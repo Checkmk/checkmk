@@ -631,22 +631,22 @@ class IlertPluginResponse(PluginName):
 # Jira --------------------------------------------------------------
 
 
-class JiraAuthResponse(BaseSchema):
+class AuthResponse(BaseSchema):
     option = fields.String(
         enum=["explicit_token", "token_store_id", "explicit_password", "password_store_id"],
-        description="The authentication method to use for Jira",
+        description="The authentication method to use",
         example="basic",
     )
     username = fields.String(
-        description="The username for the Jira connection",
+        description="The username for the connection",
         example="user_1",
     )
     password = fields.String(
-        description="The password for the Jira connection",
+        description="The password for the connection",
         example="password",
     )
     token = fields.String(
-        description="The token for the Jira connection",
+        description="The token for the connection",
         example="token",
     )
     store_id = PASSWORD_STORE_ID_SHOULD_EXIST
@@ -659,7 +659,7 @@ class JiraPluginResponse(PluginName):
     )
     disable_ssl_cert_verification = DISABLE_SSL_CERT_VERIFICATION
     auth = fields.Nested(
-        JiraAuthResponse,
+        AuthResponse,
         description="The authentication credentials for the Jira connection",
     )
     project_id = fields.String(
@@ -825,11 +825,6 @@ class PushOverPluginResponse(PluginName):
 # ServiceNow --------------------------------------------------------
 
 
-class ServiceNowPasswordResponse(ExplicitOrStoreOptions):
-    store_id = PASSWORD_STORE_ID_SHOULD_EXIST
-    password = fields.String(example="http://example_webhook_url.com")
-
-
 class CheckBoxUseSiteIDPrefix(CheckboxOutput):
     value = fields.String(
         enum=["use_site_id_prefix", "deactivated"],
@@ -887,15 +882,9 @@ class ServiceNowPluginResponse(PluginName):
         example="https://myservicenow.com",
         description="Configure your ServiceNow URL here",
     )
-    username = fields.String(
-        example="username_a",
-        description="Configure the user name here",
-    )
-
-    user_password = fields.Nested(
-        ServiceNowPasswordResponse,
-        description="The password for ServiceNow Plugin.",
-        example={"option": "password", "password": "my_unique_password"},
+    auth = fields.Nested(
+        AuthResponse,
+        description="The authentication credentials for the ServiceNow connection",
     )
     http_proxy = HTTP_PROXY_RESPONSE
     use_site_id_prefix = fields.Nested(CheckBoxUseSiteIDPrefix)

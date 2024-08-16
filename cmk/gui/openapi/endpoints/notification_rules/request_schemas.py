@@ -1313,7 +1313,7 @@ class IlertPluginCreate(PluginName):
 
 
 # Jira --------------------------------------------------------------
-class JiraAuthOptions(BaseSchema):
+class AuthOptions(BaseSchema):
     option = fields.String(
         enum=["explicit_token", "token_store_id", "explicit_password", "password_store_id"],
         required=True,
@@ -1321,44 +1321,44 @@ class JiraAuthOptions(BaseSchema):
     )
 
 
-class JiraBasicAuth(JiraAuthOptions):
+class BasicAuth(AuthOptions):
     username = fields.String(
         required=True,
         example="username_example",
-        description="Your Jira username",
+        description="Your username",
     )
 
 
-class JiraBasicAuthExplicit(JiraBasicAuth):
+class BasicAuthExplicit(BasicAuth):
     password = fields.String(
         required=True,
         example="password_example",
-        description="Your Jira password",
+        description="Your password",
     )
 
 
-class JiraBasicAuthStorePassword(JiraBasicAuth):
+class BasicAuthStorePassword(BasicAuth):
     store_id = PASSWORD_STORE_ID_SHOULD_EXIST
 
 
-class JiraExplicitToken(JiraAuthOptions):
+class ExplicitToken(AuthOptions):
     token = fields.String(
         required=True,
         example="token_example",
-        description="Your Jira personal access token",
+        description="Your personal access token",
     )
 
 
-class JiraAuthStoreToken(JiraAuthOptions):
+class AuthStoreToken(AuthOptions):
     store_id = PASSWORD_STORE_ID_SHOULD_EXIST
 
 
-class JiraAuthSelector(OptionOneOfSchema):
+class AuthSelector(OptionOneOfSchema):
     type_schemas = {
-        "password_store_id": JiraBasicAuthStorePassword,
-        "explicit_password": JiraBasicAuthExplicit,
-        "explicit_token": JiraExplicitToken,
-        "token_store_id": JiraAuthStoreToken,
+        "password_store_id": BasicAuthStorePassword,
+        "explicit_password": BasicAuthExplicit,
+        "explicit_token": ExplicitToken,
+        "token_store_id": AuthStoreToken,
     }
 
 
@@ -1370,7 +1370,7 @@ class JiraPluginCreate(PluginName):
     )
     disable_ssl_cert_verification = DISABLE_SSL_CERT_VERIFICATION
     auth = fields.Nested(
-        JiraAuthSelector,
+        AuthSelector,
         required=True,
         description="The authentication credentials for the Jira connection",
     )
@@ -1673,26 +1673,6 @@ class PushOverPluginCreate(PluginName):
 
 
 # ServiceNow --------------------------------------------------------
-
-
-class ServiceNowPasswordStoreID(ExplicitOrStoreOptions):
-    store_id = PASSWORD_STORE_ID_SHOULD_EXIST
-
-
-class ServiceNowExplicitPassword(ExplicitOrStoreOptions):
-    password = fields.String(
-        required=True,
-        example="password_example",
-    )
-
-
-class ServiceNowPasswordSelector(OptionOneOfSchema):
-    type_schemas = {
-        "explicit": ServiceNowExplicitPassword,
-        "store": ServiceNowPasswordStoreID,
-    }
-
-
 class CheckBoxUseSiteIDPrefix(Checkbox):
     value = fields.String(
         enum=["use_site_id_prefix", "deactivated"],
@@ -1865,15 +1845,10 @@ class ServiceNowPluginCreate(PluginName):
         example="https://myservicenow.com",
         description="Configure your ServiceNow URL here",
     )
-    username = fields.String(
+    auth = fields.Nested(
+        AuthSelector,
         required=True,
-        example="username_a",
-        description="Configure the user name here",
-    )
-
-    user_password = fields.Nested(
-        ServiceNowPasswordSelector,
-        required=True,
+        description="The authentication credentials for the ServiceNow connection",
     )
     http_proxy = HTTP_PROXY_CREATE
     use_site_id_prefix = fields.Nested(

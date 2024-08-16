@@ -5,7 +5,7 @@
 
 
 from collections.abc import Generator, Iterator
-from typing import Any, cast, get_args, Literal
+from typing import Any, get_args, Literal
 
 import pytest
 
@@ -22,13 +22,13 @@ from cmk.gui.openapi.endpoints.site_management.common import (
     default_config_example as _default_config,
 )
 from cmk.gui.rest_api_types.notifications_rule_types import (
+    API_BasicAuthExplicit,
     API_BasicAuthStore,
-    API_JiraBasicAuthExplicit,
+    API_ExplicitToken,
     API_JiraData,
-    API_JiraExplicitToken,
-    API_JiraStoreToken,
     API_PushOverData,
     API_ServiceNowData,
+    API_StoreToken,
     APIConditions,
     APIContactSelection,
     APINotificationRule,
@@ -779,8 +779,8 @@ plugin_test_data: list[PluginType] = [
         "disable_ssl_cert_verification": {"state": "disabled"},
         "auth": {
             "option": "explicit_password",
-            "username": "Gavin",
-            "password": "gav1234",
+            "username": "user_username",
+            "password": "user_password",
         },
         "project_id": "1234",
         "issue_type_id": "2345",
@@ -1029,10 +1029,10 @@ plugin_test_data: list[PluginType] = [
             "state": "enabled",
             "value": {"option": "url", "url": "http://http_proxy_test_url/here"},
         },
-        "username": "test_username",
-        "user_password": {
-            "option": "explicit",
-            "password": "testpassword",
+        "auth": {
+            "option": "explicit_password",
+            "username": "user_username",
+            "password": "user_password",
         },
         "use_site_id_prefix": {
             "state": "enabled",
@@ -1083,10 +1083,9 @@ plugin_test_data: list[PluginType] = [
             "state": "enabled",
             "value": {"option": "url", "url": "http://http_proxy_test_url/here"},
         },
-        "username": "test_username",
-        "user_password": {
-            "option": "store",
-            "store_id": "some_store_id",
+        "auth": {
+            "option": "explicit_token",
+            "token": "explicit_service_now_token",
         },
         "use_site_id_prefix": {
             "state": "enabled",
@@ -1447,10 +1446,10 @@ service_now: API_ServiceNowData = {
         "state": "enabled",
         "value": {"option": "url", "url": "http://http_proxy_test_url/here"},
     },
-    "username": "test_username",
-    "user_password": {
-        "option": "explicit",
-        "password": "testpassword",
+    "auth": {
+        "option": "explicit_password",
+        "username": "user_username",
+        "password": "user_password",
     },
     "use_site_id_prefix": {
         "state": "enabled",
@@ -2070,22 +2069,22 @@ def test_match_host_tags(clients: ClientRegistry) -> None:
     assert resp.json["extensions"]["rule_config"] == config
 
 
-jira_auth_methods: list[
-    API_JiraExplicitToken | API_JiraStoreToken | API_JiraBasicAuthExplicit | API_BasicAuthStore
+auth_methods: list[
+    API_ExplicitToken | API_StoreToken | API_BasicAuthExplicit | API_BasicAuthStore
 ] = [
     {
         "option": "explicit_password",
-        "username": "Gavin",
-        "password": "gav1234",
+        "username": "a_user_name",
+        "password": "_!$%@w&*@",
     },
     {
         "option": "password_store_id",
-        "username": "Gavin",
+        "username": "a_user_name",
         "store_id": "some_store_id",
     },
     {
         "option": "explicit_token",
-        "token": "some_jira_token",
+        "token": "some_token",
     },
     {
         "option": "token_store_id",
@@ -2094,21 +2093,20 @@ jira_auth_methods: list[
 ]
 
 
-@pytest.mark.parametrize("auth_method", jira_auth_methods)
+@pytest.mark.parametrize("plugin", [plugin_test_data[8], plugin_test_data[14]])
+@pytest.mark.parametrize("auth_method", auth_methods)
 @pytest.mark.usefixtures("mock_password_file_regeneration")
-def test_create_jira_rule_with_auth_types(
+def test_create_rules_with_basic_and_token_auth(
     clients: ClientRegistry,
-    auth_method: (
-        API_JiraExplicitToken | API_JiraStoreToken | API_JiraBasicAuthExplicit | API_BasicAuthStore
-    ),
+    plugin: API_JiraData | API_ServiceNowData,
+    auth_method: API_ExplicitToken | API_StoreToken | API_BasicAuthExplicit | API_BasicAuthStore,
 ) -> None:
     setup_site_data(clients)
-    jira_config = cast(API_JiraData, plugin_test_data[8])
-    jira_config["auth"] = auth_method
+    plugin["auth"] = auth_method
     config = notification_rule_request_example()
     config["notification_method"]["notify_plugin"] = {
         "option": PluginOptions.WITH_PARAMS,
-        "plugin_params": jira_config,
+        "plugin_params": plugin,
     }
     r1 = clients.RuleNotification.create(rule_config=config)
     assert r1.json["extensions"] == {"rule_config": config}

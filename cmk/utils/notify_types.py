@@ -504,22 +504,22 @@ class IlertPluginModel(TypedDict):
     proxy_url: NotRequired[ProxyUrl]
 
 
-class JiraTokenAuthCredentials(TypedDict):
+class TokenAuthCredentials(TypedDict):
     token: tuple[Literal["password", "store"], str]
 
 
-class JiraBasicAuthCredentials(TypedDict):
+class BasicAuthCredentials(TypedDict):
     username: str
     password: tuple[Literal["password", "store"], str]
 
 
-JiraBasicAuth = tuple[Literal["auth_basic"], JiraBasicAuthCredentials]
-JiraTokenAuth = tuple[Literal["auth_token"], JiraTokenAuthCredentials]
+BasicAuth = tuple[Literal["auth_basic"], BasicAuthCredentials]
+TokenAuth = tuple[Literal["auth_token"], TokenAuthCredentials]
 
 
 class JiraIssuePluginModel(TypedDict):
     url: str
-    auth: JiraBasicAuth | JiraTokenAuth
+    auth: BasicAuth | TokenAuth
     project: str
     issuetype: str
     host_customid: str
@@ -650,8 +650,7 @@ class MgmtTypeCase(MgmtTypeBase):
 
 class ServiceNowPluginModel(TypedDict):
     url: str
-    username: str
-    password: tuple[Literal["password", "store"], str]
+    auth: BasicAuth | TokenAuth
     use_site_id: NotRequired[bool]
     timeout: NotRequired[str]
     proxy_url: NotRequired[ProxyUrl]

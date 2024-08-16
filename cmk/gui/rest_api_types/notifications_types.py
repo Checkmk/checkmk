@@ -74,6 +74,7 @@ from cmk.gui.rest_api_types.notifications_rule_types import (
     APIPluginDict,
     APIPluginList,
     APISignL4SecretOption,
+    BasicOrTokenAuth,
     CheckboxEmailBodyInfo,
     CheckboxHttpProxy,
     CheckboxOpsGeniePriority,
@@ -90,7 +91,6 @@ from cmk.gui.rest_api_types.notifications_rule_types import (
     CheckboxWithStrValue,
     EnableSyncDeliveryViaSMTP,
     FromAndToEmailFields,
-    JiraAuthOption,
     ManagementType,
     WebhookURLOption,
 )
@@ -661,7 +661,7 @@ class JiraIssuePlugin:
     option: PluginOptions = PluginOptions.CANCEL
     url: str | None = None
     disable_ssl_cert_verification: CheckboxTrueOrNone = field(default_factory=CheckboxTrueOrNone)
-    auth: JiraAuthOption = field(default_factory=JiraAuthOption)
+    auth: BasicOrTokenAuth = field(default_factory=BasicOrTokenAuth)
     project_id: str | None = None
     issue_type_id: str | None = None
     host_custom_id: str | None = None
@@ -686,7 +686,7 @@ class JiraIssuePlugin:
             disable_ssl_cert_verification=CheckboxTrueOrNone.from_mk_file_format(
                 pluginparams.get("ignore_ssl"),
             ),
-            auth=JiraAuthOption.from_mk_file_format(pluginparams["auth"]),
+            auth=BasicOrTokenAuth.from_mk_file_format(pluginparams["auth"]),
             project_id=pluginparams["project"],
             issue_type_id=pluginparams["issuetype"],
             host_custom_id=pluginparams["host_customid"],
@@ -728,7 +728,7 @@ class JiraIssuePlugin:
             disable_ssl_cert_verification=CheckboxTrueOrNone.from_api_request(
                 params["disable_ssl_cert_verification"]
             ),
-            auth=JiraAuthOption.from_api_request(params["auth"]),
+            auth=BasicOrTokenAuth.from_api_request(params["auth"]),
             project_id=params["project_id"],
             issue_type_id=params["issue_type_id"],
             host_custom_id=params["host_custom_id"],
@@ -1143,8 +1143,7 @@ class ServiceNowPlugin:
     option: PluginOptions = PluginOptions.CANCEL
     url: str | None = None
     http_proxy: CheckboxHttpProxy = field(default_factory=CheckboxHttpProxy)
-    username: str | None = None
-    user_password: APIPasswordOption = field(default_factory=APIPasswordOption)
+    auth: BasicOrTokenAuth = field(default_factory=BasicOrTokenAuth)
     use_site_id: CheckboxUseSiteIDPrefix = field(default_factory=CheckboxUseSiteIDPrefix)
     timeout: CheckboxWithStrValue = field(default_factory=CheckboxWithStrValue)
     mgmt_type: ManagementType = field(default_factory=ManagementType)
@@ -1160,8 +1159,7 @@ class ServiceNowPlugin:
             http_proxy=CheckboxHttpProxy.from_mk_file_format(
                 pluginparams.get("proxy_url"),
             ),
-            username=pluginparams.get("username"),
-            user_password=APIPasswordOption.from_mk_file_format(pluginparams["password"]),
+            auth=BasicOrTokenAuth.from_mk_file_format(pluginparams["auth"]),
             use_site_id=CheckboxUseSiteIDPrefix.from_mk_file_format(
                 pluginparams.get("use_site_id"),
             ),
@@ -1182,8 +1180,7 @@ class ServiceNowPlugin:
             option=PluginOptions.WITH_PARAMS,
             url=params["servicenow_url"],
             http_proxy=CheckboxHttpProxy.from_api_request(params["http_proxy"]),
-            username=params["username"],
-            user_password=APIPasswordOption.from_api_request(params["user_password"]),
+            auth=BasicOrTokenAuth.from_api_request(params["auth"]),
             use_site_id=CheckboxUseSiteIDPrefix.from_api_request(params["use_site_id_prefix"]),
             timeout=CheckboxWithStrValue.from_api_request(params["optional_timeout"]),
             mgmt_type=ManagementType.from_api_request(params["management_type"]),
@@ -1196,8 +1193,7 @@ class ServiceNowPlugin:
                 {
                     "servicenow_url": "" if self.url is None else self.url,
                     "http_proxy": self.http_proxy.api_response(),
-                    "username": "" if self.username is None else self.username,
-                    "user_password": self.user_password.api_response(),
+                    "auth": self.auth.api_response(),
                     "use_site_id_prefix": self.use_site_id.api_response(),
                     "optional_timeout": self.timeout.api_response(),
                     "management_type": self.mgmt_type.api_response(),
@@ -1212,8 +1208,7 @@ class ServiceNowPlugin:
         r = {
             "url": self.url,
             "proxy_url": self.http_proxy.to_mk_file_format(),
-            "username": self.username,
-            "password": self.user_password.to_mk_file_format(),
+            "auth": self.auth.to_mk_file_format(),
             "use_site_id": self.use_site_id.to_mk_file_format(),
             "timeout": self.timeout.to_mk_file_format(),
             "mgmt_type": self.mgmt_type.to_mk_file_format(),

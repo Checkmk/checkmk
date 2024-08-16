@@ -11,6 +11,8 @@ from typing import cast, Literal, NotRequired, Required, TypedDict
 from cmk.utils.notify_types import (
     AlwaysBulkParameters,
     AsciiMailPluginName,
+    BasicAuth,
+    BasicAuthCredentials,
     CaseState,
     CaseStateStr,
     CiscoPluginName,
@@ -29,11 +31,7 @@ from cmk.utils.notify_types import (
     is_auto_urlprefix,
     is_manual_urlprefix,
     is_timeperiod_bulk,
-    JiraBasicAuth,
-    JiraBasicAuthCredentials,
     JiraPluginName,
-    JiraTokenAuth,
-    JiraTokenAuthCredentials,
     MailPluginName,
     MatchRegex,
     MgmntPriorityType,
@@ -71,6 +69,8 @@ from cmk.utils.notify_types import (
     SyslogPriorityIntType,
     SysLogPriorityStrType,
     TimeperiodBulkParameters,
+    TokenAuth,
+    TokenAuthCredentials,
     URLPrefix,
     WebHookUrl,
 )
@@ -2455,17 +2455,17 @@ class CheckboxWithListOfExtraPropertiesValues:
         return self.value
 
 
-class API_JiraExplicitToken(TypedDict, total=False):
+class API_ExplicitToken(TypedDict, total=False):
     option: Literal["explicit_token"]
     token: str
 
 
-class API_JiraStoreToken(TypedDict, total=False):
+class API_StoreToken(TypedDict, total=False):
     option: Literal["token_store_id"]
     store_id: str
 
 
-class API_JiraBasicAuthExplicit(TypedDict, total=False):
+class API_BasicAuthExplicit(TypedDict, total=False):
     option: Literal["explicit_password"]
     username: str
     password: str
@@ -2478,24 +2478,20 @@ class API_BasicAuthStore(TypedDict, total=False):
 
 
 @dataclass
-class JiraAuthOption:
+class BasicOrTokenAuth:
     auth_option: (
-        API_JiraExplicitToken
-        | API_JiraStoreToken
-        | API_JiraBasicAuthExplicit
-        | API_BasicAuthStore
-        | None
+        API_ExplicitToken | API_StoreToken | API_BasicAuthExplicit | API_BasicAuthStore | None
     ) = None
 
     @classmethod
-    def from_mk_file_format(cls, data: JiraBasicAuth | JiraTokenAuth | None) -> JiraAuthOption:
+    def from_mk_file_format(cls, data: BasicAuth | TokenAuth | None) -> BasicOrTokenAuth:
         if data is None:
             return cls()
 
         if data[0] == "auth_basic":
             if data[1]["password"][0] == "password":
                 return cls(
-                    auth_option=API_JiraBasicAuthExplicit(
+                    auth_option=API_BasicAuthExplicit(
                         option="explicit_password",
                         username=data[1]["username"],
                         password=data[1]["password"][1],
@@ -2511,14 +2507,14 @@ class JiraAuthOption:
 
         if data[1]["token"][0] == "password":
             return cls(
-                auth_option=API_JiraExplicitToken(
+                auth_option=API_ExplicitToken(
                     option="explicit_token",
                     token=data[1]["token"][1],
                 )
             )
 
         return cls(
-            auth_option=API_JiraStoreToken(
+            auth_option=API_StoreToken(
                 option="token_store_id",
                 store_id=data[1]["token"][1],
             ),
@@ -2527,46 +2523,37 @@ class JiraAuthOption:
     @classmethod
     def from_api_request(
         cls,
-        incoming: (
-            API_JiraExplicitToken
-            | API_JiraStoreToken
-            | API_JiraBasicAuthExplicit
-            | API_BasicAuthStore
-        ),
-    ) -> JiraAuthOption:
+        incoming: API_ExplicitToken | API_StoreToken | API_BasicAuthExplicit | API_BasicAuthStore,
+    ) -> BasicOrTokenAuth:
         return cls(auth_option=incoming)
 
     def api_response(
         self,
-    ) -> (
-        API_JiraExplicitToken | API_JiraStoreToken | API_JiraBasicAuthExplicit | API_BasicAuthStore
-    ):
+    ) -> API_ExplicitToken | API_StoreToken | API_BasicAuthExplicit | API_BasicAuthStore:
         if self.auth_option is None:
             return {}
         return self.auth_option
 
-    def to_mk_file_format(self) -> JiraBasicAuth | JiraTokenAuth | None:
+    def to_mk_file_format(self) -> BasicAuth | TokenAuth | None:
         if self.auth_option is None:
             return None
 
         if self.auth_option["option"] == "explicit_password":
-            return "auth_basic", JiraBasicAuthCredentials(
+            return "auth_basic", BasicAuthCredentials(
                 username=self.auth_option["username"],
                 password=("password", self.auth_option["password"]),
             )
 
         if self.auth_option["option"] == "password_store_id":
-            return "auth_basic", JiraBasicAuthCredentials(
+            return "auth_basic", BasicAuthCredentials(
                 username=self.auth_option["username"],
                 password=("store", self.auth_option["store_id"]),
             )
 
         if self.auth_option["option"] == "explicit_token":
-            return "auth_token", JiraTokenAuthCredentials(
-                token=("password", self.auth_option["token"])
-            )
+            return "auth_token", TokenAuthCredentials(token=("password", self.auth_option["token"]))
 
-        return "auth_token", JiraTokenAuthCredentials(token=("store", self.auth_option["store_id"]))
+        return "auth_token", TokenAuthCredentials(token=("store", self.auth_option["store_id"]))
 
 
 # ----------------------------------------------------------------
@@ -2631,9 +2618,7 @@ class API_JiraData(TypedDict, total=False):
     plugin_name: Required[JiraPluginName]
     jira_url: str
     disable_ssl_cert_verification: CheckboxStateType
-    auth: (
-        API_JiraExplicitToken | API_JiraStoreToken | API_JiraBasicAuthExplicit | API_BasicAuthStore
-    )
+    auth: API_ExplicitToken | API_StoreToken | API_BasicAuthExplicit | API_BasicAuthStore
     project_id: str
     issue_type_id: str
     host_custom_id: str
@@ -2691,8 +2676,7 @@ class API_ServiceNowData(TypedDict, total=False):
     plugin_name: Required[ServiceNowPluginName]
     servicenow_url: str
     http_proxy: HttpProxyAPIValueType
-    username: str
-    user_password: API_Password
+    auth: API_ExplicitToken | API_StoreToken | API_BasicAuthExplicit | API_BasicAuthStore
     use_site_id_prefix: CheckboxUseSiteIDPrefixAPIType
     optional_timeout: CheckboxStrAPIType
     management_type: MgmtTypeAPI

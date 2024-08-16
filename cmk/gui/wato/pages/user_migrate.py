@@ -261,7 +261,7 @@ def _get_attribute_choices() -> list[tuple[str, str]]:
     default_choices: list[tuple[str, str]] = [
         ("email", "Email address"),
         ("pager", "Pager address"),
-        ("contactgroups", "Contact Groups"),
+        ("contactgroups", "Contact groups"),
         ("fallback_contact", "Receive fallback notifications"),
         ("roles", "Roles"),
     ]

@@ -1097,7 +1097,7 @@ class ModeFolder(WatoMode):
             ),
         )
         table.cell(
-            _("Contact Groups"),
+            _("Contact groups"),
             HTML.without_escaping(", ").join(
                 [self._render_contact_group(contact_group_names, g) for g in host_contact_groups]
             ),

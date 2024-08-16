@@ -1242,7 +1242,7 @@ class ModeEditUser(WatoMode):
             )
 
         # Contact groups
-        forms.header(_("Contact Groups"), isopen=False)
+        forms.header(_("Contact groups"), isopen=False)
         forms.section()
         groups_page_url = folder_preserving_link([("mode", "contact_groups")])
         hosts_assign_url = folder_preserving_link(

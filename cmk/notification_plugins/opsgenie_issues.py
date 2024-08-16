@@ -24,6 +24,7 @@ from opsgenie_sdk.exceptions import (  # type: ignore[import-untyped]
     AuthenticationException,
 )
 
+from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.notify_types import PluginNotificationContext
 
 from cmk.notification_plugins import utils
@@ -140,8 +141,10 @@ def main() -> int:
     proxy_url: str | None = context.get("PARAMETER_PROXY_URL")
 
     tags_list: list[str] = []
-    if context.get("PARAMETER_TAGSS"):
-        tags_list = context.get("PARAMETER_TAGSS", "").split(" ")
+    if (tags := context.get("PARAMETER_TAGSS")) is not None:
+        tags_list = replace_macros_in_str(
+            string=tags, macro_mapping={f"${k}$": v for k, v in context.items()}
+        ).split()
 
     actions_list: list[str] = []
     if context.get("PARAMETER_ACTIONSS"):

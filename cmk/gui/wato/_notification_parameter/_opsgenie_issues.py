@@ -15,6 +15,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.wato import HTTPProxyReference, IndividualOrStoredPassword
 
 from ._base import NotificationParameter
+from ._helpers import notification_macro_help
 
 
 class NotificationParameterOpsgenie(NotificationParameter):
@@ -190,7 +191,7 @@ $LONGSERVICEOUTPUT$
                     "tags",
                     ListOfStrings(
                         title=_("Tags"),
-                        help=_("Tags of the alert."),
+                        help=_("Tags of the alert.<br><br>%s") % notification_macro_help(),
                         allow_empty=False,
                         orientation="horizontal",
                     ),

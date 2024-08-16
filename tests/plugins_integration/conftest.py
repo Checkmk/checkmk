@@ -181,6 +181,9 @@ def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
 # Todo: perform a proper site-cleanup and change this fixture's scope: CMK-18659
 @pytest.fixture(name="test_site_piggyback", scope="function")
 def _get_site_piggyback(request: pytest.FixtureRequest) -> Iterator[Site]:
+    if not request.config.getoption(name="--enable-piggyback"):
+        pytest.skip("Piggyback tests are not selected.")
+
     for site in get_site_factory(prefix="PB_").get_test_site(
         auto_cleanup=not checks.config.skip_cleanup
     ):

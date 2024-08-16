@@ -28,10 +28,7 @@ def test_plugin_piggyback(
     test_site_piggyback: Site,
     source_host_name: str,
     dcd_connector: None,
-    pytestconfig: pytest.Config,
 ) -> None:
-    if not pytestconfig.getoption(name="--enable-piggyback"):
-        pytest.skip("Piggyback tests are not selected.")
 
     with setup_source_host_piggyback(test_site_piggyback, source_host_name):
         disk_dump = read_disk_dump(source_host_name)

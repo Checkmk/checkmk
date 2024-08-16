@@ -11030,6 +11030,10 @@ msgid "Certificate is not signed by trusted authority"
 msgstr "Certificaat is niet ondertekend door vertrouwde autoriteit"
 
 #, fuzzy
+msgid "Certificate overview"
+msgstr "Certificaatsleutelbestand"
+
+#, fuzzy
 msgid "Certificate signature algorithm"
 msgstr "Handtekening algoritme"
 
@@ -15281,6 +15285,10 @@ msgstr "Schepping"
 msgid "Creation / Locking"
 msgstr "Creatie / Vergrendeling"
 
+#, fuzzy
+msgid "Creation Date"
+msgstr "Creatie tijd"
+
 msgid "Creation of gateway hosts"
 msgstr "Aanmaken van gateway hosts"
 
@@ -19051,6 +19059,9 @@ msgstr "Toont het aantal diensten in een geselecteerde staat."
 msgid "Displays an overview of all Checkmk servers and sites\n"
 msgstr "Toont een overzicht van alle Checkmk-servers en -instanties\n"
 
+msgid "Displays details of the certificates used by Checkmk"
+msgstr ""
+
 msgid "Displays either sites and states or hosts and states of a site"
 msgstr ""
 "Geeft ofwel sites en toestanden of hosts en toestanden van een site weer"
@@ -22667,6 +22678,10 @@ msgstr "Verwacht update-interval"
 #, fuzzy
 msgid "Experimental features"
 msgstr "Ondernemingsfunctie"
+
+#, fuzzy
+msgid "Expiration Date"
+msgstr "Registratie Staat"
 
 msgid "Expire events that are in the state <i>acknowledged</i>"
 msgstr "Verlopen gebeurtenissen die in de status <i>erkend</i>"
@@ -33618,6 +33633,10 @@ msgstr "Uitgegeven aan"
 msgid "Issuer"
 msgstr "Emittent"
 
+#, fuzzy
+msgid "Issuer Name"
+msgstr "Naam gebruiker"
+
 msgid ""
 "It does not make sense to add a bulk configuration for cancelling rules."
 msgstr ""
@@ -34197,6 +34216,9 @@ msgid "Key"
 msgstr "Key"
 
 msgid "Key ID"
+msgstr ""
+
+msgid "Key Type and Length"
 msgstr ""
 
 msgid "Key from password store"
@@ -48803,6 +48825,9 @@ msgstr "Schrijfcapaciteit"
 msgid "Pure Storage FlashArray"
 msgstr "Azure Opslag"
 
+msgid "Purpose"
+msgstr ""
+
 msgid "Push configuration to this site"
 msgstr "Push configuratie naar deze site"
 
@@ -58650,6 +58675,10 @@ msgstr ""
 msgid "Store size"
 msgstr "Winkelgrootte"
 
+#, fuzzy
+msgid "Stored Location"
+msgstr "Locatie van het systeem"
+
 #, python-format
 msgid "Stored declined bundle: %s"
 msgstr "Opgeslagen gedaalde bundel: %s"
@@ -58763,6 +58792,10 @@ msgstr ""
 
 msgid "Subject"
 msgstr "Onderwerp"
+
+#, fuzzy
+msgid "Subject Name"
+msgstr "Naam van de sectie"
 
 msgid "Subject for bulk notifications"
 msgstr "Onderwerp voor bulkmeldingen"
@@ -84352,9 +84385,6 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 #~ msgstr ""
 #~ "De opgegeven keuze is niet langer beschikbaar. Gebruik in plaats daarvan "
 #~ "een andere, zoals 'header'."
-
-#~ msgid "User Name"
-#~ msgstr "Naam gebruiker"
 
 #~ msgid ""
 #~ "You need to provide a valid password to be able to send notifications."

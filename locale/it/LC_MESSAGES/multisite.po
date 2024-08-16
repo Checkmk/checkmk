@@ -10935,6 +10935,10 @@ msgstr ""
 msgid "Certificate is not signed by trusted authority"
 msgstr "Il certificato non è firmato da un'autorità affidabile"
 
+#, fuzzy
+msgid "Certificate overview"
+msgstr "File chiave del certificato"
+
 msgid "Certificate signature algorithm"
 msgstr "Algoritmo di firma del certificato"
 
@@ -15133,6 +15137,10 @@ msgstr "Creazione"
 msgid "Creation / Locking"
 msgstr "Creazione / Blocco"
 
+#, fuzzy
+msgid "Creation Date"
+msgstr "Tempo di creazione"
+
 msgid "Creation of gateway hosts"
 msgstr "Creazione di host gateway"
 
@@ -18877,6 +18885,9 @@ msgstr "Visualizza la quantità di servizi in uno stato selezionato."
 msgid "Displays an overview of all Checkmk servers and sites\n"
 msgstr "Visualizza una panoramica di tutti i server e le istanze di Checkmk.\n"
 
+msgid "Displays details of the certificates used by Checkmk"
+msgstr ""
+
 msgid "Displays either sites and states or hosts and states of a site"
 msgstr "Visualizza i siti e gli stati o gli host e gli stati di un sito"
 
@@ -22465,6 +22476,10 @@ msgstr "Intervallo di aggiornamento previsto"
 #, fuzzy
 msgid "Experimental features"
 msgstr "Caratteristica dell'impresa"
+
+#, fuzzy
+msgid "Expiration Date"
+msgstr "Nessuna data di scadenza"
 
 msgid "Expire events that are in the state <i>acknowledged</i>"
 msgstr "Scade gli eventi che sono nello stato <i>riconosciuto</i>"
@@ -33328,6 +33343,10 @@ msgstr "Rilasciato a"
 msgid "Issuer"
 msgstr "Emittente"
 
+#, fuzzy
+msgid "Issuer Name"
+msgstr "Nome utente"
+
 msgid ""
 "It does not make sense to add a bulk configuration for cancelling rules."
 msgstr ""
@@ -33904,6 +33923,9 @@ msgid "Key"
 msgstr "Chiave"
 
 msgid "Key ID"
+msgstr ""
+
+msgid "Key Type and Length"
 msgstr ""
 
 msgid "Key from password store"
@@ -48369,6 +48391,9 @@ msgstr "Capacità di archiviazione pura"
 msgid "Pure Storage FlashArray"
 msgstr "Pure Storage FlashArray"
 
+msgid "Purpose"
+msgstr ""
+
 msgid "Push configuration to this site"
 msgstr "Spingi la configurazione a questo sito"
 
@@ -58146,6 +58171,10 @@ msgstr ""
 msgid "Store size"
 msgstr "Dimensione del negozio"
 
+#, fuzzy
+msgid "Stored Location"
+msgstr "Posizione del sistema"
+
 #, python-format
 msgid "Stored declined bundle: %s"
 msgstr "Pacchetto declinato memorizzato: %s"
@@ -58258,6 +58287,10 @@ msgstr ""
 
 msgid "Subject"
 msgstr "Oggetto"
+
+#, fuzzy
+msgid "Subject Name"
+msgstr "Nome della sezione"
 
 msgid "Subject for bulk notifications"
 msgstr "Soggetto per le notifiche di massa"
@@ -83573,9 +83606,6 @@ msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
 #~ msgstr ""
 #~ "La scelta specificata non è più disponibile. Si prega di utilizzarne "
 #~ "un'altra, come 'header' al suo posto."
-
-#~ msgid "User Name"
-#~ msgstr "Nome utente"
 
 #~ msgid ""
 #~ "You need to provide a valid password to be able to send notifications."

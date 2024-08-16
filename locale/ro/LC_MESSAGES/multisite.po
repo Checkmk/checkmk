@@ -11056,6 +11056,10 @@ msgstr ""
 msgid "Certificate is not signed by trusted authority"
 msgstr "Certificatul nu este semnat de o autoritate de încredere"
 
+#, fuzzy
+msgid "Certificate overview"
+msgstr "Fișier cu cheie de certificat"
+
 msgid "Certificate signature algorithm"
 msgstr "Algoritm de semnare a certificatelor"
 
@@ -15293,6 +15297,10 @@ msgstr "Creație"
 msgid "Creation / Locking"
 msgstr "Creare / Blocare"
 
+#, fuzzy
+msgid "Creation Date"
+msgstr "Timp de creare"
+
 msgid "Creation of gateway hosts"
 msgstr "Crearea de gazde gateway"
 
@@ -19075,6 +19083,9 @@ msgid "Displays an overview of all Checkmk servers and sites\n"
 msgstr ""
 "Afișează o prezentare generală a tuturor serverelor și instanțelor Checkmk\n"
 
+msgid "Displays details of the certificates used by Checkmk"
+msgstr ""
+
 msgid "Displays either sites and states or hosts and states of a site"
 msgstr "Afișează fie site-urile și stările, fie gazdele și stările unui site"
 
@@ -22704,6 +22715,10 @@ msgstr "Intervalul de actualizare preconizat"
 
 msgid "Experimental features"
 msgstr "Caracteristici experimentale"
+
+#, fuzzy
+msgid "Expiration Date"
+msgstr "Fără dată de expirare"
 
 msgid "Expire events that are in the state <i>acknowledged</i>"
 msgstr "Expiră evenimentele care se află în starea <i>acceptat</i>."
@@ -33686,6 +33701,10 @@ msgstr "Eliberat pentru"
 msgid "Issuer"
 msgstr "Emitent"
 
+#, fuzzy
+msgid "Issuer Name"
+msgstr "Nume utilizator"
+
 msgid ""
 "It does not make sense to add a bulk configuration for cancelling rules."
 msgstr ""
@@ -34266,6 +34285,9 @@ msgstr "Cheie"
 
 msgid "Key ID"
 msgstr "ID cheie"
+
+msgid "Key Type and Length"
+msgstr ""
 
 msgid "Key from password store"
 msgstr "Cheia din magazinul de parole"
@@ -48851,6 +48873,9 @@ msgstr "Capacitate de stocare pură"
 msgid "Pure Storage FlashArray"
 msgstr "Pure Storage FlashArray"
 
+msgid "Purpose"
+msgstr ""
+
 msgid "Push configuration to this site"
 msgstr "Configurație push către acest site"
 
@@ -58793,6 +58818,10 @@ msgstr ""
 msgid "Store size"
 msgstr "Dimensiunea magazinului"
 
+#, fuzzy
+msgid "Stored Location"
+msgstr "Locația sistemului"
+
 #, python-format
 msgid "Stored declined bundle: %s"
 msgstr "Pachet refuzat stocat: %s"
@@ -58906,6 +58935,10 @@ msgstr ""
 
 msgid "Subject"
 msgstr "Subiect"
+
+#, fuzzy
+msgid "Subject Name"
+msgstr "Denumirea secțiunii"
 
 msgid "Subject for bulk notifications"
 msgstr "Subiect pentru notificări în masă"
@@ -84495,9 +84528,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #~ msgstr ""
 #~ "Alegerea specificată nu mai este disponibilă. Vă rugăm să folosiți o altă "
 #~ "opțiune, cum ar fi 'header' în locul acesteia."
-
-#~ msgid "User Name"
-#~ msgstr "Nume utilizator"
 
 #~ msgid ""
 #~ "You need to provide a valid password to be able to send notifications."

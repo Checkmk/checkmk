@@ -10568,6 +10568,10 @@ msgstr "暗号化された認証リクエスト、レスポンス用の証明書
 msgid "Certificate is not signed by trusted authority"
 msgstr "証明書が信頼できる機関により署名されていない"
 
+#, fuzzy
+msgid "Certificate overview"
+msgstr "証明書キーファイル"
+
 msgid "Certificate signature algorithm"
 msgstr "証明書署名アルゴリズム"
 
@@ -14591,6 +14595,10 @@ msgstr "作成"
 msgid "Creation / Locking"
 msgstr "作成/ロック"
 
+#, fuzzy
+msgid "Creation Date"
+msgstr "作成時間"
+
 msgid "Creation of gateway hosts"
 msgstr "ゲートウェイホストの作成"
 
@@ -18176,6 +18184,9 @@ msgstr "選択した状態のサービス量を表示します。"
 msgid "Displays an overview of all Checkmk servers and sites\n"
 msgstr "すべてのCheckmkサーバーとサイトの概要を表示します\n"
 
+msgid "Displays details of the certificates used by Checkmk"
+msgstr ""
+
 msgid "Displays either sites and states or hosts and states of a site"
 msgstr "サイトと状態、またはサイトのホストと状態のいずれかを表示する"
 
@@ -21660,6 +21671,10 @@ msgstr "予想される更新間隔"
 
 msgid "Experimental features"
 msgstr "実験的機能"
+
+#, fuzzy
+msgid "Expiration Date"
+msgstr "登録状態"
 
 msgid "Expire events that are in the state <i>acknowledged</i>"
 msgstr "<i>確認済み</i> の状態にあるイベントを期限切れにします"
@@ -32429,6 +32444,10 @@ msgstr "発行された"
 msgid "Issuer"
 msgstr "発行者"
 
+#, fuzzy
+msgid "Issuer Name"
+msgstr "ユーザー名"
+
 msgid ""
 "It does not make sense to add a bulk configuration for cancelling rules."
 msgstr "ルールをキャンセルするための一括設定を追加することは意味がありません。"
@@ -32997,6 +33016,9 @@ msgstr "キー"
 
 msgid "Key ID"
 msgstr "キーID"
+
+msgid "Key Type and Length"
+msgstr ""
 
 msgid "Key from password store"
 msgstr "パスワードストアからのキー"
@@ -47387,6 +47409,9 @@ msgstr "純粋なストレージ容量"
 msgid "Pure Storage FlashArray"
 msgstr "純粋なストレージFlashArray"
 
+msgid "Purpose"
+msgstr ""
+
 msgid "Push configuration to this site"
 msgstr "このサイトに設定をプッシュする"
 
@@ -57124,6 +57149,10 @@ msgstr "出力値をこの名前でRRDデータベースに格納します。"
 msgid "Store size"
 msgstr "サイズ保管する"
 
+#, fuzzy
+msgid "Stored Location"
+msgstr "システムの場所"
+
 #, python-format
 msgid "Stored declined bundle: %s"
 msgstr "保存済みの拒否されたバンドル: %s"
@@ -57233,6 +57262,10 @@ msgstr ""
 
 msgid "Subject"
 msgstr "件名"
+
+#, fuzzy
+msgid "Subject Name"
+msgstr "セクション名"
 
 msgid "Subject for bulk notifications"
 msgstr "一括通知の対象"
@@ -82109,9 +82142,6 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 #~ msgstr ""
 #~ "指定の選択肢は使用できなくなりました。代わりに'header'のような他のものを使"
 #~ "用してください。"
-
-#~ msgid "User Name"
-#~ msgstr "ユーザー名"
 
 #~ msgid ""
 #~ "You need to provide a valid password to be able to send notifications."

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onBeforeMount, ref } from 'vue'
 import type { FormSpec } from '@/vue_formspec_components'
-import { CmkForm } from '@/components/cmk-form/'
+import { Form } from '@/components/cmk-form/'
 import type { ValidationMessages } from '@/lib/validation'
 
 const props = defineProps<{
@@ -19,7 +19,7 @@ onBeforeMount(() => {
 </script>
 
 <template>
-  <CmkForm
+  <Form
     :id="id"
     v-model:data="dataRef"
     :backend-validation="validation"

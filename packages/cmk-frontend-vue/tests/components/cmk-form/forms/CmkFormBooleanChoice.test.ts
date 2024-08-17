@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/vue'
 import type * as FormSpec from '@/vue_formspec_components'
-import CmkFormBooleanChoice from '@/components/cmk-form/element/CmkFormBooleanChoice.vue'
+import FormBooleanChoice from '@/components/cmk-form/forms/FormBooleanChoice.vue'
 
 function getBooleanChoice(withLabel = false): FormSpec.BooleanChoice {
   return {
@@ -14,9 +14,9 @@ function getBooleanChoice(withLabel = false): FormSpec.BooleanChoice {
   }
 }
 
-test('CmkFormBooleanChoice renders value: checked', () => {
+test('FormBooleanChoice renders value: checked', () => {
   const spec = getBooleanChoice(false)
-  render(CmkFormBooleanChoice, {
+  render(FormBooleanChoice, {
     props: {
       spec,
       data: true,
@@ -28,9 +28,9 @@ test('CmkFormBooleanChoice renders value: checked', () => {
   expect(checkbox.checked).toBe(true)
 })
 
-test('CmkFormBooleanChoice renders value: unchecked', () => {
+test('FormBooleanChoice renders value: unchecked', () => {
   const spec = getBooleanChoice(true)
-  render(CmkFormBooleanChoice, {
+  render(FormBooleanChoice, {
     props: {
       spec,
       data: false,
@@ -42,9 +42,9 @@ test('CmkFormBooleanChoice renders value: unchecked', () => {
   expect(checkbox.checked).toBe(false)
 })
 
-test('CmkFormBooleanChoice toggle checkbox', () => {
+test('FormBooleanChoice toggle checkbox', () => {
   const spec = getBooleanChoice(true)
-  render(CmkFormBooleanChoice, {
+  render(FormBooleanChoice, {
     props: {
       spec,
       data: false,

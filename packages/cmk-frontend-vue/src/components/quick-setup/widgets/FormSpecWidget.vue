@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import CmkFormDispatcher from '@/components/cmk-form/CmkFormDispatcher.vue'
+import FormEdit from '@/components/cmk-form/FormEdit.vue'
 import { type FormSpecWidgetProps } from './widget_types'
 import type { ValidationMessages } from '@/lib/validation'
 
@@ -27,7 +27,7 @@ watch(internal.value, (newValue) => {
   <table class="nform">
     <tr>
       <td>
-        <CmkFormDispatcher
+        <FormEdit
           v-model:data="internal"
           :spec="form_spec.spec"
           :backend-validation="validationErrors"

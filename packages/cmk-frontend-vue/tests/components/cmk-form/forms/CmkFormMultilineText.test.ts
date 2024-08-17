@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
 import type * as FormSpec from '@/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
-import CmkFormMultilineText from '@/components/cmk-form/element/CmkFormMultilineText.vue'
+import FormMultilineText from '@/components/cmk-form/forms/FormMultilineText.vue'
 
 const validators: FormSpec.Validator[] = [
   {
@@ -20,8 +20,8 @@ const spec: FormSpec.MultilineText = {
   input_hint: 'fooInputHint'
 }
 
-test('CmkFormMultilineText renders value', () => {
-  render(CmkFormMultilineText, {
+test('FormMultilineText renders value', () => {
+  render(FormMultilineText, {
     props: {
       spec,
       data: 'fooData',
@@ -34,7 +34,7 @@ test('CmkFormMultilineText renders value', () => {
   expect(element.value).toBe('fooData')
 })
 
-test('CmkFormMultilineText updates data', async () => {
+test('FormMultilineText updates data', async () => {
   const { getCurrentData } = renderFormWithData({
     spec,
     data: 'fooData',
@@ -47,8 +47,8 @@ test('CmkFormMultilineText updates data', async () => {
   expect(getCurrentData()).toBe('"some_other_value"')
 })
 
-test('CmkFormMultilineText checks validators', async () => {
-  render(CmkFormMultilineText, {
+test('FormMultilineText checks validators', async () => {
+  render(FormMultilineText, {
     props: {
       spec,
       data: 'fooData',
@@ -62,8 +62,8 @@ test('CmkFormMultilineText checks validators', async () => {
   screen.getByText('String length must be between 1 and 20')
 })
 
-test('CmkFormMultilineText renders backend validation messages', async () => {
-  render(CmkFormMultilineText, {
+test('FormMultilineText renders backend validation messages', async () => {
+  render(FormMultilineText, {
     props: {
       spec,
       data: 'fooData',

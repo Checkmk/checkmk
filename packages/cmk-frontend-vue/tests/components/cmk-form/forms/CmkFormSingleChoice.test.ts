@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
-import CmkFormSingleChoice from '@/components/cmk-form/element/CmkFormSingleChoice.vue'
+import FormSingleChoice from '@/components/cmk-form/forms/FormSingleChoice.vue'
 import type * as FormSpec from '@/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
 
@@ -17,8 +17,8 @@ const spec: FormSpec.SingleChoice = {
   validators: []
 }
 
-test('CmkFormSingleChoice renders value', () => {
-  render(CmkFormSingleChoice, {
+test('FormSingleChoice renders value', () => {
+  render(FormSingleChoice, {
     props: {
       spec,
       data: 'choice1',
@@ -31,7 +31,7 @@ test('CmkFormSingleChoice renders value', () => {
   expect(element.value).toBe('choice1')
 })
 
-test('CmkFormSingleChoice updates data', async () => {
+test('FormSingleChoice updates data', async () => {
   const { getCurrentData } = renderFormWithData({
     spec,
     data: 'choice1',
@@ -44,8 +44,8 @@ test('CmkFormSingleChoice updates data', async () => {
   expect(getCurrentData()).toBe('"choice2"')
 })
 
-test('CmkFormSingleChoice renders backend validation messages', async () => {
-  render(CmkFormSingleChoice, {
+test('FormSingleChoice renders backend validation messages', async () => {
+  render(FormSingleChoice, {
     props: {
       spec,
       data: 'choice1',

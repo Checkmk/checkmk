@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onBeforeMount, ref, watch } from 'vue'
-import CmkFormDispatcher from '../CmkFormDispatcher.vue'
+import FormEdit from '../FormEdit.vue'
 import type { Dictionary, DictionaryElement } from '@/vue_formspec_components'
 import { groupDictionaryValidations, type ValidationMessages } from '@/lib/validation'
 
@@ -88,7 +88,7 @@ function toggleElement(event: MouseEvent, key: string) {
           </span>
           <br />
           <div class="dictelement indent">
-            <CmkFormDispatcher
+            <FormEdit
               v-if="dict_element.is_active"
               v-model:data="data[dict_element.dict_config.ident]"
               :spec="dict_element.dict_config.parameter_form"

@@ -1,5 +1,5 @@
-import CmkForm from './CmkForm.vue'
+import Form from './FormApp.vue'
 import CmkRuleset from './CmkRuleset.vue'
 import FormValidation from './FormValidation.vue'
 
-export { CmkForm, CmkRuleset, FormValidation }
+export { Form, CmkRuleset, FormValidation }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeMount, onUpdated, type PropType, ref, watch } from 'vue'
-import CmkFormDispatcher from '@/components/cmk-form/CmkFormDispatcher.vue'
+import FormEdit from '@/components/cmk-form/FormEdit.vue'
 import type {
   CascadingSingleChoice,
   CascadingSingleChoiceElement,
@@ -106,11 +106,11 @@ const activeElement = computed((): ActiveElement | null => {
     </select>
   </div>
   <template v-if="activeElement != null">
-    <CmkFormDispatcher
+    <FormEdit
       v-model:data="data[1]"
       :spec="activeElement.spec"
       :backend-validation="elementValidation"
-    ></CmkFormDispatcher>
+    ></FormEdit>
     <FormValidation :validation="validation"></FormValidation>
   </template>
 </template>

@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
-import CmkFormFloat from '@/components/cmk-form/element/CmkFormFloat.vue'
+import FormFloat from '@/components/cmk-form/forms/FormFloat.vue'
 import type * as FormSpec from '@/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
 
@@ -22,8 +22,8 @@ const spec: FormSpec.Float = {
   input_hint: 'fooInputHint'
 }
 
-test('CmkFormFloat renders value', () => {
-  render(CmkFormFloat, {
+test('FormFloat renders value', () => {
+  render(FormFloat, {
     props: {
       spec,
       data: 42.5,
@@ -36,7 +36,7 @@ test('CmkFormFloat renders value', () => {
   expect(element.value).toBe('42.5')
 })
 
-test('CmkFormFloat updates data', async () => {
+test('FormFloat updates data', async () => {
   const { getCurrentData } = renderFormWithData({
     spec,
     data: 42.5,
@@ -49,8 +49,8 @@ test('CmkFormFloat updates data', async () => {
   expect(getCurrentData()).toMatch('23.1')
 })
 
-test('CmkFormFloat checks validators', async () => {
-  render(CmkFormFloat, {
+test('FormFloat checks validators', async () => {
+  render(FormFloat, {
     props: {
       spec,
       data: 42.5,
@@ -64,8 +64,8 @@ test('CmkFormFloat checks validators', async () => {
   screen.getByText('Value must be between 1 and 100')
 })
 
-test('CmkFormFloat renders backend validation messages', async () => {
-  render(CmkFormFloat, {
+test('FormFloat renders backend validation messages', async () => {
+  render(FormFloat, {
     props: {
       spec,
       data: 42.0,

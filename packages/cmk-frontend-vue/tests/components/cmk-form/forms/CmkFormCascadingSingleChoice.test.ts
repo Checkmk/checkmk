@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
 import type * as FormSpec from '@/vue_formspec_components'
-import CmkFormCascadingSingleChoice from '@/components/cmk-form/container/CmkFormCascadingSingleChoice.vue'
+import FormCascadingSingleChoice from '@/components/cmk-form/forms/FormCascadingSingleChoice.vue'
 import { renderFormWithData } from '../cmk-form-helper'
 
 const stringValidators: FormSpec.Validator[] = [
@@ -52,7 +52,7 @@ const spec: FormSpec.CascadingSingleChoice = {
   ]
 }
 
-test('CmkFormCascadingSingleChoice displays data', () => {
+test('FormCascadingSingleChoice displays data', () => {
   const { getCurrentData } = renderFormWithData({
     spec,
     data: ['stringChoice', 'some_value'],
@@ -68,7 +68,7 @@ test('CmkFormCascadingSingleChoice displays data', () => {
   expect(getCurrentData()).toMatch('["stringChoice","some_value"]')
 })
 
-test('CmkFormDictionary updates data', async () => {
+test('FormDictionary updates data', async () => {
   const { getCurrentData } = renderFormWithData({
     spec,
     data: ['stringChoice', 'some_value'],
@@ -81,7 +81,7 @@ test('CmkFormDictionary updates data', async () => {
   expect(getCurrentData()).toMatch('["stringChoice","other_value"]')
 })
 
-test('CmkFormCascadingSingleChoice sets default on switch', async () => {
+test('FormCascadingSingleChoice sets default on switch', async () => {
   const { getCurrentData } = renderFormWithData({
     spec,
     data: ['stringChoice', 'some_value'],
@@ -99,8 +99,8 @@ test('CmkFormCascadingSingleChoice sets default on switch', async () => {
   expect(getCurrentData()).toMatch('["integerChoice",5]')
 })
 
-test('CmkFormCascadingSingleChoice checks validators', async () => {
-  render(CmkFormCascadingSingleChoice, {
+test('FormCascadingSingleChoice checks validators', async () => {
+  render(FormCascadingSingleChoice, {
     props: {
       spec,
       data: ['stringChoice', 'some_value'],
@@ -114,8 +114,8 @@ test('CmkFormCascadingSingleChoice checks validators', async () => {
   screen.getByText('String length must be between 1 and 20')
 })
 
-test('CmkFormCascadingSingleChoice renders backend validation messages', async () => {
-  render(CmkFormCascadingSingleChoice, {
+test('FormCascadingSingleChoice renders backend validation messages', async () => {
+  render(FormCascadingSingleChoice, {
     props: {
       spec,
       data: ['stringChoice', 'some_value'],

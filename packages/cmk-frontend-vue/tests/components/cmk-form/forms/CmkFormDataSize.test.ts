@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/vue'
 import type * as FormSpec from '@/vue_formspec_components'
-import CmkFormDataSize from '@/components/cmk-form/element/CmkFormDataSize.vue'
+import FormDataSize from '@/components/cmk-form/forms/FormDataSize.vue'
 
 const spec: FormSpec.DataSize = {
   type: 'data_size',
@@ -12,8 +12,8 @@ const spec: FormSpec.DataSize = {
   input_hint: 'fooInputHint'
 }
 
-test('CmkFormDataSize renders value', () => {
-  render(CmkFormDataSize, {
+test('FormDataSize renders value', () => {
+  render(FormDataSize, {
     props: {
       spec,
       data: ['42', 'mag_bar'],

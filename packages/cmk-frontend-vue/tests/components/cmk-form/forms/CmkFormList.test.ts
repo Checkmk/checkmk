@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
-import CmkFormList from '@/components/cmk-form/container/CmkFormList.vue'
+import FormList from '@/components/cmk-form/forms/FormList.vue'
 import type * as FormSpec from '@/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
 
@@ -33,8 +33,8 @@ const spec: FormSpec.List = {
   no_element_label: 'No element'
 }
 
-test('CmkFormList renders backend validation messages', async () => {
-  render(CmkFormList, {
+test('FormList renders backend validation messages', async () => {
+  render(FormList, {
     props: {
       spec,
       data: [],
@@ -45,8 +45,8 @@ test('CmkFormList renders backend validation messages', async () => {
   screen.getByText('Backend error message')
 })
 
-test.skip('CmkFormList updated backend child validation shows validation error', async () => {
-  const { rerender } = render(CmkFormList, {
+test.skip('FormList updated backend child validation shows validation error', async () => {
+  const { rerender } = render(FormList, {
     props: {
       spec,
       data: ['some value'],
@@ -69,8 +69,8 @@ test.skip('CmkFormList updated backend child validation shows validation error',
   expect(textbox.value).toBe('other value')
 })
 
-test('CmkFormList local child validation overwrites backend validation', async () => {
-  render(CmkFormList, {
+test('FormList local child validation overwrites backend validation', async () => {
+  render(FormList, {
     props: {
       spec,
       data: ['some value'],
@@ -87,8 +87,8 @@ test('CmkFormList local child validation overwrites backend validation', async (
   expect(screen.queryByText('Backend error message')).toBeNull()
 })
 
-test('CmkFormList shows frontend validation on existing element', async () => {
-  render(CmkFormList, {
+test('FormList shows frontend validation on existing element', async () => {
+  render(FormList, {
     props: {
       spec,
       data: ['some_value'],
@@ -131,7 +131,7 @@ const listSpec: FormSpec.List = {
   no_element_label: 'No element'
 }
 
-test('CmkFormList adds two new elements and enters data', async () => {
+test('FormList adds two new elements and enters data', async () => {
   const { getCurrentData } = renderFormWithData({
     spec: listSpec,
     data: [],

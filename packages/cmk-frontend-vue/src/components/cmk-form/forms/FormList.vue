@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import CmkFormDispatcher from '@/components/cmk-form/CmkFormDispatcher.vue'
+import FormEdit from '@/components/cmk-form/FormEdit.vue'
 import type { List } from '@/vue_formspec_components'
 import { FormValidation } from '@/components/cmk-form'
 import { groupListValidations, validateValue, type ValidationMessages } from '@/lib/validation'
@@ -154,12 +154,12 @@ function sendDataUpstream() {
           </a>
         </td>
         <td class="vlof_content">
-          <CmkFormDispatcher
+          <FormEdit
             v-model:data="data[backendIndex]"
             :spec="spec.element_template"
             :backend-validation="elementValidation[backendIndex]!"
             @update:data="(new_value: unknown) => updateElementData(new_value, backendIndex)"
-          ></CmkFormDispatcher>
+          ></FormEdit>
         </td>
       </tr>
     </template>

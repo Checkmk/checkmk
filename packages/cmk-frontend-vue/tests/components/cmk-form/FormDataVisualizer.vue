@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import CmkFormDispatcher from '@/components/cmk-form/CmkFormDispatcher.vue'
+import FormEdit from '@/components/cmk-form/FormEdit.vue'
 import type { FormSpec } from '@/vue_formspec_components'
 import type { ValidationMessages } from '@/lib/validation'
 
@@ -12,6 +12,6 @@ const data = defineModel<unknown>('data', { required: true })
 </script>
 
 <template>
-  <CmkFormDispatcher v-model:data="data" :spec="spec" :backend-validation="backendValidation" />
+  <FormEdit v-model:data="data" :spec="spec" :backend-validation="backendValidation" />
   <pre data-testid="test-data">{{ JSON.stringify(data) }}</pre>
 </template>

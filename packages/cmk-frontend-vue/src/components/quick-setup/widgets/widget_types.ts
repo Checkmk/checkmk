@@ -11,7 +11,7 @@ export interface FormSpecRecapWidgetProps {
 }
 
 export interface FormSpecWidgetProps {
-  /** @property {object} form_spec - Form Spec data for the CmkForm wrapper */
+  /** @property {object} form_spec - Form Spec data for the Form wrapper */
   form_spec: {
     /** @property {string} id - Id of the form_spec */
     id: string

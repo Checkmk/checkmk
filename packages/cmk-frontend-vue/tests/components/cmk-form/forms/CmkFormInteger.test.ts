@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
-import CmkFormInteger from '@/components/cmk-form/element/CmkFormInteger.vue'
+import FormInteger from '@/components/cmk-form/forms/FormInteger.vue'
 import type * as FormSpec from '@/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
 
@@ -22,8 +22,8 @@ const spec: FormSpec.Integer = {
   input_hint: 'fooInputHint'
 }
 
-test('CmkFormInteger renders value', () => {
-  render(CmkFormInteger, {
+test('FormInteger renders value', () => {
+  render(FormInteger, {
     props: {
       spec,
       data: 42,
@@ -35,7 +35,7 @@ test('CmkFormInteger renders value', () => {
   expect(element.value).toBe('42')
 })
 
-test('CmkFormInteger updates data', async () => {
+test('FormInteger updates data', async () => {
   const { getCurrentData: currentData } = renderFormWithData({
     spec,
     data: 42,
@@ -48,8 +48,8 @@ test('CmkFormInteger updates data', async () => {
   expect(currentData()).toBe('23')
 })
 
-test('CmkFormInteger checks validators', async () => {
-  render(CmkFormInteger, {
+test('FormInteger checks validators', async () => {
+  render(FormInteger, {
     props: {
       spec,
       data: 42,
@@ -63,8 +63,8 @@ test('CmkFormInteger checks validators', async () => {
   screen.getByText('Value must be between 1 and 100')
 })
 
-test('CmkFormInteger renders backend validation messages', async () => {
-  render(CmkFormInteger, {
+test('FormInteger renders backend validation messages', async () => {
+  render(FormInteger, {
     props: {
       spec,
       data: 42,

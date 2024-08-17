@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
-import CmkFormString from '@/components/cmk-form/element/CmkFormString.vue'
+import FormString from '@/components/cmk-form/forms/FormString.vue'
 import type * as FormSpec from '@/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
 
@@ -20,8 +20,8 @@ const spec: FormSpec.String = {
   input_hint: 'fooInputHint'
 }
 
-test('CmkFormString renders value', () => {
-  render(CmkFormString, {
+test('FormString renders value', () => {
+  render(FormString, {
     props: {
       spec,
       data: 'fooData',
@@ -34,7 +34,7 @@ test('CmkFormString renders value', () => {
   expect(element.value).toBe('fooData')
 })
 
-test('CmkFormString updates data', async () => {
+test('FormString updates data', async () => {
   const { getCurrentData } = renderFormWithData({
     spec,
     data: 'fooData',
@@ -47,8 +47,8 @@ test('CmkFormString updates data', async () => {
   expect(getCurrentData()).toBe('"some_other_value"')
 })
 
-test('CmkFormString checks validators', async () => {
-  render(CmkFormString, {
+test('FormString checks validators', async () => {
+  render(FormString, {
     props: {
       spec,
       data: 'fooData',
@@ -62,8 +62,8 @@ test('CmkFormString checks validators', async () => {
   screen.getByText('String length must be between 1 and 20')
 })
 
-test('CmkFormString renders backend validation messages', async () => {
-  render(CmkFormString, {
+test('FormString renders backend validation messages', async () => {
+  render(FormString, {
     props: {
       spec,
       data: 'fooData',

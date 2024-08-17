@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import CmkFormDispatcher from './CmkFormDispatcher.vue'
+import FormEdit from './FormEdit.vue'
 import type { FormSpec } from '@/vue_formspec_components'
 import type { ValidationMessages } from '@/lib/validation'
-import CmkFormReadonly from '@/components/cmk-form/CmkFormReadonly.vue'
+import FormReadonly from '@/components/cmk-form/FormReadonly.vue'
 
 const props = defineProps<{
   id: string
@@ -42,18 +42,18 @@ function toggleActiveMode() {
     >{{ activeMode }}</label
   >
   <div v-if="activeMode === 'readonly' || activeMode === 'both'">
-    <CmkFormReadonly
+    <FormReadonly
       v-model:data="data"
       :backend-validation="backendValidation"
       :spec="spec"
-    ></CmkFormReadonly>
+    ></FormReadonly>
   </div>
 
   <div v-if="activeMode === 'edit' || activeMode === 'both'">
     <table class="nform">
       <tr>
         <td>
-          <CmkFormDispatcher
+          <FormEdit
             v-model:data="data"
             :v-if="renderMode === 'edit' || renderMode === 'both'"
             :backend-validation="backendValidation"

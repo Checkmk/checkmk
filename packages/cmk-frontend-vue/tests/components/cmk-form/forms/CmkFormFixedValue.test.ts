@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/vue'
 import type * as FormSpec from '@/vue_formspec_components'
-import CmkFormFixedValue from '@/components/cmk-form/element/CmkFormFixedValue.vue'
+import FormFixedValue from '@/components/cmk-form/forms/FormFixedValue.vue'
 
 function getFixedValue(withLabel = false): FormSpec.FixedValue {
   return {
@@ -13,9 +13,9 @@ function getFixedValue(withLabel = false): FormSpec.FixedValue {
   }
 }
 
-test('CmkFormFixedValue renders value', () => {
+test('FormFixedValue renders value', () => {
   const spec = getFixedValue(false)
-  render(CmkFormFixedValue, {
+  render(FormFixedValue, {
     props: {
       spec,
       data: 0,
@@ -26,9 +26,9 @@ test('CmkFormFixedValue renders value', () => {
   screen.getByText('42')
 })
 
-test('CmkFormFixedValue renders label', () => {
+test('FormFixedValue renders label', () => {
   const spec = getFixedValue(true)
-  render(CmkFormFixedValue, {
+  render(FormFixedValue, {
     props: {
       spec,
       data: 0,
@@ -39,9 +39,9 @@ test('CmkFormFixedValue renders label', () => {
   screen.getByText('fooLabel')
 })
 
-test('CmkFormFixedValue renders label, with nonsense data', () => {
+test('FormFixedValue renders label, with nonsense data', () => {
   const spec = getFixedValue(true)
-  render(CmkFormFixedValue, {
+  render(FormFixedValue, {
     props: {
       spec,
       data: 'blabla nonsense',

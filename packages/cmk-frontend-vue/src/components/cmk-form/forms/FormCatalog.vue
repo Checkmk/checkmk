@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { type ValidationMessages } from '@/lib/validation'
 import type { Catalog, Dictionary, FormSpec, Topic } from '@/vue_formspec_components'
-import CmkFormDispatcher from '@/components/cmk-form/CmkFormDispatcher.vue'
+import FormEdit from '@/components/cmk-form/FormEdit.vue'
 import { onBeforeMount, ref } from 'vue'
 
 const props = defineProps<{
@@ -106,7 +106,7 @@ function entriesForTopic(topic: Topic) {
           </div>
         </td>
         <td class="content">
-          <CmkFormDispatcher
+          <FormEdit
             v-model:data="(data[topic.key]! as Record<string, object>)[entry.ident]!"
             :backend-validation="backendValidation"
             :spec="entry.form"

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { type FormSpecWidgetProps } from './widget_types'
-import CmkFormReadonly from '@/components/cmk-form/CmkFormReadonly.vue'
+import FormReadonly from '@/components/cmk-form/FormReadonly.vue'
 
 defineProps<FormSpecWidgetProps>()
 </script>
@@ -9,7 +9,7 @@ defineProps<FormSpecWidgetProps>()
   <table class="nform">
     <tr>
       <td>
-        <CmkFormReadonly :data="form_spec.data" :spec="form_spec.spec" :backend-validation="[]" />
+        <FormReadonly :data="form_spec.data" :spec="form_spec.spec" :backend-validation="[]" />
       </td>
     </tr>
   </table>

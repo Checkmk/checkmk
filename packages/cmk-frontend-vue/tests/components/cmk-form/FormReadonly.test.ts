@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/vue'
 import type * as FormSpec from '@/vue_formspec_components'
-import CmkFormReadonly from '@/components/cmk-form/CmkFormReadonly.vue'
+import FormReadonly from '@/components/cmk-form/FormReadonly.vue'
 
 function getSpec(specType: 'integer' | 'float'): FormSpec.Integer | FormSpec.Float {
   return {
@@ -14,8 +14,8 @@ function getSpec(specType: 'integer' | 'float'): FormSpec.Integer | FormSpec.Flo
   }
 }
 
-test('CmkFormReadonly renders integer', () => {
-  render(CmkFormReadonly, {
+test('FormReadonly renders integer', () => {
+  render(FormReadonly, {
     props: {
       spec: getSpec('integer'),
       data: 42,
@@ -25,8 +25,8 @@ test('CmkFormReadonly renders integer', () => {
   screen.getByText('42')
 })
 
-test('CmkFormReadonly renders float', () => {
-  render(CmkFormReadonly, {
+test('FormReadonly renders float', () => {
+  render(FormReadonly, {
     props: {
       spec: getSpec('float'),
       data: 42.23,
@@ -44,8 +44,8 @@ const stringFormSpec: FormSpec.String = {
   input_hint: ''
 }
 
-test('CmkFormReadonly renders string', () => {
-  render(CmkFormReadonly, {
+test('FormReadonly renders string', () => {
+  render(FormReadonly, {
     props: {
       spec: stringFormSpec,
       data: 'foo',
@@ -71,8 +71,8 @@ const dictionaryFormSpec: FormSpec.Dictionary = {
   ]
 }
 
-test('CmkFormReadonly renders dictionary', () => {
-  render(CmkFormReadonly, {
+test('FormReadonly renders dictionary', () => {
+  render(FormReadonly, {
     props: {
       spec: dictionaryFormSpec,
       backendValidation: [],
@@ -82,8 +82,8 @@ test('CmkFormReadonly renders dictionary', () => {
   screen.getByText('baz')
 })
 
-test('CmkFormReadonly renders dictionary with default value', () => {
-  render(CmkFormReadonly, {
+test('FormReadonly renders dictionary with default value', () => {
+  render(FormReadonly, {
     props: {
       spec: dictionaryFormSpec,
       backendValidation: [],
@@ -108,8 +108,8 @@ const singleChoiceFormSpec: FormSpec.SingleChoice = {
   validators: []
 }
 
-test('CmkFormReadonly renders single_choice', () => {
-  render(CmkFormReadonly, {
+test('FormReadonly renders single_choice', () => {
+  render(FormReadonly, {
     props: {
       spec: singleChoiceFormSpec,
       backendValidation: [],
@@ -133,8 +133,8 @@ const listFormSpec: FormSpec.List = {
   no_element_label: 'No element'
 }
 
-test('CmkFormReadonly renders list', () => {
-  render(CmkFormReadonly, {
+test('FormReadonly renders list', () => {
+  render(FormReadonly, {
     props: {
       spec: listFormSpec,
       backendValidation: [],
@@ -168,8 +168,8 @@ const cascadingSingleChoiceFormSpec: FormSpec.CascadingSingleChoice = {
   ]
 }
 
-test('CmkFormReadonly renders cascading/string, 1st choice', () => {
-  render(CmkFormReadonly, {
+test('FormReadonly renders cascading/string, 1st choice', () => {
+  render(FormReadonly, {
     props: {
       spec: cascadingSingleChoiceFormSpec,
       backendValidation: [],
@@ -184,8 +184,8 @@ test('CmkFormReadonly renders cascading/string, 1st choice', () => {
   screen.getByText('baz')
 })
 
-test('CmkFormReadonly renders cascading/integer, 2nd choice', () => {
-  render(CmkFormReadonly, {
+test('FormReadonly renders cascading/integer, 2nd choice', () => {
+  render(FormReadonly, {
     props: {
       spec: cascadingSingleChoiceFormSpec,
       backendValidation: [],
@@ -209,8 +209,8 @@ const booleanChoiceFormSpec: FormSpec.BooleanChoice = {
   validators: []
 }
 
-test('CmkFormReadonly renders boolean: on', () => {
-  render(CmkFormReadonly, {
+test('FormReadonly renders boolean: on', () => {
+  render(FormReadonly, {
     props: {
       spec: booleanChoiceFormSpec,
       backendValidation: [],
@@ -221,8 +221,8 @@ test('CmkFormReadonly renders boolean: on', () => {
   screen.getByText('on')
 })
 
-test('CmkFormReadonly renders boolean: off', () => {
-  render(CmkFormReadonly, {
+test('FormReadonly renders boolean: off', () => {
+  render(FormReadonly, {
     props: {
       spec: booleanChoiceFormSpec,
       backendValidation: [],
@@ -239,8 +239,8 @@ const multilineTextFormSpec: FormSpec.MultilineText = {
   help: 'fooHelp',
   validators: []
 }
-test('CmkFormReadonly renders multiline_text', () => {
-  render(CmkFormReadonly, {
+test('FormReadonly renders multiline_text', () => {
+  render(FormReadonly, {
     props: {
       spec: multilineTextFormSpec,
       backendValidation: [],

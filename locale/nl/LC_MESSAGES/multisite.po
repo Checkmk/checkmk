@@ -6244,6 +6244,14 @@ msgstr "Analyseren van gastheer patronen"
 msgid "Analyze patterns"
 msgstr "Patronen analyseren"
 
+#, fuzzy
+msgid "Analyze recent notifications"
+msgstr "laatste mededeling"
+
+#, fuzzy
+msgid "Analyze recent notifications with your current ruleset"
+msgstr "Maak een kopie van deze notificatieregel"
+
 msgid "Analyze ruleset with this notification"
 msgstr "Analyseer regelset met deze melding"
 
@@ -27058,14 +27066,8 @@ msgstr "Plaats %s"
 msgid "Hide Checkmk version"
 msgstr "Verberg Checkmk versie"
 
-msgid "Hide analysis"
-msgstr "Verberg analyse"
-
 msgid "Hide annotation in report"
 msgstr "Verberg annotatie in rapport"
-
-msgid "Hide bulks"
-msgstr "Verberg bulken"
 
 msgid "Hide folders without read permissions"
 msgstr "Verberg mappen zonder leesrechten"
@@ -27091,6 +27093,10 @@ msgstr "Interne mapnamen in WATO verbergen"
 
 msgid "Hide names of configuration variables"
 msgstr "Verberg namen van configuratievariabelen"
+
+#, fuzzy
+msgid "Hide notification bulks"
+msgstr "kennisgevingsregel"
 
 msgid "Hide response from socket"
 msgstr "Verberg antwoord van socket"
@@ -46980,8 +46986,8 @@ msgstr "Fase 2.3: Configuratie bijwerken"
 msgid "Phase 2.4: Activating changes"
 msgstr "Fase 2.4: Activeren van veranderingen"
 
-#, fuzzy
-msgid "Phase 2: Deliver piggyback hosts"
+#, fuzzy, python-format
+msgid "Phase 2: Deliver %s piggyback hosts"
 msgstr "Voorvoegsel voor piggyback hostname"
 
 msgid "Phase Number"
@@ -47846,10 +47852,6 @@ msgstr "Plugin uitgang"
 #, fuzzy
 msgid "Plug-in output in case of absent updates"
 msgstr "Plugin uitvoer in geval van afwezige updates"
-
-#, fuzzy
-msgid "Plug-in parameters"
-msgstr "Plugin parameters"
 
 #, fuzzy
 msgid "Plug-ins directory"
@@ -51773,6 +51775,10 @@ msgid "Rule efficiency"
 msgstr "Regel efficiëntie"
 
 #, fuzzy
+msgid "Rule evaluation by the notification module"
+msgstr "Gebruik pluggable authenticatie module"
+
+#, fuzzy
 msgid "Rule evaluations"
 msgstr "Regel evaluaties"
 
@@ -55172,15 +55178,9 @@ msgstr "Toon alle regels"
 msgid "Show all topics"
 msgstr "Toon alle onderwerpen"
 
-msgid "Show analysis"
-msgstr "Analyse tonen"
-
 #, fuzzy
 msgid "Show bar visualization"
 msgstr "BI-visualisatie"
-
-msgid "Show bulks"
-msgstr "Bulken tonen"
 
 msgid "Show check parameters"
 msgstr "Toon controleparameters"
@@ -55331,6 +55331,10 @@ msgstr "Toon meer"
 
 msgid "Show more / Show less"
 msgstr "Toon meer / Toon minder"
+
+#, fuzzy
+msgid "Show notification bulks"
+msgstr "kennisgevingsregel"
 
 msgid "Show number of groups"
 msgstr "Toon aantal groepen"
@@ -84223,6 +84227,22 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Hide analysis"
+#~ msgstr "Verberg analyse"
+
+#~ msgid "Hide bulks"
+#~ msgstr "Verberg bulken"
+
+#, fuzzy
+#~ msgid "Plug-in parameters"
+#~ msgstr "Plugin parameters"
+
+#~ msgid "Show analysis"
+#~ msgstr "Analyse tonen"
+
+#~ msgid "Show bulks"
+#~ msgstr "Bulken tonen"
 
 #~ msgid ""
 #~ "You can specify a separate monitoring state for each possible combination "

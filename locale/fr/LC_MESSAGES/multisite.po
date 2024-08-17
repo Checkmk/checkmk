@@ -6302,6 +6302,13 @@ msgstr "Analyser les modèles d'hôtes"
 msgid "Analyze patterns"
 msgstr "Analyser les modèles"
 
+#, fuzzy
+msgid "Analyze recent notifications"
+msgstr "dernière notification"
+
+msgid "Analyze recent notifications with your current ruleset"
+msgstr ""
+
 msgid "Analyze ruleset with this notification"
 msgstr "Analyser le jeu de règles avec cette notification"
 
@@ -27316,14 +27323,8 @@ msgstr "Site %s"
 msgid "Hide Checkmk version"
 msgstr "Cacher la version de Checkmk"
 
-msgid "Hide analysis"
-msgstr "Cacher l'analyse"
-
 msgid "Hide annotation in report"
 msgstr "Masquer l'annotation dans le rapport"
-
-msgid "Hide bulks"
-msgstr "Cachez les vracs"
 
 msgid "Hide folders without read permissions"
 msgstr "Masquer les dossiers sans droits de lecture"
@@ -27349,6 +27350,10 @@ msgstr "Masquer les noms de dossiers internes dans WATO"
 
 msgid "Hide names of configuration variables"
 msgstr "Cacher les noms des variables de configuration"
+
+#, fuzzy
+msgid "Hide notification bulks"
+msgstr "règle de notification"
 
 msgid "Hide response from socket"
 msgstr "Cacher la réponse du socket"
@@ -47388,8 +47393,8 @@ msgstr "Phase 2.3 : Mise à jour de la configuration"
 msgid "Phase 2.4: Activating changes"
 msgstr "Phase 2.4 : Activation des changements"
 
-#, fuzzy
-msgid "Phase 2: Deliver piggyback hosts"
+#, fuzzy, python-format
+msgid "Phase 2: Deliver %s piggyback hosts"
 msgstr "Préfixe pour le nom d'hôte de ferroutage"
 
 msgid "Phase Number"
@@ -48277,10 +48282,6 @@ msgstr "Sortie du plugin"
 #, fuzzy
 msgid "Plug-in output in case of absent updates"
 msgstr "Sortie du plugin en cas d'absence de mise à jour"
-
-#, fuzzy
-msgid "Plug-in parameters"
-msgstr "Paramètres du plugin"
 
 #, fuzzy
 msgid "Plug-ins directory"
@@ -52255,6 +52256,10 @@ msgid "Rule efficiency"
 msgstr "Efficacité de la règle"
 
 #, fuzzy
+msgid "Rule evaluation by the notification module"
+msgstr "Utiliser le module d'authentification enfichable"
+
+#, fuzzy
 msgid "Rule evaluations"
 msgstr "Évaluations des règles"
 
@@ -55699,15 +55704,9 @@ msgstr "Afficher toutes les règles"
 msgid "Show all topics"
 msgstr "Afficher tous les sujets"
 
-msgid "Show analysis"
-msgstr "Montrer l'analyse"
-
 #, fuzzy
 msgid "Show bar visualization"
 msgstr "Visualisation de la BI"
-
-msgid "Show bulks"
-msgstr "Montrer les bulks"
 
 msgid "Show check parameters"
 msgstr "Afficher les paramètres de contrôle"
@@ -55862,6 +55861,10 @@ msgstr "Afficher plus"
 
 msgid "Show more / Show less"
 msgstr "Afficher plus / Afficher moins"
+
+#, fuzzy
+msgid "Show notification bulks"
+msgstr "règle de notification"
 
 msgid "Show number of groups"
 msgstr "Afficher le nombre de groupes"
@@ -85075,6 +85078,22 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tous droits réservés."
+
+#~ msgid "Hide analysis"
+#~ msgstr "Cacher l'analyse"
+
+#~ msgid "Hide bulks"
+#~ msgstr "Cachez les vracs"
+
+#, fuzzy
+#~ msgid "Plug-in parameters"
+#~ msgstr "Paramètres du plugin"
+
+#~ msgid "Show analysis"
+#~ msgstr "Montrer l'analyse"
+
+#~ msgid "Show bulks"
+#~ msgstr "Montrer les bulks"
 
 #~ msgid ""
 #~ "You can specify a separate monitoring state for each possible combination "

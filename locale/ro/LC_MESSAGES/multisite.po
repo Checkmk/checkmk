@@ -6249,6 +6249,15 @@ msgstr "Analizați modelele de gazde"
 msgid "Analyze patterns"
 msgstr "Analizați modelele"
 
+#, fuzzy
+msgid "Analyze recent notifications"
+msgstr "Analiză: Notificări recente"
+
+#, fuzzy
+msgid "Analyze recent notifications with your current ruleset"
+msgstr ""
+"Testați o notificare definită de dumneavoastră în funcție de setul de reguli."
+
 msgid "Analyze ruleset with this notification"
 msgstr "Analizează setul de reguli cu această notificare"
 
@@ -27081,14 +27090,8 @@ msgstr "Ascundeți"
 msgid "Hide Checkmk version"
 msgstr "Ascundeți versiunea Checkmk"
 
-msgid "Hide analysis"
-msgstr "Ascundeți analiza"
-
 msgid "Hide annotation in report"
 msgstr "Ascundeți adnotarea în raport"
-
-msgid "Hide bulks"
-msgstr "Ascundeți bulgări"
 
 msgid "Hide folders without read permissions"
 msgstr "Ascundeți folderele fără permisiuni de citire"
@@ -27113,6 +27116,10 @@ msgstr "Ascundeți numele dosarelor interne în Configurare"
 
 msgid "Hide names of configuration variables"
 msgstr "Ascundeți numele variabilelor de configurare"
+
+#, fuzzy
+msgid "Hide notification bulks"
+msgstr "reguli de notificare"
 
 msgid "Hide response from socket"
 msgstr "Ascundeți răspunsul de la soclu"
@@ -47015,8 +47022,8 @@ msgstr "Faza 2.3: Actualizarea configurației"
 msgid "Phase 2.4: Activating changes"
 msgstr "Faza 2.4: Activarea schimbărilor"
 
-#, fuzzy
-msgid "Phase 2: Deliver piggyback hosts"
+#, fuzzy, python-format
+msgid "Phase 2: Deliver %s piggyback hosts"
 msgstr "Prefix pentru numele de gazdă piggyback"
 
 msgid "Phase Number"
@@ -47903,10 +47910,6 @@ msgstr "Ieșirea plugin-ului"
 #, fuzzy
 msgid "Plug-in output in case of absent updates"
 msgstr "Ieșirea plugin-ului în cazul unor actualizări absente"
-
-#, fuzzy
-msgid "Plug-in parameters"
-msgstr "Parametrii plugin-ului"
 
 #, fuzzy
 msgid "Plug-ins directory"
@@ -51822,6 +51825,10 @@ msgstr "Editor de reguli"
 msgid "Rule efficiency"
 msgstr "Eficiența regulilor"
 
+#, fuzzy
+msgid "Rule evaluation by the notification module"
+msgstr "Utilizați modulul de autentificare conectabil"
+
 msgid "Rule evaluations"
 msgstr "Evaluări ale regulilor"
 
@@ -55283,14 +55290,8 @@ msgstr "Afișați toate regulile"
 msgid "Show all topics"
 msgstr "Afișați toate subiectele"
 
-msgid "Show analysis"
-msgstr "Arată analiza"
-
 msgid "Show bar visualization"
 msgstr "Afișați vizualizarea barei"
-
-msgid "Show bulks"
-msgstr "Arată bulgări"
 
 msgid "Show check parameters"
 msgstr "Afișarea parametrilor de verificare"
@@ -55442,6 +55443,10 @@ msgstr "Arată mai mult"
 
 msgid "Show more / Show less"
 msgstr "Arată mai mult / Arată mai puțin"
+
+#, fuzzy
+msgid "Show notification bulks"
+msgstr "reguli de notificare"
 
 msgid "Show number of groups"
 msgstr "Afișați numărul de grupuri"
@@ -84368,6 +84373,22 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "Hide analysis"
+#~ msgstr "Ascundeți analiza"
+
+#~ msgid "Hide bulks"
+#~ msgstr "Ascundeți bulgări"
+
+#, fuzzy
+#~ msgid "Plug-in parameters"
+#~ msgstr "Parametrii plugin-ului"
+
+#~ msgid "Show analysis"
+#~ msgstr "Arată analiza"
+
+#~ msgid "Show bulks"
+#~ msgstr "Arată bulgări"
 
 #~ msgid ""
 #~ "You can specify a separate monitoring state for each possible combination "

@@ -6202,6 +6202,14 @@ msgstr "Analizzare i modelli di host"
 msgid "Analyze patterns"
 msgstr "Analizzare i modelli"
 
+#, fuzzy
+msgid "Analyze recent notifications"
+msgstr "Analisi: Notifiche recenti"
+
+#, fuzzy
+msgid "Analyze recent notifications with your current ruleset"
+msgstr "Testate una notifica autodefinita rispetto al vostro set di regole."
+
 msgid "Analyze ruleset with this notification"
 msgstr "Analizzare il set di regole con questa notifica"
 
@@ -26817,14 +26825,8 @@ msgstr "Nascondere"
 msgid "Hide Checkmk version"
 msgstr "Nascondi versione Checkmk"
 
-msgid "Hide analysis"
-msgstr "Nascondere l'analisi"
-
 msgid "Hide annotation in report"
 msgstr "Nascondere l'annotazione nel rapporto"
-
-msgid "Hide bulks"
-msgstr "Nascondere gli ammassi"
 
 msgid "Hide folders without read permissions"
 msgstr "Nascondere le cartelle senza permessi di lettura"
@@ -26849,6 +26851,10 @@ msgstr "Nascondere i nomi delle cartelle interne in Setup"
 
 msgid "Hide names of configuration variables"
 msgstr "Nascondere i nomi delle variabili di configurazione"
+
+#, fuzzy
+msgid "Hide notification bulks"
+msgstr "regole di notifica"
 
 msgid "Hide response from socket"
 msgstr "Nascondere la risposta dalla presa"
@@ -46556,8 +46562,8 @@ msgstr "Fase 2.3: Aggiornamento della configurazione"
 msgid "Phase 2.4: Activating changes"
 msgstr "Fase 2.4: Attivare i cambiamenti"
 
-#, fuzzy
-msgid "Phase 2: Deliver piggyback hosts"
+#, fuzzy, python-format
+msgid "Phase 2: Deliver %s piggyback hosts"
 msgstr "Prefisso per l'hostname piggyback"
 
 msgid "Phase Number"
@@ -47421,10 +47427,6 @@ msgstr "Uscita del plugin"
 #, fuzzy
 msgid "Plug-in output in case of absent updates"
 msgstr "Uscita del plugin in caso di aggiornamenti assenti"
-
-#, fuzzy
-msgid "Plug-in parameters"
-msgstr "Parametri del plugin"
 
 #, fuzzy
 msgid "Plug-ins directory"
@@ -51318,6 +51320,10 @@ msgstr "Editore di regole"
 msgid "Rule efficiency"
 msgstr "Efficienza delle regole"
 
+#, fuzzy
+msgid "Rule evaluation by the notification module"
+msgstr "Utilizzare il modulo di autenticazione collegabile"
+
 msgid "Rule evaluations"
 msgstr "Valutazioni delle regole"
 
@@ -54687,14 +54693,8 @@ msgstr "Mostra tutte le regole"
 msgid "Show all topics"
 msgstr "Mostra tutti gli argomenti"
 
-msgid "Show analysis"
-msgstr "Mostra analisi"
-
 msgid "Show bar visualization"
 msgstr "Mostra la visualizzazione delle barre"
-
-msgid "Show bulks"
-msgstr "Mostrare le masse"
 
 msgid "Show check parameters"
 msgstr "Mostra i parametri di controllo"
@@ -54844,6 +54844,10 @@ msgstr "Mostra di più"
 
 msgid "Show more / Show less"
 msgstr "Mostra di più / Mostra di meno"
+
+#, fuzzy
+msgid "Show notification bulks"
+msgstr "regole di notifica"
 
 msgid "Show number of groups"
 msgstr "Mostra il numero di gruppi"
@@ -83449,6 +83453,22 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
+
+#~ msgid "Hide analysis"
+#~ msgstr "Nascondere l'analisi"
+
+#~ msgid "Hide bulks"
+#~ msgstr "Nascondere gli ammassi"
+
+#, fuzzy
+#~ msgid "Plug-in parameters"
+#~ msgstr "Parametri del plugin"
+
+#~ msgid "Show analysis"
+#~ msgstr "Mostra analisi"
+
+#~ msgid "Show bulks"
+#~ msgstr "Mostrare le masse"
 
 #~ msgid ""
 #~ "You can specify a separate monitoring state for each possible combination "

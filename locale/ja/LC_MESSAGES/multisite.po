@@ -5950,6 +5950,14 @@ msgstr "ホストパターンを分析する"
 msgid "Analyze patterns"
 msgstr "パターンを分析する"
 
+#, fuzzy
+msgid "Analyze recent notifications"
+msgstr "分析: 最近の通知"
+
+#, fuzzy
+msgid "Analyze recent notifications with your current ruleset"
+msgstr "ルールセットに対して自分で定義した通知をテストする。"
+
 msgid "Analyze ruleset with this notification"
 msgstr "この通知でルールセットを分析する"
 
@@ -25980,14 +25988,8 @@ msgstr "サイト %s"
 msgid "Hide Checkmk version"
 msgstr "Checkmkバージョンを非表示"
 
-msgid "Hide analysis"
-msgstr "分析を隠す"
-
 msgid "Hide annotation in report"
 msgstr "レポートで注釈を非表示にする"
-
-msgid "Hide bulks"
-msgstr "バルクを非表示"
 
 msgid "Hide folders without read permissions"
 msgstr "読み取り権限なしでフォルダを非表示にする"
@@ -26013,6 +26015,10 @@ msgstr "WATOで内部フォルダ名を非表示にする"
 
 msgid "Hide names of configuration variables"
 msgstr "構成変数の名前を非表示にする"
+
+#, fuzzy
+msgid "Hide notification bulks"
+msgstr "通知ルール"
 
 msgid "Hide response from socket"
 msgstr "ソケットからの応答を非表示"
@@ -45602,8 +45608,8 @@ msgstr "フェーズ2.3:構成の更新"
 msgid "Phase 2.4: Activating changes"
 msgstr "フェーズ2.4:変更のアクティブ化"
 
-#, fuzzy
-msgid "Phase 2: Deliver piggyback hosts"
+#, fuzzy, python-format
+msgid "Phase 2: Deliver %s piggyback hosts"
 msgstr "ピギーバックホスト名のプレフィックス"
 
 msgid "Phase Number"
@@ -46450,10 +46456,6 @@ msgstr "プラグイン出力"
 #, fuzzy
 msgid "Plug-in output in case of absent updates"
 msgstr "更新がない場合のプラグイン出力"
-
-#, fuzzy
-msgid "Plug-in parameters"
-msgstr "プラグインパラメータ"
 
 #, fuzzy
 msgid "Plug-ins directory"
@@ -50359,6 +50361,10 @@ msgid "Rule efficiency"
 msgstr "ルールの効率"
 
 #, fuzzy
+msgid "Rule evaluation by the notification module"
+msgstr "プラグ可能な認証モジュールを使用する"
+
+#, fuzzy
 msgid "Rule evaluations"
 msgstr "ルールの評価"
 
@@ -53715,15 +53721,9 @@ msgstr "すべてのルールを表示"
 msgid "Show all topics"
 msgstr "全てのトピックを表示"
 
-msgid "Show analysis"
-msgstr "分析を表示"
-
 #, fuzzy
 msgid "Show bar visualization"
 msgstr "BIの視覚化"
-
-msgid "Show bulks"
-msgstr "バルクを表示"
 
 msgid "Show check parameters"
 msgstr "チェックパラメータを表示する"
@@ -53873,6 +53873,10 @@ msgstr "もっと表示"
 
 msgid "Show more / Show less"
 msgstr "もっと表示/少なく表示"
+
+#, fuzzy
+msgid "Show notification bulks"
+msgstr "通知ルール"
 
 msgid "Show number of groups"
 msgstr "グループの数を表示する"
@@ -81989,6 +81993,22 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid "Hide analysis"
+#~ msgstr "分析を隠す"
+
+#~ msgid "Hide bulks"
+#~ msgstr "バルクを非表示"
+
+#, fuzzy
+#~ msgid "Plug-in parameters"
+#~ msgstr "プラグインパラメータ"
+
+#~ msgid "Show analysis"
+#~ msgstr "分析を表示"
+
+#~ msgid "Show bulks"
+#~ msgstr "バルクを表示"
 
 #~ msgid ""
 #~ "You can specify a separate monitoring state for each possible combination "

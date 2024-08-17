@@ -6107,6 +6107,15 @@ msgstr "Analysiere Host-Muster"
 msgid "Analyze patterns"
 msgstr "Analysiere Muster"
 
+#, fuzzy
+msgid "Analyze recent notifications"
+msgstr "Analyse: aktuellste Benachrichtigungen"
+
+#, fuzzy
+msgid "Analyze recent notifications with your current ruleset"
+msgstr ""
+"Testen Sie eine selbst definierte Benachrichtigung anhand Ihres Regelsatzes."
+
 msgid "Analyze ruleset with this notification"
 msgstr "Regelsatz mit dieser Benachrichtigung analysieren"
 
@@ -26251,14 +26260,8 @@ msgstr "Verbergen"
 msgid "Hide Checkmk version"
 msgstr "Die Checkmk-Version verbergen"
 
-msgid "Hide analysis"
-msgstr "Analyse ausblenden"
-
 msgid "Hide annotation in report"
 msgstr "Anmerkung im Bericht ausblenden"
-
-msgid "Hide bulks"
-msgstr "Sammelalarme ausblenden"
 
 msgid "Hide folders without read permissions"
 msgstr "Ordner ohne Leseberechtigung ausblenden"
@@ -26283,6 +26286,10 @@ msgstr "Interne Ordnernamen im Setup verstecken"
 
 msgid "Hide names of configuration variables"
 msgstr "Namen der Konfigurationsvariablen verstecken"
+
+#, fuzzy
+msgid "Hide notification bulks"
+msgstr "Benachrichtigungsregeln"
 
 msgid "Hide response from socket"
 msgstr "Antwort von Socket verstecken"
@@ -45151,8 +45158,8 @@ msgstr "Phase 2.3: Aktualisieren der Konfiguration"
 msgid "Phase 2.4: Activating changes"
 msgstr "Phase 2.4: Aktivierung der Änderungen"
 
-#, fuzzy
-msgid "Phase 2: Deliver piggyback hosts"
+#, fuzzy, python-format
+msgid "Phase 2: Deliver %s piggyback hosts"
 msgstr "Präfix für Piggyback-Host-Name"
 
 msgid "Phase Number"
@@ -46003,9 +46010,6 @@ msgstr "Plugin-Ausgabe"
 
 msgid "Plug-in output in case of absent updates"
 msgstr "Plugin-Ausgabe wenn keine Updates vorhanden sind"
-
-msgid "Plug-in parameters"
-msgstr "Plugin-Parameter"
 
 msgid "Plug-ins directory"
 msgstr "Plugin-Verzeichnis"
@@ -49794,6 +49798,10 @@ msgstr "Regel-Editor"
 msgid "Rule efficiency"
 msgstr "Regeleffizienz"
 
+#, fuzzy
+msgid "Rule evaluation by the notification module"
+msgstr "Einsteckbares Authentifizierungsmodul verwenden"
+
 msgid "Rule evaluations"
 msgstr "Regelauswertungen"
 
@@ -53102,14 +53110,8 @@ msgstr "Alle Regeln anzeigen"
 msgid "Show all topics"
 msgstr "Alle Themen anzeigen"
 
-msgid "Show analysis"
-msgstr "Analyse anzeigen"
-
 msgid "Show bar visualization"
 msgstr "Balkenansicht anzeigen"
-
-msgid "Show bulks"
-msgstr "Bulks anzeigen"
 
 msgid "Show check parameters"
 msgstr "Check-Parameter anzeigen"
@@ -53259,6 +53261,10 @@ msgstr "Mehr anzeigen"
 
 msgid "Show more / Show less"
 msgstr "Zeige mehr / Zeige weniger"
+
+#, fuzzy
+msgid "Show notification bulks"
+msgstr "Benachrichtigungsregeln"
 
 msgid "Show number of groups"
 msgstr "Anzahl der Gruppen anzeigen"
@@ -81515,6 +81521,21 @@ msgstr "{region} ({id_})"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Hide analysis"
+#~ msgstr "Analyse ausblenden"
+
+#~ msgid "Hide bulks"
+#~ msgstr "Sammelalarme ausblenden"
+
+#~ msgid "Plug-in parameters"
+#~ msgstr "Plugin-Parameter"
+
+#~ msgid "Show analysis"
+#~ msgstr "Analyse anzeigen"
+
+#~ msgid "Show bulks"
+#~ msgstr "Bulks anzeigen"
 
 #~ msgid ""
 #~ "You can specify a separate monitoring state for each possible combination "

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { ValidationMessages } from '@/lib/validation'
+import type { ValidationMessages } from '@/form/components/utils/validation'
 
 const props = defineProps<{
   validation: ValidationMessages

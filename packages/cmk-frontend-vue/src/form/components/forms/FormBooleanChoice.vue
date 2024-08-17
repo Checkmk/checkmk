@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { useValidation } from '@/form/components/utils/validation'
-import type { ValidationMessages } from '@/lib/validation'
+import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import type { BooleanChoice } from '@/vue_formspec_components'
 import FormValidation from '@/form/components/FormValidation.vue'
 

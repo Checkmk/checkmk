@@ -2,7 +2,10 @@
 import { onBeforeMount, ref, watch } from 'vue'
 import FormEdit from '../FormEdit.vue'
 import type { Dictionary, DictionaryElement } from '@/vue_formspec_components'
-import { groupDictionaryValidations, type ValidationMessages } from '@/lib/validation'
+import {
+  groupDictionaryValidations,
+  type ValidationMessages
+} from '@/form/components/utils/validation'
 
 interface ElementFromProps {
   dict_config: DictionaryElement

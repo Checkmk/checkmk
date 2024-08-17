@@ -1,5 +1,5 @@
-import type { ValidationMessages } from '@/lib/validation'
 import { type ComponentSpec } from './widgets/widget_types'
+import type { ValidationMessages } from '@/form'
 
 /**
  * Common stage structure

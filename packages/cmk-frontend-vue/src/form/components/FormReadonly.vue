@@ -17,7 +17,7 @@ import {
   groupDictionaryValidations,
   groupListValidations,
   type ValidationMessages
-} from '@/lib/validation'
+} from '@/form/components/utils/validation'
 
 const props = defineProps<{
   spec: FormSpec

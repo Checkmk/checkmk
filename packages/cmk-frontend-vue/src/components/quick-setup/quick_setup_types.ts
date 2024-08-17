@@ -1,5 +1,5 @@
 import type { ComponentSpec } from './widgets/widget_types'
-import type { ValidationMessages } from '@/lib/validation'
+import type { ValidationMessages } from '@/form'
 
 //Quick setup
 export interface QuickSetupSpec {

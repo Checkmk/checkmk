@@ -9,13 +9,13 @@ import FormCascadingSingleChoice from '@/form/components/forms/FormCascadingSing
 import FormList from '@/form/components/forms/FormList.vue'
 import FormLegacyValueSpec from '@/form/components/forms/FormLegacyValueSpec.vue'
 import type { IComponent } from '@/types'
-import type { ValidationMessages } from '@/lib/validation'
 import FormFixedValue from '@/form/components/forms/FormFixedValue.vue'
 import FormBooleanChoice from '@/form/components/forms/FormBooleanChoice.vue'
 import FormMultilineText from '@/form/components/forms/FormMultilineText.vue'
 import FormHelp from '@/form/components/FormHelp.vue'
 import FormDataSize from '@/form/components/forms/FormDataSize.vue'
 import FormCatalog from '@/form/components/forms/FormCatalog.vue'
+import type { ValidationMessages } from '@/form/components/utils/validation'
 
 const props = defineProps<{
   spec: FormSpec

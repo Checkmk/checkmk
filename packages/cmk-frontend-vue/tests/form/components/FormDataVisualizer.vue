@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import FormEdit from '@/form/components/FormEdit.vue'
 import type { FormSpec } from '@/vue_formspec_components'
-import type { ValidationMessages } from '@/lib/validation'
+import type { ValidationMessages } from '@/form/components/utils/validation'
 
 defineProps<{
   spec: FormSpec

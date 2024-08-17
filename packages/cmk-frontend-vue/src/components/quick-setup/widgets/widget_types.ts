@@ -1,6 +1,6 @@
 import type { FormSpec } from '@/vue_formspec_components'
 import { type StageData } from '../quick_setup_types'
-import type { ValidationMessages } from '@/lib/validation'
+import type { ValidationMessages } from '@/form'
 
 export interface FormSpecRecapWidgetProps {
   /** @property {string} id - Id of the form spec */

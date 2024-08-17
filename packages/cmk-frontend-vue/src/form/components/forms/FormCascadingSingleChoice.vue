@@ -6,8 +6,8 @@ import type {
   CascadingSingleChoiceElement,
   FormSpec
 } from '@/vue_formspec_components'
-import { validateValue, type ValidationMessages } from '@/lib/validation'
 import FormValidation from '@/form/components/FormValidation.vue'
+import { validateValue, type ValidationMessages } from '@/form/components/utils/validation'
 
 const props = defineProps<{
   spec: CascadingSingleChoice
@@ -102,8 +102,8 @@ const activeElement = computed((): ActiveElement | null => {
       <option v-for="element in spec.elements" :key="element.name" :value="element.name">
         {{ element.title }}
       </option>
-      <label v-if="$props.spec.label" :for="$componentId">{{ props.spec.label }}</label>
     </select>
+    <label v-if="$props.spec.label" :for="$componentId">{{ props.spec.label }}</label>
   </div>
   <template v-if="activeElement != null">
     <FormEdit

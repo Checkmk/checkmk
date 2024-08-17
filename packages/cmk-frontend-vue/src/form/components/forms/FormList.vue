@@ -2,8 +2,12 @@
 import { ref, watch } from 'vue'
 import FormEdit from '@/form/components/FormEdit.vue'
 import type { List } from '@/vue_formspec_components'
-import { groupListValidations, validateValue, type ValidationMessages } from '@/lib/validation'
 import FormValidation from '@/form/components/FormValidation.vue'
+import {
+  groupListValidations,
+  validateValue,
+  type ValidationMessages
+} from '@/form/components/utils/validation'
 
 const props = defineProps<{
   spec: List

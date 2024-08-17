@@ -2,8 +2,8 @@
 import type { LegacyValuespec } from '@/vue_formspec_components'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { select } from 'd3-selection'
-import type { ValidationMessages } from '@/lib/validation'
 import FormValidation from '@/form/components/FormValidation.vue'
+import type { ValidationMessages } from '@/form/components/utils/validation'
 
 const props = defineProps<{
   spec: LegacyValuespec

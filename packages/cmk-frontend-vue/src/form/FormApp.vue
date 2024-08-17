@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeMount, onMounted, ref } from 'vue'
 import FormEdit from './components/FormEdit.vue'
 import type { FormSpec } from '@/vue_formspec_components'
 import type { ValidationMessages } from '@/lib/validation'
@@ -8,17 +8,22 @@ import FormReadonly from '@/form/components/FormReadonly.vue'
 const props = defineProps<{
   id: string
   spec: FormSpec
+  data: unknown
   backendValidation: ValidationMessages
   renderMode: 'edit' | 'readonly' | 'both'
 }>()
+
+const dataRef = ref()
+onBeforeMount(() => {
+  dataRef.value = props.data
+})
 
 onMounted(() => {
   activeMode.value = props.renderMode
 })
 
-const data = defineModel<unknown>('data', { required: true })
 const valueAsJSON = computed(() => {
-  return JSON.stringify(data.value)
+  return JSON.stringify(dataRef.value)
 })
 
 const activeMode = ref<string>('readonly')
@@ -43,7 +48,7 @@ function toggleActiveMode() {
   >
   <div v-if="activeMode === 'readonly' || activeMode === 'both'">
     <FormReadonly
-      v-model:data="data"
+      v-model:data="dataRef"
       :backend-validation="backendValidation"
       :spec="spec"
     ></FormReadonly>
@@ -54,7 +59,7 @@ function toggleActiveMode() {
       <tr>
         <td>
           <FormEdit
-            v-model:data="data"
+            v-model:data="dataRef"
             :v-if="renderMode === 'edit' || renderMode === 'both'"
             :backend-validation="backendValidation"
             :spec="spec"
@@ -64,6 +69,6 @@ function toggleActiveMode() {
       <!-- This input field contains the computed json value which is sent when the form is submitted -->
       <input v-model="valueAsJSON" :name="id" type="hidden" />
     </table>
-    <pre>{{ data }}</pre>
+    <pre>{{ dataRef }}</pre>
   </div>
 </template>

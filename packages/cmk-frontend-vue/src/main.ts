@@ -16,7 +16,7 @@ import { mixinUniqueId } from './plugins'
 import D3Table from './views/D3Table.vue'
 import Table from './views/CmkTable.vue'
 import QuickSetup from './views/QuickSetup.vue'
-import { CmkRuleset } from '@/form'
+import { FormApp } from '@/form'
 
 function setupVue() {
   document.querySelectorAll<HTMLFormElement>('div[data-cmk_vue_app]').forEach((div) => {
@@ -32,13 +32,13 @@ function setupVue() {
     const vueApp = JSON.parse(vueAppData)
 
     if (vueApp.app_name == 'form_spec') {
-      const app = createApp(CmkRuleset, {
+      const app = createApp(FormApp, {
         id: vueApp.id,
         spec: vueApp.spec,
         // eslint has a false positive: assuming `data` is part of a vue component
         // eslint-disable-next-line vue/no-deprecated-data-object-declaration, vue/no-shared-component-data
         data: vueApp.data,
-        validation: vueApp.validation,
+        backendValidation: vueApp.validation,
         renderMode: vueApp.render_mode
       })
       // Assign a unique id to each component, useful for label for=..

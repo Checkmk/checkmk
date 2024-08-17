@@ -1,4 +1,3 @@
-import Form from './FormApp.vue'
-import CmkRuleset from './CmkRuleset.vue'
+import FormApp from './FormApp.vue'
 
-export { Form, CmkRuleset }
+export { FormApp }

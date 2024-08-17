@@ -33,6 +33,7 @@ cmk-frontend-vue project.
 ### Location of files and folders
 src/
     form/  # files for form rendering
+        index.ts     # Includes exports. E.g FormApp, ValiationMessages
         FormApp.vue  # Main entry point
         components/  # Files for the forms feature
             utils/   # Utilities for forms
@@ -54,4 +55,3 @@ src/
     graph-designer/  # upcoming: reworked graph designer
         GraphDesignerApp.vue
         components/  # Files for the graph-designer feature
-    index.ts         # Provides exports for the different apps, e.g FormApp, QuicksetupApp

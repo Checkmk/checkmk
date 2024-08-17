@@ -29,3 +29,29 @@ vite dev server is used.
 
 Checkmk should then automatically reload as soon as you change a file of the
 cmk-frontend-vue project.
+
+### Location of files and folders
+src/
+    form/  # files for form rendering
+        FormApp.vue  # Main entry point
+        components/  # Files for the forms feature
+            utils/   # Utilities for forms
+            forms/   # Implementation of forms
+            FormEdit.vue
+            FormReadonly.vue
+            FormHelp.vue
+            FormValidation.vue
+    quick-setup/
+        QuickSetupApp.vue # Main entry point
+        components/  # Files for the quick-setup feature
+            widgets/
+            elements/
+            QuickSetupStage.vue
+            ...
+    global-settings/ # upcoming: global settings rendering
+        GlobalSettingsApp.vue
+        components/  # Files for the global-setting feature
+    graph-designer/  # upcoming: reworked graph designer
+        GraphDesignerApp.vue
+        components/  # Files for the graph-designer feature
+    index.ts         # Provides exports for the different apps, e.g FormApp, QuicksetupApp

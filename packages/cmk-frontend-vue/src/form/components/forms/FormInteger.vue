@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { FormValidation } from '@/components/cmk-form/'
 import type { Integer } from '@/vue_formspec_components'
-import { useValidation } from '../utils/validation'
+import { useValidation } from '@/form/components/utils/validation'
 import { type ValidationMessages } from '@/lib/validation'
+import FormValidation from '@/form/components/FormValidation.vue'
 
 const props = defineProps<{
   spec: Integer

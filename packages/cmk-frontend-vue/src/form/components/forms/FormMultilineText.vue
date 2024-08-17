@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { FormValidation } from '@/components/cmk-form/'
 import type * as FormSpec from '@/vue_formspec_components'
-import { useValidation } from '../utils/validation'
+import { useValidation } from '@/form/components/utils/validation'
 import { type ValidationMessages } from '@/lib/validation'
+import FormValidation from '@/form/components/FormValidation.vue'
 
 const props = defineProps<{
   spec: FormSpec.MultilineText

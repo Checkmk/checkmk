@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import FormEdit from '@/components/cmk-form/FormEdit.vue'
+import FormEdit from '@/form/components/FormEdit.vue'
 import type { List } from '@/vue_formspec_components'
-import { FormValidation } from '@/components/cmk-form'
 import { groupListValidations, validateValue, type ValidationMessages } from '@/lib/validation'
+import FormValidation from '@/form/components/FormValidation.vue'
 
 const props = defineProps<{
   spec: List

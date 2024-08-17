@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import FormEdit from './FormEdit.vue'
+import FormEdit from './components/FormEdit.vue'
 import type { FormSpec } from '@/vue_formspec_components'
 import type { ValidationMessages } from '@/lib/validation'
-import FormReadonly from '@/components/cmk-form/FormReadonly.vue'
+import FormReadonly from '@/form/components/FormReadonly.vue'
 
 const props = defineProps<{
   id: string

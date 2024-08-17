@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
 import type * as FormSpec from '@/vue_formspec_components'
-import FormCascadingSingleChoice from '@/components/cmk-form/forms/FormCascadingSingleChoice.vue'
+import FormCascadingSingleChoice from '@/form/components/forms/FormCascadingSingleChoice.vue'
 import { renderFormWithData } from '../cmk-form-helper'
 
 const stringValidators: FormSpec.Validator[] = [

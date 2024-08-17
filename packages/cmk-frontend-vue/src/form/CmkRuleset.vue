@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onBeforeMount, ref } from 'vue'
 import type { FormSpec } from '@/vue_formspec_components'
-import { Form } from '@/components/cmk-form/'
+import { Form } from '@/form/index'
 import type { ValidationMessages } from '@/lib/validation'
 
 const props = defineProps<{

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { type ValidationMessages } from '@/lib/validation'
 import type { Catalog, Dictionary, FormSpec, Topic } from '@/vue_formspec_components'
-import FormEdit from '@/components/cmk-form/FormEdit.vue'
+import FormEdit from '@/form/components/FormEdit.vue'
 import { onBeforeMount, ref } from 'vue'
 
 const props = defineProps<{

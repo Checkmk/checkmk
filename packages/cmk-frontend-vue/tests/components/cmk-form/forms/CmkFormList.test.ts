@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
-import FormList from '@/components/cmk-form/forms/FormList.vue'
+import FormList from '@/form/components/forms/FormList.vue'
 import type * as FormSpec from '@/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
 

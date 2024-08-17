@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/vue'
 import type * as FormSpec from '@/vue_formspec_components'
-import FormBooleanChoice from '@/components/cmk-form/forms/FormBooleanChoice.vue'
+import FormBooleanChoice from '@/form/components/forms/FormBooleanChoice.vue'
 
 function getBooleanChoice(withLabel = false): FormSpec.BooleanChoice {
   return {

@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
-import FormSingleChoice from '@/components/cmk-form/forms/FormSingleChoice.vue'
+import FormSingleChoice from '@/form/components/forms/FormSingleChoice.vue'
 import type * as FormSpec from '@/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
 

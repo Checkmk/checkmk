@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed, onBeforeMount, onUpdated, type PropType, ref, watch } from 'vue'
-import FormEdit from '@/components/cmk-form/FormEdit.vue'
+import FormEdit from '@/form/components/FormEdit.vue'
 import type {
   CascadingSingleChoice,
   CascadingSingleChoiceElement,
   FormSpec
 } from '@/vue_formspec_components'
-import { FormValidation } from '@/components/cmk-form'
 import { validateValue, type ValidationMessages } from '@/lib/validation'
+import FormValidation from '@/form/components/FormValidation.vue'
 
 const props = defineProps<{
   spec: CascadingSingleChoice

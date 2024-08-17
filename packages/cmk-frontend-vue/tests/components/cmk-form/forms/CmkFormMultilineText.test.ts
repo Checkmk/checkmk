@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
 import type * as FormSpec from '@/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
-import FormMultilineText from '@/components/cmk-form/forms/FormMultilineText.vue'
+import FormMultilineText from '@/form/components/forms/FormMultilineText.vue'
 
 const validators: FormSpec.Validator[] = [
   {

@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
-import FormDictionary from '@/components/cmk-form/forms/FormDictionary.vue'
+import FormDictionary from '@/form/components/forms/FormDictionary.vue'
 import type * as FormSpec from '@/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
 

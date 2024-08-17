@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
-import FormInteger from '@/components/cmk-form/forms/FormInteger.vue'
+import FormInteger from '@/form/components/forms/FormInteger.vue'
 import type * as FormSpec from '@/vue_formspec_components'
 import { renderFormWithData } from '../cmk-form-helper'
 

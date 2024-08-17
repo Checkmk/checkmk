@@ -16,7 +16,7 @@ import { mixinUniqueId } from './plugins'
 import D3Table from './views/D3Table.vue'
 import Table from './views/CmkTable.vue'
 import QuickSetup from './views/QuickSetup.vue'
-import { CmkRuleset } from '@/components/cmk-form/'
+import { CmkRuleset } from '@/form'
 
 function setupVue() {
   document.querySelectorAll<HTMLFormElement>('div[data-cmk_vue_app]').forEach((div) => {

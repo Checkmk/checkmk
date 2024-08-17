@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { type FormSpecWidgetProps } from './widget_types'
-import FormReadonly from '@/components/cmk-form/FormReadonly.vue'
+import FormReadonly from '@/form/components/FormReadonly.vue'
 
 defineProps<FormSpecWidgetProps>()
 </script>

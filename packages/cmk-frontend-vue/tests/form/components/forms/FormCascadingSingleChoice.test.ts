@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
-import type * as FormSpec from '@/vue_formspec_components'
+import type * as FormSpec from '@/form/components/vue_formspec_components'
 import FormCascadingSingleChoice from '@/form/components/forms/FormCascadingSingleChoice.vue'
 import { renderFormWithData } from '../cmk-form-helper'
 

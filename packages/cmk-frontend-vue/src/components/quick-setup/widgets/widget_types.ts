@@ -1,4 +1,4 @@
-import type { FormSpec } from '@/vue_formspec_components'
+import type { FormSpec } from '@/form/components/vue_formspec_components'
 import { type StageData } from '../quick_setup_types'
 import type { ValidationMessages } from '@/form'
 

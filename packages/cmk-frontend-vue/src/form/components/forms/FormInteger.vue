@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Integer } from '@/vue_formspec_components'
+import type { Integer } from '@/form/components/vue_formspec_components'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import FormValidation from '@/form/components/FormValidation.vue'
 

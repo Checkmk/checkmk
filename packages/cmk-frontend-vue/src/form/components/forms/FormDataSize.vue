@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { DataSize } from '@/vue_formspec_components'
+import type { DataSize } from '@/form/components/vue_formspec_components'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import FormValidation from '@/form/components/FormValidation.vue'
 

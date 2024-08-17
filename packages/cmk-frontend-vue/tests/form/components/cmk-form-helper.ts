@@ -1,6 +1,6 @@
 import { render } from '@testing-library/vue'
 import FormDataVisualizer from './FormDataVisualizer.vue'
-import type { FormSpec } from '@/vue_formspec_components'
+import type { FormSpec } from '@/form/components/vue_formspec_components'
 import type { ValidationMessages } from '@/form/components/utils/validation'
 
 export function renderFormWithData(props: {

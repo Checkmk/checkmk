@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/vue'
-import type * as FormSpec from '@/vue_formspec_components'
+import type * as FormSpec from '@/form/components/vue_formspec_components'
 import FormFixedValue from '@/form/components/forms/FormFixedValue.vue'
 
 function getFixedValue(withLabel = false): FormSpec.FixedValue {

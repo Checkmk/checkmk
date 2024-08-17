@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onBeforeMount, ref, watch } from 'vue'
 import FormEdit from '../FormEdit.vue'
-import type { Dictionary, DictionaryElement } from '@/vue_formspec_components'
+import type { Dictionary, DictionaryElement } from '@/form/components/vue_formspec_components'
 import {
   groupDictionaryValidations,
   type ValidationMessages

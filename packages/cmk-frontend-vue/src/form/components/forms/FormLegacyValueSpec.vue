@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { LegacyValuespec } from '@/vue_formspec_components'
+import type { LegacyValuespec } from '@/form/components/vue_formspec_components'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { select } from 'd3-selection'
 import FormValidation from '@/form/components/FormValidation.vue'

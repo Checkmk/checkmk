@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import type { Catalog, Dictionary, FormSpec, Topic } from '@/vue_formspec_components'
+import type {
+  Catalog,
+  Dictionary,
+  FormSpec,
+  Topic
+} from '@/form/components/vue_formspec_components'
 import FormEdit from '@/form/components/FormEdit.vue'
 import { onBeforeMount, ref } from 'vue'
 import type { ValidationMessages } from '@/form/components/utils/validation'

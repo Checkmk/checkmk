@@ -1,5 +1,9 @@
 import { computed, onMounted, ref, type Ref, watch, type WritableComputedRef } from 'vue'
-import type { DictionaryElement, ValidationMessage, Validator } from '@/vue_formspec_components'
+import type {
+  DictionaryElement,
+  ValidationMessage,
+  Validator
+} from '@/form/components/vue_formspec_components'
 
 /**
  * Hook to handle validation messages and update date if invalid value is provided

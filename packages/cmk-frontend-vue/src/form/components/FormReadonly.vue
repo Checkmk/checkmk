@@ -12,7 +12,7 @@ import type {
   FixedValue,
   BooleanChoice,
   MultilineText
-} from '@/vue_formspec_components'
+} from '@/form/components/vue_formspec_components'
 import {
   groupDictionaryValidations,
   groupListValidations,

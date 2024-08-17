@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/vue'
-import type * as FormSpec from '@/vue_formspec_components'
+import type * as FormSpec from '@/form/components/vue_formspec_components'
 import FormDataSize from '@/form/components/forms/FormDataSize.vue'
 
 const spec: FormSpec.DataSize = {

@@ -5,7 +5,7 @@ import type {
   CascadingSingleChoice,
   CascadingSingleChoiceElement,
   FormSpec
-} from '@/vue_formspec_components'
+} from '@/form/components/vue_formspec_components'
 import FormValidation from '@/form/components/FormValidation.vue'
 import { validateValue, type ValidationMessages } from '@/form/components/utils/validation'
 

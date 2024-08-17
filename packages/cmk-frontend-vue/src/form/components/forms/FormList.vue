@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import FormEdit from '@/form/components/FormEdit.vue'
-import type { List } from '@/vue_formspec_components'
+import type { List } from '@/form/components/vue_formspec_components'
 import FormValidation from '@/form/components/FormValidation.vue'
 import {
   groupListValidations,

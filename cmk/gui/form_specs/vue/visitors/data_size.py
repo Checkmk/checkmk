@@ -5,8 +5,6 @@
 
 from cmk.gui.form_specs.private.validators import IsFloat, IsInteger
 from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
-from cmk.gui.form_specs.vue.registries import FormSpecVisitor
-from cmk.gui.form_specs.vue.type_defs import DataOrigin, DefaultValue, EMPTY_VALUE, EmptyValue
 from cmk.gui.form_specs.vue.utils import (
     compute_text_input_hint,
     compute_validation_errors,
@@ -21,6 +19,10 @@ from cmk.gui.form_specs.vue.validators import build_vue_validators
 
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import DataSize, IECMagnitude, SIMagnitude
+
+from ..type_defs import EMPTY_VALUE, EmptyValue
+from ._base import FormSpecVisitor
+from ._type_defs import DataOrigin, DefaultValue
 
 _magnitudes_map: dict[SIMagnitude | IECMagnitude, tuple[str, int]] = {
     SIMagnitude.BYTE: ("B", 1),

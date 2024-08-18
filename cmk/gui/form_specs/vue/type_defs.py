@@ -3,36 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from dataclasses import dataclass
-from enum import auto, Enum
-from typing import Any
-
-DataForDisk = Any
-Value = Any
-
-
-class DefaultValue:
-    pass
-
-
-DEFAULT_VALUE = DefaultValue()
+from enum import Enum
 
 
 class RenderMode(Enum):
     EDIT = "edit"
     READONLY = "readonly"
     BOTH = "both"
-
-
-class DataOrigin(Enum):
-    DISK = auto()
-    FRONTEND = auto()
-
-
-@dataclass
-class VisitorOptions:
-    # Depending on the origin, we will call the migrate function
-    data_origin: DataOrigin
 
 
 class EmptyValue:

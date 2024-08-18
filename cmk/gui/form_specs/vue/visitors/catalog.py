@@ -7,8 +7,7 @@ from typing import Any, cast, Mapping, Sequence
 
 from cmk.gui.form_specs.private.catalog import Catalog, Topic
 from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
-from cmk.gui.form_specs.vue.registries import FormSpecVisitor, get_visitor
-from cmk.gui.form_specs.vue.type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
+from cmk.gui.form_specs.vue.registries import get_visitor
 from cmk.gui.form_specs.vue.utils import (
     compute_validation_errors,
     compute_validators,
@@ -22,6 +21,10 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import DictElement
 from cmk.rulesets.v1.form_specs import Dictionary as FormSpecDictionary
+
+from ..type_defs import EMPTY_VALUE, EmptyValue
+from ._base import FormSpecVisitor
+from ._type_defs import DEFAULT_VALUE, DefaultValue
 
 
 class CatalogVisitor(FormSpecVisitor[Catalog, Mapping[str, object]]):

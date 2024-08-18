@@ -9,7 +9,7 @@ import pytest
 from cmk.utils.user import UserId
 
 from cmk.gui.form_specs.vue.form_spec_visitor import serialize_data_for_frontend
-from cmk.gui.form_specs.vue.type_defs import DataOrigin, DEFAULT_VALUE
+from cmk.gui.form_specs.vue.visitors._type_defs import DataOrigin, DEFAULT_VALUE
 from cmk.gui.session import UserContext
 
 from cmk.rulesets.v1 import Message, Title

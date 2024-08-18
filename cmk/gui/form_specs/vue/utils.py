@@ -5,9 +5,10 @@
 from typing import Any, Callable, Optional, Protocol, Sequence
 
 from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
-from cmk.gui.form_specs.vue.type_defs import DataOrigin
-from cmk.gui.form_specs.vue.type_defs import DefaultValue as FormSpecDefaultValue
-from cmk.gui.form_specs.vue.type_defs import EMPTY_VALUE, EmptyValue, VisitorOptions
+from cmk.gui.form_specs.vue.type_defs import EMPTY_VALUE, EmptyValue
+from cmk.gui.form_specs.vue.visitors._type_defs import DataOrigin
+from cmk.gui.form_specs.vue.visitors._type_defs import DefaultValue as FormSpecDefaultValue
+from cmk.gui.form_specs.vue.visitors._type_defs import VisitorOptions
 from cmk.gui.htmllib import html
 from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.utils import escaping

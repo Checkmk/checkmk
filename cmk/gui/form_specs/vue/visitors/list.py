@@ -7,14 +7,7 @@ from typing import Generic, Sequence, TypeVar
 
 from cmk.gui.form_specs.private.list_extended import ListExtended
 from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
-from cmk.gui.form_specs.vue.registries import FormSpecVisitor, get_visitor
-from cmk.gui.form_specs.vue.type_defs import (
-    DEFAULT_VALUE,
-    DefaultValue,
-    EMPTY_VALUE,
-    EmptyValue,
-    Value,
-)
+from cmk.gui.form_specs.vue.registries import get_visitor
 from cmk.gui.form_specs.vue.utils import (
     compute_validation_errors,
     compute_validators,
@@ -25,6 +18,10 @@ from cmk.gui.form_specs.vue.utils import (
 from cmk.gui.i18n import translate_to_current_language
 
 from cmk.rulesets.v1 import Title
+
+from ..type_defs import EMPTY_VALUE, EmptyValue
+from ._base import FormSpecVisitor
+from ._type_defs import DEFAULT_VALUE, DefaultValue, Value
 
 T = TypeVar("T")
 

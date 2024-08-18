@@ -6,14 +6,7 @@
 from typing import Any
 
 from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
-from cmk.gui.form_specs.vue.registries import FormSpecVisitor, get_visitor
-from cmk.gui.form_specs.vue.type_defs import (
-    DEFAULT_VALUE,
-    DefaultValue,
-    EMPTY_VALUE,
-    EmptyValue,
-    Value,
-)
+from cmk.gui.form_specs.vue.registries import get_visitor
 from cmk.gui.form_specs.vue.utils import (
     compute_label,
     compute_text_input_hint,
@@ -29,6 +22,10 @@ from cmk.gui.i18n import translate_to_current_language
 
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import CascadingSingleChoice
+
+from ..type_defs import EMPTY_VALUE, EmptyValue
+from ._base import FormSpecVisitor
+from ._type_defs import DEFAULT_VALUE, DefaultValue, Value
 
 
 class CascadingSingleChoiceVisitor(FormSpecVisitor[CascadingSingleChoice, tuple[str, object]]):

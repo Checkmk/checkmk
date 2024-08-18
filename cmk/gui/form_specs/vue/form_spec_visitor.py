@@ -19,7 +19,7 @@ from cmk.gui.form_specs.private import (
     SingleChoiceExtended,
     UnknownFormSpec,
 )
-from cmk.gui.form_specs.vue.type_defs import DataOrigin, DEFAULT_VALUE, RenderMode, VisitorOptions
+from cmk.gui.form_specs.vue.type_defs import RenderMode
 from cmk.gui.form_specs.vue.visitors.recomposers import (
     recompose_dictionary,
     recompose_host_state,
@@ -70,6 +70,7 @@ from .visitors import (
     SingleChoiceVisitor,
     StringVisitor,
 )
+from .visitors._type_defs import DataOrigin, DEFAULT_VALUE, VisitorOptions
 
 T = TypeVar("T")
 

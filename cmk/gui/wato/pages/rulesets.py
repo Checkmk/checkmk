@@ -45,7 +45,7 @@ from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.form_specs.private.definitions import LegacyValueSpec
 from cmk.gui.form_specs.vue.form_spec_visitor import parse_data_from_frontend, render_form_spec
 from cmk.gui.form_specs.vue.registries import form_spec_registry
-from cmk.gui.form_specs.vue.type_defs import DataOrigin, RenderMode
+from cmk.gui.form_specs.vue.type_defs import RenderMode
 from cmk.gui.hooks import call as call_hooks
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import ExperimentalRenderMode, get_render_mode, html
@@ -141,6 +141,7 @@ from cmk.gui.watolib.utils import may_edit_ruleset, mk_eval, mk_repr
 
 from cmk.rulesets.v1.form_specs import FormSpec
 
+from ...form_specs.vue.visitors._type_defs import DataOrigin
 from ._match_conditions import HostTagCondition
 from ._rule_conditions import DictHostTagCondition
 

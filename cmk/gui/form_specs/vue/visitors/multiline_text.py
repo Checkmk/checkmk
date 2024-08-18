@@ -5,14 +5,6 @@
 from typing import Callable, Sequence
 
 from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
-from cmk.gui.form_specs.vue.registries import FormSpecVisitor
-from cmk.gui.form_specs.vue.type_defs import (
-    DEFAULT_VALUE,
-    DefaultValue,
-    EMPTY_VALUE,
-    EmptyValue,
-    Value,
-)
 from cmk.gui.form_specs.vue.utils import (
     compute_label,
     compute_text_input_hint,
@@ -27,6 +19,10 @@ from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import MultilineText
+
+from ..type_defs import EMPTY_VALUE, EmptyValue
+from ._base import FormSpecVisitor
+from ._type_defs import DEFAULT_VALUE, DefaultValue, Value
 
 
 class MultilineTextVisitor(FormSpecVisitor[MultilineText, str]):

@@ -23,6 +23,7 @@ USER_AGENT = "checkmk-agent-nginx_status-" + __version__
 import os
 import re
 import sys
+import ssl
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -156,9 +157,16 @@ def main():  # pylint: disable=too-many-branches
 
             url = "%s://%s:%s/%s" % (proto, address, port, page)
             # Try to fetch the status page for each server
+
+            # set ssl context
+            ssl_context = ssl.create_default_context();
+            # ignore ssl-cert validation
+            ssl_context.check_hostname = False;
+            ssl_context.verify_mode = ssl.CERT_NONE;
+            
             try:
                 request = Request(url, headers={"Accept": "text/plain", "User-Agent": USER_AGENT})
-                fd = urlopen(request)  # nosec B310 # BNS:6b61d9
+                fd = fd = urlopen(request, context=ssl_context)  # nosec B310 # BNS:6b61d9 and set ssl_context
             except URLError as e:
                 if "SSL23_GET_SERVER_HELLO:unknown protocol" in str(e):
                     # HACK: workaround misconfigurations where port 443 is used for

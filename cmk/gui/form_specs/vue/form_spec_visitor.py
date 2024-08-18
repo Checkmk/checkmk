@@ -7,6 +7,7 @@ import json
 import pprint
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
+from enum import Enum
 from typing import Any, Literal, TypeVar
 
 import cmk.gui.form_specs.private.validators as private_form_specs_validators
@@ -20,7 +21,6 @@ from cmk.gui.form_specs.private import (
     SingleChoiceExtended,
     UnknownFormSpec,
 )
-from cmk.gui.form_specs.vue.type_defs import RenderMode
 from cmk.gui.form_specs.vue.visitors.recomposers import (
     recompose_dictionary,
     recompose_host_state,
@@ -154,6 +154,12 @@ def get_vue_value(field_id: str, fallback_value: Any) -> Any:
     if request.has_var(field_id):
         return json.loads(request.get_str_input_mandatory(field_id))
     return fallback_value
+
+
+class RenderMode(Enum):
+    EDIT = "edit"
+    READONLY = "readonly"
+    BOTH = "both"
 
 
 def render_form_spec(

@@ -43,9 +43,12 @@ from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.form_specs.private.definitions import LegacyValueSpec
-from cmk.gui.form_specs.vue.form_spec_visitor import parse_data_from_frontend, render_form_spec
+from cmk.gui.form_specs.vue.form_spec_visitor import (
+    parse_data_from_frontend,
+    render_form_spec,
+    RenderMode,
+)
 from cmk.gui.form_specs.vue.registries import form_spec_registry
-from cmk.gui.form_specs.vue.type_defs import RenderMode
 from cmk.gui.hooks import call as call_hooks
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import ExperimentalRenderMode, get_render_mode, html

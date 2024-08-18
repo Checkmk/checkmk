@@ -5,8 +5,6 @@
 from dataclasses import dataclass
 from typing import Any, Mapping, TypeVar
 
-from cmk.gui.form_specs.vue.type_defs import EMPTY_VALUE, EmptyValue
-
 from cmk.rulesets.v1 import Message
 from cmk.rulesets.v1.form_specs import DefaultValue, DictElement, FormSpec
 
@@ -41,4 +39,4 @@ class DictionaryExtended(FormSpec[Mapping[str, object]]):
     You can use these to deprecate elements, to avoid breaking the old configurations.
     """
 
-    prefill: DefaultValue[Mapping[str, object]] | EmptyValue = EMPTY_VALUE
+    prefill: DefaultValue[Mapping[str, object]] | None = None

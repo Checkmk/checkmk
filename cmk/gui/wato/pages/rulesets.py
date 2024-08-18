@@ -48,7 +48,9 @@ from cmk.gui.form_specs.vue.form_spec_visitor import (
     render_form_spec,
     RenderMode,
 )
-from cmk.gui.form_specs.vue.registries import form_spec_registry
+
+# The following import will be fixed by the upcoming registry rework
+from cmk.gui.form_specs.vue.visitors._registry import form_spec_registry
 from cmk.gui.hooks import call as call_hooks
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import ExperimentalRenderMode, get_render_mode, html
@@ -144,7 +146,7 @@ from cmk.gui.watolib.utils import may_edit_ruleset, mk_eval, mk_repr
 
 from cmk.rulesets.v1.form_specs import FormSpec
 
-from ...form_specs.vue.visitors._type_defs import DataOrigin
+from ...form_specs.vue.visitors import DataOrigin
 from ._match_conditions import HostTagCondition
 from ._rule_conditions import DictHostTagCondition
 

@@ -56,7 +56,6 @@ from cmk.rulesets.v1.form_specs import (
     String,
 )
 
-from .registries import get_visitor, register_visitor_class
 from .validators import (
     build_float_validator,
     build_in_range_validator,
@@ -72,10 +71,12 @@ from .visitors import (
     DictionaryVisitor,
     FixedValueVisitor,
     FloatVisitor,
+    get_visitor,
     IntegerVisitor,
     LegacyValuespecVisitor,
     ListVisitor,
     MultilineTextVisitor,
+    register_visitor_class,
     SingleChoiceVisitor,
     StringVisitor,
 )

@@ -6,7 +6,7 @@ import traceback
 from collections.abc import Sequence
 from pathlib import Path
 
-from cmk.gui.form_specs.vue.registries import form_spec_registry
+from cmk.gui.form_specs.vue.visitors._registry import form_spec_registry
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.utils import add_failed_plugin

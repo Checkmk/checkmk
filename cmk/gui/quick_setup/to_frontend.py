@@ -31,7 +31,7 @@ from cmk.gui.form_specs.vue.form_spec_visitor import (
     serialize_data_for_frontend,
     validate_value_from_frontend,
 )
-from cmk.gui.form_specs.vue.registries import form_spec_registry
+from cmk.gui.form_specs.vue.visitors._registry import form_spec_registry
 from cmk.gui.form_specs.vue.visitors._type_defs import DataOrigin
 from cmk.gui.http import request
 from cmk.gui.i18n import ungettext

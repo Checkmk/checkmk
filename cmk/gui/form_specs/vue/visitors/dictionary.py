@@ -7,7 +7,6 @@ from typing import Mapping
 
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
 from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
-from cmk.gui.form_specs.vue.registries import get_visitor
 from cmk.gui.form_specs.vue.utils import (
     compute_validation_errors,
     compute_validators,
@@ -17,6 +16,7 @@ from cmk.gui.form_specs.vue.utils import (
 )
 
 from ._base import FormSpecVisitor
+from ._registry import get_visitor
 from ._type_defs import DataOrigin, DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue, Value
 
 

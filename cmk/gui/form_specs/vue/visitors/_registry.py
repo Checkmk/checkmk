@@ -1,7 +1,3 @@
-#!/usr/bin/env python3
-# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
 from typing import Any, Callable
 
 from cmk.gui.form_specs.private import UnknownFormSpec
@@ -13,10 +9,6 @@ from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.rulesets.v1.form_specs._base import ModelT
 
 form_spec_registry: dict[str, LoadedRuleSpec] = {}
-
-# TODO: why is the registry dict defined here, but the function to put and get from that dict in utils?
-# maybe we could bundle this into visitors?
-
 RecomposerFunction = Callable[[FormSpec[Any]], FormSpec[Any]]
 form_specs_visitor_registry: dict[
     type[FormSpec[Any]], tuple[type[FormSpecVisitor[FormSpec[Any], Any]], RecomposerFunction | None]

@@ -9,6 +9,7 @@ from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from typing import Any, Literal, TypeVar
 
+import cmk.gui.form_specs.private.validators as private_form_specs_validators
 import cmk.gui.form_specs.vue.shared_type_defs as VueComponents
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.private import (
@@ -34,6 +35,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.log import logger
 
+import cmk.rulesets.v1.form_specs.validators as formspec_validators
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
@@ -55,6 +57,13 @@ from cmk.rulesets.v1.form_specs import (
 )
 
 from .registries import get_visitor, register_visitor_class
+from .validators import (
+    build_float_validator,
+    build_in_range_validator,
+    build_integer_validator,
+    build_length_in_range_validator,
+    register_validator,
+)
 from .visitors import (
     BooleanChoiceVisitor,
     CascadingSingleChoiceVisitor,
@@ -113,7 +122,15 @@ def register_form_specs():
     register_visitor_class(Dictionary, DictionaryVisitor, recompose_dictionary)
 
 
+def register_validators():
+    register_validator(formspec_validators.NumberInRange, build_in_range_validator)
+    register_validator(formspec_validators.LengthInRange, build_length_in_range_validator)
+    register_validator(private_form_specs_validators.IsInteger, build_integer_validator)
+    register_validator(private_form_specs_validators.IsFloat, build_float_validator)
+
+
 register_form_specs()
+register_validators()
 
 
 def _process_validation_errors(validation_errors: list[VueComponents.ValidationMessage]) -> None:

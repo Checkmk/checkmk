@@ -6,16 +6,6 @@
 from typing import Any
 
 from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
-from cmk.gui.form_specs.vue.utils import (
-    compute_label,
-    compute_text_input_hint,
-    compute_validation_errors,
-    compute_validators,
-    create_validation_error,
-    get_prefill_default,
-    get_title_and_help,
-    migrate_value,
-)
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import translate_to_current_language
 
@@ -25,6 +15,16 @@ from cmk.rulesets.v1.form_specs import CascadingSingleChoice
 from ._base import FormSpecVisitor
 from ._registry import get_visitor
 from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue, Value
+from ._utils import (
+    compute_label,
+    compute_text_input_hint,
+    compute_validation_errors,
+    compute_validators,
+    create_validation_error,
+    get_prefill_default,
+    get_title_and_help,
+    migrate_value,
+)
 
 
 class CascadingSingleChoiceVisitor(FormSpecVisitor[CascadingSingleChoice, tuple[str, object]]):

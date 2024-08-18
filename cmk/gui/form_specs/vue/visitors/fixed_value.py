@@ -5,13 +5,6 @@
 from typing import Callable, Sequence, TypeVar
 
 from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
-from cmk.gui.form_specs.vue.utils import (
-    compute_validation_errors,
-    compute_validators,
-    create_validation_error,
-    get_title_and_help,
-    localize,
-)
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -20,6 +13,13 @@ from cmk.rulesets.v1.form_specs import FixedValue
 
 from ._base import FormSpecVisitor
 from ._type_defs import DEFAULT_VALUE, EmptyValue, Value
+from ._utils import (
+    compute_validation_errors,
+    compute_validators,
+    create_validation_error,
+    get_title_and_help,
+    localize,
+)
 
 T = TypeVar("T", int, float, str, bool, None)
 

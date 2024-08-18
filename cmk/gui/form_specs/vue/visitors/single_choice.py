@@ -7,7 +7,14 @@ from typing import Generic, TypeVar
 
 from cmk.gui.form_specs import private
 from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
-from cmk.gui.form_specs.vue.utils import (
+from cmk.gui.form_specs.vue.validators import build_vue_validators
+from cmk.gui.i18n import translate_to_current_language
+
+from cmk.rulesets.v1 import Title
+
+from ._base import FormSpecVisitor
+from ._type_defs import DefaultValue, EMPTY_VALUE, EmptyValue, Value
+from ._utils import (
     compute_text_input_hint,
     compute_validation_errors,
     compute_validators,
@@ -17,13 +24,6 @@ from cmk.gui.form_specs.vue.utils import (
     localize,
     migrate_value,
 )
-from cmk.gui.form_specs.vue.validators import build_vue_validators
-from cmk.gui.i18n import translate_to_current_language
-
-from cmk.rulesets.v1 import Title
-
-from ._base import FormSpecVisitor
-from ._type_defs import DefaultValue, EMPTY_VALUE, EmptyValue, Value
 
 T = TypeVar("T")
 

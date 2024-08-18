@@ -9,7 +9,6 @@ from typing import Any
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.private.definitions import LegacyValueSpec
 from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
-from cmk.gui.form_specs.vue.utils import create_validation_error, get_title_and_help, migrate_value
 from cmk.gui.http import request
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.user_errors import user_errors
@@ -19,6 +18,7 @@ from cmk.rulesets.v1 import Title
 
 from ._base import FormSpecVisitor
 from ._type_defs import DataOrigin, DefaultValue, EMPTY_VALUE, EmptyValue, Value
+from ._utils import create_validation_error, get_title_and_help, migrate_value
 
 
 class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, object]):

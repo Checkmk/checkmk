@@ -7,7 +7,7 @@ from typing import Mapping
 
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
 from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
-from cmk.gui.form_specs.vue.registries import FormSpecVisitor
+from cmk.gui.form_specs.vue.registries import FormSpecVisitor, get_visitor
 from cmk.gui.form_specs.vue.type_defs import (
     DataOrigin,
     DEFAULT_VALUE,
@@ -22,7 +22,6 @@ from cmk.gui.form_specs.vue.utils import (
     create_validation_error,
     get_prefill_default,
     get_title_and_help,
-    get_visitor,
     migrate_value,
 )
 

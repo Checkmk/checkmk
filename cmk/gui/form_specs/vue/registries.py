@@ -5,6 +5,7 @@
 import abc
 from typing import Any, Callable, final, Generic, TypeVar
 
+from cmk.gui.form_specs.private import UnknownFormSpec
 from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
 from cmk.gui.form_specs.vue.type_defs import DataForDisk, EmptyValue, Value, VisitorOptions
 from cmk.gui.utils.rule_specs.loader import LoadedRuleSpec
@@ -63,3 +64,27 @@ RecomposerFunction = Callable[[FormSpec[Any]], FormSpec[Any]]
 form_specs_visitor_registry: dict[
     type[FormSpec[Any]], tuple[type[FormSpecVisitor[FormSpec[Any], Any]], RecomposerFunction | None]
 ] = {}
+
+
+def register_visitor_class(
+    form_spec_class: type[FormSpec[ModelT]],
+    visitor_class: type[FormSpecVisitor[Any, ModelT]],
+    recomposer: RecomposerFunction | None = None,
+) -> None:
+    form_specs_visitor_registry[form_spec_class] = (visitor_class, recomposer)
+
+
+def get_visitor(
+    form_spec: FormSpec[ModelT], options: VisitorOptions
+) -> FormSpecVisitor[FormSpec[ModelT], ModelT]:
+    if registered_form_spec := form_specs_visitor_registry.get(form_spec.__class__):
+        visitor, recomposer_function = registered_form_spec
+        if recomposer_function is not None:
+            form_spec = recomposer_function(form_spec)
+            return get_visitor(form_spec, options)
+        return visitor(form_spec, options)
+
+    # If the form spec has no valid visitor, convert it to the legacy valuespec visitor
+    visitor, unknown_decomposer = form_specs_visitor_registry[UnknownFormSpec]
+    assert unknown_decomposer is not None
+    return visitor(unknown_decomposer(form_spec), options)

@@ -20,7 +20,6 @@ from cmk.gui.form_specs.private import (
     UnknownFormSpec,
 )
 from cmk.gui.form_specs.vue.type_defs import DataOrigin, DEFAULT_VALUE, RenderMode, VisitorOptions
-from cmk.gui.form_specs.vue.utils import get_visitor, register_visitor_class
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.log import logger
@@ -55,6 +54,7 @@ from .form_spec_recomposers import (
     recompose_single_choice,
     recompose_unknown_form_spec,
 )
+from .registries import get_visitor, register_visitor_class
 from .visitors import (
     BooleanChoiceVisitor,
     CascadingSingleChoiceVisitor,

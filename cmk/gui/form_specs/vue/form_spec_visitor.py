@@ -44,7 +44,7 @@ from cmk.rulesets.v1.form_specs import (
     String,
 )
 
-from .form_spec_recomposers import (
+from .recomposers import (
     recompose_dictionary,
     recompose_host_state,
     recompose_list,

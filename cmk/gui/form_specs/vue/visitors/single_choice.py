@@ -22,9 +22,8 @@ from cmk.gui.i18n import translate_to_current_language
 
 from cmk.rulesets.v1 import Title
 
-from ..type_defs import EMPTY_VALUE, EmptyValue
 from ._base import FormSpecVisitor
-from ._type_defs import DefaultValue, Value
+from ._type_defs import DefaultValue, EMPTY_VALUE, EmptyValue, Value
 
 T = TypeVar("T")
 

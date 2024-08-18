@@ -17,9 +17,8 @@ from cmk.gui.valuespec import Transform
 
 from cmk.rulesets.v1 import Title
 
-from ..type_defs import EMPTY_VALUE, EmptyValue
 from ._base import FormSpecVisitor
-from ._type_defs import DataOrigin, DefaultValue, Value
+from ._type_defs import DataOrigin, DefaultValue, EMPTY_VALUE, EmptyValue, Value
 
 
 class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, object]):

@@ -18,9 +18,8 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import FixedValue
 
-from ..type_defs import EmptyValue
 from ._base import FormSpecVisitor
-from ._type_defs import DEFAULT_VALUE, Value
+from ._type_defs import DEFAULT_VALUE, EmptyValue, Value
 
 T = TypeVar("T", int, float, str, bool, None)
 

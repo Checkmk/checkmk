@@ -16,9 +16,8 @@ from cmk.gui.form_specs.vue.utils import (
     migrate_value,
 )
 
-from ..type_defs import EMPTY_VALUE, EmptyValue
 from ._base import FormSpecVisitor
-from ._type_defs import DataOrigin, DEFAULT_VALUE, DefaultValue, Value
+from ._type_defs import DataOrigin, DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue, Value
 
 
 class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, Mapping[str, object]]):

@@ -18,9 +18,8 @@ from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import String
 
-from ..type_defs import EMPTY_VALUE, EmptyValue
 from ._base import FormSpecVisitor
-from ._type_defs import DEFAULT_VALUE, DefaultValue, Value
+from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue, Value
 
 
 class StringVisitor(FormSpecVisitor[String, str]):

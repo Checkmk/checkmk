@@ -21,9 +21,8 @@ from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import Integer
 
-from ..type_defs import EMPTY_VALUE, EmptyValue
 from ._base import FormSpecVisitor
-from ._type_defs import DefaultValue
+from ._type_defs import DefaultValue, EMPTY_VALUE, EmptyValue
 
 
 class IntegerVisitor(FormSpecVisitor[Integer, int]):

@@ -23,9 +23,8 @@ from cmk.gui.i18n import translate_to_current_language
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import CascadingSingleChoice
 
-from ..type_defs import EMPTY_VALUE, EmptyValue
 from ._base import FormSpecVisitor
-from ._type_defs import DEFAULT_VALUE, DefaultValue, Value
+from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue, Value
 
 
 class CascadingSingleChoiceVisitor(FormSpecVisitor[CascadingSingleChoice, tuple[str, object]]):

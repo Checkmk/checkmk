@@ -21,9 +21,8 @@ from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import Float
 
-from ..type_defs import EMPTY_VALUE, EmptyValue
 from ._base import FormSpecVisitor
-from ._type_defs import DEFAULT_VALUE, DefaultValue
+from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
 
 
 class FloatVisitor(FormSpecVisitor[Float, float]):

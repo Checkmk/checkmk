@@ -22,9 +22,8 @@ from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import DictElement
 from cmk.rulesets.v1.form_specs import Dictionary as FormSpecDictionary
 
-from ..type_defs import EMPTY_VALUE, EmptyValue
 from ._base import FormSpecVisitor
-from ._type_defs import DEFAULT_VALUE, DefaultValue
+from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
 
 
 class CatalogVisitor(FormSpecVisitor[Catalog, Mapping[str, object]]):

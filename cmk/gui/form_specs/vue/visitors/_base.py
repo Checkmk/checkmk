@@ -2,8 +2,12 @@ import abc
 from typing import Any, final, Generic, TypeVar
 
 from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
-from cmk.gui.form_specs.vue.type_defs import EmptyValue
-from cmk.gui.form_specs.vue.visitors._type_defs import DataForDisk, Value, VisitorOptions
+from cmk.gui.form_specs.vue.visitors._type_defs import (
+    DataForDisk,
+    EmptyValue,
+    Value,
+    VisitorOptions,
+)
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.rulesets.v1.form_specs import FormSpec

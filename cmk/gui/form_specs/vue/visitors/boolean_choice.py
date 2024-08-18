@@ -17,9 +17,8 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.rulesets.v1 import Label, Title
 from cmk.rulesets.v1.form_specs import BooleanChoice
 
-from ..type_defs import EMPTY_VALUE, EmptyValue
 from ._base import FormSpecVisitor
-from ._type_defs import DEFAULT_VALUE, DefaultValue, Value
+from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue, Value
 
 
 class BooleanChoiceVisitor(FormSpecVisitor[BooleanChoice, bool]):

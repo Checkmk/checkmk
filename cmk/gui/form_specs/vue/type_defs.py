@@ -10,10 +10,3 @@ class RenderMode(Enum):
     EDIT = "edit"
     READONLY = "readonly"
     BOTH = "both"
-
-
-class EmptyValue:
-    pass
-
-
-EMPTY_VALUE = EmptyValue()

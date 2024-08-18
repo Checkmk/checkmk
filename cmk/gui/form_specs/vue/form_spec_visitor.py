@@ -20,6 +20,16 @@ from cmk.gui.form_specs.private import (
     UnknownFormSpec,
 )
 from cmk.gui.form_specs.vue.type_defs import DataOrigin, DEFAULT_VALUE, RenderMode, VisitorOptions
+from cmk.gui.form_specs.vue.visitors.recomposers import (
+    recompose_dictionary,
+    recompose_host_state,
+    recompose_list,
+    recompose_percentage,
+    recompose_regular_expression,
+    recompose_service_state,
+    recompose_single_choice,
+    recompose_unknown_form_spec,
+)
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.log import logger
@@ -44,16 +54,6 @@ from cmk.rulesets.v1.form_specs import (
     String,
 )
 
-from .recomposers import (
-    recompose_dictionary,
-    recompose_host_state,
-    recompose_list,
-    recompose_percentage,
-    recompose_regular_expression,
-    recompose_service_state,
-    recompose_single_choice,
-    recompose_unknown_form_spec,
-)
 from .registries import get_visitor, register_visitor_class
 from .visitors import (
     BooleanChoiceVisitor,

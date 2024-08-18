@@ -2,7 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from cmk.gui.form_specs.vue.autogen_type_defs import vue_formspec_components as VueComponents
+from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
 from cmk.gui.form_specs.vue.registries import FormSpecVisitor
 from cmk.gui.form_specs.vue.type_defs import (
     DEFAULT_VALUE,

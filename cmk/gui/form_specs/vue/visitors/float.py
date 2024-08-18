@@ -5,7 +5,7 @@
 from typing import Callable, Sequence
 
 from cmk.gui.form_specs.private.validators import IsFloat
-from cmk.gui.form_specs.vue.autogen_type_defs import vue_formspec_components as VueComponents
+from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
 from cmk.gui.form_specs.vue.registries import FormSpecVisitor
 from cmk.gui.form_specs.vue.type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
 from cmk.gui.form_specs.vue.utils import (

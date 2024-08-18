@@ -5,7 +5,7 @@
 import abc
 from typing import Any, Callable, final, Generic, TypeVar
 
-from cmk.gui.form_specs.vue.autogen_type_defs import vue_formspec_components as VueComponents
+from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
 from cmk.gui.form_specs.vue.type_defs import DataForDisk, EmptyValue, Value, VisitorOptions
 from cmk.gui.utils.rule_specs.loader import LoadedRuleSpec
 

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.form_specs.private.validators import IsFloat, IsInteger
-from cmk.gui.form_specs.vue.autogen_type_defs import vue_formspec_components as VueComponents
+from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
 from cmk.gui.form_specs.vue.registries import FormSpecVisitor
 from cmk.gui.form_specs.vue.type_defs import DataOrigin, DefaultValue, EMPTY_VALUE, EmptyValue
 from cmk.gui.form_specs.vue.utils import (

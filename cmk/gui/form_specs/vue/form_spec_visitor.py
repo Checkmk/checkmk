@@ -9,7 +9,7 @@ from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from typing import Any, Literal, TypeVar
 
-import cmk.gui.form_specs.vue.autogen_type_defs.vue_formspec_components as VueComponents
+import cmk.gui.form_specs.vue.shared_type_defs as VueComponents
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.private import (
     Catalog,

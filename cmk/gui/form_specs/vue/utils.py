@@ -5,7 +5,7 @@
 from typing import Any, Callable, Optional, Protocol, Sequence
 
 from cmk.gui.form_specs.private.definitions import UnknownFormSpec
-from cmk.gui.form_specs.vue.autogen_type_defs import vue_formspec_components as VueComponents
+from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
 from cmk.gui.form_specs.vue.registries import (
     form_specs_visitor_registry,
     FormSpecVisitor,

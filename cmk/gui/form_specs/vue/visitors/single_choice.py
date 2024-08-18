@@ -6,7 +6,7 @@
 from typing import Generic, TypeVar
 
 from cmk.gui.form_specs import private
-from cmk.gui.form_specs.vue.autogen_type_defs import vue_formspec_components
+from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
 from cmk.gui.form_specs.vue.registries import FormSpecVisitor
 from cmk.gui.form_specs.vue.type_defs import DefaultValue, EMPTY_VALUE, EmptyValue, Value
 from cmk.gui.form_specs.vue.utils import (
@@ -43,18 +43,18 @@ class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtend
 
     def _to_vue(
         self, raw_value: object, parsed_value: T | EmptyValue
-    ) -> tuple[vue_formspec_components.SingleChoice, Value]:
+    ) -> tuple[VueComponents.SingleChoice, Value]:
         title, help_text = get_title_and_help(self.form_spec)
 
         elements = [
-            vue_formspec_components.SingleChoiceElementExtended(
+            VueComponents.SingleChoiceElementExtended(
                 name=element.name,
                 title=element.title.localize(translate_to_current_language),
             )
             for element in self.form_spec.elements
         ]
         return (
-            vue_formspec_components.SingleChoice(
+            VueComponents.SingleChoice(
                 title=title,
                 help=help_text,
                 elements=elements,
@@ -68,7 +68,7 @@ class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtend
 
     def _validate(
         self, raw_value: object, parsed_value: T | EmptyValue
-    ) -> list[vue_formspec_components.ValidationMessage]:
+    ) -> list[VueComponents.ValidationMessage]:
         if isinstance(parsed_value, EmptyValue):
             return create_validation_error(raw_value, Title("Invalid choice"))
         return compute_validation_errors(compute_validators(self.form_spec), parsed_value)

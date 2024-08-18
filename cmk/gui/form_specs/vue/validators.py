@@ -5,7 +5,7 @@
 from typing import Any, Callable, Sequence
 
 import cmk.gui.form_specs.private.validators as private_form_specs_validators
-import cmk.gui.form_specs.vue.autogen_type_defs.vue_formspec_components as VueComponents
+import cmk.gui.form_specs.vue.shared_type_defs as VueComponents
 from cmk.gui.i18n import _
 
 import cmk.rulesets.v1.form_specs.validators as formspec_validators

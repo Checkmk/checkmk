@@ -828,160 +828,162 @@ def _to_metric_operation(
     translated_metrics: Mapping[str, TranslatedMetric],
     enforced_consolidation_function: GraphConsolidationFunction | None,
 ) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
-    if isinstance(expression, Constant):
-        return MetricOpConstant(value=float(expression.value))
-    if isinstance(expression, Metric):
-        metrics = [
-            MetricOpRRDSource(
-                site_id=site_id,
-                host_name=host_name,
-                service_name=service_name,
-                metric_name=pnp_cleanup(original.name),
-                consolidation_func_name=(
-                    expression.consolidation_func_name or enforced_consolidation_function
-                ),
-                scale=original.scale,
+    match expression:
+        case Constant():
+            return MetricOpConstant(value=float(expression.value))
+        case Metric():
+            metrics = [
+                MetricOpRRDSource(
+                    site_id=site_id,
+                    host_name=host_name,
+                    service_name=service_name,
+                    metric_name=pnp_cleanup(original.name),
+                    consolidation_func_name=(
+                        expression.consolidation_func_name or enforced_consolidation_function
+                    ),
+                    scale=original.scale,
+                )
+                for original in translated_metrics[expression.name].originals
+            ]
+            if len(metrics) > 1:
+                return MetricOpOperator(operator_name="MERGE", operands=metrics)
+            return metrics[0]
+        case Sum():
+            return MetricOpOperator(
+                operator_name="+",
+                operands=[
+                    _to_metric_operation(
+                        site_id,
+                        host_name,
+                        service_name,
+                        s,
+                        translated_metrics,
+                        enforced_consolidation_function,
+                    )
+                    for s in expression.summands
+                ],
             )
-            for original in translated_metrics[expression.name].originals
-        ]
-        if len(metrics) > 1:
-            return MetricOpOperator(operator_name="MERGE", operands=metrics)
-        return metrics[0]
-    if isinstance(expression, Sum):
-        return MetricOpOperator(
-            operator_name="+",
-            operands=[
-                _to_metric_operation(
-                    site_id,
-                    host_name,
-                    service_name,
-                    s,
-                    translated_metrics,
-                    enforced_consolidation_function,
-                )
-                for s in expression.summands
-            ],
-        )
-    if isinstance(expression, Product):
-        return MetricOpOperator(
-            operator_name="*",
-            operands=[
-                _to_metric_operation(
-                    site_id,
-                    host_name,
-                    service_name,
-                    f,
-                    translated_metrics,
-                    enforced_consolidation_function,
-                )
-                for f in expression.factors
-            ],
-        )
-    if isinstance(expression, Difference):
-        return MetricOpOperator(
-            operator_name="-",
-            operands=[
-                _to_metric_operation(
-                    site_id,
-                    host_name,
-                    service_name,
-                    expression.minuend,
-                    translated_metrics,
-                    enforced_consolidation_function,
-                ),
-                _to_metric_operation(
-                    site_id,
-                    host_name,
-                    service_name,
-                    expression.subtrahend,
-                    translated_metrics,
-                    enforced_consolidation_function,
-                ),
-            ],
-        )
-    if isinstance(expression, Fraction):
-        return MetricOpOperator(
-            operator_name="/",
-            operands=[
-                _to_metric_operation(
-                    site_id,
-                    host_name,
-                    service_name,
-                    expression.dividend,
-                    translated_metrics,
-                    enforced_consolidation_function,
-                ),
-                _to_metric_operation(
-                    site_id,
-                    host_name,
-                    service_name,
-                    expression.divisor,
-                    translated_metrics,
-                    enforced_consolidation_function,
-                ),
-            ],
-        )
-    if isinstance(expression, Maximum):
-        return MetricOpOperator(
-            operator_name="MAX",
-            operands=[
-                _to_metric_operation(
-                    site_id,
-                    host_name,
-                    service_name,
-                    o,
-                    translated_metrics,
-                    enforced_consolidation_function,
-                )
-                for o in expression.operands
-            ],
-        )
-    if isinstance(expression, Minimum):
-        return MetricOpOperator(
-            operator_name="MIN",
-            operands=[
-                _to_metric_operation(
-                    site_id,
-                    host_name,
-                    service_name,
-                    o,
-                    translated_metrics,
-                    enforced_consolidation_function,
-                )
-                for o in expression.operands
-            ],
-        )
-    if isinstance(expression, Average):
-        return MetricOpOperator(
-            operator_name="AVERAGE",
-            operands=[
-                _to_metric_operation(
-                    site_id,
-                    host_name,
-                    service_name,
-                    o,
-                    translated_metrics,
-                    enforced_consolidation_function,
-                )
-                for o in expression.operands
-            ],
-        )
-    if isinstance(expression, Merge):
-        return MetricOpOperator(
-            operator_name="MERGE",
-            operands=[
-                _to_metric_operation(
-                    site_id,
-                    host_name,
-                    service_name,
-                    o,
-                    translated_metrics,
-                    enforced_consolidation_function,
-                )
-                for o in expression.operands
-            ],
-        )
-    raise TypeError(expression)
+        case Product():
+            return MetricOpOperator(
+                operator_name="*",
+                operands=[
+                    _to_metric_operation(
+                        site_id,
+                        host_name,
+                        service_name,
+                        f,
+                        translated_metrics,
+                        enforced_consolidation_function,
+                    )
+                    for f in expression.factors
+                ],
+            )
+        case Difference():
+            return MetricOpOperator(
+                operator_name="-",
+                operands=[
+                    _to_metric_operation(
+                        site_id,
+                        host_name,
+                        service_name,
+                        expression.minuend,
+                        translated_metrics,
+                        enforced_consolidation_function,
+                    ),
+                    _to_metric_operation(
+                        site_id,
+                        host_name,
+                        service_name,
+                        expression.subtrahend,
+                        translated_metrics,
+                        enforced_consolidation_function,
+                    ),
+                ],
+            )
+        case Fraction():
+            return MetricOpOperator(
+                operator_name="/",
+                operands=[
+                    _to_metric_operation(
+                        site_id,
+                        host_name,
+                        service_name,
+                        expression.dividend,
+                        translated_metrics,
+                        enforced_consolidation_function,
+                    ),
+                    _to_metric_operation(
+                        site_id,
+                        host_name,
+                        service_name,
+                        expression.divisor,
+                        translated_metrics,
+                        enforced_consolidation_function,
+                    ),
+                ],
+            )
+        case Maximum():
+            return MetricOpOperator(
+                operator_name="MAX",
+                operands=[
+                    _to_metric_operation(
+                        site_id,
+                        host_name,
+                        service_name,
+                        o,
+                        translated_metrics,
+                        enforced_consolidation_function,
+                    )
+                    for o in expression.operands
+                ],
+            )
+        case Minimum():
+            return MetricOpOperator(
+                operator_name="MIN",
+                operands=[
+                    _to_metric_operation(
+                        site_id,
+                        host_name,
+                        service_name,
+                        o,
+                        translated_metrics,
+                        enforced_consolidation_function,
+                    )
+                    for o in expression.operands
+                ],
+            )
+        case Average():
+            return MetricOpOperator(
+                operator_name="AVERAGE",
+                operands=[
+                    _to_metric_operation(
+                        site_id,
+                        host_name,
+                        service_name,
+                        o,
+                        translated_metrics,
+                        enforced_consolidation_function,
+                    )
+                    for o in expression.operands
+                ],
+            )
+        case Merge():
+            return MetricOpOperator(
+                operator_name="MERGE",
+                operands=[
+                    _to_metric_operation(
+                        site_id,
+                        host_name,
+                        service_name,
+                        o,
+                        translated_metrics,
+                        enforced_consolidation_function,
+                    )
+                    for o in expression.operands
+                ],
+            )
+        case _:
+            raise TypeError(expression)
 
 
 def metric_expression_to_graph_recipe_expression(

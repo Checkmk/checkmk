@@ -924,7 +924,7 @@ div#page_menu_popups div[id^="popup_add_to_"] > div.content > span {
     padding-right: $spacing * 3;
   }
 }
-div#page_menu_popups div#popup_test_notifications #form_test_notifications {
+#form_test_notifications {
   div.help,
   div.foldable,
   span.checkbox {
@@ -977,6 +977,7 @@ div#page_menu_popups div#popup_test_notifications #form_test_notifications {
   }
 
   table.nform {
+    background: None;
     .dots,
     .heading {
       display: None;
@@ -1018,6 +1019,10 @@ div#page_menu_popups div#popup_test_notifications #form_test_notifications {
       }
     }
 
+    div#advanced_opts_d_notification_nr {
+      padding-top: 10px;
+    }
+
     .valuespec_foldable_content {
       margin-left: $spacing-half;
       border-left: 2px solid $line-color;
@@ -1044,4 +1049,8 @@ div#page_menu_popups div#popup_test_notifications #form_test_notifications {
       margin-right: 10px;
     }
   }
+}
+
+div.test_notifications_matching_help {
+  margin-top: 10px;
 }

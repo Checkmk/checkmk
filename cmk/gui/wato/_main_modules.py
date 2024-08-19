@@ -56,6 +56,7 @@ def register(main_module_registry: MainModuleRegistry) -> None:
     main_module_registry.register(MainModuleContactGroups)
     main_module_registry.register(MainModuleNotifications)
     main_module_registry.register(MainModuleAnalyzeNotifications)
+    main_module_registry.register(MainModuleTestNotifications)
     main_module_registry.register(MainModuleTimeperiods)
     main_module_registry.register(MainModulePasswords)
     main_module_registry.register(MainModuleAuditLog)
@@ -795,6 +796,40 @@ class MainModuleAnalyzeNotifications(ABCMainModule):
     @property
     def sort_index(self) -> int:
         return 11
+
+    @property
+    def is_show_more(self) -> bool:
+        return False
+
+
+class MainModuleTestNotifications(ABCMainModule):
+    @property
+    def mode_or_url(self) -> str:
+        return "test_notifications"
+
+    @property
+    def topic(self) -> MainModuleTopic:
+        return MainModuleTopicEvents
+
+    @property
+    def title(self) -> str:
+        return _("Test notifications")
+
+    @property
+    def icon(self) -> Icon:
+        return "analysis"
+
+    @property
+    def permission(self) -> None | str:
+        return "notifications"
+
+    @property
+    def description(self) -> str:
+        return _("Test custom notifications with your current ruleset")
+
+    @property
+    def sort_index(self) -> int:
+        return 12
 
     @property
     def is_show_more(self) -> bool:

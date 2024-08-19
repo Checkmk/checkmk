@@ -436,6 +436,7 @@ class DocReference(Enum):
     REPORTS = "reporting"
     SLA_CONFIGURATION = "sla"
     TIMEPERIODS = "timeperiods"
+    TEST_NOTIFICATIONS = "notifications#notification_testing"
     USER_INTERFACE = "user_interface"
     VIEWS = "views"
     VMWARE = "monitoring_vmware"

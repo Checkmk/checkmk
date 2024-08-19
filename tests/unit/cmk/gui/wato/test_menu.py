@@ -45,6 +45,7 @@ def expected_items() -> dict[str, list[str]]:
     events_items = [
         "notifications",
         "analyze_notifications",
+        "test_notifications",
         "mkeventd_rule_packs",
     ]
 

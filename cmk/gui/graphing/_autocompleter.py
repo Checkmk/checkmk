@@ -10,7 +10,7 @@ from cmk.gui.visuals import livestatus_query_bare
 
 from ._graph_templates import get_graph_template_choices, get_graph_templates
 from ._metrics import get_metric_spec, registered_metrics
-from ._utils import translated_metrics_from_row
+from ._translated_metrics import translated_metrics_from_row
 from ._valuespecs import metrics_of_query
 
 

@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Literal, TypedDict
+from typing import Literal
 
 from livestatus import SiteId
 
@@ -13,8 +13,6 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
 from cmk.gui.time_series import TimeSeries
-
-from ._legacy import UnitInfo
 
 GraphConsolidationFunction = Literal["max", "min", "average"]
 GraphPresentation = Literal["lines", "stacked", "sum", "average", "min", "max"]
@@ -33,27 +31,3 @@ class RRDDataKey:
 
 
 RRDData = Mapping[RRDDataKey, TimeSeries]
-
-
-@dataclass(frozen=True)
-class Original:
-    name: str
-    scale: float
-
-
-class ScalarBounds(TypedDict, total=False):
-    warn: float
-    crit: float
-    min: float
-    max: float
-
-
-@dataclass(frozen=True)
-class TranslatedMetric:
-    originals: Sequence[Original]
-    value: float
-    scalar: ScalarBounds
-    auto_graph: bool
-    title: str
-    unit_info: UnitInfo
-    color: str

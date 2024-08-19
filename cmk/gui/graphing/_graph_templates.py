@@ -57,8 +57,9 @@ from ._graph_specification import (
 )
 from ._legacy import graph_info, RawGraphTemplate
 from ._metrics import get_metric_spec
-from ._type_defs import GraphConsolidationFunction, LineType, TranslatedMetric
-from ._utils import get_graph_data_from_livestatus, translated_metrics_from_row
+from ._translated_metrics import translated_metrics_from_row, TranslatedMetric
+from ._type_defs import GraphConsolidationFunction, LineType
+from ._utils import get_graph_data_from_livestatus
 
 
 def _graph_templates_from_plugins() -> (

@@ -20,7 +20,7 @@ from cmk.gui.graphing._perfometer import (
     MetricRendererStack,
     parse_perfometer,
 )
-from cmk.gui.graphing._type_defs import Original, ScalarBounds, TranslatedMetric
+from cmk.gui.graphing._translated_metrics import Original, ScalarBounds, TranslatedMetric
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.graphing.v1 import metrics as metrics_api

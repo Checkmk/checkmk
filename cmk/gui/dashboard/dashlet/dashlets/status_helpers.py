@@ -11,7 +11,7 @@ from cmk.gui import sites, visuals
 from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.graphing._legacy import UnitInfo
 from cmk.gui.graphing._metrics import MetricSpec
-from cmk.gui.graphing._type_defs import TranslatedMetric
+from cmk.gui.graphing._translated_metrics import TranslatedMetric
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import ColumnName, VisualContext

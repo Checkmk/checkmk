@@ -34,9 +34,9 @@ from ._graph_specification import GraphDataRange, GraphRecipe
 from ._legacy import check_metrics, CheckMetricEntry
 from ._metrics import get_metric_spec
 from ._timeseries import op_func_wrapper, time_series_operators
+from ._translated_metrics import find_matching_translation, TranslationSpec
 from ._type_defs import GraphConsolidationFunction, RRDData, RRDDataKey
 from ._unit import user_specific_unit
-from ._utils import find_matching_translation, TranslationSpec
 
 
 def fetch_rrd_data_for_graph(

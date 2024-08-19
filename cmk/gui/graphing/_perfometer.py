@@ -33,7 +33,7 @@ from ._legacy import (
     unit_info,
     UnitInfo,
 )
-from ._type_defs import TranslatedMetric
+from ._translated_metrics import TranslatedMetric
 
 
 @dataclass(frozen=True)

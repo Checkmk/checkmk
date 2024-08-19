@@ -37,7 +37,7 @@ from cmk.gui.graphing._graph_templates import (
     ScalarDefinition,
     TemplateGraphSpecification,
 )
-from cmk.gui.graphing._utils import parse_perf_data, translate_metrics
+from cmk.gui.graphing._translated_metrics import parse_perf_data, translate_metrics
 
 from cmk.ccc.exceptions import MKGeneralException
 

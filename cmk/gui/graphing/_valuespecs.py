@@ -42,7 +42,7 @@ from ._from_api import registered_units
 from ._graph_render_config import GraphRenderConfigBase
 from ._legacy import check_metrics
 from ._metrics import get_metric_spec, registered_metrics
-from ._utils import (
+from ._translated_metrics import (
     find_matching_translation,
     lookup_metric_translations_for_check_command,
     parse_perf_data,

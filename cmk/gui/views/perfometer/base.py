@@ -6,8 +6,11 @@
 from collections.abc import Mapping, Sequence
 
 from cmk.gui.graphing import get_first_matching_perfometer
-from cmk.gui.graphing._type_defs import TranslatedMetric
-from cmk.gui.graphing._utils import parse_perf_data, translate_metrics
+from cmk.gui.graphing._translated_metrics import (
+    parse_perf_data,
+    translate_metrics,
+    TranslatedMetric,
+)
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import Perfdata, Row

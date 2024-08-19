@@ -2821,6 +2821,14 @@ class ManagedRobotsClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def create(self, managed_robot_data: dict[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body=managed_robot_data,
+            expect_ok=expect_ok,
+        )
+
 
 @dataclasses.dataclass
 class ClientRegistry:

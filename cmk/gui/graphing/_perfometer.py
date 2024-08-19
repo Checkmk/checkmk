@@ -360,7 +360,7 @@ def _has_required_metrics_or_scalars(
     return True
 
 
-def _perfometer_has_required_metrics_or_scalars(
+def _legacy_perfometer_has_required_metrics_or_scalars(
     perfometer: PerfometerSpec, translated_metrics: Mapping[str, TranslatedMetric]
 ) -> bool:
     if perfometer["type"] == "linear":
@@ -378,7 +378,7 @@ def _perfometer_has_required_metrics_or_scalars(
 
     if perfometer["type"] in ("dual", "stacked"):
         return all(
-            _perfometer_has_required_metrics_or_scalars(p, translated_metrics)
+            _legacy_perfometer_has_required_metrics_or_scalars(p, translated_metrics)
             for p in perfometer["perfometers"]
         )
 
@@ -390,7 +390,7 @@ def _perfometer_possible(
 ) -> bool:
     assert translated_metrics
 
-    if not _perfometer_has_required_metrics_or_scalars(perfometer, translated_metrics):
+    if not _legacy_perfometer_has_required_metrics_or_scalars(perfometer, translated_metrics):
         return False
 
     if perfometer["type"] == "linear":

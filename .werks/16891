@@ -1,0 +1,13 @@
+Title: check_ewon: TypeError ('NoneType' object is not subscriptable) raised if values for levels are missing
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1724069620
+Edition: cre
+Level: 1
+Version: 2.2.0p33
+
+In case values for `levels` are missing and `None` taken instead, running the check function would
+crash with `TypeError ('NoneType' object is not subscriptable)`.
+
+This change hard codes some default values in case no values could be extracted.

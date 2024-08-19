@@ -244,7 +244,7 @@ def _check_oxyreduct(params: Mapping[str, Any], data: Mapping[int, float]) -> Ch
             try:
                 levels = params[tag_params["levels_name"]]
             except KeyError:
-                levels = tag_params.get("levels")
+                levels = tag_params.get("levels", (16, 17, 14, 13))
 
             unit_str = tag_params.get("unit", "")
             yield from check_levels(

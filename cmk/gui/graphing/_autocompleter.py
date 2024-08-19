@@ -8,7 +8,7 @@ from collections.abc import Iterable
 from cmk.gui.type_defs import Choices
 from cmk.gui.visuals import livestatus_query_bare
 
-from ._graph_templates_from_plugins import get_graph_template_choices, get_graph_templates
+from ._graph_templates import get_graph_template_choices, get_graph_templates
 from ._metrics import get_metric_spec, registered_metrics
 from ._utils import translated_metrics_from_row
 from ._valuespecs import metrics_of_query

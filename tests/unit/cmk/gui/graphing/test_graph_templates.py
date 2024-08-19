@@ -24,9 +24,9 @@ from cmk.gui.graphing._graph_specification import (
     MetricOpOperator,
     MetricOpRRDSource,
 )
-from cmk.gui.graphing._graph_templates import _matching_graph_templates
-from cmk.gui.graphing._graph_templates_from_plugins import (
+from cmk.gui.graphing._graph_templates import (
     _graph_templates_from_plugins,
+    _matching_graph_templates,
     _parse_graph_template,
     GraphTemplate,
     ScalarDefinition,

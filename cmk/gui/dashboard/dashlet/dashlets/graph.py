@@ -19,8 +19,7 @@ from cmk.gui.dashboard.type_defs import DashletId, DashletSize
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.graphing._graph_render_config import graph_grender_options_from_vs, GraphRenderConfig
 from cmk.gui.graphing._graph_specification import GraphSpecification
-from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
-from cmk.gui.graphing._graph_templates_from_plugins import get_graph_template_choices
+from cmk.gui.graphing._graph_templates import get_graph_template_choices, TemplateGraphSpecification
 from cmk.gui.graphing._html_render import GraphDestinations
 from cmk.gui.graphing._metrics import get_metric_spec
 from cmk.gui.graphing._utils import MKCombinedGraphLimitExceededError

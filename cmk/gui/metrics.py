@@ -32,7 +32,7 @@ from cmk.gui.graphing import _utils as graphing_utils
 from cmk.gui.graphing._from_api import graphs_from_api, metrics_from_api, perfometers_from_api
 from cmk.gui.graphing._graph_render_config import GraphRenderConfig
 from cmk.gui.graphing._graph_specification import parse_raw_graph_specification
-from cmk.gui.graphing._graph_templates_from_plugins import GraphTemplate
+from cmk.gui.graphing._graph_templates import GraphTemplate
 from cmk.gui.graphing._html_render import (
     host_service_graph_dashlet_cmk,
     host_service_graph_popup_cmk,

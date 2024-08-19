@@ -32,7 +32,7 @@ from cmk.gui.graphing._expression import (
     WarningOf,
 )
 from cmk.gui.graphing._from_api import metrics_from_api
-from cmk.gui.graphing._graph_templates_from_plugins import (
+from cmk.gui.graphing._graph_templates import (
     _compute_predictive_metrics,
     get_graph_templates,
     GraphTemplate,

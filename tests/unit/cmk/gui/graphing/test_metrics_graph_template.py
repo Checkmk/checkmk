@@ -29,13 +29,13 @@ from cmk.gui.graphing._graph_specification import (
     MetricOpRRDSource,
     MinimalVerticalRange,
 )
-from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
-from cmk.gui.graphing._graph_templates_from_plugins import (
+from cmk.gui.graphing._graph_templates import (
     GraphTemplate,
     MetricDefinition,
     MetricUnitColor,
     MinimalGraphTemplateRange,
     ScalarDefinition,
+    TemplateGraphSpecification,
 )
 from cmk.gui.graphing._utils import parse_perf_data, translate_metrics
 

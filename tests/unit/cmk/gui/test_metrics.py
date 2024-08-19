@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.graphing._expression import CriticalOf, Metric, WarningOf
-from cmk.gui.graphing._graph_templates_from_plugins import (
+from cmk.gui.graphing._graph_templates import (
     get_graph_template,
     GraphTemplate,
     MetricDefinition,

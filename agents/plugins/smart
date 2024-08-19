@@ -105,6 +105,11 @@ if inpath smartctl >/dev/null 2>&1; then
             # 2012-01-25 Stefan Kaerst CDJ - in case $N does not exist
             VEND=ATA
         fi
+        # Check if "nvme" is in $N
+        # some nvme disks can be misclassified as ATA with the above
+        if [[ "$N" == *nvme* ]]; then
+            VEND=NVME
+        fi
         if [ -r /sys/block/"$N"/device/model ]; then
             MODEL=$(sed -e 's/ /_/g' -e 's/_*$//g' </sys/block/"$N"/device/model)
         else

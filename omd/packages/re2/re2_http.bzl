@@ -7,7 +7,9 @@ def re2(version_str, sha256):
         name = "re2",
         urls = [
             # Also checked in under "/third_party/re2"
-            "https://github.com/google/re2/releases/download/" + version_str + "/" + filename,
+            # TODO: "releases/download/" + version_str + "/" + filename introduced with 2023-06-02 release and later
+            # "https://github.com/google/re2/releases/download/" + version_str + "/" + filename,
+            "https://github.com/google/re2/archive/refs/tags/" + version_str + ".tar.gz",
             UPSTREAM_MIRROR_URL + filename,
         ],
         sha256 = sha256,

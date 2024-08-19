@@ -21,7 +21,7 @@ class PermittedPath(TypedDict):
     nodes: NotRequired[NothingOrChoices]
 
 
-InventoryPaths = Literal["allow_all"] | tuple[Literal["paths"], list[PermittedPath]]
+InventoryPaths = Literal["allow_all", "forbid_all"] | tuple[Literal["paths"], list[PermittedPath]]
 
 
 class GroupAliases(TypedDict):

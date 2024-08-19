@@ -284,7 +284,7 @@ class GraphTemplate:
 
 
 def _graph_template_from_api_graph(id_: str, graph: graphs_api.Graph) -> GraphTemplate:
-    metrics_ = [_parse_quantity(l, "stack") for l in graph.compound_lines]
+    metrics = [_parse_quantity(l, "stack") for l in graph.compound_lines]
     scalars: list[ScalarDefinition] = []
     for line in graph.simple_lines:
         match line:
@@ -297,12 +297,12 @@ def _graph_template_from_api_graph(id_: str, graph: graphs_api.Graph) -> GraphTe
                 parsed = _parse_quantity(line, "line")
                 scalars.append(ScalarDefinition(parsed.expression, parsed.title))
             case _:
-                metrics_.append(_parse_quantity(line, "line"))
+                metrics.append(_parse_quantity(line, "line"))
     return GraphTemplate(
         id=id_,
         title=_parse_title(graph),
         range=(None if graph.minimal_range is None else _parse_minimal_range(graph.minimal_range)),
-        metrics=metrics_,
+        metrics=metrics,
         scalars=list(scalars),
         optional_metrics=graph.optional,
         conflicting_metrics=graph.conflicting,
@@ -325,7 +325,7 @@ def _graph_template_from_api_bidirectional(
         ranges_min.append(upper_range.min)
         ranges_max.append(upper_range.max)
 
-    metrics_ = [_parse_quantity(l, "-stack") for l in bidirectional.lower.compound_lines] + [
+    metrics = [_parse_quantity(l, "-stack") for l in bidirectional.lower.compound_lines] + [
         _parse_quantity(l, "stack") for l in bidirectional.upper.compound_lines
     ]
     scalars: list[ScalarDefinition] = []
@@ -340,7 +340,7 @@ def _graph_template_from_api_bidirectional(
                 parsed = _parse_quantity(line, "-line")
                 scalars.append(ScalarDefinition(parsed.expression, parsed.title))
             case _:
-                metrics_.append(_parse_quantity(line, "-line"))
+                metrics.append(_parse_quantity(line, "-line"))
     for line in bidirectional.upper.simple_lines:
         match line:
             case (
@@ -352,7 +352,7 @@ def _graph_template_from_api_bidirectional(
                 parsed = _parse_quantity(line, "line")
                 scalars.append(ScalarDefinition(parsed.expression, parsed.title))
             case _:
-                metrics_.append(_parse_quantity(line, "line"))
+                metrics.append(_parse_quantity(line, "line"))
     return GraphTemplate(
         id=id_,
         title=_parse_title(bidirectional),
@@ -364,7 +364,7 @@ def _graph_template_from_api_bidirectional(
             if ranges_min and ranges_max
             else None
         ),
-        metrics=metrics_,
+        metrics=metrics,
         scalars=scalars,
         optional_metrics=(list(bidirectional.lower.optional) + list(bidirectional.upper.optional)),
         conflicting_metrics=(
@@ -471,9 +471,9 @@ def get_graph_template(template_id: str) -> GraphTemplate:
 
 
 def _compute_predictive_metrics(
-    translated_metrics: Mapping[str, TranslatedMetric], metrics_: Sequence[MetricDefinition]
+    translated_metrics: Mapping[str, TranslatedMetric], metrics: Sequence[MetricDefinition]
 ) -> Iterator[MetricDefinition]:
-    for metric_defintion in metrics_:
+    for metric_defintion in metrics:
         line_type: Literal["line", "-line"] = (
             "-line" if metric_defintion.line_type.startswith("-") else "line"
         )
@@ -538,7 +538,7 @@ def _get_explicit_graph_templates(
 ) -> Iterable[GraphTemplate]:
     for id_, template in graph_templates:
         parsed = _parse_graph_template(id_, template)
-        if metrics_ := applicable_metrics(
+        if metrics := applicable_metrics(
             metrics_to_consider=parsed.metrics,
             conflicting_metrics=parsed.conflicting_metrics,
             optional_metrics=parsed.optional_metrics,
@@ -554,7 +554,7 @@ def _get_explicit_graph_templates(
                 range=parsed.range,
                 omit_zero_metrics=parsed.omit_zero_metrics,
                 metrics=(
-                    list(metrics_) + list(_compute_predictive_metrics(translated_metrics, metrics_))
+                    list(metrics) + list(_compute_predictive_metrics(translated_metrics, metrics))
                 ),
             )
 

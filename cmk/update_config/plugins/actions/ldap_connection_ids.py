@@ -33,7 +33,7 @@ class UpdateLdapConnectionIds(UpdateAction):
 
         updated_users = {}
         for user_id, user_spec in load_users().items():
-            if user_spec["connector"] in replaced_connections:
+            if "connector" in user_spec and user_spec["connector"] in replaced_connections:
                 new_user_spec = copy(user_spec)
                 new_user_spec["connector"] = replaced_connections[user_spec["connector"]]
 

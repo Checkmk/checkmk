@@ -1,0 +1,15 @@
+Title: update_action: check for connector key in user configs before accessing it
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1724057162
+Edition: cre
+Level: 1
+Version: 2.2.0p33
+
+We previously implemented an update action that would check for invalid
+ldap connection ids in the user configs.  However, this change didn't
+take into account that a user config doesn't always have a connection
+id and would cause a crash on updating.
+This werk fixes this issue by checking first if the user config has
+a connection id before accessing it.

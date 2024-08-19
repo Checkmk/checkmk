@@ -1,0 +1,15 @@
+Title: chrony: change default warning level
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1724048041
+Edition: cre
+Level: 1
+Version: 2.2.0p33
+
+Chrony's default <code>minpoll</code> and <code>maxpoll</code> values are 64 seconds and 1024 seconds.
+In standard situations (good internet connection, low error etc)
+the interval between polls should stick near the max value (1024 seconds).
+(see <code>https://chrony-project.org/examples.html#_client_using_public_servers</code>)
+
+Beacuse of that, the default WARN alert is now set to 1025 seconds.

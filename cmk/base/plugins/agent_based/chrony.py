@@ -154,7 +154,7 @@ register.check_plugin(
     check_function=check_chrony,
     check_default_parameters={
         "ntp_levels": (10, 200.0, 500.0),
-        "alert_delay": (1800, 3600),  # chronys default maxpoll is 10 (1024s)
+        "alert_delay": (1025, 3600),  # chronys default maxpoll is 10 (1024s)
     },
     check_ruleset_name="ntp_time",
 )

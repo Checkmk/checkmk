@@ -338,36 +338,6 @@ class GraphTemplate:
         )
 
     @classmethod
-    def from_graph(cls, id_: str, graph: graphs_api.Graph) -> Self:
-        metrics_ = [_parse_quantity(l, "stack") for l in graph.compound_lines]
-        scalars: list[ScalarDefinition] = []
-        for line in graph.simple_lines:
-            match line:
-                case (
-                    metrics_api.WarningOf()
-                    | metrics_api.CriticalOf()
-                    | metrics_api.MinimumOf()
-                    | metrics_api.MaximumOf()
-                ):
-                    parsed = _parse_quantity(line, "line")
-                    scalars.append(ScalarDefinition(parsed.expression, parsed.title))
-                case _:
-                    metrics_.append(_parse_quantity(line, "line"))
-        return cls(
-            id=id_,
-            title=_parse_title(graph),
-            range=(
-                None if graph.minimal_range is None else _parse_minimal_range(graph.minimal_range)
-            ),
-            metrics=metrics_,
-            scalars=list(scalars),
-            optional_metrics=graph.optional,
-            conflicting_metrics=graph.conflicting,
-            consolidation_function=None,
-            omit_zero_metrics=False,
-        )
-
-    @classmethod
     def from_bidirectional(cls, id_: str, bidirectional: graphs_api.Bidirectional) -> Self:
         ranges_min = []
         ranges_max = []
@@ -432,12 +402,40 @@ class GraphTemplate:
         )
 
 
+def _graph_template_from_api_graph(id_: str, graph: graphs_api.Graph) -> GraphTemplate:
+    metrics_ = [_parse_quantity(l, "stack") for l in graph.compound_lines]
+    scalars: list[ScalarDefinition] = []
+    for line in graph.simple_lines:
+        match line:
+            case (
+                metrics_api.WarningOf()
+                | metrics_api.CriticalOf()
+                | metrics_api.MinimumOf()
+                | metrics_api.MaximumOf()
+            ):
+                parsed = _parse_quantity(line, "line")
+                scalars.append(ScalarDefinition(parsed.expression, parsed.title))
+            case _:
+                metrics_.append(_parse_quantity(line, "line"))
+    return GraphTemplate(
+        id=id_,
+        title=_parse_title(graph),
+        range=(None if graph.minimal_range is None else _parse_minimal_range(graph.minimal_range)),
+        metrics=metrics_,
+        scalars=list(scalars),
+        optional_metrics=graph.optional,
+        conflicting_metrics=graph.conflicting,
+        consolidation_function=None,
+        omit_zero_metrics=False,
+    )
+
+
 def _parse_graph_template(
     id_: str, template: graphs_api.Graph | graphs_api.Bidirectional | RawGraphTemplate
 ) -> GraphTemplate:
     match template:
         case graphs_api.Graph():
-            return GraphTemplate.from_graph(id_, template)
+            return _graph_template_from_api_graph(id_, template)
         case graphs_api.Bidirectional():
             return GraphTemplate.from_bidirectional(id_, template)
         case _:

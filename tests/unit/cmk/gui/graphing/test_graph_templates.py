@@ -23,8 +23,10 @@ from cmk.gui.graphing._expression import (
     CriticalOf,
     Difference,
     Fraction,
+    Maximum,
     MaximumOf,
     Metric,
+    Minimum,
     MinimumOf,
     Product,
     Sum,
@@ -37,6 +39,7 @@ from cmk.gui.graphing._graph_specification import (
     MetricOpRRDSource,
 )
 from cmk.gui.graphing._graph_templates import (
+    _graph_template_from_api_bidirectional,
     _graph_template_from_api_graph,
     _graph_templates_from_plugins,
     _matching_graph_templates,
@@ -709,3 +712,232 @@ def test__graph_template_from_api_graph(
             )
         )
     assert _graph_template_from_api_graph(graph.name, graph) == expected_template
+
+
+@pytest.mark.parametrize(
+    "graph, raw_metric_names, expected_template",
+    [
+        pytest.param(
+            graphs_api.Bidirectional(
+                name="name",
+                title=Title("Title"),
+                lower=graphs_api.Graph(
+                    name="name-lower",
+                    title=Title("Title lower"),
+                    compound_lines=["metric-name-l1"],
+                    simple_lines=[
+                        "metric-name-l2",
+                        metrics_api.WarningOf("metric-name-l3"),
+                        metrics_api.CriticalOf("metric-name-l4"),
+                        metrics_api.MinimumOf("metric-name-l5", COLOR),
+                        metrics_api.MaximumOf("metric-name-l6", COLOR),
+                    ],
+                    optional=["metric-name-opt-l"],
+                    conflicting=["metric-name-confl-l"],
+                ),
+                upper=graphs_api.Graph(
+                    name="name-upper",
+                    title=Title("Title upper"),
+                    compound_lines=["metric-name-u1"],
+                    simple_lines=[
+                        "metric-name-u2",
+                        metrics_api.WarningOf("metric-name-u3"),
+                        metrics_api.CriticalOf("metric-name-u4"),
+                        metrics_api.MinimumOf("metric-name-u5", COLOR),
+                        metrics_api.MaximumOf("metric-name-u6", COLOR),
+                    ],
+                    optional=["metric-name-opt-u"],
+                    conflicting=["metric-name-confl-u"],
+                ),
+            ),
+            [
+                "metric-name-l1",
+                "metric-name-l2",
+                "metric-name-l3",
+                "metric-name-l4",
+                "metric-name-l5",
+                "metric-name-l6",
+                "metric-name-u1",
+                "metric-name-u2",
+                "metric-name-u3",
+                "metric-name-u4",
+                "metric-name-u5",
+                "metric-name-u6",
+            ],
+            GraphTemplate(
+                id="name",
+                title="Title",
+                range=None,
+                scalars=[
+                    ScalarDefinition(
+                        WarningOf(Metric("metric-name-l3"), "warn"),
+                        "Warning of Title",
+                    ),
+                    ScalarDefinition(
+                        CriticalOf(Metric("metric-name-l4"), "crit"),
+                        "Critical of Title",
+                    ),
+                    ScalarDefinition(
+                        MinimumOf(Metric("metric-name-l5"), "min", explicit_color=COLOR_HEX),
+                        "Title",
+                    ),
+                    ScalarDefinition(
+                        MaximumOf(Metric("metric-name-l6"), "max", explicit_color=COLOR_HEX),
+                        "Title",
+                    ),
+                    ScalarDefinition(
+                        WarningOf(Metric("metric-name-u3"), "warn"),
+                        "Warning of Title",
+                    ),
+                    ScalarDefinition(
+                        CriticalOf(Metric("metric-name-u4"), "crit"),
+                        "Critical of Title",
+                    ),
+                    ScalarDefinition(
+                        MinimumOf(Metric("metric-name-u5"), "min", explicit_color=COLOR_HEX),
+                        "Title",
+                    ),
+                    ScalarDefinition(
+                        MaximumOf(Metric("metric-name-u6"), "max", explicit_color=COLOR_HEX),
+                        "Title",
+                    ),
+                ],
+                conflicting_metrics=["metric-name-confl-l", "metric-name-confl-u"],
+                optional_metrics=["metric-name-opt-l", "metric-name-opt-u"],
+                consolidation_function=None,
+                omit_zero_metrics=False,
+                metrics=[
+                    MetricDefinition(Metric("metric-name-l1"), "-stack", "Title"),
+                    MetricDefinition(Metric("metric-name-u1"), "stack", "Title"),
+                    MetricDefinition(Metric("metric-name-l2"), "-line", "Title"),
+                    MetricDefinition(Metric("metric-name-u2"), "line", "Title"),
+                ],
+            ),
+            id="lower-upper",
+        ),
+        pytest.param(
+            graphs_api.Bidirectional(
+                name="name",
+                title=Title("Title"),
+                lower=graphs_api.Graph(
+                    name="name-lower",
+                    title=Title("Title lower"),
+                    minimal_range=graphs_api.MinimalRange(1, 10),
+                    simple_lines=["metric-name-l"],
+                ),
+                upper=graphs_api.Graph(
+                    name="name-upper",
+                    title=Title("Title upper"),
+                    minimal_range=graphs_api.MinimalRange(2, 11),
+                    simple_lines=["metric-name-u"],
+                ),
+            ),
+            ["metric-name-l", "metric-name-u"],
+            GraphTemplate(
+                id="name",
+                title="Title",
+                range=MinimalGraphTemplateRange(
+                    min=Minimum([Constant(1), Constant(2)]),
+                    max=Maximum([Constant(10), Constant(11)]),
+                ),
+                scalars=[],
+                conflicting_metrics=[],
+                optional_metrics=[],
+                consolidation_function=None,
+                omit_zero_metrics=False,
+                metrics=[
+                    MetricDefinition(Metric("metric-name-l"), "-line", "Title"),
+                    MetricDefinition(Metric("metric-name-u"), "line", "Title"),
+                ],
+            ),
+            id="range-both",
+        ),
+        pytest.param(
+            graphs_api.Bidirectional(
+                name="name",
+                title=Title("Title"),
+                lower=graphs_api.Graph(
+                    name="name-lower",
+                    title=Title("Title lower"),
+                    minimal_range=graphs_api.MinimalRange(1, 10),
+                    simple_lines=["metric-name-l"],
+                ),
+                upper=graphs_api.Graph(
+                    name="name-upper",
+                    title=Title("Title upper"),
+                    simple_lines=["metric-name-u"],
+                ),
+            ),
+            ["metric-name-l", "metric-name-u"],
+            GraphTemplate(
+                id="name",
+                title="Title",
+                range=MinimalGraphTemplateRange(
+                    min=Minimum([Constant(1)]),
+                    max=Maximum([Constant(10)]),
+                ),
+                scalars=[],
+                conflicting_metrics=[],
+                optional_metrics=[],
+                consolidation_function=None,
+                omit_zero_metrics=False,
+                metrics=[
+                    MetricDefinition(Metric("metric-name-l"), "-line", "Title"),
+                    MetricDefinition(Metric("metric-name-u"), "line", "Title"),
+                ],
+            ),
+            id="range-only-lower",
+        ),
+        pytest.param(
+            graphs_api.Bidirectional(
+                name="name",
+                title=Title("Title"),
+                lower=graphs_api.Graph(
+                    name="name-lower",
+                    title=Title("Title lower"),
+                    simple_lines=["metric-name-l"],
+                ),
+                upper=graphs_api.Graph(
+                    name="name-upper",
+                    title=Title("Title upper"),
+                    minimal_range=graphs_api.MinimalRange(2, 11),
+                    simple_lines=["metric-name-u"],
+                ),
+            ),
+            ["metric-name-l", "metric-name-u"],
+            GraphTemplate(
+                id="name",
+                title="Title",
+                range=MinimalGraphTemplateRange(
+                    min=Minimum([Constant(2)]),
+                    max=Maximum([Constant(11)]),
+                ),
+                scalars=[],
+                conflicting_metrics=[],
+                optional_metrics=[],
+                consolidation_function=None,
+                omit_zero_metrics=False,
+                metrics=[
+                    MetricDefinition(Metric("metric-name-l"), "-line", "Title"),
+                    MetricDefinition(Metric("metric-name-u"), "line", "Title"),
+                ],
+            ),
+            id="range-only-upper",
+        ),
+    ],
+)
+def test__graph_template_from_api_bidirectional(
+    graph: graphs_api.Bidirectional,
+    raw_metric_names: Sequence[str],
+    expected_template: GraphTemplate,
+) -> None:
+    for r in raw_metric_names:
+        metrics_from_api.register(
+            metrics_api.Metric(
+                name=r,
+                title=Title("Title"),
+                unit=metrics_api.Unit(metrics_api.DecimalNotation("")),
+                color=metrics_api.Color.BLUE,
+            )
+        )
+    assert _graph_template_from_api_bidirectional(graph.name, graph) == expected_template

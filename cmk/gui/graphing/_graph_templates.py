@@ -337,70 +337,6 @@ class GraphTemplate:
             metrics=[_parse_raw_metric_definition(r) for r in raw["metrics"]],
         )
 
-    @classmethod
-    def from_bidirectional(cls, id_: str, bidirectional: graphs_api.Bidirectional) -> Self:
-        ranges_min = []
-        ranges_max = []
-        if bidirectional.lower.minimal_range is not None:
-            lower_range = _parse_minimal_range(bidirectional.lower.minimal_range)
-            ranges_min.append(lower_range.min)
-            ranges_max.append(lower_range.max)
-        if bidirectional.upper.minimal_range is not None:
-            upper_range = _parse_minimal_range(bidirectional.upper.minimal_range)
-            ranges_min.append(upper_range.min)
-            ranges_max.append(upper_range.max)
-
-        metrics_ = [_parse_quantity(l, "-stack") for l in bidirectional.lower.compound_lines] + [
-            _parse_quantity(l, "stack") for l in bidirectional.upper.compound_lines
-        ]
-        scalars: list[ScalarDefinition] = []
-        for line in bidirectional.lower.simple_lines:
-            match line:
-                case (
-                    metrics_api.WarningOf()
-                    | metrics_api.CriticalOf()
-                    | metrics_api.MinimumOf()
-                    | metrics_api.MaximumOf()
-                ):
-                    parsed = _parse_quantity(line, "-line")
-                    scalars.append(ScalarDefinition(parsed.expression, parsed.title))
-                case _:
-                    metrics_.append(_parse_quantity(line, "-line"))
-        for line in bidirectional.upper.simple_lines:
-            match line:
-                case (
-                    metrics_api.WarningOf()
-                    | metrics_api.CriticalOf()
-                    | metrics_api.MinimumOf()
-                    | metrics_api.MaximumOf()
-                ):
-                    parsed = _parse_quantity(line, "line")
-                    scalars.append(ScalarDefinition(parsed.expression, parsed.title))
-                case _:
-                    metrics_.append(_parse_quantity(line, "line"))
-        return cls(
-            id=id_,
-            title=_parse_title(bidirectional),
-            range=(
-                MinimalGraphTemplateRange(
-                    min=Minimum(ranges_min),
-                    max=Maximum(ranges_max),
-                )
-                if ranges_min and ranges_max
-                else None
-            ),
-            metrics=metrics_,
-            scalars=scalars,
-            optional_metrics=(
-                list(bidirectional.lower.optional) + list(bidirectional.upper.optional)
-            ),
-            conflicting_metrics=(
-                list(bidirectional.lower.conflicting) + list(bidirectional.upper.conflicting)
-            ),
-            consolidation_function=None,
-            omit_zero_metrics=False,
-        )
-
 
 def _graph_template_from_api_graph(id_: str, graph: graphs_api.Graph) -> GraphTemplate:
     metrics_ = [_parse_quantity(l, "stack") for l in graph.compound_lines]
@@ -430,6 +366,70 @@ def _graph_template_from_api_graph(id_: str, graph: graphs_api.Graph) -> GraphTe
     )
 
 
+def _graph_template_from_api_bidirectional(
+    id_: str, bidirectional: graphs_api.Bidirectional
+) -> GraphTemplate:
+    ranges_min = []
+    ranges_max = []
+    if bidirectional.lower.minimal_range is not None:
+        lower_range = _parse_minimal_range(bidirectional.lower.minimal_range)
+        ranges_min.append(lower_range.min)
+        ranges_max.append(lower_range.max)
+    if bidirectional.upper.minimal_range is not None:
+        upper_range = _parse_minimal_range(bidirectional.upper.minimal_range)
+        ranges_min.append(upper_range.min)
+        ranges_max.append(upper_range.max)
+
+    metrics_ = [_parse_quantity(l, "-stack") for l in bidirectional.lower.compound_lines] + [
+        _parse_quantity(l, "stack") for l in bidirectional.upper.compound_lines
+    ]
+    scalars: list[ScalarDefinition] = []
+    for line in bidirectional.lower.simple_lines:
+        match line:
+            case (
+                metrics_api.WarningOf()
+                | metrics_api.CriticalOf()
+                | metrics_api.MinimumOf()
+                | metrics_api.MaximumOf()
+            ):
+                parsed = _parse_quantity(line, "-line")
+                scalars.append(ScalarDefinition(parsed.expression, parsed.title))
+            case _:
+                metrics_.append(_parse_quantity(line, "-line"))
+    for line in bidirectional.upper.simple_lines:
+        match line:
+            case (
+                metrics_api.WarningOf()
+                | metrics_api.CriticalOf()
+                | metrics_api.MinimumOf()
+                | metrics_api.MaximumOf()
+            ):
+                parsed = _parse_quantity(line, "line")
+                scalars.append(ScalarDefinition(parsed.expression, parsed.title))
+            case _:
+                metrics_.append(_parse_quantity(line, "line"))
+    return GraphTemplate(
+        id=id_,
+        title=_parse_title(bidirectional),
+        range=(
+            MinimalGraphTemplateRange(
+                min=Minimum(ranges_min),
+                max=Maximum(ranges_max),
+            )
+            if ranges_min and ranges_max
+            else None
+        ),
+        metrics=metrics_,
+        scalars=scalars,
+        optional_metrics=(list(bidirectional.lower.optional) + list(bidirectional.upper.optional)),
+        conflicting_metrics=(
+            list(bidirectional.lower.conflicting) + list(bidirectional.upper.conflicting)
+        ),
+        consolidation_function=None,
+        omit_zero_metrics=False,
+    )
+
+
 def _parse_graph_template(
     id_: str, template: graphs_api.Graph | graphs_api.Bidirectional | RawGraphTemplate
 ) -> GraphTemplate:
@@ -437,7 +437,7 @@ def _parse_graph_template(
         case graphs_api.Graph():
             return _graph_template_from_api_graph(id_, template)
         case graphs_api.Bidirectional():
-            return GraphTemplate.from_bidirectional(id_, template)
+            return _graph_template_from_api_bidirectional(id_, template)
         case _:
             return GraphTemplate.from_raw(id_, template)
 

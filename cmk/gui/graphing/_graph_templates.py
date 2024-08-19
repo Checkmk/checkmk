@@ -324,25 +324,6 @@ class GraphTemplate:
     metrics: Sequence[MetricDefinition]
 
     @classmethod
-    def from_name(cls, name: str) -> Self:
-        if name.startswith("METRIC_"):
-            name = name[7:]
-        return cls(
-            id=f"METRIC_{name}",
-            title="",
-            metrics=[MetricDefinition(expression=Metric(name), line_type="area")],
-            scalars=[
-                ScalarDefinition(expression=WarningOf(Metric(name)), title=str(_("Warning"))),
-                ScalarDefinition(expression=CriticalOf(Metric(name)), title=str(_("Critical"))),
-            ],
-            conflicting_metrics=[],
-            optional_metrics=[],
-            consolidation_function=None,
-            range=None,
-            omit_zero_metrics=False,
-        )
-
-    @classmethod
     def from_raw(cls, id_: str, raw: RawGraphTemplate) -> Self:
         return cls(
             id=id_,
@@ -463,9 +444,28 @@ def _parse_graph_template(
             return GraphTemplate.from_raw(id_, template)
 
 
+def graph_template_from_name(name: str) -> GraphTemplate:
+    if name.startswith("METRIC_"):
+        name = name[7:]
+    return GraphTemplate(
+        id=f"METRIC_{name}",
+        title="",
+        metrics=[MetricDefinition(expression=Metric(name), line_type="area")],
+        scalars=[
+            ScalarDefinition(expression=WarningOf(Metric(name)), title=str(_("Warning"))),
+            ScalarDefinition(expression=CriticalOf(Metric(name)), title=str(_("Critical"))),
+        ],
+        conflicting_metrics=[],
+        optional_metrics=[],
+        consolidation_function=None,
+        range=None,
+        omit_zero_metrics=False,
+    )
+
+
 def get_graph_template(template_id: str) -> GraphTemplate:
     if template_id.startswith("METRIC_"):
-        return GraphTemplate.from_name(template_id)
+        return graph_template_from_name(template_id)
     for id_, template in _graph_templates_from_plugins():
         if template_id == id_:
             return _parse_graph_template(id_, template)
@@ -567,7 +567,7 @@ def _get_implicit_graph_templates(
 ) -> Iterable[GraphTemplate]:
     for metric_name, translated_metric in sorted(translated_metrics.items()):
         if translated_metric.auto_graph and metric_name not in already_graphed_metrics:
-            yield GraphTemplate.from_name(metric_name)
+            yield graph_template_from_name(metric_name)
 
 
 def get_graph_templates(
@@ -680,7 +680,7 @@ def _matching_graph_templates(
         and graph_id.startswith("METRIC_")
         and graph_id[7:] in translated_metrics
     ):
-        yield (0, GraphTemplate.from_name(graph_id))
+        yield (0, graph_template_from_name(graph_id))
         return
 
     yield from (

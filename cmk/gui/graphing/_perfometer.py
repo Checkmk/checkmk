@@ -20,12 +20,7 @@ from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api
 
 from ._color import parse_color_from_api
-from ._expression import (
-    Constant,
-    has_required_metrics_or_scalars,
-    parse_conditional_expression,
-    parse_expression,
-)
+from ._expression import Constant, MetricExpression, parse_conditional_expression, parse_expression
 from ._from_api import perfometers_from_api, register_unit_info
 from ._legacy import (
     DualPerfometerSpec,
@@ -345,6 +340,26 @@ def parse_perfometer(
     return parsed
 
 
+def _has_required_metrics_or_scalars(
+    expressions: Sequence[MetricExpression],
+    translated_metrics: Mapping[str, TranslatedMetric],
+) -> bool:
+    for expression in expressions:
+        for metric in expression.metrics():
+            if metric.name not in translated_metrics:
+                return False
+        for scalar in expression.scalars():
+            if scalar.metric.name not in translated_metrics:
+                return False
+            # TODO: scalar has type "WarningOf | CriticalOf | MinimumOf | MaximumOf" and these types
+            # meet at MetricExpression. But MetricExpression has no "name" attribute. This should
+            # be done differently either by introduing another class (the common superclass of those
+            # types) or by a protocol.
+            if scalar.name not in translated_metrics[scalar.metric.name].scalar:  # type: ignore[operator]
+                return False
+    return True
+
+
 def _perfometer_has_required_metrics_or_scalars(
     perfometer: PerfometerSpec, translated_metrics: Mapping[str, TranslatedMetric]
 ) -> bool:
@@ -354,10 +369,10 @@ def _perfometer_has_required_metrics_or_scalars(
             expressions.append(parse_expression(total, translated_metrics))
         if (label := perfometer.get("label")) is not None:
             expressions.append(parse_expression(label[0], translated_metrics))
-        return has_required_metrics_or_scalars(expressions, translated_metrics)
+        return _has_required_metrics_or_scalars(expressions, translated_metrics)
 
     if perfometer["type"] == "logarithmic":
-        return has_required_metrics_or_scalars(
+        return _has_required_metrics_or_scalars(
             [parse_expression(perfometer["metric"], translated_metrics)], translated_metrics
         )
 

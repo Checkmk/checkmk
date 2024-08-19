@@ -126,14 +126,7 @@ def user_specific_unit(
         if isinstance(unit_specification, ConvertibleUnitSpecification)
         else noop_conversion
     )
-    formatter: (
-        DecimalFormatter
-        | SIFormatter
-        | IECFormatter
-        | StandardScientificFormatter
-        | EngineeringScientificFormatter
-        | TimeFormatter
-    )
+    formatter: NotationFormatter
     match unit_specification.notation:
         case DecimalNotation():
             formatter = DecimalFormatter(

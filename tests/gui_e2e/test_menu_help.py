@@ -14,23 +14,21 @@ from tests.testlib.playwright.pom.dashboard import Dashboard
     [
         pytest.param(
             "help_beginners_guide",
-            "docs.checkmk.com/{branch}/en/welcome.html?origin=checkmk$",
+            "docs.checkmk.com/{branch}/en/welcome.html$",
             id="beginners_guide",
         ),
-        pytest.param(
-            "help_user_manual", "docs.checkmk.com/{branch}/en/?origin=checkmk$", id="user_manual"
-        ),
+        pytest.param("help_user_manual", "docs.checkmk.com/{branch}/en/$", id="user_manual"),
         pytest.param("help_video_tutorials", "consent.youtube.com", id="video_tutorials"),
         pytest.param("help_community_forum", "forum.checkmk.com/$", id="community_forum"),
         pytest.param(
             "help_plugin_api_intro",
-            "docs.checkmk.com/{branch}/en/devel_intro.html?origin=checkmk$",
+            "docs.checkmk.com/{branch}/en/devel_intro.html$",
             id="plugin_api_intro",
         ),
         pytest.param("help_plugin_api_docs", "/check_mk/plugin-api/$", id="plugin_api_docs"),
         pytest.param(
             "help_rest_api_intro",
-            "docs.checkmk.com/{branch}/en/rest_api.html?origin=checkmk$",
+            "docs.checkmk.com/{branch}/en/rest_api.html$",
             id="rest_api_intro",
         ),
         pytest.param("help_rest_api_docs", "/check_mk/api/doc/$", id="rest_api_docs"),

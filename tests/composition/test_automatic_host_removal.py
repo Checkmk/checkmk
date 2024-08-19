@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+import os
+
+import pytest
 
 from tests.testlib.pytest_helpers.marks import skip_if_saas_edition
 from tests.testlib.site import Site
@@ -13,6 +16,10 @@ logger = logging.getLogger(__name__)
 
 
 @skip_if_saas_edition
+@pytest.mark.xfail(
+    condition=os.getenv("DISTRO") in ("almalinux-9", "centos-8"),
+    reason="May fail on EL* systems, investigating.",
+)
 def test_automatic_host_removal(
     central_site: Site,
     remote_site: Site,

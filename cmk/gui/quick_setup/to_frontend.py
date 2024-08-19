@@ -13,7 +13,7 @@ from uuid import uuid4
 from livestatus import SiteId
 
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_QUICK_SETUP
-from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.hostaddress import HostName
 from cmk.utils.password_store import Password as StorePassword
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RuleConditionsSpec, RuleSpec
@@ -570,7 +570,7 @@ def create_host_from_form_data(
         name=host_name,
         folder=host_path,
         attributes=HostAttributes(
-            ipaddress=HostAddress("127.0.0.1")  # TODO: CMK-18691 IP address should not be required
+            tag_address_family="no-ip",
         ),
     )
 

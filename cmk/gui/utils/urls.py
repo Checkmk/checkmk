@@ -475,11 +475,12 @@ class DocReference(Enum):
 
 def doc_reference_url(doc_ref: DocReference | None = None) -> str:
     base = user.get_docs_base_url()
+    origin = "?origin=checkmk"
     if doc_ref is None:
-        return base
+        return base + origin
     if "#" not in doc_ref.value:
-        return f"{base}/{doc_ref.value}.html"
-    return f"{base}/{doc_ref.value.replace('#', '.html#', 1)}"
+        return f"{base}/{doc_ref.value}.html{origin}"
+    return f"{base}/{doc_ref.value.replace('#', '.html#', 1)}{origin}"
 
 
 class YouTubeReference(Enum):

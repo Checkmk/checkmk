@@ -1052,12 +1052,6 @@ class SiteField(base.String):
         return super()._serialize(value, attr, obj, **kwargs)
 
 
-def customer_field(**kw):
-    if version.edition() is version.Edition.CME:
-        return _CustomerField(**kw)
-    return None
-
-
 class _CustomerField(base.String):
     """A field representing a customer"""
 
@@ -1105,6 +1099,18 @@ class _CustomerField(base.String):
     def _deserialize(self, value, attr, data, **kwargs):
         value = super()._deserialize(value, attr, data, **kwargs)
         return None if value == "global" else value
+
+
+def customer_field(**kw: Any) -> _CustomerField | None:
+    if version.edition() is version.Edition.CME:
+        return _CustomerField(**kw)
+    return None
+
+
+def customer_field_response(**kw: Any) -> _CustomerField | None:
+    if "description" not in kw:
+        kw["description"] = "The customer for which the object is configured."
+    return customer_field(**kw)
 
 
 def verify_group_exists(group_type: GroupType, name: GroupName) -> bool:
@@ -1536,6 +1542,7 @@ __all__ = [
     "host_attributes_field",
     "column_field",
     "customer_field",
+    "customer_field_response",
     "DateTime",
     "ExprSchema",
     "FolderField",

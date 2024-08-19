@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import CheckResult, Result, State
-from cmk.plugins.splunk.agent_based import health
+from cmk.plugins.splunk.agent_based import splunk_health as health
 
 
 def test_parse_splunk_health() -> None:

@@ -53,6 +53,10 @@ def serve_group(group: GroupSpec, serializer: Callable[[GroupSpec], DomainObject
     return constructors.response_with_etag_created_from_dict(response, group)
 
 
+def build_group_list(groups: GroupSpecs) -> list[GroupSpec]:
+    return [group | {"id": key} for key, group in groups.items()]
+
+
 def serialize_group_list(
     domain_type: GroupDomainType,
     collection: Sequence[GroupSpec],
@@ -64,6 +68,9 @@ def serialize_group_list(
                 domain_type=domain_type,
                 title=group["alias"],
                 identifier=group["id"],
+                extensions=complement_customer(
+                    {key: value for key, value in group.items() if key not in ("id", "alias")}
+                ),
             )
             for group in collection
         ],

@@ -100,7 +100,6 @@ pykerberos = "==1.2.1"  # needed by check_bi_aggr
 requests-kerberos = "==0.12.0"  # needed by check_bi_aggr
 Jinja2 = "==3.0.3"  # needed by Flask
 more-itertools = "==10.3"  # needed by connexion through zipp, pytest
-zipp = "==3.7.0"  # needed by importlib_metadata
 attrs = "==21.4.0"  # needed by jsonschema
 importlib_metadata = "==4.8.2"  # needed by jsonschema
 pyrsistent = "==0.18.0"  # needed by jsonschema

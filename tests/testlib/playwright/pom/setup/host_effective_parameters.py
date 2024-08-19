@@ -66,6 +66,13 @@ class HostEffectiveParameters(CmkPage):
     def _section(self, section_name: str) -> Locator:
         return self.main_area.locator(f"table:has(td:text-is('{section_name}'))")
 
+    def _setting_row(self, setting_name: str) -> Locator:
+        return self.main_area.locator(f"tr:has(a:text-is('{setting_name}'))")
+
+    @property
+    def service_discovery_values(self) -> Locator:
+        return self._setting_row("Periodic service discovery").locator("td[class*='settingvalue']")
+
     @property
     def service_discovery_period(self) -> Locator:
         return self.main_area.locator(

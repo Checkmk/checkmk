@@ -242,3 +242,42 @@ def test_periodic_service_discovery_rule(
     ruleset_page = Ruleset(effective_parameters_page.page, "Periodic service discovery")
     ruleset_page.delete_icon(rule_description).click()
     ruleset_page.delete_button.click()
+
+
+@pytest.mark.parametrize(
+    "created_host",
+    [
+        pytest.param(
+            HostDetails(
+                name=f"test_host_{Faker().first_name()}",
+                ip="127.0.0.1",
+            )
+        )
+    ],
+    indirect=["created_host"],
+)
+def test_use_default_periodic_service_discovery_rule(
+    dashboard_page: Dashboard, created_host: HostDetails
+) -> None:
+    """Test the default 'Periodic service discovery' rule values for monitoring hosts.
+
+    Check that the default 'Periodic service discovery' rule values are correctly shown in the
+    'Effective parameters of <host name>' page.
+    """
+    logger.info("Collect the default 'Periodic service discovery' rule values")
+    ruleset_page = Ruleset(
+        dashboard_page.page,
+        "Periodic service discovery",
+    )
+    rules_count = ruleset_page.rule_rows.count()
+    assert rules_count == 1, "Unexpected number of rules in the table"
+    default_rule_values = ruleset_page.rule_values(rule_id=0).all_inner_texts()
+
+    logger.info(
+        "Check that the same rule is present in the 'Effective parameters of %s' page",
+        created_host.name,
+    )
+    effective_parameters_page = HostEffectiveParameters(ruleset_page.page, created_host)
+    effective_parameters_page.expand_section("Service discovery rules")
+    rule_values = effective_parameters_page.service_discovery_values.all_inner_texts()
+    assert default_rule_values == rule_values, "Unexpected rule values"

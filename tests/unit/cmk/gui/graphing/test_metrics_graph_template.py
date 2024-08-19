@@ -101,10 +101,14 @@ def test_rpn_stack(expression: str, result: MetricOperation) -> None:
         config=active_config,
     )
     translated_metrics = translate_metrics(perf_data, check_command)
-    lq_row = {"site": "", "host_name": "", "service_description": ""}
     assert (
         gt.metric_expression_to_graph_recipe_expression(
-            parse_expression(expression, translated_metrics), translated_metrics, lq_row, None
+            SiteId(""),
+            HostName(""),
+            "",
+            parse_expression(expression, translated_metrics),
+            translated_metrics,
+            None,
         )
         == result
     )
@@ -155,7 +159,6 @@ def test_create_graph_recipe_from_template() -> None:
         config=active_config,
     )
     translated_metrics = translate_metrics(perf_data, check_command)
-    lq_row = {"site": "", "host_name": "", "service_description": ""}
     specification = TemplateGraphSpecification(
         site=SiteId("Site"),
         host_name=HostName("Host-Name"),
@@ -163,7 +166,12 @@ def test_create_graph_recipe_from_template() -> None:
     )
 
     assert gt.create_graph_recipe_from_template(
-        graph_template, translated_metrics, lq_row, specification
+        SiteId(""),
+        HostName(""),
+        "",
+        graph_template,
+        translated_metrics,
+        specification,
     ) == GraphRecipe(
         title="Used space",
         unit="IECNotation_B_AutoPrecision_2",

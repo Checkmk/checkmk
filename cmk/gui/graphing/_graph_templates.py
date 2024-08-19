@@ -111,9 +111,11 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
             return None
 
         return create_graph_recipe_from_template(
+            row["site"],
+            row["host_name"],
+            row.get("service_description", "_HOST_"),
             graph_template_tuned,
             translated_metrics,
-            row,
             specification=TemplateGraphSpecification(
                 site=self.site,
                 host_name=self.host_name,
@@ -198,9 +200,11 @@ def _horizontal_rules_from_thresholds(
 
 
 def create_graph_recipe_from_template(
+    site_id: SiteId,
+    host_name: HostName,
+    service_name: ServiceName,
     graph_template: GraphTemplate,
     translated_metrics: Mapping[str, TranslatedMetric],
-    row: Row,
     specification: GraphSpecification,
 ) -> GraphRecipe:
     def _graph_metric(metric_definition: MetricDefinition) -> GraphMetric:
@@ -212,9 +216,11 @@ def create_graph_recipe_from_template(
             title=metric_definition.compute_title(translated_metrics),
             line_type=metric_definition.line_type,
             operation=metric_expression_to_graph_recipe_expression(
+                site_id,
+                host_name,
+                service_name,
                 metric_definition.expression,
                 translated_metrics,
-                row,
                 graph_template.consolidation_function or "max",
             ),
             unit=unit_color.unit if unit_color else "",
@@ -284,9 +290,11 @@ def _evaluate_graph_template_range_boundary(
 
 
 def _to_metric_operation(
+    site_id: SiteId,
+    host_name: HostName,
+    service_name: ServiceName,
     expression: MetricExpression,
     translated_metrics: Mapping[str, TranslatedMetric],
-    lq_row: Row,
     enforced_consolidation_function: GraphConsolidationFunction | None,
 ) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
     if isinstance(expression, Constant):
@@ -294,9 +302,9 @@ def _to_metric_operation(
     if isinstance(expression, Metric):
         metrics = [
             MetricOpRRDSource(
-                site_id=lq_row["site"],
-                host_name=lq_row["host_name"],
-                service_name=lq_row.get("service_description", "_HOST_"),
+                site_id=site_id,
+                host_name=host_name,
+                service_name=service_name,
                 metric_name=pnp_cleanup(original.name),
                 consolidation_func_name=(
                     expression.consolidation_func_name or enforced_consolidation_function
@@ -313,9 +321,11 @@ def _to_metric_operation(
             operator_name="+",
             operands=[
                 _to_metric_operation(
+                    site_id,
+                    host_name,
+                    service_name,
                     s,
                     translated_metrics,
-                    lq_row,
                     enforced_consolidation_function,
                 )
                 for s in expression.summands
@@ -326,9 +336,11 @@ def _to_metric_operation(
             operator_name="*",
             operands=[
                 _to_metric_operation(
+                    site_id,
+                    host_name,
+                    service_name,
                     f,
                     translated_metrics,
-                    lq_row,
                     enforced_consolidation_function,
                 )
                 for f in expression.factors
@@ -339,15 +351,19 @@ def _to_metric_operation(
             operator_name="-",
             operands=[
                 _to_metric_operation(
+                    site_id,
+                    host_name,
+                    service_name,
                     expression.minuend,
                     translated_metrics,
-                    lq_row,
                     enforced_consolidation_function,
                 ),
                 _to_metric_operation(
+                    site_id,
+                    host_name,
+                    service_name,
                     expression.subtrahend,
                     translated_metrics,
-                    lq_row,
                     enforced_consolidation_function,
                 ),
             ],
@@ -357,15 +373,19 @@ def _to_metric_operation(
             operator_name="/",
             operands=[
                 _to_metric_operation(
+                    site_id,
+                    host_name,
+                    service_name,
                     expression.dividend,
                     translated_metrics,
-                    lq_row,
                     enforced_consolidation_function,
                 ),
                 _to_metric_operation(
+                    site_id,
+                    host_name,
+                    service_name,
                     expression.divisor,
                     translated_metrics,
-                    lq_row,
                     enforced_consolidation_function,
                 ),
             ],
@@ -375,9 +395,11 @@ def _to_metric_operation(
             operator_name="MAX",
             operands=[
                 _to_metric_operation(
+                    site_id,
+                    host_name,
+                    service_name,
                     o,
                     translated_metrics,
-                    lq_row,
                     enforced_consolidation_function,
                 )
                 for o in expression.operands
@@ -388,9 +410,11 @@ def _to_metric_operation(
             operator_name="MIN",
             operands=[
                 _to_metric_operation(
+                    site_id,
+                    host_name,
+                    service_name,
                     o,
                     translated_metrics,
-                    lq_row,
                     enforced_consolidation_function,
                 )
                 for o in expression.operands
@@ -401,9 +425,11 @@ def _to_metric_operation(
             operator_name="AVERAGE",
             operands=[
                 _to_metric_operation(
+                    site_id,
+                    host_name,
+                    service_name,
                     o,
                     translated_metrics,
-                    lq_row,
                     enforced_consolidation_function,
                 )
                 for o in expression.operands
@@ -414,9 +440,11 @@ def _to_metric_operation(
             operator_name="MERGE",
             operands=[
                 _to_metric_operation(
+                    site_id,
+                    host_name,
+                    service_name,
                     o,
                     translated_metrics,
-                    lq_row,
                     enforced_consolidation_function,
                 )
                 for o in expression.operands
@@ -426,14 +454,18 @@ def _to_metric_operation(
 
 
 def metric_expression_to_graph_recipe_expression(
+    site_id: SiteId,
+    host_name: HostName,
+    service_name: ServiceName,
     metric_expression: MetricExpression,
     translated_metrics: Mapping[str, TranslatedMetric],
-    lq_row: Row,
     enforced_consolidation_function: GraphConsolidationFunction | None,
 ) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
     return _to_metric_operation(
+        site_id,
+        host_name,
+        service_name,
         metric_expression,
         translated_metrics,
-        lq_row,
         enforced_consolidation_function,
     )

@@ -321,6 +321,9 @@ def test__to_metric_operation(
 ) -> None:
     assert (
         gt._to_metric_operation(
+            SiteId("Site-ID"),
+            HostName("HostName"),
+            "Service description",
             Metric("metric-name"),
             {
                 "metric-name": TranslatedMetric(
@@ -339,11 +342,6 @@ def test__to_metric_operation(
                     ),
                     color="#111111",
                 ),
-            },
-            {
-                "site": "Site-ID",
-                "host_name": "HostName",
-                "service_description": "Service description",
             },
             None,
         )

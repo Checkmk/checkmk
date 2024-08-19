@@ -9,7 +9,7 @@ import abc
 import contextlib
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, KW_ONLY
-from typing import Final, Literal
+from typing import Literal
 
 from cmk.utils.metrics import MetricName
 
@@ -62,6 +62,14 @@ class MetricExpression(abc.ABC):
 
     @abc.abstractmethod
     def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
+        raise NotImplementedError()
+
+
+@dataclass(frozen=True)
+class ScalarExpression(MetricExpression):
+    @property
+    @abc.abstractmethod
+    def name(self) -> Literal["warn", "crit", "min", "max"]:
         raise NotImplementedError()
 
 
@@ -125,12 +133,15 @@ class Metric(MetricExpression):
 
 
 @dataclass(frozen=True)
-class WarningOf(MetricExpression):
+class WarningOf(ScalarExpression):
     metric: Metric
-    name: Final = "warn"
     _: KW_ONLY
     explicit_unit_id: str = ""
     explicit_color: str = ""
+
+    @property
+    def name(self) -> Literal["warn"]:
+        return "warn"
 
     def evaluate(
         self,
@@ -154,12 +165,15 @@ class WarningOf(MetricExpression):
 
 
 @dataclass(frozen=True)
-class CriticalOf(MetricExpression):
+class CriticalOf(ScalarExpression):
     metric: Metric
-    name: Final = "crit"
     _: KW_ONLY
     explicit_unit_id: str = ""
     explicit_color: str = ""
+
+    @property
+    def name(self) -> Literal["crit"]:
+        return "crit"
 
     def evaluate(
         self,
@@ -183,12 +197,15 @@ class CriticalOf(MetricExpression):
 
 
 @dataclass(frozen=True)
-class MinimumOf(MetricExpression):
+class MinimumOf(ScalarExpression):
     metric: Metric
-    name: Final = "min"
     _: KW_ONLY
     explicit_unit_id: str = ""
     explicit_color: str = ""
+
+    @property
+    def name(self) -> Literal["min"]:
+        return "min"
 
     def evaluate(
         self,
@@ -212,12 +229,15 @@ class MinimumOf(MetricExpression):
 
 
 @dataclass(frozen=True)
-class MaximumOf(MetricExpression):
+class MaximumOf(ScalarExpression):
     metric: Metric
-    name: Final = "max"
     _: KW_ONLY
     explicit_unit_id: str = ""
     explicit_color: str = ""
+
+    @property
+    def name(self) -> Literal["max"]:
+        return "max"
 
     def evaluate(
         self,

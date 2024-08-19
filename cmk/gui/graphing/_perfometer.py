@@ -351,11 +351,7 @@ def _has_required_metrics_or_scalars(
         for scalar in expression.scalars():
             if scalar.metric.name not in translated_metrics:
                 return False
-            # TODO: scalar has type "WarningOf | CriticalOf | MinimumOf | MaximumOf" and these types
-            # meet at MetricExpression. But MetricExpression has no "name" attribute. This should
-            # be done differently either by introduing another class (the common superclass of those
-            # types) or by a protocol.
-            if scalar.name not in translated_metrics[scalar.metric.name].scalar:  # type: ignore[operator]
+            if scalar.name not in translated_metrics[scalar.metric.name].scalar:
                 return False
     return True
 

@@ -771,35 +771,35 @@ def test__graph_template_from_api_graph(
                 range=None,
                 scalars=[
                     ScalarDefinition(
-                        WarningOf(Metric("metric-name-l3"), "warn"),
+                        WarningOf(Metric("metric-name-l3")),
                         "Warning of Title",
                     ),
                     ScalarDefinition(
-                        CriticalOf(Metric("metric-name-l4"), "crit"),
+                        CriticalOf(Metric("metric-name-l4")),
                         "Critical of Title",
                     ),
                     ScalarDefinition(
-                        MinimumOf(Metric("metric-name-l5"), "min", explicit_color=COLOR_HEX),
+                        MinimumOf(Metric("metric-name-l5"), explicit_color=COLOR_HEX),
                         "Title",
                     ),
                     ScalarDefinition(
-                        MaximumOf(Metric("metric-name-l6"), "max", explicit_color=COLOR_HEX),
+                        MaximumOf(Metric("metric-name-l6"), explicit_color=COLOR_HEX),
                         "Title",
                     ),
                     ScalarDefinition(
-                        WarningOf(Metric("metric-name-u3"), "warn"),
+                        WarningOf(Metric("metric-name-u3")),
                         "Warning of Title",
                     ),
                     ScalarDefinition(
-                        CriticalOf(Metric("metric-name-u4"), "crit"),
+                        CriticalOf(Metric("metric-name-u4")),
                         "Critical of Title",
                     ),
                     ScalarDefinition(
-                        MinimumOf(Metric("metric-name-u5"), "min", explicit_color=COLOR_HEX),
+                        MinimumOf(Metric("metric-name-u5"), explicit_color=COLOR_HEX),
                         "Title",
                     ),
                     ScalarDefinition(
-                        MaximumOf(Metric("metric-name-u6"), "max", explicit_color=COLOR_HEX),
+                        MaximumOf(Metric("metric-name-u6"), explicit_color=COLOR_HEX),
                         "Title",
                     ),
                 ],

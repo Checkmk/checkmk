@@ -687,17 +687,11 @@ def test_translate_metrics_with_multiple_predictive_metrics() -> None:
                     title="",
                     scalars=[
                         ScalarDefinition(
-                            expression=WarningOf(
-                                metric=Metric(name="foo"),
-                                name="warn",
-                            ),
+                            expression=WarningOf(metric=Metric(name="foo")),
                             title="Warning",
                         ),
                         ScalarDefinition(
-                            expression=CriticalOf(
-                                metric=Metric(name="foo"),
-                                name="crit",
-                            ),
+                            expression=CriticalOf(metric=Metric(name="foo")),
                             title="Critical",
                         ),
                     ],
@@ -718,17 +712,11 @@ def test_translate_metrics_with_multiple_predictive_metrics() -> None:
                     title="",
                     scalars=[
                         ScalarDefinition(
-                            expression=WarningOf(
-                                metric=Metric(name="predict_foo"),
-                                name="warn",
-                            ),
+                            expression=WarningOf(metric=Metric(name="predict_foo")),
                             title="Warning",
                         ),
                         ScalarDefinition(
-                            expression=CriticalOf(
-                                metric=Metric(name="predict_foo"),
-                                name="crit",
-                            ),
+                            expression=CriticalOf(metric=Metric(name="predict_foo")),
                             title="Critical",
                         ),
                     ],
@@ -749,17 +737,11 @@ def test_translate_metrics_with_multiple_predictive_metrics() -> None:
                     title="",
                     scalars=[
                         ScalarDefinition(
-                            expression=WarningOf(
-                                metric=Metric(name="predict_lower_foo"),
-                                name="warn",
-                            ),
+                            expression=WarningOf(metric=Metric(name="predict_lower_foo")),
                             title="Warning",
                         ),
                         ScalarDefinition(
-                            expression=CriticalOf(
-                                metric=Metric(name="predict_lower_foo"),
-                                name="crit",
-                            ),
+                            expression=CriticalOf(metric=Metric(name="predict_lower_foo")),
                             title="Critical",
                         ),
                     ],

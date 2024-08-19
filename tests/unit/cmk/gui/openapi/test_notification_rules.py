@@ -2093,6 +2093,7 @@ auth_methods: list[
 ]
 
 
+@managedtest
 @pytest.mark.parametrize("plugin", [plugin_test_data[8], plugin_test_data[14]])
 @pytest.mark.parametrize("auth_method", auth_methods)
 @pytest.mark.usefixtures("mock_password_file_regeneration")

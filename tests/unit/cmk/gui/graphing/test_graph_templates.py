@@ -41,6 +41,7 @@ from cmk.gui.graphing._graph_specification import (
 from cmk.gui.graphing._graph_templates import (
     _graph_template_from_api_bidirectional,
     _graph_template_from_api_graph,
+    _graph_template_from_legacy,
     _graph_templates_from_plugins,
     _matching_graph_templates,
     _parse_graph_template,
@@ -49,7 +50,7 @@ from cmk.gui.graphing._graph_templates import (
     MinimalGraphTemplateRange,
     ScalarDefinition,
 )
-from cmk.gui.graphing._legacy import UnitInfo
+from cmk.gui.graphing._legacy import RawGraphTemplate, UnitInfo
 from cmk.gui.graphing._type_defs import Original, TranslatedMetric
 from cmk.gui.graphing._utils import parse_perf_data, translate_metrics
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
@@ -941,3 +942,122 @@ def test__graph_template_from_api_bidirectional(
             )
         )
     assert _graph_template_from_api_bidirectional(graph.name, graph) == expected_template
+
+
+@pytest.mark.parametrize(
+    "raw, expected_graph_template",
+    [
+        pytest.param(
+            RawGraphTemplate(
+                metrics=[],
+                scalars=["metric", "metric:warn", "metric:crit"],
+            ),
+            GraphTemplate(
+                id="ident",
+                title="",
+                scalars=[
+                    ScalarDefinition(
+                        expression=Metric("metric"),
+                        title="metric",
+                    ),
+                    ScalarDefinition(
+                        expression=WarningOf(Metric("metric")),
+                        title="Warning",
+                    ),
+                    ScalarDefinition(
+                        expression=CriticalOf(Metric("metric")),
+                        title="Critical",
+                    ),
+                ],
+                conflicting_metrics=[],
+                optional_metrics=[],
+                consolidation_function=None,
+                range=None,
+                omit_zero_metrics=False,
+                metrics=[],
+            ),
+            id="scalar str",
+        ),
+        pytest.param(
+            RawGraphTemplate(
+                metrics=[],
+                scalars=[("metric", "Title"), ("metric:warn", "Warn"), ("metric:crit", "Crit")],
+            ),
+            GraphTemplate(
+                id="ident",
+                title="",
+                scalars=[
+                    ScalarDefinition(
+                        expression=Metric("metric"),
+                        title="Title",
+                    ),
+                    ScalarDefinition(
+                        expression=WarningOf(Metric("metric")),
+                        title="Warn",
+                    ),
+                    ScalarDefinition(
+                        expression=CriticalOf(Metric("metric")),
+                        title="Crit",
+                    ),
+                ],
+                conflicting_metrics=[],
+                optional_metrics=[],
+                consolidation_function=None,
+                range=None,
+                omit_zero_metrics=False,
+                metrics=[],
+            ),
+            id="scalar tuple",
+        ),
+        pytest.param(
+            RawGraphTemplate(
+                metrics=[("metric", "line")],
+            ),
+            GraphTemplate(
+                id="ident",
+                title="",
+                scalars=[],
+                conflicting_metrics=[],
+                optional_metrics=[],
+                consolidation_function=None,
+                range=None,
+                omit_zero_metrics=False,
+                metrics=[
+                    MetricDefinition(
+                        expression=Metric("metric"),
+                        line_type="line",
+                    ),
+                ],
+            ),
+            id="metrics 2-er tuple",
+        ),
+        pytest.param(
+            RawGraphTemplate(
+                metrics=[("metric", "line", "Title")],
+            ),
+            GraphTemplate(
+                id="ident",
+                title="",
+                scalars=[],
+                conflicting_metrics=[],
+                optional_metrics=[],
+                consolidation_function=None,
+                range=None,
+                omit_zero_metrics=False,
+                metrics=[
+                    MetricDefinition(
+                        expression=Metric("metric"),
+                        line_type="line",
+                        title="Title",
+                    ),
+                ],
+            ),
+            id="metrics 3-er tuple",
+        ),
+    ],
+)
+def test__graph_template_from_legacy(
+    raw: RawGraphTemplate,
+    expected_graph_template: GraphTemplate,
+) -> None:
+    assert _graph_template_from_legacy("ident", raw) == expected_graph_template

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from typing import assert_never, ClassVar, Container, Literal, Self
+from typing import assert_never, ClassVar, Container, Literal
 
 from livestatus import SiteId
 
@@ -137,40 +137,6 @@ class MetricDefinition:
         return MetricUnitColor(result.unit_info.id, result.color)
 
 
-def _parse_raw_metric_definition(
-    raw_metric_definition: (
-        tuple[str, LineType] | tuple[str, LineType, str] | tuple[str, LineType, LazyString]
-    )
-) -> MetricDefinition:
-    expression, line_type, *title = raw_metric_definition
-    return MetricDefinition(
-        expression=parse_expression(expression, {}),
-        line_type=line_type,
-        title=str(title[0]) if title else "",
-    )
-
-
-def _parse_raw_scalar_definition(
-    raw_scalar_definition: str | tuple[str, str | LazyString]
-) -> ScalarDefinition:
-    if isinstance(raw_scalar_definition, tuple):
-        return ScalarDefinition(
-            expression=parse_expression(raw_scalar_definition[0], {}),
-            title=str(raw_scalar_definition[1]),
-        )
-
-    if raw_scalar_definition.endswith(":warn"):
-        title = _("Warning")
-    elif raw_scalar_definition.endswith(":crit"):
-        title = _("Critical")
-    else:
-        title = raw_scalar_definition
-    return ScalarDefinition(
-        expression=parse_expression(raw_scalar_definition, {}),
-        title=str(title),
-    )
-
-
 def _parse_quantity(
     quantity: (
         str
@@ -287,13 +253,6 @@ class MinimalGraphTemplateRange:
     max: MetricExpression
 
 
-def _parse_raw_graph_range(raw_graph_range: tuple[int | str, int | str]) -> FixedGraphTemplateRange:
-    return FixedGraphTemplateRange(
-        min=parse_expression(raw_graph_range[0], {}),
-        max=parse_expression(raw_graph_range[1], {}),
-    )
-
-
 def _parse_minimal_range(
     minimal_range: graphs_api.MinimalRange,
 ) -> MinimalGraphTemplateRange:
@@ -322,20 +281,6 @@ class GraphTemplate:
     range: FixedGraphTemplateRange | MinimalGraphTemplateRange | None
     omit_zero_metrics: bool
     metrics: Sequence[MetricDefinition]
-
-    @classmethod
-    def from_raw(cls, id_: str, raw: RawGraphTemplate) -> Self:
-        return cls(
-            id=id_,
-            title=_parse_title(raw),
-            scalars=[_parse_raw_scalar_definition(r) for r in raw.get("scalars", [])],
-            conflicting_metrics=raw.get("conflicting_metrics", []),
-            optional_metrics=raw.get("optional_metrics", []),
-            consolidation_function=raw.get("consolidation_function"),
-            range=(_parse_raw_graph_range(raw_range) if (raw_range := raw.get("range")) else None),
-            omit_zero_metrics=raw.get("omit_zero_metrics", False),
-            metrics=[_parse_raw_metric_definition(r) for r in raw["metrics"]],
-        )
 
 
 def _graph_template_from_api_graph(id_: str, graph: graphs_api.Graph) -> GraphTemplate:
@@ -430,6 +375,61 @@ def _graph_template_from_api_bidirectional(
     )
 
 
+def _parse_raw_scalar_definition(
+    raw_scalar_definition: str | tuple[str, str | LazyString]
+) -> ScalarDefinition:
+    if isinstance(raw_scalar_definition, tuple):
+        return ScalarDefinition(
+            expression=parse_expression(raw_scalar_definition[0], {}),
+            title=str(raw_scalar_definition[1]),
+        )
+
+    if raw_scalar_definition.endswith(":warn"):
+        title = _("Warning")
+    elif raw_scalar_definition.endswith(":crit"):
+        title = _("Critical")
+    else:
+        title = raw_scalar_definition
+    return ScalarDefinition(
+        expression=parse_expression(raw_scalar_definition, {}),
+        title=str(title),
+    )
+
+
+def _parse_raw_graph_range(raw_graph_range: tuple[int | str, int | str]) -> FixedGraphTemplateRange:
+    return FixedGraphTemplateRange(
+        min=parse_expression(raw_graph_range[0], {}),
+        max=parse_expression(raw_graph_range[1], {}),
+    )
+
+
+def _parse_raw_metric_definition(
+    raw_metric_definition: (
+        tuple[str, LineType] | tuple[str, LineType, str] | tuple[str, LineType, LazyString]
+    )
+) -> MetricDefinition:
+    expression, line_type, *title = raw_metric_definition
+    return MetricDefinition(
+        expression=parse_expression(expression, {}),
+        line_type=line_type,
+        title=str(title[0]) if title else "",
+    )
+
+
+def _graph_template_from_legacy(id_: str, raw: RawGraphTemplate) -> GraphTemplate:
+    return GraphTemplate(
+        id=id_,
+        title=_parse_title(raw),
+        scalars=[_parse_raw_scalar_definition(r) for r in raw.get("scalars", [])],
+        conflicting_metrics=raw.get("conflicting_metrics", []),
+        optional_metrics=raw.get("optional_metrics", []),
+        consolidation_function=raw.get("consolidation_function"),
+        range=(_parse_raw_graph_range(raw_range) if (raw_range := raw.get("range")) else None),
+        omit_zero_metrics=raw.get("omit_zero_metrics", False),
+        metrics=[_parse_raw_metric_definition(r) for r in raw["metrics"]],
+    )
+
+
 def _parse_graph_template(
     id_: str, template: graphs_api.Graph | graphs_api.Bidirectional | RawGraphTemplate
 ) -> GraphTemplate:
@@ -439,7 +439,7 @@ def _parse_graph_template(
         case graphs_api.Bidirectional():
             return _graph_template_from_api_bidirectional(id_, template)
         case _:
-            return GraphTemplate.from_raw(id_, template)
+            return _graph_template_from_legacy(id_, template)
 
 
 def graph_template_from_name(name: str) -> GraphTemplate:

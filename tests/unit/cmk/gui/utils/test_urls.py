@@ -49,7 +49,8 @@ def test_urlencode(inp: str | None, out: str) -> None:
 
 
 def test_empty_doc_reference(request_context: None) -> None:
-    assert doc_reference_url() == user.get_docs_base_url()
+    doc_reference_url_without_origin = doc_reference_url().replace("?origin=checkmk", "")
+    assert doc_reference_url_without_origin == user.get_docs_base_url()
 
 
 def test_doc_references(request_context: None) -> None:

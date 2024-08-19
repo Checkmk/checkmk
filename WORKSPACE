@@ -115,6 +115,7 @@ asio(
 
 load("//omd/packages/re2:re2_http.bzl", "re2")
 
+# fixup http_archive URL with 2023-06-02 release or newer and remove this line
 re2(
     sha256 = "665b65b6668156db2b46dddd33405cd422bd611352c5052ab3dae6a5fbac5506",
     version_str = "2022-12-01",

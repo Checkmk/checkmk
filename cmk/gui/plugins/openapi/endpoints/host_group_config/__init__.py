@@ -38,6 +38,7 @@ from cmk.gui.plugins.openapi.endpoints.host_group_config.response_schemas import
     HostGroupCollection,
 )
 from cmk.gui.plugins.openapi.endpoints.utils import (
+    build_group_list,
     fetch_group,
     fetch_specific_groups,
     prepare_groups,
@@ -122,7 +123,7 @@ def bulk_create(params: Mapping[str, Any]) -> Response:
 def list_groups(params: Mapping[str, Any]) -> Response:
     """Show all host groups"""
     user.need_permission("wato.groups")
-    collection = [{"id": k, "alias": v["alias"]} for k, v in load_host_group_information().items()]
+    collection = build_group_list(load_host_group_information())
     return serve_json(serialize_group_list("host_group_config", collection))
 
 

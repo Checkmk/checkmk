@@ -38,6 +38,7 @@ from cmk.gui.plugins.openapi.endpoints.contact_group_config.response_schemas imp
     ContactGroupCollection,
 )
 from cmk.gui.plugins.openapi.endpoints.utils import (
+    build_group_list,
     fetch_group,
     fetch_specific_groups,
     prepare_groups,
@@ -137,9 +138,7 @@ def bulk_create(params: Mapping[str, Any]) -> Response:
 def list_group(params: Mapping[str, Any]) -> Response:
     """Show all contact groups"""
     user.need_permission("wato.users")
-    collection = [
-        {"id": k, "alias": v["alias"]} for k, v in load_contact_group_information().items()
-    ]
+    collection = build_group_list(load_contact_group_information())
     return serve_json(
         serialize_group_list("contact_group_config", collection),
     )

@@ -1,0 +1,11 @@
+Title: REST-API: Include customer in list group endpoints
+Class: feature
+Compatible: compat
+Component: rest-api
+Date: 1724078164
+Edition: cme
+Level: 1
+Version: 2.2.0p33
+
+The list endpoints for Contact, Host and Service groups now include the
+customer configuration.

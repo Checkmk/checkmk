@@ -9,16 +9,13 @@ common: &common
     - "sles-15sp3"
     - "sles-15sp4"
     - "sles-15sp5"
-    - "sles-15sp6"
 
 # A reduced set of distros for the daily builds
-# Containing only the latest version of each supported OS
-# ubuntu-22.04 is used as internal base image
 daily_reduced: &daily_reduced
     - "ubuntu-22.04"
     - "ubuntu-24.04"
     - "debian-12"
-    - "sles-15sp6"
+    - "sles-15sp5"
 
 daily_extended: &daily_extended
     - "debian-12"
@@ -26,7 +23,7 @@ daily_extended: &daily_extended
     - "ubuntu-24.04"
     - "centos-8"
     - "almalinux-9"
-    - "sles-15sp6"
+    - "sles-15sp5"
 
 daily_saas: &daily_saas
     - "ubuntu-22.04"
@@ -57,7 +54,7 @@ editions:
         # Don't test the update process for internal distros, they are not public anyway
         daily_update_tests: [*daily_extended]
         weekly: [*common, *cma_distros]
-        testbuild: ["ubuntu-24.04", "sles-15sp6", "centos-8", "cma-4"]
+        testbuild: ["ubuntu-24.04", "sles-15sp5", "centos-8", "cma-4"]
     cloud:
         release: [*common, *cma_distros]
         daily: *daily_reduced

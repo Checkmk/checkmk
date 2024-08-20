@@ -62,6 +62,10 @@ class NotationFormatter:
         self,
     ) -> Literal["Decimal", "SI", "IEC", "StandardScientific", "EngineeringScientific", "Time"]: ...
 
+    @property
+    @abc.abstractmethod
+    def js_formatter_name(self) -> str: ...
+
     @abc.abstractmethod
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
@@ -216,6 +220,10 @@ class DecimalFormatter(NotationFormatter):
     def ident(self) -> Literal["Decimal"]:
         return "Decimal"
 
+    @property
+    def js_formatter_name(self) -> Literal["DecimalFormatter"]:
+        return "DecimalFormatter"
+
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
     ) -> Sequence[Preformatted]:
@@ -276,6 +284,10 @@ class SIFormatter(NotationFormatter):
     def ident(self) -> Literal["SI"]:
         return "SI"
 
+    @property
+    def js_formatter_name(self) -> Literal["SIFormatter"]:
+        return "SIFormatter"
+
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
     ) -> Sequence[Preformatted]:
@@ -328,6 +340,10 @@ class IECFormatter(NotationFormatter):
     def ident(self) -> Literal["IEC"]:
         return "IEC"
 
+    @property
+    def js_formatter_name(self) -> Literal["IECFormatter"]:
+        return "IECFormatter"
+
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
     ) -> Sequence[Preformatted]:
@@ -361,6 +377,10 @@ class StandardScientificFormatter(NotationFormatter):
     def ident(self) -> Literal["StandardScientific"]:
         return "StandardScientific"
 
+    @property
+    def js_formatter_name(self) -> Literal["StandardScientificFormatter"]:
+        return "StandardScientificFormatter"
+
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
     ) -> Sequence[Preformatted]:
@@ -388,6 +408,10 @@ class StandardScientificFormatter(NotationFormatter):
 class EngineeringScientificFormatter(NotationFormatter):
     def ident(self) -> Literal["EngineeringScientific"]:
         return "EngineeringScientific"
+
+    @property
+    def js_formatter_name(self) -> Literal["EngineeringScientificFormatter"]:
+        return "EngineeringScientificFormatter"
 
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
@@ -457,6 +481,10 @@ _TIME_LARGE_SYMBOLS: Final = [
 class TimeFormatter(NotationFormatter):
     def ident(self) -> Literal["Time"]:
         return "Time"
+
+    @property
+    def js_formatter_name(self) -> Literal["TimeFormatter"]:
+        return "TimeFormatter"
 
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str

@@ -60,6 +60,7 @@ def build_group_list(groups: GroupSpecs) -> list[GroupSpec]:
 def serialize_group_list(
     domain_type: GroupDomainType,
     collection: Sequence[GroupSpec],
+    include_extensions: bool = True,
 ) -> CollectionObject:
     return constructors.collection_object(
         domain_type=domain_type,
@@ -68,8 +69,12 @@ def serialize_group_list(
                 domain_type=domain_type,
                 title=group["alias"],
                 identifier=group["id"],
-                extensions=complement_customer(
-                    {key: value for key, value in group.items() if key not in ("id", "alias")}
+                extensions=(
+                    complement_customer(
+                        {key: value for key, value in group.items() if key not in ("id", "alias")}
+                    )
+                    if include_extensions
+                    else None
                 ),
             )
             for group in collection

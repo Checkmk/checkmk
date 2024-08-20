@@ -26,3 +26,15 @@ def field_include_links(description: str) -> Mapping[str, Boolean]:
             description=description,
         )
     }
+
+
+def field_include_extensions(description: str | None = None) -> Mapping[str, Boolean]:
+    return {
+        "include_extensions": Boolean(
+            load_default=True,
+            required=False,
+            example=True,
+            description=description
+            or "Flag which toggles whether the extensions field of the individual values should be populated.",
+        )
+    }

@@ -626,3 +626,18 @@ def test_contact_group_inventory_paths(
             path.setdefault("nodes", {"type": "no_restriction"})
 
     assert group.json["extensions"]["inventory_paths"] == inventory_paths
+
+
+def test_contact_group_include_extensions(clients: ClientRegistry) -> None:
+    clients.ContactGroup.create(name="group_1", alias="alias_1")
+    clients.ContactGroup.create(
+        name="group_2", alias="alias_2", inventory_paths={"type": "forbid_all"}
+    )
+
+    default_response = clients.ContactGroup.list()
+    enabled_response = clients.ContactGroup.list(include_extensions=True)
+    disabled_response = clients.ContactGroup.list(include_extensions=False)
+
+    assert default_response.json == enabled_response.json
+    assert any(bool(value["extensions"]) for value in enabled_response.json["value"])
+    assert all(value["extensions"] == {} for value in disabled_response.json["value"])

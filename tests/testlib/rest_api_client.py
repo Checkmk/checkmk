@@ -1685,10 +1685,14 @@ class GroupConfig(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def list(self, expect_ok: bool = True) -> Response:
+    def list(self, include_extensions: bool | None = None, expect_ok: bool = True) -> Response:
+        query = {}
+        if include_extensions is not None:
+            query["include_extensions"] = include_extensions
         return self.request(
             "get",
             f"/domain-types/{self.domain}/collections/all",
+            query_params=query,
             expect_ok=expect_ok,
         )
 

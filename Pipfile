@@ -138,10 +138,10 @@ python-snap7 = "==1.3"  # needed by Siemens PLC special agent
 pymssql = "==2.2.11"  # needed by check_sql active check
 pymysql = "~=1.1.1"  # needed by check_sql active check
 psycopg2-binary = "==2.9.6"  # needed by check_sql active check
-apispec = "==6.4.0"  # direct dependency
-marshmallow = "==3.21.1"  # direct dependency
-marshmallow-oneofschema = "==3.1.1"  # direct dependency
-apispec-oneofschema = "==3.0.0"  # direct dependency
+apispec = "*"
+marshmallow = "*"
+marshmallow-oneofschema = "*"
+apispec-oneofschema = "*"
 pydantic = "~=2.7"
 pydantic_core = "~=2.18"  # used by pydantic and by us
 annotated-types = "~=0.7"  # provides validators for pydantic2
@@ -150,7 +150,7 @@ python-active-directory = "==2.0.1"
 rrdtool = "==0.1.16"  # Actually we ship the binding which comes with rrdtool itself...
 docstring-parser = "==0.16"  # direct dependency
 pyprof2calltree = "==1.4.5"  # used for GUI/API profiling
-pyparsing = "==3.1.2"  # direct dependency
+pyparsing = "*"
 redis = "==4.5.4"  # needed by GUI (caching)
 fido2 = "*"  # used for GUI 2fa webauthn
 opsgenie-sdk = "==2.1.5"  # needed by opsgenie_issues

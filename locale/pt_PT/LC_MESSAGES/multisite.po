@@ -7287,6 +7287,11 @@ msgstr "Aquisição automática"
 msgid "Automatic updates"
 msgstr "Atualizações automáticas"
 
+msgid ""
+"Automatic: Round the fractional part to the given decimal places or to the "
+"latest non-zero digit."
+msgstr ""
+
 msgid "Automatically activate changes"
 msgstr "Ativar mudanças automaticamente"
 
@@ -15651,6 +15656,10 @@ msgstr "Actualmente, existem %s ainda não activados."
 msgid "Currently, there is one pending change not yet activated."
 msgstr "Actualmente, existe uma alteração pendente que ainda não foi activada."
 
+#, fuzzy
+msgid "Custom"
+msgstr "Cliente"
+
 msgid "Custom Action"
 msgstr "Ação Personalizada"
 
@@ -16721,6 +16730,18 @@ msgstr "Decibel-millivolt"
 msgid "Decibel-milliwatts"
 msgstr "Decibel-milliwatts"
 
+#, fuzzy
+msgid "Decimal"
+msgstr "Decibel"
+
+#, fuzzy
+msgid "Decimal places"
+msgstr "Tablespaces"
+
+#, python-format
+msgid "Decimal with symbol %s"
+msgstr ""
+
 msgid "Declare disabled services as undecided"
 msgstr "Declarar os serviços deficientes como indecisos"
 
@@ -16785,6 +16806,9 @@ msgstr "Configuração predefinida"
 msgid "Default credentials"
 msgstr "Credenciais por defeito"
 
+msgid "Default dynamic visuals permission"
+msgstr ""
+
 #, fuzzy
 msgid "Default expiration time (relative)"
 msgstr "Intervalo de temporização padrão para relatórios"
@@ -16833,6 +16857,14 @@ msgstr "Parâmetros predefinidos para serviços detectados"
 msgid "Default parameters when no time period matches"
 msgstr ""
 "Parâmetros por defeito quando não há correspondência de período de tempo"
+
+msgid ""
+"Default permission for dynamic visuals (dashboards, views, etc.). If set to "
+"'yes' all roles (including built-in roles) will have the permission to view "
+"dynamic visuals by default. If set to 'no' only the admin role can view "
+"dynamic visuals by default. Note: Applying this setting will cause a reload "
+"of apache."
+msgstr ""
 
 #, fuzzy
 msgid "Default profile"
@@ -22874,6 +22906,10 @@ msgstr "Comando externo"
 msgid "Extra bytes read/written"
 msgstr "Bytes extra lidos/escritos"
 
+#, fuzzy
+msgid "Extra properties"
+msgstr "Editar propriedades"
+
 msgid "Extractors"
 msgstr "Extratores"
 
@@ -23933,6 +23969,9 @@ msgstr "Primeiro dia do mês passado"
 msgid "First day of this month"
 msgstr "Primeiro dia deste mês"
 
+msgid "First entry with unit"
+msgstr ""
+
 msgid "First occurrence of event"
 msgstr "Primeira ocorrência do evento"
 
@@ -23959,6 +23998,10 @@ msgstr "Consertar pastas, anfitriões e regras afetadas."
 
 msgid "Fix this"
 msgstr "Conserte isto"
+
+#, fuzzy
+msgid "Fixed"
+msgstr "Misto"
 
 msgid "Fixed Levels"
 msgstr "Níveis Fixos"
@@ -23992,6 +24035,9 @@ msgstr "Alcance fixo"
 
 msgid "Fixed string to expect in the content"
 msgstr "Cadeia fixa a esperar no conteúdo"
+
+msgid "Fixed: Round the fractional part to the given decimal places."
+msgstr ""
 
 msgid "Flap"
 msgstr "Flap"
@@ -29503,6 +29549,13 @@ msgstr "ID: %s"
 
 msgid "IDLE"
 msgstr "IDLE"
+
+msgid "IEC"
+msgstr ""
+
+#, python-format
+msgid "IEC with symbol %s"
+msgstr ""
 
 msgid "IGNORE"
 msgstr "IGNORE"
@@ -42047,6 +42100,14 @@ msgstr "Não suportado"
 msgid "Not yet monitored"
 msgstr "Ainda não monitorado"
 
+#, fuzzy
+msgid "Notation"
+msgstr "Notificação"
+
+#, fuzzy, python-format
+msgid "Notation: %s"
+msgstr "Anotação: %s"
+
 msgid ""
 "Note that since OpenSSH 7.6, only version 2 is supported. Therefore, newer "
 "versions neither use nor report this configuration variable anymore."
@@ -48102,8 +48163,16 @@ msgstr "Precedência"
 msgid "Precedence of contact groups"
 msgstr "Precedência de grupos de contato"
 
+#, fuzzy
+msgid "Precision"
+msgstr "Permissão"
+
 msgid "Precision of float values"
 msgstr "Precisão dos valores de flutuação"
+
+#, python-format
+msgid "Precision: %d decimal places, rounding mode: %s"
+msgstr ""
 
 msgid "Precompiled"
 msgstr "Pré-compilado"
@@ -51683,6 +51752,10 @@ msgstr "%sRotagem mínima"
 msgid "Round trip time"
 msgstr "Tempo de viagem de ida e volta"
 
+#, fuzzy
+msgid "Rounding mode"
+msgstr "Cápsulas de corrida"
+
 msgid "Route53"
 msgstr "Rota53"
 
@@ -52259,6 +52332,14 @@ msgstr "SHA-2 (SHA-384)"
 msgid "SHA-2 (SHA-512)"
 msgstr "SHA-2 (SHA-512)"
 
+#, fuzzy
+msgid "SI"
+msgstr "SID"
+
+#, python-format
+msgid "SI with symbol %s"
+msgstr ""
+
 msgid "SID"
 msgstr "SID"
 
@@ -52789,6 +52870,20 @@ msgstr "Nome do trabalho do agendador"
 #, python-format
 msgid "Scheduling report in background failed: %s"
 msgstr "Relatório de programação em segundo plano falhou: %s"
+
+msgid "Scientific (engineering)"
+msgstr ""
+
+#, python-format
+msgid "Scientific (engineering) with symbol %s"
+msgstr ""
+
+msgid "Scientific (standard)"
+msgstr ""
+
+#, python-format
+msgid "Scientific (standard) with symbol %s"
+msgstr ""
 
 msgid ""
 "Scope to be used in LDAP searches. In most cases <i>Search whole subtree "
@@ -57385,15 +57480,16 @@ msgstr "Utilização da Licença Splunk"
 msgid "Splunk On-Call REST Endpoint"
 msgstr "Ponto de extremidade REST do Splunk On-Call"
 
+msgid "Splunk instance to query."
+msgstr "Exemplo de consulta."
+
+#, fuzzy
 msgid ""
-"Splunk calls a search a zombie when the search is no longer running, but did "
+"Splunk labels a job a zombie when the job is no longer running,but it did "
 "not declare explicitly that it has finished its work."
 msgstr ""
 "Splunk chama de busca um zumbi quando a busca não está mais em andamento, "
 "mas não declarou explicitamente que terminou seu trabalho."
-
-msgid "Splunk instance to query."
-msgstr "Exemplo de consulta."
 
 msgid "Spool directory"
 msgstr "Diretório de spool"
@@ -59112,6 +59208,9 @@ msgstr "Symantec Anti-Vírus (Linux)"
 msgid "Symantec Brightmail Queues"
 msgstr "Filas do Symantec Brightmail"
 
+msgid "Symbol"
+msgstr ""
+
 msgid "Symmetric encryption (Linux, Windows)"
 msgstr "Encriptação simétrica (Linux, Windows)"
 
@@ -59699,7 +59798,8 @@ msgstr ""
 "As etiquetas podem ser usadas para classificar os anfitriões e serviços de "
 "uma forma flexível."
 
-msgid "Tags of the alert."
+#, fuzzy, python-format
+msgid "Tags of the alert.<br><br>%s"
 msgstr "Tags do alerta."
 
 #, fuzzy
@@ -59942,6 +60042,10 @@ msgstr "Esta ligação"
 
 msgid "Test connection to host"
 msgstr "Ligação de teste ao anfitrião"
+
+#, fuzzy
+msgid "Test custom notifications with your current ruleset"
+msgstr "Criar uma cópia desta regra de notificação"
 
 msgid "Test event generated and sent to Event Console."
 msgstr "Evento de teste gerado e enviado para o Console de Eventos."
@@ -69405,9 +69509,9 @@ msgstr "Este ano"
 
 #, python-brace-format
 msgid ""
-"This {type_name} is part of the {host_name} configuration using Quick setup. "
+"This {type_name} is part of the {qs_name} configuration using Quick setup. "
 "Some options cannot be edited to avoid conflicts.<br>Go to Quick setup to "
-"edit all parameters of {host_name}."
+"edit all parameters of {qs_name}."
 msgstr ""
 
 msgid "Thread creations per second"
@@ -82177,6 +82281,10 @@ msgstr "Adicionar a aplicação Authenticator"
 
 msgid "auto"
 msgstr "auto"
+
+#, fuzzy
+msgid "automatic"
+msgstr "Automático"
 
 msgid "avg. duration"
 msgstr "duração avg"

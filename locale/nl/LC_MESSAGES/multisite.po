@@ -7282,6 +7282,11 @@ msgstr "Automatische overname"
 msgid "Automatic updates"
 msgstr "Automatische updates"
 
+msgid ""
+"Automatic: Round the fractional part to the given decimal places or to the "
+"latest non-zero digit."
+msgstr ""
+
 msgid "Automatically activate changes"
 msgstr "Automatisch wijzigingen activeren"
 
@@ -15658,6 +15663,10 @@ msgid "Currently, there is one pending change not yet activated."
 msgstr ""
 "Momenteel is er één wijziging in behandeling die nog niet is geactiveerd."
 
+#, fuzzy
+msgid "Custom"
+msgstr "Klant"
+
 msgid "Custom Action"
 msgstr "Aangepaste actie"
 
@@ -16729,6 +16738,18 @@ msgstr "Decibel-millivolt"
 msgid "Decibel-milliwatts"
 msgstr "Decibel-milliwatt"
 
+#, fuzzy
+msgid "Decimal"
+msgstr "Decibel"
+
+#, fuzzy
+msgid "Decimal places"
+msgstr "Tafelspaces"
+
+#, python-format
+msgid "Decimal with symbol %s"
+msgstr ""
+
 msgid "Declare disabled services as undecided"
 msgstr "Gehandicapte diensten opgeven als onbeslist"
 
@@ -16793,6 +16814,9 @@ msgstr "Standaard configuratie"
 msgid "Default credentials"
 msgstr "Standaard inloggegevens"
 
+msgid "Default dynamic visuals permission"
+msgstr ""
+
 #, fuzzy
 msgid "Default expiration time (relative)"
 msgstr "Standaard timerbereik voor rapportage"
@@ -16842,6 +16866,14 @@ msgstr "Standaardparameters voor gedetecteerde diensten"
 
 msgid "Default parameters when no time period matches"
 msgstr "Standaardparameters wanneer geen tijdsperiode overeenkomt"
+
+msgid ""
+"Default permission for dynamic visuals (dashboards, views, etc.). If set to "
+"'yes' all roles (including built-in roles) will have the permission to view "
+"dynamic visuals by default. If set to 'no' only the admin role can view "
+"dynamic visuals by default. Note: Applying this setting will cause a reload "
+"of apache."
+msgstr ""
 
 #, fuzzy
 msgid "Default profile"
@@ -22887,6 +22919,10 @@ msgstr "Externe opdracht"
 msgid "Extra bytes read/written"
 msgstr "Extra bytes gelezen/geschreven"
 
+#, fuzzy
+msgid "Extra properties"
+msgstr "Eigenschappen bewerken"
+
 msgid "Extractors"
 msgstr "Extractors"
 
@@ -23940,6 +23976,9 @@ msgstr "Eerste dag van de laatste maand"
 msgid "First day of this month"
 msgstr "Eerste dag van deze maand"
 
+msgid "First entry with unit"
+msgstr ""
+
 msgid "First occurrence of event"
 msgstr "Eerste gebeurtenis"
 
@@ -23966,6 +24005,10 @@ msgstr "Herstel getroffen mappen, hosts en regels."
 
 msgid "Fix this"
 msgstr "Repareer dit"
+
+#, fuzzy
+msgid "Fixed"
+msgstr "Gemengd"
 
 msgid "Fixed Levels"
 msgstr "Vaste niveaus"
@@ -23999,6 +24042,9 @@ msgstr "Vast bereik"
 
 msgid "Fixed string to expect in the content"
 msgstr "Vaste tekenreeks te verwachten in de inhoud"
+
+msgid "Fixed: Round the fractional part to the given decimal places."
+msgstr ""
 
 msgid "Flap"
 msgstr "Flap"
@@ -29508,6 +29554,13 @@ msgstr "ID: %s"
 
 msgid "IDLE"
 msgstr "IDLE"
+
+msgid "IEC"
+msgstr ""
+
+#, python-format
+msgid "IEC with symbol %s"
+msgstr ""
 
 msgid "IGNORE"
 msgstr "IGNORE"
@@ -42066,6 +42119,14 @@ msgstr "Niet ondersteund"
 msgid "Not yet monitored"
 msgstr "Nog niet gecontroleerd"
 
+#, fuzzy
+msgid "Notation"
+msgstr "Kennisgeving"
+
+#, fuzzy, python-format
+msgid "Notation: %s"
+msgstr "Annotaties: %s"
+
 msgid ""
 "Note that since OpenSSH 7.6, only version 2 is supported. Therefore, newer "
 "versions neither use nor report this configuration variable anymore."
@@ -48135,8 +48196,16 @@ msgstr "Voorrang"
 msgid "Precedence of contact groups"
 msgstr "Voorrang van contactgroepen"
 
+#, fuzzy
+msgid "Precision"
+msgstr "Toestemming"
+
 msgid "Precision of float values"
 msgstr "Nauwkeurigheid van zwevende waarden"
+
+#, python-format
+msgid "Precision: %d decimal places, rounding mode: %s"
+msgstr ""
 
 msgid "Precompiled"
 msgstr "Voorgecompileerd"
@@ -51697,6 +51766,10 @@ msgstr "%sRondreis minimum"
 msgid "Round trip time"
 msgstr "Tijd voor rondreis"
 
+#, fuzzy
+msgid "Rounding mode"
+msgstr "Lopende pods"
+
 msgid "Route53"
 msgstr "Route53"
 
@@ -52270,6 +52343,14 @@ msgstr "SHA-2 (SHA-384)"
 msgid "SHA-2 (SHA-512)"
 msgstr "SHA-2 (SHA-512)"
 
+#, fuzzy
+msgid "SI"
+msgstr "SID"
+
+#, python-format
+msgid "SI with symbol %s"
+msgstr ""
+
 msgid "SID"
 msgstr "SID"
 
@@ -52802,6 +52883,20 @@ msgstr "Taaknaam planner"
 #, python-format
 msgid "Scheduling report in background failed: %s"
 msgstr "Schema rapport op achtergrond mislukt: %s"
+
+msgid "Scientific (engineering)"
+msgstr ""
+
+#, python-format
+msgid "Scientific (engineering) with symbol %s"
+msgstr ""
+
+msgid "Scientific (standard)"
+msgstr ""
+
+#, python-format
+msgid "Scientific (standard) with symbol %s"
+msgstr ""
 
 msgid ""
 "Scope to be used in LDAP searches. In most cases <i>Search whole subtree "
@@ -57391,15 +57486,16 @@ msgstr "Splunk Licentie Gebruik"
 msgid "Splunk On-Call REST Endpoint"
 msgstr "Splunk Op afroep REST Eindpunt"
 
+msgid "Splunk instance to query."
+msgstr "Splunk instantie om te bevragen."
+
+#, fuzzy
 msgid ""
-"Splunk calls a search a zombie when the search is no longer running, but did "
+"Splunk labels a job a zombie when the job is no longer running,but it did "
 "not declare explicitly that it has finished its work."
 msgstr ""
 "Splunk noemt een zoekactie een zombie wanneer de zoekactie niet meer loopt, "
 "maar niet expliciet heeft verklaard dat het zijn werk heeft beëindigd."
-
-msgid "Splunk instance to query."
-msgstr "Splunk instantie om te bevragen."
 
 #, fuzzy
 msgid "Spool directory"
@@ -59119,6 +59215,9 @@ msgstr "Symantec Anti Virus (Linux)"
 msgid "Symantec Brightmail Queues"
 msgstr "Symantec Brightmail wachtrijen"
 
+msgid "Symbol"
+msgstr ""
+
 msgid "Symmetric encryption (Linux, Windows)"
 msgstr "Symmetrische encryptie (Linux, Windows)"
 
@@ -59705,7 +59804,8 @@ msgstr ""
 "Tags kunnen worden gebruikt om hosts en diensten op een flexibele manier te "
 "classificeren."
 
-msgid "Tags of the alert."
+#, fuzzy, python-format
+msgid "Tags of the alert.<br><br>%s"
 msgstr "Tags van de waarschuwing."
 
 #, fuzzy
@@ -59953,6 +60053,10 @@ msgstr "Deze verbinding"
 
 msgid "Test connection to host"
 msgstr "Test verbinding met host"
+
+#, fuzzy
+msgid "Test custom notifications with your current ruleset"
+msgstr "Maak een kopie van deze notificatieregel"
 
 msgid "Test event generated and sent to Event Console."
 msgstr "Testgebeurtenis gegenereerd en naar Event Console gestuurd."
@@ -69454,9 +69558,9 @@ msgstr "Dit jaar"
 
 #, python-brace-format
 msgid ""
-"This {type_name} is part of the {host_name} configuration using Quick setup. "
+"This {type_name} is part of the {qs_name} configuration using Quick setup. "
 "Some options cannot be edited to avoid conflicts.<br>Go to Quick setup to "
-"edit all parameters of {host_name}."
+"edit all parameters of {qs_name}."
 msgstr ""
 
 msgid "Thread creations per second"
@@ -82275,6 +82379,10 @@ msgstr "Authenticatie"
 
 msgid "auto"
 msgstr "auto"
+
+#, fuzzy
+msgid "automatic"
+msgstr "Automatisch"
 
 msgid "avg. duration"
 msgstr "gemiddelde duur"

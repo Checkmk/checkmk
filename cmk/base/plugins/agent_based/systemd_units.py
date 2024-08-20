@@ -99,6 +99,7 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 
 
 _SYSTEMD_UNIT_FILE_STATES = [
+    # TODO: alias is missing. is this by accident?
     "enabled",
     "enabled-runtime",
     "linked",
@@ -169,9 +170,13 @@ class UnitStatus:
 @dataclass(frozen=True)
 class UnitEntry:
     name: str
-    loaded_status: str
-    active_status: str
-    current_state: str
+    loaded_status: str  # LOAD   = Reflects whether the unit definition was properly loaded.
+    #                     for example: loaded, not-found, bad-setting, error, masked
+    active_status: str  # ACTIVE = The high-level unit activation state, i.e. generalization of SUB.
+    #                     for example: active, reloading, inactive, failed, activating, deactivating
+    current_state: str  # SUB    = The low-level unit activation state, values depend on unit type.
+    # The list of possible LOAD, ACTIVE, and SUB states is not constant and new systemd releases may
+    # both add and remove values. See systemctl --state=help
     description: str
     enabled_status: (
         str | None
@@ -492,22 +497,26 @@ def _services_split(
     services: Iterable[UnitEntry], blacklist: Sequence[str]
 ) -> Mapping[str, list[UnitEntry]]:
     services_organised: dict[str, list[UnitEntry]] = {
-        "included": [],
-        "excluded": [],
-        "disabled": [],
+        # early exit:
+        "excluded": [],  # based on configured regex
+        # based on active_status:
         "activating": [],
         "deactivating": [],
         "reloading": [],
+        # based on enabled_status:
+        "disabled": [],  # includes also indirect
         "static": [],
+        # fallback
+        "included": [],  # all others
     }
     compiled_patterns = [regex(p) for p in blacklist]
     for service in services:
         if any(expr.match(service.name) for expr in compiled_patterns):
             services_organised["excluded"].append(service)
             continue
-        if service.active_status in ("activating", "deactivating"):
+        if service.active_status in ("reloading", "activating", "deactivating"):
             services_organised[service.active_status].append(service)
-        elif service.enabled_status in ("reloading", "disabled", "static", "indirect"):
+        elif service.enabled_status in ("disabled", "static", "indirect"):
             service_type = (
                 "disabled" if service.enabled_status == "indirect" else service.enabled_status
             )

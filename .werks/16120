@@ -1,4 +1,4 @@
-Title: Fixed value of dowtimes:is_pending column
+Title: Fixed value of downtimes:is_pending column
 Class: fix
 Compatible: compat
 Component: livestatus

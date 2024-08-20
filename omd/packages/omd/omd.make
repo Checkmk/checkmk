@@ -23,7 +23,7 @@ ifneq ($(filter $(DISTRO_CODE), sles15sp3 sles15sp4 sles15sp5 sles15sp6),)
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/ssh
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/scp
 endif
-ifneq ($(filter $(DISTRO_CODE),centos8 sles15sp4 sles15sp5 sles15sp6),)
+ifneq ($(filter $(DISTRO_CODE),el8 el9 sles15sp4 sles15sp5 sles15sp6),)
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/pdftoppm
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/curl
 endif

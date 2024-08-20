@@ -22,7 +22,7 @@ BAZEL_BUILD := $(if $(CI),../scripts/run-bazel.sh build,bazel build)
 BAZEL_BIN := "$(REPO_PATH)/bazel-bin"
 BAZEL_BIN_EXT := "$(BAZEL_BIN)/external"
 
- ifneq ($(filter $(DISTRO_CODE),sles15 sles15sp1 sles15sp2 sles15sp3 sles15sp4),)
+ ifneq ($(filter $(DISTRO_CODE),sles15 sles15sp1 sles15sp2 sles15sp3 sles15sp4 sles15sp5 sles15sp6),)
 	 OPTIONAL_BUILD_ARGS := BAZEL_EXTRA_ARGS="--define git-ssl-no-verify=true"
  endif
 

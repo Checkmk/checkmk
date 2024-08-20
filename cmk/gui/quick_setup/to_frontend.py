@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from collections.abc import Iterator, Mapping, MutableMapping, MutableSequence, Sequence
+from collections.abc import Callable, Iterator, Mapping, MutableMapping, MutableSequence, Sequence
 from dataclasses import asdict, dataclass, field
 from functools import partial
 from typing import Any, cast
@@ -251,35 +251,46 @@ def _collect_passwords_from_form_data(
     }
 
 
-def _form_data_to_diag_special_agent_input(
+def _create_diag_special_agent_input(
     rulespec_name: str,
-    all_stages_form_data: ParsedFormData,
+    host_name: str | None,
+    passwords: Mapping[str, str],
+    params: Mapping[str, object],
 ) -> DiagSpecialAgentInput:
-    host_name = _find_unique_id(all_stages_form_data, "host_name")
     return DiagSpecialAgentInput(
         host_config=DiagSpecialAgentHostConfig(
             host_name=HostName(host_name or ""), host_alias=host_name or ""
         ),
         agent_name=rulespec_name.split(":")[1],
-        params=_collect_params_with_defaults_from_form_data(all_stages_form_data, rulespec_name),
-        passwords=_collect_passwords_from_form_data(all_stages_form_data, rulespec_name),
+        params=params,
+        passwords=passwords,
     )
 
 
 def validate_test_connection(rulespec_name: str) -> CallableValidator:
-    return partial(_validate_test_connection, rulespec_name)
+    return partial(
+        _validate_test_connection,
+        rulespec_name=rulespec_name,
+        collect_params=_collect_params_with_defaults_from_form_data,
+    )
 
 
 def _validate_test_connection(
     rulespec_name: str,
     all_stages_form_data: ParsedFormData,
     expected_formspecs_map: Mapping[FormSpecId, FormSpec],
+    collect_params: Callable[[ParsedFormData, str], Mapping[str, object]],
 ) -> GeneralStageErrors:
     general_errors: GeneralStageErrors = []
     site_id = _find_unique_id(all_stages_form_data, "site_selection")
+    host_name = _find_unique_id(all_stages_form_data, "host_name")
+    params = collect_params(all_stages_form_data, rulespec_name)
+    passwords = _collect_passwords_from_form_data(all_stages_form_data, rulespec_name)
     output = diag_special_agent(
         SiteId(site_id) if site_id else omd_site(),
-        _form_data_to_diag_special_agent_input(rulespec_name, all_stages_form_data),
+        _create_diag_special_agent_input(
+            rulespec_name=rulespec_name, host_name=host_name, passwords=passwords, params=params
+        ),
     )
     for result in output.results:
         if result.return_code != 0:
@@ -324,7 +335,12 @@ def recap_service_discovery(
     rulespec_name: str,
     services_of_interest: Sequence[ServiceInterest],
 ) -> CallableRecap:
-    return partial(_recap_service_discovery, rulespec_name, services_of_interest)
+    return partial(
+        _recap_service_discovery,
+        rulespec_name=rulespec_name,
+        services_of_interest=services_of_interest,
+        collect_params=_collect_params_with_defaults_from_form_data,
+    )
 
 
 def _recap_service_discovery(
@@ -332,15 +348,21 @@ def _recap_service_discovery(
     services_of_interest: Sequence[ServiceInterest],
     all_stages_form_data: Sequence[ParsedFormData],
     expected_formspecs_map: Mapping[FormSpecId, FormSpec],
+    collect_params: Callable[[ParsedFormData, str], Mapping[str, object]],
 ) -> Sequence[Widget]:
     combined_parsed_form_data = {
         k: v for form_data in all_stages_form_data for k, v in form_data.items()
     }
+    params = collect_params(combined_parsed_form_data, rulespec_name)
+    passwords = _collect_passwords_from_form_data(combined_parsed_form_data, rulespec_name)
     site_id = _find_unique_id(all_stages_form_data, "site_selection")
+    host_name = _find_unique_id(all_stages_form_data, "host_name")
 
     service_discovery_result = special_agent_discovery_preview(
         SiteId(site_id) if site_id else omd_site(),
-        _form_data_to_diag_special_agent_input(rulespec_name, combined_parsed_form_data),
+        _create_diag_special_agent_input(
+            rulespec_name=rulespec_name, host_name=host_name, passwords=passwords, params=params
+        ),
     )
     check_preview_entry_by_service_interest, others = _check_preview_entry_by_service_interest(
         services_of_interest, service_discovery_result
@@ -575,8 +597,8 @@ def create_host_from_form_data(
     )
 
 
-def create_password_from_form_data(
-    all_stages_form_data: ParsedFormData,
+def create_passwords(
+    passwords: Mapping[str, str],
     rulespec_name: str,
     bundle_id: BundleId,
 ) -> Sequence[CreatePassword]:
@@ -592,15 +614,12 @@ def create_password_from_form_data(
                 shared_with=[],
             ),
         )
-        for pw_id, password in _collect_passwords_from_form_data(
-            all_stages_form_data=all_stages_form_data,
-            rulespec_name=rulespec_name,
-        ).items()
+        for pw_id, password in passwords.items()
     ]
 
 
-def create_rule_from_form_data(
-    all_stages_form_data: ParsedFormData,
+def create_rule(
+    params: Mapping[str, object],
     host_name: str,
     host_path: str,
     rulespec_name: str,
@@ -611,10 +630,7 @@ def create_rule_from_form_data(
         folder=host_path,
         ruleset=rulespec_name,
         spec=RuleSpec(
-            value=_collect_params_with_defaults_from_form_data(
-                all_stages_form_data=all_stages_form_data,
-                rulespec_name=rulespec_name,
-            ),
+            value=params,
             id=str(uuid4()),
             locked_by=GlobalIdent(
                 site_id=site_id,
@@ -644,6 +660,8 @@ def create_and_save_special_agent_bundle(
     host_path = all_stages_form_data[FormSpecId("host_data")]["host_path"]
 
     site_selection = _find_unique_id(all_stages_form_data, "site_selection")
+    params = _collect_params_with_defaults_from_form_data(all_stages_form_data, rulespec_name)
+    passwords = _collect_passwords_from_form_data(all_stages_form_data, rulespec_name)
 
     # TODO: DCD still to be implemented cmk-18341
     create_config_bundle(
@@ -656,14 +674,14 @@ def create_and_save_special_agent_bundle(
         ),
         entities=CreateBundleEntities(
             hosts=[create_host_from_form_data(host_name=HostName(host_name), host_path=host_path)],
-            passwords=create_password_from_form_data(
-                all_stages_form_data=all_stages_form_data,
+            passwords=create_passwords(
+                passwords=passwords,
                 rulespec_name=rulespec_name,
                 bundle_id=BundleId(bundle_id),
             ),
             rules=[
-                create_rule_from_form_data(
-                    all_stages_form_data=all_stages_form_data,
+                create_rule(
+                    params=params,
                     host_name=host_name,
                     host_path=host_path,
                     rulespec_name=rulespec_name,

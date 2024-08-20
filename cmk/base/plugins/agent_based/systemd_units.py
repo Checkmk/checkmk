@@ -2,6 +2,7 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import re
 from collections import defaultdict
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
@@ -303,6 +304,12 @@ def _is_service_entry(entry: Sequence[Sequence[str]]) -> bool:
     return unit.endswith(".service")
 
 
+SERVICE_REGEX = re.compile(
+    r".+\.(service|socket|device|mount|automount|swap|target|path|timer|slice|scope)$"
+)
+# hopefully all possible unit types as described in https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Description
+
+
 def _is_new_entry(line: Sequence[str], entry: list[Sequence[str]]) -> bool:
     # First check if we're not looking at a "Triggers" section.
     # It looks like the beginning of a new status entry, e.g.:
@@ -313,7 +320,11 @@ def _is_new_entry(line: Sequence[str], entry: list[Sequence[str]]) -> bool:
             return False
         if elem[0] not in _STATUS_SYMBOLS:
             break
-    return (line[0] in _STATUS_SYMBOLS) and (len(line) > 3) and ("." in line[1])
+    return (
+        (line[0] in _STATUS_SYMBOLS)
+        and (len(line) >= 2)
+        and (bool(SERVICE_REGEX.match(str(line[1]))))
+    )
 
 
 def _parse_status(source: Iterator[Sequence[str]]) -> Mapping[str, UnitStatus]:

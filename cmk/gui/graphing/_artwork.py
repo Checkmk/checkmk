@@ -543,7 +543,7 @@ def _make_formatter(
     | EngineeringScientificFormatter
     | TimeFormatter
 ):
-    precision = AutoPrecision(decimal_places=2)
+    precision = AutoPrecision(digits=2)
     match formatter_ident:
         case "Decimal":
             return DecimalFormatter(symbol, precision)

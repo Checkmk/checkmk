@@ -10,9 +10,9 @@ from cmk.gui.graphing._formatter import (
     AutoPrecision,
     DecimalFormatter,
     EngineeringScientificFormatter,
-    FixedPrecision,
     IECFormatter,
     NotationFormatter,
+    StrictPrecision,
     TimeFormatter,
 )
 from cmk.gui.graphing._unit import (
@@ -35,31 +35,31 @@ from cmk.gui.utils.temperate_unit import TemperatureUnit
         (
             ConvertibleUnitSpecification(
                 notation=DecimalNotation(symbol="X"),
-                precision=AutoPrecision(decimal_places=2),
+                precision=AutoPrecision(digits=2),
             ),
             DecimalFormatter(
                 symbol="X",
-                precision=AutoPrecision(decimal_places=2),
+                precision=AutoPrecision(digits=2),
             ),
         ),
         (
             ConvertibleUnitSpecification(
                 notation=IECNotation(symbol="Y"),
-                precision=FixedPrecision(decimal_places=0),
+                precision=StrictPrecision(digits=0),
             ),
             IECFormatter(
                 symbol="Y",
-                precision=FixedPrecision(decimal_places=0),
+                precision=StrictPrecision(digits=0),
             ),
         ),
         (
             ConvertibleUnitSpecification(
                 notation=TimeNotation(symbol="s"),
-                precision=FixedPrecision(decimal_places=3),
+                precision=StrictPrecision(digits=3),
             ),
             TimeFormatter(
                 symbol="s",
-                precision=FixedPrecision(decimal_places=3),
+                precision=StrictPrecision(digits=3),
             ),
         ),
     ],
@@ -87,7 +87,7 @@ def test_user_specific_unit_convertible() -> None:
     unit = user_specific_unit(
         ConvertibleUnitSpecification(
             notation=DecimalNotation(symbol="X"),
-            precision=AutoPrecision(decimal_places=2),
+            precision=AutoPrecision(digits=2),
         ),
         LoggedInUser(None),
         Config(),
@@ -100,7 +100,7 @@ def test_user_specific_unit_convertible() -> None:
     )
     assert unit.formatter == DecimalFormatter(
         symbol="Y",
-        precision=AutoPrecision(decimal_places=2),
+        precision=AutoPrecision(digits=2),
     )
     assert unit.conversion is converter
 
@@ -110,7 +110,7 @@ def test_user_specific_unit_non_convertible() -> None:
     unit = user_specific_unit(
         NonConvertibleUnitSpecification(
             notation=EngineeringScientificNotation(symbol="X"),
-            precision=AutoPrecision(decimal_places=2),
+            precision=AutoPrecision(digits=2),
         ),
         LoggedInUser(None),
         Config(),
@@ -123,7 +123,7 @@ def test_user_specific_unit_non_convertible() -> None:
     )
     assert unit.formatter == EngineeringScientificFormatter(
         symbol="X",
-        precision=AutoPrecision(decimal_places=2),
+        precision=AutoPrecision(digits=2),
     )
     assert unit.conversion(1) == 1
 
@@ -195,7 +195,7 @@ def test_user_specific_unit_celsius_to_fahrenheit(
     unit = user_specific_unit(
         ConvertibleUnitSpecification(
             notation=DecimalNotation(symbol=source_symbol),
-            precision=AutoPrecision(decimal_places=2),
+            precision=AutoPrecision(digits=2),
         ),
         user,
         config,

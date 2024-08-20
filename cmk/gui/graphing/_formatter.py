@@ -43,18 +43,18 @@ class Label:
 
 class AutoPrecision(BaseModel, frozen=True):
     type: Literal["auto"] = "auto"
-    decimal_places: int
+    digits: int
 
 
-class FixedPrecision(BaseModel, frozen=True):
-    type: Literal["fixed"] = "fixed"
-    decimal_places: int
+class StrictPrecision(BaseModel, frozen=True):
+    type: Literal["strict"] = "strict"
+    digits: int
 
 
 @dataclass(frozen=True)
 class NotationFormatter:
     symbol: str
-    precision: AutoPrecision | FixedPrecision
+    precision: AutoPrecision | StrictPrecision
     use_max_digits_for_labels: bool = True
 
     @abc.abstractmethod
@@ -84,10 +84,10 @@ class NotationFormatter:
         value_floor = math.floor(value)
         if value == value_floor:
             return value
-        digits = self.precision.decimal_places
+        digits = self.precision.digits
         if isinstance(self.precision, AutoPrecision):
             if exponent := abs(math.ceil(math.log10(value - value_floor))):
-                digits = compute_auto_precision_digits(exponent, self.precision.decimal_places)
+                digits = compute_auto_precision_digits(exponent, self.precision.digits)
         return (
             round(value, min(digits, _MAX_DIGITS))
             if use_max_digits_for_labels

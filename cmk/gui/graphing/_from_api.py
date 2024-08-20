@@ -21,11 +21,11 @@ from ._formatter import (
     AutoPrecision,
     DecimalFormatter,
     EngineeringScientificFormatter,
-    FixedPrecision,
     IECFormatter,
     NotationFormatter,
     SIFormatter,
     StandardScientificFormatter,
+    StrictPrecision,
     TimeFormatter,
 )
 from ._legacy import unit_info, UnitInfo
@@ -76,12 +76,12 @@ def _make_unit_info(
     conversion: Callable[[float], float],
 ) -> UnitInfo:
 
-    internal_precision: AutoPrecision | FixedPrecision
+    internal_precision: AutoPrecision | StrictPrecision
     match precision:
         case metrics_api.AutoPrecision(digits):
-            internal_precision = AutoPrecision(decimal_places=digits)
+            internal_precision = AutoPrecision(digits=digits)
         case metrics_api.StrictPrecision(digits):
-            internal_precision = FixedPrecision(decimal_places=digits)
+            internal_precision = StrictPrecision(digits=digits)
         case _:
             assert_never(precision)
 

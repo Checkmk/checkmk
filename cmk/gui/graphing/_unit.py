@@ -17,11 +17,11 @@ from ._formatter import (
     AutoPrecision,
     DecimalFormatter,
     EngineeringScientificFormatter,
-    FixedPrecision,
     IECFormatter,
     NotationFormatter,
     SIFormatter,
     StandardScientificFormatter,
+    StrictPrecision,
     TimeFormatter,
 )
 
@@ -69,7 +69,7 @@ class ConvertibleUnitSpecification(BaseModel, frozen=True):
         ...,
         discriminator="type",
     )
-    precision: AutoPrecision | FixedPrecision = Field(
+    precision: AutoPrecision | StrictPrecision = Field(
         ...,
         discriminator="type",
     )
@@ -88,7 +88,7 @@ class NonConvertibleUnitSpecification(BaseModel, frozen=True):
         ...,
         discriminator="type",
     )
-    precision: AutoPrecision | FixedPrecision = Field(
+    precision: AutoPrecision | StrictPrecision = Field(
         ...,
         discriminator="type",
     )

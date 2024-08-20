@@ -12,6 +12,7 @@ from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.collection.agent_based.systemd_units import (
     _services_split,
+    CHECK_DEFAULT_PARAMETERS_SUMMARY,
     check_systemd_services,
     check_systemd_sockets,
     check_systemd_units_services_summary,
@@ -1139,3 +1140,59 @@ def test_check_systemd_units_services_summary(
     assert (
         list(check_systemd_units_services_summary(params=params, section=section)) == check_results
     )
+
+
+def test_reloading() -> None:
+    # $ cat /etc/systemd/system/testing.service
+    # [Service]
+    #
+    # ExecStartPre=/usr/bin/sleep 75
+    # ExecStart=/usr/bin/sleep 90000
+    # ExecStop=/usr/bin/sleep 90
+    # ExecReload=/usr/bin/sleep 65
+    #
+    # [Install]
+    # WantedBy=multi-user.target
+    #
+    # $ systemctl enable testing
+    # $ check_mk_agent > /tmp/systemd/dead
+    # $ systemctl start testing
+    # $ check_mk_agent > /tmp/systemd/starting
+    # # wait a bit, check with systemctl status testing
+    # $ check_mk_agent > /tmp/systemd/started
+    # # ... do same with reloaded and reloading, and other states you want to check
+    # $ use-dump --site heute --path agent /tmp/systemd/*
+    # # check services in your site, maybe use service search for better overview
+
+    pre_pre_string_table = """[list-unit-files]
+testing.service enabled enabled
+[status]
+↻ testing.service
+Loaded: loaded (/etc/systemd/system/testing.service; enabled; vendor preset: enabled)
+Active: reloading (reload) since Tue 2024-08-20 11:49:32 CEST; 53s ago
+Process: 1727884 ExecStartPre=/usr/bin/sleep 75 (code=exited, status=0/SUCCESS)
+Main PID: 1728726 (sleep); Control PID: 1729357 (sleep)
+Tasks: 2 (limit: 38119)
+Memory: 360.0K
+CPU: 8ms
+CGroup: /system.slice/testing.service
+├─1728726 /usr/bin/sleep 90000
+└─1729357 /usr/bin/sleep 65
+[all]
+testing.service loaded reloading reload reload testing.service
+"""
+    string_table = [l.split(" ") for l in pre_pre_string_table.split("\n")]
+    parsed = parse(string_table)
+    assert parsed is not None
+    assert list(
+        check_systemd_units_services_summary(
+            params=CHECK_DEFAULT_PARAMETERS_SUMMARY, section=parsed
+        )
+    ) == [
+        Result(state=State.OK, summary="Total: 1"),
+        Result(state=State.OK, summary="Disabled: 0"),
+        Result(state=State.OK, summary="Failed: 0"),
+        Result(
+            state=State.CRIT, summary="1 service reloading (testing)"
+        ),  # TODO: this is a bug: reloading_levels is 30/60 by default, the service is reloading for 53s, so it should be warning state.
+    ]

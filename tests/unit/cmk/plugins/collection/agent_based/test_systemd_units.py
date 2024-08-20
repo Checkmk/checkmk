@@ -1058,8 +1058,8 @@ def test_check_systemd_units_sockets(
                     "virtualbox": UnitEntry(
                         name="virtualbox",
                         loaded_status="loaded",
-                        active_status="active",
-                        current_state="exited",
+                        active_status="reloading",
+                        current_state="reload",
                         description="LSB: VirtualBox Linux kernel module",
                         enabled_status="reloading",
                         time_since_change=timedelta(seconds=2),
@@ -1193,6 +1193,7 @@ testing.service loaded reloading reload reload testing.service
         Result(state=State.OK, summary="Disabled: 0"),
         Result(state=State.OK, summary="Failed: 0"),
         Result(
-            state=State.CRIT, summary="1 service reloading (testing)"
-        ),  # TODO: this is a bug: reloading_levels is 30/60 by default, the service is reloading for 53s, so it should be warning state.
+            state=State.WARN,
+            summary="Service 'testing' reloading for: 53 seconds (warn/crit at 30 seconds/1 minute 0 seconds)",
+        ),
     ]

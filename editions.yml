@@ -12,7 +12,7 @@ common: &common
     - "sles-15sp3"
     - "sles-15sp4"
     - "sles-15sp5"
-    # - "sles-15sp6"
+    - "sles-15sp6"
 
 # A reduced set of distros for the daily builds
 # Containing only the latest version of each supported OS
@@ -22,7 +22,7 @@ daily_reduced: &daily_reduced
     - "ubuntu-22.04"
     - "ubuntu-24.04"
     - "debian-10"
-    # - "sles-15sp6"
+    - "sles-15sp6"
 
 daily_saas: &daily_saas
     - "ubuntu-22.04"

@@ -18,6 +18,7 @@ from typing import Any, cast, Literal, NoReturn, NotRequired, TYPE_CHECKING, Typ
 from cmk.utils import paths
 
 from cmk.gui.http import HTTPMethod
+from cmk.gui.openapi.endpoints.contact_group_config.common import APIInventoryPaths
 from cmk.gui.rest_api_types.notifications_rule_types import APINotificationRule
 from cmk.gui.rest_api_types.site_connection import SiteConfig
 
@@ -1704,11 +1705,14 @@ class GroupConfig(RestApiClient):
         name: str,
         alias: str,
         customer: str = "provider",
+        inventory_paths: APIInventoryPaths | None = None,
         expect_ok: bool = True,
     ) -> Response:
-        body = {"name": name, "alias": alias}
+        body: dict[str, Any] = {"name": name, "alias": alias}
+        if inventory_paths:
+            body["inventory_paths"] = inventory_paths
         if version.edition(paths.omd_root) is version.Edition.CME:
-            body.update({"customer": customer})
+            body["customer"] = customer
 
         return self.request(
             "post",

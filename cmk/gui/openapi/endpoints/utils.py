@@ -81,19 +81,15 @@ def serialize_group_list(
 def serialize_group(name: GroupDomainType) -> Callable[[GroupSpec], DomainObject]:
     def _serializer(group: GroupSpec) -> Any:
         ident = group["id"]
-        extensions = {}
-        if "customer" in group:
-            customer_id = group["customer"]
-            extensions["customer"] = "global" if customer_id is None else customer_id
-        elif edition(paths.omd_root) is Edition.CME:
-            extensions["customer"] = customer_api().default_customer_id()
-
-        extensions["alias"] = group["alias"]
         return constructors.domain_object(
             domain_type=name,
             identifier=ident,
             title=group["alias"] or ident,
-            extensions=extensions,
+            extensions=complement_customer(
+                {  # TODO: remove alias in v2
+                    key: value for key, value in group.items() if key != "id"
+                }
+            ),
         )
 
     return _serializer

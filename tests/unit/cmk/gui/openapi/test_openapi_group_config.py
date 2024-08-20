@@ -23,6 +23,8 @@ from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 from cmk.utils import paths
 from cmk.utils.user import UserId
 
+from cmk.gui.openapi.endpoints.contact_group_config.common import APIInventoryPaths
+
 from cmk.ccc import version
 
 managedtest = pytest.mark.skipif(
@@ -582,3 +584,45 @@ def test_contact_group_dot_names(
     assert service_group_double_dot_response.status_code == 400
     assert "name" in service_group_double_dot_response.json["fields"]
     assert "name" in service_group_double_dot_response.json["detail"]
+
+
+@pytest.mark.parametrize(
+    "inventory_paths",
+    [
+        {
+            "type": "allow_all",
+        },
+        {
+            "type": "forbid_all",
+        },
+        {
+            "type": "specific_paths",
+            "paths": [
+                {
+                    "path": "path1",
+                },
+                {
+                    "path": "path2",
+                    "attributes": {"type": "restrict_all"},
+                    "columns": {"type": "restrict_values", "values": ["col1", "col2"]},
+                    "nodes": {"type": "no_restriction"},
+                },
+            ],
+        },
+    ],
+)
+def test_contact_group_inventory_paths(
+    clients: ClientRegistry, inventory_paths: APIInventoryPaths
+) -> None:
+    group = clients.ContactGroup.create(
+        name="test_group",
+        alias="test_alias",
+        inventory_paths=inventory_paths,
+    )
+    if inventory_paths["type"] == "specific_paths":
+        for path in inventory_paths["paths"]:
+            path.setdefault("attributes", {"type": "no_restriction"})
+            path.setdefault("columns", {"type": "no_restriction"})
+            path.setdefault("nodes", {"type": "no_restriction"})
+
+    assert group.json["extensions"]["inventory_paths"] == inventory_paths

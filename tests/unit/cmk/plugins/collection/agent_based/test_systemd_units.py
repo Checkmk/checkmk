@@ -1197,3 +1197,48 @@ testing.service loaded reloading reload reload testing.service
             summary="Service 'testing' reloading for: 53 seconds (warn/crit at 30 seconds/1 minute 0 seconds)",
         ),
     ]
+
+
+def test_broken_parsing_without_unit_description() -> None:
+    pre_pre_string_table = """
+<<<systemd_units>>>
+[list-unit-files]
+testing.service enabled enabled
+systemd-user-sessions.service static -
+[status]
+● klapp-0285
+State: running
+Jobs: 1 queued
+Failed: 0 units
+Since: Mon 2024-08-19 07:09:27 CEST; 1 day 4h ago
+CGroup: /
+├─sys-fs-fuse-connections.mount
+
+● systemd-user-sessions.service - Permit User Sessions
+Loaded: loaded (/lib/systemd/system/systemd-user-sessions.service; static)
+Active: active (exited) since Mon 2024-08-19 07:09:30 CEST; 1 day 4h ago
+Docs: man:systemd-user-sessions.service(8)
+Main PID: 1397 (code=exited, status=0/SUCCESS)
+CPU: 6ms
+
+↻ testing.service
+Loaded: loaded (/etc/systemd/system/testing.service; enabled; vendor preset: enabled)
+Active: reloading (reload) since Tue 2024-08-20 11:49:32 CEST; 53s ago
+Process: 1727884 ExecStartPre=/usr/bin/sleep 75 (code=exited, status=0/SUCCESS)
+Main PID: 1728726 (sleep); Control PID: 1729357 (sleep)
+Tasks: 2 (limit: 38119)
+Memory: 360.0K
+CPU: 8ms
+CGroup: /system.slice/testing.service
+├─1728726 /usr/bin/sleep 90000
+└─1729357 /usr/bin/sleep 65
+
+[all]
+testing.service loaded reloading reload reload testing.service
+systemd-user-sessions.service loaded active exited Permit User Sessions
+"""
+
+    string_table = [l.split(" ") for l in pre_pre_string_table.split("\n")]
+    parsed = parse(string_table)
+    assert parsed is not None
+    assert parsed.services["testing"].time_since_change == timedelta(seconds=53)

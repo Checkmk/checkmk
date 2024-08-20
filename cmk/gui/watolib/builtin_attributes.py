@@ -16,6 +16,7 @@ from cmk.gui import hooks, userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.generators.host_address import create_host_address
 from cmk.gui.form_specs.generators.setup_site_choice import create_setup_site_choice
+from cmk.gui.form_specs.private import SingleChoiceElementExtended, SingleChoiceExtended
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -981,6 +982,27 @@ class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
                 ("ipmi", _("IPMI")),
                 # ("ping", _("Ping-only"))
             ],
+        )
+
+    def form_spec(self) -> SingleChoiceExtended:
+        return SingleChoiceExtended(
+            title=Title("Protocol"),
+            help_text=Help("Specify the protocol used to connect to the management board."),
+            elements=[
+                SingleChoiceElementExtended(
+                    name=None,
+                    title=Title("No management board"),
+                ),
+                SingleChoiceElementExtended(
+                    name="snmp",
+                    title=Title("SNMP"),
+                ),
+                SingleChoiceElementExtended(
+                    name="ipmi",
+                    title=Title("IPMI"),
+                ),
+            ],
+            type=object,
         )
 
     def openapi_field(self) -> gui_fields.Field:

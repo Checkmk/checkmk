@@ -1011,8 +1011,7 @@ def test_check_systemd_units_sockets(
 @pytest.mark.parametrize(
     "params, section, check_results",
     [
-        # "Normal" test case
-        (
+        pytest.param(
             {
                 "else": 2,
                 "states": {"active": 0, "failed": 2, "inactive": 0},
@@ -1029,9 +1028,9 @@ def test_check_systemd_units_sockets(
                 Result(state=State.OK, summary="Failed: 2"),
                 Result(state=State.CRIT, summary="2 services failed (bar, foo)"),
             ],
+            id="'Normal' test case",
         ),
-        # Ignored (see 'blacklist')
-        (
+        pytest.param(
             {
                 "ignored": ["virtual"],
                 "activating_levels": (30, 60),
@@ -1057,9 +1056,9 @@ def test_check_systemd_units_sockets(
                 Result(state=State.OK, summary="Failed: 0"),
                 Result(state=State.OK, notice="Ignored: 1"),
             ],
+            id="Ignored (see 'blacklist')",
         ),
-        # (de)activating
-        (
+        pytest.param(
             {
                 "ignored": [],
                 "activating_levels": (30, 60),
@@ -1102,9 +1101,9 @@ def test_check_systemd_units_sockets(
                     notice="Service 'actualbox' deactivating for: 4 seconds",
                 ),
             ],
+            id="(de)activating",
         ),
-        # Activating + reloading
-        (
+        pytest.param(
             {
                 "ignored": [],
                 "activating_levels": (30, 60),
@@ -1134,9 +1133,9 @@ def test_check_systemd_units_sockets(
                     notice="Service 'virtualbox' activating for: 2 seconds",
                 ),
             ],
+            id="Activating + reloading",
         ),
-        # Reloading
-        (
+        pytest.param(
             {
                 "ignored": [],
                 "activating_levels": (30, 60),
@@ -1166,9 +1165,9 @@ def test_check_systemd_units_sockets(
                     notice="Service 'virtualbox' reloading for: 2 seconds",
                 ),
             ],
+            id="Reloading",
         ),
-        # Indirect
-        (
+        pytest.param(
             {
                 "ignored": [],
                 "activating_levels": (30, 60),
@@ -1193,9 +1192,9 @@ def test_check_systemd_units_sockets(
                 Result(state=State.OK, summary="Disabled: 1"),
                 Result(state=State.OK, summary="Failed: 0"),
             ],
+            id="Indirect",
         ),
-        # Custom systemd state
-        (
+        pytest.param(
             {
                 "else": 2,
                 "states": {"active": 0, "failed": 2, "inactive": 0},
@@ -1224,6 +1223,7 @@ def test_check_systemd_units_sockets(
                 Result(state=State.OK, summary="Failed: 0"),
                 Result(state=State.CRIT, summary="1 service somesystemdstate (virtualbox)"),
             ],
+            id="Custom systemd state",
         ),
     ],
 )

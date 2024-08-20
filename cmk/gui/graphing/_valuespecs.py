@@ -439,8 +439,8 @@ class PageVsAutocomplete(AjaxPage):
             metric_spec = get_metric_spec(metric_name)
             unit_choice_for_metric = (
                 _unit_choice_from_unit_spec(metric_spec.unit_spec)
-                if metric_spec.unit_spec
-                else _unit_choice_from_unit_info(metric_spec.unit_info)
+                if isinstance(metric_spec.unit_spec, ConvertibleUnitSpecification)
+                else _unit_choice_from_unit_info(metric_spec.unit_spec)
             )
         else:
             unit_choice_for_metric = _unit_choice_from_unit_spec(_FALLBACK_UNIT_SPEC)

@@ -15,6 +15,7 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.metrics import MetricName
 
 from cmk.gui.config import active_config
+from cmk.gui.graphing._formatter import AutoPrecision
 from cmk.gui.graphing._graph_specification import (
     GraphDataRange,
     GraphMetric,
@@ -30,6 +31,7 @@ from cmk.gui.graphing._rrd_fetch import (
 )
 from cmk.gui.graphing._translated_metrics import TranslationSpec
 from cmk.gui.graphing._type_defs import RRDDataKey
+from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 from cmk.gui.time_series import TimeSeries, TimeSeriesValues
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
@@ -78,7 +80,10 @@ _GRAPH_RECIPE = GraphRecipe(
             unit="c",
         )
     ],
-    unit="c",
+    unit_spec=ConvertibleUnitSpecification(
+        notation=DecimalNotation(symbol="°C"),
+        precision=AutoPrecision(digits=2),
+    ),
     explicit_vertical_range=None,
     horizontal_rules=[],
     omit_zero_metrics=False,

@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.graphing._expression import CriticalOf, Metric, MetricExpression, WarningOf
+from cmk.gui.graphing._formatter import StrictPrecision
 from cmk.gui.graphing._graph_templates import get_graph_template, GraphTemplate
 from cmk.gui.graphing._legacy import check_metrics
 from cmk.gui.graphing._metrics import get_metric_spec
+from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 from cmk.gui.metrics import _add_graphing_plugins, _load_graphing_plugins
 
 
@@ -16,13 +18,19 @@ def test_add_graphing_plugins() -> None:
     idle_connections = get_metric_spec("idle_connections")
     assert idle_connections.name == "idle_connections"
     assert idle_connections.title == "Idle connections"
-    assert idle_connections.unit_info.id == "DecimalNotation__StrictPrecision_2"
+    assert idle_connections.unit_spec == ConvertibleUnitSpecification(
+        notation=DecimalNotation(symbol=""),
+        precision=StrictPrecision(digits=2),
+    )
     assert idle_connections.color == "#7814a0"
 
     active_connections = get_metric_spec("active_connections")
     assert active_connections.name == "active_connections"
     assert active_connections.title == "Active connections"
-    assert active_connections.unit_info.id == "DecimalNotation__StrictPrecision_2"
+    assert active_connections.unit_spec == ConvertibleUnitSpecification(
+        notation=DecimalNotation(symbol=""),
+        precision=StrictPrecision(digits=2),
+    )
     assert active_connections.color == "#b441f0"
 
     assert "check_mk-citrix_serverload" in check_metrics

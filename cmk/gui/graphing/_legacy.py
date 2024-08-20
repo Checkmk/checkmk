@@ -8,10 +8,16 @@ from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass
 from typing import Any, Final, Literal, NotRequired, TypeAlias, TypedDict
 
+from pydantic import BaseModel
+
 from cmk.utils.metrics import MetricName
 
+from cmk.gui.config import active_config
+from cmk.gui.logged_in import user
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import Age, Filesize, Float, Integer, Percentage
+
+from ._unit import ConvertibleUnitSpecification, NonConvertibleUnitSpecification, user_specific_unit
 
 #   .--units---------------------------------------------------------------.
 #   |                                    _ _                               |
@@ -103,6 +109,31 @@ class UnitRegistry:
 # Note: we cannot simply use dict[str, Callable[[], UnitInfo]] and refactor all unit registrations
 # in our codebase because we need to stay compatible with custom extensions
 unit_info = UnitRegistry()
+
+
+class LegacyUnitSpecification(BaseModel, frozen=True):
+    type: Literal["legacy"] = "legacy"
+    id: str
+
+
+def get_render_function(
+    unit_spec: ConvertibleUnitSpecification | NonConvertibleUnitSpecification | UnitInfo,
+) -> Callable[[float], str]:
+    return (
+        unit_spec.render
+        if isinstance(unit_spec, UnitInfo)
+        else user_specific_unit(unit_spec, user, active_config).formatter.render
+    )
+
+
+def get_conversion_function(
+    unit_spec: ConvertibleUnitSpecification | NonConvertibleUnitSpecification | UnitInfo,
+) -> Callable[[float], float]:
+    return (
+        unit_spec.conversion
+        if isinstance(unit_spec, UnitInfo)
+        else user_specific_unit(unit_spec, user, active_config).conversion
+    )
 
 
 # .

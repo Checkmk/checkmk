@@ -93,12 +93,12 @@ def create_service_view_url(context):
 
 
 def purge_metric_spec_for_js(metric_spec: MetricSpec) -> dict[str, object]:
-    return {"bounds": {}} | _purge_unit_spec_for_js(metric_spec.unit_info)
+    return {"bounds": {}} | _purge_unit_spec_for_js(metric_spec.unit_spec)
 
 
 def purge_translated_metric_for_js(translated_metric: TranslatedMetric) -> dict[str, object]:
     return {"bounds": translated_metric.scalar} | _purge_unit_spec_for_js(
-        translated_metric.unit_info
+        translated_metric.unit_spec
     )
 
 

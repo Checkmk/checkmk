@@ -46,7 +46,7 @@ from ._graph_specification import (
     HorizontalRule,
     MinimalVerticalRange,
 )
-from ._legacy import UnitInfo
+from ._legacy import LegacyUnitSpecification, UnitInfo
 from ._rrd_fetch import fetch_rrd_data_for_graph
 from ._timeseries import clean_time_series_point
 from ._type_defs import LineType, RRDData
@@ -160,16 +160,17 @@ def compute_graph_artwork(
     graph_display_id: str = "",
 ) -> GraphArtwork:
     unit_spec: UserSpecificUnit | UnitInfo
-    if graph_recipe.unit_spec:
+
+    if isinstance(graph_recipe.unit_spec, LegacyUnitSpecification):
+        unit_spec = get_unit_info(graph_recipe.unit_spec.id)
+        renderer = unit_spec.render
+    else:
         unit_spec = user_specific_unit(
             graph_recipe.unit_spec,
             user,
             active_config,
         )
-        renderer: Callable[[float], str] = unit_spec.formatter.render
-    else:
-        unit_spec = get_unit_info(graph_recipe.unit)
-        renderer = unit_spec.render
+        renderer = unit_spec.formatter.render
 
     curves = list(compute_graph_artwork_curves(graph_recipe, graph_data_range))
 

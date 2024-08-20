@@ -7,6 +7,8 @@ import pytest
 
 from cmk.gui.config import active_config
 from cmk.gui.graphing._expression import (
+    _FALLBACK_UNIT_SPEC_FLOAT,
+    _FALLBACK_UNIT_SPEC_INT,
     ConditionalMetricExpression,
     Constant,
     CriticalOf,
@@ -26,8 +28,10 @@ from cmk.gui.graphing._expression import (
     Sum,
     WarningOf,
 )
-from cmk.gui.graphing._legacy import unit_info
+from cmk.gui.graphing._formatter import AutoPrecision
+from cmk.gui.graphing._legacy import unit_info, UnitInfo
 from cmk.gui.graphing._translated_metrics import parse_perf_data, translate_metrics
+from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation, IECNotation
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 
 
@@ -80,7 +84,15 @@ def test_evaluate_cpu_utilization(
 
 
 @pytest.mark.parametrize(
-    "perf_data, check_command, raw_expression, expected_metric_expression, value, unit_name, color",
+    [
+        "perf_data",
+        "check_command",
+        "raw_expression",
+        "expected_metric_expression",
+        "expected_value",
+        "expected_unit_spec",
+        "expected_color",
+    ],
     [
         pytest.param(
             [PerfDataTuple(n, n, len(n), "", 120, 240, 0, 24) for n in ["in", "out"]],
@@ -89,7 +101,7 @@ def test_evaluate_cpu_utilization(
             MetricExpression(
                 Product([Metric("if_in_octets"), Constant(8)]),
                 line_type="line",
-                unit_id="bits/s",
+                unit_spec="bits/s",
             ),
             16.0,
             "bits/s",
@@ -106,7 +118,7 @@ def test_evaluate_cpu_utilization(
             "127.0.0.1pl",
             MetricExpression(Metric("127.0.0.1pl"), line_type="line"),
             5,
-            "",
+            _FALLBACK_UNIT_SPEC_FLOAT,
             "#cc00ff",
             id="warn crit None None",
         ),
@@ -118,7 +130,7 @@ def test_evaluate_cpu_utilization(
             "10.172",
             MetricExpression(Metric("10.172"), line_type="line"),
             6,
-            "",
+            _FALLBACK_UNIT_SPEC_FLOAT,
             "#cc00ff",
             id="None None None None",
         ),
@@ -128,7 +140,7 @@ def test_evaluate_cpu_utilization(
             "97",
             MetricExpression(Constant(97), line_type="line"),
             97.0,
-            "count",
+            _FALLBACK_UNIT_SPEC_INT,
             "#000000",
             id="constant str -> int",
         ),
@@ -138,7 +150,7 @@ def test_evaluate_cpu_utilization(
             97,
             MetricExpression(Constant(97), line_type="line"),
             97.0,
-            "count",
+            _FALLBACK_UNIT_SPEC_INT,
             "#000000",
             id="constant int",
         ),
@@ -148,7 +160,7 @@ def test_evaluate_cpu_utilization(
             "97.0",
             MetricExpression(Constant(97.0), line_type="line"),
             97.0,
-            "",
+            _FALLBACK_UNIT_SPEC_FLOAT,
             "#000000",
             id="constant str -> float",
         ),
@@ -158,7 +170,7 @@ def test_evaluate_cpu_utilization(
             97.0,
             MetricExpression(Constant(97.0), line_type="line"),
             97.0,
-            "",
+            _FALLBACK_UNIT_SPEC_FLOAT,
             "#000000",
             id="constant float",
         ),
@@ -166,7 +178,7 @@ def test_evaluate_cpu_utilization(
             [],
             "check_mk-foo",
             "97.0@bytes",
-            MetricExpression(Constant(97.0), line_type="line", unit_id="bytes"),
+            MetricExpression(Constant(97.0), line_type="line", unit_spec="bytes"),
             97.0,
             "bytes",
             "#000000",
@@ -178,7 +190,7 @@ def test_evaluate_cpu_utilization(
             "97.0#123456",
             MetricExpression(Constant(97.0), line_type="line", color="#123456"),
             97.0,
-            "",
+            _FALLBACK_UNIT_SPEC_FLOAT,
             "#123456",
             id="constant color",
         ),
@@ -194,7 +206,10 @@ def test_evaluate_cpu_utilization(
                 line_type="line",
             ),
             20.0,
-            "%",
+            ConvertibleUnitSpecification(
+                notation=DecimalNotation(symbol="%"),
+                precision=AutoPrecision(digits=2),
+            ),
             "#cc00ff",
             id="percentage",
         ),
@@ -204,7 +219,7 @@ def test_evaluate_cpu_utilization(
             "metric_name:warn",
             MetricExpression(WarningOf(Metric("metric_name")), line_type="line"),
             20.0,
-            "",
+            _FALLBACK_UNIT_SPEC_FLOAT,
             "#ffd000",
             id="warn",
         ),
@@ -220,7 +235,10 @@ def test_evaluate_cpu_utilization(
                 line_type="line",
             ),
             40.0,
-            "%",
+            ConvertibleUnitSpecification(
+                notation=DecimalNotation(symbol="%"),
+                precision=AutoPrecision(digits=2),
+            ),
             "#ffd000",
             id="warn percentage",
         ),
@@ -230,7 +248,7 @@ def test_evaluate_cpu_utilization(
             "metric_name:crit",
             MetricExpression(CriticalOf(Metric("metric_name")), line_type="line"),
             30.0,
-            "",
+            _FALLBACK_UNIT_SPEC_FLOAT,
             "#ff3232",
             id="crit",
         ),
@@ -246,7 +264,10 @@ def test_evaluate_cpu_utilization(
                 line_type="line",
             ),
             60.0,
-            "%",
+            ConvertibleUnitSpecification(
+                notation=DecimalNotation(symbol="%"),
+                precision=AutoPrecision(digits=2),
+            ),
             "#ff3232",
             id="crit percentage",
         ),
@@ -256,7 +277,7 @@ def test_evaluate_cpu_utilization(
             "metric_name:min",
             MetricExpression(MinimumOf(Metric("metric_name")), line_type="line"),
             0.0,
-            "",
+            _FALLBACK_UNIT_SPEC_FLOAT,
             "#808080",
             id="min",
         ),
@@ -272,7 +293,10 @@ def test_evaluate_cpu_utilization(
                 line_type="line",
             ),
             0.0,
-            "%",
+            ConvertibleUnitSpecification(
+                notation=DecimalNotation(symbol="%"),
+                precision=AutoPrecision(digits=2),
+            ),
             "#808080",
             id="min percentage",
         ),
@@ -282,7 +306,7 @@ def test_evaluate_cpu_utilization(
             "metric_name:max",
             MetricExpression(MaximumOf(Metric("metric_name")), line_type="line"),
             50.0,
-            "",
+            _FALLBACK_UNIT_SPEC_FLOAT,
             "#808080",
             id="max",
         ),
@@ -298,7 +322,10 @@ def test_evaluate_cpu_utilization(
                 line_type="line",
             ),
             100.0,
-            "%",
+            ConvertibleUnitSpecification(
+                notation=DecimalNotation(symbol="%"),
+                precision=AutoPrecision(digits=2),
+            ),
             "#808080",
             id="max percentage",
         ),
@@ -308,7 +335,7 @@ def test_evaluate_cpu_utilization(
             "metric_name.max",
             MetricExpression(Metric("metric_name", "max"), line_type="line"),
             10.0,
-            "",
+            _FALLBACK_UNIT_SPEC_FLOAT,
             "#cc00ff",
             id="consolidation func name max",
         ),
@@ -318,7 +345,7 @@ def test_evaluate_cpu_utilization(
             "metric_name.min",
             MetricExpression(Metric("metric_name", "min"), line_type="line"),
             10.0,
-            "",
+            _FALLBACK_UNIT_SPEC_FLOAT,
             "#cc00ff",
             id="consolidation func name min",
         ),
@@ -328,7 +355,7 @@ def test_evaluate_cpu_utilization(
             "metric_name.average",
             MetricExpression(Metric("metric_name", "average"), line_type="line"),
             10.0,
-            "",
+            _FALLBACK_UNIT_SPEC_FLOAT,
             "#cc00ff",
             id="consolidation func name average",
         ),
@@ -339,34 +366,46 @@ def test_parse_and_evaluate_1(
     check_command: str,
     raw_expression: str,
     expected_metric_expression: MetricExpression,
-    value: float,
-    unit_name: str,
-    color: str,
+    expected_value: float,
+    expected_unit_spec: str | ConvertibleUnitSpecification,
+    expected_color: str,
 ) -> None:
     translated_metrics = translate_metrics(perf_data, check_command)
     metric_expression = parse_legacy_expression(raw_expression, "line", "", translated_metrics)
     assert metric_expression == expected_metric_expression
     evaluated = metric_expression.evaluate(translated_metrics)
-    assert evaluated.value == value
-    assert evaluated.color == color
-    unit_info_ = unit_info[unit_name]
-    assert evaluated.unit_info.id == unit_info_.id
-    assert evaluated.unit_info.title == unit_info_.title
-    assert evaluated.unit_info.symbol == unit_info_.symbol
-    assert evaluated.unit_info.render == unit_info_.render
-    assert evaluated.unit_info.js_render == unit_info_.js_render
-    assert evaluated.unit_info.stepping == unit_info_.stepping
-    assert evaluated.unit_info.color == unit_info_.color
-    assert evaluated.unit_info.graph_unit == unit_info_.graph_unit
-    assert evaluated.unit_info.description == unit_info_.description
-    assert evaluated.unit_info.valuespec == unit_info_.valuespec
-    assert evaluated.unit_info.perfometer_render == unit_info_.perfometer_render
-    assert evaluated.unit_info.formatter_ident == unit_info_.formatter_ident
-    assert evaluated.unit_info.conversion(123.456) == 123.456
+    assert evaluated.value == expected_value
+    assert evaluated.color == expected_color
+    if isinstance(expected_unit_spec, ConvertibleUnitSpecification):
+        assert evaluated.unit_spec == expected_unit_spec
+    else:
+        assert isinstance(evaluated.unit_spec, UnitInfo)
+        unit_info_ = unit_info[expected_unit_spec]
+        assert evaluated.unit_spec.id == unit_info_.id
+        assert evaluated.unit_spec.title == unit_info_.title
+        assert evaluated.unit_spec.symbol == unit_info_.symbol
+        assert evaluated.unit_spec.render == unit_info_.render
+        assert evaluated.unit_spec.js_render == unit_info_.js_render
+        assert evaluated.unit_spec.stepping == unit_info_.stepping
+        assert evaluated.unit_spec.color == unit_info_.color
+        assert evaluated.unit_spec.graph_unit == unit_info_.graph_unit
+        assert evaluated.unit_spec.description == unit_info_.description
+        assert evaluated.unit_spec.valuespec == unit_info_.valuespec
+        assert evaluated.unit_spec.perfometer_render == unit_info_.perfometer_render
+        assert evaluated.unit_spec.formatter_ident == unit_info_.formatter_ident
+        assert evaluated.unit_spec.conversion(123.456) == 123.456
 
 
 @pytest.mark.parametrize(
-    "perf_data, check_command, raw_expression, expected_metric_expression, value, unit_name, color",
+    [
+        "perf_data",
+        "check_command",
+        "raw_expression",
+        "expected_metric_expression",
+        "expected_value",
+        "expected_unit_spec",
+        "expected_color",
+    ],
     [
         pytest.param(
             [PerfDataTuple(n, n, len(n), "", None, None, None, None) for n in ["/", "fs_size"]],
@@ -378,7 +417,10 @@ def test_parse_and_evaluate_1(
                 color="#e3fff9",
             ),
             6291456,
-            "IECNotation_B_AutoPrecision_2",
+            ConvertibleUnitSpecification(
+                notation=IECNotation(symbol="B"),
+                precision=AutoPrecision(digits=2),
+            ),
             "#e3fff9",
             id="None None None None",
         ),
@@ -389,17 +431,17 @@ def test_parse_and_evaluate_2(
     check_command: str,
     raw_expression: str,
     expected_metric_expression: MetricExpression,
-    value: float,
-    unit_name: str,
-    color: str,
+    expected_value: float,
+    expected_unit_spec: ConvertibleUnitSpecification,
+    expected_color: str,
 ) -> None:
     translated_metrics = translate_metrics(perf_data, check_command)
     metric_expression = parse_legacy_expression(raw_expression, "line", "", translated_metrics)
     assert metric_expression == expected_metric_expression
     result = metric_expression.evaluate(translated_metrics)
-    assert result.value == value
-    assert result.unit_info.id == unit_name
-    assert result.color == color
+    assert result.value == expected_value
+    assert result.unit_spec == expected_unit_spec
+    assert result.color == expected_color
 
 
 @pytest.mark.parametrize(

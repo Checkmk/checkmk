@@ -31,6 +31,7 @@ from cmk.gui.time_series import TimeSeries
 from cmk.ccc.plugin_registry import Registry
 
 from ._graph_render_config import GraphRenderOptions
+from ._legacy import LegacyUnitSpecification
 from ._timeseries import AugmentedTimeSeries, derive_num_points_twindow, time_series_math
 from ._type_defs import GraphConsolidationFunction, LineType, Operators, RRDData, RRDDataKey
 from ._unit import ConvertibleUnitSpecification, NonConvertibleUnitSpecification
@@ -193,7 +194,7 @@ class GraphMetric(BaseModel, frozen=True):
     title: str
     line_type: LineType
     operation: Annotated[SerializeAsAny[MetricOperation], PlainValidator(parse_metric_operation)]
-    unit: str
+    unit: str | ConvertibleUnitSpecification
     color: str
 
 
@@ -261,11 +262,9 @@ class AdditionalGraphHTML(BaseModel, frozen=True):
 
 class GraphRecipe(BaseModel, frozen=True):
     title: str
-    unit: str
-    unit_spec: ConvertibleUnitSpecification | NonConvertibleUnitSpecification | None = Field(
-        default=None,
-        discriminator="type",
-    )
+    unit_spec: (
+        ConvertibleUnitSpecification | NonConvertibleUnitSpecification | LegacyUnitSpecification
+    ) = Field(discriminator="type")
     explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None
     horizontal_rules: Sequence[HorizontalRule]
     omit_zero_metrics: bool

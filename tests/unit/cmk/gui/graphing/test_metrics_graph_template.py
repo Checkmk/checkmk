@@ -21,6 +21,7 @@ from cmk.gui.graphing._expression import (
     parse_legacy_expression,
     WarningOf,
 )
+from cmk.gui.graphing._formatter import AutoPrecision
 from cmk.gui.graphing._graph_specification import (
     GraphMetric,
     GraphRecipe,
@@ -38,6 +39,7 @@ from cmk.gui.graphing._graph_templates import (
     TemplateGraphSpecification,
 )
 from cmk.gui.graphing._translated_metrics import parse_perf_data, translate_metrics
+from cmk.gui.graphing._unit import ConvertibleUnitSpecification, IECNotation
 
 from cmk.ccc.exceptions import MKGeneralException
 
@@ -159,7 +161,10 @@ def test_create_graph_recipe_from_template() -> None:
         specification,
     ) == GraphRecipe(
         title="Used space",
-        unit="IECNotation_B_AutoPrecision_2",
+        unit_spec=ConvertibleUnitSpecification(
+            notation=IECNotation(symbol="B"),
+            precision=AutoPrecision(digits=2),
+        ),
         explicit_vertical_range=MinimalVerticalRange(type="minimal", min=0.0, max=None),
         horizontal_rules=[],
         omit_zero_metrics=False,
@@ -176,7 +181,10 @@ def test_create_graph_recipe_from_template() -> None:
                     consolidation_func_name="max",
                     scale=1048576.0,
                 ),
-                unit="IECNotation_B_AutoPrecision_2",
+                unit=ConvertibleUnitSpecification(
+                    notation=IECNotation(symbol="B"),
+                    precision=AutoPrecision(digits=2),
+                ),
                 color="#1e90ff",
             ),
             GraphMetric(
@@ -203,7 +211,10 @@ def test_create_graph_recipe_from_template() -> None:
                         ),
                     ],
                 ),
-                unit="IECNotation_B_AutoPrecision_2",
+                unit=ConvertibleUnitSpecification(
+                    notation=IECNotation(symbol="B"),
+                    precision=AutoPrecision(digits=2),
+                ),
                 color="#e3fff9",
             ),
             GraphMetric(
@@ -217,7 +228,10 @@ def test_create_graph_recipe_from_template() -> None:
                     consolidation_func_name="max",
                     scale=1048576.0,
                 ),
-                unit="IECNotation_B_AutoPrecision_2",
+                unit=ConvertibleUnitSpecification(
+                    notation=IECNotation(symbol="B"),
+                    precision=AutoPrecision(digits=2),
+                ),
                 color="#37fa37",
             ),
         ],
@@ -259,7 +273,11 @@ def test_metric_unit_color(
     assert translated_metric is not None
     metric_expression = parse_legacy_expression(expression, "line", "", translated_metrics)
     assert compute_unit_color(metric_expression, translated_metrics, ["test"]) == MetricUnitColor(
-        unit=translated_metric.unit_info.id,
+        unit=(
+            translated_metric.unit_spec
+            if isinstance(translated_metric.unit_spec, ConvertibleUnitSpecification)
+            else translated_metric.unit_spec.id
+        ),
         color=result_color,
     )
 

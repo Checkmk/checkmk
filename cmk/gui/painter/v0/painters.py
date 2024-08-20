@@ -18,6 +18,7 @@ from cmk.utils.statename import short_host_state_name, short_service_state_name
 from cmk.gui import sites
 from cmk.gui.config import Config
 from cmk.gui.graphing._color import render_color_icon
+from cmk.gui.graphing._legacy import get_render_function
 from cmk.gui.graphing._metrics import get_metric_spec, registered_metrics
 from cmk.gui.graphing._translated_metrics import (
     parse_perf_data,
@@ -769,7 +770,10 @@ class PainterSvcMetrics(Painter):
             html.open_tr()
             html.td(render_color_icon(translated_metric.color), class_="color")
             html.td(f"{translated_metric.title}{optional_metric_id}:")
-            html.td(translated_metric.unit_info.render(translated_metric.value), class_="value")
+            html.td(
+                get_render_function(translated_metric.unit_spec)(translated_metric.value),
+                class_="value",
+            )
             if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE:
                 html.td(
                     html.render_popup_trigger(
@@ -5475,7 +5479,7 @@ class AbstractColumnSpecificMetric(Painter):
             return "", ""
 
         translated_metric = translated_metrics[show_metric]
-        return "", translated_metric.unit_info.render(translated_metric.value)
+        return "", get_render_function(translated_metric.unit_spec)(translated_metric.value)
 
 
 class PainterHostSpecificMetric(AbstractColumnSpecificMetric):

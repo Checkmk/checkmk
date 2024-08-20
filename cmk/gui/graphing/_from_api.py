@@ -320,7 +320,6 @@ class RegisteredMetric:
     name: str
     title_localizer: Callable[[Callable[[str], str]], str]
     unit_spec: ConvertibleUnitSpecification
-    api_unit: metrics_api.Unit
     color: str
 
 
@@ -328,13 +327,12 @@ def parse_metric_from_api(metric_from_api: metrics_api.Metric) -> RegisteredMetr
     return RegisteredMetric(
         name=metric_from_api.name,
         title_localizer=metric_from_api.title.localize,
-        unit_spec=_parse_unit_from_api(metric_from_api.unit),
-        api_unit=metric_from_api.unit,
+        unit_spec=parse_unit_from_api(metric_from_api.unit),
         color=parse_color_from_api(metric_from_api.color),
     )
 
 
-def _parse_unit_from_api(unit_from_api: metrics_api.Unit) -> ConvertibleUnitSpecification:
+def parse_unit_from_api(unit_from_api: metrics_api.Unit) -> ConvertibleUnitSpecification:
     notation: (
         DecimalNotation
         | SINotation

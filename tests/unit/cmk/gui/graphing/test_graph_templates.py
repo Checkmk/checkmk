@@ -52,7 +52,7 @@ from cmk.gui.graphing._graph_templates import (
     GraphTemplate,
     MinimalGraphTemplateRange,
 )
-from cmk.gui.graphing._legacy import RawGraphTemplate, UnitInfo
+from cmk.gui.graphing._legacy import RawGraphTemplate
 from cmk.gui.graphing._translated_metrics import (
     Original,
     parse_perf_data,
@@ -195,7 +195,7 @@ def test__replace_expressions_missing_scalars() -> None:
             [
                 HorizontalRule(
                     value=7.0,
-                    rendered_value="7.00",
+                    rendered_value="7",
                     color="#ffd000",
                     title="Warning",
                 ),
@@ -207,7 +207,7 @@ def test__replace_expressions_missing_scalars() -> None:
                 ),
                 HorizontalRule(
                     value=-2.0,
-                    rendered_value="-2.00",
+                    rendered_value="-2",
                     color="#ffd000",
                     title="Warning output",
                 ),
@@ -363,13 +363,9 @@ def test__to_metric_operation(
                     scalar={},
                     auto_graph=False,
                     title="Title",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#111111",
                 ),
@@ -456,7 +452,10 @@ COLOR_HEX = "#1e90ff"
                         Constant(value=10),
                         line_type="stack",
                         title="Constant",
-                        unit_id="DecimalNotation__AutoPrecision_2",
+                        unit_spec=ConvertibleUnitSpecification(
+                            notation=DecimalNotation(symbol=""),
+                            precision=AutoPrecision(digits=2),
+                        ),
                         color=COLOR_HEX,
                     ),
                     MetricExpression(
@@ -491,7 +490,10 @@ COLOR_HEX = "#1e90ff"
                         Product([Metric("metric-name-7")]),
                         line_type="stack",
                         title="Product",
-                        unit_id="DecimalNotation__AutoPrecision_2",
+                        unit_spec=ConvertibleUnitSpecification(
+                            notation=DecimalNotation(symbol=""),
+                            precision=AutoPrecision(digits=2),
+                        ),
                         color=COLOR_HEX,
                     ),
                     MetricExpression(
@@ -510,7 +512,10 @@ COLOR_HEX = "#1e90ff"
                         ),
                         line_type="stack",
                         title="Fraction",
-                        unit_id="DecimalNotation__AutoPrecision_2",
+                        unit_spec=ConvertibleUnitSpecification(
+                            notation=DecimalNotation(symbol=""),
+                            precision=AutoPrecision(digits=2),
+                        ),
                         color=COLOR_HEX,
                     ),
                 ],
@@ -608,7 +613,10 @@ COLOR_HEX = "#1e90ff"
                         Constant(value=10),
                         line_type="line",
                         title="Constant",
-                        unit_id="DecimalNotation__AutoPrecision_2",
+                        unit_spec=ConvertibleUnitSpecification(
+                            notation=DecimalNotation(symbol=""),
+                            precision=AutoPrecision(digits=2),
+                        ),
                         color=COLOR_HEX,
                     ),
                     MetricExpression(
@@ -621,7 +629,10 @@ COLOR_HEX = "#1e90ff"
                         Product([Metric("metric-name-7")]),
                         line_type="line",
                         title="Product",
-                        unit_id="DecimalNotation__AutoPrecision_2",
+                        unit_spec=ConvertibleUnitSpecification(
+                            notation=DecimalNotation(symbol=""),
+                            precision=AutoPrecision(digits=2),
+                        ),
                         color=COLOR_HEX,
                     ),
                     MetricExpression(
@@ -640,7 +651,10 @@ COLOR_HEX = "#1e90ff"
                         ),
                         line_type="line",
                         title="Fraction",
-                        unit_id="DecimalNotation__AutoPrecision_2",
+                        unit_spec=ConvertibleUnitSpecification(
+                            notation=DecimalNotation(symbol=""),
+                            precision=AutoPrecision(digits=2),
+                        ),
                         color=COLOR_HEX,
                     ),
                 ],
@@ -704,7 +718,6 @@ def test__graph_template_from_api_graph(
                     notation=DecimalNotation(symbol=""),
                     precision=AutoPrecision(digits=2),
                 ),
-                api_unit=metrics_api.Unit(metrics_api.DecimalNotation("")),
                 color="#000000",
             )
         )
@@ -949,7 +962,6 @@ def test__graph_template_from_api_bidirectional(
                     notation=DecimalNotation(symbol=""),
                     precision=AutoPrecision(digits=2),
                 ),
-                api_unit=metrics_api.Unit(metrics_api.DecimalNotation("")),
                 color="#000000",
             )
         )
@@ -1240,13 +1252,9 @@ def test__compute_predictive_metrics(
                         scalar={},
                         auto_graph=True,
                         title="",
-                        unit_info=UnitInfo(
-                            id="id",
-                            title="Title",
-                            symbol="",
-                            render=lambda v: f"{v}",
-                            js_render="v => v",
-                            conversion=lambda v: v,
+                        unit_spec=ConvertibleUnitSpecification(
+                            notation=DecimalNotation(symbol=""),
+                            precision=AutoPrecision(digits=2),
                         ),
                         color="#0080c0",
                     ),
@@ -1256,13 +1264,9 @@ def test__compute_predictive_metrics(
                         scalar={},
                         auto_graph=True,
                         title="",
-                        unit_info=UnitInfo(
-                            id="id",
-                            title="Title",
-                            symbol="",
-                            render=lambda v: f"{v}",
-                            js_render="v => v",
-                            conversion=lambda v: v,
+                        unit_spec=ConvertibleUnitSpecification(
+                            notation=DecimalNotation(symbol=""),
+                            precision=AutoPrecision(digits=2),
                         ),
                         color="#0080c0",
                     ),
@@ -1272,13 +1276,9 @@ def test__compute_predictive_metrics(
                         scalar={},
                         auto_graph=True,
                         title="",
-                        unit_info=UnitInfo(
-                            id="id",
-                            title="Title",
-                            symbol="",
-                            render=lambda v: f"{v}",
-                            js_render="v => v",
-                            conversion=lambda v: v,
+                        unit_spec=ConvertibleUnitSpecification(
+                            notation=DecimalNotation(symbol=""),
+                            precision=AutoPrecision(digits=2),
                         ),
                         color="#0080c0",
                     ),

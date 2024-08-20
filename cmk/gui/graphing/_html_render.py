@@ -53,7 +53,7 @@ from ._color import render_color_icon
 from ._from_api import get_unit_info
 from ._graph_render_config import GraphRenderConfig, GraphRenderConfigBase, GraphTitleFormat
 from ._graph_specification import GraphDataRange, GraphRecipe, GraphSpecification
-from ._unit import user_specific_unit
+from ._legacy import get_render_function, LegacyUnitSpecification
 from ._utils import SizeEx
 
 RenderOutput = HTML | str
@@ -1003,14 +1003,10 @@ def _render_ajax_graph_hover(
         "curve_values": list(
             compute_curve_values_at_timestamp(
                 order_graph_curves_for_legend_and_mouse_hover(graph_recipe, curves),
-                (
-                    user_specific_unit(
-                        graph_recipe.unit_spec,
-                        user,
-                        active_config,
-                    ).formatter.render
-                    if graph_recipe.unit_spec
-                    else get_unit_info(graph_recipe.unit).render
+                get_render_function(
+                    get_unit_info(graph_recipe.unit_spec.id)
+                    if isinstance(graph_recipe.unit_spec, LegacyUnitSpecification)
+                    else graph_recipe.unit_spec
                 ),
                 hover_time,
             )

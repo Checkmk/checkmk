@@ -56,9 +56,10 @@ from ._graph_specification import (
     MetricOpRRDSource,
     MinimalVerticalRange,
 )
-from ._legacy import graph_info, RawGraphTemplate
+from ._legacy import get_render_function, graph_info, LegacyUnitSpecification, RawGraphTemplate
 from ._translated_metrics import translated_metrics_from_row, TranslatedMetric
 from ._type_defs import GraphConsolidationFunction, LineType
+from ._unit import ConvertibleUnitSpecification
 from ._utils import get_graph_data_from_livestatus
 
 
@@ -95,7 +96,7 @@ def get_graph_template_choices() -> list[tuple[str, str]]:
 
 @dataclass(frozen=True)
 class MetricUnitColor:
-    unit: str
+    unit: str | ConvertibleUnitSpecification
     color: str
 
 
@@ -126,7 +127,14 @@ def compute_unit_color(
                 ", ".join(sorted(translated_metrics.keys())) or "None",
             )
         )
-    return MetricUnitColor(result.unit_info.id, result.color)
+    return MetricUnitColor(
+        (
+            result.unit_spec
+            if isinstance(result.unit_spec, ConvertibleUnitSpecification)
+            else result.unit_spec.id
+        ),
+        result.color,
+    )
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -564,7 +572,10 @@ def _replace_expressions(text: str, translated_metrics: Mapping[str, TranslatedM
             )
         except (ValueError, KeyError):
             return text.split("-")[0].strip()
-        return reg.sub(result.unit_info.render(result.value).strip(), text)
+        return reg.sub(
+            get_render_function(result.unit_spec)(result.value).strip(),
+            text,
+        )
 
     return text
 
@@ -580,7 +591,7 @@ def _horizontal_rules_from_thresholds(
                 horizontal_rules.append(
                     HorizontalRule(
                         value=result.value,
-                        rendered_value=result.unit_info.render(result.value),
+                        rendered_value=get_render_function(result.unit_spec)(result.value),
                         color=result.color,
                         title=expression.title,
                     )
@@ -624,10 +635,16 @@ def create_graph_recipe_from_template(
 
     metrics = list(map(_graph_metric, graph_template.metrics))
     units = {m.unit for m in metrics}
-    if len(units) > 1:
-        raise MKGeneralException(
-            _("Cannot create graph with metrics of different units '%s'") % ", ".join(units)
-        )
+
+    # We cannot validate the hypothetical case of a mixture of metrics from the legacy and the new API
+    if all(isinstance(m.unit, str) for m in metrics) or all(
+        isinstance(m.unit, ConvertibleUnitSpecification) for m in metrics
+    ):
+        if len(units) > 1:
+            raise MKGeneralException(
+                _("Cannot create graph with metrics of different units '%s'")
+                % ", ".join(repr(unit) for unit in units)
+            )
 
     title = _replace_expressions(graph_template.title or "", translated_metrics)
     if not title:
@@ -640,7 +657,9 @@ def create_graph_recipe_from_template(
     return GraphRecipe(
         title=title,
         metrics=metrics,
-        unit=units.pop(),
+        unit_spec=(
+            LegacyUnitSpecification(id=unit) if isinstance(unit := units.pop(), str) else unit
+        ),
         explicit_vertical_range=evaluate_graph_template_range(
             graph_template.range,
             translated_metrics,

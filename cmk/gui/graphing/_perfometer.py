@@ -11,8 +11,10 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Self
 
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKInternalError
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -26,9 +28,11 @@ from ._expression import (
     parse_legacy_base_expression,
     parse_legacy_conditional_expression,
 )
-from ._from_api import perfometers_from_api, register_unit_info
+from ._from_api import parse_unit_from_api, perfometers_from_api
 from ._legacy import (
     DualPerfometerSpec,
+    get_conversion_function,
+    get_render_function,
     LegacyPerfometer,
     LinearPerfometerSpec,
     LogarithmicPerfometerSpec,
@@ -39,6 +43,7 @@ from ._legacy import (
     UnitInfo,
 )
 from ._translated_metrics import TranslatedMetric
+from ._unit import ConvertibleUnitSpecification, user_specific_unit
 
 
 @dataclass(frozen=True)
@@ -173,7 +178,7 @@ def _perfometer_matches(
 
 @dataclass(frozen=True)
 class _EvaluatedQuantity:
-    unit_info: UnitInfo
+    unit_spec: UnitInfo | ConvertibleUnitSpecification
     color: str
     value: int | float
 
@@ -197,48 +202,48 @@ def _evaluate_quantity(
         case str():
             translated_metric = translated_metrics[quantity]
             return _EvaluatedQuantity(
-                translated_metric.unit_info,
+                translated_metric.unit_spec,
                 translated_metric.color,
                 translated_metrics[quantity].value,
             )
         case metrics_api.Constant():
             return _EvaluatedQuantity(
-                register_unit_info(quantity.unit),
+                parse_unit_from_api(quantity.unit),
                 parse_color_from_api(quantity.color),
                 quantity.value,
             )
         case metrics_api.WarningOf():
             translated_metric = translated_metrics[quantity.metric_name]
             return _EvaluatedQuantity(
-                translated_metric.unit_info,
+                translated_metric.unit_spec,
                 "#ffff00",
                 translated_metric.scalar["warn"],
             )
         case metrics_api.CriticalOf():
             translated_metric = translated_metrics[quantity.metric_name]
             return _EvaluatedQuantity(
-                translated_metric.unit_info,
+                translated_metric.unit_spec,
                 "#ff0000",
                 translated_metric.scalar["crit"],
             )
         case metrics_api.MinimumOf():
             translated_metric = translated_metrics[quantity.metric_name]
             return _EvaluatedQuantity(
-                translated_metric.unit_info,
+                translated_metric.unit_spec,
                 parse_color_from_api(quantity.color),
                 translated_metric.scalar["min"],
             )
         case metrics_api.MaximumOf():
             translated_metric = translated_metrics[quantity.metric_name]
             return _EvaluatedQuantity(
-                translated_metric.unit_info,
+                translated_metric.unit_spec,
                 parse_color_from_api(quantity.color),
                 translated_metric.scalar["max"],
             )
         case metrics_api.Sum():
             evaluated_first_summand = _evaluate_quantity(quantity.summands[0], translated_metrics)
             return _EvaluatedQuantity(
-                evaluated_first_summand.unit_info,
+                evaluated_first_summand.unit_spec,
                 parse_color_from_api(quantity.color),
                 (
                     evaluated_first_summand.value
@@ -253,7 +258,7 @@ def _evaluate_quantity(
             for f in quantity.factors:
                 product *= _evaluate_quantity(f, translated_metrics).value
             return _EvaluatedQuantity(
-                register_unit_info(quantity.unit),
+                parse_unit_from_api(quantity.unit),
                 parse_color_from_api(quantity.color),
                 product,
             )
@@ -261,13 +266,13 @@ def _evaluate_quantity(
             evaluated_minuend = _evaluate_quantity(quantity.minuend, translated_metrics)
             evaluated_subtrahend = _evaluate_quantity(quantity.subtrahend, translated_metrics)
             return _EvaluatedQuantity(
-                evaluated_minuend.unit_info,
+                evaluated_minuend.unit_spec,
                 parse_color_from_api(quantity.color),
                 evaluated_minuend.value - evaluated_subtrahend.value,
             )
         case metrics_api.Fraction():
             return _EvaluatedQuantity(
-                register_unit_info(quantity.unit),
+                parse_unit_from_api(quantity.unit),
                 parse_color_from_api(quantity.color),
                 (
                     _evaluate_quantity(quantity.dividend, translated_metrics).value
@@ -496,7 +501,7 @@ def _make_projection(
     #              68 °F
     # Generalize the following...
     conversion = (
-        list(translated_metrics.values())[0].unit_info.conversion
+        get_conversion_function(list(translated_metrics.values())[0].unit_spec)
         if len(translated_metrics) == 1
         else lambda v: v
     )
@@ -684,8 +689,10 @@ class MetricometerRenderer(abc.ABC):
         raise NotImplementedError()
 
     @staticmethod
-    def _render_value(unit_info_: UnitInfo, value: float) -> str:
-        return (unit_info_.perfometer_render or unit_info_.render)(value)
+    def _render_value(unit_spec: UnitInfo | ConvertibleUnitSpecification, value: float) -> str:
+        if isinstance(unit_spec, UnitInfo):
+            return (unit_spec.perfometer_render or unit_spec.render)(value)
+        return user_specific_unit(unit_spec, user, active_config).formatter.render(value)
 
 
 class MetricometerRendererPerfometer(MetricometerRenderer):
@@ -722,7 +729,7 @@ class MetricometerRendererPerfometer(MetricometerRenderer):
 
     def get_label(self) -> str:
         first_segment = _evaluate_quantity(self.perfometer.segments[0], self.translated_metrics)
-        return first_segment.unit_info.render(
+        return get_render_function(first_segment.unit_spec)(
             first_segment.value
             + sum(
                 _evaluate_quantity(s, self.translated_metrics).value
@@ -882,14 +889,16 @@ class MetricometerRendererLegacyLogarithmic(MetricometerRenderer):
         return [
             self.get_stack_from_values(
                 result.value,
-                *self.estimate_parameters_for_converted_units(result.unit_info.conversion),
+                *self.estimate_parameters_for_converted_units(
+                    get_conversion_function(result.unit_spec)
+                ),
                 result.color,
             )
         ]
 
     def get_label(self) -> str:
         result = self._metric.evaluate(self._translated_metrics)
-        return self._render_value(result.unit_info, result.value)
+        return self._render_value(result.unit_spec, result.value)
 
     def get_sort_value(self) -> float:
         """Returns the number to sort this perfometer with compared to the other
@@ -1001,23 +1010,23 @@ class MetricometerRendererLegacyLinear(MetricometerRenderer):
             return self._render_value(self._unit(), self._get_summed_values())
 
         result = self._label_expression.evaluate(self._translated_metrics)
-        unit_info_ = unit_info[self._label_unit_name] if self._label_unit_name else result.unit_info
+        unit_spec = unit_info[self._label_unit_name] if self._label_unit_name else result.unit_spec
 
         if isinstance(self._label_expression, Constant):
-            value = unit_info_.conversion(self._label_expression.value)
+            value = get_conversion_function(unit_spec)(self._label_expression.value)
         else:
             value = result.value
 
-        return self._render_value(unit_info_, value)
+        return self._render_value(unit_spec, value)
 
     def _evaluate_total(self) -> float:
         if isinstance(self._total, Constant):
-            return self._unit().conversion(self._total.value)
+            return get_conversion_function(self._unit())(self._total.value)
         return self._total.evaluate(self._translated_metrics).value
 
-    def _unit(self) -> UnitInfo:
+    def _unit(self) -> UnitInfo | ConvertibleUnitSpecification:
         # We assume that all expressions across all segments have the same unit
-        return self._segments[0].evaluate(self._translated_metrics).unit_info
+        return self._segments[0].evaluate(self._translated_metrics).unit_spec
 
     def get_sort_value(self) -> float:
         """Use the first segment value for sorting"""

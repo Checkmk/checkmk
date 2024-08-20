@@ -18,25 +18,65 @@ from cmk.gui.i18n import _, translate_to_current_language
 from cmk.graphing.v1 import metrics as metrics_api
 
 from ._color import mix_colors, parse_color, parse_color_from_api, render_color, scalar_colors
-from ._from_api import get_unit_info, register_unit_info
+from ._formatter import AutoPrecision, StrictPrecision
+from ._from_api import get_unit_info, parse_unit_from_api
 from ._legacy import unit_info, UnitInfo
 from ._metrics import get_metric_spec
 from ._translated_metrics import TranslatedMetric
 from ._type_defs import GraphConsolidationFunction, LineType
+from ._unit import ConvertibleUnitSpecification, DecimalNotation
 
 # TODO CMK-15246 Checkmk 2.4: Remove legacy objects/RPNs
 
+_FALLBACK_UNIT_SPEC_FLOAT = ConvertibleUnitSpecification(
+    notation=DecimalNotation(symbol=""),
+    precision=AutoPrecision(digits=2),
+)
+_FALLBACK_UNIT_SPEC_INT = ConvertibleUnitSpecification(
+    notation=DecimalNotation(symbol=""),
+    precision=StrictPrecision(digits=2),
+)
 
-def _unit_mult(left_unit_info: UnitInfo, right_unit_info: UnitInfo) -> UnitInfo:
+
+def _unit_mult(
+    left_unit_spec: UnitInfo | ConvertibleUnitSpecification,
+    right_unit_spec: UnitInfo | ConvertibleUnitSpecification,
+) -> UnitInfo | ConvertibleUnitSpecification:
     # TODO: real unit computation!
-    return (
-        right_unit_info if left_unit_info in (unit_info[""], unit_info["count"]) else left_unit_info
-    )
+    if isinstance(left_unit_spec, UnitInfo) and left_unit_spec in (
+        unit_info[""],
+        unit_info["count"],
+    ):
+        return right_unit_spec
+    if (
+        isinstance(left_unit_spec, ConvertibleUnitSpecification)
+        and not left_unit_spec.notation.symbol
+    ):
+        return right_unit_spec
+    return left_unit_spec
 
 
-_unit_div: Callable[[UnitInfo, UnitInfo], UnitInfo] = _unit_mult
-_unit_add: Callable[[UnitInfo, UnitInfo], UnitInfo] = _unit_mult
-_unit_sub: Callable[[UnitInfo, UnitInfo], UnitInfo] = _unit_mult
+_unit_div: Callable[
+    [
+        UnitInfo | ConvertibleUnitSpecification,
+        UnitInfo | ConvertibleUnitSpecification,
+    ],
+    UnitInfo | ConvertibleUnitSpecification,
+] = _unit_mult
+_unit_add: Callable[
+    [
+        UnitInfo | ConvertibleUnitSpecification,
+        UnitInfo | ConvertibleUnitSpecification,
+    ],
+    UnitInfo | ConvertibleUnitSpecification,
+] = _unit_mult
+_unit_sub: Callable[
+    [
+        UnitInfo | ConvertibleUnitSpecification,
+        UnitInfo | ConvertibleUnitSpecification,
+    ],
+    UnitInfo | ConvertibleUnitSpecification,
+] = _unit_mult
 
 
 def _choose_operator_color(a: str, b: str) -> str:
@@ -50,7 +90,7 @@ def _choose_operator_color(a: str, b: str) -> str:
 @dataclass(frozen=True)
 class MetricExpressionResult:
     value: int | float
-    unit_info: UnitInfo
+    unit_spec: ConvertibleUnitSpecification | UnitInfo
     color: str
 
 
@@ -87,7 +127,7 @@ class Constant(BaseMetricExpression):
     ) -> MetricExpressionResult:
         return MetricExpressionResult(
             self.value,
-            unit_info["count"] if isinstance(self.value, int) else unit_info[""],
+            _FALLBACK_UNIT_SPEC_INT if isinstance(self.value, int) else _FALLBACK_UNIT_SPEC_FLOAT,
             "#000000",
         )
 
@@ -109,7 +149,7 @@ class Metric(BaseMetricExpression):
     ) -> MetricExpressionResult:
         return MetricExpressionResult(
             translated_metrics[self.name].value,
-            translated_metrics[self.name].unit_info,
+            translated_metrics[self.name].unit_spec,
             translated_metrics[self.name].color,
         )
 
@@ -130,7 +170,7 @@ class WarningOf(BaseMetricExpression):
     ) -> MetricExpressionResult:
         return MetricExpressionResult(
             translated_metrics[self.metric.name].scalar["warn"],
-            self.metric.evaluate(translated_metrics).unit_info,
+            self.metric.evaluate(translated_metrics).unit_spec,
             scalar_colors.get("warn", "#808080"),
         )
 
@@ -151,7 +191,7 @@ class CriticalOf(BaseMetricExpression):
     ) -> MetricExpressionResult:
         return MetricExpressionResult(
             translated_metrics[self.metric.name].scalar["crit"],
-            self.metric.evaluate(translated_metrics).unit_info,
+            self.metric.evaluate(translated_metrics).unit_spec,
             scalar_colors.get("crit", "#808080"),
         )
 
@@ -172,7 +212,7 @@ class MinimumOf(BaseMetricExpression):
     ) -> MetricExpressionResult:
         return MetricExpressionResult(
             translated_metrics[self.metric.name].scalar["min"],
-            self.metric.evaluate(translated_metrics).unit_info,
+            self.metric.evaluate(translated_metrics).unit_spec,
             scalar_colors.get("min", "#808080"),
         )
 
@@ -193,7 +233,7 @@ class MaximumOf(BaseMetricExpression):
     ) -> MetricExpressionResult:
         return MetricExpressionResult(
             translated_metrics[self.metric.name].scalar["max"],
-            self.metric.evaluate(translated_metrics).unit_info,
+            self.metric.evaluate(translated_metrics).unit_spec,
             scalar_colors.get("max", "#808080"),
         )
 
@@ -213,19 +253,19 @@ class Sum(BaseMetricExpression):
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> MetricExpressionResult:
         if len(self.summands) == 0:
-            return MetricExpressionResult(0.0, unit_info[""], "#000000")
+            return MetricExpressionResult(0.0, _FALLBACK_UNIT_SPEC_FLOAT, "#000000")
 
         first_result = self.summands[0].evaluate(translated_metrics)
         values = [first_result.value]
-        unit_info_ = first_result.unit_info
+        unit_spec = first_result.unit_spec
         color = first_result.color
         for successor in self.summands[1:]:
             successor_result = successor.evaluate(translated_metrics)
             values.append(successor_result.value)
-            unit_info_ = _unit_add(unit_info_, successor_result.unit_info)
+            unit_spec = _unit_add(unit_spec, successor_result.unit_spec)
             color = _choose_operator_color(color, successor_result.color)
 
-        return MetricExpressionResult(sum(values), unit_info_, color)
+        return MetricExpressionResult(sum(values), unit_spec, color)
 
     def metric_names(self) -> Iterator[str]:
         yield from (n for s in self.summands for n in s.metric_names())
@@ -243,19 +283,19 @@ class Product(BaseMetricExpression):
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> MetricExpressionResult:
         if len(self.factors) == 0:
-            return MetricExpressionResult(1.0, unit_info[""], "#000000")
+            return MetricExpressionResult(1.0, _FALLBACK_UNIT_SPEC_FLOAT, "#000000")
 
         first_result = self.factors[0].evaluate(translated_metrics)
         product = first_result.value
-        unit_info_ = first_result.unit_info
+        unit_spec = first_result.unit_spec
         color = first_result.color
         for successor in self.factors[1:]:
             successor_result = successor.evaluate(translated_metrics)
             product *= successor_result.value
-            unit_info_ = _unit_mult(unit_info_, successor_result.unit_info)
+            unit_spec = _unit_mult(unit_spec, successor_result.unit_spec)
             color = _choose_operator_color(color, successor_result.color)
 
-        return MetricExpressionResult(product, unit_info_, color)
+        return MetricExpressionResult(product, unit_spec, color)
 
     def metric_names(self) -> Iterator[str]:
         yield from (n for f in self.factors for n in f.metric_names())
@@ -283,7 +323,7 @@ class Difference(BaseMetricExpression):
 
         return MetricExpressionResult(
             value,
-            _unit_sub(minuend_result.unit_info, subtrahend_result.unit_info),
+            _unit_sub(minuend_result.unit_spec, subtrahend_result.unit_spec),
             _choose_operator_color(minuend_result.color, subtrahend_result.color),
         )
 
@@ -315,7 +355,7 @@ class Fraction(BaseMetricExpression):
 
         return MetricExpressionResult(
             value,
-            _unit_div(dividend_result.unit_info, divisor_result.unit_info),
+            _unit_div(dividend_result.unit_spec, divisor_result.unit_spec),
             _choose_operator_color(dividend_result.color, divisor_result.color),
         )
 
@@ -337,7 +377,7 @@ class Minimum(BaseMetricExpression):
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> MetricExpressionResult:
         if len(self.operands) == 0:
-            return MetricExpressionResult(float("nan"), unit_info[""], "#000000")
+            return MetricExpressionResult(float("nan"), _FALLBACK_UNIT_SPEC_FLOAT, "#000000")
 
         minimum = self.operands[0].evaluate(translated_metrics)
         for operand in self.operands[1:]:
@@ -363,7 +403,7 @@ class Maximum(BaseMetricExpression):
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> MetricExpressionResult:
         if len(self.operands) == 0:
-            return MetricExpressionResult(float("nan"), unit_info[""], "#000000")
+            return MetricExpressionResult(float("nan"), _FALLBACK_UNIT_SPEC_FLOAT, "#000000")
 
         maximum = self.operands[0].evaluate(translated_metrics)
         for operand in self.operands[1:]:
@@ -403,7 +443,10 @@ class Percent(BaseMetricExpression):
                 .evaluate(translated_metrics)
                 .value
             ),
-            unit_info["%"],
+            ConvertibleUnitSpecification(
+                notation=DecimalNotation(symbol="%"),
+                precision=AutoPrecision(digits=2),
+            ),
             self.percent_value.evaluate(translated_metrics).color,
         )
 
@@ -428,12 +471,12 @@ class Average(BaseMetricExpression):
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> MetricExpressionResult:
         if len(self.operands) == 0:
-            return MetricExpressionResult(float("nan"), unit_info[""], "#000000")
+            return MetricExpressionResult(float("nan"), _FALLBACK_UNIT_SPEC_FLOAT, "#000000")
 
         result = Sum(self.operands).evaluate(translated_metrics)
         return MetricExpressionResult(
             result.value / len(self.operands),
-            result.unit_info,
+            result.unit_spec,
             result.color,
         )
 
@@ -456,7 +499,7 @@ class Merge(BaseMetricExpression):
         for operand in self.operands:
             if (result := operand.evaluate(translated_metrics)).value is not None:
                 return result
-        return MetricExpressionResult(float("nan"), unit_info[""], "#000000")
+        return MetricExpressionResult(float("nan"), _FALLBACK_UNIT_SPEC_FLOAT, "#000000")
 
     def metric_names(self) -> Iterator[str]:
         yield from (n for o in self.operands for n in o.metric_names())
@@ -714,7 +757,7 @@ class MetricExpression:
     _: KW_ONLY
     line_type: LineType
     title: str = ""
-    unit_id: str = ""
+    unit_spec: ConvertibleUnitSpecification | None | str = None
     color: str = ""
 
     def evaluate(
@@ -724,7 +767,11 @@ class MetricExpression:
         evaluated = self.base.evaluate(translated_metrics)
         return MetricExpressionResult(
             evaluated.value,
-            get_unit_info(self.unit_id) if self.unit_id else evaluated.unit_info,
+            (
+                get_unit_info(self.unit_spec)
+                if isinstance(self.unit_spec, str)
+                else (self.unit_spec or evaluated.unit_spec)
+            ),
             self.color or evaluated.color,
         )
 
@@ -746,7 +793,7 @@ def parse_legacy_expression(
             Constant(raw_expression),
             line_type=line_type,
             title=title,
-            unit_id="",
+            unit_spec=None,
             color="",
         )
     (
@@ -759,7 +806,7 @@ def parse_legacy_expression(
             resolved,
             line_type=line_type,
             title=title,
-            unit_id=unit_id,
+            unit_spec=unit_id or None,
             color=color,
         )
     raise TypeError(resolved)
@@ -849,7 +896,7 @@ def parse_expression_from_api(
                 Constant(quantity.value),
                 line_type=line_type,
                 title=str(quantity.title.localize(translate_to_current_language)),
-                unit_id=register_unit_info(quantity.unit).id,
+                unit_spec=parse_unit_from_api(quantity.unit),
                 color=parse_color_from_api(quantity.color),
             )
         case metrics_api.WarningOf():
@@ -890,7 +937,7 @@ def parse_expression_from_api(
                 Product([parse_base_expression_from_api(f) for f in quantity.factors]),
                 line_type=line_type,
                 title=str(quantity.title.localize(translate_to_current_language)),
-                unit_id=register_unit_info(quantity.unit).id,
+                unit_spec=parse_unit_from_api(quantity.unit),
                 color=parse_color_from_api(quantity.color),
             )
         case metrics_api.Difference():
@@ -911,6 +958,6 @@ def parse_expression_from_api(
                 ),
                 line_type=line_type,
                 title=str(quantity.title.localize(translate_to_current_language)),
-                unit_id=register_unit_info(quantity.unit).id,
+                unit_spec=parse_unit_from_api(quantity.unit),
                 color=parse_color_from_api(quantity.color),
             )

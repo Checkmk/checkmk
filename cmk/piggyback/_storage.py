@@ -17,7 +17,7 @@ from typing import Self
 
 from cmk.utils.hostaddress import HostAddress, HostName
 
-from ._paths import distribution_status_dir, payload_dir, source_status_dir
+from ._paths import payload_dir, source_status_dir
 
 logger = logging.getLogger(__name__)
 
@@ -172,20 +172,6 @@ def _write_file_with_mtime(
     os.rename(tmp_path, str(file_path))
 
 
-def store_last_distribution_time(
-    source_host: HostName, piggybacked_host: HostName, timestamp: float, omd_root: Path
-) -> None:
-    file_path = _get_distribution_status_file_path(source_host, piggybacked_host, omd_root)
-    _write_file_with_mtime(file_path=file_path, content=b"", mtime=timestamp)
-
-
-def load_last_distribution_time(
-    source_host: HostName, piggybacked_host: HostName, omd_root: Path
-) -> float | None:
-    file_path = _get_distribution_status_file_path(source_host, piggybacked_host, omd_root)
-    return _get_mtime(file_path)
-
-
 #   .--folders/files-------------------------------------------------------.
 #   |         __       _     _                  ____ _ _                   |
 #   |        / _| ___ | | __| | ___ _ __ ___   / / _(_) | ___  ___         |
@@ -255,12 +241,6 @@ def _get_piggybacked_file_path(
     omd_root: Path,
 ) -> Path:
     return payload_dir(omd_root).joinpath(piggybacked_hostname, source_hostname)
-
-
-def _get_distribution_status_file_path(
-    source_hostname: HostName, piggybacked_hostname: HostName | HostAddress, omd_root: Path
-) -> Path:
-    return distribution_status_dir(omd_root).joinpath(piggybacked_hostname, source_hostname)
 
 
 # .

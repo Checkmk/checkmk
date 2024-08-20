@@ -122,23 +122,6 @@ def test_store_piggyback_raw_data_second_source() -> None:
     assert raw2.last_contact == _REF_TIME + 10.0
 
 
-def test_store_piggyback_raw_data_different_timestamp() -> None:
-    piggyback.store_piggyback_raw_data(
-        HostAddress("source1"),
-        {_TEST_HOST_NAME: _PAYLOAD},
-        _REF_TIME,
-        cmk.utils.paths.omd_root,
-        _REF_TIME + 10.0,
-    )
-    raw_data_map = {
-        rd.meta.source: rd.meta
-        for rd in piggyback.get_piggyback_raw_data(_TEST_HOST_NAME, cmk.utils.paths.omd_root)
-    }
-
-    assert (raw1 := raw_data_map[HostAddress("source1")]).last_update == _REF_TIME
-    assert raw1.last_contact == _REF_TIME + 10.0
-
-
 def test_get_source_and_piggyback_hosts() -> None:
     piggyback.store_piggyback_raw_data(
         HostAddress("source1"),
@@ -197,15 +180,3 @@ def test_get_source_and_piggyback_hosts() -> None:
             ),
         ],
     }
-
-
-def test_last_distribution_time() -> None:
-    piggyback.store_last_distribution_time(
-        HostAddress("source1"), HostAddress("test-host"), int(_REF_TIME), cmk.utils.paths.omd_root
-    )
-    assert (
-        piggyback.load_last_distribution_time(
-            HostAddress("source1"), HostAddress("test-host"), cmk.utils.paths.omd_root
-        )
-        == _REF_TIME
-    )

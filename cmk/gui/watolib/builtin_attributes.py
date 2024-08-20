@@ -14,6 +14,7 @@ from cmk.utils.user import UserId
 from cmk.gui import fields as gui_fields
 from cmk.gui import hooks, userdb
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs.generators.setup_site_choice import create_setup_site_choice
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -72,6 +73,8 @@ from cmk.gui.watolib.translation import HostnameTranslation
 
 import cmk.fields.validators
 from cmk import fields
+from cmk.rulesets.v1 import Help, Message, Title
+from cmk.rulesets.v1.form_specs import InvalidElementMode, InvalidElementValidator, SingleChoice
 
 
 class HostAttributeAlias(ABCHostAttributeNagiosText):
@@ -1031,6 +1034,23 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
                 "host, you will have to change the site attribute to the "
                 "local site. But this may make the host be monitored from "
                 "multiple sites."
+            ),
+        )
+
+    def form_spec(self) -> SingleChoice:
+        return create_setup_site_choice(
+            title=Title("Monitored on site"),
+            help_text=Help("Specify the site that should monitor this host."),
+            invalid_element_validation=InvalidElementValidator(
+                mode=InvalidElementMode.KEEP,
+                error_msg=Message(
+                    "The configured site is not known to this site. In case you "
+                    "are configuring in a remote site, this may be a host "
+                    "monitored by another site. If you want to modify this "
+                    "host, you will have to change the site attribute to the "
+                    "local site. But this may make the host be monitored from "
+                    "multiple sites."
+                ),
             ),
         )
 

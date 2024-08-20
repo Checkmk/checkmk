@@ -44,6 +44,7 @@ from cmk.gui.watolib.utils import host_attribute_matches
 import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.fields import String
+from cmk.rulesets.v1.form_specs import FormSpec
 
 _ContactgroupName = str
 
@@ -929,6 +930,9 @@ class ABCHostAttributeValueSpec(ABCHostAttribute):
 
     @abc.abstractmethod
     def valuespec(self) -> ValueSpec:
+        raise NotImplementedError()
+
+    def form_spec(self) -> FormSpec:
         raise NotImplementedError()
 
     def title(self) -> str:

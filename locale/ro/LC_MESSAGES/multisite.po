@@ -16069,6 +16069,9 @@ msgstr "Configurație implicită"
 msgid "Default credentials"
 msgstr "Acreditări implicite"
 
+msgid "Default dynamic visuals permission"
+msgstr ""
+
 msgid "Default expiration time (relative)"
 msgstr "Timpul de expirare implicit (relativ)"
 
@@ -16117,6 +16120,14 @@ msgstr "Parametrii impliciți pentru serviciile detectate"
 msgid "Default parameters when no time period matches"
 msgstr ""
 "Parametrii impliciți atunci când nu se potrivește nicio perioadă de timp"
+
+msgid ""
+"Default permission for dynamic visuals (dashboards, views, etc.). If set to "
+"'yes' all roles (including built-in roles) will have the permission to view "
+"dynamic visuals by default. If set to 'no' only the admin role can view "
+"dynamic visuals by default. Note: Applying this setting will cause a reload "
+"of apache."
+msgstr ""
 
 msgid "Default profile"
 msgstr "Profil implicit"

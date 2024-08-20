@@ -16189,6 +16189,9 @@ msgstr "Configuración por defecto"
 msgid "Default credentials"
 msgstr "Credenciales por defecto"
 
+msgid "Default dynamic visuals permission"
+msgstr ""
+
 #, fuzzy
 msgid "Default expiration time (relative)"
 msgstr "Rango de tiempo por defecto de los informes"
@@ -16237,6 +16240,14 @@ msgstr "Parámetros por defecto para los servicios detectados"
 
 msgid "Default parameters when no time period matches"
 msgstr "Parámetros por defecto cuando no coincide ningún periodo"
+
+msgid ""
+"Default permission for dynamic visuals (dashboards, views, etc.). If set to "
+"'yes' all roles (including built-in roles) will have the permission to view "
+"dynamic visuals by default. If set to 'no' only the admin role can view "
+"dynamic visuals by default. Note: Applying this setting will cause a reload "
+"of apache."
+msgstr ""
 
 #, fuzzy
 msgid "Default profile"

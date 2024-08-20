@@ -6,7 +6,7 @@ LIVESTATUS_INSTALL := $(BUILD_HELPER_DIR)/livestatus-install
 
 .PHONY: $(LIVESTATUS_BUILD)
 $(LIVESTATUS_BUILD):
-ifneq ($(filter $(DISTRO_CODE),el8 el9 sles15sp3 sles15sp4 sles15sp5),)
+ifneq ($(filter $(DISTRO_CODE),el8 el9 sles15sp3 sles15sp4 sles15sp5 sles15sp6),)
 	BAZEL_EXTRA_ARGS="--define non-standard-glib-path=true" $(BAZEL_BUILD) //$(LIVESTATUS_PACKAGE):$(LIVESTATUS)_shared
 else
 	$(BAZEL_BUILD) //$(LIVESTATUS_PACKAGE):$(LIVESTATUS)_shared

@@ -2,13 +2,18 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Sequence
+
+from collections.abc import Mapping, Sequence
 
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.quick_setup.config_setups.aws import form_specs as aws
 from cmk.gui.quick_setup.config_setups.aws import ruleset_helper
-from cmk.gui.quick_setup.v0_unstable.predefined import complete, recaps
+from cmk.gui.quick_setup.v0_unstable.predefined import (
+    collect_params_from_form_data,
+    complete,
+    recaps,
+)
 from cmk.gui.quick_setup.v0_unstable.predefined import validators as qs_validators
 from cmk.gui.quick_setup.v0_unstable.predefined import widgets
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupStage
@@ -192,11 +197,16 @@ def review_and_run_service_discovery() -> QuickSetupStage:
         title=_("Review and run service discovery"),
         sub_title=_("Review your configuration, run and preview service discovery"),
         configure_components=[],
-        custom_validators=[qs_validators.validate_test_connection(RuleGroup.SpecialAgents("aws"))],
+        custom_validators=[
+            qs_validators.validate_test_connection_custom_collect_params(
+                RuleGroup.SpecialAgents("aws"), custom_collect_params=aws_collect_params
+            )
+        ],
         recap=[
-            recaps.recap_service_discovery(
+            recaps.recap_service_discovery_custom_collect_params(
                 RuleGroup.SpecialAgents("aws"),
                 [ServiceInterest(".*", "services")],
+                custom_collect_params=aws_collect_params,
             )
         ],
         button_label="Run preview service discovery",
@@ -204,10 +214,44 @@ def review_and_run_service_discovery() -> QuickSetupStage:
 
 
 def save_action(all_stages_form_data: ParsedFormData) -> str:
-    return complete.create_and_save_special_agent_bundle(
+    return complete.create_and_save_special_agent_bundle_custom_collect_params(
         special_agent_name="aws",
         all_stages_form_data=all_stages_form_data,
+        custom_collect_params=aws_collect_params,
     )
+
+
+def aws_collect_params(
+    all_stages_form_data: ParsedFormData, rulespec_name: str
+) -> Mapping[str, object]:
+    return aws_transform_to_disk(collect_params_from_form_data(all_stages_form_data, rulespec_name))
+
+
+def _aws_service_defaults(service: str) -> tuple[str, dict | None]:
+    if service in ["ce", "route53"]:
+        return "all", {}
+    if service == "cloudfront":
+        return "all", {"host_assignment": "aws_host"}
+    return "all", {"limits": "limits"}
+
+
+def aws_transform_to_disk(params: Mapping[str, object]) -> Mapping[str, object]:
+    global_services = params["global_services"]
+    assert isinstance(global_services, list)
+    services = params["services"]
+    assert isinstance(services, list)
+    overall_tags = params.get("overall_tags", [])
+    assert isinstance(overall_tags, list)
+    return {
+        "access_key_id": params["access_key_id"],
+        "secret_access_key": params["secret_access_key"],
+        "access": {},
+        "global_services": {k: _aws_service_defaults(k) for k in global_services},
+        "regions_to_monitor": params["regions_to_monitor"],
+        "services": {k: _aws_service_defaults(k) for k in services},
+        "piggyback_naming_convention": "ip_region_instance",
+        "overall_tags": overall_tags,
+    }
 
 
 quick_setup_aws = QuickSetup(

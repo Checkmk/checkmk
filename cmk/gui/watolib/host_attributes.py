@@ -33,6 +33,7 @@ from cmk.fetchers import IPMICredentials
 
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs.private import SingleChoiceElementExtended, SingleChoiceExtended
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
@@ -44,7 +45,8 @@ from cmk.gui.watolib.utils import host_attribute_matches
 import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.fields import String
-from cmk.rulesets.v1.form_specs import FormSpec
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import DefaultValue, FormSpec
 
 _ContactgroupName = str
 
@@ -1059,6 +1061,23 @@ class ABCHostAttributeHostTagList(ABCHostAttributeTag, abc.ABC):
             from_valuespec=lambda s: None if s == "" else s,
         )
 
+    def form_spec(self) -> SingleChoiceExtended:
+        choices = [(k or "", v) for k, v in self._tag_group.get_tag_choices()]
+        return SingleChoiceExtended(
+            title=Title(  # pylint: disable=localization-of-non-literal-string
+                self._tag_group.title
+            ),
+            elements=[
+                SingleChoiceElementExtended(
+                    name=choice[0],
+                    title=Title(choice[1]),  # pylint: disable=localization-of-non-literal-string
+                )
+                for choice in choices
+            ],
+            prefill=DefaultValue(choices[0][0]),
+            type=str,
+        )
+
     @property
     def is_checkbox_tag(self) -> bool:
         return False
@@ -1086,6 +1105,23 @@ class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag, abc.ABC):
             valuespec=self._valuespec(),
             to_valuespec=lambda s: s == self._tag_value(),
             from_valuespec=lambda s: self._tag_value() if s is True else None,
+        )
+
+    def form_spec(self) -> SingleChoiceExtended:
+        return SingleChoiceExtended(
+            title=Title(  # pylint: disable=localization-of-non-literal-string
+                self._tag_group.title
+            ),
+            elements=[
+                SingleChoiceElementExtended(
+                    name=self._tag_value(),
+                    title=Title(  # pylint: disable=localization-of-non-literal-string
+                        self._tag_group.title
+                    ),
+                )
+            ],
+            prefill=DefaultValue(self._tag_value()),
+            type=str,
         )
 
     @property

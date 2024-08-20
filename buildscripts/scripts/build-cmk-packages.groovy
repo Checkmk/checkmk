@@ -330,6 +330,10 @@ def main() {
                         );
                     }
                 }
+
+                stage("${distro} workspace sanity check") {
+                    check_for_workspace_sanity();
+                }
             }
         }]
     }

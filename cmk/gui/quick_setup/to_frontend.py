@@ -267,6 +267,16 @@ def _create_diag_special_agent_input(
     )
 
 
+def validate_test_connection_custom_collect_params(
+    rulespec_name: str, custom_collect_params: Callable[[ParsedFormData, str], Mapping[str, object]]
+) -> CallableValidator:
+    return partial(
+        _validate_test_connection,
+        rulespec_name=rulespec_name,
+        collect_params=custom_collect_params,
+    )
+
+
 def validate_test_connection(rulespec_name: str) -> CallableValidator:
     return partial(
         _validate_test_connection,
@@ -329,6 +339,19 @@ def _check_preview_entry_by_service_interest(
         else:
             others.append(check_preview_entry)
     return check_preview_entry_by_service_interest, others
+
+
+def recap_service_discovery_custom_collect_params(
+    rulespec_name: str,
+    services_of_interest: Sequence[ServiceInterest],
+    custom_collect_params: Callable[[ParsedFormData, str], Mapping[str, object]],
+) -> CallableRecap:
+    return partial(
+        _recap_service_discovery,
+        rulespec_name=rulespec_name,
+        services_of_interest=services_of_interest,
+        collect_params=custom_collect_params,
+    )
 
 
 def recap_service_discovery(
@@ -651,6 +674,30 @@ def create_and_save_special_agent_bundle(
     special_agent_name: str,
     all_stages_form_data: ParsedFormData,
 ) -> str:
+    return _create_and_save_special_agent_bundle(
+        special_agent_name=special_agent_name,
+        all_stages_form_data=all_stages_form_data,
+        collect_params=_collect_params_with_defaults_from_form_data,
+    )
+
+
+def create_and_save_special_agent_bundle_custom_collect_params(
+    special_agent_name: str,
+    all_stages_form_data: ParsedFormData,
+    custom_collect_params: Callable[[ParsedFormData, str], Mapping[str, object]],
+) -> str:
+    return _create_and_save_special_agent_bundle(
+        special_agent_name=special_agent_name,
+        all_stages_form_data=all_stages_form_data,
+        collect_params=custom_collect_params,
+    )
+
+
+def _create_and_save_special_agent_bundle(
+    special_agent_name: str,
+    all_stages_form_data: ParsedFormData,
+    collect_params: Callable[[ParsedFormData, str], Mapping[str, object]],
+) -> str:
     rulespec_name = RuleGroup.SpecialAgents(special_agent_name)
     bundle_id = _find_unique_id(form_data=all_stages_form_data, target_key=UniqueBundleIDStr)
     if bundle_id is None:
@@ -660,7 +707,7 @@ def create_and_save_special_agent_bundle(
     host_path = all_stages_form_data[FormSpecId("host_data")]["host_path"]
 
     site_selection = _find_unique_id(all_stages_form_data, "site_selection")
-    params = _collect_params_with_defaults_from_form_data(all_stages_form_data, rulespec_name)
+    params = collect_params(all_stages_form_data, rulespec_name)
     passwords = _collect_passwords_from_form_data(all_stages_form_data, rulespec_name)
 
     # TODO: DCD still to be implemented cmk-18341

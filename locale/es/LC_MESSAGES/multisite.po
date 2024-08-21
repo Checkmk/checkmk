@@ -7227,6 +7227,10 @@ msgstr "Autorizaciones por grupo de seguridad de la BD"
 msgid "Authorized sites"
 msgstr "Sitios autorizados"
 
+#, fuzzy
+msgid "Auto"
+msgstr "Automático"
+
 msgid "Auto (DEFAULT)"
 msgstr "Auto (DEFAULT)"
 
@@ -7250,6 +7254,11 @@ msgstr "Encogimiento automático activado"
 
 msgid "Auto-disconnect time"
 msgstr "Tiempo de desconexión automática"
+
+msgid ""
+"Auto: Round the fractional part to the given fractional digits or to the "
+"latest non-zero digit."
+msgstr ""
 
 msgid "Autodetect instances"
 msgstr "Instancias de autodetección"
@@ -7340,11 +7349,6 @@ msgstr "Adquisición automática"
 
 msgid "Automatic updates"
 msgstr "Actualizaciones automáticas"
-
-msgid ""
-"Automatic: Round the fractional part to the given decimal places or to the "
-"latest non-zero digit."
-msgstr ""
 
 msgid "Automatically activate changes"
 msgstr "Activar automáticamente los cambios"
@@ -11354,10 +11358,6 @@ msgstr ""
 
 msgid "Changes"
 msgstr "Cambios"
-
-#, fuzzy
-msgid "Changes have been activated"
-msgstr "Nunca se ha activado"
 
 msgid "Changes since last dump"
 msgstr "Cambios desde el último volcado"
@@ -16862,10 +16862,6 @@ msgstr "Decibelios-milivatios"
 #, fuzzy
 msgid "Decimal"
 msgstr "Decibelios"
-
-#, fuzzy
-msgid "Decimal places"
-msgstr "Espacios de mesa"
 
 #, python-format
 msgid "Decimal with symbol %s"
@@ -24201,10 +24197,6 @@ msgstr "Arregla las carpetas, los hosts y las reglas afectadas."
 msgid "Fix this"
 msgstr "Arreglar esto"
 
-#, fuzzy
-msgid "Fixed"
-msgstr "Mixto"
-
 msgid "Fixed Levels"
 msgstr "Niveles fijos"
 
@@ -24237,9 +24229,6 @@ msgstr "Alcance fijo"
 
 msgid "Fixed string to expect in the content"
 msgstr "Cadena fija a esperar en el contenido"
-
-msgid "Fixed: Round the fractional part to the given decimal places."
-msgstr ""
 
 msgid "Flap"
 msgstr "Volatil"
@@ -24916,6 +24905,10 @@ msgid "Found rule packs"
 msgstr "Paquetes de reglas encontrados"
 
 msgid "Fraction"
+msgstr "Fracción"
+
+#, fuzzy
+msgid "Fractional digits"
 msgstr "Fracción"
 
 msgid "Fragmentation"
@@ -41677,9 +41670,6 @@ msgstr ""
 msgid "No VMware Tools installed."
 msgstr "No hay VMware Tools instaladas."
 
-msgid "No activation needed"
-msgstr "No necesita activación"
-
 msgid "No actual SLA computation"
 msgstr "No hay cómputo real de SLA"
 
@@ -42393,9 +42383,6 @@ msgstr "No"
 
 msgid "Not a valid URL (Only http and https URLs are allowed)."
 msgstr "No es una URL válida (Sólo se permiten URLs http y https)."
-
-msgid "Not activated"
-msgstr "No activado"
 
 msgid "Not all sites have been queried. Some information is missing."
 msgstr "No se han consultado todos los sitios. Falta alguna información."
@@ -47424,9 +47411,6 @@ msgstr "Fase 2.2: Obtención de los hosts existentes"
 msgid "Phase 2.3: Updating config"
 msgstr "Fase 2.3: Actualización de la configuración"
 
-msgid "Phase 2.4: Activating changes"
-msgstr "Fase 2.4: Activar los cambios"
-
 #, fuzzy, python-format
 msgid "Phase 2: Deliver %s piggyback hosts"
 msgstr "Prefijo para el nombre de host piggyback"
@@ -48607,7 +48591,7 @@ msgid "Precision of float values"
 msgstr "Precisión de los valores flotantes"
 
 #, python-format
-msgid "Precision: %d decimal places, rounding mode: %s"
+msgid "Precision: %d fractional digits, rounding mode: %s"
 msgstr ""
 
 msgid "Precompiled"
@@ -59357,11 +59341,18 @@ msgstr "Número de la calle"
 msgid "Strength:"
 msgstr "Fuerza:"
 
+#, fuzzy
+msgid "Strict"
+msgstr "Métrica"
+
 msgid "Strict - Visible if all members are visible"
 msgstr "Estricto - Visible si todos los miembros son visibles"
 
 msgid "Strict - Visible if user is contact for the service"
 msgstr "Estricto - Visible si el usuario es contacto para el servicio"
+
+msgid "Strict: Round the fractional part to the given fractional digits."
+msgstr ""
 
 msgid "String"
 msgstr "Cadena"
@@ -83078,10 +83069,6 @@ msgstr "Autenticación"
 msgid "auto"
 msgstr "auto"
 
-#, fuzzy
-msgid "automatic"
-msgstr "Automático"
-
 msgid "avg. duration"
 msgstr "duración media"
 
@@ -84711,6 +84698,10 @@ msgstr "entradas de estado"
 msgid "stopped"
 msgstr "se detuvo"
 
+#, fuzzy
+msgid "strict"
+msgstr "Restringir todo"
+
 msgid "sub categories"
 msgstr "subcategorías"
 
@@ -85036,6 +85027,31 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
+
+#, fuzzy
+#~ msgid "Changes have been activated"
+#~ msgstr "Nunca se ha activado"
+
+#, fuzzy
+#~ msgid "Decimal places"
+#~ msgstr "Espacios de mesa"
+
+#, fuzzy
+#~ msgid "Fixed"
+#~ msgstr "Mixto"
+
+#~ msgid "No activation needed"
+#~ msgstr "No necesita activación"
+
+#~ msgid "Not activated"
+#~ msgstr "No activado"
+
+#~ msgid "Phase 2.4: Activating changes"
+#~ msgstr "Fase 2.4: Activar los cambios"
+
+#, fuzzy
+#~ msgid "automatic"
+#~ msgstr "Automático"
 
 #~ msgid "Hide analysis"
 #~ msgstr "Análisis de la ocultación"

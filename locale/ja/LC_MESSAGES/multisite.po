@@ -6836,6 +6836,10 @@ msgstr "DBセキュリティグループごとの承認"
 msgid "Authorized sites"
 msgstr "認定サイト"
 
+#, fuzzy
+msgid "Auto"
+msgstr "自動"
+
 msgid "Auto (DEFAULT)"
 msgstr "オート（初期設定）"
 
@@ -6859,6 +6863,11 @@ msgstr "自動縮小オン"
 
 msgid "Auto-disconnect time"
 msgstr "自動切断時間"
+
+msgid ""
+"Auto: Round the fractional part to the given fractional digits or to the "
+"latest non-zero digit."
+msgstr ""
 
 msgid "Autodetect instances"
 msgstr "インスタンスの自動検出"
@@ -6945,11 +6954,6 @@ msgstr "自動テイクオーバー"
 
 msgid "Automatic updates"
 msgstr "自動的にアップデート"
-
-msgid ""
-"Automatic: Round the fractional part to the given decimal places or to the "
-"latest non-zero digit."
-msgstr ""
 
 msgid "Automatically activate changes"
 msgstr "変更を自動的にアクティブ化する"
@@ -10801,10 +10805,6 @@ msgstr "サイト固有の構成変数 %s を %sに変更しました。"
 
 msgid "Changes"
 msgstr "変更"
-
-#, fuzzy
-msgid "Changes have been activated"
-msgstr "アクティベートされたことがない"
 
 msgid "Changes since last dump"
 msgstr "前回ダンプ時からの変更点"
@@ -15997,10 +15997,6 @@ msgstr "デシベルミリワット"
 #, fuzzy
 msgid "Decimal"
 msgstr "デシベル"
-
-#, fuzzy
-msgid "Decimal places"
-msgstr "テーブルスペース"
 
 #, python-format
 msgid "Decimal with symbol %s"
@@ -22992,10 +22988,6 @@ msgstr "影響を受けるフォルダ、ホスト、およびルールを修正
 msgid "Fix this"
 msgstr "これを修正する"
 
-#, fuzzy
-msgid "Fixed"
-msgstr "混合"
-
 msgid "Fixed Levels"
 msgstr "固定レベル"
 
@@ -23028,9 +23020,6 @@ msgstr "固定範囲"
 
 msgid "Fixed string to expect in the content"
 msgstr "コンテンツで期待される文字列を修正しました"
-
-msgid "Fixed: Round the fractional part to the given decimal places."
-msgstr ""
 
 msgid "Flap"
 msgstr "フラップ"
@@ -23681,6 +23670,10 @@ msgid "Found rule packs"
 msgstr "ルールパックが見つかりました"
 
 msgid "Fraction"
+msgstr "分数"
+
+#, fuzzy
+msgid "Fractional digits"
 msgstr "分数"
 
 msgid "Fragmentation"
@@ -40053,9 +40046,6 @@ msgstr ""
 msgid "No VMware Tools installed."
 msgstr "VMwareツールがインストールされていません。"
 
-msgid "No activation needed"
-msgstr "アクティベーションは必要ありません"
-
 msgid "No actual SLA computation"
 msgstr "実際のSLA計算はありません"
 
@@ -40746,9 +40736,6 @@ msgstr "ない"
 
 msgid "Not a valid URL (Only http and https URLs are allowed)."
 msgstr "有効なURLでない（httpとhttpsのURLのみ使用可能）。"
-
-msgid "Not activated"
-msgstr "有効化されていません"
 
 msgid "Not all sites have been queried. Some information is missing."
 msgstr ""
@@ -45666,9 +45653,6 @@ msgstr "フェーズ2.2: 既存のホストの取得"
 msgid "Phase 2.3: Updating config"
 msgstr "フェーズ2.3:構成の更新"
 
-msgid "Phase 2.4: Activating changes"
-msgstr "フェーズ2.4:変更のアクティブ化"
-
 #, fuzzy, python-format
 msgid "Phase 2: Deliver %s piggyback hosts"
 msgstr "ピギーバックホスト名のプレフィックス"
@@ -46798,7 +46782,7 @@ msgid "Precision of float values"
 msgstr "フロート値の精度"
 
 #, python-format
-msgid "Precision: %d decimal places, rounding mode: %s"
+msgid "Precision: %d fractional digits, rounding mode: %s"
 msgstr ""
 
 msgid "Precompiled"
@@ -57290,11 +57274,18 @@ msgstr "ストリート番号"
 msgid "Strength:"
 msgstr "強さ:"
 
+#, fuzzy
+msgid "Strict"
+msgstr "メトリック"
+
 msgid "Strict - Visible if all members are visible"
 msgstr "Strict - すべてのメンバーが表示されている場合、表示"
 
 msgid "Strict - Visible if user is contact for the service"
 msgstr "Strict - ユーザーがサービスの連絡先である場合に表示"
+
+msgid "Strict: Round the fractional part to the given fractional digits."
+msgstr ""
 
 msgid "String"
 msgstr "ストリング"
@@ -80162,10 +80153,6 @@ msgstr "認証Appの追加"
 msgid "auto"
 msgstr "オート"
 
-#, fuzzy
-msgid "automatic"
-msgstr "自動"
-
 msgid "avg. duration"
 msgstr "平均. デュレーション"
 
@@ -81775,6 +81762,10 @@ msgstr "ステータスエントリ"
 msgid "stopped"
 msgstr "停止"
 
+#, fuzzy
+msgid "strict"
+msgstr "全てを制限"
+
 msgid "sub categories"
 msgstr "サブカテゴリ"
 
@@ -82101,6 +82092,31 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#, fuzzy
+#~ msgid "Changes have been activated"
+#~ msgstr "アクティベートされたことがない"
+
+#, fuzzy
+#~ msgid "Decimal places"
+#~ msgstr "テーブルスペース"
+
+#, fuzzy
+#~ msgid "Fixed"
+#~ msgstr "混合"
+
+#~ msgid "No activation needed"
+#~ msgstr "アクティベーションは必要ありません"
+
+#~ msgid "Not activated"
+#~ msgstr "有効化されていません"
+
+#~ msgid "Phase 2.4: Activating changes"
+#~ msgstr "フェーズ2.4:変更のアクティブ化"
+
+#, fuzzy
+#~ msgid "automatic"
+#~ msgstr "自動"
 
 #~ msgid "Hide analysis"
 #~ msgstr "分析を隠す"

@@ -7170,6 +7170,10 @@ msgstr "Autorisaties per DB-beveiligingsgroep"
 msgid "Authorized sites"
 msgstr "Toegestane sites"
 
+#, fuzzy
+msgid "Auto"
+msgstr "Automatisch"
+
 msgid "Auto (DEFAULT)"
 msgstr "Auto (DEFAULT)"
 
@@ -7193,6 +7197,11 @@ msgstr "Automatisch krimpen aan"
 
 msgid "Auto-disconnect time"
 msgstr "Automatische ontkoppelingstijd"
+
+msgid ""
+"Auto: Round the fractional part to the given fractional digits or to the "
+"latest non-zero digit."
+msgstr ""
 
 msgid "Autodetect instances"
 msgstr "Autodetect instanties"
@@ -7281,11 +7290,6 @@ msgstr "Automatische overname"
 
 msgid "Automatic updates"
 msgstr "Automatische updates"
-
-msgid ""
-"Automatic: Round the fractional part to the given decimal places or to the "
-"latest non-zero digit."
-msgstr ""
 
 msgid "Automatically activate changes"
 msgstr "Automatisch wijzigingen activeren"
@@ -11271,10 +11275,6 @@ msgstr "Locatie specifieke configuratie variabele %s veranderd in %s."
 
 msgid "Changes"
 msgstr "Wijzigingen"
-
-#, fuzzy
-msgid "Changes have been activated"
-msgstr "Is nooit geactiveerd geweest"
 
 msgid "Changes since last dump"
 msgstr "Veranderingen sinds de laatste dump"
@@ -16741,10 +16741,6 @@ msgstr "Decibel-milliwatt"
 #, fuzzy
 msgid "Decimal"
 msgstr "Decibel"
-
-#, fuzzy
-msgid "Decimal places"
-msgstr "Tafelspaces"
 
 #, python-format
 msgid "Decimal with symbol %s"
@@ -24006,10 +24002,6 @@ msgstr "Herstel getroffen mappen, hosts en regels."
 msgid "Fix this"
 msgstr "Repareer dit"
 
-#, fuzzy
-msgid "Fixed"
-msgstr "Gemengd"
-
 msgid "Fixed Levels"
 msgstr "Vaste niveaus"
 
@@ -24042,9 +24034,6 @@ msgstr "Vast bereik"
 
 msgid "Fixed string to expect in the content"
 msgstr "Vaste tekenreeks te verwachten in de inhoud"
-
-msgid "Fixed: Round the fractional part to the given decimal places."
-msgstr ""
 
 msgid "Flap"
 msgstr "Flap"
@@ -24714,6 +24703,10 @@ msgid "Found rule packs"
 msgstr "Regelpakketten gevonden"
 
 msgid "Fraction"
+msgstr "Fractie"
+
+#, fuzzy
+msgid "Fractional digits"
 msgstr "Fractie"
 
 msgid "Fragmentation"
@@ -41339,9 +41332,6 @@ msgstr ""
 msgid "No VMware Tools installed."
 msgstr "Geen VMware Tools geïnstalleerd."
 
-msgid "No activation needed"
-msgstr "Geen activering nodig"
-
 msgid "No actual SLA computation"
 msgstr "Geen eigenlijke SLA-berekening"
 
@@ -42049,9 +42039,6 @@ msgstr "Niet"
 
 msgid "Not a valid URL (Only http and https URLs are allowed)."
 msgstr "Geen geldige URL (Alleen http en https URL's zijn toegestaan)."
-
-msgid "Not activated"
-msgstr "Niet geactiveerd"
 
 msgid "Not all sites have been queried. Some information is missing."
 msgstr "Niet alle locaties zijn bevraagd. Sommige informatie ontbreekt."
@@ -47044,9 +47031,6 @@ msgstr "Fase 2.2: Opzoeken van bestaande hosts"
 msgid "Phase 2.3: Updating config"
 msgstr "Fase 2.3: Configuratie bijwerken"
 
-msgid "Phase 2.4: Activating changes"
-msgstr "Fase 2.4: Activeren van veranderingen"
-
 #, fuzzy, python-format
 msgid "Phase 2: Deliver %s piggyback hosts"
 msgstr "Voorvoegsel voor piggyback hostname"
@@ -48204,7 +48188,7 @@ msgid "Precision of float values"
 msgstr "Nauwkeurigheid van zwevende waarden"
 
 #, python-format
-msgid "Precision: %d decimal places, rounding mode: %s"
+msgid "Precision: %d fractional digits, rounding mode: %s"
 msgstr ""
 
 msgid "Precompiled"
@@ -58816,11 +58800,18 @@ msgstr "Straat nummer"
 msgid "Strength:"
 msgstr "Sterkte:"
 
+#, fuzzy
+msgid "Strict"
+msgstr "Metrisch"
+
 msgid "Strict - Visible if all members are visible"
 msgstr "Strikt - Zichtbaar als alle leden zichtbaar zijn"
 
 msgid "Strict - Visible if user is contact for the service"
 msgstr "Strikt - Zichtbaar als gebruiker contactpersoon is voor de dienst"
+
+msgid "Strict: Round the fractional part to the given fractional digits."
+msgstr ""
 
 msgid "String"
 msgstr "String"
@@ -82380,10 +82371,6 @@ msgstr "Authenticatie"
 msgid "auto"
 msgstr "auto"
 
-#, fuzzy
-msgid "automatic"
-msgstr "Automatisch"
-
 msgid "avg. duration"
 msgstr "gemiddelde duur"
 
@@ -84010,6 +83997,10 @@ msgstr "statusvermeldingen"
 msgid "stopped"
 msgstr "gestopt"
 
+#, fuzzy
+msgid "strict"
+msgstr "Beperk alle"
+
 msgid "sub categories"
 msgstr "subcategorieën"
 
@@ -84335,6 +84326,31 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#, fuzzy
+#~ msgid "Changes have been activated"
+#~ msgstr "Is nooit geactiveerd geweest"
+
+#, fuzzy
+#~ msgid "Decimal places"
+#~ msgstr "Tafelspaces"
+
+#, fuzzy
+#~ msgid "Fixed"
+#~ msgstr "Gemengd"
+
+#~ msgid "No activation needed"
+#~ msgstr "Geen activering nodig"
+
+#~ msgid "Not activated"
+#~ msgstr "Niet geactiveerd"
+
+#~ msgid "Phase 2.4: Activating changes"
+#~ msgstr "Fase 2.4: Activeren van veranderingen"
+
+#, fuzzy
+#~ msgid "automatic"
+#~ msgstr "Automatisch"
 
 #~ msgid "Hide analysis"
 #~ msgstr "Verberg analyse"

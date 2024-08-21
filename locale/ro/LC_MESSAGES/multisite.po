@@ -7169,6 +7169,10 @@ msgstr "Autorizații per grup de securitate DB"
 msgid "Authorized sites"
 msgstr "Site-uri autorizate"
 
+#, fuzzy
+msgid "Auto"
+msgstr "Automat"
+
 msgid "Auto (DEFAULT)"
 msgstr "Auto (DEFAULT)"
 
@@ -7192,6 +7196,11 @@ msgstr "Auto shrink on"
 
 msgid "Auto-disconnect time"
 msgstr "Timp de deconectare automată"
+
+msgid ""
+"Auto: Round the fractional part to the given fractional digits or to the "
+"latest non-zero digit."
+msgstr ""
 
 msgid "Autodetect instances"
 msgstr "Instanțe de autodetecție"
@@ -7279,11 +7288,6 @@ msgstr "Preluare automată"
 
 msgid "Automatic updates"
 msgstr "Actualizări automate"
-
-msgid ""
-"Automatic: Round the fractional part to the given decimal places or to the "
-"latest non-zero digit."
-msgstr ""
 
 msgid "Automatically activate changes"
 msgstr "Activarea automată a modificărilor"
@@ -11298,10 +11302,6 @@ msgstr ""
 
 msgid "Changes"
 msgstr "Modificări"
-
-#, fuzzy
-msgid "Changes have been activated"
-msgstr "Nu a fost niciodată activat"
 
 msgid "Changes since last dump"
 msgstr "Modificări de la ultima descărcare de gestiune"
@@ -16747,10 +16747,6 @@ msgstr "Decibel-milliwati"
 #, fuzzy
 msgid "Decimal"
 msgstr "Decibel"
-
-#, fuzzy
-msgid "Decimal places"
-msgstr "Tablespaces"
 
 #, python-format
 msgid "Decimal with symbol %s"
@@ -24045,10 +24041,6 @@ msgstr "Remediați dosarele, gazdele și regulile afectate."
 msgid "Fix this"
 msgstr "Repară asta"
 
-#, fuzzy
-msgid "Fixed"
-msgstr "Mixtă"
-
 msgid "Fixed Levels"
 msgstr "Niveluri fixe"
 
@@ -24078,9 +24070,6 @@ msgstr "Șir fix"
 
 msgid "Fixed string to expect in the content"
 msgstr "Șir fixat pentru a aștepta în conținut"
-
-msgid "Fixed: Round the fractional part to the given decimal places."
-msgstr ""
 
 msgid "Flap"
 msgstr "Clapetă"
@@ -24753,6 +24742,10 @@ msgid "Found rule packs"
 msgstr "Pachete de reguli găsite"
 
 msgid "Fraction"
+msgstr "Fracțiune"
+
+#, fuzzy
+msgid "Fractional digits"
 msgstr "Fracțiune"
 
 msgid "Fragmentation"
@@ -41398,9 +41391,6 @@ msgstr ""
 msgid "No VMware Tools installed."
 msgstr "Nu sunt instalate instrumente VMware Tools."
 
-msgid "No activation needed"
-msgstr "Nu este necesară activarea"
-
 msgid "No actual SLA computation"
 msgstr "Nu există calcularea efectivă a SLA"
 
@@ -42105,9 +42095,6 @@ msgstr "Nu"
 msgid "Not a valid URL (Only http and https URLs are allowed)."
 msgstr ""
 "Nu este o adresă URL validă (sunt permise doar adresele URL http și https)."
-
-msgid "Not activated"
-msgstr "Neactivat"
 
 msgid "Not all sites have been queried. Some information is missing."
 msgstr "Nu toate siturile au fost interogate. Unele informații lipsesc."
@@ -47080,9 +47067,6 @@ msgstr "Faza 2.2: Obținerea gazdelor existente"
 msgid "Phase 2.3: Updating config"
 msgstr "Faza 2.3: Actualizarea configurației"
 
-msgid "Phase 2.4: Activating changes"
-msgstr "Faza 2.4: Activarea schimbărilor"
-
 #, fuzzy, python-format
 msgid "Phase 2: Deliver %s piggyback hosts"
 msgstr "Prefix pentru numele de gazdă piggyback"
@@ -48258,7 +48242,7 @@ msgid "Precision of float values"
 msgstr "Precizia valorilor float"
 
 #, python-format
-msgid "Precision: %d decimal places, rounding mode: %s"
+msgid "Precision: %d fractional digits, rounding mode: %s"
 msgstr ""
 
 msgid "Precompiled"
@@ -58960,12 +58944,19 @@ msgstr "Numărul străzii"
 msgid "Strength:"
 msgstr "Putere:"
 
+#, fuzzy
+msgid "Strict"
+msgstr "Metric"
+
 msgid "Strict - Visible if all members are visible"
 msgstr "Strict - Vizibil dacă toți membrii sunt vizibili"
 
 msgid "Strict - Visible if user is contact for the service"
 msgstr ""
 "Strict - Vizibil dacă utilizatorul este persoana de contact pentru serviciu"
+
+msgid "Strict: Round the fractional part to the given fractional digits."
+msgstr ""
 
 msgid "String"
 msgstr "Șir de caractere"
@@ -82548,10 +82539,6 @@ msgstr "aplicație autentificator"
 msgid "auto"
 msgstr "auto"
 
-#, fuzzy
-msgid "automatic"
-msgstr "Automat"
-
 msgid "avg. duration"
 msgstr "durata medie"
 
@@ -84158,6 +84145,10 @@ msgstr "intrări de stare"
 msgid "stopped"
 msgstr "oprit"
 
+#, fuzzy
+msgid "strict"
+msgstr "Restricționează toate"
+
 msgid "sub categories"
 msgstr "subcategorii"
 
@@ -84482,6 +84473,31 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#, fuzzy
+#~ msgid "Changes have been activated"
+#~ msgstr "Nu a fost niciodată activat"
+
+#, fuzzy
+#~ msgid "Decimal places"
+#~ msgstr "Tablespaces"
+
+#, fuzzy
+#~ msgid "Fixed"
+#~ msgstr "Mixtă"
+
+#~ msgid "No activation needed"
+#~ msgstr "Nu este necesară activarea"
+
+#~ msgid "Not activated"
+#~ msgstr "Neactivat"
+
+#~ msgid "Phase 2.4: Activating changes"
+#~ msgstr "Faza 2.4: Activarea schimbărilor"
+
+#, fuzzy
+#~ msgid "automatic"
+#~ msgstr "Automat"
 
 #~ msgid "Hide analysis"
 #~ msgstr "Ascundeți analiza"

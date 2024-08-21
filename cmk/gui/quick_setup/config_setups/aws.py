@@ -189,7 +189,7 @@ def save_action(all_stages_form_data: ParsedFormData) -> str:
 
 quick_setup_aws = QuickSetup(
     title=_("Amazon Web Services (AWS)"),
-    id=QuickSetupId("aws_quick_setup"),
+    id=QuickSetupId(RuleGroup.SpecialAgents("aws")),
     stages=[
         prepare_aws(),
         configure_host_and_region(),

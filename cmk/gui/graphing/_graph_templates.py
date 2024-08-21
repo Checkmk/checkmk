@@ -507,7 +507,7 @@ def _filter_renderable_graph_metrics(
             raise err
 
 
-def applicable_metrics(
+def _applicable_metrics(
     *,
     metrics_to_consider: Sequence[MetricDefinition],
     conflicting_metrics: Iterable[str],
@@ -539,7 +539,7 @@ def _get_explicit_graph_templates(
 ) -> Iterable[GraphTemplate]:
     for id_, template in graph_templates:
         parsed = _parse_graph_template(id_, template)
-        if metrics := applicable_metrics(
+        if metrics := _applicable_metrics(
             metrics_to_consider=parsed.metrics,
             conflicting_metrics=parsed.conflicting_metrics,
             optional_metrics=parsed.optional_metrics,
@@ -1003,3 +1003,21 @@ def metric_expression_to_graph_recipe_expression(
         translated_metrics,
         enforced_consolidation_function,
     )
+
+
+def find_matching_rows_and_translated_metrics(
+    rows: Sequence[Row],
+    metric_definitions: Sequence[MetricDefinition],
+    *,
+    conflicting_metrics: Sequence[str],
+    optional_metrics: Sequence[str],
+) -> Iterator[tuple[Row, Mapping[str, TranslatedMetric]]]:
+    for row in rows:
+        translated_metrics = translated_metrics_from_row(row)
+        if _applicable_metrics(
+            metrics_to_consider=metric_definitions,
+            conflicting_metrics=conflicting_metrics,
+            optional_metrics=optional_metrics,
+            translated_metrics=translated_metrics,
+        ):
+            yield row, translated_metrics

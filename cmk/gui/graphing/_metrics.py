@@ -15,6 +15,7 @@ from cmk.gui.i18n import _, translate_to_current_language
 from ._color import get_gray_tone, get_palette_color_by_index, parse_color_into_hexrgb
 from ._from_api import metrics_from_api, register_unit_info
 from ._legacy import metric_info, MetricInfo, unit_info, UnitInfo
+from ._unit import ConvertibleUnitSpecification
 
 
 def _get_legacy_metric_info(
@@ -36,6 +37,7 @@ class MetricSpec:
     title: str
     unit_info: UnitInfo
     color: str
+    unit_spec: ConvertibleUnitSpecification | None = None
 
 
 def get_metric_spec_with_color(
@@ -52,6 +54,7 @@ def get_metric_spec_with_color(
                     + _(" (lower levels)")
                 ),
                 unit_info=register_unit_info(mfa.api_unit),
+                unit_spec=mfa.unit_spec,
                 color=get_gray_tone(color_counter),
             )
 
@@ -72,6 +75,7 @@ def get_metric_spec_with_color(
                     + _(" (upper levels)")
                 ),
                 unit_info=register_unit_info(mfa.api_unit),
+                unit_spec=mfa.unit_spec,
                 color=get_gray_tone(color_counter),
             )
 
@@ -87,6 +91,7 @@ def get_metric_spec_with_color(
             name=metric_name,
             title=mfa.title_localizer(translate_to_current_language),
             unit_info=register_unit_info(mfa.api_unit),
+            unit_spec=mfa.unit_spec,
             color=mfa.color,
         )
     else:

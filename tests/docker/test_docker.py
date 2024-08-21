@@ -121,6 +121,22 @@ def test_start_with_custom_command(client: docker.DockerClient, version: CMKVers
     assert output.endswith("1\n")
 
 
+def test_start_setting_custom_timezone(client: docker.DockerClient) -> None:
+    with start_checkmk(
+        client,
+        environment={
+            "TZ": "nonvalidatedvalue",
+        },
+    ) as c:
+        config_file = "/omd/sites/cmk/etc/environment"
+        exit_code, output_bytes = c.exec_run(
+            ["grep", "^TZ=", config_file],
+            user="cmk",
+        )
+        assert exit_code == 0, f"Did not find timezone setting in {config_file}"
+        assert output_bytes.decode("utf-8") == 'TZ="nonvalidatedvalue"\n'
+
+
 # Test that the local deb package is used by making the build fail because of an empty file
 def test_build_using_local_deb(
     client: docker.DockerClient,

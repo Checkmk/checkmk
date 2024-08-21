@@ -9,10 +9,10 @@ mssql:
       hostname: "localhost" # optional, default: "localhost"
       failoverpartner: "localhost2" # optional, no default
       port: 1433 # optional, default: 1433
-      socket: "C:\path\to\file" # optional, no default
+      socket: "C:\\path\\to\\file" # optional, no default
       tls: # optional
-        ca: "C:\path\to\file" # mandatory
-        client_certificate: "C:\path\to\file" # mandatory
+        ca: "C:\\path\\to\\file" # mandatory
+        client_certificate: "C:\\path\\to\\file" # mandatory
       timeout: 5 # optional, default: 5
     sections: # optional
       always: # optional, default

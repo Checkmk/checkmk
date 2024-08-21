@@ -46,6 +46,13 @@ AZURE_CACHE_FILE_PATH = tmp_dir / "agents" / "agent_azure"
 
 NOW = datetime.datetime.now(tz=datetime.UTC)
 
+SUPPORTED_FLEXIBLE_DATABASE_SERVER_RESOURCE_TYPES = frozenset(
+    {
+        "Microsoft.DBforMySQL/flexibleServers",
+        "Microsoft.DBforPostgreSQL/flexibleServers",
+    }
+)
+
 ALL_METRICS: dict[str, list[tuple[str, str, str, None]]] = {
     # to add a new metric, just add a made up name, run the
     # agent, and you'll get a error listing available metrics!
@@ -153,6 +160,26 @@ ALL_METRICS: dict[str, list[tuple[str, str, str, None]]] = {
             None,
         ),
     ],
+    "Microsoft.DBforPostgreSQL/flexibleServers": [
+        (
+            "cpu_percent,memory_percent,disk_iops_consumed_percentage,storage_percent,active_connections",
+            "PT1M",
+            "average",
+            None,
+        ),
+        (
+            "connections_failed,network_bytes_ingress,network_bytes_egress",
+            "PT1M",
+            "total",
+            None,
+        ),
+        (
+            "physical_replication_delay_in_seconds",
+            "PT1M",
+            "maximum",
+            None,
+        ),
+    ],
     "Microsoft.Network/trafficmanagerprofiles": [
         (
             "QpsByEndpoint",
@@ -210,6 +237,7 @@ OPTIONAL_METRICS: Mapping[str, Sequence[str]] = {
     "Microsoft.DBforMySQL/servers": ["seconds_behind_master"],
     "Microsoft.DBforMySQL/flexibleServers": ["replication_lag"],
     "Microsoft.DBforPostgreSQL/servers": ["pg_replica_log_delay_in_seconds"],
+    "Microsoft.DBforPostgreSQL/flexibleServers": ["physical_replication_delay_in_seconds"],
     "Microsoft.Network/loadBalancers": ["AllocatedSnatPorts", "UsedSnatPorts"],
     "Microsoft.Compute/virtualMachines": [
         "CPU Credits Consumed",
@@ -1479,7 +1507,7 @@ def process_resource(
         process_virtual_net_gw(mgmt_client, resource)
     elif resource_type == "Microsoft.Network/loadBalancers":
         process_load_balancer(mgmt_client, resource)
-    elif resource_type == "Microsoft.DBforMySQL/flexibleServers":
+    elif resource_type in SUPPORTED_FLEXIBLE_DATABASE_SERVER_RESOURCE_TYPES:
         resource.section = "servers"  # use the same section as for single servers
 
     # metrics aren't collected for VMs if they are mapped to a resource host

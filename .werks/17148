@@ -1,0 +1,29 @@
+Title: Persist known host keys for checks that use SSH
+Class: security
+Compatible: compat
+Component: checks
+Date: 1724662564
+Edition: cre
+Level: 1
+Version: 2.2.0p33
+
+When using the special agent <em>VNX quotas and filesystems</em> or the active check <em>Check SFTP Service</em> the host keys were not properly checked.
+
+If an attacker would get into a machine-in-the-middle position he could intercept the connection and retrieve information e.g. passwords.
+
+As of this Werk the host key check is properly done.
+In order to store known host keys a regular <code>known_hosts</code> file is used that is stored in <code>/omd/sites/$SITENAME/.ssh/known_hosts</code>.
+If a host key changes an error is now raised that requires manual edit of this file.
+
+This issue was found during internal review.
+
+<em>Affected Versions</em>:
+
+LI: 2.3.0
+LI: 2.2.0
+LI: 2.1.0
+LI: 2.0.0 (EOL)
+
+<em>Vulnerability Management</em>:
+
+We have rated the issue with a CVSS Score of 6.3 Medium CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:L/SA:N and assigned CVE-2024-6572.

@@ -36,6 +36,7 @@ types-PyMySQL = "==1.0.19.2"  # used for type checking
 types-pytz = "==2022.7.1.0"  # used for type checking
 types-cryptography = "==3.3.23.2"  # used for type checking
 types-redis = "==4.4.0.0"  # used for type checking
+types-paramiko = "==2.12.0.1"
 types-protobuf = "==4.21.0.5"  # used for type checking
 types-setuptools = "==67.2.0.0"  # used for type checking
 types-pyOpenSSL = "==23.0.0.0"  # used for type checking

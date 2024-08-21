@@ -8,6 +8,7 @@ import sys
 from typing import Any
 
 import cmk.utils.password_store
+from cmk.utils.ssh_client import get_ssh_client
 
 
 def parse_arguments(argv):
@@ -24,10 +25,7 @@ def parse_arguments(argv):
 
 def get_client_connection(args):
     try:
-        import paramiko  # type: ignore[import] # pylint: disable=import-outside-toplevel
-
-        client = paramiko.SSHClient()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client = get_ssh_client()
         client.connect(args.hostname, username=args.username, password=args.password, timeout=5)
         return client
 

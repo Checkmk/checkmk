@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Optional
+
 import pytest
 
 import cmk.base.plugins.agent_based.infoblox_systeminfo as ibsi
@@ -10,7 +12,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 
 
 @pytest.fixture(name="section", scope="module")
-def _get_section() -> ibsi.Section:
+def _get_section() -> Optional[ibsi.Section]:
     return ibsi.parse_infoblox_systeminfo(
         [
             [
@@ -23,7 +25,7 @@ def _get_section() -> ibsi.Section:
     )
 
 
-def test_inventory_infoblox_systeminfo(section: ibsi.Section) -> None:
+def test_inventory_infoblox_systeminfo(section: Optional[ibsi.Section]) -> None:
     assert list(ibsi.inventory_infoblox_systeminfo(section)) == [
         Attributes(
             path=["hardware", "system"],

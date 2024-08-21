@@ -1,0 +1,9 @@
+Title: infoblox_systeminfo: Fix error 'asdict() should be called on dataclass instances' during HW/SW inventory
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1724220888
+Edition: cre
+Level: 1
+Version: 2.2.0p33
+

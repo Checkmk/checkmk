@@ -2139,7 +2139,7 @@ class ABCEditRuleMode(WatoMode):
         return "_vue_edit_rule"
 
     def page(self) -> None:
-        call_hooks("ruleset_banner", self._ruleset.name)
+        call_hooks("rmk_ruleset_banner", self._ruleset.name)
 
         help_text = self._ruleset.help()
         if help_text:

@@ -233,7 +233,7 @@ class GUIViewRenderer(ABCViewRenderer):
         for message in self.view.warning_messages:
             html.show_warning(message)
 
-        call_hooks("view_banner", self.view.name)
+        call_hooks("rmk_view_banner", self.view.name)
 
         if not has_done_actions and not missing_single_infos:
             html.div("", id_="row_info")

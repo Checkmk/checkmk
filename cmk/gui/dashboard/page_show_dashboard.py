@@ -197,7 +197,7 @@ def draw_dashboard(name: DashboardName, owner: UserId) -> None:
             makeuri(request, [("name", name), ("edit", "1" if mode == "edit" else "0")])
         )
 
-    call_hooks("dashboard_banner", name)
+    call_hooks("rmk_dashboard_banner", name)
 
     html.open_div(class_=["dashboard_%s" % name], id_="dashboard")  # Container of all dashlets
 

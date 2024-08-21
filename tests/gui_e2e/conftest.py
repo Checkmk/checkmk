@@ -144,18 +144,6 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     )
 
 
-@pytest.fixture(name="branch", scope="session")
-def fixture_current_branch(test_site: Site) -> str:
-    """Return the git branch name corresponding Checkmk version."""
-    if test_site.version.branch_version == "2.4.0":
-        branch = "master"
-    elif test_site.version.branch_version == "2.3.0":
-        branch = "latest"
-    else:
-        raise ValueError(f"Unsupported branch version: {test_site.version.branch_version}")
-    return branch
-
-
 @pytest.fixture(name="created_host")
 def fixture_host(
     dashboard_page: Dashboard, request: pytest.FixtureRequest

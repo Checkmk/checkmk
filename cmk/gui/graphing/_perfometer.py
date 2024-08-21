@@ -588,13 +588,7 @@ def _make_projection(
     assert False, focus_range
 
 
-@dataclass(frozen=True)
-class _StackEntry:
-    value: float
-    color: str
-
-
-def _compute_segments(
+def _filter_segments(
     segments: Sequence[
         str
         | metrics_api.Constant
@@ -608,17 +602,17 @@ def _compute_segments(
         | metrics_api.Fraction
     ],
     translated_metrics: Mapping[str, TranslatedMetric],
-) -> Sequence[_StackEntry]:
+) -> Sequence[_EvaluatedQuantity]:
     return [
-        _StackEntry(computed.value, computed.color)
+        evaluated
         for segment in segments
-        if (computed := _evaluate_quantity(segment, translated_metrics)).value > 0
+        if (evaluated := _evaluate_quantity(segment, translated_metrics)).value > 0
     ]
 
 
 def _project_segments(
     projection: _Projection,
-    segments: Sequence[_StackEntry],
+    segments: Sequence[_EvaluatedQuantity],
     themed_perfometer_bg_color: str,
 ) -> list[tuple[float, str]]:
     total = sum(s.value for s in segments)
@@ -697,7 +691,7 @@ class MetricometerRendererPerfometer(MetricometerRenderer):
                 _PERFOMETER_PROJECTION_PARAMETERS,
                 self.translated_metrics,
             ),
-            _compute_segments(
+            _filter_segments(
                 self.perfometer.segments,
                 self.translated_metrics,
             ),
@@ -750,7 +744,7 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
                 _BIDIRECTIONAL_PROJECTION_PARAMETERS,
                 self.translated_metrics,
             ),
-            _compute_segments(
+            _filter_segments(
                 self.perfometer.left.segments,
                 self.translated_metrics,
             ),
@@ -767,7 +761,7 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
                 _BIDIRECTIONAL_PROJECTION_PARAMETERS,
                 self.translated_metrics,
             ),
-            _compute_segments(
+            _filter_segments(
                 self.perfometer.right.segments,
                 self.translated_metrics,
             ),

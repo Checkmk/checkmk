@@ -1,4 +1,4 @@
-import CollapsibleWidget from '@/components/quick-setup/widgets/CollapsibleWidget.vue'
+import CollapsibleWidget from '@/quick-setup/widgets/CollapsibleWidget.vue'
 import { render, screen } from '@testing-library/vue'
 
 test('CollapsibleWidget renders values and label', async () => {

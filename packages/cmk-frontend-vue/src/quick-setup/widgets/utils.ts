@@ -1,10 +1,10 @@
-import TextWidget from '@/components/quick-setup/widgets/TextWidget.vue'
-import NoteTextWidget from '@/components/quick-setup/widgets/NoteTextWidget.vue'
-import ListWidget from '@/components/quick-setup/widgets/ListWidget.vue'
-import NoneWidget from '@/components/quick-setup/widgets/NoneWidget.vue'
-import FormSpecWidget from '@/components/quick-setup/widgets/FormSpecWidget.vue'
-import CollapsibleWidget from '@/components/quick-setup/widgets/CollapsibleWidget.vue'
-import FormSpecRecapWidget from '@/components/quick-setup/widgets/FormSpecRecapWidget.vue'
+import TextWidget from '@/quick-setup/widgets/TextWidget.vue'
+import NoteTextWidget from '@/quick-setup/widgets/NoteTextWidget.vue'
+import ListWidget from '@/quick-setup/widgets/ListWidget.vue'
+import NoneWidget from '@/quick-setup/widgets/NoneWidget.vue'
+import FormSpecWidget from '@/quick-setup/widgets/FormSpecWidget.vue'
+import CollapsibleWidget from '@/quick-setup/widgets/CollapsibleWidget.vue'
+import FormSpecRecapWidget from '@/quick-setup/widgets/FormSpecRecapWidget.vue'
 import type { ComponentSpec, FormSpecWidgetProps } from './widget_types'
 
 export const getWidget = (widgetType: string): unknown => {

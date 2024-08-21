@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import CollapsibleTitle from '../element/CollapsibleTitle.vue'
+import CollapsibleTitle from '@/quick-setup/components/CollapsibleTitle.vue'
 import CompositeWidget from './CompositeWidget.vue'
 import { type CollapsibleWidgetProps } from './widget_types'
 

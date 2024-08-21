@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/vue'
-import ListWidget from '@/components/quick-setup/widgets/ListWidget.vue'
+import ListWidget from '@/quick-setup/widgets/ListWidget.vue'
 
 describe('ListWidget', () => {
   it('renders items', async () => {

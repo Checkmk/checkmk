@@ -15,7 +15,7 @@ import { mixinUniqueId } from './plugins'
 
 import D3Table from './views/D3Table.vue'
 import Table from './views/CmkTable.vue'
-import QuickSetup from './views/QuickSetup.vue'
+import QuickSetup from './quick-setup/QuickSetupApp.vue'
 import { FormApp } from '@/form'
 
 function setupVue() {

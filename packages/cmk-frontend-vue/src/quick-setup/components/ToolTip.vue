@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/quick-setup/ui/tooltip'
 
 const DEFAULT_DELAY: number = 200
 const DEFAULT_HEIGHT: number = 16

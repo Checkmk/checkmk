@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ToolTip from '@/components/common/ToolTip.vue'
+import ToolTip from '@/quick-setup/components/ToolTip.vue'
 
 import { type TextWidgetProps } from './widget_types'
 

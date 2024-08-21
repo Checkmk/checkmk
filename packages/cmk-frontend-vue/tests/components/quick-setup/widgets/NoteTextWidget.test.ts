@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/vue'
-import NoteTextWidget from '@/components/quick-setup/widgets/NoteTextWidget.vue'
+import NoteTextWidget from '@/quick-setup/widgets/NoteTextWidget.vue'
 
 test('NoteTextWidget renders value', async () => {
   render(NoteTextWidget, {

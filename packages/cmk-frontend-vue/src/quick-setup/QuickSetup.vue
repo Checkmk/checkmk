@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, onBeforeMount } from 'vue'
 
-import LoadingIcon from '@/components/common/LoadingIcon.vue'
-import Button from './element/IconButton.vue'
+import LoadingIcon from '@/quick-setup/components/LoadingIcon.vue'
+import Button from '@/quick-setup/components/IconButton.vue'
 import QuickSetupStage from './QuickSetupStage.vue'
 import { type QuickSetupSpec, type QuickSetupStageSpec, type StageData } from './quick_setup_types'
 import {
@@ -15,7 +15,7 @@ import {
 
 import { completeQuickSetup, getOverview, validateStage } from './rest_api'
 import { asStringArray } from './utils'
-import AlertBox from '../common/AlertBox.vue'
+import AlertBox from '@/quick-setup/components/AlertBox.vue'
 
 const props = defineProps<QuickSetupSpec>()
 const currentStage = ref(0) //Selected stage. We start in stage 0

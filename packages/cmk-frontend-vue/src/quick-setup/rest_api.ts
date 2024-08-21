@@ -3,7 +3,7 @@ import {
   COMPLETE_QUICK_SETUP_URL,
   GET_QUICK_SETUP_OVERVIEW_URL,
   VALIDATE_QUICK_SETUP_STAGE_URL
-} from '@/constants/rest_api'
+} from '@/quick-setup/constants/rest_api'
 import { type StageData } from './quick_setup_types'
 
 import {

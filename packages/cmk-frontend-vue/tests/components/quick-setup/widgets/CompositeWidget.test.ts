@@ -1,4 +1,4 @@
-import CompositeWidget from '@/components/quick-setup/widgets/CompositeWidget.vue'
+import CompositeWidget from '@/quick-setup/widgets/CompositeWidget.vue'
 import { render, screen } from '@testing-library/vue'
 
 test('CompositeWidget renders values and label', async () => {

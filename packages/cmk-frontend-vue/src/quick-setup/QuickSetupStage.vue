@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible'
-import { Label } from '@/components/ui/label'
+import { Collapsible, CollapsibleContent } from '@/quick-setup/ui/collapsible'
+import { Label } from '@/quick-setup/ui/label'
 
 import QuickSetupStageContent from './QuickSetupStageContent.vue'
 import CompositeWidget from './widgets/CompositeWidget.vue'
-import Button from './element/IconButton.vue'
-import LoadingIcon from '@/components/common/LoadingIcon.vue'
-import ErrorBoundary from '@/components/common/ErrorBoundary.vue'
+import Button from '@/quick-setup/components/IconButton.vue'
+import LoadingIcon from '@/quick-setup/components/LoadingIcon.vue'
+import ErrorBoundary from '@/quick-setup/components/ErrorBoundary.vue'
 
 import { type QuickSetupStageWithIndexSpec, type StageData } from './quick_setup_types'
 

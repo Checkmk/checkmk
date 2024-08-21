@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button'
+import { Button } from '@/quick-setup/ui/button'
 
 interface CustomIconButtonProps {
   /** @property {string} iconUrl - Url of the icon to be displayed inside the button */

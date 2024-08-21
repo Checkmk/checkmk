@@ -3,8 +3,8 @@ import { computed } from 'vue'
 import type { QuickSetupStageContentSpec, StageData } from './quick_setup_types'
 
 import CompositeWidget from './widgets/CompositeWidget.vue'
-import ErrorBoundary from '@/components/common/ErrorBoundary.vue'
-import AlertBox from '@/components/common/AlertBox.vue'
+import ErrorBoundary from '@/quick-setup/components/ErrorBoundary.vue'
+import AlertBox from '@/quick-setup/components/AlertBox.vue'
 import { asStringArray } from './utils'
 
 const props = defineProps<QuickSetupStageContentSpec>()

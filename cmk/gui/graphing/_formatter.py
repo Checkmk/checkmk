@@ -60,20 +60,17 @@ class NotationFormatter:
     @abc.abstractmethod
     def ident(
         self,
-    ) -> Literal["Decimal", "SI", "IEC", "StandardScientific", "EngineeringScientific", "Time"]:
-        raise NotImplementedError()
+    ) -> Literal["Decimal", "SI", "IEC", "StandardScientific", "EngineeringScientific", "Time"]: ...
 
     @abc.abstractmethod
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
-    ) -> Sequence[Preformatted]:
-        raise NotImplementedError()
+    ) -> Sequence[Preformatted]: ...
 
     @abc.abstractmethod
     def _preformat_large_number(
         self, value: int | float, use_prefix: str, use_symbol: str
-    ) -> Sequence[Preformatted]:
-        raise NotImplementedError()
+    ) -> Sequence[Preformatted]: ...
 
     def _apply_precision(
         self,
@@ -109,8 +106,7 @@ class NotationFormatter:
         return str(value)
 
     @abc.abstractmethod
-    def _compose(self, formatted: Formatted) -> str:
-        raise NotImplementedError()
+    def _compose(self, formatted: Formatted) -> str: ...
 
     def _postformat(
         self,
@@ -148,12 +144,10 @@ class NotationFormatter:
         return f"{sign}{postformatted}"
 
     @abc.abstractmethod
-    def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
-        raise NotImplementedError()
+    def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]: ...
 
     @abc.abstractmethod
-    def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
-        raise NotImplementedError()
+    def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]: ...
 
     def render_y_labels(
         self,

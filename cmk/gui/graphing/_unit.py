@@ -169,10 +169,7 @@ def user_specific_unit(
 
 def _degree_celsius_conversion(user: LoggedInUser, config: Config) -> _Conversion:
     match configured_temp_unit := TemperatureUnit(
-        user.get_attribute(
-            "temperature_unit",
-            config.default_temperature_unit,
-        )
+        user.get_attribute("temperature_unit") or config.default_temperature_unit
     ):
         case TemperatureUnit.CELSIUS:
             return _Conversion(symbol="°C", converter=lambda c: c)
@@ -184,10 +181,7 @@ def _degree_celsius_conversion(user: LoggedInUser, config: Config) -> _Conversio
 
 def _degree_fahrenheit_conversion(user: LoggedInUser, config: Config) -> _Conversion:
     match configured_temp_unit := TemperatureUnit(
-        user.get_attribute(
-            "temperature_unit",
-            config.default_temperature_unit,
-        )
+        user.get_attribute("temperature_unit") or config.default_temperature_unit
     ):
         case TemperatureUnit.CELSIUS:
             return _Conversion(symbol="°C", converter=lambda f: (f - 32) / 1.8)

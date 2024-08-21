@@ -117,6 +117,19 @@ if [ ! -e "/omd/sites/$CMK_SITE_ID/version" ]; then
     exec_hook post-update
 fi
 
+# Save the timezone configured at container level to the site environment
+if [ -n "$TZ" ]; then
+    if grep -E '^TZ=' "/opt/omd/sites/$CMK_SITE_ID/etc/environment" >/dev/null; then
+        # Update an existing TZ setting
+        sed -i -E "s_^TZ=.*_TZ=\"${TZ}\"_" "/opt/omd/sites/$CMK_SITE_ID/etc/environment"
+    else
+        # Write an inital timezone setting
+        echo "TZ=\"${TZ}\"" >>"/opt/omd/sites/$CMK_SITE_ID/etc/environment"
+    fi
+
+    echo "Site timezone set to ${TZ}"
+fi
+
 # When a command is given via "docker run" use it instead of this script
 if [ -n "$1" ]; then
     exec "$@"

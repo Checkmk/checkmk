@@ -1,0 +1,13 @@
+Title: Container: Support setting custom timezone
+Class: feature
+Compatible: compat
+Component: packages
+Date: 1724255060
+Edition: cre
+Level: 1
+Version: 2.2.0p33
+
+The checkmk containers now support setting the TZ variable for a container to specify what timezone the site should use.
+
+The timezone information is then set for the site running inside the container.
+This removes the need to mount timezone files from the host machine into a docker container.

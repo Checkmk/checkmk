@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from typing import assert_never, ClassVar, Container, Literal
+from typing import assert_never, ClassVar, Literal
 
 from livestatus import SiteId
 
@@ -531,44 +531,6 @@ def _applicable_metrics(
         return []
 
 
-def _get_explicit_graph_templates(
-    graph_templates: Iterable[
-        tuple[str, graphs_api.Graph | graphs_api.Bidirectional | RawGraphTemplate]
-    ],
-    translated_metrics: Mapping[str, TranslatedMetric],
-) -> Iterable[GraphTemplate]:
-    for id_, template in graph_templates:
-        parsed = _parse_graph_template(id_, template)
-        if metrics := _applicable_metrics(
-            metrics_to_consider=parsed.metrics,
-            conflicting_metrics=parsed.conflicting_metrics,
-            optional_metrics=parsed.optional_metrics,
-            translated_metrics=translated_metrics,
-        ):
-            yield GraphTemplate(
-                id=parsed.id,
-                title=parsed.title,
-                scalars=parsed.scalars,
-                conflicting_metrics=parsed.conflicting_metrics,
-                optional_metrics=parsed.optional_metrics,
-                consolidation_function=parsed.consolidation_function,
-                range=parsed.range,
-                omit_zero_metrics=parsed.omit_zero_metrics,
-                metrics=(
-                    list(metrics) + list(_compute_predictive_metrics(translated_metrics, metrics))
-                ),
-            )
-
-
-def _get_implicit_graph_templates(
-    translated_metrics: Mapping[str, TranslatedMetric],
-    already_graphed_metrics: Container[str],
-) -> Iterable[GraphTemplate]:
-    for metric_name, translated_metric in sorted(translated_metrics.items()):
-        if translated_metric.auto_graph and metric_name not in already_graphed_metrics:
-            yield graph_template_from_name(metric_name)
-
-
 def get_graph_templates(
     translated_metrics: Mapping[str, TranslatedMetric]
 ) -> Iterator[GraphTemplate]:
@@ -576,17 +538,39 @@ def get_graph_templates(
         yield from ()
         return
 
-    explicit_templates = list(
-        _get_explicit_graph_templates(
-            _graph_templates_from_plugins(),
-            translated_metrics,
+    explicit_templates = [
+        GraphTemplate(
+            id=parsed.id,
+            title=parsed.title,
+            scalars=parsed.scalars,
+            conflicting_metrics=parsed.conflicting_metrics,
+            optional_metrics=parsed.optional_metrics,
+            consolidation_function=parsed.consolidation_function,
+            range=parsed.range,
+            omit_zero_metrics=parsed.omit_zero_metrics,
+            metrics=(
+                list(metrics) + list(_compute_predictive_metrics(translated_metrics, metrics))
+            ),
         )
-    )
+        for id_, template in _graph_templates_from_plugins()
+        for parsed in (_parse_graph_template(id_, template),)
+        if (
+            metrics := _applicable_metrics(
+                metrics_to_consider=parsed.metrics,
+                conflicting_metrics=parsed.conflicting_metrics,
+                optional_metrics=parsed.optional_metrics,
+                translated_metrics=translated_metrics,
+            )
+        )
+    ]
     yield from explicit_templates
-    yield from _get_implicit_graph_templates(
-        translated_metrics,
-        {m.name for gt in explicit_templates for md in gt.metrics for m in md.expression.metrics()},
-    )
+
+    already_graphed_metrics = {
+        m.name for gt in explicit_templates for md in gt.metrics for m in md.expression.metrics()
+    }
+    for metric_name, translated_metric in sorted(translated_metrics.items()):
+        if translated_metric.auto_graph and metric_name not in already_graphed_metrics:
+            yield graph_template_from_name(metric_name)
 
 
 class TemplateGraphSpecification(GraphSpecification, frozen=True):

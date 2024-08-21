@@ -2,7 +2,6 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 from collections.abc import Callable
 from typing import Collection, Mapping, Protocol, Sequence
 
@@ -17,12 +16,14 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
+    make_simple_form_page_menu,
     make_simple_link,
     PageMenu,
     PageMenuDropdown,
     PageMenuEntry,
     PageMenuTopic,
 )
+from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.table import Foldable, Table, table_element
 from cmk.gui.type_defs import ActionResult, HTTPVariables, Icon, PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -49,7 +50,7 @@ from cmk.gui.watolib.configuration_bundles import (
 )
 from cmk.gui.watolib.hosts_and_folders import make_action_link
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
-from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.rulespecs import rulespec_registry
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -59,6 +60,71 @@ def register(main_module_registry: MainModuleRegistry, mode_registry: ModeRegist
     # main_module_registry.register(MainModuleQuickSetupAWS)    # TODO: register once quick setup is implemented
     mode_registry.register(ModeConfigurationBundle)
     mode_registry.register(ModeEditConfigurationBundles)
+    mode_registry.register(ModeQuickSetupSpecialAgent)
+
+
+class ModeQuickSetupSpecialAgent(WatoMode):
+    """
+    This mode allows to create a new special agent configuration using the quick setup. It
+    is solely restricted to special agent based rules and relies on the RuleGroup.SpecialAgents
+    naming convention of the rulespec entry
+    """
+
+    VAR_NAME = "varname"
+
+    @classmethod
+    def name(cls) -> str:
+        return "new_special_agent_configuration"
+
+    @classmethod
+    def parent_mode(cls) -> type[WatoMode] | None:
+        return ModeEditConfigurationBundles
+
+    def _breadcrumb_url(self) -> str:
+        return self.mode_url(varname=self._name)
+
+    def _from_vars(self) -> None:
+        self._name = request.get_ascii_input_mandatory(self.VAR_NAME)
+        if not self._name.startswith(RuleGroupType.SPECIAL_AGENTS.value):
+            raise MKUserError(
+                None,
+                _("Add configuration is only available for special agent based rules."),
+            )
+
+        quick_setup = quick_setup_registry.get(self._name)
+        if quick_setup is None:
+            raise MKUserError(None, _("No Configuration Quick setup for %s available") % self._name)
+        self._quick_setup_id = quick_setup.id
+
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
+        return []
+
+    def ensure_permissions(self) -> None:
+        self._ensure_static_permissions()
+        for domain_definition in BUNDLE_DOMAINS[RuleGroupType.SPECIAL_AGENTS]:
+            pname = domain_definition.permission
+            user.need_permission(pname if "." in pname else ("wato." + pname))
+
+    def title(self) -> str:
+        title = rulespec_registry[self._name].title
+        assert title is not None
+        return _("Add %s configuration") % title
+
+    def breadcrumb(self) -> Breadcrumb:
+        with request.stashed_vars():
+            return super().breadcrumb()
+
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_form_page_menu(
+            title=_("Configuration"),
+            breadcrumb=breadcrumb,
+            add_cancel_link=True,
+            cancel_url=mode_url(mode_name=ModeEditConfigurationBundles.name(), varname=self._name),
+        )
+
+    def page(self) -> None:
+        html.vue_app(app_name="quick_setup", data={"quick_setup_id": self._quick_setup_id})
 
 
 class ModeEditConfigurationBundles(WatoMode):

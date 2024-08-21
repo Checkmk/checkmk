@@ -157,10 +157,10 @@ curl {%- if includes_redirect %} -L {%- endif %} \\
   {%- if param.example is defined and param.example %}
     {%- if param.example is iterable and param.example is not string %}
     {%- for example in param.example %}
-  --data-urlencode {{ (param.name + "=" + example) | repr }} \\
+  --data-urlencode {{ (param.name ~ "=" ~ example) | repr }} \\
     {%- endfor %}
     {%- else %}
-  --data-urlencode {{ (param.name + "=" + param.example) | repr }} \\
+  --data-urlencode {{ (param.name ~ "=" ~ param.example) | repr }} \\
     {%- endif %}
   {%- endif %}
  {%- endfor %}

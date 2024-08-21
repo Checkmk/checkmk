@@ -29,7 +29,12 @@ from cmk.gui import utils
 from cmk.gui.graphing import _color as graphing_color
 from cmk.gui.graphing import _legacy as graphing_legacy
 from cmk.gui.graphing import _utils as graphing_utils
-from cmk.gui.graphing._from_api import graphs_from_api, metrics_from_api, perfometers_from_api
+from cmk.gui.graphing._from_api import (
+    graphs_from_api,
+    metrics_from_api,
+    parse_metric_from_api,
+    perfometers_from_api,
+)
 from cmk.gui.graphing._graph_render_config import GraphRenderConfig
 from cmk.gui.graphing._graph_specification import parse_raw_graph_specification
 from cmk.gui.graphing._graph_templates import GraphTemplate
@@ -155,7 +160,7 @@ def _add_graphing_plugins(
     # TODO CMK-15246 Checkmk 2.4: Remove legacy objects
     for plugin in plugins.plugins.values():
         if isinstance(plugin, metrics_api.Metric):
-            metrics_from_api.register(plugin)
+            metrics_from_api.register(parse_metric_from_api(plugin))
 
         elif isinstance(plugin, translations_api.Translation):
             for check_command in plugin.check_commands:

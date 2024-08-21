@@ -12,12 +12,7 @@ from cmk.utils.metrics import MetricName
 
 from cmk.gui.i18n import _, translate_to_current_language
 
-from ._color import (
-    get_gray_tone,
-    get_palette_color_by_index,
-    parse_color_from_api,
-    parse_color_into_hexrgb,
-)
+from ._color import get_gray_tone, get_palette_color_by_index, parse_color_into_hexrgb
 from ._from_api import metrics_from_api, register_unit_info
 from ._legacy import metric_info, MetricInfo, unit_info, UnitInfo
 
@@ -53,10 +48,10 @@ def get_metric_spec_with_color(
                 name=metric_name,
                 title=(
                     _("Prediction of ")
-                    + mfa.title.localize(translate_to_current_language)
+                    + mfa.title_localizer(translate_to_current_language)
                     + _(" (lower levels)")
                 ),
-                unit_info=register_unit_info(mfa.unit),
+                unit_info=register_unit_info(mfa.api_unit),
                 color=get_gray_tone(color_counter),
             )
 
@@ -73,10 +68,10 @@ def get_metric_spec_with_color(
                 name=metric_name,
                 title=(
                     _("Prediction of ")
-                    + mfa.title.localize(translate_to_current_language)
+                    + mfa.title_localizer(translate_to_current_language)
                     + _(" (upper levels)")
                 ),
-                unit_info=register_unit_info(mfa.unit),
+                unit_info=register_unit_info(mfa.api_unit),
                 color=get_gray_tone(color_counter),
             )
 
@@ -90,9 +85,9 @@ def get_metric_spec_with_color(
         mfa = metrics_from_api[metric_name]
         return MetricSpec(
             name=metric_name,
-            title=mfa.title.localize(translate_to_current_language),
-            unit_info=register_unit_info(mfa.unit),
-            color=parse_color_from_api(mfa.color),
+            title=mfa.title_localizer(translate_to_current_language),
+            unit_info=register_unit_info(mfa.api_unit),
+            color=mfa.color,
         )
     else:
         mi = _get_legacy_metric_info(metric_name, color_counter)
@@ -111,6 +106,6 @@ def get_metric_spec(metric_name: str) -> MetricSpec:
 
 def registered_metrics() -> Iterator[tuple[str, str]]:
     for metric_id, mie in metrics_from_api.items():
-        yield metric_id, str(mie.title)
+        yield metric_id, mie.title_localizer(translate_to_current_language)
     for metric_id, mi in metric_info.items():
         yield metric_id, str(mi["title"])

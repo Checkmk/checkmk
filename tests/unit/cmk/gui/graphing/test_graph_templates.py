@@ -32,7 +32,8 @@ from cmk.gui.graphing._expression import (
     Sum,
     WarningOf,
 )
-from cmk.gui.graphing._from_api import metrics_from_api
+from cmk.gui.graphing._formatter import AutoPrecision
+from cmk.gui.graphing._from_api import metrics_from_api, RegisteredMetric
 from cmk.gui.graphing._graph_specification import (
     HorizontalRule,
     MetricOpOperator,
@@ -59,6 +60,7 @@ from cmk.gui.graphing._translated_metrics import (
     translate_metrics,
     TranslatedMetric,
 )
+from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 
 from cmk.graphing.v1 import graphs as graphs_api
@@ -711,11 +713,15 @@ def test__graph_template_from_api_graph(
 ) -> None:
     for r in raw_metric_names:
         metrics_from_api.register(
-            metrics_api.Metric(
+            RegisteredMetric(
                 name=r,
-                title=Title("Title"),
-                unit=metrics_api.Unit(metrics_api.DecimalNotation("")),
-                color=metrics_api.Color.BLUE,
+                title_localizer=lambda _: "Title",
+                unit_spec=ConvertibleUnitSpecification(
+                    notation=DecimalNotation(symbol=""),
+                    precision=AutoPrecision(digits=2),
+                ),
+                api_unit=metrics_api.Unit(metrics_api.DecimalNotation("")),
+                color="#000000",
             )
         )
     assert _graph_template_from_api_graph(graph.name, graph) == expected_template
@@ -940,11 +946,15 @@ def test__graph_template_from_api_bidirectional(
 ) -> None:
     for r in raw_metric_names:
         metrics_from_api.register(
-            metrics_api.Metric(
+            RegisteredMetric(
                 name=r,
-                title=Title("Title"),
-                unit=metrics_api.Unit(metrics_api.DecimalNotation("")),
-                color=metrics_api.Color.BLUE,
+                title_localizer=lambda _: "Title",
+                unit_spec=ConvertibleUnitSpecification(
+                    notation=DecimalNotation(symbol=""),
+                    precision=AutoPrecision(digits=2),
+                ),
+                api_unit=metrics_api.Unit(metrics_api.DecimalNotation("")),
+                color="#000000",
             )
         )
     assert _graph_template_from_api_bidirectional(graph.name, graph) == expected_template

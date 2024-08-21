@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 from dataclasses import asdict, dataclass
 
 from .agent_based_api.v1 import Attributes, contains, register, SNMPTree
@@ -18,8 +17,8 @@ class Section:
     version: str
 
 
-def parse_infoblox_systeminfo(string_table: StringTable) -> Section:
-    return Section(*string_table[0])
+def parse_infoblox_systeminfo(string_table: StringTable) -> Section | None:
+    return Section(*string_table[0]) if string_table else None
 
 
 register.snmp_section(
@@ -34,11 +33,13 @@ register.snmp_section(
         ],
     ),
     detect=contains(".1.3.6.1.2.1.1.1.0", "infoblox"),
+    parse_function=parse_infoblox_systeminfo,
 )
 
 
-def inventory_infoblox_systeminfo(section: Section) -> InventoryResult:
-    yield Attributes(path=["hardware", "system"], inventory_attributes=asdict(section))
+def inventory_infoblox_systeminfo(section: Section | None) -> InventoryResult:
+    if section:
+        yield Attributes(path=["hardware", "system"], inventory_attributes=asdict(section))
 
 
 register.inventory_plugin(

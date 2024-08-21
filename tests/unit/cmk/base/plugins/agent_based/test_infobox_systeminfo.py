@@ -10,7 +10,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 
 
 @pytest.fixture(name="section", scope="module")
-def _get_section() -> ibsi.Section:
+def _get_section() -> ibsi.Section | None:
     return ibsi.parse_infoblox_systeminfo(
         [
             [
@@ -23,7 +23,7 @@ def _get_section() -> ibsi.Section:
     )
 
 
-def test_inventory_infoblox_systeminfo(section: ibsi.Section) -> None:
+def test_inventory_infoblox_systeminfo(section: ibsi.Section | None) -> None:
     assert list(ibsi.inventory_infoblox_systeminfo(section)) == [
         Attributes(
             path=["hardware", "system"],

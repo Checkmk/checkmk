@@ -61,6 +61,7 @@ DomainType = Literal[
     "autocomplete",
     "quick_setup",
     "managed_robots",
+    "onboarding",
 ]
 
 

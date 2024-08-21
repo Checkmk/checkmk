@@ -192,3 +192,9 @@ Such plugins can be placed by users in their site
 See also
 ~~~~~~~~
 - `User manual: Dynamic host configuration <https://docs.checkmk.com/latest/en/dcd.html>`_
+
+Risks and technical debts
+=========================
+1. With the DCD one can circumvent the permission for activating changes.
+2. Any host can provide piggyback data for each host. A rogue agent can, with
+   enabled piggyback data, inject monitoring data.

@@ -1,0 +1,12 @@
+Title: Microsoft Teams: Fix notifications not being displayed
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1724222888
+Edition: cre
+Level: 1
+Version: 2.2.0p33
+
+Werk #17178 updated the way notifications are displayed in MS Teams.
+Unfortunately this caused them to not be displayed at all due to a version
+incompatibility in the AdaptiveCard. The issue is now resolved.

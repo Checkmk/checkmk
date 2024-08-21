@@ -60,7 +60,7 @@ def _msteams_msg(
                 "content": {
                     "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
                     "type": "AdaptiveCard",
-                    "version": "1.5",
+                    "version": "1.3",
                     "body": [
                         {
                             "type": "TextBlock",

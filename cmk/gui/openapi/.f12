@@ -18,7 +18,7 @@ rsync \
     "$ROOT"/lib/python3/cmk/gui/openapi
 
 (
-    cd "$GIT_ROOT"/web/htdocs/openapi
+    cd "$GIT_ROOT"/packages/cmk-frontend/src/openapi
     bash .f12
 )
 

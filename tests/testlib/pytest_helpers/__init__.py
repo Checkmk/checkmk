@@ -21,11 +21,16 @@ not_containerized = SkipIf(
     " (use OVERRIDE_UNCONTAINERIZED_SKIP=1 at your own risk!)",
 )
 not_cloud_edition = SkipIf(
-    not version_from_env().is_cloud_edition(), "Skipping test; intended for cloud edition only"
+    not version_from_env().is_cloud_edition(),
+    "Skipping test; intended for cloud edition only",
 )
 is_raw_edition = SkipIf(
     version_from_env().is_raw_edition(), "Skipping test; not intended for raw edition"
 )
 is_saas_edition = SkipIf(
     version_from_env().is_saas_edition(), "Skipping test; not intended for SaaS edition"
+)
+is_not_saas_edition = SkipIf(
+    not version_from_env().is_saas_edition(),
+    "Skipping test; intended only for SaaS edition",
 )

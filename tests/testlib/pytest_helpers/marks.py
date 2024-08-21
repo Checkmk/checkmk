@@ -26,3 +26,8 @@ skip_if_saas_edition = pytest.mark.skipif(
     pytest_helpers.is_saas_edition.condition,
     reason=pytest_helpers.is_saas_edition.reason,
 )
+
+skip_if_not_saas_edition = pytest.mark.skipif(
+    pytest_helpers.is_not_saas_edition.condition,
+    reason=pytest_helpers.is_not_saas_edition.reason,
+)

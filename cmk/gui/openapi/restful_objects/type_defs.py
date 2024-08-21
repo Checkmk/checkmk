@@ -56,6 +56,7 @@ DomainType = Literal[
     "user_role",
     "aux_tag",
     "autocomplete",
+    "onboarding",
 ]  # fmt: off
 
 DomainObject = dict[str, Any]

@@ -481,13 +481,25 @@ def _make_projection(
     projection_parameters: _ProjectionParameters,
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> _Projection:
+    # TODO At the moment we have a unit conversion only for temperature metrics and we want to have
+    # the orig value at the same place as the converted value, eg.:
+    #              20 °C
+    # |-------------|---------------------------------------------|
+    #              68 °F
+    # Generalize the following...
+    conversion = (
+        list(translated_metrics.values())[0].unit_info.conversion
+        if len(translated_metrics) == 1
+        else lambda v: v
+    )
+
     if isinstance(focus_range.lower.value, (int, float)):
-        lower_x = float(focus_range.lower.value)
+        lower_x = conversion(float(focus_range.lower.value))
     else:
         lower_x = _evaluate_quantity(focus_range.lower.value, translated_metrics).value
 
     if isinstance(focus_range.upper.value, (int, float)):
-        upper_x = float(focus_range.upper.value)
+        upper_x = conversion(float(focus_range.upper.value))
     else:
         upper_x = _evaluate_quantity(focus_range.upper.value, translated_metrics).value
 

@@ -201,7 +201,7 @@ def _collect_params_with_defaults_from_form_data(
 ) -> Mapping[str, object]:
     return _add_defaults_to_form_data(
         _get_rule_defaults(rulespec_name),
-        _collect_params_from_form_data(all_stages_form_data, rulespec_name),
+        collect_params_from_form_data(all_stages_form_data, rulespec_name),
     )
 
 
@@ -210,7 +210,7 @@ def _get_parameter_form_from_rulespec_name(rulespec_name: str) -> Dictionary | N
     return _parameter_form() if callable(_parameter_form) else _parameter_form
 
 
-def _collect_params_from_form_data(
+def collect_params_from_form_data(
     all_stages_form_data: ParsedFormData, rulespec_name: str
 ) -> Mapping[str, object]:
     if (parameter_form := _get_parameter_form_from_rulespec_name(rulespec_name)) is None:

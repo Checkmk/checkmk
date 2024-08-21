@@ -25,4 +25,3 @@ mssql:
       discovery:
         detect: no
         include: [ "SQLEXPRESS_NAME"]
-

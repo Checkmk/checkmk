@@ -9,7 +9,7 @@ mssql:
   # Documentation:
   #
   # Overview:
-  # The `Check SQL` plugin is designed for monitoring SQL Servers. It mandates a primary configuration (`mssql.main`) 
+  # The `Check SQL` plugin is designed for monitoring SQL Servers. It mandates a primary configuration (`mssql.main`)
   # for single SQL Server host monitoring and allows additional, optional configurations (`mssql.configs`) for multiple hosts.
   #
   # Key Features:

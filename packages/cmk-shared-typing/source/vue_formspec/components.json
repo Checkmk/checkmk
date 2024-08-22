@@ -239,13 +239,19 @@
                 },
                 "additional_static_elements": {
                     "type": "object"
+                },
+                "layout": {
+                    "enum": ["default", "two_columns"],
+                    "default": "default"
                 }
             },
             "required": [
                 "type",
                 "elements",
                 "static_elements_key",
-                "groups"
+                "groups",
+                "layout"
+
             ],
             "allOf": [
                 {
@@ -389,12 +395,17 @@
                 "label": {
                     "type": "string"
                 },
-                "input_hint": {}
+                "input_hint": {},
+                "layout": {
+                    "enum": ["default", "horizontal"],
+                    "default": "default"
+                }
             },
             "required": [
                 "type",
                 "elements",
-                "input_hint"
+                "input_hint",
+                "layout"
             ],
             "allOf": [
                 {

@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Any, Optional, Union
 
 
@@ -50,6 +51,11 @@ class DictionaryGroup:
     help: Optional[str] = None
 
 
+class Layout(str, Enum):
+    default = "default"
+    two_columns = "two_columns"
+
+
 @dataclass(kw_only=True)
 class SingleChoiceElement:
     name: Any
@@ -60,6 +66,11 @@ class SingleChoiceElement:
 class MultipleChoiceElement:
     name: str
     title: str
+
+
+class Layout1(str, Enum):
+    default = "default"
+    horizontal = "horizontal"
 
 
 @dataclass(kw_only=True)
@@ -135,6 +146,7 @@ class Dictionary(FormSpec):
     elements: list[DictionaryElement] = field(default_factory=lambda: [])
     no_elements_text: Optional[str] = None
     additional_static_elements: Optional[dict[str, Any]] = None
+    layout: Layout = Layout.default
 
 
 @dataclass(kw_only=True)
@@ -169,6 +181,7 @@ class CascadingSingleChoice(FormSpec):
     elements: list[CascadingSingleChoiceElement] = field(default_factory=lambda: [])
     no_elements_text: Optional[str] = None
     label: Optional[str] = None
+    layout: Layout1 = Layout1.default
 
 
 @dataclass(kw_only=True)

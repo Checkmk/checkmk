@@ -12,10 +12,12 @@ from black import FileMode, format_str
 STRIP_OPTIONAL = [
     ("FormSpec", "validators"),
     ("Dictionary", "elements"),
+    ("Dictionary", "layout"),
     ("SingleChoice", "elements"),
     ("MultipleChoice", "elements"),
     ("MultipleChoice", "show_toggle_all"),
     ("CascadingSingleChoice", "elements"),
+    ("CascadingSingleChoice", "layout"),
 ]
 
 

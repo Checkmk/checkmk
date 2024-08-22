@@ -12363,10 +12363,10 @@ msgstr ""
 "プロキシサーバー経由で接続するかどうかをエージェントアップデーターに設定しま"
 "す。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Configure the automatic creation of new hosts based on requests sent by the "
-"agent controller, see also the <a href=\"%s\">corresponding bakery ruleset</"
+"agent controller, see also the <a href=\"%s\">corresponding Bakery ruleset</"
 "a>. <b>Note</b>: New hosts created via this channel are marked by the host "
 "label <tt>cmk/agent_auto_registered:yes</tt>. This can for example be used "
 "to configure a host life cycle management via the <a href=\"%s\">automatic "
@@ -12894,9 +12894,6 @@ msgstr "消費者"
 
 msgid "Contact"
 msgstr "連絡先"
-
-msgid "Contact Groups"
-msgstr "連絡先グループ"
 
 msgid "Contact Name"
 msgstr "連絡先"
@@ -61230,9 +61227,10 @@ msgstr ""
 msgid "This permission is needed for the module <i>Passwords</i>."
 msgstr "この権限は<i>パスワード</i>モジュールに必要です。"
 
+#, fuzzy
 msgid ""
 "This permission is needed for the modules <b>Users</b>, <b>Roles</b> and "
-"<b>Contact Groups</b>"
+"<b>Contact groups</b>"
 msgstr ""
 "この権限は、<b>ユーザー</b>, <b>役割</b>と<b>連絡先グループ</b>のモジュールで"
 "必要です"
@@ -77387,6 +77385,9 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid "Contact Groups"
+#~ msgstr "連絡先グループ"
 
 #~ msgid "Levels on Read/Write Capacity"
 #~ msgstr "読み取り/書き込み容量のレベル"

@@ -12715,10 +12715,10 @@ msgid "Configure the agent updater whether to connect via proxy server."
 msgstr ""
 "Konfiguriere den Agent Updater für die Verbindung über einen Proxy Server."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Configure the automatic creation of new hosts based on requests sent by the "
-"agent controller, see also the <a href=\"%s\">corresponding bakery ruleset</"
+"agent controller, see also the <a href=\"%s\">corresponding Bakery ruleset</"
 "a>. <b>Note</b>: New hosts created via this channel are marked by the host "
 "label <tt>cmk/agent_auto_registered:yes</tt>. This can for example be used "
 "to configure a host life cycle management via the <a href=\"%s\">automatic "
@@ -13283,9 +13283,6 @@ msgstr "Konsumenten"
 
 msgid "Contact"
 msgstr "Kontakt"
-
-msgid "Contact Groups"
-msgstr "Kontaktgruppen"
 
 msgid "Contact Name"
 msgstr "Kontaktname"
@@ -61894,9 +61891,10 @@ msgstr ""
 msgid "This permission is needed for the module <i>Passwords</i>."
 msgstr "Diese Berechtigung ist notwendig für das Modul <i>Passwörter</i>."
 
+#, fuzzy
 msgid ""
 "This permission is needed for the modules <b>Users</b>, <b>Roles</b> and "
-"<b>Contact Groups</b>"
+"<b>Contact groups</b>"
 msgstr ""
 "Diese Berechtigung ist notwendig für die Module <b>Benutzer</b>, <b>Rollen</"
 "b> und <b>Kontaktgruppen</b>"
@@ -77866,6 +77864,9 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Contact Groups"
+#~ msgstr "Kontaktgruppen"
 
 #~ msgid "Levels on Read/Write Capacity"
 #~ msgstr "Level für die Lese-/Schreibkapazität"

@@ -12972,7 +12972,7 @@ msgstr ""
 #, fuzzy, python-format
 msgid ""
 "Configure the automatic creation of new hosts based on requests sent by the "
-"agent controller, see also the <a href=\"%s\">corresponding bakery ruleset</"
+"agent controller, see also the <a href=\"%s\">corresponding Bakery ruleset</"
 "a>. <b>Note</b>: New hosts created via this channel are marked by the host "
 "label <tt>cmk/agent_auto_registered:yes</tt>. This can for example be used "
 "to configure a host life cycle management via the <a href=\"%s\">automatic "
@@ -13536,9 +13536,6 @@ msgstr "Consumidores"
 
 msgid "Contact"
 msgstr "Contato"
-
-msgid "Contact Groups"
-msgstr "Grupos de contato"
 
 msgid "Contact Name"
 msgstr "Nome para contato"
@@ -63012,9 +63009,10 @@ msgstr ""
 msgid "This permission is needed for the module <i>Passwords</i>."
 msgstr "Esta permissão é necessária para o módulo <i>Passwords</i>."
 
+#, fuzzy
 msgid ""
 "This permission is needed for the modules <b>Users</b>, <b>Roles</b> and "
-"<b>Contact Groups</b>"
+"<b>Contact groups</b>"
 msgstr ""
 "Esta permissão é necessária para os módulos <b>Usuários</b>, <b>Funções</b> "
 "e <b>Grupos de contactos</b>"
@@ -79513,6 +79511,9 @@ msgstr "{actual} é demasiado baixo. O valor mínimo permitido é {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
+
+#~ msgid "Contact Groups"
+#~ msgstr "Grupos de contato"
 
 #~ msgid "Levels on Read/Write Capacity"
 #~ msgstr "Níveis de capacidade de leitura/escrita"

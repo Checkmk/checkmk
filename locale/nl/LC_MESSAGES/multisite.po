@@ -12978,7 +12978,7 @@ msgstr ""
 #, fuzzy, python-format
 msgid ""
 "Configure the automatic creation of new hosts based on requests sent by the "
-"agent controller, see also the <a href=\"%s\">corresponding bakery ruleset</"
+"agent controller, see also the <a href=\"%s\">corresponding Bakery ruleset</"
 "a>. <b>Note</b>: New hosts created via this channel are marked by the host "
 "label <tt>cmk/agent_auto_registered:yes</tt>. This can for example be used "
 "to configure a host life cycle management via the <a href=\"%s\">automatic "
@@ -13548,9 +13548,6 @@ msgstr "Consumenten"
 
 msgid "Contact"
 msgstr "Neem contact op met"
-
-msgid "Contact Groups"
-msgstr "Contact Groepen"
 
 msgid "Contact Name"
 msgstr "Naam contactpersoon"
@@ -63071,9 +63068,10 @@ msgstr ""
 msgid "This permission is needed for the module <i>Passwords</i>."
 msgstr "Deze toestemming is nodig voor de module <i>Wachtwoorden</i>."
 
+#, fuzzy
 msgid ""
 "This permission is needed for the modules <b>Users</b>, <b>Roles</b> and "
-"<b>Contact Groups</b>"
+"<b>Contact groups</b>"
 msgstr ""
 "Deze toestemming is nodig voor de modules <b>Gebruikers</b>, <b>Rollen</b> "
 "en <b>Contactgroepen</b>"
@@ -79630,6 +79628,9 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Contact Groups"
+#~ msgstr "Contact Groepen"
 
 #~ msgid "Levels on Read/Write Capacity"
 #~ msgstr "Niveaus op lees/schrijfcapaciteit"

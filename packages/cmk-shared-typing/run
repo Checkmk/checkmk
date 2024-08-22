@@ -101,8 +101,8 @@ run_pipenv() {
         pipenv "$@"
 }
 
-setup_venv() {
-    test "${SETUP_VENV_RAN}" = "yes" && return
+setup() {
+    test "${SETUP_RAN}" = "yes" && return
     # --quiet doesn't really work, see https://github.com/pypa/pipenv/issues/5037, but redirecting
     # stdout is OK, errors go to stderr, and so do the initial venv creation messages.
     run_pipenv sync --dev >/dev/null
@@ -110,16 +110,21 @@ setup_venv() {
     # poor man's "activate", but without any danger of naming clashes
     PATH="$(pwd)/.venv/bin:$PATH"
     hash -r
-    SETUP_VENV_RAN=yes
+
+    if [ ! -d node_modules ]; then
+        npm ci
+    fi
+
+    SETUP_RAN=yes
 }
 
 run_clean() {
-    rm -rf .cache .mypy_cache .pytest_cache .venv ./*.egg-info build
+    rm -rf .cache .mypy_cache .pytest_cache .venv ./*.egg-info build node_modules
     find python -type d -name __pycache__ -print0 | xargs --null --no-run-if-empty rm -rf
 }
 
 run_build() {
-    setup_venv
+    setup
     mkdir -p python typescript
     cwd=$(pwd)
     export PYTHONPATH="$PYTHONPATH:$cwd"
@@ -141,6 +146,11 @@ run_build() {
             --custom-formatters "utils.format"
         npm run json2ts "${file}" -o "typescript/${target_base}.ts"
     done
+
+    echo "Copying vue type defs..."
+    cp python/vue_formspec_components.py ../../cmk/gui/form_specs/vue/shared_type_defs.py
+    cp typescript/vue_formspec_components.ts ../../packages/cmk-frontend-vue/src/form/components/vue_formspec_components.ts
+    echo "Done."
 }
 
 run_check_format() {

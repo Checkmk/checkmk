@@ -272,24 +272,24 @@ def validate_test_connection_custom_collect_params(
 ) -> CallableValidator:
     return partial(
         _validate_test_connection,
-        rulespec_name=rulespec_name,
-        collect_params=custom_collect_params,
+        rulespec_name,
+        custom_collect_params,
     )
 
 
 def validate_test_connection(rulespec_name: str) -> CallableValidator:
     return partial(
         _validate_test_connection,
-        rulespec_name=rulespec_name,
-        collect_params=_collect_params_with_defaults_from_form_data,
+        rulespec_name,
+        _collect_params_with_defaults_from_form_data,
     )
 
 
 def _validate_test_connection(
     rulespec_name: str,
+    collect_params: Callable[[ParsedFormData, str], Mapping[str, object]],
     all_stages_form_data: ParsedFormData,
     expected_formspecs_map: Mapping[FormSpecId, FormSpec],
-    collect_params: Callable[[ParsedFormData, str], Mapping[str, object]],
 ) -> GeneralStageErrors:
     general_errors: GeneralStageErrors = []
     site_id = _find_unique_id(all_stages_form_data, "site_selection")
@@ -348,9 +348,9 @@ def recap_service_discovery_custom_collect_params(
 ) -> CallableRecap:
     return partial(
         _recap_service_discovery,
-        rulespec_name=rulespec_name,
-        services_of_interest=services_of_interest,
-        collect_params=custom_collect_params,
+        rulespec_name,
+        services_of_interest,
+        custom_collect_params,
     )
 
 
@@ -360,18 +360,18 @@ def recap_service_discovery(
 ) -> CallableRecap:
     return partial(
         _recap_service_discovery,
-        rulespec_name=rulespec_name,
-        services_of_interest=services_of_interest,
-        collect_params=_collect_params_with_defaults_from_form_data,
+        rulespec_name,
+        services_of_interest,
+        _collect_params_with_defaults_from_form_data,
     )
 
 
 def _recap_service_discovery(
     rulespec_name: str,
     services_of_interest: Sequence[ServiceInterest],
+    collect_params: Callable[[ParsedFormData, str], Mapping[str, object]],
     all_stages_form_data: Sequence[ParsedFormData],
     expected_formspecs_map: Mapping[FormSpecId, FormSpec],
-    collect_params: Callable[[ParsedFormData, str], Mapping[str, object]],
 ) -> Sequence[Widget]:
     combined_parsed_form_data = {
         k: v for form_data in all_stages_form_data for k, v in form_data.items()

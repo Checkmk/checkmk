@@ -137,6 +137,7 @@ run_build() {
             --use-standard-collections \
             --use-one-literal-as-default \
             --use-subclass-enum \
+            --custom-file-header-path header_py.txt \
             --custom-formatters "utils.format"
         npm run json2ts "${file}" -o "typescript/${target_base}.ts"
     done

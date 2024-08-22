@@ -17,6 +17,7 @@ test -d "$ROOT" || exit 1
 
 # Simply copying the library can cause a running NEB/CMC to crash.
 install --verbose --mode 644 ../../bazel-bin/packages/livestatus/liblivestatus.so "$ROOT/lib/liblivestatus.so.0.1"
+patchelf --set-rpath "\$ORIGIN/../lib" "$ROOT/lib/liblivestatus.so.0.1"
 
 test -z "$ONLY_COPY" || exit 0
 sudo --login -u "$SITE" -- bash -c "omd restart nagios"

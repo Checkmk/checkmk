@@ -106,7 +106,7 @@ const dictSpec: FormSpec.Dictionary = {
   type: 'dictionary',
   title: 'dictTitle',
   help: 'fooHelp',
-  layout: 'default',
+  layout: 'one_column',
   validators: [],
   groups: [],
   elements: [

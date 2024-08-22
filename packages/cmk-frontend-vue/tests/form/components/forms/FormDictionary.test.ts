@@ -24,7 +24,7 @@ const spec: FormSpec.Dictionary = {
   type: 'dictionary',
   title: 'fooTitle',
   help: 'fooHelp',
-  layout: 'default',
+  layout: 'one_column',
   validators: [],
   groups: [],
   elements: [
@@ -138,7 +138,7 @@ test('FormDictionary appends default of required element if missing in data', as
     spec: {
       type: 'dictionary',
       title: 'fooTitle',
-      layout: 'default',
+      layout: 'one_column',
       help: 'fooHelp',
       groups: [],
       validators: [],

@@ -33,7 +33,7 @@ const spec: FormSpec.CascadingSingleChoice = {
   type: 'cascading_single_choice',
   title: 'fooTitle',
   label: 'fooLabel',
-  layout: 'default',
+  layout: 'horizontal',
   help: 'fooHelp',
   validators: [],
   input_hint: '',

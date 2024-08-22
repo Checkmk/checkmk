@@ -311,11 +311,9 @@
                     "type": "object"
                 },
                 "layout": {
-                    "enum": [
-                        "default",
-                        "two_columns"
-                    ],
-                    "default": "default"
+                    "title": "DictionaryLayout",
+                    "enum": ["one_column", "two_columns"],
+                    "default": "one_column"
                 }
             },
             "required": [
@@ -469,11 +467,9 @@
                 },
                 "input_hint": {},
                 "layout": {
-                    "enum": [
-                        "default",
-                        "horizontal"
-                    ],
-                    "default": "default"
+                    "title": "CascadingChoiceLayout",
+                    "enum": ["vertical", "horizontal"],
+                    "default": "vertical"
                 }
             },
             "required": [

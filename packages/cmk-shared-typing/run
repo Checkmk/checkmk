@@ -137,6 +137,7 @@ run_build() {
             --output "python/${target_base}.py" \
             --target-python-version 3.12 \
             --output-model-type=dataclasses.dataclass \
+            --use-title-as-name \
             --use-double-quotes \
             --use-default \
             --use-standard-collections \

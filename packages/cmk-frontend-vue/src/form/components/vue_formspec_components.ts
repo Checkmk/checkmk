@@ -48,8 +48,9 @@ export type Dictionary = FormSpec & {
   groups: DictionaryGroup[];
   no_elements_text?: string;
   additional_static_elements?: {};
-  layout: "default" | "two_columns";
+  layout: DictionaryLayout;
 };
+export type DictionaryLayout = "one_column" | "two_columns";
 export type List = FormSpec & {
   type: "list";
   element_template: FormSpec;
@@ -79,8 +80,9 @@ export type CascadingSingleChoice = FormSpec & {
   no_elements_text?: string;
   label?: string;
   input_hint: unknown;
-  layout: "default" | "horizontal";
+  layout: CascadingChoiceLayout;
 };
+export type CascadingChoiceLayout = "vertical" | "horizontal";
 export type FixedValue = FormSpec & {
   type: "fixed_value";
   label?: string;

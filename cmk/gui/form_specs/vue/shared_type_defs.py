@@ -72,8 +72,8 @@ class DictionaryGroup:
     help: Optional[str] = None
 
 
-class Layout(str, Enum):
-    default = "default"
+class DictionaryLayout(str, Enum):
+    one_column = "one_column"
     two_columns = "two_columns"
 
 
@@ -89,8 +89,8 @@ class MultipleChoiceElement:
     title: str
 
 
-class Layout1(str, Enum):
-    default = "default"
+class CascadingChoiceLayout(str, Enum):
+    vertical = "vertical"
     horizontal = "horizontal"
 
 
@@ -192,7 +192,7 @@ class Dictionary(FormSpec):
     elements: list[DictionaryElement] = field(default_factory=lambda: [])
     no_elements_text: Optional[str] = None
     additional_static_elements: Optional[dict[str, Any]] = None
-    layout: Layout = Layout.default
+    layout: DictionaryLayout = DictionaryLayout.one_column
 
 
 @dataclass(kw_only=True)
@@ -227,7 +227,7 @@ class CascadingSingleChoice(FormSpec):
     elements: list[CascadingSingleChoiceElement] = field(default_factory=lambda: [])
     no_elements_text: Optional[str] = None
     label: Optional[str] = None
-    layout: Layout1 = Layout1.default
+    layout: CascadingChoiceLayout = CascadingChoiceLayout.vertical
 
 
 @dataclass(kw_only=True)

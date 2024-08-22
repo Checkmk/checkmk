@@ -22,6 +22,277 @@ from ._type_defs import GraphConsolidationFunction
 # TODO CMK-15246 Checkmk 2.4: Remove legacy objects/RPNs
 
 
+class _MetricExpression:
+    pass
+
+
+@dataclass(frozen=True)
+class _Constant(_MetricExpression):
+    value: int | float
+
+
+@dataclass(frozen=True)
+class _Metric(_MetricExpression):
+    name: MetricName
+    consolidation: GraphConsolidationFunction | None = None
+
+
+@dataclass(frozen=True)
+class _WarningOf(_MetricExpression):
+    metric: _Metric
+
+
+@dataclass(frozen=True)
+class _CriticalOf(_MetricExpression):
+    metric: _Metric
+
+
+@dataclass(frozen=True)
+class _MinimumOf(_MetricExpression):
+    metric: _Metric
+
+
+@dataclass(frozen=True)
+class _MaximumOf(_MetricExpression):
+    metric: _Metric
+
+
+@dataclass(frozen=True)
+class _Sum(_MetricExpression):
+    summands: Sequence[_MetricExpression]
+
+
+@dataclass(frozen=True)
+class _Product(_MetricExpression):
+    factors: Sequence[_MetricExpression]
+
+
+@dataclass(frozen=True, kw_only=True)
+class _Difference(_MetricExpression):
+    minuend: _MetricExpression
+    subtrahend: _MetricExpression
+
+
+@dataclass(frozen=True, kw_only=True)
+class _Fraction(_MetricExpression):
+    dividend: _MetricExpression
+    divisor: _MetricExpression
+
+
+@dataclass(frozen=True)
+class _Minimum(_MetricExpression):
+    operands: Sequence[_MetricExpression]
+
+
+@dataclass(frozen=True)
+class _Maximum(_MetricExpression):
+    operands: Sequence[_MetricExpression]
+
+
+@dataclass(frozen=True, kw_only=True)
+class _Percent(_MetricExpression):
+    """percentage = 100 * percent_value / base_value"""
+
+    percent_value: _MetricExpression
+    base_value: _MetricExpression
+
+
+@dataclass(frozen=True)
+class _Average(_MetricExpression):
+    operands: Sequence[_MetricExpression]
+
+
+@dataclass(frozen=True)
+class _Merge(_MetricExpression):
+    operands: Sequence[_MetricExpression]
+
+
+class _ConditionalMetricExpression(abc.ABC):
+    pass
+
+
+@dataclass(frozen=True, kw_only=True)
+class _GreaterThan(_ConditionalMetricExpression):
+    left: _MetricExpression
+    right: _MetricExpression
+
+
+@dataclass(frozen=True, kw_only=True)
+class _GreaterEqualThan(_ConditionalMetricExpression):
+    left: _MetricExpression
+    right: _MetricExpression
+
+
+@dataclass(frozen=True, kw_only=True)
+class _LessThan(_ConditionalMetricExpression):
+    left: _MetricExpression
+    right: _MetricExpression
+
+
+@dataclass(frozen=True, kw_only=True)
+class _LessEqualThan(_ConditionalMetricExpression):
+    left: _MetricExpression
+    right: _MetricExpression
+
+
+def _extract_consolidation(
+    expression: str,
+) -> tuple[str, GraphConsolidationFunction | None]:
+    if expression.endswith(".max"):
+        return expression[:-4], "max"
+    if expression.endswith(".min"):
+        return expression[:-4], "min"
+    if expression.endswith(".average"):
+        return expression[:-8], "average"
+    return expression, None
+
+
+def _from_scalar(
+    scalar_name: str, metric: _Metric
+) -> _WarningOf | _CriticalOf | _MinimumOf | _MaximumOf:
+    match scalar_name:
+        case "warn":
+            return _WarningOf(metric)
+        case "crit":
+            return _CriticalOf(metric)
+        case "min":
+            return _MinimumOf(metric)
+        case "max":
+            return _MaximumOf(metric)
+    raise ValueError(scalar_name)
+
+
+def _parse_single_expression(
+    raw_expression: str,
+    translated_metrics: Mapping[str, TranslatedMetric],
+) -> _MetricExpression:
+    if raw_expression not in translated_metrics:
+        with contextlib.suppress(ValueError):
+            return _Constant(int(raw_expression))
+        with contextlib.suppress(ValueError):
+            return _Constant(float(raw_expression))
+
+    var_name, consolidation = _extract_consolidation(raw_expression)
+    if percent := var_name.endswith("(%)"):
+        var_name = var_name[:-3]
+
+    if ":" in var_name:
+        var_name, scalar_name = var_name.split(":")
+        metric = _Metric(var_name, consolidation=consolidation)
+        scalar = _from_scalar(scalar_name, metric)
+        return _Percent(percent_value=scalar, base_value=_MaximumOf(metric)) if percent else scalar
+
+    metric = _Metric(var_name, consolidation=consolidation)
+    return _Percent(percent_value=metric, base_value=_MaximumOf(metric)) if percent else metric
+
+
+_RPNOperators = Literal["+", "*", "-", "/", "MIN", "MAX", "AVERAGE", "MERGE", ">", ">=", "<", "<="]
+
+
+def _parse_expression(
+    raw_expression: str,
+    translated_metrics: Mapping[str, TranslatedMetric],
+) -> tuple[Sequence[_MetricExpression | _RPNOperators], str, str]:
+    # Evaluates an expression, returns a triple of value, unit and color.
+    # e.g. "fs_used:max"    -> 12.455, "b", "#00ffc6",
+    # e.g. "fs_used(%)"     -> 17.5,   "%", "#00ffc6",
+    # e.g. "fs_used:max(%)" -> 100.0,  "%", "#00ffc6",
+    # e.g. 123.4            -> 123.4,  "",  "#000000"
+    # e.g. "123.4#ff0000"   -> 123.4,  "",  "#ff0000",
+    # Note:
+    # "fs_growth.max" is the same as fs_growth. The .max is just
+    # relevant when fetching RRD data and is used for selecting
+    # the consolidation function MAX.
+
+    explicit_color = ""
+    if "#" in raw_expression:
+        # drop appended color information
+        raw_expression, explicit_color_ = raw_expression.rsplit("#", 1)
+        explicit_color = f"#{explicit_color_}"
+
+    explicit_unit_id = ""
+    if "@" in raw_expression:
+        # appended unit name
+        raw_expression, explicit_unit_id = raw_expression.rsplit("@", 1)
+
+    stack: list[_MetricExpression | _RPNOperators] = []
+    for p in raw_expression.split(","):
+        match p:
+            case "+":
+                stack.append("+")
+            case "-":
+                stack.append("-")
+            case "*":
+                stack.append("*")
+            case "/":
+                stack.append("/")
+            case "MIN":
+                stack.append("MIN")
+            case "MAX":
+                stack.append("MAX")
+            case "AVERAGE":
+                stack.append("AVERAGE")
+            case "MERGE":
+                stack.append("MERGE")
+            case ">":
+                stack.append(">")
+            case ">=":
+                stack.append(">=")
+            case "<":
+                stack.append("<")
+            case "<=":
+                stack.append("<=")
+            case _:
+                stack.append(_parse_single_expression(p, translated_metrics))
+
+    return stack, explicit_unit_id, explicit_color
+
+
+def _resolve_stack(
+    stack: Sequence[_MetricExpression | _RPNOperators],
+) -> _MetricExpression | _ConditionalMetricExpression:
+    resolved: list[_MetricExpression | _ConditionalMetricExpression] = []
+    for element in stack:
+        if isinstance(element, _MetricExpression):
+            resolved.append(element)
+            continue
+
+        if not isinstance(right := resolved.pop(), _MetricExpression):
+            raise TypeError(right)
+
+        if not isinstance(left := resolved.pop(), _MetricExpression):
+            raise TypeError(left)
+
+        match element:
+            case "+":
+                resolved.append(_Sum([left, right]))
+            case "-":
+                resolved.append(_Difference(minuend=left, subtrahend=right))
+            case "*":
+                resolved.append(_Product([left, right]))
+            case "/":
+                # Handle zero division by always adding a tiny bit to the divisor
+                resolved.append(_Fraction(dividend=left, divisor=_Sum([right, _Constant(1e-16)])))
+            case "MIN":
+                resolved.append(_Minimum([left, right]))
+            case "MAX":
+                resolved.append(_Maximum([left, right]))
+            case "AVERAGE":
+                resolved.append(_Average([left, right]))
+            case "MERGE":
+                resolved.append(_Merge([left, right]))
+            case ">=":
+                resolved.append(_GreaterEqualThan(left=left, right=right))
+            case ">":
+                resolved.append(_GreaterThan(left=left, right=right))
+            case "<=":
+                resolved.append(_LessEqualThan(left=left, right=right))
+            case "<":
+                resolved.append(_LessThan(left=left, right=right))
+
+    return resolved[0]
+
+
 def _unit_mult(left_unit_info: UnitInfo, right_unit_info: UnitInfo) -> UnitInfo:
     # TODO: real unit computation!
     return (
@@ -592,6 +863,171 @@ class Merge(MetricExpression):
         yield from (s for o in self.operands for s in o.scalars())
 
 
+def _make_inner_metric_expression(
+    expression: _MetricExpression | _ConditionalMetricExpression,
+) -> MetricExpression:
+    match expression:
+        case _Constant():
+            return Constant(expression.value)
+        case _Metric():
+            return Metric(expression.name, consolidation=expression.consolidation)
+        case _WarningOf():
+            return WarningOf(Metric(expression.metric.name))
+        case _CriticalOf():
+            return CriticalOf(Metric(expression.metric.name))
+        case _MinimumOf():
+            return MinimumOf(Metric(expression.metric.name))
+        case _MaximumOf():
+            return MaximumOf(Metric(expression.metric.name))
+        case _Sum():
+            return Sum([_make_inner_metric_expression(s) for s in expression.summands])
+        case _Product():
+            return Product([_make_inner_metric_expression(f) for f in expression.factors])
+        case _Difference():
+            return Difference(
+                minuend=_make_inner_metric_expression(expression.minuend),
+                subtrahend=_make_inner_metric_expression(expression.subtrahend),
+            )
+        case _Fraction():
+            return Fraction(
+                dividend=_make_inner_metric_expression(expression.dividend),
+                divisor=_make_inner_metric_expression(expression.divisor),
+            )
+        case _Minimum():
+            return Minimum([_make_inner_metric_expression(o) for o in expression.operands])
+        case _Maximum():
+            return Maximum([_make_inner_metric_expression(o) for o in expression.operands])
+        case _Percent():
+            return Percent(
+                percent_value=_make_inner_metric_expression(expression.percent_value),
+                base_value=_make_inner_metric_expression(expression.base_value),
+            )
+        case _Average():
+            return Average([_make_inner_metric_expression(o) for o in expression.operands])
+        case _Merge():
+            return Merge([_make_inner_metric_expression(o) for o in expression.operands])
+        case _:
+            raise TypeError(expression)
+
+
+def _make_metric_expression(
+    expression: _MetricExpression | _ConditionalMetricExpression,
+    explicit_unit_id: str,
+    explicit_color: str,
+) -> MetricExpression:
+    match expression:
+        case _Constant():
+            return Constant(
+                expression.value,
+                explicit_unit_id=explicit_unit_id,
+                explicit_color=explicit_color,
+            )
+        case _Metric():
+            return Metric(
+                expression.name,
+                consolidation=expression.consolidation,
+                explicit_unit_id=explicit_unit_id,
+                explicit_color=explicit_color,
+            )
+        case _WarningOf():
+            return WarningOf(
+                Metric(expression.metric.name),
+                explicit_unit_id=explicit_unit_id,
+                explicit_color=explicit_color,
+            )
+        case _CriticalOf():
+            return CriticalOf(
+                Metric(expression.metric.name),
+                explicit_unit_id=explicit_unit_id,
+                explicit_color=explicit_color,
+            )
+        case _MinimumOf():
+            return MinimumOf(
+                Metric(expression.metric.name),
+                explicit_unit_id=explicit_unit_id,
+                explicit_color=explicit_color,
+            )
+        case _MaximumOf():
+            return MaximumOf(
+                Metric(expression.metric.name),
+                explicit_unit_id=explicit_unit_id,
+                explicit_color=explicit_color,
+            )
+        case _Sum():
+            return Sum(
+                [_make_inner_metric_expression(s) for s in expression.summands],
+                explicit_unit_id=explicit_unit_id,
+                explicit_color=explicit_color,
+            )
+        case _Product():
+            return Product(
+                [_make_inner_metric_expression(f) for f in expression.factors],
+                explicit_unit_id=explicit_unit_id,
+                explicit_color=explicit_color,
+            )
+        case _Difference():
+            return Difference(
+                minuend=_make_inner_metric_expression(expression.minuend),
+                subtrahend=_make_inner_metric_expression(expression.subtrahend),
+                explicit_unit_id=explicit_unit_id,
+                explicit_color=explicit_color,
+            )
+        case _Fraction():
+            return Fraction(
+                dividend=_make_inner_metric_expression(expression.dividend),
+                divisor=_make_inner_metric_expression(expression.divisor),
+                explicit_unit_id=explicit_unit_id,
+                explicit_color=explicit_color,
+            )
+        case _Minimum():
+            return Minimum(
+                [_make_inner_metric_expression(o) for o in expression.operands],
+                explicit_unit_id=explicit_unit_id,
+                explicit_color=explicit_color,
+            )
+        case _Maximum():
+            return Maximum(
+                [_make_inner_metric_expression(o) for o in expression.operands],
+                explicit_unit_id=explicit_unit_id,
+                explicit_color=explicit_color,
+            )
+        case _Percent():
+            return Percent(
+                percent_value=_make_inner_metric_expression(expression.percent_value),
+                base_value=_make_inner_metric_expression(expression.base_value),
+                explicit_unit_id=explicit_unit_id,
+                explicit_color=explicit_color,
+            )
+        case _Average():
+            return Average(
+                [_make_inner_metric_expression(o) for o in expression.operands],
+                explicit_unit_id=explicit_unit_id,
+                explicit_color=explicit_color,
+            )
+        case _Merge():
+            return Merge(
+                [_make_inner_metric_expression(o) for o in expression.operands],
+                explicit_unit_id=explicit_unit_id,
+                explicit_color=explicit_color,
+            )
+        case _:
+            raise TypeError(expression)
+
+
+def parse_expression(
+    raw_expression: str | int | float,
+    translated_metrics: Mapping[str, TranslatedMetric],
+) -> MetricExpression:
+    if isinstance(raw_expression, (int, float)):
+        return Constant(raw_expression)
+    (
+        stack,
+        explicit_unit_id,
+        explicit_color,
+    ) = _parse_expression(raw_expression, translated_metrics)
+    return _make_metric_expression(_resolve_stack(stack), explicit_unit_id, explicit_color)
+
+
 class ConditionalMetricExpression(abc.ABC):
     @abc.abstractmethod
     def evaluate(
@@ -661,302 +1097,41 @@ class LessEqualThan(ConditionalMetricExpression):
         )
 
 
-def _extract_consolidation(
-    expression: str,
-) -> tuple[str, GraphConsolidationFunction | None]:
-    if expression.endswith(".max"):
-        return expression[:-4], "max"
-    if expression.endswith(".min"):
-        return expression[:-4], "min"
-    if expression.endswith(".average"):
-        return expression[:-8], "average"
-    return expression, None
-
-
-def _from_scalar(
-    scalar_name: str, metric: Metric
-) -> WarningOf | CriticalOf | MinimumOf | MaximumOf:
-    match scalar_name:
-        case "warn":
-            return WarningOf(metric)
-        case "crit":
-            return CriticalOf(metric)
-        case "min":
-            return MinimumOf(metric)
-        case "max":
-            return MaximumOf(metric)
-    raise ValueError(scalar_name)
-
-
-def _parse_single_expression(
-    expression: str,
-    translated_metrics: Mapping[str, TranslatedMetric],
-) -> MetricExpression:
-    if expression not in translated_metrics:
-        with contextlib.suppress(ValueError):
-            return Constant(int(expression))
-        with contextlib.suppress(ValueError):
-            return Constant(float(expression))
-
-    var_name, consolidation = _extract_consolidation(expression)
-    if percent := var_name.endswith("(%)"):
-        var_name = var_name[:-3]
-
-    if ":" in var_name:
-        var_name, scalar_name = var_name.split(":")
-        metric = Metric(var_name, consolidation=consolidation)
-        scalar = _from_scalar(scalar_name, metric)
-        return Percent(percent_value=scalar, base_value=MaximumOf(metric)) if percent else scalar
-
-    metric = Metric(var_name, consolidation=consolidation)
-    return Percent(percent_value=metric, base_value=MaximumOf(metric)) if percent else metric
-
-
-RPNOperators = Literal["+", "*", "-", "/", "MIN", "MAX", "AVERAGE", "MERGE", ">", ">=", "<", "<="]
-
-
-def _parse_expression(
-    expression: str,
-    translated_metrics: Mapping[str, TranslatedMetric],
-) -> tuple[Sequence[MetricExpression | RPNOperators], str, str]:
-    # Evaluates an expression, returns a triple of value, unit and color.
-    # e.g. "fs_used:max"    -> 12.455, "b", "#00ffc6",
-    # e.g. "fs_used(%)"     -> 17.5,   "%", "#00ffc6",
-    # e.g. "fs_used:max(%)" -> 100.0,  "%", "#00ffc6",
-    # e.g. 123.4            -> 123.4,  "",  "#000000"
-    # e.g. "123.4#ff0000"   -> 123.4,  "",  "#ff0000",
-    # Note:
-    # "fs_growth.max" is the same as fs_growth. The .max is just
-    # relevant when fetching RRD data and is used for selecting
-    # the consolidation function MAX.
-
-    explicit_color = ""
-    if "#" in expression:
-        expression, explicit_color_ = expression.rsplit("#", 1)  # drop appended color information
-        explicit_color = f"#{explicit_color_}"
-
-    explicit_unit_id = ""
-    if "@" in expression:
-        expression, explicit_unit_id = expression.rsplit("@", 1)  # appended unit name
-
-    stack: list[MetricExpression | RPNOperators] = []
-    for p in expression.split(","):
-        match p:
-            case "+":
-                stack.append("+")
-            case "-":
-                stack.append("-")
-            case "*":
-                stack.append("*")
-            case "/":
-                stack.append("/")
-            case "MIN":
-                stack.append("MIN")
-            case "MAX":
-                stack.append("MAX")
-            case "AVERAGE":
-                stack.append("AVERAGE")
-            case "MERGE":
-                stack.append("MERGE")
-            case ">":
-                stack.append(">")
-            case ">=":
-                stack.append(">=")
-            case "<":
-                stack.append("<")
-            case "<=":
-                stack.append("<=")
-            case _:
-                stack.append(
-                    _parse_single_expression(
-                        p,
-                        translated_metrics,
-                    )
-                )
-
-    return stack, explicit_unit_id, explicit_color
-
-
-def _resolve_stack(
-    stack: Sequence[MetricExpression | RPNOperators],
-) -> MetricExpression | ConditionalMetricExpression:
-    resolved: list[MetricExpression | ConditionalMetricExpression] = []
-    for element in stack:
-        if isinstance(element, MetricExpression):
-            resolved.append(element)
-            continue
-
-        if not isinstance(right := resolved.pop(), MetricExpression):
-            raise TypeError(right)
-
-        if not isinstance(left := resolved.pop(), MetricExpression):
-            raise TypeError(left)
-
-        match element:
-            case "+":
-                resolved.append(Sum([left, right]))
-            case "-":
-                resolved.append(Difference(minuend=left, subtrahend=right))
-            case "*":
-                resolved.append(Product([left, right]))
-            case "/":
-                # Handle zero division by always adding a tiny bit to the divisor
-                resolved.append(Fraction(dividend=left, divisor=Sum([right, Constant(1e-16)])))
-            case "MIN":
-                resolved.append(Minimum([left, right]))
-            case "MAX":
-                resolved.append(Maximum([left, right]))
-            case "AVERAGE":
-                resolved.append(Average([left, right]))
-            case "MERGE":
-                resolved.append(Merge([left, right]))
-            case ">=":
-                resolved.append(GreaterEqualThan(left=left, right=right))
-            case ">":
-                resolved.append(GreaterThan(left=left, right=right))
-            case "<=":
-                resolved.append(LessEqualThan(left=left, right=right))
-            case "<":
-                resolved.append(LessThan(left=left, right=right))
-
-    return resolved[0]
-
-
-def _add_explicit_unit_id_or_color(
-    expression: MetricExpression, explicit_unit_id: str, explicit_color: str
-) -> MetricExpression:
+def _make_conditional_metric_expression(
+    expression: _MetricExpression | _ConditionalMetricExpression,
+) -> ConditionalMetricExpression:
     match expression:
-        case Constant():
-            return Constant(
-                expression.value,
-                explicit_unit_id=explicit_unit_id,
-                explicit_color=explicit_color,
+        case _GreaterThan():
+            return GreaterThan(
+                left=_make_metric_expression(expression.left, "", ""),
+                right=_make_metric_expression(expression.right, "", ""),
             )
-        case Metric():
-            return Metric(
-                expression.name,
-                explicit_unit_id=explicit_unit_id,
-                explicit_color=explicit_color,
+        case _GreaterEqualThan():
+            return GreaterEqualThan(
+                left=_make_metric_expression(expression.left, "", ""),
+                right=_make_metric_expression(expression.right, "", ""),
             )
-        case WarningOf():
-            return WarningOf(
-                expression.metric,
-                explicit_unit_id=explicit_unit_id,
-                explicit_color=explicit_color,
+        case _LessThan():
+            return LessThan(
+                left=_make_metric_expression(expression.left, "", ""),
+                right=_make_metric_expression(expression.right, "", ""),
             )
-        case CriticalOf():
-            return CriticalOf(
-                expression.metric,
-                explicit_unit_id=explicit_unit_id,
-                explicit_color=explicit_color,
+        case _LessEqualThan():
+            return LessEqualThan(
+                left=_make_metric_expression(expression.left, "", ""),
+                right=_make_metric_expression(expression.right, "", ""),
             )
-        case MinimumOf():
-            return MinimumOf(
-                expression.metric,
-                explicit_unit_id=explicit_unit_id,
-                explicit_color=explicit_color,
-            )
-        case MaximumOf():
-            return MaximumOf(
-                expression.metric,
-                explicit_unit_id=explicit_unit_id,
-                explicit_color=explicit_color,
-            )
-        case Sum():
-            return Sum(
-                expression.summands,
-                explicit_unit_id=explicit_unit_id,
-                explicit_color=explicit_color,
-            )
-        case Product():
-            return Product(
-                expression.factors,
-                explicit_unit_id=explicit_unit_id,
-                explicit_color=explicit_color,
-            )
-        case Difference():
-            return Difference(
-                minuend=expression.minuend,
-                subtrahend=expression.subtrahend,
-                explicit_unit_id=explicit_unit_id,
-                explicit_color=explicit_color,
-            )
-        case Fraction():
-            return Fraction(
-                dividend=expression.dividend,
-                divisor=expression.divisor,
-                explicit_unit_id=explicit_unit_id,
-                explicit_color=explicit_color,
-            )
-        case Minimum():
-            return Minimum(
-                expression.operands,
-                explicit_unit_id=explicit_unit_id,
-                explicit_color=explicit_color,
-            )
-        case Maximum():
-            return Maximum(
-                expression.operands,
-                explicit_unit_id=explicit_unit_id,
-                explicit_color=explicit_color,
-            )
-        case Percent():
-            return Percent(
-                percent_value=expression.percent_value,
-                base_value=expression.base_value,
-                explicit_unit_id=explicit_unit_id,
-                explicit_color=explicit_color,
-            )
-        case Average():
-            return Average(
-                expression.operands,
-                explicit_unit_id=explicit_unit_id,
-                explicit_color=explicit_color,
-            )
-        case Merge():
-            return Merge(
-                expression.operands,
-                explicit_unit_id=explicit_unit_id,
-                explicit_color=explicit_color,
-            )
-    assert False, expression
-
-
-def parse_expression(
-    expression: str | int | float,
-    translated_metrics: Mapping[str, TranslatedMetric],
-) -> MetricExpression:
-    if isinstance(expression, (int, float)):
-        return Constant(expression)
-
-    (
-        stack,
-        explicit_unit_id,
-        explicit_color,
-    ) = _parse_expression(expression, translated_metrics)
-
-    if isinstance(resolved := _resolve_stack(stack), MetricExpression):
-        return (
-            _add_explicit_unit_id_or_color(resolved, explicit_unit_id, explicit_color)
-            if explicit_unit_id or explicit_color
-            else resolved
-        )
-    raise TypeError(resolved)
+        case _:
+            raise TypeError(expression)
 
 
 def parse_conditional_expression(
-    expression: str,
+    raw_expression: str,
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> ConditionalMetricExpression:
     (
         stack,
         _explicit_unit_id,
         _explicit_color,
-    ) = _parse_expression(expression, translated_metrics)
-
-    if isinstance(
-        resolved := _resolve_stack(stack),
-        ConditionalMetricExpression,
-    ):
-        return resolved
-    raise TypeError(resolved)
+    ) = _parse_expression(raw_expression, translated_metrics)
+    return _make_conditional_metric_expression(_resolve_stack(stack))

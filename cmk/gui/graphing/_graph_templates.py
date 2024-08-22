@@ -409,9 +409,9 @@ def _parse_raw_metric_definition(
         tuple[str, LineType] | tuple[str, LineType, str] | tuple[str, LineType, LazyString]
     )
 ) -> MetricDefinition:
-    expression, line_type, *title = raw_metric_definition
+    raw_expression, line_type, *title = raw_metric_definition
     return MetricDefinition(
-        expression=parse_expression(expression, {}),
+        expression=parse_expression(raw_expression, {}),
         line_type=line_type,
         title=str(title[0]) if title else "",
     )

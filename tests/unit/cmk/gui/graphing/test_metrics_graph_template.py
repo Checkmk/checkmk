@@ -43,7 +43,7 @@ from cmk.ccc.exceptions import MKGeneralException
 
 
 @pytest.mark.parametrize(
-    "expression, result",
+    "raw_expression, result",
     [
         (
             "fs_size,fs_used,-",
@@ -94,7 +94,7 @@ from cmk.ccc.exceptions import MKGeneralException
         ),
     ],
 )
-def test_rpn_stack(expression: str, result: MetricOperation) -> None:
+def test_rpn_stack(raw_expression: str, result: MetricOperation) -> None:
     perf_data, check_command = parse_perf_data(
         "/=163651.992188;;;; fs_size=477500.03125;;;; growth=-1280.489081;;;;",
         "check_mk-df",
@@ -106,7 +106,7 @@ def test_rpn_stack(expression: str, result: MetricOperation) -> None:
             SiteId(""),
             HostName(""),
             "",
-            parse_expression(expression, translated_metrics),
+            parse_expression(raw_expression, translated_metrics),
             translated_metrics,
             None,
         )

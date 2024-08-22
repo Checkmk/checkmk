@@ -50,10 +50,9 @@ from ._artwork import (
     save_graph_pin,
 )
 from ._color import render_color_icon
-from ._from_api import get_unit_info
 from ._graph_render_config import GraphRenderConfig, GraphRenderConfigBase, GraphTitleFormat
 from ._graph_specification import GraphDataRange, GraphRecipe, GraphSpecification
-from ._legacy import get_render_function, LegacyUnitSpecification
+from ._legacy import get_render_function, get_unit_info, LegacyUnitSpecification
 from ._utils import SizeEx
 
 RenderOutput = HTML | str

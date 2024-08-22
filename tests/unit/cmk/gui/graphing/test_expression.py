@@ -392,7 +392,6 @@ def test_parse_and_evaluate_1(
         assert evaluated.unit_spec.description == unit_info_.description
         assert evaluated.unit_spec.valuespec == unit_info_.valuespec
         assert evaluated.unit_spec.perfometer_render == unit_info_.perfometer_render
-        assert evaluated.unit_spec.formatter_ident == unit_info_.formatter_ident
         assert evaluated.unit_spec.conversion(123.456) == 123.456
 
 

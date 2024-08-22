@@ -27,12 +27,12 @@ import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.version import parse_check_mk_version
 
-from ._from_api import get_unit_info
 from ._graph_specification import GraphDataRange, GraphRecipe
 from ._legacy import (
     check_metrics,
     CheckMetricEntry,
     get_conversion_function,
+    get_unit_info,
     LegacyUnitSpecification,
 )
 from ._metrics import get_metric_spec

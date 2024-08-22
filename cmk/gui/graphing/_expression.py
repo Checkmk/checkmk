@@ -19,8 +19,8 @@ from cmk.graphing.v1 import metrics as metrics_api
 
 from ._color import mix_colors, parse_color, parse_color_from_api, render_color, scalar_colors
 from ._formatter import AutoPrecision, StrictPrecision
-from ._from_api import get_unit_info, parse_unit_from_api
-from ._legacy import unit_info, UnitInfo
+from ._from_api import parse_unit_from_api
+from ._legacy import get_unit_info, unit_info, UnitInfo
 from ._metrics import get_metric_spec
 from ._translated_metrics import TranslatedMetric
 from ._type_defs import GraphConsolidationFunction, LineType

@@ -62,10 +62,6 @@ class UnitInfo:
         type[Age] | type[Filesize] | type[Float] | type[Integer] | type[Percentage] | None
     ) = None
     perfometer_render: Callable[[float], str] | None = None
-    formatter_ident: (
-        Literal["Decimal", "SI", "IEC", "StandardScientific", "EngineeringScientific", "Time"]
-        | None
-    ) = None
 
 
 class UnitRegistry:
@@ -90,7 +86,6 @@ class UnitRegistry:
             valuespec=item.get("valuespec"),
             conversion=item.get("conversion", lambda v: v),
             perfometer_render=item.get("perfometer_render"),
-            formatter_ident=None,
         )
 
     def __setitem__(
@@ -134,6 +129,12 @@ def get_conversion_function(
         if isinstance(unit_spec, UnitInfo)
         else user_specific_unit(unit_spec, user, active_config).conversion
     )
+
+
+def get_unit_info(unit_id: str) -> UnitInfo:
+    if unit_id in unit_info.keys():
+        return unit_info[unit_id]
+    return unit_info[""]
 
 
 # .

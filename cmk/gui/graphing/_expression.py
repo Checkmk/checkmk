@@ -107,8 +107,8 @@ class Constant(MetricExpression):
 @dataclass(frozen=True)
 class Metric(MetricExpression):
     name: MetricName
-    consolidation_func_name: GraphConsolidationFunction | None = None
     _: KW_ONLY
+    consolidation: GraphConsolidationFunction | None = None
     explicit_unit_id: str = ""
     explicit_color: str = ""
 
@@ -661,7 +661,7 @@ class LessEqualThan(ConditionalMetricExpression):
         )
 
 
-def _extract_consolidation_func_name(
+def _extract_consolidation(
     expression: str,
 ) -> tuple[str, GraphConsolidationFunction | None]:
     if expression.endswith(".max"):
@@ -698,17 +698,17 @@ def _parse_single_expression(
         with contextlib.suppress(ValueError):
             return Constant(float(expression))
 
-    var_name, consolidation_func_name = _extract_consolidation_func_name(expression)
+    var_name, consolidation = _extract_consolidation(expression)
     if percent := var_name.endswith("(%)"):
         var_name = var_name[:-3]
 
     if ":" in var_name:
         var_name, scalar_name = var_name.split(":")
-        metric = Metric(var_name, consolidation_func_name)
+        metric = Metric(var_name, consolidation=consolidation)
         scalar = _from_scalar(scalar_name, metric)
         return Percent(percent_value=scalar, base_value=MaximumOf(metric)) if percent else scalar
 
-    metric = Metric(var_name, consolidation_func_name)
+    metric = Metric(var_name, consolidation=consolidation)
     return Percent(percent_value=metric, base_value=MaximumOf(metric)) if percent else metric
 
 

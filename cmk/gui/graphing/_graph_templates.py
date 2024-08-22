@@ -824,7 +824,7 @@ def _to_metric_operation(
                     service_name=service_name,
                     metric_name=pnp_cleanup(original.name),
                     consolidation_func_name=(
-                        expression.consolidation_func_name or enforced_consolidation_function
+                        expression.consolidation or enforced_consolidation_function
                     ),
                     scale=original.scale,
                 )

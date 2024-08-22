@@ -3565,6 +3565,10 @@ msgstr "Adăugați"
 msgid "Add %s"
 msgstr "Adaugă %s"
 
+#, fuzzy, python-format
+msgid "Add %s configuration"
+msgstr "Configurația RRA"
+
 msgid "Add & remove folders"
 msgstr "Adaugă sau șterge directoare"
 
@@ -3716,6 +3720,10 @@ msgstr "Adăugați o condiție"
 #, fuzzy
 msgid "Add configuration"
 msgstr "Configurația RRA"
+
+#, fuzzy
+msgid "Add configuration is only available for special agent based rules."
+msgstr "Configurarea agentului special Datadog."
 
 msgid "Add connection"
 msgstr "Adăugați o conexiune"
@@ -13681,7 +13689,7 @@ msgstr ""
 #, fuzzy, python-format
 msgid ""
 "Configure the automatic creation of new hosts based on requests sent by the "
-"agent controller, see also the <a href=\"%s\">corresponding bakery ruleset</"
+"agent controller, see also the <a href=\"%s\">corresponding Bakery ruleset</"
 "a>. <b>Note</b>: New hosts created via this channel are marked by the host "
 "label <tt>cmk/agent_auto_registered:yes</tt>. This can for example be used "
 "to configure a host life cycle management via the <a href=\"%s\">automatic "
@@ -14243,9 +14251,6 @@ msgstr "Consumatori"
 
 msgid "Contact"
 msgstr "Contactați"
-
-msgid "Contact Groups"
-msgstr "Grupuri de contact"
 
 msgid "Contact Name"
 msgstr "Nume de contact"
@@ -33405,6 +33410,10 @@ msgstr "Pagină de manual invalidă: Nu a reușit să obțină titlul"
 msgid "Invalid messaging method selected."
 msgstr "Metoda de mesagerie nevalabilă selectată."
 
+#, fuzzy
+msgid "Invalid multiple choice value"
+msgstr "Subiect nevalabil"
+
 msgid "Invalid package part"
 msgstr "Parte de pachet invalidă"
 
@@ -41359,6 +41368,10 @@ msgstr "Nu s-a primit niciun token CSRF"
 msgid "No Conditions"
 msgstr "Fără condiții"
 
+#, fuzzy, python-format
+msgid "No Configuration Quick setup for %s available"
+msgstr "Variabila de configurare:"
+
 #, python-format
 msgid "No Forecast graph with the name <tt>%s</tt>"
 msgstr "Nu există niciun grafic de prognoză cu numele <tt>%s</tt>."
@@ -47064,9 +47077,6 @@ msgstr "Faza 2.2: Obținerea gazdelor existente"
 msgid "Phase 2.2: Deliver existing hosts"
 msgstr "Faza 2.2: Obținerea gazdelor existente"
 
-msgid "Phase 2.3: Updating config"
-msgstr "Faza 2.3: Actualizarea configurației"
-
 #, fuzzy, python-format
 msgid "Phase 2: Deliver %s piggyback hosts"
 msgstr "Prefix pentru numele de gazdă piggyback"
@@ -50362,6 +50372,11 @@ msgstr "Zilele rămase până la expirarea licenței Windows"
 #, fuzzy
 msgid "Remaining reads"
 msgstr "Lecturi rămase"
+
+msgid ""
+"Remaining time (seconds) until the license expires. The defaults equateto 14 "
+"days (warning) and 7 days (critical)."
+msgstr ""
 
 msgid "Remaining validity time"
 msgstr "Perioada de valabilitate rămasă"
@@ -67309,9 +67324,10 @@ msgstr ""
 msgid "This permission is needed for the module <i>Passwords</i>."
 msgstr "Această permisiune este necesară pentru modulul <i>Passwords</i>."
 
+#, fuzzy
 msgid ""
 "This permission is needed for the modules <b>Users</b>, <b>Roles</b> and "
-"<b>Contact Groups</b>"
+"<b>Contact groups</b>"
 msgstr ""
 "Această permisiune este necesară pentru modulele <b>Utilizatori</b>, "
 "<b>Roles</b> și <b>Grupuri de contacte</b>."
@@ -76184,9 +76200,6 @@ msgstr "Spațiu logic utilizat"
 msgid "Used meta data"
 msgstr "Metadate utilizate"
 
-msgid "Used quota: Absolute or relative upper levels"
-msgstr "Cota utilizată: Niveluri superioare absolute sau relative"
-
 #, python-format
 msgid "Used rules: %d"
 msgstr "Reguli utilizate: %d"
@@ -84473,6 +84486,15 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "Contact Groups"
+#~ msgstr "Grupuri de contact"
+
+#~ msgid "Phase 2.3: Updating config"
+#~ msgstr "Faza 2.3: Actualizarea configurației"
+
+#~ msgid "Used quota: Absolute or relative upper levels"
+#~ msgstr "Cota utilizată: Niveluri superioare absolute sau relative"
 
 #, fuzzy
 #~ msgid "Changes have been activated"

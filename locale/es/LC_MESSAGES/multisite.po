@@ -3575,6 +3575,10 @@ msgstr "Añadir"
 msgid "Add %s"
 msgstr "Añadir %s"
 
+#, fuzzy, python-format
+msgid "Add %s configuration"
+msgstr "Configuración RRA"
+
 msgid "Add & remove folders"
 msgstr "Añadir & eliminar carpetas"
 
@@ -3728,6 +3732,10 @@ msgstr "Añadir condición"
 #, fuzzy
 msgid "Add configuration"
 msgstr "Configuración RRA"
+
+#, fuzzy
+msgid "Add configuration is only available for special agent based rules."
+msgstr "Configuración del agente especial Datadog."
 
 msgid "Add connection"
 msgstr "Añadir conexión"
@@ -13781,7 +13789,7 @@ msgstr ""
 #, fuzzy, python-format
 msgid ""
 "Configure the automatic creation of new hosts based on requests sent by the "
-"agent controller, see also the <a href=\"%s\">corresponding bakery ruleset</"
+"agent controller, see also the <a href=\"%s\">corresponding Bakery ruleset</"
 "a>. <b>Note</b>: New hosts created via this channel are marked by the host "
 "label <tt>cmk/agent_auto_registered:yes</tt>. This can for example be used "
 "to configure a host life cycle management via the <a href=\"%s\">automatic "
@@ -14344,9 +14352,6 @@ msgstr "Consumidores"
 
 msgid "Contact"
 msgstr "Contacte con"
-
-msgid "Contact Groups"
-msgstr "Grupos de contacto"
 
 msgid "Contact Name"
 msgstr "Nombre de contacto"
@@ -33598,6 +33603,10 @@ msgstr "Página de manual inválida: Fallo en la obtención del título"
 msgid "Invalid messaging method selected."
 msgstr "Se ha seleccionado un método de mensajería no válido."
 
+#, fuzzy
+msgid "Invalid multiple choice value"
+msgstr "Tema no válido"
+
 msgid "Invalid package part"
 msgstr "Parte del paquete no válida"
 
@@ -41638,6 +41647,10 @@ msgstr "No se ha recibido ningún token CSRF"
 msgid "No Conditions"
 msgstr "Sin condiciones"
 
+#, fuzzy, python-format
+msgid "No Configuration Quick setup for %s available"
+msgstr "Variable de configuración:"
+
 #, python-format
 msgid "No Forecast graph with the name <tt>%s</tt>"
 msgstr "No hay gráfico de previsión con el nombre <tt>%s</tt>"
@@ -47408,9 +47421,6 @@ msgstr "Fase 2.2: Obtención de los hosts existentes"
 msgid "Phase 2.2: Deliver existing hosts"
 msgstr "Fase 2.2: Obtención de los hosts existentes"
 
-msgid "Phase 2.3: Updating config"
-msgstr "Fase 2.3: Actualización de la configuración"
-
 #, fuzzy, python-format
 msgid "Phase 2: Deliver %s piggyback hosts"
 msgstr "Prefijo para el nombre de host piggyback"
@@ -50729,6 +50739,11 @@ msgstr "Días que faltan para que caduque la licencia de Windows"
 #, fuzzy
 msgid "Remaining reads"
 msgstr "Lecturas restantes"
+
+msgid ""
+"Remaining time (seconds) until the license expires. The defaults equateto 14 "
+"days (warning) and 7 days (critical)."
+msgstr ""
 
 #, fuzzy
 msgid "Remaining validity time"
@@ -67716,9 +67731,10 @@ msgstr ""
 msgid "This permission is needed for the module <i>Passwords</i>."
 msgstr "Este permiso es necesario para el módulo <i>Contraseñas</i>."
 
+#, fuzzy
 msgid ""
 "This permission is needed for the modules <b>Users</b>, <b>Roles</b> and "
-"<b>Contact Groups</b>"
+"<b>Contact groups</b>"
 msgstr ""
 "Este permiso es necesario para los módulos <b>Usuarios</b>, <b>Roles</b> y "
 "<b>Grupos de contacto</b>"
@@ -76690,9 +76706,6 @@ msgstr "Espacio lógico utilizado"
 msgid "Used meta data"
 msgstr "Metadatos utilizados"
 
-msgid "Used quota: Absolute or relative upper levels"
-msgstr "Cuota utilizada: Niveles superiores absolutos o relativos"
-
 #, python-format
 msgid "Used rules: %d"
 msgstr "Reglas utilizadas: %d"
@@ -85027,6 +85040,15 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
+
+#~ msgid "Contact Groups"
+#~ msgstr "Grupos de contacto"
+
+#~ msgid "Phase 2.3: Updating config"
+#~ msgstr "Fase 2.3: Actualización de la configuración"
+
+#~ msgid "Used quota: Absolute or relative upper levels"
+#~ msgstr "Cuota utilizada: Niveles superiores absolutos o relativos"
 
 #, fuzzy
 #~ msgid "Changes have been activated"

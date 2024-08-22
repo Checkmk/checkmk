@@ -3503,6 +3503,10 @@ msgstr "Hinzufügen"
 msgid "Add %s"
 msgstr "%s hinzufügen"
 
+#, fuzzy, python-format
+msgid "Add %s configuration"
+msgstr "Konfiguration hinzufügen"
+
 msgid "Add & remove folders"
 msgstr "Ordner ergänzen & löschen"
 
@@ -3653,6 +3657,10 @@ msgstr "Bedingung hinzufügen"
 
 msgid "Add configuration"
 msgstr "Konfiguration hinzufügen"
+
+#, fuzzy
+msgid "Add configuration is only available for special agent based rules."
+msgstr "Konfiguration des Datadog-Spezialagenten."
 
 msgid "Add connection"
 msgstr "Verbindung hinzufügen"
@@ -13236,10 +13244,10 @@ msgid "Configure the agent updater whether to connect via proxy server."
 msgstr ""
 "Konfiguriere den Agent Updater für die Verbindung über einen Proxy Server."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Configure the automatic creation of new hosts based on requests sent by the "
-"agent controller, see also the <a href=\"%s\">corresponding bakery ruleset</"
+"agent controller, see also the <a href=\"%s\">corresponding Bakery ruleset</"
 "a>. <b>Note</b>: New hosts created via this channel are marked by the host "
 "label <tt>cmk/agent_auto_registered:yes</tt>. This can for example be used "
 "to configure a host life cycle management via the <a href=\"%s\">automatic "
@@ -13797,9 +13805,6 @@ msgstr "Konsumenten"
 
 msgid "Contact"
 msgstr "Kontakt"
-
-msgid "Contact Groups"
-msgstr "Kontaktgruppen"
 
 msgid "Contact Name"
 msgstr "Kontaktname"
@@ -32149,6 +32154,10 @@ msgstr "Ungültige Check-Manpage: Konnte Titel nicht auslesen"
 msgid "Invalid messaging method selected."
 msgstr "Ungültige Benachrichtigungsmethode ausgewählt."
 
+#, fuzzy
+msgid "Invalid multiple choice value"
+msgstr "Ungültige boolesche Auswahl"
+
 msgid "Invalid package part"
 msgstr "Ungültiger Teil im Paket"
 
@@ -39819,6 +39828,10 @@ msgstr "Kein CSRF-Token erhalten"
 msgid "No Conditions"
 msgstr "Keine Bedingungen"
 
+#, fuzzy, python-format
+msgid "No Configuration Quick setup for %s available"
+msgstr "Konfigurationsvariable:"
+
 #, python-format
 msgid "No Forecast graph with the name <tt>%s</tt>"
 msgstr "Kein Forecast-Diagramm mit dem Namen <tt>%s</tt>"
@@ -45201,9 +45214,6 @@ msgstr "Phase 2.2: Bestehende Hosts holen"
 msgid "Phase 2.2: Deliver existing hosts"
 msgstr "Phase 2.2: Bestehende Hosts holen"
 
-msgid "Phase 2.3: Updating config"
-msgstr "Phase 2.3: Aktualisieren der Konfiguration"
-
 #, fuzzy, python-format
 msgid "Phase 2: Deliver %s piggyback hosts"
 msgstr "Präfix für Piggyback-Host-Name"
@@ -48372,6 +48382,11 @@ msgstr "Verbleibende Tage bis zum Ablauf der Windows-Lizenz"
 
 msgid "Remaining reads"
 msgstr "Verbleibende Leseoperationen"
+
+msgid ""
+"Remaining time (seconds) until the license expires. The defaults equateto 14 "
+"days (warning) and 7 days (critical)."
+msgstr ""
 
 msgid "Remaining validity time"
 msgstr "Verbleibende Gültigkeitsdauer"
@@ -65017,9 +65032,10 @@ msgstr ""
 msgid "This permission is needed for the module <i>Passwords</i>."
 msgstr "Diese Berechtigung ist notwendig für das Modul <i>Passwörter</i>."
 
+#, fuzzy
 msgid ""
 "This permission is needed for the modules <b>Users</b>, <b>Roles</b> and "
-"<b>Contact Groups</b>"
+"<b>Contact groups</b>"
 msgstr ""
 "Diese Berechtigung ist notwendig für die Module <b>Benutzer</b>, <b>Rollen</"
 "b> und <b>Kontaktgruppen</b>"
@@ -73359,9 +73375,6 @@ msgstr "Verwendeter logischer Platz"
 msgid "Used meta data"
 msgstr "Genutzte Metadaten"
 
-msgid "Used quota: Absolute or relative upper levels"
-msgstr "Verwendete Quota: Absolute oder relative Obergrenzen"
-
 #, python-format
 msgid "Used rules: %d"
 msgstr "Verwendete Regeln: %d"
@@ -81622,6 +81635,15 @@ msgstr "{region} ({id_})"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Contact Groups"
+#~ msgstr "Kontaktgruppen"
+
+#~ msgid "Phase 2.3: Updating config"
+#~ msgstr "Phase 2.3: Aktualisieren der Konfiguration"
+
+#~ msgid "Used quota: Absolute or relative upper levels"
+#~ msgstr "Verwendete Quota: Absolute oder relative Obergrenzen"
 
 #~ msgid "Changes have been activated"
 #~ msgstr "Änderungen wurden aktiviert"

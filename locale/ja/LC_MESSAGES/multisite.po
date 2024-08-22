@@ -3410,6 +3410,10 @@ msgstr "追加"
 msgid "Add %s"
 msgstr "%sを追加"
 
+#, fuzzy, python-format
+msgid "Add %s configuration"
+msgstr "RRA構成"
+
 msgid "Add & remove folders"
 msgstr "フォルダの追加と削除"
 
@@ -3558,6 +3562,10 @@ msgstr "条件を追加"
 #, fuzzy
 msgid "Add configuration"
 msgstr "RRA構成"
+
+#, fuzzy
+msgid "Add configuration is only available for special agent based rules."
+msgstr "Datadog Specialエージェントの設定。"
 
 msgid "Add connection"
 msgstr "接続を追加"
@@ -13059,10 +13067,10 @@ msgstr ""
 "プロキシサーバー経由で接続するかどうかをエージェントアップデーターに設定しま"
 "す。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Configure the automatic creation of new hosts based on requests sent by the "
-"agent controller, see also the <a href=\"%s\">corresponding bakery ruleset</"
+"agent controller, see also the <a href=\"%s\">corresponding Bakery ruleset</"
 "a>. <b>Note</b>: New hosts created via this channel are marked by the host "
 "label <tt>cmk/agent_auto_registered:yes</tt>. This can for example be used "
 "to configure a host life cycle management via the <a href=\"%s\">automatic "
@@ -13584,9 +13592,6 @@ msgstr "消費者"
 
 msgid "Contact"
 msgstr "連絡先"
-
-msgid "Contact Groups"
-msgstr "連絡先グループ"
 
 msgid "Contact Name"
 msgstr "連絡先"
@@ -32154,6 +32159,10 @@ msgstr "無効なマニュアルページ: タイトルの取得に失敗しま�
 msgid "Invalid messaging method selected."
 msgstr "選択されたメッセージ送信方法が無効です。"
 
+#, fuzzy
+msgid "Invalid multiple choice value"
+msgstr "無効なトピック"
+
 msgid "Invalid package part"
 msgstr "パッケージパーツが無効です"
 
@@ -40014,6 +40023,10 @@ msgstr "CSRFトークンを受信していない"
 msgid "No Conditions"
 msgstr "条件なし"
 
+#, fuzzy, python-format
+msgid "No Configuration Quick setup for %s available"
+msgstr "構成変数:"
+
 #, python-format
 msgid "No Forecast graph with the name <tt>%s</tt>"
 msgstr "<tt>%s </tt>という名前の予測グラフはありません"
@@ -45650,9 +45663,6 @@ msgstr "フェーズ2.2: 既存のホストの取得"
 msgid "Phase 2.2: Deliver existing hosts"
 msgstr "フェーズ2.2: 既存のホストの取得"
 
-msgid "Phase 2.3: Updating config"
-msgstr "フェーズ2.3:構成の更新"
-
 #, fuzzy, python-format
 msgid "Phase 2: Deliver %s piggyback hosts"
 msgstr "ピギーバックホスト名のプレフィックス"
@@ -48896,6 +48906,11 @@ msgstr "Windowsライセンスの有効期限が切れるまでの残り日数"
 #, fuzzy
 msgid "Remaining reads"
 msgstr "残りの読み取り"
+
+msgid ""
+"Remaining time (seconds) until the license expires. The defaults equateto 14 "
+"days (warning) and 7 days (critical)."
+msgstr ""
 
 #, fuzzy
 msgid "Remaining validity time"
@@ -65289,9 +65304,10 @@ msgstr ""
 msgid "This permission is needed for the module <i>Passwords</i>."
 msgstr "この権限は<i>パスワード</i>モジュールに必要です。"
 
+#, fuzzy
 msgid ""
 "This permission is needed for the modules <b>Users</b>, <b>Roles</b> and "
-"<b>Contact Groups</b>"
+"<b>Contact groups</b>"
 msgstr ""
 "この権限は、<b>ユーザー</b>, <b>役割</b>と<b>連絡先グループ</b>のモジュールで"
 "必要です"
@@ -74004,9 +74020,6 @@ msgstr "使用済み論理スペース"
 msgid "Used meta data"
 msgstr "使用したメタデータ"
 
-msgid "Used quota: Absolute or relative upper levels"
-msgstr "使用済みクォータ: 絶対または相対的な上位レベル"
-
 #, python-format
 msgid "Used rules: %d"
 msgstr "使用中のルール: %d"
@@ -82092,6 +82105,15 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid "Contact Groups"
+#~ msgstr "連絡先グループ"
+
+#~ msgid "Phase 2.3: Updating config"
+#~ msgstr "フェーズ2.3:構成の更新"
+
+#~ msgid "Used quota: Absolute or relative upper levels"
+#~ msgstr "使用済みクォータ: 絶対または相対的な上位レベル"
 
 #, fuzzy
 #~ msgid "Changes have been activated"

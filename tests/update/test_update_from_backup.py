@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -52,6 +53,9 @@ def _base_site_demo(site_factory_demo):
 
 
 @pytest.mark.cee
+@pytest.mark.skipif(
+    os.environ.get("DISTRO") == "sles-15sp6", reason="Base version not available for SLES15 SP6"
+)
 def test_update_from_backup(site_factory: SiteFactory, base_site: Site) -> None:
     backup_path = qa_test_data_path() / Path("update/backups/update_central_2.2.0p27_backup.tar.gz")
     assert backup_path.exists()

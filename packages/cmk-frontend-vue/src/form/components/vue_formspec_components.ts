@@ -38,7 +38,9 @@ export type String = FormSpec & {
   type: "string";
   placeholder?: string;
   input_hint?: string;
+  field_size?: StringFieldSize;
 };
+export type StringFieldSize = "SMALL" | "MEDIUM" | "LARGE";
 export type Dictionary = FormSpec & {
   type: "dictionary";
   elements: DictionaryElement[];

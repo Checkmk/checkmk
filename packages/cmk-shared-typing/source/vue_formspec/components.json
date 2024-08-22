@@ -122,6 +122,15 @@
                 },
                 "input_hint": {
                     "type": "string"
+                },
+                "field_size": {
+                    "type": "string",
+                    "title": "StringFieldSize",
+                    "enum": [
+                        "SMALL",
+                        "MEDIUM",
+                        "LARGE"
+                    ]
                 }
             },
             "required": [
@@ -302,7 +311,10 @@
                     "type": "object"
                 },
                 "layout": {
-                    "enum": ["default", "two_columns"],
+                    "enum": [
+                        "default",
+                        "two_columns"
+                    ],
                     "default": "default"
                 }
             },
@@ -312,7 +324,6 @@
                 "static_elements_key",
                 "groups",
                 "layout"
-
             ],
             "allOf": [
                 {
@@ -458,7 +469,10 @@
                 },
                 "input_hint": {},
                 "layout": {
-                    "enum": ["default", "horizontal"],
+                    "enum": [
+                        "default",
+                        "horizontal"
+                    ],
                     "default": "default"
                 }
             },

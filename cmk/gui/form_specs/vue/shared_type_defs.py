@@ -6,6 +6,7 @@
 # This file is auto-generated via the cmk-shared-typing package.
 # Do not edit manually.
 
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -42,6 +43,12 @@ class NumberInRange:
 
 
 Validator = Union[IsInteger, IsFloat, NumberInRange, LengthInRange]
+
+
+class StringFieldSize(str, Enum):
+    SMALL = "SMALL"
+    MEDIUM = "MEDIUM"
+    LARGE = "LARGE"
 
 
 @dataclass(kw_only=True)
@@ -131,6 +138,7 @@ class String(FormSpec):
     type: str = "string"
     placeholder: Optional[str] = None
     input_hint: Optional[str] = None
+    field_size: Optional[StringFieldSize] = None
 
 
 @dataclass(kw_only=True)

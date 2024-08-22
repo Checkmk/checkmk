@@ -14,9 +14,23 @@ const [validation, value] = useValidation<string>(
   props.spec.validators,
   () => props.backendValidation
 )
+
+const getSize = (spec: FormSpec.StringFieldSize | undefined): number => {
+  return {
+    SMALL: 7,
+    MEDIUM: 35,
+    LARGE: 100
+  }[spec || 'MEDIUM']
+}
 </script>
 
 <template>
-  <input :id="$componentId" v-model="value" :placeholder="spec.input_hint || ''" type="text" />
+  <input
+    :id="$componentId"
+    v-model="value"
+    :placeholder="spec.input_hint || ''"
+    type="text"
+    :size="getSize(spec.field_size)"
+  />
   <FormValidation :validation="validation"></FormValidation>
 </template>

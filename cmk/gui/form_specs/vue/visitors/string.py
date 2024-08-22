@@ -2,13 +2,14 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 from typing import Callable, Sequence
 
 from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 
 from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import String
+from cmk.rulesets.v1.form_specs import FieldSize, String
 
 from ._base import FormSpecVisitor
 from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue, Value
@@ -48,6 +49,7 @@ class StringVisitor(FormSpecVisitor[String, str]):
                 help=help_text,
                 validators=build_vue_validators(self._validators()),
                 input_hint=compute_text_input_hint(self.form_spec.prefill),
+                field_size=field_size_translator(self.form_spec.field_size),
             ),
             "" if isinstance(parsed_value, EmptyValue) else parsed_value,
         )
@@ -63,3 +65,15 @@ class StringVisitor(FormSpecVisitor[String, str]):
 
     def _to_disk(self, raw_value: object, parsed_value: str) -> str:
         return parsed_value
+
+
+def field_size_translator(field_size: FieldSize) -> VueComponents.StringFieldSize:
+    match field_size:
+        case FieldSize.SMALL:
+            return VueComponents.StringFieldSize.SMALL
+        case FieldSize.MEDIUM:
+            return VueComponents.StringFieldSize.MEDIUM
+        case FieldSize.LARGE:
+            return VueComponents.StringFieldSize.LARGE
+        case _:
+            return VueComponents.StringFieldSize.MEDIUM

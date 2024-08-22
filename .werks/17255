@@ -1,0 +1,20 @@
+Title: Fix select comment removal removing all comments for acknowledgements
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1724324417
+Edition: cre
+Level: 1
+Version: 2.2.0p33
+
+When selecting and removing Acknowledgement-type comments, all non-persistent
+acknowledgement comments were removed for the respective host or service, even
+if they were not selected.
+
+With this werk, only the selected comments are removed in every case. This
+allows you to selectively remove acknowledgement comments without resetting the
+acknowledgement status of the host or service, as long as other acknowledgement
+comments are present.
+
+The acknowledgement status is reset once all acknowledgement comments are
+removed.

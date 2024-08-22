@@ -17,6 +17,7 @@ import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, _u, ungettext
@@ -1460,6 +1461,40 @@ class CommandRemoveDowntime(Command):
         return None
 
 
+@request_memoize()
+def _ack_host_comments() -> set[str]:
+    return {
+        str(comment)
+        for comment in sites.live().query_column(
+            "GET comments\n"
+            "Columns: comment_id\n"
+            "Filter: is_service = 0\n"
+            "Filter: entry_type = 4"
+        )
+    }
+
+
+@request_memoize()
+def _ack_service_comments() -> set[str]:
+    return {
+        str(comment)
+        for comment in sites.live().query_column(
+            "GET comments\n"
+            "Columns: comment_id\n"
+            "Filter: is_service = 1\n"
+            "Filter: entry_type = 4"
+        )
+    }
+
+
+def _acknowledgement_needs_removal(
+    cmdtag: Literal["HOST", "SVC"], comments_to_be_removed: set[str]
+) -> bool:
+    return (cmdtag == "HOST" and _ack_host_comments().issubset(comments_to_be_removed)) or (
+        cmdtag == "SVC" and _ack_service_comments().issubset(comments_to_be_removed)
+    )
+
+
 class CommandRemoveComments(Command):
     @property
     def ident(self) -> str:
@@ -1505,15 +1540,22 @@ class CommandRemoveComments(Command):
         # general one. The latter one only removes the comment itself, not the "acknowledged" state.
         # NOTE: We get the commend ID (an int) as a str via the spec parameter (why???), but we need
         # the specification of the host or service for REMOVE_FOO_ACKNOWLEDGEMENT.
-        if row.get("comment_entry_type") != 4:  # not an acknowledgement
-            rm_ack = []
-        elif cmdtag == "HOST":
-            rm_ack = [f"REMOVE_HOST_ACKNOWLEDGEMENT;{row['host_name']}"]
-        else:
-            rm_ack = [f"REMOVE_SVC_ACKNOWLEDGEMENT;{row['host_name']};{row['service_description']}"]
+        commands = []
+        if row.get("comment_entry_type") == 4:  # an acknowledgement
+            # NOTE: REMOVE_FOO_ACKNOWLEDGEMENT removes all non-persistent acknowledgement comments.
+            # This means if we remove some acknowledgement comments, we should only fire
+            # REMOVE_FOO_ACKNOWLEDGEMENT if there are no other acknowledgement comments left.
+            comments_to_be_removed = {str(r["comment_id"]) for r in action_rows}
+            if _acknowledgement_needs_removal(cmdtag, comments_to_be_removed):
+                if cmdtag == "HOST":
+                    rm_ack = f"REMOVE_HOST_ACKNOWLEDGEMENT;{row['host_name']}"
+                else:
+                    rm_ack = f"REMOVE_SVC_ACKNOWLEDGEMENT;{row['host_name']};{row['service_description']}"
+                commands.append(rm_ack)
         # Nevertheless, we need the general command, too, even for acknowledgements: The
         # acknowledgement might be persistent, so REMOVE_FOO_ACKNOWLEDGEMENT leaves the comment
         # itself, that's the whole point of being persistent. The only way to get rid of such a
         # comment is via DEL_FOO_COMMENT.
-        del_cmt = [f"DEL_HOST_COMMENT;{spec}" if cmdtag == "HOST" else f"DEL_SVC_COMMENT;{spec}"]
-        return (rm_ack + del_cmt), ""
+        del_cmt = f"DEL_HOST_COMMENT;{spec}" if cmdtag == "HOST" else f"DEL_SVC_COMMENT;{spec}"
+        commands.append(del_cmt)
+        return commands, ""

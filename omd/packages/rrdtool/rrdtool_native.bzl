@@ -1,6 +1,13 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
 
+def glib_header_local_repo(name):
+    native.new_local_repository(
+        name = name,
+        build_file = "@//omd/packages/rrdtool:glib.bzl",
+        path = "/usr",
+    )
+
 def rrdtool_native(version_str, sha256):
     filename = "rrdtool-" + version_str + ".tar.gz"
     http_archive(

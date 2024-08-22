@@ -294,18 +294,14 @@ rrdtool(
     version_str = "1.7.2",
 )
 
-load("//omd/packages/rrdtool:rrdtool_native.bzl", "rrdtool_native")
+load("//omd/packages/rrdtool:rrdtool_native.bzl", "glib_header_local_repo", "rrdtool_native")
+
+glib_header_local_repo("glib_repo")
 
 rrdtool_native(
     sha256 = "a199faeb7eff7cafc46fac253e682d833d08932f3db93a550a4a5af180ca58db",
     version_str = "1.7.2",
 )
-
-load("//omd/packages/glib:glib.bzl", "glibconfig")
-
-glibconfig("glibconfig-default", "/usr/lib/x86_64-linux-gnu/glib-2.0")
-
-glibconfig("glibconfig-centos", "/usr/lib64/glib-2.0")
 
 load("//omd/packages/httplib:httplib_http.bzl", "httplib")
 

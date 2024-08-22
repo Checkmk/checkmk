@@ -4,11 +4,6 @@ load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
 
 NUMVERS = "1.7002"
 
-config_setting(
-    name = "non_standard_glib_path",
-    values = {"define": "non-standard-glib-path=true"},
-)
-
 cc_library(
     name = "rrdupd",
     srcs = [
@@ -69,7 +64,6 @@ cc_library(
         "src/rrd_format.h",
     ],
     copts = [
-        "-I/usr/include/glib-2.0/",
         "-Wno-int-conversion",
         "-Wno-stringop-truncation",
         "-O2",
@@ -78,12 +72,7 @@ cc_library(
         "-lglib-2.0",
     ],
     linkstatic = True,
-    deps = select(
-        {
-            ":non_standard_glib_path": ["@glibconfig-centos"],
-            "//conditions:default": ["@glibconfig-default"],
-        },
-    ),
+    deps = ["@glib_repo//:glib_headers"],
 )
 
 cc_library(

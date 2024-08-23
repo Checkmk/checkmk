@@ -1154,6 +1154,7 @@ class Site:
             return
         logger.info("Saving to %s", self.result_dir())
         makedirs(self.result_dir(), sudo=True)
+        execute(["chmod", "777", self.result_dir().as_posix()], sudo=True)
 
         if os.path.exists(self.path("junit.xml")):
             execute(["cp", self.path("junit.xml"), self.result_dir().as_posix()], sudo=True)

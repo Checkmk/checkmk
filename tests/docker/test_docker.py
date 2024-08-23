@@ -176,6 +176,7 @@ def _build(
         "CMK_LIVESTATUS_TCP=",
         "CMK_PASSWORD=",
         "MAIL_RELAY_HOST=",
+        "TZ=",
         "CMK_CONTAINERIZED=TRUE",
     ]
 

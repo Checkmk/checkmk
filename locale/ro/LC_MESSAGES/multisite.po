@@ -11913,12 +11913,13 @@ msgstr "Serverele Checkmk"
 msgid "Checkmk service provider metadata (generated automatically)"
 msgstr "Metadatele furnizorului de servicii Checkmk (generate automat)"
 
+#, fuzzy
 msgid ""
 "Checkmk signs your SAML 2.0 requests to your identity provider. You can use "
 "the certificate that comes with Checkmk. Alternatively, if your organization "
 "manages its own certificates, you can add a custom certificate. Note that "
 "the public certificate must be a single certificate (not a certificate "
-"chain)."
+"chain). Only RSA certificates are supported at this time."
 msgstr ""
 "Checkmk semnează cererile SAML 2.0 către furnizorul de identitate. Puteți "
 "utiliza certificatul care vine cu Checkmk. Alternativ, dacă organizația dvs. "
@@ -14197,6 +14198,13 @@ msgstr "Prizele de conectare"
 msgid "Connector type"
 msgstr "Tipul de conector"
 
+msgid "Connector: Adding host changes to queue"
+msgstr ""
+
+#, python-format
+msgid "Connector: Collecting piggyback hosts on site  \"%s\""
+msgstr ""
+
 msgid "Consider alerts for Prism Central only"
 msgstr "Luați în considerare alertele numai pentru Prism Central"
 
@@ -16041,6 +16049,10 @@ msgstr "Utilizarea memoriei DB2"
 
 msgid "DCD"
 msgstr "DCD"
+
+#, fuzzy, python-format
+msgid "DCD Manager: Fetching piggyback hosts from site \"%s\""
+msgstr "Faza 1.1: Preluarea de pe site-ul \"%s\""
 
 msgid "DCD status"
 msgstr "Starea DCD"
@@ -21499,6 +21511,11 @@ msgstr ""
 "înregistrate doar problemele."
 
 msgid ""
+"Enabling this option will enforce two factor authentication for all users. "
+"Enabling this setting will overide role based two factor enforcement."
+msgstr ""
+
+msgid ""
 "Enabling this option will result in an additional service for every RMON-"
 "capable switch port. This service will provide detailed information on the "
 "distribution of packet sizes transferred over the port. Note: currently, "
@@ -21634,6 +21651,10 @@ msgstr "Impuneți criptarea datelor agentului"
 msgid "Enforce change"
 msgstr "Aplică schimbarea"
 
+#, fuzzy
+msgid "Enforce for all users"
+msgstr "Impuneți utilizarea literelor mici pentru ID-urile de utilizator."
+
 msgid "Enforce lower case User-IDs."
 msgstr "Impuneți utilizarea literelor mici pentru ID-urile de utilizator."
 
@@ -21647,6 +21668,10 @@ msgstr "Impuneți re-autentificarea după:"
 
 msgid "Enforce show more"
 msgstr "Forța de muncă arată mai mult"
+
+#, fuzzy
+msgid "Enforce two factor authentication"
+msgstr "Îndepărtați autentificarea cu doi factori"
 
 #, fuzzy
 msgid "Enforced service"
@@ -23374,6 +23399,10 @@ msgstr "Nu a reușit să redea valoarea:"
 #, python-format
 msgid "Failed to render value: %r"
 msgstr "Nu a reușit să redea valoarea: %r."
+
+#, fuzzy, python-format
+msgid "Failed to save broker certificates: %s"
+msgstr "Nu s-a reușit să se obțină certificatul peer (%s)"
 
 #, python-format
 msgid "Failed to search rule of ruleset '%s' in folder '%s' (%r): %s"
@@ -30310,6 +30339,12 @@ msgstr ""
 "serviciul va fi cel puțin în stare de AVERTISMENT (chiar dacă rezultatul în "
 "sine este OK)."
 
+msgid ""
+"If set, all users with this role will be required to setup two factor "
+"authentication. 'Enforce two factor authentication' in global settings will "
+"override this setting."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "If set, the plug-in may be called repeately - up to this many times or until "
@@ -33355,6 +33390,9 @@ msgid ""
 "Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr ""
 "Nume de dosar invalid. Sunt permise numai caracterele a-z, A-Z, 0-9, _ și -."
+
+msgid "Invalid generate-broker-certs: no certificates received."
+msgstr ""
 
 #, python-format
 msgid "Invalid graph type '%s'"
@@ -42148,6 +42186,10 @@ msgstr "Nu este permisă schimbarea parolei. Schimbarea nu poate fi impusă."
 msgid "Not ready duration"
 msgstr "Durată nepregătită"
 
+#, fuzzy
+msgid "Not required"
+msgstr "este necesară"
+
 msgid "Not responding devices"
 msgstr "Dispozitive care nu răspund"
 
@@ -47057,29 +47099,9 @@ msgstr "Întreruperi fantomă primite"
 msgid "Phase"
 msgstr "Faza"
 
-#, python-format
-msgid "Phase 1.1: Executing on site \"%s\""
-msgstr "Faza 1.1: Se execută pe site-ul \"%s\""
-
-#, python-format
-msgid "Phase 1.1: Fetching from site \"%s\""
-msgstr "Faza 1.1: Preluarea de pe site-ul \"%s\""
-
 #, fuzzy
-msgid "Phase 1.2: Extracting result"
-msgstr "Faza 2.1: Extragerea rezultatului"
-
-#, fuzzy
-msgid "Phase 2.1: Fetching existing hosts"
+msgid "Phase 2.1: Fetchin  g existing hosts"
 msgstr "Faza 2.2: Obținerea gazdelor existente"
-
-#, fuzzy
-msgid "Phase 2.2: Deliver existing hosts"
-msgstr "Faza 2.2: Obținerea gazdelor existente"
-
-#, fuzzy, python-format
-msgid "Phase 2: Deliver %s piggyback hosts"
-msgstr "Prefix pentru numele de gazdă piggyback"
 
 msgid "Phase Number"
 msgstr "Numărul fazei"
@@ -51154,6 +51176,10 @@ msgstr "Utilizarea cererilor"
 
 msgid "Require a comment"
 msgstr "Cereți un comentariu"
+
+#, fuzzy
+msgid "Required"
+msgstr "Port necesar"
 
 msgid "Required context filters"
 msgstr "Filtre de context necesare"
@@ -73410,6 +73436,10 @@ msgstr "Interfața tunelului"
 msgid "Tunnels which ignore levels"
 msgstr "Tuneluri care ignoră nivelurile"
 
+#, fuzzy
+msgid "Two Factor"
+msgstr "Factor de formă"
+
 msgid "Two hours"
 msgstr "Două ore"
 
@@ -84486,6 +84516,22 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#, python-format
+#~ msgid "Phase 1.1: Executing on site \"%s\""
+#~ msgstr "Faza 1.1: Se execută pe site-ul \"%s\""
+
+#, fuzzy
+#~ msgid "Phase 1.2: Extracting result"
+#~ msgstr "Faza 2.1: Extragerea rezultatului"
+
+#, fuzzy
+#~ msgid "Phase 2.2: Deliver existing hosts"
+#~ msgstr "Faza 2.2: Obținerea gazdelor existente"
+
+#, fuzzy, python-format
+#~ msgid "Phase 2: Deliver %s piggyback hosts"
+#~ msgstr "Prefix pentru numele de gazdă piggyback"
 
 #~ msgid "Contact Groups"
 #~ msgstr "Grupuri de contact"

@@ -11390,12 +11390,13 @@ msgstr "Checkmkサーバー"
 msgid "Checkmk service provider metadata (generated automatically)"
 msgstr "Checkmkサービスプロバイダのメタデータ（自動生成）"
 
+#, fuzzy
 msgid ""
 "Checkmk signs your SAML 2.0 requests to your identity provider. You can use "
 "the certificate that comes with Checkmk. Alternatively, if your organization "
 "manages its own certificates, you can add a custom certificate. Note that "
 "the public certificate must be a single certificate (not a certificate "
-"chain)."
+"chain). Only RSA certificates are supported at this time."
 msgstr ""
 "Checkmk は、ID プロバイダへの SAML 2.0 要求を署名します。Checkmk に付属する証"
 "明書を使用できます。または、組織が独自の証明書を管理している場合は、カスタム"
@@ -13540,6 +13541,13 @@ msgstr "コネクタアウトレット"
 msgid "Connector type"
 msgstr "コネクタタイプ"
 
+msgid "Connector: Adding host changes to queue"
+msgstr ""
+
+#, python-format
+msgid "Connector: Collecting piggyback hosts on site  \"%s\""
+msgstr ""
+
 msgid "Consider alerts for Prism Central only"
 msgstr "Prism Centralのみのアラートを検討する"
 
@@ -15319,6 +15327,10 @@ msgstr "DB2メモリー使用量"
 
 msgid "DCD"
 msgstr "DCD"
+
+#, fuzzy, python-format
+msgid "DCD Manager: Fetching piggyback hosts from site \"%s\""
+msgstr "フェーズ1.1:サイト\"%s\"からのフェッチ"
 
 msgid "DCD status"
 msgstr "DCDステータス"
@@ -20486,6 +20498,11 @@ msgstr ""
 "れます。"
 
 msgid ""
+"Enabling this option will enforce two factor authentication for all users. "
+"Enabling this setting will overide role based two factor enforcement."
+msgstr ""
+
+msgid ""
 "Enabling this option will result in an additional service for every RMON-"
 "capable switch port. This service will provide detailed information on the "
 "distribution of packet sizes transferred over the port. Note: currently, "
@@ -20616,6 +20633,10 @@ msgstr "エージェントデータの暗号化"
 msgid "Enforce change"
 msgstr "変更を強制する"
 
+#, fuzzy
+msgid "Enforce for all users"
+msgstr "小文字のユーザーIDを適用します。"
+
 msgid "Enforce lower case User-IDs."
 msgstr "小文字のユーザーIDを適用します。"
 
@@ -20628,6 +20649,10 @@ msgstr "認証後再認証を強制する"
 
 msgid "Enforce show more"
 msgstr "もっと表示を強制する"
+
+#, fuzzy
+msgid "Enforce two factor authentication"
+msgstr "2要素認証の解除"
 
 msgid "Enforced service"
 msgstr "施行されたサービス"
@@ -22325,6 +22350,10 @@ msgstr "値のレンダリングに失敗しました:"
 #, python-format
 msgid "Failed to render value: %r"
 msgstr "値のレンダリングに失敗しました: %r"
+
+#, fuzzy, python-format
+msgid "Failed to save broker certificates: %s"
+msgstr "ピア証明書のフェッチに失敗しました(%s)"
 
 #, python-format
 msgid "Failed to search rule of ruleset '%s' in folder '%s' (%r): %s"
@@ -29177,6 +29206,12 @@ msgstr ""
 "果が他のノードから発信された場合、サービスは少なくともWARNING状態になります"
 "（結果自体はOKであったとしても）。"
 
+msgid ""
+"If set, all users with this role will be required to setup two factor "
+"authentication. 'Enforce two factor authentication' in global settings will "
+"override this setting."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "If set, the plug-in may be called repeately - up to this many times or until "
@@ -32106,6 +32141,9 @@ msgid ""
 "Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr ""
 "フォルダー名が無効です。文字 a-z, A-Z, 0-9, _ および - のみが許可されます。"
+
+msgid "Invalid generate-broker-certs: no certificates received."
+msgstr ""
 
 #, python-format
 msgid "Invalid graph type '%s'"
@@ -40791,6 +40829,10 @@ msgstr "パスワードの変更は許可されていません。変更を強制
 msgid "Not ready duration"
 msgstr "準備期間"
 
+#, fuzzy
+msgid "Not required"
+msgstr "必須"
+
 msgid "Not responding devices"
 msgstr "デバイスが応答しない"
 
@@ -45643,29 +45685,9 @@ msgstr "ファントムインターラプションの受信"
 msgid "Phase"
 msgstr "フェーズ"
 
-#, python-format
-msgid "Phase 1.1: Executing on site \"%s\""
-msgstr "フェーズ1.1:サイト \"%s\" で実行"
-
-#, python-format
-msgid "Phase 1.1: Fetching from site \"%s\""
-msgstr "フェーズ1.1:サイト\"%s\"からのフェッチ"
-
 #, fuzzy
-msgid "Phase 1.2: Extracting result"
-msgstr "フェーズ2.1 : 結果の抽出"
-
-#, fuzzy
-msgid "Phase 2.1: Fetching existing hosts"
+msgid "Phase 2.1: Fetchin  g existing hosts"
 msgstr "フェーズ2.2: 既存のホストの取得"
-
-#, fuzzy
-msgid "Phase 2.2: Deliver existing hosts"
-msgstr "フェーズ2.2: 既存のホストの取得"
-
-#, fuzzy, python-format
-msgid "Phase 2: Deliver %s piggyback hosts"
-msgstr "ピギーバックホスト名のプレフィックス"
 
 msgid "Phase Number"
 msgstr "フェーズ番号"
@@ -49700,6 +49722,10 @@ msgstr "リクエストの使用率"
 
 msgid "Require a comment"
 msgstr "コメントが必要"
+
+#, fuzzy
+msgid "Required"
+msgstr "必要なポート"
 
 msgid "Required context filters"
 msgstr "必要なコンテキストフィルター"
@@ -71304,6 +71330,10 @@ msgstr "トンネルインターフェース"
 msgid "Tunnels which ignore levels"
 msgstr "レベルを無視するトンネル"
 
+#, fuzzy
+msgid "Two Factor"
+msgstr "フォーム ファクタ"
+
 msgid "Two hours"
 msgstr "2時間"
 
@@ -82105,6 +82135,22 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#, python-format
+#~ msgid "Phase 1.1: Executing on site \"%s\""
+#~ msgstr "フェーズ1.1:サイト \"%s\" で実行"
+
+#, fuzzy
+#~ msgid "Phase 1.2: Extracting result"
+#~ msgstr "フェーズ2.1 : 結果の抽出"
+
+#, fuzzy
+#~ msgid "Phase 2.2: Deliver existing hosts"
+#~ msgstr "フェーズ2.2: 既存のホストの取得"
+
+#, fuzzy, python-format
+#~ msgid "Phase 2: Deliver %s piggyback hosts"
+#~ msgstr "ピギーバックホスト名のプレフィックス"
 
 #~ msgid "Contact Groups"
 #~ msgstr "連絡先グループ"

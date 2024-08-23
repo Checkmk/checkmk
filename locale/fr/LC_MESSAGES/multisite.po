@@ -11989,12 +11989,13 @@ msgid "Checkmk service provider metadata (generated automatically)"
 msgstr ""
 "Métadonnées du fournisseur de services Checkmk (générées automatiquement)"
 
+#, fuzzy
 msgid ""
 "Checkmk signs your SAML 2.0 requests to your identity provider. You can use "
 "the certificate that comes with Checkmk. Alternatively, if your organization "
 "manages its own certificates, you can add a custom certificate. Note that "
 "the public certificate must be a single certificate (not a certificate "
-"chain)."
+"chain). Only RSA certificates are supported at this time."
 msgstr ""
 "Checkmk signe vos demandes SAML 2.0 à votre fournisseur d'identité. Vous "
 "pouvez utiliser le certificat fourni avec Checkmk. Alternativement, si votre "
@@ -14299,6 +14300,13 @@ msgstr "Sorties de connecteur"
 msgid "Connector type"
 msgstr "Type de connecteur"
 
+msgid "Connector: Adding host changes to queue"
+msgstr ""
+
+#, python-format
+msgid "Connector: Collecting piggyback hosts on site  \"%s\""
+msgstr ""
+
 msgid "Consider alerts for Prism Central only"
 msgstr "Envisager des alertes pour Prism Central uniquement"
 
@@ -16171,6 +16179,10 @@ msgstr "Utilisation de la mémoire de DB2"
 
 msgid "DCD"
 msgstr "DCD"
+
+#, fuzzy, python-format
+msgid "DCD Manager: Fetching piggyback hosts from site \"%s\""
+msgstr "Phase 1.1 : Récupération du site \"%s\""
 
 msgid "DCD status"
 msgstr "Statut DCD"
@@ -21660,6 +21672,11 @@ msgstr ""
 "est désactivée, seuls les problèmes seront consignés."
 
 msgid ""
+"Enabling this option will enforce two factor authentication for all users. "
+"Enabling this setting will overide role based two factor enforcement."
+msgstr ""
+
+msgid ""
 "Enabling this option will result in an additional service for every RMON-"
 "capable switch port. This service will provide detailed information on the "
 "distribution of packet sizes transferred over the port. Note: currently, "
@@ -21799,6 +21816,10 @@ msgstr "Renforcer le cryptage des données des agents"
 msgid "Enforce change"
 msgstr "Appliquer le changement"
 
+#, fuzzy
+msgid "Enforce for all users"
+msgstr "Appliquer les codes d'utilisateur en minuscules."
+
 msgid "Enforce lower case User-IDs."
 msgstr "Appliquer les codes d'utilisateur en minuscules."
 
@@ -21812,6 +21833,10 @@ msgstr "Authentification du VCenter"
 
 msgid "Enforce show more"
 msgstr "Appliquer montrer plus"
+
+#, fuzzy
+msgid "Enforce two factor authentication"
+msgstr "Supprimer l'authentification à deux facteurs"
 
 #, fuzzy
 msgid "Enforced service"
@@ -23545,6 +23570,10 @@ msgstr "Échec du rendu de la valeur :"
 #, python-format
 msgid "Failed to render value: %r"
 msgstr "Échec du rendu de la valeur : %r"
+
+#, fuzzy, python-format
+msgid "Failed to save broker certificates: %s"
+msgstr "Échec de la récupération du certificat du pair (%s)"
 
 #, python-format
 msgid "Failed to search rule of ruleset '%s' in folder '%s' (%r): %s"
@@ -30556,6 +30585,12 @@ msgstr ""
 "Si le résultat provient d'un autre nœud, le service sera au moins dans un "
 "état WARNING (même si le résultat lui-même est OK)."
 
+msgid ""
+"If set, all users with this role will be required to setup two factor "
+"authentication. 'Enforce two factor authentication' in global settings will "
+"override this setting."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "If set, the plug-in may be called repeately - up to this many times or until "
@@ -33595,6 +33630,9 @@ msgid ""
 msgstr ""
 "Nom de dossier non valide. Seuls les caractères a-z, A-Z, 0-9, _ et - sont "
 "autorisés."
+
+msgid "Invalid generate-broker-certs: no certificates received."
+msgstr ""
 
 #, python-format
 msgid "Invalid graph type '%s'"
@@ -42467,6 +42505,10 @@ msgstr ""
 msgid "Not ready duration"
 msgstr "Durée de non préparation"
 
+#, fuzzy
+msgid "Not required"
+msgstr "est nécessaire"
+
 msgid "Not responding devices"
 msgstr "Dispositifs ne répondant pas"
 
@@ -47428,29 +47470,9 @@ msgstr "Interruptions fantômes reçues"
 msgid "Phase"
 msgstr "Phase"
 
-#, python-format
-msgid "Phase 1.1: Executing on site \"%s\""
-msgstr "Phase 1.1 : Exécution sur le site \"%s\""
-
-#, python-format
-msgid "Phase 1.1: Fetching from site \"%s\""
-msgstr "Phase 1.1 : Récupération du site \"%s\""
-
 #, fuzzy
-msgid "Phase 1.2: Extracting result"
-msgstr "Phase 2.1 : Extraction du résultat"
-
-#, fuzzy
-msgid "Phase 2.1: Fetching existing hosts"
+msgid "Phase 2.1: Fetchin  g existing hosts"
 msgstr "Phase 2.2 : Récupération des hôtes existants"
-
-#, fuzzy
-msgid "Phase 2.2: Deliver existing hosts"
-msgstr "Phase 2.2 : Récupération des hôtes existants"
-
-#, fuzzy, python-format
-msgid "Phase 2: Deliver %s piggyback hosts"
-msgstr "Préfixe pour le nom d'hôte de ferroutage"
 
 msgid "Phase Number"
 msgstr "Numéro de phase"
@@ -51579,6 +51601,10 @@ msgstr "Utilisation des demandes"
 
 msgid "Require a comment"
 msgstr "Demander un commentaire"
+
+#, fuzzy
+msgid "Required"
+msgstr "Port requis"
 
 msgid "Required context filters"
 msgstr "Filtres contextuels requis"
@@ -73964,6 +73990,10 @@ msgstr "Interface du tunnel"
 msgid "Tunnels which ignore levels"
 msgstr "Les tunnels qui ignorent les niveaux"
 
+#, fuzzy
+msgid "Two Factor"
+msgstr "Facteur de forme"
+
 msgid "Two hours"
 msgstr "Deux heures"
 
@@ -85190,6 +85220,22 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tous droits réservés."
+
+#, python-format
+#~ msgid "Phase 1.1: Executing on site \"%s\""
+#~ msgstr "Phase 1.1 : Exécution sur le site \"%s\""
+
+#, fuzzy
+#~ msgid "Phase 1.2: Extracting result"
+#~ msgstr "Phase 2.1 : Extraction du résultat"
+
+#, fuzzy
+#~ msgid "Phase 2.2: Deliver existing hosts"
+#~ msgstr "Phase 2.2 : Récupération des hôtes existants"
+
+#, fuzzy, python-format
+#~ msgid "Phase 2: Deliver %s piggyback hosts"
+#~ msgstr "Préfixe pour le nom d'hôte de ferroutage"
 
 #~ msgid "Contact Groups"
 #~ msgstr "Groupes de contact"

@@ -324,6 +324,22 @@ def _allow_for_gui_cme(
     )
 
 
+def _allow_for_gui_cse(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return any(
+        (
+            _is_allowed_import(imported=imported),
+            (
+                _in_component(imported=imported, component=Component("cmk.gui"))
+                and not _is_a_plugin_import(imported=imported)
+            ),
+        )
+    )
+
+
 def _is_a_plugin_import(*, imported: ModuleName) -> bool:
     return any(
         (
@@ -649,6 +665,7 @@ _COMPONENTS = (
     (Component("cmk.gui.cee"), _allow_for_gui_cee),
     (Component("cmk.gui.cce"), _allow_for_gui_cce),
     (Component("cmk.gui.cme"), _allow_for_gui_cme),
+    (Component("cmk.gui.cse"), _allow_for_gui_cse),
     (Component("cmk.gui"), _allow_for_gui),
     (Component("cmk.ec"), _is_default_allowed_import),
     (Component("cmk.messaging"), _allow_for_gui),

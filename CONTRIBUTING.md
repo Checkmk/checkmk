@@ -952,8 +952,8 @@ Some of them are:
 
 ### Consistency
 
-Be consistent in the terms you use for a thing.
-E.g. in case for a server one could say something like "host", "system", "server" or "device".
+Be consistent in the terms you use for a thing,
+e.g. in case of a server one could say something like "host", "system", "server" or "device".
 Decide to use one name for one thing and use it consistently in all translations.
 
 ## Copyright and Licensing

@@ -128,7 +128,7 @@ class AutomationStoreBrokerCertificates(AutomationCommand):
             store.save_bytes_to_file(key_file(paths.omd_root), api_request.key)
             store.save_bytes_to_file(cert_file(paths.omd_root), api_request.cert)
             store.save_bytes_to_file(cacert_file(paths.omd_root), b"".join(api_request.cas))
-        except:
+        except Exception:
             raise MKGeneralException(
                 _("Failed to save broker certificates: %s") % traceback.format_exc()
             )

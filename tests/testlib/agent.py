@@ -229,7 +229,7 @@ def controller_connection_json(
         f"\nStatus:\n{controller_status}"
     )
     assert (
-        not "error" in controller_connection["remote"]
+        "error" not in controller_connection["remote"]
     ), f"Error in status output: {controller_connection['remote']['error']}"
     assert "hostname" in controller_connection["remote"], (
         "No remote endpoint hostname returned as part of controller connection details!"

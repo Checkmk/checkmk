@@ -110,6 +110,9 @@ ALL_METRICS: dict[str, list[tuple[str, str, str, None]]] = {
     ],
     "Microsoft.DBforMySQL/flexibleServers": [
         (
+            # NOTE: the "serverlog_storage_percent" metric may soon be phased out of the MySQL
+            # flexible server as it is no longer mentioned in the documentation and is not present
+            # in PostgreSQL flexible server documentation.
             "cpu_percent,memory_percent,io_consumption_percent,serverlog_storage_percent,"
             "storage_percent,active_connections",
             "PT1M",

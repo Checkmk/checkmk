@@ -503,10 +503,14 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
         if "ident" in config:
             self._ident = config.pop("ident")
         assert self._ident is not None
+        entries = self._store.load_for_modification()
+
+        # Keep the "locked_by" attribute if it exists in the current entry
+        if "locked_by" in entries[self._ident]:
+            config = {**config, "locked_by": entries[self._ident]["locked_by"]}
+
         # No typing support from valuespecs here, so we need to cast
         self._entry = cast(_T, config)
-
-        entries = self._store.load_for_modification()
 
         if self._new and self._ident in entries:
             raise MKUserError("ident", _("This ID is already in use. Please choose another one."))

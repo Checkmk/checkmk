@@ -9,6 +9,7 @@ import logging
 import os
 import re
 import subprocess
+import sys
 import time
 from collections.abc import Iterator, Mapping
 from pathlib import Path
@@ -104,8 +105,9 @@ def agent_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen | None]
     daemon_path = str(repo_path() / "tests" / "scripts" / "agent_controller_daemon.py")
 
     logger.info("Running agent controller daemon...")
+    # NOTE: we run sys.executable to make sure we use the correct python version
     with execute(
-        [daemon_path, "--agent-controller-path", ctl_path.as_posix()],
+        [sys.executable, "-B", daemon_path, "--agent-controller-path", ctl_path.as_posix()],
         sudo=True,
         shell=False,
         stdout=subprocess.PIPE,

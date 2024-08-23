@@ -1245,7 +1245,17 @@ def affects_all_sites(change: ChangeSpec) -> bool:
     return not set(change["affected_sites"]).symmetric_difference(set(activation_sites()))
 
 
+def get_all_replicated_sites() -> Mapping[SiteId, SiteConfiguration]:
+    return {
+        site_id: site_config
+        for site_id, site_config in activation_sites().items()
+        if site_config.get("replication")
+    }
+
+
 def get_rabbitmq_definitions() -> Mapping[str, rabbitmq.Definitions]:
+
+    replicated_sites_configs = get_all_replicated_sites()
 
     connection_info = [
         rabbitmq.Connection(
@@ -1258,8 +1268,7 @@ def get_rabbitmq_definitions() -> Mapping[str, rabbitmq.Definitions]:
                 site_id=omd_site(),
             ),
         )
-        for site_id, site_config in activation_sites().items()
-        if site_config.get("replication")
+        for site_id, site_config in replicated_sites_configs.items()
     ]
     return rabbitmq.compute_distributed_definitions(connection_info)
 

@@ -10,7 +10,7 @@ from dataclasses import dataclass
 
 from pydantic import BaseModel
 
-from ._constants import INTERSITE_EXCHANGE
+from ._constants import DEFAULT_VHOST_NAME, INTERSITE_EXCHANGE
 
 _logger = logging.getLogger(__name__)
 
@@ -52,6 +52,10 @@ class Binding(BaseModel):
     arguments: Mapping[str, str]
 
 
+class VirtualHost(BaseModel):
+    name: str
+
+
 DEFAULT_SHOVEL: Mapping[str, str | bool] = {
     "ack-mode": "on-confirm",
     "dest-add-forward-headers": False,
@@ -82,6 +86,7 @@ class Queue(BaseModel):
 
 class Definitions(BaseModel):
     users: list[User] = []
+    vhosts: list[VirtualHost] = []
     permissions: list[Permission] = []
     policies: list[Policy] = []
     exchanges: list[Exchange] = []
@@ -136,6 +141,18 @@ def find_shortest_paths(
     return known_paths
 
 
+def _connecting_customer(connection: Connection) -> str:
+    if connection.connecter.customer == connection.connectee.customer:
+        return connection.connecter.customer
+    if "provider" in [connection.connecter.customer, connection.connectee.customer]:
+        return (
+            connection.connecter.customer
+            if connection.connecter.customer != "provider"
+            else connection.connectee.customer
+        )
+    raise ValueError("Invalid connection customers")
+
+
 def _base_definitions(
     connections: Sequence[Connection],
 ) -> tuple[defaultdict[str, Definitions], Mapping[str, Sequence[tuple[str, str]]]]:
@@ -146,16 +163,7 @@ def _base_definitions(
         add_connecter_definitions(c, connecting_definitions[c.connecter.site_id])
         add_connectee_definitions(c, connecting_definitions[c.connectee.site_id])
 
-        customer = None
-        if c.connecter.customer == c.connectee.customer:
-            customer = c.connecter.customer
-        elif "provider" in [c.connecter.customer, c.connectee.customer]:
-            customer = (
-                c.connecter.customer if c.connecter.customer != "provider" else c.connectee.customer
-            )
-        else:
-            raise ValueError("Invalid connection customers")
-
+        customer = _connecting_customer(c)
         edges_by_customer[customer].append((c.connecter.site_id, c.connectee.site_id))
 
     return connecting_definitions, edges_by_customer
@@ -171,7 +179,7 @@ def compute_distributed_definitions(
 
         binding_site1 = Binding(
             source=INTERSITE_EXCHANGE,
-            vhost="/",
+            vhost=DEFAULT_VHOST_NAME,
             destination=f"cmk.intersite.{through}",
             destination_type="queue",
             routing_key=f"{_to}.#",
@@ -190,7 +198,6 @@ def compute_distributed_definitions(
         shortest_paths.update(find_shortest_paths(connection))
 
     for ori_dest, path in shortest_paths.items():
-
         for i in range(1, len(path) - 1):
             binding_group = (path[i - 1], ori_dest[1], path[i])  # from, to, through
             if binding_group in bindings_present:
@@ -201,26 +208,61 @@ def compute_distributed_definitions(
     return connecting_definitions
 
 
+def _get_vhost_from_connection(connection: Connection) -> tuple[str, str]:
+
+    if connection.connecter.customer == connection.connectee.customer:
+        return (DEFAULT_VHOST_NAME, r"%2f")
+
+    customer = _connecting_customer(connection)
+    return (f"{customer}", f"{customer}")
+
+
 def add_connecter_definitions(connection: Connection, definition: Definitions) -> None:
 
     user = User(name=connection.connectee.site_id)
+    vhost_name, v_host_uri = _get_vhost_from_connection(connection)
+
+    if vhost_name != DEFAULT_VHOST_NAME:
+        vhost = VirtualHost(name=vhost_name)
+        if vhost not in definition.vhosts:
+            definition.vhosts.append(vhost)
+
+        exchange = Exchange(
+            name=INTERSITE_EXCHANGE,
+            vhost=vhost_name,
+            type="topic",
+            durable=True,
+            auto_delete=False,
+            internal=False,
+            arguments={},
+        )
+        if exchange not in definition.exchanges:
+            definition.exchanges.append(exchange)
+
+    connectee_url: str = (
+        f"amqps://{connection.connectee.site_server}:"
+        f"{connection.connectee.rabbitmq_port}?server_name_indication="
+        f"{connection.connectee.site_id}&auth_mechanism=external"
+    )
+    connecter_url: str = f"amqp:///{v_host_uri}"
+
     permission = Permission(
         user=user.name,
-        vhost="/",
+        vhost=vhost_name,
         configure="^$",
         write=INTERSITE_EXCHANGE,
         read="cmk.intersite..*",
     )
     queue = Queue(
         name=f"cmk.intersite.{connection.connectee.site_id}",
-        vhost="/",
+        vhost=vhost_name,
         durable=True,
         auto_delete=False,
         arguments={},
     )
     binding = Binding(
         source=INTERSITE_EXCHANGE,
-        vhost="/",
+        vhost=vhost_name,
         destination=queue.name,
         destination_type="queue",
         routing_key=f"{connection.connectee.site_id}.#",
@@ -230,12 +272,11 @@ def add_connecter_definitions(connection: Connection, definition: Definitions) -
         Component(
             value={
                 **DEFAULT_SHOVEL,
-                "dest-uri": f"amqps://{connection.connectee.site_server}:"
-                f"{connection.connectee.rabbitmq_port}?server_name_indication="
-                f"{connection.connectee.site_id}&auth_mechanism=external",
+                "src-uri": connecter_url,
+                "dest-uri": connectee_url,
                 "src-queue": queue.name,
             },
-            vhost="/",
+            vhost=vhost_name,
             component="shovel",
             name=f"cmk.shovel.{connection.connecter.site_id}->{connection.connectee.site_id}",
         ),
@@ -243,11 +284,10 @@ def add_connecter_definitions(connection: Connection, definition: Definitions) -
             value={
                 **DEFAULT_SHOVEL,
                 "src-queue": f"cmk.intersite.{connection.connecter.site_id}",
-                "src-uri": f"amqps://{connection.connectee.site_server}:"
-                f"{connection.connectee.rabbitmq_port}?server_name_indication="
-                f"{connection.connectee.site_id}&auth_mechanism=external",
+                "src-uri": connectee_url,
+                "dest-uri": connecter_url,
             },
-            vhost="/",
+            vhost=vhost_name,
             component="shovel",
             name=f"cmk.shovel.{connection.connectee.site_id}->{connection.connecter.site_id}",
         ),
@@ -265,28 +305,31 @@ def add_connectee_definitions(connection: Connection, definition: Definitions) -
     user = User(name=connection.connecter.site_id)
     permission = Permission(
         user=user.name,
-        vhost="/",
+        vhost=DEFAULT_VHOST_NAME,
         configure="^$",
         write=INTERSITE_EXCHANGE,
         read="cmk.intersite..*",
     )
     queue = Queue(
         name=f"cmk.intersite.{connection.connecter.site_id}",
-        vhost="/",
+        vhost=DEFAULT_VHOST_NAME,
         durable=True,
         auto_delete=False,
         arguments={},
     )
-    binding = Binding(
-        source=INTERSITE_EXCHANGE,
-        vhost="/",
-        destination=queue.name,
-        destination_type="queue",
-        routing_key=f"{connection.connecter.site_id}.#",
-        arguments={},
-    )
+
+    # only add binding on default vhost if the connection is within the same customer
+    if connection.connecter.customer == connection.connectee.customer:
+        binding = Binding(
+            source=INTERSITE_EXCHANGE,
+            vhost=DEFAULT_VHOST_NAME,
+            destination=queue.name,
+            destination_type="queue",
+            routing_key=f"{connection.connecter.site_id}.#",
+            arguments={},
+        )
+        definition.bindings.append(binding)
 
     definition.users.append(user)
     definition.permissions.append(permission)
     definition.queues.append(queue)
-    definition.bindings.append(binding)

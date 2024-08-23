@@ -7,3 +7,4 @@
 LOCAL_EXCHANGE = "cmk.local"
 INTERSITE_EXCHANGE = "cmk.intersite"
 APP_PREFIX = "cmk.app"
+DEFAULT_VHOST_NAME = "/"

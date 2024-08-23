@@ -3,7 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from .temperature import check_temperature
+from cmk.base.check_legacy_includes.temperature import check_temperature
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
+    Result,
+    State,
+    render,
+)
+
 
 # For raritan devices which support the PDU2-, EMD-, or LHX-MIB
 
@@ -46,6 +53,7 @@ raritan_map_type = {
     "19": ("binary", ""),
     "20": ("binary", "Contact"),
     "21": ("fanspeed", ""),
+    "26": ("residual_current", "Residual Current"),
     "30": ("", "Other"),
     "31": ("", "None"),
 }
@@ -236,4 +244,26 @@ def check_raritan_sensors_temp(item, params, parsed):
             dev_status=state,
             dev_status_name=state_readable,
         )
+    return None
+
+
+def check_raritan_sensors_hum(item, params, parsed):
+    if item in parsed:
+        state, state_readable = parsed[item]["state"]
+        unit = parsed[item]["sensor_unit"]
+        reading, crit_lower, warn_lower, crit, warn = parsed[item]["sensor_data"]
+        if params.get('levels'):
+            warn, crit = params.get('levels')
+        if params.get('levels_lower'):
+            warn_lower, crit_lower = params.get('levels_lower')
+
+        yield from check_levels(
+            reading,
+            metric_name=parsed[item]["sensor_type"],
+            levels_upper=(warn, crit),
+            levels_lower=(warn_lower, crit_lower),
+            render_func=render.percent,
+            boundaries=(0, 100),
+        )
+        yield Result(state=State.OK, summary=f"device status: {state_readable}")
     return None

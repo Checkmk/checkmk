@@ -7,6 +7,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.raritan import (
     check_raritan_sensors,
     check_raritan_sensors_temp,
+    check_raritan_sensors_hum,
     inventory_raritan_sensors,
     inventory_raritan_sensors_temp,
     parse_raritan_sensors,
@@ -100,7 +101,8 @@ check_info["raritan_px2_sensors.humidity"] = LegacyCheckDefinition(
     service_name="Humidity %s",
     sections=["raritan_px2_sensors"],
     discovery_function=discover_raritan_px2_sensors_humidity,
-    check_function=check_raritan_sensors,
+    check_function=check_raritan_sensors_hum,
+    check_ruleset_name="humidity",
 )
 
 

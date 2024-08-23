@@ -13,12 +13,12 @@ from cmk.agent_based.v2 import all_of, any_of, SNMPTree, startswith
 
 def parse_raritan_pdu_plugs(string_table):
     parsed = {}
-
     for outlet_label, outlet_name, outlet_state in string_table:
-        parsed[outlet_label] = {
-            "state": raritan_map_state.get(outlet_state, (3, "unknown")),
-            "outlet_name": outlet_name,
-        }
+        if raritan_map_state.get(outlet_state):
+            parsed[outlet_label] = {
+                "state": raritan_map_state.get(outlet_state),
+                "outlet_name": outlet_name,
+            }
     return parsed
 
 

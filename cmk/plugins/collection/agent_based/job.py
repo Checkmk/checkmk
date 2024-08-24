@@ -176,8 +176,7 @@ agent_section_job = AgentSection(
 
 def discover_job(section: Section) -> DiscoveryResult:
     for jobname, job in section.items():
-        if not job["running"]:
-            yield Service(item=jobname)
+        yield Service(item=jobname)
 
 
 _METRIC_SPECS: Mapping[str, tuple[str, Callable]] = {

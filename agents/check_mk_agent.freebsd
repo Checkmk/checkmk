@@ -564,11 +564,8 @@ run_purely_synchronous_sections() {
     elif [ -x /usr/libexec/dma ]; then
         # Check status of DragonFly BSD Mail Agent (dma)
         echo '<<<postfix_mailq>>>'
-        /usr/libexec/dma -bp | tail -n 7
-        dma_count=$(/usr/libexec/dma -bp | grep "^ID" | wc -l)
-        if [ "${dma_count}" -gt 0 ]; then
-            echo "${dma_count} Requests."
-        fi
+        echo -n QUEUE_deferred
+        /usr/libexec/dma -bp | grep ^ID | wc -l
     fi
 
     # Check status of qmail mailqueue

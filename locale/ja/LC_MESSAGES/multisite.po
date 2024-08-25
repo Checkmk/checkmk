@@ -905,6 +905,9 @@ msgstr "(不明: %d)"
 msgid "(unset)"
 msgstr "(未設定)"
 
+msgid ", "
+msgstr ""
+
 msgid ", but it is overruled by a match in a previous rule pack."
 msgstr "、ただし、以前のルールパックの一致によって無効にされます。"
 

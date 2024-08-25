@@ -914,6 +914,9 @@ msgstr "(desconhecido: %d)"
 msgid "(unset)"
 msgstr "(não definido)"
 
+msgid ", "
+msgstr ""
+
 msgid ", but it is overruled by a match in a previous rule pack."
 msgstr "mas é anulado por uma partida num pacote de regras anterior."
 

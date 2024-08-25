@@ -916,6 +916,9 @@ msgstr "(unbekannt: %d)"
 msgid "(unset)"
 msgstr "(nicht gesetzt)"
 
+msgid ", "
+msgstr ""
+
 msgid ", but it is overruled by a match in a previous rule pack."
 msgstr ""
 ", wird aber durch eine Übereinstimmung in einem früheren Regelpaket "

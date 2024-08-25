@@ -912,6 +912,9 @@ msgstr "(onbekend: %d)"
 msgid "(unset)"
 msgstr "(niet gezet)"
 
+msgid ", "
+msgstr ""
+
 msgid ", but it is overruled by a match in a previous rule pack."
 msgstr ", maar wordt verworpen door een match in de voorgaande regels."
 

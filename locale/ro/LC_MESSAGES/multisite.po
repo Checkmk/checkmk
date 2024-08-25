@@ -918,6 +918,9 @@ msgstr "(necunoscut: %d)"
 msgid "(unset)"
 msgstr "(neconfigurat)"
 
+msgid ", "
+msgstr ""
+
 msgid ", but it is overruled by a match in a previous rule pack."
 msgstr ", dar este anulată de o potrivire dintr-un pachet de reguli anterior."
 

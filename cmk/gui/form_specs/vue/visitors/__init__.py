@@ -20,6 +20,7 @@ from .password import PasswordVisitor
 from .single_choice import SingleChoiceVisitor
 from .string import StringVisitor
 from .time_span import TimeSpanVisitor
+from .transform import TransformVisitor
 
 __all__ = [
     "DataOrigin",
@@ -41,4 +42,5 @@ __all__ = [
     "SingleChoiceVisitor",
     "StringVisitor",
     "TimeSpanVisitor",
+    "TransformVisitor",
 ]

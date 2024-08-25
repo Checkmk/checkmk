@@ -10,7 +10,7 @@ from cmk.gui.htmllib import html
 from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.utils import escaping
 
-from cmk.rulesets.v1 import Label, Title
+from cmk.rulesets.v1 import Label, Message, Title
 from cmk.rulesets.v1.form_specs import DefaultValue, FormSpec, InputHint, Prefill
 from cmk.rulesets.v1.form_specs.validators import ValidationError
 
@@ -50,9 +50,9 @@ def optional_validation(
 
 
 def create_validation_error(
-    value: object, error_message: Title | str
+    value: object, error_message: Title | Message | str
 ) -> list[shared_type_defs.ValidationMessage]:
-    if isinstance(error_message, Title):
+    if isinstance(error_message, (Title, Message)):
         error_message = error_message.localize(translate_to_current_language)
     return [
         shared_type_defs.ValidationMessage(location=[], message=error_message, invalid_value=value)

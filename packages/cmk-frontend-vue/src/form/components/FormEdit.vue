@@ -57,7 +57,7 @@ function getComponent(): IComponent {
 </script>
 
 <template>
-  <div>
+  <span>
     <FormHelp :help="spec.help" />
     <component
       :is="getComponent()"
@@ -65,5 +65,5 @@ function getComponent(): IComponent {
       :backend-validation="backendValidation"
       :spec="spec"
     />
-  </div>
+  </span>
 </template>

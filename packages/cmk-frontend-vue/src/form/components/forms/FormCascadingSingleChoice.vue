@@ -107,6 +107,7 @@ const activeElement = computed((): ActiveElement | null => {
   </div>
   <template v-if="activeElement != null">
     <FormEdit
+      :key="data[0]"
       v-model:data="data[1]"
       :spec="activeElement.spec"
       :backend-validation="elementValidation"

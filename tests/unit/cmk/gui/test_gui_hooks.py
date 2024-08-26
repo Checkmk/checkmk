@@ -6,7 +6,6 @@ import datetime
 from collections.abc import Generator
 
 import pytest
-from flask import Flask
 from pytest_mock import MockerFixture
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
@@ -28,26 +27,25 @@ def reset_hooks() -> Generator[None, None, None]:
 
 
 @pytest.mark.usefixtures("patch_theme")
-def test_flask_request_memoize(flask_app: Flask) -> None:
+def test_flask_request_memoize(wsgi_app: WebTestAppForCMK) -> None:
     @hooks.request_memoize()
     def cached_function():
         return datetime.datetime.now()
 
     assert len(hooks.hooks) > 0
 
-    with flask_app.test_client(use_cookies=True) as client:
-        prev = cached_function()
+    prev = cached_function()
 
-        # Only Checkmk and REST API Blueprint requests trigger the cache eviction.
-        resp = client.get("/")
-        assert resp.status_code == 404
+    # Only Checkmk and REST API Blueprint requests trigger the cache eviction.
+    resp = wsgi_app.get("/")
+    assert resp.status_code == 404
 
-        assert prev == cached_function()
+    assert prev == cached_function()
 
-        # After another request, the cache is evicted.
-        resp = client.get("/NO_SITE/check_mk/login.py")
-        assert resp.status_code == 200
-        assert prev != cached_function()
+    # After another request, the cache is evicted.
+    resp = wsgi_app.get("/NO_SITE/check_mk/login.py")
+    assert resp.status_code == 200
+    assert prev != cached_function()
 
 
 @pytest.mark.usefixtures("patch_theme")

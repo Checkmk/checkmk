@@ -88,9 +88,9 @@ const handleError = (err: RestApiError) => {
     stages.value[currentStage.value]!.form_spec_errors = (err as ValidationError).formspec_errors
 
     if (isOnSaveStage.value) {
-      stages.value[currentStage.value]!.stage_errors = (err as ValidationError).stage_errors
-    } else {
       saveValidationErrors.value = (err as ValidationError).stage_errors
+    } else {
+      stages.value[currentStage.value]!.stage_errors = (err as ValidationError).stage_errors
     }
   }
 }

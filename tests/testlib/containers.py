@@ -487,7 +487,7 @@ def _runtime_binds() -> Mapping[str, DockerBind]:
         # at the file mount that was used while building the image. This is not
         # really needed during runtime of the test. We could mount any file.
         (Path(os.environ["HOME"]) / ".cmk-credentials").as_posix(): DockerBind(
-            bind="/root/.cmk-credentials",
+            bind="/etc/.cmk-credentials",
             mode="ro",
         ),
     }

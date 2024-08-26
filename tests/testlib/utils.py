@@ -64,7 +64,11 @@ def is_containerized() -> bool:
 
 
 def get_cmk_download_credentials() -> tuple[str, str]:
-    credentials_file_path = Path("~").expanduser() / ".cmk-credentials"
+    credentials_file_path = (
+        Path("/etc") / ".cmk-credentials"
+        if is_containerized()
+        else Path("~").expanduser() / ".cmk-credentials"
+    )
     try:
         with open(credentials_file_path) as credentials_file:
             username, password = credentials_file.read().strip().split(":", maxsplit=1)

@@ -322,9 +322,18 @@ class Certificate:
 
         # RFC 5280 4.2.1.9.  Key Usage
         #
-        # Currently only digital signature.
         # Note that some combinations of usage bits may have security implications. See
         # RFC 3279 2.3 and other links in RFC 5280 4.2.1.9. before enabling more usages.
+        #
+        # Some notes about our current settings:
+        # - digital_signatures should be set for certificates used in TLS (needed during the
+        #   handshake) and for certificates used to sign data (like in the bakery). AT THE MOMENT
+        #   this is any certificate that we don't use as a CA.
+        # - key_encipherment and key_agreement would potentially be relevant in the TLS handshake
+        #   (depending on the key type) but as long as we have no component that cares about them
+        #   I think it's better to avoid this complexity and ignore them.
+        # - key_cert_sign MUST only be set for CAs, so non-CA self-signed certs don't set this.
+        #
         builder = builder.add_extension(
             x509.KeyUsage(
                 digital_signature=not is_ca,  # signing data

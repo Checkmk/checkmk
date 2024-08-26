@@ -30,6 +30,7 @@ from cmk.gui.watolib import activate_changes, config_sync
 
 from cmk import trace
 from cmk.bi.type_defs import frozen_aggregations_dir
+from cmk.messaging import rabbitmq
 
 
 @pytest.fixture(name="mocked_responses")
@@ -251,10 +252,11 @@ def _generate_sync_snapshot(
         else "CRESnapshotDataCollector"
     )
 
-    rabbitmq_definitions = activate_changes.get_rabbitmq_definitions()
     assert activation_manager._activation_id is not None
     site_snapshot_settings = activation_manager._get_site_snapshot_settings(
-        activation_manager._activation_id, activation_manager._sites, rabbitmq_definitions
+        activation_manager._activation_id,
+        activation_manager._sites,
+        {remote_site: rabbitmq.Definitions()},
     )
     snapshot_settings = site_snapshot_settings[remote_site]
 

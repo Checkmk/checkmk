@@ -10,93 +10,14 @@ import pytest
 from cmk.messaging import rabbitmq
 from cmk.messaging._constants import DEFAULT_VHOST_NAME
 
-# central -> remote1
-SIMPLE_CONNECTION = [
-    rabbitmq.Connection(
-        connectee=rabbitmq.Connectee(
-            site_id="remote1",
-            customer="provider",
-            site_server="remote1",
-            rabbitmq_port=5672,
-        ),
-        connecter=rabbitmq.Connecter(
-            site_id="central",
-            customer="provider",
-        ),
-    )
-]
-
-# central -> remote1
-SIMPLE_CONNECTION_DIFF_CUSTOMER = [
-    rabbitmq.Connection(
-        connectee=rabbitmq.Connectee(
-            site_id="remote1",
-            customer="customer1",
-            site_server="remote1",
-            rabbitmq_port=5672,
-        ),
-        connecter=rabbitmq.Connecter(
-            site_id="central",
-            customer="provider",
-        ),
-    )
-]
-
-# central -> remote1
-#   \
-#    remote2
-MULTISITE_CONNECTIONS_SAME_CUSTOMER = [
-    rabbitmq.Connection(
-        connectee=rabbitmq.Connectee(
-            site_id="remote1",
-            customer="customer1",
-            site_server="remote1",
-            rabbitmq_port=5672,
-        ),
-        connecter=rabbitmq.Connecter(
-            site_id="central",
-            customer="provider",
-        ),
-    ),
-    rabbitmq.Connection(
-        connectee=rabbitmq.Connectee(
-            site_id="remote2",
-            customer="customer1",
-            site_server="remote2",
-            rabbitmq_port=5672,
-        ),
-        connecter=rabbitmq.Connecter(
-            site_id="central",
-            customer="provider",
-        ),
-    ),
-]
-
-MULTISITE_CONNECTIONS_DIFFERENT_CUSTOMER = [
-    rabbitmq.Connection(
-        connectee=rabbitmq.Connectee(
-            site_id="remote1",
-            customer="customer1",
-            site_server="remote1",
-            rabbitmq_port=5672,
-        ),
-        connecter=rabbitmq.Connecter(
-            site_id="central",
-        ),
-    ),
-    rabbitmq.Connection(
-        connectee=rabbitmq.Connectee(
-            site_id="remote2",
-            customer="customer2",
-            site_server="remote2",
-            rabbitmq_port=5672,
-        ),
-        connecter=rabbitmq.Connecter(
-            site_id="central",
-            customer="provider",
-        ),
-    ),
-]
+from ._connections import (
+    MULTISITE_CONNECTIONS_DIFFERENT_CUSTOMER,
+    MULTISITE_CONNECTIONS_SAME_CUSTOMER,
+    P2P_CONNECTIONS_PROVIDER,
+    P2P_CONNECTIONS_SAME_CUSTOMER,
+    SIMPLE_CONNECTION,
+    SIMPLE_CONNECTION_DIFF_CUSTOMER,
+)
 
 
 @pytest.mark.parametrize(
@@ -138,6 +59,22 @@ MULTISITE_CONNECTIONS_DIFFERENT_CUSTOMER = [
                     rabbitmq.VirtualHost(name="customer1"),
                     rabbitmq.VirtualHost(name="customer2"),
                 ],
+                "remote2": [],
+            },
+        ),
+        (
+            P2P_CONNECTIONS_SAME_CUSTOMER,
+            {
+                "remote1": [],
+                "central": [rabbitmq.VirtualHost(name="customer1")],
+                "remote2": [],
+            },
+        ),
+        (
+            P2P_CONNECTIONS_PROVIDER,
+            {
+                "remote1": [],
+                "central": [],
                 "remote2": [],
             },
         ),
@@ -265,6 +202,108 @@ def test_compute_distributed_definitions_vhosts(
                 "remote2": [],
             },
         ),
+        (
+            P2P_CONNECTIONS_SAME_CUSTOMER,
+            {
+                "remote1": [
+                    rabbitmq.Binding(
+                        source="cmk.intersite",
+                        vhost=DEFAULT_VHOST_NAME,
+                        destination="cmk.intersite.remote2",
+                        destination_type="queue",
+                        routing_key="remote2.#",
+                        arguments={},
+                    ),
+                ],
+                "central": [
+                    rabbitmq.Binding(
+                        source="cmk.intersite",
+                        vhost="customer1",
+                        destination="cmk.intersite.remote1",
+                        destination_type="queue",
+                        routing_key="remote1.#",
+                        arguments={},
+                    ),
+                    rabbitmq.Binding(
+                        source="cmk.intersite",
+                        vhost="customer1",
+                        destination="cmk.intersite.remote2",
+                        destination_type="queue",
+                        routing_key="remote2.#",
+                        arguments={},
+                    ),
+                ],
+                "remote2": [
+                    rabbitmq.Binding(
+                        source="cmk.intersite",
+                        vhost=DEFAULT_VHOST_NAME,
+                        destination="cmk.intersite.remote1",
+                        destination_type="queue",
+                        routing_key="remote1.#",
+                        arguments={},
+                    ),
+                ],
+            },
+        ),
+        (
+            P2P_CONNECTIONS_PROVIDER,
+            {
+                "remote1": [
+                    rabbitmq.Binding(
+                        source="cmk.intersite",
+                        vhost=DEFAULT_VHOST_NAME,
+                        destination="cmk.intersite.central",
+                        destination_type="queue",
+                        routing_key="central.#",
+                        arguments={},
+                    ),
+                    rabbitmq.Binding(
+                        source="cmk.intersite",
+                        vhost=DEFAULT_VHOST_NAME,
+                        destination="cmk.intersite.remote2",
+                        destination_type="queue",
+                        routing_key="remote2.#",
+                        arguments={},
+                    ),
+                ],
+                "central": [
+                    rabbitmq.Binding(
+                        source="cmk.intersite",
+                        vhost=DEFAULT_VHOST_NAME,
+                        destination="cmk.intersite.remote1",
+                        destination_type="queue",
+                        routing_key="remote1.#",
+                        arguments={},
+                    ),
+                    rabbitmq.Binding(
+                        source="cmk.intersite",
+                        vhost=DEFAULT_VHOST_NAME,
+                        destination="cmk.intersite.remote2",
+                        destination_type="queue",
+                        routing_key="remote2.#",
+                        arguments={},
+                    ),
+                ],
+                "remote2": [
+                    rabbitmq.Binding(
+                        source="cmk.intersite",
+                        vhost=DEFAULT_VHOST_NAME,
+                        destination="cmk.intersite.central",
+                        destination_type="queue",
+                        routing_key="central.#",
+                        arguments={},
+                    ),
+                    rabbitmq.Binding(
+                        source="cmk.intersite",
+                        vhost=DEFAULT_VHOST_NAME,
+                        destination="cmk.intersite.remote1",
+                        destination_type="queue",
+                        routing_key="remote1.#",
+                        arguments={},
+                    ),
+                ],
+            },
+        ),
     ],
 )
 def test_compute_distributed_definitions_bindings(
@@ -310,6 +349,22 @@ def test_compute_distributed_definitions_bindings(
             {
                 "remote1": [rabbitmq.User(name="central")],
                 "remote2": [rabbitmq.User(name="central")],
+                "central": [rabbitmq.User(name="remote1"), rabbitmq.User(name="remote2")],
+            },
+        ),
+        (
+            P2P_CONNECTIONS_SAME_CUSTOMER,
+            {
+                "remote1": [rabbitmq.User(name="central"), rabbitmq.User(name="remote2")],
+                "remote2": [rabbitmq.User(name="central"), rabbitmq.User(name="remote1")],
+                "central": [rabbitmq.User(name="remote1"), rabbitmq.User(name="remote2")],
+            },
+        ),
+        (
+            P2P_CONNECTIONS_PROVIDER,
+            {
+                "remote1": [rabbitmq.User(name="central"), rabbitmq.User(name="remote2")],
+                "remote2": [rabbitmq.User(name="central"), rabbitmq.User(name="remote1")],
                 "central": [rabbitmq.User(name="remote1"), rabbitmq.User(name="remote2")],
             },
         ),
@@ -445,6 +500,112 @@ def test_compute_distributed_definitions_users(
                     rabbitmq.Permission(
                         user="remote2",
                         vhost="customer2",
+                        configure="^$",
+                        write="cmk.intersite",
+                        read="cmk.intersite..*",
+                    ),
+                ],
+            },
+        ),
+        (
+            P2P_CONNECTIONS_SAME_CUSTOMER,
+            {
+                "remote1": [
+                    rabbitmq.Permission(
+                        user="central",
+                        vhost=DEFAULT_VHOST_NAME,
+                        configure="^$",
+                        write="cmk.intersite",
+                        read="cmk.intersite..*",
+                    ),
+                    rabbitmq.Permission(
+                        user="remote2",
+                        vhost=DEFAULT_VHOST_NAME,
+                        configure="^$",
+                        write="cmk.intersite",
+                        read="cmk.intersite..*",
+                    ),
+                ],
+                "remote2": [
+                    rabbitmq.Permission(
+                        user="central",
+                        vhost=DEFAULT_VHOST_NAME,
+                        configure="^$",
+                        write="cmk.intersite",
+                        read="cmk.intersite..*",
+                    ),
+                    rabbitmq.Permission(
+                        user="remote1",
+                        vhost=DEFAULT_VHOST_NAME,
+                        configure="^$",
+                        write="cmk.intersite",
+                        read="cmk.intersite..*",
+                    ),
+                ],
+                "central": [
+                    rabbitmq.Permission(
+                        user="remote1",
+                        vhost="customer1",
+                        configure="^$",
+                        write="cmk.intersite",
+                        read="cmk.intersite..*",
+                    ),
+                    rabbitmq.Permission(
+                        user="remote2",
+                        vhost="customer1",
+                        configure="^$",
+                        write="cmk.intersite",
+                        read="cmk.intersite..*",
+                    ),
+                ],
+            },
+        ),
+        (
+            P2P_CONNECTIONS_PROVIDER,
+            {
+                "remote1": [
+                    rabbitmq.Permission(
+                        user="central",
+                        vhost=DEFAULT_VHOST_NAME,
+                        configure="^$",
+                        write="cmk.intersite",
+                        read="cmk.intersite..*",
+                    ),
+                    rabbitmq.Permission(
+                        user="remote2",
+                        vhost=DEFAULT_VHOST_NAME,
+                        configure="^$",
+                        write="cmk.intersite",
+                        read="cmk.intersite..*",
+                    ),
+                ],
+                "remote2": [
+                    rabbitmq.Permission(
+                        user="central",
+                        vhost=DEFAULT_VHOST_NAME,
+                        configure="^$",
+                        write="cmk.intersite",
+                        read="cmk.intersite..*",
+                    ),
+                    rabbitmq.Permission(
+                        user="remote1",
+                        vhost=DEFAULT_VHOST_NAME,
+                        configure="^$",
+                        write="cmk.intersite",
+                        read="cmk.intersite..*",
+                    ),
+                ],
+                "central": [
+                    rabbitmq.Permission(
+                        user="remote1",
+                        vhost=DEFAULT_VHOST_NAME,
+                        configure="^$",
+                        write="cmk.intersite",
+                        read="cmk.intersite..*",
+                    ),
+                    rabbitmq.Permission(
+                        user="remote2",
+                        vhost=DEFAULT_VHOST_NAME,
                         configure="^$",
                         write="cmk.intersite",
                         read="cmk.intersite..*",
@@ -593,6 +754,112 @@ def test_compute_distributed_definitions_permissions(
                 ],
             },
         ),
+        (
+            P2P_CONNECTIONS_SAME_CUSTOMER,
+            {
+                "remote1": [
+                    rabbitmq.Queue(
+                        name="cmk.intersite.central",
+                        vhost=DEFAULT_VHOST_NAME,
+                        durable=True,
+                        auto_delete=False,
+                        arguments={},
+                    ),
+                    rabbitmq.Queue(
+                        name="cmk.intersite.remote2",
+                        vhost=DEFAULT_VHOST_NAME,
+                        durable=True,
+                        auto_delete=False,
+                        arguments={},
+                    ),
+                ],
+                "remote2": [
+                    rabbitmq.Queue(
+                        name="cmk.intersite.central",
+                        vhost=DEFAULT_VHOST_NAME,
+                        durable=True,
+                        auto_delete=False,
+                        arguments={},
+                    ),
+                    rabbitmq.Queue(
+                        name="cmk.intersite.remote1",
+                        vhost=DEFAULT_VHOST_NAME,
+                        durable=True,
+                        auto_delete=False,
+                        arguments={},
+                    ),
+                ],
+                "central": [
+                    rabbitmq.Queue(
+                        name="cmk.intersite.remote1",
+                        vhost="customer1",
+                        durable=True,
+                        auto_delete=False,
+                        arguments={},
+                    ),
+                    rabbitmq.Queue(
+                        name="cmk.intersite.remote2",
+                        vhost="customer1",
+                        durable=True,
+                        auto_delete=False,
+                        arguments={},
+                    ),
+                ],
+            },
+        ),
+        (
+            P2P_CONNECTIONS_PROVIDER,
+            {
+                "remote1": [
+                    rabbitmq.Queue(
+                        name="cmk.intersite.central",
+                        vhost=DEFAULT_VHOST_NAME,
+                        durable=True,
+                        auto_delete=False,
+                        arguments={},
+                    ),
+                    rabbitmq.Queue(
+                        name="cmk.intersite.remote2",
+                        vhost=DEFAULT_VHOST_NAME,
+                        durable=True,
+                        auto_delete=False,
+                        arguments={},
+                    ),
+                ],
+                "remote2": [
+                    rabbitmq.Queue(
+                        name="cmk.intersite.central",
+                        vhost=DEFAULT_VHOST_NAME,
+                        durable=True,
+                        auto_delete=False,
+                        arguments={},
+                    ),
+                    rabbitmq.Queue(
+                        name="cmk.intersite.remote1",
+                        vhost=DEFAULT_VHOST_NAME,
+                        durable=True,
+                        auto_delete=False,
+                        arguments={},
+                    ),
+                ],
+                "central": [
+                    rabbitmq.Queue(
+                        name="cmk.intersite.remote1",
+                        vhost=DEFAULT_VHOST_NAME,
+                        durable=True,
+                        auto_delete=False,
+                        arguments={},
+                    ),
+                    rabbitmq.Queue(
+                        name="cmk.intersite.remote2",
+                        vhost=DEFAULT_VHOST_NAME,
+                        durable=True,
+                        auto_delete=False,
+                        arguments={},
+                    ),
+                ],
+            },
+        ),
     ],
 )
 def test_compute_distributed_definitions_queues(
@@ -603,157 +870,6 @@ def test_compute_distributed_definitions_queues(
 
     for site_id, site_queues in queues.items():
         assert list(definitions[site_id].queues) == site_queues
-
-
-CENTRAL_SHOVELS_REMOTE1 = [
-    rabbitmq.Component(
-        value={
-            **rabbitmq.DEFAULT_SHOVEL,
-            "dest-uri": "amqps://remote1:5672?"
-            "server_name_indication=remote1&auth_mechanism=external",
-            "src-uri": "amqp:///customer1",
-            "src-queue": "cmk.intersite.remote1",
-        },
-        vhost="customer1",
-        component="shovel",
-        name="cmk.shovel.central->remote1",
-    ),
-    rabbitmq.Component(
-        value={
-            **rabbitmq.DEFAULT_SHOVEL,
-            "src-queue": "cmk.intersite.central",
-            "src-uri": "amqps://remote1:5672?"
-            "server_name_indication=remote1&auth_mechanism=external",
-            "dest-uri": "amqp:///customer1",
-        },
-        vhost="customer1",
-        component="shovel",
-        name="cmk.shovel.remote1->central",
-    ),
-]
-CENTRAL_SHOVELS_REMOTE2 = [
-    rabbitmq.Component(
-        value={
-            **rabbitmq.DEFAULT_SHOVEL,
-            "dest-uri": "amqps://remote2:5672?"
-            "server_name_indication=remote2&auth_mechanism=external",
-            "src-queue": "cmk.intersite.remote2",
-            "src-uri": "amqp:///customer1",
-        },
-        vhost="customer1",
-        component="shovel",
-        name="cmk.shovel.central->remote2",
-    ),
-    rabbitmq.Component(
-        value={
-            **rabbitmq.DEFAULT_SHOVEL,
-            "src-queue": "cmk.intersite.central",
-            "src-uri": "amqps://remote2:5672?"
-            "server_name_indication=remote2&auth_mechanism=external",
-            "dest-uri": "amqp:///customer1",
-        },
-        vhost="customer1",
-        component="shovel",
-        name="cmk.shovel.remote2->central",
-    ),
-]
-CENTRAL_SHOVELS_REMOTE2_DIFF_CUSTOMER = [
-    rabbitmq.Component(
-        value={
-            **rabbitmq.DEFAULT_SHOVEL,
-            "dest-uri": "amqps://remote2:5672?"
-            "server_name_indication=remote2&auth_mechanism=external",
-            "src-queue": "cmk.intersite.remote2",
-            "src-uri": "amqp:///customer2",
-        },
-        vhost="customer2",
-        component="shovel",
-        name="cmk.shovel.central->remote2",
-    ),
-    rabbitmq.Component(
-        value={
-            **rabbitmq.DEFAULT_SHOVEL,
-            "src-queue": "cmk.intersite.central",
-            "src-uri": "amqps://remote2:5672?"
-            "server_name_indication=remote2&auth_mechanism=external",
-            "dest-uri": "amqp:///customer2",
-        },
-        vhost="customer2",
-        component="shovel",
-        name="cmk.shovel.remote2->central",
-    ),
-]
-
-
-@pytest.mark.parametrize(
-    "connections, parameters",
-    [
-        (
-            SIMPLE_CONNECTION,
-            {
-                "remote1": [],
-                "central": [
-                    rabbitmq.Component(
-                        value={
-                            **rabbitmq.DEFAULT_SHOVEL,
-                            "dest-uri": "amqps://remote1:5672?"
-                            "server_name_indication=remote1&auth_mechanism=external",
-                            "src-uri": r"amqp:///%2f",
-                            "src-queue": "cmk.intersite.remote1",
-                        },
-                        vhost=DEFAULT_VHOST_NAME,
-                        component="shovel",
-                        name="cmk.shovel.central->remote1",
-                    ),
-                    rabbitmq.Component(
-                        value={
-                            **rabbitmq.DEFAULT_SHOVEL,
-                            "src-queue": "cmk.intersite.central",
-                            "src-uri": "amqps://remote1:5672?"
-                            "server_name_indication=remote1&auth_mechanism=external",
-                            "dest-uri": r"amqp:///%2f",
-                        },
-                        vhost=DEFAULT_VHOST_NAME,
-                        component="shovel",
-                        name="cmk.shovel.remote1->central",
-                    ),
-                ],
-            },
-        ),
-        (
-            SIMPLE_CONNECTION_DIFF_CUSTOMER,
-            {
-                "remote1": [],
-                "central": CENTRAL_SHOVELS_REMOTE1,
-            },
-        ),
-        (
-            MULTISITE_CONNECTIONS_SAME_CUSTOMER,
-            {
-                "remote1": [],
-                "remote2": [],
-                "central": CENTRAL_SHOVELS_REMOTE1 + CENTRAL_SHOVELS_REMOTE2,
-            },
-        ),
-        (
-            MULTISITE_CONNECTIONS_DIFFERENT_CUSTOMER,
-            {
-                "remote1": [],
-                "remote2": [],
-                "central": CENTRAL_SHOVELS_REMOTE1 + CENTRAL_SHOVELS_REMOTE2_DIFF_CUSTOMER,
-            },
-        ),
-    ],
-)
-def test_compute_distributed_definitions_parameters(
-    connections: Sequence[rabbitmq.Connection],
-    parameters: Mapping[str, Sequence[rabbitmq.Component]],
-) -> None:
-
-    definitions = rabbitmq.compute_distributed_definitions(connections)
-
-    for site_id, site_parameters in parameters.items():
-        assert list(definitions[site_id].parameters) == site_parameters
 
 
 @pytest.mark.parametrize(

@@ -39,7 +39,7 @@ from urllib.parse import urlparse
 
 from setproctitle import setthreadtitle
 
-from livestatus import SiteConfiguration, SiteId
+from livestatus import BrokerConnections, SiteConfiguration, SiteId
 
 from cmk.ccc import store, version
 from cmk.ccc.exceptions import MKGeneralException
@@ -92,6 +92,7 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib import backup_snapshots, broker_certificates, config_domain_name
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import AutomationCommand
+from cmk.gui.watolib.broker_connections import BrokerConnectionsConfigFile
 from cmk.gui.watolib.config_domain_name import (
     ConfigDomainName,
     DomainRequest,
@@ -1246,6 +1247,33 @@ def affects_all_sites(change: ChangeSpec) -> bool:
     return not set(change["affected_sites"]).symmetric_difference(set(activation_sites()))
 
 
+def _add_peer_to_peer_connections(
+    replicated_sites_configs: Mapping[SiteId, SiteConfiguration],
+    connection_info: list[rabbitmq.Connection],
+    peer_to_peer_connections: BrokerConnections,
+) -> None:
+    for _connection_id, connection in peer_to_peer_connections.items():
+        source_site = connection.connecter.site_id
+        destination_site = connection.connectee.site_id
+
+        connection_info.append(
+            rabbitmq.Connection(
+                connectee=rabbitmq.Connectee(
+                    site_id=destination_site,
+                    site_server=urlparse(
+                        replicated_sites_configs[destination_site]["multisiteurl"]
+                    ).netloc,
+                    rabbitmq_port=replicated_sites_configs[destination_site].get(
+                        "message_broker_port", 5672
+                    ),
+                ),
+                connecter=rabbitmq.Connecter(
+                    site_id=source_site,
+                ),
+            )
+        )
+
+
 def get_all_replicated_sites() -> Mapping[SiteId, SiteConfiguration]:
     return {
         site_id: site_config
@@ -1254,7 +1282,9 @@ def get_all_replicated_sites() -> Mapping[SiteId, SiteConfiguration]:
     }
 
 
-def get_rabbitmq_definitions() -> Mapping[str, rabbitmq.Definitions]:
+def get_rabbitmq_definitions(
+    peer_to_peer_connections: BrokerConnections,
+) -> Mapping[str, rabbitmq.Definitions]:
 
     replicated_sites_configs = get_all_replicated_sites()
 
@@ -1271,6 +1301,10 @@ def get_rabbitmq_definitions() -> Mapping[str, rabbitmq.Definitions]:
         )
         for site_id, site_config in replicated_sites_configs.items()
     ]
+
+    _add_peer_to_peer_connections(
+        replicated_sites_configs, connection_info, peer_to_peer_connections
+    )
     return rabbitmq.compute_distributed_definitions(connection_info)
 
 
@@ -1416,7 +1450,9 @@ class ActivateChangesManager(ActivateChanges):
         self._source = source
         self._activation_id = self._new_activation_id()
         trace.get_current_span().set_attribute("cmk.activate.id", self._activation_id)
-        rabbitmq_definitions = get_rabbitmq_definitions()
+        rabbitmq_definitions = get_rabbitmq_definitions(
+            BrokerConnectionsConfigFile().load_for_reading()
+        )
 
         self._site_snapshot_settings = self._get_site_snapshot_settings(
             self._activation_id, self._sites, rabbitmq_definitions

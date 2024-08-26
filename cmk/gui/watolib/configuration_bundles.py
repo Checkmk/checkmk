@@ -199,6 +199,15 @@ def read_config_bundle(bundle_id: BundleId) -> "ConfigBundle":
     raise MKGeneralException(f'Configuration bundle "{bundle_id}" does not exist.')
 
 
+def edit_config_bundle_configuration(bundle_id: BundleId, bundle: "ConfigBundle") -> None:
+    store = ConfigBundleStore()
+    all_bundles = store.load_for_modification()
+    if bundle_id not in all_bundles:
+        raise MKGeneralException(f'Configuration bundle "{bundle_id}" does not exist.')
+    all_bundles[bundle_id] = bundle
+    store.save(all_bundles)
+
+
 def create_config_bundle(
     bundle_id: BundleId, bundle: "ConfigBundle", entities: CreateBundleEntities
 ) -> None:

@@ -46,6 +46,7 @@ from cmk.gui.watolib.configuration_bundles import (
     ConfigBundle,
     ConfigBundleStore,
     delete_config_bundle,
+    edit_config_bundle_configuration,
     identify_bundle_group_type,
     identify_bundle_references,
     load_group_bundles,
@@ -613,7 +614,12 @@ class ModeConfigurationBundle(WatoMode):
         )
 
     def _save_config_bundle_configuration(self) -> None:
-        pass
+        vs = self._configuration_vs(self._bundle_id)
+        config = vs.from_html_vars("edit_bundle_options")
+        vs.validate_value(config, "edit_bundle_options")
+        self._bundle["title"] = config["_name"]
+        self._bundle["comment"] = config["_comment"]
+        edit_config_bundle_configuration(self._bundle_id, self._bundle)
 
     def _set_vars(self, all_vars: Mapping[str, Sequence[tuple[str, str]]], form_name: str) -> None:
         request.del_vars()

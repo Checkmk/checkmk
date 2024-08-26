@@ -58,10 +58,22 @@ class NotificationParameterOpsgenie(NotificationParameter):
                 ),
                 ("proxy_url", HTTPProxyReference()),
                 (
+                    "integration_team",
+                    TextInput(
+                        title=_("Integration team"),
+                        help=_(
+                            "The name of the team where the integration was created. "
+                            "If this field is set, additional information can be added to alerts."
+                        ),
+                        size=64,
+                        allow_empty=False,
+                    ),
+                ),
+                (
                     "owner",
                     TextInput(
                         title=_("Owner"),
-                        help=("Sets the user of the alert. " "Display name of the request owner."),
+                        help=_("Sets the user of the alert. Display name of the request owner."),
                         size=100,
                         allow_empty=False,
                     ),

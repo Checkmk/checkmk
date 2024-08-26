@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Callable, Sequence, TypeVar
 
-from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
+from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -33,10 +33,10 @@ class FixedValueVisitor(FormSpecVisitor[FixedValue[T], T]):
 
     def _to_vue(
         self, raw_value: object, parsed_value: T | EmptyValue
-    ) -> tuple[VueComponents.FixedValue, Value]:
+    ) -> tuple[shared_type_defs.FixedValue, Value]:
         title, help_text = get_title_and_help(self.form_spec)
         return (
-            VueComponents.FixedValue(
+            shared_type_defs.FixedValue(
                 title=title,
                 help=help_text,
                 label=localize(self.form_spec.label),
@@ -48,7 +48,7 @@ class FixedValueVisitor(FormSpecVisitor[FixedValue[T], T]):
 
     def _validate(
         self, raw_value: object, parsed_value: T | EmptyValue
-    ) -> list[VueComponents.ValidationMessage]:
+    ) -> list[shared_type_defs.ValidationMessage]:
         if isinstance(parsed_value, EmptyValue):
             # Note: this code should be unreachable, because the parse function always returns a valid value
             return create_validation_error(

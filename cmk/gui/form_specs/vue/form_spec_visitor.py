@@ -11,7 +11,6 @@ from enum import Enum
 from typing import Any, Literal, TypeVar
 
 import cmk.gui.form_specs.private.validators as private_form_specs_validators
-import cmk.gui.form_specs.vue.shared_type_defs as VueComponents
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.private import (
     Catalog,
@@ -21,6 +20,7 @@ from cmk.gui.form_specs.private import (
     SingleChoiceExtended,
     UnknownFormSpec,
 )
+from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.visitors.recomposers import (
     recompose_dictionary,
     recompose_host_state,
@@ -94,7 +94,7 @@ T = TypeVar("T")
 @dataclass(kw_only=True)
 class VueAppConfig:
     id: str
-    spec: VueComponents.FormSpec
+    spec: shared_type_defs.FormSpec
     data: Any
     validation: Any
     render_mode: Literal["edit", "readonly", "both"]
@@ -142,7 +142,7 @@ register_form_specs()
 register_validators()
 
 
-def _process_validation_errors(validation_errors: list[VueComponents.ValidationMessage]) -> None:
+def _process_validation_errors(validation_errors: list[shared_type_defs.ValidationMessage]) -> None:
     """This functions introduces validation errors from the vue-world into the CheckMK-GUI-world
     The CheckMK-GUI works with a global parameter user_errors.
     These user_errors include the field_id of the broken input field and the error text
@@ -201,7 +201,7 @@ def parse_data_from_frontend(form_spec: FormSpec[T], field_id: str) -> Any:
 
 def validate_value_from_frontend(
     form_spec: FormSpec[T], value_from_frontend: Any
-) -> Sequence[VueComponents.ValidationMessage]:
+) -> Sequence[shared_type_defs.ValidationMessage]:
     visitor = get_visitor(form_spec, VisitorOptions(data_origin=DataOrigin.FRONTEND))
     return visitor.validate(value_from_frontend)
 
@@ -223,7 +223,7 @@ def serialize_data_for_frontend(
     visitor = get_visitor(form_spec, VisitorOptions(data_origin=origin))
     vue_component, vue_value = visitor.to_vue(value)
 
-    validation: list[VueComponents.ValidationMessage] = []
+    validation: list[shared_type_defs.ValidationMessage] = []
     if do_validate:
         validation = visitor.validate(value)
 

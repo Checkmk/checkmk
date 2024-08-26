@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Any, Callable, Optional, Protocol, Sequence, TypeVar
 
-from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
+from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.visitors._type_defs import EMPTY_VALUE, EmptyValue
 from cmk.gui.htmllib import html
 from cmk.gui.i18n import translate_to_current_language
@@ -51,20 +51,20 @@ def optional_validation(
 
 def create_validation_error(
     value: object, error_message: Title | str
-) -> list[VueComponents.ValidationMessage]:
+) -> list[shared_type_defs.ValidationMessage]:
     if isinstance(error_message, Title):
         error_message = error_message.localize(translate_to_current_language)
     return [
-        VueComponents.ValidationMessage(location=[], message=error_message, invalid_value=value)
+        shared_type_defs.ValidationMessage(location=[], message=error_message, invalid_value=value)
     ]
 
 
 def compute_validation_errors(
     validators: Sequence[Callable[[ModelT], object]],
     raw_value: Any,
-) -> list[VueComponents.ValidationMessage]:
+) -> list[shared_type_defs.ValidationMessage]:
     return [
-        VueComponents.ValidationMessage(location=[], message=x, invalid_value=raw_value)
+        shared_type_defs.ValidationMessage(location=[], message=x, invalid_value=raw_value)
         for x in optional_validation(validators, raw_value)
         if x is not None
     ]

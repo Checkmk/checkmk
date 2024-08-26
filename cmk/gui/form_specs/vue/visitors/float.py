@@ -5,7 +5,7 @@
 from typing import Callable, Sequence
 
 from cmk.gui.form_specs.private.validators import IsFloat
-from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
+from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 
 from cmk.rulesets.v1 import Title
@@ -48,10 +48,10 @@ class FloatVisitor(FormSpecVisitor[Float, float]):
 
     def _to_vue(
         self, raw_value: object, parsed_value: float | EmptyValue
-    ) -> tuple[VueComponents.Float, str | float]:
+    ) -> tuple[shared_type_defs.Float, str | float]:
         title, help_text = get_title_and_help(self.form_spec)
         return (
-            VueComponents.Float(
+            shared_type_defs.Float(
                 title=title,
                 help=help_text,
                 unit=self.form_spec.unit_symbol,
@@ -64,7 +64,7 @@ class FloatVisitor(FormSpecVisitor[Float, float]):
 
     def _validate(
         self, raw_value: object, parsed_value: float | EmptyValue
-    ) -> list[VueComponents.ValidationMessage]:
+    ) -> list[shared_type_defs.ValidationMessage]:
         if isinstance(parsed_value, EmptyValue):
             return create_validation_error(
                 "" if raw_value == DEFAULT_VALUE else raw_value, Title("Invalid float number")

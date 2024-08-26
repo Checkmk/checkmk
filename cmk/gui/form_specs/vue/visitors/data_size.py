@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.form_specs.private.validators import IsFloat, IsInteger
-from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
+from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 
 from cmk.rulesets.v1 import Title
@@ -92,7 +92,7 @@ class DataSizeVisitor(FormSpecVisitor[DataSize, int]):
 
     def _to_vue(
         self, raw_value: object, parsed_value: int | float | EmptyValue
-    ) -> tuple[VueComponents.DataSize, list[str]]:
+    ) -> tuple[shared_type_defs.DataSize, list[str]]:
         title, help_text = get_title_and_help(self.form_spec)
 
         if isinstance(parsed_value, EmptyValue):
@@ -107,7 +107,7 @@ class DataSizeVisitor(FormSpecVisitor[DataSize, int]):
         vue_validators = [IsFloat()] + compute_validators(self.form_spec)
         input_hint = str(compute_text_input_hint(self.form_spec.prefill))
         return (
-            VueComponents.DataSize(
+            shared_type_defs.DataSize(
                 title=title,
                 help=help_text,
                 label=localize(self.form_spec.label),
@@ -122,7 +122,7 @@ class DataSizeVisitor(FormSpecVisitor[DataSize, int]):
 
     def _validate(
         self, raw_value: object, parsed_value: int | EmptyValue
-    ) -> list[VueComponents.ValidationMessage]:
+    ) -> list[shared_type_defs.ValidationMessage]:
         if isinstance(parsed_value, EmptyValue):
             return create_validation_error(
                 "" if isinstance(raw_value, DefaultValue) else raw_value,

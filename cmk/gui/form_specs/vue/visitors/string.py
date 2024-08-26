@@ -5,7 +5,7 @@
 
 from typing import Callable, Sequence
 
-from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
+from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 
 from cmk.rulesets.v1 import Title
@@ -41,10 +41,10 @@ class StringVisitor(FormSpecVisitor[String, str]):
 
     def _to_vue(
         self, raw_value: object, parsed_value: str | EmptyValue
-    ) -> tuple[VueComponents.String, Value]:
+    ) -> tuple[shared_type_defs.String, Value]:
         title, help_text = get_title_and_help(self.form_spec)
         return (
-            VueComponents.String(
+            shared_type_defs.String(
                 title=title,
                 help=help_text,
                 validators=build_vue_validators(self._validators()),
@@ -56,7 +56,7 @@ class StringVisitor(FormSpecVisitor[String, str]):
 
     def _validate(
         self, raw_value: object, parsed_value: str | EmptyValue
-    ) -> list[VueComponents.ValidationMessage]:
+    ) -> list[shared_type_defs.ValidationMessage]:
         if isinstance(parsed_value, EmptyValue):
             return create_validation_error(
                 "" if raw_value == DEFAULT_VALUE else raw_value, Title("Invalid string")
@@ -67,13 +67,13 @@ class StringVisitor(FormSpecVisitor[String, str]):
         return parsed_value
 
 
-def field_size_translator(field_size: FieldSize) -> VueComponents.StringFieldSize:
+def field_size_translator(field_size: FieldSize) -> shared_type_defs.StringFieldSize:
     match field_size:
         case FieldSize.SMALL:
-            return VueComponents.StringFieldSize.SMALL
+            return shared_type_defs.StringFieldSize.SMALL
         case FieldSize.MEDIUM:
-            return VueComponents.StringFieldSize.MEDIUM
+            return shared_type_defs.StringFieldSize.MEDIUM
         case FieldSize.LARGE:
-            return VueComponents.StringFieldSize.LARGE
+            return shared_type_defs.StringFieldSize.LARGE
         case _:
-            return VueComponents.StringFieldSize.MEDIUM
+            return shared_type_defs.StringFieldSize.MEDIUM

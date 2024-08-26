@@ -6,7 +6,7 @@
 from typing import Generic, Sequence, TypeVar
 
 from cmk.gui.form_specs.private.list_extended import ListExtended
-from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
+from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.i18n import translate_to_current_language
 
 from cmk.rulesets.v1 import Title
@@ -35,7 +35,7 @@ class ListVisitor(Generic[T], FormSpecVisitor[ListExtended[T], Sequence[T]]):
 
     def _to_vue(
         self, raw_value: object, parsed_value: Sequence[T] | EmptyValue
-    ) -> tuple[VueComponents.List, Value]:
+    ) -> tuple[shared_type_defs.List, Value]:
         if isinstance(parsed_value, EmptyValue):
             # TODO: fallback to default message
             parsed_value = []
@@ -53,7 +53,7 @@ class ListVisitor(Generic[T], FormSpecVisitor[ListExtended[T], Sequence[T]]):
             list_values.append(element_vue_value)
 
         return (
-            VueComponents.List(
+            shared_type_defs.List(
                 title=title,
                 help=help_text,
                 element_template=element_schema,
@@ -74,7 +74,7 @@ class ListVisitor(Generic[T], FormSpecVisitor[ListExtended[T], Sequence[T]]):
 
     def _validate(
         self, raw_value: object, parsed_value: Sequence[T] | EmptyValue
-    ) -> list[VueComponents.ValidationMessage]:
+    ) -> list[shared_type_defs.ValidationMessage]:
         if isinstance(parsed_value, EmptyValue):
             return create_validation_error(raw_value, Title("Invalid data for list"))
 
@@ -86,7 +86,7 @@ class ListVisitor(Generic[T], FormSpecVisitor[ListExtended[T], Sequence[T]]):
         for idx, entry in enumerate(parsed_value):
             for validation in element_visitor.validate(entry):
                 element_validations.append(
-                    VueComponents.ValidationMessage(
+                    shared_type_defs.ValidationMessage(
                         location=[str(idx)] + validation.location,
                         message=validation.message,
                         invalid_value=validation.invalid_value,

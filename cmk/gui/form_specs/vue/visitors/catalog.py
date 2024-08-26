@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any, cast, Mapping, Sequence
 
 from cmk.gui.form_specs.private.catalog import Catalog, Topic
-from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
+from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -38,7 +38,7 @@ class CatalogVisitor(FormSpecVisitor[Catalog, Mapping[str, object]]):
 
     def _to_vue(
         self, raw_value: object, parsed_value: Mapping[str, object] | EmptyValue
-    ) -> tuple[VueComponents.Catalog, Mapping[str, object]]:
+    ) -> tuple[shared_type_defs.Catalog, Mapping[str, object]]:
         title, help_text = get_title_and_help(self.form_spec)
         if isinstance(parsed_value, EmptyValue):
             parsed_value = {}
@@ -49,21 +49,21 @@ class CatalogVisitor(FormSpecVisitor[Catalog, Mapping[str, object]]):
                 dict_visitor = get_visitor(topic.dictionary, self.options)
                 topic_schema, topic_vue_value = dict_visitor.to_vue(topic_value)
                 topics.append(
-                    VueComponents.Topic(
+                    shared_type_defs.Topic(
                         key=topic.key,
-                        dictionary=cast(VueComponents.Dictionary, topic_schema),
+                        dictionary=cast(shared_type_defs.Dictionary, topic_schema),
                     )
                 )
                 topic_values[topic.key] = topic_vue_value
 
         return (
-            VueComponents.Catalog(title=title, help=help_text, topics=topics),
+            shared_type_defs.Catalog(title=title, help=help_text, topics=topics),
             topic_values,
         )
 
     def _validate(
         self, raw_value: object, parsed_value: Mapping[str, object] | EmptyValue
-    ) -> list[VueComponents.ValidationMessage]:
+    ) -> list[shared_type_defs.ValidationMessage]:
         if isinstance(parsed_value, EmptyValue):
             return create_validation_error(
                 "" if isinstance(raw_value, DefaultValue) else raw_value,
@@ -78,7 +78,7 @@ class CatalogVisitor(FormSpecVisitor[Catalog, Mapping[str, object]]):
             element_visitor = get_visitor(topic.dictionary, self.options)
             for validation in element_visitor.validate(parsed_value[topic.key]):
                 validations.append(
-                    VueComponents.ValidationMessage(
+                    shared_type_defs.ValidationMessage(
                         location=[topic.key] + validation.location,
                         message=validation.message,
                         invalid_value=validation.invalid_value,

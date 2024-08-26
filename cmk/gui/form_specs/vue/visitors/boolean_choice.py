@@ -2,7 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
+from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -31,10 +31,10 @@ class BooleanChoiceVisitor(FormSpecVisitor[BooleanChoice, bool]):
 
     def _to_vue(
         self, raw_value: object, parsed_value: bool | EmptyValue
-    ) -> tuple[VueComponents.BooleanChoice, Value]:
+    ) -> tuple[shared_type_defs.BooleanChoice, Value]:
         title, help_text = get_title_and_help(self.form_spec)
         return (
-            VueComponents.BooleanChoice(
+            shared_type_defs.BooleanChoice(
                 title=title,
                 help=help_text,
                 label=localize(self.form_spec.label),
@@ -47,7 +47,7 @@ class BooleanChoiceVisitor(FormSpecVisitor[BooleanChoice, bool]):
 
     def _validate(
         self, raw_value: object, parsed_value: bool | EmptyValue
-    ) -> list[VueComponents.ValidationMessage]:
+    ) -> list[shared_type_defs.ValidationMessage]:
         if isinstance(parsed_value, EmptyValue):
             return create_validation_error(
                 "" if raw_value == DEFAULT_VALUE else raw_value, Title("Invalid boolean choice")

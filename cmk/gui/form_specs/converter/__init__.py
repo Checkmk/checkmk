@@ -4,5 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from .transform import TransformForLegacyData
+from .tuple import Tuple
 
-__all__ = ["TransformForLegacyData"]
+__all__ = ["TransformForLegacyData", "Tuple"]

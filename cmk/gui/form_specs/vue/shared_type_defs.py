@@ -111,6 +111,13 @@ class TimeSpanTimeMagnitude(str, Enum):
     day = "day"
 
 
+class TupleLayout(str, Enum):
+    horizontal_titles_top = "horizontal_titles_top"
+    horizontal = "horizontal"
+    vertical = "vertical"
+    float = "float"
+
+
 @dataclass(kw_only=True)
 class ValidationMessage:
     location: list[str]
@@ -283,6 +290,14 @@ class TimeSpan(FormSpec):
     input_hint: Optional[float] = None
 
 
+@dataclass(kw_only=True)
+class Tuple(FormSpec):
+    elements: list[FormSpec]
+    type: str = "tuple"
+    layout: TupleLayout = TupleLayout.vertical
+    show_titles: Optional[bool] = True
+
+
 Components = Union[
     Integer,
     Float,
@@ -300,6 +315,7 @@ Components = Union[
     Catalog,
     MultipleChoice,
     TimeSpan,
+    Tuple,
 ]
 
 

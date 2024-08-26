@@ -18,6 +18,7 @@ STRIP_OPTIONAL = [
     ("MultipleChoice", "show_toggle_all"),
     ("CascadingSingleChoice", "elements"),
     ("CascadingSingleChoice", "layout"),
+    ("Tuple", "layout"),
 ]
 
 

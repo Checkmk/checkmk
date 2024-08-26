@@ -123,11 +123,11 @@ export function groupDictionaryValidations(
   return [dictionaryValidations, elementValidations]
 }
 
-export function groupListValidations(
+export function groupIndexedValidations(
   messages: ValidationMessages,
   numberOfElements: number
 ): [ValidationMessages, Record<number, ValidationMessages>] {
-  const listValidations: ValidationMessages = []
+  const ownValidations: ValidationMessages = []
   const elementValidations: Record<number, ValidationMessages> = []
   // This functions groups the validation messages by the index of the element they belong to
   // Initialize the array with empty arrays
@@ -137,7 +137,7 @@ export function groupListValidations(
   messages.forEach((msg) => {
     const index = msg.location.length == 0 ? -1 : parseInt(msg.location[0]!)
     if (index == -1) {
-      listValidations.push(msg)
+      ownValidations.push(msg)
       return
     }
     const elementMessages = elementValidations[index] || []
@@ -148,5 +148,5 @@ export function groupListValidations(
     })
     elementValidations[index] = elementMessages
   })
-  return [listValidations, elementValidations]
+  return [ownValidations, elementValidations]
 }

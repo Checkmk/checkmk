@@ -4,7 +4,7 @@ import FormEdit from '@/form/components/FormEdit.vue'
 import type { List } from '@/form/components/vue_formspec_components'
 import FormValidation from '@/form/components/FormValidation.vue'
 import {
-  groupListValidations,
+  groupIndexedValidations,
   validateValue,
   type ValidationMessages
 } from '@/form/components/utils/validation'
@@ -46,7 +46,7 @@ watch(
 )
 
 function setValidation(newBackendValidation: ValidationMessages) {
-  const [_listValidations, _elementValidations] = groupListValidations(
+  const [_listValidations, _elementValidations] = groupIndexedValidations(
     newBackendValidation,
     backendData.value.length
   )

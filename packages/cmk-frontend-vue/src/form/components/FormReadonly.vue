@@ -14,11 +14,12 @@ import type {
   BooleanChoice,
   MultilineText,
   MultipleChoice,
-  Password
+  Password,
+  Tuple
 } from '@/form/components/vue_formspec_components'
 import {
   groupDictionaryValidations,
-  groupListValidations,
+  groupIndexedValidations,
   type ValidationMessages
 } from '@/form/components/utils/validation'
 import { splitToUnits, getSelectedMagnitudes, ALL_MAGNITUDES } from './utils/timeSpan'
@@ -80,7 +81,37 @@ function renderForm(
       return renderMultipleChoice(formSpec as MultipleChoice, value as string[])
     case 'password':
       return renderPassword(formSpec as Password, value as (string | boolean)[])
+    case 'tuple':
+      return renderTuple(formSpec as Tuple, value as unknown[])
   }
+}
+
+function renderTuple(
+  formSpec: Tuple,
+  value: unknown[],
+  backendValidation: ValidationMessages = []
+): VNode {
+  const [tupleValidations, elementValidations] = groupIndexedValidations(
+    backendValidation,
+    value.length
+  )
+  const tupleResults: VNode[] = []
+  tupleValidations.forEach((validation: ValidationMessage) => {
+    tupleResults.push(h('label', [validation.message]))
+  })
+
+  const elementResults: VNode[] = []
+  formSpec.elements.forEach((element, index) => {
+    const renderResult = renderForm(element, value[index], elementValidations[index])
+    if (renderResult === null) {
+      return
+    }
+    elementResults.push(h('td', renderResult))
+    elementResults.push(h('td', ', '))
+  })
+  elementResults.pop() // Remove last comma
+  tupleResults.push(h('table', h('tr', elementResults)))
+  return h('span', tupleResults)
 }
 
 function renderMultipleChoice(formSpec: MultipleChoice, value: string[]): VNode {
@@ -242,7 +273,7 @@ function renderList(
   value: unknown[],
   backendValidation: ValidationMessages
 ): VNode | null {
-  const [listValidations, elementValidations] = groupListValidations(
+  const [listValidations, elementValidations] = groupIndexedValidations(
     backendValidation,
     value.length
   )

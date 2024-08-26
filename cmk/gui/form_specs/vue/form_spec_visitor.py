@@ -14,7 +14,7 @@ from cmk.ccc.exceptions import MKGeneralException
 
 import cmk.gui.form_specs.private.validators as private_form_specs_validators
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.converter import TransformForLegacyData
+from cmk.gui.form_specs.converter import TransformForLegacyData, Tuple
 from cmk.gui.form_specs.private import (
     Catalog,
     DictionaryExtended,
@@ -88,6 +88,7 @@ from .visitors import (
     StringVisitor,
     TimeSpanVisitor,
     TransformVisitor,
+    TupleVisitor,
 )
 from .visitors._type_defs import DataOrigin, DEFAULT_VALUE, VisitorOptions
 
@@ -124,6 +125,7 @@ def register_form_specs():
     register_visitor_class(MultipleChoice, MultipleChoiceVisitor)
     register_visitor_class(TimeSpan, TimeSpanVisitor)
     register_visitor_class(TransformForLegacyData, TransformVisitor)
+    register_visitor_class(Tuple, TupleVisitor)
 
     # Recomposed
     register_visitor_class(HostState, SingleChoiceVisitor, recompose_host_state)

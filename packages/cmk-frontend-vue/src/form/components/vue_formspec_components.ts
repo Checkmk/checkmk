@@ -21,7 +21,8 @@ export type Components =
   | DataSize
   | Catalog
   | MultipleChoice
-  | TimeSpan;
+  | TimeSpan
+  | Tuple;
 export type Integer = FormSpec & {
   type: "integer";
   label?: string;
@@ -132,6 +133,13 @@ export type TimeSpan = FormSpec & {
   input_hint?: number;
 };
 export type TimeSpanTimeMagnitude = "millisecond" | "second" | "minute" | "hour" | "day";
+export type Tuple = FormSpec & {
+  type: "tuple";
+  elements: FormSpec[];
+  layout: TupleLayout;
+  show_titles: boolean;
+};
+export type TupleLayout = "horizontal_titles_top" | "horizontal" | "vertical" | "float";
 
 export interface VueFormspecComponents {
   components?: Components;

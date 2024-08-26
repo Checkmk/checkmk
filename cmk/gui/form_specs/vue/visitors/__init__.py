@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from ._registry import get_visitor, register_visitor_class
-from ._type_defs import DataOrigin
+from ._type_defs import DataOrigin, DEFAULT_VALUE, VisitorOptions
 from .boolean_choice import BooleanChoiceVisitor
 from .cascading_single_choice import CascadingSingleChoiceVisitor
 from .catalog import CatalogVisitor
@@ -21,9 +21,11 @@ from .single_choice import SingleChoiceVisitor
 from .string import StringVisitor
 from .time_span import TimeSpanVisitor
 from .transform import TransformVisitor
+from .tuple import TupleVisitor
 
 __all__ = [
     "DataOrigin",
+    "DEFAULT_VALUE",
     "register_visitor_class",
     "get_visitor",
     "BooleanChoiceVisitor",
@@ -43,4 +45,6 @@ __all__ = [
     "StringVisitor",
     "TimeSpanVisitor",
     "TransformVisitor",
+    "TupleVisitor",
+    "VisitorOptions",
 ]

@@ -506,7 +506,7 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
         entries = self._store.load_for_modification()
 
         # Keep the "locked_by" attribute if it exists in the current entry
-        if "locked_by" in entries[self._ident]:
+        if self._ident in entries and "locked_by" in entries[self._ident]:
             config = {**config, "locked_by": entries[self._ident]["locked_by"]}
 
         # No typing support from valuespecs here, so we need to cast

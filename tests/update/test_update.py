@@ -21,7 +21,6 @@ logger = logging.getLogger(__name__)
 
 @pytest.mark.cse
 @pytest.mark.cee
-@pytest.mark.skip(reason="Skipping due to cmk-credentials not found, see CMK-18821")
 def test_update(test_setup: tuple[Site, Edition, bool]) -> None:
     base_site, target_edition, interactive_mode = test_setup
     base_version = base_site.version

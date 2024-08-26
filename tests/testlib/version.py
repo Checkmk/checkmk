@@ -28,6 +28,7 @@ from tests.testlib.utils import (
     edition_from_env,
     get_cmk_download_credentials,
     package_hash_path,
+    run,
     version_spec_from_env,
 )
 
@@ -399,8 +400,8 @@ class ABCPackageManager(abc.ABC):
         if Path("/.dockerenv").exists():
             systemctl = Path("/bin/systemctl")
             if systemctl.exists():
-                systemctl.unlink()
-            systemctl.symlink_to("/bin/true")
+                run(["rm", "-f", systemctl.as_posix()], sudo=True)
+            run(["ln", "-s", "/bin/true", systemctl.as_posix()], sudo=True)
 
         if os.geteuid() != 0:
             cmd.insert(0, "sudo")

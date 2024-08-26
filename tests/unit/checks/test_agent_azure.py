@@ -74,7 +74,6 @@ from tests.testlib import SpecialAgent
                     "explicit": [{"group_name": "my_res_group", "resources": ["res1", "res2"]}],
                     "tag_based": [("my_tag_1", "exists"), ("my_tag_2", ("value", "t1"))],
                 },
-                "sequential": True,
                 "proxy": ("environment", "environment"),
             },
             [
@@ -86,7 +85,6 @@ from tests.testlib import SpecialAgent
                 ("store", "azure", "%s"),
                 "--subscription",
                 "banana",
-                "--sequential",
                 "--proxy",
                 "FROM_ENVIRONMENT",
                 "--explicit-config",

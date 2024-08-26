@@ -129,6 +129,7 @@ def _migrate_azure_rule_vs(data):
         # Set the new option "import_tags" to import all Azure tags by default
         # This is removed in 2.4.0
         data["import_tags"] = "all_tags"
+    data.pop("sequential", None)
     return data
 
 
@@ -248,20 +249,6 @@ def _valuespec_special_agents_azure():
                     ),
                 ),
                 (
-                    "sequential",
-                    DropdownChoice(
-                        title=_("Force agent to run in single thread"),
-                        help=_(
-                            "Check this to turn off multiprocessing."
-                            " Recommended for debugging purposes only."
-                        ),
-                        choices=[
-                            (False, _("Run agent multithreaded")),
-                            (True, _("Run agent in single thread")),
-                        ],
-                    ),
-                ),
-                (
                     "import_tags",
                     CascadingDropdown(
                         title=("Import tags as host/service labels"),
@@ -303,7 +290,6 @@ def _valuespec_special_agents_azure():
                 "proxy",
                 "import_tags",
                 "piggyback_vms",
-                "sequential",
             ],
             default_keys=["import_tags"],
         ),

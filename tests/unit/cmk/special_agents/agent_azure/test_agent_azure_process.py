@@ -421,8 +421,7 @@ def test_process_resource(
     expected_result: Sequence[tuple[type[Section], Sequence[str], Sequence[str]]],
 ) -> None:
     resource = AzureResource(resource_info, args.tag_key_pattern)
-    function_args = (mgmt_client, resource, group_tags, args)
-    sections = process_resource(function_args)
+    sections = process_resource(mgmt_client, resource, group_tags, args)
     assert len(sections) == len(expected_result)
     for section, expected_section in zip(sections, expected_result):
         assert isinstance(section, expected_section[0])

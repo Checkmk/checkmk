@@ -25,7 +25,7 @@ def agent_azure_arguments(  # pylint: disable=too-many-branches
         passwordstore_get_cmdline("%s", params["secret"]),
     ]
 
-    keys = ("authority", "subscription", "piggyback_vms", "sequential")
+    keys = ("authority", "subscription", "piggyback_vms")
 
     for key in (k for k in keys if k in params):
         option = "--%s" % key

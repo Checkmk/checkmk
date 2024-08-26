@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 
+import pytest
+
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import get_services_with_status
 
@@ -24,6 +26,7 @@ SKIPPED_DUMPS = ["snmp-sw-arista.demo.checkmk.com_2_2_p12"]
 SKIPPED_CHECKS = ["Postfix status", "Postfix Queue"]
 
 
+@pytest.mark.skip(reason="Skipping due to cmk-credentials not found, see CMK-18821")
 def test_plugin_update(
     test_site_update: Site,
     site_factory_update: SiteFactory,

@@ -280,12 +280,12 @@ def inject_dumps(site: Site, dumps_dir: Path) -> None:
         assert (
             run(
                 [
-                    "sudo",
                     "cp",
                     "-f",
                     f"{dumps_dir}/{dump_name}",
                     f"{site_dumps_path}/{dump_name}",
-                ]
+                ],
+                sudo=True,
             ).returncode
             == 0
         )

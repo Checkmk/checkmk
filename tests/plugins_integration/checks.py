@@ -410,7 +410,6 @@ def setup_site(site: Site, dump_path: str) -> None:
         assert (
             run(
                 [
-                    "sudo",
                     "cp",
                     "-f",
                     f"{config.dump_dir}/{dump_name}",
@@ -419,7 +418,8 @@ def setup_site(site: Site, dump_path: str) -> None:
                         if re.search(r"\bsnmp\b", dump_name)
                         else f"{dump_path}/{dump_name}"
                     ),
-                ]
+                ],
+                sudo=True,
             ).returncode
             == 0
         )
@@ -527,12 +527,12 @@ def setup_source_host_piggyback(site: Site, source_host_name: str) -> Iterator:
     assert (
         run(
             [
-                "sudo",
                 "cp",
                 "-f",
                 f"{dump_path_repo}/{source_host_name}",
                 f"{dump_path_site}/{source_host_name}",
-            ]
+            ],
+            sudo=True,
         ).returncode
         == 0
     )

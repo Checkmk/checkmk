@@ -2,7 +2,7 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Callable, Optional, Protocol, Sequence
+from typing import Any, Callable, Optional, Protocol, Sequence, TypeVar
 
 from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
 from cmk.gui.form_specs.vue.visitors._type_defs import EMPTY_VALUE, EmptyValue
@@ -11,11 +11,10 @@ from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.utils import escaping
 
 from cmk.rulesets.v1 import Label, Title
-from cmk.rulesets.v1.form_specs import FormSpec, Prefill
-
-# TODO: imports from _base are not necessary, ModelT can be defined locally and the other two can be imported from form_specs
-from cmk.rulesets.v1.form_specs._base import DefaultValue, InputHint, ModelT
+from cmk.rulesets.v1.form_specs import DefaultValue, FormSpec, InputHint, Prefill
 from cmk.rulesets.v1.form_specs.validators import ValidationError
+
+ModelT = TypeVar("ModelT")
 
 
 def get_title_and_help(form_spec: FormSpec[ModelT]) -> tuple[str, str]:

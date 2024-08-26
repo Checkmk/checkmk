@@ -51,7 +51,7 @@ The only difference being `/home/postgres/does-not-exist.env` does not exist in 
 Different defaults are chosen for Windows.
 """
 
-__version__ = "2.1.0p47"
+__version__ = "2.1.0p48"
 
 import abc
 import io

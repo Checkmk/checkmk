@@ -118,6 +118,7 @@ def _migrate_services(data):
         # Services selection was introduced after Azure monitoring so we want that the users with an
         # older version will have all services enabled as it was before this change
         data["services"] = [service_id for service_id, _service_name in get_azure_services()]
+    data.pop("sequential", None)
     return data
 
 
@@ -213,22 +214,8 @@ def _valuespec_special_agents_azure():
                         ],
                     ),
                 ),
-                (
-                    "sequential",
-                    DropdownChoice(
-                        title=_("Force agent to run in single thread"),
-                        help=_(
-                            "Check this to turn off multiprocessing."
-                            " Recommended for debugging purposes only."
-                        ),
-                        choices=[
-                            (False, _("Run agent multithreaded")),
-                            (True, _("Run agent in single thread")),
-                        ],
-                    ),
-                ),
             ],
-            optional_keys=["subscription", "proxy", "piggyback_vms", "sequential"],
+            optional_keys=["subscription", "proxy", "piggyback_vms"],
         ),
         migrate=_migrate_services,
     )

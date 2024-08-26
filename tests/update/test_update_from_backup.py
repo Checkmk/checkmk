@@ -49,6 +49,7 @@ def _base_site_demo(site_factory_demo):
 
 
 @pytest.mark.cee
+@pytest.mark.skip(reason="Skipping due to cmk-credentials not found, see CMK-18821")
 def test_update_from_backup(site_factory: SiteFactory, base_site: Site) -> None:
     backup_path = qa_test_data_path() / Path("update/backups/update_central_2.3.0p4_backup.tar.gz")
     assert backup_path.exists()

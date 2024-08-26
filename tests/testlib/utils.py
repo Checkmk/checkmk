@@ -64,10 +64,17 @@ def is_containerized() -> bool:
 
 
 def get_cmk_download_credentials() -> tuple[str, str]:
+    jenkins_credentials_file_path = Path("/home") / "jenkins" / ".cmk-credentials"
+    etc_credentials_file_path = Path("/etc") / ".cmk-credentials"
+    user_credentials_file_path = Path("~").expanduser() / ".cmk-credentials"
     credentials_file_path = (
-        Path("/etc") / ".cmk-credentials"
-        if is_containerized()
-        else Path("~").expanduser() / ".cmk-credentials"
+        jenkins_credentials_file_path
+        if jenkins_credentials_file_path.exists()
+        else (
+            user_credentials_file_path
+            if user_credentials_file_path.exists()
+            else etc_credentials_file_path
+        )
     )
     try:
         with open(credentials_file_path) as credentials_file:

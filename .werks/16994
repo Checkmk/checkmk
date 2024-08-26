@@ -1,0 +1,19 @@
+Title: REST-API: error 500 on service discovery when disabling active or custom checks
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1724659167
+Edition: cre
+Level: 1
+Version: 2.2.0p33
+
+When disabling an active or custom check and running the service discovery via
+the REST-API, for example with the
+
+C+:
+/domain-types/service_discovery_run/actions/start/invoke
+C-:
+
+endpoint, this would cause an error 500 to be returned.
+
+Now, the service discovery via the REST-API works as expected.

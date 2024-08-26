@@ -333,7 +333,11 @@ class Site:
             f"\n{pformat(pending_services)}\n"
         )
 
-    def get_host_services(self, hostname: str, pending: bool = False) -> dict[str, ServiceInfo]:
+    def get_host_services(
+        self,
+        hostname: str,
+        pending: bool | None = None,
+    ) -> dict[str, ServiceInfo]:
         """Return dict for all services in the given site and host.
 
         If pending=True, return the pending services only.

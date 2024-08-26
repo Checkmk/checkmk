@@ -157,7 +157,11 @@ def get_check_results(site: Site, host_name: str) -> dict[str, Any]:
     try:
         return {
             check["id"]: check
-            for check in site.openapi.get_host_services(host_name, columns=config.api_services_cols)
+            for check in site.openapi.get_host_services(
+                host_name,
+                columns=config.api_services_cols,
+                pending=False,
+            )
             if not config.check_names
             or check["id"] in config.check_names
             or check["id"].split(":", 1)[-1] in config.check_names

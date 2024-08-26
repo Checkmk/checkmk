@@ -13,7 +13,7 @@ import sys
 import time
 from collections.abc import Iterator, Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, assert_never, Literal
 
 from tests.testlib.repo import repo_path
 from tests.testlib.site import Site
@@ -43,7 +43,7 @@ def bake_agents(site: Site) -> None:
     )
 
 
-def get_package_type() -> str:
+def get_package_type() -> Literal["linux_deb", "linux_rpm"]:
     if os.path.exists("/var/lib/dpkg/status"):
         return "linux_deb"
     if (
@@ -74,6 +74,22 @@ def install_agent_package(package_path: Path) -> Path:
     raise NotImplementedError(
         f"Installation of package type {package_type} is not supported yet, please implement it"
     )
+
+
+def uninstall_agent_package(package_name: str = "check-mk-agent") -> None:
+    match package_type := get_package_type():
+        case "linux_deb":
+            run(
+                ["dpkg", "--remove", package_name],
+                sudo=True,
+            )
+        case "linux_rpm":
+            run(
+                ["rpm", "--erase", package_name],
+                sudo=True,
+            )
+        case _:
+            assert_never(package_type)
 
 
 def download_and_install_agent_package(site: Site, tmp_dir: Path) -> Path:

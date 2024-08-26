@@ -23,9 +23,8 @@ import sys
 import time
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
-from multiprocessing import Lock, Process, Queue
+from multiprocessing import Lock
 from pathlib import Path
-from queue import Empty as QueueEmpty
 from typing import Any, Literal, NamedTuple, TypeVar
 
 import msal  # type: ignore[import-untyped]
@@ -253,10 +252,6 @@ def parse_arguments(argv: Sequence[str]) -> Args:
     parser.add_argument(
         "--vcrtrace",
         action=vcrtrace(filter_post_data_parameters=[("client_secret", "****")]),
-        help="""(implies --sequential)""",
-    )
-    parser.add_argument(
-        "--sequential", action="store_true", help="""Sequential mode: do not use multiprocessing"""
     )
     parser.add_argument(
         "--dump-config", action="store_true", help="""Dump parsed configuration and exit"""
@@ -360,9 +355,6 @@ def parse_arguments(argv: Sequence[str]) -> Args:
     )
     group_import_tags.set_defaults(tag_key_pattern=TagsImportPatternOption.import_all)
     args = parser.parse_args(argv)
-
-    if args.vcrtrace:
-        args.sequential = True
 
     # LOGGING
     if args.verbose and args.verbose >= 3:
@@ -1551,9 +1543,8 @@ def get_vm_labels_section(vm: AzureResource, group_labels: GroupLabels) -> Label
 
 
 def process_resource(
-    function_args: tuple[MgmtApiClient, AzureResource, GroupLabels, Args],
+    mgmt_client: MgmtApiClient, resource: AzureResource, group_labels: GroupLabels, args: Args
 ) -> Sequence[Section]:
-    mgmt_client, resource, group_labels, args = function_args
     sections: list[Section] = []
     enabled_services = set(args.services)
     resource_type = resource.info.get("type")
@@ -1582,6 +1573,21 @@ def process_resource(
     sections.append(section)
 
     return sections
+
+
+def process_resources(
+    mgmt_client: MgmtApiClient,
+    resources: Sequence[AzureResource],
+    group_labels: GroupLabels,
+    args: Args,
+) -> Iterator[Sequence[Section]]:
+    for resource in resources:
+        try:
+            yield process_resource(mgmt_client, resource, group_labels, args)
+        except Exception as exc:
+            if args.debug:
+                raise
+            write_exception_to_agent_info_section(exc, "Management client")
 
 
 def get_group_labels(
@@ -1651,70 +1657,6 @@ def write_exception_to_agent_info_section(exception, component):
         msg += "HINT: Make sure you have a proper role asigned to your client!"
 
     write_to_agent_info_section(msg, component, 2)
-
-
-def get_mapper(debug, sequential, timeout):
-    """Return a function similar to the builtin 'map'
-
-    However, these functions won't stop upon an exception
-    (unless debug is set).
-    Also, there's an async variant available.
-    """
-    if sequential:
-
-        def sequential_mapper(func, args_iter):
-            for args in args_iter:
-                try:
-                    yield func(args)
-                except Exception:
-                    if debug:
-                        raise
-
-        return sequential_mapper
-
-    def async_mapper(func, args_iter):
-        """Async drop-in replacement for builtin 'map'
-
-        which does not require the involved values to be pickle-able,
-        nor third party modules such as 'multiprocess' or 'dill'.
-
-        Usage:
-                 for results in async_mapper(function, arguments_iter):
-                     do_stuff()
-
-        Note that the order of the results does not correspond
-        to that of the arguments.
-        """
-        queue: Queue[tuple[Any, bool, Any]] = Queue()
-        jobs = {}
-
-        def produce(id_, args):
-            try:
-                queue.put((id_, True, func(args)))
-            except Exception:  # pylint: disable=broad-except
-                queue.put((id_, False, None))
-                if debug:
-                    raise
-
-        # start
-        for id_, args in enumerate(args_iter):
-            jobs[id_] = Process(target=produce, args=(id_, args))
-            jobs[id_].start()
-
-        # consume
-        while jobs:
-            try:
-                id_, success, result = queue.get(block=True, timeout=timeout)
-            except QueueEmpty:
-                break
-            if success:
-                yield result
-            jobs.pop(id_)
-
-        for job in jobs.values():
-            job.terminate()
-
-    return async_mapper
 
 
 def main_graph_client(args: Args) -> None:
@@ -1892,10 +1834,9 @@ def main_subscription(args: Args, selector: Selector, subscription: str) -> None
         agent_info_section.add(err.dumpinfo())
         agent_info_section.write()
 
-    func_args = ((mgmt_client, resource, group_labels, args) for resource in monitored_resources)
-    mapper = get_mapper(args.debug, args.sequential, args.timeout)
-    for sections in mapper(process_resource, func_args):
-        for section in sections:
+    all_sections = process_resources(mgmt_client, monitored_resources, group_labels, args)
+    for resource_sections in all_sections:
+        for section in resource_sections:
             section.write()
 
     for section in process_resource_health(mgmt_client, monitored_resources, args):

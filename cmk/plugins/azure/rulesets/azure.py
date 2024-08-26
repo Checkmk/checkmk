@@ -202,6 +202,14 @@ def _get_services_fs() -> Mapping[str, DictElement]:
     }
 
 
+def _migrate_sequential(value: object) -> Mapping[str, object]:
+    if not isinstance(value, dict):
+        raise TypeError(value)
+
+    value.pop("sequential", None)
+    return value
+
+
 def _migrate_authority(value: object) -> str:
     if value == "global":
         return "global_"
@@ -212,6 +220,7 @@ def _migrate_authority(value: object) -> str:
 
 def _formspec() -> Dictionary:
     return Dictionary(
+        migrate=_migrate_sequential,
         elements={
             "authority": DictElement(
                 parameter_form=SingleChoice(
@@ -308,25 +317,6 @@ def _formspec() -> Dictionary:
                     prefill=DefaultValue("grouphost"),
                 ),
             ),
-            "sequential": DictElement(
-                parameter_form=SingleChoice(
-                    migrate=lambda value: "singlethreaded" if value else "multithreaded",
-                    title=Title("Force agent to run in single thread"),
-                    help_text=Help(
-                        "Check this to turn off multiprocessing."
-                        " Recommended for debugging purposes only."
-                    ),
-                    elements=[
-                        SingleChoiceElement(
-                            name="multithreaded", title=Title("Run agent multithreaded")
-                        ),
-                        SingleChoiceElement(
-                            name="singlethreaded", title=Title("Run agent in single thread")
-                        ),
-                    ],
-                    prefill=DefaultValue("multithreaded"),
-                ),
-            ),
             "import_tags": DictElement(
                 parameter_form=CascadingSingleChoice(
                     title=Title("Import tags as host/service labels"),
@@ -361,7 +351,7 @@ def _formspec() -> Dictionary:
                     prefill=DefaultValue("all_tags"),
                 ),
             ),
-        }
+        },
     )
 
 

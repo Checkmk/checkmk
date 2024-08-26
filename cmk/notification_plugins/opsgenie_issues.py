@@ -7,18 +7,21 @@ import os
 import sys
 from contextlib import contextmanager
 from pprint import pformat
-from typing import Iterator
+from typing import cast, Iterator
 
 from opsgenie_sdk import (  # type: ignore[import-untyped]
     AcknowledgeAlertPayload,
     AddNoteToAlertPayload,
     AddTagsToAlertPayload,
+    Alert,
     AlertApi,
     ApiClient,
     ApiException,
     CloseAlertPayload,
     Configuration,
     CreateAlertPayload,
+    UpdateAlertDescriptionPayload,
+    UpdateAlertMessagePayload,
 )
 from opsgenie_sdk.exceptions import AuthenticationException  # type: ignore[import-untyped]
 
@@ -53,6 +56,44 @@ class Connector:
 
         api_client: "ApiClient" = ApiClient(configuration=conf)
         self.alert_api = AlertApi(api_client=api_client)
+
+    def get_existing_alert(self, alias: str) -> Alert | None:
+        with _handle_api_exceptions("get_alert"):
+            try:
+                response = self.alert_api.get_alert(identifier=alias, identifier_type="alias")
+            except ApiException:
+                sys.stdout.write(f'Alert with alias "{alias}" not found.\n')
+                return None
+
+        alert = cast(Alert, response.data)
+        sys.stdout.write(f'Alert with alias "{alias}" found, id: {alert.id}.\n')
+        return alert
+
+    def handle_alert_update_description(self, identifier: str, description: str) -> None:
+        with _handle_api_exceptions("update_alert_description"):
+            response = self.alert_api.update_alert_description(
+                identifier,
+                identifier_type="id",
+                update_alert_description_payload=UpdateAlertDescriptionPayload(
+                    description=description
+                ),
+            )
+
+        sys.stdout.write(
+            f"Request id: {response.request_id}, successfully updated alert description.\n"
+        )
+
+    def handle_alert_update_message(self, identifier: str, message: str) -> None:
+        with _handle_api_exceptions("update_alert_message"):
+            response = self.alert_api.update_alert_message(
+                identifier,
+                identifier_type="id",
+                update_alert_message_payload=UpdateAlertMessagePayload(message=message),
+            )
+
+        sys.stdout.write(
+            f"Request id: {response.request_id}, successfully updated alert message.\n"
+        )
 
     def handle_alert_creation(self, create_alert_payload: CreateAlertPayload) -> None:
         with _handle_api_exceptions("create_alert"):
@@ -244,6 +285,8 @@ def _handle_problem(
     if integration_team and not any(t["name"] == integration_team for t in visible_to):
         visible_to.append({"name": integration_team, "type": "team"})
 
+    existing_alert = connector.get_existing_alert(alias) if integration_team else None
+
     connector.handle_alert_creation(
         create_alert_payload=CreateAlertPayload(
             note=note_created,
@@ -261,6 +304,12 @@ def _handle_problem(
             details=_get_extra_properties(context),
         )
     )
+
+    if existing_alert:
+        if existing_alert.description != desc:
+            connector.handle_alert_update_description(existing_alert.id, desc)
+        if existing_alert.message != msg:
+            connector.handle_alert_update_message(existing_alert.id, msg)
 
 
 def _handle_acknowledgement(

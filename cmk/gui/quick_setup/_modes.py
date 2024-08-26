@@ -180,8 +180,10 @@ class ModeEditConfigurationBundles(WatoMode):
                                     title=_("Add configuration"),
                                     icon_name="new",
                                     item=make_simple_link(
-                                        ""
-                                    ),  # TODO: add Quick setup creation page
+                                        mode_url(
+                                            ModeQuickSetupSpecialAgent.name(), varname=self._name
+                                        )
+                                    ),
                                     is_shortcut=True,
                                     is_suggested=True,
                                 )

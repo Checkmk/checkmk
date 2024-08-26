@@ -14,7 +14,7 @@ from cmk.rulesets.v1.form_specs import FieldSize, String
 from ._base import FormSpecVisitor
 from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue, Value
 from ._utils import (
-    compute_text_input_hint,
+    compute_input_hint,
     compute_validation_errors,
     create_validation_error,
     get_prefill_default,
@@ -48,7 +48,7 @@ class StringVisitor(FormSpecVisitor[String, str]):
                 title=title,
                 help=help_text,
                 validators=build_vue_validators(self._validators()),
-                input_hint=compute_text_input_hint(self.form_spec.prefill),
+                input_hint=compute_input_hint(self.form_spec.prefill),
                 field_size=field_size_translator(self.form_spec.field_size),
             ),
             "" if isinstance(parsed_value, EmptyValue) else parsed_value,

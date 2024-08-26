@@ -14,7 +14,7 @@ from cmk.rulesets.v1.form_specs import Float
 from ._base import FormSpecVisitor
 from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
 from ._utils import (
-    compute_text_input_hint,
+    compute_input_hint,
     compute_validation_errors,
     compute_validators,
     create_validation_error,
@@ -50,6 +50,8 @@ class FloatVisitor(FormSpecVisitor[Float, float]):
         self, raw_value: object, parsed_value: float | EmptyValue
     ) -> tuple[shared_type_defs.Float, str | float]:
         title, help_text = get_title_and_help(self.form_spec)
+        input_hint = compute_input_hint(self.form_spec.prefill)
+        input_hint_str = None if input_hint is None else str(input_hint)
         return (
             shared_type_defs.Float(
                 title=title,
@@ -57,7 +59,7 @@ class FloatVisitor(FormSpecVisitor[Float, float]):
                 unit=self.form_spec.unit_symbol,
                 label=localize(self.form_spec.label),
                 validators=build_vue_validators(self._validators()),
-                input_hint=compute_text_input_hint(self.form_spec.prefill),
+                input_hint=input_hint_str,
             ),
             "" if isinstance(parsed_value, EmptyValue) else parsed_value,
         )

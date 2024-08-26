@@ -15,7 +15,7 @@ from cmk.rulesets.v1 import Title
 from ._base import FormSpecVisitor
 from ._type_defs import DefaultValue, EMPTY_VALUE, EmptyValue, Value
 from ._utils import (
-    compute_text_input_hint,
+    compute_title_input_hint,
     compute_validation_errors,
     compute_validators,
     create_validation_error,
@@ -60,7 +60,7 @@ class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtend
                 label=localize(self.form_spec.label),
                 validators=build_vue_validators(compute_validators(self.form_spec)),
                 frozen=self.form_spec.frozen and isinstance(raw_value, str),
-                input_hint=compute_text_input_hint(self.form_spec.prefill),
+                input_hint=compute_title_input_hint(self.form_spec.prefill),
             ),
             "" if isinstance(parsed_value, EmptyValue) else parsed_value,
         )

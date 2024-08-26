@@ -83,16 +83,15 @@ def get_prefill_default(prefill: _PrefillTypes[ModelT]) -> ModelT | EmptyValue:
     return prefill.value
 
 
-def compute_text_input_hint(prefill: _PrefillTypes[ModelT]) -> str | None:
+def compute_title_input_hint(prefill: _PrefillTypes[ModelT]) -> ModelT | str | None:
+    # InputHint[Title] is only used by SingleChoice and CascadingSingleChoice
+    # in all other cases you should use compute_input_hint
     if not isinstance(prefill, InputHint):
         return None
 
     if isinstance(prefill.value, Title):
-        # TODO: this is a very specialized if, that is only necessary for currenlty four FormSpecs:
-        # use ag `InputHint.Title` to find them. We could put that into a special title function
-        # and use the generic comput_input_hint function below for all other FormSpecs.
         return prefill.value.localize(translate_to_current_language)
-    return str(prefill.value)
+    return prefill.value
 
 
 def compute_input_hint(prefill: Prefill[ModelT]) -> ModelT | None:

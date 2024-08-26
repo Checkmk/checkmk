@@ -5,7 +5,7 @@
 from collections.abc import Callable
 from typing import Collection, Mapping, Protocol, Sequence
 
-from cmk.utils.rulesets.definition import RuleGroupType
+from cmk.utils.rulesets.definition import RuleGroup, RuleGroupType
 
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
@@ -57,10 +57,10 @@ from cmk.ccc.exceptions import MKGeneralException
 
 
 def register(main_module_registry: MainModuleRegistry, mode_registry: ModeRegistry) -> None:
-    # main_module_registry.register(MainModuleQuickSetupAWS)    # TODO: register once quick setup is implemented
     mode_registry.register(ModeConfigurationBundle)
     mode_registry.register(ModeEditConfigurationBundles)
     mode_registry.register(ModeQuickSetupSpecialAgent)
+    main_module_registry.register(MainModuleQuickSetupAWS)
 
 
 class ModeQuickSetupSpecialAgent(WatoMode):
@@ -319,7 +319,7 @@ class ModeEditConfigurationBundles(WatoMode):
 class MainModuleQuickSetupAWS(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
-        return "quick_setup_aws"
+        return mode_url(ModeEditConfigurationBundles.name(), varname=RuleGroup.SpecialAgents("aws"))
 
     @property
     def topic(self) -> MainModuleTopic:

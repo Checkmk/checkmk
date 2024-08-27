@@ -96,11 +96,6 @@ def get_graph_template_choices() -> list[tuple[str, str]]:
 
 
 @dataclass(frozen=True)
-class ScalarDefinition:
-    expression: MetricExpression
-
-
-@dataclass(frozen=True)
 class MetricUnitColor:
     unit: str
     color: str
@@ -286,7 +281,7 @@ def _parse_minimal_range(
 class GraphTemplate:
     id: str
     title: str
-    scalars: Sequence[ScalarDefinition]
+    scalars: Sequence[MetricExpression]
     conflicting_metrics: Sequence[str]
     optional_metrics: Sequence[str]
     consolidation_function: GraphConsolidationFunction | None
@@ -297,7 +292,7 @@ class GraphTemplate:
 
 def _graph_template_from_api_graph(id_: str, graph: graphs_api.Graph) -> GraphTemplate:
     metrics = [_parse_quantity(l, "stack") for l in graph.compound_lines]
-    scalars: list[ScalarDefinition] = []
+    scalars: list[MetricExpression] = []
     for line in graph.simple_lines:
         match line:
             case (
@@ -306,7 +301,7 @@ def _graph_template_from_api_graph(id_: str, graph: graphs_api.Graph) -> GraphTe
                 | metrics_api.MinimumOf()
                 | metrics_api.MaximumOf()
             ):
-                scalars.append(ScalarDefinition(_parse_quantity(line, "line").expression))
+                scalars.append(_parse_quantity(line, "line").expression)
             case _:
                 metrics.append(_parse_quantity(line, "line"))
     return GraphTemplate(
@@ -339,7 +334,7 @@ def _graph_template_from_api_bidirectional(
     metrics = [_parse_quantity(l, "-stack") for l in bidirectional.lower.compound_lines] + [
         _parse_quantity(l, "stack") for l in bidirectional.upper.compound_lines
     ]
-    scalars: list[ScalarDefinition] = []
+    scalars: list[MetricExpression] = []
     for line in bidirectional.lower.simple_lines:
         match line:
             case (
@@ -348,7 +343,7 @@ def _graph_template_from_api_bidirectional(
                 | metrics_api.MinimumOf()
                 | metrics_api.MaximumOf()
             ):
-                scalars.append(ScalarDefinition(_parse_quantity(line, "-line").expression))
+                scalars.append(_parse_quantity(line, "-line").expression)
             case _:
                 metrics.append(_parse_quantity(line, "-line"))
     for line in bidirectional.upper.simple_lines:
@@ -359,7 +354,7 @@ def _graph_template_from_api_bidirectional(
                 | metrics_api.MinimumOf()
                 | metrics_api.MaximumOf()
             ):
-                scalars.append(ScalarDefinition(_parse_quantity(line, "line").expression))
+                scalars.append(_parse_quantity(line, "line").expression)
             case _:
                 metrics.append(_parse_quantity(line, "line"))
     return GraphTemplate(
@@ -384,21 +379,19 @@ def _graph_template_from_api_bidirectional(
     )
 
 
-def _parse_raw_scalar_definition(
-    raw_scalar_definition: str | tuple[str, str | LazyString]
-) -> ScalarDefinition:
-    if isinstance(raw_scalar_definition, tuple):
-        return ScalarDefinition(
-            parse_expression(raw_scalar_definition[0], "line", str(raw_scalar_definition[1]), {})
-        )
+def _parse_raw_scalar_expression(
+    raw_scalar_expression: str | tuple[str, str | LazyString]
+) -> MetricExpression:
+    if isinstance(raw_scalar_expression, tuple):
+        return parse_expression(raw_scalar_expression[0], "line", str(raw_scalar_expression[1]), {})
 
-    if raw_scalar_definition.endswith(":warn"):
+    if raw_scalar_expression.endswith(":warn"):
         title = _("Warning")
-    elif raw_scalar_definition.endswith(":crit"):
+    elif raw_scalar_expression.endswith(":crit"):
         title = _("Critical")
     else:
-        title = raw_scalar_definition
-    return ScalarDefinition(parse_expression(raw_scalar_definition, "line", str(title), {}))
+        title = raw_scalar_expression
+    return parse_expression(raw_scalar_expression, "line", str(title), {})
 
 
 def _parse_raw_graph_range(raw_graph_range: tuple[int | str, int | str]) -> FixedGraphTemplateRange:
@@ -423,7 +416,7 @@ def _graph_template_from_legacy(id_: str, raw: RawGraphTemplate) -> GraphTemplat
     return GraphTemplate(
         id=id_,
         title=_parse_title(raw),
-        scalars=[_parse_raw_scalar_definition(r) for r in raw.get("scalars", [])],
+        scalars=[_parse_raw_scalar_expression(r) for r in raw.get("scalars", [])],
         conflicting_metrics=raw.get("conflicting_metrics", []),
         optional_metrics=raw.get("optional_metrics", []),
         consolidation_function=raw.get("consolidation_function"),
@@ -453,19 +446,15 @@ def graph_template_from_name(name: str) -> GraphTemplate:
         title="",
         metrics=[MetricDefinition(expression=MetricExpression(Metric(name), line_type="area"))],
         scalars=[
-            ScalarDefinition(
-                MetricExpression(
-                    WarningOf(Metric(name)),
-                    line_type="line",
-                    title=str(_("Warning")),
-                ),
+            MetricExpression(
+                WarningOf(Metric(name)),
+                line_type="line",
+                title=str(_("Warning")),
             ),
-            ScalarDefinition(
-                MetricExpression(
-                    CriticalOf(Metric(name)),
-                    line_type="line",
-                    title=str(_("Critical")),
-                ),
+            MetricExpression(
+                CriticalOf(Metric(name)),
+                line_type="line",
+                title=str(_("Critical")),
             ),
         ],
         conflicting_metrics=[],
@@ -704,19 +693,19 @@ def _replace_expressions(text: str, translated_metrics: Mapping[str, TranslatedM
 
 
 def _horizontal_rules_from_thresholds(
-    thresholds: Iterable[ScalarDefinition],
+    thresholds: Iterable[MetricExpression],
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> Sequence[HorizontalRule]:
     horizontal_rules = []
-    for entry in thresholds:
+    for expression in thresholds:
         try:
-            if (result := entry.expression.evaluate(translated_metrics)).value:
+            if (result := expression.evaluate(translated_metrics)).value:
                 horizontal_rules.append(
                     HorizontalRule(
                         value=result.value,
                         rendered_value=result.unit_info.render(result.value),
                         color=result.color,
-                        title=entry.expression.title,
+                        title=expression.title,
                     )
                 )
         # Scalar value like min and max are always optional. This makes configuration

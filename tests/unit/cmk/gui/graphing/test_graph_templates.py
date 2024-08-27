@@ -52,7 +52,6 @@ from cmk.gui.graphing._graph_templates import (
     GraphTemplate,
     MetricDefinition,
     MinimalGraphTemplateRange,
-    ScalarDefinition,
 )
 from cmk.gui.graphing._legacy import RawGraphTemplate, UnitInfo
 from cmk.gui.graphing._translated_metrics import (
@@ -226,26 +225,20 @@ def test_horizontal_rules_from_thresholds(
     assert (
         gt._horizontal_rules_from_thresholds(
             [
-                ScalarDefinition(
-                    MetricExpression(
-                        WarningOf(Metric("one")),
-                        line_type="line",
-                        title="Warning",
-                    )
+                MetricExpression(
+                    WarningOf(Metric("one")),
+                    line_type="line",
+                    title="Warning",
                 ),
-                ScalarDefinition(
-                    MetricExpression(
-                        CriticalOf(Metric("power")),
-                        line_type="line",
-                        title="Critical power",
-                    )
+                MetricExpression(
+                    CriticalOf(Metric("power")),
+                    line_type="line",
+                    title="Critical power",
                 ),
-                ScalarDefinition(
-                    MetricExpression(
-                        Product([WarningOf(Metric("output")), Constant(-1)]),
-                        line_type="line",
-                        title="Warning output",
-                    )
+                MetricExpression(
+                    Product([WarningOf(Metric("output")), Constant(-1)]),
+                    line_type="line",
+                    title="Warning output",
                 ),
             ],
             translated_metrics,
@@ -258,9 +251,7 @@ def test_duplicate_graph_templates(request_context: None) -> None:
     idents_by_metrics: dict[tuple[str, ...], list[str]] = {}
     for id_, template in _graph_templates_from_plugins():
         parsed = _parse_graph_template(id_, template)
-        expressions = [m.expression.base for m in parsed.metrics] + [
-            s.expression.base for s in parsed.scalars
-        ]
+        expressions = [m.expression.base for m in parsed.metrics] + [s.base for s in parsed.scalars]
         if parsed.range:
             expressions.extend((parsed.range.min, parsed.range.max))
 
@@ -600,35 +591,27 @@ COLOR_HEX = "#1e90ff"
                 id="name",
                 title="Title",
                 scalars=[
-                    ScalarDefinition(
-                        MetricExpression(
-                            WarningOf(Metric("metric-name-2")),
-                            line_type="line",
-                            title="Warning of Title",
-                        )
+                    MetricExpression(
+                        WarningOf(Metric("metric-name-2")),
+                        line_type="line",
+                        title="Warning of Title",
                     ),
-                    ScalarDefinition(
-                        MetricExpression(
-                            CriticalOf(Metric("metric-name-3")),
-                            line_type="line",
-                            title="Critical of Title",
-                        )
+                    MetricExpression(
+                        CriticalOf(Metric("metric-name-3")),
+                        line_type="line",
+                        title="Critical of Title",
                     ),
-                    ScalarDefinition(
-                        MetricExpression(
-                            MinimumOf(Metric("metric-name-4")),
-                            line_type="line",
-                            title="Title",
-                            color=COLOR_HEX,
-                        ),
+                    MetricExpression(
+                        MinimumOf(Metric("metric-name-4")),
+                        line_type="line",
+                        title="Title",
+                        color=COLOR_HEX,
                     ),
-                    ScalarDefinition(
-                        MetricExpression(
-                            MaximumOf(Metric("metric-name-5")),
-                            line_type="line",
-                            title="Title",
-                            color=COLOR_HEX,
-                        ),
+                    MetricExpression(
+                        MaximumOf(Metric("metric-name-5")),
+                        line_type="line",
+                        title="Title",
+                        color=COLOR_HEX,
                     ),
                 ],
                 conflicting_metrics=(),
@@ -824,65 +807,49 @@ def test__graph_template_from_api_graph(
                 title="Title",
                 range=None,
                 scalars=[
-                    ScalarDefinition(
-                        MetricExpression(
-                            WarningOf(Metric("metric-name-l3")),
-                            line_type="-line",
-                            title="Warning of Title",
-                        )
+                    MetricExpression(
+                        WarningOf(Metric("metric-name-l3")),
+                        line_type="-line",
+                        title="Warning of Title",
                     ),
-                    ScalarDefinition(
-                        MetricExpression(
-                            CriticalOf(Metric("metric-name-l4")),
-                            line_type="-line",
-                            title="Critical of Title",
-                        )
+                    MetricExpression(
+                        CriticalOf(Metric("metric-name-l4")),
+                        line_type="-line",
+                        title="Critical of Title",
                     ),
-                    ScalarDefinition(
-                        MetricExpression(
-                            MinimumOf(Metric("metric-name-l5")),
-                            line_type="-line",
-                            title="Title",
-                            color=COLOR_HEX,
-                        ),
+                    MetricExpression(
+                        MinimumOf(Metric("metric-name-l5")),
+                        line_type="-line",
+                        title="Title",
+                        color=COLOR_HEX,
                     ),
-                    ScalarDefinition(
-                        MetricExpression(
-                            MaximumOf(Metric("metric-name-l6")),
-                            line_type="-line",
-                            title="Title",
-                            color=COLOR_HEX,
-                        ),
+                    MetricExpression(
+                        MaximumOf(Metric("metric-name-l6")),
+                        line_type="-line",
+                        title="Title",
+                        color=COLOR_HEX,
                     ),
-                    ScalarDefinition(
-                        MetricExpression(
-                            WarningOf(Metric("metric-name-u3")),
-                            line_type="line",
-                            title="Warning of Title",
-                        )
+                    MetricExpression(
+                        WarningOf(Metric("metric-name-u3")),
+                        line_type="line",
+                        title="Warning of Title",
                     ),
-                    ScalarDefinition(
-                        MetricExpression(
-                            CriticalOf(Metric("metric-name-u4")),
-                            line_type="line",
-                            title="Critical of Title",
-                        )
+                    MetricExpression(
+                        CriticalOf(Metric("metric-name-u4")),
+                        line_type="line",
+                        title="Critical of Title",
                     ),
-                    ScalarDefinition(
-                        MetricExpression(
-                            MinimumOf(Metric("metric-name-u5")),
-                            line_type="line",
-                            title="Title",
-                            color=COLOR_HEX,
-                        ),
+                    MetricExpression(
+                        MinimumOf(Metric("metric-name-u5")),
+                        line_type="line",
+                        title="Title",
+                        color=COLOR_HEX,
                     ),
-                    ScalarDefinition(
-                        MetricExpression(
-                            MaximumOf(Metric("metric-name-u6")),
-                            line_type="line",
-                            title="Title",
-                            color=COLOR_HEX,
-                        ),
+                    MetricExpression(
+                        MaximumOf(Metric("metric-name-u6")),
+                        line_type="line",
+                        title="Title",
+                        color=COLOR_HEX,
                     ),
                 ],
                 conflicting_metrics=["metric-name-confl-l", "metric-name-confl-u"],
@@ -1064,26 +1031,20 @@ def test__graph_template_from_api_bidirectional(
                 id="ident",
                 title="",
                 scalars=[
-                    ScalarDefinition(
-                        MetricExpression(
-                            Metric("metric"),
-                            line_type="line",
-                            title="metric",
-                        )
+                    MetricExpression(
+                        Metric("metric"),
+                        line_type="line",
+                        title="metric",
                     ),
-                    ScalarDefinition(
-                        MetricExpression(
-                            WarningOf(Metric("metric")),
-                            line_type="line",
-                            title="Warning",
-                        )
+                    MetricExpression(
+                        WarningOf(Metric("metric")),
+                        line_type="line",
+                        title="Warning",
                     ),
-                    ScalarDefinition(
-                        MetricExpression(
-                            CriticalOf(Metric("metric")),
-                            line_type="line",
-                            title="Critical",
-                        )
+                    MetricExpression(
+                        CriticalOf(Metric("metric")),
+                        line_type="line",
+                        title="Critical",
                     ),
                 ],
                 conflicting_metrics=[],
@@ -1104,26 +1065,20 @@ def test__graph_template_from_api_bidirectional(
                 id="ident",
                 title="",
                 scalars=[
-                    ScalarDefinition(
-                        MetricExpression(
-                            Metric("metric"),
-                            line_type="line",
-                            title="Title",
-                        )
+                    MetricExpression(
+                        Metric("metric"),
+                        line_type="line",
+                        title="Title",
                     ),
-                    ScalarDefinition(
-                        MetricExpression(
-                            WarningOf(Metric("metric")),
-                            line_type="line",
-                            title="Warn",
-                        )
+                    MetricExpression(
+                        WarningOf(Metric("metric")),
+                        line_type="line",
+                        title="Warn",
                     ),
-                    ScalarDefinition(
-                        MetricExpression(
-                            CriticalOf(Metric("metric")),
-                            line_type="line",
-                            title="Crit",
-                        )
+                    MetricExpression(
+                        CriticalOf(Metric("metric")),
+                        line_type="line",
+                        title="Crit",
                     ),
                 ],
                 conflicting_metrics=[],
@@ -1525,19 +1480,15 @@ def test__compute_predictive_metrics(
                     id="METRIC_foo",
                     title="",
                     scalars=[
-                        ScalarDefinition(
-                            MetricExpression(
-                                WarningOf(metric=Metric("foo")),
-                                line_type="line",
-                                title="Warning",
-                            ),
+                        MetricExpression(
+                            WarningOf(metric=Metric("foo")),
+                            line_type="line",
+                            title="Warning",
                         ),
-                        ScalarDefinition(
-                            MetricExpression(
-                                CriticalOf(metric=Metric("foo")),
-                                line_type="line",
-                                title="Critical",
-                            ),
+                        MetricExpression(
+                            CriticalOf(metric=Metric("foo")),
+                            line_type="line",
+                            title="Critical",
                         ),
                     ],
                     conflicting_metrics=[],
@@ -1551,19 +1502,15 @@ def test__compute_predictive_metrics(
                     id="METRIC_predict_foo",
                     title="",
                     scalars=[
-                        ScalarDefinition(
-                            MetricExpression(
-                                WarningOf(metric=Metric("predict_foo")),
-                                line_type="line",
-                                title="Warning",
-                            ),
+                        MetricExpression(
+                            WarningOf(metric=Metric("predict_foo")),
+                            line_type="line",
+                            title="Warning",
                         ),
-                        ScalarDefinition(
-                            MetricExpression(
-                                CriticalOf(metric=Metric("predict_foo")),
-                                line_type="line",
-                                title="Critical",
-                            )
+                        MetricExpression(
+                            CriticalOf(metric=Metric("predict_foo")),
+                            line_type="line",
+                            title="Critical",
                         ),
                     ],
                     conflicting_metrics=[],
@@ -1579,19 +1526,15 @@ def test__compute_predictive_metrics(
                     id="METRIC_predict_lower_foo",
                     title="",
                     scalars=[
-                        ScalarDefinition(
-                            MetricExpression(
-                                WarningOf(metric=Metric("predict_lower_foo")),
-                                line_type="line",
-                                title="Warning",
-                            ),
+                        MetricExpression(
+                            WarningOf(metric=Metric("predict_lower_foo")),
+                            line_type="line",
+                            title="Warning",
                         ),
-                        ScalarDefinition(
-                            MetricExpression(
-                                CriticalOf(metric=Metric("predict_lower_foo")),
-                                line_type="line",
-                                title="Critical",
-                            ),
+                        MetricExpression(
+                            CriticalOf(metric=Metric("predict_lower_foo")),
+                            line_type="line",
+                            title="Critical",
                         ),
                     ],
                     conflicting_metrics=[],

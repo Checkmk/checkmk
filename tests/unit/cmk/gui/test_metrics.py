@@ -4,12 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.graphing._expression import CriticalOf, Metric, MetricExpression, WarningOf
-from cmk.gui.graphing._graph_templates import (
-    get_graph_template,
-    GraphTemplate,
-    MetricDefinition,
-    ScalarDefinition,
-)
+from cmk.gui.graphing._graph_templates import get_graph_template, GraphTemplate, MetricDefinition
 from cmk.gui.graphing._legacy import check_metrics
 from cmk.gui.graphing._metrics import get_metric_spec
 from cmk.gui.metrics import _add_graphing_plugins, _load_graphing_plugins
@@ -51,19 +46,15 @@ def test_add_graphing_plugins() -> None:
         id="db_connections",
         title="DB Connections",
         scalars=[
-            ScalarDefinition(
-                MetricExpression(
-                    WarningOf(Metric("active_connections")),
-                    line_type="line",
-                    title="Warning of Active connections",
-                )
+            MetricExpression(
+                WarningOf(Metric("active_connections")),
+                line_type="line",
+                title="Warning of Active connections",
             ),
-            ScalarDefinition(
-                MetricExpression(
-                    CriticalOf(Metric("active_connections")),
-                    line_type="line",
-                    title="Critical of Active connections",
-                )
+            MetricExpression(
+                CriticalOf(Metric("active_connections")),
+                line_type="line",
+                title="Critical of Active connections",
             ),
         ],
         conflicting_metrics=(),

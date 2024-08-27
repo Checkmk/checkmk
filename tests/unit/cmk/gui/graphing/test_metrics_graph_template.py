@@ -35,7 +35,6 @@ from cmk.gui.graphing._graph_templates import (
     MetricDefinition,
     MetricUnitColor,
     MinimalGraphTemplateRange,
-    ScalarDefinition,
     TemplateGraphSpecification,
 )
 from cmk.gui.graphing._translated_metrics import parse_perf_data, translate_metrics
@@ -132,12 +131,8 @@ def test_create_graph_recipe_from_template() -> None:
             MetricDefinition(MetricExpression(Metric("fs_size"), line_type="line")),
         ],
         scalars=[
-            ScalarDefinition(
-                MetricExpression(WarningOf(Metric("fs_used")), line_type="line", title="Warning")
-            ),
-            ScalarDefinition(
-                MetricExpression(CriticalOf(Metric("fs_used")), line_type="line", title="Critical")
-            ),
+            MetricExpression(WarningOf(Metric("fs_used")), line_type="line", title="Warning"),
+            MetricExpression(CriticalOf(Metric("fs_used")), line_type="line", title="Critical"),
         ],
         conflicting_metrics=["fs_free"],
         optional_metrics=[],

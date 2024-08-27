@@ -21,13 +21,13 @@ from cmk.piggyback import (
     store_last_distribution_time,
     store_piggyback_raw_data,
 )
+from cmk.piggyback_hub.config import Target
 from cmk.piggyback_hub.main import (
-    _create_on_message,
     _get_piggyback_raw_data_to_send,
     _load_piggyback_targets,
+    _save_payload,
     _send_message,
     PiggybackPayload,
-    Target,
 )
 
 
@@ -40,7 +40,7 @@ def test__on_message() -> None:
         last_contact=1640000000,
         sections=[b"line1", b"line2"],
     )
-    on_message = _create_on_message(test_logger, cmk.utils.paths.omd_root)
+    on_message = _save_payload(test_logger, cmk.utils.paths.omd_root)
 
     on_message(None, None, None, input_payload)
 
@@ -71,7 +71,7 @@ def test__send_message() -> None:
         raw_data=b"section1",
     )
 
-    _send_message(channel, input_message, "site_id", cmk.utils.paths.omd_root)
+    _send_message(channel, input_message, "site_id", cmk.utils.paths.omd_root, "payload")
 
     channel.publish_for_site.assert_called_once_with(
         "site_id",
@@ -82,6 +82,7 @@ def test__send_message() -> None:
             last_contact=1234567891,
             sections=[b"section1"],
         ),
+        routing="payload",
     )
     actual_last_distribution_time = load_last_distribution_time(
         HostName("source_host"), HostName("target_host"), cmk.utils.paths.omd_root

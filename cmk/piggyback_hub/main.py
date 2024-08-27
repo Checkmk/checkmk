@@ -17,7 +17,6 @@ from logging import getLogger
 from logging.handlers import WatchedFileHandler
 from pathlib import Path
 from types import FrameType
-from typing import Final
 
 from pydantic import BaseModel
 
@@ -33,6 +32,8 @@ from cmk.piggyback import (
     store_last_distribution_time,
     store_piggyback_raw_data,
 )
+from cmk.piggyback_hub.config import config_path, PiggybackConfig, save_config, Target
+from cmk.piggyback_hub.utils import receive_messages, SignalException
 
 VERBOSITY_MAP = {
     0: logging.INFO,
@@ -41,11 +42,6 @@ VERBOSITY_MAP = {
 }
 
 
-class SignalException(Exception):
-    pass
-
-
-PIGGYBACK_HUB_CONFIG_PATH: Final = "etc/check_mk/piggyback_hub.conf"
 SENDING_PAUSE = 60  # [s]
 
 
@@ -65,12 +61,6 @@ class PiggybackPayload(BaseModel):
     last_update: int
     last_contact: int | None
     sections: Sequence[bytes]
-
-
-@dataclass
-class Target:
-    host_name: HostName
-    site_id: str
 
 
 def _parse_arguments(argv: list[str]) -> Arguments:
@@ -127,7 +117,7 @@ def _register_signal_handler() -> None:
     signal.signal(signal.SIGTERM, signal_handler)
 
 
-def _create_on_message(
+def _save_payload(
     logger: logging.Logger,
     omd_root: Path,
 ) -> Callable[[object, object, object, PiggybackPayload], None]:
@@ -148,24 +138,6 @@ def _create_on_message(
         )
 
     return _on_message
-
-
-def _receive_messages(logger: logging.Logger, omd_root: Path) -> None:
-    try:
-        with Connection("piggyback-hub", omd_root) as conn:
-            channel = conn.channel(PiggybackPayload)
-            channel.queue_declare(queue="payload")
-            on_message_callback = _create_on_message(logger, omd_root)
-
-            logger.debug("Waiting for messages")
-
-            while True:
-                channel.consume(on_message_callback, queue="payload")
-    except SignalException:
-        logger.debug("Stopping receiving messages")
-        return
-    except Exception as e:
-        logger.exception("Unhandled exception: %s.", e)
 
 
 def _load_piggyback_targets(
@@ -213,6 +185,7 @@ def _send_message(
     piggyback_message: PiggybackMessage,
     target_site_id: str,
     omd_root: Path,
+    routing: str,
 ) -> None:
     channel.publish_for_site(
         target_site_id,
@@ -223,6 +196,7 @@ def _send_message(
             last_contact=piggyback_message.meta.last_contact,
             sections=[piggyback_message.raw_data],
         ),
+        routing=routing,
     )
     store_last_distribution_time(
         piggyback_message.meta.source,
@@ -238,9 +212,7 @@ def _send_messages(logger: logging.Logger, omd_root: Path) -> None:
             channel = conn.channel(PiggybackPayload)
 
             while True:
-                targets = _load_piggyback_targets(
-                    omd_root / PIGGYBACK_HUB_CONFIG_PATH, omd_root.name
-                )
+                targets = _load_piggyback_targets(config_path(omd_root), omd_root.name)
                 for target in targets:
                     for piggyback_message in _get_piggyback_raw_data_to_send(
                         target.host_name, omd_root
@@ -251,7 +223,9 @@ def _send_messages(logger: logging.Logger, omd_root: Path) -> None:
                             piggyback_message.meta.source,
                             target.site_id,
                         )
-                        _send_message(channel, piggyback_message, target.site_id, omd_root)
+                        _send_message(
+                            channel, piggyback_message, target.site_id, omd_root, "payload"
+                        )
 
                 time.sleep(SENDING_PAUSE)
     except SignalException:
@@ -266,13 +240,21 @@ def run_piggyback_hub(logger: logging.Logger, omd_root: Path) -> None:
     while True:
         time.sleep(5)
 
-    receiving_thread = threading.Thread(target=_receive_messages, args=(logger, omd_root))
+    receiving_thread = threading.Thread(
+        target=receive_messages,
+        args=(logger, omd_root, PiggybackPayload, _save_payload, "payload"),
+    )
     sending_thread = threading.Thread(target=_send_messages, args=(logger, omd_root))
+    receive_config_thread = threading.Thread(
+        target=receive_messages, args=(logger, omd_root, PiggybackConfig, save_config, "config")
+    )
 
     receiving_thread.start()
     sending_thread.start()
+    receive_config_thread.start()
     receiving_thread.join()
     sending_thread.join()
+    receive_config_thread.join()
 
 
 def main(argv: list[str] | None = None) -> int:

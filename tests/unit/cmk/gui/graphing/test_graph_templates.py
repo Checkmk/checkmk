@@ -253,7 +253,7 @@ def test_duplicate_graph_templates(request_context: None) -> None:
             expressions.extend((parsed.range.min, parsed.range.max))
 
         idents_by_metrics.setdefault(
-            tuple(sorted(m.name for e in expressions for m in e.metrics())), []
+            tuple(sorted(n for e in expressions for n in e.metric_names())), []
         ).append(parsed.id)
 
     assert {tuple(idents) for idents in idents_by_metrics.values() if len(idents) >= 2} == {

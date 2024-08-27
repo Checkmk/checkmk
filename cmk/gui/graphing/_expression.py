@@ -329,7 +329,7 @@ class MetricExpression(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def metrics(self) -> Iterator[Metric]:
+    def metric_names(self) -> Iterator[str]:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -368,7 +368,7 @@ class Constant(MetricExpression):
             self.explicit_color or "#000000",
         )
 
-    def metrics(self) -> Iterator[Metric]:
+    def metric_names(self) -> Iterator[str]:
         yield from ()
 
     def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
@@ -397,8 +397,8 @@ class Metric(MetricExpression):
             self.explicit_color or translated_metrics[self.name].color,
         )
 
-    def metrics(self) -> Iterator[Metric]:
-        yield self
+    def metric_names(self) -> Iterator[str]:
+        yield self.name
 
     def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
         yield from ()
@@ -429,8 +429,8 @@ class WarningOf(ScalarExpression):
             self.explicit_color or scalar_colors.get("warn", "#808080"),
         )
 
-    def metrics(self) -> Iterator[Metric]:
-        yield from self.metric.metrics()
+    def metric_names(self) -> Iterator[str]:
+        yield from self.metric.metric_names()
 
     def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
         yield self
@@ -461,8 +461,8 @@ class CriticalOf(ScalarExpression):
             self.explicit_color or scalar_colors.get("crit", "#808080"),
         )
 
-    def metrics(self) -> Iterator[Metric]:
-        yield from self.metric.metrics()
+    def metric_names(self) -> Iterator[str]:
+        yield from self.metric.metric_names()
 
     def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
         yield self
@@ -493,8 +493,8 @@ class MinimumOf(ScalarExpression):
             self.explicit_color or scalar_colors.get("min", "#808080"),
         )
 
-    def metrics(self) -> Iterator[Metric]:
-        yield from self.metric.metrics()
+    def metric_names(self) -> Iterator[str]:
+        yield from self.metric.metric_names()
 
     def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
         yield self
@@ -525,8 +525,8 @@ class MaximumOf(ScalarExpression):
             self.explicit_color or scalar_colors.get("max", "#808080"),
         )
 
-    def metrics(self) -> Iterator[Metric]:
-        yield from self.metric.metrics()
+    def metric_names(self) -> Iterator[str]:
+        yield from self.metric.metric_names()
 
     def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
         yield self
@@ -566,8 +566,8 @@ class Sum(MetricExpression):
             self.explicit_color or color,
         )
 
-    def metrics(self) -> Iterator[Metric]:
-        yield from (m for s in self.summands for m in s.metrics())
+    def metric_names(self) -> Iterator[str]:
+        yield from (n for s in self.summands for n in s.metric_names())
 
     def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
         yield from (sc for s in self.summands for sc in s.scalars())
@@ -607,8 +607,8 @@ class Product(MetricExpression):
             self.explicit_color or color,
         )
 
-    def metrics(self) -> Iterator[Metric]:
-        yield from (m for f in self.factors for m in f.metrics())
+    def metric_names(self) -> Iterator[str]:
+        yield from (n for f in self.factors for n in f.metric_names())
 
     def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
         yield from (s for f in self.factors for s in f.scalars())
@@ -646,9 +646,9 @@ class Difference(MetricExpression):
             ),
         )
 
-    def metrics(self) -> Iterator[Metric]:
-        yield from self.minuend.metrics()
-        yield from self.subtrahend.metrics()
+    def metric_names(self) -> Iterator[str]:
+        yield from self.minuend.metric_names()
+        yield from self.subtrahend.metric_names()
 
     def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
         yield from self.minuend.scalars()
@@ -687,9 +687,9 @@ class Fraction(MetricExpression):
             ),
         )
 
-    def metrics(self) -> Iterator[Metric]:
-        yield from self.dividend.metrics()
-        yield from self.divisor.metrics()
+    def metric_names(self) -> Iterator[str]:
+        yield from self.dividend.metric_names()
+        yield from self.divisor.metric_names()
 
     def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
         yield from self.dividend.scalars()
@@ -722,8 +722,8 @@ class Minimum(MetricExpression):
 
         return minimum
 
-    def metrics(self) -> Iterator[Metric]:
-        yield from (m for o in self.operands for m in o.metrics())
+    def metric_names(self) -> Iterator[str]:
+        yield from (n for o in self.operands for n in o.metric_names())
 
     def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
         yield from (s for o in self.operands for s in o.scalars())
@@ -755,8 +755,8 @@ class Maximum(MetricExpression):
 
         return maximum
 
-    def metrics(self) -> Iterator[Metric]:
-        yield from (m for o in self.operands for m in o.metrics())
+    def metric_names(self) -> Iterator[str]:
+        yield from (n for o in self.operands for n in o.metric_names())
 
     def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
         yield from (s for o in self.operands for s in o.scalars())
@@ -791,9 +791,9 @@ class Percent(MetricExpression):
             self.explicit_color or self.percent_value.evaluate(translated_metrics).color,
         )
 
-    def metrics(self) -> Iterator[Metric]:
-        yield from self.percent_value.metrics()
-        yield from self.base_value.metrics()
+    def metric_names(self) -> Iterator[str]:
+        yield from self.percent_value.metric_names()
+        yield from self.base_value.metric_names()
 
     def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
         yield from self.percent_value.scalars()
@@ -828,8 +828,8 @@ class Average(MetricExpression):
             self.explicit_color or result.color,
         )
 
-    def metrics(self) -> Iterator[Metric]:
-        yield from (m for o in self.operands for m in o.metrics())
+    def metric_names(self) -> Iterator[str]:
+        yield from (n for o in self.operands for n in o.metric_names())
 
     def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
         yield from (s for o in self.operands for s in o.scalars())
@@ -856,8 +856,8 @@ class Merge(MetricExpression):
             self.explicit_color or "#000000",
         )
 
-    def metrics(self) -> Iterator[Metric]:
-        yield from (m for o in self.operands for m in o.metrics())
+    def metric_names(self) -> Iterator[str]:
+        yield from (n for o in self.operands for n in o.metric_names())
 
     def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
         yield from (s for o in self.operands for s in o.scalars())

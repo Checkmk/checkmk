@@ -114,7 +114,7 @@ class MetricDefinition:
     def compute_title(self, translated_metrics: Mapping[str, TranslatedMetric]) -> str:
         if self.title:
             return self.title
-        return translated_metrics[next(self.expression.metrics()).name].title
+        return translated_metrics[next(self.expression.metric_names())].title
 
     def compute_unit_color(
         self,
@@ -478,13 +478,13 @@ def _compute_predictive_metrics(
         line_type: Literal["line", "-line"] = (
             "-line" if metric_defintion.line_type.startswith("-") else "line"
         )
-        for metric in metric_defintion.expression.metrics():
-            if (predict_metric_name := f"predict_{metric.name}") in translated_metrics:
+        for metric_name in metric_defintion.expression.metric_names():
+            if (predict_metric_name := f"predict_{metric_name}") in translated_metrics:
                 yield MetricDefinition(
                     expression=Metric(predict_metric_name),
                     line_type=line_type,
                 )
-            if (predict_lower_metric_name := f"predict_lower_{metric.name}") in translated_metrics:
+            if (predict_lower_metric_name := f"predict_lower_{metric_name}") in translated_metrics:
                 yield MetricDefinition(
                     expression=Metric(predict_lower_metric_name),
                     line_type=line_type,
@@ -566,7 +566,7 @@ def get_graph_templates(
     yield from explicit_templates
 
     already_graphed_metrics = {
-        m.name for gt in explicit_templates for md in gt.metrics for m in md.expression.metrics()
+        n for gt in explicit_templates for md in gt.metrics for n in md.expression.metric_names()
     }
     for metric_name, translated_metric in sorted(translated_metrics.items()):
         if translated_metric.auto_graph and metric_name not in already_graphed_metrics:

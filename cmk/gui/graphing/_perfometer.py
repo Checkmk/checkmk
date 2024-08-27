@@ -345,8 +345,8 @@ def _has_required_metrics_or_scalars(
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> bool:
     for expression in expressions:
-        for metric in expression.metrics():
-            if metric.name not in translated_metrics:
+        for metric_name in expression.metric_names():
+            if metric_name not in translated_metrics:
                 return False
         for scalar in expression.scalars():
             if scalar.metric.name not in translated_metrics:

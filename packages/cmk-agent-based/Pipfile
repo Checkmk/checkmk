@@ -7,9 +7,9 @@ name = "pypi"
 bandit = "*"
 black = "*"
 isort = "*"
-mypy = "*"
+mypy = "==1.10.0"  # CMK-18399
 pylint = "*"
-pytest = "*"
+pytest = "==8.1.1"  # CMK-18399
 # LSP server stuff for IDEs
 pyls-isort = "*"
 pylsp-mypy = "*"

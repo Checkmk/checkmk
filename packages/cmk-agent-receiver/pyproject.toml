@@ -2,13 +2,13 @@
 name = "cmk-agent-receiver"
 version = "1.0.0"
 dependencies = [
-  "cryptography>41.0",
-  "fastapi>=0.109.0",
-  "gunicorn==22.0.0",
-  "python-dateutil==2.9.*",
-  "python-multipart==0.0.*",
-  "requests~=2.28",
-  "uvicorn==0.20.0",
+  "cryptography",
+  "fastapi",
+  "gunicorn",
+  "python-dateutil",
+  "python-multipart",
+  "requests",
+  "uvicorn",
 ]
 
 [build-system]

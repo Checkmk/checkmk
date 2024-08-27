@@ -2,48 +2,86 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Modes for managing users and contacts"""
+"""Mode for showing the certificates."""
 
 from collections.abc import Collection
 from dataclasses import dataclass
 from datetime import date
+from pathlib import Path
 
+from cmk.utils.paths import (
+    agent_cas_dir,
+    root_cert_file,
+    site_cert_file,
+)
+
+from cmk.gui.cert_info import cert_info_registry, CertificateInfo
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import PermissionName
+from cmk.gui.utils.html import HTML
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
+
+from cmk.crypto.certificate import Certificate, CertificatePEM, X509Name
+from cmk.crypto.hash import HashAlgorithm
 
 
 @dataclass
 class CertificateView:
-    subject_name: str
-    issuer_name: str
+    """Represents a certificate in the certificate overview."""
+
+    subject: X509Name
+    issuer: X509Name
     creation: date
     expiration: date
     fingerprint: str
     key_type_length: str
-    stored_location: str
-    purpose: str
+    stored_location: Path
+    purpose: str | None
 
-    def get_fields(self) -> dict[str, str]:
+    def get_fields(self) -> dict[str, str | HTML]:
         """Get title and value of fields."""
         return {
-            _("Subject Name"): self.subject_name,
-            _("Issuer Name"): self.issuer_name,
+            _("Subject Name"): self.subject.common_name or _("None"),
+            _("Issuer Name"): self.issuer.common_name or _("None"),
             _("Creation Date"): self.creation.isoformat(),
             _("Expiration Date"): self.expiration.isoformat(),
-            _("Fingerprint"): self.fingerprint,
+            _("Fingerprint"): HTMLWriter.render_span(self.fingerprint[:17], title=self.fingerprint),
             _("Key Type and Length"): self.key_type_length,
-            _("Stored Location"): self.stored_location,
-            _("Purpose"): self.purpose,
+            _("Stored Location"): str(self.stored_location),
+            _("Purpose"): self.purpose or _("None"),
         }
+
+    @classmethod
+    def load(cls, path: Path, purpose: str | None = None) -> "CertificateView":
+        cert = Certificate.load_pem(CertificatePEM(path.read_bytes()))
+        return cls(
+            subject=cert.subject,
+            issuer=cert.issuer,
+            creation=cert.not_valid_before.date(),
+            expiration=cert.not_valid_after.date(),
+            fingerprint=cert.fingerprint(HashAlgorithm.Sha256).hex(sep=":").upper(),
+            key_type_length=cert.public_key.show_type(),
+            stored_location=path,
+            purpose=purpose,
+        )
 
 
 def register(mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeCertificateOverview)
+    cert_info_registry.register(
+        CertificateInfo(
+            "builtin",
+            lambda: {
+                root_cert_file: _("Signing the site certificate"),
+                agent_cas_dir / "ca.pem": _("Signing agents' client certificates"),
+                site_cert_file: _("The site certificate"),
+            },
+        )
+    )
 
 
-# Todo: This page is not complete yet. It is just a placeholder for the certificate overview.
 class ModeCertificateOverview(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -70,24 +108,8 @@ class ModeCertificateOverview(WatoMode):
 
     def _load_certificates(self) -> list[CertificateView]:
         return [
-            CertificateView(
-                subject_name="site",
-                issuer_name="Heute",
-                creation=date(2023, 1, 1),
-                expiration=date(2023, 12, 30),
-                fingerprint="00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF",
-                key_type_length="RSA 2048 bits",
-                stored_location="etc/ssl/certs",
-                purpose="Monitoring",
-            ),
-            CertificateView(
-                subject_name="agent",
-                issuer_name="Heute",
-                creation=date(2023, 1, 1),
-                expiration=date(2023, 12, 30),
-                fingerprint="00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF",
-                key_type_length="RSA 2048 bits",
-                stored_location="etc/ssl/certs/agent.pem",
-                purpose="Agent communication",
-            ),
+            CertificateView.load(path, purpose)
+            for topic in cert_info_registry
+            for path, purpose in cert_info_registry[topic].get_certs().items()
+            if path.exists()
         ]

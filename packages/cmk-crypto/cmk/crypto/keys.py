@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from typing import get_args, NewType, overload, TypeAlias, TypeGuard
+from typing import assert_never, get_args, NewType, overload, TypeAlias, TypeGuard
 
 import cryptography.exceptions
 from cryptography.hazmat.primitives import serialization
@@ -264,3 +264,16 @@ class PublicKey:
             )
         except cryptography.exceptions.InvalidSignature as e:
             raise InvalidSignatureError(e) from e
+
+    def show_type(self) -> str:
+        match self._key:
+            case ed25519.Ed25519PublicKey():
+                return "Ed25519"
+            case ed448.Ed448PublicKey():
+                return "Ed448"
+            case rsa.RSAPublicKey():
+                return f"RSA {self._key.key_size} bits"
+            case ec.EllipticCurvePublicKey():
+                return f"EC {self._key.curve.name}"
+            case _:
+                assert_never(self._key)

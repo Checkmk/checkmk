@@ -107,7 +107,7 @@ def test_rpn_stack(raw_expression: str, result: MetricOperation) -> None:
             SiteId(""),
             HostName(""),
             "",
-            parse_expression(raw_expression, translated_metrics),
+            parse_expression(raw_expression, "line", "", translated_metrics),
             translated_metrics,
             None,
         )
@@ -120,31 +120,23 @@ def test_create_graph_recipe_from_template() -> None:
         id="my_id",
         title="",
         metrics=[
-            MetricDefinition(
-                MetricExpression(Metric("fs_used")),
-                line_type="area",
-            ),
+            MetricDefinition(MetricExpression(Metric("fs_used"), line_type="area")),
             MetricDefinition(
                 MetricExpression(
                     Difference(minuend=Metric("fs_size"), subtrahend=Metric("fs_used")),
+                    line_type="stack",
+                    title="Free space",
                     color="#e3fff9",
                 ),
-                line_type="stack",
-                title="Free space",
             ),
-            MetricDefinition(
-                MetricExpression(Metric("fs_size")),
-                line_type="line",
-            ),
+            MetricDefinition(MetricExpression(Metric("fs_size"), line_type="line")),
         ],
         scalars=[
             ScalarDefinition(
-                MetricExpression(WarningOf(Metric("fs_used"))),
-                title="Warning",
+                MetricExpression(WarningOf(Metric("fs_used")), line_type="line", title="Warning")
             ),
             ScalarDefinition(
-                MetricExpression(CriticalOf(Metric("fs_used"))),
-                title="Critical",
+                MetricExpression(CriticalOf(Metric("fs_used")), line_type="line", title="Critical")
             ),
         ],
         conflicting_metrics=["fs_free"],
@@ -273,8 +265,7 @@ def test_metric_unit_color(
     translated_metric = translated_metrics.get(expression)
     assert translated_metric is not None
     metric_definition = MetricDefinition(
-        expression=parse_expression(expression, translated_metrics),
-        line_type="line",
+        parse_expression(expression, "line", "", translated_metrics)
     )
     assert metric_definition.compute_unit_color(translated_metrics, ["test"]) == MetricUnitColor(
         unit=translated_metric.unit_info.id,
@@ -296,8 +287,7 @@ def test_metric_unit_color_skip(
     )
     translated_metrics = translate_metrics(perf_data, check_command)
     metric_definition = MetricDefinition(
-        expression=parse_expression(expression, translated_metrics),
-        line_type="line",
+        parse_expression(expression, "line", "", translated_metrics)
     )
     assert metric_definition.compute_unit_color(translated_metrics, ["test"]) is None
 
@@ -316,8 +306,7 @@ def test_metric_unit_color_exception(
     )
     translated_metrics = translate_metrics(perf_data, check_command)
     metric_definition = MetricDefinition(
-        expression=parse_expression(expression, translated_metrics),
-        line_type="line",
+        parse_expression(expression, "line", "", translated_metrics)
     )
     with pytest.raises(MKGeneralException):
         metric_definition.compute_unit_color(translated_metrics, ["test"])

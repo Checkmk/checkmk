@@ -52,12 +52,18 @@ def test_add_graphing_plugins() -> None:
         title="DB Connections",
         scalars=[
             ScalarDefinition(
-                MetricExpression(WarningOf(Metric("active_connections"))),
-                "Warning of Active connections",
+                MetricExpression(
+                    WarningOf(Metric("active_connections")),
+                    line_type="line",
+                    title="Warning of Active connections",
+                )
             ),
             ScalarDefinition(
-                MetricExpression(CriticalOf(Metric("active_connections"))),
-                "Critical of Active connections",
+                MetricExpression(
+                    CriticalOf(Metric("active_connections")),
+                    line_type="line",
+                    title="Critical of Active connections",
+                )
             ),
         ],
         conflicting_metrics=(),
@@ -67,14 +73,18 @@ def test_add_graphing_plugins() -> None:
         omit_zero_metrics=False,
         metrics=[
             MetricDefinition(
-                MetricExpression(Metric("active_connections")),
-                "line",
-                "Active connections",
+                MetricExpression(
+                    Metric("active_connections"),
+                    line_type="line",
+                    title="Active connections",
+                )
             ),
             MetricDefinition(
-                MetricExpression(Metric("idle_connections")),
-                "line",
-                "Idle connections",
+                MetricExpression(
+                    Metric("idle_connections"),
+                    line_type="line",
+                    title="Idle connections",
+                ),
             ),
         ],
     )

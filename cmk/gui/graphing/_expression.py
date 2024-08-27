@@ -17,7 +17,7 @@ from ._color import mix_colors, parse_color, render_color, scalar_colors
 from ._from_api import get_unit_info
 from ._legacy import unit_info, UnitInfo
 from ._translated_metrics import TranslatedMetric
-from ._type_defs import GraphConsolidationFunction
+from ._type_defs import GraphConsolidationFunction, LineType
 
 # TODO CMK-15246 Checkmk 2.4: Remove legacy objects/RPNs
 
@@ -707,6 +707,8 @@ def parse_base_expression(
 class MetricExpression:
     base: BaseMetricExpression
     _: KW_ONLY
+    line_type: LineType
+    title: str = ""
     unit_id: str = ""
     color: str = ""
 
@@ -730,17 +732,31 @@ class MetricExpression:
 
 def parse_expression(
     raw_expression: str | int | float,
+    line_type: LineType,
+    title: str,
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> MetricExpression:
     if isinstance(raw_expression, (int, float)):
-        return MetricExpression(Constant(raw_expression), unit_id="", color="")
+        return MetricExpression(
+            Constant(raw_expression),
+            line_type=line_type,
+            title=title,
+            unit_id="",
+            color="",
+        )
     (
         stack,
         unit_id,
         color,
     ) = _parse_expression(raw_expression, translated_metrics)
     if isinstance(resolved := _resolve_stack(stack), BaseMetricExpression):
-        return MetricExpression(resolved, unit_id=unit_id, color=color)
+        return MetricExpression(
+            resolved,
+            line_type=line_type,
+            title=title,
+            unit_id=unit_id,
+            color=color,
+        )
     raise TypeError(resolved)
 
 

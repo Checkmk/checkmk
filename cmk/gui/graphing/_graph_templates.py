@@ -98,7 +98,6 @@ def get_graph_template_choices() -> list[tuple[str, str]]:
 @dataclass(frozen=True)
 class ScalarDefinition:
     expression: MetricExpression
-    title: str
 
 
 @dataclass(frozen=True)
@@ -110,12 +109,10 @@ class MetricUnitColor:
 @dataclass(frozen=True)
 class MetricDefinition:
     expression: MetricExpression
-    line_type: LineType
-    title: str = ""
 
     def compute_title(self, translated_metrics: Mapping[str, TranslatedMetric]) -> str:
-        if self.title:
-            return self.title
+        if self.expression.title:
+            return self.expression.title
         return translated_metrics[next(self.expression.metric_names())].title
 
     def compute_unit_color(
@@ -158,58 +155,64 @@ def _parse_quantity(
     match quantity:
         case str():
             return MetricDefinition(
-                expression=MetricExpression(Metric(quantity)),
-                line_type=line_type,
-                title=get_metric_spec(quantity).title,
+                expression=MetricExpression(
+                    Metric(quantity),
+                    line_type=line_type,
+                    title=get_metric_spec(quantity).title,
+                ),
             )
         case metrics_api.Constant():
             return MetricDefinition(
                 expression=MetricExpression(
                     Constant(quantity.value),
+                    line_type=line_type,
+                    title=str(quantity.title.localize(translate_to_current_language)),
                     unit_id=register_unit_info(quantity.unit).id,
                     color=parse_color_from_api(quantity.color),
                 ),
-                line_type=line_type,
-                title=str(quantity.title.localize(translate_to_current_language)),
             )
         case metrics_api.WarningOf():
             return MetricDefinition(
-                expression=MetricExpression(WarningOf(Metric(quantity.metric_name))),
-                line_type=line_type,
-                title=_("Warning of %s") % get_metric_spec(quantity.metric_name).title,
+                expression=MetricExpression(
+                    WarningOf(Metric(quantity.metric_name)),
+                    line_type=line_type,
+                    title=_("Warning of %s") % get_metric_spec(quantity.metric_name).title,
+                ),
             )
         case metrics_api.CriticalOf():
             return MetricDefinition(
-                expression=MetricExpression(CriticalOf(Metric(quantity.metric_name))),
-                line_type=line_type,
-                title=_("Critical of %s") % get_metric_spec(quantity.metric_name).title,
+                expression=MetricExpression(
+                    CriticalOf(Metric(quantity.metric_name)),
+                    line_type=line_type,
+                    title=_("Critical of %s") % get_metric_spec(quantity.metric_name).title,
+                ),
             )
         case metrics_api.MinimumOf():
             return MetricDefinition(
                 expression=MetricExpression(
                     MinimumOf(Metric(quantity.metric_name)),
+                    line_type=line_type,
+                    title=get_metric_spec(quantity.metric_name).title,
                     color=parse_color_from_api(quantity.color),
                 ),
-                line_type=line_type,
-                title=get_metric_spec(quantity.metric_name).title,
             )
         case metrics_api.MaximumOf():
             return MetricDefinition(
                 expression=MetricExpression(
                     MaximumOf(Metric(quantity.metric_name)),
+                    line_type=line_type,
+                    title=get_metric_spec(quantity.metric_name).title,
                     color=parse_color_from_api(quantity.color),
                 ),
-                line_type=line_type,
-                title=get_metric_spec(quantity.metric_name).title,
             )
         case metrics_api.Sum():
             return MetricDefinition(
                 expression=MetricExpression(
                     Sum([_parse_quantity(s, line_type).expression.base for s in quantity.summands]),
+                    line_type=line_type,
+                    title=str(quantity.title.localize(translate_to_current_language)),
                     color=parse_color_from_api(quantity.color),
                 ),
-                line_type=line_type,
-                title=str(quantity.title.localize(translate_to_current_language)),
             )
         case metrics_api.Product():
             return MetricDefinition(
@@ -217,11 +220,11 @@ def _parse_quantity(
                     Product(
                         [_parse_quantity(f, line_type).expression.base for f in quantity.factors]
                     ),
+                    line_type=line_type,
+                    title=str(quantity.title.localize(translate_to_current_language)),
                     unit_id=register_unit_info(quantity.unit).id,
                     color=parse_color_from_api(quantity.color),
                 ),
-                line_type=line_type,
-                title=str(quantity.title.localize(translate_to_current_language)),
             )
         case metrics_api.Difference():
             return MetricDefinition(
@@ -230,10 +233,10 @@ def _parse_quantity(
                         minuend=_parse_quantity(quantity.minuend, line_type).expression.base,
                         subtrahend=_parse_quantity(quantity.subtrahend, line_type).expression.base,
                     ),
+                    line_type=line_type,
+                    title=str(quantity.title.localize(translate_to_current_language)),
                     color=parse_color_from_api(quantity.color),
                 ),
-                line_type=line_type,
-                title=str(quantity.title.localize(translate_to_current_language)),
             )
         case metrics_api.Fraction():
             return MetricDefinition(
@@ -242,11 +245,11 @@ def _parse_quantity(
                         dividend=_parse_quantity(quantity.dividend, line_type).expression.base,
                         divisor=_parse_quantity(quantity.divisor, line_type).expression.base,
                     ),
+                    line_type=line_type,
+                    title=str(quantity.title.localize(translate_to_current_language)),
                     unit_id=register_unit_info(quantity.unit).id,
                     color=parse_color_from_api(quantity.color),
                 ),
-                line_type=line_type,
-                title=str(quantity.title.localize(translate_to_current_language)),
             )
 
 
@@ -303,8 +306,7 @@ def _graph_template_from_api_graph(id_: str, graph: graphs_api.Graph) -> GraphTe
                 | metrics_api.MinimumOf()
                 | metrics_api.MaximumOf()
             ):
-                parsed = _parse_quantity(line, "line")
-                scalars.append(ScalarDefinition(parsed.expression, parsed.title))
+                scalars.append(ScalarDefinition(_parse_quantity(line, "line").expression))
             case _:
                 metrics.append(_parse_quantity(line, "line"))
     return GraphTemplate(
@@ -346,8 +348,7 @@ def _graph_template_from_api_bidirectional(
                 | metrics_api.MinimumOf()
                 | metrics_api.MaximumOf()
             ):
-                parsed = _parse_quantity(line, "-line")
-                scalars.append(ScalarDefinition(parsed.expression, parsed.title))
+                scalars.append(ScalarDefinition(_parse_quantity(line, "-line").expression))
             case _:
                 metrics.append(_parse_quantity(line, "-line"))
     for line in bidirectional.upper.simple_lines:
@@ -358,8 +359,7 @@ def _graph_template_from_api_bidirectional(
                 | metrics_api.MinimumOf()
                 | metrics_api.MaximumOf()
             ):
-                parsed = _parse_quantity(line, "line")
-                scalars.append(ScalarDefinition(parsed.expression, parsed.title))
+                scalars.append(ScalarDefinition(_parse_quantity(line, "line").expression))
             case _:
                 metrics.append(_parse_quantity(line, "line"))
     return GraphTemplate(
@@ -389,8 +389,7 @@ def _parse_raw_scalar_definition(
 ) -> ScalarDefinition:
     if isinstance(raw_scalar_definition, tuple):
         return ScalarDefinition(
-            expression=parse_expression(raw_scalar_definition[0], {}),
-            title=str(raw_scalar_definition[1]),
+            parse_expression(raw_scalar_definition[0], "line", str(raw_scalar_definition[1]), {})
         )
 
     if raw_scalar_definition.endswith(":warn"):
@@ -399,10 +398,7 @@ def _parse_raw_scalar_definition(
         title = _("Critical")
     else:
         title = raw_scalar_definition
-    return ScalarDefinition(
-        expression=parse_expression(raw_scalar_definition, {}),
-        title=str(title),
-    )
+    return ScalarDefinition(parse_expression(raw_scalar_definition, "line", str(title), {}))
 
 
 def _parse_raw_graph_range(raw_graph_range: tuple[int | str, int | str]) -> FixedGraphTemplateRange:
@@ -419,9 +415,7 @@ def _parse_raw_metric_definition(
 ) -> MetricDefinition:
     raw_expression, line_type, *title = raw_metric_definition
     return MetricDefinition(
-        expression=parse_expression(raw_expression, {}),
-        line_type=line_type,
-        title=str(title[0]) if title else "",
+        parse_expression(raw_expression, line_type, str(title[0]) if title else "", {}),
     )
 
 
@@ -457,17 +451,21 @@ def graph_template_from_name(name: str) -> GraphTemplate:
     return GraphTemplate(
         id=f"METRIC_{name}",
         title="",
-        metrics=[
-            MetricDefinition(expression=MetricExpression(Metric(name)), line_type="area"),
-        ],
+        metrics=[MetricDefinition(expression=MetricExpression(Metric(name), line_type="area"))],
         scalars=[
             ScalarDefinition(
-                expression=MetricExpression(WarningOf(Metric(name))),
-                title=str(_("Warning")),
+                MetricExpression(
+                    WarningOf(Metric(name)),
+                    line_type="line",
+                    title=str(_("Warning")),
+                ),
             ),
             ScalarDefinition(
-                expression=MetricExpression(CriticalOf(Metric(name))),
-                title=str(_("Critical")),
+                MetricExpression(
+                    CriticalOf(Metric(name)),
+                    line_type="line",
+                    title=str(_("Critical")),
+                ),
             ),
         ],
         conflicting_metrics=[],
@@ -492,18 +490,16 @@ def _compute_predictive_metrics(
 ) -> Iterator[MetricDefinition]:
     for metric_defintion in metrics:
         line_type: Literal["line", "-line"] = (
-            "-line" if metric_defintion.line_type.startswith("-") else "line"
+            "-line" if metric_defintion.expression.line_type.startswith("-") else "line"
         )
         for metric_name in metric_defintion.expression.metric_names():
             if (predict_metric_name := f"predict_{metric_name}") in translated_metrics:
                 yield MetricDefinition(
-                    expression=MetricExpression(Metric(predict_metric_name)),
-                    line_type=line_type,
+                    MetricExpression(Metric(predict_metric_name), line_type=line_type)
                 )
             if (predict_lower_metric_name := f"predict_lower_{metric_name}") in translated_metrics:
                 yield MetricDefinition(
-                    expression=MetricExpression(Metric(predict_lower_metric_name)),
-                    line_type=line_type,
+                    MetricExpression(Metric(predict_lower_metric_name), line_type=line_type),
                 )
 
 
@@ -720,7 +716,7 @@ def _horizontal_rules_from_thresholds(
                         value=result.value,
                         rendered_value=result.unit_info.render(result.value),
                         color=result.color,
-                        title=entry.title,
+                        title=entry.expression.title,
                     )
                 )
         # Scalar value like min and max are always optional. This makes configuration
@@ -746,7 +742,7 @@ def create_graph_recipe_from_template(
         )
         return GraphMetric(
             title=metric_definition.compute_title(translated_metrics),
-            line_type=metric_definition.line_type,
+            line_type=metric_definition.expression.line_type,
             operation=metric_expression_to_graph_recipe_expression(
                 site_id,
                 host_name,

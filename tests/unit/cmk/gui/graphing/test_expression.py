@@ -72,7 +72,9 @@ def test_evaluate_cpu_utilization(
     )
     translated_metrics = translate_metrics(perf_data_parsed, check_command)
     assert (
-        parse_expression(expression, translated_metrics).evaluate(translated_metrics).value
+        parse_expression(expression, "line", "", translated_metrics)
+        .evaluate(translated_metrics)
+        .value
         == expected_result
     )
 
@@ -86,6 +88,7 @@ def test_evaluate_cpu_utilization(
             "if_in_octets,8,*@bits/s",
             MetricExpression(
                 Product([Metric("if_in_octets"), Constant(8)]),
+                line_type="line",
                 unit_id="bits/s",
             ),
             16.0,
@@ -101,7 +104,7 @@ def test_evaluate_cpu_utilization(
             parse_perf_data("127.0.0.1pl=5%;80;100;;", config=active_config)[0],
             "check_mk_active-icmp",
             "127.0.0.1pl",
-            MetricExpression(Metric("127.0.0.1pl")),
+            MetricExpression(Metric("127.0.0.1pl"), line_type="line"),
             5,
             "",
             "#cc00ff",
@@ -113,7 +116,7 @@ def test_evaluate_cpu_utilization(
             parse_perf_data("10.172=6", config=active_config)[0],
             "check_mk-local",
             "10.172",
-            MetricExpression(Metric("10.172")),
+            MetricExpression(Metric("10.172"), line_type="line"),
             6,
             "",
             "#cc00ff",
@@ -123,7 +126,7 @@ def test_evaluate_cpu_utilization(
             [],
             "check_mk-foo",
             "97",
-            MetricExpression(Constant(97)),
+            MetricExpression(Constant(97), line_type="line"),
             97.0,
             "count",
             "#000000",
@@ -133,7 +136,7 @@ def test_evaluate_cpu_utilization(
             [],
             "check_mk-foo",
             97,
-            MetricExpression(Constant(97)),
+            MetricExpression(Constant(97), line_type="line"),
             97.0,
             "count",
             "#000000",
@@ -143,7 +146,7 @@ def test_evaluate_cpu_utilization(
             [],
             "check_mk-foo",
             "97.0",
-            MetricExpression(Constant(97.0)),
+            MetricExpression(Constant(97.0), line_type="line"),
             97.0,
             "",
             "#000000",
@@ -153,7 +156,7 @@ def test_evaluate_cpu_utilization(
             [],
             "check_mk-foo",
             97.0,
-            MetricExpression(Constant(97.0)),
+            MetricExpression(Constant(97.0), line_type="line"),
             97.0,
             "",
             "#000000",
@@ -163,7 +166,7 @@ def test_evaluate_cpu_utilization(
             [],
             "check_mk-foo",
             "97.0@bytes",
-            MetricExpression(Constant(97.0), unit_id="bytes"),
+            MetricExpression(Constant(97.0), line_type="line", unit_id="bytes"),
             97.0,
             "bytes",
             "#000000",
@@ -173,7 +176,7 @@ def test_evaluate_cpu_utilization(
             [],
             "check_mk-foo",
             "97.0#123456",
-            MetricExpression(Constant(97.0), color="#123456"),
+            MetricExpression(Constant(97.0), line_type="line", color="#123456"),
             97.0,
             "",
             "#123456",
@@ -187,7 +190,8 @@ def test_evaluate_cpu_utilization(
                 Percent(
                     percent_value=Metric("metric_name"),
                     base_value=MaximumOf(Metric("metric_name")),
-                )
+                ),
+                line_type="line",
             ),
             20.0,
             "%",
@@ -198,7 +202,7 @@ def test_evaluate_cpu_utilization(
             [PerfDataTuple(n, n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:warn",
-            MetricExpression(WarningOf(Metric("metric_name"))),
+            MetricExpression(WarningOf(Metric("metric_name")), line_type="line"),
             20.0,
             "",
             "#ffd000",
@@ -212,7 +216,8 @@ def test_evaluate_cpu_utilization(
                 Percent(
                     percent_value=WarningOf(Metric("metric_name")),
                     base_value=MaximumOf(Metric("metric_name")),
-                )
+                ),
+                line_type="line",
             ),
             40.0,
             "%",
@@ -223,7 +228,7 @@ def test_evaluate_cpu_utilization(
             [PerfDataTuple(n, n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:crit",
-            MetricExpression(CriticalOf(Metric("metric_name"))),
+            MetricExpression(CriticalOf(Metric("metric_name")), line_type="line"),
             30.0,
             "",
             "#ff3232",
@@ -237,7 +242,8 @@ def test_evaluate_cpu_utilization(
                 Percent(
                     percent_value=CriticalOf(Metric("metric_name")),
                     base_value=MaximumOf(Metric("metric_name")),
-                )
+                ),
+                line_type="line",
             ),
             60.0,
             "%",
@@ -248,7 +254,7 @@ def test_evaluate_cpu_utilization(
             [PerfDataTuple(n, n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:min",
-            MetricExpression(MinimumOf(Metric("metric_name"))),
+            MetricExpression(MinimumOf(Metric("metric_name")), line_type="line"),
             0.0,
             "",
             "#808080",
@@ -262,7 +268,8 @@ def test_evaluate_cpu_utilization(
                 Percent(
                     percent_value=MinimumOf(Metric("metric_name")),
                     base_value=MaximumOf(Metric("metric_name")),
-                )
+                ),
+                line_type="line",
             ),
             0.0,
             "%",
@@ -273,7 +280,7 @@ def test_evaluate_cpu_utilization(
             [PerfDataTuple(n, n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:max",
-            MetricExpression(MaximumOf(Metric("metric_name"))),
+            MetricExpression(MaximumOf(Metric("metric_name")), line_type="line"),
             50.0,
             "",
             "#808080",
@@ -287,7 +294,8 @@ def test_evaluate_cpu_utilization(
                 Percent(
                     percent_value=MaximumOf(Metric("metric_name")),
                     base_value=MaximumOf(Metric("metric_name")),
-                )
+                ),
+                line_type="line",
             ),
             100.0,
             "%",
@@ -298,7 +306,7 @@ def test_evaluate_cpu_utilization(
             [PerfDataTuple(n, n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name.max",
-            MetricExpression(Metric("metric_name", "max")),
+            MetricExpression(Metric("metric_name", "max"), line_type="line"),
             10.0,
             "",
             "#cc00ff",
@@ -308,7 +316,7 @@ def test_evaluate_cpu_utilization(
             [PerfDataTuple(n, n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name.min",
-            MetricExpression(Metric("metric_name", "min")),
+            MetricExpression(Metric("metric_name", "min"), line_type="line"),
             10.0,
             "",
             "#cc00ff",
@@ -318,7 +326,7 @@ def test_evaluate_cpu_utilization(
             [PerfDataTuple(n, n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name.average",
-            MetricExpression(Metric("metric_name", "average")),
+            MetricExpression(Metric("metric_name", "average"), line_type="line"),
             10.0,
             "",
             "#cc00ff",
@@ -336,7 +344,7 @@ def test_parse_and_evaluate_1(
     color: str,
 ) -> None:
     translated_metrics = translate_metrics(perf_data, check_command)
-    metric_expression = parse_expression(raw_expression, translated_metrics)
+    metric_expression = parse_expression(raw_expression, "line", "", translated_metrics)
     assert metric_expression == expected_metric_expression
     evaluated = metric_expression.evaluate(translated_metrics)
     assert evaluated.value == value
@@ -366,6 +374,7 @@ def test_parse_and_evaluate_1(
             "fs_size,fs_used,-#e3fff9",
             MetricExpression(
                 Difference(minuend=Metric("fs_size"), subtrahend=Metric("fs_used")),
+                line_type="line",
                 color="#e3fff9",
             ),
             6291456,
@@ -385,7 +394,7 @@ def test_parse_and_evaluate_2(
     color: str,
 ) -> None:
     translated_metrics = translate_metrics(perf_data, check_command)
-    metric_expression = parse_expression(raw_expression, translated_metrics)
+    metric_expression = parse_expression(raw_expression, "line", "", translated_metrics)
     assert metric_expression == expected_metric_expression
     result = metric_expression.evaluate(translated_metrics)
     assert result.value == value

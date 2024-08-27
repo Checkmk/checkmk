@@ -7,6 +7,9 @@ import pytest
 
 from cmk.gui.config import active_config
 from cmk.gui.graphing._expression import (
+    _Constant,
+    _Product,
+    _Sum,
     ConditionalMetricExpression,
     Constant,
     CriticalOf,
@@ -23,7 +26,6 @@ from cmk.gui.graphing._expression import (
     parse_expression,
     Percent,
     Product,
-    Sum,
     WarningOf,
 )
 from cmk.gui.graphing._legacy import unit_info
@@ -393,7 +395,7 @@ def test_parse_and_evaluate_2(
             "metric_name,100,>",
             GreaterThan(
                 left=Metric(name="metric_name"),
-                right=Constant(100),
+                right=_Constant(100),
             ),
             False,
             id="conditional greater than",
@@ -404,7 +406,7 @@ def test_parse_and_evaluate_2(
             "metric_name,100,>=",
             GreaterEqualThan(
                 left=Metric(name="metric_name"),
-                right=Constant(100),
+                right=_Constant(100),
             ),
             True,
             id="conditional greater equal than",
@@ -415,7 +417,7 @@ def test_parse_and_evaluate_2(
             "metric_name,100,<",
             LessThan(
                 left=Metric(name="metric_name"),
-                right=Constant(100),
+                right=_Constant(100),
             ),
             False,
             id="conditional less than",
@@ -426,7 +428,7 @@ def test_parse_and_evaluate_2(
             "metric_name,100,<=",
             LessEqualThan(
                 left=Metric(name="metric_name"),
-                right=Constant(100),
+                right=_Constant(100),
             ),
             True,
             id="conditional less equal than",
@@ -440,7 +442,7 @@ def test_parse_and_evaluate_2(
             "check_mk-foo",
             "used,uncommitted,+,size,>",
             GreaterThan(
-                left=Sum([Metric(name="used"), Metric(name="uncommitted")]),
+                left=_Sum([Metric(name="used"), Metric(name="uncommitted")]),
                 right=Metric(name="size"),
             ),
             False,
@@ -456,21 +458,21 @@ def test_parse_and_evaluate_2(
             "check_mk-foo",
             "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,>=",
             GreaterEqualThan(
-                left=Sum(
+                left=_Sum(
                     summands=[
                         Metric(name="delivered_notifications"),
                         Metric(name="failed_notifications"),
                     ]
                 ),
-                right=Product(
+                right=_Product(
                     factors=[
-                        Sum(
+                        _Sum(
                             summands=[
                                 Metric(name="delivered_notifications"),
                                 Metric(name="failed_notifications"),
                             ]
                         ),
-                        Constant(value=2),
+                        _Constant(value=2),
                     ]
                 ),
             ),
@@ -487,21 +489,21 @@ def test_parse_and_evaluate_2(
             "check_mk-foo",
             "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,>=",
             GreaterEqualThan(
-                left=Sum(
+                left=_Sum(
                     summands=[
                         Metric(name="delivered_notifications"),
                         Metric(name="failed_notifications"),
                     ]
                 ),
-                right=Product(
+                right=_Product(
                     factors=[
-                        Sum(
+                        _Sum(
                             summands=[
                                 Metric(name="delivered_notifications"),
                                 Metric(name="failed_notifications"),
                             ]
                         ),
-                        Constant(value=2),
+                        _Constant(value=2),
                     ]
                 ),
             ),
@@ -518,21 +520,21 @@ def test_parse_and_evaluate_2(
             "check_mk-foo",
             "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,>=",
             GreaterEqualThan(
-                left=Sum(
+                left=_Sum(
                     summands=[
                         Metric(name="delivered_notifications"),
                         Metric(name="failed_notifications"),
                     ]
                 ),
-                right=Product(
+                right=_Product(
                     factors=[
-                        Sum(
+                        _Sum(
                             summands=[
                                 Metric(name="delivered_notifications"),
                                 Metric(name="failed_notifications"),
                             ]
                         ),
-                        Constant(value=2),
+                        _Constant(value=2),
                     ]
                 ),
             ),

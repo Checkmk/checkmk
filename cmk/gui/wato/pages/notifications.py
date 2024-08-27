@@ -9,6 +9,7 @@ import json
 import time
 from collections.abc import Collection, Iterator, Mapping
 from copy import deepcopy
+from dataclasses import asdict
 from datetime import datetime
 from typing import Any, cast, Literal, NamedTuple, overload
 
@@ -31,11 +32,21 @@ from cmk.gui import forms, permissions, sites, userdb
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs.vue.shared_type_defs import (
+    CoreStats,
+    CoreStatsI18n,
+    Notifications,
+    NotificationStats,
+    NotificationStatsI18n,
+    Rule,
+    RuleSection,
+    RuleTopic,
+)
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.mkeventd import syslog_facilities, syslog_priorities
@@ -56,9 +67,22 @@ from cmk.gui.user_async_replication import user_profile_async_replication_dialog
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.notifications import (
+    get_disabled_notifications_infos,
+    get_failed_notification_count,
+    get_total_send_notifications,
+    OPTIMIZE_NOTIFICATIONS_ENTRIES,
+    SUPPORT_NOTIFICATIONS_ENTRIES,
+)
 from cmk.gui.utils.time import timezone_utc_offset_str
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import DocReference, make_confirm_delete_link, makeactionuri, makeuri
+from cmk.gui.utils.urls import (
+    DocReference,
+    make_confirm_delete_link,
+    makeactionuri,
+    makeuri,
+    makeuri_contextless,
+)
 from cmk.gui.valuespec import (
     Age,
     Alternative,
@@ -102,6 +126,7 @@ from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.notifications import load_user_notification_rules, NotificationRuleConfigFile
+from cmk.gui.watolib.rulesets import AllRulesets
 from cmk.gui.watolib.sample_config import get_default_notification_rule, new_notification_rule_id
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.user_scripts import load_notification_scripts
@@ -673,6 +698,7 @@ class ModeNotifications(ABCNotificationsMode):
 
     def page(self) -> None:
         self._show_no_fallback_contact_warning()
+        self._show_overview()
         self._show_rules(analyse=None)
 
     def _show_no_fallback_contact_warning(self) -> None:
@@ -689,6 +715,12 @@ class ModeNotifications(ABCNotificationsMode):
                 )
                 % url
             )
+
+    def _show_overview(self) -> None:
+        html.vue_app(
+            app_name="notification_overview",
+            data=asdict(_get_vue_data()),
+        )
 
     def _fallback_mail_contacts_configured(self) -> bool:
         current_settings = load_configuration_settings()
@@ -807,6 +839,105 @@ class ModeNotifications(ABCNotificationsMode):
                     html.write_text_permissive(
                         self._vs_notification_bulkby().value_to_html(bulk["groupby"])
                     )
+
+
+def _get_vue_data() -> Notifications:
+    all_sites_count, sites_with_disabled_notifications = get_disabled_notifications_infos()
+    return Notifications(
+        notification_stats=NotificationStats(
+            num_sent_notifications=get_total_send_notifications()[0][0],
+            num_failed_notifications=get_failed_notification_count(),
+            sent_notification_link=makeuri_contextless(
+                request,
+                [
+                    ("view_name", "alertstats"),
+                    ("_active", "logtime;log_notification_phase"),
+                    ("logtime_from_range", "86400"),
+                    ("is_log_notification_phase", "0"),
+                    ("filled_in", "filter"),
+                    ("logtime_from", "7"),
+                ],
+                filename="view.py",
+            ),
+            failed_notification_link=makeuri_contextless(
+                request,
+                [("view_name", "failed_notifications")],
+                filename="view.py",
+            ),
+            i18n=NotificationStatsI18n(
+                sent_notifications=_("Total sent notifications"),
+                failed_notifications=_("Failed notifications"),
+                sent_notifications_link_title=_("Last 7 days"),
+                failed_notifications_link_title=_("View failed notifications"),
+            ),
+        ),
+        core_stats=CoreStats(
+            sites=sites_with_disabled_notifications,
+            i18n=CoreStatsI18n(
+                title=_("Core status of notifications"),
+                sites_column_title=_("Sites"),
+                status_column_title=_("Notification core status"),
+                ok_msg=_("Notifications enabled on %d of %d %s")
+                % (
+                    all_sites_count,
+                    all_sites_count,
+                    site_prefix := ungettext("site", "sites", all_sites_count),
+                ),
+                warning_msg=_("Notifications disabled on %d of %d %s")
+                % (
+                    len(sites_with_disabled_notifications),
+                    all_sites_count,
+                    site_prefix,
+                ),
+                disabled_msg=_("Disabled via master control"),
+            ),
+        ),
+        rule_sections=[
+            RuleSection(
+                i18n=_("Optimize notifications"),
+                topics=_get_ruleset_infos(OPTIMIZE_NOTIFICATIONS_ENTRIES),
+            ),
+            RuleSection(
+                i18n=_("Supporting rules"),
+                topics=_get_ruleset_infos(SUPPORT_NOTIFICATIONS_ENTRIES),
+            ),
+        ],
+    )
+
+
+def _get_ruleset_infos(entries: dict[str, list[str]]) -> list[RuleTopic]:
+    all_rulesets = AllRulesets.load_all_rulesets()
+    rule_topic_list: list[RuleTopic] = []
+    for section, ruleset in entries.items():
+        rule_list: list[Rule] = []
+        for rule_id in ruleset:
+            try:
+                # Some rules are only available in CEE
+                rule = all_rulesets.get(rule_id)
+            except KeyError:
+                continue
+            # Should not happen
+            if rule is None:
+                continue
+
+            rule_list.append(
+                Rule(
+                    i18n=rule.title() or _("Unknown rule with ID %s") % rule_id,
+                    count=str(rule.num_rules()),
+                    link=makeuri_contextless(
+                        request,
+                        [("varname", rule_id), ("mode", "edit_ruleset")],
+                        filename="wato.py",
+                    ),
+                )
+            )
+        rule_topic_list.append(
+            RuleTopic(
+                i18n=section,
+                rules=rule_list,
+            )
+        )
+    return rule_topic_list
 
 
 class ModeAnalyzeNotifications(ModeNotifications):

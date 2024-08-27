@@ -151,6 +151,7 @@ export type OptionalChoice = FormSpec & {
 export interface VueFormspecComponents {
   components?: Components;
   validation_message?: ValidationMessage;
+  notifications?: Notifications;
 }
 export interface FormSpec {
   type: string;
@@ -229,4 +230,47 @@ export interface ValidationMessage {
   location: string[];
   message: string;
   invalid_value: unknown;
+}
+export interface Notifications {
+  notification_stats: NotificationStats;
+  core_stats: CoreStats;
+  rule_sections: RuleSection[];
+}
+export interface NotificationStats {
+  num_sent_notifications: number;
+  num_failed_notifications: number;
+  sent_notification_link: string;
+  failed_notification_link: string;
+  i18n: NotificationStatsI18N;
+}
+export interface NotificationStatsI18N {
+  sent_notifications: string;
+  failed_notifications: string;
+  sent_notifications_link_title: string;
+  failed_notifications_link_title: string;
+}
+export interface CoreStats {
+  sites: string[];
+  i18n: CoreStatsI18N;
+}
+export interface CoreStatsI18N {
+  title: string;
+  sites_column_title: string;
+  status_column_title: string;
+  ok_msg: string;
+  warning_msg: string;
+  disabled_msg: string;
+}
+export interface RuleSection {
+  i18n: string;
+  topics: RuleTopic[];
+}
+export interface RuleTopic {
+  i18n: string;
+  rules: Rule[];
+}
+export interface Rule {
+  i18n: string;
+  count: string;
+  link: string;
 }

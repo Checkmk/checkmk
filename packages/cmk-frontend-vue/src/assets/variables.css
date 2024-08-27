@@ -20,6 +20,10 @@
 
   /* Borders */
   --border-radius: 4px;
+
+  /* Icons */
+  --icon-checkmark: url('themes/facelift/images/icon_checkmark.svg');
+  --icon-crit-problem: url('themes/facelift/images/icon_crit_problem.svg');
 }
 
 @layer theme {
@@ -32,6 +36,8 @@
     --icon-save-to-services: url('themes/facelift/images/icon_save_to_services.svg');
 
     --default-submit-button-border-color: var(--success-dimmed);
+    --default-border-color: rgb(234 234 234);
+    --default-table-th-color: rgb(232 232 238);
   }
 
   body[data-theme='modern-dark'] {
@@ -43,5 +49,8 @@
     --icon-save-to-services: url('themes/modern-dark/images/icon_save_to_services.svg');
 
     --default-submit-button-border-color: rgb(8 94 61);
+    --default-border-color: rgb(38 45 52);
+
+    --default-table-th-color: rgb(32, 39, 46);
   }
 }

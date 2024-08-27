@@ -16,6 +16,7 @@ import { mixinUniqueId } from './plugins'
 import D3Table from './views/D3Table.vue'
 import Table from './views/CmkTable.vue'
 import QuickSetup from './quick-setup/QuickSetupApp.vue'
+import NotificationOverview from './notification/NotificationOverviewApp.vue'
 import { FormApp } from '@/form'
 
 function setupVue() {
@@ -69,6 +70,14 @@ function setupVue() {
       case 'quick_setup': {
         app = createApp(QuickSetup, { quick_setup_id: appData.quick_setup_id })
         app.use(mixinUniqueId)
+        break
+      }
+      case 'notification_overview': {
+        app = createApp(NotificationOverview, {
+          notification_stats: appData.notification_stats,
+          core_stats: appData.core_stats,
+          rule_sections: appData.rule_sections
+        })
         break
       }
       default:

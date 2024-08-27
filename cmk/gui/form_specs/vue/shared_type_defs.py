@@ -132,6 +132,31 @@ class ValidationMessage:
 
 
 @dataclass(kw_only=True)
+class NotificationStatsI18n:
+    sent_notifications: str
+    failed_notifications: str
+    sent_notifications_link_title: str
+    failed_notifications_link_title: str
+
+
+@dataclass(kw_only=True)
+class CoreStatsI18n:
+    title: str
+    sites_column_title: str
+    status_column_title: str
+    ok_msg: str
+    warning_msg: str
+    disabled_msg: str
+
+
+@dataclass(kw_only=True)
+class Rule:
+    i18n: str
+    count: str
+    link: str
+
+
+@dataclass(kw_only=True)
 class FormSpec:
     type: str
     title: str
@@ -335,6 +360,41 @@ Components = Union[
 
 
 @dataclass(kw_only=True)
+class NotificationStats:
+    num_sent_notifications: int
+    num_failed_notifications: int
+    sent_notification_link: str
+    failed_notification_link: str
+    i18n: NotificationStatsI18n
+
+
+@dataclass(kw_only=True)
+class CoreStats:
+    sites: list[str]
+    i18n: CoreStatsI18n
+
+
+@dataclass(kw_only=True)
+class RuleTopic:
+    i18n: str
+    rules: list[Rule]
+
+
+@dataclass(kw_only=True)
+class RuleSection:
+    i18n: str
+    topics: list[RuleTopic]
+
+
+@dataclass(kw_only=True)
+class Notifications:
+    notification_stats: NotificationStats
+    core_stats: CoreStats
+    rule_sections: list[RuleSection]
+
+
+@dataclass(kw_only=True)
 class VueFormspecComponents:
     components: Optional[Components] = None
     validation_message: Optional[ValidationMessage] = None
+    notifications: Optional[Notifications] = None

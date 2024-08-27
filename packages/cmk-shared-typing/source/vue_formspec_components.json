@@ -10,6 +10,10 @@
         "validation_message": {
             "type": "object",
             "$ref": "vue_formspec/validation_message.json#/$defs/validation_message"
+        },
+        "notifications": {
+            "type": "object",
+            "$ref": "vue_formspec/notifications.json#/$defs/notifications"
         }
     }
 }

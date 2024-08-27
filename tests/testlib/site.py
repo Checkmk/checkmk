@@ -18,6 +18,7 @@ import time
 import urllib.parse
 from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager, nullcontext, suppress
+from getpass import getuser
 from pathlib import Path
 from pprint import pformat
 from typing import Final, Literal
@@ -38,6 +39,7 @@ from tests.testlib.utils import (
     makedirs,
     PExpectDialog,
     restart_httpd,
+    run,
     ServiceInfo,
     spawn_expect_process,
     wait_until,
@@ -1154,8 +1156,7 @@ class Site:
             logger.info("Not containerized: not copying results")
             return
         logger.info("Saving to %s", self.result_dir())
-        makedirs(self.result_dir(), sudo=True)
-        execute(["chmod", "777", self.result_dir().as_posix()], sudo=True)
+        self.result_dir().mkdir(parents=True, exist_ok=True)
 
         if os.path.exists(self.path("junit.xml")):
             execute(["cp", self.path("junit.xml"), self.result_dir().as_posix()], sudo=True)
@@ -1197,11 +1198,6 @@ class Site:
             sudo=True,
         )
 
-        # Rename files to get better handling by the browser when opening a crash file
-        for crash_info in self.crash_archive_dir.glob("**/crash.info"):
-            crash_json = crash_info.parent / (crash_info.stem + ".json")
-            execute(["mv", crash_info.as_posix(), crash_json.as_posix()], sudo=True)
-
         execute(
             [
                 "cp",
@@ -1211,6 +1207,15 @@ class Site:
             ],
             sudo=True,
         )
+
+        # Change ownership of all copied files to testuser
+        run(["chown", "-R", getuser(), self.result_dir().as_posix()], sudo=True)
+        run(["chgrp", "-R", getuser(), self.result_dir().as_posix()], sudo=True)
+
+        # Rename files to get better handling by the browser when opening a crash file
+        for crash_info in self.crash_archive_dir.glob("**/crash.info"):
+            crash_json = crash_info.parent / (crash_info.stem + ".json")
+            crash_info.rename(crash_json)
 
     def report_crashes(self):
         crash_dirs = [

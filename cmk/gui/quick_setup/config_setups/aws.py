@@ -6,7 +6,6 @@ from typing import Sequence
 
 from cmk.utils.rulesets.definition import RuleGroup
 
-from cmk.gui.quick_setup.predefined import unique_id_formspec_wrapper
 from cmk.gui.quick_setup.to_frontend import (
     create_and_save_special_agent_bundle,
     recap_service_discovery,
@@ -14,6 +13,7 @@ from cmk.gui.quick_setup.to_frontend import (
     validate_test_connection,
     validate_unique_id,
 )
+from cmk.gui.quick_setup.v0_unstable.predefined import widgets
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupStage
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, QuickSetupId, ServiceInterest
 from cmk.gui.quick_setup.v0_unstable.widgets import (
@@ -64,7 +64,7 @@ def prepare_aws() -> QuickSetupStage:
                 ],
                 list_type="ordered",
             ),
-            unique_id_formspec_wrapper(
+            widgets.unique_id_formspec_wrapper(
                 title=Title("AWS account name"), prefill_template="aws_config"
             ),
             FormSpecDictWrapper(

@@ -9,10 +9,10 @@ import pytest
 
 from tests.testlib.rest_api_client import ClientRegistry
 
-from cmk.gui.quick_setup.predefined import unique_id_formspec_wrapper
 from cmk.gui.quick_setup.to_frontend import recaps_form_spec, validate_unique_id
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.definitions import UniqueBundleIDStr, UniqueFormSpecIDStr
+from cmk.gui.quick_setup.v0_unstable.predefined import widgets
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupStage
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     GeneralStageErrors,
@@ -44,7 +44,7 @@ def test_quick_setup_get(clients: ClientRegistry) -> None:
             QuickSetupStage(
                 title="stage1",
                 configure_components=[
-                    unique_id_formspec_wrapper(Title("account name")),
+                    widgets.unique_id_formspec_wrapper(Title("account name")),
                 ],
                 custom_validators=[],
                 recap=[],
@@ -64,7 +64,7 @@ def test_validate_retrieve_next(clients: ClientRegistry) -> None:
             QuickSetupStage(
                 title="stage1",
                 configure_components=[
-                    unique_id_formspec_wrapper(Title("account name")),
+                    widgets.unique_id_formspec_wrapper(Title("account name")),
                 ],
                 custom_validators=[],
                 recap=[recaps_form_spec],
@@ -100,7 +100,7 @@ def test_failing_validate(clients: ClientRegistry) -> None:
             QuickSetupStage(
                 title="stage1",
                 configure_components=[
-                    unique_id_formspec_wrapper(Title("account name")),
+                    widgets.unique_id_formspec_wrapper(Title("account name")),
                 ],
                 custom_validators=[_form_spec_extra_validate],
                 recap=[],
@@ -135,7 +135,7 @@ def test_quick_setup_save(clients: ClientRegistry) -> None:
             QuickSetupStage(
                 title="stage1",
                 configure_components=[
-                    unique_id_formspec_wrapper(Title("account name")),
+                    widgets.unique_id_formspec_wrapper(Title("account name")),
                 ],
                 custom_validators=[],
                 recap=[],
@@ -162,7 +162,7 @@ def test_unique_id_must_be_unique(
             QuickSetupStage(
                 title="stage1",
                 configure_components=[
-                    unique_id_formspec_wrapper(Title("account name")),
+                    widgets.unique_id_formspec_wrapper(Title("account name")),
                 ],
                 custom_validators=[validate_unique_id],
                 recap=[recaps_form_spec],

@@ -61,10 +61,10 @@
           "default": "number_in_range"
         },
         "min_value": {
-          "type": "integer"
+          "type": "number"
         },
         "max_value": {
-          "type": "integer"
+          "type": "number"
         },
         "error_message": {
           "type": "string"

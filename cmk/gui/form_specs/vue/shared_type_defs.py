@@ -37,8 +37,8 @@ class LengthInRange:
 @dataclass(kw_only=True)
 class NumberInRange:
     type: str = "number_in_range"
-    min_value: Optional[int] = None
-    max_value: Optional[int] = None
+    min_value: Optional[float] = None
+    max_value: Optional[float] = None
     error_message: Optional[str] = None
 
 

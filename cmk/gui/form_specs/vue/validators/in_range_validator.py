@@ -12,19 +12,12 @@ def build(
     validator: formspec_validators.NumberInRange,
 ) -> list[shared_type_defs.Validator]:
     value_from, value_to = validator.range
-    assert not isinstance(value_from, float)
-    assert not isinstance(value_to, float)
-    min_validator = formspec_validators.NumberInRange(min_value=validator.range[0])
-    max_validator = formspec_validators.NumberInRange(max_value=validator.range[1])
+
+    validator = formspec_validators.NumberInRange(min_value=value_from, max_value=value_to)
     return [
         shared_type_defs.NumberInRange(
-            min_value=None,
-            max_value=value_to,
-            error_message=max_validator.error_msg.localize(_),
-        ),
-        shared_type_defs.NumberInRange(
             min_value=value_from,
-            max_value=None,
-            error_message=min_validator.error_msg.localize(_),
-        ),
+            max_value=value_to,
+            error_message=validator.error_msg.localize(_),
+        )
     ]

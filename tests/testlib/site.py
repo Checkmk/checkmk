@@ -567,7 +567,7 @@ class Site:
             raise Exception("Failed to delete directory %s. Exit-Code: %d" % (rel_path, p.wait()))
 
     def write_text_file(self, rel_path: str | Path, content: str) -> None:
-        write_file(self.path(str(rel_path)), content, sudo=True, substitute_user=self.id)
+        write_file(self.path(rel_path), content, sudo=True, substitute_user=self.id)
 
     def write_binary_file(self, rel_path: str, content: bytes) -> None:
         write_file(self.path(rel_path), content, sudo=True, substitute_user=self.id)

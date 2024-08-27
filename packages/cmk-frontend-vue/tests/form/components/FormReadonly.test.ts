@@ -57,6 +57,7 @@ test('FormReadonly renders string', () => {
 
 const dictionaryFormSpec: FormSpec.Dictionary = {
   type: 'dictionary',
+  layout: 'default',
   title: 'fooTitle',
   help: 'fooHelp',
   validators: [],
@@ -149,6 +150,7 @@ const cascadingSingleChoiceFormSpec: FormSpec.CascadingSingleChoice = {
   type: 'cascading_single_choice',
   title: 'fooTitle',
   label: 'fooLabel',
+  layout: 'default',
   help: 'fooHelp',
   validators: [],
   input_hint: '',

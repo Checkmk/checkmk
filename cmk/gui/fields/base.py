@@ -146,7 +146,7 @@ class ValueTypedDictSchema(BaseSchema):
         return result
 
     def load(self, data, *, many=None, partial=None, unknown=None):
-        if self._has_processors(PRE_LOAD):
+        if self._hooks[PRE_LOAD]:
             data = self._invoke_load_processors(
                 PRE_LOAD, data, many=many, original_data=data, partial=partial
             )
@@ -166,7 +166,7 @@ class ValueTypedDictSchema(BaseSchema):
                 f"Data type is not known: {type(self.value_type)} {self.value_type}"
             )
 
-        if self._has_processors(POST_LOAD):
+        if self._hooks[POST_LOAD]:
             result = self._invoke_load_processors(
                 POST_LOAD,
                 result,
@@ -179,7 +179,7 @@ class ValueTypedDictSchema(BaseSchema):
 
     def dump(self, obj: typing.Any, *, many: bool | None = None) -> object:
         many = self.many if many is None else bool(many)
-        if self._has_processors(PRE_DUMP):
+        if self._hooks[PRE_DUMP]:
             obj = self._invoke_dump_processors(PRE_DUMP, obj, many=many, original_data=obj)
 
         if isinstance(self.value_type, FieldWrapper):
@@ -192,7 +192,7 @@ class ValueTypedDictSchema(BaseSchema):
         else:
             raise ValidationError(f"Data type is not known: {type(obj)}")
 
-        if self._has_processors(POST_DUMP):
+        if self._hooks[POST_DUMP]:
             result = self._invoke_dump_processors(POST_DUMP, result, many=many, original_data=obj)
 
         return result

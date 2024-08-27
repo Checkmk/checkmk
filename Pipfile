@@ -138,7 +138,7 @@ pymssql = "==2.2.11"  # needed by check_sql active check
 pymysql = "~=1.1.1"  # needed by check_sql active check
 psycopg2-binary = "==2.9.6"  # needed by check_sql active check
 apispec = "*"
-marshmallow = "==3.21.3"  # CMK-18837
+marshmallow = "*"
 marshmallow-oneofschema = "*"
 apispec-oneofschema = "*"
 pydantic = "~=2.7"

@@ -863,7 +863,6 @@ class TagGroupAttributes(ValueTypedDictSchema):
     """Schema to validate tag groups
 
     Examples:
-
         >>> schema = TagGroupAttributes()
         >>> schema.load({"foo": "bar"})
         Traceback (most recent call last):

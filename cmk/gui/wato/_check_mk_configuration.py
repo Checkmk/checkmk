@@ -183,7 +183,6 @@ def register(
     config_variable_registry.register(ConfigVariableWATOHideFilenames)
     config_variable_registry.register(ConfigVariableWATOHideHosttags)
     config_variable_registry.register(ConfigVariableWATOHideVarnames)
-    config_variable_registry.register(ConfigVariableHideHelpInLists)
     config_variable_registry.register(ConfigVariableWATOUseGit)
     config_variable_registry.register(ConfigVariableWATOPrettyPrintConfig)
     config_variable_registry.register(ConfigVariableWATOHideFoldersWithoutReadPermissions)
@@ -2331,24 +2330,6 @@ class ConfigVariableWATOHideVarnames(ConfigVariable):
                 "When enabled, internal configuration variable names of Checkmk are hidden "
                 "from the user (for example in the rule editor)"
             ),
-        )
-
-
-class ConfigVariableHideHelpInLists(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
-        return ConfigVariableGroupWATO
-
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainGUI
-
-    def ident(self) -> str:
-        return "wato_hide_help_in_lists"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("Hide help text of rules in list views"),
-            label=_("hide help text"),
-            help=_("When disabled, Setup shows the help texts of rules also in the list views."),
         )
 
 

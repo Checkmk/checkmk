@@ -198,7 +198,6 @@ def test_registered_configvars() -> None:
         "wato_activate_changes_comment_mode",
         "wato_hide_filenames",
         "wato_hide_folders_without_read_permissions",
-        "wato_hide_help_in_lists",
         "wato_hide_hosttags",
         "wato_hide_varnames",
         "wato_icon_categories",

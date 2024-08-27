@@ -556,7 +556,6 @@ class CREConfig:
     wato_hide_filenames: bool = True
     wato_hide_hosttags: bool = False
     wato_hide_varnames: bool = True
-    wato_hide_help_in_lists: bool = True
     wato_max_snapshots: int = 50
     wato_num_hostspecs: int = 12
     wato_num_itemspecs: int = 15
@@ -637,6 +636,7 @@ class CREConfig:
     bi_compile_log: str | None = None
     bi_precompile_on_demand: bool = False
     bi_use_legacy_compilation: bool = False
+    wato_hide_help_in_lists: bool = True
 
     # new in 2.1
     config_storage_format: Literal["standard", "raw", "pickle"] = "pickle"

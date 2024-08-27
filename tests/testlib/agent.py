@@ -130,7 +130,6 @@ def agent_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen | None]
             if daemon_rc is None:
                 logger.info("Terminating agent controller daemon...")
                 run(["kill", "--", f"-{os.getpgid(daemon.pid)}"], sudo=True)
-                daemon.kill()
             daemon_output, _ = daemon.communicate(timeout=5)
             logger.info("Agent controller daemon output: %s", daemon_output)
             assert (

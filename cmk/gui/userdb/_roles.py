@@ -23,6 +23,7 @@ class BuiltInUserRoleValues(Enum):
     ADMIN = "admin"
     GUEST = "guest"
     AGENT_REGISTRATION = "agent_registration"
+    NO_PERMISSIONS = "no_permissions"
 
 
 class UserRoleBase(TypedDict):
@@ -50,6 +51,7 @@ def _get_builtin_roles() -> dict[RoleName, BuiltInUserRole]:
         "user": _("Normal monitoring user"),
         "guest": _("Guest user"),
         "agent_registration": _("Agent registration user"),
+        "no_permission": _("Empty template for least privilege roles"),
     }
 
     return {

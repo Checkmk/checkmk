@@ -33,6 +33,7 @@ from cmk.gui.openapi.endpoints.aux_tags.schemas import (
     AuxTagResponse,
     AuxTagResponseCollection,
 )
+from cmk.gui.openapi.endpoints.common_fields import field_include_extensions, field_include_links
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
@@ -78,15 +79,23 @@ def show_aux_tag(params: Mapping[str, Any]) -> Response:
     response_schema=AuxTagResponseCollection,
     update_config_generation=False,
     permissions_required=PERMISSIONS,
+    query_params=[field_include_links(), field_include_extensions()],
 )
 def show_aux_tags(params: Mapping[str, Any]) -> Response:
     """Show Auxiliary Tags"""
     user.need_permission("wato.hosttags")
+    include_links: bool = params["include_links"]
+    include_extensions: bool = params["include_extensions"]
 
     return serve_json(
         constructors.collection_object(
             domain_type="aux_tag",
-            value=[_serialize_aux_tag(tag) for tag in load_all_tag_config_read_only().aux_tag_list],
+            value=[
+                _serialize_aux_tag(
+                    tag, include_links=include_links, include_extensions=include_extensions
+                )
+                for tag in load_all_tag_config_read_only().aux_tag_list
+            ],
         )
     )
 
@@ -183,17 +192,24 @@ def delete_aux_tag(params: Mapping[str, Any]) -> Response:
     return Response(status=204)
 
 
-def _serialize_aux_tag(aux_tag: AuxTag) -> DomainObject:
+def _serialize_aux_tag(
+    aux_tag: AuxTag, *, include_links: bool = True, include_extensions: bool = True
+) -> DomainObject:
     return constructors.domain_object(
         domain_type="aux_tag",
         identifier=aux_tag.id,
         title=aux_tag.title,
-        extensions={
-            "topic": "Tags" if aux_tag.topic is None else aux_tag.topic,
-            "help": "" if aux_tag.help is None else aux_tag.help,
-        },
+        extensions=(
+            {
+                "topic": "Tags" if aux_tag.topic is None else aux_tag.topic,
+                "help": "" if aux_tag.help is None else aux_tag.help,
+            }
+            if include_extensions
+            else None
+        ),
         editable=True,
         deletable=True,
+        include_links=include_links,
     )
 
 

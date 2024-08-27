@@ -349,3 +349,27 @@ def test_id_in_use_by_builtin_aux_tag(clients: ClientRegistry) -> None:
         f"The aux_tag '{builtin_aux_tag}' should not exist but it does."
         in builtin_aux_tag_resp.json["fields"]["aux_tag_id"]
     )
+
+
+def test_list_aux_tags_include_links(clients: ClientRegistry) -> None:
+    default_response = clients.AuxTag.get_all()
+    enabled_response = clients.AuxTag.get_all(include_links=True)
+    disabled_response = clients.AuxTag.get_all(include_links=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == disabled_response.json
+    assert any(bool(value["links"]) for value in enabled_response.json["value"])
+    assert all(value["links"] == [] for value in disabled_response.json["value"])
+
+
+def test_list_aux_tags_include_extensions(clients: ClientRegistry) -> None:
+    default_response = clients.AuxTag.get_all()
+    enabled_response = clients.AuxTag.get_all(include_extensions=True)
+    disabled_response = clients.AuxTag.get_all(include_extensions=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == enabled_response.json
+    assert any(bool(value["extensions"]) for value in enabled_response.json["value"])
+    assert all("extensions" not in value for value in disabled_response.json["value"])

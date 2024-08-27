@@ -124,22 +124,21 @@ struct Args {
     #[arg(long)]
     pubkey_size: Option<usize>,
 
-    /// Certificate expiration levels in days \[WARN:CRIT\]
-    #[arg(long, num_args = 2, value_delimiter = ':', default_value = "30:0")]
+    /// Certificate expiration levels in seconds [WARN CRIT]
+    #[arg(long, num_args = 2, default_values_t = [30 * 24 * 3600, 0])]
     not_after: Vec<u32>,
 
     /// Max allowed validity (difference between not_before and not_after, in days)
     #[arg(long)]
     max_validity: Option<u32>,
 
-    /// Response time levels in milliseconds \[WARN:CRIT\]
+    /// Overall response time levels in seconds [WARN CRIT]
     #[arg(
         long,
         num_args = 2,
-        value_delimiter = ':',
-        default_value = "60000:90000"
+        default_values_t = [60.0, 90.0]
     )]
-    response_time: Vec<u32>,
+    response_time: Vec<f64>,
 
     /// Load CA store at this location in place of the default one
     #[arg(long)]
@@ -175,11 +174,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     info("start check-cert");
 
-    let not_after = parse_levels(LevelsStrategy::Lower, args.not_after, Duration::days);
+    let not_after = parse_levels(LevelsStrategy::Lower, args.not_after, Duration::seconds);
     let response_time = parse_levels(
         LevelsStrategy::Upper,
         args.response_time,
-        Duration::milliseconds,
+        Duration::seconds_f64,
     );
 
     info("load trust store...");

@@ -216,7 +216,7 @@ pub fn check(der: &[u8], config: Config) -> Collection {
             config.not_after,
             cert.validity().not_after,
         )
-        .map(|cr: CheckResult<Duration>| cr.map(|x| Real::from(x.whole_days() as isize))),
+        .map(|cr: CheckResult<Duration>| cr.map(|x| Real::from(x.whole_seconds() as isize))),
         check_max_validity(cert.validity(), config.max_validity),
     ))
 }
@@ -330,7 +330,10 @@ fn check_validity_not_after(
                 time_to_expiration.whole_days(),
                 not_after
             )),
-            LevelsCheckerArgs::builder().label("validity").build(),
+            LevelsCheckerArgs::builder()
+                .label("certificate_remaining_validity")
+                .uom("s".parse().unwrap())
+                .build(),
         ),
     })
 }

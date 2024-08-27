@@ -18,7 +18,7 @@ pub fn check(response_time: Duration, config: Config) -> Collection {
         config.response_time,
     )
     .unwrap_or_default()
-    .map(|x| Real::from(x.whole_milliseconds() as isize))])
+    .map(|x| Real::from(x.as_seconds_f64()))])
 }
 
 fn check_response_time(
@@ -33,8 +33,8 @@ fn check_response_time(
                 response_time.whole_milliseconds()
             )),
             LevelsCheckerArgs::builder()
-                .label("response_time")
-                .uom("ms".parse().unwrap())
+                .label("overall_response_time")
+                .uom("s".parse().unwrap())
                 .build(),
         )
     })

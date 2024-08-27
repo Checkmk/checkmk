@@ -885,25 +885,35 @@ class MetricometerRendererLegacyLogarithmic(MetricometerRenderer):
         return "legacy_logarithmic"
 
     def get_stack(self) -> MetricRendererStack:
-        result = self._metric.evaluate(self._translated_metrics)
+        if (result := self._metric.evaluate(self._translated_metrics)).is_error():
+            raise MKGeneralException(
+                _("Cannot compute perfometer stack due to '%s'") % result.error.reason
+            )
         return [
             self.get_stack_from_values(
-                result.value,
+                result.ok.value,
                 *self.estimate_parameters_for_converted_units(
-                    get_conversion_function(result.unit_spec)
+                    get_conversion_function(result.ok.unit_spec)
                 ),
-                result.color,
+                result.ok.color,
             )
         ]
 
     def get_label(self) -> str:
-        result = self._metric.evaluate(self._translated_metrics)
-        return self._render_value(result.unit_spec, result.value)
+        if (result := self._metric.evaluate(self._translated_metrics)).is_error():
+            raise MKGeneralException(
+                _("Cannot compute perfometer label due to '%s'") % result.error.reason
+            )
+        return self._render_value(result.ok.unit_spec, result.ok.value)
 
     def get_sort_value(self) -> float:
         """Returns the number to sort this perfometer with compared to the other
         performeters in the current performeter sort group"""
-        return self._metric.evaluate(self._translated_metrics).value
+        if (result := self._metric.evaluate(self._translated_metrics)).is_error():
+            raise MKGeneralException(
+                _("Cannot compute perfometer sorting value due to '%s'") % result.error.reason
+            )
+        return result.ok.value
 
     @staticmethod
     def get_stack_from_values(
@@ -995,8 +1005,11 @@ class MetricometerRendererLegacyLinear(MetricometerRenderer):
             entry.append((100.0, get_themed_perfometer_bg_color()))
         else:
             for segment in self._segments:
-                result = segment.evaluate(self._translated_metrics)
-                entry.append((100.0 * result.value / total, result.color))
+                if (result := segment.evaluate(self._translated_metrics)).is_error():
+                    raise MKGeneralException(
+                        _("Cannot compute perfometer segment due to '%s'") % result.error.reason
+                    )
+                entry.append((100.0 * result.ok.value / total, result.ok.color))
 
             # Paint rest only, if it is positive and larger than one promille
             if total - summed > 0.001:
@@ -1009,31 +1022,57 @@ class MetricometerRendererLegacyLinear(MetricometerRenderer):
         if self._label_expression is None:
             return self._render_value(self._unit(), self._get_summed_values())
 
-        result = self._label_expression.evaluate(self._translated_metrics)
-        unit_spec = unit_info[self._label_unit_name] if self._label_unit_name else result.unit_spec
+        if (result := self._label_expression.evaluate(self._translated_metrics)).is_error():
+            raise MKGeneralException(
+                _("Cannot compute perfometer label expression due to '%s'") % result.error.reason
+            )
+        unit_spec = (
+            unit_info[self._label_unit_name] if self._label_unit_name else result.ok.unit_spec
+        )
 
         if isinstance(self._label_expression, Constant):
             value = get_conversion_function(unit_spec)(self._label_expression.value)
         else:
-            value = result.value
+            value = result.ok.value
 
         return self._render_value(unit_spec, value)
 
     def _evaluate_total(self) -> float:
         if isinstance(self._total, Constant):
             return get_conversion_function(self._unit())(self._total.value)
-        return self._total.evaluate(self._translated_metrics).value
+
+        if (result := self._total.evaluate(self._translated_metrics)).is_error():
+            raise MKGeneralException(
+                _("Cannot compute perfometer total value due to '%s'") % result.error.reason
+            )
+
+        return result.ok.value
 
     def _unit(self) -> UnitInfo | ConvertibleUnitSpecification:
         # We assume that all expressions across all segments have the same unit
-        return self._segments[0].evaluate(self._translated_metrics).unit_spec
+        if (result := self._segments[0].evaluate(self._translated_metrics)).is_error():
+            raise MKGeneralException(
+                _("Cannot compute perfometer unit due to '%s'") % result.error.reason
+            )
+        return result.ok.unit_spec
 
     def get_sort_value(self) -> float:
         """Use the first segment value for sorting"""
-        return self._segments[0].evaluate(self._translated_metrics).value
+        if (result := self._segments[0].evaluate(self._translated_metrics)).is_error():
+            raise MKGeneralException(
+                _("Cannot compute perfometer sorting value due to '%s'") % result.error.reason
+            )
+        return result.ok.value
 
     def _get_summed_values(self):
-        return sum(segment.evaluate(self._translated_metrics).value for segment in self._segments)
+        values = []
+        for segment in self._segments:
+            if (result := segment.evaluate(self._translated_metrics)).is_error():
+                raise MKGeneralException(
+                    _("Cannot compute perfometer summed values due to '%s'") % result.error.reason
+                )
+            values.append(result.ok.value)
+        return sum(values)
 
 
 class MetricometerRendererLegacyStacked(MetricometerRenderer):

@@ -75,12 +75,11 @@ def test_evaluate_cpu_utilization(
         perf_data, check_command, config=active_config
     )
     translated_metrics = translate_metrics(perf_data_parsed, check_command)
-    assert (
-        parse_legacy_expression(expression, "line", "", translated_metrics)
-        .evaluate(translated_metrics)
-        .value
-        == expected_result
+    result = parse_legacy_expression(expression, "line", "", translated_metrics).evaluate(
+        translated_metrics
     )
+    assert result.is_ok()
+    assert result.ok.value == expected_result
 
 
 @pytest.mark.parametrize(
@@ -373,26 +372,29 @@ def test_parse_and_evaluate_1(
     translated_metrics = translate_metrics(perf_data, check_command)
     metric_expression = parse_legacy_expression(raw_expression, "line", "", translated_metrics)
     assert metric_expression == expected_metric_expression
-    evaluated = metric_expression.evaluate(translated_metrics)
-    assert evaluated.value == expected_value
-    assert evaluated.color == expected_color
+
+    result = metric_expression.evaluate(translated_metrics)
+    assert result.is_ok()
+    assert result.ok.value == expected_value
+    assert result.ok.color == expected_color
+
     if isinstance(expected_unit_spec, ConvertibleUnitSpecification):
-        assert evaluated.unit_spec == expected_unit_spec
+        assert result.ok.unit_spec == expected_unit_spec
     else:
-        assert isinstance(evaluated.unit_spec, UnitInfo)
+        assert isinstance(result.ok.unit_spec, UnitInfo)
         unit_info_ = unit_info[expected_unit_spec]
-        assert evaluated.unit_spec.id == unit_info_.id
-        assert evaluated.unit_spec.title == unit_info_.title
-        assert evaluated.unit_spec.symbol == unit_info_.symbol
-        assert evaluated.unit_spec.render == unit_info_.render
-        assert evaluated.unit_spec.js_render == unit_info_.js_render
-        assert evaluated.unit_spec.stepping == unit_info_.stepping
-        assert evaluated.unit_spec.color == unit_info_.color
-        assert evaluated.unit_spec.graph_unit == unit_info_.graph_unit
-        assert evaluated.unit_spec.description == unit_info_.description
-        assert evaluated.unit_spec.valuespec == unit_info_.valuespec
-        assert evaluated.unit_spec.perfometer_render == unit_info_.perfometer_render
-        assert evaluated.unit_spec.conversion(123.456) == 123.456
+        assert result.ok.unit_spec.id == unit_info_.id
+        assert result.ok.unit_spec.title == unit_info_.title
+        assert result.ok.unit_spec.symbol == unit_info_.symbol
+        assert result.ok.unit_spec.render == unit_info_.render
+        assert result.ok.unit_spec.js_render == unit_info_.js_render
+        assert result.ok.unit_spec.stepping == unit_info_.stepping
+        assert result.ok.unit_spec.color == unit_info_.color
+        assert result.ok.unit_spec.graph_unit == unit_info_.graph_unit
+        assert result.ok.unit_spec.description == unit_info_.description
+        assert result.ok.unit_spec.valuespec == unit_info_.valuespec
+        assert result.ok.unit_spec.perfometer_render == unit_info_.perfometer_render
+        assert result.ok.unit_spec.conversion(123.456) == 123.456
 
 
 @pytest.mark.parametrize(
@@ -437,10 +439,12 @@ def test_parse_and_evaluate_2(
     translated_metrics = translate_metrics(perf_data, check_command)
     metric_expression = parse_legacy_expression(raw_expression, "line", "", translated_metrics)
     assert metric_expression == expected_metric_expression
+
     result = metric_expression.evaluate(translated_metrics)
-    assert result.value == expected_value
-    assert result.unit_spec == expected_unit_spec
-    assert result.color == expected_color
+    assert result.is_ok()
+    assert result.ok.value == expected_value
+    assert result.ok.unit_spec == expected_unit_spec
+    assert result.ok.color == expected_color
 
 
 @pytest.mark.parametrize(

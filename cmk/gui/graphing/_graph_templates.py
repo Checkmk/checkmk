@@ -113,27 +113,24 @@ def compute_unit_color(
     translated_metrics: Mapping[str, TranslatedMetric],
     optional_metrics: Sequence[str],
 ) -> MetricUnitColor | None:
-    try:
-        result = metric_expression.evaluate(translated_metrics)
-    except KeyError as err:  # because metric_name is not in translated_metrics
-        metric_name = err.args[0]
-        if optional_metrics and metric_name in optional_metrics:
+    if (result := metric_expression.evaluate(translated_metrics)).is_error():
+        if result.error.metric_name and result.error.metric_name in optional_metrics:
             return None
         raise MKGeneralException(
-            _("Graph recipe '%s' uses undefined metric '%s', available are: %s")
+            _("Graph recipe '%s' has the error '%s', available are: %s")
             % (
                 metric_expression,
-                metric_name,
+                result.error.reason,
                 ", ".join(sorted(translated_metrics.keys())) or "None",
             )
         )
     return MetricUnitColor(
         (
-            result.unit_spec
-            if isinstance(result.unit_spec, ConvertibleUnitSpecification)
-            else result.unit_spec.id
+            result.ok.unit_spec
+            if isinstance(result.ok.unit_spec, ConvertibleUnitSpecification)
+            else result.ok.unit_spec.id
         ),
-        result.color,
+        result.ok.color,
     )
 
 
@@ -377,22 +374,6 @@ def _compute_predictive_metrics(
                 yield MetricExpression(Metric(predict_lower_metric_name), line_type=line_type)
 
 
-def _filter_renderable_graph_metrics(
-    metric_expressions: Sequence[MetricExpression],
-    translated_metrics: Mapping[str, TranslatedMetric],
-    optional_metrics: Sequence[str],
-) -> Iterator[MetricExpression]:
-    for metric_expression in metric_expressions:
-        try:
-            metric_expression.evaluate(translated_metrics)
-            yield metric_expression
-        except KeyError as err:  # because can't find necessary metric_name in translated_metrics
-            metric_name = err.args[0]
-            if metric_name in optional_metrics:
-                continue
-            raise err
-
-
 def _applicable_metrics(
     *,
     metrics_to_consider: Sequence[MetricExpression],
@@ -405,16 +386,14 @@ def _applicable_metrics(
         if var in translated_metrics:
             return []
 
-    try:
-        return list(
-            _filter_renderable_graph_metrics(
-                metrics_to_consider,
-                translated_metrics,
-                optional_metrics,
-            )
-        )
-    except KeyError:
-        return []
+    applicable_metrics = []
+    for metric_expression in metrics_to_consider:
+        if (result := metric_expression.evaluate(translated_metrics)).is_error():
+            if result.error.metric_name and result.error.metric_name in optional_metrics:
+                continue
+            return []
+        applicable_metrics.append(metric_expression)
+    return applicable_metrics
 
 
 def get_graph_templates(
@@ -566,14 +545,14 @@ def _replace_expressions(text: str, translated_metrics: Mapping[str, TranslatedM
     # offer such replacements in a generic way.
     reg = regex.regex(r"%\([^)]*\)")
     if m := reg.search(text):
-        try:
-            result = parse_legacy_base_expression(m.group()[2:-1], translated_metrics).evaluate(
+        if (
+            result := parse_legacy_base_expression(m.group()[2:-1], translated_metrics).evaluate(
                 translated_metrics
             )
-        except (ValueError, KeyError):
+        ).is_error():
             return text.split("-")[0].strip()
         return reg.sub(
-            get_render_function(result.unit_spec)(result.value).strip(),
+            get_render_function(result.ok.unit_spec)(result.ok.value).strip(),
             text,
         )
 
@@ -586,21 +565,21 @@ def _horizontal_rules_from_thresholds(
 ) -> Sequence[HorizontalRule]:
     horizontal_rules = []
     for metric_expression in metric_expressions:
-        try:
-            if (result := metric_expression.evaluate(translated_metrics)).value:
-                horizontal_rules.append(
-                    HorizontalRule(
-                        value=result.value,
-                        rendered_value=get_render_function(result.unit_spec)(result.value),
-                        color=result.color,
-                        title=metric_expression.title,
-                    )
-                )
-        # Scalar value like min and max are always optional. This makes configuration
-        # of graphs easier.
-        except Exception:
-            pass
+        if (result := metric_expression.evaluate(translated_metrics)).is_error():
+            # Scalar value like min and max are always optional. This makes configuration
+            # of graphs easier.
+            if result.error.metric_name:
+                continue
+            return []
 
+        horizontal_rules.append(
+            HorizontalRule(
+                value=result.ok.value,
+                rendered_value=get_render_function(result.ok.unit_spec)(result.ok.value),
+                color=result.ok.color,
+                title=metric_expression.title,
+            )
+        )
     return horizontal_rules
 
 
@@ -697,10 +676,9 @@ def evaluate_graph_template_range(
 def _evaluate_graph_template_range_boundary(
     metric_expression: BaseMetricExpression, translated_metrics: Mapping[str, TranslatedMetric]
 ) -> float | None:
-    try:
-        return metric_expression.evaluate(translated_metrics).value
-    except Exception:
+    if (result := metric_expression.evaluate(translated_metrics)).is_error():
         return None
+    return result.ok.value
 
 
 def _to_metric_operation(

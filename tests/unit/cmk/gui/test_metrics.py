@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.graphing._expression import CriticalOf, Metric, MetricExpression, WarningOf
-from cmk.gui.graphing._graph_templates import get_graph_template, GraphTemplate, MetricDefinition
+from cmk.gui.graphing._graph_templates import get_graph_template, GraphTemplate
 from cmk.gui.graphing._legacy import check_metrics
 from cmk.gui.graphing._metrics import get_metric_spec
 from cmk.gui.metrics import _add_graphing_plugins, _load_graphing_plugins
@@ -63,19 +63,15 @@ def test_add_graphing_plugins() -> None:
         range=None,
         omit_zero_metrics=False,
         metrics=[
-            MetricDefinition(
-                MetricExpression(
-                    Metric("active_connections"),
-                    line_type="line",
-                    title="Active connections",
-                )
+            MetricExpression(
+                Metric("active_connections"),
+                line_type="line",
+                title="Active connections",
             ),
-            MetricDefinition(
-                MetricExpression(
-                    Metric("idle_connections"),
-                    line_type="line",
-                    title="Idle connections",
-                ),
+            MetricExpression(
+                Metric("idle_connections"),
+                line_type="line",
+                title="Idle connections",
             ),
         ],
     )

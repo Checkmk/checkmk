@@ -33,7 +33,6 @@ from cmk.gui.graphing._graph_specification import (
 from cmk.gui.graphing._graph_templates import (
     compute_unit_color,
     GraphTemplate,
-    MetricDefinition,
     MetricUnitColor,
     MinimalGraphTemplateRange,
     TemplateGraphSpecification,
@@ -120,16 +119,14 @@ def test_create_graph_recipe_from_template() -> None:
         id="my_id",
         title="",
         metrics=[
-            MetricDefinition(MetricExpression(Metric("fs_used"), line_type="area")),
-            MetricDefinition(
-                MetricExpression(
-                    Difference(minuend=Metric("fs_size"), subtrahend=Metric("fs_used")),
-                    line_type="stack",
-                    title="Free space",
-                    color="#e3fff9",
-                ),
+            MetricExpression(Metric("fs_used"), line_type="area"),
+            MetricExpression(
+                Difference(minuend=Metric("fs_size"), subtrahend=Metric("fs_used")),
+                line_type="stack",
+                title="Free space",
+                color="#e3fff9",
             ),
-            MetricDefinition(MetricExpression(Metric("fs_size"), line_type="line")),
+            MetricExpression(Metric("fs_size"), line_type="line"),
         ],
         scalars=[
             MetricExpression(WarningOf(Metric("fs_used")), line_type="line", title="Warning"),
@@ -260,12 +257,8 @@ def test_metric_unit_color(
     translated_metrics = translate_metrics(perf_data, check_command)
     translated_metric = translated_metrics.get(expression)
     assert translated_metric is not None
-    metric_definition = MetricDefinition(
-        parse_expression(expression, "line", "", translated_metrics)
-    )
-    assert compute_unit_color(
-        metric_definition.expression, translated_metrics, ["test"]
-    ) == MetricUnitColor(
+    metric_expression = parse_expression(expression, "line", "", translated_metrics)
+    assert compute_unit_color(metric_expression, translated_metrics, ["test"]) == MetricUnitColor(
         unit=translated_metric.unit_info.id,
         color=result_color,
     )
@@ -284,10 +277,8 @@ def test_metric_unit_color_skip(
         perf_data_string, check_command, config=active_config
     )
     translated_metrics = translate_metrics(perf_data, check_command)
-    metric_definition = MetricDefinition(
-        parse_expression(expression, "line", "", translated_metrics)
-    )
-    assert compute_unit_color(metric_definition.expression, translated_metrics, ["test"]) is None
+    metric_expression = parse_expression(expression, "line", "", translated_metrics)
+    assert compute_unit_color(metric_expression, translated_metrics, ["test"]) is None
 
 
 @pytest.mark.parametrize(
@@ -303,8 +294,6 @@ def test_metric_unit_color_exception(
         perf_data_string, check_command, config=active_config
     )
     translated_metrics = translate_metrics(perf_data, check_command)
-    metric_definition = MetricDefinition(
-        parse_expression(expression, "line", "", translated_metrics)
-    )
+    metric_expression = parse_expression(expression, "line", "", translated_metrics)
     with pytest.raises(MKGeneralException):
-        compute_unit_color(metric_definition.expression, translated_metrics, ["test"])
+        compute_unit_color(metric_expression, translated_metrics, ["test"])

@@ -17,6 +17,7 @@ from cmk.gui.graphing._expression import (
     Difference,
     MaximumOf,
     Metric,
+    MetricExpression,
     parse_expression,
     WarningOf,
 )
@@ -120,30 +121,29 @@ def test_create_graph_recipe_from_template() -> None:
         title="",
         metrics=[
             MetricDefinition(
-                expression=Metric("fs_used"),
+                MetricExpression(Metric("fs_used")),
                 line_type="area",
             ),
             MetricDefinition(
-                expression=Difference(
-                    minuend=Metric("fs_size"),
-                    subtrahend=Metric("fs_used"),
+                MetricExpression(
+                    Difference(minuend=Metric("fs_size"), subtrahend=Metric("fs_used")),
                     color="#e3fff9",
                 ),
                 line_type="stack",
                 title="Free space",
             ),
             MetricDefinition(
-                expression=Metric("fs_size"),
+                MetricExpression(Metric("fs_size")),
                 line_type="line",
             ),
         ],
         scalars=[
             ScalarDefinition(
-                expression=WarningOf(Metric("fs_used")),
+                MetricExpression(WarningOf(Metric("fs_used"))),
                 title="Warning",
             ),
             ScalarDefinition(
-                expression=CriticalOf(Metric("fs_used")),
+                MetricExpression(CriticalOf(Metric("fs_used"))),
                 title="Critical",
             ),
         ],

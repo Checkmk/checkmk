@@ -27,6 +27,7 @@ from cmk.graphing.v1 import metrics as metrics_api
 from ._color import parse_color_from_api
 from ._expression import (
     Average,
+    BaseMetricExpression,
     Constant,
     CriticalOf,
     Difference,
@@ -156,14 +157,14 @@ def _parse_quantity(
     match quantity:
         case str():
             return MetricDefinition(
-                expression=Metric(quantity),
+                expression=MetricExpression(Metric(quantity)),
                 line_type=line_type,
                 title=get_metric_spec(quantity).title,
             )
         case metrics_api.Constant():
             return MetricDefinition(
-                expression=Constant(
-                    quantity.value,
+                expression=MetricExpression(
+                    Constant(quantity.value),
                     unit_id=register_unit_info(quantity.unit).id,
                     color=parse_color_from_api(quantity.color),
                 ),
@@ -172,20 +173,20 @@ def _parse_quantity(
             )
         case metrics_api.WarningOf():
             return MetricDefinition(
-                expression=WarningOf(Metric(quantity.metric_name)),
+                expression=MetricExpression(WarningOf(Metric(quantity.metric_name))),
                 line_type=line_type,
                 title=_("Warning of %s") % get_metric_spec(quantity.metric_name).title,
             )
         case metrics_api.CriticalOf():
             return MetricDefinition(
-                expression=CriticalOf(Metric(quantity.metric_name)),
+                expression=MetricExpression(CriticalOf(Metric(quantity.metric_name))),
                 line_type=line_type,
                 title=_("Critical of %s") % get_metric_spec(quantity.metric_name).title,
             )
         case metrics_api.MinimumOf():
             return MetricDefinition(
-                expression=MinimumOf(
-                    Metric(quantity.metric_name),
+                expression=MetricExpression(
+                    MinimumOf(Metric(quantity.metric_name)),
                     color=parse_color_from_api(quantity.color),
                 ),
                 line_type=line_type,
@@ -193,8 +194,8 @@ def _parse_quantity(
             )
         case metrics_api.MaximumOf():
             return MetricDefinition(
-                expression=MaximumOf(
-                    Metric(quantity.metric_name),
+                expression=MetricExpression(
+                    MaximumOf(Metric(quantity.metric_name)),
                     color=parse_color_from_api(quantity.color),
                 ),
                 line_type=line_type,
@@ -202,8 +203,8 @@ def _parse_quantity(
             )
         case metrics_api.Sum():
             return MetricDefinition(
-                expression=Sum(
-                    [_parse_quantity(s, line_type).expression for s in quantity.summands],
+                expression=MetricExpression(
+                    Sum([_parse_quantity(s, line_type).expression.base for s in quantity.summands]),
                     color=parse_color_from_api(quantity.color),
                 ),
                 line_type=line_type,
@@ -211,8 +212,10 @@ def _parse_quantity(
             )
         case metrics_api.Product():
             return MetricDefinition(
-                expression=Product(
-                    [_parse_quantity(f, line_type).expression for f in quantity.factors],
+                expression=MetricExpression(
+                    Product(
+                        [_parse_quantity(f, line_type).expression.base for f in quantity.factors]
+                    ),
                     unit_id=register_unit_info(quantity.unit).id,
                     color=parse_color_from_api(quantity.color),
                 ),
@@ -221,9 +224,11 @@ def _parse_quantity(
             )
         case metrics_api.Difference():
             return MetricDefinition(
-                expression=Difference(
-                    minuend=_parse_quantity(quantity.minuend, line_type).expression,
-                    subtrahend=_parse_quantity(quantity.subtrahend, line_type).expression,
+                expression=MetricExpression(
+                    Difference(
+                        minuend=_parse_quantity(quantity.minuend, line_type).expression.base,
+                        subtrahend=_parse_quantity(quantity.subtrahend, line_type).expression.base,
+                    ),
                     color=parse_color_from_api(quantity.color),
                 ),
                 line_type=line_type,
@@ -231,9 +236,11 @@ def _parse_quantity(
             )
         case metrics_api.Fraction():
             return MetricDefinition(
-                expression=Fraction(
-                    dividend=_parse_quantity(quantity.dividend, line_type).expression,
-                    divisor=_parse_quantity(quantity.divisor, line_type).expression,
+                expression=MetricExpression(
+                    Fraction(
+                        dividend=_parse_quantity(quantity.dividend, line_type).expression.base,
+                        divisor=_parse_quantity(quantity.divisor, line_type).expression.base,
+                    ),
                     unit_id=register_unit_info(quantity.unit).id,
                     color=parse_color_from_api(quantity.color),
                 ),
@@ -244,14 +251,14 @@ def _parse_quantity(
 
 @dataclass(frozen=True, kw_only=True)
 class FixedGraphTemplateRange:
-    min: MetricExpression
-    max: MetricExpression
+    min: BaseMetricExpression
+    max: BaseMetricExpression
 
 
 @dataclass(frozen=True, kw_only=True)
 class MinimalGraphTemplateRange:
-    min: MetricExpression
-    max: MetricExpression
+    min: BaseMetricExpression
+    max: BaseMetricExpression
 
 
 def _parse_minimal_range(
@@ -261,12 +268,12 @@ def _parse_minimal_range(
         min=(
             Constant(minimal_range.lower)
             if isinstance(minimal_range.lower, (int, float))
-            else _parse_quantity(minimal_range.lower, "line").expression
+            else _parse_quantity(minimal_range.lower, "line").expression.base
         ),
         max=(
             Constant(minimal_range.upper)
             if isinstance(minimal_range.upper, (int, float))
-            else _parse_quantity(minimal_range.upper, "line").expression
+            else _parse_quantity(minimal_range.upper, "line").expression.base
         ),
     )
 
@@ -399,8 +406,8 @@ def _parse_raw_scalar_definition(
 
 def _parse_raw_graph_range(raw_graph_range: tuple[int | str, int | str]) -> FixedGraphTemplateRange:
     return FixedGraphTemplateRange(
-        min=parse_expression(raw_graph_range[0], {}),
-        max=parse_expression(raw_graph_range[1], {}),
+        min=parse_expression(raw_graph_range[0], {}).base,
+        max=parse_expression(raw_graph_range[1], {}).base,
     )
 
 
@@ -449,10 +456,18 @@ def graph_template_from_name(name: str) -> GraphTemplate:
     return GraphTemplate(
         id=f"METRIC_{name}",
         title="",
-        metrics=[MetricDefinition(expression=Metric(name), line_type="area")],
+        metrics=[
+            MetricDefinition(expression=MetricExpression(Metric(name)), line_type="area"),
+        ],
         scalars=[
-            ScalarDefinition(expression=WarningOf(Metric(name)), title=str(_("Warning"))),
-            ScalarDefinition(expression=CriticalOf(Metric(name)), title=str(_("Critical"))),
+            ScalarDefinition(
+                expression=MetricExpression(WarningOf(Metric(name))),
+                title=str(_("Warning")),
+            ),
+            ScalarDefinition(
+                expression=MetricExpression(CriticalOf(Metric(name))),
+                title=str(_("Critical")),
+            ),
         ],
         conflicting_metrics=[],
         optional_metrics=[],
@@ -481,12 +496,12 @@ def _compute_predictive_metrics(
         for metric_name in metric_defintion.expression.metric_names():
             if (predict_metric_name := f"predict_{metric_name}") in translated_metrics:
                 yield MetricDefinition(
-                    expression=Metric(predict_metric_name),
+                    expression=MetricExpression(Metric(predict_metric_name)),
                     line_type=line_type,
                 )
             if (predict_lower_metric_name := f"predict_lower_{metric_name}") in translated_metrics:
                 yield MetricDefinition(
-                    expression=Metric(predict_lower_metric_name),
+                    expression=MetricExpression(Metric(predict_lower_metric_name)),
                     line_type=line_type,
                 )
 
@@ -797,7 +812,7 @@ def evaluate_graph_template_range(
 
 
 def _evaluate_graph_template_range_boundary(
-    boundary: MetricExpression, translated_metrics: Mapping[str, TranslatedMetric]
+    boundary: BaseMetricExpression, translated_metrics: Mapping[str, TranslatedMetric]
 ) -> float | None:
     try:
         return boundary.evaluate(translated_metrics).value
@@ -809,7 +824,7 @@ def _to_metric_operation(
     site_id: SiteId,
     host_name: HostName,
     service_name: ServiceName,
-    expression: MetricExpression,
+    expression: BaseMetricExpression,
     translated_metrics: Mapping[str, TranslatedMetric],
     enforced_consolidation_function: GraphConsolidationFunction | None,
 ) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
@@ -983,7 +998,7 @@ def metric_expression_to_graph_recipe_expression(
         site_id,
         host_name,
         service_name,
-        metric_expression,
+        metric_expression.base,
         translated_metrics,
         enforced_consolidation_function,
     )

@@ -954,7 +954,7 @@ class MetricometerRendererLegacyLinear(MetricometerRenderer):
         # Needed for sorting via cmk/gui/views/perfometers/base.py::sort_value::_get_metrics_sort_group
         self.perfometer = perfometer
         self._segments = [parse_expression(s, translated_metrics) for s in perfometer["segments"]]
-        self._total = parse_expression(perfometer["total"], translated_metrics)
+        self._total = parse_expression(perfometer["total"], translated_metrics).base
         if (label := perfometer.get("label")) is None:
             self._label_expression = None
             self._label_unit_name = None

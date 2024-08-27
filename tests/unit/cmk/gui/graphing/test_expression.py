@@ -19,8 +19,8 @@ from cmk.gui.graphing._expression import (
     Metric,
     MetricExpression,
     MinimumOf,
-    parse_conditional_expression,
-    parse_expression,
+    parse_legacy_conditional_expression,
+    parse_legacy_expression,
     Percent,
     Product,
     Sum,
@@ -72,7 +72,7 @@ def test_evaluate_cpu_utilization(
     )
     translated_metrics = translate_metrics(perf_data_parsed, check_command)
     assert (
-        parse_expression(expression, "line", "", translated_metrics)
+        parse_legacy_expression(expression, "line", "", translated_metrics)
         .evaluate(translated_metrics)
         .value
         == expected_result
@@ -344,7 +344,7 @@ def test_parse_and_evaluate_1(
     color: str,
 ) -> None:
     translated_metrics = translate_metrics(perf_data, check_command)
-    metric_expression = parse_expression(raw_expression, "line", "", translated_metrics)
+    metric_expression = parse_legacy_expression(raw_expression, "line", "", translated_metrics)
     assert metric_expression == expected_metric_expression
     evaluated = metric_expression.evaluate(translated_metrics)
     assert evaluated.value == value
@@ -394,7 +394,7 @@ def test_parse_and_evaluate_2(
     color: str,
 ) -> None:
     translated_metrics = translate_metrics(perf_data, check_command)
-    metric_expression = parse_expression(raw_expression, "line", "", translated_metrics)
+    metric_expression = parse_legacy_expression(raw_expression, "line", "", translated_metrics)
     assert metric_expression == expected_metric_expression
     result = metric_expression.evaluate(translated_metrics)
     assert result.value == value
@@ -567,6 +567,6 @@ def test_parse_and_evaluate_conditional(
     value: bool,
 ) -> None:
     translated_metrics = translate_metrics(perf_data, check_command)
-    metric_declaration = parse_conditional_expression(raw_expression, translated_metrics)
+    metric_declaration = parse_legacy_conditional_expression(raw_expression, translated_metrics)
     assert metric_declaration == expected_conditional_metric_declaration
     assert metric_declaration.evaluate(translated_metrics) == value

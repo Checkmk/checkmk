@@ -23,8 +23,8 @@ from ._color import parse_color_from_api
 from ._expression import (
     BaseMetricExpression,
     Constant,
-    parse_base_expression,
-    parse_conditional_expression,
+    parse_legacy_base_expression,
+    parse_legacy_conditional_expression,
 )
 from ._from_api import perfometers_from_api, register_unit_info
 from ._legacy import (
@@ -365,16 +365,19 @@ def _legacy_perfometer_has_required_metrics_or_scalars(
     perfometer: PerfometerSpec, translated_metrics: Mapping[str, TranslatedMetric]
 ) -> bool:
     if perfometer["type"] == "linear":
-        expressions = [parse_base_expression(s, translated_metrics) for s in perfometer["segments"]]
+        expressions = [
+            parse_legacy_base_expression(s, translated_metrics) for s in perfometer["segments"]
+        ]
         if (total := perfometer.get("total")) is not None:
-            expressions.append(parse_base_expression(total, translated_metrics))
+            expressions.append(parse_legacy_base_expression(total, translated_metrics))
         if (label := perfometer.get("label")) is not None:
-            expressions.append(parse_base_expression(label[0], translated_metrics))
+            expressions.append(parse_legacy_base_expression(label[0], translated_metrics))
         return _has_required_metrics_or_scalars(expressions, translated_metrics)
 
     if perfometer["type"] == "logarithmic":
         return _has_required_metrics_or_scalars(
-            [parse_base_expression(perfometer["metric"], translated_metrics)], translated_metrics
+            [parse_legacy_base_expression(perfometer["metric"], translated_metrics)],
+            translated_metrics,
         )
 
     if perfometer["type"] in ("dual", "stacked"):
@@ -397,7 +400,7 @@ def _perfometer_possible(
     if perfometer["type"] == "linear":
         if "condition" in perfometer:
             try:
-                return parse_conditional_expression(
+                return parse_legacy_conditional_expression(
                     perfometer["condition"], translated_metrics
                 ).evaluate(translated_metrics)
             except Exception:
@@ -865,7 +868,7 @@ class MetricometerRendererLegacyLogarithmic(MetricometerRenderer):
 
         # Needed for sorting via cmk/gui/views/perfometers/base.py::sort_value::_get_metrics_sort_group
         self.perfometer = perfometer
-        self._metric = parse_base_expression(perfometer["metric"], translated_metrics)
+        self._metric = parse_legacy_base_expression(perfometer["metric"], translated_metrics)
         self._half_value = perfometer["half_value"]
         self._exponent = perfometer["exponent"]
         self._translated_metrics = translated_metrics
@@ -959,14 +962,14 @@ class MetricometerRendererLegacyLinear(MetricometerRenderer):
         # Needed for sorting via cmk/gui/views/perfometers/base.py::sort_value::_get_metrics_sort_group
         self.perfometer = perfometer
         self._segments = [
-            parse_base_expression(s, translated_metrics) for s in perfometer["segments"]
+            parse_legacy_base_expression(s, translated_metrics) for s in perfometer["segments"]
         ]
-        self._total = parse_base_expression(perfometer["total"], translated_metrics)
+        self._total = parse_legacy_base_expression(perfometer["total"], translated_metrics)
         if (label := perfometer.get("label")) is None:
             self._label_expression = None
             self._label_unit_name = None
         else:
-            self._label_expression = parse_base_expression(label[0], translated_metrics)
+            self._label_expression = parse_legacy_base_expression(label[0], translated_metrics)
             self._label_unit_name = label[1]
         self._translated_metrics = translated_metrics
 

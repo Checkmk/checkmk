@@ -13,9 +13,14 @@ from typing import Literal
 
 from cmk.utils.metrics import MetricName
 
-from ._color import mix_colors, parse_color, render_color, scalar_colors
-from ._from_api import get_unit_info
+from cmk.gui.i18n import _, translate_to_current_language
+
+from cmk.graphing.v1 import metrics as metrics_api
+
+from ._color import mix_colors, parse_color, parse_color_from_api, render_color, scalar_colors
+from ._from_api import get_unit_info, register_unit_info
 from ._legacy import unit_info, UnitInfo
+from ._metrics import get_metric_spec
 from ._translated_metrics import TranslatedMetric
 from ._type_defs import GraphConsolidationFunction, LineType
 
@@ -583,7 +588,7 @@ def _parse_single_expression(
 _RPNOperators = Literal["+", "*", "-", "/", "MIN", "MAX", "AVERAGE", "MERGE", ">", ">=", "<", "<="]
 
 
-def _parse_expression(
+def _parse_legacy_expression(
     raw_expression: str,
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> tuple[Sequence[BaseMetricExpression | _RPNOperators], str, str]:
@@ -687,7 +692,7 @@ def _resolve_stack(
     return resolved[0]
 
 
-def parse_base_expression(
+def parse_legacy_base_expression(
     raw_expression: str | int | float,
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> BaseMetricExpression:
@@ -697,7 +702,7 @@ def parse_base_expression(
         stack,
         _unit_id,
         _color,
-    ) = _parse_expression(raw_expression, translated_metrics)
+    ) = _parse_legacy_expression(raw_expression, translated_metrics)
     if isinstance(resolved := _resolve_stack(stack), BaseMetricExpression):
         return resolved
     raise TypeError(resolved)
@@ -730,7 +735,7 @@ class MetricExpression:
         yield from self.base.scalar_names()
 
 
-def parse_expression(
+def parse_legacy_expression(
     raw_expression: str | int | float,
     line_type: LineType,
     title: str,
@@ -748,7 +753,7 @@ def parse_expression(
         stack,
         unit_id,
         color,
-    ) = _parse_expression(raw_expression, translated_metrics)
+    ) = _parse_legacy_expression(raw_expression, translated_metrics)
     if isinstance(resolved := _resolve_stack(stack), BaseMetricExpression):
         return MetricExpression(
             resolved,
@@ -760,7 +765,7 @@ def parse_expression(
     raise TypeError(resolved)
 
 
-def parse_conditional_expression(
+def parse_legacy_conditional_expression(
     raw_expression: str,
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> ConditionalMetricExpression:
@@ -768,7 +773,144 @@ def parse_conditional_expression(
         stack,
         _unit_id,
         _color,
-    ) = _parse_expression(raw_expression, translated_metrics)
+    ) = _parse_legacy_expression(raw_expression, translated_metrics)
     if isinstance(resolved := _resolve_stack(stack), ConditionalMetricExpression):
         return resolved
     raise TypeError(resolved)
+
+
+def parse_base_expression_from_api(
+    quantity: (
+        str
+        | metrics_api.Constant
+        | metrics_api.WarningOf
+        | metrics_api.CriticalOf
+        | metrics_api.MinimumOf
+        | metrics_api.MaximumOf
+        | metrics_api.Sum
+        | metrics_api.Product
+        | metrics_api.Difference
+        | metrics_api.Fraction
+    ),
+) -> BaseMetricExpression:
+    match quantity:
+        case str():
+            return Metric(quantity)
+        case metrics_api.Constant():
+            return Constant(quantity.value)
+        case metrics_api.WarningOf():
+            return WarningOf(Metric(quantity.metric_name))
+        case metrics_api.CriticalOf():
+            return CriticalOf(Metric(quantity.metric_name))
+        case metrics_api.MinimumOf():
+            return MinimumOf(Metric(quantity.metric_name))
+        case metrics_api.MaximumOf():
+            return MaximumOf(Metric(quantity.metric_name))
+        case metrics_api.Sum():
+            return Sum([parse_base_expression_from_api(s) for s in quantity.summands])
+        case metrics_api.Product():
+            return Product([parse_base_expression_from_api(f) for f in quantity.factors])
+        case metrics_api.Difference():
+            return Difference(
+                minuend=parse_base_expression_from_api(quantity.minuend),
+                subtrahend=parse_base_expression_from_api(quantity.subtrahend),
+            )
+        case metrics_api.Fraction():
+            return Fraction(
+                dividend=parse_base_expression_from_api(quantity.dividend),
+                divisor=parse_base_expression_from_api(quantity.divisor),
+            )
+
+
+def parse_expression_from_api(
+    quantity: (
+        str
+        | metrics_api.Constant
+        | metrics_api.WarningOf
+        | metrics_api.CriticalOf
+        | metrics_api.MinimumOf
+        | metrics_api.MaximumOf
+        | metrics_api.Sum
+        | metrics_api.Product
+        | metrics_api.Difference
+        | metrics_api.Fraction
+    ),
+    line_type: Literal["line", "-line", "stack", "-stack"],
+) -> MetricExpression:
+    match quantity:
+        case str():
+            return MetricExpression(
+                Metric(quantity),
+                line_type=line_type,
+                title=get_metric_spec(quantity).title,
+            )
+        case metrics_api.Constant():
+            return MetricExpression(
+                Constant(quantity.value),
+                line_type=line_type,
+                title=str(quantity.title.localize(translate_to_current_language)),
+                unit_id=register_unit_info(quantity.unit).id,
+                color=parse_color_from_api(quantity.color),
+            )
+        case metrics_api.WarningOf():
+            return MetricExpression(
+                WarningOf(Metric(quantity.metric_name)),
+                line_type=line_type,
+                title=_("Warning of %s") % get_metric_spec(quantity.metric_name).title,
+            )
+        case metrics_api.CriticalOf():
+            return MetricExpression(
+                CriticalOf(Metric(quantity.metric_name)),
+                line_type=line_type,
+                title=_("Critical of %s") % get_metric_spec(quantity.metric_name).title,
+            )
+        case metrics_api.MinimumOf():
+            return MetricExpression(
+                MinimumOf(Metric(quantity.metric_name)),
+                line_type=line_type,
+                title=get_metric_spec(quantity.metric_name).title,
+                color=parse_color_from_api(quantity.color),
+            )
+        case metrics_api.MaximumOf():
+            return MetricExpression(
+                MaximumOf(Metric(quantity.metric_name)),
+                line_type=line_type,
+                title=get_metric_spec(quantity.metric_name).title,
+                color=parse_color_from_api(quantity.color),
+            )
+        case metrics_api.Sum():
+            return MetricExpression(
+                Sum([parse_base_expression_from_api(s) for s in quantity.summands]),
+                line_type=line_type,
+                title=str(quantity.title.localize(translate_to_current_language)),
+                color=parse_color_from_api(quantity.color),
+            )
+        case metrics_api.Product():
+            return MetricExpression(
+                Product([parse_base_expression_from_api(f) for f in quantity.factors]),
+                line_type=line_type,
+                title=str(quantity.title.localize(translate_to_current_language)),
+                unit_id=register_unit_info(quantity.unit).id,
+                color=parse_color_from_api(quantity.color),
+            )
+        case metrics_api.Difference():
+            return MetricExpression(
+                Difference(
+                    minuend=parse_base_expression_from_api(quantity.minuend),
+                    subtrahend=parse_base_expression_from_api(quantity.subtrahend),
+                ),
+                line_type=line_type,
+                title=str(quantity.title.localize(translate_to_current_language)),
+                color=parse_color_from_api(quantity.color),
+            )
+        case metrics_api.Fraction():
+            return MetricExpression(
+                Fraction(
+                    dividend=parse_base_expression_from_api(quantity.dividend),
+                    divisor=parse_base_expression_from_api(quantity.divisor),
+                ),
+                line_type=line_type,
+                title=str(quantity.title.localize(translate_to_current_language)),
+                unit_id=register_unit_info(quantity.unit).id,
+                color=parse_color_from_api(quantity.color),
+            )

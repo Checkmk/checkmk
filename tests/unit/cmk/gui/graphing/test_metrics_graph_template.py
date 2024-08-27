@@ -18,7 +18,7 @@ from cmk.gui.graphing._expression import (
     MaximumOf,
     Metric,
     MetricExpression,
-    parse_expression,
+    parse_legacy_expression,
     WarningOf,
 )
 from cmk.gui.graphing._graph_specification import (
@@ -106,7 +106,7 @@ def test_rpn_stack(raw_expression: str, result: MetricOperation) -> None:
             SiteId(""),
             HostName(""),
             "",
-            parse_expression(raw_expression, "line", "", translated_metrics),
+            parse_legacy_expression(raw_expression, "line", "", translated_metrics),
             translated_metrics,
             None,
         )
@@ -257,7 +257,7 @@ def test_metric_unit_color(
     translated_metrics = translate_metrics(perf_data, check_command)
     translated_metric = translated_metrics.get(expression)
     assert translated_metric is not None
-    metric_expression = parse_expression(expression, "line", "", translated_metrics)
+    metric_expression = parse_legacy_expression(expression, "line", "", translated_metrics)
     assert compute_unit_color(metric_expression, translated_metrics, ["test"]) == MetricUnitColor(
         unit=translated_metric.unit_info.id,
         color=result_color,
@@ -277,7 +277,7 @@ def test_metric_unit_color_skip(
         perf_data_string, check_command, config=active_config
     )
     translated_metrics = translate_metrics(perf_data, check_command)
-    metric_expression = parse_expression(expression, "line", "", translated_metrics)
+    metric_expression = parse_legacy_expression(expression, "line", "", translated_metrics)
     assert compute_unit_color(metric_expression, translated_metrics, ["test"]) is None
 
 
@@ -294,6 +294,6 @@ def test_metric_unit_color_exception(
         perf_data_string, check_command, config=active_config
     )
     translated_metrics = translate_metrics(perf_data, check_command)
-    metric_expression = parse_expression(expression, "line", "", translated_metrics)
+    metric_expression = parse_legacy_expression(expression, "line", "", translated_metrics)
     with pytest.raises(MKGeneralException):
         compute_unit_color(metric_expression, translated_metrics, ["test"])

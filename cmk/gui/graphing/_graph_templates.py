@@ -24,7 +24,6 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.graphing.v1 import metrics as metrics_api
 
-from ._color import parse_color_from_api
 from ._expression import (
     Average,
     BaseMetricExpression,
@@ -33,19 +32,19 @@ from ._expression import (
     Difference,
     Fraction,
     Maximum,
-    MaximumOf,
     Merge,
     Metric,
     MetricExpression,
     Minimum,
-    MinimumOf,
-    parse_base_expression,
-    parse_expression,
+    parse_base_expression_from_api,
+    parse_expression_from_api,
+    parse_legacy_base_expression,
+    parse_legacy_expression,
     Product,
     Sum,
     WarningOf,
 )
-from ._from_api import graphs_from_api, register_unit_info
+from ._from_api import graphs_from_api
 from ._graph_specification import (
     FixedVerticalRange,
     GraphMetric,
@@ -58,7 +57,6 @@ from ._graph_specification import (
     MinimalVerticalRange,
 )
 from ._legacy import graph_info, RawGraphTemplate
-from ._metrics import get_metric_spec
 from ._translated_metrics import translated_metrics_from_row, TranslatedMetric
 from ._type_defs import GraphConsolidationFunction, LineType
 from ._utils import get_graph_data_from_livestatus
@@ -131,100 +129,6 @@ def compute_unit_color(
     return MetricUnitColor(result.unit_info.id, result.color)
 
 
-def _parse_quantity(
-    quantity: (
-        str
-        | metrics_api.Constant
-        | metrics_api.WarningOf
-        | metrics_api.CriticalOf
-        | metrics_api.MinimumOf
-        | metrics_api.MaximumOf
-        | metrics_api.Sum
-        | metrics_api.Product
-        | metrics_api.Difference
-        | metrics_api.Fraction
-    ),
-    line_type: Literal["line", "-line", "stack", "-stack"],
-) -> MetricExpression:
-    match quantity:
-        case str():
-            return MetricExpression(
-                Metric(quantity),
-                line_type=line_type,
-                title=get_metric_spec(quantity).title,
-            )
-        case metrics_api.Constant():
-            return MetricExpression(
-                Constant(quantity.value),
-                line_type=line_type,
-                title=str(quantity.title.localize(translate_to_current_language)),
-                unit_id=register_unit_info(quantity.unit).id,
-                color=parse_color_from_api(quantity.color),
-            )
-        case metrics_api.WarningOf():
-            return MetricExpression(
-                WarningOf(Metric(quantity.metric_name)),
-                line_type=line_type,
-                title=_("Warning of %s") % get_metric_spec(quantity.metric_name).title,
-            )
-        case metrics_api.CriticalOf():
-            return MetricExpression(
-                CriticalOf(Metric(quantity.metric_name)),
-                line_type=line_type,
-                title=_("Critical of %s") % get_metric_spec(quantity.metric_name).title,
-            )
-        case metrics_api.MinimumOf():
-            return MetricExpression(
-                MinimumOf(Metric(quantity.metric_name)),
-                line_type=line_type,
-                title=get_metric_spec(quantity.metric_name).title,
-                color=parse_color_from_api(quantity.color),
-            )
-        case metrics_api.MaximumOf():
-            return MetricExpression(
-                MaximumOf(Metric(quantity.metric_name)),
-                line_type=line_type,
-                title=get_metric_spec(quantity.metric_name).title,
-                color=parse_color_from_api(quantity.color),
-            )
-        case metrics_api.Sum():
-            return MetricExpression(
-                Sum([_parse_quantity(s, line_type).base for s in quantity.summands]),
-                line_type=line_type,
-                title=str(quantity.title.localize(translate_to_current_language)),
-                color=parse_color_from_api(quantity.color),
-            )
-        case metrics_api.Product():
-            return MetricExpression(
-                Product([_parse_quantity(f, line_type).base for f in quantity.factors]),
-                line_type=line_type,
-                title=str(quantity.title.localize(translate_to_current_language)),
-                unit_id=register_unit_info(quantity.unit).id,
-                color=parse_color_from_api(quantity.color),
-            )
-        case metrics_api.Difference():
-            return MetricExpression(
-                Difference(
-                    minuend=_parse_quantity(quantity.minuend, line_type).base,
-                    subtrahend=_parse_quantity(quantity.subtrahend, line_type).base,
-                ),
-                line_type=line_type,
-                title=str(quantity.title.localize(translate_to_current_language)),
-                color=parse_color_from_api(quantity.color),
-            )
-        case metrics_api.Fraction():
-            return MetricExpression(
-                Fraction(
-                    dividend=_parse_quantity(quantity.dividend, line_type).base,
-                    divisor=_parse_quantity(quantity.divisor, line_type).base,
-                ),
-                line_type=line_type,
-                title=str(quantity.title.localize(translate_to_current_language)),
-                unit_id=register_unit_info(quantity.unit).id,
-                color=parse_color_from_api(quantity.color),
-            )
-
-
 @dataclass(frozen=True, kw_only=True)
 class FixedGraphTemplateRange:
     min: BaseMetricExpression
@@ -244,12 +148,12 @@ def _parse_minimal_range(
         min=(
             Constant(minimal_range.lower)
             if isinstance(minimal_range.lower, (int, float))
-            else _parse_quantity(minimal_range.lower, "line").base
+            else parse_base_expression_from_api(minimal_range.lower)
         ),
         max=(
             Constant(minimal_range.upper)
             if isinstance(minimal_range.upper, (int, float))
-            else _parse_quantity(minimal_range.upper, "line").base
+            else parse_base_expression_from_api(minimal_range.upper)
         ),
     )
 
@@ -268,7 +172,7 @@ class GraphTemplate:
 
 
 def _graph_template_from_api_graph(id_: str, graph: graphs_api.Graph) -> GraphTemplate:
-    metrics = [_parse_quantity(l, "stack") for l in graph.compound_lines]
+    metrics = [parse_expression_from_api(l, "stack") for l in graph.compound_lines]
     scalars: list[MetricExpression] = []
     for line in graph.simple_lines:
         match line:
@@ -278,9 +182,9 @@ def _graph_template_from_api_graph(id_: str, graph: graphs_api.Graph) -> GraphTe
                 | metrics_api.MinimumOf()
                 | metrics_api.MaximumOf()
             ):
-                scalars.append(_parse_quantity(line, "line"))
+                scalars.append(parse_expression_from_api(line, "line"))
             case _:
-                metrics.append(_parse_quantity(line, "line"))
+                metrics.append(parse_expression_from_api(line, "line"))
     return GraphTemplate(
         id=id_,
         title=_parse_title(graph),
@@ -308,9 +212,9 @@ def _graph_template_from_api_bidirectional(
         ranges_min.append(upper_range.min)
         ranges_max.append(upper_range.max)
 
-    metrics = [_parse_quantity(l, "-stack") for l in bidirectional.lower.compound_lines] + [
-        _parse_quantity(l, "stack") for l in bidirectional.upper.compound_lines
-    ]
+    metrics = [
+        parse_expression_from_api(l, "-stack") for l in bidirectional.lower.compound_lines
+    ] + [parse_expression_from_api(l, "stack") for l in bidirectional.upper.compound_lines]
     scalars: list[MetricExpression] = []
     for line in bidirectional.lower.simple_lines:
         match line:
@@ -320,9 +224,9 @@ def _graph_template_from_api_bidirectional(
                 | metrics_api.MinimumOf()
                 | metrics_api.MaximumOf()
             ):
-                scalars.append(_parse_quantity(line, "-line"))
+                scalars.append(parse_expression_from_api(line, "-line"))
             case _:
-                metrics.append(_parse_quantity(line, "-line"))
+                metrics.append(parse_expression_from_api(line, "-line"))
     for line in bidirectional.upper.simple_lines:
         match line:
             case (
@@ -331,9 +235,9 @@ def _graph_template_from_api_bidirectional(
                 | metrics_api.MinimumOf()
                 | metrics_api.MaximumOf()
             ):
-                scalars.append(_parse_quantity(line, "line"))
+                scalars.append(parse_expression_from_api(line, "line"))
             case _:
-                metrics.append(_parse_quantity(line, "line"))
+                metrics.append(parse_expression_from_api(line, "line"))
     return GraphTemplate(
         id=id_,
         title=_parse_title(bidirectional),
@@ -360,7 +264,9 @@ def _parse_raw_scalar_expression(
     raw_scalar_expression: str | tuple[str, str | LazyString]
 ) -> MetricExpression:
     if isinstance(raw_scalar_expression, tuple):
-        return parse_expression(raw_scalar_expression[0], "line", str(raw_scalar_expression[1]), {})
+        return parse_legacy_expression(
+            raw_scalar_expression[0], "line", str(raw_scalar_expression[1]), {}
+        )
 
     if raw_scalar_expression.endswith(":warn"):
         title = _("Warning")
@@ -368,13 +274,13 @@ def _parse_raw_scalar_expression(
         title = _("Critical")
     else:
         title = raw_scalar_expression
-    return parse_expression(raw_scalar_expression, "line", str(title), {})
+    return parse_legacy_expression(raw_scalar_expression, "line", str(title), {})
 
 
 def _parse_raw_graph_range(raw_graph_range: tuple[int | str, int | str]) -> FixedGraphTemplateRange:
     return FixedGraphTemplateRange(
-        min=parse_base_expression(raw_graph_range[0], {}),
-        max=parse_base_expression(raw_graph_range[1], {}),
+        min=parse_legacy_base_expression(raw_graph_range[0], {}),
+        max=parse_legacy_base_expression(raw_graph_range[1], {}),
     )
 
 
@@ -384,7 +290,7 @@ def _parse_raw_metric_expression(
     )
 ) -> MetricExpression:
     raw_expression, line_type, *title = raw_metric_expression
-    return parse_expression(raw_expression, line_type, str(title[0]) if title else "", {})
+    return parse_legacy_expression(raw_expression, line_type, str(title[0]) if title else "", {})
 
 
 def _graph_template_from_legacy(id_: str, raw: RawGraphTemplate) -> GraphTemplate:
@@ -653,7 +559,7 @@ def _replace_expressions(text: str, translated_metrics: Mapping[str, TranslatedM
     reg = regex.regex(r"%\([^)]*\)")
     if m := reg.search(text):
         try:
-            result = parse_base_expression(m.group()[2:-1], translated_metrics).evaluate(
+            result = parse_legacy_base_expression(m.group()[2:-1], translated_metrics).evaluate(
                 translated_metrics
             )
         except (ValueError, KeyError):

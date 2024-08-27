@@ -320,6 +320,12 @@ class MetricExpressionResult:
     color: str
 
 
+@dataclass(frozen=True)
+class ScalarName:
+    metric_name: str
+    scalar_name: Literal["warn", "crit", "min", "max"]
+
+
 class MetricExpression(abc.ABC):
     @abc.abstractmethod
     def evaluate(
@@ -333,15 +339,7 @@ class MetricExpression(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
-        raise NotImplementedError()
-
-
-@dataclass(frozen=True)
-class ScalarExpression(MetricExpression):
-    @property
-    @abc.abstractmethod
-    def name(self) -> Literal["warn", "crit", "min", "max"]:
+    def scalar_names(self) -> Iterator[ScalarName]:
         raise NotImplementedError()
 
 
@@ -371,7 +369,7 @@ class Constant(MetricExpression):
     def metric_names(self) -> Iterator[str]:
         yield from ()
 
-    def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
+    def scalar_names(self) -> Iterator[ScalarName]:
         yield from ()
 
 
@@ -400,20 +398,16 @@ class Metric(MetricExpression):
     def metric_names(self) -> Iterator[str]:
         yield self.name
 
-    def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
+    def scalar_names(self) -> Iterator[ScalarName]:
         yield from ()
 
 
 @dataclass(frozen=True)
-class WarningOf(ScalarExpression):
+class WarningOf(MetricExpression):
     metric: Metric
     _: KW_ONLY
     explicit_unit_id: str = ""
     explicit_color: str = ""
-
-    @property
-    def name(self) -> Literal["warn"]:
-        return "warn"
 
     def evaluate(
         self,
@@ -432,20 +426,16 @@ class WarningOf(ScalarExpression):
     def metric_names(self) -> Iterator[str]:
         yield from self.metric.metric_names()
 
-    def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
-        yield self
+    def scalar_names(self) -> Iterator[ScalarName]:
+        yield ScalarName(self.metric.name, "warn")
 
 
 @dataclass(frozen=True)
-class CriticalOf(ScalarExpression):
+class CriticalOf(MetricExpression):
     metric: Metric
     _: KW_ONLY
     explicit_unit_id: str = ""
     explicit_color: str = ""
-
-    @property
-    def name(self) -> Literal["crit"]:
-        return "crit"
 
     def evaluate(
         self,
@@ -464,20 +454,16 @@ class CriticalOf(ScalarExpression):
     def metric_names(self) -> Iterator[str]:
         yield from self.metric.metric_names()
 
-    def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
-        yield self
+    def scalar_names(self) -> Iterator[ScalarName]:
+        yield ScalarName(self.metric.name, "crit")
 
 
 @dataclass(frozen=True)
-class MinimumOf(ScalarExpression):
+class MinimumOf(MetricExpression):
     metric: Metric
     _: KW_ONLY
     explicit_unit_id: str = ""
     explicit_color: str = ""
-
-    @property
-    def name(self) -> Literal["min"]:
-        return "min"
 
     def evaluate(
         self,
@@ -496,20 +482,16 @@ class MinimumOf(ScalarExpression):
     def metric_names(self) -> Iterator[str]:
         yield from self.metric.metric_names()
 
-    def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
-        yield self
+    def scalar_names(self) -> Iterator[ScalarName]:
+        yield ScalarName(self.metric.name, "min")
 
 
 @dataclass(frozen=True)
-class MaximumOf(ScalarExpression):
+class MaximumOf(MetricExpression):
     metric: Metric
     _: KW_ONLY
     explicit_unit_id: str = ""
     explicit_color: str = ""
-
-    @property
-    def name(self) -> Literal["max"]:
-        return "max"
 
     def evaluate(
         self,
@@ -528,8 +510,8 @@ class MaximumOf(ScalarExpression):
     def metric_names(self) -> Iterator[str]:
         yield from self.metric.metric_names()
 
-    def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
-        yield self
+    def scalar_names(self) -> Iterator[ScalarName]:
+        yield ScalarName(self.metric.name, "max")
 
 
 @dataclass(frozen=True)
@@ -569,8 +551,8 @@ class Sum(MetricExpression):
     def metric_names(self) -> Iterator[str]:
         yield from (n for s in self.summands for n in s.metric_names())
 
-    def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
-        yield from (sc for s in self.summands for sc in s.scalars())
+    def scalar_names(self) -> Iterator[ScalarName]:
+        yield from (n for s in self.summands for n in s.scalar_names())
 
 
 @dataclass(frozen=True)
@@ -610,8 +592,8 @@ class Product(MetricExpression):
     def metric_names(self) -> Iterator[str]:
         yield from (n for f in self.factors for n in f.metric_names())
 
-    def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
-        yield from (s for f in self.factors for s in f.scalars())
+    def scalar_names(self) -> Iterator[ScalarName]:
+        yield from (n for f in self.factors for n in f.scalar_names())
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -650,9 +632,9 @@ class Difference(MetricExpression):
         yield from self.minuend.metric_names()
         yield from self.subtrahend.metric_names()
 
-    def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
-        yield from self.minuend.scalars()
-        yield from self.subtrahend.scalars()
+    def scalar_names(self) -> Iterator[ScalarName]:
+        yield from self.minuend.scalar_names()
+        yield from self.subtrahend.scalar_names()
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -691,9 +673,9 @@ class Fraction(MetricExpression):
         yield from self.dividend.metric_names()
         yield from self.divisor.metric_names()
 
-    def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
-        yield from self.dividend.scalars()
-        yield from self.divisor.scalars()
+    def scalar_names(self) -> Iterator[ScalarName]:
+        yield from self.dividend.scalar_names()
+        yield from self.divisor.scalar_names()
 
 
 @dataclass(frozen=True)
@@ -725,8 +707,8 @@ class Minimum(MetricExpression):
     def metric_names(self) -> Iterator[str]:
         yield from (n for o in self.operands for n in o.metric_names())
 
-    def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
-        yield from (s for o in self.operands for s in o.scalars())
+    def scalar_names(self) -> Iterator[ScalarName]:
+        yield from (n for o in self.operands for n in o.scalar_names())
 
 
 @dataclass(frozen=True)
@@ -758,8 +740,8 @@ class Maximum(MetricExpression):
     def metric_names(self) -> Iterator[str]:
         yield from (n for o in self.operands for n in o.metric_names())
 
-    def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
-        yield from (s for o in self.operands for s in o.scalars())
+    def scalar_names(self) -> Iterator[ScalarName]:
+        yield from (n for o in self.operands for n in o.scalar_names())
 
 
 # Composed metric declarations:
@@ -795,9 +777,9 @@ class Percent(MetricExpression):
         yield from self.percent_value.metric_names()
         yield from self.base_value.metric_names()
 
-    def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
-        yield from self.percent_value.scalars()
-        yield from self.base_value.scalars()
+    def scalar_names(self) -> Iterator[ScalarName]:
+        yield from self.percent_value.scalar_names()
+        yield from self.base_value.scalar_names()
 
 
 # Special metric declarations for custom graphs
@@ -831,8 +813,8 @@ class Average(MetricExpression):
     def metric_names(self) -> Iterator[str]:
         yield from (n for o in self.operands for n in o.metric_names())
 
-    def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
-        yield from (s for o in self.operands for s in o.scalars())
+    def scalar_names(self) -> Iterator[ScalarName]:
+        yield from (n for o in self.operands for n in o.scalar_names())
 
 
 @dataclass(frozen=True)
@@ -859,8 +841,8 @@ class Merge(MetricExpression):
     def metric_names(self) -> Iterator[str]:
         yield from (n for o in self.operands for n in o.metric_names())
 
-    def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
-        yield from (s for o in self.operands for s in o.scalars())
+    def scalar_names(self) -> Iterator[ScalarName]:
+        yield from (n for o in self.operands for n in o.scalar_names())
 
 
 def _make_inner_metric_expression(

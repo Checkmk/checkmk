@@ -348,10 +348,10 @@ def _has_required_metrics_or_scalars(
         for metric_name in expression.metric_names():
             if metric_name not in translated_metrics:
                 return False
-        for scalar in expression.scalars():
-            if scalar.metric.name not in translated_metrics:
+        for scalar_name in expression.scalar_names():
+            if scalar_name.metric_name not in translated_metrics:
                 return False
-            if scalar.name not in translated_metrics[scalar.metric.name].scalar:
+            if scalar_name.scalar_name not in translated_metrics[scalar_name.metric_name].scalar:
                 return False
     return True
 

@@ -1573,9 +1573,10 @@ class SiteFactory:
             or Version.from_str("2.3.0b1") <= from_version
         ):
             # tmpfs should have been restored:
-            assert os.path.exists(site.path("tmp/check_mk/counters"))
-            assert os.path.exists(site.path("tmp/check_mk/piggyback"))
-            assert os.path.exists(site.path("tmp/check_mk/piggyback_sources"))
+            tmp_dirs = site.listdir("tmp/check_mk")
+            assert "counters" in tmp_dirs
+            assert "piggyback" in tmp_dirs
+            assert "piggyback_sources" in tmp_dirs
 
         # open the livestatus port
         site.open_livestatus_tcp(encrypted=False)

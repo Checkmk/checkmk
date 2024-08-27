@@ -221,20 +221,28 @@ class MerakiOrganisation:
 
         if _SEC_NAME_DEVICE_STATUSES in self.config.section_names:
             for device_status in self._get_device_statuses():
-                if piggyback := self._get_device_piggyback(device_status, devices_by_serial):
+                # Empty device names are possible when reading from the meraki API, let's set the
+                # piggyback to None so that the output is written to the main section.
+                if (
+                    piggyback := self._get_device_piggyback(device_status, devices_by_serial)
+                ) is not None:
                     yield self._make_section(
                         name=_SEC_NAME_DEVICE_STATUSES,
                         data=device_status,
-                        piggyback=piggyback,
+                        piggyback=piggyback or None,
                     )
 
         if _SEC_NAME_SENSOR_READINGS in self.config.section_names:
             for sensor_reading in self._get_sensor_readings():
-                if piggyback := self._get_device_piggyback(sensor_reading, devices_by_serial):
+                # Empty device names are possible when reading from the meraki API, let's set the
+                # piggyback to None so that the output is written to the main section.
+                if (
+                    piggyback := self._get_device_piggyback(sensor_reading, devices_by_serial)
+                ) is not None:
                     yield self._make_section(
                         name=_SEC_NAME_SENSOR_READINGS,
                         data=sensor_reading,
-                        piggyback=piggyback,
+                        piggyback=piggyback or None,
                     )
 
     def _get_licenses_overview(self) -> MerakiAPIData | None:

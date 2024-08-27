@@ -8,6 +8,7 @@ import random
 import shutil
 import string
 from collections.abc import Iterator
+from datetime import datetime
 
 import cmk.utils.paths
 from cmk.utils.crypto.password import PasswordHash
@@ -16,7 +17,8 @@ from cmk.utils.type_defs import UserId
 import cmk.gui.config as config
 from cmk.gui.session import SuperUserContext
 from cmk.gui.type_defs import UserObject, UserSpec
-from cmk.gui.watolib.users import delete_users, edit_users
+from cmk.gui.userdb.store import load_users, save_users
+from cmk.gui.watolib.users import edit_users
 
 
 def _mk_user_obj(
@@ -104,10 +106,13 @@ def create_and_destroy_user(
         )
     )
 
-    yield user_id, password
+    try:
+        yield user_id, password
+    finally:
+        with SuperUserContext():
+            users = load_users()
+            del users[user_id]
+            save_users(profiles=users, now=datetime.now())
 
-    with SuperUserContext():
-        delete_users([user_id])
-
-    # User directories are not deleted by WATO by default. Clean it up here!
-    shutil.rmtree(str(profile_path))
+            # User directories are not deleted by WATO by default. Clean it up here!
+            shutil.rmtree(str(profile_path))

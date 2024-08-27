@@ -15,7 +15,6 @@ boto3-stubs = {extras = ["logs"], version = "*"}  # used for type checking, keep
 botocore-stubs = "*"  # used for type checking, keep version in sync with botocore
 bson = "*"  # used by test_mk_mongodb unit test
 checkmk-dev-tools = "~=0.1.60"  # provides tooling for build artifacts
-compiledb = "*"  # used by the Livestatus/CMC Makefiles for building compile_command.json
 devpi-client = "*" # Managing the devpi server
 dill = "*"
 docker = "*"  # used by test_docker test and mk_docker agent plugin

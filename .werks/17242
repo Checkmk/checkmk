@@ -1,0 +1,19 @@
+Title: Fix Cisco Meraki missing services
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1724751487
+Edition: cre
+Level: 1
+Version: 2.2.0p33
+
+In some rare cases, when using the Cisco Meraki Special Agent, certain services such as temperature
+sensors or device status may be missing. This happened when no device name was configured for a
+particular device.
+
+These devices are now added to the main host on which the Cisco Meraki integration is configured.
+
+If you want to monitor the device as a separate piggyback host, you must configure a name for that
+device.
+
+The missing services must be discovered by running a service discovery on the main host.

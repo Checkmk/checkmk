@@ -687,6 +687,22 @@ def _resolve_stack(
     return resolved[0]
 
 
+def parse_base_expression(
+    raw_expression: str | int | float,
+    translated_metrics: Mapping[str, TranslatedMetric],
+) -> BaseMetricExpression:
+    if isinstance(raw_expression, (int, float)):
+        return Constant(raw_expression)
+    (
+        stack,
+        _unit_id,
+        _color,
+    ) = _parse_expression(raw_expression, translated_metrics)
+    if isinstance(resolved := _resolve_stack(stack), BaseMetricExpression):
+        return resolved
+    raise TypeError(resolved)
+
+
 @dataclass(frozen=True)
 class MetricExpression:
     base: BaseMetricExpression

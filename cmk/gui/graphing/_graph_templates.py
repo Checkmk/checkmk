@@ -39,6 +39,7 @@ from ._expression import (
     MetricExpression,
     Minimum,
     MinimumOf,
+    parse_base_expression,
     parse_expression,
     Product,
     Sum,
@@ -406,8 +407,8 @@ def _parse_raw_scalar_definition(
 
 def _parse_raw_graph_range(raw_graph_range: tuple[int | str, int | str]) -> FixedGraphTemplateRange:
     return FixedGraphTemplateRange(
-        min=parse_expression(raw_graph_range[0], {}).base,
-        max=parse_expression(raw_graph_range[1], {}).base,
+        min=parse_base_expression(raw_graph_range[0], {}),
+        max=parse_base_expression(raw_graph_range[1], {}),
     )
 
 
@@ -696,7 +697,7 @@ def _replace_expressions(text: str, translated_metrics: Mapping[str, TranslatedM
     reg = regex.regex(r"%\([^)]*\)")
     if m := reg.search(text):
         try:
-            result = parse_expression(m.group()[2:-1], translated_metrics).evaluate(
+            result = parse_base_expression(m.group()[2:-1], translated_metrics).evaluate(
                 translated_metrics
             )
         except (ValueError, KeyError):

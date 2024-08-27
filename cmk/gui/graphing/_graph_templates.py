@@ -105,31 +105,35 @@ class MetricUnitColor:
 class MetricDefinition:
     expression: MetricExpression
 
-    def compute_title(self, translated_metrics: Mapping[str, TranslatedMetric]) -> str:
-        if self.expression.title:
-            return self.expression.title
-        return translated_metrics[next(self.expression.metric_names())].title
 
-    def compute_unit_color(
-        self,
-        translated_metrics: Mapping[str, TranslatedMetric],
-        optional_metrics: Sequence[str],
-    ) -> MetricUnitColor | None:
-        try:
-            result = self.expression.evaluate(translated_metrics)
-        except KeyError as err:  # because metric_name is not in translated_metrics
-            metric_name = err.args[0]
-            if optional_metrics and metric_name in optional_metrics:
-                return None
-            raise MKGeneralException(
-                _("Graph recipe '%s' uses undefined metric '%s', available are: %s")
-                % (
-                    self.expression,
-                    metric_name,
-                    ", ".join(sorted(translated_metrics.keys())) or "None",
-                )
+def compute_title(
+    expression: MetricExpression, translated_metrics: Mapping[str, TranslatedMetric]
+) -> str:
+    if expression.title:
+        return expression.title
+    return translated_metrics[next(expression.metric_names())].title
+
+
+def compute_unit_color(
+    expression: MetricExpression,
+    translated_metrics: Mapping[str, TranslatedMetric],
+    optional_metrics: Sequence[str],
+) -> MetricUnitColor | None:
+    try:
+        result = expression.evaluate(translated_metrics)
+    except KeyError as err:  # because metric_name is not in translated_metrics
+        metric_name = err.args[0]
+        if optional_metrics and metric_name in optional_metrics:
+            return None
+        raise MKGeneralException(
+            _("Graph recipe '%s' uses undefined metric '%s', available are: %s")
+            % (
+                expression,
+                metric_name,
+                ", ".join(sorted(translated_metrics.keys())) or "None",
             )
-        return MetricUnitColor(result.unit_info.id, result.color)
+        )
+    return MetricUnitColor(result.unit_info.id, result.color)
 
 
 def _parse_quantity(
@@ -725,12 +729,13 @@ def create_graph_recipe_from_template(
     specification: GraphSpecification,
 ) -> GraphRecipe:
     def _graph_metric(metric_definition: MetricDefinition) -> GraphMetric:
-        unit_color = metric_definition.compute_unit_color(
+        unit_color = compute_unit_color(
+            metric_definition.expression,
             translated_metrics,
             graph_template.optional_metrics,
         )
         return GraphMetric(
-            title=metric_definition.compute_title(translated_metrics),
+            title=compute_title(metric_definition.expression, translated_metrics),
             line_type=metric_definition.expression.line_type,
             operation=metric_expression_to_graph_recipe_expression(
                 site_id,

@@ -31,6 +31,7 @@ from cmk.gui.graphing._graph_specification import (
     MinimalVerticalRange,
 )
 from cmk.gui.graphing._graph_templates import (
+    compute_unit_color,
     GraphTemplate,
     MetricDefinition,
     MetricUnitColor,
@@ -262,7 +263,9 @@ def test_metric_unit_color(
     metric_definition = MetricDefinition(
         parse_expression(expression, "line", "", translated_metrics)
     )
-    assert metric_definition.compute_unit_color(translated_metrics, ["test"]) == MetricUnitColor(
+    assert compute_unit_color(
+        metric_definition.expression, translated_metrics, ["test"]
+    ) == MetricUnitColor(
         unit=translated_metric.unit_info.id,
         color=result_color,
     )
@@ -284,7 +287,7 @@ def test_metric_unit_color_skip(
     metric_definition = MetricDefinition(
         parse_expression(expression, "line", "", translated_metrics)
     )
-    assert metric_definition.compute_unit_color(translated_metrics, ["test"]) is None
+    assert compute_unit_color(metric_definition.expression, translated_metrics, ["test"]) is None
 
 
 @pytest.mark.parametrize(
@@ -304,4 +307,4 @@ def test_metric_unit_color_exception(
         parse_expression(expression, "line", "", translated_metrics)
     )
     with pytest.raises(MKGeneralException):
-        metric_definition.compute_unit_color(translated_metrics, ["test"])
+        compute_unit_color(metric_definition.expression, translated_metrics, ["test"])

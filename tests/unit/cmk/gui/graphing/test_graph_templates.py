@@ -453,8 +453,8 @@ COLOR_HEX = "#1e90ff"
                     MetricDefinition(
                         Constant(
                             value=10,
-                            explicit_unit_id="DecimalNotation__AutoPrecision_2",
-                            explicit_color=COLOR_HEX,
+                            unit_id="DecimalNotation__AutoPrecision_2",
+                            color=COLOR_HEX,
                         ),
                         "stack",
                         "Constant",
@@ -472,7 +472,7 @@ COLOR_HEX = "#1e90ff"
                     MetricDefinition(
                         MinimumOf(
                             Metric("metric-name-4"),
-                            explicit_color=COLOR_HEX,
+                            color=COLOR_HEX,
                         ),
                         "stack",
                         "Title",
@@ -480,7 +480,7 @@ COLOR_HEX = "#1e90ff"
                     MetricDefinition(
                         MaximumOf(
                             Metric("metric-name-5"),
-                            explicit_color=COLOR_HEX,
+                            color=COLOR_HEX,
                         ),
                         "stack",
                         "Title",
@@ -488,7 +488,7 @@ COLOR_HEX = "#1e90ff"
                     MetricDefinition(
                         Sum(
                             [Metric("metric-name-6")],
-                            explicit_color=COLOR_HEX,
+                            color=COLOR_HEX,
                         ),
                         "stack",
                         "Sum",
@@ -496,8 +496,8 @@ COLOR_HEX = "#1e90ff"
                     MetricDefinition(
                         Product(
                             [Metric("metric-name-7")],
-                            explicit_unit_id="DecimalNotation__AutoPrecision_2",
-                            explicit_color=COLOR_HEX,
+                            unit_id="DecimalNotation__AutoPrecision_2",
+                            color=COLOR_HEX,
                         ),
                         "stack",
                         "Product",
@@ -506,7 +506,7 @@ COLOR_HEX = "#1e90ff"
                         Difference(
                             minuend=Metric("metric-name-7"),
                             subtrahend=Metric("metric-name-8"),
-                            explicit_color=COLOR_HEX,
+                            color=COLOR_HEX,
                         ),
                         "stack",
                         "Difference",
@@ -515,8 +515,8 @@ COLOR_HEX = "#1e90ff"
                         Fraction(
                             dividend=Metric("metric-name-9"),
                             divisor=Metric("metric-name-10"),
-                            explicit_unit_id="DecimalNotation__AutoPrecision_2",
-                            explicit_color=COLOR_HEX,
+                            unit_id="DecimalNotation__AutoPrecision_2",
+                            color=COLOR_HEX,
                         ),
                         "stack",
                         "Fraction",
@@ -589,14 +589,14 @@ COLOR_HEX = "#1e90ff"
                     ScalarDefinition(
                         MinimumOf(
                             Metric("metric-name-4"),
-                            explicit_color=COLOR_HEX,
+                            color=COLOR_HEX,
                         ),
                         "Title",
                     ),
                     ScalarDefinition(
                         MaximumOf(
                             Metric("metric-name-5"),
-                            explicit_color=COLOR_HEX,
+                            color=COLOR_HEX,
                         ),
                         "Title",
                     ),
@@ -615,8 +615,8 @@ COLOR_HEX = "#1e90ff"
                     MetricDefinition(
                         Constant(
                             value=10,
-                            explicit_unit_id="DecimalNotation__AutoPrecision_2",
-                            explicit_color=COLOR_HEX,
+                            unit_id="DecimalNotation__AutoPrecision_2",
+                            color=COLOR_HEX,
                         ),
                         "line",
                         "Constant",
@@ -624,7 +624,7 @@ COLOR_HEX = "#1e90ff"
                     MetricDefinition(
                         Sum(
                             [Metric("metric-name-6")],
-                            explicit_color=COLOR_HEX,
+                            color=COLOR_HEX,
                         ),
                         "line",
                         "Sum",
@@ -632,8 +632,8 @@ COLOR_HEX = "#1e90ff"
                     MetricDefinition(
                         Product(
                             [Metric("metric-name-7")],
-                            explicit_unit_id="DecimalNotation__AutoPrecision_2",
-                            explicit_color=COLOR_HEX,
+                            unit_id="DecimalNotation__AutoPrecision_2",
+                            color=COLOR_HEX,
                         ),
                         "line",
                         "Product",
@@ -642,7 +642,7 @@ COLOR_HEX = "#1e90ff"
                         Difference(
                             minuend=Metric("metric-name-7"),
                             subtrahend=Metric("metric-name-8"),
-                            explicit_color=COLOR_HEX,
+                            color=COLOR_HEX,
                         ),
                         "line",
                         "Difference",
@@ -651,8 +651,8 @@ COLOR_HEX = "#1e90ff"
                         Fraction(
                             dividend=Metric("metric-name-9"),
                             divisor=Metric("metric-name-10"),
-                            explicit_unit_id="DecimalNotation__AutoPrecision_2",
-                            explicit_color=COLOR_HEX,
+                            unit_id="DecimalNotation__AutoPrecision_2",
+                            color=COLOR_HEX,
                         ),
                         "line",
                         "Fraction",
@@ -785,11 +785,11 @@ def test__graph_template_from_api_graph(
                         "Critical of Title",
                     ),
                     ScalarDefinition(
-                        MinimumOf(Metric("metric-name-l5"), explicit_color=COLOR_HEX),
+                        MinimumOf(Metric("metric-name-l5"), color=COLOR_HEX),
                         "Title",
                     ),
                     ScalarDefinition(
-                        MaximumOf(Metric("metric-name-l6"), explicit_color=COLOR_HEX),
+                        MaximumOf(Metric("metric-name-l6"), color=COLOR_HEX),
                         "Title",
                     ),
                     ScalarDefinition(
@@ -801,11 +801,11 @@ def test__graph_template_from_api_graph(
                         "Critical of Title",
                     ),
                     ScalarDefinition(
-                        MinimumOf(Metric("metric-name-u5"), explicit_color=COLOR_HEX),
+                        MinimumOf(Metric("metric-name-u5"), color=COLOR_HEX),
                         "Title",
                     ),
                     ScalarDefinition(
-                        MaximumOf(Metric("metric-name-u6"), explicit_color=COLOR_HEX),
+                        MaximumOf(Metric("metric-name-u6"), color=COLOR_HEX),
                         "Title",
                     ),
                 ],

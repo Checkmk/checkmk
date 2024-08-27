@@ -127,7 +127,7 @@ def test_create_graph_recipe_from_template() -> None:
                 expression=Difference(
                     minuend=Metric("fs_size"),
                     subtrahend=Metric("fs_used"),
-                    explicit_color="#e3fff9",
+                    color="#e3fff9",
                 ),
                 line_type="stack",
                 title="Free space",

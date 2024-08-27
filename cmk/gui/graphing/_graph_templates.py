@@ -164,8 +164,8 @@ def _parse_quantity(
             return MetricDefinition(
                 expression=Constant(
                     quantity.value,
-                    explicit_unit_id=register_unit_info(quantity.unit).id,
-                    explicit_color=parse_color_from_api(quantity.color),
+                    unit_id=register_unit_info(quantity.unit).id,
+                    color=parse_color_from_api(quantity.color),
                 ),
                 line_type=line_type,
                 title=str(quantity.title.localize(translate_to_current_language)),
@@ -186,7 +186,7 @@ def _parse_quantity(
             return MetricDefinition(
                 expression=MinimumOf(
                     Metric(quantity.metric_name),
-                    explicit_color=parse_color_from_api(quantity.color),
+                    color=parse_color_from_api(quantity.color),
                 ),
                 line_type=line_type,
                 title=get_metric_spec(quantity.metric_name).title,
@@ -195,7 +195,7 @@ def _parse_quantity(
             return MetricDefinition(
                 expression=MaximumOf(
                     Metric(quantity.metric_name),
-                    explicit_color=parse_color_from_api(quantity.color),
+                    color=parse_color_from_api(quantity.color),
                 ),
                 line_type=line_type,
                 title=get_metric_spec(quantity.metric_name).title,
@@ -204,7 +204,7 @@ def _parse_quantity(
             return MetricDefinition(
                 expression=Sum(
                     [_parse_quantity(s, line_type).expression for s in quantity.summands],
-                    explicit_color=parse_color_from_api(quantity.color),
+                    color=parse_color_from_api(quantity.color),
                 ),
                 line_type=line_type,
                 title=str(quantity.title.localize(translate_to_current_language)),
@@ -213,8 +213,8 @@ def _parse_quantity(
             return MetricDefinition(
                 expression=Product(
                     [_parse_quantity(f, line_type).expression for f in quantity.factors],
-                    explicit_unit_id=register_unit_info(quantity.unit).id,
-                    explicit_color=parse_color_from_api(quantity.color),
+                    unit_id=register_unit_info(quantity.unit).id,
+                    color=parse_color_from_api(quantity.color),
                 ),
                 line_type=line_type,
                 title=str(quantity.title.localize(translate_to_current_language)),
@@ -224,7 +224,7 @@ def _parse_quantity(
                 expression=Difference(
                     minuend=_parse_quantity(quantity.minuend, line_type).expression,
                     subtrahend=_parse_quantity(quantity.subtrahend, line_type).expression,
-                    explicit_color=parse_color_from_api(quantity.color),
+                    color=parse_color_from_api(quantity.color),
                 ),
                 line_type=line_type,
                 title=str(quantity.title.localize(translate_to_current_language)),
@@ -234,8 +234,8 @@ def _parse_quantity(
                 expression=Fraction(
                     dividend=_parse_quantity(quantity.dividend, line_type).expression,
                     divisor=_parse_quantity(quantity.divisor, line_type).expression,
-                    explicit_unit_id=register_unit_info(quantity.unit).id,
-                    explicit_color=parse_color_from_api(quantity.color),
+                    unit_id=register_unit_info(quantity.unit).id,
+                    color=parse_color_from_api(quantity.color),
                 ),
                 line_type=line_type,
                 title=str(quantity.title.localize(translate_to_current_language)),

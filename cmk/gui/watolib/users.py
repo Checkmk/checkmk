@@ -385,5 +385,3 @@ class ContactsConfigFile(WatoSingleConfigFile[dict]):
 def register(config_file_registry: ConfigFileRegistry) -> None:
     config_file_registry.register(UsersConfigFile())
     config_file_registry.register(ContactsConfigFile())
-    config_file_registry.register(UsersConfigFile())
-    config_file_registry.register(ContactsConfigFile())

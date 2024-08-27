@@ -94,7 +94,7 @@ const activeElement = computed((): ActiveElement | null => {
 </script>
 
 <template>
-  <div>
+  <div class="choice">
     <select :id="$componentId" v-model="value">
       <option v-if="activeElement == null" disabled selected hidden value="">
         {{ props.spec.input_hint }}
@@ -115,3 +115,10 @@ const activeElement = computed((): ActiveElement | null => {
     <FormValidation :validation="validation"></FormValidation>
   </template>
 </template>
+
+<style scoped>
+div.choice {
+  margin-bottom: 5px;
+  margin-right: 5px;
+}
+</style>

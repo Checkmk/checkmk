@@ -1,0 +1,14 @@
+Title: SLA alerts levels: show full precision instead of no decimal places
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1724764122
+Edition: cee
+Level: 1
+Version: 2.2.0p33
+
+SLA alerts levels now show the full precision configured in the SLA rather instead
+of no decimal places.
+
+The calculated results of how much SLA is left are still configured within the
+view with the <code>Precision of float values</code> option.

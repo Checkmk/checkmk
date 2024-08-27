@@ -1063,8 +1063,14 @@ textarea.try_max_width {
 |                                                                          |
 '-------------------------------------------------------------------------*/
 
+body.show_help {
+  div.help {
+    display: flex;
+  }
+}
+
 div.help {
-  display: flex;
+  display: none;
   margin: 8px 0;
 
   div.info_icon {

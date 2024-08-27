@@ -190,10 +190,9 @@ class HTMLGenerator(HTMLWriter):
         help_text = HTML.without_escaping(self.resolve_help_text_macros(stripped))
 
         self.enable_help_toggle()
-        style: str = "display:%s;" % ("flex" if user.show_help else "none")
         inner_html: HTML = HTMLWriter.render_div(self.render_icon("info"), class_="info_icon")
         inner_html += HTMLWriter.render_div(help_text, class_="help_text")
-        return HTMLWriter.render_div(inner_html, class_="help", style=style)
+        return HTMLWriter.render_div(inner_html, class_="help")
 
     @staticmethod
     def resolve_help_text_macros(text: str) -> str:

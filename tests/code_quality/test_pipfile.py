@@ -329,7 +329,6 @@ def get_undeclared_dependencies() -> Iterable[Import]:
 CEE_UNUSED_PACKAGES = [
     "cython",
     "grpcio",
-    "idna",
     "itsdangerous",
     "jmespath",
     "markupsafe",

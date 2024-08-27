@@ -35,3 +35,11 @@ pip.parse(
     },
 )
 use_repo(pip, "cmk_agent_based")
+pip.parse(
+    hub_name = "cmk_werks",
+    python_version = PYTHON_VERSION,
+    requirements_by_platform = {
+        "//packages/cmk-werks:requirements_lock.txt": "linux_*,osx_*",
+    },
+)
+use_repo(pip, "cmk_werks")

@@ -40146,6 +40146,10 @@ msgstr "Kein Objekttyp"
 msgid "No password entered. Please enter a password."
 msgstr "Kein Passwort eingegeben. Bitte geben Sie ein Passwort ein."
 
+#, fuzzy
+msgid "No password provided"
+msgstr "Aus dem Passwortspeicher"
+
 msgid "No pending changes"
 msgstr "Keine anstehenden Änderungen"
 
@@ -44500,6 +44504,10 @@ msgid "Password changed (sync failed: %s)"
 msgstr "Passwort geändert (Synchronisation fehlgeschlagen: %s)"
 
 msgid "Password does not exist or using not permitted"
+msgstr "Passwort existiert nicht oder Nutzung nicht erlaubt"
+
+#, fuzzy
+msgid "Password does not exist or using not permitted."
 msgstr "Passwort existiert nicht oder Nutzung nicht erlaubt"
 
 msgid "Password for binding, if your server requires an authentication"

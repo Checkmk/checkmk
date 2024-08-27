@@ -41633,6 +41633,10 @@ msgstr "Geen objecttype"
 msgid "No password entered. Please enter a password."
 msgstr ""
 
+#, fuzzy
+msgid "No password provided"
+msgstr "Van wachtwoord opslag"
+
 msgid "No pending changes"
 msgstr "Geen hangende wijzigingen"
 
@@ -46299,6 +46303,10 @@ msgid "Password changed (sync failed: %s)"
 msgstr "Wachtwoord gewijzigd (synchronisatie mislukt: %s)"
 
 msgid "Password does not exist or using not permitted"
+msgstr "Wachtwoord bestaat niet of gebruik niet toegestaan"
+
+#, fuzzy
+msgid "Password does not exist or using not permitted."
 msgstr "Wachtwoord bestaat niet of gebruik niet toegestaan"
 
 msgid "Password for binding, if your server requires an authentication"

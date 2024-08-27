@@ -40342,6 +40342,10 @@ msgstr "オブジェクトタイプなし"
 msgid "No password entered. Please enter a password."
 msgstr "パスワードが入力されていません。パスワードを入力してください。"
 
+#, fuzzy
+msgid "No password provided"
+msgstr "パスワードストアから"
+
 msgid "No pending changes"
 msgstr "保留中の変更はありません"
 
@@ -44932,6 +44936,10 @@ msgid "Password changed (sync failed: %s)"
 msgstr "パスワードが変更されました(同期に失敗しました: %s)"
 
 msgid "Password does not exist or using not permitted"
+msgstr "パスワードが存在しないか、使用が許可されていません"
+
+#, fuzzy
+msgid "Password does not exist or using not permitted."
 msgstr "パスワードが存在しないか、使用が許可されていません"
 
 msgid "Password for binding, if your server requires an authentication"

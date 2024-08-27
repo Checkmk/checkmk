@@ -41690,6 +41690,10 @@ msgstr "Nici un tip de obiect"
 msgid "No password entered. Please enter a password."
 msgstr "Nu a fost introdusă nicio parolă. Vă rugăm să introduceți o parolă."
 
+#, fuzzy
+msgid "No password provided"
+msgstr "Din magazinul de parole"
+
 msgid "No pending changes"
 msgstr "Nu există modificări în curs de desfășurare"
 
@@ -46350,6 +46354,10 @@ msgid "Password changed (sync failed: %s)"
 msgstr "Parola a fost schimbată (sincronizarea a eșuat: %s)"
 
 msgid "Password does not exist or using not permitted"
+msgstr "Parola nu există sau utilizarea nu este permisă"
+
+#, fuzzy
+msgid "Password does not exist or using not permitted."
 msgstr "Parola nu există sau utilizarea nu este permisă"
 
 msgid "Password for binding, if your server requires an authentication"

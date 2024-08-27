@@ -41973,6 +41973,10 @@ msgstr ""
 "No se ha introducido ninguna contraseña. Por favor, introduzca una "
 "contraseña."
 
+#, fuzzy
+msgid "No password provided"
+msgstr "Desde el almacén de contraseñas"
+
 msgid "No pending changes"
 msgstr "No hay cambios pendientes"
 
@@ -46677,6 +46681,10 @@ msgid "Password changed (sync failed: %s)"
 msgstr "La contraseña ha cambiado (la sincronización ha fallado: %s)"
 
 msgid "Password does not exist or using not permitted"
+msgstr "La contraseña no existe o su uso no está permitido"
+
+#, fuzzy
+msgid "Password does not exist or using not permitted."
 msgstr "La contraseña no existe o su uso no está permitido"
 
 msgid "Password for binding, if your server requires an authentication"

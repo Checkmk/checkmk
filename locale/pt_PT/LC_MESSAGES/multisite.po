@@ -41617,6 +41617,10 @@ msgid "No password entered. Please enter a password."
 msgstr ""
 "Não foi introduzida nenhuma palavra-passe. Introduza uma palavra-passe."
 
+#, fuzzy
+msgid "No password provided"
+msgstr "Da loja de senhas"
+
 msgid "No pending changes"
 msgstr "Sem alterações pendentes"
 
@@ -46264,6 +46268,10 @@ msgid "Password changed (sync failed: %s)"
 msgstr "Senha alterada (sincronização falhada: %s)"
 
 msgid "Password does not exist or using not permitted"
+msgstr "A senha não existe ou o uso não é permitido"
+
+#, fuzzy
+msgid "Password does not exist or using not permitted."
 msgstr "A senha não existe ou o uso não é permitido"
 
 msgid "Password for binding, if your server requires an authentication"

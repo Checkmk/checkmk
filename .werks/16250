@@ -1,0 +1,20 @@
+Title: Handle years in ntp output
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1724757177
+Edition: cre
+Level: 1
+Version: 2.2.0p33
+
+This werk affects you, in case your last <code>ntpq</code> synchronization was indeed more than a year ago.
+
+A potential check crash traceback looks like:
+
+C+:
+  File "/omd/sites/SITE/lib/python3/cmk/base/plugins/agent_based/ntp.py", line 67, in _ntp_fmt_time
+    return int(raw)
+ValueError: invalid literal for int() with base 10: '3y'
+C-:
+
+The year case is now handled in the parse function.

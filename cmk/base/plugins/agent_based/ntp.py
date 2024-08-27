@@ -66,6 +66,9 @@ def _ntp_fmt_time(raw: str) -> int:
         return int(raw[:-1]) * 60 * 60
     if raw[-1] == "d":
         return int(raw[:-1]) * 60 * 60 * 24
+    if raw[-1] == "y":
+        # Yes, does only hold true for non-leap years... but let's keep it simple at that point
+        return int(raw[:-1]) * 60 * 60 * 24 * 365
     return int(raw)
 
 

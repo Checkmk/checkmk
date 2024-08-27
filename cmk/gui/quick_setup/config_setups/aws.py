@@ -10,9 +10,8 @@ from cmk.gui.quick_setup.to_frontend import (
     create_and_save_special_agent_bundle,
     recap_service_discovery,
     recaps_form_spec,
-    validate_test_connection,
-    validate_unique_id,
 )
+from cmk.gui.quick_setup.v0_unstable.predefined import validators as qs_validators
 from cmk.gui.quick_setup.v0_unstable.predefined import widgets
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupStage
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, QuickSetupId, ServiceInterest
@@ -73,7 +72,7 @@ def prepare_aws() -> QuickSetupStage:
                 rendering_option="table",
             ),
         ],
-        custom_validators=[validate_unique_id],
+        custom_validators=[qs_validators.validate_unique_id],
         recap=[recaps_form_spec],
         button_label="Configure host and region",
     )
@@ -197,7 +196,7 @@ def review_and_run_service_discovery() -> QuickSetupStage:
         title=_("Review and run service discovery"),
         sub_title=_("Review your configuration, run and preview service discovery"),
         configure_components=[],
-        custom_validators=[validate_test_connection(RuleGroup.SpecialAgents("aws"))],
+        custom_validators=[qs_validators.validate_test_connection(RuleGroup.SpecialAgents("aws"))],
         recap=[
             recap_service_discovery(
                 RuleGroup.SpecialAgents("aws"),

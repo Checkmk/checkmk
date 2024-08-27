@@ -9,10 +9,10 @@ import pytest
 
 from tests.testlib.rest_api_client import ClientRegistry
 
-from cmk.gui.quick_setup.to_frontend import recaps_form_spec, validate_unique_id
+from cmk.gui.quick_setup.to_frontend import recaps_form_spec
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.definitions import UniqueBundleIDStr, UniqueFormSpecIDStr
-from cmk.gui.quick_setup.v0_unstable.predefined import widgets
+from cmk.gui.quick_setup.v0_unstable.predefined import validators, widgets
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupStage
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     GeneralStageErrors,
@@ -164,7 +164,7 @@ def test_unique_id_must_be_unique(
                 configure_components=[
                     widgets.unique_id_formspec_wrapper(Title("account name")),
                 ],
-                custom_validators=[validate_unique_id],
+                custom_validators=[validators.validate_unique_id],
                 recap=[recaps_form_spec],
                 button_label="Next",
             ),

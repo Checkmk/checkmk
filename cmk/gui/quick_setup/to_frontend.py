@@ -40,12 +40,7 @@ from cmk.gui.quick_setup.v0_unstable.definitions import (
     QuickSetupSaveRedirect,
     UniqueBundleIDStr,
 )
-from cmk.gui.quick_setup.v0_unstable.setups import (
-    CallableRecap,
-    CallableValidator,
-    QuickSetup,
-    QuickSetupStage,
-)
+from cmk.gui.quick_setup.v0_unstable.setups import CallableRecap, QuickSetup, QuickSetupStage
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     GeneralStageErrors,
     ParsedFormData,
@@ -64,11 +59,10 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
 )
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.wato.pages.activate_changes import ModeActivateChanges
-from cmk.gui.watolib.check_mk_automations import diag_special_agent, special_agent_discovery_preview
+from cmk.gui.watolib.check_mk_automations import special_agent_discovery_preview
 from cmk.gui.watolib.configuration_bundles import (
     BundleId,
     ConfigBundle,
-    ConfigBundleStore,
     create_config_bundle,
     CreateBundleEntities,
     CreateHost,
@@ -267,47 +261,6 @@ def _create_diag_special_agent_input(
     )
 
 
-def validate_test_connection_custom_collect_params(
-    rulespec_name: str, custom_collect_params: Callable[[ParsedFormData, str], Mapping[str, object]]
-) -> CallableValidator:
-    return partial(
-        _validate_test_connection,
-        rulespec_name,
-        custom_collect_params,
-    )
-
-
-def validate_test_connection(rulespec_name: str) -> CallableValidator:
-    return partial(
-        _validate_test_connection,
-        rulespec_name,
-        _collect_params_with_defaults_from_form_data,
-    )
-
-
-def _validate_test_connection(
-    rulespec_name: str,
-    collect_params: Callable[[ParsedFormData, str], Mapping[str, object]],
-    all_stages_form_data: ParsedFormData,
-    expected_formspecs_map: Mapping[FormSpecId, FormSpec],
-) -> GeneralStageErrors:
-    general_errors: GeneralStageErrors = []
-    site_id = _find_unique_id(all_stages_form_data, "site_selection")
-    host_name = _find_unique_id(all_stages_form_data, "host_name")
-    params = collect_params(all_stages_form_data, rulespec_name)
-    passwords = _collect_passwords_from_form_data(all_stages_form_data, rulespec_name)
-    output = diag_special_agent(
-        SiteId(site_id) if site_id else omd_site(),
-        _create_diag_special_agent_input(
-            rulespec_name=rulespec_name, host_name=host_name, passwords=passwords, params=params
-        ),
-    )
-    for result in output.results:
-        if result.return_code != 0:
-            general_errors.append(result.response)
-    return general_errors
-
-
 def _match_service_interest(
     check_preview_entry: CheckPreviewEntry, services_of_interest: Sequence[ServiceInterest]
 ) -> ServiceInterest | None:
@@ -474,20 +427,6 @@ def _find_unique_id(form_data: Any, target_key: str) -> None | str:
             if result is not None:
                 return result
     return None
-
-
-def validate_unique_id(
-    stages_form_data: ParsedFormData,
-    expected_formspecs_map: Mapping[FormSpecId, FormSpec],
-) -> GeneralStageErrors:
-    bundle_id = _find_unique_id(stages_form_data, UniqueBundleIDStr)
-    if bundle_id is None:
-        return [f"Expected the key '{UniqueBundleIDStr}' in the form data"]
-
-    if bundle_id in ConfigBundleStore().load_for_reading():
-        return [f'Configuration bundle "{bundle_id}" already exists.']
-
-    return []
 
 
 def quick_setup_overview(quick_setup: QuickSetup) -> QuickSetupOverview:

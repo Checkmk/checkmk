@@ -179,10 +179,8 @@ class Crawler:
             "text/x-sh",
         }
 
-        # override value using environment-variable
-        maxlen = int(os.environ.get("GUI_CRAWLER_URL_LIMIT", "0")) or max_urls
         # limit minimum value to 0.
-        self._max_urls = max(0, maxlen)
+        self._max_urls = max(0, max_urls)
         self._todos = deque([Url(self.site.internal_url)])
 
     async def crawl(self, max_tasks: int) -> None:

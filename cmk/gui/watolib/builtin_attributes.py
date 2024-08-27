@@ -14,8 +14,10 @@ from cmk.utils.user import UserId
 from cmk.gui import fields as gui_fields
 from cmk.gui import hooks, userdb
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs.converter import TransformForLegacyData
 from cmk.gui.form_specs.generators.host_address import create_host_address
 from cmk.gui.form_specs.generators.setup_site_choice import create_setup_site_choice
+from cmk.gui.form_specs.generators.snmp_credentials import create_snmp_credentials
 from cmk.gui.form_specs.private import (
     OptionalChoice,
     SingleChoiceElementExtended,
@@ -419,6 +421,19 @@ class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
             )
             % "wato.py?mode=edit_ruleset&varname=snmp_communities",
             default_value=None,
+        )
+
+    def form_spec(self) -> TransformForLegacyData:
+        return create_snmp_credentials(
+            help_text=Help(
+                "Configure the community to be used when contacting this host "
+                "via SNMP v1/v2 or v3. You can also configure the SNMP community "
+                'using the <a href="%s">SNMP Communities</a> ruleset. '
+                "Configuring a community when creating a host overrides the "
+                "community defined by the rules."
+            )
+            % "wato.py?mode=edit_ruleset&varname=snmp_communities",
+            default_value="community",
         )
 
     def openapi_field(self) -> gui_fields.Field:
@@ -1032,6 +1047,12 @@ class HostAttributeManagementSNMPCommunity(ABCHostAttributeValueSpec):
 
     def valuespec(self) -> ValueSpec:
         return SNMPCredentials(
+            default_value=None,
+            allow_none=True,
+        )
+
+    def form_spec(self) -> TransformForLegacyData:
+        return create_snmp_credentials(
             default_value=None,
             allow_none=True,
         )

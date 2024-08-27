@@ -15,5 +15,5 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
 if [ -d "$ROOT" ]; then
-    install -v -m 755 target/release/check_cert "$ROOT/lib/nagios/plugins/"
+    install -v -m 755 ../../bazel-bin/packages/check-cert/check-cert "$ROOT/lib/nagios/plugins/check_cert"
 fi

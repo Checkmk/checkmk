@@ -81,20 +81,49 @@ configure_make(
 )
 
 filegroup(
-    name = "fg-libssl.so",
+    name = "fg-libssl.so.3",
     srcs = [":openssl"],
     output_group = "libssl.so.3",
 )
 
 filegroup(
-    name = "fg-libcrypto.so",
+    name = "fg-libssl.so",
+    srcs = [":openssl"],
+    output_group = "libssl.so",
+)
+
+filegroup(
+    name = "fg-libcrypto.so.3",
     srcs = [":openssl"],
     output_group = "libcrypto.so.3",
+)
+
+filegroup(
+    name = "fg-libcrypto.so",
+    srcs = [":openssl"],
+    output_group = "libcrypto.so",
+)
+
+filegroup(
+    name = "gen_dir",
+    srcs = [":openssl"],
+    output_group = "gen_dir",
+    visibility = ["//visibility:public"],
+)
+
+cc_import(
+    name = "libssl.so.3",
+    shared_library = ":fg-libssl.so.3",
 )
 
 cc_import(
     name = "libssl.so",
     shared_library = ":fg-libssl.so",
+)
+
+cc_import(
+    name = "libcrypto.so.3",
+    shared_library = ":fg-libcrypto.so.3",
 )
 
 cc_import(
@@ -106,7 +135,11 @@ cc_library(
     name = "openssl_shared",
     visibility = ["//visibility:public"],
     deps = [
-        ":libcrypto.so",
+        # Note that for Linux builds, libssl must come before libcrypto on the
+        # linker command-line. As such, libssl must be listed before libcrypto.
         ":libssl.so",
+        ":libssl.so.3",
+        ":libcrypto.so",
+        ":libcrypto.so.3",
     ],
 )

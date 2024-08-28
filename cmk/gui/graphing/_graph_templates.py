@@ -709,7 +709,7 @@ def _to_metric_operation(
     service_name: ServiceName,
     expression: BaseMetricExpression,
     translated_metrics: Mapping[str, TranslatedMetric],
-    enforced_consolidation_function: GraphConsolidationFunction | None,
+    consolidation_function: GraphConsolidationFunction | None,
 ) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
     match expression:
         case Constant():
@@ -721,9 +721,7 @@ def _to_metric_operation(
                     host_name=host_name,
                     service_name=service_name,
                     metric_name=pnp_cleanup(original.name),
-                    consolidation_func_name=(
-                        expression.consolidation or enforced_consolidation_function
-                    ),
+                    consolidation_func_name=expression.consolidation or consolidation_function,
                     scale=original.scale,
                 )
                 for original in translated_metrics[expression.name].originals
@@ -741,7 +739,7 @@ def _to_metric_operation(
                         service_name,
                         s,
                         translated_metrics,
-                        enforced_consolidation_function,
+                        consolidation_function,
                     )
                     for s in expression.summands
                 ],
@@ -756,7 +754,7 @@ def _to_metric_operation(
                         service_name,
                         f,
                         translated_metrics,
-                        enforced_consolidation_function,
+                        consolidation_function,
                     )
                     for f in expression.factors
                 ],
@@ -771,7 +769,7 @@ def _to_metric_operation(
                         service_name,
                         expression.minuend,
                         translated_metrics,
-                        enforced_consolidation_function,
+                        consolidation_function,
                     ),
                     _to_metric_operation(
                         site_id,
@@ -779,7 +777,7 @@ def _to_metric_operation(
                         service_name,
                         expression.subtrahend,
                         translated_metrics,
-                        enforced_consolidation_function,
+                        consolidation_function,
                     ),
                 ],
             )
@@ -793,7 +791,7 @@ def _to_metric_operation(
                         service_name,
                         expression.dividend,
                         translated_metrics,
-                        enforced_consolidation_function,
+                        consolidation_function,
                     ),
                     _to_metric_operation(
                         site_id,
@@ -801,7 +799,7 @@ def _to_metric_operation(
                         service_name,
                         expression.divisor,
                         translated_metrics,
-                        enforced_consolidation_function,
+                        consolidation_function,
                     ),
                 ],
             )
@@ -815,7 +813,7 @@ def _to_metric_operation(
                         service_name,
                         o,
                         translated_metrics,
-                        enforced_consolidation_function,
+                        consolidation_function,
                     )
                     for o in expression.operands
                 ],
@@ -830,7 +828,7 @@ def _to_metric_operation(
                         service_name,
                         o,
                         translated_metrics,
-                        enforced_consolidation_function,
+                        consolidation_function,
                     )
                     for o in expression.operands
                 ],
@@ -845,7 +843,7 @@ def _to_metric_operation(
                         service_name,
                         o,
                         translated_metrics,
-                        enforced_consolidation_function,
+                        consolidation_function,
                     )
                     for o in expression.operands
                 ],
@@ -860,7 +858,7 @@ def _to_metric_operation(
                         service_name,
                         o,
                         translated_metrics,
-                        enforced_consolidation_function,
+                        consolidation_function,
                     )
                     for o in expression.operands
                 ],
@@ -875,7 +873,7 @@ def metric_expression_to_graph_recipe_expression(
     service_name: ServiceName,
     metric_expression: MetricExpression,
     translated_metrics: Mapping[str, TranslatedMetric],
-    enforced_consolidation_function: GraphConsolidationFunction | None,
+    consolidation_function: GraphConsolidationFunction | None,
 ) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
     return _to_metric_operation(
         site_id,
@@ -883,7 +881,7 @@ def metric_expression_to_graph_recipe_expression(
         service_name,
         metric_expression.base,
         translated_metrics,
-        enforced_consolidation_function,
+        consolidation_function,
     )
 
 

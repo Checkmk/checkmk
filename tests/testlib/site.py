@@ -502,11 +502,11 @@ class Site:
         return check_output(cmd=cmd, input=input, sudo=True, substitute_user=self.id)
 
     @contextmanager
-    def copy_file(self, name: str, target: str) -> Iterator[None]:
+    def copy_file(self, name: str, target: str | Path) -> Iterator[None]:
         """Copies a file from the same directory as the caller to the site"""
         caller_file = Path(inspect.stack()[2].filename)
         source = caller_file.parent / name
-        self.makedirs(os.path.dirname(target))
+        self.makedirs(Path(target).parent)
         self.write_text_file(target, source.read_text())
         try:
             yield
@@ -569,12 +569,12 @@ class Site:
     def write_text_file(self, rel_path: str | Path, content: str) -> None:
         write_file(self.path(rel_path), content, sudo=True, substitute_user=self.id)
 
-    def write_binary_file(self, rel_path: str, content: bytes) -> None:
+    def write_binary_file(self, rel_path: str | Path, content: bytes) -> None:
         write_file(self.path(rel_path), content, sudo=True, substitute_user=self.id)
 
-    def create_rel_symlink(self, link_rel_target: str, rel_link_name: str) -> None:
+    def create_rel_symlink(self, link_rel_target: str | Path, rel_link_name: str) -> None:
         with self.execute(
-            ["ln", "-s", link_rel_target, rel_link_name],
+            ["ln", "-s", Path(link_rel_target).as_posix(), rel_link_name],
             stdout=subprocess.PIPE,
             stdin=subprocess.PIPE,
         ) as p:
@@ -585,8 +585,8 @@ class Site:
                 % (rel_link_name, link_rel_target, p.returncode)
             )
 
-    def resolve_path(self, rel_path: Path) -> Path:
-        p = self.execute(["readlink", "-e", self.path(str(rel_path))], stdout=subprocess.PIPE)
+    def resolve_path(self, rel_path: str | Path) -> Path:
+        p = self.execute(["readlink", "-e", self.path(rel_path)], stdout=subprocess.PIPE)
         if p.wait() != 0:
             raise Exception(f"Failed to read symlink at {rel_path}. Exit-Code: {p.wait()}")
         if p.stdout is None:

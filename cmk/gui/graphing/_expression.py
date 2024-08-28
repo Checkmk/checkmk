@@ -171,7 +171,7 @@ class WarningOf(BaseMetricExpression):
         return MetricExpressionResult(
             translated_metrics[self.metric.name].scalar["warn"],
             self.metric.evaluate(translated_metrics).unit_spec,
-            scalar_colors.get("warn", "#808080"),
+            scalar_colors["warn"],
         )
 
     def metric_names(self) -> Iterator[str]:
@@ -192,7 +192,7 @@ class CriticalOf(BaseMetricExpression):
         return MetricExpressionResult(
             translated_metrics[self.metric.name].scalar["crit"],
             self.metric.evaluate(translated_metrics).unit_spec,
-            scalar_colors.get("crit", "#808080"),
+            scalar_colors["crit"],
         )
 
     def metric_names(self) -> Iterator[str]:
@@ -213,7 +213,7 @@ class MinimumOf(BaseMetricExpression):
         return MetricExpressionResult(
             translated_metrics[self.metric.name].scalar["min"],
             self.metric.evaluate(translated_metrics).unit_spec,
-            scalar_colors.get("min", "#808080"),
+            "#808080",
         )
 
     def metric_names(self) -> Iterator[str]:
@@ -234,7 +234,7 @@ class MaximumOf(BaseMetricExpression):
         return MetricExpressionResult(
             translated_metrics[self.metric.name].scalar["max"],
             self.metric.evaluate(translated_metrics).unit_spec,
-            scalar_colors.get("max", "#808080"),
+            "#808080",
         )
 
     def metric_names(self) -> Iterator[str]:

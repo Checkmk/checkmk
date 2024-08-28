@@ -587,6 +587,9 @@ class BaseApiClient(abc.ABC):
 
         json_data = self._request_json_from_url(method, uri, body=body, params=params)
 
+        if (error := json_data.get("error")) is not None:
+            raise ApiErrorFactory.error_from_data(error)
+
         if key is None:
             return json_data
 
@@ -626,8 +629,7 @@ class BaseApiClient(abc.ABC):
         try:
             return json_data[key]
         except KeyError:
-            error = json_data.get("error", json_data)
-            raise ApiErrorFactory.error_from_data(error)
+            raise ApiErrorFactory.error_from_data(json_data)
 
 
 class GraphApiClient(BaseApiClient):

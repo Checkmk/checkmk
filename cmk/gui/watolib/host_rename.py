@@ -14,6 +14,9 @@ from pydantic import BaseModel
 
 from livestatus import SiteId
 
+from cmk.ccc import store
+from cmk.ccc.plugin_registry import Registry
+
 import cmk.utils.paths
 from cmk.utils.agent_registration import get_uuid_link_manager
 from cmk.utils.hostaddress import HostName
@@ -31,9 +34,6 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.utils.urls import makeuri
-
-from cmk.ccc import store
-from cmk.ccc.plugin_registry import Registry
 
 from ..config import active_config
 from .audit_log import log_audit

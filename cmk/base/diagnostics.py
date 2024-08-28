@@ -28,6 +28,11 @@ import requests
 
 import livestatus
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc import site, store
+from cmk.ccc.i18n import _
+from cmk.ccc.site import omd_site
+
 import cmk.utils.paths
 from cmk.utils import tty
 from cmk.utils.diagnostics import (
@@ -59,11 +64,6 @@ from cmk.utils.log import console, section
 from cmk.utils.paths import omd_root
 from cmk.utils.structured_data import load_tree, SDNodeName, SDRawTree
 from cmk.utils.user import UserId
-
-import cmk.ccc.version as cmk_version
-from cmk.ccc import site, store
-from cmk.ccc.i18n import _
-from cmk.ccc.site import omd_site
 
 if cmk_version.edition(cmk.utils.paths.omd_root) in [
     cmk_version.Edition.CEE,

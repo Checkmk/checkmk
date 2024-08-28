@@ -10,13 +10,14 @@ from typing import Literal
 
 import pytest
 
+from cmk.ccc.version import Edition, edition
+
 from cmk.utils.paths import omd_root
 
 from cmk.gui.graphing import perfometer_info
 from cmk.gui.graphing._legacy import AutomaticDict, graph_info, metric_info
 from cmk.gui.metrics import _load_graphing_plugins
 
-from cmk.ccc.version import Edition, edition
 from cmk.discover_plugins import PluginLocation
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.graphing.v1 import metrics as metrics_api

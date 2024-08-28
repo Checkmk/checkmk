@@ -13,9 +13,9 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Final
 
-import cmk.utils.paths
-
 from cmk.ccc import store
+
+import cmk.utils.paths
 
 __all__ = ["ConfigPath", "VersionedConfigPath", "LATEST_CONFIG"]
 

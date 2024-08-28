@@ -12,6 +12,8 @@ import string
 from collections.abc import Iterator, Mapping, Sequence
 from typing import Any, Literal, NamedTuple, overload, TypedDict
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.structured_data import SDPath
 from cmk.utils.user import UserId
 
@@ -62,8 +64,6 @@ from cmk.gui.valuespec import (
 from cmk.gui.views.inventory import inv_display_hints, NodeDisplayHint
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
-
-from cmk.ccc.exceptions import MKGeneralException
 
 from .layout import layout_registry
 from .sorter import ParameterizedSorter, Sorter, sorter_registry, SorterRegistry

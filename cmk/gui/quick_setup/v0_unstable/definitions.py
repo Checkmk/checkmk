@@ -6,9 +6,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from cmk.gui.quick_setup.v0_unstable.type_defs import RawFormData
-
 from cmk.ccc.exceptions import MKGeneralException
+
+from cmk.gui.quick_setup.v0_unstable.type_defs import RawFormData
 
 
 @dataclass

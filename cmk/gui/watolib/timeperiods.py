@@ -6,6 +6,8 @@
 from collections.abc import Callable
 from pathlib import Path
 
+from cmk.ccc.plugin_registry import Registry
+
 from cmk.utils.timeperiod import (
     builtin_timeperiods,
     cleanup_timeperiod_caches,
@@ -21,8 +23,6 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSimpleConfigFile
 from cmk.gui.watolib.utils import wato_root_dir
-
-from cmk.ccc.plugin_registry import Registry
 
 from . import changes as _changes
 

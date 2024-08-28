@@ -8,6 +8,9 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils.paths
 
 import cmk.gui.pages
@@ -16,9 +19,6 @@ from cmk.gui.http import response
 from cmk.gui.log import logger
 from cmk.gui.pages import PageRegistry
 from cmk.gui.session import SuperUserContext
-
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
 
 multisite_cronjobs = []
 

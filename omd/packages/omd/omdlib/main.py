@@ -122,6 +122,9 @@ from omdlib.version import (
 )
 from omdlib.version_info import VersionInfo
 
+from cmk.ccc.exceptions import MKTerminate
+from cmk.ccc.version import Version, versions_compatible, VersionsIncompatible
+
 import cmk.utils.log
 from cmk.utils import tty
 from cmk.utils.certs import (
@@ -139,8 +142,6 @@ from cmk.utils.resulttype import Error, OK, Result
 from cmk.utils.werks.acknowledgement import unacknowledged_incompatible_werks
 
 from cmk import messaging
-from cmk.ccc.exceptions import MKTerminate
-from cmk.ccc.version import Version, versions_compatible, VersionsIncompatible
 from cmk.crypto.password import Password
 from cmk.crypto.password_hashing import hash_password
 

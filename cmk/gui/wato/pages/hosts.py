@@ -9,6 +9,8 @@ import copy
 from collections.abc import Collection, Iterator
 from typing import Final, overload
 
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils.tags
 from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
@@ -52,8 +54,6 @@ from cmk.gui.watolib.hosts_and_folders import (
     validate_all_hosts,
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
-
-from cmk.ccc.exceptions import MKGeneralException
 
 from ._host_attributes import configure_attributes
 from ._status_links import make_host_status_link

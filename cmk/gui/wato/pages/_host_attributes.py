@@ -7,6 +7,8 @@ import json
 from collections.abc import Mapping, Sequence
 from typing import cast, Literal
 
+import cmk.ccc.version as cmk_version
+
 from cmk.utils import paths
 from cmk.utils.global_ident_type import is_locked_by_quick_setup
 from cmk.utils.hostaddress import HostName
@@ -29,8 +31,6 @@ from cmk.gui.watolib.host_attributes import (
     get_sorted_host_attributes_by_topic,
 )
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_from_request, Host, SearchFolder
-
-import cmk.ccc.version as cmk_version
 
 #   "host"        -> normal host edit dialog
 #   "cluster"     -> normal host edit dialog

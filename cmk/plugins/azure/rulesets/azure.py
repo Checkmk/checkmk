@@ -5,9 +5,10 @@
 from collections.abc import Mapping, Sequence
 from typing import Final
 
+from cmk.ccc.version import edition, Edition
+
 from cmk.utils import paths
 
-from cmk.ccc.version import edition, Edition
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,

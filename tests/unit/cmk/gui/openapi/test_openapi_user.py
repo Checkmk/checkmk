@@ -19,6 +19,8 @@ from tests.testlib.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.gui.conftest import SetConfig
 
+from cmk.ccc import version
+
 from cmk.utils import paths
 from cmk.utils.user import UserId
 
@@ -42,7 +44,6 @@ from cmk.gui.watolib.custom_attributes import (
 from cmk.gui.watolib.userroles import clone_role, RoleID
 from cmk.gui.watolib.users import edit_users
 
-from cmk.ccc import version
 from cmk.crypto.password_hashing import PasswordHash
 
 managedtest = pytest.mark.skipif(

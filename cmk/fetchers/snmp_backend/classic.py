@@ -7,13 +7,13 @@ import subprocess
 from collections.abc import Iterable
 from typing import assert_never, Literal, TypeAlias
 
+from cmk.ccc.exceptions import MKGeneralException, MKSNMPError, MKTimeout
+
 from cmk.utils import tty
 from cmk.utils.log import VERBOSE
 from cmk.utils.sectionname import SectionName
 
 from cmk.snmplib import OID, SNMPBackend, SNMPContext, SNMPRawValue, SNMPRowInfo, SNMPVersion
-
-from cmk.ccc.exceptions import MKGeneralException, MKSNMPError, MKTimeout
 
 from ._utils import strip_snmp_value
 

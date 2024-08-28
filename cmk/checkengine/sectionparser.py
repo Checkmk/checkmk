@@ -11,12 +11,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final, Generic, NamedTuple, TypeVar
 
+from cmk.ccc import debug
+
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.validatedstr import ValidatedString
 
 from cmk import piggyback
-from cmk.ccc import debug
 
 from .fetcher import HostKey, SourceType
 from .parser import HostSections

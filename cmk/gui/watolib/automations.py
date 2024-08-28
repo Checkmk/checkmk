@@ -26,6 +26,10 @@ import urllib3
 
 from livestatus import SiteConfiguration, SiteId
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils import paths
 from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import get_license_state
@@ -63,10 +67,7 @@ from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automation_types import PhaseOneResult
 from cmk.gui.watolib.utils import mk_repr
 
-import cmk.ccc.version as cmk_version
 from cmk import trace
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
 
 auto_logger = logger.getChild("automations")
 tracer = trace.get_tracer()

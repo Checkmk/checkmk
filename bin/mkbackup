@@ -19,6 +19,9 @@ from contextlib import contextmanager, ExitStack
 from pathlib import Path
 from typing import Any, IO, NamedTuple, NoReturn
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc.exceptions import MKGeneralException, MKTerminate
+
 import cmk.utils.daemon as daemon
 import cmk.utils.render as render
 import cmk.utils.schedule as schedule
@@ -43,9 +46,6 @@ from cmk.utils.backup.utils import (
     State,
 )
 from cmk.utils.paths import mkbackup_lock_dir
-
-import cmk.ccc.version as cmk_version
-from cmk.ccc.exceptions import MKGeneralException, MKTerminate
 
 ################
 # Utility Code #

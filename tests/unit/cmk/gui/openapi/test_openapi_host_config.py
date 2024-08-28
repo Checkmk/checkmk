@@ -19,6 +19,8 @@ from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from livestatus import SiteId
 
+from cmk.ccc import version
+
 from cmk.utils import paths
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
 from cmk.utils.hostaddress import HostName
@@ -33,8 +35,6 @@ from cmk.gui.watolib.custom_attributes import (
 )
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
-
-from cmk.ccc import version
 
 managedtest = pytest.mark.skipif(
     version.edition(paths.omd_root) is not version.Edition.CME, reason="see #7213"

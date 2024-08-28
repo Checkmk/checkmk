@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.ccc import version
+from cmk.ccc.version import edition_supports_nagvis
+
 from cmk.utils import paths
 
 from cmk.gui.background_job import BackgroundJobRegistry
@@ -29,9 +32,6 @@ from cmk.gui.watolib.main_menu import MainModuleRegistry, MainModuleTopicRegistr
 from cmk.gui.watolib.mode import ModeRegistry
 from cmk.gui.watolib.rulespecs import RulespecGroupRegistry
 from cmk.gui.watolib.search import MatchItemGeneratorRegistry
-
-from cmk.ccc import version
-from cmk.ccc.version import edition_supports_nagvis
 
 from . import (
     _ac_tests,

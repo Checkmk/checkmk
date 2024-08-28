@@ -12,6 +12,9 @@ from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import assert_never, Generic, Literal, TypeVar
 
+import cmk.ccc.debug
+from cmk.ccc.exceptions import MKGeneralException, MKTimeout, OnError
+
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.hostaddress import HostName
@@ -32,9 +35,6 @@ from cmk.checkengine.sectionparser import (
     store_piggybacked_sections,
 )
 from cmk.checkengine.summarize import SummarizerFunction
-
-import cmk.ccc.debug
-from cmk.ccc.exceptions import MKGeneralException, MKTimeout, OnError
 
 from ._autochecks import (
     AutocheckEntry,

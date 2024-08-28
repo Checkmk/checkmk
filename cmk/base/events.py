@@ -18,6 +18,9 @@ from urllib.parse import quote, urlencode
 
 import livestatus
 
+import cmk.ccc.debug
+from cmk.ccc.site import omd_site
+
 import cmk.utils.daemon
 from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
@@ -28,9 +31,6 @@ from cmk.utils.rulesets.ruleset_matcher import matches_host_tags
 from cmk.utils.rulesets.tuple_rulesets import in_extraconf_servicelist
 from cmk.utils.servicename import ServiceName
 from cmk.utils.timeperiod import check_timeperiod, cleanup_timeperiod_caches, TimeperiodSpecs
-
-import cmk.ccc.debug
-from cmk.ccc.site import omd_site
 
 ContactList = list  # TODO Improve this
 

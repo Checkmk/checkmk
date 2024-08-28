@@ -7,9 +7,9 @@
 import logging
 from collections.abc import Collection
 
-from cmk.utils.translations import TranslationOptions
-
 from cmk.ccc.i18n import _
+
+from cmk.utils.translations import TranslationOptions
 
 from .config import (
     ConfigFromWATO,

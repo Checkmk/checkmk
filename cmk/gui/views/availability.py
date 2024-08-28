@@ -11,6 +11,8 @@ from collections.abc import Iterator
 
 from livestatus import SiteId
 
+import cmk.ccc.version as cmk_version
+
 from cmk.utils import paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
@@ -77,8 +79,6 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.view import View
 from cmk.gui.visuals import page_menu_topic_add_to, view_title
-
-import cmk.ccc.version as cmk_version
 
 # Variable name conventions
 # av_rawdata: a two tier dict: (site, host) -> service -> list(spans)

@@ -30,11 +30,11 @@ from tests.testlib.repo import repo_path
 from tests.testlib.site import Site
 from tests.testlib.utils import wait_until
 
+from cmk.ccc import debug
+
 from cmk.utils import log
 
 from cmk.snmplib import SNMPBackendEnum
-
-from cmk.ccc import debug
 
 logger = logging.getLogger(__name__)
 

@@ -22,13 +22,13 @@ from pydantic import (
 
 from livestatus import SiteId
 
+from cmk.ccc.plugin_registry import Registry
+
 from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 
 from cmk.gui.time_series import TimeSeries
-
-from cmk.ccc.plugin_registry import Registry
 
 from ._graph_render_config import GraphRenderOptions
 from ._legacy import LegacyUnitSpecification

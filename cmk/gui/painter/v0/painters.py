@@ -9,6 +9,8 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from fnmatch import fnmatch
 from pathlib import Path
 
+import cmk.ccc.version as cmk_version
+
 import cmk.utils.paths
 from cmk.utils import man_pages
 from cmk.utils.labels import Labels
@@ -74,7 +76,6 @@ from cmk.gui.view_utils import (
 )
 from cmk.gui.visual_link import render_link_to_view
 
-import cmk.ccc.version as cmk_version
 from cmk.discover_plugins import discover_families, PluginGroup
 
 from ..v1.helpers import get_perfdata_nth_value, is_stale, paint_stalified

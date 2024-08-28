@@ -5,10 +5,10 @@
 
 import socket
 
+from cmk.ccc.site import url_prefix
+
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import CascadingDropdown, DEF_VALUE, TextInput, Transform
-
-from cmk.ccc.site import url_prefix
 
 
 def notification_macro_help() -> str:

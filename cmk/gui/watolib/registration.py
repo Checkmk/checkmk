@@ -7,15 +7,15 @@
 
 from collections.abc import Callable, Sequence
 
+from cmk.ccc import version
+from cmk.ccc.version import edition_supports_nagvis
+
 from cmk.utils import paths
 
 from cmk.gui import hooks
 from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.cron import register_job
 from cmk.gui.valuespec import AutocompleterRegistry
-
-from cmk.ccc import version
-from cmk.ccc.version import edition_supports_nagvis
 
 from . import (
     _host_attributes,

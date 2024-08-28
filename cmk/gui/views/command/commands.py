@@ -9,6 +9,8 @@ from typing import Literal, Protocol
 
 import livestatus
 
+import cmk.ccc.version as cmk_version
+
 from cmk.utils import paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
@@ -40,7 +42,6 @@ from cmk.gui.valuespec import AbsoluteDate, Age, Checkbox, DatePicker, Dictionar
 from cmk.gui.view_utils import render_cre_upgrade_button
 from cmk.gui.watolib.downtime import determine_downtime_mode, DowntimeSchedule
 
-import cmk.ccc.version as cmk_version
 from cmk.bi.trees import CompiledAggrLeaf, CompiledAggrRule, CompiledAggrTree
 
 from .base import Command, CommandActionResult, CommandConfirmDialogOptions, CommandSpec

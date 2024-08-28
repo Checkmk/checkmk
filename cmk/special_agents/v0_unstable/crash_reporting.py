@@ -6,10 +6,10 @@
 import traceback
 from typing import Literal
 
-import cmk.utils.paths
-
 import cmk.ccc.version as cmk_version
 from cmk.ccc import crash_reporting
+
+import cmk.utils.paths
 
 CrashReportStore = crash_reporting.CrashReportStore
 

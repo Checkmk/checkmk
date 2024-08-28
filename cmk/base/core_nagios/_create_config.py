@@ -14,6 +14,9 @@ from contextlib import suppress
 from io import StringIO
 from typing import Any, cast, IO, Literal
 
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils.config_path
 import cmk.utils.paths
 from cmk.utils import config_warnings, ip_lookup, password_store, tty
@@ -39,9 +42,6 @@ from cmk.base.core_config import (
     get_labels_from_attributes,
     get_tags_with_groups_from_attributes,
 )
-
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
 
 from ._precompile_host_checks import precompile_hostchecks, PrecompileMode
 

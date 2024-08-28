@@ -61,6 +61,10 @@ from six import ensure_str
 
 from livestatus import SiteId
 
+import cmk.ccc.plugin_registry
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.version import Version
+
 import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.regex
@@ -111,9 +115,6 @@ from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, urlencode
 from cmk.gui.view_utils import render_labels
 
-import cmk.ccc.plugin_registry
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.version import Version
 from cmk.crypto import certificate, keys
 
 seconds_per_day = 86400

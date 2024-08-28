@@ -10,6 +10,8 @@ from dataclasses import asdict, dataclass
 from enum import Enum
 from typing import Any, Literal, TypeVar
 
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.gui.form_specs.private.validators as private_form_specs_validators
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.private import (
@@ -36,7 +38,6 @@ from cmk.gui.http import request
 from cmk.gui.log import logger
 
 import cmk.rulesets.v1.form_specs.validators as formspec_validators
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
     CascadingSingleChoice,

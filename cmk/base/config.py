@@ -39,6 +39,12 @@ from typing import (
     TypeVar,
 )
 
+import cmk.ccc.debug
+import cmk.ccc.version as cmk_version
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate
+from cmk.ccc.site import omd_site
+
 import cmk.utils
 import cmk.utils.check_utils
 import cmk.utils.cleanup
@@ -125,12 +131,7 @@ from cmk.base.parent_scan import ScanConfig as ParentScanConfig
 from cmk.base.server_side_calls import load_special_agents, SpecialAgent, SpecialAgentCommandLine
 from cmk.base.sources import SNMPFetcherConfig
 
-import cmk.ccc.debug
-import cmk.ccc.version as cmk_version
 from cmk import piggyback
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate
-from cmk.ccc.site import omd_site
 from cmk.server_side_calls import v1 as server_side_calls_api
 from cmk.server_side_calls_backend.config_processing import PreprocessingResult
 

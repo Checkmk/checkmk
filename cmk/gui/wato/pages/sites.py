@@ -23,6 +23,9 @@ from livestatus import (
     TLSParams,
 )
 
+from cmk.ccc.exceptions import MKGeneralException, MKTerminate, MKTimeout
+from cmk.ccc.site import omd_site
+
 import cmk.utils.paths
 from cmk.utils.encryption import CertificateDetails, fetch_certificate_details
 from cmk.utils.licensing.handler import LicenseState
@@ -121,8 +124,6 @@ from cmk.gui.watolib.sites import (
 )
 from cmk.gui.watolib.utils import ldap_connections_are_configurable
 
-from cmk.ccc.exceptions import MKGeneralException, MKTerminate, MKTimeout
-from cmk.ccc.site import omd_site
 from cmk.messaging import check_remote_connection, ConnectionFailed, ConnectionOK
 
 

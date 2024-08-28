@@ -10,6 +10,8 @@ from typing import Any, Generic, TypeVar
 
 import livestatus
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.hostaddress import HostName
 from cmk.utils.macros import MacroMapping
 from cmk.utils.user import UserId
@@ -39,8 +41,6 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.visuals import get_only_sites_from_context, get_singlecontext_vars
-
-from cmk.ccc.exceptions import MKGeneralException
 
 from ...title_macros import macro_mapping_from_context
 from ...type_defs import ABCGraphDashletConfig, DashboardConfig, DashboardName

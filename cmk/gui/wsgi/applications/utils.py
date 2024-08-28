@@ -11,6 +11,10 @@ from datetime import datetime
 from typing import final
 from wsgiref.types import StartResponse, WSGIEnvironment
 
+import cmk.ccc.store
+import cmk.ccc.version as cmk_version
+from cmk.ccc.site import url_prefix
+
 import cmk.utils.paths
 import cmk.utils.profile
 
@@ -29,10 +33,7 @@ from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
 from cmk.gui.wsgi.type_defs import WSGIResponse
 
-import cmk.ccc.store
-import cmk.ccc.version as cmk_version
 from cmk import trace
-from cmk.ccc.site import url_prefix
 
 # TODO
 #  * derive all exceptions from werkzeug's http exceptions.

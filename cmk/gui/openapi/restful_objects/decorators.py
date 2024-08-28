@@ -25,6 +25,8 @@ from marshmallow import Schema, ValidationError
 from werkzeug.datastructures import MultiDict
 from werkzeug.http import parse_options_header
 
+from cmk.ccc import store
+
 from cmk.utils.paths import configuration_lockfile
 
 from cmk.gui import hooks
@@ -68,8 +70,6 @@ from cmk.gui.watolib.activate_changes import (
     update_config_generation as activate_changes_update_config_generation,
 )
 from cmk.gui.watolib.git import do_git_commit
-
-from cmk.ccc import store
 
 from .content_decoder import decode, KnownContentType
 

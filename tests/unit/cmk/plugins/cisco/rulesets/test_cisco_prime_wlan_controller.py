@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.ccc.version import Edition
+
 from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
 
-from cmk.ccc.version import Edition
 from cmk.plugins.cisco.rulesets.prime_wlan_controller import (
     rule_spec_cisco_prime_wlan_controller_access_points,
     rule_spec_cisco_prime_wlan_controller_clients,

@@ -9,6 +9,9 @@ import traceback
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.ccc import store
+from cmk.ccc.version import edition, Edition
+
 import cmk.utils.paths
 from cmk.utils.config_warnings import ConfigurationWarnings
 
@@ -43,9 +46,6 @@ from cmk.gui.watolib.config_domain_name import (
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.config_sync import ReplicationPath
 from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupSiteManagement
-
-from cmk.ccc import store
-from cmk.ccc.version import edition, Edition
 
 
 def register(

@@ -10,6 +10,8 @@ from typing import Any
 import pytest
 from pytest import MonkeyPatch
 
+import cmk.ccc.version as cmk_version
+
 from cmk.utils import paths
 
 from cmk.gui.config import active_config
@@ -19,8 +21,6 @@ from cmk.gui.utils.ntop import (
     is_ntop_available,
     is_ntop_configured,
 )
-
-import cmk.ccc.version as cmk_version
 
 
 @pytest.mark.usefixtures("load_config")

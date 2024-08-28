@@ -7,12 +7,12 @@ import pytest
 
 from tests.testlib.rest_api_client import ClientRegistry
 
+import cmk.ccc.version as cmk_version
+
 from cmk.utils import paths
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 from cmk.gui.valuespec import autocompleter_registry
-
-import cmk.ccc.version as cmk_version
 
 
 @pytest.fixture(name="expected_autocompleters")

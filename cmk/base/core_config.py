@@ -15,6 +15,10 @@ from contextlib import contextmanager, nullcontext, suppress
 from pathlib import Path
 from typing import Literal
 
+import cmk.ccc.debug
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.store import lock_checkmk_configuration
+
 import cmk.utils.config_path
 import cmk.utils.password_store
 import cmk.utils.paths
@@ -35,10 +39,6 @@ import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import config
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.nagios_utils import do_check_nagiosconfig
-
-import cmk.ccc.debug
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.store import lock_checkmk_configuration
 
 CoreCommandName = str
 CoreCommand = str

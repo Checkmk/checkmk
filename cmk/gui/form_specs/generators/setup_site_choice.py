@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Sequence, TypeVar
 
+from cmk.ccc.site import omd_site
+
 from cmk.gui import site_config
 from cmk.gui.logged_in import user as global_user
 from cmk.gui.site_config import configured_sites
 from cmk.gui.user_sites import activation_sites, site_choices
 
-from cmk.ccc.site import omd_site
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,

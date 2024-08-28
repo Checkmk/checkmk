@@ -16,6 +16,8 @@ from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
+from cmk.ccc.exceptions import OnError
+
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
@@ -81,8 +83,6 @@ from cmk.base.checkers import (
     SectionPluginMapper,
 )
 from cmk.base.config import ConfigCache
-
-from cmk.ccc.exceptions import OnError
 
 
 def _as_plugin(plugin: SectionPluginAPI) -> SectionPlugin:

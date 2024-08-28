@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.ccc.version import edition, Edition
+
 from cmk.utils import paths
 from cmk.utils.user import UserId
 
@@ -16,8 +18,6 @@ from cmk.gui.quick_setup.v0_unstable.predefined._common import (
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
 from cmk.gui.session import UserContext
-
-from cmk.ccc.version import edition, Edition
 
 ALL_FORM_SPEC_DATA: ParsedFormData = {
     FormSpecId("formspec_unique_id"): {

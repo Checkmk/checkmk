@@ -16,6 +16,11 @@ from typing import Final, Literal, NewType, TypedDict
 
 import livestatus
 
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.i18n import _
+from cmk.ccc.store import load_object_from_file, save_object_to_file
+
 from cmk.utils import statename
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.hostaddress import HostName
@@ -25,11 +30,6 @@ from cmk.utils.notify_types import NotificationContext as NotificationContext
 from cmk.utils.paths import core_helper_config_dir
 from cmk.utils.servicename import ServiceName
 from cmk.utils.tags import TagGroupID, TagID
-
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.i18n import _
-from cmk.ccc.store import load_object_from_file, save_object_to_file
 
 logger = logging.getLogger("cmk.utils.notify")
 

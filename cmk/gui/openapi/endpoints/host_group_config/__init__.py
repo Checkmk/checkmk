@@ -20,6 +20,8 @@ A host group object can have the following relations present in `links`:
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.ccc import version
+
 from cmk.utils import paths
 
 from cmk.gui.http import Response
@@ -55,8 +57,6 @@ from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib import groups
 from cmk.gui.watolib.groups import GroupInUseException, UnknownGroupException
 from cmk.gui.watolib.groups_io import load_host_group_information
-
-from cmk.ccc import version
 
 PERMISSIONS = permissions.Perm("wato.groups")
 

@@ -23,18 +23,18 @@ from tests.testlib.utils import wait_until
 
 from tests.unit.import_module_hack import import_module_hack
 
+import cmk.ccc.debug
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.store import ObjectStore, TextSerializer
+from cmk.ccc.store._file import FileIo, RealIo
+
 from cmk.utils.host_storage import (
     get_hosts_file_variables,
     get_standard_hosts_storage,
     StandardStorageLoader,
     StorageFormat,
 )
-
-import cmk.ccc.debug
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.store import ObjectStore, TextSerializer
-from cmk.ccc.store._file import FileIo, RealIo
 
 
 class FakeIo:

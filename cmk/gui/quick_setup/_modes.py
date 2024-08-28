@@ -6,6 +6,8 @@
 from collections.abc import Callable, Collection, Iterator, Mapping, Sequence
 from typing import Protocol
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.rulesets.definition import RuleGroup, RuleGroupType
 
 from cmk.gui import forms
@@ -56,8 +58,6 @@ from cmk.gui.watolib.hosts_and_folders import folder_from_request, make_action_l
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.rulespecs import rulespec_registry
-
-from cmk.ccc.exceptions import MKGeneralException
 
 
 def register(main_module_registry: MainModuleRegistry, mode_registry: ModeRegistry) -> None:

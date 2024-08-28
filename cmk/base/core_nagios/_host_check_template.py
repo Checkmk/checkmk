@@ -8,6 +8,9 @@ import sys
 from contextlib import suppress
 from importlib import import_module
 
+import cmk.ccc.debug
+from cmk.ccc.exceptions import MKTerminate
+
 import cmk.utils.log
 from cmk.utils.config_path import LATEST_CONFIG
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -20,8 +23,6 @@ from cmk.base.api.agent_based.register import register_plugin_by_type
 from cmk.base.core_nagios import HostCheckConfig
 from cmk.base.modes.check_mk import mode_check
 
-import cmk.ccc.debug
-from cmk.ccc.exceptions import MKTerminate
 from cmk.discover_plugins import PluginLocation
 
 # This will be replaced by the config genreration, when the template is instanciated.

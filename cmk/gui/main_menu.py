@@ -8,11 +8,11 @@ Entries of the main_menu_registry must NOT be registered in this module to keep 
 in this module as small as possible.
 """
 
-from cmk.utils import paths
-from cmk.utils.licensing.registry import get_license_message
-
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.version import __version__, edition, Edition
+
+from cmk.utils import paths
+from cmk.utils.licensing.registry import get_license_message
 
 if edition(paths.omd_root) is Edition.CSE:
     from cmk.gui.cse.utils.roles import user_may_see_saas_onboarding

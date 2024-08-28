@@ -15,9 +15,9 @@ from collections.abc import (
 from re import Pattern
 from typing import Any, Literal, TypedDict
 
-from cmk.utils.translations import TranslationOptions
-
 from cmk.ccc.exceptions import MKException
+
+from cmk.utils.translations import TranslationOptions
 
 TextPattern = str | Pattern[str]
 TextMatchResult = Literal[False] | Sequence[str]

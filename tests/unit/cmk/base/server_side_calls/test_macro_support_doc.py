@@ -13,13 +13,13 @@ import pytest
 
 from tests.testlib.base import Scenario
 
+import cmk.ccc.version as cmk_version
+
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 
 import cmk.base.config as base_config
 from cmk.base.config import ConfigCache
-
-import cmk.ccc.version as cmk_version
 
 DOCUMENTED_ACTIVE_CHECK_MACROS = {
     "required": [

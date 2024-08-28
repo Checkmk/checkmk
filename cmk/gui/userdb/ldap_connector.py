@@ -49,6 +49,11 @@ import ldap.filter  # type: ignore[import-untyped]
 from ldap.controls import SimplePagedResultsControl  # type: ignore[import-untyped]
 from six import ensure_str
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
+
 import cmk.utils.paths
 from cmk.utils import password_store
 from cmk.utils.log.security_event import log_security_event
@@ -82,10 +87,6 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.watolib.groups_io import load_contact_group_information
 
-import cmk.ccc.version as cmk_version
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import omd_site
 from cmk.crypto.password import Password
 
 from ._connections import (

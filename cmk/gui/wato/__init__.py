@@ -9,6 +9,9 @@ This package implements the backend rendered UI part of the setup, while `cmk.gu
 backend business and persistence logic, which is also shared with the REST API.
 """
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc.exceptions import MKGeneralException
+
 # A huge number of imports are here to be compatible with old GUI plugins. Once we dropped support
 # for them, we can remove this here and the imports
 # pylint: disable=unused-import
@@ -76,9 +79,6 @@ from cmk.gui.watolib.rulespecs import register_check_parameters as register_chec
 from cmk.gui.watolib.rulespecs import register_rule as register_rule
 from cmk.gui.watolib.sites import LivestatusViaTCP
 from cmk.gui.watolib.translation import HostnameTranslation
-
-import cmk.ccc.version as cmk_version
-from cmk.ccc.exceptions import MKGeneralException
 
 from ._check_mk_configuration import monitoring_macro_help as monitoring_macro_help
 from ._check_mk_configuration import PluginCommandLine as PluginCommandLine

@@ -5,6 +5,8 @@
 
 from collections.abc import Mapping, Sequence
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.gui.graphing import get_first_matching_perfometer
 from cmk.gui.graphing._translated_metrics import (
     parse_perf_data,
@@ -15,8 +17,6 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import Perfdata, Row
 from cmk.gui.utils.html import HTML
-
-from cmk.ccc.exceptions import MKGeneralException
 
 from ...config import active_config
 

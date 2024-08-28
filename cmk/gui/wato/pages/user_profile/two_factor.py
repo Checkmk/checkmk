@@ -27,6 +27,9 @@ from fido2.webauthn import (
     UserVerificationRequirement,
 )
 
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
+
 from cmk.utils.jsontype import JsonSerializable
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.user import UserId
@@ -87,8 +90,6 @@ from cmk.gui.utils.user_security_message import SecurityNotificationEvent, send_
 from cmk.gui.valuespec import Dictionary, FixedValue, TextInput
 from cmk.gui.watolib.mode import redirect
 
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import omd_site
 from cmk.crypto.password import Password
 from cmk.crypto.password_hashing import PasswordHash
 from cmk.crypto.totp import TOTP

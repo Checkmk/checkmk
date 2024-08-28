@@ -13,14 +13,14 @@ from typing import Any
 import requests
 import urllib3
 
+import cmk.ccc.site
+from cmk.ccc.exceptions import MKException
+from cmk.ccc.site import omd_site
+
 from cmk.utils.local_secrets import AutomationUserSecret
 from cmk.utils.password_store import extract
 from cmk.utils.paths import omd_root
 from cmk.utils.regex import regex
-
-import cmk.ccc.site
-from cmk.ccc.exceptions import MKException
-from cmk.ccc.site import omd_site
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 

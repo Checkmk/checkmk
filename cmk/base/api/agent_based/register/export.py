@@ -8,6 +8,7 @@ from collections.abc import Callable, Mapping
 from typing import Any, overload
 
 import cmk.ccc.debug
+
 from cmk.agent_based.v1 import SNMPTree
 from cmk.agent_based.v1.register import RuleSetType
 from cmk.agent_based.v1.type_defs import (

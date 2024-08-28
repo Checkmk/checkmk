@@ -15,6 +15,9 @@ from werkzeug.exceptions import RequestEntityTooLarge
 
 import livestatus
 
+import cmk.ccc.store
+from cmk.ccc.exceptions import MKException
+
 import cmk.utils.paths
 import cmk.utils.profile
 
@@ -45,9 +48,7 @@ from cmk.gui.wsgi.applications.utils import (
 )
 from cmk.gui.wsgi.type_defs import WSGIResponse
 
-import cmk.ccc.store
 from cmk import trace
-from cmk.ccc.exceptions import MKException
 from cmk.crypto import MKCryptoException
 
 tracer = trace.get_tracer()

@@ -5,9 +5,9 @@
 
 from __future__ import annotations
 
-from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup
-
 from cmk.ccc.plugin_registry import Registry
+
+from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup
 
 
 class QuickSetupRegistry(Registry[QuickSetup]):

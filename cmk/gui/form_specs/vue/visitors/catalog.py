@@ -5,11 +5,12 @@
 from dataclasses import dataclass
 from typing import Any, cast, Mapping, Sequence
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.gui.form_specs.private.catalog import Catalog, Topic
 from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
 
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import DictElement
 from cmk.rulesets.v1.form_specs import Dictionary as FormSpecDictionary

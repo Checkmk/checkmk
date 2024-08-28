@@ -7,15 +7,6 @@ from __future__ import annotations
 
 from typing import Final, Literal
 
-from cmk.utils.hostaddress import HostName
-from cmk.utils.servicename import ServiceName
-
-from cmk.snmplib import SNMPBackendEnum
-
-from cmk.checkengine.checkresults import ActiveCheckResult
-from cmk.checkengine.exitspec import ExitSpec
-from cmk.checkengine.submitters import ServiceState
-
 import cmk.ccc.debug
 from cmk.ccc.exceptions import (
     MKAgentError,
@@ -25,6 +16,15 @@ from cmk.ccc.exceptions import (
     MKSNMPError,
     MKTimeout,
 )
+
+from cmk.utils.hostaddress import HostName
+from cmk.utils.servicename import ServiceName
+
+from cmk.snmplib import SNMPBackendEnum
+
+from cmk.checkengine.checkresults import ActiveCheckResult
+from cmk.checkengine.exitspec import ExitSpec
+from cmk.checkengine.submitters import ServiceState
 
 from ._crash import create_check_crash_dump
 

@@ -8,6 +8,9 @@ import re
 from collections.abc import Mapping, Sequence
 from typing import Any, Literal
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc.version import edition, Edition
+
 import cmk.utils.paths
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.tags import TagGroup, TagGroupID, TagID
@@ -113,9 +116,6 @@ from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.translation import HostnameTranslation, ServiceDescriptionTranslation
 from cmk.gui.watolib.users import vs_idle_timeout_duration
 from cmk.gui.watolib.utils import site_neutral_path
-
-import cmk.ccc.version as cmk_version
-from cmk.ccc.version import edition, Edition
 
 from ._check_plugin_selection import CheckPluginSelection
 from ._group_selection import ContactGroupSelection, HostGroupSelection, ServiceGroupSelection

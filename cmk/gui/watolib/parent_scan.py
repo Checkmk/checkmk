@@ -10,6 +10,9 @@ from typing import Literal
 
 from livestatus import SiteId
 
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.paths import configuration_lockfile
 
@@ -31,9 +34,6 @@ from cmk.gui.watolib.hosts_and_folders import (
     folder_tree,
     Host,
 )
-
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
 
 
 @dataclass(frozen=True)

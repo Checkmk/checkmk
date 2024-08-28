@@ -7,6 +7,8 @@ from collections.abc import Mapping
 from logging import Logger
 from typing import Final, Generic, Protocol, TypeVar
 
+from cmk.ccc.plugin_registry import Registry
+
 from cmk.utils.user import UserId
 
 from cmk.gui.pagetypes import (
@@ -18,7 +20,6 @@ from cmk.gui.pagetypes import (
     PagetypeTopics,
 )
 
-from cmk.ccc.plugin_registry import Registry
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 _TOverridable_co = TypeVar("_TOverridable_co", bound=Overridable, covariant=True)

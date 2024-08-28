@@ -8,6 +8,8 @@ from functools import partial
 
 from livestatus import SiteId
 
+from cmk.ccc.site import omd_site
+
 from cmk.automations.results import SpecialAgentDiscoveryPreviewResult
 
 from cmk.checkengine.discovery import CheckPreviewEntry
@@ -33,7 +35,6 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
 )
 from cmk.gui.watolib.check_mk_automations import special_agent_discovery_preview
 
-from cmk.ccc.site import omd_site
 from cmk.rulesets.v1.form_specs import FormSpec
 
 

@@ -26,6 +26,11 @@ if not os.environ.get("OMD_SITE"):
     sys.stderr.write("Check_MK can be used only as site user.\n")
     sys.exit(1)
 
+import cmk.ccc.debug
+import cmk.ccc.version as cmk_version
+from cmk.ccc.crash_reporting import ABCCrashReport, crash_report_registry, CrashReportStore
+from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTerminate
+
 import cmk.utils.caching
 import cmk.utils.log
 import cmk.utils.paths
@@ -36,11 +41,6 @@ import cmk.base.config as config
 import cmk.base.profiling as profiling
 import cmk.base.utils
 from cmk.base.modes import modes
-
-import cmk.ccc.debug
-import cmk.ccc.version as cmk_version
-from cmk.ccc.crash_reporting import ABCCrashReport, crash_report_registry, CrashReportStore
-from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTerminate
 
 cmk.utils.log.setup_console_logging()
 logger = logging.getLogger("cmk.base")

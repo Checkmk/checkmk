@@ -9,6 +9,8 @@ import subprocess
 import traceback
 from collections.abc import Mapping
 
+from cmk.ccc import store
+
 from cmk.utils.config_warnings import ConfigurationWarnings
 
 from cmk.gui.log import logger
@@ -20,8 +22,6 @@ from cmk.gui.utils.piggyback_hub import (
 )
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain, ConfigDomainName, SerializedSettings
 from cmk.gui.watolib.hosts_and_folders import folder_tree
-
-from cmk.ccc import store
 
 
 class ConfigDomainDistributedPiggyback(ABCConfigDomain):

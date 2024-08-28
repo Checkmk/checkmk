@@ -17,14 +17,14 @@ from tests.testlib.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
+from cmk.ccc import version
+
 from cmk.utils import paths
 from cmk.utils.user import UserId
 
 from cmk.gui.fields import FOLDER_PATTERN, FolderField
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
-
-from cmk.ccc import version
 
 
 @pytest.mark.parametrize(

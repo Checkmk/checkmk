@@ -11,6 +11,8 @@ from typing import assert_never, ClassVar, Literal
 
 from livestatus import SiteId
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils import pnp_cleanup, regex
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
@@ -20,7 +22,6 @@ from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import Row
 from cmk.gui.utils.speaklater import LazyString
 
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.graphing.v1 import metrics as metrics_api
 

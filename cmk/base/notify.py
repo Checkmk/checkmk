@@ -32,6 +32,10 @@ from functools import partial
 from pathlib import Path
 from typing import Any, Callable, cast, Literal, overload
 
+import cmk.ccc.debug
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils.paths
 from cmk.utils import log
 from cmk.utils.hostaddress import HostName
@@ -77,10 +81,6 @@ from cmk.utils.timeout import MKTimeout, Timeout
 from cmk.utils.timeperiod import is_timeperiod_active, timeperiod_active, TimeperiodSpecs
 
 from cmk.base import events
-
-import cmk.ccc.debug
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
 
 logger = logging.getLogger("cmk.base.notify")
 

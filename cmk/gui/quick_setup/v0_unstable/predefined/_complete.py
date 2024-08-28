@@ -8,6 +8,8 @@ from uuid import uuid4
 
 from livestatus import SiteId
 
+from cmk.ccc.site import omd_site
+
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_QUICK_SETUP
 from cmk.utils.hostaddress import HostName
 from cmk.utils.password_store import Password as StorePassword
@@ -37,8 +39,6 @@ from cmk.gui.watolib.configuration_bundles import (
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.services import get_check_table, perform_fix_all
-
-from cmk.ccc.site import omd_site
 
 
 def create_host_from_form_data(

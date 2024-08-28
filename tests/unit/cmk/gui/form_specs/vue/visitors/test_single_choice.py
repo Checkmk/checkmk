@@ -5,12 +5,13 @@
 
 import pytest
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.user import UserId
 
 from cmk.gui.form_specs.vue.visitors import DataOrigin, get_visitor
 from cmk.gui.form_specs.vue.visitors._type_defs import VisitorOptions
 
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
     InvalidElementMode,

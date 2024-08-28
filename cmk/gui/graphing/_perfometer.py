@@ -11,13 +11,14 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Self
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKInternalError
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api
 

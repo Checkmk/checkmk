@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.ccc.version import parse_check_mk_version
+
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -21,8 +23,6 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
-
-from cmk.ccc.version import parse_check_mk_version
 
 
 def _validate_version(value: str, varprefix: str) -> None:

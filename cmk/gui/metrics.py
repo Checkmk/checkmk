@@ -18,6 +18,9 @@ from typing import Any
 
 from livestatus import SiteId
 
+import cmk.ccc.debug
+import cmk.ccc.plugin_registry
+
 import cmk.utils
 import cmk.utils.render
 from cmk.utils.hostaddress import HostName
@@ -47,8 +50,6 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.pages import PageResult
 
-import cmk.ccc.debug
-import cmk.ccc.plugin_registry
 from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup
 from cmk.graphing.v1 import entry_point_prefixes
 from cmk.graphing.v1 import graphs as graphs_api

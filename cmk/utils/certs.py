@@ -17,10 +17,11 @@ from dateutil.relativedelta import relativedelta
 
 from livestatus import SiteId
 
+from cmk.ccc.site import omd_site
+
 from cmk.utils.log.security_event import SecurityEvent
 from cmk.utils.user import UserId
 
-from cmk.ccc.site import omd_site
 from cmk.crypto.certificate import (
     Certificate,
     CertificateSigningRequest,

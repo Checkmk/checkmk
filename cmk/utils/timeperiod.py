@@ -11,13 +11,13 @@ from dateutil.tz import tzlocal
 
 import livestatus
 
-import cmk.utils.cleanup
-from cmk.utils.caching import cache_manager
-from cmk.utils.dateutils import Weekday
-
 import cmk.ccc.debug
 from cmk.ccc.exceptions import MKTimeout
 from cmk.ccc.i18n import _
+
+import cmk.utils.cleanup
+from cmk.utils.caching import cache_manager
+from cmk.utils.dateutils import Weekday
 
 __all__ = [
     "TimeperiodName",

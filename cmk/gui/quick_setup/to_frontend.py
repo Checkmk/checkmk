@@ -7,6 +7,8 @@ from collections.abc import Iterator, Mapping, MutableMapping, MutableSequence, 
 from dataclasses import asdict, dataclass, field
 from typing import Any, cast
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.gui.form_specs.vue.form_spec_visitor import (
     parse_value_from_frontend,
     serialize_data_for_frontend,
@@ -29,7 +31,6 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     Widget,
 )
 
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.rulesets.v1.form_specs import FormSpec
 
 

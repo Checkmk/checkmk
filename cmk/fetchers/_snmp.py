@@ -10,6 +10,9 @@ from collections.abc import Collection, Iterable, Iterator, Mapping, MutableMapp
 from pathlib import Path
 from typing import Any, Final
 
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKFetcherError, MKTimeout
+
 from cmk.utils.sectionname import SectionMap, SectionName
 
 from cmk.snmplib import (
@@ -22,9 +25,6 @@ from cmk.snmplib import (
 )
 
 from cmk.checkengine.parser import SectionStore
-
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKFetcherError, MKTimeout
 
 from ._abstract import Fetcher, Mode
 from ._snmpscan import gather_available_raw_section_names, SNMPScanConfig

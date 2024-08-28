@@ -22,6 +22,8 @@ A contact group object can have the following relations present in `links`:
 from collections.abc import Mapping
 from typing import Any, cast, Iterable, Literal
 
+from cmk.ccc import version
+
 from cmk.utils import paths
 
 from cmk.gui.groups import GroupSpec
@@ -78,8 +80,6 @@ from cmk.gui.watolib.groups_io import (
     NothingOrChoices,
     PermittedPath,
 )
-
-from cmk.ccc import version
 
 PERMISSIONS = permissions.Perm("wato.users")
 

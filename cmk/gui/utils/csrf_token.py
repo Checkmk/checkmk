@@ -6,14 +6,14 @@ from dataclasses import dataclass
 
 from flask import session
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.log.security_event import log_security_event, SecurityEvent
 from cmk.utils.user import UserId
 
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInNobody
-
-from cmk.ccc.exceptions import MKGeneralException
 
 
 @dataclass

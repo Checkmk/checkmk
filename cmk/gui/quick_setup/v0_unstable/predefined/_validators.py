@@ -8,6 +8,8 @@ from functools import partial
 
 from livestatus import SiteId
 
+from cmk.ccc.site import omd_site
+
 from cmk.gui.quick_setup.v0_unstable.definitions import UniqueBundleIDStr
 from cmk.gui.quick_setup.v0_unstable.predefined._common import (
     _collect_params_with_defaults_from_form_data,
@@ -21,7 +23,6 @@ from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
 from cmk.gui.watolib.check_mk_automations import diag_special_agent
 from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
 
-from cmk.ccc.site import omd_site
 from cmk.rulesets.v1.form_specs import FormSpec
 
 

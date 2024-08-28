@@ -7,6 +7,8 @@
 from collections.abc import Sequence
 from logging import Logger
 
+from cmk.ccc import version
+
 from cmk.utils import paths
 from cmk.utils.log import VERBOSE
 from cmk.utils.redis import disable_redis
@@ -21,7 +23,6 @@ from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 
-from cmk.ccc import version
 from cmk.update_config.plugins.lib.rulesets import REPLACED_RULESETS
 from cmk.update_config.plugins.pre_actions.utils import ConflictMode, prompt, USER_INPUT_CONTINUE
 from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction

@@ -10,6 +10,8 @@ import itertools
 from collections.abc import Generator
 from typing import Any, List, Sequence
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.regex import regex
 from cmk.utils.rulesets import RuleSetName
@@ -37,7 +39,6 @@ from cmk.agent_based.v1 import HostLabel, SNMPTree
 from cmk.agent_based.v1.register import RuleSetType
 from cmk.agent_based.v1.type_defs import StringByteTable, StringTable
 from cmk.agent_based.v2 import AgentSection, SimpleSNMPSection, SNMPSection
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.discover_plugins import PluginLocation
 
 

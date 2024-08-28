@@ -8,9 +8,9 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Final, Generic, TypeVar
 
-from cmk.utils.sectionname import MutableSectionMap, SectionMap, SectionName
-
 import cmk.ccc.store as _store
+
+from cmk.utils.sectionname import MutableSectionMap, SectionMap, SectionName
 
 __all__ = ["SectionStore"]
 

@@ -15,14 +15,14 @@ import urllib.parse
 from collections.abc import Mapping, Sequence
 from typing import Any, cast, Literal, NoReturn, NotRequired, TYPE_CHECKING, TypedDict
 
+from cmk.ccc import version
+
 from cmk.utils import paths
 
 from cmk.gui.http import HTTPMethod
 from cmk.gui.openapi.endpoints.contact_group_config.common import APIInventoryPaths
 from cmk.gui.rest_api_types.notifications_rule_types import APINotificationRule
 from cmk.gui.rest_api_types.site_connection import SiteConfig
-
-from cmk.ccc import version
 
 if TYPE_CHECKING:
     from cmk.gui.openapi.endpoints.downtime import FindByType

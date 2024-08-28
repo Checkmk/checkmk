@@ -7,12 +7,13 @@ from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
+import cmk.ccc.debug
+
 import cmk.utils.paths
 from cmk.utils import config_warnings, password_store
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
-import cmk.ccc.debug
 from cmk.discover_plugins import discover_executable, family_libexec_dir, PluginLocation
 from cmk.server_side_calls.v1 import ActiveCheckConfig, HostConfig
 from cmk.server_side_calls_backend.config_processing import (

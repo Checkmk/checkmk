@@ -13,6 +13,10 @@ from typing import Any, Literal, NamedTuple
 
 from livestatus import SiteId
 
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
+from cmk.ccc.version import __version__, Version
+
 import cmk.utils.render
 from cmk.utils.check_utils import worst_service_state
 from cmk.utils.everythingtype import EVERYTHING
@@ -91,10 +95,6 @@ from cmk.gui.watolib.services import (
     UpdateType,
 )
 from cmk.gui.watolib.utils import may_edit_ruleset, mk_repr
-
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import omd_site
-from cmk.ccc.version import __version__, Version
 
 from ._status_links import make_host_status_link
 

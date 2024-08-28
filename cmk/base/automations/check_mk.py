@@ -29,6 +29,11 @@ from typing import Any
 
 import livestatus
 
+import cmk.ccc.debug
+from cmk.ccc import store, version
+from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKSNMPError, MKTimeout, OnError
+from cmk.ccc.version import edition_supports_nagvis
+
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.utils import config_warnings, ip_lookup, log, man_pages, tty
@@ -182,12 +187,8 @@ from cmk.base.server_side_calls import (
 )
 from cmk.base.sources import make_parser, SNMPFetcherConfig
 
-import cmk.ccc.debug
 import cmk.piggyback
 from cmk.agent_based.v1.value_store import set_value_store_manager
-from cmk.ccc import store, version
-from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKSNMPError, MKTimeout, OnError
-from cmk.ccc.version import edition_supports_nagvis
 from cmk.discover_plugins import discover_families, PluginGroup
 
 HistoryFile = str

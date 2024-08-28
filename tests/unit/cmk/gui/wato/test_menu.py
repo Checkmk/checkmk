@@ -6,13 +6,13 @@
 
 import pytest
 
+import cmk.ccc.version as cmk_version
+
 from cmk.utils import paths
 
 from cmk.gui.type_defs import TopicMenuItem, TopicMenuTopic
 from cmk.gui.wato._snapins import get_wato_menu_items, MatchItemGeneratorSetupMenu
 from cmk.gui.watolib.search import MatchItem
-
-import cmk.ccc.version as cmk_version
 
 
 def expected_items() -> dict[str, list[str]]:

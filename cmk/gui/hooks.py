@@ -9,8 +9,9 @@ import typing
 from collections.abc import Callable
 from typing import Any, Literal, NamedTuple
 
-from cmk import trace
 from cmk.ccc.exceptions import MKGeneralException
+
+from cmk import trace
 
 tracer = trace.get_tracer()
 

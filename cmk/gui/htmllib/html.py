@@ -18,6 +18,9 @@ from typing import Any, Literal, overload
 
 from flask import current_app, session
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils.paths
 
 from cmk.gui import log, utils
@@ -46,9 +49,6 @@ from cmk.gui.utils.theme import theme, Theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import doc_reference_url, DocReference, requested_file_name
 from cmk.gui.utils.user_errors import user_errors
-
-import cmk.ccc.version as cmk_version
-from cmk.ccc.exceptions import MKGeneralException
 
 from .generator import HTMLWriter
 from .tag_rendering import (

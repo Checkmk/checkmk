@@ -17,6 +17,8 @@ from pytest import MonkeyPatch
 
 from tests.testlib.repo import is_managed_repo
 
+import cmk.ccc.version
+
 import cmk.utils.paths
 from cmk.utils.user import UserId
 
@@ -43,7 +45,6 @@ from cmk.gui.userdb.store import load_custom_attr, save_two_factor_credentials, 
 from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.valuespec import Dictionary
 
-import cmk.ccc.version
 from cmk.crypto import password_hashing
 from cmk.crypto.password import Password
 

@@ -10,10 +10,10 @@ from pathlib import Path
 
 import pytest
 
-from cmk.utils import daemon
-
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
+
+from cmk.utils import daemon
 
 
 @pytest.fixture(autouse=True)

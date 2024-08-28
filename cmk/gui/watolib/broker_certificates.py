@@ -8,6 +8,10 @@ from pathlib import Path
 
 from livestatus import SiteConfiguration, SiteId
 
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
+
 from cmk.utils import paths
 from cmk.utils.certs import RootCA, save_single_cert, save_single_key
 
@@ -16,9 +20,6 @@ from cmk.gui.i18n import _
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import omd_site
 from cmk.crypto.certificate import Certificate, CertificatePEM
 from cmk.crypto.keys import PrivateKey
 from cmk.messaging import (

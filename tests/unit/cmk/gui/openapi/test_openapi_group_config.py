@@ -20,12 +20,12 @@ from tests.testlib.rest_api_client import (
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
+from cmk.ccc import version
+
 from cmk.utils import paths
 from cmk.utils.user import UserId
 
 from cmk.gui.openapi.endpoints.contact_group_config.common import APIInventoryPaths
-
-from cmk.ccc import version
 
 managedtest = pytest.mark.skipif(
     version.edition(paths.omd_root) is not version.Edition.CME, reason="see #7213"

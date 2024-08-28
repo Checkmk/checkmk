@@ -16,6 +16,8 @@ from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
+from cmk.ccc.exceptions import MKSNMPError
+
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import logger
 from cmk.utils.sectionname import SectionName
@@ -39,8 +41,6 @@ from cmk.snmplib import (
 from cmk.checkengine.fetcher import SourceType
 
 from cmk.base.config import ConfigCache
-
-from cmk.ccc.exceptions import MKSNMPError
 
 SNMPConfig = SNMPHostConfig(
     is_ipv6_primary=False,

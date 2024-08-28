@@ -6,6 +6,8 @@
 import time
 from typing import Any
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.user import UserId
 
 from cmk.gui import visuals
@@ -15,8 +17,6 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.user_async_replication import user_profile_async_replication_page
 from cmk.gui.views.store import internal_view_to_runtime_view
-
-from cmk.ccc.exceptions import MKGeneralException
 
 from .builtin_dashboards import builtin_dashboards
 from .type_defs import DashboardConfig, DashboardName, DashletConfig, DashletId

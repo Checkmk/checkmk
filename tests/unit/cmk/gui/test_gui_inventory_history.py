@@ -7,13 +7,13 @@ from pathlib import Path
 
 import pytest
 
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils
 from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import ImmutableTree
 
 from cmk.gui.inventory._history import get_history, load_delta_tree, load_latest_delta_tree
-
-from cmk.ccc.exceptions import MKGeneralException
 
 
 def test_get_history_empty() -> None:

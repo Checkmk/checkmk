@@ -5,6 +5,8 @@
 
 from collections.abc import Mapping, Sequence
 
+from cmk.ccc.i18n import _
+
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.quick_setup.config_setups.aws import form_specs as aws
@@ -28,7 +30,6 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
 )
 from cmk.gui.user_sites import get_configured_site_choices, site_attribute_default_value
 
-from cmk.ccc.i18n import _
 from cmk.rulesets.v1 import Label, Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,

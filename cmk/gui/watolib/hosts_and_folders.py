@@ -25,6 +25,10 @@ from redis.client import Pipeline
 
 from livestatus import SiteId
 
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
+
 import cmk.utils.paths
 from cmk.utils.global_ident_type import GlobalIdent, is_locked_by_quick_setup
 from cmk.utils.host_storage import (
@@ -102,10 +106,6 @@ from cmk.gui.watolib.utils import (
     rename_host_in_list,
     wato_root_dir,
 )
-
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import omd_site
 
 _ContactgroupName = str
 

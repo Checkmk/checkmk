@@ -8,6 +8,8 @@ from collections.abc import Callable, Mapping, Sequence
 import numpy as np
 import pytest
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.gui.graphing import get_first_matching_perfometer, PerfometerSpec
 from cmk.gui.graphing._formatter import AutoPrecision
 from cmk.gui.graphing._legacy import LegacyPerfometer, UnitInfo
@@ -24,7 +26,6 @@ from cmk.gui.graphing._perfometer import (
 from cmk.gui.graphing._translated_metrics import Original, ScalarBounds, TranslatedMetric
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api
 

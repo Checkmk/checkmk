@@ -11,6 +11,8 @@ from pytest import MonkeyPatch
 
 from tests.testlib.rest_api_client import ClientRegistry
 
+from cmk.ccc import version
+
 from cmk.utils import paths
 
 from cmk.gui.exceptions import MKUserError
@@ -24,8 +26,6 @@ from cmk.gui.rest_api_types.site_connection import (
     SiteConfig,
     StatusHost,
 )
-
-from cmk.ccc import version
 
 DOMAIN_TYPE = "site_connection"
 

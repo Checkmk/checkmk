@@ -24,6 +24,10 @@ from typing import ContextManager
 
 from setproctitle import setthreadtitle
 
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKTerminate
+from cmk.ccc.site import get_omd_config, omd_site
+
 from cmk.utils import paths
 from cmk.utils.log import VERBOSE
 from cmk.utils.user import UserId
@@ -36,9 +40,6 @@ from cmk.gui.single_global_setting import load_gui_log_levels
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.wsgi.trace import instrument_app_dependencies
 
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKTerminate
-from cmk.ccc.site import get_omd_config, omd_site
 from cmk.trace import (
     get_tracer,
     get_tracer_provider,

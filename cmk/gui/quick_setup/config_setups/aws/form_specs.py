@@ -5,11 +5,12 @@
 
 from collections.abc import Mapping, Sequence
 
+from cmk.ccc.version import Edition
+
 from cmk.gui.form_specs.vue.visitors._registry import form_spec_registry
 from cmk.gui.quick_setup.config_setups.aws.ruleset_helper import formspec_aws_tags
 from cmk.gui.utils.rule_specs.loader import LoadedRuleSpec
 
-from cmk.ccc.version import Edition
 from cmk.plugins.aws.lib import aws_region_to_monitor  # pylint: disable=cmk-module-layer-violation
 
 try:

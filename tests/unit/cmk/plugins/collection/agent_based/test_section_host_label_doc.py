@@ -15,10 +15,10 @@ from typing import DefaultDict, Final
 
 from tests.unit.conftest import FixRegister
 
+import cmk.ccc.version as cmk_version
+
 from cmk.utils import paths
 from cmk.utils.sectionname import SectionName
-
-import cmk.ccc.version as cmk_version
 
 CRE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/azure/resource_group",

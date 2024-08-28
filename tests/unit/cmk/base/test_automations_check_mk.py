@@ -9,6 +9,8 @@ import pytest
 
 from tests.testlib.base import Scenario
 
+import cmk.ccc.debug
+
 import cmk.utils.resulttype as result
 from cmk.utils.hostaddress import HostAddress
 
@@ -21,7 +23,6 @@ from cmk.base import config, core_config, server_side_calls
 from cmk.base.automations import check_mk
 from cmk.base.config import ConfigCache
 
-import cmk.ccc.debug
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, replace_macros
 

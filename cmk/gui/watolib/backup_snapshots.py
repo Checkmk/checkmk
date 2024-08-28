@@ -16,6 +16,9 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Any, IO, Literal, NotRequired, TypedDict, TypeVar
 
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils
 import cmk.utils.paths
 from cmk.utils.user import UserId
@@ -26,8 +29,6 @@ from cmk.gui.log import logger
 from cmk.gui.watolib.audit_log import log_audit
 
 from cmk import trace
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
 
 DomainSpec = dict
 

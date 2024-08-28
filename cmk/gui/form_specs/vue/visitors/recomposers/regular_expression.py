@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.rulesets.v1 import Help
 from cmk.rulesets.v1.form_specs import FormSpec, MatchingScope, RegularExpression, String
 

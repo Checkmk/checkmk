@@ -20,6 +20,9 @@ from marshmallow import fields
 
 from livestatus import SiteId
 
+import cmk.ccc.plugin_registry
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils import deprecation_warnings
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import Labels
@@ -42,8 +45,6 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import Checkbox, DropdownChoice, TextInput, Transform, ValueSpec
 from cmk.gui.watolib.utils import host_attribute_matches
 
-import cmk.ccc.plugin_registry
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.fields import String
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import DefaultValue, FormSpec

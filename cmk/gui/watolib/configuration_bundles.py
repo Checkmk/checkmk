@@ -21,6 +21,9 @@ from typing import (
     TypeVar,
 )
 
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
+
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_QUICK_SETUP
 from cmk.utils.hostaddress import HostName
 from cmk.utils.password_store import Password
@@ -34,9 +37,6 @@ from cmk.gui.watolib.passwords import load_passwords, remove_password, save_pass
 from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, Rule, SingleRulesetRecursively
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.utils import multisite_dir
-
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import omd_site
 
 _T = TypeVar("_T")
 BundleId = NewType("BundleId", str)

@@ -16,6 +16,10 @@ from typing import Final
 import redis
 from redis import ConnectionError as RedisConnectionError
 
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.plugin_registry import Registry
+from cmk.ccc.version import edition, Edition
+
 from cmk.utils import paths
 from cmk.utils.redis import get_redis_client, redis_enabled, redis_server_reachable
 from cmk.utils.setup_search_index import (
@@ -49,10 +53,6 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import file_name_and_query_vars_from_url, QueryVars
 from cmk.gui.watolib.mode_permissions import mode_permissions_ensurance_registry
 from cmk.gui.watolib.utils import may_edit_ruleset
-
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.plugin_registry import Registry
-from cmk.ccc.version import edition, Edition
 
 
 class IndexNotFoundException(MKGeneralException):

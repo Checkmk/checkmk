@@ -10,6 +10,8 @@ from contextlib import suppress
 from pathlib import Path
 from typing import Literal
 
+from cmk.ccc.exceptions import OnError
+
 import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.render
@@ -47,8 +49,6 @@ from cmk.base.config import (
     lookup_mgmt_board_ip_address,
 )
 from cmk.base.sources import SNMPFetcherConfig, Source
-
-from cmk.ccc.exceptions import OnError
 
 
 def dump_source(source: Source) -> str:  # pylint: disable=too-many-branches

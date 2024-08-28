@@ -13,6 +13,8 @@ from typing import Any
 
 from livestatus import MKLivestatusNotFoundError, SiteId
 
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils.render
 from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import profile_dir
@@ -37,8 +39,6 @@ from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import Timerange, TimerangeValue
-
-from cmk.ccc.exceptions import MKGeneralException
 
 from ._artwork import (
     compute_curve_values_at_timestamp,

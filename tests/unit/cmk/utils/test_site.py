@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.paths import omd_root
-
 from cmk.ccc import site
+
+from cmk.utils.paths import omd_root
 
 
 def test_get_omd_config(patch_omd_site: None) -> None:

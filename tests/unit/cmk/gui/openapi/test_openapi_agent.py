@@ -12,9 +12,9 @@ from tests.testlib.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
-from cmk.utils import paths
-
 import cmk.ccc.version as cmk_version
+
+from cmk.utils import paths
 
 
 @pytest.mark.skipif(

@@ -16,6 +16,9 @@ from html import unescape
 from pathlib import Path
 from typing import Any, Literal
 
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.plugin_registry import Registry
+
 import cmk.utils.paths
 
 from cmk.gui import visuals
@@ -48,9 +51,6 @@ from cmk.gui.utils.theme import theme, Theme
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view_utils import CellSpec, CSVExportError, JSONExportError, PythonExportError
-
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.plugin_registry import Registry
 
 from ..v1.painter_lib import experimental_painter_registry, Formatters
 from ..v1.painter_lib import Painter as V1Painter

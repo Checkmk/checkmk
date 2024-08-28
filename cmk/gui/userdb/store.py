@@ -17,6 +17,16 @@ from typing import Any, Literal, TypeVar
 
 from six import ensure_str
 
+from cmk.ccc.store import (
+    acquire_lock,
+    load_from_mk_file,
+    load_text_from_file,
+    mkdir,
+    release_lock,
+    save_text_to_file,
+    save_to_mk_file,
+)
+
 import cmk.utils.paths
 from cmk.utils.config_validation_layer.users.contacts import validate_contacts
 from cmk.utils.config_validation_layer.users.users import validate_users
@@ -35,15 +45,6 @@ from cmk.gui.type_defs import SessionInfo, TwoFactorCredentials, Users, UserSpec
 from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.utils.roles import roles_of_user
 
-from cmk.ccc.store import (
-    acquire_lock,
-    load_from_mk_file,
-    load_text_from_file,
-    mkdir,
-    release_lock,
-    save_text_to_file,
-    save_to_mk_file,
-)
 from cmk.crypto import password_hashing
 from cmk.crypto.password import Password
 

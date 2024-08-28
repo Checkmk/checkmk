@@ -18,6 +18,10 @@ from typing import NamedTuple
 
 from livestatus import SiteConfiguration, SiteGlobals, SiteId
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils.paths
 
 from cmk.gui.i18n import _
@@ -25,9 +29,6 @@ from cmk.gui.log import logger
 from cmk.gui.userdb import user_sync_default_config
 from cmk.gui.watolib.config_domain_name import wato_fileheader
 
-import cmk.ccc.version as cmk_version
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.messaging import rabbitmq
 
 Command = list[str]

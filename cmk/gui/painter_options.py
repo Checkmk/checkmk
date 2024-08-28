@@ -10,6 +10,8 @@ import time
 from collections.abc import Sequence
 from typing import Any
 
+from cmk.ccc.plugin_registry import Registry
+
 import cmk.utils.render
 
 from cmk.gui import forms, valuespec
@@ -23,8 +25,6 @@ from cmk.gui.logged_in import user
 from cmk.gui.type_defs import ViewSpec
 from cmk.gui.valuespec import DropdownChoice, ValueSpec
 from cmk.gui.view_utils import CellSpec
-
-from cmk.ccc.plugin_registry import Registry
 
 
 def register(painter_option_registry_: PainterOptionRegistry) -> None:

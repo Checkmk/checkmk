@@ -12,6 +12,8 @@ from functools import partial
 from types import ModuleType
 from typing import Any, assert_never, Literal, Self, TypeVar
 
+from cmk.ccc.version import Edition
+
 from cmk.utils.password_store import ad_hoc_password_id
 from cmk.utils.rulesets.definition import RuleGroup
 
@@ -38,7 +40,6 @@ from cmk.gui.watolib.rulespecs import (
     rulespec_group_registry,
 )
 
-from cmk.ccc.version import Edition
 from cmk.rulesets import v1 as ruleset_api_v1
 
 try:

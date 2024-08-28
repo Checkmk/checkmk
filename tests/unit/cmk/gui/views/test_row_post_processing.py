@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.ccc.version as cmk_version
+
 from cmk.utils import paths
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.structured_data import ImmutableTree
@@ -11,8 +13,6 @@ from cmk.gui.type_defs import Rows
 from cmk.gui.view import View
 from cmk.gui.views.row_post_processing import _ROW_POST_PROCESSORS, post_process_rows
 from cmk.gui.views.store import multisite_builtin_views
-
-import cmk.ccc.version as cmk_version
 
 
 def test_post_processor_registrations() -> None:

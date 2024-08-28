@@ -49,6 +49,7 @@ from tests.testlib.web_session import CMKWebSession
 import livestatus
 
 from cmk.ccc.version import Edition, Version
+
 from cmk.crypto.secrets import Secret
 
 logger = logging.getLogger(__name__)

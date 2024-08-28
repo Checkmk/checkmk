@@ -10,10 +10,10 @@
 import logging
 from typing import IO
 
-from cmk.utils.log import VERBOSE
-
 import cmk.ccc.debug
 from cmk.ccc.exceptions import MKBailOut
+
+from cmk.utils.log import VERBOSE
 
 logger = logging.getLogger("cmk.base.compress_history")
 

@@ -9,6 +9,8 @@ from typing import cast, Literal
 
 from livestatus import SiteId
 
+from cmk.ccc.version import Edition, edition
+
 from cmk.utils import paths
 from cmk.utils.config_validation_layer.users.contacts import validate_contacts
 from cmk.utils.config_validation_layer.users.users import validate_users
@@ -37,7 +39,6 @@ from cmk.gui.watolib.user_scripts import (
 )
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
 
-from cmk.ccc.version import Edition, edition
 from cmk.crypto.password import Password, PasswordPolicy
 
 # Wrong module layer violation warning due to CME/CRE split

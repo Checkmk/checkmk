@@ -15,6 +15,9 @@ from typing import NoReturn
 
 import psutil
 
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.regex import regex, REGEX_GENERIC_IDENTIFIER
 from cmk.utils.user import UserId
 
@@ -25,8 +28,6 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.utils.urls import makeuri_contextless
 
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.trace import get_tracer, Link, Status, StatusCode, TracerProvider
 from cmk.trace.export import init_span_processor, SpanExporter
 

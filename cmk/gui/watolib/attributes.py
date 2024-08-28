@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Alternative,
@@ -16,8 +18,6 @@ from cmk.gui.valuespec import (
     ValueSpec,
     ValueSpecHelp,
 )
-
-from cmk.ccc.exceptions import MKGeneralException
 
 
 def IPMIParameters() -> Dictionary:

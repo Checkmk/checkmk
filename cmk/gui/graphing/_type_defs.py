@@ -26,7 +26,7 @@ class RRDDataKey:
     host_name: HostName
     service_name: ServiceName
     metric_name: str
-    consolidation_func_name: GraphConsolidationFunction | None
+    consolidation_function: GraphConsolidationFunction | None
     scale: float
 
 

@@ -59,7 +59,7 @@ def fetch_rrd_data_for_graph(
     rrd_data: dict[RRDDataKey, TimeSeries] = {}
     for (site, host_name, service_description), metrics in by_service.items():
         with contextlib.suppress(livestatus.MKLivestatusNotFoundError):
-            for (metric_name, consolidation_func_name, scale), data in _fetch_rrd_data(
+            for (metric_name, consolidation_function, scale), data in _fetch_rrd_data(
                 site,
                 host_name,
                 service_description,
@@ -73,7 +73,7 @@ def fetch_rrd_data_for_graph(
                         host_name,
                         service_description,
                         metric_name,
-                        consolidation_func_name,
+                        consolidation_function,
                         scale,
                     )
                 ] = TimeSeries(
@@ -87,7 +87,7 @@ def fetch_rrd_data_for_graph(
 
 
 def _align_and_resample_rrds(
-    rrd_data: RRDData, consolidation_func_name: GraphConsolidationFunction | None
+    rrd_data: RRDData, consolidation_function: GraphConsolidationFunction | None
 ) -> None:
     """RRDTool aligns start/end/step to its internal precision.
 
@@ -111,7 +111,7 @@ def _align_and_resample_rrds(
             time_series.values = (
                 time_series.downsample(
                     (start_time, end_time, step),
-                    key.consolidation_func_name or consolidation_func_name,
+                    key.consolidation_function or consolidation_function,
                 )
                 if step >= time_series.twindow[2]
                 else time_series.forward_fill_resample((start_time, end_time, step))
@@ -163,7 +163,7 @@ def _group_needed_rrd_data_by_service(
     ] = collections.defaultdict(set)
     for key in rrd_data_keys:
         by_service[(key.site_id, key.host_name, key.service_name)].add(
-            (key.metric_name, key.consolidation_func_name, key.scale)
+            (key.metric_name, key.consolidation_function, key.scale)
         )
     return by_service
 
@@ -173,7 +173,7 @@ def _fetch_rrd_data(
     host_name: HostName,
     service_description: ServiceName,
     metrics: set[MetricProperties],
-    consolidation_func_name: GraphConsolidationFunction | None,
+    consolidation_function: GraphConsolidationFunction | None,
     graph_data_range: GraphDataRange,
 ) -> list[tuple[MetricProperties, TimeSeriesValues]]:
     start_time, end_time = graph_data_range.time_range
@@ -184,7 +184,7 @@ def _fetch_rrd_data(
         step = max(1, step)
 
     point_range = ":".join(map(str, (start_time, end_time, step)))
-    lql_columns = list(rrd_columns(metrics, consolidation_func_name, point_range))
+    lql_columns = list(rrd_columns(metrics, consolidation_function, point_range))
     query = livestatus_lql([host_name], lql_columns, service_description)
 
     with sites.only_sites(site):
@@ -193,7 +193,7 @@ def _fetch_rrd_data(
 
 def rrd_columns(
     metrics: Iterable[MetricProperties],
-    consolidation_func_name: GraphConsolidationFunction | None,
+    consolidation_function: GraphConsolidationFunction | None,
     data_range: str,
 ) -> Iterator[ColumnName]:
     """RRD data columns for each metric
@@ -201,7 +201,7 @@ def rrd_columns(
     Include scaling of metric directly in query"""
 
     for perfvar, cf, scale in metrics:
-        cf = consolidation_func_name or cf or "max"
+        cf = consolidation_function or cf or "max"
         rpn = f"{perfvar}.{cf}"
         if scale != 1.0:
             rpn += ",%f,*" % scale
@@ -252,7 +252,7 @@ def _reverse_translate_into_all_potentially_relevant_metrics_cached(
 
 def all_rrd_columns_potentially_relevant_for_metric(
     metric_name: MetricName,
-    consolidation_func_name: GraphConsolidationFunction,
+    consolidation_function: GraphConsolidationFunction,
     from_time: int,
     until_time: int,
 ) -> Iterator[ColumnName]:
@@ -269,7 +269,7 @@ def all_rrd_columns_potentially_relevant_for_metric(
                 metric_name
             )
         ),
-        consolidation_func_name,
+        consolidation_function,
         f"{from_time}:{until_time}:60",
     )
 

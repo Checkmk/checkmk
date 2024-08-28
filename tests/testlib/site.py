@@ -102,6 +102,8 @@ class Site:
             site_version=self.version,
         )
 
+        self.result_dir().mkdir(parents=True, exist_ok=True)
+
     @property
     def apache_port(self) -> int:
         if self._apache_port is None:
@@ -1156,8 +1158,6 @@ class Site:
             logger.info("Not containerized: not copying results")
             return
         logger.info("Saving to %s", self.result_dir())
-        self.result_dir().mkdir(parents=True, exist_ok=True)
-
         if os.path.exists(self.path("junit.xml")):
             execute(["cp", self.path("junit.xml"), self.result_dir().as_posix()], sudo=True)
 

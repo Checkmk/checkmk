@@ -10,13 +10,7 @@ import string
 import pytest
 from pytest import FixtureRequest
 
-from tests.testlib.rest_api_client import (
-    ClientRegistry,
-    ContactGroupClient,
-    GroupConfig,
-    HostGroupClient,
-    ServiceGroupClient,
-)
+from tests.testlib.rest_api_client import ClientRegistry, GroupConfig
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
@@ -34,26 +28,19 @@ managedtest = pytest.mark.skipif(
 ESCAPED_GROUP_NAME_PATTERN = "^(?!\\\\.\\\\.$|\\\\.$)[-a-zA-Z0-9_\\\\.]*\\\\Z"
 
 
-@pytest.fixture
-def host(clients: ClientRegistry) -> HostGroupClient:
-    return clients.HostGroup
+@pytest.fixture(name="group_type", params=["host", "contact", "service"])
+def fixture_group_type(request: FixtureRequest) -> str:
+    return request.param
 
 
-@pytest.fixture
-def contact(clients: ClientRegistry) -> ContactGroupClient:
-    return clients.ContactGroup
-
-
-@pytest.fixture
-def service(clients: ClientRegistry) -> ServiceGroupClient:
-    return clients.ServiceGroup
+@pytest.fixture(name="group_client")
+def fixture_group_client(clients: ClientRegistry, group_type: str) -> GroupConfig:
+    return getattr(clients, f"{group_type.title()}Group")
 
 
 @managedtest
-@pytest.mark.parametrize("group_type", ["host", "contact", "service"])
-def test_required_alias_field_create(group_type: str, request: FixtureRequest) -> None:
-    client = request.getfixturevalue(group_type)
-    client.create(name="RandleMcMurphy", alias=None, expect_ok=False).assert_status_code(400)
+def test_required_alias_field_create(group_client: GroupConfig) -> None:
+    group_client.create(name="RandleMcMurphy", alias="", expect_ok=False).assert_status_code(400)
 
 
 @managedtest
@@ -518,15 +505,12 @@ def test_service_group_id_with_newline(
 
 
 @managedtest
-@pytest.mark.parametrize("group_type", ["host", "service", "contact"])
 def test_group_attributes_required(
-    request: FixtureRequest,
-    group_type: str,
+    group_client: GroupConfig,
 ) -> None:
-    client: GroupConfig = request.getfixturevalue(group_type)
     group_name = "test_name"
-    client.create(name=group_name, alias="test_alias")
-    resp = client.bulk_edit(
+    group_client.create(name=group_name, alias="test_alias")
+    resp = group_client.bulk_edit(
         groups=({"name": group_name},),
         expect_ok=False,
     )

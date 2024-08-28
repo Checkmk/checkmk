@@ -6,11 +6,8 @@ from collections.abc import Sequence
 
 from cmk.utils.rulesets.definition import RuleGroup
 
-from cmk.gui.quick_setup.to_frontend import (
-    create_and_save_special_agent_bundle,
-    recap_service_discovery,
-    recaps_form_spec,
-)
+from cmk.gui.quick_setup.to_frontend import create_and_save_special_agent_bundle
+from cmk.gui.quick_setup.v0_unstable.predefined import recaps
 from cmk.gui.quick_setup.v0_unstable.predefined import validators as qs_validators
 from cmk.gui.quick_setup.v0_unstable.predefined import widgets
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupStage
@@ -73,7 +70,7 @@ def prepare_aws() -> QuickSetupStage:
             ),
         ],
         custom_validators=[qs_validators.validate_unique_id],
-        recap=[recaps_form_spec],
+        recap=[recaps.recaps_form_spec],
         button_label="Configure host and region",
     )
 
@@ -116,7 +113,7 @@ def configure_host_and_region() -> QuickSetupStage:
             ),
         ],
         custom_validators=[],
-        recap=[recaps_form_spec],
+        recap=[recaps.recaps_form_spec],
         button_label="Configure services to monitor",
     )
 
@@ -185,7 +182,7 @@ def configure_services_to_monitor() -> QuickSetupStage:
         configure_components=_configure,
         custom_validators=[],
         recap=[
-            recaps_form_spec,
+            recaps.recaps_form_spec,
         ],
         button_label="Review and run service discovery",
     )
@@ -198,7 +195,7 @@ def review_and_run_service_discovery() -> QuickSetupStage:
         configure_components=[],
         custom_validators=[qs_validators.validate_test_connection(RuleGroup.SpecialAgents("aws"))],
         recap=[
-            recap_service_discovery(
+            recaps.recap_service_discovery(
                 RuleGroup.SpecialAgents("aws"),
                 [ServiceInterest(".*", "services")],
             )

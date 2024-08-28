@@ -6,7 +6,6 @@
 import re
 from collections.abc import Callable, Iterator, Mapping, MutableMapping, MutableSequence, Sequence
 from dataclasses import asdict, dataclass, field
-from functools import partial
 from typing import Any, cast
 from uuid import uuid4
 
@@ -34,13 +33,12 @@ from cmk.gui.form_specs.vue.form_spec_visitor import (
 from cmk.gui.form_specs.vue.visitors._registry import form_spec_registry
 from cmk.gui.form_specs.vue.visitors._type_defs import DataOrigin
 from cmk.gui.http import request
-from cmk.gui.i18n import ungettext
 from cmk.gui.quick_setup.v0_unstable.definitions import (
     IncomingStage,
     QuickSetupSaveRedirect,
     UniqueBundleIDStr,
 )
-from cmk.gui.quick_setup.v0_unstable.setups import CallableRecap, QuickSetup, QuickSetupStage
+from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupStage
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     GeneralStageErrors,
     ParsedFormData,
@@ -51,15 +49,12 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
 from cmk.gui.quick_setup.v0_unstable.widgets import (
     Collapsible,
     FormSpecId,
-    FormSpecRecap,
     FormSpecWrapper,
     ListOfWidgets,
-    Text,
     Widget,
 )
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.wato.pages.activate_changes import ModeActivateChanges
-from cmk.gui.watolib.check_mk_automations import special_agent_discovery_preview
 from cmk.gui.watolib.configuration_bundles import (
     BundleId,
     ConfigBundle,
@@ -294,67 +289,6 @@ def _check_preview_entry_by_service_interest(
     return check_preview_entry_by_service_interest, others
 
 
-def recap_service_discovery_custom_collect_params(
-    rulespec_name: str,
-    services_of_interest: Sequence[ServiceInterest],
-    custom_collect_params: Callable[[ParsedFormData, str], Mapping[str, object]],
-) -> CallableRecap:
-    return partial(
-        _recap_service_discovery,
-        rulespec_name,
-        services_of_interest,
-        custom_collect_params,
-    )
-
-
-def recap_service_discovery(
-    rulespec_name: str,
-    services_of_interest: Sequence[ServiceInterest],
-) -> CallableRecap:
-    return partial(
-        _recap_service_discovery,
-        rulespec_name,
-        services_of_interest,
-        _collect_params_with_defaults_from_form_data,
-    )
-
-
-def _recap_service_discovery(
-    rulespec_name: str,
-    services_of_interest: Sequence[ServiceInterest],
-    collect_params: Callable[[ParsedFormData, str], Mapping[str, object]],
-    all_stages_form_data: Sequence[ParsedFormData],
-    expected_formspecs_map: Mapping[FormSpecId, FormSpec],
-) -> Sequence[Widget]:
-    combined_parsed_form_data = {
-        k: v for form_data in all_stages_form_data for k, v in form_data.items()
-    }
-    params = collect_params(combined_parsed_form_data, rulespec_name)
-    passwords = _collect_passwords_from_form_data(combined_parsed_form_data, rulespec_name)
-    site_id = _find_unique_id(all_stages_form_data, "site_selection")
-    host_name = _find_unique_id(all_stages_form_data, "host_name")
-
-    service_discovery_result = special_agent_discovery_preview(
-        SiteId(site_id) if site_id else omd_site(),
-        _create_diag_special_agent_input(
-            rulespec_name=rulespec_name, host_name=host_name, passwords=passwords, params=params
-        ),
-    )
-    check_preview_entry_by_service_interest, others = _check_preview_entry_by_service_interest(
-        services_of_interest, service_discovery_result
-    )
-    items: list[Widget] = [
-        Text(
-            text=f"{len(check_preview_entries)} {service_interest.label}",
-        )
-        for service_interest, check_preview_entries in check_preview_entry_by_service_interest.items()
-    ]
-    if len(others) >= 1:
-        items.append(Text(text=ungettext("%s other service", "%s other services", len(others))))
-
-    return [ListOfWidgets(items=items, list_type="check")]
-
-
 def _get_rule_defaults(rulespec_name: str) -> dict[str, object]:
     if (parameter_form := _get_parameter_form_from_rulespec_name(rulespec_name)) is None:
         return {}
@@ -450,26 +384,6 @@ def quick_setup_overview(quick_setup: QuickSetup) -> QuickSetupOverview:
         ),
         button_complete_label=quick_setup.button_complete_label,
     )
-
-
-def recaps_form_spec(
-    stages_form_data: Sequence[ParsedFormData],
-    expected_formspecs_map: Mapping[FormSpecId, FormSpec],
-) -> Sequence[Widget]:
-    return [
-        FormSpecRecap(
-            id=form_spec_id,
-            form_spec=serialize_data_for_frontend(
-                form_spec=expected_formspecs_map[form_spec_id],
-                field_id=form_spec_id,
-                origin=DataOrigin.DISK,
-                do_validate=False,
-                value=form_data,
-            ),
-        )
-        for form_spec_id, form_data in stages_form_data[-1].items()
-        if form_spec_id in expected_formspecs_map
-    ]
 
 
 def validate_stage(

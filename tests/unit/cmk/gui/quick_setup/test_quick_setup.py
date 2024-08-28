@@ -6,12 +6,9 @@ from collections.abc import Sequence
 
 from tests.unit.cmk.gui.quick_setup.factories import QuickSetupFactory, QuickSetupStageFactory
 
-from cmk.gui.quick_setup.to_frontend import (
-    build_quick_setup_formspec_map,
-    recaps_form_spec,
-    retrieve_next_stage,
-)
+from cmk.gui.quick_setup.to_frontend import build_quick_setup_formspec_map, retrieve_next_stage
 from cmk.gui.quick_setup.v0_unstable.definitions import IncomingStage
+from cmk.gui.quick_setup.v0_unstable.predefined._recaps import recaps_form_spec
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupStage
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, RawFormData
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, FormSpecRecap, FormSpecWrapper

@@ -6,6 +6,8 @@
 import traceback
 from pathlib import Path
 
+from dateutil.relativedelta import relativedelta
+
 from livestatus import SiteConfiguration, SiteId
 
 from cmk.ccc import store
@@ -39,6 +41,9 @@ def site_cert(
 
     cert, key = ca.issue_new_certificate(
         common_name=site_id,
+        organization=f"Checkmk Site {omd_site()}",
+        expiry=relativedelta(years=2),
+        key_size=4096,
     )
 
     save_single_cert(cert_path, cert)

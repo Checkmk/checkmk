@@ -48,6 +48,7 @@ from cmk.gui.openapi.endpoints.comment.request_schemas import (
     DeleteComments,
 )
 from cmk.gui.openapi.endpoints.comment.response_schemas import CommentCollection, CommentObject
+from cmk.gui.openapi.endpoints.common_fields import field_include_extensions, field_include_links
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
@@ -70,23 +71,28 @@ PERMISSIONS = permissions.Undocumented(
 RW_PERMISSIONS = permissions.AllPerm([permissions.Perm("action.addcomment"), PERMISSIONS])
 
 
-def _serialize_comment(comment: Comment) -> DomainObject:
-    dict_comment = dict(comment)
-
+def _serialize_comment_extensions(comment: Comment) -> dict[str, Any]:
+    dict_comment: dict[str, Any] = dict(comment)
     if "site" in dict_comment:
         dict_comment["site_id"] = dict_comment.pop("site")
 
     dict_comment["entry_time"] = (
         datetime.strptime(dict_comment["entry_time"], "%b %d %Y %H:%M:%S").isoformat() + "+00:00"
     )
+    return dict_comment
 
+
+def _serialize_comment(
+    comment: Comment, *, include_links: bool = True, include_extensions: bool = True
+) -> DomainObject:
     return constructors.domain_object(
         domain_type="comment",
         identifier=str(comment.id),
         title=comment.comment,
-        extensions=dict_comment,
+        extensions=_serialize_comment_extensions(comment) if include_extensions else None,
         editable=False,
         deletable=True,
+        include_links=include_links,
     )
 
 
@@ -188,11 +194,19 @@ def show_comment(params: Mapping[str, Any]) -> Response:
     response_schema=CommentCollection,
     update_config_generation=False,
     path_params=[COLLECTION_NAME],
-    query_params=[GetCommentsByQuery, HOST_NAME_SHOW, SERVICE_DESCRIPTION_SHOW, OPTIONAL_SITE_ID],
+    query_params=[
+        GetCommentsByQuery,
+        HOST_NAME_SHOW,
+        SERVICE_DESCRIPTION_SHOW,
+        OPTIONAL_SITE_ID,
+        field_include_links(),
+        field_include_extensions(),
+    ],
 )
 def show_comments(params: Mapping[str, Any]) -> Response:
     """Show comments"""
-
+    include_links: bool = params["include_links"]
+    include_extensions: bool = params["include_extensions"]
     try:
         sites_to_query = params.get("site_id")
         live = sites.live()
@@ -216,7 +230,14 @@ def show_comments(params: Mapping[str, Any]) -> Response:
     return serve_json(
         constructors.collection_object(
             domain_type="comment",
-            value=[_serialize_comment(comment) for _, comment in sorted(comments_dict.items())],
+            value=[
+                _serialize_comment(
+                    comment,
+                    include_links=include_links,
+                    include_extensions=include_extensions,
+                )
+                for _, comment in sorted(comments_dict.items())
+            ],
         )
     )
 

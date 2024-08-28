@@ -2292,10 +2292,13 @@ class CommentClient(RestApiClient):
 
     def get_all(
         self,
+        *,
         host_name: str | None = None,
         service_description: str | None = None,
         query: Mapping[str, Any] | str | None = None,
         site_id: str | None = None,
+        include_links: bool | None = None,
+        include_extensions: bool | None = None,
         expect_ok: bool = True,
     ) -> Response:
         q: Mapping[str, Any] = _only_set_keys(
@@ -2304,6 +2307,8 @@ class CommentClient(RestApiClient):
                 "service_description": service_description,
                 "query": query,
                 "site_id": site_id,
+                "include_links": include_links,
+                "include_extensions": include_extensions,
             }
         )
 

@@ -20,6 +20,12 @@ const stringFormSpec: FormSpec.String = {
   input_hint: ''
 }
 
+const dictElementGroupFormSpec: FormSpec.DictionaryGroup = {
+  key: 'titlehelp',
+  title: 'title',
+  help: 'help'
+}
+
 const spec: FormSpec.Dictionary = {
   type: 'dictionary',
   title: 'fooTitle',
@@ -32,7 +38,8 @@ const spec: FormSpec.Dictionary = {
       ident: 'bar',
       required: false,
       default_value: 'baz',
-      parameter_form: stringFormSpec
+      parameter_form: stringFormSpec,
+      group: dictElementGroupFormSpec
     }
   ]
 }
@@ -147,7 +154,8 @@ test('FormDictionary appends default of required element if missing in data', as
           ident: 'bar',
           required: true,
           default_value: 'baz',
-          parameter_form: stringFormSpec
+          parameter_form: stringFormSpec,
+          group: dictElementGroupFormSpec
         }
       ]
     } as FormSpec.Dictionary,

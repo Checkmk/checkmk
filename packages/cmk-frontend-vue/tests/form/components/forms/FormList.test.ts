@@ -20,6 +20,12 @@ const stringFormSpec: FormSpec.String = {
   input_hint: ''
 }
 
+const dictElementGroupFormSpec: FormSpec.DictionaryGroup = {
+  key: 'titlehelp',
+  title: 'title',
+  help: 'help'
+}
+
 const spec: FormSpec.List = {
   type: 'list',
   title: 'fooTitle',
@@ -114,7 +120,8 @@ const dictSpec: FormSpec.Dictionary = {
       ident: 'bar',
       required: true,
       default_value: 'baz',
-      parameter_form: stringFormSpec
+      parameter_form: stringFormSpec,
+      group: dictElementGroupFormSpec
     }
   ]
 }

@@ -8,6 +8,8 @@ from typing import Mapping
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
 from cmk.gui.form_specs.vue import shared_type_defs
 
+from cmk.rulesets.v1.form_specs._composed import NoGroup
+
 from ._base import FormSpecVisitor
 from ._registry import get_visitor
 from ._type_defs import DataOrigin, DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue, Value
@@ -16,6 +18,7 @@ from ._utils import (
     compute_validators,
     create_validation_error,
     get_title_and_help,
+    localize,
 )
 
 
@@ -81,6 +84,16 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, Mapping[str, object]
             element_value = parsed_value[key_name] if is_active else DEFAULT_VALUE
             element_schema, element_vue_value = element_visitor.to_vue(element_value)
 
+            if isinstance(dict_element.group, NoGroup):
+                group = None
+
+            else:
+                group = shared_type_defs.DictionaryGroup(
+                    title=localize(self.form_spec.title),
+                    help=localize(self.form_spec.help_text),
+                    key=localize(self.form_spec.title) + localize(self.form_spec.help_text),
+                )
+
             if is_active:
                 vue_values[key_name] = element_vue_value
 
@@ -90,6 +103,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, Mapping[str, object]
                     default_value=element_vue_value,
                     required=dict_element.required,
                     parameter_form=element_schema,
+                    group=group,
                 )
             )
 

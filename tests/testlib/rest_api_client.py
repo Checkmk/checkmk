@@ -1573,28 +1573,31 @@ class DowntimeClient(RestApiClient):
 
     def get_all(
         self,
+        *,
         host_name: str | None = None,
         service_description: str | None = None,
         query: str | None = None,
         downtime_type: Literal["host", "service", "both"] = "both",
         site_id: str | None = None,
+        include_links: bool | None = None,
+        include_extensions: bool | None = None,
         expect_ok: bool = True,
     ) -> Response:
-        query_params = urllib.parse.urlencode(
-            _only_set_keys(
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+            query_params=_only_set_keys(
                 {
                     "downtime_type": downtime_type,
                     "host_name": host_name,
                     "service_description": service_description,
                     "query": query,
                     "site_id": site_id,
+                    "include_links": include_links,
+                    "include_extensions": include_extensions,
                 }
-            )
-        )
-        return self.request(
-            "get",
-            url=f"/domain-types/{self.domain}/collections/all?{query_params}",
-            expect_ok=expect_ok,
+            ),
         )
 
     def create_for_host(

@@ -6,7 +6,7 @@ import datetime
 
 import pytest
 
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.rest_api_client import ClientRegistry, Response
 
 from tests.unit.cmk.gui.conftest import SetConfig
 
@@ -1622,3 +1622,53 @@ def test_openapi_downtime_fields_format(
             attributes = dt["extensions"]
             assert isinstance(attributes["recurring"], bool)
             assert isinstance(attributes["is_service"], bool)
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
+def test_list_downtimes_include_links(
+    mock_livestatus: MockLiveStatusConnection, clients: ClientRegistry
+) -> None:
+    def _request(include_links: bool | None = None) -> Response:
+        mock_livestatus.expect_query(
+            [
+                "GET downtimes",
+                "Columns: id host_name service_description is_service author start_time end_time recurring comment",
+            ]
+        )
+        with mock_livestatus:
+            return clients.Downtime.get_all(include_links=include_links)
+
+    default_response = _request()
+    enabled_response = _request(include_links=True)
+    disabled_response = _request(include_links=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == disabled_response.json
+    assert any(bool(value["links"]) for value in enabled_response.json["value"])
+    assert all(value["links"] == [] for value in disabled_response.json["value"])
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
+def test_list_downtimes_include_extensions(
+    mock_livestatus: MockLiveStatusConnection, clients: ClientRegistry
+) -> None:
+    def _request(include_extensions: bool | None = None) -> Response:
+        mock_livestatus.expect_query(
+            [
+                "GET downtimes",
+                "Columns: id host_name service_description is_service author start_time end_time recurring comment",
+            ]
+        )
+        with mock_livestatus:
+            return clients.Downtime.get_all(include_extensions=include_extensions)
+
+    default_response = _request()
+    enabled_response = _request(include_extensions=True)
+    disabled_response = _request(include_extensions=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == enabled_response.json
+    assert any(bool(value["extensions"]) for value in enabled_response.json["value"])
+    assert all("extensions" not in value for value in disabled_response.json["value"])

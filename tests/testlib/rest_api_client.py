@@ -2644,11 +2644,20 @@ class UserRoleClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def get_all(self, expect_ok: bool = True) -> Response:
+    def get_all(
+        self,
+        *,
+        include_links: bool | None = None,
+        include_extensions: bool | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
         return self.request(
             "get",
             url=f"/domain-types/{self.domain}/collections/all",
             expect_ok=expect_ok,
+            query_params=_only_set_keys(
+                {"include_links": include_links, "include_extensions": include_extensions}
+            ),
         )
 
     def clone(self, body: dict[str, Any], expect_ok: bool = True) -> Response:

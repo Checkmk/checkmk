@@ -19,6 +19,30 @@ def test_get_userroles_endpoint(clients: ClientRegistry) -> None:
     assert {user_role["id"] for user_role in resp.json["value"]} == set(builtin_role_ids)
 
 
+def test_list_userroles_include_links(clients: ClientRegistry) -> None:
+    default_response = clients.UserRole.get_all()
+    enabled_response = clients.UserRole.get_all(include_links=True)
+    disabled_response = clients.UserRole.get_all(include_links=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == disabled_response.json
+    assert any(bool(value["links"]) for value in enabled_response.json["value"])
+    assert all(value["links"] == [] for value in disabled_response.json["value"])
+
+
+def test_list_userroles_include_extensions(clients: ClientRegistry) -> None:
+    default_response = clients.UserRole.get_all()
+    enabled_response = clients.UserRole.get_all(include_extensions=True)
+    disabled_response = clients.UserRole.get_all(include_extensions=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == enabled_response.json
+    assert any(bool(value["extensions"]) for value in enabled_response.json["value"])
+    assert all("extensions" not in value for value in disabled_response.json["value"])
+
+
 def test_post_userrole_endpoint(clients: ClientRegistry) -> None:
     clients.UserRole.clone(body={"role_id": "admin"})
     resp = clients.UserRole.get(role_id="adminx")

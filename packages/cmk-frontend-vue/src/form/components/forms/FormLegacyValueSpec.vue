@@ -32,6 +32,10 @@ const data = defineModel<unknown>('data', { required: true })
 const legacyDOM = ref<HTMLFormElement>()
 
 onMounted(() => {
+  // @ts-expect-error comes from different javascript file
+  window['cmk'].forms.enable_dynamic_form_elements(legacyDOM.value!)
+  // @ts-expect-error comes from different javascript file
+  window['cmk'].valuespecs.initialize_autocompleters(legacyDOM.value!)
   select(legacyDOM.value!).selectAll('input,select').on('input.observer', collectData)
   collectData()
 })

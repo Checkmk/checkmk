@@ -74,6 +74,34 @@ def test_get_notification_rules(clients: ClientRegistry) -> None:
     assert rules[1]["id"] == r2.json["id"]
 
 
+def test_list_notification_rules_include_links(clients: ClientRegistry) -> None:
+    config = notification_rule_request_example()
+    clients.RuleNotification.create(config)
+    default_response = clients.RuleNotification.get_all()
+    enabled_response = clients.RuleNotification.get_all(include_links=True)
+    disabled_response = clients.RuleNotification.get_all(include_links=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == disabled_response.json
+    assert any(bool(value["links"]) for value in enabled_response.json["value"])
+    assert all(value["links"] == [] for value in disabled_response.json["value"])
+
+
+def test_list_notification_rules_include_extensions(clients: ClientRegistry) -> None:
+    config = notification_rule_request_example()
+    clients.RuleNotification.create(config)
+    default_response = clients.RuleNotification.get_all()
+    enabled_response = clients.RuleNotification.get_all(include_extensions=True)
+    disabled_response = clients.RuleNotification.get_all(include_extensions=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == enabled_response.json
+    assert any(bool(value["extensions"]) for value in enabled_response.json["value"])
+    assert all("extensions" not in value for value in disabled_response.json["value"])
+
+
 def test_create_notification_rule(clients: ClientRegistry) -> None:
     config = notification_rule_request_example()
     r1 = clients.RuleNotification.create(config)

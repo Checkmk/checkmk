@@ -950,6 +950,28 @@ class FolderClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def get_hosts(
+        self,
+        folder_name: str,
+        *,
+        effective_attributes: bool | None = None,
+        include_links: bool | None = None,
+        include_extensions: bool | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{folder_name}/collections/hosts",
+            expect_ok=expect_ok,
+            query_params=_only_set_keys(
+                {
+                    "effective_attributes": effective_attributes,
+                    "include_links": include_links,
+                    "include_extensions": include_extensions,
+                }
+            ),
+        )
+
     def create(
         self,
         title: str,

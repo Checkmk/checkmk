@@ -379,26 +379,38 @@ def list_hosts(param: Mapping[str, Any]) -> Response:
 
 
 def serve_host_collection(
-    hosts: Iterable[Host], effective_attributes: bool = False, include_links: bool = False
+    hosts: Iterable[Host],
+    *,
+    effective_attributes: bool = False,
+    include_links: bool = False,
+    include_extensions: bool = True,
 ) -> Response:
     return serve_json(
         _host_collection(
             hosts,
             effective_attributes=effective_attributes,
             include_links=include_links,
+            include_extensions=include_extensions,
         )
     )
 
 
 def _host_collection(
-    hosts: Iterable[Host], effective_attributes: bool = False, include_links: bool = False
+    hosts: Iterable[Host],
+    *,
+    effective_attributes: bool = False,
+    include_links: bool = False,
+    include_extensions: bool = True,
 ) -> dict[str, Any]:
     return {
         "id": "host",
         "domainType": "host_config",
         "value": [
             serialize_host(
-                host, effective_attributes=effective_attributes, include_links=include_links
+                host,
+                effective_attributes=effective_attributes,
+                include_links=include_links,
+                include_extensions=include_extensions,
             )
             for host in hosts
         ],
@@ -819,7 +831,7 @@ def show_host(params: Mapping[str, Any]) -> Response:
 
 
 def _serve_host(host: Host, effective_attributes: bool = False) -> Response:
-    response = serve_json(serialize_host(host, effective_attributes))
+    response = serve_json(serialize_host(host, effective_attributes=effective_attributes))
     return constructors.response_with_etag_created_from_dict(response, _host_etag_values(host))
 
 
@@ -827,16 +839,24 @@ agent_links_hook: Callable[[HostName], list[LinkType]] = lambda h: []
 
 
 def serialize_host(
-    host: Host, effective_attributes: bool, include_links: bool = True
+    host: Host,
+    *,
+    effective_attributes: bool,
+    include_links: bool = True,
+    include_extensions: bool = True,
 ) -> DomainObject:
-    extensions = {
-        "folder": "/" + host.folder().path(),
-        "attributes": host.attributes,
-        "effective_attributes": host.effective_attributes() if effective_attributes else None,
-        "is_cluster": host.is_cluster(),
-        "is_offline": host.is_offline(),
-        "cluster_nodes": host.cluster_nodes(),
-    }
+    extensions = (
+        {
+            "folder": "/" + host.folder().path(),
+            "attributes": host.attributes,
+            "effective_attributes": host.effective_attributes() if effective_attributes else None,
+            "is_cluster": host.is_cluster(),
+            "is_offline": host.is_offline(),
+            "cluster_nodes": host.cluster_nodes(),
+        }
+        if include_extensions
+        else None
+    )
 
     if include_links:
         links = [

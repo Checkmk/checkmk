@@ -41,7 +41,11 @@ from cmk.gui import fields as gui_fields
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.endpoints.common_fields import EXISTING_FOLDER_PATTERN
+from cmk.gui.openapi.endpoints.common_fields import (
+    EXISTING_FOLDER_PATTERN,
+    field_include_extensions,
+    field_include_links,
+)
 from cmk.gui.openapi.endpoints.folder_config.request_schemas import (
     BulkUpdateFolder,
     CreateFolder,
@@ -49,7 +53,7 @@ from cmk.gui.openapi.endpoints.folder_config.request_schemas import (
     MoveFolder,
     UpdateFolder,
 )
-from cmk.gui.openapi.endpoints.host_config import serve_host_collection
+from cmk.gui.openapi.endpoints.host_config import EFFECTIVE_ATTRIBUTES, serve_host_collection
 from cmk.gui.openapi.endpoints.host_config.response_schemas import (
     FolderCollection,
     FolderSchema,
@@ -137,12 +141,24 @@ def create(params: Mapping[str, Any]) -> Response:
     path_params=[PATH_FOLDER_FIELD],
     response_schema=HostConfigCollection,
     permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
+    query_params=[
+        EFFECTIVE_ATTRIBUTES,
+        field_include_links(
+            "Flag which toggles whether the links field of the individual hosts should be populated."
+        ),
+        field_include_extensions(),
+    ],
 )
 def hosts_of_folder(params: Mapping[str, Any]) -> Response:
     """Show all hosts in a folder"""
     folder: Folder = params["folder"]
     folder.permissions.need_permission("read")
-    return serve_host_collection(folder.hosts().values())
+    return serve_host_collection(
+        folder.hosts().values(),
+        effective_attributes=params["effective_attributes"],
+        include_links=params["include_links"],
+        include_extensions=params["include_extensions"],
+    )
 
 
 @Endpoint(

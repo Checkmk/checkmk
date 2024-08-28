@@ -268,13 +268,34 @@ def test_openapi_folder_config_collections(aut_user_auth_wsgi_app: WebTestAppFor
 
 
 @pytest.mark.usefixtures("with_host")
-def test_openapi_folder_hosts_sub_resource(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
-    aut_user_auth_wsgi_app.call_method(
-        "get",
-        "/NO_SITE/check_mk/api/1.0/objects/folder_config/~/collections/hosts",
-        status=200,
-        headers={"Accept": "application/json"},
-    )
+def test_openapi_hosts_in_folder(clients: ClientRegistry) -> None:
+    clients.Folder.get_hosts("~")
+
+
+@pytest.mark.usefixtures("with_host")
+def test_openapi_hosts_in_folder_include_links(clients: ClientRegistry) -> None:
+    default_response = clients.Folder.get_hosts("~")
+    enabled_response = clients.Folder.get_hosts("~", include_links=True)
+    disabled_response = clients.Folder.get_hosts("~", include_links=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == disabled_response.json
+    assert any(bool(value["links"]) for value in enabled_response.json["value"])
+    assert all(value["links"] == [] for value in disabled_response.json["value"])
+
+
+@pytest.mark.usefixtures("with_host")
+def test_openapi_hosts_in_folder_include_extensions(clients: ClientRegistry) -> None:
+    default_response = clients.Folder.get_hosts("~")
+    enabled_response = clients.Folder.get_hosts("~", include_extensions=True)
+    disabled_response = clients.Folder.get_hosts("~", include_extensions=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == enabled_response.json
+    assert any(bool(value["extensions"]) for value in enabled_response.json["value"])
+    assert all("extensions" not in value for value in disabled_response.json["value"])
 
 
 def test_openapi_hosts_in_folder_collection(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:

@@ -135,6 +135,7 @@ def test_registered_pages() -> None:
         "user_webauthn_register_begin",
         "user_totp_register",
         "user_two_factor_overview",
+        "user_two_factor_enforce",
         "user_two_factor_edit_credential",
         "user_webauthn_register_complete",
         "user_login_two_factor",

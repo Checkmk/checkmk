@@ -75,6 +75,13 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
                 "user_webauthn_login_complete",
             )
 
+            two_factor_registration_pages = requested_file_name(request) in (
+                "user_two_factor_enforce",
+                "user_totp_register",
+                "user_webauthn_register_begin",
+                "user_webauthn_register_complete",
+            )
+
             # Two factor login
             if (
                 not two_factor_login_pages
@@ -83,6 +90,16 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
             ):
                 raise HTTPRedirect(
                     "user_login_two_factor.py?_origtarget=%s" % urlencode(makeuri(request, []))
+                )
+
+            # Enforce Two Factor
+            if (
+                not two_factor_registration_pages
+                and session.session_info.two_factor_required
+                and not session.session_info.two_factor_completed
+            ):
+                raise HTTPRedirect(
+                    "user_two_factor_enforce.py?_origtarget=%s" % urlencode(makeuri(request, []))
                 )
 
             if not two_factor_login_pages and requested_file_name(request) != "user_change_pw":

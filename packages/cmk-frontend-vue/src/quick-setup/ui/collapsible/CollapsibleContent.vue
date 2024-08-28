@@ -5,6 +5,7 @@ const props = defineProps<CollapsibleContentProps>()
 </script>
 
 <template>
+  <!-- @vue-expect-error Radix-vue props doesn't follow our exactOptionalPropertyTypes rule -->
   <CollapsibleContent v-bind="props" class="ui-collapsible-content">
     <slot />
   </CollapsibleContent>

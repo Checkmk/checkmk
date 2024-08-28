@@ -15,6 +15,7 @@ const props = withDefaults(defineProps<Props>(), {
 </script>
 
 <template>
+  <!-- @vue-expect-error Radix-vue props doesn't follow our exactOptionalPropertyTypes rule -->
   <Primitive :as="as" :as-child="asChild" :class="props.class">
     <slot />
   </Primitive>

@@ -5,6 +5,7 @@ const props = defineProps<TooltipTriggerProps>()
 </script>
 
 <template>
+  <!-- @vue-expect-error Radix-vue props doesn't follow our exactOptionalPropertyTypes rule -->
   <TooltipTrigger v-bind="props">
     <slot />
   </TooltipTrigger>

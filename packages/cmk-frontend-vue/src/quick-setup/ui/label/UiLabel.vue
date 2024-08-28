@@ -32,6 +32,7 @@ const delegatedProps = computed(() => {
 </script>
 
 <template>
+  <!-- @vue-expect-error Radix-vue props doesn't follow our exactOptionalPropertyTypes rule -->
   <Label v-bind="delegatedProps" :class="labelVariants({ variant })">
     <slot />
   </Label>

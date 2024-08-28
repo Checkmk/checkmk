@@ -608,6 +608,32 @@ def test_openapi_host_collection_effective_attributes(clients: ClientRegistry) -
         assert host["extensions"]["effective_attributes"] is None
 
 
+@pytest.mark.usefixtures("with_host")
+def test_openapi_list_hosts_include_links(clients: ClientRegistry) -> None:
+    default_response = clients.HostConfig.get_all()
+    enabled_response = clients.HostConfig.get_all(include_links=True)
+    disabled_response = clients.HostConfig.get_all(include_links=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == disabled_response.json
+    assert any(bool(value["links"]) for value in enabled_response.json["value"])
+    assert all(value["links"] == [] for value in disabled_response.json["value"])
+
+
+@pytest.mark.usefixtures("with_host")
+def test_openapi_list_hosts_include_extensions(clients: ClientRegistry) -> None:
+    default_response = clients.HostConfig.get_all()
+    enabled_response = clients.HostConfig.get_all(include_extensions=True)
+    disabled_response = clients.HostConfig.get_all(include_extensions=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == enabled_response.json
+    assert any(bool(value["extensions"]) for value in enabled_response.json["value"])
+    assert all("extensions" not in value for value in disabled_response.json["value"])
+
+
 @pytest.mark.usefixtures("inline_background_jobs")
 def test_openapi_host_rename(
     clients: ClientRegistry,

@@ -53,7 +53,7 @@ from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import request, Response
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.endpoints.common_fields import field_include_links
+from cmk.gui.openapi.endpoints.common_fields import field_include_extensions, field_include_links
 from cmk.gui.openapi.endpoints.host_config.request_schemas import (
     BulkCreateHost,
     BulkDeleteHost,
@@ -358,14 +358,12 @@ def _bulk_host_action_response(
         field_include_links(
             "Flag which toggles whether the links field of the individual hosts should be populated."
         ),
+        field_include_extensions(),
     ],
 )
-def list_hosts(param: Mapping[str, Any]) -> Response:
+def list_hosts(params: Mapping[str, Any]) -> Response:
     """Show all hosts"""
     root_folder = folder_tree().root_folder()
-    effective_attributes: bool = param["effective_attributes"]
-    include_links: bool = param["include_links"]
-
     hosts = (
         host
         for host in root_folder.all_hosts_recursively().values()
@@ -373,8 +371,9 @@ def list_hosts(param: Mapping[str, Any]) -> Response:
     )
     return serve_host_collection(
         hosts,
-        effective_attributes=effective_attributes,
-        include_links=include_links,
+        effective_attributes=params["effective_attributes"],
+        include_links=params["include_links"],
+        include_extensions=params["include_extensions"],
     )
 
 

@@ -28,9 +28,13 @@ const updateData = (...args: unknown[]) => emit('update', ...args)
       @update="updateData"
     />
   </ErrorBoundary>
-  <AlertBox v-if="combinedErrors.length" variant="error" style="margin-left: 1rem">
+  <AlertBox v-if="combinedErrors.length" variant="error">
     <p v-for="error in combinedErrors" :key="error">{{ error }}</p>
   </AlertBox>
 </template>
 
-<style scoped></style>
+<style scoped>
+p {
+  margin: 0;
+}
+</style>

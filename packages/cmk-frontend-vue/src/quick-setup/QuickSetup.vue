@@ -191,9 +191,10 @@ const save = async () => {
     />
   </ol>
   <LoadingIcon v-else />
-  <div v-if="isOnSaveStage" class="qs-main__action">
+  <div v-if="isOnSaveStage" class="quick-setup__action">
     <div v-if="loading">
-      <p class="qs-main__loading"><LoadingIcon :height="16" />Please wait...</p>
+      <!-- TODO: move this text to the backend to make it translatable (CMK-19020) -->
+      <div class="quick-setup__loading"><LoadingIcon size="lg" />Please wait...</div>
     </div>
     <div v-else>
       <AlertBox v-if="combinedOnSaveErrors.length" variant="error" style="margin-left: 1rem">
@@ -208,17 +209,17 @@ const save = async () => {
 <style scoped>
 .quick-setup {
   counter-reset: stage-index;
-  --size: 3rem;
-  --spacing: 0.5rem;
 }
 
-.qs-main__action {
+.quick-setup__action {
   padding-top: 1rem;
   padding-left: 7.5rem;
   position: relative;
 }
 
-.qs-stage__loading {
-  padding-left: 1rem;
+.quick-setup__loading {
+  display: flex;
+  align-items: center;
+  padding-top: 12px;
 }
 </style>

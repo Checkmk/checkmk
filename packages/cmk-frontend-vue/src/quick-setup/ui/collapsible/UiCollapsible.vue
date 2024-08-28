@@ -17,6 +17,6 @@ const forwarded = useForwardPropsEmits(props, emits)
 
 <style scoped>
 .ui-collapsible {
-  padding-top: 1rem;
+  padding-top: 2px;
 }
 </style>

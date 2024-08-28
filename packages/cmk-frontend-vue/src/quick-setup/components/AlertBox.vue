@@ -15,7 +15,7 @@ const alertIcon = computed(() => {
   const url = 'themes/facelift/images'
   switch (props.variant) {
     case 'error':
-      return `${url}/icon_alert_crit.png`
+      return `${url}/icon_alert_crit.svg`
     case 'warning':
       return `${url}/icon_alert_warn.png`
     case 'success':
@@ -25,37 +25,46 @@ const alertIcon = computed(() => {
   }
 })
 
+/* TODO: change these classes to proper variants */
 const alertClass = computed(() => {
   switch (props.variant) {
     case 'error':
-      return 'error AlertBox'
+      return 'error qs-alert-box'
     case 'warning':
-      return 'warning AlertBox'
+      return 'warning qs-alert-box'
     case 'success':
-      return 'success AlertBox'
+      return 'success qs-alert-box'
     default:
-      return 'message AlertBox'
+      return 'message qs-alert-box'
   }
 })
 </script>
 
 <template>
   <div :class="alertClass" :style="{ maxWidth: 'fit-content' }">
-    <img class="loading" :height="32" :src="alertIcon" />
+    <img :src="alertIcon" />
     <slot />
   </div>
 </template>
 
 <style scoped>
-.AlertBox {
+/* TODO: try to unify this component with component FormValidation. the styling should be the same
+         for all error messages, so the same base component should be used. */
+.qs-alert-box {
   display: flex;
   align-items: center;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  margin-bottom: 1rem;
-}
+  padding: 8px 12px;
+  border-radius: var(--border-radius);
+  margin: 12px 0;
 
-.AlertBox img {
-  margin-right: 1rem;
+  img {
+    height: 18px;
+    margin-right: 12px;
+  }
+
+  &.error {
+    color: var(--font-color);
+    background-color: var(--error-msg-bg-color);
+  }
 }
 </style>

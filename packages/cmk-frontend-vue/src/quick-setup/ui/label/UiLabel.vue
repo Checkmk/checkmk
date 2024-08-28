@@ -7,8 +7,8 @@ const labelVariants = cva('', {
   variants: {
     variant: {
       default: '',
-      title: 'label_title',
-      subtitle: 'label_subtitle'
+      title: 'qs-ui-label--title',
+      subtitle: 'qs-ui-label--subtitle'
     }
   },
   defaultVariants: {
@@ -39,16 +39,19 @@ const delegatedProps = computed(() => {
 </template>
 
 <style scoped>
-.label_title {
-  font-weight: bold;
-  font-size: large;
-  position: relative;
-  top: -0.2rem;
-}
+label {
+  display: block;
 
-.label_subtitle {
-  font-weight: normal;
-  font-size: small;
-  position: relative;
+  &.qs-ui-label--title {
+    height: 24px;
+    align-content: center;
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-xlarge);
+  }
+
+  &.qs-ui-label--subtitle {
+    font-size: var(--font-size-normal);
+    margin-bottom: var(--spacing);
+  }
 }
 </style>

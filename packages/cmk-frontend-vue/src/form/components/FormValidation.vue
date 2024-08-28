@@ -17,7 +17,7 @@ const props = defineProps<{
 div.form-validation {
   margin-top: 12px;
   padding: 8px 12px;
-  background-color: rgba(200, 50, 50, 0.15);
+  background-color: var(--error-msg-bg-color);
   border-radius: var(--border-radius);
 
   div {

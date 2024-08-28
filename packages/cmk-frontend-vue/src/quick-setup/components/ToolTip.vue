@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/quick-setup/ui/tooltip'
+import { getIconVariable } from '@/lib/utils'
 
 const DEFAULT_DELAY: number = 200
-const DEFAULT_HEIGHT: number = 16
-const DEFAULT_ICON: string = 'themes/facelift/images/icon_about_checkmk.svg'
+const DEFAULT_ICON: string = 'main_help'
 
 interface ToolTipInterface {
   /** @property {number} duration - how many milliseconds should wait before displaying the tooltip  */
   delayDuration?: number
+
+  /** @property {number} width - Height in pixels for the tooltip icon */
+  width?: number
 
   /** @property {number} height - Height in pixels for the tooltip icon */
   height?: number
@@ -16,16 +19,16 @@ interface ToolTipInterface {
   icon?: string
 }
 
-defineProps<ToolTipInterface>()
+const props = defineProps<ToolTipInterface>()
 </script>
 
 <template>
   <TooltipProvider :delay-duration="delayDuration || DEFAULT_DELAY">
     <Tooltip>
       <TooltipTrigger as-child>
-        <img class="trigger" :src="icon || DEFAULT_ICON" :height="height || DEFAULT_HEIGHT" />
+        <div class="qs-tooltip__trigger" />
       </TooltipTrigger>
-      <TooltipContent as-child class="tooltipContent message">
+      <TooltipContent as-child class="qs-tooltip__content message">
         <div>
           <slot></slot>
         </div>
@@ -35,23 +38,19 @@ defineProps<ToolTipInterface>()
 </template>
 
 <style scoped>
-.trigger {
-  cursor: pointer;
+.qs-tooltip__trigger {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
   position: relative;
   top: 4px;
+  background-image: v-bind('getIconVariable(props.icon || DEFAULT_ICON)');
 }
 
-div.message {
-  padding: 4px;
-  margin: 0;
-}
-
-.tooltipContent {
+.qs-tooltip__content {
+  padding: 6px 12px;
   border-radius: 4px;
   line-height: 1;
-  box-shadow:
-    hsl(206 22% 7% / 35%) 0px 10px 38px -10px,
-    hsl(206 22% 7% / 20%) 0px 10px 20px -15px;
   user-select: none;
   animation-duration: 400ms;
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);

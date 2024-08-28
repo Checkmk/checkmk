@@ -1,49 +1,74 @@
 <script setup lang="ts">
-type InlineChevronVariant = 'bottom' | 'left' | 'right'
+import { type VariantProps, cva } from 'class-variance-authority'
+
+const inlineChevronVariants = cva('', {
+  variants: {
+    variant: {
+      bottom: 'qs-inline-chevron--bottom',
+      left: 'qs-inline-chevron--left',
+      right: 'qs-inline-chevron--right'
+    }
+  },
+  defaultVariants: {
+    variant: 'bottom'
+  }
+})
+type InlineChevronVariants = VariantProps<typeof inlineChevronVariants>
 
 interface InlineChevronProps {
-  /**@property {string} variant - The chevron's direction */
-  variant: InlineChevronVariant
+  /**@property {InlineChevronVariants['variant']} variant - The chevron's direction */
+  variant: InlineChevronVariants['variant']
 }
 
 defineProps<InlineChevronProps>()
 </script>
 
 <template>
-  <span :class="['chevron', variant]" />
+  <span :class="['qs-inline-chevron', inlineChevronVariants({ variant })]" />
 </template>
 
 <style scoped>
-.chevron::before {
-  border-color: #13d389;
-  border-style: solid;
-  border-width: 0.25em 0.25em 0 0;
-  content: '';
+.qs-inline-chevron {
   display: inline-block;
-  height: 0.45em;
-  left: 0.15em;
-  position: relative;
-  top: 0.15em;
-  transform: rotate(-45deg);
-  vertical-align: top;
-  width: 0.45em;
-}
+  width: 8px;
+  margin-right: var(--spacing-half);
 
-.chevron.right:before {
-  left: 0;
-  transform: rotate(45deg);
-  transition: transform 100ms linear;
-}
+  &::before {
+    border-color: var(--success-dimmed);
+    border-style: solid;
+    border-width: 1px 1px 0 0;
+    content: '';
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    position: relative;
+    top: 0.15em;
+    transform: rotate(-45deg);
+    vertical-align: top;
+  }
 
-.chevron.bottom:before {
-  top: 0;
-  transform: rotate(135deg);
-  transition: transform 100ms linear;
-}
+  &.qs-inline-chevron--bottom {
+    padding-left: 3px;
 
-.chevron.left:before {
-  left: 0.25em;
-  transform: rotate(-135deg);
-  transition: transform 100ms linear;
+    &:before {
+      top: 2px;
+      transform: rotate(135deg);
+      transition: transform 100ms linear;
+    }
+  }
+
+  &.qs-inline-chevron--left:before {
+    left: 0.25em;
+    transform: rotate(-135deg);
+    transition: transform 100ms linear;
+  }
+
+  &.qs-inline-chevron--right:before {
+    top: 4px;
+    left: 0;
+    margin-bottom: 16px;
+    transform: rotate(45deg);
+    transition: transform 100ms linear;
+  }
 }
 </style>

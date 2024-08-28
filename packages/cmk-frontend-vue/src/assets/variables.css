@@ -6,7 +6,8 @@
   /* Colors */
   --success: rgb(19, 211, 137);
   --success-dimmed: rgb(17 188 122);
-  --color-white: rgb(255 255 255);
+  --white: rgb(255, 255, 255);
+  --error-msg-bg-color: rgba(200, 50, 50, 0.15);
 
   /* Fonts */
   --font-size-xlarge: 16px;
@@ -31,12 +32,13 @@
 @layer theme {
   body[data-theme='facelift'] {
     /* Icons */
-    --icon-alert-crit: url('themes/facelift/icon_alert_crit.png');
+    --icon-alert-crit: url('themes/facelift/images/icon_alert_crit.svg');
     --icon-back: url('themes/facelift/images/icon_back.png');
     --icon-continue: url('themes/facelift/images/icon_continue.png');
     --icon-main-help: url('themes/facelift/images/icon_main_help.svg');
     --icon-save-to-services: url('themes/facelift/images/icon_save_to_services.svg');
 
+    /* Colors */
     --default-submit-button-border-color: var(--success-dimmed);
     --default-border-color: rgb(234 234 234);
     --default-table-th-color: rgb(232 232 238);
@@ -44,12 +46,13 @@
 
   body[data-theme='modern-dark'] {
     /* Icons */
-    --icon-alert-crit: url('themes/modern-dark/images/icon_alert_crit.png');
+    --icon-alert-crit: url('themes/modern-dark/images/icon_alert_crit.svg');
     --icon-back: url('themes/modern-dark/images/icon_back.png');
     --icon-continue: url('themes/modern-dark/images/icon_continue.png');
     --icon-main-help: url('themes/modern-dark/images/icon_main_help.svg');
     --icon-save-to-services: url('themes/modern-dark/images/icon_save_to_services.svg');
 
+    /* Colors */
     --default-submit-button-border-color: rgb(8 94 61);
     --default-border-color: rgb(38 45 52);
 

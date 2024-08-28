@@ -15,4 +15,5 @@ defineProps<QuickSetupAppProperties>()
 
 <style>
 @import '@/assets/variables.css';
+@import './variables.css';
 </style>

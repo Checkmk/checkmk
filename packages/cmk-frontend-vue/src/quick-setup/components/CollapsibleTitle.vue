@@ -16,27 +16,27 @@ defineEmits(['toggleOpen'])
 </script>
 
 <template>
-  <button class="text-button" @click="$emit('toggleOpen')">
+  <button class="qs-collapsible-title" @click="$emit('toggleOpen')">
     <InlineChevron :variant="open ? 'bottom' : 'right'" />
-    <span class="collapsible-title">{{ title }}</span>
+    <span class="qs-collapsible-title__text">{{ title }}</span>
   </button>
 </template>
 
 <style scoped>
-.text-button {
+.qs-collapsible-title {
   position: relative;
   left: -27px;
   background: none;
   border: none;
   cursor: pointer;
-}
-.text-button:hover {
-  background-color: none;
+
+  &:hover {
+    background-color: none;
+  }
 }
 
-.collapsible-title {
-  color: #13d389;
-  font-weight: bold;
-  padding-left: 5px;
+.qs-collapsible-title__text {
+  color: var(--success-dimmed);
+  font-weight: var(--font-weight-bold);
 }
 </style>

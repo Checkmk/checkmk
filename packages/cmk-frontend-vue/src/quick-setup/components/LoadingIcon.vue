@@ -1,21 +1,38 @@
 <script setup lang="ts">
-interface LoadingIconProps {
-  /** @property {number} height - Height of the loading icon */
-  height?: number
-}
+import { type VariantProps, cva } from 'class-variance-authority'
 
-const DEFAULT_HEIGHT = 32
-
-withDefaults(defineProps<LoadingIconProps>(), {
-  height: DEFAULT_HEIGHT
+const loadingIconVariants = cva('', {
+  variants: {
+    size: {
+      xl: '32px',
+      lg: '20px'
+    }
+  },
+  defaultVariants: {
+    size: 'xl'
+  }
 })
+type LoadingIconVariants = VariantProps<typeof loadingIconVariants>
+
+interface LoadingIconProps {
+  /** @property {LoadingIconVariants['size']} size - Height of the loading icon */
+  size?: LoadingIconVariants['size']
+}
+defineProps<LoadingIconProps>()
 </script>
 
 <template>
   <img
-    :height="height || DEFAULT_HEIGHT"
     src="themes/facelift/images/load_graph.png"
     alt="Loading"
     aria-label="Loading"
+    class="qs-loading-icon"
   />
 </template>
+
+<style scoped>
+.qs-loading-icon {
+  margin-right: 8px;
+  height: v-bind('loadingIconVariants({ size })');
+}
+</style>

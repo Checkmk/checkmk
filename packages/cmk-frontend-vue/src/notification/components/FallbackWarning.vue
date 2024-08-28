@@ -40,17 +40,10 @@ function openInNewTab(url: string) {
       <div class="buttons">
         <!-- TODO: Change buttons to a new implementation -->
         <Button
-          icon-url="null"
-          variant="null"
           :label="properties['i18n']['setup_link_title']"
           @click="openInNewTab(properties['setup_link'])"
         />
-        <Button
-          icon-url="null"
-          variant="null"
-          :label="properties['i18n']['do_not_show_again_title']"
-          @click="hideContent"
-        />
+        <Button :label="properties['i18n']['do_not_show_again_title']" @click="hideContent" />
       </div>
     </div>
   </div>
@@ -67,7 +60,7 @@ div.help {
 
   div.help_text {
     background-color: rgb(38 47 56);
-    color: var(--color-white);
+    color: var(--white);
   }
 
   p {
@@ -88,7 +81,7 @@ div.help {
 
   .button {
     background-color: rgb(6 103 193);
-    color: var(--color-white);
+    color: var(--white);
     border: unset;
   }
 }

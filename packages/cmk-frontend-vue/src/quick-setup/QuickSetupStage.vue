@@ -16,6 +16,7 @@ const props = defineProps<QuickSetupStageWithIndexSpec>()
 
 const isFirst = computed(() => props.index == 0)
 const isCompleted = computed(() => props.index < props.selectedStage)
+const isLast = computed(() => props.index == props.numberOfStages - 1)
 
 let userInput: StageData = (props?.spec.user_input as StageData) || {}
 
@@ -30,11 +31,14 @@ const updateData = (id: string, value: object) => {
     class="qs-stage"
     :class="{
       active: props.index == props.selectedStage,
-      complete: props.index < props.selectedStage
+      complete: isCompleted
     }"
   >
     <div class="qs-stage__content">
       <Label variant="title">{{ props.spec.title }}</Label>
+      <Label v-if="!isCompleted && props.spec.sub_title" variant="subtitle">{{
+        props.spec.sub_title
+      }}</Label>
 
       <ErrorBoundary>
         <CompositeWidget v-if="isCompleted" :items="props.spec.recap || []" />
@@ -42,10 +46,7 @@ const updateData = (id: string, value: object) => {
 
       <Collapsible :open="props.index == props.selectedStage">
         <CollapsibleContent>
-          <div style="padding-left: 1rem">
-            <div v-if="props.spec.sub_title">
-              <Label variant="subtitle">{{ props.spec.sub_title }}</Label>
-            </div>
+          <div>
             <QuickSetupStageContent
               :components="props.spec?.components || []"
               :form_spec_errors="props.spec?.form_spec_errors || {}"
@@ -58,19 +59,25 @@ const updateData = (id: string, value: object) => {
 
           <div v-if="!loading" class="qs-stage__action">
             <Button
+              v-if="!isLast"
               :label="props.spec.next_button_label || 'Next'"
               variant="next"
               @click="$emit('nextStage')"
             />
             <Button
-              v-if="!isFirst"
-              style="padding-left: 1rem"
-              label="Back"
-              variant="prev"
-              @click="$emit('prevStage')"
+              v-if="isLast"
+              :label="props.spec.next_button_label || 'Save'"
+              variant="save"
+              @click="$emit('nextStage')"
             />
+            <Button v-if="!isFirst" label="Back" variant="prev" @click="$emit('prevStage')" />
           </div>
-          <div v-else class="qs-stage__loading"><LoadingIcon :height="16" />Please wait...</div>
+          <div v-else class="qs-stage__loading">
+            <LoadingIcon size="lg" />
+            <!-- TODO: move these texts to the backend to make them translatable (CMK-19020) -->
+            <span v-if="isLast">This process may take several minutes, please wait...</span>
+            <span v-else>Please wait...</span>
+          </div>
         </CollapsibleContent>
       </Collapsible>
     </div>
@@ -81,22 +88,20 @@ const updateData = (id: string, value: object) => {
 .qs-stage {
   position: relative;
   display: flex;
-  gap: 1rem;
+  gap: 16px;
   padding-bottom: 1rem;
 
   &:before {
-    --size: 3rem;
     counter-increment: stage-index;
     content: counter(stage-index);
     align-content: center;
     text-align: center;
-    font-size: large;
+    font-size: var(--font-size-normal);
     font-weight: bold;
-    margin-right: 1rem;
     position: relative;
     z-index: 1;
-    flex: 0 0 var(--size);
-    height: var(--size);
+    flex: 0 0 24px;
+    height: 24px;
     border-radius: 50%;
     color: #212121;
     background-color: lightgrey;
@@ -110,31 +115,35 @@ const updateData = (id: string, value: object) => {
   &:not(:last-child):after {
     content: '';
     position: absolute;
-    left: 0;
+    left: -1px;
     top: 0;
     bottom: 0;
-    transform: translateX(1.5rem);
-    width: 2px;
-    background-color: #e0e0e0;
+    transform: translateX(11px);
+    width: 3px;
+    background-color: var(--qs-stage-line-color);
   }
 
-  &.active:not(:last-child):after,
-  &.complete:not(:last-child):after {
-    background-color: #17b78e;
+  &.active:after {
+    background: linear-gradient(
+      to bottom,
+      var(--success-dimmed) 50px,
+      var(--qs-stage-line-color) 50px
+    );
   }
-}
 
-.qs-stage__content {
-  padding-top: 1rem;
+  &.complete:after {
+    background-color: var(--success-dimmed);
+  }
 }
 
 .qs-stage__action {
-  padding-top: 1rem;
+  padding-top: var(--spacing);
   position: relative;
-  left: -0.8rem;
 }
 
 .qs-stage__loading {
-  padding-left: 1rem;
+  display: flex;
+  align-items: center;
+  padding-top: 12px;
 }
 </style>

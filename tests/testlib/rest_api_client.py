@@ -1210,15 +1210,25 @@ class RuleClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def list(self, ruleset: str, expect_ok: bool = True) -> Response:
-        url = f"/domain-types/{self.domain}/collections/all"
-        if ruleset:
-            url = f"/domain-types/{self.domain}/collections/all?ruleset_name={ruleset}"
-
+    def list(
+        self,
+        ruleset: str,
+        *,
+        include_links: bool | None = None,
+        include_extensions: bool | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
         return self.request(
             "get",
-            url=url,
+            url=f"/domain-types/{self.domain}/collections/all",
             expect_ok=expect_ok,
+            query_params=_only_set_keys(
+                {
+                    "ruleset_name": ruleset,
+                    "include_links": include_links,
+                    "include_extensions": include_extensions,
+                }
+            ),
         )
 
     def delete(self, rule_id: str, expect_ok: bool = True) -> Response:

@@ -17,7 +17,6 @@ from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 from cmk.ccc import version
 
 from cmk.utils import paths
-from cmk.utils.user import UserId
 
 from cmk.gui.openapi.endpoints.contact_group_config.common import APIInventoryPaths
 
@@ -286,42 +285,17 @@ def test_openapi_groups_with_customer(
 
 
 @managedtest
-@pytest.mark.parametrize("group_type", ["host", "contact", "service"])
-def test_openapi_group_values_are_links(
-    group_type: str, wsgi_app: WebTestAppForCMK, with_automation_user: tuple[UserId, str], base: str
-) -> None:
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+def test_openapi_group_values_are_links(group_client: GroupConfig, group_type: str) -> None:
+    response = group_client.list()
+    assert len(response.json["value"]) == 0
 
-    collection_url = f"{base}/domain-types/{group_type}_group_config/collections/all"
-    response = wsgi_app.call_method(
-        url=collection_url,
-        method="GET",
-        headers={"Accept": "application/json"},
-    )
-    json_data = response.json
-    assert len(json_data["value"]) == 0
-
-    group = {
-        "name": f"{group_type}_foo_bar",
-        "alias": f"{group_type} foo bar",
-        "customer": "global",
-    }
-    _response = wsgi_app.call_method(
-        "post",
-        base + f"/domain-types/{group_type}_group_config/collections/all",
-        params=json.dumps(group),
-        headers={"Accept": "application/json"},
-        status=200,
-        content_type="application/json",
+    group_client.create(
+        name=f"{group_type}_foo_bar",
+        alias=f"{group_type} foo bar",
+        customer="global",
     )
 
-    response = wsgi_app.call_method(
-        url=collection_url,
-        method="GET",
-        headers={"Accept": "application/json"},
-    )
-    assert response.status_code == 200
+    response = group_client.list(include_links=True)
 
     assert len(response.json["value"]) == 1
     assert response.json["value"][0]["links"][0]["domainType"] == "link"
@@ -612,15 +586,26 @@ def test_contact_group_inventory_paths(
     assert group.json["extensions"]["inventory_paths"] == inventory_paths
 
 
-def test_contact_group_include_extensions(clients: ClientRegistry) -> None:
-    clients.ContactGroup.create(name="group_1", alias="alias_1")
-    clients.ContactGroup.create(
-        name="group_2", alias="alias_2", inventory_paths={"type": "forbid_all"}
-    )
+def test_list_group_include_links(group_client: GroupConfig) -> None:
+    group_client.create(name="test_group", alias="test_alias")
+    default_response = group_client.list()
+    enabled_response = group_client.list(include_links=True)
+    disabled_response = group_client.list(include_links=False)
 
-    default_response = clients.ContactGroup.list()
-    enabled_response = clients.ContactGroup.list(include_extensions=True)
-    disabled_response = clients.ContactGroup.list(include_extensions=False)
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == disabled_response.json
+    assert any(bool(value["links"]) for value in enabled_response.json["value"])
+    assert all(value["links"] == [] for value in disabled_response.json["value"])
+
+
+def test_list_group_include_extensions(group_client: GroupConfig) -> None:
+    group_client.create(name="test_group", alias="test_alias")
+    default_response = group_client.list()
+    enabled_response = group_client.list(include_extensions=True)
+    disabled_response = group_client.list(include_extensions=False)
+
+    assert len(default_response.json["value"]) > 0
 
     assert default_response.json == enabled_response.json
     assert any(bool(value["extensions"]) for value in enabled_response.json["value"])

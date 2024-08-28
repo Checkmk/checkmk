@@ -29,7 +29,7 @@ from cmk.utils import paths
 from cmk.gui.groups import GroupSpec
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.endpoints.common_fields import field_include_extensions
+from cmk.gui.openapi.endpoints.common_fields import field_include_extensions, field_include_links
 from cmk.gui.openapi.endpoints.contact_group_config.common import (
     APIGroupSpec,
     APIInventoryPaths,
@@ -244,7 +244,7 @@ def bulk_create(params: Mapping[str, Any]) -> Response:
     method="get",
     response_schema=ContactGroupCollection,
     permissions_required=PERMISSIONS,
-    query_params=[field_include_extensions()],
+    query_params=[field_include_links(), field_include_extensions()],
 )
 def list_group(params: Mapping[str, Any]) -> Response:
     """Show all contact groups"""
@@ -254,7 +254,12 @@ def list_group(params: Mapping[str, Any]) -> Response:
     if include_extensions:
         collection = [_group_to_api(value) for value in collection]
     return serve_json(
-        serialize_group_list("contact_group_config", collection, include_extensions),
+        serialize_group_list(
+            "contact_group_config",
+            collection,
+            include_links=params["include_links"],
+            include_extensions=include_extensions,
+        ),
     )
 
 

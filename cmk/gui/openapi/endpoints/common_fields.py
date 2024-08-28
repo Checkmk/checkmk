@@ -17,13 +17,14 @@ EXISTING_FOLDER = gui_fields.FolderField(
 )
 
 
-def field_include_links(description: str) -> Mapping[str, Boolean]:
+def field_include_links(description: str | None = None) -> Mapping[str, Boolean]:
     return {
         "include_links": Boolean(
             load_default=False,
             required=False,
             example=False,
-            description=description,
+            description=description
+            or "Flag which toggles whether the links field of the individual values should be populated.",
         )
     }
 

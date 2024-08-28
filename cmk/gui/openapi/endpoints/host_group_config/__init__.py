@@ -26,6 +26,7 @@ from cmk.utils import paths
 
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
+from cmk.gui.openapi.endpoints.common_fields import field_include_extensions, field_include_links
 from cmk.gui.openapi.endpoints.host_group_config.request_schemas import (
     BulkDeleteHostGroup,
     BulkInputHostGroup,
@@ -122,12 +123,20 @@ def bulk_create(params: Mapping[str, Any]) -> Response:
     method="get",
     response_schema=HostGroupCollection,
     permissions_required=PERMISSIONS,
+    query_params=[field_include_links(), field_include_extensions()],
 )
 def list_groups(params: Mapping[str, Any]) -> Response:
     """Show all host groups"""
     user.need_permission("wato.groups")
     collection = build_group_list(load_host_group_information())
-    return serve_json(serialize_group_list("host_group_config", collection))
+    return serve_json(
+        serialize_group_list(
+            "host_group_config",
+            collection,
+            include_links=params["include_links"],
+            include_extensions=params["include_extensions"],
+        )
+    )
 
 
 @Endpoint(

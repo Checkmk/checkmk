@@ -11,14 +11,14 @@ metric_disk_read_throughput = metrics.Metric(
     name="disk_read_throughput",
     title=Title("Read throughput"),
     unit=UNIT_BYTES_PER_SECOND,
-    color=metrics.Color.BLUE,
+    color=metrics.Color.GREEN,
 )
 
 metric_disk_write_throughput = metrics.Metric(
     name="disk_write_throughput",
     title=Title("Write throughput"),
     unit=UNIT_BYTES_PER_SECOND,
-    color=metrics.Color.GREEN,
+    color=metrics.Color.BLUE,
 )
 
 perfometer_disk_throughput = perfometers.Bidirectional(
@@ -39,21 +39,21 @@ graph_disk_throughput = graphs.Bidirectional(
     name="disk_throughput",
     title=Title("Disk throughput"),
     lower=graphs.Graph(
-        name="disk_read_throughput",
-        title=Title("Read throughput"),
-        compound_lines=["disk_read_throughput"],
-        simple_lines=[
-            metrics.WarningOf("disk_read_throughput"),
-            metrics.CriticalOf("disk_read_throughput"),
-        ],
-    ),
-    upper=graphs.Graph(
         name="disk_write_throughput",
         title=Title("Write throughput"),
         compound_lines=["disk_write_throughput"],
         simple_lines=[
             metrics.WarningOf("disk_write_throughput"),
             metrics.CriticalOf("disk_write_throughput"),
+        ],
+    ),
+    upper=graphs.Graph(
+        name="disk_read_throughput",
+        title=Title("Read throughput"),
+        compound_lines=["disk_read_throughput"],
+        simple_lines=[
+            metrics.WarningOf("disk_read_throughput"),
+            metrics.CriticalOf("disk_read_throughput"),
         ],
     ),
 )

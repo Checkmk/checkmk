@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { type VariantProps, cva } from 'class-variance-authority'
 import { ref } from 'vue'
+
 import FormEdit from '../FormEdit.vue'
 import { immediateWatch } from '@/form/components/utils/watch'
 import type { Dictionary, DictionaryElement } from '@/form/components/vue_formspec_components'
@@ -10,6 +12,19 @@ import {
 import FormHelp from '../FormHelp.vue'
 
 const DICT_ELEMENT_NO_GROUP = '-ungrouped-'
+
+const dictionaryVariants = cva('', {
+  variants: {
+    variant: {
+      one_column: '',
+      two_columns: 'form-dictionary--two_columns'
+    }
+  },
+  defaultVariants: {
+    variant: 'one_column'
+  }
+})
+type DictionaryVariants = VariantProps<typeof dictionaryVariants>
 
 interface ElementFromProps {
   dict_config: DictionaryElement
@@ -27,6 +42,9 @@ const props = defineProps<{
   spec: Dictionary
   backendValidation: ValidationMessages
 }>()
+
+const variant: DictionaryVariants['variant'] =
+  'layout' in props.spec ? props.spec['layout'] : 'one_column'
 
 const data = defineModel('data', { type: Object, required: true })
 const elementValidation = ref<Record<string, ValidationMessages>>({})
@@ -122,15 +140,16 @@ function indentRequired(element: DictionaryElement): boolean {
 </script>
 
 <template>
-  <table class="dictionary">
+  <table class="dictionary" :class="dictionaryVariants({ variant })">
     <tbody>
       <tr v-for="group in getElementsInGroupsFromProps()" :key="$componentId + group.groupKey">
         <td class="dictleft">
-          <div v-if="!!group.title" class="group-title">{{ group?.title }}</div>
+          <div v-if="!!group.title" class="form-dictionary__group-title">{{ group?.title }}</div>
           <FormHelp v-if="group.help" :help="group.help" />
-          <template
+          <div
             v-for="dict_element in group.elems"
             :key="$componentId + dict_element.dict_config.ident"
+            class="form-dictionary__group_elem"
           >
             <template v-if="indentRequired(dict_element.dict_config)">
               <span class="checkbox">
@@ -161,7 +180,7 @@ function indentRequired(element: DictionaryElement): boolean {
                 :backend-validation="elementValidation[dict_element.dict_config.ident]!"
               />
             </div>
-          </template>
+          </div>
         </td>
       </tr>
     </tbody>
@@ -169,8 +188,34 @@ function indentRequired(element: DictionaryElement): boolean {
 </template>
 
 <style scoped>
-.group-title {
+.form-dictionary__group-title {
   font-weight: bold;
   margin: 1em 0 0.2em 0;
+}
+
+/* Variants */
+.form-dictionary--two_columns {
+  .form-dictionary__group_elem {
+    padding: 8px 0;
+
+    span.checkbox {
+      display: inline-block;
+      float: left;
+      width: 130px;
+      margin: 0;
+      padding-top: 3px;
+      font-weight: bold;
+      word-wrap: break-word;
+      white-space: normal;
+    }
+
+    .dictelement.indent:not(div[id*='DictGroup']) {
+      display: inline-block;
+      margin: 0;
+      margin-left: 16px;
+      padding-left: 0;
+      border-left: none;
+    }
+  }
 }
 </style>

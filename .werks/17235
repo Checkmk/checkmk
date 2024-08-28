@@ -1,0 +1,14 @@
+Title: cpu_utilization: allow total CPU utilization to be set above 101%
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1724827504
+Edition: cre
+Level: 1
+Version: 2.2.0p33
+
+Before this werk, the "High utilization at" level option within the 
+"Levels over an extended time period on total CPU utilization" target
+was limited to a maximum of 101%. However, in environments like containers,
+the total CPU utilization can exceed this threshold. This werk therefore removes
+the upper limit for the total value.

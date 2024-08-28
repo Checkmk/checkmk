@@ -64,6 +64,30 @@ def test_get_site_connections(clients: ClientRegistry) -> None:
     assert resp.json["value"][0]["id"] == "NO_SITE"
 
 
+def test_list_sites_include_links(clients: ClientRegistry) -> None:
+    default_response = clients.SiteManagement.get_all()
+    enabled_response = clients.SiteManagement.get_all(include_links=True)
+    disabled_response = clients.SiteManagement.get_all(include_links=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == disabled_response.json
+    assert any(bool(value["links"]) for value in enabled_response.json["value"])
+    assert all(value["links"] == [] for value in disabled_response.json["value"])
+
+
+def test_list_sites_include_extensions(clients: ClientRegistry) -> None:
+    default_response = clients.SiteManagement.get_all()
+    enabled_response = clients.SiteManagement.get_all(include_extensions=True)
+    disabled_response = clients.SiteManagement.get_all(include_extensions=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == enabled_response.json
+    assert any(bool(value["extensions"]) for value in enabled_response.json["value"])
+    assert all("extensions" not in value for value in disabled_response.json["value"])
+
+
 def test_login(
     clients: ClientRegistry,
     monkeypatch: MonkeyPatch,

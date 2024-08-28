@@ -98,6 +98,32 @@ def test_openapi_host_tag_group_get_collection(aut_user_auth_wsgi_app: WebTestAp
     assert len(col_resp.json_body["value"]) == builtin_groups_count
 
 
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_list_host_tag_groups_include_links(clients: ClientRegistry) -> None:
+    default_response = clients.HostTagGroup.get_all()
+    enabled_response = clients.HostTagGroup.get_all(include_links=True)
+    disabled_response = clients.HostTagGroup.get_all(include_links=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == disabled_response.json
+    assert any(bool(value["links"]) for value in enabled_response.json["value"])
+    assert all(value["links"] == [] for value in disabled_response.json["value"])
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_list_host_tag_groups_include_extensions(clients: ClientRegistry) -> None:
+    default_response = clients.HostTagGroup.get_all()
+    enabled_response = clients.HostTagGroup.get_all(include_extensions=True)
+    disabled_response = clients.HostTagGroup.get_all(include_extensions=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == enabled_response.json
+    assert any(bool(value["extensions"]) for value in enabled_response.json["value"])
+    assert all("extensions" not in value for value in disabled_response.json["value"])
+
+
 @pytest.mark.usefixtures(
     "suppress_remote_automation_calls",
     "suppress_spec_generation_in_background",

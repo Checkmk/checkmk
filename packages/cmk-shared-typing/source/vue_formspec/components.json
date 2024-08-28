@@ -572,11 +572,21 @@
                     "title": "time_span_i18n",
                     "type": "object",
                     "properties": {
-                        "millisecond": { "type": "string" },
-                        "second": { "type": "string" },
-                        "minute": { "type": "string" },
-                        "hour": { "type": "string" },
-                        "day": { "type": "string" }
+                        "millisecond": {
+                            "type": "string"
+                        },
+                        "second": {
+                            "type": "string"
+                        },
+                        "minute": {
+                            "type": "string"
+                        },
+                        "hour": {
+                            "type": "string"
+                        },
+                        "day": {
+                            "type": "string"
+                        }
                     },
                     "required": [
                         "millisecond",
@@ -645,6 +655,42 @@
                 }
             ]
         },
+        "optional_choice": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "optional_choice",
+                    "default": "optional_choice"
+                },
+                "parameter_form": {
+                    "$ref": "#/$defs/form_spec"
+                },
+                "i18n": {
+                    "type": "object",
+                    "title": "i18nOptionalChoice",
+                    "properties": {
+                        "label": {
+                            "type": "string"
+                        },
+                        "none_label": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "parameter_form_default_value": {}
+            },
+            "required": [
+                "type",
+                "parameter_form",
+                "parameter_form_default_value",
+                "i18n"
+            ],
+            "allOf": [
+                {
+                    "$ref": "#/$defs/form_spec"
+                }
+            ]
+        },
         "components": {
             "discriminator": {
                 "propertyName": "type"
@@ -700,6 +746,9 @@
                 },
                 {
                     "$ref": "#/$defs/tuple"
+                },
+                {
+                    "$ref": "#/$defs/optional_choice"
                 }
             ],
             "required": ["type"]

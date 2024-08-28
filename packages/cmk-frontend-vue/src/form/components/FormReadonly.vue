@@ -14,7 +14,8 @@ import type {
   MultilineText,
   MultipleChoice,
   Password,
-  Tuple
+  Tuple,
+  OptionalChoice
 } from '@/form/components/vue_formspec_components'
 import {
   groupDictionaryValidations,
@@ -77,7 +78,40 @@ function renderForm(
       return renderPassword(formSpec as Password, value as (string | boolean)[])
     case 'tuple':
       return renderTuple(formSpec as Tuple, value as unknown[])
+    case 'optional_choice':
+      return renderOptionalChoice(formSpec as OptionalChoice, value as unknown[])
   }
+}
+
+function renderOptionalChoice(
+  formSpec: OptionalChoice,
+  value: unknown,
+  backendValidation: ValidationMessages = []
+): VNode | null {
+  if (value === null) {
+    return h('div', formSpec.i18n.none_label)
+  }
+  const embeddedMessages: ValidationMessages = []
+  const localMessages: ValidationMessages = []
+  backendValidation.forEach((msg) => {
+    if (msg['location'].length > 0) {
+      embeddedMessages.push({
+        location: msg.location.slice(1),
+        message: msg.message,
+        invalid_value: msg.invalid_value
+      })
+    } else {
+      localMessages.push(msg)
+    }
+  })
+
+  const errorFields: VNode[] = []
+  localMessages.forEach((msg) => {
+    errorFields.push(h('label', [msg.message]))
+  })
+
+  const embeddedResult = renderForm(formSpec.parameter_form, value, embeddedMessages)
+  return h('div', [errorFields.concat(embeddedResult ? [embeddedResult] : [])])
 }
 
 function renderTuple(

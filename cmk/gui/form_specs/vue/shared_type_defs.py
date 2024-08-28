@@ -119,6 +119,12 @@ class TupleLayout(str, Enum):
 
 
 @dataclass(kw_only=True)
+class I18nOptionalChoice:
+    label: Optional[str] = None
+    none_label: Optional[str] = None
+
+
+@dataclass(kw_only=True)
 class ValidationMessage:
     location: list[str]
     message: str
@@ -298,6 +304,14 @@ class Tuple(FormSpec):
     show_titles: Optional[bool] = True
 
 
+@dataclass(kw_only=True)
+class OptionalChoice(FormSpec):
+    parameter_form: FormSpec
+    i18n: I18nOptionalChoice
+    parameter_form_default_value: Any
+    type: str = "optional_choice"
+
+
 Components = Union[
     Integer,
     Float,
@@ -316,6 +330,7 @@ Components = Union[
     MultipleChoice,
     TimeSpan,
     Tuple,
+    OptionalChoice,
 ]
 
 

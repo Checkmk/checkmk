@@ -20,6 +20,7 @@ import type { ValidationMessages } from '@/form/components/utils/validation'
 import FormMultipleChoice from '@/form/components/forms/FormMultipleChoice.vue'
 import FormPassword from './forms/FormPassword.vue'
 import FormTuple from '@/form/components/forms/FormTuple.vue'
+import FormOptionalChoice from '@/form/components/forms/FormOptionalChoice.vue'
 
 const props = defineProps<{
   spec: FormSpec
@@ -46,7 +47,8 @@ const components: Record<Components['type'], unknown> = {
   password: FormPassword,
   data_size: FormDataSize,
   catalog: FormCatalog,
-  tuple: FormTuple
+  tuple: FormTuple,
+  optional_choice: FormOptionalChoice
 }
 
 function getComponent(): IComponent {

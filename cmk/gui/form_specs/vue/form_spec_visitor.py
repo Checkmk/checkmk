@@ -20,6 +20,7 @@ from cmk.gui.form_specs.private import (
     DictionaryExtended,
     LegacyValueSpec,
     ListExtended,
+    OptionalChoice,
     SingleChoiceExtended,
     UnknownFormSpec,
 )
@@ -82,6 +83,7 @@ from .visitors import (
     ListVisitor,
     MultilineTextVisitor,
     MultipleChoiceVisitor,
+    OptionalChoiceVisitor,
     PasswordVisitor,
     register_visitor_class,
     SingleChoiceVisitor,
@@ -126,6 +128,7 @@ def register_form_specs():
     register_visitor_class(TimeSpan, TimeSpanVisitor)
     register_visitor_class(TransformForLegacyData, TransformVisitor)
     register_visitor_class(Tuple, TupleVisitor)
+    register_visitor_class(OptionalChoice, OptionalChoiceVisitor)
 
     # Recomposed
     register_visitor_class(HostState, SingleChoiceVisitor, recompose_host_state)

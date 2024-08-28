@@ -22,7 +22,8 @@ export type Components =
   | Catalog
   | MultipleChoice
   | TimeSpan
-  | Tuple;
+  | Tuple
+  | OptionalChoice;
 export type Integer = FormSpec & {
   type: "integer";
   label?: string;
@@ -140,6 +141,12 @@ export type Tuple = FormSpec & {
   show_titles: boolean;
 };
 export type TupleLayout = "horizontal_titles_top" | "horizontal" | "vertical" | "float";
+export type OptionalChoice = FormSpec & {
+  type: "optional_choice";
+  parameter_form: FormSpec;
+  i18n: I18NOptionalChoice;
+  parameter_form_default_value: unknown;
+};
 
 export interface VueFormspecComponents {
   components?: Components;
@@ -213,6 +220,10 @@ export interface TimeSpanI18N {
   minute: string;
   hour: string;
   day: string;
+}
+export interface I18NOptionalChoice {
+  label?: string;
+  none_label?: string;
 }
 export interface ValidationMessage {
   location: string[];

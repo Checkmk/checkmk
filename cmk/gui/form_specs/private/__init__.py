@@ -12,6 +12,7 @@ from .definitions import (
 )
 from .dictionary_extended import DictionaryExtended
 from .list_extended import ListExtended
+from .optional_choice import OptionalChoice
 
 __all__ = [
     "Catalog",
@@ -20,5 +21,6 @@ __all__ = [
     "ListExtended",
     "SingleChoiceElementExtended",
     "SingleChoiceExtended",
+    "OptionalChoice",
     "UnknownFormSpec",
 ]

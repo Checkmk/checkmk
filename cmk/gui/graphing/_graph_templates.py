@@ -101,20 +101,20 @@ class MetricUnitColor:
 
 
 def compute_title(
-    expression: MetricExpression, translated_metrics: Mapping[str, TranslatedMetric]
+    metric_expression: MetricExpression, translated_metrics: Mapping[str, TranslatedMetric]
 ) -> str:
-    if expression.title:
-        return expression.title
-    return translated_metrics[next(expression.metric_names())].title
+    if metric_expression.title:
+        return metric_expression.title
+    return translated_metrics[next(metric_expression.metric_names())].title
 
 
 def compute_unit_color(
-    expression: MetricExpression,
+    metric_expression: MetricExpression,
     translated_metrics: Mapping[str, TranslatedMetric],
     optional_metrics: Sequence[str],
 ) -> MetricUnitColor | None:
     try:
-        result = expression.evaluate(translated_metrics)
+        result = metric_expression.evaluate(translated_metrics)
     except KeyError as err:  # because metric_name is not in translated_metrics
         metric_name = err.args[0]
         if optional_metrics and metric_name in optional_metrics:
@@ -122,7 +122,7 @@ def compute_unit_color(
         raise MKGeneralException(
             _("Graph recipe '%s' uses undefined metric '%s', available are: %s")
             % (
-                expression,
+                metric_expression,
                 metric_name,
                 ", ".join(sorted(translated_metrics.keys())) or "None",
             )
@@ -581,19 +581,19 @@ def _replace_expressions(text: str, translated_metrics: Mapping[str, TranslatedM
 
 
 def _horizontal_rules_from_thresholds(
-    thresholds: Iterable[MetricExpression],
+    metric_expressions: Iterable[MetricExpression],
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> Sequence[HorizontalRule]:
     horizontal_rules = []
-    for expression in thresholds:
+    for metric_expression in metric_expressions:
         try:
-            if (result := expression.evaluate(translated_metrics)).value:
+            if (result := metric_expression.evaluate(translated_metrics)).value:
                 horizontal_rules.append(
                     HorizontalRule(
                         value=result.value,
                         rendered_value=get_render_function(result.unit_spec)(result.value),
                         color=result.color,
-                        title=expression.title,
+                        title=metric_expression.title,
                     )
                 )
         # Scalar value like min and max are always optional. This makes configuration
@@ -695,10 +695,10 @@ def evaluate_graph_template_range(
 
 
 def _evaluate_graph_template_range_boundary(
-    boundary: BaseMetricExpression, translated_metrics: Mapping[str, TranslatedMetric]
+    metric_expression: BaseMetricExpression, translated_metrics: Mapping[str, TranslatedMetric]
 ) -> float | None:
     try:
-        return boundary.evaluate(translated_metrics).value
+        return metric_expression.evaluate(translated_metrics).value
     except Exception:
         return None
 
@@ -707,13 +707,13 @@ def _to_metric_operation(
     site_id: SiteId,
     host_name: HostName,
     service_name: ServiceName,
-    expression: BaseMetricExpression,
+    metric_expression: BaseMetricExpression,
     translated_metrics: Mapping[str, TranslatedMetric],
     consolidation_function: GraphConsolidationFunction | None,
 ) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
-    match expression:
+    match metric_expression:
         case Constant():
-            return MetricOpConstant(value=float(expression.value))
+            return MetricOpConstant(value=float(metric_expression.value))
         case Metric():
             metrics = [
                 MetricOpRRDSource(
@@ -721,10 +721,11 @@ def _to_metric_operation(
                     host_name=host_name,
                     service_name=service_name,
                     metric_name=pnp_cleanup(original.name),
-                    consolidation_func_name=expression.consolidation or consolidation_function,
+                    consolidation_func_name=metric_expression.consolidation
+                    or consolidation_function,
                     scale=original.scale,
                 )
-                for original in translated_metrics[expression.name].originals
+                for original in translated_metrics[metric_expression.name].originals
             ]
             if len(metrics) > 1:
                 return MetricOpOperator(operator_name="MERGE", operands=metrics)
@@ -741,7 +742,7 @@ def _to_metric_operation(
                         translated_metrics,
                         consolidation_function,
                     )
-                    for s in expression.summands
+                    for s in metric_expression.summands
                 ],
             )
         case Product():
@@ -756,7 +757,7 @@ def _to_metric_operation(
                         translated_metrics,
                         consolidation_function,
                     )
-                    for f in expression.factors
+                    for f in metric_expression.factors
                 ],
             )
         case Difference():
@@ -767,7 +768,7 @@ def _to_metric_operation(
                         site_id,
                         host_name,
                         service_name,
-                        expression.minuend,
+                        metric_expression.minuend,
                         translated_metrics,
                         consolidation_function,
                     ),
@@ -775,7 +776,7 @@ def _to_metric_operation(
                         site_id,
                         host_name,
                         service_name,
-                        expression.subtrahend,
+                        metric_expression.subtrahend,
                         translated_metrics,
                         consolidation_function,
                     ),
@@ -789,7 +790,7 @@ def _to_metric_operation(
                         site_id,
                         host_name,
                         service_name,
-                        expression.dividend,
+                        metric_expression.dividend,
                         translated_metrics,
                         consolidation_function,
                     ),
@@ -797,7 +798,7 @@ def _to_metric_operation(
                         site_id,
                         host_name,
                         service_name,
-                        expression.divisor,
+                        metric_expression.divisor,
                         translated_metrics,
                         consolidation_function,
                     ),
@@ -815,7 +816,7 @@ def _to_metric_operation(
                         translated_metrics,
                         consolidation_function,
                     )
-                    for o in expression.operands
+                    for o in metric_expression.operands
                 ],
             )
         case Minimum():
@@ -830,7 +831,7 @@ def _to_metric_operation(
                         translated_metrics,
                         consolidation_function,
                     )
-                    for o in expression.operands
+                    for o in metric_expression.operands
                 ],
             )
         case Average():
@@ -845,7 +846,7 @@ def _to_metric_operation(
                         translated_metrics,
                         consolidation_function,
                     )
-                    for o in expression.operands
+                    for o in metric_expression.operands
                 ],
             )
         case Merge():
@@ -860,11 +861,11 @@ def _to_metric_operation(
                         translated_metrics,
                         consolidation_function,
                     )
-                    for o in expression.operands
+                    for o in metric_expression.operands
                 ],
             )
         case _:
-            raise TypeError(expression)
+            raise TypeError(metric_expression)
 
 
 def metric_expression_to_graph_recipe_expression(

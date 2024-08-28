@@ -577,16 +577,16 @@ class LessEqualThan(ConditionalMetricExpression):
         )
 
 
-def _extract_consolidation(
-    expression: str,
+def _extract_consolidation_function(
+    raw_expression: str,
 ) -> tuple[str, GraphConsolidationFunction | None]:
-    if expression.endswith(".max"):
-        return expression[:-4], "max"
-    if expression.endswith(".min"):
-        return expression[:-4], "min"
-    if expression.endswith(".average"):
-        return expression[:-8], "average"
-    return expression, None
+    if raw_expression.endswith(".max"):
+        return raw_expression[:-4], "max"
+    if raw_expression.endswith(".min"):
+        return raw_expression[:-4], "min"
+    if raw_expression.endswith(".average"):
+        return raw_expression[:-8], "average"
+    return raw_expression, None
 
 
 def _from_scalar(
@@ -614,7 +614,7 @@ def _parse_single_expression(
         with contextlib.suppress(ValueError):
             return Constant(float(raw_expression))
 
-    var_name, consolidation = _extract_consolidation(raw_expression)
+    var_name, consolidation = _extract_consolidation_function(raw_expression)
     if percent := var_name.endswith("(%)"):
         var_name = var_name[:-3]
 

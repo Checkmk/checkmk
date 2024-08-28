@@ -8,14 +8,13 @@ from functools import partial
 
 from livestatus import SiteId
 
-# TODO: find a location for these imports (maybe cmk.gui.quick_setup.v0_unstable.predefined._common)
-from cmk.gui.quick_setup.to_frontend import (
+from cmk.gui.quick_setup.v0_unstable.definitions import UniqueBundleIDStr
+from cmk.gui.quick_setup.v0_unstable.predefined._common import (
     _collect_params_with_defaults_from_form_data,
     _collect_passwords_from_form_data,
     _create_diag_special_agent_input,
     _find_unique_id,
 )
-from cmk.gui.quick_setup.v0_unstable.definitions import UniqueBundleIDStr
 from cmk.gui.quick_setup.v0_unstable.setups import CallableValidator
 from cmk.gui.quick_setup.v0_unstable.type_defs import GeneralStageErrors, ParsedFormData
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId

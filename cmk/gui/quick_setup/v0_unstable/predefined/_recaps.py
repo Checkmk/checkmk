@@ -8,17 +8,19 @@ from functools import partial
 
 from livestatus import SiteId
 
+from cmk.automations.results import SpecialAgentDiscoveryPreviewResult
+
+from cmk.checkengine.discovery import CheckPreviewEntry
+
 from cmk.gui.form_specs.vue.form_spec_visitor import serialize_data_for_frontend
 from cmk.gui.form_specs.vue.visitors import DataOrigin
 from cmk.gui.i18n import ungettext
-
-# TODO: find a location for these imports (maybe cmk.gui.quick_setup.v0_unstable.predefined._common)
-from cmk.gui.quick_setup.to_frontend import (
-    _check_preview_entry_by_service_interest,
+from cmk.gui.quick_setup.v0_unstable.predefined._common import (
     _collect_params_with_defaults_from_form_data,
     _collect_passwords_from_form_data,
     _create_diag_special_agent_input,
     _find_unique_id,
+    _match_service_interest,
 )
 from cmk.gui.quick_setup.v0_unstable.setups import CallableRecap
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, ServiceInterest
@@ -114,3 +116,23 @@ def _recap_service_discovery(
         items.append(Text(text=ungettext("%s other service", "%s other services", len(others))))
 
     return [ListOfWidgets(items=items, list_type="check")]
+
+
+def _check_preview_entry_by_service_interest(
+    services_of_interest: Sequence[ServiceInterest],
+    service_discovery_result: SpecialAgentDiscoveryPreviewResult,
+) -> tuple[Mapping[ServiceInterest, list[CheckPreviewEntry]], list[CheckPreviewEntry]]:
+    check_preview_entry_by_service_interest: Mapping[ServiceInterest, list[CheckPreviewEntry]] = {
+        si: [] for si in services_of_interest
+    }
+    others: list[CheckPreviewEntry] = []
+    for check_preview_entry in service_discovery_result.check_table:
+        if matching_services_interests := _match_service_interest(
+            check_preview_entry, services_of_interest
+        ):
+            check_preview_entry_by_service_interest[matching_services_interests].append(
+                check_preview_entry
+            )
+        else:
+            others.append(check_preview_entry)
+    return check_preview_entry_by_service_interest, others

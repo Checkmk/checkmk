@@ -15,14 +15,12 @@ from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RuleConditionsSpec, RuleSpec
 
 from cmk.gui.http import request
-
-# TODO: find a location for these imports (maybe cmk.gui.quick_setup.v0_unstable.predefined._common)
-from cmk.gui.quick_setup.to_frontend import (
+from cmk.gui.quick_setup.v0_unstable.definitions import UniqueBundleIDStr
+from cmk.gui.quick_setup.v0_unstable.predefined._common import (
     _collect_params_with_defaults_from_form_data,
     _collect_passwords_from_form_data,
     _find_unique_id,
 )
-from cmk.gui.quick_setup.v0_unstable.definitions import UniqueBundleIDStr
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
 from cmk.gui.utils.urls import makeuri_contextless

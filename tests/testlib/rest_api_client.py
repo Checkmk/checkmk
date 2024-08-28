@@ -934,20 +934,27 @@ class FolderClient(RestApiClient):
 
     def get_all(
         self,
+        *,
         parent: str | None = None,
-        expect_ok: bool = True,
         recursive: bool = False,
         show_hosts: bool = False,
+        include_links: bool | None = None,
+        include_extensions: bool | None = None,
+        expect_ok: bool = True,
     ) -> Response:
-        query_params: dict[str, Any] = {"recursive": recursive, "show_hosts": show_hosts}
-        if parent:
-            query_params.update({"parent": parent})
-
         return self.request(
             "get",
             url=f"/domain-types/{self.domain}/collections/all",
-            query_params=query_params,
             expect_ok=expect_ok,
+            query_params=_only_set_keys(
+                {
+                    "parent": parent,
+                    "recursive": recursive,
+                    "show_hosts": show_hosts,
+                    "include_links": include_links,
+                    "include_extensions": include_extensions,
+                }
+            ),
         )
 
     def get_hosts(

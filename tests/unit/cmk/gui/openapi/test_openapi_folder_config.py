@@ -213,6 +213,32 @@ def test_openapi_folders(clients: ClientRegistry) -> None:
         clients.Folder.delete(folder_name=folder_obj["id"])
 
 
+def test_openapi_list_folders_include_links(clients: ClientRegistry) -> None:
+    clients.Folder.create(parent="/", title="test_folder")
+    default_response = clients.Folder.get_all()
+    enabled_response = clients.Folder.get_all(include_links=True)
+    disabled_response = clients.Folder.get_all(include_links=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == disabled_response.json
+    assert any(bool(value["links"]) for value in enabled_response.json["value"])
+    assert all(value["links"] == [] for value in disabled_response.json["value"])
+
+
+def test_openapi_list_folders_include_extensions(clients: ClientRegistry) -> None:
+    clients.Folder.create(parent="/", title="test_folder")
+    default_response = clients.Folder.get_all()
+    enabled_response = clients.Folder.get_all(include_extensions=True)
+    disabled_response = clients.Folder.get_all(include_extensions=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == enabled_response.json
+    assert any(bool(value["extensions"]) for value in enabled_response.json["value"])
+    assert all("extensions" not in value for value in disabled_response.json["value"])
+
+
 def test_openapi_folder_non_existent_site(clients: ClientRegistry) -> None:
     folder_name = "my_folder"
     non_existing_site_name = "i_am_not_existing"

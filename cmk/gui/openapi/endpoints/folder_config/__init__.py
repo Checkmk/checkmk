@@ -267,7 +267,7 @@ def bulk_update(params: Mapping[str, Any]) -> Response:
             detail=f"The following folders were not updated since some of the provided remove attributes did not exist: {', '.join(faulty_folders)}",
         )
 
-    return serve_json(_folders_collection(folders, False))
+    return serve_json(_folders_collection(folders))
 
 
 @Endpoint(
@@ -370,7 +370,9 @@ def move(params: Mapping[str, Any]) -> Response:
                 example=False,
                 load_default=False,
             ),
-        }
+        },
+        field_include_links(),
+        field_include_extensions(),
     ],
     response_schema=FolderCollection,
     permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
@@ -384,12 +386,22 @@ def list_folders(params: Mapping[str, Any]) -> Response:
     else:
         parent.permissions.need_permission("read")
         folders = parent.subfolders()
-    return serve_json(_folders_collection(folders, params["show_hosts"]))
+    return serve_json(
+        _folders_collection(
+            folders,
+            show_hosts=params["show_hosts"],
+            include_links=params["include_links"],
+            include_extensions=params["include_extensions"],
+        )
+    )
 
 
 def _folders_collection(
     folders: list[Folder],
-    show_hosts: bool,
+    *,
+    show_hosts: bool = False,
+    include_links: bool = True,
+    include_extensions: bool = True,
 ) -> CollectionObject:
     folders_ = []
     for folder in folders:
@@ -413,11 +425,16 @@ def _folders_collection(
                 domain_type="folder_config",
                 identifier=folder_slug(folder),
                 title=folder.title(),
-                extensions={
-                    "path": "/" + folder.path(),
-                    "attributes": folder.attributes.copy(),
-                },
+                extensions=(
+                    {
+                        "path": "/" + folder.path(),
+                        "attributes": folder.attributes.copy(),
+                    }
+                    if include_extensions
+                    else None
+                ),
                 members=members,
+                include_links=include_links,
             )
         )
     #

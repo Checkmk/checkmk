@@ -1936,11 +1936,21 @@ class HostClient(RestApiClient):
 
     def get_all(
         self,
-        query: dict[str, Any],
+        *,
+        query: dict[str, Any] | None = None,
         columns: Sequence[str] = ("name",),
+        include_links: bool | None = None,
+        include_extensions: bool | None = None,
         expect_ok: bool = True,
     ) -> Response:
-        params = {"query": json.dumps(query), "columns": columns}
+        params = _only_set_keys(
+            {
+                "query": json.dumps(query),
+                "columns": columns,
+                "include_links": include_links,
+                "include_extensions": include_extensions,
+            }
+        )
         return self.request(
             "get",
             url="/domain-types/host/collections/all",

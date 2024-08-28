@@ -40,6 +40,7 @@ from ._expression import (
     parse_expression_from_api,
     parse_legacy_base_expression,
     parse_legacy_expression,
+    parse_legacy_simple_expression,
     Product,
     Sum,
     WarningOf,
@@ -546,7 +547,7 @@ def _replace_expressions(text: str, translated_metrics: Mapping[str, TranslatedM
     reg = regex.regex(r"%\([^)]*\)")
     if m := reg.search(text):
         if (
-            result := parse_legacy_base_expression(m.group()[2:-1], translated_metrics).evaluate(
+            result := parse_legacy_simple_expression(m.group()[2:-1], translated_metrics).evaluate(
                 translated_metrics
             )
         ).is_error():

@@ -865,11 +865,9 @@ def parse_legacy_base_expression(
 
 
 @dataclass(frozen=True)
-class MetricExpression:
+class SimpleMetricExpression:
     base: BaseMetricExpression
     _: KW_ONLY
-    line_type: LineType
-    title: str = ""
     unit_spec: ConvertibleUnitSpecification | None | str = None
     color: str = ""
 
@@ -899,6 +897,28 @@ class MetricExpression:
         yield from self.base.scalar_names()
 
 
+def parse_legacy_simple_expression(
+    raw_expression: str | int | float,
+    translated_metrics: Mapping[str, TranslatedMetric],
+) -> SimpleMetricExpression:
+    if isinstance(raw_expression, (int, float)):
+        return SimpleMetricExpression(Constant(raw_expression))
+    (
+        stack,
+        unit_id,
+        color,
+    ) = _parse_legacy_expression(raw_expression, translated_metrics)
+    if isinstance(resolved := _resolve_stack(stack), BaseMetricExpression):
+        return SimpleMetricExpression(resolved, unit_spec=unit_id or None, color=color)
+    raise TypeError(resolved)
+
+
+@dataclass(frozen=True, kw_only=True)
+class MetricExpression(SimpleMetricExpression):
+    line_type: LineType
+    title: str = ""
+
+
 def parse_legacy_expression(
     raw_expression: str | int | float,
     line_type: LineType,
@@ -908,10 +928,10 @@ def parse_legacy_expression(
     if isinstance(raw_expression, (int, float)):
         return MetricExpression(
             Constant(raw_expression),
-            line_type=line_type,
-            title=title,
             unit_spec=None,
             color="",
+            line_type=line_type,
+            title=title,
         )
     (
         stack,
@@ -921,10 +941,10 @@ def parse_legacy_expression(
     if isinstance(resolved := _resolve_stack(stack), BaseMetricExpression):
         return MetricExpression(
             resolved,
-            line_type=line_type,
-            title=title,
             unit_spec=unit_id or None,
             color=color,
+            line_type=line_type,
+            title=title,
         )
     raise TypeError(resolved)
 
@@ -1011,10 +1031,10 @@ def parse_expression_from_api(
         case metrics_api.Constant():
             return MetricExpression(
                 Constant(quantity.value),
-                line_type=line_type,
-                title=str(quantity.title.localize(translate_to_current_language)),
                 unit_spec=parse_unit_from_api(quantity.unit),
                 color=parse_color_from_api(quantity.color),
+                line_type=line_type,
+                title=str(quantity.title.localize(translate_to_current_language)),
             )
         case metrics_api.WarningOf():
             return MetricExpression(
@@ -1031,31 +1051,31 @@ def parse_expression_from_api(
         case metrics_api.MinimumOf():
             return MetricExpression(
                 MinimumOf(Metric(quantity.metric_name)),
+                color=parse_color_from_api(quantity.color),
                 line_type=line_type,
                 title=get_metric_spec(quantity.metric_name).title,
-                color=parse_color_from_api(quantity.color),
             )
         case metrics_api.MaximumOf():
             return MetricExpression(
                 MaximumOf(Metric(quantity.metric_name)),
+                color=parse_color_from_api(quantity.color),
                 line_type=line_type,
                 title=get_metric_spec(quantity.metric_name).title,
-                color=parse_color_from_api(quantity.color),
             )
         case metrics_api.Sum():
             return MetricExpression(
                 Sum([parse_base_expression_from_api(s) for s in quantity.summands]),
+                color=parse_color_from_api(quantity.color),
                 line_type=line_type,
                 title=str(quantity.title.localize(translate_to_current_language)),
-                color=parse_color_from_api(quantity.color),
             )
         case metrics_api.Product():
             return MetricExpression(
                 Product([parse_base_expression_from_api(f) for f in quantity.factors]),
-                line_type=line_type,
-                title=str(quantity.title.localize(translate_to_current_language)),
                 unit_spec=parse_unit_from_api(quantity.unit),
                 color=parse_color_from_api(quantity.color),
+                line_type=line_type,
+                title=str(quantity.title.localize(translate_to_current_language)),
             )
         case metrics_api.Difference():
             return MetricExpression(
@@ -1063,9 +1083,9 @@ def parse_expression_from_api(
                     minuend=parse_base_expression_from_api(quantity.minuend),
                     subtrahend=parse_base_expression_from_api(quantity.subtrahend),
                 ),
+                color=parse_color_from_api(quantity.color),
                 line_type=line_type,
                 title=str(quantity.title.localize(translate_to_current_language)),
-                color=parse_color_from_api(quantity.color),
             )
         case metrics_api.Fraction():
             return MetricExpression(
@@ -1073,8 +1093,8 @@ def parse_expression_from_api(
                     dividend=parse_base_expression_from_api(quantity.dividend),
                     divisor=parse_base_expression_from_api(quantity.divisor),
                 ),
-                line_type=line_type,
-                title=str(quantity.title.localize(translate_to_current_language)),
                 unit_spec=parse_unit_from_api(quantity.unit),
                 color=parse_color_from_api(quantity.color),
+                line_type=line_type,
+                title=str(quantity.title.localize(translate_to_current_language)),
             )

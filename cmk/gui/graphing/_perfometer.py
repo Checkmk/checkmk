@@ -27,6 +27,7 @@ from ._expression import (
     Constant,
     parse_legacy_base_expression,
     parse_legacy_conditional_expression,
+    parse_legacy_simple_expression,
 )
 from ._from_api import parse_unit_from_api, perfometers_from_api
 from ._legacy import (
@@ -981,14 +982,14 @@ class MetricometerRendererLegacyLinear(MetricometerRenderer):
         # Needed for sorting via cmk/gui/views/perfometers/base.py::sort_value::_get_metrics_sort_group
         self.perfometer = perfometer
         self._segments = [
-            parse_legacy_base_expression(s, translated_metrics) for s in perfometer["segments"]
+            parse_legacy_simple_expression(s, translated_metrics) for s in perfometer["segments"]
         ]
         self._total = parse_legacy_base_expression(perfometer["total"], translated_metrics)
         if (label := perfometer.get("label")) is None:
             self._label_expression = None
             self._label_unit_name = None
         else:
-            self._label_expression = parse_legacy_base_expression(label[0], translated_metrics)
+            self._label_expression = parse_legacy_simple_expression(label[0], translated_metrics)
             self._label_unit_name = label[1]
         self._translated_metrics = translated_metrics
 

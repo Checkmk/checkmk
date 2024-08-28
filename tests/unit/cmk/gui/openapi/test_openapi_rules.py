@@ -186,7 +186,7 @@ def test_openapi_value_active_check_http(clients: ClientRegistry) -> None:
 
 
 def test_openapi_rules_href_escaped(clients: ClientRegistry) -> None:
-    resp = clients.Ruleset.list(used=False)
+    resp = clients.Ruleset.list(used=False, include_links=True)
     ruleset = next(r for r in resp.json["value"] if RuleGroup.SpecialAgents("gcp") == r["id"])
     assert (
         ruleset["links"][0]["href"]
@@ -337,6 +337,34 @@ def test_openapi_show_non_existing_ruleset(clients: ClientRegistry) -> None:
 def test_openapi_list_rulesets(clients: ClientRegistry) -> None:
     resp = clients.Ruleset.list(fulltext="cisco_qos", used=False)
     assert len(resp.json["value"]) == 2
+
+
+def test_openapi_list_rulesets_include_links(clients: ClientRegistry) -> None:
+    default_response = clients.Ruleset.list(fulltext="cisco_qos", used=False)
+    enabled_response = clients.Ruleset.list(fulltext="cisco_qos", used=False, include_links=True)
+    disabled_response = clients.Ruleset.list(fulltext="cisco_qos", used=False, include_links=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == disabled_response.json
+    assert any(bool(value["links"]) for value in enabled_response.json["value"])
+    assert all(value["links"] == [] for value in disabled_response.json["value"])
+
+
+def test_openapi_list_rulesets_include_extensions(clients: ClientRegistry) -> None:
+    default_response = clients.Ruleset.list(fulltext="cisco_qos", used=False)
+    enabled_response = clients.Ruleset.list(
+        fulltext="cisco_qos", used=False, include_extensions=True
+    )
+    disabled_response = clients.Ruleset.list(
+        fulltext="cisco_qos", used=False, include_extensions=False
+    )
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == enabled_response.json
+    assert any(bool(value["extensions"]) for value in enabled_response.json["value"])
+    assert all("extensions" not in value for value in disabled_response.json["value"])
 
 
 def test_create_rule_old_label_format(

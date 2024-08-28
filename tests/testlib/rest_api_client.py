@@ -1313,33 +1313,34 @@ class RulesetClient(RestApiClient):
 
     def list(
         self,
+        *,
         fulltext: str | None = None,
         folder: str | None = None,
         deprecated: bool | None = None,
         used: bool | None = None,
         group: str | None = None,
         name: str | None = None,
-        search_options: str | None = None,
+        include_links: bool | None = None,
+        include_extensions: bool | None = None,
         expect_ok: bool = True,
     ) -> Response:
-        url = f"/domain-types/{self.domain}/collections/all"
-        if search_options is not None:
-            url = f"/domain-types/{self.domain}/collections/all{search_options}"
-        else:
-            query_params = urllib.parse.urlencode(
-                _only_set_keys(
-                    {
-                        "fulltext": fulltext,
-                        "folder": folder,
-                        "deprecated": deprecated,
-                        "used": used,
-                        "group": group,
-                        "name": name,
-                    }
-                )
-            )
-            url = f"/domain-types/{self.domain}/collections/all?" + query_params
-        return self.request("get", url=url, expect_ok=expect_ok)
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+            query_params=_only_set_keys(
+                {
+                    "fulltext": fulltext,
+                    "folder": folder,
+                    "deprecated": deprecated,
+                    "used": used,
+                    "group": group,
+                    "name": name,
+                    "include_links": include_links,
+                    "include_extensions": include_extensions,
+                }
+            ),
+        )
 
 
 class HostTagGroupClient(RestApiClient):

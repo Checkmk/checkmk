@@ -80,7 +80,6 @@ function getPlaceholder(magnitude: Magnitude): string {
 <template>
   <label v-for="magnitude in selectedMagnitudes" :key="magnitude">
     <input
-      :id="$componentId"
       v-model="values[magnitude]"
       :placeholder="getPlaceholder(magnitude)"
       class="number no-spinner"

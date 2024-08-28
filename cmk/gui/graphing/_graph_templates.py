@@ -699,12 +699,13 @@ def _to_metric_operation(
                     site_id=site_id,
                     host_name=host_name,
                     service_name=service_name,
-                    metric_name=pnp_cleanup(original.name),
-                    consolidation_func_name=metric_expression.consolidation
-                    or consolidation_function,
-                    scale=original.scale,
+                    metric_name=pnp_cleanup(o.name),
+                    consolidation_func_name=(
+                        metric_expression.consolidation or consolidation_function
+                    ),
+                    scale=o.scale,
                 )
-                for original in translated_metrics[metric_expression.name].originals
+                for o in translated_metrics[metric_expression.name].originals
             ]
             if len(metrics) > 1:
                 return MetricOpOperator(operator_name="MERGE", operands=metrics)

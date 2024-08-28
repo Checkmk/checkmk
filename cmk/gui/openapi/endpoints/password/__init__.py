@@ -24,6 +24,7 @@ from cmk.utils.password_store import Password
 
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
+from cmk.gui.openapi.endpoints.common_fields import field_include_extensions, field_include_links
 from cmk.gui.openapi.endpoints.password.request_schemas import InputPassword, UpdatePassword
 from cmk.gui.openapi.endpoints.password.response_schemas import PasswordCollection, PasswordObject
 from cmk.gui.openapi.endpoints.utils import complement_customer, update_customer_info
@@ -179,6 +180,7 @@ def show_password(params: Mapping[str, Any]) -> Response:
     method="get",
     response_schema=PasswordCollection,
     permissions_required=PERMISSIONS,
+    query_params=[field_include_links(), field_include_extensions()],
 )
 def list_passwords(params: Mapping[str, Any]) -> Response:
     """Show all passwords"""
@@ -187,7 +189,13 @@ def list_passwords(params: Mapping[str, Any]) -> Response:
         constructors.collection_object(
             domain_type="password",
             value=[
-                serialize_password(ident, details) for ident, details in load_passwords().items()
+                serialize_password(
+                    ident,
+                    details,
+                    include_links=params["include_links"],
+                    include_extensions=params["include_extensions"],
+                )
+                for ident, details in load_passwords().items()
             ],
         )
     )
@@ -199,7 +207,9 @@ def _serve_password(ident: str, password_details: Password) -> Response:
     return constructors.response_with_etag_created_from_dict(response, password_as_dict)
 
 
-def serialize_password(ident: str, details: Password) -> DomainObject:
+def serialize_password(
+    ident: str, details: Password, *, include_links: bool = True, include_extensions: bool = True
+) -> DomainObject:
     if details["owned_by"] is None:
         details["owned_by"] = "admin"
 
@@ -208,18 +218,23 @@ def serialize_password(ident: str, details: Password) -> DomainObject:
         identifier=ident,
         title=details["title"],
         members={},
-        extensions={
-            k: v
-            for k, v in complement_customer(details).items()
-            if k
-            in (
-                "comment",
-                "docu_url",
-                "owned_by",
-                "shared_with",
-                "customer",
-            )
-        },
+        extensions=(
+            {
+                k: v
+                for k, v in complement_customer(details).items()
+                if k
+                in (
+                    "comment",
+                    "docu_url",
+                    "owned_by",
+                    "shared_with",
+                    "customer",
+                )
+            }
+            if include_extensions
+            else None
+        ),
+        include_links=include_links,
         editable=True,
         deletable=True,
     )

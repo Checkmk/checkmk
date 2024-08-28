@@ -394,7 +394,6 @@ def test_subject_alt_names(self_signed_cert: CertificateWithPrivateKey, sans: li
             subject_alt_dns_names=sans,
             expiry=relativedelta(days=1),
             start_date=datetime.now(timezone.utc),
-            is_ca=False,
             issuer_signing_key=self_signed_cert.private_key,
             issuer_name=X509Name.create(common_name="sans_test"),
         ).get_subject_alt_names()

@@ -6,7 +6,7 @@ defineProps<FormSpecWidgetProps>()
 </script>
 
 <template>
-  <table class="nform">
+  <table class="qs-formspec-recap-widget">
     <tr>
       <td>
         <FormReadonly :data="form_spec.data" :spec="form_spec.spec" :backend-validation="[]" />
@@ -14,3 +14,9 @@ defineProps<FormSpecWidgetProps>()
     </tr>
   </table>
 </template>
+
+<style scoped>
+table.qs-formspec-recap-widget {
+  border-spacing: 0;
+}
+</style>

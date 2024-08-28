@@ -7,7 +7,7 @@ defineProps<TextWidgetProps>()
 </script>
 
 <template>
-  <span
+  <span class="qs-text-widget"
     >{{ text }}
     <ToolTip v-if="tooltip"
       ><p>{{ tooltip }}</p></ToolTip
@@ -15,4 +15,8 @@ defineProps<TextWidgetProps>()
   >
 </template>
 
-<style scoped></style>
+<style scoped>
+.qs-text-widget {
+  margin-bottom: var(--spacing);
+}
+</style>

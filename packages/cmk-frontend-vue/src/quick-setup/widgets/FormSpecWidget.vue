@@ -24,7 +24,7 @@ watch(internal.value, (newValue) => {
 </script>
 
 <template>
-  <table class="nform">
+  <table class="qs-formspec-widget">
     <tr>
       <td>
         <FormEdit
@@ -36,3 +36,9 @@ watch(internal.value, (newValue) => {
     </tr>
   </table>
 </template>
+
+<style scoped>
+table.qs-formspec-widget {
+  border-spacing: 0;
+}
+</style>

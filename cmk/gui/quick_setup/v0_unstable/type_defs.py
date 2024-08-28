@@ -5,8 +5,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping, MutableSequence
 from dataclasses import dataclass
-from typing import Any, Mapping, MutableSequence, NewType
+from typing import Any, NewType
 
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
 

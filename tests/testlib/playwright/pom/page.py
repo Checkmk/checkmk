@@ -119,6 +119,12 @@ class CmkPage(LocatorHelper):
         with self.page.expect_event(event) as _:
             self.page.goto(url)
 
+    def check_no_errors(self, timeout: int) -> None:
+        """Check that no errors are present on the page."""
+        expect(self.locator("div.error"), "Some errors are present on the page").not_to_be_visible(
+            timeout=timeout
+        )
+
     def go(
         self,
         url: str,

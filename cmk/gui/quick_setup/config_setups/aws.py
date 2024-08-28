@@ -6,8 +6,7 @@ from collections.abc import Sequence
 
 from cmk.utils.rulesets.definition import RuleGroup
 
-from cmk.gui.quick_setup.to_frontend import create_and_save_special_agent_bundle
-from cmk.gui.quick_setup.v0_unstable.predefined import recaps
+from cmk.gui.quick_setup.v0_unstable.predefined import complete, recaps
 from cmk.gui.quick_setup.v0_unstable.predefined import validators as qs_validators
 from cmk.gui.quick_setup.v0_unstable.predefined import widgets
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupStage
@@ -205,7 +204,7 @@ def review_and_run_service_discovery() -> QuickSetupStage:
 
 
 def save_action(all_stages_form_data: ParsedFormData) -> str:
-    return create_and_save_special_agent_bundle(
+    return complete.create_and_save_special_agent_bundle(
         special_agent_name="aws",
         all_stages_form_data=all_stages_form_data,
     )

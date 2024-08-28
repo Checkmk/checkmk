@@ -60,6 +60,7 @@ API_DOMAIN = Literal[
     "bi_rule",
     "user_role",
     "autocomplete",
+    "service",
     "service_discovery",
     "discovery_run",
     "ldap_connection",
@@ -2773,6 +2774,31 @@ class SAMLConnectionClient(RestApiClient):
         return set_if_match_header(etag)
 
 
+class ServiceClient(RestApiClient):
+    domain: API_DOMAIN = "service"
+
+    def get_all(
+        self,
+        *,
+        host_name: str | None = None,
+        include_links: bool | None = None,
+        include_extensions: bool | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+            query_params=_only_set_keys(
+                {
+                    "host_name": host_name,
+                    "include_links": include_links,
+                    "include_extensions": include_extensions,
+                }
+            ),
+        )
+
+
 class ServiceDiscoveryClient(RestApiClient):
     service_discovery_domain: API_DOMAIN = "service_discovery"
     discovery_run_domain: API_DOMAIN = "discovery_run"
@@ -3039,6 +3065,7 @@ class ClientRegistry:
     BiRule: BiRuleClient
     UserRole: UserRoleClient
     AutoComplete: AutocompleteClient
+    Service: ServiceClient
     ServiceDiscovery: ServiceDiscoveryClient
     LdapConnection: LDAPConnectionClient
     SamlConnection: SAMLConnectionClient
@@ -3077,6 +3104,7 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         BiRule=BiRuleClient(request_handler, url_prefix),
         UserRole=UserRoleClient(request_handler, url_prefix),
         AutoComplete=AutocompleteClient(request_handler, url_prefix),
+        Service=ServiceClient(request_handler, url_prefix),
         ServiceDiscovery=ServiceDiscoveryClient(request_handler, url_prefix),
         LdapConnection=LDAPConnectionClient(request_handler, url_prefix),
         ParentScan=ParentScanClient(request_handler, url_prefix),

@@ -30,6 +30,7 @@ from cmk.gui import fields as gui_fields
 from cmk.gui import sites
 from cmk.gui.fields import HostField
 from cmk.gui.http import Response
+from cmk.gui.openapi.endpoints.common_fields import field_include_extensions, field_include_links
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_schemas
 from cmk.gui.openapi.restful_objects.constructors import object_action_href
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
@@ -69,7 +70,9 @@ PARAMETERS = [
             ],
             example=["host_name", "description"],
         ),
-    }
+    },
+    field_include_links(),
+    field_include_extensions(),
 ]
 
 HOST_NAME = {
@@ -204,6 +207,9 @@ def _list_services(params: Mapping[str, Any]) -> Response:
 
     result = q.iterate(live)
 
+    include_links: bool = params["include_links"]
+    include_extensions: bool = params["include_extensions"]
+
     return serve_json(
         constructors.collection_object(
             domain_type="service",
@@ -214,18 +220,23 @@ def _list_services(params: Mapping[str, Any]) -> Response:
                     identifier=f"{entry['host_name']}:{entry['description']}",
                     editable=False,
                     deletable=False,
-                    extensions=entry,
-                    self_link=constructors.link_rel(
-                        rel="cmk/show",
-                        href=constructors.object_action_href(
-                            "host",
-                            entry["host_name"],
-                            "show_service",
-                            query_params=[("service_description", entry["description"])],
-                        ),
-                        method="get",
-                        title=f"Show the service {entry['description']}",
+                    extensions=entry if include_extensions else None,
+                    self_link=(
+                        constructors.link_rel(
+                            rel="cmk/show",
+                            href=constructors.object_action_href(
+                                "host",
+                                entry["host_name"],
+                                "show_service",
+                                query_params=[("service_description", entry["description"])],
+                            ),
+                            method="get",
+                            title=f"Show the service {entry['description']}",
+                        )
+                        if include_links
+                        else None
                     ),
+                    include_links=include_links,
                 )
                 for entry in result
             ],

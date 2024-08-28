@@ -6,7 +6,7 @@
 import hashlib
 import re
 from http import HTTPStatus
-from typing import Any, NewType
+from typing import Any, Mapping, NewType
 from urllib.parse import quote
 
 from werkzeug.datastructures import ETags
@@ -764,7 +764,7 @@ def action_parameter(action, parameter, friendly_name, optional, pattern):
     )
 
 
-def hash_of_dict(dict_: dict[str, Any]) -> ETagHash:
+def hash_of_dict(dict_: Mapping[str, Any]) -> ETagHash:
     """Build a sha256 hash over a dictionary's content.
 
     Keys are sorted first to ensure a stable hash.
@@ -802,7 +802,7 @@ def hash_of_dict(dict_: dict[str, Any]) -> ETagHash:
     return ETagHash(_hash.hexdigest())
 
 
-def etag_of_dict(dict_: dict[str, Any]) -> ETags:
+def etag_of_dict(dict_: Mapping[str, Any]) -> ETags:
     """Build a sha256 hash over a dictionary's content.
 
     Keys are sorted first to ensure a stable hash.
@@ -831,7 +831,7 @@ def etag_of_dict(dict_: dict[str, Any]) -> ETags:
     return ETags(strong_etags=[hash_of_dict(dict_)])
 
 
-def response_with_etag_created_from_dict(response: Response, dict_: dict[str, Any]) -> Response:
+def response_with_etag_created_from_dict(response: Response, dict_: Mapping[str, Any]) -> Response:
     """Add an ETag header to the response and return the updated response.
     The ETag header is an ETagHash generated from the dict passed in.
     """

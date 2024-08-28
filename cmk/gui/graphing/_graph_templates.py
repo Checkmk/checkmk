@@ -377,7 +377,7 @@ def _compute_predictive_metrics(
 
 def _applicable_metrics(
     *,
-    metrics_to_consider: Sequence[MetricExpression],
+    metric_expressions: Sequence[MetricExpression],
     conflicting_metrics: Iterable[str],
     optional_metrics: Sequence[str],
     translated_metrics: Mapping[str, TranslatedMetric],
@@ -388,7 +388,7 @@ def _applicable_metrics(
             return []
 
     applicable_metrics = []
-    for metric_expression in metrics_to_consider:
+    for metric_expression in metric_expressions:
         if (result := metric_expression.evaluate(translated_metrics)).is_error():
             if result.error.metric_name and result.error.metric_name in optional_metrics:
                 continue
@@ -422,7 +422,7 @@ def get_graph_templates(
         for parsed in (_parse_graph_template(id_, template),)
         if (
             metrics := _applicable_metrics(
-                metrics_to_consider=parsed.metrics,
+                metric_expressions=parsed.metrics,
                 conflicting_metrics=parsed.conflicting_metrics,
                 optional_metrics=parsed.optional_metrics,
                 translated_metrics=translated_metrics,
@@ -876,7 +876,7 @@ def find_matching_rows_and_translated_metrics(
     for row in rows:
         translated_metrics = translated_metrics_from_row(row)
         if _applicable_metrics(
-            metrics_to_consider=metric_expressions,
+            metric_expressions=metric_expressions,
             conflicting_metrics=conflicting_metrics,
             optional_metrics=optional_metrics,
             translated_metrics=translated_metrics,

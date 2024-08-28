@@ -413,6 +413,8 @@ def _make_exception(error_data: object) -> ApiError:
     match error_data:
         case {"code": "Authorization_RequestDenied", **rest}:
             return ApiErrorAuthorizationRequestDenied(**rest.get("message", error_data))
+        case {"code": _code, "message": message}:
+            return ApiError(message)
         case other:
             return ApiError(other)
 
@@ -605,6 +607,9 @@ class BaseApiClient(abc.ABC):
 
         json_data = self._request_json_from_url(method, uri, body=body, params=params)
 
+        if (error := json_data.get("error")) is not None:
+            raise _make_exception(error)
+
         if key is None:
             return json_data
 
@@ -644,8 +649,7 @@ class BaseApiClient(abc.ABC):
         try:
             return json_data[key]
         except KeyError:
-            error = json_data.get("error", json_data)
-            raise _make_exception(error)
+            raise _make_exception(json_data)
 
 
 class GraphApiClient(BaseApiClient):

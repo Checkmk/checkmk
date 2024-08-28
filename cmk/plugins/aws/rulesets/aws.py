@@ -308,7 +308,7 @@ def quick_setup_stage_1() -> Mapping[str, DictElement]:
     return {
         "access_key_id": DictElement(
             parameter_form=String(
-                title=Title("The access key ID for your AWS account"),
+                title=Title("Access key ID"),
                 field_size=FieldSize.MEDIUM,
                 custom_validate=(validators.LengthInRange(min_value=1),),
             ),
@@ -316,7 +316,7 @@ def quick_setup_stage_1() -> Mapping[str, DictElement]:
         ),
         "secret_access_key": DictElement(
             parameter_form=Password(
-                title=Title("The secret access key for your AWS account"),
+                title=Title("Secret access key"),
                 migrate=migrate_to_password,
                 custom_validate=(validators.LengthInRange(min_value=1),),
             ),

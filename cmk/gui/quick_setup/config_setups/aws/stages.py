@@ -50,17 +50,23 @@ def prepare_aws() -> QuickSetupStage:
         configure_components=[
             ListOfWidgets(
                 items=[
-                    Text(
-                        text=_("Go to AWS root account > Services > IAM."),
-                    ),
+                    Text(text=_("Go to AWS root account > Services > IAM.")),
                     Text(
                         text=_(
-                            "Click 'Add user' under Users, select 'Access key - Programmatic access', and attach the 'ReadOnlyAccess' policy."
+                            'Click "Add user" under Users, select "Access key - Programmatic '
+                            'access", and attach the "ReadOnlyAccess" policy.',
+                        ),
+                        tooltip=_(
+                            "Since this is a ReadOnlyAccess, we won't create any resources on "
+                            "your AWS account."
                         ),
                     ),
+                    Text(text=_("Save the generated Access key and Secret access key.")),
                     Text(
-                        text=_("Save the generated access key and secret key for later use."),
-                        tooltip="Since this is a ReadOnlyAccess, we won't create any resources on your AWS account",
+                        text=_(
+                            "Return to Checkmk, define a unique AWS account name, and use the "
+                            "Access key and Secret access key below."
+                        )
                     ),
                 ],
                 list_type="ordered",
@@ -76,11 +82,11 @@ def prepare_aws() -> QuickSetupStage:
         ],
         custom_validators=[qs_validators.validate_unique_id],
         recap=[recaps.recaps_form_spec],
-        button_label="Configure host and region",
+        button_label="Configure host and regions",
     )
 
 
-def configure_host_and_region() -> QuickSetupStage:
+def configure_host_and_regions() -> QuickSetupStage:
     return QuickSetupStage(
         title=_("Configure host and regions"),
         sub_title=_(
@@ -112,7 +118,7 @@ def configure_host_and_region() -> QuickSetupStage:
                 ),
             ),
             FormSpecDictWrapper(
-                id=FormSpecId("configure_host_and_region"),
+                id=FormSpecId("configure_host_and_regions"),
                 rendering_option="table",
                 form_spec=Dictionary(elements=aws.quick_setup_stage_2()),
             ),
@@ -189,14 +195,14 @@ def configure_services_to_monitor() -> QuickSetupStage:
         recap=[
             recaps.recaps_form_spec,
         ],
-        button_label="Review and run service discovery",
+        button_label="Review & run preview service discovery",
     )
 
 
-def review_and_run_service_discovery() -> QuickSetupStage:
+def review_and_run_preview_service_discovery() -> QuickSetupStage:
     return QuickSetupStage(
-        title=_("Review and run service discovery"),
-        sub_title=_("Review your configuration, run and preview service discovery"),
+        title=_("Review and run preview service discovery"),
+        sub_title=_("Review your configuration and run preview service discovery"),
         configure_components=[],
         custom_validators=[
             qs_validators.validate_test_connection_custom_collect_params(
@@ -260,9 +266,9 @@ quick_setup_aws = QuickSetup(
     id=QuickSetupId(RuleGroup.SpecialAgents("aws")),
     stages=[
         prepare_aws(),
-        configure_host_and_region(),
+        configure_host_and_regions(),
         configure_services_to_monitor(),
-        review_and_run_service_discovery(),
+        review_and_run_preview_service_discovery(),
     ],
     save_action=save_action,
     button_complete_label=_("Save & go to Activate changes"),

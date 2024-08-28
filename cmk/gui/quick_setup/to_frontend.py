@@ -215,7 +215,6 @@ def validate_stage(
         errors.stage_errors.extend(
             custom_validator(
                 parsed_formspecs_data,
-                formspec_lookup,
             )
         )
 

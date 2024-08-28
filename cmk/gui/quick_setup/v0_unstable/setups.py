@@ -17,7 +17,7 @@ from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, Widget
 
 from cmk.rulesets.v1.form_specs import FormSpec
 
-CallableValidator = Callable[[ParsedFormData, Mapping[FormSpecId, FormSpec]], GeneralStageErrors]
+CallableValidator = Callable[[ParsedFormData], GeneralStageErrors]
 CallableRecap = Callable[
     [Sequence[ParsedFormData], Mapping[FormSpecId, FormSpec]],
     Sequence[Widget],

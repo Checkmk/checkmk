@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 
 import pytest
 
@@ -18,11 +18,9 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
     ParsedFormData,
     QuickSetupId,
 )
-from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
 from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
 
 from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import FormSpec
 
 
 def register_quick_setup(setup_stages: Sequence[QuickSetupStage] | None = None) -> None:
@@ -87,9 +85,7 @@ def test_validate_retrieve_next(clients: ClientRegistry) -> None:
     assert resp.json["next_stage_structure"]["button_label"] == "Next"
 
 
-def _form_spec_extra_validate(
-    _stages: ParsedFormData, formspec_map: Mapping[FormSpecId, FormSpec]
-) -> GeneralStageErrors:
+def _form_spec_extra_validate(_stages: ParsedFormData) -> GeneralStageErrors:
     return ["this is a general error", "and another one"]
 
 

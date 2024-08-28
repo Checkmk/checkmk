@@ -19,11 +19,8 @@ from cmk.gui.quick_setup.v0_unstable.predefined._common import (
 )
 from cmk.gui.quick_setup.v0_unstable.setups import CallableValidator
 from cmk.gui.quick_setup.v0_unstable.type_defs import GeneralStageErrors, ParsedFormData
-from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
 from cmk.gui.watolib.check_mk_automations import diag_special_agent
 from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
-
-from cmk.rulesets.v1.form_specs import FormSpec
 
 
 def validate_test_connection_custom_collect_params(
@@ -48,7 +45,6 @@ def _validate_test_connection(
     rulespec_name: str,
     collect_params: Callable[[ParsedFormData, str], Mapping[str, object]],
     all_stages_form_data: ParsedFormData,
-    expected_formspecs_map: Mapping[FormSpecId, FormSpec],
 ) -> GeneralStageErrors:
     general_errors: GeneralStageErrors = []
     site_id = _find_unique_id(all_stages_form_data, "site_selection")
@@ -69,7 +65,6 @@ def _validate_test_connection(
 
 def validate_unique_id(
     stages_form_data: ParsedFormData,
-    expected_formspecs_map: Mapping[FormSpecId, FormSpec],
 ) -> GeneralStageErrors:
     bundle_id = _find_unique_id(stages_form_data, UniqueBundleIDStr)
     if bundle_id is None:

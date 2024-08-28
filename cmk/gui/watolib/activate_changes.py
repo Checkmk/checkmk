@@ -1307,6 +1307,22 @@ def get_rabbitmq_definitions(
     return rabbitmq.compute_distributed_definitions(connection_info)
 
 
+def create_broker_certificates(dirty_sites: list[tuple[SiteId, SiteConfiguration]]) -> None:
+    local_broker_ca = broker_certificates.load_or_create_broker_central_certs()
+    for site_id, settings in dirty_sites:
+        # only remote
+        if site_id == omd_site():
+            continue
+
+        if broker_certificates.broker_certs_created(site_id):
+            continue
+
+        remote_broker_certs = broker_certificates.create_remote_broker_certs(
+            local_broker_ca, site_id, settings
+        )
+        broker_certificates.sync_remote_broker_certs(settings, remote_broker_certs)
+
+
 class ActivateChangesManager(ActivateChanges):
     """Manages the activation of pending configuration changes
 
@@ -1369,20 +1385,6 @@ class ActivateChangesManager(ActivateChanges):
         from_file = self._load_activation_info(activation_id)
         for key in self.info_keys:
             setattr(self, key, from_file[key])
-
-    def _broker_certificates(self):
-        local_broker_ca = broker_certificates.generate_local_broker_ca()
-        need_local_broker_update = False
-        for site_id, settings in self.dirty_sites():
-            # only remote
-            if site_id == omd_site():
-                continue
-            need_local_broker_update |= broker_certificates.generate_remote_broker_certificate(
-                local_broker_ca, site_id, settings
-            )
-
-        if need_local_broker_update:
-            broker_certificates.dump_central_site_broker_certificates()
 
     # Creates the snapshot and starts the single site sync processes. In case these
     # steps could not be started, exceptions are raised and have to be handled by
@@ -1476,7 +1478,7 @@ class ActivateChangesManager(ActivateChanges):
         self._save_activation()
 
         self._start_activation()
-        self._broker_certificates()
+        create_broker_certificates(self.dirty_sites())
 
         create_rabbitmq_definitions_file(paths.omd_root, rabbitmq_definitions[omd_site()])
         return self._activation_id

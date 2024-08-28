@@ -11,9 +11,10 @@ from pathlib import Path
 
 from dateutil.relativedelta import relativedelta
 
-from cmk.utils.certs import CN_TEMPLATE, RootCA, save_single_cert, save_single_key
+from cmk.utils.certs import CN_TEMPLATE
 
 from cmk import messaging
+from cmk.crypto.certificate import CertificateWithPrivateKey, PersistedCertificateWithPrivateKey
 
 
 @dataclass
@@ -27,17 +28,30 @@ def initialize_message_broker_certs(omd_root: Path, site_name: str) -> None:
     These might be replaced by the config sync later.
     """
 
-    cert, key = RootCA.load_or_create(
-        messaging.cacert_file(omd_root),
-        CN_TEMPLATE.format(site_name),
-    ).issue_new_certificate(
-        common_name=site_name,  # used for user identification
+    ca = CertificateWithPrivateKey.generate_self_signed(
+        common_name=CN_TEMPLATE.format(site_name),
         organization=f"Checkmk Site {site_name}",
         expiry=relativedelta(years=5),
         key_size=4096,
+        is_ca=True,
     )
-    save_single_cert(messaging.cert_file(omd_root), cert)
-    save_single_key(messaging.key_file(omd_root), key)
+
+    # be sure the folder of cacert_file are created
+    cacert_file = messaging.cacert_file(omd_root)
+    cacert_file.parent.mkdir(parents=True, exist_ok=True)
+
+    PersistedCertificateWithPrivateKey.persist(ca, cacert_file, messaging.ca_key_file(omd_root))
+
+    bundle = ca.issue_new_certificate(
+        common_name=site_name,  # used for user identification
+        organization=f"Checkmk Site {site_name}",
+        expiry=relativedelta(years=2),
+        key_size=4096,
+    )
+
+    PersistedCertificateWithPrivateKey.persist(
+        bundle, messaging.site_cert_file(omd_root), messaging.site_key_file(omd_root)
+    )
 
 
 def _parse_arguments(argv: list[str]) -> Arguments:

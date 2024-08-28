@@ -7,13 +7,15 @@
 from . import rabbitmq
 from ._config import (
     BrokerCertificates,
+    ca_key_file,
     cacert_file,
-    cert_file,
     get_local_port,
-    key_file,
+    multisite_ca_key_file,
     multisite_cacert_file,
     multisite_cert_file,
     multisite_key_file,
+    site_cert_file,
+    site_key_file,
     TLS_PATH_CUSTOMERS,
 )
 from ._connection import (
@@ -27,11 +29,13 @@ from ._connection import (
 __all__ = [
     "BrokerCertificates",
     "cacert_file",
-    "cert_file",
+    "ca_key_file",
+    "site_cert_file",
     "get_local_port",
-    "key_file",
+    "site_key_file",
     "Channel",
     "Connection",
+    "multisite_ca_key_file",
     "multisite_cacert_file",
     "multisite_cert_file",
     "multisite_key_file",

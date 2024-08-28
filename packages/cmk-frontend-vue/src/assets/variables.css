@@ -1,0 +1,47 @@
+/* Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package. */
+
+:root {
+  /* Colors */
+  --success: rgb(19, 211, 137);
+  --success-dimmed: rgb(17 188 122);
+
+  /* Fonts */
+  --font-size-xlarge: 16px;
+  --font-size-large: 14px;
+  --font-size-normal: 12px;
+  --font-weight-default: 400;
+  --font-weight-bold: 700;
+
+  /* Spacings */
+  --spacing: 10px;
+  --spacing-half: 5px;
+
+  /* Borders */
+  --border-radius: 4px;
+}
+
+@layer theme {
+  body[data-theme='facelift'] {
+    /* Icons */
+    --icon-alert-crit: url('themes/facelift/icon_alert_crit.png');
+    --icon-back: url('themes/facelift/images/icon_back.png');
+    --icon-continue: url('themes/facelift/images/icon_continue.png');
+    --icon-main-help: url('themes/facelift/images/icon_main_help.svg');
+    --icon-save-to-services: url('themes/facelift/images/icon_save_to_services.svg');
+
+    --default-submit-button-border-color: var(--success-dimmed);
+  }
+
+  body[data-theme='modern-dark'] {
+    /* Icons */
+    --icon-alert-crit: url('themes/modern-dark/images/icon_alert_crit.png');
+    --icon-back: url('themes/modern-dark/images/icon_back.png');
+    --icon-continue: url('themes/modern-dark/images/icon_continue.png');
+    --icon-main-help: url('themes/modern-dark/images/icon_main_help.svg');
+    --icon-save-to-services: url('themes/modern-dark/images/icon_save_to_services.svg');
+
+    --default-submit-button-border-color: rgb(8 94 61);
+  }
+}

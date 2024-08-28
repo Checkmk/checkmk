@@ -13,4 +13,6 @@ defineProps<QuickSetupAppProperties>()
   <QuickSetup :quick_setup_id="quick_setup_id" />
 </template>
 
-<style lang="scss" scoped></style>
+<style>
+@import '@/assets/variables.css';
+</style>

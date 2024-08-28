@@ -239,12 +239,36 @@ def test_openapi_user_minimal_password_settings(
 
 
 def test_openapi_all_users(clients: ClientRegistry) -> None:
-    resp = clients.User.get_all()
+    resp = clients.User.get_all(include_links=True)
     users = resp.json["value"]
     assert len(users) == 1
 
     user = clients.User.get(url=users[0]["links"][0]["href"])
     assert user.json == users[0]
+
+
+def test_openapi_list_users_include_links(clients: ClientRegistry) -> None:
+    default_response = clients.User.get_all()
+    enabled_response = clients.User.get_all(include_links=True)
+    disabled_response = clients.User.get_all(include_links=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == disabled_response.json
+    assert any(bool(value["links"]) for value in enabled_response.json["value"])
+    assert all(value["links"] == [] for value in disabled_response.json["value"])
+
+
+def test_openapi_list_users_include_extensions(clients: ClientRegistry) -> None:
+    default_response = clients.User.get_all()
+    enabled_response = clients.User.get_all(include_extensions=True)
+    disabled_response = clients.User.get_all(include_extensions=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == enabled_response.json
+    assert any(bool(value["extensions"]) for value in enabled_response.json["value"])
+    assert all("extensions" not in value for value in disabled_response.json["value"])
 
 
 @managedtest

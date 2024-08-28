@@ -14,11 +14,13 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields import Username
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
+from cmk.gui.openapi.endpoints.common_fields import field_include_extensions, field_include_links
 from cmk.gui.openapi.endpoints.user_config.request_schemas import CreateUser, UpdateUser
 from cmk.gui.openapi.endpoints.user_config.response_schemas import UserCollection, UserObject
 from cmk.gui.openapi.endpoints.utils import complement_customer, update_customer_info
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
+from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.userdb import (
@@ -94,15 +96,19 @@ def show_user(params: Mapping[str, Any]) -> Response:
     method="get",
     response_schema=UserCollection,
     permissions_required=PERMISSIONS,
+    query_params=[field_include_links(), field_include_extensions()],
 )
 def list_users(params: Mapping[str, Any]) -> Response:
     """Show all users"""
     user.need_permission("wato.users")
-    users = []
-    for user_id, attrs in load_users(False).items():
-        user_attributes = _internal_to_api_format(attrs)
-        users.append(serialize_user(user_id, complement_customer(user_attributes)))
-
+    include_links: bool = params["include_links"]
+    include_extensions: bool = params["include_extensions"]
+    users = [
+        serialize_user(
+            user_id, spec, include_links=include_links, include_extensions=include_extensions
+        )
+        for user_id, spec in load_users(False).items()
+    ]
     return serve_json(constructors.collection_object(domain_type="user_config", value=users))
 
 
@@ -182,6 +188,7 @@ def edit_user(params: Mapping[str, Any]) -> Response:
     api_attrs = params["body"]
 
     current_attrs = _load_user(username)
+    constructors.require_etag(constructors.hash_of_dict(current_attrs))
     internal_attrs = _api_to_internal_format(current_attrs, api_attrs)
 
     if connector_id := internal_attrs.get("connector"):
@@ -217,18 +224,26 @@ def _identify_modified_attrs(initial_attrs: UserSpec, new_attrs: dict) -> set[st
 
 
 def serve_user(user_id):
-    user_attributes_internal = _load_user(user_id)
-    user_attributes = _internal_to_api_format(user_attributes_internal)
-    response = serve_json(serialize_user(user_id, complement_customer(user_attributes)))
-    return constructors.response_with_etag_created_from_dict(response, user_attributes)
+    user_spec = _load_user(user_id)
+    response = serve_json(serialize_user(user_id, user_spec))
+    return constructors.response_with_etag_created_from_dict(response, user_spec)
 
 
-def serialize_user(user_id, attributes):
+def serialize_user(
+    user_id: UserId,
+    user_spec: UserSpec,
+    *,
+    include_links: bool = True,
+    include_extensions: bool = True,
+) -> DomainObject:
     return constructors.domain_object(
         domain_type="user_config",
         identifier=user_id,
-        title=attributes["fullname"],
-        extensions=attributes,
+        title=user_spec["alias"],
+        extensions=(
+            complement_customer(_internal_to_api_format(user_spec)) if include_extensions else None
+        ),
+        include_links=include_links,
     )
 
 

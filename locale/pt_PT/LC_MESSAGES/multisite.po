@@ -49327,6 +49327,10 @@ msgstr "Segurança"
 msgid "Security Level"
 msgstr "Nível de Segurança"
 
+#, fuzzy
+msgid "Security advice"
+msgstr "Nome de segurança"
+
 msgid "Security fix"
 msgstr "Correcção de segurança"
 
@@ -77059,6 +77063,12 @@ msgstr "Você precisa fornecer um comentário para o seu tempo parado."
 
 msgid "You need to supply a comment."
 msgstr "Você precisa fornecer um comentário."
+
+msgid ""
+"You should see the standard Robot Framework HTML log below. However, this "
+"content is generated externally. It is prone to injection attacks (executed "
+"on the host where the test is executed). Proceed with caution."
+msgstr ""
 
 msgid ""
 "You will have to configure the host address of the server which hosts the "

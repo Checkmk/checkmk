@@ -49377,6 +49377,10 @@ msgstr "Securitate"
 msgid "Security Level"
 msgstr "Nivelul de securitate"
 
+#, fuzzy
+msgid "Security advice"
+msgstr "Denumire de securitate"
+
 msgid "Security fix"
 msgstr "Fix de securitate"
 
@@ -77307,6 +77311,12 @@ msgstr "Trebuie să furnizați un comentariu pentru timpul de nefuncționare."
 
 msgid "You need to supply a comment."
 msgstr "Trebuie să furnizați un comentariu."
+
+msgid ""
+"You should see the standard Robot Framework HTML log below. However, this "
+"content is generated externally. It is prone to injection attacks (executed "
+"on the host where the test is executed). Proceed with caution."
+msgstr ""
 
 msgid ""
 "You will have to configure the host address of the server which hosts the "

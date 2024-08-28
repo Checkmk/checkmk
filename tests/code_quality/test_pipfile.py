@@ -250,7 +250,6 @@ CEE_UNUSED_PACKAGES = [
     "attrs",
     "bcrypt",
     "cachetools",
-    "certifi",
     "cffi",
     "chardet",
     "click",

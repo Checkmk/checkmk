@@ -1243,7 +1243,7 @@ class Site:
             )
 
     def result_dir(self) -> Path:
-        return Path(os.environ.get("RESULT_PATH", self.path("results"))) / self.id
+        return Path(os.environ.get("RESULT_PATH") or repo_path() / "results" / self.id)
 
     @property
     def crash_report_dir(self) -> Path:

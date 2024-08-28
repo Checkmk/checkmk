@@ -256,6 +256,32 @@ def test_get_ldap_connections(clients: ClientRegistry) -> None:
     assert resp.json["value"][3]["extensions"] == cnx4
 
 
+def test_list_ldap_connections_include_links(clients: ClientRegistry) -> None:
+    create_ldap_connections(clients)
+    default_response = clients.LdapConnection.get_all()
+    enabled_response = clients.LdapConnection.get_all(include_links=True)
+    disabled_response = clients.LdapConnection.get_all(include_links=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == disabled_response.json
+    assert any(bool(value["links"]) for value in enabled_response.json["value"])
+    assert all(value["links"] == [] for value in disabled_response.json["value"])
+
+
+def test_list_ldap_connections_include_extensions(clients: ClientRegistry) -> None:
+    create_ldap_connections(clients)
+    default_response = clients.LdapConnection.get_all()
+    enabled_response = clients.LdapConnection.get_all(include_extensions=True)
+    disabled_response = clients.LdapConnection.get_all(include_extensions=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == enabled_response.json
+    assert any(bool(value["extensions"]) for value in enabled_response.json["value"])
+    assert all("extensions" not in value for value in disabled_response.json["value"])
+
+
 def test_create_ldap_connection_existing_id(clients: ClientRegistry) -> None:
     create_ldap_connections(clients)
     clients.LdapConnection.create(

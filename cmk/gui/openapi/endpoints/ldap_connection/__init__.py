@@ -25,6 +25,7 @@ from typing import Any
 from cmk.gui.fields.custom_fields import LDAPConnectionID
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
+from cmk.gui.openapi.endpoints.common_fields import field_include_extensions, field_include_links
 from cmk.gui.openapi.endpoints.ldap_connection.error_schemas import GETLdapConnection404
 from cmk.gui.openapi.endpoints.ldap_connection.internal_to_restapi_interface import (
     LDAPConnectionInterface,
@@ -113,6 +114,7 @@ def show_ldap_connection(params: Mapping[str, Any]) -> Response:
     tag_group="Setup",
     response_schema=LDAPConnectionResponseCollection,
     permissions_required=RO_PERMISSIONS,
+    query_params=[field_include_links(), field_include_extensions()],
 )
 def show_ldap_connections(params: Mapping[str, Any]) -> Response:
     """Show all LDAP connections"""
@@ -121,7 +123,14 @@ def show_ldap_connections(params: Mapping[str, Any]) -> Response:
     return serve_json(
         collection_object(
             domain_type="ldap_connection",
-            value=[_serialize_ldap_connection(cnx) for cnx in request_ldap_connections().values()],
+            value=[
+                _serialize_ldap_connection(
+                    cnx,
+                    include_links=params["include_links"],
+                    include_extensions=params["include_extensions"],
+                )
+                for cnx in request_ldap_connections().values()
+            ],
         )
     )
 
@@ -199,12 +208,18 @@ def edit_ldap_connection(params: Mapping[str, Any]) -> Response:
     )
 
 
-def _serialize_ldap_connection(connection: LDAPConnectionInterface) -> DomainObject:
+def _serialize_ldap_connection(
+    connection: LDAPConnectionInterface,
+    *,
+    include_links: bool = True,
+    include_extensions: bool = True,
+) -> DomainObject:
     return domain_object(
         domain_type="ldap_connection",
         identifier=connection.general_properties.id,
         title=connection.general_properties.description,
-        extensions=connection.api_response(),
+        extensions=connection.api_response() if include_extensions else None,
+        include_links=include_links,
         editable=True,
         deletable=True,
     )

@@ -143,6 +143,9 @@ msgid ""
 "require manual activation (marked with "
 msgstr ""
 
+msgid " Want to be notified about the public release? "
+msgstr ""
+
 #, python-format
 msgid " and %s '%s'"
 msgstr " en %s '%s'"
@@ -188,9 +191,6 @@ msgstr " of "
 
 msgid " or int"
 msgstr " of int"
-
-msgid " to get notified once the commercial release is available. "
-msgstr ""
 
 msgid " to:"
 msgstr " naar:"
@@ -11740,10 +11740,6 @@ msgstr ""
 msgid "Checkmk Cloud"
 msgstr "Checkmk Logo"
 
-#, fuzzy
-msgid "Checkmk Cloud (SaaS) Beta"
-msgstr "Checkmk agent"
-
 msgid "Checkmk Configuration Files"
 msgstr "Checkmk Configuratie Bestanden"
 
@@ -20282,10 +20278,6 @@ msgstr ""
 msgid ""
 "During the beta phase, the number of services is limited to %s but you would "
 "have %s services after activating your changes."
-msgstr ""
-
-#, python-format
-msgid "During the beta phase, the number of services is limited to %s. "
 msgstr ""
 
 #, python-format
@@ -50920,10 +50912,6 @@ msgid "Report Properties"
 msgstr "Verslag Eigenschappen"
 
 #, fuzzy
-msgid "Report an issue here. "
-msgstr "Rapport aan schema"
-
-#, fuzzy
 msgid ""
 "Report created $NOW_DATE$ $NOW_TIME$ by $USER_ALIAS$ ($USER_ID$)\n"
 "\n"
@@ -52783,6 +52771,10 @@ msgstr "Veranderingen niet activeren"
 msgid "Save & go to host properties"
 msgstr "Opslaan en naar host eigenschappen gaan"
 
+#, fuzzy
+msgid "Save & go to service discovery"
+msgstr "Save & run service discovery"
+
 msgid "Save & run connection tests"
 msgstr "Bewaar & voer verbindingstests uit"
 
@@ -53280,6 +53272,10 @@ msgstr "Beveiliging"
 
 msgid "Security Level"
 msgstr "Beveiligingsniveau"
+
+#, fuzzy
+msgid "Security advice"
+msgstr "Veiligheidsnaam"
 
 msgid "Security fix"
 msgstr "Veiligheidsprobleem"
@@ -59522,6 +59518,10 @@ msgstr "Systemd sockets samenvatting"
 
 msgid "Systems larger than"
 msgstr "Systemen groter dan"
+
+#, fuzzy
+msgid "TBD"
+msgstr "MiB"
 
 msgid "TCP"
 msgstr "TCP"
@@ -70483,14 +70483,15 @@ msgstr "Token authenticatie"
 msgid "Token based authentication"
 msgstr "Token authenticatie"
 
-msgid "Tolderance period for 'reloading' state"
-msgstr "Tolerantieperiode voor 'herladen' staat"
-
 msgid "Tolerance period for 'activating' state"
 msgstr "Tolerantieperiode voor 'activerende' toestand"
 
 msgid "Tolerance period for 'deactivating' state"
 msgstr "Tolerantieperiode voor 'deactivering' toestand"
+
+#, fuzzy
+msgid "Tolerance period for 'reloading' state"
+msgstr "Tolerantieperiode voor 'herladen' staat"
 
 #, fuzzy
 msgid "Tools install state"
@@ -81945,6 +81946,12 @@ msgid "You need to supply a comment."
 msgstr "Je moet een commentaar geven."
 
 msgid ""
+"You should see the standard Robot Framework HTML log below. However, this "
+"content is generated externally. It is prone to injection attacks (executed "
+"on the host where the test is executed). Proceed with caution."
+msgstr ""
+
+msgid ""
 "You will have to configure the host address of the server which hosts the "
 "monitoring server of the host the agent is installed on."
 msgstr ""
@@ -84380,6 +84387,14 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#, fuzzy
+#~ msgid "Checkmk Cloud (SaaS) Beta"
+#~ msgstr "Checkmk agent"
+
+#, fuzzy
+#~ msgid "Report an issue here. "
+#~ msgstr "Rapport aan schema"
 
 #, python-format
 #~ msgid "Phase 1.1: Executing on site \"%s\""

@@ -141,6 +141,9 @@ msgstr ""
 " Aceasta include, de asemenea, orice modificări efectuate de la ultima "
 "activare care nu au necesitat activare manuală (marcate cu "
 
+msgid " Want to be notified about the public release? "
+msgstr ""
+
 #, python-format
 msgid " and %s '%s'"
 msgstr " și %s '%s'"
@@ -186,9 +189,6 @@ msgstr " sau "
 
 msgid " or int"
 msgstr " sau int"
-
-msgid " to get notified once the commercial release is available. "
-msgstr ""
 
 msgid " to:"
 msgstr " către:"
@@ -11752,10 +11752,6 @@ msgstr ""
 msgid "Checkmk Cloud"
 msgstr "Checkmk Logo"
 
-#, fuzzy
-msgid "Checkmk Cloud (SaaS) Beta"
-msgstr "Agent Checkmk"
-
 msgid "Checkmk Configuration Files"
 msgstr "Fișiere de configurare Checkmk"
 
@@ -20307,10 +20303,6 @@ msgstr ""
 msgid ""
 "During the beta phase, the number of services is limited to %s but you would "
 "have %s services after activating your changes."
-msgstr ""
-
-#, python-format
-msgid "During the beta phase, the number of services is limited to %s. "
 msgstr ""
 
 #, python-format
@@ -50962,10 +50954,6 @@ msgstr "Raport"
 msgid "Report Properties"
 msgstr "Proprietăți de raport"
 
-#, fuzzy
-msgid "Report an issue here. "
-msgstr "Raport la program"
-
 msgid ""
 "Report created $NOW_DATE$ $NOW_TIME$ by $USER_ALIAS$ ($USER_ID$)\n"
 "\n"
@@ -52833,6 +52821,10 @@ msgstr "Nu activați modificările"
 msgid "Save & go to host properties"
 msgstr "Salvați și mergeți la proprietățile gazdei"
 
+#, fuzzy
+msgid "Save & go to service discovery"
+msgstr "Salvați & rulați descoperirea serviciilor"
+
 msgid "Save & run connection tests"
 msgstr "Salvați & executați testele de conectare"
 
@@ -53330,6 +53322,10 @@ msgstr "Securitate"
 
 msgid "Security Level"
 msgstr "Nivelul de securitate"
+
+#, fuzzy
+msgid "Security advice"
+msgstr "Denumire de securitate"
 
 msgid "Security fix"
 msgstr "Fix de securitate"
@@ -59661,6 +59657,10 @@ msgstr "Rezumatul socket-urilor Systemd"
 
 msgid "Systems larger than"
 msgstr "Sisteme mai mari de"
+
+#, fuzzy
+msgid "TBD"
+msgstr "MiB"
 
 msgid "TCP"
 msgstr "TCP"
@@ -70717,14 +70717,15 @@ msgstr "Autentificare cu jeton"
 msgid "Token based authentication"
 msgstr "Autentificare bazată pe token"
 
-msgid "Tolderance period for 'reloading' state"
-msgstr "Perioada de toleranță pentru 'reîncărcarea' statului"
-
 msgid "Tolerance period for 'activating' state"
 msgstr "Perioada de toleranță pentru 'activarea' stării"
 
 msgid "Tolerance period for 'deactivating' state"
 msgstr "Perioada de toleranță pentru 'dezactivarea' statului"
+
+#, fuzzy
+msgid "Tolerance period for 'reloading' state"
+msgstr "Perioada de toleranță pentru 'reîncărcarea' statului"
 
 msgid "Tools install state"
 msgstr "Instrumente de instalare de stat"
@@ -82099,6 +82100,12 @@ msgid "You need to supply a comment."
 msgstr "Trebuie să furnizați un comentariu."
 
 msgid ""
+"You should see the standard Robot Framework HTML log below. However, this "
+"content is generated externally. It is prone to injection attacks (executed "
+"on the host where the test is executed). Proceed with caution."
+msgstr ""
+
+msgid ""
 "You will have to configure the host address of the server which hosts the "
 "monitoring server of the host the agent is installed on."
 msgstr ""
@@ -84527,6 +84534,14 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#, fuzzy
+#~ msgid "Checkmk Cloud (SaaS) Beta"
+#~ msgstr "Agent Checkmk"
+
+#, fuzzy
+#~ msgid "Report an issue here. "
+#~ msgstr "Raport la program"
 
 #, python-format
 #~ msgid "Phase 1.1: Executing on site \"%s\""

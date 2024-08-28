@@ -138,6 +138,9 @@ msgid ""
 "require manual activation (marked with "
 msgstr ""
 
+msgid " Want to be notified about the public release? "
+msgstr ""
+
 #, python-format
 msgid " and %s '%s'"
 msgstr " e %s '%s'"
@@ -183,9 +186,6 @@ msgstr " o "
 
 msgid " or int"
 msgstr " o int"
-
-msgid " to get notified once the commercial release is available. "
-msgstr ""
 
 msgid " to:"
 msgstr " a:"
@@ -11622,10 +11622,6 @@ msgstr ""
 msgid "Checkmk Cloud"
 msgstr "Logo Checkmk"
 
-#, fuzzy
-msgid "Checkmk Cloud (SaaS) Beta"
-msgstr "Agente Checkmk"
-
 msgid "Checkmk Configuration Files"
 msgstr "File di configurazione di Checkmk"
 
@@ -20099,10 +20095,6 @@ msgstr ""
 msgid ""
 "During the beta phase, the number of services is limited to %s but you would "
 "have %s services after activating your changes."
-msgstr ""
-
-#, python-format
-msgid "During the beta phase, the number of services is limited to %s. "
 msgstr ""
 
 #, python-format
@@ -50459,10 +50451,6 @@ msgstr "Segnala"
 msgid "Report Properties"
 msgstr "Proprietà del rapporto"
 
-#, fuzzy
-msgid "Report an issue here. "
-msgstr "Rapporto al programma"
-
 msgid ""
 "Report created $NOW_DATE$ $NOW_TIME$ by $USER_ALIAS$ ($USER_ID$)\n"
 "\n"
@@ -52327,6 +52315,10 @@ msgstr "Non attivare le modifiche"
 msgid "Save & go to host properties"
 msgstr "Salva e vai alle proprietà dell'host"
 
+#, fuzzy
+msgid "Save & go to service discovery"
+msgstr "Salvare & eseguire il rilevamento dei servizi"
+
 msgid "Save & run connection tests"
 msgstr "Salvare & eseguire i test di connessione"
 
@@ -52816,6 +52808,10 @@ msgstr "Sicurezza"
 
 msgid "Security Level"
 msgstr "Livello di sicurezza"
+
+#, fuzzy
+msgid "Security advice"
+msgstr "Nome di sicurezza"
 
 msgid "Security fix"
 msgstr "Correzione di sicurezza"
@@ -59007,6 +59003,10 @@ msgstr "Riepilogo dei socket di Systemd"
 
 msgid "Systems larger than"
 msgstr "Sistemi più grandi di"
+
+#, fuzzy
+msgid "TBD"
+msgstr "MiB"
 
 msgid "TCP"
 msgstr "TCP"
@@ -69891,14 +69891,15 @@ msgstr "Autenticazione con token"
 msgid "Token based authentication"
 msgstr "Autenticazione basata su token"
 
-msgid "Tolderance period for 'reloading' state"
-msgstr "Periodo di tolleranza per 'ricarica' stato"
-
 msgid "Tolerance period for 'activating' state"
 msgstr "Periodo di tolleranza per lo stato di 'attivazione'"
 
 msgid "Tolerance period for 'deactivating' state"
 msgstr "Periodo di tolleranza per 'disattivazione' stato"
+
+#, fuzzy
+msgid "Tolerance period for 'reloading' state"
+msgstr "Periodo di tolleranza per 'ricarica' stato"
 
 msgid "Tools install state"
 msgstr "Stato di installazione degli strumenti"
@@ -81207,6 +81208,12 @@ msgid "You need to supply a comment."
 msgstr "È necessario fornire un commento."
 
 msgid ""
+"You should see the standard Robot Framework HTML log below. However, this "
+"content is generated externally. It is prone to injection attacks (executed "
+"on the host where the test is executed). Proceed with caution."
+msgstr ""
+
+msgid ""
 "You will have to configure the host address of the server which hosts the "
 "monitoring server of the host the agent is installed on."
 msgstr ""
@@ -83606,6 +83613,14 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
+
+#, fuzzy
+#~ msgid "Checkmk Cloud (SaaS) Beta"
+#~ msgstr "Agente Checkmk"
+
+#, fuzzy
+#~ msgid "Report an issue here. "
+#~ msgstr "Rapporto al programma"
 
 #, python-format
 #~ msgid "Phase 1.1: Executing on site \"%s\""

@@ -138,6 +138,9 @@ msgstr ""
 " これには、前回アクティベーション以降に行われた変更のうち、手動によるアクティ"
 "ベーションを必要としないもの（マークされたもの）も含まれます "
 
+msgid " Want to be notified about the public release? "
+msgstr ""
+
 #, python-format
 msgid " and %s '%s'"
 msgstr " および%s '%s'"
@@ -183,9 +186,6 @@ msgstr " または "
 
 msgid " or int"
 msgstr " またはint"
-
-msgid " to get notified once the commercial release is available. "
-msgstr " 商業リリースが可能になり次第、通知を受け取る。 "
 
 msgid " to:"
 msgstr " まで:"
@@ -11236,9 +11236,6 @@ msgstr ""
 msgid "Checkmk Cloud"
 msgstr "Checkmkロゴ"
 
-msgid "Checkmk Cloud (SaaS) Beta"
-msgstr "Checkmk Cloud (SaaS) Beta"
-
 msgid "Checkmk Configuration Files"
 msgstr "Checkmk設定ファイル"
 
@@ -19324,10 +19321,6 @@ msgid ""
 msgstr ""
 "ベータ・フェーズの間、サービス数は%sに制限されていますが、変更を有効化する"
 "と、%sのサービスを利用できるようになります。"
-
-#, python-format
-msgid "During the beta phase, the number of services is limited to %s. "
-msgstr "ベータ・フェーズの間、サービス数は %s に制限されます。 "
 
 #, fuzzy, python-format
 msgid "During the development phase, the number of services is limited to %s."
@@ -49501,10 +49494,6 @@ msgid "Report Properties"
 msgstr "レポートのプロパティ"
 
 #, fuzzy
-msgid "Report an issue here. "
-msgstr "スケジュールに報告する"
-
-#, fuzzy
 msgid ""
 "Report created $NOW_DATE$ $NOW_TIME$ by $USER_ALIAS$ ($USER_ID$)\n"
 "\n"
@@ -51362,6 +51351,10 @@ msgstr "変更をアクティブにしないでください"
 msgid "Save & go to host properties"
 msgstr "保存してホストプロパティに移動します"
 
+#, fuzzy
+msgid "Save & go to service discovery"
+msgstr "サービスディスカバリの実行と保存"
+
 msgid "Save & run connection tests"
 msgstr "保存して接続テストを実行"
 
@@ -51848,6 +51841,10 @@ msgstr "セキュリティ"
 
 msgid "Security Level"
 msgstr "セキュリティレベル"
+
+#, fuzzy
+msgid "Security advice"
+msgstr "セキュリティ名"
 
 msgid "Security fix"
 msgstr "セキュリティ修正"
@@ -57983,6 +57980,10 @@ msgstr "Systemdソケットの概要"
 
 msgid "Systems larger than"
 msgstr "より大きいシステム"
+
+#, fuzzy
+msgid "TBD"
+msgstr "MiB"
 
 msgid "TCP"
 msgstr "TCP"
@@ -68529,14 +68530,15 @@ msgstr "トークン認証"
 msgid "Token based authentication"
 msgstr "トークン認証"
 
-msgid "Tolderance period for 'reloading' state"
-msgstr "\"リロード\"状態での試用期間"
-
 msgid "Tolerance period for 'activating' state"
 msgstr "”アクティブ”状態の許容期間"
 
 msgid "Tolerance period for 'deactivating' state"
 msgstr "\"停止\"状態の許容期間"
+
+#, fuzzy
+msgid "Tolerance period for 'reloading' state"
+msgstr "\"リロード\"状態での試用期間"
 
 msgid "Tools install state"
 msgstr "ツールのインストール状態"
@@ -79725,6 +79727,12 @@ msgid "You need to supply a comment."
 msgstr "コメントを入力する必要があります。"
 
 msgid ""
+"You should see the standard Robot Framework HTML log below. However, this "
+"content is generated externally. It is prone to injection attacks (executed "
+"on the host where the test is executed). Proceed with caution."
+msgstr ""
+
+msgid ""
 "You will have to configure the host address of the server which hosts the "
 "monitoring server of the host the agent is installed on."
 msgstr ""
@@ -82146,6 +82154,20 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid " to get notified once the commercial release is available. "
+#~ msgstr " 商業リリースが可能になり次第、通知を受け取る。 "
+
+#~ msgid "Checkmk Cloud (SaaS) Beta"
+#~ msgstr "Checkmk Cloud (SaaS) Beta"
+
+#, python-format
+#~ msgid "During the beta phase, the number of services is limited to %s. "
+#~ msgstr "ベータ・フェーズの間、サービス数は %s に制限されます。 "
+
+#, fuzzy
+#~ msgid "Report an issue here. "
+#~ msgstr "スケジュールに報告する"
 
 #, python-format
 #~ msgid "Phase 1.1: Executing on site \"%s\""

@@ -142,6 +142,9 @@ msgstr ""
 "vorgenommen wurden und keine manuelle Aktivierung erforderten "
 "(gekennzeichnet mit "
 
+msgid " Want to be notified about the public release? "
+msgstr ""
+
 #, python-format
 msgid " and %s '%s'"
 msgstr " und %s '%s'"
@@ -187,10 +190,6 @@ msgstr " oder "
 
 msgid " or int"
 msgstr " oder int"
-
-msgid " to get notified once the commercial release is available. "
-msgstr ""
-" um benachrichtigt zu werden, sobald die kommerzielle Version verfügbar ist. "
 
 msgid " to:"
 msgstr " An:"
@@ -11363,9 +11362,6 @@ msgstr ""
 msgid "Checkmk Cloud"
 msgstr "Checkmk Cloud"
 
-msgid "Checkmk Cloud (SaaS) Beta"
-msgstr "Checkmk Cloud (SaaS) Beta"
-
 msgid "Checkmk Configuration Files"
 msgstr "Checkmk-Konfigurationsdateien"
 
@@ -19605,10 +19601,6 @@ msgid ""
 msgstr ""
 "Während der Beta-Phase ist die Anzahl der Services auf %s begrenzt, aber "
 "nach der Aktivierung Ihrer Änderungen hätten Sie %s Services."
-
-#, python-format
-msgid "During the beta phase, the number of services is limited to %s. "
-msgstr "Während der Beta-Phase ist die Anzahl der Services auf %s begrenzt. "
 
 #, python-format
 msgid "During the development phase, the number of services is limited to %s."
@@ -48970,9 +48962,6 @@ msgstr "Bericht"
 msgid "Report Properties"
 msgstr "Berichteigenschaften"
 
-msgid "Report an issue here. "
-msgstr "Melden Sie hier ein Problem. "
-
 msgid ""
 "Report created $NOW_DATE$ $NOW_TIME$ by $USER_ALIAS$ ($USER_ID$)\n"
 "\n"
@@ -50760,6 +50749,10 @@ msgstr "Speichern & zu 'Änderungen aktivieren' wechseln"
 msgid "Save & go to host properties"
 msgstr "Speichern und zu den Host-Eigenschaften gehen"
 
+#, fuzzy
+msgid "Save & go to service discovery"
+msgstr "Speichern & Service-Erkennung durchführen"
+
 msgid "Save & run connection tests"
 msgstr "Speichern & Verbindungstests durchführen"
 
@@ -51240,6 +51233,10 @@ msgstr "Sicherheit"
 
 msgid "Security Level"
 msgstr "Sicherheitslevel"
+
+#, fuzzy
+msgid "Security advice"
+msgstr "Sicherheitsname"
 
 msgid "Security fix"
 msgstr "Sicherheitsfix"
@@ -57385,6 +57382,10 @@ msgstr "Zusammenfassung der Systemd-Buchsen"
 
 msgid "Systems larger than"
 msgstr "Systeme größer als"
+
+#, fuzzy
+msgid "TBD"
+msgstr "MiB"
 
 msgid "TCP"
 msgstr "TCP"
@@ -68360,14 +68361,15 @@ msgstr "Token-Authentifizierung"
 msgid "Token based authentication"
 msgstr "Token-basierte Authentifizierung"
 
-msgid "Tolderance period for 'reloading' state"
-msgstr "Toleranzperiode für Status 'reloading'"
-
 msgid "Tolerance period for 'activating' state"
 msgstr "Toleranzperiode für Status 'activating'"
 
 msgid "Tolerance period for 'deactivating' state"
 msgstr "Toleranzperiode für Status 'deactivating'"
+
+#, fuzzy
+msgid "Tolerance period for 'reloading' state"
+msgstr "Toleranzperiode für Status 'reloading'"
 
 msgid "Tools install state"
 msgstr "Installationsstatus der Tools"
@@ -79266,6 +79268,12 @@ msgid "You need to supply a comment."
 msgstr "Sie müssen einen Kommentar eingeben."
 
 msgid ""
+"You should see the standard Robot Framework HTML log below. However, this "
+"content is generated externally. It is prone to injection attacks (executed "
+"on the host where the test is executed). Proceed with caution."
+msgstr ""
+
+msgid ""
 "You will have to configure the host address of the server which hosts the "
 "monitoring server of the host the agent is installed on."
 msgstr ""
@@ -81676,6 +81684,22 @@ msgstr "{region} ({id_})"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid " to get notified once the commercial release is available. "
+#~ msgstr ""
+#~ " um benachrichtigt zu werden, sobald die kommerzielle Version verfügbar "
+#~ "ist. "
+
+#~ msgid "Checkmk Cloud (SaaS) Beta"
+#~ msgstr "Checkmk Cloud (SaaS) Beta"
+
+#, python-format
+#~ msgid "During the beta phase, the number of services is limited to %s. "
+#~ msgstr ""
+#~ "Während der Beta-Phase ist die Anzahl der Services auf %s begrenzt. "
+
+#~ msgid "Report an issue here. "
+#~ msgstr "Melden Sie hier ein Problem. "
 
 #, python-format
 #~ msgid "Phase 1.1: Executing on site \"%s\""

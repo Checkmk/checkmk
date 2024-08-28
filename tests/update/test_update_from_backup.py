@@ -80,7 +80,12 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site) -> None:
     assert target_version.edition == Edition.CEE, "This test works with CEE only"
 
     min_version = get_min_version()
-    target_site = site_factory.interactive_update(base_site, target_version, min_version)
+    target_site = site_factory.interactive_update(
+        base_site,
+        target_version,
+        min_version,
+        conflict_mode="install",
+    )
 
     target_services = {}
     target_ok_services = {}

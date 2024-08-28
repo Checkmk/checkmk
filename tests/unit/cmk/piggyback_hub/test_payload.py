@@ -22,12 +22,12 @@ from cmk.piggyback import (
     store_piggyback_raw_data,
 )
 from cmk.piggyback_hub.config import Target
-from cmk.piggyback_hub.main import (
+from cmk.piggyback_hub.payload import (
     _get_piggyback_raw_data_to_send,
     _load_piggyback_targets,
-    _save_payload,
     _send_message,
     PiggybackPayload,
+    save_payload,
 )
 
 
@@ -40,7 +40,7 @@ def test__on_message() -> None:
         last_contact=1640000000,
         sections=[b"line1", b"line2"],
     )
-    on_message = _save_payload(test_logger, cmk.utils.paths.omd_root)
+    on_message = save_payload(test_logger, cmk.utils.paths.omd_root)
 
     on_message(None, None, None, input_payload)
 

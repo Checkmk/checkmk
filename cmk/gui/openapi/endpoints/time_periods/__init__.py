@@ -21,6 +21,7 @@ from cmk.utils.timeperiod import TimeperiodSpec
 
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
+from cmk.gui.openapi.endpoints.common_fields import field_include_extensions, field_include_links
 from cmk.gui.openapi.endpoints.time_periods.request_schemas import (
     CreateTimePeriod,
     UpdateTimePeriod,
@@ -68,13 +69,17 @@ def time_period_not_found_problem(time_period_id: str) -> Response:
 
 def _get_time_period_domain_object(
     name: str,
-    api_format: dict[str, Any],
+    time_period: TimeperiodSpec,
+    *,
+    include_links: bool = True,
+    include_extensions: bool = True,
 ) -> DomainObject:
     return constructors.domain_object(
         domain_type="time_period",
         identifier=name,
-        title=api_format["alias"],
-        extensions=api_format,
+        title=cast(str, time_period["alias"]),
+        extensions=_to_api_format(time_period, name == "24X7") if include_extensions else None,
+        include_links=include_links,
         deletable=True,
         editable=True,
     )
@@ -101,7 +106,7 @@ def create_timeperiod(params: Mapping[str, Any]) -> Response:
         alias=body["alias"], periods=periods, exceptions=exceptions, exclude=body.get("exclude", [])
     )
     _create_timeperiod(name, time_period)
-    return _serve_time_period(_get_time_period_domain_object(name, _to_api_format(time_period)))
+    return _serve_time_period(_get_time_period_domain_object(name, time_period))
 
 
 @Endpoint(
@@ -149,9 +154,8 @@ def update_timeperiod(params: Mapping[str, Any]) -> Response:
         exceptions=_format_exceptions(body.get("exceptions", parsed_time_period["exceptions"])),
         exclude=body.get("exclude", parsed_time_period["exclude"]),
     )
-    api_format_response = _to_api_format(updated_time_period)
     modify_timeperiod(name, updated_time_period)
-    return _serve_time_period(_get_time_period_domain_object(name, api_format_response))
+    return _serve_time_period(_get_time_period_domain_object(name, updated_time_period))
 
 
 @Endpoint(
@@ -208,8 +212,7 @@ def show_time_period(params: Mapping[str, Any]) -> Response:
     except TimePeriodNotFoundError:
         return time_period_not_found_problem(name)
 
-    api_format = _to_api_format(time_period, name == "24X7")
-    return _serve_time_period(_get_time_period_domain_object(name, api_format))
+    return _serve_time_period(_get_time_period_domain_object(name, time_period))
 
 
 @Endpoint(
@@ -218,6 +221,7 @@ def show_time_period(params: Mapping[str, Any]) -> Response:
     method="get",
     response_schema=TimePeriodResponseCollection,
     permissions_required=PERMISSIONS,
+    query_params=[field_include_links(), field_include_extensions()],
 )
 def list_time_periods(params: Mapping[str, Any]) -> Response:
     """Show all time periods"""
@@ -226,7 +230,12 @@ def list_time_periods(params: Mapping[str, Any]) -> Response:
         constructors.collection_object(
             domain_type="time_period",
             value=[
-                _get_time_period_domain_object(name, _to_api_format(time_period, name == "24X7"))
+                _get_time_period_domain_object(
+                    name,
+                    time_period,
+                    include_links=params["include_links"],
+                    include_extensions=params["include_extensions"],
+                )
                 for name, time_period in load_timeperiods().items()
             ],
         )

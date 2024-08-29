@@ -1,0 +1,18 @@
+Title: raritan_pdu_plugs.py: respect user defined parameters
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1728485393
+Edition: cre
+Level: 1
+Version: 2.2.0p36
+
+Currently, the check disregards the custom parameters set by the user, always returning the state
+defined by the SNMP mapping. With this change, the service now compares the current state with the
+required state defined by the user in the check parameters. If there is a mismatch, a "CRIT" result
+will be yielded, comparing the actual and expected plug state. Otherwise, an "OK" result will be
+yielded with the plug state.
+
+Note: if these parameters are not explicitly set for your service, the service will compare the
+current state with the state set during service discovery. If you do have configured parameters,
+there are no changes needed for this fix.

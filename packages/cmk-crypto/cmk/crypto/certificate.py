@@ -77,13 +77,12 @@ class CertificateWithPrivateKey(NamedTuple):
     @classmethod
     def generate_self_signed(  # pylint: disable=too-many-arguments
         cls,
-        *,
         common_name: str,
         organization: str,
         organizational_unit: str | None = None,
-        subject_alt_dns_names: list[str] | None = None,
         expiry: relativedelta = relativedelta(years=2),
         key_size: int = 4096,
+        subject_alt_dns_names: list[str] | None = None,
         is_ca: bool = False,
     ) -> CertificateWithPrivateKey:
         """Generate an RSA private key and create a self-signed certificated for it."""
@@ -96,14 +95,10 @@ class CertificateWithPrivateKey(NamedTuple):
             organization_name=organization,
             organizational_unit=organizational_unit,
         )
-        alt_names = (
-            [x509.DNSName(san) for san in subject_alt_dns_names] if subject_alt_dns_names else None
-        )
-
         certificate = Certificate._create(
             subject_public_key=private_key.public_key,
             subject_name=name,
-            subject_alt_dns_names=alt_names,
+            subject_alt_dns_names=subject_alt_dns_names,
             expiry=expiry,
             start_date=datetime.now(tz=timezone.utc),
             is_ca=is_ca,
@@ -159,45 +154,6 @@ class CertificateWithPrivateKey(NamedTuple):
             private_key=key,
         )
 
-    def issue_new_certificate(  # pylint: disable=too-many-arguments
-        self,
-        *,
-        common_name: str,
-        organization: str,
-        organizational_unit: str | None = None,
-        subject_alt_dns_names: list[str] | None = None,
-        expiry: relativedelta = relativedelta(years=2),
-        key_size: int = 4096,
-        is_ca: bool = False,
-    ) -> CertificateWithPrivateKey:
-        """Create a new certificate signed by this certificate's private key."""
-
-        if not self.certificate.may_sign_certificates():
-            raise ValueError("This certificate is not allowed to issue certificates (not a CA)")
-
-        issued_key = PrivateKey.generate_rsa(key_size)
-        issued_name = X509Name.create(
-            common_name=common_name,
-            organization_name=organization,
-            organizational_unit=organizational_unit,
-        )
-        issued_alt_names = (
-            [x509.DNSName(san) for san in subject_alt_dns_names] if subject_alt_dns_names else None
-        )
-
-        issued_certificate = Certificate._create(
-            subject_public_key=issued_key.public_key,
-            subject_name=issued_name,
-            subject_alt_dns_names=issued_alt_names,
-            expiry=expiry,
-            start_date=datetime.now(tz=timezone.utc),
-            is_ca=is_ca,
-            issuer_signing_key=self.private_key,
-            issuer_name=self.certificate.subject,
-        )
-
-        return CertificateWithPrivateKey(issued_certificate, issued_key)
-
     def sign_csr(self, csr: CertificateSigningRequest, expiry: relativedelta) -> Certificate:
         """
         Create a certificate by signing a certificate signing request.
@@ -206,7 +162,7 @@ class CertificateWithPrivateKey(NamedTuple):
         certificates at the moment.
         """
         if not self.certificate.may_sign_certificates():
-            raise ValueError("This certificate is not suitable for signing CSRs (not a CA)")
+            raise ValueError("This certificate is not suitable for signing CSRs")
 
         if not csr.is_signature_valid:
             raise ValueError("CSR signature is not valid")
@@ -219,12 +175,12 @@ class CertificateWithPrivateKey(NamedTuple):
         return Certificate._create(
             subject_public_key=csr.public_key,
             subject_name=csr.subject,
-            subject_alt_dns_names=[x509.DNSName(cn)],
+            subject_alt_dns_names=[x509.DNSName(cn).value],
+            issuer_signing_key=self.private_key,
+            issuer_name=self.certificate.subject,
             expiry=expiry,
             start_date=datetime.now(tz=timezone.utc),
             is_ca=False,
-            issuer_signing_key=self.private_key,
-            issuer_name=self.certificate.subject,
         )
 
 
@@ -325,11 +281,11 @@ class Certificate:
         # subject info
         subject_public_key: PublicKey,
         subject_name: X509Name,
-        subject_alt_dns_names: list[x509.DNSName] | None,
+        subject_alt_dns_names: list[str] | None = None,
         # cert properties
         expiry: relativedelta,
         start_date: datetime,
-        is_ca: bool,
+        is_ca: bool = False,
         # issuer info
         issuer_signing_key: PrivateKey,
         issuer_name: X509Name,
@@ -395,7 +351,8 @@ class Certificate:
 
         if subject_alt_dns_names is not None:
             builder = builder.add_extension(
-                x509.SubjectAlternativeName(subject_alt_dns_names), critical=False
+                x509.SubjectAlternativeName([x509.DNSName(san) for san in subject_alt_dns_names]),
+                critical=False,
             )
 
         hash_algo = (

@@ -22,7 +22,12 @@ from cmk.ccc.site import omd_site
 from cmk.utils.log.security_event import SecurityEvent
 from cmk.utils.user import UserId
 
-from cmk.crypto.certificate import Certificate, CertificateWithPrivateKey
+from cmk.crypto.certificate import (
+    Certificate,
+    CertificateSigningRequest,
+    CertificateWithPrivateKey,
+    X509Name,
+)
 from cmk.crypto.hash import HashAlgorithm
 from cmk.crypto.keys import is_supported_private_key_type, PrivateKey
 
@@ -77,6 +82,19 @@ class RootCA(CertificateWithPrivateKey):
             _save_cert_chain(path, [ca.certificate], ca.private_key)
             return cls(ca.certificate, ca.private_key)
 
+    def issue_new_certificate(
+        self,
+        common_name: str,
+        validity: relativedelta = _DEFAULT_VALIDITY,
+        key_size: int = _DEFAULT_KEY_SIZE,
+    ) -> tuple[Certificate, PrivateKey]:
+        new_cert_key = PrivateKey.generate_rsa(key_size)
+        new_cert_csr = CertificateSigningRequest.create(
+            subject_name=X509Name.create(common_name=common_name),
+            subject_private_key=new_cert_key,
+        )
+        return self.sign_csr(new_cert_csr, validity), new_cert_key
+
     def issue_and_store_certificate(
         self,
         path: Path,
@@ -85,13 +103,7 @@ class RootCA(CertificateWithPrivateKey):
         key_size: int = _DEFAULT_KEY_SIZE,
     ) -> None:
         """Create and sign a new certificate, store the chain to 'path'"""
-        new_cert, new_key = self.issue_new_certificate(
-            common_name=common_name,
-            organization=f"Checkmk Site {omd_site()}",
-            subject_alt_dns_names=[common_name],
-            expiry=validity,
-            key_size=key_size,
-        )
+        new_cert, new_key = self.issue_new_certificate(common_name, validity, key_size)
         _save_cert_chain(path, [new_cert, self.certificate], new_key)
 
 

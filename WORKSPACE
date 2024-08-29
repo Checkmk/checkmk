@@ -386,3 +386,10 @@ http_archive(
         "https://github.com/storypku/bazel_iwyu/archive/bb102395e553215abd66603bcdeb6e93c66ca6d7.tar.gz",
     ],
 )
+
+load("//omd/packages/rabbitmq:rabbitmq_http.bzl", "rabbitmq")
+
+rabbitmq(
+    sha256 = "7bfc742e3d227e8a2b1ea2a0b5ef3ba4b6a7987d5e220e0fbf0919d29b6ed43c",
+    version_str = "3.13.6",
+)

@@ -1,0 +1,21 @@
+filegroup(
+    name = "files",
+    srcs = [
+        "Pipfile",
+        "Pipfile.lock",
+        "cmk/crypto/__init__.py",
+        "cmk/crypto/certificate.py",
+        "cmk/crypto/deprecated.py",
+        "cmk/crypto/hash.py",
+        "cmk/crypto/keys.py",
+        "cmk/crypto/password.py",
+        "cmk/crypto/password_hashing.py",
+        "cmk/crypto/pem.py",
+        "cmk/crypto/secrets.py",
+        "cmk/crypto/symmetric.py",
+        "cmk/crypto/totp.py",
+        "pyproject.toml",
+        "setup.cfg",
+    ],
+    visibility = ["//visibility:public"],
+)

@@ -33,6 +33,16 @@ logger = logging.getLogger(__name__)
 OMD_STATUS_CACHE = Path("/var/lib/check_mk_agent/cache/omd_status.cache")
 
 
+def bake_agents(site: Site) -> None:
+    expected_baking_start_time = time.time()
+    bake_all_agents_response = site.openapi.post("domain-types/agent/actions/bake/invoke")
+    bake_all_agents_response.raise_for_status()
+    wait_for_baking_job(
+        central_site=site,
+        expected_start_time=expected_baking_start_time,
+    )
+
+
 def get_package_type() -> str:
     if os.path.exists("/var/lib/dpkg/status"):
         return "linux_deb"

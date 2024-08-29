@@ -7,7 +7,7 @@
 from time import time
 from typing import Any
 
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.rest_api_client import ClientRegistry, Response
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
@@ -79,6 +79,52 @@ def test_get_all_ec_events(
             "ok",
             "unknown",
         }
+
+
+def test_list_ec_events_include_links(
+    clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    add_event_console_events_to_live_status_table(mock_livestatus)
+
+    def _request(include_links: bool | None = None) -> Response:
+        mock_livestatus.expect_query(
+            "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text"
+        )
+        with mock_livestatus:
+            return clients.EventConsole.get_all(include_links=include_links)
+
+    default_response = _request()
+    enabled_response = _request(include_links=True)
+    disabled_response = _request(include_links=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == disabled_response.json
+    assert any(bool(value["links"]) for value in enabled_response.json["value"])
+    assert all(value["links"] == [] for value in disabled_response.json["value"])
+
+
+def test_list_ec_events_include_extensions(
+    clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    add_event_console_events_to_live_status_table(mock_livestatus)
+
+    def _request(include_extensions: bool | None = None) -> Response:
+        mock_livestatus.expect_query(
+            "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text"
+        )
+        with mock_livestatus:
+            return clients.EventConsole.get_all(include_extensions=include_extensions)
+
+    default_response = _request()
+    enabled_response = _request(include_extensions=True)
+    disabled_response = _request(include_extensions=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == enabled_response.json
+    assert any(bool(value["extensions"]) for value in enabled_response.json["value"])
+    assert all("extensions" not in value for value in disabled_response.json["value"])
 
 
 def test_get_all_ec_events_host(

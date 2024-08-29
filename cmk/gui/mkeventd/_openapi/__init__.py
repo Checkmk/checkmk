@@ -42,6 +42,7 @@ from cmk.gui.livestatus_utils.commands.event_console import (
     update_and_acknowledge,
 )
 from cmk.gui.logged_in import user
+from cmk.gui.openapi.endpoints.common_fields import field_include_extensions, field_include_links
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
@@ -138,16 +139,18 @@ def event_id_not_found_problem(event_id: str) -> Response:
     )
 
 
-def _serialize_event(event: ECEvent) -> DomainObject:
-    returnthis = constructors.domain_object(
+def _serialize_event(
+    event: ECEvent, *, include_links: bool = True, include_extensions: bool = True
+) -> DomainObject:
+    return constructors.domain_object(
         domain_type="event_console",
         identifier=str(event.event_id),
         title=event.event_text,
-        extensions=dict(event),
+        extensions=dict(event) if include_extensions else None,
+        include_links=include_links,
         editable=False,
         deletable=True,
     )
-    return returnthis
 
 
 @Endpoint(
@@ -197,10 +200,14 @@ def show_event(params: Mapping[str, Any]) -> Response:
                 presence="should_exist",
             )
         },
+        field_include_links(),
+        field_include_extensions(),
     ],
 )
 def show_events(params: Mapping[str, Any]) -> Response:
     """Show events"""
+    include_links: bool = params["include_links"]
+    include_extensions: bool = params["include_extensions"]
     query = filter_event_table(
         host=params.get("host"),
         state=params.get("state"),
@@ -212,7 +219,9 @@ def show_events(params: Mapping[str, Any]) -> Response:
         constructors.collection_object(
             domain_type="event_console",
             value=[
-                _serialize_event(ev)
+                _serialize_event(
+                    ev, include_links=include_links, include_extensions=include_extensions
+                )
                 for _, ev in get_all_events(sites.live(), query, params.get("site_id")).items()
             ],
         )

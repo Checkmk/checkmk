@@ -2051,16 +2051,22 @@ class EventConsoleClient(RestApiClient):
 
     def get_all(
         self,
+        *,
         query: str | None = None,
         host: str | None = None,
         application: str | None = None,
         state: Literal["warning", "ok", "critical", "unknown"] | None = None,
         phase: Literal["open", "ack"] | None = None,
         site_id: str | None = None,
+        include_links: bool | None = None,
+        include_extensions: bool | None = None,
         expect_ok: bool = True,
     ) -> Response:
-        query_params = urllib.parse.urlencode(
-            _only_set_keys(
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+            query_params=_only_set_keys(
                 {
                     "query": query,
                     "host": host,
@@ -2068,18 +2074,10 @@ class EventConsoleClient(RestApiClient):
                     "state": state,
                     "phase": phase,
                     "site_id": site_id,
+                    "include_links": include_links,
+                    "include_extensions": include_extensions,
                 }
-            )
-        )
-
-        url = f"/domain-types/{self.domain}/collections/all"
-        if query_params:
-            url = f"{url}?{query_params}"
-
-        return self.request(
-            "get",
-            url=url,
-            expect_ok=expect_ok,
+            ),
         )
 
     def update_and_acknowledge(

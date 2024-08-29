@@ -10321,6 +10321,38 @@ msgstr ""
 "geändert werden."
 
 #, python-format
+msgid "Cannot compute perfometer label due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer label expression due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer segment due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer sorting value due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer stack due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer summed values due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer total value due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer unit due to '%s'"
+msgstr ""
+
+#, python-format
 msgid "Cannot connect to event daemon via %s: %s"
 msgstr "Kann Verbindung zur Event Console über %s nicht aufbauen: %s"
 
@@ -15976,8 +16008,13 @@ msgstr "Datenbank für flexiblen MySQL Server"
 msgid "Database for MySQL single server"
 msgstr "Datenbank für einzelnen MySQL Server"
 
-msgid "Database for PostgreSQL"
-msgstr "Datenbank für PostgreSQL"
+#, fuzzy
+msgid "Database for PostgreSQL flexible server"
+msgstr "Datenbank für flexiblen MySQL Server"
+
+#, fuzzy
+msgid "Database for PostgreSQL single server"
+msgstr "Datenbank für einzelnen MySQL Server"
 
 msgid "Database identifier"
 msgstr "Datenbank-Identifier"
@@ -22903,6 +22940,10 @@ msgstr "Ermittle '%s'..."
 msgid "Fetching livestatus status"
 msgstr "Abrufen des Livestatusstatus"
 
+#, fuzzy
+msgid "Fetching message broker status"
+msgstr "Abrufen des Livestatusstatus"
+
 msgid "Fetching replication status"
 msgstr "Abrufen des Replikationsstatus"
 
@@ -24690,8 +24731,8 @@ msgstr "Graph ist sichtbar"
 msgid "Graph layout"
 msgstr "Graphenlayout"
 
-#, python-format
-msgid "Graph recipe '%s' uses undefined metric '%s', available are: %s"
+#, fuzzy, python-format
+msgid "Graph recipe '%s' has the error '%s', available are: %s"
 msgstr ""
 "Graphendefinition '%s' benutzt die undefinierte Metrik '%s'. Verfügbar sind: "
 "%s"
@@ -32051,7 +32092,8 @@ msgstr "Ungültiger Check-Parameter"
 msgid "Invalid check type"
 msgstr "Ungültiger Check-Typ"
 
-msgid "Invalid choice"
+#, fuzzy, python-format
+msgid "Invalid choice %r"
 msgstr "Ungültige Auswahl"
 
 msgid "Invalid code provided"
@@ -32330,6 +32372,10 @@ msgstr "Ungültiges Thema"
 
 msgid "Invalid transaction"
 msgstr "Ungültige Transaktion"
+
+#, fuzzy
+msgid "Invalid tuple"
+msgstr "Ungültiger Text"
 
 msgid "Invalid type specified."
 msgstr "Ungültiger Typ angegeben."
@@ -55835,6 +55881,11 @@ msgid "State if at least one blocked session"
 msgstr ""
 "Geben Sie den Status an, ob mindestens eine blockierte Sitzung gesperrt ist"
 
+#, fuzzy
+msgid "State if at least one node is unmanaged"
+msgstr ""
+"Geben Sie den Status an, ob mindestens eine blockierte Sitzung gesperrt ist"
+
 msgid "State if battery needs replacement"
 msgstr "Zustand, wenn die Batterie ausgetauscht werden muss"
 
@@ -71226,6 +71277,10 @@ msgstr ""
 "gemeinsame Basis DN für die Benutzerbasis DN \"%s\" und die Gruppenbasis DN "
 "\"%s\" gefunden)"
 
+#, fuzzy
+msgid "Unable to transform value"
+msgstr "Fehler beim Darstellen des Werts:"
+
 #, python-format
 msgid "Unable to upload icon: %s"
 msgstr "Fehler beim Hochladen des Symbols: %s"
@@ -81684,6 +81739,9 @@ msgstr "{region} ({id_})"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Database for PostgreSQL"
+#~ msgstr "Datenbank für PostgreSQL"
 
 #~ msgid " to get notified once the commercial release is available. "
 #~ msgstr ""

@@ -10669,6 +10669,38 @@ msgid "Cannot change rule conditions for rules managed by Quick setup."
 msgstr ""
 
 #, python-format
+msgid "Cannot compute perfometer label due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer label expression due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer segment due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer sorting value due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer stack due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer summed values due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer total value due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer unit due to '%s'"
+msgstr ""
+
+#, python-format
 msgid "Cannot connect to event daemon via %s: %s"
 msgstr "Kan geen verbinding maken met event daemon via %s: %s"
 
@@ -16469,8 +16501,13 @@ msgstr "Database voor MySQL"
 msgid "Database for MySQL single server"
 msgstr "Database voor MySQL"
 
-msgid "Database for PostgreSQL"
-msgstr "Database voor PostgreSQL"
+#, fuzzy
+msgid "Database for PostgreSQL flexible server"
+msgstr "Database voor MySQL"
+
+#, fuzzy
+msgid "Database for PostgreSQL single server"
+msgstr "Database voor MySQL"
 
 msgid "Database identifier"
 msgstr "Identificatiecode databank"
@@ -23627,6 +23664,10 @@ msgstr "Afhalen van '%s'..."
 msgid "Fetching livestatus status"
 msgstr "Het ophalen van livestatus"
 
+#, fuzzy
+msgid "Fetching message broker status"
+msgstr "Het ophalen van livestatus"
+
 msgid "Fetching replication status"
 msgstr "Opvragen van replicatie status"
 
@@ -25458,8 +25499,8 @@ msgstr "Grafiek is zichtbaar"
 msgid "Graph layout"
 msgstr "Grafiek lay-out"
 
-#, python-format
-msgid "Graph recipe '%s' uses undefined metric '%s', available are: %s"
+#, fuzzy, python-format
+msgid "Graph recipe '%s' has the error '%s', available are: %s"
 msgstr ""
 "Grafiekrecept '%s' gebruikt ongedefinieerde metriek '%s', beschikbaar zijn: "
 "%s"
@@ -33232,8 +33273,8 @@ msgstr "Ongeldige controleparameter"
 msgid "Invalid check type"
 msgstr "Ongeldig controletype"
 
-#, fuzzy
-msgid "Invalid choice"
+#, fuzzy, python-format
+msgid "Invalid choice %r"
 msgstr "Ongeldig onderwerp"
 
 #, fuzzy
@@ -33519,6 +33560,10 @@ msgstr "Ongeldig onderwerp"
 
 msgid "Invalid transaction"
 msgstr "Ongeldige transactie"
+
+#, fuzzy
+msgid "Invalid tuple"
+msgstr "Ongeldige test."
 
 msgid "Invalid type specified."
 msgstr "Ongeldig type opgegeven."
@@ -57929,6 +57974,10 @@ msgstr "Staat als agent deployment globaal is uitgeschakeld"
 msgid "State if at least one blocked session"
 msgstr "Staat als ten minste één geblokkeerde sessie"
 
+#, fuzzy
+msgid "State if at least one node is unmanaged"
+msgstr "Staat als ten minste één geblokkeerde sessie"
+
 msgid "State if battery needs replacement"
 msgstr "Geef aan of de batterij moet worden vervangen"
 
@@ -73857,6 +73906,10 @@ msgstr ""
 "Kan geneste groepen niet synchroniseren (geen gemeenschappelijke basis DN "
 "gevonden voor gebruiker basis DN \"%s\" en groep basis DN \"%s\")"
 
+#, fuzzy
+msgid "Unable to transform value"
+msgstr "Mislukt om waarde te renderen:"
+
 #, python-format
 msgid "Unable to upload icon: %s"
 msgstr "Kan pictogram niet uploaden: %s"
@@ -84387,6 +84440,9 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Database for PostgreSQL"
+#~ msgstr "Database voor PostgreSQL"
 
 #, fuzzy
 #~ msgid "Checkmk Cloud (SaaS) Beta"

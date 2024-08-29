@@ -10697,6 +10697,38 @@ msgid "Cannot change rule conditions for rules managed by Quick setup."
 msgstr ""
 
 #, python-format
+msgid "Cannot compute perfometer label due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer label expression due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer segment due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer sorting value due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer stack due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer summed values due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer total value due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer unit due to '%s'"
+msgstr ""
+
+#, python-format
 msgid "Cannot connect to event daemon via %s: %s"
 msgstr "Nu se poate conecta la daemonul de evenimente prin %s: %s."
 
@@ -16474,8 +16506,13 @@ msgstr "Baza de date pentru MySQL"
 msgid "Database for MySQL single server"
 msgstr "Baza de date pentru MySQL"
 
-msgid "Database for PostgreSQL"
-msgstr "Baza de date pentru PostgreSQL"
+#, fuzzy
+msgid "Database for PostgreSQL flexible server"
+msgstr "Baza de date pentru MySQL"
+
+#, fuzzy
+msgid "Database for PostgreSQL single server"
+msgstr "Baza de date pentru MySQL"
 
 msgid "Database identifier"
 msgstr "Identificatorul bazei de date"
@@ -23668,6 +23705,10 @@ msgstr "Fetching '%s'..."
 msgid "Fetching livestatus status"
 msgstr "Preluarea stării livestatus"
 
+#, fuzzy
+msgid "Fetching message broker status"
+msgstr "Preluarea stării livestatus"
+
 msgid "Fetching replication status"
 msgstr "Obținerea stării de replicare"
 
@@ -25487,8 +25528,8 @@ msgstr "Graficul este vizibil"
 msgid "Graph layout"
 msgstr "Dispunerea graficului"
 
-#, python-format
-msgid "Graph recipe '%s' uses undefined metric '%s', available are: %s"
+#, fuzzy, python-format
+msgid "Graph recipe '%s' has the error '%s', available are: %s"
 msgstr ""
 "Rețeta grafică '%s' utilizează metrica nedefinită '%s', disponibile sunt: %s."
 
@@ -33302,8 +33343,8 @@ msgstr "Parametru de control invalid"
 msgid "Invalid check type"
 msgstr "Tip de control nevalabil"
 
-#, fuzzy
-msgid "Invalid choice"
+#, fuzzy, python-format
+msgid "Invalid choice %r"
 msgstr "Subiect nevalabil"
 
 #, fuzzy
@@ -33590,6 +33631,10 @@ msgstr "Subiect nevalabil"
 
 msgid "Invalid transaction"
 msgstr "Tranzacție invalidă"
+
+#, fuzzy
+msgid "Invalid tuple"
+msgstr "Test nevalabil."
 
 msgid "Invalid type specified."
 msgstr "Tipul specificat nu este valid."
@@ -58059,6 +58104,10 @@ msgstr "Stare dacă implementarea agentului este dezactivată la nivel global"
 msgid "State if at least one blocked session"
 msgstr "Stare dacă cel puțin o sesiune blocată"
 
+#, fuzzy
+msgid "State if at least one node is unmanaged"
+msgstr "Stare dacă cel puțin o sesiune blocată"
+
 msgid "State if battery needs replacement"
 msgstr "Indicați dacă bateria trebuie înlocuită"
 
@@ -74011,6 +74060,10 @@ msgstr ""
 "pentru DN-ul de bază al utilizatorului \"%s\" și DN-ul de bază al grupului "
 "\"%s\")"
 
+#, fuzzy
+msgid "Unable to transform value"
+msgstr "Nu a reușit să redea valoarea:"
+
 #, python-format
 msgid "Unable to upload icon: %s"
 msgstr "Nu se poate încărca pictograma: %s."
@@ -84534,6 +84587,9 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "Database for PostgreSQL"
+#~ msgstr "Baza de date pentru PostgreSQL"
 
 #, fuzzy
 #~ msgid "Checkmk Cloud (SaaS) Beta"

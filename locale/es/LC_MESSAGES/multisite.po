@@ -10734,6 +10734,38 @@ msgid "Cannot change rule conditions for rules managed by Quick setup."
 msgstr ""
 
 #, python-format
+msgid "Cannot compute perfometer label due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer label expression due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer segment due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer sorting value due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer stack due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer summed values due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer total value due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer unit due to '%s'"
+msgstr ""
+
+#, python-format
 msgid "Cannot connect to event daemon via %s: %s"
 msgstr "No se puede conectar al demonio de eventos a través de %s: %s"
 
@@ -16585,8 +16617,13 @@ msgstr "Base de datos para MySQL"
 msgid "Database for MySQL single server"
 msgstr "Base de datos para MySQL"
 
-msgid "Database for PostgreSQL"
-msgstr "Base de datos para PostgreSQL"
+#, fuzzy
+msgid "Database for PostgreSQL flexible server"
+msgstr "Base de datos para MySQL"
+
+#, fuzzy
+msgid "Database for PostgreSQL single server"
+msgstr "Base de datos para MySQL"
 
 msgid "Database identifier"
 msgstr "Identificador de la base de datos"
@@ -23820,6 +23857,10 @@ msgstr "Buscando '%s'..."
 msgid "Fetching livestatus status"
 msgstr "Obtención del estado de livestatus"
 
+#, fuzzy
+msgid "Fetching message broker status"
+msgstr "Obtención del estado de livestatus"
+
 msgid "Fetching replication status"
 msgstr "Obtención del estado de la replicación"
 
@@ -25665,8 +25706,8 @@ msgstr "El gráfico es visible"
 msgid "Graph layout"
 msgstr "Diseño de gráficos"
 
-#, python-format
-msgid "Graph recipe '%s' uses undefined metric '%s', available are: %s"
+#, fuzzy, python-format
+msgid "Graph recipe '%s' has the error '%s', available are: %s"
 msgstr ""
 "La receta del gráfico '%s' utiliza una métrica indefinida '%s', las "
 "disponibles son: %s"
@@ -33491,8 +33532,8 @@ msgstr "Parámetro de comprobación no válido"
 msgid "Invalid check type"
 msgstr "Tipo de cheque inválido"
 
-#, fuzzy
-msgid "Invalid choice"
+#, fuzzy, python-format
+msgid "Invalid choice %r"
 msgstr "Tema no válido"
 
 #, fuzzy
@@ -33782,6 +33823,10 @@ msgstr "Tema no válido"
 
 msgid "Invalid transaction"
 msgstr "Transacción inválida"
+
+#, fuzzy
+msgid "Invalid tuple"
+msgstr "Prueba inválida."
 
 msgid "Invalid type specified."
 msgstr "Tipo no válido especificado."
@@ -58459,6 +58504,10 @@ msgstr "Estado si el despliegue del agente está globalmente desactivado"
 msgid "State if at least one blocked session"
 msgstr "Estado si al menos una sesión bloqueada"
 
+#, fuzzy
+msgid "State if at least one node is unmanaged"
+msgstr "Estado si al menos una sesión bloqueada"
+
 msgid "State if battery needs replacement"
 msgstr "Indique si la batería necesita ser reemplazada"
 
@@ -74488,6 +74537,10 @@ msgstr ""
 "No se ha podido sincronizar los grupos anidados (No se ha encontrado un DN "
 "base común para el DN base de usuario \"%s\" y el DN base de grupo \"%s\")"
 
+#, fuzzy
+msgid "Unable to transform value"
+msgstr "No se ha podido mostrar el valor:"
+
 #, python-format
 msgid "Unable to upload icon: %s"
 msgstr "No se ha podido cargar el icono: %s"
@@ -85086,6 +85139,9 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
+
+#~ msgid "Database for PostgreSQL"
+#~ msgstr "Base de datos para PostgreSQL"
 
 #~ msgid " to get notified once the commercial release is available. "
 #~ msgstr ""

@@ -10218,6 +10218,38 @@ msgid "Cannot change rule conditions for rules managed by Quick setup."
 msgstr ""
 
 #, python-format
+msgid "Cannot compute perfometer label due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer label expression due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer segment due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer sorting value due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer stack due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer summed values due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer total value due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer unit due to '%s'"
+msgstr ""
+
+#, python-format
 msgid "Cannot connect to event daemon via %s: %s"
 msgstr "%s 経由でイベントデーモンに接続できません: %s"
 
@@ -15742,8 +15774,13 @@ msgstr "MySQLフレキシブルサーバー用データベース"
 msgid "Database for MySQL single server"
 msgstr "MySQLシングルサーバー用データベース"
 
-msgid "Database for PostgreSQL"
-msgstr "PostgreSQL用データベース"
+#, fuzzy
+msgid "Database for PostgreSQL flexible server"
+msgstr "MySQLフレキシブルサーバー用データベース"
+
+#, fuzzy
+msgid "Database for PostgreSQL single server"
+msgstr "MySQLシングルサーバー用データベース"
 
 msgid "Database identifier"
 msgstr "データベース識別子"
@@ -22618,6 +22655,10 @@ msgstr "'%s'をフェッチしています..."
 msgid "Fetching livestatus status"
 msgstr "Livestatusのステータスを取得"
 
+#, fuzzy
+msgid "Fetching message broker status"
+msgstr "Livestatusのステータスを取得"
+
 msgid "Fetching replication status"
 msgstr "レプリケーションステータスの取得"
 
@@ -24415,8 +24456,8 @@ msgstr "グラフが表示されます"
 msgid "Graph layout"
 msgstr "グラフレイアウト"
 
-#, python-format
-msgid "Graph recipe '%s' uses undefined metric '%s', available are: %s"
+#, fuzzy, python-format
+msgid "Graph recipe '%s' has the error '%s', available are: %s"
 msgstr ""
 "グラフ・レシピ '%s' は未定義のメトリック '%s' を使用ししています。利用可能:%s"
 
@@ -32056,8 +32097,8 @@ msgstr "チェックパラメータが無効です"
 msgid "Invalid check type"
 msgstr "チェックタイプが無効です"
 
-#, fuzzy
-msgid "Invalid choice"
+#, fuzzy, python-format
+msgid "Invalid choice %r"
 msgstr "無効なトピック"
 
 msgid "Invalid code provided"
@@ -32335,6 +32376,10 @@ msgstr "無効なトピック"
 
 msgid "Invalid transaction"
 msgstr "無効なトランザクション"
+
+#, fuzzy
+msgid "Invalid tuple"
+msgstr "無効なテスト。"
 
 msgid "Invalid type specified."
 msgstr "無効なタイプが指定されました。"
@@ -56416,6 +56461,10 @@ msgstr "エージェントデプロイがグローバルに無効になってい
 msgid "State if at least one blocked session"
 msgstr "少なくとも1つのブロックされたセッションがあるかどうかを記述します"
 
+#, fuzzy
+msgid "State if at least one node is unmanaged"
+msgstr "少なくとも1つのブロックされたセッションがあるかどうかを記述します"
+
 msgid "State if battery needs replacement"
 msgstr "バッテリーの交換が必要かどうかを述べる"
 
@@ -71896,6 +71945,10 @@ msgstr ""
 "ネストされたグループを同期できません(ユーザーベースDN \"%s\" とグループベース"
 "DN \"%s\"の共通ベースDNが見つかりません)"
 
+#, fuzzy
+msgid "Unable to transform value"
+msgstr "値のレンダリングに失敗しました:"
+
 #, python-format
 msgid "Unable to upload icon: %s"
 msgstr "アイコンをアップロードできません:%s"
@@ -82154,6 +82207,9 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid "Database for PostgreSQL"
+#~ msgstr "PostgreSQL用データベース"
 
 #~ msgid " to get notified once the commercial release is available. "
 #~ msgstr " 商業リリースが可能になり次第、通知を受け取る。 "

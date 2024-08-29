@@ -289,7 +289,7 @@ def get_checkmk_log_files_map() -> CheckmkFilesMap:
     for root, _dirs, files in os.walk(cmk.utils.paths.log_dir):
         for file_name in files:
             filepath = Path(root).joinpath(file_name)
-            if filepath.suffix in (".log", ".state") or filepath.name in (
+            if filepath.suffix in (".log", ".1", ".state") or filepath.name in (
                 "access_log",
                 "error_log",
                 "stats",
@@ -356,6 +356,9 @@ def get_checkmk_file_info(rel_filepath: str, component: str | None = None) -> Ch
     #       multisite.d/wato/global.mk
     #   => MULTIPLE entries in CheckmkFileInfoByRelFilePathMap
     #      (Otherwise all other 'global.mk' would be associated with 'Notifications')
+
+    if Path(rel_filepath).suffix == ".1":
+        rel_filepath = rel_filepath[:-2]
 
     file_info_by_name = CheckmkFileInfoByNameMap.get(Path(rel_filepath).name)
     if file_info_by_name is not None:

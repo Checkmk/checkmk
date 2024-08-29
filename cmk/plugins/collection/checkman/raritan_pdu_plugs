@@ -9,8 +9,11 @@ description:
  It has been tested with the model PX2-2180CR.
  As default the state of the time from inventory will result in the state {OK},
  other states are in the state {CRIT}.
- The required state can be configured to {on} or {off}. Then these plugs are in
- the state {OK} when they are in the configured state, and {CRIT} otherwise.
+ The required state can be configured to {on}, {off} or {None} (default).
+ When the required state is set to None, the service will compare the
+ current state with the state found during discovery.
+ Plugs are considered {OK} when their current state matches the required
+ or discovered state (required state takes precedence), and {CRIT} otherwise.
 
 item:
  The ID of the plug as given by the device

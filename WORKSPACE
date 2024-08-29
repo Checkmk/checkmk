@@ -282,9 +282,11 @@ rrdtool(
     version_str = "1.7.2",
 )
 
-load("//omd/packages/rrdtool:rrdtool_native.bzl", "glib_header_local_repo", "rrdtool_native")
+load("//omd/packages/glib:glib.bzl", "glib_header_local_repo")
 
 glib_header_local_repo("glib_repo")
+
+load("//omd/packages/rrdtool:rrdtool_native.bzl", "rrdtool_native")
 
 rrdtool_native(
     sha256 = "a199faeb7eff7cafc46fac253e682d833d08932f3db93a550a4a5af180ca58db",

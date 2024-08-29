@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import dataclasses
+import enum
 import glob
 import logging
 import os
@@ -14,10 +15,11 @@ import textwrap
 
 # pylint: disable=redefined-outer-name
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from pprint import pformat
-from typing import Any
+from typing import Any, assert_never
 
 import pexpect  # type: ignore[import-untyped]
 import pytest
@@ -278,6 +280,62 @@ def execute(  # type: ignore[no-untyped-def]
     logger.info("Executing: %s", cmd_txt)
     kwargs["shell"] = kwargs.get("shell", True)
     return subprocess.Popen(cmd_txt if kwargs.get("shell") else cmd, *args, **kwargs)
+
+
+class DaemonTerminationMode(enum.Enum):
+    PROCESS = enum.auto()
+    GROUP = enum.auto()
+
+
+@contextmanager
+def daemon(
+    cmd: list[str],
+    name_for_logging: str,
+    termination_mode: DaemonTerminationMode,
+    sudo: bool,
+) -> Iterator[subprocess.Popen]:
+    with execute(
+        cmd,
+        sudo=sudo,
+        shell=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        start_new_session=True,
+    ) as daemon_proc:
+        try:
+            yield daemon_proc
+        finally:
+            daemon_rc = daemon_proc.returncode
+            if daemon_rc is None:
+                logger.info("Terminating %s daemon...", name_for_logging)
+                _terminate_daemon(daemon_proc, termination_mode, sudo)
+            stdout, stderr = daemon_proc.communicate(timeout=5)
+            logger.info("Stdout from %s daemon:\n%s", name_for_logging, stdout)
+            logger.info("Stderr from %s daemon:\n%s", name_for_logging, stderr)
+            assert (
+                daemon_rc is None
+            ), f"{name_for_logging} daemon unexpectedly exited (RC={daemon_rc})!"
+
+
+def _terminate_daemon(
+    daemon_proc: subprocess.Popen,
+    termination_mode: DaemonTerminationMode,
+    sudo: bool,
+) -> None:
+    match termination_mode:
+        case DaemonTerminationMode.PROCESS:
+            run(
+                ["kill", "--", str(daemon_proc.pid)],
+                sudo=sudo,
+            )
+        case DaemonTerminationMode.GROUP:
+            run(
+                ["kill", "--", f"-{os.getpgid(daemon_proc.pid)}"],
+                sudo=sudo,
+            )
+        case _:
+            assert_never(termination_mode)
 
 
 def check_output(

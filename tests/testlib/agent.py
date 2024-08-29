@@ -17,7 +17,14 @@ from typing import Any
 
 from tests.testlib.repo import repo_path
 from tests.testlib.site import Site
-from tests.testlib.utils import execute, is_containerized, run, wait_until
+from tests.testlib.utils import (
+    daemon,
+    DaemonTerminationMode,
+    execute,
+    is_containerized,
+    run,
+    wait_until,
+)
 
 from cmk.utils.hostaddress import HostName
 
@@ -94,39 +101,27 @@ def agent_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen | None]
         yield None
         return
 
-    daemon_path = str(repo_path() / "tests" / "scripts" / "agent_controller_daemon.py")
-
     logger.info("Running agent controller daemon...")
-    # NOTE: we run sys.executable to make sure we use the correct python version
-    with execute(
-        [sys.executable, "-B", daemon_path, "--agent-controller-path", ctl_path.as_posix()],
+    with daemon(
+        [
+            sys.executable,
+            "-B",
+            str(repo_path() / "tests" / "scripts" / "agent_controller_daemon.py"),
+            "--agent-controller-path",
+            ctl_path.as_posix(),
+        ],
+        name_for_logging="agent controller",
+        termination_mode=DaemonTerminationMode.GROUP,
         sudo=True,
-        shell=False,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        start_new_session=True,
-    ) as daemon:
-        try:
-            # wait for a dump being returned successfully, which may not work immediately
-            # after starting the agent controller, so we retry for some time
-            wait_until(
-                lambda: execute([ctl_path.as_posix(), "dump"], sudo=True).wait() == 0,
-                timeout=3,
-                interval=0.1,
-            )
-
-            yield daemon
-        finally:
-            daemon_rc = daemon.returncode
-            if daemon_rc is None:
-                logger.info("Terminating agent controller daemon...")
-                run(["kill", "--", f"-{os.getpgid(daemon.pid)}"], sudo=True)
-            daemon_output, _ = daemon.communicate(timeout=5)
-            logger.info("Agent controller daemon output: %s", daemon_output)
-            assert (
-                daemon_rc is None
-            ), f"Agent controller daemon unexpectedly exited (RC={daemon_rc})!"
+    ) as agent_ctl_daemon:
+        # wait for a dump being returned successfully, which may not work immediately
+        # after starting the agent controller, so we retry for some time
+        wait_until(
+            lambda: execute([ctl_path.as_posix(), "dump"], sudo=True).wait() == 0,
+            timeout=3,
+            interval=0.1,
+        )
+        yield agent_ctl_daemon
 
 
 def register_controller(

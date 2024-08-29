@@ -16,29 +16,21 @@ from tests.composition.constants import TEST_HOST_1
 from tests.composition.utils import bake_agent, get_cre_agent_path
 
 site_factory = get_site_factory(prefix="comp_")
-central_site_ids: list[str] = []
 
 
 # The scope of the site fixtures is "module" to avoid that changing the site properties in a module
 # may result in a test failing in another one. It also makes analyzing the job artifacts easier.
 @pytest.fixture(name="central_site", scope="session")
 def _central_site(request: pytest.FixtureRequest) -> Iterator[Site]:
-    site_number = len(central_site_ids)
-    central_site_ids.append(f"{site_number}_central")
     yield from site_factory.get_test_site(
-        f"{site_number}_central",
-        description=request.node.name,
-        auto_restart_httpd=True,
+        "central", description=request.node.name, auto_restart_httpd=True
     )
 
 
 @pytest.fixture(name="remote_site", scope="session")
 def _remote_site(central_site: Site, request: pytest.FixtureRequest) -> Iterator[Site]:
-    site_number = central_site.id.split("_")[1]
     remote_site_generator = site_factory.get_test_site(
-        f"{site_number}_remote",
-        description=request.node.name,
-        auto_restart_httpd=True,
+        "remote", description=request.node.name, auto_restart_httpd=True
     )
     try:  # make pylint happy
         remote_site = next(remote_site_generator)

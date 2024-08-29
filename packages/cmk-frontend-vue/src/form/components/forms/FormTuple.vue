@@ -15,7 +15,8 @@ const props = defineProps<{
 
 const data = defineModel<unknown[]>('data', { required: true })
 
-const validation = ref<ValidationMessages>([])
+const validation = ref<Array<string>>([])
+
 type ElementIndex = number
 const elementValidation = ref<Record<ElementIndex, ValidationMessages>>({})
 

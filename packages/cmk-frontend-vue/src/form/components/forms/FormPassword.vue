@@ -11,10 +11,10 @@ const props = defineProps<{
 
 const data = defineModel<(string | boolean)[]>('data', { required: true })
 
-const validation = ref<ValidationMessages>([])
+const validation = ref<Array<string>>([])
 
 const updateValidation = (newValidation: ValidationMessages) => {
-  validation.value = newValidation
+  validation.value = newValidation.map((vm) => vm.message)
 }
 
 onMounted(() => updateValidation(props.backendValidation))
@@ -35,9 +35,7 @@ const explicitPassword = computed({
   set: (value: string) => {
     validation.value = []
     if (data.value[0] === 'explicit_password') {
-      validateValue(value, props.spec.validators).forEach((error) => {
-        validation.value = [{ message: error, location: [], invalid_value: value }]
-      })
+      validation.value = validateValue(value, props.spec.validators)
     }
     data.value[1] = ''
     data.value[2] = value

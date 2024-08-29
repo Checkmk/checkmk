@@ -9,7 +9,6 @@ import type {
   SingleChoice,
   CascadingSingleChoice,
   LegacyValuespec,
-  ValidationMessage,
   FixedValue,
   BooleanChoice,
   MultilineText,
@@ -96,8 +95,8 @@ function renderTuple(
     value.length
   )
   const tupleResults: VNode[] = []
-  tupleValidations.forEach((validation: ValidationMessage) => {
-    tupleResults.push(h('label', [validation.message]))
+  tupleValidations.forEach((validation: string) => {
+    tupleResults.push(h('label', [validation]))
   })
 
   const elementResults: VNode[] = []
@@ -281,8 +280,8 @@ function renderList(
     return null
   }
   const listResults = [h('label', [formSpec.element_template.title])]
-  listValidations.forEach((validation: ValidationMessage) => {
-    listResults.push(h('label', [validation.message]))
+  listValidations.forEach((validation: string) => {
+    listResults.push(h('label', [validation]))
   })
 
   for (let i = 0; i < value.length; i++) {

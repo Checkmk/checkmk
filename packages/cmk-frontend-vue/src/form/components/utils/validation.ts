@@ -14,11 +14,11 @@ export function useValidation<Type>(
   data: Ref<Type>,
   validators: Validator[],
   getBackendValidation: () => ValidationMessages
-): [Ref<ValidationMessages>, WritableComputedRef<Type>] {
-  const validation = ref<ValidationMessages>([])
+): [Ref<Array<string>>, WritableComputedRef<Type>] {
+  const validation = ref<Array<string>>([])
 
   const updateValidation = (newValidation: ValidationMessages) => {
-    validation.value = newValidation
+    validation.value = newValidation.map((m) => m.message)
     newValidation.forEach((message) => {
       data.value = message.invalid_value as Type
     })
@@ -33,10 +33,7 @@ export function useValidation<Type>(
       return data.value
     },
     set(value: Type) {
-      validation.value = []
-      validateValue(value, validators).forEach((error) => {
-        validation.value = [{ message: error, location: [], invalid_value: value }]
-      })
+      validation.value = validateValue(value, validators)
       data.value = value
     }
   })
@@ -126,8 +123,8 @@ export function groupDictionaryValidations(
 export function groupIndexedValidations(
   messages: ValidationMessages,
   numberOfElements: number
-): [ValidationMessages, Record<number, ValidationMessages>] {
-  const ownValidations: ValidationMessages = []
+): [Array<string>, Record<number, ValidationMessages>] {
+  const ownValidations: Array<string> = []
   const elementValidations: Record<number, ValidationMessages> = []
   // This functions groups the validation messages by the index of the element they belong to
   // Initialize the array with empty arrays
@@ -137,7 +134,7 @@ export function groupIndexedValidations(
   messages.forEach((msg) => {
     const index = msg.location.length == 0 ? -1 : parseInt(msg.location[0]!)
     if (index == -1) {
-      ownValidations.push(msg)
+      ownValidations.push(msg.message)
       return
     }
     const elementMessages = elementValidations[index] || []

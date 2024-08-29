@@ -18,7 +18,7 @@ const backendData = defineModel<unknown[]>('data', { required: true })
 
 type ElementIndex = number
 const data = ref<Record<ElementIndex, unknown>>({})
-const validation = ref<ValidationMessages>([])
+const validation = ref<Array<string>>([])
 const elementValidation = ref<Record<ElementIndex, ValidationMessages>>({})
 const frontendOrder = ref<ElementIndex[]>([])
 const newElementIndex = ref<ElementIndex>(0)
@@ -102,7 +102,7 @@ function dragging(event: DragEvent) {
 function validateList() {
   validation.value.splice(0)
   validateValue(backendData.value, props.spec.validators!).forEach((error) => {
-    validation.value.push({ message: error, location: [], invalid_value: backendData.value })
+    validation.value.push(error)
   })
 }
 

@@ -14,7 +14,7 @@ const props = defineProps<{
   backendValidation: ValidationMessages
 }>()
 
-const validation = ref<ValidationMessages>([])
+const validation = ref<Array<string>>([])
 const elementValidation = ref<ValidationMessages>([])
 
 watch(
@@ -24,7 +24,7 @@ watch(
     elementValidation.value = []
     newValidation.forEach((msg) => {
       if (msg.location.length === 0) {
-        validation.value.push(msg)
+        validation.value.push(msg.message)
         return
       }
       elementValidation.value.push({
@@ -68,7 +68,7 @@ const value = computed({
     validation.value = []
     const newValue: [string, unknown] = [value, currentValues[value]]
     validateValue(value, props.spec.validators!).forEach((error) => {
-      validation.value = [{ message: error, location: [''], invalid_value: value }]
+      validation.value = [error]
     })
     data.value = newValue
   }

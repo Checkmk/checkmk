@@ -10,18 +10,14 @@ const props = defineProps<{
   backendValidation: ValidationMessages
 }>()
 
-const validation = ref<ValidationMessages>([])
+const validation = ref<Array<string>>([])
 
 watch(
   () => props.backendValidation,
   (newValidation: ValidationMessages) => {
-    const validations: ValidationMessages = []
+    const validations: Array<string> = []
     newValidation.forEach((message) => {
-      validations.push({
-        location: [],
-        message: message.message,
-        invalid_value: message.invalid_value
-      })
+      validations.push(message.message)
     })
     validation.value = validations
   },

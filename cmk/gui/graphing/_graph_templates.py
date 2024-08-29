@@ -867,13 +867,19 @@ def metric_expression_to_graph_recipe_expression(
     )
 
 
+@dataclass(frozen=True)
+class MetricExpressionInfo:
+    row: Row
+    translated_metrics: Mapping[str, TranslatedMetric]
+
+
 def find_matching_rows_and_translated_metrics(
     rows: Sequence[Row],
     metric_expressions: Sequence[MetricExpression],
     *,
     conflicting_metrics: Sequence[str],
     optional_metrics: Sequence[str],
-) -> Iterator[tuple[Row, Mapping[str, TranslatedMetric]]]:
+) -> Iterator[MetricExpressionInfo]:
     for row in rows:
         translated_metrics = translated_metrics_from_row(row)
         if _applicable_metrics(
@@ -882,4 +888,4 @@ def find_matching_rows_and_translated_metrics(
             optional_metrics=optional_metrics,
             translated_metrics=translated_metrics,
         ):
-            yield row, translated_metrics
+            yield MetricExpressionInfo(row, translated_metrics)

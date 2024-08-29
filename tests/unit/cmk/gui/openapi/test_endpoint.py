@@ -26,8 +26,6 @@ from cmk.gui.http import Response
 from cmk.gui.openapi.restful_objects.decorators import Endpoint, WrappedEndpoint
 from cmk.gui.openapi.restful_objects.registry import endpoint_registry
 from cmk.gui.openapi.utils import ProblemException, RestAPIResponseGeneralException
-from cmk.gui.utils.script_helpers import session_wsgi_app
-from cmk.gui.wsgi.blueprints import checkmk, rest_api
 
 from cmk import fields
 
@@ -77,13 +75,6 @@ def test_openapi_accept_header_invalid(aut_user_auth_wsgi_app: WebTestAppForCMK)
 
 class SomeSchema(BaseSchema):
     permission = fields.String(description="smth", example="smth")
-
-
-@pytest.fixture(name="fresh_app_instance", scope="function")
-def _fresh_app_instance():
-    session_wsgi_app.cache_clear()
-    rest_api.app_instance.cache_clear()
-    checkmk.app_instance.cache_clear()
 
 
 @pytest.fixture(name="test_endpoint")

@@ -57,6 +57,7 @@ from cmk.gui.utils.json import patch_json
 from cmk.gui.utils.script_helpers import session_wsgi_app
 from cmk.gui.watolib import activate_changes, groups
 from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.wsgi.blueprints import checkmk, rest_api
 
 from .users import create_and_destroy_user
 
@@ -622,3 +623,10 @@ def api_client(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> RestApiCl
 @pytest.fixture()
 def clients(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> ClientRegistry:
     return get_client_registry(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)
+
+
+@pytest.fixture(name="fresh_app_instance", scope="function")
+def _fresh_app_instance():
+    session_wsgi_app.cache_clear()
+    rest_api.app_instance.cache_clear()
+    checkmk.app_instance.cache_clear()

@@ -624,4 +624,4 @@ def test_contact_group_include_extensions(clients: ClientRegistry) -> None:
 
     assert default_response.json == enabled_response.json
     assert any(bool(value["extensions"]) for value in enabled_response.json["value"])
-    assert all(value["extensions"] == {} for value in disabled_response.json["value"])
+    assert all("extensions" not in value for value in disabled_response.json["value"])

@@ -239,7 +239,7 @@ class DomainObject(TypedDict):
     title: str
     links: list[LinkType]
     members: dict[str, Any]
-    extensions: dict[str, Any]
+    extensions: NotRequired[dict[str, Any]]
 
 
 class CollectionObject(TypedDict):

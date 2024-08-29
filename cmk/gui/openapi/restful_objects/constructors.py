@@ -622,8 +622,6 @@ def domain_object(
 
     """
     uri = object_href(domain_type, identifier)
-    if extensions is None:
-        extensions = {}
     if members is None:
         members = {}
 
@@ -637,14 +635,17 @@ def domain_object(
         if links:
             _links.extend(links)
 
-    return {
+    out: DomainObject = {
         "domainType": domain_type,
         "id": identifier,
         "title": title,
         "links": _links,
         "members": members,
-        "extensions": extensions,
     }
+    if extensions is not None:
+        out["extensions"] = extensions
+
+    return out
 
 
 def collection_object(

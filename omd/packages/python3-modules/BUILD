@@ -52,20 +52,9 @@ config_setting(
     srcs = [
         "@freetds",
         "@omd_packages//omd/packages/omd:use_system_openssl",
-        "@omd_packages//packages/cmk-agent-based:files",
-        "@omd_packages//packages/cmk-agent-receiver:files",
-        "@omd_packages//packages/cmk-crypto:files",
-        "@omd_packages//packages/cmk-graphing:files",
-        "@omd_packages//packages/cmk-livestatus-client:files",
-        "@omd_packages//packages/cmk-messaging:files",
-        "@omd_packages//packages/cmk-mkp-tool:files",
-        "@omd_packages//packages/cmk-rulesets:files",
-        "@omd_packages//packages/cmk-server-side-calls:files",
-        "@omd_packages//packages/cmk-trace:files",
-        "@omd_packages//packages/cmk-werks:files",
         "@openssl",
         "@python",
-    ],
+    ] + src,
     outs = [
         "compiled_%s.tar" % module,
     ],
@@ -87,21 +76,65 @@ config_setting(
             requirements = dep,
         ),
     }),
-) for module, dep in [
-    ("agent-receiver", "$(locations @omd_packages//packages/cmk-agent-receiver:files)"),
-    ("crypto", "$(locations @omd_packages//packages/cmk-crypto:files)"),
-    ("graphing", "$(locations @omd_packages//packages/cmk-graphing:files)"),
-    ("rulesets", "$(locations @omd_packages//packages/cmk-rulesets:files)"),
-    ("server-side-calls", "$(locations @omd_packages//packages/cmk-server-side-calls:files)"),
-    ("werks", "$(locations @omd_packages//packages/cmk-werks:files)"),
-    ("trace", "$(locations @omd_packages//packages/cmk-trace:files)"),
-    ("agent-based", "$(locations @omd_packages//packages/cmk-agent-based:files)"),
-    ("messaging", "$(locations @omd_packages//packages/cmk-messaging:files)"),
-    ("mkp-tool", "$(locations @omd_packages//packages/cmk-mkp-tool:files)"),
-    ("livestatus-client", "$(locations @omd_packages//packages/cmk-livestatus-client:files)"),
+) for module, dep, src in [
+    (
+        "agent-receiver",
+        "$(locations @omd_packages//packages/cmk-agent-receiver:files)",
+        ["@omd_packages//packages/cmk-agent-receiver:files"],
+    ),
+    (
+        "crypto",
+        "$(locations @omd_packages//packages/cmk-crypto:files)",
+        ["@omd_packages//packages/cmk-crypto:files"],
+    ),
+    (
+        "graphing",
+        "$(locations @omd_packages//packages/cmk-graphing:files)",
+        ["@omd_packages//packages/cmk-graphing:files"],
+    ),
+    (
+        "rulesets",
+        "$(locations @omd_packages//packages/cmk-rulesets:files)",
+        ["@omd_packages//packages/cmk-rulesets:files"],
+    ),
+    (
+        "server-side-calls",
+        "$(locations @omd_packages//packages/cmk-server-side-calls:files)",
+        ["@omd_packages//packages/cmk-server-side-calls:files"],
+    ),
+    (
+        "werks",
+        "$(locations @omd_packages//packages/cmk-werks:files)",
+        ["@omd_packages//packages/cmk-werks:files"],
+    ),
+    (
+        "trace",
+        "$(locations @omd_packages//packages/cmk-trace:files)",
+        ["@omd_packages//packages/cmk-trace:files"],
+    ),
+    (
+        "agent-based",
+        "$(locations @omd_packages//packages/cmk-agent-based:files)",
+        ["@omd_packages//packages/cmk-agent-based:files"],
+    ),
+    (
+        "messaging",
+        "$(locations @omd_packages//packages/cmk-messaging:files)",
+        ["@omd_packages//packages/cmk-messaging:files"],
+    ),
+    (
+        "mkp-tool",
+        "$(locations @omd_packages//packages/cmk-mkp-tool:files)",
+        ["@omd_packages//packages/cmk-mkp-tool:files"],
+    ),
+    (
+        "livestatus-client",
+        "$(locations @omd_packages//packages/cmk-livestatus-client:files)",
+        ["@omd_packages//packages/cmk-livestatus-client:files"],
+    ),
     # TODO: Switch to official release when netapp has fixed their build process
     # See: https://github.com/NetApp/ontap-rest-python/issues/46
-    ("netapp-ontap", "git+https://github.com/Checkmk/netapp-ontap-cmk.git@e38ce4ce357ad2ea8f47260c269757f8805bdbce"),
+    ("netapp-ontap", "git+https://github.com/Checkmk/netapp-ontap-cmk.git@e38ce4ce357ad2ea8f47260c269757f8805bdbce", []),
 ]]
 
 genrule(

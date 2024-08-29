@@ -22,6 +22,7 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
     ParsedFormData,
     QuickSetupId,
     RawFormData,
+    StageIndex,
 )
 from cmk.gui.quick_setup.v0_unstable.widgets import (
     Collapsible,
@@ -196,6 +197,7 @@ def quick_setup_overview(quick_setup: QuickSetup) -> QuickSetupOverview:
 
 
 def validate_stage(
+    quick_setup_id: QuickSetupId,
     stage: QuickSetupStage,
     formspec_lookup: Mapping[FormSpecId, FormSpec],
     stages_raw_formspecs: Sequence[RawFormData],
@@ -214,6 +216,8 @@ def validate_stage(
     for custom_validator in stage.custom_validators:
         errors.stage_errors.extend(
             custom_validator(
+                quick_setup_id,
+                StageIndex(len(stages_raw_formspecs) - 1),
                 parsed_formspecs_data,
             )
         )

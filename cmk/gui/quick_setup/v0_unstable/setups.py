@@ -12,12 +12,13 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
     GeneralStageErrors,
     ParsedFormData,
     QuickSetupId,
+    StageIndex,
 )
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, Widget
 
 from cmk.rulesets.v1.form_specs import FormSpec
 
-CallableValidator = Callable[[ParsedFormData], GeneralStageErrors]
+CallableValidator = Callable[[QuickSetupId, StageIndex, ParsedFormData], GeneralStageErrors]
 CallableRecap = Callable[
     [Sequence[ParsedFormData], Mapping[FormSpecId, FormSpec]],
     Sequence[Widget],

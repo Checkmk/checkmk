@@ -17,6 +17,7 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
     GeneralStageErrors,
     ParsedFormData,
     QuickSetupId,
+    StageIndex,
 )
 from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
 
@@ -85,7 +86,9 @@ def test_validate_retrieve_next(clients: ClientRegistry) -> None:
     assert resp.json["next_stage_structure"]["button_label"] == "Next"
 
 
-def _form_spec_extra_validate(_stages: ParsedFormData) -> GeneralStageErrors:
+def _form_spec_extra_validate(
+    _quick_setup_id: QuickSetupId, _stage_index: StageIndex, _stages: ParsedFormData
+) -> GeneralStageErrors:
     return ["this is a general error", "and another one"]
 
 

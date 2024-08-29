@@ -12,6 +12,7 @@ from typing import Any, NewType
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
 
 QuickSetupId = NewType("QuickSetupId", str)
+StageIndex = NewType("StageIndex", int)
 RawFormData = NewType("RawFormData", Mapping[FormSpecId, object])
 ParsedFormData = Mapping[FormSpecId, Any]
 GeneralStageErrors = MutableSequence[str]

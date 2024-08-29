@@ -95,6 +95,7 @@ def quicksetup_validate_stage_and_retrieve_next(params: Mapping[str, Any]) -> Re
 
     if (
         errors := validate_stage(
+            quick_setup_id=quick_setup.id,
             stage=quick_setup.stages[len(stages_received) - 1],
             formspec_lookup=build_quick_setup_formspec_map(quick_setup.stages),
             stages_raw_formspecs=[stage.form_data for stage in stages_received],

@@ -53,7 +53,7 @@ else:
 
 # Wrong module layer violation warning due to CME/CRE split
 if cmk_version.is_managed_edition():
-    from cmk.gui.cme.watolib.users import (  # pylint: disable=cmk-module-layer-violation
+    from cmk.gui.cme.watolib.users import (  # pylint: disable=cmk-module-layer-violation,no-name-in-module
         user_associated_sites,
     )
 else:

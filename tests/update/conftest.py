@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+from tests.testlib.licensing import license_site
 from tests.testlib.repo import repo_path
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import edition_from_env, parse_raw_edition, run
@@ -243,25 +244,12 @@ def _setup(request: pytest.FixtureRequest) -> Generator[tuple, None, None]:
     if not version_from_env().is_saas_edition():
         if not disable_rules_injection:
             inject_rules(test_site)
-    licensing_dir = Path(os.environ.get("OMD_ROOT", "")) / "var/check_mk/licensing"
-    verification_request_id_file_path = licensing_dir / "verification_request_id"
-    verification_response_file_path = licensing_dir / "verification_response"
 
-    # copy the desired license files to the test site
-    test_site.copy_file(
-        str(Path("license_files") / target_edition.short / "verification_response"),
-        str(_get_rel_path(verification_response_file_path)),
-    )
-    if test_site.version.edition in [Edition.CCE, Edition.CME]:  # enforced license editions
-        test_site.copy_file(
-            str(Path("license_files") / target_edition.short / "verification_request_id"),
-            str(_get_rel_path(verification_request_id_file_path)),
-        )
+    with license_site(test_site, target_edition):
+        test_site.activate_changes_and_wait_for_core_reload()
+        assert is_test_site_licensed(test_site)
+        yield test_site, target_edition, interactive_mode
 
-    test_site.activate_changes_and_wait_for_core_reload()
-    assert is_test_site_licensed(test_site)
-
-    yield test_site, target_edition, interactive_mode
     LOGGER.info("Removing test-site...")
     test_site.rm()
 

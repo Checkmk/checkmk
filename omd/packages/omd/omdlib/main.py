@@ -32,6 +32,7 @@ from typing import assert_never, BinaryIO, cast, Final, IO, Literal, NamedTuple,
 from uuid import uuid4
 
 import psutil
+from dateutil.relativedelta import relativedelta
 
 import omdlib
 import omdlib.backup
@@ -123,6 +124,7 @@ from omdlib.version import (
 from omdlib.version_info import VersionInfo
 
 from cmk.ccc.exceptions import MKTerminate
+from cmk.ccc.site import omd_site
 from cmk.ccc.version import Version, versions_compatible, VersionsIncompatible
 
 import cmk.utils.log
@@ -1470,6 +1472,9 @@ def initialize_message_broker_ca(site: SiteContext, site_key_size: int = 4096) -
         CN_TEMPLATE.format(site.name),
     ).issue_new_certificate(
         common_name=site.name,  # used for user identification
+        organization=f"Checkmk Site {omd_site()}",
+        expiry=relativedelta(years=5),
+        key_size=4096,
     )
     save_single_cert(messaging.cert_file(omd_root), cert)
     save_single_key(messaging.key_file(omd_root), key)

@@ -68,11 +68,8 @@ cc_library(
         "-Wno-stringop-truncation",
         "-O2",
     ],
-    linkopts = [
-        "-lglib-2.0",
-    ],
     linkstatic = True,
-    deps = ["@glib_repo//:glib_headers"],
+    deps = ["@glib"],
 )
 
 cc_library(
@@ -117,7 +114,6 @@ cc_library(
     copts = [
         "-I/usr/include/cairo",
         "-I/usr/include/pango-1.0",
-        "-I/usr/include/glib-2.0",
         "-I/usr/include/harfbuzz",
         "-Wno-implicit-function-declaration",
         "-Wno-format-truncation",
@@ -133,7 +129,10 @@ cc_library(
     ],
     linkstatic = True,
     visibility = ["//visibility:public"],
-    deps = [":rrd"],
+    deps = [
+        ":rrd",
+        "@glib",
+    ],
 )
 
 cc_binary(
@@ -163,16 +162,13 @@ cc_binary(
     srcs = ["src/rrd_daemon.c"],
     copts = [
         "-Wno-format-truncation",
-        "-I/usr/include/glib-2.0/",
         "-O2",
-    ],
-    linkopts = [
-        "-lglib-2.0",
     ],
     local_defines = ["LOCALSTATEDIR="],
     visibility = ["//visibility:public"],
     deps = [
         ":rrd",
         ":rrdupd",
+        "@glib",
     ],
 )

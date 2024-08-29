@@ -294,9 +294,9 @@ rrdtool(
     version_str = "1.7.2",
 )
 
-load("//omd/packages/glib:glib.bzl", "glib_header_local_repo")
+load("//omd/packages/glib:glib.bzl", "glib_local_repo")
 
-glib_header_local_repo("glib_repo")
+glib_local_repo("glib")
 
 load("//omd/packages/rrdtool:rrdtool_native.bzl", "rrdtool_native")
 

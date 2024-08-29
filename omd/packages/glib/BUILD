@@ -16,10 +16,24 @@ cc_library(
     ),
 )
 
+cc_import(
+    name = "libglib",
+    shared_library = select(
+        {
+            "@//:lsb_filesystem_layout": "lib/x86_64-linux-gnu/libglib-2.0.so",
+            "@//:fhs_filesystem_layout": "lib64/libglib-2.0.so",
+        },
+        no_match_error = "Please build with lsb or fhs filesystem layout",
+    ),
+)
+
 cc_library(
-    name = "glib_headers",
+    name = "glib",
     hdrs = glob(["include/glib-2.0/**"]),
     includes = ["include/glib-2.0"],
     visibility = ["//visibility:public"],
-    deps = [":glibconfig"],
+    deps = [
+        ":glibconfig",
+        ":libglib",
+    ],
 )

@@ -17,7 +17,7 @@ from typing import Any
 
 from tests.testlib.repo import repo_path
 from tests.testlib.site import Site
-from tests.testlib.utils import execute, run, wait_until
+from tests.testlib.utils import execute, is_containerized, run, wait_until
 
 from cmk.utils.hostaddress import HostName
 
@@ -87,18 +87,10 @@ def download_and_install_agent_package(site: Site, tmp_dir: Path) -> Path:
     return install_agent_package(path_agent_package)
 
 
-def _is_containerized() -> bool:
-    return (
-        os.path.exists("/.dockerenv")
-        or os.path.exists("/run/.containerenv")
-        or os.environ.get("CMK_CONTAINERIZED") == "TRUE"
-    )
-
-
 @contextlib.contextmanager
 def agent_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen | None]:
     """Manually take over systemds job if we are in a container (where we have no systemd)."""
-    if not _is_containerized():
+    if not is_containerized():
         yield None
         return
 

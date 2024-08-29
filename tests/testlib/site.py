@@ -1225,10 +1225,11 @@ class Site:
         ]
         for crash_dir in crash_dirs:
             crash_file = crash_dir / "crash.info"
-            if os.access(crash_dir, os.R_OK) and not os.path.exists(crash_file):
+            try:
+                crash = json.loads(self.read_file(crash_file))
+            except Exception:
                 pytest_check.fail(f"Crash report detected!\nSee {crash_dir} for more details.")
                 continue
-            crash = json.loads(self.read_file(crash_file))
             crash_type = crash.get("exc_type", "")
             crash_detail = crash.get("exc_value", "")
             if re.search("list index out of range", crash_detail):

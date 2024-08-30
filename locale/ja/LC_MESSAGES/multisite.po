@@ -6675,6 +6675,15 @@ msgstr ""
 "プがある場合は、プレースホルダー<tt>\\1</tt>、 <tt>\\2</tt>などを使用して、最"
 "初、2番目などの一致するグループを挿入できます。"
 
+#, fuzzy
+msgid "Attach graphs"
+msgstr "すべてのグラフ"
+
+#, fuzzy
+msgid ""
+"Attach graphs and limit the number of graphs that are attached to an issue."
+msgstr "通知に表示されるグラフの数の制限を設定します。"
+
 msgid ""
 "Attach information about a contact person. If you have bracketed groups in "
 "the text to match, then you can use the placeholders <tt>\\1</tt>, <tt>\\2</"
@@ -6683,6 +6692,10 @@ msgstr ""
 "連絡先の情報を添付してください。一致するテキストに括弧で囲まれたグループがあ"
 "る場合は、プレースホルダー<tt>\\1</tt>、 <tt>\\2</tt>などを使用して、最初、2"
 "番目などの一致するグループを挿入できます。"
+
+#, fuzzy
+msgid "Attach up to"
+msgstr "に現れる"
 
 msgid "Attempt to interpret OEM data"
 msgstr "OEMデータの解釈の試行"
@@ -31862,6 +31875,10 @@ msgstr "Prometheus統合"
 msgid "Integration Key"
 msgstr "統合キー"
 
+#, fuzzy
+msgid "Integration team"
+msgstr "統合キー"
+
 msgid ""
 "Interactive search field for direct access to monitoring instances (hosts, "
 "services, host and service groups).<br>You can use the following filters: "
@@ -53590,6 +53607,9 @@ msgid ""
 "and plan services can be other than OK if runtimes were exceeded."
 msgstr ""
 
+msgid "Sets the user of the alert. Display name of the request owner."
+msgstr ""
+
 msgid ""
 "Sets thresholds for the runtime of a KPI. Note that runtime monitoring is "
 "not a feature of Robot Framework, but of Robotmk. This means that even if a "
@@ -61530,6 +61550,11 @@ msgid ""
 msgstr ""
 "システムの名前は、<tt>VM</tt>または<tt>HostSystem</tt>で始まる必要がありま"
 "す。"
+
+msgid ""
+"The name of the team where the integration was created. If this field is "
+"set, additional information can be added to alerts."
+msgstr ""
 
 msgid "The name of the view may only contain letters, digits and underscores."
 msgstr ""

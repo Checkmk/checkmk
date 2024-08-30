@@ -6943,6 +6943,17 @@ msgstr ""
 "parentesi da abbinare, è possibile utilizzare i segnaposto <tt>\\1</tt>, <tt>"
 "\\2</tt>, ecc. per inserire il primo, il secondo ecc. gruppo corrispondente."
 
+#, fuzzy
+msgid "Attach graphs"
+msgstr "tutti i grafici"
+
+#, fuzzy
+msgid ""
+"Attach graphs and limit the number of graphs that are attached to an issue."
+msgstr ""
+"Imposta un limite per il numero di grafici che vengono visualizzati in una "
+"notifica."
+
 msgid ""
 "Attach information about a contact person. If you have bracketed groups in "
 "the text to match, then you can use the placeholders <tt>\\1</tt>, <tt>\\2</"
@@ -6952,6 +6963,10 @@ msgstr ""
 "presenti gruppi di parentesi da abbinare, è possibile utilizzare i "
 "segnaposto <tt>\\1</tt>, <tt>\\2</tt>, ecc. per inserire il primo, il "
 "secondo ecc. gruppo corrispondente."
+
+#, fuzzy
+msgid "Attach up to"
+msgstr "Mostra fino a"
 
 msgid "Attempt to interpret OEM data"
 msgstr "Tentativo di interpretazione dei dati OEM"
@@ -32751,6 +32766,10 @@ msgstr "Integrazione di Prometheus"
 msgid "Integration Key"
 msgstr "Chiave di integrazione"
 
+#, fuzzy
+msgid "Integration team"
+msgstr "Chiave di integrazione"
+
 msgid ""
 "Interactive search field for direct access to monitoring instances (hosts, "
 "services, host and service groups).<br>You can use the following filters: "
@@ -54563,6 +54582,9 @@ msgid ""
 "and plan services can be other than OK if runtimes were exceeded."
 msgstr ""
 
+msgid "Sets the user of the alert. Display name of the request owner."
+msgstr ""
+
 msgid ""
 "Sets thresholds for the runtime of a KPI. Note that runtime monitoring is "
 "not a feature of Robot Framework, but of Robotmk. This means that even if a "
@@ -62671,6 +62693,11 @@ msgid ""
 "The name of the system must begin with <tt>VM</tt> or <tt>HostSystem</tt>."
 msgstr ""
 "Il nome del sistema deve iniziare con <tt>VM</tt> o <tt>HostSystem</tt>."
+
+msgid ""
+"The name of the team where the integration was created. If this field is "
+"set, additional information can be added to alerts."
+msgstr ""
 
 msgid "The name of the view may only contain letters, digits and underscores."
 msgstr ""

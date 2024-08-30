@@ -7006,6 +7006,17 @@ msgstr ""
 "combinação."
 
 #, fuzzy
+msgid "Attach graphs"
+msgstr "todos os gráficos"
+
+#, fuzzy
+msgid ""
+"Attach graphs and limit the number of graphs that are attached to an issue."
+msgstr ""
+"Define um limite para o número de gráficos que são exibidos em uma "
+"notificação."
+
+#, fuzzy
 msgid ""
 "Attach information about a contact person. If you have bracketed groups in "
 "the text to match, then you can use the placeholders <tt>\\1</tt>, <tt>\\2</"
@@ -7015,6 +7026,10 @@ msgstr ""
 "parênteses no texto para combinar, então você pode usar os espaços "
 "reservados <tt>\\1</tt>, <tt>\\2</tt>, etc. para inserir o primeiro, "
 "segundo, etc. grupo correspondente."
+
+#, fuzzy
+msgid "Attach up to"
+msgstr "Aparecer até"
 
 msgid "Attempt to interpret OEM data"
 msgstr "Tentativa de interpretação dos dados OEM"
@@ -33021,6 +33036,10 @@ msgstr "Integração do Prometheus"
 msgid "Integration Key"
 msgstr "Chave de Integração"
 
+#, fuzzy
+msgid "Integration team"
+msgstr "Chave de Integração"
+
 msgid ""
 "Interactive search field for direct access to monitoring instances (hosts, "
 "services, host and service groups).<br>You can use the following filters: "
@@ -55028,6 +55047,9 @@ msgid ""
 "and plan services can be other than OK if runtimes were exceeded."
 msgstr ""
 
+msgid "Sets the user of the alert. Display name of the request owner."
+msgstr ""
+
 msgid ""
 "Sets thresholds for the runtime of a KPI. Note that runtime monitoring is "
 "not a feature of Robot Framework, but of Robotmk. This means that even if a "
@@ -63202,6 +63224,11 @@ msgstr "O nome da porta do interruptor"
 msgid ""
 "The name of the system must begin with <tt>VM</tt> or <tt>HostSystem</tt>."
 msgstr "O nome do sistema deve começar com <tt>VM</tt> ou <tt>HostSystem</tt>."
+
+msgid ""
+"The name of the team where the integration was created. If this field is "
+"set, additional information can be added to alerts."
+msgstr ""
 
 msgid "The name of the view may only contain letters, digits and underscores."
 msgstr "O nome da vista só pode conter letras, dígitos e sublinhados."

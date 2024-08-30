@@ -7063,6 +7063,17 @@ msgstr ""
 "premier, le deuxième, etc. groupe correspondant."
 
 #, fuzzy
+msgid "Attach graphs"
+msgstr "tous les graphes"
+
+#, fuzzy
+msgid ""
+"Attach graphs and limit the number of graphs that are attached to an issue."
+msgstr ""
+"Définit une limite pour le nombre de graphiques qui sont affichés dans une "
+"notification."
+
+#, fuzzy
 msgid ""
 "Attach information about a contact person. If you have bracketed groups in "
 "the text to match, then you can use the placeholders <tt>\\1</tt>, <tt>\\2</"
@@ -7072,6 +7083,10 @@ msgstr ""
 "crochets dans le texte à faire correspondre, vous pouvez utiliser les "
 "caractères de remplacement <tt>\\1</tt>, <tt>\\2</tt>, etc. pour insérer le "
 "premier, le deuxième, etc. groupe correspondant."
+
+#, fuzzy
+msgid "Attach up to"
+msgstr "Montrez-vous à"
 
 msgid "Attempt to interpret OEM data"
 msgstr "Tenter d'interpréter les données de l'OEM"
@@ -33342,6 +33357,10 @@ msgstr "Intégration de Prometheus"
 msgid "Integration Key"
 msgstr "Clé d'intégration"
 
+#, fuzzy
+msgid "Integration team"
+msgstr "Clé d'intégration"
+
 msgid ""
 "Interactive search field for direct access to monitoring instances (hosts, "
 "services, host and service groups).<br>You can use the following filters: "
@@ -55567,6 +55586,9 @@ msgid ""
 "and plan services can be other than OK if runtimes were exceeded."
 msgstr ""
 
+msgid "Sets the user of the alert. Display name of the request owner."
+msgstr ""
+
 msgid ""
 "Sets thresholds for the runtime of a KPI. Note that runtime monitoring is "
 "not a feature of Robot Framework, but of Robotmk. This means that even if a "
@@ -63833,6 +63855,11 @@ msgid ""
 "The name of the system must begin with <tt>VM</tt> or <tt>HostSystem</tt>."
 msgstr ""
 "Le nom du système doit commencer par <tt>VM</tt> ou <tt>HostSystem</tt>."
+
+msgid ""
+"The name of the team where the integration was created. If this field is "
+"set, additional information can be added to alerts."
+msgstr ""
 
 msgid "The name of the view may only contain letters, digits and underscores."
 msgstr ""

@@ -7053,6 +7053,17 @@ msgstr ""
 "coincidente."
 
 #, fuzzy
+msgid "Attach graphs"
+msgstr "todos los gráficos"
+
+#, fuzzy
+msgid ""
+"Attach graphs and limit the number of graphs that are attached to an issue."
+msgstr ""
+"Establece un límite para el número de gráficos que se muestran en una "
+"notificación."
+
+#, fuzzy
 msgid ""
 "Attach information about a contact person. If you have bracketed groups in "
 "the text to match, then you can use the placeholders <tt>\\1</tt>, <tt>\\2</"
@@ -7062,6 +7073,10 @@ msgstr ""
 "corchetes en el texto que debe coincidir, entonces puede utilizar los "
 "marcadores de posición <tt>\\1</tt>, <tt>\\2</tt>, etc. para insertar el "
 "primer, segundo, etc. grupo coincidente."
+
+#, fuzzy
+msgid "Attach up to"
+msgstr "Preséntese a"
 
 msgid "Attempt to interpret OEM data"
 msgstr "Intentar interpretar los datos del OEM"
@@ -33292,6 +33307,10 @@ msgstr "Integración de Prometheus"
 msgid "Integration Key"
 msgstr "Clave de integración"
 
+#, fuzzy
+msgid "Integration team"
+msgstr "Clave de integración"
+
 msgid ""
 "Interactive search field for direct access to monitoring instances (hosts, "
 "services, host and service groups).<br>You can use the following filters: "
@@ -55536,6 +55555,9 @@ msgid ""
 "and plan services can be other than OK if runtimes were exceeded."
 msgstr ""
 
+msgid "Sets the user of the alert. Display name of the request owner."
+msgstr ""
+
 msgid ""
 "Sets thresholds for the runtime of a KPI. Note that runtime monitoring is "
 "not a feature of Robot Framework, but of Robotmk. This means that even if a "
@@ -63796,6 +63818,11 @@ msgid ""
 "The name of the system must begin with <tt>VM</tt> or <tt>HostSystem</tt>."
 msgstr ""
 "El nombre del sistema debe empezar por <tt>VM</tt> o <tt>HostSystem</tt>."
+
+msgid ""
+"The name of the team where the integration was created. If this field is "
+"set, additional information can be added to alerts."
+msgstr ""
 
 msgid "The name of the view may only contain letters, digits and underscores."
 msgstr ""

@@ -512,6 +512,7 @@ class HWDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
     def _cpuinfo_proc_parser(self, content: list[str]) -> dict[str, str]:
         cpu_info: dict[str, Any] = {}
+        physical_ids: list[str] = []
         num_processors = 0
 
         # Example lines from /proc/cpuinfo output:
@@ -554,7 +555,12 @@ class HWDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             if key == "processor":
                 num_processors += 1
 
-        cpu_info["num_processors"] = str(num_processors)
+            if key == "physical_id" and value not in physical_ids:
+                physical_ids.append(value)
+
+        cpu_info["num_logical_processors"] = str(num_processors)
+        cpu_info["cpus"] = len(physical_ids)
+
         return cpu_info
 
     def _load_avg_proc_parser(self, content: list[str]) -> dict[str, str]:

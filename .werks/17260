@@ -1,0 +1,12 @@
+Title: Support Diagnostics: Fix data collected about the CPU
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1725004566
+Edition: cre
+Level: 1
+Version: 2.2.0p33
+
+Prior to this werk, the information collected about the number of CPUs
+was missing. Only the number of logical processors and CPU cores was
+included. This is now fixed.

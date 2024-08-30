@@ -817,6 +817,16 @@ translation_icmp_host_ping_host_service_ping = translations.Translation(
     },
 )
 
+translation_drbd_disk = translations.Translation(
+    name="drbd_disk",
+    check_commands=[translations.PassiveCheck("drbd_disk")],
+    translations={
+        # orig values in check plug-in are measured in kb
+        "read": translations.RenameToAndScaleBy("disk_read_throughput", 1000),
+        "write": translations.RenameToAndScaleBy("disk_write_throughput", 1000),
+    },
+)
+
 translation_drbd_net = translations.Translation(
     name="drbd_net",
     check_commands=[translations.PassiveCheck("drbd_net")],

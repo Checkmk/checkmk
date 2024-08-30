@@ -1,0 +1,15 @@
+Title: SLA alert levels: show CRIT state if SLA alerts levels are CRIT but SLA not broken yet
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1725012432
+Edition: cee
+Level: 1
+Version: 2.2.0p33
+
+When configuring SLA alerts levels only the WARN state was shown in a view,
+in case the alert levels for warning have been reached.
+
+The CRIT alerts levels were shown as OK as long as the SLA was not broken.
+
+Now this already shows up as CRIT, even though the SLA is not yet broken.

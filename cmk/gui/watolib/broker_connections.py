@@ -8,12 +8,12 @@ from pathlib import Path
 
 from livestatus import BrokerConnection, BrokerConnections, BrokerSite, ConnectionId
 
+from cmk.ccc import store
+
 from cmk.utils import paths
 
 from cmk.gui.config import active_config
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
-
-from cmk.ccc import store
 
 
 class BrokerConnectionsConfigFile(WatoSingleConfigFile[BrokerConnections]):

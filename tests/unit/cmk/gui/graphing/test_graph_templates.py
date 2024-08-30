@@ -44,7 +44,6 @@ from cmk.gui.graphing._graph_templates import (
     _compute_predictive_metrics,
     _graph_template_from_api_bidirectional,
     _graph_template_from_api_graph,
-    _graph_template_from_legacy,
     _graph_templates_from_plugins,
     _matching_graph_templates,
     _parse_graph_template,
@@ -1083,11 +1082,11 @@ def test__graph_template_from_api_bidirectional(
         ),
     ],
 )
-def test__graph_template_from_legacy(
+def test__parse_graph_template(
     raw: RawGraphTemplate,
     expected_graph_template: GraphTemplate,
 ) -> None:
-    assert _graph_template_from_legacy("ident", raw) == expected_graph_template
+    assert _parse_graph_template("ident", raw) == expected_graph_template
 
 
 @pytest.mark.parametrize(

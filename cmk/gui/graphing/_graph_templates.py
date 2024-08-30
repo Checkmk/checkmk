@@ -300,20 +300,6 @@ def _parse_raw_metric_expression(
     return parse_legacy_expression(raw_expression, line_type, str(title[0]) if title else "", {})
 
 
-def _graph_template_from_legacy(id_: str, raw: RawGraphTemplate) -> GraphTemplate:
-    return GraphTemplate(
-        id=id_,
-        title=_parse_title(raw),
-        scalars=[_parse_raw_scalar_expression(r) for r in raw.get("scalars", [])],
-        conflicting_metrics=raw.get("conflicting_metrics", []),
-        optional_metrics=raw.get("optional_metrics", []),
-        consolidation_function=raw.get("consolidation_function"),
-        range=(_parse_raw_graph_range(raw_range) if (raw_range := raw.get("range")) else None),
-        omit_zero_metrics=raw.get("omit_zero_metrics", False),
-        metrics=[_parse_raw_metric_expression(r) for r in raw["metrics"]],
-    )
-
-
 def _parse_graph_template(
     id_: str, template: graphs_api.Graph | graphs_api.Bidirectional | RawGraphTemplate
 ) -> GraphTemplate:
@@ -323,7 +309,21 @@ def _parse_graph_template(
         case graphs_api.Bidirectional():
             return _graph_template_from_api_bidirectional(id_, template)
         case _:
-            return _graph_template_from_legacy(id_, template)
+            return GraphTemplate(
+                id=id_,
+                title=_parse_title(template),
+                scalars=[_parse_raw_scalar_expression(r) for r in template.get("scalars", [])],
+                conflicting_metrics=template.get("conflicting_metrics", []),
+                optional_metrics=template.get("optional_metrics", []),
+                consolidation_function=template.get("consolidation_function"),
+                range=(
+                    _parse_raw_graph_range(template_range)
+                    if (template_range := template.get("range"))
+                    else None
+                ),
+                omit_zero_metrics=template.get("omit_zero_metrics", False),
+                metrics=[_parse_raw_metric_expression(r) for r in template["metrics"]],
+            )
 
 
 def graph_template_from_name(name: str) -> GraphTemplate:

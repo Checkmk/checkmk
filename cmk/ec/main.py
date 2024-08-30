@@ -51,7 +51,7 @@ from cmk.utils.log import VERBOSE
 from cmk.utils.translations import translate_hostname
 
 from .actions import do_event_action, do_event_actions, do_notify, event_has_opened
-from .config import Config, ConfigFromWATO, Count, ECRulePack, MatchGroups, Rule
+from .config import Config, ConfigFromWATO, Count, ECRulePack, Expect, MatchGroups, Rule
 from .core_queries import HostInfo, query_hosts_scheduled_downtime_depth
 from .crash_reporting import CrashReportStore, ECCrashReport
 from .event import create_events_from_syslog_messages, Event, scrub_string
@@ -839,7 +839,7 @@ class EventServer(ECServerThread):
                     event["phase"] = "closed"
                     events_to_delete.append((event, "ORPHANED"))
 
-                elif "count" not in rule and "expect" not in rule:
+                elif "count" not in rule and not rule.get("expect"):
                     self._logger.info(
                         "Count-based event %d belonging to rule %s: rule does not "
                         "count/expect anymore. Deleting event.",
@@ -960,14 +960,13 @@ class EventServer(ECServerThread):
         """
         now = time.time()
         for rule in self._rules:
-            if "expect" in rule:
+            if expect := rule.get("expect"):
                 if not self._rule_matcher.event_rule_matches_site(rule, event=Event()):
                     continue
 
                 # Interval is either a number of seconds, or pair of a number of seconds
                 # (e.g. 86400, meaning one day) and a timezone offset relative to UTC in hours.
-                interval = rule["expect"]["interval"]
-                expected_count = rule["expect"]["count"]
+                interval = expect["interval"]
 
                 interval_start = self._event_status.interval_start(rule["id"], interval)
                 if interval_start >= now:
@@ -993,11 +992,9 @@ class EventServer(ECServerThread):
                     if event["rule_id"] == rule["id"] and event["phase"] == "counting":
                         # time has elapsed. Now lets see if we have reached
                         # the necessary count:
-                        if event["count"] < expected_count:  # no -> trigger alarm
+                        if event["count"] < expect["count"]:  # no -> trigger alarm
                             events_to_delete.append((event, "AUTODELETE"))
-                            self._handle_absent_event(
-                                rule, event["count"], expected_count, event["last"]
-                            )
+                            self._handle_absent_event(rule, expect, event["count"], event["last"])
                         else:  # yes -> everything is fine. Just log.
                             self._logger.info(
                                 "Rule %s/%s has reached %d occurrences (%d required). "
@@ -1005,7 +1002,7 @@ class EventServer(ECServerThread):
                                 rule["pack"],
                                 rule["id"],
                                 event["count"],
-                                expected_count,
+                                expect["count"],
                             )
                         # Counting event is no longer needed.
                         events_to_delete.append((event, "COUNTREACHED"))
@@ -1013,18 +1010,18 @@ class EventServer(ECServerThread):
 
                 # Ou ou, no event found at all.
                 else:
-                    self._handle_absent_event(rule, 0, expected_count, interval_start)
+                    self._handle_absent_event(rule, expect, 0, interval_start)
 
                 for event, reason in events_to_delete:
                     self._event_status.remove_event(event, reason)
 
     def _handle_absent_event(
-        self, rule: Rule, event_count: int, expected_count: int, interval_start: float
+        self, rule: Rule, expect: Expect, event_count: int, interval_start: float
     ) -> None:
         now = time.time()
         if event_count:
             text = (
-                f"Expected message arrived only {event_count} out of {expected_count}"
+                f"Expected message arrived only {event_count} out of {expect['count']}"
                 f' times since {time.strftime("%F %T", time.localtime(interval_start))}'
             )
 
@@ -1036,7 +1033,7 @@ class EventServer(ECServerThread):
         merge_event = None
 
         reset_ack = True
-        merge = rule["expect"].get("merge", "open")
+        merge = expect.get("merge", "open")
 
         # Changed "acked" to ("acked", bool) with 1.6.0p20
         if isinstance(merge, tuple):  # TODO: Move this to upgrade time
@@ -1369,7 +1366,7 @@ class EventServer(ECServerThread):
                             existing_event["phase"] = "closed"
                             with self._event_status.lock:
                                 self._event_status.remove_event(existing_event, "AUTODELETE")
-                elif "expect" in rule:
+                elif rule.get("expect"):
                     self._event_status.count_expected_event(self, event)
                 else:
                     if "delay" in rule:

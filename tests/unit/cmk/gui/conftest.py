@@ -286,8 +286,8 @@ def inline_background_jobs(mocker: MagicMock) -> None:
     mocker.patch("cmk.gui.background_job._process._open_stdout_and_stderr")
     mocker.patch("cmk.gui.background_job._process._register_signal_handlers")
     mocker.patch("cmk.gui.background_job.BackgroundJob._exit")
-    mocker.patch("cmk.utils.daemon.daemonize")
-    mocker.patch("cmk.utils.daemon.closefrom")
+    mocker.patch("cmk.ccc.daemon.daemonize")
+    mocker.patch("cmk.ccc.daemon.closefrom")
 
 
 @pytest.fixture()

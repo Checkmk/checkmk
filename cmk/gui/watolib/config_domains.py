@@ -246,7 +246,7 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
                 pass
             except ValueError:
                 # ignore empty pid file (may happen during locking in
-                # cmk.utils.daemon.lock_with_pid_file().  We are in the
+                # cmk.ccc.daemon.lock_with_pid_file().  We are in the
                 # situation where the livstatus proxy is in early phase of the
                 # startup. The configuration is loaded later -> no reload needed
                 pass

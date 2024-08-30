@@ -18,10 +18,10 @@ from urllib.parse import quote, urlencode
 
 import livestatus
 
+import cmk.ccc.daemon
 import cmk.ccc.debug
 from cmk.ccc.site import omd_site
 
-import cmk.utils.daemon
 from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.notify import read_notify_host_file
@@ -89,7 +89,7 @@ def event_keepalive(
                     # had an issue related to os.urandom() which kept FDs open.
                     # This specific issue of Python 2.7.9 should've been fixed
                     # since Python 2.7.10. Just to be sure we keep cleaning up.
-                    cmk.utils.daemon.closefrom(3)
+                    cmk.ccc.daemon.closefrom(3)
 
                     os.execvp("cmk", sys.argv)
 

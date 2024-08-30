@@ -16,7 +16,7 @@ from logging.handlers import WatchedFileHandler
 from pathlib import Path
 from types import FrameType
 
-from cmk.utils.daemon import daemonize, pid_file_lock
+from cmk.ccc.daemon import daemonize, pid_file_lock
 
 from cmk.piggyback_hub.config import PiggybackConfig, save_config
 from cmk.piggyback_hub.payload import PiggybackPayload, save_payload, send_payload

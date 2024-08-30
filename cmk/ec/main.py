@@ -36,12 +36,12 @@ from typing import Any, assert_never, IO, Literal, TypedDict
 
 from setproctitle import setthreadtitle
 
+import cmk.ccc.daemon
 import cmk.ccc.version as cmk_version
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKException
 from cmk.ccc.site import omd_site
 
-import cmk.utils.daemon
 import cmk.utils.paths
 import cmk.utils.profile
 from cmk.utils import log
@@ -3458,10 +3458,10 @@ def main() -> None:
 
         if not settings.options.foreground:
             pid_path.parent.mkdir(parents=True, exist_ok=True)
-            cmk.utils.daemon.daemonize()
+            cmk.ccc.daemon.daemonize()
             logger.info("Daemonized with PID %d.", os.getpid())
 
-        cmk.utils.daemon.lock_with_pid_file(pid_path)
+        cmk.ccc.daemon.lock_with_pid_file(pid_path)
 
         def signal_handler(signum: int, stack_frame: FrameType | None) -> None:
             logger.log(VERBOSE, "Got signal %d.", signum)

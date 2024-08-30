@@ -10,7 +10,8 @@ from opentelemetry.instrumentation.wsgi import get_default_span_name, OpenTeleme
 from cmk.ccc.site import get_omd_config, omd_site
 
 from cmk.utils import paths
-from cmk.utils.profile_switcher import (
+
+from cmk.gui.wsgi.applications.profile_switcher import (
     LazyImportProfilingMiddleware,
     ProfileConfigLoader,
     ProfileSetting,

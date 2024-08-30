@@ -1453,6 +1453,7 @@ translation_smart_stats = translations.Translation(
     check_commands=[translations.PassiveCheck("smart_stats")],
     translations={
         "Available_Spare": translations.RenameTo("nvme_available_spare"),
+        "CRC_Errors": translations.RenameTo("harddrive_crc_errors"),
         "CRC_Error_Count": translations.RenameTo("harddrive_crc_errors"),
         "Command_Timeout_Counter": translations.RenameTo("harddrive_cmd_timeouts"),
         "Critical_Warning": translations.RenameTo("nvme_critical_warning"),

@@ -77,6 +77,9 @@ config_setting(
         ),
     }),
 ) for module, dep, src in [
+    # !!! ATTENTION !!!
+    # As soon you extend this list bc you want to add a new cmk package, keep in mind to
+    # extend as well WORKSPACE -> create_python_requirements -> ignored_modules
     (
         "agent-receiver",
         "$(locations @omd_packages//packages/cmk-agent-receiver:files)",

@@ -51,7 +51,16 @@ from cmk.utils.log import VERBOSE
 from cmk.utils.translations import translate_hostname
 
 from .actions import do_event_action, do_event_actions, do_notify, event_has_opened
-from .config import Config, ConfigFromWATO, Count, ECRulePack, Expect, MatchGroups, Rule
+from .config import (
+    Config,
+    ConfigFromWATO,
+    Count,
+    ECRulePack,
+    Expect,
+    ExpectInterval,
+    MatchGroups,
+    Rule,
+)
 from .core_queries import HostInfo, query_hosts_scheduled_downtime_depth
 from .crash_reporting import CrashReportStore, ECCrashReport
 from .event import create_events_from_syslog_messages, Event, scrub_string
@@ -964,10 +973,7 @@ class EventServer(ECServerThread):
                 if not self._rule_matcher.event_rule_matches_site(rule, event=Event()):
                     continue
 
-                # Interval is either a number of seconds, or pair of a number of seconds
-                # (e.g. 86400, meaning one day) and a timezone offset relative to UTC in hours.
                 interval = expect["interval"]
-
                 interval_start = self._event_status.interval_start(rule["id"], interval)
                 if interval_start >= now:
                     continue
@@ -2572,7 +2578,7 @@ class EventStatus:
                 return event
         return None
 
-    def interval_start(self, rule_id: str, interval: int) -> int:
+    def interval_start(self, rule_id: str, interval: ExpectInterval) -> int:
         """
         Return beginning of current expectation interval. For new rules
         we start with the next interval in future.
@@ -2591,13 +2597,9 @@ class EventStatus:
             self._interval_starts[rule_id] = start
         return start
 
-    def next_interval_start(self, interval: tuple[int, int] | int, previous_start: float) -> int:
-        if isinstance(interval, tuple):
-            length, offset = interval
-            offset *= 3600
-        else:
-            length = interval
-            offset = 0
+    def next_interval_start(self, interval: ExpectInterval, previous_start: float) -> int:
+        length, offset = interval if isinstance(interval, tuple) else (interval, 0)
+        offset *= 3600
 
         previous_start -= offset  # take into account timezone offset
         full_parts = divmod(previous_start, length)[0]
@@ -2605,7 +2607,7 @@ class EventStatus:
         next_start += offset
         return int(next_start)
 
-    def start_next_interval(self, rule_id: str, interval: int) -> None:
+    def start_next_interval(self, rule_id: str, interval: ExpectInterval) -> None:
         current_start = self.interval_start(rule_id, interval)
         next_start = self.next_interval_start(interval, current_start)
         self._interval_starts[rule_id] = next_start

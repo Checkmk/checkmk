@@ -13,7 +13,7 @@ from collections.abc import (
     Sequence,
 )
 from re import Pattern
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal, TypeAlias, TypedDict
 
 from cmk.ccc.exceptions import MKException
 
@@ -113,8 +113,12 @@ class ContactGroups(TypedDict):
     precedence: Literal["host", "rule"]
 
 
+# number of second with an optional timzone offest from UTC in hours
+ExpectInterval: TypeAlias = int | tuple[int, int]
+
+
 class Expect(TypedDict):
-    interval: int  # seconds
+    interval: ExpectInterval
     count: int
     merge: Literal["open", "acked", "never"]
 

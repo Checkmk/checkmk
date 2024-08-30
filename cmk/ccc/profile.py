@@ -7,12 +7,13 @@ is to provide a contextmanager that can be added to existing code with
 minimal changes."""
 
 import cProfile
+import logging
 import time
 from collections.abc import Callable
 from pathlib import Path
 from typing import ParamSpec, TypeVar
 
-import cmk.utils.log
+logger = logging.getLogger("cmk.ccc.profile")
 
 
 class Profile:
@@ -41,7 +42,7 @@ class Profile:
 
     def __enter__(self) -> "Profile":
         if self._enabled:
-            cmk.utils.log.logger.info("Recording profile")
+            logger.info("Recording profile")
             # cProfile.Profile has a slightly interesting API: None is not allowed as a timer argument. o_O
             self._profile = (
                 cProfile.Profile(
@@ -80,7 +81,7 @@ class Profile:
         if not self._profile:
             return
         self._profile.dump_stats(str(self._profile_file))
-        cmk.utils.log.logger.info("Created profile file: %s", self._profile_file)
+        logger.info("Created profile file: %s", self._profile_file)
 
     def _write_dump_script(self) -> None:
         if not self._profile_file:
@@ -95,7 +96,7 @@ class Profile:
                 "stats.sort_stats('cumtime').print_stats()\n" % self._profile_file
             )
         script_path.chmod(0o755)
-        cmk.utils.log.logger.info("Created profile dump script: %s", script_path)
+        logger.info("Created profile dump script: %s", script_path)
 
 
 P = ParamSpec("P")
@@ -110,9 +111,9 @@ def profile_call(base_dir: str, enabled: bool = True) -> Callable[[Callable[P, R
     The name of the output file is composed of the function name itself,
     the timestamp when the function was called and the suffix '.profile'.
     Examples:
-      @cmk.utils.profile.profile_call(base_dir="/PATH/TO/DIR")
-      @cmk.utils.profile.profile_call(base_dir="/PATH/TO/DIR", enabled=True)
-      @cmk.utils.profile.profile_call(base_dir="/PATH/TO/DIR", enabled=False)"""
+      @cmk.ccc.profile.profile_call(base_dir="/PATH/TO/DIR")
+      @cmk.ccc.profile.profile_call(base_dir="/PATH/TO/DIR", enabled=True)
+      @cmk.ccc.profile.profile_call(base_dir="/PATH/TO/DIR", enabled=False)"""
 
     def wrap(f: Callable[P, R]) -> Callable[P, R]:
         def wrapped_f(*args: P.args, **kwargs: P.kwargs) -> R:

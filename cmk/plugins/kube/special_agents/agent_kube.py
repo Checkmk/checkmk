@@ -31,8 +31,9 @@ import requests
 import urllib3
 from pydantic import TypeAdapter
 
+import cmk.ccc.profile
+
 import cmk.utils.password_store
-import cmk.utils.profile
 
 from cmk.plugins.kube import common, performance, prometheus_section, query
 from cmk.plugins.kube.agent_handlers import (
@@ -822,7 +823,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
         setup_logging(arguments.verbose)
         LOGGER.debug("parsed arguments: %s\n", arguments)
 
-        with cmk.utils.profile.Profile(
+        with cmk.ccc.profile.Profile(
             enabled=bool(arguments.profile), profile_file=arguments.profile
         ):
             client_config = query.parse_api_session_config(arguments)

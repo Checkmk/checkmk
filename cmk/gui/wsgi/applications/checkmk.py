@@ -19,7 +19,6 @@ import cmk.ccc.store
 from cmk.ccc.exceptions import MKException
 
 import cmk.utils.paths
-import cmk.utils.profile
 
 from cmk.gui import pages, sites
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem

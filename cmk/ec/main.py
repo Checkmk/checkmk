@@ -37,13 +37,13 @@ from typing import Any, assert_never, IO, Literal, TypedDict
 from setproctitle import setthreadtitle
 
 import cmk.ccc.daemon
+import cmk.ccc.profile
 import cmk.ccc.version as cmk_version
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKException
 from cmk.ccc.site import omd_site
 
 import cmk.utils.paths
-import cmk.utils.profile
 from cmk.utils import log
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.iterables import partition
@@ -161,7 +161,7 @@ class ECServerThread(threading.Thread):
         setthreadtitle(self.name)
         while not self._terminate_event.is_set():
             try:
-                with cmk.utils.profile.Profile(
+                with cmk.ccc.profile.Profile(
                     enabled=self._profiling_enabled, profile_file=str(self._profile_file)
                 ):
                     self.serve()

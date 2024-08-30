@@ -16,7 +16,6 @@ import cmk.ccc.version as cmk_version
 from cmk.ccc.site import url_prefix
 
 import cmk.utils.paths
-import cmk.utils.profile
 
 import cmk.gui.auth
 import cmk.gui.session

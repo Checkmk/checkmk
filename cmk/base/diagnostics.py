@@ -163,6 +163,7 @@ class DiagnosticsDump:
             FilesSizeCSVDiagnosticsElement(),
             PipFreezeDiagnosticsElement(),
             SELinuxJSONDiagnosticsElement(),
+            CMAJSONDiagnosticsElement(),
         ]
 
     def _get_optional_elements(
@@ -734,6 +735,37 @@ class SELinuxJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             for line in subprocess.check_output(selinux_binary, text=True).split("\n")
             if ":" in line
         }
+
+
+class CMAJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+    @property
+    def ident(self) -> str:
+        return "appliance"
+
+    @property
+    def title(self) -> str:
+        return _("Checkmk Appliance information")
+
+    @property
+    def description(self) -> str:
+        return _("Information about the Appliance hardware and firmware version.")
+
+    def _collect_infos(self) -> DiagnosticsElementJSONResult:
+        cma_infos: dict[str, str | dict[str, str]] = {}
+
+        hw_file = "/etc/cma/hw"
+        if os.path.exists(hw_file):
+            with open(hw_file, "r") as f:
+                cma_infos["hw"] = dict(
+                    [l.replace("'", "").split("=") for l in f.read().splitlines() if "=" in l]
+                )
+
+        fw_file = "/ro/usr/share/cma/version"
+        if os.path.exists(fw_file):
+            with open(fw_file, "r") as f:
+                cma_infos["fw"] = f.read().splitlines()[0]
+
+        return cma_infos
 
 
 class OMDConfigDiagnosticsElement(ABCDiagnosticsElementJSONDump):

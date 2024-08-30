@@ -12,7 +12,7 @@ import shutil
 import uuid
 from pathlib import Path, PurePath
 from typing import NamedTuple
-from unittest.mock import patch
+from unittest.mock import mock_open, patch
 
 import pytest
 import requests
@@ -779,6 +779,42 @@ def test_diagnostics_element_se_linux_content(monkeypatch, tmp_path):
         assert content["SELinux status"] == "enabled"
 
         shutil.rmtree(str(test_bin_dir))
+
+
+def test_diagnostics_element_cma():
+    diagnostics_element = diagnostics.CMAJSONDiagnosticsElement()
+    assert diagnostics_element.ident == "appliance"
+    assert diagnostics_element.title == "Checkmk Appliance information"
+    assert diagnostics_element.description == (
+        "Information about the Appliance hardware and firmware version."
+    )
+
+
+def test_diagnostics_element_cma_content(tmp_path):
+    data_dict = {
+        "/etc/cma/hw": "product='Checkmk rack1 Mark VI'",
+        "/ro/usr/share/cma/version": "1.7.5",
+    }
+
+    def open_side_effect(name, options):
+        return mock_open(read_data=data_dict.get(name))()
+
+    with patch("builtins.open") as bo, patch("os.path.exists") as ope:
+        bo.side_effect = open_side_effect
+        ope.return_value = True
+
+        diagnostics_element = diagnostics.CMAJSONDiagnosticsElement()
+        tmppath = Path(tmp_path).joinpath("tmp")
+        tmppath.mkdir(parents=True, exist_ok=True)
+        filepath = next(diagnostics_element.add_or_get_files(tmppath))
+
+        assert isinstance(filepath, Path)
+        assert filepath == tmppath.joinpath("appliance.json")
+
+        content = json.loads(filepath.open().read())
+
+        assert content["hw"]["product"] == "Checkmk rack1 Mark VI"
+        assert content["fw"] == "1.7.5"
 
 
 def test_diagnostics_element_crash_dumps():

@@ -15,6 +15,7 @@ config_setting(
     ],
 ) for module in all_requirements]
 
+# Third Party packages parsed from Pipfile
 [build_python_module(
     name = "%s_compile" % module,
     srcs = [
@@ -47,6 +48,7 @@ config_setting(
     }),
 ) for module in all_requirements]
 
+# Our internal cmk packages
 [build_python_module(
     name = "%s_compile" % module,
     srcs = [
@@ -54,7 +56,8 @@ config_setting(
         "@omd_packages//omd/packages/omd:use_system_openssl",
         "@openssl",
         "@python",
-    ] + src,
+        src,
+    ],
     outs = [
         "compiled_%s.tar" % module,
     ],
@@ -65,7 +68,7 @@ config_setting(
             pip_add_opts = get_pip_options(module),
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
             pypi_mirror = INTERNAL_PYPI_MIRROR,
-            requirements = dep,
+            requirements = "$(locations %s)" % src,
         ),
         ":git_ssl_no_verify": build_cmd.format(
             git_ssl_no_verify = "GIT_SSL_NO_VERIFY=true",
@@ -73,72 +76,95 @@ config_setting(
             pip_add_opts = get_pip_options(module),
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
             pypi_mirror = INTERNAL_PYPI_MIRROR,
-            requirements = dep,
+            requirements = "$(locations %s)" % src,
         ),
     }),
-) for module, dep, src in [
+) for module, src in [
     # !!! ATTENTION !!!
     # As soon you extend this list bc you want to add a new cmk package, keep in mind to
     # extend as well WORKSPACE -> create_python_requirements -> ignored_modules
     (
         "agent-receiver",
-        "$(locations @omd_packages//packages/cmk-agent-receiver:files)",
-        ["@omd_packages//packages/cmk-agent-receiver:files"],
+        "@omd_packages//packages/cmk-agent-receiver:files",
     ),
     (
         "crypto",
-        "$(locations @omd_packages//packages/cmk-crypto:files)",
-        ["@omd_packages//packages/cmk-crypto:files"],
+        "@omd_packages//packages/cmk-crypto:files",
     ),
     (
         "graphing",
-        "$(locations @omd_packages//packages/cmk-graphing:files)",
-        ["@omd_packages//packages/cmk-graphing:files"],
+        "@omd_packages//packages/cmk-graphing:files",
     ),
     (
         "rulesets",
-        "$(locations @omd_packages//packages/cmk-rulesets:files)",
-        ["@omd_packages//packages/cmk-rulesets:files"],
+        "@omd_packages//packages/cmk-rulesets:files",
     ),
     (
         "server-side-calls",
-        "$(locations @omd_packages//packages/cmk-server-side-calls:files)",
-        ["@omd_packages//packages/cmk-server-side-calls:files"],
+        "@omd_packages//packages/cmk-server-side-calls:files",
     ),
     (
         "werks",
-        "$(locations @omd_packages//packages/cmk-werks:files)",
-        ["@omd_packages//packages/cmk-werks:files"],
+        "@omd_packages//packages/cmk-werks:files",
     ),
     (
         "trace",
-        "$(locations @omd_packages//packages/cmk-trace:files)",
-        ["@omd_packages//packages/cmk-trace:files"],
+        "@omd_packages//packages/cmk-trace:files",
     ),
     (
         "agent-based",
-        "$(locations @omd_packages//packages/cmk-agent-based:files)",
-        ["@omd_packages//packages/cmk-agent-based:files"],
+        "@omd_packages//packages/cmk-agent-based:files",
     ),
     (
         "messaging",
-        "$(locations @omd_packages//packages/cmk-messaging:files)",
-        ["@omd_packages//packages/cmk-messaging:files"],
+        "@omd_packages//packages/cmk-messaging:files",
     ),
     (
         "mkp-tool",
-        "$(locations @omd_packages//packages/cmk-mkp-tool:files)",
-        ["@omd_packages//packages/cmk-mkp-tool:files"],
+        "@omd_packages//packages/cmk-mkp-tool:files",
     ),
     (
         "livestatus-client",
-        "$(locations @omd_packages//packages/cmk-livestatus-client:files)",
-        ["@omd_packages//packages/cmk-livestatus-client:files"],
+        "@omd_packages//packages/cmk-livestatus-client:files",
     ),
-    # TODO: Switch to official release when netapp has fixed their build process
-    # See: https://github.com/NetApp/ontap-rest-python/issues/46
-    ("netapp-ontap", "git+https://github.com/Checkmk/netapp-ontap-cmk.git@e38ce4ce357ad2ea8f47260c269757f8805bdbce", []),
 ]]
+
+# TODO: Switch to official release when netapp has fixed their build process
+# See: https://github.com/NetApp/ontap-rest-python/issues/46
+MODULE_NETAPP = "netapp-ontap"
+
+MODULE_NETAPP_SOURCE = "git+https://github.com/Checkmk/netapp-ontap-cmk.git@e38ce4ce357ad2ea8f47260c269757f8805bdbce"
+
+build_python_module(
+    name = "%s_compile" % MODULE_NETAPP,
+    srcs = [
+        "@freetds",
+        "@omd_packages//omd/packages/omd:use_system_openssl",
+        "@openssl",
+        "@python",
+    ],
+    outs = [
+        "compiled_%s.tar" % MODULE_NETAPP,
+    ],
+    cmd = select({
+        "//conditions:default": build_cmd.format(
+            git_ssl_no_verify = "",
+            module_name = MODULE_NETAPP,
+            pip_add_opts = get_pip_options(MODULE_NETAPP),
+            pyMajMin = PYTHON_MAJOR_DOT_MINOR,
+            pypi_mirror = INTERNAL_PYPI_MIRROR,
+            requirements = MODULE_NETAPP_SOURCE,
+        ),
+        ":git_ssl_no_verify": build_cmd.format(
+            git_ssl_no_verify = "GIT_SSL_NO_VERIFY=true",
+            module_name = MODULE_NETAPP,
+            pip_add_opts = get_pip_options(MODULE_NETAPP),
+            pyMajMin = PYTHON_MAJOR_DOT_MINOR,
+            pypi_mirror = INTERNAL_PYPI_MIRROR,
+            requirements = MODULE_NETAPP_SOURCE,
+        ),
+    }),
+)
 
 genrule(
     name = "python3-modules",

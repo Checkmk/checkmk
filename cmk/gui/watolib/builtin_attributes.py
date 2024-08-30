@@ -16,7 +16,11 @@ from cmk.gui import hooks, userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.generators.host_address import create_host_address
 from cmk.gui.form_specs.generators.setup_site_choice import create_setup_site_choice
-from cmk.gui.form_specs.private import SingleChoiceElementExtended, SingleChoiceExtended
+from cmk.gui.form_specs.private import (
+    OptionalChoice,
+    SingleChoiceElementExtended,
+    SingleChoiceExtended,
+)
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -54,7 +58,7 @@ from cmk.gui.valuespec import (
     ValueSpecText,
     ValueSpecValidateFunc,
 )
-from cmk.gui.watolib.attributes import IPMIParameters, SNMPCredentials
+from cmk.gui.watolib.attributes import create_ipmi_parameters, IPMIParameters, SNMPCredentials
 from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttributeNagiosText,
@@ -75,7 +79,7 @@ from cmk.gui.watolib.translation import HostnameTranslation
 
 import cmk.fields.validators
 from cmk import fields
-from cmk.rulesets.v1 import Help, Message, Title
+from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     InvalidElementMode,
     InvalidElementValidator,
@@ -985,7 +989,7 @@ class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
         )
 
     def form_spec(self) -> SingleChoiceExtended:
-        return SingleChoiceExtended(
+        return SingleChoiceExtended[object](
             title=Title("Protocol"),
             help_text=Help("Specify the protocol used to connect to the management board."),
             elements=[
@@ -1094,6 +1098,13 @@ class HostAttributeManagementIPMICredentials(ABCHostAttributeValueSpec):
         return IPMICredentials(
             title=_("IPMI credentials"),
             default_value=None,
+        )
+
+    def form_spec(self) -> OptionalChoice:
+        return OptionalChoice(
+            title=Title("Explicit credentials"),
+            none_label=Label(""),
+            parameter_form=create_ipmi_parameters(),
         )
 
     def openapi_field(self) -> gui_fields.Field:

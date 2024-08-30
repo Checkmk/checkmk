@@ -5,6 +5,7 @@
 
 from cmk.ccc.exceptions import MKGeneralException
 
+from cmk.gui.form_specs.private import LegacyValueSpec
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Alternative,
@@ -18,6 +19,9 @@ from cmk.gui.valuespec import (
     ValueSpec,
     ValueSpecHelp,
 )
+
+import cmk.rulesets.v1.form_specs as form_specs
+from cmk.rulesets.v1 import Title
 
 
 def IPMIParameters() -> Dictionary:
@@ -40,6 +44,29 @@ def IPMIParameters() -> Dictionary:
             ),
         ],
         optional_keys=[],
+    )
+
+
+def create_ipmi_parameters() -> form_specs.Dictionary:
+    return form_specs.Dictionary(
+        title=Title("IPMI credentials"),
+        elements={
+            "username": form_specs.DictElement(
+                required=True,
+                parameter_form=form_specs.String(
+                    title=Title("Username"),
+                ),
+            ),
+            "password": form_specs.DictElement(
+                required=True,
+                parameter_form=LegacyValueSpec.wrap(
+                    Password(
+                        title=_("Password"),
+                        allow_empty=False,
+                    ),
+                ),
+            ),
+        },
     )
 
 

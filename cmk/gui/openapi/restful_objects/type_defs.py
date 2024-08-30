@@ -169,6 +169,7 @@ RestfulEndpointName = Literal[
 ]  # fmt: off
 
 LinkRelation = CmkEndpointName | RestfulEndpointName
+TagGroup = Literal["Monitoring", "Setup", "Checkmk Internal", "Undocumented Endpoint"]
 
 PropertyFormat = Literal[
     # String values

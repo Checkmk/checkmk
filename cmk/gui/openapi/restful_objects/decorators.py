@@ -17,7 +17,7 @@ import json
 import logging
 import warnings
 from collections.abc import Callable, Iterator, Mapping, Sequence
-from typing import Any, Final, Literal, TypeVar
+from typing import Any, Final, TypeVar
 from urllib import parse
 
 from marshmallow import fields as ma_fields
@@ -47,6 +47,7 @@ from cmk.gui.openapi.restful_objects.type_defs import (
     LinkRelation,
     RawParameter,
     StatusCodeInt,
+    TagGroup,
 )
 from cmk.gui.openapi.utils import (
     EXT,
@@ -266,6 +267,9 @@ class Endpoint:
         accept:
             The content-type accepted by the endpoint.
 
+        internal_user_only:
+            If set to True, then this endpoint is only accesible via InternalToken authentication method
+
     """
 
     def __init__(  # pylint: disable=too-many-branches
@@ -285,7 +289,7 @@ class Endpoint:
         header_params: Sequence[RawParameter] | None = None,
         etag: ETagBehaviour | None = None,
         status_descriptions: dict[StatusCodeInt, str] | None = None,
-        tag_group: Literal["Monitoring", "Setup", "Checkmk Internal"] = "Setup",
+        tag_group: TagGroup = "Setup",
         blacklist_in: Sequence[EndpointTarget] | None = None,
         additional_status_codes: Sequence[StatusCodeInt] | None = None,
         permissions_required: permissions.BasePerm | None = None,  # will be permissions.NoPerm()
@@ -296,6 +300,7 @@ class Endpoint:
         update_config_generation: bool = True,
         sort: int = 0,
         accept: ACCEPT_FIELD_TYPE = "application/json",
+        internal_user_only: bool = False,
     ):
         self.path = path
         self.link_relation = link_relation
@@ -320,6 +325,7 @@ class Endpoint:
         self.valid_until = valid_until
         self.sort = sort
         self.accept = accept if isinstance(accept, list) else [accept]
+        self.internal_user_only = internal_user_only
 
         if deprecated_urls is not None:
             for url in deprecated_urls:

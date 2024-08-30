@@ -31,7 +31,7 @@ from cmk.utils.site import omd_site
 from cmk.gui import session
 from cmk.gui.exceptions import MKAuthException, MKHTTPException, MKUserError
 from cmk.gui.http import request, Response
-from cmk.gui.logged_in import LoggedInNobody, user
+from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, user
 from cmk.gui.openapi import endpoint_registry
 from cmk.gui.openapi.restful_objects import Endpoint
 from cmk.gui.openapi.restful_objects.parameters import (
@@ -475,6 +475,15 @@ class CheckmkRESTAPI(AbstractWSGIApp):
             # don't want to have cookies sent to the HTTP client whenever one is logged in using
             # the header methods.
             _ensure_authenticated()
+
+            # A Checmk Reserved endpoint can only be accessed with the site secret
+            if (
+                isinstance(wsgi_endpoint, EndpointAdapter)
+                and wsgi_endpoint.endpoint.internal_user_only
+                and not isinstance(session.session.user, LoggedInSuperUser)
+            ):
+                raise MKAuthException("This endpoint is reserved for Checkmk.")
+
             return wsgi_endpoint(environ, start_response)
 
         except ProblemException as exc:

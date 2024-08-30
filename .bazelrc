@@ -1,6 +1,5 @@
 # https://docs.bazel.build/versions/main/best-practices.html#using-the-bazelrc-file
 try-import %workspace%/user.bazelrc
-try-import /etc/ci.bazelrc
 
 # default/common bazel args for all commands supporting it
 common --experimental_ui_max_stdouterr_bytes=10000000
@@ -12,6 +11,8 @@ common --remote_local_fallback
 common --cycles
 common --local_resources=cpu=HOST_CPUS-2
 common --local_resources=memory=HOST_RAM*.5
+# We standardized on Ubuntu, a Debian-based distro, so LSB
+common --@//:filesystem_layout=lsb
 
 ## For specific commands
 # Always require debug info.
@@ -41,6 +42,9 @@ common:ci --extra_toolchains="//omd/packages/toolchain:ci"
 common:ci --local_resources=cpu=HOST_CPUS
 common:ci --local_resources=memory=HOST_RAM*.67
 common:ci --lockfile_mode=error
+
+# No standard in the CI where we must explicitly differentiate between LSB and FHS.
+common:ci --@//:filesystem_layout=FILESYSTEM_LAYOUT_INVALID
 
 ## For specific commands
 # build:ci ...
@@ -81,3 +85,6 @@ build:iwyu --output_groups=report
 build:iwyu --@bazel_iwyu//:iwyu_executable=//omd/packages/bazel_iwyu:iwyu_bin
 build:iwyu --@bazel_iwyu//:iwyu_opts="--error"
 build:iwyu --@bazel_iwyu//:iwyu_mappings=//omd/packages/bazel_iwyu:iwyu_mappings
+
+# Must be last
+try-import /etc/ci.bazelrc

@@ -1,19 +1,18 @@
 cc_library(
     name = "glibconfig",
-    hdrs = glob([
-        # buildifier: disable=constant-glob
-        "lib/x86_64-linux-gnu/glib-2.0/include/glibconfig.h",
-        "lib64/glib-2.0/include/glibconfig.h",
-    ]),
-    includes = glob(
-        [
-            # buildifier: disable=constant-glob
-            # glibconfig.h path for most distros, including Ubuntu
-            "lib/x86_64-linux-gnu/glib-2.0/include",
-            # glibconfig.h path for el{8,9] and sles15* distros
-            "lib64/glib-2.0/include",
-        ],
-        exclude_directories = 0,
+    hdrs = select(
+        {
+            "@//:lsb_filesystem_layout": ["lib/x86_64-linux-gnu/glib-2.0/include/glibconfig.h"],
+            "@//:fhs_filesystem_layout": ["lib64/glib-2.0/include/glibconfig.h"],
+        },
+        no_match_error = "Please build with lsb or fhs filesystem layout",
+    ),
+    includes = select(
+        {
+            "@//:lsb_filesystem_layout": ["lib/x86_64-linux-gnu/glib-2.0/include"],
+            "@//:fhs_filesystem_layout": ["lib64/glib-2.0/include"],
+        },
+        no_match_error = "Please build with lsb or fhs filesystem layout",
     ),
 )
 

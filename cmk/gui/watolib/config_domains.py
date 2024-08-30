@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from functools import partial
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any, NewType, Sequence
 
 from cryptography.hazmat.primitives import hashes
 from cryptography.x509 import Certificate, load_pem_x509_certificate
@@ -32,7 +32,6 @@ from cmk.utils.certs import CN_TEMPLATE, RemoteSiteCertsStore
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.hostaddress import HostName
-from cmk.utils.process import pid_from_file, send_signal
 
 from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
 from cmk.gui.config import active_config, get_default_config
@@ -53,6 +52,8 @@ from cmk.gui.watolib.config_domain_name import (
     SerializedSettings,
 )
 from cmk.gui.watolib.utils import liveproxyd_config_dir, multisite_dir, wato_root_dir
+
+ProcessId = NewType("ProcessId", int)
 
 
 class _NegativeSerialException(Exception):
@@ -339,7 +340,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
                 cmk.utils.paths.omd_root / "tmp" / "run" / "stunnel-server.pid"
             )
             if stunnel_pid:
-                send_signal(stunnel_pid, signal.SIGHUP)
+                os.kill(stunnel_pid, signal.SIGHUP)
             return warnings
         except Exception:
             logger.exception("error updating trusted CAs")
@@ -486,6 +487,14 @@ class ConfigDomainCACertificates(ABCConfigDomain):
                 "trusted_cas": [],
             }
         }
+
+
+def pid_from_file(pid_file: Path) -> ProcessId | None:
+    """Read a process id from a given pid file"""
+    try:
+        return ProcessId(int(store.load_object_from_file(pid_file, default=None)))
+    except Exception:
+        return None
 
 
 class ConfigDomainOMD(ABCConfigDomain):

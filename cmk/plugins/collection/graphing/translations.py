@@ -837,6 +837,15 @@ translation_drbd_net = translations.Translation(
     },
 )
 
+translation_drbd_stats = translations.Translation(
+    name="drbd_stats",
+    check_commands=[translations.PassiveCheck("drbd_stats")],
+    translations={
+        # see related check plug-in drbd_stats: "ooo (out of sync)"
+        "kb_out_of_sync": translations.ScaleBy(1024),
+    },
+)
+
 translation_interfaces_aws_ec2_network_io_aws_rds_network_io_cadvisor_if_esx_vsphere_counters_if_esx_vsphere_counters_fritz_fritz_wan_if_hitachi_hnas_fc_if_hpux_if_huawei_osn_if_if64_lnx_if_mcdata_fcport_netapp_ontap_if_winperf_if_gcp_gce_network_azure_vm_network_io_prism_host_networks = translations.Translation(
     name="interfaces_aws_ec2_network_io_aws_rds_network_io_cadvisor_if_esx_vsphere_counters_if_esx_vsphere_counters_fritz_fritz_wan_if_hitachi_hnas_fc_if_hpux_if_huawei_osn_if_if64_lnx_if_mcdata_fcport_netapp_ontap_if_winperf_if_gcp_gce_network_azure_vm_network_io_prism_host_networks",
     check_commands=[

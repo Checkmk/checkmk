@@ -865,12 +865,12 @@ msgid "(No fallback email address configured!)"
 msgstr "(Nu este configurată nicio adresă de e-mail de rezervă!)"
 
 #, python-format
-msgid "(SLA alert levels at %d%%/%d%% left)"
-msgstr "(niveluri de alertă SLA la %d%%/%d%% stânga)"
-
-#, python-format
 msgid "(SLA alert levels at %d/%d incidents left)"
 msgstr "(niveluri de alertă SLA la %d/%d incidente în stânga)"
+
+#, fuzzy, python-format
+msgid "(SLA alert levels at %r%%/%r%% left)"
+msgstr "(niveluri de alertă SLA la %d%%/%d%% stânga)"
 
 msgid "(TLS, HTTP and DNS names)"
 msgstr "(TLS, HTTP și nume DNS)"

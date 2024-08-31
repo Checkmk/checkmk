@@ -851,12 +851,12 @@ msgid "(No fallback email address configured!)"
 msgstr "(Non è stato configurato alcun indirizzo e-mail di riserva!)"
 
 #, python-format
-msgid "(SLA alert levels at %d%%/%d%% left)"
-msgstr "(livelli di allarme SLA a %d%%/%d%% sinistra)"
-
-#, python-format
 msgid "(SLA alert levels at %d/%d incidents left)"
 msgstr "(livelli di allarme SLA a %d/%d incidenti rimasti)"
+
+#, fuzzy, python-format
+msgid "(SLA alert levels at %r%%/%r%% left)"
+msgstr "(livelli di allarme SLA a %d%%/%d%% sinistra)"
 
 msgid "(TLS, HTTP and DNS names)"
 msgstr "(TLS, HTTP e nomi DNS)"

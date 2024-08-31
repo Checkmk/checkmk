@@ -855,12 +855,12 @@ msgid "(No fallback email address configured!)"
 msgstr "(フォールバックメールアドレスは設定されていません!)"
 
 #, python-format
-msgid "(SLA alert levels at %d%%/%d%% left)"
-msgstr "(%d %%/%d %%のSLAアラートレベルが残っています)"
-
-#, python-format
 msgid "(SLA alert levels at %d/%d incidents left)"
 msgstr "(SLAアラートレベル %d/%d のインシデントが残っています)"
+
+#, fuzzy, python-format
+msgid "(SLA alert levels at %r%%/%r%% left)"
+msgstr "(%d %%/%d %%のSLAアラートレベルが残っています)"
 
 msgid "(TLS, HTTP and DNS names)"
 msgstr "(TLS、HTTP、およびDNS名)"

@@ -860,12 +860,12 @@ msgstr ""
 "(¡No se ha configurado ninguna dirección de correo electrónico de reserva!)"
 
 #, python-format
-msgid "(SLA alert levels at %d%%/%d%% left)"
-msgstr "(Niveles de alerta de SLA en %d%%/%d%% restante)"
-
-#, python-format
 msgid "(SLA alert levels at %d/%d incidents left)"
 msgstr "(Niveles de alerta de SLA en %d/%d incidencias restantes)"
+
+#, fuzzy, python-format
+msgid "(SLA alert levels at %r%%/%r%% left)"
+msgstr "(Niveles de alerta de SLA en %d%%/%d%% restante)"
 
 msgid "(TLS, HTTP and DNS names)"
 msgstr "(TLS, HTTP y nombres DNS)"

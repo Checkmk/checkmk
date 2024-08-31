@@ -806,12 +806,12 @@ msgid "(No fallback email address configured!)"
 msgstr "(フォールバックメールアドレスは設定されていません!)"
 
 #, python-format
-msgid "(SLA alert levels at %d%%/%d%% left)"
-msgstr "(%d %%/%d %%のSLAアラートレベルが残っています)"
-
-#, python-format
 msgid "(SLA alert levels at %d/%d incidents left)"
 msgstr "(SLAアラートレベル %d/%d のインシデントが残っています)"
+
+#, fuzzy, python-format
+msgid "(SLA alert levels at %r%%/%r%% left)"
+msgstr "(%d %%/%d %%のSLAアラートレベルが残っています)"
 
 msgid "(TLS, HTTP and DNS names)"
 msgstr "(TLS、HTTP、およびDNS名)"
@@ -1942,6 +1942,14 @@ msgid ""
 "A complete list of all host problems, optimized for usage in the dashboard"
 msgstr ""
 "ダッシュボード使用のために最適化された、すべてのホストの問題の完全なリスト"
+
+#, fuzzy
+msgid "A connection with the same sites already exists."
+msgstr "その名前のフォルダはすでに存在します。"
+
+#, fuzzy
+msgid "A connection with this ID already exists."
+msgstr "このIDのルールパックはすでに存在します。"
 
 msgid ""
 "A couple of switches with broken firmware report that they support 64 bit "
@@ -3696,6 +3704,10 @@ msgstr "リストの追加"
 msgid "Add macro"
 msgstr "マクロを追加"
 
+#, fuzzy
+msgid "Add message broker connection"
+msgstr "APIサーバー接続"
+
 msgid "Add message pattern"
 msgstr "メッセージパターンの追加"
 
@@ -3856,6 +3868,10 @@ msgstr "パターンを追加する"
 
 msgid "Add pattern group"
 msgstr "パターングループを追加する"
+
+#, fuzzy
+msgid "Add peer-to-peer message broker connection"
+msgstr "接続あたりの平均リクエスト"
 
 msgid "Add plug-in"
 msgstr "プラグインを追加"
@@ -13483,6 +13499,23 @@ msgstr "パスワードなしで接続する"
 msgid "Connect without proxy"
 msgstr "プロキシなしで接続する"
 
+#, fuzzy
+msgid "Connectee:"
+msgstr "接続する"
+
+msgid "Connecter and connectee sites must be different."
+msgstr ""
+
+msgid "Connecter and connectee sites must be specified."
+msgstr ""
+
+msgid "Connecter and connectee sites must belong to the same customers."
+msgstr ""
+
+#, fuzzy
+msgid "Connecter:"
+msgstr "接続する"
+
 msgid "Connection"
 msgstr "接続"
 
@@ -14607,6 +14640,10 @@ msgstr "新しい通知ルールを作成しました"
 #, python-format
 msgid "Created new notification rule for user %s"
 msgstr "ユーザー %sの新しい通知ルールを作成しました"
+
+#, fuzzy, python-format
+msgid "Created new peer-to-peer broker connection id %s"
+msgstr "サイト%sへの新しい接続を作成しました"
 
 #, python-format
 msgid "Created new role '%s'"
@@ -16641,6 +16678,10 @@ msgstr "通知ルール#%dを削除"
 
 msgid "Delete oldest event, create new event"
 msgstr "最も古いイベントを削除し、新しいイベントを作成します"
+
+#, fuzzy
+msgid "Delete peer-to-peer connection to site"
+msgstr "サイトへの接続を削除"
 
 msgid "Delete permitted maps"
 msgstr "許可された地図の削除"
@@ -19817,6 +19858,10 @@ msgstr "レイアウトを編集する"
 
 msgid "Edit layout only available if header is enabled"
 msgstr "ヘッダーが有効な場合のみ、レイアウトの編集が可能"
+
+#, fuzzy, python-format
+msgid "Edit message broker connection %s"
+msgstr "サイト接続 %sを編集する"
 
 msgid "Edit model"
 msgstr "モデルを編集する"
@@ -33216,9 +33261,6 @@ msgstr "キーワード"
 msgid "KiB"
 msgstr "MiB"
 
-msgid "KiB out of sync"
-msgstr "KiB 同期していません"
-
 msgid "Kube-proxy version"
 msgstr "Kube-proxy バージョン"
 
@@ -38398,6 +38440,10 @@ msgstr ""
 #, python-format
 msgid "Modified host %s."
 msgstr "変更されたホスト %s。"
+
+#, fuzzy, python-format
+msgid "Modified peer-to-peer broker connection id %s"
+msgstr "変更されたサイト接続 %s"
 
 #, python-format
 msgid "Modified rule pack %s"
@@ -44013,6 +44059,10 @@ msgstr "通知期間外"
 msgid "Out of service period"
 msgstr "サービス期間満了"
 
+#, fuzzy
+msgid "Out of sync"
+msgstr "KiB 同期していません"
+
 msgid "Outage count requirement"
 msgstr "停止カウント要件"
 
@@ -45162,6 +45212,10 @@ msgstr "ピア名"
 #, fuzzy
 msgid "Peer states"
 msgstr "ピアの状態"
+
+#, fuzzy
+msgid "Peer-to-peer message broker connections"
+msgstr "ブロックされた接続の上位レベル"
 
 msgid "Peers"
 msgstr "ピア"
@@ -62207,6 +62261,10 @@ msgstr "要求されたBIアグリゲーションは存在しません。"
 msgid "The requested BI rule does not exist."
 msgstr "要求されたBIルールは存在しません。"
 
+#, fuzzy, python-format
+msgid "The requested connection %s does not exist"
+msgstr "要求された接続は存在しません。"
+
 msgid "The requested connection does not exist."
 msgstr "要求された接続は存在しません。"
 
@@ -71832,8 +71890,18 @@ msgid "Unable to create authentication request"
 msgstr "認証リクエスト作成不可"
 
 #, python-format
+msgid ""
+"Unable to delete connection id: %s. Connecter and connectee sites must be "
+"specified."
+msgstr ""
+
+#, python-format
 msgid "Unable to delete group. It is still in use by: %s"
 msgstr "グループを削除できません。まだ使用中です: %s"
+
+#, fuzzy, python-format
+msgid "Unable to delete unknown connection id: %s"
+msgstr "不明なサイトIDを削除できません:%s"
 
 #, python-format
 msgid "Unable to delete unknown site id: %s"
@@ -72101,6 +72169,10 @@ msgstr "一意のID"
 
 msgid "Unique ID used to identify the instance on the host within Checkmk."
 msgstr "Checkmk内でホスト上のインスタンスを識別するために使用される一意のID。"
+
+#, fuzzy
+msgid "Unique ID:"
+msgstr "一意のID"
 
 msgid ""
 "Unique client ID used for the broker. Will be randomly generated when not "
@@ -79408,6 +79480,10 @@ msgstr ""
 "トのデータを暗黙のうちに追加します。リモートサイトを追加した場合で、ローカル"
 "監視サイトのデータも表示したいのであれば、忘れずに追加してください。"
 
+#, fuzzy
+msgid "You have not configured any peer-to-peer connections."
+msgstr "まだルールを作成していません。"
+
 #, python-format
 msgid ""
 "You have not created any agent <a href='%s' target='_blank'>signature keys</"
@@ -80424,6 +80500,14 @@ msgstr "構成"
 
 msgid "configure"
 msgstr "設定"
+
+#, fuzzy
+msgid "connectee"
+msgstr "切断されました"
+
+#, fuzzy
+msgid "connecter"
+msgstr "切断されました"
 
 msgid "connection"
 msgstr "接続"
@@ -82580,9 +82664,6 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 #~ "Amount of time that the replica server is lagging against the source "
 #~ "server"
 #~ msgstr "レプリカサーバーがソースサーバーに対して遅れている時間"
-
-#~ msgid "Connect"
-#~ msgstr "接続する"
 
 #, fuzzy
 #~ msgid "Last updated"

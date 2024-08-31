@@ -818,12 +818,12 @@ msgid "(No fallback email address configured!)"
 msgstr "(Nu este configurată nicio adresă de e-mail de rezervă!)"
 
 #, python-format
-msgid "(SLA alert levels at %d%%/%d%% left)"
-msgstr "(niveluri de alertă SLA la %d%%/%d%% stânga)"
-
-#, python-format
 msgid "(SLA alert levels at %d/%d incidents left)"
 msgstr "(niveluri de alertă SLA la %d/%d incidente în stânga)"
+
+#, fuzzy, python-format
+msgid "(SLA alert levels at %r%%/%r%% left)"
+msgstr "(niveluri de alertă SLA la %d%%/%d%% stânga)"
 
 msgid "(TLS, HTTP and DNS names)"
 msgstr "(TLS, HTTP și nume DNS)"
@@ -2027,6 +2027,14 @@ msgid ""
 msgstr ""
 "O listă completă a tuturor problemelor gazdelor, optimizată pentru "
 "utilizarea în tabloul de bord"
+
+#, fuzzy
+msgid "A connection with the same sites already exists."
+msgstr "Un director cu acest nume deja există."
+
+#, fuzzy
+msgid "A connection with this ID already exists."
+msgstr "Există deja un pachet de reguli cu acest ID."
 
 msgid ""
 "A couple of switches with broken firmware report that they support 64 bit "
@@ -3853,6 +3861,10 @@ msgstr "Adăugați lista"
 msgid "Add macro"
 msgstr "Adăugați macro"
 
+#, fuzzy
+msgid "Add message broker connection"
+msgstr "Conexiune la serverul API"
+
 msgid "Add message pattern"
 msgstr "Adaugă model mesaj"
 
@@ -4015,6 +4027,10 @@ msgstr "Adaugă model/tipar"
 
 msgid "Add pattern group"
 msgstr "Adaugă group de model"
+
+#, fuzzy
+msgid "Add peer-to-peer message broker connection"
+msgstr "Solicitări medii pe conexiune"
 
 #, fuzzy
 msgid "Add plug-in"
@@ -14136,6 +14152,23 @@ msgstr "Conectare fără parolă"
 msgid "Connect without proxy"
 msgstr "Conectare fără proxy"
 
+#, fuzzy
+msgid "Connectee:"
+msgstr "Conectați-vă"
+
+msgid "Connecter and connectee sites must be different."
+msgstr ""
+
+msgid "Connecter and connectee sites must be specified."
+msgstr ""
+
+msgid "Connecter and connectee sites must belong to the same customers."
+msgstr ""
+
+#, fuzzy
+msgid "Connecter:"
+msgstr "Conectați-vă"
+
 msgid "Connection"
 msgstr "Conexiune"
 
@@ -15309,6 +15342,10 @@ msgstr "A creat o nouă regulă de notificare"
 #, python-format
 msgid "Created new notification rule for user %s"
 msgstr "A fost creată o nouă regulă de notificare pentru utilizatorul %s"
+
+#, fuzzy, python-format
+msgid "Created new peer-to-peer broker connection id %s"
+msgstr "A fost creată o nouă conexiune la site %s"
 
 #, python-format
 msgid "Created new role '%s'"
@@ -17424,6 +17461,10 @@ msgstr "Ștergerea regulii de notificare #%d"
 
 msgid "Delete oldest event, create new event"
 msgstr "Ștergeți cel mai vechi eveniment, creați un nou eveniment"
+
+#, fuzzy
+msgid "Delete peer-to-peer connection to site"
+msgstr "Ștergeți conexiunea cu site-ul"
 
 msgid "Delete permitted maps"
 msgstr "Ștergerea hărților permise"
@@ -20813,6 +20854,10 @@ msgstr "Editați aspectul"
 
 msgid "Edit layout only available if header is enabled"
 msgstr "Editarea aspectului este disponibilă numai dacă este activat antetul"
+
+#, fuzzy, python-format
+msgid "Edit message broker connection %s"
+msgstr "Editați conexiunea site-ului %s"
 
 msgid "Edit model"
 msgstr "Editați modelul"
@@ -34487,9 +34532,6 @@ msgstr "Cuvânt cheie"
 msgid "KiB"
 msgstr "MiB"
 
-msgid "KiB out of sync"
-msgstr "KiB desincronizat"
-
 msgid "Kube-proxy version"
 msgstr "Versiunea Kube-proxy"
 
@@ -39718,6 +39760,10 @@ msgstr ""
 #, python-format
 msgid "Modified host %s."
 msgstr "Gazdă modificată %s."
+
+#, fuzzy, python-format
+msgid "Modified peer-to-peer broker connection id %s"
+msgstr "Conexiune site modificată %s"
 
 #, python-format
 msgid "Modified rule pack %s"
@@ -45420,6 +45466,10 @@ msgstr "În afara perioadei de notificare"
 msgid "Out of service period"
 msgstr "Perioada de întrerupere a serviciului"
 
+#, fuzzy
+msgid "Out of sync"
+msgstr "KiB desincronizat"
+
 msgid "Outage count requirement"
 msgstr "Cerința de numărare a întreruperilor"
 
@@ -46581,6 +46631,10 @@ msgstr "Numele colegului"
 #, fuzzy
 msgid "Peer states"
 msgstr "Statele similare"
+
+#, fuzzy
+msgid "Peer-to-peer message broker connections"
+msgstr "Niveluri superioare pentru conexiuni blocate"
 
 msgid "Peers"
 msgstr "Colegii"
@@ -64068,6 +64122,10 @@ msgstr "Agregarea BI solicitată nu există."
 msgid "The requested BI rule does not exist."
 msgstr "Regula BI solicitată nu există."
 
+#, fuzzy, python-format
+msgid "The requested connection %s does not exist"
+msgstr "Conexiunea solicitată nu există."
+
 msgid "The requested connection does not exist."
 msgstr "Conexiunea solicitată nu există."
 
@@ -73945,8 +74003,18 @@ msgid "Unable to create authentication request"
 msgstr "Nu se poate crea o cerere de autentificare"
 
 #, python-format
+msgid ""
+"Unable to delete connection id: %s. Connecter and connectee sites must be "
+"specified."
+msgstr ""
+
+#, python-format
 msgid "Unable to delete group. It is still in use by: %s"
 msgstr "Nu se poate șterge grupul. Acesta este încă utilizat de: %s."
+
+#, fuzzy, python-format
+msgid "Unable to delete unknown connection id: %s"
+msgstr "Nu se poate șterge un id de site necunoscut: %s."
 
 #, python-format
 msgid "Unable to delete unknown site id: %s"
@@ -74221,6 +74289,10 @@ msgstr "ID unic"
 msgid "Unique ID used to identify the instance on the host within Checkmk."
 msgstr ""
 "ID unic utilizat pentru a identifica instanța de pe gazdă în cadrul Checkmk."
+
+#, fuzzy
+msgid "Unique ID:"
+msgstr "ID unic"
 
 msgid ""
 "Unique client ID used for the broker. Will be randomly generated when not "
@@ -81784,6 +81856,10 @@ msgstr ""
 "la distanță, nu uitați să adăugați și site-ul de monitorizare local, dacă "
 "doriți să afișați datele acestuia."
 
+#, fuzzy
+msgid "You have not configured any peer-to-peer connections."
+msgstr "Nu ați creat încă nicio regulă."
+
 #, python-format
 msgid ""
 "You have not created any agent <a href='%s' target='_blank'>signature keys</"
@@ -82809,6 +82885,14 @@ msgstr "configurare"
 
 msgid "configure"
 msgstr "configurați"
+
+#, fuzzy
+msgid "connectee"
+msgstr "deconectat"
+
+#, fuzzy
+msgid "connecter"
+msgstr "deconectat"
 
 msgid "connection"
 msgstr "conexiune"
@@ -84969,9 +85053,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #~ msgstr ""
 #~ "Cantitatea de timp în care serverul de replică este în întârziere față de "
 #~ "serverul sursă"
-
-#~ msgid "Connect"
-#~ msgstr "Conectați-vă"
 
 #, fuzzy
 #~ msgid "Last updated"

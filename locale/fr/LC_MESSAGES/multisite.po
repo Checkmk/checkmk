@@ -815,12 +815,12 @@ msgid "(No fallback email address configured!)"
 msgstr "(Aucune adresse électronique de secours n'est configurée !)"
 
 #, python-format
-msgid "(SLA alert levels at %d%%/%d%% left)"
-msgstr "(niveaux d'alerte SLA à %d%%/%d%% restants)"
-
-#, python-format
 msgid "(SLA alert levels at %d/%d incidents left)"
 msgstr "(niveaux d'alerte SLA à %d/%d incidents restants)"
+
+#, fuzzy, python-format
+msgid "(SLA alert levels at %r%%/%r%% left)"
+msgstr "(niveaux d'alerte SLA à %d%%/%d%% restants)"
 
 msgid "(TLS, HTTP and DNS names)"
 msgstr "(TLS, HTTP et noms DNS)"
@@ -2045,6 +2045,14 @@ msgid ""
 msgstr ""
 "Une liste complète de tous les problèmes de l'hôte, optimisée pour une "
 "utilisation dans le tableau de bord"
+
+#, fuzzy
+msgid "A connection with the same sites already exists."
+msgstr "Un dossier portant ce nom existe déjà."
+
+#, fuzzy
+msgid "A connection with this ID already exists."
+msgstr "Un paquet de règles avec cet ID existe déjà."
 
 msgid ""
 "A couple of switches with broken firmware report that they support 64 bit "
@@ -3883,6 +3891,10 @@ msgstr "Ajouter une liste"
 msgid "Add macro"
 msgstr "Ajouter une macro"
 
+#, fuzzy
+msgid "Add message broker connection"
+msgstr "Connexion au serveur API"
+
 msgid "Add message pattern"
 msgstr "Ajouter un modèle de message"
 
@@ -4050,6 +4062,10 @@ msgstr "Ajouter un motif"
 
 msgid "Add pattern group"
 msgstr "Ajouter un groupe de motifs"
+
+#, fuzzy
+msgid "Add peer-to-peer message broker connection"
+msgstr "Demandes moyennes par connexion"
 
 #, fuzzy
 msgid "Add plug-in"
@@ -14237,6 +14253,23 @@ msgstr "Se connecter sans mot de passe"
 msgid "Connect without proxy"
 msgstr "Se connecter sans proxy"
 
+#, fuzzy
+msgid "Connectee:"
+msgstr "Connectez-vous à"
+
+msgid "Connecter and connectee sites must be different."
+msgstr ""
+
+msgid "Connecter and connectee sites must be specified."
+msgstr ""
+
+msgid "Connecter and connectee sites must belong to the same customers."
+msgstr ""
+
+#, fuzzy
+msgid "Connecter:"
+msgstr "Connectez-vous à"
+
 msgid "Connection"
 msgstr "Connexion"
 
@@ -15423,6 +15456,10 @@ msgstr "Création d'une nouvelle règle de notification"
 #, python-format
 msgid "Created new notification rule for user %s"
 msgstr "Création d'une nouvelle règle de notification pour l'utilisateur %s"
+
+#, fuzzy, python-format
+msgid "Created new peer-to-peer broker connection id %s"
+msgstr "Création d'une nouvelle connexion au site %s"
 
 #, python-format
 msgid "Created new role '%s'"
@@ -17559,6 +17596,10 @@ msgstr "Supprimer la règle de notification #%d"
 
 msgid "Delete oldest event, create new event"
 msgstr "Supprimer l'événement le plus ancien, créer un nouvel événement"
+
+#, fuzzy
+msgid "Delete peer-to-peer connection to site"
+msgstr "Supprimer la connexion au site"
 
 msgid "Delete permitted maps"
 msgstr "Supprimer les cartes autorisées"
@@ -20965,6 +21006,10 @@ msgid "Edit layout only available if header is enabled"
 msgstr ""
 "La modification de la mise en page n'est disponible que si l'en-tête est "
 "activé"
+
+#, fuzzy, python-format
+msgid "Edit message broker connection %s"
+msgstr "Modifier la connexion du site %s"
 
 msgid "Edit model"
 msgstr "Modifier le modèle"
@@ -34735,9 +34780,6 @@ msgstr "Mot clé"
 msgid "KiB"
 msgstr "MiB"
 
-msgid "KiB out of sync"
-msgstr "KiB désynchronisés"
-
 msgid "Kube-proxy version"
 msgstr "Version de Kube-proxy"
 
@@ -40032,6 +40074,10 @@ msgstr ""
 #, python-format
 msgid "Modified host %s."
 msgstr "Hôte modifié %s."
+
+#, fuzzy, python-format
+msgid "Modified peer-to-peer broker connection id %s"
+msgstr "Connexion au site modifiée %s"
 
 #, python-format
 msgid "Modified rule pack %s"
@@ -45762,6 +45808,10 @@ msgstr "Hors période de notification"
 msgid "Out of service period"
 msgstr "Période d'inactivité"
 
+#, fuzzy
+msgid "Out of sync"
+msgstr "KiB désynchronisés"
+
 msgid "Outage count requirement"
 msgstr "Exigence de comptage des interruptions"
 
@@ -46934,6 +46984,10 @@ msgstr "Nom de l'homologue"
 #, fuzzy
 msgid "Peer states"
 msgstr "États pairs"
+
+#, fuzzy
+msgid "Peer-to-peer message broker connections"
+msgstr "Niveaux supérieurs pour les connexions bloquées"
 
 msgid "Peers"
 msgstr "Pairs"
@@ -64524,6 +64578,10 @@ msgstr "L'agrégation BI demandée n'existe pas."
 msgid "The requested BI rule does not exist."
 msgstr "La règle BI demandée n'existe pas."
 
+#, fuzzy, python-format
+msgid "The requested connection %s does not exist"
+msgstr "La connexion demandée n'existe pas."
+
 msgid "The requested connection does not exist."
 msgstr "La connexion demandée n'existe pas."
 
@@ -74502,8 +74560,18 @@ msgid "Unable to create authentication request"
 msgstr "Impossible de créer une demande d'authentification"
 
 #, python-format
+msgid ""
+"Unable to delete connection id: %s. Connecter and connectee sites must be "
+"specified."
+msgstr ""
+
+#, python-format
 msgid "Unable to delete group. It is still in use by: %s"
 msgstr "Impossible de supprimer le groupe. Il est toujours utilisé par : %s"
+
+#, fuzzy, python-format
+msgid "Unable to delete unknown connection id: %s"
+msgstr "Impossible de supprimer l'identifiant de site inconnu : %s"
 
 #, python-format
 msgid "Unable to delete unknown site id: %s"
@@ -74782,6 +74850,10 @@ msgstr "ID unique"
 
 msgid "Unique ID used to identify the instance on the host within Checkmk."
 msgstr "ID unique utilisé pour identifier l'instance sur l'hôte dans Checkmk."
+
+#, fuzzy
+msgid "Unique ID:"
+msgstr "ID unique"
 
 msgid ""
 "Unique client ID used for the broker. Will be randomly generated when not "
@@ -82474,6 +82546,10 @@ msgstr ""
 "sites distants, n'oubliez pas d'ajouter également votre site de surveillance "
 "local, si vous voulez afficher ses données."
 
+#, fuzzy
+msgid "You have not configured any peer-to-peer connections."
+msgstr "Vous n'avez pas encore créé de règles."
+
 #, python-format
 msgid ""
 "You have not created any agent <a href='%s' target='_blank'>signature keys</"
@@ -83498,6 +83574,14 @@ msgstr "configuration"
 
 msgid "configure"
 msgstr "configurer"
+
+#, fuzzy
+msgid "connectee"
+msgstr "déconnecté"
+
+#, fuzzy
+msgid "connecter"
+msgstr "déconnecté"
 
 msgid "connection"
 msgstr "connexion"
@@ -85672,9 +85756,6 @@ msgstr "© %s Checkmk GmbH. Tous droits réservés."
 #~ "Amount of time that the replica server is lagging against the source "
 #~ "server"
 #~ msgstr "Temps de retard du serveur réplique par rapport au serveur source"
-
-#~ msgid "Connect"
-#~ msgstr "Connectez-vous à"
 
 #, fuzzy
 #~ msgid "Last updated"

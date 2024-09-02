@@ -275,7 +275,7 @@ sw-documentation-docker:
 Pipfile.lock:
 	@( \
 		flock $(LOCK_FD); \
-		if ! SKIP_MAKEFILE_CALL=1 $(PIPENV) verify; then \
+		if ! SKIP_MAKEFILE_CALL=1 $(PIPENV) verify > /dev/null; then \
 			if [ "${CI}" == "true" ]; then \
 				echo "A locking of Pipfile.lock is needed, but we're executed in the CI, where this should not be done."; \
 				echo "It seems you forgot to commit the new Pipfile.lock. Regenerate Pipfile.lock with e.g.:"; \

@@ -696,6 +696,10 @@ class X509Name:
         """
         return self.get_single_name_attribute(X509NameOid.ORGANIZATIONAL_UNIT_NAME)
 
+    def rfc4514_string(self) -> str:
+        """Return the name in RFC4514 format like "CN=John Doe,O=Example Corp,OU=Unit"."""
+        return self.name.rfc4514_string()
+
 
 @dataclass
 class CertificateSigningRequest:

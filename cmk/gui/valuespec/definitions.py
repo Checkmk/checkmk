@@ -116,6 +116,7 @@ from cmk.gui.utils.urls import makeuri, urlencode
 from cmk.gui.view_utils import render_labels
 
 from cmk.crypto import certificate, keys
+from cmk.crypto.hash import HashAlgorithm
 
 seconds_per_day = 86400
 
@@ -8338,41 +8339,17 @@ class _CAorCAChain(UploadOrPasteTextFile):
         )
 
     @staticmethod
-    def _analyse_cert(cert: certificate.Certificate) -> dict[str, dict[str, str]]:
+    def _analyse_cert(cert: certificate.Certificate) -> dict[str, str]:
         """
         Inspect the certificate and place selected info in a dict.
-
-        Depending on which info is specified in the certificate, the resulting dict may contain
-        - common name; organization name; locality name; state or province name; country name
-        and will look something like this:
-        {
-            "issuer": {
-                "Common Name": ...,
-                "Organization Name": ...,
-                ...
-            },
-            "subject": {
-                "Common Name": ...,
-                "Organization Name": ...,
-                ...
-            },
-        }
         """
-        attributes = {
-            certificate.X509NameOid.COUNTRY_NAME: _("Country"),
-            certificate.X509NameOid.STATE_OR_PROVINCE_NAME: _("State or Province Name"),
-            certificate.X509NameOid.LOCALITY_NAME: _("Locality Name"),
-            certificate.X509NameOid.ORGANIZATION_NAME: _("Organization Name"),
-            certificate.X509NameOid.COMMON_NAME: _("Common Name"),
-        }
 
         return {
-            entity: {
-                attributes[attr_name]: attr_value
-                for attr_name in attributes
-                if (attr_value := info.get_single_name_attribute(attr_name)) is not None
-            }
-            for (entity, info) in [("issuer", cert.issuer), ("subject", cert.subject)]
+            "issuer": cert.issuer.rfc4514_string(),
+            "subject": cert.subject.rfc4514_string(),
+            "creation": cert.not_valid_before.date().isoformat(),
+            "expiration": cert.not_valid_after.date().isoformat(),
+            "fingerprint": cert.fingerprint(HashAlgorithm.Sha256).hex(sep=":").upper(),
         }
 
     def _validate_value(self, value: Any, varprefix: str) -> None:
@@ -8388,20 +8365,27 @@ class _CAorCAChain(UploadOrPasteTextFile):
         cert_info = self._analyse_cert(
             certificate.Certificate.load_pem(certificate.CertificatePEM(value))
         )
-
+        show_info = {k: HTML.with_escaping(cert_info[k]) for k in ("issuer", "subject")}
+        show_info["fingerprint"] = HTMLWriter.render_span(
+            cert_info["fingerprint"][:41], title=cert_info["fingerprint"]
+        )
+        show_info["validity"] = HTML.without_escaping(
+            _("Not Before: %s - Not After: %s")
+            % (
+                cert_info["creation"],
+                cert_info["expiration"],
+            )
+        )
         rows = []
         for what, title in [
             ("issuer", _("Issuer")),
             ("subject", _("Subject")),
+            ("validity", _("Validity")),
+            ("fingerprint", _("Fingerprint")),
         ]:
             rows.append(
                 HTMLWriter.render_tr(
-                    HTMLWriter.render_td("%s:" % title)
-                    + HTMLWriter.render_td(
-                        HTML.empty().join(
-                            f"{title1}: {val}" for title1, val in sorted(cert_info[what].items())
-                        )
-                    )
+                    HTMLWriter.render_td("%s:" % title) + HTMLWriter.render_td(show_info[what])
                 )
             )
         return HTMLWriter.render_table(HTML.empty().join(rows))

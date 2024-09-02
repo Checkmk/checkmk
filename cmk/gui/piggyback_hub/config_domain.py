@@ -4,24 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import json
 import subprocess
 import traceback
 from collections.abc import Mapping
+from typing import Final
 
-from cmk.ccc import store
-
+import cmk.utils.paths
 from cmk.utils.config_warnings import ConfigurationWarnings
 
 from cmk.gui.log import logger
-from cmk.gui.site_config import is_wato_slave_site
-from cmk.gui.utils.piggyback_hub import (
-    distributed_piggyback_sites,
-    PIGGYBACK_HUB_CONFIG,
-    PIGGYBACK_HUB_CONFIG_DIR,
-)
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain, ConfigDomainName, SerializedSettings
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+
+PIGGYBACK_HUB_CONFIG_DIR: Final = cmk.utils.paths.default_config_dir + "/piggyback_hub.d/wato/"
 
 
 class ConfigDomainDistributedPiggyback(ABCConfigDomain):
@@ -39,11 +33,6 @@ class ConfigDomainDistributedPiggyback(ABCConfigDomain):
 
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         try:
-            # TODO: the config doesn't get updated if the site specific config of
-            # a remote site is changed
-            if not is_wato_slave_site():
-                self._write_config_file()
-
             completed_process = subprocess.run(
                 ["omd", "restart", "piggyback-hub"],
                 stdin=subprocess.DEVNULL,
@@ -64,15 +53,3 @@ class ConfigDomainDistributedPiggyback(ABCConfigDomain):
 
     def default_globals(self) -> Mapping[str, object]:
         return {"piggyback_hub_enabled": True}
-
-    def _write_config_file(self):
-        dist_piggyback_sites = distributed_piggyback_sites()
-
-        root_folder = folder_tree().root_folder()
-        hosts = [
-            {"host_name": host_name, "site_id": host.site_id()}
-            for host_name, host in root_folder.all_hosts_recursively().items()
-            if host.site_id() in dist_piggyback_sites
-        ]
-
-        store.save_text_to_file(PIGGYBACK_HUB_CONFIG, json.dumps(hosts))

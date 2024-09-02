@@ -17,7 +17,7 @@ def test__on_message(
 ) -> None:
     test_logger = logging.getLogger("test")
     input_payload = PiggybackConfig(
-        hosts=[Target(host_name=HostName("test_host"), site_id="test_site")]
+        targets=[Target(host_name=HostName("test_host"), site_id="test_site")]
     )
     on_message = save_config(test_logger, tmp_path)
 
@@ -26,7 +26,9 @@ def test__on_message(
 
     on_message(None, None, None, input_payload)
 
-    expected_config = [{"host_name": "test_host", "site_id": "test_site"}]
+    expected_config = PiggybackConfig(
+        targets=[Target(host_name=HostName("test_host"), site_id="test_site")]
+    )
     with open(tmp_path / "etc/check_mk/piggyback_hub.conf") as f:
         actual_config = json.loads(f.read())
-    assert actual_config == expected_config
+    assert PiggybackConfig.model_validate_json(actual_config) == expected_config

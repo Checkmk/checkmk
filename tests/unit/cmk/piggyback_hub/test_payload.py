@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
 import logging
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -21,7 +21,7 @@ from cmk.piggyback import (
     store_last_distribution_time,
     store_piggyback_raw_data,
 )
-from cmk.piggyback_hub.config import Target
+from cmk.piggyback_hub.config import PiggybackConfig, Target
 from cmk.piggyback_hub.payload import (
     _get_piggyback_raw_data_to_send,
     _load_piggyback_targets,
@@ -138,23 +138,29 @@ def test__load_piggyback_targets_missing_config_file(tmpdir: Path) -> None:
 @pytest.mark.parametrize(
     "config, expected_targets",
     [
-        pytest.param([{"host_name": "host1", "site_id": "site1"}], [], id="skip_self"),
         pytest.param(
-            [
-                {"host_name": "host1", "site_id": "site1"},
-                {"host_name": "host2", "site_id": "site2"},
-            ],
+            PiggybackConfig(targets=[Target(host_name=HostName("host1"), site_id="site1")]),
+            [],
+            id="skip_self",
+        ),
+        pytest.param(
+            PiggybackConfig(
+                targets=[
+                    Target(host_name=HostName("host1"), site_id="site1"),
+                    Target(host_name=HostName("host2"), site_id="site2"),
+                ]
+            ),
             [Target(host_name=HostName("host2"), site_id="site2")],
             id="additional_site",
         ),
     ],
 )
 def test__load_piggyback_targets(
-    tmpdir: Path, config: Sequence[Mapping[str, str]], expected_targets: Sequence[Target]
+    tmpdir: Path, config: PiggybackConfig, expected_targets: Sequence[Target]
 ) -> None:
     config_file = tmpdir / "piggyback_hub.conf"
     with open(config_file, "w") as f:
-        f.write(json.dumps(config))
+        f.write(json.dumps(config.model_dump_json()))
 
     actual_targets = _load_piggyback_targets(tmpdir / "piggyback_hub.conf", "site1")
     assert actual_targets == expected_targets

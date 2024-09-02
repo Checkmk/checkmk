@@ -6,7 +6,7 @@
 import json
 import logging
 import time
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Callable
 
@@ -23,7 +23,7 @@ from cmk.piggyback import (
     store_last_distribution_time,
     store_piggyback_raw_data,
 )
-from cmk.piggyback_hub.config import config_path, Target
+from cmk.piggyback_hub.config import config_path, PiggybackConfig, Target
 from cmk.piggyback_hub.utils import SignalException
 
 SENDING_PAUSE = 60  # [s]
@@ -66,16 +66,14 @@ def _load_piggyback_targets(
     if not piggyback_hub_config_path.exists():
         return []
     with open(piggyback_hub_config_path, "r") as f:
-        piggyback_hub_config: Sequence[Mapping[str, str]] = json.load(f)
+        piggyback_hub_config = PiggybackConfig.model_validate_json(json.loads(f.read()))
 
     targets = []
-    for config in piggyback_hub_config:
-        match config:
-            case {"host_name": target_host_name, "site_id": target_site_id}:
-                if target_site_id != current_site_id:
-                    targets.append(
-                        Target(host_name=HostName(target_host_name), site_id=target_site_id)
-                    )
+    for target in piggyback_hub_config.targets:
+        match target:
+            case Target():
+                if target.site_id != current_site_id:
+                    targets.append(target)
             case other:
                 raise ValueError(f"Invalid piggyback_hub configuration: {other}")
     return targets

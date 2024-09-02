@@ -249,6 +249,7 @@ def _allow_for_gui(
                 and not _in_component(imported=imported, component=Component("cmk.gui.cme"))
                 and not _is_a_plugin_import(imported=imported)
             ),
+            _in_component(imported=imported, component=Component("cmk.piggyback_hub")),
             _in_component(imported=imported, component=Component("cmk.checkengine")),
             _in_component(imported=imported, component=Component("cmk.fetchers")),
             _in_component(imported=imported, component=Component("cmk.messaging")),

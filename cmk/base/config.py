@@ -128,7 +128,12 @@ from cmk.base.api.agent_based.register.section_plugins_legacy import (
 )
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.parent_scan import ScanConfig as ParentScanConfig
-from cmk.base.server_side_calls import load_special_agents, SpecialAgent, SpecialAgentCommandLine
+from cmk.base.server_side_calls import (
+    load_special_agents,
+    SpecialAgent,
+    SpecialAgentCommandLine,
+    SSCRules,
+)
 from cmk.base.sources import SNMPFetcherConfig
 
 from cmk import piggyback
@@ -171,9 +176,8 @@ CheckCommandArguments = Iterable[int | float | str | tuple[str, str, str]]
 LegacySSCConfigModel = object
 
 LegacySSCRules = Sequence[tuple[str, Sequence[LegacySSCConfigModel]]]
-SSCRules = Sequence[tuple[str, Sequence[Mapping[str, object]]]]
 
-MixedSSCRules = LegacySSCRules | SSCRules
+MixedSSCRules = LegacySSCRules | Sequence[SSCRules]
 
 
 class FilterMode(enum.Enum):
@@ -1882,9 +1886,7 @@ class ConfigCache:
         self.__explicit_host_attributes: dict[HostName, dict[str, str]] = {}
         self.__computed_datasources: dict[HostName | HostAddress, ComputedDataSources] = {}
         self.__discovery_check_parameters: dict[HostName, DiscoveryCheckParameters] = {}
-        # TODO: active checks are actually "SSCRules" now (no longer mixed).
-        # This is currently validated very late.
-        self.__active_checks: dict[HostName, MixedSSCRules] = {}
+        self.__active_checks: dict[HostName, Sequence[SSCRules]] = {}
         self.__special_agents: dict[HostName, MixedSSCRules] = {}
         self.__hostgroups: dict[HostName, Sequence[str]] = {}
         self.__contactgroups: dict[HostName, Sequence[_ContactgroupName]] = {}
@@ -2554,15 +2556,15 @@ class ConfigCache:
         """Return the free form configured custom checks without formalization"""
         return self.ruleset_matcher.get_host_values(host_name, custom_checks)
 
-    def active_checks(self, host_name: HostName) -> MixedSSCRules:
-        """Returns the list of active checks configured for this host
+    def active_checks(self, host_name: HostName) -> Sequence[SSCRules]:
+        """Returns active checks configured for this host
 
         These are configured using the active check formalization of WATO
         where the whole parameter set is configured using valuespecs.
         """
 
-        def make_active_checks() -> MixedSSCRules:
-            configured_checks: list[tuple[str, Sequence[object]]] = []
+        def make_active_checks() -> Sequence[SSCRules]:
+            configured_checks: list[SSCRules] = []
             for plugin_name, ruleset in sorted(active_checks.items(), key=lambda x: x[0]):
                 # Skip Check_MK HW/SW Inventory for all ping hosts, even when the
                 # user has enabled the inventory for ping only hosts

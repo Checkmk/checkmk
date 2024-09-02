@@ -17,6 +17,10 @@ from cmk.server_side_calls.v1 import Secret
 CheckCommandArguments = Iterable[int | float | str | tuple[str, str, str]]
 
 
+ConfigSet = Mapping[str, object]
+SSCRules = tuple[str, Sequence[ConfigSet]]
+
+
 class SpecialAgentLegacyConfiguration(Protocol):
     args: Sequence[str]
     # None makes the stdin of subprocess /dev/null

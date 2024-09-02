@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -21,7 +21,7 @@ from cmk.server_side_calls_backend.config_processing import (
     ProxyConfig,
 )
 
-from ._commons import replace_passwords
+from ._commons import ConfigSet, replace_passwords, SSCRules
 
 
 # This class can probably be consolidated to have fewer fields.
@@ -43,14 +43,6 @@ class ActiveServiceDescription:
     plugin_name: str
     description: ServiceName
     params: Mapping[str, object] | object
-
-
-def _ensure_mapping_str_object(values: Sequence[object]) -> Sequence[Mapping[str, object]]:
-    # for the new API, we can be sure that there are only Mappings.
-    for value in values:
-        if not isinstance(value, dict):
-            raise TypeError(value)
-    return values  # type: ignore[return-value]
 
 
 class ActiveCheck:
@@ -79,11 +71,9 @@ class ActiveCheck:
         self.escape_func = escape_func
 
     def get_active_service_data(
-        self, active_checks_rules: Sequence[tuple[str, Sequence[Mapping[str, object] | object]]]
+        self, active_checks_rules: Iterable[SSCRules]
     ) -> Iterator[ActiveServiceData]:
         for plugin_name, plugin_params in active_checks_rules:
-            plugin_params = _ensure_mapping_str_object(plugin_params)
-
             service_iterator = self._iterate_services(plugin_name, plugin_params)
 
             try:
@@ -96,7 +86,7 @@ class ActiveCheck:
                 )
 
     def _iterate_services(
-        self, plugin_name: str, plugin_params: Sequence[Mapping[str, object]]
+        self, plugin_name: str, plugin_params: Iterable[ConfigSet]
     ) -> Iterator[tuple[str, str, str, Mapping[str, object]]]:
         if (active_check := self._plugins.get(plugin_name)) is None:
             return
@@ -175,11 +165,9 @@ class ActiveCheck:
         return command, detected_executable, " ".join((detected_executable, *args))
 
     def get_active_service_descriptions(
-        self, active_checks_rules: Sequence[tuple[str, Sequence[Mapping[str, object] | object]]]
+        self, active_checks_rules: Iterable[SSCRules]
     ) -> Iterator[ActiveServiceDescription]:
         for plugin_name, plugin_params in active_checks_rules:
-            plugin_params = _ensure_mapping_str_object(plugin_params)
-
             try:
                 for desc, _args, _command_line, params in self._iterate_services(
                     plugin_name, plugin_params

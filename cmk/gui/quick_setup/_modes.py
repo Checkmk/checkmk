@@ -49,7 +49,6 @@ from cmk.gui.watolib.configuration_bundles import (
     ConfigBundleStore,
     delete_config_bundle,
     edit_config_bundle_configuration,
-    identify_bundle_group_type,
     identify_bundle_references,
     load_group_bundles,
     valid_special_agent_bundle,
@@ -152,7 +151,7 @@ class ModeEditConfigurationBundles(WatoMode):
 
     def _from_vars(self) -> None:
         self._name = request.get_ascii_input_mandatory(self.VAR_NAME)
-        self._bundle_group_type = identify_bundle_group_type(self._name)
+        self._bundle_group_type = RuleGroupType(self._name.split(":")[0])
         if self._bundle_group_type not in BUNDLE_DOMAINS:
             raise MKUserError(
                 None,

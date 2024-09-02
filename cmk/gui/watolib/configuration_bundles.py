@@ -121,12 +121,6 @@ class BundleReferences:
     dcd_connections: Sequence[tuple[str, DCDConnectionSpec]] | None = None
 
 
-def identify_bundle_group_type(bundle_group: str) -> RuleGroupType:
-    if bundle_group.startswith(RuleGroupType.SPECIAL_AGENTS.value):
-        return RuleGroupType.SPECIAL_AGENTS
-    raise ValueError(f"Unknown bundle group: {bundle_group}")
-
-
 def valid_special_agent_bundle(bundle: BundleReferences) -> bool:
     host_conditions = bundle.hosts is not None and len(bundle.hosts) == 1
     rule_conditions = bundle.rules is not None and len(bundle.rules) == 1

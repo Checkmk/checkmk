@@ -11,6 +11,7 @@ RABBITMQ_CONFIG_FILES="${OMD_ROOT}/etc/rabbitmq/conf.d"
 RABBITMQ_ADVANCED_CONFIG_FILE="${OMD_ROOT}/etc/rabbitmq/advanced_conf.d/00-advanced.conf"
 RABBITMQ_ENABLED_PLUGINS_FILE="${OMD_ROOT}/etc/rabbitmq/enabled_plugins"
 RABBITMQ_DIST_PORT="${CONFIG_RABBITMQ_DIST_PORT:?}"
+BROKER_CERTIFICATES=$OMD_ROOT/bin/message-broker-certs
 EXECUTE="${OMD_ROOT}/lib/rabbitmq/sbin/rabbitmq-server"
 
 getpid() {
@@ -59,9 +60,19 @@ exit_failure() {
     exit 1
 }
 
+ensure_broker_certs() {
+    printf "Ensuring broker certificates presence..."
+    if [ ! -f "${OMD_ROOT}/etc/rabbitmq/ssl/cert.pem" ]; then
+        printf "Creating broker certificates..."
+        "${BROKER_CERTIFICATES}" "${OMD_ROOT}" "###SITE###"
+    fi
+}
+
 case "$1" in
 
     start-blocking)
+        ensure_broker_certs
+
         RABBITMQ_NODENAME="${RABBITMQ_NODENAME}" \
             RABBITMQ_ENABLED_PLUGINS_FILE="${RABBITMQ_ENABLED_PLUGINS_FILE}" \
             RABBITMQ_CONFIG_FILES="${RABBITMQ_CONFIG_FILES}" \

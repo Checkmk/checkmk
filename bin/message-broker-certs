@@ -1,0 +1,78 @@
+#!/usr/bin/env python3
+# Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+import argparse
+import logging
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+
+from dateutil.relativedelta import relativedelta
+
+from cmk.utils.certs import CN_TEMPLATE, RootCA, save_single_cert, save_single_key
+
+from cmk import messaging
+
+
+@dataclass
+class Arguments:
+    omd_root: Path
+    site_name: str
+
+
+def initialize_message_broker_certs(omd_root: Path, site_name: str) -> None:
+    """Initialize the CA and create the certificate for use with the message broker.
+    These might be replaced by the config sync later.
+    """
+
+    cert, key = RootCA.load_or_create(
+        messaging.cacert_file(omd_root),
+        CN_TEMPLATE.format(site_name),
+    ).issue_new_certificate(
+        common_name=site_name,  # used for user identification
+        organization=f"Checkmk Site {site_name}",
+        expiry=relativedelta(years=5),
+        key_size=4096,
+    )
+    save_single_cert(messaging.cert_file(omd_root), cert)
+    save_single_key(messaging.key_file(omd_root), key)
+
+
+def _parse_arguments(argv: list[str]) -> Arguments:
+    parser = argparse.ArgumentParser(
+        description="Ensure the message broker certificates are created"
+    )
+    parser.add_argument("omd_root", type=Path, help="The OMD root directory")
+    parser.add_argument("site_name", type=str, help="The site name")
+
+    args = parser.parse_args(argv[1:])
+    return Arguments(
+        omd_root=args.omd_root,
+        site_name=args.site_name,
+    )
+
+
+def main(argv: list[str] | None = None) -> int:
+
+    logger = logging.getLogger("cmk-message-broker-certs")
+    logger.addHandler(handler := logging.StreamHandler(stream=sys.stdout))
+    handler.setFormatter(logging.Formatter("%(message)s"))
+    logger.setLevel(logging.INFO)
+
+    if argv is None:
+        argv = sys.argv
+
+    try:
+        args = _parse_arguments(argv)
+        initialize_message_broker_certs(args.omd_root, args.site_name)
+    except Exception as e:
+        logger.error("Error: %s", e)
+        return 1
+
+    return 0
+
+
+if __name__ == "__main__":
+    main()

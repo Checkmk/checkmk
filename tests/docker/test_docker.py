@@ -351,9 +351,6 @@ def test_container_agent(checkmk: docker.models.containers.Container) -> None:
     assert ":::6556" in checkmk.exec_run(["netstat", "-tln"])[-1].decode("utf-8")
 
 
-@pytest.mark.skip(
-    reason="rabbitmq's ssl certificats are not yet created on update, must be fixed by CMK-18913"
-)
 @pytest.mark.skipif(
     not git_tag_exists(old_version),
     reason=f"Test is skipped until we have {old_version} available as git tag",

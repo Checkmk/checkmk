@@ -68,7 +68,6 @@ cc_library(
         "-Wno-stringop-truncation",
         "-O2",
     ],
-    linkstatic = True,
     deps = ["@glib"],
 )
 
@@ -91,7 +90,6 @@ cc_library(
         "-Wformat-truncation=0",  # false positive in src/rrd_list.c
         "-O2",  # maybe O3?
     ],
-    linkstatic = True,
     local_defines = ['NUMVERS="' + NUMVERS + '"'],
     visibility = ["//visibility:public"],
     deps = [
@@ -127,7 +125,6 @@ cc_library(
         "-lpangocairo-1.0",
         "-lpng",
     ],
-    linkstatic = True,
     visibility = ["//visibility:public"],
     deps = [
         ":rrd",

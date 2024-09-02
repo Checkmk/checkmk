@@ -1,0 +1,9 @@
+Title: HTML Email: Add from address to log on SMTP error
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1725281578
+Edition: cre
+Level: 1
+Version: 2.2.0p33
+

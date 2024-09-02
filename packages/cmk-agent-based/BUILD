@@ -1,4 +1,5 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
+load("@rules_python//python:packaging.bzl", "py_wheel")
 load("@cmk_agent_based//:requirements.bzl", "requirement")
 load("@rules_python//python:pip.bzl", "compile_pip_requirements")
 
@@ -85,5 +86,16 @@ py_test(
         ":cmk-agent-based",
         requirement("pytest"),
         requirement("pydantic"),
+    ],
+)
+
+py_wheel(
+    name = "wheel",
+    distribution = "cmk-agent-based",
+    strip_path_prefixes = ["packages/cmk-agent-based"],
+    # TODO: Duplicated from pyproject.toml
+    version = "1.0.0",
+    deps = [
+        ":cmk-agent-based",
     ],
 )

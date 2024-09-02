@@ -8538,6 +8538,7 @@ def MonitoringSiteChoice() -> DropdownChoice:
 
 
 def LogLevelChoice(  # pylint: disable=redefined-builtin
+    with_verbose: bool = True,
     # DropdownChoice
     sorted: bool = False,
     label: str | None = None,
@@ -8560,14 +8561,24 @@ def LogLevelChoice(  # pylint: disable=redefined-builtin
     deprecated_choices: Sequence[int] = (),
 ) -> DropdownChoice:
     return DropdownChoice(
-        choices=[
-            (logging.CRITICAL, _("Critical")),
-            (logging.ERROR, _("Error")),
-            (logging.WARNING, _("Warning")),
-            (logging.INFO, _("Informational")),
-            (cmk.utils.log.VERBOSE, _("Verbose")),
-            (logging.DEBUG, _("Debug")),
-        ],
+        choices=(
+            [
+                (logging.CRITICAL, _("Critical")),
+                (logging.ERROR, _("Error")),
+                (logging.WARNING, _("Warning")),
+                (logging.INFO, _("Informational")),
+                (cmk.utils.log.VERBOSE, _("Verbose")),
+                (logging.DEBUG, _("Debug")),
+            ]
+            if with_verbose
+            else [
+                (logging.CRITICAL, _("Critical")),
+                (logging.ERROR, _("Error")),
+                (logging.WARNING, _("Warning")),
+                (logging.INFO, _("Informational")),
+                (logging.DEBUG, _("Debug")),
+            ]
+        ),
         sorted=sorted,
         label=label,
         help_separator=help_separator,

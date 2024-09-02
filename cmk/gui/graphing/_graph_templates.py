@@ -376,7 +376,7 @@ def _compute_predictive_metrics(
                 yield MetricExpression(Metric(predict_lower_metric_name), line_type=line_type)
 
 
-def _applicable_metrics(
+def applicable_metrics(
     *,
     metric_expressions: Sequence[MetricExpression],
     conflicting_metrics: Iterable[str],
@@ -388,14 +388,14 @@ def _applicable_metrics(
         if var in translated_metrics:
             return []
 
-    applicable_metrics = []
+    applicable_metric_expressions = []
     for metric_expression in metric_expressions:
         if (result := metric_expression.evaluate(translated_metrics)).is_error():
             if result.error.metric_name and result.error.metric_name in optional_metrics:
                 continue
             return []
-        applicable_metrics.append(metric_expression)
-    return applicable_metrics
+        applicable_metric_expressions.append(metric_expression)
+    return applicable_metric_expressions
 
 
 def get_graph_templates(
@@ -422,7 +422,7 @@ def get_graph_templates(
         for id_, template in _graph_templates_from_plugins()
         for parsed in (_parse_graph_template(id_, template),)
         if (
-            metrics := _applicable_metrics(
+            metrics := applicable_metrics(
                 metric_expressions=parsed.metrics,
                 conflicting_metrics=parsed.conflicting_metrics,
                 optional_metrics=parsed.optional_metrics,
@@ -865,24 +865,3 @@ def metric_expression_to_graph_recipe_expression(
         translated_metrics,
         consolidation_function,
     )
-
-
-@dataclass(frozen=True)
-class MetricExpressionInfo:
-    row: Row
-    translated_metrics: Mapping[str, TranslatedMetric]
-
-
-def find_matching_rows_and_translated_metrics(
-    rows: Sequence[Row],
-    graph_template: GraphTemplate,
-) -> Iterator[MetricExpressionInfo]:
-    for row in rows:
-        translated_metrics = translated_metrics_from_row(row)
-        if _applicable_metrics(
-            metric_expressions=graph_template.metrics,
-            conflicting_metrics=graph_template.conflicting_metrics,
-            optional_metrics=graph_template.optional_metrics,
-            translated_metrics=translated_metrics,
-        ):
-            yield MetricExpressionInfo(row, translated_metrics)

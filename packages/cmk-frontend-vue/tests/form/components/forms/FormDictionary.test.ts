@@ -205,3 +205,38 @@ test('FormDictionary reads new defaultValue on updated spec', async () => {
 
   expect(getCurrentData()).toBe('{"some_other_id":"something"}')
 })
+
+test('FormDictionary is able to be rerenderd: static value', async () => {
+  // before this test was written, some data handling logic was in onBeforeMount
+  // which is only executed once. os if the spec is changed, it was not executed again.
+
+  function getSpec(staticElements: Record<string, unknown>): FormSpec.Dictionary {
+    return {
+      type: 'dictionary',
+      title: 'fooTitle',
+      layout: 'one_column',
+      help: 'fooHelp',
+      additional_static_elements: staticElements,
+      groups: [],
+      validators: [],
+      elements: []
+    }
+  }
+
+  const { getCurrentData, rerender } = renderFormWithData({
+    spec: getSpec({ some_key: 'some_value' }),
+    data: {},
+    backendValidation: []
+  })
+
+  // wait until component is renderd and expected data is shown
+  await screen.findByText('{"some_key":"some_value"}')
+
+  await rerender({
+    spec: getSpec({ another_key: 'another_value' }),
+    data: {},
+    backendValidation: []
+  })
+
+  expect(getCurrentData()).toBe('{"another_key":"another_value"}')
+})

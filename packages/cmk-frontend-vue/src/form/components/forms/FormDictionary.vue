@@ -27,12 +27,19 @@ function getDefaultValue(key: string): unknown {
   return element.default_value
 }
 
-onBeforeMount(() => {
-  if (props.spec.additional_static_elements) {
-    for (const [key, value] of Object.entries(props.spec.additional_static_elements)) {
-      data.value[key] = value
+watch(
+  () => props.spec.additional_static_elements,
+  (newAdditionalStaticElements: Dictionary['additional_static_elements'] | undefined) => {
+    if (newAdditionalStaticElements) {
+      for (const [key, value] of Object.entries(newAdditionalStaticElements)) {
+        data.value[key] = value
+      }
     }
-  }
+  },
+  { immediate: true }
+)
+
+onBeforeMount(() => {
   setValidation(props.backendValidation)
 })
 

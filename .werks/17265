@@ -1,0 +1,12 @@
+Title: Git: Support long commit messages
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1725272831
+Edition: cre
+Level: 1
+Version: 2.2.0p33
+
+When the Git integration was enabled, creating thousands of hosts could result
+in a crash. This was caused by a limit of the command line.
+This werk improves the Git integration to support longer messages.

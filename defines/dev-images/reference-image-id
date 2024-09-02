@@ -96,7 +96,7 @@ run_optionally_exclusive() {
             break
         fi
 
-        if ! grep "error reading from server: EOF" docker-build.log; then
+        if ! grep -E "error reading from server: EOF|fatal error: concurrent map read and map write" docker-build.log; then
             echo >&2 "We got some random error from 'docker build' - don't retry."
             exit "$RESULT"
         fi

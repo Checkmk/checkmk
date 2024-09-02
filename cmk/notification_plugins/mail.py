@@ -588,7 +588,15 @@ def send_mail_smtp(  # pylint: disable=too-many-branches
             ]:
                 retry_possible = True
 
-            sys.stderr.write('mail to "%s" refused: %d, %r\n' % (target, errorcode, err_message))
+            sys.stderr.write(
+                'mail from %s" to "%s" refused: %d, %r\n'
+                % (
+                    from_address,
+                    target,
+                    errorcode,
+                    err_message,
+                )
+            )
         except smtplib.SMTPHeloError as e:
             retry_possible = True  # server is acting up, this may be fixed quickly
             sys.stderr.write(

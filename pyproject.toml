@@ -1,5 +1,4 @@
 [tool.ruff]
-src = ["cmk", "tests"]
 extend-exclude = ["agents/plugins/mk_sap_2.py", "doc/**/*.py"]
 target-version = "py312"
 line-length = 100

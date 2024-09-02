@@ -3,6 +3,7 @@ import logging
 import os
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -22,6 +23,19 @@ from .conftest import BaseVersions, DUMPS_DIR, inject_dumps
 
 logger = logging.getLogger(__name__)
 
+def _create_site(
+    site_factory: SiteFactory, site_name: str, *args: Any, **kwargs: Any
+) -> Iterator[Site]:
+    try:
+        yield from site_factory.get_test_site(site_name, *args, **kwargs)
+    except Exception as excp:
+        if f"Version {site_factory.version.version} could not be installed" in str(excp):
+            pytest.skip(
+                f"Base-version '{site_factory.version.version}' not available in "
+                f"distro '{os.environ.get("DISTRO")}'."
+            )
+        else:
+            raise excp
 
 @pytest.fixture(name="site_factory", scope="function")
 def _site_factory() -> SiteFactory:
@@ -34,7 +48,7 @@ def _site_factory() -> SiteFactory:
 @pytest.fixture(name="base_site", scope="function")
 def _base_site(site_factory: SiteFactory) -> Iterator[Site]:
     site_name = "update_central"
-    yield from site_factory.get_test_site(site_name, save_results=False)
+    yield from _create_site(site_factory, site_name, save_results=False)
 
 
 @pytest.fixture(name="site_factory_demo", scope="function")
@@ -49,7 +63,7 @@ def _site_factory_demo():
 def _base_site_demo(site_factory_demo):
     # Note: to access the UI of the "play" site go to http://localhost/play/check_mk/login.py?_admin
     site_name = "play"
-    yield from site_factory_demo.get_test_site(site_name, save_results=False)
+    yield from _create_site(site_factory_demo, site_name, save_results=False)
 
 
 @pytest.mark.cee

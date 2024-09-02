@@ -174,3 +174,34 @@ test('FormDictionary checks frontend validators on existing element', async () =
 
   screen.getByText('String length must be between 1 and 20')
 })
+
+test('FormDictionary reads new defaultValue on updated spec', async () => {
+  function getSpec(ident: string): FormSpec.Dictionary {
+    return {
+      type: 'dictionary',
+      title: 'fooTitle',
+      layout: 'one_column',
+      help: 'fooHelp',
+      groups: [],
+      validators: [],
+      elements: [
+        {
+          ident: ident,
+          required: true,
+          default_value: 'something',
+          parameter_form: stringFormSpec
+        }
+      ]
+    }
+  }
+
+  const { getCurrentData, rerender } = renderFormWithData({
+    spec: getSpec('some_id'),
+    data: {},
+    backendValidation: []
+  })
+
+  await rerender({ spec: getSpec('some_other_id'), data: {}, backendValidation: [] })
+
+  expect(getCurrentData()).toBe('{"some_other_id":"something"}')
+})

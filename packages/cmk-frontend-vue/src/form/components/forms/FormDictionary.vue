@@ -17,14 +17,17 @@ const props = defineProps<{
 }>()
 
 const data = defineModel('data', { type: Object, required: true })
-const defaultValues: Record<string, unknown> = {}
 const elementValidation = ref<Record<string, ValidationMessages>>({})
 
+function getDefaultValue(key: string): unknown {
+  const element = props.spec.elements.find((element) => element.ident === key)
+  if (element === undefined) {
+    return undefined
+  }
+  return element.default_value
+}
+
 onBeforeMount(() => {
-  props.spec.elements.forEach((element: DictionaryElement) => {
-    const key = element.ident
-    defaultValues[key] = element.default_value
-  })
   if (props.spec.additional_static_elements) {
     for (const [key, value] of Object.entries(props.spec.additional_static_elements)) {
       data.value[key] = value
@@ -46,7 +49,7 @@ function getElementsFromProps(): ElementFromProps[] {
   props.spec.elements.forEach((element: DictionaryElement) => {
     let isActive = element.ident in data.value ? true : element.required
     if (isActive && data.value[element.ident] === undefined) {
-      data.value[element.ident] = JSON.parse(JSON.stringify(defaultValues[element.ident]))
+      data.value[element.ident] = JSON.parse(JSON.stringify(getDefaultValue(element.ident)))
     }
     elements.push({
       dict_config: element,
@@ -64,7 +67,7 @@ function toggleElement(event: MouseEvent, key: string) {
   if (key in data.value) {
     delete data.value[key]
   } else {
-    data.value[key] = defaultValues[key]
+    data.value[key] = getDefaultValue(key)
   }
 }
 

@@ -875,17 +875,14 @@ class MetricExpressionInfo:
 
 def find_matching_rows_and_translated_metrics(
     rows: Sequence[Row],
-    metric_expressions: Sequence[MetricExpression],
-    *,
-    conflicting_metrics: Sequence[str],
-    optional_metrics: Sequence[str],
+    graph_template: GraphTemplate,
 ) -> Iterator[MetricExpressionInfo]:
     for row in rows:
         translated_metrics = translated_metrics_from_row(row)
         if _applicable_metrics(
-            metric_expressions=metric_expressions,
-            conflicting_metrics=conflicting_metrics,
-            optional_metrics=optional_metrics,
+            metric_expressions=graph_template.metrics,
+            conflicting_metrics=graph_template.conflicting_metrics,
+            optional_metrics=graph_template.optional_metrics,
             translated_metrics=translated_metrics,
         ):
             yield MetricExpressionInfo(row, translated_metrics)

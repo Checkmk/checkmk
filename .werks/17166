@@ -1,0 +1,13 @@
+Title: HTML Email: Handle SMTP return code 554 as permanent error
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1725281302
+Edition: cre
+Level: 1
+Version: 2.2.0p33
+
+If you used "Enable synchronous delivery via SMTP" the return code 554 was not
+handled as a permanent error, leading to multiple delivery attempts.
+
+This return code is now handled as permanent error.

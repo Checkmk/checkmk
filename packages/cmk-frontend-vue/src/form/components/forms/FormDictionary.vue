@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { onBeforeMount, ref, watch } from 'vue'
+import { ref } from 'vue'
 import FormEdit from '../FormEdit.vue'
+import { immediateWatch } from '@/form/components/utils/watch'
 import type { Dictionary, DictionaryElement } from '@/form/components/vue_formspec_components'
 import {
   groupDictionaryValidations,
@@ -27,7 +28,7 @@ function getDefaultValue(key: string): unknown {
   return element.default_value
 }
 
-watch(
+immediateWatch(
   () => props.spec.additional_static_elements,
   (newAdditionalStaticElements: Dictionary['additional_static_elements'] | undefined) => {
     if (newAdditionalStaticElements) {
@@ -35,20 +36,16 @@ watch(
         data.value[key] = value
       }
     }
-  },
-  { immediate: true }
+  }
 )
 
-onBeforeMount(() => {
-  setValidation(props.backendValidation)
-})
-
-watch(() => props.backendValidation, setValidation)
-
-function setValidation(newValidation: ValidationMessages) {
-  const [, _elementValidation] = groupDictionaryValidations(props.spec.elements, newValidation)
-  elementValidation.value = _elementValidation
-}
+immediateWatch(
+  () => props.backendValidation,
+  (newValidation: ValidationMessages) => {
+    const [, _elementValidation] = groupDictionaryValidations(props.spec.elements, newValidation)
+    elementValidation.value = _elementValidation
+  }
+)
 
 // TODO: computed
 function getElementsFromProps(): ElementFromProps[] {

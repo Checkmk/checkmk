@@ -1,9 +1,10 @@
-import { computed, onMounted, ref, type Ref, watch, type WritableComputedRef } from 'vue'
+import { computed, ref, type Ref, type WritableComputedRef } from 'vue'
 import type {
   DictionaryElement,
   ValidationMessage,
   Validator
 } from '@/form/components/vue_formspec_components'
+import { immediateWatch } from './watch'
 
 /**
  * Hook to handle validation messages and update date if invalid value is provided
@@ -17,16 +18,12 @@ export function useValidation<Type>(
 ): [Ref<Array<string>>, WritableComputedRef<Type>] {
   const validation = ref<Array<string>>([])
 
-  const updateValidation = (newValidation: ValidationMessages) => {
+  immediateWatch(getBackendValidation, (newValidation: ValidationMessages) => {
     validation.value = newValidation.map((m) => m.message)
     newValidation.forEach((message) => {
       data.value = message.invalid_value as Type
     })
-  }
-
-  onMounted(() => updateValidation(getBackendValidation()))
-
-  watch(getBackendValidation, updateValidation)
+  })
 
   const value = computed<Type>({
     get() {

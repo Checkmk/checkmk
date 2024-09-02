@@ -7,7 +7,7 @@
 from collections.abc import Mapping
 from typing import Literal
 
-from cmk.ccc.version import edition, Edition
+from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
 

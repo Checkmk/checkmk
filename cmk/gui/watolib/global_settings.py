@@ -6,7 +6,7 @@
 from collections.abc import Callable
 from typing import Any
 
-from cmk.ccc.version import edition, Edition
+from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
 

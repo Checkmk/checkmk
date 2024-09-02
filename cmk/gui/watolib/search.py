@@ -18,7 +18,7 @@ from redis import ConnectionError as RedisConnectionError
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.plugin_registry import Registry
-from cmk.ccc.version import edition, Edition
+from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
 from cmk.utils.redis import get_redis_client, redis_enabled, redis_server_reachable

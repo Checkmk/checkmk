@@ -8,7 +8,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.ccc.version import edition, Edition
+from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
 from cmk.utils.rulesets.definition import RuleGroup

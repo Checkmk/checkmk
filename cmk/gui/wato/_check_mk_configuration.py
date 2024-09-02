@@ -9,7 +9,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any, Literal
 
 import cmk.ccc.version as cmk_version
-from cmk.ccc.version import edition, Edition
+from cmk.ccc.version import Edition, edition
 
 import cmk.utils.paths
 from cmk.utils.rulesets.definition import RuleGroup

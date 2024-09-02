@@ -15,7 +15,7 @@ from typing import Any, Final
 from livestatus import SiteConfigurations, SiteId
 
 from cmk.ccc import store
-from cmk.ccc.version import __version__, edition, Edition, Version
+from cmk.ccc.version import __version__, Edition, edition, Version
 
 import cmk.utils.paths
 from cmk.utils.local_secrets import AutomationUserSecret

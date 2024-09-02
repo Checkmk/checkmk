@@ -26,9 +26,9 @@ except ImportError:
     from cmk.plugins.aws.rulesets.cre import (
         edition_specific_global_services,
         edition_specific_regional_services,
+        handle_edition_switch,
         migrate_edition_specific_global_services_vs_to_fs,
         migrate_edition_specific_regional_services_vs_to_fs,
-        handle_edition_switch,
     )
 
 from cmk.rulesets.v1 import Help, Label, Message, Title

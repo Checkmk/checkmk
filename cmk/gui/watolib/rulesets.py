@@ -20,7 +20,7 @@ from typing import Any, assert_never, cast, Final
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.version import edition, Edition
+from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
 from cmk.utils.config_validation_layer.rules import validate_rulesets

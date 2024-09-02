@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import Literal
 
 from cmk.ccc import debug
-from cmk.ccc.version import edition, Edition
+from cmk.ccc.version import Edition, edition
 
 from cmk.utils import log, paths, tty
 from cmk.utils.log import VERBOSE

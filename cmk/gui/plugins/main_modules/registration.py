@@ -11,7 +11,7 @@ from functools import partial
 from livestatus import MultiSiteConnection
 
 from cmk.ccc.crash_reporting import crash_report_registry
-from cmk.ccc.version import edition, Edition
+from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
 from cmk.utils.licensing.registry import register_cre_licensing_handler

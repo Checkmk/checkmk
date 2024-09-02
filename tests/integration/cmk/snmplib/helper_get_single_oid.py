@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 import cmk.ccc.debug
-from cmk.ccc.version import edition, Edition
+from cmk.ccc.version import Edition, edition
 
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName

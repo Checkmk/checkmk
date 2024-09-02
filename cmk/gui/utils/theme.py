@@ -9,7 +9,7 @@ from pathlib import Path
 
 from flask import current_app
 
-from cmk.ccc.version import edition, Edition
+from cmk.ccc.version import Edition, edition
 
 import cmk.utils.paths
 

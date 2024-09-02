@@ -19,7 +19,7 @@ from cmk.gui.graphing._html_render import (
     render_graphs_from_specification_html,
 )
 from cmk.gui.graphing._valuespecs import vs_graph_render_options
-from cmk.gui.http import Request, response, Response
+from cmk.gui.http import Request, Response, response
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.painter.v0.base import Cell, Painter

@@ -34,7 +34,7 @@ from livestatus import LocalConnection, MKLivestatusSocketError, SiteId
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
-from cmk.ccc.version import edition, Edition
+from cmk.ccc.version import Edition, edition
 
 import cmk.utils.log
 import cmk.utils.paths

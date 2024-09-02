@@ -11,7 +11,7 @@ from typing import Any, Literal
 from livestatus import MultiSiteConnection, SiteId
 
 from cmk.ccc import version
-from cmk.ccc.version import edition, Edition
+from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
 from cmk.utils.livestatus_helpers.queries import detailed_connection, Query

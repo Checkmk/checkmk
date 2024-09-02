@@ -17,7 +17,7 @@ from livestatus import SiteConfiguration, SiteConfigurations, SiteId
 import cmk.ccc.plugin_registry
 import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.version import edition, Edition
+from cmk.ccc.version import Edition, edition
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.definition import RuleGroup

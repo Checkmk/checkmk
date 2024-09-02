@@ -6,7 +6,7 @@
 from collections.abc import Callable, Iterable, Sequence
 from typing import Final
 
-from cmk.ccc.version import edition, Edition
+from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
 

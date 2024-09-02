@@ -10,7 +10,7 @@ from typing import Any, Literal, TypedDict
 
 from livestatus import BrokerConnections, SiteConfigurations
 
-from cmk.ccc.version import edition, Edition
+from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
 from cmk.utils.tags import TagConfigSpec

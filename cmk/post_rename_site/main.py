@@ -11,7 +11,7 @@ from livestatus import SiteId
 
 import cmk.ccc.debug
 from cmk.ccc.site import omd_site
-from cmk.ccc.version import edition, Edition
+from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
 from cmk.utils.log import VERBOSE

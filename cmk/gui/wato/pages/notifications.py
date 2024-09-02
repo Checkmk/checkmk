@@ -15,7 +15,7 @@ from typing import Any, cast, Literal, NamedTuple, overload
 from livestatus import LivestatusResponse, SiteId
 
 from cmk.ccc import store
-from cmk.ccc.version import edition, Edition
+from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
 from cmk.utils.labels import Labels

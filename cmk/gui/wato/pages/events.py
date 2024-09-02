@@ -7,7 +7,7 @@ import abc
 from collections.abc import Callable, Sequence
 from typing import Generic, Literal, TypeVar
 
-from cmk.ccc.version import edition, Edition
+from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
 from cmk.utils.notify_types import EventRule

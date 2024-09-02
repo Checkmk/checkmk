@@ -18,7 +18,7 @@ from six import ensure_str
 
 from livestatus import SiteConfiguration, SiteId
 
-from cmk.ccc.version import edition, Edition, edition_has_enforced_licensing
+from cmk.ccc.version import Edition, edition, edition_has_enforced_licensing
 
 from cmk.utils import paths, render
 from cmk.utils.hostaddress import HostName

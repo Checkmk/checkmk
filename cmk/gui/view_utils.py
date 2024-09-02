@@ -15,7 +15,7 @@ from cmk.utils.tags import TagGroupID, TagID
 
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, Request
+from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.type_defs import FilterHTTPVariables, HTTPVariables, Row

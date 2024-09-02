@@ -5,7 +5,7 @@ Component: wato
 Date: 1723724113
 Edition: cee
 Level: 1
-Version: 2.1.0p47
+Version: 2.1.0p48
 
 Prior to this werk, the SLA (Service Level Agreement) titles were being rendered as HTML in the view page without proper escaping, leading to a potential XSS vulnerability.
 

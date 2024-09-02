@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator, Mapping, MutableMapping, MutableSequence, Sequence
+from collections.abc import Mapping, MutableMapping, MutableSequence, Sequence
 from dataclasses import asdict, dataclass, field
 from typing import Any, cast
 
@@ -15,8 +15,12 @@ from cmk.gui.form_specs.vue.form_spec_visitor import (
     validate_value_from_frontend,
 )
 from cmk.gui.form_specs.vue.visitors._type_defs import DataOrigin
-from cmk.gui.quick_setup.v0_unstable.definitions import IncomingStage, QuickSetupSaveRedirect
-from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupStage
+from cmk.gui.quick_setup.v0_unstable.definitions import QuickSetupSaveRedirect
+from cmk.gui.quick_setup.v0_unstable.predefined._common import (
+    build_quick_setup_formspec_map,
+    stage_components,
+)
+from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     GeneralStageErrors,
     ParsedFormData,
@@ -146,33 +150,6 @@ def _form_spec_parse(
     }
 
 
-def _flatten_formspec_wrappers(components: Sequence[Widget]) -> Iterator[FormSpecWrapper]:
-    for component in components:
-        if isinstance(component, (ListOfWidgets, Collapsible)):
-            yield from iter(_flatten_formspec_wrappers(component.items))
-
-        if isinstance(component, FormSpecWrapper):
-            yield component
-
-
-def build_quick_setup_formspec_map(
-    stages: Sequence[QuickSetupStage],
-) -> Mapping[FormSpecId, FormSpec]:
-    return {
-        widget.id: cast(FormSpec, widget.form_spec)
-        for stage in stages
-        for widget in _flatten_formspec_wrappers(stage_components(stage))
-    }
-
-
-def stage_components(stage: QuickSetupStage) -> Sequence[Widget]:
-    return (
-        stage.configure_components()
-        if callable(stage.configure_components)
-        else stage.configure_components
-    )
-
-
 def quick_setup_overview(quick_setup: QuickSetup) -> QuickSetupOverview:
     return QuickSetupOverview(
         quick_setup_id=quick_setup.id,
@@ -197,28 +174,30 @@ def quick_setup_overview(quick_setup: QuickSetup) -> QuickSetupOverview:
 
 
 def validate_stage(
-    quick_setup_id: QuickSetupId,
-    stage: QuickSetupStage,
-    formspec_lookup: Mapping[FormSpecId, FormSpec],
+    quick_setup: QuickSetup,
     stages_raw_formspecs: Sequence[RawFormData],
 ) -> Errors | None:
     errors = Errors()
 
+    quick_setup_formspec_map = build_quick_setup_formspec_map(quick_setup.stages)
+
     errors.stage_errors.extend(
-        _stage_validate_all_form_spec_keys_existing(stages_raw_formspecs[-1], formspec_lookup)
+        _stage_validate_all_form_spec_keys_existing(
+            stages_raw_formspecs[-1], quick_setup_formspec_map
+        )
     )
-    errors.formspec_errors = _form_spec_validate(stages_raw_formspecs, formspec_lookup)
+    errors.formspec_errors = _form_spec_validate(stages_raw_formspecs, quick_setup_formspec_map)
     if errors.exist():
         return errors
 
-    parsed_formspecs_data = _form_spec_parse(stages_raw_formspecs, formspec_lookup)
-
-    for custom_validator in stage.custom_validators:
+    for custom_validator in quick_setup.stages[
+        StageIndex(len(stages_raw_formspecs) - 1)
+    ].custom_validators:
         errors.stage_errors.extend(
             custom_validator(
-                quick_setup_id,
+                quick_setup.id,
                 StageIndex(len(stages_raw_formspecs) - 1),
-                parsed_formspecs_data,
+                _form_spec_parse(stages_raw_formspecs, quick_setup_formspec_map),
             )
         )
 
@@ -227,22 +206,19 @@ def validate_stage(
 
 def retrieve_next_stage(
     quick_setup: QuickSetup,
-    incoming_stages: Sequence[IncomingStage],
+    stages_raw_formspecs: Sequence[RawFormData],
 ) -> Stage:
-    current_stage_index = len(incoming_stages) - 1
-    current_stage = quick_setup.stages[current_stage_index]
 
+    current_stage_index = StageIndex(len(stages_raw_formspecs) - 1)
     quick_setup_formspec_map = build_quick_setup_formspec_map(quick_setup.stages)
-    combined_parsed_form_data_by_stage = [
-        _form_spec_parse([stage.form_data], quick_setup_formspec_map) for stage in incoming_stages
-    ]
 
     current_stage_recap = [
         r
-        for recap_callable in current_stage.recap
+        for recap_callable in quick_setup.stages[current_stage_index].recap
         for r in recap_callable(
-            combined_parsed_form_data_by_stage,
-            quick_setup_formspec_map,
+            quick_setup.id,
+            current_stage_index,
+            _form_spec_parse(stages_raw_formspecs, quick_setup_formspec_map),
         )
     ]
 
@@ -264,7 +240,7 @@ def retrieve_next_stage(
 
 def complete_quick_setup(
     quick_setup: QuickSetup,
-    incoming_stages: Sequence[IncomingStage],
+    stages_raw_formspecs: Sequence[RawFormData],
 ) -> QuickSetupSaveRedirect:
     if quick_setup.save_action is None:
         return QuickSetupSaveRedirect(redirect_url=None)
@@ -272,7 +248,7 @@ def complete_quick_setup(
     return QuickSetupSaveRedirect(
         redirect_url=quick_setup.save_action(
             _form_spec_parse(
-                [stage.form_data for stage in incoming_stages],
+                stages_raw_formspecs,
                 build_quick_setup_formspec_map(quick_setup.stages),
             )
         )

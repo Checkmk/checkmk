@@ -17,15 +17,22 @@ from cmk.checkengine.discovery import CheckPreviewEntry
 from cmk.gui.form_specs.vue.form_spec_visitor import serialize_data_for_frontend
 from cmk.gui.form_specs.vue.visitors import DataOrigin
 from cmk.gui.i18n import ungettext
+from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.predefined._common import (
     _collect_params_with_defaults_from_form_data,
     _collect_passwords_from_form_data,
     _create_diag_special_agent_input,
     _find_unique_id,
     _match_service_interest,
+    build_quick_setup_formspec_map,
 )
 from cmk.gui.quick_setup.v0_unstable.setups import CallableRecap
-from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, ServiceInterest
+from cmk.gui.quick_setup.v0_unstable.type_defs import (
+    ParsedFormData,
+    QuickSetupId,
+    ServiceInterest,
+    StageIndex,
+)
 from cmk.gui.quick_setup.v0_unstable.widgets import (
     FormSpecId,
     FormSpecRecap,
@@ -39,22 +46,30 @@ from cmk.rulesets.v1.form_specs import FormSpec
 
 
 def recaps_form_spec(
-    stages_form_data: Sequence[ParsedFormData],
-    expected_formspecs_map: Mapping[FormSpecId, FormSpec],
+    quick_setup_id: QuickSetupId,
+    stage_index: StageIndex,
+    parsed_form_data: ParsedFormData,
 ) -> Sequence[Widget]:
+
+    quick_setup = quick_setup_registry.get(quick_setup_id)
+    if quick_setup is None:
+        raise ValueError(f"Quick setup with id {quick_setup_id} not found")
+
+    quick_setup_formspec_map = build_quick_setup_formspec_map([quick_setup.stages[stage_index]])
+
     return [
         FormSpecRecap(
             id=form_spec_id,
             form_spec=serialize_data_for_frontend(
-                form_spec=expected_formspecs_map[form_spec_id],
+                form_spec=quick_setup_formspec_map[form_spec_id],
                 field_id=form_spec_id,
                 origin=DataOrigin.DISK,
                 do_validate=False,
                 value=form_data,
             ),
         )
-        for form_spec_id, form_data in stages_form_data[-1].items()
-        if form_spec_id in expected_formspecs_map
+        for form_spec_id, form_data in parsed_form_data.items()
+        if form_spec_id in quick_setup_formspec_map
     ]
 
 

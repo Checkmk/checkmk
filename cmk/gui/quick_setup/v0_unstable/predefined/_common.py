@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from typing import Any, Mapping, Sequence
+from collections.abc import Iterator
+from typing import Any, cast, Mapping, Sequence
 
 from cmk.utils.hostaddress import HostName
 
@@ -15,10 +16,18 @@ from cmk.checkengine.discovery import CheckPreviewEntry
 from cmk.gui.form_specs.vue.form_spec_visitor import serialize_data_for_frontend
 from cmk.gui.form_specs.vue.visitors import DataOrigin
 from cmk.gui.form_specs.vue.visitors._registry import form_spec_registry
+from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupStage
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, ServiceInterest
+from cmk.gui.quick_setup.v0_unstable.widgets import (
+    Collapsible,
+    FormSpecId,
+    FormSpecWrapper,
+    ListOfWidgets,
+    Widget,
+)
 from cmk.gui.watolib.passwords import load_passwords
 
-from cmk.rulesets.v1.form_specs import Dictionary, Password
+from cmk.rulesets.v1.form_specs import Dictionary, FormSpec, Password
 
 
 def _collect_params_with_defaults_from_form_data(
@@ -150,3 +159,30 @@ def _match_service_interest(
         ):
             return service_of_interest
     return None
+
+
+def stage_components(stage: QuickSetupStage) -> Sequence[Widget]:
+    return (
+        stage.configure_components()
+        if callable(stage.configure_components)
+        else stage.configure_components
+    )
+
+
+def _flatten_formspec_wrappers(components: Sequence[Widget]) -> Iterator[FormSpecWrapper]:
+    for component in components:
+        if isinstance(component, (ListOfWidgets, Collapsible)):
+            yield from iter(_flatten_formspec_wrappers(component.items))
+
+        if isinstance(component, FormSpecWrapper):
+            yield component
+
+
+def build_quick_setup_formspec_map(
+    stages: Sequence[QuickSetupStage],
+) -> Mapping[FormSpecId, FormSpec]:
+    return {
+        widget.id: cast(FormSpec, widget.form_spec)
+        for stage in stages
+        for widget in _flatten_formspec_wrappers(stage_components(stage))
+    }

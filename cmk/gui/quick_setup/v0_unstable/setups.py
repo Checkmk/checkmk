@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
@@ -14,15 +14,10 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
     QuickSetupId,
     StageIndex,
 )
-from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, Widget
-
-from cmk.rulesets.v1.form_specs import FormSpec
+from cmk.gui.quick_setup.v0_unstable.widgets import Widget
 
 CallableValidator = Callable[[QuickSetupId, StageIndex, ParsedFormData], GeneralStageErrors]
-CallableRecap = Callable[
-    [Sequence[ParsedFormData], Mapping[FormSpecId, FormSpec]],
-    Sequence[Widget],
-]
+CallableRecap = Callable[[QuickSetupId, StageIndex, ParsedFormData], Sequence[Widget]]
 CallableSaveAction = Callable[[ParsedFormData], str]
 WidgetConfigurator = Callable[[], Sequence[Widget]]
 

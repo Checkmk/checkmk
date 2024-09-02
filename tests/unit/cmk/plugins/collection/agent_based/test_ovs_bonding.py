@@ -43,19 +43,19 @@ def test_parse_missing_slave_interfaces() -> None:
 
 def test_parse_missing_header() -> None:
     string_table = [["bond_mode", " active-backup"]]
-    with pytest.raises(UnboundLocalError):
+    with pytest.raises(ovs_bonding.InvalidOvsBondingStringTable):
         assert ovs_bonding.parse_ovs_bonding(string_table)
 
 
 def test_parse_missing_slave_interface_with_active() -> None:
     string_table = [["[bond1]"], ["active slave"]]
-    with pytest.raises(UnboundLocalError):
+    with pytest.raises(ovs_bonding.InvalidOvsBondingStringTable):
         assert ovs_bonding.parse_ovs_bonding(string_table)
 
 
 def test_parse_missing_slave_interface_in_second_bond() -> None:
     string_table = [*DATA, ["[bond2]"], ["active slave"]]
-    with pytest.raises(KeyError):
+    with pytest.raises(ovs_bonding.InvalidOvsBondingStringTable):
         assert ovs_bonding.parse_ovs_bonding(string_table)
 
 

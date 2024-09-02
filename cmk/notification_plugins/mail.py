@@ -584,6 +584,7 @@ def send_mail_smtp(  # pylint: disable=too-many-branches
             if errorcode not in [
                 450,  # sender address domain not found
                 550,  # sender address unknown
+                554,  # "Transaction failed" / "Message rejected"
             ]:
                 retry_possible = True
 

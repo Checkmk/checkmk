@@ -251,8 +251,7 @@ class ModeEditRole(WatoMode):
         except ValidationError as exc:
             raise MKUserError("id", str(exc))
 
-        if new_two_factor := html.get_checkbox("two_factor"):
-            self._role.two_factor = new_two_factor
+        self._role.two_factor = bool(html.get_checkbox("two_factor"))
 
         self._role.name = new_id
 

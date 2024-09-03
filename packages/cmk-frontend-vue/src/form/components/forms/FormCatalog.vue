@@ -17,10 +17,10 @@ onBeforeMount(() => {
   props.spec.topics.forEach((topic) => {
     openTopics.value[topic.key] = true
     topic.dictionary.elements.forEach((element) => {
-      if (element.ident in data.value[topic.key]!) {
-        return
+      const topicData = data.value[topic.key]!
+      if (!(element.ident in topicData)) {
+        topicData[element.ident] = element.default_value
       }
-      data.value[topic.key]![element.ident] = element.default_value
     })
   })
 })

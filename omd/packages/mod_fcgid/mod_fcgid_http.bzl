@@ -1,7 +1,8 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
 
-def mod_fcgid(version_str, sha256):
+def mod_fcgid_workspace():
+    version_str = "2.3.9"
     filename = "mod_fcgid-" + version_str + ".tar.gz"
     http_archive(
         name = "mod_fcgid",
@@ -17,5 +18,5 @@ def mod_fcgid(version_str, sha256):
         ],
         patch_args = ["-p1"],
         patch_tool = "patch",
-        sha256 = sha256,
+        sha256 = "1cbad345e3376b5d7c8f9a62b471edd7fa892695b90b79502f326b4692a679cf",
     )

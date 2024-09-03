@@ -1,7 +1,8 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
 
-def rrdtool(version_str, sha256):
+def rrdtool_workspace():
+    version_str = "1.7.2"
     filename = "rrdtool-" + version_str + ".tar.gz"
     http_archive(
         name = "rrdtool",
@@ -18,5 +19,5 @@ def rrdtool(version_str, sha256):
         ],
         patch_args = ["-p1"],
         patch_tool = "patch",
-        sha256 = sha256,
+        sha256 = "a199faeb7eff7cafc46fac253e682d833d08932f3db93a550a4a5af180ca58db",
     )

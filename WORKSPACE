@@ -57,10 +57,6 @@ rules_pkg_dependencies()
 #   |          |_| /_/   \_\____|_|\_\/_/   \_\____|_____|____/            |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-load(
-    "//:package_versions.bzl",
-    "PYTHON_VERSION",
-)
 
 cargo_deps(
     name = "check-cert-deps",
@@ -80,164 +76,97 @@ load("@check-http-deps//:defs.bzl", check_http_deps = "crate_repositories")
 
 check_http_deps()
 
-load("//omd/packages/patch:patch_http.bzl", "patch")
+load("//omd/packages/patch:patch_http.bzl", "patch_workspace")
 
-patch(
-    sha256 = "8cf86e00ad3aaa6d26aca30640e86b0e3e1f395ed99f189b06d4c9f74bc58a4e",
-    version_str = "2.7.6",
-)
+patch_workspace()
 
-load("//omd/packages/redis:redis_http.bzl", "redis")
+load("//omd/packages/redis:redis_http.bzl", "redis_workspace")
 
-redis(
-    sha256 = "5b2b8b7a50111ef395bf1c1d5be11e6e167ac018125055daa8b5c2317ae131ab",
-    version_str = "6.2.6",
-)
+redis_workspace()
 
-load("//omd/packages/asio:asio_http.bzl", "asio")
+load("//omd/packages/asio:asio_http.bzl", "asio_workspace")
 
-asio(
-    sha256 = "09b9fe5c670c7bd47c7ee957cd9c184b4c8f0620d5b08b38ce837a24df971bca",
-    version_str = "1.24.0-patched",
-)
+asio_workspace()
 
-load("//omd/packages/re2:re2_http.bzl", "re2")
+load("//omd/packages/re2:re2_http.bzl", "re2_workspace")
 
-# fixup http_archive URL with 2023-06-02 release or newer and remove this line
-re2(
-    sha256 = "665b65b6668156db2b46dddd33405cd422bd611352c5052ab3dae6a5fbac5506",
-    version_str = "2022-12-01",
-)
+re2_workspace()
 
-load("//omd/packages/openssl:openssl_http.bzl", "openssl")
+load("//omd/packages/openssl:openssl_http.bzl", "openssl_workspace")
 
-openssl(
-    sha256 = "88525753f79d3bec27d2fa7c66aa0b92b3aa9498dafd93d7cfa4b3780cdae313",
-    version_str = "3.0.13",
-)
+openssl_workspace()
 
-load("//omd/packages/xmlsec1:xmlsec1_http.bzl", "xmlsec1")
+load("//omd/packages/xmlsec1:xmlsec1_http.bzl", "xmlsec_workspace")
 
-xmlsec1(
-    sha256 = "5f8dfbcb6d1e56bddd0b5ec2e00a3d0ca5342a9f57c24dffde5c796b2be2871c",
-    version_str = "1.2.37",
-)
+xmlsec_workspace()
 
-load("//omd/packages/heirloom-mailx:heirloom-mailx_http.bzl", "heirloommailx")
+load("//omd/packages/heirloom-mailx:heirloom-mailx_http.bzl", "heirloommailx_workspace")
 
-heirloommailx(
-    sha256 = "015ba4209135867f37a0245d22235a392b8bbed956913286b887c2e2a9a421ad",
-    version_str = "12.5",
-)
+heirloommailx_workspace()
 
-load("//omd/packages/monitoring-plugins:monitoring-plugins_http.bzl", "monitoring_plugins")
+load("//omd/packages/monitoring-plugins:monitoring-plugins_http.bzl", "monitoring_plugins_workspace")
 
-monitoring_plugins(
-    sha256 = "7023b1dc17626c5115b061e7ce02e06f006e35af92abf473334dffe7ff3c2d6d",
-    version_str = "2.3.3",
-)
+monitoring_plugins_workspace()
 
-load("//omd/packages/stunnel:stunnel_http.bzl", "stunnel")
+load("//omd/packages/stunnel:stunnel_http.bzl", "stunnel_workspace")
 
-stunnel(
-    sha256 = "c74c4e15144a3ae34b8b890bb31c909207301490bd1e51bfaaa5ffeb0a994617",
-    version_str = "5.63",
-)
+stunnel_workspace()
 
-load("//omd/packages/freetds:freetds_http.bzl", "freetds")
+load("//omd/packages/freetds:freetds_http.bzl", "freetds_workspace")
 
-freetds(
-    sha256 = "be7c90fc771f30411eff6ae3a0d2e55961f23a950a4d93c44d4c488006e64c70",
-    version_str = "0.95.95",
-)
+freetds_workspace()
 
-load("//omd/packages/heirloom-pkgtools:heirloom-pkgtools_http.bzl", "heirloom_pkgtools")
+load("//omd/packages/heirloom-pkgtools:heirloom-pkgtools_http.bzl", "heirloom_pkgtools_workspace")
 
-heirloom_pkgtools(
-    sha256 = "aa94d33550847d57c62138cabd0f742d4af2f14aa2bfb9e9d4a9427bf498e6cc",
-    version_str = "070227",
-)
+heirloom_pkgtools_workspace()
 
-load("//omd/packages/libgsf:libgsf_http.bzl", "libgsf")
+load("//omd/packages/libgsf:libgsf_http.bzl", "libgsf_workspace")
 
-libgsf(
-    sha256 = "68bede10037164764992970b4cb57cd6add6986a846d04657af9d5fac774ffde",
-    version_str = "1.14.44",
-)
+libgsf_workspace()
 
-load("//omd/packages/lcab:lcab_http.bzl", "lcab")
+load("//omd/packages/lcab:lcab_http.bzl", "lcab_workspace")
 
-lcab(
-    sha256 = "065f2c1793b65f28471c0f71b7cf120a7064f28d1c44b07cabf49ec0e97f1fc8",
-    version_str = "1.0b12",
-)
+lcab_workspace()
 
-load("//omd/packages/msitools:msitools_http.bzl", "msitools")
+load("//omd/packages/msitools:msitools_http.bzl", "msitools_workspace")
 
-msitools(
-    sha256 = "152eb4149cb44f178af93d17bbe0921b5312f30fb4780e5be113b35747b5cd2e",
-    version_str = "0.94",
-)
+msitools_workspace()
 
-load("//omd/packages/snap7:snap7_http.bzl", "snap7")
+load("//omd/packages/snap7:snap7_http.bzl", "snap7_workspace")
 
-snap7(
-    sha256 = "fe137737b432d95553ebe5d5f956f0574c6a80c0aeab7a5262fb36b535df3cf4",
-    version_str = "1.4.2",
-)
+snap7_workspace()
 
 load("//omd/packages/perl-modules:perl-modules_http.bzl", "perl_modules")
 
 perl_modules()
 
-load("//omd/packages/crypt-ssleay:cryptssl_http.bzl", "crypt_ssleay")
+load("//omd/packages/crypt-ssleay:cryptssl_http.bzl", "crypt_ssleay_workspace")
 
-crypt_ssleay(
-    sha256 = "f5d34f813677829857cf8a0458623db45b4d9c2311daaebe446f9e01afa9ffe8",
-    version_str = "0.72",
-)
+crypt_ssleay_workspace()
 
-load("//omd/packages/nrpe:nrpe_http.bzl", "nrpe")
+load("//omd/packages/nrpe:nrpe_http.bzl", "nrpe_workspace")
 
-nrpe(
-    sha256 = "8ad2d1846ab9011fdd2942b8fc0c99dfad9a97e57f4a3e6e394a4ead99c0f1f0",
-    version_str = "3.2.1",
-)
+nrpe_workspace()
 
-load("//omd/packages/Python:Python_http.bzl", "python")
+load("//omd/packages/Python:Python_http.bzl", "python_workspace")
 
-python(
-    sha256 = "56bfef1fdfc1221ce6720e43a661e3eb41785dd914ce99698d8c7896af4bdaa1",
-    version_str = PYTHON_VERSION,
-)
+python_workspace()
 
-load("//omd/packages/pnp4nagios:pnp4nagios_http.bzl", "pnp4nagios")
+load("//omd/packages/pnp4nagios:pnp4nagios_http.bzl", "pnp4nagios_workspace")
 
-pnp4nagios(
-    sha256 = "ab59a8a02d0f70de3cf89b12fe1e9216e4b1127bc29c04a036cd06dde72ee8fb",
-    version_str = "0.6.26",
-)
+pnp4nagios_workspace()
 
-load("//omd/packages/mod_fcgid:mod_fcgid_http.bzl", "mod_fcgid")
+load("//omd/packages/mod_fcgid:mod_fcgid_http.bzl", "mod_fcgid_workspace")
 
-mod_fcgid(
-    sha256 = "1cbad345e3376b5d7c8f9a62b471edd7fa892695b90b79502f326b4692a679cf",
-    version_str = "2.3.9",
-)
+mod_fcgid_workspace()
 
-load("//omd/packages/xinetd:xinetd_http.bzl", "xinetd")
+load("//omd/packages/xinetd:xinetd_http.bzl", "xinetd_workspace")
 
-xinetd(
-    sha256 = "2baa581010bc70361abdfa37f121e92aeb9c5ce67f9a71913cebd69359cc9654",
-    version_str = "2.3.15.4",
-)
+xinetd_workspace()
 
-load("//omd/packages/nagios:nagios_http.bzl", "nagios")
+load("//omd/packages/nagios:nagios_http.bzl", "nagios_workspace")
 
-nagios(
-    sha256 = "b4323f8c027bf3f409225eeb4f7fb8e55856092ef5f890206fc2983bc75b072e",
-    version_str = "3.5.1",
-)
+nagios_workspace()
 
 load("//omd/packages/python3-modules:create_python_requirements.bzl", "create_python_requirements")
 
@@ -266,51 +195,33 @@ create_python_requirements(
     requirements = "//:Pipfile",
 )
 
-load("//omd/packages/mod_wsgi:mod_wsgi_http.bzl", "mod_wsgi")
+load("//omd/packages/mod_wsgi:mod_wsgi_http.bzl", "mod_wsgi_workspace")
 
-mod_wsgi(
-    sha256 = "ee926a3fd5675890b908ebc23db1f8f7f03dc3459241abdcf35d46c68e1be29b",
-    version_str = "4.9.4",
-)
+mod_wsgi_workspace()
 
-load("//omd/packages/net-snmp:net-snmp_http.bzl", "netsnmp")
+load("//omd/packages/net-snmp:net-snmp_http.bzl", "netsnmp_workspace")
 
-netsnmp(
-    sha256 = "75b59d67e871aaaa31c8cef89ba7d06972782b97736b7e8c3399f36b50a8816f",
-    version_str = "5.9.1",
-)
+netsnmp_workspace()
 
-load("//omd/packages/robotmk:robotmk_http.bzl", "robotmk")
+load("//omd/packages/robotmk:robotmk_http.bzl", "robotmk_workspace")
 
-robotmk(
-    sha256 = "78d1b5bde14b2f8421181b5ef1733e205a4f13b1229b26924861764f61175401",
-    version_str = "v3.0.0-alpha-7",
-)
+robotmk_workspace()
 
-load("//omd/packages/rrdtool:rrdtool_http.bzl", "rrdtool")
+load("//omd/packages/rrdtool:rrdtool_http.bzl", "rrdtool_workspace")
 
-rrdtool(
-    sha256 = "a199faeb7eff7cafc46fac253e682d833d08932f3db93a550a4a5af180ca58db",
-    version_str = "1.7.2",
-)
+rrdtool_workspace()
 
 load("//omd/packages/glib:glib.bzl", "glib_local_repo")
 
 glib_local_repo("glib")
 
-load("//omd/packages/rrdtool:rrdtool_native.bzl", "rrdtool_native")
+load("//omd/packages/rrdtool:rrdtool_native.bzl", "rrdtool_native_workspace")
 
-rrdtool_native(
-    sha256 = "a199faeb7eff7cafc46fac253e682d833d08932f3db93a550a4a5af180ca58db",
-    version_str = "1.7.2",
-)
+rrdtool_native_workspace()
 
-load("//omd/packages/httplib:httplib_http.bzl", "httplib")
+load("//omd/packages/httplib:httplib_http.bzl", "httplib_workspace")
 
-httplib(
-    sha256 = "2a4503f9f2015f6878baef54cd94b01849cc3ed19dfe95f2c9775655bea8b73f",
-    version_str = "0.13.3",
-)
+httplib_workspace()
 
 http_archive(
     name = "gtest",
@@ -349,20 +260,13 @@ load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
 
 protobuf_deps()
 
-load("//omd/packages/redfish_mkp:redfish_mkp_http.bzl", "redfish_mkp")
+load("//omd/packages/redfish_mkp:redfish_mkp_http.bzl", "redfish_mkp_workspace")
 
-redfish_mkp(
-    commit_hash = "35b0ef91252bbba9b147ec12dc120bcc70bb3cf6",
-    sha256 = "c388a2b5525a55a6e0b175c014a3cb375062b4643d2ceed7ee188c054b2f0c8c",
-    version_str = "2.3.38",
-)
+redfish_mkp_workspace()
 
-load("//omd/packages/jaeger:jaeger_http.bzl", "jaeger")
+load("//omd/packages/jaeger:jaeger_http.bzl", "jaeger_workspace")
 
-jaeger(
-    sha256 = "0581d1d3c59ea32d1c3d8a1a6783341ab99a050428abb5d29c717e468680c365",
-    version_str = "1.58.1",
-)
+jaeger_workspace()
 
 http_archive(
     name = "bazel_clang_tidy",
@@ -371,11 +275,9 @@ http_archive(
     url = "https://github.com/erenon/bazel_clang_tidy/archive/bff5c59c843221b05ef0e37cef089ecc9d24e7da.tar.gz",
 )
 
-load("//omd/packages/erlang:erlang_http.bzl", "erlang")
+load("//omd/packages/erlang:erlang_http.bzl", "erlang_workspace")
 
-erlang(
-    version_str = "c1805ad6200cec57bf86640fb9a1c715db515b78",  # This is v26.2.5.2
-)
+erlang_workspace()
 
 http_archive(
     name = "bazel_iwyu",
@@ -387,9 +289,6 @@ http_archive(
     ],
 )
 
-load("//omd/packages/rabbitmq:rabbitmq_http.bzl", "rabbitmq")
+load("//omd/packages/rabbitmq:rabbitmq_http.bzl", "rabbitmq_workspace")
 
-rabbitmq(
-    sha256 = "7bfc742e3d227e8a2b1ea2a0b5ef3ba4b6a7987d5e220e0fbf0919d29b6ed43c",
-    version_str = "3.13.6",
-)
+rabbitmq_workspace()

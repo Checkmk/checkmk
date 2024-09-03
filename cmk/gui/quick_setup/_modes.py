@@ -151,10 +151,13 @@ class ModeEditConfigurationBundles(WatoMode):
 
     def _from_vars(self) -> None:
         self._name = request.get_ascii_input_mandatory(self.VAR_NAME)
-        self._bundle_group_type = RuleGroupType(self._name.split(":")[0])
+        try:
+            self._bundle_group_type = RuleGroupType(self._name.split(":")[0])
+        except ValueError:
+            raise MKUserError(None, _("Invalid configuration bundle group type."))
         if self._bundle_group_type not in BUNDLE_DOMAINS:
             raise MKUserError(
-                None,
+                self.VAR_NAME,
                 _("No edit configuration bundle implemented for bundle group type '%s'.")
                 % self._name,
             )

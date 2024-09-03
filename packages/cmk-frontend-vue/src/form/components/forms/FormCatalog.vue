@@ -1,10 +1,5 @@
 <script setup lang="ts">
-import type {
-  Catalog,
-  Dictionary,
-  FormSpec,
-  Topic
-} from '@/form/components/vue_formspec_components'
+import type { Catalog, FormSpec, Topic } from '@/form/components/vue_formspec_components'
 import FormEdit from '@/form/components/FormEdit.vue'
 import { onBeforeMount, ref } from 'vue'
 import type { ValidationMessages } from '@/form/components/utils/validation'
@@ -14,20 +9,18 @@ const props = defineProps<{
   backendValidation: ValidationMessages
 }>()
 
-const data = defineModel<Record<string, object>>('data', { required: true })
+const data = defineModel<Record<string, Record<string, unknown>>>('data', { required: true })
 
 const openTopics = ref<Record<string, boolean>>({})
 onBeforeMount(() => {
   openTopics.value = {}
   props.spec.topics.forEach((topic) => {
     openTopics.value[topic.key] = true
-    const dictionary = topic.dictionary
-    dictionary.elements.forEach((element) => {
+    topic.dictionary.elements.forEach((element) => {
       if (element.ident in data.value[topic.key]!) {
         return
       }
-      const topicData = data.value[topic.key]! as Record<string, unknown>
-      topicData[element.ident] = element.default_value
+      data.value[topic.key]![element.ident] = element.default_value
     })
   })
 })
@@ -51,8 +44,7 @@ interface TopicEntry {
 
 function entriesForTopic(topic: Topic) {
   const entries: TopicEntry[] = []
-  const dictionary = topic.dictionary as unknown as Dictionary
-  dictionary.elements.forEach((element) => {
+  topic.dictionary.elements.forEach((element) => {
     entries.push({
       title: element.parameter_form.title,
       ident: element.ident,

@@ -276,9 +276,11 @@ Pipfile.lock:
 				echo "pipenv lock"; \
 				exit 1; \
 			fi; \
-			( SKIP_MAKEFILE_CALL=1 $(PIPENV) lock --python $(PYTHON_MAJOR_DOT_MINOR) ) || ( $(RM) -r .venv ; exit 1 ) \
+			( SKIP_MAKEFILE_CALL=1 $(PIPENV) lock --python $(PYTHON_MAJOR_DOT_MINOR) ) \
+			|| ( $(RM) -r .venv ; exit 1 ) \
+			&& ( bazel run //cmk:requirements.update ) \
 		fi \
-	) $(LOCK_FD)>$(LOCK_PATH); \
+	) $(LOCK_FD)>$(LOCK_PATH)
 
 
 # .venv is PHONY because the dependencies are resolved now in the make_venv script

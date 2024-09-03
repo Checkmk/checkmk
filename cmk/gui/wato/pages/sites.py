@@ -896,7 +896,7 @@ class ModeDistributedMonitoring(WatoMode):
             return self._action_login(SiteId(login_id))
         return None
 
-    def _action_delete(self, delete_id: SiteId) -> ActionResult:
+    def _delete_single_site(self, delete_id: SiteId) -> ActionResult:
         # TODO: Can we delete this ancient code? The site attribute is always available
         # these days and the following code does not seem to have any effect.
         configured_sites = self._site_mgmt.load_sites()
@@ -937,6 +937,17 @@ class ModeDistributedMonitoring(WatoMode):
 
         self._site_mgmt.delete_site(delete_id)
         return redirect(mode_url("sites"))
+
+    def _action_delete(self, delete_id: SiteId) -> ActionResult:
+        result = self._delete_single_site(delete_id)
+        related_sites = list(wato_slave_sites().keys())
+        _changes.add_change(
+            "edit-sites",
+            _("Updated broker connection for site %s") % delete_id,
+            domains=[ConfigDomainGUI],
+            sites=related_sites,
+        )
+        return result
 
     def _action_delete_broker_connection(self, delete_connection_id: str) -> ActionResult:
         connection_config = BrokerConnectionsConfigFile()

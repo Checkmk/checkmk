@@ -441,7 +441,11 @@ class SiteManagement:
         sites_config_file.save(all_sites)
         cmk.gui.watolib.activate_changes.clear_site_replication_status(site_id)
         cmk.gui.watolib.changes.add_change(
-            "edit-sites", _("Deleted site %s") % site_id, domains=domains, sites=[omd_site()]
+            "edit-sites",
+            _("Deleted site %s") % site_id,
+            domains=domains,
+            sites=[omd_site()],
+            need_restart=True,
         )
 
     @classmethod

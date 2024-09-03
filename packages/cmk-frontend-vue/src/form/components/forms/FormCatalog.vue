@@ -26,6 +26,13 @@ function setAllTopics(isOpen: boolean) {
     hiddenTopics.value[topic.key] = !isOpen
   }
 }
+
+function getClass(key: string) {
+  return {
+    open: !hiddenTopics.value[key],
+    closed: hiddenTopics.value[key]
+  }
+}
 </script>
 
 <template>
@@ -34,29 +41,18 @@ function setAllTopics(isOpen: boolean) {
   <table
     v-for="topic in props.spec.topics"
     :key="topic.key"
-    :class="{
-      nform: true,
-      open: !hiddenTopics[topic.key],
-      closed: hiddenTopics[topic.key]
-    }"
+    class="nform"
+    :class="getClass(topic.key)"
   >
     <thead>
       <tr class="heading" @click="toggleTopic(topic)">
         <td colspan="2">
-          <img
-            :class="{
-              vue: true,
-              nform: true,
-              treeangle: true,
-              open: !hiddenTopics[topic.key],
-              closed: hiddenTopics[topic.key]
-            }"
-          />
+          <img class="vue nform treeangle" :class="getClass(topic.key)" />
           {{ topic.dictionary.title }}
         </td>
       </tr>
     </thead>
-    <tbody :class="{ open: !hiddenTopics[topic.key], closed: hiddenTopics[topic.key] }">
+    <tbody :class="getClass(topic.key)">
       <tr>
         <td colspan="2" />
       </tr>

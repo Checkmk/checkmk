@@ -26,8 +26,8 @@ onBeforeMount(() => {
       <div class="title">
         {{ element.parameter_form.title }}
         <span
+          class="dots"
           :class="{
-            dots: true,
             required: element.required
           }"
           >{{ Array(200).join('.') }}</span

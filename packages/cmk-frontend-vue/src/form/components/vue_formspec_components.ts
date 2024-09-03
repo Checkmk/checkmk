@@ -201,7 +201,7 @@ export interface I18NPassword {
 }
 export interface Topic {
   key: string;
-  dictionary: FormSpec;
+  dictionary: Dictionary;
 }
 export interface MultipleChoiceElement {
   name: string;

@@ -21,8 +21,7 @@ onBeforeMount(() => {
   openTopics.value = {}
   props.spec.topics.forEach((topic) => {
     openTopics.value[topic.key] = true
-    // TODO: fix FormSpec->Dictionary typing problem in vue_formspec_components.ts
-    const dictionary = topic.dictionary as unknown as Dictionary
+    const dictionary = topic.dictionary
     dictionary.elements.forEach((element) => {
       if (element.ident in data.value[topic.key]!) {
         return

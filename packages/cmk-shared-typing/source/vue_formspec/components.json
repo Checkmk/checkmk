@@ -251,47 +251,50 @@
             "required": ["ident", "required", "parameter_form", "default_value"]
         },
         "dictionary": {
-            "type": "object",
-            "properties": {
-                "type": {
-                    "const": "dictionary",
-                    "default": "dictionary"
-                },
-                "elements": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/$defs/dictionary_element"
-                    },
-                    "default": []
-                },
-                "groups": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/$defs/dictionary_group"
-                    }
-                },
-                "no_elements_text": {
-                    "type": "string"
-                },
-                "additional_static_elements": {
-                    "type": "object"
-                },
-                "layout": {
-                    "title": "DictionaryLayout",
-                    "enum": ["one_column", "two_columns"],
-                    "default": "one_column"
-                }
-            },
-            "required": [
-                "type",
-                "elements",
-                "static_elements_key",
-                "groups",
-                "layout"
-            ],
+            "id": "dictionary",
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "const": "dictionary",
+                            "default": "dictionary"
+                        },
+                        "elements": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/dictionary_element"
+                            },
+                            "default": []
+                        },
+                        "groups": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/dictionary_group"
+                            }
+                        },
+                        "no_elements_text": {
+                            "type": "string"
+                        },
+                        "additional_static_elements": {
+                            "type": "object"
+                        },
+                        "layout": {
+                            "title": "DictionaryLayout",
+                            "enum": ["one_column", "two_columns"],
+                            "default": "one_column"
+                        }
+                    },
+                    "required": [
+                        "type",
+                        "elements",
+                        "static_elements_key",
+                        "groups",
+                        "layout"
+                    ]
                 }
             ]
         },
@@ -532,7 +535,7 @@
                     "$ref": "#/$defs/dictionary"
                 }
             },
-            "required": ["key", "title", "dictionary"]
+            "required": ["key", "dictionary"]
         },
         "catalog": {
             "type": "object",

@@ -7,13 +7,10 @@ import dataclasses
 import logging
 import os
 import subprocess
-import uuid
 from collections.abc import Mapping
 from logging import Logger
 from pathlib import Path
-from typing import Literal, TypedDict
 
-from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
 from cmk.ccc.store import load_object_from_file, save_object_to_file
@@ -21,24 +18,12 @@ from cmk.ccc.store import load_object_from_file, save_object_to_file
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
-from cmk.utils.notification_result import NotificationResult
-from cmk.utils.notify_types import EnrichedEventContext
 from cmk.utils.notify_types import NotificationContext as NotificationContext
 from cmk.utils.paths import core_helper_config_dir
 from cmk.utils.servicename import ServiceName
 from cmk.utils.tags import TagGroupID, TagID
 
 logger = logging.getLogger("cmk.utils.notify")
-
-
-class NotificationForward(TypedDict):
-    forward: Literal[True]
-    context: EnrichedEventContext
-
-
-class NotificationViaPlugin(TypedDict):
-    plugin: str
-    context: NotificationContext
 
 
 @dataclasses.dataclass(frozen=True)
@@ -99,17 +84,6 @@ def ensure_utf8(logger_: Logger | None = None) -> None:
             if not logger_:
                 raise MKGeneralException(not_found_msg)
             logger_.info(not_found_msg)
-
-
-def create_spoolfile(
-    logger_: Logger,
-    spool_dir: Path,
-    data: NotificationForward | NotificationResult | NotificationViaPlugin,
-) -> None:
-    spool_dir.mkdir(parents=True, exist_ok=True)
-    file_path = spool_dir / str(uuid.uuid4())
-    logger_.info("Creating spoolfile: %s", file_path)
-    store.save_object_to_file(file_path, data, pretty=True)
 
 
 def write_notify_host_file(

@@ -48,12 +48,12 @@ from cmk.utils.log_to_history import (
 )
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.notification_result import NotificationPluginName, NotificationResultCode
-from cmk.utils.notify import (
-    create_spoolfile,
-    find_wato_folder,
+from cmk.utils.notification_spool_file import (
+    create_spool_file,
     NotificationForward,
     NotificationViaPlugin,
 )
+from cmk.utils.notify import find_wato_folder
 from cmk.utils.notify_types import (
     Contact,
     ContactName,
@@ -437,7 +437,7 @@ def notify_notify(
 
     # Spool notification to remote host, if this is enabled
     if spooling in ("remote", "both"):
-        create_spoolfile(
+        create_spool_file(
             logger,
             Path(notification_spooldir),
             NotificationForward({"context": enriched_context, "forward": True}),
@@ -954,7 +954,7 @@ def _process_notifications(
                     if bulk:
                         do_bulk_notify(plugin_name, params, context, bulk)
                     elif spooling in ("local", "both"):
-                        create_spoolfile(
+                        create_spool_file(
                             logger,
                             Path(notification_spooldir),
                             NotificationViaPlugin({"context": context, "plugin": plugin_name}),

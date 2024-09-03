@@ -3510,7 +3510,7 @@ def _validate_contact_group_modification(
         _must_be_in_contactgroups(diff_groups)
 
 
-def _must_be_in_contactgroups(cgs: Iterable[_ContactgroupName]) -> None:
+def _must_be_in_contactgroups(cgs: Collection[_ContactgroupName]) -> None:
     """Make sure that the user is in all of cgs contact groups
 
     This is needed when the user assigns contact groups to

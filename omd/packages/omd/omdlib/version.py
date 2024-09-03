@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from pathlib import Path
 
 import omdlib
@@ -56,7 +56,7 @@ def default_version(versions_path: Path) -> str:
     return (versions_path / "default").resolve().name
 
 
-def omd_versions(versions_path: Path) -> Iterable[str]:
+def omd_versions(versions_path: Path) -> Collection[str]:
     try:
         return sorted(d.name for d in versions_path.iterdir() if d.name != "default")
     except FileNotFoundError:

@@ -7,9 +7,9 @@ import json
 from ast import literal_eval
 from collections.abc import (
     Callable,
+    Collection,
     Container,
     Hashable,
-    Iterable,
     Iterator,
     Mapping,
     MutableMapping,
@@ -105,7 +105,7 @@ class _StaticDiskSyncedMapping(Mapping[_TKey, _TValue]):
         self,
         *,
         removed: Container[_TKey] = (),
-        updated: Iterable[tuple[_TKey, _TValue]] = (),
+        updated: Collection[tuple[_TKey, _TValue]] = (),
     ) -> None:
         """Re-load and write the changes of the stored values
 

@@ -181,7 +181,7 @@ def _evaluate_snmp_detection(
 
 
 def _output_snmp_check_plugins(
-    title: str, collection: Iterable[SectionName], logger: Logger
+    title: str, collection: Collection[SectionName], logger: Logger
 ) -> None:
     collection_out = " ".join(str(n) for n in sorted(collection)) if collection else "-"
     logger.debug(

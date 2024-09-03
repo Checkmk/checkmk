@@ -41,7 +41,8 @@ def load_global_config() -> GlobalConfig:
         with open(path, encoding="utf-8") as file:
             return GlobalConfig.model_validate_json(file.read())
     except Exception as e:
-        LOGGER.debug("Failed to load config from %s: %s", path, e)
+        if edition() is Edition.CSE:
+            LOGGER.debug("Failed to load config from %s: %s", path, e)
         return GlobalConfig(
             global_settings=GlobalSettings(is_activate=set[str]()),
             rulespec_allow_list=RulespecAllowList(),

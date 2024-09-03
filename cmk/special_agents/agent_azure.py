@@ -669,6 +669,15 @@ class GraphApiClient(BaseApiClient):
 
 
 class MgmtApiClient(BaseApiClient):
+    def __init__(
+        self,
+        authority_urls: _AuthorityURLs,
+        http_proxy_config: HTTPProxyConfig,
+        subscription: str,
+    ):
+        self.subscription = subscription
+        super().__init__(authority_urls, http_proxy_config)
+
     @staticmethod
     def _get_available_metrics_from_exception(
         desired_names: str, api_error: ApiError, resource_type: str
@@ -1275,10 +1284,13 @@ def get_remote_peerings(
     vnet_peerings = []
     for vnet_peering in resource["properties"].get("remoteVirtualNetworkPeerings", []):
         vnet_peering_id = vnet_peering["id"]
-        _, group, providers, vnet_id, vnet_peering_id = get_params_from_azure_id(
+        subscription, group, providers, vnet_id, vnet_peering_id = get_params_from_azure_id(
             vnet_peering_id,
             resource_types=["providers", "virtualNetworks", "virtualNetworkPeerings"],
         )
+        # skip vNet peerings that belong to another Azure subscription
+        if subscription != mgmt_client.subscription:
+            continue
 
         peering_view = mgmt_client.vnet_peering_view(group, providers, vnet_id, vnet_peering_id)
         vnet_peering = {
@@ -1837,6 +1849,7 @@ def main_subscription(args: Args, selector: Selector, subscription: str) -> None
     mgmt_client = MgmtApiClient(
         _get_mgmt_authority_urls(args.authority, subscription),
         deserialize_http_proxy_config(args.proxy),
+        subscription,
     )
 
     try:

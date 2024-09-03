@@ -99,7 +99,7 @@ def test_list_ec_events_include_links(
 
     assert len(default_response.json["value"]) > 0
 
-    assert default_response.json == disabled_response.json
+    assert default_response.json == enabled_response.json
     assert any(bool(value["links"]) for value in enabled_response.json["value"])
     assert all(value["links"] == [] for value in disabled_response.json["value"])
 

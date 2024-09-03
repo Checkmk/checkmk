@@ -278,7 +278,7 @@ def test_openapi_list_rules_include_links(
 
     assert len(default_response.json["value"]) > 0
 
-    assert default_response.json == disabled_response.json
+    assert default_response.json == enabled_response.json
     assert any(bool(value["links"]) for value in enabled_response.json["value"])
     assert all(value["links"] == [] for value in disabled_response.json["value"])
 
@@ -346,7 +346,7 @@ def test_openapi_list_rulesets_include_links(clients: ClientRegistry) -> None:
 
     assert len(default_response.json["value"]) > 0
 
-    assert default_response.json == disabled_response.json
+    assert default_response.json == enabled_response.json
     assert any(bool(value["links"]) for value in enabled_response.json["value"])
     assert all(value["links"] == [] for value in disabled_response.json["value"])
 

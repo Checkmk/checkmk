@@ -60,6 +60,7 @@ class MockMgmtApiClient(MgmtApiClient):
         super().__init__(
             _AuthorityURLs("login-url", "resource-url", "base-url"),
             NoProxyConfig(),
+            "mock_subscription",
         )
 
     def resourcegroups(self) -> Sequence[Mapping[str, Any]]:

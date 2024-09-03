@@ -7,24 +7,21 @@ import dataclasses
 import logging
 import os
 import subprocess
-import time
 import uuid
 from collections.abc import Mapping
 from logging import Logger
 from pathlib import Path
-from typing import Final, Literal, NewType, TypedDict
-
-import livestatus
+from typing import Literal, TypedDict
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
 from cmk.ccc.store import load_object_from_file, save_object_to_file
 
-from cmk.utils import statename
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
+from cmk.utils.notification_result import NotificationResult
 from cmk.utils.notify_types import EnrichedEventContext
 from cmk.utils.notify_types import NotificationContext as NotificationContext
 from cmk.utils.paths import core_helper_config_dir
@@ -32,30 +29,6 @@ from cmk.utils.servicename import ServiceName
 from cmk.utils.tags import TagGroupID, TagID
 
 logger = logging.getLogger("cmk.utils.notify")
-
-# NOTE: Keep in sync with values in MonitoringLog.cc.
-MAX_COMMENT_LENGTH = 2000
-MAX_PLUGIN_OUTPUT_LENGTH = 1000
-_SEMICOLON: Final = "%3B"
-# from https://www.w3schools.com/tags/ref_urlencode.ASP
-# Nagios uses ":", which is even more surprising, I guess.
-
-# 0 -> OK
-# 1 -> temporary issue
-# 2 -> permanent issue
-NotificationResultCode = NewType("NotificationResultCode", int)
-NotificationPluginName = NewType("NotificationPluginName", str)
-
-
-SanitizedLivestatusLogStr = NewType("SanitizedLivestatusLogStr", str)
-
-
-class NotificationResult(TypedDict, total=False):
-    plugin: NotificationPluginName
-    status: NotificationResultCode
-    output: list[str]
-    forward: bool
-    context: NotificationContext
 
 
 class NotificationForward(TypedDict):
@@ -75,10 +48,6 @@ class NotificationHostConfig:
     tags: Mapping[TagGroupID, TagID]
 
 
-def _state_for(exit_code: NotificationResultCode) -> str:
-    return statename.service_state_name(exit_code, "UNKNOWN")
-
-
 def find_wato_folder(context: NotificationContext) -> str:
     return next(
         (
@@ -87,91 +56,6 @@ def find_wato_folder(context: NotificationContext) -> str:
             if tag.startswith("/wato/")
         ),
         "",
-    )
-
-
-def notification_message(
-    plugin: NotificationPluginName, context: NotificationContext
-) -> SanitizedLivestatusLogStr:
-    contact = context["CONTACTNAME"]
-    hostname = context["HOSTNAME"]
-    if service := context.get("SERVICEDESC"):
-        what = "SERVICE NOTIFICATION"
-        spec = f"{hostname};{service}"
-        state = context["SERVICESTATE"]
-        output = context["SERVICEOUTPUT"]
-    else:
-        what = "HOST NOTIFICATION"
-        spec = hostname
-        state = context["HOSTSTATE"]
-        output = context["HOSTOUTPUT"]
-    # NOTE: There are actually 3 more additional fields, which we don't use: author, comment and long plug-in output.
-    return SanitizedLivestatusLogStr(
-        "{}: {};{};{};{};{}".format(
-            what,
-            livestatus.lqencode(contact),
-            livestatus.lqencode(spec),
-            livestatus.lqencode(state),
-            livestatus.lqencode(plugin),
-            livestatus.lqencode(output[:MAX_PLUGIN_OUTPUT_LENGTH].replace(";", _SEMICOLON)),
-        )
-    )
-
-
-def notification_progress_message(
-    plugin: NotificationPluginName,
-    contact: str,
-    hostname: str,
-    service: str | None,
-    exit_code: NotificationResultCode,
-    output: str,
-) -> SanitizedLivestatusLogStr:
-    if service:
-        what = "SERVICE NOTIFICATION PROGRESS"
-        spec = f"{hostname};{service}"
-    else:
-        what = "HOST NOTIFICATION PROGRESS"
-        spec = hostname
-    state = _state_for(exit_code)
-    return SanitizedLivestatusLogStr(
-        "{}: {};{};{};{};{}".format(
-            what,
-            livestatus.lqencode(contact),
-            livestatus.lqencode(spec),
-            state,
-            livestatus.lqencode(plugin),
-            livestatus.lqencode(output[:MAX_PLUGIN_OUTPUT_LENGTH].replace(";", _SEMICOLON)),
-        )
-    )
-
-
-def notification_result_message(
-    plugin: NotificationPluginName,
-    contact: str,
-    hostname: str,
-    service: str | None,
-    exit_code: NotificationResultCode,
-    output: list[str],
-) -> SanitizedLivestatusLogStr:
-    if service:
-        what = "SERVICE NOTIFICATION RESULT"
-        spec = f"{hostname};{service}"
-    else:
-        what = "HOST NOTIFICATION RESULT"
-        spec = hostname
-    state = _state_for(exit_code)
-    comment = " -- ".join(output)
-    short_output = output[-1] if output else ""
-    return SanitizedLivestatusLogStr(
-        "{}: {};{};{};{};{};{}".format(
-            what,
-            livestatus.lqencode(contact),
-            livestatus.lqencode(spec),
-            state,
-            livestatus.lqencode(plugin),
-            livestatus.lqencode(short_output[:MAX_PLUGIN_OUTPUT_LENGTH].replace(";", _SEMICOLON)),
-            livestatus.lqencode(comment[:MAX_COMMENT_LENGTH].replace(";", _SEMICOLON)),
-        )
     )
 
 
@@ -226,22 +110,6 @@ def create_spoolfile(
     file_path = spool_dir / str(uuid.uuid4())
     logger_.info("Creating spoolfile: %s", file_path)
     store.save_object_to_file(file_path, data, pretty=True)
-
-
-def log_to_history(message: SanitizedLivestatusLogStr) -> None:
-    _livestatus_cmd(f"LOG;{message}")
-
-
-def _livestatus_cmd(command: str) -> None:
-    logger.info("sending command %s", command)
-    timeout = 2
-    try:
-        connection = livestatus.LocalConnection()
-        connection.set_timeout(timeout)
-        connection.command("[%d] %s" % (time.time(), command))
-    except Exception:
-        logger.exception("Cannot send livestatus command (Timeout: %d sec)", timeout)
-        logger.info("Command was: %s", command)
 
 
 def write_notify_host_file(

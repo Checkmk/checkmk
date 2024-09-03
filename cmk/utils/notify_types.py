@@ -20,6 +20,7 @@ from typing import (
 from pydantic import PlainValidator, TypeAdapter, ValidationInfo
 
 from cmk.utils.hostaddress import HostName
+from cmk.utils.notification_result import NotificationContext as NotificationContext
 from cmk.utils.rulesets.ruleset_matcher import TagCondition
 from cmk.utils.tags import TagGroupID
 from cmk.utils.timeperiod import TimeperiodName
@@ -117,7 +118,6 @@ NotificationType = Literal[
     "PROBLEM",
     "RECOVERY",
 ]
-NotificationContext = NewType("NotificationContext", dict[str, str])
 
 MgmntPriorityType = Literal[
     "low",

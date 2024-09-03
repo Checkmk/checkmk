@@ -41,16 +41,17 @@ from cmk.utils import log
 from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.log import console
-from cmk.utils.macros import replace_macros_in_str
-from cmk.utils.notify import (
-    create_spoolfile,
-    find_wato_folder,
+from cmk.utils.log_to_history import (
     log_to_history,
     notification_message,
     notification_result_message,
+)
+from cmk.utils.macros import replace_macros_in_str
+from cmk.utils.notification_result import NotificationPluginName, NotificationResultCode
+from cmk.utils.notify import (
+    create_spoolfile,
+    find_wato_folder,
     NotificationForward,
-    NotificationPluginName,
-    NotificationResultCode,
     NotificationViaPlugin,
 )
 from cmk.utils.notify_types import (

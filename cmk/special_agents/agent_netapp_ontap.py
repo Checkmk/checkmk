@@ -186,7 +186,7 @@ def fetch_volumes_counters(
             id=volume_id,
             connection=connection,
             fields="counters",
-            max_records=None,  # type: ignore # pylint disable=arg-type not working
+            max_records=None,  # type: ignore[arg-type] # pylint disable=arg-type not working
             **{"counters.name": "|".join(volumes_counters_field_query)},
         ):
             element_serialized = element.to_dict()
@@ -396,7 +396,7 @@ def fetch_interfaces_counters(
             id=interface_id,
             connection=connection,
             fields="counters",
-            max_records=None,  # type: ignore # pylint disable=arg-type not working
+            max_records=None,  # type: ignore[arg-type] # pylint disable=arg-type not working
             **{"counters.name": "|".join(interfaces_counters_field_query)},
         ):
             element_data = element.to_dict()
@@ -600,7 +600,7 @@ def fetch_vs_traffic_counters(
             key,
             connection=connection,
             fields="properties,counters",
-            max_records=None,  # type: ignore # pylint disable=arg-type not working
+            max_records=None,  # type: ignore[arg-type] # pylint disable=arg-type not working
             **{"counters.name": "|".join(values)},
         ):
             element_data = element.to_dict()
@@ -640,7 +640,7 @@ def fetch_fc_interfaces_counters(
             key,
             connection=connection,
             fields="properties,counters",
-            max_records=None,  # type: ignore # pylint disable=arg-type not working
+            max_records=None,  # type: ignore[arg-type] # pylint disable=arg-type not working
             **{"counters.name": "|".join(values)},
         ):
             element_data = element.to_dict()

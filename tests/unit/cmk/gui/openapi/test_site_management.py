@@ -175,7 +175,7 @@ def test_create_site_connection_missing_config(
     key: str,
 ) -> None:
     config = _default_config()
-    config.pop(key)  # type: ignore
+    config.pop(key)  # type: ignore[misc]
     clients.SiteManagement.create(
         site_config=config,
         expect_ok=False,
@@ -267,7 +267,7 @@ connection_test_data_400: list[Connection] = [
         "encrypted": False,
         "verify": False,
     },
-    {"socket_type": "electrical_socket"},  # type: ignore
+    {"socket_type": "electrical_socket"},  # type: ignore[typeddict-item]
     {"socket_type": "unix"},
     {"socket_type": "tcp"},
     {"socket_type": "tcp6"},
@@ -384,7 +384,7 @@ proxy_test_data_400: list[Proxy] = [
     {
         "use_livestatus_daemon": "with_proxy",
         "global_settings": False,
-        "params": {"invalid_param": True},  # type: ignore
+        "params": {"invalid_param": True},  # type: ignore[typeddict-unknown-key]
     },
     {
         "use_livestatus_daemon": "direct",
@@ -570,7 +570,7 @@ config_cnx_test_data_400: list[ConfigurationConnection] = [
         },
         "replicate_event_console": False,
         "replicate_extensions": False,
-        "invalid_attribute": True,  # type: ignore
+        "invalid_attribute": True,  # type: ignore[typeddict-unknown-key]
     },
     {
         "enable_replication": True,

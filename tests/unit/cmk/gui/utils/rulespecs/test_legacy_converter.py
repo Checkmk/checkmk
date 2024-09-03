@@ -2991,7 +2991,7 @@ def test_dictionary_groups_migrate(
                         ),
                     )
                 },
-                migrate=lambda x: x,  # type: ignore
+                migrate=lambda x: x,  # type: ignore[arg-type, return-value]
             ),
             {"key1": {"key2": ""}},
             id="inner group with outer migrate",

@@ -21,7 +21,7 @@ from cmk.special_agents.v0_unstable.misc import vcrtrace
 
 sys.path.append(str(cmk.utils.paths.local_agents_dir / "plugins"))
 sys.path.append(os.path.join(cmk.utils.paths.agents_dir, "plugins"))
-import mk_jolokia  # type: ignore  # pylint: disable=import-error,wrong-import-order
+import mk_jolokia  # type: ignore[import-not-found]  # pylint: disable=import-error,wrong-import-order
 
 
 def parse_arguments(argv):

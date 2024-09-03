@@ -1540,7 +1540,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         for key, params, plugin in self._active_sync_plugins():
             # sync_func doesn't expect UserSpec yet. In fact, it will access some LDAP-specific
             # attributes that aren't defined by UserSpec.
-            user.update(plugin.sync_func(self, key, params, user_id, ldap_user, user))  # type: ignore
+            user.update(plugin.sync_func(self, key, params, user_id, ldap_user, user))  # type: ignore[arg-type, typeddict-item]
 
     def _flush_caches(self):
         self._num_queries = 0
@@ -1901,7 +1901,7 @@ def _group_membership_parameters():
                 ),
                 # TODO typing: ListChoice doesn't actually allow None in the choice tuples
                 # (aka ListChoiceChoice), yet that's what we get here.
-                choices=lambda: _get_connection_choices(add_this=False),  # type: ignore
+                choices=lambda: _get_connection_choices(add_this=False),  # type: ignore[arg-type]
             ),
         ),
     ]

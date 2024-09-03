@@ -185,7 +185,7 @@ def request_memoize(
     """
     return scoped_memoize(
         clear_events=["request-end", "request-context-exit"],
-        cache_impl=functools.lru_cache,  # type: ignore  # too specialized _lru_cache[_P, _R] ...
+        cache_impl=functools.lru_cache,  # type: ignore[return-value]  # too specialized _lru_cache[_P, _R] ...
         cache_impl_args=(),
         cache_impl_kwargs={"maxsize": maxsize, "typed": typed},
     )

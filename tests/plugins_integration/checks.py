@@ -28,12 +28,12 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class SkippedDumps:
-    SKIPPED_DUMPS = []  # type: ignore
+    SKIPPED_DUMPS = []  # type: ignore[var-annotated]
 
 
 @dataclass
 class SkippedChecks:
-    SKIPPED_CHECKS = []  # type: ignore
+    SKIPPED_CHECKS = []  # type: ignore[var-annotated]
 
 
 class CheckModes(IntEnum):
@@ -270,7 +270,7 @@ def _verify_check_result(
 
     if mode != CheckModes.UPDATE:
         # ignore columns in the canon that are not supposed to be returned
-        canon_data = {_: canon_data[_] for _ in canon_data if _ in config.api_services_cols}  # type: ignore
+        canon_data = {_: canon_data[_] for _ in canon_data if _ in config.api_services_cols}  # type: ignore[operator]
 
     if not config.skip_masking:
         _apply_regexps(check_id, canon_data, result_data)
@@ -378,7 +378,7 @@ def process_check_output(  # pylint: disable=too-many-branches
         diffs[check_id] = diff
 
     if diffs:
-        os.makedirs(config.diff_dir, exist_ok=True)  # type: ignore
+        os.makedirs(config.diff_dir, exist_ok=True)  # type: ignore[arg-type]
         with open(
             f"{config.diff_dir}/{host_name}.json",
             mode="a",
@@ -424,7 +424,7 @@ def setup_site(site: Site, dump_path: str) -> None:
             == 0
         )
 
-    for dump_type in config.dump_types:  # type: ignore
+    for dump_type in config.dump_types:  # type: ignore[union-attr]
         host_folder = f"/{dump_type}"
         if site.openapi.get_folder(host_folder):
             logger.info('Host folder "%s" already exists!', host_folder)

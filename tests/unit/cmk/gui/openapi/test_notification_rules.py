@@ -401,7 +401,7 @@ def test_create_and_update_rule_with_conditions_data_200(
 def invalid_conditions() -> Iterator:
     for k in notification_rule_request_example()["conditions"]:
         config = notification_rule_request_example()
-        config["conditions"].update({k: {"state": "enabled"}})  # type: ignore
+        config["conditions"].update({k: {"state": "enabled"}})  # type: ignore[misc]
         yield config
 
 

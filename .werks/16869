@@ -1,0 +1,15 @@
+Title: azure: Don't fetch vNet gateway peerings from another subscription
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1725635756
+Edition: cre
+Level: 1
+Version: 2.2.0p35
+
+Previously, the Azure agent would crash when monitoring vNet gateways which have peerings
+from a different subscription.
+The agent wouldn't report the crash and the consequence was that the affected vNet gateway
+wasn't monitored.
+
+Now, the agent will not monitor vNet gateways peerings from another subscription.

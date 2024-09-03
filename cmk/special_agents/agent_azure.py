@@ -601,13 +601,13 @@ class MgmtApiClient(BaseApiClient):
         subscription,
         http_proxy_config: HTTPProxyConfig,
     ) -> None:
-        self._subscription = subscription
+        self.subscription = subscription
 
-        base_url = f"{self.resource}/subscriptions/{self._subscription}/"
+        base_url = f"{self.resource}/subscriptions/{self.subscription}/"
         super().__init__(base_url, http_proxy_config)
 
     def regional_base_url(self, region):
-        return f"https://{region}.metrics.monitor.azure.com/subscriptions/{self._subscription}"
+        return f"https://{region}.metrics.monitor.azure.com/subscriptions/{self.subscription}"
 
     @staticmethod
     def _get_available_metrics_from_exception(
@@ -1204,10 +1204,13 @@ def get_remote_peerings(
     vnet_peerings = []
     for vnet_peering in resource["properties"].get("remoteVirtualNetworkPeerings", []):
         vnet_peering_id = vnet_peering["id"]
-        _, group, providers, vnet_id, vnet_peering_id = get_params_from_azure_id(
+        subscription, group, providers, vnet_id, vnet_peering_id = get_params_from_azure_id(
             vnet_peering_id,
             resource_types=["providers", "virtualNetworks", "virtualNetworkPeerings"],
         )
+        # skip vNet peerings that belong to another Azure subscription
+        if subscription != mgmt_client.subscription:
+            continue
 
         peering_view = mgmt_client.vnet_peering_view(group, providers, vnet_id, vnet_peering_id)
         vnet_peering = {

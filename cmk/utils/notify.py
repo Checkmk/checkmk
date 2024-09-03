@@ -244,14 +244,6 @@ def _livestatus_cmd(command: str) -> None:
         logger.info("Command was: %s", command)
 
 
-def transform_flexible_and_plain_context(context: NotificationContext) -> NotificationContext:
-    if "CONTACTS" not in context:
-        context["CONTACTS"] = context.get("CONTACTNAME", "?")
-        context["PARAMETER_GRAPHS_PER_NOTIFICATION"] = "5"
-        context["PARAMETER_NOTIFICATIONS_WITH_GRAPHS"] = "5"
-    return context
-
-
 def write_notify_host_file(
     config_path: VersionedConfigPath,
     config_per_host: Mapping[HostName, NotificationHostConfig],

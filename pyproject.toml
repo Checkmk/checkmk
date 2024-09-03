@@ -263,7 +263,7 @@ filterwarnings = [
   # ignore PytestCollectionWarning caused by webtest
   'ignore:^cannot collect test class .* because it has a __init__ constructor.*$:UserWarning:.*webtest.*:0',
   # openapi collector uses pkg resources
-  'ignore:pkg_resources:DeprecationWarning:.*opentelemetry.*'
+  'ignore:pkg_resources:DeprecationWarning:.*opentelemetry.*',
 ]
 # When writing a junit.xml, also write the output of a test to the junit
 # file in addition to the console.

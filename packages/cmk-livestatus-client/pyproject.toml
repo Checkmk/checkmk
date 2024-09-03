@@ -1,9 +1,7 @@
 [project]
 name = "cmk-livestatus-client"
 version = "1.0.0"
-dependencies = [
-    "opentelemetry-api",
-]
+dependencies = ["opentelemetry-api"]
 
 [build-system]
 requires = ["setuptools"]

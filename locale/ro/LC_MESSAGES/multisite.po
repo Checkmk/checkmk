@@ -138,6 +138,9 @@ msgstr ""
 " Aceasta include, de asemenea, orice modificări efectuate de la ultima "
 "activare care nu au necesitat activare manuală (marcate cu "
 
+msgid " Want to be notified about the public release? "
+msgstr ""
+
 #, python-format
 msgid " and %s '%s'"
 msgstr " și %s '%s'"
@@ -183,9 +186,6 @@ msgstr " sau "
 
 msgid " or int"
 msgstr " sau int"
-
-msgid " to get notified once the commercial release is available. "
-msgstr ""
 
 msgid " to:"
 msgstr " către:"
@@ -11087,10 +11087,6 @@ msgstr ""
 "starea demonilor: Apache, Core, Crontag, DCD, Liveproxyd, MKEventd, "
 "MKNotifyd, RRDCached (trebuie instalat pluginul agentului mk_inventory)"
 
-#, fuzzy
-msgid "Checkmk Cloud (SaaS) Beta"
-msgstr "Agent Checkmk"
-
 msgid "Checkmk Configuration Files"
 msgstr "Fișiere de configurare Checkmk"
 
@@ -19474,10 +19470,6 @@ msgstr ""
 msgid ""
 "During the beta phase, the number of services is limited to %s but you would "
 "have %s services after activating your changes."
-msgstr ""
-
-#, python-format
-msgid "During the beta phase, the number of services is limited to %s. "
 msgstr ""
 
 msgid "During this time period no monitoring data is available"
@@ -79769,6 +79761,10 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#, fuzzy
+#~ msgid "Checkmk Cloud (SaaS) Beta"
+#~ msgstr "Agent Checkmk"
 
 #~ msgid "Contact Groups"
 #~ msgstr "Grupuri de contact"

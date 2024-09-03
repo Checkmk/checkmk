@@ -139,6 +139,9 @@ msgstr ""
 " Esto también incluye cualquier cambio realizado desde la última activación "
 "que no requirieron activación manual (marcados con "
 
+msgid " Want to be notified about the public release? "
+msgstr ""
+
 #, python-format
 msgid " and %s '%s'"
 msgstr " y %s '%s'"
@@ -184,9 +187,6 @@ msgstr " o "
 
 msgid " or int"
 msgstr " o int"
-
-msgid " to get notified once the commercial release is available. "
-msgstr ""
 
 msgid " to:"
 msgstr " a:"
@@ -11160,10 +11160,6 @@ msgstr ""
 "daemons: Apache, Core, Crontag, DCD, Liveproxyd, MKEventd, MKNotifyd, "
 "RRDCached (es necesario instalar el plugin del agente mk_inventory)"
 
-#, fuzzy
-msgid "Checkmk Cloud (SaaS) Beta"
-msgstr "Agente Checkmk"
-
 msgid "Checkmk Configuration Files"
 msgstr "Archivos de configuración de Checkmk"
 
@@ -19617,10 +19613,6 @@ msgstr ""
 msgid ""
 "During the beta phase, the number of services is limited to %s but you would "
 "have %s services after activating your changes."
-msgstr ""
-
-#, python-format
-msgid "During the beta phase, the number of services is limited to %s. "
 msgstr ""
 
 msgid "During this time period no monitoring data is available"
@@ -80340,6 +80332,10 @@ msgstr "{actual} es demasiado bajo. El valor mínimo permitido es {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
+
+#, fuzzy
+#~ msgid "Checkmk Cloud (SaaS) Beta"
+#~ msgstr "Agente Checkmk"
 
 #~ msgid "Contact Groups"
 #~ msgstr "Grupos de contacto"

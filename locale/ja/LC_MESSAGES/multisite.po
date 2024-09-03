@@ -135,6 +135,9 @@ msgstr ""
 " これには、前回アクティベーション以降に行われた変更のうち、手動によるアクティ"
 "ベーションを必要としないもの（マークされたもの）も含まれます "
 
+msgid " Want to be notified about the public release? "
+msgstr ""
+
 #, python-format
 msgid " and %s '%s'"
 msgstr " および%s '%s'"
@@ -180,9 +183,6 @@ msgstr " または "
 
 msgid " or int"
 msgstr " またはint"
-
-msgid " to get notified once the commercial release is available. "
-msgstr " 商業リリースが可能になり次第、通知を受け取る。 "
 
 msgid " to:"
 msgstr " まで:"
@@ -10572,9 +10572,6 @@ msgstr ""
 "態: Apache, Core, Crontag, DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
 "(エージェントプラグインmk_inventoryをインストールする必要があります)"
 
-msgid "Checkmk Cloud (SaaS) Beta"
-msgstr "Checkmk Cloud (SaaS) Beta"
-
 msgid "Checkmk Configuration Files"
 msgstr "Checkmk設定ファイル"
 
@@ -18489,10 +18486,6 @@ msgid ""
 msgstr ""
 "ベータ・フェーズの間、サービス数は%sに制限されていますが、変更を有効化する"
 "と、%sのサービスを利用できるようになります。"
-
-#, python-format
-msgid "During the beta phase, the number of services is limited to %s. "
-msgstr "ベータ・フェーズの間、サービス数は %s に制限されます。 "
 
 msgid "During this time period no monitoring data is available"
 msgstr "この期間中、監視データは利用できません"
@@ -77396,6 +77389,16 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid " to get notified once the commercial release is available. "
+#~ msgstr " 商業リリースが可能になり次第、通知を受け取る。 "
+
+#~ msgid "Checkmk Cloud (SaaS) Beta"
+#~ msgstr "Checkmk Cloud (SaaS) Beta"
+
+#, python-format
+#~ msgid "During the beta phase, the number of services is limited to %s. "
+#~ msgstr "ベータ・フェーズの間、サービス数は %s に制限されます。 "
 
 #~ msgid "Contact Groups"
 #~ msgstr "連絡先グループ"

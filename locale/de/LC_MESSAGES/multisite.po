@@ -139,6 +139,9 @@ msgstr ""
 "vorgenommen wurden und keine manuelle Aktivierung erforderten "
 "(gekennzeichnet mit "
 
+msgid " Want to be notified about the public release? "
+msgstr ""
+
 #, python-format
 msgid " and %s '%s'"
 msgstr " und %s '%s'"
@@ -184,10 +187,6 @@ msgstr " oder "
 
 msgid " or int"
 msgstr " oder int"
-
-msgid " to get notified once the commercial release is available. "
-msgstr ""
-" um benachrichtigt zu werden, sobald die kommerzielle Version verfügbar ist. "
 
 msgid " to:"
 msgstr " An:"
@@ -10867,9 +10866,6 @@ msgstr ""
 "Status der Daemons: Apache, Core, Crontab, DCD, Liveproxyd, MKEventd, "
 "MKNotifyd, RRDCached (Agentenplugin mk_inventory muss installiert sein)"
 
-msgid "Checkmk Cloud (SaaS) Beta"
-msgstr "Checkmk Cloud (SaaS) Beta"
-
 msgid "Checkmk Configuration Files"
 msgstr "Checkmk-Konfigurationsdateien"
 
@@ -18983,10 +18979,6 @@ msgid ""
 msgstr ""
 "Während der Beta-Phase ist die Anzahl der Services auf %s begrenzt, aber "
 "nach der Aktivierung Ihrer Änderungen hätten Sie %s Services."
-
-#, python-format
-msgid "During the beta phase, the number of services is limited to %s. "
-msgstr "Während der Beta-Phase ist die Anzahl der Services auf %s begrenzt. "
 
 msgid "During this time period no monitoring data is available"
 msgstr "Während dieser Zeitperiode sind keine Monitoring-Daten verfügbar"
@@ -77875,6 +77867,19 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid " to get notified once the commercial release is available. "
+#~ msgstr ""
+#~ " um benachrichtigt zu werden, sobald die kommerzielle Version verfügbar "
+#~ "ist. "
+
+#~ msgid "Checkmk Cloud (SaaS) Beta"
+#~ msgstr "Checkmk Cloud (SaaS) Beta"
+
+#, python-format
+#~ msgid "During the beta phase, the number of services is limited to %s. "
+#~ msgstr ""
+#~ "Während der Beta-Phase ist die Anzahl der Services auf %s begrenzt. "
 
 #~ msgid "Contact Groups"
 #~ msgstr "Kontaktgruppen"

@@ -23,12 +23,7 @@
                     "default": []
                 }
             },
-            "required": [
-                "type",
-                "title",
-                "help",
-                "validators"
-            ]
+            "required": ["type", "title", "help", "validators"]
         },
         "integer": {
             "type": "object",
@@ -47,9 +42,7 @@
                     "type": "string"
                 }
             },
-            "required": [
-                "type"
-            ],
+            "required": ["type"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -73,9 +66,7 @@
                     "type": "string"
                 }
             },
-            "required": [
-                "type"
-            ],
+            "required": ["type"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -99,11 +90,7 @@
                     "type": "string"
                 }
             },
-            "required": [
-                "type",
-                "html",
-                "varprefix"
-            ],
+            "required": ["type", "html", "varprefix"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -126,16 +113,10 @@
                 "field_size": {
                     "type": "string",
                     "title": "StringFieldSize",
-                    "enum": [
-                        "SMALL",
-                        "MEDIUM",
-                        "LARGE"
-                    ]
+                    "enum": ["SMALL", "MEDIUM", "LARGE"]
                 }
             },
-            "required": [
-                "type"
-            ],
+            "required": ["type"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -161,10 +142,7 @@
                                 "type": "string"
                             }
                         },
-                        "required": [
-                            "password_id",
-                            "name"
-                        ]
+                        "required": ["password_id", "name"]
                     }
                 },
                 "i18n": {
@@ -192,11 +170,7 @@
                     ]
                 }
             },
-            "required": [
-                "type",
-                "password_store_choices",
-                "i18n"
-            ],
+            "required": ["type", "password_store_choices", "i18n"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -255,10 +229,7 @@
                     "type": "string"
                 }
             },
-            "required": [
-                "key",
-                "title"
-            ]
+            "required": ["key", "title"]
         },
         "dictionary_element": {
             "type": "object",
@@ -277,12 +248,7 @@
                     "$ref": "#/$defs/form_spec"
                 }
             },
-            "required": [
-                "ident",
-                "required",
-                "parameter_form",
-                "default_value"
-            ]
+            "required": ["ident", "required", "parameter_form", "default_value"]
         },
         "dictionary": {
             "type": "object",
@@ -337,10 +303,7 @@
                     "type": "string"
                 }
             },
-            "required": [
-                "name",
-                "title"
-            ]
+            "required": ["name", "title"]
         },
         "single_choice": {
             "type": "object",
@@ -367,12 +330,7 @@
                 },
                 "input_hint": {}
             },
-            "required": [
-                "type",
-                "frozen",
-                "elements",
-                "input_hint"
-            ],
+            "required": ["type", "frozen", "elements", "input_hint"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -389,10 +347,7 @@
                     "type": "string"
                 }
             },
-            "required": [
-                "name",
-                "title"
-            ]
+            "required": ["name", "title"]
         },
         "multiple_choice": {
             "type": "object",
@@ -413,11 +368,7 @@
                     "default": false
                 }
             },
-            "required": [
-                "type",
-                "elements",
-                "show_toggle_all"
-            ],
+            "required": ["type", "elements", "show_toggle_all"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -438,12 +389,7 @@
                     "$ref": "#/$defs/form_spec"
                 }
             },
-            "required": [
-                "name",
-                "title",
-                "default_value",
-                "parameter_form"
-            ]
+            "required": ["name", "title", "default_value", "parameter_form"]
         },
         "cascading_single_choice": {
             "type": "object",
@@ -472,12 +418,7 @@
                     "default": "vertical"
                 }
             },
-            "required": [
-                "type",
-                "elements",
-                "input_hint",
-                "layout"
-            ],
+            "required": ["type", "elements", "input_hint", "layout"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -496,10 +437,7 @@
                 },
                 "value": {}
             },
-            "required": [
-                "type",
-                "value"
-            ],
+            "required": ["type", "value"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -523,11 +461,7 @@
                     "type": "string"
                 }
             },
-            "required": [
-                "type",
-                "text_on",
-                "text_off"
-            ],
+            "required": ["type", "text_on", "text_off"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -554,9 +488,7 @@
                     "type": "string"
                 }
             },
-            "required": [
-                "type"
-            ],
+            "required": ["type"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -583,10 +515,7 @@
                     "type": "string"
                 }
             },
-            "required": [
-                "type",
-                "displayed_magnitudes"
-            ],
+            "required": ["type", "displayed_magnitudes"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -603,11 +532,7 @@
                     "$ref": "#/$defs/dictionary"
                 }
             },
-            "required": [
-                "key",
-                "title",
-                "dictionary"
-            ]
+            "required": ["key", "title", "dictionary"]
         },
         "catalog": {
             "type": "object",
@@ -623,10 +548,7 @@
                     }
                 }
             },
-            "required": [
-                "type",
-                "topics"
-            ],
+            "required": ["type", "topics"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -647,18 +569,30 @@
                     "title": "time_span_i18n",
                     "type": "object",
                     "properties": {
-                        "millisecond": {"type": "string"},
-                        "second": {"type": "string"},
-                        "minute": {"type": "string"},
-                        "hour": {"type": "string"},
-                        "day": {"type": "string"}
+                        "millisecond": { "type": "string" },
+                        "second": { "type": "string" },
+                        "minute": { "type": "string" },
+                        "hour": { "type": "string" },
+                        "day": { "type": "string" }
                     },
-                    "required": [ "millisecond", "second", "minute", "hour", "day" ]
+                    "required": [
+                        "millisecond",
+                        "second",
+                        "minute",
+                        "hour",
+                        "day"
+                    ]
                 },
                 "displayed_magnitudes": {
                     "type": "array",
                     "items": {
-                        "enum": [ "millisecond", "second", "minute", "hour", "day" ],
+                        "enum": [
+                            "millisecond",
+                            "second",
+                            "minute",
+                            "hour",
+                            "day"
+                        ],
                         "title": "time_span_time_magnitude"
                     }
                 },
@@ -666,11 +600,7 @@
                     "type": "number"
                 }
             },
-            "required": [
-                "displayed_magnitudes",
-                "i18n",
-                "prefill"
-            ],
+            "required": ["displayed_magnitudes", "i18n", "prefill"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -705,12 +635,7 @@
                     "default": true
                 }
             },
-            "required": [
-                "type",
-                "elements",
-                "layout",
-                "show_titles"
-            ],
+            "required": ["type", "elements", "layout", "show_titles"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -774,9 +699,7 @@
                     "$ref": "#/$defs/tuple"
                 }
             ],
-            "required": [
-                "type"
-            ]
+            "required": ["type"]
         }
     }
 }

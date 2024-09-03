@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { Catalog, Topic } from '@/form/components/vue_formspec_components'
-import { onBeforeMount, ref } from 'vue'
+import { ref } from 'vue'
 import type { ValidationMessages } from '@/form/components/utils/validation'
+import { immediateWatch } from '@/form/components/utils/watch'
 import FormCatalogDictionary from './FormCatalogDictionary.vue'
 
 const props = defineProps<{
@@ -13,9 +14,12 @@ const data = defineModel<Record<string, Record<string, unknown>>>('data', { requ
 
 const hiddenTopics = ref<Record<string, boolean>>({})
 
-onBeforeMount(() => {
-  hiddenTopics.value = {}
-})
+immediateWatch(
+  () => props.spec.topics,
+  () => {
+    hiddenTopics.value = {}
+  }
+)
 
 function toggleTopic(topic: Topic) {
   hiddenTopics.value[topic.key] = !hiddenTopics.value[topic.key]

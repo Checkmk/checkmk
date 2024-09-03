@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { DictionaryElement } from '@/form/components/vue_formspec_components'
 import FormEdit from '@/form/components/FormEdit.vue'
-import { onBeforeMount } from 'vue'
+import { immediateWatch } from '@/form/components/utils/watch'
 import type { ValidationMessages } from '@/form/components/utils/validation'
 
 const props = defineProps<{
@@ -11,13 +11,16 @@ const props = defineProps<{
 
 const data = defineModel<Record<string, unknown>>({ required: true })
 
-onBeforeMount(() => {
-  props.entries.forEach((element) => {
-    if (!(element.ident in data.value)) {
-      data.value[element.ident] = element.default_value
-    }
-  })
-})
+immediateWatch(
+  () => props.entries,
+  (newValue) => {
+    newValue.forEach((element) => {
+      if (!(element.ident in data.value)) {
+        data.value[element.ident] = element.default_value
+      }
+    })
+  }
+)
 </script>
 
 <template>

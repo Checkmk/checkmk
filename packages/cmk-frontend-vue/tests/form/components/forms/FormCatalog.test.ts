@@ -167,5 +167,7 @@ test('FormCatalog default value', async () => {
   // [Vue warn]: Invalid prop: type check failed for prop "data". Expected String with value "undefined", got Undefined
   await rerender(getDefinition('some_other_string_indent'))
 
-  expect(getCurrentData()).toBe('{"some_ut_key":{}}') // TODO: THIS IS A BUG! rerendering does not work yet.
+  expect(getCurrentData()).toBe(
+    '{"some_ut_key":{"some_other_string_indent":"ut_string_1 default value"}}'
+  )
 })

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { Catalog, FormSpec, Topic } from '@/form/components/vue_formspec_components'
-import FormEdit from '@/form/components/FormEdit.vue'
+import type { Catalog, Topic } from '@/form/components/vue_formspec_components'
 import { onBeforeMount, ref } from 'vue'
 import type { ValidationMessages } from '@/form/components/utils/validation'
+import FormCatalogDictionary from './FormCatalogDictionary.vue'
 
 const props = defineProps<{
   spec: Catalog
@@ -16,12 +16,6 @@ onBeforeMount(() => {
   openTopics.value = {}
   props.spec.topics.forEach((topic) => {
     openTopics.value[topic.key] = true
-    topic.dictionary.elements.forEach((element) => {
-      const topicData = data.value[topic.key]!
-      if (!(element.ident in topicData)) {
-        topicData[element.ident] = element.default_value
-      }
-    })
   })
 })
 
@@ -33,26 +27,6 @@ function setAllTopics(isOpen: boolean) {
   for (const key in openTopics.value) {
     openTopics.value[key] = isOpen
   }
-}
-
-interface TopicEntry {
-  title: string
-  ident: string
-  required: boolean
-  form: FormSpec
-}
-
-function entriesForTopic(topic: Topic) {
-  const entries: TopicEntry[] = []
-  topic.dictionary.elements.forEach((element) => {
-    entries.push({
-      title: element.parameter_form.title,
-      ident: element.ident,
-      required: element.required,
-      form: element.parameter_form
-    })
-  })
-  return entries
 }
 </script>
 
@@ -88,27 +62,12 @@ function entriesForTopic(topic: Topic) {
       <tr>
         <td colspan="2" />
       </tr>
-      <tr v-for="entry in entriesForTopic(topic)" :key="entry.ident">
-        <td class="legend">
-          <div class="title">
-            {{ entry.title }}
-            <span
-              :class="{
-                dots: true,
-                required: entry.required
-              }"
-              >{{ Array(200).join('.') }}</span
-            >
-          </div>
-        </td>
-        <td class="content">
-          <FormEdit
-            v-model:data="(data[topic.key]! as Record<string, object>)[entry.ident]!"
-            :backend-validation="backendValidation"
-            :spec="entry.form"
-          />
-        </td>
-      </tr>
+      <FormCatalogDictionary
+        v-model="data[topic.key]!"
+        :entries="topic.dictionary.elements"
+        :backend-validation="backendValidation"
+      />
+      <!-- TODO: backendValidation can not be passed as is? it needs to be filtered by topic.key, right? -->
       <tr class="bottom">
         <td colspan="2"></td>
       </tr>

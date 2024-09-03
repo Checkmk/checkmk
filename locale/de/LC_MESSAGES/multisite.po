@@ -2942,6 +2942,10 @@ msgstr "Konfigurationsanalyse aufrufen"
 msgid "Access key"
 msgstr "Zugriffsschlüssel"
 
+#, fuzzy
+msgid "Access key ID"
+msgstr "Zugriffsschlüssel"
+
 msgid "Access point name"
 msgstr "Name des Accesspoints"
 
@@ -12238,9 +12242,10 @@ msgstr "Log-Datei durch Löschen aller gespeicherten Nachrichten bereinigen"
 msgid "Cleared"
 msgstr "Bereinigt"
 
+#, fuzzy
 msgid ""
-"Click 'Add user' under Users, select 'Access key - Programmatic access', and "
-"attach the 'ReadOnlyAccess' policy."
+"Click \"Add user\" under Users, select \"Access key - Programmatic access\", "
+"and attach the \"ReadOnlyAccess\" policy."
 msgstr ""
 "Klicken Sie unter 'Benutzer' auf 'Benutzer hinzufügen', wählen Sie "
 "'Zugriffsschlüssel - Programmatischer Zugriff', und fügen Sie die Richtlinie "
@@ -26438,9 +26443,6 @@ msgstr "Ordner ohne Leseberechtigung ausblenden"
 
 msgid "Hide from Status GUI"
 msgstr "Nicht in Status GUI anzeigen"
-
-msgid "Hide help text of rules in list views"
-msgstr "Hilfetexte von Regeln in der Listenansicht verbergen"
 
 msgid "Hide hosttags in Setup folder view"
 msgstr "Host-Tags in Setup-Ordneransicht verstecken"
@@ -49788,6 +49790,11 @@ msgid "Return process times within performance data"
 msgstr "Zeige Ausführungszeiten innerhalb der Leistungsdaten"
 
 msgid ""
+"Return to Checkmk, define a unique AWS account name, and use the Access key "
+"and Secret access key below."
+msgstr ""
+
+msgid ""
 "Returns the latest crash dumps of each type as found in var/checkmk/crashes"
 msgstr ""
 "Gibt die neuesten Crash-Dumps jedes Typs zurück, die in var/checkmk/crashes "
@@ -49802,10 +49809,12 @@ msgstr "Änderungen rückgängig machen?"
 msgid "Revert foreign changes"
 msgstr "Verwerfe fremde Änderungen"
 
-msgid "Review and run service discovery"
+#, fuzzy
+msgid "Review and run preview service discovery"
 msgstr "Überprüfen und Service-Erkennung durchführen"
 
-msgid "Review your configuration, run and preview service discovery"
+#, fuzzy
+msgid "Review your configuration and run preview service discovery"
 msgstr ""
 "Überprüfen Sie Ihre Konfiguration, führen Sie die Service-Erkennung aus und "
 "sehen Sie sich diese an"
@@ -50893,7 +50902,8 @@ msgstr "Als neues Layout für diese Aggregation speichern"
 msgid "Save response"
 msgstr "Antwort speichern"
 
-msgid "Save the generated access key and secret key for later use."
+#, fuzzy
+msgid "Save the generated Access key and Secret access key."
 msgstr ""
 "Speichern Sie den generierten Zugangsschlüssel und den geheimen Schlüssel "
 "zur späteren Verwendung."
@@ -51304,6 +51314,10 @@ msgstr "Wartezeit in Sekunden vor Abfrage"
 
 msgid "Seconds to wait between sending string and polling for response"
 msgstr "Wartezeit in Sekunden zwischen Senden und Abfragen"
+
+#, fuzzy
+msgid "Secret access key"
+msgstr "Geheimer Schlüssel"
 
 msgid "Secret key"
 msgstr "Geheimer Schlüssel"
@@ -53963,6 +53977,14 @@ msgstr ""
 "Sensoren die gleiche Beschreibung haben. Um sicherzustellen, dass die "
 "Elemente eindeutig sind, wird ihnen das Präfix X-Y vorangestellt, wobei X "
 "die Gerätenummer und Y der Index des Sensors ist."
+
+#, fuzzy
+msgid ""
+"Since this is a ReadOnlyAccess, we won't create any resources on your AWS "
+"account."
+msgstr ""
+"*Da dies ein Nur-Lese-Zugang (ReadOnlyAccess) ist, werden wir keine "
+"Ressourcen auf Ihrem AWS-Konto erstellen"
 
 msgid ""
 "Since version 2.1 it is possible to encrypt the communication of the "
@@ -58958,9 +58980,6 @@ msgstr ""
 "lokale Checks einstellen</i> und <i>Setze Ausführungsmodus für Plugins und "
 "lokale Checks</i> ändern."
 
-msgid "The access key ID for your AWS account"
-msgstr "Der Zugangsschlüssel für Ihr AWS-Konto"
-
 msgid "The access key for your AWS account"
 msgstr "Der Zugangsschlüssel für Ihr AWS-Konto"
 
@@ -62078,9 +62097,6 @@ msgstr "Der Eintrag, den Sie löschen möchten, existiert nicht."
 msgid "The schedule you are trying to edit does not exist."
 msgstr "Der Eintrag, den Sie bearbeiten möchten, existiert nicht."
 
-msgid "The secret access key for your AWS account"
-msgstr "Der geheime Schlüssel für Ihr AWS-Konto"
-
 msgid "The secret key for your AWS account"
 msgstr "Der geheime Schlüssel für Ihr AWS-Konto"
 
@@ -62860,9 +62876,6 @@ msgstr ""
 #, python-format
 msgid "The version of this site is not a %s"
 msgstr "Die Version dieser Instanz ist keine %s"
-
-msgid "The version of this site is not a Checkmk managed services edition"
-msgstr "Die Version dieser Instanz ist keine Checkmk Managed Services Edition"
 
 #, python-format
 msgid ""
@@ -75872,12 +75885,6 @@ msgstr ""
 "dies als Dateiname vorgeschlagen. Die Endung sollte immer <tt>pdf</tt> sein."
 
 msgid ""
-"When disabled, Setup shows the help texts of rules also in the list views."
-msgstr ""
-"Wenn deaktiviert, zeigt Setup die Hilfetexte der Regeln auch in den "
-"Listenansichten an."
-
-msgid ""
 "When doing service discovery on brocade switches only ports with the given "
 "administrative states will be added to the monitoring system."
 msgstr ""
@@ -79459,6 +79466,11 @@ msgstr "Ihre IT-Monitoring-Plattform"
 msgid "Your WebAuthn credential is already in use"
 msgstr "Ihre WebAuthn-Anmeldedaten werden bereits benutzt"
 
+msgid ""
+"Your administrator has enforced two factor authentication for your account. "
+"Kindly register one of the following two factor mechanisms:"
+msgstr ""
+
 msgid "Your central site is incompatible with this remote site"
 msgstr "Ihre Zentralinstanz ist mit dieser Remote-Instanz nicht kompatibel"
 
@@ -80497,9 +80509,6 @@ msgstr "blende Ordner-Namen aus"
 
 msgid "hide folders without read permissions"
 msgstr "verstecke Ordner ohne Leseberechtigungen"
-
-msgid "hide help text"
-msgstr "Hilfetext ausblenden"
 
 msgid "hide hosttags"
 msgstr "blende Host-Merkmale aus"
@@ -81851,6 +81860,28 @@ msgstr "{region} ({id_})"
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
+#~ msgid "Hide help text of rules in list views"
+#~ msgstr "Hilfetexte von Regeln in der Listenansicht verbergen"
+
+#~ msgid "The access key ID for your AWS account"
+#~ msgstr "Der Zugangsschlüssel für Ihr AWS-Konto"
+
+#~ msgid "The secret access key for your AWS account"
+#~ msgstr "Der geheime Schlüssel für Ihr AWS-Konto"
+
+#~ msgid "The version of this site is not a Checkmk managed services edition"
+#~ msgstr ""
+#~ "Die Version dieser Instanz ist keine Checkmk Managed Services Edition"
+
+#~ msgid ""
+#~ "When disabled, Setup shows the help texts of rules also in the list views."
+#~ msgstr ""
+#~ "Wenn deaktiviert, zeigt Setup die Hilfetexte der Regeln auch in den "
+#~ "Listenansichten an."
+
+#~ msgid "hide help text"
+#~ msgstr "Hilfetext ausblenden"
+
 #~ msgid "Database for PostgreSQL"
 #~ msgstr "Datenbank für PostgreSQL"
 
@@ -82122,13 +82153,6 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Total number of client connections upper level"
 #~ msgstr "Obergrenze für die Gesamtzahl der Klient-Verbindungen"
-
-#~ msgid ""
-#~ "*Since this is a ReadOnlyAccess, we will never create any resources on "
-#~ "your AWS account"
-#~ msgstr ""
-#~ "*Da dies ein Nur-Lese-Zugang (ReadOnlyAccess) ist, werden wir keine "
-#~ "Ressourcen auf Ihrem AWS-Konto erstellen"
 
 #~ msgid ""
 #~ "A voluntary context switch occurs when a thread blocks because it "

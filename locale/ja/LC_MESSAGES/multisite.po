@@ -2858,6 +2858,10 @@ msgstr "アクセス解析設定"
 msgid "Access key"
 msgstr "アクセスキー"
 
+#, fuzzy
+msgid "Access key ID"
+msgstr "アクセスキー"
+
 msgid "Access point name"
 msgstr "アクセスポイント名"
 
@@ -12073,8 +12077,8 @@ msgid "Cleared"
 msgstr "\"クリア\"状態"
 
 msgid ""
-"Click 'Add user' under Users, select 'Access key - Programmatic access', and "
-"attach the 'ReadOnlyAccess' policy."
+"Click \"Add user\" under Users, select \"Access key - Programmatic access\", "
+"and attach the \"ReadOnlyAccess\" policy."
 msgstr ""
 
 msgid "Click for instant reload."
@@ -26164,9 +26168,6 @@ msgstr "読み取り権限なしでフォルダを非表示にする"
 
 msgid "Hide from Status GUI"
 msgstr "ステータスGUIから非表示"
-
-msgid "Hide help text of rules in list views"
-msgstr "リストビューでルールのヘルプテキストを非表示にする"
 
 msgid "Hide hosttags in Setup folder view"
 msgstr "セットアップフォルダビューでホストタグを非表示にする"
@@ -50332,6 +50333,11 @@ msgid "Return process times within performance data"
 msgstr "パフォーマンスデータ内のプロセス時間を返す"
 
 msgid ""
+"Return to Checkmk, define a unique AWS account name, and use the Access key "
+"and Secret access key below."
+msgstr ""
+
+msgid ""
 "Returns the latest crash dumps of each type as found in var/checkmk/crashes"
 msgstr "var/checkmk/crashes にある各タイプの最新のクラッシュダンプを返す"
 
@@ -50346,11 +50352,11 @@ msgid "Revert foreign changes"
 msgstr "外国の変更を有効にする"
 
 #, fuzzy
-msgid "Review and run service discovery"
+msgid "Review and run preview service discovery"
 msgstr "サービスディスカバリの実行と保存"
 
 #, fuzzy
-msgid "Review your configuration, run and preview service discovery"
+msgid "Review your configuration and run preview service discovery"
 msgstr "サービスディスカバリの実行と保存"
 
 msgid "Revolutions per minute"
@@ -51494,7 +51500,7 @@ msgstr "この集計のコピーを作成します"
 msgid "Save response"
 msgstr "応答を保存"
 
-msgid "Save the generated access key and secret key for later use."
+msgid "Save the generated Access key and Secret access key."
 msgstr ""
 
 msgid "Save this host and go to"
@@ -51909,6 +51915,10 @@ msgstr "ポーリングする前に待機する秒数"
 
 msgid "Seconds to wait between sending string and polling for response"
 msgstr "文字列の送信と応答のポーリングの間に待機する秒数"
+
+#, fuzzy
+msgid "Secret access key"
+msgstr "秘密鍵"
 
 msgid "Secret key"
 msgstr "秘密鍵"
@@ -54567,6 +54577,11 @@ msgstr ""
 "センサーの説明はユーザー定義のテキストであるため、複数のセンサーが同じ説明を"
 "持つ可能性があります。項目が一意であることを保証するために、X-Yを先頭に付けま"
 "す。Xはデバイス番号、Yはセンサーのインデックスです。"
+
+msgid ""
+"Since this is a ReadOnlyAccess, we won't create any resources on your AWS "
+"account."
+msgstr ""
 
 msgid ""
 "Since version 2.1 it is possible to encrypt the communication of the "
@@ -59533,9 +59548,6 @@ msgstr ""
 "の設定</i>および<i>プラグインとローカルチェックの実行モードの設定</i>を使用し"
 "て変更できます。"
 
-msgid "The access key ID for your AWS account"
-msgstr "AWSアカウントのアクセスキーID"
-
 msgid "The access key for your AWS account"
 msgstr "AWSアカウントのアクセスキー"
 
@@ -62508,9 +62520,6 @@ msgstr "削除しようとしているスケジュールが存在しません。
 msgid "The schedule you are trying to edit does not exist."
 msgstr "編集しようとしているスケジュールが存在しません。"
 
-msgid "The secret access key for your AWS account"
-msgstr "AWSアカウントのシークレットアクセスキー"
-
 msgid "The secret key for your AWS account"
 msgstr "AWSアカウントのシークレットアクセスキー"
 
@@ -63247,10 +63256,6 @@ msgstr "CA証明書が見つからないため、検証を開始できません"
 #, python-format
 msgid "The version of this site is not a %s"
 msgstr "このサイトのバージョンは %s ではありません"
-
-msgid "The version of this site is not a Checkmk managed services edition"
-msgstr ""
-"このサイトのバージョンは、Checkmkマネージドサービスエディションではありません"
 
 #, python-format
 msgid ""
@@ -76497,12 +76502,6 @@ msgstr ""
 "提案します。拡張子は常に <tt>pdf</tt>である必要があります。"
 
 msgid ""
-"When disabled, Setup shows the help texts of rules also in the list views."
-msgstr ""
-"無効にすると、セットアップはルールのヘルプテキストをリストビューにも表示しま"
-"す。"
-
-msgid ""
 "When doing service discovery on brocade switches only ports with the given "
 "administrative states will be added to the monitoring system."
 msgstr ""
@@ -79914,6 +79913,11 @@ msgstr "IT監視プラットフォーム"
 msgid "Your WebAuthn credential is already in use"
 msgstr "WebAuthn認証はすでに使用されています"
 
+msgid ""
+"Your administrator has enforced two factor authentication for your account. "
+"Kindly register one of the following two factor mechanisms:"
+msgstr ""
+
 msgid "Your central site is incompatible with this remote site"
 msgstr "セントラルサイトは、このリモートサイトと互換性がありません"
 
@@ -80950,9 +80954,6 @@ msgstr "フォルダ名を非表示にする"
 
 msgid "hide folders without read permissions"
 msgstr "読み取り権限なしでフォルダを非表示にする"
-
-msgid "hide help text"
-msgstr "ヘルプテキストを非表示"
 
 msgid "hide hosttags"
 msgstr "ホストタグを非表示にする"
@@ -82316,6 +82317,29 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid "Hide help text of rules in list views"
+#~ msgstr "リストビューでルールのヘルプテキストを非表示にする"
+
+#~ msgid "The access key ID for your AWS account"
+#~ msgstr "AWSアカウントのアクセスキーID"
+
+#~ msgid "The secret access key for your AWS account"
+#~ msgstr "AWSアカウントのシークレットアクセスキー"
+
+#~ msgid "The version of this site is not a Checkmk managed services edition"
+#~ msgstr ""
+#~ "このサイトのバージョンは、Checkmkマネージドサービスエディションではありま"
+#~ "せん"
+
+#~ msgid ""
+#~ "When disabled, Setup shows the help texts of rules also in the list views."
+#~ msgstr ""
+#~ "無効にすると、セットアップはルールのヘルプテキストをリストビューにも表示し"
+#~ "ます。"
+
+#~ msgid "hide help text"
+#~ msgstr "ヘルプテキストを非表示"
 
 #~ msgid "Database for PostgreSQL"
 #~ msgstr "PostgreSQL用データベース"

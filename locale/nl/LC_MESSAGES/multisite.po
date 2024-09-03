@@ -2966,6 +2966,10 @@ msgstr "Toegang analyseren configuratie"
 msgid "Access key"
 msgstr "Toegangssleutel"
 
+#, fuzzy
+msgid "Access key ID"
+msgstr "Toegangssleutel"
+
 msgid "Access point name"
 msgstr "Naam toegangspunt"
 
@@ -12641,8 +12645,8 @@ msgid "Cleared"
 msgstr "Status 'bevestigd'"
 
 msgid ""
-"Click 'Add user' under Users, select 'Access key - Programmatic access', and "
-"attach the 'ReadOnlyAccess' policy."
+"Click \"Add user\" under Users, select \"Access key - Programmatic access\", "
+"and attach the \"ReadOnlyAccess\" policy."
 msgstr ""
 
 msgid "Click for instant reload."
@@ -27243,9 +27247,6 @@ msgstr "Verberg mappen zonder leesrechten"
 
 msgid "Hide from Status GUI"
 msgstr "Verberg van Status GUI"
-
-msgid "Hide help text of rules in list views"
-msgstr "Verberg helptekst van regels in lijstweergaven"
 
 msgid "Hide hosttags in Setup folder view"
 msgstr "Verberg hosttags in Setup-mapweergave"
@@ -51746,6 +51747,11 @@ msgid "Return process times within performance data"
 msgstr "Terugkeren procestijden binnen prestatiegegevens"
 
 msgid ""
+"Return to Checkmk, define a unique AWS account name, and use the Access key "
+"and Secret access key below."
+msgstr ""
+
+msgid ""
 "Returns the latest crash dumps of each type as found in var/checkmk/crashes"
 msgstr ""
 
@@ -51762,11 +51768,11 @@ msgid "Revert foreign changes"
 msgstr "Buitenlandse wijzigingen activeren"
 
 #, fuzzy
-msgid "Review and run service discovery"
+msgid "Review and run preview service discovery"
 msgstr "Save & run service discovery"
 
 #, fuzzy
-msgid "Review your configuration, run and preview service discovery"
+msgid "Review your configuration and run preview service discovery"
 msgstr "Save & run service discovery"
 
 msgid "Revolutions per minute"
@@ -52916,7 +52922,7 @@ msgstr "Maak een kopie van deze aggregatie"
 msgid "Save response"
 msgstr "Reactie opslaan"
 
-msgid "Save the generated access key and secret key for later use."
+msgid "Save the generated Access key and Secret access key."
 msgstr ""
 
 msgid "Save this host and go to"
@@ -53341,6 +53347,10 @@ msgid "Seconds to wait between sending string and polling for response"
 msgstr ""
 "Seconden om te wachten tussen het verzenden van de string en het zoeken naar "
 "antwoord"
+
+#, fuzzy
+msgid "Secret access key"
+msgstr "Geheime sleutel"
 
 msgid "Secret key"
 msgstr "Geheime sleutel"
@@ -56038,6 +56048,11 @@ msgstr ""
 "is, kunnen meerdere sensoren dezelfde beschrijving hebben. Om ervoor te "
 "zorgen dat de items uniek zijn, worden ze voorafgegaan door X-Y waarbij X "
 "het apparaatnummer is en Y de index van de sensor."
+
+msgid ""
+"Since this is a ReadOnlyAccess, we won't create any resources on your AWS "
+"account."
+msgstr ""
 
 msgid ""
 "Since version 2.1 it is possible to encrypt the communication of the "
@@ -61141,9 +61156,6 @@ msgstr ""
 "met de Setup rulesets <i>Set cache age for plugins and local checks</i> en "
 "<i>Set execution mode for plugins and local checks</i>."
 
-msgid "The access key ID for your AWS account"
-msgstr "De toegangssleutel ID voor uw AWS account"
-
 msgid "The access key for your AWS account"
 msgstr "De toegangssleutel ID voor uw AWS account"
 
@@ -64215,9 +64227,6 @@ msgstr "Het schema dat u probeert te verwijderen bestaat niet."
 msgid "The schedule you are trying to edit does not exist."
 msgstr "De agenda die u probeert te bewerken bestaat niet."
 
-msgid "The secret access key for your AWS account"
-msgstr "De geheime toegangssleutel voor uw AWS account"
-
 msgid "The secret key for your AWS account"
 msgstr "De geheime sleutel voor uw AWS-account"
 
@@ -64986,9 +64995,6 @@ msgstr ""
 #, python-format
 msgid "The version of this site is not a %s"
 msgstr "De versie van deze site is geen %s"
-
-msgid "The version of this site is not a Checkmk managed services edition"
-msgstr "De versie van deze site is geen Checkmk managed services editie"
 
 #, python-format
 msgid ""
@@ -78558,12 +78564,6 @@ msgstr ""
 "op te slaan met deze bestandsnaam. De extensie moet altijd <tt>pdf</tt> zijn."
 
 msgid ""
-"When disabled, Setup shows the help texts of rules also in the list views."
-msgstr ""
-"Indien uitgeschakeld, toont Setup de helpteksten van regels ook in de "
-"lijstweergaven."
-
-msgid ""
 "When doing service discovery on brocade switches only ports with the given "
 "administrative states will be added to the monitoring system."
 msgstr ""
@@ -82136,6 +82136,11 @@ msgstr "Uw bewakingsapparaat"
 msgid "Your WebAuthn credential is already in use"
 msgstr "Uw WebAuthn referentie is al in gebruik"
 
+msgid ""
+"Your administrator has enforced two factor authentication for your account. "
+"Kindly register one of the following two factor mechanisms:"
+msgstr ""
+
 msgid "Your central site is incompatible with this remote site"
 msgstr "Uw centrale site is niet compatibel met deze externe site"
 
@@ -83176,9 +83181,6 @@ msgstr "mapnamen verbergen"
 
 msgid "hide folders without read permissions"
 msgstr "mappen zonder leesrechten verbergen"
-
-msgid "hide help text"
-msgstr "help tekst verbergen"
 
 msgid "hide hosttags"
 msgstr "hosttags verbergen"
@@ -84551,6 +84553,27 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Hide help text of rules in list views"
+#~ msgstr "Verberg helptekst van regels in lijstweergaven"
+
+#~ msgid "The access key ID for your AWS account"
+#~ msgstr "De toegangssleutel ID voor uw AWS account"
+
+#~ msgid "The secret access key for your AWS account"
+#~ msgstr "De geheime toegangssleutel voor uw AWS account"
+
+#~ msgid "The version of this site is not a Checkmk managed services edition"
+#~ msgstr "De versie van deze site is geen Checkmk managed services editie"
+
+#~ msgid ""
+#~ "When disabled, Setup shows the help texts of rules also in the list views."
+#~ msgstr ""
+#~ "Indien uitgeschakeld, toont Setup de helpteksten van regels ook in de "
+#~ "lijstweergaven."
+
+#~ msgid "hide help text"
+#~ msgstr "help tekst verbergen"
 
 #~ msgid "Database for PostgreSQL"
 #~ msgstr "Database voor PostgreSQL"

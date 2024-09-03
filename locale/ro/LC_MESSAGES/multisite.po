@@ -2984,6 +2984,10 @@ msgstr "Accesul analizează configurația"
 msgid "Access key"
 msgstr "Cheie de acces"
 
+#, fuzzy
+msgid "Access key ID"
+msgstr "Cheie de acces"
+
 msgid "Access point name"
 msgstr "Numele punctului de acces"
 
@@ -12655,8 +12659,8 @@ msgid "Cleared"
 msgstr "Starea \"Liber"
 
 msgid ""
-"Click 'Add user' under Users, select 'Access key - Programmatic access', and "
-"attach the 'ReadOnlyAccess' policy."
+"Click \"Add user\" under Users, select \"Access key - Programmatic access\", "
+"and attach the \"ReadOnlyAccess\" policy."
 msgstr ""
 
 msgid "Click for instant reload."
@@ -27267,9 +27271,6 @@ msgstr "Ascundeți folderele fără permisiuni de citire"
 
 msgid "Hide from Status GUI"
 msgstr "Ascundeți din GUI de stare"
-
-msgid "Hide help text of rules in list views"
-msgstr "Ascundeți textul de ajutor al regulilor în vizualizările de listă"
 
 msgid "Hide hosttags in Setup folder view"
 msgstr "Ascundeți etichetele de gazdă în vizualizarea folderului Setup"
@@ -51798,6 +51799,11 @@ msgid "Return process times within performance data"
 msgstr "Timpii de procesare a returului în cadrul datelor de performanță"
 
 msgid ""
+"Return to Checkmk, define a unique AWS account name, and use the Access key "
+"and Secret access key below."
+msgstr ""
+
+msgid ""
 "Returns the latest crash dumps of each type as found in var/checkmk/crashes"
 msgstr ""
 "Returnează cele mai recente descărcări de accident de fiecare tip, așa cum "
@@ -51814,11 +51820,11 @@ msgid "Revert foreign changes"
 msgstr "Activați modificările străine"
 
 #, fuzzy
-msgid "Review and run service discovery"
+msgid "Review and run preview service discovery"
 msgstr "Salvați & rulați descoperirea serviciilor"
 
 #, fuzzy
-msgid "Review your configuration, run and preview service discovery"
+msgid "Review your configuration and run preview service discovery"
 msgstr "Salvați & rulați descoperirea serviciilor"
 
 msgid "Revolutions per minute"
@@ -52965,7 +52971,7 @@ msgstr "Salvați ca nou aspect pentru această agregare"
 msgid "Save response"
 msgstr "Salvați răspunsul"
 
-msgid "Save the generated access key and secret key for later use."
+msgid "Save the generated Access key and Secret access key."
 msgstr ""
 
 msgid "Save this host and go to"
@@ -53390,6 +53396,10 @@ msgid "Seconds to wait between sending string and polling for response"
 msgstr ""
 "Secunde de așteptare între trimiterea șirului de caractere și interogarea "
 "pentru răspuns"
+
+#, fuzzy
+msgid "Secret access key"
+msgstr "Cheia secretă"
 
 msgid "Secret key"
 msgstr "Cheia secretă"
@@ -56148,6 +56158,11 @@ msgstr ""
 "senzori pot avea aceeași descriere. Pentru a se asigura că elementele sunt "
 "unice, acestea sunt prefixate cu X-Y, unde X este numărul dispozitivului și "
 "Y este indicele senzorului."
+
+msgid ""
+"Since this is a ReadOnlyAccess, we won't create any resources on your AWS "
+"account."
+msgstr ""
 
 msgid ""
 "Since version 2.1 it is possible to encrypt the communication of the "
@@ -61267,9 +61282,6 @@ msgstr ""
 "plugins and local checks</i> și <i>Set execution mode for plugins and local "
 "checks</i>."
 
-msgid "The access key ID for your AWS account"
-msgstr "ID-ul cheii de acces pentru contul dvs. AWS"
-
 msgid "The access key for your AWS account"
 msgstr "Cheia de acces pentru contul dvs. AWS"
 
@@ -64370,9 +64382,6 @@ msgstr "Programul pe care încercați să îl ștergeți nu există."
 msgid "The schedule you are trying to edit does not exist."
 msgstr "Programul pe care încercați să îl editați nu există."
 
-msgid "The secret access key for your AWS account"
-msgstr "Cheia secretă de acces pentru contul AWS"
-
 msgid "The secret key for your AWS account"
 msgstr "Cheia secretă pentru contul dvs. AWS"
 
@@ -65145,9 +65154,6 @@ msgstr "Verificarea nu poate fi inițiată din cauza lipsei certificatului CA"
 #, python-format
 msgid "The version of this site is not a %s"
 msgstr "Versiunea acestui site nu este un %s."
-
-msgid "The version of this site is not a Checkmk managed services edition"
-msgstr "Versiunea din acest site nu este o ediție Checkmk managed services"
 
 #, python-format
 msgid ""
@@ -78712,12 +78718,6 @@ msgstr ""
 "cu acest nume de fișier. Extensia trebuie să fie întotdeauna <tt>pdf</tt>."
 
 msgid ""
-"When disabled, Setup shows the help texts of rules also in the list views."
-msgstr ""
-"Dacă este dezactivat, Setup afișează textele de ajutor ale regulilor și în "
-"vizualizările listei."
-
-msgid ""
 "When doing service discovery on brocade switches only ports with the given "
 "administrative states will be added to the monitoring system."
 msgstr ""
@@ -82289,6 +82289,11 @@ msgstr "Platforma dumneavoastră de monitorizare IT"
 msgid "Your WebAuthn credential is already in use"
 msgstr "Credențialul dvs. WebAuthn este deja în uz"
 
+msgid ""
+"Your administrator has enforced two factor authentication for your account. "
+"Kindly register one of the following two factor mechanisms:"
+msgstr ""
+
 msgid "Your central site is incompatible with this remote site"
 msgstr "Site-ul dvs. central este incompatibil cu acest site la distanță"
 
@@ -83335,9 +83340,6 @@ msgstr "ascundeți numele dosarelor"
 
 msgid "hide folders without read permissions"
 msgstr "ascundeți folderele fără permisiuni de citire"
-
-msgid "hide help text"
-msgstr "ascundeți textul de ajutor"
 
 msgid "hide hosttags"
 msgstr "ascunde etichetele de gazdă"
@@ -84698,6 +84700,27 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "Hide help text of rules in list views"
+#~ msgstr "Ascundeți textul de ajutor al regulilor în vizualizările de listă"
+
+#~ msgid "The access key ID for your AWS account"
+#~ msgstr "ID-ul cheii de acces pentru contul dvs. AWS"
+
+#~ msgid "The secret access key for your AWS account"
+#~ msgstr "Cheia secretă de acces pentru contul AWS"
+
+#~ msgid "The version of this site is not a Checkmk managed services edition"
+#~ msgstr "Versiunea din acest site nu este o ediție Checkmk managed services"
+
+#~ msgid ""
+#~ "When disabled, Setup shows the help texts of rules also in the list views."
+#~ msgstr ""
+#~ "Dacă este dezactivat, Setup afișează textele de ajutor ale regulilor și "
+#~ "în vizualizările listei."
+
+#~ msgid "hide help text"
+#~ msgstr "ascundeți textul de ajutor"
 
 #~ msgid "Database for PostgreSQL"
 #~ msgstr "Baza de date pentru PostgreSQL"

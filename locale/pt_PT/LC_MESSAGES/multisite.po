@@ -2963,6 +2963,10 @@ msgstr "Configuração da análise de acesso"
 msgid "Access key"
 msgstr "Chave de acesso"
 
+#, fuzzy
+msgid "Access key ID"
+msgstr "Chave de acesso"
+
 msgid "Access point name"
 msgstr "Nome do ponto de acesso"
 
@@ -12640,8 +12644,8 @@ msgid "Cleared"
 msgstr "Estado 'limpo'"
 
 msgid ""
-"Click 'Add user' under Users, select 'Access key - Programmatic access', and "
-"attach the 'ReadOnlyAccess' policy."
+"Click \"Add user\" under Users, select \"Access key - Programmatic access\", "
+"and attach the \"ReadOnlyAccess\" policy."
 msgstr ""
 
 msgid "Click for instant reload."
@@ -27241,9 +27245,6 @@ msgstr "Ocultar pastas sem permissão de leitura"
 
 msgid "Hide from Status GUI"
 msgstr "Ocultar da GUI de Status"
-
-msgid "Hide help text of rules in list views"
-msgstr "Ocultar texto de ajuda das regras nas visualizações da lista"
 
 msgid "Hide hosttags in Setup folder view"
 msgstr "Ocultar hosttags na visualização da pasta Configuração"
@@ -51734,6 +51735,11 @@ msgid "Return process times within performance data"
 msgstr "Tempos de processo de retorno dentro dos dados de desempenho"
 
 msgid ""
+"Return to Checkmk, define a unique AWS account name, and use the Access key "
+"and Secret access key below."
+msgstr ""
+
+msgid ""
 "Returns the latest crash dumps of each type as found in var/checkmk/crashes"
 msgstr ""
 
@@ -51748,11 +51754,11 @@ msgid "Revert foreign changes"
 msgstr "Ativar mudanças estrangeiras"
 
 #, fuzzy
-msgid "Review and run service discovery"
+msgid "Review and run preview service discovery"
 msgstr "Guardar & executar a descoberta de serviços"
 
 #, fuzzy
-msgid "Review your configuration, run and preview service discovery"
+msgid "Review your configuration and run preview service discovery"
 msgstr "Guardar & executar a descoberta de serviços"
 
 msgid "Revolutions per minute"
@@ -52904,7 +52910,7 @@ msgstr "Criar uma cópia desta agregação"
 msgid "Save response"
 msgstr "Guardar resposta"
 
-msgid "Save the generated access key and secret key for later use."
+msgid "Save the generated Access key and Secret access key."
 msgstr ""
 
 msgid "Save this host and go to"
@@ -53332,6 +53338,10 @@ msgstr "Segundos para esperar antes da votação"
 
 msgid "Seconds to wait between sending string and polling for response"
 msgstr "Segundos para esperar entre o envio do fio e a votação para resposta"
+
+#, fuzzy
+msgid "Secret access key"
+msgstr "Chave secreta"
 
 msgid "Secret key"
 msgstr "Chave secreta"
@@ -56022,6 +56032,11 @@ msgstr ""
 "vários sensores podem ter a mesma descrição. Para garantir que os itens são "
 "únicos, são prefixados com X-Y, em que X é o número do dispositivo e Y o "
 "índice do sensor."
+
+msgid ""
+"Since this is a ReadOnlyAccess, we won't create any resources on your AWS "
+"account."
+msgstr ""
 
 msgid ""
 "Since version 2.1 it is possible to encrypt the communication of the "
@@ -61120,9 +61135,6 @@ msgstr ""
 "cache para plugins e verificações locais</i> e <i>Definir o modo de execução "
 "para plugins e verificações locais</i>."
 
-msgid "The access key ID for your AWS account"
-msgstr "A ID da chave de acesso para a sua conta AWS"
-
 msgid "The access key for your AWS account"
 msgstr "A chave de acesso para a sua conta AWS"
 
@@ -64185,9 +64197,6 @@ msgstr "O horário que você está tentando apagar não existe."
 msgid "The schedule you are trying to edit does not exist."
 msgstr "O horário que você está tentando editar não existe."
 
-msgid "The secret access key for your AWS account"
-msgstr "A chave de acesso secreto para a sua conta AWS"
-
 msgid "The secret key for your AWS account"
 msgstr "A chave secreta da sua conta AWS"
 
@@ -64945,10 +64954,6 @@ msgstr ""
 #, python-format
 msgid "The version of this site is not a %s"
 msgstr "A versão deste sítio não é uma %s"
-
-msgid "The version of this site is not a Checkmk managed services edition"
-msgstr ""
-"A versão deste site não é uma edição dos serviços gerenciados pela Checkmk"
 
 #, python-format
 msgid ""
@@ -78488,12 +78493,6 @@ msgstr ""
 "nome de arquivo. A extensão deve ser sempre <tt>pdf</tt>."
 
 msgid ""
-"When disabled, Setup shows the help texts of rules also in the list views."
-msgstr ""
-"Quando desactivada, a Configuração mostra os textos de ajuda das regras "
-"também nas vistas de lista."
-
-msgid ""
 "When doing service discovery on brocade switches only ports with the given "
 "administrative states will be added to the monitoring system."
 msgstr ""
@@ -82029,6 +82028,11 @@ msgstr "A sua plataforma de monitorização de TI"
 msgid "Your WebAuthn credential is already in use"
 msgstr "A sua credencial WebAuthn já está a ser utilizada"
 
+msgid ""
+"Your administrator has enforced two factor authentication for your account. "
+"Kindly register one of the following two factor mechanisms:"
+msgstr ""
+
 msgid "Your central site is incompatible with this remote site"
 msgstr "O seu sítio central é incompatível com este sítio remoto"
 
@@ -83073,9 +83077,6 @@ msgstr "nomes de pastas ocultas"
 
 msgid "hide folders without read permissions"
 msgstr "esconder pastas sem permissão de leitura"
-
-msgid "hide help text"
-msgstr "texto de ajuda para ocultar"
 
 msgid "hide hosttags"
 msgstr "esconder as hostes"
@@ -84439,6 +84440,28 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
+
+#~ msgid "Hide help text of rules in list views"
+#~ msgstr "Ocultar texto de ajuda das regras nas visualizações da lista"
+
+#~ msgid "The access key ID for your AWS account"
+#~ msgstr "A ID da chave de acesso para a sua conta AWS"
+
+#~ msgid "The secret access key for your AWS account"
+#~ msgstr "A chave de acesso secreto para a sua conta AWS"
+
+#~ msgid "The version of this site is not a Checkmk managed services edition"
+#~ msgstr ""
+#~ "A versão deste site não é uma edição dos serviços gerenciados pela Checkmk"
+
+#~ msgid ""
+#~ "When disabled, Setup shows the help texts of rules also in the list views."
+#~ msgstr ""
+#~ "Quando desactivada, a Configuração mostra os textos de ajuda das regras "
+#~ "também nas vistas de lista."
+
+#~ msgid "hide help text"
+#~ msgstr "texto de ajuda para ocultar"
 
 #~ msgid "Database for PostgreSQL"
 #~ msgstr "Base de dados para PostgreSQL"

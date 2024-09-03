@@ -132,9 +132,7 @@ def load_users(lock: bool = False, skip_validation: bool = False) -> Users:
     return _load_users(lock, skip_validation)
 
 
-def _load_users(
-    lock: bool = False, skip_validation: bool = False
-) -> Users:  # pylint: disable=too-many-branches
+def _load_users(lock: bool = False, skip_validation: bool = False) -> Users:  # pylint: disable=too-many-branches
     if lock:
         # Note: the lock will be released on next save_users() call or at
         #       end of page request automatically.
@@ -386,7 +384,9 @@ def _add_custom_macro_attributes(profiles: Users) -> Users:
 
     # Add custom macros
     core_custom_macros = {
-        name for name, attr in get_user_attributes() if attr.add_custom_macro()  #
+        name
+        for name, attr in get_user_attributes()
+        if attr.add_custom_macro()  #
     }
     for user in updated_profiles.keys():
         for macro in core_custom_macros:

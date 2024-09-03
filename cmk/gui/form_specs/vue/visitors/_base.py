@@ -8,9 +8,14 @@ from typing import Any, final, Generic, TypeVar
 from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.gui.form_specs.vue import shared_type_defs
-from cmk.gui.form_specs.vue.visitors._type_defs import DataForDisk, DataOrigin
+from cmk.gui.form_specs.vue.visitors._type_defs import (
+    DataForDisk,
+    DataOrigin,
+    EmptyValue,
+    Value,
+    VisitorOptions,
+)
 from cmk.gui.form_specs.vue.visitors._type_defs import DefaultValue as FormSpecDefaultValue
-from cmk.gui.form_specs.vue.visitors._type_defs import EmptyValue, Value, VisitorOptions
 
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.rulesets.v1.form_specs._base import ModelT

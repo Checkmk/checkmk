@@ -877,9 +877,8 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
             if core_entity is not None:
                 host_id = self._network_data.hostname.get(core_entity[0])
                 if host_id and (
-                    custom_settings := self._topology_configuration.frontend.custom_node_settings.get(
-                        host_id
-                    )
+                    custom_settings
+                    := self._topology_configuration.frontend.custom_node_settings.get(host_id)
                 ):
                     visibility = custom_settings.get("show_services", general_service_visibility)
             if visibility == "all":

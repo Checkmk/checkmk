@@ -64,9 +64,9 @@ def add_inventory_plugin(inventory_plugin: InventoryPlugin) -> None:
 
 
 def add_section_plugin(section_plugin: SectionPlugin) -> None:
-    _sections_by_parsed_name[section_plugin.parsed_section_name][
-        section_plugin.name
-    ] = section_plugin
+    _sections_by_parsed_name[section_plugin.parsed_section_name][section_plugin.name] = (
+        section_plugin
+    )
     if isinstance(section_plugin, AgentSectionPlugin):
         registered_agent_sections[section_plugin.name] = section_plugin
     else:

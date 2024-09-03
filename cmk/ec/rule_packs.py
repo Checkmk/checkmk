@@ -110,9 +110,7 @@ def _load_config(  # pylint: disable=too-many-branches
     global_context["mkp_rule_packs"] = {}
     for path in config_files:
         with open(str(path), mode="rb") as file_object:
-            exec(
-                compile(file_object.read(), path, "exec"), global_context
-            )  # nosec B102 # BNS:aee528
+            exec(compile(file_object.read(), path, "exec"), global_context)  # nosec B102 # BNS:aee528
     assert isinstance(global_context["rule_packs"], Iterable)
     assert isinstance(global_context["mkp_rule_packs"], Mapping)
     _bind_to_rule_pack_proxies(global_context["rule_packs"], global_context["mkp_rule_packs"])

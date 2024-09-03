@@ -360,9 +360,7 @@ class PushAgentSource(Source[AgentRawData]):
             use_only_cache=True,
             file_cache_mode=(
                 # Careful: at most read-only!
-                FileCacheMode.DISABLED
-                if file_cache_options.disabled
-                else FileCacheMode.READ
+                FileCacheMode.DISABLED if file_cache_options.disabled else FileCacheMode.READ
             ),
         )
 

@@ -79,13 +79,14 @@ class CMKWebSession:
     def _handle_http_response(
         self, response: requests.Response, expected_code: int, allow_redirect_to_login: bool
     ) -> None:
-        assert (
-            response.status_code == expected_code
-        ), "Got invalid status code (%d != %d) for URL %s (Location: %s)" % (
-            response.status_code,
-            expected_code,
-            response.url,
-            response.headers.get("Location", "None"),
+        assert response.status_code == expected_code, (
+            "Got invalid status code (%d != %d) for URL %s (Location: %s)"
+            % (
+                response.status_code,
+                expected_code,
+                response.url,
+                response.headers.get("Location", "None"),
+            )
         )
 
         if not allow_redirect_to_login and response.history:

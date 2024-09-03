@@ -3685,8 +3685,8 @@ def test_check_aws_rds_transaction_logs_usage(
             section=section,
         )
     )
-    assert check_result[0] == Result(
-        state=State.OK, summary="60 B"
+    assert (
+        check_result[0] == Result(state=State.OK, summary="60 B")
     )  # The first result is always OK and shows the information about the TransactionLogsDiskUsage in Bytes
     assert check_result == expected_check_result
 
@@ -3811,8 +3811,8 @@ def test_check_aws_rds_replication_slot_usage(
             section=section,
         )
     )
-    assert check_result[0] == Result(
-        state=State.OK, summary="60 B"
+    assert (
+        check_result[0] == Result(state=State.OK, summary="60 B")
     )  # The first result is always OK and shows the information about the ReplicationSlotDiskUsage in Bytes
     assert check_result == expected_check_result
 

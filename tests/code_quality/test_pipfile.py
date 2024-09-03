@@ -359,10 +359,9 @@ def test_dependencies_are_used() -> None:
 
     unused_dependencies = set(get_unused_dependencies())
 
-    assert (
-        unused_dependencies >= known_unused_packages
-    ), "The exceptionlist is outdated, these are the 'offenders':" + str(
-        known_unused_packages - unused_dependencies
+    assert unused_dependencies >= known_unused_packages, (
+        "The exceptionlist is outdated, these are the 'offenders':"
+        + str(known_unused_packages - unused_dependencies)
     )
 
     unused_dependencies -= known_unused_packages
@@ -388,16 +387,16 @@ def test_dependencies_are_declared() -> None:
         "msrest",  # used in publish_cloud_images.py and not in the product
         "pipfile",  # used in tests and in helper script pin_dependencies.py
     }
-    assert (
-        undeclared_dependencies_str >= known_undeclared_dependencies
-    ), "The exceptionlist is outdated, these are the 'offenders':" + str(
-        known_undeclared_dependencies - undeclared_dependencies_str
+    assert undeclared_dependencies_str >= known_undeclared_dependencies, (
+        "The exceptionlist is outdated, these are the 'offenders':"
+        + str(known_undeclared_dependencies - undeclared_dependencies_str)
     )
     undeclared_dependencies_str -= known_undeclared_dependencies
-    assert (
-        undeclared_dependencies_str == set()
-    ), "There are imports that are not declared in the Pipfile:\n    " + "\n    ".join(
-        str(d) for d in undeclared_dependencies if d.name not in known_undeclared_dependencies
+    assert undeclared_dependencies_str == set(), (
+        "There are imports that are not declared in the Pipfile:\n    "
+        + "\n    ".join(
+            str(d) for d in undeclared_dependencies if d.name not in known_undeclared_dependencies
+        )
     )
 
 

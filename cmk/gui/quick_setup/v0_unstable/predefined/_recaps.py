@@ -42,7 +42,6 @@ def recaps_form_spec(
     stage_index: StageIndex,
     parsed_form_data: ParsedFormData,
 ) -> Sequence[Widget]:
-
     quick_setup = quick_setup_registry.get(quick_setup_id)
     if quick_setup is None:
         raise ValueError(f"Quick setup with id {quick_setup_id} not found")

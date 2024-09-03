@@ -536,9 +536,7 @@ def _patch_template_file(  # pylint: disable=too-many-branches
                 ):
                     pass
             elif choice == "diff":
-                os.system(
-                    f"diff -u {old_orig_path} {new_orig_path}{pipe_pager()}"
-                )  # nosec B605 # BNS:2b5952
+                os.system(f"diff -u {old_orig_path} {new_orig_path}{pipe_pager()}")  # nosec B605 # BNS:2b5952
             elif choice == "brute":
                 os.system(  # nosec B605 # BNS:2b5952
                     f"sed 's@/{old_site_name}/@/{new_site.name}/@g' {dst}.orig > {dst}"
@@ -546,9 +544,7 @@ def _patch_template_file(  # pylint: disable=too-many-branches
                 changed = len(
                     [
                         l
-                        for l in os.popen(
-                            f"diff {dst}.orig {dst}"
-                        ).readlines()  # nosec B605 # BNS:2b5952
+                        for l in os.popen(f"diff {dst}.orig {dst}").readlines()  # nosec B605 # BNS:2b5952
                         if l.startswith(">")
                     ]
                 )
@@ -563,9 +559,7 @@ def _patch_template_file(  # pylint: disable=too-many-branches
                         pass
                     break
             elif choice == "you":
-                os.system(
-                    f"pwd ; diff -u {old_orig_path} {dst}.orig{pipe_pager()}"
-                )  # nosec B605 # BNS:2b5952
+                os.system(f"pwd ; diff -u {old_orig_path} {dst}.orig{pipe_pager()}")  # nosec B605 # BNS:2b5952
             elif choice == "restore":
                 os.rename(dst + ".orig", dst)
                 sys.stdout.write("Restored your version.\n")
@@ -590,9 +584,7 @@ def _patch_template_file(  # pylint: disable=too-many-branches
 
                 sys.stdout.write("\n Starting BASH. Type CTRL-D to continue.\n\n")
                 thedir = "/".join(dst.split("/")[:-1])
-                os.system(
-                    f"su - {new_site.name} -c 'cd {thedir} ; bash -i'"
-                )  # nosec B605 # BNS:2b5952
+                os.system(f"su - {new_site.name} -c 'cd {thedir} ; bash -i'")  # nosec B605 # BNS:2b5952
     # remove unnecessary files
     try:
         os.remove(dst + ".skel." + old_site_name)
@@ -681,13 +673,9 @@ def merge_update_file(  # pylint: disable=too-many-branches
             with subprocess.Popen([editor, user_path]):
                 pass
         elif choice == "diff":
-            os.system(
-                f"diff -u {user_path}.orig {user_path}-{new_version}{pipe_pager()}"
-            )  # nosec B605 # BNS:2b5952
+            os.system(f"diff -u {user_path}.orig {user_path}-{new_version}{pipe_pager()}")  # nosec B605 # BNS:2b5952
         elif choice == "you":
-            os.system(
-                f"diff -u {user_path}-{old_version} {user_path}.orig{pipe_pager()}"
-            )  # nosec B605 # BNS:2b5952
+            os.system(f"diff -u {user_path}-{old_version} {user_path}.orig{pipe_pager()}")  # nosec B605 # BNS:2b5952
         elif choice == "new":
             os.system(  # nosec B605 # BNS:2b5952
                 f"diff -u {user_path}-{old_version} {user_path}-{new_version}{pipe_pager()}"

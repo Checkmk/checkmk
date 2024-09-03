@@ -194,7 +194,9 @@ class DirectHost:
             # automatically set the HTTP Host header and use HTTP/1.1 instead of
             # HTTP/1.0. This can lead to request timeouts on hosts which are
             # not compliant with HTTP/1.1.
-            else None if mode is Mode.URL else self.address
+            else None
+            if mode is Mode.URL
+            else self.address
         )
 
 

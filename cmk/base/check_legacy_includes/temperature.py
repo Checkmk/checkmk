@@ -12,14 +12,13 @@ from typing import AnyStr, NotRequired, TypedDict
 from cmk.base.check_api import check_levels
 
 from cmk.agent_based.v2 import get_average, get_rate, get_value_store, IgnoreResultsError
-from cmk.plugins.lib.temperature import _migrate_params
+from cmk.plugins.lib.temperature import _migrate_params, TempParamDict
 from cmk.plugins.lib.temperature import (
     fahrenheit_to_celsius as fahrenheit_to_celsius,  # ruff: ignore[unused-import]
 )
 from cmk.plugins.lib.temperature import render_temp as render_temp
 from cmk.plugins.lib.temperature import StatusType as StatusType
 from cmk.plugins.lib.temperature import temp_unitsym as temp_unitsym
-from cmk.plugins.lib.temperature import TempParamDict
 from cmk.plugins.lib.temperature import TempParamType as TempParamType
 from cmk.plugins.lib.temperature import to_celsius as to_celsius
 from cmk.plugins.lib.temperature import TwoLevelsType as TwoLevelsType

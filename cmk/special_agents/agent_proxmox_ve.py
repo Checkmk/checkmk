@@ -811,7 +811,9 @@ class ProxmoxVeAPI:
                 return (
                     request_tree
                     if isinstance(request_tree, Mapping)
-                    else next(iter(request_tree)) if len(request_tree) > 0 else {}
+                    else next(iter(request_tree))
+                    if len(request_tree) > 0
+                    else {}
                 )
 
             def extract_variable(st: RequestStructure) -> Mapping[str, Any] | None:

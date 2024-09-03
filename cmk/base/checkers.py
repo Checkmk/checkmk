@@ -102,9 +102,8 @@ from cmk.agent_based.prediction_backend import (
     lookup_predictive_levels,
     PredictionParameters,
 )
-from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError, Metric
+from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError, Metric, State
 from cmk.agent_based.v1 import Result as CheckFunctionResult
-from cmk.agent_based.v1 import State
 
 __all__ = [
     "CheckPluginMapper",
@@ -286,7 +285,9 @@ class SpecialAgentFetcher:
         self.cmds: Final = cmds
         self.file_cache_options: Final = file_cache_options
 
-    def __call__(self, host_name: HostName, *, ip_address: HostAddress | None) -> Sequence[
+    def __call__(
+        self, host_name: HostName, *, ip_address: HostAddress | None
+    ) -> Sequence[
         tuple[
             SourceInfo,
             result.Result[AgentRawData | SNMPRawData, Exception],
@@ -347,7 +348,9 @@ class CMKFetcher:
         self.max_cachefile_age: Final = max_cachefile_age
         self.snmp_backend_override: Final = snmp_backend_override
 
-    def __call__(self, host_name: HostName, *, ip_address: HostAddress | None) -> Sequence[
+    def __call__(
+        self, host_name: HostName, *, ip_address: HostAddress | None
+    ) -> Sequence[
         tuple[
             SourceInfo,
             result.Result[AgentRawData | SNMPRawData, Exception],

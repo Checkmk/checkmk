@@ -208,7 +208,6 @@ def retrieve_next_stage(
     quick_setup: QuickSetup,
     stages_raw_formspecs: Sequence[RawFormData],
 ) -> Stage:
-
     current_stage_index = StageIndex(len(stages_raw_formspecs) - 1)
     quick_setup_formspec_map = build_quick_setup_formspec_map(quick_setup.stages)
 

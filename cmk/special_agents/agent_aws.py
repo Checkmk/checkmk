@@ -6123,7 +6123,9 @@ class ElastiCacheLimits(AWSSectionLimits):
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
-    def get_live_data(self, *args: AWSColleagueContents) -> tuple[
+    def get_live_data(
+        self, *args: AWSColleagueContents
+    ) -> tuple[
         Sequence[Mapping[str, object]],
         Sequence[Mapping[str, object]],
         Sequence[Mapping[str, object]],

@@ -202,9 +202,7 @@ def test_cluster_check_functions_match_manpages_cluster_sections(
             (
                 missing_cluster_description,
                 unexpected_cluster_description,
-            )[
-                has_cluster_doc
-            ].add(str(plugin.name))
+            )[has_cluster_doc].add(str(plugin.name))
 
     assert not missing_cluster_description
     assert not unexpected_cluster_description

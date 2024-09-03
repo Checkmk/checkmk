@@ -1786,7 +1786,13 @@ def register_user_attribute_sync_plugins() -> None:
                         ),
                     ],
                 ),
-                "sync_func": lambda self, connection, plugin, params, user_id, ldap_user, user: _ldap_sync_simple(
+                "sync_func": lambda self,
+                connection,
+                plugin,
+                params,
+                user_id,
+                ldap_user,
+                user: _ldap_sync_simple(
                     user_id, ldap_user, user, plugin, self.needed_attributes(connection, params)[0]
                 ),
             },

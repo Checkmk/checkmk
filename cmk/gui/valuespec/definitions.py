@@ -5931,9 +5931,8 @@ class Dictionary(ValueSpec[DictionaryModel]):
         render: Literal["normal", "form", "form_part"] = "normal",
         form_narrow: bool = False,
         form_isopen: bool = True,
-        headers: None | (
-            Sequence[tuple[str, Sequence[str]] | tuple[str, str, Sequence[str]]]
-        ) = None,
+        headers: None
+        | (Sequence[tuple[str, Sequence[str]] | tuple[str, str, Sequence[str]]]) = None,
         migrate: Callable[[tuple], dict] | None = None,
         indent: bool = True,
         horizontal: bool = False,

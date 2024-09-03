@@ -33,9 +33,7 @@ from .snmp import make_backend, SNMPPluginStore
 __all__ = ["SNMPFetcher", "SNMPSectionMeta", "SNMPScanConfig"]
 
 
-class WalkCache(
-    MutableMapping[tuple[str, str, bool], SNMPRowInfo]
-):  # pylint: disable=too-many-ancestors
+class WalkCache(MutableMapping[tuple[str, str, bool], SNMPRowInfo]):  # pylint: disable=too-many-ancestors
     """A cache on a per-fetchoid basis
 
     This cache is different from section stores in that is per-fetchoid,

@@ -40,9 +40,7 @@ DefaultCheckParameters: IisAppPoolStateCheckParams = {
         app_state.name: {
             IisAppPoolState.Running: State.OK,
             IisAppPoolState.Initialized: State.WARN,
-        }
-        .get(app_state, State.CRIT)
-        .value
+        }.get(app_state, State.CRIT).value
         for app_state in IisAppPoolState
     }
 }

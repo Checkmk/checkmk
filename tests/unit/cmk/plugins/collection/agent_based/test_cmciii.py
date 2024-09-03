@@ -1256,9 +1256,7 @@ def test_genericdataset_cmciii_check(
                 params,
             )
             == expected
-        ), (
-            "Item %s does not match" % item
-        )
+        ), "Item %s does not match" % item
 
 
 def _generictest_cmciii_input_regression():
@@ -1479,6 +1477,4 @@ def test_genericdataset_cmciii_input_regression_check(
                 params,
             )
             == expected
-        ), (
-            "Item %s does not match" % item
-        )
+        ), "Item %s does not match" % item

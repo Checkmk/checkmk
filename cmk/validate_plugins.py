@@ -21,8 +21,10 @@ from cmk.checkengine.checkresults import (  # pylint: disable=cmk-module-layer-v
     ActiveCheckResult,
 )
 
-from cmk.base import check_api  # pylint: disable=cmk-module-layer-violation
-from cmk.base import server_side_calls  # pylint: disable=cmk-module-layer-violation
+from cmk.base import (  # pylint: disable=cmk-module-layer-violation
+    check_api,
+    server_side_calls,
+)
 from cmk.base.api.agent_based.register import (  # pylint: disable=cmk-module-layer-violation
     iter_all_check_plugins,
     iter_all_discovery_rulesets,

@@ -199,13 +199,13 @@ def test_section_detection_uses_sysdescr_or_sysobjid(
 
     for section in fix_register.snmp_sections.values():
         for (first_checked_oid, *_rest1), *_rest2 in (  #
-            criterion for criterion in section.detect_spec if criterion  #
+            criterion
+            for criterion in section.detect_spec
+            if criterion  #
         ):
             if first_checked_oid in allowed_oids:
                 continue
-            assert str(section.name) in known_exceptions.get(
-                first_checked_oid, ()
-            ), f"""
+            assert str(section.name) in known_exceptions.get(first_checked_oid, ()), f"""
             If you've made it here, you have added a case to the known exceptions above.
             Even worse: You may have added an OID to the list of OIDs that are fetched
             from *all SNMP devices* known to the Checkmk site. Please reconsider!

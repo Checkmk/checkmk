@@ -88,9 +88,8 @@ from cmk.gui.visuals.type import visual_type_registry
 from cmk.gui.wato import notification_parameter_registry
 from cmk.gui.wato import registration as wato_registration
 from cmk.gui.watolib import broker_connections as broker_connections_config
-from cmk.gui.watolib import configuration_bundles, groups_io
+from cmk.gui.watolib import configuration_bundles, groups_io, password_store
 from cmk.gui.watolib import notifications as notifications_config
-from cmk.gui.watolib import password_store
 from cmk.gui.watolib import registration as watolib_registration
 from cmk.gui.watolib import rulesets as rule_config
 from cmk.gui.watolib import sites as sites_config

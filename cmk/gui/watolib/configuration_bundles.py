@@ -282,9 +282,7 @@ def _create_hosts(bundle_ident: GlobalIdent, hosts: Iterable[CreateHost]) -> Non
     folder_getter = itemgetter("folder")
     hosts_sorted_by_folder: list[CreateHost] = sorted(hosts, key=folder_getter)
     folder_and_valid_hosts = []
-    for folder_name, hosts_iter in groupby(
-        hosts_sorted_by_folder, key=folder_getter
-    ):  # type: str, Iterable[CreateHost]
+    for folder_name, hosts_iter in groupby(hosts_sorted_by_folder, key=folder_getter):  # type: str, Iterable[CreateHost]
         folder = folder_tree().folder(folder_name)
         folder.prepare_create_hosts()
         valid_hosts = [
@@ -310,9 +308,7 @@ def _delete_hosts(hosts: Iterable[Host]) -> None:
         ((host.folder(), host) for host in hosts),
         key=folder_getter,
     )
-    for folder, host_iter in groupby(
-        folders_and_hosts, key=folder_getter
-    ):  # type: Folder, Iterable[tuple[Folder, Host]]
+    for folder, host_iter in groupby(folders_and_hosts, key=folder_getter):  # type: Folder, Iterable[tuple[Folder, Host]]
         host_names = [host.name() for _folder, host in host_iter]
         folder.delete_hosts(
             host_names, automation=check_mk_automations.delete_hosts, allow_locked_deletion=True
@@ -364,15 +360,11 @@ def _collect_rules(
 def _create_rules(bundle_ident: GlobalIdent, rules: Iterable[CreateRule]) -> None:
     # sort by folder, then ruleset
     sorted_rules = sorted(rules, key=itemgetter("folder", "ruleset"))
-    for folder_name, rule_iter_outer in groupby(
-        sorted_rules, key=itemgetter("folder")
-    ):  # type: str, Iterable[CreateRule]
+    for folder_name, rule_iter_outer in groupby(sorted_rules, key=itemgetter("folder")):  # type: str, Iterable[CreateRule]
         folder = folder_tree().folder(folder_name)
         rulesets = FolderRulesets.load_folder_rulesets(folder)
 
-        for ruleset_name, rule_iter_inner in groupby(
-            rule_iter_outer, key=itemgetter("ruleset")
-        ):  # type: str, Iterable[CreateRule]
+        for ruleset_name, rule_iter_inner in groupby(rule_iter_outer, key=itemgetter("ruleset")):  # type: str, Iterable[CreateRule]
             ruleset = rulesets.get(ruleset_name)
             for create_rule in rule_iter_inner:
                 rule = Rule.from_config(folder, ruleset, create_rule["spec"])
@@ -385,9 +377,7 @@ def _create_rules(bundle_ident: GlobalIdent, rules: Iterable[CreateRule]) -> Non
 def _delete_rules(rules: Iterable[Rule]) -> None:
     folder_getter = itemgetter(0)
     sorted_rules = sorted(((rule.folder, rule) for rule in rules), key=folder_getter)
-    for folder, rule_iter in groupby(
-        sorted_rules, key=folder_getter
-    ):  # type: Folder, Iterable[tuple[Folder, Rule]]
+    for folder, rule_iter in groupby(sorted_rules, key=folder_getter):  # type: Folder, Iterable[tuple[Folder, Rule]]
         rulesets = FolderRulesets.load_folder_rulesets(folder)
         for _folder, rule in rule_iter:
             # the rule objects loaded into `rulesets` are different instances

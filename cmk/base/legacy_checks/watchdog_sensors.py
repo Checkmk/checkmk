@@ -53,8 +53,7 @@ def _parse_legacy_line(line, temp_unit):
     yield (
         "general",
         {
-            "Watchdog %s"
-            % sensor_id: {
+            "Watchdog %s" % sensor_id: {
                 "descr": line[1],
                 "availability": _translate_availability(line[3]),
             },
@@ -74,8 +73,7 @@ def _parse_line(line, temp_unit):
     yield (
         "general",
         {
-            "Watchdog %s"
-            % sensor_id: {
+            "Watchdog %s" % sensor_id: {
                 "descr": line[1],
                 "availability": _translate_availability(line[2]),
             },

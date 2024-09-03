@@ -158,7 +158,9 @@ def _load_module(filepath: Path) -> types.ModuleType:
     return mod
 
 
-def _load_file_content(path: Path) -> tuple[
+def _load_file_content(
+    path: Path,
+) -> tuple[
     Mapping[str, MetricInfo],
     Mapping[str, Mapping[MetricName, CheckMetricEntry]],
     Sequence[PerfometerSpec],
@@ -184,7 +186,9 @@ def _load_file_content(path: Path) -> tuple[
     return metric_info, check_metrics, perfometer_info, graph_info
 
 
-def _load(debug: bool, folders: Sequence[str], load_translations: bool) -> tuple[
+def _load(
+    debug: bool, folders: Sequence[str], load_translations: bool
+) -> tuple[
     Mapping[str, MetricInfo],
     Mapping[str, Mapping[MetricName, CheckMetricEntry]],
     Sequence[PerfometerSpec],

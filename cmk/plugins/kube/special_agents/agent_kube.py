@@ -958,7 +958,8 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                         piggyback_name=namespace_piggyback_name,
                     )
                     if (
-                        api_resource_quota := namespace_handler.filter_matching_namespace_resource_quota(
+                        api_resource_quota
+                        := namespace_handler.filter_matching_namespace_resource_quota(
                             namespace_name(api_namespace), resource_quotas
                         )
                     ) is not None:

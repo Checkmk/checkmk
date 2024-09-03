@@ -64,9 +64,7 @@ def load_web_plugins(forwhat: str, globalvars: dict) -> None:
             try:
                 if file_path.suffix == ".py" and not file_path.with_suffix(".pyc").exists():
                     with file_path.open(encoding="utf-8") as f:
-                        exec(
-                            compile(f.read(), file_path, "exec"), globalvars
-                        )  # nosec B102 # BNS:aee528
+                        exec(compile(f.read(), file_path, "exec"), globalvars)  # nosec B102 # BNS:aee528
 
                 elif file_path.suffix == ".pyc":
                     with file_path.open("rb") as pyc:

@@ -580,9 +580,7 @@ class SetFolderPathDict(SetFolderPathAbstract, dict):
 
 
 def _load_config_file(file_to_load: Path, into_dict: dict[str, Any]) -> None:
-    exec(
-        compile(file_to_load.read_text(), file_to_load, "exec"), into_dict, into_dict
-    )  # nosec B102 # BNS:aee528
+    exec(compile(file_to_load.read_text(), file_to_load, "exec"), into_dict, into_dict)  # nosec B102 # BNS:aee528
 
 
 def _load_config(with_conf_d: bool) -> set[str]:
@@ -1301,9 +1299,9 @@ NEGATE = tuple_rulesets.NEGATE
 #           _initialize_data_structures()
 # The following data structures will be filled by the checks
 # all known checks
-check_info: dict[object, object] = (
-    {}
-)  # want: dict[str, LegacyCheckDefinition], but don't trust the plugins!
+check_info: dict[
+    object, object
+] = {}  # want: dict[str, LegacyCheckDefinition], but don't trust the plugins!
 # for nagios config: keep track which plug-in lives where
 legacy_check_plugin_files: dict[str, str] = {}
 # Lookup for legacy names
@@ -1510,9 +1508,7 @@ def load_precompiled_plugin(path: str, check_context: CheckContext) -> bool:
         # The original file is from the version so the calculated mode is world readable...
         os.chmod(precompiled_path, 0o640)
 
-    exec(
-        marshal.loads(Path(precompiled_path).read_bytes()[_PYCHeader.SIZE :]), check_context
-    )  # nosec B102 # BNS:aee528
+    exec(marshal.loads(Path(precompiled_path).read_bytes()[_PYCHeader.SIZE :]), check_context)  # nosec B102 # BNS:aee528
 
     return do_compile
 
@@ -2210,7 +2206,9 @@ class ConfigCache:
 
         return resolved
 
-    def enforced_services_table(self, hostname: HostName) -> Mapping[
+    def enforced_services_table(
+        self, hostname: HostName
+    ) -> Mapping[
         ServiceID,
         tuple[RulesetName, ConfiguredService],
     ]:

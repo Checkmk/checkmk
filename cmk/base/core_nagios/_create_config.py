@@ -1005,8 +1005,9 @@ def _create_nagios_config_contacts(cfg: NagiosConfig, hostnames: Sequence[HostNa
                     {
                         "%s_notification_options" % what: ",".join(no),
                         "%s_notification_period" % what: contact.get("notification_period", "24X7"),
-                        "%s_notification_commands"
-                        % what: contact.get("%s_notification_commands" % what, "check-mk-notify"),
+                        "%s_notification_commands" % what: contact.get(
+                            "%s_notification_commands" % what, "check-mk-notify"
+                        ),
                     }
                 )
 

@@ -797,9 +797,9 @@ def _get_cluster_services(
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     on_error: OnError,
 ) -> dict[HostName, ServicesTable[_Transition]]:
-    cluster_items: dict[HostName, ServicesTable[_Transition]] = (
-        {}
-    )  # actually _BasicTransition but typing...
+    cluster_items: dict[
+        HostName, ServicesTable[_Transition]
+    ] = {}  # actually _BasicTransition but typing...
     cluster_items[host_name] = {}
 
     for node in cluster_nodes:

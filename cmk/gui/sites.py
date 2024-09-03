@@ -134,8 +134,8 @@ def all_groups(what: str) -> list[tuple[str, str]]:
 
 # TODO: this too does not really belong here...
 def get_alias_of_host(site_id: SiteId | None, host_name: str) -> SiteId:
-    query = (
-        "GET hosts\n" "Cache: reload\n" "Columns: alias\n" "Filter: name = %s" % lqencode(host_name)
+    query = "GET hosts\n" "Cache: reload\n" "Columns: alias\n" "Filter: name = %s" % lqencode(
+        host_name
     )
 
     with only_sites(site_id):
@@ -444,10 +444,12 @@ _STATUS_NAMES = {
 }
 
 
-def site_state_titles() -> dict[
-    Literal["online", "disabled", "down", "unreach", "dead", "waiting", "missing", "unknown"],
-    str,
-]:
+def site_state_titles() -> (
+    dict[
+        Literal["online", "disabled", "down", "unreach", "dead", "waiting", "missing", "unknown"],
+        str,
+    ]
+):
     return {
         "online": _("This site is online."),
         "disabled": _("The connection to this site has been disabled."),

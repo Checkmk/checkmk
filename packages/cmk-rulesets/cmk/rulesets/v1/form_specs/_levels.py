@@ -99,9 +99,7 @@ class LevelsType(enum.Enum):
 
 
 @dataclass(frozen=True, kw_only=True)
-class SimpleLevels(
-    FormSpec[SimpleLevelsConfigModel[_NumberT]]
-):  # pylint: disable=too-many-instance-attributes
+class SimpleLevels(FormSpec[SimpleLevelsConfigModel[_NumberT]]):  # pylint: disable=too-many-instance-attributes
     """Specifies a form for configuring levels without predictive levels.
 
     This creates a FormSpec that allows to configure simple levels, i.e.

@@ -73,9 +73,7 @@ def msi_component_table() -> list[str]:
 
 def _remove_cab(path_to_msibuild: Path, *, msi: Path) -> None:
     _verbose("Removing product.cab from %s" % msi)
-    cmd: Final = (
-        f"{path_to_msibuild / 'msibuild'} {msi} -q \"DELETE FROM _Streams where Name = 'product.cab'\""
-    )
+    cmd: Final = f"{path_to_msibuild / 'msibuild'} {msi} -q \"DELETE FROM _Streams where Name = 'product.cab'\""
 
     if (result := os.system(cmd)) != 0:  # nosec B605 # BNS:f6c1b9
         bail_out(f"msibuild is failed on remove cab, {result=}")

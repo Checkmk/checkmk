@@ -12,7 +12,6 @@ TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
                       --exclude=__pycache__ --exclude=*.pyc
 # TODO: Prefixing the command with the environment variable breaks xargs usage below!
 PIPENV             := PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR) scripts/run-pipenv
-BLACK              := scripts/run-black
 
 OPENAPI_SPEC       := web/htdocs/openapi/checkmk.yaml
 
@@ -247,15 +246,15 @@ ifeq ($(ENTERPRISE),yes)
 	packages/cmc/run --check-format
 endif
 
-format-python: format-python-isort format-python-black
+format-python: format-python-isort format-python-format
 
 format-python-isort:
 	if test -z "$$PYTHON_FILES"; then ./scripts/find-python-files; else echo "$$PYTHON_FILES"; fi | \
-	PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR)/simple xargs -n 1500 scripts/run-pipenv run isort --settings-path pyproject.toml
+	PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR)/simple xargs -n 1500 ./scripts/run-pipenv run ruff check --select I --fix
 
-format-python-black:
+format-python-format:
 	if test -z "$$PYTHON_FILES"; then ./scripts/find-python-files; else echo "$$PYTHON_FILES"; fi | \
-	xargs -n 1500 $(BLACK)
+	xargs -n 1500 ./scripts/run-pipenv run ruff format
 
 format-shell:
 	$(MAKE)	-C tests format-shell

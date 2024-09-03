@@ -12,9 +12,11 @@ from cmk.notification_plugins.utils import (
     post_request,
     process_by_matchers,
     ResponseMatcher,
+    StateInfo,
+    StatusCodeMatcher,
+    StatusCodeRange,
 )
 from cmk.notification_plugins.utils import retrieve_from_passwordstore as passwords
-from cmk.notification_plugins.utils import StateInfo, StatusCodeMatcher, StatusCodeRange
 
 PLUGIN_VERSION = "1.0"
 

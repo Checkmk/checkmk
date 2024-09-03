@@ -71,8 +71,8 @@ from cmk.gui.background_job import (
 from cmk.gui.config import active_config
 from cmk.gui.crash_handler import crash_dump_message, handle_exception_as_gui_crash_report
 from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
-from cmk.gui.http import request as _request
 from cmk.gui.http import Request
+from cmk.gui.http import request as _request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user

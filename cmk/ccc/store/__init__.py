@@ -26,9 +26,10 @@ from cmk.ccc.store._file import (
     Serializer,
     TextSerializer,
 )
-from cmk.ccc.store._locks import acquire_lock, cleanup_locks, have_lock
-from cmk.ccc.store._locks import leave_locked_unless_exception as _leave_locked_unless_exception
 from cmk.ccc.store._locks import (
+    acquire_lock,
+    cleanup_locks,
+    have_lock,
     lock_checkmk_configuration,
     lock_exclusive,
     locked,
@@ -37,6 +38,7 @@ from cmk.ccc.store._locks import (
     try_acquire_lock,
     try_locked,
 )
+from cmk.ccc.store._locks import leave_locked_unless_exception as _leave_locked_unless_exception
 
 from cmk import trace
 
@@ -135,9 +137,7 @@ def load_mk_file(
             acquire_lock(path)
 
         try:
-            exec(
-                compile(path.read_bytes(), path, "exec"), globals(), default
-            )  # nosec B102 # BNS:aee528
+            exec(compile(path.read_bytes(), path, "exec"), globals(), default)  # nosec B102 # BNS:aee528
         except FileNotFoundError:
             pass
         except (MKTerminate, MKTimeout):

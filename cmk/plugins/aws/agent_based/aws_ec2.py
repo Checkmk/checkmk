@@ -233,14 +233,14 @@ def check_aws_ec2_disk_io(
     section: Section,
 ) -> CheckResult:
     disk_data: dict[str, float] = {}
-    key_pairs: Mapping[str, str] = (
-        {  # The key from the Mapping is the result that we want and the value is how we get the data
-            "read_ios": "DiskReadOps",
-            "write_ios": "DiskWriteOps",
-            "read_throughput": "DiskReadBytes",
-            "write_throughput": "DiskWriteBytes",
-        }
-    )
+    key_pairs: Mapping[
+        str, str
+    ] = {  # The key from the Mapping is the result that we want and the value is how we get the data
+        "read_ios": "DiskReadOps",
+        "write_ios": "DiskWriteOps",
+        "read_throughput": "DiskReadBytes",
+        "write_throughput": "DiskWriteBytes",
+    }
 
     for key, section_key in key_pairs.items():
         if (value := section.get(section_key)) is None:

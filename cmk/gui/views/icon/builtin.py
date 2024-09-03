@@ -23,9 +23,8 @@ from cmk.gui.logged_in import user
 from cmk.gui.painter.v0.helpers import render_cache_info
 from cmk.gui.painter.v1.helpers import is_stale
 from cmk.gui.painter_options import paint_age, PainterOptions
-from cmk.gui.type_defs import ColumnName
+from cmk.gui.type_defs import ColumnName, Row, VisualLinkSpec
 from cmk.gui.type_defs import Icon as IconSpec
-from cmk.gui.type_defs import Row, VisualLinkSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.popups import MethodAjax

@@ -8,9 +8,8 @@
 import base64
 from os import environ
 
-from cmk.notification_plugins.utils import post_request, process_by_matchers
+from cmk.notification_plugins.utils import post_request, process_by_matchers, StateInfo
 from cmk.notification_plugins.utils import retrieve_from_passwordstore as passwords
-from cmk.notification_plugins.utils import StateInfo
 
 RESULT_MATCHER = [
     ((200, 299), StateInfo(0, "json", "eventId")),

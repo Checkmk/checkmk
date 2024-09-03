@@ -294,7 +294,9 @@ class RuleConditions:
                     self.host_name,
                     dict,
                 )
-                else [*self.host_name] if self.host_name is not None else None
+                else [*self.host_name]
+                if self.host_name is not None
+                else None
             ),
             service_description=(
                 self.service_description.copy()
@@ -302,7 +304,9 @@ class RuleConditions:
                     self.service_description,
                     dict,
                 )
-                else [*self.service_description] if self.service_description is not None else None
+                else [*self.service_description]
+                if self.service_description is not None
+                else None
             ),
             service_label_groups=self.service_label_groups,
         )

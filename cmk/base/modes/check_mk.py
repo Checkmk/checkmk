@@ -72,9 +72,8 @@ from cmk.snmplib import (
 )
 
 import cmk.fetchers.snmp as snmp_factory
-from cmk.fetchers import get_raw_data
+from cmk.fetchers import get_raw_data, SNMPScanConfig, TLSConfig
 from cmk.fetchers import Mode as FetchMode
-from cmk.fetchers import SNMPScanConfig, TLSConfig
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
@@ -1705,9 +1704,8 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
         options,
         args,
         define_servicegroups=config.define_servicegroups,
-        host_parameters_cb=lambda hostname, plugin: config.get_config_cache().notification_plugin_parameters(
-            hostname, plugin
-        ),
+        host_parameters_cb=lambda hostname,
+        plugin: config.get_config_cache().notification_plugin_parameters(hostname, plugin),
         rules=config.notification_rules,
         get_http_proxy=config.get_http_proxy,
         ensure_nagios=ensure_nagios,

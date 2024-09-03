@@ -20,8 +20,7 @@ SECTION_WARNING = {
     "Version %s" % ITEM: {"instance": ITEM, "version": "1.00.122.22.1543461992 (fa/hana1sp12)"},
 }
 SECTION_ERROR = {
-    "Status %s"
-    % ITEM: {
+    "Status %s" % ITEM: {
         "instance": ITEM,
         "message": "hdbsql ERROR: There was an error",
         "state_name": "error",

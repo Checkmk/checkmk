@@ -87,10 +87,12 @@ def _parse_to_predictive_levels(
                 bound=_extract_bound(model, scale, ntype, level_dir),
             )
         # migrate not configured predictive levels
-        case {
-            "period": "wday" | "day" | "hour" | "minute",
-            "horizon": int(),
-        } as val if "levels" not in val and "bound" not in val:  # type: ignore[operator]
+        case (
+            {
+                "period": "wday" | "day" | "hour" | "minute",
+                "horizon": int(),
+            } as val
+        ) if "levels" not in val and "bound" not in val:  # type: ignore[operator]
             return None
         case _:
             raise TypeError(

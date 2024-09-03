@@ -485,11 +485,9 @@ function virtual_host_tree_enter(path)
                 "Columns: host_name filename state num_services_ok num_services_warn "
                 "num_services_crit num_services_unknown custom_variables"
             )
-            hosts: list[
-                tuple[str, str, str, int, int, int, int, int, dict[str, str]]
-            ] = sites.live().query(
-                query
-            )  # type: ignore[assignment]
+            hosts: list[tuple[str, str, str, int, int, int, int, int, dict[str, str]]] = (
+                sites.live().query(query)  # type: ignore[assignment]
+            )
         finally:
             sites.live().set_prepend_site(False)
 

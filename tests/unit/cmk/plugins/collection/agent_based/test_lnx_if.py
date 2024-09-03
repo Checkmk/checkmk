@@ -935,22 +935,25 @@ def test_lnx_if_regression(
 
     node_name = "node"
     for item, par, res in items_params_results:
-        assert list(
-            lnx_if.cluster_check_lnx_if(
-                item,
-                par,
-                {node_name: section},
-                {},
-            )
-        )[:-1] == [
-            Result(  # type: ignore[call-overload]
-                state=res[0].state,
-                summary=res[0].summary + " on %s" % node_name if res[0].summary else None,
-                notice=res[0].summary + " on %s" % node_name if not res[0].summary else None,
-                details=res[0].details + " on %s" % node_name if res[0].details else None,
-            ),
-            *res[1:-1],
-        ]
+        assert (
+            list(
+                lnx_if.cluster_check_lnx_if(
+                    item,
+                    par,
+                    {node_name: section},
+                    {},
+                )
+            )[:-1]
+            == [
+                Result(  # type: ignore[call-overload]
+                    state=res[0].state,
+                    summary=res[0].summary + " on %s" % node_name if res[0].summary else None,
+                    notice=res[0].summary + " on %s" % node_name if not res[0].summary else None,
+                    details=res[0].details + " on %s" % node_name if res[0].details else None,
+                ),
+                *res[1:-1],
+            ]
+        )
 
 
 def test_lnx_if_with_bonding(monkeypatch: pytest.MonkeyPatch) -> None:

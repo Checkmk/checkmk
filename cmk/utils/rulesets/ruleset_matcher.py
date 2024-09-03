@@ -529,9 +529,9 @@ class RulesetOptimizer:
 
         self.__service_ruleset_cache: dict[tuple[int, bool], PreprocessedServiceRuleset] = {}
         self.__host_ruleset_cache: dict[tuple[int, bool], Mapping[HostAddress, Sequence[Any]]] = {}
-        self._all_matching_hosts_match_cache: dict[tuple[ConditionCacheID, bool], set[HostName]] = (
-            {}
-        )
+        self._all_matching_hosts_match_cache: dict[
+            tuple[ConditionCacheID, bool], set[HostName]
+        ] = {}
 
         # Reference dirname -> hosts in this dir including subfolders
         self._folder_host_lookup: dict[tuple[bool, str], set[HostName]] = {}

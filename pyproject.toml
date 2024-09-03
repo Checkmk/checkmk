@@ -128,6 +128,19 @@ target-version = ['py312']
 # addition, a single cause can imply multiple symptoms, so these numbers have to
 # be taken with a grain of salt...
 [tool.mypy]
+enable_error_code = [
+  # "explicit-override",
+  # "ignore-without-code",
+  # "mutable-override",
+  # "possibly-undefined",
+  # "redundant-expr",
+  "redundant-self",
+  # "truthy-bool",
+  # "truthy-iterable",
+  "unimported-reveal",
+  "unused-awaitable",
+  "unused-ignore",
+]
 explicit_package_bases = true
 mypy_path = """\
     $MYPY_CONFIG_FILE_DIR:\

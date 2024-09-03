@@ -1,6 +1,6 @@
 {
   "lockFileVersion": 6,
-  "moduleFileHash": "977afb6681af0c8694c0e634de09bc1dc26c86d7053df489c5e250226c6ba102",
+  "moduleFileHash": "27a5781dd37094c5d7611e056fa684e2161550af8f117315ace8c4ad6c5abbf3",
   "flags": {
     "cmdRegistries": [
       "https://bcr.bazel.build/"
@@ -64,7 +64,8 @@
           },
           "imports": {
             "cmk_agent_based": "cmk_agent_based",
-            "cmk_werks": "cmk_werks"
+            "cmk_werks": "cmk_werks",
+            "cmk_py": "cmk_py"
           },
           "devImports": [],
           "tags": [
@@ -97,6 +98,25 @@
               "location": {
                 "file": "@@//:MODULE.bazel",
                 "line": 46,
+                "column": 10
+              }
+            },
+            {
+              "tagName": "parse",
+              "attributeValues": {
+                "hub_name": "cmk_py",
+                "python_version": "3.12.3",
+                "requirements_by_platform": {
+                  "@//:requirements_lock.txt": "linux_*"
+                },
+                "environment": {
+                  "CC": "gcc-13"
+                }
+              },
+              "devDependency": false,
+              "location": {
+                "file": "@@//:MODULE.bazel",
+                "line": 54,
                 "column": 10
               }
             }

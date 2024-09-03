@@ -82,9 +82,7 @@ py_wheel(
     strip_path_prefixes = ["packages/cmk-agent-based"],
     # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
-    deps = [
-        ":cmk-agent-based",
-    ],
+    deps = [":cmk-agent-based"],
 )
 
 package_wheel(

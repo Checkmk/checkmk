@@ -1,3 +1,6 @@
+load("@aspect_rules_py//py:defs.bzl", "py_library")
+load("@cmk_py//:requirements.bzl", "requirement")
+load("@rules_python//python:packaging.bzl", "py_wheel")
 load("@rules_python//python:pip.bzl", "compile_pip_requirements")
 
 genrule(
@@ -33,3 +36,187 @@ compile_pip_requirements(
     requirements_txt = "@//:requirements_lock.txt",
     visibility = ["//visibility:public"],
 )
+
+REQUIRED_EXTERNAL_DEPS = [
+    # alphabetical order
+    "annotated-types",
+    "apispec",
+    "apispec-oneofschema",
+    "azure-identity",
+    "azure-storage-blob",
+    "boto3",
+    "botocore",
+    "cryptography",
+    "cython",
+    "dicttoxml",
+    "docstring-parser",
+    "exchangelib",  # missing wheel
+    "feedparser",
+    "fido2",
+    "flask",
+    "GitPython",
+    "google-api-python-client",
+    "google-auth",
+    "google-cloud-asset",
+    "google-cloud-monitoring",
+    "icalendar",
+    "jinja2",
+    "jira",
+    "kubernetes",
+    "lxml",
+    "marshmallow",
+    "marshmallow-oneofschema",
+    "meraki",
+    "msal",
+    # "netapp-ontap",  # provided elsewhere
+    "numpy",
+    "oauthlib",
+    "openapi-spec-validator",
+    "opentelemetry-api",
+    "opentelemetry-exporter-otlp",
+    "opentelemetry-instrumentation-redis",
+    "opentelemetry-instrumentation-requests",
+    "opentelemetry-instrumentation-wsgi",
+    "opentelemetry-sdk",
+    "opentelemetry-semantic-conventions",
+    "opsgenie-sdk",
+    "paho-mqtt",
+    "paramiko",
+    "pillow",
+    "ply",
+    # "protobuf",  # provided elsewhere
+    "psutil",
+    "psycopg2-binary",  # missing wheel
+    "pyasn1",
+    "pydantic",
+    "pydantic_core",
+    "pyghmi",
+    "pyjwt",
+    "pymssql",
+    "pymysql",
+    "pyopenssl",
+    "pyparsing",
+    "pypdf",
+    "pyprof2calltree",
+    "pysaml2",
+    "pysmb",
+    "pysmi-lextudio",
+    "pysnmp-lextudio",
+    "python-active-directory",  # missing wheel
+    "python-dateutil",
+    "python-ldap",  # missing wheel
+    "python-snap7",
+    "pyyaml",
+    "recurring_ical_events",
+    "redfish",
+    "redis",
+    "reportlab",
+    "requests",
+    "requests-kerberos",  # krb5: missing wheel
+    "requests-oauthlib",
+    "robotframework",
+    "roman",
+    "setproctitle",
+    "setuptools-scm",
+    "six",
+    "snmpsim-lextudio",
+    "typing-extensions",
+    "urllib3",
+    "vcrpy",
+]
+
+CRE_PY = glob([
+    "**/cre/**/*.py",
+    "**/cre.py",
+    "**/raw/**/*.py",
+    "**/raw.py",
+])
+
+CCE_PY = glob([
+    "**/cce/**/*.py",
+    "**/cce.py",
+])
+
+CEE_PY = glob([
+    "**/cee/**/*.py",
+    "**/cee.py",
+])
+
+CME_PY = glob([
+    "**/cme/**/*.py",
+    "**/cme.py",
+])
+
+CSE_PY = glob([
+    "**/cse/**/*.py",
+    "**/cse.py",
+])
+
+py_library(
+    name = "lib_cmk",
+    srcs = glob(
+        # Keep in sync with `REPO_PATCH_RULES` from `versioning.groovy`.
+        include = ["**/*.py"],
+        exclude = CRE_PY + CCE_PY + CEE_PY + CME_PY + CSE_PY,
+    ),
+    imports = [".."],
+    visibility = ["//visibility:private"],
+    deps = [
+        "//packages/cmk-agent-based",
+        "//packages/cmk-agent-receiver",
+        "//packages/cmk-crypto",
+        "//packages/cmk-graphing",
+        "//packages/cmk-livestatus-client",
+        "//packages/cmk-livestatus-client:py_livestatus",
+        "//packages/cmk-messaging",
+        "//packages/cmk-mkp-tool",
+        "//packages/cmk-rulesets",
+        "//packages/cmk-server-side-calls",
+        "//packages/cmk-trace",
+        "//packages/cmk-werks",
+        "@rrdtool_native//:rrdtool_python_lib",
+    ] + [requirement(dep) for dep in REQUIRED_EXTERNAL_DEPS],
+)
+
+py_library(
+    name = "lib_cmk_cre",
+    srcs = CRE_PY,
+    imports = [".."],
+    deps = [
+        "lib_cmk",
+    ],
+)
+
+[py_library(
+    name = "lib_cmk_" + edition,
+    srcs = srcs,
+    imports = [".."],
+    deps = [
+        "lib_cmk",
+        "//non-free/cmc-protocols/protocols:py_config_proto",
+    ],
+) for edition, srcs in [
+    ("cce", CCE_PY),
+    ("cee", CEE_PY),
+    ("cme", CME_PY),
+    ("cse", CSE_PY),
+]]
+
+[py_wheel(
+    name = "cmk_" + edition,
+    distribution = "checkmk",
+    requires = REQUIRED_EXTERNAL_DEPS,
+    # TODO(ml): cmk_version vs. PEP 440?
+    version = "1+" + edition,
+    visibility = ["//visibility:public"],
+    deps = [
+        "lib_cmk",
+        "lib_cmk_" + edition,
+    ],
+) for edition in [
+    "cre",
+    "cce",
+    "cee",
+    "cme",
+    "cse",
+]]

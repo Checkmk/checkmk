@@ -51,3 +51,16 @@ pip.parse(
     },
 )
 use_repo(pip, "cmk_werks")
+pip.parse(
+    hub_name = "cmk_py",
+    python_version = PYTHON_VERSION,
+    requirements_by_platform = {
+        "@//:requirements_lock.txt": "linux_*",
+    },
+    environment = {
+        # Hack for building extensions from source.
+        # See also:  https://github.com/bazelbuild/rules_python/issues/1463
+        "CC": "gcc-13"
+    },
+)
+use_repo(pip, "cmk_py")

@@ -11,21 +11,19 @@ const props = defineProps<{
 
 const data = defineModel<Record<string, Record<string, unknown>>>('data', { required: true })
 
-const openTopics = ref<Record<string, boolean>>({})
+const hiddenTopics = ref<Record<string, boolean>>({})
+
 onBeforeMount(() => {
-  openTopics.value = {}
-  props.spec.topics.forEach((topic) => {
-    openTopics.value[topic.key] = true
-  })
+  hiddenTopics.value = {}
 })
 
 function toggleTopic(topic: Topic) {
-  openTopics.value[topic.key] = !openTopics.value[topic.key]
+  hiddenTopics.value[topic.key] = !hiddenTopics.value[topic.key]
 }
 
 function setAllTopics(isOpen: boolean) {
-  for (const key in openTopics.value) {
-    openTopics.value[key] = isOpen
+  for (const topic of props.spec.topics) {
+    hiddenTopics.value[topic.key] = !isOpen
   }
 }
 </script>
@@ -38,8 +36,8 @@ function setAllTopics(isOpen: boolean) {
     :key="topic.key"
     :class="{
       nform: true,
-      open: openTopics[topic.key],
-      closed: !openTopics[topic.key]
+      open: !hiddenTopics[topic.key],
+      closed: hiddenTopics[topic.key]
     }"
   >
     <thead>
@@ -50,15 +48,15 @@ function setAllTopics(isOpen: boolean) {
               vue: true,
               nform: true,
               treeangle: true,
-              open: openTopics[topic.key],
-              closed: !openTopics[topic.key]
+              open: !hiddenTopics[topic.key],
+              closed: hiddenTopics[topic.key]
             }"
           />
           {{ topic.dictionary.title }}
         </td>
       </tr>
     </thead>
-    <tbody :class="{ open: openTopics[topic.key], closed: !openTopics[topic.key] }">
+    <tbody :class="{ open: !hiddenTopics[topic.key], closed: hiddenTopics[topic.key] }">
       <tr>
         <td colspan="2" />
       </tr>

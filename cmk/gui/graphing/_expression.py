@@ -109,6 +109,10 @@ class ScalarName:
 
 class BaseMetricExpression(abc.ABC):
     @abc.abstractmethod
+    def ident(self) -> str:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
@@ -127,6 +131,9 @@ class BaseMetricExpression(abc.ABC):
 @dataclass(frozen=True)
 class Constant(BaseMetricExpression):
     value: int | float
+
+    def ident(self) -> str:
+        return f"{self.__class__.__name__}({self.value})"
 
     def evaluate(
         self,
@@ -156,6 +163,9 @@ class Metric(BaseMetricExpression):
     name: MetricName
     consolidation: GraphConsolidationFunction | None = None
 
+    def ident(self) -> str:
+        return f"{self.__class__.__name__}({self.name},{self.consolidation})"
+
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
@@ -180,6 +190,9 @@ class Metric(BaseMetricExpression):
 @dataclass(frozen=True)
 class WarningOf(BaseMetricExpression):
     metric: Metric
+
+    def ident(self) -> str:
+        return f"{self.__class__.__name__}({self.metric.ident()})"
 
     def evaluate(
         self,
@@ -214,6 +227,9 @@ class WarningOf(BaseMetricExpression):
 class CriticalOf(BaseMetricExpression):
     metric: Metric
 
+    def ident(self) -> str:
+        return f"{self.__class__.__name__}({self.metric.ident()})"
+
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
@@ -246,6 +262,9 @@ class CriticalOf(BaseMetricExpression):
 @dataclass(frozen=True)
 class MinimumOf(BaseMetricExpression):
     metric: Metric
+
+    def ident(self) -> str:
+        return f"{self.__class__.__name__}({self.metric.ident()})"
 
     def evaluate(
         self,
@@ -280,6 +299,9 @@ class MinimumOf(BaseMetricExpression):
 class MaximumOf(BaseMetricExpression):
     metric: Metric
 
+    def ident(self) -> str:
+        return f"{self.__class__.__name__}({self.metric.ident()})"
+
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
@@ -312,6 +334,9 @@ class MaximumOf(BaseMetricExpression):
 @dataclass(frozen=True)
 class Sum(BaseMetricExpression):
     summands: Sequence[BaseMetricExpression]
+
+    def ident(self) -> str:
+        return f"{self.__class__.__name__}({','.join(s.ident() for s in self.summands)})"
 
     def evaluate(
         self,
@@ -347,6 +372,9 @@ class Sum(BaseMetricExpression):
 class Product(BaseMetricExpression):
     factors: Sequence[BaseMetricExpression]
 
+    def ident(self) -> str:
+        return f"{self.__class__.__name__}({','.join(f.ident() for f in self.factors)})"
+
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
@@ -381,6 +409,9 @@ class Product(BaseMetricExpression):
 class Difference(BaseMetricExpression):
     minuend: BaseMetricExpression
     subtrahend: BaseMetricExpression
+
+    def ident(self) -> str:
+        return f"{self.__class__.__name__}({self.minuend.ident()},{self.subtrahend.ident()})"
 
     def evaluate(
         self,
@@ -418,6 +449,9 @@ class Fraction(BaseMetricExpression):
     dividend: BaseMetricExpression
     divisor: BaseMetricExpression
 
+    def ident(self) -> str:
+        return f"{self.__class__.__name__}({self.dividend.ident()},{self.divisor.ident()})"
+
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
@@ -453,6 +487,9 @@ class Fraction(BaseMetricExpression):
 class Minimum(BaseMetricExpression):
     operands: Sequence[BaseMetricExpression]
 
+    def ident(self) -> str:
+        return f"{self.__class__.__name__}({','.join(o.ident() for o in self.operands)})"
+
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
@@ -482,6 +519,9 @@ class Minimum(BaseMetricExpression):
 @dataclass(frozen=True)
 class Maximum(BaseMetricExpression):
     operands: Sequence[BaseMetricExpression]
+
+    def ident(self) -> str:
+        return f"{self.__class__.__name__}({','.join(o.ident() for o in self.operands)})"
 
     def evaluate(
         self,
@@ -518,6 +558,9 @@ class Percent(BaseMetricExpression):
 
     percent_value: BaseMetricExpression
     base_value: BaseMetricExpression
+
+    def ident(self) -> str:
+        return f"{self.__class__.__name__}({self.percent_value.ident()},{self.base_value.ident()})"
 
     def evaluate(
         self,
@@ -561,6 +604,9 @@ class Percent(BaseMetricExpression):
 class Average(BaseMetricExpression):
     operands: Sequence[BaseMetricExpression]
 
+    def ident(self) -> str:
+        return f"{self.__class__.__name__}({','.join(o.ident() for o in self.operands)})"
+
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
@@ -589,6 +635,9 @@ class Average(BaseMetricExpression):
 @dataclass(frozen=True)
 class Merge(BaseMetricExpression):
     operands: Sequence[BaseMetricExpression]
+
+    def ident(self) -> str:
+        return f"{self.__class__.__name__}({','.join(o.ident() for o in self.operands)})"
 
     def evaluate(
         self,
@@ -933,6 +982,9 @@ class MetricExpression:
     color: str = ""
     line_type: LineType
     title: str = ""
+
+    def ident(self) -> str:
+        return f"{self.__class__.__name__}({self.base.ident()})"
 
     def evaluate(
         self,

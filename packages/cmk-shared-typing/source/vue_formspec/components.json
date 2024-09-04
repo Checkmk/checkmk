@@ -528,14 +528,14 @@
         "topic": {
             "type": "object",
             "properties": {
-                "key": {
+                "ident": {
                     "type": "string"
                 },
                 "dictionary": {
                     "$ref": "#/$defs/dictionary"
                 }
             },
-            "required": ["key", "dictionary"]
+            "required": ["ident", "dictionary"]
         },
         "catalog": {
             "type": "object",

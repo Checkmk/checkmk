@@ -17,6 +17,7 @@ from .optional_choice import OptionalChoice
 __all__ = [
     "Topic",
     "Catalog",
+    "Topic",
     "DictionaryExtended",
     "LegacyValueSpec",
     "ListExtended",

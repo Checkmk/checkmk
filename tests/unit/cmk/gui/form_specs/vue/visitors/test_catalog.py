@@ -24,7 +24,7 @@ def test_catalog_validation_simple(
     spec = Catalog(
         topics=[
             Topic(
-                key="some_key",
+                ident="some_key",
                 dictionary=Dictionary(
                     elements={
                         "key": DictElement(

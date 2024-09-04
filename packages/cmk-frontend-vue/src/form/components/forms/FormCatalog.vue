@@ -22,19 +22,19 @@ immediateWatch(
 )
 
 function toggleTopic(topic: Topic) {
-  hiddenTopics.value[topic.key] = !hiddenTopics.value[topic.key]
+  hiddenTopics.value[topic.ident] = !hiddenTopics.value[topic.ident]
 }
 
 function setAllTopics(isOpen: boolean) {
   for (const topic of props.spec.topics) {
-    hiddenTopics.value[topic.key] = !isOpen
+    hiddenTopics.value[topic.ident] = !isOpen
   }
 }
 
-function getClass(key: string) {
+function getClass(ident: string) {
   return {
-    open: !hiddenTopics.value[key],
-    closed: hiddenTopics.value[key]
+    open: !hiddenTopics.value[ident],
+    closed: hiddenTopics.value[ident]
   }
 }
 </script>
@@ -44,24 +44,24 @@ function getClass(key: string) {
   <input type="button" value="Collapse all" @click="setAllTopics(false)" />
   <table
     v-for="topic in props.spec.topics"
-    :key="topic.key"
+    :key="topic.ident"
     class="nform"
-    :class="getClass(topic.key)"
+    :class="getClass(topic.ident)"
   >
     <thead>
       <tr class="heading" @click="toggleTopic(topic)">
         <td colspan="2">
-          <img class="vue nform treeangle" :class="getClass(topic.key)" />
+          <img class="vue nform treeangle" :class="getClass(topic.ident)" />
           {{ topic.dictionary.title }}
         </td>
       </tr>
     </thead>
-    <tbody :class="getClass(topic.key)">
+    <tbody :class="getClass(topic.ident)">
       <tr>
         <td colspan="2" />
       </tr>
       <FormCatalogDictionary
-        v-model="data[topic.key]!"
+        v-model="data[topic.ident]!"
         :entries="topic.dictionary.elements"
         :backend-validation="backendValidation"
       />

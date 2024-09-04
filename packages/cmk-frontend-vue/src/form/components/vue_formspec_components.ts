@@ -207,7 +207,7 @@ export interface I18NPassword {
   password_choice_invalid: string;
 }
 export interface Topic {
-  key: string;
+  ident: string;
   dictionary: Dictionary;
 }
 export interface MultipleChoiceElement {

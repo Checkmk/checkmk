@@ -56,7 +56,7 @@ function renderSimpleCatalog() {
         validators: [],
         topics: [
           {
-            key: 'some_ut_key',
+            ident: 'some_ut_key',
             dictionary: getDictionaryFormspec(
               {
                 title: 'ut embedded dictionary title'
@@ -131,7 +131,7 @@ test('FormCatalog default value', async () => {
         validators: [],
         topics: [
           {
-            key: 'some_ut_key',
+            ident: 'some_ut_key',
             dictionary: getDictionaryFormspec(
               {
                 title: 'ut embedded dictionary title'

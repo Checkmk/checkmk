@@ -1,9 +1,5 @@
 import { computed, ref, type Ref, type WritableComputedRef } from 'vue'
-import type {
-  DictionaryElement,
-  ValidationMessage,
-  Validator
-} from '@/form/components/vue_formspec_components'
+import type { ValidationMessage, Validator } from '@/form/components/vue_formspec_components'
 import { immediateWatch } from './watch'
 
 /**
@@ -84,7 +80,7 @@ export function isFloat(value: string): boolean {
 }
 
 export function groupDictionaryValidations(
-  elements: DictionaryElement[],
+  elements: Array<{ ident: string }>,
   newValidation: ValidationMessages
 ): [ValidationMessages, Record<string, ValidationMessages>] {
   // Prepare all elements with an empty list of validation messages

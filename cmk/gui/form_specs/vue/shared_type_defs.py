@@ -277,7 +277,7 @@ class DataSize(FormSpec):
 
 @dataclass(kw_only=True)
 class Topic:
-    key: str
+    ident: str
     dictionary: Dictionary
 
 

@@ -857,7 +857,10 @@ def _create_notifications(
         bulk = rbn_get_bulk_params(rule)
 
         final_parameters = rbn_finalize_plugin_parameters(
-            enriched_context["HOSTNAME"], plugin_name, host_parameters_cb, plugin_parameters
+            HostName(enriched_context["HOSTNAME"]),
+            plugin_name,
+            host_parameters_cb,
+            plugin_parameters,
         )
         notifications[key] = (not rule.get("allow_disable"), final_parameters, bulk)
 
@@ -897,7 +900,10 @@ def _process_notifications(
 
                 plugin_name, fallback_params = fallback_format
                 fallback_params = rbn_finalize_plugin_parameters(
-                    enriched_context["HOSTNAME"], plugin_name, host_parameters_cb, fallback_params
+                    HostName(enriched_context["HOSTNAME"]),
+                    plugin_name,
+                    host_parameters_cb,
+                    fallback_params,
                 )
                 plugin_context = create_plugin_context(
                     enriched_context, fallback_params, get_http_proxy

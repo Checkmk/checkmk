@@ -9,6 +9,7 @@ import time
 from collections.abc import Iterable
 from logging import Logger
 
+from cmk.utils import event_context
 from cmk.utils.log import VERBOSE
 from cmk.utils.notify_types import ECEventContext
 from cmk.utils.statename import service_state_name
@@ -417,7 +418,7 @@ def _add_infos_from_monitoring_host(
     def _add_artificial_context_info() -> None:
         context.update(
             {
-                "HOSTNAME": event["host"],
+                "HOSTNAME": event_context.HostName(event["host"]),
                 "HOSTALIAS": event["host"],
                 "HOSTADDRESS": event["ipaddress"],
                 "HOSTTAGS": "",
@@ -441,7 +442,7 @@ def _add_infos_from_monitoring_host(
 
     context.update(
         {
-            "HOSTNAME": config.name,
+            "HOSTNAME": event_context.HostName(config.name),
             "HOSTALIAS": config.alias,
             "HOSTADDRESS": config.address,
             "HOSTTAGS": config.custom_variables.get("TAGS", ""),

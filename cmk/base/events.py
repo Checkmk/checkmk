@@ -267,7 +267,7 @@ def add_rulebased_macros(
         )
 
         contact_list = livestatus_fetch_contacts(
-            raw_context["HOSTNAME"], raw_context.get("SERVICEDESC")
+            HostName(raw_context["HOSTNAME"]), raw_context.get("SERVICEDESC")
         )
         if contact_list is not None:
             raw_context["CONTACTS"] = ",".join(contact_list)
@@ -443,7 +443,7 @@ def complete_raw_context(
 
 
 def _update_enriched_context_with_labels(enriched_context: EnrichedEventContext) -> None:
-    notify_host_config = read_notify_host_file(enriched_context["HOSTNAME"])
+    notify_host_config = read_notify_host_file(HostName(enriched_context["HOSTNAME"]))
     for k, v in notify_host_config.host_labels.items():
         # Dynamically added keys...
         enriched_context["HOSTLABEL_" + k] = v  # type: ignore[literal-required]
@@ -607,7 +607,7 @@ def event_match_hosttags(
 ) -> str | None:
     required_tags = rule.get("match_hosttags")
     if required_tags:
-        notify_host_config = read_notify_host_file(context["HOSTNAME"])
+        notify_host_config = read_notify_host_file(HostName(context["HOSTNAME"]))
         host_tags = notify_host_config.tags
         if not matches_host_tags(set(host_tags.items()), required_tags):
             return f"The host's tags {host_tags} do not " f"match the required tags {required_tags}"

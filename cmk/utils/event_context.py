@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Literal, TypedDict
+from typing import Literal, NewType, TypedDict
 
-from cmk.utils.hostaddress import HostName
+HostName = NewType("HostName", str)
 
 NotificationType = Literal[
     "ACKNOWLEDGEMENT",

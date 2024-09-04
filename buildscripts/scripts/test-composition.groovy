@@ -67,7 +67,7 @@ def main() {
                 DOCKER_TAG: docker_tag,
                 MAKE_TARGET: "test-composition-docker",
                 BRANCH: branch_name,
-                cmk_version: cmk_version,
+                cmk_version: cmk_version_rc_aware,
             );
         }
     }

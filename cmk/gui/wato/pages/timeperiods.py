@@ -10,6 +10,7 @@ import logging
 import time
 from collections.abc import Collection
 from datetime import date, datetime, timedelta
+from typing import Any, cast
 
 import recurring_ical_events  # type: ignore[import-untyped]
 from icalendar import Calendar, Event  # type: ignore[import-untyped]
@@ -47,6 +48,7 @@ from cmk.gui.utils.urls import DocReference, make_confirm_delete_link
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
+    DictionaryModel,
     FileUpload,
     FileUploadModel,
     FixedValue,
@@ -521,14 +523,15 @@ class ModeEditTimeperiod(WatoMode):
         if self._new:
             clone_name = request.var("clone")
             if request.var("mode") == "import_ical":
-                self._timeperiod = {}
+                self._timeperiod: TimeperiodSpec = {"alias": request.var("timeperiod_p_alias", "")}
             elif clone_name:
                 self._name = clone_name
-
                 self._timeperiod = self._get_timeperiod(self._name)
             else:
                 # initialize with 24x7 config
-                self._timeperiod = {day: [("00:00", "24:00")] for day in dateutils.weekday_ids()}
+                self._timeperiod = {"alias": ""}
+                for day in dateutils.weekday_ids():
+                    self._timeperiod[day] = [("00:00", "24:00")]
         else:
             assert self._name is not None
             self._timeperiod = self._get_timeperiod(self._name)
@@ -823,8 +826,8 @@ class ModeEditTimeperiod(WatoMode):
         e.g. "00:30" -> (0, 30)"""
         return tuple(map(int, time_str.split(":")))
 
-    def _from_valuespec(self, vs_spec):
-        tp_spec = {
+    def _from_valuespec(self, vs_spec: DictionaryModel) -> TimeperiodSpec:
+        tp_spec: dict[str, Any] = {
             "alias": vs_spec["alias"],
         }
 
@@ -833,16 +836,16 @@ class ModeEditTimeperiod(WatoMode):
 
         tp_spec.update(self._exceptions_from_valuespec(vs_spec))
         tp_spec.update(self._time_exceptions_from_valuespec(vs_spec))
-        return tp_spec
+        return cast(TimeperiodSpec, tp_spec)
 
-    def _exceptions_from_valuespec(self, vs_spec):
+    def _exceptions_from_valuespec(self, vs_spec: DictionaryModel) -> dict[str, Any]:
         tp_spec = {}
         for exception_name, time_ranges in vs_spec["exceptions"]:
             if time_ranges:
                 tp_spec[exception_name] = self._time_ranges_from_valuespec(time_ranges)
         return tp_spec
 
-    def _time_exceptions_from_valuespec(self, vs_spec):
+    def _time_exceptions_from_valuespec(self, vs_spec: DictionaryModel) -> dict[str, Any]:
         # TODO: time exceptions is either a list of tuples or a dictionary for
         period_type, exceptions_details = vs_spec["weekdays"]
 

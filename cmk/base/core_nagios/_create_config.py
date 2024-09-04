@@ -28,7 +28,6 @@ from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.notify import NotificationHostConfig, write_notify_host_file
 from cmk.utils.servicename import MAX_SERVICE_NAME_LEN, ServiceName
-from cmk.utils.timeperiod import TimeperiodName
 
 from cmk.checkengine.checking import CheckPluginName
 
@@ -948,7 +947,7 @@ def _create_nagios_config_timeperiods(cfg: NagiosConfig) -> None:
                         timeperiod_spec[key] = times
 
             if "exclude" in tp:
-                timeperiod_spec["exclude"] = ",".join(cast(list[TimeperiodName], tp["exclude"]))
+                timeperiod_spec["exclude"] = ",".join(tp["exclude"])
 
             cfg.write(format_nagios_object("timeperiod", timeperiod_spec))
 

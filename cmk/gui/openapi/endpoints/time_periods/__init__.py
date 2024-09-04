@@ -77,7 +77,7 @@ def _get_time_period_domain_object(
     return constructors.domain_object(
         domain_type="time_period",
         identifier=name,
-        title=cast(str, time_period["alias"]),
+        title=time_period["alias"],
         extensions=_to_api_format(time_period, name == "24X7") if include_extensions else None,
         include_links=include_links,
         deletable=True,
@@ -271,12 +271,12 @@ def _to_api_format(time_period: TimeperiodSpec, builtin_period: bool = False) ->
         time_period_readable["exclude"] = time_period.get("exclude", [])
 
     active_time_ranges = _active_time_ranges_readable(
-        {key: time_period[key] for key in time_period if key in dateutils.weekday_ids()}
+        {key: value for key, value in time_period.items() if key in dateutils.weekday_ids()}
     )
     exceptions = _exceptions_readable(
         {
-            key: time_period[key]
-            for key in time_period
+            key: value
+            for key, value in time_period.items()
             if key not in ["alias", "exclude", *dateutils.weekday_ids()]
         }
     )
@@ -431,8 +431,7 @@ def _to_checkmk_format(
     time_period: dict[str, Any] = {"alias": alias, "exclude": [] if exclude is None else exclude}
     time_period.update(exceptions)
     time_period.update(periods)
-
-    return time_period
+    return cast(TimeperiodSpec, time_period)
 
 
 def _is_alias_in_use(alias: str | None, name: str) -> bool:

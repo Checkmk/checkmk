@@ -275,17 +275,17 @@ def is_alias_used(
 
     # Timeperiods
     timeperiods = load_timeperiods()
-    for key, value in timeperiods.items():
-        if timeperiod_spec_alias(value) == my_alias and (
-            my_what != "timeperiods" or my_name != key
+    for timeperiod_id, timeperiod_spec in timeperiods.items():
+        if timeperiod_spec_alias(timeperiod_spec) == my_alias and (
+            my_what != "timeperiods" or my_name != timeperiod_id
         ):
-            return False, _("This alias is already used in time period %s.") % key
+            return False, _("This alias is already used in time period %s.") % timeperiod_id
 
     # Roles
     roles = load_roles()
-    for key, value in roles.items():
-        if value.get("alias") == my_alias and (my_what != "roles" or my_name != key):
-            return False, _("This alias is already used in the role %s.") % key
+    for role_id, role_spec in roles.items():
+        if role_spec.get("alias") == my_alias and (my_what != "roles" or my_name != role_id):
+            return False, _("This alias is already used in the role %s.") % role_id
 
     return True, None
 

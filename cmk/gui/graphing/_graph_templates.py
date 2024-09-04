@@ -377,21 +377,21 @@ def _compute_predictive_metrics(
 
 
 def applicable_metrics(
-    *,
-    metric_expressions: Sequence[MetricExpression],
-    conflicting_metrics: Iterable[str],
-    optional_metrics: Sequence[str],
+    graph_template: GraphTemplate,
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> Sequence[MetricExpression]:
     # Skip early on conflicting_metrics
-    for var in conflicting_metrics:
+    for var in graph_template.conflicting_metrics:
         if var in translated_metrics:
             return []
 
     applicable_metric_expressions = []
-    for metric_expression in metric_expressions:
+    for metric_expression in graph_template.metrics:
         if (result := metric_expression.evaluate(translated_metrics)).is_error():
-            if result.error.metric_name and result.error.metric_name in optional_metrics:
+            if (
+                result.error.metric_name
+                and result.error.metric_name in graph_template.optional_metrics
+            ):
                 continue
             return []
         applicable_metric_expressions.append(metric_expression)
@@ -405,35 +405,28 @@ def get_graph_templates(
         yield from ()
         return
 
-    explicit_templates = [
+    graph_templates = [
         GraphTemplate(
-            id=parsed.id,
-            title=parsed.title,
-            scalars=parsed.scalars,
-            conflicting_metrics=parsed.conflicting_metrics,
-            optional_metrics=parsed.optional_metrics,
-            consolidation_function=parsed.consolidation_function,
-            range=parsed.range,
-            omit_zero_metrics=parsed.omit_zero_metrics,
+            id=graph_template.id,
+            title=graph_template.title,
+            scalars=graph_template.scalars,
+            conflicting_metrics=graph_template.conflicting_metrics,
+            optional_metrics=graph_template.optional_metrics,
+            consolidation_function=graph_template.consolidation_function,
+            range=graph_template.range,
+            omit_zero_metrics=graph_template.omit_zero_metrics,
             metrics=(
                 list(metrics) + list(_compute_predictive_metrics(translated_metrics, metrics))
             ),
         )
         for id_, template in _graph_templates_from_plugins()
-        for parsed in (_parse_graph_template(id_, template),)
-        if (
-            metrics := applicable_metrics(
-                metric_expressions=parsed.metrics,
-                conflicting_metrics=parsed.conflicting_metrics,
-                optional_metrics=parsed.optional_metrics,
-                translated_metrics=translated_metrics,
-            )
-        )
+        for graph_template in (_parse_graph_template(id_, template),)
+        if (metrics := applicable_metrics(graph_template, translated_metrics))
     ]
-    yield from explicit_templates
+    yield from graph_templates
 
     already_graphed_metrics = {
-        n for gt in explicit_templates for me in gt.metrics for n in me.metric_names()
+        n for gt in graph_templates for me in gt.metrics for n in me.metric_names()
     }
     for metric_name, translated_metric in sorted(translated_metrics.items()):
         if translated_metric.auto_graph and metric_name not in already_graphed_metrics:

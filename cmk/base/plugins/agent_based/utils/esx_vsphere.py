@@ -95,6 +95,7 @@ class ESXVm(BaseModel):
     heartbeat: HeartBeat | None
     host: str | None
     name: str | None
+    systime: str | None
 
     class Config:
         allow_mutation = False

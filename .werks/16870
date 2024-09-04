@@ -1,0 +1,14 @@
+Title: vsphere: Determine snapshot age based on system time
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1726477629
+Edition: cre
+Level: 1
+Version: 2.2.0p37
+
+Previously, snapshot age was calculated based on the Checkmk server system time.
+This led to incorrect values when the time zone of the vSphere system was different
+than the time zone of the Checkmk server.
+
+Now, the age calculation is based on a vSphere system time.

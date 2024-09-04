@@ -12,7 +12,7 @@ import socket
 import sys
 import time
 from collections import Counter
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any
 from xml.dom import minidom
 
@@ -1652,7 +1652,9 @@ def get_pattern(pattern, line):
 
 
 # snapshot.rootSnapshotList.summary 871 1605626114 poweredOn SnapshotName| 834 1605632160 poweredOff Snapshotname2
-def get_section_snapshot_summary(vms):
+def get_section_snapshot_summary(
+    vms: Mapping[str, Mapping[str, str]], systime: int | None
+) -> Sequence[str]:
     snapshots = []
     for vm in vms.values():
         if raw_snapshots := vm.get("snapshot.rootSnapshotList"):
@@ -1667,6 +1669,7 @@ def get_section_snapshot_summary(vms):
         json.dumps(
             {
                 "time": int(snapshot[1]),
+                "systime": systime,
                 "state": snapshot[2],
                 "name": snapshot[3],
                 "vm": snapshot[4],
@@ -1680,17 +1683,16 @@ def _make_unix_time(raw_time: str) -> int:
     return int(dateutil.parser.isoparse(raw_time).timestamp())
 
 
-def get_section_systemtime(connection: ESXConnection, debug: bool) -> Sequence[str]:
+def get_systemtime(connection: ESXConnection, debug: bool) -> int | None:
     try:
         response = connection.query_server("systemtime")
         raw_systime = get_pattern("<returnval>(.*)</returnval>", response)[0]
     except (IndexError, Exception):
         if debug:
             raise
-        return []
+        return None
 
-    systime = _make_unix_time(raw_systime)
-    return ["<<<systemtime>>>", f"{systime} {time.time()}"]
+    return _make_unix_time(raw_systime)
 
 
 def is_placeholder_vm(devices) -> bool:  # type:ignore[no-untyped-def]
@@ -1867,7 +1869,7 @@ def fetch_virtual_machines(connection, hostsystems, datastores, opt):
     return vms, vm_esx_host
 
 
-def get_section_vm(vms):
+def get_section_vm(vms: Mapping[str, Mapping[str, str]], systime: int | None) -> Sequence[str]:
     section_lines = []
     for vm_name, vm_data in sorted(vms.items()):
         if vm_data.get("name"):
@@ -1876,6 +1878,8 @@ def get_section_vm(vms):
                 "<<<esx_vsphere_vm>>>",
             ]
             section_lines.extend("%s %s" % entry for entry in sorted(vm_data.items()))
+            if systime is not None:
+                section_lines.append(f"systime {systime}")
     section_lines += ["<<<<>>>>"]
     return section_lines
 
@@ -1975,13 +1979,15 @@ def fetch_data(connection, opt):
     ###########################
     # Virtual machines
     ###########################
+    systime = get_systemtime(connection, bool(opt.debug))
+
     if "virtualmachine" in opt.modules:
         vms, vm_esx_host = fetch_virtual_machines(connection, hostsystems, datastores, opt)
-        output += get_section_vm(vms)
+        output += get_section_vm(vms, systime)
         output += get_section_virtual_machines(vms)
 
         if not opt.direct or opt.snapshots_on_host:
-            output += get_section_snapshot_summary(vms)
+            output += get_section_snapshot_summary(vms, systime)
     else:
         vms, vm_esx_host = {}, {}
 
@@ -1995,7 +2001,8 @@ def fetch_data(connection, opt):
     if "hostsystem" in opt.modules:
         output += get_hostsystem_power_states(vms, hostsystems, hostsystems_properties, opt)
 
-    output += get_section_systemtime(connection, bool(opt.debug))
+    if systime is not None:
+        output += ["<<<systemtime>>>", f"{systime} {time.time()}"]
 
     return output
 

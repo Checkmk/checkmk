@@ -19,8 +19,7 @@ from typing import (
 
 from pydantic import PlainValidator, TypeAdapter, ValidationInfo
 
-from cmk.utils.event_context import EnrichedEventContext as EnrichedEventContext
-from cmk.utils.event_context import EventContext as EventContext
+from cmk.utils.event_context import EventContext
 from cmk.utils.notification_result import NotificationContext as NotificationContext
 from cmk.utils.rulesets.ruleset_matcher import TagCondition
 from cmk.utils.tags import TagGroupID
@@ -48,9 +47,6 @@ __all__ = [
     "EventRule",
     "DisabledNotificationsOptions",
     "Contact",
-    # TODO: Clean up the re-exports
-    "EventContext",
-    "EnrichedEventContext",
     "ECEventContext",
 ]
 

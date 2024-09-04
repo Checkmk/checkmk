@@ -10,14 +10,8 @@ from typing import Final
 import pytest
 from pytest import MonkeyPatch
 
-from cmk.utils.notify_types import (
-    Contact,
-    ContactName,
-    EnrichedEventContext,
-    EventContext,
-    NotificationContext,
-    NotifyPluginParams,
-)
+from cmk.utils.event_context import EnrichedEventContext, EventContext
+from cmk.utils.notify_types import Contact, ContactName, NotificationContext, NotifyPluginParams
 
 from cmk.base import notify
 

@@ -22,10 +22,11 @@ import cmk.ccc.daemon
 import cmk.ccc.debug
 from cmk.ccc.site import omd_site
 
+from cmk.utils.event_context import EnrichedEventContext, EventContext
 from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.notify import read_notify_host_file
-from cmk.utils.notify_types import EnrichedEventContext, EventContext, EventRule
+from cmk.utils.notify_types import EventRule
 from cmk.utils.regex import regex
 from cmk.utils.rulesets.ruleset_matcher import matches_host_tags
 from cmk.utils.rulesets.tuple_rulesets import in_extraconf_servicelist

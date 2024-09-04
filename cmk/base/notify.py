@@ -38,6 +38,7 @@ from cmk.ccc.exceptions import MKGeneralException
 
 import cmk.utils.paths
 from cmk.utils import log
+from cmk.utils.event_context import EnrichedEventContext, EventContext
 from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.log import console
@@ -57,8 +58,6 @@ from cmk.utils.notify import find_wato_folder
 from cmk.utils.notify_types import (
     Contact,
     ContactName,
-    EnrichedEventContext,
-    EventContext,
     EventRule,
     HostEventType,
     is_always_bulk,

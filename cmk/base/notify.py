@@ -48,7 +48,6 @@ from cmk.utils.log_to_history import (
     notification_result_message,
 )
 from cmk.utils.macros import replace_macros_in_str
-from cmk.utils.notification_result import NotificationPluginName, NotificationResultCode
 from cmk.utils.notification_spool_file import (
     create_spool_file,
     NotificationForward,
@@ -79,6 +78,8 @@ from cmk.utils.notify_types import (
 from cmk.utils.regex import regex
 from cmk.utils.timeout import MKTimeout, Timeout
 from cmk.utils.timeperiod import is_timeperiod_active, timeperiod_active, TimeperiodSpecs
+
+from cmk.events.notification_result import NotificationPluginName, NotificationResultCode
 
 from cmk.base import events
 

@@ -11,7 +11,8 @@ from typing import Literal, TypedDict
 from cmk.ccc import store
 
 from cmk.utils.event_context import EnrichedEventContext
-from cmk.utils.notification_result import NotificationContext, NotificationResult
+
+from cmk.events.notification_result import NotificationContext, NotificationResult
 
 
 class NotificationForward(TypedDict):

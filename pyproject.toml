@@ -49,6 +49,7 @@ section-order = [
   "livestatus",
   "omd",
   "cmk_ccc",
+  "cmk_events",
   "cmk_utils",
   "cmk_automations",
   "cmk_snmplib",
@@ -73,6 +74,7 @@ unittests = ["tests.unit", "tests.plugins_integration", "tests.update"]
 livestatus = ["livestatus"]
 omd = ["omdlib"]
 cmk_ccc = ["cmk.ccc"]
+cmk_events = ["cmk.events"]
 cmk_utils = ["cmk.utils"]
 cmk_automations = ["cmk.automations"]
 cmk_snmplib = ["cmk.snmplib"]
@@ -95,6 +97,7 @@ known_unittests = "tests.unit,tests.plugins_integration,tests.update"
 known_livestatus = "livestatus"
 known_omd = "omdlib"
 known_cmk_ccc = "cmk.ccc"
+known_cmk_events = "cmk.events"
 known_cmk_utils = "cmk.utils"
 known_cmk_automations = "cmk.automations"
 known_cmk_snmplib = "cmk.snmplib"
@@ -109,7 +112,7 @@ known_first_party = "cmk"
 
 # Order sections according to our layering.
 sections = """FUTURE,STDLIB,THIRDPARTY,WERKS,CMC_PROTO,TESTLIB,INTEGRATIONTESTS,COMPOSITIONTESTS,UNITTESTS,LIVESTATUS,OMD,
-CMK_CCC,CMK_UTILS,CMK_AUTOMATIONS,CMK_SNMPLIB,CMK_FETCHERS,CMK_CHECKENGINE,CMK_BASE,CMK_EC,CMK_GUI,CMK_CEE,
+CMK_CCC,CMK_UTILS,CMK_EVENTS,CMK_AUTOMATIONS,CMK_SNMPLIB,CMK_FETCHERS,CMK_CHECKENGINE,CMK_BASE,CMK_EC,CMK_GUI,CMK_CEE,
 CMK_NOTIFICATION_PLUGINS,FIRSTPARTY,LOCALFOLDER"""
 
 profile = "black"

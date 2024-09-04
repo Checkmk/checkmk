@@ -16,7 +16,8 @@ from cmk.utils.log_to_history import (
     notification_result_message,
     SanitizedLivestatusLogStr,
 )
-from cmk.utils.notification_result import NotificationPluginName, NotificationResultCode
+
+from cmk.events.notification_result import NotificationPluginName, NotificationResultCode
 
 
 class FakeLocalConnection:

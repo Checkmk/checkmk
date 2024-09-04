@@ -19,7 +19,7 @@ from typing import Final, NewType
 
 import livestatus
 
-from cmk.utils.notification_result import (
+from cmk.events.notification_result import (
     NOTIFICATION_RESULT_OK,
     NOTIFICATION_RESULT_PERMANENT_ISSUE,
     NOTIFICATION_RESULT_TEMPORARY_ISSUE,

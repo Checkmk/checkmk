@@ -7,8 +7,6 @@ import pytest
 
 from livestatus import SiteId
 
-from cmk.ccc.exceptions import MKGeneralException
-
 from cmk.utils.hostaddress import HostName
 
 import cmk.gui.graphing._graph_templates as gt
@@ -34,9 +32,7 @@ from cmk.gui.graphing._graph_specification import (
     MinimalVerticalRange,
 )
 from cmk.gui.graphing._graph_templates import (
-    compute_unit_color,
     GraphTemplate,
-    MetricUnitColor,
     MinimalGraphTemplateRange,
     TemplateGraphSpecification,
 )
@@ -271,15 +267,16 @@ def test_metric_unit_color(
     translated_metrics = translate_metrics(perf_data, check_command)
     translated_metric = translated_metrics.get(expression)
     assert translated_metric is not None
-    metric_expression = parse_legacy_expression(expression, "line", "", translated_metrics)
-    assert compute_unit_color(metric_expression, translated_metrics, ["test"]) == MetricUnitColor(
-        unit=(
-            translated_metric.unit_spec
-            if isinstance(translated_metric.unit_spec, ConvertibleUnitSpecification)
-            else translated_metric.unit_spec.id
-        ),
-        color=result_color,
+    evaluated = parse_legacy_expression(expression, "line", "", translated_metrics).evaluate(
+        translated_metrics
     )
+    assert evaluated.is_ok()
+    assert evaluated.ok.unit_spec == (
+        translated_metric.unit_spec
+        if isinstance(translated_metric.unit_spec, ConvertibleUnitSpecification)
+        else translated_metric.unit_spec.id
+    )
+    assert evaluated.ok.color == result_color
 
 
 @pytest.mark.parametrize(
@@ -295,8 +292,11 @@ def test_metric_unit_color_skip(
         perf_data_string, check_command, config=active_config
     )
     translated_metrics = translate_metrics(perf_data, check_command)
-    metric_expression = parse_legacy_expression(expression, "line", "", translated_metrics)
-    assert compute_unit_color(metric_expression, translated_metrics, ["test"]) is None
+    evaluated = parse_legacy_expression(expression, "line", "", translated_metrics).evaluate(
+        translated_metrics
+    )
+    assert evaluated.is_error()
+    assert evaluated.error.metric_name == "test"
 
 
 @pytest.mark.parametrize(
@@ -312,6 +312,8 @@ def test_metric_unit_color_exception(
         perf_data_string, check_command, config=active_config
     )
     translated_metrics = translate_metrics(perf_data, check_command)
-    metric_expression = parse_legacy_expression(expression, "line", "", translated_metrics)
-    with pytest.raises(MKGeneralException):
-        compute_unit_color(metric_expression, translated_metrics, ["test"])
+    evaluated = parse_legacy_expression(expression, "line", "", translated_metrics).evaluate(
+        translated_metrics
+    )
+    assert evaluated.is_error()
+    assert evaluated.error.metric_name == "level"

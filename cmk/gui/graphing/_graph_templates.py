@@ -97,46 +97,6 @@ def get_graph_template_choices() -> list[tuple[str, str]]:
     )
 
 
-@dataclass(frozen=True)
-class MetricUnitColor:
-    unit: str | ConvertibleUnitSpecification
-    color: str
-
-
-def compute_title(
-    metric_expression: MetricExpression, translated_metrics: Mapping[str, TranslatedMetric]
-) -> str:
-    if metric_expression.title:
-        return metric_expression.title
-    return translated_metrics[next(metric_expression.metric_names())].title
-
-
-def compute_unit_color(
-    metric_expression: MetricExpression,
-    translated_metrics: Mapping[str, TranslatedMetric],
-    optional_metrics: Sequence[str],
-) -> MetricUnitColor | None:
-    if (result := metric_expression.evaluate(translated_metrics)).is_error():
-        if result.error.metric_name and result.error.metric_name in optional_metrics:
-            return None
-        raise MKGeneralException(
-            _("Graph recipe '%s' has the error '%s', available are: %s")
-            % (
-                metric_expression,
-                result.error.reason,
-                ", ".join(sorted(translated_metrics.keys())) or "None",
-            )
-        )
-    return MetricUnitColor(
-        (
-            result.ok.unit_spec
-            if isinstance(result.ok.unit_spec, ConvertibleUnitSpecification)
-            else result.ok.unit_spec.id
-        ),
-        result.ok.color,
-    )
-
-
 @dataclass(frozen=True, kw_only=True)
 class FixedGraphTemplateRange:
     min: BaseMetricExpression

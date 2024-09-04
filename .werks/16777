@@ -1,0 +1,14 @@
+Title: NetApp ONTAP agent: implement exclusion of volume performance queries
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1725462080
+Edition: cre
+Level: 1
+Version: 2.2.0p37
+
+The new NetApp ONTAP agent previously did not correctly implement
+the exclusion of queries to volume performance counters;
+which caused the agent to crash when this functionality was enabled in the gui.
+
+This update correctly implements this functionality.

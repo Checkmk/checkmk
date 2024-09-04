@@ -809,7 +809,10 @@ def fetch_fc_ports(connection: HostConnection) -> Iterable[netapp_ontap_models.F
 def write_sections(connection: HostConnection, logger: logging.Logger, args: Args) -> None:
     volumes = list(fetch_volumes(connection))
     write_section("volumes", volumes, logger)
-    write_section("volumes_counters", fetch_volumes_counters(connection, volumes), logger)
+
+    if "volumes" not in args.no_counters:
+        write_section("volumes_counters", fetch_volumes_counters(connection, volumes), logger)
+
     write_section("disk", fetch_disks(connection), logger)
     write_section("luns", fetch_luns(connection), logger)
     write_section("aggr", fetch_aggr(connection), logger)
@@ -847,6 +850,14 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
             "Note: the timeout is not only applied to the connection, but also "
             "to each individual subquery. (Default is %(default)s seconds)"
         ),
+    )
+    parser.add_argument(
+        "--no-counters",
+        nargs="*",
+        type=str,
+        default=[],
+        choices=["volumes"],
+        help=('Skip counters for the given element. Right now only "volumes" is supported.'),
     )
     parser.add_argument(
         "--no-cert-check", action="store_true", help="Do not verify TLS certificate"

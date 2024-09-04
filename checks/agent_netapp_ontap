@@ -21,7 +21,9 @@ def agent_netapp_ontap_arguments(
     if params["no-cert-check"]:
         args += ["--no-cert-check"]
 
-    args += [element[4:] for element in params["skip_elements"] if element.startswith("ctr_")]
+    if "skip_elements" in params:
+        args += ["--no-counters"]
+        args += [element[4:] for element in params["skip_elements"] if element.startswith("ctr_")]
     return args
 
 

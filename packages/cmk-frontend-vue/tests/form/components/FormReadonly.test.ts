@@ -25,6 +25,21 @@ test('FormReadonly renders integer', () => {
   screen.getByText('42')
 })
 
+test('FormReadonly updates integer', async () => {
+  const props = {
+    spec: getSpec('integer'),
+    data: 42,
+    backendValidation: []
+  }
+
+  const { rerender } = render(FormReadonly, {
+    props
+  })
+  screen.getByText('42')
+  await rerender({ ...props, data: 41 })
+  screen.getByText('41')
+})
+
 test('FormReadonly renders float', () => {
   render(FormReadonly, {
     props: {

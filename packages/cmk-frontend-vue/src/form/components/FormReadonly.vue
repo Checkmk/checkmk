@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { h, ref, type VNode, watch } from 'vue'
+import { h, type VNode } from 'vue'
 import type {
   Components,
   Dictionary,
@@ -31,14 +31,9 @@ const props = defineProps<{
 const data = defineModel<unknown>('data', { required: true })
 const ERROR_BACKGROUND_COLOR = 'rgb(252, 85, 85)'
 
-const rendered = ref<VNode | null>(null)
-watch(
-  [data],
-  () => {
-    rendered.value = renderForm(props.spec, data.value, props.backendValidation)
-  },
-  { deep: true, immediate: true }
-)
+function render() {
+  return renderForm(props.spec, data.value, props.backendValidation)
+}
 
 function renderForm(
   formSpec: FormSpec,
@@ -332,5 +327,7 @@ function renderLegacyValuespec(
 </script>
 
 <template>
-  <component :is="rendered"></component>
+  <render />
 </template>
+
+<style scoped></style>

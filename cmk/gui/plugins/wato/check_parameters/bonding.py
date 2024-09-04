@@ -10,7 +10,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersNetworking,
 )
-from cmk.gui.valuespec import Dictionary, DropdownChoice, MonitoringState, TextInput
+from cmk.gui.valuespec import Dictionary, DropdownChoice, Integer, MonitoringState, TextInput
 
 
 def get_common_elements() -> list:
@@ -32,6 +32,29 @@ def get_common_elements() -> list:
             MonitoringState(
                 title=_("State for mismatching Aggregator IDs for LACP"),
                 default_value=1,
+            ),
+        ),
+        (
+            "expected_interfaces",
+            Dictionary(
+                title=_("Configure the number of expected interfaces"),
+                optional_keys=[],
+                elements=[
+                    (
+                        "expected_number",
+                        Integer(
+                            title=_("Lower limit of expected interfaces"),
+                            default_value=2,
+                            minvalue=0,
+                        ),
+                    ),
+                    (
+                        "state",
+                        MonitoringState(
+                            title=_("State for unexpected number of interfaces"), default_value=0
+                        ),
+                    ),
+                ],
             ),
         ),
     ]

@@ -31,6 +31,7 @@ from ._expression import (
     Constant,
     CriticalOf,
     Difference,
+    Evaluated,
     Fraction,
     Maximum,
     Merge,
@@ -379,13 +380,13 @@ def _compute_predictive_metrics(
 def applicable_metrics(
     graph_template: GraphTemplate,
     translated_metrics: Mapping[str, TranslatedMetric],
-) -> Sequence[MetricExpression]:
+) -> Sequence[tuple[MetricExpression, Evaluated]]:
     # Skip early on conflicting_metrics
     for var in graph_template.conflicting_metrics:
         if var in translated_metrics:
             return []
 
-    applicable_metric_expressions = []
+    results = []
     for metric_expression in graph_template.metrics:
         if (result := metric_expression.evaluate(translated_metrics)).is_error():
             if (
@@ -394,8 +395,8 @@ def applicable_metrics(
             ):
                 continue
             return []
-        applicable_metric_expressions.append(metric_expression)
-    return applicable_metric_expressions
+        results.append((metric_expression, result.ok))
+    return results
 
 
 def get_graph_templates(
@@ -421,7 +422,7 @@ def get_graph_templates(
         )
         for id_, template in _graph_templates_from_plugins()
         for graph_template in (_parse_graph_template(id_, template),)
-        if (metrics := applicable_metrics(graph_template, translated_metrics))
+        if (metrics := [m for m, _e in applicable_metrics(graph_template, translated_metrics)])
     ]
     yield from graph_templates
 

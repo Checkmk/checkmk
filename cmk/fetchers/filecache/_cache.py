@@ -55,10 +55,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final, Generic, NamedTuple, NoReturn, TypeVar
 
-from cmk.utils.log import VERBOSE
-
 import cmk.ccc.store as _store
 from cmk.ccc.exceptions import MKFetcherError, MKGeneralException, MKTimeout
+
+from cmk.utils.log import VERBOSE
 
 from .._abstract import Mode
 

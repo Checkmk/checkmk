@@ -10,13 +10,13 @@ from ast import literal_eval
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, Final, Literal, Self, TypedDict
 
-import cmk.utils.paths
-from cmk.utils.hostaddress import HostName
-from cmk.utils.sectionname import SectionName
-
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
+
+import cmk.utils.paths
+from cmk.utils.hostaddress import HostName
+from cmk.utils.sectionname import SectionName
 
 Labels = Mapping[str, str]
 

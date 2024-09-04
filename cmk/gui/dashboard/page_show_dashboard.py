@@ -14,6 +14,9 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Literal
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc.exceptions import MKException
+
 from cmk.utils import paths
 from cmk.utils.user import UserId
 
@@ -48,9 +51,6 @@ from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.watolib.activate_changes import get_pending_changes_tooltip, has_pending_changes
-
-import cmk.ccc.version as cmk_version
-from cmk.ccc.exceptions import MKException
 
 from ._network_topology import get_topology_context_and_filters
 from .breadcrumb import dashboard_breadcrumb

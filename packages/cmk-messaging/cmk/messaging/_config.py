@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Configuraton values"""
+
 import ssl
 import subprocess
-from collections.abc import Callable, Sequence
+from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING, TypeVar
 
@@ -31,7 +32,8 @@ class BrokerCertificates(BaseModel):
 
     key: bytes
     cert: bytes
-    cas: Sequence[bytes]
+    central_ca: bytes
+    customer_ca: bytes | None = None
 
 
 @lru_cache

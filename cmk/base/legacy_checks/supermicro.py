@@ -140,7 +140,8 @@ def check_supermicro_sensors(item, _no_params, info):
                 if unit == "mV":
                     # TODO: Could warn_upper and crit_upper be None here?
                     reading, warn_upper, crit_upper = (
-                        x / 1000.0 for x in (reading, warn_upper, crit_upper)  # type: ignore[operator]
+                        x / 1000.0  # type: ignore[operator]
+                        for x in (reading, warn_upper, crit_upper)
                     )
                     unit = "V"
                 perfvar = "voltage"

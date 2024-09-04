@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.ccc.version import Edition, edition
+
 from cmk.utils import paths
 from cmk.utils.licensing.cre_handler import CRELicensingHandler
 from cmk.utils.licensing.handler import (
@@ -13,8 +15,6 @@ from cmk.utils.licensing.handler import (
     RemainingTrialTime,
     UserEffect,
 )
-
-from cmk.ccc.version import Edition, edition
 
 
 class LicensingHandlerRegistry:

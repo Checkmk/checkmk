@@ -5,6 +5,7 @@
 from typing import Any
 
 from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.rulesets.v1.form_specs import Float, FormSpec, Percentage
 
 

@@ -13,9 +13,9 @@ import pytest
 
 from tests.testlib.repo import repo_path
 
-import cmk.utils.werks
-
 import cmk.ccc.version as cmk_version
+
+import cmk.utils.werks
 
 CVSS_REGEX_V31 = re.compile(
     r"CVSS:3.1/AV:[NALP]/AC:[LH]/PR:[NLH]/UI:[NR]/S:[UC]/C:[NLH]/I:[NLH]/A:[NLH]"

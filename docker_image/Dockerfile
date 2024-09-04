@@ -21,6 +21,9 @@ ENV CMK_PASSWORD=""
 ARG MAIL_RELAY_HOST
 ENV MAIL_RELAY_HOST=""
 
+# Set a timezone
+ENV TZ=""
+
 ARG DISTRO_CODENAME="jammy"
 
 # Add helper variable to better detect when running inside container.

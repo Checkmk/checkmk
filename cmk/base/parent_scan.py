@@ -12,6 +12,9 @@ from contextlib import suppress
 from dataclasses import dataclass
 from typing import Protocol
 
+import cmk.ccc.debug
+from cmk.ccc.exceptions import MKGeneralException, MKIPAddressLookupError
+
 import cmk.utils.paths
 from cmk.utils import tty
 from cmk.utils.caching import cache_manager, DictCache
@@ -20,9 +23,6 @@ from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.log import console
 
 from cmk.automations.results import Gateway, GatewayResult
-
-import cmk.ccc.debug
-from cmk.ccc.exceptions import MKGeneralException, MKIPAddressLookupError
 
 
 @dataclass(frozen=True, kw_only=True)

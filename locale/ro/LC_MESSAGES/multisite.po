@@ -141,6 +141,9 @@ msgstr ""
 " Aceasta include, de asemenea, orice modificări efectuate de la ultima "
 "activare care nu au necesitat activare manuală (marcate cu "
 
+msgid " Want to be notified about the public release? "
+msgstr ""
+
 #, python-format
 msgid " and %s '%s'"
 msgstr " și %s '%s'"
@@ -186,9 +189,6 @@ msgstr " sau "
 
 msgid " or int"
 msgstr " sau int"
-
-msgid " to get notified once the commercial release is available. "
-msgstr ""
 
 msgid " to:"
 msgstr " către:"
@@ -818,12 +818,12 @@ msgid "(No fallback email address configured!)"
 msgstr "(Nu este configurată nicio adresă de e-mail de rezervă!)"
 
 #, python-format
-msgid "(SLA alert levels at %d%%/%d%% left)"
-msgstr "(niveluri de alertă SLA la %d%%/%d%% stânga)"
-
-#, python-format
 msgid "(SLA alert levels at %d/%d incidents left)"
 msgstr "(niveluri de alertă SLA la %d/%d incidente în stânga)"
+
+#, fuzzy, python-format
+msgid "(SLA alert levels at %r%%/%r%% left)"
+msgstr "(niveluri de alertă SLA la %d%%/%d%% stânga)"
 
 msgid "(TLS, HTTP and DNS names)"
 msgstr "(TLS, HTTP și nume DNS)"
@@ -917,6 +917,9 @@ msgstr "(necunoscut: %d)"
 
 msgid "(unset)"
 msgstr "(neconfigurat)"
+
+msgid ", "
+msgstr ""
 
 msgid ", but it is overruled by a match in a previous rule pack."
 msgstr ", dar este anulată de o potrivire dintr-un pachet de reguli anterior."
@@ -2025,6 +2028,14 @@ msgstr ""
 "O listă completă a tuturor problemelor gazdelor, optimizată pentru "
 "utilizarea în tabloul de bord"
 
+#, fuzzy
+msgid "A connection with the same sites already exists."
+msgstr "Un director cu acest nume deja există."
+
+#, fuzzy
+msgid "A connection with this ID already exists."
+msgstr "Există deja un pachet de reguli cu acest ID."
+
 msgid ""
 "A couple of switches with broken firmware report that they support 64 bit "
 "counters but do not output any actual data in those counters. Listing those "
@@ -2973,6 +2984,10 @@ msgstr "Accesul analizează configurația"
 msgid "Access key"
 msgstr "Cheie de acces"
 
+#, fuzzy
+msgid "Access key ID"
+msgstr "Cheie de acces"
+
 msgid "Access point name"
 msgstr "Numele punctului de acces"
 
@@ -3850,6 +3865,10 @@ msgstr "Adăugați lista"
 msgid "Add macro"
 msgstr "Adăugați macro"
 
+#, fuzzy
+msgid "Add message broker connection"
+msgstr "Conexiune la serverul API"
+
 msgid "Add message pattern"
 msgstr "Adaugă model mesaj"
 
@@ -4012,6 +4031,10 @@ msgstr "Adaugă model/tipar"
 
 msgid "Add pattern group"
 msgstr "Adaugă group de model"
+
+#, fuzzy
+msgid "Add peer-to-peer message broker connection"
+msgstr "Solicitări medii pe conexiune"
 
 #, fuzzy
 msgid "Add plug-in"
@@ -7004,6 +7027,17 @@ msgstr ""
 "poziție <tt>\\1</tt>, <tt>\\2</tt>, etc. pentru a insera primul, al doilea "
 "etc. grup care se potrivește."
 
+#, fuzzy
+msgid "Attach graphs"
+msgstr "toate graficele"
+
+#, fuzzy
+msgid ""
+"Attach graphs and limit the number of graphs that are attached to an issue."
+msgstr ""
+"Stabilește o limită pentru numărul de grafice care sunt afișate într-o "
+"notificare."
+
 msgid ""
 "Attach information about a contact person. If you have bracketed groups in "
 "the text to match, then you can use the placeholders <tt>\\1</tt>, <tt>\\2</"
@@ -7013,6 +7047,10 @@ msgstr ""
 "paranteze în textul care trebuie să se potrivească, atunci puteți utiliza "
 "caracterele de poziție <tt>\\1</tt>, <tt>\\2</tt>, etc. pentru a insera "
 "primul, al doilea etc. grup care se potrivește."
+
+#, fuzzy
+msgid "Attach up to"
+msgstr "Să se prezinte la"
 
 msgid "Attempt to interpret OEM data"
 msgstr "Încercarea de a interpreta datele OEM"
@@ -10694,6 +10732,38 @@ msgid "Cannot change rule conditions for rules managed by Quick setup."
 msgstr ""
 
 #, python-format
+msgid "Cannot compute perfometer label due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer label expression due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer segment due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer sorting value due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer stack due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer summed values due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer total value due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer unit due to '%s'"
+msgstr ""
+
+#, python-format
 msgid "Cannot connect to event daemon via %s: %s"
 msgstr "Nu se poate conecta la daemonul de evenimente prin %s: %s."
 
@@ -11749,10 +11819,6 @@ msgstr ""
 msgid "Checkmk Cloud"
 msgstr "Checkmk Logo"
 
-#, fuzzy
-msgid "Checkmk Cloud (SaaS) Beta"
-msgstr "Agent Checkmk"
-
 msgid "Checkmk Configuration Files"
 msgstr "Fișiere de configurare Checkmk"
 
@@ -11913,12 +11979,13 @@ msgstr "Serverele Checkmk"
 msgid "Checkmk service provider metadata (generated automatically)"
 msgstr "Metadatele furnizorului de servicii Checkmk (generate automat)"
 
+#, fuzzy
 msgid ""
 "Checkmk signs your SAML 2.0 requests to your identity provider. You can use "
 "the certificate that comes with Checkmk. Alternatively, if your organization "
 "manages its own certificates, you can add a custom certificate. Note that "
 "the public certificate must be a single certificate (not a certificate "
-"chain)."
+"chain). Only RSA certificates are supported at this time."
 msgstr ""
 "Checkmk semnează cererile SAML 2.0 către furnizorul de identitate. Puteți "
 "utiliza certificatul care vine cu Checkmk. Alternativ, dacă organizația dvs. "
@@ -12592,8 +12659,8 @@ msgid "Cleared"
 msgstr "Starea \"Liber"
 
 msgid ""
-"Click 'Add user' under Users, select 'Access key - Programmatic access', and "
-"attach the 'ReadOnlyAccess' policy."
+"Click \"Add user\" under Users, select \"Access key - Programmatic access\", "
+"and attach the \"ReadOnlyAccess\" policy."
 msgstr ""
 
 msgid "Click for instant reload."
@@ -14089,6 +14156,23 @@ msgstr "Conectare fără parolă"
 msgid "Connect without proxy"
 msgstr "Conectare fără proxy"
 
+#, fuzzy
+msgid "Connectee:"
+msgstr "Conectați-vă"
+
+msgid "Connecter and connectee sites must be different."
+msgstr ""
+
+msgid "Connecter and connectee sites must be specified."
+msgstr ""
+
+msgid "Connecter and connectee sites must belong to the same customers."
+msgstr ""
+
+#, fuzzy
+msgid "Connecter:"
+msgstr "Conectați-vă"
+
 msgid "Connection"
 msgstr "Conexiune"
 
@@ -14196,6 +14280,13 @@ msgstr "Prizele de conectare"
 
 msgid "Connector type"
 msgstr "Tipul de conector"
+
+msgid "Connector: Adding host changes to queue"
+msgstr ""
+
+#, python-format
+msgid "Connector: Collecting piggyback hosts on site  \"%s\""
+msgstr ""
 
 msgid "Consider alerts for Prism Central only"
 msgstr "Luați în considerare alertele numai pentru Prism Central"
@@ -15256,6 +15347,10 @@ msgstr "A creat o nouă regulă de notificare"
 msgid "Created new notification rule for user %s"
 msgstr "A fost creată o nouă regulă de notificare pentru utilizatorul %s"
 
+#, fuzzy, python-format
+msgid "Created new peer-to-peer broker connection id %s"
+msgstr "A fost creată o nouă conexiune la site %s"
+
 #, python-format
 msgid "Created new role '%s'"
 msgstr "A creat un nou rol '%s'"
@@ -16042,6 +16137,10 @@ msgstr "Utilizarea memoriei DB2"
 msgid "DCD"
 msgstr "DCD"
 
+#, fuzzy, python-format
+msgid "DCD Manager: Fetching piggyback hosts from site \"%s\""
+msgstr "Faza 1.1: Preluarea de pe site-ul \"%s\""
+
 msgid "DCD status"
 msgstr "Starea DCD"
 
@@ -16463,8 +16562,13 @@ msgstr "Baza de date pentru MySQL"
 msgid "Database for MySQL single server"
 msgstr "Baza de date pentru MySQL"
 
-msgid "Database for PostgreSQL"
-msgstr "Baza de date pentru PostgreSQL"
+#, fuzzy
+msgid "Database for PostgreSQL flexible server"
+msgstr "Baza de date pentru MySQL"
+
+#, fuzzy
+msgid "Database for PostgreSQL single server"
+msgstr "Baza de date pentru MySQL"
 
 msgid "Database identifier"
 msgstr "Identificatorul bazei de date"
@@ -17361,6 +17465,10 @@ msgstr "Ștergerea regulii de notificare #%d"
 
 msgid "Delete oldest event, create new event"
 msgstr "Ștergeți cel mai vechi eveniment, creați un nou eveniment"
+
+#, fuzzy
+msgid "Delete peer-to-peer connection to site"
+msgstr "Ștergeți conexiunea cu site-ul"
 
 msgid "Delete permitted maps"
 msgstr "Ștergerea hărților permise"
@@ -20295,10 +20403,6 @@ msgid ""
 msgstr ""
 
 #, python-format
-msgid "During the beta phase, the number of services is limited to %s. "
-msgstr ""
-
-#, python-format
 msgid "During the development phase, the number of services is limited to %s."
 msgstr ""
 
@@ -20754,6 +20858,10 @@ msgstr "Editați aspectul"
 
 msgid "Edit layout only available if header is enabled"
 msgstr "Editarea aspectului este disponibilă numai dacă este activat antetul"
+
+#, fuzzy, python-format
+msgid "Edit message broker connection %s"
+msgstr "Editați conexiunea site-ului %s"
 
 msgid "Edit model"
 msgstr "Editați modelul"
@@ -21499,6 +21607,11 @@ msgstr ""
 "înregistrate doar problemele."
 
 msgid ""
+"Enabling this option will enforce two factor authentication for all users. "
+"Enabling this setting will overide role based two factor enforcement."
+msgstr ""
+
+msgid ""
 "Enabling this option will result in an additional service for every RMON-"
 "capable switch port. This service will provide detailed information on the "
 "distribution of packet sizes transferred over the port. Note: currently, "
@@ -21634,6 +21747,10 @@ msgstr "Impuneți criptarea datelor agentului"
 msgid "Enforce change"
 msgstr "Aplică schimbarea"
 
+#, fuzzy
+msgid "Enforce for all users"
+msgstr "Impuneți utilizarea literelor mici pentru ID-urile de utilizator."
+
 msgid "Enforce lower case User-IDs."
 msgstr "Impuneți utilizarea literelor mici pentru ID-urile de utilizator."
 
@@ -21647,6 +21764,10 @@ msgstr "Impuneți re-autentificarea după:"
 
 msgid "Enforce show more"
 msgstr "Forța de muncă arată mai mult"
+
+#, fuzzy
+msgid "Enforce two factor authentication"
+msgstr "Îndepărtați autentificarea cu doi factori"
 
 #, fuzzy
 msgid "Enforced service"
@@ -23375,6 +23496,10 @@ msgstr "Nu a reușit să redea valoarea:"
 msgid "Failed to render value: %r"
 msgstr "Nu a reușit să redea valoarea: %r."
 
+#, fuzzy, python-format
+msgid "Failed to save broker certificates: %s"
+msgstr "Nu s-a reușit să se obțină certificatul peer (%s)"
+
 #, python-format
 msgid "Failed to search rule of ruleset '%s' in folder '%s' (%r): %s"
 msgstr ""
@@ -23642,6 +23767,10 @@ msgid "Fetching '%s'..."
 msgstr "Fetching '%s'..."
 
 msgid "Fetching livestatus status"
+msgstr "Preluarea stării livestatus"
+
+#, fuzzy
+msgid "Fetching message broker status"
 msgstr "Preluarea stării livestatus"
 
 msgid "Fetching replication status"
@@ -25463,8 +25592,8 @@ msgstr "Graficul este vizibil"
 msgid "Graph layout"
 msgstr "Dispunerea graficului"
 
-#, python-format
-msgid "Graph recipe '%s' uses undefined metric '%s', available are: %s"
+#, fuzzy, python-format
+msgid "Graph recipe '%s' has the error '%s', available are: %s"
 msgstr ""
 "Rețeta grafică '%s' utilizează metrica nedefinită '%s', disponibile sunt: %s."
 
@@ -27142,9 +27271,6 @@ msgstr "Ascundeți folderele fără permisiuni de citire"
 
 msgid "Hide from Status GUI"
 msgstr "Ascundeți din GUI de stare"
-
-msgid "Hide help text of rules in list views"
-msgstr "Ascundeți textul de ajutor al regulilor în vizualizările de listă"
 
 msgid "Hide hosttags in Setup folder view"
 msgstr "Ascundeți etichetele de gazdă în vizualizarea folderului Setup"
@@ -30310,6 +30436,12 @@ msgstr ""
 "serviciul va fi cel puțin în stare de AVERTISMENT (chiar dacă rezultatul în "
 "sine este OK)."
 
+msgid ""
+"If set, all users with this role will be required to setup two factor "
+"authentication. 'Enforce two factor authentication' in global settings will "
+"override this setting."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "If set, the plug-in may be called repeately - up to this many times or until "
@@ -33032,6 +33164,10 @@ msgstr "Integrarea Prometheus"
 msgid "Integration Key"
 msgstr "Cheia de integrare"
 
+#, fuzzy
+msgid "Integration team"
+msgstr "Cheia de integrare"
+
 msgid ""
 "Interactive search field for direct access to monitoring instances (hosts, "
 "services, host and service groups).<br>You can use the following filters: "
@@ -33272,8 +33408,8 @@ msgstr "Parametru de control invalid"
 msgid "Invalid check type"
 msgstr "Tip de control nevalabil"
 
-#, fuzzy
-msgid "Invalid choice"
+#, fuzzy, python-format
+msgid "Invalid choice %r"
 msgstr "Subiect nevalabil"
 
 #, fuzzy
@@ -33355,6 +33491,9 @@ msgid ""
 "Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr ""
 "Nume de dosar invalid. Sunt permise numai caracterele a-z, A-Z, 0-9, _ și -."
+
+msgid "Invalid generate-broker-certs: no certificates received."
+msgstr ""
 
 #, python-format
 msgid "Invalid graph type '%s'"
@@ -33557,6 +33696,10 @@ msgstr "Subiect nevalabil"
 
 msgid "Invalid transaction"
 msgstr "Tranzacție invalidă"
+
+#, fuzzy
+msgid "Invalid tuple"
+msgstr "Test nevalabil."
 
 msgid "Invalid type specified."
 msgstr "Tipul specificat nu este valid."
@@ -34389,9 +34532,6 @@ msgstr "Cuvânt cheie"
 #, fuzzy
 msgid "KiB"
 msgstr "MiB"
-
-msgid "KiB out of sync"
-msgstr "KiB desincronizat"
 
 msgid "Kube-proxy version"
 msgstr "Versiunea Kube-proxy"
@@ -39622,6 +39762,10 @@ msgstr ""
 msgid "Modified host %s."
 msgstr "Gazdă modificată %s."
 
+#, fuzzy, python-format
+msgid "Modified peer-to-peer broker connection id %s"
+msgstr "Conexiune site modificată %s"
+
 #, python-format
 msgid "Modified rule pack %s"
 msgstr "Pachet de reguli modificat %s"
@@ -41649,6 +41793,10 @@ msgstr "Nici un tip de obiect"
 msgid "No password entered. Please enter a password."
 msgstr "Nu a fost introdusă nicio parolă. Vă rugăm să introduceți o parolă."
 
+#, fuzzy
+msgid "No password provided"
+msgstr "Din magazinul de parole"
+
 msgid "No pending changes"
 msgstr "Nu există modificări în curs de desfășurare"
 
@@ -42147,6 +42295,10 @@ msgstr "Nu este permisă schimbarea parolei. Schimbarea nu poate fi impusă."
 
 msgid "Not ready duration"
 msgstr "Durată nepregătită"
+
+#, fuzzy
+msgid "Not required"
+msgstr "este necesară"
 
 msgid "Not responding devices"
 msgstr "Dispozitive care nu răspund"
@@ -45315,6 +45467,10 @@ msgstr "În afara perioadei de notificare"
 msgid "Out of service period"
 msgstr "Perioada de întrerupere a serviciului"
 
+#, fuzzy
+msgid "Out of sync"
+msgstr "KiB desincronizat"
+
 msgid "Outage count requirement"
 msgstr "Cerința de numărare a întreruperilor"
 
@@ -46307,6 +46463,10 @@ msgstr "Parola a fost schimbată (sincronizarea a eșuat: %s)"
 msgid "Password does not exist or using not permitted"
 msgstr "Parola nu există sau utilizarea nu este permisă"
 
+#, fuzzy
+msgid "Password does not exist or using not permitted."
+msgstr "Parola nu există sau utilizarea nu este permisă"
+
 msgid "Password for binding, if your server requires an authentication"
 msgstr "Parola pentru legare, dacă serverul dvs. necesită o autentificare"
 
@@ -46472,6 +46632,10 @@ msgstr "Numele colegului"
 #, fuzzy
 msgid "Peer states"
 msgstr "Statele similare"
+
+#, fuzzy
+msgid "Peer-to-peer message broker connections"
+msgstr "Niveluri superioare pentru conexiuni blocate"
 
 msgid "Peers"
 msgstr "Colegii"
@@ -47057,29 +47221,9 @@ msgstr "Întreruperi fantomă primite"
 msgid "Phase"
 msgstr "Faza"
 
-#, python-format
-msgid "Phase 1.1: Executing on site \"%s\""
-msgstr "Faza 1.1: Se execută pe site-ul \"%s\""
-
-#, python-format
-msgid "Phase 1.1: Fetching from site \"%s\""
-msgstr "Faza 1.1: Preluarea de pe site-ul \"%s\""
-
 #, fuzzy
-msgid "Phase 1.2: Extracting result"
-msgstr "Faza 2.1: Extragerea rezultatului"
-
-#, fuzzy
-msgid "Phase 2.1: Fetching existing hosts"
+msgid "Phase 2.1: Fetchin  g existing hosts"
 msgstr "Faza 2.2: Obținerea gazdelor existente"
-
-#, fuzzy
-msgid "Phase 2.2: Deliver existing hosts"
-msgstr "Faza 2.2: Obținerea gazdelor existente"
-
-#, fuzzy, python-format
-msgid "Phase 2: Deliver %s piggyback hosts"
-msgstr "Prefix pentru numele de gazdă piggyback"
 
 msgid "Phase Number"
 msgstr "Numărul fazei"
@@ -50929,10 +51073,6 @@ msgstr "Raport"
 msgid "Report Properties"
 msgstr "Proprietăți de raport"
 
-#, fuzzy
-msgid "Report an issue here. "
-msgstr "Raport la program"
-
 msgid ""
 "Report created $NOW_DATE$ $NOW_TIME$ by $USER_ALIAS$ ($USER_ID$)\n"
 "\n"
@@ -51154,6 +51294,10 @@ msgstr "Utilizarea cererilor"
 
 msgid "Require a comment"
 msgstr "Cereți un comentariu"
+
+#, fuzzy
+msgid "Required"
+msgstr "Port necesar"
 
 msgid "Required context filters"
 msgstr "Filtre de context necesare"
@@ -51655,6 +51799,11 @@ msgid "Return process times within performance data"
 msgstr "Timpii de procesare a returului în cadrul datelor de performanță"
 
 msgid ""
+"Return to Checkmk, define a unique AWS account name, and use the Access key "
+"and Secret access key below."
+msgstr ""
+
+msgid ""
 "Returns the latest crash dumps of each type as found in var/checkmk/crashes"
 msgstr ""
 "Returnează cele mai recente descărcări de accident de fiecare tip, așa cum "
@@ -51671,11 +51820,11 @@ msgid "Revert foreign changes"
 msgstr "Activați modificările străine"
 
 #, fuzzy
-msgid "Review and run service discovery"
+msgid "Review and run preview service discovery"
 msgstr "Salvați & rulați descoperirea serviciilor"
 
 #, fuzzy
-msgid "Review your configuration, run and preview service discovery"
+msgid "Review your configuration and run preview service discovery"
 msgstr "Salvați & rulați descoperirea serviciilor"
 
 msgid "Revolutions per minute"
@@ -52796,6 +52945,10 @@ msgstr "Nu activați modificările"
 msgid "Save & go to host properties"
 msgstr "Salvați și mergeți la proprietățile gazdei"
 
+#, fuzzy
+msgid "Save & go to service discovery"
+msgstr "Salvați & rulați descoperirea serviciilor"
+
 msgid "Save & run connection tests"
 msgstr "Salvați & executați testele de conectare"
 
@@ -52818,7 +52971,7 @@ msgstr "Salvați ca nou aspect pentru această agregare"
 msgid "Save response"
 msgstr "Salvați răspunsul"
 
-msgid "Save the generated access key and secret key for later use."
+msgid "Save the generated Access key and Secret access key."
 msgstr ""
 
 msgid "Save this host and go to"
@@ -53244,6 +53397,10 @@ msgstr ""
 "Secunde de așteptare între trimiterea șirului de caractere și interogarea "
 "pentru răspuns"
 
+#, fuzzy
+msgid "Secret access key"
+msgstr "Cheia secretă"
+
 msgid "Secret key"
 msgstr "Cheia secretă"
 
@@ -53293,6 +53450,10 @@ msgstr "Securitate"
 
 msgid "Security Level"
 msgstr "Nivelul de securitate"
+
+#, fuzzy
+msgid "Security advice"
+msgstr "Denumire de securitate"
 
 msgid "Security fix"
 msgstr "Fix de securitate"
@@ -55071,6 +55232,9 @@ msgstr ""
 "Framework, ci a Robotmk; o suită Robot poate avea o stare internă OK, dar o "
 "stare WARN în Checkmk."
 
+msgid "Sets the user of the alert. Display name of the request owner."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Sets thresholds for the runtime of a KPI. Note that runtime monitoring is "
@@ -55994,6 +56158,11 @@ msgstr ""
 "senzori pot avea aceeași descriere. Pentru a se asigura că elementele sunt "
 "unice, acestea sunt prefixate cu X-Y, unde X este numărul dispozitivului și "
 "Y este indicele senzorului."
+
+msgid ""
+"Since this is a ReadOnlyAccess, we won't create any resources on your AWS "
+"account."
+msgstr ""
 
 msgid ""
 "Since version 2.1 it is possible to encrypt the communication of the "
@@ -58026,6 +58195,10 @@ msgstr "Stare dacă implementarea agentului este dezactivată la nivel global"
 msgid "State if at least one blocked session"
 msgstr "Stare dacă cel puțin o sesiune blocată"
 
+#, fuzzy
+msgid "State if at least one node is unmanaged"
+msgstr "Stare dacă cel puțin o sesiune blocată"
+
 msgid "State if battery needs replacement"
 msgstr "Indicați dacă bateria trebuie înlocuită"
 
@@ -59625,6 +59798,10 @@ msgstr "Rezumatul socket-urilor Systemd"
 msgid "Systems larger than"
 msgstr "Sisteme mai mari de"
 
+#, fuzzy
+msgid "TBD"
+msgstr "MiB"
+
 msgid "TCP"
 msgstr "TCP"
 
@@ -61104,9 +61281,6 @@ msgstr ""
 "aceste valori cu seturile de reguli de configurare <i>Set cache age for "
 "plugins and local checks</i> și <i>Set execution mode for plugins and local "
 "checks</i>."
-
-msgid "The access key ID for your AWS account"
-msgstr "ID-ul cheii de acces pentru contul dvs. AWS"
 
 msgid "The access key for your AWS account"
 msgstr "Cheia de acces pentru contul dvs. AWS"
@@ -63295,6 +63469,11 @@ msgid ""
 msgstr ""
 "Numele sistemului trebuie să înceapă cu <tt>VM</tt> sau <tt>HostSystem</tt>."
 
+msgid ""
+"The name of the team where the integration was created. If this field is "
+"set, additional information can be added to alerts."
+msgstr ""
+
 msgid "The name of the view may only contain letters, digits and underscores."
 msgstr ""
 "Numele vizualizării poate conține numai litere, cifre și caractere de "
@@ -63955,6 +64134,10 @@ msgstr "Agregarea BI solicitată nu există."
 msgid "The requested BI rule does not exist."
 msgstr "Regula BI solicitată nu există."
 
+#, fuzzy, python-format
+msgid "The requested connection %s does not exist"
+msgstr "Conexiunea solicitată nu există."
+
 msgid "The requested connection does not exist."
 msgstr "Conexiunea solicitată nu există."
 
@@ -64198,9 +64381,6 @@ msgstr "Programul pe care încercați să îl ștergeți nu există."
 
 msgid "The schedule you are trying to edit does not exist."
 msgstr "Programul pe care încercați să îl editați nu există."
-
-msgid "The secret access key for your AWS account"
-msgstr "Cheia secretă de acces pentru contul AWS"
 
 msgid "The secret key for your AWS account"
 msgstr "Cheia secretă pentru contul dvs. AWS"
@@ -64974,9 +65154,6 @@ msgstr "Verificarea nu poate fi inițiată din cauza lipsei certificatului CA"
 #, python-format
 msgid "The version of this site is not a %s"
 msgstr "Versiunea acestui site nu este un %s."
-
-msgid "The version of this site is not a Checkmk managed services edition"
-msgstr "Versiunea din acest site nu este o ediție Checkmk managed services"
 
 #, python-format
 msgid ""
@@ -70680,14 +70857,15 @@ msgstr "Autentificare cu jeton"
 msgid "Token based authentication"
 msgstr "Autentificare bazată pe token"
 
-msgid "Tolderance period for 'reloading' state"
-msgstr "Perioada de toleranță pentru 'reîncărcarea' statului"
-
 msgid "Tolerance period for 'activating' state"
 msgstr "Perioada de toleranță pentru 'activarea' stării"
 
 msgid "Tolerance period for 'deactivating' state"
 msgstr "Perioada de toleranță pentru 'dezactivarea' statului"
+
+#, fuzzy
+msgid "Tolerance period for 'reloading' state"
+msgstr "Perioada de toleranță pentru 'reîncărcarea' statului"
 
 msgid "Tools install state"
 msgstr "Instrumente de instalare de stat"
@@ -73410,6 +73588,10 @@ msgstr "Interfața tunelului"
 msgid "Tunnels which ignore levels"
 msgstr "Tuneluri care ignoră nivelurile"
 
+#, fuzzy
+msgid "Two Factor"
+msgstr "Factor de formă"
+
 msgid "Two hours"
 msgstr "Două ore"
 
@@ -73827,8 +74009,18 @@ msgid "Unable to create authentication request"
 msgstr "Nu se poate crea o cerere de autentificare"
 
 #, python-format
+msgid ""
+"Unable to delete connection id: %s. Connecter and connectee sites must be "
+"specified."
+msgstr ""
+
+#, python-format
 msgid "Unable to delete group. It is still in use by: %s"
 msgstr "Nu se poate șterge grupul. Acesta este încă utilizat de: %s."
+
+#, fuzzy, python-format
+msgid "Unable to delete unknown connection id: %s"
+msgstr "Nu se poate șterge un id de site necunoscut: %s."
 
 #, python-format
 msgid "Unable to delete unknown site id: %s"
@@ -73969,6 +74161,10 @@ msgstr ""
 "pentru DN-ul de bază al utilizatorului \"%s\" și DN-ul de bază al grupului "
 "\"%s\")"
 
+#, fuzzy
+msgid "Unable to transform value"
+msgstr "Nu a reușit să redea valoarea:"
+
 #, python-format
 msgid "Unable to upload icon: %s"
 msgstr "Nu se poate încărca pictograma: %s."
@@ -74099,6 +74295,10 @@ msgstr "ID unic"
 msgid "Unique ID used to identify the instance on the host within Checkmk."
 msgstr ""
 "ID unic utilizat pentru a identifica instanța de pe gazdă în cadrul Checkmk."
+
+#, fuzzy
+msgid "Unique ID:"
+msgstr "ID unic"
 
 msgid ""
 "Unique client ID used for the broker. Will be randomly generated when not "
@@ -78518,12 +78718,6 @@ msgstr ""
 "cu acest nume de fișier. Extensia trebuie să fie întotdeauna <tt>pdf</tt>."
 
 msgid ""
-"When disabled, Setup shows the help texts of rules also in the list views."
-msgstr ""
-"Dacă este dezactivat, Setup afișează textele de ajutor ale regulilor și în "
-"vizualizările listei."
-
-msgid ""
 "When doing service discovery on brocade switches only ports with the given "
 "administrative states will be added to the monitoring system."
 msgstr ""
@@ -81662,6 +81856,10 @@ msgstr ""
 "la distanță, nu uitați să adăugați și site-ul de monitorizare local, dacă "
 "doriți să afișați datele acestuia."
 
+#, fuzzy
+msgid "You have not configured any peer-to-peer connections."
+msgstr "Nu ați creat încă nicio regulă."
+
 #, python-format
 msgid ""
 "You have not created any agent <a href='%s' target='_blank'>signature keys</"
@@ -82058,6 +82256,12 @@ msgid "You need to supply a comment."
 msgstr "Trebuie să furnizați un comentariu."
 
 msgid ""
+"You should see the standard Robot Framework HTML log below. However, this "
+"content is generated externally. It is prone to injection attacks (executed "
+"on the host where the test is executed). Proceed with caution."
+msgstr ""
+
+msgid ""
 "You will have to configure the host address of the server which hosts the "
 "monitoring server of the host the agent is installed on."
 msgstr ""
@@ -82084,6 +82288,11 @@ msgstr "Platforma dumneavoastră de monitorizare IT"
 
 msgid "Your WebAuthn credential is already in use"
 msgstr "Credențialul dvs. WebAuthn este deja în uz"
+
+msgid ""
+"Your administrator has enforced two factor authentication for your account. "
+"Kindly register one of the following two factor mechanisms:"
+msgstr ""
 
 msgid "Your central site is incompatible with this remote site"
 msgstr "Site-ul dvs. central este incompatibil cu acest site la distanță"
@@ -82682,6 +82891,14 @@ msgstr "configurare"
 msgid "configure"
 msgstr "configurați"
 
+#, fuzzy
+msgid "connectee"
+msgstr "deconectat"
+
+#, fuzzy
+msgid "connecter"
+msgstr "deconectat"
+
 msgid "connection"
 msgstr "conexiune"
 
@@ -83123,9 +83340,6 @@ msgstr "ascundeți numele dosarelor"
 
 msgid "hide folders without read permissions"
 msgstr "ascundeți folderele fără permisiuni de citire"
-
-msgid "hide help text"
-msgstr "ascundeți textul de ajutor"
 
 msgid "hide hosttags"
 msgstr "ascunde etichetele de gazdă"
@@ -84487,6 +84701,54 @@ msgstr ""
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 
+#~ msgid "Hide help text of rules in list views"
+#~ msgstr "Ascundeți textul de ajutor al regulilor în vizualizările de listă"
+
+#~ msgid "The access key ID for your AWS account"
+#~ msgstr "ID-ul cheii de acces pentru contul dvs. AWS"
+
+#~ msgid "The secret access key for your AWS account"
+#~ msgstr "Cheia secretă de acces pentru contul AWS"
+
+#~ msgid "The version of this site is not a Checkmk managed services edition"
+#~ msgstr "Versiunea din acest site nu este o ediție Checkmk managed services"
+
+#~ msgid ""
+#~ "When disabled, Setup shows the help texts of rules also in the list views."
+#~ msgstr ""
+#~ "Dacă este dezactivat, Setup afișează textele de ajutor ale regulilor și "
+#~ "în vizualizările listei."
+
+#~ msgid "hide help text"
+#~ msgstr "ascundeți textul de ajutor"
+
+#~ msgid "Database for PostgreSQL"
+#~ msgstr "Baza de date pentru PostgreSQL"
+
+#, fuzzy
+#~ msgid "Checkmk Cloud (SaaS) Beta"
+#~ msgstr "Agent Checkmk"
+
+#, fuzzy
+#~ msgid "Report an issue here. "
+#~ msgstr "Raport la program"
+
+#, python-format
+#~ msgid "Phase 1.1: Executing on site \"%s\""
+#~ msgstr "Faza 1.1: Se execută pe site-ul \"%s\""
+
+#, fuzzy
+#~ msgid "Phase 1.2: Extracting result"
+#~ msgstr "Faza 2.1: Extragerea rezultatului"
+
+#, fuzzy
+#~ msgid "Phase 2.2: Deliver existing hosts"
+#~ msgstr "Faza 2.2: Obținerea gazdelor existente"
+
+#, fuzzy, python-format
+#~ msgid "Phase 2: Deliver %s piggyback hosts"
+#~ msgstr "Prefix pentru numele de gazdă piggyback"
+
 #~ msgid "Contact Groups"
 #~ msgstr "Grupuri de contact"
 
@@ -84814,9 +85076,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #~ msgstr ""
 #~ "Cantitatea de timp în care serverul de replică este în întârziere față de "
 #~ "serverul sursă"
-
-#~ msgid "Connect"
-#~ msgstr "Conectați-vă"
 
 #, fuzzy
 #~ msgid "Last updated"

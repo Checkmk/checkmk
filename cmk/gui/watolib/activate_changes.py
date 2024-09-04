@@ -35,10 +35,15 @@ from itertools import filterfalse
 from multiprocessing.pool import AsyncResult, ThreadPool
 from pathlib import Path
 from typing import Any, Literal, NamedTuple, TypedDict
+from urllib.parse import urlparse
 
 from setproctitle import setthreadtitle
 
-from livestatus import SiteConfiguration, SiteId
+from livestatus import BrokerConnections, SiteConfiguration, SiteId
+
+from cmk.ccc import store, version
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
 
 from cmk.utils import agent_registration, paths, render, setup_search_index
 from cmk.utils.licensing.export import LicenseUsageExtensions
@@ -87,6 +92,7 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib import backup_snapshots, broker_certificates, config_domain_name
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import AutomationCommand
+from cmk.gui.watolib.broker_connections import BrokerConnectionsConfigFile
 from cmk.gui.watolib.config_domain_name import (
     ConfigDomainName,
     DomainRequest,
@@ -98,6 +104,7 @@ from cmk.gui.watolib.config_domain_name import (
 from cmk.gui.watolib.config_sync import (
     ABCSnapshotDataCollector,
     create_distributed_wato_files,
+    create_rabbitmq_definitions_file,
     get_site_globals,
     ReplicationPath,
     SnapshotSettings,
@@ -113,10 +120,8 @@ from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
 
 from cmk import mkp_tool, trace
 from cmk.bi.type_defs import frozen_aggregations_dir
-from cmk.ccc import store, version
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import omd_site
 from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
+from cmk.messaging import rabbitmq
 
 # TODO: Make private
 Phase = str  # TODO: Make dedicated type
@@ -284,6 +289,12 @@ def get_replication_paths() -> list[ReplicationPath]:
             ident="omd",
             site_path="etc/omd",
             excludes=["site.conf", "instance_id"],
+        ),
+        ReplicationPath(
+            ty="dir",
+            ident="rabbitmq",
+            site_path="etc/rabbitmq/definitions.d",
+            excludes=["00-default.json"],
         ),
         ReplicationPath(
             ty="dir",
@@ -1236,6 +1247,66 @@ def affects_all_sites(change: ChangeSpec) -> bool:
     return not set(change["affected_sites"]).symmetric_difference(set(activation_sites()))
 
 
+def _add_peer_to_peer_connections(
+    replicated_sites_configs: Mapping[SiteId, SiteConfiguration],
+    connection_info: list[rabbitmq.Connection],
+    peer_to_peer_connections: BrokerConnections,
+) -> None:
+    for _connection_id, connection in peer_to_peer_connections.items():
+        source_site = connection.connecter.site_id
+        destination_site = connection.connectee.site_id
+
+        connection_info.append(
+            rabbitmq.Connection(
+                connectee=rabbitmq.Connectee(
+                    site_id=destination_site,
+                    site_server=urlparse(
+                        replicated_sites_configs[destination_site]["multisiteurl"]
+                    ).netloc,
+                    rabbitmq_port=replicated_sites_configs[destination_site].get(
+                        "message_broker_port", 5672
+                    ),
+                ),
+                connecter=rabbitmq.Connecter(
+                    site_id=source_site,
+                ),
+            )
+        )
+
+
+def get_all_replicated_sites() -> Mapping[SiteId, SiteConfiguration]:
+    return {
+        site_id: site_config
+        for site_id, site_config in activation_sites().items()
+        if site_config.get("replication")
+    }
+
+
+def get_rabbitmq_definitions(
+    peer_to_peer_connections: BrokerConnections,
+) -> Mapping[str, rabbitmq.Definitions]:
+    replicated_sites_configs = get_all_replicated_sites()
+
+    connection_info = [
+        rabbitmq.Connection(
+            connectee=rabbitmq.Connectee(
+                site_id=site_id,
+                site_server=urlparse(site_config["multisiteurl"]).netloc,
+                rabbitmq_port=site_config.get("message_broker_port", 5672),
+            ),
+            connecter=rabbitmq.Connecter(
+                site_id=omd_site(),
+            ),
+        )
+        for site_id, site_config in replicated_sites_configs.items()
+    ]
+
+    _add_peer_to_peer_connections(
+        replicated_sites_configs, connection_info, peer_to_peer_connections
+    )
+    return rabbitmq.compute_distributed_definitions(connection_info)
+
+
 class ActivateChangesManager(ActivateChanges):
     """Manages the activation of pending configuration changes
 
@@ -1374,12 +1445,16 @@ class ActivateChangesManager(ActivateChanges):
         self._activate_foreign = activate_foreign
 
         self._sites = self._get_sites(sites)
+
         self._source = source
         self._activation_id = self._new_activation_id()
         trace.get_current_span().set_attribute("cmk.activate.id", self._activation_id)
+        rabbitmq_definitions = get_rabbitmq_definitions(
+            BrokerConnectionsConfigFile().load_for_reading()
+        )
 
         self._site_snapshot_settings = self._get_site_snapshot_settings(
-            self._activation_id, self._sites
+            self._activation_id, self._sites, rabbitmq_definitions
         )
         self._activate_until = (
             self._get_last_change_id() if activate_until is None else activate_until
@@ -1403,6 +1478,7 @@ class ActivateChangesManager(ActivateChanges):
         self._start_activation()
         self._broker_certificates()
 
+        create_rabbitmq_definitions_file(paths.omd_root, rabbitmq_definitions[omd_site()])
         return self._activation_id
 
     def _verify_valid_host_config(self):
@@ -1636,6 +1712,7 @@ class ActivateChangesManager(ActivateChanges):
         self,
         activation_id: ActivationId,
         sites: list[SiteId],
+        rabbitmq_definitions: Mapping[str, rabbitmq.Definitions],
     ) -> dict[SiteId, SnapshotSettings]:
         snapshot_settings = {}
 
@@ -1656,6 +1733,7 @@ class ActivateChangesManager(ActivateChanges):
                 snapshot_components=snapshot_components,
                 component_names=component_names,
                 site_config=site_config,
+                rabbitmq_definition=rabbitmq_definitions[site_id],
             )
 
         return snapshot_settings
@@ -1811,7 +1889,7 @@ def _clone_site_config_directory(
 
 
 class CRESnapshotDataCollector(ABCSnapshotDataCollector):
-    def prepare_snapshot_files(self):
+    def prepare_snapshot_files(self) -> None:
         """Collect the files to be synchronized for all sites
 
         This is done by copying the things declared by the generic components together to a single
@@ -1842,6 +1920,9 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
                 )
                 create_distributed_wato_files(
                     Path(snapshot_settings.work_dir), site_id, is_remote=True
+                )
+                create_rabbitmq_definitions_file(
+                    Path(snapshot_settings.work_dir), snapshot_settings.rabbitmq_definition
                 )
 
     def _prepare_site_config_directory(self, site_id: SiteId) -> None:

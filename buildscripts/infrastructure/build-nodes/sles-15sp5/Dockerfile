@@ -198,6 +198,7 @@ RUN /opt/install-patchelf.sh
 RUN touch /etc/fstab
 
 COPY --from=scripts ci.bazelrc /etc/
+RUN echo "common:ci --@//:filesystem_layout=fhs" >> /etc/ci.bazelrc
 
 ARG VERS_TAG
 RUN echo "${VERS_TAG}" > /version.txt

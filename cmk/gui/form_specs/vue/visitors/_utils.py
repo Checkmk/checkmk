@@ -2,18 +2,19 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Callable, Optional, Protocol, Sequence
+from typing import Any, Callable, Optional, Protocol, Sequence, TypeVar
 
-from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
+from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.visitors._type_defs import EMPTY_VALUE, EmptyValue
 from cmk.gui.htmllib import html
 from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.utils import escaping
 
-from cmk.rulesets.v1 import Label, Title
-from cmk.rulesets.v1.form_specs import FormSpec
-from cmk.rulesets.v1.form_specs._base import DefaultValue, InputHint, ModelT
+from cmk.rulesets.v1 import Label, Message, Title
+from cmk.rulesets.v1.form_specs import DefaultValue, FormSpec, InputHint, Prefill
 from cmk.rulesets.v1.form_specs.validators import ValidationError
+
+ModelT = TypeVar("ModelT")
 
 
 def get_title_and_help(form_spec: FormSpec[ModelT]) -> tuple[str, str]:
@@ -49,21 +50,21 @@ def optional_validation(
 
 
 def create_validation_error(
-    value: object, error_message: Title | str
-) -> list[VueComponents.ValidationMessage]:
-    if isinstance(error_message, Title):
+    value: object, error_message: Title | Message | str
+) -> list[shared_type_defs.ValidationMessage]:
+    if isinstance(error_message, (Title, Message)):
         error_message = error_message.localize(translate_to_current_language)
     return [
-        VueComponents.ValidationMessage(location=[], message=error_message, invalid_value=value)
+        shared_type_defs.ValidationMessage(location=[], message=error_message, invalid_value=value)
     ]
 
 
 def compute_validation_errors(
     validators: Sequence[Callable[[ModelT], object]],
     raw_value: Any,
-) -> list[VueComponents.ValidationMessage]:
+) -> list[shared_type_defs.ValidationMessage]:
     return [
-        VueComponents.ValidationMessage(location=[], message=x, invalid_value=raw_value)
+        shared_type_defs.ValidationMessage(location=[], message=x, invalid_value=raw_value)
         for x in optional_validation(validators, raw_value)
         if x is not None
     ]
@@ -82,13 +83,21 @@ def get_prefill_default(prefill: _PrefillTypes[ModelT]) -> ModelT | EmptyValue:
     return prefill.value
 
 
-def compute_text_input_hint(prefill: _PrefillTypes[ModelT]) -> str | None:
+def compute_title_input_hint(prefill: _PrefillTypes[ModelT]) -> ModelT | str | None:
+    # InputHint[Title] is only used by SingleChoice and CascadingSingleChoice
+    # in all other cases you should use compute_input_hint
     if not isinstance(prefill, InputHint):
         return None
 
     if isinstance(prefill.value, Title):
         return prefill.value.localize(translate_to_current_language)
-    return str(prefill.value)
+    return prefill.value
+
+
+def compute_input_hint(prefill: Prefill[ModelT]) -> ModelT | None:
+    if not isinstance(prefill, InputHint):
+        return None
+    return prefill.value
 
 
 def compute_label(label: Label | None) -> str | None:

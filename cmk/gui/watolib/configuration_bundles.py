@@ -21,6 +21,9 @@ from typing import (
     TypeVar,
 )
 
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
+
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_QUICK_SETUP
 from cmk.utils.hostaddress import HostName
 from cmk.utils.password_store import Password
@@ -34,9 +37,6 @@ from cmk.gui.watolib.passwords import load_passwords, remove_password, save_pass
 from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, Rule, SingleRulesetRecursively
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.utils import multisite_dir
-
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import omd_site
 
 _T = TypeVar("_T")
 BundleId = NewType("BundleId", str)
@@ -121,12 +121,6 @@ class BundleReferences:
     dcd_connections: Sequence[tuple[str, DCDConnectionSpec]] | None = None
 
 
-def identify_bundle_group_type(bundle_group: str) -> RuleGroupType:
-    if bundle_group.startswith(RuleGroupType.SPECIAL_AGENTS.value):
-        return RuleGroupType.SPECIAL_AGENTS
-    raise ValueError(f"Unknown bundle group: {bundle_group}")
-
-
 def valid_special_agent_bundle(bundle: BundleReferences) -> bool:
     host_conditions = bundle.hosts is not None and len(bundle.hosts) == 1
     rule_conditions = bundle.rules is not None and len(bundle.rules) == 1
@@ -197,6 +191,15 @@ def read_config_bundle(bundle_id: BundleId) -> "ConfigBundle":
         return all_bundles[bundle_id]
 
     raise MKGeneralException(f'Configuration bundle "{bundle_id}" does not exist.')
+
+
+def edit_config_bundle_configuration(bundle_id: BundleId, bundle: "ConfigBundle") -> None:
+    store = ConfigBundleStore()
+    all_bundles = store.load_for_modification()
+    if bundle_id not in all_bundles:
+        raise MKGeneralException(f'Configuration bundle "{bundle_id}" does not exist.')
+    all_bundles[bundle_id] = bundle
+    store.save(all_bundles)
 
 
 def create_config_bundle(

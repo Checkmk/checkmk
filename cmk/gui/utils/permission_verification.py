@@ -16,6 +16,7 @@ to GUI endpoints, performs the following:
 With this, we can ensure we always have some understanding of the required and used permissions.
 
 """
+
 from __future__ import annotations
 
 import abc

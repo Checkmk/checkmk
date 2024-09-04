@@ -5,6 +5,7 @@
 """
 Library with container registry focussed functionality
 """
+
 import sys
 from collections.abc import Callable, Iterator, Sequence
 from contextlib import suppress

@@ -11,6 +11,10 @@ from typing import Any, Literal, NamedTuple
 
 from cmk.ccc.exceptions import MKGeneralException
 
+from cmk import trace
+
+tracer = trace.get_tracer()
+
 
 class Hook(NamedTuple):
     handler: Callable
@@ -72,15 +76,17 @@ def registered(name: str) -> bool:
 
 
 def call(name: str, *args: Any) -> None:
-    n = 0
-    for hook in hooks.get(name, []):
-        n += 1
-        try:
-            hook.handler(*args)
-        except Exception as e:
-            t, v, tb = sys.exc_info()
-            msg = "".join(traceback.format_exception(t, v, tb, None))
-            raise MKGeneralException(msg) from e
+    if not (registered_hooks := hooks.get(name, [])):
+        return
+
+    with tracer.start_as_current_span(f"hook_call[{name}]"):
+        for hook in registered_hooks:
+            try:
+                hook.handler(*args)
+            except Exception as e:
+                t, v, tb = sys.exc_info()
+                msg = "".join(traceback.format_exception(t, v, tb, None))
+                raise MKGeneralException(msg) from e
 
 
 ClearEvent = Literal[
@@ -179,7 +185,7 @@ def request_memoize(
     """
     return scoped_memoize(
         clear_events=["request-end", "request-context-exit"],
-        cache_impl=functools.lru_cache,  # type: ignore  # too specialized _lru_cache[_P, _R] ...
+        cache_impl=functools.lru_cache,  # type: ignore[return-value]  # too specialized _lru_cache[_P, _R] ...
         cache_impl_args=(),
         cache_impl_kwargs={"maxsize": maxsize, "typed": typed},
     )

@@ -19,10 +19,10 @@ from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import edition_from_env, parse_raw_edition, run
 from tests.testlib.version import CMKVersion, get_min_version, version_from_env
 
+from cmk.ccc.version import Edition
+
 from cmk.utils.licensing.helper import get_licensed_state_file_path
 from cmk.utils.paths import omd_root
-
-from cmk.ccc.version import Edition
 
 LOGGER = logging.getLogger(__name__)
 DUMPS_DIR = Path(__file__).parent.resolve() / "dumps"
@@ -280,12 +280,12 @@ def inject_dumps(site: Site, dumps_dir: Path) -> None:
         assert (
             run(
                 [
-                    "sudo",
                     "cp",
                     "-f",
                     f"{dumps_dir}/{dump_name}",
                     f"{site_dumps_path}/{dump_name}",
-                ]
+                ],
+                sudo=True,
             ).returncode
             == 0
         )

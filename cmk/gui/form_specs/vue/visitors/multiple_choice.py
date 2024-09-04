@@ -5,7 +5,7 @@
 
 from typing import Sequence, TypeVar
 
-from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
+from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.form_specs.vue.visitors._base import FormSpecVisitor
 from cmk.gui.form_specs.vue.visitors._type_defs import DefaultValue, EMPTY_VALUE, EmptyValue
@@ -48,11 +48,11 @@ class MultipleChoiceVisitor(FormSpecVisitor[MultipleChoice, Sequence[str]]):
 
     def _to_vue(
         self, raw_value: object, parsed_value: Sequence[str] | EmptyValue
-    ) -> tuple[VueComponents.MultipleChoice, Sequence[str]]:
+    ) -> tuple[shared_type_defs.MultipleChoice, Sequence[str]]:
         title, help_text = get_title_and_help(self.form_spec)
 
         elements = [
-            VueComponents.MultipleChoiceElement(
+            shared_type_defs.MultipleChoiceElement(
                 name=element.name,
                 title=element.title.localize(translate_to_current_language),
             )
@@ -60,7 +60,7 @@ class MultipleChoiceVisitor(FormSpecVisitor[MultipleChoice, Sequence[str]]):
         ]
 
         return (
-            VueComponents.MultipleChoice(
+            shared_type_defs.MultipleChoice(
                 title=title,
                 help=help_text,
                 elements=elements,
@@ -72,7 +72,7 @@ class MultipleChoiceVisitor(FormSpecVisitor[MultipleChoice, Sequence[str]]):
 
     def _validate(
         self, raw_value: object, parsed_value: Sequence[str] | EmptyValue
-    ) -> list[VueComponents.ValidationMessage]:
+    ) -> list[shared_type_defs.ValidationMessage]:
         if isinstance(parsed_value, EmptyValue):
             return create_validation_error(
                 [] if isinstance(raw_value, DefaultValue) else raw_value,

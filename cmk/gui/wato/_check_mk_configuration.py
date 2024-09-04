@@ -8,6 +8,9 @@ import re
 from collections.abc import Mapping, Sequence
 from typing import Any, Literal
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc.version import Edition, edition
+
 import cmk.utils.paths
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.tags import TagGroup, TagGroupID, TagID
@@ -114,9 +117,6 @@ from cmk.gui.watolib.translation import HostnameTranslation, ServiceDescriptionT
 from cmk.gui.watolib.users import vs_idle_timeout_duration
 from cmk.gui.watolib.utils import site_neutral_path
 
-import cmk.ccc.version as cmk_version
-from cmk.ccc.version import edition, Edition
-
 from ._check_plugin_selection import CheckPluginSelection
 from ._group_selection import ContactGroupSelection, HostGroupSelection, ServiceGroupSelection
 from ._http_proxy import HTTPProxyInput
@@ -183,7 +183,6 @@ def register(
     config_variable_registry.register(ConfigVariableWATOHideFilenames)
     config_variable_registry.register(ConfigVariableWATOHideHosttags)
     config_variable_registry.register(ConfigVariableWATOHideVarnames)
-    config_variable_registry.register(ConfigVariableHideHelpInLists)
     config_variable_registry.register(ConfigVariableWATOUseGit)
     config_variable_registry.register(ConfigVariableWATOPrettyPrintConfig)
     config_variable_registry.register(ConfigVariableWATOHideFoldersWithoutReadPermissions)
@@ -2334,24 +2333,6 @@ class ConfigVariableWATOHideVarnames(ConfigVariable):
         )
 
 
-class ConfigVariableHideHelpInLists(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
-        return ConfigVariableGroupWATO
-
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainGUI
-
-    def ident(self) -> str:
-        return "wato_hide_help_in_lists"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("Hide help text of rules in list views"),
-            label=_("hide help text"),
-            help=_("When disabled, Setup shows the help texts of rules also in the list views."),
-        )
-
-
 class ConfigVariableWATOUseGit(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupWATO
@@ -3221,7 +3202,7 @@ class ConfigVariableUseDNSCache(ConfigVariable):
 
 
 def transform_snmp_backend_default_to_valuespec(
-    backend: Literal["classic", "inline"]
+    backend: Literal["classic", "inline"],
 ) -> SNMPBackendEnum:
     return {
         "classic": SNMPBackendEnum.CLASSIC,
@@ -4703,7 +4684,7 @@ def _valuespec_automatic_rediscover_parameters() -> Dictionary:
 
 
 def _migrate_automatic_rediscover_parameters(
-    param: int | tuple[str, dict[str, bool]]
+    param: int | tuple[str, dict[str, bool]],
 ) -> tuple[str, dict[str, bool] | None]:
     # already migrated
     if isinstance(param, tuple):

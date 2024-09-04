@@ -25,7 +25,7 @@ information about VMs and nodes:
 import logging
 import re
 import sys
-from collections.abc import Iterable, Mapping, MutableMapping, Sequence
+from collections.abc import Collection, Iterable, Mapping, MutableMapping, Sequence
 from datetime import datetime, timedelta
 from json import JSONDecodeError
 from typing import Any
@@ -159,7 +159,7 @@ class BackupTask:
     def _extract_logs(  # pylint: disable=too-many-branches
         logs: Iterable[str],
         strict: bool,
-    ) -> tuple[Mapping[str, BackupInfo], Iterable[tuple[int, str]]]:
+    ) -> tuple[Mapping[str, BackupInfo], Collection[tuple[int, str]]]:
         log_line_pattern = {
             key: re.compile(pat, flags=re.IGNORECASE)
             for key, pat in (

@@ -332,5 +332,3 @@ system:
                                # delayed - serice started automatically(delayed)
                                # disabled - service cannot be started manually and should be enabled
     repair_invalid_utf: no
-
-

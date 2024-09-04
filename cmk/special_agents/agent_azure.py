@@ -46,6 +46,13 @@ AZURE_CACHE_FILE_PATH = tmp_dir / "agents" / "agent_azure"
 
 NOW = datetime.datetime.now(tz=datetime.UTC)
 
+SUPPORTED_FLEXIBLE_DATABASE_SERVER_RESOURCE_TYPES = frozenset(
+    {
+        "Microsoft.DBforMySQL/flexibleServers",
+        "Microsoft.DBforPostgreSQL/flexibleServers",
+    }
+)
+
 ALL_METRICS: dict[str, list[tuple[str, str, str, None]]] = {
     # to add a new metric, just add a made up name, run the
     # agent, and you'll get a error listing available metrics!
@@ -110,6 +117,9 @@ ALL_METRICS: dict[str, list[tuple[str, str, str, None]]] = {
     ],
     "Microsoft.DBforMySQL/flexibleServers": [
         (
+            # NOTE: the "serverlog_storage_percent" metric may soon be phased out of the MySQL
+            # flexible server as it is no longer mentioned in the documentation and is not present
+            # in PostgreSQL flexible server documentation.
             "cpu_percent,memory_percent,io_consumption_percent,serverlog_storage_percent,"
             "storage_percent,active_connections",
             "PT1M",
@@ -145,6 +155,26 @@ ALL_METRICS: dict[str, list[tuple[str, str, str, None]]] = {
         ),
         (
             "pg_replica_log_delay_in_seconds",
+            "PT1M",
+            "maximum",
+            None,
+        ),
+    ],
+    "Microsoft.DBforPostgreSQL/flexibleServers": [
+        (
+            "cpu_percent,memory_percent,disk_iops_consumed_percentage,storage_percent,active_connections",
+            "PT1M",
+            "average",
+            None,
+        ),
+        (
+            "connections_failed,network_bytes_ingress,network_bytes_egress",
+            "PT1M",
+            "total",
+            None,
+        ),
+        (
+            "physical_replication_delay_in_seconds",
             "PT1M",
             "maximum",
             None,
@@ -207,6 +237,7 @@ OPTIONAL_METRICS: Mapping[str, Sequence[str]] = {
     "Microsoft.DBforMySQL/servers": ["seconds_behind_master"],
     "Microsoft.DBforMySQL/flexibleServers": ["replication_lag"],
     "Microsoft.DBforPostgreSQL/servers": ["pg_replica_log_delay_in_seconds"],
+    "Microsoft.DBforPostgreSQL/flexibleServers": ["physical_replication_delay_in_seconds"],
     "Microsoft.Network/loadBalancers": ["AllocatedSnatPorts", "UsedSnatPorts"],
     "Microsoft.Compute/virtualMachines": [
         "CPU Credits Consumed",
@@ -485,7 +516,6 @@ class BaseApiClient(abc.ABC):
         self._ratelimit = min(self._ratelimit, new_value)
 
     def _handle_ratelimit(self, get_response: Callable[[], requests.Response]) -> requests.Response:
-
         response = get_response()
         self._update_ratelimit(response)
 
@@ -1453,7 +1483,7 @@ def get_vm_labels_section(vm: AzureResource, group_labels: GroupLabels) -> Label
 
 
 def process_resource(
-    function_args: tuple[MgmtApiClient, AzureResource, GroupLabels, Args]
+    function_args: tuple[MgmtApiClient, AzureResource, GroupLabels, Args],
 ) -> Sequence[Section]:
     mgmt_client, resource, group_labels, args = function_args
     sections: list[Section] = []
@@ -1476,7 +1506,7 @@ def process_resource(
         process_virtual_net_gw(mgmt_client, resource)
     elif resource_type == "Microsoft.Network/loadBalancers":
         process_load_balancer(mgmt_client, resource)
-    elif resource_type == "Microsoft.DBforMySQL/flexibleServers":
+    elif resource_type in SUPPORTED_FLEXIBLE_DATABASE_SERVER_RESOURCE_TYPES:
         resource.section = "servers"  # use the same section as for single servers
 
     # metrics aren't collected for VMs if they are mapped to a resource host

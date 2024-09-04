@@ -17,6 +17,8 @@ import dicttoxml  # type: ignore[import-untyped]
 
 import livestatus
 
+from cmk.ccc.exceptions import MKException
+
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.structured_data import SDRawTree
@@ -36,8 +38,6 @@ from cmk.gui.views.icon import IconRegistry
 from cmk.gui.visuals.filter import FilterRegistry
 from cmk.gui.visuals.info import VisualInfo, VisualInfoRegistry
 from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
-
-from cmk.ccc.exceptions import MKException
 
 from . import _rulespec
 from ._history import (

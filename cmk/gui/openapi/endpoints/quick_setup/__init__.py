@@ -24,7 +24,6 @@ from cmk.gui.openapi.restful_objects.constructors import (
 )
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.quick_setup.to_frontend import (
-    build_quick_setup_formspec_map,
     complete_quick_setup,
     quick_setup_overview,
     QuickSetupOverview,
@@ -33,7 +32,8 @@ from cmk.gui.quick_setup.to_frontend import (
     validate_stage,
 )
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
-from cmk.gui.quick_setup.v0_unstable.definitions import IncomingStage, QuickSetupSaveRedirect
+from cmk.gui.quick_setup.v0_unstable.definitions import QuickSetupSaveRedirect
+from cmk.gui.quick_setup.v0_unstable.type_defs import RawFormData
 
 from cmk import fields
 
@@ -85,24 +85,24 @@ def quicksetup_validate_stage_and_retrieve_next(params: Mapping[str, Any]) -> Re
     """Validate the current stage and retrieve the next"""
     body = params["body"]
     quick_setup_id = body["quick_setup_id"]
-    quick_setup = quick_setup_registry.get(quick_setup_id)
-    if quick_setup is None:
+    if (quick_setup := quick_setup_registry.get(quick_setup_id)) is None:
         return _serve_error(
             title="Quick setup not found",
             detail=f"Quick setup with id '{quick_setup_id}' does not exist.",
         )
-    stages_received = [IncomingStage(form_data=stage["form_data"]) for stage in body["stages"]]
 
     if (
         errors := validate_stage(
-            stage=quick_setup.stages[len(stages_received) - 1],
-            formspec_lookup=build_quick_setup_formspec_map(quick_setup.stages),
-            stages_raw_formspecs=[stage.form_data for stage in stages_received],
+            quick_setup=quick_setup,
+            stages_raw_formspecs=[RawFormData(stage["form_data"]) for stage in body["stages"]],
         )
     ) is not None:
         return _serve_data(Stage(errors=errors), status_code=400)
     return _serve_data(
-        data=retrieve_next_stage(quick_setup=quick_setup, incoming_stages=stages_received)
+        data=retrieve_next_stage(
+            quick_setup=quick_setup,
+            stages_raw_formspecs=[RawFormData(stage["form_data"]) for stage in body["stages"]],
+        )
     )
 
 
@@ -126,9 +126,11 @@ def complete_quick_setup_action(params: Mapping[str, Any]) -> Response:
             title="Quick setup not found",
             detail=f"Quick setup with id '{quick_setup_id}' does not exist.",
         )
-    incoming_stages = [IncomingStage(**stage) for stage in body["stages"]]
     return _serve_data(
-        data=complete_quick_setup(quick_setup=quick_setup, incoming_stages=incoming_stages),
+        data=complete_quick_setup(
+            quick_setup=quick_setup,
+            stages_raw_formspecs=[RawFormData(stage["form_data"]) for stage in body["stages"]],
+        ),
         status_code=201,
     )
 

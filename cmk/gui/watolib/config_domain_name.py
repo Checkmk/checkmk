@@ -13,6 +13,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Final
 
+import cmk.ccc.plugin_registry
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.hostaddress import HostName
 
@@ -22,10 +26,6 @@ from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.watolib.site_changes import ChangeSpec
-
-import cmk.ccc.plugin_registry
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
 
 ConfigDomainName = str
 

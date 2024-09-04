@@ -9,6 +9,9 @@ from typing import Any, NamedTuple, TypeVar
 
 from livestatus import SiteId
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.diagnostics import DiagnosticsCLParameters
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel
@@ -31,9 +34,6 @@ from cmk.gui.watolib.automations import (
     local_automation_failure,
     MKAutomationException,
 )
-
-import cmk.ccc.version as cmk_version
-from cmk.ccc.exceptions import MKGeneralException
 
 
 class AutomationResponse(NamedTuple):

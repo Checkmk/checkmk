@@ -8,6 +8,8 @@ from __future__ import annotations
 import textwrap
 from collections.abc import Callable, Sequence
 
+from cmk.ccc.exceptions import MKBailOut, MKGeneralException
+
 from cmk.utils import tty
 from cmk.utils.hostaddress import HostName, Hosts
 from cmk.utils.log import console
@@ -16,8 +18,6 @@ from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist
 from cmk.utils.tags import TagID
 
 from cmk.base.config import ConfigCache
-
-from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 
 OptionSpec = str
 Argument = str

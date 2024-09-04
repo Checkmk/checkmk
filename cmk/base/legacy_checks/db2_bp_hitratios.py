@@ -83,9 +83,11 @@ def check_db2_bp_hitratios(item, _no_params, parsed):
                     "INDEX_HIT": "Index",
                     "XDA_HIT": "XDA",
                 }
-                yield 0, f"{map_key_to_text[key]}: {value}%", [
-                    ("%sratio" % key.lower(), float(value), None, None, 0, 100)
-                ]
+                yield (
+                    0,
+                    f"{map_key_to_text[key]}: {value}%",
+                    [("%sratio" % key.lower(), float(value), None, None, 0, 100)],
+                )
             break
 
 

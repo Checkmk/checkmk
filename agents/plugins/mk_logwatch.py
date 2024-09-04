@@ -78,8 +78,8 @@ IPV4_REGEX = re.compile(r"^(::ffff:|::ffff:0:|)(?:[0-9]{1,3}\.){3}[0-9]{1,3}$")
 IPV6_REGEX = re.compile(r"^(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}$")
 
 ENCODINGS = (
-    (b"\xFF\xFE", "utf_16"),
-    (b"\xFE\xFF", "utf_16_be"),
+    (b"\xff\xfe", "utf_16"),
+    (b"\xfe\xff", "utf_16_be"),
 )
 
 TTY_COLORS = {

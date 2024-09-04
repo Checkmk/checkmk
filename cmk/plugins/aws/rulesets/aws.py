@@ -26,9 +26,9 @@ except ImportError:
     from cmk.plugins.aws.rulesets.cre import (
         edition_specific_global_services,
         edition_specific_regional_services,
+        handle_edition_switch,
         migrate_edition_specific_global_services_vs_to_fs,
         migrate_edition_specific_regional_services_vs_to_fs,
-        handle_edition_switch,
     )
 
 from cmk.rulesets.v1 import Help, Label, Message, Title
@@ -308,7 +308,7 @@ def quick_setup_stage_1() -> Mapping[str, DictElement]:
     return {
         "access_key_id": DictElement(
             parameter_form=String(
-                title=Title("The access key ID for your AWS account"),
+                title=Title("Access key ID"),
                 field_size=FieldSize.MEDIUM,
                 custom_validate=(validators.LengthInRange(min_value=1),),
             ),
@@ -316,7 +316,7 @@ def quick_setup_stage_1() -> Mapping[str, DictElement]:
         ),
         "secret_access_key": DictElement(
             parameter_form=Password(
-                title=Title("The secret access key for your AWS account"),
+                title=Title("Secret access key"),
                 migrate=migrate_to_password,
                 custom_validate=(validators.LengthInRange(min_value=1),),
             ),

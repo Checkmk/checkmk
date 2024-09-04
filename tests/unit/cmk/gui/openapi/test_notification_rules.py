@@ -11,6 +11,8 @@ import pytest
 
 from tests.testlib.rest_api_client import ClientRegistry
 
+from cmk.ccc import version
+
 from cmk.utils import paths
 from cmk.utils.notify_types import CaseStateStr, CustomPluginName, IncidentStateStr, PluginOptions
 from cmk.utils.tags import TagID
@@ -50,8 +52,6 @@ from cmk.gui.wato._notification_parameter._registry import (
 )
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 
-from cmk.ccc import version
-
 managedtest = pytest.mark.skipif(
     version.edition(paths.omd_root) is not version.Edition.CME, reason="see #7213"
 )
@@ -72,6 +72,34 @@ def test_get_notification_rules(clients: ClientRegistry) -> None:
     rules = r3.json["value"]
     assert rules[0]["id"] == r1.json["id"]
     assert rules[1]["id"] == r2.json["id"]
+
+
+def test_list_notification_rules_include_links(clients: ClientRegistry) -> None:
+    config = notification_rule_request_example()
+    clients.RuleNotification.create(config)
+    default_response = clients.RuleNotification.get_all()
+    enabled_response = clients.RuleNotification.get_all(include_links=True)
+    disabled_response = clients.RuleNotification.get_all(include_links=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == enabled_response.json
+    assert any(bool(value["links"]) for value in enabled_response.json["value"])
+    assert all(value["links"] == [] for value in disabled_response.json["value"])
+
+
+def test_list_notification_rules_include_extensions(clients: ClientRegistry) -> None:
+    config = notification_rule_request_example()
+    clients.RuleNotification.create(config)
+    default_response = clients.RuleNotification.get_all()
+    enabled_response = clients.RuleNotification.get_all(include_extensions=True)
+    disabled_response = clients.RuleNotification.get_all(include_extensions=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == enabled_response.json
+    assert any(bool(value["extensions"]) for value in enabled_response.json["value"])
+    assert all("extensions" not in value for value in disabled_response.json["value"])
 
 
 def test_create_notification_rule(clients: ClientRegistry) -> None:
@@ -401,7 +429,7 @@ def test_create_and_update_rule_with_conditions_data_200(
 def invalid_conditions() -> Iterator:
     for k in notification_rule_request_example()["conditions"]:
         config = notification_rule_request_example()
-        config["conditions"].update({k: {"state": "enabled"}})  # type: ignore
+        config["conditions"].update({k: {"state": "enabled"}})  # type: ignore[misc]
         yield config
 
 
@@ -805,6 +833,10 @@ plugin_test_data: list[PluginType] = [
         "label": {
             "state": "enabled",
             "value": "label_key:label_value",
+        },
+        "graphs_per_notification": {
+            "state": "enabled",
+            "value": 3,
         },
         "resolution_id": {
             "state": "enabled",
@@ -1641,7 +1673,7 @@ def config_with_bulk(plugin: PluginType) -> APINotificationRule:
 
 
 def plugin_with_bulking(
-    bulking: Literal["allowed", "not_allowed"]
+    bulking: Literal["allowed", "not_allowed"],
 ) -> Iterator[APINotificationRule]:
     notification_scripts = load_notification_scripts()
     plugins: list[str] = []

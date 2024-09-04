@@ -5,6 +5,8 @@
 
 """Raw edition and only raw edition specific registrations"""
 
+import cmk.ccc.version as cmk_version
+
 from cmk.utils import paths
 
 import cmk.gui.graphing._graph_images as graph_images
@@ -20,8 +22,6 @@ from cmk.gui.view_renderer import GUIViewRenderer
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views import graph
 from cmk.gui.wato import notification_parameter_registry, NotificationParameterMail
-
-import cmk.ccc.version as cmk_version
 
 
 def painter_downtime_recurring_renderer(row: Row, cell: Cell) -> CellSpec:

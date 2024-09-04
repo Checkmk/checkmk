@@ -63,7 +63,6 @@ def agent_datadog_arguments(
     params: Params,
     host_config: HostConfig,
 ) -> Iterator[SpecialAgentCommand]:
-
     args: list[str | Secret] = [
         host_config.name,
         params.instance.api_key.unsafe(),

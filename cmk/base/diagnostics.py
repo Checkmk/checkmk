@@ -28,6 +28,11 @@ import requests
 
 import livestatus
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc import site, store
+from cmk.ccc.i18n import _
+from cmk.ccc.site import omd_site
+
 import cmk.utils.paths
 from cmk.utils import tty
 from cmk.utils.diagnostics import (
@@ -59,11 +64,6 @@ from cmk.utils.log import console, section
 from cmk.utils.paths import omd_root
 from cmk.utils.structured_data import load_tree, SDNodeName, SDRawTree
 from cmk.utils.user import UserId
-
-import cmk.ccc.version as cmk_version
-from cmk.ccc import site, store
-from cmk.ccc.i18n import _
-from cmk.ccc.site import omd_site
 
 if cmk_version.edition(cmk.utils.paths.omd_root) in [
     cmk_version.Edition.CEE,
@@ -519,6 +519,7 @@ class HWDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
     def _cpuinfo_proc_parser(self, content: list[str]) -> dict[str, str]:
         cpu_info: dict[str, Any] = {}
+        physical_ids: list[str] = []
         num_processors = 0
 
         # Example lines from /proc/cpuinfo output:
@@ -561,7 +562,12 @@ class HWDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             if key == "processor":
                 num_processors += 1
 
-        cpu_info["num_processors"] = str(num_processors)
+            if key == "physical_id" and value not in physical_ids:
+                physical_ids.append(value)
+
+        cpu_info["num_logical_processors"] = str(num_processors)
+        cpu_info["cpus"] = len(physical_ids)
+
         return cpu_info
 
     def _load_avg_proc_parser(self, content: list[str]) -> dict[str, str]:

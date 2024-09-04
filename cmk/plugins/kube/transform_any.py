@@ -8,6 +8,7 @@
 This file contains helper functions for transform and transform_json. Each
 function is required to handle data from the client or from JSON.
 """
+
 import json
 import re
 from collections.abc import Iterator, Mapping

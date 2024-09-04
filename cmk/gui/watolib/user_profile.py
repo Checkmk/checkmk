@@ -13,6 +13,8 @@ from typing import Any, cast, Literal, NamedTuple
 
 from livestatus import SiteConfiguration, SiteId
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.user import UserId
 
 from cmk.gui import sites, userdb
@@ -34,8 +36,6 @@ from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation, get_url, MKAutomationException
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.utils import mk_eval, mk_repr
-
-from cmk.ccc.exceptions import MKGeneralException
 
 # In case the sync is done on the master of a distributed setup the auth serial
 # is increased on the master, but not on the slaves. The user can not access the

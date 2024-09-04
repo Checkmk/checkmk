@@ -35,3 +35,4 @@ Note that Bandit is picky about the exact format.
 | `BNS:b00359` | `B602` | Intended Shell functionality.|
 | `BNS:ff2c84` | `B411` | The xmlrpc submodule version being used is safe to xml attacks. |
 | `BNS:0b0eac` | `B113` | The timeout will be enforced by the executor process for special agents and active checks (CMK-18517). |
+| `BNS:f159c1` | `B507` | The AutoAdd policy is used, which is the human default. Also the host keys are persisted |

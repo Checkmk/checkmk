@@ -17,6 +17,8 @@ from urllib.parse import quote_plus
 import livestatus
 from livestatus import SiteId
 
+from cmk.ccc.site import omd_site
+
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.user import UserId
@@ -53,8 +55,6 @@ from cmk.gui.visuals import (
     get_only_sites_from_context,
 )
 from cmk.gui.visuals.filter import Filter
-
-from cmk.ccc.site import omd_site
 
 from . import availability
 from .row_post_processing import post_process_rows

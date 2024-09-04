@@ -817,6 +817,35 @@ translation_icmp_host_ping_host_service_ping = translations.Translation(
     },
 )
 
+translation_drbd_disk = translations.Translation(
+    name="drbd_disk",
+    check_commands=[translations.PassiveCheck("drbd_disk")],
+    translations={
+        # orig values in check plug-in are measured in kb
+        "read": translations.RenameToAndScaleBy("disk_read_throughput", 1000),
+        "write": translations.RenameToAndScaleBy("disk_write_throughput", 1000),
+    },
+)
+
+translation_drbd_net = translations.Translation(
+    name="drbd_net",
+    check_commands=[translations.PassiveCheck("drbd_net")],
+    translations={
+        # orig values in check plug-in are measured in kb
+        "in": translations.RenameToAndScaleBy("if_in_bps", 8000),
+        "out": translations.RenameToAndScaleBy("if_out_bps", 8000),
+    },
+)
+
+translation_drbd_stats = translations.Translation(
+    name="drbd_stats",
+    check_commands=[translations.PassiveCheck("drbd_stats")],
+    translations={
+        # see related check plug-in drbd_stats: "ooo (out of sync)"
+        "kb_out_of_sync": translations.ScaleBy(1024),
+    },
+)
+
 translation_interfaces_aws_ec2_network_io_aws_rds_network_io_cadvisor_if_esx_vsphere_counters_if_esx_vsphere_counters_fritz_fritz_wan_if_hitachi_hnas_fc_if_hpux_if_huawei_osn_if_if64_lnx_if_mcdata_fcport_netapp_ontap_if_winperf_if_gcp_gce_network_azure_vm_network_io_prism_host_networks = translations.Translation(
     name="interfaces_aws_ec2_network_io_aws_rds_network_io_cadvisor_if_esx_vsphere_counters_if_esx_vsphere_counters_fritz_fritz_wan_if_hitachi_hnas_fc_if_hpux_if_huawei_osn_if_if64_lnx_if_mcdata_fcport_netapp_ontap_if_winperf_if_gcp_gce_network_azure_vm_network_io_prism_host_networks",
     check_commands=[
@@ -1453,6 +1482,7 @@ translation_smart_stats = translations.Translation(
     check_commands=[translations.PassiveCheck("smart_stats")],
     translations={
         "Available_Spare": translations.RenameTo("nvme_available_spare"),
+        "CRC_Errors": translations.RenameTo("harddrive_crc_errors"),
         "CRC_Error_Count": translations.RenameTo("harddrive_crc_errors"),
         "Command_Timeout_Counter": translations.RenameTo("harddrive_cmd_timeouts"),
         "Critical_Warning": translations.RenameTo("nvme_critical_warning"),

@@ -2,11 +2,15 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Callable
-from typing import Collection, Mapping, Protocol, Sequence
 
-from cmk.utils.rulesets.definition import RuleGroupType
+from collections.abc import Callable, Collection, Iterator, Mapping, Sequence
+from typing import Protocol
 
+from cmk.ccc.exceptions import MKGeneralException
+
+from cmk.utils.rulesets.definition import RuleGroup, RuleGroupType
+
+from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -16,6 +20,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
+    make_form_bulk_submit_link,
     make_simple_form_page_menu,
     make_simple_link,
     PageMenu,
@@ -43,24 +48,22 @@ from cmk.gui.watolib.configuration_bundles import (
     ConfigBundle,
     ConfigBundleStore,
     delete_config_bundle,
-    identify_bundle_group_type,
+    edit_config_bundle_configuration,
     identify_bundle_references,
     load_group_bundles,
     valid_special_agent_bundle,
 )
-from cmk.gui.watolib.hosts_and_folders import make_action_link
+from cmk.gui.watolib.hosts_and_folders import folder_from_request, make_action_link
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.rulespecs import rulespec_registry
 
-from cmk.ccc.exceptions import MKGeneralException
-
 
 def register(main_module_registry: MainModuleRegistry, mode_registry: ModeRegistry) -> None:
-    # main_module_registry.register(MainModuleQuickSetupAWS)    # TODO: register once quick setup is implemented
     mode_registry.register(ModeConfigurationBundle)
     mode_registry.register(ModeEditConfigurationBundles)
     mode_registry.register(ModeQuickSetupSpecialAgent)
+    main_module_registry.register(MainModuleQuickSetupAWS)
 
 
 class ModeQuickSetupSpecialAgent(WatoMode):
@@ -148,10 +151,13 @@ class ModeEditConfigurationBundles(WatoMode):
 
     def _from_vars(self) -> None:
         self._name = request.get_ascii_input_mandatory(self.VAR_NAME)
-        self._bundle_group_type = identify_bundle_group_type(self._name)
+        try:
+            self._bundle_group_type = RuleGroupType(self._name.split(":")[0])
+        except ValueError:
+            raise MKUserError(None, _("Invalid configuration bundle group type."))
         if self._bundle_group_type not in BUNDLE_DOMAINS:
             raise MKUserError(
-                None,
+                self.VAR_NAME,
                 _("No edit configuration bundle implemented for bundle group type '%s'.")
                 % self._name,
             )
@@ -180,8 +186,10 @@ class ModeEditConfigurationBundles(WatoMode):
                                     title=_("Add configuration"),
                                     icon_name="new",
                                     item=make_simple_link(
-                                        ""
-                                    ),  # TODO: add Quick setup creation page
+                                        mode_url(
+                                            ModeQuickSetupSpecialAgent.name(), varname=self._name
+                                        )
+                                    ),
                                     is_shortcut=True,
                                     is_suggested=True,
                                 )
@@ -317,7 +325,7 @@ class ModeEditConfigurationBundles(WatoMode):
 class MainModuleQuickSetupAWS(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
-        return "quick_setup_aws"
+        return mode_url(ModeEditConfigurationBundles.name(), varname=RuleGroup.SpecialAgents("aws"))
 
     @property
     def topic(self) -> MainModuleTopic:
@@ -358,6 +366,8 @@ class EditDCDConnection(Protocol):
     def from_vars(self, ident_var: str) -> None: ...
 
     def page(self, form_name: str) -> None: ...
+
+    def action(self) -> ActionResult: ...
 
 
 class ModeConfigurationBundle(WatoMode):
@@ -433,11 +443,12 @@ class ModeConfigurationBundle(WatoMode):
         self._edit_host = ModeEditHost()
 
         # DCD connections
+        self._edit_dcd_connections: Sequence[EditDCDConnection | None] = []
         if self._bundle_references.dcd_connections:
             for index, dcd_connection in enumerate(self._bundle_references.dcd_connections):
                 request.set_var(f"dcd_id_{index}", dcd_connection[0])
 
-            self._edit_dcd_connections: Sequence[EditDCDConnection | None] = [
+            self._edit_dcd_connections = [
                 self.edit_dcd_connection_hook() for _dcd in self._bundle_references.dcd_connections
             ]
             for index, edit_dcd_connection in enumerate(self._edit_dcd_connections):
@@ -475,6 +486,8 @@ class ModeConfigurationBundle(WatoMode):
                     "_comment": self._bundle["comment"],
                 },
             )
+            forms.end()
+            html.hidden_fields()
 
     def _sub_page_rule(self) -> None:
         html.h1(_("Rule"), class_=["edit_configuration_bundle_header"])
@@ -498,6 +511,9 @@ class ModeConfigurationBundle(WatoMode):
                 edit_password.page(f"edit_password_{index}")
 
     def page(self) -> None:
+        with html.form_context("bulk", method="POST"):
+            forms.end()
+            html.hidden_fields()
         match self._rule_group_type:
             case RuleGroupType.SPECIAL_AGENTS:
                 self._sub_page_configuration()
@@ -511,3 +527,126 @@ class ModeConfigurationBundle(WatoMode):
                     _("No edit configuration bundle implemented for bundle group type '%s'.")
                     % self._bundle_group,
                 )
+
+    def _form_names(self) -> Iterator[str]:
+        yield "edit_bundle"
+        if self._edit_rule:
+            yield "rule_editor"
+        if self._edit_host:
+            yield "edit_host"
+        yield from (f"edit_dcd_{index}" for index in range(len(self._edit_dcd_connections)))
+        yield from (f"edit_password_{index}" for index in range(len(self._edit_passwords)))
+
+    def _page_menu_action_entries(self) -> Iterator[PageMenuEntry]:
+        form_names = list(self._form_names())
+        yield PageMenuEntry(
+            title=_("Save"),
+            icon_name="services",
+            item=make_form_bulk_submit_link(
+                bulk_form_name="bulk", form_names=form_names, button_name="_save"
+            ),
+            is_shortcut=False,
+        )
+        yield PageMenuEntry(
+            title=_("Save & go to service discovery"),
+            icon_name="services_green",
+            item=make_form_bulk_submit_link(
+                bulk_form_name="bulk",
+                form_names=form_names,
+                button_name="_save_and_go_to_service_discovery",
+            ),
+            is_shortcut=True,
+        )
+        yield PageMenuEntry(
+            title=_("Cancel"),
+            icon_name="cancel",
+            item=make_simple_link(""),
+            is_shortcut=True,
+        )
+
+    def _page_menu_related_entries(self) -> Iterator[PageMenuEntry]:
+        yield PageMenuEntry(
+            title=_("TBD"),
+            icon_name="",
+            item=make_simple_link(""),
+        )
+
+    def action(self) -> ActionResult:
+        check_csrf_token()
+        if not transactions.check_transaction():
+            return redirect(self.mode_url(bundle_id=self._bundle_id))
+
+        if request.has_var("_save"):
+            self._action_save()
+            return redirect(self.mode_url(bundle_id=self._bundle_id))
+
+        if request.has_var("_save_and_go_to_service_discovery"):
+            self._action_save()
+            host = self._edit_host.host
+            folder = folder_from_request(request.var("folder"), host.name())
+            return redirect(mode_url("inventory", folder=folder.path(), host=host.name()))
+
+        return redirect(self.mode_url(bundle_id=self._bundle_id))
+
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="actions",
+                    title=_("Configuration"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Actions"),
+                            entries=list(self._page_menu_action_entries()),
+                        ),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="actions",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Related"),
+                            entries=list(self._page_menu_related_entries()),
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
+
+    def _save_config_bundle_configuration(self) -> None:
+        vs = self._configuration_vs(self._bundle_id)
+        config = vs.from_html_vars("edit_bundle_options")
+        vs.validate_value(config, "edit_bundle_options")
+        self._bundle["title"] = config["_name"]
+        self._bundle["comment"] = config["_comment"]
+        edit_config_bundle_configuration(self._bundle_id, self._bundle)
+
+    def _set_vars(self, all_vars: Mapping[str, Sequence[tuple[str, str]]], form_name: str) -> None:
+        request.del_vars()
+        for var in all_vars[form_name]:
+            request.set_var(var[0].replace(form_name + "_", ""), var[1])
+        request.set_var("_transid", transactions.fresh_transid())
+        transactions.store_new()
+
+    def _action_save(self) -> None:
+        all_vars = {
+            form_name: list(request.itervars(form_name)) for form_name in self._form_names()
+        }
+        self._save_config_bundle_configuration()
+        if self._edit_host:
+            self._set_vars(all_vars, "edit_host")
+            self._edit_host.action()
+        if self._edit_rule:
+            self._set_vars(all_vars, "rule_editor")
+            self._edit_rule.action()
+        if self._edit_passwords:
+            for index, edit_password in enumerate(self._edit_passwords):
+                self._set_vars(all_vars, f"edit_password_{index}")
+                edit_password.action()
+        if self._edit_dcd_connections:
+            for index, edit_dcd_connection in enumerate(self._edit_dcd_connections):
+                if edit_dcd_connection:
+                    self._set_vars(all_vars, f"edit_dcd_connection_{index}")
+                    edit_dcd_connection.action()

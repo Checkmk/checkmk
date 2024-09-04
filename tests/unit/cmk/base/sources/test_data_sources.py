@@ -10,6 +10,8 @@ import pytest
 
 from tests.testlib.base import Scenario
 
+from cmk.ccc.exceptions import OnError
+
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.tags import TagGroupID, TagID
@@ -28,8 +30,6 @@ from cmk.checkengine.parser import NO_SELECTION
 
 from cmk.base.config import ConfigCache, ConfiguredIPLookup, handle_ip_lookup_failure
 from cmk.base.sources import make_sources, SNMPFetcherConfig, Source
-
-from cmk.ccc.exceptions import OnError
 
 
 def _make_sources(

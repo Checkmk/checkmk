@@ -9,6 +9,7 @@ import logging
 import os
 import re
 import subprocess
+import sys
 import time
 from collections.abc import Iterator, Mapping
 from pathlib import Path
@@ -104,8 +105,9 @@ def agent_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen | None]
     daemon_path = str(repo_path() / "tests" / "scripts" / "agent_controller_daemon.py")
 
     logger.info("Running agent controller daemon...")
+    # NOTE: we run sys.executable to make sure we use the correct python version
     with execute(
-        [daemon_path, "--agent-controller-path", ctl_path.as_posix()],
+        [sys.executable, "-B", daemon_path, "--agent-controller-path", ctl_path.as_posix()],
         sudo=True,
         shell=False,
         stdout=subprocess.PIPE,
@@ -128,7 +130,6 @@ def agent_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen | None]
             if daemon_rc is None:
                 logger.info("Terminating agent controller daemon...")
                 run(["kill", "--", f"-{os.getpgid(daemon.pid)}"], sudo=True)
-                daemon.kill()
             daemon_output, _ = daemon.communicate(timeout=5)
             logger.info("Agent controller daemon output: %s", daemon_output)
             assert (
@@ -227,7 +228,7 @@ def controller_connection_json(
         f"\nStatus:\n{controller_status}"
     )
     assert (
-        not "error" in controller_connection["remote"]
+        "error" not in controller_connection["remote"]
     ), f"Error in status output: {controller_connection['remote']['error']}"
     assert "hostname" in controller_connection["remote"], (
         "No remote endpoint hostname returned as part of controller connection details!"

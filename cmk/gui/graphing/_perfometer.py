@@ -11,19 +11,30 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Self
 
+from cmk.ccc.exceptions import MKGeneralException
+
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKInternalError
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api
 
 from ._color import parse_color_from_api
-from ._expression import Constant, MetricExpression, parse_conditional_expression, parse_expression
-from ._from_api import perfometers_from_api, register_unit_info
+from ._expression import (
+    BaseMetricExpression,
+    Constant,
+    parse_legacy_base_expression,
+    parse_legacy_conditional_expression,
+    parse_legacy_simple_expression,
+)
+from ._from_api import parse_unit_from_api, perfometers_from_api
 from ._legacy import (
     DualPerfometerSpec,
+    get_conversion_function,
+    get_render_function,
     LegacyPerfometer,
     LinearPerfometerSpec,
     LogarithmicPerfometerSpec,
@@ -34,6 +45,7 @@ from ._legacy import (
     UnitInfo,
 )
 from ._translated_metrics import TranslatedMetric
+from ._unit import ConvertibleUnitSpecification, user_specific_unit
 
 
 @dataclass(frozen=True)
@@ -168,7 +180,7 @@ def _perfometer_matches(
 
 @dataclass(frozen=True)
 class _EvaluatedQuantity:
-    unit_info: UnitInfo
+    unit_spec: UnitInfo | ConvertibleUnitSpecification
     color: str
     value: int | float
 
@@ -192,48 +204,48 @@ def _evaluate_quantity(
         case str():
             translated_metric = translated_metrics[quantity]
             return _EvaluatedQuantity(
-                translated_metric.unit_info,
+                translated_metric.unit_spec,
                 translated_metric.color,
                 translated_metrics[quantity].value,
             )
         case metrics_api.Constant():
             return _EvaluatedQuantity(
-                register_unit_info(quantity.unit),
+                parse_unit_from_api(quantity.unit),
                 parse_color_from_api(quantity.color),
                 quantity.value,
             )
         case metrics_api.WarningOf():
             translated_metric = translated_metrics[quantity.metric_name]
             return _EvaluatedQuantity(
-                translated_metric.unit_info,
+                translated_metric.unit_spec,
                 "#ffff00",
                 translated_metric.scalar["warn"],
             )
         case metrics_api.CriticalOf():
             translated_metric = translated_metrics[quantity.metric_name]
             return _EvaluatedQuantity(
-                translated_metric.unit_info,
+                translated_metric.unit_spec,
                 "#ff0000",
                 translated_metric.scalar["crit"],
             )
         case metrics_api.MinimumOf():
             translated_metric = translated_metrics[quantity.metric_name]
             return _EvaluatedQuantity(
-                translated_metric.unit_info,
+                translated_metric.unit_spec,
                 parse_color_from_api(quantity.color),
                 translated_metric.scalar["min"],
             )
         case metrics_api.MaximumOf():
             translated_metric = translated_metrics[quantity.metric_name]
             return _EvaluatedQuantity(
-                translated_metric.unit_info,
+                translated_metric.unit_spec,
                 parse_color_from_api(quantity.color),
                 translated_metric.scalar["max"],
             )
         case metrics_api.Sum():
             evaluated_first_summand = _evaluate_quantity(quantity.summands[0], translated_metrics)
             return _EvaluatedQuantity(
-                evaluated_first_summand.unit_info,
+                evaluated_first_summand.unit_spec,
                 parse_color_from_api(quantity.color),
                 (
                     evaluated_first_summand.value
@@ -248,7 +260,7 @@ def _evaluate_quantity(
             for f in quantity.factors:
                 product *= _evaluate_quantity(f, translated_metrics).value
             return _EvaluatedQuantity(
-                register_unit_info(quantity.unit),
+                parse_unit_from_api(quantity.unit),
                 parse_color_from_api(quantity.color),
                 product,
             )
@@ -256,13 +268,13 @@ def _evaluate_quantity(
             evaluated_minuend = _evaluate_quantity(quantity.minuend, translated_metrics)
             evaluated_subtrahend = _evaluate_quantity(quantity.subtrahend, translated_metrics)
             return _EvaluatedQuantity(
-                evaluated_minuend.unit_info,
+                evaluated_minuend.unit_spec,
                 parse_color_from_api(quantity.color),
                 evaluated_minuend.value - evaluated_subtrahend.value,
             )
         case metrics_api.Fraction():
             return _EvaluatedQuantity(
-                register_unit_info(quantity.unit),
+                parse_unit_from_api(quantity.unit),
                 parse_color_from_api(quantity.color),
                 (
                     _evaluate_quantity(quantity.dividend, translated_metrics).value
@@ -341,17 +353,17 @@ def parse_perfometer(
 
 
 def _has_required_metrics_or_scalars(
-    expressions: Sequence[MetricExpression],
+    metric_expressions: Sequence[BaseMetricExpression],
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> bool:
-    for expression in expressions:
-        for metric in expression.metrics():
-            if metric.name not in translated_metrics:
+    for metric_expression in metric_expressions:
+        for metric_name in metric_expression.metric_names():
+            if metric_name not in translated_metrics:
                 return False
-        for scalar in expression.scalars():
-            if scalar.metric.name not in translated_metrics:
+        for scalar_name in metric_expression.scalar_names():
+            if scalar_name.metric_name not in translated_metrics:
                 return False
-            if scalar.name not in translated_metrics[scalar.metric.name].scalar:
+            if scalar_name.scalar_name not in translated_metrics[scalar_name.metric_name].scalar:
                 return False
     return True
 
@@ -360,16 +372,19 @@ def _legacy_perfometer_has_required_metrics_or_scalars(
     perfometer: PerfometerSpec, translated_metrics: Mapping[str, TranslatedMetric]
 ) -> bool:
     if perfometer["type"] == "linear":
-        expressions = [parse_expression(s, translated_metrics) for s in perfometer["segments"]]
+        metric_expressions = [
+            parse_legacy_base_expression(s, translated_metrics) for s in perfometer["segments"]
+        ]
         if (total := perfometer.get("total")) is not None:
-            expressions.append(parse_expression(total, translated_metrics))
+            metric_expressions.append(parse_legacy_base_expression(total, translated_metrics))
         if (label := perfometer.get("label")) is not None:
-            expressions.append(parse_expression(label[0], translated_metrics))
-        return _has_required_metrics_or_scalars(expressions, translated_metrics)
+            metric_expressions.append(parse_legacy_base_expression(label[0], translated_metrics))
+        return _has_required_metrics_or_scalars(metric_expressions, translated_metrics)
 
     if perfometer["type"] == "logarithmic":
         return _has_required_metrics_or_scalars(
-            [parse_expression(perfometer["metric"], translated_metrics)], translated_metrics
+            [parse_legacy_base_expression(perfometer["metric"], translated_metrics)],
+            translated_metrics,
         )
 
     if perfometer["type"] in ("dual", "stacked"):
@@ -392,7 +407,7 @@ def _perfometer_possible(
     if perfometer["type"] == "linear":
         if "condition" in perfometer:
             try:
-                return parse_conditional_expression(
+                return parse_legacy_conditional_expression(
                     perfometer["condition"], translated_metrics
                 ).evaluate(translated_metrics)
             except Exception:
@@ -488,7 +503,7 @@ def _make_projection(
     #              68 °F
     # Generalize the following...
     conversion = (
-        list(translated_metrics.values())[0].unit_info.conversion
+        get_conversion_function(list(translated_metrics.values())[0].unit_spec)
         if len(translated_metrics) == 1
         else lambda v: v
     )
@@ -676,8 +691,10 @@ class MetricometerRenderer(abc.ABC):
         raise NotImplementedError()
 
     @staticmethod
-    def _render_value(unit_info_: UnitInfo, value: float) -> str:
-        return (unit_info_.perfometer_render or unit_info_.render)(value)
+    def _render_value(unit_spec: UnitInfo | ConvertibleUnitSpecification, value: float) -> str:
+        if isinstance(unit_spec, UnitInfo):
+            return (unit_spec.perfometer_render or unit_spec.render)(value)
+        return user_specific_unit(unit_spec, user, active_config).formatter.render(value)
 
 
 class MetricometerRendererPerfometer(MetricometerRenderer):
@@ -714,7 +731,7 @@ class MetricometerRendererPerfometer(MetricometerRenderer):
 
     def get_label(self) -> str:
         first_segment = _evaluate_quantity(self.perfometer.segments[0], self.translated_metrics)
-        return first_segment.unit_info.render(
+        return get_render_function(first_segment.unit_spec)(
             first_segment.value
             + sum(
                 _evaluate_quantity(s, self.translated_metrics).value
@@ -860,7 +877,7 @@ class MetricometerRendererLegacyLogarithmic(MetricometerRenderer):
 
         # Needed for sorting via cmk/gui/views/perfometers/base.py::sort_value::_get_metrics_sort_group
         self.perfometer = perfometer
-        self._metric = parse_expression(perfometer["metric"], translated_metrics)
+        self._metric = parse_legacy_base_expression(perfometer["metric"], translated_metrics)
         self._half_value = perfometer["half_value"]
         self._exponent = perfometer["exponent"]
         self._translated_metrics = translated_metrics
@@ -870,23 +887,35 @@ class MetricometerRendererLegacyLogarithmic(MetricometerRenderer):
         return "legacy_logarithmic"
 
     def get_stack(self) -> MetricRendererStack:
-        result = self._metric.evaluate(self._translated_metrics)
+        if (result := self._metric.evaluate(self._translated_metrics)).is_error():
+            raise MKGeneralException(
+                _("Cannot compute perfometer stack due to '%s'") % result.error.reason
+            )
         return [
             self.get_stack_from_values(
-                result.value,
-                *self.estimate_parameters_for_converted_units(result.unit_info.conversion),
-                result.color,
+                result.ok.value,
+                *self.estimate_parameters_for_converted_units(
+                    get_conversion_function(result.ok.unit_spec)
+                ),
+                result.ok.color,
             )
         ]
 
     def get_label(self) -> str:
-        result = self._metric.evaluate(self._translated_metrics)
-        return self._render_value(result.unit_info, result.value)
+        if (result := self._metric.evaluate(self._translated_metrics)).is_error():
+            raise MKGeneralException(
+                _("Cannot compute perfometer label due to '%s'") % result.error.reason
+            )
+        return self._render_value(result.ok.unit_spec, result.ok.value)
 
     def get_sort_value(self) -> float:
         """Returns the number to sort this perfometer with compared to the other
         performeters in the current performeter sort group"""
-        return self._metric.evaluate(self._translated_metrics).value
+        if (result := self._metric.evaluate(self._translated_metrics)).is_error():
+            raise MKGeneralException(
+                _("Cannot compute perfometer sorting value due to '%s'") % result.error.reason
+            )
+        return result.ok.value
 
     @staticmethod
     def get_stack_from_values(
@@ -953,13 +982,15 @@ class MetricometerRendererLegacyLinear(MetricometerRenderer):
     ) -> None:
         # Needed for sorting via cmk/gui/views/perfometers/base.py::sort_value::_get_metrics_sort_group
         self.perfometer = perfometer
-        self._segments = [parse_expression(s, translated_metrics) for s in perfometer["segments"]]
-        self._total = parse_expression(perfometer["total"], translated_metrics)
+        self._segments = [
+            parse_legacy_simple_expression(s, translated_metrics) for s in perfometer["segments"]
+        ]
+        self._total = parse_legacy_base_expression(perfometer["total"], translated_metrics)
         if (label := perfometer.get("label")) is None:
             self._label_expression = None
             self._label_unit_name = None
         else:
-            self._label_expression = parse_expression(label[0], translated_metrics)
+            self._label_expression = parse_legacy_simple_expression(label[0], translated_metrics)
             self._label_unit_name = label[1]
         self._translated_metrics = translated_metrics
 
@@ -976,8 +1007,11 @@ class MetricometerRendererLegacyLinear(MetricometerRenderer):
             entry.append((100.0, get_themed_perfometer_bg_color()))
         else:
             for segment in self._segments:
-                result = segment.evaluate(self._translated_metrics)
-                entry.append((100.0 * result.value / total, result.color))
+                if (result := segment.evaluate(self._translated_metrics)).is_error():
+                    raise MKGeneralException(
+                        _("Cannot compute perfometer segment due to '%s'") % result.error.reason
+                    )
+                entry.append((100.0 * result.ok.value / total, result.ok.color))
 
             # Paint rest only, if it is positive and larger than one promille
             if total - summed > 0.001:
@@ -990,31 +1024,57 @@ class MetricometerRendererLegacyLinear(MetricometerRenderer):
         if self._label_expression is None:
             return self._render_value(self._unit(), self._get_summed_values())
 
-        result = self._label_expression.evaluate(self._translated_metrics)
-        unit_info_ = unit_info[self._label_unit_name] if self._label_unit_name else result.unit_info
+        if (result := self._label_expression.evaluate(self._translated_metrics)).is_error():
+            raise MKGeneralException(
+                _("Cannot compute perfometer label expression due to '%s'") % result.error.reason
+            )
+        unit_spec = (
+            unit_info[self._label_unit_name] if self._label_unit_name else result.ok.unit_spec
+        )
 
         if isinstance(self._label_expression, Constant):
-            value = unit_info_.conversion(self._label_expression.value)
+            value = get_conversion_function(unit_spec)(self._label_expression.value)
         else:
-            value = result.value
+            value = result.ok.value
 
-        return self._render_value(unit_info_, value)
+        return self._render_value(unit_spec, value)
 
     def _evaluate_total(self) -> float:
         if isinstance(self._total, Constant):
-            return self._unit().conversion(self._total.value)
-        return self._total.evaluate(self._translated_metrics).value
+            return get_conversion_function(self._unit())(self._total.value)
 
-    def _unit(self) -> UnitInfo:
+        if (result := self._total.evaluate(self._translated_metrics)).is_error():
+            raise MKGeneralException(
+                _("Cannot compute perfometer total value due to '%s'") % result.error.reason
+            )
+
+        return result.ok.value
+
+    def _unit(self) -> UnitInfo | ConvertibleUnitSpecification:
         # We assume that all expressions across all segments have the same unit
-        return self._segments[0].evaluate(self._translated_metrics).unit_info
+        if (result := self._segments[0].evaluate(self._translated_metrics)).is_error():
+            raise MKGeneralException(
+                _("Cannot compute perfometer unit due to '%s'") % result.error.reason
+            )
+        return result.ok.unit_spec
 
     def get_sort_value(self) -> float:
         """Use the first segment value for sorting"""
-        return self._segments[0].evaluate(self._translated_metrics).value
+        if (result := self._segments[0].evaluate(self._translated_metrics)).is_error():
+            raise MKGeneralException(
+                _("Cannot compute perfometer sorting value due to '%s'") % result.error.reason
+            )
+        return result.ok.value
 
     def _get_summed_values(self):
-        return sum(segment.evaluate(self._translated_metrics).value for segment in self._segments)
+        values = []
+        for segment in self._segments:
+            if (result := segment.evaluate(self._translated_metrics)).is_error():
+                raise MKGeneralException(
+                    _("Cannot compute perfometer summed values due to '%s'") % result.error.reason
+                )
+            values.append(result.ok.value)
+        return sum(values)
 
 
 class MetricometerRendererLegacyStacked(MetricometerRenderer):
@@ -1170,7 +1230,7 @@ def _get_legacy_renderer(
 
 
 def get_first_matching_perfometer(
-    translated_metrics: Mapping[str, TranslatedMetric]
+    translated_metrics: Mapping[str, TranslatedMetric],
 ) -> (
     MetricometerRendererPerfometer
     | MetricometerRendererBidirectional

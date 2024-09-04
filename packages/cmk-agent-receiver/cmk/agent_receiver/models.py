@@ -27,7 +27,9 @@ class CsrField:
 
     @classmethod
     def __get_pydantic_core_schema__(
-        cls, source_type: object, _handler: GetCoreSchemaHandler  # pylint: disable=unused-argument
+        cls,
+        source_type: object,  # pylint: disable=unused-argument
+        _handler: GetCoreSchemaHandler,
     ) -> core_schema.CoreSchema:
         return core_schema.no_info_after_validator_function(
             cls.validate, core_schema.str_schema(), serialization=core_schema.to_string_ser_schema()

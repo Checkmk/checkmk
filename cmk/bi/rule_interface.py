@@ -7,6 +7,8 @@ from abc import abstractmethod
 from collections.abc import Sequence
 from typing import Any
 
+from cmk.ccc.plugin_registry import Registry
+
 from cmk.bi.lib import (
     ABCBICompiledNode,
     ABCBISearcher,
@@ -19,7 +21,6 @@ from cmk.bi.lib import (
 )
 from cmk.bi.node_generator_interface import ABCBINodeGenerator
 from cmk.bi.schema import Schema
-from cmk.ccc.plugin_registry import Registry
 
 
 class BIRulePropertiesSchema(Schema):

@@ -123,8 +123,9 @@ def check_rabbitmq_nodes(item, params, parsed):
         state = 0
         if not node_state:
             state = params.get("state")
-        yield state, "Is running: %s" % str(node_state).replace("True", "yes").replace(
-            "False", "no"
+        yield (
+            state,
+            "Is running: %s" % str(node_state).replace("True", "yes").replace("False", "no"),
         )
 
     for alarm_key, alarm_infotext in [
@@ -139,9 +140,12 @@ def check_rabbitmq_nodes(item, params, parsed):
         if alarm_value:
             alarm_state = params.get(alarm_key)
 
-            yield alarm_state, "{}: {}".format(
-                alarm_infotext,
-                str(alarm_value).replace("True", "yes").replace("False", "no"),
+            yield (
+                alarm_state,
+                "{}: {}".format(
+                    alarm_infotext,
+                    str(alarm_value).replace("True", "yes").replace("False", "no"),
+                ),
             )
 
 

@@ -5,10 +5,10 @@
 
 from collections.abc import Mapping
 
-from cmk.gui.type_defs import FilterName
-
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.plugin_registry import Registry
+
+from cmk.gui.type_defs import FilterName
 
 from ._base import Filter
 

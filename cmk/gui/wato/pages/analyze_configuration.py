@@ -19,6 +19,9 @@ from collections.abc import Collection
 
 from livestatus import SiteConfigurations, SiteId
 
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils.paths
 
 from cmk.gui import log
@@ -52,9 +55,6 @@ from cmk.gui.watolib.analyze_configuration import (
 )
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
-
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
 
 
 def register(mode_registry: ModeRegistry) -> None:

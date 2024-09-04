@@ -5,6 +5,8 @@
 
 import pytest
 
+import cmk.ccc.version as cmk_version
+
 from cmk.utils import paths
 
 from cmk.gui.valuespec import ValueSpec
@@ -18,8 +20,6 @@ from cmk.gui.watolib.config_domain_name import (
     ConfigVariableGroup,
 )
 from cmk.gui.watolib.utils import format_php
-
-import cmk.ccc.version as cmk_version
 
 
 def test_registered_config_domains() -> None:
@@ -198,7 +198,6 @@ def test_registered_configvars() -> None:
         "wato_activate_changes_comment_mode",
         "wato_hide_filenames",
         "wato_hide_folders_without_read_permissions",
-        "wato_hide_help_in_lists",
         "wato_hide_hosttags",
         "wato_hide_varnames",
         "wato_icon_categories",

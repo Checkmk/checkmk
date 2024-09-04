@@ -4,7 +4,7 @@ import FormEdit from '@/form/components/FormEdit.vue'
 import type { List } from '@/form/components/vue_formspec_components'
 import FormValidation from '@/form/components/FormValidation.vue'
 import {
-  groupListValidations,
+  groupIndexedValidations,
   validateValue,
   type ValidationMessages
 } from '@/form/components/utils/validation'
@@ -18,7 +18,7 @@ const backendData = defineModel<unknown[]>('data', { required: true })
 
 type ElementIndex = number
 const data = ref<Record<ElementIndex, unknown>>({})
-const validation = ref<ValidationMessages>([])
+const validation = ref<Array<string>>([])
 const elementValidation = ref<Record<ElementIndex, ValidationMessages>>({})
 const frontendOrder = ref<ElementIndex[]>([])
 const newElementIndex = ref<ElementIndex>(0)
@@ -46,7 +46,7 @@ watch(
 )
 
 function setValidation(newBackendValidation: ValidationMessages) {
-  const [_listValidations, _elementValidations] = groupListValidations(
+  const [_listValidations, _elementValidations] = groupIndexedValidations(
     newBackendValidation,
     backendData.value.length
   )
@@ -102,7 +102,7 @@ function dragging(event: DragEvent) {
 function validateList() {
   validation.value.splice(0)
   validateValue(backendData.value, props.spec.validators!).forEach((error) => {
-    validation.value.push({ message: error, location: [], invalid_value: backendData.value })
+    validation.value.push(error)
   })
 }
 

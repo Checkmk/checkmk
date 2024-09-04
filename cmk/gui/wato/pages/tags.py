@@ -8,6 +8,8 @@ to hosts and that is the basis of the rules."""
 import abc
 from collections.abc import Collection
 
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils.tags
 from cmk.utils.tags import TagGroupID, TagID
 
@@ -64,8 +66,6 @@ from cmk.gui.watolib.tags import (
     TagConfigFile,
     update_tag_config,
 )
-
-from cmk.ccc.exceptions import MKGeneralException
 
 from ._tile_menu import TileMenuRenderer
 

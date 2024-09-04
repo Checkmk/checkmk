@@ -12,9 +12,14 @@ import time
 import traceback
 from collections.abc import Collection, Iterable, Iterator, Mapping
 from multiprocessing import JoinableQueue, Process
-from typing import Any, cast, NamedTuple, overload
+from typing import Any, assert_never, cast, NamedTuple, overload
+from urllib.parse import urlparse
 
 from livestatus import (
+    BrokerConnection,
+    BrokerConnections,
+    BrokerSite,
+    ConnectionId,
     NetworkSocketDetails,
     SiteConfiguration,
     SiteConfigurations,
@@ -22,10 +27,14 @@ from livestatus import (
     TLSParams,
 )
 
+from cmk.ccc.exceptions import MKGeneralException, MKTerminate, MKTimeout
+from cmk.ccc.site import omd_site
+
 import cmk.utils.paths
 from cmk.utils.encryption import CertificateDetails, fetch_certificate_details
 from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import is_free
+from cmk.utils.paths import omd_root
 from cmk.utils.user import UserId
 
 import cmk.gui.sites
@@ -57,6 +66,7 @@ from cmk.gui.site_config import (
     is_replication_enabled,
     is_wato_slave_site,
     site_is_local,
+    wato_slave_sites,
 )
 from cmk.gui.sites import SiteStatus
 from cmk.gui.table import Table, table_element
@@ -97,6 +107,7 @@ from cmk.gui.watolib.automations import (
     MKAutomationException,
     parse_license_state,
 )
+from cmk.gui.watolib.broker_connections import BrokerConnectionsConfigFile
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_registry,
@@ -111,7 +122,10 @@ from cmk.gui.watolib.global_settings import (
 )
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree, make_action_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
-from cmk.gui.watolib.site_management import add_changes_after_editing_site_connection
+from cmk.gui.watolib.site_management import (
+    add_changes_after_editing_broker_connection,
+    add_changes_after_editing_site_connection,
+)
 from cmk.gui.watolib.sites import (
     is_livestatus_encrypted,
     site_globals_editable,
@@ -119,13 +133,13 @@ from cmk.gui.watolib.sites import (
 )
 from cmk.gui.watolib.utils import ldap_connections_are_configurable
 
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import omd_site
+from cmk.messaging import check_remote_connection, ConnectionFailed, ConnectionOK
 
 
 def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
     page_registry.register_page("wato_ajax_fetch_site_status")(PageAjaxFetchSiteStatus)
     mode_registry.register(ModeEditSite)
+    mode_registry.register(ModeEditBrokerConnection)
     mode_registry.register(ModeDistributedMonitoring)
     mode_registry.register(ModeEditSiteGlobals)
     mode_registry.register(ModeEditSiteGlobalSetting)
@@ -564,6 +578,222 @@ class ModeEditSite(WatoMode):
         return elements
 
 
+class ModeEditBrokerConnection(WatoMode):
+    @classmethod
+    def name(cls) -> str:
+        return "edit_broker_connection"
+
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
+        return ["sites"]
+
+    @classmethod
+    def parent_mode(cls) -> type[WatoMode] | None:
+        return ModeDistributedMonitoring
+
+    # pylint does not understand this overloading
+    @overload
+    @classmethod
+    def mode_url(cls, *, site: str) -> str:  # pylint: disable=arguments-differ
+        ...
+
+    @overload
+    @classmethod
+    def mode_url(cls, **kwargs: str) -> str: ...
+
+    @classmethod
+    def mode_url(cls, **kwargs: str) -> str:
+        return super().mode_url(**kwargs)
+
+    @property
+    def _is_new(self) -> bool:
+        return self._edit_id is None
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        self._connection: BrokerConnection | None = None
+
+        self._edit_id: ConnectionId | None = (
+            ConnectionId(connection_id)
+            if (connection_id := request.get_ascii_input("edit_connection_id"))
+            else None
+        )
+
+        self._clone_id: ConnectionId | None = (
+            ConnectionId(connection_id)
+            if (connection_id := request.get_ascii_input("clone_connection_id"))
+            else None
+        )
+
+        self._connections: BrokerConnections = BrokerConnectionsConfigFile().load_for_reading()
+
+        for el_id in [self._edit_id, self._clone_id]:
+            if not el_id:
+                continue
+            try:
+                self._connection = self._connections[el_id]
+            except IndexError:
+                raise MKUserError(None, _("The requested connection %s does not exist") % el_id)
+
+    def title(self) -> str:
+        if self._is_new:
+            return _("Add message broker connection")
+        return _("Edit message broker connection %s") % self._edit_id
+
+    def _breadcrumb_url(self) -> str:
+        assert self._edit_id is not None
+        return self.mode_url(site=self._edit_id)
+
+    def _save_connection_config(self, save_id: str, connection: BrokerConnection) -> str:
+        self._connections[ConnectionId(save_id)] = connection
+        BrokerConnectionsConfigFile().save(self._connections)
+        return "Connection configuration saved successfully."
+
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = make_simple_form_page_menu(
+            _("Connection"), breadcrumb, form_name="broker_connection", button_name="_save"
+        )
+        return menu
+
+    def _validate_connection_id(self, connection_id: str, varprefix: str | None) -> None:
+        if self._is_new and connection_id in self._connections:
+            raise MKUserError(
+                "unique_id",
+                _("A connection with this ID already exists."),
+            )
+
+    def _check_connection_values(self, connection_id: str, connection: BrokerConnection) -> None:
+        if connection.connecter.site_id == connection.connectee.site_id:
+            raise MKUserError(
+                None,
+                _("Connecter and connectee sites must be different."),
+            )
+
+        self._validate_connection_id(connection_id, None)
+
+        for _conn_id, conn in self._connections.items():
+            old_connection_sites = [
+                connection.connecter.site_id,
+                connection.connectee.site_id,
+            ]
+            edit_connection_sites = [conn.connecter.site_id, conn.connectee.site_id]
+
+            if (self._is_new and set(old_connection_sites) == set(edit_connection_sites)) or (
+                not self._is_new
+                and _conn_id != self._edit_id
+                and set(old_connection_sites) == set(edit_connection_sites)
+            ):
+                raise MKUserError(
+                    None,
+                    _("A connection with the same sites already exists."),
+                )
+
+    def action(self) -> ActionResult:
+        if not transactions.check_transaction():
+            return redirect(mode_url("sites"))
+
+        vs = self._valuespec()
+        raw_site_spec = vs.from_html_vars("broker_connection")
+        vs.validate_value(raw_site_spec, "broker_connection")
+
+        try:
+            source_site, dest_site = (
+                SiteId(raw_site_spec["connecter"]),
+                SiteId(raw_site_spec["connectee"]),
+            )
+        except KeyError:
+            raise MKUserError(None, _("Connecter and connectee sites must be specified."))
+
+        connection = BrokerConnection(
+            connecter=BrokerSite(site_id=source_site),
+            connectee=BrokerSite(site_id=dest_site),
+        )
+
+        self._check_connection_values(raw_site_spec["unique_id"], connection)
+        self._save_connection_config(raw_site_spec["unique_id"], connection)
+        msg = add_changes_after_editing_broker_connection(
+            connection_id=raw_site_spec["unique_id"],
+            is_new_broker_connection=self._is_new,
+            sites=[source_site, dest_site],
+        )
+
+        flash(msg)
+        return redirect(mode_url("sites"))
+
+    def page(self) -> None:
+        with html.form_context("broker_connection"):
+            connection_vs = (
+                {
+                    "unique_id": self._edit_id if self._edit_id else "",
+                    "connecter": self._connection.connecter.site_id,
+                    "connectee": self._connection.connectee.site_id,
+                }
+                if self._connection
+                else {}
+            )
+
+            self._valuespec().render_input("broker_connection", connection_vs)
+            forms.end()
+            html.hidden_fields()
+
+    def _valuespec(self) -> Dictionary:
+        basic_elements = self._basic_elements()
+
+        return Dictionary(
+            elements=basic_elements,
+            headers=[
+                (_("Connection"), [key for key, _vs in basic_elements]),
+            ],
+            render="form",
+            form_narrow=True,
+            optional_keys=[],
+        )
+
+    def _basic_elements(self):
+        replicated_sites_choices = [
+            (sk, si.get("alias", sk)) for sk, si in wato_slave_sites().items()
+        ]
+
+        return [
+            (
+                (
+                    "unique_id",
+                    FixedValue(
+                        value=self._edit_id,
+                        title=_("Unique ID:"),
+                    ),
+                )
+                if self._edit_id
+                else (
+                    "unique_id",
+                    ID(
+                        title=_("Unique ID:"),
+                        size=60,
+                        allow_empty=False,
+                        validate=self._validate_connection_id,
+                    ),
+                )
+            ),
+            (
+                "connecter",
+                DropdownChoice(
+                    title=_("Connecter:"),
+                    choices=replicated_sites_choices,
+                    sorted=True,
+                ),
+            ),
+            (
+                "connectee",
+                DropdownChoice(
+                    title=_("Connectee:"),
+                    choices=replicated_sites_choices,
+                    sorted=True,
+                ),
+            ),
+        ]
+
+
 class ModeDistributedMonitoring(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -599,6 +829,17 @@ class ModeDistributedMonitoring(WatoMode):
                                     is_shortcut=True,
                                     is_suggested=True,
                                 ),
+                                PageMenuEntry(
+                                    title=_("Add peer-to-peer message broker connection"),
+                                    icon_name="new",
+                                    item=make_simple_link(
+                                        makeuri_contextless(
+                                            request, [("mode", "edit_broker_connection")]
+                                        ),
+                                    ),
+                                    is_shortcut=False,
+                                    is_suggested=True,
+                                ),
                             ],
                         ),
                     ],
@@ -616,6 +857,10 @@ class ModeDistributedMonitoring(WatoMode):
         delete_id = request.get_ascii_input("_delete")
         if delete_id and transactions.check_transaction():
             return self._action_delete(SiteId(delete_id))
+
+        delete_connection_id = request.get_ascii_input("_delete_connection_id")
+        if delete_connection_id and transactions.check_transaction():
+            return self._action_delete_broker_connection(delete_connection_id)
 
         logout_id = request.get_ascii_input("_logout")
         if logout_id:
@@ -666,6 +911,39 @@ class ModeDistributedMonitoring(WatoMode):
             )
 
         self._site_mgmt.delete_site(delete_id)
+        return redirect(mode_url("sites"))
+
+    def _action_delete_broker_connection(self, delete_connection_id: str) -> ActionResult:
+        connection_config = BrokerConnectionsConfigFile()
+        connections = connection_config.load_for_modification()
+
+        if delete_connection_id not in connections:
+            raise MKUserError(
+                None, _("Unable to delete unknown connection id: %s") % delete_connection_id
+            )
+        try:
+            source_site, dest_site = (
+                SiteId(connections[ConnectionId(delete_connection_id)].connecter.site_id),
+                SiteId(connections[ConnectionId(delete_connection_id)].connectee.site_id),
+            )
+        except KeyError:
+            raise MKUserError(
+                None,
+                _(
+                    "Unable to delete connection id: %s. Connecter and connectee sites must be specified."
+                )
+                % delete_connection_id,
+            )
+
+        add_changes_after_editing_broker_connection(
+            connection_id=delete_connection_id,
+            is_new_broker_connection=False,
+            sites=[source_site, dest_site],
+        )
+
+        del connections[ConnectionId(delete_connection_id)]
+
+        connection_config.save(connections)
         return redirect(mode_url("sites"))
 
     def _action_logout(self, logout_id: SiteId) -> ActionResult:
@@ -798,7 +1076,42 @@ class ModeDistributedMonitoring(WatoMode):
                 self._show_config_connection_status(table, site_id, site)
                 self._show_message_broker_connection(table, site_id, site)
 
+        # Message broker connections table
+        connections = BrokerConnectionsConfigFile().load_for_reading()
+        if connections:
+            with table_element(
+                "brokers_connections",
+                _("Peer-to-peer message broker connections"),
+                empty_text=_("You have not configured any peer-to-peer connections."),
+            ) as table:
+                for conn_id, connection in connections.items():
+                    table.row()
+
+                    self._show_buttons_connection(table, conn_id)
+                    self._show_basic_settings_connection(table, conn_id, connection)
+
         html.javascript("cmk.sites.fetch_site_status();")
+
+    def _show_buttons_connection(self, table: Table, connection_id: str) -> None:
+        table.cell(_("Actions"), css=["buttons"])
+        edit_url = folder_preserving_link(
+            [("mode", "edit_broker_connection"), ("edit_connection_id", connection_id)]
+        )
+        html.icon_button(edit_url, _("Properties"), "edit")
+
+        clone_url = folder_preserving_link(
+            [("mode", "edit_broker_connection"), ("clone_connection_id", connection_id)]
+        )
+        html.icon_button(
+            clone_url, _("Clone this connection in order to create a new one"), "clone"
+        )
+
+        delete_url = make_confirm_delete_link(
+            url=makeactionuri(request, transactions, [("_delete_connection_id", connection_id)]),
+            title=_("Delete peer-to-peer connection to site"),
+            message=_("ID: %s") % connection_id,
+        )
+        html.icon_button(delete_url, _("Delete"), "delete")
 
     def _show_buttons(self, table: Table, site_id: SiteId, site: SiteConfiguration) -> None:
         table.cell(_("Actions"), css=["buttons"])
@@ -835,6 +1148,13 @@ class ModeDistributedMonitoring(WatoMode):
                 icon = "site_globals"
 
             html.icon_button(globals_url, title, icon)
+
+    def _show_basic_settings_connection(
+        self, table: Table, connection_id: str, connection: BrokerConnection
+    ) -> None:
+        table.cell(_("ID"), connection_id)
+        table.cell(_("connecter"), connection.connecter.site_id)
+        table.cell(_("connectee"), connection.connectee.site_id)
 
     def _show_basic_settings(self, table: Table, site_id: SiteId, site: SiteConfiguration) -> None:
         table.cell(_("ID"), site_id)
@@ -918,8 +1238,12 @@ class ModeDistributedMonitoring(WatoMode):
         table.cell("Message broker connection")
         html.open_div(id_=f"message_broker_status_{site_id}", class_="connection_status")
         if is_replication_enabled(site):
-            # TODO CMK-18495
-            pass
+            # The status is fetched asynchronously for all sites. Show a temporary loading icon.
+            html.icon(
+                "reload",
+                _("Fetching message broker status"),
+                class_=["reloading", "replication_status_loading"],
+            )
         html.close_div()
 
 
@@ -999,8 +1323,37 @@ class PageAjaxFetchSiteStatus(AjaxPage):
         )
 
     def _render_message_broker_status(self, site_id: SiteId, site: SiteConfiguration) -> str | HTML:
-        # TODO CMK-18495
-        return ""
+        if not is_replication_enabled(site):
+            return ""
+
+        icon, message = self._get_connection_status_icon_message(site)
+        return html.render_icon(icon, title=message) + HTMLWriter.render_span(
+            message, style="vertical-align:middle"
+        )
+
+    def _get_connection_status_icon_message(self, site: SiteConfiguration) -> tuple[str, str]:
+        if (remote_host := urlparse(site["multisiteurl"]).hostname) is None:
+            return "cross", "Offline: No valid multisite URL configured"
+
+        try:
+            connection_status = check_remote_connection(
+                omd_root, remote_host, site.get("message_broker_port", 5672)
+            )
+        except (MKTerminate, MKTimeout):
+            raise
+        except Exception as e:
+            connection_status = ConnectionFailed(str(e))
+
+        match connection_status:
+            case ConnectionOK():
+                icon = "checkmark"
+                message = "Online"
+            case ConnectionFailed(error):
+                icon = "cross"
+                message = f"Offline: {error}"
+            case _:
+                assert_never(_)
+        return icon, message
 
 
 class PingResult(NamedTuple):

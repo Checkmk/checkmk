@@ -10,17 +10,21 @@ from dataclasses import asdict, dataclass
 from enum import Enum
 from typing import Any, Literal, TypeVar
 
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.gui.form_specs.private.validators as private_form_specs_validators
-import cmk.gui.form_specs.vue.shared_type_defs as VueComponents
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs.converter import TransformForLegacyData, Tuple
 from cmk.gui.form_specs.private import (
     Catalog,
     DictionaryExtended,
     LegacyValueSpec,
     ListExtended,
+    OptionalChoice,
     SingleChoiceExtended,
     UnknownFormSpec,
 )
+from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.visitors.recomposers import (
     recompose_dictionary,
     recompose_host_state,
@@ -36,7 +40,6 @@ from cmk.gui.http import request
 from cmk.gui.log import logger
 
 import cmk.rulesets.v1.form_specs.validators as formspec_validators
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
     CascadingSingleChoice,
@@ -50,11 +53,13 @@ from cmk.rulesets.v1.form_specs import (
     List,
     MultilineText,
     MultipleChoice,
+    Password,
     Percentage,
     RegularExpression,
     ServiceState,
     SingleChoice,
     String,
+    TimeSpan,
 )
 
 from .validators import (
@@ -78,9 +83,14 @@ from .visitors import (
     ListVisitor,
     MultilineTextVisitor,
     MultipleChoiceVisitor,
+    OptionalChoiceVisitor,
+    PasswordVisitor,
     register_visitor_class,
     SingleChoiceVisitor,
     StringVisitor,
+    TimeSpanVisitor,
+    TransformVisitor,
+    TupleVisitor,
 )
 from .visitors._type_defs import DataOrigin, DEFAULT_VALUE, VisitorOptions
 
@@ -90,7 +100,7 @@ T = TypeVar("T")
 @dataclass(kw_only=True)
 class VueAppConfig:
     id: str
-    spec: VueComponents.FormSpec
+    spec: shared_type_defs.FormSpec
     data: Any
     validation: Any
     render_mode: Literal["edit", "readonly", "both"]
@@ -104,6 +114,7 @@ def register_form_specs():
     register_visitor_class(String, StringVisitor)
     register_visitor_class(Float, FloatVisitor)
     register_visitor_class(SingleChoiceExtended, SingleChoiceVisitor)
+    register_visitor_class(Password, PasswordVisitor)
     register_visitor_class(CascadingSingleChoice, CascadingSingleChoiceVisitor)
     register_visitor_class(LegacyValueSpec, LegacyValuespecVisitor)
     register_visitor_class(FixedValue, FixedValueVisitor)
@@ -114,6 +125,10 @@ def register_form_specs():
     register_visitor_class(Catalog, CatalogVisitor)
     register_visitor_class(ListExtended, ListVisitor)
     register_visitor_class(MultipleChoice, MultipleChoiceVisitor)
+    register_visitor_class(TimeSpan, TimeSpanVisitor)
+    register_visitor_class(TransformForLegacyData, TransformVisitor)
+    register_visitor_class(Tuple, TupleVisitor)
+    register_visitor_class(OptionalChoice, OptionalChoiceVisitor)
 
     # Recomposed
     register_visitor_class(HostState, SingleChoiceVisitor, recompose_host_state)
@@ -136,7 +151,7 @@ register_form_specs()
 register_validators()
 
 
-def _process_validation_errors(validation_errors: list[VueComponents.ValidationMessage]) -> None:
+def _process_validation_errors(validation_errors: list[shared_type_defs.ValidationMessage]) -> None:
     """This functions introduces validation errors from the vue-world into the CheckMK-GUI-world
     The CheckMK-GUI works with a global parameter user_errors.
     These user_errors include the field_id of the broken input field and the error text
@@ -195,7 +210,7 @@ def parse_data_from_frontend(form_spec: FormSpec[T], field_id: str) -> Any:
 
 def validate_value_from_frontend(
     form_spec: FormSpec[T], value_from_frontend: Any
-) -> Sequence[VueComponents.ValidationMessage]:
+) -> Sequence[shared_type_defs.ValidationMessage]:
     visitor = get_visitor(form_spec, VisitorOptions(data_origin=DataOrigin.FRONTEND))
     return visitor.validate(value_from_frontend)
 
@@ -217,7 +232,7 @@ def serialize_data_for_frontend(
     visitor = get_visitor(form_spec, VisitorOptions(data_origin=origin))
     vue_component, vue_value = visitor.to_vue(value)
 
-    validation: list[VueComponents.ValidationMessage] = []
+    validation: list[shared_type_defs.ValidationMessage] = []
     if do_validate:
         validation = visitor.validate(value)
 

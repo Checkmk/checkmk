@@ -7,9 +7,9 @@ import time
 from pathlib import Path
 from typing import Any, TypedDict
 
-from cmk.gui.i18n import _
-
 from cmk.ccc import store
+
+from cmk.gui.i18n import _
 
 from ._defines import BackgroundJobDefines
 from ._status import JobLogInfo, JobStatusSpec, JobStatusStates

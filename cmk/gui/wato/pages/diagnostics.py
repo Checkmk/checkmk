@@ -11,6 +11,9 @@ from pathlib import Path
 
 from livestatus import SiteId
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc.site import omd_site
+
 import cmk.utils.paths
 from cmk.utils.diagnostics import (
     CheckmkFileInfo,
@@ -82,9 +85,6 @@ from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCom
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import create_diagnostics_dump
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
-
-import cmk.ccc.version as cmk_version
-from cmk.ccc.site import omd_site
 
 _CHECKMK_FILES_NOTE = _(
     "<br>Note: Some files may contain highly sensitive data like"
@@ -765,6 +765,7 @@ def _merge_results(
 
 
 def _get_tarfile_from_remotesite(site: SiteId, tarfile_name: str, timeout: int) -> str:
+    cmk.utils.paths.diagnostics_dir.mkdir(parents=True, exist_ok=True)
     tarfile_localpath = _create_file_path()
     with open(tarfile_localpath, "wb") as file:
         file.write(_get_diagnostics_dump_file(site, tarfile_name, timeout))

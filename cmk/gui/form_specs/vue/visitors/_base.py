@@ -5,12 +5,13 @@
 import abc
 from typing import Any, final, Generic, TypeVar
 
-from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
+from cmk.ccc.exceptions import MKGeneralException
+
+from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.visitors._type_defs import DataForDisk, DataOrigin
 from cmk.gui.form_specs.vue.visitors._type_defs import DefaultValue as FormSpecDefaultValue
 from cmk.gui.form_specs.vue.visitors._type_defs import EmptyValue, Value, VisitorOptions
 
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.rulesets.v1.form_specs._base import ModelT
 
@@ -24,12 +25,12 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, ModelT]):
         self.options = options
 
     @final
-    def to_vue(self, raw_value: object) -> tuple[VueComponents.FormSpec, Value]:
+    def to_vue(self, raw_value: object) -> tuple[shared_type_defs.FormSpec, Value]:
         parsed_value = self._parse_value(self._migrate_disk_value(raw_value))
         return self._to_vue(raw_value, parsed_value)
 
     @final
-    def validate(self, raw_value: object) -> list[VueComponents.ValidationMessage]:
+    def validate(self, raw_value: object) -> list[shared_type_defs.ValidationMessage]:
         parsed_value = self._parse_value(self._migrate_disk_value(raw_value))
         return self._validate(raw_value, parsed_value)
 
@@ -59,13 +60,13 @@ class FormSpecVisitor(abc.ABC, Generic[FormSpecModel, ModelT]):
     @abc.abstractmethod
     def _to_vue(
         self, raw_value: object, parsed_value: ModelT | EmptyValue
-    ) -> tuple[VueComponents.FormSpec, Value]:
+    ) -> tuple[shared_type_defs.FormSpec, Value]:
         """Returns frontend representation of the FormSpec schema and its data value."""
 
     @abc.abstractmethod
     def _validate(
         self, raw_value: object, parsed_value: ModelT | EmptyValue
-    ) -> list[VueComponents.ValidationMessage]:
+    ) -> list[shared_type_defs.ValidationMessage]:
         """Validates the parsed value and returns a list of validation error messages."""
 
     @abc.abstractmethod

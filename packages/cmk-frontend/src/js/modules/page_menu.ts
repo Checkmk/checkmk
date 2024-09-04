@@ -267,6 +267,32 @@ export function toggle_suggestions() {
     }
 }
 
+export function form_bulk_submit(
+    bulk_form_name: string,
+    form_names: string[],
+    button_name: string
+) {
+    const form_bulk = document.getElementById(
+        "form_" + bulk_form_name
+    ) as HTMLFormElement;
+    // Add all form fields to the bulk form as hidden fields
+    for (const form_name of form_names) {
+        const form = document.getElementById(
+            "form_" + form_name
+        ) as HTMLFormElement;
+        if (!form) continue;
+        const formData = new FormData(form);
+        for (const [key, value] of formData) {
+            const hiddenField = document.createElement("input");
+            hiddenField.type = "hidden";
+            hiddenField.name = `${form_name}_${key}`;
+            hiddenField.value = value as string;
+            form_bulk?.appendChild(hiddenField);
+        }
+    }
+    form_submit(bulk_form_name, button_name);
+}
+
 export function form_submit(form_name: string, button_name: string) {
     const form = document.getElementById("form_" + form_name);
     const field = document.createElement("input");

@@ -24,7 +24,7 @@ def cpu_util_elements():
             Tuple(
                 title=_("Levels over an extended time period on total CPU utilization"),
                 elements=[
-                    Percentage(title=_("High utilization at "), default_value=100.0),
+                    Percentage(title=_("High utilization at "), default_value=100.0, maxvalue=None),
                     Age(title=_("Warning after "), default_value=5 * 60),
                     Age(title=_("Critical after "), default_value=15 * 60),
                 ],
@@ -240,7 +240,7 @@ rulespec_registry.register(
 
 
 def _cpu_utilization_to_dict(
-    param: tuple[float, float] | dict[str, tuple[float, float]]
+    param: tuple[float, float] | dict[str, tuple[float, float]],
 ) -> dict[str, tuple[float, float]]:
     if not param:
         return {}

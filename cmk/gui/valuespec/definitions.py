@@ -61,6 +61,10 @@ from six import ensure_str
 
 from livestatus import SiteId
 
+import cmk.ccc.plugin_registry
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.version import Version
+
 import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.regex
@@ -111,9 +115,6 @@ from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, urlencode
 from cmk.gui.view_utils import render_labels
 
-import cmk.ccc.plugin_registry
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.version import Version
 from cmk.crypto import certificate, keys
 
 seconds_per_day = 86400
@@ -6137,7 +6138,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
 
     @staticmethod
     def _normalize_header(
-        header: tuple[str, Sequence[str]] | tuple[str, str, Sequence[str]]
+        header: tuple[str, Sequence[str]] | tuple[str, str, Sequence[str]],
     ) -> tuple[str, str | None, Sequence[str]]:
         if isinstance(header, tuple):
             if len(header) == 2:
@@ -8537,6 +8538,7 @@ def MonitoringSiteChoice() -> DropdownChoice:
 
 
 def LogLevelChoice(  # pylint: disable=redefined-builtin
+    with_verbose: bool = True,
     # DropdownChoice
     sorted: bool = False,
     label: str | None = None,
@@ -8559,14 +8561,24 @@ def LogLevelChoice(  # pylint: disable=redefined-builtin
     deprecated_choices: Sequence[int] = (),
 ) -> DropdownChoice:
     return DropdownChoice(
-        choices=[
-            (logging.CRITICAL, _("Critical")),
-            (logging.ERROR, _("Error")),
-            (logging.WARNING, _("Warning")),
-            (logging.INFO, _("Informational")),
-            (cmk.utils.log.VERBOSE, _("Verbose")),
-            (logging.DEBUG, _("Debug")),
-        ],
+        choices=(
+            [
+                (logging.CRITICAL, _("Critical")),
+                (logging.ERROR, _("Error")),
+                (logging.WARNING, _("Warning")),
+                (logging.INFO, _("Informational")),
+                (cmk.utils.log.VERBOSE, _("Verbose")),
+                (logging.DEBUG, _("Debug")),
+            ]
+            if with_verbose
+            else [
+                (logging.CRITICAL, _("Critical")),
+                (logging.ERROR, _("Error")),
+                (logging.WARNING, _("Warning")),
+                (logging.INFO, _("Informational")),
+                (logging.DEBUG, _("Debug")),
+            ]
+        ),
         sorted=sorted,
         label=label,
         help_separator=help_separator,

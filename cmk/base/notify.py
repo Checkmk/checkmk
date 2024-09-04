@@ -32,23 +32,28 @@ from functools import partial
 from pathlib import Path
 from typing import Any, Callable, cast, Literal, overload
 
+import cmk.ccc.debug
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils.paths
 from cmk.utils import log
 from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.log import console
-from cmk.utils.macros import replace_macros_in_str
-from cmk.utils.notify import (
-    create_spoolfile,
-    find_wato_folder,
+from cmk.utils.log_to_history import (
     log_to_history,
     notification_message,
     notification_result_message,
+)
+from cmk.utils.macros import replace_macros_in_str
+from cmk.utils.notification_result import NotificationPluginName, NotificationResultCode
+from cmk.utils.notification_spool_file import (
+    create_spool_file,
     NotificationForward,
-    NotificationPluginName,
-    NotificationResultCode,
     NotificationViaPlugin,
 )
+from cmk.utils.notify import find_wato_folder
 from cmk.utils.notify_types import (
     Contact,
     ContactName,
@@ -77,10 +82,6 @@ from cmk.utils.timeout import MKTimeout, Timeout
 from cmk.utils.timeperiod import is_timeperiod_active, timeperiod_active, TimeperiodSpecs
 
 from cmk.base import events
-
-import cmk.ccc.debug
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
 
 logger = logging.getLogger("cmk.base.notify")
 
@@ -436,7 +437,7 @@ def notify_notify(
 
     # Spool notification to remote host, if this is enabled
     if spooling in ("remote", "both"):
-        create_spoolfile(
+        create_spool_file(
             logger,
             Path(notification_spooldir),
             NotificationForward({"context": enriched_context, "forward": True}),
@@ -953,7 +954,7 @@ def _process_notifications(
                     if bulk:
                         do_bulk_notify(plugin_name, params, context, bulk)
                     elif spooling in ("local", "both"):
-                        create_spoolfile(
+                        create_spool_file(
                             logger,
                             Path(notification_spooldir),
                             NotificationViaPlugin({"context": context, "plugin": plugin_name}),

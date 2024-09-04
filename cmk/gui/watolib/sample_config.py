@@ -9,6 +9,8 @@ from datetime import datetime
 from typing import Any
 from uuid import uuid4
 
+from cmk.ccc import store
+
 from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.log import VERBOSE
 from cmk.utils.notify_types import EventRule, MailPluginModel, NotificationRuleID
@@ -30,8 +32,6 @@ from cmk.gui.watolib.notifications import NotificationRuleConfigFile
 from cmk.gui.watolib.rulesets import FolderRulesets
 from cmk.gui.watolib.tags import TagConfigFile
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
-
-from cmk.ccc import store
 
 
 # TODO: Must only be unlocked when it was not locked before. We should find a more

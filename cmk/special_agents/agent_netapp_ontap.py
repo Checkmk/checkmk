@@ -33,7 +33,6 @@ def write_section(
 
 
 def _collect_netapp_resource_volume(connection: HostConnection, is_constituent: bool) -> Iterable:
-
     field_query = (
         "uuid",
         "state",
@@ -58,7 +57,6 @@ def _collect_netapp_resource_volume(connection: HostConnection, is_constituent: 
 
 
 def _collect_volume_models(netapp_volumes: Iterable) -> Iterable[models.VolumeModel]:
-
     for netapp_resources in netapp_volumes:
         element_data = netapp_resources.to_dict()
 
@@ -88,7 +86,6 @@ def _collect_volume_models(netapp_volumes: Iterable) -> Iterable[models.VolumeMo
 
 
 def fetch_volumes(connection: HostConnection) -> Iterable[models.VolumeModel]:
-
     yield from _collect_volume_models(
         _collect_netapp_resource_volume(connection, is_constituent=True)
     )
@@ -186,7 +183,7 @@ def fetch_volumes_counters(
             id=volume_id,
             connection=connection,
             fields="counters",
-            max_records=None,  # type: ignore # pylint disable=arg-type not working
+            max_records=None,  # type: ignore[arg-type] # pylint disable=arg-type not working
             **{"counters.name": "|".join(volumes_counters_field_query)},
         ):
             element_serialized = element.to_dict()
@@ -396,7 +393,7 @@ def fetch_interfaces_counters(
             id=interface_id,
             connection=connection,
             fields="counters",
-            max_records=None,  # type: ignore # pylint disable=arg-type not working
+            max_records=None,  # type: ignore[arg-type] # pylint disable=arg-type not working
             **{"counters.name": "|".join(interfaces_counters_field_query)},
         ):
             element_data = element.to_dict()
@@ -600,7 +597,7 @@ def fetch_vs_traffic_counters(
             key,
             connection=connection,
             fields="properties,counters",
-            max_records=None,  # type: ignore # pylint disable=arg-type not working
+            max_records=None,  # type: ignore[arg-type] # pylint disable=arg-type not working
             **{"counters.name": "|".join(values)},
         ):
             element_data = element.to_dict()
@@ -640,7 +637,7 @@ def fetch_fc_interfaces_counters(
             key,
             connection=connection,
             fields="properties,counters",
-            max_records=None,  # type: ignore # pylint disable=arg-type not working
+            max_records=None,  # type: ignore[arg-type] # pylint disable=arg-type not working
             **{"counters.name": "|".join(values)},
         ):
             element_data = element.to_dict()
@@ -879,7 +876,6 @@ def agent_netapp_main(args: Args) -> int:
         verify=False if args.no_cert_check else True,  # pylint: disable=simplifiable-if-expression
         headers={"User-Agent": USER_AGENT},
     ) as connection:
-
         if isinstance(args.cert_server_name, str):
             connection.session.mount(
                 connection.origin, HostnameValidationAdapter(args.cert_server_name)

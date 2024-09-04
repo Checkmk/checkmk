@@ -129,10 +129,14 @@ def check_aws_s3_summary(item, params, parsed):
     )
 
     if largest_bucket:
-        yield 0, "Largest bucket: {} ({})".format(
-            largest_bucket,
-            render.bytes(largest_bucket_size),
-        ), [("aws_largest_bucket_size", largest_bucket_size)]
+        yield (
+            0,
+            "Largest bucket: {} ({})".format(
+                largest_bucket,
+                render.bytes(largest_bucket_size),
+            ),
+            [("aws_largest_bucket_size", largest_bucket_size)],
+        )
 
 
 check_info["aws_s3.summary"] = LegacyCheckDefinition(

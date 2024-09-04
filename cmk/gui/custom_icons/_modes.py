@@ -6,6 +6,8 @@
 import os
 from collections.abc import Collection
 
+from cmk.ccc import store
+
 import cmk.utils.paths
 from cmk.utils.images import CMKImage, ImageType
 
@@ -25,8 +27,6 @@ from cmk.gui.valuespec import Dictionary, DropdownChoice, IconSelector, ImageUpl
 from cmk.gui.wato import PermissionSectionWATO
 from cmk.gui.watolib.hosts_and_folders import make_action_link
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
-
-from cmk.ccc import store
 
 
 class ModeIcons(WatoMode):

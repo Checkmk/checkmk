@@ -65,8 +65,9 @@ def check_rabbitmq_queues(item, params, parsed):
         state = 0
         if not queue_state:
             state = 2
-        yield state, "Is running: %s" % str(queue_state).replace("True", "yes").replace(
-            "False", "no"
+        yield (
+            state,
+            "Is running: %s" % str(queue_state).replace("True", "yes").replace("False", "no"),
         )
 
     queue_node = data.get("node")

@@ -8,7 +8,6 @@ see https://solutionpartner.cisco.com/media/prime-infrastructure/api-reference/
       szier-m8-106.cisco.com/webacs/api/v1/data/AccessPointscc3b.html
 """
 
-
 import collections
 from collections.abc import Iterable, Mapping
 

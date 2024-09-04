@@ -673,7 +673,7 @@ class DowntimesIcon(Icon):
         def detail_txt(
             downtimes_with_extra_info: Sequence[
                 tuple[int, str, str, str, int, int, int, bool, int, bool, bool]
-            ]
+            ],
         ) -> str:
             if not downtimes_with_extra_info:
                 return ""

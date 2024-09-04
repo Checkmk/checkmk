@@ -22,6 +22,8 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import assert_never
 
+from cmk.ccc import store
+
 import cmk.utils.config_path
 import cmk.utils.password_store
 import cmk.utils.paths
@@ -40,7 +42,6 @@ import cmk.base.utils
 from cmk.base import server_side_calls
 from cmk.base.config import ConfigCache, FilterMode, lookup_ip_address, save_packed_config
 
-from cmk.ccc import store
 from cmk.discover_plugins import PluginLocation
 
 from ._host_check_config import HostCheckConfig

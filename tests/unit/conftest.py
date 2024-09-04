@@ -24,6 +24,11 @@ from tests.testlib.repo import (
 
 import livestatus
 
+import cmk.ccc.debug
+import cmk.ccc.version as cmk_version
+from cmk.ccc import store
+from cmk.ccc.site import omd_site
+
 import cmk.utils.caching
 import cmk.utils.paths
 from cmk.utils import redis, tty
@@ -39,11 +44,7 @@ from cmk.utils.livestatus_helpers.testing import (
     MockLiveStatusConnection,
 )
 
-import cmk.ccc.debug
-import cmk.ccc.version as cmk_version
 import cmk.crypto.password_hashing
-from cmk.ccc import store
-from cmk.ccc.site import omd_site
 
 logger = logging.getLogger(__name__)
 

@@ -29,7 +29,6 @@ def test_plugin_piggyback(
     source_host_name: str,
     dcd_connector: None,
 ) -> None:
-
     with setup_source_host_piggyback(test_site_piggyback, source_host_name):
         disk_dump = read_disk_dump(source_host_name)
         cmk_dump = read_cmk_dump(source_host_name, test_site_piggyback, "agent")

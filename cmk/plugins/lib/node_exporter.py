@@ -339,7 +339,7 @@ class NodeExporter:
 
     @staticmethod
     def _process_kernel_info(
-        temp_result: dict[str, dict[str, dict[str, int]]]
+        temp_result: dict[str, dict[str, dict[str, int]]],
     ) -> dict[str, SectionStr]:
         result: dict[str, SectionStr] = {}
         for node_name, cpu_result in temp_result.items():

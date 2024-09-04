@@ -17,13 +17,17 @@ A host group object can have the following relations present in `links`:
  * `urn:org.restfulobject/rels:delete` - An endpoint to delete this host group.
 
 """
+
 from collections.abc import Mapping
 from typing import Any
+
+from cmk.ccc import version
 
 from cmk.utils import paths
 
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
+from cmk.gui.openapi.endpoints.common_fields import field_include_extensions, field_include_links
 from cmk.gui.openapi.endpoints.host_group_config.request_schemas import (
     BulkDeleteHostGroup,
     BulkInputHostGroup,
@@ -36,6 +40,7 @@ from cmk.gui.openapi.endpoints.host_group_config.response_schemas import (
     HostGroupCollection,
 )
 from cmk.gui.openapi.endpoints.utils import (
+    build_group_list,
     fetch_group,
     fetch_specific_groups,
     prepare_groups,
@@ -54,8 +59,6 @@ from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib import groups
 from cmk.gui.watolib.groups import GroupInUseException, UnknownGroupException
 from cmk.gui.watolib.groups_io import load_host_group_information
-
-from cmk.ccc import version
 
 PERMISSIONS = permissions.Perm("wato.groups")
 
@@ -121,12 +124,20 @@ def bulk_create(params: Mapping[str, Any]) -> Response:
     method="get",
     response_schema=HostGroupCollection,
     permissions_required=PERMISSIONS,
+    query_params=[field_include_links(), field_include_extensions()],
 )
 def list_groups(params: Mapping[str, Any]) -> Response:
     """Show all host groups"""
     user.need_permission("wato.groups")
-    collection = [{"id": k, "alias": v["alias"]} for k, v in load_host_group_information().items()]
-    return serve_json(serialize_group_list("host_group_config", collection))
+    collection = build_group_list(load_host_group_information())
+    return serve_json(
+        serialize_group_list(
+            "host_group_config",
+            collection,
+            include_links=params["include_links"],
+            include_extensions=params["include_extensions"],
+        )
+    )
 
 
 @Endpoint(

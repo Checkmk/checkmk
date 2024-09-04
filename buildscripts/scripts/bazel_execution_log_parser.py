@@ -5,6 +5,8 @@
 
 import argparse
 import json
+from contextlib import contextmanager
+from datetime import datetime
 from pathlib import Path
 from pprint import pprint as pp
 from typing import Iterator, NamedTuple, Self
@@ -73,16 +75,26 @@ def parse_execution_logs(log_files: list[Path]) -> Iterator[ExecutionMetrics]:
     We need to use raw_decode as the logs are not a valid json, see:
     https://github.com/bazelbuild/bazel/issues/14209
     """
-    for log_file in log_files:
-        with open(log_file) as f:
-            data = f.read()
 
-        decoder = json.JSONDecoder()
-        d = data
-        while len(d):
-            (parsed_data, offset) = decoder.raw_decode(d)
-            d = d[offset:]
-            yield ExecutionMetrics.from_dict(parsed_data)
+    for log_file in log_files:
+        with time_action(f"Parsing {log_file}"):
+            with open(log_file) as f:
+                data = f.read()
+
+            decoder = json.JSONDecoder()
+            d = data
+            while len(d):
+                (parsed_data, offset) = decoder.raw_decode(d)
+                d = d[offset:]
+                yield ExecutionMetrics.from_dict(parsed_data)
+
+
+@contextmanager
+def time_action(action: str) -> Iterator[None]:
+    begin = datetime.now()
+    yield None
+    end = datetime.now()
+    print(f"{action} in {end-begin}")
 
 
 def build_summary(parsed_logs: list[ExecutionMetrics]) -> Summary:
@@ -116,7 +128,9 @@ def write_cachehit_csv(summary: Summary, file_path: Path, distro: str) -> None:
 def main():
     args = parse_arguments()
 
-    bazel_log_files = list(args.execution_logs_root.glob(args.bazel_log_file_pattern))
+    with time_action("Finding log files"):
+        bazel_log_files = list(args.execution_logs_root.glob(args.bazel_log_file_pattern))
+
     print("Analyzing the following log files: ")
     pp(bazel_log_files)
 

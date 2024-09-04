@@ -61,6 +61,7 @@ DomainType = Literal[
     "autocomplete",
     "quick_setup",
     "managed_robots",
+    "onboarding",
 ]
 
 
@@ -177,6 +178,7 @@ RestfulEndpointName = Literal[
 ]  # fmt: off
 
 LinkRelation = CmkEndpointName | RestfulEndpointName
+TagGroup = Literal["Monitoring", "Setup", "Checkmk Internal", "Undocumented Endpoint"]
 
 PropertyFormat = Literal[
     # String values
@@ -237,7 +239,7 @@ class DomainObject(TypedDict):
     title: str
     links: list[LinkType]
     members: dict[str, Any]
-    extensions: dict[str, Any]
+    extensions: NotRequired[dict[str, Any]]
 
 
 class CollectionObject(TypedDict):

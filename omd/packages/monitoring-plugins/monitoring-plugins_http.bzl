@@ -1,7 +1,8 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
 
-def monitoring_plugins(version_str, sha256):
+def monitoring_plugins_workspace():
+    version_str = "2.3.3"
     filename = "monitoring-plugins-" + version_str + ".tar.gz"
     http_archive(
         name = "monitoring-plugins",
@@ -10,7 +11,7 @@ def monitoring_plugins(version_str, sha256):
             "https://www.monitoring-plugins.org/download/" + filename,
             UPSTREAM_MIRROR_URL + filename,
         ],
-        sha256 = sha256,
+        sha256 = "7023b1dc17626c5115b061e7ce02e06f006e35af92abf473334dffe7ff3c2d6d",
         strip_prefix = "monitoring-plugins-" + version_str,
         patches = [
             "//omd/packages/monitoring-plugins:patches/0001-check-icmp-allows-pl-of-101.dif",

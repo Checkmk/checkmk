@@ -3,14 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.ccc.version import Edition, edition
+
 from cmk.utils import paths
 
 from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.pages import PageRegistry
 from cmk.gui.watolib.automation_commands import AutomationCommandRegistry
 from cmk.gui.watolib.mode import ModeRegistry
-
-from cmk.ccc.version import edition, Edition
 
 from . import (
     activate_changes,

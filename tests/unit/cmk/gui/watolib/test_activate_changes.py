@@ -19,6 +19,8 @@ from tests.testlib.repo import is_enterprise_repo, is_managed_repo
 
 from livestatus import SiteConfiguration, SiteId
 
+import cmk.ccc.version as cmk_version
+
 import cmk.utils.paths
 
 import cmk.gui.watolib.utils
@@ -28,8 +30,6 @@ from cmk.gui.http import Request
 from cmk.gui.watolib import activate_changes
 from cmk.gui.watolib.activate_changes import ActivationCleanupBackgroundJob, ConfigSyncFileInfo
 from cmk.gui.watolib.config_sync import ReplicationPath
-
-import cmk.ccc.version as cmk_version
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +63,12 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
         ),
         ReplicationPath(
             ty="dir", ident="omd", site_path="etc/omd", excludes=["site.conf", "instance_id"]
+        ),
+        ReplicationPath(
+            ty="dir",
+            ident="rabbitmq",
+            site_path="etc/rabbitmq/definitions.d",
+            excludes=["00-default.json", ".*new*"],
         ),
         ReplicationPath(
             ty="dir",
@@ -741,7 +747,6 @@ def test_get_current_config_generation() -> None:
 
 
 def test_activation_cleanup_background_job(capsys: pytest.CaptureFixture[str]) -> None:
-
     act_dir = (
         cmk.utils.paths.tmp_dir / "wato" / "activation" / "9a61e24f-d991-4710-b8e7-04700c309594"
     )

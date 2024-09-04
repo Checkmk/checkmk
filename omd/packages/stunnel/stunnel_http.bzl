@@ -1,7 +1,8 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
 
-def stunnel(version_str, sha256):
+def stunnel_workspace():
+    version_str = "5.63"
     filename = "stunnel-" + version_str + ".tar.gz"
     http_archive(
         name = "stunnel",
@@ -11,5 +12,5 @@ def stunnel(version_str, sha256):
             "https://ftp.nluug.nl/pub/networking/stunnel/archive/5.x/" + filename,
             UPSTREAM_MIRROR_URL + filename,
         ],
-        sha256 = sha256,
+        sha256 = "c74c4e15144a3ae34b8b890bb31c909207301490bd1e51bfaaa5ffeb0a994617",
     )

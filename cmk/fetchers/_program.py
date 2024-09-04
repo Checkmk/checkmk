@@ -10,10 +10,10 @@ import subprocess
 from contextlib import suppress
 from typing import Final
 
+from cmk.ccc.exceptions import MKFetcherError
+
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.log import VERBOSE
-
-from cmk.ccc.exceptions import MKFetcherError
 
 from ._abstract import Fetcher, Mode
 

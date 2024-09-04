@@ -15,9 +15,9 @@ from typing import TYPE_CHECKING
 
 from omdlib.type_defs import ConfigChoiceHasError
 
-from cmk.utils import tty
-
 from cmk.ccc.exceptions import MKTerminate
+
+from cmk.utils import tty
 
 if TYPE_CHECKING:
     from omdlib.contexts import SiteContext

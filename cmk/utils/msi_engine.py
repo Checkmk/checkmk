@@ -21,9 +21,9 @@ from pathlib import Path
 from subprocess import PIPE, Popen
 from typing import Final, NoReturn
 
-from cmk.utils import msi_patch
-
 from cmk.ccc.version import __version__
+
+from cmk.utils import msi_patch
 
 
 def _extract_major_version(version: str) -> str:

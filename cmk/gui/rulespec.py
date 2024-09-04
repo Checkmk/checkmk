@@ -6,6 +6,8 @@ import traceback
 from collections.abc import Sequence
 from pathlib import Path
 
+from cmk.ccc.debug import enabled as debug_enabled
+
 from cmk.gui.form_specs.vue.visitors._registry import form_spec_registry
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -13,8 +15,6 @@ from cmk.gui.utils import add_failed_plugin
 from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
 from cmk.gui.utils.rule_specs.loader import load_api_v1_rule_specs, LoadedRuleSpec
 from cmk.gui.watolib.rulespecs import rulespec_registry
-
-from cmk.ccc.debug import enabled as debug_enabled
 
 
 def load_plugins() -> None:

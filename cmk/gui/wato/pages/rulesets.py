@@ -311,14 +311,7 @@ class ABCRulesetMode(WatoMode):
                 forms.container()
 
                 for ruleset in group_rulesets:
-                    float_cls = (
-                        []
-                        if active_config.wato_hide_help_in_lists
-                        else ["nofloat" if user.show_help else "float"]
-                    )
-                    html.open_div(
-                        class_=["ruleset"] + float_cls, title=strip_tags(ruleset.help() or "")
-                    )
+                    html.open_div(class_=["ruleset"], title=strip_tags(ruleset.help() or ""))
                     html.open_div(class_="text")
 
                     url_vars: HTTPVariables = [
@@ -346,9 +339,6 @@ class ABCRulesetMode(WatoMode):
                         num_rules_txt,
                         class_=["rulecount", "nonzero" if ruleset.is_empty() else "zero"],
                     )
-                    if not active_config.wato_hide_help_in_lists and ruleset.help():
-                        html.help(ruleset.help())
-
                     html.close_div()
                 forms.end()
 

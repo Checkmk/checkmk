@@ -18,9 +18,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Generic, Literal, NamedTuple, NewType, Self, TypedDict, TypeVar
 
-from cmk.utils.hostaddress import HostName
-
 from cmk.ccc import store
+
+from cmk.utils.hostaddress import HostName
 
 # TODO Cleanup path in utils, base, gui, find ONE place (type defs or similar)
 # TODO filter table rows?
@@ -316,7 +316,7 @@ def _make_filter_func(choice: Literal["nothing", "all"] | Sequence[_CT]) -> Call
 
 
 def _consolidate_filter_funcs(
-    choices: Sequence[Literal["nothing", "all"] | Sequence[_CT]]
+    choices: Sequence[Literal["nothing", "all"] | Sequence[_CT]],
 ) -> Callable[[_CT], bool]:
     return lambda kn: any(_make_filter_func(c)(kn) for c in choices)
 

@@ -6,7 +6,9 @@ import ast
 from typing import Mapping
 
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
-from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
+from cmk.gui.form_specs.vue import shared_type_defs
+
+from cmk.rulesets.v1.form_specs._composed import NoGroup
 
 from ._base import FormSpecVisitor
 from ._registry import get_visitor
@@ -16,6 +18,7 @@ from ._utils import (
     compute_validators,
     create_validation_error,
     get_title_and_help,
+    localize,
 )
 
 
@@ -66,7 +69,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, Mapping[str, object]
 
     def _to_vue(
         self, raw_value: object, parsed_value: Mapping[str, object] | EmptyValue
-    ) -> tuple[VueComponents.Dictionary, Value]:
+    ) -> tuple[shared_type_defs.Dictionary, Value]:
         title, help_text = get_title_and_help(self.form_spec)
         if isinstance(parsed_value, EmptyValue):
             # TODO: add warning message somewhere "falling back to defaults"
@@ -81,20 +84,31 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, Mapping[str, object]
             element_value = parsed_value[key_name] if is_active else DEFAULT_VALUE
             element_schema, element_vue_value = element_visitor.to_vue(element_value)
 
+            if isinstance(dict_element.group, NoGroup):
+                group = None
+
+            else:
+                group = shared_type_defs.DictionaryGroup(
+                    title=localize(self.form_spec.title),
+                    help=localize(self.form_spec.help_text),
+                    key=localize(self.form_spec.title) + localize(self.form_spec.help_text),
+                )
+
             if is_active:
                 vue_values[key_name] = element_vue_value
 
             elements_keyspec.append(
-                VueComponents.DictionaryElement(
+                shared_type_defs.DictionaryElement(
                     ident=key_name,
                     default_value=element_vue_value,
                     required=dict_element.required,
                     parameter_form=element_schema,
+                    group=group,
                 )
             )
 
         return (
-            VueComponents.Dictionary(
+            shared_type_defs.Dictionary(
                 groups=[],
                 title=title,
                 help=help_text,
@@ -106,7 +120,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, Mapping[str, object]
 
     def _validate(
         self, raw_value: object, parsed_value: Mapping[str, object] | EmptyValue
-    ) -> list[VueComponents.ValidationMessage]:
+    ) -> list[shared_type_defs.ValidationMessage]:
         if isinstance(parsed_value, EmptyValue):
             return create_validation_error(raw_value, "Expected a valid value, got EmptyValue")
 
@@ -121,7 +135,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, Mapping[str, object]
             element_visitor = get_visitor(dict_element.parameter_form, self.options)
             for validation in element_visitor.validate(parsed_value[key_name]):
                 element_validations.append(
-                    VueComponents.ValidationMessage(
+                    shared_type_defs.ValidationMessage(
                         location=[key_name] + validation.location,
                         message=validation.message,
                         invalid_value=validation.invalid_value,

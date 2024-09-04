@@ -17,6 +17,30 @@ def test_get_all_time_periods(clients: ClientRegistry) -> None:
     clients.TimePeriod.get_all()
 
 
+def test_openapi_list_time_periods_include_links(clients: ClientRegistry) -> None:
+    default_response = clients.TimePeriod.get_all()
+    enabled_response = clients.TimePeriod.get_all(include_links=True)
+    disabled_response = clients.TimePeriod.get_all(include_links=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == enabled_response.json
+    assert any(bool(value["links"]) for value in enabled_response.json["value"])
+    assert all(value["links"] == [] for value in disabled_response.json["value"])
+
+
+def test_openapi_list_time_periods_include_extensions(clients: ClientRegistry) -> None:
+    default_response = clients.TimePeriod.get_all()
+    enabled_response = clients.TimePeriod.get_all(include_extensions=True)
+    disabled_response = clients.TimePeriod.get_all(include_extensions=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == enabled_response.json
+    assert any(bool(value["extensions"]) for value in enabled_response.json["value"])
+    assert all("extensions" not in value for value in disabled_response.json["value"])
+
+
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_get_a_time_period(clients: ClientRegistry) -> None:
     clients.TimePeriod.get(time_period_id="24X7")

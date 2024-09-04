@@ -3,12 +3,12 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-div.robotmk_free_tier_banner {
+div.robotmk_banner {
   display: flex;
   margin: 8px 0;
   width: 100%;
 
-  div.robotmk_free_tier_banner_icon {
+  div.robotmk_banner_icon {
     display: flex;
     align-items: center;
     background-color: $help-icon-bg-color;

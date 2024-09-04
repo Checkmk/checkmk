@@ -448,7 +448,7 @@ def test_check_diskstat_dict(
     params: Mapping[str, object], disk: diskstat.Disk, exp_res: CheckResult
 ) -> None:
     value_store: dict[str, Any] = {}
-
+    expected = list(exp_res)
     assert (
         list(
             diskstat.check_diskstat_dict(
@@ -458,7 +458,7 @@ def test_check_diskstat_dict(
                 this_time=0.0,
             )
         )
-        == exp_res
+        == expected
     )
     assert list(
         diskstat.check_diskstat_dict(
@@ -470,8 +470,8 @@ def test_check_diskstat_dict(
     ) == [
         *(
             [Result(state=State.OK, notice="All values averaged over 5 minutes 0 seconds")]
-            if exp_res
+            if expected
             else []
         ),
-        *exp_res,
+        *expected,
     ]

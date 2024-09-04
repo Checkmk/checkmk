@@ -87,9 +87,11 @@ def check_esx_vsphere_datastores(item, params, parsed):
     if warn is not None:
         # convert percent to abs MiB
         scale = (size_bytes / mib) / 100.0  # fixed: true-division
-        yield 0, "", [
-            ("overprovisioned", prov_bytes / mib, scale * warn, scale * crit)
-        ]  # fixed: true-division
+        yield (
+            0,
+            "",
+            [("overprovisioned", prov_bytes / mib, scale * warn, scale * crit)],
+        )  # fixed: true-division
     else:
         yield 0, "", [("overprovisioned", prov_bytes / mib)]  # fixed: true-division
 

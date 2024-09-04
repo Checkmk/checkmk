@@ -5,9 +5,10 @@
 from collections.abc import Mapping, Sequence
 from typing import Final
 
+from cmk.ccc.version import Edition, edition
+
 from cmk.utils import paths
 
-from cmk.ccc.version import edition, Edition
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
@@ -46,7 +47,8 @@ RAW_AZURE_SERVICES: Final = [
     ("Microsoft.Web/sites", Title("Web Servers (IIS)")),
     ("Microsoft.DBforMySQL/servers", Title("Database for MySQL single server")),
     ("Microsoft.DBforMySQL/flexibleServers", Title("Database for MySQL flexible server")),
-    ("Microsoft.DBforPostgreSQL/servers", Title("Database for PostgreSQL")),
+    ("Microsoft.DBforPostgreSQL/servers", Title("Database for PostgreSQL single server")),
+    ("Microsoft.DBforPostgreSQL/flexibleServers", Title("Database for PostgreSQL flexible server")),
     ("Microsoft.Network/trafficmanagerprofiles", Title("Traffic Manager")),
     ("Microsoft.Network/loadBalancers", Title("Load Balancer")),
 ]

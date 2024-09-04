@@ -31,8 +31,9 @@ import requests
 import urllib3
 from pydantic import TypeAdapter
 
+import cmk.ccc.profile
+
 import cmk.utils.password_store
-import cmk.utils.profile
 
 from cmk.plugins.kube import common, performance, prometheus_section, query
 from cmk.plugins.kube.agent_handlers import (
@@ -456,7 +457,15 @@ def request_cluster_collector(
     prepare_request = session.prepare_request(request)
     try:
         cluster_resp = session.send(
-            prepare_request, verify=config.usage_verify_cert, timeout=config.requests_timeout()
+            prepare_request,
+            timeout=config.requests_timeout(),
+            **session.merge_environment_settings(
+                url=request.url,
+                proxies={},
+                stream=None,
+                verify=config.usage_verify_cert,
+                cert=None,
+            ),
         )
         cluster_resp.raise_for_status()
     except requests.HTTPError as e:
@@ -822,7 +831,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
         setup_logging(arguments.verbose)
         LOGGER.debug("parsed arguments: %s\n", arguments)
 
-        with cmk.utils.profile.Profile(
+        with cmk.ccc.profile.Profile(
             enabled=bool(arguments.profile), profile_file=arguments.profile
         ):
             client_config = query.parse_api_session_config(arguments)

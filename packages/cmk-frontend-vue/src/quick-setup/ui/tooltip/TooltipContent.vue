@@ -35,6 +35,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
 
 <template>
   <TooltipPortal>
+    <!-- @vue-expect-error Radix-vue props doesn't follow our exactOptionalPropertyTypes rule -->
     <TooltipContent
       v-bind="{ ...forwarded, ...$attrs }"
       :class="

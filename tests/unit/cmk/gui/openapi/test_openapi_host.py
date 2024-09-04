@@ -7,7 +7,7 @@ import base64
 
 import pytest
 
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.rest_api_client import ClientRegistry, Response
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
@@ -72,6 +72,76 @@ def test_openapi_livestatus_hosts_generic_filter(
             status=200,
         )
         assert len(resp.json["value"]) == 1
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_list_hosts_include_links(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    mock_livestatus.add_table(
+        "hosts",
+        [
+            {
+                "name": "heute",
+            },
+        ],
+    )
+
+    def _request(include_links: bool | None = None) -> Response:
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                "Columns: name",
+            ],
+        )
+        with mock_livestatus:
+            return clients.Host.get_all(include_links=include_links)
+
+    default_response = _request()
+    enabled_response = _request(include_links=True)
+    disabled_response = _request(include_links=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == enabled_response.json
+    assert any(bool(value["links"]) for value in enabled_response.json["value"])
+    assert all(value["links"] == [] for value in disabled_response.json["value"])
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_list_hosts_include_extensions(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    mock_livestatus.add_table(
+        "hosts",
+        [
+            {
+                "name": "heute",
+            },
+        ],
+    )
+
+    def _request(include_extensions: bool | None = None) -> Response:
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                "Columns: name",
+            ],
+        )
+        with mock_livestatus:
+            return clients.Host.get_all(include_extensions=include_extensions)
+
+    default_response = _request()
+    enabled_response = _request(include_extensions=True)
+    disabled_response = _request(include_extensions=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == enabled_response.json
+    assert any(bool(value["extensions"]) for value in enabled_response.json["value"])
+    assert all("extensions" not in value for value in disabled_response.json["value"])
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")

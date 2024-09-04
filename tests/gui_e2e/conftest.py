@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 """some fixtures related to e2e tests and playwright"""
+
 import logging
 import re
 from collections.abc import Iterator
@@ -13,7 +14,7 @@ import pytest
 from playwright.sync_api import Browser, BrowserContext, expect, Page
 from playwright.sync_api import TimeoutError as PWTimeoutError
 
-from tests.testlib.host_details import HostDetails
+from tests.testlib.host_details import AgentAndApiIntegration, HostDetails
 from tests.testlib.playwright.helpers import CmkCredentials
 from tests.testlib.playwright.plugin import (
     manage_new_browser_context,
@@ -22,7 +23,9 @@ from tests.testlib.playwright.plugin import (
 from tests.testlib.playwright.pom.dashboard import Dashboard, DashboardMobile
 from tests.testlib.playwright.pom.login import LoginPage
 from tests.testlib.playwright.pom.setup.hosts import AddHost, SetupHost
+from tests.testlib.repo import qa_test_data_path
 from tests.testlib.site import ADMIN_USER, get_site_factory, Site
+from tests.testlib.utils import run
 
 logger = logging.getLogger(__name__)
 
@@ -160,3 +163,81 @@ def fixture_host(
     setup_host_page.select_hosts([host_details.name])
     setup_host_page.delete_selected_hosts()
     setup_host_page.activate_changes()
+
+
+@pytest.fixture(name="setup_host_using_agent_dump")
+def setup_host_using_data_from_agent_dump(
+    test_site: Site, request: pytest.FixtureRequest
+) -> Iterator:
+    """Create a host which will use data from agent dump.
+
+    Copy the agent dump to the test site, create a rule to read agent-output data from it,
+    then add a host and wait for services update. Delete all the created objects after the test.
+
+    This fixture uses indirect pytest parametrization to define the agent dump.
+    """
+    test_site_dump_path = test_site.path("var/check_mk/dumps")
+    data_source_dump_path = str(qa_test_data_path() / "gui_e2e")
+    dump_name = request.param
+    host_name = dump_name.split("-")[0] + "_host"
+
+    logger.info("Create a folder '%s' for dumps inside test site", test_site_dump_path)
+    if not test_site.is_dir(test_site_dump_path):
+        test_site.makedirs(test_site_dump_path)
+
+    logger.info("Copy a dump to the new folder")
+    assert (
+        run(
+            [
+                "cp",
+                "-f",
+                f"{data_source_dump_path}/{dump_name}",
+                f"{test_site_dump_path}/{host_name}",
+            ],
+            sudo=True,
+        ).returncode
+        == 0
+    )
+
+    logger.info("Create a rule to read agent-output data from file")
+    rule_id = test_site.openapi.create_rule(
+        ruleset_name="datasource_programs",
+        value=f"cat {test_site_dump_path}/<HOST>",
+    )
+
+    logger.info("Create a host '%s'", host_name)
+    host_details = HostDetails(
+        name=host_name, ip="127.0.0.1", agent_and_api_integration=AgentAndApiIntegration.cmk_agent
+    )
+    test_site.openapi.create_host(
+        hostname=host_details.name,
+        attributes=host_details.rest_api_attributes(),
+    )
+    test_site.activate_changes_and_wait_for_core_reload()
+
+    logger.info("Run service discovery")
+    test_site.openapi.discover_services_and_wait_for_completion(host_name)
+    test_site.activate_changes_and_wait_for_core_reload()
+
+    logger.info("Schedule the 'Check_MK' service and check for pending services")
+    for _ in range(3):
+        test_site.schedule_check(host_name, "Check_MK", 0, 60)
+
+    pending_checks = test_site.openapi.get_host_services(host_name, pending=True)
+    if pending_checks:
+        logger.info(
+            "%s pending service(s) found: %s",
+            len(pending_checks),
+            ",".join(
+                _.get("extensions", {}).get("description", _.get("id")) for _ in pending_checks
+            ),
+        )
+
+    try:
+        yield
+    finally:
+        logger.info("Clean up: delete the host and the rule")
+        test_site.openapi.delete_host(host_name)
+        test_site.openapi.delete_rule(rule_id)
+        test_site.delete_file(f"{test_site_dump_path}/{host_name}")
+        test_site.activate_changes_and_wait_for_core_reload()

@@ -41,11 +41,12 @@ import botocore
 from botocore.client import BaseClient
 from pydantic import BaseModel, ConfigDict, Field
 
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKException
+
 from cmk.utils import password_store
 from cmk.utils.paths import tmp_dir
 
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKException
 from cmk.plugins.aws.constants import (  # pylint: disable=cmk-module-layer-violation
     AWSEC2InstFamilies,
     AWSEC2InstTypes,
@@ -521,7 +522,10 @@ def _get_wafv2_web_acls(
 ) -> Sequence[dict[str, object]]:
     if web_acls_info is None:
         web_acls_info = _iterate_through_wafv2_list_operations(
-            client.list_web_acls, scope, "WebACLs", get_response_content  # type: ignore[attr-defined]
+            client.list_web_acls,  # type: ignore[attr-defined]
+            scope,
+            "WebACLs",
+            get_response_content,
         )
 
     if web_acls_names is not None:
@@ -3778,7 +3782,8 @@ class RDSSummary(AWSSection):
     def _get_instance_tags(self, instance_arn: str) -> Tags:
         # list_tags_for_resource cannot be paginated
         return self._get_response_content(
-            self._client.list_tags_for_resource(ResourceName=instance_arn), "TagList"  # type: ignore[attr-defined]
+            self._client.list_tags_for_resource(ResourceName=instance_arn),  # type: ignore[attr-defined]
+            "TagList",
         )
 
     def _matches_tag_conditions(self, tagging: Tags) -> bool:

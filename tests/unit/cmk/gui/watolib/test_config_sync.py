@@ -18,6 +18,8 @@ from tests.testlib.repo import is_enterprise_repo, is_managed_repo
 
 from livestatus import NetworkSocketDetails, SiteConfiguration, SiteId, TLSParams
 
+import cmk.ccc.version as cmk_version
+
 import cmk.utils.paths
 from cmk.utils.user import UserId
 
@@ -26,9 +28,9 @@ from cmk.gui.config import active_config
 from cmk.gui.nodevis.utils import topology_dir
 from cmk.gui.watolib import activate_changes, config_sync
 
-import cmk.ccc.version as cmk_version
 from cmk import trace
 from cmk.bi.type_defs import frozen_aggregations_dir
+from cmk.messaging import rabbitmq
 
 
 @pytest.fixture(name="mocked_responses")
@@ -170,6 +172,7 @@ def _get_site_configuration(remote_site: SiteId) -> SiteConfiguration:
             "persist": False,
             "replicate_ec": True,
             "multisiteurl": "http://localhost/unit_remote_1/check_mk/",
+            "message_broker_port": 5672,
         }
     if remote_site == SiteId("unit_remote_2"):
         return {
@@ -197,6 +200,7 @@ def _get_site_configuration(remote_site: SiteId) -> SiteConfiguration:
             "persist": False,
             "replicate_ec": True,
             "multisiteurl": "http://localhost/unit_remote_1/check_mk/",
+            "message_broker_port": 5672,
         }
     raise ValueError(remote_site)
 
@@ -216,6 +220,7 @@ def _get_activation_manager(
                     "disabled": False,
                     "insecure": False,
                     "multisiteurl": "",
+                    "message_broker_port": 5672,
                     "persist": False,
                     "replicate_ec": False,
                     "replication": "",
@@ -246,9 +251,12 @@ def _generate_sync_snapshot(
         if edition is cmk_version.Edition.CME
         else "CRESnapshotDataCollector"
     )
+
     assert activation_manager._activation_id is not None
     site_snapshot_settings = activation_manager._get_site_snapshot_settings(
-        activation_manager._activation_id, activation_manager._sites
+        activation_manager._activation_id,
+        activation_manager._sites,
+        {remote_site: rabbitmq.Definitions()},
     )
     snapshot_settings = site_snapshot_settings[remote_site]
 
@@ -319,6 +327,9 @@ def _get_expected_paths(
         "etc/check_mk/piggyback_hub.d",
         "etc/check_mk/piggyback_hub.d/wato",
         "etc/check_mk/piggyback_hub.d/wato/sitespecific.mk",
+        "etc/rabbitmq",
+        "etc/rabbitmq/definitions.d",
+        "etc/rabbitmq/definitions.d/definitions.json",
     ]
 
     if edition is not cmk_version.Edition.CRE:

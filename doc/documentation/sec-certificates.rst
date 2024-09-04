@@ -42,8 +42,13 @@ Architecture
             rectangle "[[../sec-certificates.html#site-site-name-local-ca Site '$site-name' local CA]]" <<$certificate>> as $label##_site_ca
             rectangle "[[../sec-certificates.html#sitecertificate $site-name]]" <<$certificate>> as $label##_site_cert
 
+            rectangle "[[../sec-certificates.html#customer-name-broker-signing-ca Message broker '$customer-name' CA]]" <<$certificate>> as $label##_broker_ca
+            rectangle "[[../sec-certificates.html#site-name-broker-certificate Message broker $site-name cert]]" <<$certificate>> as $label##_broker_cert
+
         ' ca - certs relationships
         $label##_site_ca -d-> $label##_site_cert: signs
+        $label##_site_ca -d-> $label##_broker_ca: signs
+        $label##_broker_ca -d-> $label##_broker_cert: signs
 
         ' components
         component wato as $label##_wato
@@ -138,6 +143,23 @@ $agent-UUID
 * stored in the connection configuration of the agent
 * Validated by the agent-receiver and the fetcher to authenticate an agent
 
+'$customer-name' broker signing CA
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Created by omd
+* CME: `etc/rabbitmq/ssl/multisite/$customer-name/ca.pem`
+* other editions: `etc/rabbitmq/ssl/multisite/ca.pem`
+* must be a CA
+* signs the local and remote site certs
+* Central site sends CA and certs to remote sites, only stores locally the public key of the remote site
+
+$site-name broker certificate
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Created by omd
+* CME: `etc/rabbitmq/ssl/multisite/$customer-name/$site-name_cert.pem`
+* other editions: `etc/rabbitmq/ssl/multisite/$site-name_cert.pem`
+* Used by RabbitMQ broker to authenticate the connections
 
 Interface agent controller - agent-receiver/fetcher
 ---------------------------------------------------

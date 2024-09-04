@@ -25,6 +25,21 @@ test('FormReadonly renders integer', () => {
   screen.getByText('42')
 })
 
+test('FormReadonly updates integer', async () => {
+  const props = {
+    spec: getSpec('integer'),
+    data: 42,
+    backendValidation: []
+  }
+
+  const { rerender } = render(FormReadonly, {
+    props
+  })
+  screen.getByText('42')
+  await rerender({ ...props, data: 41 })
+  screen.getByText('41')
+})
+
 test('FormReadonly renders float', () => {
   render(FormReadonly, {
     props: {
@@ -57,6 +72,7 @@ test('FormReadonly renders string', () => {
 
 const dictionaryFormSpec: FormSpec.Dictionary = {
   type: 'dictionary',
+  layout: 'one_column',
   title: 'fooTitle',
   help: 'fooHelp',
   validators: [],
@@ -149,6 +165,7 @@ const cascadingSingleChoiceFormSpec: FormSpec.CascadingSingleChoice = {
   type: 'cascading_single_choice',
   title: 'fooTitle',
   label: 'fooLabel',
+  layout: 'horizontal',
   help: 'fooHelp',
   validators: [],
   input_hint: '',
@@ -231,6 +248,21 @@ test('FormReadonly renders boolean: off', () => {
   })
   // Title of cascading
   screen.getByText('off')
+})
+
+test('FormReadonly renders time_span: simple', () => {
+  render(FormReadonly, {
+    props: {
+      spec: {
+        type: 'time_span',
+        displayed_magnitudes: ['millisecond', 'second', 'minute'],
+        i18n: { minute: 'ut_minute', second: 'ut_second', millisecond: 'ut_ms' }
+      } as FormSpec.TimeSpan,
+      backendValidation: [],
+      data: 66.6
+    }
+  })
+  screen.getByText('1 ut_minute 6 ut_second 600 ut_ms')
 })
 
 const multilineTextFormSpec: FormSpec.MultilineText = {

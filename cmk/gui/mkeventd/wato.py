@@ -31,6 +31,11 @@ from pysmi.writer.pyfile import PyFileWriter  # type: ignore[import-untyped]
 
 from livestatus import LocalConnection, MKLivestatusSocketError, SiteId
 
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
+from cmk.ccc.version import Edition, edition
+
 import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.render
@@ -169,10 +174,6 @@ from cmk.gui.watolib.translation import HostnameTranslation
 from cmk.gui.watolib.utils import site_neutral_path
 
 import cmk.mkp_tool
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import omd_site
-from cmk.ccc.version import edition, Edition
 
 from ._rulespecs import RulespecLogwatchEC
 from .config_domain import ConfigDomainEventConsole
@@ -5313,7 +5314,7 @@ ExtraServiceConfECContact = ServiceRulespec(
 #   | Stuff for sending monitoring notifications into the event console.   |
 #   '----------------------------------------------------------------------'
 def mkeventd_update_notification_configuration(
-    hosts: Mapping[HostName, CollectedHostAttributes]
+    hosts: Mapping[HostName, CollectedHostAttributes],
 ) -> None:
     contactgroup = active_config.mkeventd_notify_contactgroup
     remote_console = active_config.mkeventd_notify_remotehost

@@ -18,6 +18,11 @@ from typing import Final, Literal, NamedTuple, overload, Protocol, TypeAlias, Ty
 
 import livestatus
 
+import cmk.ccc.debug
+import cmk.ccc.version as cmk_version
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout, OnError
+
 import cmk.utils.cleanup
 import cmk.utils.password_store
 import cmk.utils.paths
@@ -125,12 +130,8 @@ from cmk.base.server_side_calls import load_active_checks
 from cmk.base.sources import make_parser, SNMPFetcherConfig
 from cmk.base.utils import register_sigint_handler
 
-import cmk.ccc.debug
-import cmk.ccc.version as cmk_version
 from cmk import piggyback
 from cmk.agent_based.v1.value_store import set_value_store_manager
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout, OnError
 from cmk.discover_plugins import discover_families, PluginGroup
 
 from ._localize import do_localize

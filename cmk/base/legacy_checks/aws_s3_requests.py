@@ -72,9 +72,11 @@ def check_aws_s3_requests(item, params, section):
     ]:
         requests_rate = metrics.get(key, 0)
 
-        yield 0, f"{title}: {aws_get_counts_rate_human_readable(requests_rate)}", [
-            (perf_key, requests_rate)
-        ]
+        yield (
+            0,
+            f"{title}: {aws_get_counts_rate_human_readable(requests_rate)}",
+            [(perf_key, requests_rate)],
+        )
 
         try:
             requests_perc = 100.0 * requests_rate / all_requests_rate

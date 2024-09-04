@@ -23,12 +23,7 @@
                     "default": []
                 }
             },
-            "required": [
-                "type",
-                "title",
-                "help",
-                "validators"
-            ]
+            "required": ["type", "title", "help", "validators"]
         },
         "integer": {
             "type": "object",
@@ -47,9 +42,7 @@
                     "type": "string"
                 }
             },
-            "required": [
-                "type"
-            ],
+            "required": ["type"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -73,9 +66,7 @@
                     "type": "string"
                 }
             },
-            "required": [
-                "type"
-            ],
+            "required": ["type"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -99,11 +90,7 @@
                     "type": "string"
                 }
             },
-            "required": [
-                "type",
-                "html",
-                "varprefix"
-            ],
+            "required": ["type", "html", "varprefix"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -122,11 +109,68 @@
                 },
                 "input_hint": {
                     "type": "string"
+                },
+                "field_size": {
+                    "type": "string",
+                    "title": "StringFieldSize",
+                    "enum": ["SMALL", "MEDIUM", "LARGE"]
                 }
             },
-            "required": [
-                "type"
-            ],
+            "required": ["type"],
+            "allOf": [
+                {
+                    "$ref": "#/$defs/form_spec"
+                }
+            ]
+        },
+        "password": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "password",
+                    "default": "password"
+                },
+                "password_store_choices": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "password_id": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": "string"
+                            }
+                        },
+                        "required": ["password_id", "name"]
+                    }
+                },
+                "i18n": {
+                    "type": "object",
+                    "title": "i18nPassword",
+                    "properties": {
+                        "explicit_password": {
+                            "type": "string"
+                        },
+                        "password_store": {
+                            "type": "string"
+                        },
+                        "no_password_store_choices": {
+                            "type": "string"
+                        },
+                        "password_choice_invalid": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "explicit_password",
+                        "password_store",
+                        "no_password_store_choices",
+                        "password_choice_invalid"
+                    ]
+                }
+            },
+            "required": ["type", "password_store_choices", "i18n"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -185,10 +229,7 @@
                     "type": "string"
                 }
             },
-            "required": [
-                "key",
-                "title"
-            ]
+            "required": ["key", "title"]
         },
         "dictionary_element": {
             "type": "object",
@@ -207,49 +248,53 @@
                     "$ref": "#/$defs/form_spec"
                 }
             },
-            "required": [
-                "ident",
-                "required",
-                "parameter_form",
-                "default_value"
-            ]
+            "required": ["ident", "required", "parameter_form", "default_value"]
         },
         "dictionary": {
-            "type": "object",
-            "properties": {
-                "type": {
-                    "const": "dictionary",
-                    "default": "dictionary"
-                },
-                "elements": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/$defs/dictionary_element"
-                    },
-                    "default": []
-                },
-                "groups": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/$defs/dictionary_group"
-                    }
-                },
-                "no_elements_text": {
-                    "type": "string"
-                },
-                "additional_static_elements": {
-                    "type": "object"
-                }
-            },
-            "required": [
-                "type",
-                "elements",
-                "static_elements_key",
-                "groups"
-            ],
+            "id": "dictionary",
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "const": "dictionary",
+                            "default": "dictionary"
+                        },
+                        "elements": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/dictionary_element"
+                            },
+                            "default": []
+                        },
+                        "groups": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/dictionary_group"
+                            }
+                        },
+                        "no_elements_text": {
+                            "type": "string"
+                        },
+                        "additional_static_elements": {
+                            "type": "object"
+                        },
+                        "layout": {
+                            "title": "DictionaryLayout",
+                            "enum": ["one_column", "two_columns"],
+                            "default": "one_column"
+                        }
+                    },
+                    "required": [
+                        "type",
+                        "elements",
+                        "static_elements_key",
+                        "groups",
+                        "layout"
+                    ]
                 }
             ]
         },
@@ -261,10 +306,7 @@
                     "type": "string"
                 }
             },
-            "required": [
-                "name",
-                "title"
-            ]
+            "required": ["name", "title"]
         },
         "single_choice": {
             "type": "object",
@@ -291,12 +333,7 @@
                 },
                 "input_hint": {}
             },
-            "required": [
-                "type",
-                "frozen",
-                "elements",
-                "input_hint"
-            ],
+            "required": ["type", "frozen", "elements", "input_hint"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -313,10 +350,7 @@
                     "type": "string"
                 }
             },
-            "required": [
-                "name",
-                "title"
-            ]
+            "required": ["name", "title"]
         },
         "multiple_choice": {
             "type": "object",
@@ -337,11 +371,7 @@
                     "default": false
                 }
             },
-            "required": [
-                "type",
-                "elements",
-                "show_toggle_all"
-            ],
+            "required": ["type", "elements", "show_toggle_all"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -362,12 +392,7 @@
                     "$ref": "#/$defs/form_spec"
                 }
             },
-            "required": [
-                "name",
-                "title",
-                "default_value",
-                "parameter_form"
-            ]
+            "required": ["name", "title", "default_value", "parameter_form"]
         },
         "cascading_single_choice": {
             "type": "object",
@@ -389,13 +414,14 @@
                 "label": {
                     "type": "string"
                 },
-                "input_hint": {}
+                "input_hint": {},
+                "layout": {
+                    "title": "CascadingChoiceLayout",
+                    "enum": ["vertical", "horizontal"],
+                    "default": "vertical"
+                }
             },
-            "required": [
-                "type",
-                "elements",
-                "input_hint"
-            ],
+            "required": ["type", "elements", "input_hint", "layout"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -414,10 +440,7 @@
                 },
                 "value": {}
             },
-            "required": [
-                "type",
-                "value"
-            ],
+            "required": ["type", "value"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -441,11 +464,7 @@
                     "type": "string"
                 }
             },
-            "required": [
-                "type",
-                "text_on",
-                "text_off"
-            ],
+            "required": ["type", "text_on", "text_off"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -472,9 +491,7 @@
                     "type": "string"
                 }
             },
-            "required": [
-                "type"
-            ],
+            "required": ["type"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -501,10 +518,7 @@
                     "type": "string"
                 }
             },
-            "required": [
-                "type",
-                "displayed_magnitudes"
-            ],
+            "required": ["type", "displayed_magnitudes"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -521,11 +535,7 @@
                     "$ref": "#/$defs/dictionary"
                 }
             },
-            "required": [
-                "key",
-                "title",
-                "dictionary"
-            ]
+            "required": ["key", "dictionary"]
         },
         "catalog": {
             "type": "object",
@@ -541,9 +551,139 @@
                     }
                 }
             },
+            "required": ["type", "topics"],
+            "allOf": [
+                {
+                    "$ref": "#/$defs/form_spec"
+                }
+            ]
+        },
+        "time_span": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "time_span",
+                    "default": "time_span"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "i18n": {
+                    "title": "time_span_i18n",
+                    "type": "object",
+                    "properties": {
+                        "millisecond": {
+                            "type": "string"
+                        },
+                        "second": {
+                            "type": "string"
+                        },
+                        "minute": {
+                            "type": "string"
+                        },
+                        "hour": {
+                            "type": "string"
+                        },
+                        "day": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "millisecond",
+                        "second",
+                        "minute",
+                        "hour",
+                        "day"
+                    ]
+                },
+                "displayed_magnitudes": {
+                    "type": "array",
+                    "items": {
+                        "enum": [
+                            "millisecond",
+                            "second",
+                            "minute",
+                            "hour",
+                            "day"
+                        ],
+                        "title": "time_span_time_magnitude"
+                    }
+                },
+                "input_hint": {
+                    "type": "number"
+                }
+            },
+            "required": ["displayed_magnitudes", "i18n", "prefill"],
+            "allOf": [
+                {
+                    "$ref": "#/$defs/form_spec"
+                }
+            ]
+        },
+        "tuple": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "tuple",
+                    "default": "tuple"
+                },
+                "elements": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/form_spec"
+                    }
+                },
+                "layout": {
+                    "title": "TupleLayout",
+                    "enum": [
+                        "horizontal_titles_top",
+                        "horizontal",
+                        "vertical",
+                        "float"
+                    ],
+                    "default": "vertical"
+                },
+                "show_titles": {
+                    "type": "boolean",
+                    "default": true
+                }
+            },
+            "required": ["type", "elements", "layout", "show_titles"],
+            "allOf": [
+                {
+                    "$ref": "#/$defs/form_spec"
+                }
+            ]
+        },
+        "optional_choice": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "optional_choice",
+                    "default": "optional_choice"
+                },
+                "parameter_form": {
+                    "$ref": "#/$defs/form_spec"
+                },
+                "i18n": {
+                    "type": "object",
+                    "title": "i18nOptionalChoice",
+                    "properties": {
+                        "label": {
+                            "type": "string"
+                        },
+                        "none_label": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "parameter_form_default_value": {}
+            },
             "required": [
                 "type",
-                "topics"
+                "parameter_form",
+                "parameter_form_default_value",
+                "i18n"
             ],
             "allOf": [
                 {
@@ -590,6 +730,9 @@
                     "$ref": "#/$defs/multiline_text"
                 },
                 {
+                    "$ref": "#/$defs/password"
+                },
+                {
                     "$ref": "#/$defs/data_size"
                 },
                 {
@@ -597,11 +740,18 @@
                 },
                 {
                     "$ref": "#/$defs/multiple_choice"
+                },
+                {
+                    "$ref": "#/$defs/time_span"
+                },
+                {
+                    "$ref": "#/$defs/tuple"
+                },
+                {
+                    "$ref": "#/$defs/optional_choice"
                 }
             ],
-            "required": [
-                "type"
-            ]
+            "required": ["type"]
         }
     }
 }

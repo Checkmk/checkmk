@@ -584,7 +584,7 @@ def parse_protocol_version(
 
 
 def make_parser(
-    protocol_version: Literal["1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0"]
+    protocol_version: Literal["1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0"],
 ) -> Parser:
     match protocol_version:
         case "1.0":
@@ -690,7 +690,7 @@ class MonthlyServiceAverages:
 
     @staticmethod
     def _calculate_daily_services(
-        short_samples: Sequence[tuple[int, int]]
+        short_samples: Sequence[tuple[int, int]],
     ) -> Sequence[MonthlyServiceAverage]:
         daily_services: dict[datetime, Counter[str]] = {}
         for sample_time, num_services in short_samples:

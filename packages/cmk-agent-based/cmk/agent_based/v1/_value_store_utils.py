@@ -7,7 +7,6 @@
 
 # pylint: disable=duplicate-code
 
-
 from collections.abc import MutableMapping
 from typing import Any, cast
 

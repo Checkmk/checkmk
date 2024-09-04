@@ -12,7 +12,7 @@ from cmk.gui.data_source import data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.http import request, Request, response
+from cmk.gui.http import Request, request, response
 from cmk.gui.type_defs import (
     FilterName,
     HTTPVariables,

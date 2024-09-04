@@ -17,9 +17,13 @@ export type Components =
   | FixedValue
   | BooleanChoice
   | MultilineText
+  | Password
   | DataSize
   | Catalog
-  | MultipleChoice;
+  | MultipleChoice
+  | TimeSpan
+  | Tuple
+  | OptionalChoice;
 export type Integer = FormSpec & {
   type: "integer";
   label?: string;
@@ -37,14 +41,18 @@ export type String = FormSpec & {
   type: "string";
   placeholder?: string;
   input_hint?: string;
+  field_size?: StringFieldSize;
 };
+export type StringFieldSize = "SMALL" | "MEDIUM" | "LARGE";
 export type Dictionary = FormSpec & {
   type: "dictionary";
   elements: DictionaryElement[];
   groups: DictionaryGroup[];
   no_elements_text?: string;
   additional_static_elements?: {};
+  layout: DictionaryLayout;
 };
+export type DictionaryLayout = "one_column" | "two_columns";
 export type List = FormSpec & {
   type: "list";
   element_template: FormSpec;
@@ -74,7 +82,9 @@ export type CascadingSingleChoice = FormSpec & {
   no_elements_text?: string;
   label?: string;
   input_hint: unknown;
+  layout: CascadingChoiceLayout;
 };
+export type CascadingChoiceLayout = "vertical" | "horizontal";
 export type FixedValue = FormSpec & {
   type: "fixed_value";
   label?: string;
@@ -93,6 +103,14 @@ export type MultilineText = FormSpec & {
   monospaced?: boolean;
   input_hint?: string;
 };
+export type Password = FormSpec & {
+  type: "password";
+  password_store_choices: {
+    password_id: string;
+    name: string;
+  }[];
+  i18n: I18NPassword;
+};
 export type DataSize = FormSpec & {
   type: "data_size";
   label?: string;
@@ -107,6 +125,27 @@ export type MultipleChoice = FormSpec & {
   type: "multiple_choice";
   elements: MultipleChoiceElement[];
   show_toggle_all: boolean;
+};
+export type TimeSpan = FormSpec & {
+  type?: "time_span";
+  label?: string;
+  i18n: TimeSpanI18N;
+  displayed_magnitudes: TimeSpanTimeMagnitude[];
+  input_hint?: number;
+};
+export type TimeSpanTimeMagnitude = "millisecond" | "second" | "minute" | "hour" | "day";
+export type Tuple = FormSpec & {
+  type: "tuple";
+  elements: FormSpec[];
+  layout: TupleLayout;
+  show_titles: boolean;
+};
+export type TupleLayout = "horizontal_titles_top" | "horizontal" | "vertical" | "float";
+export type OptionalChoice = FormSpec & {
+  type: "optional_choice";
+  parameter_form: FormSpec;
+  i18n: I18NOptionalChoice;
+  parameter_form_default_value: unknown;
 };
 
 export interface VueFormspecComponents {
@@ -161,13 +200,30 @@ export interface CascadingSingleChoiceElement {
   default_value: unknown;
   parameter_form: FormSpec;
 }
+export interface I18NPassword {
+  explicit_password: string;
+  password_store: string;
+  no_password_store_choices: string;
+  password_choice_invalid: string;
+}
 export interface Topic {
   key: string;
-  dictionary: FormSpec;
+  dictionary: Dictionary;
 }
 export interface MultipleChoiceElement {
   name: string;
   title: string;
+}
+export interface TimeSpanI18N {
+  millisecond: string;
+  second: string;
+  minute: string;
+  hour: string;
+  day: string;
+}
+export interface I18NOptionalChoice {
+  label?: string;
+  none_label?: string;
 }
 export interface ValidationMessage {
   location: string[];

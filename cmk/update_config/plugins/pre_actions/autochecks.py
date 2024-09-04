@@ -48,7 +48,6 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
 
         # show one error per plugin to decrease the number of errors user has to handle
         for plugin, hosts in plugin_errors.items():
-
             logger.log(VERBOSE, f"{plugin}: Failed to migrate autochecks")
             for host, messages in hosts.items():
                 logger.log(VERBOSE, f"  {len(messages)} service(s) on {host} affected")

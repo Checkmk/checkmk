@@ -7,6 +7,8 @@ import subprocess
 from collections.abc import Mapping
 from pathlib import Path
 
+from cmk.ccc import store
+
 from cmk.utils import password_store
 from cmk.utils.password_store import Password
 
@@ -16,8 +18,6 @@ from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Choices
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSimpleConfigFile
 from cmk.gui.watolib.utils import wato_root_dir
-
-from cmk.ccc import store
 
 
 class PasswordStore(WatoSimpleConfigFile[Password]):
@@ -93,7 +93,7 @@ def join_password_specs(
 
 
 def split_password_specs(
-    joined: Mapping[str, Password]
+    joined: Mapping[str, Password],
 ) -> tuple[dict[str, Password], dict[str, str]]:
     """Separate passwords from meta data"""
     meta_data, passwords = {}, {}

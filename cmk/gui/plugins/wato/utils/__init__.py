@@ -14,6 +14,11 @@ from typing import Any, cast, Literal
 
 from livestatus import SiteConfiguration, SiteConfigurations, SiteId
 
+import cmk.ccc.plugin_registry
+import cmk.ccc.version as cmk_version
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.version import Edition, edition
+
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.definition import RuleGroup
 
@@ -216,11 +221,6 @@ from cmk.gui.watolib.translation import (
     ServiceDescriptionTranslation as ServiceDescriptionTranslation,
 )
 from cmk.gui.watolib.translation import translation_elements as translation_elements
-
-import cmk.ccc.plugin_registry
-import cmk.ccc.version as cmk_version
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.version import edition, Edition
 
 
 def check_icmp_params() -> list[DictionaryEntry]:

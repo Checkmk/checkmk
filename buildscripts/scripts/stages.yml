@@ -161,6 +161,9 @@ VARIABLES:
     - NAME: CHANGED_FRONTEND_VUE_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-frontend-vue/' || true"
 
+    - NAME: CHANGED_SHARED_TYPING_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-shared-typing/\\|^cmk/gui/form_specs/vue/shared_type_defs.py\\|^packages/cmk-frontend-vue/src/form/components/vue_formspec_components.ts' || true"
+
     - NAME: CHANGED_CMK_FRONTEND_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-frontend/' || true"
 
@@ -491,6 +494,13 @@ STAGES:
       COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/cmk-frontend-vue.txt"
       TEXT_ON_SKIP: "No cmk-frontend-vue files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-frontend-vue.txt"
+
+    - NAME: "Package cmk-shared-typing"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_SHARED_TYPING_FILES
+      DIR: "packages/cmk-shared-typing"
+      COMMAND: "../../scripts/run-in-docker.sh ./run --clean --all &> ${RESULTS}/cmk-shared-typing.txt"
+      TEXT_ON_SKIP: "No cmk-shared-typing files changed"
+      RESULT_CHECK_FILE_PATTERN: "results/cmk-shared-typing.txt"
 
     - NAME: "Package mk-sql"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_MK_SQL_FILES

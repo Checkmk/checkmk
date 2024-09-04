@@ -107,7 +107,6 @@ def inventory_hitachi_hus(section: Section) -> DiscoveryResult:
 
 
 def check_hitachi_hus(item: str, section: Section) -> CheckResult:
-
     if (data := section.get(item)) is None:
         return
 

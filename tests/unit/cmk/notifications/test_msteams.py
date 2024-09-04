@@ -40,7 +40,7 @@ from cmk.notification_plugins.msteams import _msteams_msg
                             "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
                             "msteams": {"width": "Full"},
                             "type": "AdaptiveCard",
-                            "version": "1.5",
+                            "version": "1.3",
                             "actions": [
                                 {
                                     "type": "Action.OpenUrl",
@@ -198,7 +198,7 @@ from cmk.notification_plugins.msteams import _msteams_msg
                             "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
                             "msteams": {"width": "Full"},
                             "type": "AdaptiveCard",
-                            "version": "1.5",
+                            "version": "1.3",
                             "actions": [],
                             "body": [
                                 {

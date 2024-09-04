@@ -12,6 +12,9 @@ from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import assert_never, Generic, Literal, TypeVar
 
+import cmk.ccc.debug
+from cmk.ccc.exceptions import MKGeneralException, MKTimeout, OnError
+
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.hostaddress import HostName
@@ -32,9 +35,6 @@ from cmk.checkengine.sectionparser import (
     store_piggybacked_sections,
 )
 from cmk.checkengine.summarize import SummarizerFunction
-
-import cmk.ccc.debug
-from cmk.ccc.exceptions import MKGeneralException, MKTimeout, OnError
 
 from ._autochecks import (
     AutocheckEntry,
@@ -884,10 +884,13 @@ def _cluster_service_entry(
 
     if current_recorded_entry is None:
         # first encounter of the service
-        yield DiscoveredService.id(entry), ServicesTableEntry(
-            transition=node_transition,
-            autocheck=entry,
-            hosts=[node_name],
+        yield (
+            DiscoveredService.id(entry),
+            ServicesTableEntry(
+                transition=node_transition,
+                autocheck=entry,
+                hosts=[node_name],
+            ),
         )
         return
 
@@ -903,15 +906,18 @@ def _cluster_service_entry(
             # we only update the labels
             assert existing_autocheck_entry.new is not None
             assert existing_autocheck_entry.previous is not None
-            yield DiscoveredService.id(entry), ServicesTableEntry(
-                transition=accumulated_transition,
-                autocheck=DiscoveredItem[AutocheckEntry](
-                    new=_autocheck_with_merged_labels(existing_autocheck_entry.new, entry.new),
-                    previous=_autocheck_with_merged_labels(
-                        existing_autocheck_entry.previous, entry.previous
+            yield (
+                DiscoveredService.id(entry),
+                ServicesTableEntry(
+                    transition=accumulated_transition,
+                    autocheck=DiscoveredItem[AutocheckEntry](
+                        new=_autocheck_with_merged_labels(existing_autocheck_entry.new, entry.new),
+                        previous=_autocheck_with_merged_labels(
+                            existing_autocheck_entry.previous, entry.previous
+                        ),
                     ),
+                    hosts=nodes_with_service,
                 ),
-                hosts=nodes_with_service,
             )
             return
         case "new", "unchanged" | "changed" | "vanished":
@@ -926,29 +932,35 @@ def _cluster_service_entry(
             assert existing_autocheck_entry.new is not None
             assert entry.previous is not None
             assert existing_autocheck_entry.new is not None
-            yield DiscoveredService.id(entry), ServicesTableEntry(
-                transition=(
-                    "changed"
-                    if _changed_service(existing_autocheck_entry.new, entry.previous)
-                    else "unchanged"
+            yield (
+                DiscoveredService.id(entry),
+                ServicesTableEntry(
+                    transition=(
+                        "changed"
+                        if _changed_service(existing_autocheck_entry.new, entry.previous)
+                        else "unchanged"
+                    ),
+                    autocheck=DiscoveredItem[AutocheckEntry](
+                        new=_autocheck_with_merged_labels(existing_autocheck_entry.new, entry.new),
+                        previous=existing_autocheck_entry.previous,
+                    ),
+                    hosts=nodes_with_service,
                 ),
-                autocheck=DiscoveredItem[AutocheckEntry](
-                    new=_autocheck_with_merged_labels(existing_autocheck_entry.new, entry.new),
-                    previous=existing_autocheck_entry.previous,
-                ),
-                hosts=nodes_with_service,
             )
         case "new", "new":
             # still new, first new node appearance wins so we keep the existing entry
             # we only update the labels of the new entry
             assert existing_autocheck_entry.new is not None
-            yield DiscoveredService.id(entry), ServicesTableEntry(
-                transition=accumulated_transition,
-                autocheck=DiscoveredItem[AutocheckEntry](
-                    new=_autocheck_with_merged_labels(existing_autocheck_entry.new, entry.new),
-                    previous=existing_autocheck_entry.previous,
+            yield (
+                DiscoveredService.id(entry),
+                ServicesTableEntry(
+                    transition=accumulated_transition,
+                    autocheck=DiscoveredItem[AutocheckEntry](
+                        new=_autocheck_with_merged_labels(existing_autocheck_entry.new, entry.new),
+                        previous=existing_autocheck_entry.previous,
+                    ),
+                    hosts=nodes_with_service,
                 ),
-                hosts=nodes_with_service,
             )
             return
         case "vanished", "unchanged" | "changed" | "new":
@@ -957,33 +969,39 @@ def _cluster_service_entry(
             assert current_recorded_entry.autocheck.previous is not None
             assert entry.new is not None
             assert existing_autocheck_entry.previous is not None
-            yield DiscoveredService.id(entry), ServicesTableEntry(
-                transition=(
-                    "changed"
-                    if _changed_service(current_recorded_entry.autocheck.previous, entry.new)
-                    else "unchanged"
-                ),
-                autocheck=DiscoveredItem[AutocheckEntry](
-                    new=entry.new,
-                    previous=_autocheck_with_merged_labels(
-                        existing_autocheck_entry.previous, entry.previous
+            yield (
+                DiscoveredService.id(entry),
+                ServicesTableEntry(
+                    transition=(
+                        "changed"
+                        if _changed_service(current_recorded_entry.autocheck.previous, entry.new)
+                        else "unchanged"
                     ),
+                    autocheck=DiscoveredItem[AutocheckEntry](
+                        new=entry.new,
+                        previous=_autocheck_with_merged_labels(
+                            existing_autocheck_entry.previous, entry.previous
+                        ),
+                    ),
+                    hosts=nodes_with_service,
                 ),
-                hosts=nodes_with_service,
             )
         case "vanished", "vanished":
             # still vanished, first vanished node appearance wins so we keep the existing entry but
             # look for new labels
             assert existing_autocheck_entry.previous is not None
-            yield DiscoveredService.id(entry), ServicesTableEntry(
-                transition=accumulated_transition,
-                autocheck=DiscoveredItem[AutocheckEntry](
-                    new=existing_autocheck_entry.new,
-                    previous=_autocheck_with_merged_labels(
-                        existing_autocheck_entry.previous, entry.previous
+            yield (
+                DiscoveredService.id(entry),
+                ServicesTableEntry(
+                    transition=accumulated_transition,
+                    autocheck=DiscoveredItem[AutocheckEntry](
+                        new=existing_autocheck_entry.new,
+                        previous=_autocheck_with_merged_labels(
+                            existing_autocheck_entry.previous, entry.previous
+                        ),
                     ),
+                    hosts=nodes_with_service,
                 ),
-                hosts=nodes_with_service,
             )
             return
 

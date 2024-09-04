@@ -6,6 +6,8 @@
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.painter.v0.base import Cell, Painter
@@ -17,8 +19,6 @@ from cmk.gui.watolib.hosts_and_folders import (
     get_folder_title_path,
     get_folder_title_path_with_links,
 )
-
-from cmk.ccc.exceptions import MKGeneralException
 
 
 class PainterHostFilename(Painter):

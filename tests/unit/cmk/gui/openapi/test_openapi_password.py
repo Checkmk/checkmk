@@ -11,9 +11,9 @@ from tests.testlib.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
-from cmk.utils import password_store, paths
-
 from cmk.ccc import version
+
+from cmk.utils import password_store, paths
 
 managedtest = pytest.mark.skipif(
     version.edition(paths.omd_root) is not version.Edition.CME, reason="see #7213"
@@ -335,3 +335,33 @@ def test_password_identifier_regex(clients: ClientRegistry) -> None:
             "'abcℕ' does not match pattern. An identifier must only consist of letters, digits, dash and underscore and it must start with a letter or underscore."
         ]
     }
+
+
+@managedtest
+@pytest.mark.usefixtures("mock_password_file_regeneration")
+def test_list_passwords_include_links(clients: ClientRegistry) -> None:
+    clients.Password.create("test_password", "Test Password", "admin", "secret", ["all"])
+    default_response = clients.Password.get_all()
+    enabled_response = clients.Password.get_all(include_links=True)
+    disabled_response = clients.Password.get_all(include_links=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == enabled_response.json
+    assert any(bool(value["links"]) for value in enabled_response.json["value"])
+    assert all(value["links"] == [] for value in disabled_response.json["value"])
+
+
+@managedtest
+@pytest.mark.usefixtures("mock_password_file_regeneration")
+def test_list_passwords_include_extensions(clients: ClientRegistry) -> None:
+    clients.Password.create("test_password", "Test Password", "admin", "secret", ["all"])
+    default_response = clients.Password.get_all()
+    enabled_response = clients.Password.get_all(include_extensions=True)
+    disabled_response = clients.Password.get_all(include_extensions=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == enabled_response.json
+    assert any(bool(value["extensions"]) for value in enabled_response.json["value"])
+    assert all("extensions" not in value for value in disabled_response.json["value"])

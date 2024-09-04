@@ -60,7 +60,7 @@ def maybe_lazy(entry: typing.Iterable[T]) -> typing.Iterable[T]: ...
 
 
 def maybe_lazy(
-    entry: typing.Iterable[T] | typing.Callable[[], typing.Iterable[T]]
+    entry: typing.Iterable[T] | typing.Callable[[], typing.Iterable[T]],
 ) -> typing.Iterable[T]:
     """Return the iterable unchanged, but invoking the parameter if it's a callable.
 

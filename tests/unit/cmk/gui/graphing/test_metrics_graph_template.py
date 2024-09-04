@@ -7,6 +7,8 @@ import pytest
 
 from livestatus import SiteId
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.hostaddress import HostName
 
 import cmk.gui.graphing._graph_templates as gt
@@ -17,9 +19,11 @@ from cmk.gui.graphing._expression import (
     Difference,
     MaximumOf,
     Metric,
-    parse_expression,
+    MetricExpression,
+    parse_legacy_expression,
     WarningOf,
 )
+from cmk.gui.graphing._formatter import AutoPrecision
 from cmk.gui.graphing._graph_specification import (
     GraphMetric,
     GraphRecipe,
@@ -30,16 +34,14 @@ from cmk.gui.graphing._graph_specification import (
     MinimalVerticalRange,
 )
 from cmk.gui.graphing._graph_templates import (
+    compute_unit_color,
     GraphTemplate,
-    MetricDefinition,
     MetricUnitColor,
     MinimalGraphTemplateRange,
-    ScalarDefinition,
     TemplateGraphSpecification,
 )
 from cmk.gui.graphing._translated_metrics import parse_perf_data, translate_metrics
-
-from cmk.ccc.exceptions import MKGeneralException
+from cmk.gui.graphing._unit import ConvertibleUnitSpecification, IECNotation
 
 
 @pytest.mark.parametrize(
@@ -106,7 +108,7 @@ def test_rpn_stack(raw_expression: str, result: MetricOperation) -> None:
             SiteId(""),
             HostName(""),
             "",
-            parse_expression(raw_expression, translated_metrics),
+            parse_legacy_expression(raw_expression, "line", "", translated_metrics),
             translated_metrics,
             None,
         )
@@ -119,33 +121,18 @@ def test_create_graph_recipe_from_template() -> None:
         id="my_id",
         title="",
         metrics=[
-            MetricDefinition(
-                expression=Metric("fs_used"),
-                line_type="area",
-            ),
-            MetricDefinition(
-                expression=Difference(
-                    minuend=Metric("fs_size"),
-                    subtrahend=Metric("fs_used"),
-                    explicit_color="#e3fff9",
-                ),
+            MetricExpression(Metric("fs_used"), line_type="area"),
+            MetricExpression(
+                Difference(minuend=Metric("fs_size"), subtrahend=Metric("fs_used")),
                 line_type="stack",
                 title="Free space",
+                color="#e3fff9",
             ),
-            MetricDefinition(
-                expression=Metric("fs_size"),
-                line_type="line",
-            ),
+            MetricExpression(Metric("fs_size"), line_type="line"),
         ],
         scalars=[
-            ScalarDefinition(
-                expression=WarningOf(Metric("fs_used")),
-                title="Warning",
-            ),
-            ScalarDefinition(
-                expression=CriticalOf(Metric("fs_used")),
-                title="Critical",
-            ),
+            MetricExpression(WarningOf(Metric("fs_used")), line_type="line", title="Warning"),
+            MetricExpression(CriticalOf(Metric("fs_used")), line_type="line", title="Critical"),
         ],
         conflicting_metrics=["fs_free"],
         optional_metrics=[],
@@ -174,7 +161,10 @@ def test_create_graph_recipe_from_template() -> None:
         specification,
     ) == GraphRecipe(
         title="Used space",
-        unit="IECNotation_B_AutoPrecision_2",
+        unit_spec=ConvertibleUnitSpecification(
+            notation=IECNotation(symbol="B"),
+            precision=AutoPrecision(digits=2),
+        ),
         explicit_vertical_range=MinimalVerticalRange(type="minimal", min=0.0, max=None),
         horizontal_rules=[],
         omit_zero_metrics=False,
@@ -191,7 +181,10 @@ def test_create_graph_recipe_from_template() -> None:
                     consolidation_func_name="max",
                     scale=1048576.0,
                 ),
-                unit="IECNotation_B_AutoPrecision_2",
+                unit=ConvertibleUnitSpecification(
+                    notation=IECNotation(symbol="B"),
+                    precision=AutoPrecision(digits=2),
+                ),
                 color="#1e90ff",
             ),
             GraphMetric(
@@ -218,7 +211,10 @@ def test_create_graph_recipe_from_template() -> None:
                         ),
                     ],
                 ),
-                unit="IECNotation_B_AutoPrecision_2",
+                unit=ConvertibleUnitSpecification(
+                    notation=IECNotation(symbol="B"),
+                    precision=AutoPrecision(digits=2),
+                ),
                 color="#e3fff9",
             ),
             GraphMetric(
@@ -232,7 +228,10 @@ def test_create_graph_recipe_from_template() -> None:
                     consolidation_func_name="max",
                     scale=1048576.0,
                 ),
-                unit="IECNotation_B_AutoPrecision_2",
+                unit=ConvertibleUnitSpecification(
+                    notation=IECNotation(symbol="B"),
+                    precision=AutoPrecision(digits=2),
+                ),
                 color="#37fa37",
             ),
         ],
@@ -272,12 +271,13 @@ def test_metric_unit_color(
     translated_metrics = translate_metrics(perf_data, check_command)
     translated_metric = translated_metrics.get(expression)
     assert translated_metric is not None
-    metric_definition = MetricDefinition(
-        expression=parse_expression(expression, translated_metrics),
-        line_type="line",
-    )
-    assert metric_definition.compute_unit_color(translated_metrics, ["test"]) == MetricUnitColor(
-        unit=translated_metric.unit_info.id,
+    metric_expression = parse_legacy_expression(expression, "line", "", translated_metrics)
+    assert compute_unit_color(metric_expression, translated_metrics, ["test"]) == MetricUnitColor(
+        unit=(
+            translated_metric.unit_spec
+            if isinstance(translated_metric.unit_spec, ConvertibleUnitSpecification)
+            else translated_metric.unit_spec.id
+        ),
         color=result_color,
     )
 
@@ -295,11 +295,8 @@ def test_metric_unit_color_skip(
         perf_data_string, check_command, config=active_config
     )
     translated_metrics = translate_metrics(perf_data, check_command)
-    metric_definition = MetricDefinition(
-        expression=parse_expression(expression, translated_metrics),
-        line_type="line",
-    )
-    assert metric_definition.compute_unit_color(translated_metrics, ["test"]) is None
+    metric_expression = parse_legacy_expression(expression, "line", "", translated_metrics)
+    assert compute_unit_color(metric_expression, translated_metrics, ["test"]) is None
 
 
 @pytest.mark.parametrize(
@@ -315,9 +312,6 @@ def test_metric_unit_color_exception(
         perf_data_string, check_command, config=active_config
     )
     translated_metrics = translate_metrics(perf_data, check_command)
-    metric_definition = MetricDefinition(
-        expression=parse_expression(expression, translated_metrics),
-        line_type="line",
-    )
+    metric_expression = parse_legacy_expression(expression, "line", "", translated_metrics)
     with pytest.raises(MKGeneralException):
-        metric_definition.compute_unit_color(translated_metrics, ["test"])
+        compute_unit_color(metric_expression, translated_metrics, ["test"])

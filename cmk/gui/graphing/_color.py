@@ -9,13 +9,14 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import Literal
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.gui.ctx_stack import g
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import RGBColor
 from cmk.gui.utils.html import HTML
 
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.graphing.v1 import metrics as metrics_api
 
 # Colors:

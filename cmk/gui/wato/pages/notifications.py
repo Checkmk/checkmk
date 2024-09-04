@@ -14,6 +14,9 @@ from typing import Any, cast, Literal, NamedTuple, overload
 
 from livestatus import LivestatusResponse, SiteId
 
+from cmk.ccc import store
+from cmk.ccc.version import Edition, edition
+
 from cmk.utils import paths
 from cmk.utils.labels import Labels
 from cmk.utils.notify import NotificationContext
@@ -103,9 +106,6 @@ from cmk.gui.watolib.sample_config import get_default_notification_rule, new_not
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.users import notification_script_choices
-
-from cmk.ccc import store
-from cmk.ccc.version import edition, Edition
 
 from .._group_selection import ContactGroupSelection
 from .._notification_parameter import notification_parameter_registry
@@ -2371,7 +2371,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
 
     @staticmethod
     def _migrate_bulk(
-        v: CascadingDropdownChoiceValue | Mapping[str, Any]
+        v: CascadingDropdownChoiceValue | Mapping[str, Any],
     ) -> CascadingDropdownChoiceValue:
         return v if isinstance(v, tuple) else ("always", v)
 

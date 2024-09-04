@@ -175,7 +175,7 @@ def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
         if not checks.config.skip_cleanup:
             # cleanup existing agent-output folder in the test site
             logger.info('Removing folder "%s"...', dump_path)
-            assert run(["sudo", "rm", "-rf", dump_path]).returncode == 0
+            assert run(["rm", "-rf", dump_path], sudo=True).returncode == 0
 
 
 # Todo: perform a proper site-cleanup and change this fixture's scope: CMK-18659
@@ -222,7 +222,7 @@ def _get_site_update(
         if not checks.config.skip_cleanup:
             # cleanup existing agent-output folder in the test site
             logger.info('Removing folder "%s"...', dump_path)
-            assert run(["sudo", "rm", "-rf", dump_path]).returncode == 0
+            assert run(["rm", "-rf", dump_path], sudo=True).returncode == 0
 
 
 @pytest.fixture(name="bulk_setup", scope="session")

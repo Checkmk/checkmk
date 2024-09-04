@@ -240,7 +240,7 @@ def _serialize_volumes(
 
 
 def _deserialize_volume(
-    combined_volumes: Mapping[str, float]
+    combined_volumes: Mapping[str, float],
 ) -> tuple[models.VolumeModel, models.VolumeCountersModel | None]:
     # if the dictionary contains "id" it means it has counters values
     if combined_volumes.get("id", None) is not None:

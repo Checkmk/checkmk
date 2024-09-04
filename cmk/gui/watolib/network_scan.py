@@ -13,6 +13,9 @@ import traceback
 from collections.abc import Sequence
 from typing import Literal, NamedTuple, TypeGuard
 
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.paths import configuration_lockfile
 from cmk.utils.translations import translate_hostname, TranslationOptions
@@ -24,9 +27,6 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.session import UserContext
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local
-
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
 
 from ..config import active_config
 from . import bakery

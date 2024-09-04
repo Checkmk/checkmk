@@ -9,6 +9,8 @@ from collections.abc import Hashable, Iterator, Sequence
 from functools import partial
 from typing import Any
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.regex import escape_regex_chars
 
 from cmk.gui import utils
@@ -26,8 +28,6 @@ from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.type_defs import GroupSpec, Row, Rows, ViewSpec
 from cmk.gui.utils.theme import theme
 from cmk.gui.visual_link import render_link_to_view
-
-from cmk.ccc.exceptions import MKGeneralException
 
 from .base import Layout
 from .helpers import group_value

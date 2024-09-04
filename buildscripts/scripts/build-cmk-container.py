@@ -495,6 +495,8 @@ def main() -> None:
             suffix = ".cee"
         case "managed":
             suffix = ".cme"
+            registry = ""
+            folder = "checkmk"
         case "cloud":
             suffix = ".cce"
             registry = ""

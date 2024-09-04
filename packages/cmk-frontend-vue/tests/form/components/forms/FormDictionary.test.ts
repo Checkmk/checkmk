@@ -20,10 +20,17 @@ const stringFormSpec: FormSpec.String = {
   input_hint: ''
 }
 
+const dictElementGroupFormSpec: FormSpec.DictionaryGroup = {
+  key: 'titlehelp',
+  title: 'title',
+  help: 'help'
+}
+
 const spec: FormSpec.Dictionary = {
   type: 'dictionary',
   title: 'fooTitle',
   help: 'fooHelp',
+  layout: 'one_column',
   validators: [],
   groups: [],
   elements: [
@@ -31,7 +38,8 @@ const spec: FormSpec.Dictionary = {
       ident: 'bar',
       required: false,
       default_value: 'baz',
-      parameter_form: stringFormSpec
+      parameter_form: stringFormSpec,
+      group: dictElementGroupFormSpec
     }
   ]
 }
@@ -137,6 +145,7 @@ test('FormDictionary appends default of required element if missing in data', as
     spec: {
       type: 'dictionary',
       title: 'fooTitle',
+      layout: 'one_column',
       help: 'fooHelp',
       groups: [],
       validators: [],
@@ -145,7 +154,8 @@ test('FormDictionary appends default of required element if missing in data', as
           ident: 'bar',
           required: true,
           default_value: 'baz',
-          parameter_form: stringFormSpec
+          parameter_form: stringFormSpec,
+          group: dictElementGroupFormSpec
         }
       ]
     } as FormSpec.Dictionary,
@@ -171,4 +181,70 @@ test('FormDictionary checks frontend validators on existing element', async () =
   await fireEvent.update(element, '')
 
   screen.getByText('String length must be between 1 and 20')
+})
+
+test('FormDictionary reads new defaultValue on updated spec', async () => {
+  function getSpec(ident: string): FormSpec.Dictionary {
+    return {
+      type: 'dictionary',
+      title: 'fooTitle',
+      layout: 'one_column',
+      help: 'fooHelp',
+      groups: [],
+      validators: [],
+      elements: [
+        {
+          ident: ident,
+          required: true,
+          default_value: 'something',
+          parameter_form: stringFormSpec
+        }
+      ]
+    }
+  }
+
+  const { getCurrentData, rerender } = renderFormWithData({
+    spec: getSpec('some_id'),
+    data: {},
+    backendValidation: []
+  })
+
+  await rerender({ spec: getSpec('some_other_id'), data: {}, backendValidation: [] })
+
+  expect(getCurrentData()).toBe('{"some_other_id":"something"}')
+})
+
+test('FormDictionary is able to be rerenderd: static value', async () => {
+  // before this test was written, some data handling logic was in onBeforeMount
+  // which is only executed once. os if the spec is changed, it was not executed again.
+
+  function getSpec(staticElements: Record<string, unknown>): FormSpec.Dictionary {
+    return {
+      type: 'dictionary',
+      title: 'fooTitle',
+      layout: 'one_column',
+      help: 'fooHelp',
+      additional_static_elements: staticElements,
+      groups: [],
+      validators: [],
+      elements: []
+    }
+  }
+
+  const { getCurrentData, rerender } = renderFormWithData({
+    spec: getSpec({ some_key: 'some_value' }),
+    data: {},
+    backendValidation: []
+  })
+
+  // wait until component is renderd and expected data is shown
+  await screen.findByText('{"some_key":"some_value"}')
+
+  await rerender({
+    spec: getSpec({ another_key: 'another_value' }),
+    data: {},
+    backendValidation: []
+  })
+
+  expect(getCurrentData()).toBe('{"another_key":"another_value"}')
 })

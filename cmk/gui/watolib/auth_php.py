@@ -38,6 +38,8 @@ import copy
 from pathlib import Path
 from typing import Any, Literal
 
+from cmk.ccc import store
+
 from cmk.gui import userdb
 from cmk.gui.config import active_config
 from cmk.gui.groups import GroupName
@@ -47,8 +49,6 @@ from cmk.gui.utils.roles import get_role_permissions
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.paths import wato_var_dir
 from cmk.gui.watolib.utils import format_php
-
-from cmk.ccc import store
 
 _CalleeHooks = ClearEvent | Literal["page_hook"]
 

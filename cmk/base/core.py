@@ -12,6 +12,10 @@ from collections.abc import Iterable, Iterator, Sequence
 from contextlib import contextmanager, suppress
 from typing import Literal
 
+import cmk.ccc.debug
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKBailOut, MKGeneralException
+
 import cmk.utils.cleanup
 import cmk.utils.paths
 from cmk.utils import ip_lookup, tty
@@ -21,10 +25,6 @@ import cmk.base.nagios_utils
 from cmk.base import core_config
 from cmk.base.config import ConfigCache, ConfiguredIPLookup
 from cmk.base.core_config import MonitoringCore
-
-import cmk.ccc.debug
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 
 # suppress "Cannot find module" error from mypy
 

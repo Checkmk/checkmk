@@ -15,8 +15,10 @@ from werkzeug.exceptions import RequestEntityTooLarge
 
 import livestatus
 
+import cmk.ccc.store
+from cmk.ccc.exceptions import MKException
+
 import cmk.utils.paths
-import cmk.utils.profile
 
 from cmk.gui import pages, sites
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
@@ -32,7 +34,7 @@ from cmk.gui.exceptions import (
 )
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, response, Response
+from cmk.gui.http import request, Response, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.utils.urls import requested_file_name
@@ -45,9 +47,7 @@ from cmk.gui.wsgi.applications.utils import (
 )
 from cmk.gui.wsgi.type_defs import WSGIResponse
 
-import cmk.ccc.store
 from cmk import trace
-from cmk.ccc.exceptions import MKException
 from cmk.crypto import MKCryptoException
 
 tracer = trace.get_tracer()

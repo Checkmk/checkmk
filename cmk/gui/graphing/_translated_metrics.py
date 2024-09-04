@@ -18,8 +18,9 @@ from cmk.gui.config import active_config, Config
 from cmk.gui.log import logger
 from cmk.gui.type_defs import Perfdata, PerfDataTuple, Row
 
-from ._legacy import check_metrics, CheckMetricEntry, UnitInfo
+from ._legacy import check_metrics, CheckMetricEntry, get_conversion_function, UnitInfo
 from ._metrics import get_metric_spec_with_color
+from ._unit import ConvertibleUnitSpecification
 
 
 def _parse_perf_values(
@@ -206,7 +207,7 @@ class TranslatedMetric:
     scalar: ScalarBounds
     auto_graph: bool
     title: str
-    unit_info: UnitInfo
+    unit_spec: UnitInfo | ConvertibleUnitSpecification
     color: str
 
 
@@ -254,21 +255,22 @@ def translate_metrics(
 
         originals = [Original(perf_data_tuple.metric_name, translation_spec.scale)]
         mi = get_metric_spec_with_color(metric_name, color_counter)
+        conversion = get_conversion_function(mi.unit_spec)
         translated_metrics[metric_name] = TranslatedMetric(
             originals=(
                 list(translated_metrics[metric_name].originals) + originals
                 if metric_name in translated_metrics
                 else originals
             ),
-            value=mi.unit_info.conversion(perf_data_tuple.value * translation_spec.scale),
+            value=conversion(perf_data_tuple.value * translation_spec.scale),
             scalar=_translated_scalar(
                 perf_data_tuple,
                 translation_spec.scale,
-                mi.unit_info.conversion,
+                conversion,
             ),
             auto_graph=translation_spec.auto_graph,
             title=str(mi.title),
-            unit_info=mi.unit_info,
+            unit_spec=mi.unit_spec,
             color=explicit_color or mi.color,
         )
 

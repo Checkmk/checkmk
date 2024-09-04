@@ -12,6 +12,7 @@
 | light heartedly!                                        |
 +---------------------------------------------------------+
 """
+
 from types import ModuleType
 
 from cmk.base.plugins.agent_based.agent_based_api import v1

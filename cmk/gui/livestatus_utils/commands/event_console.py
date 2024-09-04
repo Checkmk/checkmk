@@ -73,9 +73,10 @@ class ECEvent:
                 continue
 
             if k == "sl":
-                yield "service_level", dict(zip([0, 10, 20, 30], list(get_args(ServiceLevelType))))[
-                    v
-                ]
+                yield (
+                    "service_level",
+                    dict(zip([0, 10, 20, 30], list(get_args(ServiceLevelType))))[v],
+                )
                 continue
 
             if k == "priority":

@@ -1,5 +1,4 @@
 [tool.ruff]
-src = ["cmk", "tests"]
 extend-exclude = ["agents/plugins/mk_sap_2.py", "doc/**/*.py"]
 target-version = "py312"
 line-length = 100
@@ -95,6 +94,7 @@ known_compositiontests = "tests.composition"
 known_unittests = "tests.unit,tests.plugins_integration,tests.update"
 known_livestatus = "livestatus"
 known_omd = "omdlib"
+known_cmk_ccc = "cmk.ccc"
 known_cmk_utils = "cmk.utils"
 known_cmk_automations = "cmk.automations"
 known_cmk_snmplib = "cmk.snmplib"
@@ -109,7 +109,7 @@ known_first_party = "cmk"
 
 # Order sections according to our layering.
 sections = """FUTURE,STDLIB,THIRDPARTY,WERKS,CMC_PROTO,TESTLIB,INTEGRATIONTESTS,COMPOSITIONTESTS,UNITTESTS,LIVESTATUS,OMD,
-CMK_UTILS,CMK_AUTOMATIONS,CMK_SNMPLIB,CMK_FETCHERS,CMK_CHECKENGINE,CMK_BASE,CMK_EC,CMK_GUI,CMK_CEE,
+CMK_CCC,CMK_UTILS,CMK_AUTOMATIONS,CMK_SNMPLIB,CMK_FETCHERS,CMK_CHECKENGINE,CMK_BASE,CMK_EC,CMK_GUI,CMK_CEE,
 CMK_NOTIFICATION_PLUGINS,FIRSTPARTY,LOCALFOLDER"""
 
 profile = "black"
@@ -128,6 +128,19 @@ target-version = ['py312']
 # addition, a single cause can imply multiple symptoms, so these numbers have to
 # be taken with a grain of salt...
 [tool.mypy]
+enable_error_code = [
+  # "explicit-override",
+  "ignore-without-code",
+  # "mutable-override",
+  # "possibly-undefined",
+  # "redundant-expr",
+  "redundant-self",
+  # "truthy-bool",
+  "truthy-iterable",
+  "unimported-reveal",
+  "unused-awaitable",
+  "unused-ignore",
+]
 explicit_package_bases = true
 mypy_path = """\
     $MYPY_CONFIG_FILE_DIR:\
@@ -263,7 +276,7 @@ filterwarnings = [
   # ignore PytestCollectionWarning caused by webtest
   'ignore:^cannot collect test class .* because it has a __init__ constructor.*$:UserWarning:.*webtest.*:0',
   # openapi collector uses pkg resources
-  'ignore:pkg_resources:DeprecationWarning:.*opentelemetry.*'
+  'ignore:pkg_resources:DeprecationWarning:.*opentelemetry.*',
 ]
 # When writing a junit.xml, also write the output of a test to the junit
 # file in addition to the console.

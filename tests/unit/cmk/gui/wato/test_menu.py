@@ -6,13 +6,13 @@
 
 import pytest
 
+import cmk.ccc.version as cmk_version
+
 from cmk.utils import paths
 
 from cmk.gui.type_defs import TopicMenuItem, TopicMenuTopic
 from cmk.gui.wato._snapins import get_wato_menu_items, MatchItemGeneratorSetupMenu
 from cmk.gui.watolib.search import MatchItem
-
-import cmk.ccc.version as cmk_version
 
 
 def expected_items() -> dict[str, list[str]]:
@@ -111,6 +111,7 @@ def expected_items() -> dict[str, list[str]]:
         ],
         "hosts": hosts_items,
         "maintenance": maintenance_items,
+        "quick_setups": ["wato.py?mode=edit_configuration_bundles&varname=special_agents%3Aaws"],
         "services": [
             "wato.py?group=monconf&mode=rulesets",
             "wato.py?group=checkparams&mode=rulesets",

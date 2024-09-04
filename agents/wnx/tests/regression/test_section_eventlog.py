@@ -35,7 +35,8 @@ class Globals:
 def generate_logs():
     if platform.system() == "Windows":
         with winreg.OpenKey(  # type: ignore[attr-defined]
-            winreg.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\Eventlog"  # type: ignore[attr-defined]
+            winreg.HKEY_LOCAL_MACHINE,  # type: ignore[attr-defined]
+            "SYSTEM\\CurrentControlSet\\Services\\Eventlog",
         ) as key:
             index = 0
             while True:

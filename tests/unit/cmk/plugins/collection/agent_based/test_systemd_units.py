@@ -12,6 +12,7 @@ from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.collection.agent_based.systemd_units import (
     _services_split,
+    CHECK_DEFAULT_PARAMETERS_SUMMARY,
     check_systemd_services,
     check_systemd_sockets,
     check_systemd_units_services_summary,
@@ -929,8 +930,7 @@ def test_check_systemd_units_sockets(
 @pytest.mark.parametrize(
     "params, section, check_results",
     [
-        # "Normal" test case
-        (
+        pytest.param(
             {
                 "else": 2,
                 "states": {"active": 0, "failed": 2, "inactive": 0},
@@ -947,9 +947,9 @@ def test_check_systemd_units_sockets(
                 Result(state=State.OK, summary="Failed: 2"),
                 Result(state=State.CRIT, summary="2 services failed (bar, foo)"),
             ],
+            id="'Normal' test case",
         ),
-        # Ignored (see 'blacklist')
-        (
+        pytest.param(
             {
                 "ignored": ["virtual"],
                 "activating_levels": (30, 60),
@@ -975,9 +975,9 @@ def test_check_systemd_units_sockets(
                 Result(state=State.OK, summary="Failed: 0"),
                 Result(state=State.OK, notice="Ignored: 1"),
             ],
+            id="Ignored (see 'blacklist')",
         ),
-        # (de)activating
-        (
+        pytest.param(
             {
                 "ignored": [],
                 "activating_levels": (30, 60),
@@ -1014,9 +1014,9 @@ def test_check_systemd_units_sockets(
                 Result(state=State.OK, notice="Service 'virtualbox' activating for: 2 seconds"),
                 Result(state=State.OK, notice="Service 'actualbox' deactivating for: 4 seconds"),
             ],
+            id="(de)activating",
         ),
-        # Activating + reloading
-        (
+        pytest.param(
             {
                 "ignored": [],
                 "activating_levels": (30, 60),
@@ -1043,9 +1043,9 @@ def test_check_systemd_units_sockets(
                 Result(state=State.OK, summary="Failed: 0"),
                 Result(state=State.OK, notice="Service 'virtualbox' activating for: 2 seconds"),
             ],
+            id="Activating + reloading",
         ),
-        # Reloading
-        (
+        pytest.param(
             {
                 "ignored": [],
                 "activating_levels": (30, 60),
@@ -1058,8 +1058,8 @@ def test_check_systemd_units_sockets(
                     "virtualbox": UnitEntry(
                         name="virtualbox",
                         loaded_status="loaded",
-                        active_status="active",
-                        current_state="exited",
+                        active_status="reloading",
+                        current_state="reload",
                         description="LSB: VirtualBox Linux kernel module",
                         enabled_status="reloading",
                         time_since_change=timedelta(seconds=2),
@@ -1072,9 +1072,9 @@ def test_check_systemd_units_sockets(
                 Result(state=State.OK, summary="Failed: 0"),
                 Result(state=State.OK, notice="Service 'virtualbox' reloading for: 2 seconds"),
             ],
+            id="Reloading",
         ),
-        # Indirect
-        (
+        pytest.param(
             {
                 "ignored": [],
                 "activating_levels": (30, 60),
@@ -1099,9 +1099,9 @@ def test_check_systemd_units_sockets(
                 Result(state=State.OK, summary="Disabled: 1"),
                 Result(state=State.OK, summary="Failed: 0"),
             ],
+            id="Indirect",
         ),
-        # Custom systemd state
-        (
+        pytest.param(
             {
                 "else": 2,
                 "states": {"active": 0, "failed": 2, "inactive": 0},
@@ -1130,6 +1130,7 @@ def test_check_systemd_units_sockets(
                 Result(state=State.OK, summary="Failed: 0"),
                 Result(state=State.CRIT, summary="1 service somesystemdstate (virtualbox)"),
             ],
+            id="Custom systemd state",
         ),
     ],
 )
@@ -1139,3 +1140,105 @@ def test_check_systemd_units_services_summary(
     assert (
         list(check_systemd_units_services_summary(params=params, section=section)) == check_results
     )
+
+
+def test_reloading() -> None:
+    # $ cat /etc/systemd/system/testing.service
+    # [Service]
+    #
+    # ExecStartPre=/usr/bin/sleep 75
+    # ExecStart=/usr/bin/sleep 90000
+    # ExecStop=/usr/bin/sleep 90
+    # ExecReload=/usr/bin/sleep 65
+    #
+    # [Install]
+    # WantedBy=multi-user.target
+    #
+    # $ systemctl enable testing
+    # $ check_mk_agent > /tmp/systemd/dead
+    # $ systemctl start testing
+    # $ check_mk_agent > /tmp/systemd/starting
+    # # wait a bit, check with systemctl status testing
+    # $ check_mk_agent > /tmp/systemd/started
+    # # ... do same with reloaded and reloading, and other states you want to check
+    # $ use-dump --site heute --path agent /tmp/systemd/*
+    # # check services in your site, maybe use service search for better overview
+
+    pre_pre_string_table = """[list-unit-files]
+testing.service enabled enabled
+[status]
+↻ testing.service
+Loaded: loaded (/etc/systemd/system/testing.service; enabled; vendor preset: enabled)
+Active: reloading (reload) since Tue 2024-08-20 11:49:32 CEST; 53s ago
+Process: 1727884 ExecStartPre=/usr/bin/sleep 75 (code=exited, status=0/SUCCESS)
+Main PID: 1728726 (sleep); Control PID: 1729357 (sleep)
+Tasks: 2 (limit: 38119)
+Memory: 360.0K
+CPU: 8ms
+CGroup: /system.slice/testing.service
+├─1728726 /usr/bin/sleep 90000
+└─1729357 /usr/bin/sleep 65
+[all]
+testing.service loaded reloading reload reload testing.service
+"""
+    string_table = [l.split(" ") for l in pre_pre_string_table.split("\n")]
+    parsed = parse(string_table)
+    assert parsed is not None
+    assert list(
+        check_systemd_units_services_summary(
+            params=CHECK_DEFAULT_PARAMETERS_SUMMARY, section=parsed
+        )
+    ) == [
+        Result(state=State.OK, summary="Total: 1"),
+        Result(state=State.OK, summary="Disabled: 0"),
+        Result(state=State.OK, summary="Failed: 0"),
+        Result(
+            state=State.WARN,
+            summary="Service 'testing' reloading for: 53 seconds (warn/crit at 30 seconds/1 minute 0 seconds)",
+        ),
+    ]
+
+
+def test_broken_parsing_without_unit_description() -> None:
+    pre_pre_string_table = """
+<<<systemd_units>>>
+[list-unit-files]
+testing.service enabled enabled
+systemd-user-sessions.service static -
+[status]
+● klapp-0285
+State: running
+Jobs: 1 queued
+Failed: 0 units
+Since: Mon 2024-08-19 07:09:27 CEST; 1 day 4h ago
+CGroup: /
+├─sys-fs-fuse-connections.mount
+
+● systemd-user-sessions.service - Permit User Sessions
+Loaded: loaded (/lib/systemd/system/systemd-user-sessions.service; static)
+Active: active (exited) since Mon 2024-08-19 07:09:30 CEST; 1 day 4h ago
+Docs: man:systemd-user-sessions.service(8)
+Main PID: 1397 (code=exited, status=0/SUCCESS)
+CPU: 6ms
+
+↻ testing.service
+Loaded: loaded (/etc/systemd/system/testing.service; enabled; vendor preset: enabled)
+Active: reloading (reload) since Tue 2024-08-20 11:49:32 CEST; 53s ago
+Process: 1727884 ExecStartPre=/usr/bin/sleep 75 (code=exited, status=0/SUCCESS)
+Main PID: 1728726 (sleep); Control PID: 1729357 (sleep)
+Tasks: 2 (limit: 38119)
+Memory: 360.0K
+CPU: 8ms
+CGroup: /system.slice/testing.service
+├─1728726 /usr/bin/sleep 90000
+└─1729357 /usr/bin/sleep 65
+
+[all]
+testing.service loaded reloading reload reload testing.service
+systemd-user-sessions.service loaded active exited Permit User Sessions
+"""
+
+    string_table = [l.split(" ") for l in pre_pre_string_table.split("\n")]
+    parsed = parse(string_table)
+    assert parsed is not None
+    assert parsed.services["testing"].time_since_change == timedelta(seconds=53)

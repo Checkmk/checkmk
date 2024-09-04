@@ -15,6 +15,10 @@ from typing import Any, Literal
 
 import livestatus
 
+import cmk.ccc.plugin_registry
+from cmk.ccc import store
+from cmk.ccc.store import locked
+
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.user import UserId
@@ -79,10 +83,6 @@ from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visuals import get_livestatus_filter_headers
 from cmk.gui.visuals.filter import FilterRegistry
-
-import cmk.ccc.plugin_registry
-from cmk.ccc import store
-from cmk.ccc.store import locked
 
 
 @request_memoize()

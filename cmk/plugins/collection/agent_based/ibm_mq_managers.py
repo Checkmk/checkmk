@@ -15,7 +15,6 @@ RE_ATTRIBUTES = re.compile(r"[()]")
 
 
 def parse_ibm_mq_managers(string_table: StringTable) -> Section:
-
     def get_data_of_line(line):
         splits = RE_ATTRIBUTES.split(line)
         data = {}

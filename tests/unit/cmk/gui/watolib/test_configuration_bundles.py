@@ -12,6 +12,8 @@ from tests.unit.cmk.gui.watolib.test_watolib_password_store import (  # pylint: 
     mock_update_passwords_merged_file,
 )
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.hostaddress import HostName
 from cmk.utils.password_store import Password
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
@@ -34,8 +36,6 @@ from cmk.gui.watolib.configuration_bundles import (
 from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
 from cmk.gui.watolib.passwords import load_passwords
 from cmk.gui.watolib.rulesets import SingleRulesetRecursively
-
-from cmk.ccc.exceptions import MKGeneralException
 
 logger = logging.getLogger(__name__)
 

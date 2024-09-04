@@ -6,9 +6,11 @@
 # This file is auto-generated via the cmk-shared-typing package.
 # Do not edit manually.
 
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Any, Optional, Union
 
 
@@ -35,12 +37,32 @@ class LengthInRange:
 @dataclass(kw_only=True)
 class NumberInRange:
     type: str = "number_in_range"
-    min_value: Optional[int] = None
-    max_value: Optional[int] = None
+    min_value: Optional[float] = None
+    max_value: Optional[float] = None
     error_message: Optional[str] = None
 
 
 Validator = Union[IsInteger, IsFloat, NumberInRange, LengthInRange]
+
+
+class StringFieldSize(str, Enum):
+    SMALL = "SMALL"
+    MEDIUM = "MEDIUM"
+    LARGE = "LARGE"
+
+
+@dataclass(kw_only=True)
+class PasswordStoreChoice:
+    password_id: str
+    name: str
+
+
+@dataclass(kw_only=True)
+class I18nPassword:
+    explicit_password: str
+    password_store: str
+    no_password_store_choices: str
+    password_choice_invalid: str
 
 
 @dataclass(kw_only=True)
@@ -48,6 +70,11 @@ class DictionaryGroup:
     key: str
     title: str
     help: Optional[str] = None
+
+
+class DictionaryLayout(str, Enum):
+    one_column = "one_column"
+    two_columns = "two_columns"
 
 
 @dataclass(kw_only=True)
@@ -60,6 +87,41 @@ class SingleChoiceElement:
 class MultipleChoiceElement:
     name: str
     title: str
+
+
+class CascadingChoiceLayout(str, Enum):
+    vertical = "vertical"
+    horizontal = "horizontal"
+
+
+@dataclass(kw_only=True)
+class TimeSpanI18n:
+    millisecond: str
+    second: str
+    minute: str
+    hour: str
+    day: str
+
+
+class TimeSpanTimeMagnitude(str, Enum):
+    millisecond = "millisecond"
+    second = "second"
+    minute = "minute"
+    hour = "hour"
+    day = "day"
+
+
+class TupleLayout(str, Enum):
+    horizontal_titles_top = "horizontal_titles_top"
+    horizontal = "horizontal"
+    vertical = "vertical"
+    float = "float"
+
+
+@dataclass(kw_only=True)
+class I18nOptionalChoice:
+    label: Optional[str] = None
+    none_label: Optional[str] = None
 
 
 @dataclass(kw_only=True)
@@ -106,6 +168,14 @@ class String(FormSpec):
     type: str = "string"
     placeholder: Optional[str] = None
     input_hint: Optional[str] = None
+    field_size: Optional[StringFieldSize] = None
+
+
+@dataclass(kw_only=True)
+class Password(FormSpec):
+    password_store_choices: list[PasswordStoreChoice]
+    i18n: I18nPassword
+    type: str = "password"
 
 
 @dataclass(kw_only=True)
@@ -135,6 +205,7 @@ class Dictionary(FormSpec):
     elements: list[DictionaryElement] = field(default_factory=lambda: [])
     no_elements_text: Optional[str] = None
     additional_static_elements: Optional[dict[str, Any]] = None
+    layout: DictionaryLayout = DictionaryLayout.one_column
 
 
 @dataclass(kw_only=True)
@@ -169,6 +240,7 @@ class CascadingSingleChoice(FormSpec):
     elements: list[CascadingSingleChoiceElement] = field(default_factory=lambda: [])
     no_elements_text: Optional[str] = None
     label: Optional[str] = None
+    layout: CascadingChoiceLayout = CascadingChoiceLayout.vertical
 
 
 @dataclass(kw_only=True)
@@ -215,6 +287,31 @@ class Catalog(FormSpec):
     type: str = "catalog"
 
 
+@dataclass(kw_only=True)
+class TimeSpan(FormSpec):
+    i18n: TimeSpanI18n
+    displayed_magnitudes: list[TimeSpanTimeMagnitude]
+    type: str = "time_span"
+    label: Optional[str] = None
+    input_hint: Optional[float] = None
+
+
+@dataclass(kw_only=True)
+class Tuple(FormSpec):
+    elements: list[FormSpec]
+    type: str = "tuple"
+    layout: TupleLayout = TupleLayout.vertical
+    show_titles: Optional[bool] = True
+
+
+@dataclass(kw_only=True)
+class OptionalChoice(FormSpec):
+    parameter_form: FormSpec
+    i18n: I18nOptionalChoice
+    parameter_form_default_value: Any
+    type: str = "optional_choice"
+
+
 Components = Union[
     Integer,
     Float,
@@ -227,9 +324,13 @@ Components = Union[
     FixedValue,
     BooleanChoice,
     MultilineText,
+    Password,
     DataSize,
     Catalog,
     MultipleChoice,
+    TimeSpan,
+    Tuple,
+    OptionalChoice,
 ]
 
 

@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.ccc.version import Edition, edition
+
 from cmk.utils import paths
 from cmk.utils.password_store import ad_hoc_password_id
 from cmk.utils.rulesets.definition import RuleGroup
@@ -30,12 +32,10 @@ from cmk.gui.wato import (
 )
 from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
-from cmk.ccc.version import edition, Edition
 from cmk.rulesets.v1.form_specs import migrate_to_proxy as migrate_proxy_back
 
 
 def migrate_password_back(value):
-
     # from this rulespec I just expect the old password formats
     match value:
         case "password", str(password):
@@ -51,7 +51,6 @@ def migrate_password_back(value):
 
 
 def migrate_password_forth(value):
-
     match value:
         # old formats
         case ("password", str()) | ("store", str()):
@@ -67,9 +66,7 @@ def migrate_password_forth(value):
 
 
 def migrate_proxy_forth(value):
-
     match value:
-
         case "cmk_postprocessed", "stored_proxy", str(stored_proxy_id):
             return "global", stored_proxy_id
         case "cmk_postprocessed", "environment_proxy", str():

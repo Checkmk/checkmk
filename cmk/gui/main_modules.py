@@ -11,13 +11,14 @@ from contextlib import contextmanager
 from pathlib import Path
 from types import ModuleType
 
+import cmk.ccc.version as cmk_version
+
 from cmk.utils import paths
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 
 from cmk.gui import utils
 from cmk.gui.log import logger
 
-import cmk.ccc.version as cmk_version
 from cmk import trace
 
 tracer = trace.get_tracer()

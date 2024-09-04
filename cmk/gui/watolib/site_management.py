@@ -25,6 +25,9 @@ from livestatus import (
     UnixSocketInfo,
 )
 
+from cmk.ccc import version
+from cmk.ccc.site import omd_site
+
 from cmk.utils import paths
 from cmk.utils.user import UserId
 
@@ -39,9 +42,6 @@ from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.sites import SiteManagementFactory
-
-from cmk.ccc import version
-from cmk.ccc.site import omd_site
 
 
 class SiteDoesNotExistException(Exception): ...
@@ -586,6 +586,30 @@ class SitesApiMgr:
         sites = prepare_raw_site_config(SiteConfigurations({site_id: site_config}))
         self.all_sites.update(sites)
         self.site_mgmt.save_sites(self.all_sites)
+
+
+def add_changes_after_editing_broker_connection(
+    *,
+    connection_id: str,
+    is_new_broker_connection: bool,
+    sites: list[SiteId],
+) -> LogMessage:
+    change_message = (
+        _("Created new peer-to-peer broker connection id %s") % connection_id
+        if is_new_broker_connection
+        else _("Modified peer-to-peer broker connection id %s") % connection_id
+    )
+
+    add_change(
+        "edit-sites",
+        change_message,
+        need_sync=True,
+        need_restart=True,
+        sites=[omd_site()] + sites,
+        domains=[ConfigDomainGUI],
+    )
+
+    return change_message
 
 
 def add_changes_after_editing_site_connection(

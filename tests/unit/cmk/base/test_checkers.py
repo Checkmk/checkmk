@@ -187,7 +187,6 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
 
 
 def test_only_from_injection() -> None:
-
     p_config = checkers.PostprocessingConfig(
         only_from=lambda: ["1.2.3.4"],
         prediction=lambda: InjectedParameters(meta_file_path_template="", predictions={}),

@@ -10,9 +10,9 @@ from tests.testlib.site import Site
 from tests.testlib.utils import get_services_with_status, parse_files, version_spec_from_env
 from tests.testlib.version import CMKVersion
 
-from cmk.utils.hostaddress import HostName
-
 from cmk.ccc.version import Edition
+
+from cmk.utils.hostaddress import HostName
 
 from .conftest import get_site_status, is_test_site_licensed, update_site
 

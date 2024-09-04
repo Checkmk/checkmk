@@ -354,7 +354,9 @@ class CMKOpenApiSession(requests.Session):
         )
 
     def get_hosts(self) -> list[dict[str, Any]]:
-        response = self.get("/domain-types/host_config/collections/all")
+        response = self.get(
+            "/domain-types/host_config/collections/all", params={"include_links": False}
+        )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
         value: list[dict[str, Any]] = response.json()["value"]

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Collection, Mapping, Sequence
 
 import cmk.utils.render
 
@@ -163,7 +163,7 @@ unit_info["bits/s"] = {
 
 
 def bytes_human_readable_list(
-    values: Iterable[float],
+    values: Collection[float],
     precision: int,
     unit_symbol: str,
 ) -> tuple[str, list[str]]:

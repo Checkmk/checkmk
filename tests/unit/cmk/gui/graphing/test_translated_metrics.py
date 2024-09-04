@@ -304,22 +304,10 @@ def test_translate_metrics_with_predictive_metrics(
     ]
     translated_metrics = translate_metrics(perfdata, "my-check-plugin")
     assert translated_metrics[predictive_metric_name].title == expected_title
-
-    predictive_unit_info = translated_metrics[predictive_metric_name].unit_info
-    expected_unit_info = translated_metrics[metric_name].unit_info
-    assert predictive_unit_info.id == expected_unit_info.id
-    assert predictive_unit_info.title == expected_unit_info.title
-    assert predictive_unit_info.symbol == expected_unit_info.symbol
-    assert predictive_unit_info.js_render == expected_unit_info.js_render
-    assert predictive_unit_info.stepping == expected_unit_info.stepping
-    assert predictive_unit_info.color == expected_unit_info.color
-    assert predictive_unit_info.graph_unit == expected_unit_info.graph_unit
-    assert predictive_unit_info.description == expected_unit_info.description
-    assert predictive_unit_info.valuespec == expected_unit_info.valuespec
-    assert predictive_unit_info.perfometer_render == expected_unit_info.perfometer_render
-    assert predictive_unit_info.formatter_ident == expected_unit_info.formatter_ident
-    assert predictive_unit_info.conversion(123.456) == 123.456
-
+    assert (
+        translated_metrics[predictive_metric_name].unit_spec
+        == translated_metrics[metric_name].unit_spec
+    )
     assert translated_metrics[predictive_metric_name].color == expected_color
 
 

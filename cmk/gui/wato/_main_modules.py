@@ -10,6 +10,8 @@
 import time
 from collections.abc import Iterable
 
+import cmk.ccc.version as cmk_version
+
 from cmk.utils import paths
 
 from cmk.gui.breadcrumb import BreadcrumbItem
@@ -18,8 +20,6 @@ from cmk.gui.i18n import _
 from cmk.gui.type_defs import Icon
 from cmk.gui.utils.urls import makeuri_contextless, makeuri_contextless_rulespec_group
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
-
-import cmk.ccc.version as cmk_version
 
 from ._main_module_topics import (
     MainModuleTopicAgents,

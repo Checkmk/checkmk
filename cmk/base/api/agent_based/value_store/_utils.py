@@ -7,9 +7,9 @@ import json
 from ast import literal_eval
 from collections.abc import (
     Callable,
+    Collection,
     Container,
     Hashable,
-    Iterable,
     Iterator,
     Mapping,
     MutableMapping,
@@ -18,6 +18,9 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Final, TypeVar
 
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils.cleanup
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
@@ -25,9 +28,6 @@ from cmk.utils.log import logger
 from cmk.utils.servicename import Item
 
 from cmk.checkengine.checking import CheckPluginName, ServiceID
-
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
 
 _PluginName = str
 _UserKey = str
@@ -105,7 +105,7 @@ class _StaticDiskSyncedMapping(Mapping[_TKey, _TValue]):
         self,
         *,
         removed: Container[_TKey] = (),
-        updated: Iterable[tuple[_TKey, _TValue]] = (),
+        updated: Collection[tuple[_TKey, _TValue]] = (),
     ) -> None:
         """Re-load and write the changes of the stored values
 

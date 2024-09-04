@@ -13,6 +13,9 @@ from collections.abc import Mapping, Sequence
 from dataclasses import asdict, astuple, dataclass, field
 from typing import Any, Literal, TypedDict, TypeVar
 
+from cmk.ccc import version as cmk_version
+from cmk.ccc.plugin_registry import Registry
+
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.config_warnings import ConfigurationWarnings
@@ -28,9 +31,6 @@ from cmk.checkengine.discovery import DiscoveryResult as SingleHostDiscoveryResu
 from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
-
-from cmk.ccc import version as cmk_version
-from cmk.ccc.plugin_registry import Registry
 
 DiscoveredHostLabelsDict = dict[str, HostLabelValueDict]
 
@@ -81,7 +81,7 @@ class ServiceDiscoveryResult(ABCAutomationResult):
 
     @staticmethod
     def _from_dict(
-        serialized: Mapping[HostName, Mapping[str, Any]]
+        serialized: Mapping[HostName, Mapping[str, Any]],
     ) -> Mapping[HostName, SingleHostDiscoveryResult]:
         return {k: SingleHostDiscoveryResult(**v) for k, v in serialized.items()}
 
@@ -204,7 +204,7 @@ class AutodiscoveryResult(ABCAutomationResult):
 
     @staticmethod
     def _hosts_from_dict(
-        serialized: Mapping[HostName, Mapping[str, Any]]
+        serialized: Mapping[HostName, Mapping[str, Any]],
     ) -> Mapping[HostName, SingleHostDiscoveryResult]:
         return {k: SingleHostDiscoveryResult(**v) for k, v in serialized.items()}
 
@@ -534,7 +534,9 @@ class DiagSpecialAgentHostConfig:
         return cls(**deserialized)
 
     @staticmethod
-    def deserialize_host_primary_family(raw: int) -> Literal[
+    def deserialize_host_primary_family(
+        raw: int,
+    ) -> Literal[
         socket.AddressFamily.AF_INET,
         socket.AddressFamily.AF_INET6,
     ]:
@@ -680,7 +682,6 @@ result_type_registry.register(UpdateDNSCacheResult)
 
 @dataclass
 class UpdatePasswordsMergedFileResult(ABCAutomationResult):
-
     @staticmethod
     def automation_call() -> str:
         return "update-passwords-merged-file"

@@ -11,8 +11,11 @@ from datetime import datetime
 from typing import final
 from wsgiref.types import StartResponse, WSGIEnvironment
 
+import cmk.ccc.store
+import cmk.ccc.version as cmk_version
+from cmk.ccc.site import url_prefix
+
 import cmk.utils.paths
-import cmk.utils.profile
 
 import cmk.gui.auth
 import cmk.gui.session
@@ -20,7 +23,7 @@ from cmk.gui import login, pages, userdb
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUnauthenticatedException
-from cmk.gui.http import request, response, Response
+from cmk.gui.http import request, Response, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInSuperUser, user
 from cmk.gui.session import session
@@ -29,10 +32,7 @@ from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
 from cmk.gui.wsgi.type_defs import WSGIResponse
 
-import cmk.ccc.store
-import cmk.ccc.version as cmk_version
 from cmk import trace
-from cmk.ccc.site import url_prefix
 
 # TODO
 #  * derive all exceptions from werkzeug's http exceptions.
@@ -75,6 +75,13 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
                 "user_webauthn_login_complete",
             )
 
+            two_factor_registration_pages = requested_file_name(request) in (
+                "user_two_factor_enforce",
+                "user_totp_register",
+                "user_webauthn_register_begin",
+                "user_webauthn_register_complete",
+            )
+
             # Two factor login
             if (
                 not two_factor_login_pages
@@ -83,6 +90,16 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
             ):
                 raise HTTPRedirect(
                     "user_login_two_factor.py?_origtarget=%s" % urlencode(makeuri(request, []))
+                )
+
+            # Enforce Two Factor
+            if (
+                not two_factor_registration_pages
+                and session.session_info.two_factor_required
+                and not session.session_info.two_factor_completed
+            ):
+                raise HTTPRedirect(
+                    "user_two_factor_enforce.py?_origtarget=%s" % urlencode(makeuri(request, []))
                 )
 
             if not two_factor_login_pages and requested_file_name(request) != "user_change_pw":

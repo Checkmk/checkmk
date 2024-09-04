@@ -10,7 +10,7 @@ from typing import Any
 import pytest
 from faker import Faker
 
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.rest_api_client import ClientRegistry, Response
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
@@ -52,6 +52,52 @@ def test_get_all_comments(
         resp = clients.Comment.get_all()
         assert resp.json["domainType"] == DOMAIN_TYPE
         assert resp.json["value"][0]["extensions"]["site_id"] == SITE_ID
+
+
+def test_list_comments_include_links(
+    mock_livestatus: MockLiveStatusConnection, clients: ClientRegistry
+) -> None:
+    add_service_and_host_comments_to_live_status_table(mock_livestatus)
+
+    def _request(include_links: bool | None = None) -> Response:
+        mock_livestatus.expect_query(
+            "GET comments\nColumns: host_name id author comment persistent service_description entry_time is_service"
+        )
+        with mock_livestatus:
+            return clients.Comment.get_all(include_links=include_links)
+
+    default_response = _request()
+    enabled_response = _request(include_links=True)
+    disabled_response = _request(include_links=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == enabled_response.json
+    assert any(bool(value["links"]) for value in enabled_response.json["value"])
+    assert all(value["links"] == [] for value in disabled_response.json["value"])
+
+
+def test_list_comments_include_extensions(
+    mock_livestatus: MockLiveStatusConnection, clients: ClientRegistry
+) -> None:
+    add_service_and_host_comments_to_live_status_table(mock_livestatus)
+
+    def _request(include_extensions: bool | None = None) -> Response:
+        mock_livestatus.expect_query(
+            "GET comments\nColumns: host_name id author comment persistent service_description entry_time is_service"
+        )
+        with mock_livestatus:
+            return clients.Comment.get_all(include_extensions=include_extensions)
+
+    default_response = _request()
+    enabled_response = _request(include_extensions=True)
+    disabled_response = _request(include_extensions=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == enabled_response.json
+    assert any(bool(value["extensions"]) for value in enabled_response.json["value"])
+    assert all("extensions" not in value for value in disabled_response.json["value"])
 
 
 def test_get_host_comments(

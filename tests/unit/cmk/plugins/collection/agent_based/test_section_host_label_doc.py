@@ -8,6 +8,7 @@ Currently the helper below is just used to facilitate the testing.
 Someday it may be used to automatically extract the doc for all
 builtin host labels.
 """
+
 import itertools
 from collections import defaultdict
 from collections.abc import Sequence
@@ -15,10 +16,10 @@ from typing import DefaultDict, Final
 
 from tests.unit.conftest import FixRegister
 
+import cmk.ccc.version as cmk_version
+
 from cmk.utils import paths
 from cmk.utils.sectionname import SectionName
-
-import cmk.ccc.version as cmk_version
 
 CRE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/azure/resource_group",

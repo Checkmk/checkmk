@@ -104,7 +104,6 @@ class NoLineToParse(Exception):
 
 
 def _get_varname_value(line: str) -> tuple[str, str]:
-
     if ":" not in line:
         raise NoLineToParse
 
@@ -115,7 +114,6 @@ def _get_varname_value(line: str) -> tuple[str, str]:
 def _parse_site_data(
     starting_index: int, data: list[list[str]]
 ) -> tuple[int, str | None, int | None]:
-
     version: str | None
     updated: int | None
     try:
@@ -130,7 +128,6 @@ def _parse_site_data(
 
 
 def _get_connection(index: int, data: list[list[str]]) -> tuple[int, Connection]:
-
     keys = [
         "Type",
         "State",
@@ -164,7 +161,6 @@ def _get_connection(index: int, data: list[list[str]]) -> tuple[int, Connection]
 
 
 def _get_spool(index: int, data: list[list[str]]) -> tuple[int, Spool]:
-
     def _split_parse_date(value: str) -> int | None:
         try:
             return int(value.split()[0])
@@ -304,7 +300,6 @@ def check_mknotifyd(item: str, section: MkNotifySection) -> CheckResult:
     # Are there deferred files that are too old?
     deferred_spool = site.spools["Deferred"]
     if deferred_spool.count and deferred_spool.oldest is not None:
-
         yield from check_levels(
             deferred_spool.count,
             metric_name="deferred_files",
@@ -348,7 +343,6 @@ _V2_SERVICE_NAMING = "Notification Spooler connection to"
 
 
 def check_mknotifyd_connection(item: str, section: MkNotifySection) -> CheckResult:
-
     # "mknotifyd.connection_v2"
     if _V2_SERVICE_NAMING in item:
         site_name, connection_name = item.split(f" {_V2_SERVICE_NAMING} ", 1)
@@ -367,7 +361,6 @@ def check_mknotifyd_connection(item: str, section: MkNotifySection) -> CheckResu
     }
 
     if (connection := section.sites[site_name].connections.get(connection_name)) is not None:
-
         state, summary = states[connection.state]
         yield Result(state=State(state), summary=summary)
 

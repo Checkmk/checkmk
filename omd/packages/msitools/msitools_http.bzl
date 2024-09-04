@@ -1,7 +1,8 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
 
-def msitools(version_str, sha256):
+def msitools_workspace():
+    version_str = "0.94"
     filename = "msitools-" + version_str + ".tar.xz"
     http_archive(
         name = "msitools",
@@ -19,5 +20,5 @@ def msitools(version_str, sha256):
             "http://ftp.gnome.org/pub/GNOME/sources/msitools/" + version_str + "/" + filename,
             UPSTREAM_MIRROR_URL + filename,
         ],
-        sha256 = sha256,
+        sha256 = "152eb4149cb44f178af93d17bbe0921b5312f30fb4780e5be113b35747b5cd2e",
     )

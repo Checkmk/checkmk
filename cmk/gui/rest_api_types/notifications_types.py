@@ -672,6 +672,9 @@ class JiraIssuePlugin:
     host_summary: CheckboxWithStrValue = field(default_factory=CheckboxWithStrValue)
     service_summary: CheckboxWithStrValue = field(default_factory=CheckboxWithStrValue)
     label: CheckboxWithStrValue = field(default_factory=CheckboxWithStrValue)
+    graphs_per_notification: CheckboxWithIntValue = field(
+        default_factory=CheckboxWithIntValue,
+    )
     resolution: CheckboxWithStrValue = field(default_factory=CheckboxWithStrValue)
     timeout: CheckboxWithStrValue = field(default_factory=CheckboxWithStrValue)
 
@@ -707,6 +710,9 @@ class JiraIssuePlugin:
             label=CheckboxWithStrValue.from_mk_file_format(
                 pluginparams.get("label"),
             ),
+            graphs_per_notification=CheckboxWithIntValue.from_mk_file_format(
+                pluginparams.get("graphs_per_notification"),
+            ),
             resolution=CheckboxWithStrValue.from_mk_file_format(
                 pluginparams.get("resolution"),
             ),
@@ -739,6 +745,9 @@ class JiraIssuePlugin:
             host_summary=CheckboxWithStrValue.from_api_request(params["host_summary"]),
             service_summary=CheckboxWithStrValue.from_api_request(params["service_summary"]),
             label=CheckboxWithStrValue.from_api_request(params["label"]),
+            graphs_per_notification=CheckboxWithIntValue.from_api_request(
+                params["graphs_per_notification"]
+            ),
             resolution=CheckboxWithStrValue.from_api_request(params["resolution_id"]),
             timeout=CheckboxWithStrValue.from_api_request(params["optional_timeout"]),
         )
@@ -763,6 +772,7 @@ class JiraIssuePlugin:
                     "host_summary": self.host_summary.api_response(),
                     "service_summary": self.service_summary.api_response(),
                     "label": self.label.api_response(),
+                    "graphs_per_notification": self.graphs_per_notification.api_response(),
                     "resolution_id": self.resolution.api_response(),
                     "optional_timeout": self.timeout.api_response(),
                 }
@@ -780,6 +790,7 @@ class JiraIssuePlugin:
             "host_customid": self.host_custom_id,
             "issuetype": self.issue_type_id,
             "label": self.label.to_mk_file_format(),
+            "graphs_per_notification": self.graphs_per_notification.to_mk_file_format(),
             "monitoring": self.monitoring,
             "priority": self.priority.to_mk_file_format(),
             "project": self.project_id,
@@ -1849,7 +1860,6 @@ class CustomPluginAdapter:
 def get_plugin_from_mk_file(  # pylint: disable=too-many-branches
     notify_plugin: NotifyPlugin,
 ) -> PluginAdapter | CustomPluginAdapter:
-
     # TODO use match case once mypy has support for it
     if is_known_plugin(notify_plugin):
         if notify_plugin[0] == "sms":

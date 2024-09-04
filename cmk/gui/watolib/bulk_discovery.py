@@ -9,6 +9,8 @@ from typing import NamedTuple, NewType, TypedDict
 
 from livestatus import SiteId
 
+from cmk.ccc import store
+
 from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import configuration_lockfile
 
@@ -34,8 +36,6 @@ from cmk.gui.valuespec import (
 from cmk.gui.watolib.changes import add_service_change
 from cmk.gui.watolib.check_mk_automations import discovery
 from cmk.gui.watolib.hosts_and_folders import disk_or_search_folder_from_request, folder_tree, Host
-
-from cmk.ccc import store
 
 DoFullScan = NewType("DoFullScan", bool)
 
@@ -157,7 +157,7 @@ def vs_bulk_discovery(render_form: bool = False, include_subfolders: bool = True
 
 
 def _migrate_automatic_rediscover_parameters(
-    param: str | tuple[str, dict[str, bool]]
+    param: str | tuple[str, dict[str, bool]],
 ) -> tuple[str, dict[str, bool]]:
     # already migrated
     if isinstance(param, tuple):

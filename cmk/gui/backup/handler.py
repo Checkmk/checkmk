@@ -23,6 +23,11 @@ from io import TextIOWrapper
 from pathlib import Path
 from typing import assert_never, cast, Final, Generic, TypeVar
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.plugin_registry import Registry
+from cmk.ccc.site import omd_site
+
 from cmk.utils import render
 from cmk.utils.backup.config import Config as RawConfig
 from cmk.utils.backup.job import JobConfig, JobState, ScheduleConfig
@@ -98,10 +103,6 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.wato import IndividualOrStoredPassword
 
-import cmk.ccc.version as cmk_version
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.plugin_registry import Registry
-from cmk.ccc.site import omd_site
 from cmk.crypto.password import Password as PasswordType
 from cmk.crypto.pem import PEMDecodingError
 

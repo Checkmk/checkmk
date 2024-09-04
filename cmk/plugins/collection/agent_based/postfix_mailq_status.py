@@ -60,7 +60,7 @@ agent_section_postfix_mailq_status = AgentSection(
 
 
 def discovery_postfix_mailq_status(
-    section: Mapping[str, PostfixError | PostfixPid]
+    section: Mapping[str, PostfixError | PostfixPid],
 ) -> DiscoveryResult:
     yield from (
         Service(item=queuename)

@@ -8,6 +8,8 @@ from contextlib import contextmanager
 
 from pytest import MonkeyPatch
 
+import cmk.ccc.version as cmk_version
+
 from cmk.utils import paths
 
 import cmk.gui.utils.transaction_manager
@@ -15,8 +17,6 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.userdb import UserRole
 from cmk.gui.watolib import userroles
 from cmk.gui.watolib.userroles import RoleID
-
-import cmk.ccc.version as cmk_version
 
 
 @contextmanager

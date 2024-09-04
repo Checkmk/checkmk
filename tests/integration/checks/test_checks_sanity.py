@@ -34,12 +34,8 @@ def _installed_agent_ctl_in_unknown_state(
 
 @pytest.fixture(name="agent_ctl", scope="module")
 def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
-    with agent_controller_daemon(installed_agent_ctl_in_unknown_state) as daemon:
-        try:
-            yield installed_agent_ctl_in_unknown_state
-        finally:
-            if daemon:
-                daemon.kill()
+    with agent_controller_daemon(installed_agent_ctl_in_unknown_state):
+        yield installed_agent_ctl_in_unknown_state
 
 
 @pytest.fixture(

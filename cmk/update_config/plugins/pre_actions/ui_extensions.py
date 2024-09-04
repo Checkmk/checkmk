@@ -7,12 +7,13 @@ from collections.abc import Mapping
 from logging import Logger
 from pathlib import Path
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.gui import main_modules
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.graphing import parse_perfometer, perfometer_info
 from cmk.gui.utils import get_failed_plugins, remove_failed_plugin
 
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.mkp_tool import PackageID
 from cmk.update_config.plugins.pre_actions.utils import (
     ConflictMode,

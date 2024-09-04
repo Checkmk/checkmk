@@ -43,7 +43,7 @@ def test_automatic_host_removal(
             hostnames = {
                 _["id"]
                 for _ in central_site.openapi.get(
-                    "domain-types/host_config/collections/all"
+                    "domain-types/host_config/collections/all", params={"include_links": False}
                 ).json()["value"]
             }
             return not hostnames.intersection({unresolvable_host_central, unresolvable_host_remote})

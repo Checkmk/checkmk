@@ -130,7 +130,6 @@ from cmk.plugins.netapp.agent_based.netapp_ontap_qtree_quota import (
 def test_parse_netapp_ontap_qtree_quota(
     input_string_table: StringTable, expected_section: Section
 ) -> None:
-
     result = parse_netapp_ontap_qtree_quota(input_string_table)
 
     assert result == expected_section

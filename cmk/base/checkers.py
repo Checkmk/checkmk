@@ -19,6 +19,9 @@ from typing import Final, Literal
 
 import livestatus
 
+import cmk.ccc.debug
+from cmk.ccc.exceptions import MKTimeout, OnError
+
 import cmk.utils.paths
 import cmk.utils.resulttype as result
 from cmk.utils import password_store, tty
@@ -94,7 +97,6 @@ from cmk.base.sources import (
     SpecialAgentSource,
 )
 
-import cmk.ccc.debug
 from cmk.agent_based.prediction_backend import (
     InjectedParameters,
     lookup_predictive_levels,
@@ -103,7 +105,6 @@ from cmk.agent_based.prediction_backend import (
 from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError, Metric
 from cmk.agent_based.v1 import Result as CheckFunctionResult
 from cmk.agent_based.v1 import State
-from cmk.ccc.exceptions import MKTimeout, OnError
 
 __all__ = [
     "CheckPluginMapper",
@@ -649,7 +650,9 @@ def _get_check_function(
 
 
 def _aggregate_results(
-    subresults: tuple[Sequence[IgnoreResults], Sequence[MetricTuple], Sequence[CheckFunctionResult]]
+    subresults: tuple[
+        Sequence[IgnoreResults], Sequence[MetricTuple], Sequence[CheckFunctionResult]
+    ],
 ) -> ServiceCheckResult:
     # Impedance matching part of `get_check_function()`.
     ignore_results, metrics, results = subresults
@@ -1060,7 +1063,6 @@ def _make_discovery_parameters_getter(
     ruleset_type: Literal["all", "merged"],
     rules_getter_function: Callable[[RuleSetName], Sequence[RuleSpec]],
 ) -> Callable[[HostName], None | Parameters | list[Parameters]]:
-
     def get_discovery_parameters(host_name: HostName) -> None | Parameters | list[Parameters]:
         params = get_plugin_parameters(
             host_name,

@@ -18,6 +18,9 @@ from typing import Any, Literal, overload
 
 from flask import current_app, session
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils.paths
 
 from cmk.gui import log, utils
@@ -42,13 +45,10 @@ from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.popups import PopupMethod
-from cmk.gui.utils.theme import theme, Theme
+from cmk.gui.utils.theme import Theme, theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import doc_reference_url, DocReference, requested_file_name
 from cmk.gui.utils.user_errors import user_errors
-
-import cmk.ccc.version as cmk_version
-from cmk.ccc.exceptions import MKGeneralException
 
 from .generator import HTMLWriter
 from .tag_rendering import (
@@ -190,10 +190,9 @@ class HTMLGenerator(HTMLWriter):
         help_text = HTML.without_escaping(self.resolve_help_text_macros(stripped))
 
         self.enable_help_toggle()
-        style: str = "display:%s;" % ("flex" if user.show_help else "none")
         inner_html: HTML = HTMLWriter.render_div(self.render_icon("info"), class_="info_icon")
         inner_html += HTMLWriter.render_div(help_text, class_="help_text")
-        return HTMLWriter.render_div(inner_html, class_="help", style=style)
+        return HTMLWriter.render_div(inner_html, class_="help")
 
     @staticmethod
     def resolve_help_text_macros(text: str) -> str:

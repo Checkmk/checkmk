@@ -19,6 +19,8 @@ import pytest
 
 from tests.testlib.base import Scenario
 
+import cmk.ccc.version as cmk_version
+
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.rulesets.tuple_rulesets import (
@@ -29,8 +31,6 @@ from cmk.utils.rulesets.tuple_rulesets import (
     in_extraconf_servicelist,
 )
 from cmk.utils.tags import TagGroupID, TagID
-
-import cmk.ccc.version as cmk_version
 
 
 @pytest.fixture(autouse=True)

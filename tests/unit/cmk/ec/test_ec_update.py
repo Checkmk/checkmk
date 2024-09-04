@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """EC UPDATE methods with one or more event IDs"""
+
 import pytest
 
 from tests.unit.cmk.ec.helpers import FakeStatusSocket, new_event
@@ -20,15 +21,15 @@ from cmk.ec.query import MKClientError
 def test_update_event(
     event_status: EventStatus,
     status_server: StatusServer,
-    start_phase: str,
+    start_phase: ec.EventPhase,
     set_phase_to: str,
 ) -> None:
     """Update and acknowledge one event"""
-    event: ec.Event = {
-        "host": HostName("host_1"),
-        "phase": start_phase,
-        "core_host": HostName("ABC"),
-    }
+    event = ec.Event(
+        host=HostName("host_1"),
+        phase=start_phase,
+        core_host=HostName("ABC"),
+    )
     event_status.new_event(new_event(event))
     s = FakeStatusSocket(
         bytes(f"COMMAND UPDATE;1;testuser;{set_phase_to};test_comment;test_contact_name", "utf-8")
@@ -44,14 +45,14 @@ def test_update_event(
 def test_update_events_that_cant_be_acked(
     event_status: EventStatus,
     status_server: StatusServer,
-    test_phase: str,
+    test_phase: ec.EventPhase,
 ) -> None:
     """Update and acknowledge an event when the phase is not 'ack' or 'open'"""
-    event: ec.Event = {
-        "host": HostName("host_1"),
-        "phase": test_phase,
-        "core_host": HostName("ABC"),
-    }
+    event = ec.Event(
+        host=HostName("host_1"),
+        phase=test_phase,
+        core_host=HostName("ABC"),
+    )
     event_status.new_event(new_event(event))
     s = FakeStatusSocket(b"COMMAND UPDATE;1;testuser;1;test_comment;test_contact_name")
     with pytest.raises(MKClientError) as excinfo:

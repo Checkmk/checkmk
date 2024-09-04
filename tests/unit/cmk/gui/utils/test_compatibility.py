@@ -7,6 +7,8 @@
 
 import pytest
 
+from cmk.ccc.version import Edition
+
 from cmk.utils.licensing.handler import LicenseState
 
 from cmk.gui.utils.compatibility import (
@@ -17,8 +19,6 @@ from cmk.gui.utils.compatibility import (
     LicensingCompatibility,
     LicensingCompatible,
 )
-
-from cmk.ccc.version import Edition
 
 
 @pytest.mark.parametrize(

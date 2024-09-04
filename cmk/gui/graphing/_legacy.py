@@ -8,10 +8,16 @@ from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass
 from typing import Any, Final, Literal, NotRequired, TypeAlias, TypedDict
 
+from pydantic import BaseModel
+
 from cmk.utils.metrics import MetricName
 
+from cmk.gui.config import active_config
+from cmk.gui.logged_in import user
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import Age, Filesize, Float, Integer, Percentage
+
+from ._unit import ConvertibleUnitSpecification, NonConvertibleUnitSpecification, user_specific_unit
 
 #   .--units---------------------------------------------------------------.
 #   |                                    _ _                               |
@@ -56,10 +62,6 @@ class UnitInfo:
         type[Age] | type[Filesize] | type[Float] | type[Integer] | type[Percentage] | None
     ) = None
     perfometer_render: Callable[[float], str] | None = None
-    formatter_ident: (
-        Literal["Decimal", "SI", "IEC", "StandardScientific", "EngineeringScientific", "Time"]
-        | None
-    ) = None
 
 
 class UnitRegistry:
@@ -84,7 +86,6 @@ class UnitRegistry:
             valuespec=item.get("valuespec"),
             conversion=item.get("conversion", lambda v: v),
             perfometer_render=item.get("perfometer_render"),
-            formatter_ident=None,
         )
 
     def __setitem__(
@@ -103,6 +104,37 @@ class UnitRegistry:
 # Note: we cannot simply use dict[str, Callable[[], UnitInfo]] and refactor all unit registrations
 # in our codebase because we need to stay compatible with custom extensions
 unit_info = UnitRegistry()
+
+
+class LegacyUnitSpecification(BaseModel, frozen=True):
+    type: Literal["legacy"] = "legacy"
+    id: str
+
+
+def get_render_function(
+    unit_spec: ConvertibleUnitSpecification | NonConvertibleUnitSpecification | UnitInfo,
+) -> Callable[[float], str]:
+    return (
+        unit_spec.render
+        if isinstance(unit_spec, UnitInfo)
+        else user_specific_unit(unit_spec, user, active_config).formatter.render
+    )
+
+
+def get_conversion_function(
+    unit_spec: ConvertibleUnitSpecification | NonConvertibleUnitSpecification | UnitInfo,
+) -> Callable[[float], float]:
+    return (
+        unit_spec.conversion
+        if isinstance(unit_spec, UnitInfo)
+        else user_specific_unit(unit_spec, user, active_config).conversion
+    )
+
+
+def get_unit_info(unit_id: str) -> UnitInfo:
+    if unit_id in unit_info.keys():
+        return unit_info[unit_id]
+    return unit_info[""]
 
 
 # .

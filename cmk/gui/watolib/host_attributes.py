@@ -20,6 +20,9 @@ from marshmallow import fields
 
 from livestatus import SiteId
 
+import cmk.ccc.plugin_registry
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils import deprecation_warnings
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import Labels
@@ -33,6 +36,7 @@ from cmk.fetchers import IPMICredentials
 
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs.private import SingleChoiceElementExtended, SingleChoiceExtended
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
@@ -41,9 +45,9 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import Checkbox, DropdownChoice, TextInput, Transform, ValueSpec
 from cmk.gui.watolib.utils import host_attribute_matches
 
-import cmk.ccc.plugin_registry
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.fields import String
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import DefaultValue, FormSpec
 
 _ContactgroupName = str
 
@@ -931,6 +935,9 @@ class ABCHostAttributeValueSpec(ABCHostAttribute):
     def valuespec(self) -> ValueSpec:
         raise NotImplementedError()
 
+    def form_spec(self) -> FormSpec:
+        raise NotImplementedError()
+
     def title(self) -> str:
         title = self.valuespec().title()
         assert title is not None
@@ -1055,6 +1062,23 @@ class ABCHostAttributeHostTagList(ABCHostAttributeTag, abc.ABC):
             from_valuespec=lambda s: None if s == "" else s,
         )
 
+    def form_spec(self) -> SingleChoiceExtended:
+        choices = [(k or "", v) for k, v in self._tag_group.get_tag_choices()]
+        return SingleChoiceExtended(
+            title=Title(  # pylint: disable=localization-of-non-literal-string
+                self._tag_group.title
+            ),
+            elements=[
+                SingleChoiceElementExtended(
+                    name=choice[0],
+                    title=Title(choice[1]),  # pylint: disable=localization-of-non-literal-string
+                )
+                for choice in choices
+            ],
+            prefill=DefaultValue(choices[0][0]),
+            type=str,
+        )
+
     @property
     def is_checkbox_tag(self) -> bool:
         return False
@@ -1082,6 +1106,23 @@ class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag, abc.ABC):
             valuespec=self._valuespec(),
             to_valuespec=lambda s: s == self._tag_value(),
             from_valuespec=lambda s: self._tag_value() if s is True else None,
+        )
+
+    def form_spec(self) -> SingleChoiceExtended:
+        return SingleChoiceExtended(
+            title=Title(  # pylint: disable=localization-of-non-literal-string
+                self._tag_group.title
+            ),
+            elements=[
+                SingleChoiceElementExtended(
+                    name=self._tag_value(),
+                    title=Title(  # pylint: disable=localization-of-non-literal-string
+                        self._tag_group.title
+                    ),
+                )
+            ],
+            prefill=DefaultValue(self._tag_value()),
+            type=str,
         )
 
     @property

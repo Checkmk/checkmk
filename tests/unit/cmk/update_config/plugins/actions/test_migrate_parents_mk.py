@@ -10,13 +10,14 @@ from typing import Iterator
 
 import pytest
 
+from cmk.ccc.site import omd_site
+
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.user import UserId
 
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 
-from cmk.ccc.site import omd_site
 from cmk.update_config.plugins.actions.migrate_parents_mk import MigrateParentsMK
 
 EXAMPLE_PARENTS_EMPTY = """# Automatically created by --scan-parents at Mon Apr 15 07:52:26 2024

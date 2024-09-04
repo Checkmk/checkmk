@@ -12,6 +12,8 @@ from functools import partial
 from types import ModuleType
 from typing import Any, assert_never, Literal, Self, TypeVar
 
+from cmk.ccc.version import Edition
+
 from cmk.utils.password_store import ad_hoc_password_id
 from cmk.utils.rulesets.definition import RuleGroup
 
@@ -38,7 +40,6 @@ from cmk.gui.watolib.rulespecs import (
     rulespec_group_registry,
 )
 
-from cmk.ccc.version import Edition
 from cmk.rulesets import v1 as ruleset_api_v1
 
 try:
@@ -727,7 +728,7 @@ def convert_to_legacy_valuespec(
     to_convert: ruleset_api_v1.form_specs.FormSpec, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.ValueSpec:
     def allow_empty_value_wrapper(
-        update_func: Callable[[object], object]
+        update_func: Callable[[object], object],
     ) -> Callable[[object], object]:
         def wrapper(v: object) -> object:
             try:
@@ -998,7 +999,7 @@ def _get_dict_group_key(dict_group: ruleset_api_v1.form_specs.DictGroup) -> str:
 
 
 def _get_group_keys(
-    dict_elements: Mapping[str, ruleset_api_v1.form_specs.DictElement]
+    dict_elements: Mapping[str, ruleset_api_v1.form_specs.DictElement],
 ) -> Sequence[str]:
     return [
         _get_dict_group_key(elem.group)
@@ -1008,7 +1009,7 @@ def _get_group_keys(
 
 
 def _make_group_keys_dict(
-    dict_elements: Mapping[str, ruleset_api_v1.form_specs.DictElement]
+    dict_elements: Mapping[str, ruleset_api_v1.form_specs.DictElement],
 ) -> dict:
     # to render the groups in a nicer way the group names are required keys, so have to exist per
     # default
@@ -1512,7 +1513,8 @@ def _get_legacy_level_spec(
     # we someday invent one that does not have this attribute.
     if hasattr(form_spec_template, "prefill"):
         form_spec_template = dataclasses.replace(
-            form_spec_template, prefill=prefill_type(prefill_value)  # type: ignore[call-arg]
+            form_spec_template,
+            prefill=prefill_type(prefill_value),  # type: ignore[call-arg]
         )
     return convert_to_legacy_valuespec(
         dataclasses.replace(form_spec_template, title=title), localizer
@@ -1954,7 +1956,9 @@ def _transform_proxy_forth(value: object) -> tuple[str, str | None]:
     raise ValueError(value)
 
 
-def _transform_proxy_back(value: tuple[str, str]) -> tuple[
+def _transform_proxy_back(
+    value: tuple[str, str],
+) -> tuple[
     Literal["cmk_postprocessed"],
     Literal["environment_proxy", "no_proxy", "stored_proxy", "explicit_proxy"],
     str,
@@ -2145,7 +2149,7 @@ def _transform_password_forth(value: object) -> tuple[str, str]:
 
 
 def _transform_password_back(
-    value: tuple[str, str]
+    value: tuple[str, str],
 ) -> tuple[
     Literal["cmk_postprocessed"], Literal["explicit_password", "stored_password"], tuple[str, str]
 ]:
@@ -2175,9 +2179,7 @@ def _convert_to_legacy_individual_or_stored_password(
 def _convert_to_legacy_list_choice_match_type(
     to_convert: ruleset_api_v1.form_specs.MultipleChoice, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.ValueSpec:
-
     def _ensure_sequence_str(value: object) -> Sequence | object:
-
         if not isinstance(value, Sequence):
             return value
         return list(value)

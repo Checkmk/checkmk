@@ -9,6 +9,7 @@ const forwarded = useForwardPropsEmits(props, emits)
 </script>
 
 <template>
+  <!-- @vue-expect-error Radix-vue props doesn't follow our exactOptionalPropertyTypes rule -->
   <CollapsibleRoot v-slot="{ open: openSlot }" v-bind="forwarded" class="ui-collapsible">
     <slot :open="openSlot" />
   </CollapsibleRoot>

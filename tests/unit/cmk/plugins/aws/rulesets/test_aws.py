@@ -9,12 +9,13 @@ from typing import Generator
 import pytest
 from pytest import MonkeyPatch
 
+from cmk.ccc.version import Edition, edition
+
 from cmk.utils import paths
 
 from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
 
 import cmk.plugins.aws.rulesets.aws as aws_ruleset
-from cmk.ccc.version import Edition, edition
 
 AWS_VS_RULE_VALUE = {
     "access_key_id": "foo_key",

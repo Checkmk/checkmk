@@ -7,6 +7,8 @@ import json
 from collections.abc import Iterator
 from typing import cast
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.gui.graphing._graph_specification import GraphSpecification, parse_raw_graph_specification
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.http import response
@@ -15,8 +17,6 @@ from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_javascript_link, PageMenuEntry
 from cmk.gui.type_defs import VisualContext
 from cmk.gui.visuals.type import VisualType
-
-from cmk.ccc.exceptions import MKGeneralException
 
 from .dashlet import copy_view_into_dashlet, dashlet_registry, DashletConfig, ViewDashletConfig
 from .store import add_dashlet, get_permitted_dashboards, load_dashboard

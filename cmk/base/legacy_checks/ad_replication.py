@@ -169,8 +169,9 @@ def check_ad_replication(item, params, info):
         yield 0, "All replications are OK."
         return
 
-    yield status, (
-        f"Replications with failures: {count_failed_repl}, Total failures: {count_failures}"
+    yield (
+        status,
+        (f"Replications with failures: {count_failed_repl}, Total failures: {count_failures}"),
     )
     if long_output:
         yield 0, "\n%s" % "\n".join(long_output)

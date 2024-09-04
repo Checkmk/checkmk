@@ -7,6 +7,8 @@ import pytest
 
 from cmk.gui.config import active_config
 from cmk.gui.graphing._expression import (
+    _FALLBACK_UNIT_SPEC_FLOAT,
+    _FALLBACK_UNIT_SPEC_INT,
     ConditionalMetricExpression,
     Constant,
     CriticalOf,
@@ -19,15 +21,17 @@ from cmk.gui.graphing._expression import (
     Metric,
     MetricExpression,
     MinimumOf,
-    parse_conditional_expression,
-    parse_expression,
+    parse_legacy_conditional_expression,
+    parse_legacy_expression,
     Percent,
     Product,
     Sum,
     WarningOf,
 )
-from cmk.gui.graphing._legacy import unit_info
+from cmk.gui.graphing._formatter import AutoPrecision
+from cmk.gui.graphing._legacy import unit_info, UnitInfo
 from cmk.gui.graphing._translated_metrics import parse_perf_data, translate_metrics
+from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation, IECNotation
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 
 
@@ -71,22 +75,32 @@ def test_evaluate_cpu_utilization(
         perf_data, check_command, config=active_config
     )
     translated_metrics = translate_metrics(perf_data_parsed, check_command)
-    assert (
-        parse_expression(expression, translated_metrics).evaluate(translated_metrics).value
-        == expected_result
+    result = parse_legacy_expression(expression, "line", "", translated_metrics).evaluate(
+        translated_metrics
     )
+    assert result.is_ok()
+    assert result.ok.value == expected_result
 
 
 @pytest.mark.parametrize(
-    "perf_data, check_command, raw_expression, expected_metric_expression, value, unit_name, color",
+    [
+        "perf_data",
+        "check_command",
+        "raw_expression",
+        "expected_metric_expression",
+        "expected_value",
+        "expected_unit_spec",
+        "expected_color",
+    ],
     [
         pytest.param(
             [PerfDataTuple(n, n, len(n), "", 120, 240, 0, 24) for n in ["in", "out"]],
             "check_mk-openvpn_clients",
             "if_in_octets,8,*@bits/s",
-            Product(
-                factors=[Metric(name="if_in_octets"), Constant(value=8)],
-                explicit_unit_id="bits/s",
+            MetricExpression(
+                Product([Metric("if_in_octets"), Constant(8)]),
+                line_type="line",
+                unit_spec="bits/s",
             ),
             16.0,
             "bits/s",
@@ -101,9 +115,9 @@ def test_evaluate_cpu_utilization(
             parse_perf_data("127.0.0.1pl=5%;80;100;;", config=active_config)[0],
             "check_mk_active-icmp",
             "127.0.0.1pl",
-            Metric(name="127.0.0.1pl"),
+            MetricExpression(Metric("127.0.0.1pl"), line_type="line"),
             5,
-            "",
+            _FALLBACK_UNIT_SPEC_FLOAT,
             "#cc00ff",
             id="warn crit None None",
         ),
@@ -113,9 +127,9 @@ def test_evaluate_cpu_utilization(
             parse_perf_data("10.172=6", config=active_config)[0],
             "check_mk-local",
             "10.172",
-            Metric(name="10.172"),
+            MetricExpression(Metric("10.172"), line_type="line"),
             6,
-            "",
+            _FALLBACK_UNIT_SPEC_FLOAT,
             "#cc00ff",
             id="None None None None",
         ),
@@ -123,9 +137,9 @@ def test_evaluate_cpu_utilization(
             [],
             "check_mk-foo",
             "97",
-            Constant(value=97),
+            MetricExpression(Constant(97), line_type="line"),
             97.0,
-            "count",
+            _FALLBACK_UNIT_SPEC_INT,
             "#000000",
             id="constant str -> int",
         ),
@@ -133,9 +147,9 @@ def test_evaluate_cpu_utilization(
             [],
             "check_mk-foo",
             97,
-            Constant(value=97),
+            MetricExpression(Constant(97), line_type="line"),
             97.0,
-            "count",
+            _FALLBACK_UNIT_SPEC_INT,
             "#000000",
             id="constant int",
         ),
@@ -143,9 +157,9 @@ def test_evaluate_cpu_utilization(
             [],
             "check_mk-foo",
             "97.0",
-            Constant(value=97.0),
+            MetricExpression(Constant(97.0), line_type="line"),
             97.0,
-            "",
+            _FALLBACK_UNIT_SPEC_FLOAT,
             "#000000",
             id="constant str -> float",
         ),
@@ -153,9 +167,9 @@ def test_evaluate_cpu_utilization(
             [],
             "check_mk-foo",
             97.0,
-            Constant(value=97.0),
+            MetricExpression(Constant(97.0), line_type="line"),
             97.0,
-            "",
+            _FALLBACK_UNIT_SPEC_FLOAT,
             "#000000",
             id="constant float",
         ),
@@ -163,7 +177,7 @@ def test_evaluate_cpu_utilization(
             [],
             "check_mk-foo",
             "97.0@bytes",
-            Constant(value=97.0, explicit_unit_id="bytes"),
+            MetricExpression(Constant(97.0), line_type="line", unit_spec="bytes"),
             97.0,
             "bytes",
             "#000000",
@@ -173,9 +187,9 @@ def test_evaluate_cpu_utilization(
             [],
             "check_mk-foo",
             "97.0#123456",
-            Constant(value=97.0, explicit_color="#123456"),
+            MetricExpression(Constant(97.0), line_type="line", color="#123456"),
             97.0,
-            "",
+            _FALLBACK_UNIT_SPEC_FLOAT,
             "#123456",
             id="constant color",
         ),
@@ -183,12 +197,18 @@ def test_evaluate_cpu_utilization(
             [PerfDataTuple(n, n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name(%)",
-            Percent(
-                percent_value=Metric(name="metric_name"),
-                base_value=MaximumOf(metric=Metric(name="metric_name")),
+            MetricExpression(
+                Percent(
+                    percent_value=Metric("metric_name"),
+                    base_value=MaximumOf(Metric("metric_name")),
+                ),
+                line_type="line",
             ),
             20.0,
-            "%",
+            ConvertibleUnitSpecification(
+                notation=DecimalNotation(symbol="%"),
+                precision=AutoPrecision(digits=2),
+            ),
             "#cc00ff",
             id="percentage",
         ),
@@ -196,9 +216,9 @@ def test_evaluate_cpu_utilization(
             [PerfDataTuple(n, n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:warn",
-            WarningOf(metric=Metric(name="metric_name")),
+            MetricExpression(WarningOf(Metric("metric_name")), line_type="line"),
             20.0,
-            "",
+            _FALLBACK_UNIT_SPEC_FLOAT,
             "#ffd000",
             id="warn",
         ),
@@ -206,12 +226,18 @@ def test_evaluate_cpu_utilization(
             [PerfDataTuple(n, n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:warn(%)",
-            Percent(
-                percent_value=WarningOf(metric=Metric(name="metric_name")),
-                base_value=MaximumOf(metric=Metric(name="metric_name")),
+            MetricExpression(
+                Percent(
+                    percent_value=WarningOf(Metric("metric_name")),
+                    base_value=MaximumOf(Metric("metric_name")),
+                ),
+                line_type="line",
             ),
             40.0,
-            "%",
+            ConvertibleUnitSpecification(
+                notation=DecimalNotation(symbol="%"),
+                precision=AutoPrecision(digits=2),
+            ),
             "#ffd000",
             id="warn percentage",
         ),
@@ -219,9 +245,9 @@ def test_evaluate_cpu_utilization(
             [PerfDataTuple(n, n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:crit",
-            CriticalOf(metric=Metric(name="metric_name")),
+            MetricExpression(CriticalOf(Metric("metric_name")), line_type="line"),
             30.0,
-            "",
+            _FALLBACK_UNIT_SPEC_FLOAT,
             "#ff3232",
             id="crit",
         ),
@@ -229,12 +255,18 @@ def test_evaluate_cpu_utilization(
             [PerfDataTuple(n, n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:crit(%)",
-            Percent(
-                percent_value=CriticalOf(metric=Metric(name="metric_name")),
-                base_value=MaximumOf(metric=Metric(name="metric_name")),
+            MetricExpression(
+                Percent(
+                    percent_value=CriticalOf(Metric("metric_name")),
+                    base_value=MaximumOf(Metric("metric_name")),
+                ),
+                line_type="line",
             ),
             60.0,
-            "%",
+            ConvertibleUnitSpecification(
+                notation=DecimalNotation(symbol="%"),
+                precision=AutoPrecision(digits=2),
+            ),
             "#ff3232",
             id="crit percentage",
         ),
@@ -242,9 +274,9 @@ def test_evaluate_cpu_utilization(
             [PerfDataTuple(n, n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:min",
-            MinimumOf(metric=Metric(name="metric_name")),
+            MetricExpression(MinimumOf(Metric("metric_name")), line_type="line"),
             0.0,
-            "",
+            _FALLBACK_UNIT_SPEC_FLOAT,
             "#808080",
             id="min",
         ),
@@ -252,12 +284,18 @@ def test_evaluate_cpu_utilization(
             [PerfDataTuple(n, n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:min(%)",
-            Percent(
-                percent_value=MinimumOf(metric=Metric(name="metric_name")),
-                base_value=MaximumOf(metric=Metric(name="metric_name")),
+            MetricExpression(
+                Percent(
+                    percent_value=MinimumOf(Metric("metric_name")),
+                    base_value=MaximumOf(Metric("metric_name")),
+                ),
+                line_type="line",
             ),
             0.0,
-            "%",
+            ConvertibleUnitSpecification(
+                notation=DecimalNotation(symbol="%"),
+                precision=AutoPrecision(digits=2),
+            ),
             "#808080",
             id="min percentage",
         ),
@@ -265,9 +303,9 @@ def test_evaluate_cpu_utilization(
             [PerfDataTuple(n, n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:max",
-            MaximumOf(metric=Metric(name="metric_name")),
+            MetricExpression(MaximumOf(Metric("metric_name")), line_type="line"),
             50.0,
-            "",
+            _FALLBACK_UNIT_SPEC_FLOAT,
             "#808080",
             id="max",
         ),
@@ -275,12 +313,18 @@ def test_evaluate_cpu_utilization(
             [PerfDataTuple(n, n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name:max(%)",
-            Percent(
-                percent_value=MaximumOf(metric=Metric(name="metric_name")),
-                base_value=MaximumOf(metric=Metric(name="metric_name")),
+            MetricExpression(
+                Percent(
+                    percent_value=MaximumOf(Metric("metric_name")),
+                    base_value=MaximumOf(Metric("metric_name")),
+                ),
+                line_type="line",
             ),
             100.0,
-            "%",
+            ConvertibleUnitSpecification(
+                notation=DecimalNotation(symbol="%"),
+                precision=AutoPrecision(digits=2),
+            ),
             "#808080",
             id="max percentage",
         ),
@@ -288,9 +332,9 @@ def test_evaluate_cpu_utilization(
             [PerfDataTuple(n, n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name.max",
-            Metric(name="metric_name", consolidation="max"),
+            MetricExpression(Metric("metric_name", "max"), line_type="line"),
             10.0,
-            "",
+            _FALLBACK_UNIT_SPEC_FLOAT,
             "#cc00ff",
             id="consolidation func name max",
         ),
@@ -298,9 +342,9 @@ def test_evaluate_cpu_utilization(
             [PerfDataTuple(n, n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name.min",
-            Metric(name="metric_name", consolidation="min"),
+            MetricExpression(Metric("metric_name", "min"), line_type="line"),
             10.0,
-            "",
+            _FALLBACK_UNIT_SPEC_FLOAT,
             "#cc00ff",
             id="consolidation func name min",
         ),
@@ -308,9 +352,9 @@ def test_evaluate_cpu_utilization(
             [PerfDataTuple(n, n, 10, "", 20, 30, 0, 50) for n in ["metric_name"]],
             "check_mk-foo",
             "metric_name.average",
-            Metric(name="metric_name", consolidation="average"),
+            MetricExpression(Metric("metric_name", "average"), line_type="line"),
             10.0,
-            "",
+            _FALLBACK_UNIT_SPEC_FLOAT,
             "#cc00ff",
             id="consolidation func name average",
         ),
@@ -321,46 +365,63 @@ def test_parse_and_evaluate_1(
     check_command: str,
     raw_expression: str,
     expected_metric_expression: MetricExpression,
-    value: float,
-    unit_name: str,
-    color: str,
+    expected_value: float,
+    expected_unit_spec: str | ConvertibleUnitSpecification,
+    expected_color: str,
 ) -> None:
     translated_metrics = translate_metrics(perf_data, check_command)
-    metric_expression = parse_expression(raw_expression, translated_metrics)
+    metric_expression = parse_legacy_expression(raw_expression, "line", "", translated_metrics)
     assert metric_expression == expected_metric_expression
-    evaluated = metric_expression.evaluate(translated_metrics)
-    assert evaluated.value == value
-    assert evaluated.color == color
-    unit_info_ = unit_info[unit_name]
-    assert evaluated.unit_info.id == unit_info_.id
-    assert evaluated.unit_info.title == unit_info_.title
-    assert evaluated.unit_info.symbol == unit_info_.symbol
-    assert evaluated.unit_info.render == unit_info_.render
-    assert evaluated.unit_info.js_render == unit_info_.js_render
-    assert evaluated.unit_info.stepping == unit_info_.stepping
-    assert evaluated.unit_info.color == unit_info_.color
-    assert evaluated.unit_info.graph_unit == unit_info_.graph_unit
-    assert evaluated.unit_info.description == unit_info_.description
-    assert evaluated.unit_info.valuespec == unit_info_.valuespec
-    assert evaluated.unit_info.perfometer_render == unit_info_.perfometer_render
-    assert evaluated.unit_info.formatter_ident == unit_info_.formatter_ident
-    assert evaluated.unit_info.conversion(123.456) == 123.456
+
+    result = metric_expression.evaluate(translated_metrics)
+    assert result.is_ok()
+    assert result.ok.value == expected_value
+    assert result.ok.color == expected_color
+
+    if isinstance(expected_unit_spec, ConvertibleUnitSpecification):
+        assert result.ok.unit_spec == expected_unit_spec
+    else:
+        assert isinstance(result.ok.unit_spec, UnitInfo)
+        unit_info_ = unit_info[expected_unit_spec]
+        assert result.ok.unit_spec.id == unit_info_.id
+        assert result.ok.unit_spec.title == unit_info_.title
+        assert result.ok.unit_spec.symbol == unit_info_.symbol
+        assert result.ok.unit_spec.render == unit_info_.render
+        assert result.ok.unit_spec.js_render == unit_info_.js_render
+        assert result.ok.unit_spec.stepping == unit_info_.stepping
+        assert result.ok.unit_spec.color == unit_info_.color
+        assert result.ok.unit_spec.graph_unit == unit_info_.graph_unit
+        assert result.ok.unit_spec.description == unit_info_.description
+        assert result.ok.unit_spec.valuespec == unit_info_.valuespec
+        assert result.ok.unit_spec.perfometer_render == unit_info_.perfometer_render
+        assert result.ok.unit_spec.conversion(123.456) == 123.456
 
 
 @pytest.mark.parametrize(
-    "perf_data, check_command, raw_expression, expected_metric_expression, value, unit_name, color",
+    [
+        "perf_data",
+        "check_command",
+        "raw_expression",
+        "expected_metric_expression",
+        "expected_value",
+        "expected_unit_spec",
+        "expected_color",
+    ],
     [
         pytest.param(
             [PerfDataTuple(n, n, len(n), "", None, None, None, None) for n in ["/", "fs_size"]],
             "check_mk-df",
             "fs_size,fs_used,-#e3fff9",
-            Difference(
-                minuend=Metric(name="fs_size"),
-                subtrahend=Metric(name="fs_used"),
-                explicit_color="#e3fff9",
+            MetricExpression(
+                Difference(minuend=Metric("fs_size"), subtrahend=Metric("fs_used")),
+                line_type="line",
+                color="#e3fff9",
             ),
             6291456,
-            "IECNotation_B_AutoPrecision_2",
+            ConvertibleUnitSpecification(
+                notation=IECNotation(symbol="B"),
+                precision=AutoPrecision(digits=2),
+            ),
             "#e3fff9",
             id="None None None None",
         ),
@@ -371,17 +432,19 @@ def test_parse_and_evaluate_2(
     check_command: str,
     raw_expression: str,
     expected_metric_expression: MetricExpression,
-    value: float,
-    unit_name: str,
-    color: str,
+    expected_value: float,
+    expected_unit_spec: ConvertibleUnitSpecification,
+    expected_color: str,
 ) -> None:
     translated_metrics = translate_metrics(perf_data, check_command)
-    metric_expression = parse_expression(raw_expression, translated_metrics)
+    metric_expression = parse_legacy_expression(raw_expression, "line", "", translated_metrics)
     assert metric_expression == expected_metric_expression
+
     result = metric_expression.evaluate(translated_metrics)
-    assert result.value == value
-    assert result.unit_info.id == unit_name
-    assert result.color == color
+    assert result.is_ok()
+    assert result.ok.value == expected_value
+    assert result.ok.unit_spec == expected_unit_spec
+    assert result.ok.color == expected_color
 
 
 @pytest.mark.parametrize(
@@ -392,7 +455,7 @@ def test_parse_and_evaluate_2(
             "check_mk-foo",
             "metric_name,100,>",
             GreaterThan(
-                left=Metric(name="metric_name"),
+                left=Metric("metric_name"),
                 right=Constant(100),
             ),
             False,
@@ -403,7 +466,7 @@ def test_parse_and_evaluate_2(
             "check_mk-foo",
             "metric_name,100,>=",
             GreaterEqualThan(
-                left=Metric(name="metric_name"),
+                left=Metric("metric_name"),
                 right=Constant(100),
             ),
             True,
@@ -414,7 +477,7 @@ def test_parse_and_evaluate_2(
             "check_mk-foo",
             "metric_name,100,<",
             LessThan(
-                left=Metric(name="metric_name"),
+                left=Metric("metric_name"),
                 right=Constant(100),
             ),
             False,
@@ -425,7 +488,7 @@ def test_parse_and_evaluate_2(
             "check_mk-foo",
             "metric_name,100,<=",
             LessEqualThan(
-                left=Metric(name="metric_name"),
+                left=Metric("metric_name"),
                 right=Constant(100),
             ),
             True,
@@ -440,8 +503,8 @@ def test_parse_and_evaluate_2(
             "check_mk-foo",
             "used,uncommitted,+,size,>",
             GreaterThan(
-                left=Sum([Metric(name="used"), Metric(name="uncommitted")]),
-                right=Metric(name="size"),
+                left=Sum([Metric("used"), Metric("uncommitted")]),
+                right=Metric("size"),
             ),
             False,
             id="conditional greater than nested",
@@ -457,20 +520,20 @@ def test_parse_and_evaluate_2(
             "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,>=",
             GreaterEqualThan(
                 left=Sum(
-                    summands=[
-                        Metric(name="delivered_notifications"),
-                        Metric(name="failed_notifications"),
+                    [
+                        Metric("delivered_notifications"),
+                        Metric("failed_notifications"),
                     ]
                 ),
                 right=Product(
-                    factors=[
+                    [
                         Sum(
-                            summands=[
-                                Metric(name="delivered_notifications"),
-                                Metric(name="failed_notifications"),
+                            [
+                                Metric("delivered_notifications"),
+                                Metric("failed_notifications"),
                             ]
                         ),
-                        Constant(value=2),
+                        Constant(2),
                     ]
                 ),
             ),
@@ -488,20 +551,20 @@ def test_parse_and_evaluate_2(
             "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,>=",
             GreaterEqualThan(
                 left=Sum(
-                    summands=[
-                        Metric(name="delivered_notifications"),
-                        Metric(name="failed_notifications"),
+                    [
+                        Metric("delivered_notifications"),
+                        Metric("failed_notifications"),
                     ]
                 ),
                 right=Product(
-                    factors=[
+                    [
                         Sum(
-                            summands=[
-                                Metric(name="delivered_notifications"),
-                                Metric(name="failed_notifications"),
+                            [
+                                Metric("delivered_notifications"),
+                                Metric("failed_notifications"),
                             ]
                         ),
-                        Constant(value=2),
+                        Constant(2),
                     ]
                 ),
             ),
@@ -519,20 +582,20 @@ def test_parse_and_evaluate_2(
             "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,>=",
             GreaterEqualThan(
                 left=Sum(
-                    summands=[
-                        Metric(name="delivered_notifications"),
-                        Metric(name="failed_notifications"),
+                    [
+                        Metric("delivered_notifications"),
+                        Metric("failed_notifications"),
                     ]
                 ),
                 right=Product(
-                    factors=[
+                    [
                         Sum(
-                            summands=[
-                                Metric(name="delivered_notifications"),
-                                Metric(name="failed_notifications"),
+                            [
+                                Metric("delivered_notifications"),
+                                Metric("failed_notifications"),
                             ]
                         ),
-                        Constant(value=2),
+                        Constant(2),
                     ]
                 ),
             ),
@@ -549,6 +612,6 @@ def test_parse_and_evaluate_conditional(
     value: bool,
 ) -> None:
     translated_metrics = translate_metrics(perf_data, check_command)
-    metric_declaration = parse_conditional_expression(raw_expression, translated_metrics)
+    metric_declaration = parse_legacy_conditional_expression(raw_expression, translated_metrics)
     assert metric_declaration == expected_conditional_metric_declaration
     assert metric_declaration.evaluate(translated_metrics) == value

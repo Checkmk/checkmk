@@ -6,14 +6,16 @@
 # pylint: disable=unused-import
 
 import time
-from collections.abc import Generator, Mapping, Sequence
+from collections.abc import Generator, Sequence
 from typing import AnyStr, NotRequired, TypedDict
 
-from cmk.base.check_api import check_levels, state_markers
+from cmk.base.check_api import check_levels
 
-from cmk.agent_based.v2 import get_average, get_rate, get_value_store, IgnoreResultsError, State
+from cmk.agent_based.v2 import get_average, get_rate, get_value_store, IgnoreResultsError
 from cmk.plugins.lib.temperature import _migrate_params
-from cmk.plugins.lib.temperature import fahrenheit_to_celsius as fahrenheit_to_celsius
+from cmk.plugins.lib.temperature import (
+    fahrenheit_to_celsius as fahrenheit_to_celsius,  # ruff: ignore[unused-import]
+)
 from cmk.plugins.lib.temperature import render_temp as render_temp
 from cmk.plugins.lib.temperature import StatusType as StatusType
 from cmk.plugins.lib.temperature import temp_unitsym as temp_unitsym
@@ -117,15 +119,17 @@ def check_temperature_determine_levels(  # pylint: disable=too-many-branches
     # minn is a min that deals with None in the way we want here.
     elif dlh == "best":
         warn, crit = maxx(usr_warn, dev_warn), maxx(usr_crit, dev_crit)
-        warn_lower, crit_lower = minn(usr_warn_lower, dev_warn_lower), minn(
-            usr_crit_lower, dev_crit_lower
+        warn_lower, crit_lower = (
+            minn(usr_warn_lower, dev_warn_lower),
+            minn(usr_crit_lower, dev_crit_lower),
         )
 
     # Use most critical of your and device's levels
     elif dlh == "worst":
         warn, crit = minn(usr_warn, dev_warn), minn(usr_crit, dev_crit)
-        warn_lower, crit_lower = maxx(usr_warn_lower, dev_warn_lower), maxx(
-            usr_crit_lower, dev_crit_lower
+        warn_lower, crit_lower = (
+            maxx(usr_warn_lower, dev_warn_lower),
+            maxx(usr_crit_lower, dev_crit_lower),
         )
 
     # Use user's levels if present, otherwise the device's

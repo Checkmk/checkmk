@@ -7,6 +7,7 @@ import re
 import pytest
 
 from tests.testlib.playwright.pom.dashboard import Dashboard
+from tests.testlib.playwright.timeouts import handle_playwright_timeouterror
 
 
 @pytest.mark.parametrize(
@@ -28,20 +29,22 @@ def test_help_menu(
     help_menu_button: str,
     url_pattern: str,
 ) -> None:
-
     browser_context = dashboard_page.page.context
+    pw_timeout_msg = (
+        f"Expected a response to URL with pattern: `{url_pattern}`.\n"
+        "None intercepted within the validation period!"
+    )
 
     with browser_context.expect_page() as new_tab_info:
         with browser_context.expect_event(
             "response", lambda response: bool(re.findall(url_pattern, response.url))
         ) as matched_response:
             getattr(dashboard_page.main_menu, help_menu_button).click()
-
-            assert matched_response.value.status in (200, 301), (
-                f"Unexpected response status code: {matched_response.value.status}, "
-                f"response url: {matched_response.value.url}"
-            )
-
+            with handle_playwright_timeouterror(pw_timeout_msg):
+                assert matched_response.value.status in (200, 301), (
+                    f"Unexpected response status code: {matched_response.value.status}, "
+                    f"response url: {matched_response.value.url}"
+                )
             new_page = new_tab_info.value
             new_page.wait_for_url(url=re.compile(url_pattern), wait_until="load")
             new_page.close()

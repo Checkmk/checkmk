@@ -112,7 +112,14 @@ setup() {
     hash -r
 
     if [ ! -d node_modules ]; then
-        npm ci
+        ARTIFACTS_BASE="https://artifacts.lan.tribe29.com"
+        export NPM_CONFIG_REGISTRY="${ARTIFACTS_BASE}/repository/npm-proxy/"
+        export NODE_OPTIONS="--dns-result-order=ipv4first",
+        npm \
+            ci \
+            --yes \
+            --unsafe-perm \
+            --audit=false
     fi
 
     SETUP_RAN=yes
@@ -137,28 +144,44 @@ run_build() {
             --output "python/${target_base}.py" \
             --target-python-version 3.12 \
             --output-model-type=dataclasses.dataclass \
+            --use-title-as-name \
             --use-double-quotes \
             --use-default \
             --use-standard-collections \
             --use-one-literal-as-default \
             --use-subclass-enum \
+            --use-title-as-name \
             --custom-file-header-path header_py.txt \
+            --use-title-as-name \
             --custom-formatters "utils.format"
         npm run json2ts "${file}" -o "typescript/${target_base}.ts"
     done
 
-    echo "Copying vue type defs..."
-    cp python/vue_formspec_components.py ../../cmk/gui/form_specs/vue/shared_type_defs.py
-    cp typescript/vue_formspec_components.ts ../../packages/cmk-frontend-vue/src/form/components/vue_formspec_components.ts
+    SOURCE_PYTHON=python/vue_formspec_components.py
+    SOURCE_TYPESCRIPT=typescript/vue_formspec_components.ts
+    # you should also modify uildscripts/scripts/stages.yml if you change the destination!
+    DESTINATION_PYTHON=../../cmk/gui/form_specs/vue/shared_type_defs.py
+    DESTINATION_TYPESCRIPT=../../packages/cmk-frontend-vue/src/form/components/vue_formspec_components.ts
+
+    if [ "$CI" == "true" ]; then
+        # this is a hack, we should create another "copy" or "diff" target
+        diff $SOURCE_PYTHON $DESTINATION_PYTHON
+        diff $SOURCE_TYPESCRIPT $DESTINATION_TYPESCRIPT
+    else
+        echo "Copying vue type defs..."
+        cp $SOURCE_PYTHON $DESTINATION_PYTHON
+        cp $SOURCE_TYPESCRIPT $DESTINATION_TYPESCRIPT
+    fi
+
     echo "Done."
 }
 
 run_check_format() {
-    echo "TODO..."
+    npm run prettier -- -c source/
 }
 
 run_format() {
-    echo "TODO..."
+    npm run prettier -- -w source/
 }
 
 main() {

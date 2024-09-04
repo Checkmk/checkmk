@@ -6,7 +6,13 @@
 import traceback
 from pathlib import Path
 
+from dateutil.relativedelta import relativedelta
+
 from livestatus import SiteConfiguration, SiteId
+
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
 
 from cmk.utils import paths
 from cmk.utils.certs import RootCA, save_single_cert, save_single_key
@@ -16,10 +22,7 @@ from cmk.gui.i18n import _
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import omd_site
-from cmk.crypto.certificate import Certificate
+from cmk.crypto.certificate import Certificate, CertificatePEM
 from cmk.crypto.keys import PrivateKey
 from cmk.messaging import (
     BrokerCertificates,
@@ -34,23 +37,24 @@ from cmk.messaging import (
 
 def site_cert(
     cert_path: Path, key_path: Path, site_id: SiteId, ca: RootCA
-) -> tuple[Certificate, PrivateKey] | None:
-    # if public key is already present,
-    # I assume I already created everything for this site in the past
-    if not cert_path.exists():
-        cert, key = ca.issue_new_certificate(
-            common_name=site_id,
-        )
+) -> tuple[Certificate, PrivateKey]:
+    cert, key = ca.issue_new_certificate(
+        common_name=site_id,
+        organization=f"Checkmk Site {omd_site()}",
+        expiry=relativedelta(years=2),
+        key_size=4096,
+    )
 
-        save_single_cert(cert_path, cert)
-        if omd_site() == site_id:
-            save_single_key(key_path, key)
-        return cert, key
+    save_single_cert(cert_path, cert)
+    # just save private key for local site
+    # no need to save locally here for remote sites
+    # (will be done by the automation)
+    if omd_site() == site_id:
+        save_single_key(key_path, key)
+    return cert, key
 
-    return None
 
-
-def _load_create_site_cert(site_id: SiteId, ca: RootCA) -> tuple[Certificate, PrivateKey] | None:
+def _load_create_site_cert(site_id: SiteId, ca: RootCA) -> tuple[Certificate, PrivateKey]:
     cert_path = multisite_cert_file(paths.omd_root, site_id)
     key_path = multisite_key_file(paths.omd_root, site_id)
     return site_cert(cert_path, key_path, site_id, ca)
@@ -59,41 +63,43 @@ def _load_create_site_cert(site_id: SiteId, ca: RootCA) -> tuple[Certificate, Pr
 def generate_local_broker_ca() -> RootCA:
     return RootCA.load_or_create(
         multisite_cacert_file(paths.omd_root),
-        "Central site CA",
+        "Message broker CA",
     )
+
+
+def _cert_generated(site_id: SiteId) -> bool:
+    return multisite_cert_file(paths.omd_root, site_id).exists()
 
 
 def remote_broker_certificates(
     central_site_ca: RootCA, site_id: SiteId, site: SiteConfiguration
 ) -> BrokerCertificates | None:
-
-    sync_cas = [central_site_ca.certificate.dump_pem().bytes]
-
-    if (cert_key := _load_create_site_cert(site_id, central_site_ca)) is None:
+    # no need to do anything if the public key is already present
+    if _cert_generated(site_id):
         return None
 
+    cert_key = _load_create_site_cert(site_id, central_site_ca)
     return BrokerCertificates(
         key=cert_key[1].dump_pem(None).bytes,
         cert=cert_key[0].dump_pem().bytes,
-        cas=sync_cas,
+        central_ca=central_site_ca.certificate.dump_pem().bytes,
     )
 
 
 def generate_remote_broker_certificate(
     central_site_ca: RootCA, site_id: SiteId, site: SiteConfiguration
 ) -> bool:
-
     if (broker_certificates := remote_broker_certificates(central_site_ca, site_id, site)) is None:
         return False
 
-    do_remote_automation(
+    res = do_remote_automation(
         site,
         "store-broker-certs",
         [("certificates", broker_certificates.model_dump_json())],
         timeout=60,
     )
 
-    return True
+    return res if isinstance(res, bool) else False
 
 
 def dump_central_site_broker_certificates() -> None:
@@ -112,23 +118,30 @@ def dump_central_site_broker_certificates() -> None:
 
 
 class AutomationStoreBrokerCertificates(AutomationCommand):
-    def command_name(self):
+    def command_name(self) -> str:
         return "store-broker-certs"
 
-    def get_request(self):
+    def get_request(self) -> BrokerCertificates:
         req = _request.get_str_input_mandatory("certificates")
         return BrokerCertificates.model_validate_json(req)
 
-    def execute(self, api_request):
-
+    def execute(self, api_request: BrokerCertificates) -> bool:
         if not api_request:
             raise MKGeneralException(_("Invalid generate-broker-certs: no certificates received."))
 
         try:
-            store.save_bytes_to_file(key_file(paths.omd_root), api_request.key)
+            ca_bytes = api_request.central_ca
+            if api_request.customer_ca:
+                ca_bytes += api_request.customer_ca
+                ca = Certificate.load_pem(CertificatePEM(api_request.customer_ca))
+            else:
+                ca = Certificate.load_pem(CertificatePEM(api_request.central_ca))
+            Certificate.load_pem(CertificatePEM(api_request.cert)).verify_is_signed_by(ca)
+
+            store.save_bytes_to_file(cacert_file(paths.omd_root), ca_bytes)
             store.save_bytes_to_file(cert_file(paths.omd_root), api_request.cert)
-            store.save_bytes_to_file(cacert_file(paths.omd_root), b"".join(api_request.cas))
-        except:
+            store.save_bytes_to_file(key_file(paths.omd_root), api_request.key)
+        except Exception:
             raise MKGeneralException(
                 _("Failed to save broker certificates: %s") % traceback.format_exc()
             )

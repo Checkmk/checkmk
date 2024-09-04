@@ -14,7 +14,7 @@ const props = defineProps<{
   backendValidation: ValidationMessages
 }>()
 
-const validation = ref<ValidationMessages>([])
+const validation = ref<Array<string>>([])
 const elementValidation = ref<ValidationMessages>([])
 
 watch(
@@ -24,7 +24,7 @@ watch(
     elementValidation.value = []
     newValidation.forEach((msg) => {
       if (msg.location.length === 0) {
-        validation.value.push(msg)
+        validation.value.push(msg.message)
         return
       }
       elementValidation.value.push({
@@ -68,7 +68,7 @@ const value = computed({
     validation.value = []
     const newValue: [string, unknown] = [value, currentValues[value]]
     validateValue(value, props.spec.validators!).forEach((error) => {
-      validation.value = [{ message: error, location: [''], invalid_value: value }]
+      validation.value = [error]
     })
     data.value = newValue
   }
@@ -94,7 +94,7 @@ const activeElement = computed((): ActiveElement | null => {
 </script>
 
 <template>
-  <div>
+  <div class="choice">
     <select :id="$componentId" v-model="value">
       <option v-if="activeElement == null" disabled selected hidden value="">
         {{ props.spec.input_hint }}
@@ -107,6 +107,7 @@ const activeElement = computed((): ActiveElement | null => {
   </div>
   <template v-if="activeElement != null">
     <FormEdit
+      :key="data[0]"
       v-model:data="data[1]"
       :spec="activeElement.spec"
       :backend-validation="elementValidation"
@@ -114,3 +115,10 @@ const activeElement = computed((): ActiveElement | null => {
     <FormValidation :validation="validation"></FormValidation>
   </template>
 </template>
+
+<style scoped>
+div.choice {
+  margin-bottom: 5px;
+  margin-right: 5px;
+}
+</style>

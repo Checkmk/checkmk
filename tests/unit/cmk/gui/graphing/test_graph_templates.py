@@ -26,13 +26,15 @@ from cmk.gui.graphing._expression import (
     Maximum,
     MaximumOf,
     Metric,
+    MetricExpression,
     Minimum,
     MinimumOf,
     Product,
     Sum,
     WarningOf,
 )
-from cmk.gui.graphing._from_api import metrics_from_api
+from cmk.gui.graphing._formatter import AutoPrecision
+from cmk.gui.graphing._from_api import metrics_from_api, RegisteredMetric
 from cmk.gui.graphing._graph_specification import (
     HorizontalRule,
     MetricOpOperator,
@@ -42,23 +44,21 @@ from cmk.gui.graphing._graph_templates import (
     _compute_predictive_metrics,
     _graph_template_from_api_bidirectional,
     _graph_template_from_api_graph,
-    _graph_template_from_legacy,
     _graph_templates_from_plugins,
     _matching_graph_templates,
     _parse_graph_template,
     get_graph_templates,
     GraphTemplate,
-    MetricDefinition,
     MinimalGraphTemplateRange,
-    ScalarDefinition,
 )
-from cmk.gui.graphing._legacy import RawGraphTemplate, UnitInfo
+from cmk.gui.graphing._legacy import RawGraphTemplate
 from cmk.gui.graphing._translated_metrics import (
     Original,
     parse_perf_data,
     translate_metrics,
     TranslatedMetric,
 )
+from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 
 from cmk.graphing.v1 import graphs as graphs_api
@@ -194,7 +194,7 @@ def test__replace_expressions_missing_scalars() -> None:
             [
                 HorizontalRule(
                     value=7.0,
-                    rendered_value="7.00",
+                    rendered_value="7",
                     color="#ffd000",
                     title="Warning",
                 ),
@@ -206,7 +206,7 @@ def test__replace_expressions_missing_scalars() -> None:
                 ),
                 HorizontalRule(
                     value=-2.0,
-                    rendered_value="-2.00",
+                    rendered_value="-2",
                     color="#ffd000",
                     title="Warning output",
                 ),
@@ -223,16 +223,19 @@ def test_horizontal_rules_from_thresholds(
     assert (
         gt._horizontal_rules_from_thresholds(
             [
-                ScalarDefinition(
-                    expression=WarningOf(Metric("one")),
+                MetricExpression(
+                    WarningOf(Metric("one")),
+                    line_type="line",
                     title="Warning",
                 ),
-                ScalarDefinition(
-                    expression=CriticalOf(Metric("power")),
+                MetricExpression(
+                    CriticalOf(Metric("power")),
+                    line_type="line",
                     title="Critical power",
                 ),
-                ScalarDefinition(
-                    expression=Product([WarningOf(Metric("output")), Constant(-1)]),
+                MetricExpression(
+                    Product([WarningOf(Metric("output")), Constant(-1)]),
+                    line_type="line",
                     title="Warning output",
                 ),
             ],
@@ -246,14 +249,12 @@ def test_duplicate_graph_templates(request_context: None) -> None:
     idents_by_metrics: dict[tuple[str, ...], list[str]] = {}
     for id_, template in _graph_templates_from_plugins():
         parsed = _parse_graph_template(id_, template)
-        expressions = [m.expression for m in parsed.metrics] + [
-            s.expression for s in parsed.scalars
-        ]
+        expressions = [m.base for m in parsed.metrics] + [s.base for s in parsed.scalars]
         if parsed.range:
             expressions.extend((parsed.range.min, parsed.range.max))
 
         idents_by_metrics.setdefault(
-            tuple(sorted(m.name for e in expressions for m in e.metrics())), []
+            tuple(sorted(n for e in expressions for n in e.metric_names())), []
         ).append(parsed.id)
 
     assert {tuple(idents) for idents in idents_by_metrics.values() if len(idents) >= 2} == {
@@ -273,22 +274,22 @@ def test_graph_template_with_layered_areas(request_context: None) -> None:
     areas_by_ident: dict[str, _GraphTemplateArea] = {}
     for id_, template in _graph_templates_from_plugins():
         parsed = _parse_graph_template(id_, template)
-        for metric in parsed.metrics:
-            if metric.line_type == "area":
+        for metric_expression in parsed.metrics:
+            if metric_expression.line_type == "area":
                 areas_by_ident.setdefault(parsed.id, _GraphTemplateArea()).pos.append(
-                    metric.line_type
+                    metric_expression.line_type
                 )
-            elif metric.line_type == "stack":
+            elif metric_expression.line_type == "stack":
                 areas_by_ident.setdefault(parsed.id, _GraphTemplateArea()).pos.append(
-                    metric.line_type
+                    metric_expression.line_type
                 )
-            elif metric.line_type == "-area":
+            elif metric_expression.line_type == "-area":
                 areas_by_ident.setdefault(parsed.id, _GraphTemplateArea()).neg.append(
-                    metric.line_type
+                    metric_expression.line_type
                 )
-            elif metric.line_type == "-stack":
+            elif metric_expression.line_type == "-stack":
                 areas_by_ident.setdefault(parsed.id, _GraphTemplateArea()).neg.append(
-                    metric.line_type
+                    metric_expression.line_type
                 )
 
     templates_with_more_than_one_layer = [
@@ -361,13 +362,9 @@ def test__to_metric_operation(
                     scalar={},
                     auto_graph=False,
                     title="Title",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#111111",
                 ),
@@ -445,81 +442,80 @@ COLOR_HEX = "#1e90ff"
                 range=None,
                 omit_zero_metrics=False,
                 metrics=[
-                    MetricDefinition(
+                    MetricExpression(
                         Metric("metric-name-1"),
-                        "stack",
-                        "Title",
+                        line_type="stack",
+                        title="Title",
                     ),
-                    MetricDefinition(
-                        Constant(
-                            value=10,
-                            explicit_unit_id="DecimalNotation__AutoPrecision_2",
-                            explicit_color=COLOR_HEX,
+                    MetricExpression(
+                        Constant(value=10),
+                        line_type="stack",
+                        title="Constant",
+                        unit_spec=ConvertibleUnitSpecification(
+                            notation=DecimalNotation(symbol=""),
+                            precision=AutoPrecision(digits=2),
                         ),
-                        "stack",
-                        "Constant",
+                        color=COLOR_HEX,
                     ),
-                    MetricDefinition(
+                    MetricExpression(
                         WarningOf(Metric("metric-name-2")),
-                        "stack",
-                        "Warning of Title",
+                        line_type="stack",
+                        title="Warning of Title",
                     ),
-                    MetricDefinition(
+                    MetricExpression(
                         CriticalOf(Metric("metric-name-3")),
-                        "stack",
-                        "Critical of Title",
+                        line_type="stack",
+                        title="Critical of Title",
                     ),
-                    MetricDefinition(
-                        MinimumOf(
-                            Metric("metric-name-4"),
-                            explicit_color=COLOR_HEX,
+                    MetricExpression(
+                        MinimumOf(Metric("metric-name-4")),
+                        line_type="stack",
+                        title="Title",
+                        color=COLOR_HEX,
+                    ),
+                    MetricExpression(
+                        MaximumOf(Metric("metric-name-5")),
+                        line_type="stack",
+                        title="Title",
+                        color=COLOR_HEX,
+                    ),
+                    MetricExpression(
+                        Sum([Metric("metric-name-6")]),
+                        line_type="stack",
+                        title="Sum",
+                        color=COLOR_HEX,
+                    ),
+                    MetricExpression(
+                        Product([Metric("metric-name-7")]),
+                        line_type="stack",
+                        title="Product",
+                        unit_spec=ConvertibleUnitSpecification(
+                            notation=DecimalNotation(symbol=""),
+                            precision=AutoPrecision(digits=2),
                         ),
-                        "stack",
-                        "Title",
+                        color=COLOR_HEX,
                     ),
-                    MetricDefinition(
-                        MaximumOf(
-                            Metric("metric-name-5"),
-                            explicit_color=COLOR_HEX,
-                        ),
-                        "stack",
-                        "Title",
-                    ),
-                    MetricDefinition(
-                        Sum(
-                            [Metric("metric-name-6")],
-                            explicit_color=COLOR_HEX,
-                        ),
-                        "stack",
-                        "Sum",
-                    ),
-                    MetricDefinition(
-                        Product(
-                            [Metric("metric-name-7")],
-                            explicit_unit_id="DecimalNotation__AutoPrecision_2",
-                            explicit_color=COLOR_HEX,
-                        ),
-                        "stack",
-                        "Product",
-                    ),
-                    MetricDefinition(
+                    MetricExpression(
                         Difference(
                             minuend=Metric("metric-name-7"),
                             subtrahend=Metric("metric-name-8"),
-                            explicit_color=COLOR_HEX,
                         ),
-                        "stack",
-                        "Difference",
+                        line_type="stack",
+                        title="Difference",
+                        color=COLOR_HEX,
                     ),
-                    MetricDefinition(
+                    MetricExpression(
                         Fraction(
                             dividend=Metric("metric-name-9"),
                             divisor=Metric("metric-name-10"),
-                            explicit_unit_id="DecimalNotation__AutoPrecision_2",
-                            explicit_color=COLOR_HEX,
                         ),
-                        "stack",
-                        "Fraction",
+                        line_type="stack",
+                        title="Fraction",
+                        unit_spec=ConvertibleUnitSpecification(
+                            notation=DecimalNotation(symbol=""),
+                            precision=AutoPrecision(digits=2),
+                        ),
+                        color=COLOR_HEX,
                     ),
                 ],
             ),
@@ -578,27 +574,27 @@ COLOR_HEX = "#1e90ff"
                 id="name",
                 title="Title",
                 scalars=[
-                    ScalarDefinition(
+                    MetricExpression(
                         WarningOf(Metric("metric-name-2")),
-                        "Warning of Title",
+                        line_type="line",
+                        title="Warning of Title",
                     ),
-                    ScalarDefinition(
+                    MetricExpression(
                         CriticalOf(Metric("metric-name-3")),
-                        "Critical of Title",
+                        line_type="line",
+                        title="Critical of Title",
                     ),
-                    ScalarDefinition(
-                        MinimumOf(
-                            Metric("metric-name-4"),
-                            explicit_color=COLOR_HEX,
-                        ),
-                        "Title",
+                    MetricExpression(
+                        MinimumOf(Metric("metric-name-4")),
+                        line_type="line",
+                        title="Title",
+                        color=COLOR_HEX,
                     ),
-                    ScalarDefinition(
-                        MaximumOf(
-                            Metric("metric-name-5"),
-                            explicit_color=COLOR_HEX,
-                        ),
-                        "Title",
+                    MetricExpression(
+                        MaximumOf(Metric("metric-name-5")),
+                        line_type="line",
+                        title="Title",
+                        color=COLOR_HEX,
                     ),
                 ],
                 conflicting_metrics=(),
@@ -607,55 +603,58 @@ COLOR_HEX = "#1e90ff"
                 range=None,
                 omit_zero_metrics=False,
                 metrics=[
-                    MetricDefinition(
+                    MetricExpression(
                         Metric("metric-name-1"),
-                        "line",
-                        "Title",
+                        line_type="line",
+                        title="Title",
                     ),
-                    MetricDefinition(
-                        Constant(
-                            value=10,
-                            explicit_unit_id="DecimalNotation__AutoPrecision_2",
-                            explicit_color=COLOR_HEX,
+                    MetricExpression(
+                        Constant(value=10),
+                        line_type="line",
+                        title="Constant",
+                        unit_spec=ConvertibleUnitSpecification(
+                            notation=DecimalNotation(symbol=""),
+                            precision=AutoPrecision(digits=2),
                         ),
-                        "line",
-                        "Constant",
+                        color=COLOR_HEX,
                     ),
-                    MetricDefinition(
-                        Sum(
-                            [Metric("metric-name-6")],
-                            explicit_color=COLOR_HEX,
+                    MetricExpression(
+                        Sum([Metric("metric-name-6")]),
+                        line_type="line",
+                        title="Sum",
+                        color=COLOR_HEX,
+                    ),
+                    MetricExpression(
+                        Product([Metric("metric-name-7")]),
+                        line_type="line",
+                        title="Product",
+                        unit_spec=ConvertibleUnitSpecification(
+                            notation=DecimalNotation(symbol=""),
+                            precision=AutoPrecision(digits=2),
                         ),
-                        "line",
-                        "Sum",
+                        color=COLOR_HEX,
                     ),
-                    MetricDefinition(
-                        Product(
-                            [Metric("metric-name-7")],
-                            explicit_unit_id="DecimalNotation__AutoPrecision_2",
-                            explicit_color=COLOR_HEX,
-                        ),
-                        "line",
-                        "Product",
-                    ),
-                    MetricDefinition(
+                    MetricExpression(
                         Difference(
                             minuend=Metric("metric-name-7"),
                             subtrahend=Metric("metric-name-8"),
-                            explicit_color=COLOR_HEX,
                         ),
-                        "line",
-                        "Difference",
+                        line_type="line",
+                        title="Difference",
+                        color=COLOR_HEX,
                     ),
-                    MetricDefinition(
+                    MetricExpression(
                         Fraction(
                             dividend=Metric("metric-name-9"),
                             divisor=Metric("metric-name-10"),
-                            explicit_unit_id="DecimalNotation__AutoPrecision_2",
-                            explicit_color=COLOR_HEX,
                         ),
-                        "line",
-                        "Fraction",
+                        line_type="line",
+                        title="Fraction",
+                        unit_spec=ConvertibleUnitSpecification(
+                            notation=DecimalNotation(symbol=""),
+                            precision=AutoPrecision(digits=2),
+                        ),
+                        color=COLOR_HEX,
                     ),
                 ],
             ),
@@ -678,7 +677,7 @@ COLOR_HEX = "#1e90ff"
                 optional_metrics=(),
                 consolidation_function=None,
                 omit_zero_metrics=False,
-                metrics=[MetricDefinition(Metric("metric-name"), "line", "Title")],
+                metrics=[MetricExpression(Metric("metric-name"), line_type="line", title="Title")],
             ),
             id="explicit-range",
         ),
@@ -700,7 +699,7 @@ COLOR_HEX = "#1e90ff"
                 optional_metrics=["metric-name-opt"],
                 consolidation_function=None,
                 omit_zero_metrics=False,
-                metrics=[MetricDefinition(Metric("metric-name"), "line", "Title")],
+                metrics=[MetricExpression(Metric("metric-name"), line_type="line", title="Title")],
             ),
             id="optional-conflicting",
         ),
@@ -711,11 +710,14 @@ def test__graph_template_from_api_graph(
 ) -> None:
     for r in raw_metric_names:
         metrics_from_api.register(
-            metrics_api.Metric(
+            RegisteredMetric(
                 name=r,
-                title=Title("Title"),
-                unit=metrics_api.Unit(metrics_api.DecimalNotation("")),
-                color=metrics_api.Color.BLUE,
+                title_localizer=lambda _: "Title",
+                unit_spec=ConvertibleUnitSpecification(
+                    notation=DecimalNotation(symbol=""),
+                    precision=AutoPrecision(digits=2),
+                ),
+                color="#000000",
             )
         )
     assert _graph_template_from_api_graph(graph.name, graph) == expected_template
@@ -776,37 +778,49 @@ def test__graph_template_from_api_graph(
                 title="Title",
                 range=None,
                 scalars=[
-                    ScalarDefinition(
+                    MetricExpression(
                         WarningOf(Metric("metric-name-l3")),
-                        "Warning of Title",
+                        line_type="-line",
+                        title="Warning of Title",
                     ),
-                    ScalarDefinition(
+                    MetricExpression(
                         CriticalOf(Metric("metric-name-l4")),
-                        "Critical of Title",
+                        line_type="-line",
+                        title="Critical of Title",
                     ),
-                    ScalarDefinition(
-                        MinimumOf(Metric("metric-name-l5"), explicit_color=COLOR_HEX),
-                        "Title",
+                    MetricExpression(
+                        MinimumOf(Metric("metric-name-l5")),
+                        line_type="-line",
+                        title="Title",
+                        color=COLOR_HEX,
                     ),
-                    ScalarDefinition(
-                        MaximumOf(Metric("metric-name-l6"), explicit_color=COLOR_HEX),
-                        "Title",
+                    MetricExpression(
+                        MaximumOf(Metric("metric-name-l6")),
+                        line_type="-line",
+                        title="Title",
+                        color=COLOR_HEX,
                     ),
-                    ScalarDefinition(
+                    MetricExpression(
                         WarningOf(Metric("metric-name-u3")),
-                        "Warning of Title",
+                        line_type="line",
+                        title="Warning of Title",
                     ),
-                    ScalarDefinition(
+                    MetricExpression(
                         CriticalOf(Metric("metric-name-u4")),
-                        "Critical of Title",
+                        line_type="line",
+                        title="Critical of Title",
                     ),
-                    ScalarDefinition(
-                        MinimumOf(Metric("metric-name-u5"), explicit_color=COLOR_HEX),
-                        "Title",
+                    MetricExpression(
+                        MinimumOf(Metric("metric-name-u5")),
+                        line_type="line",
+                        title="Title",
+                        color=COLOR_HEX,
                     ),
-                    ScalarDefinition(
-                        MaximumOf(Metric("metric-name-u6"), explicit_color=COLOR_HEX),
-                        "Title",
+                    MetricExpression(
+                        MaximumOf(Metric("metric-name-u6")),
+                        line_type="line",
+                        title="Title",
+                        color=COLOR_HEX,
                     ),
                 ],
                 conflicting_metrics=["metric-name-confl-l", "metric-name-confl-u"],
@@ -814,10 +828,10 @@ def test__graph_template_from_api_graph(
                 consolidation_function=None,
                 omit_zero_metrics=False,
                 metrics=[
-                    MetricDefinition(Metric("metric-name-l1"), "-stack", "Title"),
-                    MetricDefinition(Metric("metric-name-u1"), "stack", "Title"),
-                    MetricDefinition(Metric("metric-name-l2"), "-line", "Title"),
-                    MetricDefinition(Metric("metric-name-u2"), "line", "Title"),
+                    MetricExpression(Metric("metric-name-l1"), line_type="-stack", title="Title"),
+                    MetricExpression(Metric("metric-name-u1"), line_type="stack", title="Title"),
+                    MetricExpression(Metric("metric-name-l2"), line_type="-line", title="Title"),
+                    MetricExpression(Metric("metric-name-u2"), line_type="line", title="Title"),
                 ],
             ),
             id="lower-upper",
@@ -853,8 +867,8 @@ def test__graph_template_from_api_graph(
                 consolidation_function=None,
                 omit_zero_metrics=False,
                 metrics=[
-                    MetricDefinition(Metric("metric-name-l"), "-line", "Title"),
-                    MetricDefinition(Metric("metric-name-u"), "line", "Title"),
+                    MetricExpression(Metric("metric-name-l"), line_type="-line", title="Title"),
+                    MetricExpression(Metric("metric-name-u"), line_type="line", title="Title"),
                 ],
             ),
             id="range-both",
@@ -889,8 +903,8 @@ def test__graph_template_from_api_graph(
                 consolidation_function=None,
                 omit_zero_metrics=False,
                 metrics=[
-                    MetricDefinition(Metric("metric-name-l"), "-line", "Title"),
-                    MetricDefinition(Metric("metric-name-u"), "line", "Title"),
+                    MetricExpression(Metric("metric-name-l"), line_type="-line", title="Title"),
+                    MetricExpression(Metric("metric-name-u"), line_type="line", title="Title"),
                 ],
             ),
             id="range-only-lower",
@@ -925,8 +939,8 @@ def test__graph_template_from_api_graph(
                 consolidation_function=None,
                 omit_zero_metrics=False,
                 metrics=[
-                    MetricDefinition(Metric("metric-name-l"), "-line", "Title"),
-                    MetricDefinition(Metric("metric-name-u"), "line", "Title"),
+                    MetricExpression(Metric("metric-name-l"), line_type="-line", title="Title"),
+                    MetricExpression(Metric("metric-name-u"), line_type="line", title="Title"),
                 ],
             ),
             id="range-only-upper",
@@ -940,11 +954,14 @@ def test__graph_template_from_api_bidirectional(
 ) -> None:
     for r in raw_metric_names:
         metrics_from_api.register(
-            metrics_api.Metric(
+            RegisteredMetric(
                 name=r,
-                title=Title("Title"),
-                unit=metrics_api.Unit(metrics_api.DecimalNotation("")),
-                color=metrics_api.Color.BLUE,
+                title_localizer=lambda _: "Title",
+                unit_spec=ConvertibleUnitSpecification(
+                    notation=DecimalNotation(symbol=""),
+                    precision=AutoPrecision(digits=2),
+                ),
+                color="#000000",
             )
         )
     assert _graph_template_from_api_bidirectional(graph.name, graph) == expected_template
@@ -962,16 +979,19 @@ def test__graph_template_from_api_bidirectional(
                 id="ident",
                 title="",
                 scalars=[
-                    ScalarDefinition(
-                        expression=Metric("metric"),
+                    MetricExpression(
+                        Metric("metric"),
+                        line_type="line",
                         title="metric",
                     ),
-                    ScalarDefinition(
-                        expression=WarningOf(Metric("metric")),
+                    MetricExpression(
+                        WarningOf(Metric("metric")),
+                        line_type="line",
                         title="Warning",
                     ),
-                    ScalarDefinition(
-                        expression=CriticalOf(Metric("metric")),
+                    MetricExpression(
+                        CriticalOf(Metric("metric")),
+                        line_type="line",
                         title="Critical",
                     ),
                 ],
@@ -993,16 +1013,19 @@ def test__graph_template_from_api_bidirectional(
                 id="ident",
                 title="",
                 scalars=[
-                    ScalarDefinition(
-                        expression=Metric("metric"),
+                    MetricExpression(
+                        Metric("metric"),
+                        line_type="line",
                         title="Title",
                     ),
-                    ScalarDefinition(
-                        expression=WarningOf(Metric("metric")),
+                    MetricExpression(
+                        WarningOf(Metric("metric")),
+                        line_type="line",
                         title="Warn",
                     ),
-                    ScalarDefinition(
-                        expression=CriticalOf(Metric("metric")),
+                    MetricExpression(
+                        CriticalOf(Metric("metric")),
+                        line_type="line",
                         title="Crit",
                     ),
                 ],
@@ -1029,10 +1052,7 @@ def test__graph_template_from_api_bidirectional(
                 range=None,
                 omit_zero_metrics=False,
                 metrics=[
-                    MetricDefinition(
-                        expression=Metric("metric"),
-                        line_type="line",
-                    ),
+                    MetricExpression(Metric("metric"), line_type="line"),
                 ],
             ),
             id="metrics 2-er tuple",
@@ -1051,8 +1071,8 @@ def test__graph_template_from_api_bidirectional(
                 range=None,
                 omit_zero_metrics=False,
                 metrics=[
-                    MetricDefinition(
-                        expression=Metric("metric"),
+                    MetricExpression(
+                        Metric("metric"),
                         line_type="line",
                         title="Title",
                     ),
@@ -1062,11 +1082,11 @@ def test__graph_template_from_api_bidirectional(
         ),
     ],
 )
-def test__graph_template_from_legacy(
+def test__parse_graph_template(
     raw: RawGraphTemplate,
     expected_graph_template: GraphTemplate,
 ) -> None:
-    assert _graph_template_from_legacy("ident", raw) == expected_graph_template
+    assert _parse_graph_template("ident", raw) == expected_graph_template
 
 
 @pytest.mark.parametrize(
@@ -1160,7 +1180,7 @@ def test_get_graph_templates_2(
 
 
 @pytest.mark.parametrize(
-    "metric_definitions, expected_predictive_metric_definitions",
+    "metric_expressions, expected_predictive_metric_expressions",
     [
         pytest.param(
             [],
@@ -1168,70 +1188,58 @@ def test_get_graph_templates_2(
             id="empty",
         ),
         pytest.param(
-            [MetricDefinition(expression=Metric(name="metric_name"), line_type="line")],
+            [MetricExpression(Metric("metric_name"), line_type="line")],
             [
-                MetricDefinition(expression=Metric(name="predict_metric_name"), line_type="line"),
-                MetricDefinition(
-                    expression=Metric(name="predict_lower_metric_name"), line_type="line"
-                ),
+                MetricExpression(Metric("predict_metric_name"), line_type="line"),
+                MetricExpression(Metric("predict_lower_metric_name"), line_type="line"),
             ],
             id="line",
         ),
         pytest.param(
-            [MetricDefinition(expression=Metric(name="metric_name"), line_type="area")],
+            [MetricExpression(Metric("metric_name"), line_type="area")],
             [
-                MetricDefinition(expression=Metric(name="predict_metric_name"), line_type="line"),
-                MetricDefinition(
-                    expression=Metric(name="predict_lower_metric_name"), line_type="line"
-                ),
+                MetricExpression(Metric("predict_metric_name"), line_type="line"),
+                MetricExpression(Metric("predict_lower_metric_name"), line_type="line"),
             ],
             id="area",
         ),
         pytest.param(
-            [MetricDefinition(expression=Metric(name="metric_name"), line_type="stack")],
+            [MetricExpression(Metric("metric_name"), line_type="stack")],
             [
-                MetricDefinition(expression=Metric(name="predict_metric_name"), line_type="line"),
-                MetricDefinition(
-                    expression=Metric(name="predict_lower_metric_name"), line_type="line"
-                ),
+                MetricExpression(Metric("predict_metric_name"), line_type="line"),
+                MetricExpression(Metric("predict_lower_metric_name"), line_type="line"),
             ],
             id="stack",
         ),
         pytest.param(
-            [MetricDefinition(expression=Metric(name="metric_name"), line_type="-line")],
+            [MetricExpression(Metric("metric_name"), line_type="-line")],
             [
-                MetricDefinition(expression=Metric(name="predict_metric_name"), line_type="-line"),
-                MetricDefinition(
-                    expression=Metric(name="predict_lower_metric_name"), line_type="-line"
-                ),
+                MetricExpression(Metric("predict_metric_name"), line_type="-line"),
+                MetricExpression(Metric("predict_lower_metric_name"), line_type="-line"),
             ],
             id="-line",
         ),
         pytest.param(
-            [MetricDefinition(expression=Metric(name="metric_name"), line_type="-area")],
+            [MetricExpression(Metric("metric_name"), line_type="-area")],
             [
-                MetricDefinition(expression=Metric(name="predict_metric_name"), line_type="-line"),
-                MetricDefinition(
-                    expression=Metric(name="predict_lower_metric_name"), line_type="-line"
-                ),
+                MetricExpression(Metric("predict_metric_name"), line_type="-line"),
+                MetricExpression(Metric("predict_lower_metric_name"), line_type="-line"),
             ],
             id="-area",
         ),
         pytest.param(
-            [MetricDefinition(expression=Metric(name="metric_name"), line_type="-stack")],
+            [MetricExpression(Metric("metric_name"), line_type="-stack")],
             [
-                MetricDefinition(expression=Metric(name="predict_metric_name"), line_type="-line"),
-                MetricDefinition(
-                    expression=Metric(name="predict_lower_metric_name"), line_type="-line"
-                ),
+                MetricExpression(Metric("predict_metric_name"), line_type="-line"),
+                MetricExpression(Metric("predict_lower_metric_name"), line_type="-line"),
             ],
             id="-stack",
         ),
     ],
 )
 def test__compute_predictive_metrics(
-    metric_definitions: Sequence[MetricDefinition],
-    expected_predictive_metric_definitions: Sequence[MetricDefinition],
+    metric_expressions: Sequence[MetricExpression],
+    expected_predictive_metric_expressions: Sequence[MetricExpression],
 ) -> None:
     assert (
         list(
@@ -1243,13 +1251,9 @@ def test__compute_predictive_metrics(
                         scalar={},
                         auto_graph=True,
                         title="",
-                        unit_info=UnitInfo(
-                            id="id",
-                            title="Title",
-                            symbol="",
-                            render=lambda v: f"{v}",
-                            js_render="v => v",
-                            conversion=lambda v: v,
+                        unit_spec=ConvertibleUnitSpecification(
+                            notation=DecimalNotation(symbol=""),
+                            precision=AutoPrecision(digits=2),
                         ),
                         color="#0080c0",
                     ),
@@ -1259,13 +1263,9 @@ def test__compute_predictive_metrics(
                         scalar={},
                         auto_graph=True,
                         title="",
-                        unit_info=UnitInfo(
-                            id="id",
-                            title="Title",
-                            symbol="",
-                            render=lambda v: f"{v}",
-                            js_render="v => v",
-                            conversion=lambda v: v,
+                        unit_spec=ConvertibleUnitSpecification(
+                            notation=DecimalNotation(symbol=""),
+                            precision=AutoPrecision(digits=2),
                         ),
                         color="#0080c0",
                     ),
@@ -1275,21 +1275,17 @@ def test__compute_predictive_metrics(
                         scalar={},
                         auto_graph=True,
                         title="",
-                        unit_info=UnitInfo(
-                            id="id",
-                            title="Title",
-                            symbol="",
-                            render=lambda v: f"{v}",
-                            js_render="v => v",
-                            conversion=lambda v: v,
+                        unit_spec=ConvertibleUnitSpecification(
+                            notation=DecimalNotation(symbol=""),
+                            precision=AutoPrecision(digits=2),
                         ),
                         color="#0080c0",
                     ),
                 },
-                metric_definitions,
+                metric_expressions,
             )
         )
-        == expected_predictive_metric_definitions
+        == expected_predictive_metric_expressions
     )
 
 
@@ -1321,31 +1317,23 @@ def test__compute_predictive_metrics(
                     range=None,
                     omit_zero_metrics=False,
                     metrics=[
-                        MetricDefinition(
-                            expression=Metric(name="messages_outbound"),
+                        MetricExpression(
+                            Metric("messages_outbound"),
                             line_type="stack",
                             title="Outbound messages",
                         ),
-                        MetricDefinition(
-                            expression=Metric(name="messages_inbound"),
+                        MetricExpression(
+                            Metric("messages_inbound"),
                             line_type="stack",
                             title="Inbound messages",
                         ),
-                        MetricDefinition(
-                            expression=Metric(name="predict_messages_outbound"),
-                            line_type="line",
+                        MetricExpression(Metric("predict_messages_outbound"), line_type="line"),
+                        MetricExpression(
+                            Metric("predict_lower_messages_outbound"), line_type="line"
                         ),
-                        MetricDefinition(
-                            expression=Metric(name="predict_lower_messages_outbound"),
-                            line_type="line",
-                        ),
-                        MetricDefinition(
-                            expression=Metric(name="predict_messages_inbound"),
-                            line_type="line",
-                        ),
-                        MetricDefinition(
-                            expression=Metric(name="predict_lower_messages_inbound"),
-                            line_type="line",
+                        MetricExpression(Metric("predict_messages_inbound"), line_type="line"),
+                        MetricExpression(
+                            Metric("predict_lower_messages_inbound"), line_type="line"
                         ),
                     ],
                 )
@@ -1376,13 +1364,13 @@ def test__compute_predictive_metrics(
                     range=None,
                     omit_zero_metrics=False,
                     metrics=[
-                        MetricDefinition(
-                            expression=Metric(name="messages_outbound"),
+                        MetricExpression(
+                            Metric("messages_outbound"),
                             line_type="stack",
                             title="Outbound messages",
                         ),
-                        MetricDefinition(
-                            expression=Metric(name="messages_inbound"),
+                        MetricExpression(
+                            Metric("messages_inbound"),
                             line_type="stack",
                             title="Inbound messages",
                         ),
@@ -1392,12 +1380,14 @@ def test__compute_predictive_metrics(
                     id="METRIC_foo",
                     title="",
                     scalars=[
-                        ScalarDefinition(
-                            expression=WarningOf(metric=Metric(name="foo")),
+                        MetricExpression(
+                            WarningOf(metric=Metric("foo")),
+                            line_type="line",
                             title="Warning",
                         ),
-                        ScalarDefinition(
-                            expression=CriticalOf(metric=Metric(name="foo")),
+                        MetricExpression(
+                            CriticalOf(metric=Metric("foo")),
+                            line_type="line",
                             title="Critical",
                         ),
                     ],
@@ -1406,23 +1396,20 @@ def test__compute_predictive_metrics(
                     consolidation_function=None,
                     range=None,
                     omit_zero_metrics=False,
-                    metrics=[
-                        MetricDefinition(
-                            expression=Metric(name="foo"),
-                            line_type="area",
-                        )
-                    ],
+                    metrics=[MetricExpression(Metric("foo"), line_type="area")],
                 ),
                 GraphTemplate(
                     id="METRIC_predict_foo",
                     title="",
                     scalars=[
-                        ScalarDefinition(
-                            expression=WarningOf(metric=Metric(name="predict_foo")),
+                        MetricExpression(
+                            WarningOf(metric=Metric("predict_foo")),
+                            line_type="line",
                             title="Warning",
                         ),
-                        ScalarDefinition(
-                            expression=CriticalOf(metric=Metric(name="predict_foo")),
+                        MetricExpression(
+                            CriticalOf(metric=Metric("predict_foo")),
+                            line_type="line",
                             title="Critical",
                         ),
                     ],
@@ -1431,23 +1418,20 @@ def test__compute_predictive_metrics(
                     consolidation_function=None,
                     range=None,
                     omit_zero_metrics=False,
-                    metrics=[
-                        MetricDefinition(
-                            expression=Metric(name="predict_foo"),
-                            line_type="area",
-                        )
-                    ],
+                    metrics=[MetricExpression(Metric("predict_foo"), line_type="area")],
                 ),
                 GraphTemplate(
                     id="METRIC_predict_lower_foo",
                     title="",
                     scalars=[
-                        ScalarDefinition(
-                            expression=WarningOf(metric=Metric(name="predict_lower_foo")),
+                        MetricExpression(
+                            WarningOf(metric=Metric("predict_lower_foo")),
+                            line_type="line",
                             title="Warning",
                         ),
-                        ScalarDefinition(
-                            expression=CriticalOf(metric=Metric(name="predict_lower_foo")),
+                        MetricExpression(
+                            CriticalOf(metric=Metric("predict_lower_foo")),
+                            line_type="line",
                             title="Critical",
                         ),
                     ],
@@ -1456,12 +1440,7 @@ def test__compute_predictive_metrics(
                     consolidation_function=None,
                     range=None,
                     omit_zero_metrics=False,
-                    metrics=[
-                        MetricDefinition(
-                            expression=Metric(name="predict_lower_foo"),
-                            line_type="area",
-                        )
-                    ],
+                    metrics=[MetricExpression(Metric("predict_lower_foo"), line_type="area")],
                 ),
             ],
             id="does-not-match",

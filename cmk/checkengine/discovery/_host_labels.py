@@ -12,6 +12,8 @@ from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import TypeVar
 
+from cmk.ccc.exceptions import MKGeneralException, MKTimeout, OnError
+
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel as _HostLabel
 from cmk.utils.log import console
@@ -24,7 +26,6 @@ from cmk.checkengine.parameters import Parameters
 from cmk.checkengine.sectionparser import Provider, ResolvedResult
 
 from cmk.agent_based.v1 import HostLabel
-from cmk.ccc.exceptions import MKGeneralException, MKTimeout, OnError
 
 __all__ = [
     "analyse_cluster_labels",

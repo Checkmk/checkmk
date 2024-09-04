@@ -7,11 +7,11 @@
 import abc
 from typing import Any
 
-from cmk.utils import paths
-from cmk.utils.licensing.registry import get_license_state
-
 import cmk.ccc.plugin_registry
 import cmk.ccc.version as cmk_version
+
+from cmk.utils import paths
+from cmk.utils.licensing.registry import get_license_state
 
 
 class AutomationCommand(abc.ABC):

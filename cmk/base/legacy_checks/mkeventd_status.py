@@ -59,13 +59,17 @@ def check_mkeventd_status(item, params, parsed):  # pylint: disable=too-many-bra
         yield 0, "Currently not running"
         return
 
-    yield 0, "Current events: %d" % status["num_open_events"], [
-        ("num_open_events", status["num_open_events"])
-    ]
+    yield (
+        0,
+        "Current events: %d" % status["num_open_events"],
+        [("num_open_events", status["num_open_events"])],
+    )
 
-    yield 0, "Virtual memory: %s" % render.bytes(status["virtual_memory_size"]), [
-        ("process_virtual_size", status["virtual_memory_size"])
-    ]
+    yield (
+        0,
+        "Virtual memory: %s" % render.bytes(status["virtual_memory_size"]),
+        [("process_virtual_size", status["virtual_memory_size"])],
+    )
 
     # Event limits
     if status["event_limit_active_overall"]:

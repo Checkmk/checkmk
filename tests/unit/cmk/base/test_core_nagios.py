@@ -20,6 +20,9 @@ from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
+import cmk.ccc.debug
+import cmk.ccc.version as cmk_version
+
 from cmk.utils import paths
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -29,8 +32,6 @@ from cmk.checkengine.discovery import AutocheckEntry
 
 from cmk.base import config, core_nagios, server_side_calls
 
-import cmk.ccc.debug
-import cmk.ccc.version as cmk_version
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig
 

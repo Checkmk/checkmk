@@ -130,9 +130,12 @@ def check_esx_vsphere_objects_count(_no_item, params, parsed):
         hosts = sorted({vm.hostsystem for vm in virtualmachines if vm.name[3:] in ruled_vms})
         count = len(hosts)
         if count < distribution["hosts_count"]:
-            yield distribution.get("state", 2), (
-                "VMs %s are running on %d host%s: %s"
-                % (", ".join(ruled_vms), count, "" if count == 1 else "s", ", ".join(hosts))
+            yield (
+                distribution.get("state", 2),
+                (
+                    "VMs %s are running on %d host%s: %s"
+                    % (", ".join(ruled_vms), count, "" if count == 1 else "s", ", ".join(hosts))
+                ),
             )
 
 

@@ -29,7 +29,6 @@ from io import BytesIO
 from typing import Any, Literal, NamedTuple, NewType, TypedDict
 
 from opentelemetry import trace
-from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
 UserId = NewType("UserId", str)
 SiteId = NewType("SiteId", str)
@@ -116,6 +115,21 @@ class SiteConfiguration(TypedDict, total=False):
 
 
 SiteConfigurations = NewType("SiteConfigurations", dict[SiteId, SiteConfiguration])
+
+
+@dataclass
+class BrokerSite:
+    site_id: SiteId
+
+
+@dataclass(kw_only=True)
+class BrokerConnection:
+    connecter: BrokerSite
+    connectee: BrokerSite
+
+
+ConnectionId = NewType("ConnectionId", str)
+BrokerConnections = NewType("BrokerConnections", dict[ConnectionId, BrokerConnection])
 
 LivestatusColumn = Any
 LivestatusRow = NewType("LivestatusRow", list[LivestatusColumn])
@@ -688,13 +702,16 @@ class SingleSiteConnection(Helpers):
         return data.getvalue()
 
     def do_query(self, query: Query, add_headers: str = "") -> LivestatusResponse:
-        with tracer.start_as_current_span(
-            "do_query",
-            kind=trace.SpanKind.CLIENT,
-            attributes={
-                "cmk.livestatus.target_site_id": str(self.site_name),
-            },
-        ) as span, _livestatus_output_format_switcher(query, self):
+        with (
+            tracer.start_as_current_span(
+                "do_query",
+                kind=trace.SpanKind.CLIENT,
+                attributes={
+                    "cmk.livestatus.target_site_id": str(self.site_name),
+                },
+            ) as span,
+            _livestatus_output_format_switcher(query, self),
+        ):
             str_query = self.build_query(query, add_headers)
             span.set_attribute("cmk.livestatus.query", str_query)
 
@@ -873,7 +890,9 @@ class SingleSiteConnection(Helpers):
         return response
 
     def command(
-        self, command: str, site: SiteId | None = None  # pylint: disable=unused-argument
+        self,
+        command: str,
+        site: SiteId | None = None,  # pylint: disable=unused-argument
     ) -> None:
         command_str = command.rstrip("\n")
         if not command_str.startswith("["):

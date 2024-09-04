@@ -18,6 +18,10 @@ from typing import NamedTuple
 
 from livestatus import SiteConfiguration, SiteGlobals, SiteId
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils.paths
 
 from cmk.gui.i18n import _
@@ -25,9 +29,7 @@ from cmk.gui.log import logger
 from cmk.gui.userdb import user_sync_default_config
 from cmk.gui.watolib.config_domain_name import wato_fileheader
 
-import cmk.ccc.version as cmk_version
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
+from cmk.messaging import rabbitmq
 
 Command = list[str]
 
@@ -71,6 +73,7 @@ class SnapshotSettings(NamedTuple):
     snapshot_components: list[ReplicationPath]
     component_names: set[str]
     site_config: SiteConfiguration
+    rabbitmq_definition: rabbitmq.Definitions
 
 
 class ABCSnapshotDataCollector(abc.ABC):
@@ -507,3 +510,10 @@ def _create_distributed_wato_file_for_omd(base_dir: Path, is_remote: bool) -> No
     output = wato_fileheader()
     output += f"is_wato_remote_site = {is_remote}\n"
     store.save_text_to_file(base_dir / "etc/omd/distributed.mk", output)
+
+
+def create_rabbitmq_definitions_file(base_dir: Path, definition: rabbitmq.Definitions) -> None:
+    store.save_text_to_file(
+        base_dir.joinpath("etc/rabbitmq/definitions.d/definitions.json"),
+        definition.model_dump_json(indent=4),
+    )

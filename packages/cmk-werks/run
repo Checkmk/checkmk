@@ -148,8 +148,7 @@ run_clean() {
 }
 
 run_unit_tests() {
-    setup_venv
-    pytest
+    ../../scripts/run-bazel.sh test //packages/cmk-werks:all
 }
 
 run_check_format() {

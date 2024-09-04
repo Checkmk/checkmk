@@ -10,7 +10,8 @@ description:
 
  The check will report a CRITICAL state when the reported state is not {Started}.
  In addition the check can report a problem if a resource is not handled
- by a specified node.
+ by a specified node. Furthermore, by default, the check reports a WARN if there
+ are unmanaged nodes. The monitoring state for this case is user-configurable.
 
  Till version 1.2.5i6 the check nailed down the DC to the node which was DC during
  inventory. This has been changed to not nailing down the node. You can change this back

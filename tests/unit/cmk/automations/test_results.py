@@ -8,6 +8,8 @@
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
+from cmk.ccc import version as cmk_version
+
 from cmk.utils import paths
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import HostLabel
@@ -30,8 +32,6 @@ from cmk.checkengine.discovery import CheckPreviewEntry
 from cmk.checkengine.discovery import DiscoveryResult as SingleHostDiscoveryResult
 
 from cmk.base.automations import automations
-
-from cmk.ccc import version as cmk_version
 
 
 def test_result_type_registry_completeness() -> None:

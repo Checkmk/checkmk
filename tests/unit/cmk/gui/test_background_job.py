@@ -19,6 +19,8 @@ from opentelemetry import trace as otel_trace
 
 from tests.testlib.utils import wait_until
 
+import cmk.ccc.version as cmk_version
+
 import cmk.utils.log
 import cmk.utils.paths
 
@@ -35,7 +37,6 @@ from cmk.gui.background_job import (
     wait_for_background_jobs,
 )
 
-import cmk.ccc.version as cmk_version
 from cmk.trace import get_tracer, init_tracing, ReadableSpan, TracerProvider
 from cmk.trace.export import BatchSpanProcessor, SpanExporter, SpanExportResult
 

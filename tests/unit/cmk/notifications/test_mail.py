@@ -2,12 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import binascii
-import json
-from unittest.mock import patch
 
 import pytest
-import requests
 from pytest_mock import MockerFixture
 
 from cmk.notification_plugins import mail
@@ -495,81 +491,3 @@ def test_mail_content_from_host_context(mocker: MockerFixture) -> None:
     assert content.reply_to == ""
     assert content.content_txt == HOST_CONTENT_TXT
     assert content.attachments == []
-
-
-class SiteMock:
-    def get_apache_port(self, _omd_root: object) -> int:
-        return 80
-
-
-class ResponseMock:
-    def __init__(self, data: str) -> None:
-        self.data = data
-
-    @property
-    def text(self) -> str:
-        return self.data
-
-    def json(self) -> dict | list:
-        try:
-            return json.loads(self.data)
-        except json.JSONDecodeError:
-            raise requests.exceptions.JSONDecodeError("Expecting value", "doc", 0)
-
-
-class RequestsSessionMock:
-    def __init__(self) -> None:
-        self.data: str = ""
-        self.side_effect: type[Exception] | None = None
-
-    def __call__(self) -> object:
-        return self
-
-    def send(self, request: object, timeout: int) -> ResponseMock:
-        if self.side_effect:
-            # pylint thinks this could be None here but it cannot...
-            raise self.side_effect  # pylint: disable=raising-bad-type
-        return ResponseMock(self.data)
-
-
-@patch("cmk.notification_plugins.mail.site", new=SiteMock())
-def test_render_cmk_graphs(capsys: pytest.CaptureFixture) -> None:
-    context = {
-        "HOSTNAME": "heute",
-        "PARAMETER_GRAPHS_PER_NOTIFICATION": "1",
-        "WHAT": "HOST",
-    }
-    with patch("cmk.notification_plugins.mail.requests.Session", new=RequestsSessionMock()):
-        assert mail.render_cmk_graphs(context=context, is_bulk=False) == []
-
-    with patch("cmk.notification_plugins.mail.requests.Session", new=RequestsSessionMock()) as mock:
-        mock.side_effect = requests.exceptions.ReadTimeout
-        assert mail.render_cmk_graphs(context=context, is_bulk=False) == []
-        assert capsys.readouterr().err == (
-            "ERROR: Timed out fetching graphs (10 sec)\n"
-            "URL: http://localhost:80/NO_SITE/check_mk/ajax_graph_images.py?host=heute&service=_HOST_&num_graphs=1\n"
-        )
-
-    with patch("cmk.notification_plugins.mail.requests.Session", new=RequestsSessionMock()) as mock:
-        mock.data = "foo"
-        assert mail.render_cmk_graphs(context=context, is_bulk=False) == []
-        assert capsys.readouterr().err == (
-            "ERROR: Failed to decode graphs: Expecting value: line 1 column 1 (char 0)\n"
-            "URL: http://localhost:80/NO_SITE/check_mk/ajax_graph_images.py?host=heute&service=_HOST_&num_graphs=1\n"
-            "Data: 'foo'\n"
-        )
-
-    with patch("cmk.notification_plugins.mail.requests.Session", new=RequestsSessionMock()) as mock:
-        mock.data = '["foo"]'
-        with pytest.raises(binascii.Error):
-            mail.render_cmk_graphs(context=context, is_bulk=False)
-
-    with patch("cmk.notification_plugins.mail.requests.Session", new=RequestsSessionMock()) as mock:
-        mock.data = '[""]'
-        assert mail.render_cmk_graphs(context=context, is_bulk=False) == [b""]
-        assert capsys.readouterr().err == ""
-
-    with patch("cmk.notification_plugins.mail.requests.Session", new=RequestsSessionMock()) as mock:
-        mock.data = '["YQ==", "Yg==", "Yw=="]'
-        assert mail.render_cmk_graphs(context=context, is_bulk=False) == [b"a", b"b", b"c"]
-        assert capsys.readouterr().err == ""

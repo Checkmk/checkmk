@@ -11,11 +11,11 @@ from tests.testlib.site import Site
 
 from tests.integration.linux_test_host import create_linux_test_host
 
+from cmk.ccc import version as cmk_version
+
 from cmk.utils import paths
 
 from cmk.checkengine.discovery._autochecks import _AutochecksSerializer
-
-from cmk.ccc import version as cmk_version
 
 
 # Test whether or not factory settings and checkgroup parameters work

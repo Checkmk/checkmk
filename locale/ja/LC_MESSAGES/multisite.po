@@ -138,6 +138,9 @@ msgstr ""
 " これには、前回アクティベーション以降に行われた変更のうち、手動によるアクティ"
 "ベーションを必要としないもの（マークされたもの）も含まれます "
 
+msgid " Want to be notified about the public release? "
+msgstr ""
+
 #, python-format
 msgid " and %s '%s'"
 msgstr " および%s '%s'"
@@ -183,9 +186,6 @@ msgstr " または "
 
 msgid " or int"
 msgstr " またはint"
-
-msgid " to get notified once the commercial release is available. "
-msgstr " 商業リリースが可能になり次第、通知を受け取る。 "
 
 msgid " to:"
 msgstr " まで:"
@@ -806,12 +806,12 @@ msgid "(No fallback email address configured!)"
 msgstr "(フォールバックメールアドレスは設定されていません!)"
 
 #, python-format
-msgid "(SLA alert levels at %d%%/%d%% left)"
-msgstr "(%d %%/%d %%のSLAアラートレベルが残っています)"
-
-#, python-format
 msgid "(SLA alert levels at %d/%d incidents left)"
 msgstr "(SLAアラートレベル %d/%d のインシデントが残っています)"
+
+#, fuzzy, python-format
+msgid "(SLA alert levels at %r%%/%r%% left)"
+msgstr "(%d %%/%d %%のSLAアラートレベルが残っています)"
 
 msgid "(TLS, HTTP and DNS names)"
 msgstr "(TLS、HTTP、およびDNS名)"
@@ -904,6 +904,9 @@ msgstr "(不明: %d)"
 
 msgid "(unset)"
 msgstr "(未設定)"
+
+msgid ", "
+msgstr ""
 
 msgid ", but it is overruled by a match in a previous rule pack."
 msgstr "、ただし、以前のルールパックの一致によって無効にされます。"
@@ -1940,6 +1943,14 @@ msgid ""
 msgstr ""
 "ダッシュボード使用のために最適化された、すべてのホストの問題の完全なリスト"
 
+#, fuzzy
+msgid "A connection with the same sites already exists."
+msgstr "その名前のフォルダはすでに存在します。"
+
+#, fuzzy
+msgid "A connection with this ID already exists."
+msgstr "このIDのルールパックはすでに存在します。"
+
 msgid ""
 "A couple of switches with broken firmware report that they support 64 bit "
 "counters but do not output any actual data in those counters. Listing those "
@@ -2847,6 +2858,10 @@ msgstr "アクセス解析設定"
 msgid "Access key"
 msgstr "アクセスキー"
 
+#, fuzzy
+msgid "Access key ID"
+msgstr "アクセスキー"
+
 msgid "Access point name"
 msgstr "アクセスポイント名"
 
@@ -3693,6 +3708,10 @@ msgstr "リストの追加"
 msgid "Add macro"
 msgstr "マクロを追加"
 
+#, fuzzy
+msgid "Add message broker connection"
+msgstr "APIサーバー接続"
+
 msgid "Add message pattern"
 msgstr "メッセージパターンの追加"
 
@@ -3853,6 +3872,10 @@ msgstr "パターンを追加する"
 
 msgid "Add pattern group"
 msgstr "パターングループを追加する"
+
+#, fuzzy
+msgid "Add peer-to-peer message broker connection"
+msgstr "接続あたりの平均リクエスト"
 
 msgid "Add plug-in"
 msgstr "プラグインを追加"
@@ -6672,6 +6695,15 @@ msgstr ""
 "プがある場合は、プレースホルダー<tt>\\1</tt>、 <tt>\\2</tt>などを使用して、最"
 "初、2番目などの一致するグループを挿入できます。"
 
+#, fuzzy
+msgid "Attach graphs"
+msgstr "すべてのグラフ"
+
+#, fuzzy
+msgid ""
+"Attach graphs and limit the number of graphs that are attached to an issue."
+msgstr "通知に表示されるグラフの数の制限を設定します。"
+
 msgid ""
 "Attach information about a contact person. If you have bracketed groups in "
 "the text to match, then you can use the placeholders <tt>\\1</tt>, <tt>\\2</"
@@ -6680,6 +6712,10 @@ msgstr ""
 "連絡先の情報を添付してください。一致するテキストに括弧で囲まれたグループがあ"
 "る場合は、プレースホルダー<tt>\\1</tt>、 <tt>\\2</tt>などを使用して、最初、2"
 "番目などの一致するグループを挿入できます。"
+
+#, fuzzy
+msgid "Attach up to"
+msgstr "に現れる"
 
 msgid "Attempt to interpret OEM data"
 msgstr "OEMデータの解釈の試行"
@@ -10215,6 +10251,38 @@ msgid "Cannot change rule conditions for rules managed by Quick setup."
 msgstr ""
 
 #, python-format
+msgid "Cannot compute perfometer label due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer label expression due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer segment due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer sorting value due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer stack due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer summed values due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer total value due to '%s'"
+msgstr ""
+
+#, python-format
+msgid "Cannot compute perfometer unit due to '%s'"
+msgstr ""
+
+#, python-format
 msgid "Cannot connect to event daemon via %s: %s"
 msgstr "%s 経由でイベントデーモンに接続できません: %s"
 
@@ -11233,9 +11301,6 @@ msgstr ""
 msgid "Checkmk Cloud"
 msgstr "Checkmkロゴ"
 
-msgid "Checkmk Cloud (SaaS) Beta"
-msgstr "Checkmk Cloud (SaaS) Beta"
-
 msgid "Checkmk Configuration Files"
 msgstr "Checkmk設定ファイル"
 
@@ -11390,12 +11455,13 @@ msgstr "Checkmkサーバー"
 msgid "Checkmk service provider metadata (generated automatically)"
 msgstr "Checkmkサービスプロバイダのメタデータ（自動生成）"
 
+#, fuzzy
 msgid ""
 "Checkmk signs your SAML 2.0 requests to your identity provider. You can use "
 "the certificate that comes with Checkmk. Alternatively, if your organization "
 "manages its own certificates, you can add a custom certificate. Note that "
 "the public certificate must be a single certificate (not a certificate "
-"chain)."
+"chain). Only RSA certificates are supported at this time."
 msgstr ""
 "Checkmk は、ID プロバイダへの SAML 2.0 要求を署名します。Checkmk に付属する証"
 "明書を使用できます。または、組織が独自の証明書を管理している場合は、カスタム"
@@ -12011,8 +12077,8 @@ msgid "Cleared"
 msgstr "\"クリア\"状態"
 
 msgid ""
-"Click 'Add user' under Users, select 'Access key - Programmatic access', and "
-"attach the 'ReadOnlyAccess' policy."
+"Click \"Add user\" under Users, select \"Access key - Programmatic access\", "
+"and attach the \"ReadOnlyAccess\" policy."
 msgstr ""
 
 msgid "Click for instant reload."
@@ -13437,6 +13503,23 @@ msgstr "パスワードなしで接続する"
 msgid "Connect without proxy"
 msgstr "プロキシなしで接続する"
 
+#, fuzzy
+msgid "Connectee:"
+msgstr "接続する"
+
+msgid "Connecter and connectee sites must be different."
+msgstr ""
+
+msgid "Connecter and connectee sites must be specified."
+msgstr ""
+
+msgid "Connecter and connectee sites must belong to the same customers."
+msgstr ""
+
+#, fuzzy
+msgid "Connecter:"
+msgstr "接続する"
+
 msgid "Connection"
 msgstr "接続"
 
@@ -13539,6 +13622,13 @@ msgstr "コネクタアウトレット"
 
 msgid "Connector type"
 msgstr "コネクタタイプ"
+
+msgid "Connector: Adding host changes to queue"
+msgstr ""
+
+#, python-format
+msgid "Connector: Collecting piggyback hosts on site  \"%s\""
+msgstr ""
 
 msgid "Consider alerts for Prism Central only"
 msgstr "Prism Centralのみのアラートを検討する"
@@ -14555,6 +14645,10 @@ msgstr "新しい通知ルールを作成しました"
 msgid "Created new notification rule for user %s"
 msgstr "ユーザー %sの新しい通知ルールを作成しました"
 
+#, fuzzy, python-format
+msgid "Created new peer-to-peer broker connection id %s"
+msgstr "サイト%sへの新しい接続を作成しました"
+
 #, python-format
 msgid "Created new role '%s'"
 msgstr "新しい役割 '%s'を作成しました"
@@ -15320,6 +15414,10 @@ msgstr "DB2メモリー使用量"
 msgid "DCD"
 msgstr "DCD"
 
+#, fuzzy, python-format
+msgid "DCD Manager: Fetching piggyback hosts from site \"%s\""
+msgstr "フェーズ1.1:サイト\"%s\"からのフェッチ"
+
 msgid "DCD status"
 msgstr "DCDステータス"
 
@@ -15730,8 +15828,13 @@ msgstr "MySQLフレキシブルサーバー用データベース"
 msgid "Database for MySQL single server"
 msgstr "MySQLシングルサーバー用データベース"
 
-msgid "Database for PostgreSQL"
-msgstr "PostgreSQL用データベース"
+#, fuzzy
+msgid "Database for PostgreSQL flexible server"
+msgstr "MySQLフレキシブルサーバー用データベース"
+
+#, fuzzy
+msgid "Database for PostgreSQL single server"
+msgstr "MySQLシングルサーバー用データベース"
 
 msgid "Database identifier"
 msgstr "データベース識別子"
@@ -16579,6 +16682,10 @@ msgstr "通知ルール#%dを削除"
 
 msgid "Delete oldest event, create new event"
 msgstr "最も古いイベントを削除し、新しいイベントを作成します"
+
+#, fuzzy
+msgid "Delete peer-to-peer connection to site"
+msgstr "サイトへの接続を削除"
 
 msgid "Delete permitted maps"
 msgstr "許可された地図の削除"
@@ -19310,10 +19417,6 @@ msgstr ""
 "ベータ・フェーズの間、サービス数は%sに制限されていますが、変更を有効化する"
 "と、%sのサービスを利用できるようになります。"
 
-#, python-format
-msgid "During the beta phase, the number of services is limited to %s. "
-msgstr "ベータ・フェーズの間、サービス数は %s に制限されます。 "
-
 #, fuzzy, python-format
 msgid "During the development phase, the number of services is limited to %s."
 msgstr "ベータ・フェーズの間、サービス数は %s に制限されます。 "
@@ -19759,6 +19862,10 @@ msgstr "レイアウトを編集する"
 
 msgid "Edit layout only available if header is enabled"
 msgstr "ヘッダーが有効な場合のみ、レイアウトの編集が可能"
+
+#, fuzzy, python-format
+msgid "Edit message broker connection %s"
+msgstr "サイト接続 %sを編集する"
 
 msgid "Edit model"
 msgstr "モデルを編集する"
@@ -20486,6 +20593,11 @@ msgstr ""
 "れます。"
 
 msgid ""
+"Enabling this option will enforce two factor authentication for all users. "
+"Enabling this setting will overide role based two factor enforcement."
+msgstr ""
+
+msgid ""
 "Enabling this option will result in an additional service for every RMON-"
 "capable switch port. This service will provide detailed information on the "
 "distribution of packet sizes transferred over the port. Note: currently, "
@@ -20616,6 +20728,10 @@ msgstr "エージェントデータの暗号化"
 msgid "Enforce change"
 msgstr "変更を強制する"
 
+#, fuzzy
+msgid "Enforce for all users"
+msgstr "小文字のユーザーIDを適用します。"
+
 msgid "Enforce lower case User-IDs."
 msgstr "小文字のユーザーIDを適用します。"
 
@@ -20628,6 +20744,10 @@ msgstr "認証後再認証を強制する"
 
 msgid "Enforce show more"
 msgstr "もっと表示を強制する"
+
+#, fuzzy
+msgid "Enforce two factor authentication"
+msgstr "2要素認証の解除"
 
 msgid "Enforced service"
 msgstr "施行されたサービス"
@@ -22326,6 +22446,10 @@ msgstr "値のレンダリングに失敗しました:"
 msgid "Failed to render value: %r"
 msgstr "値のレンダリングに失敗しました: %r"
 
+#, fuzzy, python-format
+msgid "Failed to save broker certificates: %s"
+msgstr "ピア証明書のフェッチに失敗しました(%s)"
+
 #, python-format
 msgid "Failed to search rule of ruleset '%s' in folder '%s' (%r): %s"
 msgstr "ルールセット '%s' ルの検索に失敗しましたフォルダ内 '%s' (%r): %s"
@@ -22591,6 +22715,10 @@ msgid "Fetching '%s'..."
 msgstr "'%s'をフェッチしています..."
 
 msgid "Fetching livestatus status"
+msgstr "Livestatusのステータスを取得"
+
+#, fuzzy
+msgid "Fetching message broker status"
 msgstr "Livestatusのステータスを取得"
 
 msgid "Fetching replication status"
@@ -24390,8 +24518,8 @@ msgstr "グラフが表示されます"
 msgid "Graph layout"
 msgstr "グラフレイアウト"
 
-#, python-format
-msgid "Graph recipe '%s' uses undefined metric '%s', available are: %s"
+#, fuzzy, python-format
+msgid "Graph recipe '%s' has the error '%s', available are: %s"
 msgstr ""
 "グラフ・レシピ '%s' は未定義のメトリック '%s' を使用ししています。利用可能:%s"
 
@@ -26040,9 +26168,6 @@ msgstr "読み取り権限なしでフォルダを非表示にする"
 
 msgid "Hide from Status GUI"
 msgstr "ステータスGUIから非表示"
-
-msgid "Hide help text of rules in list views"
-msgstr "リストビューでルールのヘルプテキストを非表示にする"
 
 msgid "Hide hosttags in Setup folder view"
 msgstr "セットアップフォルダビューでホストタグを非表示にする"
@@ -29177,6 +29302,12 @@ msgstr ""
 "果が他のノードから発信された場合、サービスは少なくともWARNING状態になります"
 "（結果自体はOKであったとしても）。"
 
+msgid ""
+"If set, all users with this role will be required to setup two factor "
+"authentication. 'Enforce two factor authentication' in global settings will "
+"override this setting."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "If set, the plug-in may be called repeately - up to this many times or until "
@@ -31790,6 +31921,10 @@ msgstr "Prometheus統合"
 msgid "Integration Key"
 msgstr "統合キー"
 
+#, fuzzy
+msgid "Integration team"
+msgstr "統合キー"
+
 msgid ""
 "Interactive search field for direct access to monitoring instances (hosts, "
 "services, host and service groups).<br>You can use the following filters: "
@@ -32025,8 +32160,8 @@ msgstr "チェックパラメータが無効です"
 msgid "Invalid check type"
 msgstr "チェックタイプが無効です"
 
-#, fuzzy
-msgid "Invalid choice"
+#, fuzzy, python-format
+msgid "Invalid choice %r"
 msgstr "無効なトピック"
 
 msgid "Invalid code provided"
@@ -32106,6 +32241,9 @@ msgid ""
 "Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr ""
 "フォルダー名が無効です。文字 a-z, A-Z, 0-9, _ および - のみが許可されます。"
+
+msgid "Invalid generate-broker-certs: no certificates received."
+msgstr ""
 
 #, python-format
 msgid "Invalid graph type '%s'"
@@ -32301,6 +32439,10 @@ msgstr "無効なトピック"
 
 msgid "Invalid transaction"
 msgstr "無効なトランザクション"
+
+#, fuzzy
+msgid "Invalid tuple"
+msgstr "無効なテスト。"
 
 msgid "Invalid type specified."
 msgstr "無効なタイプが指定されました。"
@@ -33119,9 +33261,6 @@ msgstr "キーワード"
 #, fuzzy
 msgid "KiB"
 msgstr "MiB"
-
-msgid "KiB out of sync"
-msgstr "KiB 同期していません"
 
 msgid "Kube-proxy version"
 msgstr "Kube-proxy バージョン"
@@ -38303,6 +38442,10 @@ msgstr ""
 msgid "Modified host %s."
 msgstr "変更されたホスト %s。"
 
+#, fuzzy, python-format
+msgid "Modified peer-to-peer broker connection id %s"
+msgstr "変更されたサイト接続 %s"
+
 #, python-format
 msgid "Modified rule pack %s"
 msgstr "変更されたルールパック %s"
@@ -40301,6 +40444,10 @@ msgstr "オブジェクトタイプなし"
 msgid "No password entered. Please enter a password."
 msgstr "パスワードが入力されていません。パスワードを入力してください。"
 
+#, fuzzy
+msgid "No password provided"
+msgstr "パスワードストアから"
+
 msgid "No pending changes"
 msgstr "保留中の変更はありません"
 
@@ -40790,6 +40937,10 @@ msgstr "パスワードの変更は許可されていません。変更を強制
 
 msgid "Not ready duration"
 msgstr "準備期間"
+
+#, fuzzy
+msgid "Not required"
+msgstr "必須"
 
 msgid "Not responding devices"
 msgstr "デバイスが応答しない"
@@ -43909,6 +44060,10 @@ msgstr "通知期間外"
 msgid "Out of service period"
 msgstr "サービス期間満了"
 
+#, fuzzy
+msgid "Out of sync"
+msgstr "KiB 同期していません"
+
 msgid "Outage count requirement"
 msgstr "停止カウント要件"
 
@@ -44889,6 +45044,10 @@ msgstr "パスワードが変更されました(同期に失敗しました: %s)
 msgid "Password does not exist or using not permitted"
 msgstr "パスワードが存在しないか、使用が許可されていません"
 
+#, fuzzy
+msgid "Password does not exist or using not permitted."
+msgstr "パスワードが存在しないか、使用が許可されていません"
+
 msgid "Password for binding, if your server requires an authentication"
 msgstr "サーバーに認証が必要な場合のバインド用のパスワード"
 
@@ -45054,6 +45213,10 @@ msgstr "ピア名"
 #, fuzzy
 msgid "Peer states"
 msgstr "ピアの状態"
+
+#, fuzzy
+msgid "Peer-to-peer message broker connections"
+msgstr "ブロックされた接続の上位レベル"
 
 msgid "Peers"
 msgstr "ピア"
@@ -45643,29 +45806,9 @@ msgstr "ファントムインターラプションの受信"
 msgid "Phase"
 msgstr "フェーズ"
 
-#, python-format
-msgid "Phase 1.1: Executing on site \"%s\""
-msgstr "フェーズ1.1:サイト \"%s\" で実行"
-
-#, python-format
-msgid "Phase 1.1: Fetching from site \"%s\""
-msgstr "フェーズ1.1:サイト\"%s\"からのフェッチ"
-
 #, fuzzy
-msgid "Phase 1.2: Extracting result"
-msgstr "フェーズ2.1 : 結果の抽出"
-
-#, fuzzy
-msgid "Phase 2.1: Fetching existing hosts"
+msgid "Phase 2.1: Fetchin  g existing hosts"
 msgstr "フェーズ2.2: 既存のホストの取得"
-
-#, fuzzy
-msgid "Phase 2.2: Deliver existing hosts"
-msgstr "フェーズ2.2: 既存のホストの取得"
-
-#, fuzzy, python-format
-msgid "Phase 2: Deliver %s piggyback hosts"
-msgstr "ピギーバックホスト名のプレフィックス"
 
 msgid "Phase Number"
 msgstr "フェーズ番号"
@@ -49468,10 +49611,6 @@ msgid "Report Properties"
 msgstr "レポートのプロパティ"
 
 #, fuzzy
-msgid "Report an issue here. "
-msgstr "スケジュールに報告する"
-
-#, fuzzy
 msgid ""
 "Report created $NOW_DATE$ $NOW_TIME$ by $USER_ALIAS$ ($USER_ID$)\n"
 "\n"
@@ -49700,6 +49839,10 @@ msgstr "リクエストの使用率"
 
 msgid "Require a comment"
 msgstr "コメントが必要"
+
+#, fuzzy
+msgid "Required"
+msgstr "必要なポート"
 
 msgid "Required context filters"
 msgstr "必要なコンテキストフィルター"
@@ -50190,6 +50333,11 @@ msgid "Return process times within performance data"
 msgstr "パフォーマンスデータ内のプロセス時間を返す"
 
 msgid ""
+"Return to Checkmk, define a unique AWS account name, and use the Access key "
+"and Secret access key below."
+msgstr ""
+
+msgid ""
 "Returns the latest crash dumps of each type as found in var/checkmk/crashes"
 msgstr "var/checkmk/crashes にある各タイプの最新のクラッシュダンプを返す"
 
@@ -50204,11 +50352,11 @@ msgid "Revert foreign changes"
 msgstr "外国の変更を有効にする"
 
 #, fuzzy
-msgid "Review and run service discovery"
+msgid "Review and run preview service discovery"
 msgstr "サービスディスカバリの実行と保存"
 
 #, fuzzy
-msgid "Review your configuration, run and preview service discovery"
+msgid "Review your configuration and run preview service discovery"
 msgstr "サービスディスカバリの実行と保存"
 
 msgid "Revolutions per minute"
@@ -51325,6 +51473,10 @@ msgstr "変更をアクティブにしないでください"
 msgid "Save & go to host properties"
 msgstr "保存してホストプロパティに移動します"
 
+#, fuzzy
+msgid "Save & go to service discovery"
+msgstr "サービスディスカバリの実行と保存"
+
 msgid "Save & run connection tests"
 msgstr "保存して接続テストを実行"
 
@@ -51348,7 +51500,7 @@ msgstr "この集計のコピーを作成します"
 msgid "Save response"
 msgstr "応答を保存"
 
-msgid "Save the generated access key and secret key for later use."
+msgid "Save the generated Access key and Secret access key."
 msgstr ""
 
 msgid "Save this host and go to"
@@ -51764,6 +51916,10 @@ msgstr "ポーリングする前に待機する秒数"
 msgid "Seconds to wait between sending string and polling for response"
 msgstr "文字列の送信と応答のポーリングの間に待機する秒数"
 
+#, fuzzy
+msgid "Secret access key"
+msgstr "秘密鍵"
+
 msgid "Secret key"
 msgstr "秘密鍵"
 
@@ -51811,6 +51967,10 @@ msgstr "セキュリティ"
 
 msgid "Security Level"
 msgstr "セキュリティレベル"
+
+#, fuzzy
+msgid "Security advice"
+msgstr "セキュリティ名"
 
 msgid "Security fix"
 msgstr "セキュリティ修正"
@@ -53511,6 +53671,9 @@ msgid ""
 "and plan services can be other than OK if runtimes were exceeded."
 msgstr ""
 
+msgid "Sets the user of the alert. Display name of the request owner."
+msgstr ""
+
 msgid ""
 "Sets thresholds for the runtime of a KPI. Note that runtime monitoring is "
 "not a feature of Robot Framework, but of Robotmk. This means that even if a "
@@ -54414,6 +54577,11 @@ msgstr ""
 "センサーの説明はユーザー定義のテキストであるため、複数のセンサーが同じ説明を"
 "持つ可能性があります。項目が一意であることを保証するために、X-Yを先頭に付けま"
 "す。Xはデバイス番号、Yはセンサーのインデックスです。"
+
+msgid ""
+"Since this is a ReadOnlyAccess, we won't create any resources on your AWS "
+"account."
+msgstr ""
 
 msgid ""
 "Since version 2.1 it is possible to encrypt the communication of the "
@@ -56382,6 +56550,10 @@ msgstr "エージェントデプロイがグローバルに無効になってい
 msgid "State if at least one blocked session"
 msgstr "少なくとも1つのブロックされたセッションがあるかどうかを記述します"
 
+#, fuzzy
+msgid "State if at least one node is unmanaged"
+msgstr "少なくとも1つのブロックされたセッションがあるかどうかを記述します"
+
 msgid "State if battery needs replacement"
 msgstr "バッテリーの交換が必要かどうかを述べる"
 
@@ -57947,6 +58119,10 @@ msgstr "Systemdソケットの概要"
 msgid "Systems larger than"
 msgstr "より大きいシステム"
 
+#, fuzzy
+msgid "TBD"
+msgstr "MiB"
+
 msgid "TCP"
 msgstr "TCP"
 
@@ -59371,9 +59547,6 @@ msgstr ""
 "は、セットアップのルールセット<i>プラグインとローカルチェックのキャッシュ期間"
 "の設定</i>および<i>プラグインとローカルチェックの実行モードの設定</i>を使用し"
 "て変更できます。"
-
-msgid "The access key ID for your AWS account"
-msgstr "AWSアカウントのアクセスキーID"
 
 msgid "The access key for your AWS account"
 msgstr "AWSアカウントのアクセスキー"
@@ -61444,6 +61617,11 @@ msgstr ""
 "システムの名前は、<tt>VM</tt>または<tt>HostSystem</tt>で始まる必要がありま"
 "す。"
 
+msgid ""
+"The name of the team where the integration was created. If this field is "
+"set, additional information can be added to alerts."
+msgstr ""
+
 msgid "The name of the view may only contain letters, digits and underscores."
 msgstr ""
 "ビューの名前には、文字、数字、およびアンダースコアのみを含めることができま"
@@ -62095,6 +62273,10 @@ msgstr "要求されたBIアグリゲーションは存在しません。"
 msgid "The requested BI rule does not exist."
 msgstr "要求されたBIルールは存在しません。"
 
+#, fuzzy, python-format
+msgid "The requested connection %s does not exist"
+msgstr "要求された接続は存在しません。"
+
 msgid "The requested connection does not exist."
 msgstr "要求された接続は存在しません。"
 
@@ -62337,9 +62519,6 @@ msgstr "削除しようとしているスケジュールが存在しません。
 
 msgid "The schedule you are trying to edit does not exist."
 msgstr "編集しようとしているスケジュールが存在しません。"
-
-msgid "The secret access key for your AWS account"
-msgstr "AWSアカウントのシークレットアクセスキー"
 
 msgid "The secret key for your AWS account"
 msgstr "AWSアカウントのシークレットアクセスキー"
@@ -63077,10 +63256,6 @@ msgstr "CA証明書が見つからないため、検証を開始できません"
 #, python-format
 msgid "The version of this site is not a %s"
 msgstr "このサイトのバージョンは %s ではありません"
-
-msgid "The version of this site is not a Checkmk managed services edition"
-msgstr ""
-"このサイトのバージョンは、Checkmkマネージドサービスエディションではありません"
 
 #, python-format
 msgid ""
@@ -68492,14 +68667,15 @@ msgstr "トークン認証"
 msgid "Token based authentication"
 msgstr "トークン認証"
 
-msgid "Tolderance period for 'reloading' state"
-msgstr "\"リロード\"状態での試用期間"
-
 msgid "Tolerance period for 'activating' state"
 msgstr "”アクティブ”状態の許容期間"
 
 msgid "Tolerance period for 'deactivating' state"
 msgstr "\"停止\"状態の許容期間"
+
+#, fuzzy
+msgid "Tolerance period for 'reloading' state"
+msgstr "\"リロード\"状態での試用期間"
 
 msgid "Tools install state"
 msgstr "ツールのインストール状態"
@@ -71304,6 +71480,10 @@ msgstr "トンネルインターフェース"
 msgid "Tunnels which ignore levels"
 msgstr "レベルを無視するトンネル"
 
+#, fuzzy
+msgid "Two Factor"
+msgstr "フォーム ファクタ"
+
 msgid "Two hours"
 msgstr "2時間"
 
@@ -71715,8 +71895,18 @@ msgid "Unable to create authentication request"
 msgstr "認証リクエスト作成不可"
 
 #, python-format
+msgid ""
+"Unable to delete connection id: %s. Connecter and connectee sites must be "
+"specified."
+msgstr ""
+
+#, python-format
 msgid "Unable to delete group. It is still in use by: %s"
 msgstr "グループを削除できません。まだ使用中です: %s"
+
+#, fuzzy, python-format
+msgid "Unable to delete unknown connection id: %s"
+msgstr "不明なサイトIDを削除できません:%s"
 
 #, python-format
 msgid "Unable to delete unknown site id: %s"
@@ -71853,6 +72043,10 @@ msgstr ""
 "ネストされたグループを同期できません(ユーザーベースDN \"%s\" とグループベース"
 "DN \"%s\"の共通ベースDNが見つかりません)"
 
+#, fuzzy
+msgid "Unable to transform value"
+msgstr "値のレンダリングに失敗しました:"
+
 #, python-format
 msgid "Unable to upload icon: %s"
 msgstr "アイコンをアップロードできません:%s"
@@ -71980,6 +72174,10 @@ msgstr "一意のID"
 
 msgid "Unique ID used to identify the instance on the host within Checkmk."
 msgstr "Checkmk内でホスト上のインスタンスを識別するために使用される一意のID。"
+
+#, fuzzy
+msgid "Unique ID:"
+msgstr "一意のID"
 
 msgid ""
 "Unique client ID used for the broker. Will be randomly generated when not "
@@ -76304,12 +76502,6 @@ msgstr ""
 "提案します。拡張子は常に <tt>pdf</tt>である必要があります。"
 
 msgid ""
-"When disabled, Setup shows the help texts of rules also in the list views."
-msgstr ""
-"無効にすると、セットアップはルールのヘルプテキストをリストビューにも表示しま"
-"す。"
-
-msgid ""
 "When doing service discovery on brocade switches only ports with the given "
 "administrative states will be added to the monitoring system."
 msgstr ""
@@ -79287,6 +79479,10 @@ msgstr ""
 "トのデータを暗黙のうちに追加します。リモートサイトを追加した場合で、ローカル"
 "監視サイトのデータも表示したいのであれば、忘れずに追加してください。"
 
+#, fuzzy
+msgid "You have not configured any peer-to-peer connections."
+msgstr "まだルールを作成していません。"
+
 #, python-format
 msgid ""
 "You have not created any agent <a href='%s' target='_blank'>signature keys</"
@@ -79684,6 +79880,12 @@ msgid "You need to supply a comment."
 msgstr "コメントを入力する必要があります。"
 
 msgid ""
+"You should see the standard Robot Framework HTML log below. However, this "
+"content is generated externally. It is prone to injection attacks (executed "
+"on the host where the test is executed). Proceed with caution."
+msgstr ""
+
+msgid ""
 "You will have to configure the host address of the server which hosts the "
 "monitoring server of the host the agent is installed on."
 msgstr ""
@@ -79710,6 +79912,11 @@ msgstr "IT監視プラットフォーム"
 
 msgid "Your WebAuthn credential is already in use"
 msgstr "WebAuthn認証はすでに使用されています"
+
+msgid ""
+"Your administrator has enforced two factor authentication for your account. "
+"Kindly register one of the following two factor mechanisms:"
+msgstr ""
 
 msgid "Your central site is incompatible with this remote site"
 msgstr "セントラルサイトは、このリモートサイトと互換性がありません"
@@ -80298,6 +80505,14 @@ msgstr "構成"
 msgid "configure"
 msgstr "設定"
 
+#, fuzzy
+msgid "connectee"
+msgstr "切断されました"
+
+#, fuzzy
+msgid "connecter"
+msgstr "切断されました"
+
 msgid "connection"
 msgstr "接続"
 
@@ -80739,9 +80954,6 @@ msgstr "フォルダ名を非表示にする"
 
 msgid "hide folders without read permissions"
 msgstr "読み取り権限なしでフォルダを非表示にする"
-
-msgid "hide help text"
-msgstr "ヘルプテキストを非表示"
 
 msgid "hide hosttags"
 msgstr "ホストタグを非表示にする"
@@ -82106,6 +82318,62 @@ msgstr ""
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
 
+#~ msgid "Hide help text of rules in list views"
+#~ msgstr "リストビューでルールのヘルプテキストを非表示にする"
+
+#~ msgid "The access key ID for your AWS account"
+#~ msgstr "AWSアカウントのアクセスキーID"
+
+#~ msgid "The secret access key for your AWS account"
+#~ msgstr "AWSアカウントのシークレットアクセスキー"
+
+#~ msgid "The version of this site is not a Checkmk managed services edition"
+#~ msgstr ""
+#~ "このサイトのバージョンは、Checkmkマネージドサービスエディションではありま"
+#~ "せん"
+
+#~ msgid ""
+#~ "When disabled, Setup shows the help texts of rules also in the list views."
+#~ msgstr ""
+#~ "無効にすると、セットアップはルールのヘルプテキストをリストビューにも表示し"
+#~ "ます。"
+
+#~ msgid "hide help text"
+#~ msgstr "ヘルプテキストを非表示"
+
+#~ msgid "Database for PostgreSQL"
+#~ msgstr "PostgreSQL用データベース"
+
+#~ msgid " to get notified once the commercial release is available. "
+#~ msgstr " 商業リリースが可能になり次第、通知を受け取る。 "
+
+#~ msgid "Checkmk Cloud (SaaS) Beta"
+#~ msgstr "Checkmk Cloud (SaaS) Beta"
+
+#, python-format
+#~ msgid "During the beta phase, the number of services is limited to %s. "
+#~ msgstr "ベータ・フェーズの間、サービス数は %s に制限されます。 "
+
+#, fuzzy
+#~ msgid "Report an issue here. "
+#~ msgstr "スケジュールに報告する"
+
+#, python-format
+#~ msgid "Phase 1.1: Executing on site \"%s\""
+#~ msgstr "フェーズ1.1:サイト \"%s\" で実行"
+
+#, fuzzy
+#~ msgid "Phase 1.2: Extracting result"
+#~ msgstr "フェーズ2.1 : 結果の抽出"
+
+#, fuzzy
+#~ msgid "Phase 2.2: Deliver existing hosts"
+#~ msgstr "フェーズ2.2: 既存のホストの取得"
+
+#, fuzzy, python-format
+#~ msgid "Phase 2: Deliver %s piggyback hosts"
+#~ msgstr "ピギーバックホスト名のプレフィックス"
+
 #~ msgid "Contact Groups"
 #~ msgstr "連絡先グループ"
 
@@ -82420,9 +82688,6 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 #~ "Amount of time that the replica server is lagging against the source "
 #~ "server"
 #~ msgstr "レプリカサーバーがソースサーバーに対して遅れている時間"
-
-#~ msgid "Connect"
-#~ msgstr "接続する"
 
 #, fuzzy
 #~ msgid "Last updated"

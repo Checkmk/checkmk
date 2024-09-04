@@ -122,7 +122,7 @@ def _parse_esx_cpu_section(vm_values: Mapping[str, Sequence[str]]) -> ESXCpu | N
 
 
 def _parse_esx_datastore_section(
-    vm_values: Mapping[str, Sequence[str]]
+    vm_values: Mapping[str, Sequence[str]],
 ) -> list[ESXDataStore] | None:
     """Parse datastores specific values
 

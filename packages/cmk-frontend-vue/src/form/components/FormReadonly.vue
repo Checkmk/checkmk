@@ -1,24 +1,28 @@
 <script setup lang="ts">
-import { h, ref, type VNode, watch } from 'vue'
+import { h, type VNode } from 'vue'
 import type {
   Components,
   Dictionary,
   FormSpec,
   List,
+  TimeSpan,
   SingleChoice,
   CascadingSingleChoice,
   LegacyValuespec,
-  ValidationMessage,
   FixedValue,
   BooleanChoice,
   MultilineText,
-  MultipleChoice
+  MultipleChoice,
+  Password,
+  Tuple,
+  OptionalChoice
 } from '@/form/components/vue_formspec_components'
 import {
   groupDictionaryValidations,
-  groupListValidations,
+  groupIndexedValidations,
   type ValidationMessages
 } from '@/form/components/utils/validation'
+import { splitToUnits, getSelectedMagnitudes, ALL_MAGNITUDES } from './utils/timeSpan'
 
 const props = defineProps<{
   spec: FormSpec
@@ -28,14 +32,9 @@ const props = defineProps<{
 const data = defineModel<unknown>('data', { required: true })
 const ERROR_BACKGROUND_COLOR = 'rgb(252, 85, 85)'
 
-const rendered = ref<VNode | null>(null)
-watch(
-  [data],
-  () => {
-    rendered.value = renderForm(props.spec, data.value, props.backendValidation)
-  },
-  { deep: true, immediate: true }
-)
+function render() {
+  return renderForm(props.spec, data.value, props.backendValidation)
+}
 
 function renderForm(
   formSpec: FormSpec,
@@ -45,6 +44,8 @@ function renderForm(
   switch (formSpec.type as Components['type']) {
     case 'dictionary':
       return renderDict(formSpec as Dictionary, value as Record<string, unknown>, backendValidation)
+    case 'time_span':
+      return renderTimeSpan(formSpec as TimeSpan, value as number)
     case 'string':
     case 'integer':
     case 'float':
@@ -73,7 +74,72 @@ function renderForm(
       return h('div', 'Catalog does not support readonly')
     case 'multiple_choice':
       return renderMultipleChoice(formSpec as MultipleChoice, value as string[])
+    case 'password':
+      return renderPassword(formSpec as Password, value as (string | boolean)[])
+    case 'tuple':
+      return renderTuple(formSpec as Tuple, value as unknown[])
+    case 'optional_choice':
+      return renderOptionalChoice(formSpec as OptionalChoice, value as unknown[])
   }
+}
+
+function renderOptionalChoice(
+  formSpec: OptionalChoice,
+  value: unknown,
+  backendValidation: ValidationMessages = []
+): VNode | null {
+  if (value === null) {
+    return h('div', formSpec.i18n.none_label)
+  }
+  const embeddedMessages: ValidationMessages = []
+  const localMessages: ValidationMessages = []
+  backendValidation.forEach((msg) => {
+    if (msg['location'].length > 0) {
+      embeddedMessages.push({
+        location: msg.location.slice(1),
+        message: msg.message,
+        invalid_value: msg.invalid_value
+      })
+    } else {
+      localMessages.push(msg)
+    }
+  })
+
+  const errorFields: VNode[] = []
+  localMessages.forEach((msg) => {
+    errorFields.push(h('label', [msg.message]))
+  })
+
+  const embeddedResult = renderForm(formSpec.parameter_form, value, embeddedMessages)
+  return h('div', [errorFields.concat(embeddedResult ? [embeddedResult] : [])])
+}
+
+function renderTuple(
+  formSpec: Tuple,
+  value: unknown[],
+  backendValidation: ValidationMessages = []
+): VNode {
+  const [tupleValidations, elementValidations] = groupIndexedValidations(
+    backendValidation,
+    value.length
+  )
+  const tupleResults: VNode[] = []
+  tupleValidations.forEach((validation: string) => {
+    tupleResults.push(h('label', [validation]))
+  })
+
+  const elementResults: VNode[] = []
+  formSpec.elements.forEach((element, index) => {
+    const renderResult = renderForm(element, value[index], elementValidations[index])
+    if (renderResult === null) {
+      return
+    }
+    elementResults.push(h('td', renderResult))
+    elementResults.push(h('td', ', '))
+  })
+  elementResults.pop() // Remove last comma
+  tupleResults.push(h('table', h('tr', elementResults)))
+  return h('span', tupleResults)
 }
 
 function renderMultipleChoice(formSpec: MultipleChoice, value: string[]): VNode {
@@ -177,6 +243,33 @@ function renderSimpleValue(
   )
 }
 
+function renderPassword(formSpec: Password, value: (string | boolean)[]): VNode {
+  if (value[0] === 'explicit_password') {
+    return h('div', [`${formSpec.i18n.explicit_password}, ******`])
+  }
+
+  const storeChoice = formSpec.password_store_choices.find(
+    (choice) => choice.password_id === value[1]
+  )
+  if (storeChoice) {
+    return h('div', [`${formSpec.i18n.password_store}, ${storeChoice.name}`])
+  } else {
+    return h('div', [`${formSpec.i18n.password_store}, ${formSpec.i18n.password_choice_invalid}`])
+  }
+}
+
+function renderTimeSpan(formSpec: TimeSpan, value: number): VNode {
+  const result = []
+  const values = splitToUnits(value, getSelectedMagnitudes(formSpec.displayed_magnitudes))
+  for (const [magnitude] of ALL_MAGNITUDES) {
+    const v = values[magnitude]
+    if (v !== undefined) {
+      result.push(`${v} ${formSpec.i18n[magnitude]}`)
+    }
+  }
+  return h('div', [result.join(' ')])
+}
+
 function renderSingleChoice(
   formSpec: SingleChoice,
   value: unknown,
@@ -208,7 +301,7 @@ function renderList(
   value: unknown[],
   backendValidation: ValidationMessages
 ): VNode | null {
-  const [listValidations, elementValidations] = groupListValidations(
+  const [listValidations, elementValidations] = groupIndexedValidations(
     backendValidation,
     value.length
   )
@@ -216,8 +309,8 @@ function renderList(
     return null
   }
   const listResults = [h('label', [formSpec.element_template.title])]
-  listValidations.forEach((validation: ValidationMessage) => {
-    listResults.push(h('label', [validation.message]))
+  listValidations.forEach((validation: string) => {
+    listResults.push(h('label', [validation]))
   })
 
   for (let i = 0; i < value.length; i++) {
@@ -268,5 +361,7 @@ function renderLegacyValuespec(
 </script>
 
 <template>
-  <component :is="rendered"></component>
+  <render />
 </template>
+
+<style scoped></style>

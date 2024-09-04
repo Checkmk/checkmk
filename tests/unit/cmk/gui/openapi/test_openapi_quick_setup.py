@@ -3,27 +3,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 
 import pytest
 
 from tests.testlib.rest_api_client import ClientRegistry
 
-from cmk.gui.quick_setup.predefined import unique_id_formspec_wrapper
-from cmk.gui.quick_setup.to_frontend import recaps_form_spec, validate_unique_id
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.definitions import UniqueBundleIDStr, UniqueFormSpecIDStr
+from cmk.gui.quick_setup.v0_unstable.predefined import recaps, validators, widgets
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupStage
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     GeneralStageErrors,
     ParsedFormData,
     QuickSetupId,
+    StageIndex,
 )
-from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
 from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
 
 from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import FormSpec
 
 
 def register_quick_setup(setup_stages: Sequence[QuickSetupStage] | None = None) -> None:
@@ -44,7 +42,7 @@ def test_quick_setup_get(clients: ClientRegistry) -> None:
             QuickSetupStage(
                 title="stage1",
                 configure_components=[
-                    unique_id_formspec_wrapper(Title("account name")),
+                    widgets.unique_id_formspec_wrapper(Title("account name")),
                 ],
                 custom_validators=[],
                 recap=[],
@@ -64,10 +62,10 @@ def test_validate_retrieve_next(clients: ClientRegistry) -> None:
             QuickSetupStage(
                 title="stage1",
                 configure_components=[
-                    unique_id_formspec_wrapper(Title("account name")),
+                    widgets.unique_id_formspec_wrapper(Title("account name")),
                 ],
                 custom_validators=[],
-                recap=[recaps_form_spec],
+                recap=[recaps.recaps_form_spec],
                 button_label="Next",
             ),
             QuickSetupStage(
@@ -89,7 +87,7 @@ def test_validate_retrieve_next(clients: ClientRegistry) -> None:
 
 
 def _form_spec_extra_validate(
-    _stages: ParsedFormData, formspec_map: Mapping[FormSpecId, FormSpec]
+    _quick_setup_id: QuickSetupId, _stage_index: StageIndex, _stages: ParsedFormData
 ) -> GeneralStageErrors:
     return ["this is a general error", "and another one"]
 
@@ -100,7 +98,7 @@ def test_failing_validate(clients: ClientRegistry) -> None:
             QuickSetupStage(
                 title="stage1",
                 configure_components=[
-                    unique_id_formspec_wrapper(Title("account name")),
+                    widgets.unique_id_formspec_wrapper(Title("account name")),
                 ],
                 custom_validators=[_form_spec_extra_validate],
                 recap=[],
@@ -135,7 +133,7 @@ def test_quick_setup_save(clients: ClientRegistry) -> None:
             QuickSetupStage(
                 title="stage1",
                 configure_components=[
-                    unique_id_formspec_wrapper(Title("account name")),
+                    widgets.unique_id_formspec_wrapper(Title("account name")),
                 ],
                 custom_validators=[],
                 recap=[],
@@ -162,10 +160,10 @@ def test_unique_id_must_be_unique(
             QuickSetupStage(
                 title="stage1",
                 configure_components=[
-                    unique_id_formspec_wrapper(Title("account name")),
+                    widgets.unique_id_formspec_wrapper(Title("account name")),
                 ],
-                custom_validators=[validate_unique_id],
-                recap=[recaps_form_spec],
+                custom_validators=[validators.validate_unique_id],
+                recap=[recaps.recaps_form_spec],
                 button_label="Next",
             ),
         ],

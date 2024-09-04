@@ -82,9 +82,11 @@ def check_hpux_tunables(section, params, tunable, descr):
         warn_perf = float(warn * threshold / 100)
         crit_perf = float(crit * threshold / 100)
 
-        yield 0, "%.2f%% used (%d/%d %s)" % (perc, usage, threshold, descr), [
-            (descr, usage, warn_perf, crit_perf, 0, threshold)
-        ]
+        yield (
+            0,
+            "%.2f%% used (%d/%d %s)" % (perc, usage, threshold, descr),
+            [(descr, usage, warn_perf, crit_perf, 0, threshold)],
+        )
 
         if perc > crit:
             state = 2

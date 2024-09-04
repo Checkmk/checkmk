@@ -373,10 +373,18 @@ def get_elasticache_sections() -> ElasticacheSections:
 
         # TODO: FakeElastiCacheClient shoud actually subclass ElastiCacheClient, etc.
         elasticache_limits = ElastiCacheLimits(
-            fake_elasticache_client1, region, config, distributor, fake_quota_client  # type: ignore[arg-type]
+            fake_elasticache_client1,  # type: ignore[arg-type]
+            region,
+            config,
+            distributor,
+            fake_quota_client,  # type: ignore[arg-type]
         )
         elasticache_summary = ElastiCacheSummary(
-            fake_elasticache_client2, fake_tagging_client, region, config, distributor  # type: ignore[arg-type]
+            fake_elasticache_client2,  # type: ignore[arg-type]
+            fake_tagging_client,  # type: ignore[arg-type]
+            region,
+            config,
+            distributor,
         )
         elasticache = ElastiCache(fake_cloudwatch_client, region, config)  # type: ignore[arg-type]
 

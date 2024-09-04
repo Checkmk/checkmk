@@ -9,6 +9,7 @@ from typing import Any
 import pytest
 
 import cmk.ccc.version as cmk_version
+
 from cmk.agent_based.v2 import Attributes, TableRow
 from cmk.plugins.collection.agent_based import inventory_checkmk_server as inv_checkmk
 

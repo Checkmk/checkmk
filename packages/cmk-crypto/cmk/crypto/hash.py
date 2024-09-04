@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Hash algorithms"""
 
-
 from __future__ import annotations
 
 import hashlib

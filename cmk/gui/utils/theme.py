@@ -9,14 +9,14 @@ from pathlib import Path
 
 from flask import current_app
 
+from cmk.ccc.version import Edition, edition
+
 import cmk.utils.paths
 
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKInternalError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
-
-from cmk.ccc.version import edition, Edition
 
 
 class Theme:

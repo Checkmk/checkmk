@@ -8,15 +8,15 @@ from typing import Callable, cast, Generic, Mapping, TypeAlias, TypeVar
 
 from pydantic import TypeAdapter, ValidationError
 
+from cmk.ccc import store
+from cmk.ccc.plugin_registry import Registry
+
 from cmk.utils.config_validation_layer.validation_utils import ConfigValidationError
 from cmk.utils.paths import omd_root
 
 from cmk.gui.config import active_config
 from cmk.gui.watolib.config_domain_name import wato_fileheader
 from cmk.gui.watolib.utils import format_config_value
-
-from cmk.ccc import store
-from cmk.ccc.plugin_registry import Registry
 
 _G = TypeVar("_G")
 _T = TypeVar("_T")

@@ -8,6 +8,7 @@ WARNING: Use at your own risk, not supported.
 
 Checkmk uses TLS certificates to secure agent communication.
 """
+
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
@@ -71,7 +72,6 @@ def _serialized_root_cert() -> str:
 
 
 def _serialized_signed_cert(csr: x509.CertificateSigningRequest) -> str:
-
     cert = _get_agent_ca().sign_csr(
         CertificateSigningRequest(csr),
         expiry=relativedelta(

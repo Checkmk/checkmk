@@ -10,6 +10,11 @@ from contextlib import suppress
 from pathlib import Path
 from typing import Any, cast, Final, Generic, get_args, TypeVar
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.store import save_object_to_file
+
 import cmk.utils
 import cmk.utils.paths
 from cmk.utils.escaping import escape
@@ -26,10 +31,6 @@ from cmk.gui.type_defs import PermissionName, RoleName, Visual, VisualName, Visu
 from cmk.gui.utils.roles import user_may
 from cmk.gui.utils.speaklater import LazyString
 
-import cmk.ccc.version as cmk_version
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.store import save_object_to_file
 from cmk.mkp_tool import id_to_mkp, Installer, PackageName, PackagePart
 
 TVisual = TypeVar("TVisual", bound=Visual)

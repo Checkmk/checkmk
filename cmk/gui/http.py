@@ -19,14 +19,14 @@ from pydantic import BaseModel
 from six import ensure_str
 from werkzeug.utils import get_content_type
 
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import url_prefix
+
 from cmk.utils.urls import is_allowed_url
 
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import url_prefix
 
 UploadedFile = tuple[str, str, bytes]
 T = TypeVar("T")
@@ -196,10 +196,13 @@ class LegacyDeprecatedMixin:
         for name, values in self.values.lists():  # type: ignore[attr-defined]
             if name.startswith(prefix):
                 # Preserve previous behaviour
-                yield name, (
-                    ensure_str(values[-1])  # pylint: disable= six-ensure-str-bin-call
-                    if values
-                    else None
+                yield (
+                    name,
+                    (
+                        ensure_str(values[-1])  # pylint: disable= six-ensure-str-bin-call
+                        if values
+                        else None
+                    ),
                 )
 
     @overload

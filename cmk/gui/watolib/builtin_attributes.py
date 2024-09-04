@@ -14,6 +14,15 @@ from cmk.utils.user import UserId
 from cmk.gui import fields as gui_fields
 from cmk.gui import hooks, userdb
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs.converter import TransformForLegacyData
+from cmk.gui.form_specs.generators.host_address import create_host_address
+from cmk.gui.form_specs.generators.setup_site_choice import create_setup_site_choice
+from cmk.gui.form_specs.generators.snmp_credentials import create_snmp_credentials
+from cmk.gui.form_specs.private import (
+    OptionalChoice,
+    SingleChoiceElementExtended,
+    SingleChoiceExtended,
+)
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -51,7 +60,7 @@ from cmk.gui.valuespec import (
     ValueSpecText,
     ValueSpecValidateFunc,
 )
-from cmk.gui.watolib.attributes import IPMIParameters, SNMPCredentials
+from cmk.gui.watolib.attributes import create_ipmi_parameters, IPMIParameters, SNMPCredentials
 from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttributeNagiosText,
@@ -72,6 +81,14 @@ from cmk.gui.watolib.translation import HostnameTranslation
 
 import cmk.fields.validators
 from cmk import fields
+from cmk.rulesets.v1 import Help, Label, Message, Title
+from cmk.rulesets.v1.form_specs import (
+    InvalidElementMode,
+    InvalidElementValidator,
+    List,
+    SingleChoice,
+    String,
+)
 
 
 class HostAttributeAlias(ABCHostAttributeNagiosText):
@@ -149,6 +166,27 @@ class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
             allow_ipv6_address=False,
         )
 
+    def form_spec(self) -> String:
+        return create_host_address(
+            title=Title("IPv4 address"),
+            help_text=Help(
+                "Specify an explicit IP address or resolvable DNS name here, if "
+                "the host name is not resolvable via <tt>/etc/hosts</tt> or DNS. "
+                "If you do not set this attribute, host name resolution will be "
+                "performed when the configuration is enabled. Checkmk's "
+                "built-in DNS cache is enabled by default in the global "
+                "configuration to speed up the activation process. The cache is "
+                "normally updated daily by a cron job. You can manually update "
+                "the cache with the <tt>cmk -v --update-dns-cache</tt> "
+                "command.<br><br><b>Dynamic IP addresses only:</b><br>If you "
+                "enter a DNS name here, the DNS resolution will be performed "
+                "each time the host is checked. Checkmk's DNS cache is "
+                "<b>NOT</b> queried."
+            ),
+            allow_empty=False,
+            allow_ipv6_address=False,
+        )
+
     def openapi_field(self) -> gui_fields.Field:
         return fields.String(
             description="An IPv4 address.",
@@ -182,6 +220,27 @@ class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
         return HostAddress(
             title=_("IPv6 address"),
             help=_(
+                "Specify an explicit IPv6 address or resolvable DNS name here, if "
+                "the host name is not resolvable via <tt>/etc/hosts</tt> or DNS. "
+                "If you do not set this attribute, host name resolution will be "
+                "performed when the configuration is enabled. Checkmk's "
+                "built-in DNS cache is enabled by default in the global "
+                "configuration to speed up the activation process. The cache is "
+                "normally updated daily by a cron job. You can manually update "
+                "the cache with the <tt>cmk -v --update-dns-cache</tt> "
+                "command.<br><br><b>Dynamic IP addresses only:</b><br>If you "
+                "enter a DNS name here, the DNS resolution will be performed "
+                "each time the host is checked. Checkmk's DNS cache is "
+                "<b>NOT</b> queried."
+            ),
+            allow_empty=False,
+            allow_ipv4_address=False,
+        )
+
+    def form_spec(self) -> String:
+        return create_host_address(
+            title=Title("IPv6 address"),
+            help_text=Help(
                 "Specify an explicit IPv6 address or resolvable DNS name here, if "
                 "the host name is not resolvable via <tt>/etc/hosts</tt> or DNS. "
                 "If you do not set this attribute, host name resolution will be "
@@ -247,6 +306,16 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
             ),
         )
 
+    def form_spec(self) -> List:
+        return List[str](
+            title=Title("Additional IPv4 addresses"),
+            help_text=Help(
+                "Specify additional IPv4 addresses here. These can be used in "
+                "active checks such as ICMP."
+            ),
+            element_template=create_host_address(allow_empty=False, allow_ipv6_address=False),
+        )
+
     def openapi_field(self) -> gui_fields.Field:
         return fields.List(
             fields.String(
@@ -297,6 +366,16 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
             ),
         )
 
+    def form_spec(self) -> List:
+        return List[str](
+            title=Title("Additional IPv6 addresses"),
+            help_text=Help(
+                "Specify additional IPv6 addresses here. These can be used in "
+                "active checks such as ICMP."
+            ),
+            element_template=create_host_address(allow_empty=False, allow_ipv4_address=False),
+        )
+
     def openapi_field(self) -> gui_fields.Field:
         return fields.List(
             fields.String(
@@ -342,6 +421,19 @@ class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
             )
             % "wato.py?mode=edit_ruleset&varname=snmp_communities",
             default_value=None,
+        )
+
+    def form_spec(self) -> TransformForLegacyData:
+        return create_snmp_credentials(
+            help_text=Help(
+                "Configure the community to be used when contacting this host "
+                "via SNMP v1/v2 or v3. You can also configure the SNMP community "
+                'using the <a href="%s">SNMP Communities</a> ruleset. '
+                "Configuring a community when creating a host overrides the "
+                "community defined by the rules."
+            )
+            % "wato.py?mode=edit_ruleset&varname=snmp_communities",
+            default_value="community",
         )
 
     def openapi_field(self) -> gui_fields.Field:
@@ -858,6 +950,17 @@ class HostAttributeManagementAddress(ABCHostAttributeValueSpec):
             allow_empty=False,
         )
 
+    def form_spec(self) -> String:
+        return create_host_address(
+            title=Title("Address"),
+            help_text=Help(
+                "Address (IPv4 or IPv6) or dns name under which the "
+                "management board can be reached. If this is not set, "
+                "the same address as that of the host will be used."
+            ),
+            allow_empty=False,
+        )
+
     def openapi_field(self) -> gui_fields.Field:
         return fields.String(
             description="Address (IPv4, IPv6 or host name) under which the management board can be reached.",
@@ -900,6 +1003,27 @@ class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
             ],
         )
 
+    def form_spec(self) -> SingleChoiceExtended:
+        return SingleChoiceExtended[object](
+            title=Title("Protocol"),
+            help_text=Help("Specify the protocol used to connect to the management board."),
+            elements=[
+                SingleChoiceElementExtended(
+                    name=None,
+                    title=Title("No management board"),
+                ),
+                SingleChoiceElementExtended(
+                    name="snmp",
+                    title=Title("SNMP"),
+                ),
+                SingleChoiceElementExtended(
+                    name="ipmi",
+                    title=Title("IPMI"),
+                ),
+            ],
+            type=object,
+        )
+
     def openapi_field(self) -> gui_fields.Field:
         return gui_fields.HostAttributeManagementBoardField()
 
@@ -923,6 +1047,12 @@ class HostAttributeManagementSNMPCommunity(ABCHostAttributeValueSpec):
 
     def valuespec(self) -> ValueSpec:
         return SNMPCredentials(
+            default_value=None,
+            allow_none=True,
+        )
+
+    def form_spec(self) -> TransformForLegacyData:
+        return create_snmp_credentials(
             default_value=None,
             allow_none=True,
         )
@@ -991,6 +1121,13 @@ class HostAttributeManagementIPMICredentials(ABCHostAttributeValueSpec):
             default_value=None,
         )
 
+    def form_spec(self) -> OptionalChoice:
+        return OptionalChoice(
+            title=Title("Explicit credentials"),
+            none_label=Label(""),
+            parameter_form=create_ipmi_parameters(),
+        )
+
     def openapi_field(self) -> gui_fields.Field:
         return fields.Nested(
             gui_fields.IPMIParameters,
@@ -1031,6 +1168,23 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
                 "host, you will have to change the site attribute to the "
                 "local site. But this may make the host be monitored from "
                 "multiple sites."
+            ),
+        )
+
+    def form_spec(self) -> SingleChoice:
+        return create_setup_site_choice(
+            title=Title("Monitored on site"),
+            help_text=Help("Specify the site that should monitor this host."),
+            invalid_element_validation=InvalidElementValidator(
+                mode=InvalidElementMode.KEEP,
+                error_msg=Message(
+                    "The configured site is not known to this site. In case you "
+                    "are configuring in a remote site, this may be a host "
+                    "monitored by another site. If you want to modify this "
+                    "host, you will have to change the site attribute to the "
+                    "local site. But this may make the host be monitored from "
+                    "multiple sites."
+                ),
             ),
         )
 

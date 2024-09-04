@@ -7,6 +7,7 @@ import argparse
 from pathlib import Path
 
 from cmk.ccc.version import __version__, Version
+
 from cmk.werks.models import Edition, Werk
 
 from . import load_precompiled_werks_file, load_raw_files, write_as_text, write_precompiled_werks

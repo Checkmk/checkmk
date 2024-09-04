@@ -7,7 +7,6 @@
 Needs to be part of the generic code, not packed into NTOP addon.
 """
 
-
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user

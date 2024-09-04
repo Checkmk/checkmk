@@ -208,7 +208,6 @@ class HttpEndpoint(BaseModel):
 
 
 def parse_http_params(params: Mapping[str, object]) -> Sequence[HttpEndpoint]:
-
     def _parse_dict(o: object) -> dict:
         if not isinstance(o, dict):
             raise TypeError(o)
@@ -288,7 +287,7 @@ def _auth_args(
     auth: (
         tuple[Literal[AuthMode.BASIC_AUTH], UserAuth]
         | tuple[Literal[AuthMode.TOKEN_AUTH], TokenAuth]
-    )
+    ),
 ) -> tuple[str | Secret, ...]:
     match auth:
         case (AuthMode.BASIC_AUTH, UserAuth(user=user, password=password)):
@@ -457,7 +456,7 @@ def _content_args(content: Content) -> Iterator[str]:
 def _header_match_args(
     header: (
         tuple[Literal[MatchType.STRING], HeaderSpec] | tuple[Literal[MatchType.REGEX], HeaderRegex]
-    )
+    ),
 ) -> Iterator[str]:
     match header:
         case (MatchType.STRING, HeaderSpec(header_name=name, header_value=value)):
@@ -481,7 +480,7 @@ def _header_match_args(
 
 
 def _body_match_args(
-    body: tuple[Literal[MatchType.STRING], str] | tuple[Literal[MatchType.REGEX], BodyRegex]
+    body: tuple[Literal[MatchType.STRING], str] | tuple[Literal[MatchType.REGEX], BodyRegex],
 ) -> Iterator[str]:
     match body:
         case (MatchType.STRING, str(string)):

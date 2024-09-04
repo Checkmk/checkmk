@@ -19,6 +19,8 @@ from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from livestatus import SiteId
 
+from cmk.ccc import version
+
 from cmk.utils import paths
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
 from cmk.utils.hostaddress import HostName
@@ -33,8 +35,6 @@ from cmk.gui.watolib.custom_attributes import (
 )
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
-
-from cmk.ccc import version
 
 managedtest = pytest.mark.skipif(
     version.edition(paths.omd_root) is not version.Edition.CME, reason="see #7213"
@@ -586,7 +586,7 @@ def test_openapi_host_custom_attributes(clients: ClientRegistry) -> None:
 
 @pytest.mark.usefixtures("with_host")
 def test_openapi_host_collection(clients: ClientRegistry) -> None:
-    resp = clients.HostConfig.get_all()
+    resp = clients.HostConfig.get_all(include_links=False)
 
     for host in resp.json["value"]:
         # Check that all entries are domain objects
@@ -599,13 +599,39 @@ def test_openapi_host_collection(clients: ClientRegistry) -> None:
 
 @pytest.mark.usefixtures("with_host")
 def test_openapi_host_collection_effective_attributes(clients: ClientRegistry) -> None:
-    resp1 = clients.HostConfig.get_all(effective_attributes=True)
+    resp1 = clients.HostConfig.get_all(effective_attributes=True, include_links=False)
     for host in resp1.json["value"]:
         assert isinstance(host["extensions"]["effective_attributes"], dict)
 
-    resp2 = clients.HostConfig.get_all(effective_attributes=False)
+    resp2 = clients.HostConfig.get_all(effective_attributes=False, include_links=False)
     for host in resp2.json["value"]:
         assert host["extensions"]["effective_attributes"] is None
+
+
+@pytest.mark.usefixtures("with_host")
+def test_openapi_list_hosts_include_links(clients: ClientRegistry) -> None:
+    default_response = clients.HostConfig.get_all()
+    enabled_response = clients.HostConfig.get_all(include_links=True)
+    disabled_response = clients.HostConfig.get_all(include_links=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == enabled_response.json
+    assert any(bool(value["links"]) for value in enabled_response.json["value"])
+    assert all(value["links"] == [] for value in disabled_response.json["value"])
+
+
+@pytest.mark.usefixtures("with_host")
+def test_openapi_list_hosts_include_extensions(clients: ClientRegistry) -> None:
+    default_response = clients.HostConfig.get_all()
+    enabled_response = clients.HostConfig.get_all(include_extensions=True)
+    disabled_response = clients.HostConfig.get_all(include_extensions=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == enabled_response.json
+    assert any(bool(value["extensions"]) for value in enabled_response.json["value"])
+    assert all("extensions" not in value for value in disabled_response.json["value"])
 
 
 @pytest.mark.usefixtures("inline_background_jobs")
@@ -968,7 +994,7 @@ def test_openapi_all_hosts_with_non_existing_site(
         }
 
     monkeypatch.setattr(Folder, "all_hosts_recursively", mock_all_hosts_recursively)
-    clients.HostConfig.get_all()
+    clients.HostConfig.get_all(include_links=False)
 
 
 def test_openapi_host_with_non_existing_site(
@@ -1085,7 +1111,7 @@ def test_openapi_list_hosts_does_not_show_inaccessible_hosts(clients: ClientRegi
     )
 
     clients.Host.set_credentials("unable_to_see_all_host", "supersecretish")
-    resp = clients.HostConfig.get_all()
+    resp = clients.HostConfig.get_all(include_links=False, include_extensions=False)
     host_names = [entry["id"] for entry in resp.json["value"]]
     assert "should_be_visible" in host_names
     assert "should_not_be_invisible" not in host_names
@@ -1120,8 +1146,10 @@ def test_openapi_effective_attributes_are_transformed_on_their_way_out_regressio
         == resp_without_effective_attributes.json["extensions"]["attributes"]["meta_data"]
     )
 
-    resp_with_effective_attributes = clients.HostConfig.get_all(effective_attributes=True)
-    resp_without_effective_attributes = clients.HostConfig.get_all()
+    resp_with_effective_attributes = clients.HostConfig.get_all(
+        effective_attributes=True, include_links=False
+    )
+    resp_without_effective_attributes = clients.HostConfig.get_all(include_links=False)
     assert resp_with_effective_attributes.json["value"][0]["extensions"]["effective_attributes"][
         "meta_data"
     ] == {

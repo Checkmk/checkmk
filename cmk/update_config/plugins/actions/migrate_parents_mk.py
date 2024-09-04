@@ -12,6 +12,8 @@ from typing import Iterator, NamedTuple
 
 from livestatus import SiteId
 
+from cmk.ccc.site import omd_site
+
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostAddress, HostName
 
@@ -21,7 +23,6 @@ from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 
-from cmk.ccc.site import omd_site
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 

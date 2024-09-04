@@ -8,7 +8,7 @@
 
 #first section to load
 load:
-    - global.yml 
+    - global.yml
     - winperf.yml
     - logfiles.yml
     - logwatch.yml
@@ -16,9 +16,9 @@ load:
 
 #second section to load
 custom:
-    - ps_custom.yml 
-    
-#now override 
+    - ps_custom.yml
+
+#now override
 global:
     port: 6556
     # Disable ipv6 support. By default, ipv4 is always supported

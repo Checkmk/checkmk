@@ -16,7 +16,7 @@ from cmk.gui.form_specs.vue.form_spec_visitor import (
 )
 from cmk.gui.form_specs.vue.visitors._type_defs import DataOrigin
 from cmk.gui.quick_setup.v0_unstable.definitions import QuickSetupSaveRedirect
-from cmk.gui.quick_setup.v0_unstable.predefined._common import (
+from cmk.gui.quick_setup.v0_unstable.predefined import (
     build_quick_setup_formspec_map,
     stage_components,
 )

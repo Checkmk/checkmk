@@ -10,6 +10,16 @@ import cmk.gui.quick_setup.v0_unstable.predefined._widgets as widgets
 from cmk.gui.quick_setup.v0_unstable.predefined._common import (
     _collect_params_from_form_data as collect_params_from_form_data,
 )
+from cmk.gui.quick_setup.v0_unstable.predefined._common import (
+    _collect_params_with_defaults_from_form_data as collect_params_with_defaults_from_form_data,
+)
+from cmk.gui.quick_setup.v0_unstable.predefined._common import (
+    _collect_passwords_from_form_data as collect_passwords_from_form_data,
+)
+from cmk.gui.quick_setup.v0_unstable.predefined._common import (
+    build_quick_setup_formspec_map as build_quick_setup_formspec_map,
+)
+from cmk.gui.quick_setup.v0_unstable.predefined._common import stage_components as stage_components
 
 __all__ = [
     "complete",
@@ -17,4 +27,8 @@ __all__ = [
     "validators",
     "widgets",
     "collect_params_from_form_data",
+    "build_quick_setup_formspec_map",
+    "stage_components",
+    "collect_params_with_defaults_from_form_data",
+    "collect_passwords_from_form_data",
 ]

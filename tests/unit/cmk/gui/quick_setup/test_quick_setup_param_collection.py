@@ -10,10 +10,10 @@ from cmk.utils.user import UserId
 
 from cmk.base.server_side_calls import load_special_agents
 
-from cmk.gui.quick_setup.v0_unstable.predefined._common import (
-    _collect_params_from_form_data,
-    _collect_params_with_defaults_from_form_data,
-    _collect_passwords_from_form_data,
+from cmk.gui.quick_setup.v0_unstable.predefined import (
+    collect_params_from_form_data,
+    collect_params_with_defaults_from_form_data,
+    collect_passwords_from_form_data,
 )
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
@@ -120,14 +120,14 @@ EXPECTED_PASSWORDS = {"ca2f6299-622f-4339-80bb-14a4ae03bdda": "my_secret_access_
 def test_quick_setup_collect_params_from_form_data() -> None:
     load_special_agents()
     assert (
-        _collect_params_from_form_data(ALL_FORM_SPEC_DATA, "special_agents:aws") == EXPECTED_PARAMS
+        collect_params_from_form_data(ALL_FORM_SPEC_DATA, "special_agents:aws") == EXPECTED_PARAMS
     )
 
 
 def test_quick_setup_collect_passwords_from_form_data() -> None:
     load_special_agents()
     assert (
-        _collect_passwords_from_form_data(ALL_FORM_SPEC_DATA, "special_agents:aws")
+        collect_passwords_from_form_data(ALL_FORM_SPEC_DATA, "special_agents:aws")
         == EXPECTED_PASSWORDS
     )
 
@@ -138,6 +138,6 @@ def test_quick_setup_collect_params_with_defaults_from_form_data(
     load_special_agents()
     with UserContext(with_user[0]):
         assert (
-            _collect_params_with_defaults_from_form_data(ALL_FORM_SPEC_DATA, "special_agents:aws")
+            collect_params_with_defaults_from_form_data(ALL_FORM_SPEC_DATA, "special_agents:aws")
             == EXPECTED_PARAMS_WITH_DEFAULTS
         )

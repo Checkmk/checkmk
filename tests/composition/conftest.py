@@ -18,8 +18,6 @@ from tests.composition.utils import bake_agent, get_cre_agent_path
 site_factory = get_site_factory(prefix="comp_")
 
 
-# The scope of the site fixtures is "module" to avoid that changing the site properties in a module
-# may result in a test failing in another one. It also makes analyzing the job artifacts easier.
 @pytest.fixture(name="central_site", scope="session")
 def _central_site(request: pytest.FixtureRequest) -> Iterator[Site]:
     yield from site_factory.get_test_site(

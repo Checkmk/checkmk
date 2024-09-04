@@ -19,8 +19,10 @@ from typing import Final, NewType
 
 import livestatus
 
-from cmk.utils import statename
 from cmk.utils.notification_result import (
+    NOTIFICATION_RESULT_OK,
+    NOTIFICATION_RESULT_PERMANENT_ISSUE,
+    NOTIFICATION_RESULT_TEMPORARY_ISSUE,
     NotificationContext,
     NotificationPluginName,
     NotificationResultCode,
@@ -96,7 +98,7 @@ def notification_progress_message(
     else:
         what = "HOST NOTIFICATION PROGRESS"
         spec = hostname
-    state = _state_for(exit_code)
+    state = _notification_result_code_to_state_name(exit_code)
     return SanitizedLivestatusLogStr(
         "{}: {};{};{};{};{}".format(
             what,
@@ -123,7 +125,7 @@ def notification_result_message(
     else:
         what = "HOST NOTIFICATION RESULT"
         spec = hostname
-    state = _state_for(exit_code)
+    state = _notification_result_code_to_state_name(exit_code)
     comment = " -- ".join(output)
     short_output = output[-1] if output else ""
     return SanitizedLivestatusLogStr(
@@ -139,5 +141,10 @@ def notification_result_message(
     )
 
 
-def _state_for(exit_code: NotificationResultCode) -> str:
-    return statename.service_state_name(exit_code, "UNKNOWN")
+def _notification_result_code_to_state_name(exit_code: NotificationResultCode) -> str:
+    """Map the notification result codes to service state names"""
+    return {
+        NOTIFICATION_RESULT_OK: "OK",
+        NOTIFICATION_RESULT_TEMPORARY_ISSUE: "WARNING",
+        NOTIFICATION_RESULT_PERMANENT_ISSUE: "CRITICAL",
+    }.get(exit_code, "UNKNOWN")

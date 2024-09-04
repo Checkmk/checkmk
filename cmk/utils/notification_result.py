@@ -5,9 +5,10 @@
 
 from typing import NewType, TypedDict
 
-# 0 -> OK
-# 1 -> temporary issue
-# 2 -> permanent issue
+NOTIFICATION_RESULT_OK = 0
+NOTIFICATION_RESULT_TEMPORARY_ISSUE = 1
+NOTIFICATION_RESULT_PERMANENT_ISSUE = 2
+
 NotificationResultCode = NewType("NotificationResultCode", int)
 NotificationPluginName = NewType("NotificationPluginName", str)
 

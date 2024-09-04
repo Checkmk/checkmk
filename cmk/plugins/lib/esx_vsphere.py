@@ -96,6 +96,7 @@ class SectionESXVm(BaseModel):
     heartbeat: HeartBeat | None
     host: str | None
     name: str | None
+    systime: str | None
 
 
 def average_parsed_data(values: CounterValues) -> float:

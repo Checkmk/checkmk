@@ -35,6 +35,7 @@ def parse_esx_vsphere_vm(string_table: StringTable) -> SectionESXVm | None:
         datastores=_parse_esx_datastore_section(grouped_values),
         host=_parse_esx_vm_running_on_host(grouped_values),
         name=_parse_esx_vm_name(grouped_values),
+        systime=_parse_esx_systime(grouped_values),
     )
 
 
@@ -49,6 +50,13 @@ def _parse_esx_vm_name(vm_values: Mapping[str, Sequence]) -> str | None:
         return None
 
     return " ".join(vm_values["name"])
+
+
+def _parse_esx_systime(vm_values: Mapping[str, Sequence]) -> str | None:
+    if "systime" not in vm_values:
+        return None
+
+    return vm_values["systime"][0]
 
 
 def _parse_esx_vm_heartbeat_status(vm_values: Mapping[str, Sequence[str]]) -> HeartBeat | None:

@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import datetime
 import json
 from collections.abc import Mapping, Sequence
-from typing import Any, NamedTuple
+from dataclasses import dataclass
+from typing import Any
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
@@ -23,11 +23,19 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.lib import esx_vsphere
 
 
-class Snapshot(NamedTuple):
+@dataclass(frozen=True)
+class Snapshot:
     time: int
+    systime: int | None
     state: str
     name: str
     vm: str
+
+    @property
+    def age(self) -> int | None:
+        if self.systime is None:
+            return None
+        return self.systime - self.time
 
 
 Section = Sequence[Snapshot]
@@ -36,9 +44,9 @@ Section = Sequence[Snapshot]
 def parse_esx_vsphere_snapshots(string_table: StringTable) -> Section:
     """
     >>> parse_esx_vsphere_snapshots([
-    ...     ['{"time": 0, "state": "poweredOn", "name": "foo", "vm": "bar"}'],
+    ...     ['{"time": 0, "systime": 0, "state": "poweredOn", "name": "foo", "vm": "bar"}'],
     ... ])
-    [Snapshot(time=0, state='poweredOn', name='foo', vm='bar')]
+    [Snapshot(time=0, systime=0, state='poweredOn', name='foo', vm='bar')]
     """
     return [Snapshot(**json.loads(line[0])) for line in string_table]
 
@@ -60,10 +68,7 @@ def _get_snapshot_name(snapshot: Snapshot) -> str:
 def check_snapshots_summary(params: Mapping[str, Any], section: Section) -> CheckResult:
     snapshots = section  # just to be clear
 
-    # use UTC-timestamp - don't use time.time() here since it's local
-    now = int(datetime.datetime.now(tz=datetime.UTC).timestamp())
-
-    if any(s for s in snapshots if s.time > now):
+    if any(s for s in snapshots if s.age is not None and s.age < 0):
         yield Result(
             state=State.WARN,
             summary="Snapshot with a creation time in future found. Please check your network time synchronisation.",
@@ -90,15 +95,16 @@ def check_snapshots_summary(params: Mapping[str, Any], section: Section) -> Chec
         summary=f"Latest: {_get_snapshot_name(latest_snapshot)} {latest_timestamp}",
     )
 
-    yield from check_levels_v1(
-        now - latest_snapshot.time,
-        metric_name="age" if params.get("age") else None,
-        levels_upper=params.get("age"),
-        label="Age of latest",
-        render_func=render.timespan,
-        notice_only=True,
-        boundaries=(0, None),
-    )
+    if latest_snapshot.age is not None:
+        yield from check_levels_v1(
+            latest_snapshot.age,
+            metric_name="age" if params.get("age") else None,
+            levels_upper=params.get("age"),
+            label="Age of latest",
+            render_func=render.timespan,
+            notice_only=True,
+            boundaries=(0, None),
+        )
 
     # Display oldest snapshot only, if it is not identical with the latest snapshot
     if oldest_snapshot != latest_snapshot:
@@ -106,16 +112,17 @@ def check_snapshots_summary(params: Mapping[str, Any], section: Section) -> Chec
             state=State.OK,
             summary=f"Oldest: {_get_snapshot_name(oldest_snapshot)} {oldest_timestamp}",
         )
-    # check oldest age unconditionally
-    yield from check_levels_v1(
-        now - oldest_snapshot.time,
-        metric_name="age_oldest" if params.get("age_oldest") else None,
-        levels_upper=params.get("age_oldest"),
-        label="Age of oldest",
-        render_func=render.timespan,
-        notice_only=True,
-        boundaries=(0, None),
-    )
+
+    if oldest_snapshot.age is not None:
+        yield from check_levels_v1(
+            oldest_snapshot.age,
+            metric_name="age_oldest" if params.get("age_oldest") else None,
+            levels_upper=params.get("age_oldest"),
+            label="Age of oldest",
+            render_func=render.timespan,
+            notice_only=True,
+            boundaries=(0, None),
+        )
 
 
 check_plugin_esx_vsphere_vm_snapshots_summary = CheckPlugin(
@@ -142,6 +149,7 @@ def check_snapshots(params: Mapping[str, Any], section: esx_vsphere.SectionESXVm
         [
             Snapshot(
                 time=int(x[1]),
+                systime=(int(section.systime) if (section.systime is not None) else None),
                 state=x[2],
                 name=x[3],
                 vm=section.name if section.name else "",

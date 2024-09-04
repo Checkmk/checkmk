@@ -29,6 +29,7 @@
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.10.4",
+    "@testing-library/jest-dom": "^6.5.0",
     "@testing-library/vue": "^8.1.0",
     "@tsconfig/node20": "^20.1.4",
     "@types/d3": "^7.4.3",

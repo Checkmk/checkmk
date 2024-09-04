@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import abc
 import random
-from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from typing import Any, TypedDict
 
 from cmk.plugins.aws.constants import AWSEC2InstTypes
@@ -144,7 +144,7 @@ class Bytes(Str):
 
 
 class InstanceBuilder(abc.ABC):
-    def __init__(self, idx: int, amount: int, skip_entities: Container[str] = ()) -> None:
+    def __init__(self, idx: int, amount: int, skip_entities: Collection[str] = ()) -> None:
         self._idx = idx
         self._amount = amount
         self._skip_entities = [] if not skip_entities else skip_entities

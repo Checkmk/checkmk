@@ -190,7 +190,7 @@ def test_calculate_data_for_prediction(
             from_time - start,
         )
         for start, end in time_windows
-        if (response := _load_fake_rrd_response(start, end))
+        for response in [_load_fake_rrd_response(start, end)]
     ]
 
     data_for_pred = _prediction._calculate_data_for_prediction(raw_slices[0][0], raw_slices)

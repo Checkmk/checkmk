@@ -49,7 +49,7 @@ class TestStructuredDataID:
         self,
         id_: str,
     ) -> None:
-        assert StructuredDataID(id_)
+        StructuredDataID(id_)
 
     @pytest.mark.parametrize(
         "id_",
@@ -70,7 +70,7 @@ class TestStructuredDataID:
     )
     def test_validate_raises(self, id_: str) -> None:
         with pytest.raises(ValueError, match="is not an RFC 5425-conform SD-ID."):
-            assert StructuredDataID(id_)
+            StructuredDataID(id_)
 
 
 class TestStructuredDataValue:

@@ -252,7 +252,6 @@ def test_get_vm_labels_section(
 ) -> None:
     labels_section = get_vm_labels_section(vm, group_tags)
 
-    assert labels_section
     assert labels_section._cont == expected_result[0]
     assert labels_section._piggytargets == expected_result[1]
 

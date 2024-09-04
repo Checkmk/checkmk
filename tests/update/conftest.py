@@ -203,7 +203,8 @@ def update_site(base_site: Site, target_version: CMKVersion, interactive: bool) 
 
 
 def _get_rel_path(full_path: Path) -> Path:
-    return full_path if not omd_root else full_path.relative_to(omd_root)
+    # NOTE: omd_root is always truthy because it's a Path
+    return full_path.relative_to(omd_root)
 
 
 def is_test_site_licensed(test_site: Site) -> bool:

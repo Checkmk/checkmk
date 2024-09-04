@@ -1,0 +1,11 @@
+Title: USV UPS: discover devices with .1.3.6.1.4.1.43943 as sysObjectID
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1725464434
+Edition: cre
+Level: 1
+Version: 2.2.0p33
+
+USV UPSs use OID .1.3.6.1.4.1.43943 as sysObjectID. These devices are currently not discovered or
+monitored. This has now been changed and they will be discovered.

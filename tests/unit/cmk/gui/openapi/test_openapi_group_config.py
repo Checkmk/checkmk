@@ -599,6 +599,7 @@ def test_list_group_include_links(group_client: GroupConfig) -> None:
     assert all(value["links"] == [] for value in disabled_response.json["value"])
 
 
+@managedtest
 def test_list_group_include_extensions(group_client: GroupConfig) -> None:
     group_client.create(name="test_group", alias="test_alias")
     default_response = group_client.list()

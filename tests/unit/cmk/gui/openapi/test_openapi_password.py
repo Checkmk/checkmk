@@ -337,6 +337,7 @@ def test_password_identifier_regex(clients: ClientRegistry) -> None:
     }
 
 
+@managedtest
 @pytest.mark.usefixtures("mock_password_file_regeneration")
 def test_list_passwords_include_links(clients: ClientRegistry) -> None:
     clients.Password.create("test_password", "Test Password", "admin", "secret", ["all"])
@@ -351,6 +352,7 @@ def test_list_passwords_include_links(clients: ClientRegistry) -> None:
     assert all(value["links"] == [] for value in disabled_response.json["value"])
 
 
+@managedtest
 @pytest.mark.usefixtures("mock_password_file_regeneration")
 def test_list_passwords_include_extensions(clients: ClientRegistry) -> None:
     clients.Password.create("test_password", "Test Password", "admin", "secret", ["all"])

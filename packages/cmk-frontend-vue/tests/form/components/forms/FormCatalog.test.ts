@@ -171,3 +171,44 @@ test('FormCatalog default value', async () => {
     '{"some_ut_key":{"some_other_string_indent":"ut_string_1 default value"}}'
   )
 })
+
+test('FormCatalog backend validation', async () => {
+  const spec = {
+    spec: {
+      type: 'catalog',
+      title: 'catalog title',
+      help: 'catalog help',
+      validators: [],
+      topics: [
+        {
+          ident: 'ut_topic_1',
+          dictionary: getDictionaryFormspec({}, [
+            {
+              ident: 'ut_topic_1_dict_1',
+              parameter_form: getStringFormspec('ut_topic_1_dict_1_key_1')
+            }
+          ])
+        },
+        {
+          ident: 'ut_topic_2',
+          dictionary: getDictionaryFormspec({}, [
+            {
+              ident: 'ut_topic_2_dict_1',
+              parameter_form: getStringFormspec('ut_topic_2_dict_1_key_1')
+            }
+          ])
+        }
+      ]
+    } as Catalog,
+    data: { ut_topic_1: {}, ut_topic_2: {} },
+    backendValidation: [
+      { location: ['ut_topic_1', 'ut_topic_1_dict_1'], message: 'ut_error_1', invalid_value: '' },
+      { location: ['ut_topic_2', 'ut_topic_2_dict_1'], message: 'ut_error_2', invalid_value: '' }
+    ]
+  }
+  renderFormWithData(spec)
+  // this is the problem: we should only see each error once
+  // but currently each child gets all error messages
+  expect(await screen.findAllByText('ut_error_1')).toHaveLength(2)
+  expect(await screen.findAllByText('ut_error_2')).toHaveLength(2)
+})

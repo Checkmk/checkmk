@@ -30,7 +30,7 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
 )
 from cmk.gui.user_sites import get_configured_site_choices, site_attribute_default_value
 
-from cmk.rulesets.v1 import Label, Title
+from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
@@ -156,7 +156,7 @@ def _configure() -> Sequence[Widget]:
                                         )
                                         for site_id, title in get_configured_site_choices()
                                     ],
-                                    label=Label("Site selection"),
+                                    title=Title("Site selection"),
                                     prefill=(
                                         DefaultValue(site_default_value)
                                         if site_default_value

@@ -109,7 +109,14 @@ const updateData = (id: string, value: object) => {
 
   &.active:before,
   &.complete:before {
-    background-color: #17b78e;
+    background-color: var(--success-dimmed);
+  }
+
+  &.complete:before {
+    background-image: var(--icon-check);
+    background-repeat: no-repeat;
+    background-position: center;
+    content: '';
   }
 
   &:not(:last-child):after {

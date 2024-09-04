@@ -34,6 +34,7 @@
     /* Icons */
     --icon-alert-crit: url('themes/facelift/images/icon_alert_crit.svg');
     --icon-back: url('themes/facelift/images/icon_back.png');
+    --icon-check: url('themes/facelift/images/icon_check.svg');
     --icon-continue: url('themes/facelift/images/icon_continue.png');
     --icon-main-help: url('themes/facelift/images/icon_main_help.svg');
     --icon-save-to-services: url('themes/facelift/images/icon_save_to_services.svg');
@@ -48,6 +49,7 @@
     /* Icons */
     --icon-alert-crit: url('themes/modern-dark/images/icon_alert_crit.svg');
     --icon-back: url('themes/modern-dark/images/icon_back.png');
+    --icon-check: url('themes/modern-dark/images/icon_check.svg');
     --icon-continue: url('themes/modern-dark/images/icon_continue.png');
     --icon-main-help: url('themes/modern-dark/images/icon_main_help.svg');
     --icon-save-to-services: url('themes/modern-dark/images/icon_save_to_services.svg');

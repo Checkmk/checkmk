@@ -98,6 +98,7 @@ if (props?.variant) {
 
 .qs-icon-button--next div.icon {
   background-image: var(--icon-continue);
+  transform: rotate(90deg);
 }
 
 .qs-icon-button--save div.icon {

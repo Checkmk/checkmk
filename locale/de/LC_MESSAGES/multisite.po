@@ -16323,9 +16323,6 @@ msgstr "Debugmodus"
 msgid "Debug rule execution"
 msgstr "Debugge Regelausführung"
 
-msgid "Debugging (log every single action)"
-msgstr "Debugging (jede Aktion loggen)"
-
 msgid "Debugging of Checkmk helpers"
 msgstr "Debugging von Checkmk-Helper"
 
@@ -32173,6 +32170,10 @@ msgstr "Ungültige Farbangabe '%s'"
 msgid "Invalid combined graph representation '%s'"
 msgstr "Ungültige Kombigraphdarstellung '%s'"
 
+#, fuzzy
+msgid "Invalid configuration bundle group type."
+msgstr "Konfigurationsbündel-Eigenschaften"
+
 msgid "Invalid configuration hash"
 msgstr "Ungültiger Konfigurationshashwert"
 
@@ -40552,9 +40553,6 @@ msgstr "Normales Intervall für Service-Checks"
 
 msgid "Normal logging"
 msgstr "Normales Loggen"
-
-msgid "Normal logging (only startup, shutdown and errors)"
-msgstr "Normales Protokoll (nur Start, Ende und Fehler)"
 
 msgid "Normal monitoring user"
 msgstr "Normaler Monitoring-Benutzer"
@@ -74817,12 +74815,6 @@ msgstr "Venue-ID"
 msgid "Verbose"
 msgstr "Verboses Logging"
 
-msgid "Verbose logging (also spooled notifications)"
-msgstr "Verboses Logging (auch gespoolte Benachrichtigungen)"
-
-msgid "Verbosity of logging"
-msgstr "Log-Verbosität"
-
 msgid "Verification"
 msgstr "Verifizierung"
 
@@ -81859,6 +81851,18 @@ msgstr "{region} ({id_})"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Debugging (log every single action)"
+#~ msgstr "Debugging (jede Aktion loggen)"
+
+#~ msgid "Normal logging (only startup, shutdown and errors)"
+#~ msgstr "Normales Protokoll (nur Start, Ende und Fehler)"
+
+#~ msgid "Verbose logging (also spooled notifications)"
+#~ msgstr "Verboses Logging (auch gespoolte Benachrichtigungen)"
+
+#~ msgid "Verbosity of logging"
+#~ msgstr "Log-Verbosität"
 
 #~ msgid "Hide help text of rules in list views"
 #~ msgstr "Hilfetexte von Regeln in der Listenansicht verbergen"

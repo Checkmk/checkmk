@@ -16821,9 +16821,6 @@ msgstr "Modo de depuração"
 msgid "Debug rule execution"
 msgstr "Execução de regras de depuração"
 
-msgid "Debugging (log every single action)"
-msgstr "Depuração (registar cada acção)"
-
 msgid "Debugging of Checkmk helpers"
 msgstr "Depuração de helpers Checkmk"
 
@@ -33341,6 +33338,10 @@ msgstr "Especificação de cor inválida '%s'"
 msgid "Invalid combined graph representation '%s'"
 msgstr "Representação gráfica combinada inválida '%s'"
 
+#, fuzzy
+msgid "Invalid configuration bundle group type."
+msgstr "Erro de configuração"
+
 msgid "Invalid configuration hash"
 msgstr "hash de configuração inválido"
 
@@ -42034,9 +42035,6 @@ msgstr "Intervalo normal de verificação para verificações de serviço"
 
 msgid "Normal logging"
 msgstr "Corte normal"
-
-msgid "Normal logging (only startup, shutdown and errors)"
-msgstr "Registo normal (apenas arranque, encerramento e erros)"
 
 msgid "Normal monitoring user"
 msgstr "Utilizador normal de monitorização"
@@ -77419,12 +77417,6 @@ msgstr "Identificação do local"
 msgid "Verbose"
 msgstr "Verbose"
 
-msgid "Verbose logging (also spooled notifications)"
-msgstr "Registo verbal (também notificações spooled)"
-
-msgid "Verbosity of logging"
-msgstr "Verbosidade da exploração madeireira"
-
 msgid "Verification"
 msgstr "Verificação"
 
@@ -84440,6 +84432,18 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
+
+#~ msgid "Debugging (log every single action)"
+#~ msgstr "Depuração (registar cada acção)"
+
+#~ msgid "Normal logging (only startup, shutdown and errors)"
+#~ msgstr "Registo normal (apenas arranque, encerramento e erros)"
+
+#~ msgid "Verbose logging (also spooled notifications)"
+#~ msgstr "Registo verbal (também notificações spooled)"
+
+#~ msgid "Verbosity of logging"
+#~ msgstr "Verbosidade da exploração madeireira"
 
 #~ msgid "Hide help text of rules in list views"
 #~ msgstr "Ocultar texto de ajuda das regras nas visualizações da lista"

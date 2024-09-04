@@ -16084,9 +16084,6 @@ msgstr "デバッグモード"
 msgid "Debug rule execution"
 msgstr "デバッグルールの実行"
 
-msgid "Debugging (log every single action)"
-msgstr "デバッグ(すべてのアクションをログに記録する)"
-
 msgid "Debugging of Checkmk helpers"
 msgstr "Checkmkヘルパーのデバッグ"
 
@@ -32175,6 +32172,10 @@ msgstr "無効な色指定 '%s'"
 msgid "Invalid combined graph representation '%s'"
 msgstr "無効な結合グラフ表現 '%s'"
 
+#, fuzzy
+msgid "Invalid configuration bundle group type."
+msgstr "構成エラー"
+
 msgid "Invalid configuration hash"
 msgstr "無効な構成ハッシュ"
 
@@ -40754,9 +40755,6 @@ msgstr "サービスチェックの通常のチェック間隔"
 
 msgid "Normal logging"
 msgstr "通常のロギング"
-
-msgid "Normal logging (only startup, shutdown and errors)"
-msgstr "通常のログ(起動、シャットダウン、エラーのみ)"
 
 msgid "Normal monitoring user"
 msgstr "通常の監視ユーザー"
@@ -75444,12 +75442,6 @@ msgstr "会場ID"
 msgid "Verbose"
 msgstr "詳細"
 
-msgid "Verbose logging (also spooled notifications)"
-msgstr "詳細ログ(スプール通知も)"
-
-msgid "Verbosity of logging"
-msgstr "ロギングの冗長性"
-
 msgid "Verification"
 msgstr "検証"
 
@@ -82317,6 +82309,18 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid "Debugging (log every single action)"
+#~ msgstr "デバッグ(すべてのアクションをログに記録する)"
+
+#~ msgid "Normal logging (only startup, shutdown and errors)"
+#~ msgstr "通常のログ(起動、シャットダウン、エラーのみ)"
+
+#~ msgid "Verbose logging (also spooled notifications)"
+#~ msgstr "詳細ログ(スプール通知も)"
+
+#~ msgid "Verbosity of logging"
+#~ msgstr "ロギングの冗長性"
 
 #~ msgid "Hide help text of rules in list views"
 #~ msgstr "リストビューでルールのヘルプテキストを非表示にする"

@@ -16835,9 +16835,6 @@ msgstr "Modul de depanare"
 msgid "Debug rule execution"
 msgstr "Depanarea execuției regulilor"
 
-msgid "Debugging (log every single action)"
-msgstr "Depanare (înregistrați fiecare acțiune)"
-
 msgid "Debugging of Checkmk helpers"
 msgstr "Depanarea ajutoarelor Checkmk"
 
@@ -33424,6 +33421,10 @@ msgstr "Specificație de culoare invalidă '%s'"
 msgid "Invalid combined graph representation '%s'"
 msgstr "Reprezentare nevalabilă a graficului combinat '%s'"
 
+#, fuzzy
+msgid "Invalid configuration bundle group type."
+msgstr "Eroare de configurare"
+
 msgid "Invalid configuration hash"
 msgstr "Hash de configurare invalid"
 
@@ -42104,9 +42105,6 @@ msgstr "Intervalul normal de verificare pentru controalele de service"
 
 msgid "Normal logging"
 msgstr "Înregistrare normală"
-
-msgid "Normal logging (only startup, shutdown and errors)"
-msgstr "Jurnalizare normală (numai pornire, oprire și erori)"
 
 msgid "Normal monitoring user"
 msgstr "Utilizator normal de monitorizare"
@@ -77643,12 +77641,6 @@ msgstr "ID-ul locului de desfășurare"
 msgid "Verbose"
 msgstr "Verbose"
 
-msgid "Verbose logging (also spooled notifications)"
-msgstr "Jurnalizare abundentă (de asemenea, notificări spoilere)"
-
-msgid "Verbosity of logging"
-msgstr "Verbozitatea jurnalizării"
-
 msgid "Verification"
 msgstr "Verificare"
 
@@ -84700,6 +84692,18 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "Debugging (log every single action)"
+#~ msgstr "Depanare (înregistrați fiecare acțiune)"
+
+#~ msgid "Normal logging (only startup, shutdown and errors)"
+#~ msgstr "Jurnalizare normală (numai pornire, oprire și erori)"
+
+#~ msgid "Verbose logging (also spooled notifications)"
+#~ msgstr "Jurnalizare abundentă (de asemenea, notificări spoilere)"
+
+#~ msgid "Verbosity of logging"
+#~ msgstr "Verbozitatea jurnalizării"
 
 #~ msgid "Hide help text of rules in list views"
 #~ msgstr "Ascundeți textul de ajutor al regulilor în vizualizările de listă"

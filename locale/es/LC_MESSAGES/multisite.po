@@ -16948,9 +16948,6 @@ msgstr "Modo de depuración"
 msgid "Debug rule execution"
 msgstr "Depuración de la ejecución de las reglas"
 
-msgid "Debugging (log every single action)"
-msgstr "Depuración (registro de cada acción)"
-
 msgid "Debugging of Checkmk helpers"
 msgstr "Depuración de los ayudantes de Checkmk"
 
@@ -33613,6 +33610,10 @@ msgstr "Especificación de color inválida '%s'"
 msgid "Invalid combined graph representation '%s'"
 msgstr "Representación gráfica combinada inválida '%s'"
 
+#, fuzzy
+msgid "Invalid configuration bundle group type."
+msgstr "Error de configuración"
+
 msgid "Invalid configuration hash"
 msgstr "Hash de configuración inválido"
 
@@ -42391,9 +42392,6 @@ msgstr "Intervalo de control normal para las revisiones de servicio"
 
 msgid "Normal logging"
 msgstr "Registro normal"
-
-msgid "Normal logging (only startup, shutdown and errors)"
-msgstr "Registro normal (sólo arranque, apagado y errores)"
 
 msgid "Normal monitoring user"
 msgstr "Usuario de supervisión normal"
@@ -78147,12 +78145,6 @@ msgstr "Identificación del lugar de celebración"
 msgid "Verbose"
 msgstr "Verbose"
 
-msgid "Verbose logging (also spooled notifications)"
-msgstr "Registro verborrágico (también notificaciones en cola de impresión)"
-
-msgid "Verbosity of logging"
-msgstr "Verbosidad del registro"
-
 msgid "Verification"
 msgstr "Verificación"
 
@@ -85250,6 +85242,18 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
+
+#~ msgid "Debugging (log every single action)"
+#~ msgstr "Depuración (registro de cada acción)"
+
+#~ msgid "Normal logging (only startup, shutdown and errors)"
+#~ msgstr "Registro normal (sólo arranque, apagado y errores)"
+
+#~ msgid "Verbose logging (also spooled notifications)"
+#~ msgstr "Registro verborrágico (también notificaciones en cola de impresión)"
+
+#~ msgid "Verbosity of logging"
+#~ msgstr "Verbosidad del registro"
 
 #~ msgid "Hide help text of rules in list views"
 #~ msgstr "Ocultar el texto de ayuda de las reglas en las vistas de lista"

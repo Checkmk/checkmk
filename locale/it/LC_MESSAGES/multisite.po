@@ -16658,9 +16658,6 @@ msgstr "Modalità di debug"
 msgid "Debug rule execution"
 msgstr "Debug dell'esecuzione delle regole"
 
-msgid "Debugging (log every single action)"
-msgstr "Debugging (registrare ogni singola azione)"
-
 msgid "Debugging of Checkmk helpers"
 msgstr "Debug degli aiutanti di Checkmk"
 
@@ -33070,6 +33067,10 @@ msgstr "Specifica di colore non valida '%s'"
 msgid "Invalid combined graph representation '%s'"
 msgstr "Rappresentazione grafica combinata non valida '%s'"
 
+#, fuzzy
+msgid "Invalid configuration bundle group type."
+msgstr "Errore di configurazione"
+
 msgid "Invalid configuration hash"
 msgstr "hash di configurazione non valido"
 
@@ -41672,9 +41673,6 @@ msgstr "Intervallo di controllo normale per i controlli di servizio"
 
 msgid "Normal logging"
 msgstr "Registrazione normale"
-
-msgid "Normal logging (only startup, shutdown and errors)"
-msgstr "Registrazione normale (solo avvio, spegnimento ed errori)"
 
 msgid "Normal monitoring user"
 msgstr "Utente di monitoraggio normale"
@@ -76788,12 +76786,6 @@ msgstr "ID sede"
 msgid "Verbose"
 msgstr "Verboso"
 
-msgid "Verbose logging (also spooled notifications)"
-msgstr "Registrazione verbosa (anche notifiche in spool)"
-
-msgid "Verbosity of logging"
-msgstr "Verbosità della registrazione"
-
 msgid "Verification"
 msgstr "Verifica"
 
@@ -83778,6 +83770,18 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
+
+#~ msgid "Debugging (log every single action)"
+#~ msgstr "Debugging (registrare ogni singola azione)"
+
+#~ msgid "Normal logging (only startup, shutdown and errors)"
+#~ msgstr "Registrazione normale (solo avvio, spegnimento ed errori)"
+
+#~ msgid "Verbose logging (also spooled notifications)"
+#~ msgstr "Registrazione verbosa (anche notifiche in spool)"
+
+#~ msgid "Verbosity of logging"
+#~ msgstr "Verbosità della registrazione"
 
 #~ msgid "Hide help text of rules in list views"
 #~ msgstr "Nascondere il testo di aiuto delle regole nelle viste di elenco"

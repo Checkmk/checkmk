@@ -16829,9 +16829,6 @@ msgstr "Debug-modus"
 msgid "Debug rule execution"
 msgstr "Debug regel uitvoering"
 
-msgid "Debugging (log every single action)"
-msgstr "Debugging (log elke actie)"
-
 msgid "Debugging of Checkmk helpers"
 msgstr "Debuggen van Checkmk helpers"
 
@@ -33354,6 +33351,10 @@ msgstr "Ongeldige kleurspecificatie '%s'"
 msgid "Invalid combined graph representation '%s'"
 msgstr "Ongeldige gecombineerde grafiekvoorstelling '%s'"
 
+#, fuzzy
+msgid "Invalid configuration bundle group type."
+msgstr "Configuratiefout"
+
 msgid "Invalid configuration hash"
 msgstr "Ongeldige configuratie hash"
 
@@ -42052,9 +42053,6 @@ msgstr "Normaal controle-interval voor onderhoudscontroles"
 
 msgid "Normal logging"
 msgstr "Normaal loggen"
-
-msgid "Normal logging (only startup, shutdown and errors)"
-msgstr "Normaal loggen (alleen opstarten, afsluiten en fouten)"
 
 msgid "Normal monitoring user"
 msgstr "Normaal toezicht gebruiker"
@@ -77482,12 +77480,6 @@ msgstr "Plaats ID"
 msgid "Verbose"
 msgstr "Verbose"
 
-msgid "Verbose logging (also spooled notifications)"
-msgstr "Verbose logging (ook spooled meldingen)"
-
-msgid "Verbosity of logging"
-msgstr "Bepaaldheid van logboekregistratie"
-
 msgid "Verification"
 msgstr "Verificatie"
 
@@ -84553,6 +84545,18 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Debugging (log every single action)"
+#~ msgstr "Debugging (log elke actie)"
+
+#~ msgid "Normal logging (only startup, shutdown and errors)"
+#~ msgstr "Normaal loggen (alleen opstarten, afsluiten en fouten)"
+
+#~ msgid "Verbose logging (also spooled notifications)"
+#~ msgstr "Verbose logging (ook spooled meldingen)"
+
+#~ msgid "Verbosity of logging"
+#~ msgstr "Bepaaldheid van logboekregistratie"
 
 #~ msgid "Hide help text of rules in list views"
 #~ msgstr "Verberg helptekst van regels in lijstweergaven"

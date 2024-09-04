@@ -14,6 +14,7 @@ class NetappOntapParams(BaseModel):
     username: str
     password: Secret
     no_cert_check: bool
+    skip_elements: list[str] = []
 
 
 def generate_netapp_ontap_command(
@@ -30,6 +31,14 @@ def generate_netapp_ontap_command(
         args += ["--no-cert-check"]
     else:
         args += ["--cert-server-name", host_config.name]
+
+    if params.skip_elements:
+        args += [
+            "--no-counters",
+            " ".join(
+                [element[4:] for element in params.skip_elements if element.startswith("ctr_")]
+            ),
+        ]
 
     yield SpecialAgentCommand(command_arguments=args)
 

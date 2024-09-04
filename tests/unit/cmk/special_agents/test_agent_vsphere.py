@@ -125,7 +125,7 @@ def test_cloning_vm_is_processed(mocker: Mock) -> None:
 
 
 @pytest.mark.parametrize(
-    "virtual_machines, expected_output",
+    "virtual_machines, systime, expected_output",
     [
         pytest.param(
             {
@@ -134,15 +134,17 @@ def test_cloning_vm_is_processed(mocker: Mock) -> None:
                     "snapshot.rootSnapshotList": "871 1605626114 poweredOn SnapshotName|834 1605632160 poweredOff Snapshotname2",
                 }
             },
+            1605636114,
             [
                 "<<<esx_vsphere_snapshots_summary:sep(0)>>>",
-                '{"time": 1605626114, "state": "poweredOn", "name": "SnapshotName", "vm": "vm_name"}',
-                '{"time": 1605632160, "state": "poweredOff", "name": "Snapshotname2", "vm": "vm_name"}',
+                '{"time": 1605626114, "systime": 1605636114, "state": "poweredOn", "name": "SnapshotName", "vm": "vm_name"}',
+                '{"time": 1605632160, "systime": 1605636114, "state": "poweredOff", "name": "Snapshotname2", "vm": "vm_name"}',
             ],
             id="There are two snapshots available. For every available snapshot, information about the creation time, state, name and vm_name is provided.",
         ),
         pytest.param(
             {"vm_name": {"name": "vm_name"}},
+            1605636114,
             ["<<<esx_vsphere_snapshots_summary:sep(0)>>>"],
             id="There are no snapshots available and because of that an empty section is created.",
         ),
@@ -153,16 +155,32 @@ def test_cloning_vm_is_processed(mocker: Mock) -> None:
                     "snapshot.rootSnapshotList": "871 1605626114 poweredOn SnapshotName",
                 }
             },
+            1605636114,
             [
                 "<<<esx_vsphere_snapshots_summary:sep(0)>>>",
-                '{"time": 1605626114, "state": "poweredOn", "name": "SnapshotName", "vm": "vm_name"}',
+                '{"time": 1605626114, "systime": 1605636114, "state": "poweredOn", "name": "SnapshotName", "vm": "vm_name"}',
             ],
             id="There is only one snapshot available. Same behaviour as when there are multiple snapshots available.",
+        ),
+        pytest.param(
+            {
+                "vm_name": {
+                    "name": "vm_name",
+                    "snapshot.rootSnapshotList": "871 1605626114 poweredOn SnapshotName",
+                }
+            },
+            None,
+            [
+                "<<<esx_vsphere_snapshots_summary:sep(0)>>>",
+                '{"time": 1605626114, "systime": null, "state": "poweredOn", "name": "SnapshotName", "vm": "vm_name"}',
+            ],
+            id="Systime not available",
         ),
     ],
 )
 def test_get_section_snapshot_summary(
     virtual_machines: Mapping[str, Mapping[str, str]],
+    systime: int | None,
     expected_output: Sequence[str],
 ) -> None:
-    assert get_section_snapshot_summary(virtual_machines) == expected_output
+    assert get_section_snapshot_summary(virtual_machines, systime) == expected_output

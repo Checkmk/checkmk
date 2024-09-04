@@ -7,7 +7,6 @@ import time
 from collections.abc import Sequence
 
 import pytest
-from freezegun import freeze_time
 
 from tests.unit.cmk.base.plugins.agent_based.esx_vsphere_vm_util import esx_vm_section
 
@@ -27,17 +26,17 @@ from cmk.plugins.lib.esx_vsphere import ESXVm
 
 def test_parse_esx_vsphere_snapshots():
     assert parse_esx_vsphere_snapshots(
-        [['{"time": 0, "state": "On", "name": "foo", "vm": "bar"}']]
-    ) == [Snapshot(time=0, state="On", name="foo", vm="bar")]
+        [['{"time": 0, "systime": null, "state": "On", "name": "foo", "vm": "bar"}']]
+    ) == [Snapshot(time=0, systime=None, state="On", name="foo", vm="bar")]
 
 
 @pytest.mark.parametrize(
     "section, expected_result",
     [
-        (
+        pytest.param(
             [
-                Snapshot(5234560, "poweredOn", "PC1", "vm_name"),
-                Snapshot(2087850, "poweredOff", "PC2", "vm_name"),
+                Snapshot(5234560, 1606086000, "poweredOn", "PC1", "vm_name"),
+                Snapshot(2087850, 1606086000, "poweredOff", "PC2", "vm_name"),
             ],
             [
                 Result(state=State.OK, summary="Count: 2"),
@@ -47,11 +46,12 @@ def test_parse_esx_vsphere_snapshots():
                 Result(state=State.OK, summary="Oldest: vm_name/PC2 1970-01-25 03:57:30"),
                 Result(state=State.OK, notice="Age of oldest: 50 years 314 days"),
             ],
+            id="two snapshots",
         ),
-        (
+        pytest.param(
             [
-                Snapshot(5234560, "poweredOn", "PC1", "vm_name"),
-                Snapshot(1606089700, "poweredOff", "PC2", "vm_name"),
+                Snapshot(5234560, 1606086000, "poweredOn", "PC1", "vm_name"),
+                Snapshot(1606089700, 1606088700, "poweredOff", "PC2", "vm_name"),
             ],
             [
                 Result(
@@ -59,10 +59,24 @@ def test_parse_esx_vsphere_snapshots():
                     summary="Snapshot with a creation time in future found. Please check your network time synchronisation.",
                 ),
             ],
+            id="snapshot from future",
+        ),
+        pytest.param(
+            [
+                Snapshot(5234560, None, "poweredOn", "PC1", "vm_name"),
+                Snapshot(2087850, 1606086000, "poweredOff", "PC2", "vm_name"),
+            ],
+            [
+                Result(state=State.OK, summary="Count: 2"),
+                Result(state=State.OK, summary="Powered on: vm_name/PC1"),
+                Result(state=State.OK, summary="Latest: vm_name/PC1 1970-03-02 14:02:40"),
+                Result(state=State.OK, summary="Oldest: vm_name/PC2 1970-01-25 03:57:30"),
+                Result(state=State.OK, notice="Age of oldest: 50 years 314 days"),
+            ],
+            id="snapshot without systime",
         ),
     ],
 )
-@freeze_time("2020-11-23")
 def test_check_snapshots_summary(
     section: Section, expected_result: CheckResult, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -71,13 +85,12 @@ def test_check_snapshots_summary(
     assert list(result) == expected_result
 
 
-@freeze_time("2020-11-23")
 def test_check_snapshots(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(time, "localtime", time.gmtime)
     assert list(
         check_snapshots(
             {},
-            _esx_vm_section(["871", "1605626114", "poweredOn", "Snapshotname"]),
+            _esx_vm_section(["871", "1605626114", "poweredOn", "Snapshotname"], "1606089600"),
         )
     ) == [
         Result(state=State.OK, summary="Count: 1"),
@@ -88,7 +101,6 @@ def test_check_snapshots(monkeypatch: pytest.MonkeyPatch) -> None:
     ]
 
 
-@freeze_time("2020-11-23 14:37:00")
 def test_check_multi_snapshots(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(time, "localtime", time.gmtime)
     parsed = parse_esx_vsphere_vm(
@@ -103,11 +115,12 @@ def test_check_multi_snapshots(monkeypatch: pytest.MonkeyPatch) -> None:
                 "poweredOn",
                 "LinuxI",
                 "Testsnapshot",
-            ]
+            ],
+            ["systime", "1606145820"],
         ]
     )
     assert parsed is not None
-    assert list(check_snapshots({}, _esx_vm_section(parsed.snapshots))) == [
+    assert list(check_snapshots({}, _esx_vm_section(parsed.snapshots, parsed.systime))) == [
         Result(state=State.OK, summary="Count: 2"),
         Result(state=State.OK, summary="Powered on: test_vm_name/LinuxI Testsnapshot"),
         Result(
@@ -122,7 +135,6 @@ def test_check_multi_snapshots(monkeypatch: pytest.MonkeyPatch) -> None:
     ]
 
 
-@freeze_time("2019-06-22 14:37:00")
 def test_check_one_snapshot(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(time, "localtime", time.gmtime)
     parsed = parse_esx_vsphere_vm(
@@ -137,10 +149,15 @@ def test_check_one_snapshot(monkeypatch: pytest.MonkeyPatch) -> None:
                 "10:56",
                 "UTC+02:00",
             ],
+            ["systime", "1561214220"],
         ]
     )
     assert parsed is not None
-    assert list(check_snapshots({"age_oldest": (30, 3600)}, _esx_vm_section(parsed.snapshots))) == [
+    assert list(
+        check_snapshots(
+            {"age_oldest": (30, 3600)}, _esx_vm_section(parsed.snapshots, parsed.systime)
+        )
+    ) == [
         Result(state=State.OK, summary="Count: 1"),
         Result(
             state=State.OK,
@@ -159,19 +176,19 @@ def test_check_one_snapshot(monkeypatch: pytest.MonkeyPatch) -> None:
     ]
 
 
-@freeze_time("2022-06-22")
 def test_time_reference_snapshot(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(time, "localtime", time.gmtime)
     parsed = parse_esx_vsphere_vm(
         [
             ["snapshot.rootSnapshotList", "732", "1594041788", "poweredOn", "FransTeil2"],
+            ["systime", "1655856000"],
         ]
     )
     assert parsed is not None
     assert list(
         check_snapshots(
             {"age": (86400, 172800), "age_oldest": (86400, 172800)},
-            _esx_vm_section(parsed.snapshots),
+            _esx_vm_section(parsed.snapshots, parsed.systime),
         )
     ) == [
         Result(state=State.OK, summary="Count: 1"),
@@ -190,5 +207,5 @@ def test_time_reference_snapshot(monkeypatch: pytest.MonkeyPatch) -> None:
     ]
 
 
-def _esx_vm_section(snapshots: Sequence[str]) -> ESXVm:
-    return esx_vm_section(snapshots=snapshots, name="test_vm_name")
+def _esx_vm_section(snapshots: Sequence[str], systime: str | None) -> ESXVm:
+    return esx_vm_section(snapshots=snapshots, systime=systime, name="test_vm_name")

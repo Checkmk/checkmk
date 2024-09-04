@@ -2,6 +2,7 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
 
 def redfish_mkp_workspace():
+    """Download redfish"""
     commit_hash = "35b0ef91252bbba9b147ec12dc120bcc70bb3cf6"
     version_str = "2.3.38"
     filename = "redfish-" + version_str + ".mkp"

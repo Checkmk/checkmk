@@ -1,6 +1,6 @@
-load("@rules_python//python:pip.bzl", "compile_pip_requirements")
 load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
 load("@cmk_werks//:requirements.bzl", "requirement")
+load("@rules_python//python:pip.bzl", "compile_pip_requirements")
 
 filegroup(
     name = "files",

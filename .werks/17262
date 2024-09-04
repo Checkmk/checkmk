@@ -1,0 +1,23 @@
+Title: Support Diagnostics: More detailled list of site's files
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1725438803
+Edition: cre
+Level: 1
+Version: 2.2.0p33
+
+The file "filesize.csv" contains a list of all files insided a site. It is always included in the dump.
+From now on, it has additional columns:
+
+Before:
+ * size
+ * file path
+
+Now:
+ * size (in Bytes)
+ * file path
+ * owner
+ * group
+ * mode (the file's access rights)
+ * changed (the date/time of the last content change)

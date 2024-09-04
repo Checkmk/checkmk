@@ -587,15 +587,17 @@ def create_graph_recipe_from_template(
     translated_metrics: Mapping[str, TranslatedMetric],
     specification: GraphSpecification,
 ) -> GraphRecipe:
-    def _graph_metric(metric_expression: MetricExpression) -> GraphMetric:
-        unit_color = compute_unit_color(
-            metric_expression,
-            translated_metrics,
-            graph_template.optional_metrics,
-        )
-        return GraphMetric(
-            title=compute_title(metric_expression, translated_metrics),
-            line_type=metric_expression.line_type,
+    # TODO Cleanup evaluations:
+    # - Either:
+    #   - Remove evaluation in TemplateGraphSpecification::recipes::_matching_graph_templates)
+    #   - Add evaluation in SingleTimeseriesGraphSpecification::recipes
+    #   - Remove evaluation here
+    # - Or:
+    #   - Only evaluate here
+    metrics = [
+        GraphMetric(
+            title=evaluated.title,
+            line_type=evaluated.line_type,
             operation=metric_expression_to_graph_recipe_expression(
                 site_id,
                 host_name,
@@ -604,11 +606,15 @@ def create_graph_recipe_from_template(
                 translated_metrics,
                 graph_template.consolidation_function or "max",
             ),
-            unit=unit_color.unit if unit_color else "",
-            color=unit_color.color if unit_color else "#000000",
+            unit=(
+                evaluated.unit_spec
+                if isinstance(evaluated.unit_spec, ConvertibleUnitSpecification)
+                else evaluated.unit_spec.id
+            ),
+            color=evaluated.color,
         )
-
-    metrics = list(map(_graph_metric, graph_template.metrics))
+        for metric_expression, evaluated in applicable_metrics(graph_template, translated_metrics)
+    ]
     units = {m.unit for m in metrics}
 
     # We cannot validate the hypothetical case of a mixture of metrics from the legacy and the new API

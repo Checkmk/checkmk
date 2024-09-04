@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from .catalog import Catalog
+from .catalog import Catalog, Topic
 from .definitions import (
     LegacyValueSpec,
     SingleChoiceElementExtended,
@@ -15,6 +15,7 @@ from .list_extended import ListExtended
 from .optional_choice import OptionalChoice
 
 __all__ = [
+    "Topic",
     "Catalog",
     "DictionaryExtended",
     "LegacyValueSpec",

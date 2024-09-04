@@ -198,7 +198,7 @@ def render_graph_image(
 
 
 def graph_recipes_for_api_request(
-    api_request: dict[str, Any]
+    api_request: dict[str, Any],
 ) -> tuple[GraphDataRange, Sequence[GraphRecipe]]:
     # Get and validate the specification
     if not (raw_graph_spec := api_request.get("specification")):

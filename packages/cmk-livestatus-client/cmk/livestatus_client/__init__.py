@@ -890,7 +890,9 @@ class SingleSiteConnection(Helpers):
         return response
 
     def command(
-        self, command: str, site: SiteId | None = None  # pylint: disable=unused-argument
+        self,
+        command: str,
+        site: SiteId | None = None,  # pylint: disable=unused-argument
     ) -> None:
         command_str = command.rstrip("\n")
         if not command_str.startswith("["):

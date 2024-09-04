@@ -8,6 +8,7 @@ For code to be admitted to this module, it should itself be tested thoroughly, s
 have any friction during testing with these helpers themselves.
 
 """
+
 from __future__ import annotations
 
 import collections

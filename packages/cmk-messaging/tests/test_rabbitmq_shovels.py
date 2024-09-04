@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """RabbitMq configurations module test"""
+
 from collections.abc import Mapping, Sequence
 
 import pytest
@@ -278,7 +279,6 @@ def test_compute_distributed_definitions_parameters(
     connections: Sequence[rabbitmq.Connection],
     parameters: Mapping[str, Sequence[rabbitmq.Component]],
 ) -> None:
-
     definitions = rabbitmq.compute_distributed_definitions(connections)
 
     for site_id, site_parameters in parameters.items():

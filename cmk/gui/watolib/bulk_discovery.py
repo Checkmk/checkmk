@@ -157,7 +157,7 @@ def vs_bulk_discovery(render_form: bool = False, include_subfolders: bool = True
 
 
 def _migrate_automatic_rediscover_parameters(
-    param: str | tuple[str, dict[str, bool]]
+    param: str | tuple[str, dict[str, bool]],
 ) -> tuple[str, dict[str, bool]]:
     # already migrated
     if isinstance(param, tuple):

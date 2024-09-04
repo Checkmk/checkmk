@@ -44,7 +44,8 @@ def _compute_default_prefill() -> DefaultValue[str]:
 def _compute_site_choices() -> Sequence[SingleChoiceElement]:
     return [
         SingleChoiceElement(
-            choice[0], Title(choice[1])  # pylint: disable=localization-of-non-literal-string
+            choice[0],
+            Title(choice[1]),  # pylint: disable=localization-of-non-literal-string
         )
         for choice in site_choices(activation_sites())
     ]

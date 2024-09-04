@@ -8,6 +8,7 @@ Decorating a function with `Endpoint` will result in a change of the SPEC object
 which then has to be dumped into the checkmk.yaml file.
 
 """
+
 from __future__ import annotations
 
 import contextlib
@@ -533,7 +534,6 @@ class Endpoint:
 
         # If we have an schema, or doing post/put, we need a content-type
         if self.request_schema and not request.content_type:
-
             raise RestAPIRequestContentTypeException(
                 detail=f"No content-type specified. Possible value is: {", ".join(self.accept)}",
                 title="Content type not valid for this endpoint.",

@@ -5,6 +5,7 @@
 """This module cares about Check_MK's file storage accessing. Most important
 functionality is the locked file opening realized with the File() context
 manager."""
+
 import logging
 import pickle
 import pprint

@@ -7,6 +7,7 @@
 """Mode for displaying and modifying the rule based host and service
 parameters. This is a host/service overview page over all things that can be
 modified via rules."""
+
 import functools
 from collections.abc import Callable, Collection, Container, Iterator
 

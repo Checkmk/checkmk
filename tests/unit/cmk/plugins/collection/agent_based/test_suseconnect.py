@@ -85,7 +85,7 @@ def test_check(
 
 
 def test_agent_output_parsable(
-    check_suseconnect: Callable[[object, Section], DiscoveryResult]
+    check_suseconnect: Callable[[object, Section], DiscoveryResult],
 ) -> None:
     with time_machine.travel(datetime.datetime(2020, 7, 15, tzinfo=ZoneInfo("UTC"))):
         assert list(

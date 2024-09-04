@@ -50,7 +50,6 @@ class Args(BaseModel):
 
 
 def parse_arguments(sys_args: Sequence[str]) -> Args:
-
     parser = argparse.ArgumentParser(prog=__doc__)
 
     parser.add_argument("--host", default="localhost", help="SFTP server address")

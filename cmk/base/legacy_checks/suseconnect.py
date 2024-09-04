@@ -82,10 +82,14 @@ def check_suseconnect(
         state = 2
     yield state, infotext
 
-    yield 0, (
-        "Subscription type: %(subscription_type)s, Registration code: %(registration_code)s, "
-        "Starts at: %(starts_at)s, Expires at: %(expires_at)s"
-    ) % specs
+    yield (
+        0,
+        (
+            "Subscription type: %(subscription_type)s, Registration code: %(registration_code)s, "
+            "Starts at: %(starts_at)s, Expires at: %(expires_at)s"
+        )
+        % specs,
+    )
 
     expiration_date = time.strptime(specs["expires_at"], "%Y-%m-%d %H:%M:%S %Z")
     expiration_time = time.mktime(expiration_date) - time.time()

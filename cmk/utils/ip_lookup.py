@@ -47,7 +47,7 @@ class IPLookupConfig(NamedTuple):
 
 
 def fallback_ip_for(
-    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
 ) -> HostAddress:
     match family:
         case socket.AddressFamily.AF_INET:
@@ -59,7 +59,7 @@ def fallback_ip_for(
 
 
 def _local_ip_for(
-    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
 ) -> HostAddress:
     match family:
         case socket.AddressFamily.AF_INET:

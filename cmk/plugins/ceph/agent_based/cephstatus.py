@@ -200,7 +200,6 @@ def check_cephstatus_testable(
     now: float,
     value_store: MutableMapping[str, Any],
 ) -> CheckResult:
-
     if section.health is not None:
         yield from _check_health(section.health)
     elif section.error is not None:
@@ -254,7 +253,6 @@ def _check_pgmap(
     value_store: MutableMapping[str, object],
     now: float,
 ) -> CheckResult:
-
     if pgmap.avail_mb is not None and pgmap.size_mb is not None:
         yield from df.df_check_filesystem_single(
             value_store,

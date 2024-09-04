@@ -132,7 +132,6 @@ def summarize_piggyback(
 def _summarize_single_piggyback_source(
     meta: PiggybackMetaData, config: PiggybackConfig, now: float
 ) -> ActiveCheckResult:
-
     if (age := now - meta.last_update) > (allowed := config.max_cache_age(meta.source)):
         return ActiveCheckResult(
             0,

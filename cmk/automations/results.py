@@ -81,7 +81,7 @@ class ServiceDiscoveryResult(ABCAutomationResult):
 
     @staticmethod
     def _from_dict(
-        serialized: Mapping[HostName, Mapping[str, Any]]
+        serialized: Mapping[HostName, Mapping[str, Any]],
     ) -> Mapping[HostName, SingleHostDiscoveryResult]:
         return {k: SingleHostDiscoveryResult(**v) for k, v in serialized.items()}
 
@@ -204,7 +204,7 @@ class AutodiscoveryResult(ABCAutomationResult):
 
     @staticmethod
     def _hosts_from_dict(
-        serialized: Mapping[HostName, Mapping[str, Any]]
+        serialized: Mapping[HostName, Mapping[str, Any]],
     ) -> Mapping[HostName, SingleHostDiscoveryResult]:
         return {k: SingleHostDiscoveryResult(**v) for k, v in serialized.items()}
 
@@ -534,7 +534,9 @@ class DiagSpecialAgentHostConfig:
         return cls(**deserialized)
 
     @staticmethod
-    def deserialize_host_primary_family(raw: int) -> Literal[
+    def deserialize_host_primary_family(
+        raw: int,
+    ) -> Literal[
         socket.AddressFamily.AF_INET,
         socket.AddressFamily.AF_INET6,
     ]:
@@ -680,7 +682,6 @@ result_type_registry.register(UpdateDNSCacheResult)
 
 @dataclass
 class UpdatePasswordsMergedFileResult(ABCAutomationResult):
-
     @staticmethod
     def automation_call() -> str:
         return "update-passwords-merged-file"

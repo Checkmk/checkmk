@@ -25,7 +25,6 @@ class BrokerConnectionsConfigFile(WatoSingleConfigFile[BrokerConnections]):
         )
 
     def _load_file(self, lock: bool) -> BrokerConnections:
-
         if not self._config_file_path.exists():
             return BrokerConnections({})
 
@@ -50,7 +49,6 @@ class BrokerConnectionsConfigFile(WatoSingleConfigFile[BrokerConnections]):
         )
 
     def save(self, cfg: BrokerConnections) -> None:
-
         connections_dict = {k: asdict(v) for k, v in cfg.items()}
         self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         store.save_to_mk_file(

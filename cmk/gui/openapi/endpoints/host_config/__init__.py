@@ -37,6 +37,7 @@ A host_config object can have the following relations present in `links`:
  * `urn:org.restfulobjects:rels/delete` - The endpoint to delete this host.
 
 """
+
 import itertools
 import operator
 from collections.abc import Callable, Iterable, Mapping, Sequence

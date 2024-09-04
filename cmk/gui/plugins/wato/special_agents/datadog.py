@@ -36,7 +36,6 @@ from cmk.rulesets.v1.form_specs import migrate_to_proxy as migrate_proxy_back
 
 
 def migrate_password_back(value):
-
     # from this rulespec I just expect the old password formats
     match value:
         case "password", str(password):
@@ -52,7 +51,6 @@ def migrate_password_back(value):
 
 
 def migrate_password_forth(value):
-
     match value:
         # old formats
         case ("password", str()) | ("store", str()):
@@ -68,9 +66,7 @@ def migrate_password_forth(value):
 
 
 def migrate_proxy_forth(value):
-
     match value:
-
         case "cmk_postprocessed", "stored_proxy", str(stored_proxy_id):
             return "global", stored_proxy_id
         case "cmk_postprocessed", "environment_proxy", str():

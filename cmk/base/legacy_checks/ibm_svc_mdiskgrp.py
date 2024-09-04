@@ -150,9 +150,11 @@ def check_ibm_svc_mdiskgrp(item, params, parsed):
 
     # Note: Performance data is now (with new metric system) normed to
     # canonical units - i.e. 1 byte in this case.
-    yield state, infotext, [
-        ("fs_provisioning", virtual_capacity * mb, warn_mb, crit_mb, 0, capacity * mb)
-    ]
+    yield (
+        state,
+        infotext,
+        [("fs_provisioning", virtual_capacity * mb, warn_mb, crit_mb, 0, capacity * mb)],
+    )
 
 
 check_info["ibm_svc_mdiskgrp"] = LegacyCheckDefinition(

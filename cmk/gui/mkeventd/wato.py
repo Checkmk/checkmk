@@ -5314,7 +5314,7 @@ ExtraServiceConfECContact = ServiceRulespec(
 #   | Stuff for sending monitoring notifications into the event console.   |
 #   '----------------------------------------------------------------------'
 def mkeventd_update_notification_configuration(
-    hosts: Mapping[HostName, CollectedHostAttributes]
+    hosts: Mapping[HostName, CollectedHostAttributes],
 ) -> None:
     contactgroup = active_config.mkeventd_notify_contactgroup
     remote_console = active_config.mkeventd_notify_remotehost

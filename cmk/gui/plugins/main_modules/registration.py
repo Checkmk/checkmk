@@ -5,7 +5,6 @@
 
 """Central module for common (non-edition specific) registrations"""
 
-
 from functools import partial
 
 from livestatus import MultiSiteConnection

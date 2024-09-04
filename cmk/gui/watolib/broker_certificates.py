@@ -38,7 +38,6 @@ from cmk.messaging import (
 def site_cert(
     cert_path: Path, key_path: Path, site_id: SiteId, ca: RootCA
 ) -> tuple[Certificate, PrivateKey]:
-
     cert, key = ca.issue_new_certificate(
         common_name=site_id,
         organization=f"Checkmk Site {omd_site()}",
@@ -75,7 +74,6 @@ def _cert_generated(site_id: SiteId) -> bool:
 def remote_broker_certificates(
     central_site_ca: RootCA, site_id: SiteId, site: SiteConfiguration
 ) -> BrokerCertificates | None:
-
     # no need to do anything if the public key is already present
     if _cert_generated(site_id):
         return None
@@ -91,7 +89,6 @@ def remote_broker_certificates(
 def generate_remote_broker_certificate(
     central_site_ca: RootCA, site_id: SiteId, site: SiteConfiguration
 ) -> bool:
-
     if (broker_certificates := remote_broker_certificates(central_site_ca, site_id, site)) is None:
         return False
 
@@ -129,7 +126,6 @@ class AutomationStoreBrokerCertificates(AutomationCommand):
         return BrokerCertificates.model_validate_json(req)
 
     def execute(self, api_request: BrokerCertificates) -> bool:
-
         if not api_request:
             raise MKGeneralException(_("Invalid generate-broker-certs: no certificates received."))
 

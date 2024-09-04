@@ -37,6 +37,7 @@ To search for hosts with specific tags set on them:
     {'op': '~', 'left': 'tag_names', 'right': 'windows'}
 
 """
+
 import ast
 from collections.abc import Generator, Mapping, Sequence
 from typing import Any
@@ -211,7 +212,7 @@ def contains_an_inventory_colum(columns: Sequence[str]) -> bool:
 
 
 def fixup_inventory_column(
-    result: Generator[ResultRow, None, None]
+    result: Generator[ResultRow, None, None],
 ) -> Generator[ResultRow, None, None]:
     for row in result:
         if inventory_data := row.get(INVENTORY_COLUMN):

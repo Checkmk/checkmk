@@ -5,6 +5,7 @@
 
 # pylint: disable=protected-access
 """A few upgraded Fields which handle some OpenAPI validation internally."""
+
 import ast
 import json
 import logging

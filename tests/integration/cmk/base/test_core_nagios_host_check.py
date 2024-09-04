@@ -61,7 +61,6 @@ def _test_compile_delayed_host_check(request: pytest.FixtureRequest, site: Site)
     site.check_output(["cmk", "-R"])
 
     with _stopped(site):  # don't interfere...
-
         #
         # Phase 1: No compilation yet.
         #

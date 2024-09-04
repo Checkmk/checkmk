@@ -36,7 +36,7 @@ def parse_jolokia_generic(string_table: StringTable) -> Section:
 
 
 def discover_type(
-    type_: Literal["string", "rate", "number"]
+    type_: Literal["string", "rate", "number"],
 ) -> Callable[[Section], DiscoveryResult]:
     def _discover_bound_type(section: Section) -> DiscoveryResult:
         yield from ((item, {}) for item, data in section.items() if data.get("type") == type_)

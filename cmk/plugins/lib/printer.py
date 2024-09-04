@@ -8,7 +8,6 @@
 # { 'KEY1' : PAGES VALUE1, 'KEY2' : PAGES VALUE2, ... }
 """
 
-
 from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (
     all_of,

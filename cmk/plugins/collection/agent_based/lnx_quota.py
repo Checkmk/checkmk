@@ -141,7 +141,7 @@ def lnx_quota_limit_check(quota: Quota, filesys_mode: QuotasType) -> Iterable[Re
     (result,) = check_levels(
         value=quota.used, levels_upper=(quota.soft, quota.hard), notice_only=True
     )
-    match (result.state):
+    match result.state:
         case State.OK:
             yield Result(state=State.OK, notice=f"{filesys_mode.name} {quota.exceeded_no_limit()}")
         case State.WARN:

@@ -94,7 +94,7 @@ def check_info(info: Mapping[InfoTypes, Any]) -> CheckResult:
 
 
 def host_labels(
-    object_type: Literal["deployment", "daemonset", "statefulset"]
+    object_type: Literal["deployment", "daemonset", "statefulset"],
 ) -> Callable[[DaemonSetInfo | DeploymentInfo | StatefulSetInfo], HostLabelGenerator]:
     def _host_labels(
         section: DaemonSetInfo | DeploymentInfo | StatefulSetInfo,

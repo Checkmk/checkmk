@@ -141,7 +141,6 @@ def add_trx_arguments(parser: argparse.ArgumentParser, scope: Scope) -> None:
 
 
 def _parse_auth(raw: Mapping[str, object]) -> BasicAuth | OAuth2:
-
     match raw:
         case {
             "username": None,

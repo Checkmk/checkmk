@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """RabbitMq configurations module test"""
+
 from collections.abc import Mapping, Sequence
 
 import pytest
@@ -83,7 +84,6 @@ from ._connections import (
 def test_compute_distributed_definitions_vhosts(
     connections: Sequence[rabbitmq.Connection], vhosts: Mapping[str, Sequence[rabbitmq.VirtualHost]]
 ) -> None:
-
     definitions = rabbitmq.compute_distributed_definitions(connections)
 
     for site_id, site_vhosts in vhosts.items():
@@ -309,7 +309,6 @@ def test_compute_distributed_definitions_vhosts(
 def test_compute_distributed_definitions_bindings(
     connections: Sequence[rabbitmq.Connection], bindings: Mapping[str, Sequence[rabbitmq.Binding]]
 ) -> None:
-
     definitions = rabbitmq.compute_distributed_definitions(connections)
 
     def _key(bind: rabbitmq.Binding) -> str:
@@ -373,7 +372,6 @@ def test_compute_distributed_definitions_bindings(
 def test_compute_distributed_definitions_users(
     connections: Sequence[rabbitmq.Connection], users: Mapping[str, Sequence[rabbitmq.User]]
 ) -> None:
-
     definitions = rabbitmq.compute_distributed_definitions(connections)
 
     for site_id, site_users in users.items():
@@ -619,7 +617,6 @@ def test_compute_distributed_definitions_permissions(
     connections: Sequence[rabbitmq.Connection],
     permissions: Mapping[str, Sequence[rabbitmq.Permission]],
 ) -> None:
-
     definitions = rabbitmq.compute_distributed_definitions(connections)
 
     for site_id, site_permissions in permissions.items():
@@ -865,7 +862,6 @@ def test_compute_distributed_definitions_permissions(
 def test_compute_distributed_definitions_queues(
     connections: Sequence[rabbitmq.Connection], queues: Mapping[str, Sequence[rabbitmq.Queue]]
 ) -> None:
-
     definitions = rabbitmq.compute_distributed_definitions(connections)
 
     for site_id, site_queues in queues.items():

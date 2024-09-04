@@ -117,7 +117,6 @@ def create_and_delete_hosts_with_labels(test_site: Site) -> Iterator[tuple[list[
 def test_filter_hosts_with_host_labels(
     hosts_with_labels: tuple[list[HostDetails], str], dashboard_page: Dashboard
 ) -> None:
-
     expected_hosts_list, expected_label = hosts_with_labels
     host_status_page = HostStatus(dashboard_page.page, expected_hosts_list[0])
 

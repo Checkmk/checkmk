@@ -341,9 +341,10 @@ class _TracerouteRoutertrace:
         line = re.sub(r"[0-9]+(\.[0-9]+)? ms", "", line)
         yield from (
             part.lstrip("(").rstrip(")")
-            for part in line.strip().split()
-            # drop numbering
-            [1:]
+            for part in line.strip().split()[
+                # drop numbering
+                1:
+            ]
             # drop additional information such as !X
             if not part.startswith("!")
         )

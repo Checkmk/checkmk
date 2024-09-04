@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module for RabbitMq definitions creation"""
+
 import logging
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
@@ -116,9 +117,8 @@ class Connection:
 
 
 def find_shortest_paths(
-    edges: Sequence[tuple[str, str]]
+    edges: Sequence[tuple[str, str]],
 ) -> Mapping[tuple[str, str], tuple[str, ...]]:
-
     known_paths: dict[tuple[str, str], tuple[str, ...]] = {
         (start, end): (start, end) for start, end in edges
     }
@@ -135,7 +135,6 @@ def find_shortest_paths(
         for neighbor in neighbors[end]
         if neighbor not in path and (start, neighbor) not in known_paths
     }:
-
         known_paths.update(new_paths)
 
     return known_paths
@@ -156,7 +155,6 @@ def _connecting_customer(connection: Connection) -> str:
 def _base_definitions(
     connections: Sequence[Connection],
 ) -> tuple[defaultdict[str, Definitions], Mapping[str, Sequence[tuple[str, str]]]]:
-
     connecting_definitions: defaultdict[str, Definitions] = defaultdict(Definitions)
     edges_by_customer = defaultdict(list)
     for c in connections:
@@ -172,11 +170,9 @@ def _base_definitions(
 def compute_distributed_definitions(
     connections: Sequence[Connection],
 ) -> Mapping[str, Definitions]:
-
     connecting_definitions, edges_by_customer = _base_definitions(connections)
 
     def _add_binding(_from: str, _to: str, through: str) -> None:
-
         binding_site1 = Binding(
             source=INTERSITE_EXCHANGE,
             vhost=DEFAULT_VHOST_NAME,
@@ -209,7 +205,6 @@ def compute_distributed_definitions(
 
 
 def _get_vhost_from_connection(connection: Connection) -> tuple[str, str]:
-
     if connection.connecter.customer == connection.connectee.customer:
         return (DEFAULT_VHOST_NAME, r"%2f")
 
@@ -218,7 +213,6 @@ def _get_vhost_from_connection(connection: Connection) -> tuple[str, str]:
 
 
 def add_connecter_definitions(connection: Connection, definition: Definitions) -> None:
-
     user = User(name=connection.connectee.site_id)
     vhost_name, v_host_uri = _get_vhost_from_connection(connection)
 
@@ -301,7 +295,6 @@ def add_connecter_definitions(connection: Connection, definition: Definitions) -
 
 
 def add_connectee_definitions(connection: Connection, definition: Definitions) -> None:
-
     user = User(name=connection.connecter.site_id)
     permission = Permission(
         user=user.name,

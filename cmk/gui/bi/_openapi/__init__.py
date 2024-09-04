@@ -575,7 +575,8 @@ def get_bi_pack(params: Mapping[str, Any]) -> Response:
                     rel=".../value",
                     parameters={"collection": "items"},
                     href=constructors.object_href(
-                        "bi_" + name, element.id  # type: ignore[arg-type]
+                        "bi_" + name,  # type: ignore[arg-type]
+                        element.id,
                     ),
                 )
                 for element in elements

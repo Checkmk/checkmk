@@ -427,7 +427,7 @@ def auth_request(with_user: tuple[UserId, str]) -> typing.Generator[http.Request
 
 @pytest.fixture()
 def admin_auth_request(
-    with_admin: tuple[UserId, str]
+    with_admin: tuple[UserId, str],
 ) -> typing.Generator[http.Request, None, None]:
     # NOTE:
     # REMOTE_USER will be omitted by `flask_app.test_client()` if only passed via an

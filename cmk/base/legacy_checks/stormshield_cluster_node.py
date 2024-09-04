@@ -54,14 +54,20 @@ def check_stormshield_cluster_node(item, params, info):
             else:
                 yield 0, "Member is %s" % online_mapping[online]
             if statusforced == "1":
-                yield 1, "HA-State: {} ({})".format(
-                    active_mapping[active],
-                    forced_mapping[statusforced],
+                yield (
+                    1,
+                    "HA-State: {} ({})".format(
+                        active_mapping[active],
+                        forced_mapping[statusforced],
+                    ),
                 )
             else:
-                yield 0, "HA-State: {} ({})".format(
-                    active_mapping[active],
-                    forced_mapping[statusforced],
+                yield (
+                    0,
+                    "HA-State: {} ({})".format(
+                        active_mapping[active],
+                        forced_mapping[statusforced],
+                    ),
                 )
             if int(quality) < crit:
                 yield 2, "Quality: %s" % quality

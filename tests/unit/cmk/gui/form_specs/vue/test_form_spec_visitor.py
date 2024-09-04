@@ -75,15 +75,23 @@ def _build_value_validation_for_class_with_input_hint(
 ) -> Iterable[tuple[FormSpec, Any, bool]]:
     for good_value in good_values:
         yield class_type(), good_value, True
-        yield class_type(
-            prefill=DefaultValue(prefill_value),
-        ), good_value, True
+        yield (
+            class_type(
+                prefill=DefaultValue(prefill_value),
+            ),
+            good_value,
+            True,
+        )
 
     for bad_value in bad_values:
         yield class_type(), bad_value, False
-        yield class_type(
-            prefill=DefaultValue(prefill_value),
-        ), bad_value, False
+        yield (
+            class_type(
+                prefill=DefaultValue(prefill_value),
+            ),
+            bad_value,
+            False,
+        )
 
     yield class_type(), DEFAULT_VALUE, False
     yield class_type(prefill=DefaultValue(prefill_value)), DEFAULT_VALUE, True

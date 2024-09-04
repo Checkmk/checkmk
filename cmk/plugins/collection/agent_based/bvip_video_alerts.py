@@ -42,7 +42,6 @@ def inventory_bvip_video_alerts(section: Section) -> DiscoveryResult:
 
 
 def check_bvip_video_alerts(item: str, section: Section) -> CheckResult:
-
     if (alerts := section.get(item)) is None:
         return
 

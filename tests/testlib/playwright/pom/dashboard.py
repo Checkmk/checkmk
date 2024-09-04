@@ -69,7 +69,6 @@ class Dashboard(CmkPage):
 
 
 class DashboardMobile(CmkPage):
-
     page_title: str = r"Checkmk Mobile"
 
     links: list[str] = [

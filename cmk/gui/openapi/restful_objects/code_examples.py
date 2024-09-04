@@ -8,6 +8,7 @@ To add a new example (new language, library, etc.), a new Jinja2-Template has to
 be referenced in the result of _build_code_templates.
 
 """
+
 import functools
 import json
 import re

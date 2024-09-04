@@ -118,7 +118,7 @@ class Dict2CatalogConverter:
 
     @staticmethod
     def _normalize_header(
-        header: tuple[str, Sequence[str]] | tuple[str, str, Sequence[str]]
+        header: tuple[str, Sequence[str]] | tuple[str, str, Sequence[str]],
     ) -> tuple[str, str | None, Sequence[str]]:
         # normalized various header configurations
         # title / css classes / elements

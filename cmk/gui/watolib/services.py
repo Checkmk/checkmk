@@ -126,6 +126,7 @@ class DiscoveryAction(enum.StrEnum):
 
 class UpdateType(enum.Enum):
     "States that an individual service can be changed to by clicking a button"
+
     UNDECIDED = "new"
     MONITORED = "unchanged"
     IGNORED = "ignored"

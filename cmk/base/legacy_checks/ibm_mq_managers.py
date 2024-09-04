@@ -86,16 +86,22 @@ def check_ibm_mq_managers(item, params, parsed):  # pylint: disable=too-many-bra
             yield 0, "High availability: replicated"
     elif standby == "PERMITTED":
         if len(instances) == 2:
-            yield 0, "Multi-Instance: {}={} and {}={}".format(
-                instances[0][0],
-                instances[0][1],
-                instances[1][0],
-                instances[1][1],
+            yield (
+                0,
+                "Multi-Instance: {}={} and {}={}".format(
+                    instances[0][0],
+                    instances[0][1],
+                    instances[1][0],
+                    instances[1][1],
+                ),
             )
         elif len(instances) == 1:
-            yield 2, "Multi-Instance: {}={} and missing partner".format(
-                instances[0][0],
-                instances[0][1],
+            yield (
+                2,
+                "Multi-Instance: {}={} and missing partner".format(
+                    instances[0][0],
+                    instances[0][1],
+                ),
             )
         else:
             yield 2, "Multi-Instance: unknown instances (%s)" % instances

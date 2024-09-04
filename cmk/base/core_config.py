@@ -533,7 +533,7 @@ def get_labels_from_attributes(key_value_pairs: list[tuple[str, str]]) -> Labels
 
 
 def get_tags_with_groups_from_attributes(
-    key_value_pairs: list[tuple[str, str]]
+    key_value_pairs: list[tuple[str, str]],
 ) -> dict[TagGroupID, TagID]:
     return {
         TagGroupID(key[6:]): TagID(value)

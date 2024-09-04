@@ -33,21 +33,29 @@ def check_ucs_c_rack_server_faultinst(
 
     # report overall state and summary of fault instances
     severity_counter = collections.Counter(parsed["Severity"])
-    yield overall_state, "Found faults: " + ", ".join(
-        [
-            f"{severity_counter[severity]} with severity '{severity}'"
-            for severity in sorted(severity_counter.keys())
-        ]
+    yield (
+        overall_state,
+        "Found faults: "
+        + ", ".join(
+            [
+                f"{severity_counter[severity]} with severity '{severity}'"
+                for severity in sorted(severity_counter.keys())
+            ]
+        ),
     )
 
     # report individual faults sorted by monitoring state
     start_str = "\n\nIndividual faults:\n"
     for index in sorted(range(len(states)), key=lambda idx: states[idx]):
-        yield states[index], start_str + ", ".join(
-            [
-                f"{key}: {parsed[key][index]}"
-                for key in ["Severity", "Description", "Cause", "Code", "Affected DN"]
-            ]
+        yield (
+            states[index],
+            start_str
+            + ", ".join(
+                [
+                    f"{key}: {parsed[key][index]}"
+                    for key in ["Severity", "Description", "Cause", "Code", "Affected DN"]
+                ]
+            ),
         )
         start_str = ""
 

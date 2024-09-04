@@ -240,7 +240,7 @@ rulespec_registry.register(
 
 
 def _cpu_utilization_to_dict(
-    param: tuple[float, float] | dict[str, tuple[float, float]]
+    param: tuple[float, float] | dict[str, tuple[float, float]],
 ) -> dict[str, tuple[float, float]]:
     if not param:
         return {}

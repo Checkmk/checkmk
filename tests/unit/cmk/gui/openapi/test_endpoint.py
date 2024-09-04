@@ -462,7 +462,6 @@ def test_invalid_payload(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     payload: str,
 ) -> None:
-
     response = aut_user_auth_wsgi_app.call_method(
         "post",
         "/NO_SITE/check_mk/api/1.0/test_accept_parameter",
@@ -502,7 +501,6 @@ def test_endpoint_accept_multiple_types(
     content_type: str,
     payload: str,
 ) -> None:
-
     res = aut_user_auth_wsgi_app.call_method(
         "post",
         "/NO_SITE/check_mk/api/1.0/test_multiple_content_types",

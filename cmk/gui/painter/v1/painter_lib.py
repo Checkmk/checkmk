@@ -28,7 +28,7 @@ class PainterConfiguration:
 
 
 def strip_css_from_cell_spec(
-    html_formatter: Callable[[T, PainterConfiguration], CellSpec]
+    html_formatter: Callable[[T, PainterConfiguration], CellSpec],
 ) -> Callable[[T, PainterConfiguration], str]:
     def css_remover(painter_data: T, painter_configuration: PainterConfiguration) -> str:
         return str(html_formatter(painter_data, painter_configuration)[1])

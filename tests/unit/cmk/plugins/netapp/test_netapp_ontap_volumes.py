@@ -102,7 +102,6 @@ def test_generate_volume_metrics() -> None:
 
 
 def test_serialize_volumes() -> None:
-
     volume_models = [
         VolumeModelFactory.build(
             uuid="volume_uuid",
@@ -218,7 +217,6 @@ _VOLUME_MODELS = [
     ],
 )
 def test_check_netapp_ontap_volumes_state_online(volume_id: str, expected_result_qty: int) -> None:
-
     volumes_section = {vol_obj.item_name(): vol_obj for vol_obj in _VOLUME_MODELS}
     volumes_counters_section = {
         counter_obj.item_name(): counter_obj for counter_obj in _VOLUME_COUNTERS_MODELS

@@ -33,7 +33,6 @@ def write_section(
 
 
 def _collect_netapp_resource_volume(connection: HostConnection, is_constituent: bool) -> Iterable:
-
     field_query = (
         "uuid",
         "state",
@@ -58,7 +57,6 @@ def _collect_netapp_resource_volume(connection: HostConnection, is_constituent: 
 
 
 def _collect_volume_models(netapp_volumes: Iterable) -> Iterable[models.VolumeModel]:
-
     for netapp_resources in netapp_volumes:
         element_data = netapp_resources.to_dict()
 
@@ -88,7 +86,6 @@ def _collect_volume_models(netapp_volumes: Iterable) -> Iterable[models.VolumeMo
 
 
 def fetch_volumes(connection: HostConnection) -> Iterable[models.VolumeModel]:
-
     yield from _collect_volume_models(
         _collect_netapp_resource_volume(connection, is_constituent=True)
     )
@@ -879,7 +876,6 @@ def agent_netapp_main(args: Args) -> int:
         verify=False if args.no_cert_check else True,  # pylint: disable=simplifiable-if-expression
         headers={"User-Agent": USER_AGENT},
     ) as connection:
-
         if isinstance(args.cert_server_name, str):
             connection.session.mount(
                 connection.origin, HostnameValidationAdapter(args.cert_server_name)

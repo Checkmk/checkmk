@@ -10,6 +10,7 @@ This registry has multiple jobs:
  2. interlinking between endpoints without having to know the specific URL.
 
 """
+
 from collections.abc import Iterator
 from typing import TypedDict
 

@@ -286,7 +286,7 @@ def _metric_names_by_module(
         | graphs_api.Graph
         | graphs_api.Bidirectional
         | translations_api.Translation,
-    ]
+    ],
 ) -> Mapping[str, _MetricNamesInModule]:
     metric_names_by_module: dict[str, _MetricNamesInModule] = {}
     for plugin_location, plugin in plugins.items():

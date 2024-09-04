@@ -20,6 +20,7 @@ The event console endpoints allow for
     * Query the event console table using filters, id or live status query and archive those events.
 
 """
+
 from collections.abc import Mapping
 from typing import Any
 

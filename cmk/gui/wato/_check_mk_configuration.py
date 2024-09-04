@@ -3202,7 +3202,7 @@ class ConfigVariableUseDNSCache(ConfigVariable):
 
 
 def transform_snmp_backend_default_to_valuespec(
-    backend: Literal["classic", "inline"]
+    backend: Literal["classic", "inline"],
 ) -> SNMPBackendEnum:
     return {
         "classic": SNMPBackendEnum.CLASSIC,
@@ -4684,7 +4684,7 @@ def _valuespec_automatic_rediscover_parameters() -> Dictionary:
 
 
 def _migrate_automatic_rediscover_parameters(
-    param: int | tuple[str, dict[str, bool]]
+    param: int | tuple[str, dict[str, bool]],
 ) -> tuple[str, dict[str, bool] | None]:
     # already migrated
     if isinstance(param, tuple):

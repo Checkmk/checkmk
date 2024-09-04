@@ -3027,7 +3027,6 @@ class QuickSetupClient(RestApiClient):
         payload: dict[str, Any],
         expect_ok: bool = True,
     ) -> Response:
-
         return self.request(
             "post",
             url=f"/objects/{self.domain}/{quick_setup_id}/actions/save/invoke",

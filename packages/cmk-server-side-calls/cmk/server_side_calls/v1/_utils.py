@@ -253,6 +253,7 @@ class Secret(NamedTuple):
         >>> argv = ["--basicauth", my_secret.unsafe("user:%s")]
 
     """
+
     id: int
     format: str = "%s"
     pass_safely: bool = True

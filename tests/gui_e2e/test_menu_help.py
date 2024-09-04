@@ -29,7 +29,6 @@ def test_help_menu(
     help_menu_button: str,
     url_pattern: str,
 ) -> None:
-
     browser_context = dashboard_page.page.context
     pw_timeout_msg = (
         f"Expected a response to URL with pattern: `{url_pattern}`.\n"

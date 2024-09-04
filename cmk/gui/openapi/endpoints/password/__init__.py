@@ -13,6 +13,7 @@ same way the user interface does. This includes being able to create, update and
 stored passwords. You are also able to fetch a list of passwrods or individual passwords,
 however, the password itself is not returned for security reasons.
 """
+
 from collections.abc import Mapping
 from typing import Any, cast
 

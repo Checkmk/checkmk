@@ -15,7 +15,6 @@ from cmk.update_config.plugins.actions.counters_conversion import ConvertCounter
 
 
 def test_new_files_are_ignored(tmp_path: Path) -> None:
-
     content = '[[["heute", "plugin", "item", "user-key"], "42"]]'
 
     (new_file := tmp_path / "heute").write_text(content)
@@ -26,7 +25,6 @@ def test_new_files_are_ignored(tmp_path: Path) -> None:
 
 
 def test_old_files_are_converted(tmp_path: Path) -> None:
-
     host = HostAddress("heute")
     service = ServiceID(CheckPluginName("plugin"), "item")
     old_content = repr({(host, str(service[0]), service[1], "user-key"): 42})

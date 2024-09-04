@@ -6,6 +6,7 @@
 Polyfactory has a limitation on more specific Callables, so we override the original dataclasses
 to have a more generic type definition for fields which involve those
 """
+
 from dataclasses import dataclass
 from typing import Callable, Sequence
 

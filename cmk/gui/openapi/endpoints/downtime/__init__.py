@@ -27,6 +27,7 @@ Downtime object can have the following relations:
  * `urn:org.restfulobjects/delete` - The endpoint to delete downtimes.
 
 """
+
 import datetime as dt
 import json
 from collections.abc import Callable, Mapping

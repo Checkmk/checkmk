@@ -158,8 +158,9 @@ def get_all_shared_files(
         if share_name.lower() not in share_names:
             raise SMBShareAgentError(f"Share {share_name} doesn't exist on host {hostname}")
 
-        yield pattern_string, set(
-            iter_shared_files(conn, hostname, share_name, pattern[2:], recursive=recursive)
+        yield (
+            pattern_string,
+            set(iter_shared_files(conn, hostname, share_name, pattern[2:], recursive=recursive)),
         )
 
 

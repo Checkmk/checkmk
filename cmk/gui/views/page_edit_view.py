@@ -450,7 +450,7 @@ def _get_vs_column_dropdown(
 
 
 def _get_vs_link_or_tooltip_elements(
-    painters: Mapping[str, Painter]
+    painters: Mapping[str, Painter],
 ) -> list[tuple[str, ValueSpec]]:
     return [
         (
@@ -507,7 +507,7 @@ def _view_editor_spec(
             tuple[Literal["column"], _RawVSColumnSpec]
             | tuple[Literal["join_column"], _RawVSJoinColumnSpec]
             | tuple[Literal["join_inv_column"], _RawVSJoinInvColumnSpec]
-        )
+        ),
     ) -> ColumnSpec:
         if value[0] == "column":
             column_type, inner_value = value

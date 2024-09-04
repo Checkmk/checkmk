@@ -270,7 +270,7 @@ class ModeBulkImport(WatoMode):
                 yield dict(zip(_attr_names, csv_row))
 
         def _transform_and_validate_raw_rows(
-            iterator: typing.Iterator[dict[str, str]]
+            iterator: typing.Iterator[dict[str, str]],
         ) -> typing.Generator[ImportTuple, None, None]:
             """Here we transform each row into a tuple of HostName and HostAttributes and None.
 

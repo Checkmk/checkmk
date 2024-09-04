@@ -2110,10 +2110,13 @@ class AutomationDiagSpecialAgent(Automation):
                     fetched = fetcher.fetch(Mode.DISCOVERY)
 
                 if fetched.is_ok():
-                    yield 0, ensure_str_with_fallback(
-                        fetched.ok,
-                        encoding="utf-8",
-                        fallback="latin-1",
+                    yield (
+                        0,
+                        ensure_str_with_fallback(
+                            fetched.ok,
+                            encoding="utf-8",
+                            fallback="latin-1",
+                        ),
                     )
                 else:
                     yield 1, str(fetched.error)

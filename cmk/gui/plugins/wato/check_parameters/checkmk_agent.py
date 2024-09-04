@@ -33,7 +33,7 @@ def _validate_version(value: str, varprefix: str) -> None:
 
 
 def _migrate_version_spec(
-    param: str | tuple[str, str] | tuple[str, dict[str, str]]
+    param: str | tuple[str, str] | tuple[str, dict[str, str]],
 ) -> tuple[str, dict[str, str]]:
     """
     >>> _migrate_version_spec(('at_least', {'build': '1.1.1'}))

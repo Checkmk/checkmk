@@ -516,7 +516,6 @@ class BaseApiClient(abc.ABC):
         self._ratelimit = min(self._ratelimit, new_value)
 
     def _handle_ratelimit(self, get_response: Callable[[], requests.Response]) -> requests.Response:
-
         response = get_response()
         self._update_ratelimit(response)
 
@@ -1484,7 +1483,7 @@ def get_vm_labels_section(vm: AzureResource, group_labels: GroupLabels) -> Label
 
 
 def process_resource(
-    function_args: tuple[MgmtApiClient, AzureResource, GroupLabels, Args]
+    function_args: tuple[MgmtApiClient, AzureResource, GroupLabels, Args],
 ) -> Sequence[Section]:
     mgmt_client, resource, group_labels, args = function_args
     sections: list[Section] = []

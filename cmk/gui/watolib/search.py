@@ -514,7 +514,7 @@ class IndexSearcher:
 
     @staticmethod
     def _filter_results_by_user_permissions(
-        results_by_topic: Iterable[tuple[str, Iterable[_SearchResultWithPermissionsCheck]]]
+        results_by_topic: Iterable[tuple[str, Iterable[_SearchResultWithPermissionsCheck]]],
     ) -> SearchResultsByTopic:
         yield from (
             (

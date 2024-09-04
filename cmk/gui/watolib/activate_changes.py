@@ -1285,7 +1285,6 @@ def get_all_replicated_sites() -> Mapping[SiteId, SiteConfiguration]:
 def get_rabbitmq_definitions(
     peer_to_peer_connections: BrokerConnections,
 ) -> Mapping[str, rabbitmq.Definitions]:
-
     replicated_sites_configs = get_all_replicated_sites()
 
     connection_info = [

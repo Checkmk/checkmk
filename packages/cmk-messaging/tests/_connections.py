@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """RabbitMq configurations module test: connections"""
+
 from cmk.messaging import rabbitmq
 
 # central -> remote1

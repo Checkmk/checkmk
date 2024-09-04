@@ -10,6 +10,7 @@ a host.
 You can find an introduction to services including service discovery in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_services.html).
 """
+
 import enum
 from collections.abc import Mapping, Sequence
 from typing import Any, assert_never

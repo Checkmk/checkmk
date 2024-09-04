@@ -188,7 +188,7 @@ def check_aws_http_errors(
 
 
 def check_aws_metrics(
-    metric_infos: list[dict[str, float | str | None | tuple | None | Callable | None]]
+    metric_infos: list[dict[str, float | str | None | tuple | None | Callable | None]],
 ) -> CheckResult:
     go_stale = True
 

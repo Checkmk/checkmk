@@ -27,7 +27,6 @@ def create_host_attributes_selection(
     default_host_attributes: Sequence[tuple[str, str]] | None,
     exclude_host_attributes: Sequence[str] | None = None,
 ) -> ListExtended[tuple[str, object]]:
-
     attribute_choices: list[CascadingSingleChoiceElement[Any]] = []
     for topic, topic_title in get_sorted_host_attribute_topics(for_what="host", new=False):
         for attr in get_sorted_host_attributes_by_topic(topic):

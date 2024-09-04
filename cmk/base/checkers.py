@@ -650,7 +650,9 @@ def _get_check_function(
 
 
 def _aggregate_results(
-    subresults: tuple[Sequence[IgnoreResults], Sequence[MetricTuple], Sequence[CheckFunctionResult]]
+    subresults: tuple[
+        Sequence[IgnoreResults], Sequence[MetricTuple], Sequence[CheckFunctionResult]
+    ],
 ) -> ServiceCheckResult:
     # Impedance matching part of `get_check_function()`.
     ignore_results, metrics, results = subresults
@@ -1061,7 +1063,6 @@ def _make_discovery_parameters_getter(
     ruleset_type: Literal["all", "merged"],
     rules_getter_function: Callable[[RuleSetName], Sequence[RuleSpec]],
 ) -> Callable[[HostName], None | Parameters | list[Parameters]]:
-
     def get_discovery_parameters(host_name: HostName) -> None | Parameters | list[Parameters]:
         params = get_plugin_parameters(
             host_name,

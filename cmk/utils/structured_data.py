@@ -316,7 +316,7 @@ def _make_filter_func(choice: Literal["nothing", "all"] | Sequence[_CT]) -> Call
 
 
 def _consolidate_filter_funcs(
-    choices: Sequence[Literal["nothing", "all"] | Sequence[_CT]]
+    choices: Sequence[Literal["nothing", "all"] | Sequence[_CT]],
 ) -> Callable[[_CT], bool]:
     return lambda kn: any(_make_filter_func(c)(kn) for c in choices)
 

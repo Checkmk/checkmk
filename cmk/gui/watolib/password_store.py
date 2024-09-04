@@ -93,7 +93,7 @@ def join_password_specs(
 
 
 def split_password_specs(
-    joined: Mapping[str, Password]
+    joined: Mapping[str, Password],
 ) -> tuple[dict[str, Password], dict[str, str]]:
     """Separate passwords from meta data"""
     meta_data, passwords = {}, {}

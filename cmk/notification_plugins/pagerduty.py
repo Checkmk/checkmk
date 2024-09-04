@@ -7,6 +7,7 @@ Send notification messages to PagerDuty
 =======================================
 
 """
+
 from typing import Any
 
 from cmk.notification_plugins.utils import (

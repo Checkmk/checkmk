@@ -247,7 +247,7 @@ class MerakiOrganisation:
 
     def _get_licenses_overview(self) -> MerakiAPIData | None:
         def _update_licenses_overview(
-            licenses_overview: dict[str, object] | None
+            licenses_overview: dict[str, object] | None,
         ) -> MerakiAPIData | None:
             if not licenses_overview:
                 return None

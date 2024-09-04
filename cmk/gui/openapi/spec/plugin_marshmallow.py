@@ -149,7 +149,6 @@ class CheckmkOpenAPIConverter(marshmallow.OpenAPIConverter):  # type: ignore[nam
 
 
 class CheckmkOpenAPIResolver(marshmallow.SchemaResolver):  # type: ignore[name-defined,misc]
-
     def resolve_parameters(self, parameters: list[object]) -> list[object]:
         parameters = super().resolve_parameters(parameters)
 

@@ -8,6 +8,7 @@ This provides access to autocomplete functionality. This currently is mostly use
 internally by the Grafana's data source plug-in and relies on data sent by it that
 is not fully documented and specified yet.
 """
+
 from collections.abc import Mapping
 from typing import Any
 

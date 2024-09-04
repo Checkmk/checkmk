@@ -1860,7 +1860,6 @@ class CustomPluginAdapter:
 def get_plugin_from_mk_file(  # pylint: disable=too-many-branches
     notify_plugin: NotifyPlugin,
 ) -> PluginAdapter | CustomPluginAdapter:
-
     # TODO use match case once mypy has support for it
     if is_known_plugin(notify_plugin):
         if notify_plugin[0] == "sms":

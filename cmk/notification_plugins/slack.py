@@ -8,6 +8,7 @@ Send notification messages to Slack
 
 Use a slack webhook to send notification messages
 """
+
 from dataclasses import dataclass
 from typing import Iterable
 

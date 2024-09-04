@@ -664,7 +664,6 @@ class ModeEditBrokerConnection(WatoMode):
             )
 
     def _check_connection_values(self, connection_id: str, connection: BrokerConnection) -> None:
-
         if connection.connecter.site_id == connection.connectee.site_id:
             raise MKUserError(
                 None,
@@ -699,8 +698,9 @@ class ModeEditBrokerConnection(WatoMode):
         vs.validate_value(raw_site_spec, "broker_connection")
 
         try:
-            source_site, dest_site = SiteId(raw_site_spec["connecter"]), SiteId(
-                raw_site_spec["connectee"]
+            source_site, dest_site = (
+                SiteId(raw_site_spec["connecter"]),
+                SiteId(raw_site_spec["connectee"]),
             )
         except KeyError:
             raise MKUserError(None, _("Connecter and connectee sites must be specified."))
@@ -723,7 +723,6 @@ class ModeEditBrokerConnection(WatoMode):
 
     def page(self) -> None:
         with html.form_context("broker_connection"):
-
             connection_vs = (
                 {
                     "unique_id": self._edit_id if self._edit_id else "",
@@ -923,9 +922,10 @@ class ModeDistributedMonitoring(WatoMode):
                 None, _("Unable to delete unknown connection id: %s") % delete_connection_id
             )
         try:
-            source_site, dest_site = SiteId(
-                connections[ConnectionId(delete_connection_id)].connecter.site_id
-            ), SiteId(connections[ConnectionId(delete_connection_id)].connectee.site_id)
+            source_site, dest_site = (
+                SiteId(connections[ConnectionId(delete_connection_id)].connecter.site_id),
+                SiteId(connections[ConnectionId(delete_connection_id)].connectee.site_id),
+            )
         except KeyError:
             raise MKUserError(
                 None,

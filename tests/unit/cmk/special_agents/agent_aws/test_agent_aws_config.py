@@ -29,7 +29,6 @@ from cmk.special_agents.agent_aws import AWSConfig, NamingConvention
 def test_agent_aws_config_hash_names(
     sys_argv_1: Args, sys_argv_2: Args, expected_result: bool
 ) -> None:
-
     aws_config_1 = AWSConfig("heute1", sys_argv_1, ([], []), NamingConvention.ip_region_instance)
     aws_config_2 = AWSConfig("heute1", sys_argv_2, ([], []), NamingConvention.ip_region_instance)
     assert (

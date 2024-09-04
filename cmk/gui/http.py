@@ -196,10 +196,13 @@ class LegacyDeprecatedMixin:
         for name, values in self.values.lists():  # type: ignore[attr-defined]
             if name.startswith(prefix):
                 # Preserve previous behaviour
-                yield name, (
-                    ensure_str(values[-1])  # pylint: disable= six-ensure-str-bin-call
-                    if values
-                    else None
+                yield (
+                    name,
+                    (
+                        ensure_str(values[-1])  # pylint: disable= six-ensure-str-bin-call
+                        if values
+                        else None
+                    ),
                 )
 
     @overload

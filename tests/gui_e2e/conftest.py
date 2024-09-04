@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 """some fixtures related to e2e tests and playwright"""
+
 import logging
 import re
 from collections.abc import Iterator

@@ -228,11 +228,16 @@ def check_fireeye_mail_statistics(_no_item, params, info):
         perfdata = [(counter.replace(".", "_"), rate * 60)]
         if average:
             avg = get_average(value_store, f"{counter}.avg", this_time, rate, average)
-            yield 0, "%s: %.2f per %d minutes" % (
-                mail_containing,
-                avg * 60 * average,
-                average,
-            ), perfdata
+            yield (
+                0,
+                "%s: %.2f per %d minutes"
+                % (
+                    mail_containing,
+                    avg * 60 * average,
+                    average,
+                ),
+                perfdata,
+            )
         else:
             yield 0, f"{mail_containing}: {rate * 60:.2f} per minute", perfdata
 

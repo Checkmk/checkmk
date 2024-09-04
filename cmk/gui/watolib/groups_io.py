@@ -104,7 +104,6 @@ def save_group_information(
 
 
 class GroupAliasConfigFile(WatoMultiConfigFile[GroupAliases]):
-
     def __init__(self, config_dir: Path | None = None) -> None:
         if config_dir is None:
             config_dir = Path(paths.default_config_dir)
@@ -128,7 +127,6 @@ class GroupAliasConfigFile(WatoMultiConfigFile[GroupAliases]):
 
 
 class GroupsConfigFile(WatoMultiConfigFile[GroupConfigs]):
-
     def __init__(self, config_dir: Path | None = None) -> None:
         if config_dir is None:
             config_dir = Path(paths.default_config_dir)

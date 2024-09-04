@@ -268,7 +268,7 @@ def _graph_template_from_api_bidirectional(
 
 
 def _parse_raw_scalar_expression(
-    raw_scalar_expression: str | tuple[str, str | LazyString]
+    raw_scalar_expression: str | tuple[str, str | LazyString],
 ) -> MetricExpression:
     if isinstance(raw_scalar_expression, tuple):
         return parse_legacy_expression(
@@ -294,7 +294,7 @@ def _parse_raw_graph_range(raw_graph_range: tuple[int | str, int | str]) -> Fixe
 def _parse_raw_metric_expression(
     raw_metric_expression: (
         tuple[str, LineType] | tuple[str, LineType, str] | tuple[str, LineType, LazyString]
-    )
+    ),
 ) -> MetricExpression:
     raw_expression, line_type, *title = raw_metric_expression
     return parse_legacy_expression(raw_expression, line_type, str(title[0]) if title else "", {})
@@ -399,7 +399,7 @@ def applicable_metrics(
 
 
 def get_graph_templates(
-    translated_metrics: Mapping[str, TranslatedMetric]
+    translated_metrics: Mapping[str, TranslatedMetric],
 ) -> Iterator[GraphTemplate]:
     if not translated_metrics:
         yield from ()

@@ -107,7 +107,7 @@ _TEndpointReturn = TypeVar("_TEndpointReturn")  # pylint: disable=invalid-name
 
 
 def log_http_exception(
-    endpoint_call: Callable[_TEndpointParams, _TEndpointReturn]
+    endpoint_call: Callable[_TEndpointParams, _TEndpointReturn],
 ) -> Callable[Concatenate[str, _TEndpointParams], _TEndpointReturn]:
     def wrapper(
         log_text: str,

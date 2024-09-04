@@ -106,7 +106,11 @@ def get_elb_sections() -> ELBSections:
         # TODO: FakeELBClient shoud actually subclass ELBClient.
         elb_limits = ELBLimits(fake_elb_client, region, config, distributor)  # type: ignore[arg-type]
         elb_summary = ELBSummaryGeneric(
-            fake_elb_client, region, config, distributor, resource="elb"  # type: ignore[arg-type]
+            fake_elb_client,  # type: ignore[arg-type]
+            region,
+            config,
+            distributor,
+            resource="elb",
         )
         elb_labels = ELBLabelsGeneric(fake_elb_client, region, config, resource="elb")  # type: ignore[arg-type]
         elb_health = ELBHealth(fake_elb_client, region, config)  # type: ignore[arg-type]

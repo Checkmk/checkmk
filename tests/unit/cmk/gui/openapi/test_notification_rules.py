@@ -1673,7 +1673,7 @@ def config_with_bulk(plugin: PluginType) -> APINotificationRule:
 
 
 def plugin_with_bulking(
-    bulking: Literal["allowed", "not_allowed"]
+    bulking: Literal["allowed", "not_allowed"],
 ) -> Iterator[APINotificationRule]:
     notification_scripts = load_notification_scripts()
     plugins: list[str] = []

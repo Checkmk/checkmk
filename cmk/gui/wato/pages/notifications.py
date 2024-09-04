@@ -2371,7 +2371,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
 
     @staticmethod
     def _migrate_bulk(
-        v: CascadingDropdownChoiceValue | Mapping[str, Any]
+        v: CascadingDropdownChoiceValue | Mapping[str, Any],
     ) -> CascadingDropdownChoiceValue:
         return v if isinstance(v, tuple) else ("always", v)
 

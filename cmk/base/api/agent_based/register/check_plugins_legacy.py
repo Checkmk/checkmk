@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=protected-access
-"""Helper to register a new-style section based on config.check_info
-"""
+"""Helper to register a new-style section based on config.check_info"""
+
 import copy
 import functools
 import itertools

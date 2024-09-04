@@ -5,6 +5,7 @@
 
 # pylint: disable=protected-access
 """The rulespecs are the ruleset specifications registered to Setup."""
+
 import abc
 import re
 from collections.abc import Callable

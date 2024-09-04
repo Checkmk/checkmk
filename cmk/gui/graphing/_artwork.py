@@ -320,7 +320,7 @@ def _areastack(
 
     # Make sure that first entry in pair is not greater than second
     def fix_swap(
-        pp: tuple[TimeSeriesValue, TimeSeriesValue]
+        pp: tuple[TimeSeriesValue, TimeSeriesValue],
     ) -> tuple[TimeSeriesValue, TimeSeriesValue]:
         lower, upper = pp
         if lower is None and upper is None:
@@ -959,7 +959,7 @@ def _render_label_value(
 
 
 def render_labels(
-    label_specs: Iterable[tuple[float, str, int]]
+    label_specs: Iterable[tuple[float, str, int]],
 ) -> tuple[list[VerticalAxisLabel], int]:
     max_label_length = 0
     rendered_labels: list[VerticalAxisLabel] = []

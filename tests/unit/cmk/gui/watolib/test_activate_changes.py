@@ -747,7 +747,6 @@ def test_get_current_config_generation() -> None:
 
 
 def test_activation_cleanup_background_job(capsys: pytest.CaptureFixture[str]) -> None:
-
     act_dir = (
         cmk.utils.paths.tmp_dir / "wato" / "activation" / "9a61e24f-d991-4710-b8e7-04700c309594"
     )

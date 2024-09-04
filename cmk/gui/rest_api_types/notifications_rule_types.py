@@ -883,7 +883,6 @@ class CheckboxMatchHostTags:
 
         resp["value"] = []
         for k, v in self.value.items():
-
             as_aux_tag = TagID(k)
             if as_aux_tag in aux_tags:
                 resp["value"].append(

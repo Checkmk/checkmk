@@ -2,8 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""All objects defined here are intended to be exposed in the API
-"""
+"""All objects defined here are intended to be exposed in the API"""
+
 from collections.abc import Callable, Mapping
 from typing import Any, overload
 
@@ -264,7 +264,9 @@ def snmp_section(
                 name=name,
                 detect=detect,
                 fetch=fetch,
-                parse_function=_noop_snmp_parse_function if parse_function is None else parse_function,  # type: ignore[arg-type]
+                parse_function=(
+                    _noop_snmp_parse_function if parse_function is None else parse_function  # type: ignore[arg-type]
+                ),
                 parsed_section_name=parsed_section_name,
                 host_label_function=host_label_function,
                 host_label_default_parameters=host_label_default_parameters,  # type: ignore[arg-type]
@@ -277,7 +279,9 @@ def snmp_section(
                 name=name,
                 detect=detect,
                 fetch=fetch,
-                parse_function=_noop_snmp_parse_function if parse_function is None else parse_function,  # type: ignore[arg-type]
+                parse_function=(
+                    _noop_snmp_parse_function if parse_function is None else parse_function  # type: ignore[arg-type]
+                ),
                 parsed_section_name=parsed_section_name,
                 host_label_function=host_label_function,
                 host_label_default_parameters=host_label_default_parameters,  # type: ignore[arg-type]

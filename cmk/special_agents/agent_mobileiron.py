@@ -9,6 +9,7 @@ https://help.ivanti.com/mi/help/en_us/cld/76/api/Content/MobileIronCloudCustomer
 
 api call url parameters: "https://" + $tenantURL + "/api/v1/device?q=&rows=" + $interval + "&start=" + $start + "&dmPartitionId=" + $spaceId + "&fq=" + $filterCriteria + ""
 """
+
 from __future__ import annotations
 
 import enum

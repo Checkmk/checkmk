@@ -772,7 +772,7 @@ class PackedConfigGenerator:
             return all_hosts_red
 
         def filter_clusters(
-            clusters_orig: dict[HostName, list[HostName]]
+            clusters_orig: dict[HostName, list[HostName]],
         ) -> dict[HostName, list[HostName]]:
             clusters_red = {}
             for cluster_entry, cluster_nodes in clusters_orig.items():
@@ -786,7 +786,7 @@ class PackedConfigGenerator:
             return clusters_red
 
         def filter_hostname_in_dict(
-            values: dict[HostName, dict[str, str]]
+            values: dict[HostName, dict[str, str]],
         ) -> dict[HostName, dict[str, str]]:
             values_red = {}
             for hostname, attributes in values.items():
@@ -795,7 +795,7 @@ class PackedConfigGenerator:
             return values_red
 
         def filter_extra_service_conf(
-            values: dict[str, list[dict[str, str]]]
+            values: dict[str, list[dict[str, str]]],
         ) -> dict[str, list[dict[str, str]]]:
             return {"check_interval": values.get("check_interval", [])}
 
@@ -1557,7 +1557,7 @@ def _add_sections_to_register(sections: Iterable[SNMPSectionPlugin | AgentSectio
 
 
 def _make_agent_and_snmp_sections(
-    legacy_checks: Mapping[str, LegacyCheckDefinition]
+    legacy_checks: Mapping[str, LegacyCheckDefinition],
 ) -> tuple[list[str], Sequence[SNMPSectionPlugin | AgentSectionPlugin]]:
     """Here comes the next layer of converting-to-"new"-api.
 
@@ -1786,7 +1786,7 @@ def lookup_ip_address(
 
 
 def _get_ssc_ip_family(
-    ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+    ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
 ) -> server_side_calls_api.IPAddressFamily:
     match ip_family:
         case socket.AddressFamily.AF_INET:
@@ -2015,7 +2015,7 @@ class ConfigCache:
             return self.__snmp_config[(host_name, ip_address, source_type)]
 
         def _timeout_policy(
-            policy: Literal["stop_on_timeout", "continue_on_timeout"]
+            policy: Literal["stop_on_timeout", "continue_on_timeout"],
         ) -> Literal["stop", "continue"]:
             match policy:
                 case "stop_on_timeout":
@@ -2694,7 +2694,7 @@ class ConfigCache:
         }
 
         def _filter_newstyle_ssc_rule(
-            unfiltered: Sequence[Mapping[str, object] | LegacySSCConfigModel]
+            unfiltered: Sequence[Mapping[str, object] | LegacySSCConfigModel],
         ) -> Sequence[Mapping[str, object]]:
             return [
                 r for r in unfiltered if isinstance(r, dict) and all(isinstance(k, str) for k in r)
@@ -2706,7 +2706,7 @@ class ConfigCache:
             return [(name, _filter_newstyle_ssc_rule(unfiltered)) for name, unfiltered in rules]
 
         def _gather_secrets_from(
-            rules_function: Callable[[HostName], MixedSSCRules]
+            rules_function: Callable[[HostName], MixedSSCRules],
         ) -> Mapping[str, str]:
             return {
                 id_: secret
@@ -3551,9 +3551,7 @@ class ConfigCache:
             attrs["_ACTIONS"] = ",".join(actions)
 
         if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CME:
-            attrs[
-                "_CUSTOMER"
-            ] = current_customer  # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
+            attrs["_CUSTOMER"] = current_customer  # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
 
         return attrs
 

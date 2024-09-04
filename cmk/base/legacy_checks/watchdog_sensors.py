@@ -50,10 +50,16 @@ def _parse_legacy_line(line, temp_unit):
     [('general', {'Watchdog 1': {'descr': 'blah', 'availability': (0, 'available')}}), ('temp', {'Temperature 1': ('30', 'C')}), ('humidity', {'Humidity 1': '20'}), ('dew', {'Dew point 1': ('8', 'C')})]
     """
     sensor_id = line[0]
-    yield "general", {
-        "Watchdog %s"
-        % sensor_id: {"descr": line[1], "availability": _translate_availability(line[3])},
-    }
+    yield (
+        "general",
+        {
+            "Watchdog %s"
+            % sensor_id: {
+                "descr": line[1],
+                "availability": _translate_availability(line[3]),
+            },
+        },
+    )
     yield "temp", {"Temperature %s" % sensor_id: (line[4], temp_unit)}
     yield "humidity", {"Humidity %s" % sensor_id: line[5]}
     yield "dew", {"Dew point %s" % sensor_id: (line[6], temp_unit)}
@@ -65,10 +71,16 @@ def _parse_line(line, temp_unit):
     [('general', {'Watchdog 1': {'descr': 'blah', 'availability': (0, 'available')}}), ('temp', {'Temperature 1': ('30', 'C')}), ('humidity', {'Humidity 1': '20'}), ('dew', {'Dew point 1': ('8', 'C')})]
     """
     sensor_id = line[0]
-    yield "general", {
-        "Watchdog %s"
-        % sensor_id: {"descr": line[1], "availability": _translate_availability(line[2])},
-    }
+    yield (
+        "general",
+        {
+            "Watchdog %s"
+            % sensor_id: {
+                "descr": line[1],
+                "availability": _translate_availability(line[2]),
+            },
+        },
+    )
     yield "temp", {"Temperature %s" % sensor_id: (line[3], temp_unit)}
     yield "humidity", {"Humidity %s" % sensor_id: line[4]}
     yield "dew", {"Dew point %s" % sensor_id: (line[5], temp_unit)}

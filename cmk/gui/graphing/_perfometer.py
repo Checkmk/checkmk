@@ -1230,7 +1230,7 @@ def _get_legacy_renderer(
 
 
 def get_first_matching_perfometer(
-    translated_metrics: Mapping[str, TranslatedMetric]
+    translated_metrics: Mapping[str, TranslatedMetric],
 ) -> (
     MetricometerRendererPerfometer
     | MetricometerRendererBidirectional

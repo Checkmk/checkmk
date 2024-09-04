@@ -661,7 +661,10 @@ class PainterAggrOutput(Painter):
 
 
 def paint_aggr_hosts(
-    row: Row, link_to_view: str, *, request: Request  # pylint: disable=redefined-outer-name
+    row: Row,
+    link_to_view: str,
+    *,
+    request: Request,  # pylint: disable=redefined-outer-name
 ) -> CellSpec:
     h = []
     for site, host in row["aggr_hosts"]:

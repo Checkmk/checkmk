@@ -32,6 +32,7 @@ A folder_config object can have the following relations present in `links`:
 
 
 """
+
 from collections.abc import Mapping
 from typing import Any
 

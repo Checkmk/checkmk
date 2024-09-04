@@ -363,7 +363,7 @@ def _merge_action_counts(action_counts: dict[str, int], new_counts: Mapping[str,
 
 
 def group_renamings_by_site(
-    renamings: Iterable[tuple[Folder, HostName, HostName]]
+    renamings: Iterable[tuple[Folder, HostName, HostName]],
 ) -> dict[SiteId, list[tuple[HostName, HostName]]]:
     renamings_per_site: dict[SiteId, list[tuple[HostName, HostName]]] = {}
     for folder, oldname, newname in renamings:

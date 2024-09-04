@@ -80,8 +80,15 @@ def check_hivemanager_devices(item, params, info):  # pylint: disable=too-many-b
                 "location",
                 "networkPolicy",
             ]
-            yield 0, ", ".join(
-                [f"{x}: {y}" for x, y in infos.items() if x in additional_informations and y != "-"]
+            yield (
+                0,
+                ", ".join(
+                    [
+                        f"{x}: {y}"
+                        for x, y in infos.items()
+                        if x in additional_informations and y != "-"
+                    ]
+                ),
             )
 
 

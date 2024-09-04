@@ -2,11 +2,12 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-""" Test documentation of supported macros in server side calls
+"""Test documentation of supported macros in server side calls
 
 These tests are a single point of truth about supported macros
 in active check and special agent SSC plugins.
 """
+
 from collections.abc import Iterable, Iterator, Sequence
 
 import pytest

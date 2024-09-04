@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import type { Catalog, Topic } from '@/form/components/vue_formspec_components'
 import { ref } from 'vue'
-import type { ValidationMessages } from '@/form/components/utils/validation'
 import { immediateWatch } from '@/form/components/utils/watch'
 import FormCatalogDictionary from './FormCatalogDictionary.vue'
+import {
+  groupDictionaryValidations,
+  type ValidationMessages
+} from '@/form/components/utils/validation'
 
 const props = defineProps<{
   spec: Catalog
@@ -18,6 +21,15 @@ immediateWatch(
   () => props.spec.topics,
   () => {
     hiddenTopics.value = {}
+  }
+)
+
+const elementValidation = ref<Record<string, ValidationMessages>>({})
+immediateWatch(
+  () => props.backendValidation,
+  (newValidation: ValidationMessages) => {
+    const [, _elementValidation] = groupDictionaryValidations(props.spec.topics, newValidation)
+    elementValidation.value = _elementValidation
   }
 )
 
@@ -63,9 +75,8 @@ function getClass(ident: string) {
       <FormCatalogDictionary
         v-model="data[topic.ident]!"
         :entries="topic.dictionary.elements"
-        :backend-validation="backendValidation"
+        :backend-validation="elementValidation[topic.ident]!"
       />
-      <!-- TODO: backendValidation can not be passed as is? it needs to be filtered by topic.key, right? -->
       <tr class="bottom">
         <td colspan="2"></td>
       </tr>

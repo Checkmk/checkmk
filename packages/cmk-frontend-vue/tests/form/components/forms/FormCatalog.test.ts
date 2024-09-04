@@ -207,8 +207,6 @@ test('FormCatalog backend validation', async () => {
     ]
   }
   renderFormWithData(spec)
-  // this is the problem: we should only see each error once
-  // but currently each child gets all error messages
-  expect(await screen.findAllByText('ut_error_1')).toHaveLength(2)
-  expect(await screen.findAllByText('ut_error_2')).toHaveLength(2)
+  expect(await screen.findAllByText('ut_error_1')).toHaveLength(1)
+  expect(await screen.findAllByText('ut_error_2')).toHaveLength(1)
 })

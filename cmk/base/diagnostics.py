@@ -403,12 +403,25 @@ class FilesSizeCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
 
     def _collect_infos(self) -> DiagnosticsElementCSVResult:
         csv_data = []
-        csv_data.append("size;path")
-        for path, _dirs, files in os.walk(cmk.utils.paths.omd_root):
-            for f in files:
-                fp = os.path.join(path, f)
-                if not os.path.islink(fp):
-                    csv_data.append("%d;%s" % (os.path.getsize(fp), str(fp)))
+        csv_data.append("size;path;owner;group;mode;changed")
+        for dirpath, _dirnames, filenames in os.walk(cmk.utils.paths.omd_root):
+            for file in filenames:
+                f = Path(dirpath).joinpath(file)
+                if f.is_symlink():
+                    continue
+                csv_data.append(
+                    ";".join(
+                        [
+                            str(f.stat().st_size),
+                            str(f),
+                            f.owner(),
+                            f.group(),
+                            str(oct(f.stat().st_mode)),
+                            datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S"),
+                        ]
+                    )
+                )
+
         return "\n".join(csv_data)
 
 

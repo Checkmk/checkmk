@@ -66,7 +66,7 @@ def main() {
             DOCKER_TAG: docker_tag,
             MAKE_TARGET: "test-integration-docker",
             BRANCH: branch_name,
-            cmk_version: cmk_version,
+            cmk_version: cmk_version_rc_aware,
         );
     }
 }

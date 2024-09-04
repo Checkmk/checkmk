@@ -328,7 +328,7 @@ def sha256_file(path: Path) -> str:
 
 class PackageManagerDEB(ABCPackageManager):
     def package_name(self, edition: Edition, version: str) -> str:
-        return f"check-mk-{edition.long}-{version}_0.{self.distro_name}_amd64.deb"
+        return f"check-mk-{edition.long}-{version.split('-rc')[0]}_0.{self.distro_name}_amd64.deb"
 
     def _install_package(self, package_path: Path) -> None:
         # all dependencies are installed via install-cmk-dependencies.sh in the Dockerfile
@@ -338,7 +338,7 @@ class PackageManagerDEB(ABCPackageManager):
 
 class ABCPackageManagerRPM(ABCPackageManager):
     def package_name(self, edition: Edition, version: str) -> str:
-        return f"check-mk-{edition.long}-{version}-{self.distro_name}-38.x86_64.rpm"
+        return f"check-mk-{edition.long}-{version.split('-rc')[0]}-{self.distro_name}-38.x86_64.rpm"
 
 
 class PackageManagerSuSE(ABCPackageManagerRPM):
@@ -353,7 +353,7 @@ class PackageManagerRHEL(ABCPackageManagerRPM):
 
 class PackageManagerCMA(PackageManagerDEB):
     def package_name(self, edition: Edition, version: str) -> str:
-        return f"check-mk-{edition.long}-{version}-{self.distro_name.split('-')[1]}-x86_64.cma"
+        return f"check-mk-{edition.long}-{version.split('-rc')[0]}-{self.distro_name.split('-')[1]}-x86_64.cma"
 
 
 # TODO: Duplicated in cmk_dev.utils.distro_code

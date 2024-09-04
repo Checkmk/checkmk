@@ -224,10 +224,12 @@ def _generate_volume_metrics(
 
 def _serialize_volumes(
     section_netapp_ontap_volumes: VolumesSection,
-    section_netapp_ontap_volumes_counters: VolumesCountersSection,
+    section_netapp_ontap_volumes_counters: VolumesCountersSection | None,
 ) -> Mapping[str, Mapping[str, int | str]]:
-    merged_section = {}
+    if not section_netapp_ontap_volumes_counters:
+        return {key: volume.model_dump() for key, volume in section_netapp_ontap_volumes.items()}
 
+    merged_section = {}
     for key, volume in section_netapp_ontap_volumes.items():
         volume_counter = section_netapp_ontap_volumes_counters.get(
             _get_volume_counters_key(volume), None
@@ -256,7 +258,7 @@ def _check_volumes_pattern(
     item: str,
     params: Mapping[str, Any],
     section_netapp_ontap_volumes: VolumesSection,
-    section_netapp_ontap_volumes_counters: VolumesCountersSection,
+    section_netapp_ontap_volumes_counters: VolumesCountersSection | None,
     value_store: MutableMapping[str, Any],
     now: float,
 ) -> CheckResult:
@@ -282,11 +284,10 @@ def _check_volumes_pattern(
 
     combined_volumes, combined_volumes_counters = _deserialize_volume(combined_volumes_data)
 
-    if combined_volumes and combined_volumes_counters:
-        yield from _check_single_netapp_volume(
-            item, params, combined_volumes, combined_volumes_counters, value_store, now
-        )
-        yield Result(state=State.OK, notice="%d volume(s) in group" % len(volumes_in_group))
+    yield from _check_single_netapp_volume(
+        item, params, combined_volumes, combined_volumes_counters, value_store, now
+    )
+    yield Result(state=State.OK, notice="%d volume(s) in group" % len(volumes_in_group))
 
 
 def check_volumes(
@@ -297,7 +298,7 @@ def check_volumes(
     value_store: MutableMapping[str, Any],
     now: float,
 ) -> CheckResult:
-    if not section_netapp_ontap_volumes or not section_netapp_ontap_volumes_counters:
+    if not section_netapp_ontap_volumes:
         return
 
     if "patterns" in params:
@@ -319,10 +320,11 @@ def check_volumes(
         yield Result(state=State.WARN, summary=f"Volume state {volume.state or 'Unknown'}")
         return
 
-    if not section_netapp_ontap_volumes_counters:
-        return
-
-    volume_counter = section_netapp_ontap_volumes_counters.get(_get_volume_counters_key(volume))
+    volume_counter = (
+        section_netapp_ontap_volumes_counters.get(_get_volume_counters_key(volume))
+        if section_netapp_ontap_volumes_counters
+        else None
+    )
     yield from _check_single_netapp_volume(item, params, volume, volume_counter, value_store, now)
 
 

@@ -240,7 +240,7 @@ def _serialize_volumes(
 
 
 def _deserialize_volume(
-    combined_volumes: Mapping[str, float]
+    combined_volumes: Mapping[str, float],
 ) -> tuple[models.VolumeModel, models.VolumeCountersModel | None]:
     # if the dictionary contains "id" it means it has counters values
     if combined_volumes.get("id", None) is not None:
@@ -249,6 +249,43 @@ def _deserialize_volume(
         ), models.VolumeCountersModel.model_validate(combined_volumes)
 
     return models.VolumeModel.model_validate(combined_volumes), None
+
+
+def _check_volumes_pattern(
+    item: str,
+    params: Mapping[str, Any],
+    section_netapp_ontap_volumes: VolumesSection,
+    section_netapp_ontap_volumes_counters: VolumesCountersSection,
+    value_store: MutableMapping[str, Any],
+    now: float,
+) -> CheckResult:
+    volumes_in_group = mountpoints_in_group(section_netapp_ontap_volumes, *params["patterns"])
+
+    if not volumes_in_group:
+        yield Result(
+            state=State.UNKNOWN,
+            summary="No volumes matching the patterns of this group",
+        )
+        return
+
+    volumes = _serialize_volumes(
+        section_netapp_ontap_volumes, section_netapp_ontap_volumes_counters
+    )
+
+    combined_volumes_data, volumes_not_online = combine_netapp_api_volumes(
+        volumes_in_group, volumes
+    )
+
+    for vol, state in volumes_not_online.items():
+        yield Result(state=State.WARN, summary=f"Volume {vol} is {state or 'Unknown'}")
+
+    combined_volumes, combined_volumes_counters = _deserialize_volume(combined_volumes_data)
+
+    if combined_volumes and combined_volumes_counters:
+        yield from _check_single_netapp_volume(
+            item, params, combined_volumes, combined_volumes_counters, value_store, now
+        )
+        yield Result(state=State.OK, notice="%d volume(s) in group" % len(volumes_in_group))
 
 
 def check_volumes(
@@ -263,34 +300,14 @@ def check_volumes(
         return
 
     if "patterns" in params:
-        volumes_in_group = mountpoints_in_group(section_netapp_ontap_volumes, *params["patterns"])
-
-        if not volumes_in_group:
-            yield Result(
-                state=State.UNKNOWN,
-                summary="No volumes matching the patterns of this group",
-            )
-            return
-
-        volumes = _serialize_volumes(
-            section_netapp_ontap_volumes, section_netapp_ontap_volumes_counters
+        yield from _check_volumes_pattern(
+            item,
+            params,
+            section_netapp_ontap_volumes,
+            section_netapp_ontap_volumes_counters,
+            value_store,
+            now,
         )
-
-        combined_volumes_data, volumes_not_online = combine_netapp_api_volumes(
-            volumes_in_group, volumes
-        )
-
-        for vol, state in volumes_not_online.items():
-            yield Result(state=State.WARN, summary=f"Volume {vol} is {state or 'Unknown'}")
-
-        combined_volumes, combined_volumes_counters = _deserialize_volume(combined_volumes_data)
-
-        if combined_volumes and combined_volumes_counters:
-            yield from _check_single_netapp_volume(
-                item, params, combined_volumes, combined_volumes_counters, value_store, now
-            )
-            yield Result(state=State.OK, notice="%d volume(s) in group" % len(volumes_in_group))
-
         return
 
     if not (volume := section_netapp_ontap_volumes.get(item)):

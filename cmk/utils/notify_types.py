@@ -23,7 +23,6 @@ from cmk.utils.rulesets.ruleset_matcher import TagCondition
 from cmk.utils.tags import TagGroupID
 from cmk.utils.timeperiod import TimeperiodName
 
-from cmk.events.event_context import EventContext
 from cmk.events.notification_result import NotificationContext as NotificationContext
 
 __all__ = [
@@ -48,7 +47,6 @@ __all__ = [
     "EventRule",
     "DisabledNotificationsOptions",
     "Contact",
-    "ECEventContext",
 ]
 
 ContactName = str
@@ -916,37 +914,3 @@ class Contact(TypedDict, total=False):
     notifications_enabled: bool
     host_notification_options: str
     service_notification_options: str
-
-
-class ECEventContext(EventContext, total=False):
-    """The keys "found" in cmk.ec
-
-    Not sure if subclassing EventContext is the right call...
-    Feel free to merge if you feel like doing it.
-    """
-
-    EC_CONTACT: str
-    EC_CONTACT_GROUPS: str
-    EC_ID: str
-    EC_MATCH_GROUPS: str
-    EC_ORIG_HOST: str
-    EC_OWNER: str
-    EC_PHASE: str
-    EC_PID: str
-    HOSTADDRESS: str
-    HOSTALIAS: str
-    HOSTDOWNTIME: str
-    LASTSERVICESTATEID: str
-    NOTIFICATIONAUTHOR: str
-    NOTIFICATIONAUTHORALIAS: str
-    NOTIFICATIONAUTHORNAME: str
-    SERVICEACKAUTHOR: str
-    SERVICEACKCOMMENT: str
-    SERVICEPERFDATA: str
-    SERVICEPROBLEMID: str
-    SERVICESTATEID: str
-    SERVICE_EC_CONTACT: str
-    SERVICE_SL: str
-
-    # Dynamically added:
-    # HOST_*: str  #  custom_variables

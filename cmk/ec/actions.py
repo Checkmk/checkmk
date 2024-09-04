@@ -10,7 +10,6 @@ from collections.abc import Iterable
 from logging import Logger
 
 from cmk.utils.log import VERBOSE
-from cmk.utils.notify_types import ECEventContext
 from cmk.utils.statename import service_state_name
 
 from cmk.events import event_context
@@ -21,6 +20,41 @@ from .event import Event
 from .history import History
 from .host_config import HostConfig
 from .settings import Settings
+
+
+class ECEventContext(event_context.EventContext, total=False):
+    """The keys "found" in cmk.ec
+
+    Not sure if subclassing EventContext is the right call...
+    Feel free to merge if you feel like doing it.
+    """
+
+    EC_CONTACT: str
+    EC_CONTACT_GROUPS: str
+    EC_ID: str
+    EC_MATCH_GROUPS: str
+    EC_ORIG_HOST: str
+    EC_OWNER: str
+    EC_PHASE: str
+    EC_PID: str
+    HOSTADDRESS: str
+    HOSTALIAS: str
+    HOSTDOWNTIME: str
+    LASTSERVICESTATEID: str
+    NOTIFICATIONAUTHOR: str
+    NOTIFICATIONAUTHORALIAS: str
+    NOTIFICATIONAUTHORNAME: str
+    SERVICEACKAUTHOR: str
+    SERVICEACKCOMMENT: str
+    SERVICEPERFDATA: str
+    SERVICEPROBLEMID: str
+    SERVICESTATEID: str
+    SERVICE_EC_CONTACT: str
+    SERVICE_SL: str
+
+    # Dynamically added:
+    # HOST_*: str  #  custom_variables
+
 
 # .
 #   .--Actions-------------------------------------------------------------.

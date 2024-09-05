@@ -2931,13 +2931,8 @@ def main_update(  # pylint: disable=too-many-branches
         mu.prepare_and_populate_tmpfs(version_info, site)
 
         process = subprocess.run(
-            ["cmk-update-config", "--conflict", conflict_mode, "--dry-run"],
-            check=False,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
+            ["cmk-update-config", "--conflict", conflict_mode, "--dry-run"], check=False
         )
-        sys.stdout.write(process.stdout)
         if process.returncode != 0:
             sys.exit(process.returncode)
         sys.stdout.write(

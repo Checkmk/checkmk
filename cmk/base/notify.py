@@ -47,11 +47,6 @@ from cmk.utils.log_to_history import (
     notification_result_message,
 )
 from cmk.utils.macros import replace_macros_in_str
-from cmk.utils.notification_spool_file import (
-    create_spool_file,
-    NotificationForward,
-    NotificationViaPlugin,
-)
 from cmk.utils.notify import find_wato_folder
 from cmk.utils.notify_types import (
     Contact,
@@ -80,6 +75,11 @@ from cmk.utils.timeperiod import is_timeperiod_active, timeperiod_active, Timepe
 
 from cmk.events.event_context import EnrichedEventContext, EventContext
 from cmk.events.notification_result import NotificationPluginName, NotificationResultCode
+from cmk.events.notification_spool_file import (
+    create_spool_file,
+    NotificationForward,
+    NotificationViaPlugin,
+)
 
 from cmk.base import events
 

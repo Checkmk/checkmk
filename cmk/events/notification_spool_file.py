@@ -10,8 +10,8 @@ from typing import Literal, TypedDict
 
 from cmk.ccc import store
 
-from cmk.events.event_context import EnrichedEventContext
-from cmk.events.notification_result import NotificationContext, NotificationResult
+from .event_context import EnrichedEventContext
+from .notification_result import NotificationContext, NotificationResult
 
 
 class NotificationForward(TypedDict):

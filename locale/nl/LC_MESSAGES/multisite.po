@@ -10646,6 +10646,12 @@ msgstr "Definitieve haken oproepen"
 msgid "Can be used until version:"
 msgstr "Kan gebruikt worden tot versie:"
 
+#, python-format
+msgid ""
+"Can not activate changes, the peer-to-peer connection %s is between site of "
+"different customers."
+msgstr ""
+
 msgid "Can not clone a cluster host as regular host"
 msgstr "Kan een cluster host niet klonen als gewone host"
 
@@ -22888,6 +22894,10 @@ msgstr "Expliciete voorwaarden"
 msgid "Explicit conditions"
 msgstr "Expliciete voorwaarden"
 
+#, fuzzy
+msgid "Explicit credentials"
+msgstr "Geen expliciete geloofsbrieven"
+
 msgid "Explicit email addresses"
 msgstr "Expliciete e-mailadressen"
 
@@ -33482,6 +33492,10 @@ msgstr "Ongeldige berichtmethode geselecteerd."
 
 #, fuzzy
 msgid "Invalid multiple choice value"
+msgstr "Ongeldig onderwerp"
+
+#, fuzzy
+msgid "Invalid optional choice"
 msgstr "Ongeldig onderwerp"
 
 msgid "Invalid package part"

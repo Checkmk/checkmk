@@ -10194,6 +10194,12 @@ msgstr "最終フックの呼び出し"
 msgid "Can be used until version:"
 msgstr "バージョンまで使用できます:"
 
+#, python-format
+msgid ""
+"Can not activate changes, the peer-to-peer connection %s is between site of "
+"different customers."
+msgstr ""
+
 msgid "Can not clone a cluster host as regular host"
 msgstr "クラスターホストを通常のホストとして複製できません"
 
@@ -21880,6 +21886,10 @@ msgstr "明示的な条件"
 msgid "Explicit conditions"
 msgstr "明示的な条件"
 
+#, fuzzy
+msgid "Explicit credentials"
+msgstr "明示的な資格情報はありません"
+
 msgid "Explicit email addresses"
 msgstr "明示的なメールアドレス"
 
@@ -32300,6 +32310,10 @@ msgstr "選択されたメッセージ送信方法が無効です。"
 
 #, fuzzy
 msgid "Invalid multiple choice value"
+msgstr "無効なトピック"
+
+#, fuzzy
+msgid "Invalid optional choice"
 msgstr "無効なトピック"
 
 msgid "Invalid package part"

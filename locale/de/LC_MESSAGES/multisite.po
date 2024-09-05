@@ -10295,6 +10295,12 @@ msgstr "Rufe finale Hooks auf"
 msgid "Can be used until version:"
 msgstr "Kann bis zur Version verwendet werden:"
 
+#, python-format
+msgid ""
+"Can not activate changes, the peer-to-peer connection %s is between site of "
+"different customers."
+msgstr ""
+
 msgid "Can not clone a cluster host as regular host"
 msgstr "Ein Cluster-Host kann nicht als regulärer Host geklont werden"
 
@@ -22198,6 +22204,10 @@ msgstr "Explizite Bedingung"
 msgid "Explicit conditions"
 msgstr "Explizite Bedingungen"
 
+#, fuzzy
+msgid "Explicit credentials"
+msgstr "Keine expliziten Zugangsdaten"
+
 msgid "Explicit email addresses"
 msgstr "Explizite E-Mail-Adressen"
 
@@ -32298,6 +32308,10 @@ msgstr "Ungültige Benachrichtigungsmethode ausgewählt."
 
 #, fuzzy
 msgid "Invalid multiple choice value"
+msgstr "Ungültige boolesche Auswahl"
+
+#, fuzzy
+msgid "Invalid optional choice"
 msgstr "Ungültige boolesche Auswahl"
 
 msgid "Invalid package part"

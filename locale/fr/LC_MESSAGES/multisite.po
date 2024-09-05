@@ -10721,6 +10721,12 @@ msgstr "Appel des crochets finaux"
 msgid "Can be used until version:"
 msgstr "Peut être utilisé jusqu'à la version :"
 
+#, python-format
+msgid ""
+"Can not activate changes, the peer-to-peer connection %s is between site of "
+"different customers."
+msgstr ""
+
 msgid "Can not clone a cluster host as regular host"
 msgstr "Impossible de cloner un hôte de cluster comme hôte normal"
 
@@ -23092,6 +23098,10 @@ msgstr "Conditions explicites"
 msgid "Explicit conditions"
 msgstr "Conditions explicites"
 
+#, fuzzy
+msgid "Explicit credentials"
+msgstr "Pas d'accréditation explicite"
+
 msgid "Explicit email addresses"
 msgstr "Adresses électroniques explicites"
 
@@ -33794,6 +33804,10 @@ msgstr "La méthode de messagerie sélectionnée n'est pas valide."
 
 #, fuzzy
 msgid "Invalid multiple choice value"
+msgstr "Sujet non valide"
+
+#, fuzzy
+msgid "Invalid optional choice"
 msgstr "Sujet non valide"
 
 msgid "Invalid package part"

@@ -10546,6 +10546,12 @@ msgstr "Chiamata dei ganci finali"
 msgid "Can be used until version:"
 msgstr "Può essere usato fino alla versione:"
 
+#, python-format
+msgid ""
+"Can not activate changes, the peer-to-peer connection %s is between site of "
+"different customers."
+msgstr ""
+
 msgid "Can not clone a cluster host as regular host"
 msgstr "Non è possibile clonare un host cluster come host regolare"
 
@@ -22685,6 +22691,10 @@ msgstr "Condizioni esplicite"
 msgid "Explicit conditions"
 msgstr "Condizioni esplicite"
 
+#, fuzzy
+msgid "Explicit credentials"
+msgstr "Nessuna credenziale esplicita"
+
 msgid "Explicit email addresses"
 msgstr "Indirizzi e-mail espliciti"
 
@@ -33198,6 +33208,10 @@ msgstr "È stato selezionato un metodo di messaggistica non valido."
 
 #, fuzzy
 msgid "Invalid multiple choice value"
+msgstr "Argomento non valido"
+
+#, fuzzy
+msgid "Invalid optional choice"
 msgstr "Argomento non valido"
 
 msgid "Invalid package part"

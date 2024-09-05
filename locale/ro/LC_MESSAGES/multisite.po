@@ -10674,6 +10674,12 @@ msgstr "Apelarea cârligelor finale"
 msgid "Can be used until version:"
 msgstr "Poate fi utilizat până la versiunea:"
 
+#, python-format
+msgid ""
+"Can not activate changes, the peer-to-peer connection %s is between site of "
+"different customers."
+msgstr ""
+
 msgid "Can not clone a cluster host as regular host"
 msgstr "Nu se poate clona o gazdă cluster ca gazdă obișnuită"
 
@@ -22925,6 +22931,10 @@ msgstr "Condiții explicite"
 msgid "Explicit conditions"
 msgstr "Condiții explicite"
 
+#, fuzzy
+msgid "Explicit credentials"
+msgstr "Fără acreditări explicite"
+
 msgid "Explicit email addresses"
 msgstr "Adrese de e-mail explicite"
 
@@ -33552,6 +33562,10 @@ msgstr "Metoda de mesagerie nevalabilă selectată."
 
 #, fuzzy
 msgid "Invalid multiple choice value"
+msgstr "Subiect nevalabil"
+
+#, fuzzy
+msgid "Invalid optional choice"
 msgstr "Subiect nevalabil"
 
 msgid "Invalid package part"

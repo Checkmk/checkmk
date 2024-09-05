@@ -322,6 +322,8 @@ def ensure_authenticated(persist: bool = True) -> typing.Iterator[None]:
         if session.session.exc:
             raise session.session.exc
         raise MKAuthException("You need to be logged in to access this resource.")
+    if session.session.two_factor_pending():
+        raise MKAuthException("Two-factor authentication required.")
     yield
 
 

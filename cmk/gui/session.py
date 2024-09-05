@@ -173,6 +173,14 @@ class CheckmkFileBasedSession(dict, SessionMixin):
     def invalidate(self) -> None:
         self.session_info.logged_out = True
 
+    def two_factor_pending(self) -> bool:
+        if isinstance(self.user, (LoggedInNobody, LoggedInSuperUser)):
+            return False
+        return (
+            userdb.is_two_factor_login_enabled(self.user.ident)
+            and not self.session_info.two_factor_completed
+        )
+
 
 class FileBasedSession(SessionInterface):
     """A "session" which loads its information from a .mk file

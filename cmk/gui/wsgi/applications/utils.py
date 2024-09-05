@@ -68,11 +68,7 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
                 "user_webauthn_login_complete",
             )
 
-            if (
-                not two_factor_ok
-                and userdb.is_two_factor_login_enabled(user_id)
-                and not session.session_info.two_factor_completed
-            ):
+            if not two_factor_ok and session.two_factor_pending():
                 raise HTTPRedirect(
                     "user_login_two_factor.py?_origtarget=%s" % urlencode(makeuri(request, []))
                 )

@@ -355,7 +355,7 @@ def applicable_metrics(
     return results
 
 
-def get_graph_templates(
+def get_evaluated_graph_templates(
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> Iterator[GraphTemplate]:
     if not translated_metrics:
@@ -485,7 +485,7 @@ def _matching_graph_templates(
 
     yield from (
         (index, graph_template)
-        for index, graph_template in enumerate(get_graph_templates(translated_metrics))
+        for index, graph_template in enumerate(get_evaluated_graph_templates(translated_metrics))
         if (graph_index is None or index == graph_index)
         and (graph_id is None or graph_template.id == graph_id)
     )

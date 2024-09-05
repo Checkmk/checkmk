@@ -8,7 +8,7 @@ from collections.abc import Iterable
 from cmk.gui.type_defs import Choices
 from cmk.gui.visuals import livestatus_query_bare
 
-from ._graph_templates import get_graph_template_choices, get_graph_templates
+from ._graph_templates import get_evaluated_graph_templates, get_graph_template_choices
 from ._metrics import get_metric_spec, registered_metrics
 from ._translated_metrics import translated_metrics_from_row
 from ._valuespecs import metrics_of_query
@@ -46,7 +46,7 @@ def graph_templates_autocompleter(value: str, params: dict) -> Choices:
                 params["context"],
                 ["service_check_command", "service_perf_data", "service_metrics"],
             )
-            for template in get_graph_templates(translated_metrics_from_row(row))
+            for template in get_evaluated_graph_templates(translated_metrics_from_row(row))
         }
 
     return sorted(

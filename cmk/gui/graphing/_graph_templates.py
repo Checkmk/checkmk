@@ -283,7 +283,7 @@ def _parse_graph_template(
             )
 
 
-def graph_template_from_name(name: str) -> GraphTemplate:
+def get_graph_template_from_name(name: str) -> GraphTemplate:
     if name.startswith("METRIC_"):
         name = name[7:]
     return GraphTemplate(
@@ -312,7 +312,7 @@ def graph_template_from_name(name: str) -> GraphTemplate:
 
 def get_graph_template(template_id: str) -> GraphTemplate:
     if template_id.startswith("METRIC_"):
-        return graph_template_from_name(template_id)
+        return get_graph_template_from_name(template_id)
     for id_, template in _graph_templates_from_plugins():
         if template_id == id_:
             return _parse_graph_template(id_, template)
@@ -387,7 +387,7 @@ def get_graph_templates(
     }
     for metric_name, translated_metric in sorted(translated_metrics.items()):
         if translated_metric.auto_graph and metric_name not in already_graphed_metrics:
-            yield graph_template_from_name(metric_name)
+            yield get_graph_template_from_name(metric_name)
 
 
 class TemplateGraphSpecification(GraphSpecification, frozen=True):
@@ -480,7 +480,7 @@ def _matching_graph_templates(
         and graph_id.startswith("METRIC_")
         and graph_id[7:] in translated_metrics
     ):
-        yield (0, graph_template_from_name(graph_id))
+        yield (0, get_graph_template_from_name(graph_id))
         return
 
     yield from (

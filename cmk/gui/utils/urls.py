@@ -464,7 +464,7 @@ def doc_reference_url(doc_ref: DocReference | None = None) -> str:
         return base + origin
     if "#" not in doc_ref.value:
         return f"{base}/{doc_ref.value}.html{origin}"
-    return f"{base}/{doc_ref.value.replace('#', '.html#', 1)}{origin}"
+    return f"{base}/{doc_ref.value.replace('#', f'.html{origin}#', 1)}"
 
 
 class YouTubeReference(Enum):

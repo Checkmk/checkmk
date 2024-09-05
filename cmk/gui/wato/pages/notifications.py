@@ -592,13 +592,13 @@ class ModeNotifications(ABCNotificationsMode):
             dropdowns=[
                 PageMenuDropdown(
                     name="notification_rules",
-                    title=_("Notification rules"),
+                    title=_("Notifications"),
                     topics=[
                         PageMenuTopic(
                             title=_("Add new"),
                             entries=[
                                 PageMenuEntry(
-                                    title=_("Add rule"),
+                                    title=_("Add notification rule"),
                                     icon_name="new",
                                     item=make_simple_link(
                                         folder_preserving_link([("mode", "notification_rule")])
@@ -606,6 +606,11 @@ class ModeNotifications(ABCNotificationsMode):
                                     is_shortcut=True,
                                     is_suggested=True,
                                 ),
+                            ],
+                        ),
+                        PageMenuTopic(
+                            title=_("Analyze"),
+                            entries=[
                                 PageMenuEntry(
                                     title=_("Test notifications"),
                                     name="test_notifications",
@@ -618,7 +623,7 @@ class ModeNotifications(ABCNotificationsMode):
                                 ),
                                 PageMenuEntry(
                                     title=_("Analyze recent notifications"),
-                                    icon_name="new",
+                                    icon_name="analyze",
                                     item=make_simple_link(
                                         folder_preserving_link([("mode", "analyze_notifications")])
                                     ),
@@ -629,6 +634,16 @@ class ModeNotifications(ABCNotificationsMode):
                         ),
                     ],
                 ),
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Global settings"),
+                            entries=list(self._page_menu_entries_related()),
+                        ),
+                    ],
+                ),
             ],
             breadcrumb=breadcrumb,
             inpage_search=PageMenuSearch(),
@@ -636,6 +651,60 @@ class ModeNotifications(ABCNotificationsMode):
         self._extend_display_dropdown(menu)
         menu.add_doc_reference(_("Notifications"), DocReference.NOTIFICATIONS)
         return menu
+
+    def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
+        yield PageMenuEntry(
+            title=_("Fallback email address for notifications"),
+            icon_name="configuration",
+            item=make_simple_link(
+                folder_preserving_link(
+                    [
+                        ("mode", "edit_configvar"),
+                        ("varname", "notification_fallback_email"),
+                    ]
+                )
+            ),
+        )
+
+        yield PageMenuEntry(
+            title=_("Failed notification horizon"),
+            icon_name="configuration",
+            item=make_simple_link(
+                folder_preserving_link(
+                    [
+                        ("mode", "edit_configvar"),
+                        ("varname", "failed_notification_horizon"),
+                    ]
+                )
+            ),
+        )
+
+        yield PageMenuEntry(
+            title=_("Notification log level"),
+            icon_name="configuration",
+            item=make_simple_link(
+                folder_preserving_link(
+                    [
+                        ("mode", "edit_configvar"),
+                        ("varname", "notification_logging"),
+                    ]
+                )
+            ),
+        )
+
+        # TODO this should be CEE only?!
+        yield PageMenuEntry(
+            title=_("Logging of the notification mechanics"),
+            icon_name="configuration",
+            item=make_simple_link(
+                folder_preserving_link(
+                    [
+                        ("mode", "edit_configvar"),
+                        ("varname", "cmc_debug_notifications"),
+                    ]
+                )
+            ),
+        )
 
     def _extend_display_dropdown(self, menu: PageMenu) -> None:
         display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
@@ -1219,11 +1288,25 @@ class ModeTestNotifications(ModeNotifications):
         menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
-                    name="related",
-                    title=_("Related"),
+                    name="test_notifications",
+                    title=_("Test notifications"),
                     topics=[
                         PageMenuTopic(
-                            title=_("Notifications"),
+                            title=_("Add new"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Add notification rule"),
+                                    icon_name="new",
+                                    item=make_simple_link(
+                                        folder_preserving_link([("mode", "notification_rule")])
+                                    ),
+                                    is_shortcut=False,
+                                    is_suggested=False,
+                                ),
+                            ],
+                        ),
+                        PageMenuTopic(
+                            title=_("Analyze"),
                             entries=[
                                 PageMenuEntry(
                                     title=_("Analyze recent notifications"),
@@ -1235,6 +1318,17 @@ class ModeTestNotifications(ModeNotifications):
                                     is_shortcut=True,
                                     is_suggested=True,
                                 ),
+                            ],
+                        ),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Overview"),
+                            entries=[
                                 PageMenuEntry(
                                     title=_("Notifications"),
                                     icon_name="notifications",
@@ -1246,6 +1340,35 @@ class ModeTestNotifications(ModeNotifications):
                                 ),
                             ],
                         ),
+                        PageMenuTopic(
+                            title=_("Global settings"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Notification log level"),
+                                    icon_name="configuration",
+                                    item=make_simple_link(
+                                        folder_preserving_link(
+                                            [
+                                                ("mode", "edit_configvar"),
+                                                ("varname", "notification_logging"),
+                                            ]
+                                        )
+                                    ),
+                                ),
+                                PageMenuEntry(
+                                    title=_("Logging of the notification mechanics"),
+                                    icon_name="configuration",
+                                    item=make_simple_link(
+                                        folder_preserving_link(
+                                            [
+                                                ("mode", "edit_configvar"),
+                                                ("varname", "cmc_debug_notifications"),
+                                            ]
+                                        )
+                                    ),
+                                ),
+                            ],
+                        ),
                     ],
                 ),
             ],
@@ -1254,7 +1377,7 @@ class ModeTestNotifications(ModeNotifications):
         )
         self._extend_display_dropdown(menu)
         menu.add_doc_reference(
-            _("Rule evaluation by the notification module"),
+            _("Testing notifications"),
             DocReference.TEST_NOTIFICATIONS,
         )
         return menu
@@ -1913,7 +2036,7 @@ class ModeUserNotifications(ABCUserNotificationsMode):
                             title=_("Add new"),
                             entries=[
                                 PageMenuEntry(
-                                    title=_("Add rule"),
+                                    title=_("Add notification rule"),
                                     icon_name="new",
                                     item=make_simple_link(
                                         folder_preserving_link(

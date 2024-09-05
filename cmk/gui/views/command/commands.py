@@ -656,7 +656,7 @@ class CommandFakeCheckResult(Command):
     def _link_to_test_notifications(self):
         return html.render_a(
             _("Test notification"),
-            makeuri_contextless(request, [("mode", "notifications")], filename="wato.py"),
+            makeuri_contextless(request, [("mode", "test_notifications")], filename="wato.py"),
         )
 
     def _render_test_notification_tip(self):
@@ -665,7 +665,7 @@ class CommandFakeCheckResult(Command):
         html.write_text_permissive(
             " &nbsp; "
             + _(
-                "If you are looking for a way to test your notification settings, try '%s' in Setup > Notifications"
+                "If you are looking for a way to test your notification settings, try '%s' in Setup > Test notifications"
             )
             % self._link_to_test_notifications()
         )

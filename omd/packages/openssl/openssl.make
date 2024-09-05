@@ -1,6 +1,6 @@
 OPENSSL := openssl
 # also set in package_versions.bzl
-OPENSSL_VERS := 3.0.13
+OPENSSL_VERS := 3.0.14
 OPENSSL_DIR := $(OPENSSL)-$(OPENSSL_VERS)
 
 OPENSSL_BUILD := $(BUILD_HELPER_DIR)/$(OPENSSL_DIR)-build
@@ -31,7 +31,7 @@ $(OPENSSL_INTERMEDIATE_INSTALL):  $(OPENSSL_BUILD)
 	# https://stackoverflow.com/questions/75208034
 	$(RSYNC) --recursive --links --times --chmod=u+w "$(BAZEL_BIN_EXT)/openssl/openssl/" "$(OPENSSL_INSTALL_DIR)/"
 
-	# this will replace forced absolute paths determined at build time by 
+	# this will replace forced absolute paths determined at build time by
 	# Bazel/foreign_cc. Note that this step depends on $OMD_ROOT which is different
 	# each time
 

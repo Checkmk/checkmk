@@ -632,9 +632,9 @@ def evaluate_graph_template_range(
 
 
 def _evaluate_graph_template_range_boundary(
-    metric_expression: BaseMetricExpression, translated_metrics: Mapping[str, TranslatedMetric]
+    base_metric_expression: BaseMetricExpression, translated_metrics: Mapping[str, TranslatedMetric]
 ) -> float | None:
-    if (result := metric_expression.evaluate(translated_metrics)).is_error():
+    if (result := base_metric_expression.evaluate(translated_metrics)).is_error():
         return None
     return result.ok.value
 

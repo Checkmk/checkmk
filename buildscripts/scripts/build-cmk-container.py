@@ -231,7 +231,7 @@ def docker_tag(
 
 def docker_login(registry: str, docker_username: str, docker_passphrase: str) -> None:
     """Log into a registry"""
-    LOG.info("Login to %s ...", registry)
+    LOG.info("Perform docker login to registry '%s' as user '%s' ...", registry, docker_username)
     docker_client.login(registry=registry, username=docker_username, password=docker_passphrase)
 
 
@@ -262,6 +262,8 @@ def docker_push(args: argparse.Namespace, version_tag: str, registry: str, folde
     )
     for line in resp:
         LOG.debug(line)
+        if "error" in line:
+            raise ValueError(f"Some error occured during upload: {line}")
 
     if args.set_branch_latest_tag:
         LOG.info("Pushing '%s' as '%s-latest' ...", this_repository, args.branch)
@@ -286,6 +288,8 @@ def docker_push(args: argparse.Namespace, version_tag: str, registry: str, folde
         )
         for line in resp:
             LOG.debug(line)
+            if "error" in line:
+                raise ValueError(f"Some error occured during upload: {line}")
 
 
 def needed_packages(mk_file: str, output_file: str) -> None:

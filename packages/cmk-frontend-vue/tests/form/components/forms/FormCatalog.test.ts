@@ -152,7 +152,9 @@ test('FormCatalog default value', async () => {
       backendValidation: []
     }
   }
-  const { getCurrentData } = renderFormWithData(getDefinition('ut_string_1_ident_default'))
+  const { getCurrentData, rerender } = renderFormWithData(
+    getDefinition('ut_string_1_ident_default')
+  )
 
   // wait until everything is rendered:
   await screen.findByText('title of string input')
@@ -160,4 +162,10 @@ test('FormCatalog default value', async () => {
   expect(getCurrentData()).toBe(
     '{"some_ut_key":{"ut_string_1_ident_default":"ut_string_1 default value"}}'
   )
+
+  vi.spyOn(console, 'warn').mockImplementation(() => {}) // TODO: this should be removed! it warns about a typing problem:
+  // [Vue warn]: Invalid prop: type check failed for prop "data". Expected String with value "undefined", got Undefined
+  await rerender(getDefinition('some_other_string_indent'))
+
+  expect(getCurrentData()).toBe('{"some_ut_key":{}}') // TODO: THIS IS A BUG! rerendering does not work yet.
 })

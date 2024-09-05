@@ -10,6 +10,8 @@ from tests.testlib import CMKWebSession
 from tests.testlib.pytest_helpers.marks import skip_if_saas_edition
 from tests.testlib.site import Site
 
+from cmk.gui.type_defs import TotpCredential, TwoFactorCredentials
+
 
 @skip_if_saas_edition
 def test_login_and_logout(site: Site) -> None:
@@ -259,7 +261,11 @@ def test_failed_login_counter_human(site: Site) -> None:
 
         session.post(
             "login.py",
-            params={"_username": username, "_password": "wrong_password", "_login": "Login"},
+            params={
+                "_username": username,
+                "_password": "wrong_password",
+                "_login": "Login",
+            },
             allow_redirect_to_login=True,
         )
 
@@ -342,3 +348,80 @@ def test_local_secret_permissions(site: Site) -> None:
     )
     assert response.status_code == 200
     assert isinstance(response.json()["lifetime_in_months"], int)
+
+
+@contextlib.contextmanager
+def enable_2fa(site: Site, username: str) -> Iterator[None]:
+    """enables totp as second factor for username
+
+    Caution, this overrides any previous 2fa configs"""
+
+    site.write_text_file(
+        f"var/check_mk/web/{username}/two_factor_credentials.mk",
+        repr(
+            TwoFactorCredentials(
+                webauthn_credentials={},
+                backup_codes=[],
+                totp_credentials={
+                    "foo": TotpCredential(
+                        credential_id="foo",
+                        secret=b"\0",
+                        version=1,
+                        registered_at=0,
+                        alias="alias",
+                    )
+                },
+            )
+        ),
+    )
+    try:
+        yield
+    finally:
+        site.delete_file(f"var/check_mk/web/{username}/two_factor_credentials.mk")
+
+
+def test_rest_api_access_with_enabled_2fa(site: Site) -> None:
+    """you're not supposed to access the rest api if you have 2fa enabled (except for cookie auth)
+
+    See: CMK-18988"""
+    username = "cmkadmin"
+    password = site.admin_password
+    with enable_2fa(site, "cmkadmin"):
+        session = CMKWebSession(site)
+        response = session.get(
+            f"/{site.id}/check_mk/api/1.0/version",
+            auth=(username, password),
+            expected_code=401,
+        )
+        assert not "site" in response.json()
+        assert not session.is_logged_in()
+
+
+def test_rest_api_access_by_cookie_2fa(site: Site) -> None:
+    """login via the gui but do not complete the 2fa, the cookie must not allow you access to the
+    rest api
+
+    See: CMK-18988"""
+
+    username = "cmkadmin"
+    password = site.admin_password
+
+    with enable_2fa(site, "cmkadmin"):
+        session = CMKWebSession(site)
+        response = session.post(
+            "login.py",
+            data={
+                "filled_in": "login",
+                "_username": username,
+                "_password": password,
+                "_login": "Login",
+            },
+        )
+        assert "Enter the six-digit code from your authenticator app to log in." in response.text
+
+        response = session.get(
+            f"/{site.id}/check_mk/api/1.0/version",
+            expected_code=401,
+        )
+        assert not "site" in response.json()
+        assert not session.is_logged_in()

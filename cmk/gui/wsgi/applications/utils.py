@@ -28,7 +28,12 @@ from cmk.gui.logged_in import LoggedInSuperUser, user
 from cmk.gui.session import session
 from cmk.gui.utils.language_cookie import set_language_cookie
 from cmk.gui.utils.theme import theme
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
+from cmk.gui.utils.urls import (
+    makeuri,
+    makeuri_contextless,
+    requested_file_name,
+    urlencode,
+)
 from cmk.gui.wsgi.type_defs import WSGIResponse
 
 if TYPE_CHECKING:
@@ -44,11 +49,15 @@ class AbstractWSGIApp(abc.ABC):
         self.debug = debug
 
     @final
-    def __call__(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
+    def __call__(
+        self, environ: WSGIEnvironment, start_response: StartResponse
+    ) -> WSGIResponse:
         return self.wsgi_app(environ, start_response)
 
     @abc.abstractmethod
-    def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
+    def wsgi_app(
+        self, environ: WSGIEnvironment, start_response: StartResponse
+    ) -> WSGIResponse:
         raise NotImplementedError
 
 
@@ -73,13 +82,10 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
                 "user_webauthn_login_complete",
             )
 
-            if (
-                not two_factor_ok
-                and userdb.is_two_factor_login_enabled(user_id)
-                and not session.session_info.two_factor_completed
-            ):
+            if not two_factor_ok and session.two_factor_pending():
                 raise HTTPRedirect(
-                    "user_login_two_factor.py?_origtarget=%s" % urlencode(makeuri(request, []))
+                    "user_login_two_factor.py?_origtarget=%s"
+                    % urlencode(makeuri(request, []))
                 )
 
             if not two_factor_ok and requested_file_name(request) != "user_change_pw":
@@ -106,7 +112,9 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
             # Returns None on first load
             assert user.id is not None
             theme.set(
-                cmk.gui.userdb.load_custom_attr(user_id=user.id, key="ui_theme", parser=lambda x: x)
+                cmk.gui.userdb.load_custom_attr(
+                    user_id=user.id, key="ui_theme", parser=lambda x: x
+                )
             )
 
             func()
@@ -154,7 +162,9 @@ def _ensure_general_access() -> None:
 
     if session.session_info.auth_type == "cookie":
         reason.append(
-            _("<p>You have been logged out. Please reload the page to re-authenticate.</p>")
+            _(
+                "<p>You have been logged out. Please reload the page to re-authenticate.</p>"
+            )
         )
         login.del_auth_cookie()
 

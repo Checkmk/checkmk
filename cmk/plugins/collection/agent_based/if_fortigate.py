@@ -10,7 +10,7 @@ from cmk.plugins.lib import if64
 # Use ifName under the guise of ifAlias in order to make technical interface names available.
 # ifAlias or ifDescr may only contain user defined names. DO NOT roll back to ifAlias again
 # (werk 4539 -> werk 6638 -> werk 11267)
-END_OIDS = if64.END_OIDS[:18] + ["31.1.1.1.1"] + if64.END_OIDS[19:]
+END_OIDS = if64.END_OIDS[:18] + ["31.1.1.1.1"] + if64.END_OIDS[19:] + ["2.2.1.7"]
 
 snmp_section_if_fortigate = SimpleSNMPSection(
     name="if_fortigate",

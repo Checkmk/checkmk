@@ -332,6 +332,7 @@ def generic_parse_if64(
                 alias=str(line[18]),
                 phys_address=line[19],
                 extra_info=_port_mapping(str(line[1]), port_map) if port_map else None,
+                admin_status=str(line[20]) if len(line) == 21 else None,
             ),
             interfaces.Counters(
                 in_octets=interfaces.saveint(line[5]),
@@ -372,7 +373,7 @@ def parse_if64(
             line[4] = _convert_status(str(line[4]))
 
             # remove ifHighSpeed
-            preprocessed_lines.append(line[:20])
+            preprocessed_lines.append(line[:20] if len(line) == 21 else line[:20] + line[21:])
 
     return generic_parse_if64(preprocessed_lines)
 

@@ -58,14 +58,9 @@ repos:
             language: script
             entry: scripts/run-autoflake
             types: [file, python]
-          - id: isort
-            name: Run isort
-            entry: scripts/run-isort
-            language: script
-            types: [file, python]
-          - id: black
-            name: Run black
-            entry: scripts/run-black
+          - id: format
+            name: Run format
+            entry: scripts/run-format
             language: script
             types: [file, python]
           - id: bandit

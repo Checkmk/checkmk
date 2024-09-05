@@ -13,10 +13,11 @@ import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.utils.diagnostics import DiagnosticsCLParameters
-from cmk.utils.event_context import EventContext
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel
 from cmk.utils.servicename import ServiceName
+
+from cmk.events.event_context import EventContext
 
 from cmk.automations import results
 from cmk.automations.results import SetAutochecksInput, SetAutochecksTable

@@ -36,11 +36,8 @@ import cmk.ccc.debug
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 
-from cmk.events.notification_result import NotificationPluginName, NotificationResultCode
-
 import cmk.utils.paths
 from cmk.utils import log
-from cmk.utils.event_context import EnrichedEventContext, EventContext
 from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.log import console
@@ -80,6 +77,9 @@ from cmk.utils.notify_types import (
 from cmk.utils.regex import regex
 from cmk.utils.timeout import MKTimeout, Timeout
 from cmk.utils.timeperiod import is_timeperiod_active, timeperiod_active, TimeperiodSpecs
+
+from cmk.events.event_context import EnrichedEventContext, EventContext
+from cmk.events.notification_result import NotificationPluginName, NotificationResultCode
 
 from cmk.base import events
 

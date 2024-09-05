@@ -19,12 +19,12 @@ from typing import (
 
 from pydantic import PlainValidator, TypeAdapter, ValidationInfo
 
-from cmk.events.notification_result import NotificationContext as NotificationContext
-
-from cmk.utils.event_context import EventContext
 from cmk.utils.rulesets.ruleset_matcher import TagCondition
 from cmk.utils.tags import TagGroupID
 from cmk.utils.timeperiod import TimeperiodName
+
+from cmk.events.event_context import EventContext
+from cmk.events.notification_result import NotificationContext as NotificationContext
 
 __all__ = [
     # Types

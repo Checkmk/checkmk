@@ -41,11 +41,6 @@ from cmk.utils import log
 from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.log import console
-from cmk.utils.log_to_history import (
-    log_to_history,
-    notification_message,
-    notification_result_message,
-)
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.notify import find_wato_folder
 from cmk.utils.notify_types import (
@@ -74,6 +69,11 @@ from cmk.utils.timeout import MKTimeout, Timeout
 from cmk.utils.timeperiod import is_timeperiod_active, timeperiod_active, TimeperiodSpecs
 
 from cmk.events.event_context import EnrichedEventContext, EventContext
+from cmk.events.log_to_history import (
+    log_to_history,
+    notification_message,
+    notification_result_message,
+)
 from cmk.events.notification_result import NotificationPluginName, NotificationResultCode
 from cmk.events.notification_spool_file import (
     create_spool_file,

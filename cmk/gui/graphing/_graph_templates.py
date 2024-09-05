@@ -310,7 +310,7 @@ def get_graph_template_from_name(name: str) -> GraphTemplate:
     )
 
 
-def get_graph_template(template_id: str) -> GraphTemplate:
+def get_graph_template_from_id(template_id: str) -> GraphTemplate:
     if template_id.startswith("METRIC_"):
         return get_graph_template_from_name(template_id)
     for id_, template in _graph_templates_from_plugins():

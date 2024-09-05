@@ -20,7 +20,6 @@ def test_catalog_validation_simple(
     patch_theme: None,
     with_user: tuple[UserId, str],
 ) -> None:
-
     spec = Catalog(
         topics=[
             Topic(

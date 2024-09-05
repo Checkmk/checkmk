@@ -11,13 +11,13 @@ from pytest import MonkeyPatch
 
 import livestatus
 
+from cmk.events.notification_result import NotificationPluginName, NotificationResultCode
+
 from cmk.utils.log_to_history import (
     log_to_history,
     notification_result_message,
     SanitizedLivestatusLogStr,
 )
-
-from cmk.events.notification_result import NotificationPluginName, NotificationResultCode
 
 
 class FakeLocalConnection:

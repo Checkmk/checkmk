@@ -55,14 +55,11 @@ class CheckConfig:
     host_names: list[str] | None = None
     check_names: list[str] | None = None
     api_services_cols: list | None = None
-    piggyback: bool = False
 
     def load(self):
         data_dir_default = str(qa_test_data_path() / "plugins_integration")
-        dump_dir_default = f"{data_dir_default}/dumps" + ("/piggyback" if self.piggyback else "")
-        response_dir_default = f"{data_dir_default}/responses" + (
-            "/piggyback" if self.piggyback else ""
-        )
+        dump_dir_default = f"{data_dir_default}/dumps"
+        response_dir_default = f"{data_dir_default}/responses"
 
         self.data_dir = str(self.data_dir or os.getenv("DATA_DIR", data_dir_default))
         self.dump_dir = str(self.dump_dir or os.getenv("DUMP_DIR", dump_dir_default))
@@ -173,9 +170,10 @@ def get_check_results(site: Site, host_name: str) -> dict[str, Any]:
         ) from exc
 
 
-def get_host_names(site: Site | None = None) -> list[str]:
+def get_host_names(site: Site | None = None, piggyback: bool = False) -> list[str]:
     """Return the list of agent/snmp hosts via filesystem or site.openapi."""
     host_names = []
+    dump_dir = str(config.dump_dir) + ("/piggyback" if piggyback else "")
     if site:
         hosts = [_ for _ in site.openapi.get_hosts() if _.get("id") not in (None, "", site.id)]
         agent_host_names = [
@@ -185,17 +183,17 @@ def get_host_names(site: Site | None = None) -> list[str]:
     else:
         agent_host_names = []
         snmp_host_names = []
-        if not (config.dump_dir and os.path.exists(config.dump_dir)):
+        if not (dump_dir and os.path.exists(dump_dir)):
             # need to skip here to abort the collection and return RC=5: "no tests collected"
-            pytest.skip(f'Folder "{config.dump_dir}" not found; exiting!', allow_module_level=True)
+            pytest.skip(f'Folder "{dump_dir}" not found; exiting!', allow_module_level=True)
         for dump_file_name in [
             _
-            for _ in os.listdir(config.dump_dir)
+            for _ in os.listdir(dump_dir)
             if (not _.startswith(".") and _ not in SkippedDumps.SKIPPED_DUMPS)
-            and os.path.isfile(os.path.join(config.dump_dir, _))
+            and os.path.isfile(os.path.join(dump_dir, _))
         ]:
             try:
-                dump_file_path = f"{config.dump_dir}/{dump_file_name}"
+                dump_file_path = f"{dump_dir}/{dump_file_name}"
                 with open(dump_file_path, encoding="utf-8") as dump_file:
                     if re.match(r"^snmp-", dump_file_name) and dump_file.read(1) == ".":
                         snmp_host_names.append(dump_file_name)
@@ -225,9 +223,10 @@ def get_host_names(site: Site | None = None) -> list[str]:
     return host_names
 
 
-def read_disk_dump(host_name: str) -> str:
+def read_disk_dump(host_name: str, piggyback: bool = False) -> str:
     """Return the content of an agent dump from the dumps' folder."""
-    dump_file_path = f"{config.dump_dir}/{host_name}"
+    dump_dir = str(config.dump_dir) + ("/piggyback" if piggyback else "")
+    dump_file_path = f"{dump_dir}/{host_name}"
     with open(dump_file_path, encoding="utf-8") as dump_file:
         return dump_file.read()
 
@@ -319,7 +318,6 @@ def process_check_output(  # pylint: disable=too-many-branches
     site: Site,
     host_name: str,
     output_dir: Path,
-    piggyback_host: bool,
 ) -> dict[str, str]:
     """Process the check output and either dump or compare it."""
     if host_name in SkippedDumps.SKIPPED_DUMPS:
@@ -327,13 +325,7 @@ def process_check_output(  # pylint: disable=too-many-branches
 
     logger.info('> Processing agent host "%s"...', host_name)
     diffs = {}
-    if config.piggyback:
-        response_path = (
-            f"{config.response_dir}/"
-            f"{"piggyback_hosts" if piggyback_host else "source_hosts"}/{host_name}.json"
-        )
-    else:
-        response_path = f"{config.response_dir}/{host_name}.json"
+    response_path = f"{config.response_dir}/{host_name}.json"
 
     if os.path.exists(response_path):
         with open(response_path, encoding="utf-8") as json_file:
@@ -465,19 +457,6 @@ def setup_source_host(site: Site, source_host_name: str, skip_cleanup: bool = Fa
 
     logger.info("Activating changes & reloading core...")
     site.activate_changes_and_wait_for_core_reload()
-
-    if config.piggyback:
-        _wait_for_piggyback_hosts(site, source_host=source_host_name)
-        count = 0
-        while (
-            n_pending_changes := len(site.openapi.pending_changes([site.id]))
-        ) > 0 and count < 60:
-            logger.info(
-                "Waiting for changes to be activated by the DCD connector. Count: %s", count
-            )
-            time.sleep(5)
-            count += 1
-        assert n_pending_changes == 0, "Pending changes found!"
 
     hostnames = get_piggyback_hosts(site, source_host_name) + [source_host_name]
     for hostname in hostnames:
@@ -667,8 +646,6 @@ def cleanup_hosts(site: Site, host_names: list[str]) -> None:
 
 
 def get_piggyback_hosts(site: Site, source_host: str) -> list[str]:
-    if not config.piggyback:
-        return []
     return [_.get("id") for _ in site.openapi.get_hosts() if _.get("id") != source_host]
 
 

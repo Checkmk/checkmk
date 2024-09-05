@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeMount, onUpdated, type PropType, ref, watch } from 'vue'
+import { computed, onBeforeMount, type PropType, ref, watch } from 'vue'
 import FormEdit from '@/form/components/FormEdit.vue'
 import type {
   CascadingSingleChoice,
@@ -54,17 +54,14 @@ onBeforeMount(() => {
   })
 })
 
-onUpdated(() => {
-  if (data.value[0] in currentValues) {
-    currentValues[data.value[0]] = data.value[1]
-  }
-})
-
 const selectedOption = computed({
   get(): string {
     return data.value[0] as string
   },
   set(value: string) {
+    // keep old data in case user switches back and they don't loose their modifications
+    currentValues[data.value[0]] = data.value[1]
+
     validation.value = []
     const newValue: [string, unknown] = [value, currentValues[value]]
     validateValue(value, props.spec.validators!).forEach((error) => {

@@ -19,13 +19,15 @@ getpid() {
 }
 
 process_is_running() {
-    [ -e "${PIDFILE}" ] && kill -0 "$(getpid)" 2>/dev/null
+    # when the process is killed, and the pidfile already removed
+    # the process can still run for a short time.
+    kill -0 "$1" 2>/dev/null
 }
 
 await_process_stop() {
     max=$(("${1}" * 10))
     for N in $(seq "${max}"); do
-        process_is_running || return 0
+        process_is_running "$2" || return 0
         [ $((N % 10)) -eq 0 ] && printf "."
         sleep 0.1
     done
@@ -117,28 +119,23 @@ case "$1" in
         fi
 
         printf "killing %s..." "${PID}"
+        kill "${PID}" 2>/dev/null
 
-        if ! kill "${PID}" 2>/dev/null; then
-            # Remove the stale pidfile to have a clean state after this
-            rm "${PIDFILE}"
-            exit_successfully "OK"
-        fi
-
-        # signal could be sent. Patiently wait for 1 minute.
-        if await_process_stop 60; then
+        # signal could be sent. Patiently wait for max 1 minute.
+        if await_process_stop 60 "${PID}"; then
             exit_successfully "OK"
         fi
 
         # We insist...
         force_kill "${PID}"
-        if await_process_stop 10; then
+        if await_process_stop 10 "${PID}"; then
             exit_successfully "OK"
         fi
         # Give up
         exit_failure "failed"
         ;;
 
-    restart | reload)
+    reload)
         $0 stop
         $0 start
         ;;

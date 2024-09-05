@@ -1,0 +1,24 @@
+Title: Fix XSS on SAML login screen
+Class: security
+Compatible: compat
+Component: wato
+Date: 1725549833
+Edition: cee
+Level: 1
+Version: 2.2.0p34
+
+Prior to Werk, attackers could craft URLs that rendered clickable HTML links in the error box on the SAML login page.
+This could facilitate phishing attacks by tricking users into clicking malicious links.
+
+Links in the error message are now escaped and no longer clickable.
+
+This issue was identified during internal review.
+
+<em>Affected Versions</em>:
+
+LI: 2.3.0
+LI: 2.2.0
+
+<em>Vulnerability Management</em>:
+
+We have rated the issue with a CVSS Score of 5.1 Medium (<code>CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:A/VC:N/VI:N/VA:N/SC:N/SI:L/SA:N</code>) and assigned <code>CVE-2024-38860</code>.

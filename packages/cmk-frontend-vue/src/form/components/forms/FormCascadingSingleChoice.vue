@@ -60,7 +60,7 @@ onUpdated(() => {
   }
 })
 
-const value = computed({
+const selectedOption = computed({
   get(): string {
     return data.value[0] as string
   },
@@ -95,7 +95,7 @@ const activeElement = computed((): ActiveElement | null => {
 
 <template>
   <div class="choice">
-    <select :id="$componentId" v-model="value">
+    <select :id="$componentId" v-model="selectedOption">
       <option v-if="activeElement == null" disabled selected hidden value="">
         {{ props.spec.input_hint }}
       </option>

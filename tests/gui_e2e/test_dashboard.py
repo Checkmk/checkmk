@@ -31,6 +31,7 @@ def test_dashboard_sanity_check(dashboard_page: Dashboard) -> None:
     expect(dashboard_page.dashlet_svg("Service statistics")).to_be_visible()
 
 
+@pytest.mark.skip("Due to problems with reading dumps from qa-test-data repo")
 @pytest.mark.parametrize(
     "setup_host_using_agent_dump, dashboard_class, dashlets_expected_to_have_data",
     [

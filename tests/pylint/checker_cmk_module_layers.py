@@ -73,6 +73,7 @@ def _is_allowed_import(imported: ModuleName) -> bool:
             _in_component(imported=imported, component=Component("cmk.automations")),
             _in_component(imported=imported, component=Component("cmk.bi")),
             _in_component(imported=imported, component=Component("cmk.piggyback")),
+            _in_component(imported=imported, component=Component("cmk.piggyback_hub")),
             _in_component(imported=imported, component=Component("cmk.plugins.mail")),
             _in_component(imported=imported, component=Component("cmk.plugins.collection")),
             _in_component(imported=imported, component=Component("cmk.discover_plugins")),
@@ -249,7 +250,6 @@ def _allow_for_gui(
                 and not _in_component(imported=imported, component=Component("cmk.gui.cme"))
                 and not _is_a_plugin_import(imported=imported)
             ),
-            _in_component(imported=imported, component=Component("cmk.piggyback_hub")),
             _in_component(imported=imported, component=Component("cmk.checkengine")),
             _in_component(imported=imported, component=Component("cmk.fetchers")),
             _in_component(imported=imported, component=Component("cmk.messaging")),

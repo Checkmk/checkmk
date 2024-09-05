@@ -46,33 +46,35 @@ def piggyback_hub_enabled(site_config: SiteConfiguration, global_settings: Globa
     return global_settings.get("piggyback_hub_enabled", True)
 
 
-def get_piggyback_hub_sites() -> Sequence[SiteId]:
+def get_piggyback_site_configs() -> Mapping[SiteId, SiteConfiguration]:
     global_settings = load_configuration_settings()
-    return [
-        site_id
+    return {
+        site_id: site_config
         for site_id, site_config in configured_sites().items()
         if piggyback_hub_enabled(site_config, global_settings) is True
-    ]
+    }
 
 
-def get_piggyback_hub_config(piggyback_hub_sites: Sequence[SiteId]) -> PiggybackConfig:
+def get_piggyback_hub_config(
+    piggyback_hub_sites: Mapping[SiteId, SiteConfiguration],
+) -> PiggybackConfig:
     root_folder = folder_tree().root_folder()
 
     return PiggybackConfig(
         targets=[
             Target(host_name=host_name, site_id=host.site_id())
             for host_name, host in root_folder.all_hosts_recursively().items()
-            if host.site_id() in piggyback_hub_sites
+            if host.site_id() in piggyback_hub_sites.keys()
         ]
     )
 
 
 def distribute_config() -> None:
-    piggyback_hub_sites = get_piggyback_hub_sites()
+    site_configs = get_piggyback_site_configs()
 
     old_config = load_config()
-    new_config = get_piggyback_hub_config(piggyback_hub_sites)
+    new_config = get_piggyback_hub_config(site_configs)
 
     if set(old_config.targets) != set(new_config.targets):
-        distribute({site: new_config for site in piggyback_hub_sites}, omd_root)
+        distribute({site: new_config for site in site_configs.keys()}, omd_root)
         save_config(new_config)

@@ -285,13 +285,6 @@ def _parse_raw_scalar_expression(
     return parse_legacy_expression(raw_scalar_expression, "line", str(title), {})
 
 
-def _parse_raw_graph_range(raw_graph_range: tuple[int | str, int | str]) -> FixedGraphTemplateRange:
-    return FixedGraphTemplateRange(
-        min=parse_legacy_base_expression(raw_graph_range[0], {}),
-        max=parse_legacy_base_expression(raw_graph_range[1], {}),
-    )
-
-
 def _parse_raw_metric_expression(
     raw_metric_expression: (
         tuple[str, LineType] | tuple[str, LineType, str] | tuple[str, LineType, LazyString]
@@ -318,7 +311,10 @@ def _parse_graph_template(
                 optional_metrics=template.get("optional_metrics", []),
                 consolidation_function=template.get("consolidation_function"),
                 range=(
-                    _parse_raw_graph_range(template_range)
+                    FixedGraphTemplateRange(
+                        min=parse_legacy_base_expression(template_range[0], {}),
+                        max=parse_legacy_base_expression(template_range[1], {}),
+                    )
                     if (template_range := template.get("range"))
                     else None
                 ),

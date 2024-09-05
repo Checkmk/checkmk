@@ -11078,6 +11078,10 @@ msgstr ""
 "Apache, Core, Crontag, DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
 "(Agent plugin mk_inventory moet geïnstalleerd zijn)"
 
+#, fuzzy
+msgid "Checkmk Appliance information"
+msgstr "Checkmk automatisering"
+
 msgid "Checkmk Configuration Files"
 msgstr "Checkmk Configuratie Bestanden"
 
@@ -30487,6 +30491,10 @@ msgstr ""
 
 msgid "Information about size, age and count of files"
 msgstr "Informatie over grootte, leeftijd en aantal bestanden"
+
+#, fuzzy
+msgid "Information about the Appliance hardware and firmware version."
+msgstr "Configuratie van het Checkmk-hardware- en software-inventarissysteem"
 
 msgid "Information similar to 'docker system df' output"
 msgstr "Informatie vergelijkbaar met \"docker system df\" uitvoer"

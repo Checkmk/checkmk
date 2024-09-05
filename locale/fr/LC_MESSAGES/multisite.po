@@ -11161,6 +11161,10 @@ msgstr ""
 "état des démons : Apache, Core, Crontag, DCD, Liveproxyd, MKEventd, "
 "MKNotifyd, RRDCached (le plugin d'agent mk_inventory doit être installé)"
 
+#, fuzzy
+msgid "Checkmk Appliance information"
+msgstr "Automatisation de Checkmk"
+
 msgid "Checkmk Configuration Files"
 msgstr "Fichiers de configuration de Checkmk"
 
@@ -30792,6 +30796,11 @@ msgstr ""
 
 msgid "Information about size, age and count of files"
 msgstr "Informations sur la taille, l'âge et le nombre de fichiers"
+
+#, fuzzy
+msgid "Information about the Appliance hardware and firmware version."
+msgstr ""
+"Configuration du système d'inventaire de matériel et de logiciels Checkmk"
 
 msgid "Information similar to 'docker system df' output"
 msgstr "Informations similaires à la sortie 'docker system df'"

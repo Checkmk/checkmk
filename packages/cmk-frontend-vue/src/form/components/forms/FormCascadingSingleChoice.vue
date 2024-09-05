@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, onBeforeMount, type PropType, ref, watch } from 'vue'
+import { computed, type PropType, ref, watch } from 'vue'
 import FormEdit from '@/form/components/FormEdit.vue'
+import { immediateWatch } from '@/form/components/utils/watch'
 import type {
   CascadingSingleChoice,
   CascadingSingleChoiceElement,
@@ -43,16 +44,19 @@ const data = defineModel('data', {
 })
 
 const currentValues: Record<string, unknown> = {}
-onBeforeMount(() => {
-  props.spec.elements.forEach((element: CascadingSingleChoiceElement) => {
-    const key = element.name
-    if (data.value[0] === key) {
-      currentValues[key] = data.value[1]
-    } else {
-      currentValues[key] = element.default_value
-    }
-  })
-})
+immediateWatch(
+  () => props.spec.elements,
+  (newValue) => {
+    newValue.forEach((element: CascadingSingleChoiceElement) => {
+      const key = element.name
+      if (data.value[0] === key) {
+        currentValues[key] = data.value[1]
+      } else {
+        currentValues[key] = element.default_value
+      }
+    })
+  }
+)
 
 const selectedOption = computed({
   get(): string {

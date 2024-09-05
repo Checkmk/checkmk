@@ -617,7 +617,7 @@ def test_automation_active_check_icmp_all_ipv4(site: Site) -> None:
         )
         assert isinstance(result, results.ActiveCheckResult)
         assert result.state == 0
-        assert result.output.startswith("OK - 127.0.0.1 rta")
+        assert result.output.startswith("OK - 127.0.0.1: rta")
 
 
 def test_automation_active_check_unknown_custom(site: Site) -> None:

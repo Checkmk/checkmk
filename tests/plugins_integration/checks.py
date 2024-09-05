@@ -434,17 +434,17 @@ def setup_site(site: Site, dump_path: str) -> None:
 
 
 @contextmanager
-def setup_source_host(site: Site, source_host_name: str, skip_cleanup: bool = False) -> Iterator:
-    logger.info('Creating host "%s"...', source_host_name)
+def setup_host(site: Site, host_name: str, skip_cleanup: bool = False) -> Iterator:
+    logger.info('Creating host "%s"...', host_name)
     host_attributes = {
         "ipaddress": "127.0.0.1",
-        "tag_agent": ("no-agent" if "snmp" in source_host_name else "cmk-agent"),
+        "tag_agent": ("no-agent" if "snmp" in host_name else "cmk-agent"),
     }
-    if "snmp" in source_host_name:
+    if "snmp" in host_name:
         host_attributes["tag_snmp_ds"] = "snmp-v2"
     site.openapi.create_host(
-        hostname=source_host_name,
-        folder="/snmp" if "snmp" in source_host_name else "/agent",
+        hostname=host_name,
+        folder="/snmp" if "snmp" in host_name else "/agent",
         attributes=host_attributes,
         bake_agent=False,
     )
@@ -453,41 +453,39 @@ def setup_source_host(site: Site, source_host_name: str, skip_cleanup: bool = Fa
     site.activate_changes_and_wait_for_core_reload()
 
     logger.info("Running service discovery...")
-    site.openapi.discover_services_and_wait_for_completion(source_host_name)
+    site.openapi.discover_services_and_wait_for_completion(host_name)
 
     logger.info("Activating changes & reloading core...")
     site.activate_changes_and_wait_for_core_reload()
 
-    hostnames = get_piggyback_hosts(site, source_host_name) + [source_host_name]
-    for hostname in hostnames:
-        logger.info("Scheduling checks & checking for pending services...")
-        pending_checks = []
-        for idx in range(3):
-            # we have to schedule the checks multiple times (twice at least):
-            # => once to get baseline data
-            # => a second time to calculate differences
-            # => a third time since some checks require it
-            site.schedule_check(hostname, "Check_MK", 0, 60)
-            pending_checks = site.openapi.get_host_services(hostname, pending=True)
-            if idx > 0 and len(pending_checks) == 0:
-                break
+    logger.info("Scheduling checks & checking for pending services...")
+    pending_checks = []
+    for idx in range(3):
+        # we have to schedule the checks multiple times (twice at least):
+        # => once to get baseline data
+        # => a second time to calculate differences
+        # => a third time since some checks require it
+        site.schedule_check(host_name, "Check_MK", 0, 60)
+        pending_checks = site.openapi.get_host_services(host_name, pending=True)
+        if idx > 0 and len(pending_checks) == 0:
+            break
 
-        if pending_checks:
-            logger.info(
-                '%s pending service(s) found on host "%s": %s',
-                len(pending_checks),
-                hostname,
-                ",".join(
-                    _.get("extensions", {}).get("description", _.get("id")) for _ in pending_checks
-                ),
-            )
+    if pending_checks:
+        logger.info(
+            '%s pending service(s) found on host "%s": %s',
+            len(pending_checks),
+            host_name,
+            ",".join(
+                _.get("extensions", {}).get("description", _.get("id")) for _ in pending_checks
+            ),
+        )
 
     try:
         yield
     finally:
         if not (config.skip_cleanup or skip_cleanup):
-            logger.info('Deleting host "%s"...', source_host_name)
-            site.openapi.delete_host(source_host_name)
+            logger.info('Deleting host "%s"...', host_name)
+            site.openapi.delete_host(host_name)
 
 
 @contextmanager

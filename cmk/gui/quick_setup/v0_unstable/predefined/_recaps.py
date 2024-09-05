@@ -33,16 +33,8 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
     ServiceInterest,
     StageIndex,
 )
-from cmk.gui.quick_setup.v0_unstable.widgets import (
-    FormSpecId,
-    FormSpecRecap,
-    ListOfWidgets,
-    Text,
-    Widget,
-)
+from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecRecap, ListOfWidgets, Text, Widget
 from cmk.gui.watolib.check_mk_automations import special_agent_discovery_preview
-
-from cmk.rulesets.v1.form_specs import FormSpec
 
 
 def recaps_form_spec(
@@ -102,14 +94,12 @@ def _recap_service_discovery(
     rulespec_name: str,
     services_of_interest: Sequence[ServiceInterest],
     collect_params: Callable[[ParsedFormData, str], Mapping[str, object]],
-    all_stages_form_data: Sequence[ParsedFormData],
-    expected_formspecs_map: Mapping[FormSpecId, FormSpec],
+    _quick_setup_id: QuickSetupId,
+    _stage_index: StageIndex,
+    all_stages_form_data: ParsedFormData,
 ) -> Sequence[Widget]:
-    combined_parsed_form_data = {
-        k: v for form_data in all_stages_form_data for k, v in form_data.items()
-    }
-    params = collect_params(combined_parsed_form_data, rulespec_name)
-    passwords = _collect_passwords_from_form_data(combined_parsed_form_data, rulespec_name)
+    params = collect_params(all_stages_form_data, rulespec_name)
+    passwords = _collect_passwords_from_form_data(all_stages_form_data, rulespec_name)
     site_id = _find_unique_id(all_stages_form_data, "site_selection")
     host_name = _find_unique_id(all_stages_form_data, "host_name")
 

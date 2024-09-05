@@ -1,0 +1,10 @@
+Title: if_fortigate: Show admin state in summary
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1725543890
+Edition: cre
+Level: 1
+Version: 2.2.0p33
+
+With this werk the admin state of the devices will be shown in the summary.

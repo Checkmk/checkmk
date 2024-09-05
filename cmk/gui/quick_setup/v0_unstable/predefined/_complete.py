@@ -16,7 +16,9 @@ from cmk.utils.password_store import Password as StorePassword
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RuleConditionsSpec, RuleSpec
 
+from cmk.gui.config import active_config
 from cmk.gui.http import request
+from cmk.gui.i18n import _
 from cmk.gui.quick_setup.v0_unstable.definitions import UniqueBundleIDStr
 from cmk.gui.quick_setup.v0_unstable.predefined._common import (
     _collect_params_with_defaults_from_form_data,
@@ -25,8 +27,12 @@ from cmk.gui.quick_setup.v0_unstable.predefined._common import (
 )
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
+from cmk.gui.site_config import site_is_local
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.wato.pages.activate_changes import ModeActivateChanges
+from cmk.gui.watolib.automations import (
+    fetch_service_discovery_background_job_status,
+)
 from cmk.gui.watolib.configuration_bundles import (
     BundleId,
     ConfigBundle,
@@ -35,10 +41,15 @@ from cmk.gui.watolib.configuration_bundles import (
     CreateHost,
     CreatePassword,
     CreateRule,
+    delete_config_bundle,
 )
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
-from cmk.gui.watolib.services import get_check_table, perform_fix_all
+from cmk.gui.watolib.services import (
+    DiscoveryAction,
+    get_check_table,
+    perform_fix_all,
+)
 
 
 def _normalize_folder_path_str(folder_path: str) -> str:
@@ -110,6 +121,7 @@ def sanitize_folder_path(folder_path: str) -> Folder:
 
 def create_host_from_form_data(
     host_name: HostName,
+    site_id: SiteId,
     host_path: str,
 ) -> CreateHost:
     # TODO Folder formspec.  The sanitize function is likely to change once we have a folder formspec.
@@ -119,6 +131,7 @@ def create_host_from_form_data(
         folder=sanitize_folder_path(host_path),
         attributes=HostAttributes(
             tag_address_family="no-ip",
+            site=site_id,
         ),
     )
 
@@ -210,12 +223,17 @@ def _create_and_save_special_agent_bundle(
     host_path = all_stages_form_data[FormSpecId("host_data")]["host_path"]
 
     site_selection = _find_unique_id(all_stages_form_data, "site_selection")
+    site_id = SiteId(site_selection) if site_selection else omd_site()
     params = collect_params(all_stages_form_data, rulespec_name)
     passwords = _collect_passwords_from_form_data(all_stages_form_data, rulespec_name)
 
     # TODO: DCD still to be implemented cmk-18341
 
-    hosts = [create_host_from_form_data(host_name=HostName(host_name), host_path=host_path)]
+    hosts = [
+        create_host_from_form_data(
+            host_name=HostName(host_name), host_path=host_path, site_id=site_id
+        )
+    ]
     create_config_bundle(
         bundle_id=BundleId(bundle_id),
         bundle=ConfigBundle(
@@ -238,21 +256,34 @@ def _create_and_save_special_agent_bundle(
                     host_path=host["folder"].path(),
                     rulespec_name=rulespec_name,
                     bundle_id=BundleId(bundle_id),
-                    site_id=SiteId(site_selection) if site_selection else omd_site(),
+                    site_id=site_id,
                 )
                 for host in hosts
             ],
         ),
     )
+    try:
+        host: Host = Host.load_host(host_name)
+        if not site_is_local(active_config, site_id):
+            get_check_table(host, DiscoveryAction.REFRESH, raise_errors=False)
+            snapshot = fetch_service_discovery_background_job_status(site_id, host_name)
+            if not snapshot.exists:
+                raise Exception(
+                    _("Could not find a running service discovery for host %s on remote site %s")
+                    % (host_name, site_id)
+                )
+            while snapshot.is_active:
+                snapshot = fetch_service_discovery_background_job_status(site_id, host_name)
 
-    # TODO: config sync
-
-    host: Host = Host.load_host(host_name)
-    perform_fix_all(
-        discovery_result=get_check_table(host=host, action=host_name, raise_errors=False),
-        host=host,
-        raise_errors=False,
-    )
+        check_table = get_check_table(host, DiscoveryAction.FIX_ALL, raise_errors=False)
+        perform_fix_all(
+            discovery_result=check_table,
+            host=host,
+            raise_errors=False,
+        )
+    except Exception as e:
+        delete_config_bundle(BundleId(bundle_id))
+        raise e
 
     return makeuri_contextless(
         request,

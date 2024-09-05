@@ -2,7 +2,8 @@
 import FormValidation from '@/form/components/FormValidation.vue'
 import type { Password } from '@/form/components/vue_formspec_components'
 import { validateValue, type ValidationMessages } from '@/form/components/utils/validation'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
+import { immediateWatch } from '@/form/components/utils/watch'
 
 const props = defineProps<{
   spec: Password
@@ -17,8 +18,7 @@ const updateValidation = (newValidation: ValidationMessages) => {
   validation.value = newValidation.map((vm) => vm.message)
 }
 
-onMounted(() => updateValidation(props.backendValidation))
-watch(() => props.backendValidation, updateValidation)
+immediateWatch(() => props.backendValidation, updateValidation)
 
 const passwordType = computed({
   get: () => data.value[0] as string,

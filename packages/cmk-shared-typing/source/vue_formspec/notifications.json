@@ -5,6 +5,10 @@
         "notifications": {
             "type": "object",
             "properties": {
+                "fallback_warning": {
+                    "type": "object",
+                    "$ref": "#/$defs/fallback_warning"
+                },
                 "notification_stats": {
                     "type": "object",
                     "$ref": "#/$defs/notification_stats"
@@ -22,6 +26,53 @@
                 }
             },
             "required": ["notification_stats", "core_stats", "rule_sections"]
+        },
+        "fallback_warning": {
+            "type": "object",
+            "properties": {
+                "i18n": {
+                    "type": "object",
+                    "$ref": "#/$defs/fallback_warning_i18n"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "setup_link": {
+                    "type": "string"
+                },
+                "do_not_show_again_link": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "i18n",
+                "user_id",
+                "setup_link",
+                "do_not_show_again_link"
+            ]
+        },
+        "fallback_warning_i18n": {
+            "type": "object",
+            "properties": {
+                "title": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "setup_link_title": {
+                    "type": "string"
+                },
+                "do_not_show_again_title": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "title",
+                "message",
+                "setup_link_title",
+                "do_not_show_again_title"
+            ]
         },
         "notification_stats": {
             "type": "object",

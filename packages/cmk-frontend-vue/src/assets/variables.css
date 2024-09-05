@@ -6,6 +6,7 @@
   /* Colors */
   --success: rgb(19, 211, 137);
   --success-dimmed: rgb(17 188 122);
+  --color-white: rgb(255 255 255);
 
   /* Fonts */
   --font-size-xlarge: 16px;
@@ -24,6 +25,7 @@
   /* Icons */
   --icon-checkmark: url('themes/facelift/images/icon_checkmark.svg');
   --icon-crit-problem: url('themes/facelift/images/icon_crit_problem.svg');
+  --icon-info: url('themes/facelift/images/icon_info.svg');
 }
 
 @layer theme {

@@ -2,13 +2,16 @@
 import type {
   NotificationStats,
   CoreStats,
-  RuleSection
+  RuleSection,
+  FallbackWarning
 } from '@/form/components/vue_formspec_components'
 import NotificationStatsComponent from '@/notification/components/NotificationStats.vue'
 import CoreStatistics from '@/notification/components/CoreStats.vue'
 import NotificationRules from '@/notification/components/NotificationRules.vue'
+import FallbackWarningComponent from '@/notification/components/FallbackWarning.vue'
 
 defineProps<{
+  fallback_warning: FallbackWarning | null
   notification_stats: NotificationStats
   core_stats: CoreStats
   rule_sections: RuleSection[]
@@ -16,6 +19,10 @@ defineProps<{
 </script>
 
 <template>
+  <FallbackWarningComponent
+    v-if="fallback_warning"
+    :properties="fallback_warning"
+  ></FallbackWarningComponent>
   <div class="overview_container">
     <div class="stats_container">
       <NotificationStatsComponent

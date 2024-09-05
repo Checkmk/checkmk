@@ -74,6 +74,7 @@ function setupVue() {
       }
       case 'notification_overview': {
         app = createApp(NotificationOverview, {
+          fallback_warning: appData.fallback_warning,
           notification_stats: appData.notification_stats,
           core_stats: appData.core_stats,
           rule_sections: appData.rule_sections

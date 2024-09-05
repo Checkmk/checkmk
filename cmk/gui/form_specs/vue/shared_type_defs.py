@@ -132,6 +132,14 @@ class ValidationMessage:
 
 
 @dataclass(kw_only=True)
+class FallbackWarningI18n:
+    title: str
+    message: str
+    setup_link_title: str
+    do_not_show_again_title: str
+
+
+@dataclass(kw_only=True)
 class NotificationStatsI18n:
     sent_notifications: str
     failed_notifications: str
@@ -360,6 +368,14 @@ Components = Union[
 
 
 @dataclass(kw_only=True)
+class FallbackWarning:
+    i18n: FallbackWarningI18n
+    user_id: str
+    setup_link: str
+    do_not_show_again_link: str
+
+
+@dataclass(kw_only=True)
 class NotificationStats:
     num_sent_notifications: int
     num_failed_notifications: int
@@ -391,6 +407,7 @@ class Notifications:
     notification_stats: NotificationStats
     core_stats: CoreStats
     rule_sections: list[RuleSection]
+    fallback_warning: Optional[FallbackWarning] = None
 
 
 @dataclass(kw_only=True)

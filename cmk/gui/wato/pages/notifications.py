@@ -35,6 +35,8 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.vue.shared_type_defs import (
     CoreStats,
     CoreStatsI18n,
+    FallbackWarning,
+    FallbackWarningI18n,
     Notifications,
     NotificationStats,
     NotificationStatsI18n,
@@ -697,41 +699,14 @@ class ModeNotifications(ABCNotificationsMode):
         )
 
     def page(self) -> None:
-        self._show_no_fallback_contact_warning()
         self._show_overview()
         self._show_rules(analyse=None)
-
-    def _show_no_fallback_contact_warning(self) -> None:
-        if not self._fallback_mail_contacts_configured():
-            url = "wato.py?mode=edit_configvar&varname=notification_fallback_email"
-            html.show_warning(
-                _(
-                    "<b>Warning</b><br><br>You haven't configured a "
-                    '<a href="%s">fallback email address</a> nor enabled receiving fallback emails for '
-                    "any user. If your monitoring produces a notification that is not matched by any of your "
-                    "notification rules, the notification will not be sent out. To prevent that, please "
-                    "configure either the global setting or enable the fallback contact option for at least "
-                    "one of your users."
-                )
-                % url
-            )
 
     def _show_overview(self) -> None:
         html.vue_app(
             app_name="notification_overview",
             data=asdict(_get_vue_data()),
         )
-
-    def _fallback_mail_contacts_configured(self) -> bool:
-        current_settings = load_configuration_settings()
-        if current_settings.get("notification_fallback_email"):
-            return True
-
-        for user_spec in userdb.load_users(lock=False).values():
-            if user_spec.get("fallback_contact", False):
-                return True
-
-        return False
 
     def _get_date(self, context: NotificationContext) -> str:
         if "MICROTIME" in context:
@@ -841,9 +816,46 @@ class ModeNotifications(ABCNotificationsMode):
                     )
 
 
+def _fallback_mail_contacts_configured() -> bool:
+    current_settings = load_configuration_settings()
+    if current_settings.get("notification_fallback_email"):
+        return True
+
+    for user_spec in userdb.load_users(lock=False).values():
+        if user_spec.get("fallback_contact", False):
+            return True
+
+    return False
+
+
 def _get_vue_data() -> Notifications:
     all_sites_count, sites_with_disabled_notifications = get_disabled_notifications_infos()
     return Notifications(
+        fallback_warning=(
+            FallbackWarning(
+                i18n=FallbackWarningI18n(
+                    title=_("No fallback email address configured"),
+                    message=_(
+                        "If your monitoring produces a notification that is not matched by any of your notification rules, the notification will not be sent out. To prevent that, we recommend configuring either the global setting or enable the fallback contact option for at least one of your users."
+                    ),
+                    setup_link_title=_("Configure fallback email address"),
+                    do_not_show_again_title=_("Do not show again"),
+                ),
+                user_id=str(user.id),
+                setup_link=makeuri_contextless(
+                    request,
+                    [("varname", "notification_fallback_email"), ("mode", "edit_configvar")],
+                    filename="wato.py",
+                ),
+                do_not_show_again_link=makeuri_contextless(
+                    request,
+                    [("varname", "notification_fallback_email"), ("mode", "edit_configvar")],
+                    filename="wato.py",
+                ),
+            )
+            if not _fallback_mail_contacts_configured()
+            else None
+        ),
         notification_stats=NotificationStats(
             num_sent_notifications=get_total_send_notifications()[0][0],
             num_failed_notifications=get_failed_notification_count(),

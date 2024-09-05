@@ -232,9 +232,22 @@ export interface ValidationMessage {
   invalid_value: unknown;
 }
 export interface Notifications {
+  fallback_warning?: FallbackWarning;
   notification_stats: NotificationStats;
   core_stats: CoreStats;
   rule_sections: RuleSection[];
+}
+export interface FallbackWarning {
+  i18n: FallbackWarningI18N;
+  user_id: string;
+  setup_link: string;
+  do_not_show_again_link: string;
+}
+export interface FallbackWarningI18N {
+  title: string;
+  message: string;
+  setup_link_title: string;
+  do_not_show_again_title: string;
 }
 export interface NotificationStats {
   num_sent_notifications: number;

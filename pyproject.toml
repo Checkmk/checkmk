@@ -86,46 +86,6 @@ cmk_gui = ["cmk.gui"]
 cmk_cee = ["cmk.cee.dcd", "cmk.cee.liveproxy", "cmk.cee.mknotifyd"]
 cmk_notification_plugins = ["cmk.notification_plugins"]
 
-
-[tool.isort]
-known_werks = "werks"
-known_cmc_proto = "cmc_proto"
-known_testlib = "tests.testlib"
-known_integrationtests = "tests.integration"
-known_compositiontests = "tests.composition"
-known_unittests = "tests.unit,tests.plugins_integration,tests.update"
-known_livestatus = "livestatus"
-known_omd = "omdlib"
-known_cmk_ccc = "cmk.ccc"
-known_cmk_events = "cmk.events"
-known_cmk_utils = "cmk.utils"
-known_cmk_automations = "cmk.automations"
-known_cmk_snmplib = "cmk.snmplib"
-known_cmk_fetchers = "cmk.fetchers"
-known_cmk_checkengine = "cmk.checkengine"
-known_cmk_base = "cmk.base"
-known_cmk_ec = "cmk.ec"
-known_cmk_gui = "cmk.gui"
-known_cmk_cee = "cmk.cee.dcd,cmk.cee.liveproxy,cmk.cee.mknotifyd"
-known_cmk_notification_plugins = "cmk.notification_plugins"
-known_first_party = "cmk"
-
-# Order sections according to our layering.
-sections = """FUTURE,STDLIB,THIRDPARTY,WERKS,CMC_PROTO,TESTLIB,INTEGRATIONTESTS,COMPOSITIONTESTS,UNITTESTS,LIVESTATUS,OMD,
-CMK_CCC,CMK_UTILS,CMK_EVENTS,CMK_AUTOMATIONS,CMK_SNMPLIB,CMK_FETCHERS,CMK_CHECKENGINE,CMK_BASE,CMK_EC,CMK_GUI,CMK_CEE,
-CMK_NOTIFICATION_PLUGINS,FIRSTPARTY,LOCALFOLDER"""
-
-profile = "black"
-order_by_type = "False"
-line_length = 100
-py_version = "312"
-
-
-[tool.black]
-line-length = 100
-target-version = ['py312']
-
-
 # NOTE: Keep this is sync with mypy-raw.ini!
 # The number of errors/files below are just a snapshot to give a rough idea. In
 # addition, a single cause can imply multiple symptoms, so these numbers have to

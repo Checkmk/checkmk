@@ -9,7 +9,7 @@ import abc
 import contextlib
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, KW_ONLY
-from typing import Literal
+from typing import assert_never, Literal
 
 from cmk.utils.metrics import MetricName
 from cmk.utils.resulttype import Error, OK, Result
@@ -1019,6 +1019,32 @@ class MetricExpression:
 
     def scalar_names(self) -> Iterator[ScalarName]:
         yield from self.base.scalar_names()
+
+    def mirror(self) -> MetricExpression:
+        def _swap_line_type() -> LineType:
+            match self.line_type:
+                case "line":
+                    return "-line"
+                case "-line":
+                    return "line"
+                case "area":
+                    return "-area"
+                case "-area":
+                    return "area"
+                case "stack":
+                    return "-stack"
+                case "-stack":
+                    return "stack"
+                case _:
+                    assert_never(self.line_type)
+
+        return MetricExpression(
+            self.base,
+            unit_spec=self.unit_spec,
+            color=self.color,
+            line_type=_swap_line_type(),
+            title=self.title,
+        )
 
 
 def parse_legacy_expression(

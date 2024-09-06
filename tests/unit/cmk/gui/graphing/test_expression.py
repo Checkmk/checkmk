@@ -31,6 +31,7 @@ from cmk.gui.graphing._expression import (
 from cmk.gui.graphing._formatter import AutoPrecision
 from cmk.gui.graphing._legacy import unit_info, UnitInfo
 from cmk.gui.graphing._translated_metrics import parse_perf_data, translate_metrics
+from cmk.gui.graphing._type_defs import LineType
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation, IECNotation
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 
@@ -615,3 +616,30 @@ def test_parse_and_evaluate_conditional(
     metric_declaration = parse_legacy_conditional_expression(raw_expression, translated_metrics)
     assert metric_declaration == expected_conditional_metric_declaration
     assert metric_declaration.evaluate(translated_metrics) == value
+
+
+@pytest.mark.parametrize(
+    "line_type, expected_line_type",
+    [
+        pytest.param("line", "-line", id="'line'->'-line'"),
+        pytest.param("-line", "line", id="'-line'->'line'"),
+        pytest.param("area", "-area", id="'area'->'-area'"),
+        pytest.param("-area", "area", id="'-area'->'area'"),
+        pytest.param("stack", "-stack", id="'stack'->'-stack'"),
+        pytest.param("-stack", "stack", id="'-stack'->'stack'"),
+    ],
+)
+def test_metric_expression_mirror(line_type: LineType, expected_line_type: LineType) -> None:
+    assert MetricExpression(
+        Metric("metric-name"),
+        unit_spec="unit",
+        color="#000000",
+        line_type=line_type,
+        title="Title",
+    ).mirror() == MetricExpression(
+        Metric("metric-name"),
+        unit_spec="unit",
+        color="#000000",
+        line_type=expected_line_type,
+        title="Title",
+    )

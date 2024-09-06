@@ -9,11 +9,14 @@
 
 from argparse import Namespace as Args
 from collections.abc import Iterator, Mapping, Sequence
-from typing import Any
+from typing import Any, Unpack
 
 import pytest
 from mypy_boto3_logs.client import CloudWatchLogsClient
-from mypy_boto3_logs.type_defs import GetQueryResultsResponseTypeDef
+from mypy_boto3_logs.type_defs import (
+    GetQueryResultsRequestRequestTypeDef,
+    GetQueryResultsResponseTypeDef,
+)
 
 from cmk.special_agents.agent_aws import (
     _create_lamdba_sections,
@@ -290,7 +293,9 @@ def test_lambda_cloudwatch_insights_query_results_timeout() -> None:
         def __init__(self):  # pylint: disable=super-init-not-called
             pass
 
-        def get_query_results(self, *, queryId: str) -> GetQueryResultsResponseTypeDef:
+        def get_query_results(
+            self, **kwargs: Unpack[GetQueryResultsRequestRequestTypeDef]
+        ) -> GetQueryResultsResponseTypeDef:
             return {
                 "results": [[]],
                 "statistics": {"recordsMatched": 2.0, "recordsScanned": 6.0, "bytesScanned": 710.0},

@@ -155,7 +155,7 @@ run_check_format() {
     command -v taplo >/dev/null && RUST_LOG=warn taplo format --check --diff pyproject.toml
     setup_venv
     ruff check --select I --diff cmk tests
-    ruff format --check --diff cmk tests
+    ../../scripts/run-bazel.sh run :format.check "$(realpath cmk)" "$(realpath tests)"
 }
 
 run_mypy() {
@@ -180,7 +180,7 @@ run_format() {
     command -v taplo >/dev/null && RUST_LOG=warn taplo format pyproject.toml
     setup_venv
     ruff check --select I --fix cmk tests
-    ruff format cmk tests
+    ../../scripts/run-bazel.sh run :format "$(realpath cmk)" "$(realpath tests)"
 }
 
 run_documentation() {

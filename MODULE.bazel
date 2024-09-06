@@ -25,6 +25,7 @@ python.toolchain(
 )
 
 bazel_dep(name = "aspect_rules_py", version = "0.7.4")
+bazel_dep(name = "aspect_rules_lint", version = "1.0.0-rc9")
 
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
 pip.parse(

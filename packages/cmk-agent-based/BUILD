@@ -1,4 +1,5 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
+load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("@cmk_agent_based//:requirements.bzl", "requirement")
 load("@rules_python//python:pip.bzl", "compile_pip_requirements")
@@ -89,6 +90,11 @@ py_test(
         ":cmk-agent-based",
         requirement("pytest"),
     ],
+)
+
+format_multirun(
+    name = "format",
+    python = "@aspect_rules_lint//format:ruff",
 )
 
 py_wheel(

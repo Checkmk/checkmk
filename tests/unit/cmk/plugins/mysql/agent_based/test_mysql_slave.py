@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from tests.unit.conftest import FixRegister
-
-from cmk.utils.sectionname import SectionName
-
-from cmk.checkengine.checking import CheckPluginName
-
 from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.plugins.mysql.agent_based.mysql_slave import (
+    check_mysql_slave,
+    discover_mysql_slave,
+    parse_mysql_slave,
+)
 
 SERVER_LINUX_MYSQL_SLAVE_1 = [
     # from generictests
@@ -86,18 +85,19 @@ MYSQL_ERROR = [
 ]
 
 
-def test_mysql_slave_simple(
-    fix_register: FixRegister,
-) -> None:
-    section = fix_register.agent_sections[SectionName("mysql_slave")].parse_function(
-        SERVER_LINUX_MYSQL_SLAVE_1
-    )
-    plugin = fix_register.check_plugins[CheckPluginName("mysql_slave")]
+def test_mysql_slave_simple() -> None:
+    section = parse_mysql_slave(SERVER_LINUX_MYSQL_SLAVE_1)
 
-    assert list(plugin.discovery_function(section)) == [
+    assert list(discover_mysql_slave(section)) == [
         Service(item="mysql"),
     ]
-    assert list(plugin.check_function(item="mysql", section=section, params={})) == [
+    assert list(
+        check_mysql_slave(
+            item="mysql",
+            section=section,
+            params={"seconds_behind_master": None},
+        )
+    ) == [
         Result(state=State.OK, summary="Slave-IO: running"),
         Result(state=State.OK, summary="Relay log: 89.4 MiB"),
         Metric("relay_log_space", 93709799.0),
@@ -107,16 +107,19 @@ def test_mysql_slave_simple(
     ]
 
 
-def test_mysql_slave_error(
-    fix_register: FixRegister,
-) -> None:
-    section = fix_register.agent_sections[SectionName("mysql_slave")].parse_function(MYSQL_ERROR)
-    plugin = fix_register.check_plugins[CheckPluginName("mysql_slave")]
+def test_mysql_slave_error() -> None:
+    section = parse_mysql_slave(MYSQL_ERROR)
 
-    assert list(plugin.discovery_function(section)) == [
+    assert list(discover_mysql_slave(section)) == [
         Service(item="mysql"),
     ]
-    assert list(plugin.check_function(item="mysql", section=section, params={})) == [
+    assert list(
+        check_mysql_slave(
+            item="mysql",
+            section=section,
+            params={"seconds_behind_master": None},
+        )
+    ) == [
         Result(
             state=State.CRIT,
             summary="ERROR 1227 (42000) at line 1: Access denied; you need (at least one of) the SUPER, SLAVE MONITOR privilege(s) for this operation",

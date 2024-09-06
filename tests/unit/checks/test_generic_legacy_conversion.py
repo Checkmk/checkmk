@@ -861,7 +861,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "mysql.galerasize",
         "mysql.galerastatus",
         "mysql_ping",
-        "mysql_slave",
         "netapp_cluster",
         "netapp_cpu",
         "netapp_fcpio",

@@ -489,11 +489,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "mysql_slave",
-            RuleGroup.CheckgroupParameters("mysql_slave"),
-        ),
-        (
-            "check",
             "netapp_api_environment_fan_faults",
             RuleGroup.CheckgroupParameters("hw_fans"),
         ),

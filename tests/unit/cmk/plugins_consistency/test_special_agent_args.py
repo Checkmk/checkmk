@@ -9,7 +9,7 @@ from typing import Final, Mapping
 
 import pytest
 
-from tests.testlib import repo_path
+from tests.testlib.repo import repo_path
 
 from cmk.plugins.gcp.special_agents import agent_gcp, agent_gcp_status
 from cmk.special_agents import (

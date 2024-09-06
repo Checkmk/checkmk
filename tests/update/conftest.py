@@ -14,8 +14,9 @@ from pathlib import Path
 import pytest
 import yaml
 
+from tests.testlib.repo import repo_path
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import edition_from_env, repo_path, restart_httpd, run
+from tests.testlib.utils import edition_from_env, restart_httpd, run
 from tests.testlib.version import CMKVersion, get_min_version
 
 logger = logging.getLogger(__name__)

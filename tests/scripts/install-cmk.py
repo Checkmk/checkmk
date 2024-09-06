@@ -12,7 +12,7 @@ import sys
 # Make the tests.testlib available
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-from tests.testlib.utils import add_python_paths, current_base_branch_name
+from tests.testlib.repo import add_python_paths, current_base_branch_name
 from tests.testlib.version import ABCPackageManager, CMKVersion, version_from_env
 
 from cmk.utils.version import Edition

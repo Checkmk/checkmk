@@ -16,7 +16,7 @@ from typing import Any, ContextManager
 import docker  # type: ignore[import-untyped]
 import requests
 
-from tests.testlib import repo_path
+from tests.testlib.repo import repo_path
 from tests.testlib.utils import wait_until
 from tests.testlib.version import CMKVersion, version_from_env
 

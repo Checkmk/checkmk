@@ -23,7 +23,7 @@ from tests.testlib.certs import (  # pylint: disable=unused-import # noqa: F401
     fixture_self_signed_ec,
     fixture_self_signed_ed25519,
 )
-from tests.testlib.utils import (
+from tests.testlib.repo import (
     is_cloud_repo,
     is_enterprise_repo,
     is_managed_repo,

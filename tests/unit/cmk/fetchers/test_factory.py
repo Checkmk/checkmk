@@ -8,7 +8,7 @@ import logging
 
 import pytest
 
-from tests.testlib.utils import is_enterprise_repo
+from tests.testlib.repo import is_enterprise_repo
 
 from cmk.utils.hostaddress import HostAddress, HostName
 

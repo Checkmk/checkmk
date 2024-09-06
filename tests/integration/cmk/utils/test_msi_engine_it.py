@@ -9,7 +9,7 @@ from typing import Final
 
 import pytest
 
-from tests.testlib import repo_path
+from tests.testlib.repo import repo_path
 from tests.testlib.site import Site
 
 import cmk.utils.msi_engine as msi_engine

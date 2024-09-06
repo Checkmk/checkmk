@@ -8,8 +8,7 @@ from collections.abc import Iterable
 from itertools import chain
 from pathlib import Path
 
-from tests.testlib import repo_path
-from tests.testlib.utils import is_enterprise_repo
+from tests.testlib.repo import is_enterprise_repo, repo_path
 
 
 def scss_files() -> set[Path]:

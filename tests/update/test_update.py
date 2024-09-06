@@ -6,8 +6,9 @@ import logging
 
 import pytest
 
+from tests.testlib.repo import current_base_branch_name
 from tests.testlib.site import Site
-from tests.testlib.utils import current_base_branch_name, get_services_with_status, parse_files
+from tests.testlib.utils import get_services_with_status, parse_files
 from tests.testlib.version import CMKVersion, version_from_env
 
 from cmk.utils.hostaddress import HostName

@@ -14,7 +14,7 @@ import pytest
 from flask import Flask
 from pytest import MonkeyPatch
 
-from tests.testlib.utils import is_managed_repo
+from tests.testlib.repo import is_managed_repo
 
 import cmk.utils.paths
 import cmk.utils.version

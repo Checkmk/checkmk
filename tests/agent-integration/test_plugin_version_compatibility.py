@@ -11,7 +11,7 @@ from pathlib import Path
 import docker  # type: ignore[import]
 import pytest
 
-from tests import testlib
+from tests.testlib.repo import repo_path
 
 
 @pytest.fixture(scope="module")
@@ -26,7 +26,7 @@ def python_container(request, docker_client):
         command=["python2.5", "-c", "import time; time.sleep(9999)"],
         detach=True,
         volumes={
-            testlib.repo_path(): {"bind": "/cmk", "mode": "ro"},
+            repo_path(): {"bind": "/cmk", "mode": "ro"},
         },
     )
     yield c
@@ -36,7 +36,7 @@ def python_container(request, docker_client):
 def _get_python_plugins():
     return [
         f"agents/plugins/{p.name}"
-        for p in (testlib.repo_path() / "agents" / "plugins").iterdir()
+        for p in (repo_path() / "agents" / "plugins").iterdir()
         if is_python_file(p, "python") or is_python_file(p, "python3")
     ]
 

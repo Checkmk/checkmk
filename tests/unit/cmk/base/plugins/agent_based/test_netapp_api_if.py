@@ -467,7 +467,7 @@ if __name__ == "__main__":
     # Just run this file from your IDE and dive into the code.
     from pathlib import Path
 
-    from tests.testlib.utils import repo_path
+    from tests.testlib.repo import repo_path
 
     assert not pytest.main(
         [

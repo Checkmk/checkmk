@@ -12,7 +12,6 @@ from pathlib import Path
 import docker  # type: ignore[import-untyped]
 import pytest
 
-from tests.testlib import repo_path
 from tests.testlib.docker import (
     checkmk_docker_add_host,
     checkmk_docker_automation_secret,
@@ -25,6 +24,7 @@ from tests.testlib.docker import (
     resolve_image_alias,
     start_checkmk,
 )
+from tests.testlib.repo import repo_path
 from tests.testlib.utils import execute, makedirs, wait_until, write_file
 from tests.testlib.version import CMKVersion, version_from_env
 

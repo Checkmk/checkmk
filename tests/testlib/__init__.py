@@ -26,17 +26,19 @@ from psutil import Process
 
 from tests.testlib.compare_html import compare_html
 from tests.testlib.event_console import CMKEventConsole, CMKEventConsoleStatus
-from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import (
+from tests.testlib.repo import (
     add_python_paths,
     current_branch_name,
-    get_cmk_download_credentials,
-    get_standard_linux_agent_output,
     is_cloud_repo,
     is_enterprise_repo,
     is_managed_repo,
     is_saas_repo,
     repo_path,
+)
+from tests.testlib.site import Site, SiteFactory
+from tests.testlib.utils import (
+    get_cmk_download_credentials,
+    get_standard_linux_agent_output,
     site_id,
     virtualenv_path,
     wait_until,
@@ -429,8 +431,6 @@ def on_time(utctime: datetime.datetime | str | int | float, timezone: str) -> It
 
 
 __all__ = [
-    "repo_path",
-    "add_python_paths",
     "create_linux_test_host",
     "fake_version_and_paths",
     "skip_unwanted_test_types",
@@ -447,7 +447,6 @@ __all__ = [
     "APIError",
     "CMKWebSession",
     "compare_html",
-    "current_branch_name",
     "get_cmk_download_credentials",
     "site_id",
     "virtualenv_path",

@@ -14,6 +14,9 @@ from pathlib import Path
 import pytest
 from pytest_metadata.plugin import metadata_key  # type: ignore[import-untyped]
 
+import tests.testlib as testlib
+from tests.testlib.repo import add_python_paths, current_base_branch_name, repo_path
+
 if os.getenv("_PYTEST_RAISE", "0") != "0":
     # This allows exceptions to be handled by IDEs (rather than just printing the results)
     # when pytest based tests are being run from inside the IDE
@@ -33,9 +36,6 @@ pytest.register_assert_rewrite(
 )
 
 pytest_plugins = ("tests.testlib.playwright.plugin",)
-
-import tests.testlib as testlib
-from tests.testlib.utils import current_base_branch_name
 
 collect_ignore = []
 
@@ -119,7 +119,7 @@ def pytest_collection_modifyitems(items):
         if type_marker and type_marker.args:
             continue  # Do not modify manually set marks
         file_path = Path("%s" % item.reportinfo()[0])
-        repo_rel_path = file_path.relative_to(testlib.repo_path())
+        repo_rel_path = file_path.relative_to(repo_path())
         ty = repo_rel_path.parts[1]
         if ty not in test_types:
             if not isinstance(item, pytest.DoctestItem):
@@ -167,5 +167,5 @@ def verify_virtualenv():
 # MAIN
 #
 
-testlib.add_python_paths()
+add_python_paths()
 testlib.fake_version_and_paths()

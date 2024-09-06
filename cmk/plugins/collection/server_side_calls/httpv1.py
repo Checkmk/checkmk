@@ -114,8 +114,6 @@ def _parse_family(params: HttpHostParams, host_config: HostConfig) -> Family:
         case "ipv6_enforced":  # Enforce IPv6
             return Family.ipv6
         case "primary_enforced":  # Enforce primary address family
-            if not host_config.primary_ip_config:
-                raise ValueError("No primary IP address configured")
             match host_config.primary_ip_config.family:
                 case IPAddressFamily.IPV4:
                     return Family.ipv4
@@ -151,8 +149,6 @@ class HostSettings:
                     raise ValueError("No IPv6 address configured")
                 return self.host_config.ipv6_config.address
             case Family.any:
-                if not self.host_config.primary_ip_config:
-                    raise ValueError("No primary IP address configured")
                 return self.host_config.primary_ip_config.address
             case _:
                 assert_never(self.family)

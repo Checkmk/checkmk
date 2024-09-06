@@ -691,8 +691,7 @@ class ProxmoxVeSession:
 
     def close(self) -> None:
         """close connection to Proxmox VE endpoint"""
-        if self._session:
-            self._session.close()
+        self._session.close()
 
     def get_api_element(self, path: str) -> object:
         """do an API GET request"""

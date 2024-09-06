@@ -76,7 +76,7 @@ def parse_hp_proliant_fans(string_table: StringTable) -> Section:
     return {
         sanitize_item(f"{fan.index} ({fan.label})"): fan
         for line in string_table
-        if (fan := Fan.from_line(line))
+        for fan in [Fan.from_line(line)]
     }
 
 

@@ -118,7 +118,15 @@ def test_openapi_time_period_active_time_ranges(clients: ClientRegistry) -> None
         },
     )
 
-    days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+    days = [
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday",
+    ]
     assert resp1.json["extensions"]["active_time_ranges"] == [
         {"day": day, "time_ranges": [{"end": "23:59", "start": "00:00"}]} for day in days
     ]
@@ -153,7 +161,10 @@ def test_openapi_time_period_time_ranges(clients: ClientRegistry) -> None:
         time_period_data={
             "active_time_ranges": [{"day": "friday"}],
             "exceptions": [
-                {"date": "2023-02-02", "time_ranges": [{"start": "18:32", "end": "21:15"}]},
+                {
+                    "date": "2023-02-02",
+                    "time_ranges": [{"start": "18:32", "end": "21:15"}],
+                },
             ],
         },
     )
@@ -179,7 +190,10 @@ def test_openapi_time_period_time_ranges(clients: ClientRegistry) -> None:
         "day": "saturday",
         "time_ranges": [{"start": "18:11", "end": "23:45"}],
     }
-    assert resp2.json["extensions"]["exceptions"][0] == {"date": "2023-02-03", "time_ranges": []}
+    assert resp2.json["extensions"]["exceptions"][0] == {
+        "date": "2023-02-03",
+        "time_ranges": [],
+    }
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -192,7 +206,10 @@ def test_openapi_time_period(clients: ClientRegistry) -> None:
                 {"day": "all", "time_ranges": [{"start": "12:00", "end": "14:00"}]}
             ],
             "exceptions": [
-                {"date": "2020-01-01", "time_ranges": [{"start": "14:00", "end": "18:00"}]}
+                {
+                    "date": "2020-01-01",
+                    "time_ranges": [{"start": "14:00", "end": "18:00"}],
+                }
             ],
         },
     )
@@ -219,7 +236,10 @@ def test_openapi_time_period_collection(clients: ClientRegistry) -> None:
                 {"day": "all", "time_ranges": [{"start": "12:00", "end": "14:00"}]}
             ],
             "exceptions": [
-                {"date": "2020-01-01", "time_ranges": [{"start": "14:00", "end": "18:00"}]}
+                {
+                    "date": "2020-01-01",
+                    "time_ranges": [{"start": "14:00", "end": "18:00"}],
+                }
             ],
         },
     )
@@ -323,7 +343,10 @@ def test_openapi_timeperiod_unmodified_update(clients: ClientRegistry) -> None:
             ],
             "alias": "Test All days 8x5",
             "exceptions": [
-                {"date": "2021-04-01", "time_ranges": [{"end": "15:00", "start": "14:00"}]}
+                {
+                    "date": "2021-04-01",
+                    "time_ranges": [{"end": "15:00", "start": "14:00"}],
+                }
             ],
         },
     )
@@ -355,7 +378,10 @@ def test_openapi_timeperiod_complex_update(clients: ClientRegistry) -> None:
             ],
             "alias": "Test All days 8x5",
             "exceptions": [
-                {"date": "2021-04-01", "time_ranges": [{"end": "15:00", "start": "14:00"}]}
+                {
+                    "date": "2021-04-01",
+                    "time_ranges": [{"end": "15:00", "start": "14:00"}],
+                }
             ],
         },
     )
@@ -373,7 +399,10 @@ def test_openapi_timeperiod_complex_update(clients: ClientRegistry) -> None:
             ],
             "alias": "Test All days 8x5 z",
             "exceptions": [
-                {"date": "2021-04-01", "time_ranges": [{"end": "15:00", "start": "14:00"}]}
+                {
+                    "date": "2021-04-01",
+                    "time_ranges": [{"end": "15:00", "start": "14:00"}],
+                }
             ],
         },
     )
@@ -464,7 +493,7 @@ def test_openapi_timeperiod_exclude_builtin(clients: ClientRegistry) -> None:
         },
     )
 
-    assert clients.TimePeriod.create(
+    clients.TimePeriod.create(
         expect_ok=False,
         time_period_data={
             "name": "exclude_test_3",
@@ -538,7 +567,8 @@ def test_openapi_time_period_24h_regression(clients: ClientRegistry) -> None:
     clients.TimePeriod.get(time_period_id="all_of_monday")
     clients.TimePeriod.get_all()
     clients.TimePeriod.edit(
-        time_period_id="all_of_monday", time_period_data={"alias": "Everything in Monday"}
+        time_period_id="all_of_monday",
+        time_period_data={"alias": "Everything in Monday"},
     )
     clients.TimePeriod.delete(time_period_id="all_of_monday")
 
@@ -693,13 +723,15 @@ def test_openapi_timeperiod_update_exclude(clients: ClientRegistry) -> None:
     assert res_empty_exclude.json["extensions"]["exclude"] == []
 
     clients.TimePeriod.edit(
-        time_period_id="time_period_3", time_period_data={"exclude": [time_period_name_1]}
+        time_period_id="time_period_3",
+        time_period_data={"exclude": [time_period_name_1]},
     )
     res_update_time_period = clients.TimePeriod.get(time_period_id="time_period_3")
     assert res_update_time_period.json["extensions"]["exclude"] == [time_period_name_1]
 
     clients.TimePeriod.edit(
-        time_period_id="time_period_3", time_period_data={"exclude": [time_period_name_2]}
+        time_period_id="time_period_3",
+        time_period_data={"exclude": [time_period_name_2]},
     )
     res_update_time_period = clients.TimePeriod.get(time_period_id="time_period_3")
     assert res_update_time_period.json["extensions"]["exclude"] == [time_period_name_2]

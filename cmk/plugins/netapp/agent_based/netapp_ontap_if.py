@@ -36,7 +36,7 @@ def parse_netapp_interfaces(string_table: StringTable) -> InterfacesSection:
     return {
         interface_obj.name: interface_obj
         for line in string_table
-        if (interface_obj := models.IpInterfaceModel.model_validate_json(line[0]))
+        for interface_obj in [models.IpInterfaceModel.model_validate_json(line[0])]
     }
 
 
@@ -52,7 +52,7 @@ def parse_netapp_interfaces_counters(
     return {
         counter_obj.id: counter_obj
         for line in string_table
-        if (counter_obj := models.InterfaceCounters.model_validate_json(line[0]))
+        for counter_obj in [models.InterfaceCounters.model_validate_json(line[0])]
     }
 
 

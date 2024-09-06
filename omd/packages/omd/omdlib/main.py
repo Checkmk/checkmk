@@ -1911,7 +1911,7 @@ def _call_script(  # pylint: disable=too-many-branches
         except OSError:
             pass
         finally:
-            if not pty:
+            if open_pty:
                 parent.close()
 
     if not proc.returncode:
@@ -3626,7 +3626,7 @@ def kill_site_user_processes(
 def get_current_and_parent_pids() -> list[int]:
     """Return list of PIDs of the current process and parent process tree till pid 0"""
     pids = []
-    process = psutil.Process()
+    process: psutil.Process | None = psutil.Process()
     while process and process.pid != 0:
         pids.append(process.pid)
         process = process.parent()

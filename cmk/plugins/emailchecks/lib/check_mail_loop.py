@@ -241,7 +241,7 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
         now = int(time.time())
 
         def filter_subject(subject: None | str, re_pattern: re.Pattern[str]) -> None | re.Match:
-            if re_pattern and not (match := re_pattern.match(subject or "")):
+            if not (match := re_pattern.match(subject or "")):
                 logging.debug("ignore message with subject %r", subject)
                 return None
             return match

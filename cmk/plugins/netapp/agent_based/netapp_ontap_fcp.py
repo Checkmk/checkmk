@@ -93,7 +93,7 @@ def parse_netapp_ontap_fc_ports(
     return {
         f"{fc_port.node_name}.{fc_port.name}": fc_port
         for vol in string_table
-        if (fc_port := models.FcPortModel.model_validate_json(vol[0]))
+        for fc_port in [models.FcPortModel.model_validate_json(vol[0])]
     }
 
 
@@ -109,7 +109,7 @@ def parse_netapp_ontap_fc_interfaces_counters(
     return {
         counter_obj.port_wwpn: counter_obj
         for line in string_table
-        if (counter_obj := models.FcInterfaceTrafficCountersModel.model_validate_json(line[0]))
+        for counter_obj in [models.FcInterfaceTrafficCountersModel.model_validate_json(line[0])]
     }
 
 

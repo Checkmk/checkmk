@@ -51,7 +51,7 @@ def parse_netapp_ontap_luns(string_table: StringTable) -> Section:
     return {
         lun.item_name(): lun
         for line in string_table
-        if (lun := models.LunModel.model_validate_json(line[0]))
+        for lun in [models.LunModel.model_validate_json(line[0])]
     }
 
 

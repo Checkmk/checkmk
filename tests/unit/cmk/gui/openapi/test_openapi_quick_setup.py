@@ -111,7 +111,7 @@ def test_failing_validate(clients: ClientRegistry) -> None:
         stages=[{"form_data": {UniqueFormSpecIDStr: {UniqueBundleIDStr: 5}}}],
         expect_ok=False,
     )
-    assert resp.assert_status_code(400)
+    resp.assert_status_code(400)
     assert resp.json["errors"] == {
         "formspec_errors": {
             "formspec_unique_id": [

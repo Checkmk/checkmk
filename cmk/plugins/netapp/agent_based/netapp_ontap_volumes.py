@@ -107,7 +107,7 @@ def parse_netapp_ontap_volumes(
     return {
         vol_obj.item_name(): vol_obj
         for vol in string_table
-        if (vol_obj := models.VolumeModel.model_validate_json(vol[0]))
+        for vol_obj in [models.VolumeModel.model_validate_json(vol[0])]
     }
 
 
@@ -123,7 +123,7 @@ def parse_netapp_ontap_volumes_counters(
     return {
         counter_obj.item_name(): counter_obj
         for line in string_table
-        if (counter_obj := models.VolumeCountersModel.model_validate_json(line[0]))
+        for counter_obj in [models.VolumeCountersModel.model_validate_json(line[0])]
     }
 
 
@@ -285,7 +285,7 @@ def check_volumes(
 
         combined_volumes, combined_volumes_counters = _deserialize_volume(combined_volumes_data)
 
-        if combined_volumes and combined_volumes_counters:
+        if combined_volumes_counters:
             yield from _check_single_netapp_volume(
                 item, params, combined_volumes, combined_volumes_counters, value_store, now
             )

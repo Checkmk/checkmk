@@ -50,7 +50,7 @@ def parse_netapp_ontap_vs_traffic(string_table: StringTable) -> Section:
     return {
         f"{counters.table}.{counters.svm_name}": counters
         for line in string_table
-        if (counters := models.SvmTrafficCountersModel.model_validate_json(line[0]))
+        for counters in [models.SvmTrafficCountersModel.model_validate_json(line[0])]
     }
 
 

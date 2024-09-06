@@ -153,8 +153,7 @@ class MobileironAPI:
         return self
 
     def __exit__(self, *exc_info: tuple) -> None:
-        if self._session:
-            self._session.close()
+        self._session.close()
 
     def _get_devices(self, data_raw: Sequence[Mapping]) -> None:
         """

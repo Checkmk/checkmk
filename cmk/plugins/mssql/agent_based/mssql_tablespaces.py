@@ -121,7 +121,7 @@ def _check_levels_space_upper(
         state = State.CRIT
     elif value >= warn:
         state = State.WARN
-    if state:
+    if state:  # XXXXXXXXXX Regression in 2.3.0/master caused by 4f176b665595
         infotext = f"{infotext} (warn/crit at {render_func(warn)}/{render_func(crit)})"
 
     yield Result(state=state, summary=infotext)
@@ -143,7 +143,7 @@ def _check_levels_space_lower(
         state = State.CRIT
     elif value <= warn:
         state = State.WARN
-    if state:
+    if state:  # XXXXXXXXXX Regression in 2.3.0/master caused by 4f176b665595
         infotext = f"{infotext} (warn/crit below {render_func(warn)}/{render_func(crit)})"
 
     yield Result(state=state, summary=infotext)

@@ -81,7 +81,10 @@ def check_hp_msa_fan(item: str, section: Section) -> CheckResult:
 
     yield Result(state=fan_state, summary=f"Status: {fan_state_readable}, speed: {fan_speed} RPM")
 
-    if fan_health_state and fan_health_reason:
+    if (
+        fan_health_state  # XXXXXXXXXX Regression in master caused by ce74f5aa09b5
+        and fan_health_reason
+    ):
         yield Result(
             state=fan_health_state,
             summary="health: {} ({})".format(

@@ -35,7 +35,10 @@ def check_hp_msa_health(item: str, section: _HealthSection) -> CheckResult:
 
     health_state, health_state_readable = _STATE_MAP[data["health"]]
     health_info = "Status: %s" % health_state_readable
-    if health_state and data.get("health-reason", ""):
+    if (
+        health_state  # XXXXXXXXXX Regression in master caused by ce74f5aa09b5
+        and data.get("health-reason", "")
+    ):
         health_info += " (%s)" % data["health-reason"]
 
     yield Result(state=health_state, summary=health_info)

@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Alias: Restrict interfaces on which RabbitMQ listens
+# Menu: Basic
+# Description:
+#  Configure the IP addresses of the interfaces on which the RabbitMQ Instance will listen for connections. The setting
+#  "0.0.0.0 ::" makes the port available to all IPv4 and IPv6 clients.
+
+case "$1" in
+    default)
+        echo "0.0.0.0 ::"
+    ;;
+    choices)
+        echo "@{IP_ADDRESS_LIST}"
+    ;;
+    set)
+        CONF_FILE="$OMD_ROOT/etc/rabbitmq/conf.d/01-default.conf"
+        echo "# Port set by \`omd config\` and passed by the init script." > "$CONF_FILE"
+        echo "# IP addresses also set by \`omd config\`." > "$CONF_FILE"
+        IFS=' ' read -r -a arr <<< "$2"
+        for i in "${!arr[@]}"; do
+          echo "listeners.ssl.$((i + 1)) = ${arr[$i]}:\$(CONFIG_RABBITMQ_PORT)" >> "$CONF_FILE"
+        done
+    ;;
+esac

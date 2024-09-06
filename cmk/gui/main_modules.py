@@ -7,11 +7,11 @@ import importlib
 import sys
 import traceback
 from collections.abc import Iterator
-from contextlib import contextmanager
 from pathlib import Path
 from types import ModuleType
 
 import cmk.ccc.version as cmk_version
+from cmk.ccc.version import Edition
 
 from cmk.utils import paths
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
@@ -23,46 +23,46 @@ from cmk import trace
 
 tracer = trace.get_tracer()
 
-
-@contextmanager
-def suppress_module_not_found(name: str) -> Iterator[None]:
-    """Specialized to contextlib.supress with additional module name matching"""
-    try:
-        yield
-    except ModuleNotFoundError as e:
-        if e.name != name:
-            raise
-
-
 # The following imports trigger loading of built-in main modules.
 # Note: They are loaded once more in `_import_main_module_plugins()` and
 # possibly a third time over the plug-in discovery mechanism.
 import cmk.gui.plugins.main_modules  # pylint: disable=cmk-module-layer-violation
 
-with suppress_module_not_found("cmk.gui.raw"):
-    import cmk.gui.raw.registration
+match cmk_version.edition(paths.omd_root):
+    case Edition.CEE:
+        import cmk.gui.cee.registration  # pylint: disable=cmk-module-layer-violation
 
-    cmk.gui.raw.registration.register()
+        cmk.gui.cee.registration.register()
 
-with suppress_module_not_found("cmk.gui.cee"):
-    import cmk.gui.cee.registration  # pylint: disable=no-name-in-module,cmk-module-layer-violation
+    case Edition.CME:
+        import cmk.gui.cce.registration  # pylint: disable=cmk-module-layer-violation
+        import cmk.gui.cee.registration  # pylint: disable=cmk-module-layer-violation
+        import cmk.gui.cme.registration  # pylint: disable=cmk-module-layer-violation
 
-    cmk.gui.cee.registration.register()
+        cmk.gui.cee.registration.register()
+        cmk.gui.cme.registration.register()
+        cmk.gui.cce.registration.register()
 
-with suppress_module_not_found("cmk.gui.cme"):
-    import cmk.gui.cme.registration  # pylint: disable=no-name-in-module,cmk-module-layer-violation
+    case Edition.CCE:
+        import cmk.gui.cce.registration  # pylint: disable=cmk-module-layer-violation
+        import cmk.gui.cee.registration  # pylint: disable=cmk-module-layer-violation
 
-    cmk.gui.cme.registration.register()
+        cmk.gui.cee.registration.register()
+        cmk.gui.cce.registration.register()
 
-with suppress_module_not_found("cmk.gui.cce"):
-    import cmk.gui.cce.registration  # pylint: disable=no-name-in-module,cmk-module-layer-violation
+    case Edition.CSE:
+        import cmk.gui.cce.registration  # pylint: disable=cmk-module-layer-violation
+        import cmk.gui.cee.registration  # pylint: disable=cmk-module-layer-violation
+        import cmk.gui.cse.registration  # pylint: disable=cmk-module-layer-violation
 
-    cmk.gui.cce.registration.register()
+        cmk.gui.cee.registration.register()
+        cmk.gui.cce.registration.register()
+        cmk.gui.cse.registration.register()
 
-with suppress_module_not_found("cmk.gui.cse"):
-    import cmk.gui.cse.registration  # pylint: disable=no-name-in-module,cmk-module-layer-violation
+    case Edition.CRE:
+        import cmk.gui.raw.registration
 
-    cmk.gui.cse.registration.register()
+        cmk.gui.raw.registration.register()
 
 
 def _imports() -> Iterator[str]:

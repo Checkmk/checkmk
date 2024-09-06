@@ -15,11 +15,12 @@ import pytest
 import yaml
 
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import edition_from_env, restart_httpd, run
+from tests.testlib.utils import edition_from_env, repo_path, restart_httpd, run
 from tests.testlib.version import CMKVersion, get_min_version
 
 logger = logging.getLogger(__name__)
-DUMPS_DIR = Path(__file__).parent.resolve() / "dumps"
+MODULE_DIR = Path(__file__).parent.resolve()
+DUMPS_DIR = MODULE_DIR / "dumps"
 
 
 def pytest_addoption(parser):
@@ -69,11 +70,18 @@ class BaseVersions:
 
     MIN_VERSION = get_min_version()
 
-    with open(Path(__file__).parent.resolve() / "base_versions_previous_branch.json", "r") as f:
-        BASE_VERSIONS_PB = _limit_versions(json.load(f), MIN_VERSION)
+    previous_branch_versions_file = MODULE_DIR / "base_versions_previous_branch.json"
+    BASE_VERSIONS_PB = _limit_versions(
+        json.loads(previous_branch_versions_file.read_text(encoding="utf-8")), MIN_VERSION
+    )
 
-    with open(Path(__file__).parent.resolve() / "base_versions_current_branch.json", "r") as f:
-        BASE_VERSIONS_CB = _limit_versions(json.load(f), MIN_VERSION)
+    current_branch_versions_file = MODULE_DIR / "base_versions_current_branch.json"
+    try:
+        BASE_VERSIONS_CB = _limit_versions(
+            json.loads(current_branch_versions_file.read_text(encoding="utf-8")), MIN_VERSION
+        )
+    except FileNotFoundError:
+        BASE_VERSIONS_CB = []
 
     BASE_VERSIONS = [
         CMKVersion(base_version_str, edition_from_env())
@@ -85,7 +93,7 @@ class BaseVersions:
 class InteractiveModeDistros:
     @staticmethod
     def get_supported_distros():
-        with open(Path(__file__).parent.resolve() / "../../editions.yml", "r") as stream:
+        with open(repo_path() / "editions.yml", "r") as stream:
             yaml_file = yaml.safe_load(stream)
 
         return yaml_file["common"]

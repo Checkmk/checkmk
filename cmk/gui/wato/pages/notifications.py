@@ -1042,11 +1042,25 @@ class ModeAnalyzeNotifications(ModeNotifications):
         menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
-                    name="related",
-                    title=_("Related"),
+                    name="analyze_notifications",
+                    title=_("Analyze recent notifications"),
                     topics=[
                         PageMenuTopic(
-                            title=_("Notifications"),
+                            title=_("Add new"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Add notification rule"),
+                                    icon_name="new",
+                                    item=make_simple_link(
+                                        folder_preserving_link([("mode", "notification_rule")])
+                                    ),
+                                    is_shortcut=False,
+                                    is_suggested=False,
+                                ),
+                            ],
+                        ),
+                        PageMenuTopic(
+                            title=_("Test notifications"),
                             entries=[
                                 PageMenuEntry(
                                     title=_("Test notifications"),
@@ -1058,14 +1072,52 @@ class ModeAnalyzeNotifications(ModeNotifications):
                                     is_shortcut=True,
                                     is_suggested=True,
                                 ),
+                            ],
+                        ),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Global settings"),
+                            entries=[
                                 PageMenuEntry(
-                                    title=_("Notifications"),
-                                    icon_name="notifications",
+                                    title=_("Store notifications for rule analysis"),
+                                    icon_name="configuration",
                                     item=make_simple_link(
-                                        folder_preserving_link([("mode", "notifications")])
+                                        folder_preserving_link(
+                                            [
+                                                ("mode", "edit_configvar"),
+                                                ("varname", "notification_backlog"),
+                                            ]
+                                        )
                                     ),
-                                    is_shortcut=True,
-                                    is_suggested=True,
+                                ),
+                                PageMenuEntry(
+                                    title=_("Notification log level"),
+                                    icon_name="configuration",
+                                    item=make_simple_link(
+                                        folder_preserving_link(
+                                            [
+                                                ("mode", "edit_configvar"),
+                                                ("varname", "notification_logging"),
+                                            ]
+                                        )
+                                    ),
+                                ),
+                                PageMenuEntry(
+                                    title=_("Logging of the notification mechanics"),
+                                    icon_name="configuration",
+                                    item=make_simple_link(
+                                        folder_preserving_link(
+                                            [
+                                                ("mode", "edit_configvar"),
+                                                ("varname", "cmc_debug_notifications"),
+                                            ]
+                                        )
+                                    ),
                                 ),
                             ],
                         ),
@@ -1107,6 +1159,24 @@ class ModeAnalyzeNotifications(ModeNotifications):
                         ),
                         is_shortcut=True,
                         is_suggested=True,
+                    ),
+                    PageMenuEntry(
+                        title=(
+                            _("Hide user rules") if self._show_user_rules else _("Show user rules")
+                        ),
+                        icon_name={
+                            "icon": "checkbox",
+                            "emblem": "disable" if self._show_user_rules else "enable",
+                        },
+                        item=make_simple_link(
+                            makeactionuri(
+                                request,
+                                transactions,
+                                [
+                                    ("_show_user", "" if self._show_user_rules else "1"),
+                                ],
+                            )
+                        ),
                     ),
                 ],
             ),

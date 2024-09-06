@@ -10,6 +10,8 @@ from black import FileMode, format_str
 
 # Codegen ignores the required flag if default is set
 STRIP_OPTIONAL = [
+    ("MultilineText", "type"),
+    ("CommentTextArea", "type"),
     ("FormSpec", "validators"),
     ("Dictionary", "elements"),
     ("Dictionary", "layout"),

@@ -7,6 +7,7 @@ from ._type_defs import DataOrigin, DEFAULT_VALUE, DefaultValue, VisitorOptions
 from .boolean_choice import BooleanChoiceVisitor
 from .cascading_single_choice import CascadingSingleChoiceVisitor
 from .catalog import CatalogVisitor
+from .comment_text_area import CommentTextAreaVisitor
 from .data_size import DataSizeVisitor
 from .dictionary import DictionaryVisitor
 from .fixed_value import FixedValueVisitor
@@ -46,6 +47,7 @@ __all__ = [
     "OptionalChoiceVisitor",
     "PasswordVisitor",
     "SimplePasswordVisitor",
+    "CommentTextAreaVisitor",
     "SingleChoiceVisitor",
     "StringVisitor",
     "TimeSpanVisitor",

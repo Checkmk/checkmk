@@ -22,6 +22,7 @@ import FormPassword from './forms/FormPassword.vue'
 import FormTuple from '@/form/components/forms/FormTuple.vue'
 import FormOptionalChoice from '@/form/components/forms/FormOptionalChoice.vue'
 import FormSimplePassword from '@/form/components/forms/FormSimplePassword.vue'
+import FormCommentTextArea from './forms/FormCommentTextArea.vue'
 
 const props = defineProps<{
   spec: FormSpec
@@ -44,6 +45,7 @@ const components: Record<Components['type'], unknown> = {
   time_span: FormTimeSpan,
   boolean_choice: FormBooleanChoice,
   multiline_text: FormMultilineText,
+  comment_text_area: FormCommentTextArea,
   multiple_choice: FormMultipleChoice,
   password: FormPassword,
   data_size: FormDataSize,

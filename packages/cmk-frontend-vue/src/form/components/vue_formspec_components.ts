@@ -17,6 +17,7 @@ export type Components =
   | FixedValue
   | BooleanChoice
   | MultilineText
+  | CommentTextArea
   | Password
   | DataSize
   | Catalog
@@ -98,11 +99,16 @@ export type BooleanChoice = FormSpec & {
   text_off: string;
 };
 export type MultilineText = FormSpec & {
-  type: "multiline_text";
+  type: string;
   label?: string;
   macro_support?: boolean;
   monospaced?: boolean;
   input_hint?: string;
+};
+export type CommentTextArea = MultilineText & {
+  type: string;
+  user_name: string;
+  i18n: CommentTextAreaI18N;
 };
 export type Password = FormSpec & {
   type: "password";
@@ -204,6 +210,9 @@ export interface CascadingSingleChoiceElement {
   title: string;
   default_value: unknown;
   parameter_form: FormSpec;
+}
+export interface CommentTextAreaI18N {
+  prefix_date_and_comment: string;
 }
 export interface I18NPassword {
   explicit_password: string;

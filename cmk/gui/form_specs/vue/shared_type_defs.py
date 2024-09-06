@@ -95,6 +95,11 @@ class CascadingChoiceLayout(str, Enum):
 
 
 @dataclass(kw_only=True)
+class CommentTextAreaI18n:
+    prefix_date_and_comment: str
+
+
+@dataclass(kw_only=True)
 class TimeSpanI18n:
     millisecond: str
     second: str
@@ -301,6 +306,13 @@ class MultilineText(FormSpec):
 
 
 @dataclass(kw_only=True)
+class CommentTextArea(MultilineText):
+    user_name: str
+    i18n: CommentTextAreaI18n
+    type: str = "comment_text_area"
+
+
+@dataclass(kw_only=True)
 class DataSize(FormSpec):
     displayed_magnitudes: list[str]
     type: str = "data_size"
@@ -362,6 +374,7 @@ Components = Union[
     FixedValue,
     BooleanChoice,
     MultilineText,
+    CommentTextArea,
     Password,
     DataSize,
     Catalog,

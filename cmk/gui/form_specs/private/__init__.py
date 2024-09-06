@@ -5,6 +5,7 @@
 
 from .catalog import Catalog, Topic
 from .definitions import (
+    CommentTextArea,
     LegacyValueSpec,
     SingleChoiceElementExtended,
     SingleChoiceExtended,
@@ -23,6 +24,7 @@ __all__ = [
     "ListExtended",
     "SingleChoiceElementExtended",
     "SingleChoiceExtended",
+    "CommentTextArea",
     "OptionalChoice",
     "UnknownFormSpec",
     "not_empty",

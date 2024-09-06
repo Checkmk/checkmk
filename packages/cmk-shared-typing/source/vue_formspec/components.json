@@ -472,29 +472,63 @@
             ]
         },
         "multiline_text": {
-            "type": "object",
-            "properties": {
-                "type": {
-                    "const": "multiline_text",
-                    "default": "multiline_text"
-                },
-                "label": {
-                    "type": "string"
-                },
-                "macro_support": {
-                    "type": "boolean"
-                },
-                "monospaced": {
-                    "type": "boolean"
-                },
-                "input_hint": {
-                    "type": "string"
-                }
-            },
-            "required": ["type"],
+            "id": "multiline_text",
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "type": "string",
+                            "default": "multiline_text"
+                        },
+                        "label": {
+                            "type": "string"
+                        },
+                        "macro_support": {
+                            "type": "boolean"
+                        },
+                        "monospaced": {
+                            "type": "boolean"
+                        },
+                        "input_hint": {
+                            "type": "string"
+                        }
+                    },
+                    "required": ["type"]
+                }
+            ]
+        },
+        "comment_text_area": {
+            "id": "comment_text_area",
+            "allOf": [
+                {
+                    "$ref": "#/$defs/multiline_text"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "type": "string",
+                            "default": "comment_text_area"
+                        },
+                        "user_name": {
+                            "type": "string"
+                        },
+                        "i18n": {
+                            "type": "object",
+                            "title": "comment_text_area_i18n",
+                            "properties": {
+                                "prefix_date_and_comment": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": ["prefix_date_and_comment"]
+                        }
+                    },
+                    "required": ["type", "user_name", "i18n"]
                 }
             ]
         },
@@ -743,6 +777,9 @@
                 },
                 {
                     "$ref": "#/$defs/multiline_text"
+                },
+                {
+                    "$ref": "#/$defs/comment_text_area"
                 },
                 {
                     "$ref": "#/$defs/password"

@@ -25,17 +25,19 @@ const style = computed(() => {
 </script>
 
 <template>
-  <div v-if="props.spec.label">
-    <label> {{ props.spec.label }}</label
-    ><br />
+  <div style="flex">
+    <div v-if="props.spec.label">
+      <label> {{ props.spec.label }}</label
+      ><br />
+    </div>
+    <textarea
+      v-model="value"
+      :style="style"
+      :placeholder="spec.input_hint || ''"
+      rows="20"
+      cols="60"
+      type="text"
+    />
+    <FormValidation :validation="validation"></FormValidation>
   </div>
-  <textarea
-    v-model="value"
-    :style="style"
-    :placeholder="spec.input_hint || ''"
-    rows="20"
-    cols="60"
-    type="text"
-  />
-  <FormValidation :validation="validation"></FormValidation>
 </template>

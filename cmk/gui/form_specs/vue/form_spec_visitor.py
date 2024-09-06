@@ -17,6 +17,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.converter import SimplePassword, TransformForLegacyData, Tuple
 from cmk.gui.form_specs.private import (
     Catalog,
+    CommentTextArea,
     DictionaryExtended,
     LegacyValueSpec,
     ListExtended,
@@ -73,6 +74,7 @@ from .visitors import (
     BooleanChoiceVisitor,
     CascadingSingleChoiceVisitor,
     CatalogVisitor,
+    CommentTextAreaVisitor,
     DataSizeVisitor,
     DictionaryVisitor,
     FixedValueVisitor,
@@ -121,6 +123,7 @@ def register_form_specs():
     register_visitor_class(FixedValue, FixedValueVisitor)
     register_visitor_class(BooleanChoice, BooleanChoiceVisitor)
     register_visitor_class(MultilineText, MultilineTextVisitor)
+    register_visitor_class(CommentTextArea, CommentTextAreaVisitor)
     register_visitor_class(RegularExpression, StringVisitor, recompose_regular_expression)
     register_visitor_class(DataSize, DataSizeVisitor)
     register_visitor_class(Catalog, CatalogVisitor)
@@ -153,7 +156,9 @@ register_form_specs()
 register_validators()
 
 
-def _process_validation_errors(validation_errors: list[shared_type_defs.ValidationMessage]) -> None:
+def _process_validation_errors(
+    validation_errors: list[shared_type_defs.ValidationMessage],
+) -> None:
     """This functions introduces validation errors from the vue-world into the CheckMK-GUI-world
     The CheckMK-GUI works with a global parameter user_errors.
     These user_errors include the field_id of the broken input field and the error text
@@ -165,7 +170,8 @@ def _process_validation_errors(validation_errors: list[shared_type_defs.Validati
 
     first_error = validation_errors[0]
     raise MKUserError(
-        "" if not first_error.location else first_error.location[-1], first_error.message
+        "" if not first_error.location else first_error.location[-1],
+        first_error.message,
     )
 
 

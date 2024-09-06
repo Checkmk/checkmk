@@ -38,6 +38,7 @@
     --icon-continue: url('themes/facelift/images/icon_continue.png');
     --icon-main-help: url('themes/facelift/images/icon_main_help.svg');
     --icon-save-to-services: url('themes/facelift/images/icon_save_to_services.svg');
+    --icon-insertdate: url('themes/facelift/images/icon_insertdate.png');
 
     /* Colors */
     --default-submit-button-border-color: var(--success-dimmed);
@@ -53,6 +54,7 @@
     --icon-continue: url('themes/modern-dark/images/icon_continue.png');
     --icon-main-help: url('themes/modern-dark/images/icon_main_help.svg');
     --icon-save-to-services: url('themes/modern-dark/images/icon_save_to_services.svg');
+    --icon-insertdate: url('themes/modern-dark/images/icon_insertdate.png');
 
     /* Colors */
     --default-submit-button-border-color: rgb(8 94 61);

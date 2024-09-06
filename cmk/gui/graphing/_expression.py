@@ -1021,7 +1021,7 @@ class MetricExpression:
         yield from self.base.scalar_names()
 
     def mirror(self) -> MetricExpression:
-        def _swap_line_type() -> LineType:
+        def _mirror_line_type() -> LineType:
             match self.line_type:
                 case "line":
                     return "-line"
@@ -1042,7 +1042,7 @@ class MetricExpression:
             self.base,
             unit_spec=self.unit_spec,
             color=self.color,
-            line_type=_swap_line_type(),
+            line_type=_mirror_line_type(),
             title=self.title,
         )
 

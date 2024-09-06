@@ -20,15 +20,12 @@ build-backend = "setuptools.build_meta"
 
 [tool.bandit]
 
-[tool.black]
-line_length = 100
-quiet = true
+[tool.ruff]
+target-version = "py312"
+line-length = 100
 
-[tool.isort]
-profile = "black"
-order_by_type = false
-line_length = 100
-py_version = 312
+[tool.ruff.lint.isort]
+order-by-type = false
 
 [tool.mypy]
 explicit_package_bases = true

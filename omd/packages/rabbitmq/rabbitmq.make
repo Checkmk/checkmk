@@ -12,3 +12,5 @@ $(RABBITMQ_BUILD):
 $(RABBITMQ_INSTALL): $(RABBITMQ_BUILD)
 	$(RM) $(DESTDIR)$(OMD_ROOT)/lib/rabbitmq
 	tar -xzf $(RABBITMQ_BAZEL_OUT)/rabbitmq.tar.gz -C $(DESTDIR)$(OMD_ROOT)/lib/
+	install -m 755 $(PACKAGE_DIR)/$(RABBITMQ)/RABBITMQ_PORT $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
+	install -m 755 $(PACKAGE_DIR)/$(RABBITMQ)/RABBITMQ_DIST_PORT $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/

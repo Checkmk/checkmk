@@ -1320,22 +1320,6 @@ msgstr ""
 msgid "<b>Warning:</b> There are %d unacknowledged incompatible werks:"
 msgstr "<b>Aviso:</b> Há %d werks incompatíveis não reconhecidos:"
 
-#, python-format
-msgid ""
-"<b>Warning</b><br><br>You haven't configured a <a href=\"%s\">fallback email "
-"address</a> nor enabled receiving fallback emails for any user. If your "
-"monitoring produces a notification that is not matched by any of your "
-"notification rules, the notification will not be sent out. To prevent that, "
-"please configure either the global setting or enable the fallback contact "
-"option for at least one of your users."
-msgstr ""
-"<b>Aviso</b>>>br>>br>Você não configurou um <a href=\"%s\">fallback email "
-"address</a> nem habilitou o recebimento de fallback emails para nenhum "
-"usuário. Se a sua monitorização produzir uma notificação que não corresponda "
-"a nenhuma das suas regras de notificação, a notificação não será enviada. "
-"Para evitar isso, por favor configure a configuração global ou habilite a "
-"opção de contato fallback para pelo menos um de seus usuários."
-
 msgid "<b>You do not have any roles.</b>"
 msgstr "<b>Você não tem nenhum papel.</b>"
 
@@ -8657,6 +8641,9 @@ msgstr "Agentes de panificação..."
 msgid "Baking successful"
 msgstr "Assar com sucesso"
 
+msgid "Balance short-term spikes"
+msgstr ""
+
 msgid "Balanced boxes"
 msgstr "Caixas equilibradas"
 
@@ -10706,6 +10693,11 @@ msgstr ""
 msgid "Cannot change rule conditions for rules managed by Quick setup."
 msgstr ""
 
+msgid ""
+"Cannot change the customer of this site because it is in a peer to peer "
+"broker connection."
+msgstr ""
+
 #, python-format
 msgid "Cannot compute perfometer label due to '%s'"
 msgstr ""
@@ -11803,6 +11795,10 @@ msgstr ""
 "hosts, serviços, CMK Helper, Live Helper, Uso de Helper; Estado dos daemons: "
 "Apache, Core, Crontag, DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached (o "
 "plugin Agent mk_inventory precisa ser instalado)"
+
+#, fuzzy
+msgid "Checkmk Appliance information"
+msgstr "Automação Checkmk"
 
 #, fuzzy
 msgid "Checkmk Cloud"
@@ -13663,6 +13659,10 @@ msgstr "Configurar a descoberta de interfaces únicas"
 msgid "Configure enforced checks without using service discovery"
 msgstr "Configurar verificações forçadas sem utilizar a descoberta de serviços"
 
+#, fuzzy
+msgid "Configure fallback email address"
+msgstr "Relatório de acidente fallback endereço postal"
+
 msgid "Configure grouping of interfaces"
 msgstr "Configurar o agrupamento de interfaces"
 
@@ -14676,6 +14676,10 @@ msgstr "O núcleo começou"
 
 msgid "Core statistics"
 msgstr "Estatísticas principais"
+
+#, fuzzy
+msgid "Core status of notifications"
+msgstr "Criar uma notificação"
 
 msgid "Core stopped"
 msgstr "Núcleo parado"
@@ -18701,6 +18705,10 @@ msgstr "Seções para deficientes (agente Windows)"
 msgid "Disabled services"
 msgstr "Serviços para deficientes físicos"
 
+#, fuzzy
+msgid "Disabled via master control"
+msgstr "Desactivar o controlador"
+
 msgid ""
 "Disabling the password will prevent a user from logging in while retaining "
 "the original password. Notifications are not affected by this setting."
@@ -19805,6 +19813,10 @@ msgstr "Não enviar para o anfitrião remoto"
 
 msgid "Do not show a summary line"
 msgstr "Não mostrar uma linha de resumo"
+
+#, fuzzy
+msgid "Do not show again"
+msgstr "Não mostrar título"
 
 msgid "Do not show the service status"
 msgstr "Não mostrar o estado do serviço"
@@ -21280,6 +21292,9 @@ msgstr "Saída vazia do local remoto."
 msgid "Empty response from web service"
 msgstr "Resposta vazia do serviço web"
 
+msgid "Empty template for least privilege roles"
+msgstr ""
+
 msgid "Enable"
 msgstr "Ativar"
 
@@ -22034,6 +22049,10 @@ msgstr "Taxas de erro"
 msgid "Error showing view: %s"
 msgstr "Erro ao mostrar vista: %s"
 
+#, fuzzy
+msgid "Error updating broker connections."
+msgstr "Editar conexão ao site %s"
+
 #, python-format
 msgid "Error while rendering element type '%s'"
 msgstr "Erro ao renderizar elementos do tipo '%s'"
@@ -22069,6 +22088,10 @@ msgstr "Escalar os tempos de paragem com base no estado de CRIT agregado"
 
 msgid "Escalate downtimes based on aggregated WARN state"
 msgstr "Escalar os tempos de paragem com base no estado agregado de WARN"
+
+#, fuzzy
+msgid "Escalations"
+msgstr "Localizações"
 
 msgid "Escape HTML"
 msgstr "Escape HTML"
@@ -25567,11 +25590,6 @@ msgstr "O gráfico é visível"
 
 msgid "Graph layout"
 msgstr "Layout gráfico"
-
-#, fuzzy, python-format
-msgid "Graph recipe '%s' has the error '%s', available are: %s"
-msgstr ""
-"A receita gráfica '%s' utiliza métrica indefinida '%s', estão disponíveis: %s"
 
 msgid "Graph rendering options"
 msgstr "Opções de renderização gráfica"
@@ -30907,7 +30925,7 @@ msgstr ""
 #, python-format
 msgid ""
 "If you are looking for a way to test your notification settings, try '%s' in "
-"Setup > Notifications"
+"Setup > Test notifications"
 msgstr ""
 
 msgid ""
@@ -31697,6 +31715,20 @@ msgstr ""
 "lista de padrões regex. Apenas os espaços de nomes correspondentes serão "
 "monitorizados. Note que isto diz respeito a tudo o que faz parte dos "
 "namespaces correspondentes, como as cápsulas, por exemplo."
+
+#, fuzzy
+msgid ""
+"If your monitoring produces a notification that is not matched by any of "
+"your notification rules, the notification will not be sent out. To prevent "
+"that, we recommend configuring either the global setting or enable the "
+"fallback contact option for at least one of your users."
+msgstr ""
+"<b>Aviso</b>>>br>>br>Você não configurou um <a href=\"%s\">fallback email "
+"address</a> nem habilitou o recebimento de fallback emails para nenhum "
+"usuário. Se a sua monitorização produzir uma notificação que não corresponda "
+"a nenhuma das suas regras de notificação, a notificação não será enviada. "
+"Para evitar isso, por favor configure a configuração global ou habilite a "
+"opção de contato fallback para pelo menos um de seus usuários."
 
 msgid "Ignore"
 msgstr "Ignorar"
@@ -32774,6 +32806,10 @@ msgstr ""
 msgid "Information about size, age and count of files"
 msgstr "Informações sobre tamanho, idade e contagem de arquivos"
 
+#, fuzzy
+msgid "Information about the Appliance hardware and firmware version."
+msgstr "Configuração do Sistema de Inventário de Hardware e Software Checkmk"
+
 msgid "Information similar to 'docker system df' output"
 msgstr "Informação semelhante à saída do 'docker system df'"
 
@@ -33343,10 +33379,6 @@ msgstr "URL de retorno inválido fornecido."
 #, python-format
 msgid "Invalid color specification '%s'"
 msgstr "Especificação de cor inválida '%s'"
-
-#, python-format
-msgid "Invalid combined graph representation '%s'"
-msgstr "Representação gráfica combinada inválida '%s'"
 
 #, fuzzy
 msgid "Invalid configuration bundle group type."
@@ -34813,6 +34845,10 @@ msgstr "Últimos 35 dias"
 
 msgid "Last 6 months"
 msgstr "Últimos 6 meses"
+
+#, fuzzy
+msgid "Last 7 days"
+msgstr "Últimos 35 dias"
 
 msgid "Last Contact"
 msgstr "Último contato"
@@ -41618,6 +41654,10 @@ msgstr "Estado de registo"
 msgid "No explicit credentials"
 msgstr "Sem credenciais explícitas"
 
+#, fuzzy
+msgid "No fallback email address configured"
+msgstr "(Nenhum endereço de correio electrónico de recurso configurado!)"
+
 msgid ""
 "No fresh discovery information available. Using latest cached information. "
 "Please perform a rescan in case you want to discover the current state."
@@ -42422,6 +42462,10 @@ msgid "Notification configuration"
 msgstr "Configuração da notificação"
 
 #, fuzzy
+msgid "Notification core status"
+msgstr "Comentário de notificação"
+
+#, fuzzy
 msgid "Notification delivery rate"
 msgstr "Sistema de Notificação"
 
@@ -42514,7 +42558,15 @@ msgstr "Notificações são desativadas manualmente para esta %s"
 msgid "Notifications are manually enabled for this %s"
 msgstr "Notificações são habilitadas manualmente para esta %s"
 
+#, fuzzy, python-format
+msgid "Notifications disabled on %d of %d %s"
+msgstr "Notificações são desativadas para esta %s"
+
 msgid "Notifications enabled"
+msgstr "Notificações activadas"
+
+#, fuzzy, python-format
+msgid "Notifications enabled on %d of %d %s"
 msgstr "Notificações activadas"
 
 #, fuzzy
@@ -44198,6 +44250,10 @@ msgstr "Pista de Alimentação de Sinal Óptico %d"
 #, fuzzy
 msgid "Optical signal power lane 9"
 msgstr "Pista de Alimentação de Sinal Óptico %d"
+
+#, fuzzy
+msgid "Optimize notifications"
+msgstr "Notificações falhadas"
 
 msgid "Optimize rule execution"
 msgstr "Otimizar a execução das regras"
@@ -51557,6 +51613,10 @@ msgstr ""
 "Restringe os monitores obtidos por etiquetas (campo da API <tt>tags</tt>). "
 "Os monitores devem ter todas as tags configuradas para serem buscados."
 
+#, fuzzy
+msgid "Restrict generation of notifications"
+msgstr "Restringir ao número de notificação"
+
 msgid "Restrict interface items"
 msgstr "Restringir itens de interface"
 
@@ -56148,6 +56208,10 @@ msgstr ""
 "Descoordenação de identificação do local. Nosso ID é '%s', mas você está "
 "dizendo que nós somos '%s'."
 
+#, fuzzy
+msgid "Site ID must be set"
+msgstr "O valor deve ser uma cadeia de caracteres"
+
 msgid "Site alias"
 msgstr "Extrônomo do local"
 
@@ -59281,6 +59345,10 @@ msgstr "Suporte"
 msgid "Support diagnostics"
 msgstr "Diagnósticos de suporte"
 
+#, fuzzy
+msgid "Supporting rules"
+msgstr "Regras horizontais"
+
 msgid "Suppress not available sensors"
 msgstr "Suprimir sensores não disponíveis"
 
@@ -60269,6 +60337,10 @@ msgstr "Verificação dos ensaios"
 
 msgid "Testing"
 msgstr "Testes"
+
+#, fuzzy
+msgid "Testing notifications"
+msgstr "última notificação"
 
 #, fuzzy
 msgid "Tests"
@@ -69850,6 +69922,10 @@ msgstr ""
 msgid "Time consumed by rule engine"
 msgstr "Tempo consumido pelo motor de regras"
 
+#, fuzzy
+msgid "Time dependencies"
+msgstr "Diferença horária"
+
 msgid "Time difference"
 msgstr "Diferença horária"
 
@@ -73073,6 +73149,10 @@ msgstr "Total de Instâncias a Pedido"
 msgid "Total running on-demand z1d.xlarge instances"
 msgstr "Total de Instâncias a Pedido"
 
+#, fuzzy
+msgid "Total sent notifications"
+msgstr "última notificação"
+
 msgid "Total service problems"
 msgstr "Total de problemas de serviço"
 
@@ -74182,6 +74262,10 @@ msgstr "Caminhos desconhecidos"
 msgid "Unknown rendering mode %s"
 msgstr "Tipo de métrica desconhecida %s"
 
+#, fuzzy, python-format
+msgid "Unknown rule with ID %s"
+msgstr "Site desconhecido %s"
+
 #, fuzzy
 msgid "Unknown service"
 msgstr "Usuário desconhecido"
@@ -74387,6 +74471,10 @@ msgstr "Atualizar transformação"
 
 msgid "Updated attributes: "
 msgstr "Atributos actualizados: "
+
+#, fuzzy, python-format
+msgid "Updated broker connection for site %s"
+msgstr "Criada nova ligação ao site %s"
 
 #, python-format
 msgid "Updated discovered host labels of '%s' with %d labels"
@@ -77605,6 +77693,10 @@ msgstr "Veja e edite as regras e agregações neste pacote de BI"
 #, fuzzy
 msgid "View extension package manager"
 msgstr "Ver Gestor de Pacotes de Extensão"
+
+#, fuzzy
+msgid "View failed notifications"
+msgstr "Mostrar notificações de falhas"
 
 msgid "View layout"
 msgstr "Ver layout"
@@ -81367,6 +81459,12 @@ msgstr ""
 "ela. Você pode usar a busca <a href=\"%s\">host search</a> para obter uma "
 "lista dos hosts."
 
+#, fuzzy
+msgid ""
+"You cannot delete this connection. It is used in a broker peer to peer "
+"connection."
+msgstr "Você não pode apagar a conexão com o site local."
+
 #, python-format
 msgid "You cannot delete this pack. It contains <b>%d</b> rules."
 msgstr "Você não pode apagar este pacote. Ele contém <b>%d</b> regras."
@@ -81387,6 +81485,11 @@ msgstr "Não é possível eliminar este período de tempo."
 
 msgid "You cannot delete your own account!"
 msgstr "Você não pode apagar a sua própria conta!"
+
+msgid ""
+"You cannot disable the replication on this site. It is used in a broker peer "
+"to peer connection."
+msgstr ""
 
 msgid "You cannot do replication with the local site."
 msgstr "Você não pode fazer replicação com o site local."
@@ -84097,6 +84200,12 @@ msgstr "mostrar apenas problemas"
 msgid "signing"
 msgstr "ao assinar"
 
+#, fuzzy
+msgid "site"
+msgid_plural "sites"
+msgstr[0] "sítio Web"
+msgstr[1] "sítio Web"
+
 msgid "slots"
 msgstr "vagas"
 
@@ -84446,6 +84555,16 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
+
+#, fuzzy, python-format
+#~ msgid "Graph recipe '%s' has the error '%s', available are: %s"
+#~ msgstr ""
+#~ "A receita gráfica '%s' utiliza métrica indefinida '%s', estão "
+#~ "disponíveis: %s"
+
+#, python-format
+#~ msgid "Invalid combined graph representation '%s'"
+#~ msgstr "Representação gráfica combinada inválida '%s'"
 
 #~ msgid "Debugging (log every single action)"
 #~ msgstr "Depuração (registar cada acção)"

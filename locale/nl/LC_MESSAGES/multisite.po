@@ -1325,23 +1325,6 @@ msgid "<b>Warning:</b> There are %d unacknowledged incompatible werks:"
 msgstr ""
 "<b>Waarschuwing:</b> Er zijn %d onbevestigde werks die niet compatibel zijn:"
 
-#, python-format
-msgid ""
-"<b>Warning</b><br><br>You haven't configured a <a href=\"%s\">fallback email "
-"address</a> nor enabled receiving fallback emails for any user. If your "
-"monitoring produces a notification that is not matched by any of your "
-"notification rules, the notification will not be sent out. To prevent that, "
-"please configure either the global setting or enable the fallback contact "
-"option for at least one of your users."
-msgstr ""
-"<b>Waarschuwing</b><br><br>U hebt geen <a href=\"%s\">terugval-e-mailadres</"
-"a> geconfigureerd en u hebt het ontvangen van terugval-e-mails voor geen "
-"enkele gebruiker ingeschakeld. Als uw bewaking een melding genereert die "
-"niet overeenkomt met een van uw meldingsregels, zal de melding niet worden "
-"verzonden. Om dat te voorkomen, moet u ofwel de globale instelling "
-"configureren of de optie voor fallback contact inschakelen voor ten minste "
-"één van uw gebruikers."
-
 msgid "<b>You do not have any roles.</b>"
 msgstr "<b>U heeft geen rollen.</b>"
 
@@ -8650,6 +8633,9 @@ msgstr "Bakmiddelen..."
 msgid "Baking successful"
 msgstr "Succesvol bakken"
 
+msgid "Balance short-term spikes"
+msgstr ""
+
 msgid "Balanced boxes"
 msgstr "Uitgebalanceerde dozen"
 
@@ -10709,6 +10695,11 @@ msgstr ""
 msgid "Cannot change rule conditions for rules managed by Quick setup."
 msgstr ""
 
+msgid ""
+"Cannot change the customer of this site because it is in a peer to peer "
+"broker connection."
+msgstr ""
+
 #, python-format
 msgid "Cannot compute perfometer label due to '%s'"
 msgstr ""
@@ -11808,6 +11799,10 @@ msgstr ""
 "hosts, services, CMK Helper, Live Helper, Helper gebruik; Staat van daemons: "
 "Apache, Core, Crontag, DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
 "(Agent plugin mk_inventory moet geïnstalleerd zijn)"
+
+#, fuzzy
+msgid "Checkmk Appliance information"
+msgstr "Checkmk automatisering"
 
 #, fuzzy
 msgid "Checkmk Cloud"
@@ -13666,6 +13661,10 @@ msgid "Configure enforced checks without using service discovery"
 msgstr ""
 "Configureer opgelegde controles zonder gebruik te maken van service discovery"
 
+#, fuzzy
+msgid "Configure fallback email address"
+msgstr "Uitwijkmailadres voor crashmeldingen"
+
 msgid "Configure grouping of interfaces"
 msgstr "Groepering van interfaces configureren"
 
@@ -14689,6 +14688,10 @@ msgstr "Kern gestart"
 
 msgid "Core statistics"
 msgstr "Kernstatistieken"
+
+#, fuzzy
+msgid "Core status of notifications"
+msgstr "Maak een melding"
 
 msgid "Core stopped"
 msgstr "Kern gestopt"
@@ -18714,6 +18717,10 @@ msgstr "Uitgeschakelde secties (Windows agent)"
 msgid "Disabled services"
 msgstr "Diensten voor gehandicapten"
 
+#, fuzzy
+msgid "Disabled via master control"
+msgstr "Controller uitschakelen"
+
 msgid ""
 "Disabling the password will prevent a user from logging in while retaining "
 "the original password. Notifications are not affected by this setting."
@@ -19809,6 +19816,10 @@ msgstr "Niet verzenden naar host op afstand"
 
 msgid "Do not show a summary line"
 msgstr "Geen samenvattingsregel tonen"
+
+#, fuzzy
+msgid "Do not show again"
+msgstr "Titel niet tonen"
 
 msgid "Do not show the service status"
 msgstr "Laat de dienst status niet zien"
@@ -21291,6 +21302,9 @@ msgstr "Lege uitgang van externe locatie."
 msgid "Empty response from web service"
 msgstr "Leeg antwoord van webdienst"
 
+msgid "Empty template for least privilege roles"
+msgstr ""
+
 msgid "Enable"
 msgstr "Activeer"
 
@@ -22040,6 +22054,10 @@ msgstr "Foutenpercentages"
 msgid "Error showing view: %s"
 msgstr "Fout bij het bekijken: %s"
 
+#, fuzzy
+msgid "Error updating broker connections."
+msgstr "Siteverbinding %s bewerken"
+
 #, python-format
 msgid "Error while rendering element type '%s'"
 msgstr "Fout bij het renderen van element type '%s'"
@@ -22075,6 +22093,10 @@ msgstr "Escaleer downtimes op basis van geaggregeerde CRIT status"
 
 msgid "Escalate downtimes based on aggregated WARN state"
 msgstr "Escaleer downtimes gebaseerd op geaggregeerde WARN status"
+
+#, fuzzy
+msgid "Escalations"
+msgstr "Lokalisaties"
 
 msgid "Escape HTML"
 msgstr "HTML ontsnappen"
@@ -25569,12 +25591,6 @@ msgstr "Grafiek is zichtbaar"
 
 msgid "Graph layout"
 msgstr "Grafiek lay-out"
-
-#, fuzzy, python-format
-msgid "Graph recipe '%s' has the error '%s', available are: %s"
-msgstr ""
-"Grafiekrecept '%s' gebruikt ongedefinieerde metriek '%s', beschikbaar zijn: "
-"%s"
 
 msgid "Graph rendering options"
 msgstr "Grafiek rendering opties"
@@ -30916,7 +30932,7 @@ msgstr ""
 #, python-format
 msgid ""
 "If you are looking for a way to test your notification settings, try '%s' in "
-"Setup > Notifications"
+"Setup > Test notifications"
 msgstr ""
 
 msgid ""
@@ -31714,6 +31730,21 @@ msgstr ""
 "specificeren. Alleen overeenkomende namespaces zullen worden gemonitord. "
 "Merk op dat dit alles betreft wat deel uitmaakt van de overeenkomende "
 "namespaces, zoals pods bijvoorbeeld."
+
+#, fuzzy
+msgid ""
+"If your monitoring produces a notification that is not matched by any of "
+"your notification rules, the notification will not be sent out. To prevent "
+"that, we recommend configuring either the global setting or enable the "
+"fallback contact option for at least one of your users."
+msgstr ""
+"<b>Waarschuwing</b><br><br>U hebt geen <a href=\"%s\">terugval-e-mailadres</"
+"a> geconfigureerd en u hebt het ontvangen van terugval-e-mails voor geen "
+"enkele gebruiker ingeschakeld. Als uw bewaking een melding genereert die "
+"niet overeenkomt met een van uw meldingsregels, zal de melding niet worden "
+"verzonden. Om dat te voorkomen, moet u ofwel de globale instelling "
+"configureren of de optie voor fallback contact inschakelen voor ten minste "
+"één van uw gebruikers."
 
 msgid "Ignore"
 msgstr "Negeer"
@@ -32787,6 +32818,10 @@ msgstr ""
 msgid "Information about size, age and count of files"
 msgstr "Informatie over grootte, leeftijd en aantal bestanden"
 
+#, fuzzy
+msgid "Information about the Appliance hardware and firmware version."
+msgstr "Configuratie van het Checkmk-hardware- en software-inventarissysteem"
+
 msgid "Information similar to 'docker system df' output"
 msgstr "Informatie vergelijkbaar met \"docker system df\" uitvoer"
 
@@ -33356,10 +33391,6 @@ msgstr "Ongeldige URL teruggegeven."
 #, python-format
 msgid "Invalid color specification '%s'"
 msgstr "Ongeldige kleurspecificatie '%s'"
-
-#, python-format
-msgid "Invalid combined graph representation '%s'"
-msgstr "Ongeldige gecombineerde grafiekvoorstelling '%s'"
 
 #, fuzzy
 msgid "Invalid configuration bundle group type."
@@ -34832,6 +34863,10 @@ msgstr "Laatste 35 dagen"
 
 msgid "Last 6 months"
 msgstr "Laatste 6 maanden"
+
+#, fuzzy
+msgid "Last 7 days"
+msgstr "Laatste 35 dagen"
 
 msgid "Last Contact"
 msgstr "Laatste contact"
@@ -41634,6 +41669,10 @@ msgstr "Registratie Staat"
 msgid "No explicit credentials"
 msgstr "Geen expliciete geloofsbrieven"
 
+#, fuzzy
+msgid "No fallback email address configured"
+msgstr "(Geen fallback e-mail adres geconfigureerd!)"
+
 msgid ""
 "No fresh discovery information available. Using latest cached information. "
 "Please perform a rescan in case you want to discover the current state."
@@ -42441,6 +42480,10 @@ msgid "Notification configuration"
 msgstr "Kennisgeving configuratie"
 
 #, fuzzy
+msgid "Notification core status"
+msgstr "Kennisgeving Commentaar"
+
+#, fuzzy
 msgid "Notification delivery rate"
 msgstr "Kennisgevingssysteem"
 
@@ -42532,7 +42575,15 @@ msgstr "Meldingen zijn handmatig uitgeschakeld voor deze %s"
 msgid "Notifications are manually enabled for this %s"
 msgstr "Meldingen zijn handmatig ingeschakeld voor deze %s"
 
+#, fuzzy, python-format
+msgid "Notifications disabled on %d of %d %s"
+msgstr "Meldingen zijn uitgeschakeld voor deze %s"
+
 msgid "Notifications enabled"
+msgstr "Meldingen ingeschakeld"
+
+#, fuzzy, python-format
+msgid "Notifications enabled on %d of %d %s"
 msgstr "Meldingen ingeschakeld"
 
 #, fuzzy
@@ -44235,6 +44286,10 @@ msgstr "Optisch Signaalvermogen Lane %d"
 #, fuzzy
 msgid "Optical signal power lane 9"
 msgstr "Optisch Signaalvermogen Lane %d"
+
+#, fuzzy
+msgid "Optimize notifications"
+msgstr "Mislukte kennisgevingen"
 
 msgid "Optimize rule execution"
 msgstr "Regeluitvoering optimaliseren"
@@ -51570,6 +51625,10 @@ msgstr ""
 "Beperk het ophalen van monitors op tags (API veld <tt>tags</tt>). Monitors "
 "moeten alle geconfigureerde tags hebben om opgehaald te kunnen worden."
 
+#, fuzzy
+msgid "Restrict generation of notifications"
+msgstr "Beperken tot kennisgevingsnummer"
+
 msgid "Restrict interface items"
 msgstr "Interface-items beperken"
 
@@ -56162,6 +56221,10 @@ msgstr "Plaats ID"
 msgid "Site ID mismatch. Our ID is '%s', but you are saying we are '%s'."
 msgstr "Site ID mismatch. Onze ID is '%s', maar u zegt dat we '%s' zijn."
 
+#, fuzzy
+msgid "Site ID must be set"
+msgstr "De waarde moet een string zijn"
+
 msgid "Site alias"
 msgstr "Site alias"
 
@@ -59289,6 +59352,10 @@ msgstr "Steun"
 msgid "Support diagnostics"
 msgstr "Ondersteunende diagnostiek"
 
+#, fuzzy
+msgid "Supporting rules"
+msgstr "Horizontale regels"
+
 msgid "Suppress not available sensors"
 msgstr "Niet beschikbare sensoren onderdrukken"
 
@@ -60282,6 +60349,10 @@ msgstr "Verificatie van het rijbewijs"
 
 msgid "Testing"
 msgstr "Test"
+
+#, fuzzy
+msgid "Testing notifications"
+msgstr "laatste mededeling"
 
 #, fuzzy
 msgid "Tests"
@@ -69902,6 +69973,10 @@ msgstr ""
 msgid "Time consumed by rule engine"
 msgstr "Bovenste niveaus voor het gebruik van de licentie"
 
+#, fuzzy
+msgid "Time dependencies"
+msgstr "Tijdsverschil"
+
 msgid "Time difference"
 msgstr "Tijdsverschil"
 
@@ -73123,6 +73198,10 @@ msgstr "Totaal draaiende On-Demand Instances"
 msgid "Total running on-demand z1d.xlarge instances"
 msgstr "Totaal draaiende On-Demand Instances"
 
+#, fuzzy
+msgid "Total sent notifications"
+msgstr "laatste mededeling"
+
 msgid "Total service problems"
 msgstr "Totaal service problemen"
 
@@ -74235,6 +74314,10 @@ msgstr "Onbekende paden"
 msgid "Unknown rendering mode %s"
 msgstr "Onbekend metriek type %s"
 
+#, fuzzy, python-format
+msgid "Unknown rule with ID %s"
+msgstr "Onbekende site %s"
+
 #, fuzzy
 msgid "Unknown service"
 msgstr "Onbekende gebruiker"
@@ -74444,6 +74527,10 @@ msgstr "Transformatie bijwerken"
 
 msgid "Updated attributes: "
 msgstr "Bijgewerkte attributen: "
+
+#, fuzzy, python-format
+msgid "Updated broker connection for site %s"
+msgstr "Nieuwe verbinding gemaakt met site %s"
 
 #, python-format
 msgid "Updated discovered host labels of '%s' with %d labels"
@@ -77670,6 +77757,10 @@ msgstr "De regels en aggregaties in dit BI-pakket bekijken en bewerken"
 #, fuzzy
 msgid "View extension package manager"
 msgstr "Bekijk uitbreiding pakketbeheer"
+
+#, fuzzy
+msgid "View failed notifications"
+msgstr "Toon mislukte meldingen"
 
 msgid "View layout"
 msgstr "Bekijk lay-out"
@@ -81472,6 +81563,12 @@ msgstr ""
 "toegewezen. U kunt de <a href=\"%s\">host zoeken</a> gebruiken om een lijst "
 "van de hosts te krijgen."
 
+#, fuzzy
+msgid ""
+"You cannot delete this connection. It is used in a broker peer to peer "
+"connection."
+msgstr "U kunt de verbinding met de lokale site niet verwijderen."
+
 #, python-format
 msgid "You cannot delete this pack. It contains <b>%d</b> rules."
 msgstr "U kunt dit pakket niet verwijderen. Het bevat <b>%d</b> regels."
@@ -81496,6 +81593,11 @@ msgstr "U kunt deze periode niet wissen."
 
 msgid "You cannot delete your own account!"
 msgstr "Je kunt je eigen account niet verwijderen!"
+
+msgid ""
+"You cannot disable the replication on this site. It is used in a broker peer "
+"to peer connection."
+msgstr ""
 
 msgid "You cannot do replication with the local site."
 msgstr "U kunt geen replicatie doen met de lokale site."
@@ -84210,6 +84312,12 @@ msgstr "laat alleen problemen zien"
 msgid "signing"
 msgstr "ondertekening"
 
+#, fuzzy
+msgid "site"
+msgid_plural "sites"
+msgstr[0] "website"
+msgstr[1] "website"
+
 msgid "slots"
 msgstr "slots"
 
@@ -84559,6 +84667,16 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#, fuzzy, python-format
+#~ msgid "Graph recipe '%s' has the error '%s', available are: %s"
+#~ msgstr ""
+#~ "Grafiekrecept '%s' gebruikt ongedefinieerde metriek '%s', beschikbaar "
+#~ "zijn: %s"
+
+#, python-format
+#~ msgid "Invalid combined graph representation '%s'"
+#~ msgstr "Ongeldige gecombineerde grafiekvoorstelling '%s'"
 
 #~ msgid "Debugging (log every single action)"
 #~ msgstr "Debugging (log elke actie)"

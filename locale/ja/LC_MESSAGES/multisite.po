@@ -1304,21 +1304,6 @@ msgstr ""
 msgid "<b>Warning:</b> There are %d unacknowledged incompatible werks:"
 msgstr "<b>警告:</b>%dの未確認の互換性のないwerksがあります:"
 
-#, python-format
-msgid ""
-"<b>Warning</b><br><br>You haven't configured a <a href=\"%s\">fallback email "
-"address</a> nor enabled receiving fallback emails for any user. If your "
-"monitoring produces a notification that is not matched by any of your "
-"notification rules, the notification will not be sent out. To prevent that, "
-"please configure either the global setting or enable the fallback contact "
-"option for at least one of your users."
-msgstr ""
-"<b>警告</b><br><br><a href=\"%s\">フォールバックメールアドレス</a>を設定して"
-"おらず、どのユーザーに対してもフォールバックメールの受信を有効にしていませ"
-"ん。監視によって通知ルールのいずれにも一致しない通知が生成された場合、通知は"
-"送信されません。これを防ぐには、グローバル設定を構成するか、少なくとも1人の"
-"ユーザーに対してフォールバック連絡先オプションを有効にしてください。"
-
 msgid "<b>You do not have any roles.</b>"
 msgstr "<b>あなたには役割がありません。</b>"
 
@@ -8282,6 +8267,9 @@ msgstr "ベーキングエージェント..."
 msgid "Baking successful"
 msgstr "成功したベーキング"
 
+msgid "Balance short-term spikes"
+msgstr ""
+
 msgid "Balanced boxes"
 msgstr "バランスボックス"
 
@@ -10256,6 +10244,11 @@ msgstr ""
 msgid "Cannot change rule conditions for rules managed by Quick setup."
 msgstr ""
 
+msgid ""
+"Cannot change the customer of this site because it is in a peer to peer "
+"broker connection."
+msgstr ""
+
 #, python-format
 msgid "Cannot compute perfometer label due to '%s'"
 msgstr ""
@@ -11302,6 +11295,10 @@ msgstr ""
 "ホスト数, サービス数, CMKヘルパー, Liveヘルパー, ヘルパー使用率; デーモンの状"
 "態: Apache, Core, Crontag, DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
 "(エージェントプラグインmk_inventoryをインストールする必要があります)"
+
+#, fuzzy
+msgid "Checkmk Appliance information"
+msgstr "Checkmkの自動化"
 
 #, fuzzy
 msgid "Checkmk Cloud"
@@ -13062,6 +13059,10 @@ msgstr "単一インターフェースの検出を構成します"
 msgid "Configure enforced checks without using service discovery"
 msgstr "サービスディスカバリを使用せずに強制チェックを構成する"
 
+#, fuzzy
+msgid "Configure fallback email address"
+msgstr "クラッシュレポートのフォールバックメールアドレス"
+
 msgid "Configure grouping of interfaces"
 msgstr "インターフェイスのグループ化を構成します"
 
@@ -14009,6 +14010,10 @@ msgstr "コアが始まりました"
 
 msgid "Core statistics"
 msgstr "コア統計"
+
+#, fuzzy
+msgid "Core status of notifications"
+msgstr "通知を作成する"
 
 msgid "Core stopped"
 msgstr "コアが停止しました"
@@ -17855,6 +17860,10 @@ msgstr "無効なセクション(Windowsエージェント)"
 msgid "Disabled services"
 msgstr "無効なサービス"
 
+#, fuzzy
+msgid "Disabled via master control"
+msgstr "コントローラ無効化"
+
 msgid ""
 "Disabling the password will prevent a user from logging in while retaining "
 "the original password. Notifications are not affected by this setting."
@@ -18855,6 +18864,10 @@ msgstr "リモートホストに送信しないでください"
 
 msgid "Do not show a summary line"
 msgstr "要約行を表示しない"
+
+#, fuzzy
+msgid "Do not show again"
+msgstr "タイトルを表示しない"
 
 msgid "Do not show the service status"
 msgstr "サービスステータスを表示しない"
@@ -20324,6 +20337,9 @@ msgstr "リモートサイトからの空の出力。"
 msgid "Empty response from web service"
 msgstr "Webサービスからの空の応答"
 
+msgid "Empty template for least privilege roles"
+msgstr ""
+
 msgid "Enable"
 msgstr "有効にする"
 
@@ -21042,6 +21058,10 @@ msgstr "エラーレート"
 msgid "Error showing view: %s"
 msgstr "ビューの表示中にエラーが発生しました: %s"
 
+#, fuzzy
+msgid "Error updating broker connections."
+msgstr "サイト接続 %sを編集する"
+
 #, python-format
 msgid "Error while rendering element type '%s'"
 msgstr "要素タイプ '%s'のレンダリング中にエラーが発生しました"
@@ -21075,6 +21095,10 @@ msgstr "集約されたCRIT状態に基づいてダウンタイムをエスカ�
 
 msgid "Escalate downtimes based on aggregated WARN state"
 msgstr "集約されたWARN状態に基づいてダウンタイムをエスカレーションします"
+
+#, fuzzy
+msgid "Escalations"
+msgstr "ローカリゼーション"
 
 msgid "Escape HTML"
 msgstr "HTMLをエスケープする"
@@ -24524,11 +24548,6 @@ msgstr "グラフが表示されます"
 
 msgid "Graph layout"
 msgstr "グラフレイアウト"
-
-#, fuzzy, python-format
-msgid "Graph recipe '%s' has the error '%s', available are: %s"
-msgstr ""
-"グラフ・レシピ '%s' は未定義のメトリック '%s' を使用ししています。利用可能:%s"
 
 msgid "Graph rendering options"
 msgstr "グラフレンダリングオプション"
@@ -29785,10 +29804,10 @@ msgstr ""
 "プロセスの現在の数とそれらのさまざまな状態の詳細な統計を含む1つの新しいサービ"
 "スがあります。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "If you are looking for a way to test your notification settings, try '%s' in "
-"Setup > Notifications"
+"Setup > Test notifications"
 msgstr ""
 "通知設定をテストする方法をお探しの場合は、セットアップ ＞通知 で'%s'をお試し"
 "ください"
@@ -30548,6 +30567,19 @@ msgstr ""
 "クラスタに複数のネームスペースがある場合は、正規表現パターンのリストを指定で"
 "きます。一致するネームスペースのみが監視されます。これは、たとえばPodなど、一"
 "致する名前空間の一部であるすべてに関係することに注意してください。"
+
+#, fuzzy
+msgid ""
+"If your monitoring produces a notification that is not matched by any of "
+"your notification rules, the notification will not be sent out. To prevent "
+"that, we recommend configuring either the global setting or enable the "
+"fallback contact option for at least one of your users."
+msgstr ""
+"<b>警告</b><br><br><a href=\"%s\">フォールバックメールアドレス</a>を設定して"
+"おらず、どのユーザーに対してもフォールバックメールの受信を有効にしていませ"
+"ん。監視によって通知ルールのいずれにも一致しない通知が生成された場合、通知は"
+"送信されません。これを防ぐには、グローバル設定を構成するか、少なくとも1人の"
+"ユーザーに対してフォールバック連絡先オプションを有効にしてください。"
 
 msgid "Ignore"
 msgstr "無視する"
@@ -31616,6 +31648,10 @@ msgstr "最近24時間のイベントおよびイベントに対するアクシ�
 msgid "Information about size, age and count of files"
 msgstr "ファイルのサイズ、経過時間、数に関する情報"
 
+#, fuzzy
+msgid "Information about the Appliance hardware and firmware version."
+msgstr "Checkmkハードウェアおよびソフトウェアインベントリシステムの構成"
+
 msgid "Information similar to 'docker system df' output"
 msgstr "docker system df'出力に類似した情報"
 
@@ -32177,10 +32213,6 @@ msgstr "不正なコード"
 #, python-format
 msgid "Invalid color specification '%s'"
 msgstr "無効な色指定 '%s'"
-
-#, python-format
-msgid "Invalid combined graph representation '%s'"
-msgstr "無効な結合グラフ表現 '%s'"
 
 #, fuzzy
 msgid "Invalid configuration bundle group type."
@@ -33626,6 +33658,10 @@ msgstr "過去35日間"
 
 msgid "Last 6 months"
 msgstr "過去6か月"
+
+#, fuzzy
+msgid "Last 7 days"
+msgstr "過去35日間"
 
 msgid "Last Contact"
 msgstr "最後の連絡先"
@@ -40343,6 +40379,10 @@ msgstr "登録状態"
 msgid "No explicit credentials"
 msgstr "明示的な資格情報はありません"
 
+#, fuzzy
+msgid "No fallback email address configured"
+msgstr "(フォールバックメールアドレスは設定されていません!)"
+
 msgid ""
 "No fresh discovery information available. Using latest cached information. "
 "Please perform a rescan in case you want to discover the current state."
@@ -41134,6 +41174,10 @@ msgid "Notification configuration"
 msgstr "通知設定"
 
 #, fuzzy
+msgid "Notification core status"
+msgstr "通知コメント"
+
+#, fuzzy
 msgid "Notification delivery rate"
 msgstr "通知システム"
 
@@ -41222,7 +41266,15 @@ msgstr "この%sの通知は手動で無効にされます"
 msgid "Notifications are manually enabled for this %s"
 msgstr "この %s の通知は手動で有効になります"
 
+#, fuzzy, python-format
+msgid "Notifications disabled on %d of %d %s"
+msgstr "この %s の通知は無効になっています"
+
 msgid "Notifications enabled"
+msgstr "通知を有効化"
+
+#, fuzzy, python-format
+msgid "Notifications enabled on %d of %d %s"
 msgstr "通知を有効化"
 
 msgid "Notifications have been sent. "
@@ -42893,6 +42945,10 @@ msgstr "光信号パワーレーン%d"
 #, fuzzy
 msgid "Optical signal power lane 9"
 msgstr "光信号パワーレーン%d"
+
+#, fuzzy
+msgid "Optimize notifications"
+msgstr "失敗した通知"
 
 msgid "Optimize rule execution"
 msgstr "ルールの実行を最適化する"
@@ -50155,6 +50211,10 @@ msgstr ""
 "取得する監視をタグで制限します(APIフィールド <tt>tags</tt>)。監視をフェッチす"
 "るには、設定されたタグをすべて持っている必要があります。"
 
+#, fuzzy
+msgid "Restrict generation of notifications"
+msgstr "通知番号に制限する"
+
 msgid "Restrict interface items"
 msgstr "インターフェイスアイテムを制限する"
 
@@ -54691,6 +54751,10 @@ msgstr ""
 "サイトIDの不一致。私たちのIDは '%s'ですが、あなたは私たちが '%s'であると言っ"
 "ています。"
 
+#, fuzzy
+msgid "Site ID must be set"
+msgstr "値は文字列であること"
+
 msgid "Site alias"
 msgstr "サイトエイリアス"
 
@@ -57755,6 +57819,10 @@ msgstr "サポート"
 msgid "Support diagnostics"
 msgstr "診断をサポートする"
 
+#, fuzzy
+msgid "Supporting rules"
+msgstr "水平方向のルール"
+
 msgid "Suppress not available sensors"
 msgstr "利用できないセンサーを抑制する"
 
@@ -58724,6 +58792,10 @@ msgstr "テスト検証"
 
 msgid "Testing"
 msgstr "テスト"
+
+#, fuzzy
+msgid "Testing notifications"
+msgstr "最終通知"
 
 #, fuzzy
 msgid "Tests"
@@ -67957,6 +68029,10 @@ msgstr "プライマリのoplogと上記のセカンダリの最後の操作の�
 msgid "Time consumed by rule engine"
 msgstr "ルールエンジンが消費する時間"
 
+#, fuzzy
+msgid "Time dependencies"
+msgstr "時差"
+
 msgid "Time difference"
 msgstr "時差"
 
@@ -71164,6 +71240,10 @@ msgstr "実行中のオンデマンドインスタンスの合計"
 msgid "Total running on-demand z1d.xlarge instances"
 msgstr "実行中のオンデマンドインスタンスの合計"
 
+#, fuzzy
+msgid "Total sent notifications"
+msgstr "最終通知"
+
 msgid "Total service problems"
 msgstr "サービス問題の合計"
 
@@ -72266,6 +72346,10 @@ msgstr "不明なパス"
 msgid "Unknown rendering mode %s"
 msgstr "不明なメトリックのタイプ %s"
 
+#, fuzzy, python-format
+msgid "Unknown rule with ID %s"
+msgstr "不明なサイト%s"
+
 #, fuzzy
 msgid "Unknown service"
 msgstr "不明なユーザー"
@@ -72470,6 +72554,10 @@ msgstr "変換を更新"
 
 msgid "Updated attributes: "
 msgstr "更新された属性: "
+
+#, fuzzy, python-format
+msgid "Updated broker connection for site %s"
+msgstr "サイト%sへの新しい接続を作成しました"
 
 #, python-format
 msgid "Updated discovered host labels of '%s' with %d labels"
@@ -75629,6 +75717,10 @@ msgstr "このBIパックのルールと集計を表示および編集する"
 #, fuzzy
 msgid "View extension package manager"
 msgstr "拡張パッケージマネージャを見る"
+
+#, fuzzy
+msgid "View failed notifications"
+msgstr "失敗した通知を表示する"
 
 msgid "View layout"
 msgstr "レイアウトを表示"
@@ -79260,6 +79352,12 @@ msgstr ""
 "この接続は削除できません。フォルダ/ホストが割り当てられています。<a href=\"%s"
 "\">ホスト検索</a>を使用して、ホストのリストを取得できます。"
 
+#, fuzzy
+msgid ""
+"You cannot delete this connection. It is used in a broker peer to peer "
+"connection."
+msgstr "ローカルサイトへの接続を削除することはできません。"
+
 #, python-format
 msgid "You cannot delete this pack. It contains <b>%d</b> rules."
 msgstr "このパックは削除できません。<b>%d</b>ルールが含まれています。"
@@ -79278,6 +79376,11 @@ msgstr "この期間は削除できません。"
 
 msgid "You cannot delete your own account!"
 msgstr "自分のアカウントを削除することはできません！"
+
+msgid ""
+"You cannot disable the replication on this site. It is used in a broker peer "
+"to peer connection."
+msgstr ""
 
 msgid "You cannot do replication with the local site."
 msgstr "ローカルサイトでレプリケーションを行うことはできません。"
@@ -81975,6 +82078,11 @@ msgstr "問題のみを表示"
 msgid "signing"
 msgstr "署名"
 
+#, fuzzy
+msgid "site"
+msgid_plural "sites"
+msgstr[0] "ウェブサイト"
+
 msgid "slots"
 msgstr "スロット"
 
@@ -82323,6 +82431,16 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#, fuzzy, python-format
+#~ msgid "Graph recipe '%s' has the error '%s', available are: %s"
+#~ msgstr ""
+#~ "グラフ・レシピ '%s' は未定義のメトリック '%s' を使用ししています。利用可"
+#~ "能:%s"
+
+#, python-format
+#~ msgid "Invalid combined graph representation '%s'"
+#~ msgstr "無効な結合グラフ表現 '%s'"
 
 #~ msgid "Debugging (log every single action)"
 #~ msgstr "デバッグ(すべてのアクションをログに記録する)"

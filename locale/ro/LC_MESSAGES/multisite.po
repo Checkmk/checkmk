@@ -1336,23 +1336,6 @@ msgstr ""
 msgid "<b>Warning:</b> There are %d unacknowledged incompatible werks:"
 msgstr "<b>Avertisment:</b> Există %d lucrări incompatibile nerecunoscute:"
 
-#, python-format
-msgid ""
-"<b>Warning</b><br><br>You haven't configured a <a href=\"%s\">fallback email "
-"address</a> nor enabled receiving fallback emails for any user. If your "
-"monitoring produces a notification that is not matched by any of your "
-"notification rules, the notification will not be sent out. To prevent that, "
-"please configure either the global setting or enable the fallback contact "
-"option for at least one of your users."
-msgstr ""
-"<b>Avertisment</b><br><br>Nu ați configurat o <a href=\"%s\">>adresă de e-"
-"mail de rezervă</a> și nici nu ați activat primirea de e-mailuri de rezervă "
-"pentru niciun utilizator. Dacă monitorizarea dvs. produce o notificare care "
-"nu se potrivește cu niciuna dintre regulile de notificare, notificarea nu va "
-"fi trimisă. Pentru a preveni acest lucru, vă rugăm să configurați fie "
-"setarea globală, fie să activați opțiunea de contact de rezervă pentru cel "
-"puțin unul dintre utilizatorii dvs."
-
 msgid "<b>You do not have any roles.</b>"
 msgstr "<b>Nu aveți niciun rol.</b>"
 
@@ -8644,6 +8627,9 @@ msgstr "Agenți de coacere..."
 msgid "Baking successful"
 msgstr "Coacerea cu succes"
 
+msgid "Balance short-term spikes"
+msgstr ""
+
 msgid "Balanced boxes"
 msgstr "Cutii echilibrate"
 
@@ -10737,6 +10723,11 @@ msgstr ""
 msgid "Cannot change rule conditions for rules managed by Quick setup."
 msgstr ""
 
+msgid ""
+"Cannot change the customer of this site because it is in a peer to peer "
+"broker connection."
+msgstr ""
+
 #, python-format
 msgid "Cannot compute perfometer label due to '%s'"
 msgstr ""
@@ -11820,6 +11811,10 @@ msgstr ""
 "numărul de gazde, servicii, CMK Helper, Live Helper, utilizarea Helper; "
 "starea demonilor: Apache, Core, Crontag, DCD, Liveproxyd, MKEventd, "
 "MKNotifyd, RRDCached (trebuie instalat pluginul agentului mk_inventory)"
+
+#, fuzzy
+msgid "Checkmk Appliance information"
+msgstr "Automatizare Checkmk"
 
 #, fuzzy
 msgid "Checkmk Cloud"
@@ -13677,6 +13672,10 @@ msgid "Configure enforced checks without using service discovery"
 msgstr ""
 "Configurați verificările impuse fără a utiliza descoperirea serviciilor"
 
+#, fuzzy
+msgid "Configure fallback email address"
+msgstr "Adresa de e-mail de rezervă a raportului de accident"
+
 msgid "Configure grouping of interfaces"
 msgstr "Configurați gruparea interfețelor"
 
@@ -14687,6 +14686,10 @@ msgstr "Nucleu început"
 
 msgid "Core statistics"
 msgstr "Statistici de bază"
+
+#, fuzzy
+msgid "Core status of notifications"
+msgstr "Creați o notificare"
 
 msgid "Core stopped"
 msgstr "Miezul oprit"
@@ -18729,6 +18732,10 @@ msgstr "Secțiuni dezactivate (agent Windows)"
 msgid "Disabled services"
 msgstr "Servicii pentru persoane cu handicap"
 
+#, fuzzy
+msgid "Disabled via master control"
+msgstr "Dezactivați controlerul"
+
 msgid ""
 "Disabling the password will prevent a user from logging in while retaining "
 "the original password. Notifications are not affected by this setting."
@@ -19843,6 +19850,10 @@ msgstr "Nu trimiteți la gazda de la distanță"
 
 msgid "Do not show a summary line"
 msgstr "Nu afișați o linie de rezumat"
+
+#, fuzzy
+msgid "Do not show again"
+msgstr "Nu afișați titlul"
 
 msgid "Do not show the service status"
 msgstr "Nu afișați starea serviciului"
@@ -21326,6 +21337,9 @@ msgstr "Ieșire goală de la distanță."
 msgid "Empty response from web service"
 msgstr "Răspuns gol de la serviciul web"
 
+msgid "Empty template for least privilege roles"
+msgstr ""
+
 msgid "Enable"
 msgstr "Activați"
 
@@ -22077,6 +22091,10 @@ msgstr "Ratele de eroare"
 msgid "Error showing view: %s"
 msgstr "Eroare de afișare a vizualizării: %s."
 
+#, fuzzy
+msgid "Error updating broker connections."
+msgstr "Editați conexiunea site-ului %s"
+
 #, python-format
 msgid "Error while rendering element type '%s'"
 msgstr "Eroare la redarea elementului de tip '%s'"
@@ -22112,6 +22130,10 @@ msgstr "Escaladarea timpilor de oprire pe baza stării CRIT agregate"
 
 msgid "Escalate downtimes based on aggregated WARN state"
 msgstr "Escaladarea timpilor de oprire pe baza stării WARN agregate"
+
+#, fuzzy
+msgid "Escalations"
+msgstr "Localizări"
 
 msgid "Escape HTML"
 msgstr "Escape HTML"
@@ -25598,11 +25620,6 @@ msgstr "Graficul este vizibil"
 
 msgid "Graph layout"
 msgstr "Dispunerea graficului"
-
-#, fuzzy, python-format
-msgid "Graph recipe '%s' has the error '%s', available are: %s"
-msgstr ""
-"Rețeta grafică '%s' utilizează metrica nedefinită '%s', disponibile sunt: %s."
 
 msgid "Graph rendering options"
 msgstr "Opțiuni de redare grafică"
@@ -30938,10 +30955,10 @@ msgstr ""
 "detectată, va exista un serviciu nou cu statistici detaliate privind numărul "
 "actual de clienți și procese și diferitele lor stări."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "If you are looking for a way to test your notification settings, try '%s' in "
-"Setup > Notifications"
+"Setup > Test notifications"
 msgstr ""
 "Dacă sunteți în căutarea unei modalități de a testa setările de notificare, "
 "încercați '%s' în Configurare > Notificări."
@@ -31756,6 +31773,21 @@ msgstr ""
 "de nume corespunzătoare. Rețineți că acest lucru se referă la tot ceea ce "
 "face parte din spațiile de nume corespunzătoare, cum ar fi, de exemplu, "
 "podurile."
+
+#, fuzzy
+msgid ""
+"If your monitoring produces a notification that is not matched by any of "
+"your notification rules, the notification will not be sent out. To prevent "
+"that, we recommend configuring either the global setting or enable the "
+"fallback contact option for at least one of your users."
+msgstr ""
+"<b>Avertisment</b><br><br>Nu ați configurat o <a href=\"%s\">>adresă de e-"
+"mail de rezervă</a> și nici nu ați activat primirea de e-mailuri de rezervă "
+"pentru niciun utilizator. Dacă monitorizarea dvs. produce o notificare care "
+"nu se potrivește cu niciuna dintre regulile de notificare, notificarea nu va "
+"fi trimisă. Pentru a preveni acest lucru, vă rugăm să configurați fie "
+"setarea globală, fie să activați opțiunea de contact de rezervă pentru cel "
+"puțin unul dintre utilizatorii dvs."
 
 msgid "Ignore"
 msgstr "Ignoră"
@@ -32853,6 +32885,10 @@ msgstr ""
 msgid "Information about size, age and count of files"
 msgstr "Informații despre dimensiunea, vechimea și numărul de fișiere"
 
+#, fuzzy
+msgid "Information about the Appliance hardware and firmware version."
+msgstr "Configurarea sistemului de inventariere hardware și software Checkmk"
+
 msgid "Information similar to 'docker system df' output"
 msgstr "Informații similare cu 'docker system df' ieșire"
 
@@ -33426,10 +33462,6 @@ msgstr "URL-ul de întoarcere furnizat nu este valid."
 #, python-format
 msgid "Invalid color specification '%s'"
 msgstr "Specificație de culoare invalidă '%s'"
-
-#, python-format
-msgid "Invalid combined graph representation '%s'"
-msgstr "Reprezentare nevalabilă a graficului combinat '%s'"
 
 #, fuzzy
 msgid "Invalid configuration bundle group type."
@@ -34899,6 +34931,10 @@ msgstr "Ultimele 35 de zile"
 
 msgid "Last 6 months"
 msgstr "Ultimele 6 luni"
+
+#, fuzzy
+msgid "Last 7 days"
+msgstr "Ultimele 35 de zile"
 
 msgid "Last Contact"
 msgstr "Ultimul contact"
@@ -41689,6 +41725,10 @@ msgstr "Fără dată de expirare"
 msgid "No explicit credentials"
 msgstr "Fără acreditări explicite"
 
+#, fuzzy
+msgid "No fallback email address configured"
+msgstr "(Nu este configurată nicio adresă de e-mail de rezervă!)"
+
 msgid ""
 "No fresh discovery information available. Using latest cached information. "
 "Please perform a rescan in case you want to discover the current state."
@@ -42494,6 +42534,10 @@ msgid "Notification configuration"
 msgstr "Configurația notificărilor"
 
 #, fuzzy
+msgid "Notification core status"
+msgstr "Notificare Observație"
+
+#, fuzzy
 msgid "Notification delivery rate"
 msgstr "Sistem de notificare"
 
@@ -42585,7 +42629,15 @@ msgstr "Notificările sunt dezactivate manual pentru acest %s."
 msgid "Notifications are manually enabled for this %s"
 msgstr "Notificările sunt activate manual pentru acest %s."
 
+#, fuzzy, python-format
+msgid "Notifications disabled on %d of %d %s"
+msgstr "Notificările sunt dezactivate pentru acest %s"
+
 msgid "Notifications enabled"
+msgstr "Notificări activate"
+
+#, fuzzy, python-format
+msgid "Notifications enabled on %d of %d %s"
 msgstr "Notificări activate"
 
 msgid "Notifications have been sent. "
@@ -44286,6 +44338,10 @@ msgstr "Linia de putere a semnalului optic %d"
 #, fuzzy
 msgid "Optical signal power lane 9"
 msgstr "Linia de putere a semnalului optic %d"
+
+#, fuzzy
+msgid "Optimize notifications"
+msgstr "Notificări eșuate"
 
 msgid "Optimize rule execution"
 msgstr "Optimizarea executării regulilor"
@@ -51617,6 +51673,10 @@ msgstr ""
 "<tt>tags</tt>). Monitoarele trebuie să aibă toate etichetele configurate "
 "pentru a putea fi preluate."
 
+#, fuzzy
+msgid "Restrict generation of notifications"
+msgstr "Restricție la numărul de notificare"
+
 msgid "Restrict interface items"
 msgstr "Restrângerea elementelor de interfață"
 
@@ -56270,6 +56330,10 @@ msgstr ""
 "Necorespundere între ID-ul site-ului. ID-ul nostru este '%s', dar "
 "dumneavoastră spuneți că suntem '%s'."
 
+#, fuzzy
+msgid "Site ID must be set"
+msgstr "Valoarea trebuie să fie un șir de caractere"
+
 msgid "Site alias"
 msgstr "Aliasul site-ului"
 
@@ -59429,6 +59493,10 @@ msgstr "Suport"
 msgid "Support diagnostics"
 msgstr "Diagnosticarea suportului"
 
+#, fuzzy
+msgid "Supporting rules"
+msgstr "Reguli orizontale"
+
 msgid "Suppress not available sensors"
 msgstr "Suprimarea senzorilor care nu sunt disponibili"
 
@@ -60406,6 +60474,10 @@ msgstr "Verificarea testelor"
 
 msgid "Testing"
 msgstr "Testare"
+
+#, fuzzy
+msgid "Testing notifications"
+msgstr "Notificări de testare"
 
 #, fuzzy
 msgid "Tests"
@@ -70123,6 +70195,10 @@ msgstr ""
 msgid "Time consumed by rule engine"
 msgstr "Timp consumat de motorul de reguli"
 
+#, fuzzy
+msgid "Time dependencies"
+msgstr "Diferența de timp"
+
 msgid "Time difference"
 msgstr "Diferența de timp"
 
@@ -73277,6 +73353,10 @@ msgstr "Totalul instanțelor z1d.metal On-Demand care rulează la cerere"
 msgid "Total running on-demand z1d.xlarge instances"
 msgstr "Total instanțe On-Demand z1d.xlarge care rulează la cerere"
 
+#, fuzzy
+msgid "Total sent notifications"
+msgstr "Notificări de testare"
+
 msgid "Total service problems"
 msgstr "Total probleme de serviciu"
 
@@ -74386,6 +74466,10 @@ msgstr "Trasee necunoscute"
 msgid "Unknown rendering mode %s"
 msgstr "Mod de redare necunoscut %s"
 
+#, fuzzy, python-format
+msgid "Unknown rule with ID %s"
+msgstr "Site necunoscut %s"
+
 msgid "Unknown service"
 msgstr "Serviciu necunoscut"
 
@@ -74589,6 +74673,10 @@ msgstr "Actualizarea transformării"
 
 msgid "Updated attributes: "
 msgstr "Atribute actualizate: "
+
+#, fuzzy, python-format
+msgid "Updated broker connection for site %s"
+msgstr "A fost creată o nouă conexiune la site %s"
 
 #, python-format
 msgid "Updated discovered host labels of '%s' with %d labels"
@@ -77829,6 +77917,10 @@ msgstr "Vizualizați și editați regulile și agregările din acest pachet BI"
 
 msgid "View extension package manager"
 msgstr "Vizualizați managerul de pachete de extensii"
+
+#, fuzzy
+msgid "View failed notifications"
+msgstr "Afișați notificările eșuate"
 
 msgid "View layout"
 msgstr "Vizualizați aspectul"
@@ -81618,6 +81710,12 @@ msgstr ""
 "Puteți utiliza <a href=\"%s\">căutare gazdă</a> pentru a obține o listă cu "
 "gazdele."
 
+#, fuzzy
+msgid ""
+"You cannot delete this connection. It is used in a broker peer to peer "
+"connection."
+msgstr "Nu puteți șterge conexiunea cu site-ul local."
+
 #, python-format
 msgid "You cannot delete this pack. It contains <b>%d</b> rules."
 msgstr "Nu puteți șterge acest pachet. Acesta conține <b>%d</b> reguli."
@@ -81638,6 +81736,11 @@ msgstr "Nu puteți șterge această perioadă de timp."
 
 msgid "You cannot delete your own account!"
 msgstr "Nu vă puteți șterge propriul cont!"
+
+msgid ""
+"You cannot disable the replication on this site. It is used in a broker peer "
+"to peer connection."
+msgstr ""
 
 msgid "You cannot do replication with the local site."
 msgstr "Nu puteți face replicare cu site-ul local."
@@ -84360,6 +84463,13 @@ msgstr "afiseaza numai probleme"
 msgid "signing"
 msgstr "semnarea"
 
+#, fuzzy
+msgid "site"
+msgid_plural "sites"
+msgstr[0] "site"
+msgstr[1] "site"
+msgstr[2] "site"
+
 msgid "slots"
 msgstr "slot-uri"
 
@@ -84706,6 +84816,16 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#, fuzzy, python-format
+#~ msgid "Graph recipe '%s' has the error '%s', available are: %s"
+#~ msgstr ""
+#~ "Rețeta grafică '%s' utilizează metrica nedefinită '%s', disponibile sunt: "
+#~ "%s."
+
+#, python-format
+#~ msgid "Invalid combined graph representation '%s'"
+#~ msgstr "Reprezentare nevalabilă a graficului combinat '%s'"
 
 #~ msgid "Debugging (log every single action)"
 #~ msgstr "Depanare (înregistrați fiecare acțiune)"

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 PIDFILE="${OMD_ROOT}/tmp/run/rabbitmq.pid"
-RABBITMQ_NODENAME="rabbit-###SITE###"
+RABBITMQ_NODENAME="rabbit-###SITE###@localhost"
 RABBITMQ_LOG_BASE="${OMD_ROOT}/var/log/rabbitmq"
 RABBITMQ_MNESIA_BASE="${OMD_ROOT}/var/rabbitmq/mnesia"
 RABBITMQ_CONFIG_FILES="${OMD_ROOT}/etc/rabbitmq/conf.d"
@@ -13,6 +13,7 @@ RABBITMQ_ENABLED_PLUGINS_FILE="${OMD_ROOT}/etc/rabbitmq/enabled_plugins"
 RABBITMQ_DIST_PORT="${CONFIG_RABBITMQ_DIST_PORT:?}"
 BROKER_CERTIFICATES=$OMD_ROOT/bin/message-broker-certs
 EXECUTE="${OMD_ROOT}/lib/rabbitmq/sbin/rabbitmq-server"
+ERL_EPMD_ADDRESS="::1"
 
 getpid() {
     cat "${PIDFILE}" 2>/dev/null
@@ -83,6 +84,7 @@ case "$1" in
             RABBITMQ_PID_FILE="${PIDFILE}" \
             RABBITMQ_MNESIA_BASE="${RABBITMQ_MNESIA_BASE}" \
             RABBITMQ_DIST_PORT="${RABBITMQ_DIST_PORT}" \
+            ERL_EPMD_ADDRESS="${ERL_EPMD_ADDRESS}" \
             flock "${PIDFILE}" --command "${EXECUTE}"
         rm --force "${PIDFILE}" # should be removed by rabbitmq itself
         ;;

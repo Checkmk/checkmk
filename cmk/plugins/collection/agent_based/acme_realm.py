@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.acme import DETECT_ACME
+from cmk.plugins.acme.agent_based.lib import DETECT_ACME
 
 
 def inventory_acme_realm(section: StringTable) -> DiscoveryResult:

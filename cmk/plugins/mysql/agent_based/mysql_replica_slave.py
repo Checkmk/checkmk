@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 # mypy: disable-error-code="arg-type"
 import re
-from collections.abc import Mapping, MutableSequence, Sequence
+from collections.abc import Mapping
 from typing import Literal, NamedTuple, TypedDict
 
 from cmk.agent_based.v1.type_defs import StringTable
@@ -36,7 +35,9 @@ class Error(NamedTuple):
 Section = Error | dict[str, int | None | bool | Literal["NULL"]]
 
 
-def _parse_mysql_slave(string_table: StringTable) -> Section:
+def _parse_mysql_replica_slave(
+    string_table: StringTable,
+) -> Section:
     return (
         Error(" ".join(string_table[0]))
         if len(string_table) == 1
@@ -53,32 +54,32 @@ def _parse_mysql_slave(string_table: StringTable) -> Section:
     )
 
 
-def parse_mysql_slave(
+def parse_mysql_replica_slave(
     string_table: StringTable,
 ) -> Mapping[str, Section]:
-    grouped: dict[str, MutableSequence[Sequence[str]]] = {}
+    grouped: dict[str, list[list[str]]] = {}
     item = "mysql"
     for line in string_table:
         if line[0].startswith("[["):
             item = " ".join(line).strip("[ ]") or item
             continue
         grouped.setdefault(item, []).append(line)
-    return {k: _parse_mysql_slave(v) for k, v in grouped.items()}
+    return {k: _parse_mysql_replica_slave(v) for k, v in grouped.items()}
 
 
-agent_section_mysql_slave = AgentSection(
-    name="mysql_slave",
-    parse_function=parse_mysql_slave,
+agent_section_mysql_replica_slave = AgentSection(
+    name="mysql_replica_slave",
+    parse_function=parse_mysql_replica_slave,
 )
 
 
-def discover_mysql_slave(
-    section: Mapping[str, Section],
+def discover_mysql_replica_slave(
+    section: Mapping[str, Error | Section],
 ) -> DiscoveryResult:
     yield from (Service(item=item) for item, data in section.items() if data)
 
 
-def check_mysql_slave(
+def check_mysql_replica_slave(
     item: str,
     params: Params,
     section: Mapping[str, Section],
@@ -90,45 +91,58 @@ def check_mysql_slave(
         yield Result(state=State.CRIT, summary=data.message)
         return
 
-    if data["Slave_IO_Running"]:
-        yield Result(state=State.OK, summary="Slave-IO: running")
+    replica_or_slave = "Replica" if "Replica_IO_Running" in data else "Slave"
+    if data[f"{replica_or_slave}_IO_Running"]:
+        yield Result(state=State.OK, summary=f"{replica_or_slave}-IO: running")
 
         if rls := data["Relay_Log_Space"]:
-            yield from check_levels(
-                value=rls,
-                metric_name="relay_log_space",
-                label="Relay log",
-                render_func=render.bytes,
-            )
+            if rls != "NULL":
+                yield from check_levels(
+                    value=rls,
+                    metric_name="relay_log_space",
+                    label="Relay log",
+                    render_func=render.bytes,
+                )
 
     else:
-        yield Result(state=State.CRIT, summary="Slave-IO: not running")
+        yield Result(state=State.CRIT, summary=f"{replica_or_slave}-IO: not running")
 
-    if not data["Slave_SQL_Running"]:
-        yield Result(state=State.CRIT, summary="Slave-SQL: not running")
+    if not data[f"{replica_or_slave}_SQL_Running"]:
+        yield Result(state=State.CRIT, summary=f"{replica_or_slave}-SQL: not running")
         return
 
-    yield Result(state=State.OK, summary="Slave-SQL: running")
+    yield Result(state=State.OK, summary=f"{replica_or_slave}-SQL: running")
+
+    sbm = (
+        data["Seconds_Behind_Master"]
+        if replica_or_slave == "Slave"
+        else data["Seconds_Behind_Source"]
+    )
+    source_or_master = "master" if replica_or_slave == "Slave" else "source"
 
     # Makes only sense to monitor the age when the SQL slave is running
-    if (sbm := data["Seconds_Behind_Master"]) == "NULL":
-        yield Result(state=State.CRIT, summary="Time behind master: NULL (Lost connection?)")
+    if sbm == "NULL":
+        yield Result(
+            state=State.CRIT,
+            summary=f"Time behind {source_or_master}: NULL (Lost connection?)",
+        )
         return
 
-    yield from check_levels(
-        value=sbm,
-        metric_name="sync_latency",
-        levels_upper=params.get("seconds_behind_master"),
-        label="Time behind master",
-        render_func=render.timespan,
-    )
+    if sbm is not None and sbm.is_integer():
+        yield from check_levels(
+            value=sbm,
+            metric_name="sync_latency",
+            levels_upper=params.get("seconds_behind_master"),
+            label=f"Time behind {source_or_master}",
+            render_func=render.timespan,
+        )
 
 
-check_plugin_mysql_slave = CheckPlugin(
-    name="mysql_slave",
+check_plugin_mysql_replica_slave = CheckPlugin(
+    name="mysql_replica_slave",
     service_name="MySQL DB Slave %s",
-    discovery_function=discover_mysql_slave,
-    check_function=check_mysql_slave,
+    discovery_function=discover_mysql_replica_slave,
+    check_function=check_mysql_replica_slave,
     check_ruleset_name="mysql_slave",
     check_default_parameters={
         "seconds_behind_master": None,

@@ -38,6 +38,7 @@ def main() {
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
+    def bazel_logs = load("${checkout_dir}/buildscripts/scripts/utils/bazel_logs.groovy");
 
     shout("configure");
 
@@ -45,7 +46,7 @@ def main() {
     /// used on different nodes
     def docker_args = "${mount_reference_repo_dir} --ulimit nofile=1024:1024";
 
-    def bazel_log_prefix = "bazel_log_"
+    def bazel_log_prefix = "bazel_log_";
 
     def (jenkins_base_folder, use_case, omd_env_vars, upload_path_suffix) = (
         env.JOB_BASE_NAME == "testbuild" ? [
@@ -294,7 +295,7 @@ def main() {
                             """);
 
                             stage("Parse bazel execution logs") {
-                                try_parse_bazel_execution_log(distro, distro_dir, bazel_log_prefix);
+                                bazel_logs.try_parse_bazel_execution_log(distro, distro_dir, bazel_log_prefix)
                             }
                         }
                     }
@@ -335,7 +336,7 @@ def main() {
     parallel package_builds;
 
     stage("Plot cache hits") {
-        try_plot_cache_hits(bazel_log_prefix);
+        bazel_logs.try_plot_cache_hits(bazel_log_prefix, distros);
     }
 
     conditional_stage('Upload', !jenkins_base_folder.startsWith("Testing")) {
@@ -363,66 +364,6 @@ def main() {
                 }
             }
         }
-    }
-}
-
-def try_parse_bazel_execution_log(distro, distro_dir, bazel_log_prefix) {
-    try {
-        dir("${distro_dir}") {
-            def summary_file="${distro_dir}/${bazel_log_prefix}execution_summary_${distro}.json";
-            def cache_hits_file="${distro_dir}/${bazel_log_prefix}cache_hits_${distro}.csv";
-            sh("""scripts/run-pipenv run \
-            buildscripts/scripts/bazel_execution_log_parser.py \
-            --execution_logs_root "${distro_dir}" \
-            --bazel_log_file_pattern "bazel_execution_log*" \
-            --summary_file "${summary_file}" \
-            --cachehit_csv "${cache_hits_file}" \
-            --distro "${distro}"
-        """);
-            stash(name: "${bazel_log_prefix}${distro}", includes: "${bazel_log_prefix}*");
-
-            // remove large execution log summary file to save some space, approx 1.6GB per workspace
-            sh("rm -rf ${distro_dir}/${bazel_log_prefix}*.json");
-        }
-    } catch (Exception e) {
-        print("Failed to parse bazel execution logs: ${e}");
-    }
-}
-
-def try_plot_cache_hits(bazel_log_prefix) {
-    try {
-        all_distros = versioning.configured_or_overridden_distros(edition, false, "release");
-        all_distros.each { distro ->
-            try {
-                print("Unstashing for distro ${distro}...");
-                unstash(name: "${bazel_log_prefix}${distro}");
-            }
-            catch (Exception e) {
-                print("No stash for ${distro}");
-            }
-        }
-
-        plot(
-            csvFileName: 'bazel_cache_hits.csv',
-            csvSeries:
-                all_distros.collect {[file: "${bazel_log_prefix}cache_hits_${it}.csv"]},
-            description: 'Bazel Remote Cache Analysis',
-            group: 'Bazel Cache',
-            numBuilds: '30',
-            propertiesSeries: [[file: '', label: '']],
-            style: 'line',
-            title: 'Cache hits',
-            yaxis: 'Cache hits in percent',
-            yaxisMaximum: '100',
-            yaxisMinimum: '0',
-        );
-
-        archiveArtifacts(
-           artifacts: "${bazel_log_prefix}*",
-        );
-    }
-    catch (Exception e) {
-        print("Failed to plot cache hits: ${e}");
     }
 }
 

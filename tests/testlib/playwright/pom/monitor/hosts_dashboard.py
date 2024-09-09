@@ -41,10 +41,17 @@ class HostsDashboard(CmkPage):
         expect(self.dashlet(self.table_dashlets[0])).to_be_visible()
 
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
-        return DropdownListNameToID()
+        mapping = DropdownListNameToID()
+        setattr(mapping, "Dashboard", "menu_dashboard")
+        setattr(mapping, "Add", "menu_add_dashlets")
+        return mapping
+
+    @property
+    def enter_layout_mode_icon(self) -> Locator:
+        return self.main_area.locator().get_by_role("link", name="Enter layout mode")
 
     def dashlet(self, dashlet_title: str) -> Locator:
-        return self.main_area.locator(f'div[class*="dashlet "]:has-text("{dashlet_title}")')
+        return self.main_area.locator(f"div[class*='dashlet ']:has-text('{dashlet_title}')")
 
     def dashlet_table(self, dashlet_title: str) -> Locator:
         if self.dashlet(dashlet_title).locator("iframe").count() > 0:
@@ -78,7 +85,7 @@ class HostsDashboard(CmkPage):
     def scatterplot(self, dashlet_title: str) -> Locator:
         return self.dashlet(dashlet_title).locator("svg[class='renderer']")
 
-    def wait_for_scatterplot_to_load(self, dashlet_title: str, max_attempts: int = 15) -> None:
+    def wait_for_scatterplot_to_load(self, dashlet_title: str, max_attempts: int = 30) -> None:
         """Wait for scatter plot to be visible on the page.
 
         When using agent dumps, the scatter plot takes some time to load.
@@ -96,6 +103,30 @@ class HostsDashboard(CmkPage):
             f"Scatterplot '{dashlet_title}' is not visible on the page after "
             f"{max_attempts * wait_time} seconds"
         )
+
+    def enter_layout_mode(self) -> None:
+        if self.enter_layout_mode_icon.is_visible():
+            self.enter_layout_mode_icon.click()
+        else:
+            self.main_area.click_item_in_dropdown_list("Dashboard", "Clone built-in dashboard")
+            # TODO remove when CMK-19019 is fixed
+            self.navigate()
+            self.enter_layout_mode_icon.click()
+        self.page.wait_for_load_state("load")
+
+    def edit_properties_button(self, dashlet_title: str) -> Locator:
+        return self.dashlet(dashlet_title).get_by_title("Edit properties of this element")
+
+    def delete_dashlet_button(self, dashlet_title: str) -> Locator:
+        return self.dashlet(dashlet_title).get_by_title("Delete this element")
+
+    @property
+    def delete_confirmation_window(self) -> Locator:
+        return self.main_area.locator("div[class*='confirm_popup']")
+
+    @property
+    def delete_confirmation_button(self) -> Locator:
+        return self.delete_confirmation_window.get_by_role("button", name="Yes")
 
 
 class LinuxHostsDashboard(HostsDashboard):

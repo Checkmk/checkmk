@@ -165,39 +165,31 @@ def fixture_host(
     setup_host_page.activate_changes()
 
 
-@pytest.fixture(name="setup_host_using_agent_dump")
-def setup_host_using_data_from_agent_dump(
+@pytest.fixture(name="create_host_using_agent_dump")
+def create_host_using_data_from_agent_dump(
     test_site: Site, request: pytest.FixtureRequest
 ) -> Iterator:
-    """Create a host which will use data from agent dump.
+    """Create a host(s) which will use data from agent dump.
 
     Copy the agent dump to the test site, create a rule to read agent-output data from it,
-    then add a host and wait for services update. Delete all the created objects after the test.
+    then add a host(s) and wait for services update. Delete all the created objects after the test.
 
-    This fixture uses indirect pytest parametrization to define the agent dump.
+    This fixture uses indirect pytest parametrization to define the agent dump and host names.
     """
+    logger.info("Check indirect parameters have correct type")
+    dump_name, host_names = request.param
+    assert isinstance(dump_name, str), "First parameter 'dump_name' is not a string"
+    assert isinstance(host_names, list), "Second parameter 'host_names' is not a list"
+    assert all(
+        isinstance(host_name, str) for host_name in host_names
+    ), "Second parameter 'host_names' contain non-string elements"
+
     test_site_dump_path = test_site.path("var/check_mk/dumps")
     data_source_dump_path = repo_path() / "tests" / "gui_e2e" / "data"
-    dump_name = request.param
-    host_name = dump_name.split("-")[0] + "_host"
 
     logger.info("Create a folder '%s' for dumps inside test site", test_site_dump_path)
     if not test_site.is_dir(test_site_dump_path):
         test_site.makedirs(test_site_dump_path)
-
-    logger.info("Copy a dump to the new folder")
-    assert (
-        run(
-            [
-                "cp",
-                "-f",
-                f"{data_source_dump_path}/{dump_name}",
-                f"{test_site_dump_path}/{host_name}",
-            ],
-            sudo=True,
-        ).returncode
-        == 0
-    )
 
     logger.info("Create a rule to read agent-output data from file")
     rule_id = test_site.openapi.create_rule(
@@ -205,39 +197,57 @@ def setup_host_using_data_from_agent_dump(
         value=f"cat {test_site_dump_path}/<HOST>",
     )
 
-    logger.info("Create a host '%s'", host_name)
-    host_details = HostDetails(
-        name=host_name, ip="127.0.0.1", agent_and_api_integration=AgentAndApiIntegration.cmk_agent
-    )
-    test_site.openapi.create_host(
-        hostname=host_details.name,
-        attributes=host_details.rest_api_attributes(),
-    )
-    test_site.activate_changes_and_wait_for_core_reload()
-
-    logger.info("Run service discovery")
-    test_site.openapi.discover_services_and_wait_for_completion(host_name)
-    test_site.activate_changes_and_wait_for_core_reload()
-
-    logger.info("Schedule the 'Check_MK' service and check for pending services")
-    for _ in range(3):
-        test_site.schedule_check(host_name, "Check_MK", 0, 60)
-
-    pending_checks = test_site.openapi.get_host_services(host_name, pending=True)
-    if pending_checks:
-        logger.info(
-            "%s pending service(s) found: %s",
-            len(pending_checks),
-            ",".join(
-                _.get("extensions", {}).get("description", _.get("id")) for _ in pending_checks
-            ),
+    for host_name in host_names:
+        logger.info("Copy a dump to the new folder")
+        assert (
+            run(
+                [
+                    "cp",
+                    "-f",
+                    f"{data_source_dump_path}/{dump_name}",
+                    f"{test_site_dump_path}/{host_name}",
+                ],
+                sudo=True,
+            ).returncode
+            == 0
         )
 
+        logger.info("Create a host '%s'", host_name)
+        host_details = HostDetails(
+            name=host_name,
+            ip="127.0.0.1",
+            agent_and_api_integration=AgentAndApiIntegration.cmk_agent,
+        )
+        test_site.openapi.create_host(
+            hostname=host_details.name,
+            attributes=host_details.rest_api_attributes(),
+        )
+        test_site.activate_changes_and_wait_for_core_reload()
+
+        logger.info("Run service discovery")
+        test_site.openapi.discover_services_and_wait_for_completion(host_name)
+        test_site.activate_changes_and_wait_for_core_reload()
+
+        logger.info("Schedule the 'Check_MK' service and check for pending services")
+        for _ in range(3):
+            test_site.schedule_check(host_name, "Check_MK", 0, 60)
+
+        pending_checks = test_site.openapi.get_host_services(host_name, pending=True)
+        if pending_checks:
+            logger.info(
+                "%s pending service(s) found: %s",
+                len(pending_checks),
+                ",".join(
+                    _.get("extensions", {}).get("description", _.get("id")) for _ in pending_checks
+                ),
+            )
+
     try:
-        yield
+        yield host_names
     finally:
-        logger.info("Clean up: delete the host and the rule")
-        test_site.openapi.delete_host(host_name)
+        logger.info("Clean up: delete the host(s) and the rule")
+        for host_name in host_names:
+            test_site.openapi.delete_host(host_name)
+            test_site.delete_file(f"{test_site_dump_path}/{host_name}")
         test_site.openapi.delete_rule(rule_id)
-        test_site.delete_file(f"{test_site_dump_path}/{host_name}")
         test_site.activate_changes_and_wait_for_core_reload()

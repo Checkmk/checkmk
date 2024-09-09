@@ -523,14 +523,8 @@ def setup_source_host_piggyback(site: Site, source_host_name: str) -> Iterator:
     logger.info("Activating changes & reloading core...")
     site.activate_changes_and_wait_for_core_reload()
 
-    _wait_for_piggyback_hosts(site, source_host=source_host_name)
-
-    count = 0
-    while (n_pending_changes := len(site.openapi.pending_changes([site.id]))) > 0 and count < 60:
-        logger.info("Waiting for changes to be activated by the DCD connector. Count: %s", count)
-        time.sleep(5)
-        count += 1
-    assert n_pending_changes == 0, "Pending changes found!"
+    _wait_for_piggyback_hosts_creation(site, source_host=source_host_name)
+    _wait_for_dcd_pend_changes(site)
 
     hostnames = get_piggyback_hosts(site, source_host_name) + [source_host_name]
     for hostname in hostnames:
@@ -557,19 +551,18 @@ def setup_source_host_piggyback(site: Site, source_host_name: str) -> Iterator:
             )
 
     yield
-    # Todo: perform a proper site-cleanup: CMK-18659
-    # finally:
-    #     if not config.skip_cleanup:
-    #
-    #         # hostnames = [_.get("id") for _ in site.openapi.get_hosts()]
-    #         # for hostname in hostnames:
-    #         #     logger.info('Deleting host "%s"...', hostname)
-    #         #     site.openapi.delete_host(hostname)
-    #         #
-    #         # logger.info("Activating changes & reloading core...")
-    #         # site.activate_changes_and_wait_for_core_reload()
-    #
-    #         # assert run(["sudo", "rm", "-f", f"{dump_path_site}/{source_host_name}"]).returncode == 0
+
+    if not config.skip_cleanup:
+        logger.info('Deleting source host "%s"...', source_host_name)
+        site.openapi.delete_host(source_host_name)
+
+        assert run(["sudo", "rm", "-f", f"{dump_path_site}/{source_host_name}"]).returncode == 0
+
+        logger.info("Activating changes & reloading core...")
+        site.activate_changes_and_wait_for_core_reload()
+
+        _wait_for_piggyback_hosts_deletion(site, source_host=source_host_name)
+        _wait_for_dcd_pend_changes(site)
 
 
 def setup_hosts(site: Site, host_names: list[str]) -> None:
@@ -651,7 +644,7 @@ def get_piggyback_hosts(site: Site, source_host: str) -> list[str]:
     return [_.get("id") for _ in site.openapi.get_hosts() if _.get("id") != source_host]
 
 
-def _wait_for_piggyback_hosts(
+def _wait_for_piggyback_hosts_creation(
     site: Site, source_host: str, max_count: int = 80, sleep_time: float = 5, strict: bool = True
 ) -> None:
     count = 0
@@ -661,3 +654,30 @@ def _wait_for_piggyback_hosts(
         count += 1
     if strict:
         assert piggyback_hosts, "No piggyback hosts found."
+
+
+def _wait_for_piggyback_hosts_deletion(
+    site: Site, source_host: str, max_count: int = 80, sleep_time: float = 5, strict: bool = True
+) -> None:
+    count = 0
+    while piggyback_hosts := get_piggyback_hosts(site, source_host) and count < max_count:
+        logger.info("Waiting for piggyback hosts to be removed. Count: %s/%s", count, max_count)
+        time.sleep(sleep_time)
+        count += 1
+    if strict:
+        assert not piggyback_hosts, "Piggyback hosts still found: %s" % piggyback_hosts
+
+
+def _wait_for_dcd_pend_changes(site: Site, max_count: int = 60) -> None:
+    count = 0
+    while (
+        n_pending_changes := len(site.openapi.pending_changes([site.id]))
+    ) > 0 and count < max_count:
+        logger.info(
+            "Waiting for changes to be activated by the DCD connector. Count: %s/%s",
+            count,
+            max_count,
+        )
+        time.sleep(5)
+        count += 1
+    assert n_pending_changes == 0, "Pending changes found!"

@@ -170,8 +170,7 @@ def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
             assert run(["rm", "-rf", dump_path], sudo=True).returncode == 0
 
 
-# Todo: perform a proper site-cleanup and change this fixture's scope: CMK-18659
-@pytest.fixture(name="test_site_piggyback", scope="function")
+@pytest.fixture(name="test_site_piggyback", scope="session")
 def _get_site_piggyback(request: pytest.FixtureRequest) -> Iterator[Site]:
     for site in get_site_factory(prefix="PB_").get_test_site(
         auto_cleanup=not checks.config.skip_cleanup
@@ -278,8 +277,7 @@ def _create_periodic_service_discovery_rule(test_site_update: Site) -> Iterator[
     test_site_update.openapi.activate_changes_and_wait_for_completion()
 
 
-# Todo: perform a proper site-cleanup and change this fixture's scope: CMK-18659
-@pytest.fixture(name="dcd_connector", scope="function")
+@pytest.fixture(name="dcd_connector", scope="session")
 def _dcd_connector(test_site_piggyback: Site) -> Iterator[None]:
     logger.info("Creating a DCD connection for piggyback hosts...")
     dcd_id = "dcd_connector"
@@ -294,7 +292,10 @@ def _dcd_connector(test_site_piggyback: Site) -> Iterator[None]:
         title="DCD Connector for piggyback hosts",
         host_attributes=host_attributes,
         interval=1,
-        validity_period=600,
+        validity_period=60,
+        max_cache_age=60,
+        delete_hosts=True,
+        no_deletion_time_after_init=60,
     )
     test_site_piggyback.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
     yield

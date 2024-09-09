@@ -174,11 +174,11 @@
         },
         "platformdirs": {
             "hashes": [
-                "sha256:2d7a1657e36a80ea911db832a8a6ece5ee53d8de21edd5cc5879af6530b1bfee",
-                "sha256:38b7b51f512eed9e84a22788b4bce1de17c0adb134d6becb09836e37d8654cd3"
+                "sha256:9e5e27a08aa095dd127b9f2e764d74254f482fef22b0970773bfba79d091ab8c",
+                "sha256:eb1c8582560b34ed4ba105009a4badf7f6f85768b30126f351328507b2beb617"
             ],
             "markers": "python_version >= '3.8'",
-            "version": "==4.2.2"
+            "version": "==4.3.2"
         },
         "pluggy": {
             "hashes": [
@@ -214,12 +214,12 @@
         },
         "pylsp-mypy": {
             "hashes": [
-                "sha256:3ea7c406d0f100317a212d8cd39075a2c139f1a4a2866d4412fe531b3f23b381",
-                "sha256:3f8307ca07d7e253e50e38c5fe31c371ceace0bc33d31c3429fa035d6d41bd5f"
+                "sha256:9b73ece2977b22b5fc75dfec1cc491bf2031955e3da4062d924a5cc22a278151",
+                "sha256:d28994a6ba123c3918ce3274a5cad768418650e575001002101c425ad6c7bbaa"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.8'",
-            "version": "==0.6.8"
+            "version": "==0.6.9"
         },
         "pytest": {
             "hashes": [
@@ -330,14 +330,6 @@
             ],
             "markers": "python_version >= '3.8'",
             "version": "==5.3.0"
-        },
-        "tomli": {
-            "hashes": [
-                "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc",
-                "sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f"
-            ],
-            "markers": "python_version >= '3.7'",
-            "version": "==2.0.1"
         },
         "tomlkit": {
             "hashes": [

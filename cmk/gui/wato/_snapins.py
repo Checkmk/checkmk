@@ -210,7 +210,7 @@ class SidebarSnapinWATOMini(SidebarSnapin):
 
     @classmethod
     def title(cls) -> str:
-        return _("Quick setup")
+        return _("Setup shortcuts")
 
     @classmethod
     def has_show_more_items(cls) -> bool:
@@ -448,5 +448,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         # Now render the whole tree
         if user_folders:
             render_tree_folder(
-                "wato-hosts", list(user_folders.values())[0], "cmk.sidebar.wato_tree_click"
+                "wato-hosts",
+                list(user_folders.values())[0],
+                "cmk.sidebar.wato_tree_click",
             )

@@ -20,8 +20,7 @@ from cmk.gui.valuespec import (
     ValueSpecHelp,
 )
 
-import cmk.rulesets.v1.form_specs as form_specs
-from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1 import form_specs, Title
 
 
 def IPMIParameters() -> Dictionary:

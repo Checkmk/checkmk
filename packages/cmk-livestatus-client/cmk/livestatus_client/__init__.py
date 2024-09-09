@@ -340,7 +340,7 @@ class Helpers:
         of all lines in that column as a single list"""
         normalized_query = Query(query) if not isinstance(query, Query) else query
 
-        return [l[0] for l in self.query(normalized_query, "ColumnHeaders: off\n")]
+        return [row[0] for row in self.query(normalized_query, "ColumnHeaders: off\n")]
 
     def query_column_unique(self, query: QueryTypes) -> set[LivestatusColumn]:
         """Issues a query that returns exactly one column and returns the values

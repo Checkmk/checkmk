@@ -563,8 +563,8 @@ def main_list(args: argparse.Namespace, fmt: str) -> None:  # pylint: disable=to
 # CSV Table has the following columns:
 # Component;ID;Title;Class;Effort
 def output_csv(werks: list[Werk]) -> None:
-    def line(*l: int | str) -> None:
-        sys.stdout.write('"' + '";"'.join(map(str, l)) + '"\n')
+    def line(*parts: int | str) -> None:
+        sys.stdout.write('"' + '";"'.join(map(str, parts)) + '"\n')
 
     nr = 1
     for entry in get_config().components:
@@ -968,14 +968,14 @@ def invalidate_my_werkid(wid: WerkId) -> None:
         sys.stdout.write(f"\n{TTY_RED}This was your last reserved ID.{TTY_NORMAL}\n\n")
 
 
-def store_werk_ids(l: list[WerkId]) -> None:
+def store_werk_ids(ids: list[WerkId]) -> None:
     with open(RESERVED_IDS_FILE_PATH, "w", encoding="utf-8") as f:
-        f.write(repr([i.id for i in l]) + "\n")
+        f.write(repr([i.id for i in ids]) + "\n")
     sys.stdout.write(f"Werk IDs stored in the file: {RESERVED_IDS_FILE_PATH}\n")
 
 
 def current_branch() -> str:
-    return [l for l in os.popen("git branch") if l.startswith("*")][0].split()[-1]
+    return [line for line in os.popen("git branch") if line.startswith("*")][0].split()[-1]
 
 
 def current_repo() -> str:

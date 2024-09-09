@@ -4,4 +4,4 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """MK Livestatus Python API"""
 
-from cmk.livestatus_client import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.livestatus_client import *  # noqa: F403 # pylint: disable=wildcard-import,unused-wildcard-import

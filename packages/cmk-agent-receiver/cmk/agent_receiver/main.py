@@ -5,8 +5,8 @@
 
 from fastapi import FastAPI
 
-# register endpoints
-from . import endpoints  # pylint: disable=unused-import
+# NOTE: The import below is a hack, we should register endpoints explicitly!
+from . import endpoints  # noqa: F401 # pylint: disable=unused-import
 from .apps_and_routers import AGENT_RECEIVER_APP, UUID_VALIDATION_ROUTER
 from .log import configure_logger
 from .site_context import log_path, site_name

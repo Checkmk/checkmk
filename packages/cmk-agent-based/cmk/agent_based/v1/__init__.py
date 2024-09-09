@@ -78,4 +78,5 @@ __all__ = [
     "TableRow",
     "type_defs",
     "GetRateError",
+    "register",
 ]

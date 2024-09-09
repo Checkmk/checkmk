@@ -138,7 +138,7 @@ class Service(_ServiceTuple):
     def _parse_labels(labels: Sequence[ServiceLabel] | None) -> Sequence[ServiceLabel]:
         if not labels:
             return []
-        if isinstance(labels, list) and all(isinstance(l, ServiceLabel) for l in labels):
+        if isinstance(labels, list) and all(isinstance(label, ServiceLabel) for label in labels):
             return labels
         raise TypeError(f"'labels' must be list of ServiceLabels or None, got {labels!r}")
 

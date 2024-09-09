@@ -48,7 +48,7 @@ def _parameter_form() -> Dictionary:
     )
 
 
-rule_spec_mysql_slave = CheckParameters(
+rule_spec_mysql_replica_slave = CheckParameters(
     name="mysql_slave",
     title=Title("MySQL replica/slave"),
     topic=Topic.DATABASES,

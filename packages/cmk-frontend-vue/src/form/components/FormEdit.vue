@@ -21,6 +21,7 @@ import FormMultipleChoice from '@/form/components/forms/FormMultipleChoice.vue'
 import FormPassword from './forms/FormPassword.vue'
 import FormTuple from '@/form/components/forms/FormTuple.vue'
 import FormOptionalChoice from '@/form/components/forms/FormOptionalChoice.vue'
+import FormSimplePassword from '@/form/components/forms/FormSimplePassword.vue'
 
 const props = defineProps<{
   spec: FormSpec
@@ -48,7 +49,8 @@ const components: Record<Components['type'], unknown> = {
   data_size: FormDataSize,
   catalog: FormCatalog,
   tuple: FormTuple,
-  optional_choice: FormOptionalChoice
+  optional_choice: FormOptionalChoice,
+  simple_password: FormSimplePassword
 }
 
 function getComponent(): IComponent {

@@ -2,8 +2,11 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from .simple_password import SimplePassword
-from .transform import TransformForLegacyData
-from .tuple import Tuple
+from dataclasses import dataclass
 
-__all__ = ["SimplePassword", "TransformForLegacyData", "Tuple"]
+from cmk.rulesets.v1.form_specs import FormSpec
+
+
+@dataclass(frozen=True, kw_only=True)
+class SimplePassword(FormSpec[str]):
+    pass

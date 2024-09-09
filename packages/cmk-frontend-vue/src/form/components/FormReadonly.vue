@@ -80,7 +80,13 @@ function renderForm(
       return renderTuple(formSpec as Tuple, value as unknown[])
     case 'optional_choice':
       return renderOptionalChoice(formSpec as OptionalChoice, value as unknown[])
+    case 'simple_password':
+      return renderSimplePassword()
   }
+}
+
+function renderSimplePassword(): VNode {
+  return h('div', ['******'])
 }
 
 function renderOptionalChoice(

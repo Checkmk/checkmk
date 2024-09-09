@@ -345,6 +345,11 @@ class OptionalChoice(FormSpec):
     type: str = "optional_choice"
 
 
+@dataclass(kw_only=True)
+class SimplePassword(FormSpec):
+    type: str = "simple_password"
+
+
 Components = Union[
     Integer,
     Float,
@@ -364,6 +369,7 @@ Components = Union[
     TimeSpan,
     Tuple,
     OptionalChoice,
+    SimplePassword,
 ]
 
 

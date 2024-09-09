@@ -23,7 +23,8 @@ export type Components =
   | MultipleChoice
   | TimeSpan
   | Tuple
-  | OptionalChoice;
+  | OptionalChoice
+  | SimplePassword;
 export type Integer = FormSpec & {
   type: "integer";
   label?: string;
@@ -146,6 +147,9 @@ export type OptionalChoice = FormSpec & {
   parameter_form: FormSpec;
   i18n: I18NOptionalChoice;
   parameter_form_default_value: unknown;
+};
+export type SimplePassword = FormSpec & {
+  type: "simple_password";
 };
 
 export interface VueFormspecComponents {

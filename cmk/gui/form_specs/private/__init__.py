@@ -13,11 +13,11 @@ from .definitions import (
 from .dictionary_extended import DictionaryExtended
 from .list_extended import ListExtended
 from .optional_choice import OptionalChoice
+from .validators import not_empty
 
 __all__ = [
     "Topic",
     "Catalog",
-    "Topic",
     "DictionaryExtended",
     "LegacyValueSpec",
     "ListExtended",
@@ -25,4 +25,5 @@ __all__ = [
     "SingleChoiceExtended",
     "OptionalChoice",
     "UnknownFormSpec",
+    "not_empty",
 ]

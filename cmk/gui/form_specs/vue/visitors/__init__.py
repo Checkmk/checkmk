@@ -18,6 +18,7 @@ from .multiline_text import MultilineTextVisitor
 from .multiple_choice import MultipleChoiceVisitor
 from .optional_choice import OptionalChoiceVisitor
 from .password import PasswordVisitor
+from .simple_password import SimplePasswordVisitor
 from .single_choice import SingleChoiceVisitor
 from .string import StringVisitor
 from .time_span import TimeSpanVisitor
@@ -44,6 +45,7 @@ __all__ = [
     "MultipleChoiceVisitor",
     "OptionalChoiceVisitor",
     "PasswordVisitor",
+    "SimplePasswordVisitor",
     "SingleChoiceVisitor",
     "StringVisitor",
     "TimeSpanVisitor",

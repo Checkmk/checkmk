@@ -691,6 +691,21 @@
                 }
             ]
         },
+        "simple_password": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "simple_password",
+                    "default": "simple_password"
+                }
+            },
+            "required": ["type"],
+            "allOf": [
+                {
+                    "$ref": "#/$defs/form_spec"
+                }
+            ]
+        },
         "components": {
             "discriminator": {
                 "propertyName": "type"
@@ -749,6 +764,9 @@
                 },
                 {
                     "$ref": "#/$defs/optional_choice"
+                },
+                {
+                    "$ref": "#/$defs/simple_password"
                 }
             ],
             "required": ["type"]

@@ -20,7 +20,7 @@ usage() {
     echo "  -u, --unit-tests        run unit tests"
     echo "  -F, --check-format      check for correct formatting"
     echo "  -m, --mypy              run mypy"
-    echo "  -p, --pylint            run pylint"
+    echo "  -r, --ruff              run ruff linter"
     echo "  -B, --bandit            run bandit"
     echo "  -a, --all               shortcut for -u -F -m -p -B -C"
     echo "  -f, --format            format sources"
@@ -35,12 +35,12 @@ parse_options() {
     RUN_UNIT_TESTS=no
     RUN_CHECK_FORMAT=no
     RUN_MYPY=no
-    RUN_PYLINT=no
+    RUN_RUFF=no
     RUN_BANDIT=no
     RUN_FORMAT=no
     RUN_DOCUMENTATION=no
 
-    if ! OPTIONS=$(getopt --options 'cuFmpBafDj:h' --long 'clean,unit-tests,check-format,mypy,pylint,bandit,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'cuFmprBafDj:h' --long 'clean,unit-tests,check-format,mypy,ruff,bandit,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -69,8 +69,8 @@ parse_options() {
                 shift
                 continue
                 ;;
-            '-p' | '--pylint')
-                RUN_PYLINT=yes
+            '-r' | '--ruff')
+                RUN_RUFF=yes
                 shift
                 continue
                 ;;
@@ -83,7 +83,7 @@ parse_options() {
                 RUN_UNIT_TESTS=yes
                 RUN_CHECK_FORMAT=yes
                 RUN_MYPY=yes
-                RUN_PYLINT=yes
+                RUN_RUFF=yes
                 RUN_BANDIT=yes
                 shift
                 continue
@@ -116,7 +116,7 @@ parse_options() {
         esac
     done
 
-    readonly RUN_CLEAN RUN_UNIT_TESTS RUN_CHECK_FORMAT RUN_MYPY RUN_PYLINT RUN_BANDIT RUN_FORMAT RUN_DOCUMENTATION JOBS
+    readonly RUN_CLEAN RUN_UNIT_TESTS RUN_CHECK_FORMAT RUN_MYPY RUN_RUFF RUN_BANDIT RUN_FORMAT RUN_DOCUMENTATION JOBS
 }
 
 run_pipenv() {
@@ -164,9 +164,9 @@ run_mypy() {
     mypy
 }
 
-run_pylint() {
+run_ruff() {
     setup_venv
-    PYTHONPATH=. pylint --jobs="${JOBS}" cmk tests
+    ruff check cmk tests
 }
 
 run_bandit() {
@@ -197,7 +197,7 @@ main() {
     test ${RUN_UNIT_TESTS} = yes && run_unit_tests
     test ${RUN_CHECK_FORMAT} = yes && run_check_format
     test ${RUN_MYPY} = yes && run_mypy
-    test ${RUN_PYLINT} = yes && run_pylint
+    test ${RUN_RUFF} = yes && run_ruff
     test ${RUN_BANDIT} = yes && run_bandit
     test ${RUN_DOCUMENTATION} = yes && run_documentation
     test ${RUN_FORMAT} = yes && run_format

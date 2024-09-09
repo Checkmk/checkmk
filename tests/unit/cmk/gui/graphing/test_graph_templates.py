@@ -1251,7 +1251,7 @@ def test__compute_predictive_metrics(
                 {
                     "metric_name": TranslatedMetric(
                         originals=[Original("metric_name", 1.0)],
-                        value=0.0,
+                        value=1.0,
                         scalar={},
                         auto_graph=True,
                         title="",
@@ -1263,7 +1263,7 @@ def test__compute_predictive_metrics(
                     ),
                     "predict_metric_name": TranslatedMetric(
                         originals=[Original("predict_metric_name", 1.0)],
-                        value=0.0,
+                        value=2.0,
                         scalar={},
                         auto_graph=True,
                         title="",
@@ -1275,7 +1275,7 @@ def test__compute_predictive_metrics(
                     ),
                     "predict_lower_metric_name": TranslatedMetric(
                         originals=[Original("predict_lower_metric_name", 1.0)],
-                        value=0.0,
+                        value=3.0,
                         scalar={},
                         auto_graph=True,
                         title="",

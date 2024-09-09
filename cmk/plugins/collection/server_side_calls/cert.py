@@ -174,8 +174,8 @@ def _remaining_args(remaining: FloatLevels) -> Iterator[str]:
     match remaining:
         case (LevelsType.FIXED, (float(warn), float(crit))):
             yield "--not-after"
-            yield f"{round(warn / _DAY)}"
-            yield f"{round(crit / _DAY)}"
+            yield f"{int(round(warn))}"
+            yield f"{int(round(crit))}"
 
 
 def _cert_details_args(cert_details: CertificateDetails, host_config: HostConfig) -> Iterator[str]:

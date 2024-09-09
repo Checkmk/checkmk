@@ -26,8 +26,9 @@ from cmk.utils.licensing.helper import get_licensed_state_file_path
 from cmk.utils.paths import omd_root
 
 LOGGER = logging.getLogger(__name__)
-DUMPS_DIR = Path(__file__).parent.resolve() / "dumps"
-RULES_DIR = repo_path() / "tests" / "update" / "rules"
+MODULE_PATH = Path(__file__).parent.resolve()
+DUMPS_DIR = MODULE_PATH / "dumps"
+RULES_DIR = MODULE_PATH / "rules"
 
 
 def pytest_addoption(parser):
@@ -71,20 +72,50 @@ def pytest_configure(config):
 
 @dataclasses.dataclass
 class BaseVersions:
-    """Get all base versions used for the test."""
+    """Get all base versions used for the test. Up to five versions are used per branch:
+    The first one and the last four.
+    """
 
-    with open(Path(__file__).parent.resolve() / "base_versions.json") as f:
-        BASE_VERSIONS_STR = json.load(f)
+    @staticmethod
+    def _limit_versions(versions: list[str], min_version: CMKVersion) -> list[str]:
+        """Select supported earliest and latest versions and eliminate duplicates"""
+        max_earliest_versions = 1
+        max_latest_versions = 4
+
+        active_versions = [_ for _ in versions if CMKVersion(_, min_version.edition) >= min_version]
+        earliest_versions = active_versions[0:max_earliest_versions]
+        latest_versions = active_versions[-max_latest_versions:]
+        # do not use a set to retain the order
+        return list(dict.fromkeys(earliest_versions + latest_versions))
+
+    MIN_VERSION = get_min_version()
 
     if version_from_env().is_saas_edition():
-        BASE_VERSIONS = [
-            CMKVersion(CMKVersion.DAILY, edition_from_env(Edition.CSE), "2.3.0", "2.3.0")
-        ]
+        BASE_VERSIONS = [CMKVersion(CMKVersion.DAILY, Edition.CSE, "2.3.0", "2.3.0")]
     else:
+        base_versions_pb_file = MODULE_PATH / "base_versions_previous_branch.json"
+        if not base_versions_pb_file.exists():
+            base_versions_pb_file = MODULE_PATH / "base_versions.json"
+        BASE_VERSIONS_PB = _limit_versions(
+            json.loads(base_versions_pb_file.read_text(encoding="utf-8")), MIN_VERSION
+        )
+
+        base_versions_cb_file = MODULE_PATH / "base_versions_current_branch.json"
+        BASE_VERSIONS_CB = (
+            _limit_versions(
+                json.loads(base_versions_cb_file.read_text(encoding="utf-8")),
+                MIN_VERSION,
+            )
+            if base_versions_cb_file.exists()
+            else []
+        )
+
         BASE_VERSIONS = [
-            CMKVersion(base_version_str, edition_from_env(Edition.CEE))
-            for base_version_str in BASE_VERSIONS_STR
-            if not version_from_env().is_saas_edition()
+            CMKVersion(
+                base_version_str,
+                edition_from_env(Edition.CEE),
+            )
+            for base_version_str in BASE_VERSIONS_PB + BASE_VERSIONS_CB
         ]
 
 
@@ -92,7 +123,7 @@ class BaseVersions:
 class InteractiveModeDistros:
     @staticmethod
     def get_supported_distros():
-        with open(Path(__file__).parent.resolve() / "../../editions.yml") as stream:
+        with open(repo_path() / "editions.yml") as stream:
             yaml_file = yaml.safe_load(stream)
 
         return yaml_file["daily_extended"]

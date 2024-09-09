@@ -157,14 +157,14 @@ if inpath smartctl >/dev/null 2>&1; then
                 DNAME="${VEND}_${MODEL}_${SN}"
             fi
         else
-            CMD="smartctl -d ata -v 9,raw48 -A $D"
+            CMD="smartctl -d ata -v 9,raw48 -A $D; smartctl -d sat -v 9,raw48 -A $D"
         fi
 
         if [ "$VEND" == "NVME" ]; then
             echo "$DNAME $VEND $MODEL"
-            [ -n "$CMD" ] && $CMD | sed -e '1,5d; /^$/d'
+            [ -n "$CMD" ] && eval "$CMD" | sed -e '1,5d; /^$/d'
         else
-            [ -n "$CMD" ] && $CMD | grep Always | grep -v -E '^190(.*)Temperature(.*)' | sed "s|^|$DNAME $VEND $MODEL |"
+            [ -n "$CMD" ] && eval "$CMD" | grep Always | grep -v -E '^190(.*)Temperature(.*)' | sed "s|^|$DNAME $VEND $MODEL |"
         fi
     done 2>/dev/null
 

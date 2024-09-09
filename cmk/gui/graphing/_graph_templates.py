@@ -333,7 +333,7 @@ def _compute_predictive_metrics(
                 yield MetricExpression(Metric(predict_lower_metric_name), line_type=line_type)
 
 
-def applicable_metrics(
+def evaluate_metrics(
     graph_template: GraphTemplate,
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> Sequence[tuple[MetricExpression, Evaluated]]:
@@ -378,7 +378,7 @@ def get_evaluated_graph_templates(
         )
         for id_, template in _graph_templates_from_plugins()
         for graph_template in (_parse_graph_template(id_, template),)
-        if (metrics := [m for m, _e in applicable_metrics(graph_template, translated_metrics)])
+        if (metrics := [m for m, _e in evaluate_metrics(graph_template, translated_metrics)])
     ]
     yield from graph_templates
 
@@ -681,7 +681,7 @@ def create_graph_recipe_from_template(
             ),
             color=evaluated.color,
         )
-        for metric_expression, evaluated in applicable_metrics(graph_template, translated_metrics)
+        for metric_expression, evaluated in evaluate_metrics(graph_template, translated_metrics)
     ]
     units = {m.unit for m in metrics}
 

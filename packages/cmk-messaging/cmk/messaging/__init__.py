@@ -24,6 +24,7 @@ from ._connection import (
     Connection,
     ConnectionFailed,
     ConnectionOK,
+    ConnectionUnknown,
 )
 
 __all__ = [
@@ -44,4 +45,5 @@ __all__ = [
     "check_remote_connection",
     "ConnectionOK",
     "ConnectionFailed",
+    "ConnectionUnknown",
 ]

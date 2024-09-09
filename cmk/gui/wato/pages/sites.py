@@ -133,7 +133,7 @@ from cmk.gui.watolib.sites import (
 )
 from cmk.gui.watolib.utils import ldap_connections_are_configurable
 
-from cmk.messaging import check_remote_connection, ConnectionFailed, ConnectionOK
+from cmk.messaging import check_remote_connection, ConnectionFailed, ConnectionOK, ConnectionUnknown
 
 
 def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
@@ -1291,18 +1291,21 @@ class PageAjaxFetchSiteStatus(AjaxPage):
 
         site_states = {}
 
-        sites = list(SiteManagementFactory().factory().load_sites().items())
-        replication_sites = [e for e in sites if is_replication_enabled(e[1])]
+        sites = SiteManagementFactory().factory().load_sites()
+        replication_sites = [
+            (key, val) for (key, val) in sites.items() if is_replication_enabled(val)
+        ]
         replication_status = ReplicationStatusFetcher().fetch(replication_sites)
 
-        for site_id, site in sites:
+        local_site = sites[omd_site()]
+        for site_id, site in sites.items():
             site_id_str: str = site_id
             site_states[site_id_str] = {
                 "livestatus": self._render_status_connection_status(site_id, site),
                 "replication": self._render_configuration_connection_status(
                     site_id, site, replication_status
                 ),
-                "message_broker": self._render_message_broker_status(site_id, site),
+                "message_broker": self._render_message_broker_status(site_id, site, local_site),
             }
         return site_states
 
@@ -1358,23 +1361,33 @@ class PageAjaxFetchSiteStatus(AjaxPage):
             message, style="vertical-align:middle"
         )
 
-    def _render_message_broker_status(self, site_id: SiteId, site: SiteConfiguration) -> str | HTML:
+    def _render_message_broker_status(
+        self, site_id: SiteId, site: SiteConfiguration, local_site: SiteConfiguration
+    ) -> str | HTML:
         if not is_replication_enabled(site):
             return ""
 
-        icon, message = self._get_connection_status_icon_message(site)
+        icon, message = self._get_connection_status_icon_message(site, local_site)
         return html.render_icon(icon, title=message) + HTMLWriter.render_span(
             message, style="vertical-align:middle"
         )
 
-    def _get_connection_status_icon_message(self, site: SiteConfiguration) -> tuple[str, str]:
+    def _get_connection_status_icon_message(
+        self, site: SiteConfiguration, local_site: SiteConfiguration
+    ) -> tuple[str, str]:
         if (remote_host := urlparse(site["multisiteurl"]).hostname) is None:
             return "cross", "Offline: No valid multisite URL configured"
 
+        connection_status: ConnectionOK | ConnectionUnknown | ConnectionFailed
         try:
-            connection_status = check_remote_connection(
-                omd_root, remote_host, site.get("message_broker_port", 5672)
-            )
+            if (remote_port := site.get("message_broker_port", 5672)) == local_site.get(
+                "message_broker_port", 5672
+            ) and remote_host == urlparse(local_site["multisiteurl"]).hostname:
+                connection_status = ConnectionUnknown(
+                    "The configuration checks against the local site"
+                )
+            else:
+                connection_status = check_remote_connection(omd_root, remote_host, remote_port)
         except (MKTerminate, MKTimeout):
             raise
         except Exception as e:
@@ -1387,6 +1400,9 @@ class PageAjaxFetchSiteStatus(AjaxPage):
             case ConnectionFailed(error):
                 icon = "cross"
                 message = f"Offline: {error}"
+            case ConnectionUnknown(error):
+                icon = "alert"
+                message = f"Unknown: {error}"
             case _:
                 assert_never(_)
         return icon, message

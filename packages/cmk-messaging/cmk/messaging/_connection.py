@@ -36,6 +36,13 @@ class ConnectionFailed:
     message: str
 
 
+@dataclass(frozen=True)
+class ConnectionUnknown:
+    """The connection state is unknown"""
+
+    message: str
+
+
 class ChannelP(Protocol):
     """Protocol of the wrapped channel type"""
 

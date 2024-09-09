@@ -81,7 +81,6 @@ def _extract_error_messages(section: Section) -> Sequence[str]:
     return sorted(error_messages)
 
 
-# TODO genereller Status -> ceph health (Ausnahmen für "too many PGs per OSD" als Option ermöglichen)
 def check_ceph_status(params: Mapping[str, Any], section: Section) -> CheckResult:
     map_health_states: dict[str, tuple[State, str]] = {
         "HEALTH_OK": (State.OK, "OK"),
@@ -98,7 +97,7 @@ def check_ceph_status(params: Mapping[str, Any], section: Section) -> CheckResul
         overall_status,
         (State.UNKNOWN, "unknown[%s]" % overall_status),
     )
-    if state:  # XXXXXXXXXX Regression in 2.3.0/master caused by c936c8ffb7b3
+    if state is not State.OK:
         error_messages = _extract_error_messages(section)
         if error_messages:
             state_readable += " (%s)" % (", ".join(error_messages))

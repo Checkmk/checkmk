@@ -257,11 +257,11 @@ class PushUserProfilesRequest(NamedTuple):
     user_visuals: Mapping[UserId, Mapping[VisualTypeName, Any]] | None
 
 
-class PushUserProfilesToSite(AutomationCommand):
-    def command_name(self):
+class PushUserProfilesToSite(AutomationCommand[PushUserProfilesRequest]):
+    def command_name(self) -> str:
         return "push-profiles"
 
-    def get_request(self):
+    def get_request(self) -> PushUserProfilesRequest:
         return PushUserProfilesRequest(
             ast.literal_eval(request.get_str_input_mandatory("profiles")),
             ast.literal_eval(request.get_str_input_mandatory("visuals", None)),

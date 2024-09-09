@@ -230,11 +230,11 @@ def _activate_changes(sites: Iterable[SiteId]) -> None:
         logger.info("Activation finished")
 
 
-class AutomationHostsForAutoRemoval(AutomationCommand):
+class AutomationHostsForAutoRemoval(AutomationCommand[None]):
     def command_name(self) -> str:
         return "hosts-for-auto-removal"
 
-    def execute(self, api_request: object = None) -> str:
+    def execute(self, api_request: None) -> str:
         return json.dumps(list(_hosts_to_be_removed_local()))
 
     def get_request(self) -> None:

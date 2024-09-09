@@ -61,6 +61,7 @@ from cmk.gui.valuespec import Checkbox, Dictionary, DictionaryEntry, TextAreaUni
 from cmk.gui.watolib import activate_changes, backup_snapshots, read_only
 from cmk.gui.watolib.activate_changes import (
     affects_all_sites,
+    ConfigWarnings,
     has_been_activated,
     is_foreign_change,
     prevent_discard_changes,
@@ -1016,11 +1017,11 @@ class ActivateChangesRequest(NamedTuple):
     domains: DomainRequests
 
 
-class AutomationActivateChanges(AutomationCommand):
-    def command_name(self):
+class AutomationActivateChanges(AutomationCommand[ActivateChangesRequest]):
+    def command_name(self) -> str:
         return "activate-changes"
 
-    def get_request(self):
+    def get_request(self) -> ActivateChangesRequest:
         site_id = SiteId(request.get_ascii_input_mandatory("site_id"))
         activate_changes.verify_remote_site_config(site_id)
 
@@ -1039,7 +1040,10 @@ class AutomationActivateChanges(AutomationCommand):
 
         return ActivateChangesRequest(site_id=site_id, domains=serialized_domain_requests)
 
-    def execute(self, api_request):
+    def execute(self, api_request: ActivateChangesRequest) -> ConfigWarnings:
         return activate_changes.execute_activate_changes(
-            activate_changes.parse_serialized_domain_requests(api_request.domains)
+            # NOTE: Something is fishy here: parse_serialized_domain_requests() expects
+            # an Iterable[SerializedSettings] (i.e. an Iterable[Mapping[str, Any]]),
+            # but ActivateChangesRequest.domains has the type Sequence[DomainRequest]
+            activate_changes.parse_serialized_domain_requests(api_request.domains)  # type: ignore[arg-type]
         )

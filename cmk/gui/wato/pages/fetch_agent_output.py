@@ -225,7 +225,7 @@ class PageFetchAgentOutput(AgentOutputPage):
         )
 
 
-class ABCAutomationFetchAgentOutput(AutomationCommand, abc.ABC):
+class ABCAutomationFetchAgentOutput(AutomationCommand[FetchAgentOutputRequest]):
     def get_request(self) -> FetchAgentOutputRequest:
         user.need_permission("wato.download_agent_output")
 
@@ -267,7 +267,7 @@ def start_fetch_agent_job(api_request: FetchAgentOutputRequest) -> None:
 class AutomationFetchAgentOutputGetStatus(ABCAutomationFetchAgentOutput):
     """Is called by AgentOutputPage._get_job_status() to execute the background job on a remote site"""
 
-    def command_name(self):
+    def command_name(self) -> str:
         return "fetch-agent-output-get-status"
 
     def execute(self, api_request: FetchAgentOutputRequest) -> dict:

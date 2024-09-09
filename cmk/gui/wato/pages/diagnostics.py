@@ -810,7 +810,7 @@ class PageDownloadDiagnosticsDump(Page):
         response.set_data(file_content)
 
 
-class AutomationDiagnosticsDumpGetFile(AutomationCommand):
+class AutomationDiagnosticsDumpGetFile(AutomationCommand[str]):
     def command_name(self) -> str:
         return "diagnostics-dump-get-file"
 

@@ -685,7 +685,7 @@ def _start_remote_automation_job(
     return job_id
 
 
-class AutomationCheckmkAutomationStart(AutomationCommand):
+class AutomationCheckmkAutomationStart(AutomationCommand[CheckmkAutomationRequest]):
     """Called by do_remote_automation_in_background_job to execute the background job on a remote site"""
 
     def command_name(self) -> str:
@@ -711,7 +711,7 @@ class AutomationCheckmkAutomationStart(AutomationCommand):
         return job.get_job_id()
 
 
-class AutomationCheckmkAutomationGetStatus(AutomationCommand):
+class AutomationCheckmkAutomationGetStatus(AutomationCommand[str]):
     """Called by do_remote_automation_in_background_job to get the background job state from on a
     remote site"""
 

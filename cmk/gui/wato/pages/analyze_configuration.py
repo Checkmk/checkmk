@@ -411,7 +411,8 @@ class ModeAnalyzeConfig(WatoMode):
 
             if site_is_local(active_config, site_id):
                 automation = AutomationCheckAnalyzeConfig()
-                results_data = automation.execute(automation.get_request())
+                # NOTE: The mypy people are too stubborn to fix this, see https://github.com/python/mypy/issues/6549
+                results_data = automation.execute(automation.get_request())  # type: ignore[func-returns-value]
 
             else:
                 raw_results_data = do_remote_automation(

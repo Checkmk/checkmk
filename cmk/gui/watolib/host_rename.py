@@ -403,7 +403,7 @@ class _RenameHostsUUIDLinkRequest(BaseModel):
     renamings: Sequence[tuple[HostName, HostName]]
 
 
-class AutomationRenameHostsUUIDLink(AutomationCommand):
+class AutomationRenameHostsUUIDLink(AutomationCommand[_RenameHostsUUIDLinkRequest]):
     def command_name(self) -> str:
         return "rename-hosts-uuid-link"
 

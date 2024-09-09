@@ -3081,7 +3081,7 @@ class SyncDelta:
     to_delete: list[str]
 
 
-class AutomationGetConfigSyncState(AutomationCommand):
+class AutomationGetConfigSyncState(AutomationCommand[list[ReplicationPath]]):
     """Called on remote site from a central site to get the current config sync state
 
     The central site hands over the list of replication paths it will try to synchronize later.  The
@@ -3090,7 +3090,7 @@ class AutomationGetConfigSyncState(AutomationCommand):
     and ensures that nothing is changed between the two config sync steps.
     """
 
-    def command_name(self):
+    def command_name(self) -> str:
         return "get-config-sync-state"
 
     def get_request(self) -> list[ReplicationPath]:
@@ -3254,7 +3254,7 @@ class ReceiveConfigSyncRequest(NamedTuple):
     config_generation: int
 
 
-class AutomationReceiveConfigSync(AutomationCommand):
+class AutomationReceiveConfigSync(AutomationCommand[ReceiveConfigSyncRequest]):
     """Called on remote site from a central site to update the Checkmk configuration
 
     The central site hands over a tar archive with the files to be written and a list of

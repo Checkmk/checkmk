@@ -71,7 +71,7 @@ class SyncRemoteSitesResult:
         return cls(audit_logs, site_changes)
 
 
-class AutomationSyncRemoteSites(AutomationCommand):
+class AutomationSyncRemoteSites(AutomationCommand[int]):
     def command_name(self) -> str:
         return "sync-remote-site"
 
@@ -87,11 +87,11 @@ class AutomationSyncRemoteSites(AutomationCommand):
         return int(request.get_str_input_mandatory("last_audit_log_timestamp"))
 
 
-class AutomationClearSiteChanges(AutomationCommand):
+class AutomationClearSiteChanges(AutomationCommand[None]):
     def command_name(self) -> str:
         return "clear-site-changes"
 
-    def execute(self, api_request: object = None) -> None:
+    def execute(self, api_request: None) -> None:
         site_id = omd_site()
         SiteChanges(site_id).clear()
 

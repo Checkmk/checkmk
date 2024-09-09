@@ -217,7 +217,7 @@ class _AutomationServiceDiscoveryRequest(NamedTuple):
     raise_errors: bool
 
 
-class AutomationServiceDiscoveryJobSnapshot(AutomationCommand):
+class AutomationServiceDiscoveryJobSnapshot(AutomationCommand[HostName]):
     """Fetch the service discovery background job snapshot on a remote site"""
 
     def command_name(self) -> str:
@@ -235,7 +235,7 @@ class AutomationServiceDiscoveryJobSnapshot(AutomationCommand):
         return json.dumps(job_snapshot)
 
 
-class AutomationServiceDiscoveryJob(AutomationCommand):
+class AutomationServiceDiscoveryJob(AutomationCommand[_AutomationServiceDiscoveryRequest]):
     """Is called by _get_check_table() to execute the background job on a remote site"""
 
     def command_name(self) -> str:

@@ -216,11 +216,11 @@ class ACTestRegistry(cmk.ccc.plugin_registry.Registry[type[ACTest]]):
 ac_test_registry = ACTestRegistry()
 
 
-class AutomationCheckAnalyzeConfig(AutomationCommand):
+class AutomationCheckAnalyzeConfig(AutomationCommand[None]):
     def command_name(self) -> str:
         return "check-analyze-config"
 
-    def get_request(self):
+    def get_request(self) -> None:
         return None
 
     def execute(self, _unused_request: None) -> list[ACTestResult]:

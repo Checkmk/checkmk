@@ -294,7 +294,7 @@ def get_updated_host_label_files(newer_than: float) -> list[UpdatedHostLabelsEnt
     return updated_host_labels
 
 
-class AutomationDiscoveredHostLabelSync(AutomationCommand):
+class AutomationDiscoveredHostLabelSync(AutomationCommand[SiteRequest]):
     """Called by execute_site_sync to perform the sync with a remote site"""
 
     def command_name(self) -> str:

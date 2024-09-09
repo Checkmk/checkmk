@@ -144,7 +144,7 @@ def sync_remote_broker_certs(
     )
 
 
-class AutomationStoreBrokerCertificates(AutomationCommand):
+class AutomationStoreBrokerCertificates(AutomationCommand[BrokerCertificates]):
     def command_name(self) -> str:
         return "store-broker-certs"
 

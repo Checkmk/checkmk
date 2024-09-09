@@ -174,7 +174,7 @@ def _save_network_scan_result(folder: Folder, result: NetworkScanResult) -> None
         write_folder.save()
 
 
-class AutomationNetworkScan(AutomationCommand):
+class AutomationNetworkScan(AutomationCommand[NetworkScanRequest]):
     def command_name(self) -> str:
         return "network-scan"
 

@@ -151,7 +151,7 @@ from cmk.base.server_side_calls import (
 )
 from cmk.base.sources import SNMPFetcherConfig
 
-from cmk import piggyback
+from cmk import piggyback, trace
 from cmk.server_side_calls import v1 as server_side_calls_api
 from cmk.server_side_calls_backend.config_processing import PreprocessingResult
 
@@ -168,6 +168,8 @@ try:
 except ModuleNotFoundError:
     # Non-existing edition layering...
     RRDObjectConfig: TypeAlias = object  # type: ignore[no-redef]
+
+tracer = trace.get_tracer()
 
 _ContactgroupName = str
 
@@ -1413,10 +1415,11 @@ def load_all_plugins(
 
     errors = agent_based_register.load_all_plugins(raise_errors=cmk.ccc.debug.enabled())
 
-    # LEGACY CHECK PLUGINS
-    filelist = _get_plugin_paths(str(local_checks_dir), checks_dir)
+    with tracer.start_as_current_span("load_legacy_check_plugins"):
+        with tracer.start_as_current_span("discover_legacy_check_plugins"):
+            filelist = _get_plugin_paths(str(local_checks_dir), checks_dir)
 
-    errors.extend(load_checks(get_check_api_context, filelist))
+        errors.extend(load_checks(get_check_api_context, filelist))
 
     return errors
 
@@ -1441,6 +1444,7 @@ def _get_plugin_paths(*dirs: str) -> list[str]:
 # NOTE: The given file names should better be absolute, otherwise
 # we depend on the current working directory, which is a bad idea,
 # especially in tests.
+@tracer.start_as_current_span("load_legacy_checks")
 def load_checks(
     get_check_api_context: GetCheckApiContext,
     filelist: list[str],

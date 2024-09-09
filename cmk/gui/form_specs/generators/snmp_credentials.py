@@ -6,16 +6,14 @@ from enum import Enum
 from typing import Any, Sequence
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.i18n import _
 
-from cmk.gui.form_specs.converter import TransformForLegacyData, Tuple
+from cmk.gui.form_specs.converter import SimplePassword, TransformForLegacyData, Tuple
 from cmk.gui.form_specs.private import (
-    LegacyValueSpec,
+    not_empty,
     SingleChoiceElementExtended,
     SingleChoiceExtended,
 )
 from cmk.gui.form_specs.vue.visitors import DefaultValue as VueDefaultValue
-from cmk.gui.valuespec import Password
 
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
@@ -58,11 +56,9 @@ def _snmpv3_auth_protocol_elements() -> list[FormSpec[Any]]:
         String(
             title=Title("Security name"),
         ),
-        LegacyValueSpec.wrap(
-            Password(
-                title=_("Authentication password"),
-                minlen=8,
-            )
+        SimplePassword(
+            title=Title("Authentication password"),
+            custom_validate=(LengthInRange(min_value=8),),
         ),
     ]
     return form_specs
@@ -76,12 +72,9 @@ def _snmp_not_set_element() -> FixedValue[None]:
     )
 
 
-def _snmp_community_element() -> LegacyValueSpec:
-    return LegacyValueSpec.wrap(
-        Password(
-            title=_("SNMP community (SNMP Versions 1 and 2c)"),
-            allow_empty=False,
-        )
+def _snmp_community_element() -> SimplePassword:
+    return SimplePassword(
+        title=Title("SNMP community (SNMP Versions 1 and 2c)"), custom_validate=(not_empty(),)
     )
 
 
@@ -154,11 +147,8 @@ def _snmpv3_auth_priv_element(for_ec: bool = False) -> Tuple:
             type=str,
             prefill=DefaultValue("DES"),
         ),
-        LegacyValueSpec.wrap(
-            Password(
-                title=_("Privacy pass phrase"),
-                minlen=8,
-            )
+        SimplePassword(
+            title=Title("Privacy pass phrase"), custom_validate=(LengthInRange(min_value=8),)
         ),
     ]
     return Tuple(

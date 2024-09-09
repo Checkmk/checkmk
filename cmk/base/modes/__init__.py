@@ -19,6 +19,8 @@ from cmk.utils.tags import TagID
 
 from cmk.base.config import ConfigCache
 
+from cmk import trace
+
 OptionSpec = str
 Argument = str
 OptionName = str
@@ -27,6 +29,8 @@ ModeFunction = Callable
 ConvertFunction = Callable
 Options = list[tuple[OptionSpec, Argument]]
 Arguments = list[str]
+
+tracer = trace.get_tracer()
 
 
 class Modes:
@@ -69,7 +73,14 @@ class Modes:
         if handler is None:
             raise TypeError()
 
-        return handler(*handler_args)
+        with tracer.start_as_current_span(
+            f"mode[{mode}]",
+            attributes={
+                "cmk.base.mode": mode.name(),
+                "cmk.base.mode_args": repr(handler_args),
+            },
+        ):
+            return handler(*handler_args)
 
     def _get(self, opt: str) -> Mode:
         opt_name = self._strip_dashes(opt)

@@ -1,0 +1,14 @@
+title: Cisco UCS: Fault summary
+agents: snmp
+catalog: hw/network/cisco
+license: GPLv2
+distribution: check_mk
+
+description:
+ This check allows to monitor all faults reported by the device.
+ The check will report {OK} as long as no faults are reported.
+ In other cases, the check will report a status determined by the severity of the most severe issue:
+ "major" and "critical" are reported as {CRITICAL}, "warning" and "minor" as {WARNING} and "cleared" and "info" as {OK}.
+
+discovery:
+ One service is created.

@@ -578,24 +578,23 @@ def metric_expression_to_graph_recipe_expression(
     )
 
 
-def _replace_expressions(text: str, translated_metrics: Mapping[str, TranslatedMetric]) -> str:
+def _evaluate_title(title: str, translated_metrics: Mapping[str, TranslatedMetric]) -> str:
     """Replace expressions in strings like CPU Load - %(load1:max@count) CPU Cores"""
     # Note: The 'CPU load' graph is the only example with such a replacement. We do not want to
     # offer such replacements in a generic way.
     reg = regex.regex(r"%\([^)]*\)")
-    if m := reg.search(text):
+    if m := reg.search(title):
         if (
             result := parse_legacy_simple_expression(m.group()[2:-1], translated_metrics).evaluate(
                 translated_metrics
             )
         ).is_error():
-            return text.split("-")[0].strip()
+            return title.split("-")[0].strip()
         return reg.sub(
             get_render_function(result.ok.unit_spec)(result.ok.value).strip(),
-            text,
+            title,
         )
-
-    return text
+    return title
 
 
 def _evaluate_graph_template_range_boundary(
@@ -699,7 +698,7 @@ def create_graph_recipe_from_template(
                 % ", ".join(repr(unit) for unit in units)
             )
 
-    title = _replace_expressions(graph_template.title or "", translated_metrics)
+    title = _evaluate_title(graph_template.title or "", translated_metrics)
     if not title:
         title = next((m.title for m in metrics), "")
 

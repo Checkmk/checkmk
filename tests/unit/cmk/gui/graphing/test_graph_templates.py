@@ -1241,7 +1241,7 @@ def test_get_evaluated_graph_templates_2(
         ),
     ],
 )
-def test__compute_predictive_metrics(
+def test__compute_predictive_metrics_line_type(
     metric_expressions: Sequence[MetricExpression],
     expected_predictive_metric_expressions: Sequence[MetricExpression],
 ) -> None:
@@ -1291,6 +1291,59 @@ def test__compute_predictive_metrics(
         )
         == expected_predictive_metric_expressions
     )
+
+
+def test__compute_predictive_metrics_duplicates() -> None:
+    assert list(
+        _compute_predictive_metrics(
+            {
+                "metric_name": TranslatedMetric(
+                    originals=[Original("metric_name", 1.0)],
+                    value=1.0,
+                    scalar={},
+                    auto_graph=True,
+                    title="",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#0080c0",
+                ),
+                "predict_metric_name": TranslatedMetric(
+                    originals=[Original("predict_metric_name", 1.0)],
+                    value=2.0,
+                    scalar={},
+                    auto_graph=True,
+                    title="",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#0080c0",
+                ),
+                "predict_lower_metric_name": TranslatedMetric(
+                    originals=[Original("predict_lower_metric_name", 1.0)],
+                    value=3.0,
+                    scalar={},
+                    auto_graph=True,
+                    title="",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#0080c0",
+                ),
+            },
+            [
+                MetricExpression(Metric("metric_name"), line_type="line"),
+                MetricExpression(WarningOf(Metric("metric_name")), line_type="line", title="Warn"),
+                MetricExpression(CriticalOf(Metric("metric_name")), line_type="line", title="Crit"),
+            ],
+        )
+    ) == [
+        MetricExpression(Metric("predict_metric_name"), line_type="line"),
+        MetricExpression(Metric("predict_lower_metric_name"), line_type="line"),
+    ]
 
 
 @pytest.mark.parametrize(

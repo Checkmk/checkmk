@@ -322,11 +322,15 @@ def get_graph_template_from_id(template_id: str) -> GraphTemplate:
 def _compute_predictive_metrics(
     translated_metrics: Mapping[str, TranslatedMetric], metrics: Sequence[MetricExpression]
 ) -> Iterator[MetricExpression]:
+    computed = set()
     for metric_expression in metrics:
         line_type: Literal["line", "-line"] = (
             "-line" if metric_expression.line_type.startswith("-") else "line"
         )
         for metric_name in metric_expression.metric_names():
+            if metric_name in computed:
+                continue
+            computed.add(metric_name)
             if (predict_metric_name := f"predict_{metric_name}") in translated_metrics:
                 yield MetricExpression(Metric(predict_metric_name), line_type=line_type)
             if (predict_lower_metric_name := f"predict_lower_{metric_name}") in translated_metrics:

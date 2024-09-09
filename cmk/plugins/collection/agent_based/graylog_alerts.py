@@ -56,8 +56,7 @@ agent_section_graylog_alerts = AgentSection(
 
 
 def discover_graylog_alerts(section: AlertsInfo) -> DiscoveryResult:
-    if section:
-        yield Service(item=None)
+    yield Service(item=None)
 
 
 def check_graylog_alerts(params: Mapping[str, Any], section: AlertsInfo) -> CheckResult:

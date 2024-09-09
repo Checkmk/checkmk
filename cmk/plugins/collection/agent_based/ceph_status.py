@@ -98,7 +98,7 @@ def check_ceph_status(params: Mapping[str, Any], section: Section) -> CheckResul
         overall_status,
         (State.UNKNOWN, "unknown[%s]" % overall_status),
     )
-    if state:
+    if state:  # XXXXXXXXXX Regression in 2.3.0/master caused by c936c8ffb7b3
         error_messages = _extract_error_messages(section)
         if error_messages:
             state_readable += " (%s)" % (", ".join(error_messages))

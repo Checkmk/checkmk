@@ -44,7 +44,7 @@ Section = Mapping[str, Fan]
 
 
 def parse_blade_powerfan(string_table: StringTable) -> Section:
-    return {fan.index: fan for line in string_table if (fan := Fan.from_line(line))}
+    return {fan.index: fan for line in string_table for fan in [Fan.from_line(line)]}
 
 
 snmp_section_blade_powerfan = SimpleSNMPSection(

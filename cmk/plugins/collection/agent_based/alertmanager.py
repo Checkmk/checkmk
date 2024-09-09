@@ -184,7 +184,7 @@ def check_alertmanager_rules(item: str, params: CheckParams, section: Section) -
         rule = group.get(item)
         if rule:
             status = _get_rule_state(rule, params)
-            if rule.severity:
+            if rule.severity:  # XXXXXXXXXX Bug: Is always true, should probably be 'if rule.severity != Severity.NA'
                 yield Result(
                     state=State.OK,
                     summary="Severity: %s" % rule.severity.value,

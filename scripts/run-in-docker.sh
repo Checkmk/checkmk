@@ -32,7 +32,7 @@ CHECKOUT_ROOT="$(git rev-parse --show-toplevel)"
     fi
 )"}"
 
-IMAGE_VERSION="$(docker run -v "${CHECKOUT_ROOT}/omd:/tmp" "${IMAGE_ID}" /tmp/distro '-')"
+IMAGE_VERSION="$(docker run --rm -v "${CHECKOUT_ROOT}/omd:/tmp" "${IMAGE_ID}" /tmp/distro '-')"
 
 # in case of worktrees $CHECKOUT_ROOT might not contain the actual repository clone
 GIT_COMMON_DIR="$(realpath "$(git rev-parse --git-common-dir)")"
@@ -144,6 +144,8 @@ docker run -a stdout -a stderr \
     ${DOCKER_RUN_ADDOPTS} \
     "${IMAGE_ID}" \
     sh -c "${CMD}"
+
+# FIXME: eventually created image is not being cleaned up
 
 ROOT_ARTIFACTS=$(find . -user root)
 if [ -n "${ROOT_ARTIFACTS}" ]; then

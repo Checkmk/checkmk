@@ -212,7 +212,7 @@ class TCPFetcher(Fetcher[AgentRawData]):
             self._logger.debug("Reading data from agent")
             output = recvall(sock, socket.MSG_WAITALL)
 
-        if not output:
+        if not memoryview(output):
             return AgentRawData(b"")  # nothing to to, validation will fail
 
         if protocol is TransportProtocol.PLAIN:

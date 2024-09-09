@@ -111,9 +111,8 @@ def delete_users(users_to_delete: Sequence[UserId]) -> None:
 
 
 def edit_users(changed_users: UserObject) -> None:
-    if user:
-        user.need_permission("wato.users")
-        user.need_permission("wato.edit")
+    user.need_permission("wato.users")
+    user.need_permission("wato.edit")
     all_users = userdb.load_users(lock=True)
     new_users_info = []
     modified_users_info = []

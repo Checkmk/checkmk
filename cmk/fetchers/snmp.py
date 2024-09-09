@@ -6,6 +6,7 @@
 import logging
 from collections.abc import Iterator, Mapping, Sequence
 from pathlib import Path
+from types import ModuleType
 from typing import Any, Final, NamedTuple
 
 from cmk.utils.sectionname import SectionMap, SectionName
@@ -20,10 +21,11 @@ from cmk.snmplib import (
 
 from .snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
 
+inline: ModuleType | None
 try:
-    from .cee.snmp_backend import inline  # type: ignore[import,unused-ignore]
+    from .cee.snmp_backend import inline  # type: ignore[import,no-redef,unused-ignore]
 except ImportError:
-    inline = None  # type: ignore[assignment]
+    inline = None
 
 
 __all__ = ["SNMPPluginStoreItem", "SNMPPluginStore", "make_backend"]

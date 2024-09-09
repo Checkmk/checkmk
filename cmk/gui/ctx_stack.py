@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Any, assert_never, Literal, TypeVar
+from typing import Any, Literal, TypeVar
 
 from flask import g as g  # pylint: disable=unused-import
 from flask import request, session
@@ -140,12 +140,12 @@ def session_attr(
     def maybe_str_lookup(_name: str) -> T | None:
         return getattr(session, _name)
 
-    if isinstance(name, tuple):  # pylint: disable=no-else-return
-        return LocalProxy(partial(maybe_tuple_lookup, name), unbound_message=UNBOUND_MESSAGE)  # type: ignore[return-value]
-    if isinstance(name, str):
-        return LocalProxy(partial(maybe_str_lookup, name), unbound_message=UNBOUND_MESSAGE)  # type: ignore[return-value]
-
-    assert_never(name)
+    return LocalProxy(
+        partial(maybe_tuple_lookup, name)
+        if isinstance(name, tuple)
+        else partial(maybe_str_lookup, name),
+        unbound_message=UNBOUND_MESSAGE,
+    )  # type: ignore[return-value]
 
 
 # NOTE: Flask offers the proxies below, and we should go into that direction,

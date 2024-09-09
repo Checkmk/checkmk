@@ -3617,10 +3617,7 @@ def get_folder_title_path_with_links(path: PathWithoutSlash) -> list[HTML]:
 
 def get_folder_title(path: str) -> str:
     """Return the title of a folder - which is given as a string path"""
-    folder = folder_tree().folder(path)
-    if folder:
-        return folder.title()
-    return path
+    return folder_tree().folder(path).title()
 
 
 # TODO: Move to Folder()?

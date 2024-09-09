@@ -445,11 +445,10 @@ class ABCHostAttribute(abc.ABC):
         """Check whether this attribute needs to be validated at all
         Attributes might be permanently hidden (show_in_form = False)
         or dynamically hidden by the depends_on_tags, editable features"""
-        if not self.is_visible(for_what, new):
-            return False
-        if not html:
-            return True
-        return request.var("attr_display_%s" % self.name(), "1") == "1"
+        return (
+            self.is_visible(for_what, new)
+            and request.var("attr_display_%s" % self.name(), "1") == "1"
+        )
 
     def is_visible(self, for_what: str, new: bool) -> bool:
         """Gets the type of current view as argument and returns whether or not

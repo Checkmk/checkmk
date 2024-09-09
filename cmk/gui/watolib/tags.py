@@ -96,8 +96,7 @@ def update_tag_config(tag_config: TagConfig) -> None:
             The tag config object to persist
 
     """
-    if user:
-        user.need_permission("wato.hosttags")
+    user.need_permission("wato.hosttags")
     TagConfigFile().save(tag_config.get_dict_format())
     _update_tag_dependencies()
     hooks.call("tags-changed")
@@ -132,10 +131,8 @@ def save_tag_group(tag_group: TagGroup) -> None:
 
 def is_builtin(ident: TagGroupID) -> bool:
     """Verify if a tag group is a built-in"""
-    if user:
-        user.need_permission("wato.hosttags")
-    tag_config = BuiltinTagConfig()
-    return tag_config.tag_group_exists(ident)
+    user.need_permission("wato.hosttags")
+    return BuiltinTagConfig().tag_group_exists(ident)
 
 
 def tag_group_exists(ident: TagGroupID, builtin_included: bool = False) -> bool:

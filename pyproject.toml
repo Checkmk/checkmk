@@ -4,8 +4,7 @@ target-version = "py312"
 line-length = 100
 
 [tool.ruff.lint]
-# NOTE: No "I" yet due to various tiny formatting differences
-select = ["E", "F", "W", "C90", "PL"]
+select = ["E", "F", "I", "W", "C90", "PL"]
 ignore = [
   # Black is our formatting tool, so ignore any formatting-related findings.
   "E501", # line too long

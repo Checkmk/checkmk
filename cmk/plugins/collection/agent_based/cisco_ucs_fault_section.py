@@ -9,8 +9,10 @@ from collections import defaultdict
 from cmk.agent_based.v2 import SimpleSNMPSection, SNMPTree, StringTable
 from cmk.plugins.lib.cisco_ucs import DETECT, Fault, FaultSeverity
 
+type Section = dict[str, list[Fault]]  # FIXME
 
-def parse_cisco_ucs_fault(string_table: StringTable) -> dict[str, list[Fault]]:
+
+def parse_cisco_ucs_fault(string_table: StringTable) -> Section:
     faults = defaultdict(list)
     for fault_object_id, fault_ack, fault_code, fault_description, fault_severity in string_table:
         faults[fault_object_id].append(

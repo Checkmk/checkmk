@@ -283,7 +283,7 @@ def _parse_graph_template(
             )
 
 
-def get_graph_template_from_name(name: str) -> GraphTemplate:
+def _get_graph_template_from_name(name: str) -> GraphTemplate:
     if name.startswith("METRIC_"):
         name = name[7:]
     return GraphTemplate(
@@ -312,7 +312,7 @@ def get_graph_template_from_name(name: str) -> GraphTemplate:
 
 def get_graph_template_from_id(template_id: str) -> GraphTemplate:
     if template_id.startswith("METRIC_"):
-        return get_graph_template_from_name(template_id)
+        return _get_graph_template_from_name(template_id)
     for id_, template in _graph_templates_from_plugins():
         if template_id == id_:
             return _parse_graph_template(id_, template)
@@ -391,7 +391,7 @@ def get_evaluated_graph_templates(
     }
     for metric_name, translated_metric in sorted(translated_metrics.items()):
         if translated_metric.auto_graph and metric_name not in already_graphed_metrics:
-            yield get_graph_template_from_name(metric_name)
+            yield _get_graph_template_from_name(metric_name)
 
 
 def _to_metric_operation(
@@ -650,7 +650,7 @@ def _horizontal_rules_from_thresholds(
     return horizontal_rules
 
 
-def create_graph_recipe_from_template(
+def _create_graph_recipe_from_template(
     site_id: SiteId,
     host_name: HostName,
     service_name: ServiceName,
@@ -742,7 +742,7 @@ def _matching_graph_templates(
         and graph_id.startswith("METRIC_")
         and graph_id[7:] in translated_metrics
     ):
-        yield (0, get_graph_template_from_name(graph_id))
+        yield (0, _get_graph_template_from_name(graph_id))
         return
 
     yield from (
@@ -793,7 +793,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         ):
             return None
 
-        return create_graph_recipe_from_template(
+        return _create_graph_recipe_from_template(
             row["site"],
             row["host_name"],
             row.get("service_description", "_HOST_"),

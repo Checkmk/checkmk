@@ -5,7 +5,6 @@
 PACKAGES_EXT = [
     "freetds",
     "net-snmp",
-    "openssl",
     "rrdtool",
 ]
 
@@ -13,6 +12,7 @@ PACKAGES_EXT_LABEL = ["@%s//:%s" % (p, p) for p in PACKAGES_EXT]
 
 PACKAGES_INT = [
     "//omd/packages/Python:python_tar_with_prefix",
+    "//omd/packages/openssl:openssl_with_prefix_tar",
     "//omd/packages/perl-modules:perl-modules.tar",
     "//omd/packages/python3-modules:python3-modules.tar",
 ]

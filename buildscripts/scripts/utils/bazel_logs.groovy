@@ -7,8 +7,8 @@ def try_parse_bazel_execution_log(distro, distro_dir, bazel_log_prefix) {
         dir("${distro_dir}") {
             def summary_file="${distro_dir}/${bazel_log_prefix}execution_summary_${distro}.json";
             def cache_hits_file="${distro_dir}/${bazel_log_prefix}cache_hits_${distro}.csv";
-            sh("""python3 \
-            buildscripts/scripts/bazel_execution_log_parser.py \
+            sh("""bash \
+            buildscripts/scripts/bazel_execution_log_parser.sh \
             --execution_logs_root "${distro_dir}" \
             --bazel_log_file_pattern "bazel_execution_log*" \
             --summary_file "${summary_file}" \

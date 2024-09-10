@@ -88,12 +88,18 @@ def _parse_title(template: graphs_api.Graph | graphs_api.Bidirectional | RawGrap
             return str(template.get("title", ""))
 
 
-def get_graph_template_choices() -> list[tuple[str, str]]:
+@dataclass(frozen=True)
+class GraphTemplateChoice:
+    id: str
+    title: str
+
+
+def get_graph_template_choices() -> Sequence[GraphTemplateChoice]:
     # TODO: v.get("title", k): Use same algorithm as used in
     # GraphIdentificationTemplateBased._parse_template_metric()
     return sorted(
-        [(t_id, _parse_title(t)) for t_id, t in _graph_templates_from_plugins()],
-        key=lambda k_v: k_v[1],
+        [GraphTemplateChoice(t_id, _parse_title(t)) for t_id, t in _graph_templates_from_plugins()],
+        key=lambda c: c.title,
     )
 
 
@@ -358,7 +364,7 @@ def evaluate_metrics(
     return results
 
 
-def get_evaluated_graph_templates(
+def _get_evaluated_graph_templates(
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> Iterator[GraphTemplate]:
     if not translated_metrics:
@@ -401,6 +407,15 @@ def get_evaluated_graph_templates(
     for metric_name, translated_metric in sorted(translated_metrics.items()):
         if translated_metric.auto_graph and metric_name not in already_graphed_metrics:
             yield _get_graph_template_from_name(metric_name)
+
+
+def get_evaluated_graph_template_choices(
+    translated_metrics: Mapping[str, TranslatedMetric],
+) -> Sequence[GraphTemplateChoice]:
+    return [
+        GraphTemplateChoice(graph_template.id, graph_template.title)
+        for graph_template in _get_evaluated_graph_templates(translated_metrics)
+    ]
 
 
 def _to_metric_operation(
@@ -761,7 +776,7 @@ def _matching_graph_templates(
 
     yield from (
         (index, graph_template)
-        for index, graph_template in enumerate(get_evaluated_graph_templates(translated_metrics))
+        for index, graph_template in enumerate(_get_evaluated_graph_templates(translated_metrics))
         if (graph_index is None or index == graph_index)
         and (graph_id is None or graph_template.id == graph_id)
     )

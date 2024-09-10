@@ -42,12 +42,12 @@ from cmk.gui.graphing._graph_specification import (
 )
 from cmk.gui.graphing._graph_templates import (
     _compute_predictive_metrics,
+    _get_evaluated_graph_templates,
     _graph_template_from_api_bidirectional,
     _graph_template_from_api_graph,
     _graph_templates_from_plugins,
     _matching_graph_templates,
     _parse_graph_template,
-    get_evaluated_graph_templates,
     GraphTemplate,
     MinimalGraphTemplateRange,
 )
@@ -146,7 +146,7 @@ def test__matching_graph_templates(
 ) -> None:
     monkeypatch.setattr(
         gt,
-        "get_evaluated_graph_templates",
+        "_get_evaluated_graph_templates",
         lambda _metrics: _GRAPH_TEMPLATES,
     )
     assert (
@@ -1144,7 +1144,7 @@ def test__parse_graph_template(
         ),
     ],
 )
-def test_get_evaluated_graph_templates_1(
+def test__get_evaluated_graph_templates_1(
     metric_names: Sequence[str],
     check_command: str,
     graph_ids: Sequence[str],
@@ -1152,7 +1152,7 @@ def test_get_evaluated_graph_templates_1(
 ) -> None:
     perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
     translated_metrics = translate_metrics(perfdata, check_command)
-    assert sorted([t.id for t in get_evaluated_graph_templates(translated_metrics)]) == sorted(
+    assert sorted([t.id for t in _get_evaluated_graph_templates(translated_metrics)]) == sorted(
         graph_ids
     )
 
@@ -1169,7 +1169,7 @@ def test_get_evaluated_graph_templates_1(
         ),
     ],
 )
-def test_get_evaluated_graph_templates_2(
+def test__get_evaluated_graph_templates_2(
     metric_names: Sequence[str],
     warn_crit_min_max: tuple[int, int, int, int],
     check_command: str,
@@ -1178,7 +1178,7 @@ def test_get_evaluated_graph_templates_2(
 ) -> None:
     perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", *warn_crit_min_max) for n in metric_names]
     translated_metrics = translate_metrics(perfdata, check_command)
-    assert sorted([t.id for t in get_evaluated_graph_templates(translated_metrics)]) == sorted(
+    assert sorted([t.id for t in _get_evaluated_graph_templates(translated_metrics)]) == sorted(
         graph_ids
     )
 
@@ -1504,7 +1504,7 @@ def test__compute_predictive_metrics_duplicates() -> None:
         ),
     ],
 )
-def test_get_evaluated_graph_templates_with_predictive_metrics(
+def test__get_evaluated_graph_templates_with_predictive_metrics(
     metric_names: Sequence[str],
     predict_metric_names: Sequence[str],
     predict_lower_metric_names: Sequence[str],
@@ -1521,7 +1521,7 @@ def test_get_evaluated_graph_templates_with_predictive_metrics(
         ]
     )
     translated_metrics = translate_metrics(perfdata, check_command)
-    found_graph_templates = list(get_evaluated_graph_templates(translated_metrics))
+    found_graph_templates = list(_get_evaluated_graph_templates(translated_metrics))
     assert found_graph_templates == graph_templates
 
 
@@ -1870,6 +1870,6 @@ def test_conflicting_metrics(
     # 2. use metric names from (1) and conflicting metrics
     perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
     translated_metrics = translate_metrics(perfdata, "check_command")
-    assert sorted([t.id for t in get_evaluated_graph_templates(translated_metrics)]) == sorted(
+    assert sorted([t.id for t in _get_evaluated_graph_templates(translated_metrics)]) == sorted(
         graph_ids
     )

@@ -87,11 +87,7 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
             return list(self.choices())
         return [
             next(
-                (
-                    (graph_id, graph_title)
-                    for graph_id, graph_title in get_graph_template_choices()
-                    if graph_id == value
-                ),
+                ((c.id, c.title) for c in get_graph_template_choices() if c.id == value),
                 (
                     value,
                     (

@@ -23,7 +23,7 @@ from tests.testlib.playwright.plugin import (
 from tests.testlib.playwright.pom.dashboard import Dashboard, DashboardMobile
 from tests.testlib.playwright.pom.login import LoginPage
 from tests.testlib.playwright.pom.setup.hosts import AddHost, SetupHost
-from tests.testlib.repo import qa_test_data_path
+from tests.testlib.repo import repo_path
 from tests.testlib.site import ADMIN_USER, get_site_factory, Site
 from tests.testlib.utils import run
 
@@ -177,7 +177,7 @@ def setup_host_using_data_from_agent_dump(
     This fixture uses indirect pytest parametrization to define the agent dump.
     """
     test_site_dump_path = test_site.path("var/check_mk/dumps")
-    data_source_dump_path = str(qa_test_data_path() / "gui_e2e")
+    data_source_dump_path = repo_path() / "tests" / "gui_e2e" / "data"
     dump_name = request.param
     host_name = dump_name.split("-")[0] + "_host"
 

@@ -1,0 +1,468 @@
+<<<check_mk>>>
+Version: 2.4.0-2024.08.27
+AgentOS: linux
+Hostname: linux_host
+AgentDirectory: /etc/check_mk
+DataDirectory: /var/lib/check_mk_agent
+SpoolDirectory: /var/lib/check_mk_agent/spool
+PluginsDirectory: /usr/lib/check_mk_agent/plugins
+LocalDirectory: /usr/lib/check_mk_agent/local
+OSType: linux
+OSName: Ubuntu
+OSVersion: 22.04
+OSPlatform: ubuntu
+FailedPythonReason:
+SSHClient:
+<<<cmk_agent_ctl_status:sep(0)>>>
+{"version":"2.4.0-2024.08.27","agent_socket_operational":true,"ip_allowlist":[],"allow_legacy_pull":false,"connections":[{"site_id":"127.0.0.1/gui_e2e_central","receiver_port":8000,"uuid":"a7d123ce-ded1-406c-90d0-d51a5e2b1538","local":{"connection_mode":"pull-agent","cert_info":{"issuer":"Site 'gui_e2e_central' agent signing CA","from":"Tue, 27 Aug 2024 11:03:14 +0000","to":"Mon, 27 Aug 2029 11:03:14 +0000"}},"remote":"remote_query_disabled"}]}
+<<<checkmk_agent_plugins_lnx:sep(0)>>>
+pluginsdir /usr/lib/check_mk_agent/plugins
+localdir /usr/lib/check_mk_agent/local
+<<<labels:sep(0)>>>
+<<<df_v2>>>
+tmpfs                     tmpfs        3221136     3092   3218044       1% /run
+/dev/mapper/vgubuntu-root ext4       486903968 84732080 377365080      19% /
+tmpfs                     tmpfs       16105668   313840  15791828       2% /dev/shm
+tmpfs                     tmpfs           5120        4      5116       1% /run/lock
+efivarfs                  efivarfs         438      335        99      78% /sys/firmware/efi/efivars
+/dev/nvme0n1p2            ext4         1684592   766440    814268      49% /boot
+/dev/nvme0n1p1            vfat          523248    26152    497096       5% /boot/efi
+tmpfs                     tmpfs        3221132    21800   3199332       1% /run/user/1000
+tmpfs                     tmpfs       16105668      384  16105284       1% /opt/omd/sites/gui_e2e_central/tmp
+tmpfs                     tmpfs        3221132       64   3221068       1% /run/user/0
+<<<df_v2>>>
+[df_inodes_start]
+tmpfs                     tmpfs     4026417    1689  4024728    1% /run
+/dev/mapper/vgubuntu-root ext4     30990336 1190280 29800056    4% /
+tmpfs                     tmpfs     4026417    1160  4025257    1% /dev/shm
+tmpfs                     tmpfs     4026417       7  4026410    1% /run/lock
+efivarfs                  efivarfs        0       0        0     - /sys/firmware/efi/efivars
+/dev/nvme0n1p2            ext4       109536     330   109206    1% /boot
+/dev/nvme0n1p1            vfat            0       0        0     - /boot/efi
+tmpfs                     tmpfs      805283     161   805122    1% /run/user/1000
+tmpfs                     tmpfs     4026417      78  4026339    1% /opt/omd/sites/gui_e2e_central/tmp
+tmpfs                     tmpfs      805283      66   805217    1% /run/user/0
+[df_inodes_end]
+[df_lsblk_start]
+NAME                        UUID
+/dev/loop0
+/dev/loop1
+/dev/loop2
+/dev/loop3
+/dev/loop4
+/dev/loop5
+/dev/loop6
+/dev/loop7
+/dev/loop8
+/dev/loop9
+/dev/loop10
+/dev/loop11
+/dev/loop12
+/dev/loop13
+/dev/loop14
+/dev/loop15
+/dev/loop16
+/dev/loop17
+/dev/loop18
+/dev/loop19
+/dev/loop20
+/dev/loop21
+/dev/loop22
+/dev/mapper/nvme0n1p3_crypt s02RBM-ad6q-rjCE-KOQM-nlL0-xklf-1JoffO
+/dev/mapper/vgubuntu-root   1bcd18c4-1ec4-4d02-86e5-58e4c1c2d9ff
+/dev/mapper/vgubuntu-swap_1 67ce394f-479f-4ff7-8df7-2999863134d6
+/dev/nvme0n1
+/dev/nvme0n1p1              ABE3-D2E4
+/dev/nvme0n1p2              cb11d228-67b1-4a5b-a81c-ab8a99c6fd1a
+/dev/nvme0n1p3              75eecc02-f0e7-4669-8ce0-562ba273525c
+[df_lsblk_end]
+<<<mem>>>
+MemTotal:       32211340 kB
+MemFree:        13987264 kB
+MemAvailable:   20984928 kB
+Buffers:          459564 kB
+Cached:          8769472 kB
+SwapCached:            0 kB
+Active:         11410688 kB
+Inactive:        3862288 kB
+Active(anon):    8326468 kB
+Inactive(anon):        0 kB
+Active(file):    3084220 kB
+Inactive(file):  3862288 kB
+Unevictable:     1826092 kB
+Mlocked:              32 kB
+SwapTotal:       2002940 kB
+SwapFree:        2002940 kB
+Zswap:                 0 kB
+Zswapped:              0 kB
+Dirty:              1060 kB
+Writeback:           116 kB
+AnonPages:       7870044 kB
+Mapped:          2728440 kB
+Shmem:           2282572 kB
+KReclaimable:     518868 kB
+Slab:             772068 kB
+SReclaimable:     518868 kB
+SUnreclaim:       253200 kB
+KernelStack:       25812 kB
+PageTables:        78876 kB
+SecPageTables:         0 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:    18108608 kB
+Committed_AS:   28904588 kB
+VmallocTotal:   34359738367 kB
+VmallocUsed:       68068 kB
+VmallocChunk:          0 kB
+Percpu:            16896 kB
+HardwareCorrupted:     0 kB
+AnonHugePages:         0 kB
+ShmemHugePages:  1744896 kB
+ShmemPmdMapped:        0 kB
+FileHugePages:         0 kB
+FilePmdMapped:         0 kB
+Unaccepted:            0 kB
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+Hugetlb:               0 kB
+DirectMap4k:      456736 kB
+DirectMap2M:    11474944 kB
+DirectMap1G:    22020096 kB
+<<<cpu>>>
+1.05 1.05 0.77 1/1596 180104 12
+250588
+<<<uptime>>>
+16361.77 165754.22
+<<<lnx_if:sep(58)>>>
+    lo: 101330054   53814    0    0    0     0          0         0 101330054   53814    0    0    0     0       0          0
+wlp0s20f3: 749951557  827027    0 7088    0     0          0         0 146987540  341601    0    0    0     0       0          0
+docker0:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
+  tun0: 342765509  273127    0    0    0     0          0         0  9930039   86330    0    0    0     0       0          0
+[lo]
+Address: 00:00:00:00:00:00
+[tun0]
+Speed: 10000Mb/s
+Address:
+[docker0]
+Address: 02:42:54:e9:ef:82
+[wlp0s20f3]
+Address: 4c:5f:70:9e:63:17
+<<<tcp_conn_stats>>>
+08 4
+01 10
+0A 15
+05 3
+06 34
+<<<diskstat>>>
+1724756915
+ 259       0 nvme0n1 120546 37633 8940235 24611 418859 166974 13205442 672730 0 278872 726652 0 0 0 0 62859 29311
+ 252       0 dm-0 157491 0 8910050 49860 575354 0 13205176 1445540 0 281172 1495400 0 0 0 0 0 0
+ 252       1 dm-1 157253 0 8899594 49976 573225 0 13205176 1424708 0 281144 1474684 0 0 0 0 0 0
+ 252       2 dm-2 194 0 8616 84 0 0 0 0 0 88 84 0 0 0 0 0 0
+[dmsetup_info]
+nvme0n1p3_crypt 252:0
+vgubuntu-root 252:1 vgubuntu root
+vgubuntu-swap_1 252:2 vgubuntu swap_1
+[device_wwn]
+nvme-eui.000000000000000100a0752346045327 /dev/nvme0n1
+nvme-eui.000000000000000100a0752346045327-part1 /dev/nvme0n1p1
+nvme-eui.000000000000000100a0752346045327-part2 /dev/nvme0n1p2
+nvme-eui.000000000000000100a0752346045327-part3 /dev/nvme0n1p3
+<<<kernel>>>
+1724756915
+nr_free_pages 3499388
+nr_zone_inactive_anon 0
+nr_zone_active_anon 2081898
+nr_zone_inactive_file 965572
+nr_zone_active_file 771055
+nr_zone_unevictable 456532
+nr_zone_write_pending 294
+nr_mlock 8
+nr_bounce 0
+nr_zspages 0
+nr_free_cma 0
+nr_unaccepted 0
+numa_hit 373867993
+numa_miss 0
+numa_foreign 0
+numa_interleave 2059
+numa_local 373867993
+numa_other 0
+nr_inactive_anon 0
+nr_active_anon 2081898
+nr_inactive_file 965572
+nr_active_file 771055
+nr_unevictable 456532
+nr_slab_reclaimable 129717
+nr_slab_unreclaimable 63300
+nr_isolated_anon 0
+nr_isolated_file 0
+workingset_nodes 0
+workingset_refault_anon 0
+workingset_refault_file 0
+workingset_activate_anon 0
+workingset_activate_file 0
+workingset_restore_anon 0
+workingset_restore_file 0
+workingset_nodereclaim 0
+nr_anon_pages 1967646
+nr_mapped 682256
+nr_file_pages 2307259
+nr_dirty 265
+nr_writeback 29
+nr_writeback_temp 0
+nr_shmem 570643
+nr_shmem_hugepages 852
+nr_shmem_pmdmapped 0
+nr_file_hugepages 0
+nr_file_pmdmapped 0
+nr_anon_transparent_hugepages 0
+nr_vmscan_write 0
+nr_vmscan_immediate_reclaim 0
+nr_dirtied 2098005
+nr_written 1465928
+nr_throttled_written 0
+nr_kernel_misc_reclaimable 0
+nr_foll_pin_acquired 1065
+nr_foll_pin_released 1065
+nr_kernel_stack 25796
+nr_page_table_pages 19783
+nr_sec_page_table_pages 0
+nr_swapcached 0
+pgpromote_success 0
+pgpromote_candidate 0
+nr_dirty_threshold 1033530
+nr_dirty_background_threshold 516134
+pgpgin 4672627
+pgpgout 6602721
+pswpin 0
+pswpout 0
+pgalloc_dma 1024
+pgalloc_dma32 1026
+pgalloc_normal 402181868
+pgalloc_movable 0
+pgalloc_device 0
+allocstall_dma 0
+allocstall_dma32 0
+allocstall_normal 0
+allocstall_movable 0
+allocstall_device 0
+pgskip_dma 0
+pgskip_dma32 0
+pgskip_normal 0
+pgskip_movable 0
+pgskip_device 0
+pgfree 405692404
+pgactivate 0
+pgdeactivate 0
+pglazyfree 24306
+pgfault 371525405
+pgmajfault 24595
+pglazyfreed 0
+pgrefill 0
+pgreuse 10985841
+pgsteal_kswapd 0
+pgsteal_direct 0
+pgsteal_khugepaged 0
+pgdemote_kswapd 0
+pgdemote_direct 0
+pgdemote_khugepaged 0
+pgscan_kswapd 0
+pgscan_direct 0
+pgscan_khugepaged 0
+pgscan_direct_throttle 0
+pgscan_anon 0
+pgscan_file 0
+pgsteal_anon 0
+pgsteal_file 0
+zone_reclaim_failed 0
+pginodesteal 0
+slabs_scanned 0
+kswapd_inodesteal 0
+kswapd_low_wmark_hit_quickly 0
+kswapd_high_wmark_hit_quickly 0
+pageoutrun 0
+pgrotated 5
+drop_pagecache 0
+drop_slab 0
+oom_kill 0
+numa_pte_updates 0
+numa_huge_pte_updates 0
+numa_hint_faults 0
+numa_hint_faults_local 0
+numa_pages_migrated 0
+pgmigrate_success 0
+pgmigrate_fail 0
+thp_migration_success 0
+thp_migration_fail 0
+thp_migration_split 0
+compact_migrate_scanned 0
+compact_free_scanned 0
+compact_isolated 0
+compact_stall 0
+compact_fail 0
+compact_success 0
+compact_daemon_wake 0
+compact_daemon_migrate_scanned 0
+compact_daemon_free_scanned 0
+htlb_buddy_alloc_success 0
+htlb_buddy_alloc_fail 0
+unevictable_pgs_culled 28046174
+unevictable_pgs_scanned 26951589
+unevictable_pgs_rescued 27483172
+unevictable_pgs_mlocked 535802
+unevictable_pgs_munlocked 535794
+unevictable_pgs_cleared 0
+unevictable_pgs_stranded 0
+thp_fault_alloc 0
+thp_fault_fallback 0
+thp_fault_fallback_charge 0
+thp_collapse_alloc 0
+thp_collapse_alloc_failed 0
+thp_file_alloc 49176
+thp_file_fallback 0
+thp_file_fallback_charge 0
+thp_file_mapped 0
+thp_split_page 0
+thp_split_page_failed 0
+thp_deferred_split_page 0
+thp_split_pmd 0
+thp_scan_exceed_none_pte 0
+thp_scan_exceed_swap_pte 0
+thp_scan_exceed_share_pte 0
+thp_split_pud 0
+thp_zero_page_alloc 0
+thp_zero_page_alloc_failed 0
+thp_swpout 0
+thp_swpout_fallback 0
+balloon_inflate 0
+balloon_deflate 0
+balloon_migrate 0
+swap_ra 0
+swap_ra_hit 0
+ksm_swpin_copy 0
+cow_ksm 0
+zswpin 0
+zswpout 0
+direct_map_level2_splits 213
+direct_map_level3_splits 8
+nr_unstable 0
+cpu  2498112 2438 331632 16575460 12886 0 11568 0 0 0
+cpu0 233636 317 39131 1329606 1147 0 1064 0 0 0
+cpu1 211629 392 27212 1380772 923 0 1126 0 0 0
+cpu2 250437 495 38054 1316001 1170 0 876 0 0 0
+cpu3 228729 468 32755 1359186 650 0 410 0 0 0
+cpu4 231134 231 33904 1346970 1120 0 6176 0 0 0
+cpu5 218557 105 29562 1371767 1002 0 120 0 0 0
+cpu6 208306 77 26903 1385795 1008 0 146 0 0 0
+cpu7 201568 127 23727 1396223 1048 0 74 0 0 0
+cpu8 194556 60 21873 1404216 1192 0 228 0 0 0
+cpu9 181979 91 20659 1418622 1023 0 976 0 0 0
+cpu10 174322 39 19759 1427051 1196 0 55 0 0 0
+cpu11 163253 33 18088 1439244 1402 0 312 0 0 0
+intr 48056100 0 6214 0 0 0 0 0 0 0 43189 0 0 139 0 10123 0 0 0 0 0 0 0 0 0 0 0 168629 0 0 0 0 0 0 0 0 0 0 0 0 0 386324 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2028004 323 347 0 0 0 0 0 0 0 0 0 0 0 0 0 0 31 32879 17024 34303 16966 30842 25898 24523 26994 23070 29561 33255 24833 10123 1619651 45 322679 9051 36530 43659 3517 231203 3780 2498 3866 2175 4275 2307 3517 3 0 0 0 0 0 0 0 0 0 4353 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ctxt 139629751
+btime 1724740553
+processes 180188
+procs_running 1
+procs_blocked 0
+softirq 27617437 1850490 1589162 6 717105 9363 0 19012 9715557 98 13716644
+<<<md>>>
+Personalities :
+unused devices: <none>
+<<<vbox_guest>>>
+<<<postfix_mailq>>>
+[[[default]]]
+QUEUE_deferred 256 40
+QUEUE_active 4 0
+<<<postfix_mailq_status:sep(58)>>>
+default:the Postfix mail system is running:PID:2959
+<<<livestatus_status:sep(59)>>>
+[gui_e2e_central]
+accept_passive_host_checks;accept_passive_service_checks;average_latency_checker;average_latency_fetcher;average_latency_generic;average_latency_real_time;average_runnable_jobs_checker;average_runnable_jobs_fetcher;cached_log_messages;carbon_bytes_sent;carbon_bytes_sent_rate;carbon_overflows;carbon_overflows_rate;carbon_queue_usage;carbon_queue_usage_rate;check_external_commands;check_host_freshness;check_service_freshness;connections;connections_rate;core_pid;edition;enable_event_handlers;enable_flap_detection;enable_notifications;execute_host_checks;execute_service_checks;external_command_buffer_max;external_command_buffer_slots;external_command_buffer_usage;external_commands;external_commands_rate;forks;forks_rate;has_event_handlers;helper_usage_checker;helper_usage_fetcher;helper_usage_generic;helper_usage_real_time;host_checks;host_checks_rate;influxdb_bytes_sent;influxdb_bytes_sent_rate;influxdb_overflows;influxdb_overflows_rate;influxdb_queue_usage;influxdb_queue_usage_rate;interval_length;last_command_check;last_log_rotation;license_usage_history;livechecks;livechecks_rate;livestatus_active_connections;livestatus_overflows;livestatus_overflows_rate;livestatus_queued_connections;livestatus_threads;livestatus_usage;livestatus_version;log_messages;log_messages_rate;max_long_output_size;metrics_count;metrics_count_rate;mk_inventory_last;nagios_pid;neb_callbacks;neb_callbacks_rate;num_hosts;num_queued_alerts;num_queued_notifications;num_services;obsess_over_hosts;obsess_over_services;perf_data_count;perf_data_count_rate;process_performance_data;program_start;program_version;requests;requests_rate;rrdcached_bytes_sent;rrdcached_bytes_sent_rate;rrdcached_overflows;rrdcached_overflows_rate;rrdcached_queue_usage;rrdcached_queue_usage_rate;service_checks;service_checks_rate;state_file_created
+1;1;0;1.46875e-06;1.50039;0;0;0;18;0;0;0;0;5e-05;1.34543e-13;1;1;1;154;0.128381;161518;enterprise;1;1;1;1;1;8;0;0;16;1.64443e-06;0;0;0;3.56016e-09;0.00150109;1.85758e-09;0;289;0.600146;0;0;0;0;0;0;60;0;1724756546;LQ't#$x~}Qi Qb]_Q[ Q9:DE@CJQi ,LQ:?DE2?460:5Qi Q`gd72afd\b3ga\c64a\gfbe\4445hheca4agQ[ QD:E6092D9Qi Q_gd6fgddb_fba_ehd6366egf36fea6d4df`ddc2h3a577befghf`76e_e46622b6Q[ QG6CD:@?Qi Qa]c]_\a_ac]_g]af]466Q[ Q65:E:@?Qi Q466Q[ QA=2E7@C>Qi Q&3F?EF aa]_c]c {%$Q[ Q:D04>2Qi 72=D6[ QD2>A=60E:>6Qi `facf`eg__[ QE:>6K@?6Qi Q&%rQ[ Q?F>09@DEDQi _[ Q?F>09@DED04=@F5Qi _[ Q?F>09@DED0D925@HQi _[ Q?F>09@DED06I4=F565Qi _[ Q?F>0D6CG:46DQi _[ Q?F>0D6CG:46D04=@F5Qi _[ Q?F>0D6CG:46D0D925@HQi _[ Q?F>0D6CG:46D06I4=F565Qi _[ Q?F>0DJ?E96E:40E6DEDQi _[ Q?F>0DJ?E96E:40E6DED06I4=F565Qi _[ Q6IE6?D:@?0?E@AQi 72=D6N.N;1;2.68478e-07;1;0;0;0;20;2.20981e-09;2.4.0-2024.08.27;80;1.48089e-05;2000;2590;1.43205;1724756674;161518;0;0;1;0;0;43;0;0;324;0.175776;1;1724756673;Check_MK 2.4.0-2024.08.27;489;0.459585;44518;27.4871;0;0;5e-05;-7.02827e-06;397;0.211965;0
+<<<livestatus_ssl_certs:sep(124)>>>
+[gui_e2e_central]
+/omd/sites/gui_e2e_central/etc/ssl/ca.pem|2040289320
+/omd/sites/gui_e2e_central/etc/ssl/sites/gui_e2e_central.pem|2040289321
+<<<mkeventd_status:sep(0)>>>
+["gui_e2e_central"]
+[["status_config_load_time", "status_num_open_events", "status_virtual_memory_size", "status_messages", "status_message_rate", "status_average_message_rate", "status_rule_tries", "status_rule_trie_rate", "status_average_rule_trie_rate", "status_rule_hits", "status_rule_hit_rate", "status_average_rule_hit_rate", "status_drops", "status_drop_rate", "status_average_drop_rate", "status_overflows", "status_overflow_rate", "status_average_overflow_rate", "status_events", "status_event_rate", "status_average_event_rate", "status_connects", "status_connect_rate", "status_average_connect_rate", "status_average_processing_time", "status_average_sync_time", "status_average_request_time", "status_replication_slavemode", "status_replication_last_sync", "status_replication_success", "status_event_limit_host", "status_event_limit_rule", "status_event_limit_overall", "status_event_limit_active_hosts", "status_event_limit_active_rules", "status_event_limit_active_overall"], [1724756545, 0, 231354368, 0, 0.0, 0.0, 0, 0.0, 0.0, 0, 0.0, 0.0, 0, 0.0, 0.0, 0, 0.0, 0.0, 0, 0.0, 0.0, 26, 0.0, 0.04333615577122656, 0.0, 0.0, 0.00022878929419275828, "master", 0.0, false, 1000, 1000, 10000, [], [], false]]
+<<<cmk_site_statistics:sep(59)>>>
+[gui_e2e_central]
+1;0;0;0
+42;0;0;0;0;1
+<<<job>>>
+<<<lnx_thermal:sep(124)>>>
+thermal_zone0|disabled|INT3400 Thermal|20000||
+thermal_zone1|enabled|TSKN|38050|-274000|passive|-274000|passive|127050|critical|127050|hot|60050|passive|60050|active
+thermal_zone10|enabled|x86_pkg_temp|66000|-274000|passive|-274000|passive
+thermal_zone2|enabled|TMEM|41050|-274000|passive|-274000|passive|127050|critical|127050|hot|60050|passive|60050|active
+thermal_zone3|enabled|CHRG|47050|-274000|passive|-274000|passive|127050|critical|127050|hot|60050|passive|60050|active
+thermal_zone4|enabled|AMBF|44050|-274000|passive|-274000|passive|127050|critical|127050|hot|60050|passive|60050|active
+thermal_zone5|enabled|HTTP|45050|-274000|passive|-274000|passive|127050|critical|127050|hot|60050|passive|60050|active
+thermal_zone6|enabled|BATT|28050|-274000|passive|-274000|passive|127050|critical|127050|hot|60050|passive|60050|active
+thermal_zone7|enabled|TCPU|65050|110050|critical|110050|hot|110050|passive|109050|active|107050|active|106050|active|104550|active|103050|active
+thermal_zone8|enabled|TCPU_PCI|66000|-274000|passive
+thermal_zone9|enabled|iwlwifi_1|42000|-2147483648|passive|-2147483648|passive|-2147483648|passive|-2147483648|passive|-2147483648|passive|-2147483648|passive|-2147483648|passive|-2147483648|passive
+<<<mknotifyd:sep(0)>>>
+1724756915
+[gui_e2e_central]
+Version:         2.4.0-2024.08.27
+Updated:         1724756908 (2024-08-27 11:08:28)
+Started:         1724756546 (2024-08-27 11:02:26, 361 sec ago)
+Configuration:   1724756546 (2024-08-27 11:02:26, 361 sec ago)
+Listening FD:    None
+
+Spool:           New
+Count:           0
+Oldest:          -
+Youngest:        -
+
+Spool:           Deferred
+Count:           0
+Oldest:          -
+Youngest:        -
+
+Spool:           Corrupted
+Count:           0
+Oldest:          -
+Youngest:        -
+<<<omd_apache:sep(124)>>>
+[gui_e2e_central]
+/gui_e2e_central/check_mk/run_cron.py|200|3|61698
+/gui_e2e_central/check_mk/sidebar_snapin.py?names=tactical_overview,master_control&since=1724756581&_ajaxid=0|200|6096|30380
+/gui_e2e_central/check_mk/ajax_figure_dashlet_data.py|200|2753|24273
+/gui_e2e_central/check_mk/ajax_figure_dashlet_data.py|200|3653|29690
+/gui_e2e_central/check_mk/ajax_figure_dashlet_data.py|200|3227|31761
+/gui_e2e_central/check_mk/view.py?view_name=allhosts|200|120226|67853
+
+<<<omd_diskusage:sep(0)>>>
+[site gui_e2e_central]
+175178350	/omd/sites/gui_e2e_central
+980277	/omd/sites/gui_e2e_central/var/log
+106237408	/omd/sites/gui_e2e_central/var/check_mk/rrd
+20480	/omd/sites/gui_e2e_central/var/pnp4nagios/
+309025	/omd/sites/gui_e2e_central/tmp/
+335883	/omd/sites/gui_e2e_central/local/
+57606136	/omd/sites/gui_e2e_central/var/check_mk/agents/
+28672	/omd/sites/gui_e2e_central/var/mkeventd/history/
+580114	/omd/sites/gui_e2e_central/var/check_mk/core/
+0 /omd/sites/gui_e2e_central/var/check_mk/inventory_archive/
+<<<omd_info:sep(59)>>>
+[versions]
+version;number;edition;demo
+2.4.0-2024.06.05.cre;2.4.0-2024.06.05;cre;0
+2.4.0-2024.08.26.cee;2.4.0-2024.08.26;cee;0
+2.4.0-2024.08.27.cee;2.4.0-2024.08.27;cee;0
+[sites]
+site;used_version;autostart
+gui_e2e_central;2.4.0-2024.08.27.cee;0
+<<<timesyncd_ntpmessage:sep(10)>>>
+NTPMessage={ Leap=0, Version=4, Mode=4, Stratum=2, Precision=-25, RootDelay=1.068ms, RootDispersion=289us, Reference=B7A08584, OriginateTimestamp=Tue 2024-08-27 12:34:40 CEST, ReceiveTimestamp=Tue 2024-08-27 12:34:40 CEST, TransmitTimestamp=Tue 2024-08-27 12:34:40 CEST, DestinationTimestamp=Tue 2024-08-27 12:34:40 CEST, Ignored=no PacketCount=13, Jitter=7.239ms }
+Timezone=Europe/Berlin
+<<<local:sep(0)>>>

@@ -95,7 +95,6 @@ from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.broker_connections import BrokerConnectionsConfigFile
 from cmk.gui.watolib.config_domain_name import (
     ConfigDomainName,
-    DomainRequest,
     DomainRequests,
     get_always_activate_domains,
     get_config_domain,
@@ -2629,12 +2628,6 @@ def _render_warnings(configuration_warnings: ConfigWarnings) -> str:
 def _save_state(activation_id: ActivationId, site_id: SiteId, state: SiteActivationState) -> None:
     state_path = ActivateChangesManager.site_state_path(activation_id, site_id)
     store.save_object_to_file(state_path, state)
-
-
-def parse_serialized_domain_requests(
-    serialized_requests: Iterable[SerializedSettings],
-) -> DomainRequests:
-    return [DomainRequest(**x) for x in serialized_requests]
 
 
 def execute_activate_changes(domain_requests: DomainRequests) -> ConfigWarnings:

@@ -11,8 +11,6 @@ import json
 import os
 import tarfile
 from collections.abc import Collection, Iterator
-from dataclasses import asdict
-from typing import NamedTuple
 
 from six import ensure_str
 
@@ -65,6 +63,7 @@ from cmk.gui.watolib.activate_changes import (
     has_been_activated,
     is_foreign_change,
     prevent_discard_changes,
+    verify_remote_site_config,
 )
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
 from cmk.gui.watolib.automations import MKAutomationException
@@ -1012,38 +1011,17 @@ class PageAjaxActivationState(AjaxPage):
         return manager.get_state()
 
 
-class ActivateChangesRequest(NamedTuple):
-    site_id: SiteId
-    domains: DomainRequests
-
-
-class AutomationActivateChanges(AutomationCommand[ActivateChangesRequest]):
+class AutomationActivateChanges(AutomationCommand[DomainRequests]):
     def command_name(self) -> str:
         return "activate-changes"
 
-    def get_request(self) -> ActivateChangesRequest:
-        site_id = SiteId(request.get_ascii_input_mandatory("site_id"))
-        activate_changes.verify_remote_site_config(site_id)
-
+    def get_request(self) -> DomainRequests:
+        verify_remote_site_config(SiteId(request.get_ascii_input_mandatory("site_id")))
+        domains = request.get_ascii_input_mandatory("domains")
         try:
-            serialized_domain_requests = ast.literal_eval(
-                request.get_ascii_input_mandatory("domains")
-            )
-            if serialized_domain_requests and isinstance(serialized_domain_requests[0], str):
-                serialized_domain_requests = [
-                    asdict(DomainRequest(x)) for x in serialized_domain_requests
-                ]
+            return [DomainRequest(**x) for x in ast.literal_eval(domains)]
         except SyntaxError:
-            raise MKAutomationException(
-                _("Invalid request: %r") % request.get_ascii_input_mandatory("domains")
-            )
+            raise MKAutomationException(_("Invalid request: %r") % domains)
 
-        return ActivateChangesRequest(site_id=site_id, domains=serialized_domain_requests)
-
-    def execute(self, api_request: ActivateChangesRequest) -> ConfigWarnings:
-        return activate_changes.execute_activate_changes(
-            # NOTE: Something is fishy here: parse_serialized_domain_requests() expects
-            # an Iterable[SerializedSettings] (i.e. an Iterable[Mapping[str, Any]]),
-            # but ActivateChangesRequest.domains has the type Sequence[DomainRequest]
-            activate_changes.parse_serialized_domain_requests(api_request.domains)  # type: ignore[arg-type]
-        )
+    def execute(self, api_request: DomainRequests) -> ConfigWarnings:
+        return activate_changes.execute_activate_changes(api_request)

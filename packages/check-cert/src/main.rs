@@ -132,13 +132,13 @@ struct Args {
     #[arg(long)]
     max_validity: Option<u32>,
 
-    /// Response time levels in milliseconds [WARN CRIT]
+    /// Overall response time levels in seconds [WARN CRIT]
     #[arg(
         long,
         num_args = 2,
-        default_values_t = [60000, 90000]
+        default_values_t = [60.0, 90.0]
     )]
-    response_time: Vec<u32>,
+    response_time: Vec<f64>,
 
     /// Load CA store at this location in place of the default one
     #[arg(long)]
@@ -178,7 +178,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let response_time = parse_levels(
         LevelsStrategy::Upper,
         args.response_time,
-        Duration::milliseconds,
+        Duration::seconds_f64,
     );
 
     info("load trust store...");

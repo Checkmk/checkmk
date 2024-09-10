@@ -156,8 +156,8 @@ def _response_time_args(response_time: FloatLevels) -> Iterator[str]:
     match response_time:
         case (LevelsType.FIXED, (float(warn), float(crit))):
             yield "--response-time"
-            yield f"{int(warn * _MILLISECOND)}"
-            yield f"{int(crit * _MILLISECOND)}"
+            yield f"{round(warn, 3)}"
+            yield f"{round(crit, 3)}"
 
 
 def _validity_args(validity: Certificate) -> Iterator[str]:

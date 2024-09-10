@@ -594,7 +594,7 @@ class ModeObjectParameters(WatoMode):
                     raise
                 html.write_text_permissive(_("Invalid parameter %r: %s") % (known_settings, e))
 
-        elif valuespec and not rules:  # show the default value
+        elif not rules:  # show the default value
             if rulespec.factory_default is not Rulespec.NO_FACTORY_DEFAULT:
                 # If there is a factory default then show that one
                 setting = rulespec.factory_default
@@ -609,7 +609,7 @@ class ModeObjectParameters(WatoMode):
                 html.write_text_permissive(valuespec.value_to_html(valuespec.default_value()))
 
         # We have a setting
-        elif valuespec:
+        else:
             if ruleset.match_type() == "all":
                 if not isinstance(setting, list):
                     raise ValueError(f"Expected list, got {setting}")
@@ -621,10 +621,6 @@ class ModeObjectParameters(WatoMode):
             else:
                 html.write_text_permissive(valuespec.value_to_html(setting))
 
-        # Binary rule, no valuespec, outcome is True or False
-        else:
-            icon_name = "rule_{}{}".format("yes" if setting else "no", "_off" if not rules else "")
-            html.icon(icon_name, title=_("yes") if setting else _("no"))
         html.close_td()
         html.close_tr()
         html.close_table()

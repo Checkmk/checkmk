@@ -14,7 +14,8 @@ from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from contextlib import suppress
 from functools import partial
 from pathlib import Path
-from typing import Final, Literal, NamedTuple, overload, Protocol, TypeAlias, TypedDict, TypeVar
+from types import ModuleType
+from typing import Final, Literal, NamedTuple, overload, Protocol, TypedDict, TypeVar
 
 import livestatus
 
@@ -1675,11 +1676,12 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
     # pylint: disable=import-outside-toplevel
     from cmk.base import notify
 
+    keepalive_mod: ModuleType | None
     try:
-        from cmk.base.cee import keepalive as keepalive_mod
+        from cmk.base.cee import keepalive as keepalive_mod  # type: ignore[no-redef, unused-ignore]
     except ImportError:
         # Edition layering...
-        keepalive_mod: TypeAlias = None  # type: ignore[no-redef]
+        keepalive_mod = None
 
     with store.lock_checkmk_configuration(configuration_lockfile):
         config.load(with_conf_d=True, validate_hosts=False)

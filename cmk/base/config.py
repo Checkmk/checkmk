@@ -2513,12 +2513,14 @@ class ConfigCache:
             if not entries:
                 return defaults
 
-            if (entry := entries[0]) is None or not (check_interval := entry["check_interval"]):
+            if (entry := entries[0]) is None or not (
+                check_interval := int(entry["check_interval"])
+            ):
                 return dataclasses.replace(defaults, commandline_only=True)
 
             return DiscoveryCheckParameters(
                 commandline_only=False,
-                check_interval=int(check_interval),
+                check_interval=check_interval,
                 severity_new_services=int(entry["severity_unmonitored"]),
                 severity_vanished_services=int(entry["severity_vanished"]),
                 # TODO: should be changed via Transform & update-action of the periodic discovery rule

@@ -8,7 +8,6 @@ from ast import literal_eval
 from collections.abc import (
     Callable,
     Collection,
-    Container,
     Hashable,
     Iterator,
     Mapping,
@@ -104,7 +103,7 @@ class _StaticDiskSyncedMapping(Mapping[_TKey, _TValue]):
     def disksync(
         self,
         *,
-        removed: Container[_TKey] = (),
+        removed: Collection[_TKey] = (),
         updated: Collection[tuple[_TKey, _TValue]] = (),
     ) -> None:
         """Re-load and write the changes of the stored values

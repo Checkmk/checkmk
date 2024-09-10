@@ -658,7 +658,7 @@ class PageMenuRenderer:
         html.close_td()
 
     def _show_suggestions(self, menu: PageMenu) -> None:
-        entries = menu.suggestions
+        entries = list(menu.suggestions)
         if not entries:
             return
 

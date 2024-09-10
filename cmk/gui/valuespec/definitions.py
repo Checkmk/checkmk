@@ -2204,9 +2204,8 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
                 _("You can specify at most %d entries") % self._max_entries,
             )
 
-        if self._valuespec:
-            for nr, s in enumerate(value):
-                self._valuespec.validate_value(s, varprefix + "_%d" % nr)
+        for nr, s in enumerate(value):
+            self._valuespec.validate_value(s, varprefix + "_%d" % nr)
 
     def has_show_more(self) -> bool:
         return self._valuespec.has_show_more()

@@ -1386,8 +1386,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             # disabled or not known any more
             is_known_connection: UserConnector | None = get_connection(user_connection_id)
             if not mode_create and (
-                not is_known_connection
-                or (is_known_connection and user_connection_id not in all_active_connections)
+                not is_known_connection or (user_connection_id not in all_active_connections)
             ):
                 user_connection_id = connection_id
                 user["connector"] = connection_id

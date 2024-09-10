@@ -108,7 +108,8 @@ def cleanup_connections() -> Iterator[None]:
 # sockets and connection classes. This should really be cleaned up (context managers, ...)
 def disconnect() -> None:
     """Actively closes all Livestatus connections."""
-    if not g:
+    # NOTE: g.__bool__() *can* return False due to the LocalProxy Kung Fu!
+    if not g:  # type: ignore[truthy-bool]
         return
     logger.debug("Disconnecting site connections")
     if "live" in g:

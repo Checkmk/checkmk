@@ -692,8 +692,8 @@ def view_editor_sorter_specs(
                 continue
             # Sorters may provide a third element: That Dictionary will be displayed after the
             # sorter was choosen in the CascadingDropdown.
-            if isinstance(p, ParameterizedSorter) and (parameters := p.vs_parameters(painters)):
-                yield name, get_sorter_plugin_title_for_choices(p), parameters
+            if isinstance(p, ParameterizedSorter):
+                yield name, get_sorter_plugin_title_for_choices(p), p.vs_parameters(painters)
             else:
                 yield name, get_sorter_plugin_title_for_choices(p)
 

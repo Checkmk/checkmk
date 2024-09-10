@@ -832,9 +832,6 @@ def show_bi_availability(  # pylint: disable=too-many-branches
                 "availability",
                 deflt=PageMenuDropdown(name="availability", title=_("Availability"), topics=[]),
             )
-            if not dropdown:
-                raise RuntimeError('Dropdown "availability" missing')
-
             aggr_name = aggr_rows[0]["aggr_name"]
             aggr_group = aggr_rows[0]["aggr_group"]
             timeline_url = makeuri(

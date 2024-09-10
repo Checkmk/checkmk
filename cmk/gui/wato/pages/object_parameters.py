@@ -183,9 +183,6 @@ class ModeObjectParameters(WatoMode):
             self._host.site_id(),
             self._hostname,
         )
-        if not host_info:
-            return
-
         forms.header(_("Host information"), isopen=True, narrow=True, css="rulesettings")
         self._show_labels(host_info.labels, "host", host_info.label_sources)
 

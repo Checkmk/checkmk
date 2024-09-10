@@ -1603,7 +1603,7 @@ def get_topology_configuration(
 
     # Fallback, new page, no saved settings
     frontend_configuration = FrontendConfiguration()
-    frontend_configuration.overlays_config = default_overlays or OverlaysConfig()
+    frontend_configuration.overlays_config = default_overlays
 
     return TopologyConfiguration(
         type=topology_type,

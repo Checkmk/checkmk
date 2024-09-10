@@ -36,7 +36,11 @@ from cmk.snmplib import SNMPBackendEnum
 from cmk.fetchers import Mode, TCPEncryptionHandling
 
 from cmk.checkengine.checking import CheckPluginName, ConfiguredService, ServiceID
-from cmk.checkengine.discovery import AutocheckEntry, DiscoveryCheckParameters
+from cmk.checkengine.discovery import (
+    AutocheckEntry,
+    DiscoveryCheckParameters,
+    RediscoveryParameters,
+)
 from cmk.checkengine.inventory import InventoryPlugin
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.sectionparser import ParsedSectionName
@@ -46,6 +50,7 @@ from cmk.base import config
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin as CheckPluginAPI
 from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin
 from cmk.base.config import ConfigCache, ConfiguredIPLookup, handle_ip_lookup_failure
+from cmk.base.default_config.base import _PeriodicDiscovery
 
 from cmk.agent_based.v1 import HostLabel
 
@@ -2607,15 +2612,16 @@ def test_host_config_service_level(
     assert config_cache.service_level(hostname) == result
 
 
-def _rule_val(check_interval: int | None) -> dict[str, Any]:
-    return {
-        "check_interval": check_interval,
-        "severity_unmonitored": 0,
-        "severity_changed_service_labels": 0,
-        "severity_changed_service_params": 0,
-        "severity_vanished": 0,
-        "severity_new_host_label": 0,
-    }
+def _rule_val(check_interval: int) -> _PeriodicDiscovery:
+    return _PeriodicDiscovery(
+        severity_unmonitored=0,
+        severity_vanished=0,
+        severity_changed_service_labels=0,
+        severity_changed_service_params=0,
+        severity_new_host_label=0,
+        check_interval=check_interval,
+        inventory_rediscovery=RediscoveryParameters(),
+    )
 
 
 @pytest.mark.parametrize(
@@ -2623,7 +2629,6 @@ def _rule_val(check_interval: int | None) -> dict[str, Any]:
     [
         ([None], False, False, True),
         ([], False, False, False),
-        ([_rule_val(None)], False, False, True),
         ([_rule_val(0)], False, False, True),
         ([_rule_val(3600)], False, False, False),
         ([_rule_val(3600)], True, False, True),
@@ -2632,7 +2637,7 @@ def _rule_val(check_interval: int | None) -> dict[str, Any]:
 )
 def test_host_config_add_discovery_check(
     monkeypatch: MonkeyPatch,
-    rule_entries: Sequence[dict | None],
+    rule_entries: Sequence[_PeriodicDiscovery | None],
     ignored: bool,
     ping: bool,
     result: bool,

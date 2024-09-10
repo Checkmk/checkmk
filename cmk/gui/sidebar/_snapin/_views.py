@@ -130,6 +130,7 @@ class MonitoringSearch(ABCMegaMenuSearch):
                 "tg: Host tag\n"
                 "hl: Host label (e.g. hl: cmk/os_family:linux)\n"
                 "sl: Service label (e.g. sl: cmk/os_family:linux)\n\n"
+                "st: Service state (e.g. 0, 1, 2, ok, warn, crit)\n\n"
                 "Note that for simplicity '*' will be substituted with '.*'."
             )
             html.input(

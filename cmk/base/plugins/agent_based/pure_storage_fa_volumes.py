@@ -31,7 +31,13 @@ def parse_volume(string_table: StringTable) -> Mapping[str, Volume] | None:
     if not (volumes := json_data.get("items")):
         return None
 
-    return {item["name"]: Volume.model_validate(item["space"]) for item in volumes}
+    return {
+        item["name"]: Volume.model_validate(item["space"])
+        for item in volumes
+        # don't discover protocol_endpoint entries since those don't carry
+        # any volume relevant values resulting in avoidable problems
+        if item["subtype"] != "protocol_endpoint"
+    }
 
 
 register.agent_section(

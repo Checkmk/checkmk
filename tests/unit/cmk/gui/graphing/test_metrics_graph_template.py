@@ -11,16 +11,7 @@ from cmk.utils.hostaddress import HostName
 
 import cmk.gui.graphing._graph_templates as gt
 from cmk.gui.config import active_config
-from cmk.gui.graphing._expression import (
-    Constant,
-    CriticalOf,
-    Difference,
-    MaximumOf,
-    Metric,
-    MetricExpression,
-    parse_legacy_expression,
-    WarningOf,
-)
+from cmk.gui.graphing._expression import parse_legacy_expression
 from cmk.gui.graphing._formatter import AutoPrecision
 from cmk.gui.graphing._graph_specification import (
     GraphMetric,
@@ -31,13 +22,10 @@ from cmk.gui.graphing._graph_specification import (
     MetricOpRRDSource,
     MinimalVerticalRange,
 )
-from cmk.gui.graphing._graph_templates import (
-    GraphTemplate,
-    MinimalGraphTemplateRange,
-    TemplateGraphSpecification,
-)
+from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing._translated_metrics import parse_perf_data, translate_metrics
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, IECNotation
+from cmk.gui.type_defs import Row
 
 
 @pytest.mark.parametrize(
@@ -112,138 +100,182 @@ def test_rpn_stack(raw_expression: str, result: MetricOperation) -> None:
     )
 
 
-def test_create_graph_recipe_from_template() -> None:
-    graph_template = GraphTemplate(
-        id="my_id",
-        title="",
-        metrics=[
-            MetricExpression(Metric("fs_used"), line_type="area"),
-            MetricExpression(
-                Difference(minuend=Metric("fs_size"), subtrahend=Metric("fs_used")),
-                line_type="stack",
-                title="Free space",
-                color="#e3fff9",
-            ),
-            MetricExpression(Metric("fs_size"), line_type="line"),
-        ],
-        scalars=[
-            MetricExpression(WarningOf(Metric("fs_used")), line_type="line", title="Warning"),
-            MetricExpression(CriticalOf(Metric("fs_used")), line_type="line", title="Critical"),
-        ],
-        conflicting_metrics=["fs_free"],
-        optional_metrics=[],
-        consolidation_function=None,
-        range=MinimalGraphTemplateRange(min=Constant(0), max=MaximumOf(Metric("fs_used"))),
-        omit_zero_metrics=False,
-    )
-    perf_data, check_command = parse_perf_data(
-        "/=163651.992188;;;; fs_size=477500.03125;;;; growth=-1280.489081;;;;",
-        "check_mk-df",
-        config=active_config,
-    )
-    translated_metrics = translate_metrics(perf_data, check_command)
-    specification = TemplateGraphSpecification(
-        site=SiteId("Site"),
-        host_name=HostName("Host-Name"),
-        service_description="Service name",
-    )
+class FakeTemplateGraphSpecification(TemplateGraphSpecification):
+    def _get_graph_data_from_livestatus(self) -> Row:
+        return {
+            "site": "site_id",
+            "service_perf_data": "/=163651.992188;;;; fs_size=477500.03125;;;; growth=-1280.489081;;;;",
+            "service_metrics": ["metric_name"],
+            "service_check_command": "check_mk-df",
+            "host_name": "host_name",
+            "service_description": "Service name",
+        }
 
-    assert gt.create_graph_recipe_from_template(
-        SiteId(""),
-        HostName(""),
-        "",
-        graph_template,
-        translated_metrics,
-        specification,
-    ) == GraphRecipe(
-        title="Used space",
-        unit_spec=ConvertibleUnitSpecification(
-            notation=IECNotation(symbol="B"),
-            precision=AutoPrecision(digits=2),
+
+def test_template_recipes() -> None:
+    assert FakeTemplateGraphSpecification(
+        site=SiteId("site_id"),
+        host_name=HostName("host_name"),
+        service_description="Service name",
+    ).recipes() == [
+        GraphRecipe(
+            title="Size and used space",
+            unit_spec=ConvertibleUnitSpecification(
+                notation=IECNotation(symbol="B"),
+                precision=AutoPrecision(digits=2),
+            ),
+            explicit_vertical_range=MinimalVerticalRange(min=0.0, max=None),
+            horizontal_rules=[],
+            omit_zero_metrics=False,
+            consolidation_function="max",
+            metrics=[
+                GraphMetric(
+                    title="Used space",
+                    line_type="stack",
+                    operation=MetricOpOperator(
+                        operator_name="MERGE",
+                        operands=[
+                            MetricOpRRDSource(
+                                site_id=SiteId("site_id"),
+                                host_name=HostName("host_name"),
+                                service_name="Service name",
+                                metric_name="_",
+                                consolidation_func_name="max",
+                                scale=1048576.0,
+                            ),
+                            MetricOpRRDSource(
+                                site_id=SiteId("site_id"),
+                                host_name=HostName("host_name"),
+                                service_name="Service name",
+                                metric_name="metric_name",
+                                consolidation_func_name="max",
+                                scale=1048576.0,
+                            ),
+                        ],
+                    ),
+                    unit=ConvertibleUnitSpecification(
+                        notation=IECNotation(symbol="B"),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#1e90ff",
+                ),
+                GraphMetric(
+                    title="Free space",
+                    line_type="stack",
+                    operation=MetricOpOperator(
+                        operator_name="-",
+                        operands=[
+                            MetricOpRRDSource(
+                                site_id=SiteId("site_id"),
+                                host_name=HostName("host_name"),
+                                service_name="Service name",
+                                metric_name="fs_size",
+                                consolidation_func_name="max",
+                                scale=1048576.0,
+                            ),
+                            MetricOpOperator(
+                                operator_name="MERGE",
+                                operands=[
+                                    MetricOpRRDSource(
+                                        site_id=SiteId("site_id"),
+                                        host_name=HostName("host_name"),
+                                        service_name="Service name",
+                                        metric_name="_",
+                                        consolidation_func_name="max",
+                                        scale=1048576.0,
+                                    ),
+                                    MetricOpRRDSource(
+                                        site_id=SiteId("site_id"),
+                                        host_name=HostName("host_name"),
+                                        service_name="Service name",
+                                        metric_name="metric_name",
+                                        consolidation_func_name="max",
+                                        scale=1048576.0,
+                                    ),
+                                ],
+                            ),
+                        ],
+                    ),
+                    unit=ConvertibleUnitSpecification(
+                        notation=IECNotation(symbol="B"),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#ffffff",
+                ),
+                GraphMetric(
+                    title="Total size",
+                    line_type="line",
+                    operation=MetricOpRRDSource(
+                        site_id=SiteId("site_id"),
+                        host_name=HostName("host_name"),
+                        service_name="Service name",
+                        metric_name="fs_size",
+                        consolidation_func_name="max",
+                        scale=1048576.0,
+                    ),
+                    unit=ConvertibleUnitSpecification(
+                        notation=IECNotation(symbol="B"),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#37fa37",
+                ),
+            ],
+            additional_html=None,
+            render_options={},
+            data_range=None,
+            mark_requested_end_time=False,
+            specification=TemplateGraphSpecification(
+                site=SiteId("site_id"),
+                host_name=HostName("host_name"),
+                service_description="Service name",
+                graph_index=0,
+                graph_id="fs_used",
+                destination=None,
+            ),
         ),
-        explicit_vertical_range=MinimalVerticalRange(type="minimal", min=0.0, max=None),
-        horizontal_rules=[],
-        omit_zero_metrics=False,
-        consolidation_function="max",
-        metrics=[
-            GraphMetric(
-                title="Used space",
-                line_type="area",
-                operation=MetricOpRRDSource(
-                    site_id=SiteId(""),
-                    host_name=HostName(""),
-                    service_name="",
-                    metric_name="_",
-                    consolidation_func_name="max",
-                    scale=1048576.0,
-                ),
-                unit=ConvertibleUnitSpecification(
-                    notation=IECNotation(symbol="B"),
-                    precision=AutoPrecision(digits=2),
-                ),
-                color="#1e90ff",
+        GraphRecipe(
+            title="Growth",
+            unit_spec=ConvertibleUnitSpecification(
+                notation=IECNotation(symbol="B/d"),
+                precision=AutoPrecision(digits=2),
             ),
-            GraphMetric(
-                title="Free space",
-                line_type="stack",
-                operation=MetricOpOperator(
-                    operator_name="-",
-                    operands=[
-                        MetricOpRRDSource(
-                            site_id=SiteId(""),
-                            host_name=HostName(""),
-                            service_name="",
-                            metric_name="fs_size",
-                            consolidation_func_name="max",
-                            scale=1048576.0,
-                        ),
-                        MetricOpRRDSource(
-                            site_id=SiteId(""),
-                            host_name=HostName(""),
-                            service_name="",
-                            metric_name="_",
-                            consolidation_func_name="max",
-                            scale=1048576.0,
-                        ),
-                    ],
-                ),
-                unit=ConvertibleUnitSpecification(
-                    notation=IECNotation(symbol="B"),
-                    precision=AutoPrecision(digits=2),
-                ),
-                color="#e3fff9",
+            explicit_vertical_range=None,
+            horizontal_rules=[],
+            omit_zero_metrics=False,
+            consolidation_function="max",
+            metrics=[
+                GraphMetric(
+                    title="Growth",
+                    line_type="area",
+                    operation=MetricOpRRDSource(
+                        site_id=SiteId("site_id"),
+                        host_name=HostName("host_name"),
+                        service_name="Service name",
+                        metric_name="growth",
+                        consolidation_func_name="max",
+                        scale=12.136296296296296,
+                    ),
+                    unit=ConvertibleUnitSpecification(
+                        notation=IECNotation(symbol="B/d"),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#1ee6e6",
+                )
+            ],
+            additional_html=None,
+            render_options={},
+            data_range=None,
+            mark_requested_end_time=False,
+            specification=TemplateGraphSpecification(
+                site=SiteId("site_id"),
+                host_name=HostName("host_name"),
+                service_description="Service name",
+                graph_index=1,
+                graph_id="METRIC_fs_growth",
+                destination=None,
             ),
-            GraphMetric(
-                title="Total size",
-                line_type="line",
-                operation=MetricOpRRDSource(
-                    site_id=SiteId(""),
-                    host_name=HostName(""),
-                    service_name="",
-                    metric_name="fs_size",
-                    consolidation_func_name="max",
-                    scale=1048576.0,
-                ),
-                unit=ConvertibleUnitSpecification(
-                    notation=IECNotation(symbol="B"),
-                    precision=AutoPrecision(digits=2),
-                ),
-                color="#37fa37",
-            ),
-        ],
-        additional_html=None,
-        render_options={},
-        data_range=None,
-        mark_requested_end_time=False,
-        specification=TemplateGraphSpecification(
-            site=SiteId("Site"),
-            host_name=HostName("Host-Name"),
-            service_description="Service name",
-            graph_index=None,
-            graph_id=None,
-            destination=None,
         ),
-    )
+    ]
 
 
 @pytest.mark.parametrize(

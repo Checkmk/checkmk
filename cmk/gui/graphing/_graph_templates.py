@@ -770,6 +770,13 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
     def graph_type_name() -> Literal["template"]:
         return "template"
 
+    def _get_graph_data_from_livestatus(self) -> Row:
+        return get_graph_data_from_livestatus(
+            self.site,
+            self.host_name,
+            self.service_description,
+        )
+
     def _build_recipe_from_template(
         self,
         *,
@@ -806,7 +813,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         )
 
     def recipes(self) -> list[GraphRecipe]:
-        row = get_graph_data_from_livestatus(self.site, self.host_name, self.service_description)
+        row = self._get_graph_data_from_livestatus()
         translated_metrics = translated_metrics_from_row(row)
         return [
             recipe

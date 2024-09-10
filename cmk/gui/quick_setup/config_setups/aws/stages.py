@@ -245,12 +245,16 @@ def aws_collect_params(
     return aws_transform_to_disk(collect_params_from_form_data(all_stages_form_data, rulespec_name))
 
 
-def _aws_service_defaults(service: str) -> tuple[str, dict | None]:
+def _migrate_aws_service(service: str) -> object:
+    # Global
     if service in ["ce", "route53"]:
-        return "all", {}
+        return None
     if service == "cloudfront":
-        return "all", {"host_assignment": "aws_host"}
-    return "all", {"limits": "limits"}
+        return {"selection": "all", "host_assignment": "aws_host"}
+    # Regional
+    if service == "wafv2":
+        return {"selection": "all", "limits": True, "cloudfront": None}
+    return {"selection": "all", "limits": True}
 
 
 def aws_transform_to_disk(params: Mapping[str, object]) -> Mapping[str, object]:
@@ -260,16 +264,19 @@ def aws_transform_to_disk(params: Mapping[str, object]) -> Mapping[str, object]:
     assert isinstance(services, list)
     overall_tags = params.get("overall_tags", [])
     assert isinstance(overall_tags, list)
-    return {
+    regions_to_monitor = params["regions_to_monitor"]
+    assert isinstance(regions_to_monitor, list)
+    keys_to_rename = {"aws_lambda": "lambda"}
+    params = {
         "access_key_id": params["access_key_id"],
         "secret_access_key": params["secret_access_key"],
-        "access": {},
-        "global_services": {k: _aws_service_defaults(k) for k in global_services},
-        "regions_to_monitor": params["regions_to_monitor"],
-        "services": {k: _aws_service_defaults(k) for k in services},
+        "global_services": {k: _migrate_aws_service(k) for k in global_services},
+        "regions_to_monitor": [region.replace("_", "-") for region in regions_to_monitor],
+        "services": {keys_to_rename.get(k, k): _migrate_aws_service(k) for k in services},
         "piggyback_naming_convention": "ip_region_instance",
-        "overall_tags": overall_tags,
+        "overall_tags": [(tag["key"], tag["values"]) for tag in overall_tags],
     }
+    return params
 
 
 quick_setup_aws = QuickSetup(

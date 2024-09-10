@@ -33,54 +33,42 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                     ),
                 },
                 "access": {
-                    "global_service_region": "us_gov_east_1",
-                    "role_arn_id": {"role_arn": "foo_iam", "external_id": "foo_external_id"},
+                    "global_service_region": "us-gov-east-1",
+                    "role_arn_id": ("foo_iam", "foo_external_id"),
                 },
                 "global_services": {
-                    "ce": ("all", {}),
-                    "route53": ("none", None),
-                    "cloudfront": (
-                        "tags",
-                        {
-                            "tags": [{"key": "cloudfront", "values": ["tag", "tag2"]}],
-                            "host_assignment": "domain_host",
-                        },
-                    ),
+                    "ce": None,
+                    "cloudfront": {
+                        "selection": ("tags", [("cloudfront", ["tag", "tag2"])]),
+                        "host_assignment": "domain_host",
+                    },
                 },
-                "regions_to_monitor": ["ap_northeast_2", "ap_southeast_2"],
+                "regions_to_monitor": ["ap-northeast-2", "ap-southeast-2"],
                 "services": {
-                    "ec2": (
-                        "tags",
-                        {
-                            "tags": [
-                                {"key": "ec2_key", "values": ["tag1"]},
-                                {"key": "ec2_key_2", "values": ["tag1", "tag2"]},
-                            ],
-                            "limits": "limits",
-                        },
-                    ),
-                    "ebs": ("all", {"limits": "limits"}),
-                    "s3": ("all", {"limits": "limits", "requests": None}),
-                    "glacier": ("all", {"limits": "limits"}),
-                    "elb": ("none", None),
-                    "elbv2": ("tags", {"tags": [], "limits": "limits"}),
-                    "rds": (
-                        "names",
-                        {"names": ["explicit_rds_name1", "explicit_rds_name2"], "limits": "limits"},
-                    ),
-                    "cloudwatch_alarms": (
-                        "names",
-                        {"names": ["explicit_cloudwatch_name"], "limits": "no_limits"},
-                    ),
-                    "dynamodb": ("all", {"limits": "limits"}),
-                    "wafv2": ("all", {"limits": "no_limits", "cloudfront": None}),
-                    "aws_lambda": ("all", {"limits": "limits"}),
-                    "sns": ("none", None),
-                    "ecs": ("all", {"limits": "limits"}),
-                    "elasticache": ("all", {"limits": "limits"}),
+                    "ec2": {
+                        "selection": (
+                            "tags",
+                            [("ec2_key", ["tag1"]), ("ec2_key_2", ["tag1", "tag2"])],
+                        ),
+                        "limits": True,
+                    },
+                    "ebs": {"selection": "all", "limits": True},
+                    "s3": {"selection": "all", "limits": True, "requests": None},
+                    "glacier": {"selection": "all", "limits": True},
+                    "elbv2": {"selection": ("tags", []), "limits": True},
+                    "rds": {
+                        "selection": ("names", ["explicit_rds_name1", "explicit_rds_name2"]),
+                        "limits": True,
+                    },
+                    "cloudwatch_alarms": {"alarms": ("names", ["explicit_cloudwatch_name"])},
+                    "dynamodb": {"selection": "all", "limits": True},
+                    "wafv2": {"selection": "all", "cloudfront": None},
+                    "lambda": {"selection": "all", "limits": True},
+                    "ecs": {"selection": "all", "limits": True},
+                    "elasticache": {"selection": "all", "limits": True},
                 },
                 "piggyback_naming_convention": "private_dns_name",
-                "overall_tags": [{"key": "global_restrict_key", "values": ["value1"]}],
+                "overall_tags": [("global_restrict_key", ["value1"])],
             },
             [
                 "--access-key-id",
@@ -111,8 +99,6 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                 "--cloudfront-tag-values",
                 "tag",
                 "tag2",
-                "--cloudfront-host-assignment",
-                "domain_host",
                 "--services",
                 "cloudwatch_alarms",
                 "dynamodb",
@@ -152,6 +138,8 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                 "--elasticache-limits",
                 "--s3-requests",
                 "--wafv2-cloudfront",
+                "--cloudfront-host-assignment",
+                "domain_host",
                 "--overall-tag-key",
                 "global_restrict_key",
                 "--overall-tag-values",
@@ -171,16 +159,67 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                     "stored_password",
                     ("strawberry098", ""),
                 ),
+                "services": {
+                    "cloudwatch_alarms": {},
+                },
+                "piggyback_naming_convention": "ip_region_instance",
+            },
+            [
+                "--access-key-id",
+                "strawberry",
+                "--secret-access-key-reference",
+                ANY,
+                "--services",
+                "cloudwatch_alarms",
+                "--hostname",
+                "foo",
+                "--piggyback-naming-convention",
+                "ip_region_instance",
+            ],
+            id="minimal_config_no_cloudwatch_alarms",
+        ),
+        pytest.param(
+            {
+                "access_key_id": "strawberry",
+                "secret_access_key": (
+                    "cmk_postprocessed",
+                    "stored_password",
+                    ("strawberry098", ""),
+                ),
+                "services": {
+                    "cloudwatch_alarms": {"alarms": "all"},
+                },
+                "piggyback_naming_convention": "ip_region_instance",
+            },
+            [
+                "--access-key-id",
+                "strawberry",
+                "--secret-access-key-reference",
+                ANY,
+                "--services",
+                "cloudwatch_alarms",
+                "--cloudwatch-alarms",
+                "--hostname",
+                "foo",
+                "--piggyback-naming-convention",
+                "ip_region_instance",
+            ],
+            id="minimal_config_all_cloudwatch_alarms",
+        ),
+        pytest.param(
+            {
+                "access_key_id": "strawberry",
+                "secret_access_key": (
+                    "cmk_postprocessed",
+                    "stored_password",
+                    ("strawberry098", ""),
+                ),
                 "proxy_details": {
                     "proxy_host": "1.1.1",
                     "proxy_user": "banana",
                     "proxy_password": ("cmk_postprocessed", "stored_password", ("banana123", "")),
                 },
-                "access": {},
-                "global_services": {},
-                "regions_to_monitor": [],
-                "services": {},
-                "piggyback_naming_convention": "checkmk_mix",
+                "piggyback_naming_convention": "ip_region_instance",
             },
             [
                 "--access-key-id",
@@ -196,13 +235,13 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                 "--hostname",
                 "foo",
                 "--piggyback-naming-convention",
-                "checkmk_mix",
+                "ip_region_instance",
             ],
-            id="passwords_from_store",
+            id="minimal_config_with_passwords_from_store",
         ),
     ],
 )
-def test_fs_values_to_args(value: Mapping[str, Any], expected_args: Sequence[Any]) -> None:
+def test_values_to_args(value: Mapping[str, Any], expected_args: Sequence[Any]) -> None:
     # GIVEN
     params = process_configuration_to_parameters(value)
 

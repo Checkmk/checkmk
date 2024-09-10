@@ -91,11 +91,11 @@ cmk_notification_plugins = ["cmk.notification_plugins"]
 # be taken with a grain of salt...
 [tool.mypy]
 enable_error_code = [
-  # "explicit-override",
+  # "explicit-override",   # 9999 errors in 762 files
   "ignore-without-code",
-  # "mutable-override",
-  # "possibly-undefined",
-  # "redundant-expr",
+  # "mutable-override",    # 336 errors in 71 files
+  # "possibly-undefined",  # 401 errors in 183 files
+  # "redundant-expr",      # 115 errors in 86 files
   "redundant-self",
   # "truthy-bool",
   "truthy-iterable",

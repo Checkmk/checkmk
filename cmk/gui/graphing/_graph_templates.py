@@ -325,24 +325,6 @@ def get_graph_template_from_id(template_id: str) -> GraphTemplate:
     raise MKGeneralException(_("There is no graph template with the id '%s'") % template_id)
 
 
-def _compute_predictive_metrics(
-    translated_metrics: Mapping[str, TranslatedMetric], metrics: Sequence[MetricExpression]
-) -> Iterator[MetricExpression]:
-    computed = set()
-    for metric_expression in metrics:
-        line_type: Literal["line", "-line"] = (
-            "-line" if metric_expression.line_type.startswith("-") else "line"
-        )
-        for metric_name in metric_expression.metric_names():
-            if metric_name in computed:
-                continue
-            computed.add(metric_name)
-            if (predict_metric_name := f"predict_{metric_name}") in translated_metrics:
-                yield MetricExpression(Metric(predict_metric_name), line_type=line_type)
-            if (predict_lower_metric_name := f"predict_lower_{metric_name}") in translated_metrics:
-                yield MetricExpression(Metric(predict_lower_metric_name), line_type=line_type)
-
-
 def evaluate_metrics(
     *,
     conflicting_metrics: Sequence[str],
@@ -362,51 +344,6 @@ def evaluate_metrics(
             return []
         results.append((metric_expression, result.ok))
     return results
-
-
-def _get_evaluated_graph_templates(
-    translated_metrics: Mapping[str, TranslatedMetric],
-) -> Iterator[GraphTemplate]:
-    if not translated_metrics:
-        yield from ()
-        return
-
-    graph_templates = [
-        GraphTemplate(
-            id=graph_template.id,
-            title=graph_template.title,
-            scalars=graph_template.scalars,
-            conflicting_metrics=graph_template.conflicting_metrics,
-            optional_metrics=graph_template.optional_metrics,
-            consolidation_function=graph_template.consolidation_function,
-            range=graph_template.range,
-            omit_zero_metrics=graph_template.omit_zero_metrics,
-            metrics=(
-                list(metrics) + list(_compute_predictive_metrics(translated_metrics, metrics))
-            ),
-        )
-        for id_, template in _graph_templates_from_plugins()
-        for graph_template in (_parse_graph_template(id_, template),)
-        if (
-            metrics := [
-                m
-                for m, _e in evaluate_metrics(
-                    conflicting_metrics=graph_template.conflicting_metrics,
-                    optional_metrics=graph_template.optional_metrics,
-                    metric_expressions=graph_template.metrics,
-                    translated_metrics=translated_metrics,
-                )
-            ]
-        )
-    ]
-    yield from graph_templates
-
-    already_graphed_metrics = {
-        n for gt in graph_templates for me in gt.metrics for n in me.metric_names()
-    }
-    for metric_name, translated_metric in sorted(translated_metrics.items()):
-        if translated_metric.auto_graph and metric_name not in already_graphed_metrics:
-            yield _get_graph_template_from_name(metric_name)
 
 
 def get_evaluated_graph_template_choices(
@@ -774,6 +711,69 @@ def _create_graph_recipe_from_template(
         consolidation_function=graph_template.consolidation_function or "max",
         specification=specification,
     )
+
+
+def _compute_predictive_metrics(
+    translated_metrics: Mapping[str, TranslatedMetric], metrics: Sequence[MetricExpression]
+) -> Iterator[MetricExpression]:
+    computed = set()
+    for metric_expression in metrics:
+        line_type: Literal["line", "-line"] = (
+            "-line" if metric_expression.line_type.startswith("-") else "line"
+        )
+        for metric_name in metric_expression.metric_names():
+            if metric_name in computed:
+                continue
+            computed.add(metric_name)
+            if (predict_metric_name := f"predict_{metric_name}") in translated_metrics:
+                yield MetricExpression(Metric(predict_metric_name), line_type=line_type)
+            if (predict_lower_metric_name := f"predict_lower_{metric_name}") in translated_metrics:
+                yield MetricExpression(Metric(predict_lower_metric_name), line_type=line_type)
+
+
+def _get_evaluated_graph_templates(
+    translated_metrics: Mapping[str, TranslatedMetric],
+) -> Iterator[GraphTemplate]:
+    if not translated_metrics:
+        yield from ()
+        return
+
+    graph_templates = [
+        GraphTemplate(
+            id=graph_template.id,
+            title=graph_template.title,
+            scalars=graph_template.scalars,
+            conflicting_metrics=graph_template.conflicting_metrics,
+            optional_metrics=graph_template.optional_metrics,
+            consolidation_function=graph_template.consolidation_function,
+            range=graph_template.range,
+            omit_zero_metrics=graph_template.omit_zero_metrics,
+            metrics=(
+                list(metrics) + list(_compute_predictive_metrics(translated_metrics, metrics))
+            ),
+        )
+        for id_, template in _graph_templates_from_plugins()
+        for graph_template in (_parse_graph_template(id_, template),)
+        if (
+            metrics := [
+                m
+                for m, _e in evaluate_metrics(
+                    conflicting_metrics=graph_template.conflicting_metrics,
+                    optional_metrics=graph_template.optional_metrics,
+                    metric_expressions=graph_template.metrics,
+                    translated_metrics=translated_metrics,
+                )
+            ]
+        )
+    ]
+    yield from graph_templates
+
+    already_graphed_metrics = {
+        n for gt in graph_templates for me in gt.metrics for n in me.metric_names()
+    }
+    for metric_name, translated_metric in sorted(translated_metrics.items()):
+        if translated_metric.auto_graph and metric_name not in already_graphed_metrics:
+            yield _get_graph_template_from_name(metric_name)
 
 
 # Performance graph dashlets already use graph_id, but for example in reports, we still use

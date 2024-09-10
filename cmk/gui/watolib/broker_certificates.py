@@ -153,9 +153,6 @@ class AutomationStoreBrokerCertificates(AutomationCommand[BrokerCertificates]):
         return BrokerCertificates.model_validate_json(req)
 
     def execute(self, api_request: BrokerCertificates) -> bool:
-        if not api_request:
-            raise MKGeneralException(_("Invalid generate-broker-certs: no certificates received."))
-
         try:
             ca_bytes = api_request.central_ca
             if api_request.customer_ca:

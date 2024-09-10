@@ -268,14 +268,11 @@ class ABCHostMode(WatoMode, abc.ABC):
             ]
 
             if self._is_cluster():
-                if self._host:
-                    nodes = self._host.cluster_nodes()
-                    assert nodes is not None
-                else:
-                    nodes = []
+                nodes = self._host.cluster_nodes()
+                assert nodes is not None
                 basic_attributes += [
                     # attribute name, valuepec, default value
-                    ("nodes", self._vs_cluster_nodes(), nodes if self._host else []),
+                    ("nodes", self._vs_cluster_nodes(), nodes),
                 ]
 
             configure_attributes(

@@ -750,7 +750,7 @@ class ModeBIRules(ABCBIMode):
                                         button_name="_bulk_delete_bi_rules",
                                         title=_("Delete selected rules"),
                                     ),
-                                    is_enabled=bool(self.bi_pack and self.bi_pack.num_rules() > 0),
+                                    is_enabled=bool(self.bi_pack.num_rules() > 0),
                                 ),
                                 PageMenuEntry(
                                     title=_("Move rules"),
@@ -758,8 +758,7 @@ class ModeBIRules(ABCBIMode):
                                     name="move_rules",
                                     item=PageMenuPopup(self._render_bulk_move_form()),
                                     is_enabled=bool(
-                                        self.bi_pack
-                                        and self.bi_pack.num_rules() > 0
+                                        self.bi_pack.num_rules() > 0
                                         and self._show_bulk_move_choices()
                                     ),
                                 ),
@@ -2146,9 +2145,7 @@ class BIModeAggregations(ABCBIMode):
                                         button_name="_bulk_delete_bi_aggregations",
                                         title=_("Delete selected aggregations"),
                                     ),
-                                    is_enabled=bool(
-                                        self.bi_pack and self.bi_pack.num_aggregations() > 0
-                                    ),
+                                    is_enabled=bool(self.bi_pack.num_aggregations() > 0),
                                 ),
                                 PageMenuEntry(
                                     title=_("Move aggregations"),
@@ -2156,8 +2153,7 @@ class BIModeAggregations(ABCBIMode):
                                     name="move_aggregations",
                                     item=PageMenuPopup(self._render_bulk_move_form()),
                                     is_enabled=bool(
-                                        self.bi_pack
-                                        and self.bi_pack.num_aggregations() > 0
+                                        self.bi_pack.num_aggregations() > 0
                                         and self._show_bulk_move_choices()
                                     ),
                                 ),

@@ -530,10 +530,8 @@ class ModeConfigurationBundle(WatoMode):
 
     def _form_names(self) -> Iterator[str]:
         yield "edit_bundle"
-        if self._edit_rule:
-            yield "rule_editor"
-        if self._edit_host:
-            yield "edit_host"
+        yield "rule_editor"
+        yield "edit_host"
         yield from (f"edit_dcd_{index}" for index in range(len(self._edit_dcd_connections)))
         yield from (f"edit_password_{index}" for index in range(len(self._edit_passwords)))
 
@@ -635,12 +633,10 @@ class ModeConfigurationBundle(WatoMode):
             form_name: list(request.itervars(form_name)) for form_name in self._form_names()
         }
         self._save_config_bundle_configuration()
-        if self._edit_host:
-            self._set_vars(all_vars, "edit_host")
-            self._edit_host.action()
-        if self._edit_rule:
-            self._set_vars(all_vars, "rule_editor")
-            self._edit_rule.action()
+        self._set_vars(all_vars, "edit_host")
+        self._edit_host.action()
+        self._set_vars(all_vars, "rule_editor")
+        self._edit_rule.action()
         if self._edit_passwords:
             for index, edit_password in enumerate(self._edit_passwords):
                 self._set_vars(all_vars, f"edit_password_{index}")

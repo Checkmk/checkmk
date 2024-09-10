@@ -1,0 +1,12 @@
+Title: agent_cisco_meraki: Apply changes to selected organisations immediately
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1725951228
+Edition: cre
+Level: 1
+Version: 2.2.0p34
+
+To avoid too many requests, information about organisations to query for the Cisco Meraki agent are cached.
+However, the cache was not invalidated if the selected organisations changed, leading to changes only become visible after the cache interval (1 day).
+Now the cache is refreshed when a new selection has been made.

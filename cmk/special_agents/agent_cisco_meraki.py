@@ -128,7 +128,12 @@ class _ABCGetOrganisationsCache(DataCache):
         return 86400
 
     def get_validity_from_args(self, *args: object) -> bool:
-        return True
+        (org_ids,) = args
+        try:
+            cache_ids = [org["id_"] for org in self.get_cached_data()]
+        except FileNotFoundError:
+            cache_ids = []
+        return cache_ids == org_ids
 
     @abc.abstractmethod
     def get_live_data(self, *args: object) -> Sequence[_Organisation]:
@@ -246,7 +251,7 @@ class MerakiOrganisation:
 
     def _get_licenses_overview(self) -> MerakiAPIData | None:
         def _update_licenses_overview(
-            licenses_overview: dict[str, object] | None
+            licenses_overview: dict[str, object] | None,
         ) -> MerakiAPIData | None:
             if not licenses_overview:
                 return None
@@ -399,7 +404,7 @@ def _get_organisations(config: MerakiConfig, org_ids: Sequence[str]) -> Sequence
         return []
     return (
         GetOrganisationsByIDCache(config, org_ids) if org_ids else GetOrganisationsCache(config)
-    ).get_data()
+    ).get_data(org_ids)
 
 
 def _need_organisations(section_names: Sequence[str]) -> bool:

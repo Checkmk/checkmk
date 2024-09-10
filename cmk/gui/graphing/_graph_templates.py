@@ -338,21 +338,20 @@ def _compute_predictive_metrics(
 
 
 def evaluate_metrics(
-    graph_template: GraphTemplate,
+    *,
+    conflicting_metrics: Sequence[str],
+    optional_metrics: Sequence[str],
+    metric_expressions: Sequence[MetricExpression],
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> Sequence[tuple[MetricExpression, Evaluated]]:
     # Skip early on conflicting_metrics
-    for var in graph_template.conflicting_metrics:
+    for var in conflicting_metrics:
         if var in translated_metrics:
             return []
-
     results = []
-    for metric_expression in graph_template.metrics:
+    for metric_expression in metric_expressions:
         if (result := metric_expression.evaluate(translated_metrics)).is_error():
-            if (
-                result.error.metric_name
-                and result.error.metric_name in graph_template.optional_metrics
-            ):
+            if result.error.metric_name and result.error.metric_name in optional_metrics:
                 continue
             return []
         results.append((metric_expression, result.ok))
@@ -382,7 +381,17 @@ def get_evaluated_graph_templates(
         )
         for id_, template in _graph_templates_from_plugins()
         for graph_template in (_parse_graph_template(id_, template),)
-        if (metrics := [m for m, _e in evaluate_metrics(graph_template, translated_metrics)])
+        if (
+            metrics := [
+                m
+                for m, _e in evaluate_metrics(
+                    conflicting_metrics=graph_template.conflicting_metrics,
+                    optional_metrics=graph_template.optional_metrics,
+                    metric_expressions=graph_template.metrics,
+                    translated_metrics=translated_metrics,
+                )
+            ]
+        )
     ]
     yield from graph_templates
 
@@ -684,7 +693,12 @@ def _create_graph_recipe_from_template(
             ),
             color=evaluated.color,
         )
-        for metric_expression, evaluated in evaluate_metrics(graph_template, translated_metrics)
+        for metric_expression, evaluated in evaluate_metrics(
+            conflicting_metrics=graph_template.conflicting_metrics,
+            optional_metrics=graph_template.optional_metrics,
+            metric_expressions=graph_template.metrics,
+            translated_metrics=translated_metrics,
+        )
     ]
     units = {m.unit for m in metrics}
 

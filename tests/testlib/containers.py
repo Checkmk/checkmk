@@ -26,7 +26,7 @@ from docker.models.images import Image  # type: ignore[import-untyped]
 
 from tests.testlib.repo import git_commit_id, git_essential_directories, repo_path
 from tests.testlib.utils import get_cmk_download_credentials, package_hash_path
-from tests.testlib.version import CMKVersion
+from tests.testlib.version import CMKVersion, DISTRO_CODES
 
 _DOCKER_REGISTRY = "artifacts.lan.tribe29.com:4000"
 _DOCKER_REGISTRY_URL = "https://%s/v2/" % _DOCKER_REGISTRY
@@ -231,18 +231,7 @@ def check_for_local_package(version: CMKVersion, distro_name: str) -> bool:
             raise SystemExit(1)
 
         package_name = available_packages[0].name
-        os_name = {
-            "debian-11": "bullseye",
-            "debian-12": "bookworm",
-            "ubuntu-22.04": "jammy",
-            "ubuntu-23.10": "mantic",
-            "ubuntu-24.04": "noble",
-            "centos-8": "el8",
-            "almalinux-9": "el9",
-            "sles-15sp3": "sles15sp3",
-            "sles-15sp4": "sles15sp4",
-            "sles-15sp5": "sles15sp5",
-        }.get(distro_name, f"UNKNOWN DISTRO: {distro_name}")
+        os_name = DISTRO_CODES.get(distro_name, f"UNKNOWN DISTRO: {distro_name}")
         pkg_pattern = rf"check-mk-{version.edition.long}-{version.version}.*{os_name}.*\.(deb|rpm)"
         if not re.match(f"^{pkg_pattern}$", package_name):
             logger.error("Error: '%s' does not match version=%s", package_name, version)

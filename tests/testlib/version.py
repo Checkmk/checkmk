@@ -38,6 +38,25 @@ logger = logging.getLogger()
 
 PackageUrl = NewType("PackageUrl", str)
 
+DISTRO_CODES = {
+    "cma-4": "cma-4",
+    "debian-11": "bullseye",
+    "debian-12": "bookworm",
+    "ubuntu-22.04": "jammy",
+    "ubuntu-23.04": "lunar",
+    "ubuntu-23.10": "mantic",
+    "ubuntu-24.04": "noble",
+    "centos-7": "el7",
+    "centos-8": "el8",
+    "almalinux-9": "el9",
+    "sles-15sp1": "sles15sp1",
+    "sles-15sp2": "sles15sp2",
+    "sles-15sp3": "sles15sp3",
+    "sles-15sp4": "sles15sp4",
+    "sles-15sp5": "sles15sp5",
+    "sles-15sp6": "sles15sp6",
+}
+
 
 # It's ok to make it currently only work on debian based distros
 class CMKVersion:
@@ -453,23 +472,7 @@ class PackageManagerCMA(PackageManagerDEB):
 
 # TODO: Duplicated in cmk_dev.utils.distro_code
 def code_name(distro_name: str) -> str:
-    if code := {
-        "cma-4": "cma-4",
-        "debian-11": "bullseye",
-        "debian-12": "bookworm",
-        "ubuntu-22.04": "jammy",
-        "ubuntu-23.04": "lunar",
-        "ubuntu-23.10": "mantic",
-        "ubuntu-24.04": "noble",
-        "centos-7": "el7",
-        "centos-8": "el8",
-        "almalinux-9": "el9",
-        "sles-15sp1": "sles15sp1",
-        "sles-15sp2": "sles15sp2",
-        "sles-15sp3": "sles15sp3",
-        "sles-15sp4": "sles15sp4",
-        "sles-15sp5": "sles15sp5",
-    }.get(distro_name):
+    if code := DISTRO_CODES.get(distro_name):
         return code
     raise RuntimeError(f"Unknown distro: {distro_name}")
 

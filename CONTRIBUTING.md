@@ -162,7 +162,7 @@ Once done, you are ready for the next chapter.
 
     On GitHub in your browser, submit a pull request from your `my-feature-branch` to the official Checkmk branch you forked from.
 
-    The Travis CI bot will start testing your commits for issues.
+    The Github Actions CI bot will start testing your commits for issues.
     In case there are issues, it will send you a mail and ask you to [fix the issues](#help-i-need-to-change-my-commits).
 
 ### Help: I have a conflict
@@ -187,7 +187,7 @@ $ git pull --rebase upstream master
 
 ### Help: I need to change my commits
 
-In case Travis notifies you about issues or the reviewer asks you to change your code, you will have to rework your commits.
+In case Github Actions notifies you about issues or the reviewer asks you to change your code, you will have to rework your commits.
 Be sure, we don't want to upset you :-).
 
 There are several ways to update your changes in Git.
@@ -197,10 +197,10 @@ This article on [how to amend a commit](https://www.burntfen.com/2015-10-30/how-
 
 ## How to execute tests
 
-The public repository of [Checkmk](https://github.com/Checkmk/checkmk) is integrated with Travis CI.
-Each time a Pull request is submitted, Travis will have a look at the changes.
+The public repository of [Checkmk](https://github.com/Checkmk/checkmk) is integrated with Github Actions CI.
+Each time a Pull request is submitted, Github Actions will have a look at the changes.
 
-**⚠ Important:** We only review PRs that are confirmed to be OK by Travis.
+**⚠ Important:** We only review PRs that are confirmed to be OK by Github Actions.
 If a check failed, please fix it and update the PR.
 PRs will be closed if the author didn't respond for at least 14 days.
 
@@ -218,7 +218,7 @@ $ make -C tests test-mypy-raw
 > We highly recommend integrating ruff, pylint and mypy into the editor you work with.
 > Most editors will notify you about issues the moment you edit the code.
 
-You could also push your changes to your forked repository and wait for Travis to execute the tests for you, but that takes several minutes for each try.
+You could also push your changes to your forked repository and wait for Github Actions to execute the tests for you, but that takes several minutes for each try.
 
 ## Style guide
 

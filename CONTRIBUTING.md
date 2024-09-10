@@ -215,11 +215,7 @@ $ make -C tests test-format-python
 $ make -C tests test-mypy-raw
 ```
 
-Some of these commands take several minutes, for example the command `test-format-python` because it tests the formatting of the whole code base.
-Normally you only change a small set of files in your commits.
-If you execute `black [filename]` to format the changed code, this should be enough and you don't need to execute the formatting test at all.
-
-> We highly recommend integrating black, isort, pylint and mypy into the editor you work with.
+> We highly recommend integrating ruff, pylint and mypy into the editor you work with.
 > Most editors will notify you about issues the moment you edit the code.
 
 You could also push your changes to your forked repository and wait for Travis to execute the tests for you, but that takes several minutes for each try.
@@ -462,53 +458,38 @@ def worst_service_state(*states: int, default: int) -> int:
 
 * We supply an `.editorconfig` file, which is used to automatically configure your editor to adhere to the most basic formatting style, like indents or line-lengths.
   If your editor doesn't already come with Editorconfig support, install [one of the available plugins](https://editorconfig.org/#download).
-* We use Black for automatic formatting of the Python code.
+* We use [`ruff`](https://docs.astral.sh/ruff/) for automatic formatting of the Python code.
   Have a look [below](#automatic-formatting) for further information.
-* We use isort for automatic sorting of imports in Python code.
+* We use also `ruff` for automatic sorting of imports in Python code.
 
-### Automatic formatting with black and isort
+### Automatic formatting/sorting with ruff
 
-The black configuration file, `pyproject.toml`, lives in the root directory of the project repository, where Black picks it up automatically.
-Black itself lives in a virtualenv managed by pipenv in `check_mk/.venv`, you can run it with `make format-python-black` or `scripts/run-pipenv run black`.
+The `ruff` configuration file, `pyproject.toml`, lives in the root directory of the project repository, where `ruff` picks it up automatically.
+`ruff` itself lives in a virtualenv managed by pipenv in `check_mk/.venv`, you can run it with `make format-python`.
 
-The imports are also sorted with isort.
-Configuration is in `pyproject.toml` file in the root directory of the project repository.
-If you have isort installed in you virtualenv you can run it with `make format-python-isort`
+This make target will then format your code base as well as sort the import statements.
 
-#### Manual black invocation: Single file
+*NOTE*: You will also find other `pyproject.toml` files in our code base (at the time of writing, e.g. under `packges/cmk-*`).
+Those are individual project settings for our own python packages and may differ from the top-level `pyproject.toml`.
+
+#### Manual ruff formatting invocation: Single file
 
 ```console
-black [the_file.py]
+ruff format [the_file.py]
 ```
 
-#### Manual isort invocation: Single file
+#### Manual ruff import sorting invocation: Single file
 
 ```console
-$ isort [the_file.py]
+$ run ruff check --select I --fix [the_file.py]
 
 # or with pre-commit installed
-$ pre-commit run isort
-```
-
-#### Manual black invocation: Whole code base
-
-If you want to black format all Python files in the repository, you can run:
-
-```console
-$ make format-python-black
-```
-
-#### Manual isort invocation: Whole code base
-
-If you want to isort format all Python files in the repository, you can run:
-
-```console
-$ make format-python-isort
+$ pre-commit run ruff
 ```
 
 #### Integration with CI
 
-Our CI executes black and isort formatting test on the whole code base:
+Our CI executes `ruff` formatting/sorting test on the whole code base:
 
 ```console
 $ make -C tests test-format-python
@@ -516,9 +497,9 @@ $ make -C tests test-format-python
 
 Our review tests jobs prevent un-formatted code from being added to the repository.
 
-#### Editor integration with black:
+#### Editor integration with ruff:
 
-[Black editor integration](https://black.readthedocs.io/en/stable/integrations/editors.html)
+[Ruff editor integration](https://docs.astral.sh/ruff/editors/)
 
 ### Type checking: mypy
 

@@ -466,7 +466,23 @@ def run_metrics(client: ClientProtocol, services: Iterable[Service]) -> Iterator
 
 def gather_assets(client: ClientProtocol) -> Sequence[Asset]:
     request = asset_v1.ListAssetsRequest(
-        parent=f"projects/{client.project}", content_type=asset_v1.ContentType.RESOURCE
+        parent=f"projects/{client.project}",
+        content_type=asset_v1.ContentType.RESOURCE,
+        # IMPORTANT:
+        # * Keep this in sync with the list of asset types in the corresponding check "gcp_assets"
+        # * When adding new assets types, keep in mind that some of them may cause exceeding quota limits on gcp
+        #   see SUP-20177
+        asset_types=[
+            "file.googleapis.com/Instance",
+            "cloudfunctions.googleapis.com/CloudFunction",
+            "storage.googleapis.com/Bucket",
+            "redis.googleapis.com/Instance",
+            "run.googleapis.com/Service",
+            "sqladmin.googleapis.com/Instance",
+            "compute.googleapis.com/Instance",
+            "compute.googleapis.com/Disk",
+            "compute.googleapis.com/UrlMap",
+        ],
     )
     all_assets = client.list_assets(request)
     return [Asset(a) for a in all_assets]

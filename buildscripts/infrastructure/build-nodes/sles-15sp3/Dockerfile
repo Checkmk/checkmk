@@ -41,6 +41,7 @@ RUN zypper ref -s \
     gtk-doc \
     intltool \
     iputils \
+    jq \
     krb5-devel \
     libXpm-devel \
     libbz2-devel \

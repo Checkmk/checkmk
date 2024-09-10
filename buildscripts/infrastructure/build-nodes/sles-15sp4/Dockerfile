@@ -41,6 +41,7 @@ RUN zypper ref -s \
     gtk-doc \
     intltool \
     iputils \
+    jq \
     libXpm-devel \
     libbz2-devel \
     libcurl-devel \

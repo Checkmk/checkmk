@@ -412,10 +412,32 @@ def _get_evaluated_graph_templates(
 def get_evaluated_graph_template_choices(
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> Sequence[GraphTemplateChoice]:
-    return [
-        GraphTemplateChoice(graph_template.id, graph_template.title)
-        for graph_template in _get_evaluated_graph_templates(translated_metrics)
-    ]
+    graph_template_choices = []
+    already_graphed_metrics = set()
+    for id_, template in _graph_templates_from_plugins():
+        graph_template = _parse_graph_template(id_, template)
+        if metrics := evaluate_metrics(
+            conflicting_metrics=graph_template.conflicting_metrics,
+            optional_metrics=graph_template.optional_metrics,
+            metric_expressions=graph_template.metrics,
+            translated_metrics=translated_metrics,
+        ):
+            graph_template_choices.append(
+                GraphTemplateChoice(
+                    graph_template.id,
+                    graph_template.title,
+                )
+            )
+            already_graphed_metrics.update({n for m, _e in metrics for n in m.metric_names()})
+    for metric_name, translated_metric in sorted(translated_metrics.items()):
+        if translated_metric.auto_graph and metric_name not in already_graphed_metrics:
+            graph_template_choices.append(
+                GraphTemplateChoice(
+                    metric_name[7:] if metric_name.startswith("METRIC_") else metric_name,
+                    "",
+                )
+            )
+    return graph_template_choices
 
 
 def _to_metric_operation(

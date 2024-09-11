@@ -1,0 +1,15 @@
+Title: Use the original message text for rewriting the comment field
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1726062847
+Edition: cre
+Level: 1
+Version: 2.2.0p34
+
+Werk 16534 made the rewriting of the comment field use the comment field
+itself as the basis. For this field, it doesn't really make sense, because
+rewriting is the only way to fill that field, so e.g. \0 was always empty.
+
+With this change, we revert to the old behaviour where all match groups
+refer to the original message text.

@@ -970,7 +970,9 @@ class EventServer(ECServerThread):
         now = time.time()
         for rule in self._rules:
             if expect := rule.get("expect"):
-                if not self._rule_matcher.event_rule_matches_site(rule, event=Event()):
+                if isinstance(
+                    self._rule_matcher.event_rule_matches_site(rule, event=Event()), MatchFailure
+                ):
                     continue
 
                 interval = expect["interval"]

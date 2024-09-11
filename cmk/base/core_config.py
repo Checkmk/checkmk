@@ -40,8 +40,12 @@ from cmk.base import config
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.nagios_utils import do_check_nagiosconfig
 
+from cmk import trace
+
 CoreCommandName = str
 CoreCommand = str
+
+tracer = trace.get_tracer()
 
 
 class MonitoringCore(abc.ABC):
@@ -69,7 +73,12 @@ class MonitoringCore(abc.ABC):
         licensing_handler = self._licensing_handler_type.make()
         licensing_handler.persist_licensed_state(get_licensed_state_file_path())
         self._create_config(
-            config_path, config_cache, ip_address_of, licensing_handler, passwords, hosts_to_update
+            config_path,
+            config_cache,
+            ip_address_of,
+            licensing_handler,
+            passwords,
+            hosts_to_update,
         )
         if config.ruleset_matching_stats:
             config_cache.ruleset_matcher.persist_matching_stats(
@@ -273,20 +282,28 @@ def do_create_config(
         )
 
     try:
-        _create_core_config(
-            core,
-            config_cache,
-            ip_address_of,
-            hosts_to_update=hosts_to_update,
-            duplicates=duplicates,
-        )
+        with tracer.start_as_current_span(
+            "create_core_config",
+            attributes={
+                "cmk.core_config.core": core.name(),
+                "cmk.core_config.core_config.hosts_to_update": repr(hosts_to_update),
+            },
+        ):
+            _create_core_config(
+                core,
+                config_cache,
+                ip_address_of,
+                hosts_to_update=hosts_to_update,
+                duplicates=duplicates,
+            )
     except Exception as e:
         if cmk.ccc.debug.enabled():
             raise
         raise MKGeneralException("Error creating configuration: %s" % e)
 
     if config.bake_agents_on_restart and not config.is_wato_slave_site:
-        _bake_on_restart(config_cache, all_hosts, skip_config_locking_for_bakery)
+        with tracer.start_as_current_span("bake_on_restart"):
+            _bake_on_restart(config_cache, all_hosts, skip_config_locking_for_bakery)
 
 
 def _bake_on_restart(
@@ -298,8 +315,8 @@ def _bake_on_restart(
             agent_bakery,  # pylint: disable=redefined-outer-name,import-outside-toplevel
         )
 
-        from cmk.cee.bakery.type_defs import (  # pylint: disable=redefined-outer-name,import-outside-toplevel
-            BakeRevisionMode,
+        from cmk.cee.bakery.type_defs import (
+            BakeRevisionMode,  # pylint: disable=redefined-outer-name,import-outside-toplevel
         )
 
     except ImportError:
@@ -485,7 +502,8 @@ def get_service_attributes(
 
     attrs.update(
         ConfigCache._get_tag_attributes(
-            config_cache.ruleset_matcher.labels_of_service(hostname, description), "LABEL"
+            config_cache.ruleset_matcher.labels_of_service(hostname, description),
+            "LABEL",
         )
     )
     attrs.update(

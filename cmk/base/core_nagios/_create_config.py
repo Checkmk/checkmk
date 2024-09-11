@@ -374,7 +374,7 @@ def transform_active_service_command(
 
     if service_data.command_name == "check-mk-custom":
         cfg.custom_commands_to_define.add("check-mk-custom")
-        return f"{service_data.command_name}!{service_data.command_line}"
+        return f"{service_data.command_name}!{service_data.command}"
 
     return service_data.command_display
 

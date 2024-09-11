@@ -32,10 +32,14 @@ class ActiveServiceData:
     description: ServiceName
     command_name: str
     command_display: str
-    command_line: str
     params: object
     expanded_args: str
     detected_executable: str
+    args: str
+
+    @property
+    def command(self) -> str:
+        return f"{self.detected_executable} {self.args}".rstrip()
 
 
 @dataclass(frozen=True)
@@ -153,10 +157,10 @@ class ActiveCheck:
                 description=raw_service.description,
                 command_name=command,
                 command_display=f"{command}!{self.escape_func(args)}",
-                command_line=f"{detected_executable} {args}".rstrip(),
                 params=raw_service.configuration,
                 expanded_args=self.escape_func(args),
                 detected_executable=detected_executable,
+                args=args,
             )
 
     def _get_command(self, raw_service: _RawActiveServiceData) -> tuple[str, str, str]:

@@ -112,10 +112,10 @@ def argument_function_with_exception(*args, **kwargs):
                     description="HTTP myHTTPName on my_host_alias",
                     command_name="check_mk_active-http",
                     command_display="check_mk_active-http!--arg1 argument1 --arg2 argument2",
-                    command_line="check_http --arg1 argument1 --arg2 argument2",
                     params={"name": "myHTTPName on my_host_alias"},
                     expanded_args="--arg1 argument1 --arg2 argument2",
                     detected_executable="check_http",
+                    args="--arg1 argument1 --arg2 argument2",
                 ),
             ],
             id="http_active_service_plugin",
@@ -156,20 +156,20 @@ def argument_function_with_exception(*args, **kwargs):
                     description="First service",
                     command_name="check_mk_active-my_active_check",
                     command_display="check_mk_active-my_active_check!--arg1 argument1",
-                    command_line="check_my_active_check --arg1 argument1",
                     params={"description": "My active check", "param1": "param1"},
                     expanded_args="--arg1 argument1",
                     detected_executable="check_my_active_check",
+                    args="--arg1 argument1",
                 ),
                 ActiveServiceData(
                     plugin_name="my_active_check",
                     description="Second service",
                     command_name="check_mk_active-my_active_check",
                     command_display="check_mk_active-my_active_check!--arg2 argument2",
-                    command_line="check_my_active_check --arg2 argument2",
                     params={"description": "My active check", "param1": "param1"},
                     expanded_args="--arg2 argument2",
                     detected_executable="check_my_active_check",
+                    args="--arg2 argument2",
                 ),
             ],
             id="multiple_services",
@@ -232,7 +232,6 @@ def argument_function_with_exception(*args, **kwargs):
                     description="My service",
                     command_name="check_mk_active-my_active_check",
                     command_display="check_mk_active-my_active_check!--pwstore=1@9@/pw/store@stored_password '--secret=**********'",
-                    command_line="check_my_active_check --pwstore=1@9@/pw/store@stored_password '--secret=**********'",
                     params={
                         "description": "My active check",
                         "password": (
@@ -243,6 +242,7 @@ def argument_function_with_exception(*args, **kwargs):
                     },
                     expanded_args="--pwstore=1@9@/pw/store@stored_password '--secret=**********'",
                     detected_executable="check_my_active_check",
+                    args="--pwstore=1@9@/pw/store@stored_password '--secret=**********'",
                 ),
             ],
             id="one_service_password_store",
@@ -347,13 +347,13 @@ def test_get_active_service_data_password_with_hack(
             description="My service",
             command_name="check_mk_active-check_path",
             command_display="check_mk_active-check_path!--pwstore=4@1@/pw/store@uuid1234 --password-id uuid1234:/pw/store --password-plain-in-curly '{*********}'",
-            command_line="/path/to/check_test_check --pwstore=4@1@/pw/store@uuid1234 --password-id uuid1234:/pw/store --password-plain-in-curly '{*********}'",
             params={
                 "description": "My active check",
                 "password": ("cmk_postprocessed", "explicit_password", ("uuid1234", "p4ssw0rd!")),
             },
             expanded_args="--pwstore=4@1@/pw/store@uuid1234 --password-id uuid1234:/pw/store --password-plain-in-curly '{*********}'",
             detected_executable="/path/to/check_test_check",
+            args="--pwstore=4@1@/pw/store@uuid1234 --password-id uuid1234:/pw/store --password-plain-in-curly '{*********}'",
         ),
     ]
 
@@ -405,13 +405,13 @@ def test_get_active_service_data_password_without_hack(
             description="My service",
             command_name="check_mk_active-check_path",
             command_display="check_mk_active-check_path!--password-id uuid1234:/pw/store --password-plain-in-curly '{p4ssw0rd\\!}'",
-            command_line="/path/to/check_test_check --password-id uuid1234:/pw/store --password-plain-in-curly '{p4ssw0rd!}'",
             params={
                 "description": "My active check",
                 "password": ("cmk_postprocessed", "explicit_password", ("uuid1234", "p4ssw0rd!")),
             },
             expanded_args="--password-id uuid1234:/pw/store --password-plain-in-curly '{p4ssw0rd\\!}'",
             detected_executable="/path/to/check_test_check",
+            args="--password-id uuid1234:/pw/store --password-plain-in-curly '{p4ssw0rd!}'",
         ),
     ]
 
@@ -594,9 +594,6 @@ def test_test_get_active_service_data_crash_with_debug(
                     command_name="check_mk_active-my_active_check",
                     command_display="check_mk_active-my_active_check!--pwstore=2@0@/pw/store@stored_password "
                     "--password '***'",
-                    command_line="check_my_active_check "
-                    "--pwstore=2@0@/pw/store@stored_password --password "
-                    "'***'",
                     params={
                         "description": "My active check",
                         "password": (
@@ -607,6 +604,7 @@ def test_test_get_active_service_data_crash_with_debug(
                     },
                     expanded_args="--pwstore=2@0@/pw/store@stored_password --password " "'***'",
                     detected_executable="check_my_active_check",
+                    args="--pwstore=2@0@/pw/store@stored_password --password '***'",
                 ),
             ],
             '\nWARNING: The stored password "stored_password" used by host "myhost" does not exist (anymore).\n',

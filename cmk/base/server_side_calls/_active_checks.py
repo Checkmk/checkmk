@@ -24,20 +24,13 @@ from cmk.server_side_calls_backend.config_processing import (
 from ._commons import ConfigSet, replace_passwords, SSCRules
 
 
-# This class can probably be consolidated to have fewer fields.
-# But it's close to the release and I don't dare to touch it.
 @dataclass(frozen=True)
 class ActiveServiceData:
     plugin_name: str
+    configuration: Mapping[str, object]
     description: ServiceName
     command_name: str
-    params: Mapping[str, object]
-    detected_executable: str
-    args: str
-
-    @property
-    def command(self) -> str:
-        return f"{self.detected_executable} {self.args}".rstrip()
+    command: tuple[str, ...]
 
 
 @dataclass(frozen=True)
@@ -121,11 +114,10 @@ class ActiveCheck:
 
                 yield ActiveServiceData(
                     plugin_name=plugin_name,
+                    configuration=conf_dict,
                     description=service.service_description,
                     command_name=f"check_mk_active-{active_check.name}",
-                    params=conf_dict,
-                    detected_executable=detected_executable,
-                    args=" ".join(arguments),
+                    command=(detected_executable, *arguments),
                 )
 
     def _sanitize_service_descriptions(
@@ -161,7 +153,7 @@ class ActiveCheck:
                     yield ActiveServiceDescription(
                         plugin_name=raw_service.plugin_name,
                         description=raw_service.description,
-                        params=raw_service.params,
+                        params=raw_service.configuration,
                     )
             except Exception as e:
                 if cmk.ccc.debug.enabled():

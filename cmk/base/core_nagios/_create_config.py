@@ -376,7 +376,7 @@ def transform_active_service_command(
         cfg.custom_commands_to_define.add("check-mk-custom")
         return f"{service_data.command_name}!{service_data.command}"
 
-    escaped_args = service_data.args.replace("\\", "\\\\").replace("!", "\\!")
+    escaped_args = " ".join(service_data.command[1:]).replace("\\", "\\\\").replace("!", "\\!")
     return f"{service_data.command_name}!{escaped_args}"
 
 
@@ -556,7 +556,7 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
             _extra_service_conf_of(cfg, config_cache, hostname, service_data.description)
         )
 
-        cfg.active_checks_to_define[service_data.plugin_name] = service_data.detected_executable
+        cfg.active_checks_to_define[service_data.plugin_name] = service_data.command[0]
         active_services.append(service_spec)
 
     if actchecks:

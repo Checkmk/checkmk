@@ -2625,7 +2625,7 @@ class AutomationActiveCheck(Automation):
             command_line = self._replace_service_macros(
                 host_name,
                 service_data.description,
-                service_data.command,
+                " ".join(service_data.command),
             )
             return ActiveCheckResult(*self._execute_check_plugin(command_line))
 

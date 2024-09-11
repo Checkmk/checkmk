@@ -37,6 +37,9 @@ py_library(
         "cmk/agent_based/v2/render.py",
     ],
     visibility = ["//visibility:public"],
+    deps = [
+        requirement("pydantic"),
+    ],
 )
 
 py_pytest_main(
@@ -57,7 +60,6 @@ py_test(
         ":__test__",
         ":cmk-agent-based",
         requirement("pytest"),
-        requirement("pydantic"),
     ],
 )
 

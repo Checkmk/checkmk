@@ -53,9 +53,9 @@ def check_csrf_token(token: str | None = None) -> None:
     if isinstance(session.user, LoggedInNobody):
         return
 
-    csrf_token = token or request.get_str_input("csrf_token")
+    csrf_token = token or request.get_str_input("_csrf_token")
     if csrf_token is None:
-        csrf_token = request.get_request().get("csrf_token")
+        csrf_token = request.get_request().get("_csrf_token")
 
     if csrf_token is None:
         log_security_event(

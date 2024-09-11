@@ -3598,7 +3598,7 @@ def folder_preserving_link(add_vars: HTTPVariables) -> str:
 def make_action_link(vars_: HTTPVariables) -> str:
     session_vars: HTTPVariables = [("_transid", transactions.get())]
     if session and hasattr(session, "session_info"):
-        session_vars.append(("csrf_token", session.session_info.csrf_token))
+        session_vars.append(("_csrf_token", session.session_info.csrf_token))
 
     return folder_preserving_link(vars_ + session_vars)
 

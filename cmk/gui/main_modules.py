@@ -9,6 +9,7 @@ import traceback
 from collections.abc import Iterator
 from pathlib import Path
 from types import ModuleType
+from typing import assert_never
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.version import Edition
@@ -63,6 +64,9 @@ match cmk_version.edition(paths.omd_root):
         import cmk.gui.raw.registration
 
         cmk.gui.raw.registration.register()
+
+    case _ as unreachable:
+        assert_never(unreachable)
 
 
 def _imports() -> Iterator[str]:

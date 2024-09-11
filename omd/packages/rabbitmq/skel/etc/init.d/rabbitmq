@@ -12,6 +12,7 @@ RABBITMQ_ADVANCED_CONFIG_FILE="${OMD_ROOT}/etc/rabbitmq/advanced_conf.d/00-advan
 RABBITMQ_ENABLED_PLUGINS_FILE="${OMD_ROOT}/etc/rabbitmq/enabled_plugins"
 RABBITMQ_DIST_PORT="${CONFIG_RABBITMQ_DIST_PORT:?}"
 RABBITMQ_DIAGNOSTICS="${OMD_ROOT}/lib/rabbitmq/sbin/rabbitmq-diagnostics"
+RABBITMQCTL="${OMD_ROOT}/lib/rabbitmq/sbin/rabbitmqctl"
 BROKER_CERTIFICATES=$OMD_ROOT/bin/message-broker-certs
 EXECUTE="${OMD_ROOT}/lib/rabbitmq/sbin/rabbitmq-server"
 ERL_EPMD_ADDRESS="::1"
@@ -76,6 +77,14 @@ ensure_broker_certs() {
     fi
 }
 
+stop_process() {
+    "${RABBITMQCTL}" -n "${RABBITMQ_NODENAME}" stop_app &>/dev/null
+    "${RABBITMQCTL}" -n "${RABBITMQ_NODENAME}" reset &>/dev/null
+
+    printf "killing %s..." "${1}"
+    kill "${1}" 2>/dev/null
+}
+
 case "$1" in
 
     start-blocking)
@@ -125,8 +134,7 @@ case "$1" in
             exit_successfully "not running (PID file orphaned)"
         fi
 
-        printf "killing %s..." "${PID}"
-        kill "${PID}" 2>/dev/null
+        stop_process "${PID}"
 
         # signal could be sent. Patiently wait for max 1 minute.
         if await_process_stop 60 "${PID}"; then

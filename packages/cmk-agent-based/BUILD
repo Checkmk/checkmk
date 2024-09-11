@@ -2,38 +2,10 @@ load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
 load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("@cmk_agent_based//:requirements.bzl", "requirement")
-load("@rules_python//python:pip.bzl", "compile_pip_requirements")
-
-filegroup(
-    name = "files",
-    srcs = [
-        "Pipfile",
-        "Pipfile.lock",
-        "cmk/agent_based/prediction_backend.py",
-        "cmk/agent_based/v1/__init__.py",
-        "cmk/agent_based/v1/_check_levels.py",
-        "cmk/agent_based/v1/_checking_classes.py",
-        "cmk/agent_based/v1/_detection.py",
-        "cmk/agent_based/v1/_inventory_classes.py",
-        "cmk/agent_based/v1/_regex.py",
-        "cmk/agent_based/v1/_snmp.py",
-        "cmk/agent_based/v1/_value_store_utils.py",
-        "cmk/agent_based/v1/clusterize.py",
-        "cmk/agent_based/v1/register.py",
-        "cmk/agent_based/v1/render.py",
-        "cmk/agent_based/v1/type_defs.py",
-        "cmk/agent_based/v1/value_store.py",
-        "cmk/agent_based/v2/__init__.py",
-        "cmk/agent_based/v2/_check_levels.py",
-        "cmk/agent_based/v2/_get_average.py",
-        "cmk/agent_based/v2/_plugins.py",
-        "cmk/agent_based/v2/clusterize.py",
-        "cmk/agent_based/v2/render.py",
-        "pyproject.toml",
-        "setup.cfg",
-    ],
-    visibility = ["//visibility:public"],
-)
+load("@rules_python//python:pip.bzl", "compile_pip_requirements", "whl_filegroup")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("@omd_packages//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
 
 compile_pip_requirements(
     name = "requirements",
@@ -106,4 +78,29 @@ py_wheel(
     deps = [
         ":cmk-agent-based",
     ],
+)
+
+whl_filegroup(
+    name = "whl_filegroup",
+    whl = ":wheel",
+)
+
+pkg_files(
+    name = "pkg_files",
+    srcs = [
+        ":whl_filegroup",
+    ],
+    # TODO: As soon as we have all omd/packages in bazel, we won't need the intermediate install target anymore.
+    # Then we can also completely remove the "python3-modules" prefix - currently it will be deployed to $(DESTDIR) via
+    # $(PYTHON3_MODULES_INSTALL) in python3-modules.make
+    prefix = "python3-modules/lib/python%s/site-packages" % PYTHON_MAJOR_DOT_MINOR,
+    strip_prefix = "whl_filegroup",
+)
+
+pkg_tar(
+    name = "pkg_tar",
+    srcs = [
+        ":pkg_files",
+    ],
+    visibility = ["//visibility:public"],
 )

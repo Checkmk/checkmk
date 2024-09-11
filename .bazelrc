@@ -25,6 +25,11 @@ build --flag_alias=cmk_version=//:cmk_version
 # valgrind-clean again, which is a crucial feature for debugging the NEB & CMC!
 build --copt="-DRE2_ON_VALGRIND"
 
+# Don't require system python for bootstrapping
+# See: https://github.com/bazelbuild/rules_python/commit/f5b19dce7bc0837396ac03a425cdb9b64643cf61
+# TODO: should be dropped as soon as this becomes the default
+build --@rules_python//python/config_settings:bootstrap_impl=script
+
 clean --async
 # all bazel-created temporary and build output files
 # clean --expunge

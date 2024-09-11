@@ -112,10 +112,6 @@ config_setting(
         "@omd_packages//packages/cmk-trace:files",
     ),
     (
-        "agent-based",
-        "@omd_packages//packages/cmk-agent-based:files",
-    ),
-    (
         "messaging",
         "@omd_packages//packages/cmk-messaging:files",
     ),
@@ -171,7 +167,6 @@ genrule(
     srcs = [
         "%s_compile" % module
         for module in all_requirements + [
-            "agent-based",
             "agent-receiver",
             "crypto",
             "graphing",

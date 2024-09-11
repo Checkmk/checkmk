@@ -15,6 +15,7 @@ PACKAGES_INT = [
     "//omd/packages/openssl:openssl_with_prefix_tar",
     "//omd/packages/perl-modules:perl-modules.tar",
     "//omd/packages/python3-modules:python3-modules.tar",
+    "//packages/cmk-agent-based:pkg_tar",
 ]
 
 genrule(

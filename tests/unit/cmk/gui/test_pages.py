@@ -237,6 +237,8 @@ def test_registered_pages() -> None:
             "noauth:cognito_callback",
             "cognito_logout",
             "noauth:verification_request",
+            "noauth:upload_license_response",
+            "noauth:download_license_usage",
         ]
 
     # TODO: Depending on how we call the test (single test or whole package) we

@@ -97,7 +97,7 @@ enable_error_code = [
   # "possibly-undefined",  # 401 errors in 183 files
   # "redundant-expr",      # 115 errors in 86 files
   "redundant-self",
-  # "truthy-bool",
+  "truthy-bool",
   "truthy-iterable",
   "unimported-reveal",
   "unused-awaitable",

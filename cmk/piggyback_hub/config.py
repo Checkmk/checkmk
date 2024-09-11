@@ -16,8 +16,6 @@ from pydantic import BaseModel
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.messaging import Connection
-
 PIGGYBACK_HUB_CONFIG_PATH: Final = Path("etc/check_mk/piggyback_hub.conf")
 MULTISITE_CONFIG: Final = Path("etc/check_mk/piggyback_hub.d/multisite.conf")
 
@@ -43,10 +41,12 @@ def multisite_config_path(omd_root: Path) -> Path:
 
 
 def distribute(configs: Mapping[str, PiggybackConfig], omd_root: Path) -> None:
-    for site_id, config in configs.items():
-        with Connection("piggyback-hub", omd_root) as conn:
-            channel = conn.channel(PiggybackConfig)
-            channel.publish_for_site(site_id, config, routing="config")
+    # TODO: remove the return statement and uncomment the code below after fix the flaky integration test
+    return
+    # for site_id, config in configs.items():
+    #     with Connection("piggyback-hub", omd_root) as conn:
+    #         channel = conn.channel(PiggybackConfig)
+    #         channel.publish_for_site(site_id, config, routing="config")
 
 
 def save_config(

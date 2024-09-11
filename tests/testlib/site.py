@@ -21,7 +21,7 @@ from contextlib import contextmanager, nullcontext, suppress
 from getpass import getuser
 from pathlib import Path
 from pprint import pformat
-from typing import Final, Literal
+from typing import Any, Final, Literal, overload
 
 import pytest
 import pytest_check  # type: ignore[import-untyped]
@@ -483,27 +483,73 @@ class Site:
         )
         return state
 
-    def execute(  # type: ignore[no-untyped-def]
+    def execute(
         self,
         cmd: list[str],
-        *args,
         preserve_env: list[str] | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> subprocess.Popen:
-        return execute(
-            cmd, *args, preserve_env=preserve_env, sudo=True, substitute_user=self.id, **kwargs
+        return execute(cmd, preserve_env=preserve_env, sudo=True, substitute_user=self.id, **kwargs)
+
+    def run(
+        self,
+        args: list[str],
+        input: str | None = None,  # pylint: disable=redefined-builtin
+        preserve_env: list[str] | None = None,
+        **kwargs: Any,
+    ) -> subprocess.CompletedProcess:
+        return run(
+            args=args,
+            input=input,
+            encoding="utf-8",
+            preserve_env=preserve_env,
+            sudo=True,
+            substitute_user=self.id,
+            **kwargs,
         )
+
+    @overload
+    def check_output(
+        self,
+        cmd: list[str],
+        encoding: str = "utf-8",
+        input: str | None = None,  # pylint: disable=redefined-builtin
+        preserve_env: list[str] | None = None,
+        **kwargs: Any,
+    ) -> str: ...
+
+    @overload
+    def check_output(
+        self,
+        cmd: list[str],
+        encoding: None,
+        input: str | None = None,  # pylint: disable=redefined-builtin
+        preserve_env: list[str] | None = None,
+        **kwargs: Any,
+    ) -> bytes: ...
 
     def check_output(
         self,
         cmd: list[str],
+        encoding: str | None = "utf-8",
         input: str | None = None,  # pylint: disable=redefined-builtin
-    ) -> str:
+        preserve_env: list[str] | None = None,
+        **kwargs: Any,
+    ) -> str | bytes:
         """Mimics subprocess.check_output while running a process as the site user.
 
         Returns the stdout of the process.
         """
-        return check_output(cmd=cmd, input=input, sudo=True, substitute_user=self.id)
+        output = check_output(
+            cmd=cmd,
+            input=input,
+            encoding=encoding,
+            preserve_env=preserve_env,
+            sudo=True,
+            substitute_user=self.id,
+            **kwargs,
+        )
+        return output
 
     @contextmanager
     def copy_file(self, name: str, target: str | Path) -> Iterator[None]:
@@ -546,29 +592,34 @@ class Site:
         return os.path.join(self.root, rel_path)
 
     def read_file(self, rel_path: str | Path) -> str:
-        p = self.execute(["cat", self.path(rel_path)], stdout=subprocess.PIPE)
-        stdout = p.communicate()[0]
-        if p.returncode != 0:
-            raise Exception("Failed to read file %s. Exit-Code: %d" % (rel_path, p.wait()))
-        return stdout if isinstance(stdout, str) else ""
+        try:
+            stdout = self.check_output(["cat", self.path(rel_path)])
+        except subprocess.CalledProcessError as excp:
+            excp.add_note(f"Failed to read file '{rel_path}'!")
+            raise excp
+        return stdout
 
     def read_binary_file(self, rel_path: str | Path) -> bytes:
-        p = self.execute(["cat", self.path(rel_path)], stdout=subprocess.PIPE, encoding=None)
-        stdout = p.communicate()[0]
-        if p.returncode != 0:
-            raise Exception("Failed to read file %s. Exit-Code: %d" % (rel_path, p.returncode))
-        assert isinstance(stdout, bytes)
+        try:
+            stdout = self.check_output(["cat", self.path(rel_path)], encoding=None)
+        except subprocess.CalledProcessError as excp:
+            excp.add_note(f"Failed to read file '{rel_path}'!")
+            raise excp
         return stdout
 
     def delete_file(self, rel_path: str | Path) -> None:
-        p = self.execute(["rm", "-f", self.path(rel_path)])
-        if p.wait() != 0:
-            raise Exception("Failed to delete file %s. Exit-Code: %d" % (rel_path, p.wait()))
+        try:
+            _ = self.run(["rm", "-f", self.path(rel_path)])
+        except subprocess.CalledProcessError as excp:
+            excp.add_note(f"Failed to read file '{rel_path}'!")
+            raise excp
 
     def delete_dir(self, rel_path: str | Path) -> None:
-        p = self.execute(["rm", "-rf", self.path(rel_path)])
-        if p.wait() != 0:
-            raise Exception("Failed to delete directory %s. Exit-Code: %d" % (rel_path, p.wait()))
+        try:
+            _ = self.run(["rm", "-rf", self.path(rel_path)])
+        except subprocess.CalledProcessError as excp:
+            excp.add_note(f"Failed to delete directory '{rel_path}'!")
+            raise excp
 
     def write_text_file(self, rel_path: str | Path, content: str) -> None:
         write_file(self.path(rel_path), content, sudo=True, substitute_user=self.id)
@@ -577,35 +628,29 @@ class Site:
         write_file(self.path(rel_path), content, sudo=True, substitute_user=self.id)
 
     def create_rel_symlink(self, link_rel_target: str | Path, rel_link_name: str) -> None:
-        with self.execute(
-            ["ln", "-s", Path(link_rel_target).as_posix(), rel_link_name],
-            stdout=subprocess.PIPE,
-            stdin=subprocess.PIPE,
-        ) as p:
-            p.wait()
-        if p.returncode != 0:
-            raise Exception(
-                "Failed to create symlink from %s to ./%s. Exit-Code: %d"
-                % (rel_link_name, link_rel_target, p.returncode)
-            )
+        try:
+            _ = self.run(["ln", "-s", Path(link_rel_target).as_posix(), rel_link_name])
+        except subprocess.CalledProcessError as excp:
+            excp.add_note(f"Failed to create symlink from {rel_link_name} to ./{link_rel_target}!")
+            raise excp
 
     def resolve_path(self, rel_path: str | Path) -> Path:
-        p = self.execute(["readlink", "-e", self.path(rel_path)], stdout=subprocess.PIPE)
-        if p.wait() != 0:
-            raise Exception(f"Failed to read symlink at {rel_path}. Exit-Code: {p.wait()}")
-        if p.stdout is None:
-            raise Exception(f"Failed to read symlink at {rel_path}. No stdout.")
-        return Path(p.stdout.read().strip())
+        try:
+            stdout = self.check_output(["readlink", "-e", self.path(rel_path)])
+        except subprocess.CalledProcessError as excp:
+            excp.add_note(f"Failed to read symlink at {rel_path}!")
+            raise excp
+        return Path(stdout.strip())
 
     def file_exists(self, rel_path: str | Path) -> bool:
-        p = self.execute(["test", "-e", self.path(rel_path)], stdout=subprocess.PIPE)
-        return p.wait() == 0
+        p = self.run(["test", "-e", self.path(rel_path)], check=False)
+        return p.returncode == 0
 
     def is_file(self, rel_path: str | Path) -> bool:
-        return self.execute(["test", "-f", self.path(rel_path)]).wait() == 0
+        return self.run(["test", "-f", self.path(rel_path)], check=False).returncode == 0
 
     def is_dir(self, rel_path: str | Path) -> bool:
-        return self.execute(["test", "-d", self.path(rel_path)]).wait() == 0
+        return self.run(["test", "-d", self.path(rel_path)], check=False).returncode == 0
 
     def file_mode(self, rel_path: str | Path) -> int:
         return int(self.check_output(["stat", "-c", "%f", self.path(rel_path)]).rstrip(), base=16)
@@ -613,37 +658,29 @@ class Site:
     def inode(self, rel_path: str | Path) -> int:
         return int(self.check_output(["stat", "-c", "%i", self.path(rel_path)]).rstrip())
 
-    def makedirs(self, rel_path: str | Path) -> bool:
-        return makedirs(self.path(rel_path), sudo=True, substitute_user=self.id)
+    def makedirs(self, rel_path: str | Path) -> None:
+        makedirs(self.path(rel_path), sudo=True, substitute_user=self.id)
 
     def reset_admin_password(self, new_password: str | None = None) -> None:
-        self.check_output(
-            ["cmk-passwd", "-i", ADMIN_USER], input=new_password or self.admin_password
-        )
+        self.run(["cmk-passwd", "-i", ADMIN_USER], input=new_password or self.admin_password)
 
     def listdir(self, rel_path: str | Path) -> list[str]:
-        p = self.execute(["ls", "-1", self.path(rel_path)], stdout=subprocess.PIPE)
-        output = p.communicate()[0].strip()
-        assert p.wait() == 0
-        if not output:
-            return []
-        assert isinstance(output, str)
-        return output.split("\n")
+        output = self.check_output(["ls", "-1", self.path(rel_path)])
+        return output.strip().split("\n") if output else []
 
     def system_temp_dir(self) -> Iterator[str]:
-        p = self.execute(
-            ["mktemp", "-d", "cmk-system-test-XXXXXXXXX", "-p", "/tmp"], stdout=subprocess.PIPE
-        )
-        assert p.wait() == 0
-        assert p.stdout is not None
-        path = p.stdout.read().strip()
+        stdout = self.check_output(["mktemp", "-d", "cmk-system-test-XXXXXXXXX", "-p", "/tmp"])
+        assert stdout is not None
+        path = stdout.strip()
 
         try:
             yield path
         finally:
-            p = self.execute(["rm", "-rf", path])
-            if p.wait() != 0:
-                raise Exception("Failed to delete directory %s. Exit-Code: %d" % (path, p.wait()))
+            try:
+                _ = self.run(["rm", "-rf", path])
+            except subprocess.CalledProcessError as excp:
+                excp.add_note(f"Failed to delete directory '{path}'!")
+                raise excp
 
     def cleanup_if_wrong_version(self) -> None:
         if not self.exists():
@@ -661,22 +698,23 @@ class Site:
     def install_cmk(self) -> None:
         if not self.version.is_installed():
             logger.info("Installing Checkmk version %s", self.version.version_directory())
-            completed_process = subprocess.run(
-                [
-                    f"{repo_path()}/scripts/run-pipenv",
-                    "run",
-                    f"{repo_path()}/tests/scripts/install-cmk.py",
-                ],
-                env=dict(
-                    os.environ, VERSION=self.version.version, EDITION=self.version.edition.short
-                ),
-                check=False,
-            )
-            if completed_process.returncode != 0:
-                raise Exception(
+            try:
+                _ = run(
+                    [
+                        f"{repo_path()}/scripts/run-pipenv",
+                        "run",
+                        f"{repo_path()}/tests/scripts/install-cmk.py",
+                    ],
+                    env=dict(
+                        os.environ, VERSION=self.version.version, EDITION=self.version.edition.short
+                    ),
+                )
+            except subprocess.CalledProcessError as excp:
+                excp.add_note(
                     f"Version {self.version.version} could not be installed! "
                     'Use "tests/scripts/install-cmk.py" or install it manually.'
                 )
+                raise excp
 
     def create(self) -> None:
         self.install_cmk()
@@ -686,10 +724,9 @@ class Site:
 
         if self.update or not self.exists():
             logger.info('Updating site "%s"' if self.update else 'Creating site "%s"', self.id)
-            completed_process = subprocess.run(
+            completed_process = run(
                 (
                     [
-                        "/usr/bin/sudo",
                         "omd",
                         "-f",
                         "-V",
@@ -700,7 +737,6 @@ class Site:
                     ]
                     if self.update
                     else [
-                        "/usr/bin/sudo",
                         "omd",
                         "-V",
                         self.version.version_directory(),
@@ -712,8 +748,7 @@ class Site:
                     ]
                 ),
                 check=False,
-                capture_output=True,
-                encoding="utf-8",
+                sudo=True,
             )
             assert not completed_process.returncode, completed_process.stderr
             assert os.path.exists("/omd/sites/%s" % self.id)
@@ -771,8 +806,7 @@ class Site:
 
     def _update_cmk_core_config(self) -> None:
         logger.info("Updating core configuration...")
-        p = self.execute(["cmk", "-U"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        assert p.wait() == 0, "Failed to execute 'cmk -U': %s" % p.communicate()[0]
+        _ = self.run(["cmk", "-U"])
 
     def _enable_liveproxyd_debug_logging(self) -> None:
         self.makedirs("etc/check_mk/liveproxyd.d")
@@ -906,9 +940,8 @@ class Site:
     def rm(self, site_id: str | None = None) -> None:
         # Wait a bit to avoid unnecessarily stress testing the site.
         time.sleep(1)
-        completed_process = subprocess.run(
+        _ = run(
             [
-                "/usr/bin/sudo",
                 "omd",
                 "-f",
                 "rm",
@@ -916,9 +949,8 @@ class Site:
                 "--kill",
                 site_id or self.id,
             ],
-            check=False,
+            sudo=True,
         )
-        assert completed_process.returncode == 0
 
     def start(self) -> None:
         if not self.is_running():
@@ -931,7 +963,7 @@ class Site:
             while not self.is_running():
                 i += 1
                 if i > 10:
-                    self.execute(["omd", "status"]).wait()
+                    self.run(["omd", "status"])
                     # print("= BEGIN PROCESSES FAIL ==============================")
                     # self.execute(["ps", "aux"]).wait()
                     # print("= END PROCESSES FAIL ==============================")
@@ -955,7 +987,7 @@ class Site:
         logger.info("Stopping site")
 
         logger.debug("= BEGIN PROCESSES BEFORE =======================================")
-        logger.debug(subprocess.check_output(["ps", "-fwwu", str(self.id)], encoding="utf-8"))
+        logger.debug(check_output(["ps", "-fwwu", str(self.id)]))
         logger.debug("= END PROCESSES BEFORE =======================================")
 
         stop_exit_code = self.omd("stop")
@@ -980,14 +1012,8 @@ class Site:
 
     def ensure_running(self) -> None:
         if not self.is_running():
-            omd_status_output = self.execute(
-                ["omd", "status"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
-            ).communicate()[0]
-            ps_output = self.execute(
-                ["ps", "-ef"],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-            ).communicate()[0]
+            omd_status_output = self.check_output(["omd", "status"], stderr=subprocess.STDOUT)
+            ps_output = self.check_output(["ps", "-ef"], stderr=subprocess.STDOUT)
             self.save_results()
 
             write_file(ps_output_file := self.result_dir() / "processes.out", ps_output, sudo=True)
@@ -996,7 +1022,7 @@ class Site:
 
             pytest.exit(
                 "Site was not running completely while it should be! Enforcing stop.\n\n"
-                f"Output of omd status:\n{omd_status_output}\n\n"
+                f"Output of omd status:\n{omd_status_output!r}\n\n"
                 f'See "{ps_output_file}" for full "ps -ef" output!',
                 returncode=1,
             )
@@ -1015,7 +1041,7 @@ class Site:
             return ("\n> " + "\n> ".join(msg.splitlines()) + "\n") if msg else "-"
 
         try:
-            self.check_output(["omd", "status", "--bare"])
+            self.run(["omd", "status", "--bare"])
             logger.info("Exit code was: 0 (fully running)")
             return 0
         except subprocess.CalledProcessError as e:
@@ -1025,7 +1051,7 @@ class Site:
                 2: "partially running",
             }.get(e.returncode, "unknown meaning")
             logger.info("Exit code was: %d (%s)", e.returncode, status_text)
-            logger.debug("%s Output: %sSTDERR: %s", e, _fmt_output(e.output), _fmt_output(e.stderr))
+            logger.debug(str(e))
             return e.returncode
 
     def set_config(self, key: str, val: str, with_restart: bool = False) -> None:
@@ -1045,12 +1071,9 @@ class Site:
             logger.debug("Started site")
 
     def get_config(self, key: str, default: str = "") -> str:
-        p = self.execute(
-            ["omd", "config", "show", key], stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-        stdout, stderr = p.communicate()
-        logger.debug("omd config: %s is set to %r", key, stdout.strip())
-        if stderr:
+        process = self.run(["omd", "config", "show", key])
+        logger.debug("omd config: %s is set to %r", key, stdout := process.stdout.strip())
+        if stderr := process.stderr:
             logger.error(stderr)
         return stdout.strip() or default
 
@@ -1647,13 +1670,7 @@ class SiteFactory:
             f"--conflict={conflict_mode}",
         ]
 
-        process = site.execute(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        rc = process.wait()
-        assert rc == 0, (
-            f"Failed to update the test-site!\n"
-            f"STDERR: {process.stderr.read() if process.stderr else ""}\n"
-            f"STDOUT: {process.stdout.read() if process.stdout else ""}"
-        )
+        _ = site.run(cmd)
 
         # refresh the site object after creating the site
         site = self.get_existing_site(site.id)
@@ -1831,9 +1848,15 @@ class PythonHelper:
         finally:
             self.site.delete_file(str(self.site_path))
 
-    def check_output(self, input: str | None = None) -> str:  # pylint: disable=redefined-builtin
+    def check_output(self, input: str | None = None, encoding: str = "utf-8") -> str:  # pylint: disable=redefined-builtin
         with self.copy_helper():
-            return self.site.check_output(["python3", str(self.site_path)], input)
+            output = self.site.check_output(
+                ["python3", str(self.site_path)],
+                input=input,
+                encoding=encoding,
+                stderr=subprocess.PIPE,
+            )
+            return output
 
     @contextmanager
     def execute(self, *args, **kwargs) -> Iterator[subprocess.Popen]:  # type: ignore[no-untyped-def]

@@ -2,13 +2,13 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
 from tests.testlib.agent import agent_controller_daemon, install_agent_package
+from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.site import get_site_factory, Site
 from tests.testlib.utils import is_containerized, run
 
@@ -20,29 +20,32 @@ site_factory = get_site_factory(prefix="comp_")
 
 @pytest.fixture(name="central_site", scope="session")
 def _central_site(request: pytest.FixtureRequest) -> Iterator[Site]:
-    yield from site_factory.get_test_site(
-        "central", description=request.node.name, auto_restart_httpd=True
-    )
+    with exit_pytest_on_exceptions():
+        yield from site_factory.get_test_site(
+            "central", description=request.node.name, auto_restart_httpd=True
+        )
 
 
 @pytest.fixture(name="remote_site", scope="session")
 def _remote_site(central_site: Site, request: pytest.FixtureRequest) -> Iterator[Site]:
-    remote_site_generator = site_factory.get_test_site(
-        "remote", description=request.node.name, auto_restart_httpd=True
-    )
-    try:  # make pylint happy
-        remote_site = next(remote_site_generator)
-    except StopIteration as e:
-        raise RuntimeError("I should have received a remote site...") from e
-    _add_remote_site_to_central_site(central_site=central_site, remote_site=remote_site)
+    with exit_pytest_on_exceptions():
+        remote_site_generator = site_factory.get_test_site(
+            "remote", description=request.node.name, auto_restart_httpd=True
+        )
+        try:  # make pylint happy
+            remote_site = next(remote_site_generator)
+        except StopIteration as excp:
+            excp.add_note("I should have received a remote site...")
 
-    try:
-        yield remote_site
-    finally:
-        # Teardown of remote site. We first stop the central site to avoid crashes due to
-        # interruptions in the remote-central communication caused by the teardown.
-        central_site.stop()
-        yield from remote_site_generator
+        _add_remote_site_to_central_site(central_site=central_site, remote_site=remote_site)
+
+        try:
+            yield remote_site
+        finally:
+            # Teardown of remote site. We first stop the central site to avoid crashes due to
+            # interruptions in the remote-central communication caused by the teardown.
+            central_site.stop()
+            yield from remote_site_generator
 
 
 def _add_remote_site_to_central_site(

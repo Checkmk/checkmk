@@ -193,20 +193,10 @@ def wait_until_host_receives_data(
             interval=interval,
         )
     except TimeoutError as e:
-        proc = site.execute(
-            ["cmk", "-d", hostname],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-        )
-        proc.wait()
-        output = proc.stdout.read() if proc.stdout else ""
-        logger.error(
-            'Executing "cmk -d %s" failed with RC:%s! Output:\n%s',
-            hostname,
-            proc.returncode,
-            output,
-        )
-        raise e
+        try:
+            _ = site.run(["cmk", "-d", hostname])
+        except subprocess.CalledProcessError as excp:
+            raise excp from e
 
 
 def controller_status_json(controller_path: Path) -> Mapping[str, Any]:
@@ -303,15 +293,11 @@ def wait_for_baking_job(central_site: Site, expected_start_time: float) -> None:
 
 def _remove_omd_status_cache() -> None:
     logger.info("Removing omd status agent cache...")
-    with execute(
-        ["rm", "-f", str(OMD_STATUS_CACHE)],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        sudo=True,
-    ) as p:
-        rc = p.wait()
-        p_out, p_err = p.communicate()
-        assert rc == 0, f"Failed to remove agent cache.\nSTDOUT: {p_out}\nSTDERR: {p_err}"
+    try:
+        run(["rm", "-f", str(OMD_STATUS_CACHE)], shell=True, sudo=True)
+    except subprocess.CalledProcessError as excp:
+        excp.add_note("Failed to remove agent cache!")
+        raise excp
 
 
 def _all_omd_services_running_from_cache(site: Site) -> tuple[bool, str]:

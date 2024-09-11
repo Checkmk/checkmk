@@ -8,6 +8,7 @@ from collections.abc import Iterator
 import pytest
 
 from tests.testlib.openapi_session import RequestSessionRequestHandler
+from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.rest_api_client import ClientRegistry, get_client_registry, RestApiClient
 from tests.testlib.site import get_site_factory, Site
 from tests.testlib.web_session import CMKWebSession
@@ -20,7 +21,10 @@ logger = logging.getLogger(__name__)
 # Session fixtures must be in conftest.py to work properly
 @pytest.fixture(name="site", scope="session")
 def get_site() -> Iterator[Site]:
-    yield from get_site_factory(prefix="int_").get_test_site(name="test", auto_restart_httpd=True)
+    with exit_pytest_on_exceptions():
+        yield from get_site_factory(prefix="int_").get_test_site(
+            name="test", auto_restart_httpd=True
+        )
 
 
 @pytest.fixture(scope="session", name="web")

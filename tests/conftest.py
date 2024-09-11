@@ -9,6 +9,7 @@
 import logging
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 from collections.abc import Iterator
@@ -63,6 +64,8 @@ def fail_on_log_exception(
 def pytest_exception_interact(call: pytest.CallInfo) -> None:
     if not (excinfo := call.excinfo):
         return
+
+    _excp = excinfo.value
     if excinfo.type in (TimeoutError, PWTimeoutError):
         try:
             top_output = f"\n{run(["top", "-b", "-n", "1"], check=False).stdout}"
@@ -71,8 +74,16 @@ def pytest_exception_interact(call: pytest.CallInfo) -> None:
             # silence any exception when running top since
             # we do not want to break the exception handling
             logger.error('Could not get "top" output on TimeoutError!')
+    elif isinstance(_excp, subprocess.CalledProcessError):
+        notes = "\n".join(getattr(_excp, "__notes__", []))
+        msg = (
+            f"Command: {str(_excp.cmd)}; Exit code: {str(_excp.returncode)}\n"
+            f"STDOUT: {_excp.stdout}\n"
+            f"STDERR: {_excp.stderr}\n"
+        ) + notes
+        logger.exception(msg)
     if PYTEST_RAISE:
-        raise excinfo.value
+        raise _excp
 
 
 @pytest.hookimpl(tryfirst=True)

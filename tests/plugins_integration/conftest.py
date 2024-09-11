@@ -8,6 +8,7 @@ from collections.abc import Iterator
 
 import pytest
 
+from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.site import get_site_factory, Site, SiteFactory
 from tests.testlib.utils import run
 from tests.testlib.version import get_min_version
@@ -152,51 +153,44 @@ def pytest_collection_modifyitems(config, items):
 @pytest.fixture(name="test_site", scope="session")
 def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
     """Setup test-site and perform cleanup after test execution."""
-    for site in get_site_factory(prefix="plugins_").get_test_site(
-        auto_cleanup=not checks.config.skip_cleanup
-    ):
-        dump_path = site.path(checks.dump_path_site)
-        checks.setup_site(site, dump_path)
+    with exit_pytest_on_exceptions():
+        for site in get_site_factory(prefix="plugins_").get_test_site(
+            auto_cleanup=not checks.config.skip_cleanup
+        ):
+            dump_path = site.path("var/check_mk/dumps")
+            checks.setup_site(site, dump_path)
 
-        yield site
+            yield site
 
-        if not request.config.getoption("--enable-core-scheduling"):
-            site.stop_host_checks()
-            site.stop_active_services()
+            if not request.config.getoption("--enable-core-scheduling"):
+                site.stop_host_checks()
+                site.stop_active_services()
 
-        if not checks.config.skip_cleanup:
-            # cleanup existing agent-output folder in the test site
-            logger.info('Removing folder "%s"...', dump_path)
-            assert run(["rm", "-rf", dump_path], sudo=True).returncode == 0
+            if not checks.config.skip_cleanup:
+                # cleanup existing agent-output folder in the test site
+                logger.info('Removing folder "%s"...', dump_path)
+                assert run(["rm", "-rf", dump_path], sudo=True).returncode == 0
 
 
 @pytest.fixture(name="test_site_piggyback", scope="session")
 def _get_site_piggyback(request: pytest.FixtureRequest) -> Iterator[Site]:
-    for site in get_site_factory(prefix="PB_").get_test_site(
-        auto_cleanup=not checks.config.skip_cleanup
-    ):
-        dump_path = site.path(checks.dump_path_site)
+    with exit_pytest_on_exceptions():
+        for site in get_site_factory(prefix="PB_").get_test_site(
+            auto_cleanup=not checks.config.skip_cleanup
+        ):
+            dump_path = site.path("var/check_mk/dumps")
 
-        # create dump folder in the test site
-        logger.info('Creating folder "%s"...', dump_path)
-        rc = site.execute(["mkdir", "-p", dump_path]).wait()
-        assert rc == 0
+            # create dump folder in the test site
+            logger.info('Creating folder "%s"...', dump_path)
+            rc = site.execute(["mkdir", "-p", dump_path]).wait()
+            assert rc == 0
 
-        ruleset_name = "datasource_programs"
-        logger.info('Creating rule "%s"...', ruleset_name)
-        site.openapi.create_rule(ruleset_name=ruleset_name, value=f"cat {dump_path}/<HOST>")
-        logger.info('Rule "%s" created!', ruleset_name)
+            ruleset_name = "datasource_programs"
+            logger.info('Creating rule "%s"...', ruleset_name)
+            site.openapi.create_rule(ruleset_name=ruleset_name, value=f"cat {dump_path}/<HOST>")
+            logger.info('Rule "%s" created!', ruleset_name)
 
-        update_interval_sec = 60
-        logger.info(
-            "Setting dynamic configuration site update interval to %s seconds...",
-            update_interval_sec,
-        )
-        site.write_text_file(
-            "etc/check_mk/dcd.d/wato/global.mk", f"dcd_site_update_interval = {update_interval_sec}"
-        )
-
-        yield site
+            yield site
 
 
 @pytest.fixture(name="site_factory_update", scope="session")
@@ -210,16 +204,17 @@ def _get_site_update(
     site_factory_update: SiteFactory, request: pytest.FixtureRequest
 ) -> Iterator[Site]:
     """Setup test-site and perform cleanup after test execution."""
-    for site in site_factory_update.get_test_site(auto_cleanup=not checks.config.skip_cleanup):
-        dump_path = site.path(checks.dump_path_site)
-        checks.setup_site(site, dump_path)
+    with exit_pytest_on_exceptions():
+        for site in site_factory_update.get_test_site(auto_cleanup=not checks.config.skip_cleanup):
+            dump_path = site.path("var/check_mk/dumps")
+            checks.setup_site(site, dump_path)
 
-        yield site
+            yield site
 
-        if not checks.config.skip_cleanup:
-            # cleanup existing agent-output folder in the test site
-            logger.info('Removing folder "%s"...', dump_path)
-            assert run(["rm", "-rf", dump_path], sudo=True).returncode == 0
+            if not checks.config.skip_cleanup:
+                # cleanup existing agent-output folder in the test site
+                logger.info('Removing folder "%s"...', dump_path)
+                assert run(["rm", "-rf", dump_path], sudo=True).returncode == 0
 
 
 @pytest.fixture(name="bulk_setup", scope="session")
@@ -237,7 +232,8 @@ def _bulk_setup(test_site: Site, pytestconfig: pytest.Config) -> Iterator:
 
 @pytest.fixture(name="plugin_validation_site", scope="session")
 def _get_site_validation() -> Iterator[Site]:
-    yield from get_site_factory(prefix="val_").get_test_site()
+    with exit_pytest_on_exceptions():
+        yield from get_site_factory(prefix="val_").get_test_site()
 
 
 def _periodic_service_discovery_rule() -> dict:

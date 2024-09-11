@@ -23,6 +23,7 @@ from tests.testlib.playwright.plugin import (
 from tests.testlib.playwright.pom.dashboard import Dashboard, DashboardMobile
 from tests.testlib.playwright.pom.login import LoginPage
 from tests.testlib.playwright.pom.setup.hosts import AddHost, SetupHost
+from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.repo import repo_path
 from tests.testlib.site import ADMIN_USER, get_site_factory, Site
 from tests.testlib.utils import run
@@ -33,7 +34,8 @@ logger = logging.getLogger(__name__)
 @pytest.fixture(name="test_site", scope="session")
 def fixture_test_site() -> Iterator[Site]:
     """Return the Checkmk site object."""
-    yield from get_site_factory(prefix="gui_e2e_").get_test_site()
+    with exit_pytest_on_exceptions():
+        yield from get_site_factory(prefix="gui_e2e_").get_test_site()
 
 
 @pytest.fixture(name="credentials", scope="session")

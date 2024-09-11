@@ -2,6 +2,8 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from contextlib import contextmanager
+from typing import Any
 
 import pytest
 
@@ -26,3 +28,14 @@ def abort_if_raw_edition(condition: bool = True) -> None:
 def abort_if_saas_edition(condition: bool = True) -> None:
     if pytest_helpers.is_saas_edition.condition and condition:
         pytest.skip(pytest_helpers.is_saas_edition.reason)
+
+
+@contextmanager
+def exit_pytest_on_exceptions(exceptions: tuple[Any, ...] | None = None, exit_msg: str = "") -> Any:
+    if exceptions is None:
+        exceptions = (Exception,)
+    try:
+        yield
+    except exceptions as excp:
+        excp.add_note(exit_msg)
+        pytest.exit(str(excp), returncode=1)

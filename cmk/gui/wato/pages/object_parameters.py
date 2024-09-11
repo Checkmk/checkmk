@@ -609,17 +609,16 @@ class ModeObjectParameters(WatoMode):
                 html.write_text_permissive(valuespec.value_to_html(valuespec.default_value()))
 
         # We have a setting
-        else:
-            if ruleset.match_type() == "all":
-                if not isinstance(setting, list):
-                    raise ValueError(f"Expected list, got {setting}")
-                html.write_html(
-                    HTML.without_escaping(", ").join(
-                        [valuespec.value_to_html(value) for value in setting]
-                    )
+        elif ruleset.match_type() == "all":
+            if not isinstance(setting, list):
+                raise ValueError(f"Expected list, got {setting}")
+            html.write_html(
+                HTML.without_escaping(", ").join(
+                    [valuespec.value_to_html(value) for value in setting]
                 )
-            else:
-                html.write_text_permissive(valuespec.value_to_html(setting))
+            )
+        else:
+            html.write_text_permissive(valuespec.value_to_html(setting))
 
         html.close_td()
         html.close_tr()

@@ -482,7 +482,7 @@ MOCK_PLUGIN = ActiveCheckConfig(
             "# Active checks\n"
             "define service {\n"
             "  active_checks_enabled         1\n"
-            '  check_command                 check-mk-custom!echo "CRIT - Failed to lookup IP address and no explicit IP address configured"; exit 2\n'
+            "  check_command                 check_mk_active-my_active_check!'Failed to lookup IP address and no explicit IP address configured'\n"
             "  check_interval                1.0\n"
             "  host_name                     my_host\n"
             "  service_description           Active check of my_host\n"

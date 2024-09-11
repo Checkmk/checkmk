@@ -146,35 +146,34 @@ class ActiveCheck:
 
             existing_descriptions[raw_service.description] = raw_service.plugin_name
 
-            command, detected_exectutable, exec_command_line = self._get_command(raw_service)
+            command, detected_executable, args = self._get_command(raw_service)
 
             yield ActiveServiceData(
                 plugin_name=plugin_name,
                 description=raw_service.description,
                 command=command,
-                command_display=f"{command}!{self.escape_func(raw_service.arguments)}",
-                command_line=exec_command_line,
+                command_display=f"{command}!{self.escape_func(args)}",
+                command_line=f"{detected_executable} {args}".rstrip(),
                 params=raw_service.configuration,
-                expanded_args=self.escape_func(raw_service.arguments),
-                detected_executable=detected_exectutable,
+                expanded_args=self.escape_func(args),
+                detected_executable=detected_executable,
             )
 
     def _get_command(self, raw_service: _RawActiveServiceData) -> tuple[str, str, str]:
         if self.host_attrs["address"] in ["0.0.0.0", "::"]:
-            command = "check-mk-custom"
-            command_line = 'echo "CRIT - Failed to lookup IP address and no explicit IP address configured"; exit 2'
+            # these 'magic' addresses indicate that the lookup failed :-(
+            executable = "check_always_crit"
+            args = "'Failed to lookup IP address and no explicit IP address configured'"
 
-            return command, "echo", command_line
+        else:
+            executable = f"check_{raw_service.plugin_name}"
+            args = raw_service.arguments
 
         command = f"check_mk_active-{raw_service.plugin_name}"
         detected_executable = _autodetect_plugin(
-            f"check_{raw_service.plugin_name}", self._modules.get(raw_service.plugin_name)
+            executable, self._modules.get(raw_service.plugin_name)
         )
-        return (
-            command,
-            detected_executable,
-            f"{detected_executable} {raw_service.arguments}".rstrip(),
-        )
+        return (command, detected_executable, args)
 
     def get_active_service_descriptions(
         self, active_checks_rules: Iterable[SSCRules]

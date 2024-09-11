@@ -103,6 +103,7 @@ MONITORING_PLUGINS: Sequence[Plugin] = (
     MonitoringPlugin("urlize"),
     MonitoringPlugin("check_mysql"),
     MonitoringPlugin("check_mysql_query"),
+    CheckmkActiveCheck("check_always_crit"),
     CheckmkActiveCheck("check_sftp"),
     CheckmkActiveCheck(
         "check_mail",

@@ -113,15 +113,17 @@ class SpecialAgent:
         processed = process_configuration_to_parameters(conf_dict, proxy_config)
 
         for command in special_agent(processed.value, self.host_config):
-            args = replace_passwords(
-                self.host_name,
-                command.command_arguments,
-                self.stored_passwords,
-                self.password_store_file,
-                processed.surrogates,
-                apply_password_store_hack=password_store.hack.HACK_AGENTS.get(
-                    special_agent.name, False
-                ),
+            args = " ".join(
+                replace_passwords(
+                    self.host_name,
+                    command.command_arguments,
+                    self.stored_passwords,
+                    self.password_store_file,
+                    processed.surrogates,
+                    apply_password_store_hack=password_store.hack.HACK_AGENTS.get(
+                        special_agent.name, False
+                    ),
+                )
             )
             # there's a test that currently prevents us from moving this out of the loop
             path = self._make_source_path(special_agent.name)

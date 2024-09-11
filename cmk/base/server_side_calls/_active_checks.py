@@ -53,7 +53,7 @@ class ActiveServiceDescription:
 class _RawActiveServiceData:
     plugin_name: str
     description: str
-    arguments: str
+    arguments: tuple[str, ...]
     configuration: Mapping[str, object]
 
 
@@ -154,14 +154,16 @@ class ActiveCheck:
                 command_name=command,
                 params=raw_service.configuration,
                 detected_executable=detected_executable,
-                args=args,
+                args=" ".join(args),
             )
 
-    def _get_command(self, raw_service: _RawActiveServiceData) -> tuple[str, str, str]:
+    def _get_command(self, raw_service: _RawActiveServiceData) -> tuple[str, str, tuple[str, ...]]:
         if self.host_attrs["address"] in ["0.0.0.0", "::"]:
             # these 'magic' addresses indicate that the lookup failed :-(
             executable = "check_always_crit"
-            args = "'Failed to lookup IP address and no explicit IP address configured'"
+            args: tuple[str, ...] = (
+                "'Failed to lookup IP address and no explicit IP address configured'",
+            )
 
         else:
             executable = f"check_{raw_service.plugin_name}"

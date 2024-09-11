@@ -55,7 +55,7 @@ function toggleActiveMode() {
   >
   <div v-if="activeMode === 'readonly' || activeMode === 'both'">
     <FormReadonly
-      v-model:data="dataRef"
+      :data="dataRef"
       :backend-validation="backendValidation"
       :spec="spec"
     ></FormReadonly>

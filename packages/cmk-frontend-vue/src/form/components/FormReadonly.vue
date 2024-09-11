@@ -1,5 +1,5 @@
-<script setup lang="ts">
-import { h, type VNode } from 'vue'
+<script lang="ts">
+import { h, type VNode, defineComponent, type PropType } from 'vue'
 import type {
   Components,
   Dictionary,
@@ -25,17 +25,7 @@ import {
 } from '@/form/components/utils/validation'
 import { splitToUnits, getSelectedMagnitudes, ALL_MAGNITUDES } from './utils/timeSpan'
 
-const props = defineProps<{
-  spec: FormSpec
-  backendValidation: ValidationMessages
-}>()
-
-const data = defineModel<unknown>('data', { required: true })
 const ERROR_BACKGROUND_COLOR = 'rgb(252, 85, 85)'
-
-function render() {
-  return renderForm(props.spec, data.value, props.backendValidation)
-}
 
 function renderForm(
   formSpec: FormSpec,
@@ -369,10 +359,17 @@ function renderLegacyValuespec(
     h('div', { validation: backendValidation })
   ])
 }
-</script>
 
-<template>
-  <render />
-</template>
+export default defineComponent({
+  props: {
+    spec: { type: Object as PropType<FormSpec>, required: true },
+    data: { type: null as unknown as PropType<unknown>, required: true },
+    backendValidation: { type: Object as PropType<ValidationMessages>, required: true }
+  },
+  render() {
+    return renderForm(this.spec, this.data, this.backendValidation)
+  }
+})
+</script>
 
 <style scoped></style>

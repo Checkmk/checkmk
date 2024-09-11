@@ -41,11 +41,14 @@
     --icon-main-help: url('themes/facelift/images/icon_main_help.svg');
     --icon-save-to-services: url('themes/facelift/images/icon_save_to_services.svg');
     --icon-insertdate: url('themes/facelift/images/icon_insertdate.png');
+    --icon-select-arrow: url('themes/facelift/images/select_arrow.png');
 
     /* Colors */
     --default-submit-button-border-color: var(--success-dimmed);
     --default-border-color: rgb(234 234 234);
     --default-table-th-color: rgb(232 232 238);
+    --default-select-background-color: rgb(224, 224, 228);
+    --default-select-hover-color: var(--success);
   }
 
   body[data-theme='modern-dark'] {
@@ -57,11 +60,13 @@
     --icon-main-help: url('themes/modern-dark/images/icon_main_help.svg');
     --icon-save-to-services: url('themes/modern-dark/images/icon_save_to_services.svg');
     --icon-insertdate: url('themes/modern-dark/images/icon_insertdate.png');
+    --icon-select-arrow: url('themes/modern-dark/images/select_arrow.png');
 
     /* Colors */
     --default-submit-button-border-color: rgb(8 94 61);
     --default-border-color: rgb(38 45 52);
-
     --default-table-th-color: rgb(32, 39, 46);
+    --default-select-background-color: rgb(48, 57, 70);
+    --default-select-hover-color: var(--success);
   }
 }

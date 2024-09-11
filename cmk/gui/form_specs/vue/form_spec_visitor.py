@@ -23,6 +23,7 @@ from cmk.gui.form_specs.private import (
     ListExtended,
     OptionalChoice,
     SingleChoiceExtended,
+    StringAutocompleter,
     UnknownFormSpec,
 )
 from cmk.gui.form_specs.vue import shared_type_defs
@@ -34,6 +35,7 @@ from cmk.gui.form_specs.vue.visitors.recomposers import (
     recompose_regular_expression,
     recompose_service_state,
     recompose_single_choice,
+    recompose_string,
     recompose_unknown_form_spec,
 )
 from cmk.gui.htmllib.html import html
@@ -134,8 +136,10 @@ def register_form_specs():
     register_visitor_class(Tuple, TupleVisitor)
     register_visitor_class(OptionalChoice, OptionalChoiceVisitor)
     register_visitor_class(SimplePassword, SimplePasswordVisitor)
+    register_visitor_class(StringAutocompleter, StringVisitor)
 
     # Recomposed
+    register_visitor_class(String, StringVisitor, recompose_string)
     register_visitor_class(HostState, SingleChoiceVisitor, recompose_host_state)
     register_visitor_class(ServiceState, SingleChoiceVisitor, recompose_service_state)
     register_visitor_class(SingleChoice, SingleChoiceVisitor, recompose_single_choice)

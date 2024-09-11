@@ -44,6 +44,7 @@ export type String = FormSpec & {
   placeholder?: string;
   input_hint?: string;
   field_size?: StringFieldSize;
+  autocompleter?: Autocompleter;
 };
 export type StringFieldSize = "SMALL" | "MEDIUM" | "LARGE";
 export type Dictionary = FormSpec & {
@@ -195,6 +196,10 @@ export interface LengthInRange {
   min_value?: number;
   max_value?: number;
   error_message?: string;
+}
+export interface Autocompleter {
+  fetch_method: "ajax_vs_autocomplete";
+  data: {};
 }
 export interface DictionaryElement {
   ident: string;

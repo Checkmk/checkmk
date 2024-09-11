@@ -130,6 +130,12 @@ class I18nOptionalChoice:
 
 
 @dataclass(kw_only=True)
+class Autocompleter:
+    data: dict[str, Any]
+    fetch_method: str = "ajax_vs_autocomplete"
+
+
+@dataclass(kw_only=True)
 class ValidationMessage:
     location: list[str]
     message: str
@@ -207,6 +213,7 @@ class String(FormSpec):
     placeholder: Optional[str] = None
     input_hint: Optional[str] = None
     field_size: Optional[StringFieldSize] = None
+    autocompleter: Optional[Autocompleter] = None
 
 
 @dataclass(kw_only=True)

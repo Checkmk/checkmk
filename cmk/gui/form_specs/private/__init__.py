@@ -14,17 +14,19 @@ from .definitions import (
 from .dictionary_extended import DictionaryExtended
 from .list_extended import ListExtended
 from .optional_choice import OptionalChoice
+from .string_autocompleter import StringAutocompleter
 from .validators import not_empty
 
 __all__ = [
     "Topic",
     "Catalog",
+    "CommentTextArea",
     "DictionaryExtended",
     "LegacyValueSpec",
     "ListExtended",
     "SingleChoiceElementExtended",
     "SingleChoiceExtended",
-    "CommentTextArea",
+    "StringAutocompleter",
     "OptionalChoice",
     "UnknownFormSpec",
     "not_empty",

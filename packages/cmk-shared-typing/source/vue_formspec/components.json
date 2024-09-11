@@ -114,6 +114,9 @@
                     "type": "string",
                     "title": "StringFieldSize",
                     "enum": ["SMALL", "MEDIUM", "LARGE"]
+                },
+                "autocompleter": {
+                    "$ref": "#/$defs/autocompleter"
                 }
             },
             "required": ["type"],
@@ -746,6 +749,19 @@
                     "$ref": "#/$defs/form_spec"
                 }
             ]
+        },
+        "autocompleter": {
+            "type": "object",
+            "properties": {
+                "fetch_method": {
+                    "const": "ajax_vs_autocomplete",
+                    "default": "ajax_vs_autocomplete"
+                },
+                "data": {
+                    "type": "object"
+                }
+            },
+            "required": ["fetch_method", "data"]
         },
         "components": {
             "discriminator": {

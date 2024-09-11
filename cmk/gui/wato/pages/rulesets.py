@@ -2180,6 +2180,7 @@ class ABCEditRuleMode(WatoMode):
             show_more_toggle=valuespec.has_show_more(),
         )
         forms.section()
+        html.form_has_submit_button = True
         html.prevent_password_auto_completion()
         try:
             # Experimental rendering: Only render form_spec if they are in the form_spec_registry

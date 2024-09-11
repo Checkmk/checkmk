@@ -5,11 +5,12 @@
 
 from typing import Callable, Sequence
 
+from cmk.gui.form_specs.private import StringAutocompleter
 from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 
 from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import FieldSize, String
+from cmk.rulesets.v1.form_specs import FieldSize
 
 from ._base import FormSpecVisitor
 from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
@@ -22,7 +23,7 @@ from ._utils import (
 )
 
 
-class StringVisitor(FormSpecVisitor[String, str]):
+class StringVisitor(FormSpecVisitor[StringAutocompleter, str]):
     def _parse_value(self, raw_value: object) -> str | EmptyValue:
         if isinstance(raw_value, DefaultValue):
             if isinstance(
@@ -50,6 +51,7 @@ class StringVisitor(FormSpecVisitor[String, str]):
                 validators=build_vue_validators(self._validators()),
                 input_hint=compute_input_hint(self.form_spec.prefill),
                 field_size=field_size_translator(self.form_spec.field_size),
+                autocompleter=self.form_spec.autocompleter,
             ),
             "" if isinstance(parsed_value, EmptyValue) else parsed_value,
         )

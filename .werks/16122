@@ -1,0 +1,12 @@
+Title: Fixed site matching for expected regular event console messages
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1726052246
+Edition: cre
+Level: 1
+Version: 2.2.0p34
+
+Due to a regression in 2.2.0, the "Match site" option had no effect for
+expected regular messages, i.e. it was effectively ignored in that case.
+This has been fixed.

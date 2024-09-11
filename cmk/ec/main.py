@@ -940,7 +940,9 @@ class EventServer(ECServerThread):
         now = time.time()
         for rule in self._rules:
             if "expect" in rule:
-                if not self._rule_matcher.event_rule_matches_site(rule, event={}):
+                if isinstance(
+                    self._rule_matcher.event_rule_matches_site(rule, event=Event()), MatchFailure
+                ):
                     continue
 
                 # Interval is either a number of seconds, or pair of a number of seconds

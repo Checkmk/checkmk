@@ -376,7 +376,8 @@ def transform_active_service_command(
         cfg.custom_commands_to_define.add("check-mk-custom")
         return f"{service_data.command_name}!{service_data.command}"
 
-    return service_data.command_display
+    escaped_args = service_data.args.replace("\\", "\\\\").replace("!", "\\!")
+    return f"{service_data.command_name}!{escaped_args}"
 
 
 def create_nagios_servicedefs(  # pylint: disable=too-many-branches
@@ -518,7 +519,6 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
         lambda x: config.get_final_service_description(x, translations),
         stored_passwords,
         password_store.core_password_store_path(LATEST_CONFIG),
-        escape_func=lambda a: a.replace("\\", "\\\\").replace("!", "\\!"),
     )
 
     active_checks = config_cache.active_checks(hostname)

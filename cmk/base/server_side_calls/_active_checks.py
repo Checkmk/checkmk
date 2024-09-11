@@ -31,9 +31,7 @@ class ActiveServiceData:
     plugin_name: str
     description: ServiceName
     command_name: str
-    command_display: str
     params: object
-    expanded_args: str
     detected_executable: str
     args: str
 
@@ -70,7 +68,6 @@ class ActiveCheck:
         service_name_finalizer: Callable[[ServiceName], ServiceName],
         stored_passwords: Mapping[str, str],
         password_store_file: Path,
-        escape_func: Callable[[str], str] = lambda a: a.replace("!", "\\!"),
     ):
         self._plugins = {p.name: p for p in plugins.values()}
         self._modules = {p.name: l.module for l, p in plugins.items()}
@@ -82,7 +79,6 @@ class ActiveCheck:
         self._service_name_finalizer = service_name_finalizer
         self.stored_passwords = stored_passwords or {}
         self.password_store_file = password_store_file
-        self.escape_func = escape_func
 
     def get_active_service_data(
         self, active_checks_rules: Iterable[SSCRules]
@@ -156,9 +152,7 @@ class ActiveCheck:
                 plugin_name=plugin_name,
                 description=raw_service.description,
                 command_name=command,
-                command_display=f"{command}!{self.escape_func(args)}",
                 params=raw_service.configuration,
-                expanded_args=self.escape_func(args),
                 detected_executable=detected_executable,
                 args=args,
             )

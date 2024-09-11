@@ -709,7 +709,7 @@ def test_forward_tcp_message_forwarded_spool_twice() -> None:
     spool_dir = Path(cmk.utils.paths.var_dir, "logwatch_spool", "some_host_name")
 
     # create a spooled message:
-    with time_machine.travel(datetime.datetime.fromisoformat("2023-10-31 16:02:00Z")):
+    with time_machine.travel(datetime.datetime.fromisoformat("2023-10-31 16:02:00Z"), tick=False):
         result, messages_forwarded = _forward_message(
             tcp_result="set exception", method=SPOOL_METHOD
         )
@@ -723,7 +723,7 @@ def test_forward_tcp_message_forwarded_spool_twice() -> None:
     assert list(f.name for f in spool_dir.iterdir()) == ["spool.1698768120.00"]
 
     # create another spooled message:
-    with time_machine.travel(datetime.datetime.fromisoformat("2023-10-31 16:03:00Z")):
+    with time_machine.travel(datetime.datetime.fromisoformat("2023-10-31 16:03:00Z"), tick=False):
         result, messages_forwarded = _forward_message(
             tcp_result="set exception", method=SPOOL_METHOD
         )

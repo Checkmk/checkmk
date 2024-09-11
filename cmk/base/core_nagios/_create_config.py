@@ -372,9 +372,9 @@ def transform_active_service_command(
         cfg.custom_commands_to_define.add("check-mk-simulation")
         return "check-mk-simulation!echo 'Simulation mode - cannot execute real check'"
 
-    if service_data.command == "check-mk-custom":
+    if service_data.command_name == "check-mk-custom":
         cfg.custom_commands_to_define.add("check-mk-custom")
-        return f"{service_data.command}!{service_data.command_line}"
+        return f"{service_data.command_name}!{service_data.command_line}"
 
     return service_data.command_display
 

@@ -30,7 +30,7 @@ from ._commons import ConfigSet, replace_passwords, SSCRules
 class ActiveServiceData:
     plugin_name: str
     description: ServiceName
-    command: str
+    command_name: str
     command_display: str
     command_line: str
     params: object
@@ -151,7 +151,7 @@ class ActiveCheck:
             yield ActiveServiceData(
                 plugin_name=plugin_name,
                 description=raw_service.description,
-                command=command,
+                command_name=command,
                 command_display=f"{command}!{self.escape_func(args)}",
                 command_line=f"{detected_executable} {args}".rstrip(),
                 params=raw_service.configuration,

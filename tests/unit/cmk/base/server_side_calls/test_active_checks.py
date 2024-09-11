@@ -110,7 +110,7 @@ def argument_function_with_exception(*args, **kwargs):
                 ActiveServiceData(
                     plugin_name="http",
                     description="HTTP myHTTPName on my_host_alias",
-                    command="check_mk_active-http",
+                    command_name="check_mk_active-http",
                     command_display="check_mk_active-http!--arg1 argument1 --arg2 argument2",
                     command_line="check_http --arg1 argument1 --arg2 argument2",
                     params={"name": "myHTTPName on my_host_alias"},
@@ -154,7 +154,7 @@ def argument_function_with_exception(*args, **kwargs):
                 ActiveServiceData(
                     plugin_name="my_active_check",
                     description="First service",
-                    command="check_mk_active-my_active_check",
+                    command_name="check_mk_active-my_active_check",
                     command_display="check_mk_active-my_active_check!--arg1 argument1",
                     command_line="check_my_active_check --arg1 argument1",
                     params={"description": "My active check", "param1": "param1"},
@@ -164,7 +164,7 @@ def argument_function_with_exception(*args, **kwargs):
                 ActiveServiceData(
                     plugin_name="my_active_check",
                     description="Second service",
-                    command="check_mk_active-my_active_check",
+                    command_name="check_mk_active-my_active_check",
                     command_display="check_mk_active-my_active_check!--arg2 argument2",
                     command_line="check_my_active_check --arg2 argument2",
                     params={"description": "My active check", "param1": "param1"},
@@ -230,7 +230,7 @@ def argument_function_with_exception(*args, **kwargs):
                 ActiveServiceData(
                     plugin_name="my_active_check",
                     description="My service",
-                    command="check_mk_active-my_active_check",
+                    command_name="check_mk_active-my_active_check",
                     command_display="check_mk_active-my_active_check!--pwstore=1@9@/pw/store@stored_password '--secret=**********'",
                     command_line="check_my_active_check --pwstore=1@9@/pw/store@stored_password '--secret=**********'",
                     params={
@@ -345,7 +345,7 @@ def test_get_active_service_data_password_with_hack(
         ActiveServiceData(
             plugin_name="test_check",
             description="My service",
-            command="check_mk_active-check_path",
+            command_name="check_mk_active-check_path",
             command_display="check_mk_active-check_path!--pwstore=4@1@/pw/store@uuid1234 --password-id uuid1234:/pw/store --password-plain-in-curly '{*********}'",
             command_line="/path/to/check_test_check --pwstore=4@1@/pw/store@uuid1234 --password-id uuid1234:/pw/store --password-plain-in-curly '{*********}'",
             params={
@@ -403,7 +403,7 @@ def test_get_active_service_data_password_without_hack(
         ActiveServiceData(
             plugin_name="test_check",
             description="My service",
-            command="check_mk_active-check_path",
+            command_name="check_mk_active-check_path",
             command_display="check_mk_active-check_path!--password-id uuid1234:/pw/store --password-plain-in-curly '{p4ssw0rd\\!}'",
             command_line="/path/to/check_test_check --password-id uuid1234:/pw/store --password-plain-in-curly '{p4ssw0rd!}'",
             params={
@@ -591,7 +591,7 @@ def test_test_get_active_service_data_crash_with_debug(
                 ActiveServiceData(
                     plugin_name="my_active_check",
                     description="My service",
-                    command="check_mk_active-my_active_check",
+                    command_name="check_mk_active-my_active_check",
                     command_display="check_mk_active-my_active_check!--pwstore=2@0@/pw/store@stored_password "
                     "--password '***'",
                     command_line="check_my_active_check "

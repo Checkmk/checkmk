@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import typing
 
+from cmk.plugins.gcp.lib.gcp import AssetType, GCPAsset, Item
+
 RegionMap: typing.Final = {
     # Download from:
     # https://github.com/GoogleCloudPlatform/gcping/blob/main/tools/terraform/regions.json
@@ -44,4 +46,19 @@ RegionMap: typing.Final = {
     "us-west2": "Los Angeles",
     "us-west3": "Salt Lake City",
     "us-west4": "Las Vegas",
+}
+
+# Known asset types that downstream checks can work with. Ignore others
+Extractors: typing.Mapping[AssetType, typing.Callable[[GCPAsset], Item]] = {
+    AssetType("file.googleapis.com/Instance"): lambda a: a.resource_data["name"].split("/")[-1],
+    AssetType("cloudfunctions.googleapis.com/CloudFunction"): lambda a: a.resource_data[
+        "name"
+    ].split("/")[-1],
+    AssetType("storage.googleapis.com/Bucket"): lambda a: a.resource_data["id"],
+    AssetType("redis.googleapis.com/Instance"): lambda a: a.resource_data["name"],
+    AssetType("run.googleapis.com/Service"): lambda a: a.resource_data["metadata"]["name"],
+    AssetType("sqladmin.googleapis.com/Instance"): lambda a: a.resource_data["name"],
+    AssetType("compute.googleapis.com/Instance"): lambda a: a.resource_data["name"],
+    AssetType("compute.googleapis.com/Disk"): lambda a: a.resource_data["name"],
+    AssetType("compute.googleapis.com/UrlMap"): lambda a: a.resource_data["name"],
 }

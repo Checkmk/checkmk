@@ -22,6 +22,8 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build, Resource  # type: ignore[import-untyped]
 from googleapiclient.http import HttpError, HttpRequest  # type: ignore[import-untyped]
 
+from cmk.plugins.gcp.lib.constants import Extractors
+
 # Those are enum classes defined in the Aggregation class. Not nice but works
 Aligner = GoogleAggregation.Aligner
 Reducer = GoogleAggregation.Reducer
@@ -478,21 +480,7 @@ def gather_assets(client: ClientProtocol) -> Sequence[Asset]:
     request = asset_v1.ListAssetsRequest(
         parent=f"projects/{client.project}",
         content_type=asset_v1.ContentType.RESOURCE,
-        # IMPORTANT:
-        # * Keep this in sync with the list of asset types in the corresponding check "gcp_assets"
-        # * When adding new assets types, keep in mind that some of them may cause exceeding quota limits on gcp
-        #   see SUP-20177
-        asset_types=[
-            "file.googleapis.com/Instance",
-            "cloudfunctions.googleapis.com/CloudFunction",
-            "storage.googleapis.com/Bucket",
-            "redis.googleapis.com/Instance",
-            "run.googleapis.com/Service",
-            "sqladmin.googleapis.com/Instance",
-            "compute.googleapis.com/Instance",
-            "compute.googleapis.com/Disk",
-            "compute.googleapis.com/UrlMap",
-        ],
+        asset_types=list(Extractors),
     )
     all_assets = client.list_assets(request)
     return [Asset(a) for a in all_assets]

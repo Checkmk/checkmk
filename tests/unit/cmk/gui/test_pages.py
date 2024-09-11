@@ -236,7 +236,7 @@ def test_registered_pages() -> None:
             "noauth:cognito_sso",
             "noauth:cognito_callback",
             "cognito_logout",
-            "noauth:verification_request",
+            "noauth:download_license_request",
             "noauth:upload_license_response",
             "noauth:download_license_usage",
         ]

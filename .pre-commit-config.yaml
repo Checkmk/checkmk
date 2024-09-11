@@ -63,6 +63,11 @@ repos:
             entry: scripts/run-format
             language: script
             types: [file, python]
+          - id: sort
+            name: Run sort imports
+            entry: scripts/run-sort
+            language: script
+            types: [file, python]
           - id: bandit
             name: Run bandit
             # -l level low -ll = level medium -lll level high

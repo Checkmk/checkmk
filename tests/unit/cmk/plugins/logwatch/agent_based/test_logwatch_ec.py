@@ -11,7 +11,6 @@ from pathlib import Path
 from typing import Literal
 
 import pytest
-import time_machine
 
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
@@ -237,6 +236,7 @@ class _FakeForwarder:
         self,
         method: str | tuple,
         messages: Sequence[ec.SyslogMessage],
+        timestamp: float,
     ) -> logwatch_ec.LogwatchForwardedResult:
         return logwatch_ec.LogwatchForwardedResult(num_forwarded=len(messages))
 
@@ -588,6 +588,7 @@ def _forward_message(
     text: str = "some_text",
     item: str | None = None,
     application: str = "-",
+    timestamp: str = "2023-11-11 11:11:00Z",
 ) -> tuple[logwatch_ec.LogwatchForwardedResult, list[tuple[float, int, list[str]]]]:
     messages_forwarded: list[tuple[float, int, list[str]]] = []
 
@@ -613,6 +614,7 @@ def _forward_message(
                 facility=1, severity=1, timestamp=0.0, text=text, application=application
             )
         ],
+        timestamp=datetime.datetime.fromisoformat(timestamp).timestamp(),
     )
 
     return result, messages_forwarded
@@ -709,10 +711,11 @@ def test_forward_tcp_message_forwarded_spool_twice() -> None:
     spool_dir = Path(cmk.utils.paths.var_dir, "logwatch_spool", "some_host_name")
 
     # create a spooled message:
-    with time_machine.travel(datetime.datetime.fromisoformat("2023-10-31 16:02:00Z"), tick=False):
-        result, messages_forwarded = _forward_message(
-            tcp_result="set exception", method=SPOOL_METHOD
-        )
+    result, messages_forwarded = _forward_message(
+        tcp_result="set exception",
+        method=SPOOL_METHOD,
+        timestamp="2023-10-31 16:02:00Z",
+    )
     assert result.num_forwarded == 0
     assert result.num_spooled == 1
     assert result.num_dropped == 0
@@ -723,10 +726,11 @@ def test_forward_tcp_message_forwarded_spool_twice() -> None:
     assert list(f.name for f in spool_dir.iterdir()) == ["spool.1698768120.00"]
 
     # create another spooled message:
-    with time_machine.travel(datetime.datetime.fromisoformat("2023-10-31 16:03:00Z"), tick=False):
-        result, messages_forwarded = _forward_message(
-            tcp_result="set exception", method=SPOOL_METHOD
-        )
+    result, messages_forwarded = _forward_message(
+        tcp_result="set exception",
+        method=SPOOL_METHOD,
+        timestamp="2023-10-31 16:03:00Z",
+    )
     assert result.num_forwarded == 0
     assert result.num_spooled == 2
     assert result.num_dropped == 0
@@ -752,22 +756,22 @@ def test_forward_tcp_message_update_old_spoolfiles() -> None:
 
     # first we create a spooled message for a logwatch_ec service with "separate_checks" = False
     # this is the same as the old behaviour, before werk 15397 with "separate_checks" = True
-    with time_machine.travel(datetime.datetime.fromisoformat("2023-10-31 16:02:00Z"), tick=False):
-        _result, messages_forwarded = _forward_message(
-            tcp_result="set exception",
-            method=SPOOL_METHOD,
-            application="item_name_1",
-        )
+    _result, messages_forwarded = _forward_message(
+        tcp_result="set exception",
+        method=SPOOL_METHOD,
+        application="item_name_1",
+        timestamp="2023-10-31 16:02:00Z",
+    )
     # we expect one spool file to be created:
     assert list(f.name for f in spool_dir.iterdir()) == ["spool.1698768120.00"]
 
     # now we do the same, but for a different item:
-    with time_machine.travel(datetime.datetime.fromisoformat("2023-10-31 16:03:00Z"), tick=False):
-        _result, messages_forwarded = _forward_message(
-            tcp_result="set exception",
-            method=SPOOL_METHOD,
-            application="another_item",
-        )
+    _result, messages_forwarded = _forward_message(
+        tcp_result="set exception",
+        method=SPOOL_METHOD,
+        application="another_item",
+        timestamp="2023-10-31 16:03:00Z",
+    )
     # we expect two spool files in the host folder:
     assert {f.name for f in spool_dir.iterdir()} == {
         "spool.1698768120.00",
@@ -777,13 +781,13 @@ def test_forward_tcp_message_update_old_spoolfiles() -> None:
     # this was the old behaviour. now we image the customer installed the new version of checkmk.
     # their logwatch_ec services had separate_checks = True from the beginning.
 
-    with time_machine.travel(datetime.datetime.fromisoformat("2023-10-31 16:04:00Z"), tick=False):
-        _result, messages_forwarded = _forward_message(
-            tcp_result="ok",
-            method=SPOOL_METHOD,
-            item="item_name_1",
-            application="item_name_1",
-        )
+    _result, messages_forwarded = _forward_message(
+        tcp_result="ok",
+        method=SPOOL_METHOD,
+        item="item_name_1",
+        application="item_name_1",
+        timestamp="2023-10-31 16:04:00Z",
+    )
 
     # we now expect, that the item_name_1 message was found (although in the old directory) and the
     # new message was also sent:

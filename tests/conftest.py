@@ -35,7 +35,7 @@ from tests.testlib.repo import (
     repo_path,
 )
 
-_logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope="function", autouse=True)
@@ -259,7 +259,7 @@ def _fake_version_and_paths() -> None:
     }
 
     # patch `cmk.utils.paths` before `cmk.ccc.versions`
-    _logger.info("Patching `cmk.utils.paths`.")
+    logger.info("Patching `cmk.utils.paths`.")
     import cmk.utils.paths  # pylint: disable=import-outside-toplevel
 
     # Unit test context: load all available modules
@@ -284,7 +284,7 @@ def _fake_version_and_paths() -> None:
     monkeypatch.setattr("cmk.utils.paths.legacy_check_manpages_dir", "%s/checkman" % repo_path())
 
     # patch `cmk.ccc.versions`
-    _logger.info("Patching `cmk.ccc.versions`.")
+    logger.info("Patching `cmk.ccc.versions`.")
     import cmk.ccc.version as cmk_version  # pylint: disable=import-outside-toplevel
 
     monkeypatch.setattr(cmk_version, "orig_omd_version", cmk_version.omd_version, raising=False)

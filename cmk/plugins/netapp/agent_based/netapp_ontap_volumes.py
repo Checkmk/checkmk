@@ -281,7 +281,7 @@ def _check_volumes_pattern(
 
     combined_volumes, combined_volumes_counters = _deserialize_volume(combined_volumes_data)
 
-    if combined_volumes and combined_volumes_counters:
+    if combined_volumes_counters:
         yield from _check_single_netapp_volume(
             item, params, combined_volumes, combined_volumes_counters, value_store, now
         )

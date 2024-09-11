@@ -54,10 +54,6 @@ class _RawActiveServiceData:
     arguments: str
     configuration: Mapping[str, object]
 
-    @property
-    def command_line(self) -> str:
-        return f"check_{self.plugin_name} {self.arguments}"
-
 
 class ActiveCheck:
     def __init__(
@@ -171,11 +167,14 @@ class ActiveCheck:
             return command, "echo", command_line
 
         command = f"check_mk_active-{raw_service.plugin_name}"
-        executable, *args = raw_service.command_line.split(None, 1)
         detected_executable = _autodetect_plugin(
-            executable, self._modules.get(raw_service.plugin_name)
+            f"check_{raw_service.plugin_name}", self._modules.get(raw_service.plugin_name)
         )
-        return command, detected_executable, " ".join((detected_executable, *args))
+        return (
+            command,
+            detected_executable,
+            f"{detected_executable} {raw_service.arguments}".rstrip(),
+        )
 
     def get_active_service_descriptions(
         self, active_checks_rules: Iterable[SSCRules]

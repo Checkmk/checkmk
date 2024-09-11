@@ -308,7 +308,7 @@ def test_get_active_service_data_password_with_hack(
         lambda self, r: (
             "check_mk_active-check_path",
             f"/path/to/check_{r.plugin_name}",
-            r.command_line,
+            f"check_{r.plugin_name} {r.arguments}",
         ),
     )
     monkeypatch.setitem(password_store.hack.HACK_CHECKS, "test_check", True)
@@ -367,7 +367,7 @@ def test_get_active_service_data_password_without_hack(
         lambda self, r: (
             "check_mk_active-check_path",
             f"/path/to/check_{r.plugin_name}",
-            r.command_line,
+            f"check_{r.plugin_name} {r.arguments}",
         ),
     )
     active_check = ActiveCheck(

@@ -373,7 +373,6 @@ def _test_register_new(
     assert set(response.json()) == {"root_cert"}
 
     triggered_r4r = R4R.read(uuid)
-    assert triggered_r4r
     assert triggered_r4r.status is R4RStatus.NEW
     assert triggered_r4r.request.uuid == uuid
     assert triggered_r4r.request.username == "monitoring"

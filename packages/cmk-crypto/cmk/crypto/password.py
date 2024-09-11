@@ -10,7 +10,7 @@ import secrets
 import string
 from dataclasses import dataclass
 from enum import Enum
-from typing import Final
+from typing import Final, override
 
 
 @dataclass
@@ -105,6 +105,7 @@ class Password:
         """
         return len(self.raw)
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Password):
             return False

@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from typing import assert_never, get_args, NewType, overload, TypeAlias, TypeGuard
+from typing import assert_never, get_args, NewType, overload, override, TypeAlias, TypeGuard
 
 import cryptography.exceptions
 from cryptography.hazmat.primitives import serialization
@@ -217,6 +217,7 @@ class PublicKey:
 
         return cls(key)
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, PublicKey):
             return NotImplemented

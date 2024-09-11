@@ -6,7 +6,7 @@
 """Attaches Python logging logs to the active span"""
 
 import logging
-from typing import TextIO
+from typing import override, TextIO
 
 from opentelemetry import trace
 
@@ -38,6 +38,7 @@ def add_span_log_handler() -> None:
 class _JaegerLogHandler(logging.StreamHandler[TextIO]):  # pylint: disable=too-few-public-methods
     """Add python logger records to the current span"""
 
+    @override
     def emit(self, record: logging.LogRecord) -> None:
         # See here https://docs.python.org/3/library/logging.html#logrecord-objects
         try:

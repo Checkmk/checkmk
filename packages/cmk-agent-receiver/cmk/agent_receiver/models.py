@@ -10,7 +10,7 @@ import socket
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
-from typing import Literal, Self
+from typing import Literal, override, Self
 from uuid import UUID
 
 from cryptography.x509 import CertificateSigningRequest, load_pem_x509_csr
@@ -162,6 +162,7 @@ class RegisterExistingBody(RegistrationWithHNBody, frozen=True):
 
     @field_validator("host_name")
     @staticmethod
+    @override
     def valid_hostname(v: str) -> str:
         if not _is_valid_hostname_or_ip(v):
             raise HTTPException(

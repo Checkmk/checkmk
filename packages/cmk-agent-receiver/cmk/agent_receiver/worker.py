@@ -7,6 +7,7 @@
 
 import asyncio
 from ssl import SSLObject
+from typing import override
 from urllib.parse import unquote
 
 import h11
@@ -34,6 +35,7 @@ def _extract_client_cert_cn(ssl_object: SSLObject | None) -> str | None:
 
 class _ClientCertProtocol(H11Protocol):
     # copied from uvicorn.protocols.http.h11_impl.H11Protocol
+    @override
     def handle_events(self) -> None:
         while True:
             try:

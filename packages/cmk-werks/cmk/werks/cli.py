@@ -21,7 +21,7 @@ import tty
 from collections.abc import Iterator, Sequence
 from functools import cache
 from pathlib import Path
-from typing import Literal, NamedTuple, NoReturn
+from typing import Literal, NamedTuple, NoReturn, override
 
 from . import load_werk as cmk_werks_load_werk
 from . import parse_werk
@@ -37,6 +37,7 @@ class WerkId:
     def __init__(self, id: int):  # pylint: disable=redefined-builtin
         self.__id = id
 
+    @override
     def __str__(self) -> str:
         return f"{self.__id:0>5}"
 
@@ -44,11 +45,13 @@ class WerkId:
     def id(self) -> int:
         return self.__id
 
+    @override
     def __eq__(self, other: object) -> bool:
         if isinstance(other, self.__class__):
             return self.id == other.id
         return False
 
+    @override
     def __hash__(self) -> int:
         return hash(self.__id)
 
@@ -568,14 +571,9 @@ def output_csv(werks: list[Werk]) -> None:
 
     nr = 1
     for entry in get_config().components:
-        # TODO: Our config has been validated, so we should be able to nuke the isinstance horror
-        # below.
-        if isinstance(entry, tuple) and len(entry) == 2:
-            name, alias = entry
-        elif isinstance(entry, str):  # type: ignore[unreachable]  # TODO: Hmmm...
-            name, alias = entry, entry
-        else:
+        if len(entry) != 2:
             bail_out(f"invalid component {entry!r}")
+        name, alias = entry
 
         line("", "", "", "", "")
 
@@ -609,7 +607,7 @@ def werk_class(werk: Werk) -> str:
         if entry == cl:  # type: ignore[comparison-overlap]
             return cl
 
-        if isinstance(entry, tuple) and entry[0] == cl:
+        if entry[0] == cl:
             return entry[1]
     return cl
 

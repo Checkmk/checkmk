@@ -26,7 +26,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from functools import cache
 from io import BytesIO
-from typing import Any, Literal, NamedTuple, NewType, TypedDict
+from typing import Any, Literal, NamedTuple, NewType, override, TypedDict
 
 from opentelemetry import trace
 
@@ -417,6 +417,7 @@ class QuerySpecification:
     columns: Sequence[LivestatusColumn] = field(default_factory=list)
     headers: str = ""
 
+    @override
     def __str__(self) -> str:
         query = f"GET {self.table}\n"
         if self.columns:
@@ -454,6 +455,7 @@ class Query:
         else:
             self.suppress_exceptions = suppress_exceptions
 
+    @override
     def __str__(self) -> str:
         if isinstance(self._query, QuerySpecification):
             return str(self._query)
@@ -872,6 +874,7 @@ class SingleSiteConnection(Helpers):
     def set_limit(self, limit: int | None = None) -> None:
         self.limit = limit
 
+    @override
     def query(self, query: QueryTypes, add_headers: str = "") -> LivestatusResponse:
         # Normalize argument types
         normalized_add_headers = add_headers
@@ -1025,7 +1028,7 @@ class MultiSiteConnection(Helpers):
         for sitename, site in sites_dict.items():
             status_host = site.get("status_host")
             if status_host:
-                if not isinstance(status_host, tuple) or len(status_host) != 2:
+                if len(status_host) != 2:
                     raise MKLivestatusConfigError(
                         f"Status host of site {sitename} is {status_host!r}, "
                         "but must be pair of site and host"
@@ -1189,6 +1192,7 @@ class MultiSiteConnection(Helpers):
         for connected_site in self.connections:
             connected_site.connection.set_auth_domain(domain)
 
+    @override
     def query(self, query: QueryTypes, add_headers: str = "") -> LivestatusResponse:
         # Normalize argument types
         normalized_add_headers = add_headers

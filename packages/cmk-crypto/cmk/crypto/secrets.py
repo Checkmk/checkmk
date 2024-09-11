@@ -61,8 +61,7 @@ class LocalSecret(ABC):
         """
         if self.path.exists():
             self.secret = Secret(self.path.read_bytes())
-            if self.secret:
-                return
+            return
 
         self.regenerate()
 

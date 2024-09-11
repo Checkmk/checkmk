@@ -6,7 +6,7 @@
 
 import string
 from collections.abc import Sequence
-from typing import Literal, NamedTuple, Self
+from typing import Literal, NamedTuple, override, Self
 
 
 class _OIDSpecTuple(NamedTuple):
@@ -34,6 +34,7 @@ class OIDBytes(_OIDSpecTuple):
     def __new__(cls, value: str) -> "OIDBytes":
         return super().__new__(cls, value, "binary", False)
 
+    @override
     def __repr__(self) -> str:
         return f"OIDBytes({self.column!r})"
 
@@ -53,6 +54,7 @@ class OIDCached(_OIDSpecTuple):
     def __new__(cls, value: str) -> "OIDCached":
         return super().__new__(cls, value, "string", True)
 
+    @override
     def __repr__(self) -> str:
         return f"OIDCached({self.column!r})"
 
@@ -69,6 +71,7 @@ class OIDEnd(_OIDSpecTuple):
     def __new__(cls) -> "OIDEnd":
         return super().__new__(cls, 0, "string", False)
 
+    @override
     def __repr__(self) -> str:
         return "OIDEnd()"
 

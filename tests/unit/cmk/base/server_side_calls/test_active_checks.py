@@ -308,7 +308,7 @@ def test_get_active_service_data_password_with_hack(
         lambda self, r: (
             "check_mk_active-check_path",
             f"/path/to/check_{r.plugin_name}",
-            f"check_{r.plugin_name} {r.arguments}",
+            f"/path/to/check_{r.plugin_name} {r.arguments}",
         ),
     )
     monkeypatch.setitem(password_store.hack.HACK_CHECKS, "test_check", True)
@@ -347,7 +347,7 @@ def test_get_active_service_data_password_with_hack(
             description="My service",
             command="check_mk_active-check_path",
             command_display="check_mk_active-check_path!--pwstore=4@1@/pw/store@uuid1234 --password-id uuid1234:/pw/store --password-plain-in-curly '{*********}'",
-            command_line="check_test_check --pwstore=4@1@/pw/store@uuid1234 --password-id uuid1234:/pw/store --password-plain-in-curly '{*********}'",
+            command_line="/path/to/check_test_check --pwstore=4@1@/pw/store@uuid1234 --password-id uuid1234:/pw/store --password-plain-in-curly '{*********}'",
             params={
                 "description": "My active check",
                 "password": ("cmk_postprocessed", "explicit_password", ("uuid1234", "p4ssw0rd!")),
@@ -367,7 +367,7 @@ def test_get_active_service_data_password_without_hack(
         lambda self, r: (
             "check_mk_active-check_path",
             f"/path/to/check_{r.plugin_name}",
-            f"check_{r.plugin_name} {r.arguments}",
+            f"/path/to/check_{r.plugin_name} {r.arguments}",
         ),
     )
     active_check = ActiveCheck(
@@ -405,7 +405,7 @@ def test_get_active_service_data_password_without_hack(
             description="My service",
             command="check_mk_active-check_path",
             command_display="check_mk_active-check_path!--password-id uuid1234:/pw/store --password-plain-in-curly '{p4ssw0rd\\!}'",
-            command_line="check_test_check --password-id uuid1234:/pw/store --password-plain-in-curly '{p4ssw0rd!}'",
+            command_line="/path/to/check_test_check --password-id uuid1234:/pw/store --password-plain-in-curly '{p4ssw0rd!}'",
             params={
                 "description": "My active check",
                 "password": ("cmk_postprocessed", "explicit_password", ("uuid1234", "p4ssw0rd!")),

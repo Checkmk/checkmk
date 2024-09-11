@@ -13,7 +13,7 @@ import cmk.utils.paths
 from cmk.utils import password_store
 from cmk.utils.hostaddress import HostName
 
-from cmk.base.server_side_calls import ActiveCheck, ActiveServiceData
+from cmk.base.server_side_calls import _active_checks, ActiveCheck, ActiveServiceData
 from cmk.base.server_side_calls._active_checks import ActiveServiceDescription
 
 from cmk.discover_plugins import PluginLocation
@@ -295,13 +295,9 @@ def test_get_active_service_data_password_with_hack(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
-        ActiveCheck,
-        "_get_command",
-        lambda self, r: (
-            "check_mk_active-check_path",
-            f"/path/to/check_{r.plugin_name}",
-            r.arguments,
-        ),
+        _active_checks,
+        "_autodetect_plugin",
+        lambda executable, module: f"/path/to/{executable}",
     )
     monkeypatch.setitem(password_store.hack.HACK_CHECKS, "test_check", True)
     active_check = ActiveCheck(
@@ -337,7 +333,7 @@ def test_get_active_service_data_password_with_hack(
         ActiveServiceData(
             plugin_name="test_check",
             description="My service",
-            command_name="check_mk_active-check_path",
+            command_name="check_mk_active-test_check",
             params={
                 "description": "My active check",
                 "password": ("cmk_postprocessed", "explicit_password", ("uuid1234", "p4ssw0rd!")),
@@ -352,13 +348,9 @@ def test_get_active_service_data_password_without_hack(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
-        ActiveCheck,
-        "_get_command",
-        lambda self, r: (
-            "check_mk_active-check_path",
-            f"/path/to/check_{r.plugin_name}",
-            r.arguments,
-        ),
+        _active_checks,
+        "_autodetect_plugin",
+        lambda executable, module: f"/path/to/{executable}",
     )
     active_check = ActiveCheck(
         plugins=_PASSWORD_TEST_ACTIVE_CHECKS,
@@ -393,7 +385,7 @@ def test_get_active_service_data_password_without_hack(
         ActiveServiceData(
             plugin_name="test_check",
             description="My service",
-            command_name="check_mk_active-check_path",
+            command_name="check_mk_active-test_check",
             params={
                 "description": "My active check",
                 "password": ("cmk_postprocessed", "explicit_password", ("uuid1234", "p4ssw0rd!")),

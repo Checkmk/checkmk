@@ -31,7 +31,7 @@ class ActiveServiceData:
     plugin_name: str
     description: ServiceName
     command_name: str
-    params: object
+    params: Mapping[str, object]
     detected_executable: str
     args: str
 
@@ -45,16 +45,6 @@ class ActiveServiceDescription:
     plugin_name: str
     description: ServiceName
     params: Mapping[str, object] | object
-
-
-# yet another collection of description / command / arguments
-# see if we can conslidate these.
-@dataclass(frozen=True)
-class _RawActiveServiceData:
-    plugin_name: str
-    description: str
-    arguments: tuple[str, ...]
-    configuration: Mapping[str, object]
 
 
 class ActiveCheck:
@@ -84,10 +74,10 @@ class ActiveCheck:
         self, active_checks_rules: Iterable[SSCRules]
     ) -> Iterator[ActiveServiceData]:
         for plugin_name, plugin_params in active_checks_rules:
-            service_iterator = self._iterate_services(plugin_name, plugin_params)
-
             try:
-                yield from self._get_service_data(plugin_name, service_iterator)
+                yield from self._sanitize_service_descriptions(
+                    self._iterate_services(plugin_name, plugin_params)
+                )
             except Exception as e:
                 if cmk.ccc.debug.enabled():
                     raise
@@ -97,7 +87,7 @@ class ActiveCheck:
 
     def _iterate_services(
         self, plugin_name: str, plugin_params: Iterable[ConfigSet]
-    ) -> Iterator[_RawActiveServiceData]:
+    ) -> Iterator[ActiveServiceData]:
         if (active_check := self._plugins.get(plugin_name)) is None:
             return
         for conf_dict in plugin_params:
@@ -106,74 +96,61 @@ class ActiveCheck:
             processed = process_configuration_to_parameters(conf_dict, proxy_config)
 
             for service in active_check(processed.value, self.host_config):
-                arguments = replace_passwords(
-                    self.host_name,
-                    service.command_arguments,
-                    self.stored_passwords,
-                    self.password_store_file,
-                    processed.surrogates,
-                    apply_password_store_hack=password_store.hack.HACK_CHECKS.get(
-                        active_check.name, False
-                    ),
-                )
-                yield _RawActiveServiceData(
-                    plugin_name=active_check.name,
-                    description=service.service_description,
-                    arguments=arguments,
-                    configuration=conf_dict,
+                if self.host_attrs["address"] in ["0.0.0.0", "::"]:
+                    # these 'magic' addresses indicate that the lookup failed :-(
+                    executable = "check_always_crit"
+                    arguments: tuple[str, ...] = (
+                        "'Failed to lookup IP address and no explicit IP address configured'",
+                    )
+                else:
+                    executable = f"check_{active_check.name}"
+                    arguments = replace_passwords(
+                        self.host_name,
+                        service.command_arguments,
+                        self.stored_passwords,
+                        self.password_store_file,
+                        processed.surrogates,
+                        apply_password_store_hack=password_store.hack.HACK_CHECKS.get(
+                            active_check.name, False
+                        ),
+                    )
+
+                detected_executable = _autodetect_plugin(
+                    executable, self._modules.get(active_check.name)
                 )
 
-    def _get_service_data(
+                yield ActiveServiceData(
+                    plugin_name=plugin_name,
+                    description=service.service_description,
+                    command_name=f"check_mk_active-{active_check.name}",
+                    params=conf_dict,
+                    detected_executable=detected_executable,
+                    args=" ".join(arguments),
+                )
+
+    def _sanitize_service_descriptions(
         self,
-        plugin_name: str,
-        service_iterator: Iterator[_RawActiveServiceData],
+        service_iterator: Iterator[ActiveServiceData],
     ) -> Iterator[ActiveServiceData]:
         existing_descriptions: dict[str, str] = {}
 
-        for raw_service in service_iterator:
-            if not raw_service.description:
+        for service in service_iterator:
+            if not service.description:
                 config_warnings.warn(
                     f"Skipping invalid service with empty description "
-                    f"(active check: {raw_service.plugin_name}) on host {self.host_name}"
+                    f"(active check: {service.plugin_name}) on host {self.host_name}"
                 )
                 continue
 
-            if raw_service.description in existing_descriptions:
+            if service.description in existing_descriptions:
                 # If we have the same active check again with the same description,
                 # then we do not regard this as an error, but simply ignore the
                 # second one. That way one can override a check with other settings.
                 continue
 
-            existing_descriptions[raw_service.description] = raw_service.plugin_name
+            existing_descriptions[service.description] = service.plugin_name
 
-            command, detected_executable, args = self._get_command(raw_service)
-
-            yield ActiveServiceData(
-                plugin_name=plugin_name,
-                description=raw_service.description,
-                command_name=command,
-                params=raw_service.configuration,
-                detected_executable=detected_executable,
-                args=" ".join(args),
-            )
-
-    def _get_command(self, raw_service: _RawActiveServiceData) -> tuple[str, str, tuple[str, ...]]:
-        if self.host_attrs["address"] in ["0.0.0.0", "::"]:
-            # these 'magic' addresses indicate that the lookup failed :-(
-            executable = "check_always_crit"
-            args: tuple[str, ...] = (
-                "'Failed to lookup IP address and no explicit IP address configured'",
-            )
-
-        else:
-            executable = f"check_{raw_service.plugin_name}"
-            args = raw_service.arguments
-
-        command = f"check_mk_active-{raw_service.plugin_name}"
-        detected_executable = _autodetect_plugin(
-            executable, self._modules.get(raw_service.plugin_name)
-        )
-        return (command, detected_executable, args)
+            yield service
 
     def get_active_service_descriptions(
         self, active_checks_rules: Iterable[SSCRules]
@@ -182,7 +159,9 @@ class ActiveCheck:
             try:
                 for raw_service in self._iterate_services(plugin_name, plugin_params):
                     yield ActiveServiceDescription(
-                        plugin_name, raw_service.description, raw_service.configuration
+                        plugin_name=raw_service.plugin_name,
+                        description=raw_service.description,
+                        params=raw_service.params,
                     )
             except Exception as e:
                 if cmk.ccc.debug.enabled():

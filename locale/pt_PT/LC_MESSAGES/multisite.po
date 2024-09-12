@@ -11704,13 +11704,6 @@ msgstr ""
 "relacionadas com as notificações do ficheiro de registo do seu núcleo de "
 "monitorização."
 
-msgid ""
-"Check this to turn off multiprocessing. Recommended for debugging purposes "
-"only."
-msgstr ""
-"Verifique isto para desligar o multiprocessamento. Recomendado apenas para "
-"fins de depuração."
-
 #, fuzzy
 msgid "Check timeout for services (Micro Core)"
 msgstr "Check timeout para serviços (Microcore)"
@@ -24606,9 +24599,6 @@ msgstr ""
 msgid "Forbid to see the whole tree"
 msgstr "Proibir ver a árvore inteira"
 
-msgid "Force agent to run in single thread"
-msgstr "Forçar o agente a funcionar em uma única linha"
-
 msgid ""
 "Force explicit setting for parents even if setting matches that of the folder"
 msgstr ""
@@ -33453,9 +33443,6 @@ msgstr ""
 "Nome de pasta inválido. Apenas os caracteres a-z, A-Z, 0-9, _ e - são "
 "permitidos."
 
-msgid "Invalid generate-broker-certs: no certificates received."
-msgstr ""
-
 #, python-format
 msgid "Invalid graph type '%s'"
 msgstr "Tipo de gráfico inválido '%s'"
@@ -40461,12 +40448,12 @@ msgid "MySQL database sizes"
 msgstr "Tamanhos de base de dados MySQL"
 
 #, fuzzy
-msgid "MySQL sessions & connections"
-msgstr "Sessões & Conexões MySQL"
+msgid "MySQL replica/slave"
+msgstr "Escravo do MySQL"
 
 #, fuzzy
-msgid "MySQL slave"
-msgstr "Escravo do MySQL"
+msgid "MySQL sessions & connections"
+msgstr "Sessões & Conexões MySQL"
 
 #, no-python-format
 msgid "N * 100% as each core contributes with 100% at full load"
@@ -41494,10 +41481,6 @@ msgstr "Sem condições"
 msgid "No Configuration Quick setup for %s available"
 msgstr "Variável de configuração:"
 
-#, python-format
-msgid "No Forecast graph with the name <tt>%s</tt>"
-msgstr "Não Previsão gráfica com o nome <tt>%s</tt>"
-
 msgid "No IP"
 msgstr "Sem IP"
 
@@ -41593,10 +41576,6 @@ msgstr "Não há grupos de contato designados."
 
 msgid "No custom attributes are defined yet."
 msgstr "Ainda não foram definidos atributos personalizados."
-
-#, python-format
-msgid "No custom graph with the name <tt>%s</tt>"
-msgstr "Nenhum gráfico personalizado com o nome <tt>%s</tt>"
 
 msgid "No data"
 msgstr "Sem dados"
@@ -47209,10 +47188,6 @@ msgstr "Fantasmas de interrupções recebidas"
 msgid "Phase"
 msgstr "Fase"
 
-#, fuzzy
-msgid "Phase 2.1: Fetchin  g existing hosts"
-msgstr "Fase 2.2: Buscando hospedeiros existentes"
-
 msgid "Phase Number"
 msgstr "Número de fase"
 
@@ -49269,9 +49244,6 @@ msgstr "Configuração rápida"
 
 msgid "Quick search"
 msgstr "Pesquisa rápida"
-
-msgid "Quick setup"
-msgstr "Configuração rápida"
 
 msgid "Quicksearch"
 msgstr "Pesquisa rápida"
@@ -52251,12 +52223,6 @@ msgstr ""
 msgid "Run agent as non-root user (Linux)"
 msgstr "Executar agente como usuário não-root (Linux)"
 
-msgid "Run agent in single thread"
-msgstr "Agente de execução em um único fio"
-
-msgid "Run agent multithreaded"
-msgstr "Agente de execução multi-tarefa"
-
 msgid "Run as"
 msgstr "Funciona como"
 
@@ -52400,8 +52366,24 @@ msgstr "SAML 2.0"
 msgid "SAML authentication"
 msgstr "Autenticação SAML"
 
+#, fuzzy
+msgid "SAML builtin encryption certificate"
+msgstr "certificado de roteador SAP"
+
+#, fuzzy
+msgid "SAML builtin signing certificate"
+msgstr "certificado de roteador SAP"
+
 msgid "SAML connections"
 msgstr "Ligações SAML"
+
+#, fuzzy, python-format
+msgid "SAML custom encryption certificate for the connection %s"
+msgstr "Opções de tempo do certificado de roteador SAP"
+
+#, python-format
+msgid "SAML custom signing certificate for the connection '%s'"
+msgstr ""
 
 msgid "SAN"
 msgstr "SAN"
@@ -55286,6 +55268,9 @@ msgstr ""
 "A configuração está desactivada. Defina <tt>wato_enabled = True</tt> no seu "
 "<tt>multisite.mk</tt> se quiser usar a Configuração."
 
+msgid "Setup shortcuts"
+msgstr ""
+
 msgid "Setup, site management"
 msgstr "Configuração, gerenciamento do site"
 
@@ -56008,6 +55993,14 @@ msgstr "Agentes assinados"
 
 msgid "Signing Agents..."
 msgstr "Agentes Signatários..."
+
+#, fuzzy
+msgid "Signing agents' client certificates"
+msgstr "Certificados SSL da Citrix Netscaler"
+
+#, fuzzy
+msgid "Signing the site certificate"
+msgstr "Verificar o certificado"
 
 msgid "Silently ignore new or missing resources"
 msgstr "Ignorar silenciosamente os recursos novos ou em falta"
@@ -64489,6 +64482,10 @@ msgid ""
 msgstr ""
 "A identificação do local deve ser idêntica (sensível a maiúsculas e "
 "minúsculas) ao nome exato da instância."
+
+#, fuzzy
+msgid "The site certificate"
+msgstr "Verificar o certificado"
 
 msgid "The site id must consist only of letters, digit and the underscore."
 msgstr ""
@@ -84555,6 +84552,37 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
+
+#~ msgid ""
+#~ "Check this to turn off multiprocessing. Recommended for debugging "
+#~ "purposes only."
+#~ msgstr ""
+#~ "Verifique isto para desligar o multiprocessamento. Recomendado apenas "
+#~ "para fins de depuração."
+
+#~ msgid "Force agent to run in single thread"
+#~ msgstr "Forçar o agente a funcionar em uma única linha"
+
+#, fuzzy
+#~ msgid "Phase 2.1: Fetchin  g existing hosts"
+#~ msgstr "Fase 2.2: Buscando hospedeiros existentes"
+
+#~ msgid "Run agent in single thread"
+#~ msgstr "Agente de execução em um único fio"
+
+#~ msgid "Run agent multithreaded"
+#~ msgstr "Agente de execução multi-tarefa"
+
+#, python-format
+#~ msgid "No Forecast graph with the name <tt>%s</tt>"
+#~ msgstr "Não Previsão gráfica com o nome <tt>%s</tt>"
+
+#, python-format
+#~ msgid "No custom graph with the name <tt>%s</tt>"
+#~ msgstr "Nenhum gráfico personalizado com o nome <tt>%s</tt>"
+
+#~ msgid "Quick setup"
+#~ msgstr "Configuração rápida"
 
 #, fuzzy, python-format
 #~ msgid "Graph recipe '%s' has the error '%s', available are: %s"

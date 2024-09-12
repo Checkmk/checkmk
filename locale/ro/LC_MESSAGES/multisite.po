@@ -11721,13 +11721,6 @@ msgstr ""
 "plugin interoghează livestatus pentru a extrage intrările de jurnal legate "
 "de notificări din fișierul jurnal al nucleului de monitorizare."
 
-msgid ""
-"Check this to turn off multiprocessing. Recommended for debugging purposes "
-"only."
-msgstr ""
-"Bifați această opțiune pentru a dezactiva multiprocesarea. Recomandat numai "
-"în scopuri de depanare."
-
 #, fuzzy
 msgid "Check timeout for services (Micro Core)"
 msgstr "Verificarea timeout-ului pentru servicii (Microcore)"
@@ -24645,9 +24638,6 @@ msgstr ""
 msgid "Forbid to see the whole tree"
 msgstr "Interzis să vezi tot copacul"
 
-msgid "Force agent to run in single thread"
-msgstr "Forțați agentul să ruleze într-un singur fir de execuție"
-
 msgid ""
 "Force explicit setting for parents even if setting matches that of the folder"
 msgstr ""
@@ -33535,9 +33525,6 @@ msgid ""
 msgstr ""
 "Nume de dosar invalid. Sunt permise numai caracterele a-z, A-Z, 0-9, _ și -."
 
-msgid "Invalid generate-broker-certs: no certificates received."
-msgstr ""
-
 #, python-format
 msgid "Invalid graph type '%s'"
 msgstr "Tip de grafic invalid \"%s"
@@ -40525,12 +40512,12 @@ msgid "MySQL database sizes"
 msgstr "Dimensiunile bazei de date MySQL"
 
 #, fuzzy
-msgid "MySQL sessions & connections"
-msgstr "Sesiuni și conexiuni MySQL"
+msgid "MySQL replica/slave"
+msgstr "MySQL Slave"
 
 #, fuzzy
-msgid "MySQL slave"
-msgstr "MySQL Slave"
+msgid "MySQL sessions & connections"
+msgstr "Sesiuni și conexiuni MySQL"
 
 #, no-python-format
 msgid "N * 100% as each core contributes with 100% at full load"
@@ -41567,10 +41554,6 @@ msgstr "Fără condiții"
 msgid "No Configuration Quick setup for %s available"
 msgstr "Variabila de configurare:"
 
-#, python-format
-msgid "No Forecast graph with the name <tt>%s</tt>"
-msgstr "Nu există niciun grafic de prognoză cu numele <tt>%s</tt>."
-
 msgid "No IP"
 msgstr "Fără IP"
 
@@ -41664,10 +41647,6 @@ msgstr "Nu sunt alocate grupuri de contact."
 
 msgid "No custom attributes are defined yet."
 msgstr "Nu sunt definite încă atribute personalizate."
-
-#, python-format
-msgid "No custom graph with the name <tt>%s</tt>"
-msgstr "Nu există niciun grafic personalizat cu numele <tt>%s</tt>."
 
 msgid "No data"
 msgstr "Nu există date"
@@ -47289,10 +47268,6 @@ msgstr "Întreruperi fantomă primite"
 msgid "Phase"
 msgstr "Faza"
 
-#, fuzzy
-msgid "Phase 2.1: Fetchin  g existing hosts"
-msgstr "Faza 2.2: Obținerea gazdelor existente"
-
 msgid "Phase Number"
 msgstr "Numărul fazei"
 
@@ -49360,9 +49335,6 @@ msgstr "Configurare rapidă"
 
 msgid "Quick search"
 msgstr "Căutare rapidă"
-
-msgid "Quick setup"
-msgstr "Configurare rapidă"
 
 msgid "Quicksearch"
 msgstr "Cautare rapida"
@@ -52314,12 +52286,6 @@ msgstr ""
 msgid "Run agent as non-root user (Linux)"
 msgstr "Rulați agentul ca utilizator non-root (Linux)"
 
-msgid "Run agent in single thread"
-msgstr "Rularea agentului într-un singur fir de execuție"
-
-msgid "Run agent multithreaded"
-msgstr "Rularea agentului multithreaded"
-
 msgid "Run as"
 msgstr "Rulați ca"
 
@@ -52465,8 +52431,24 @@ msgstr "SAML 2.0"
 msgid "SAML authentication"
 msgstr "Autentificare SAML"
 
+#, fuzzy
+msgid "SAML builtin encryption certificate"
+msgstr "Certificat de router SAP"
+
+#, fuzzy
+msgid "SAML builtin signing certificate"
+msgstr "Certificat de router SAP"
+
 msgid "SAML connections"
 msgstr "Conexiuni SAML"
+
+#, fuzzy, python-format
+msgid "SAML custom encryption certificate for the connection %s"
+msgstr "Setări de timp pentru certificatul routerului SAP"
+
+#, python-format
+msgid "SAML custom signing certificate for the connection '%s'"
+msgstr ""
 
 msgid "SAN"
 msgstr "SAN"
@@ -55413,6 +55395,9 @@ msgstr ""
 "Configurarea este dezactivată. Vă rugăm să setați <tt>wato_enabled = True</"
 "tt> în <tt>multisite.mk</tt> dacă doriți să utilizați Setup."
 
+msgid "Setup shortcuts"
+msgstr ""
+
 msgid "Setup, site management"
 msgstr "Configurare, gestionarea site-ului"
 
@@ -56133,6 +56118,14 @@ msgstr "Agenți semnate"
 
 msgid "Signing Agents..."
 msgstr "Agenți de semnare..."
+
+#, fuzzy
+msgid "Signing agents' client certificates"
+msgstr "Certificate SSL Citrix Netscaler"
+
+#, fuzzy
+msgid "Signing the site certificate"
+msgstr "Verificarea certificatului"
 
 msgid "Silently ignore new or missing resources"
 msgstr "Ignorarea silențioasă a resurselor noi sau lipsă"
@@ -64681,6 +64674,10 @@ msgid ""
 msgstr ""
 "ID-ul site-ului trebuie să fie identic (sensibil la majuscule și minuscule) "
 "cu numele exact al instanței."
+
+#, fuzzy
+msgid "The site certificate"
+msgstr "Verificarea certificatului"
 
 msgid "The site id must consist only of letters, digit and the underscore."
 msgstr ""
@@ -84816,6 +84813,37 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid ""
+#~ "Check this to turn off multiprocessing. Recommended for debugging "
+#~ "purposes only."
+#~ msgstr ""
+#~ "Bifați această opțiune pentru a dezactiva multiprocesarea. Recomandat "
+#~ "numai în scopuri de depanare."
+
+#~ msgid "Force agent to run in single thread"
+#~ msgstr "Forțați agentul să ruleze într-un singur fir de execuție"
+
+#, fuzzy
+#~ msgid "Phase 2.1: Fetchin  g existing hosts"
+#~ msgstr "Faza 2.2: Obținerea gazdelor existente"
+
+#~ msgid "Run agent in single thread"
+#~ msgstr "Rularea agentului într-un singur fir de execuție"
+
+#~ msgid "Run agent multithreaded"
+#~ msgstr "Rularea agentului multithreaded"
+
+#, python-format
+#~ msgid "No Forecast graph with the name <tt>%s</tt>"
+#~ msgstr "Nu există niciun grafic de prognoză cu numele <tt>%s</tt>."
+
+#, python-format
+#~ msgid "No custom graph with the name <tt>%s</tt>"
+#~ msgstr "Nu există niciun grafic personalizat cu numele <tt>%s</tt>."
+
+#~ msgid "Quick setup"
+#~ msgstr "Configurare rapidă"
 
 #, fuzzy, python-format
 #~ msgid "Graph recipe '%s' has the error '%s', available are: %s"

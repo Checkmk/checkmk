@@ -11706,13 +11706,6 @@ msgstr ""
 "tijdsinterval. Deze plugin bevraagt livestatus om de meldingsgerelateerde "
 "logboekitems uit het logbestand van uw monitoring core te halen."
 
-msgid ""
-"Check this to turn off multiprocessing. Recommended for debugging purposes "
-"only."
-msgstr ""
-"Vink dit aan om multiprocessing uit te schakelen. Alleen aanbevolen voor "
-"debugging-doeleinden."
-
 #, fuzzy
 msgid "Check timeout for services (Micro Core)"
 msgstr "Time-out voor diensten controleren (Microcore)"
@@ -24610,9 +24603,6 @@ msgstr ""
 msgid "Forbid to see the whole tree"
 msgstr "Verboden de hele boom te zien"
 
-msgid "Force agent to run in single thread"
-msgstr "Forceer agent om in enkele thread te draaien"
-
 msgid ""
 "Force explicit setting for parents even if setting matches that of the folder"
 msgstr ""
@@ -33464,9 +33454,6 @@ msgid ""
 msgstr ""
 "Ongeldige mapnaam. Alleen de tekens a-z, A-Z, 0-9, _ en - zijn toegestaan."
 
-msgid "Invalid generate-broker-certs: no certificates received."
-msgstr ""
-
 #, python-format
 msgid "Invalid graph type '%s'"
 msgstr "Ongeldig grafiektype '%s'"
@@ -40470,12 +40457,12 @@ msgid "MySQL database sizes"
 msgstr "MySQL databasegrootte"
 
 #, fuzzy
-msgid "MySQL sessions & connections"
-msgstr "MySQL Sessies & Verbindingen"
+msgid "MySQL replica/slave"
+msgstr "MySQL Slaaf"
 
 #, fuzzy
-msgid "MySQL slave"
-msgstr "MySQL Slaaf"
+msgid "MySQL sessions & connections"
+msgstr "MySQL Sessies & Verbindingen"
 
 #, no-python-format
 msgid "N * 100% as each core contributes with 100% at full load"
@@ -41508,10 +41495,6 @@ msgstr "Geen voorwaarden"
 msgid "No Configuration Quick setup for %s available"
 msgstr "Configuratie variabele:"
 
-#, python-format
-msgid "No Forecast graph with the name <tt>%s</tt>"
-msgstr "Geen voorspel grafiek met de naam <tt>%s</tt>"
-
 msgid "No IP"
 msgstr "Geen IP"
 
@@ -41607,10 +41590,6 @@ msgstr "Geen contactgroepen toegewezen."
 
 msgid "No custom attributes are defined yet."
 msgstr "Er zijn nog geen aangepaste attributen gedefinieerd."
-
-#, python-format
-msgid "No custom graph with the name <tt>%s</tt>"
-msgstr "Geen aangepaste grafiek met de naam <tt>%s</tt>"
 
 msgid "No data"
 msgstr "Geen gegevens"
@@ -47252,10 +47231,6 @@ msgstr "Phantom onderbrekingen ontvangen"
 msgid "Phase"
 msgstr "Fase"
 
-#, fuzzy
-msgid "Phase 2.1: Fetchin  g existing hosts"
-msgstr "Fase 2.2: Opzoeken van bestaande hosts"
-
 msgid "Phase Number"
 msgstr "Fase Aantal"
 
@@ -49302,9 +49277,6 @@ msgstr "Snelle installatie"
 
 msgid "Quick search"
 msgstr "Snel zoeken"
-
-msgid "Quick setup"
-msgstr "Snelle installatie"
 
 msgid "Quicksearch"
 msgstr "Snelzoeken"
@@ -52260,12 +52232,6 @@ msgstr "Regelsets die regels bevatten met verwijzingen naar de gewijzigde tags"
 msgid "Run agent as non-root user (Linux)"
 msgstr "Agent uitvoeren als niet-root gebruiker (Linux)"
 
-msgid "Run agent in single thread"
-msgstr "Agent uitvoeren in een enkele thread"
-
-msgid "Run agent multithreaded"
-msgstr "Agent multithreaded uitvoeren"
-
 msgid "Run as"
 msgstr "Uitvoeren als"
 
@@ -52409,8 +52375,24 @@ msgstr "SAML 2.0"
 msgid "SAML authentication"
 msgstr "SAML-authenticatie"
 
+#, fuzzy
+msgid "SAML builtin encryption certificate"
+msgstr "SAP-routercertificaat"
+
+#, fuzzy
+msgid "SAML builtin signing certificate"
+msgstr "SAP-routercertificaat"
+
 msgid "SAML connections"
 msgstr "SAML-verbindingen"
+
+#, fuzzy, python-format
+msgid "SAML custom encryption certificate for the connection %s"
+msgstr "SAP router certificaat tijd instellingen"
+
+#, python-format
+msgid "SAML custom signing certificate for the connection '%s'"
+msgstr ""
 
 msgid "SAN"
 msgstr "SAN"
@@ -55301,6 +55283,9 @@ msgstr ""
 "Setup is uitgeschakeld. Gelieve <tt>wato_enabled = True</tt> in uw "
 "<tt>multisite.mk</tt> te zetten als u Setup wilt gebruiken."
 
+msgid "Setup shortcuts"
+msgstr ""
+
 msgid "Setup, site management"
 msgstr "Setup, site beheer"
 
@@ -56021,6 +56006,14 @@ msgstr "Ondertekende agenten"
 
 msgid "Signing Agents..."
 msgstr "Ondertekenende agenten..."
+
+#, fuzzy
+msgid "Signing agents' client certificates"
+msgstr "Citrix Netscaler SSL-certificaten"
+
+#, fuzzy
+msgid "Signing the site certificate"
+msgstr "Verifieer het certificaat"
 
 msgid "Silently ignore new or missing resources"
 msgstr "Stilzwijgend nieuwe of ontbrekende bronnen negeren"
@@ -64520,6 +64513,10 @@ msgid ""
 msgstr ""
 "De site-ID moet identiek zijn (hoofdlettergevoelig) met de exacte naam van "
 "de instantie."
+
+#, fuzzy
+msgid "The site certificate"
+msgstr "Verifieer het certificaat"
 
 msgid "The site id must consist only of letters, digit and the underscore."
 msgstr "De site-id mag alleen bestaan uit letters, cijfers en de underscore."
@@ -84667,6 +84664,37 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid ""
+#~ "Check this to turn off multiprocessing. Recommended for debugging "
+#~ "purposes only."
+#~ msgstr ""
+#~ "Vink dit aan om multiprocessing uit te schakelen. Alleen aanbevolen voor "
+#~ "debugging-doeleinden."
+
+#~ msgid "Force agent to run in single thread"
+#~ msgstr "Forceer agent om in enkele thread te draaien"
+
+#, fuzzy
+#~ msgid "Phase 2.1: Fetchin  g existing hosts"
+#~ msgstr "Fase 2.2: Opzoeken van bestaande hosts"
+
+#~ msgid "Run agent in single thread"
+#~ msgstr "Agent uitvoeren in een enkele thread"
+
+#~ msgid "Run agent multithreaded"
+#~ msgstr "Agent multithreaded uitvoeren"
+
+#, python-format
+#~ msgid "No Forecast graph with the name <tt>%s</tt>"
+#~ msgstr "Geen voorspel grafiek met de naam <tt>%s</tt>"
+
+#, python-format
+#~ msgid "No custom graph with the name <tt>%s</tt>"
+#~ msgstr "Geen aangepaste grafiek met de naam <tt>%s</tt>"
+
+#~ msgid "Quick setup"
+#~ msgstr "Snelle installatie"
 
 #, fuzzy, python-format
 #~ msgid "Graph recipe '%s' has the error '%s', available are: %s"

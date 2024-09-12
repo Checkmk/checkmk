@@ -133,6 +133,7 @@ run_build() {
 
 run_check_format() {
     npm run test-prettier
+    python3 scripts/test_license_headers.py
 }
 
 run_tsc() {

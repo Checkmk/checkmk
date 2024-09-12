@@ -7,7 +7,6 @@ from enum import auto, Enum
 from typing import Any
 
 DataForDisk = Any
-Value = Any
 
 
 class DefaultValue:

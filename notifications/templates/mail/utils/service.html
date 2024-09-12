@@ -1,0 +1,47 @@
+<!-- Service description -->
+{% macro service_desc(service_description) %} {% import 'utils/styles.html' as
+style_macros %}
+<tr style="border-bottom: 1px solid #e5e5e5">
+    <td {{ style_macros.td_first_child(width="80px" ,padding="8px" ) }}>
+        Service:
+    </td>
+    <td {{ style_macros.td_last_child() }}>
+        <a href="#" style="color: black">{{ service_description}}</a>
+    </td>
+</tr>
+{% endmacro %}
+
+<!-- Service labels-->
+{% macro service_labels(data) %}
+<div class="sl_container" style="width: 279px; margin-bottom: 20px">
+    <p class="heading" style="font-size: 18px; font-weight: 600; margin: 0px">
+        <img src="cid:label.png" style="width: 18px; height: 19px" />
+        Service labels
+    </p>
+    {% set has_labels = false %} {% for key, value in data.items() %} {% if
+    key.startswith('SERVICELABEL_')%} {% set found = true %}
+    <div
+        class="label"
+        style="
+            min-width: 50px;
+            height: 24px;
+            border-radius: 8px;
+            background-color: #dcdcdc;
+            display: inline-block;
+            color: #2c3843;
+            align-content: center;
+            text-align: center;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 400;
+            padding: 0 10px 0px 10px;
+            margin-top: 10px;
+        "
+    >
+        {{ key[13:] }}:{{ value }}
+    </div>
+    {% endif %} {% endfor %} {% if not has_labels %}
+    <p>No Service labels</p>
+    {% endif %}
+</div>
+{% endmacro %}

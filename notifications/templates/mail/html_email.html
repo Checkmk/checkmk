@@ -1,0 +1,474 @@
+<!doctype html>
+<html>
+    <head>
+        <title>HTML Email Template</title>
+    </head>
+    <body>
+        {% import 'utils/service.html' as service_macros %} {% import
+        'utils/styles.html' as style_macros %} {% import
+        'utils/additional.html' as additional_macros %}
+        <div
+            class="mail_container"
+            style="
+                margin: 0 auto;
+                width: 600px;
+                padding: 20px;
+                border: 1px solid #ccc;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            "
+        >
+            {% set service_notification = data.WHAT == 'SERVICE' %}
+            <div class="content_container">
+                <img
+                    src="cid:checkmk_logo.png"
+                    class="logo"
+                    style="width: 110px; height: 30px; margin-left: 30px"
+                />
+
+                <hr style="width: 536px; border: 1px solid #e5e5e5" />
+
+                <div
+                    class="summary_container"
+                    style="
+                        border: 1px solid #e5e5e5;
+                        width: 536px;
+                        border-radius: 4px 0px 0px 0px;
+                        margin-top: 16px;
+                        margin-left: 32px;
+                        border-top: 8px solid #c83232;
+                    "
+                >
+                    <table
+                        style="
+                            width: 472px;
+                            height: 124px;
+                            border-collapse: collapse;
+                            border-spacing: 0;
+                            margin-left: 32px;
+                        "
+                    >
+                        <tr style="border-bottom: 1px solid #e5e5e5">
+                            <td
+                                {{
+                                style_macros.td_first_child(width="80px"
+                                ,padding="8px"
+                                )
+                                }}
+                            >
+                                Event:
+                            </td>
+                            <td {{ style_macros.td_last_child() }}>
+                                <div class="event_state">
+                                    {% set state_mapping = {
+                                    "OK":"background-color: #13D389;
+                                    color:#ffffff;", "UP": "background-color:
+                                    #13D389;color:#ffffff;",
+                                    "WARNING":"background-color:#FFD703; color:
+                                    #000000;", "CRITICAL": "background-color:
+                                    #C83232;color:#ffffff;",
+                                    "DOWN":"background-color:#C83232; color:
+                                    #ffffff;", "UNKNOWN": "background-color:
+                                    #ff8800;color:#ffffff;",
+                                    "UNREACHABLE":"background-color:#ff8800;
+                                    color: #ffffff;",
+                                    "PENDING":"background-color:
+                                    #888888;color:#ffffff;", } %}
+                                    <p
+                                        style="
+                                            float: left;
+                                            border-radius: 2px;
+                                            font-weight: bold;
+                                            width: 70px;height: 28px;
+                                            padding: 6px 0px 7px 0px;
+                                            font-size: 16px;
+                                            font-weight: 700;
+                                            text-align: center;
+                                            color: #000000;
+                                            align-content: center;
+                                            margin-right: 10px;
+                                            {% if service_notification %}
+                                                {{ state_mapping[data.PREVIOUSSERVICEHARDSTATE] }}>
+                                            {% else %}
+                                                {{ state_mapping[data.PREVIOUSHOSTHARDSTATE] }}
+                                            {% endif %}
+                                        "
+                                    >
+                                        {% if service_notification %}
+                                        {{data.PREVIOUSSERVICEHARDSTATE[:4] }}
+                                        {%else %}
+                                        {{data.PREVIOUSHOSTHARDSHORTSTATE[:4] }}
+                                        {% endif %}
+                                    </p>
+
+                                    <p style="float: left">&#8211;&#8250;</p>
+
+                                    <p
+                                        style="
+                                            float: left;
+                                            border-radius: 2px;
+                                            font-weight: bold;
+                                            width: 70px;
+                                            height: 28px;
+                                            padding: 6px 0px 7px 0px;
+                                            font-size: 16px;
+                                            font-weight: 700;
+                                            text-align: center;
+                                            align-content: center;
+                                            margin-left: 10px;
+                                            {% if service_notification %}
+                                                {{ state_mapping[data.SERVICESTATE] }}>
+                                            {% else %}
+                                                {{ state_mapping[data.HOSTSTATE] }}
+                                            {% endif %}"
+                                    >
+                                        {% if service_notification %}
+                                        {{data.SERVICESTATE[:4]}} {% else %}
+                                        {{data.HOSTSTATE[:4] }} {% endif %}
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% if service_notification %}
+                        {{service_macros.service_desc(data.SERVICEDESC) }}
+                        {%endif %}
+                        <tr>
+                            <td
+                                {{
+                                style_macros.td_first_child(width="80px"
+                                ,padding="8px"
+                                )
+                                }}
+                            >
+                                Host:
+                            </td>
+                            <td {{ style_macros.td_last_child() }}>
+                                <a href="#" style="color: black">
+                                    {{ data.HOSTNAME }}
+                                </a>
+                            </td>
+                        </tr>
+                    </table>
+                    <a
+                        href="#"
+                        class="button"
+                        style="
+                            width: 472px;
+                            height: 34px;
+                            border-radius: 8px;
+                            background-color: #2c3843;
+                            display: inline-block;
+                            color: white;
+                            align-content: center;
+                            text-align: center;
+                            text-decoration: none;
+                            font-size: 14px;
+                            font-weight: 600;
+                            margin-top: 10px;
+                            margin-left: 32px;
+                            margin-bottom: 20px;
+                        "
+                    >
+                        View issue
+                    </a>
+                </div>
+
+                <div
+                    class="details_container"
+                    style="width: 536px; margin: 20px auto"
+                >
+                    <div
+                        class="event_container"
+                        style="width: 536px; margin-bottom: 20px"
+                    >
+                        <p
+                            class="heading"
+                            style="
+                                font-size: 18px;
+                                font-weight: 600;
+                                margin: 0px;
+                            "
+                        >
+                            <img
+                                src="cid:overview.png"
+                                style="width: 18px; height: 19px"
+                            />
+                            Event overview
+                        </p>
+
+                        <table style="border-spacing: 0">
+                            <tr>
+                                <td
+                                    {{
+                                    style_macros.td_first_child(width="105px"
+                                    )
+                                    }}
+                                >
+                                    Event date:
+                                </td>
+                                <td {{ style_macros.td_last_child() }}>
+                                    {{ data.LONGDATETIME }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td
+                                    {{
+                                    style_macros.td_first_child(width="105px"
+                                    )
+                                    }}
+                                >
+                                    Address:
+                                </td>
+                                <td {{ style_macros.td_last_child() }}>
+                                    {{ data.HOSTADDRESS }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td
+                                    {{
+                                    style_macros.td_first_child(width="105px"
+                                    )
+                                    }}
+                                >
+                                    Site:
+                                </td>
+                                <td {{ style_macros.td_last_child() }}>
+                                    {{ data.OMD_SITE }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td
+                                    {{
+                                    style_macros.td_first_child(width="105px"
+                                    )
+                                    }}
+                                >
+                                    Summary:
+                                </td>
+                                <td {{ style_macros.td_last_child() }}>
+                                    {{ data.SERVICEOUTPUT }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td
+                                    {{
+                                    style_macros.td_first_child(width="105px"
+                                    )
+                                    }}
+                                >
+                                    Service details:
+                                </td>
+                            </tr>
+                        </table>
+                        <div
+                            class="service_details"
+                            style="background-color: #f6f6f6"
+                        >
+                            <p style="margin: 0px; padding: 10px 0 10px 10px">
+                                {% if data.LONGSERVICEOUTPUT %} {% for line in
+                                data.LONGSERVICEOUTPUT.split('\\n') %} {{ line
+                                }}
+                                <br />
+                                {% endfor %} {% else %} No details available {%
+                                endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    {% if graphs %}
+                    <div class="graph_container" style="margin-bottom: 20px">
+                        <p
+                            class="heading"
+                            style="font-size: 18px; font-weight: 600"
+                        >
+                            <img
+                                src="cid:graph.png"
+                                style="width: 18px; height: 19px"
+                            />
+                            Graph
+                        </p>
+                        <div class="graph">
+                            {% for graph in graphs %}
+                            <img src="cid:{{graph}}" style="width: 100%" ; />
+                            {% endfor %}
+                        </div>
+                        <a
+                            href="#"
+                            class="view_graph"
+                            style="
+                                color: black;
+                                display: block;
+                                height: 24px;
+                                margin-top: 7px;
+                                font-size: 16px;
+                                font-weight: 500;
+                                color: #2c3843;
+                                line-height: 24px;
+                            "
+                        >
+                            View graph to inspect
+                        </a>
+                    </div>
+                    {% endif %} {% if data.PARAMETER_ELEMENTSS %}
+                    <div
+                        class="additional_container"
+                        style="margin-bottom: 20px"
+                    >
+                        <p
+                            class="heading"
+                            style="
+                                font-size: 18px;
+                                font-weight: 600;
+                                margin: 0px;
+                            "
+                        >
+                            <img
+                                src="cid:additional_details.png"
+                                style="width: 18px; height: 19px"
+                            />
+                            Additional details
+                        </p>
+                        <table style="height: 54px">
+                            {{
+                            additional_macros.additional_information(data,
+                            service_notification) }}
+                        </table>
+                    </div>
+                    {% endif %}
+
+                    <div class="cg_container" style="margin-bottom: 20px">
+                        <p
+                            class="heading"
+                            style="
+                                font-size: 18px;
+                                font-weight: 600;
+                                margin: 0px;
+                            "
+                        >
+                            <img
+                                src="cid:contact_groups.png"
+                                style="width: 18px; height: 19px"
+                            />
+                            Contact groups
+                        </p>
+                        <div class="cg_list" style="padding: 10px 0 10px 0">
+                            {% for item in data.HOSTCONTACTGROUPNAMES.split(' ')
+                            %}
+                            <span style="padding-right: 8px">• {{ item }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    {% if service_notification %} {{
+                    service_macros.service_labels(data) }} {% endif %}
+
+                    <div
+                        class="hl_container"
+                        style="width: 536px; margin-bottom: 20px"
+                    >
+                        <p
+                            class="heading"
+                            style="
+                                font-size: 18px;
+                                font-weight: 600;
+                                margin: 0px;
+                            "
+                        >
+                            <img
+                                src="cid:label.png"
+                                style="width: 18px; height: 19px"
+                            />
+                            Host labels
+                        </p>
+                        {% for key, value in data.items() %} {% if
+                        key.startswith('HOSTLABEL_') %}
+                        <div
+                            class="label"
+                            style="
+                                min-width: 50px;
+                                height: 24px;
+                                border-radius: 8px;
+                                background-color: #dcdcdc;
+                                display: inline-block;
+                                color: #2c3843;
+                                align-content: center;
+                                text-align: center;
+                                text-decoration: none;
+                                font-size: 14px;
+                                font-weight: 400;
+                                padding: 0 10px 0px 10px;
+                                margin-top: 10px;
+                            "
+                        >
+                            {{ key[10:] }}:{{ value }}
+                        </div>
+                        {% endif %} {% endfor %}
+                    </div>
+
+                    <div
+                        class="ht_container"
+                        style="width: 536px; margin-bottom: 20px"
+                    >
+                        <p
+                            class="heading"
+                            style="
+                                font-size: 18px;
+                                font-weight: 600;
+                                margin: 0px;
+                            "
+                        >
+                            <img
+                                src="cid:vector.png"
+                                style="width: 18px; height: 19px"
+                            />
+                            Host tags
+                        </p>
+                        {% for tag_with_id in data.HOSTTAGS_WITH_ID %}
+                        <div
+                            class="label"
+                            style="
+                                min-width: 50px;
+                                height: 24px;
+                                border-radius: 8px;
+                                background-color: #dcdcdc;
+                                display: inline-block;
+                                color: #2c3843;
+                                align-content: center;
+                                text-align: center;
+                                text-decoration: none;
+                                font-size: 14px;
+                                font-weight: 400;
+                                padding: 0 10px 0px 10px;
+                                margin-top: 10px;
+                            "
+                        >
+                            {{ tag_with_id }}
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <a
+                        href="#"
+                        class="button"
+                        style="
+                            width: 472px;
+                            height: 34px;
+                            border-radius: 8px;
+                            background-color: #2c3843;
+                            display: inline-block;
+                            color: white;
+                            align-content: center;
+                            text-align: center;
+                            text-decoration: none;
+                            font-size: 14px;
+                            font-weight: 600;
+                            margin-top: 10px;
+                            margin-left: 32px;
+                        "
+                    >
+                        View issue
+                    </a>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

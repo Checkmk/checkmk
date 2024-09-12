@@ -213,12 +213,16 @@ function renderDict(
     }
     dictElements.push(
       h('tr', [
-        h('td', `${element.parameter_form.title}: `),
+        h('th', `${element.parameter_form.title}: `),
         h('td', { style: 'align: left' }, [elementForm])
       ])
     )
   })
-  return h('table', dictElements)
+  return h(
+    'table',
+    { class: formSpec.layout === 'two_columns' ? 'form-readonly__dictionary--two_columns' : '' },
+    dictElements
+  )
 }
 
 function computeUsedValue(
@@ -372,4 +376,10 @@ export default defineComponent({
 })
 </script>
 
-<style scoped></style>
+<style scoped>
+.form-readonly__dictionary--two_columns > tr > th {
+  width: 130px;
+  padding-right: 16px;
+  font-weight: var(--font-weight-bold);
+}
+</style>

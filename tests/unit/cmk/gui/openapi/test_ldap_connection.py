@@ -35,7 +35,7 @@ def ldap_api_schema(ldap_id: str) -> dict:
             "ldap_version": {"state": "enabled", "version": 3},
             "page_size": {"state": "enabled", "size": 1000},
             "response_timeout": {"state": "enabled", "seconds": 60},
-            "connection_suffix": {"state": "enabled", "suffix": "dc=corp,dc=de"},
+            "connection_suffix": {"state": "enabled", "suffix": f"suffix_{ldap_id}"},
         },
         "users": {
             "user_base_dn": "ou=Benutzer,dc=corp,dc=de",
@@ -359,3 +359,31 @@ def test_edit_ldap_connection_invalid_etag(clients: ClientRegistry) -> None:
         etag="invalid_etag",
         expect_ok=False,
     ).assert_status_code(412)
+
+
+def test_cant_create_with_the_same_suffix(clients: ClientRegistry) -> None:
+    clients.LdapConnection.create(
+        ldap_data={
+            "general_properties": {"id": "LDAP_1"},
+            "ldap_connection": {
+                "directory_type": {
+                    "type": "active_directory_manual",
+                    "ldap_server": "10.200.3.32",
+                },
+                "connection_suffix": {"state": "enabled", "suffix": "suffix_1"},
+            },
+        }
+    )
+    clients.LdapConnection.create(
+        ldap_data={
+            "general_properties": {"id": "LDAP_2"},
+            "ldap_connection": {
+                "directory_type": {
+                    "type": "active_directory_manual",
+                    "ldap_server": "10.200.3.33",
+                },
+                "connection_suffix": {"state": "enabled", "suffix": "suffix_1"},
+            },
+        },
+        expect_ok=False,
+    ).assert_status_code(400)

@@ -7,6 +7,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, cast, get_args, Literal, TypedDict
 
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.i18n import _
 from cmk.gui.userdb import (
     ACTIVE_DIR,
     ActivePlugins,
@@ -1280,6 +1282,18 @@ def request_to_create_ldap_connection(ldap_data: APIConnection) -> LDAPConnectio
 def request_to_edit_ldap_connection(
     ldap_id: str, ldap_data: APIConnection
 ) -> LDAPConnectionInterface:
+    if ldap_data["ldap_connection"]["connection_suffix"]["state"] == "enabled":
+        for ldap_connection in [
+            cnx for ldapid, cnx in get_ldap_connections().items() if ldapid != ldap_id
+        ]:
+            if (suffix := ldap_connection.get("suffix")) is not None:
+                if suffix == ldap_data["ldap_connection"]["connection_suffix"]["suffix"]:
+                    raise MKUserError(
+                        None,
+                        _("The suffix '%s' is already in use by another LDAP connection.")
+                        % ldap_connection["suffix"],
+                    )
+
     config_file = UserConnectionConfigFile()
     all_connections = config_file.load_for_modification()
     connection = LDAPConnectionInterface.from_api_request(ldap_data)

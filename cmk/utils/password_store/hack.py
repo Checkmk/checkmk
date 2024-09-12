@@ -53,6 +53,7 @@ HACK_AGENTS = {
     "prometheus": False,
     "allnet_ip_sensoric": False,  # needs no secret
     "graylog": True,
+    "storeonce": True,
 }
 
 

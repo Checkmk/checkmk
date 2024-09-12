@@ -37,17 +37,84 @@ from cmk.gui.watolib.configuration_bundles import (
     CreateRule,
 )
 from cmk.gui.watolib.host_attributes import HostAttributes
-from cmk.gui.watolib.hosts_and_folders import Host
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 from cmk.gui.watolib.services import get_check_table, perform_fix_all
+
+
+def _normalize_folder_path_str(folder_path: str) -> str:
+    r"""Normalizes a folder representation
+
+    Args:
+        folder_id:
+            A representation of a folder.
+
+    Examples:
+
+        >>> _normalize_folder_path_str("\\")
+        ''
+
+        >>> _normalize_folder_path_str("~")
+        ''
+
+        >>> _normalize_folder_path_str("/foo/bar")
+        'foo/bar'
+
+        >>> _normalize_folder_path_str("\\foo\\bar")
+        'foo/bar'
+
+        >>> _normalize_folder_path_str("~foo~bar")
+        'foo/bar'
+
+        >>> _normalize_folder_path_str("/foo/bar/")
+        'foo/bar'
+
+    Returns:
+        The normalized representation.
+
+    """
+
+    if folder_path in ["/", "~", "\\"]:
+        return ""
+
+    prev = folder_path
+    separators = ["\\", "~"]
+    while True:
+        for sep in separators:
+            folder_path = folder_path.replace(sep, "/")
+        if prev == folder_path:
+            break
+        prev = folder_path
+    if len(folder_path) > 1 and folder_path.endswith("/"):
+        folder_path = folder_path[:-1]
+
+    if folder_path.startswith("/"):
+        folder_path = folder_path[1:]
+
+    return folder_path
+
+
+def sanitize_folder_path(folder_path: str) -> Folder:
+    """Attempt to get the folder from the folder path. If the folder does not exist, create it.
+    Returns the folder object."""
+
+    tree = folder_tree()
+    sanitized_folder_path = _normalize_folder_path_str(folder_path)
+    if sanitized_folder_path == "":
+        return tree.root_folder()
+    if sanitized_folder_path in tree.all_folders():
+        return tree.all_folders()[sanitized_folder_path]
+    return tree.root_folder().create_subfolder(name=folder_path, title=folder_path, attributes={})
 
 
 def create_host_from_form_data(
     host_name: HostName,
     host_path: str,
 ) -> CreateHost:
+    # TODO Folder formspec.  The sanitize function is likely to change once we have a folder formspec.
+
     return CreateHost(
         name=host_name,
-        folder=host_path,
+        folder=sanitize_folder_path(host_path),
         attributes=HostAttributes(
             tag_address_family="no-ip",
         ),
@@ -145,6 +212,8 @@ def _create_and_save_special_agent_bundle(
     passwords = _collect_passwords_from_form_data(all_stages_form_data, rulespec_name)
 
     # TODO: DCD still to be implemented cmk-18341
+
+    hosts = [create_host_from_form_data(host_name=HostName(host_name), host_path=host_path)]
     create_config_bundle(
         bundle_id=BundleId(bundle_id),
         bundle=ConfigBundle(
@@ -154,7 +223,7 @@ def _create_and_save_special_agent_bundle(
             program_id=PROGRAM_ID_QUICK_SETUP,
         ),
         entities=CreateBundleEntities(
-            hosts=[create_host_from_form_data(host_name=HostName(host_name), host_path=host_path)],
+            hosts=hosts,
             passwords=create_passwords(
                 passwords=passwords,
                 rulespec_name=rulespec_name,
@@ -163,12 +232,13 @@ def _create_and_save_special_agent_bundle(
             rules=[
                 create_rule(
                     params=params,
-                    host_name=host_name,
-                    host_path=host_path,
+                    host_name=host["name"],
+                    host_path=host["folder"].path(),
                     rulespec_name=rulespec_name,
                     bundle_id=BundleId(bundle_id),
                     site_id=SiteId(site_selection) if site_selection else omd_site(),
                 )
+                for host in hosts
             ],
         ),
     )

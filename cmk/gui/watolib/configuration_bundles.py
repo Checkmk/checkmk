@@ -73,7 +73,7 @@ def _get_affected_entities(bundle_group: str) -> set[Entity]:
 
 
 class CreateHost(TypedDict):
-    folder: str
+    folder: Folder
     name: HostName
     attributes: HostAttributes
     cluster_nodes: NotRequired[Sequence[HostName]]
@@ -282,8 +282,9 @@ def _create_hosts(bundle_ident: GlobalIdent, hosts: Iterable[CreateHost]) -> Non
     folder_getter = itemgetter("folder")
     hosts_sorted_by_folder: list[CreateHost] = sorted(hosts, key=folder_getter)
     folder_and_valid_hosts = []
-    for folder_name, hosts_iter in groupby(hosts_sorted_by_folder, key=folder_getter):  # type: str, Iterable[CreateHost]
-        folder = folder_tree().folder(folder_name)
+
+    folder: Folder
+    for folder, hosts_iter in groupby(hosts_sorted_by_folder, key=folder_getter):
         folder.prepare_create_hosts()
         valid_hosts = [
             (
@@ -296,6 +297,7 @@ def _create_hosts(bundle_ident: GlobalIdent, hosts: Iterable[CreateHost]) -> Non
             )
             for host in hosts_iter
         ]
+
         folder_and_valid_hosts.append((folder, valid_hosts))
 
     for folder, valid_hosts in folder_and_valid_hosts:

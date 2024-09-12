@@ -101,14 +101,17 @@ def mock_delete_host_automation(monkeypatch: pytest.MonkeyPatch) -> Iterable[Non
 @pytest.mark.usefixtures("request_context", "with_admin_login", "mock_delete_host_automation")
 def test_create_and_delete_config_bundle_hosts(other_folder: str) -> None:
     bundle_id, bundle = _make_bundle()
+    tree = folder_tree()
     hosts = [
         CreateHost(
-            folder="",
+            folder=tree.root_folder(),
             name=HostName("test-host-1"),
             attributes={},
         ),
         CreateHost(
-            folder=other_folder,
+            folder=tree.root_folder().create_subfolder(
+                name=other_folder, title=other_folder, attributes={}
+            ),
             name=HostName("test-host-2"),
             attributes={},
         ),

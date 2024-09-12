@@ -9,9 +9,11 @@ import pytest
 
 from tests.testlib.rest_api_client import ClientRegistry
 
+from cmk.gui.fields.definitions import FOLDER_PATTERN
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.definitions import UniqueBundleIDStr, UniqueFormSpecIDStr
-from cmk.gui.quick_setup.v0_unstable.predefined import recaps, validators, widgets
+from cmk.gui.quick_setup.v0_unstable.predefined import recaps, widgets
+from cmk.gui.quick_setup.v0_unstable.predefined import validators as qs_validators
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupStage
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     GeneralStageErrors,
@@ -19,9 +21,20 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
     QuickSetupId,
     StageIndex,
 )
+from cmk.gui.quick_setup.v0_unstable.widgets import (
+    FormSpecId,
+    FormSpecWrapper,
+)
 from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
 
 from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import (
+    DictElement,
+    Dictionary,
+    FieldSize,
+    String,
+    validators,
+)
 
 
 def register_quick_setup(setup_stages: Sequence[QuickSetupStage] | None = None) -> None:
@@ -127,6 +140,58 @@ def test_failing_validate(clients: ClientRegistry) -> None:
     assert resp.json["next_stage_structure"] is None
 
 
+def test_failing_validate_host_path(clients: ClientRegistry) -> None:
+    register_quick_setup(
+        setup_stages=[
+            QuickSetupStage(
+                title="stage1",
+                configure_components=[
+                    FormSpecWrapper(
+                        id=FormSpecId("host_data"),
+                        form_spec=Dictionary(
+                            elements={
+                                "host_path": DictElement(
+                                    parameter_form=String(
+                                        title=Title("Host path"),
+                                        field_size=FieldSize.MEDIUM,
+                                        custom_validate=(
+                                            validators.LengthInRange(min_value=1),
+                                            validators.MatchRegex(FOLDER_PATTERN),
+                                        ),
+                                    ),
+                                    required=True,
+                                ),
+                            }
+                        ),
+                    ),
+                ],
+                custom_validators=[_form_spec_extra_validate],
+                recap=[],
+                button_label="Next",
+            ),
+        ],
+    )
+    resp = clients.QuickSetup.send_stage_retrieve_next(
+        quick_setup_id="quick_setup_test",
+        stages=[{"form_data": {"host_data": {"host_path": "#invalid_host_path#"}}}],
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+    assert resp.json["errors"] == {
+        "formspec_errors": {
+            "host_data": [
+                {
+                    "location": ["host_path"],
+                    "message": "Your input does not match the required format '^(?:(?:[~\\\\\\/]|(?:[~\\\\\\/][-_ a-zA-Z0-9.]+)+[~\\\\\\/]?)|[0-9a-fA-F]{32})$'.",
+                    "invalid_value": "#invalid_host_path#",
+                },
+            ],
+        },
+        "stage_errors": [],
+    }
+    assert resp.json["next_stage_structure"] is None
+
+
 def test_quick_setup_save(clients: ClientRegistry) -> None:
     register_quick_setup(
         setup_stages=[
@@ -162,7 +227,7 @@ def test_unique_id_must_be_unique(
                 configure_components=[
                     widgets.unique_id_formspec_wrapper(Title("account name")),
                 ],
-                custom_validators=[validators.validate_unique_id],
+                custom_validators=[qs_validators.validate_unique_id],
                 recap=[recaps.recaps_form_spec],
                 button_label="Next",
             ),

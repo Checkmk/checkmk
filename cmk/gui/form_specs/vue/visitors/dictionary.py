@@ -114,6 +114,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, Mapping[str, object]
                 help=help_text,
                 elements=elements_keyspec,
                 additional_static_elements=self._compute_static_elements(parsed_value),
+                layout=self.form_spec.layout,
             ),
             vue_values,
         )

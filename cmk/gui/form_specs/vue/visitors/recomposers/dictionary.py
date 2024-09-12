@@ -7,6 +7,7 @@ from typing import Any
 from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
+from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout
 
 from cmk.rulesets.v1.form_specs import Dictionary, FormSpec
 
@@ -25,4 +26,5 @@ def recompose(form_spec: FormSpec[Any]) -> DictionaryExtended:
         no_elements_text=form_spec.no_elements_text,
         ignored_elements=form_spec.ignored_elements,
         prefill=None,
+        layout=DictionaryLayout.one_column,
     )

@@ -1,4 +1,4 @@
 {
-  "command_line": "./run --clean --all --setup-environment",
+  "command_line": "./run --clean --all",
   "maintainers": ["team-prj-engelbart@checkmk.com"]
 }

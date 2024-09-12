@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-08-10 00:57+0000\n"
+"PO-Revision-Date: 2024-09-12 02:57+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -136,7 +136,7 @@ msgstr ""
 "ベーションを必要としないもの（マークされたもの）も含まれます "
 
 msgid " Want to be notified about the public release? "
-msgstr ""
+msgstr " 公開リリースに関する通知を希望しますか？ "
 
 #, python-format
 msgid " and %s '%s'"
@@ -858,9 +858,9 @@ msgstr "(フォールバックメールアドレスは設定されていませ�
 msgid "(SLA alert levels at %d/%d incidents left)"
 msgstr "(SLAアラートレベル %d/%d のインシデントが残っています)"
 
-#, fuzzy, python-format
+#, python-format
 msgid "(SLA alert levels at %r%%/%r%% left)"
-msgstr "(%d %%/%d %%のSLAアラートレベルが残っています)"
+msgstr "(SLAアラートレベル%r%%/%r%%が残っています)"
 
 msgid "(TLS, HTTP and DNS names)"
 msgstr "(TLS、HTTP、およびDNS名)"
@@ -10483,13 +10483,6 @@ msgstr ""
 "プラグインはlivestatusにクエリを実行して、モニタリングコアのログファイルから"
 "通知関連のログエントリを抽出します。"
 
-msgid ""
-"Check this to turn off multiprocessing. Recommended for debugging purposes "
-"only."
-msgstr ""
-"マルチプロセッシングをオフにするには、これをチェックします。デバッグ目的での"
-"み推奨されます。"
-
 msgid "Check timeout for services (Micro Core)"
 msgstr "サービスのタイムアウトを確認する(Micro core)"
 
@@ -15320,7 +15313,7 @@ msgid "Default credentials"
 msgstr "デフォルトの資格情報"
 
 msgid "Default dynamic visuals permission"
-msgstr ""
+msgstr "動的ビジュアルのデフォルト権限"
 
 msgid "Default expiration time (relative)"
 msgstr "デフォルトの有効期限（相対）"
@@ -15374,6 +15367,11 @@ msgid ""
 "dynamic visuals by default. Note: Applying this setting will cause a reload "
 "of apache."
 msgstr ""
+"動的ビジュアル（ダッシュボード、ビューなど）のデフォルト権限。yesに設定すると"
+"、すべてのロール（ビルトインロールを含む）がデフォルトで動的ビジュアルを表示"
+"する権限を持ちます。noに設定すると、デフォルトで動的ビジュアルを表示できるの"
+"は管理者ロールに限られます。注意：この設定を適用すると apache "
+"がリロードされます。"
 
 msgid "Default profile"
 msgstr "デフォルトのプロファイル"
@@ -22435,9 +22433,6 @@ msgstr ""
 msgid "Forbid to see the whole tree"
 msgstr "ツリー全体を表示することを禁止する"
 
-msgid "Force agent to run in single thread"
-msgstr "エージェントを強制的にシングルスレッドで実行する"
-
 msgid ""
 "Force explicit setting for parents even if setting matches that of the folder"
 msgstr "設定がフォルダの設定と一致している場合でも、親に明示的な設定を強制する"
@@ -29313,9 +29308,8 @@ msgstr "最近24時間のイベントおよびイベントに対するアクシ�
 msgid "Information about size, age and count of files"
 msgstr "ファイルのサイズ、経過時間、数に関する情報"
 
-#, fuzzy
 msgid "Information about the Appliance hardware and firmware version."
-msgstr "Checkmkハードウェアおよびソフトウェアインベントリシステムの構成"
+msgstr "アプライアンスのハードウェアとファームウェアのバージョンに関する情報。"
 
 msgid "Information similar to 'docker system df' output"
 msgstr "docker system df'出力に類似した情報"
@@ -46792,12 +46786,6 @@ msgstr "変更されたタグへの参照を含むルールを含むルールセ
 msgid "Run agent as non-root user (Linux)"
 msgstr "root以外のユーザーとしてエージェントを実行する(Linux)"
 
-msgid "Run agent in single thread"
-msgstr "シングルスレッドでエージェントを実行する"
-
-msgid "Run agent multithreaded"
-msgstr "エージェントをマルチスレッドで実行する"
-
 msgid "Run as"
 msgstr "として実行"
 
@@ -58770,7 +58758,7 @@ msgstr ""
 "ロセスに関して、IDプロバイダにリクエストを送信し、そこからレスポンスを受信し"
 "ます。"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "The timeout in seconds when gathering the support diagnostics data. The "
 "default is 110 seconds. When very large files are collected, it's also "
@@ -58778,10 +58766,11 @@ msgid ""
 "command 'cmk --create-diagnostics-dump' with appropriate parameters in the "
 "context of the affected site. See the %s."
 msgstr ""
-"サポート診断データを収集する際のタイムアウト時間（秒）。デフォルトは 110 秒で"
-"す。非常に大きなファイルが収集された場合、該当するサイトのコンテキストで適切"
-"なパラメータを指定し 'cmk --create-diagnostics-dump' コマンドを使用して、コマ"
-"ンドラインからサポート診断を呼び出すこともできます。%sをご確認ください"
+"サポート診断データを収集する際のタイムアウト時間（秒）。デフォルトは 110 "
+"秒です。非常に大きなファイルが収集された場合、"
+"該当するサイトのコンテキストで適切なパラメータを指定し 'cmk --create-"
+"diagnostics-dump' コマンドを使用して、コマンドラインからサポート診断を呼び出"
+"すこともできます。%sをご確認ください。"
 
 #, python-format
 msgid ""
@@ -74953,6 +74942,9 @@ msgid ""
 "content is generated externally. It is prone to injection attacks (executed "
 "on the host where the test is executed). Proceed with caution."
 msgstr ""
+"下に標準的なロボットフレームワークのHTMLログが表示されます。しかし、このコン"
+"テンツは外部で生成されたものであり、インジェクション攻撃（テストを実行するホ"
+"ストで実行される）を受けやすいものです。注意してください。"
 
 msgid ""
 "You will have to configure the host address of the server which hosts the "
@@ -77397,6 +77389,22 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid ""
+#~ "Check this to turn off multiprocessing. Recommended for debugging "
+#~ "purposes only."
+#~ msgstr ""
+#~ "マルチプロセッシングをオフにするには、これをチェックします。デバッグ目的で"
+#~ "のみ推奨されます。"
+
+#~ msgid "Force agent to run in single thread"
+#~ msgstr "エージェントを強制的にシングルスレッドで実行する"
+
+#~ msgid "Run agent in single thread"
+#~ msgstr "シングルスレッドでエージェントを実行する"
+
+#~ msgid "Run agent multithreaded"
+#~ msgstr "エージェントをマルチスレッドで実行する"
 
 #~ msgid " to get notified once the commercial release is available. "
 #~ msgstr " 商業リリースが可能になり次第、通知を受け取る。 "

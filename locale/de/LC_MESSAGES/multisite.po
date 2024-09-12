@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-08-08 23:44+0000\n"
+"PO-Revision-Date: 2024-09-12 02:57+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -63,7 +63,7 @@ msgid " (lower levels)"
 msgstr " (Untergrenzen)"
 
 msgid " (required)"
-msgstr " ist erforderlich"
+msgstr " (erforderlich)"
 
 msgid " (upper levels)"
 msgstr " (Obergrenzen)"
@@ -141,6 +141,8 @@ msgstr ""
 
 msgid " Want to be notified about the public release? "
 msgstr ""
+" Möchten Sie über die allgemeine Veröffentlichung (public release) "
+"informiert werden? "
 
 #, python-format
 msgid " and %s '%s'"
@@ -861,15 +863,15 @@ msgid "(Max suggestions reached, be more specific)"
 msgstr "(Maximale Anzahl von Vorschlägen erreicht, bitte genauer definieren)"
 
 msgid "(No fallback email address configured!)"
-msgstr "(Keine Fallback-E-Mailadresse konfiguriert!)"
+msgstr "(Keine Fallback-E-Mail-Adresse konfiguriert!)"
 
 #, python-format
 msgid "(SLA alert levels at %d/%d incidents left)"
 msgstr "(SLA Alert-Level bei %d/%d Vorfällen verbleibend)"
 
-#, fuzzy, python-format
+#, python-format
 msgid "(SLA alert levels at %r%%/%r%% left)"
-msgstr "(SLA Alert-Level bei %d%%/%d%% verbleibend)"
+msgstr "(SLA Alert-Level bei %r%%/%r%% verbleibend)"
 
 msgid "(TLS, HTTP and DNS names)"
 msgstr "(TLS, HTTP und DNS Namen)"
@@ -1349,7 +1351,7 @@ msgid ""
 msgstr ""
 "<b>Hinweis<sup>3</sup>:</b> Um dieses Plugin auf Solaris zu verteilen, ist "
 "eine Python 3.4-Installation (oder neuer) mit installierten Python-Paketen "
-"\"pyOpenSSL\", \"requests\" und \"PySocks\" auf den Ziel-Hosts erforderlich."
+"\"pyOpenSSL\", \"requests\" und \"PySocks\" auf den Zielhosts erforderlich."
 
 #, python-format
 msgid ""
@@ -1406,10 +1408,10 @@ msgid ""
 "call run correctly in all execution contexts (UI and console)."
 msgstr ""
 "<br> HINWEIS: Das einzelne Programm wird aus dem aktuellen "
-"Arbeitsverzeichnis heraus aufgerufen. Deshalb sollten absolute Pfadnamen in "
-"den Skripten angegeben werden (beim Verwenden von Umgebungsvariablen wie "
-"OMD_SITE) um das einzelne Programm in allen Kontexten korrekt aufzurufen (UI "
-"und Konsole)."
+"Arbeitsverzeichnis heraus aufgerufen. Deshalb sollten Sie absolute Pfadnamen "
+"in den Skripten angeben (beim Verwenden von Umgebungsvariablen wie OMD_SITE) "
+"um das einzelne Programm in allen Kontexten korrekt aufzurufen (UI und "
+"Konsole)."
 
 msgid "<br><br>"
 msgstr "<br><br>"
@@ -2301,7 +2303,6 @@ msgstr ""
 "Ein Scheduler-Job ist ein Objekt in einer Oracle-Datenbank, das mit einem "
 "Cron-Job unter Unix verglichen werden kann."
 
-#, fuzzy
 msgid ""
 "A separate notification is send to every recipient. Recipients cannot see "
 "which other recipients were notified."
@@ -2362,7 +2363,6 @@ msgstr ""
 msgid "A single host related aggregation"
 msgstr "Eine einzelne Host-bezogene Aggregation"
 
-#, fuzzy
 msgid ""
 "A single thread fully utilizing a single core (potentially due to a bug) may "
 "go unnoticed when only monitoring the total utilization of the CPU. With "
@@ -2546,13 +2546,12 @@ msgstr "APC Inrow-Systemereignisse"
 msgid "APC Symmetra Checks"
 msgstr "APC Symmetra Checks"
 
-#, fuzzy
 msgid ""
 "API Key to use. Depending on your opsgenie subscription you can use global "
 "or team integration API keys."
 msgstr ""
-"Zu verwendender API-Key. Abhängig von Ihrem opsgenie-Abonnement, können Sie "
-"globale oder Team Keys verwenden."
+"Zu verwendender API-Schlüssel. Abhängig von Ihrer opsgenie-Subskription "
+"können Sie globale oder Team-integrierte API-Schlüssel verwenden."
 
 msgid "API access token"
 msgstr "API Zugangstoken"
@@ -4326,7 +4325,6 @@ msgstr ""
 "dem Punkt das Byte und die nach dem Punkt das Bit nennt, welches geholt "
 "werden soll. Die Nummer des Bits liegt immer zwischen 0 und 7."
 
-#, fuzzy
 msgid ""
 "Adds a headless version of the OpenHardwareMonitor to the Windows agent. The "
 "agent will then automatically use this to provide readings of hardware "
@@ -4343,7 +4341,6 @@ msgstr ""
 "überwachen. Sie brauchen dies auch nicht, wenn Sie die reguläre "
 "OpenHardwareMonitor-Software verwenden."
 
-#, fuzzy
 msgid ""
 "Adds the user to contact groups based on the group memberships in LDAP. This "
 "plug-in adds the user only to existing contact groups while the name of the "
@@ -4688,7 +4685,6 @@ msgstr "Die älteste Benachrichtigung hat das maximale Alter überschritten"
 msgid "Age of security patch"
 msgstr "Alter des Sicherheits-Patches"
 
-#, fuzzy
 msgid "Age of the current host state"
 msgstr "Alter des aktuellen Host-Status"
 
@@ -5588,7 +5584,7 @@ msgid "All users"
 msgstr "Alle Benutzer"
 
 msgid "All users with an email address"
-msgstr "Alle Benutzer mit Email-Adresse"
+msgstr "Alle Benutzer mit E-Mail-Adresse"
 
 msgid "Allocatable"
 msgstr "reserviert"
@@ -5722,7 +5718,8 @@ msgid ""
 "arbitrary email addresses as report destination."
 msgstr ""
 "Erlaubt einem Benutzer geplante Berichte von anderen Benutzern zu ändern und "
-"darüber hinaus beliebige E-Mailadressen als Ziel für den Bericht auszuwählen."
+"darüber hinaus beliebige E-Mail-Adressen als Ziel für den Bericht "
+"auszuwählen."
 
 msgid ""
 "Allows the assignment of the Robotmk plan/test services to another host."
@@ -7596,13 +7593,11 @@ msgstr "Zu überwachende Azure-Dienste"
 msgid "Azure storage accounts"
 msgstr "Azure Speicherkonten"
 
-#, fuzzy
 msgid "Azure virtual machines"
-msgstr "Azure Virtuelle Maschinen"
+msgstr "Virtuelle Maschinen von Azure"
 
-#, fuzzy
 msgid "Azure virtual machines summary"
-msgstr "Azure Virtuelle Maschinen Zusammenfassung"
+msgstr "Zusammenfassung der virtuellen Maschinen von Azure"
 
 msgid "Azure web servers (IIS)"
 msgstr "Azure-Webserver (IIS)"
@@ -8625,7 +8620,6 @@ msgstr ""
 "<tt>ORA-</tt> enthält. Bemerkung: Wenn eine invertierte Regel greift, kann "
 "es nie Match-Gruppen geben."
 
-#, fuzzy
 msgid ""
 "By activating this item, the sum of incoming and outgoing traffic will be "
 "monitored via a separate metric. Setting levels on the used total bandwidth "
@@ -8633,7 +8627,7 @@ msgid ""
 msgstr ""
 "Bei Aktivierung dieses Items wird die Summe über den ein- und ausgehenden "
 "Verkehr mittels einer separaten Metrik überwacht. Das Festlegen von Leveln "
-"für die verbrauchte Bandbreite ist optional. Wenn Sie Level einrichten dann "
+"für die verbrauchte Bandbreite ist optional. Wenn Sie Level einrichten, dann "
 "sollten Sie auch einen Durchschnittswert verwenden."
 
 msgid ""
@@ -9255,9 +9249,9 @@ msgid ""
 "installation files from. (In order to access a page through a proxy inside "
 "of the test suite, use the libraries capabilities)"
 msgstr ""
-"Umgehung des Proxys für bestimmte Hosts: Spezifiziert eine Liste von Ziel-"
-"Hosts/-adressen, auf die nicht über den angegebenen Proxy zugegriffen werden "
-"soll. <br>Die Proxy-Einstellung wird für den Zugriff auf das Internet "
+"Umgehung des Proxys für bestimmte Hosts: Spezifiziert eine Liste von "
+"Zielhosts/-adressen, auf die nicht über den angegebenen Proxy zugegriffen "
+"werden soll. <br>Die Proxy-Einstellung wird für den Zugriff auf das Internet "
 "verwendet, von dem RCC die Installationsdateien herunterladen muss. (Um eine "
 "Seite über einen Proxy innerhalb der Test-Suite aufzurufen, verwenden Sie "
 "die Bibliotheksfunktionen)"
@@ -9939,8 +9933,8 @@ msgid ""
 "Cannot email report: The owner %s does not have an email address and no "
 "explicit recipient addresses are configured."
 msgstr ""
-"Der Bericht kann nicht gemailt werden: Der Besitzer %s hat keine "
-"Emailadresse und es sind auch keine expliziten Adressen konfiguriert."
+"Der Bericht kann nicht gemailt werden: Der Besitzer %s hat keine E-Mail-"
+"Adresse und es sind auch keine expliziten Empfängeradressen konfiguriert."
 
 msgid "Cannot fetch data via Livestatus"
 msgstr "Daten nicht via Livestatus erreichbar"
@@ -10488,9 +10482,8 @@ msgstr "Prüfe DNS Service"
 msgid "Check FTP Service"
 msgstr "Prüfe FTP-Dienst"
 
-#, fuzzy
 msgid "Check HTML form submit"
-msgstr "Absenden eines HTML-Formulars prüfen"
+msgstr "Einreichung des HTML-Formulars prüfen"
 
 msgid "Check HTTP service (deprecated)"
 msgstr "Prüfe HTTP Service (veraltet)"
@@ -10568,7 +10561,7 @@ msgid "Check State of BI Aggregation"
 msgstr "Status einer BI-Aggregation überwachen"
 
 msgid "Check State of Broker on Primary: "
-msgstr "Check Zustand des Brokers auf dem Primary: "
+msgstr "Check-Zustand des Brokers auf dem Primary: "
 
 msgid "Check TCP port connection"
 msgstr "Check TCP Port Verbindung"
@@ -10612,13 +10605,11 @@ msgstr "Prüfe Alter des Dokuments"
 msgid "Check document size"
 msgstr "Prüfe Größe des Dokuments"
 
-#, fuzzy
 msgid "Check email"
-msgstr "Email überprüfen"
+msgstr "Email prüfen"
 
-#, fuzzy
 msgid "Check email delivery"
-msgstr "Emailzustellung prüfen"
+msgstr "E-Mail-Zustellung prüfen"
 
 msgid "Check event state in Event Console"
 msgstr "Prüfe Ereignisstatus in Event Console"
@@ -10778,12 +10769,6 @@ msgstr ""
 "benachrichtigungsrelevanten Informationen aus den Logdateien Ihres "
 "Monitoring-Kerns zu ermitteln."
 
-msgid ""
-"Check this to turn off multiprocessing. Recommended for debugging purposes "
-"only."
-msgstr ""
-"Auswählen um multiprocessing zu deaktivieren. Nur zum Debuggen empfohlen."
-
 msgid "Check timeout for services (Micro Core)"
 msgstr "Check-Timeout für Services (Micro Core)"
 
@@ -10866,9 +10851,8 @@ msgstr ""
 "Status der Daemons: Apache, Core, Crontab, DCD, Liveproxyd, MKEventd, "
 "MKNotifyd, RRDCached (Agentenplugin mk_inventory muss installiert sein)"
 
-#, fuzzy
 msgid "Checkmk Appliance information"
-msgstr "Checkmk Automatisierung"
+msgstr "Checkmk Appliance Information"
 
 msgid "Checkmk Configuration Files"
 msgstr "Checkmk-Konfigurationsdateien"
@@ -11029,7 +11013,6 @@ msgstr "Checkmk Server"
 msgid "Checkmk service provider metadata (generated automatically)"
 msgstr "Metadaten des Checkmk Serviceproviders (automatisch generiert)"
 
-#, fuzzy
 msgid ""
 "Checkmk signs your SAML 2.0 requests to your identity provider. You can use "
 "the certificate that comes with Checkmk. Alternatively, if your organization "
@@ -11039,10 +11022,10 @@ msgid ""
 msgstr ""
 "Checkmk signiert Ihre SAML 2.0-Anforderung an Ihren Identitätsanbieter. Sie "
 "können das Zertifikat verwenden, das mit Checkmk ausgeliefert wird. "
-"Alternativ können Sie ein individuelles Zertifikat hinzufügen, falls Ihre "
-"Organisation eigene Zertifikate verwendet. Beachten Sie, dass das "
+"Alternativ können Sie ein benutzerdefiniertes Zertifikat hinzufügen, falls "
+"Ihre Organisation eigene Zertifikate verwendet. Beachten Sie, dass das "
 "öffentliche Zertifikat ein einzelnes Zertifikat sein muss (keine "
-"Zertifikatskette)."
+"Zertifikatskette). Derzeit werden nur RSA-Zertifikate unterstützt."
 
 msgid "Checkmk site objects"
 msgstr "Objekte von Checkmk-Instanzen"
@@ -11144,17 +11127,14 @@ msgstr "Checkmk: Sonstige: Anfragen"
 msgid "Checkmk: Other: Secs"
 msgstr "Checkmk: Sonstige: Sekunden"
 
-#, fuzzy
 msgid "Checkmk: Setup: Bytes"
-msgstr "Checkmk: BI: Bytes"
+msgstr "Checkmk: Setup: Bytes"
 
-#, fuzzy
 msgid "Checkmk: Setup: Requests"
-msgstr "Checkmk: BI: Anfragen"
+msgstr "Checkmk: Setup: Anfragen"
 
-#, fuzzy
 msgid "Checkmk: Setup: Secs"
-msgstr "Checkmk: BI: Sekunden"
+msgstr "Checkmk: Setup: Sekunden"
 
 msgid "Checkmk: Sidebar elements: Bytes"
 msgstr "Checkmk: Seitenleistenelemente: Bytes"
@@ -12716,7 +12696,7 @@ msgid "Configure the agent updater whether to connect via proxy server."
 msgstr ""
 "Konfiguriere den Agent Updater für die Verbindung über einen Proxy Server."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Configure the automatic creation of new hosts based on requests sent by the "
 "agent controller, see also the <a href=\"%s\">corresponding Bakery ruleset</"
@@ -15381,8 +15361,8 @@ msgid ""
 "Data-Guards with dg_broker_start=false needs Ignore Brokerstate to monitor "
 "the Switchoverstate on Primary."
 msgstr ""
-"Data-Guards mit dg_broker_start=false benötigen Ignore Brokerstate um den "
-"primären Switchoverstate zu monitoren."
+"Data-Guards mit dg_broker_start=false benötigen den Zustand Brokerstatus "
+"ignorieren, um den primären Switchoverstate zu überwachen."
 
 msgid "Database"
 msgstr "Datenbank"
@@ -16958,7 +16938,7 @@ msgid "Destination address"
 msgstr "Zieladresse"
 
 msgid "Destination email address"
-msgstr "Empfänger-E-Mailadresse"
+msgstr "Ziel-E-Mail-Adresse"
 
 msgid "Detailed search"
 msgstr "Detaillierte Suche"
@@ -18542,7 +18522,6 @@ msgstr "Existiert nicht"
 msgid "Does not match any service"
 msgstr "Passt zu keinem Service"
 
-#, fuzzy
 msgid "Domain (only used for European accounts)"
 msgstr "Domain (nur für europäische Konten verwendet)"
 
@@ -18859,7 +18838,6 @@ msgstr ""
 "Checkmk enthalten die Ergebnisse widersprüchliche Metriken und diese "
 "Topliste kann falsch oder unvollständig sein."
 
-#, fuzzy
 msgid ""
 "Due to security reasons the plug-in being executed as admin will check "
 "permissions for Oracle executables. If the modification of Oracle binaries "
@@ -19814,16 +19792,16 @@ msgid "Email"
 msgstr "E-Mail"
 
 msgid "Email address"
-msgstr "E-Mailadresse"
+msgstr "E-Mail-Adresse"
 
 msgid "Email address attribute"
 msgstr "Attribute der E-Mail-Adresse"
 
 msgid "Email address used for account identification"
-msgstr "E-Mail-Adresse die zur Kontoidentifizierung verwendete wird"
+msgstr "E-Mail-Adresse, die zur Kontoidentifizierung verwendet wird"
 
 msgid "Email addresses to mail PDF reports to"
-msgstr "Email-Adressen, an welche die PDF-Berichte gemailt werden sollen"
+msgstr "E-Mail-Adressen, an welche die PDF-Berichte gemailt werden sollen"
 
 msgid "Email sent"
 msgstr "E-Mail gesendet"
@@ -20123,14 +20101,13 @@ msgstr ""
 "Sie liefert die folgenden Felder: user_time, system_time, children_user_time "
 "und children_system_time"
 
-#, fuzzy
 msgid ""
 "Enabling this option will create detailed log entries for all replication "
 "activities of the remote site. If disabled only problems will be logged."
 msgstr ""
-"Mit dieser Option werden detaillierte Logeinträge für alle Replikationen der "
-"Remote-Instanz erzeugt. Wenn deaktiviert, dann werden nur Probleme "
-"protokolliert."
+"Wenn Sie diese Option aktivieren, werden detaillierte Protokolleinträge für "
+"alle Replikationsaktivitäten der Remote-Instanz erstellt. Bei Deaktivierung "
+"werden nur Probleme protokolliert."
 
 msgid ""
 "Enabling this option will result in an additional service for every RMON-"
@@ -21975,9 +21952,8 @@ msgstr "Täusche Checkergebnisse vor"
 msgid "Fallback email address for notifications"
 msgstr "Fallback-E-Mail-Adresse für Benachrichtigungen"
 
-#, fuzzy
 msgid "Fallback if central comes back within"
-msgstr "Zurück wenn Zentralinstanz wiederkommt innerhalb"
+msgstr "Fallback, wenn die Zentrale zurückkehrt innerhalb von"
 
 msgid "Fallback notification email format"
 msgstr "Rückfall-Format der Benachrichtigungs-E-Mail"
@@ -22948,9 +22924,6 @@ msgstr ""
 msgid "Forbid to see the whole tree"
 msgstr "Verbiete, den ganzen Baum zu sehen"
 
-msgid "Force agent to run in single thread"
-msgstr "Den Agenten in einem einzigen Thread ausführen"
-
 msgid ""
 "Force explicit setting for parents even if setting matches that of the folder"
 msgstr ""
@@ -23356,7 +23329,7 @@ msgid "From: %s"
 msgstr "Von: %s"
 
 msgid "From: email address"
-msgstr "Absender-E-Mailadresse"
+msgstr "Von: E-Mail-Adresse"
 
 msgid "Frontend net time"
 msgstr "Netto Frontend-Zeit"
@@ -29082,11 +29055,12 @@ msgstr ""
 "Falls auf ein bestimmtes Ereignis keine einzige Ihrer "
 "Benachrichtigungsregeln greift, dann wird eine Benachrichtigung an diese "
 "Adresse versendet. Das stellt sicher, dass zumindest <i>irgendjemand</i> "
-"informiert wird. Außerdem wird diese Emailadresse für Benachrichtigungen von "
-"solchen Hosts oder Services als Kontakt verwendet, die nicht im Monitoring "
-"bekannt sind. Das kann bei einer Weiterleitung von Benachrichtigungen von "
-"der Event Console der Fall sein.<br><br>Auch in den Benutzerprofilen können "
-"Sie einzelne Benutzer als Benachrichtigungs-Fallback definieren."
+"informiert wird. Außerdem wird diese E-Mail-Adresse für Benachrichtigungen "
+"von solchen Hosts oder Services als Kontakt verwendet, die nicht im "
+"Monitoring bekannt sind. Das kann bei einer Weiterleitung von "
+"Benachrichtigungen von der Event Console der Fall sein.<br><br>Auch in den "
+"Benutzerprofilen können Sie einzelne Benutzer als Benachrichtigungs-Fallback "
+"definieren."
 
 msgid ""
 "In case none of your notification rules handles a certain event a "
@@ -29837,9 +29811,8 @@ msgstr ""
 msgid "Information about size, age and count of files"
 msgstr "Information über Größe, Alter und Anzahl von Dateien"
 
-#, fuzzy
 msgid "Information about the Appliance hardware and firmware version."
-msgstr "Konfiguration der Checkmk Hardware/Software-Inventur"
+msgstr "Informationen über die Hardware- und Firmware-Version der Appliance."
 
 msgid "Information similar to 'docker system df' output"
 msgstr "Informationen die der 'docker system df' Ausgabe gleichen"
@@ -30841,7 +30814,6 @@ msgstr ""
 "zu informieren, aber die Nachricht zu unterdrücken, nachdem das Ereignis "
 "stattgefunden hat."
 
-#, fuzzy
 msgid ""
 "It is possible to fetch several attributes of users, like email or full "
 "names, from the LDAP directory. This is done by plug-ins which can be "
@@ -31298,33 +31270,27 @@ msgstr "Kubernetes Statefulset"
 msgid "Kubernetes Statefulsets"
 msgstr "Kubernetes Statefulsets"
 
-#, fuzzy
 msgid "Kubernetes cluster"
 msgstr "Kubernetes-Cluster"
 
-#, fuzzy
 msgid "Kubernetes daemonSet"
 msgstr "Kubernetes DaemonSet"
 
-#, fuzzy
 msgid "Kubernetes deployment"
 msgstr "Kubernetes-Verteilung"
 
 msgid "Kubernetes deployment conditions"
 msgstr "Verteilungsbedingungen von Kubernetes"
 
-#, fuzzy
 msgid "Kubernetes deployments"
 msgstr "Kubernetes-Verteilungen"
 
 msgid "Kubernetes memory resource utilization"
 msgstr "Auslastung der Kubernetes-Speicherressourcen"
 
-#, fuzzy
 msgid "Kubernetes namespace"
 msgstr "Kubernetes Namespace"
 
-#, fuzzy
 msgid "Kubernetes node"
 msgstr "Kubernetes-Knoten"
 
@@ -31361,7 +31327,6 @@ msgstr "Kubernetes Ressourcenkontingent CPU-Auslastung"
 msgid "Kubernetes resource quota memory utilization"
 msgstr "Kubernetes Ressourcen-Quota Speicherauslastung"
 
-#, fuzzy
 msgid "Kubernetes statefulSet"
 msgstr "Kubernetes StatefulSet"
 
@@ -31662,7 +31627,6 @@ msgstr "Letzter Host-Status Wechsel"
 msgid "Last known details"
 msgstr "Letzten bekannten Details"
 
-#, fuzzy
 msgid "Last known plug-in output"
 msgstr "Letzte bekannte Plugin-Ausgabe"
 
@@ -31786,16 +31750,15 @@ msgstr "Layout-Konfiguration"
 msgid "Layout options"
 msgstr "Layout Optionen"
 
-#, fuzzy
 msgid ""
 "Learn how to setup a REST endpoint <a href=\"https://help.victorops.com/"
 "knowledge-base/victorops-restendpoint-integration/\" target=\"_blank\">here</"
 "a>.<br />This URL can also be collected from the password store of Checkmk."
 msgstr ""
-"Erfahren Sie <a href=\"https://help.victorops.com/knowledge-base/victorops-"
-"restendpoint-integration/\" target=\"_blank\">hier</a><br />, wie Sie einen "
-"REST-Endpunkt einrichten. Diese URL kann auch über den Passwortspeicher von "
-"Checkmk abgefragt werden."
+"Erfahren Sie <a href=\"https://help.victorops.com/knowledge-base/"
+"victorops-restendpoint-integration/\" target=\"_blank\">hier</a><br />, wie "
+"Sie einen REST-Endpunkt einrichten. Diese URL kann auch über den "
+"Passwortspeicher von Checkmk abgefragt werden."
 
 msgid "Learning Checkmk"
 msgstr "Checkmk kennenlernen"
@@ -32400,9 +32363,8 @@ msgstr "Level der Leistung"
 msgid "Levels on read capacity"
 msgstr "Level für die Lesekapazität"
 
-#, fuzzy
 msgid "Levels on read/write capacity"
-msgstr "Level für die Schreibkapazität"
+msgstr "Level für die Lese-/Schreibkapazität"
 
 msgid "Levels on server latency in seconds"
 msgstr "Level der Server-Latenzzeit in Sekunden"
@@ -33893,7 +33855,6 @@ msgstr "Untergrenzen für die Trefferquote"
 msgid "Lower levels for incoming requests to a JVM application server"
 msgstr "Untergrenzen für eingehende Anfragen an einen JVM Applikationsserver"
 
-#, fuzzy
 msgid "Lower levels for notification delivery rate"
 msgstr "Untergrenzen für Zustellungsrate der Benachrichtigungen"
 
@@ -37370,7 +37331,6 @@ msgstr "Name der virtuellen Maschine und/oder<br>Typ der Garbagecollection"
 msgid "Name of the virtual machine and/or<br>threadpool"
 msgstr "Name der virtuellen Maschine und/oder<br>Threadpool"
 
-#, fuzzy
 msgid "Name or IP address of the host where MS SQL runs if host name fails"
 msgstr ""
 "Name oder IP-Adresse des Hosts, auf dem MS SQL läuft, wenn Host-Name "
@@ -37657,7 +37617,6 @@ msgstr "Netzwerk-Monitoring"
 msgid "Network out"
 msgstr "Netzwerk ausgehend"
 
-#, fuzzy
 msgid "Network scan"
 msgstr "Netzwerk-Scan"
 
@@ -38895,7 +38854,7 @@ msgstr "Alle Benutzer alarmieren"
 
 msgid "Notify all users that have configured an email address in their profile"
 msgstr ""
-"Alle Benutzer alarmieren, die in ihrem Profil eine Email-Adresse angegeben "
+"Alle Benutzer alarmieren, die in ihrem Profil eine E-Mail-Adresse angegeben "
 "haben"
 
 msgid "November"
@@ -38957,9 +38916,9 @@ msgid ""
 "execution. All packets are sent directly on check execution. Afterwards the "
 "check waits for the incoming packets."
 msgstr ""
-"Anzahl von ICMP Paketen die pro Check an das Ziel-Host gesendet werden "
-"sollen. Alle Pakete werden direkt gesendet. Danach wartet der Check auf "
-"eingehende Pakete."
+"Anzahl der ICMP-Echo-Request-Pakete, die bei jeder Check-Ausführung an den "
+"Zielhost gesendet werden. Alle Pakete werden direkt bei der Ausführung des "
+"Checks gesendet. Danach wartet der Check auf die eingehenden Pakete."
 
 msgid "Number of Active Sessions"
 msgstr "Anzahl von aktiven Sitzungen"
@@ -41661,7 +41620,6 @@ msgstr "Der Eltern-Scan läuft derzeit im <a href=\"%s\">Hintergrund</a>."
 msgid "Parent scan finished"
 msgstr "Eltern-Scan abgeschlossen"
 
-#, fuzzy
 msgid "Parent/child topology"
 msgstr "Eltern-/Kind-Topologie"
 
@@ -42239,9 +42197,8 @@ msgstr "Leistung"
 msgid "Performance Graphs of Checkmk Server"
 msgstr "Leistungsdiagramme von Checkmk Server"
 
-#, fuzzy
 msgid "Performance counters"
-msgstr "Leistungsdaten"
+msgstr "Leistungszähler"
 
 msgid "Performance data"
 msgstr "Leistungsdaten"
@@ -42347,7 +42304,6 @@ msgstr "Berechtigt zum Löschen aller Karten."
 msgid "Permitted HW/SW inventory paths"
 msgstr "Erlaubte HW/SW-Inventurpfade"
 
-#, fuzzy
 msgid "Permitted contact groups"
 msgstr "Berechtigte Kontaktgruppen"
 
@@ -42557,16 +42513,15 @@ msgstr "Ping Timeout"
 msgid "Placeholder VMs"
 msgstr "Platzhalter-VMs"
 
-#, fuzzy
 msgid ""
 "Placeholder VMs are created by the Site Recovery Manager (SRM) and act as "
 "backup virtual machines in case the default VM is unable to start. This "
 "option tells the vSphere agent to exclude placeholder VMs in its output."
 msgstr ""
 "Platzhalter-VMs werden vom Site Recovery Manager (SRM) erzeugt und fungieren "
-"als Sicherung für Virtuelle Maschinen für den Fall dass eine VM nicht "
-"starten kann. Diese Option sagt dem vSphere-Agent, dass er diese VMs von der "
-"Überwachung ausschließen soll."
+"als Backup für virtuelle Maschinen für den Fall, dass eine VM nicht starten "
+"kann. Diese Option sagt dem vSphere-Agent, dass er diese VMs von seiner "
+"Ausgabe ausschließen soll."
 
 msgid "Placement"
 msgstr "Platzierung"
@@ -43255,7 +43210,6 @@ msgstr "Plugin Heartbeat Timeout"
 msgid "Plug-in is disabled"
 msgstr "Plugin ist deaktiviert"
 
-#, fuzzy
 msgid "Plug-in name"
 msgstr "Plugin-Name"
 
@@ -44057,7 +44011,7 @@ msgstr "Grenzwerte bereitstellen"
 msgid "Provide proxy settings"
 msgstr "Proxy-Einstellungen angeben"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Provide the base URL for Docker API engine calls. By default we are trying "
 "to connect via the Unix socket at %s."
@@ -45006,9 +44960,8 @@ msgstr "Kürzlich geänderte Services"
 msgid "Recipient"
 msgstr "Empfänger"
 
-#, fuzzy
 msgid "Recipient email address"
-msgstr "Empfänger E-Mailadresse"
+msgstr "Empfänger E-Mail-Adresse"
 
 #, python-format
 msgid "Recipients: %s"
@@ -45378,7 +45331,6 @@ msgstr "Regulärer Ausdruck: "
 msgid "Regular expressions for message classification"
 msgstr "Reguläre Ausdrücke zur Eintragsklassifikation"
 
-#, fuzzy
 msgid ""
 "Regular expressions matching the beginning of the internal name or the "
 "description of the service. If no name is given, then this rule will match "
@@ -45388,8 +45340,8 @@ msgid ""
 "*mssql</tt> matches all services which contain <tt>MSSQL</tt> or <tt>MsSQL</"
 "tt> or <tt>mssql</tt> or..."
 msgstr ""
-"Reguläre Ausdrücke, die auf den Anfang des internen Namens oder der "
-"Beschreibung eines Services zutreffen. Wenn kein Ausdruck angegeben wird, "
+"Reguläre Ausdrücke, die mit dem Anfang des internen Namens oder der "
+"Beschreibung eines Services übereinstimmen. Wenn kein Name angegeben wird, "
 "dann greift die Regel auf alle Services. Der Match wird mit dem <i>Anfang</"
 "i> des Service-Namens vorgenommen. Er <i>unterscheidet Groß-/"
 "Kleinschreibung</i>. Sie können die Schreibung ignorieren, indem Sie dem "
@@ -46040,7 +45992,7 @@ msgid "Replication synchronization"
 msgstr "Replikations-Synchronisation"
 
 msgid "Reply-To: email address"
-msgstr "Reply-To: Adresse"
+msgstr "Reply-To: E-Mail-Adresse"
 
 msgid "Report"
 msgstr "Bericht"
@@ -46429,7 +46381,6 @@ msgstr "Ressourcengruppe"
 msgid "Resource Name"
 msgstr "Ressourcenname"
 
-#, fuzzy
 msgid "Resource consumption of Windows processes"
 msgstr "Ressourcenverbrauch von Windows-Prozessen"
 
@@ -47129,12 +47080,6 @@ msgstr ""
 
 msgid "Run agent as non-root user (Linux)"
 msgstr "Agent als nicht-root-Benutzer laufen lassen (Linux)"
-
-msgid "Run agent in single thread"
-msgstr "Den Agenten in einem einzigen Thread ausführen"
-
-msgid "Run agent multithreaded"
-msgstr "Den Agenten in mehreren Threads ausführen"
 
 msgid "Run as"
 msgstr "Führe aus als"
@@ -48198,9 +48143,8 @@ msgstr "Sicherheit"
 msgid "Security Level"
 msgstr "Sicherheitslevel"
 
-#, fuzzy
 msgid "Security advice"
-msgstr "Sicherheitsname"
+msgstr "Sicherheitshinweis"
 
 msgid "Security fix"
 msgstr "Sicherheitsfix"
@@ -48689,9 +48633,8 @@ msgstr ""
 msgid "Send request"
 msgstr "Senden der Anfrage"
 
-#, fuzzy
 msgid "Send separate notifications to every recipient"
-msgstr "Einzelne Benachrichtigung für jeden Empfänger versenden"
+msgstr "An jeden Empfänger separate Benachrichtigungen versenden"
 
 msgid "Send service metrics to Graphite"
 msgstr "Service-Metriken an Graphite senden"
@@ -48717,7 +48660,6 @@ msgstr "Senden über TCP"
 msgid "Send via UDP"
 msgstr "Senden über UDP"
 
-#, fuzzy
 msgid "Send via email"
 msgstr "Per E-Mail versenden"
 
@@ -49499,7 +49441,6 @@ msgstr ""
 msgid "Set lower and upper levels for numerical sensors"
 msgstr "Setze Unter- und Obergrenzen für numerische Sensoren"
 
-#, fuzzy
 msgid "Set lower levels"
 msgstr "Untergrenzen setzen"
 
@@ -49788,7 +49729,6 @@ msgstr "Auf \"0\" setzen, um automatisches Neuladen zu deaktivieren."
 msgid "Set to '%s'"
 msgstr "Auf ' %s' setzen"
 
-#, fuzzy
 msgid "Set upper levels"
 msgstr "Obergrenzen setzen"
 
@@ -52159,7 +52099,7 @@ msgid "Specify the name of the VM, for example z4065012."
 msgstr "Geben sie den Namen der VM an, z.B. z4065012."
 
 msgid "Specify the name of the destination host, i.e. <tt>checkmk.com</tt>"
-msgstr "Geben Sie den Namen des Ziel-Hosts an, z.B. <tt>checkmk.com</tt>"
+msgstr "Geben Sie den Namen des Zielhosts an, z.B. <tt>checkmk.com</tt>"
 
 msgid "Specify the password to be used to bind to the LDAP directory."
 msgstr ""
@@ -53202,13 +53142,11 @@ msgstr "Zustand, wenn der Lizenzzustand verletzt wird"
 msgid "State when license traffic is exceeded"
 msgstr "Zustand bei Überschreitung des Lizenzverkehrs"
 
-#, fuzzy
 msgid "State when life cycle state is failed"
-msgstr "Zustand bei fehlgeschlagenem Lifecycle-Status"
+msgstr "Status bei fehlgeschlagenem Lifecycle-Status"
 
-#, fuzzy
 msgid "State when life cycle state is halting"
-msgstr "Zustand, wenn der Lebenszyklusstatus halting ist"
+msgstr "Zustand, wenn der Lifecycle-Status 'halting' ist"
 
 #, fuzzy
 msgid "State when life cycle state is override_lb_alive"
@@ -55417,7 +55355,7 @@ msgid "The LDAP attribute containing the alias of the user."
 msgstr "LDAP Attribut das den Benutzer-Alias enthält."
 
 msgid "The LDAP attribute containing the mail address of the user."
-msgstr "LDAP Attribut, das die Emailadresse des Benutzers enthält."
+msgstr "Das LDAP Attribut, das die E-Mail-Adresse des Benutzers enthält."
 
 msgid "The LDAP attribute containing the pager number of the user."
 msgstr "LDAP Attribut das die Pager Nummer des Benutzers enthält."
@@ -56611,17 +56549,16 @@ msgid ""
 "The email address and visible name used in the Reply-To header of "
 "notifications messages."
 msgstr ""
-"Die E-Mail-Adresse und der sichtbare Name, die in der Reply-To-Header von "
+"Die E-Mail-Adresse und der sichtbare Name, die im Reply-To-Header von "
 "Benachrichtigungsnachrichten verwendet werden."
 
-#, fuzzy
 msgid ""
 "The email address is optional and is needed if the user is a monitoring "
 "contact and receives notifications via email."
 msgstr ""
-"E-Mail-Adresse ist optional und nur dann notwendig, wenn der Benutzer als "
-"Monitoring-Kontakt eingetragen ist und Benachrichtigungs-E-Mails bekommen "
-"soll."
+"Die E-Mail-Adresse ist optional und nur dann notwendig, wenn der Benutzer "
+"als Monitoring-Kontakt eingetragen ist und Benachrichtigungen per E-Mail "
+"bekommen soll."
 
 #, python-format
 msgid "The emblem type is %s, but should be str"
@@ -57605,7 +57542,6 @@ msgstr ""
 "erlaubtes Maximum auf dem FTP Server gesetzt werden. Bei Erreichen des "
 "Limits erfolgt die Alarmierung."
 
-#, fuzzy
 msgid ""
 "The maximum standard deviation on the roundtrip time in ms before this "
 "service goes into warning/critical. This alarm only applies to the target "
@@ -58046,7 +57982,7 @@ msgid ""
 "accordingly."
 msgstr ""
 "Die Anzahl der Sekunden, die eine Cache-Datei alt sein darf, wenn Checkmk "
-"sie verwenden soll anstatt Informationen von den Ziel-Hosts während der "
+"sie verwenden soll anstatt Informationen von den Zielhosts während der "
 "Überprüfung eines Clusters zu erhalten. Standardmäßig ist dies aktiviert und "
 "auf 90 Sekunden eingestellt. Wenn Ihr Prüfzyklus auf einen größeren Wert als "
 "eine Minute eingestellt ist, sollten Sie diesen Wert entsprechend erhöhen."
@@ -61746,7 +61682,8 @@ msgstr ""
 "nicht verschlüsselt."
 
 msgid "This password will be saved in plain text on the configured hosts."
-msgstr "Dieses Password wird auf dem Zielhost als Klartext gespeichert."
+msgstr ""
+"Dieses Password wird auf dem konfigurierten Host als Klartext gespeichert."
 
 msgid "This period has been reclassified as a not being a scheduled downtime"
 msgstr ""
@@ -74970,9 +74907,9 @@ msgid ""
 "address. You need to configure your mail address in order to be able to "
 "receive fallback notifications."
 msgstr ""
-"Sie haben Ersatz-Benachrichtigungen aktiviert, aber noch keine E-Mail-"
-"Adresse als Empfänger angegeben. Damit diese E-Mails empfangen werden "
-"können, muss eine E-Mailadresse konfiguriert sein."
+"Sie haben die Fallback-Benachrichtigungen aktiviert, aber versäumt, eine E"
+"-Mail-Adresse zu konfigurieren. Sie müssen Ihre E-Mail-Adresse "
+"konfigurieren, um Fallback-Benachrichtigungen erhalten zu können."
 
 msgid ""
 "You have multiple methods enabled. Please select the security method you "
@@ -75548,7 +75485,7 @@ msgstr ""
 "entspricht ('%s')."
 
 msgid "Your input is not a valid email address."
-msgstr "Ihre Eingabe ist keine gültige E-Mail Adresse."
+msgstr "Ihre Eingabe ist keine gültige E-Mail-Adresse."
 
 #, python-format
 msgid ""
@@ -75874,7 +75811,7 @@ msgid "all users"
 msgstr "Alle Benutzer"
 
 msgid "all users with and email address"
-msgstr "Alle Benutzer mit Email-Adresse"
+msgstr "alle Benutzer mit E-Mail-Adresse"
 
 msgid "allocated"
 msgstr "reserviert"
@@ -76297,7 +76234,7 @@ msgid "echo"
 msgstr "Echo"
 
 msgid "email addresses: "
-msgstr "Email-Adressen: "
+msgstr "E-Mail-Adressen: "
 
 msgid "emailAddress"
 msgstr "emailAddress"
@@ -77875,6 +77812,21 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid ""
+#~ "Check this to turn off multiprocessing. Recommended for debugging "
+#~ "purposes only."
+#~ msgstr ""
+#~ "Auswählen um multiprocessing zu deaktivieren. Nur zum Debuggen empfohlen."
+
+#~ msgid "Force agent to run in single thread"
+#~ msgstr "Den Agenten in einem einzigen Thread ausführen"
+
+#~ msgid "Run agent in single thread"
+#~ msgstr "Den Agenten in einem einzigen Thread ausführen"
+
+#~ msgid "Run agent multithreaded"
+#~ msgstr "Den Agenten in mehreren Threads ausführen"
 
 #~ msgid " to get notified once the commercial release is available. "
 #~ msgstr ""

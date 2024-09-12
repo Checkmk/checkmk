@@ -10996,13 +10996,6 @@ msgstr ""
 "plugin interoghează livestatus pentru a extrage intrările de jurnal legate "
 "de notificări din fișierul jurnal al nucleului de monitorizare."
 
-msgid ""
-"Check this to turn off multiprocessing. Recommended for debugging purposes "
-"only."
-msgstr ""
-"Bifați această opțiune pentru a dezactiva multiprocesarea. Recomandat numai "
-"în scopuri de depanare."
-
 #, fuzzy
 msgid "Check timeout for services (Micro Core)"
 msgstr "Verificarea timeout-ului pentru servicii (Microcore)"
@@ -23492,9 +23485,6 @@ msgstr ""
 
 msgid "Forbid to see the whole tree"
 msgstr "Interzis să vezi tot copacul"
-
-msgid "Force agent to run in single thread"
-msgstr "Forțați agentul să ruleze într-un singur fir de execuție"
 
 msgid ""
 "Force explicit setting for parents even if setting matches that of the folder"
@@ -48267,12 +48257,6 @@ msgstr ""
 
 msgid "Run agent as non-root user (Linux)"
 msgstr "Rulați agentul ca utilizator non-root (Linux)"
-
-msgid "Run agent in single thread"
-msgstr "Rularea agentului într-un singur fir de execuție"
-
-msgid "Run agent multithreaded"
-msgstr "Rularea agentului multithreaded"
 
 msgid "Run as"
 msgstr "Rulați ca"
@@ -79769,6 +79753,22 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid ""
+#~ "Check this to turn off multiprocessing. Recommended for debugging "
+#~ "purposes only."
+#~ msgstr ""
+#~ "Bifați această opțiune pentru a dezactiva multiprocesarea. Recomandat "
+#~ "numai în scopuri de depanare."
+
+#~ msgid "Force agent to run in single thread"
+#~ msgstr "Forțați agentul să ruleze într-un singur fir de execuție"
+
+#~ msgid "Run agent in single thread"
+#~ msgstr "Rularea agentului într-un singur fir de execuție"
+
+#~ msgid "Run agent multithreaded"
+#~ msgstr "Rularea agentului multithreaded"
 
 #, fuzzy
 #~ msgid "Checkmk Cloud (SaaS) Beta"

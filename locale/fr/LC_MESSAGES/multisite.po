@@ -11068,13 +11068,6 @@ msgstr ""
 "journal relatives aux notifications à partir du fichier journal de votre "
 "noyau de surveillance."
 
-msgid ""
-"Check this to turn off multiprocessing. Recommended for debugging purposes "
-"only."
-msgstr ""
-"Cochez cette case pour désactiver le multitraitement. Recommandé uniquement "
-"à des fins de débogage."
-
 #, fuzzy
 msgid "Check timeout for services (Micro Core)"
 msgstr "Vérifier le timeout des services (Microcore)"
@@ -23682,9 +23675,6 @@ msgstr ""
 
 msgid "Forbid to see the whole tree"
 msgstr "Interdit de voir l'arbre entier"
-
-msgid "Force agent to run in single thread"
-msgstr "Forcer l'agent à s'exécuter dans un seul thread"
 
 msgid ""
 "Force explicit setting for parents even if setting matches that of the folder"
@@ -48712,12 +48702,6 @@ msgstr ""
 
 msgid "Run agent as non-root user (Linux)"
 msgstr "Exécuter l'agent en tant qu'utilisateur non root (Linux)"
-
-msgid "Run agent in single thread"
-msgstr "Exécuter l'agent dans un seul thread"
-
-msgid "Run agent multithreaded"
-msgstr "Exécuter l'agent en mode multithread"
 
 msgid "Run as"
 msgstr "Exécuter en tant que"
@@ -80490,6 +80474,22 @@ msgstr "{actual} est trop faible. La valeur minimale autorisée est de {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tous droits réservés."
+
+#~ msgid ""
+#~ "Check this to turn off multiprocessing. Recommended for debugging "
+#~ "purposes only."
+#~ msgstr ""
+#~ "Cochez cette case pour désactiver le multitraitement. Recommandé "
+#~ "uniquement à des fins de débogage."
+
+#~ msgid "Force agent to run in single thread"
+#~ msgstr "Forcer l'agent à s'exécuter dans un seul thread"
+
+#~ msgid "Run agent in single thread"
+#~ msgstr "Exécuter l'agent dans un seul thread"
+
+#~ msgid "Run agent multithreaded"
+#~ msgstr "Exécuter l'agent en mode multithread"
 
 #, fuzzy
 #~ msgid "Checkmk Cloud (SaaS) Beta"

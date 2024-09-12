@@ -17,7 +17,7 @@ from cmk.gui.valuespec import Transform
 from cmk.rulesets.v1 import Title
 
 from ._base import FormSpecVisitor
-from ._type_defs import DataOrigin, DefaultValue, EMPTY_VALUE, EmptyValue, Value
+from ._type_defs import DataOrigin, DefaultValue, EMPTY_VALUE, EmptyValue
 from ._utils import create_validation_error, get_title_and_help
 
 
@@ -53,7 +53,7 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, object]):
 
     def _to_vue(
         self, raw_value: object, parsed_value: object | EmptyValue
-    ) -> tuple[shared_type_defs.LegacyValuespec, Value]:
+    ) -> tuple[shared_type_defs.LegacyValuespec, object]:
         title, help_text = get_title_and_help(self.form_spec)
 
         varprefix = None

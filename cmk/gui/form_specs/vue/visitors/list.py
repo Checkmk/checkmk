@@ -13,7 +13,7 @@ from cmk.rulesets.v1 import Title
 
 from ._base import FormSpecVisitor
 from ._registry import get_visitor
-from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue, Value
+from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
 from ._utils import (
     compute_validation_errors,
     compute_validators,
@@ -35,7 +35,7 @@ class ListVisitor(Generic[T], FormSpecVisitor[ListExtended[T], Sequence[T]]):
 
     def _to_vue(
         self, raw_value: object, parsed_value: Sequence[T] | EmptyValue
-    ) -> tuple[shared_type_defs.List, Value]:
+    ) -> tuple[shared_type_defs.List, list[object]]:
         if isinstance(parsed_value, EmptyValue):
             # TODO: fallback to default message
             parsed_value = []

@@ -11,7 +11,7 @@ from cmk.rulesets.v1 import Label, Title
 from cmk.rulesets.v1.form_specs import BooleanChoice
 
 from ._base import FormSpecVisitor
-from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue, Value
+from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
 from ._utils import (
     compute_validation_errors,
     compute_validators,
@@ -32,8 +32,9 @@ class BooleanChoiceVisitor(FormSpecVisitor[BooleanChoice, bool]):
 
     def _to_vue(
         self, raw_value: object, parsed_value: bool | EmptyValue
-    ) -> tuple[shared_type_defs.BooleanChoice, Value]:
+    ) -> tuple[shared_type_defs.BooleanChoice, bool]:
         title, help_text = get_title_and_help(self.form_spec)
+        assert not isinstance(parsed_value, EmptyValue)
         return (
             shared_type_defs.BooleanChoice(
                 title=title,

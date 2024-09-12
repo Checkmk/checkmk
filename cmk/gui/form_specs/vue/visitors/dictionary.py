@@ -12,7 +12,7 @@ from cmk.rulesets.v1.form_specs._composed import NoGroup
 
 from ._base import FormSpecVisitor
 from ._registry import get_visitor
-from ._type_defs import DataOrigin, DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue, Value
+from ._type_defs import DataOrigin, DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
 from ._utils import (
     compute_validation_errors,
     compute_validators,
@@ -69,7 +69,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, Mapping[str, object]
 
     def _to_vue(
         self, raw_value: object, parsed_value: Mapping[str, object] | EmptyValue
-    ) -> tuple[shared_type_defs.Dictionary, Value]:
+    ) -> tuple[shared_type_defs.Dictionary, dict[str, object]]:
         title, help_text = get_title_and_help(self.form_spec)
         if isinstance(parsed_value, EmptyValue):
             # TODO: add warning message somewhere "falling back to defaults"

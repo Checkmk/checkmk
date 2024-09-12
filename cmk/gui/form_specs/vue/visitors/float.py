@@ -2,7 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Callable, Sequence
+from typing import Callable, Literal, Sequence
 
 from cmk.gui.form_specs.private.validators import IsFloat
 from cmk.gui.form_specs.vue import shared_type_defs
@@ -48,7 +48,7 @@ class FloatVisitor(FormSpecVisitor[Float, float]):
 
     def _to_vue(
         self, raw_value: object, parsed_value: float | EmptyValue
-    ) -> tuple[shared_type_defs.Float, str | float]:
+    ) -> tuple[shared_type_defs.Float, Literal[""] | float]:
         title, help_text = get_title_and_help(self.form_spec)
         input_hint = compute_input_hint(self.form_spec.prefill)
         input_hint_str = None if input_hint is None else str(input_hint)

@@ -15,7 +15,11 @@ const props = defineProps<{
   backendValidation: ValidationMessages
 }>()
 
-const data = defineModel<(string | boolean)[]>('data', { required: true })
+type PasswordType = 'explicit_password' | 'stored_password'
+
+const data = defineModel<[PasswordType, string, string, boolean]>('data', {
+  required: true
+})
 
 const validation = ref<Array<string>>([])
 
@@ -28,7 +32,7 @@ immediateWatch(() => props.backendValidation, updateValidation)
 const passwordType = computed({
   get: () => data.value[0] as string,
   set: (value: string) => {
-    data.value[0] = value
+    data.value[0] = value as PasswordType
     data.value[1] = ''
     data.value[2] = ''
     data.value[3] = false

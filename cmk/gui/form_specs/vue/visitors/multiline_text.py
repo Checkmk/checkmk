@@ -11,7 +11,7 @@ from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import MultilineText
 
 from ._base import FormSpecVisitor
-from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue, Value
+from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
 from ._utils import (
     compute_input_hint,
     compute_label,
@@ -40,7 +40,7 @@ class MultilineTextVisitor(FormSpecVisitor[MultilineText, str]):
 
     def _to_vue(
         self, raw_value: object, parsed_value: str | EmptyValue
-    ) -> tuple[shared_type_defs.MultilineText, Value]:
+    ) -> tuple[shared_type_defs.MultilineText, str]:
         title, help_text = get_title_and_help(self.form_spec)
         return (
             shared_type_defs.MultilineText(

@@ -51,7 +51,7 @@ const props = defineProps<{
 const variant: DictionaryVariants['variant'] =
   'layout' in props.spec ? props.spec['layout'] : 'one_column'
 
-const data = defineModel('data', { type: Object, required: true })
+const data = defineModel<Record<string, unknown>>('data', { required: true })
 const elementValidation = ref<Record<string, ValidationMessages>>({})
 
 function getDefaultValue(key: string): unknown {

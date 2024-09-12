@@ -39,7 +39,7 @@ class OptionalChoiceVisitor(FormSpecVisitor[OptionalChoice, object]):
 
     def _to_vue(
         self, raw_value: object, parsed_value: object | EmptyValue
-    ) -> tuple[shared_type_defs.OptionalChoice, object]:
+    ) -> tuple[shared_type_defs.OptionalChoice, None | object]:
         title, help_text = get_title_and_help(self.form_spec)
 
         visitor = get_visitor(self.form_spec.parameter_form, self.options)

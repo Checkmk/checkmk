@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Generic, TypeVar
+from typing import Generic, Literal, TypeVar
 
 from cmk.gui.form_specs import private
 from cmk.gui.form_specs.vue import shared_type_defs
@@ -14,7 +14,7 @@ from cmk.rulesets.v1 import Message
 from cmk.rulesets.v1.form_specs import InvalidElementMode
 
 from ._base import FormSpecVisitor
-from ._type_defs import DefaultValue, EMPTY_VALUE, EmptyValue, Value
+from ._type_defs import DefaultValue, EMPTY_VALUE, EmptyValue
 from ._utils import (
     compute_title_input_hint,
     compute_validation_errors,
@@ -69,7 +69,7 @@ class SingleChoiceVisitor(Generic[T], FormSpecVisitor[private.SingleChoiceExtend
 
     def _to_vue(
         self, raw_value: object, parsed_value: T | EmptyValue
-    ) -> tuple[shared_type_defs.SingleChoice, Value]:
+    ) -> tuple[shared_type_defs.SingleChoice, Literal[""] | T]:
         title, help_text = get_title_and_help(self.form_spec)
 
         elements = [

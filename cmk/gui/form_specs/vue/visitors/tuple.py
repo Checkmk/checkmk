@@ -35,7 +35,7 @@ class TupleVisitor(FormSpecVisitor[Tuple, tuple[object, ...]]):
 
     def _to_vue(
         self, raw_value: object, parsed_value: tuple[Any, ...] | EmptyValue
-    ) -> tuple[shared_type_defs.Tuple, list[Any]]:
+    ) -> tuple[shared_type_defs.Tuple, list[object]]:
         title, help_text = get_title_and_help(self.form_spec)
         vue_specs = []
         vue_elements = []

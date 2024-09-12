@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, type PropType, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import FormEdit from '@/form/components/FormEdit.vue'
 import { immediateWatch } from '@/form/components/utils/watch'
 import type {
@@ -43,10 +43,7 @@ watch(
   { immediate: true }
 )
 
-const data = defineModel('data', {
-  type: Object as PropType<[string, unknown]>,
-  required: true
-})
+const data = defineModel<[string, unknown]>('data', { required: true })
 
 const currentValues: Record<string, unknown> = {}
 immediateWatch(

@@ -14,7 +14,7 @@ from cmk.rulesets.v1.form_specs import CascadingSingleChoice
 
 from ._base import FormSpecVisitor
 from ._registry import get_visitor
-from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue, Value
+from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
 from ._utils import (
     compute_label,
     compute_title_input_hint,
@@ -44,7 +44,7 @@ class CascadingSingleChoiceVisitor(FormSpecVisitor[CascadingSingleChoice, tuple[
 
     def _to_vue(
         self, raw_value: object, parsed_value: tuple[str, object] | EmptyValue
-    ) -> tuple[shared_type_defs.CascadingSingleChoice, Value]:
+    ) -> tuple[shared_type_defs.CascadingSingleChoice, tuple[str, object]]:
         title, help_text = get_title_and_help(self.form_spec)
         if isinstance(parsed_value, EmptyValue):
             parsed_value = ("", None)

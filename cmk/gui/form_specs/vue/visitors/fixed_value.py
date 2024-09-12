@@ -13,7 +13,7 @@ from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import FixedValue
 
 from ._base import FormSpecVisitor
-from ._type_defs import DEFAULT_VALUE, EmptyValue, Value
+from ._type_defs import DEFAULT_VALUE, EmptyValue
 from ._utils import (
     compute_validation_errors,
     compute_validators,
@@ -34,7 +34,7 @@ class FixedValueVisitor(FormSpecVisitor[FixedValue[T], T]):
 
     def _to_vue(
         self, raw_value: object, parsed_value: T | EmptyValue
-    ) -> tuple[shared_type_defs.FixedValue, Value]:
+    ) -> tuple[shared_type_defs.FixedValue, object]:
         title, help_text = get_title_and_help(self.form_spec)
         return (
             shared_type_defs.FixedValue(

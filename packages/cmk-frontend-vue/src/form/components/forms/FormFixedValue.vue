@@ -14,8 +14,8 @@ const props = defineProps<{
   backendValidation: ValidationMessages
 }>()
 
-const data = defineModel<number | string | boolean>('data', { required: true })
-const [validation, _value] = useValidation<number | string | boolean>(
+const data = defineModel<unknown>('data', { required: true })
+const [validation, _value] = useValidation<unknown>(
   data,
   props.spec.validators,
   () => props.backendValidation

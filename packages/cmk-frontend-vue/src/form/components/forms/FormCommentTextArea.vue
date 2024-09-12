@@ -14,7 +14,7 @@ const props = defineProps<{
   backendValidation: ValidationMessages
 }>()
 
-const data = defineModel('data', { type: String, required: true })
+const data = defineModel<string>('data', { required: true })
 
 const prependDateAndUsername = (): void => {
   const date = new Date()

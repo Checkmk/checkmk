@@ -9,6 +9,8 @@ from cmk.ccc.i18n import _
 
 from cmk.utils.rulesets.definition import RuleGroup
 
+from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
+from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout
 from cmk.gui.quick_setup.config_setups.aws import form_specs as aws
 from cmk.gui.quick_setup.config_setups.aws import ruleset_helper
 from cmk.gui.quick_setup.v0_unstable.predefined import (
@@ -22,8 +24,8 @@ from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupStage
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, QuickSetupId, ServiceInterest
 from cmk.gui.quick_setup.v0_unstable.widgets import (
     Collapsible,
-    FormSpecDictWrapper,
     FormSpecId,
+    FormSpecWrapper,
     ListOfWidgets,
     Text,
     Widget,
@@ -34,7 +36,6 @@ from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
-    Dictionary,
     FieldSize,
     InputHint,
     SingleChoice,
@@ -74,10 +75,12 @@ def prepare_aws() -> QuickSetupStage:
             widgets.unique_id_formspec_wrapper(
                 title=Title("AWS account name"), prefill_template="aws_config"
             ),
-            FormSpecDictWrapper(
+            FormSpecWrapper(
                 id=FormSpecId("credentials"),
-                form_spec=Dictionary(elements=aws.quick_setup_stage_1()),
-                rendering_option="table",
+                form_spec=DictionaryExtended(
+                    elements=aws.quick_setup_stage_1(),
+                    layout=DictionaryLayout.two_columns,
+                ),
             ),
         ],
         custom_validators=[qs_validators.validate_unique_id],
@@ -93,10 +96,9 @@ def configure_host_and_regions() -> QuickSetupStage:
             "Name your host, define the path and select the regions you would like to monitor"
         ),
         configure_components=[
-            FormSpecDictWrapper(
+            FormSpecWrapper(
                 id=FormSpecId("host_data"),
-                rendering_option="table",
-                form_spec=Dictionary(
+                form_spec=DictionaryExtended(
                     elements={
                         "host_name": DictElement(
                             parameter_form=String(
@@ -114,13 +116,16 @@ def configure_host_and_regions() -> QuickSetupStage:
                             ),
                             required=True,
                         ),
-                    }
+                    },
+                    layout=DictionaryLayout.two_columns,
                 ),
             ),
-            FormSpecDictWrapper(
+            FormSpecWrapper(
                 id=FormSpecId("configure_host_and_regions"),
-                rendering_option="table",
-                form_spec=Dictionary(elements=aws.quick_setup_stage_2()),
+                form_spec=DictionaryExtended(
+                    elements=aws.quick_setup_stage_2(),
+                    layout=DictionaryLayout.two_columns,
+                ),
             ),
         ],
         custom_validators=[],
@@ -132,18 +137,19 @@ def configure_host_and_regions() -> QuickSetupStage:
 def _configure() -> Sequence[Widget]:
     site_default_value = site_attribute_default_value()
     return [
-        FormSpecDictWrapper(
+        FormSpecWrapper(
             id=FormSpecId("configure_services_to_monitor"),
-            rendering_option="table",
-            form_spec=Dictionary(elements=aws.quick_setup_stage_3()),
+            form_spec=DictionaryExtended(
+                elements=aws.quick_setup_stage_3(),
+                layout=DictionaryLayout.two_columns,
+            ),
         ),
         Collapsible(
             title="Other options",
             items=[
-                FormSpecDictWrapper(
+                FormSpecWrapper(
                     id=FormSpecId("site"),
-                    rendering_option="table",
-                    form_spec=Dictionary(
+                    form_spec=DictionaryExtended(
                         elements={
                             "site_selection": DictElement(
                                 parameter_form=SingleChoice(
@@ -165,13 +171,13 @@ def _configure() -> Sequence[Widget]:
                                 ),
                                 required=True,
                             )
-                        }
+                        },
+                        layout=DictionaryLayout.two_columns,
                     ),
                 ),
-                FormSpecDictWrapper(
+                FormSpecWrapper(
                     id=FormSpecId("aws_tags"),
-                    rendering_option="table",
-                    form_spec=Dictionary(
+                    form_spec=DictionaryExtended(
                         elements={
                             "overall_tags": DictElement(
                                 parameter_form=ruleset_helper.formspec_aws_tags(
@@ -179,6 +185,7 @@ def _configure() -> Sequence[Widget]:
                                 ),
                             ),
                         },
+                        layout=DictionaryLayout.two_columns,
                     ),
                 ),
             ],

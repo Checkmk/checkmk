@@ -1867,13 +1867,19 @@ def call_scripts(
     for file in sorted(path.iterdir()):
         if file.name[0] == ".":
             continue
-        _call_script(phase, open_pty, env, file)
+        sys.stdout.write(f'Executing {phase} script "{file.name}"...')
+        returncode = _call_script(open_pty, env, str(file))
+
+        if not returncode:
+            sys.stdout.write(tty.ok + "\n")
+        else:
+            sys.stdout.write(tty.error + " (exit code: %d)\n" % returncode)
+            raise SystemExit(1)
 
 
 def _call_script(  # pylint: disable=too-many-branches
-    phase: str, open_pty: bool, env: Mapping[str, str], file: Path
-) -> None:
-    sys.stdout.write(f'Executing {phase} script "{file.name}"...')
+    open_pty: bool, env: Mapping[str, str], command: str
+) -> int:
     if open_pty:
         fd_parent, fd_child = pty.openpty()
         stdout = stderr = fd_child
@@ -1882,7 +1888,7 @@ def _call_script(  # pylint: disable=too-many-branches
         stderr = subprocess.STDOUT
 
     with subprocess.Popen(  # nosec B602 # BNS:2b5952
-        str(file),  # path-like args is not allowed when shell is true
+        command,  # path-like args is not allowed when shell is true
         shell=True,
         stdout=stdout,
         stderr=stderr,
@@ -1913,12 +1919,7 @@ def _call_script(  # pylint: disable=too-many-branches
         finally:
             if open_pty:
                 parent.close()
-
-    if not proc.returncode:
-        sys.stdout.write(tty.ok + "\n")
-    else:
-        sys.stdout.write(tty.error + " (exit code: %d)\n" % proc.returncode)
-        raise SystemExit(1)
+    return proc.returncode
 
 
 # .
@@ -2930,11 +2931,25 @@ def main_update(  # pylint: disable=too-many-branches
         # initialized tmpfs.
         mu.prepare_and_populate_tmpfs(version_info, site)
 
-        process = subprocess.run(
-            ["cmk-update-config", "--conflict", conflict_mode, "--dry-run"], check=False
+        additional_update_env = {
+            "OMD_CONFLICT_MODE": conflict_mode,
+            "OMD_TO_EDITION": to_edition,
+            "OMD_FROM_VERSION": from_version,
+            "OMD_TO_VERSION": to_version,
+            "OMD_FROM_EDITION": from_edition,
+        }
+        returncode = _call_script(
+            is_tty,
+            {
+                **os.environ,
+                "OMD_ROOT": site.dir,
+                "OMD_SITE": site.name,
+                **additional_update_env,
+            },
+            f"cmk-update-config --conflict {conflict_mode} --dry-run",
         )
-        if process.returncode != 0:
-            sys.exit(process.returncode)
+        if returncode != 0:
+            sys.exit(returncode)
         sys.stdout.write(
             f"\nCompleted verifying site configuration. Your site now has version {to_version}.\n"
         )
@@ -2943,13 +2958,7 @@ def main_update(  # pylint: disable=too-many-branches
         site,
         "update-pre-hooks",
         open_pty=is_tty,
-        add_env={
-            "OMD_CONFLICT_MODE": conflict_mode,
-            "OMD_TO_EDITION": to_edition,
-            "OMD_FROM_VERSION": from_version,
-            "OMD_TO_VERSION": to_version,
-            "OMD_FROM_EDITION": from_edition,
-        },
+        add_env=additional_update_env,
     )
 
     save_site_conf(site)

@@ -37829,12 +37829,12 @@ msgid "MySQL database sizes"
 msgstr "MySQL databasegrootte"
 
 #, fuzzy
-msgid "MySQL sessions & connections"
-msgstr "MySQL Sessies & Verbindingen"
+msgid "MySQL replica/slave"
+msgstr "MySQL Slaaf"
 
 #, fuzzy
-msgid "MySQL slave"
-msgstr "MySQL Slaaf"
+msgid "MySQL sessions & connections"
+msgstr "MySQL Sessies & Verbindingen"
 
 #, no-python-format
 msgid "N * 100% as each core contributes with 100% at full load"

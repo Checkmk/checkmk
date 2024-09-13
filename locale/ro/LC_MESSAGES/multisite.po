@@ -37868,12 +37868,12 @@ msgid "MySQL database sizes"
 msgstr "Dimensiunile bazei de date MySQL"
 
 #, fuzzy
-msgid "MySQL sessions & connections"
-msgstr "Sesiuni și conexiuni MySQL"
+msgid "MySQL replica/slave"
+msgstr "MySQL Slave"
 
 #, fuzzy
-msgid "MySQL slave"
-msgstr "MySQL Slave"
+msgid "MySQL sessions & connections"
+msgstr "Sesiuni și conexiuni MySQL"
 
 #, no-python-format
 msgid "N * 100% as each core contributes with 100% at full load"

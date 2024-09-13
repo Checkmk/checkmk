@@ -37816,12 +37816,12 @@ msgid "MySQL database sizes"
 msgstr "Tamanhos de base de dados MySQL"
 
 #, fuzzy
-msgid "MySQL sessions & connections"
-msgstr "Sessões & Conexões MySQL"
+msgid "MySQL replica/slave"
+msgstr "Escravo do MySQL"
 
 #, fuzzy
-msgid "MySQL slave"
-msgstr "Escravo do MySQL"
+msgid "MySQL sessions & connections"
+msgstr "Sessões & Conexões MySQL"
 
 #, no-python-format
 msgid "N * 100% as each core contributes with 100% at full load"

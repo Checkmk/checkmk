@@ -13,7 +13,7 @@ from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
 from cmk.gui.graphing._graph_render_config import graph_grender_options_from_vs, GraphRenderConfig
-from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
+from cmk.gui.graphing._graph_templates import get_template_graph_specification
 from cmk.gui.graphing._html_render import (
     make_graph_data_range,
     render_graphs_from_specification_html,
@@ -234,10 +234,10 @@ def paint_time_graph_cmk(  # pylint: disable=redefined-outer-name
         )
 
     return "", render_graphs_from_specification_html(
-        TemplateGraphSpecification(
-            site=row["site"],
+        get_template_graph_specification(
+            site_id=row["site"],
             host_name=row["host_name"],
-            service_description=row.get("service_description", "_HOST_"),
+            service_name=row.get("service_description", "_HOST_"),
         ),
         graph_data_range,
         graph_render_config,

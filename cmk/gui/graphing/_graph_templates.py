@@ -5,9 +5,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from typing import assert_never, ClassVar, Literal
+from typing import assert_never, Literal
 
 from livestatus import SiteId
 
@@ -50,6 +50,7 @@ from ._expression import (
 from ._from_api import graphs_from_api
 from ._graph_specification import (
     FixedVerticalRange,
+    graph_specification_registry,
     GraphMetric,
     GraphRecipe,
     GraphSpecification,
@@ -805,11 +806,6 @@ def _matching_graph_templates(
 
 
 class TemplateGraphSpecification(GraphSpecification, frozen=True):
-    # Overwritten in cmk/gui/graphing/cee/__init__.py
-    TUNE_GRAPH_TEMPLATE: ClassVar[
-        Callable[[GraphTemplate, TemplateGraphSpecification], GraphTemplate | None]
-    ] = lambda graph_template, _spec: graph_template
-
     site: SiteId | None
     host_name: HostName
     service_description: ServiceName
@@ -836,21 +832,13 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         translated_metrics: Mapping[str, TranslatedMetric],
         index: int,
     ) -> GraphRecipe | None:
-        if not (
-            graph_template_tuned := TemplateGraphSpecification.TUNE_GRAPH_TEMPLATE(
-                graph_template,
-                self,
-            )
-        ):
-            return None
-
         return _create_graph_recipe_from_template(
             row["site"],
             row["host_name"],
             row.get("service_description", "_HOST_"),
-            graph_template_tuned,
+            graph_template,
             translated_metrics,
-            specification=TemplateGraphSpecification(
+            specification=type(self)(
                 site=self.site,
                 host_name=self.host_name,
                 service_description=self.service_description,
@@ -859,7 +847,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
                 # use graph_index. We should switch to graph_id everywhere (CMK-7308). Once this is
                 # done, we can remove the line below.
                 graph_index=index,
-                graph_id=graph_template_tuned.id,
+                graph_id=graph_template.id,
             ),
         )
 
@@ -882,3 +870,26 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
                 )
             )
         ]
+
+
+def get_template_graph_specification(
+    *,
+    site_id: SiteId | None,
+    host_name: HostName,
+    service_name: ServiceName,
+    graph_index: int | None = None,
+    graph_id: str | None = None,
+    destination: str | None = None,
+) -> TemplateGraphSpecification:
+    if issubclass(
+        graph_specification := graph_specification_registry["template"], TemplateGraphSpecification
+    ):
+        return graph_specification(
+            site=site_id,
+            host_name=host_name,
+            service_description=service_name,
+            graph_index=graph_index,
+            graph_id=graph_id,
+            destination=destination,
+        )
+    raise TypeError(graph_specification)

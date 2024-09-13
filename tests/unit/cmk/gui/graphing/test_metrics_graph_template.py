@@ -224,7 +224,7 @@ def test_template_recipes() -> None:
             render_options={},
             data_range=None,
             mark_requested_end_time=False,
-            specification=TemplateGraphSpecification(
+            specification=FakeTemplateGraphSpecification(
                 site=SiteId("site_id"),
                 host_name=HostName("host_name"),
                 service_description="Service name",
@@ -266,7 +266,7 @@ def test_template_recipes() -> None:
             render_options={},
             data_range=None,
             mark_requested_end_time=False,
-            specification=TemplateGraphSpecification(
+            specification=FakeTemplateGraphSpecification(
                 site=SiteId("site_id"),
                 host_name=HostName("host_name"),
                 service_description="Service name",

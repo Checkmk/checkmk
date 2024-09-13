@@ -22,7 +22,10 @@ from cmk.utils.servicename import ServiceName
 
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKMissingDataError
-from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
+from cmk.gui.graphing._graph_templates import (
+    get_template_graph_specification,
+    TemplateGraphSpecification,
+)
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
@@ -110,10 +113,10 @@ def host_service_graph_popup_cmk(
 
     html.write_html(
         render_graphs_from_specification_html(
-            TemplateGraphSpecification(
-                site=site,
+            get_template_graph_specification(
+                site_id=site,
                 host_name=host_name,
-                service_description=service_description,
+                service_name=service_description,
             ),
             graph_data_range,
             graph_render_config,

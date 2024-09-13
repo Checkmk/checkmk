@@ -21,7 +21,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.gui import pdf
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUnauthenticatedException, MKUserError
-from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
+from cmk.gui.graphing._graph_templates import get_template_graph_specification
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -101,10 +101,10 @@ def _answer_graph_image_request() -> None:
         )
 
         graph_data_range = graph_image_data_range(graph_render_config, start_time, end_time)
-        graph_recipes = TemplateGraphSpecification(
-            site=livestatus.SiteId(site) if site else None,
+        graph_recipes = get_template_graph_specification(
+            site_id=livestatus.SiteId(site) if site else None,
             host_name=host_name,
-            service_description=service_description,
+            service_name=service_description,
             graph_index=None,  # all graphs
             destination=GraphDestinations.notification,
         ).recipes()

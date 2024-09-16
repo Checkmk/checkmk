@@ -132,12 +132,13 @@ DEALLOCATE instance_cursor;
 
 SELECT InstanceNames, InstanceIds, EditionNames, VersionNames, ClusterNames,Ports, DynamicPorts FROM @GetAll;";
 
-    pub const UTC_ENTRY: &str = "SELECT CONVERT(varchar, GETUTCDATE(), 20) as utc_date";
+    pub const UTC_ENTRY: &str = "SELECT CONVERT(nvarchar, GETUTCDATE(), 20) as utc_date";
 
-    pub const COUNTERS_ENTRIES: &str =
-        "SELECT counter_name, object_name, instance_name, cntr_value \
-     FROM sys.dm_os_performance_counters \
-     WHERE object_name NOT LIKE '%Deprecated%'";
+    pub const COUNTERS_ENTRIES: &str = "SELECT cast(counter_name as NVARCHAR) as counter_name, \
+                cast(object_name as NVARCHAR) as object_name, \
+                cast(instance_name as NVARCHAR) as instance_name, \
+                cntr_value \
+     FROM sys.dm_os_performance_counters WHERE object_name NOT LIKE '%Deprecated%'";
 
     /// used only for testing: it is difficult to get blocked tasks in reality
     pub const WAITING_TASKS: &str = "SELECT cast(session_id as varchar) as session_id, \
@@ -187,7 +188,7 @@ IF (@HADRStatus IS NULL or @HADRStatus <> 1)
 BEGIN
     SET @SQLCommand = '
     SELECT 
-      CONVERT(VARCHAR, DATEADD(s, MAX(DATEDIFF(s, ''19700101'', backup_finish_date) - (CASE WHEN time_zone IS NOT NULL AND time_zone <> 127 THEN 60 * 15 * time_zone ELSE 0 END)), ''19700101''), 120) AS last_backup_date,
+      CONVERT(NVARCHAR, DATEADD(s, MAX(DATEDIFF(s, ''19700101'', backup_finish_date) - (CASE WHEN time_zone IS NOT NULL AND time_zone <> 127 THEN 60 * 15 * time_zone ELSE 0 END)), ''19700101''), 120) AS last_backup_date,
       type, 
       machine_name, 
       ''True'' as is_primary_replica, 
@@ -209,7 +210,7 @@ ELSE
 BEGIN
     SET @SQLCommand = '
     SELECT 
-    CONVERT(VARCHAR, DATEADD(s, MAX(DATEDIFF(s, ''19700101'', b.backup_finish_date) - (CASE WHEN time_zone IS NOT NULL AND time_zone <> 127 THEN 60 * 15 * time_zone ELSE 0 END)), ''19700101''), 120) AS last_backup_date,
+    CONVERT(NVARCHAR, DATEADD(s, MAX(DATEDIFF(s, ''19700101'', b.backup_finish_date) - (CASE WHEN time_zone IS NOT NULL AND time_zone <> 127 THEN 60 * 15 * time_zone ELSE 0 END)), ''19700101''), 120) AS last_backup_date,
       b.type, 
       b.machine_name, 
       isnull(rep.is_primary_replica,0) as is_primary_replica, 
@@ -270,17 +271,18 @@ EXEC (@SQLCommand)
 FROM sys.database_files WHERE type_desc = 'ROWS'";
 
     pub const DATABASES: &str = "SELECT name, \
-cast(DATABASEPROPERTYEX(name, 'Status') as varchar) AS Status, \
-  cast(DATABASEPROPERTYEX(name, 'Recovery') as varchar) AS Recovery, \
+cast(DATABASEPROPERTYEX(name, 'Status') as nvarchar) AS Status, \
+  cast(DATABASEPROPERTYEX(name, 'Recovery') as nvarchar) AS Recovery, \
   cast(DATABASEPROPERTYEX(name, 'IsAutoClose') as bigint) AS auto_close, \
   cast(DATABASEPROPERTYEX(name, 'IsAutoShrink') as bigint) AS auto_shrink \
 FROM master.dbo.sysdatabases";
 
     pub const IS_CLUSTERED: &str =
         "SELECT cast( SERVERPROPERTY('IsClustered') as nvarchar) AS is_clustered";
-    pub const CLUSTER_NODES: &str = "SELECT nodename FROM sys.dm_os_cluster_nodes";
+    pub const CLUSTER_NODES: &str =
+        "SELECT cast(nodename as NVARCHAR) as nodename FROM sys.dm_os_cluster_nodes";
     pub const CLUSTER_ACTIVE_NODES: &str =
-        "SELECT cast(SERVERPROPERTY('ComputerNamePhysicalNetBIOS') as varchar) AS active_node";
+        "SELECT cast(SERVERPROPERTY('ComputerNamePhysicalNetBIOS') as nvarchar) AS active_node";
 
     pub const CONNECTIONS: &str = "SELECT name AS DbName, \
       cast((SELECT COUNT(dbid) AS Num_Of_Connections FROM sys.sysprocesses WHERE dbid > 0 AND name = DB_NAME(dbid) GROUP BY dbid ) as bigint) AS NumberOfConnections  \
@@ -288,17 +290,17 @@ FROM sys.databases";
 
     pub const JOBS: &str = "SELECT \
   sj.job_id AS job_id, \
-  sj.name AS job_name, \
+  cast(sj.name  as NVARCHAR) AS job_name, \
   sj.enabled AS job_enabled, \
-  CAST(sjs.next_run_date AS VARCHAR(8)) AS next_run_date, \
-  CAST(sjs.next_run_time AS VARCHAR(6)) AS next_run_time, \
+  CAST(sjs.next_run_date AS NVARCHAR(8)) AS next_run_date, \
+  CAST(sjs.next_run_time AS NVARCHAR(6)) AS next_run_time, \
   sjserver.last_run_outcome, \
-  sjserver.last_outcome_message, \
-  CAST(sjserver.last_run_date AS VARCHAR(8)) AS last_run_date, \
-  CAST(sjserver.last_run_time AS VARCHAR(6)) AS last_run_time, \
+  CAST(sjserver.last_outcome_message as NVARCHAR) as last_outcome_message, \
+  CAST(sjserver.last_run_date AS NVARCHAR(8)) AS last_run_date, \
+  CAST(sjserver.last_run_time AS NVARCHAR(6)) AS last_run_time, \
   sjserver.last_run_duration, \
   ss.enabled AS schedule_enabled, \
-  CONVERT(VARCHAR, CURRENT_TIMESTAMP, 20) AS server_current_time \
+  CONVERT(NVARCHAR, CURRENT_TIMESTAMP, 20) AS server_current_time \
 FROM dbo.sysjobs sj \
 LEFT JOIN dbo.sysjobschedules sjs ON sj.job_id = sjs.job_id \
 LEFT JOIN dbo.sysjobservers sjserver ON sj.job_id = sjserver.job_id \
@@ -334,12 +336,12 @@ FROM sys.dm_hadr_availability_group_states Groups \
 INNER JOIN master.sys.availability_groups GroupsName ON Groups.group_id = GroupsName.group_id";
 
     pub const INSTANCE_PROPERTIES: &str = "SELECT \
-    cast(SERVERPROPERTY( 'InstanceName' ) as varchar)as InstanceName, \
-    cast(SERVERPROPERTY( 'ProductVersion' ) as varchar) as ProductVersion, \
-    cast(SERVERPROPERTY( 'MachineName' ) as varchar) as MachineName, \
-    cast(SERVERPROPERTY( 'Edition' ) as varchar) as Edition, \
-    cast(SERVERPROPERTY( 'ProductLevel' ) as varchar) as ProductLevel, \
-    cast(SERVERPROPERTY( 'ComputerNamePhysicalNetBIOS' ) as varchar) as NetBios";
+    cast(SERVERPROPERTY( 'InstanceName' ) as nvarchar) as InstanceName, \
+    cast(SERVERPROPERTY( 'ProductVersion' ) as nvarchar) as ProductVersion, \
+    cast(SERVERPROPERTY( 'MachineName' ) as nvarchar) as MachineName, \
+    cast(SERVERPROPERTY( 'Edition' ) as nvarchar) as Edition, \
+    cast(SERVERPROPERTY( 'ProductLevel' ) as nvarchar) as ProductLevel, \
+    cast(SERVERPROPERTY( 'ComputerNamePhysicalNetBIOS' ) as nvarchar) as NetBios";
 
     #[allow(dead_code)]
     pub const BAD_QUERY: &str = "SELEC name FROM sys.databases";

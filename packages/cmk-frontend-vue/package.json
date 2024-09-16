@@ -25,7 +25,7 @@
     "radix-vue": "^1.9.4",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
-    "vue": "^3.4.37"
+    "vue": "^3.5.5"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.10.4",

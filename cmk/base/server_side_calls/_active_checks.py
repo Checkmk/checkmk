@@ -202,7 +202,12 @@ class ActiveCheck:
                     ),
                 )
                 command_line = f"check_{active_check.name} {arguments}"
-                yield service.service_description, arguments, command_line, conf_dict
+                yield (
+                    self._service_name_finalizer(service.service_description),
+                    arguments,
+                    command_line,
+                    conf_dict,
+                )
 
     def _iterate_legacy_services(
         self,

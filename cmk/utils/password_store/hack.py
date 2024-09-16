@@ -54,6 +54,7 @@ HACK_AGENTS = {
     "allnet_ip_sensoric": False,  # needs no secret
     "graylog": True,
     "storeonce": True,
+    "appdynamics": True,
 }
 
 

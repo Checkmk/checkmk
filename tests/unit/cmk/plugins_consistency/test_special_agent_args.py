@@ -103,7 +103,6 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
 }
 
 UNMIGRATED = {
-    "appdynamics",
     "ddn_s2a",
     "gcp_status",
     "hivemanager",

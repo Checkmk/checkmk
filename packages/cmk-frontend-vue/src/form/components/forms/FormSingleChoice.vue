@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { SingleChoice } from '@/form/components/vue_formspec_components'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import FormValidation from '@/form/components/FormValidation.vue'
+import { useId } from '@/form/utils'
 
 const props = defineProps<{
   spec: SingleChoice
@@ -19,12 +20,14 @@ const [validation, value] = useValidation<string>(
   props.spec.validators,
   () => props.backendValidation
 )
+
+const componentId = useId()
 </script>
 
 <template>
   <div>
-    <label v-if="$props.spec.label" :for="$componentId">{{ spec.label }}</label>
-    <select :id="$componentId" v-model="value" :disabled="spec.frozen">
+    <label v-if="$props.spec.label" :for="componentId">{{ spec.label }}</label>
+    <select :id="componentId" v-model="value" :disabled="spec.frozen">
       <option v-if="value.length == 0" disabled selected hidden value="">
         {{ props.spec.input_hint }}
       </option>

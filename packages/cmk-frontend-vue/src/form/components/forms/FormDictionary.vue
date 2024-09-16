@@ -15,6 +15,7 @@ import {
   type ValidationMessages
 } from '@/form/components/utils/validation'
 import FormHelp from '../FormHelp.vue'
+import { useId } from '@/form/utils'
 
 const DICT_ELEMENT_NO_GROUP = '-ungrouped-'
 
@@ -142,32 +143,34 @@ function indentRequired(element: DictionaryElement): boolean {
     element.parameter_form.type === 'boolean_choice'
   )
 }
+
+const componentId = useId()
 </script>
 
 <template>
   <table class="dictionary" :class="dictionaryVariants({ variant })">
     <tbody>
-      <tr v-for="group in getElementsInGroupsFromProps()" :key="$componentId + group.groupKey">
+      <tr v-for="group in getElementsInGroupsFromProps()" :key="`${componentId}.${group.groupKey}`">
         <td class="dictleft">
           <div v-if="!!group.title" class="form-dictionary__group-title">{{ group?.title }}</div>
           <FormHelp v-if="group.help" :help="group.help" />
           <div
             v-for="dict_element in group.elems"
-            :key="$componentId + dict_element.dict_config.ident"
+            :key="`${componentId}.${dict_element.dict_config.ident}`"
             class="form-dictionary__group_elem"
           >
             <template v-if="indentRequired(dict_element.dict_config)">
               <span class="checkbox">
                 <input
                   v-if="!dict_element.dict_config.required"
-                  :id="$componentId + dict_element.dict_config.ident"
+                  :id="`${componentId}.${dict_element.dict_config.ident}`"
                   v-model="dict_element.is_active"
                   :onclick="
                     (event: MouseEvent) => toggleElement(event, dict_element.dict_config.ident)
                   "
                   type="checkbox"
                 />
-                <label :for="$componentId + dict_element.dict_config.ident">
+                <label :for="`${componentId}.${dict_element.dict_config.ident}`">
                   {{ dict_element.dict_config.parameter_form.title }}
                 </label>
               </span>

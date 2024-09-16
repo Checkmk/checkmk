@@ -11,6 +11,7 @@ import type {
   MultipleChoice,
   MultipleChoiceElement
 } from '@/form/components/vue_formspec_components'
+import { useId } from '@/form/utils'
 
 const props = defineProps<{
   spec: MultipleChoice
@@ -78,6 +79,8 @@ const selectStyle = computed(() => {
     width: `${Math.max(20, Math.min(100, maxLength * 0.7))}em`
   }
 })
+
+const componentId = useId()
 </script>
 
 <template>
@@ -90,7 +93,7 @@ const selectStyle = computed(() => {
       <tr>
         <td>
           <select
-            :id="`${$componentId}_available`"
+            :id="`${componentId}_available`"
             v-model="availableSelected"
             aria-label="available"
             multiple
@@ -116,7 +119,7 @@ const selectStyle = computed(() => {
         </td>
         <td>
           <select
-            :id="`${$componentId}_active`"
+            :id="`${componentId}_active`"
             v-model="activeSelected"
             aria-label="active"
             multiple

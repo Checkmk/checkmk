@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type * as FormSpec from '@/form/components/vue_formspec_components'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import FormValidation from '@/form/components/FormValidation.vue'
+import { useId } from '@/form/utils'
 
 const props = defineProps<{
   spec: FormSpec.String
@@ -27,11 +28,13 @@ const getSize = (spec: FormSpec.StringFieldSize | undefined): number => {
     LARGE: 100
   }[spec || 'MEDIUM']
 }
+
+const componentId = useId()
 </script>
 
 <template>
   <input
-    :id="$componentId"
+    :id="componentId"
     v-model="value"
     :placeholder="spec.input_hint || ''"
     type="text"

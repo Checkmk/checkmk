@@ -10,6 +10,7 @@ import FormEdit from '@/form/components/FormEdit.vue'
 import FormValidation from '@/form/components/FormValidation.vue'
 import { ref } from 'vue'
 import { immediateWatch } from '../utils/watch'
+import { useId } from '@/form/utils'
 
 const props = defineProps<{
   spec: FormSpec.OptionalChoice
@@ -39,16 +40,18 @@ immediateWatch(
       })
   }
 )
+
+const componentId = useId()
 </script>
 
 <template>
   <input
-    :id="`${$componentId}_input`"
+    :id="`${componentId}_input`"
     :checked="value !== null"
     type="checkbox"
     @change="value = value === null ? spec.parameter_form_default_value : null"
   />
-  <label :for="`${$componentId}_input`">
+  <label :for="`${componentId}_input`">
     {{ spec.i18n.label }}
   </label>
   <div v-if="value !== null" class="embedded">

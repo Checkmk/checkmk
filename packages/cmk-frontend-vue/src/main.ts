@@ -16,8 +16,6 @@ import 'core-js/stable'
 
 import { createApp } from 'vue'
 
-import { mixinUniqueId } from './plugins'
-
 import D3Table from './views/D3Table.vue'
 import Table from './views/CmkTable.vue'
 import QuickSetup from './quick-setup/QuickSetupApp.vue'
@@ -51,9 +49,6 @@ function setupVue() {
           backendValidation: appData.validation,
           renderMode: appData.render_mode
         })
-        // Assign a unique id to each component, useful for label for=..
-        // until https://github.com/vuejs/rfcs/discussions/557 is resolved
-        app.use(mixinUniqueId)
         break
       }
       case 'd3_table': {
@@ -74,7 +69,6 @@ function setupVue() {
       }
       case 'quick_setup': {
         app = createApp(QuickSetup, { quick_setup_id: appData.quick_setup_id })
-        app.use(mixinUniqueId)
         break
       }
       case 'notification_overview': {

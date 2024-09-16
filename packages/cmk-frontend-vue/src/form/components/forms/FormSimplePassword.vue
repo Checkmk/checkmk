@@ -9,6 +9,7 @@ import { validateValue, type ValidationMessages } from '@/form/components/utils/
 import { computed, ref } from 'vue'
 import type { SimplePassword } from '@/form/components/vue_formspec_components'
 import { immediateWatch } from '@/form/components/utils/watch'
+import { useId } from '@/form/utils'
 
 const props = defineProps<{
   spec: SimplePassword
@@ -33,10 +34,12 @@ const password = computed({
     data.value[1] = false
   }
 })
+
+const componentId = useId()
 </script>
 
 <template>
-  <input :id="$componentId" v-model="password" type="password" :placeholder="'******'" />
-  <label :for="$componentId" />
+  <input :id="componentId" v-model="password" type="password" :placeholder="'******'" />
+  <label :for="componentId" />
   <FormValidation :validation="validation"></FormValidation>
 </template>

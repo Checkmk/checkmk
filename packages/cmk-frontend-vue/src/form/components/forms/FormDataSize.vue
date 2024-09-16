@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { DataSize } from '@/form/components/vue_formspec_components'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import FormValidation from '@/form/components/FormValidation.vue'
+import { useId } from '@/form/utils'
 
 const props = defineProps<{
   spec: DataSize
@@ -19,12 +20,14 @@ const [validation, value] = useValidation<[string, string]>(
   props.spec.validators,
   () => props.backendValidation
 )
+
+const componentId = useId()
 </script>
 
 <template>
-  <label v-if="props.spec.label" :for="$componentId">{{ props.spec.label }}</label>
+  <label v-if="props.spec.label" :for="componentId">{{ props.spec.label }}</label>
   <input
-    :id="$componentId"
+    :id="componentId"
     v-model="value[0]"
     :placeholder="spec.input_hint || ''"
     class="number"

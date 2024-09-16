@@ -12,6 +12,7 @@ import type {
   CascadingSingleChoiceElement,
   FormSpec
 } from '@/form/components/vue_formspec_components'
+import { useId } from '@/form/utils'
 import FormValidation from '@/form/components/FormValidation.vue'
 import { validateValue, type ValidationMessages } from '@/form/components/utils/validation'
 
@@ -94,11 +95,13 @@ const activeElement = computed((): ActiveElement | null => {
     validation: []
   }
 })
+
+const componentId = useId()
 </script>
 
 <template>
   <div class="choice">
-    <select :id="$componentId" v-model="selectedOption">
+    <select :id="componentId" v-model="selectedOption">
       <option v-if="activeElement == null" disabled selected hidden value="">
         {{ props.spec.input_hint }}
       </option>
@@ -106,7 +109,7 @@ const activeElement = computed((): ActiveElement | null => {
         {{ element.title }}
       </option>
     </select>
-    <label v-if="$props.spec.label" :for="$componentId">{{ props.spec.label }}</label>
+    <label v-if="$props.spec.label" :for="componentId">{{ props.spec.label }}</label>
   </div>
   <template v-if="activeElement != null">
     <FormEdit

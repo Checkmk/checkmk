@@ -33,13 +33,6 @@ class ActiveServiceData:
     command: tuple[str, ...]
 
 
-@dataclass(frozen=True)
-class ActiveServiceDescription:
-    plugin_name: str
-    description: ServiceName
-    params: Mapping[str, object] | object
-
-
 class ActiveCheck:
     def __init__(
         self,
@@ -143,24 +136,6 @@ class ActiveCheck:
             existing_descriptions[service.description] = service.plugin_name
 
             yield service
-
-    def get_active_service_descriptions(
-        self, active_checks_rules: Iterable[SSCRules]
-    ) -> Iterator[ActiveServiceDescription]:
-        for plugin_name, plugin_params in active_checks_rules:
-            try:
-                for raw_service in self._iterate_services(plugin_name, plugin_params):
-                    yield ActiveServiceDescription(
-                        plugin_name=raw_service.plugin_name,
-                        description=raw_service.description,
-                        params=raw_service.configuration,
-                    )
-            except Exception as e:
-                if cmk.ccc.debug.enabled():
-                    raise
-                config_warnings.warn(
-                    f"Config creation for active check {plugin_name} failed on {self.host_name}: {e}"
-                )
 
 
 def _autodetect_plugin(command: str, module_name: str | None) -> str:

@@ -15,7 +15,12 @@ from tests.plugins_integration.checks import (  # pylint: disable=ungrouped-impo
 logger = logging.getLogger(__name__)
 
 # * Arista dumps containing several checks that have been removed after 2.3.0.
-SKIPPED_DUMPS = ["snmp-sw-arista.demo.checkmk.com_2_2_p12"]
+# * BIG-IP cluster containing several checks remaining in PEND state, leading to assertion-error
+#   after update. See CMK-19103.
+SKIPPED_DUMPS = [
+    "snmp-sw-arista.demo.checkmk.com_2_2_p12",
+    "snmp-f5-bigip-failover-cluster",
+]
 
 # * The 'Postfix status' service has been renamed into 'Postfix status default'.
 #   Related: CMK-13774
@@ -50,7 +55,6 @@ def test_plugin_update(
                     base_data[host_name].pop(skipped_check)
 
             base_data_status_0[host_name] = get_services_with_status(base_data[host_name], 0)
-
     test_site_update = site_factory_update.update_as_site_user(test_site_update)
 
     target_data = {}

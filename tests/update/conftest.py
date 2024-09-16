@@ -291,8 +291,7 @@ def inject_dumps(site: Site, dumps_dir: Path) -> None:
     # create dump folder in the test site
     site_dumps_path = site.path("var/check_mk/dumps")
     LOGGER.info('Creating folder "%s"...', site_dumps_path)
-    rc = site.execute(["mkdir", "-p", site_dumps_path]).wait()
-    assert rc == 0
+    _ = site.run(["mkdir", "-p", site_dumps_path])
 
     LOGGER.info("Injecting agent-output...")
 

@@ -5,7 +5,6 @@
 
 import ast
 import re
-import subprocess
 from collections.abc import Iterator, MutableMapping, Sequence
 
 import pytest
@@ -135,24 +134,21 @@ def _execute_automation(
     parse_data: bool = True,
 ) -> object:
     cmdline = ["cmk", "--automation", cmd, *([] if args is None else args)]
-    p = site.execute(cmdline, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+    p = site.run(cmdline, input=stdin, check=False)
+    error_msg = "Exit code: %d, Output: %r, Error: %r" % (p.returncode, p.stdout, p.stderr)
 
-    stdout, stderr = p.communicate(stdin)
-
-    error_msg = "Exit code: %d, Output: %r, Error: %r" % (p.wait(), stdout, stderr)
-
-    assert p.wait() == expect_exit_code, error_msg
+    assert p.returncode == expect_exit_code, error_msg
 
     if expect_stderr_pattern:
-        assert re.match(expect_stderr_pattern, stderr) is not None, error_msg
+        assert re.match(expect_stderr_pattern, p.stderr) is not None, error_msg
     else:
-        assert stderr == expect_stderr, error_msg
+        assert p.stderr == expect_stderr, error_msg
 
     if expect_stdout is not None:
-        assert stdout == expect_stdout, error_msg
+        assert p.stdout == expect_stdout, error_msg
 
     if parse_data:
-        return results.result_type_registry[cmd].deserialize(stdout)
+        return results.result_type_registry[cmd].deserialize(p.stdout)
 
     return None
 
@@ -161,31 +157,24 @@ def _execute_automation(
 @pytest.mark.usefixtures("test_cfg")
 def test_automation_inventory_no_host(site: Site) -> None:
     # NOTE: We can't use @raiseerrors here, because this would redirect stderr to /dev/null!
-    p = site.execute(
-        ["cmk", "--automation", "inventory", "@scan", "new"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
+    p = site.run(["cmk", "--automation", "inventory", "@scan", "new"], check=False)
 
-    stdout, stderr = p.communicate()
-    assert "Need two arguments:" in stderr
-    assert stdout == ""
-    assert p.wait() == 1
+    assert "Need two arguments:" in p.stderr
+    assert p.stdout == ""
+    assert p.returncode == 1
 
 
 @pytest.mark.usefixtures("test_cfg")
 def test_automation_discovery_no_host(site: Site) -> None:
     # NOTE: We can't use @raiseerrors here, because this would redirect stderr to /dev/null!
-    p = site.execute(
+    p = site.run(
         ["cmk", "--automation", "service-discovery", "@scan", "new"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        check=False,
     )
 
-    stdout, stderr = p.communicate()
-    assert "Need two arguments:" in stderr
-    assert stdout == ""
-    assert p.wait() == 1
+    assert "Need two arguments:" in p.stderr
+    assert p.stdout == ""
+    assert p.returncode == 1
 
 
 # old alias, drop after 2.2 release

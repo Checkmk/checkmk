@@ -399,8 +399,7 @@ def setup_site(site: Site, dump_path: str) -> None:
     walk_path = site.path("var/check_mk/snmpwalks")
     # create dump folder in the test site
     logger.info('Creating folder "%s"...', dump_path)
-    rc = site.execute(["mkdir", "-p", dump_path]).wait()
-    assert rc == 0
+    _ = site.run(["mkdir", "-p", dump_path])
 
     logger.info("Injecting agent-output...")
     for dump_name in get_host_names():

@@ -182,8 +182,7 @@ def _get_site_piggyback(request: pytest.FixtureRequest) -> Iterator[Site]:
 
             # create dump folder in the test site
             logger.info('Creating folder "%s"...', dump_path)
-            rc = site.execute(["mkdir", "-p", dump_path]).wait()
-            assert rc == 0
+            _ = site.run(["mkdir", "-p", dump_path])
 
             ruleset_name = "datasource_programs"
             logger.info('Creating rule "%s"...', ruleset_name)

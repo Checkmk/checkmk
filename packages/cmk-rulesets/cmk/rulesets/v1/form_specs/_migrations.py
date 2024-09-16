@@ -307,6 +307,7 @@ def migrate_to_proxy(  # pylint: disable=too-many-return-statements
     """
     Transform a previous proxy configuration to a model of the `Proxy` FormSpec.
     Previous configurations are transformed in the following way:
+
         ("global", <stored-proxy-id>) -> ("cmk_postprocessed", "stored_proxy", <stored-proxy-id>)
         ("environment", "environment") -> ("cmk_postprocessed", "environment_proxy", "")
         ("url", <url>) -> ("cmk_postprocessed", "explicit_proxy", <url>)
@@ -342,6 +343,7 @@ def migrate_to_time_period(
     """
     Transform a previous time period configuration to a model of the `TimePeriod` FormSpec.
     Previous configurations are transformed in the following way:
+
         <time-period> -> ("time_period", "preconfigured", <time-period>)
 
     Args:

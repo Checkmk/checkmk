@@ -25,7 +25,7 @@ class ReceivingThread(threading.Thread, Generic[_ModelT]):
         logger: logging.Logger,
         omd_root: Path,
         model: type[_ModelT],
-        callback: Callable[[object, object, object, _ModelT], None],
+        callback: Callable[[Channel[_ModelT], _ModelT], None],
         queue: str,
     ) -> None:
         super().__init__()

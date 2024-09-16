@@ -178,9 +178,7 @@ class TestChannel:
 
         channel.publish_for_site("other_site", message, routing="subrouting.key")
 
-        def _on_message(
-            _channel: object, _delivery: object, _properties: object, received: Message
-        ) -> None:
+        def _on_message(_channel: Channel[Message], received: Message) -> None:
             assert received == message
 
         channel.consume(_on_message)

@@ -41,10 +41,8 @@ class PiggybackPayload(BaseModel):
 def save_payload(
     logger: logging.Logger,
     omd_root: Path,
-) -> Callable[[object, object, object, PiggybackPayload], None]:
-    def _on_message(
-        _channel: object, _delivery: object, _properties: object, received: PiggybackPayload
-    ) -> None:
+) -> Callable[[Channel[PiggybackPayload], PiggybackPayload], None]:
+    def _on_message(_channel: Channel[PiggybackPayload], received: PiggybackPayload) -> None:
         logger.debug(
             "Received payload for piggybacked host '%s' from source host '%s'",
             received.target_host,

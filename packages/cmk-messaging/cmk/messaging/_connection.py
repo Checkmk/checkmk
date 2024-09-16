@@ -171,9 +171,7 @@ class Channel(Generic[_ModelT]):
 
     def consume(
         self,
-        callback: Callable[
-            [pika.channel.Channel, pika.DeliveryMode, pika.BasicProperties, _ModelT], object
-        ],
+        callback: Callable[[Self, _ModelT], object],
         *,
         auto_ack: bool = False,
         queue: str | None = None,
@@ -185,14 +183,12 @@ class Channel(Generic[_ModelT]):
         """
 
         def _on_message(
-            channel: pika.channel.Channel,
-            method: pika.DeliveryMode,
-            properties: pika.BasicProperties,
+            _channel: pika.channel.Channel,
+            _method: pika.DeliveryMode,
+            _properties: pika.BasicProperties,
             body: bytes,
         ) -> None:
-            callback(
-                channel, method, properties, self._model.model_validate_json(body.decode("utf-8"))
-            )
+            callback(self, self._model.model_validate_json(body.decode("utf-8")))
 
         self._pchannel.basic_consume(
             queue=self._make_queue_name(queue),

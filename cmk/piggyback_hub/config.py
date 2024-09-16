@@ -16,6 +16,8 @@ from pydantic import BaseModel
 
 from cmk.utils.hostaddress import HostName
 
+from cmk.messaging import Channel
+
 PIGGYBACK_HUB_CONFIG_PATH: Final = Path("etc/check_mk/piggyback_hub.conf")
 MULTISITE_CONFIG: Final = Path("etc/check_mk/piggyback_hub.d/multisite.conf")
 
@@ -51,10 +53,8 @@ def distribute(configs: Mapping[str, PiggybackConfig], omd_root: Path) -> None:
 
 def save_config(
     logger: logging.Logger, omd_root: Path
-) -> Callable[[object, object, object, PiggybackConfig], None]:
-    def _on_message(
-        _channel: object, _delivery: object, _properties: object, received: PiggybackConfig
-    ) -> None:
+) -> Callable[[Channel[PiggybackConfig], PiggybackConfig], None]:
+    def _on_message(_channel: Channel[PiggybackConfig], received: PiggybackConfig) -> None:
         logger.debug("New configuration received")
         file_path = config_path(omd_root)
         file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)

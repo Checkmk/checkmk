@@ -42,7 +42,7 @@ def test__on_message() -> None:
     )
     on_message = save_payload(test_logger, cmk.utils.paths.omd_root)
 
-    on_message(None, None, None, input_payload)
+    on_message(Mock(), input_payload)
 
     expected_payload = [
         PiggybackMessage(

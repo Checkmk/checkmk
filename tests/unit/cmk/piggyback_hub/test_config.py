@@ -6,6 +6,7 @@
 import json
 import logging
 from pathlib import Path
+from unittest.mock import Mock
 
 from cmk.utils.hostaddress import HostName
 
@@ -24,7 +25,7 @@ def test__on_message(
     config_dir = tmp_path / "etc/check_mk"
     config_dir.mkdir(parents=True)
 
-    on_message(None, None, None, input_payload)
+    on_message(Mock(), input_payload)
 
     expected_config = PiggybackConfig(
         targets=[Target(host_name=HostName("test_host"), site_id="test_site")]

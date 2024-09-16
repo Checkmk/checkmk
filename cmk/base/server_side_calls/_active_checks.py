@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Iterable, Iterator, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -15,7 +15,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
 from cmk.discover_plugins import discover_executable, family_libexec_dir, PluginLocation
-from cmk.server_side_calls.v1 import ActiveCheckConfig, HostConfig
+from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, HostConfig
 from cmk.server_side_calls_backend.config_processing import (
     process_configuration_to_parameters,
     ProxyConfig,
@@ -61,65 +61,74 @@ class ActiveCheck:
     ) -> Iterator[ActiveServiceData]:
         for plugin_name, plugin_params in active_checks_rules:
             try:
-                yield from self._sanitize_service_descriptions(
-                    self._iterate_services(plugin_name, plugin_params)
-                )
+                services = self._make_services(plugin_name, plugin_params)
             except Exception as e:
                 if cmk.ccc.debug.enabled():
                     raise
                 config_warnings.warn(
                     f"Config creation for active check {plugin_name} failed on {self.host_name}: {e}"
                 )
+            else:
+                yield from self._sanitize_service_descriptions(services)
 
-    def _iterate_services(
+    def _make_services(
         self, plugin_name: str, plugin_params: Iterable[ConfigSet]
-    ) -> Iterator[ActiveServiceData]:
+    ) -> Sequence[ActiveServiceData]:
         if (active_check := self._plugins.get(plugin_name)) is None:
-            return
-        for conf_dict in plugin_params:
-            # actually these ^- are configuration sets.
-            proxy_config = ProxyConfig(self.host_name, self._http_proxies)
+            return ()
+
+        proxy_config = ProxyConfig(self.host_name, self._http_proxies)
+        return [
+            self._make_service(active_check, service, proxy_config, configuration_set)
+            for configuration_set in plugin_params
+            for processed in [process_configuration_to_parameters(configuration_set, proxy_config)]
+            for service in active_check(processed.value, self.host_config)
+        ]
+
+    def _make_service(
+        self,
+        active_check: ActiveCheckConfig,
+        service: ActiveCheckCommand,
+        proxy_config: ProxyConfig,
+        conf_dict: Mapping[str, object],
+    ) -> ActiveServiceData:
+        if self.host_attrs["address"] in ["0.0.0.0", "::"]:
+            # these 'magic' addresses indicate that the lookup failed :-(
+            executable = "check_always_crit"
+            arguments: tuple[str, ...] = (
+                "'Failed to lookup IP address and no explicit IP address configured'",
+            )
+        else:
+            executable = f"check_{active_check.name}"
             processed = process_configuration_to_parameters(conf_dict, proxy_config)
+            arguments = replace_passwords(
+                self.host_name,
+                service.command_arguments,
+                self.stored_passwords,
+                self.password_store_file,
+                processed.surrogates,
+                apply_password_store_hack=password_store.hack.HACK_CHECKS.get(
+                    active_check.name, False
+                ),
+            )
 
-            for service in active_check(processed.value, self.host_config):
-                if self.host_attrs["address"] in ["0.0.0.0", "::"]:
-                    # these 'magic' addresses indicate that the lookup failed :-(
-                    executable = "check_always_crit"
-                    arguments: tuple[str, ...] = (
-                        "'Failed to lookup IP address and no explicit IP address configured'",
-                    )
-                else:
-                    executable = f"check_{active_check.name}"
-                    arguments = replace_passwords(
-                        self.host_name,
-                        service.command_arguments,
-                        self.stored_passwords,
-                        self.password_store_file,
-                        processed.surrogates,
-                        apply_password_store_hack=password_store.hack.HACK_CHECKS.get(
-                            active_check.name, False
-                        ),
-                    )
+        detected_executable = _autodetect_plugin(executable, self._modules.get(active_check.name))
 
-                detected_executable = _autodetect_plugin(
-                    executable, self._modules.get(active_check.name)
-                )
-
-                yield ActiveServiceData(
-                    plugin_name=plugin_name,
-                    configuration=conf_dict,
-                    description=service.service_description,
-                    command_name=f"check_mk_active-{active_check.name}",
-                    command=(detected_executable, *arguments),
-                )
+        return ActiveServiceData(
+            plugin_name=active_check.name,
+            configuration=conf_dict,
+            description=service.service_description,
+            command_name=f"check_mk_active-{active_check.name}",
+            command=(detected_executable, *arguments),
+        )
 
     def _sanitize_service_descriptions(
         self,
-        service_iterator: Iterator[ActiveServiceData],
+        services: Iterable[ActiveServiceData],
     ) -> Iterator[ActiveServiceData]:
         existing_descriptions: dict[str, str] = {}
 
-        for service in service_iterator:
+        for service in services:
             if not service.description:
                 config_warnings.warn(
                     f"Skipping invalid service with empty description "

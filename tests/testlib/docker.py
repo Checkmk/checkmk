@@ -65,7 +65,7 @@ def image_name(version: CMKVersion) -> str:
 
 
 def package_name(version: CMKVersion) -> str:
-    return f"check-mk-{version.edition.long}-{version.version}_0.{distro_codename}_amd64.deb"
+    return f"check-mk-{version.edition.long}-{version.version.split('-rc')[0]}_0.{distro_codename}_amd64.deb"
 
 
 def prepare_build() -> None:

@@ -104,7 +104,7 @@ class CMKVersion:
         return self.omd_version()
 
     def omd_version(self) -> str:
-        return f"{self.version}.{self.edition.short}"
+        return f"{self.version.split('-rc')[0]}.{self.edition.short}"
 
     def version_path(self) -> str:
         return "/omd/versions/%s" % self.version_directory()
@@ -312,6 +312,7 @@ class ABCPackageManager(abc.ABC):
                     package_name, self.package_url_public(version, package_name)
                 )
 
+            logger.info("Install from tstbuild or portal (%s)", package_path)
             self._write_package_hash(version, edition, package_path)
             self._install_package(package_path)
             os.unlink(package_path)
@@ -331,7 +332,7 @@ class ABCPackageManager(abc.ABC):
     def _download_package(self, package_name: str, package_url: PackageUrl) -> Path:
         temp_package_path = Path("/tmp", package_name)
 
-        logger.info("Downloading from: %s", package_url)
+        logger.info("Downloading from: %s to %s", package_url, temp_package_path)
         response = requests.get(  # nosec
             package_url, auth=get_cmk_download_credentials(), verify=False
         )

@@ -331,7 +331,7 @@ fn check_validity_not_after(
                 not_after
             )),
             LevelsCheckerArgs::builder()
-                .label("remaining_validity")
+                .label("certificate_remaining_validity")
                 .uom("s".parse().unwrap())
                 .build(),
         ),

@@ -57,8 +57,8 @@ def main() {
             artifacts_helper.download_deb(
                 INTERNAL_DEPLOY_DEST,
                 INTERNAL_DEPLOY_PORT,
-                cmk_version,
-                "${package_dir}/${cmk_version}",
+                cmk_version_rc_aware,
+                "${package_dir}/${cmk_version_rc_aware}",
                 EDITION,
                 "jammy",  // TODO (CMK-11568): This must be kept in sync with e.g. docker/Dockerfile
             );
@@ -66,8 +66,8 @@ def main() {
             artifacts_helper.download_source_tar(
                 INTERNAL_DEPLOY_DEST,
                 INTERNAL_DEPLOY_PORT,
-                cmk_version,
-                "${package_dir}/${cmk_version}",
+                cmk_version_rc_aware,
+                "${package_dir}/${cmk_version_rc_aware}",
                 EDITION,
             );
         }
@@ -76,7 +76,7 @@ def main() {
     // TODO: don't run make-test-docker but use docker.inside() instead
     stage('test cmk-docker integration') {
         dir("${checkout_dir}/tests") {
-            def cmd = "make test-docker-docker WORKSPACE='${checkout_dir}' BRANCH='$branch_name' EDITION='$EDITION' VERSION='$cmk_version'";
+            def cmd = "make test-docker-docker WORKSPACE='${checkout_dir}' BRANCH='$branch_name' EDITION='$EDITION' VERSION='$cmk_version_rc_aware'";
             on_dry_run_omit(LONG_RUNNING, "RUN ${cmd}") {
                 sh(cmd);
             }

@@ -1,6 +1,6 @@
 {
   "lockFileVersion": 6,
-  "moduleFileHash": "20fa89ed58b5f11e40ce791a5b082458a94f9a2f748d80f9dfb9ddf174ac5c2b",
+  "moduleFileHash": "989f38c7f591ae807d09fbab48e66845abe80167821e049f7c9ac8c264db021c",
   "flags": {
     "cmdRegistries": [
       "https://bcr.bazel.build/"
@@ -109,7 +109,7 @@
         "hedron_compile_commands": "hedron_compile_commands@_",
         "rules_cc": "rules_cc@0.0.9",
         "rules_rust": "rules_rust@0.49.3",
-        "rules_python": "rules_python@0.34.0",
+        "rules_python": "rules_python@0.35.0",
         "aspect_rules_py": "aspect_rules_py@0.7.4",
         "aspect_rules_lint": "aspect_rules_lint@1.0.0-rc9",
         "bazel_tools": "bazel_tools@_",
@@ -454,10 +454,10 @@
         }
       }
     },
-    "rules_python@0.34.0": {
+    "rules_python@0.35.0": {
       "name": "rules_python",
-      "version": "0.34.0",
-      "key": "rules_python@0.34.0",
+      "version": "0.35.0",
+      "key": "rules_python@0.35.0",
       "repoName": "rules_python",
       "executionPlatformsToRegister": [],
       "toolchainsToRegister": [
@@ -467,9 +467,9 @@
         {
           "extensionBzlFile": "@rules_python//python/private:internal_deps.bzl",
           "extensionName": "internal_deps",
-          "usingModule": "rules_python@0.34.0",
+          "usingModule": "rules_python@0.35.0",
           "location": {
-            "file": "https://bcr.bazel.build/modules/rules_python/0.34.0/MODULE.bazel",
+            "file": "https://bcr.bazel.build/modules/rules_python/0.35.0/MODULE.bazel",
             "line": 16,
             "column": 30
           },
@@ -499,9 +499,9 @@
         {
           "extensionBzlFile": "@rules_python//python/extensions:python.bzl",
           "extensionName": "python",
-          "usingModule": "rules_python@0.34.0",
+          "usingModule": "rules_python@0.35.0",
           "location": {
-            "file": "https://bcr.bazel.build/modules/rules_python/0.34.0/MODULE.bazel",
+            "file": "https://bcr.bazel.build/modules/rules_python/0.35.0/MODULE.bazel",
             "line": 39,
             "column": 23
           },
@@ -520,7 +520,7 @@
               },
               "devDependency": false,
               "location": {
-                "file": "https://bcr.bazel.build/modules/rules_python/0.34.0/MODULE.bazel",
+                "file": "https://bcr.bazel.build/modules/rules_python/0.35.0/MODULE.bazel",
                 "line": 45,
                 "column": 17
               }
@@ -532,9 +532,9 @@
         {
           "extensionBzlFile": "@rules_python//python/private/pypi:pip.bzl",
           "extensionName": "pip_internal",
-          "usingModule": "rules_python@0.34.0",
+          "usingModule": "rules_python@0.35.0",
           "location": {
-            "file": "https://bcr.bazel.build/modules/rules_python/0.34.0/MODULE.bazel",
+            "file": "https://bcr.bazel.build/modules/rules_python/0.35.0/MODULE.bazel",
             "line": 57,
             "column": 20
           },
@@ -556,7 +556,7 @@
               },
               "devDependency": false,
               "location": {
-                "file": "https://bcr.bazel.build/modules/rules_python/0.34.0/MODULE.bazel",
+                "file": "https://bcr.bazel.build/modules/rules_python/0.35.0/MODULE.bazel",
                 "line": 58,
                 "column": 10
               }
@@ -581,12 +581,12 @@
         "ruleClassName": "http_archive",
         "attributes": {
           "urls": [
-            "https://github.com/bazelbuild/rules_python/releases/download/0.34.0/rules_python-0.34.0.tar.gz"
+            "https://github.com/bazelbuild/rules_python/releases/download/0.35.0/rules_python-0.35.0.tar.gz"
           ],
-          "integrity": "sha256-d4quqz5s/VbWgcifXBDXrWv40vGnLeneVbIwgbLTFhg=",
-          "strip_prefix": "rules_python-0.34.0",
+          "integrity": "sha256-vgS2Nce+RgS+HvIFQumHCvPEl3jOhB7i2S/LQvnZUWo=",
+          "strip_prefix": "rules_python-0.35.0",
           "remote_patches": {
-            "https://bcr.bazel.build/modules/rules_python/0.34.0/patches/module_dot_bazel_version.patch": "sha256-9Hwgtvb4RwCw/H1tVHuzJFpDSLvbPWD0dw4elwjeHQM="
+            "https://bcr.bazel.build/modules/rules_python/0.35.0/patches/module_dot_bazel_version.patch": "sha256-CXFJYTzyfhPzSinBGZ3QrfymhcaEMqaJDOfGmlgU97c="
           },
           "remote_patch_strip": 1
         }
@@ -665,7 +665,7 @@
       "deps": {
         "aspect_bazel_lib": "aspect_bazel_lib@2.7.7",
         "bazel_skylib": "bazel_skylib@1.6.1",
-        "rules_python": "rules_python@0.34.0",
+        "rules_python": "rules_python@0.35.0",
         "platforms": "platforms@0.0.8",
         "bazel_tools": "bazel_tools@_",
         "local_config_platform": "local_config_platform@_"
@@ -910,7 +910,7 @@
         "rules_java": "rules_java@7.4.0",
         "rules_license": "rules_license@0.0.8",
         "rules_proto": "rules_proto@6.0.2",
-        "rules_python": "rules_python@0.34.0",
+        "rules_python": "rules_python@0.35.0",
         "buildozer": "buildozer@6.4.0.2",
         "platforms": "platforms@0.0.8",
         "com_google_protobuf": "protobuf@24.4",
@@ -1215,7 +1215,7 @@
       ],
       "deps": {
         "bazel_skylib": "bazel_skylib@1.6.1",
-        "rules_python": "rules_python@0.34.0",
+        "rules_python": "rules_python@0.35.0",
         "rules_cc": "rules_cc@0.0.9",
         "rules_proto": "rules_proto@6.0.2",
         "rules_java": "rules_java@7.4.0",
@@ -1546,7 +1546,7 @@
       "extensionUsages": [],
       "deps": {
         "bazel_skylib": "bazel_skylib@1.6.1",
-        "rules_python": "rules_python@0.34.0",
+        "rules_python": "rules_python@0.35.0",
         "bazel_tools": "bazel_tools@_",
         "local_config_platform": "local_config_platform@_"
       },
@@ -1938,7 +1938,7 @@
       "toolchainsToRegister": [],
       "extensionUsages": [],
       "deps": {
-        "rules_python": "rules_python@0.34.0",
+        "rules_python": "rules_python@0.35.0",
         "bazel_skylib": "bazel_skylib@1.6.1",
         "rules_license": "rules_license@0.0.8",
         "bazel_tools": "bazel_tools@_",
@@ -5117,11 +5117,11 @@
     },
     "@@rules_python~//python/private/pypi:pip.bzl%pip_internal": {
       "general": {
-        "bzlTransitiveDigest": "hn2PEchz9fJ+oxtJuhcrOb18UocEZbAE/UNcJQDTO4M=",
+        "bzlTransitiveDigest": "jdeOjZwlxiiL178KTMiOrx3plfmUCDPOtsm6YMD0yCQ=",
         "recordedFileInputs": {
           "@@rules_python~//tools/publish/requirements.txt": "031e35d03dde03ae6305fe4b3d1f58ad7bdad857379752deede0f93649991b8a",
-          "@@rules_python~//tools/publish/requirements_windows.txt": "349252b9ff6f0095e3a22046e33c7650cd2d833d8edcf11641a5d95e08829250",
-          "@@rules_python~//tools/publish/requirements_darwin.txt": "ce2f5127a385350df974ba1e73a51f32ac201c63d92fc5a4cb1628f0b8c393c1"
+          "@@rules_python~//tools/publish/requirements_windows.txt": "15472d5a28e068d31ba9e2dc389459698afaff366e9db06e15890283a3ea252e",
+          "@@rules_python~//tools/publish/requirements_darwin.txt": "61cf602ff33b58c5f42a6cee30112985e9b502209605314e313157f8aad679f9"
         },
         "recordedDirentsInputs": {},
         "envVariables": {},
@@ -5132,11 +5132,11 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "cffi-1.15.1-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5154,14 +5154,11 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "zipp-3.11.0.tar.gz",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5179,11 +5176,11 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "urllib3-1.26.14.tar.gz",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5201,11 +5198,11 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "cffi-1.15.1-cp311-cp311-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5223,14 +5220,14 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "requests-2.28.2-py3-none-any.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5248,11 +5245,11 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "certifi-2022.12.7.tar.gz",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5270,14 +5267,14 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "readme_renderer-37.3-py3-none-any.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5295,11 +5292,11 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "cffi-1.15.1.tar.gz",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5317,9 +5314,9 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "idna-3.7-py3-none-any.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5331,20 +5328,40 @@
               ]
             }
           },
+          "rules_python_publish_deps_311_certifi_py3_none_any_c198e21b": {
+            "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "dep_template": "@rules_python_publish_deps//{name}:{target}",
+              "experimental_target_platforms": [
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
+              ],
+              "filename": "certifi-2024.7.4-py3-none-any.whl",
+              "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
+              "repo": "rules_python_publish_deps_311",
+              "requirement": "certifi==2024.7.4",
+              "sha256": "c198e21b1289c2ab85ee4e67bb4b4ef3ead0892059901a8d5b622f24a1101e90",
+              "urls": [
+                "https://files.pythonhosted.org/packages/1c/d5/c84e1a17bf61d4df64ca866a1c9a913874b4e9bdc131ec689a0ad013fb36/certifi-2024.7.4-py3-none-any.whl"
+              ]
+            }
+          },
           "rules_python_publish_deps_311_requests_toolbelt_py2_none_any_18565aa5": {
             "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
             "ruleClassName": "whl_library",
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "requests_toolbelt-0.10.1-py2.py3-none-any.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5356,17 +5373,37 @@
               ]
             }
           },
+          "rules_python_publish_deps_311_charset_normalizer_cp311_cp311_macosx_10_9_universal2_802fe99c": {
+            "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "dep_template": "@rules_python_publish_deps//{name}:{target}",
+              "experimental_target_platforms": [
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
+              ],
+              "filename": "charset_normalizer-3.3.2-cp311-cp311-macosx_10_9_universal2.whl",
+              "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
+              "repo": "rules_python_publish_deps_311",
+              "requirement": "charset-normalizer==3.3.2",
+              "sha256": "802fe99cca7457642125a8a88a084cef28ff0cf9407060f7b93dca5aa25480db",
+              "urls": [
+                "https://files.pythonhosted.org/packages/68/77/02839016f6fbbf808e8b38601df6e0e66c17bbab76dff4613f7511413597/charset_normalizer-3.3.2-cp311-cp311-macosx_10_9_universal2.whl"
+              ]
+            }
+          },
           "rules_python_publish_deps_311_cffi_cp311_cp311_manylinux_2_17_x86_64_94411f22": {
             "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
             "ruleClassName": "whl_library",
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "cffi-1.15.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5384,11 +5421,11 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "cryptography-42.0.4-cp39-abi3-musllinux_1_1_x86_64.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5406,14 +5443,14 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "Pygments-2.14.0-py3-none-any.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5431,11 +5468,11 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "cryptography-42.0.4-cp39-abi3-musllinux_1_1_aarch64.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5453,14 +5490,14 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "bleach-6.0.0-py3-none-any.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5478,11 +5515,11 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "cryptography-42.0.4-cp39-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5500,14 +5537,14 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "keyring-23.13.1-py3-none-any.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5525,14 +5562,14 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "jaraco.classes-3.2.3.tar.gz",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5550,14 +5587,14 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "rich-13.2.0-py3-none-any.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5575,11 +5612,11 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "cryptography-42.0.4-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5597,14 +5634,11 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "charset_normalizer-3.0.1-cp311-cp311-manylinux_2_17_s390x.manylinux2014_s390x.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5622,11 +5656,11 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "SecretStorage-3.3.3.tar.gz",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5644,14 +5678,11 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "charset_normalizer-3.0.1-cp311-cp311-musllinux_1_1_ppc64le.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5669,11 +5700,11 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "cryptography-42.0.4-cp39-abi3-musllinux_1_2_aarch64.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5691,14 +5722,14 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "more-itertools-9.0.0.tar.gz",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5716,14 +5747,14 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "importlib_metadata-6.0.0-py3-none-any.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5735,45 +5766,20 @@
               ]
             }
           },
-          "rules_python_publish_deps_311_charset_normalizer_cp311_cp311_win_amd64_9ab77acb": {
-            "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
-            "ruleClassName": "whl_library",
-            "attributes": {
-              "dep_template": "@rules_python_publish_deps//{name}:{target}",
-              "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
-              ],
-              "filename": "charset_normalizer-3.0.1-cp311-cp311-win_amd64.whl",
-              "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
-              "repo": "rules_python_publish_deps_311",
-              "requirement": "charset-normalizer==3.0.1",
-              "sha256": "9ab77acb98eba3fd2a85cd160851816bfce6871d944d885febf012713f06659c",
-              "urls": [
-                "https://files.pythonhosted.org/packages/2e/7b/5053a4a46fac017fd2aea3dc9abdd9983fd4cef153b6eb6aedcb0d7cb6e3/charset_normalizer-3.0.1-cp311-cp311-win_amd64.whl"
-              ]
-            }
-          },
           "rules_python_publish_deps_311_importlib_metadata_sdist_e354bede": {
             "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
             "ruleClassName": "whl_library",
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "importlib_metadata-6.0.0.tar.gz",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5785,45 +5791,17 @@
               ]
             }
           },
-          "rules_python_publish_deps_311_charset_normalizer_cp311_cp311_macosx_11_0_arm64_87701167": {
-            "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
-            "ruleClassName": "whl_library",
-            "attributes": {
-              "dep_template": "@rules_python_publish_deps//{name}:{target}",
-              "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
-              ],
-              "filename": "charset_normalizer-3.0.1-cp311-cp311-macosx_11_0_arm64.whl",
-              "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
-              "repo": "rules_python_publish_deps_311",
-              "requirement": "charset-normalizer==3.0.1",
-              "sha256": "87701167f2a5c930b403e9756fab1d31d4d4da52856143b609e30a1ce7160f3c",
-              "urls": [
-                "https://files.pythonhosted.org/packages/02/49/78b4c1bc8b1b0e0fc66fb31ce30d8302f10a1412ba75de72c57532f0beb0/charset_normalizer-3.0.1-cp311-cp311-macosx_11_0_arm64.whl"
-              ]
-            }
-          },
           "rules_python_publish_deps_311_charset_normalizer_cp311_cp311_musllinux_1_1_x86_64_761e8904": {
             "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
             "ruleClassName": "whl_library",
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "charset_normalizer-3.0.1-cp311-cp311-musllinux_1_1_x86_64.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5841,11 +5819,11 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "certifi-2022.12.7-py3-none-any.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5863,11 +5841,11 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "jeepney-0.8.0-py3-none-any.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5885,11 +5863,11 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "SecretStorage-3.3.3-py3-none-any.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5907,11 +5885,11 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "idna-3.4-py3-none-any.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5929,11 +5907,11 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "cryptography-42.0.4-cp39-abi3-manylinux_2_28_x86_64.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5951,11 +5929,11 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "urllib3-1.26.14-py2.py3-none-any.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5973,9 +5951,9 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "urllib3-1.26.19.tar.gz",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -5993,14 +5971,11 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "charset_normalizer-3.0.1-py3-none-any.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6018,14 +5993,14 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "twine-4.0.2.tar.gz",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6043,7 +6018,7 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "windows_x86_64"
+                "cp311_windows_x86_64"
               ],
               "filename": "pywin32_ctypes-0.2.0-py2.py3-none-any.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6061,14 +6036,14 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "pkginfo-1.9.6-py3-none-any.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6086,11 +6061,11 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "cffi-1.15.1-cp311-cp311-musllinux_1_1_x86_64.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6108,11 +6083,11 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "cryptography-42.0.4.tar.gz",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6124,20 +6099,60 @@
               ]
             }
           },
+          "rules_python_publish_deps_311_charset_normalizer_sdist_f30c3cb3": {
+            "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "dep_template": "@rules_python_publish_deps//{name}:{target}",
+              "experimental_target_platforms": [
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
+              ],
+              "filename": "charset-normalizer-3.3.2.tar.gz",
+              "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
+              "repo": "rules_python_publish_deps_311",
+              "requirement": "charset-normalizer==3.3.2",
+              "sha256": "f30c3cb33b24454a82faecaf01b19c18562b1e89558fb6c56de4d9118a032fd5",
+              "urls": [
+                "https://files.pythonhosted.org/packages/63/09/c1bc53dab74b1816a00d8d030de5bf98f724c52c1635e07681d312f20be8/charset-normalizer-3.3.2.tar.gz"
+              ]
+            }
+          },
+          "rules_python_publish_deps_311_zipp_sdist_bf1dcf64": {
+            "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "dep_template": "@rules_python_publish_deps//{name}:{target}",
+              "experimental_target_platforms": [
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
+              ],
+              "filename": "zipp-3.19.2.tar.gz",
+              "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
+              "repo": "rules_python_publish_deps_311",
+              "requirement": "zipp==3.19.2",
+              "sha256": "bf1dcf6450f873a13e952a29504887c89e6de7506209e5b1bcc3460135d4de19",
+              "urls": [
+                "https://files.pythonhosted.org/packages/d3/20/b48f58857d98dcb78f9e30ed2cfe533025e2e9827bbd36ea0a64cc00cbc1/zipp-3.19.2.tar.gz"
+              ]
+            }
+          },
           "rules_python_publish_deps_311_mdurl_py3_none_any_84008a41": {
             "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
             "ruleClassName": "whl_library",
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "mdurl-0.1.2-py3-none-any.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6155,11 +6170,11 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "cryptography-42.0.4-cp39-abi3-musllinux_1_2_x86_64.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6177,14 +6192,14 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "more_itertools-9.0.0-py3-none-any.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6202,14 +6217,14 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "mdurl-0.1.2.tar.gz",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6227,14 +6242,14 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "keyring-23.13.1.tar.gz",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6252,14 +6267,14 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "rfc3986-2.0.0.tar.gz",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6271,20 +6286,40 @@
               ]
             }
           },
+          "rules_python_publish_deps_311_charset_normalizer_cp311_cp311_macosx_11_0_arm64_549a3a73": {
+            "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "dep_template": "@rules_python_publish_deps//{name}:{target}",
+              "experimental_target_platforms": [
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
+              ],
+              "filename": "charset_normalizer-3.3.2-cp311-cp311-macosx_11_0_arm64.whl",
+              "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
+              "repo": "rules_python_publish_deps_311",
+              "requirement": "charset-normalizer==3.3.2",
+              "sha256": "549a3a73da901d5bc3ce8d24e0600d1fa85524c10287f6004fbab87672bf3e1e",
+              "urls": [
+                "https://files.pythonhosted.org/packages/dd/51/68b61b90b24ca35495956b718f35a9756ef7d3dd4b3c1508056fa98d1a1b/charset_normalizer-3.3.2-cp311-cp311-macosx_11_0_arm64.whl"
+              ]
+            }
+          },
           "rules_python_publish_deps_311_six_py2_none_any_8abb2f1d": {
             "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
             "ruleClassName": "whl_library",
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "six-1.16.0-py2.py3-none-any.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6296,17 +6331,37 @@
               ]
             }
           },
+          "rules_python_publish_deps_311_charset_normalizer_py3_none_any_3e4d1f65": {
+            "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "dep_template": "@rules_python_publish_deps//{name}:{target}",
+              "experimental_target_platforms": [
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
+              ],
+              "filename": "charset_normalizer-3.3.2-py3-none-any.whl",
+              "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
+              "repo": "rules_python_publish_deps_311",
+              "requirement": "charset-normalizer==3.3.2",
+              "sha256": "3e4d1f6587322d2788836a99c69062fbb091331ec940e02d12d179c1d53e25fc",
+              "urls": [
+                "https://files.pythonhosted.org/packages/28/76/e6222113b83e3622caa4bb41032d0b1bf785250607392e1b778aca0b8a7d/charset_normalizer-3.3.2-py3-none-any.whl"
+              ]
+            }
+          },
           "rules_python_publish_deps_311_cryptography_cp39_abi3_manylinux_2_28_aarch64_1df6fcbf": {
             "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
             "ruleClassName": "whl_library",
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "cryptography-42.0.4-cp39-abi3-manylinux_2_28_aarch64.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6324,14 +6379,11 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "charset_normalizer-3.0.1-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6349,14 +6401,14 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "readme_renderer-37.3.tar.gz",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6374,14 +6426,14 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "markdown_it_py-2.1.0-py3-none-any.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6399,14 +6451,14 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "six-1.16.0.tar.gz",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6418,20 +6470,40 @@
               ]
             }
           },
+          "rules_python_publish_deps_311_certifi_sdist_5a1e7645": {
+            "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "dep_template": "@rules_python_publish_deps//{name}:{target}",
+              "experimental_target_platforms": [
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
+              ],
+              "filename": "certifi-2024.7.4.tar.gz",
+              "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
+              "repo": "rules_python_publish_deps_311",
+              "requirement": "certifi==2024.7.4",
+              "sha256": "5a1e7645bc0ec61a09e26c36f6106dd4cf40c6db3a1fb6352b0244e7fb057c7b",
+              "urls": [
+                "https://files.pythonhosted.org/packages/c2/02/a95f2b11e207f68bc64d7aae9666fed2e2b3f307748d5123dffb72a1bbea/certifi-2024.7.4.tar.gz"
+              ]
+            }
+          },
           "rules_python_publish_deps_311_twine_py3_none_any_929bc3c2": {
             "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
             "ruleClassName": "whl_library",
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "twine-4.0.2-py3-none-any.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6449,14 +6521,14 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "webencodings-0.5.1.tar.gz",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6474,14 +6546,11 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "charset_normalizer-3.0.1-cp311-cp311-musllinux_1_1_s390x.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6499,14 +6568,14 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "markdown-it-py-2.1.0.tar.gz",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6524,9 +6593,9 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "urllib3-1.26.19-py2.py3-none-any.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6544,14 +6613,11 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "charset_normalizer-3.0.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6569,11 +6635,11 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "idna-3.4.tar.gz",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6591,14 +6657,14 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "jaraco.classes-3.2.3-py3-none-any.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6616,11 +6682,11 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "pycparser-2.21-py2.py3-none-any.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6638,14 +6704,14 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "rich-13.2.0.tar.gz",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6663,7 +6729,7 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "windows_x86_64"
+                "cp311_windows_x86_64"
               ],
               "filename": "pywin32-ctypes-0.2.0.tar.gz",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6681,14 +6747,14 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "pkginfo-1.9.6.tar.gz",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6706,14 +6772,14 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "Pygments-2.14.0.tar.gz",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6725,40 +6791,17 @@
               ]
             }
           },
-          "rules_python_publish_deps_311_certifi_py3_none_any_92d60375": {
-            "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
-            "ruleClassName": "whl_library",
-            "attributes": {
-              "dep_template": "@rules_python_publish_deps//{name}:{target}",
-              "experimental_target_platforms": [
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
-              ],
-              "filename": "certifi-2023.7.22-py3-none-any.whl",
-              "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
-              "repo": "rules_python_publish_deps_311",
-              "requirement": "certifi==2023.7.22",
-              "sha256": "92d6037539857d8206b8f6ae472e8b77db8058fec5937a1ef3f54304089edbb9",
-              "urls": [
-                "https://files.pythonhosted.org/packages/4c/dd/2234eab22353ffc7d94e8d13177aaa050113286e93e7b40eae01fbf7c3d9/certifi-2023.7.22-py3-none-any.whl"
-              ]
-            }
-          },
           "rules_python_publish_deps_311_zipp_py3_none_any_83a28fcb": {
             "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
             "ruleClassName": "whl_library",
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "zipp-3.11.0-py3-none-any.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6770,45 +6813,20 @@
               ]
             }
           },
-          "rules_python_publish_deps_311_charset_normalizer_cp311_cp311_macosx_10_9_x86_64_a8d0fc94": {
-            "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
-            "ruleClassName": "whl_library",
-            "attributes": {
-              "dep_template": "@rules_python_publish_deps//{name}:{target}",
-              "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
-              ],
-              "filename": "charset_normalizer-3.0.1-cp311-cp311-macosx_10_9_x86_64.whl",
-              "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
-              "repo": "rules_python_publish_deps_311",
-              "requirement": "charset-normalizer==3.0.1",
-              "sha256": "a8d0fc946c784ff7f7c3742310cc8a57c5c6dc31631269876a88b809dbeff3d3",
-              "urls": [
-                "https://files.pythonhosted.org/packages/90/59/941e2e5ae6828a688c6437ad16e026eb3606d0cfdd13ea5c9090980f3ffd/charset_normalizer-3.0.1-cp311-cp311-macosx_10_9_x86_64.whl"
-              ]
-            }
-          },
           "rules_python_publish_deps_311_docutils_py3_none_any_5e1de4d8": {
             "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
             "ruleClassName": "whl_library",
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "docutils-0.19-py3-none-any.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6826,14 +6844,14 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "docutils-0.19.tar.gz",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6845,28 +6863,23 @@
               ]
             }
           },
-          "rules_python_publish_deps_311_charset_normalizer_cp311_cp311_macosx_10_9_universal2_0298eaff": {
+          "rules_python_publish_deps_311_charset_normalizer_cp311_cp311_win_amd64_66394663": {
             "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
             "ruleClassName": "whl_library",
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
-              "filename": "charset_normalizer-3.0.1-cp311-cp311-macosx_10_9_universal2.whl",
+              "filename": "charset_normalizer-3.3.2-cp311-cp311-win_amd64.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
               "repo": "rules_python_publish_deps_311",
-              "requirement": "charset-normalizer==3.0.1",
-              "sha256": "0298eafff88c99982a4cf66ba2efa1128e4ddaca0b05eec4c456bbc7db691d8d",
+              "requirement": "charset-normalizer==3.3.2",
+              "sha256": "663946639d296df6a2bb2aa51b60a2454ca1cb29835324c640dafb5ff2131a77",
               "urls": [
-                "https://files.pythonhosted.org/packages/37/00/ca188e0a2b3cd3184cdd2521b8765cf579327d128caa8aedc3dc7614020a/charset_normalizer-3.0.1-cp311-cp311-macosx_10_9_universal2.whl"
+                "https://files.pythonhosted.org/packages/57/ec/80c8d48ac8b1741d5b963797b7c0c869335619e13d4744ca2f67fc11c6fc/charset_normalizer-3.3.2-cp311-cp311-win_amd64.whl"
               ]
             }
           },
@@ -6876,9 +6889,9 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "idna-3.7.tar.gz",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6896,11 +6909,11 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "jeepney-0.8.0.tar.gz",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6912,20 +6925,40 @@
               ]
             }
           },
+          "rules_python_publish_deps_311_zipp_py3_none_any_f091755f": {
+            "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "dep_template": "@rules_python_publish_deps//{name}:{target}",
+              "experimental_target_platforms": [
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
+              ],
+              "filename": "zipp-3.19.2-py3-none-any.whl",
+              "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
+              "repo": "rules_python_publish_deps_311",
+              "requirement": "zipp==3.19.2",
+              "sha256": "f091755f667055f2d02b32c53771a7a6c8b47e1fdbc4b72a8b9072b3eef8015c",
+              "urls": [
+                "https://files.pythonhosted.org/packages/20/38/f5c473fe9b90c8debdd29ea68d5add0289f1936d6f923b6b9cc0b931194c/zipp-3.19.2-py3-none-any.whl"
+              ]
+            }
+          },
           "rules_python_publish_deps_311_requests_toolbelt_sdist_62e09f7f": {
             "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
             "ruleClassName": "whl_library",
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "requests-toolbelt-0.10.1.tar.gz",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6937,40 +6970,17 @@
               ]
             }
           },
-          "rules_python_publish_deps_311_certifi_sdist_539cc1d1": {
-            "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
-            "ruleClassName": "whl_library",
-            "attributes": {
-              "dep_template": "@rules_python_publish_deps//{name}:{target}",
-              "experimental_target_platforms": [
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
-              ],
-              "filename": "certifi-2023.7.22.tar.gz",
-              "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
-              "repo": "rules_python_publish_deps_311",
-              "requirement": "certifi==2023.7.22",
-              "sha256": "539cc1d13202e33ca466e88b2807e29f4c13049d6d87031a3c110744495cb082",
-              "urls": [
-                "https://files.pythonhosted.org/packages/98/98/c2ff18671db109c9f10ed27f5ef610ae05b73bd876664139cf95bd1429aa/certifi-2023.7.22.tar.gz"
-              ]
-            }
-          },
           "rules_python_publish_deps_311_charset_normalizer_cp311_cp311_manylinux_2_17_ppc64le_0c0a5902": {
             "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
             "ruleClassName": "whl_library",
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "charset_normalizer-3.0.1-cp311-cp311-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -6988,14 +6998,14 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "rfc3986-2.0.0-py2.py3-none-any.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -7013,14 +7023,14 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "requests-2.28.2.tar.gz",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -7040,18 +7050,18 @@
               "whl_map": {
                 "six": "[{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"six-1.16.0-py2.py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_six_py2_none_any_8abb2f1d\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"six-1.16.0.tar.gz\",\"repo\":\"rules_python_publish_deps_311_six_sdist_1e61c374\",\"target_platforms\":null,\"version\":\"3.11\"}]",
                 "cffi": "[{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"cffi-1.15.1-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl\",\"repo\":\"rules_python_publish_deps_311_cffi_cp311_cp311_manylinux_2_17_aarch64_3548db28\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"cffi-1.15.1-cp311-cp311-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl\",\"repo\":\"rules_python_publish_deps_311_cffi_cp311_cp311_manylinux_2_17_ppc64le_91fc98ad\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"cffi-1.15.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl\",\"repo\":\"rules_python_publish_deps_311_cffi_cp311_cp311_manylinux_2_17_x86_64_94411f22\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"cffi-1.15.1-cp311-cp311-musllinux_1_1_x86_64.whl\",\"repo\":\"rules_python_publish_deps_311_cffi_cp311_cp311_musllinux_1_1_x86_64_cc4d65ae\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"cffi-1.15.1.tar.gz\",\"repo\":\"rules_python_publish_deps_311_cffi_sdist_d400bfb9\",\"target_platforms\":null,\"version\":\"3.11\"}]",
-                "idna": "[{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"idna-3.4-py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_idna_py3_none_any_90b77e79\",\"target_platforms\":[\"linux_aarch64\",\"linux_arm\",\"linux_ppc\",\"linux_s390x\",\"linux_x86_64\"],\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"idna-3.4.tar.gz\",\"repo\":\"rules_python_publish_deps_311_idna_sdist_814f528e\",\"target_platforms\":[\"linux_aarch64\",\"linux_arm\",\"linux_ppc\",\"linux_s390x\",\"linux_x86_64\"],\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"idna-3.7-py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_idna_py3_none_any_82fee1fc\",\"target_platforms\":[\"osx_aarch64\",\"osx_x86_64\",\"windows_x86_64\"],\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"idna-3.7.tar.gz\",\"repo\":\"rules_python_publish_deps_311_idna_sdist_028ff3aa\",\"target_platforms\":[\"osx_aarch64\",\"osx_x86_64\",\"windows_x86_64\"],\"version\":\"3.11\"}]",
+                "idna": "[{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"idna-3.4-py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_idna_py3_none_any_90b77e79\",\"target_platforms\":[\"cp311_linux_aarch64\",\"cp311_linux_arm\",\"cp311_linux_ppc\",\"cp311_linux_s390x\",\"cp311_linux_x86_64\"],\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"idna-3.4.tar.gz\",\"repo\":\"rules_python_publish_deps_311_idna_sdist_814f528e\",\"target_platforms\":[\"cp311_linux_aarch64\",\"cp311_linux_arm\",\"cp311_linux_ppc\",\"cp311_linux_s390x\",\"cp311_linux_x86_64\"],\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"idna-3.7-py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_idna_py3_none_any_82fee1fc\",\"target_platforms\":[\"cp311_osx_aarch64\",\"cp311_osx_x86_64\",\"cp311_windows_x86_64\"],\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"idna-3.7.tar.gz\",\"repo\":\"rules_python_publish_deps_311_idna_sdist_028ff3aa\",\"target_platforms\":[\"cp311_osx_aarch64\",\"cp311_osx_x86_64\",\"cp311_windows_x86_64\"],\"version\":\"3.11\"}]",
                 "rich": "[{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"rich-13.2.0-py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_rich_py3_none_any_7c963f0d\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"rich-13.2.0.tar.gz\",\"repo\":\"rules_python_publish_deps_311_rich_sdist_f1a00cdd\",\"target_platforms\":null,\"version\":\"3.11\"}]",
-                "zipp": "[{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"zipp-3.11.0-py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_zipp_py3_none_any_83a28fcb\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"zipp-3.11.0.tar.gz\",\"repo\":\"rules_python_publish_deps_311_zipp_sdist_a7a22e05\",\"target_platforms\":null,\"version\":\"3.11\"}]",
+                "zipp": "[{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"zipp-3.11.0-py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_zipp_py3_none_any_83a28fcb\",\"target_platforms\":[\"cp311_linux_aarch64\",\"cp311_linux_arm\",\"cp311_linux_ppc\",\"cp311_linux_s390x\",\"cp311_linux_x86_64\"],\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"zipp-3.11.0.tar.gz\",\"repo\":\"rules_python_publish_deps_311_zipp_sdist_a7a22e05\",\"target_platforms\":[\"cp311_linux_aarch64\",\"cp311_linux_arm\",\"cp311_linux_ppc\",\"cp311_linux_s390x\",\"cp311_linux_x86_64\"],\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"zipp-3.19.2-py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_zipp_py3_none_any_f091755f\",\"target_platforms\":[\"cp311_osx_aarch64\",\"cp311_osx_x86_64\",\"cp311_windows_x86_64\"],\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"zipp-3.19.2.tar.gz\",\"repo\":\"rules_python_publish_deps_311_zipp_sdist_bf1dcf64\",\"target_platforms\":[\"cp311_osx_aarch64\",\"cp311_osx_x86_64\",\"cp311_windows_x86_64\"],\"version\":\"3.11\"}]",
                 "mdurl": "[{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"mdurl-0.1.2-py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_mdurl_py3_none_any_84008a41\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"mdurl-0.1.2.tar.gz\",\"repo\":\"rules_python_publish_deps_311_mdurl_sdist_bb413d29\",\"target_platforms\":null,\"version\":\"3.11\"}]",
                 "twine": "[{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"twine-4.0.2-py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_twine_py3_none_any_929bc3c2\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"twine-4.0.2.tar.gz\",\"repo\":\"rules_python_publish_deps_311_twine_sdist_9e102ef5\",\"target_platforms\":null,\"version\":\"3.11\"}]",
                 "bleach": "[{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"bleach-6.0.0-py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_bleach_py3_none_any_33c16e33\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"bleach-6.0.0.tar.gz\",\"repo\":\"rules_python_publish_deps_311_bleach_sdist_1a1a85c1\",\"target_platforms\":null,\"version\":\"3.11\"}]",
-                "certifi": "[{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"certifi-2022.12.7-py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_certifi_py3_none_any_4ad3232f\",\"target_platforms\":[\"linux_aarch64\",\"linux_arm\",\"linux_ppc\",\"linux_s390x\",\"linux_x86_64\"],\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"certifi-2022.12.7.tar.gz\",\"repo\":\"rules_python_publish_deps_311_certifi_sdist_35824b4c\",\"target_platforms\":[\"linux_aarch64\",\"linux_arm\",\"linux_ppc\",\"linux_s390x\",\"linux_x86_64\"],\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"certifi-2023.7.22-py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_certifi_py3_none_any_92d60375\",\"target_platforms\":[\"osx_aarch64\",\"osx_x86_64\",\"windows_x86_64\"],\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"certifi-2023.7.22.tar.gz\",\"repo\":\"rules_python_publish_deps_311_certifi_sdist_539cc1d1\",\"target_platforms\":[\"osx_aarch64\",\"osx_x86_64\",\"windows_x86_64\"],\"version\":\"3.11\"}]",
+                "certifi": "[{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"certifi-2022.12.7-py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_certifi_py3_none_any_4ad3232f\",\"target_platforms\":[\"cp311_linux_aarch64\",\"cp311_linux_arm\",\"cp311_linux_ppc\",\"cp311_linux_s390x\",\"cp311_linux_x86_64\"],\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"certifi-2022.12.7.tar.gz\",\"repo\":\"rules_python_publish_deps_311_certifi_sdist_35824b4c\",\"target_platforms\":[\"cp311_linux_aarch64\",\"cp311_linux_arm\",\"cp311_linux_ppc\",\"cp311_linux_s390x\",\"cp311_linux_x86_64\"],\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"certifi-2024.7.4-py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_certifi_py3_none_any_c198e21b\",\"target_platforms\":[\"cp311_osx_aarch64\",\"cp311_osx_x86_64\",\"cp311_windows_x86_64\"],\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"certifi-2024.7.4.tar.gz\",\"repo\":\"rules_python_publish_deps_311_certifi_sdist_5a1e7645\",\"target_platforms\":[\"cp311_osx_aarch64\",\"cp311_osx_x86_64\",\"cp311_windows_x86_64\"],\"version\":\"3.11\"}]",
                 "jeepney": "[{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"jeepney-0.8.0-py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_jeepney_py3_none_any_c0a454ad\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"jeepney-0.8.0.tar.gz\",\"repo\":\"rules_python_publish_deps_311_jeepney_sdist_5efe48d2\",\"target_platforms\":null,\"version\":\"3.11\"}]",
                 "keyring": "[{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"keyring-23.13.1-py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_keyring_py3_none_any_771ed2a9\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"keyring-23.13.1.tar.gz\",\"repo\":\"rules_python_publish_deps_311_keyring_sdist_ba2e15a9\",\"target_platforms\":null,\"version\":\"3.11\"}]",
                 "pkginfo": "[{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"pkginfo-1.9.6-py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_pkginfo_py3_none_any_4b7a555a\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"pkginfo-1.9.6.tar.gz\",\"repo\":\"rules_python_publish_deps_311_pkginfo_sdist_8fd5896e\",\"target_platforms\":null,\"version\":\"3.11\"}]",
                 "rfc3986": "[{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"rfc3986-2.0.0-py2.py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_rfc3986_py2_none_any_50b1502b\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"rfc3986-2.0.0.tar.gz\",\"repo\":\"rules_python_publish_deps_311_rfc3986_sdist_97aacf9d\",\"target_platforms\":null,\"version\":\"3.11\"}]",
-                "urllib3": "[{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"urllib3-1.26.14-py2.py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_urllib3_py2_none_any_75edcdc2\",\"target_platforms\":[\"linux_aarch64\",\"linux_arm\",\"linux_ppc\",\"linux_s390x\",\"linux_x86_64\"],\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"urllib3-1.26.14.tar.gz\",\"repo\":\"rules_python_publish_deps_311_urllib3_sdist_076907bf\",\"target_platforms\":[\"linux_aarch64\",\"linux_arm\",\"linux_ppc\",\"linux_s390x\",\"linux_x86_64\"],\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"urllib3-1.26.19-py2.py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_urllib3_py2_none_any_37a03444\",\"target_platforms\":[\"osx_aarch64\",\"osx_x86_64\",\"windows_x86_64\"],\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"urllib3-1.26.19.tar.gz\",\"repo\":\"rules_python_publish_deps_311_urllib3_sdist_3e3d753a\",\"target_platforms\":[\"osx_aarch64\",\"osx_x86_64\",\"windows_x86_64\"],\"version\":\"3.11\"}]",
+                "urllib3": "[{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"urllib3-1.26.14-py2.py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_urllib3_py2_none_any_75edcdc2\",\"target_platforms\":[\"cp311_linux_aarch64\",\"cp311_linux_arm\",\"cp311_linux_ppc\",\"cp311_linux_s390x\",\"cp311_linux_x86_64\"],\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"urllib3-1.26.14.tar.gz\",\"repo\":\"rules_python_publish_deps_311_urllib3_sdist_076907bf\",\"target_platforms\":[\"cp311_linux_aarch64\",\"cp311_linux_arm\",\"cp311_linux_ppc\",\"cp311_linux_s390x\",\"cp311_linux_x86_64\"],\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"urllib3-1.26.19-py2.py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_urllib3_py2_none_any_37a03444\",\"target_platforms\":[\"cp311_osx_aarch64\",\"cp311_osx_x86_64\",\"cp311_windows_x86_64\"],\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"urllib3-1.26.19.tar.gz\",\"repo\":\"rules_python_publish_deps_311_urllib3_sdist_3e3d753a\",\"target_platforms\":[\"cp311_osx_aarch64\",\"cp311_osx_x86_64\",\"cp311_windows_x86_64\"],\"version\":\"3.11\"}]",
                 "docutils": "[{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"docutils-0.19-py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_docutils_py3_none_any_5e1de4d8\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"docutils-0.19.tar.gz\",\"repo\":\"rules_python_publish_deps_311_docutils_sdist_33995a67\",\"target_platforms\":null,\"version\":\"3.11\"}]",
                 "pygments": "[{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"Pygments-2.14.0-py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_pygments_py3_none_any_fa7bd7bd\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"Pygments-2.14.0.tar.gz\",\"repo\":\"rules_python_publish_deps_311_pygments_sdist_b3ed06a9\",\"target_platforms\":null,\"version\":\"3.11\"}]",
                 "requests": "[{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"requests-2.28.2-py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_requests_py3_none_any_64299f49\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"requests-2.28.2.tar.gz\",\"repo\":\"rules_python_publish_deps_311_requests_sdist_98b1b278\",\"target_platforms\":null,\"version\":\"3.11\"}]",
@@ -7064,7 +7074,7 @@
                 "more_itertools": "[{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"more_itertools-9.0.0-py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_more_itertools_py3_none_any_250e83d7\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"more-itertools-9.0.0.tar.gz\",\"repo\":\"rules_python_publish_deps_311_more_itertools_sdist_5a6257e4\",\"target_platforms\":null,\"version\":\"3.11\"}]",
                 "readme_renderer": "[{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"readme_renderer-37.3-py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_readme_renderer_py3_none_any_f67a16ca\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"readme_renderer-37.3.tar.gz\",\"repo\":\"rules_python_publish_deps_311_readme_renderer_sdist_cd653186\",\"target_platforms\":null,\"version\":\"3.11\"}]",
                 "requests_toolbelt": "[{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"requests_toolbelt-0.10.1-py2.py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_requests_toolbelt_py2_none_any_18565aa5\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"requests-toolbelt-0.10.1.tar.gz\",\"repo\":\"rules_python_publish_deps_311_requests_toolbelt_sdist_62e09f7f\",\"target_platforms\":null,\"version\":\"3.11\"}]",
-                "charset_normalizer": "[{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"charset_normalizer-3.0.1-cp311-cp311-macosx_10_9_universal2.whl\",\"repo\":\"rules_python_publish_deps_311_charset_normalizer_cp311_cp311_macosx_10_9_universal2_0298eaff\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"charset_normalizer-3.0.1-cp311-cp311-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl\",\"repo\":\"rules_python_publish_deps_311_charset_normalizer_cp311_cp311_manylinux_2_17_ppc64le_0c0a5902\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"charset_normalizer-3.0.1-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl\",\"repo\":\"rules_python_publish_deps_311_charset_normalizer_cp311_cp311_manylinux_2_17_aarch64_14e76c0f\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"charset_normalizer-3.0.1-cp311-cp311-musllinux_1_1_s390x.whl\",\"repo\":\"rules_python_publish_deps_311_charset_normalizer_cp311_cp311_musllinux_1_1_s390x_4a8fcf28\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"charset_normalizer-3.0.1-cp311-cp311-musllinux_1_1_ppc64le.whl\",\"repo\":\"rules_python_publish_deps_311_charset_normalizer_cp311_cp311_musllinux_1_1_ppc64le_5995f016\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"charset_normalizer-3.0.1-cp311-cp311-musllinux_1_1_aarch64.whl\",\"repo\":\"rules_python_publish_deps_311_charset_normalizer_cp311_cp311_musllinux_1_1_aarch64_72966d1b\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"charset_normalizer-3.0.1-cp311-cp311-musllinux_1_1_x86_64.whl\",\"repo\":\"rules_python_publish_deps_311_charset_normalizer_cp311_cp311_musllinux_1_1_x86_64_761e8904\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"charset_normalizer-3.0.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl\",\"repo\":\"rules_python_publish_deps_311_charset_normalizer_cp311_cp311_manylinux_2_17_x86_64_79909e27\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"charset_normalizer-3.0.1-py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_charset_normalizer_py3_none_any_7e189e2e\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"charset_normalizer-3.0.1-cp311-cp311-macosx_11_0_arm64.whl\",\"repo\":\"rules_python_publish_deps_311_charset_normalizer_cp311_cp311_macosx_11_0_arm64_87701167\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"charset_normalizer-3.0.1-cp311-cp311-manylinux_2_17_s390x.manylinux2014_s390x.whl\",\"repo\":\"rules_python_publish_deps_311_charset_normalizer_cp311_cp311_manylinux_2_17_s390x_8c7fe7af\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"charset_normalizer-3.0.1-cp311-cp311-win_amd64.whl\",\"repo\":\"rules_python_publish_deps_311_charset_normalizer_cp311_cp311_win_amd64_9ab77acb\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"charset_normalizer-3.0.1-cp311-cp311-macosx_10_9_x86_64.whl\",\"repo\":\"rules_python_publish_deps_311_charset_normalizer_cp311_cp311_macosx_10_9_x86_64_a8d0fc94\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"charset-normalizer-3.0.1.tar.gz\",\"repo\":\"rules_python_publish_deps_311_charset_normalizer_sdist_ebea339a\",\"target_platforms\":null,\"version\":\"3.11\"}]",
+                "charset_normalizer": "[{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"charset_normalizer-3.0.1-cp311-cp311-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl\",\"repo\":\"rules_python_publish_deps_311_charset_normalizer_cp311_cp311_manylinux_2_17_ppc64le_0c0a5902\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"charset_normalizer-3.0.1-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl\",\"repo\":\"rules_python_publish_deps_311_charset_normalizer_cp311_cp311_manylinux_2_17_aarch64_14e76c0f\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"charset_normalizer-3.0.1-cp311-cp311-musllinux_1_1_s390x.whl\",\"repo\":\"rules_python_publish_deps_311_charset_normalizer_cp311_cp311_musllinux_1_1_s390x_4a8fcf28\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"charset_normalizer-3.0.1-cp311-cp311-musllinux_1_1_ppc64le.whl\",\"repo\":\"rules_python_publish_deps_311_charset_normalizer_cp311_cp311_musllinux_1_1_ppc64le_5995f016\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"charset_normalizer-3.0.1-cp311-cp311-musllinux_1_1_aarch64.whl\",\"repo\":\"rules_python_publish_deps_311_charset_normalizer_cp311_cp311_musllinux_1_1_aarch64_72966d1b\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"charset_normalizer-3.0.1-cp311-cp311-musllinux_1_1_x86_64.whl\",\"repo\":\"rules_python_publish_deps_311_charset_normalizer_cp311_cp311_musllinux_1_1_x86_64_761e8904\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"charset_normalizer-3.0.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl\",\"repo\":\"rules_python_publish_deps_311_charset_normalizer_cp311_cp311_manylinux_2_17_x86_64_79909e27\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"charset_normalizer-3.0.1-py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_charset_normalizer_py3_none_any_7e189e2e\",\"target_platforms\":[\"cp311_linux_aarch64\",\"cp311_linux_arm\",\"cp311_linux_ppc\",\"cp311_linux_s390x\",\"cp311_linux_x86_64\"],\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"charset_normalizer-3.0.1-cp311-cp311-manylinux_2_17_s390x.manylinux2014_s390x.whl\",\"repo\":\"rules_python_publish_deps_311_charset_normalizer_cp311_cp311_manylinux_2_17_s390x_8c7fe7af\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"charset-normalizer-3.0.1.tar.gz\",\"repo\":\"rules_python_publish_deps_311_charset_normalizer_sdist_ebea339a\",\"target_platforms\":[\"cp311_linux_aarch64\",\"cp311_linux_arm\",\"cp311_linux_ppc\",\"cp311_linux_s390x\",\"cp311_linux_x86_64\"],\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"charset_normalizer-3.3.2-py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_charset_normalizer_py3_none_any_3e4d1f65\",\"target_platforms\":[\"cp311_osx_aarch64\",\"cp311_osx_x86_64\",\"cp311_windows_x86_64\"],\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"charset_normalizer-3.3.2-cp311-cp311-macosx_11_0_arm64.whl\",\"repo\":\"rules_python_publish_deps_311_charset_normalizer_cp311_cp311_macosx_11_0_arm64_549a3a73\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"charset_normalizer-3.3.2-cp311-cp311-macosx_10_9_x86_64.whl\",\"repo\":\"rules_python_publish_deps_311_charset_normalizer_cp311_cp311_macosx_10_9_x86_64_573f6eac\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"charset_normalizer-3.3.2-cp311-cp311-win_amd64.whl\",\"repo\":\"rules_python_publish_deps_311_charset_normalizer_cp311_cp311_win_amd64_66394663\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"charset_normalizer-3.3.2-cp311-cp311-macosx_10_9_universal2.whl\",\"repo\":\"rules_python_publish_deps_311_charset_normalizer_cp311_cp311_macosx_10_9_universal2_802fe99c\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"charset-normalizer-3.3.2.tar.gz\",\"repo\":\"rules_python_publish_deps_311_charset_normalizer_sdist_f30c3cb3\",\"target_platforms\":[\"cp311_osx_aarch64\",\"cp311_osx_x86_64\",\"cp311_windows_x86_64\"],\"version\":\"3.11\"}]",
                 "importlib_metadata": "[{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"importlib_metadata-6.0.0-py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_importlib_metadata_py3_none_any_7efb448e\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"importlib_metadata-6.0.0.tar.gz\",\"repo\":\"rules_python_publish_deps_311_importlib_metadata_sdist_e354bede\",\"target_platforms\":null,\"version\":\"3.11\"}]",
                 "pywin32_ctypes": "[{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"pywin32_ctypes-0.2.0-py2.py3-none-any.whl\",\"repo\":\"rules_python_publish_deps_311_pywin32_ctypes_py2_none_any_9dc2d991\",\"target_platforms\":null,\"version\":\"3.11\"},{\"config_setting\":\"//_config:is_python_3.11\",\"filename\":\"pywin32-ctypes-0.2.0.tar.gz\",\"repo\":\"rules_python_publish_deps_311_pywin32_ctypes_sdist_24ffc3b3\",\"target_platforms\":null,\"version\":\"3.11\"}]"
               },
@@ -7103,14 +7113,14 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "webencodings-0.5.1-py2.py3-none-any.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -7128,14 +7138,11 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "charset-normalizer-3.0.1.tar.gz",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -7153,14 +7160,11 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "charset_normalizer-3.0.1-cp311-cp311-musllinux_1_1_aarch64.whl",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -7172,17 +7176,37 @@
               ]
             }
           },
+          "rules_python_publish_deps_311_charset_normalizer_cp311_cp311_macosx_10_9_x86_64_573f6eac": {
+            "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "dep_template": "@rules_python_publish_deps//{name}:{target}",
+              "experimental_target_platforms": [
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
+              ],
+              "filename": "charset_normalizer-3.3.2-cp311-cp311-macosx_10_9_x86_64.whl",
+              "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
+              "repo": "rules_python_publish_deps_311",
+              "requirement": "charset-normalizer==3.3.2",
+              "sha256": "573f6eac48f4769d667c4442081b1794f52919e7edada77495aaed9236d13a96",
+              "urls": [
+                "https://files.pythonhosted.org/packages/3e/33/21a875a61057165e92227466e54ee076b73af1e21fe1b31f1e292251aa1e/charset_normalizer-3.3.2-cp311-cp311-macosx_10_9_x86_64.whl"
+              ]
+            }
+          },
           "rules_python_publish_deps_311_pycparser_sdist_e644fdec": {
             "bzlFile": "@@rules_python~//python/private/pypi:whl_library.bzl",
             "ruleClassName": "whl_library",
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64"
               ],
               "filename": "pycparser-2.21.tar.gz",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -7200,14 +7224,14 @@
             "attributes": {
               "dep_template": "@rules_python_publish_deps//{name}:{target}",
               "experimental_target_platforms": [
-                "linux_aarch64",
-                "linux_arm",
-                "linux_ppc",
-                "linux_s390x",
-                "linux_x86_64",
-                "osx_aarch64",
-                "osx_x86_64",
-                "windows_x86_64"
+                "cp311_linux_aarch64",
+                "cp311_linux_arm",
+                "cp311_linux_ppc",
+                "cp311_linux_s390x",
+                "cp311_linux_x86_64",
+                "cp311_osx_aarch64",
+                "cp311_osx_x86_64",
+                "cp311_windows_x86_64"
               ],
               "filename": "bleach-6.0.0.tar.gz",
               "python_interpreter_target": "@@rules_python~~python~python_3_11_host//:python",
@@ -7235,6 +7259,11 @@
             "rules_python~",
             "bazel_features",
             "bazel_features~"
+          ],
+          [
+            "rules_python~",
+            "bazel_skylib",
+            "bazel_skylib~"
           ],
           [
             "rules_python~",

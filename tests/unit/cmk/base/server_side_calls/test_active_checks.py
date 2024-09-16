@@ -71,6 +71,45 @@ HOST_CONFIG_WITH_MACROS = HostConfig(
 )
 
 
+TEST_PLUGIN_STORE = {
+    PluginLocation(
+        # this is not what we'd expect here, but we need a module that we know to be importable.
+        f"{__name__}",
+        "active_check_my_active_check",
+    ): ActiveCheckConfig(
+        name="my_active_check",
+        parameter_parser=lambda p: p,
+        commands_function=lambda p, *_: (
+            [
+                ActiveCheckCommand(
+                    service_description="My service",
+                    command_arguments=sum(p.items(), ()),
+                ),
+            ]
+        ),
+    )
+}
+
+
+def test_get_active_service_data_respects_finalizer(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setitem(password_store.hack.HACK_CHECKS, "my_active_check", False)
+    active_check = ActiveCheck(
+        TEST_PLUGIN_STORE,
+        HostName("myhost"),
+        HOST_CONFIG,
+        HOST_ATTRS,
+        http_proxies={},
+        service_name_finalizer=lambda x: x.upper(),
+        stored_passwords={},
+        password_store_file=Path("/pw/store"),
+    )
+
+    service = next(active_check.get_active_service_data([("my_active_check", [{}])]))
+    assert service.description == "MY SERVICE"
+
+
 def argument_function_with_exception(*args, **kwargs):
     raise Exception("Can't create argument list")
 

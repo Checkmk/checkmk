@@ -120,7 +120,7 @@ class ActiveCheck:
         return ActiveServiceData(
             plugin_name=active_check.name,
             configuration=conf_dict,
-            description=service.service_description,
+            description=self._service_name_finalizer(service.service_description),
             command_name=f"check_mk_active-{active_check.name}",
             command=(detected_executable, *arguments),
         )

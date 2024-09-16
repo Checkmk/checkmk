@@ -12,7 +12,7 @@
 
 import socket
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from email.message import Message
 from email.mime.application import MIMEApplication
 from email.mime.image import MIMEImage
@@ -20,9 +20,12 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import Literal, NamedTuple, NoReturn
 
+from jinja2 import Environment, FileSystemLoader
+
 from cmk.ccc.exceptions import MKException
 
 from cmk.utils.mail import default_from_address, MailString, send_mail_sendmail, set_mail_headers
+from cmk.utils.paths import omd_root, web_dir
 
 from cmk.notification_plugins import utils
 from cmk.notification_plugins.utils import render_cmk_graphs
@@ -490,17 +493,23 @@ class GraphException(MKException):
     pass
 
 
-class AttachmentNamedTuple(NamedTuple):
+class Attachment(NamedTuple):
     what: Literal["img"]
     name: str
     contents: bytes | str
     how: str
 
 
-# Keeping this for compatibility reasons
-AttachmentUnNamedTuple = tuple[str, str, bytes | str, str]
-AttachmentTuple = AttachmentNamedTuple | AttachmentUnNamedTuple
-AttachmentList = list[AttachmentTuple]
+class TemplateRenderer:
+    def __init__(self) -> None:
+        self.env = Environment(
+            loader=FileSystemLoader(omd_root / "share/check_mk/notifications/templates/mail"),
+            autoescape=True,
+        )
+
+    def render_template(self, template_file: str, data: dict[str, object]) -> str:
+        template = self.env.get_template(template_file)
+        return template.render(data)
 
 
 # TODO: Just use a single EmailContent parameter.
@@ -511,7 +520,7 @@ def multipart_mail(
     reply_to: str,
     content_txt: str,
     content_html: str,
-    attach: AttachmentList | None = None,
+    attach: Sequence[Attachment] | None = None,
 ) -> MIMEMultipart:
     if attach is None:
         attach = []
@@ -699,29 +708,22 @@ def send_mail(message: Message, target: str, from_address: str, context: dict[st
     return 0
 
 
-def render_performance_graphs(context: dict[str, str]) -> tuple[AttachmentList, str]:
-    attachments: AttachmentList = []
-    graph_code = ""
+def render_performance_graphs(
+    context: dict[str, str],
+) -> tuple[list[Attachment], list[str]]:
+    attachments: list[Attachment] = []
+    file_names = []
     for graph in render_cmk_graphs(context):
-        attachments.append(AttachmentNamedTuple("img", graph.filename, graph.data, "inline"))
+        attachments.append(Attachment("img", graph.filename, graph.data, "inline"))
 
-        cls = ""
-        if context.get("PARAMETER_NO_FLOATING_GRAPHS"):
-            cls = ' class="nofloat"'
-        graph_code += f'<img src="cid:{graph.filename}"{cls} />'
+        file_names.append(graph.filename)
 
-    if graph_code:
-        graph_code = (
-            "<tr><th colspan=2>Graphs</th></tr>"
-            '<tr class="even0"><td colspan=2 class=graphs>%s</td></tr>' % graph_code
-        )
-
-    return attachments, graph_code
+    return attachments, file_names
 
 
 def construct_content(
     context: dict[str, str], is_bulk: bool = False, notification_number: int = 1
-) -> tuple[str, str, AttachmentList]:
+) -> tuple[str, str, list[Attachment]]:
     # A list of optional information is configurable via the parameter "elements"
     # (new configuration style)
     # Note: The value PARAMETER_ELEMENTSS is NO TYPO.
@@ -746,12 +748,12 @@ def construct_content(
     content_txt = utils.substitute_context(template_txt, context)
     content_html = utils.substitute_context(template_html, context)
 
-    attachments: AttachmentList = []
+    attachments: list[Attachment] = []
+    file_names: list[str] = []
     if "graph" in elements and "ALERTHANDLEROUTPUT" not in context:
         # Add Checkmk graphs
         try:
-            attachments, graph_code = render_performance_graphs(context)
-            content_html += graph_code
+            attachments, file_names = render_performance_graphs(context)
         except Exception as e:
             sys.stderr.write("Failed to add graphs to mail. Continue without them. (%s)\n" % e)
 
@@ -765,7 +767,14 @@ def construct_content(
         + utils.substitute_context(TMPL_FOOT_HTML, context)
     )
 
-    return content_txt, content_html, attachments
+    return (
+        content_txt,
+        TemplateRenderer().render_template(
+            "html_email.html",
+            {"data": context, "graphs": file_names},
+        ),
+        attachments,
+    )
 
 
 def extend_context(context: dict[str, str]) -> None:
@@ -902,7 +911,7 @@ class EmailContent:
         reply_to: str,
         content_txt: str,
         content_html: str,
-        attachments: AttachmentList,
+        attachments: Sequence[Attachment],
     ) -> None:
         self.context = context
         self.mailto = mailto
@@ -970,6 +979,17 @@ class SingleEmailContent(EmailContent):
         extend_context(escaped_context)
         content_txt, content_html, attachments = construct_content(escaped_context)
 
+        for icon in [
+            "checkmk_logo.png",
+            "additional.png",
+            "vector.png",
+            "label.png",
+            "graph.png",
+            "overview.png",
+            "contact_groups.png",
+        ]:
+            attachments.append(attach_file(icon=icon))
+
         # TODO: cleanup duplicate code with BulkEmailContent
         # TODO: the context is only needed because of SMPT settings used in send_mail
         super().__init__(
@@ -988,6 +1008,11 @@ class SingleEmailContent(EmailContent):
             content_html=content_html,
             attachments=attachments,
         )
+
+
+def attach_file(icon: str) -> Attachment:
+    with open(web_dir + f"/htdocs/images/icons/{icon}", "rb") as file:
+        return Attachment(what="img", name=icon, contents=file.read(), how="inline")
 
 
 def main() -> NoReturn:

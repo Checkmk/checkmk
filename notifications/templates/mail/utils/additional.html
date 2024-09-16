@@ -4,77 +4,102 @@ title, key) %}
     <td {{ style_macros.td_first_child(width="170px" ) }}>{{ title }}:</td>
     <td {{ style_macros.td_last_child() }}>{{ data[key] }}</td>
 </tr>
-{% endmacro %} {% macro additional_information(data, service_notification) %}
-{%for element in data.PARAMETER_ELEMENTSS.split(' ') %} {% if element
-=="ack_author" %} {% if service_notification %} {{
-additional_tr(data,"Acknowledgment author", "data.SERVICEACKAUTHOR") }} {% else
-%} {{additional_tr(data, "Acknowledgment author", "data.HOSTACKAUTHOR") }} {%
-endif %} {% elif element == "ack_comment" %} {% if service_notification %}
-{{additional_tr(data, "Acknowledgment comment", "data.SERVICEACKCOMMENT") }}
-{%else %} {{ additional_tr(data, "Acknowledgment comment",
-"data.HOSTACKCOMMENT")}} {% endif %} {% elif element == "notification_author" %}
-{% if service_notification %} {{ additional_tr(data, "Notification
-author","data.SERVICEACKAUTHOR") }} {% else %} {{ additional_tr(data,
-"Notificationauthor", "data.HOSTACKAUTHOR") }} {% endif %} {% elif element
-=="notification_comment" %} {% if service_notification %} {{
-additional_tr(data,"Notification comment", "data.SERVICEACKCOMMENT") }} {% else
-%} {{additional_tr(data, "Notification comment", "data.HOSTACKCOMMENT") }} {%
-endif %} {% elif element == "omdsite" %} {{ additional_tr(data, "Site",
-"OMD_SITE") }} {% elif element == "reltime" %} {% if service_notification %}
-{{additional_tr(data, "Relative time", "LASTSERVICESTATECHANGE_REL") }} {% else
-%} {{ additional_tr(data, "Relative time", "LASTHOSTSTATECHANGE_REL") }} {%
-endif %} {% elif element == "perfdata" %} {% if service_notification %}
-{{additional_tr(data, "Service metrics", "SERVICEPERFDATA") }} {% else %}
-{{additional_tr(data, "Host metrics", "HOSTPERFDATA") }} {% endif %} {% elif
-element == "notesurl" %} {% if service_notification %} {{
-additional_tr(data,"Custom service notes URL", "SERVICENOTESURL") }} {% else %}
-{{additional_tr(data, "Custom host notes URL", "HOSTNOTESURL") }} {% endif %}
-{%elif element == "context" %}
-<tr>
-    <td {{ style_macros.td_first_child(width="170px" ) }}>
-        Complete variable list:
-    </td>
-</tr>
-<table
-    style="
-        border: 1px solid #dfdfdf;
-        width: 536px;
-        border-collapse: collapse;
-        margin-top: 5px;
-    "
->
-    {% for key, value in data.items() %}
-    <tr style="border: 1px solid #dfdfdf">
-        <td
-            style="
-                padding-left: 16px;
-                padding-top: 8px;
-                font-size: 14px;
-                color: #2c3844;
-                font-weight: 400;
-                text-overflow: ellipsis;
-                width: 150px;
-                overflow: hidden;
-            "
-        >
-            {{ key }}
-        </td>
-        <td
-            style="
-                border: 1px solid #dfdfdf;
-                max-width: 100px;
-                padding-left: 16px;
-                padding-top: 8px;
-                font-size: 14px;
-                color: #2c3844;
-                font-weight: 400;
-                text-overflow: ellipsis;
-                overflow: hidden;
-            "
-        >
-            {{ value }}
-        </td>
-    </tr>
+{% endmacro %}
+
+{% macro additional_information(data, service_notification) %}
+    {%for element in data.PARAMETER_ELEMENTSS.split(' ') %}
+        {% if element == "ack_author" %}
+            {% if service_notification %}
+                {{additional_tr(data,"Acknowledgment author", "data.SERVICEACKAUTHOR") }}
+            {% else%}
+                {{additional_tr(data, "Acknowledgment author", "data.HOSTACKAUTHOR") }}
+            {% endif %}
+        {% elif element == "ack_comment" %}
+            {% if service_notification %}
+                {{additional_tr(data, "Acknowledgment comment", "data.SERVICEACKCOMMENT") }}
+            {%else %}
+                {{ additional_tr(data, "Acknowledgment comment", "data.HOSTACKCOMMENT")}}
+            {% endif %}
+        {% elif element == "notification_author" %}
+            {% if service_notification %}
+                {{ additional_tr(data, "Notificationauthor","data.SERVICEACKAUTHOR") }}
+            {% else %}
+                {{ additional_tr(data, "Notificationauthor", "data.HOSTACKAUTHOR") }}
+            {% endif %}
+        {% elif element == "notification_comment" %}
+            {% if service_notification %}
+                {{additional_tr(data,"Notification comment", "data.SERVICEACKCOMMENT") }}
+            {% else %}
+                {{additional_tr(data, "Notification comment", "data.HOSTACKCOMMENT") }}
+            {% endif %}
+        {% elif element == "omdsite" %}
+            {{ additional_tr(data, "Site", "OMD_SITE") }}
+        {% elif element == "reltime" %}
+            {% if service_notification %}
+                {{additional_tr(data, "Relative time", "LASTSERVICESTATECHANGE_REL") }}
+            {% else %}
+                {{ additional_tr(data, "Relative time", "LASTHOSTSTATECHANGE_REL") }}
+            {% endif %}
+        {% elif element == "perfdata" %}
+            {% if service_notification %}
+                {{additional_tr(data, "Service metrics", "SERVICEPERFDATA") }}
+            {% else %}
+                {{additional_tr(data, "Host metrics", "HOSTPERFDATA") }}
+            {% endif %}
+        {% elif element == "notesurl" %}
+            {% if service_notification %}
+                {{additional_tr(data,"Custom service notes URL", "SERVICENOTESURL") }}
+            {% else %}
+                {{additional_tr(data, "Custom host notes URL", "HOSTNOTESURL") }}
+            {% endif %}
+        {%elif element == "context" %}
+            <tr>
+                <td {{ style_macros.td_first_child(width="170px" ) }}>
+                    Complete variable list:
+                </td>
+            </tr>
+            <table
+                style="
+                    border: 1px solid #dfdfdf;
+                    width: 536px;
+                    border-collapse: collapse;
+                    margin-top: 5px;
+                "
+            >
+                {% for key, value in data.items() %}
+                <tr style="border: 1px solid #dfdfdf">
+                    <td
+                        style="
+                            padding-left: 16px;
+                            padding-top: 8px;
+                            font-size: 14px;
+                            color: #2c3844;
+                            font-weight: 400;
+                            text-overflow: ellipsis;
+                            width: 150px;
+                            overflow: hidden;
+                        "
+                    >
+                        {{ key }}
+                    </td>
+                    <td
+                        style="
+                            border: 1px solid #dfdfdf;
+                            max-width: 100px;
+                            padding-left: 16px;
+                            padding-top: 8px;
+                            font-size: 14px;
+                            color: #2c3844;
+                            font-weight: 400;
+                            text-overflow: ellipsis;
+                            overflow: hidden;
+                        "
+                    >
+                        {{ value }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        {% endif %}
     {% endfor %}
-</table>
-{% endif %} {% endfor %} {% endmacro %}
+{% endmacro %}

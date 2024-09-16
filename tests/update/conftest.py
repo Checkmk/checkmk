@@ -19,6 +19,8 @@ from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import edition_from_env, restart_httpd, run
 from tests.testlib.version import CMKVersion, get_min_version
 
+from cmk.utils.version import Edition
+
 logger = logging.getLogger(__name__)
 MODULE_DIR = Path(__file__).parent.resolve()
 DUMPS_DIR = MODULE_DIR / "dumps"
@@ -85,7 +87,7 @@ class BaseVersions:
         BASE_VERSIONS_CB = []
 
     BASE_VERSIONS = [
-        CMKVersion(base_version_str, edition_from_env())
+        CMKVersion(base_version_str, edition_from_env(fallback=Edition.CEE))
         for base_version_str in BASE_VERSIONS_PB + BASE_VERSIONS_CB
     ]
 

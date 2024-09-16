@@ -46,8 +46,6 @@ DISTRO_CODES = {
     "ubuntu-23.04": "lunar",
     "ubuntu-23.10": "mantic",
     "ubuntu-24.04": "noble",
-    "centos-7": "el7",
-    "centos-8": "el8",
     "almalinux-9": "el9",
     "sles-15sp1": "sles15sp1",
     "sles-15sp2": "sles15sp2",

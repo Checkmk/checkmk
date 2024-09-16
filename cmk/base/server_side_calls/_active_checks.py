@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Reversible, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -68,8 +68,11 @@ class ActiveCheck:
                 config_warnings.warn(
                     f"Config creation for active check {plugin_name} failed on {self.host_name}: {e}"
                 )
-            else:
-                yield from self._sanitize_service_descriptions(services)
+                continue
+
+            yield from self._deduplicate_service_descriptions(
+                self._drop_empty_service_descriptions(services)
+            )
 
     def _make_services(
         self, plugin_name: str, plugin_params: Iterable[ConfigSet]
@@ -122,29 +125,34 @@ class ActiveCheck:
             command=(detected_executable, *arguments),
         )
 
-    def _sanitize_service_descriptions(
+    def _drop_empty_service_descriptions(
         self,
         services: Iterable[ActiveServiceData],
-    ) -> Iterator[ActiveServiceData]:
-        existing_descriptions: dict[str, str] = {}
+    ) -> Sequence[ActiveServiceData]:
+        # too bad we didn't think of this when we designed the API :-(
+        def _keep(service: ActiveServiceData) -> bool:
+            if service.description:
+                return True
+            config_warnings.warn(
+                f"Skipping invalid service with empty description "
+                f"(active check: {service.plugin_name}) on host {self.host_name}"
+            )
+            return False
 
-        for service in services:
-            if not service.description:
-                config_warnings.warn(
-                    f"Skipping invalid service with empty description "
-                    f"(active check: {service.plugin_name}) on host {self.host_name}"
-                )
-                continue
+        return [s for s in services if _keep(s)]
 
-            if service.description in existing_descriptions:
-                # If we have the same active check again with the same description,
-                # then we do not regard this as an error, but simply ignore the
-                # second one. That way one can override a check with other settings.
-                continue
+    def _deduplicate_service_descriptions(
+        self,
+        services: Reversible[ActiveServiceData],
+    ) -> Sequence[ActiveServiceData]:
+        """Drops duplicate service descriptions, keeping the first one.
 
-            existing_descriptions[service.description] = service.plugin_name
-
-            yield service
+        If the same active check repeats the same description, we do not
+        regard this as an error, but simply ignore the second one.
+        That way one can override a check with other settings.
+        """
+        seen: dict[ServiceName, ActiveServiceData] = {}
+        return [seen.setdefault(s.description, s) for s in services if s.description not in seen]
 
 
 def _autodetect_plugin(command: str, module_name: str | None) -> str:

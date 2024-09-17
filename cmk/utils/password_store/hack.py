@@ -55,6 +55,7 @@ HACK_AGENTS = {
     "graylog": True,
     "storeonce": True,
     "appdynamics": True,
+    "ddn_s2a": True,
 }
 
 

@@ -238,10 +238,10 @@ class TestConfigDomainCACertificates:
         )
         assert list(remote_cas) == [SiteId("heute_remote_1"), SiteId("heute_remote_2")]
 
-        assert remote_cas[SiteId("heute_remote_1")].not_valid_after_utc == longest_validity
+        assert remote_cas[SiteId("heute_remote_1")].not_valid_after == longest_validity
         # also test changed order:
         remote_cas = ConfigDomainCACertificates()._remote_sites_cas([remote1_older, remote1_newer])
-        assert remote_cas[SiteId("heute_remote_1")].not_valid_after_utc == longest_validity
+        assert remote_cas[SiteId("heute_remote_1")].not_valid_after == longest_validity
 
     def test_remote_root_ca_in_remote_site_cas(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch

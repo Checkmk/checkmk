@@ -22,7 +22,7 @@ from cmk.ccc.site import omd_site
 from cmk.utils.log.security_event import SecurityEvent
 from cmk.utils.user import UserId
 
-from cmk.crypto.certificate import Certificate, CertificateWithPrivateKey
+from cmk.crypto.certificate import Certificate, CertificatePEM, CertificateWithPrivateKey
 from cmk.crypto.hash import HashAlgorithm
 from cmk.crypto.keys import is_supported_private_key_type, PrivateKey
 
@@ -32,7 +32,7 @@ class _CNTemplate:
 
     def __init__(self, template: str) -> None:
         self._temp = template
-        self._match = re.compile("CN=" + template % "([^=+,]*)").match
+        self._match = re.compile("CN=" + template % "([^=+,]*)").search
 
     def format(self, site: SiteId | str) -> str:
         return self._temp % site
@@ -159,17 +159,15 @@ def _set_certfile_permissions(
 
 
 class RemoteSiteCertsStore:
-    # TODO: don't expose cryptography x509.Certificate in interface
-
     def __init__(self, path: Path) -> None:
         self.path: Final = path
 
-    def save(self, site_id: SiteId, cert: x509.Certificate) -> None:
+    def save(self, site_id: SiteId, cert: Certificate) -> None:
         self.path.mkdir(parents=True, exist_ok=True)
-        self._make_file_name(site_id).write_bytes(Certificate(cert).dump_pem().bytes)
+        self._make_file_name(site_id).write_bytes(cert.dump_pem().bytes)
 
-    def load(self, site_id: SiteId) -> x509.Certificate:
-        return x509.load_pem_x509_certificate(self._make_file_name(site_id).read_bytes())
+    def load(self, site_id: SiteId) -> Certificate:
+        return Certificate.load_pem(CertificatePEM(self._make_file_name(site_id).read_bytes()))
 
     def _make_file_name(self, site_id: SiteId) -> Path:
         return self.path / f"{site_id}.pem"
@@ -179,12 +177,23 @@ class RemoteSiteCertsStore:
 class CertManagementEvent(SecurityEvent):
     """Indicates a certificate has been added or removed"""
 
-    ComponentType = Literal["saml", "agent controller", "backup encryption keys", "agent bakery"]
+    ComponentType = Literal[
+        "saml",
+        "agent controller",
+        "backup encryption keys",
+        "agent bakery",
+        "trusted certificate authorities",
+    ]
 
     def __init__(
         self,
         *,
-        event: Literal["certificate created", "certificate removed", "certificate uploaded"],
+        event: Literal[
+            "certificate created",
+            "certificate removed",
+            "certificate uploaded",
+            "certificate added",
+        ],
         component: CertManagementEvent.ComponentType,
         actor: UserId | str | None,
         cert: Certificate | None,

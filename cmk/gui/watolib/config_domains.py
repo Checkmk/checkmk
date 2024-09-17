@@ -17,10 +17,6 @@ from functools import partial
 from pathlib import Path
 from typing import Any, NewType, Sequence
 
-from cryptography.hazmat.primitives import hashes
-from cryptography.x509 import Certificate, load_pem_x509_certificate
-from cryptography.x509.oid import NameOID
-
 from livestatus import SiteId
 
 import cmk.ccc.version as cmk_version
@@ -28,10 +24,11 @@ from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 
 import cmk.utils.paths
-from cmk.utils.certs import CN_TEMPLATE, RemoteSiteCertsStore
+from cmk.utils.certs import CertManagementEvent, CN_TEMPLATE, RemoteSiteCertsStore
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.hostaddress import HostName
+from cmk.utils.log.security_event import log_security_event
 
 from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
 from cmk.gui.config import active_config, get_default_config
@@ -52,6 +49,9 @@ from cmk.gui.watolib.config_domain_name import (
     SerializedSettings,
 )
 from cmk.gui.watolib.utils import liveproxyd_config_dir, multisite_dir, wato_root_dir
+
+from cmk.crypto.certificate import Certificate, CertificatePEM
+from cmk.crypto.hash import HashAlgorithm
 
 ProcessId = NewType("ProcessId", int)
 
@@ -307,6 +307,53 @@ class ConfigDomainCACertificates(ABCConfigDomain):
     def config_dir(self):
         return multisite_dir()
 
+    @staticmethod
+    def log_changes(
+        config_before: TrustedCertificateAuthorities,
+        config_after: TrustedCertificateAuthorities,
+    ) -> None:
+        current_certs = {
+            (cert := ConfigDomainCACertificates._load_cert(value)).fingerprint(
+                HashAlgorithm.Sha256
+            ): cert
+            for value in config_before["trusted_cas"]
+        }
+
+        new_certs = {
+            (cert := ConfigDomainCACertificates._load_cert(value)).fingerprint(
+                HashAlgorithm.Sha256
+            ): cert
+            for value in config_after["trusted_cas"]
+        }
+
+        added_certs = [
+            new_certs[fingerprint] for fingerprint in new_certs if fingerprint not in current_certs
+        ]
+        removed_certs = [
+            current_certs[fingerprint]
+            for fingerprint in current_certs
+            if fingerprint not in new_certs
+        ]
+
+        for cert in added_certs:
+            log_security_event(
+                CertManagementEvent(
+                    event="certificate added",
+                    component="trusted certificate authorities",
+                    actor=user.id,
+                    cert=cert,
+                )
+            )
+        for cert in removed_certs:
+            log_security_event(
+                CertManagementEvent(
+                    event="certificate removed",
+                    component="trusted certificate authorities",
+                    actor=user.id,
+                    cert=cert,
+                )
+            )
+
     def config_file(self, site_specific=False):
         if site_specific:
             return os.path.join(self.config_dir(), "ca-certificates_sitespecific.mk")
@@ -384,12 +431,13 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         Here we catch these warnings and raise an exception if the serial number is negative.
         """
         with warnings_module.catch_warnings(record=True, category=UserWarning):
-            cert = load_pem_x509_certificate(cert_str.encode())
+            cert = Certificate.load_pem(CertificatePEM(cert_str))
+
             if cert.serial_number < 0:
                 raise _NegativeSerialException(
                     f"Certificate with a negative serial number {cert.serial_number!r}",
                     cert.subject.rfc4514_string(),
-                    cert.fingerprint(hashes.SHA256()).hex(),
+                    cert.fingerprint(HashAlgorithm.Sha256).hex(),
                 )
         return cert
 
@@ -411,11 +459,11 @@ class ConfigDomainCACertificates(ABCConfigDomain):
             site_id: cert
             for cert in sorted(
                 ConfigDomainCACertificates._load_certs(trusted_cas),
-                key=lambda cert: cert.not_valid_after_utc,
+                key=lambda cert: cert.not_valid_after,
             )
             if (
-                (cns := cert.subject.get_attributes_for_oid(NameOID.COMMON_NAME))
-                and (site_id := CN_TEMPLATE.extract_site(cns[0].rfc4514_string()))
+                (cns := cert.subject.rfc4514_string())
+                and (site_id := CN_TEMPLATE.extract_site(cns))
             )
         }
 
@@ -741,7 +789,7 @@ class ConfigDomainOMD(ABCConfigDomain):
                 ):
                     settings["TRACE_SEND_TARGET"] = settings["TRACE_SEND"][1]["url"]
                 else:
-                    raise ValueError(f"Unhandled value: {settings["TRACE_SEND"]}")
+                    raise ValueError(f"Unhandled value: {settings['TRACE_SEND']}")
                 settings["TRACE_SEND"] = "on"
             else:
                 settings["TRACE_SEND"] = "off"

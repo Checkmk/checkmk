@@ -52,7 +52,7 @@ from cmk.gui.watolib.config_domain_name import (
     ConfigVariable,
     ConfigVariableGroup,
 )
-from cmk.gui.watolib.config_domains import ConfigDomainCore
+from cmk.gui.watolib.config_domains import ConfigDomainCACertificates, ConfigDomainCore
 from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
@@ -360,6 +360,7 @@ class ABCEditGlobalSettingMode(WatoMode):
             new_value = self._valuespec.from_html_vars("ve")
             self._valuespec.validate_value(new_value, "ve")
 
+            current = self._current_settings[self._varname]
             self._current_settings[self._varname] = new_value
             msg = HTML.without_escaping(
                 _("Changed global configuration variable %s to %s.")
@@ -370,6 +371,8 @@ class ABCEditGlobalSettingMode(WatoMode):
             )
 
         self._save()
+        if self._varname == "trusted_certificate_authorities":
+            ConfigDomainCACertificates.log_changes(current, new_value)
         _changes.add_change(
             "edit-configvar",
             msg,

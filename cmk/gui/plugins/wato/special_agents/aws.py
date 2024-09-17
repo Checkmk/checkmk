@@ -506,7 +506,7 @@ class AWSSpecialAgentValuespecBuilder:
         ]
 
 
-def _valuespec_special_agents_aws() -> Migrate:
+def _valuespec_special_agents_aws() -> Dictionary:
     valuespec_builder = AWSSpecialAgentValuespecBuilder(
         edition(cmk.utils.paths.omd_root) in (Edition.CME, Edition.CCE, Edition.CSE)
     )
@@ -514,155 +514,144 @@ def _valuespec_special_agents_aws() -> Migrate:
     regional_services = valuespec_builder.get_regional_services()
     regional_services_default_keys = [service[0] for service in regional_services]
 
-    return Migrate(
-        valuespec=Dictionary(
-            title=_("Amazon Web Services (AWS)"),
-            elements=[
-                (
-                    "access_key_id",
-                    TextInput(
-                        title=_("The access key ID for your AWS account"),
-                        allow_empty=False,
-                        size=50,
-                    ),
+    return Dictionary(
+        title=_("Amazon Web Services (AWS)"),
+        elements=[
+            (
+                "access_key_id",
+                TextInput(
+                    title=_("The access key ID for your AWS account"),
+                    allow_empty=False,
+                    size=50,
                 ),
-                (
-                    "secret_access_key",
-                    _vs_v1_ssc_password(
-                        title=_("The secret access key for your AWS account"),
-                        allow_empty=False,
-                    ),
+            ),
+            (
+                "secret_access_key",
+                _vs_v1_ssc_password(
+                    title=_("The secret access key for your AWS account"),
+                    allow_empty=False,
                 ),
-                (
-                    "proxy_details",
-                    Dictionary(
-                        title=_("Proxy server details"),
-                        elements=[
-                            ("proxy_host", TextInput(title=_("Proxy host"), allow_empty=False)),
-                            ("proxy_port", NetworkPort(title=_("Port"))),
-                            (
-                                "proxy_user",
-                                TextInput(
-                                    title=_("Username"),
-                                    size=32,
+            ),
+            (
+                "proxy_details",
+                Dictionary(
+                    title=_("Proxy server details"),
+                    elements=[
+                        ("proxy_host", TextInput(title=_("Proxy host"), allow_empty=False)),
+                        ("proxy_port", NetworkPort(title=_("Port"))),
+                        (
+                            "proxy_user",
+                            TextInput(
+                                title=_("Username"),
+                                size=32,
+                            ),
+                        ),
+                        (
+                            "proxy_password",
+                            _vs_v1_ssc_password(title=_("Password"), allow_empty=True),
+                        ),
+                    ],
+                    optional_keys=["proxy_port", "proxy_user", "proxy_password"],
+                ),
+            ),
+            (
+                "access",
+                Dictionary(
+                    title=_("Access to AWS API"),
+                    elements=[
+                        (
+                            "global_service_region",
+                            DropdownChoice(
+                                title=_("Use custom region for global AWS services"),
+                                choices=[
+                                    (None, _("default (all normal AWS regions)")),
+                                ]
+                                + [
+                                    (x, x)
+                                    for x in (
+                                        "us-gov-east-1",
+                                        "us-gov-west-1",
+                                        "cn-north-1",
+                                        "cn-northwest-1",
+                                    )
+                                ],
+                                help=_(
+                                    "us-gov-* or cn-* regions have their own global services and may not reach the default one."
                                 ),
+                                default_value=None,
                             ),
-                            (
-                                "proxy_password",
-                                _vs_v1_ssc_password(title=_("Password"), allow_empty=True),
-                            ),
-                        ],
-                        optional_keys=["proxy_port", "proxy_user", "proxy_password"],
-                    ),
-                ),
-                (
-                    "access",
-                    Dictionary(
-                        title=_("Access to AWS API"),
-                        elements=[
-                            (
-                                "global_service_region",
-                                DropdownChoice(
-                                    title=_("Use custom region for global AWS services"),
-                                    choices=[
-                                        (None, _("default (all normal AWS regions)")),
-                                    ]
-                                    + [
-                                        (x, x)
-                                        for x in (
-                                            "us-gov-east-1",
-                                            "us-gov-west-1",
-                                            "cn-north-1",
-                                            "cn-northwest-1",
-                                        )
-                                    ],
-                                    help=_(
-                                        "us-gov-* or cn-* regions have their own global services and may not reach the default one."
+                        ),
+                        (
+                            "role_arn_id",
+                            Tuple(
+                                title=_("Use STS AssumeRole to assume a different IAM role"),
+                                elements=[
+                                    TextInput(
+                                        title=_("The ARN of the IAM role to assume"),
+                                        size=50,
+                                        help=_(
+                                            "The Amazon Resource Name (ARN) of the role to assume."
+                                        ),
                                     ),
-                                    default_value=None,
-                                ),
-                            ),
-                            (
-                                "role_arn_id",
-                                Tuple(
-                                    title=_("Use STS AssumeRole to assume a different IAM role"),
-                                    elements=[
-                                        TextInput(
-                                            title=_("The ARN of the IAM role to assume"),
-                                            size=50,
-                                            help=_(
-                                                "The Amazon Resource Name (ARN) of the role to assume."
-                                            ),
+                                    TextInput(
+                                        title=_("External ID (optional)"),
+                                        size=50,
+                                        help=_(
+                                            "A unique identifier that might be required when you assume a role in another "
+                                            "account. If the administrator of the account to which the role belongs provided "
+                                            "you with an external ID, then provide that value in the External ID parameter. "
                                         ),
-                                        TextInput(
-                                            title=_("External ID (optional)"),
-                                            size=50,
-                                            help=_(
-                                                "A unique identifier that might be required when you assume a role in another "
-                                                "account. If the administrator of the account to which the role belongs provided "
-                                                "you with an external ID, then provide that value in the External ID parameter. "
-                                            ),
-                                        ),
-                                    ],
-                                ),
+                                    ),
+                                ],
                             ),
-                        ],
+                        ),
+                    ],
+                ),
+            ),
+            (
+                "global_services",
+                MigrateNotUpdated(
+                    valuespec=Dictionary(
+                        title=_("Global services to monitor"),
+                        elements=global_services,
+                    ),
+                    migrate=lambda p: dict(
+                        valuespec_builder.filter_for_edition(
+                            p.items(), valuespec_builder.CCE_ONLY_GLOBAL_SERVICES
+                        )
                     ),
                 ),
-                (
-                    "global_services",
-                    MigrateNotUpdated(
-                        valuespec=Dictionary(
-                            title=_("Global services to monitor"),
-                            elements=global_services,
-                        ),
-                        migrate=lambda p: dict(
-                            valuespec_builder.filter_for_edition(
-                                p.items(), valuespec_builder.CCE_ONLY_GLOBAL_SERVICES
-                            )
-                        ),
+            ),
+            (
+                "regions",
+                ListChoice(
+                    title=_("Regions to monitor"),
+                    choices=aws_region_to_monitor(),
+                ),
+            ),
+            (
+                "services",
+                MigrateNotUpdated(
+                    valuespec=Dictionary(
+                        title=_("Services per region to monitor"),
+                        elements=regional_services,
+                        default_keys=regional_services_default_keys,
+                    ),
+                    migrate=lambda p: dict(
+                        valuespec_builder.filter_for_edition(
+                            p.items(), valuespec_builder.CCE_ONLY_REGIONAL_SERVICES
+                        )
                     ),
                 ),
-                (
-                    "regions",
-                    ListChoice(
-                        title=_("Regions to monitor"),
-                        choices=aws_region_to_monitor(),
-                    ),
-                ),
-                (
-                    "services",
-                    MigrateNotUpdated(
-                        valuespec=Dictionary(
-                            title=_("Services per region to monitor"),
-                            elements=regional_services,
-                            default_keys=regional_services_default_keys,
-                        ),
-                        migrate=lambda p: dict(
-                            valuespec_builder.filter_for_edition(
-                                p.items(), valuespec_builder.CCE_ONLY_REGIONAL_SERVICES
-                            )
-                        ),
-                    ),
-                ),
-                _vs_element_aws_piggyback_naming_convention(),
-                (
-                    "overall_tags",
-                    _vs_aws_tags(_("Restrict monitoring services by one of these AWS tags")),
-                ),
-            ],
-            optional_keys=["overall_tags", "proxy_details"],
-        ),
-        migrate=__migrate,
+            ),
+            _vs_element_aws_piggyback_naming_convention(),
+            (
+                "overall_tags",
+                _vs_aws_tags(_("Restrict monitoring services by one of these AWS tags")),
+            ),
+        ],
+        optional_keys=["overall_tags", "proxy_details"],
     )
-
-
-def __migrate(p: dict[str, object]) -> dict[str, object]:
-    # "assume_role" was renamed to "access"
-    if "assume_role" in p:
-        assert "access" not in p
-        p["access"] = p.pop("assume_role")
-    return p
 
 
 rulespec_registry.register(

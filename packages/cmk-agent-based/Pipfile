@@ -8,7 +8,6 @@ bandit = "*"
 ruff = "*"
 mypy = "==1.10.0"  # CMK-18399
 pylint = "*"
-pytest = "==8.1.1"  # CMK-18399
 # LSP server stuff for IDEs
 pylsp-mypy = "*"
 python-lsp-server = "*"

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
+
 from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
@@ -132,6 +134,7 @@ def test_quick_setup_collect_passwords_from_form_data() -> None:
     )
 
 
+@pytest.mark.skip("There currently is no quick setup rule with defaults we could test with.")
 def test_quick_setup_collect_params_with_defaults_from_form_data(
     with_user: tuple[UserId, str], patch_theme: None
 ) -> None:

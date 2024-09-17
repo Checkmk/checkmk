@@ -749,33 +749,34 @@ def _get_evaluated_graph_templates(
         yield from ()
         return
 
-    graph_templates = [
-        GraphTemplate(
-            id=graph_template.id,
-            title=graph_template.title,
-            scalars=graph_template.scalars,
+    def _generate_graph_templates(graph_template: GraphTemplate) -> Iterator[GraphTemplate]:
+        if evaluated_metrics := evaluate_metrics(
             conflicting_metrics=graph_template.conflicting_metrics,
             optional_metrics=graph_template.optional_metrics,
-            consolidation_function=graph_template.consolidation_function,
-            range=graph_template.range,
-            omit_zero_metrics=graph_template.omit_zero_metrics,
-            metrics=list(
-                itertools.chain(
-                    (m.expression for m in evaluated_metrics),
-                    _compute_predictive_metrics(translated_metrics, evaluated_metrics),
-                )
-            ),
-        )
-        for id_, template in _graph_templates_from_plugins()
-        for graph_template in (_parse_graph_template(id_, template),)
-        if (
-            evaluated_metrics := evaluate_metrics(
+            metric_expressions=graph_template.metrics,
+            translated_metrics=translated_metrics,
+        ):
+            yield GraphTemplate(
+                id=graph_template.id,
+                title=graph_template.title,
+                scalars=graph_template.scalars,
                 conflicting_metrics=graph_template.conflicting_metrics,
                 optional_metrics=graph_template.optional_metrics,
-                metric_expressions=graph_template.metrics,
-                translated_metrics=translated_metrics,
+                consolidation_function=graph_template.consolidation_function,
+                range=graph_template.range,
+                omit_zero_metrics=graph_template.omit_zero_metrics,
+                metrics=list(
+                    itertools.chain(
+                        (m.expression for m in evaluated_metrics),
+                        _compute_predictive_metrics(translated_metrics, evaluated_metrics),
+                    )
+                ),
             )
-        )
+
+    graph_templates = [
+        t
+        for id_, template in _graph_templates_from_plugins()
+        for t in _generate_graph_templates(_parse_graph_template(id_, template))
     ]
     yield from graph_templates
 

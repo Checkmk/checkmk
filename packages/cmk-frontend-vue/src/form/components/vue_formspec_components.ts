@@ -98,17 +98,24 @@ export type BooleanChoice = FormSpec & {
   text_on: string;
   text_off: string;
 };
-export type MultilineText = FormSpec & {
-  type: string;
+export type MultilineText = (FormSpec & {
   label?: string;
   macro_support?: boolean;
   monospaced?: boolean;
   input_hint?: string;
+}) & {
+  type: "multiline_text";
 };
-export type CommentTextArea = MultilineText & {
-  type: string;
+export type CommentTextArea = ((FormSpec & {
+  label?: string;
+  macro_support?: boolean;
+  monospaced?: boolean;
+  input_hint?: string;
+}) & {
   user_name: string;
   i18n: CommentTextAreaI18N;
+}) & {
+  type: "comment_text_area";
 };
 export type Password = FormSpec & {
   type: "password";

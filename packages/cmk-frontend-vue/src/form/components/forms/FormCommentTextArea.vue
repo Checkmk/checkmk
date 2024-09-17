@@ -24,7 +24,11 @@ const prependDateAndUsername = (): void => {
 </script>
 <template>
   <div style="display: flex">
-    <FormMultilineText v-model:data="data" :backend-validation="backendValidation" :spec="spec" />
+    <FormMultilineText
+      v-model:data="data"
+      :backend-validation="backendValidation"
+      :spec="{ ...spec, type: 'multiline_text' }"
+    />
     <img
       :alt="props.spec.i18n.prefix_date_and_comment"
       :title="props.spec.i18n.prefix_date_and_comment"

@@ -298,11 +298,11 @@ class BooleanChoice(FormSpec):
 
 @dataclass(kw_only=True)
 class MultilineText(FormSpec):
-    type: str = "multiline_text"
     label: Optional[str] = None
     macro_support: Optional[bool] = None
     monospaced: Optional[bool] = None
     input_hint: Optional[str] = None
+    type: str = "multiline_text"
 
 
 @dataclass(kw_only=True)

@@ -20,8 +20,7 @@ import type {
   MultipleChoice,
   Password,
   Tuple,
-  OptionalChoice,
-  CommentTextArea
+  OptionalChoice
 } from '@/form/components/vue_formspec_components'
 import {
   groupDictionaryValidations,
@@ -63,9 +62,8 @@ function renderForm(
     case 'boolean_choice':
       return renderBooleanChoice(formSpec as BooleanChoice, value as boolean)
     case 'multiline_text':
-      return renderMultilineText(formSpec as MultilineText, value as string)
     case 'comment_text_area':
-      return renderMultilineText(formSpec as CommentTextArea, value as string)
+      return renderMultilineText(formSpec as MultilineText, value as string)
     case 'data_size':
       return renderDataSize(value as [string, string])
     case 'catalog':
@@ -80,8 +78,7 @@ function renderForm(
       return renderOptionalChoice(formSpec as OptionalChoice, value as unknown[])
     case 'simple_password':
       return renderSimplePassword()
-    default:
-      return null
+    // Do not add a default case here. This is intentional to make sure that all form types are covered.
   }
 }
 

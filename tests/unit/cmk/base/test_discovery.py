@@ -1184,7 +1184,8 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
     }
 
     def __iter(
-        section_names: Iterable[ParsedSectionName], providers: Mapping[HostKey, Provider]
+        section_names: Iterable[ParsedSectionName],
+        providers: Mapping[HostKey, Provider],
     ) -> Iterable[tuple[HostKey, ParsedSectionName]]:
         for host_key, provider in providers.items():
             # filter section names for sections that cannot be resolved
@@ -1196,7 +1197,6 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
                 yield host_key, section_name
 
     resolved = tuple(__iter(parsed_sections_of_interest, providers))
-
     assert _find_host_plugins(
         ((p.name, p.sections) for p in preliminary_candidates),
         frozenset(
@@ -1206,6 +1206,7 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
         ),
     ) == {
         CheckPluginName("docker_container_status_uptime"),
+        CheckPluginName("if64"),
         CheckPluginName("kernel"),
         CheckPluginName("kernel_performance"),
         CheckPluginName("kernel_util"),
@@ -1221,6 +1222,7 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
         ),
     ) == {
         CheckPluginName("mgmt_docker_container_status_uptime"),
+        CheckPluginName("mgmt_if64"),
         CheckPluginName("mgmt_liebert_fans"),
         CheckPluginName("mgmt_uptime"),
     }
@@ -1235,10 +1237,12 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
         ],
     ) == {
         CheckPluginName("docker_container_status_uptime"),
+        CheckPluginName("if64"),
         CheckPluginName("kernel"),
         CheckPluginName("kernel_performance"),
         CheckPluginName("kernel_util"),
         CheckPluginName("mgmt_docker_container_status_uptime"),
+        CheckPluginName("mgmt_if64"),
         CheckPluginName("mgmt_liebert_fans"),
         CheckPluginName("mgmt_uptime"),
         CheckPluginName("uptime"),
@@ -1674,7 +1678,11 @@ def test__discovery_considers_host_labels(
     assert {
         entry.id()
         for entry in discover_services(
-            host_name, plugin_names, providers=providers, plugins=plugins, on_error=OnError.RAISE
+            host_name,
+            plugin_names,
+            providers=providers,
+            plugins=plugins,
+            on_error=OnError.RAISE,
         )
     } == expected_services
 
@@ -1703,7 +1711,11 @@ _discovery_test_cases = [
         ),
         on_cluster=ExpectedDiscoveryResultOnCluster(
             expected_vanished_host_labels=[
-                HostLabel("node1_existing_label", "true", plugin_name=SectionName("node1_plugin"))
+                HostLabel(
+                    "node1_existing_label",
+                    "true",
+                    plugin_name=SectionName("node1_plugin"),
+                )
             ],
             expected_old_host_labels=[],
             expected_new_host_labels=[
@@ -1823,7 +1835,11 @@ def test__discover_host_labels_and_services_on_realhost(
     )
 
     discovered_services = discover_services(
-        host_name, plugin_names, providers=providers, plugins=plugins, on_error=OnError.RAISE
+        host_name,
+        plugin_names,
+        providers=providers,
+        plugins=plugins,
+        on_error=OnError.RAISE,
     )
 
     services = {s.id() for s in discovered_services}
@@ -1964,7 +1980,10 @@ def test_get_node_services() -> None:
             transition="vanished",
             autocheck=DiscoveredItem[AutocheckEntry](
                 previous=AutocheckEntry(
-                    CheckPluginName("plugin_vanished"), item=None, parameters={}, service_labels={}
+                    CheckPluginName("plugin_vanished"),
+                    item=None,
+                    parameters={},
+                    service_labels={},
                 ),
                 new=None,
             ),
@@ -1974,10 +1993,16 @@ def test_get_node_services() -> None:
             transition="unchanged",
             autocheck=DiscoveredItem[AutocheckEntry](
                 previous=AutocheckEntry(
-                    CheckPluginName("plugin_unchanged"), item=None, parameters={}, service_labels={}
+                    CheckPluginName("plugin_unchanged"),
+                    item=None,
+                    parameters={},
+                    service_labels={},
                 ),
                 new=AutocheckEntry(
-                    CheckPluginName("plugin_unchanged"), item=None, parameters={}, service_labels={}
+                    CheckPluginName("plugin_unchanged"),
+                    item=None,
+                    parameters={},
+                    service_labels={},
                 ),
             ),
             hosts=[host_name],
@@ -1986,7 +2011,10 @@ def test_get_node_services() -> None:
             transition="new",
             autocheck=DiscoveredItem[AutocheckEntry](
                 new=AutocheckEntry(
-                    CheckPluginName("plugin_new"), item=None, parameters={}, service_labels={}
+                    CheckPluginName("plugin_new"),
+                    item=None,
+                    parameters={},
+                    service_labels={},
                 ),
                 previous=None,
             ),

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
 from collections.abc import Mapping, Sequence
 from typing import Any
 
@@ -15,7 +16,7 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib import if64, interfaces
+from cmk.plugins.lib import if64, interfaces, uptime
 
 If64AdmSection = Sequence[str]
 
@@ -63,6 +64,7 @@ def discover_if64(
     params: Sequence[Mapping[str, Any]],
     section_if64: interfaces.Section[interfaces.TInterfaceType] | None,
     section_if64adm: If64AdmSection | None,
+    section_uptime: uptime.Section | None,
 ) -> DiscoveryResult:
     if section_if64 is None:
         return
@@ -78,14 +80,20 @@ def check_if64(
     params: Mapping[str, Any],
     section_if64: interfaces.Section[interfaces.TInterfaceType] | None,
     section_if64adm: If64AdmSection | None,
+    section_uptime: uptime.Section | None,
 ) -> CheckResult:
     if section_if64 is None:
         return
     _add_admin_status_to_ifaces(section_if64, section_if64adm)
-    yield from if64.generic_check_if64(
+    if section_uptime is not None:
+        timestamp = section_uptime.uptime_sec or time.time()
+    else:
+        timestamp = time.time()
+    yield from interfaces.check_multiple_interfaces(
         item,
         params,
         section_if64,
+        timestamp=timestamp,
     )
 
 
@@ -94,6 +102,7 @@ def cluster_check_if64(
     params: Mapping[str, Any],
     section_if64: Mapping[str, interfaces.Section[interfaces.TInterfaceType] | None],
     section_if64adm: Mapping[str, If64AdmSection | None],
+    section_uptime: Mapping[str, uptime.Section | None],
 ) -> CheckResult:
     sections_w_admin_status: dict[str, interfaces.Section[interfaces.TInterfaceType]] = {}
     for node_name, node_section_if64 in section_if64.items():
@@ -110,7 +119,7 @@ def cluster_check_if64(
 
 check_plugin_if64 = CheckPlugin(
     name="if64",
-    sections=["if64", "if64adm"],
+    sections=["if64", "if64adm", "uptime"],
     service_name="Interface %s",
     discovery_ruleset_name="inventory_if_rules",
     discovery_ruleset_type=RuleSetType.ALL,

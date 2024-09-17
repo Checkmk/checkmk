@@ -1198,7 +1198,6 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
                 yield host_key, section_name
 
     resolved = tuple(__iter(parsed_sections_of_interest, providers))
-
     assert _find_host_plugins(
         ((p.name, p.sections) for p in preliminary_candidates),
         frozenset(
@@ -1208,6 +1207,7 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
         ),
     ) == {
         CheckPluginName("docker_container_status_uptime"),
+        CheckPluginName("if64"),
         CheckPluginName("kernel"),
         CheckPluginName("kernel_performance"),
         CheckPluginName("kernel_util"),
@@ -1223,6 +1223,7 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
         ),
     ) == {
         CheckPluginName("mgmt_docker_container_status_uptime"),
+        CheckPluginName("mgmt_if64"),
         CheckPluginName("mgmt_liebert_fans"),
         CheckPluginName("mgmt_uptime"),
     }
@@ -1237,10 +1238,12 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
         ],
     ) == {
         CheckPluginName("docker_container_status_uptime"),
+        CheckPluginName("if64"),
         CheckPluginName("kernel"),
         CheckPluginName("kernel_performance"),
         CheckPluginName("kernel_util"),
         CheckPluginName("mgmt_docker_container_status_uptime"),
+        CheckPluginName("mgmt_if64"),
         CheckPluginName("mgmt_liebert_fans"),
         CheckPluginName("mgmt_uptime"),
         CheckPluginName("uptime"),

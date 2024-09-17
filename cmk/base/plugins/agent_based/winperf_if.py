@@ -596,16 +596,22 @@ def _check_winperf_if(
     if not section_winperf_if:
         return
 
+    ifaces = _merge_sections(
+        section_winperf_if.interfaces,
+        section_winperf_if_teaming,
+        section_winperf_if_extended,
+    )
+    timestamps = (
+        [section_winperf_if.timestamp] * len(ifaces)
+        if section_winperf_if.timestamp is not None
+        else None
+    )
     yield from interfaces.check_multiple_interfaces(
         item,
         params,
-        _merge_sections(
-            section_winperf_if.interfaces,
-            section_winperf_if_teaming,
-            section_winperf_if_extended,
-        ),
+        ifaces,
         group_name="Teaming",
-        timestamp=section_winperf_if.timestamp,
+        timestamps=timestamps,
         value_store=value_store,
     )
     if section_winperf_if_dhcp and (

@@ -1127,7 +1127,7 @@ def _check_ungrouped_ifs(
     item: str,
     params: Mapping[str, Any],
     section: Section[TInterfaceType],
-    timestamp: float,
+    timestamps: Sequence[float],
     value_store: MutableMapping[str, Any],
 ) -> CheckResult:
     """
@@ -1142,7 +1142,9 @@ def _check_ungrouped_ifs(
     item_appearance = (
         _to_item_appearance(params["item_appearance"]) if "item_appearance" in params else None
     )
-    for interface in matching_interfaces_for_item(item, section, item_appearance):
+    for timestamp, interface in zip(
+        timestamps, matching_interfaces_for_item(item, section, item_appearance)
+    ):
         last_results = list(
             check_single_interface(
                 item,
@@ -1176,23 +1178,6 @@ def _check_ungrouped_ifs(
     if last_results:
         yield from last_results
         return
-
-
-def _filter_matching_interfaces(
-    *,
-    item: str,
-    group_config: GroupConfiguration,
-    section: Section[TInterfaceType],
-) -> Iterable[InterfaceWithCounters | InterfaceWithRates]:
-    yield from (
-        interface
-        for interface in section
-        if _check_group_matching_conditions(
-            interface.attributes,
-            item,
-            group_config,
-        )
-    )
 
 
 def _accumulate_attributes(
@@ -1323,7 +1308,7 @@ def _check_grouped_ifs(
     params: Mapping[str, Any],
     section: Section[TInterfaceType],
     group_name: str,
-    timestamp: float,
+    timestamps: Sequence[float],
     value_store: MutableMapping[str, Any],
 ) -> CheckResult:
     """
@@ -1337,10 +1322,11 @@ def _check_grouped_ifs(
             value_store=value_store,
             params=params,
         )
-        for iface in _filter_matching_interfaces(
-            item=item,
-            group_config=params["aggregate"],
-            section=section,
+        for timestamp, iface in zip(timestamps, section)
+        if _check_group_matching_conditions(
+            iface.attributes,
+            item,
+            params["aggregate"],
         )
     ]
     yield from check_single_interface(
@@ -1374,11 +1360,14 @@ def check_multiple_interfaces(
     section: Section[TInterfaceType],
     *,
     group_name: str = "Interface group",
-    timestamp: float | None = None,
+    timestamps: Sequence[float] | None = None,
     value_store: MutableMapping[str, Any] | None = None,
 ) -> CheckResult:
-    if timestamp is None:
-        timestamp = time.time()
+    if timestamps is not None:
+        timestamps_f = timestamps
+    else:
+        now = time.time()
+        timestamps_f = [now] * len(section)
     if value_store is None:
         value_store = get_value_store()
 
@@ -1388,7 +1377,7 @@ def check_multiple_interfaces(
             params,
             section,
             group_name,
-            timestamp,
+            timestamps_f,
             value_store,
         )
     else:
@@ -1396,7 +1385,7 @@ def check_multiple_interfaces(
             item,
             params,
             section,
-            timestamp,
+            timestamps_f,
             value_store,
         )
 

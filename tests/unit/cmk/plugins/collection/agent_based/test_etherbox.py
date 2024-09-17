@@ -224,7 +224,9 @@ def test_check_voltage() -> None:
     )
     assert section
     results = list(
-        etherbox.check_etherbox_voltage(item="9.1", section=section, params={"levels": (0, 0)})
+        etherbox.check_etherbox_voltage(
+            item="9.1", section=section, params={"levels": ("fixed", (0, 0))}
+        )
     )
     assert set(results) == {
         Metric("voltage", 42.0, levels=(0.0, 0.0)),

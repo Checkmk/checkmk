@@ -23,6 +23,7 @@ from typing import Any, assert_never, Literal, TypedDict
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -379,7 +380,7 @@ def check_etherbox_voltage(item: str, params: Mapping[str, Any], section: Sectio
     except SensorException as error:
         yield Result(state=State.UNKNOWN, summary=str(error))
         return
-    yield from check_levels_v1(
+    yield from check_levels(
         data.value,
         levels_upper=params["levels"],
         metric_name="voltage",
@@ -398,5 +399,5 @@ check_plugin_etherbox_voltage = CheckPlugin(
     discovery_function=discovery_voltage,
     service_name="Sensor %s",
     check_ruleset_name="etherbox_voltage",
-    check_default_parameters={"levels": None},
+    check_default_parameters={"levels": ("no_levels", None)},
 )

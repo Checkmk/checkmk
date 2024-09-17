@@ -745,7 +745,7 @@ class ModeNotifications(ABCNotificationsMode):
             context["HOSTSTATE"] = host_state_name(int(simulation_mode[1]["host_states"][1]))
             context["HOSTSTATEID"] = str(simulation_mode[1]["host_states"][1])
         else:
-            context["NOTIFICATIONTYPE"] = "DOWNTIME"
+            context["NOTIFICATIONTYPE"] = "DOWNTIMESTART"
             context["PREVIOUSHOSTHARDSTATE"] = "UP"
             context["HOSTSTATE"] = "UP"
 

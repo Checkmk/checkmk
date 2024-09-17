@@ -801,23 +801,24 @@ def _get_evaluated_graph_templates(
             )
 
 
-# Performance graph dashlets already use graph_id, but for example in reports, we still use
-# graph_index. Therefore, this function needs to support both. We should switch to graph_id
-# everywhere (CMK-7308) and remove the support for graph_index. However, note that we cannot easily
-# build a corresponding transform, so even after switching to graph_id everywhere, we will need to
-# keep this functionality here for some time to support already created dashlets, reports etc.
 def _matching_graph_templates(
     *,
     graph_id: str | None,
     graph_index: int | None,
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> Iterable[tuple[int, GraphTemplate, Sequence[EvaluatedMetricExpression]]]:
-    # Single metrics
+    # Performance graph dashlets already use graph_id, but for example in reports, we still use
+    # graph_index. Therefore, this function needs to support both. We should switch to graph_id
+    # everywhere (CMK-7308) and remove the support for graph_index. However, note that we cannot
+    # easily build a corresponding transform, so even after switching to graph_id everywhere, we
+    # will need to keep this functionality here for some time to support already created dashlets,
+    # reports etc.
     if (
         isinstance(graph_id, str)
         and graph_id.startswith("METRIC_")
         and graph_id[7:] in translated_metrics
     ):
+        # Single metrics
         graph_template = _get_graph_template_from_name(graph_id)
         yield (
             0,
@@ -881,9 +882,6 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
                 host_name=self.host_name,
                 service_description=self.service_description,
                 destination=self.destination,
-                # Performance graph dashlets already use graph_id, but for example in reports, we still
-                # use graph_index. We should switch to graph_id everywhere (CMK-7308). Once this is
-                # done, we can remove the line below.
                 graph_index=index,
                 graph_id=graph_template.id,
             ),

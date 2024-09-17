@@ -27,6 +27,23 @@
 
                 <hr style="width: 536px; border: 1px solid #e5e5e5" />
 
+                {% if insert %}
+                    <div
+                        class="summary_container"
+                        style="
+                            border: 1px solid #e5e5e5;
+                            width: 536px;
+                            border-radius: 4px 0px 0px 0px;
+                            margin-top: 16px;
+                            margin-left: 32px;
+                        "
+                    >
+                        <div style="padding: 20px;">
+                            {{ insert|safe }}
+                        </div>
+                    </div>
+                {% endif %}
+
                 <div
                     class="summary_container"
                     style="

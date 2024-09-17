@@ -24,6 +24,7 @@ from jinja2 import Environment, FileSystemLoader
 
 from cmk.ccc.exceptions import MKException
 
+from cmk.utils.escaping import escape_permissive
 from cmk.utils.mail import default_from_address, MailString, send_mail_sendmail, set_mail_headers
 from cmk.utils.paths import omd_root, web_dir
 
@@ -739,14 +740,13 @@ def construct_content(
             elements.remove("graph")
 
     # Prepare the mail contents
-    template_txt, template_html = body_templates(
+    template_txt, _template_html = body_templates(
         context["WHAT"].lower(),
         "ALERTHANDLEROUTPUT" in context,
         elements,
         BODY_ELEMENTS,
     )
     content_txt = utils.substitute_context(template_txt, context)
-    content_html = utils.substitute_context(template_html, context)
 
     attachments: list[Attachment] = []
     file_names: list[str] = []
@@ -761,18 +761,21 @@ def construct_content(
     if "PARAMETER_INSERT_HTML_SECTION" in context:
         extra_html_section = context["PARAMETER_INSERT_HTML_SECTION"]
 
-    content_html = (
-        utils.substitute_context(tmpl_head_html(extra_html_section), context)
-        + content_html
-        + utils.substitute_context(TMPL_FOOT_HTML, context)
+    content_html = utils.substitute_context(
+        TemplateRenderer().render_template(
+            "html_email.html",
+            {
+                "data": context,
+                "graphs": file_names,
+                "insert": escape_permissive(extra_html_section),
+            },
+        ),
+        context,
     )
 
     return (
         content_txt,
-        TemplateRenderer().render_template(
-            "html_email.html",
-            {"data": context, "graphs": file_names},
-        ),
+        content_html,
         attachments,
     )
 

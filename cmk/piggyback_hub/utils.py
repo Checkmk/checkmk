@@ -42,9 +42,8 @@ class ReceivingThread(threading.Thread, Generic[_ModelT]):
                 channel.queue_declare(queue=self.queue, bindings=(self.queue,))
 
                 self.logger.debug("Waiting for messages in queue %s", self.queue)
+                channel.consume(self.callback, queue=self.queue)
 
-                while True:
-                    channel.consume(self.callback, queue=self.queue)
         except SignalException:
             self.logger.debug("Stopping receiving messages")
             return

@@ -10,7 +10,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from types import TracebackType
-from typing import Final, Generic, Protocol, Self, TypeVar
+from typing import Final, Generic, NoReturn, Protocol, Self, TypeVar
 
 import pika
 import pika.adapters.blocking_connection
@@ -175,7 +175,7 @@ class Channel(Generic[_ModelT]):
         *,
         auto_ack: bool = False,
         queue: str | None = None,
-    ) -> None:
+    ) -> NoReturn:
         """Block forever and call the callback for every message received.
 
         This is a combination of pika's `basic_consume` and `start_consuming` methods.
@@ -196,6 +196,8 @@ class Channel(Generic[_ModelT]):
             auto_ack=auto_ack,
         )
         self._pchannel.start_consuming()
+
+        raise RuntimeError("start_consuming() should never return")
 
 
 class Connection:

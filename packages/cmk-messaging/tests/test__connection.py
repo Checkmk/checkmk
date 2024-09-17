@@ -16,6 +16,10 @@ from pydantic import BaseModel
 from cmk.messaging import Channel
 
 
+class _ConsumedSuccesfully(RuntimeError):
+    """Used to leave the ever-blocking consuming loop"""
+
+
 class Message(BaseModel):
     """Test model for messages"""
 
@@ -98,6 +102,10 @@ class ChannelTester:
                 published.properties,
                 published.body,
             )
+        # The actual consuming loop would be endless, raise instead.
+        # Design your tests to deal with this.
+
+        raise AssertionError("No more messages to consume")
 
 
 def _make_test_channel() -> tuple[Channel[Message], ChannelTester]:
@@ -180,5 +188,7 @@ class TestChannel:
 
         def _on_message(_channel: Channel[Message], received: Message) -> None:
             assert received == message
+            raise _ConsumedSuccesfully()
 
-        channel.consume(_on_message)
+        with pytest.raises(_ConsumedSuccesfully):
+            channel.consume(_on_message)

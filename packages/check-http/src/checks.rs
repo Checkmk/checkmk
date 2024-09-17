@@ -351,32 +351,31 @@ fn check_body_matching(body: Option<&Body>, matcher: Vec<TextMatcher>) -> Vec<Op
     matcher
         .iter()
         .flat_map(|m| {
-            let (match_text, predicate) = match m {
+            let (match_text, match_predicate, not_match_predicate) = match m {
                 TextMatcher::Regex {
                     regex: _,
                     expectation,
-                } => (
+                } => {
                     if *expectation {
-                        "Expected regex in body"
+                        ("Expected regex in body", "matched", "not matched")
                     } else {
-                        "Not expected regex in body"
-                    },
-                    "matched",
-                ),
+                        ("Not expected regex in body", "not matched", "matched")
+                    }
+                }
                 TextMatcher::Contains(_) | TextMatcher::Exact(_) => {
-                    ("Expected string in body", "found")
+                    ("Expected string in body", "found", "not found")
                 }
             };
 
             if m.match_on(&body.text) {
                 vec![CheckResult::details(
                     State::Ok,
-                    &format!("{}: {} ({})", match_text, m.inner(), predicate),
+                    &format!("{}: {} ({})", match_text, m.inner(), match_predicate),
                 )]
             } else {
                 notice(
                     State::Warn,
-                    &format!("{}: {} (not {})", match_text, m.inner(), predicate),
+                    &format!("{}: {} ({})", match_text, m.inner(), not_match_predicate),
                 )
             }
         })
@@ -1280,8 +1279,22 @@ mod test_check_body_matching {
             ),
             vec![CheckResult::details(
                 State::Ok,
-                "Not expected regex in body: f.*z (matched)"
+                "Not expected regex in body: f.*z (not matched)"
             ),]
+        );
+    }
+
+    #[test]
+    fn test_regex_inverse_not_ok() {
+        assert_eq!(
+            check_body_matching(
+                test_body("argl").as_ref(),
+                vec![TextMatcher::from_regex(Regex::new("argl").unwrap(), false)]
+            ),
+            vec![
+                CheckResult::summary(State::Warn, "Not expected regex in body: argl (matched)"),
+                CheckResult::details(State::Warn, "Not expected regex in body: argl (matched)")
+            ]
         );
     }
 

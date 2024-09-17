@@ -56,6 +56,7 @@ HACK_AGENTS = {
     "storeonce": True,
     "appdynamics": True,
     "ddn_s2a": True,
+    "gcp_status": False,  # needs no secret
 }
 
 

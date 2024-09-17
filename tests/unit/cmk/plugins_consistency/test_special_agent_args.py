@@ -103,7 +103,6 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
 }
 
 UNMIGRATED = {
-    "gcp_status",
     "hivemanager",
     "hivemanager_ng",
     "hp_msa",

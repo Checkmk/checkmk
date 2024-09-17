@@ -763,6 +763,33 @@
             },
             "required": ["fetch_method", "data"]
         },
+        "list_of_strings": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "list_of_strings",
+                    "default": "list_of_strings"
+                },
+                "string_spec": {
+                    "$ref": "#/$defs/form_spec"
+                },
+                "string_default_value": {
+                    "type": "string",
+                    "default": ""
+                },
+                "layout": {
+                    "title": "ListOfStringsLayout",
+                    "enum": ["horizontal", "vertical"],
+                    "default": "horizontal"
+                }
+            },
+            "required": ["type", "string_spec", "string_default_value"],
+            "allOf": [
+                {
+                    "$ref": "#/$defs/form_spec"
+                }
+            ]
+        },
         "components": {
             "discriminator": {
                 "propertyName": "type"
@@ -827,6 +854,9 @@
                 },
                 {
                     "$ref": "#/$defs/simple_password"
+                },
+                {
+                    "$ref": "#/$defs/list_of_strings"
                 }
             ],
             "required": ["type"]

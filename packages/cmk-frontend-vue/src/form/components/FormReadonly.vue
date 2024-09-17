@@ -20,7 +20,8 @@ import type {
   MultipleChoice,
   Password,
   Tuple,
-  OptionalChoice
+  OptionalChoice,
+  ListOfStrings
 } from '@/form/components/vue_formspec_components'
 import {
   groupDictionaryValidations,
@@ -49,6 +50,8 @@ function renderForm(
       return renderSingleChoice(formSpec as SingleChoice, value as unknown, backendValidation)
     case 'list':
       return renderList(formSpec as List, value as unknown[], backendValidation)
+    case 'list_of_strings':
+      return renderListOfStrings(formSpec as ListOfStrings, value as unknown[], backendValidation)
     case 'cascading_single_choice':
       return renderCascadingSingleChoice(
         formSpec as CascadingSingleChoice,
@@ -325,6 +328,37 @@ function renderList(
       h('li', [
         renderForm(
           formSpec.element_template,
+          value[i],
+          elementValidations[i] ? elementValidations[i] : []
+        )
+      ])
+    )
+  }
+  return h('ul', { style: 'display: contents' }, listResults)
+}
+
+function renderListOfStrings(
+  formSpec: ListOfStrings,
+  value: unknown[],
+  backendValidation: ValidationMessages
+): VNode | null {
+  const [listValidations, elementValidations] = groupIndexedValidations(
+    backendValidation,
+    value.length
+  )
+  if (!value) {
+    return null
+  }
+  const listResults = [h('label', [formSpec.string_spec.title])]
+  listValidations.forEach((validation: string) => {
+    listResults.push(h('label', [validation]))
+  })
+
+  for (let i = 0; i < value.length; i++) {
+    listResults.push(
+      h('li', [
+        renderForm(
+          formSpec.string_spec,
           value[i],
           elementValidations[i] ? elementValidations[i] : []
         )

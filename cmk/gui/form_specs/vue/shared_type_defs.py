@@ -135,6 +135,11 @@ class Autocompleter:
     fetch_method: str = "ajax_vs_autocomplete"
 
 
+class ListOfStringsLayout(str, Enum):
+    horizontal = "horizontal"
+    vertical = "vertical"
+
+
 @dataclass(kw_only=True)
 class ValidationMessage:
     location: list[str]
@@ -369,6 +374,14 @@ class SimplePassword(FormSpec):
     type: str = "simple_password"
 
 
+@dataclass(kw_only=True)
+class ListOfStrings(FormSpec):
+    string_spec: FormSpec
+    type: str = "list_of_strings"
+    string_default_value: Optional[str] = ""
+    layout: Optional[ListOfStringsLayout] = ListOfStringsLayout.horizontal
+
+
 Components = Union[
     Integer,
     Float,
@@ -390,6 +403,7 @@ Components = Union[
     Tuple,
     OptionalChoice,
     SimplePassword,
+    ListOfStrings,
 ]
 
 

@@ -13,6 +13,7 @@ from .definitions import (
 )
 from .dictionary_extended import DictionaryExtended
 from .list_extended import ListExtended
+from .list_of_strings import ListOfStrings
 from .optional_choice import OptionalChoice
 from .string_autocompleter import StringAutocompleter
 from .validators import not_empty
@@ -24,6 +25,7 @@ __all__ = [
     "DictionaryExtended",
     "LegacyValueSpec",
     "ListExtended",
+    "ListOfStrings",
     "SingleChoiceElementExtended",
     "SingleChoiceExtended",
     "StringAutocompleter",

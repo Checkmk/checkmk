@@ -25,7 +25,8 @@ export type Components =
   | TimeSpan
   | Tuple
   | OptionalChoice
-  | SimplePassword;
+  | SimplePassword
+  | ListOfStrings;
 export type Integer = FormSpec & {
   type: "integer";
   label?: string;
@@ -165,6 +166,13 @@ export type OptionalChoice = FormSpec & {
 export type SimplePassword = FormSpec & {
   type: "simple_password";
 };
+export type ListOfStrings = FormSpec & {
+  type: "list_of_strings";
+  string_spec: FormSpec;
+  string_default_value: string;
+  layout?: ListOfStringsLayout;
+};
+export type ListOfStringsLayout = "horizontal" | "vertical";
 
 export interface VueFormspecComponents {
   components?: Components;

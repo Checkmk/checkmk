@@ -36,28 +36,18 @@ match cmk_version.edition(paths.omd_root):
         cmk.gui.cee.registration.register()
 
     case Edition.CME:
-        import cmk.gui.cce.registration  # pylint: disable=cmk-module-layer-violation
-        import cmk.gui.cee.registration  # pylint: disable=cmk-module-layer-violation
         import cmk.gui.cme.registration  # pylint: disable=cmk-module-layer-violation
 
-        cmk.gui.cee.registration.register()
         cmk.gui.cme.registration.register()
-        cmk.gui.cce.registration.register()
 
     case Edition.CCE:
         import cmk.gui.cce.registration  # pylint: disable=cmk-module-layer-violation
-        import cmk.gui.cee.registration  # pylint: disable=cmk-module-layer-violation
 
-        cmk.gui.cee.registration.register()
         cmk.gui.cce.registration.register()
 
     case Edition.CSE:
-        import cmk.gui.cce.registration  # pylint: disable=cmk-module-layer-violation
-        import cmk.gui.cee.registration  # pylint: disable=cmk-module-layer-violation
-        import cmk.gui.cse.registration  # pylint: disable=cmk-module-layer-violation
+        import cmk.gui.cse.registration
 
-        cmk.gui.cee.registration.register()
-        cmk.gui.cce.registration.register()
         cmk.gui.cse.registration.register()
 
     case Edition.CRE:

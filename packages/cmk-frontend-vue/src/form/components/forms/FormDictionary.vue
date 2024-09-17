@@ -186,6 +186,7 @@ const componentId = useId()
                 v-model:data="data[dict_element.dict_config.ident]"
                 :spec="dict_element.dict_config.parameter_form"
                 :backend-validation="elementValidation[dict_element.dict_config.ident]!"
+                :aria-label="dict_element.dict_config.parameter_form.title"
               />
             </div>
           </div>

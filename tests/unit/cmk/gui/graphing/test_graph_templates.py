@@ -48,6 +48,7 @@ from cmk.gui.graphing._graph_templates import (
     _graph_templates_from_plugins,
     _matching_graph_templates,
     _parse_graph_template,
+    evaluate_metrics,
     GraphTemplate,
     MinimalGraphTemplateRange,
 )
@@ -1245,48 +1246,54 @@ def test__compute_predictive_metrics_line_type(
     metric_expressions: Sequence[MetricExpression],
     expected_predictive_metric_expressions: Sequence[MetricExpression],
 ) -> None:
+    translated_metrics = {
+        "metric_name": TranslatedMetric(
+            originals=[Original("metric_name", 1.0)],
+            value=1.0,
+            scalar={},
+            auto_graph=True,
+            title="",
+            unit_spec=ConvertibleUnitSpecification(
+                notation=DecimalNotation(symbol=""),
+                precision=AutoPrecision(digits=2),
+            ),
+            color="#0080c0",
+        ),
+        "predict_metric_name": TranslatedMetric(
+            originals=[Original("predict_metric_name", 1.0)],
+            value=2.0,
+            scalar={},
+            auto_graph=True,
+            title="",
+            unit_spec=ConvertibleUnitSpecification(
+                notation=DecimalNotation(symbol=""),
+                precision=AutoPrecision(digits=2),
+            ),
+            color="#0080c0",
+        ),
+        "predict_lower_metric_name": TranslatedMetric(
+            originals=[Original("predict_lower_metric_name", 1.0)],
+            value=3.0,
+            scalar={},
+            auto_graph=True,
+            title="",
+            unit_spec=ConvertibleUnitSpecification(
+                notation=DecimalNotation(symbol=""),
+                precision=AutoPrecision(digits=2),
+            ),
+            color="#0080c0",
+        ),
+    }
     assert (
         list(
             _compute_predictive_metrics(
-                {
-                    "metric_name": TranslatedMetric(
-                        originals=[Original("metric_name", 1.0)],
-                        value=1.0,
-                        scalar={},
-                        auto_graph=True,
-                        title="",
-                        unit_spec=ConvertibleUnitSpecification(
-                            notation=DecimalNotation(symbol=""),
-                            precision=AutoPrecision(digits=2),
-                        ),
-                        color="#0080c0",
-                    ),
-                    "predict_metric_name": TranslatedMetric(
-                        originals=[Original("predict_metric_name", 1.0)],
-                        value=2.0,
-                        scalar={},
-                        auto_graph=True,
-                        title="",
-                        unit_spec=ConvertibleUnitSpecification(
-                            notation=DecimalNotation(symbol=""),
-                            precision=AutoPrecision(digits=2),
-                        ),
-                        color="#0080c0",
-                    ),
-                    "predict_lower_metric_name": TranslatedMetric(
-                        originals=[Original("predict_lower_metric_name", 1.0)],
-                        value=3.0,
-                        scalar={},
-                        auto_graph=True,
-                        title="",
-                        unit_spec=ConvertibleUnitSpecification(
-                            notation=DecimalNotation(symbol=""),
-                            precision=AutoPrecision(digits=2),
-                        ),
-                        color="#0080c0",
-                    ),
-                },
-                metric_expressions,
+                translated_metrics,
+                evaluate_metrics(
+                    conflicting_metrics=[],
+                    optional_metrics=[],
+                    metric_expressions=metric_expressions,
+                    translated_metrics=translated_metrics,
+                ),
             )
         )
         == expected_predictive_metric_expressions
@@ -1294,51 +1301,61 @@ def test__compute_predictive_metrics_line_type(
 
 
 def test__compute_predictive_metrics_duplicates() -> None:
+    translated_metrics = {
+        "metric_name": TranslatedMetric(
+            originals=[Original("metric_name", 1.0)],
+            value=1.0,
+            scalar={"warn": 1.1, "crit": 1.2},
+            auto_graph=True,
+            title="",
+            unit_spec=ConvertibleUnitSpecification(
+                notation=DecimalNotation(symbol=""),
+                precision=AutoPrecision(digits=2),
+            ),
+            color="#0080c0",
+        ),
+        "predict_metric_name": TranslatedMetric(
+            originals=[Original("predict_metric_name", 1.0)],
+            value=2.0,
+            scalar={},
+            auto_graph=True,
+            title="",
+            unit_spec=ConvertibleUnitSpecification(
+                notation=DecimalNotation(symbol=""),
+                precision=AutoPrecision(digits=2),
+            ),
+            color="#0080c0",
+        ),
+        "predict_lower_metric_name": TranslatedMetric(
+            originals=[Original("predict_lower_metric_name", 1.0)],
+            value=3.0,
+            scalar={},
+            auto_graph=True,
+            title="",
+            unit_spec=ConvertibleUnitSpecification(
+                notation=DecimalNotation(symbol=""),
+                precision=AutoPrecision(digits=2),
+            ),
+            color="#0080c0",
+        ),
+    }
     assert list(
         _compute_predictive_metrics(
-            {
-                "metric_name": TranslatedMetric(
-                    originals=[Original("metric_name", 1.0)],
-                    value=1.0,
-                    scalar={},
-                    auto_graph=True,
-                    title="",
-                    unit_spec=ConvertibleUnitSpecification(
-                        notation=DecimalNotation(symbol=""),
-                        precision=AutoPrecision(digits=2),
+            translated_metrics,
+            evaluate_metrics(
+                conflicting_metrics=[],
+                optional_metrics=[],
+                metric_expressions=[
+                    MetricExpression(Metric("metric_name"), line_type="line"),
+                    MetricExpression(
+                        WarningOf(Metric("metric_name")), line_type="line", title="Warn"
                     ),
-                    color="#0080c0",
-                ),
-                "predict_metric_name": TranslatedMetric(
-                    originals=[Original("predict_metric_name", 1.0)],
-                    value=2.0,
-                    scalar={},
-                    auto_graph=True,
-                    title="",
-                    unit_spec=ConvertibleUnitSpecification(
-                        notation=DecimalNotation(symbol=""),
-                        precision=AutoPrecision(digits=2),
+                    MetricExpression(
+                        CriticalOf(Metric("metric_name")), line_type="line", title="Crit"
                     ),
-                    color="#0080c0",
-                ),
-                "predict_lower_metric_name": TranslatedMetric(
-                    originals=[Original("predict_lower_metric_name", 1.0)],
-                    value=3.0,
-                    scalar={},
-                    auto_graph=True,
-                    title="",
-                    unit_spec=ConvertibleUnitSpecification(
-                        notation=DecimalNotation(symbol=""),
-                        precision=AutoPrecision(digits=2),
-                    ),
-                    color="#0080c0",
-                ),
-            },
-            [
-                MetricExpression(Metric("metric_name"), line_type="line"),
-                MetricExpression(WarningOf(Metric("metric_name")), line_type="line", title="Warn"),
-                MetricExpression(CriticalOf(Metric("metric_name")), line_type="line", title="Crit"),
-            ],
+                ],
+                translated_metrics=translated_metrics,
+            ),
         )
     ) == [
         MetricExpression(Metric("predict_metric_name"), line_type="line"),

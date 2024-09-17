@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import itertools
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import assert_never, Literal
@@ -723,14 +724,15 @@ def _create_graph_recipe_from_template(
 
 
 def _compute_predictive_metrics(
-    translated_metrics: Mapping[str, TranslatedMetric], metrics: Sequence[MetricExpression]
+    translated_metrics: Mapping[str, TranslatedMetric],
+    metrics: Sequence[EvaluatedMetricExpression],
 ) -> Iterator[MetricExpression]:
     computed = set()
-    for metric_expression in metrics:
+    for metric in metrics:
         line_type: Literal["line", "-line"] = (
-            "-line" if metric_expression.line_type.startswith("-") else "line"
+            "-line" if metric.expression.line_type.startswith("-") else "line"
         )
-        for metric_name in metric_expression.metric_names():
+        for metric_name in metric.expression.metric_names():
             if metric_name in computed:
                 continue
             computed.add(metric_name)
@@ -757,22 +759,22 @@ def _get_evaluated_graph_templates(
             consolidation_function=graph_template.consolidation_function,
             range=graph_template.range,
             omit_zero_metrics=graph_template.omit_zero_metrics,
-            metrics=(
-                list(metrics) + list(_compute_predictive_metrics(translated_metrics, metrics))
+            metrics=list(
+                itertools.chain(
+                    (m.expression for m in evaluated_metrics),
+                    _compute_predictive_metrics(translated_metrics, evaluated_metrics),
+                )
             ),
         )
         for id_, template in _graph_templates_from_plugins()
         for graph_template in (_parse_graph_template(id_, template),)
         if (
-            metrics := [
-                m.expression
-                for m in evaluate_metrics(
-                    conflicting_metrics=graph_template.conflicting_metrics,
-                    optional_metrics=graph_template.optional_metrics,
-                    metric_expressions=graph_template.metrics,
-                    translated_metrics=translated_metrics,
-                )
-            ]
+            evaluated_metrics := evaluate_metrics(
+                conflicting_metrics=graph_template.conflicting_metrics,
+                optional_metrics=graph_template.optional_metrics,
+                metric_expressions=graph_template.metrics,
+                translated_metrics=translated_metrics,
+            )
         )
     ]
     yield from graph_templates

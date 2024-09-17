@@ -1,3 +1,4 @@
+use check_cert::check;
 use check_cert::checker::certificate::{self, Config as CertConfig};
 
 // Taken from `x509-parser`.
@@ -13,7 +14,7 @@ fn s(s: &str) -> Option<String> {
 
 #[test]
 fn test_cert_ok() {
-    let out = certificate::check(
+    let coll = certificate::check(
         DER,
         CertConfig::builder()
             .serial(s(SERIAL))
@@ -30,10 +31,11 @@ fn test_cert_ok() {
             .pubkey_size(Some(PUBKEY_SZ))
             .build(),
     );
+    assert_eq!(check::exit_code(&coll), 0);
     assert_eq!(
-        out.to_string(),
+        coll.to_string(),
         format!(
-            "OK - CN=IGC/A\n\
+            "CN=IGC/A\n\
             Subject CN: IGC/A\n\
             Subject O: PM/SGDN\n\
             Subject OU: DCSSI\n\
@@ -53,7 +55,7 @@ fn test_cert_ok() {
 #[test]
 fn test_cert_wrong_serial() {
     let serial = "01:02:03:04:05";
-    let out = certificate::check(
+    let coll = certificate::check(
         DER,
         CertConfig::builder()
             .serial(s(serial))
@@ -67,11 +69,11 @@ fn test_cert_wrong_serial() {
             .issuer_c(s("FR"))
             .build(),
     );
+    assert_eq!(check::exit_code(&coll), 1);
     assert_eq!(
-        out.to_string(),
+        coll.to_string(),
         format!(
-            "WARNING - \
-            CN=IGC/A, \
+            "CN=IGC/A, \
             Serial is {SERIAL} but expected {serial} (!)\n\
             Subject CN: IGC/A\n\
             Subject O: PM/SGDN\n\

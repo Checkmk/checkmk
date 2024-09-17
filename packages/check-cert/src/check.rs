@@ -505,7 +505,6 @@ impl Collection {
 
 impl Display for Collection {
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
-        let mut out = String::from(self.state.as_str());
         let summary = self
             .summary
             .iter()
@@ -519,9 +518,13 @@ impl Display for Collection {
             })
             .collect::<Vec<_>>()
             .join(", ");
-        if !summary.is_empty() {
-            out = format!("{} - {}", out, summary);
-        }
+        let mut out = if summary.is_empty() {
+            String::from(self.state.as_str())
+        } else {
+            // No SERVICE STATUS, this deviates from the Nagios guidelines
+            // but follows our internal requirements.
+            summary.to_string()
+        };
         let details = self
             .details
             .iter()
@@ -791,42 +794,37 @@ mod test_writer_format {
 
     #[test]
     fn test_single_check_result_ok() {
-        assert_eq!(
-            format!("{}", Collection::from(SimpleCheckResult::ok("summary"))),
-            "OK - summary"
-        );
+        let coll = Collection::from(SimpleCheckResult::ok("summary"));
+        assert_eq!(coll.state, State::Ok);
+        assert_eq!(format!("{}", coll), "summary");
     }
 
     #[test]
     fn test_single_check_result_warn() {
-        assert_eq!(
-            format!("{}", Collection::from(SimpleCheckResult::warn("summary"))),
-            "WARNING - summary (!)"
-        );
+        let coll = Collection::from(SimpleCheckResult::warn("summary"));
+        assert_eq!(coll.state, State::Warn);
+        assert_eq!(format!("{}", coll), "summary (!)");
     }
 
     #[test]
     fn test_single_check_result_crit() {
-        assert_eq!(
-            format!("{}", Collection::from(SimpleCheckResult::crit("summary"))),
-            "CRITICAL - summary (!!)"
-        );
+        let coll = Collection::from(SimpleCheckResult::crit("summary"));
+        assert_eq!(coll.state, State::Crit);
+        assert_eq!(format!("{}", coll), "summary (!!)");
     }
 
     #[test]
     fn test_single_check_result_unknown() {
-        assert_eq!(
-            format!(
-                "{}",
-                Collection::from(SimpleCheckResult::unknown("summary"))
-            ),
-            "UNKNOWN - summary (?)"
-        );
+        let coll = Collection::from(SimpleCheckResult::unknown("summary"));
+        assert_eq!(coll.state, State::Unknown);
+        assert_eq!(format!("{}", coll), "summary (?)");
     }
 
     #[test]
     fn test_no_check_results_is_ok() {
-        assert_eq!(format!("{}", Collection::from(&mut vec![])), "OK");
+        let coll = Collection::from(&mut vec![]);
+        assert_eq!(coll.state, State::Ok);
+        assert_eq!(format!("{}", coll), "OK");
     }
 
     #[test]
@@ -834,13 +832,9 @@ mod test_writer_format {
         let cr1 = SimpleCheckResult::default();
         let cr2 = SimpleCheckResult::default();
         let cr3 = SimpleCheckResult::default();
-        assert_eq!(
-            format!(
-                "{}",
-                Collection::from(&mut vec![cr1.into(), cr2.into(), cr3.into()])
-            ),
-            "OK"
-        );
+        let coll = Collection::from(&mut vec![cr1.into(), cr2.into(), cr3.into()]);
+        assert_eq!(coll.state, State::Ok);
+        assert_eq!(format!("{}", coll), "OK");
     }
 
     #[test]
@@ -848,13 +842,9 @@ mod test_writer_format {
         let cr1 = SimpleCheckResult::ok("summary 1");
         let cr2 = SimpleCheckResult::ok("summary 2");
         let cr3 = SimpleCheckResult::ok("summary 3");
-        assert_eq!(
-            format!(
-                "{}",
-                Collection::from(&mut vec![cr1.into(), cr2.into(), cr3.into()])
-            ),
-            "OK - summary 1, summary 2, summary 3"
-        );
+        let coll = Collection::from(&mut vec![cr1.into(), cr2.into(), cr3.into()]);
+        assert_eq!(coll.state, State::Ok);
+        assert_eq!(format!("{}", coll), "summary 1, summary 2, summary 3");
     }
 
     #[test]
@@ -862,13 +852,9 @@ mod test_writer_format {
         let cr1 = SimpleCheckResult::ok("summary 1");
         let cr2 = SimpleCheckResult::warn("summary 2");
         let cr3 = SimpleCheckResult::ok("summary 3");
-        assert_eq!(
-            format!(
-                "{}",
-                Collection::from(&mut vec![cr1.into(), cr2.into(), cr3.into()])
-            ),
-            "WARNING - summary 1, summary 2 (!), summary 3"
-        );
+        let coll = Collection::from(&mut vec![cr1.into(), cr2.into(), cr3.into()]);
+        assert_eq!(coll.state, State::Warn);
+        assert_eq!(format!("{}", coll), "summary 1, summary 2 (!), summary 3");
     }
 
     #[test]
@@ -876,12 +862,11 @@ mod test_writer_format {
         let cr1 = SimpleCheckResult::ok("summary 1");
         let cr2 = SimpleCheckResult::warn("summary 2");
         let cr3 = SimpleCheckResult::crit("summary 3");
+        let coll = Collection::from(&mut vec![cr1.into(), cr2.into(), cr3.into()]);
+        assert_eq!(coll.state, State::Crit);
         assert_eq!(
-            format!(
-                "{}",
-                Collection::from(&mut vec![cr1.into(), cr2.into(), cr3.into()])
-            ),
-            "CRITICAL - summary 1, summary 2 (!), summary 3 (!!)"
+            format!("{}", coll),
+            "summary 1, summary 2 (!), summary 3 (!!)"
         );
     }
 
@@ -891,12 +876,11 @@ mod test_writer_format {
         let cr2 = SimpleCheckResult::warn("summary 2");
         let cr3 = SimpleCheckResult::crit("summary 3");
         let cr4 = SimpleCheckResult::unknown("summary 4");
+        let coll = Collection::from(&mut vec![cr1.into(), cr2.into(), cr3.into(), cr4.into()]);
+        assert_eq!(coll.state, State::Crit);
         assert_eq!(
-            format!(
-                "{}",
-                Collection::from(&mut vec![cr1.into(), cr2.into(), cr3.into(), cr4.into()])
-            ),
-            "CRITICAL - summary 1, summary 2 (!), summary 3 (!!), summary 4 (?)"
+            format!("{}", coll),
+            "summary 1, summary 2 (!), summary 3 (!!), summary 4 (?)"
         );
     }
 
@@ -913,9 +897,11 @@ mod test_writer_format {
         let cr2 = CheckResult::warn("summary 2", m("m2", 37));
         let cr3 = CheckResult::crit("summary 3", m("m3", 42));
         let mut vec = vec![cr1, cr2, cr3];
+        let coll = Collection::from(&mut vec);
+        assert_eq!(coll.state, State::Crit);
         assert_eq!(
-            format!("{}", Collection::from(&mut vec)),
-            "CRITICAL - summary 1, summary 2 (!), summary 3 (!!)\n\
+            format!("{}", coll),
+            "summary 1, summary 2 (!), summary 3 (!!)\n\
             m1=13;;;;\n\
             m2=37;;;;\n\
             m3=42;;;;"
@@ -925,22 +911,24 @@ mod test_writer_format {
 
     #[test]
     fn test_joined_collection_with_metrics() {
-        let mut c = Collection::default();
-        c.join(&mut Collection::from(&mut vec![CheckResult::ok(
+        let mut coll = Collection::default();
+        coll.join(&mut Collection::from(&mut vec![CheckResult::ok(
             "summary 1",
             m("m1", 13),
         )]));
-        c.join(&mut Collection::from(&mut vec![CheckResult::warn(
+        coll.join(&mut Collection::from(&mut vec![CheckResult::warn(
             "summary 2",
             m("m2", 37),
         )]));
-        c.join(&mut Collection::from(&mut vec![CheckResult::crit(
+        coll.join(&mut Collection::from(&mut vec![CheckResult::crit(
             "summary 3",
             m("m3", 42),
         )]));
+        let coll = coll;
+        assert_eq!(coll.state, State::Crit);
         assert_eq!(
-            format!("{}", c),
-            "CRITICAL - summary 1, summary 2 (!), summary 3 (!!)\n\
+            format!("{}", coll),
+            "summary 1, summary 2 (!), summary 3 (!!)\n\
             m1=13;;;;\n\
             m2=37;;;;\n\
             m3=42;;;;"
@@ -953,17 +941,16 @@ mod test_writer_format {
         let cr_notice = SimpleCheckResult::notice("notice");
         let cr_warn = SimpleCheckResult::warn_with_details("summary warn", "details warn");
         let cr_crit = SimpleCheckResult::crit_with_details("summary crit", "details crit");
+        let coll = Collection::from(&mut vec![
+            cr_ok.into(),
+            cr_notice.into(),
+            cr_warn.into(),
+            cr_crit.into(),
+        ]);
+        assert_eq!(coll.state, State::Crit);
         assert_eq!(
-            format!(
-                "{}",
-                Collection::from(&mut vec![
-                    cr_ok.into(),
-                    cr_notice.into(),
-                    cr_warn.into(),
-                    cr_crit.into()
-                ])
-            ),
-            "CRITICAL - summary ok, summary warn (!), summary crit (!!)\n\
+            format!("{}", coll),
+            "summary ok, summary warn (!), summary crit (!!)\n\
             details ok\n\
             notice\n\
             details warn\n\
@@ -979,12 +966,11 @@ mod test_writer_format {
             CheckResult::warn_with_details("summary warn", "details warn", m("mwarn", 13));
         let cr_crit =
             CheckResult::crit_with_details("summary crit", "details crit", m("mcrit", 37));
+        let coll = Collection::from(&mut vec![cr_ok.into(), cr_notice.into(), cr_warn, cr_crit]);
+        assert_eq!(coll.state, State::Crit);
         assert_eq!(
-            format!(
-                "{}",
-                Collection::from(&mut vec![cr_ok.into(), cr_notice.into(), cr_warn, cr_crit])
-            ),
-            "CRITICAL - summary ok, summary warn (!), summary crit (!!)\n\
+            format!("{}", coll),
+            "summary ok, summary warn (!), summary crit (!!)\n\
             notice\n\
             details warn | mwarn=13;;;;\n\
             details crit | mcrit=37;;;;"
@@ -998,12 +984,11 @@ mod test_writer_format {
         let cr_warn =
             CheckResult::warn_with_details("summary warn", "details warn", m("mwarn", 13));
         let cr_crit = CheckResult::crit("summary crit", m("mcrit", 37));
+        let coll = Collection::from(&mut vec![cr_ok.into(), cr_notice.into(), cr_warn, cr_crit]);
+        assert_eq!(coll.state, State::Crit);
         assert_eq!(
-            format!(
-                "{}",
-                Collection::from(&mut vec![cr_ok.into(), cr_notice.into(), cr_warn, cr_crit])
-            ),
-            "CRITICAL - summary ok, summary warn (!), summary crit (!!)\n\
+            format!("{}", coll),
+            "summary ok, summary warn (!), summary crit (!!)\n\
             notice\n\
             details warn | mwarn=13;;;;\n\
             mcrit=37;;;;"

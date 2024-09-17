@@ -1,0 +1,16 @@
+Title: omd: curl wrapper not used for all supported versions of SLES and EL
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1726586000
+Edition: cre
+Level: 1
+Version: 2.2.0p35
+
+Some OMD makefile rules have to be (de-)activated for certain versions of SLES or EL
+(Enterprise Linux), but would not respect all affected versions due to the redundant
+implementation of the check. This led to {{curl}} not being wrapped as needed for SLES15-SP3.
+
+This change makes use of string prefixes rather than explicit listing of all supported
+versions of e.g. SLES15[-sp*], which fixes the mentioned issue and also takes care of
+future releases of SLES15 or EL based distros.

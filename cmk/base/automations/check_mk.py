@@ -2120,6 +2120,10 @@ class AutomationDiagSpecialAgent(Automation):
                     )
                 else:
                     yield 1, str(fetched.error)
+        except Exception as e:
+            if cmk.ccc.debug.enabled():
+                raise
+            yield 1, str(e)
         finally:
             if password_store_file.exists():
                 password_store_file.unlink()

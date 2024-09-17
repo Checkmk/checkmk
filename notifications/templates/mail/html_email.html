@@ -262,7 +262,7 @@
                                     Summary:
                                 </td>
                                 <td {{ style_macros.td_last_child() }}>
-                                    {{ data.SERVICEOUTPUT }}
+                                    {{ style_macros.replace_statemarker(data.SERVICEOUTPUT_HTML) }}
                                 </td>
                             </tr>
                             <tr>
@@ -281,11 +281,9 @@
                             style="background-color: #f6f6f6"
                         >
                             <p style="margin: 0px; padding: 10px 0 10px 10px">
-                                {% if data.LONGSERVICEOUTPUT %} {% for line in
-                                data.LONGSERVICEOUTPUT.split('\\n') %} {{ line
-                                }}
-                                <br />
-                                {% endfor %} {% else %} No details available {%
+                                {% if data.LONGSERVICEOUTPUT_HTML %}
+                                {{ style_macros.replace_statemarker(data.LONGSERVICEOUTPUT_HTML) }}
+                                {% else %} No details available {%
                                 endif %}
                             </p>
                         </div>

@@ -15,92 +15,56 @@ from cmk.notification_plugins import mail
     [
         (
             "PROBLEM",
-            (
-                "$PREVIOUS@HARDSHORTSTATE$ -> $@SHORTSTATE$",
-                '<span class="state$PREVIOUS@HARDSTATE$">$PREVIOUS@HARDSTATE$</span> &rarr; <span class="state$@STATE$">$@STATE$</span>',
-            ),
+            "$PREVIOUS@HARDSHORTSTATE$ -> $@SHORTSTATE$",
         ),
         (
             "RECOVERY",
-            (
-                "$PREVIOUS@HARDSHORTSTATE$ -> $@SHORTSTATE$",
-                '<span class="state$PREVIOUS@HARDSTATE$">$PREVIOUS@HARDSTATE$</span> &rarr; <span class="state$@STATE$">$@STATE$</span>',
-            ),
+            "$PREVIOUS@HARDSHORTSTATE$ -> $@SHORTSTATE$",
         ),
         (
             "FLAPPINGSTART",
-            (
-                "Started Flapping",
-                "Started Flapping",
-            ),
+            "Started Flapping",
         ),
         (
             "FLAPPINGSTOP",
-            (
-                "Stopped Flapping ($@SHORTSTATE$)",
-                'Stopped Flapping (while <span class="state$@STATE$">$@STATE$</span>)',
-            ),
+            "Stopped Flapping ($@SHORTSTATE$)",
         ),
         (
             "FLAPPINGDISABLED",
-            (
-                "Disabled Flapping ($@SHORTSTATE$)",
-                'Disabled Flapping (while <span class="state$@STATE$">$@STATE$</span>)',
-            ),
+            "Disabled Flapping ($@SHORTSTATE$)",
         ),
         (
             "DOWNTIMESTART",
-            (
-                "Downtime Start ($@SHORTSTATE$)",
-                'Downtime Start (while <span class="state$@STATE$">$@STATE$</span>)',
-            ),
+            "Downtime Start ($@SHORTSTATE$)",
         ),
         (
             "DOWNTIMEEND",
-            (
-                "Downtime End ($@SHORTSTATE$)",
-                'Downtime End (while <span class="state$@STATE$">$@STATE$</span>)',
-            ),
+            "Downtime End ($@SHORTSTATE$)",
         ),
         (
             "DOWNTIMECANCELLED",
-            (
-                "Downtime Cancelled ($@SHORTSTATE$)",
-                'Downtime Cancelled (while <span class="state$@STATE$">$@STATE$</span>)',
-            ),
+            "Downtime Cancelled ($@SHORTSTATE$)",
         ),
         (
             "ACKNOWLEDGEMENT",
-            (
-                "Acknowledged ($@SHORTSTATE$)",
-                'Acknowledged (while <span class="state$@STATE$">$@STATE$</span>)',
-            ),
+            "Acknowledged ($@SHORTSTATE$)",
         ),
         (
             "CUSTOM",
-            (
-                "Custom Notification ($@SHORTSTATE$)",
-                'Custom Notification (while <span class="state$@STATE$">$@STATE$</span>)',
-            ),
+            "Custom Notification ($@SHORTSTATE$)",
         ),
         (
             "ALERTHANDLER (OK)",
-            (
-                "ALERTHANDLER (OK)",
-                "ALERTHANDLER (OK)",
-            ),
+            "ALERTHANDLER (OK)",
         ),
         (
             "UNKNOWN",
-            (
-                "UNKNOWN",
-                "UNKNOWN",
-            ),
+            "UNKNOWN",
         ),
     ],
 )
-def test_event_templates(notification_type: str, expected: tuple[str, str]) -> None:
-    assert mail.event_templates(notification_type) == expected
+def test_event_templates(notification_type: str, expected: str) -> None:
+    assert mail.txt_event_template(notification_type) == expected
 
 
 HOSTNAME_ELEMENT = (
@@ -110,7 +74,6 @@ HOSTNAME_ELEMENT = (
     "all",
     "Host",
     "$HOSTNAME$ ($HOSTALIAS$)",
-    "$LINKEDHOSTNAME$ ($HOSTALIAS$)",
 )
 SERVICEDESC_ELEMENT = (
     "servicedesc",
@@ -119,7 +82,6 @@ SERVICEDESC_ELEMENT = (
     "all",
     "Service",
     "$SERVICEDESC$",
-    "$LINKEDSERVICEDESC$",
 )
 
 ALERTHANDLER_NAME_ELEMENT = (
@@ -129,7 +91,6 @@ ALERTHANDLER_NAME_ELEMENT = (
     "alerthandler",
     "Name of alert handler",
     "$ALERTHANDLERNAME$",
-    "$ALERTHANDLERNAME$",
 )
 
 
@@ -138,28 +99,19 @@ ALERTHANDLER_NAME_ELEMENT = (
     [
         (  # Show the hostname column in host notifications
             ("host", False, ["hostname"], [HOSTNAME_ELEMENT]),
-            (
-                "Host:                $HOSTNAME$ ($HOSTALIAS$)\n",
-                '<tr class="even0"><td class=left>Host</td><td>$LINKEDHOSTNAME$ ($HOSTALIAS$)</td></tr>',
-            ),
+            "Host:                $HOSTNAME$ ($HOSTALIAS$)\n",
         ),
         (  # Show the hostname column in service notifications
             ("service", False, ["hostname"], [HOSTNAME_ELEMENT]),
-            (
-                "Host:                $HOSTNAME$ ($HOSTALIAS$)\n",
-                '<tr class="even0"><td class=left>Host</td><td>$LINKEDHOSTNAME$ ($HOSTALIAS$)</td></tr>',
-            ),
+            "Host:                $HOSTNAME$ ($HOSTALIAS$)\n",
         ),
         (  # Don't show the servicedesc column in host notifications
             ("host", False, ["servicedesc"], [SERVICEDESC_ELEMENT]),
-            ("", ""),
+            "",
         ),
         (  # Show the servicedesc column in service notifications
             ("service", False, ["servicedesc"], [SERVICEDESC_ELEMENT]),
-            (
-                "Service:             $SERVICEDESC$\n",
-                '<tr class="even0"><td class=left>Service</td><td>$LINKEDSERVICEDESC$</td></tr>',
-            ),
+            "Service:             $SERVICEDESC$\n",
         ),
         (  # Columns are concatenated, the order is determined by the body elements
             (
@@ -168,27 +120,21 @@ ALERTHANDLER_NAME_ELEMENT = (
                 ["servicedesc", "hostname"],
                 [HOSTNAME_ELEMENT, SERVICEDESC_ELEMENT],
             ),
-            (
-                "Host:                $HOSTNAME$ ($HOSTALIAS$)\nService:             $SERVICEDESC$\n",
-                '<tr class="even0"><td class=left>Host</td><td>$LINKEDHOSTNAME$ ($HOSTALIAS$)</td></tr><tr class="odd0"><td class=left>Service</td><td>$LINKEDSERVICEDESC$</td></tr>',
-            ),
+            "Host:                $HOSTNAME$ ($HOSTALIAS$)\nService:             $SERVICEDESC$\n",
         ),
         (  # Don't show the alerthandler_name if is_alert_handler is False
             ("service", False, ["alerthandler_name"], [ALERTHANDLER_NAME_ELEMENT]),
-            ("", ""),
+            "",
         ),
         (  # Show the alerthandler_name if is_alert_handler is True
             ("service", True, ["alerthandler_name"], [ALERTHANDLER_NAME_ELEMENT]),
-            (
-                "Name of alert handler: $ALERTHANDLERNAME$\n",
-                '<tr class="even0"><td class=left>Name of alert handler</td><td>$ALERTHANDLERNAME$</td></tr>',
-            ),
+            "Name of alert handler: $ALERTHANDLERNAME$\n",
         ),
     ],
 )
 def test_body_templates(
-    args: tuple[str, bool, list[str], list[tuple[str, str, bool, str, str, str, str]]],
-    expected: tuple[str, str],
+    args: tuple[str, bool, list[str], list[tuple[str, str, bool, str, str, str]]],
+    expected: str,
 ) -> None:
     assert mail.body_templates(*args) == expected
 

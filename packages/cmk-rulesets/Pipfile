@@ -15,6 +15,7 @@ python-lsp-server = "*"
 
 [packages]
 cmk-rulesets = {editable = true, path = "."}
+uuid = "*"
 
 [requires]
 python_version = "3.12"

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Literal, TypeVar
+from uuid import uuid4
 
 from ._levels import _PredictiveLevelsT, LevelDirection, LevelsConfigModel, SimpleLevelsConfigModel
 
@@ -278,7 +279,11 @@ def migrate_to_password(
     match model:
         # old password format
         case "password", str(password):
-            return "cmk_postprocessed", "explicit_password", ("throwaway-id", password)
+            return (
+                "cmk_postprocessed",
+                "explicit_password",
+                (str(uuid4()), password),
+            )
         case "store", str(password_store_id):
             return "cmk_postprocessed", "stored_password", (password_store_id, "")
 

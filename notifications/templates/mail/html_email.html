@@ -262,31 +262,39 @@
                                     Summary:
                                 </td>
                                 <td {{ style_macros.td_last_child() }}>
-                                    {{ style_macros.replace_statemarker(data.SERVICEOUTPUT_HTML) }}
+                                    {% if service_notification %}
+                                        {{ style_macros.replace_statemarker(data.SERVICEOUTPUT_HTML) }}
+                                    {% else %}
+                                        {{ style_macros.replace_statemarker(data.HOSTOUTPUT_HTML) }}
+                                    {%endif %}
                                 </td>
                             </tr>
-                            <tr>
-                                <td
-                                    {{
-                                    style_macros.td_first_child(width="105px"
-                                    )
-                                    }}
+                            {% if service_notification %}
+                                <tr>
+                                    <td
+                                        {{
+                                        style_macros.td_first_child(width="105px"
+                                        )
+                                        }}
+                                    >
+                                        Service details:
+                                    </td>
+                                </tr>
+                                </table>
+                                <div
+                                    class="service_details"
+                                    style="background-color: #f6f6f6"
                                 >
-                                    Service details:
-                                </td>
-                            </tr>
-                        </table>
-                        <div
-                            class="service_details"
-                            style="background-color: #f6f6f6"
-                        >
-                            <p style="margin: 0px; padding: 10px 0 10px 10px">
-                                {% if data.LONGSERVICEOUTPUT_HTML %}
-                                {{ style_macros.replace_statemarker(data.LONGSERVICEOUTPUT_HTML) }}
-                                {% else %} No details available {%
-                                endif %}
-                            </p>
-                        </div>
+                                    <p style="margin: 0px; padding: 10px 0 10px 10px">
+                                        {% if data.LONGSERVICEOUTPUT_HTML %}
+                                        {{ style_macros.replace_statemarker(data.LONGSERVICEOUTPUT_HTML) }}
+                                        {% else %} No details available {%
+                                        endif %}
+                                    </p>
+                                </div>
+                            {% else %}
+                                </table>
+                        {% endif %}
                     </div>
 
                     {% if graphs %}

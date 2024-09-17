@@ -123,7 +123,7 @@ cmk-frontend:
 	packages/cmk-frontend/run --setup-environment --all
 
 frontend-vue:
-	packages/cmk-frontend-vue/run --setup-environment --all
+	packages/cmk-frontend-vue/run --all
 
 announcement:
 	mkdir -p $(CHECK_MK_ANNOUNCE_FOLDER)

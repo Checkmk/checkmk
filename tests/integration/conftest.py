@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 # Session fixtures must be in conftest.py to work properly
-@pytest.fixture(name="site", scope="session", autouse=True)
+@pytest.fixture(name="site", scope="session")
 def get_site() -> Iterator[Site]:
     if os.environ.get("RUNNING_IN_IDE") in ["yes", "1", "t", "true"]:
         # launch docker container

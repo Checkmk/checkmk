@@ -54,7 +54,7 @@ def _collect_passwords_from_form_data(
         form_spec_value[2][0]: (
             form_spec_value[2][1]
             if form_spec_value[1] == "explicit_password"
-            else load_passwords()[form_spec_value[2][1]]
+            else load_passwords()[form_spec_value[2][0]]["password"]
         )
         for form_data in all_stages_form_data.values()
         if isinstance(form_data, dict)

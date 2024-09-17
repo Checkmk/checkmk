@@ -8,7 +8,6 @@ import logging
 import os
 import signal
 import sys
-import threading
 import time
 from dataclasses import dataclass
 from logging import getLogger
@@ -19,8 +18,8 @@ from types import FrameType
 from cmk.ccc.daemon import daemonize, pid_file_lock
 
 from cmk.piggyback_hub.config import PiggybackConfig, save_config
-from cmk.piggyback_hub.payload import PiggybackPayload, save_payload, send_payload
-from cmk.piggyback_hub.utils import receive_messages, SignalException
+from cmk.piggyback_hub.payload import PiggybackPayload, save_payload, SendingPayloadThread
+from cmk.piggyback_hub.utils import ReceivingThread, SignalException
 
 VERBOSITY_MAP = {
     0: logging.INFO,
@@ -98,13 +97,12 @@ def run_piggyback_hub(logger: logging.Logger, omd_root: Path) -> None:
     while True:
         time.sleep(5)
 
-    receiving_thread = threading.Thread(
-        target=receive_messages,
-        args=(logger, omd_root, PiggybackPayload, save_payload, "payload"),
+    receiving_thread = ReceivingThread(
+        logger, omd_root, PiggybackPayload, save_payload(logger, omd_root), "payload"
     )
-    sending_thread = threading.Thread(target=send_payload, args=(logger, omd_root))
-    receive_config_thread = threading.Thread(
-        target=receive_messages, args=(logger, omd_root, PiggybackConfig, save_config, "config")
+    sending_thread = SendingPayloadThread(logger, omd_root)
+    receive_config_thread = ReceivingThread(
+        logger, omd_root, PiggybackConfig, save_config(logger, omd_root), "config"
     )
 
     receiving_thread.start()

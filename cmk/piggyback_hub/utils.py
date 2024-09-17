@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+import threading
 from pathlib import Path
-from typing import Callable, TypeVar
+from typing import Callable, Generic, TypeVar
 
 from pydantic import BaseModel
 
@@ -18,25 +19,34 @@ class SignalException(Exception):
     pass
 
 
-def receive_messages(
-    logger: logging.Logger,
-    omd_root: Path,
-    model: type[_ModelT],
-    callback: Callable[[logging.Logger, Path], Callable[[object, object, object, _ModelT], None]],
-    queue: str,
-) -> None:
-    try:
-        with Connection("piggyback-hub", omd_root) as conn:
-            channel: Channel[_ModelT] = conn.channel(model)
-            channel.queue_declare(queue=queue, bindings=(queue,))
-            on_message_callback = callback(logger, omd_root)
+class ReceivingThread(threading.Thread, Generic[_ModelT]):
+    def __init__(
+        self,
+        logger: logging.Logger,
+        omd_root: Path,
+        model: type[_ModelT],
+        callback: Callable[[object, object, object, _ModelT], None],
+        queue: str,
+    ) -> None:
+        super().__init__()
+        self.logger = logger
+        self.omd_root = omd_root
+        self.model = model
+        self.callback = callback
+        self.queue = queue
 
-            logger.debug("Waiting for messages in queue %s", queue)
+    def run(self) -> None:
+        try:
+            with Connection("piggyback-hub", self.omd_root) as conn:
+                channel: Channel[_ModelT] = conn.channel(self.model)
+                channel.queue_declare(queue=self.queue, bindings=(self.queue,))
 
-            while True:
-                channel.consume(on_message_callback, queue=queue)
-    except SignalException:
-        logger.debug("Stopping receiving messages")
-        return
-    except Exception as e:
-        logger.exception("Unhandled exception: %s.", e)
+                self.logger.debug("Waiting for messages in queue %s", self.queue)
+
+                while True:
+                    channel.consume(self.callback, queue=self.queue)
+        except SignalException:
+            self.logger.debug("Stopping receiving messages")
+            return
+        except Exception as e:
+            self.logger.exception("Unhandled exception: %s.", e)

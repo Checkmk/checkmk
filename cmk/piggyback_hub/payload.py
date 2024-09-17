@@ -5,6 +5,7 @@
 
 import json
 import logging
+import threading
 import time
 from collections.abc import Sequence
 from pathlib import Path
@@ -124,30 +125,38 @@ def _send_message(
     )
 
 
-def send_payload(logger: logging.Logger, omd_root: Path) -> None:
-    try:
-        with Connection("piggyback-hub", omd_root) as conn:
-            channel = conn.channel(PiggybackPayload)
+class SendingPayloadThread(threading.Thread):
+    def __init__(self, logger: logging.Logger, omd_root: Path):
+        super().__init__()
+        self.logger = logger
+        self.omd_root = omd_root
 
-            while True:
-                targets = _load_piggyback_targets(config_path(omd_root), omd_root.name)
-                for target in targets:
-                    for piggyback_message in _get_piggyback_raw_data_to_send(
-                        target.host_name, omd_root
-                    ):
-                        logger.debug(
-                            "Sending payload for piggybacked host '%s' from source host '%s' to site '%s'",
-                            piggyback_message.meta.piggybacked,
-                            piggyback_message.meta.source,
-                            target.site_id,
-                        )
-                        _send_message(
-                            channel, piggyback_message, target.site_id, omd_root, "payload"
-                        )
+    def run(self):
+        try:
+            with Connection("piggyback-hub", self.omd_root) as conn:
+                channel = conn.channel(PiggybackPayload)
 
-                time.sleep(SENDING_PAUSE)
-    except SignalException:
-        logger.debug("Stopping distributing messages")
-        return
-    except Exception as e:
-        logger.exception("Unhandled exception: %s.", e)
+                while True:
+                    targets = _load_piggyback_targets(
+                        config_path(self.omd_root), self.omd_root.name
+                    )
+                    for target in targets:
+                        for piggyback_message in _get_piggyback_raw_data_to_send(
+                            target.host_name, self.omd_root
+                        ):
+                            self.logger.debug(
+                                "Sending payload for piggybacked host '%s' from source host '%s' to site '%s'",
+                                piggyback_message.meta.piggybacked,
+                                piggyback_message.meta.source,
+                                target.site_id,
+                            )
+                            _send_message(
+                                channel, piggyback_message, target.site_id, self.omd_root, "payload"
+                            )
+
+                    time.sleep(SENDING_PAUSE)
+        except SignalException:
+            self.logger.debug("Stopping distributing messages")
+            return
+        except Exception as e:
+            self.logger.exception("Unhandled exception: %s.", e)

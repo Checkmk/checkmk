@@ -103,7 +103,9 @@ def sanitize_folder_path(folder_path: str) -> Folder:
         return tree.root_folder()
     if sanitized_folder_path in tree.all_folders():
         return tree.all_folders()[sanitized_folder_path]
-    return tree.root_folder().create_subfolder(name=folder_path, title=folder_path, attributes={})
+    return tree.root_folder().create_subfolder(
+        name=sanitized_folder_path, title=sanitized_folder_path, attributes={}
+    )
 
 
 def create_host_from_form_data(

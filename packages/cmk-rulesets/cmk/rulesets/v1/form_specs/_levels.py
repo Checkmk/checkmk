@@ -6,7 +6,7 @@
 import enum
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic, Literal, TypedDict, TypeVar
+from typing import Generic, Literal, TypedDict, TypeVar, Union
 
 from .._localize import Help, Title
 from ._base import DefaultValue, FormSpec, Prefill
@@ -77,17 +77,15 @@ class _PredictiveLevelsT(Generic[_NumberT], TypedDict):
     bound: tuple[_NumberT, _NumberT] | None
 
 
-SimpleLevelsConfigModel = (
-    tuple[Literal["no_levels"], None] | tuple[Literal["fixed"], tuple[_NumberT, _NumberT]]
-)
+SimpleLevelsConfigModel = Union[
+    tuple[Literal["no_levels"], None], tuple[Literal["fixed"], tuple[_NumberT, _NumberT]]
+]
 
 
-LevelsConfigModel = (
-    SimpleLevelsConfigModel[_NumberT]
-    | tuple[
-        Literal["cmk_postprocessed"], Literal["predictive_levels"], _PredictiveLevelsT[_NumberT]
-    ]
-)
+LevelsConfigModel = Union[
+    SimpleLevelsConfigModel[_NumberT],
+    tuple[Literal["cmk_postprocessed"], Literal["predictive_levels"], _PredictiveLevelsT[_NumberT]],
+]
 
 
 class LevelsType(enum.Enum):

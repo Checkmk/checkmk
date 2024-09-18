@@ -1907,12 +1907,8 @@ def _call_script(  # pylint: disable=too-many-branches
             line = parent.readline()
             if line:
                 sys.stdout.write("\n")
-                while True:
-                    line = parent.readline()
-                    if not line:
-                        break
+                for line in parent:
                     sys.stdout.write(f"-| {line}")
-                    sys.stdout.flush()
         except OSError:
             pass
         finally:

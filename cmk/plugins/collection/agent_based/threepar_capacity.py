@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -78,7 +78,7 @@ def check_threepar_capacity(
     if disk.failed_capacity == 0.0:
         return
 
-    yield from check_levels(
+    yield from check_levels_v1(
         value=disk.failed_capacity / disk.total_capacity * 100,
         levels_upper=params.get("failed_capacity_levels", (0.0, 0.0)),
         label=f"{disk.failed_capacity} MB failed",

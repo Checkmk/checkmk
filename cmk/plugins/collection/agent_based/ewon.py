@@ -7,7 +7,7 @@
 from collections.abc import Iterable, Mapping
 from typing import Any, Final, Literal
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -259,7 +259,7 @@ def _check_oxyreduct(params: Mapping[str, Any], data: Mapping[int, float]) -> Ch
                 levels = tag_params.get("levels", (16, 17, 14, 13))
 
             unit_str = tag_params.get("unit", "")
-            yield from check_levels(
+            yield from check_levels_v1(
                 value,
                 metric_name=tag_params.get("perfvar"),
                 levels_lower=levels[2:],

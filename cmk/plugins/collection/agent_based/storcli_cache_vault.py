@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import Final, NamedTuple
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -87,7 +87,9 @@ def check_storcli_cache_vault(item: str, section: Section) -> CheckResult:
         summary=vault.state.capitalize(),
     )
 
-    yield from check_levels(vault.capacitance_perc, render_func=render.percent, label="Capacitance")
+    yield from check_levels_v1(
+        vault.capacitance_perc, render_func=render.percent, label="Capacitance"
+    )
 
     if vault.needs_replacement:
         yield Result(state=State.WARN, summary="Replacement required")

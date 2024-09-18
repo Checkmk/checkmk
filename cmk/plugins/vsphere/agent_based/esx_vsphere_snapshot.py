@@ -8,7 +8,7 @@ import json
 from collections.abc import Mapping, Sequence
 from typing import Any, NamedTuple
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -90,7 +90,7 @@ def check_snapshots_summary(params: Mapping[str, Any], section: Section) -> Chec
         summary=f"Latest: {_get_snapshot_name(latest_snapshot)} {latest_timestamp}",
     )
 
-    yield from check_levels(
+    yield from check_levels_v1(
         now - latest_snapshot.time,
         metric_name="age" if params.get("age") else None,
         levels_upper=params.get("age"),
@@ -107,7 +107,7 @@ def check_snapshots_summary(params: Mapping[str, Any], section: Section) -> Chec
             summary=f"Oldest: {_get_snapshot_name(oldest_snapshot)} {oldest_timestamp}",
         )
     # check oldest age unconditionally
-    yield from check_levels(
+    yield from check_levels_v1(
         now - oldest_snapshot.time,
         metric_name="age_oldest" if params.get("age_oldest") else None,
         levels_upper=params.get("age_oldest"),

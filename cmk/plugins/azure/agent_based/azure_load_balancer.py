@@ -7,7 +7,7 @@
 from collections.abc import Callable, Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -88,7 +88,7 @@ def check_byte_count(item: str, params: Mapping[str, Any], section: Section) -> 
 
     bytes_per_second = metric.value / 60.0
 
-    yield from check_levels(
+    yield from check_levels_v1(
         bytes_per_second,
         levels_upper=params.get("upper_levels"),
         levels_lower=params.get("lower_levels"),
@@ -135,7 +135,7 @@ def check_snat(item: str, params: Mapping[str, Any], section: Section) -> CheckR
     if allocated_ports != 0:
         snat_usage = used_ports / allocated_ports * 100
 
-        yield from check_levels(
+        yield from check_levels_v1(
             snat_usage,
             levels_upper=params.get("upper_levels"),
             levels_lower=params.get("lower_levels"),

@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from time import time
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -53,14 +53,14 @@ def check_fortigate_antivirus_ips(
     data = section[item]
     value_store = get_value_store()
     now = time()
-    yield from check_levels(
+    yield from check_levels_v1(
         get_rate(value_store, "detection_rate", now, data["detected"]),
         levels_upper=params["detections"],
         metric_name="fortigate_detection_rate",
         label="Detection rate",
         render_func=lambda v: f"{v:.2f}/s",
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         get_rate(value_store, "blocking rate", now, data["blocked"]),
         metric_name="fortigate_blocking_rate",
         label="Blocking rate",

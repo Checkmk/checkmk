@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, Final
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     all_of,
     CheckPlugin,
@@ -211,7 +211,7 @@ def check_printer_supply(item: str, params: Mapping[str, Any], section: Section)
     if params["upturn_toner"]:
         leftperc = 100 - leftperc
 
-    yield from check_levels(
+    yield from check_levels_v1(
         leftperc,
         levels_lower=(warn, crit),
         label=f"{color_info}Remaining",

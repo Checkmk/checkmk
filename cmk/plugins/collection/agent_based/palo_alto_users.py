@@ -8,7 +8,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -81,7 +81,7 @@ def check(params: Mapping[str, Any], section: Section) -> CheckResult:
 
     abs_levels, perc_levels = _abs_and_rel_levels(params["levels"])
 
-    yield from check_levels(
+    yield from check_levels_v1(
         section.num_users,
         levels_upper=abs_levels,
         metric_name="num_user",
@@ -89,7 +89,7 @@ def check(params: Mapping[str, Any], section: Section) -> CheckResult:
         label="Absolute number of users",
         notice_only=True,
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         user_perc,
         levels_upper=perc_levels,
         render_func=render.percent,

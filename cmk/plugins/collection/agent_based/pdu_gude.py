@@ -6,7 +6,7 @@
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -162,7 +162,7 @@ def check_pdu_gude(
             else:
                 levels_upper = warn, crit
 
-        yield from check_levels(
+        yield from check_levels_v1(
             pdu_property.value,
             levels_upper=levels_upper,
             levels_lower=levels_lower,

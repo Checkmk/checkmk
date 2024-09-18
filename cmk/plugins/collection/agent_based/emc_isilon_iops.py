@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from contextlib import suppress
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -53,7 +53,7 @@ def check_emc_isilon_iops(
 ) -> CheckResult:
     if (iops := section.get(item)) is None:
         return
-    yield from check_levels(
+    yield from check_levels_v1(
         iops,
         metric_name="iops",
         label="Disk operations",

@@ -5,7 +5,7 @@
 
 import time
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -58,7 +58,7 @@ def _check_never_checked(text, never_checked, params, value_store, now):
         value_store[state_key] = now
         return
 
-    yield from check_levels(
+    yield from check_levels_v1(
         now - last_ts,
         levels_upper=params.get("never_analyze_vacuum"),
         render_func=render.timespan,
@@ -101,7 +101,7 @@ def _check_postgres_stats(*, item, params, section, value_store, now):
     if oldest_element:
         oldest_time, oldest_name = oldest_element
         yield Result(state=State.OK, summary=f"Table: {oldest_name}")
-        yield from check_levels(
+        yield from check_levels_v1(
             now - oldest_time,
             levels_upper=params.get(f"last_{item_type.lower()}"),
             render_func=render.timespan,

@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 
 from pydantic import BaseModel
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -82,7 +82,7 @@ def check_app_registration(
         )
 
     else:
-        yield from check_levels(
+        yield from check_levels_v1(
             age,
             levels_lower=params.get("expiration_time"),
             label="Remaining time",

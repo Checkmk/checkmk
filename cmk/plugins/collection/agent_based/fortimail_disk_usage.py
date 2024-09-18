@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -37,7 +37,7 @@ def check_fortimail_disk_usage(
     params: Mapping[str, tuple[float, float] | None],
     section: Section,
 ) -> CheckResult:
-    yield from check_levels(
+    yield from check_levels_v1(
         section["disk_usage"],
         levels_upper=params["disk_usage"],
         metric_name="disk_utilization",

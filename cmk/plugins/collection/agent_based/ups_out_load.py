@@ -6,7 +6,7 @@
 from collections.abc import Mapping, Sequence
 from typing import Any, NamedTuple
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -70,7 +70,7 @@ def check_ups_out_load(item: str, params: Mapping[str, Any], section: Section) -
         yield Result(state=State.UNKNOWN, summary=f"Phase {item} not found in SNMP output")
         return
 
-    yield from check_levels(
+    yield from check_levels_v1(
         value=ups.power,
         levels_upper=params["levels"],
         metric_name="out_load",

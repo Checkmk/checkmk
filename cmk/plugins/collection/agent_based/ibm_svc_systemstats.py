@@ -8,7 +8,7 @@ from collections import defaultdict
 from collections.abc import Mapping
 from typing import Any, NamedTuple
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -169,7 +169,7 @@ def check_ibm_svc_systemstats_disk_latency(
         ("read", section.disks[item]["r_ms"]),
         ("write", section.disks[item]["w_ms"]),
     ]:
-        yield from check_levels(
+        yield from check_levels_v1(
             value=value,
             metric_name=f"{name}_latency",
             levels_upper=params.get(name),

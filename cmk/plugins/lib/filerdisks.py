@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import CheckResult, Metric, render, Result, State
 
 
@@ -38,7 +38,7 @@ def _check_total_capacity(disks: Sequence[FilerDisk]) -> CheckResult:
 def _check_spare_disks(spare_disks: int, spare_disk_levels: Any) -> CheckResult:
     if spare_disk_levels:
         warn, crit = spare_disk_levels
-        yield from check_levels(
+        yield from check_levels_v1(
             value=float(spare_disks),
             levels_lower=(float(crit), float(warn)),
             label=f"Spare disks: {spare_disks}",

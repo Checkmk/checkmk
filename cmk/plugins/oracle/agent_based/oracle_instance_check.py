@@ -18,7 +18,7 @@ import time
 from collections.abc import Iterable, Mapping
 from typing import Literal, TypedDict
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -108,7 +108,7 @@ def check_oracle_instance(item: str, params: _Params, section: Section) -> Check
         yield from _check_archive_log(instance, params)
 
     if instance.pdb and instance.ptotal_size is not None:
-        yield from check_levels(
+        yield from check_levels_v1(
             instance.ptotal_size,
             metric_name="fs_size",
             render_func=render.bytes,
@@ -194,7 +194,7 @@ def check_oracle_instance_uptime(
         state=State.OK, summary=f"Up since {render.datetime(time.time() - data.up_seconds)}"
     )
 
-    yield from check_levels(
+    yield from check_levels_v1(
         data.up_seconds,
         levels_lower=params.get("min"),
         levels_upper=params.get("max"),

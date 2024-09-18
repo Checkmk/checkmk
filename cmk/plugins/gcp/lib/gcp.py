@@ -9,7 +9,8 @@ from dataclasses import dataclass
 from enum import IntEnum, unique
 from typing import Any, NewType
 
-from cmk.agent_based.v1 import check_levels, check_levels_predictive
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v1 import check_levels_predictive
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable
 
 Project = str
@@ -295,7 +296,7 @@ def generic_check(
                 label=metric_spec.display.label,
             )
         else:
-            yield from check_levels(
+            yield from check_levels_v1(
                 value,
                 metric_name=metric_name,
                 render_func=metric_spec.display.render_func,

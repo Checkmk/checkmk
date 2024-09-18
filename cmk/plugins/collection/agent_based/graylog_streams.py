@@ -6,7 +6,7 @@
 import json
 from collections.abc import Mapping
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -94,7 +94,7 @@ def check_graylog_streams(params: Mapping, section: Section) -> CheckResult:
         yield Result(state=State.WARN, summary="Number of streams: 0")
         return
 
-    yield from check_levels(
+    yield from check_levels_v1(
         len(section),
         metric_name="num_streams",
         levels_lower=params.get("stream_count_lower"),

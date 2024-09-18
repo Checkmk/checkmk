@@ -21,7 +21,7 @@ from dataclasses import dataclass
 # ...
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -113,98 +113,98 @@ def check_nfsiostat(item: str, params: Mapping[str, Any], section: Section) -> C
     if (values := section.get(item)) is None:
         return
 
-    yield from check_levels(
+    yield from check_levels_v1(
         values.op_s,
         metric_name="op_s",
         levels_upper=params.get("op_s"),
         label="Operations",
         render_func=lambda f: "%.2f/s" % f,
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         values.rpc_backlog,
         metric_name="rpc_backlog",
         levels_upper=params.get("rpc_backlog"),
         label="RPC Backlog",
         render_func=lambda f: "%.2f" % f,
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         values.read_ops,
         metric_name="read_ops",
         levels_upper=params.get("read_ops"),
         label="Read operations",
         render_func=lambda f: "%.2f/s" % f,
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         values.read_b_s,
         metric_name="read_b_s",
         levels_upper=params.get("read_b_s"),
         label="Reads size",
         render_func=render.iobandwidth,
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         values.read_b_op,
         metric_name="read_b_op",
         levels_upper=params.get("read_b_op"),
         label="Read bytes per operation",
         render_func=lambda f: "%.2f B/op" % f,
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         values.read_retrans,
         metric_name="read_retrans",
         levels_upper=params.get("read_retrans"),
         label="Read Retransmission",
         render_func=render.percent,
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         values.read_avg_rtt_s,
         metric_name="read_avg_rtt_s",
         levels_upper=params.get("read_avg_rtt_s"),
         label="Read average RTT",
         render_func=render.timespan,
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         values.read_avg_exe_s,
         metric_name="read_avg_exe_s",
         levels_upper=params.get("read_avg_exe_s"),
         label="Read average EXE",
         render_func=render.timespan,
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         values.write_ops_s,
         metric_name="write_ops_s",
         levels_upper=params.get("write_ops_s"),
         label="Write operations",
         render_func=lambda f: "%.2f/s" % f,
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         values.write_b_s,
         metric_name="write_b_s",
         levels_upper=params.get("write_b_s"),
         label="Writes size",
         render_func=render.iobandwidth,
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         values.write_b_op,
         metric_name="write_b_op",
         levels_upper=params.get("write_b_op"),
         label="Write bytes per operation",
         render_func=lambda f: "%.2f B/op" % f,
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         values.write_retrans,
         metric_name="write_retrans",
         levels_upper=params.get("write_retrans"),
         label="Write Retransmission",
         render_func=render.percent,
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         values.write_avg_rtt_s,
         metric_name="write_avg_rtt_s",
         levels_upper=params.get("write_avg_rtt_s"),
         label="Write Average RTT",
         render_func=render.timespan,
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         values.write_avg_exe_s,
         metric_name="write_avg_exe_s",
         levels_upper=params.get("write_avg_exe_s"),

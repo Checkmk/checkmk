@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from html import escape
 from typing import Any, Literal
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
@@ -620,7 +620,7 @@ def count_check(
     info_name: str,
 ) -> CheckResult:
     warnmin, okmin, okmax, warnmax = params["levels"]
-    yield from check_levels(
+    yield from check_levels_v1(
         processes.count,
         metric_name="count",
         levels_lower=(okmin, warnmin),
@@ -729,7 +729,7 @@ def check_averageable_metric(
     else:
         infotext = metric_name
 
-    yield from check_levels(
+    yield from check_levels_v1(
         metric_value,
         levels_upper=levels,
         render_func=render_fn,
@@ -812,7 +812,7 @@ def individual_process_check(
             if levels is None or metric_value is None:
                 continue
 
-            check_result, *_ = check_levels(
+            check_result, *_ = check_levels_v1(
                 metric_value,
                 levels_upper=levels,
                 render_func=render_fn,
@@ -833,7 +833,7 @@ def uptime_check(
 ) -> CheckResult:
     """Check how long the process is running"""
     if min_elapsed == max_elapsed:
-        yield from check_levels(
+        yield from check_levels_v1(
             min_elapsed,
             levels_lower=params.get("min_age"),
             levels_upper=params.get("max_age"),
@@ -850,14 +850,14 @@ def uptime_check(
             levels=params.get("max_age"),
         )
     else:
-        yield from check_levels(
+        yield from check_levels_v1(
             min_elapsed,
             metric_name="age_youngest",
             levels_lower=params.get("min_age"),
             render_func=render.timespan,
             label="Youngest running for",
         )
-        yield from check_levels(
+        yield from check_levels_v1(
             max_elapsed,
             metric_name="age_oldest",
             levels_upper=params.get("max_age"),
@@ -870,7 +870,7 @@ def handle_count_check(
     processes: ProcessAggregator,
     params: Mapping[str, Any],
 ) -> CheckResult:
-    yield from check_levels(
+    yield from check_levels_v1(
         processes.handle_count,
         metric_name="process_handles",
         levels_upper=params.get("handle_count"),

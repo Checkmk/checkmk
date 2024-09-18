@@ -6,7 +6,7 @@
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -72,7 +72,7 @@ def check_netscaler_sslcertificates(
     if item not in section:
         return
     label = "certificate valid for"
-    yield from check_levels(
+    yield from check_levels_v1(
         section[item],
         levels_lower=params["age_levels"],
         metric_name="daysleft",

@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, render, Service
 from cmk.plugins.lib.mssql_counters import Counters, Section
 
@@ -71,7 +71,7 @@ def check_mssql_counters_page_life_expectancy(
     if page_life_expectancy is None:
         return
 
-    yield from check_levels(
+    yield from check_levels_v1(
         page_life_expectancy,
         levels_upper=None,
         levels_lower=params["mssql_min_page_life_expectancy"],

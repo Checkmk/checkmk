@@ -7,7 +7,9 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels  # we can only use v2 after migrating the ruleset!
+from cmk.agent_based.v1 import (
+    check_levels as check_levels_v1,  # we can only use v2 after migrating the ruleset!
+)
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -108,7 +110,7 @@ def check_redis_info_persistence(
 
     rdb_changes = persistence_data.get("rdb_changes_since_last_save")
     if rdb_changes is not None:
-        yield from check_levels(
+        yield from check_levels_v1(
             int(rdb_changes),
             metric_name="changes_sld",
             levels_upper=params.get("rdb_changes_count"),

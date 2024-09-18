@@ -8,7 +8,7 @@ import json
 from collections.abc import Callable, Mapping, MutableMapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (  # check_levels,
     AgentSection,
     CheckPlugin,
@@ -115,7 +115,7 @@ def check_environment_threshold(
 
     unit = _scale_unit(data.value_units)
 
-    yield from check_levels(
+    yield from check_levels_v1(
         value=_scale(data.value, data.value_units),
         levels_upper=levels[:2],
         levels_lower=levels[2:],

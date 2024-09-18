@@ -6,7 +6,8 @@
 from collections.abc import Callable, Mapping
 from typing import Any, NamedTuple
 
-from cmk.agent_based.v1 import check_levels, check_levels_predictive
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v1 import check_levels_predictive
 from cmk.agent_based.v2 import (
     all_of,
     CheckPlugin,
@@ -81,7 +82,7 @@ def _check_levels(
             label=label,
         )
     else:
-        yield from check_levels(
+        yield from check_levels_v1(
             value=value,
             levels_upper=levels_upper,
             boundaries=boundaries,

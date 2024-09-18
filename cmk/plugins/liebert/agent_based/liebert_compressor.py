@@ -7,7 +7,9 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels  # we can only use v2 after migrating the ruleset!
+from cmk.agent_based.v1 import (
+    check_levels as check_levels_v1,  # we can only use v2 after migrating the ruleset!
+)
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -26,7 +28,7 @@ def check_liebert_compressor(
         value, unit = section[item]
     except KeyError:
         return
-    yield from check_levels(
+    yield from check_levels_v1(
         value,
         metric_name=None,
         levels_upper=params["levels"],

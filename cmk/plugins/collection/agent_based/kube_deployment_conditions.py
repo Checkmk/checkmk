@@ -6,7 +6,7 @@
 import time
 from collections.abc import Mapping
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -89,7 +89,7 @@ def _check(
 
         time_difference = now - condition["last_transition_time"]
         check_result = list(
-            check_levels(
+            check_levels_v1(
                 time_difference,
                 levels_upper=condition_levels(params=params, condition=name),
                 render_func=render.timespan,

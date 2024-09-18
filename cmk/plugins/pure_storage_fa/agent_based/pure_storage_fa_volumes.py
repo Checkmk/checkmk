@@ -9,7 +9,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -79,7 +79,7 @@ def check_volume_capacity(
         params,
     )
 
-    yield from check_levels(
+    yield from check_levels_v1(
         volume.data_reduction,
         metric_name="data_reduction",
         levels_lower=params.get("data_reduction"),

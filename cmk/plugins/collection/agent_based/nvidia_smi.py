@@ -11,7 +11,7 @@ from xml.etree import ElementTree
 
 from pydantic import BaseModel
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -309,7 +309,7 @@ def check_nvidia_smi_gpu_util(
         return
     if gpu.utilization.gpu_util is None:
         return
-    yield from check_levels(
+    yield from check_levels_v1(
         gpu.utilization.gpu_util,
         levels_upper=params.get("levels"),
         render_func=render.percent,
@@ -348,7 +348,7 @@ def check_nvidia_smi_en_de_coder_util(
     if not (gpu := section.gpus.get(item)):
         return
     if gpu.utilization.encoder_util is not None:
-        yield from check_levels(
+        yield from check_levels_v1(
             gpu.utilization.encoder_util,
             levels_upper=params.get("encoder_levels"),
             render_func=render.percent,
@@ -356,7 +356,7 @@ def check_nvidia_smi_en_de_coder_util(
             label="Encoder",
         )
     if gpu.utilization.decoder_util is not None:
-        yield from check_levels(
+        yield from check_levels_v1(
             gpu.utilization.decoder_util,
             levels_upper=params.get("decoder_levels"),
             render_func=render.percent,
@@ -392,7 +392,7 @@ def check_nvidia_smi_power(
 
     if gpu.power_readings.power_draw is not None:
         power_limit = gpu.power_readings.power_limit
-        yield from check_levels(
+        yield from check_levels_v1(
             gpu.power_readings.power_draw,
             levels_upper=params.get(
                 "levels", None if power_limit is None else (power_limit, power_limit)

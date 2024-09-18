@@ -29,7 +29,7 @@
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     any_of,
     CheckPlugin,
@@ -137,7 +137,7 @@ def check_entity_sensors_fan(
         state=sensor_reading.state, summary=f"Operational status: {sensor_reading.status_descr}"
     )
 
-    yield from check_levels(
+    yield from check_levels_v1(
         value=sensor_reading.reading,
         metric_name="fan" if params.get("output_metrics") else None,
         levels_upper=params.get("upper"),

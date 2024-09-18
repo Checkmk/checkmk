@@ -7,7 +7,7 @@
 from collections.abc import Mapping
 from typing import NamedTuple
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -50,7 +50,7 @@ def check(
     params: Mapping[str, tuple[float, float]],
     section: _Section,
 ) -> CheckResult:
-    yield from check_levels(
+    yield from check_levels_v1(
         levels_upper=params.get("levels"),
         value=section.db_usage,
         metric_name="disk_utilization",

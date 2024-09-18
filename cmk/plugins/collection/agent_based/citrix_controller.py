@@ -5,7 +5,7 @@
 
 import typing
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, Result, Service, State
 from cmk.plugins.lib.citrix_controller import Error, Section, Session
 
@@ -91,21 +91,21 @@ def discovery_citrix_controller_sessions(section: Section) -> DiscoveryResult:
 
 def check_citrix_controller_sessions(params: SessionParams, section: Section) -> CheckResult:
     session = Session() if section.session is None else section.session
-    yield from check_levels(
+    yield from check_levels_v1(
         session.active + session.inactive,
         levels_upper=params.get("total"),
         metric_name="total_sessions",
         label="total",
         render_func=str,
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         session.active,
         levels_upper=params.get("active"),
         metric_name="active_sessions",
         label="active",
         render_func=str,
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         session.inactive,
         levels_upper=params.get("inactive"),
         metric_name="inactive_sessions",
@@ -139,7 +139,7 @@ def check_citrix_controller_registered(params: DesktopParams, section: Section) 
     if isinstance(section.desktop_count, Error) or section.desktop_count is None:
         yield Result(state=State.UNKNOWN, summary="No desktops registered")
     else:
-        yield from check_levels(
+        yield from check_levels_v1(
             section.desktop_count,
             metric_name="registered_desktops",
             levels_upper=params.get("levels"),

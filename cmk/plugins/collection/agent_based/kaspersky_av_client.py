@@ -7,7 +7,7 @@ import time
 from collections.abc import Mapping
 from typing import Literal, TypedDict
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -97,7 +97,7 @@ def _check_age(
         yield Result(state=State.UNKNOWN, summary=f"{label} unkown")
         return
 
-    yield from check_levels(
+    yield from check_levels_v1(
         value=age,
         levels_upper=params[key],
         label=label,

@@ -9,7 +9,7 @@ from typing import Any
 
 from cmk.utils import oracle_constants  # pylint: disable=cmk-module-layer-violation
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -249,7 +249,7 @@ def _check_oracle_db_time(
         ("oracle_db_wait_time", "DB Non-Idle Wait", wait_time_rate),
     ]:
         metric_params = params.get(metric, (None, None))
-        yield from check_levels(
+        yield from check_levels_v1(
             rate,
             metric_name=metric,
             levels_upper=metric_params,
@@ -297,7 +297,7 @@ def _check_oracle_memory_info(
             continue
 
         metric_params = params.get(ga_field.metric, (None, None))
-        yield from check_levels(
+        yield from check_levels_v1(
             value,
             metric_name=ga_field.metric,
             levels_upper=metric_params,
@@ -372,7 +372,7 @@ def _check_oracle_performance_iostat_file(
             totals[i] += rate
 
             metric_params = params.get(metric_name, (None, None))
-            yield from check_levels(
+            yield from check_levels_v1(
                 rate,
                 metric_name=metric_name,
                 levels_upper=metric_params,
@@ -509,7 +509,7 @@ def check_oracle_performance_waitclasses(
                 total_waited_sum_fg += rate
 
             metric_params = params.get(metric_name, (None, None))
-            yield from check_levels(
+            yield from check_levels_v1(
                 rate,
                 metric_name=metric_name,
                 levels_upper=metric_params,
@@ -524,7 +524,7 @@ def check_oracle_performance_waitclasses(
         ("Total waited (FG)", total_waited_sum_fg, "oracle_wait_class_total_fg"),
     ]:
         metric_params = params.get(total_metric, (None, None))
-        yield from check_levels(
+        yield from check_levels_v1(
             total_value,
             metric_name=total_metric,
             levels_upper=metric_params,

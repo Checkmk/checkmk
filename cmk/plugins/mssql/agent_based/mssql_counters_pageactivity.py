@@ -7,7 +7,7 @@ import time
 from collections.abc import Mapping, MutableMapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -56,7 +56,7 @@ def _check_common(
         if p[0] in counters
     ):
         try:
-            yield from check_levels(
+            yield from check_levels_v1(
                 value=get_rate(
                     value_store,
                     f"mssql_counters.pageactivity.{node_name or None}.{item}.{counter_key}",

@@ -8,7 +8,7 @@ from typing import Any
 
 import pydantic
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -141,7 +141,7 @@ def check_oracle_crs_res(
 
         summary += f"; {infotext}" if summary else infotext
 
-    yield from check_levels(
+    yield from check_levels_v1(
         value=number_of_nodes_not_in_target_state,
         levels_upper=params["number_of_nodes_not_in_target_state"],
         metric_name="oracle_number_of_nodes_not_in_target_state",

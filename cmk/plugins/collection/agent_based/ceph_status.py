@@ -9,7 +9,7 @@ import time
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -50,7 +50,7 @@ def ceph_check_epoch(id_: str, epoch: float, params: Mapping[str, Any]) -> Check
     )
     epoch_avg = get_average(value_store, f"{id_}.epoch.avg", now, epoch_rate, avg_interval_min)
 
-    yield from check_levels(
+    yield from check_levels_v1(
         epoch_avg,
         levels_upper=(warn, crit),
         label=f"Epoch rate ({render.timespan(avg_interval_min * 60)} average)",
@@ -159,7 +159,7 @@ def check_ceph_status_osds(params: Mapping[str, Any], section: Section) -> Check
         ("num_up_osds", "OSDs down", "num_down_osds"),
     ]:
         value = num_osds - data[ds]
-        yield from check_levels(
+        yield from check_levels_v1(
             100 * float(value) / num_osds,
             levels_upper=params.get(param_key),
             render_func=render.percent,

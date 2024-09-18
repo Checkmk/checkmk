@@ -7,7 +7,8 @@ from typing import TypedDict
 
 from pydantic import BaseModel
 
-from cmk.agent_based.v1 import check_levels, Result, Service, State
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v1 import Result, Service, State
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -64,7 +65,7 @@ def check_aws_reservation_utilization(params: UtilizationParams, section: Sectio
     latest_date = max(date.fromisoformat(d) for d in section.keys()).strftime("%Y-%m-%d")
     data = section[latest_date]
 
-    yield from check_levels(
+    yield from check_levels_v1(
         value=data.UtilizationPercentage,
         metric_name="aws_total_reservation_utilization",
         levels_lower=params.get("levels_utilization_percent"),

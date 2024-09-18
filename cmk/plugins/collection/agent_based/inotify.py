@@ -9,7 +9,7 @@ from collections import Counter, defaultdict
 from collections.abc import Mapping
 from typing import Literal, NamedTuple
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -95,7 +95,7 @@ def _check_inotify(
     levels = {mode: (warn, crit) for mode, warn, crit in params["age_last_operation"]}
 
     for mode, timestamp in sorted(last_status.items()):
-        yield from check_levels(
+        yield from check_levels_v1(
             now - timestamp,
             levels_upper=levels.get(mode),
             render_func=render.timespan,

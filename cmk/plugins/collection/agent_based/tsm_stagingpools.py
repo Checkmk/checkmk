@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -111,7 +111,7 @@ def check_tsm_stagingpools(
         yield Result(state=State.UNKNOWN, summary="No tapes in this pool or pool not existant.")
         return
 
-    yield from check_levels(
+    yield from check_levels_v1(
         num_free_tapes,
         levels_lower=params.get("levels", (None, None)),
         metric_name="free",

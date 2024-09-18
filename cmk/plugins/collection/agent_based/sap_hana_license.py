@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import Any, NamedTuple
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -114,7 +114,7 @@ def check_sap_hana_license(
 
 
 def _check_product_usage(size, limit, params):
-    yield from check_levels(
+    yield from check_levels_v1(
         size,
         metric_name="license_size",
         levels_upper=params.get("license_size"),
@@ -127,7 +127,7 @@ def _check_product_usage(size, limit, params):
     except ZeroDivisionError:
         yield Result(state=State.WARN, summary="Usage: cannot calculate")
     else:
-        yield from check_levels(
+        yield from check_levels_v1(
             usage_perc,
             metric_name="license_usage_perc",
             levels_upper=params.get("license_usage_perc"),

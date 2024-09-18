@@ -6,7 +6,7 @@ import time
 from collections.abc import Mapping, MutableMapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -64,7 +64,7 @@ def _check_common(
             yield IgnoreResults(value="Cannot calculate rates yet")
             continue
 
-        yield from check_levels(
+        yield from check_levels_v1(
             rate,
             levels_upper=params.get(counter_key),
             render_func=lambda v, n=node_name, t=title: "{}{}: {:.1f}/s".format(

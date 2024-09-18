@@ -5,7 +5,7 @@
 
 from typing import Any, NamedTuple
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -51,7 +51,7 @@ def check_checkpoint_connections(
     params: dict[str, Any],
     section: Section,
 ) -> CheckResult:
-    yield from check_levels(
+    yield from check_levels_v1(
         value=section.current,
         levels_upper=params["levels"],
         metric_name="connections",

@@ -5,7 +5,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -75,7 +75,7 @@ def check_winperf_msx_queues(
 ) -> CheckResult:
     length = section.get(params["offset"])
     if length is not None:
-        yield from check_levels(
+        yield from check_levels_v1(
             length,
             levels_upper=params.get("levels"),
             metric_name="queue_length",

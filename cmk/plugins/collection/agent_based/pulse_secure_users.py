@@ -6,7 +6,7 @@
 from collections.abc import Generator, Mapping, Sequence
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     clusterize,
@@ -53,7 +53,7 @@ def discover_pulse_secure_users(section: Section) -> Generator[Service, None, No
 
 
 def check_pulse_secure_users(params: Mapping[str, Any], section: Section) -> CheckOutput:
-    yield from check_levels(
+    yield from check_levels_v1(
         section["n_users"],
         metric_name="current_users",
         levels_upper=params["upper_number_of_users"],
@@ -81,7 +81,7 @@ def cluster_check_pulse_secure_users(
             ),
         )
 
-    yield from check_levels(
+    yield from check_levels_v1(
         n_users_total,
         metric_name="current_users",
         levels_upper=params["upper_number_of_users"],

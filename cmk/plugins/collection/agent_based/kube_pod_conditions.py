@@ -6,7 +6,7 @@
 import time
 from collections.abc import Mapping
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -47,7 +47,7 @@ def _check_condition(
             yield Result(state=State.OK, summary=condition_short_description(name, cond.status))
             return
         summary_prefix = condition_detailed_description(name, cond.status, cond.reason, cond.detail)
-        for result in check_levels(
+        for result in check_levels_v1(
             time_diff, levels_upper=levels_upper, render_func=render.timespan
         ):
             yield Result(state=result.state, summary=f"{summary_prefix} for {result.summary}")

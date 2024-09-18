@@ -8,7 +8,7 @@ import time
 from collections.abc import Callable, Mapping, Sequence
 from typing import NamedTuple
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -220,7 +220,7 @@ def check_mqtt_broker(item: str, section: Mapping[str, Statistics]) -> CheckResu
         return
 
     if stats.subscriptions:
-        yield from check_levels(
+        yield from check_levels_v1(
             stats.subscriptions, metric_name="subscriptions", label="Subscriptions", render_func=str
         )
 
@@ -285,7 +285,7 @@ def check_mqtt_messages(item: str, section: Mapping[str, Statistics]) -> CheckRe
     messages = stats.messages
 
     if messages.retained_messages_count:
-        yield from check_levels(
+        yield from check_levels_v1(
             messages.retained_messages_count,
             metric_name="retained_messages",
             label="Retained messages",
@@ -293,7 +293,7 @@ def check_mqtt_messages(item: str, section: Mapping[str, Statistics]) -> CheckRe
         )
 
     if messages.stored_messages_count:
-        yield from check_levels(
+        yield from check_levels_v1(
             messages.stored_messages_count,
             metric_name="stored_messages",
             label="Stored messages",
@@ -301,7 +301,7 @@ def check_mqtt_messages(item: str, section: Mapping[str, Statistics]) -> CheckRe
         )
 
     if messages.stored_messages_bytes:
-        yield from check_levels(
+        yield from check_levels_v1(
             messages.stored_messages_bytes,
             metric_name="stored_messages_bytes",
             label="Stored message bytes",
@@ -328,7 +328,7 @@ def check_mqtt_messages(item: str, section: Mapping[str, Statistics]) -> CheckRe
 
 
 def check_message_rate(k: str, rate: float) -> CheckResult:
-    yield from check_levels(
+    yield from check_levels_v1(
         rate, metric_name=k, label=format_title(k), render_func=get_render_func(k)
     )
 
@@ -366,7 +366,7 @@ def check_mqtt_clients(item: str, section: Mapping[str, Statistics]) -> CheckRes
     clients = stats.clients
 
     if clients.connected:
-        yield from check_levels(
+        yield from check_levels_v1(
             clients.connected,
             metric_name="clients_connected",
             label="Connected clients",
@@ -374,7 +374,7 @@ def check_mqtt_clients(item: str, section: Mapping[str, Statistics]) -> CheckRes
         )
 
     if clients.maximum:
-        yield from check_levels(
+        yield from check_levels_v1(
             clients.maximum,
             metric_name="clients_maximum",
             label="Maximum connected (since startup)",
@@ -382,7 +382,7 @@ def check_mqtt_clients(item: str, section: Mapping[str, Statistics]) -> CheckRes
         )
 
     if clients.total:
-        yield from check_levels(
+        yield from check_levels_v1(
             clients.total, metric_name="clients_total", label="Total connected", render_func=str
         )
 

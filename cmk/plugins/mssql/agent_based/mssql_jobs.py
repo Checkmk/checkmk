@@ -7,7 +7,7 @@ import datetime
 from collections.abc import Mapping
 from typing import Any, Final, NamedTuple
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -192,7 +192,7 @@ def check_mssql_jobs(
         return
 
     if job_specs.last_run_duration is not None:
-        yield from check_levels(
+        yield from check_levels_v1(
             value=job_specs.last_run_duration,
             metric_name="database_job_duration",
             levels_upper=params.get("run_duration"),

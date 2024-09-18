@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, render, Service
 from cmk.plugins.lib.mssql_counters import get_int, get_item, Section
 
@@ -45,7 +45,7 @@ def _check_common(
     counters, counter = get_item(item, section)
     value = get_int(counters, counter)
     base = get_int(counters, "%s_base" % counter)
-    yield from check_levels(
+    yield from check_levels_v1(
         (100 * value / base) if base != 0 else 0,
         render_func=lambda v: "{}{}".format(node_name and "[%s] " % node_name, render.percent(v)),
         metric_name=counter,

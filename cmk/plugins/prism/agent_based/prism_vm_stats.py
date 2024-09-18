@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -80,7 +80,7 @@ def check_prism_vm_stats_cpu(params: Mapping[str, Any], section: Section) -> Che
     cpu_ready = int(data.get("hypervisor.cpu_ready_time_ppm", 0)) / 10000.0
     cpu_usage = int(data.get("hypervisor_cpu_usage_ppm", 0)) / 10000.0
 
-    yield from check_levels(
+    yield from check_levels_v1(
         value=cpu_usage,
         metric_name="cpu_usage",
         levels_upper=params.get("levels", (None, None)),
@@ -88,7 +88,7 @@ def check_prism_vm_stats_cpu(params: Mapping[str, Any], section: Section) -> Che
         label="CPU usage",
         boundaries=(0, 100),
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         value=cpu_ready,
         metric_name="cpu_ready",
         levels_upper=params.get("levels_rdy", (None, None)),

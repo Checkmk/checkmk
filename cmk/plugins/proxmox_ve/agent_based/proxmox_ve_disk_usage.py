@@ -7,7 +7,7 @@ import json
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -65,7 +65,7 @@ def check_proxmox_ve_disk_usage(params: Mapping[str, Any], section: Section) -> 
         boundaries=(0, None),
     )
 
-    yield from check_levels(
+    yield from check_levels_v1(
         100.0 * used_bytes / total_bytes,
         levels_upper=(warn, crit),
         metric_name="fs_used_percent",

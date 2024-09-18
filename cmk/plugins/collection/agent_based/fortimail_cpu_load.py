@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -36,7 +36,7 @@ def check_fortimail_cpu_load(
     params: Mapping[str, tuple[float, float] | None],
     section: Section,
 ) -> CheckResult:
-    yield from check_levels(
+    yield from check_levels_v1(
         section["cpu_load"],
         levels_upper=params["cpu_load"],
         metric_name="load_instant",

@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -114,7 +114,7 @@ def check(item: str, params: Mapping[str, Any], section: SectionTableSpaces) -> 
         yield Result(state=State.CRIT, summary=tablespace.error)
 
     if size is not None:
-        yield from check_levels(
+        yield from check_levels_v1(
             value=size,
             metric_name="size",
             levels_upper=params.get("size"),
@@ -140,7 +140,7 @@ def check(item: str, params: Mapping[str, Any], section: SectionTableSpaces) -> 
 
         levels_are_perc = _levels_are_in_percentage(levels_upper or levels_lower)
 
-        yield from check_levels(
+        yield from check_levels_v1(
             value=value_bytes,
             metric_name=metric_name,
             levels_upper=None if levels_are_perc else levels_upper,
@@ -149,7 +149,7 @@ def check(item: str, params: Mapping[str, Any], section: SectionTableSpaces) -> 
             label=label,
         )
         if size is not None and size != 0:
-            yield from check_levels(
+            yield from check_levels_v1(
                 value=100.0 * value_bytes / size,
                 levels_upper=levels_upper if levels_are_perc else None,
                 levels_lower=levels_lower if levels_are_perc else None,

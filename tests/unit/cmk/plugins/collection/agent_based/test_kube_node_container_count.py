@@ -132,7 +132,7 @@ def test_check_all_metrics_values(check_result: CheckResult, section: ContainerC
 
 @pytest.fixture
 def check_levels(mocker, autouse=True):
-    return mocker.spy(kube_node_container_count, "check_levels")
+    return mocker.spy(kube_node_container_count, "check_levels_v1")
 
 
 def test_check_issues_expected_check_levels_calls(

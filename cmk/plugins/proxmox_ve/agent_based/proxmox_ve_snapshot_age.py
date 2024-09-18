@@ -8,7 +8,7 @@ import time
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -40,7 +40,7 @@ def check_proxmox_ve_snapshot_age(params: Mapping[str, Any], section: Section) -
 
     # timestamps and timezones...
     age = max(time.time() - min(section["snaptimes"]), 0)
-    yield from check_levels(
+    yield from check_levels_v1(
         age,
         levels_upper=params["oldest_levels"],
         metric_name="age",

@@ -7,7 +7,7 @@ import time
 from collections.abc import Mapping, MutableMapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -82,7 +82,7 @@ def _check_common(
         yield IgnoreResults("Cannot calculate rates yet")
         return
 
-    yield from check_levels(
+    yield from check_levels_v1(
         lock_rate / batch_rate if batch_rate else 0,
         levels_upper=params.get("locks_per_batch"),
         metric_name="locks_per_batch",

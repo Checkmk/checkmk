@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -73,13 +73,13 @@ def discover_arbor_memory(section: Section) -> DiscoveryResult:
 
 
 def check_arbor_memory(params: Mapping[str, Any], section: Section) -> CheckResult:
-    yield from check_levels(
+    yield from check_levels_v1(
         section.ram,
         metric_name="mem_used_percent",
         levels_upper=params["levels_ram"][1],
         label="Used RAM",
     )
-    yield from check_levels(
+    yield from check_levels_v1(
         section.swap,
         metric_name="swap_used_percent",
         levels_upper=params["levels_swap"][1],

@@ -11,7 +11,9 @@ It sums up all connections and checks against configurable maximum values.
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels  # we have to migrate the ruleset to use v2
+from cmk.agent_based.v1 import (
+    check_levels as check_levels_v1,  # we have to migrate the ruleset to use v2
+)
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -47,7 +49,7 @@ def check_zorp_connections(params: Mapping[str, Any], section: Section) -> Check
 
     yield from (Result(state=State.OK, summary="%s: %d" % elem) for elem in section.items())
 
-    yield from check_levels(
+    yield from check_levels_v1(
         sum(section.values()),
         metric_name="connections",
         levels_upper=params.get("levels"),

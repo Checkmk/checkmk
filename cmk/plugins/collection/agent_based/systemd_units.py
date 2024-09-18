@@ -10,7 +10,7 @@ from datetime import timedelta
 from enum import Enum
 from typing import Any, NamedTuple, Self
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -549,7 +549,7 @@ def check_systemd_units(item: str, params: Mapping[str, Any], units: Units) -> C
     yield Result(state=State(state), summary=f"Status: {unit.active_status}")
     yield Result(state=State.OK, summary=unit.description)
     if unit.cpu_seconds:
-        yield from check_levels(
+        yield from check_levels_v1(
             unit.cpu_seconds.value,
             levels_upper=params.get("cpu_time"),
             label="CPU Time",
@@ -557,7 +557,7 @@ def check_systemd_units(item: str, params: Mapping[str, Any], units: Units) -> C
             render_func=render.timespan,
         )
     if unit.time_since_change is not None and unit.active_status == "active":
-        yield from check_levels(
+        yield from check_levels_v1(
             unit.time_since_change.total_seconds(),
             levels_lower=params.get("active_since_lower"),
             levels_upper=params.get("active_since_upper"),
@@ -566,7 +566,7 @@ def check_systemd_units(item: str, params: Mapping[str, Any], units: Units) -> C
             render_func=render.timespan,
         )
     if unit.memory:
-        yield from check_levels(
+        yield from check_levels_v1(
             unit.memory.bytes,
             levels_upper=params.get("memory"),
             label="Memory",
@@ -574,7 +574,7 @@ def check_systemd_units(item: str, params: Mapping[str, Any], units: Units) -> C
             render_func=render.bytes,
         )
     if unit.number_of_tasks:
-        yield from check_levels(
+        yield from check_levels_v1(
             unit.number_of_tasks,
             label="Number of tasks",
             metric_name="number_of_tasks",
@@ -672,7 +672,7 @@ def _check_temporary_state(
         elapsed_time = service.time_since_change
         if elapsed_time is None:
             continue
-        yield from check_levels(
+        yield from check_levels_v1(
             elapsed_time.total_seconds(),
             levels_upper=levels,
             render_func=render.timespan,

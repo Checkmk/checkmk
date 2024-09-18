@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from datetime import datetime, timezone, tzinfo
 from typing import Any, NamedTuple
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -135,7 +135,7 @@ def check_sap_hana_backup(item: str, params: Mapping[str, Any], section: Section
         yield Result(
             state=State.OK, summary="Last: %s" % render.datetime(data.end_time.timestamp())
         )
-        yield from check_levels(
+        yield from check_levels_v1(
             (datetime.now(tz=timezone.utc) - data.end_time).total_seconds(),
             metric_name="backup_age",
             levels_upper=params["backup_age"],

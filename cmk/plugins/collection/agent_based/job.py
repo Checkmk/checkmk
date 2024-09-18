@@ -7,7 +7,7 @@ import time
 from collections.abc import Callable, Mapping
 from typing import Any, Final, TypedDict
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -193,7 +193,7 @@ _METRIC_SPECS: Mapping[str, tuple[str, Callable]] = {
 
 def _check_job_levels(job: Job, metric: str, notice_only: bool = True) -> CheckResult:
     label, render_func = _METRIC_SPECS[metric]
-    yield from check_levels(
+    yield from check_levels_v1(
         job["metrics"][metric],
         metric_name=metric,
         label=label,
@@ -242,7 +242,7 @@ def _process_job_stats(
 
     used_start_time = max(job["running_start_time"]) if currently_running else job["start_time"]
     if (age := now - used_start_time) >= 0:
-        yield from check_levels(
+        yield from check_levels_v1(
             age,
             metric_name="job_age",
             label=f"Job age{currently_running}",

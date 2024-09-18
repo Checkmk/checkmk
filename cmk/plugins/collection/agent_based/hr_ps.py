@@ -7,7 +7,7 @@ import re
 from collections.abc import Mapping, Sequence
 from typing import Any, NamedTuple
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -111,7 +111,7 @@ def check_hr_ps(item: str, params: Mapping[str, Any], section: Section) -> Check
             ).append(process)
 
     lc, lw, uw, uc = params.get("levels", (None, None, None, None))
-    yield from check_levels(
+    yield from check_levels_v1(
         count_processes,
         metric_name="processes",
         levels_lower=(lw, lc),

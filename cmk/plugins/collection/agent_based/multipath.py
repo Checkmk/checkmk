@@ -8,7 +8,7 @@ from collections.abc import Mapping
 from contextlib import suppress
 from typing import Any, TypedDict
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -204,7 +204,7 @@ def check_multipath(  # pylint: disable=too-many-branches
 
     levels = params.get("levels")
 
-    yield from check_levels(
+    yield from check_levels_v1(
         num_active / num_paths * 100.0,
         levels_lower=(levels[0], levels[1]) if isinstance(levels, tuple) else None,
         render_func=render.percent,

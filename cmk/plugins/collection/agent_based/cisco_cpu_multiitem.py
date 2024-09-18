@@ -8,7 +8,7 @@ from contextlib import suppress
 from statistics import mean
 from typing import NamedTuple, TypedDict
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -84,7 +84,7 @@ def discover_cisco_cpu_multiitem(params: DiscoveryParams, section: Section) -> D
 def check_cisco_cpu_multiitem(item: str, params: Params, section: Section) -> CheckResult:
     if item not in section:
         return None
-    yield from check_levels(
+    yield from check_levels_v1(
         section[item].util,
         levels_upper=params["levels"],
         metric_name="util",

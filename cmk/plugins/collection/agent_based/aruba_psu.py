@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from enum import Enum
 from typing import NamedTuple, TypedDict
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     all_of,
     CheckPlugin,
@@ -219,7 +219,7 @@ def check_aruba_psu_wattage(
     if not (psu := section.get(item)):
         return
 
-    yield from check_levels(
+    yield from check_levels_v1(
         value=psu.wattage_curr,
         levels_upper=params.get("levels_abs_upper"),
         levels_lower=params.get("levels_abs_lower"),
@@ -228,7 +228,7 @@ def check_aruba_psu_wattage(
         render_func=lambda x: f"{x:.2f}W",
     )
 
-    yield from check_levels(
+    yield from check_levels_v1(
         value=psu.wattage_curr / psu.wattage_max * 100.0,
         levels_upper=params.get("levels_perc_upper"),
         levels_lower=params.get("levels_perc_lower"),

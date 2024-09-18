@@ -8,7 +8,7 @@ import time
 from collections.abc import MutableMapping, Sequence
 from typing import Any, TypedDict
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -133,7 +133,7 @@ def _check_kube_pod_status(
     if levels is None:
         yield Result(state=State.OK, summary=status_message)
     else:
-        for result in check_levels(
+        for result in check_levels_v1(
             sum(value_store["duration_per_status"].values()),
             render_func=render.timespan,
             levels_upper=levels,

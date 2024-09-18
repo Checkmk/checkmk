@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -38,7 +38,7 @@ def discover_arbor_peakflow_sp_flows(section: int) -> DiscoveryResult:
 
 
 def check_arbor_peakflow_sp_flows(section: int) -> CheckResult:
-    yield from check_levels(section, metric_name="flows", label="Flows", render_func=str)
+    yield from check_levels_v1(section, metric_name="flows", label="Flows", render_func=str)
 
 
 check_plugin_arbor_peakflow_sp_flows = CheckPlugin(

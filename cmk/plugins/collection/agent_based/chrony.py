@@ -21,7 +21,7 @@ from calendar import timegm
 from time import strptime, time
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -118,7 +118,7 @@ def check_chrony(params, section_chrony, section_ntp):
     crit_stratum, warn, crit = params["ntp_levels"]
 
     if (sys_time_offset := section_chrony.get("System time")) is not None:
-        yield from check_levels(
+        yield from check_levels_v1(
             abs(sys_time_offset),
             levels_upper=(warn, crit),
             metric_name="offset",
@@ -128,7 +128,7 @@ def check_chrony(params, section_chrony, section_ntp):
         )
 
     if (stratum := section_chrony.get("Stratum")) is not None:
-        yield from check_levels(
+        yield from check_levels_v1(
             stratum,
             levels_upper=(crit_stratum, crit_stratum),
             render_func=lambda v: "%d" % v,
@@ -138,7 +138,7 @@ def check_chrony(params, section_chrony, section_ntp):
 
     if (last_sync := section_chrony.get("last_sync")) is not None:
         if last_sync >= 0:
-            yield from check_levels(
+            yield from check_levels_v1(
                 last_sync,
                 levels_upper=params["alert_delay"],
                 render_func=render.timespan,

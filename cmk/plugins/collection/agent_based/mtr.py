@@ -6,7 +6,7 @@
 from collections.abc import Iterable, Mapping, Sequence
 from typing import NamedTuple, TypedDict
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -88,7 +88,7 @@ def _check_last_hop(
     last_hop: Hop,
     last_idx: int,
 ) -> CheckResult:
-    yield from check_levels(
+    yield from check_levels_v1(
         last_hop.pl,
         levels_upper=params["pl"],
         metric_name="hop_%d_pl" % last_idx,
@@ -96,7 +96,7 @@ def _check_last_hop(
         label="Packet loss",
     )
 
-    yield from check_levels(
+    yield from check_levels_v1(
         last_hop.rta,
         levels_upper=(params["rta"][0] / 1000, params["rta"][1] / 1000),
         metric_name="hop_%d_rta" % last_idx,
@@ -104,7 +104,7 @@ def _check_last_hop(
         label="Round trip average",
     )
 
-    yield from check_levels(
+    yield from check_levels_v1(
         last_hop.rtstddev,
         levels_upper=(params["rtstddev"][0] / 1000, params["rtstddev"][1] / 1000),
         metric_name="hop_%d_rtstddev" % last_idx,

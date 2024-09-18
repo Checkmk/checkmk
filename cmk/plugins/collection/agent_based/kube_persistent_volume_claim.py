@@ -6,7 +6,7 @@ import time
 from collections.abc import Iterator, Mapping, MutableMapping
 from typing import Any, TypedDict
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -192,7 +192,7 @@ def _output_status(
 
     pending_start_timestamp = value_store.setdefault("pending", timestamp)
     check_result = list(
-        check_levels(
+        check_levels_v1(
             timestamp - pending_start_timestamp,
             levels_upper=pending_age_levels,
             render_func=render.timespan,

@@ -7,7 +7,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, Literal, TypedDict
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Metric, Result, Service, State
 
 # TODO: Cleanup the whole status text mapping in utils/ipmi.py, ipmi_sensors.include, ipmi.py
@@ -217,7 +217,7 @@ def _check_ipmi_detailed(
             levels=(None, sensor.crit_high),
         )
 
-    sensor_result, *_ = check_levels(
+    sensor_result, *_ = check_levels_v1(
         sensor.value,
         levels_upper=_sensor_levels_to_check_levels_fixed(sensor.warn_high, sensor.crit_high),
         levels_lower=_sensor_levels_to_check_levels_fixed(sensor.warn_low, sensor.crit_low),
@@ -232,7 +232,7 @@ def _check_ipmi_detailed(
 
     user_levels_map = _compile_user_levels_map(params)
     if levels := user_levels_map.get(item):
-        yield from check_levels(
+        yield from check_levels_v1(
             sensor.value,
             levels_upper=levels.upper,
             levels_lower=levels.lower,
@@ -287,7 +287,7 @@ def _check_individual_sensors(
         )
 
         if sensor.value is not None and (levels := user_levels_map.get(sensor_name)):
-            (sensor_result,) = check_levels(
+            (sensor_result,) = check_levels_v1(
                 sensor.value,
                 levels_upper=levels.upper,
                 levels_lower=levels.lower,

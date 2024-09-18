@@ -8,7 +8,7 @@ import time
 from collections.abc import Callable, Mapping
 from typing import Any, Final
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -217,7 +217,7 @@ def check_apache_status(item: str, params: Mapping[str, Any], section: Section) 
             def renderer(i: float) -> str:
                 return "%d" % int(i)
 
-        yield from check_levels(
+        yield from check_levels_v1(
             value,
             metric_name=key.replace(" ", "_"),
             levels_lower=params.get(key) if levels_are_lower else None,

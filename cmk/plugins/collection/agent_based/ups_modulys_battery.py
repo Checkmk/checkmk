@@ -7,7 +7,7 @@ import sys
 from collections.abc import Mapping, Sequence
 from typing import Any, NamedTuple
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -113,7 +113,7 @@ def _check_battery_remaining_time(
     remaining_time: float,
     time_left_params: tuple[float, float],
 ) -> CheckResult:
-    yield from check_levels(
+    yield from check_levels_v1(
         value=remaining_time,
         levels_lower=time_left_params,
         label="Minutes remaining",
@@ -124,7 +124,7 @@ def _check_battery_capacity(
     capacity: float,
     capacity_params: tuple[float, float],
 ) -> CheckResult:
-    yield from check_levels(
+    yield from check_levels_v1(
         value=capacity,
         levels_lower=capacity_params,
         render_func=render.percent,

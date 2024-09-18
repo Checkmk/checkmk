@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import cast, Literal
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -38,7 +38,7 @@ def check(params: KubeContainersLevelsUpperLower, section: ContainerCount) -> Ch
     section_dict["total"] = sum(section_dict.values())
     for name, value in section_dict.items():
         level_count_name = cast(CountName, name)
-        yield from check_levels(
+        yield from check_levels_v1(
             value,
             levels_upper=_get_levels(params, level_count_name, "upper"),
             levels_lower=_get_levels(params, level_count_name, "lower"),

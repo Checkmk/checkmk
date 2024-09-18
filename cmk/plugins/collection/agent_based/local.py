@@ -18,7 +18,7 @@ from collections.abc import Iterable, Mapping, Sequence
 # P No-Text hirn=-8;-20
 from typing import Any, NamedTuple
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -350,7 +350,7 @@ def _local_make_metrics(local_result: LocalResult) -> LocalCheckResult:
         else:
             metric_name = entry.name
 
-        yield from check_levels(
+        yield from check_levels_v1(
             entry.value,
             # check_levels does not like levels like (23, None), but it does deal with it.
             levels_upper=entry.levels_upper if local_result.apply_levels else None,

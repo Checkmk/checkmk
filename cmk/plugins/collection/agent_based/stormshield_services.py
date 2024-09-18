@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import NamedTuple
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -73,7 +73,7 @@ def check_stormshield_services(item: str, section: Section) -> CheckResult:
     if state_label == "down":
         return
 
-    yield from check_levels(
+    yield from check_levels_v1(
         service.uptime,
         metric_name="uptime",
         render_func=render.timespan,

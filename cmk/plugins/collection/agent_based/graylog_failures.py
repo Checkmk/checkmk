@@ -8,7 +8,7 @@ from collections.abc import Collection, Iterable, Mapping, Sequence
 
 from pydantic import BaseModel, Field
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -125,7 +125,7 @@ def check(
     if section.failures is None or section.total is None:
         return
 
-    yield from check_levels(
+    yield from check_levels_v1(
         value=section.total,
         levels_upper=params.get("failures"),
         metric_name="failures",
@@ -136,7 +136,7 @@ def check(
     if section.count is None:
         return
 
-    yield from check_levels(
+    yield from check_levels_v1(
         value=section.count,
         levels_upper=params.get("failures_last"),
         metric_name=None,

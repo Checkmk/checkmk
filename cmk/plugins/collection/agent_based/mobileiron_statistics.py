@@ -10,7 +10,7 @@ Single service per mobileiron source host.
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -35,7 +35,7 @@ def check_mobileiron_sourcehost(
     yield Metric(name="mobileiron_non_compliant", value=section.non_compliant)
 
     non_compliant_percent = section.non_compliant / section.total_count * 100
-    yield from check_levels(
+    yield from check_levels_v1(
         label="Non-compliant devices",
         value=non_compliant_percent,
         metric_name="mobileiron_non_compliant_summary",

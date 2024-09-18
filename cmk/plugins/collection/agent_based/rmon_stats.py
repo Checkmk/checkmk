@@ -12,7 +12,7 @@ import time
 from collections.abc import Mapping
 from typing import Literal
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     all_of,
     any_of,
@@ -64,7 +64,7 @@ def check_rmon_stats(item: str, section: Mapping[str, PortStats]) -> CheckResult
         except GetRateError:
             yield IgnoreResults()
         else:
-            yield from check_levels(
+            yield from check_levels_v1(
                 rate, metric_name=metric, render_func=lambda v: "%.0f octets/sec" % v, label=metric
             )
 

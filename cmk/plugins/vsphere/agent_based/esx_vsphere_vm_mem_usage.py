@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -45,7 +45,7 @@ def check_mem_usage(params: Mapping[str, Any], section: esx_vsphere.SectionESXVm
     ]:
         if value is None:
             continue
-        yield from check_levels(
+        yield from check_levels_v1(
             value=value,
             levels_upper=params.get(metric_name),
             metric_name=metric_name,

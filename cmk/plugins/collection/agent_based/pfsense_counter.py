@@ -8,7 +8,7 @@ import time
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -79,7 +79,7 @@ def check_pfsense_counter(params: Mapping[str, Any], section: Section) -> CheckR
                 value_store, "pfsense_counter-%srate" % what, this_time, rate, backlog_minutes
             )
 
-        yield from check_levels(
+        yield from check_levels_v1(
             rate,
             metric_name=f"fw{'_avg' if backlog_minutes else ''}_packets_{what}",
             levels_upper=levels,

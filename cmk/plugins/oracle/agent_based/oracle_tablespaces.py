@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -309,7 +309,7 @@ def check_oracle_tablespaces(  # pylint: disable=too-many-branches
             or (ts_type == "TEMPORARY" and params.get("temptablespace"))
             or (ts_type == "UNDO" and params.get("monitor_undo_tablespace"))
         ):
-            yield from check_levels(
+            yield from check_levels_v1(
                 stats.free_space,
                 levels_lower=(warn, crit),
                 render_func=render.bytes,

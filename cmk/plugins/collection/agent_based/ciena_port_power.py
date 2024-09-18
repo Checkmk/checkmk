@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from math import log10
 from typing import NamedTuple
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -83,7 +83,7 @@ def check_ciena_port_power(item: str, section: Section) -> CheckResult:
     # Currently, the switch sometimes reports 0 micro_watt. For the most part it does this, if the
     # port does not support transmition. If we convert this to dBm, it breaks our metric.
     if received_power.power != -inf:
-        yield from check_levels(
+        yield from check_levels_v1(
             value=received_power.power,
             metric_name="input_signal_power_dbm",
             levels_upper=(received_power.treshold_upper, received_power.treshold_upper),
@@ -99,7 +99,7 @@ def check_ciena_port_power(item: str, section: Section) -> CheckResult:
     else:
         yield Result(state=State.OK, summary="Received signal power is 0 watt")
     if transmitted_power.power != -inf:
-        yield from check_levels(
+        yield from check_levels_v1(
             value=transmitted_power.power,
             metric_name="output_signal_power_dbm",
             levels_upper=(transmitted_power.treshold_upper, transmitted_power.treshold_upper),

@@ -10,7 +10,7 @@ from collections.abc import MutableMapping
 from itertools import islice
 from typing import Literal, NamedTuple, TypedDict
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -197,7 +197,7 @@ def check_free_pods(
     else:  # vs_result[0] == "levels_perc"
         levels = Levels(*tuple(math.ceil(level * allocatable_pods / 100) for level in vs_result[1]))
 
-    yield from check_levels(
+    yield from check_levels_v1(
         value=num_free_pods,
         label="Free",
         metric_name="kube_pod_free",

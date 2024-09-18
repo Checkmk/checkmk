@@ -6,7 +6,7 @@
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, TypedDict
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -263,7 +263,7 @@ def _check_netscaler_vservers(
 
     first_vserver = vsevers[0]
     if first_vserver["entity_service_type"] in ["loadbalancing", "loadbalancing group"]:
-        yield from check_levels(
+        yield from check_levels_v1(
             value=first_vserver["health"],
             levels_lower=params["health_levels"],
             metric_name="health_perc",
@@ -287,7 +287,7 @@ def _check_netscaler_vservers(
         (max(rx_list), "if_in_octets", render.networkbandwidth, "In"),
         (max(tx_list), "if_out_octets", render.networkbandwidth, "Out"),
     ]:
-        yield from check_levels(
+        yield from check_levels_v1(
             value=metric_value,
             metric_name=metric_name,
             render_func=render_func,

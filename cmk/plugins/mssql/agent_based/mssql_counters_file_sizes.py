@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, Metric, render
 from cmk.plugins.lib.mssql_counters import (
     discovery_mssql_counters_generic,
@@ -45,7 +45,7 @@ def _check_mssql_file_sizes(
         (data_files_size, "data_files", "Data files"),
         (log_files_size, "log_files", "Log files total"),
     ):
-        yield from check_levels(
+        yield from check_levels_v1(
             size,
             levels_upper=params.get(key),
             render_func=lambda v, t=title: f"{node_info}{t}: {render.bytes(v)}",
@@ -60,7 +60,7 @@ def _check_mssql_file_sizes(
 
     levels_upper = params.get("log_files_used", (None, None))
     if isinstance(levels_upper[0], float) and log_files_size:
-        yield from check_levels(
+        yield from check_levels_v1(
             100 * log_files_used / log_files_size,
             levels_upper=levels_upper,
             render_func=render.percent,
@@ -69,7 +69,7 @@ def _check_mssql_file_sizes(
         )
         levels_upper = tuple(l / 100 * log_files_size for l in levels_upper)
     else:
-        yield from check_levels(
+        yield from check_levels_v1(
             log_files_used,
             levels_upper=levels_upper,
             render_func=render.bytes,

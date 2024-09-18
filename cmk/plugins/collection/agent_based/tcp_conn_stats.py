@@ -5,7 +5,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -89,7 +89,7 @@ def discover_tcp_connections(section: TCPConnections) -> DiscoveryResult:
 def check_tcp_connections(params: Mapping[str, Any], section: TCPConnections) -> CheckResult:
     for tcp_state, tcp_count in sorted(section.items()):
         label = tcp_state.replace("_", " ").capitalize()
-        yield from check_levels(
+        yield from check_levels_v1(
             tcp_count,
             levels_upper=params.get(tcp_state),
             metric_name=tcp_state,

@@ -6,7 +6,7 @@ import time
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -160,7 +160,7 @@ def check_aws_ebs_burst_balance(
     if (disk_data := section.get(item)) is None:
         return
 
-    yield from check_levels(
+    yield from check_levels_v1(
         value=disk_data["BurstBalance"],
         metric_name="aws_burst_balance",
         levels_lower=params.get("burst_balance_levels_lower", (None, None)),

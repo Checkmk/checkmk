@@ -5,14 +5,14 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, Result, Service, State
 from cmk.plugins.lib.mobileiron import Section
 
 
 def check_mobileiron_compliance(params: Mapping[str, Any], section: Section) -> CheckResult:
     count = section.policy_violation_count or 0
-    yield from check_levels(
+    yield from check_levels_v1(
         label="Policy violation count",
         value=count,
         levels_upper=params.get("policy_violation_levels"),

@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -94,7 +94,7 @@ def check_netapp_ontap_snapshots(
     used_percent = (volume.snapshot_used / volume.snapshot_reserve_size) * 100.0
     snapshot_used = volume.snapshot_used
 
-    yield from check_levels(
+    yield from check_levels_v1(
         used_percent,
         levels_upper=params.get("levels"),
         label="Reserve used",

@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import Any, NamedTuple
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -118,7 +118,7 @@ def check_sansymphony_pool(
 
     if isinstance(pool.usage_stats, SimpleUsage):
         # sansymphony_pool
-        yield from check_levels(
+        yield from check_levels_v1(
             value=pool.usage_stats.percent_allocated,
             metric_name="pool_allocation",
             levels_upper=params["levels"],

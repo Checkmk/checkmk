@@ -10,7 +10,7 @@ from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from typing import Any, Literal, MutableMapping
 
-from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     all_of,
     any_of,
@@ -684,7 +684,7 @@ def check_cisco_temperature_dom(
         # in rare case of sensor id instead of sensor description no destinction
         # between transmit/receive possible
         dsname = "signal_power_dbm"
-    yield from check_levels(
+    yield from check_levels_v1(
         reading,
         metric_name=dsname,
         # Map WATO configuration of levels to check_levels() compatible tuple.

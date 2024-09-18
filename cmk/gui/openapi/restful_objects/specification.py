@@ -525,6 +525,7 @@ def _redoc_spec() -> ReDocSpec:
             {"name": "Monitoring", "tags": []},
             {"name": "Setup", "tags": []},
             {"name": "Checkmk Internal", "tags": []},
+            {"name": "Undocumented Endpoint", "tags": []},
         ],
         "x-ignoredHeaderParameters": [
             "User-Agent",

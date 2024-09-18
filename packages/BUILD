@@ -1,5 +1,4 @@
 exports_files([
-    "cmk-crypto",
     "cmk-graphing",
     "cmk-messaging",
     "cmk-rulesets",

@@ -88,10 +88,6 @@ config_setting(
         "@omd_packages//packages/cmk-agent-receiver:files",
     ),
     (
-        "crypto",
-        "@omd_packages//packages/cmk-crypto:files",
-    ),
-    (
         "graphing",
         "@omd_packages//packages/cmk-graphing:files",
     ),
@@ -160,7 +156,6 @@ genrule(
         "%s_compile" % module
         for module in all_requirements + [
             "agent-receiver",
-            "crypto",
             "graphing",
             "messaging",
             "rulesets",

@@ -18,6 +18,7 @@ PACKAGES_INT = [
     "//packages/cmk-agent-based:pkg_tar",
     "//packages/cmk-werks:pkg_tar",
     "//packages/cmk-mkp-tool:pkg_tar",
+    "//packages/cmk-crypto:pkg_tar",
 ]
 
 genrule(

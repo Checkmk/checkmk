@@ -1,8 +1,10 @@
-filegroup(
-    name = "files",
+load("@aspect_rules_py//py:defs.bzl", "py_library")
+load("@rules_python//python:packaging.bzl", "py_wheel")
+load("@omd_packages//omd/packages/rules:package_wheel.bzl", "package_wheel")
+
+py_library(
+    name = "cmk-crypto",
     srcs = [
-        "Pipfile",
-        "Pipfile.lock",
         "cmk/crypto/__init__.py",
         "cmk/crypto/certificate.py",
         "cmk/crypto/deprecated.py",
@@ -14,8 +16,18 @@ filegroup(
         "cmk/crypto/secrets.py",
         "cmk/crypto/symmetric.py",
         "cmk/crypto/totp.py",
-        "pyproject.toml",
-        "setup.cfg",
     ],
-    visibility = ["//visibility:public"],
 )
+
+py_wheel(
+    name = "wheel",
+    distribution = "cmk-crypto",
+    strip_path_prefixes = ["packages/cmk-crypto"],
+    # TODO: Duplicated from pyproject.toml
+    version = "0.9.0",
+    deps = [
+        ":cmk-crypto",
+    ],
+)
+
+package_wheel(wheel_target = "wheel")

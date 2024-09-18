@@ -94,8 +94,8 @@ def _register_signal_handler() -> None:
 
 def run_piggyback_hub(logger: logging.Logger, omd_root: Path) -> None:
     # TODO: remove this loop when rabbitmq available in site
-    while 0 < 1:  # pylint: disable=comparison-of-constants  # obfuscated `True` to have the rest linted!
-        time.sleep(5)
+    for _ in range(1_000_000):
+        time.sleep(1_000)
 
     receiving_thread = ReceivingThread(
         logger, omd_root, PiggybackPayload, save_payload(logger, omd_root), "payload"

@@ -580,7 +580,6 @@ def _active_check_preview_rows(
             macros,
             ip_address_of,
         ),
-        host_attrs,
         config.http_proxies,
         make_final_service_name,
         cmk.utils.password_store.load(password_store_file),
@@ -588,6 +587,7 @@ def _active_check_preview_rows(
         ExecutableFinder(
             cmk.utils.paths.local_nagios_plugins_dir, cmk.utils.paths.nagios_plugins_dir
         ),
+        ip_lookup_failed=ip_lookup.is_fallback_ip(host_attrs["address"]),
     )
 
     return [
@@ -1533,7 +1533,6 @@ class AutomationAnalyseServices(Automation):
                 macros,
                 ip_address_of,
             ),
-            host_attrs,
             config.http_proxies,
             lambda x: config.get_final_service_description(x, translations),
             cmk.utils.password_store.load(password_store_file),
@@ -1541,6 +1540,7 @@ class AutomationAnalyseServices(Automation):
             ExecutableFinder(
                 cmk.utils.paths.local_nagios_plugins_dir, cmk.utils.paths.nagios_plugins_dir
             ),
+            ip_lookup_failed=ip_lookup.is_fallback_ip(host_attrs["address"]),
         )
 
         active_checks = config_cache.active_checks(host_name)
@@ -2616,7 +2616,6 @@ class AutomationActiveCheck(Automation):
                 macros,
                 ip_address_of,
             ),
-            host_attrs,
             config.http_proxies,
             lambda x: config.get_final_service_description(x, translations),
             cmk.utils.password_store.load(password_store_file),
@@ -2624,6 +2623,7 @@ class AutomationActiveCheck(Automation):
             ExecutableFinder(
                 cmk.utils.paths.local_nagios_plugins_dir, cmk.utils.paths.nagios_plugins_dir
             ),
+            ip_lookup_failed=ip_lookup.is_fallback_ip(host_attrs["address"]),
         )
 
         active_check = dict(config_cache.active_checks(host_name)).get(plugin, [])

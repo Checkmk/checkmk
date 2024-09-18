@@ -515,7 +515,6 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
             macros,
             ip_address_of,
         ),
-        host_attrs,
         config.http_proxies,
         lambda x: config.get_final_service_description(x, translations),
         stored_passwords,
@@ -523,6 +522,7 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
         server_side_calls.ExecutableFinder(
             cmk.utils.paths.local_nagios_plugins_dir, cmk.utils.paths.nagios_plugins_dir
         ),
+        ip_lookup_failed=ip_lookup.is_fallback_ip(host_attrs["address"]),
     )
 
     active_checks = config_cache.active_checks(hostname)

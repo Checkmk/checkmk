@@ -38,24 +38,24 @@ class ActiveCheck:
         plugins: Mapping[PluginLocation, ActiveCheckConfig],
         host_name: HostName,
         host_config: HostConfig,
-        host_attrs: Mapping[str, str],
         http_proxies: Mapping[str, Mapping[str, str]],
         service_name_finalizer: Callable[[ServiceName], ServiceName],
         stored_passwords: Mapping[str, str],
         password_store_file: Path,
         finder: ExecutableFinderProtocol,
+        *,
+        ip_lookup_failed: bool,
     ):
         self._plugins = {p.name: p for p in plugins.values()}
         self._modules = {p.name: l.module for l, p in plugins.items()}
         self.host_name = host_name
         self.host_config = host_config
-        self.host_alias = host_attrs["alias"]
-        self.host_attrs = host_attrs
         self._http_proxies = http_proxies
         self._service_name_finalizer = service_name_finalizer
         self.stored_passwords = stored_passwords or {}
         self.password_store_file = password_store_file
         self._finder = finder
+        self._ip_lookup_failed = ip_lookup_failed
 
     def get_active_service_data(
         self, active_checks_rules: Iterable[SSCRules]
@@ -96,8 +96,7 @@ class ActiveCheck:
         proxy_config: ProxyConfig,
         conf_dict: Mapping[str, object],
     ) -> ActiveServiceData:
-        if self.host_attrs["address"] in ["0.0.0.0", "::"]:
-            # these 'magic' addresses indicate that the lookup failed :-(
+        if self._ip_lookup_failed:
             executable = "check_always_crit"
             arguments: tuple[str, ...] = (
                 "'Failed to lookup IP address and no explicit IP address configured'",

@@ -27,6 +27,9 @@ IPLookupCacheId = tuple[HostName | HostAddress, socket.AddressFamily]
 _fake_dns: HostAddress | None = None
 _enforce_localhost = False
 
+_FALLBACK_V4 = HostAddress("0.0.0.0")
+_FALLBACK_V6 = HostAddress("::")
+
 
 @enum.unique
 class IPStackConfig(enum.IntFlag):
@@ -51,11 +54,15 @@ def fallback_ip_for(
 ) -> HostAddress:
     match family:
         case socket.AddressFamily.AF_INET:
-            return HostAddress("0.0.0.0")
+            return _FALLBACK_V4
         case socket.AddressFamily.AF_INET6:
-            return HostAddress("::")
+            return _FALLBACK_V6
         case other:
             assert_never(other)
+
+
+def is_fallback_ip(ip: HostAddress | str) -> bool:
+    return HostAddress(ip) in (_FALLBACK_V4, _FALLBACK_V6)
 
 
 def _local_ip_for(

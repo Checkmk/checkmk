@@ -328,18 +328,18 @@ def get_graph_template_from_id(template_id: str) -> GraphTemplate:
 
 
 @dataclass(frozen=True)
-class EvaluatedMetricExpression:
+class _EvaluatedMetricExpression:
     expression: MetricExpression
     evaluated: Evaluated
 
 
-def evaluate_metrics(
+def _evaluate_metrics(
     *,
     conflicting_metrics: Sequence[str],
     optional_metrics: Sequence[str],
     metric_expressions: Sequence[MetricExpression],
     translated_metrics: Mapping[str, TranslatedMetric],
-) -> Sequence[EvaluatedMetricExpression]:
+) -> Sequence[_EvaluatedMetricExpression]:
     # Skip early on conflicting_metrics
     for var in conflicting_metrics:
         if var in translated_metrics:
@@ -350,8 +350,26 @@ def evaluate_metrics(
             if result.error.metric_name and result.error.metric_name in optional_metrics:
                 continue
             return []
-        results.append(EvaluatedMetricExpression(metric_expression, result.ok))
+        results.append(_EvaluatedMetricExpression(metric_expression, result.ok))
     return results
+
+
+def evaluate_metrics(
+    *,
+    conflicting_metrics: Sequence[str],
+    optional_metrics: Sequence[str],
+    metric_expressions: Sequence[MetricExpression],
+    translated_metrics: Mapping[str, TranslatedMetric],
+) -> Sequence[Evaluated]:
+    return [
+        m.evaluated
+        for m in _evaluate_metrics(
+            conflicting_metrics=conflicting_metrics,
+            optional_metrics=optional_metrics,
+            metric_expressions=metric_expressions,
+            translated_metrics=translated_metrics,
+        )
+    ]
 
 
 def get_evaluated_graph_template_choices(
@@ -373,9 +391,7 @@ def get_evaluated_graph_template_choices(
                     graph_template.title,
                 )
             )
-            already_graphed_metrics.update(
-                {n for m in evaluated_metrics for n in m.evaluated.metric_names()}
-            )
+            already_graphed_metrics.update({n for m in evaluated_metrics for n in m.metric_names()})
     for metric_name, translated_metric in sorted(translated_metrics.items()):
         if translated_metric.auto_graph and metric_name not in already_graphed_metrics:
             graph_template_choices.append(
@@ -648,30 +664,30 @@ def _create_graph_recipe_from_template(
     host_name: HostName,
     service_name: ServiceName,
     graph_template: GraphTemplate,
-    evaluated_metrics: Sequence[EvaluatedMetricExpression],
+    evaluated_metrics: Sequence[Evaluated],
     translated_metrics: Mapping[str, TranslatedMetric],
     specification: GraphSpecification,
 ) -> GraphRecipe:
     metrics = [
         GraphMetric(
-            title=metric.evaluated.title,
-            line_type=metric.evaluated.line_type,
+            title=evaluated.title,
+            line_type=evaluated.line_type,
             operation=metric_expression_to_graph_recipe_expression(
                 site_id,
                 host_name,
                 service_name,
-                metric.evaluated.base,
+                evaluated.base,
                 translated_metrics,
                 graph_template.consolidation_function or "max",
             ),
             unit=(
-                metric.evaluated.unit_spec
-                if isinstance(metric.evaluated.unit_spec, ConvertibleUnitSpecification)
-                else metric.evaluated.unit_spec.id
+                evaluated.unit_spec
+                if isinstance(evaluated.unit_spec, ConvertibleUnitSpecification)
+                else evaluated.unit_spec.id
             ),
-            color=metric.evaluated.color,
+            color=evaluated.color,
         )
-        for metric in evaluated_metrics
+        for evaluated in evaluated_metrics
     ]
     units = {m.unit for m in metrics}
 
@@ -714,12 +730,12 @@ def _create_graph_recipe_from_template(
 
 def _evaluate_predictive_metrics(
     translated_metrics: Mapping[str, TranslatedMetric],
-    metrics: Sequence[EvaluatedMetricExpression],
-) -> Iterator[EvaluatedMetricExpression]:
+    evaluated_metrics: Sequence[_EvaluatedMetricExpression],
+) -> Iterator[_EvaluatedMetricExpression]:
     computed = set()
-    for metric in metrics:
+    for metric in evaluated_metrics:
         line_type: Literal["line", "-line"] = (
-            "-line" if metric.expression.line_type.startswith("-") else "line"
+            "-line" if metric.evaluated.line_type.startswith("-") else "line"
         )
         for metric_name in metric.evaluated.metric_names():
             if metric_name in computed:
@@ -730,20 +746,20 @@ def _evaluate_predictive_metrics(
                 MetricExpression(Metric(f"predict_lower_{metric_name}"), line_type=line_type),
             ]:
                 if (result := predictive_metric_expression.evaluate(translated_metrics)).is_ok():
-                    yield EvaluatedMetricExpression(predictive_metric_expression, result.ok)
+                    yield _EvaluatedMetricExpression(predictive_metric_expression, result.ok)
 
 
 def _get_evaluated_graph_templates(
     translated_metrics: Mapping[str, TranslatedMetric],
-) -> Iterator[tuple[GraphTemplate, Sequence[EvaluatedMetricExpression]]]:
+) -> Iterator[tuple[GraphTemplate, Sequence[Evaluated]]]:
     if not translated_metrics:
         yield from ()
         return
 
     def _generate_graph_templates(
         graph_template: GraphTemplate,
-    ) -> Iterator[tuple[GraphTemplate, Sequence[EvaluatedMetricExpression]]]:
-        if evaluated_metrics := evaluate_metrics(
+    ) -> Iterator[tuple[GraphTemplate, Sequence[Evaluated]]]:
+        if evaluated_metrics := _evaluate_metrics(
             conflicting_metrics=graph_template.conflicting_metrics,
             optional_metrics=graph_template.optional_metrics,
             metric_expressions=graph_template.metrics,
@@ -769,7 +785,12 @@ def _get_evaluated_graph_templates(
                         )
                     ),
                 ),
-                list(itertools.chain(evaluated_metrics, evaluated_predictive_metrics)),
+                list(
+                    itertools.chain(
+                        (m.evaluated for m in evaluated_metrics),
+                        (m.evaluated for m in evaluated_predictive_metrics),
+                    )
+                ),
             )
 
     graph_templates = [
@@ -779,9 +800,7 @@ def _get_evaluated_graph_templates(
     ]
     yield from graph_templates
 
-    already_graphed_metrics = {
-        n for _t, e in graph_templates for m in e for n in m.evaluated.metric_names()
-    }
+    already_graphed_metrics = {n for _t, e in graph_templates for m in e for n in m.metric_names()}
     for metric_name, translated_metric in sorted(translated_metrics.items()):
         if translated_metric.auto_graph and metric_name not in already_graphed_metrics:
             graph_template = _get_graph_template_from_name(metric_name)
@@ -801,7 +820,7 @@ def _matching_graph_templates(
     graph_id: str | None,
     graph_index: int | None,
     translated_metrics: Mapping[str, TranslatedMetric],
-) -> Iterable[tuple[int, GraphTemplate, Sequence[EvaluatedMetricExpression]]]:
+) -> Iterable[tuple[int, GraphTemplate, Sequence[Evaluated]]]:
     # Performance graph dashlets already use graph_id, but for example in reports, we still use
     # graph_index. Therefore, this function needs to support both. We should switch to graph_id
     # everywhere (CMK-7308) and remove the support for graph_index. However, note that we cannot
@@ -860,7 +879,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         self,
         *,
         graph_template: GraphTemplate,
-        evaluated_metrics: Sequence[EvaluatedMetricExpression],
+        evaluated_metrics: Sequence[Evaluated],
         row: Row,
         translated_metrics: Mapping[str, TranslatedMetric],
         index: int,

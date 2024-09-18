@@ -41,6 +41,7 @@ from cmk.gui.graphing._graph_specification import (
     MetricOpRRDSource,
 )
 from cmk.gui.graphing._graph_templates import (
+    _evaluate_metrics,
     _evaluate_predictive_metrics,
     _get_evaluated_graph_templates,
     _graph_template_from_api_bidirectional,
@@ -48,7 +49,6 @@ from cmk.gui.graphing._graph_templates import (
     _graph_templates_from_plugins,
     _matching_graph_templates,
     _parse_graph_template,
-    evaluate_metrics,
     GraphTemplate,
     MinimalGraphTemplateRange,
 )
@@ -1285,7 +1285,7 @@ def test__evaluate_predictive_metrics_line_type(
         m.expression
         for m in _evaluate_predictive_metrics(
             translated_metrics,
-            evaluate_metrics(
+            _evaluate_metrics(
                 conflicting_metrics=[],
                 optional_metrics=[],
                 metric_expressions=metric_expressions,
@@ -1338,7 +1338,7 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
         m.expression
         for m in _evaluate_predictive_metrics(
             translated_metrics,
-            evaluate_metrics(
+            _evaluate_metrics(
                 conflicting_metrics=[],
                 optional_metrics=[],
                 metric_expressions=[

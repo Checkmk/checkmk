@@ -20,6 +20,11 @@ def check_mbg_lantime_state_common(states, _no_item, params, info):
     # Handle State
     yield states[ntp_state][0], "State: " + states[ntp_state][1]
 
+    # if refclock_offset (and thus also refclock_name) are 'n/a'
+    # we must not treat them as numbers or create metrics
+    if refclock_offset == "n/a":
+        return
+
     # Check the reported stratum
     state = 0
     levels_text = ""

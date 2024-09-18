@@ -397,6 +397,7 @@ def test_rest_api_access_with_enabled_2fa(site: Site) -> None:
         assert not session.is_logged_in()
 
 
+@skip_if_saas_edition
 def test_rest_api_access_by_cookie_2fa(site: Site) -> None:
     """login via the gui but do not complete the 2fa, the cookie must not allow you access to the
     rest api

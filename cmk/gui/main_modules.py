@@ -51,9 +51,9 @@ match cmk_version.edition(paths.omd_root):
         cmk.gui.cse.registration.register()
 
     case Edition.CRE:
-        import cmk.gui.raw.registration
+        import cmk.gui.cre.registration
 
-        cmk.gui.raw.registration.register()
+        cmk.gui.cre.registration.register()
 
     case _ as unreachable:
         assert_never(unreachable)

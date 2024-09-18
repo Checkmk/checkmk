@@ -5,10 +5,6 @@
 
 """Raw edition and only raw edition specific registrations"""
 
-import cmk.ccc.version as cmk_version
-
-from cmk.utils import paths
-
 import cmk.gui.graphing._graph_images as graph_images
 import cmk.gui.graphing._html_render as html_render
 import cmk.gui.pages
@@ -48,9 +44,6 @@ def register_painters() -> None:
 
 
 def register() -> None:
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
-        return
-
     notification_parameter_registry.register(NotificationParameterMail)
     GUIViewRenderer.page_menu_dropdowns_hook = lambda v, r, p: None
     host_config.agent_links_hook = lambda h: []

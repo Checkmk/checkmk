@@ -14,7 +14,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config
 @pytest.mark.parametrize(
     "params,host_config,expected_args,expected_description",
     [
-        (
+        pytest.param(
             {
                 "svc_item": "stuff",
                 "index": ["f", "o", "o"],
@@ -24,7 +24,21 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config
             HostConfig(name="test", ipv4_config=IPv4Config(address="test")),
             ["-q", "bar", "-t", "1", "-i", "f o o", "-H", "test"],
             "Elasticsearch Query stuff",
-        )
+            id="basic config",
+        ),
+        pytest.param(
+            {
+                "svc_item": "stuff",
+                "index": ["f", "o", "o"],
+                "pattern": "bar",
+                "timerange": 1,
+                "count": ("fixed", (1, 5)),
+            },
+            HostConfig(name="test", ipv4_config=IPv4Config(address="test")),
+            ["-q", "bar", "-t", "1", "-i", "f o o", "--warn=1", "--crit=5", "-H", "test"],
+            "Elasticsearch Query stuff",
+            id="config with count",
+        ),
     ],
 )
 def test_check_elasticsearch_query(

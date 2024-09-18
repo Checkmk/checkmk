@@ -125,7 +125,7 @@ class SimpleLevels(FormSpec[SimpleLevelsConfigModel[_NumberT]]):  # pylint: disa
           ]
 
     **Example**: SimpleLevels used to configure no levels will look like ``("no_levels", None)``,
-    levels used to configure fixed lower levels might be ``("fixed", (5.0, 10.0))``.
+    levels used to configure fixed upper levels might be ``("fixed", (5.0, 10.0))``.
 
     Arguments:
     **********

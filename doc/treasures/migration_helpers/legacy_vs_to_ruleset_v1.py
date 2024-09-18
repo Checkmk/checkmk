@@ -309,11 +309,11 @@ class VSTransformer(cst.CSTTransformer):
         ]
 
         template_args = []
-        if (args.get("unit")) is not None:
+        if (unit := args.get("unit")) is not None:
             template_args = [
                 cst.Arg(
                     keyword=cst.Name("unit_symbol"),
-                    value=cst.ensure_type(args["spec"], cst.SimpleString),
+                    value=cst.ensure_type(unit, cst.SimpleString),
                 )
             ]
 

@@ -76,18 +76,6 @@ build_cmd = """
     export OPENSSL_LIB_DIR="$$HOME/$$EXT_DEPS_PATH/openssl/openssl/lib"
     export OPENSSL_INCLUDE_DIR="$$HOME/$$EXT_DEPS_PATH/openssl/openssl/include"
 
-    if [[ "{requirements}" = -r* || "{requirements}" = git+* ]]; then
-        REQUIREMENTS="{requirements}"
-    else
-        TMP_BUILD_BASE=$$HOME/tmp/{module_name}
-	rm -rf $$TMP_BUILD_BASE
-	mkdir -p $$TMP_BUILD_BASE/packages/{module_name}
-        REQUIREMENTS=$$TMP_BUILD_BASE/packages/cmk-{module_name}
-        echo "Copy package sources"
-        cp -r --parents {requirements} $$TMP_BUILD_BASE
-        ls -al $$REQUIREMENTS
-    fi
-
     # Under some distros (e.g. almalinux), the build may use an available c++ system compiler instead of our own /opt/bin/g++
     # Enforce here the usage of the build image compiler and in the same time enable local building.
     # TODO: CMK-15581 The whole toolchain registration should be bazel wide!
@@ -110,7 +98,7 @@ build_cmd = """
       --prefix="$$HOME/$$MODULE_NAME" \\
       -i {pypi_mirror} \\
       {pip_add_opts} \\
-      $$REQUIREMENTS 2>&1 | tee "$$HOME/""$$MODULE_NAME""_pip_install.stdout"
+      {requirements} 2>&1 | tee "$$HOME/""$$MODULE_NAME""_pip_install.stdout"
 
     tar cf $@ $$MODULE_NAME
 """

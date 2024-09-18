@@ -9,7 +9,7 @@ from cmk.ccc.i18n import _
 
 from cmk.utils.rulesets.definition import RuleGroup
 
-from cmk.gui.fields.definitions import FOLDER_PATTERN
+from cmk.gui.fields.definitions import FOLDER_PATTERN, HOST_NAME_REGEXP
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
 from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout
 from cmk.gui.quick_setup.config_setups.aws import form_specs as aws
@@ -105,7 +105,10 @@ def configure_host_and_regions() -> QuickSetupStage:
                             parameter_form=String(
                                 title=Title("Host name"),
                                 field_size=FieldSize.MEDIUM,
-                                custom_validate=(validators.LengthInRange(min_value=1),),
+                                custom_validate=(
+                                    validators.LengthInRange(min_value=1),
+                                    validators.MatchRegex(HOST_NAME_REGEXP),
+                                ),
                             ),
                             required=True,
                         ),

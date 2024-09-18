@@ -336,7 +336,7 @@ def _areastack(
 
 
 def _compute_graph_curves(
-    metrics: Sequence[GraphMetric],
+    graph_metrics: Sequence[GraphMetric],
     rrd_data: RRDData,
 ) -> Iterator[Curve]:
     def _parse_line_type(
@@ -353,27 +353,27 @@ def _compute_graph_curves(
                 return "ref"
         assert_never((mirror_prefix, ts_line_type))
 
-    for metric in metrics:
-        time_series = metric.operation.compute_time_series(rrd_data)
+    for graph_metric in graph_metrics:
+        time_series = graph_metric.operation.compute_time_series(rrd_data)
         if not time_series:
             continue
 
         multi = len(time_series) > 1
-        mirror_prefix: Literal["", "-"] = "-" if metric.line_type.startswith("-") else ""
+        mirror_prefix: Literal["", "-"] = "-" if graph_metric.line_type.startswith("-") else ""
         for i, ts in enumerate(time_series):
-            title = metric.title
+            title = graph_metric.title
             if multi and ts.metadata.title:
                 title += " - " + ts.metadata.title
 
-            color = ts.metadata.color or metric.color
-            if i % 2 == 1 and metric.operation.fade_odd_color():
+            color = ts.metadata.color or graph_metric.color
+            if i % 2 == 1 and graph_metric.operation.fade_odd_color():
                 color = render_color(fade_color(parse_color(color), 0.3))
 
             yield Curve(
                 line_type=(
                     _parse_line_type(mirror_prefix, ts.metadata.line_type)
                     if multi and ts.metadata.line_type
-                    else metric.line_type
+                    else graph_metric.line_type
                 ),
                 color=color,
                 title=title,
@@ -426,7 +426,7 @@ def order_graph_curves_for_legend_and_mouse_hover(
 ) -> Iterator[_TCurveType]:
     yield from (
         reversed(list(curves))
-        if any(metric.line_type == "stack" for metric in graph_recipe.metrics)
+        if any(graph_metric.line_type == "stack" for graph_metric in graph_recipe.metrics)
         else curves
     )
 

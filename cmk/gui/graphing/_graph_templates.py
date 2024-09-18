@@ -361,7 +361,7 @@ def get_evaluated_graph_template_choices(
     already_graphed_metrics = set()
     for id_, template in _graph_templates_from_plugins():
         graph_template = _parse_graph_template(id_, template)
-        if metrics := evaluate_metrics(
+        if evaluated_metrics := evaluate_metrics(
             conflicting_metrics=graph_template.conflicting_metrics,
             optional_metrics=graph_template.optional_metrics,
             metric_expressions=graph_template.metrics,
@@ -374,7 +374,7 @@ def get_evaluated_graph_template_choices(
                 )
             )
             already_graphed_metrics.update(
-                {n for m in metrics for n in m.expression.metric_names()}
+                {n for m in evaluated_metrics for n in m.expression.metric_names()}
             )
     for metric_name, translated_metric in sorted(translated_metrics.items()):
         if translated_metric.auto_graph and metric_name not in already_graphed_metrics:

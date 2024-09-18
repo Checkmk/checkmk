@@ -2,6 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use crate::constants;
 use anyhow::{anyhow, bail, Context, Result as AnyhowResult};
 use openssl::hash::MessageDigest;
 use openssl::nid::Nid;
@@ -22,7 +23,7 @@ use x509_parser::traits::FromDer;
 
 pub fn make_csr(cn: &str) -> AnyhowResult<(String, String)> {
     // https://github.com/sfackler/rust-openssl/blob/master/openssl/examples/mk_certs.rs
-    let rsa = Rsa::generate(2048)?;
+    let rsa = Rsa::generate(constants::CERT_RSA_KEY_SIZE)?;
     let key_pair = PKey::from_rsa(rsa)?;
 
     let mut name = X509Name::builder()?;

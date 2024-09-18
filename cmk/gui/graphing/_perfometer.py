@@ -353,14 +353,14 @@ def parse_perfometer(
 
 
 def _has_required_metrics_or_scalars(
-    metric_expressions: Sequence[BaseMetricExpression],
+    base_metric_expressions: Sequence[BaseMetricExpression],
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> bool:
-    for metric_expression in metric_expressions:
-        for metric_name in metric_expression.metric_names():
+    for base_metric_expression in base_metric_expressions:
+        for metric_name in base_metric_expression.metric_names():
             if metric_name not in translated_metrics:
                 return False
-        for scalar_name in metric_expression.scalar_names():
+        for scalar_name in base_metric_expression.scalar_names():
             if scalar_name.metric_name not in translated_metrics:
                 return False
             if scalar_name.scalar_name not in translated_metrics[scalar_name.metric_name].scalar:
@@ -372,14 +372,16 @@ def _legacy_perfometer_has_required_metrics_or_scalars(
     perfometer: PerfometerSpec, translated_metrics: Mapping[str, TranslatedMetric]
 ) -> bool:
     if perfometer["type"] == "linear":
-        metric_expressions = [
+        base_metric_expressions = [
             parse_legacy_base_expression(s, translated_metrics) for s in perfometer["segments"]
         ]
         if (total := perfometer.get("total")) is not None:
-            metric_expressions.append(parse_legacy_base_expression(total, translated_metrics))
+            base_metric_expressions.append(parse_legacy_base_expression(total, translated_metrics))
         if (label := perfometer.get("label")) is not None:
-            metric_expressions.append(parse_legacy_base_expression(label[0], translated_metrics))
-        return _has_required_metrics_or_scalars(metric_expressions, translated_metrics)
+            base_metric_expressions.append(
+                parse_legacy_base_expression(label[0], translated_metrics)
+            )
+        return _has_required_metrics_or_scalars(base_metric_expressions, translated_metrics)
 
     if perfometer["type"] == "logarithmic":
         return _has_required_metrics_or_scalars(

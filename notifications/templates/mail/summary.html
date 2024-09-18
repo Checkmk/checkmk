@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<div
+    id="summary_container"
+    style="
+        border: 1px solid #e5e5e5;
+        width: 536px;
+        border-radius: 4px 0px 0px 0px;
+        margin-top: 16px;
+        margin-left: 32px;
+        border-top: 8px solid #c83232;
+    "
+>
+    <table
+        style="
+            width: 472px;
+            height: 124px;
+            border-collapse: collapse;
+            border-spacing: 0;
+            margin-left: 32px;
+        "
+    >
+        <tr style="border-bottom: 1px solid #e5e5e5">
+            <td
+                {{
+                macros.td_first_child(width="80px"
+                ,padding="8px"
+                )
+                }}
+            >
+                Event:
+            </td>
+            <td {{ macros.td_last_child() }}>
+                <div class="event_state">
+                    {% set state_mapping = {
+                    "OK":"background-color: #13D389;
+                    color:#ffffff;", "UP": "background-color:
+                    #13D389;color:#ffffff;",
+                    "WARNING":"background-color:#FFD703; color:
+                    #000000;", "CRITICAL": "background-color:
+                    #C83232;color:#ffffff;",
+                    "DOWN":"background-color:#C83232; color:
+                    #ffffff;", "UNKNOWN": "background-color:
+                    #ff8800;color:#ffffff;",
+                    "UNREACHABLE":"background-color:#ff8800;
+                    color: #ffffff;",
+                    "PENDING":"background-color:
+                    #888888;color:#ffffff;", } %}
+                    <p
+                        style="
+                            float: left;
+                            border-radius: 2px;
+                            font-weight: bold;
+                            width: 70px;height: 28px;
+                            padding: 6px 0px 7px 0px;
+                            font-size: 16px;
+                            font-weight: 700;
+                            text-align: center;
+                            color: #000000;
+                            align-content: center;
+                            margin-right: 10px;
+                            {% if service_notification %}
+                                {{ state_mapping[data.PREVIOUSSERVICEHARDSTATE] }}>
+                            {% else %}
+                                {{ state_mapping[data.PREVIOUSHOSTHARDSTATE] }}
+                            {% endif %}
+                        "
+                    >
+                        {% if service_notification %}
+                            {{data.PREVIOUSSERVICEHARDSTATE[:4] }}
+                        {%else %}
+                            {{data.PREVIOUSHOSTHARDSHORTSTATE[:4] }}
+                        {% endif %}
+                    </p>
+
+                    <p style="float: left">&#8211;&#8250;</p>
+
+                    <p
+                        style="
+                            float: left;
+                            border-radius: 2px;
+                            font-weight: bold;
+                            width: 70px;
+                            height: 28px;
+                            padding: 6px 0px 7px 0px;
+                            font-size: 16px;
+                            font-weight: 700;
+                            text-align: center;
+                            align-content: center;
+                            margin-left: 10px;
+                            {% if service_notification %}
+                                {{ state_mapping[data.SERVICESTATE] }}>
+                            {% else %}
+                                {{ state_mapping[data.HOSTSTATE] }}
+                            {% endif %}"
+                    >
+                        {% if service_notification %}
+                            {{data.SERVICESTATE[:4]}}
+                        {% else %}
+                            {{data.HOSTSTATE[:4] }}
+                        {% endif %}
+                    </p>
+                </div>
+            </td>
+        </tr>
+        {% if service_notification %}
+            {{macros.service_desc(data.SERVICEDESC) }}
+        {%endif %}
+        <tr>
+            <td
+                {{
+                macros.td_first_child(width="80px"
+                ,padding="8px"
+                )
+                }}
+            >
+                Host:
+            </td>
+            <td {{ macros.td_last_child() }}>
+                <a href="#" style="color: black">
+                    {{ data.HOSTNAME }}
+                </a>
+            </td>
+        </tr>
+    </table>
+    <a
+        href="#"
+        class="button"
+        style="
+            width: 472px;
+            height: 34px;
+            border-radius: 8px;
+            background-color: #2c3843;
+            display: inline-block;
+            color: white;
+            align-content: center;
+            text-align: center;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 10px;
+            margin-left: 32px;
+            margin-bottom: 20px;
+        "
+    >
+        View issue
+    </a>
+</div>

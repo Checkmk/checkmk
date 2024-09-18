@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>HTML Email template</title>
+    </head>
+    <body>
+        {% import 'macros.html' as macros %}
+        {% set service_notification = data.WHAT == 'SERVICE' %}
+        <div
+            id="mail_container"
+            style="
+                margin: 0 auto;
+                width: 600px;
+                padding: 20px;
+                border: 1px solid #ccc;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            "
+        >
+            <div id="content_container">
+                <img
+                    src="cid:checkmk_logo.png"
+                    id="logo"
+                    style="width: 110px; height: 30px; margin-left: 30px"
+                />
+
+                <hr style="width: 536px; border: 1px solid #e5e5e5" />
+
+                {% if insert %}
+                    <div
+                        id="extra_section"
+                        style="
+                            border: 1px solid #e5e5e5;
+                            width: 536px;
+                            border-radius: 4px 0px 0px 0px;
+                            margin-top: 16px;
+                            margin-left: 32px;
+                        "
+                    >
+                        <div style="padding: 20px;">
+                            {{ insert|safe }}
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% include 'summary.html' %}
+
+                <div
+                    id="sections_container"
+                    style="width: 536px; margin: 20px auto"
+                >
+                    {% include 'event_overview.html' %}
+
+                    {% if graphs %}
+                        {% include 'graph.html' %}
+                    {% endif %}
+
+                    {% if data.PARAMETER_ELEMENTSS %}
+                        {% include 'additional.html' %}
+                    {% endif %}
+
+                    {% include 'contact_groups.html' %}
+
+                    {% if service_notification %}
+                        {% include 'service_labels.html' %}
+                    {% endif %}
+
+                    {% include 'host_labels.html' %}
+
+                    {% include 'host_tags.html' %}
+
+                    <a
+                        href="#"
+                        class="button"
+                        style="
+                            width: 472px;
+                            height: 34px;
+                            border-radius: 8px;
+                            background-color: #2c3843;
+                            display: inline-block;
+                            color: white;
+                            align-content: center;
+                            text-align: center;
+                            text-decoration: none;
+                            font-size: 14px;
+                            font-weight: 600;
+                            margin-top: 10px;
+                            margin-left: 32px;
+                        "
+                    >
+                        View issue
+                    </a>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

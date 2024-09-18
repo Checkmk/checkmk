@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<div
+    class="ht_container"
+    style="width: 536px; margin-bottom: 20px"
+>
+    <p
+        class="heading"
+        style="
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0px;
+        "
+    >
+        <img
+            src="cid:vector.png"
+            style="width: 18px; height: 19px"
+        />
+        Host tags
+    </p>
+    {% for tag_with_id in data.HOSTTAGS.split(' ') %}
+    <div
+        class="label"
+        style="
+            min-width: 50px;
+            height: 24px;
+            border-radius: 8px;
+            background-color: #dcdcdc;
+            display: inline-block;
+            color: #2c3843;
+            align-content: center;
+            text-align: center;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 400;
+            padding: 0 10px 0px 10px;
+            margin-top: 10px;
+        "
+    >
+        {{ tag_with_id }}
+    </div>
+    {% endfor %}
+</div>

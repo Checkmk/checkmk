@@ -1,18 +1,4 @@
-<!-- Service description -->
-{% macro service_desc(service_description) %} {% import 'utils/styles.html' as
-style_macros %}
-<tr style="border-bottom: 1px solid #e5e5e5">
-    <td {{ style_macros.td_first_child(width="80px" ,padding="8px" ) }}>
-        Service:
-    </td>
-    <td {{ style_macros.td_last_child() }}>
-        <a href="#" style="color: black">{{ service_description}}</a>
-    </td>
-</tr>
-{% endmacro %}
-
-<!-- Service labels-->
-{% macro service_labels(data) %}
+<!DOCTYPE html>
 <div class="sl_container" style="width: 279px; margin-bottom: 20px">
     <p class="heading" style="font-size: 18px; font-weight: 600; margin: 0px">
         <img src="cid:label.png" style="width: 18px; height: 19px" />
@@ -44,4 +30,3 @@ style_macros %}
     <p>No Service labels</p>
     {% endif %}
 </div>
-{% endmacro %}

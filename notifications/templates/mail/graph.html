@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<div class="graph_container" style="margin-bottom: 20px">
+    <p
+        class="heading"
+        style="font-size: 18px; font-weight: 600"
+    >
+        <img
+            src="cid:graph.png"
+            style="width: 18px; height: 19px"
+        />
+        Graph
+    </p>
+    <div class="graph">
+        {% for graph in graphs %}
+        <img src="cid:{{graph}}" style="width: 100%" ; />
+        {% endfor %}
+    </div>
+    <a
+        href="#"
+        class="view_graph"
+        style="
+            color: black;
+            display: block;
+            height: 24px;
+            margin-top: 7px;
+            font-size: 16px;
+            font-weight: 500;
+            color: #2c3843;
+            line-height: 24px;
+        "
+    >
+        View graph to inspect
+    </a>
+</div>

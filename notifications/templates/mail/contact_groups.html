@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<div class="cg_container" style="margin-bottom: 20px">
+    <p
+        class="heading"
+        style="
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0px;
+        "
+    >
+        <img
+            src="cid:contact_groups.png"
+            style="width: 18px; height: 19px"
+        />
+        Contact groups
+    </p>
+    <div class="cg_list" style="padding: 10px 0 10px 0">
+        {% for item in data.HOSTCONTACTGROUPNAMES.split(' ')
+        %}
+        <span style="padding-right: 8px">• {{ item }}</span>
+        {% endfor %}
+    </div>
+</div>

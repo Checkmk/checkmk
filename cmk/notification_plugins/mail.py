@@ -519,7 +519,7 @@ def construct_content(
 
     content_html = utils.substitute_context(
         TemplateRenderer().render_template(
-            "html_email.html",
+            "base.html",
             {
                 "data": context,
                 "graphs": file_names,

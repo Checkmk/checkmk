@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<div
+    class="hl_container"
+    style="width: 536px; margin-bottom: 20px"
+>
+    <p
+        class="heading"
+        style="
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0px;
+        "
+    >
+        <img
+            src="cid:label.png"
+            style="width: 18px; height: 19px"
+        />
+        Host labels
+    </p>
+    {% for key, value in data.items() %} {% if
+    key.startswith('HOSTLABEL_') %}
+    <div
+        class="label"
+        style="
+            min-width: 50px;
+            height: 24px;
+            border-radius: 8px;
+            background-color: #dcdcdc;
+            display: inline-block;
+            color: #2c3843;
+            align-content: center;
+            text-align: center;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 400;
+            padding: 0 10px 0px 10px;
+            margin-top: 10px;
+        "
+    >
+        {{ key[10:] }}:{{ value }}
+    </div>
+    {% endif %} {% endfor %}
+</div>

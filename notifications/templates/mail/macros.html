@@ -17,3 +17,16 @@ relative;top: -1px;' %} {{ data | replace('(.)','<b
     style="'+default_style+'background-color: #ff8800; color: #ffffff"
     >UNKN</b
 >') | safe }} {% endmacro %}
+
+<!-- Service description -->
+{% macro service_desc(service_description) %} {% import 'utils/styles.html' as
+style_macros %}
+<tr style="border-bottom: 1px solid #e5e5e5">
+    <td {{ style_macros.td_first_child(width="80px" ,padding="8px" ) }}>
+        Service:
+    </td>
+    <td {{ style_macros.td_last_child() }}>
+        <a href="#" style="color: black">{{ service_description}}</a>
+    </td>
+</tr>
+{% endmacro %}

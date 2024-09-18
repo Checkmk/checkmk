@@ -12,6 +12,7 @@ from cmk.utils import config_warnings, password_store
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.servicename import ServiceName
 
+from cmk.discover_plugins import discover_executable, family_libexec_dir
 from cmk.server_side_calls.v1 import Secret
 
 CheckCommandArguments = Iterable[int | float | str | tuple[str, str, str]]
@@ -176,3 +177,16 @@ def replace_macros(string: str, macros: Mapping[str, str]) -> str:
     for macro, replacement in macros.items():
         string = string.replace(macro, str(replacement))
     return string
+
+
+ExecutableFinderProtocol = Callable[[str, str | None], str]
+
+
+class ExecutableFinder:
+    def __init__(self, local_search_path: Path, shipped_search_path: Path):
+        self._additional_search_paths = (local_search_path, shipped_search_path)
+
+    def __call__(self, executable: str, module: str | None) -> str:
+        libexec_paths = () if module is None else (family_libexec_dir(module),)
+        full_path = discover_executable(executable, *libexec_paths, *self._additional_search_paths)
+        return str(full_path) if full_path else executable

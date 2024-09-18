@@ -9,19 +9,18 @@ from pathlib import Path
 
 import cmk.ccc.debug
 
-import cmk.utils.paths
 from cmk.utils import config_warnings, password_store
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
-from cmk.discover_plugins import discover_executable, family_libexec_dir, PluginLocation
+from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, HostConfig
 from cmk.server_side_calls_backend.config_processing import (
     process_configuration_to_parameters,
     ProxyConfig,
 )
 
-from ._commons import ConfigSet, replace_passwords, SSCRules
+from ._commons import ConfigSet, ExecutableFinderProtocol, replace_passwords, SSCRules
 
 
 @dataclass(frozen=True)
@@ -44,6 +43,7 @@ class ActiveCheck:
         service_name_finalizer: Callable[[ServiceName], ServiceName],
         stored_passwords: Mapping[str, str],
         password_store_file: Path,
+        finder: ExecutableFinderProtocol,
     ):
         self._plugins = {p.name: p for p in plugins.values()}
         self._modules = {p.name: l.module for l, p in plugins.items()}
@@ -55,6 +55,7 @@ class ActiveCheck:
         self._service_name_finalizer = service_name_finalizer
         self.stored_passwords = stored_passwords or {}
         self.password_store_file = password_store_file
+        self._finder = finder
 
     def get_active_service_data(
         self, active_checks_rules: Iterable[SSCRules]
@@ -115,7 +116,7 @@ class ActiveCheck:
                 ),
             )
 
-        detected_executable = _autodetect_plugin(executable, self._modules.get(active_check.name))
+        detected_executable = self._finder(executable, self._modules.get(active_check.name))
 
         return ActiveServiceData(
             plugin_name=active_check.name,
@@ -153,15 +154,3 @@ class ActiveCheck:
         """
         seen: dict[ServiceName, ActiveServiceData] = {}
         return [seen.setdefault(s.description, s) for s in services if s.description not in seen]
-
-
-def _autodetect_plugin(command: str, module_name: str | None) -> str:
-    libexec_paths = (family_libexec_dir(module_name),) if module_name else ()
-    nagios_paths = (
-        cmk.utils.paths.local_lib_dir / "nagios/plugins",
-        Path(cmk.utils.paths.lib_dir, "nagios/plugins"),
-    )
-    if (full_path := discover_executable(command, *libexec_paths, *nagios_paths)) is None:
-        return command
-
-    return str(full_path)

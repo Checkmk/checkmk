@@ -180,6 +180,7 @@ from cmk.base.diagnostics import DiagnosticsDump
 from cmk.base.errorhandling import create_section_crash_dump
 from cmk.base.parent_scan import ScanConfig
 from cmk.base.server_side_calls import (
+    ExecutableFinder,
     load_active_checks,
     load_special_agents,
     SpecialAgent,
@@ -584,6 +585,9 @@ def _active_check_preview_rows(
         make_final_service_name,
         cmk.utils.password_store.load(password_store_file),
         password_store_file,
+        ExecutableFinder(
+            cmk.utils.paths.local_nagios_plugins_dir, cmk.utils.paths.nagios_plugins_dir
+        ),
     )
 
     return [
@@ -1534,6 +1538,9 @@ class AutomationAnalyseServices(Automation):
             lambda x: config.get_final_service_description(x, translations),
             cmk.utils.password_store.load(password_store_file),
             password_store_file,
+            ExecutableFinder(
+                cmk.utils.paths.local_nagios_plugins_dir, cmk.utils.paths.nagios_plugins_dir
+            ),
         )
 
         active_checks = config_cache.active_checks(host_name)
@@ -2057,6 +2064,9 @@ def get_special_agent_commandline(
         http_proxies,
         passwords,
         password_store_file,
+        ExecutableFinder(
+            cmk.utils.paths.local_special_agents_dir, cmk.utils.paths.special_agents_dir
+        ),
     )
 
     if not params:
@@ -2611,6 +2621,9 @@ class AutomationActiveCheck(Automation):
             lambda x: config.get_final_service_description(x, translations),
             cmk.utils.password_store.load(password_store_file),
             password_store_file,
+            ExecutableFinder(
+                cmk.utils.paths.local_nagios_plugins_dir, cmk.utils.paths.nagios_plugins_dir
+            ),
         )
 
         active_check = dict(config_cache.active_checks(host_name)).get(plugin, [])

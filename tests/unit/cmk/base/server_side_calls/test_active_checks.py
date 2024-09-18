@@ -13,7 +13,10 @@ import cmk.utils.paths
 from cmk.utils import password_store
 from cmk.utils.hostaddress import HostName
 
-from cmk.base.server_side_calls import _active_checks, ActiveCheck, ActiveServiceData
+from cmk.base.server_side_calls import (
+    ActiveCheck,
+    ActiveServiceData,
+)
 
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls.v1 import (
@@ -104,6 +107,7 @@ def test_get_active_service_data_respects_finalizer(
         service_name_finalizer=lambda x: x.upper(),
         stored_passwords={},
         password_store_file=Path("/pw/store"),
+        finder=lambda executable, module: f"/path/to/{executable}",
     )
 
     service = next(active_check.get_active_service_data([("my_active_check", [{}])]))
@@ -150,7 +154,7 @@ def argument_function_with_exception(*args, **kwargs):
                     description="HTTP myHTTPName on my_host_alias",
                     command_name="check_mk_active-http",
                     configuration={"name": "myHTTPName on my_host_alias"},
-                    command=("check_http", "--arg1", "argument1", "--arg2", "argument2"),
+                    command=("/path/to/check_http", "--arg1", "argument1", "--arg2", "argument2"),
                 ),
             ],
             id="http_active_service_plugin",
@@ -191,14 +195,14 @@ def argument_function_with_exception(*args, **kwargs):
                     description="First service",
                     command_name="check_mk_active-my_active_check",
                     configuration={"description": "My active check", "param1": "param1"},
-                    command=("check_my_active_check", "--arg1", "argument1"),
+                    command=("/path/to/check_my_active_check", "--arg1", "argument1"),
                 ),
                 ActiveServiceData(
                     plugin_name="my_active_check",
                     description="Second service",
                     command_name="check_mk_active-my_active_check",
                     configuration={"description": "My active check", "param1": "param1"},
-                    command=("check_my_active_check", "--arg2", "argument2"),
+                    command=("/path/to/check_my_active_check", "--arg2", "argument2"),
                 ),
             ],
             id="multiple_services",
@@ -269,7 +273,7 @@ def argument_function_with_exception(*args, **kwargs):
                         ),
                     },
                     command=(
-                        "check_my_active_check",
+                        "/path/to/check_my_active_check",
                         "--pwstore=1@9@/pw/store@stored_password",
                         "'--secret=**********'",
                     ),
@@ -299,6 +303,7 @@ def test_get_active_service_data(
         service_name_finalizer=lambda x: x,
         stored_passwords=stored_passwords,
         password_store_file=Path("/pw/store"),
+        finder=lambda executable, module: f"/path/to/{executable}",
     )
 
     services = list(active_check.get_active_service_data(active_check_rules))
@@ -332,11 +337,6 @@ _PASSWORD_TEST_ACTIVE_CHECKS = {
 def test_get_active_service_data_password_with_hack(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(
-        _active_checks,
-        "_autodetect_plugin",
-        lambda executable, module: f"/path/to/{executable}",
-    )
     monkeypatch.setitem(password_store.hack.HACK_CHECKS, "test_check", True)
     active_check = ActiveCheck(
         plugins=_PASSWORD_TEST_ACTIVE_CHECKS,
@@ -347,6 +347,7 @@ def test_get_active_service_data_password_with_hack(
         service_name_finalizer=lambda x: x,
         stored_passwords={"uuid1234": "p4ssw0rd!"},
         password_store_file=Path("/pw/store"),
+        finder=lambda executable, module: f"/path/to/{executable}",
     )
 
     assert list(
@@ -391,11 +392,6 @@ def test_get_active_service_data_password_with_hack(
 def test_get_active_service_data_password_without_hack(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(
-        _active_checks,
-        "_autodetect_plugin",
-        lambda executable, module: f"/path/to/{executable}",
-    )
     active_check = ActiveCheck(
         plugins=_PASSWORD_TEST_ACTIVE_CHECKS,
         host_name=HostName("myhost"),
@@ -405,6 +401,7 @@ def test_get_active_service_data_password_without_hack(
         service_name_finalizer=lambda x: x,
         stored_passwords={"uuid1234": "p4ssw0rd!"},
         password_store_file=Path("/pw/store"),
+        finder=lambda executable, module: f"/path/to/{executable}",
     )
 
     assert list(
@@ -486,6 +483,7 @@ def test_test_get_active_service_data_crash(
         service_name_finalizer=lambda x: x,
         stored_passwords={},
         password_store_file=Path("/pw/store"),
+        finder=lambda executable, module: f"/path/to/{executable}",
     )
 
     list(active_check.get_active_service_data(active_check_rules))
@@ -537,6 +535,7 @@ def test_test_get_active_service_data_crash_with_debug(
         service_name_finalizer=lambda x: x,
         stored_passwords={},
         password_store_file=Path("/pw/store"),
+        finder=lambda executable, module: f"/path/to/{executable}",
     )
 
     with pytest.raises(
@@ -630,7 +629,7 @@ def test_test_get_active_service_data_crash_with_debug(
                         ),
                     },
                     command=(
-                        "check_my_active_check",
+                        "/path/to/check_my_active_check",
                         "--pwstore=2@0@/pw/store@stored_password",
                         "--password",
                         "'***'",
@@ -662,6 +661,7 @@ def test_get_active_service_data_warnings(
         service_name_finalizer=lambda x: x,
         stored_passwords={},
         password_store_file=Path("/pw/store"),
+        finder=lambda executable, module: f"/path/to/{executable}",
     )
 
     services = list(active_check_config.get_active_service_data(active_check_rules))

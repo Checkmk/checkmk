@@ -13,7 +13,7 @@ import cmk.utils.paths
 from cmk.utils import config_warnings, password_store
 from cmk.utils.hostaddress import HostAddress, HostName
 
-from cmk.discover_plugins import discover_executable, family_libexec_dir, PluginLocation
+from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls.v1 import HostConfig, SpecialAgentConfig
 from cmk.server_side_calls_backend.config_processing import (
     process_configuration_to_parameters,
@@ -22,6 +22,7 @@ from cmk.server_side_calls_backend.config_processing import (
 
 from ._commons import (
     commandline_arguments,
+    ExecutableFinderProtocol,
     InfoFunc,
     replace_macros,
     replace_passwords,
@@ -54,6 +55,7 @@ class SpecialAgent:
         http_proxies: Mapping[str, Mapping[str, str]],
         stored_passwords: Mapping[str, str],
         password_store_file: Path,
+        finder: ExecutableFinderProtocol,
     ):
         self._plugins = {p.name: p for p in plugins.values()}
         self._modules = {p.name: l.module for l, p in plugins.items()}
@@ -65,18 +67,10 @@ class SpecialAgent:
         self._http_proxies = http_proxies
         self.stored_passwords = stored_passwords
         self.password_store_file = password_store_file
+        self._finder = finder
 
-    def _make_source_path(self, agent_name: str) -> Path | str:
-        file_name = f"agent_{agent_name}"
-
-        libexec_paths = (
-            (family_libexec_dir(self._modules[agent_name]),) if agent_name in self._modules else ()
-        )
-        nagios_paths = (
-            cmk.utils.paths.local_agents_dir / "special",
-            Path(cmk.utils.paths.agents_dir, "special"),
-        )
-        return discover_executable(file_name, *libexec_paths, *nagios_paths) or file_name
+    def _make_source_path(self, agent_name: str) -> str:
+        return self._finder(f"agent_{agent_name}", self._modules.get(agent_name))
 
     def _make_special_agent_cmdline(
         self,

@@ -141,6 +141,7 @@ from cmk.base.api.agent_based.register.section_plugins_legacy import (
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.parent_scan import ScanConfig as ParentScanConfig
 from cmk.base.server_side_calls import (
+    ExecutableFinder,
     load_special_agents,
     SpecialAgent,
     SpecialAgentCommandLine,
@@ -2735,6 +2736,9 @@ class ConfigCache:
                     http_proxies,
                     passwords,
                     password_store_file,
+                    ExecutableFinder(
+                        cmk.utils.paths.local_special_agents_dir, cmk.utils.paths.special_agents_dir
+                    ),
                 )
                 for agent_data in special_agent.iter_special_agent_commands(agentname, params):
                     yield agentname, agent_data

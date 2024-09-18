@@ -520,6 +520,9 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
         lambda x: config.get_final_service_description(x, translations),
         stored_passwords,
         password_store.core_password_store_path(LATEST_CONFIG),
+        server_side_calls.ExecutableFinder(
+            cmk.utils.paths.local_nagios_plugins_dir, cmk.utils.paths.nagios_plugins_dir
+        ),
     )
 
     active_checks = config_cache.active_checks(hostname)

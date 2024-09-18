@@ -289,7 +289,6 @@ def test_iter_special_agent_commands(
     expected_result: Sequence[SpecialAgentCommandLine],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(SpecialAgent, "_make_source_path", lambda *_: "agent_path")
     monkeypatch.setitem(password_store.hack.HACK_AGENTS, "test_agent", True)
 
     special_agent = SpecialAgent(
@@ -302,6 +301,7 @@ def test_iter_special_agent_commands(
         http_proxies={},
         stored_passwords=stored_passwords,
         password_store_file=Path("/pw/store"),
+        finder=lambda *_: "agent_path",
     )
     commands = list(special_agent.iter_special_agent_commands("test_agent", parameters))
     assert commands == expected_result
@@ -332,7 +332,6 @@ _PASSWORD_TEST_PLUGINS = {
 def test_iter_special_agent_commands_stored_password_with_hack(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(SpecialAgent, "_make_source_path", lambda *_: "agent_path")
     monkeypatch.setitem(password_store.hack.HACK_AGENTS, "test_agent", True)
 
     special_agent = SpecialAgent(
@@ -345,6 +344,7 @@ def test_iter_special_agent_commands_stored_password_with_hack(
         http_proxies={},
         stored_passwords={"1234": "p4ssw0rd!"},
         password_store_file=Path("/pw/store"),
+        finder=lambda *_: "agent_path",
     )
     assert list(
         special_agent.iter_special_agent_commands(
@@ -359,11 +359,7 @@ def test_iter_special_agent_commands_stored_password_with_hack(
     ]
 
 
-def test_iter_special_agent_commands_stored_password_without_hack(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(SpecialAgent, "_make_source_path", lambda *_: "agent_path")
-
+def test_iter_special_agent_commands_stored_password_without_hack() -> None:
     special_agent = SpecialAgent(
         plugins=_PASSWORD_TEST_PLUGINS,
         legacy_plugins={},
@@ -374,6 +370,7 @@ def test_iter_special_agent_commands_stored_password_without_hack(
         http_proxies={},
         stored_passwords={"uuid1234": "p4ssw0rd!"},
         password_store_file=Path("/pw/store"),
+        finder=lambda *_: "agent_path",
     )
     assert list(
         special_agent.iter_special_agent_commands(
@@ -431,6 +428,7 @@ def test_iter_special_agent_commands_crash(
         http_proxies={},
         stored_passwords={},
         password_store_file=Path("/pw/store"),
+        finder=lambda *_: "/path/to/agent",
     )
 
     list(special_agent.iter_special_agent_commands("test_agent", {}))
@@ -484,6 +482,7 @@ def test_iter_special_agent_commands_crash_with_debug(
         http_proxies={},
         stored_passwords={},
         password_store_file=Path("/pw/store"),
+        finder=lambda *_: "/path/to/agent",
     )
 
     with pytest.raises(
@@ -491,43 +490,3 @@ def test_iter_special_agent_commands_crash_with_debug(
         match="Can't create argument list",
     ):
         list(special_agent.iter_special_agent_commands("test_agent", {}))
-
-
-def test_make_source_path() -> None:
-    special_agent = SpecialAgent(
-        {},
-        {},
-        HostName("test_host"),
-        HostAddress("127.0.0.1"),
-        HOST_CONFIG,
-        host_attrs={},
-        http_proxies={},
-        stored_passwords={},
-        password_store_file=Path("/pw/store"),
-    )
-
-    shipped_path = Path(cmk.utils.paths.agents_dir, "special", "agent_test_agent")
-    with _with_file(shipped_path):
-        agent_path = special_agent._make_source_path("test_agent")
-
-    assert agent_path == shipped_path
-
-
-def test_make_source_path_local_agent() -> None:
-    special_agent = SpecialAgent(
-        {},
-        {},
-        HostName("test_host"),
-        HostAddress("127.0.0.1"),
-        HOST_CONFIG,
-        host_attrs={},
-        http_proxies={},
-        stored_passwords={},
-        password_store_file=Path("/pw/store"),
-    )
-
-    local_agent_path = Path(cmk.utils.paths.agents_dir, "special", "agent_test_agent")
-    with _with_file(local_agent_path):
-        agent_path = special_agent._make_source_path("test_agent")
-
-    assert agent_path == local_agent_path

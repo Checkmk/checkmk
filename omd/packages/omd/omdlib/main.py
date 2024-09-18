@@ -1903,18 +1903,16 @@ def _call_script(  # pylint: disable=too-many-branches
             assert proc.stdout is not None
             parent = proc.stdout
 
-        wrote_output = False
         try:
-            while True:
-                line = parent.readline()
-                if not line:
-                    break
-                if not wrote_output:
-                    sys.stdout.write("\n")
-                    wrote_output = True
-
-                sys.stdout.write(f"-| {line}")
-                sys.stdout.flush()
+            line = parent.readline()
+            if line:
+                sys.stdout.write("\n")
+                while True:
+                    line = parent.readline()
+                    if not line:
+                        break
+                    sys.stdout.write(f"-| {line}")
+                    sys.stdout.flush()
         except OSError:
             pass
         finally:
@@ -2939,6 +2937,8 @@ def main_update(  # pylint: disable=too-many-branches
             "OMD_TO_VERSION": to_version,
             "OMD_FROM_EDITION": from_edition,
         }
+        command = ["cmk-update-config", "--conflict", conflict_mode, "--dry-run"]
+        sys.stdout.write("Executing '{}'".format(subprocess.list2cmdline(command)))
         returncode = _call_script(
             is_tty,
             {
@@ -2947,7 +2947,7 @@ def main_update(  # pylint: disable=too-many-branches
                 "OMD_SITE": site.name,
                 **additional_update_env,
             },
-            ["cmk-update-config", "--conflict", conflict_mode, "--dry-run"],
+            command,
         )
         if returncode != 0:
             sys.exit(returncode)

@@ -1868,7 +1868,7 @@ def call_scripts(
         if file.name[0] == ".":
             continue
         sys.stdout.write(f'Executing {phase} script "{file.name}"...')
-        returncode = _call_script(open_pty, env, str(file))
+        returncode = _call_script(open_pty, env, [str(file)])
 
         if not returncode:
             sys.stdout.write(tty.ok + "\n")
@@ -1878,7 +1878,9 @@ def call_scripts(
 
 
 def _call_script(  # pylint: disable=too-many-branches
-    open_pty: bool, env: Mapping[str, str], command: str
+    open_pty: bool,
+    env: Mapping[str, str],
+    command: Sequence[str],
 ) -> int:
     if open_pty:
         fd_parent, fd_child = pty.openpty()
@@ -1887,9 +1889,8 @@ def _call_script(  # pylint: disable=too-many-branches
         stdout = subprocess.PIPE
         stderr = subprocess.STDOUT
 
-    with subprocess.Popen(  # nosec B602 # BNS:2b5952
-        command,  # path-like args is not allowed when shell is true
-        shell=True,
+    with subprocess.Popen(
+        command,
         stdout=stdout,
         stderr=stderr,
         encoding="utf-8",
@@ -2946,7 +2947,7 @@ def main_update(  # pylint: disable=too-many-branches
                 "OMD_SITE": site.name,
                 **additional_update_env,
             },
-            f"cmk-update-config --conflict {conflict_mode} --dry-run",
+            ["cmk-update-config", "--conflict", conflict_mode, "--dry-run"],
         )
         if returncode != 0:
             sys.exit(returncode)

@@ -48,47 +48,6 @@ config_setting(
     }),
 ) for module in all_requirements]
 
-# Our internal cmk packages
-[build_python_module(
-    name = "%s_compile" % module,
-    srcs = [
-        "@freetds",
-        "@omd_packages//omd/packages/omd:use_system_openssl",
-        "@openssl",
-        "@python",
-        src,
-    ],
-    outs = [
-        "compiled_%s.tar" % module,
-    ],
-    cmd = select({
-        "//conditions:default": build_cmd.format(
-            git_ssl_no_verify = "",
-            module_name = module,
-            pip_add_opts = get_pip_options(module),
-            pyMajMin = PYTHON_MAJOR_DOT_MINOR,
-            pypi_mirror = INTERNAL_PYPI_MIRROR,
-            requirements = "$(locations %s)" % src,
-        ),
-        ":git_ssl_no_verify": build_cmd.format(
-            git_ssl_no_verify = "GIT_SSL_NO_VERIFY=true",
-            module_name = module,
-            pip_add_opts = get_pip_options(module),
-            pyMajMin = PYTHON_MAJOR_DOT_MINOR,
-            pypi_mirror = INTERNAL_PYPI_MIRROR,
-            requirements = "$(locations %s)" % src,
-        ),
-    }),
-) for module, src in [
-    # !!! ATTENTION !!!
-    # As soon you extend this list bc you want to add a new cmk package, keep in mind to
-    # extend as well WORKSPACE -> create_python_requirements -> ignored_modules
-    (
-        "trace",
-        "@omd_packages//packages/cmk-trace:files",
-    ),
-]]
-
 # TODO: Switch to official release when netapp has fixed their build process
 # See: https://github.com/NetApp/ontap-rest-python/issues/46
 MODULE_NETAPP = "netapp-ontap"
@@ -131,7 +90,6 @@ genrule(
     srcs = [
         "%s_compile" % module
         for module in all_requirements + [
-            "trace",
             "netapp-ontap",
         ]
     ],

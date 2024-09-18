@@ -22,6 +22,17 @@ set -e
 
 ROOT_DIR="$(dirname "$(dirname "$(realpath "$0")")")"
 
+if ! command -v bazel &>/dev/null; then
+    cat <<EOF
+bazel command not found in PATH. Please install bazelisk via:
+https://github.com/bazelbuild/bazelisk?tab=readme-ov-file#installation
+
+or use the installation script:
+./buildscripts/infrastructure/build-nodes/scripts/install-development.sh --profile bazel --only
+EOF
+    exit 1
+fi
+
 ACTION="$1"
 TARGET=("${@:2}")
 TARGET_S1=$(echo "${TARGET[-1]}" | sed -e 's/\/\///g' -e 's/@//g' -e 's/:/_/g' -e 's/\//_/g')

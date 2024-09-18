@@ -1,4 +1,13 @@
 <!DOCTYPE html>
+{% set state_mapping = {
+    "OK":"background-color: #13D389; color: #000000;",
+    "UP": "background-color: #13D389; color: #000000;",
+    "WARNING":"background-color: #FFD703; color: #000000;",
+    "CRITICAL": "background-color: #C83232; color: #ffffff;",
+    "DOWN":"background-color: #C83232; color: #ffffff;",
+    "UNKNOWN": "background-color: #ff8800; color: #ffffff;",
+    "UNREACHABLE":"background-color: #ff8800; color: #ffffff;",
+    "PENDING":"background-color: #888888; color: #ffffff;", } %}
 <div
     id="summary_container"
     style="
@@ -6,8 +15,13 @@
         width: 536px;
         border-radius: 4px 0px 0px 0px;
         margin-top: 16px;
-        margin-left: 32px;
-        border-top: 8px solid #c83232;
+        border-top: 8px solid
+        {% if service_notification %}
+            {{ state_mapping[data.SERVICESTATE].split('background-color: ')[1].split(';')[0] }}
+        {% else %}
+            {{ state_mapping[data.HOSTSTATE].split('background-color: ')[1].split(';')[0] }}
+        {% endif %}
+        ;
     "
 >
     <table
@@ -31,35 +45,21 @@
             </td>
             <td {{ macros.td_last_child() }}>
                 <div class="event_state">
-                    {% set state_mapping = {
-                    "OK":"background-color: #13D389;
-                    color:#ffffff;", "UP": "background-color:
-                    #13D389;color:#ffffff;",
-                    "WARNING":"background-color:#FFD703; color:
-                    #000000;", "CRITICAL": "background-color:
-                    #C83232;color:#ffffff;",
-                    "DOWN":"background-color:#C83232; color:
-                    #ffffff;", "UNKNOWN": "background-color:
-                    #ff8800;color:#ffffff;",
-                    "UNREACHABLE":"background-color:#ff8800;
-                    color: #ffffff;",
-                    "PENDING":"background-color:
-                    #888888;color:#ffffff;", } %}
+                    <!-- This could also be a macro -->
                     <p
                         style="
                             float: left;
-                            border-radius: 2px;
-                            font-weight: bold;
-                            width: 70px;height: 28px;
+                            border-radius: 8px;
+                            width: 85px;
+                            height: 28px;
                             padding: 6px 0px 7px 0px;
                             font-size: 16px;
                             font-weight: 700;
                             text-align: center;
-                            color: #000000;
-                            align-content: center;
+                            line-height: 28px;
                             margin-right: 10px;
                             {% if service_notification %}
-                                {{ state_mapping[data.PREVIOUSSERVICEHARDSTATE] }}>
+                                {{ state_mapping[data.PREVIOUSSERVICEHARDSTATE] }}
                             {% else %}
                                 {{ state_mapping[data.PREVIOUSHOSTHARDSTATE] }}
                             {% endif %}
@@ -72,23 +72,22 @@
                         {% endif %}
                     </p>
 
-                    <p style="float: left">&#8211;&#8250;</p>
+                    <p style="float: left;line-height: 45px;font-size: 14px;font-weight: 600;">&#8211;&#8250;</p>
 
                     <p
                         style="
                             float: left;
-                            border-radius: 2px;
-                            font-weight: bold;
-                            width: 70px;
+                            border-radius: 8px;
+                            width: 85px;
                             height: 28px;
                             padding: 6px 0px 7px 0px;
                             font-size: 16px;
                             font-weight: 700;
                             text-align: center;
-                            align-content: center;
+                            line-height: 28px;
                             margin-left: 10px;
                             {% if service_notification %}
-                                {{ state_mapping[data.SERVICESTATE] }}>
+                                {{ state_mapping[data.SERVICESTATE] }}
                             {% else %}
                                 {{ state_mapping[data.HOSTSTATE] }}
                             {% endif %}"
@@ -132,7 +131,7 @@
             background-color: #2c3843;
             display: inline-block;
             color: white;
-            align-content: center;
+            line-height: 33px;
             text-align: center;
             text-decoration: none;
             font-size: 14px;

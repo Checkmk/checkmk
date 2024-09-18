@@ -62,6 +62,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+DEFAULT_ITEM_NAME = "default"
+
 
 def postfix_mailq_to_bytes(value, uom):
     uom = uom.lower()
@@ -76,12 +78,12 @@ def postfix_mailq_to_bytes(value, uom):
 
 def parse_postfix_mailq(string_table):
     parsed = {}
-    instance_name = ""
+    instance_name = DEFAULT_ITEM_NAME
     for line in string_table:
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
             # deal with the pre 2.3 agent output that will send an empty instance
             # name for the "default" queue.
-            instance_name = line[0][3:-3] or "default"
+            instance_name = line[0][3:-3] or DEFAULT_ITEM_NAME
 
         queueinfo = None
         # single and old output formats
@@ -123,8 +125,13 @@ def inventory_postfix_mailq(parsed):
 
 
 def check_postfix_mailq(item, params, parsed):
+    # If the user disabled the "Use new service description" option, we arrive
+    # at this function with item being None. In this case we still need to
+    # lookup the data in parsed under the default item name.
+    if item is None:
+        item = DEFAULT_ITEM_NAME
+
     if item not in parsed:
-        yield 3, "Item not found"
         return
 
     if not isinstance(params, dict):

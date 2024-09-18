@@ -12,6 +12,12 @@
 #   --installpath $PWD/qwertz \
 #   --profile cpp,python \
 #   --dry
+#
+# For a very minimal, but maybe breaking or incomplete installation of "just"
+# a single profile use the "--only" option
+# ./buildscripts/infrastructure/build-nodes/scripts/install-development.sh \
+#   --profile bazel \
+#   --only
 set -e -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
@@ -389,6 +395,10 @@ while [[ $# -gt 0 ]]; do
             shift # past argument
             shift # past value
             ;;
+        --only)
+            INSTALL_ONLY=1
+            shift # past argument
+            ;;
         --* | -*)
             echo "Unknown option $1"
             exit 1
@@ -405,6 +415,7 @@ print_debug "SCRIPT_DIR      = ${SCRIPT_DIR}"
 print_debug "INSTALL_PATH    = ${INSTALL_PATH}"
 print_debug "INSTALL_PROFILE = ${INSTALL_PROFILE}"
 print_debug "DRY_RUN         = ${DRY_RUN}"
+print_debug "INSTALL_ONLY    = ${INSTALL_ONLY}"
 print_debug "POSITIONAL_ARGS = ${POSITIONAL_ARGS[*]}"
 print_debug "PROFILE_ARGS    = ${PROFILE_ARGS[*]}"
 
@@ -414,6 +425,7 @@ INSTALL_FOR_CPP=0
 INSTALL_FOR_RUST=0
 INSTALL_FOR_FRONTEND=0
 INSTALL_FOR_LOCALIZE=0
+INSTALL_FOR_BAZEL=0
 INSTALLED_BY_PYENV=0
 # strip only once, if "all" or multiple profiles selected, do it at the end
 STRIP_LATER=0
@@ -449,9 +461,13 @@ for PROFILE in "${PROFILE_ARGS[@]}"; do
         localize)
             INSTALL_FOR_LOCALIZE=1
             ;;
+        bazel)
+            ((REQUIRES_NEXUS += 1))
+            INSTALL_FOR_BAZEL=1
+            ;;
         *)
             print_red "Unknown installation profile $INSTALL_PROFILE"
-            print_debug "Choose from 'all', 'python', 'cpp', 'rust', 'frontend', 'localize'"
+            print_debug "Choose from 'all', 'python', 'cpp', 'rust', 'frontend', 'localize', 'bazel'"
             exit 1
             ;;
     esac
@@ -461,6 +477,7 @@ print_debug "INSTALL_FOR_CPP      = ${INSTALL_FOR_CPP}"
 print_debug "INSTALL_FOR_RUST     = ${INSTALL_FOR_RUST}"
 print_debug "INSTALL_FOR_FRONTEND = ${INSTALL_FOR_FRONTEND}"
 print_debug "INSTALL_FOR_LOCALIZE = ${INSTALL_FOR_LOCALIZE}"
+print_debug "INSTALL_FOR_BAZEL    = ${INSTALL_FOR_BAZEL}"
 print_debug "REQUIRES_NEXUS       = ${REQUIRES_NEXUS}"
 print_debug "STRIP_LATER          = ${STRIP_LATER}"
 
@@ -475,7 +492,9 @@ if [[ $REQUIRES_NEXUS -ge 1 ]]; then
     collect_user_input
 fi
 
-install_basic_tools
+if [[ $INSTALL_ONLY -eq 0 ]]; then
+    install_basic_tools
+fi
 
 if [[ -z ${CI} ]]; then
     # non CI build, Dockerfile is responsible for placing the files
@@ -532,17 +551,23 @@ if [[ $STRIP_LATER -gt 1 ]]; then
     fi
 fi
 
-# basic tools and env variables required to install docker
-"${SCRIPT_DIR}"/install-docker.sh
+if [[ $INSTALL_ONLY -eq 0 ]]; then
+    # basic tools and env variables required to install docker
+    "${SCRIPT_DIR}"/install-docker.sh
 
-# CMK dependencies should always be installed
-install_cmk_package_dependencies
+    # CMK dependencies should always be installed
+    install_cmk_package_dependencies
+fi
 
-if [[ $REQUIRES_NEXUS -gt 0 ]]; then
+if [[ $REQUIRES_NEXUS -gt 0 || $INSTALL_FOR_BAZEL -eq 1 ]]; then
     # only localize or web is installed, which don't require nexus interactions
     # install Bazel for package building
+    print_green "Installing Bazel/Bazelisk ..."
+
     export TARGET_DIR="${INSTALL_PATH}"
     "${SCRIPT_DIR}"/install-bazel.sh
+
+    print_green "Installation of Bazel/Bazelisk done"
 fi
 
 # install_packages golang-go

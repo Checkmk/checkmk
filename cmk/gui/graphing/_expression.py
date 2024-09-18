@@ -967,11 +967,18 @@ def parse_legacy_simple_expression(
 
 @dataclass(frozen=True)
 class Evaluated:
+    base: BaseMetricExpression
     value: int | float
     unit_spec: ConvertibleUnitSpecification | UnitInfo
     color: str
     line_type: LineType
     title: str
+
+    def ident(self) -> str:
+        return self.base.ident()
+
+    def metric_names(self) -> Iterator[str]:
+        yield from self.base.metric_names()
 
 
 @dataclass(frozen=True)
@@ -984,7 +991,7 @@ class MetricExpression:
     title: str = ""
 
     def ident(self) -> str:
-        return f"{self.__class__.__name__}({self.base.ident()})"
+        return self.base.ident()
 
     def evaluate(
         self,
@@ -1002,6 +1009,7 @@ class MetricExpression:
 
         return OK(
             Evaluated(
+                self.base,
                 result.ok.value,
                 (
                     get_unit_info(self.unit_spec)

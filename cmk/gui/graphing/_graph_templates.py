@@ -374,7 +374,7 @@ def get_evaluated_graph_template_choices(
                 )
             )
             already_graphed_metrics.update(
-                {n for m in evaluated_metrics for n in m.expression.metric_names()}
+                {n for m in evaluated_metrics for n in m.evaluated.metric_names()}
             )
     for metric_name, translated_metric in sorted(translated_metrics.items()):
         if translated_metric.auto_graph and metric_name not in already_graphed_metrics:
@@ -652,7 +652,7 @@ def _create_graph_recipe_from_template(
     translated_metrics: Mapping[str, TranslatedMetric],
     specification: GraphSpecification,
 ) -> GraphRecipe:
-    evaluated_by_id = {m.expression.ident(): m.evaluated for m in evaluated_metrics}
+    evaluated_by_id = {m.evaluated.ident(): m.evaluated for m in evaluated_metrics}
     metrics = [
         GraphMetric(
             title=evaluated.title,
@@ -661,7 +661,7 @@ def _create_graph_recipe_from_template(
                 site_id,
                 host_name,
                 service_name,
-                metric_expression.base,
+                evaluated.base,
                 translated_metrics,
                 graph_template.consolidation_function or "max",
             ),
@@ -725,7 +725,7 @@ def _evaluate_predictive_metrics(
         line_type: Literal["line", "-line"] = (
             "-line" if metric.expression.line_type.startswith("-") else "line"
         )
-        for metric_name in metric.expression.metric_names():
+        for metric_name in metric.evaluated.metric_names():
             if metric_name in computed:
                 continue
             computed.add(metric_name)
@@ -753,9 +753,8 @@ def _get_evaluated_graph_templates(
             metric_expressions=graph_template.metrics,
             translated_metrics=translated_metrics,
         ):
-            evaluated_predictive_metrics = _evaluate_predictive_metrics(
-                translated_metrics,
-                evaluated_metrics,
+            evaluated_predictive_metrics = list(
+                _evaluate_predictive_metrics(translated_metrics, evaluated_metrics)
             )
             yield (
                 GraphTemplate(
@@ -785,7 +784,7 @@ def _get_evaluated_graph_templates(
     yield from graph_templates
 
     already_graphed_metrics = {
-        n for gt, _e in graph_templates for me in gt.metrics for n in me.metric_names()
+        n for _t, e in graph_templates for m in e for n in m.evaluated.metric_names()
     }
     for metric_name, translated_metric in sorted(translated_metrics.items()):
         if translated_metric.auto_graph and metric_name not in already_graphed_metrics:

@@ -112,10 +112,6 @@ config_setting(
         "@omd_packages//packages/cmk-messaging:files",
     ),
     (
-        "mkp-tool",
-        "@omd_packages//packages/cmk-mkp-tool:files",
-    ),
-    (
         "livestatus-client",
         "@omd_packages//packages/cmk-livestatus-client:files",
     ),
@@ -167,7 +163,6 @@ genrule(
             "crypto",
             "graphing",
             "messaging",
-            "mkp-tool",
             "rulesets",
             "server-side-calls",
             "trace",

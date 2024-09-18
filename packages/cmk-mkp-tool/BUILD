@@ -1,8 +1,10 @@
-filegroup(
-    name = "files",
+load("@aspect_rules_py//py:defs.bzl", "py_library")
+load("@rules_python//python:packaging.bzl", "py_wheel")
+load("@omd_packages//omd/packages/rules:package_wheel.bzl", "package_wheel")
+
+py_library(
+    name = "cmk-mkp-tool",
     srcs = [
-        "Pipfile",
-        "Pipfile.lock",
         "cmk/mkp_tool/__init__.py",
         "cmk/mkp_tool/__main__.py",
         "cmk/mkp_tool/__version__.py",
@@ -14,8 +16,19 @@ filegroup(
         "cmk/mkp_tool/_type_defs.py",
         "cmk/mkp_tool/_unsorted.py",
         "cmk/mkp_tool/cli.py",
-        "pyproject.toml",
-        "setup.cfg",
     ],
     visibility = ["//visibility:public"],
 )
+
+py_wheel(
+    name = "wheel",
+    distribution = "cmk-mkp-tool",
+    strip_path_prefixes = ["packages/cmk-mkp-tool"],
+    # TODO: Duplicated from pyproject.toml
+    version = "0.2.0",
+    deps = [
+        ":cmk-mkp-tool",
+    ],
+)
+
+package_wheel(wheel_target = "wheel")

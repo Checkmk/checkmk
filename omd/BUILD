@@ -17,6 +17,7 @@ PACKAGES_INT = [
     "//omd/packages/python3-modules:python3-modules.tar",
     "//packages/cmk-agent-based:pkg_tar",
     "//packages/cmk-werks:pkg_tar",
+    "//packages/cmk-mkp-tool:pkg_tar",
 ]
 
 genrule(

@@ -25,22 +25,22 @@
   /* Borders */
   --border-radius: 4px;
 
-  /* Icons */
+  /* Icons that are only defined for facelift, so without dark variant */
   --icon-checkmark: url('~cmk-frontend/src/themes/facelift/images/icon_checkmark.svg');
   --icon-crit-problem: url('~cmk-frontend/src/themes/facelift/images/icon_crit_problem.svg');
   --icon-info: url('~cmk-frontend/src/themes/facelift/images/icon_info.svg');
+  --icon-back: url('~cmk-frontend/src/themes/facelift/images/icon_back.png');
+  --icon-continue: url('~cmk-frontend/src/themes/facelift/images/icon_continue.png');
+  --icon-save-to-services: url('~cmk-frontend/src/themes/facelift/images/icon_save_to_services.svg');
+  --icon-insertdate: url('~cmk-frontend/src/themes/facelift/images/icon_insertdate.png');
+  --icon-alert-crit: url('~cmk-frontend/src/themes/facelift/images/icon_alert_crit.svg');
+  --icon-check: url('~cmk-frontend/src/themes/facelift/images/icon_check.svg');
 }
 
 @layer theme {
   body[data-theme='facelift'] {
     /* Icons */
-    --icon-alert-crit: url('~cmk-frontend/src/themes/facelift/images/icon_alert_crit.svg');
-    --icon-back: url('~cmk-frontend/src/themes/facelift/images/icon_back.png');
-    --icon-check: url('~cmk-frontend/src/themes/facelift/images/icon_check.svg');
-    --icon-continue: url('~cmk-frontend/src/themes/facelift/images/icon_continue.png');
     --icon-main-help: url('~cmk-frontend/src/themes/facelift/images/icon_main_help.svg');
-    --icon-save-to-services: url('~cmk-frontend/src/themes/facelift/images/icon_save_to_services.svg');
-    --icon-insertdate: url('~cmk-frontend/src/themes/facelift/images/icon_insertdate.png');
     --icon-select-arrow: url('~cmk-frontend/src/themes/facelift/images/select_arrow.png');
 
     /* Colors */
@@ -53,13 +53,7 @@
 
   body[data-theme='modern-dark'] {
     /* Icons */
-    --icon-alert-crit: url('~cmk-frontend/src/themes/facelift/images/icon_alert_crit.svg');
-    --icon-back: url('~cmk-frontend/src/themes/facelift/images/icon_back.png');
-    --icon-check: url('~cmk-frontend/src/themes/facelift/images/icon_check.svg');
-    --icon-continue: url('~cmk-frontend/src/themes/facelift/images/icon_continue.png');
     --icon-main-help: url('~cmk-frontend/src/themes/modern-dark/images/icon_main_help.svg');
-    --icon-save-to-services: url('~cmk-frontend/src/themes/facelift/images/icon_save_to_services.svg');
-    --icon-insertdate: url('~cmk-frontend/src/themes/facelift/images/icon_insertdate.png');
     --icon-select-arrow: url('~cmk-frontend/src/themes/modern-dark/images/select_arrow.png');
 
     /* Colors */

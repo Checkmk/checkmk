@@ -977,6 +977,9 @@ class Evaluated:
     def ident(self) -> str:
         return self.base.ident()
 
+    def metric_names(self) -> Iterator[str]:
+        yield from self.base.metric_names()
+
     def mirror(self) -> Evaluated:
         return Evaluated(
             self.base,
@@ -986,9 +989,6 @@ class Evaluated:
             line_type_mirror(self.line_type),
             self.title,
         )
-
-    def metric_names(self) -> Iterator[str]:
-        yield from self.base.metric_names()
 
 
 @dataclass(frozen=True)
@@ -1013,7 +1013,7 @@ class MetricExpression:
         def _title() -> str:
             if self.title:
                 return self.title
-            if metric_names := list(self.metric_names()):
+            if metric_names := list(self.base.metric_names()):
                 return translated_metrics[metric_names[0]].title
             return ""
 
@@ -1031,12 +1031,6 @@ class MetricExpression:
                 _title(),
             )
         )
-
-    def metric_names(self) -> Iterator[str]:
-        yield from self.base.metric_names()
-
-    def scalar_names(self) -> Iterator[ScalarName]:
-        yield from self.base.scalar_names()
 
     def mirror(self) -> MetricExpression:
         return MetricExpression(

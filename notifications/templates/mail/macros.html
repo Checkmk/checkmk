@@ -18,14 +18,39 @@ font-size: 7pt;border: 1px solid #666;position: relative;top: -1px;' %}
     >UNKN</b
 >') | safe }} {% endmacro %}
 
-<!-- Service description -->
-{% macro service_desc(service_description) %}
-<tr style="border-bottom: 1px solid #e5e5e5">
-    <td {{ td_first_child(width="80px", padding="8px") }}>
-        Service:
-    </td>
-    <td {{ td_last_child() }}>
-        <a href="#" style="color: black">{{ service_description}}</a>
-    </td>
-</tr>
+{% macro view_issue_button(href) %}
+<a
+    href="{{ href }}"
+    class="button"
+    style="
+        width: 472px;
+        height: 34px;
+        border-radius: 8px;
+        background-color: #2c3843;
+        display: inline-block;
+        color: white;
+        line-height: 33px;
+        text-align: center;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 600;
+        margin-top: 10px;
+        margin-left: 32px;
+    "
+>
+    View issue
+</a>
+{% endmacro %}
+
+{% macro event_marker_style() %}
+float: left;
+border-radius: 8px;
+width: 85px;
+height: 28px;
+padding: 6px 0px 7px 0px;
+font-size: 16px;
+font-weight: 700;
+text-align: center;
+line-height: 28px;
+margin-right: 10px
 {% endmacro %}

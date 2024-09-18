@@ -15,6 +15,7 @@
         width: 536px;
         border-radius: 4px 0px 0px 0px;
         margin-top: 16px;
+        padding-bottom: 20px;
         border-top: 8px solid
         {% if service_notification %}
             {{ state_mapping[data.SERVICESTATE].split('background-color: ')[1].split(';')[0] }}
@@ -45,25 +46,13 @@
             </td>
             <td {{ macros.td_last_child() }}>
                 <div class="event_state">
-                    <!-- This could also be a macro -->
-                    <p
-                        style="
-                            float: left;
-                            border-radius: 8px;
-                            width: 85px;
-                            height: 28px;
-                            padding: 6px 0px 7px 0px;
-                            font-size: 16px;
-                            font-weight: 700;
-                            text-align: center;
-                            line-height: 28px;
-                            margin-right: 10px;
-                            {% if service_notification %}
-                                {{ state_mapping[data.PREVIOUSSERVICEHARDSTATE] }}
-                            {% else %}
-                                {{ state_mapping[data.PREVIOUSHOSTHARDSTATE] }}
-                            {% endif %}
-                        "
+                    <p style="
+                        {{ macros.event_marker_style() }};
+                        {% if service_notification %}
+                            {{ state_mapping[data.PREVIOUSSERVICEHARDSTATE] }}
+                        {% else %}
+                            {{ state_mapping[data.PREVIOUSHOSTHARDSTATE] }}
+                        {% endif %};"
                     >
                         {% if service_notification %}
                             {{data.PREVIOUSSERVICEHARDSTATE[:4] }}
@@ -72,25 +61,24 @@
                         {% endif %}
                     </p>
 
-                    <p style="float: left;line-height: 45px;font-size: 14px;font-weight: 600;">&#8211;&#8250;</p>
+                    <p style="
+                        float: left;
+                        line-height: 45px;
+                        font-size: 14px;
+                        font-weight: 600;
+                        margin-right: 10px;
+                        "
+                    >
+                        &#8211;&#8250;
+                    </p>
 
-                    <p
-                        style="
-                            float: left;
-                            border-radius: 8px;
-                            width: 85px;
-                            height: 28px;
-                            padding: 6px 0px 7px 0px;
-                            font-size: 16px;
-                            font-weight: 700;
-                            text-align: center;
-                            line-height: 28px;
-                            margin-left: 10px;
-                            {% if service_notification %}
-                                {{ state_mapping[data.SERVICESTATE] }}
-                            {% else %}
-                                {{ state_mapping[data.HOSTSTATE] }}
-                            {% endif %}"
+                    <p style="
+                        {{ macros.event_marker_style() }};
+                        {% if service_notification %}
+                            {{ state_mapping[data.SERVICESTATE] }}
+                        {% else %}
+                            {{ state_mapping[data.HOSTSTATE] }}
+                        {% endif %};"
                     >
                         {% if service_notification %}
                             {{data.SERVICESTATE[:4]}}
@@ -102,7 +90,14 @@
             </td>
         </tr>
         {% if service_notification %}
-            {{macros.service_desc(data.SERVICEDESC) }}
+            <tr style="border-bottom: 1px solid #e5e5e5">
+                <td {{ macros.td_first_child(width="80px", padding="8px") }}>
+                    Service:
+                </td>
+                <td {{ macros.td_last_child() }}>
+                    {{ data.LINKEDSERVICEDESC | safe }}
+                </td>
+            </tr>
         {%endif %}
         <tr>
             <td
@@ -115,32 +110,10 @@
                 Host:
             </td>
             <td {{ macros.td_last_child() }}>
-                <a href="#" style="color: black">
-                    {{ data.HOSTNAME }}
-                </a>
+                {{ data.LINKEDHOSTNAME | safe }}
             </td>
         </tr>
     </table>
-    <a
-        href="#"
-        class="button"
-        style="
-            width: 472px;
-            height: 34px;
-            border-radius: 8px;
-            background-color: #2c3843;
-            display: inline-block;
-            color: white;
-            line-height: 33px;
-            text-align: center;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 600;
-            margin-top: 10px;
-            margin-left: 32px;
-            margin-bottom: 20px;
-        "
-    >
-        View issue
-    </a>
+
+    {{ macros.view_issue_button(href) }}
 </div>

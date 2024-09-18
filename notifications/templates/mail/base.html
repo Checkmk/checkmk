@@ -6,6 +6,11 @@
     <body>
         {% import 'macros.html' as macros %}
         {% set service_notification = data.WHAT == 'SERVICE' %}
+        {% if service_notification %}
+            {% set href = data.LINKEDSERVICEDESC.split('"')[1] %}
+        {% else %}
+            {% set href = data.LINKEDHOSTNAME.split('"')[1] %}
+        {% endif %}
         <table
             id="mail_container"
             style="
@@ -69,27 +74,8 @@
 
                             {% include 'host_tags.html' %}
 
-                            <a
-                                href="#"
-                                class="button"
-                                style="
-                                    width: 472px;
-                                    height: 34px;
-                                    border-radius: 8px;
-                                    background-color: #2c3843;
-                                    display: inline-block;
-                                    color: white;
-                                    line-height: 33px;
-                                    text-align: center;
-                                    text-decoration: none;
-                                    font-size: 14px;
-                                    font-weight: 600;
-                                    margin-top: 10px;
-                                    margin-left: 32px;
-                                "
-                            >
-                                View issue
-                            </a>
+                            {{ macros.view_issue_button(href) }}
+
                         </div>
                     </div>
                 </td>

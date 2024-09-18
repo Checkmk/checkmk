@@ -541,10 +541,12 @@ def extend_context(context: dict[str, str]) -> None:
         context["PARAMETER_URL_PREFIX"] = context["PARAMETER_2"]
 
     context["LINKEDHOSTNAME"] = utils.format_link(
-        '<a href="%s">%s</a>', utils.host_url_from_context(context), context["HOSTNAME"]
+        '<a href="%s" style="color:#000000">%s</a>',
+        utils.host_url_from_context(context),
+        context["HOSTNAME"],
     )
     context["LINKEDSERVICEDESC"] = utils.format_link(
-        '<a href="%s">%s</a>',
+        '<a href="%s" style="color:#000000">%s</a>',
         utils.service_url_from_context(context),
         context.get("SERVICEDESC", ""),
     )

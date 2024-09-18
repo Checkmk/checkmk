@@ -1,8 +1,12 @@
 <!DOCTYPE html>
-<div class="graph_container" style="margin-bottom: 20px">
+<div class="graph_container" style="margin-bottom: 20px;">
     <p
         class="heading"
-        style="font-size: 18px; font-weight: 600"
+        style="
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+        "
     >
         <img
             src="cid:graph.png"
@@ -10,7 +14,7 @@
         />
         Graph
     </p>
-    <div class="graph">
+    <div class="graph" style="padding-top: 10px;">
         {% for graph in graphs %}
         <img src="cid:{{graph}}" style="width: 100%" ; />
         {% endfor %}

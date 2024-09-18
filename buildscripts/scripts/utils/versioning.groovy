@@ -6,6 +6,9 @@
 import groovy.transform.Field
 
 /* groovylint-disable DuplicateListLiteral */
+// ATTENTION: The paths added here for removal MUST NOT include slashes, because
+//            the command used in the function patch_folders will then fail and
+//            paths will not be removed as expected.
 @Field
 def REPO_PATCH_RULES = [\
 "raw": [\
@@ -22,7 +25,8 @@ def REPO_PATCH_RULES = [\
         "saas", \
         "cse", \
         "cse.py", \
-        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/{cme,cee,cce}"],\
+        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/{cme,cee,cce}", \
+        "cmk.cee.dcd.plugins.connectors.connectors_api"],\
     "folders_to_be_created": [\
         "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/{cme,cee,cce}"]], \
 "enterprise": [\

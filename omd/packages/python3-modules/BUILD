@@ -96,10 +96,6 @@ config_setting(
         "@omd_packages//packages/cmk-trace:files",
     ),
     (
-        "messaging",
-        "@omd_packages//packages/cmk-messaging:files",
-    ),
-    (
         "livestatus-client",
         "@omd_packages//packages/cmk-livestatus-client:files",
     ),
@@ -147,7 +143,6 @@ genrule(
     srcs = [
         "%s_compile" % module
         for module in all_requirements + [
-            "messaging",
             "rulesets",
             "server-side-calls",
             "trace",

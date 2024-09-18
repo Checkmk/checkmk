@@ -2997,14 +2997,16 @@ class ParentScanClient(RestApiClient):
 class QuickSetupClient(RestApiClient):
     domain: API_DOMAIN = "quick_setup"
 
-    def get_overview_and_first_stage(
+    def get_overview_mode_or_guided_mode(
         self,
         quick_setup_id: str,
+        mode: Literal["overview", "guided"] | None = "guided",
         expect_ok: bool = True,
     ) -> Response:
         return self.request(
             "get",
             url=f"/objects/{self.domain}/{quick_setup_id}",
+            query_params=_only_set_keys({"mode": mode}),
             expect_ok=expect_ok,
         )
 

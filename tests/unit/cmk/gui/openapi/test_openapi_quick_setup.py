@@ -49,7 +49,7 @@ def register_quick_setup(setup_stages: Sequence[QuickSetupStage] | None = None) 
     )
 
 
-def test_quick_setup_get(clients: ClientRegistry) -> None:
+def test_get_quick_setup_mode_guided(clients: ClientRegistry) -> None:
     register_quick_setup(
         setup_stages=[
             QuickSetupStage(
@@ -63,7 +63,9 @@ def test_quick_setup_get(clients: ClientRegistry) -> None:
             ),
         ],
     )
-    resp = clients.QuickSetup.get_overview_and_first_stage("quick_setup_test")
+    resp = clients.QuickSetup.get_overview_mode_or_guided_mode(
+        quick_setup_id="quick_setup_test", mode="guided"
+    )
     assert len(resp.json["overviews"]) == 1
     assert len(resp.json["stage"]["next_stage_structure"]["components"]) == 1
     assert resp.json["stage"]["next_stage_structure"]["button_label"] == "Next"
@@ -240,3 +242,33 @@ def test_unique_id_must_be_unique(
     )
     resp.assert_status_code(400)
     assert len(resp.json["errors"]["stage_errors"]) == 1
+
+
+def test_get_quick_setup_mode_overview(clients: ClientRegistry) -> None:
+    register_quick_setup(
+        setup_stages=[
+            QuickSetupStage(
+                title="stage1",
+                sub_title="1",
+                configure_components=[
+                    widgets.unique_id_formspec_wrapper(Title("account name")),
+                ],
+                custom_validators=[],
+                recap=[],
+                button_label="Next",
+            ),
+            QuickSetupStage(
+                title="stage2",
+                sub_title="2",
+                configure_components=[],
+                custom_validators=[],
+                recap=[],
+                button_label="Next",
+            ),
+        ],
+    )
+    resp = clients.QuickSetup.get_overview_mode_or_guided_mode(
+        quick_setup_id="quick_setup_test", mode="overview"
+    )
+    assert len(resp.json["stages"]) == 2
+    assert set(resp.json["stages"][0]) == {"title", "sub_title", "components", "button_label"}

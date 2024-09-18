@@ -91,6 +91,23 @@ class QuickSetupOverview:
     overviews: list[StageOverview]
     stage: Stage
     button_complete_label: str
+    mode: str = field(default="guided")
+
+
+@dataclass
+class CompleteStage:
+    title: str
+    sub_title: str | None
+    components: Sequence[dict]
+    button_label: str | None
+
+
+@dataclass
+class QuickSetupAllStages:
+    quick_setup_id: QuickSetupId
+    stages: list[CompleteStage]
+    button_complete_label: str
+    mode: str = field(default="overview")
 
 
 def _get_stage_components_from_widget(widget: Widget) -> dict:
@@ -150,7 +167,7 @@ def _form_spec_parse(
     }
 
 
-def quick_setup_overview(quick_setup: QuickSetup) -> QuickSetupOverview:
+def quick_setup_guided_mode(quick_setup: QuickSetup) -> QuickSetupOverview:
     return QuickSetupOverview(
         quick_setup_id=quick_setup.id,
         overviews=[
@@ -251,4 +268,22 @@ def complete_quick_setup(
                 build_quick_setup_formspec_map(quick_setup.stages),
             )
         )
+    )
+
+
+def quick_setup_overview_mode(quick_setup: QuickSetup) -> QuickSetupAllStages:
+    return QuickSetupAllStages(
+        quick_setup_id=quick_setup.id,
+        stages=[
+            CompleteStage(
+                title=stage.title,
+                sub_title=stage.sub_title,
+                components=[
+                    _get_stage_components_from_widget(widget) for widget in stage_components(stage)
+                ],
+                button_label=stage.button_label,
+            )
+            for stage in quick_setup.stages
+        ],
+        button_complete_label=quick_setup.button_complete_label,
     )

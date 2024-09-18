@@ -5,12 +5,14 @@
 """
 Quick setup
 
-* GET quick setup overview
+* GET quick setup guided stages or overview stages
 * POST validate stage and retrieve the next
+* POST complete the quick setup and save
 """
 
 from collections.abc import Mapping
 from dataclasses import asdict
+from enum import StrEnum
 from typing import Any
 
 from cmk.utils.encoding import json_encode
@@ -25,7 +27,9 @@ from cmk.gui.openapi.restful_objects.constructors import (
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.quick_setup.to_frontend import (
     complete_quick_setup,
-    quick_setup_overview,
+    quick_setup_guided_mode,
+    quick_setup_overview_mode,
+    QuickSetupAllStages,
     QuickSetupOverview,
     retrieve_next_stage,
     Stage,
@@ -39,7 +43,7 @@ from cmk import fields
 
 from .request_schemas import QuickSetupFinalSaveRequest, QuickSetupRequest
 from .response_schemas import (
-    QuickSetupOverviewResponse,
+    QuickSetupResponse,
     QuickSetupSaveResponse,
     QuickSetupStageResponse,
 )
@@ -53,16 +57,33 @@ QUICKSETUP_ID = {
 }
 
 
+class QuickSetupMode(StrEnum):
+    GUIDED = "guided"
+    OVERVIEW = "overview"
+
+
+QUICKSETUP_MODE = {
+    "mode": fields.String(
+        enum=[mode.value for mode in QuickSetupMode],
+        required=False,
+        description="The quick setup mode",
+        example="overview",
+        load_default="guided",
+    )
+}
+
+
 @Endpoint(
     object_href("quick_setup", "{quick_setup_id}"),
     "cmk/quick_setup",
     method="get",
     tag_group="Checkmk Internal",
+    query_params=[QUICKSETUP_MODE],
     path_params=[QUICKSETUP_ID],
-    response_schema=QuickSetupOverviewResponse,
+    response_schema=QuickSetupResponse,
 )
-def get_all_stage_overviews_and_first_stage(params: Mapping[str, Any]) -> Response:
-    """Get all stages overview together with the first stage components"""
+def get_guided_stages_or_overview_stages(params: Mapping[str, Any]) -> Response:
+    """Get guided stages or overview stages"""
     quick_setup_id = params["quick_setup_id"]
     quick_setup = quick_setup_registry.get(quick_setup_id)
     if quick_setup is None:
@@ -70,7 +91,19 @@ def get_all_stage_overviews_and_first_stage(params: Mapping[str, Any]) -> Respon
             title="Quick setup not found",
             detail=f"Quick setup with id '{quick_setup_id}' does not exist.",
         )
-    return _serve_data(data=quick_setup_overview(quick_setup=quick_setup))
+
+    mode: QuickSetupMode = params["mode"]
+    match mode:
+        case QuickSetupMode.OVERVIEW.value:
+            return _serve_data(data=quick_setup_overview_mode(quick_setup=quick_setup))
+        case QuickSetupMode.GUIDED.value:
+            return _serve_data(data=quick_setup_guided_mode(quick_setup=quick_setup))
+        case _:
+            return _serve_error(
+                title="Invalid mode",
+                detail=f"The mode {mode} is not one of {[mode.value for mode in QuickSetupMode]}",
+                status_code=400,
+            )
 
 
 @Endpoint(
@@ -136,7 +169,7 @@ def complete_quick_setup_action(params: Mapping[str, Any]) -> Response:
 
 
 def _serve_data(
-    data: QuickSetupOverview | Stage | QuickSetupSaveRedirect,
+    data: QuickSetupOverview | Stage | QuickSetupSaveRedirect | QuickSetupAllStages,
     status_code: int = 200,
 ) -> Response:
     response = Response()
@@ -155,6 +188,6 @@ def _serve_error(title: str, detail: str, status_code: int = 404) -> Response:
 
 
 def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(get_all_stage_overviews_and_first_stage)
+    endpoint_registry.register(get_guided_stages_or_overview_stages)
     endpoint_registry.register(quicksetup_validate_stage_and_retrieve_next)
     endpoint_registry.register(complete_quick_setup_action)

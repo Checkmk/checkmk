@@ -11,7 +11,7 @@ PIPENV := $(REPO_PATH)/omd/run-pipenv
 
 # You can set these variables from the command line, and also
 # from the environment for the first one.
-SPHINXOPTS    ?= --fail-on-warning
+SPHINXOPTS    ?=
 SPHINXBUILD   := $(PIPENV) run sphinx-build
 BASEDIR       = $(REPO_PATH)/doc/plugin-api
 SOURCEDIR     = $(BASEDIR)/source

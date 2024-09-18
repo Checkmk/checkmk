@@ -16,11 +16,11 @@ from werkzeug.test import create_environ
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
+from cmk.ccc.site import omd_site
+
 from cmk.utils.user import UserId
 
 from cmk.gui import cron
-
-from cmk.ccc.site import omd_site
 
 
 def search_up(search_path: str, start_path: str) -> str:
@@ -174,18 +174,6 @@ def test_cmk_run_cron(wsgi_app: WebTestAppForCMK) -> None:
 def test_cmk_automation(wsgi_app: WebTestAppForCMK) -> None:
     response = wsgi_app.get("/NO_SITE/check_mk/automation.py", status=200)
     assert response.text == "Missing secret for automation command."
-
-
-def test_cmk_ajax_graph_images(wsgi_app: WebTestAppForCMK) -> None:
-    resp = wsgi_app.get("/NO_SITE/check_mk/ajax_graph_images.py", status=200)
-    assert resp.text.startswith("You are not allowed")
-
-    resp = wsgi_app.get(
-        "/NO_SITE/check_mk/ajax_graph_images.py",
-        status=200,
-        extra_environ={"REMOTE_ADDR": "127.0.0.1"},
-    )
-    assert resp.text == ""
 
 
 def test_options_disabled(wsgi_app: WebTestAppForCMK) -> None:

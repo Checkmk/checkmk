@@ -6,11 +6,12 @@
 
 This tool will modify files in place, to make them use the API `cmk.rulesets.v1`.
 It requires you to install the python library `libcst`.
-It does not require, but will attempt to call `autoflake`, `scripts/run-black` and `scripts/run-isort` on the modified file(s).
+It does not require, but will attempt to call `autoflake`, `scripts/run-format` and `scripts/run-sort` on the modified file(s).
 For very simple plugins, it might do the whole job, for most it will not.
 
 It's a quick and dirty, untested hacky thing.
 """
+
 import argparse
 import subprocess
 import sys
@@ -118,7 +119,6 @@ def _extract(keyword: str, args: Sequence[cst.Arg]) -> Iterable[cst.Arg]:
 
 
 class VSTransformer(cst.CSTTransformer):
-
     def leave_Arg(self, original_node: cst.Arg, updated_node: cst.Arg) -> cst.Arg:
         match updated_node:
             case cst.Arg(cst.Call(func=cst.Name("_"), args=args), cst.Name("title")):
@@ -309,11 +309,11 @@ class VSTransformer(cst.CSTTransformer):
         ]
 
         template_args = []
-        if (args.get("unit")) is not None:
+        if (unit := args.get("unit")) is not None:
             template_args = [
                 cst.Arg(
                     keyword=cst.Name("unit_symbol"),
-                    value=cst.ensure_type(args["spec"], cst.SimpleString),
+                    value=cst.ensure_type(unit, cst.SimpleString),
                 )
             ]
 
@@ -409,7 +409,6 @@ class VSTransformer(cst.CSTTransformer):
 
 
 class RegistrationTransformer(cst.CSTTransformer):
-
     def leave_SimpleStatementLine(
         self, original_node: cst.SimpleStatementLine, updated_node: cst.SimpleStatementLine
     ) -> cst.SimpleStatementLine | cst.FlattenSentinel:
@@ -572,7 +571,6 @@ def _try_to_run(*command_items: object) -> None:
 
 
 def main(argv: Sequence[str]) -> None:
-
     args = parse_arguments(argv)
 
     for file in (Path(p) for p in args.files):
@@ -585,8 +583,8 @@ def main(argv: Sequence[str]) -> None:
                 raise
 
     _try_to_run("autoflake", "-i", "--remove-all-unused-imports", *args.files)
-    _try_to_run("scripts/run-isort", *args.files)
-    _try_to_run("scripts/run-black", *args.files)
+    _try_to_run("scripts/run-sort", *args.files)
+    _try_to_run("scripts/run-format", *args.files)
 
 
 if __name__ == "__main__":

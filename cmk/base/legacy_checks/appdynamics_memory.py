@@ -83,12 +83,16 @@ def check_appdynamics_memory(item, params, info):  # pylint: disable=too-many-br
 
             if max_available > 0:
                 perfdata = [("mem_%s" % mem_type, used, warn, crit, 0, max_available)]
-                yield state, "Used: {} of {} ({:.2f}%){}".format(
-                    render.bytes(used),
-                    render.bytes(max_available),
-                    used_percent,
-                    levels_label,
-                ), perfdata
+                yield (
+                    state,
+                    "Used: {} of {} ({:.2f}%){}".format(
+                        render.bytes(used),
+                        render.bytes(max_available),
+                        used_percent,
+                        levels_label,
+                    ),
+                    perfdata,
+                )
             else:
                 perfdata = [("mem_%s" % mem_type, used)]
                 yield state, "Used: %s" % render.bytes(used), perfdata

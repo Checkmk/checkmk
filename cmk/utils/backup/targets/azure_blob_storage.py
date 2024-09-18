@@ -10,10 +10,10 @@ from typing import assert_never, Final, Literal, TypedDict
 from azure.identity import ClientSecretCredential
 from azure.storage.blob import ContainerClient, LinearRetry
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.backup.targets.remote_interface import ProgressStepLogger, RemoteTarget
 from cmk.utils.password_store import extract, PasswordId
-
-from cmk.ccc.exceptions import MKGeneralException
 
 
 class BlobStorageADCredentials(TypedDict):

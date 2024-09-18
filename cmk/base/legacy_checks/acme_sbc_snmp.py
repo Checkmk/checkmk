@@ -8,7 +8,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.plugins.lib.acme import DETECT_ACME
+from cmk.plugins.acme.agent_based.lib import DETECT_ACME
 
 # comNET GmbH, Fabian Binder
 

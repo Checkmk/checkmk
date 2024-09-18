@@ -10,10 +10,14 @@ import os
 import shutil
 import socket
 import sys
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterable, Iterator, Mapping
 from contextlib import contextmanager, nullcontext, suppress
 from pathlib import Path
 from typing import Literal
+
+import cmk.ccc.debug
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.store import lock_checkmk_configuration
 
 import cmk.utils.config_path
 import cmk.utils.password_store
@@ -35,10 +39,6 @@ import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import config
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.nagios_utils import do_check_nagiosconfig
-
-import cmk.ccc.debug
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.store import lock_checkmk_configuration
 
 CoreCommandName = str
 CoreCommand = str
@@ -256,7 +256,7 @@ def do_create_config(
     all_hosts: Iterable[HostName],
     hosts_to_update: set[HostName] | None = None,
     *,
-    duplicates: Sequence[HostName],
+    duplicates: Collection[HostName],
     skip_config_locking_for_bakery: bool = False,
 ) -> None:
     """Creating the monitoring core configuration and additional files
@@ -370,7 +370,7 @@ def _create_core_config(
     ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     hosts_to_update: set[HostName] | None = None,
     *,
-    duplicates: Sequence[HostName],
+    duplicates: Collection[HostName],
 ) -> None:
     config_warnings.initialize()
 
@@ -422,7 +422,7 @@ def _verify_non_deprecated_checkgroups() -> None:
             )
 
 
-def _verify_non_duplicate_hosts(duplicates: Iterable[HostName]) -> None:
+def _verify_non_duplicate_hosts(duplicates: Collection[HostName]) -> None:
     if duplicates:
         config_warnings.warn(
             "The following host names have duplicates: %s. "
@@ -533,7 +533,7 @@ def get_labels_from_attributes(key_value_pairs: list[tuple[str, str]]) -> Labels
 
 
 def get_tags_with_groups_from_attributes(
-    key_value_pairs: list[tuple[str, str]]
+    key_value_pairs: list[tuple[str, str]],
 ) -> dict[TagGroupID, TagID]:
     return {
         TagGroupID(key[6:]): TagID(value)

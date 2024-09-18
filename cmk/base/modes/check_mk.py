@@ -14,9 +14,15 @@ from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from contextlib import suppress
 from functools import partial
 from pathlib import Path
-from typing import Final, Literal, NamedTuple, overload, Protocol, TypeAlias, TypedDict, TypeVar
+from types import ModuleType
+from typing import Final, Literal, NamedTuple, overload, Protocol, TypedDict, TypeVar
 
 import livestatus
+
+import cmk.ccc.debug
+import cmk.ccc.version as cmk_version
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout, OnError
 
 import cmk.utils.cleanup
 import cmk.utils.password_store
@@ -67,9 +73,8 @@ from cmk.snmplib import (
 )
 
 import cmk.fetchers.snmp as snmp_factory
-from cmk.fetchers import get_raw_data
+from cmk.fetchers import get_raw_data, SNMPScanConfig, TLSConfig
 from cmk.fetchers import Mode as FetchMode
-from cmk.fetchers import SNMPScanConfig, TLSConfig
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
@@ -125,12 +130,8 @@ from cmk.base.server_side_calls import load_active_checks
 from cmk.base.sources import make_parser, SNMPFetcherConfig
 from cmk.base.utils import register_sigint_handler
 
-import cmk.ccc.debug
-import cmk.ccc.version as cmk_version
 from cmk import piggyback
 from cmk.agent_based.v1.value_store import set_value_store_manager
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout, OnError
 from cmk.discover_plugins import discover_families, PluginGroup
 
 from ._localize import do_localize
@@ -477,13 +478,7 @@ def mode_list_checks() -> None:
         p.name for p in agent_based_register.iter_all_check_plugins()
     ]
 
-    # active checks using both new and old API have to be collected
-    all_checks += [
-        "check_" + name
-        for name in itertools.chain(
-            config.active_check_info, (p.name for p in load_active_checks()[1].values())
-        )
-    ]
+    all_checks.extend("check_" + p.name for p in load_active_checks()[1].values())
 
     for plugin_name in sorted(all_checks, key=str):
         ds_protocol = _get_ds_protocol(plugin_name)
@@ -1681,11 +1676,12 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
     # pylint: disable=import-outside-toplevel
     from cmk.base import notify
 
+    keepalive_mod: ModuleType | None
     try:
-        from cmk.base.cee import keepalive as keepalive_mod
+        from cmk.base.cee import keepalive as keepalive_mod  # type: ignore[no-redef, unused-ignore]
     except ImportError:
         # Edition layering...
-        keepalive_mod: TypeAlias = None  # type: ignore[no-redef]
+        keepalive_mod = None
 
     with store.lock_checkmk_configuration(configuration_lockfile):
         config.load(with_conf_d=True, validate_hosts=False)
@@ -1704,9 +1700,8 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
         options,
         args,
         define_servicegroups=config.define_servicegroups,
-        host_parameters_cb=lambda hostname, plugin: config.get_config_cache().notification_plugin_parameters(
-            hostname, plugin
-        ),
+        host_parameters_cb=lambda hostname,
+        plugin: config.get_config_cache().notification_plugin_parameters(hostname, plugin),
         rules=config.notification_rules,
         get_http_proxy=config.get_http_proxy,
         ensure_nagios=ensure_nagios,

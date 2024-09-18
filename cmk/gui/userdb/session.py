@@ -20,6 +20,8 @@ from collections.abc import Mapping
 from dataclasses import asdict
 from datetime import datetime
 
+from cmk.ccc.site import omd_site
+
 from cmk.utils.local_secrets import AuthenticationSecret
 from cmk.utils.user import UserId
 
@@ -30,8 +32,6 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.type_defs import SessionInfo
 from cmk.gui.userdb.store import convert_session_info, load_custom_attr, save_custom_attr
-
-from cmk.ccc.site import omd_site
 
 from ._two_factor import is_two_factor_login_enabled
 

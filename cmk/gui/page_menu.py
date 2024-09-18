@@ -86,6 +86,15 @@ def make_form_submit_link(form_name: str, button_name: str) -> PageMenuLink:
     )
 
 
+def make_form_bulk_submit_link(
+    bulk_form_name: str, form_names: list[str], button_name: str
+) -> PageMenuLink:
+    # form_names will be used as a prefix for the response form data
+    return make_javascript_link(
+        f"cmk.page_menu.form_bulk_submit({json.dumps(bulk_form_name)}, {json.dumps(form_names)}, {json.dumps(button_name)})"
+    )
+
+
 def make_confirmed_form_submit_link(
     *,
     form_name: str,
@@ -649,7 +658,7 @@ class PageMenuRenderer:
         html.close_td()
 
     def _show_suggestions(self, menu: PageMenu) -> None:
-        entries = menu.suggestions
+        entries = list(menu.suggestions)
         if not entries:
             return
 

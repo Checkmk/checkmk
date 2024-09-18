@@ -8,6 +8,7 @@ To add a new example (new language, library, etc.), a new Jinja2-Template has to
 be referenced in the result of _build_code_templates.
 
 """
+
 import functools
 import json
 import re
@@ -19,13 +20,13 @@ from apispec import APISpec
 from apispec.ext.marshmallow import resolve_schema_instance  # type: ignore[attr-defined]
 from marshmallow import Schema
 
+from cmk.ccc.site import omd_site
+
 from cmk.gui import fields
 from cmk.gui.fields.base import BaseSchema
 from cmk.gui.openapi.restful_objects.decorators import Endpoint
 from cmk.gui.openapi.restful_objects.params import fill_out_path_template, to_openapi
 from cmk.gui.openapi.restful_objects.type_defs import CodeSample, OpenAPIParameter, RawParameter
-
-from cmk.ccc.site import omd_site
 
 CODE_TEMPLATE_MACROS = """
 {%- macro comments(comment_format="# ", request_schema_multiple=False) %}
@@ -157,10 +158,10 @@ curl {%- if includes_redirect %} -L {%- endif %} \\
   {%- if param.example is defined and param.example %}
     {%- if param.example is iterable and param.example is not string %}
     {%- for example in param.example %}
-  --data-urlencode {{ (param.name + "=" + example) | repr }} \\
+  --data-urlencode {{ (param.name ~ "=" ~ example) | repr }} \\
     {%- endfor %}
     {%- else %}
-  --data-urlencode {{ (param.name + "=" + param.example) | repr }} \\
+  --data-urlencode {{ (param.name ~ "=" ~ param.example) | repr }} \\
     {%- endif %}
   {%- endif %}
  {%- endfor %}

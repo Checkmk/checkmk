@@ -77,13 +77,11 @@ def test_check_splunk_health() -> None:
 
     actual = list(plugin.check_splunk_health(params=default_params, section=sections))
     expected: CheckResult = [
-        Result(
-            state=State.OK,
-            summary="Overall state: green",
-        ),
+        Result(state=State.OK, summary="Overall state: green"),
         Result(
             state=State.CRIT,
-            summary="File monitor input: red (Batchreader-0: red, Tailreader-0: green)",
+            summary="File monitor input: red",
+            details="Batchreader-0: red\nTailreader-0: green",
         ),
     ]
 

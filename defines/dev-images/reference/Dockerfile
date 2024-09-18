@@ -82,4 +82,7 @@ RUN /opt/install-aws-cli.sh
 COPY --from=scripts install-buildifier.sh /opt/
 RUN /opt/install-buildifier.sh
 
+COPY --from=scripts install-taplo.sh /opt/
+RUN /opt/install-taplo.sh
+
 COPY --from=dev_images entrypoint.sh /opt/

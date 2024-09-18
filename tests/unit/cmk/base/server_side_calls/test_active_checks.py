@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
 
 from collections.abc import Mapping, Sequence
 from pathlib import Path
@@ -15,8 +13,7 @@ import cmk.utils.paths
 from cmk.utils import password_store
 from cmk.utils.hostaddress import HostName
 
-from cmk.base.server_side_calls import ActiveCheck, ActiveServiceData
-from cmk.base.server_side_calls._active_checks import ActiveServiceDescription
+from cmk.base.server_side_calls import _active_checks, ActiveCheck, ActiveServiceData
 
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls.v1 import (
@@ -112,12 +109,9 @@ def argument_function_with_exception(*args, **kwargs):
                 ActiveServiceData(
                     plugin_name="http",
                     description="HTTP myHTTPName on my_host_alias",
-                    command="check_mk_active-http",
-                    command_display="check_mk_active-http!--arg1 argument1 --arg2 argument2",
-                    command_line="check_http --arg1 argument1 --arg2 argument2",
-                    params={"name": "myHTTPName on my_host_alias"},
-                    expanded_args="--arg1 argument1 --arg2 argument2",
-                    detected_executable="check_http",
+                    command_name="check_mk_active-http",
+                    configuration={"name": "myHTTPName on my_host_alias"},
+                    command=("check_http", "--arg1", "argument1", "--arg2", "argument2"),
                 ),
             ],
             id="http_active_service_plugin",
@@ -156,22 +150,16 @@ def argument_function_with_exception(*args, **kwargs):
                 ActiveServiceData(
                     plugin_name="my_active_check",
                     description="First service",
-                    command="check_mk_active-my_active_check",
-                    command_display="check_mk_active-my_active_check!--arg1 argument1",
-                    command_line="check_my_active_check --arg1 argument1",
-                    params={"description": "My active check", "param1": "param1"},
-                    expanded_args="--arg1 argument1",
-                    detected_executable="check_my_active_check",
+                    command_name="check_mk_active-my_active_check",
+                    configuration={"description": "My active check", "param1": "param1"},
+                    command=("check_my_active_check", "--arg1", "argument1"),
                 ),
                 ActiveServiceData(
                     plugin_name="my_active_check",
                     description="Second service",
-                    command="check_mk_active-my_active_check",
-                    command_display="check_mk_active-my_active_check!--arg2 argument2",
-                    command_line="check_my_active_check --arg2 argument2",
-                    params={"description": "My active check", "param1": "param1"},
-                    expanded_args="--arg2 argument2",
-                    detected_executable="check_my_active_check",
+                    command_name="check_mk_active-my_active_check",
+                    configuration={"description": "My active check", "param1": "param1"},
+                    command=("check_my_active_check", "--arg2", "argument2"),
                 ),
             ],
             id="multiple_services",
@@ -232,10 +220,8 @@ def argument_function_with_exception(*args, **kwargs):
                 ActiveServiceData(
                     plugin_name="my_active_check",
                     description="My service",
-                    command="check_mk_active-my_active_check",
-                    command_display="check_mk_active-my_active_check!--pwstore=1@9@/pw/store@stored_password '--secret=**********'",
-                    command_line="check_my_active_check --pwstore=1@9@/pw/store@stored_password '--secret=**********'",
-                    params={
+                    command_name="check_mk_active-my_active_check",
+                    configuration={
                         "description": "My active check",
                         "password": (
                             "cmk_postprocessed",
@@ -243,8 +229,11 @@ def argument_function_with_exception(*args, **kwargs):
                             ("stored_password", ""),
                         ),
                     },
-                    expanded_args="--pwstore=1@9@/pw/store@stored_password '--secret=**********'",
-                    detected_executable="check_my_active_check",
+                    command=(
+                        "check_my_active_check",
+                        "--pwstore=1@9@/pw/store@stored_password",
+                        "'--secret=**********'",
+                    ),
                 ),
             ],
             id="one_service_password_store",
@@ -305,9 +294,9 @@ def test_get_active_service_data_password_with_hack(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
-        ActiveCheck,
-        "_get_command",
-        lambda self, pn, cl: ("check_mk_active-check_path", f"/path/to/check_{pn}", cl),
+        _active_checks,
+        "_autodetect_plugin",
+        lambda executable, module: f"/path/to/{executable}",
     )
     monkeypatch.setitem(password_store.hack.HACK_CHECKS, "test_check", True)
     active_check = ActiveCheck(
@@ -343,15 +332,19 @@ def test_get_active_service_data_password_with_hack(
         ActiveServiceData(
             plugin_name="test_check",
             description="My service",
-            command="check_mk_active-check_path",
-            command_display="check_mk_active-check_path!--pwstore=4@1@/pw/store@uuid1234 --password-id uuid1234:/pw/store --password-plain-in-curly '{*********}'",
-            command_line="check_test_check --pwstore=4@1@/pw/store@uuid1234 --password-id uuid1234:/pw/store --password-plain-in-curly '{*********}'",
-            params={
+            command_name="check_mk_active-test_check",
+            configuration={
                 "description": "My active check",
                 "password": ("cmk_postprocessed", "explicit_password", ("uuid1234", "p4ssw0rd!")),
             },
-            expanded_args="--pwstore=4@1@/pw/store@uuid1234 --password-id uuid1234:/pw/store --password-plain-in-curly '{*********}'",
-            detected_executable="/path/to/check_test_check",
+            command=(
+                "/path/to/check_test_check",
+                "--pwstore=4@1@/pw/store@uuid1234",
+                "--password-id",
+                "uuid1234:/pw/store",
+                "--password-plain-in-curly",
+                "'{*********}'",
+            ),
         ),
     ]
 
@@ -360,9 +353,9 @@ def test_get_active_service_data_password_without_hack(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
-        ActiveCheck,
-        "_get_command",
-        lambda self, pn, cl: ("check_mk_active-check_path", f"/path/to/check_{pn}", cl),
+        _active_checks,
+        "_autodetect_plugin",
+        lambda executable, module: f"/path/to/{executable}",
     )
     active_check = ActiveCheck(
         plugins=_PASSWORD_TEST_ACTIVE_CHECKS,
@@ -397,15 +390,18 @@ def test_get_active_service_data_password_without_hack(
         ActiveServiceData(
             plugin_name="test_check",
             description="My service",
-            command="check_mk_active-check_path",
-            command_display="check_mk_active-check_path!--password-id uuid1234:/pw/store --password-plain-in-curly '{p4ssw0rd\\!}'",
-            command_line="check_test_check --password-id uuid1234:/pw/store --password-plain-in-curly '{p4ssw0rd!}'",
-            params={
+            command_name="check_mk_active-test_check",
+            configuration={
                 "description": "My active check",
                 "password": ("cmk_postprocessed", "explicit_password", ("uuid1234", "p4ssw0rd!")),
             },
-            expanded_args="--password-id uuid1234:/pw/store --password-plain-in-curly '{p4ssw0rd\\!}'",
-            detected_executable="/path/to/check_test_check",
+            command=(
+                "/path/to/check_test_check",
+                "--password-id",
+                "uuid1234:/pw/store",
+                "--password-plain-in-curly",
+                "'{p4ssw0rd!}'",
+            ),
         ),
     ]
 
@@ -585,13 +581,8 @@ def test_test_get_active_service_data_crash_with_debug(
                 ActiveServiceData(
                     plugin_name="my_active_check",
                     description="My service",
-                    command="check_mk_active-my_active_check",
-                    command_display="check_mk_active-my_active_check!--pwstore=2@0@/pw/store@stored_password "
-                    "--password '***'",
-                    command_line="check_my_active_check "
-                    "--pwstore=2@0@/pw/store@stored_password --password "
-                    "'***'",
-                    params={
+                    command_name="check_mk_active-my_active_check",
+                    configuration={
                         "description": "My active check",
                         "password": (
                             "cmk_postprocessed",
@@ -599,8 +590,12 @@ def test_test_get_active_service_data_crash_with_debug(
                             ("stored_password", ""),
                         ),
                     },
-                    expanded_args="--pwstore=2@0@/pw/store@stored_password --password " "'***'",
-                    detected_executable="check_my_active_check",
+                    command=(
+                        "check_my_active_check",
+                        "--pwstore=2@0@/pw/store@stored_password",
+                        "--password",
+                        "'***'",
+                    ),
                 ),
             ],
             '\nWARNING: The stored password "stored_password" used by host "myhost" does not exist (anymore).\n',
@@ -635,110 +630,3 @@ def test_get_active_service_data_warnings(
 
     captured = capsys.readouterr()
     assert captured.out == expected_warning
-
-
-@pytest.mark.parametrize(
-    "active_check_rules, active_check_plugins, hostname, host_attrs, expected_result",
-    [
-        pytest.param(
-            [
-                (
-                    "my_active_check",
-                    [
-                        {
-                            "description": "My active check",
-                            "password": (
-                                "cmk_postprocessed",
-                                "explicit_password",
-                                (":uuid:1234", "myp4ssw0rd"),
-                            ),
-                        }
-                    ],
-                ),
-            ],
-            {
-                PluginLocation(
-                    # this is not what we'd expect here, but we need a module that we know to be importable.
-                    f"{__name__}",
-                    "active_check_my_active_check",
-                ): ActiveCheckConfig(
-                    name="my_active_check",
-                    parameter_parser=lambda p: p,
-                    commands_function=lambda p, *_: (
-                        [
-                            ActiveCheckCommand(
-                                service_description="My service",
-                                command_arguments=["--password", p["password"]],
-                            ),
-                        ]
-                    ),
-                )
-            },
-            HostName("myhost"),
-            {
-                "alias": "my_host_alias",
-                "_ADDRESS_4": "127.0.0.1",
-                "address": "127.0.0.1",
-                "_ADDRESS_FAMILY": "4",
-                "_ADDRESSES_4": "127.0.0.1",
-                "_ADDRESSES_6": "",
-                "display_name": "my_host",
-            },
-            [
-                ActiveServiceDescription(
-                    plugin_name="my_active_check",
-                    description="My service",
-                    params={
-                        "description": "My active check",
-                        "password": (
-                            "cmk_postprocessed",
-                            "explicit_password",
-                            (":uuid:1234", "myp4ssw0rd"),
-                        ),
-                    },
-                ),
-            ],
-            id="one_service",
-        ),
-        pytest.param(
-            [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
-            ],
-            {},
-            HostName("myhost"),
-            {
-                "alias": "my_host_alias",
-                "_ADDRESS_4": "127.0.0.1",
-                "address": "127.0.0.1",
-                "_ADDRESS_FAMILY": "4",
-                "_ADDRESSES_4": "127.0.0.1",
-                "_ADDRESSES_6": "",
-                "display_name": "my_host",
-            },
-            [],
-            id="unimplemented_plugin",
-        ),
-    ],
-)
-def test_get_active_service_descriptions(
-    monkeypatch: pytest.MonkeyPatch,
-    active_check_rules: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
-    active_check_plugins: Mapping[PluginLocation, ActiveCheckConfig],
-    hostname: HostName,
-    host_attrs: Mapping[str, str],
-    expected_result: Sequence[ActiveServiceDescription],
-) -> None:
-    monkeypatch.setitem(password_store.hack.HACK_CHECKS, "my_active_check", True)
-    active_check_config = ActiveCheck(
-        active_check_plugins,
-        hostname,
-        HOST_CONFIG,
-        host_attrs,
-        http_proxies={},
-        service_name_finalizer=lambda x: x,
-        stored_passwords={},
-        password_store_file=Path("/pw/store"),
-    )
-
-    descriptions = list(active_check_config.get_active_service_descriptions(active_check_rules))
-    assert descriptions == expected_result

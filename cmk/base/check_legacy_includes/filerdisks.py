@@ -33,9 +33,11 @@ def check_filer_disks(disks, params):  # pylint: disable=too-many-branches
             if disk["state"] == what:
                 state[what].append(disk)
 
-    yield 0, "Total raw capacity: %s" % render.disksize(total_capacity), [
-        ("total_disk_capacity", total_capacity)
-    ]
+    yield (
+        0,
+        "Total raw capacity: %s" % render.disksize(total_capacity),
+        [("total_disk_capacity", total_capacity)],
+    )
     # TODO: Is a prefailed disk unavailable?
     unavail_disks = len(state["prefailed"]) + len(state["failed"]) + len(state["offline"])
     yield 0, "Total disks: %d" % (len(disks) - unavail_disks), [("total_disks", len(disks))]
@@ -91,8 +93,11 @@ def check_filer_disks(disks, params):  # pylint: disable=too-many-branches
             elif ratio >= warn:
                 return_state = 1
             if return_state:
-                yield return_state, "Too many {} disks (warn/crit at {:.1f}%/{:.1f}%)".format(
-                    disk_state,
-                    warn,
-                    crit,
+                yield (
+                    return_state,
+                    "Too many {} disks (warn/crit at {:.1f}%/{:.1f}%)".format(
+                        disk_state,
+                        warn,
+                        crit,
+                    ),
                 )

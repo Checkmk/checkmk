@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.watolib.mode_permissions import mode_permissions_ensurance_registry
-
 from cmk.ccc.plugin_registry import Registry
+
+from cmk.gui.watolib.mode_permissions import mode_permissions_ensurance_registry
 
 from ._base import WatoMode
 

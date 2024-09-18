@@ -1424,6 +1424,11 @@ class JiraPluginCreate(PluginName):
         required=True,
         description="Here you can set a custom label for new issues. If not set, 'monitoring' will be used",
     )
+    graphs_per_notification = fields.Nested(
+        GraphsPerNotificationOneOfSchema,
+        load_default=lambda: {"state": "disabled"},
+        description="Here you can set a limit for the number of graphs that are displayed in a notification. If not set, 0 will be used",
+    )
     resolution_id = fields.Nested(
         StrValueOneOfSchema,
         required=True,

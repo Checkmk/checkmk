@@ -41,7 +41,7 @@ def test_subscription_details_broken(
     "protocol_version", ["1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0"]
 )
 def test_subscription_details_empty_source(
-    protocol_version: Literal["1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0"]
+    protocol_version: Literal["1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0"],
 ) -> None:
     assert make_parser(protocol_version).parse_subscription_details(
         {

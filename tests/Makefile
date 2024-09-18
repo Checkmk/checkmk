@@ -11,7 +11,6 @@ PYTEST := $(PIPENV) run pytest $(PYTEST_ARGS)
 CYCLES := $(PIPENV) run py_import_cycles
 PYTEST_OPTS_UNIT_SKIP_SLOW = -m "not slow"
 PYTEST_OPTS_UNIT_SLOW_ONLY = -m "slow"
-BLACK  := $(SCRIPTS)/run-black
 THREE_TO_TWO := $(PIPENV) run 3to2
 BANDIT := $(PIPENV) run bandit
 FIND_INVALID_TEST_FILES := $(SCRIPTS)/find-invalid-autogen-files
@@ -198,16 +197,16 @@ test-docker:
 	shellcheck -x $(SHELLCHECK_OUTPUT_ARGS) ../docker_image/docker-entrypoint.sh
 	$(PYTEST) -x -T docker --log-cli-level=INFO docker
 
-test-format-python: test-format-python-isort test-format-python-black
+test-format-python: test-format-python-sort test-format-python-format
 
-test-format-python-isort: ../pyproject.toml
+test-format-python-sort: ../pyproject.toml
 	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
-	xargs -n 1500 $(PIPENV) run isort --settings-path ../pyproject.toml --check-only --diff \
+	xargs -n 1500 ../scripts/run-pipenv run ruff check --select I --diff;\
 	exit $${PIPESTATUS[1]}
 
-test-format-python-black: ../pyproject.toml
+test-format-python-format: ../pyproject.toml
 	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
-	xargs -n 1500 $(BLACK) --check --diff ;\
+	xargs -n 1500 ../scripts/run-pipenv run ruff format --check --diff;\
 	exit $${PIPESTATUS[1]}
 
 test-format-python-docker:
@@ -274,11 +273,12 @@ test-schemathesis-openapi:
 	$(PYTEST) -T schemathesis_openapi $(PYTEST_SYSTEM_TEST_ARGS) $(realpath schemathesis_openapi)
 
 test-plugins:
-	$(PYTEST) -T plugins_integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_integration)
+	$(PYTEST) -T plugins_integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_integration) \
+	--ignore=plugins_integration/test_plugin_piggyback.py
 
 test-plugins-piggyback:
 	$(PYTEST) -T plugins_integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_integration) \
-	plugins_integration/test_plugin_piggyback.py --enable-piggyback --log-cli-level=INFO
+	plugins_integration/test_plugin_piggyback.py --log-cli-level=INFO
 
 $(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker):
 	$(PIPENV) run scripts/run-dockerized.py "$(subst -docker,,$@)"

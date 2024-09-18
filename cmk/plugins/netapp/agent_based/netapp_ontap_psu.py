@@ -34,7 +34,7 @@ def parse_netapp_ontap_psu(string_table: StringTable) -> Section:
     return {
         psu.item_name(): psu
         for line in string_table
-        if (psu := models.ShelfPsuModel.model_validate_json(line[0]))
+        for psu in [models.ShelfPsuModel.model_validate_json(line[0])]
     }
 
 

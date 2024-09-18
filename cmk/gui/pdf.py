@@ -1053,7 +1053,8 @@ class TableRenderer:
         # ( "number", "0.75" ), or ("", ("icon", "/bar/foo.png") )
         # The headers come *without* the css field and are always texts.
         headers: list[CellRenderer] = [
-            TitleCell(["heading"], header_text) for header_text in header_texts  #
+            TitleCell(["heading"], header_text)
+            for header_text in header_texts  #
         ]
 
         rows: list[list[CellRenderer]] = []

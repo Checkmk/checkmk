@@ -5,6 +5,7 @@
 """
 Special agent for monitoring Prometheus with Checkmk.
 """
+
 import argparse
 import ast
 import json

@@ -14,7 +14,7 @@ from tests.testlib.playwright.pom.dashboard import Dashboard
 from tests.testlib.playwright.pom.login import LoginPage
 from tests.testlib.site import Site
 
-from cmk.utils.totp import TOTP
+from cmk.crypto.totp import TOTP
 
 
 def test_totp(test_site: Site, dashboard_page: Dashboard, credentials: CmkCredentials) -> None:

@@ -5,12 +5,13 @@
 import logging
 import re
 from abc import abstractmethod
+from re import Pattern
 from typing import Literal, overload
 from urllib.parse import urljoin
 
 from playwright.sync_api import expect, FrameLocator, Locator, Page, Response
 
-from tests.testlib.playwright.helpers import Keys, LocatorHelper
+from tests.testlib.playwright.helpers import DropdownListNameToID, Keys, LocatorHelper
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +29,7 @@ class CmkPage(LocatorHelper):
         super().__init__(page, timeout_assertions, timeout_navigation)
         self._navigate_to_page = navigate_to_page
         self.main_menu = MainMenu(self.page)
-        self.main_area = MainArea(self.page)
+        self.main_area = MainArea(self.page, self._dropdown_list_name_to_id())
         self.sidebar = Sidebar(self.page)
         if self._navigate_to_page:
             self.navigate()
@@ -50,6 +51,16 @@ class CmkPage(LocatorHelper):
 
         Ensure the expected page is displayed by checking the page title,
         url or other elements that are unique to the page.
+        """
+
+    @abstractmethod
+    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
+        """Provide mapping between `dropdown list` names and corresponding `menu ID`s.
+
+        In addition to the `quick suggestion` buttons present on a page,
+        `dropdown list`s provide additional options to a user, in form of an item list.
+        Item list corresponds to a web element in the UI, consisting of a `menu ID`.
+        Using `menu ID` ensures that an instruction is executed from the desired `dropdown list`.
         """
 
     def locator(self, selector: str = "xpath=.") -> Locator:
@@ -91,12 +102,12 @@ class CmkPage(LocatorHelper):
         logger.info("Press keyboard key: %d", key.value)
         self.page.keyboard.press(str(key.value))
 
-    def get_link(self, name: str, exact: bool = True) -> Locator:
+    def get_link(self, name: str | Pattern[str], exact: bool = True) -> Locator:
         """Returns a web-element from the `main_area`, which is a `link`."""
         return self.main_area.locator().get_by_role(role="link", name=name, exact=exact)
 
     def activate_changes(self) -> None:
-        self.get_link("changes", exact=False).click()
+        self.get_link(re.compile("^[1-9][0-9]* changes?$"), exact=False).click()
         self.activate_selected()
         self.expect_success_state()
 
@@ -107,6 +118,12 @@ class CmkPage(LocatorHelper):
         """
         with self.page.expect_event(event) as _:
             self.page.goto(url)
+
+    def check_no_errors(self, timeout: int) -> None:
+        """Check that no errors are present on the page."""
+        expect(self.locator("div.error"), "Some errors are present on the page").not_to_be_visible(
+            timeout=timeout
+        )
 
     def go(
         self,
@@ -303,6 +320,16 @@ class MainMenu(LocatorHelper):
 class MainArea(LocatorHelper):
     """functionality to find items from the main area"""
 
+    def __init__(
+        self,
+        page: Page,
+        dropdown_list_name_to_id: DropdownListNameToID,
+        timeout_assertions: int | None = None,
+        timeout_navigation: int | None = None,
+    ) -> None:
+        super().__init__(page, timeout_assertions, timeout_navigation)
+        self._dropdown_list_name_to_id = dropdown_list_name_to_id
+
     @overload
     def locator(self, selector: None = None) -> FrameLocator: ...
 
@@ -337,16 +364,24 @@ class MainArea(LocatorHelper):
     def dropdown_button(self, name: str, exact: bool = True) -> Locator:
         return self.page_menu_bar.get_by_role(role="heading", name=name, exact=exact)
 
-    def dropdown_menu(self, menu_id: str) -> Locator:
+    def dropdown_list(self, dropdown_button: str) -> Locator:
+        try:
+            menu_id = getattr(self._dropdown_list_name_to_id, dropdown_button)
+        except AttributeError as e:
+            e.add_note(
+                f"No `menu ID` found corresponding to dropdown list: '{dropdown_button}'!\n"
+                "`MainArea` is initialized with incomplete mapping of `dropdown_list_name_to_id`."
+            )
+            raise e
         return self.locator(f"div#{menu_id}")
 
-    def dropdown_menu_item(self, menu_id: str, item_name: str) -> Locator:
-        return self.dropdown_menu(menu_id).locator(f"span:has-text('{item_name}')")
+    def item_in_dropdown_list(self, dropdown_button: str, item: str) -> Locator:
+        return self.dropdown_list(dropdown_button).locator(f"span:has-text('{item}')")
 
-    def click_dropdown_menu_item(self, dropdown_button: str, menu_id: str, menu_item: str) -> None:
+    def click_item_in_dropdown_list(self, dropdown_button: str, item: str) -> None:
         self.dropdown_button(dropdown_button).click()
-        expect(self.dropdown_menu(menu_id)).to_be_visible()
-        self.dropdown_menu_item(menu_id, menu_item).click()
+        expect(self.dropdown_list(dropdown_button)).to_be_visible()
+        self.item_in_dropdown_list(dropdown_button, item).click()
 
 
 class Sidebar(LocatorHelper):

@@ -11,6 +11,8 @@ from pytest import MonkeyPatch
 
 from tests.testlib.rest_api_client import ClientRegistry
 
+from cmk.ccc import version
+
 from cmk.utils import paths
 
 from cmk.gui.exceptions import MKUserError
@@ -24,8 +26,6 @@ from cmk.gui.rest_api_types.site_connection import (
     SiteConfig,
     StatusHost,
 )
-
-from cmk.ccc import version
 
 DOMAIN_TYPE = "site_connection"
 
@@ -62,6 +62,30 @@ def test_get_site_connections(clients: ClientRegistry) -> None:
     resp = clients.SiteManagement.get_all()
     assert resp.json["domainType"] == DOMAIN_TYPE
     assert resp.json["value"][0]["id"] == "NO_SITE"
+
+
+def test_list_sites_include_links(clients: ClientRegistry) -> None:
+    default_response = clients.SiteManagement.get_all()
+    enabled_response = clients.SiteManagement.get_all(include_links=True)
+    disabled_response = clients.SiteManagement.get_all(include_links=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == enabled_response.json
+    assert any(bool(value["links"]) for value in enabled_response.json["value"])
+    assert all(value["links"] == [] for value in disabled_response.json["value"])
+
+
+def test_list_sites_include_extensions(clients: ClientRegistry) -> None:
+    default_response = clients.SiteManagement.get_all()
+    enabled_response = clients.SiteManagement.get_all(include_extensions=True)
+    disabled_response = clients.SiteManagement.get_all(include_extensions=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == enabled_response.json
+    assert any(bool(value["extensions"]) for value in enabled_response.json["value"])
+    assert all("extensions" not in value for value in disabled_response.json["value"])
 
 
 def test_login(
@@ -175,7 +199,7 @@ def test_create_site_connection_missing_config(
     key: str,
 ) -> None:
     config = _default_config()
-    config.pop(key)  # type: ignore
+    config.pop(key)  # type: ignore[misc]
     clients.SiteManagement.create(
         site_config=config,
         expect_ok=False,
@@ -267,7 +291,7 @@ connection_test_data_400: list[Connection] = [
         "encrypted": False,
         "verify": False,
     },
-    {"socket_type": "electrical_socket"},  # type: ignore
+    {"socket_type": "electrical_socket"},  # type: ignore[typeddict-item]
     {"socket_type": "unix"},
     {"socket_type": "tcp"},
     {"socket_type": "tcp6"},
@@ -384,7 +408,7 @@ proxy_test_data_400: list[Proxy] = [
     {
         "use_livestatus_daemon": "with_proxy",
         "global_settings": False,
-        "params": {"invalid_param": True},  # type: ignore
+        "params": {"invalid_param": True},  # type: ignore[typeddict-unknown-key]
     },
     {
         "use_livestatus_daemon": "direct",
@@ -570,7 +594,7 @@ config_cnx_test_data_400: list[ConfigurationConnection] = [
         },
         "replicate_event_console": False,
         "replicate_extensions": False,
-        "invalid_attribute": True,  # type: ignore
+        "invalid_attribute": True,  # type: ignore[typeddict-unknown-key]
     },
     {
         "enable_replication": True,

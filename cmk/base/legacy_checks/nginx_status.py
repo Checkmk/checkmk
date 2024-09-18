@@ -86,9 +86,11 @@ def check_nginx_status(item, params, parsed):
     txt += " (%0.2f/Connection)" % computed_values["requests_per_conn"]
     yield state, txt, perf
 
-    yield 0, "Accepted: %0.2f/s" % computed_values["accepted_per_sec"], [
-        ("accepted", data["accepted"])
-    ]
+    yield (
+        0,
+        "Accepted: %0.2f/s" % computed_values["accepted_per_sec"],
+        [("accepted", data["accepted"])],
+    )
     yield 0, "Handled: %0.2f/s" % computed_values["handled_per_sec"], [("handled", data["handled"])]
 
 

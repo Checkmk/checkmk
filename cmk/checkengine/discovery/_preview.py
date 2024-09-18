@@ -8,6 +8,8 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Literal
 
+from cmk.ccc.exceptions import OnError
+
 import cmk.utils.paths
 from cmk.utils import tty
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -35,8 +37,6 @@ from cmk.checkengine.sectionparser import (
 )
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.summarize import SummarizerFunction
-
-from cmk.ccc.exceptions import OnError
 
 from ._autochecks import AutocheckEntry, DiscoveredService
 from ._autodiscovery import _Transition, get_host_services_by_host_name

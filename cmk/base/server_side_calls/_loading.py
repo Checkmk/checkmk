@@ -6,6 +6,7 @@
 from collections.abc import Mapping, Sequence
 
 import cmk.ccc.debug
+
 from cmk.discover_plugins import discover_plugins, PluginGroup, PluginLocation
 from cmk.server_side_calls.v1 import ActiveCheckConfig, entry_point_prefixes, SpecialAgentConfig
 

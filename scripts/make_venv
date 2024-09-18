@@ -22,7 +22,6 @@ LOCK_AND_OS_HASH_FILE="${VENV_PATH}/lock_and_os.hash"
 
 if [ -f "${LOCK_AND_OS_HASH_FILE}" ] &&
     [ "$(cat "${LOCK_AND_OS_HASH_FILE}")" = "${SYSTEM_IDENTIFIER} ${LOCK_FILE_HASH}" ]; then
-    echo >&2 "Virtual environment matches Pipfile.lock and the system identifier."
     exit 0
 fi
 

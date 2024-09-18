@@ -9,6 +9,7 @@ the pytest-playwright addon's fixtures are too "aggressive" and are loaded in
 all tests. So some functionality is inspired from this module
 See: https://github.com/microsoft/playwright-pytest
 """
+
 import logging
 import os
 import re

@@ -9,9 +9,11 @@ import pytest
 from pytest import MonkeyPatch
 
 from cmk.utils.notify import NotificationHostConfig
-from cmk.utils.notify_types import EnrichedEventContext, EventContext, EventRule, NotificationRuleID
+from cmk.utils.notify_types import EventRule, NotificationRuleID
 from cmk.utils.rulesets.ruleset_matcher import TagConditionNE
 from cmk.utils.tags import TagGroupID, TagID
+
+from cmk.events.event_context import EnrichedEventContext, EventContext
 
 import cmk.base.events
 from cmk.base.events import (

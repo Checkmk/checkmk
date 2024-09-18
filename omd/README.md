@@ -20,7 +20,7 @@ Checkmk git base directory.
 After this is done, you may use, depending on your distribution, one of the
 following targets to build a package for the current git:
 
-- `make rpm`: Create a RPM package for RedHat/CentOS/SLES. Each build starts
+- `make rpm`: Create a RPM package for RedHat/SLES. Each build starts
   building th
 - `make deb`: Create a DEB package for Debian/Ubuntu
 - `make cma`: Create a CMA package for the appliance

@@ -61,7 +61,8 @@ def _serialize_device(
     ) + (
         ";"
         + ";".join(
-            _serialize_value(value) for value in values  # pylint: disable=used-before-assignment
+            _serialize_value(value)
+            for value in values  # pylint: disable=used-before-assignment
         )
         if (values := [*global_values, *device.values])
         else ""

@@ -1519,7 +1519,7 @@ export function update_unit_selector(selectbox: string, metric_prefix: string) {
                 // Error handling is: If request failed do nothing
                 if (json_data.result_code == 0)
                     $("#" + selectbox + "_sel")
-                        .val(json_data.result.option_place)
+                        .val(json_data.result.unit_choice_index)
                         .trigger("change");
             },
         });

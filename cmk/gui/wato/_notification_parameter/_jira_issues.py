@@ -6,7 +6,15 @@
 from typing import Any
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import CascadingDropdown, Dictionary, FixedValue, HTTPUrl, Migrate, TextInput
+from cmk.gui.valuespec import (
+    CascadingDropdown,
+    Dictionary,
+    FixedValue,
+    HTTPUrl,
+    Integer,
+    Migrate,
+    TextInput,
+)
 from cmk.gui.wato import HTTPProxyReference, IndividualOrStoredPassword
 
 from ._base import NotificationParameter
@@ -32,9 +40,11 @@ class NotificationParameterJiraIssues(NotificationParameter):
                     "ignore_ssl",
                     "timeout",
                     "label",
+                    "graphs_per_notification",
                     "proxy_url",
                     "assign",
                 ],
+                default_keys=["graphs_per_notification"],
                 elements=[
                     (
                         "url",
@@ -244,6 +254,20 @@ class NotificationParameterJiraIssues(NotificationParameter):
                             )
                             % notification_macro_help(),
                             size=16,
+                        ),
+                    ),
+                    (
+                        "graphs_per_notification",
+                        Integer(
+                            title=_("Attach graphs"),
+                            label=_("Attach up to"),
+                            unit=_("graphs"),
+                            help=_(
+                                "Attach graphs and limit the number of graphs that are attached to "
+                                "an issue."
+                            ),
+                            default_value=5,
+                            minvalue=0,
                         ),
                     ),
                     (

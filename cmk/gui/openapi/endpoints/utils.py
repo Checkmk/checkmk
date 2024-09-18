@@ -10,6 +10,9 @@ from typing import Any, Literal
 
 from livestatus import MultiSiteConnection, SiteId
 
+from cmk.ccc import version
+from cmk.ccc.version import Edition, edition
+
 from cmk.utils import paths
 from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
 from cmk.utils.livestatus_helpers.tables.hosts import Hosts
@@ -24,9 +27,6 @@ from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.watolib.groups import edit_group
 from cmk.gui.watolib.groups_io import load_group_information
 from cmk.gui.watolib.hosts_and_folders import Folder
-
-from cmk.ccc import version
-from cmk.ccc.version import edition, Edition
 
 GroupDomainType = Literal[
     "host_group_config", "contact_group_config", "service_group_config", "agent"
@@ -53,9 +53,16 @@ def serve_group(group: GroupSpec, serializer: Callable[[GroupSpec], DomainObject
     return constructors.response_with_etag_created_from_dict(response, group)
 
 
+def build_group_list(groups: GroupSpecs) -> list[GroupSpec]:
+    return [group | {"id": key} for key, group in groups.items()]
+
+
 def serialize_group_list(
     domain_type: GroupDomainType,
     collection: Sequence[GroupSpec],
+    *,
+    include_links: bool = True,
+    include_extensions: bool = True,
 ) -> CollectionObject:
     return constructors.collection_object(
         domain_type=domain_type,
@@ -64,6 +71,14 @@ def serialize_group_list(
                 domain_type=domain_type,
                 title=group["alias"],
                 identifier=group["id"],
+                include_links=include_links,
+                extensions=(
+                    complement_customer(
+                        {key: value for key, value in group.items() if key not in ("id", "alias")}
+                    )
+                    if include_extensions
+                    else None
+                ),
             )
             for group in collection
         ],
@@ -74,19 +89,15 @@ def serialize_group_list(
 def serialize_group(name: GroupDomainType) -> Callable[[GroupSpec], DomainObject]:
     def _serializer(group: GroupSpec) -> Any:
         ident = group["id"]
-        extensions = {}
-        if "customer" in group:
-            customer_id = group["customer"]
-            extensions["customer"] = "global" if customer_id is None else customer_id
-        elif edition(paths.omd_root) is Edition.CME:
-            extensions["customer"] = customer_api().default_customer_id()
-
-        extensions["alias"] = group["alias"]
         return constructors.domain_object(
             domain_type=name,
             identifier=ident,
             title=group["alias"] or ident,
-            extensions=extensions,
+            extensions=complement_customer(
+                {  # TODO: remove alias in v2
+                    key: value for key, value in group.items() if key != "id"
+                }
+            ),
         )
 
     return _serializer

@@ -32,7 +32,7 @@ class _EditionValue(NamedTuple):
     title: str
 
 
-class Edition(_EditionValue, enum.Enum):
+class Edition(enum.Enum):
     CRE = _EditionValue("cre", "raw", "Checkmk Raw Edition")
     CEE = _EditionValue("cee", "enterprise", "Checkmk Enterprise Edition")
     CCE = _EditionValue("cce", "cloud", "Checkmk Cloud Edition")
@@ -46,9 +46,21 @@ class Edition(_EditionValue, enum.Enum):
     @classmethod
     def from_long_edition(cls, long: str) -> Edition:
         for e in cls:
-            if e.long == long:
+            if e.value.long == long:
                 return e
         raise RuntimeError(f"Unknown long edition: {long}")
+
+    @property
+    def title(self) -> str:
+        return self.value.title
+
+    @property
+    def short(self) -> str:
+        return self.value.short
+
+    @property
+    def long(self) -> str:
+        return self.value.long
 
 
 @cache

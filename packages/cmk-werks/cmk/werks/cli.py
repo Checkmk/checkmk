@@ -2,8 +2,7 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Checkmk development script to manage werks
-"""
+"""Checkmk development script to manage werks"""
 
 # pylint: disable=too-many-lines
 
@@ -22,7 +21,7 @@ import tty
 from collections.abc import Iterator, Sequence
 from functools import cache
 from pathlib import Path
-from typing import Literal, NamedTuple, NoReturn
+from typing import Literal, NamedTuple, NoReturn, override
 
 from . import load_werk as cmk_werks_load_werk
 from . import parse_werk
@@ -38,6 +37,7 @@ class WerkId:
     def __init__(self, id: int):  # pylint: disable=redefined-builtin
         self.__id = id
 
+    @override
     def __str__(self) -> str:
         return f"{self.__id:0>5}"
 
@@ -45,11 +45,13 @@ class WerkId:
     def id(self) -> int:
         return self.__id
 
+    @override
     def __eq__(self, other: object) -> bool:
         if isinstance(other, self.__class__):
             return self.id == other.id
         return False
 
+    @override
     def __hash__(self) -> int:
         return hash(self.__id)
 
@@ -461,9 +463,7 @@ def next_werk_id() -> WerkId:
 
 
 def add_comment(werk: Werk, title: str, comment: str) -> None:
-    werk.content.metadata[
-        "description"
-    ] += f"""
+    werk.content.metadata["description"] += f"""
 {time.strftime('%F %T')}: {title}
 {comment}"""
 
@@ -566,19 +566,14 @@ def main_list(args: argparse.Namespace, fmt: str) -> None:  # pylint: disable=to
 # CSV Table has the following columns:
 # Component;ID;Title;Class;Effort
 def output_csv(werks: list[Werk]) -> None:
-    def line(*l: int | str) -> None:
-        sys.stdout.write('"' + '";"'.join(map(str, l)) + '"\n')
+    def line(*parts: int | str) -> None:
+        sys.stdout.write('"' + '";"'.join(map(str, parts)) + '"\n')
 
     nr = 1
     for entry in get_config().components:
-        # TODO: Our config has been validated, so we should be able to nuke the isinstance horror
-        # below.
-        if isinstance(entry, tuple) and len(entry) == 2:
-            name, alias = entry
-        elif isinstance(entry, str):  # type: ignore[unreachable]  # TODO: Hmmm...
-            name, alias = entry, entry
-        else:
+        if len(entry) != 2:
             bail_out(f"invalid component {entry!r}")
+        name, alias = entry
 
         line("", "", "", "", "")
 
@@ -612,7 +607,7 @@ def werk_class(werk: Werk) -> str:
         if entry == cl:  # type: ignore[comparison-overlap]
             return cl
 
-        if isinstance(entry, tuple) and entry[0] == cl:
+        if entry[0] == cl:
             return entry[1]
     return cl
 
@@ -971,14 +966,14 @@ def invalidate_my_werkid(wid: WerkId) -> None:
         sys.stdout.write(f"\n{TTY_RED}This was your last reserved ID.{TTY_NORMAL}\n\n")
 
 
-def store_werk_ids(l: list[WerkId]) -> None:
+def store_werk_ids(ids: list[WerkId]) -> None:
     with open(RESERVED_IDS_FILE_PATH, "w", encoding="utf-8") as f:
-        f.write(repr([i.id for i in l]) + "\n")
+        f.write(repr([i.id for i in ids]) + "\n")
     sys.stdout.write(f"Werk IDs stored in the file: {RESERVED_IDS_FILE_PATH}\n")
 
 
 def current_branch() -> str:
-    return [l for l in os.popen("git branch") if l.startswith("*")][0].split()[-1]
+    return [line for line in os.popen("git branch") if line.startswith("*")][0].split()[-1]
 
 
 def current_repo() -> str:

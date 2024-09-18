@@ -1,3 +1,8 @@
+/**
+ * Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
 import { fireEvent, render, screen } from '@testing-library/vue'
 import FormList from '@/form/components/forms/FormList.vue'
 import type * as FormSpec from '@/form/components/vue_formspec_components'
@@ -18,6 +23,12 @@ const stringFormSpec: FormSpec.String = {
   help: 'barHelp',
   validators: stringValidators,
   input_hint: ''
+}
+
+const dictElementGroupFormSpec: FormSpec.DictionaryGroup = {
+  key: 'titlehelp',
+  title: 'title',
+  help: 'help'
 }
 
 const spec: FormSpec.List = {
@@ -106,6 +117,7 @@ const dictSpec: FormSpec.Dictionary = {
   type: 'dictionary',
   title: 'dictTitle',
   help: 'fooHelp',
+  layout: 'one_column',
   validators: [],
   groups: [],
   elements: [
@@ -113,7 +125,8 @@ const dictSpec: FormSpec.Dictionary = {
       ident: 'bar',
       required: true,
       default_value: 'baz',
-      parameter_form: stringFormSpec
+      parameter_form: stringFormSpec,
+      group: dictElementGroupFormSpec
     }
   ]
 }
@@ -138,9 +151,7 @@ test('FormList adds two new elements and enters data', async () => {
     backendValidation: []
   })
 
-  const addElementButton = await screen.findByRole<HTMLInputElement>('button', {
-    name: 'Add element'
-  })
+  const addElementButton = await screen.getByText('Add element')
   await fireEvent.click(addElementButton)
   await fireEvent.click(addElementButton)
 

@@ -1,0 +1,72 @@
+/**
+ * Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+
+:root {
+  /* Colors */
+  --success: rgb(19, 211, 137);
+  --success-dimmed: rgb(17 188 122);
+  --white: rgb(255, 255, 255);
+  --error-msg-bg-color: rgba(200, 50, 50, 0.15);
+
+  /* Fonts */
+  --font-size-xlarge: 16px;
+  --font-size-large: 14px;
+  --font-size-normal: 12px;
+  --font-weight-default: 400;
+  --font-weight-bold: 700;
+
+  /* Spacings */
+  --spacing: 10px;
+  --spacing-half: 5px;
+
+  /* Borders */
+  --border-radius: 4px;
+
+  /* Icons */
+  --icon-checkmark: url('themes/facelift/images/icon_checkmark.svg');
+  --icon-crit-problem: url('themes/facelift/images/icon_crit_problem.svg');
+  --icon-info: url('themes/facelift/images/icon_info.svg');
+}
+
+@layer theme {
+  body[data-theme='facelift'] {
+    /* Icons */
+    --icon-alert-crit: url('themes/facelift/images/icon_alert_crit.svg');
+    --icon-back: url('themes/facelift/images/icon_back.png');
+    --icon-check: url('themes/facelift/images/icon_check.svg');
+    --icon-continue: url('themes/facelift/images/icon_continue.png');
+    --icon-main-help: url('themes/facelift/images/icon_main_help.svg');
+    --icon-save-to-services: url('themes/facelift/images/icon_save_to_services.svg');
+    --icon-insertdate: url('themes/facelift/images/icon_insertdate.png');
+    --icon-select-arrow: url('themes/facelift/images/select_arrow.png');
+
+    /* Colors */
+    --default-submit-button-border-color: var(--success-dimmed);
+    --default-border-color: rgb(234 234 234);
+    --default-table-th-color: rgb(232 232 238);
+    --default-select-background-color: rgb(224, 224, 228);
+    --default-select-hover-color: var(--success);
+  }
+
+  body[data-theme='modern-dark'] {
+    /* Icons */
+    --icon-alert-crit: url('themes/modern-dark/images/icon_alert_crit.svg');
+    --icon-back: url('themes/modern-dark/images/icon_back.png');
+    --icon-check: url('themes/modern-dark/images/icon_check.svg');
+    --icon-continue: url('themes/modern-dark/images/icon_continue.png');
+    --icon-main-help: url('themes/modern-dark/images/icon_main_help.svg');
+    --icon-save-to-services: url('themes/modern-dark/images/icon_save_to_services.svg');
+    --icon-insertdate: url('themes/modern-dark/images/icon_insertdate.png');
+    --icon-select-arrow: url('themes/modern-dark/images/select_arrow.png');
+
+    /* Colors */
+    --default-submit-button-border-color: rgb(8 94 61);
+    --default-border-color: rgb(38 45 52);
+    --default-table-th-color: rgb(32, 39, 46);
+    --default-select-background-color: rgb(48, 57, 70);
+    --default-select-hover-color: var(--success);
+  }
+}

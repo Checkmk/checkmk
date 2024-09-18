@@ -15,6 +15,10 @@ from typing import Any, Literal
 
 import livestatus
 
+import cmk.ccc.plugin_registry
+from cmk.ccc import store
+from cmk.ccc.store import locked
+
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.user import UserId
@@ -79,10 +83,6 @@ from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visuals import get_livestatus_filter_headers
 from cmk.gui.visuals.filter import FilterRegistry
-
-import cmk.ccc.plugin_registry
-from cmk.ccc import store
-from cmk.ccc.store import locked
 
 
 @request_memoize()
@@ -877,9 +877,8 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
             if core_entity is not None:
                 host_id = self._network_data.hostname.get(core_entity[0])
                 if host_id and (
-                    custom_settings := self._topology_configuration.frontend.custom_node_settings.get(
-                        host_id
-                    )
+                    custom_settings
+                    := self._topology_configuration.frontend.custom_node_settings.get(host_id)
                 ):
                     visibility = custom_settings.get("show_services", general_service_visibility)
             if visibility == "all":
@@ -1604,7 +1603,7 @@ def get_topology_configuration(
 
     # Fallback, new page, no saved settings
     frontend_configuration = FrontendConfiguration()
-    frontend_configuration.overlays_config = default_overlays or OverlaysConfig()
+    frontend_configuration.overlays_config = default_overlays
 
     return TopologyConfiguration(
         type=topology_type,

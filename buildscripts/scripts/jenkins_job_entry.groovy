@@ -14,13 +14,6 @@ def main(job_definition_file) {
     load("${checkout_dir}/buildscripts/scripts/utils/common.groovy");
     load("${checkout_dir}/buildscripts/scripts/utils/docker_util.groovy");
 
-    if (currentBuild.number % 10 == 0) {
-        print("Cleanup git clone (git gc)..");
-        dir("${checkout_dir}") {
-            cmd_output("git gc");
-        }
-    }
-
     docker_registry_no_http = DOCKER_REGISTRY.split('://')[1];
 
     /// in order to spoiler spooky effects encountered just
@@ -32,10 +25,11 @@ def main(job_definition_file) {
     def notify = load("${checkout_dir}/buildscripts/scripts/utils/notify.groovy");
     try {
         load("${checkout_dir}/${job_definition_file}").main();
-    } catch(Exception e) {
+    } catch(Exception exc) {
         dir("${checkout_dir}") {
-            notify.notify_error(e);
+            notify.notify_error(exc);
         }
+        throw exc;
     }
 }
 

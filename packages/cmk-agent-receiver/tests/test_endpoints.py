@@ -57,7 +57,8 @@ def test_register_existing_ok(
     serialized_csr: str,
 ) -> None:
     def rest_api_register_mock(
-        *args: object, **kwargs: object  # pylint: disable=unused-argument
+        *args: object,  # pylint: disable=unused-argument
+        **kwargs: object,  # pylint: disable=unused-argument
     ) -> RegisterResponse:
         _symlink_push_host(tmp_path, uuid)
         return RegisterResponse(connection_mode=ConnectionMode.PULL)
@@ -372,7 +373,6 @@ def _test_register_new(
     assert set(response.json()) == {"root_cert"}
 
     triggered_r4r = R4R.read(uuid)
-    assert triggered_r4r
     assert triggered_r4r.status is R4RStatus.NEW
     assert triggered_r4r.request.uuid == uuid
     assert triggered_r4r.request.username == "monitoring"

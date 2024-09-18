@@ -22,9 +22,11 @@ Documentation: https://docs.checkmk.com/latest/en/ldap.html.
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields.custom_fields import LDAPConnectionID
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
+from cmk.gui.openapi.endpoints.common_fields import field_include_extensions, field_include_links
 from cmk.gui.openapi.endpoints.ldap_connection.error_schemas import GETLdapConnection404
 from cmk.gui.openapi.endpoints.ldap_connection.internal_to_restapi_interface import (
     LDAPConnectionInterface,
@@ -54,7 +56,7 @@ from cmk.gui.openapi.restful_objects.constructors import (
 )
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
-from cmk.gui.openapi.utils import serve_json
+from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.utils import permission_verification as permissions
 
 RO_PERMISSIONS = permissions.AllPerm(
@@ -113,6 +115,7 @@ def show_ldap_connection(params: Mapping[str, Any]) -> Response:
     tag_group="Setup",
     response_schema=LDAPConnectionResponseCollection,
     permissions_required=RO_PERMISSIONS,
+    query_params=[field_include_links(), field_include_extensions()],
 )
 def show_ldap_connections(params: Mapping[str, Any]) -> Response:
     """Show all LDAP connections"""
@@ -121,7 +124,14 @@ def show_ldap_connections(params: Mapping[str, Any]) -> Response:
     return serve_json(
         collection_object(
             domain_type="ldap_connection",
-            value=[_serialize_ldap_connection(cnx) for cnx in request_ldap_connections().values()],
+            value=[
+                _serialize_ldap_connection(
+                    cnx,
+                    include_links=params["include_links"],
+                    include_extensions=params["include_extensions"],
+                )
+                for cnx in request_ldap_connections().values()
+            ],
         )
     )
 
@@ -192,19 +202,32 @@ def edit_ldap_connection(params: Mapping[str, Any]) -> Response:
 
     ldap_data = params["body"]
     ldap_data["general_properties"]["id"] = ldap_id
-    updated_connection = request_to_edit_ldap_connection(ldap_data=ldap_data, ldap_id=ldap_id)
+    try:
+        updated_connection = request_to_edit_ldap_connection(ldap_data=ldap_data, ldap_id=ldap_id)
+    except MKUserError as exc:
+        raise ProblemException(
+            title=f"There was problem when trying to update the LDAP connection with ldap_id {ldap_id}",
+            detail=str(exc),
+        )
+
     return response_with_etag_created_from_dict(
         serve_json(_serialize_ldap_connection(updated_connection)),
         updated_connection.api_response(),
     )
 
 
-def _serialize_ldap_connection(connection: LDAPConnectionInterface) -> DomainObject:
+def _serialize_ldap_connection(
+    connection: LDAPConnectionInterface,
+    *,
+    include_links: bool = True,
+    include_extensions: bool = True,
+) -> DomainObject:
     return domain_object(
         domain_type="ldap_connection",
         identifier=connection.general_properties.id,
         title=connection.general_properties.description,
-        extensions=connection.api_response(),
+        extensions=connection.api_response() if include_extensions else None,
+        include_links=include_links,
         editable=True,
         deletable=True,
     )

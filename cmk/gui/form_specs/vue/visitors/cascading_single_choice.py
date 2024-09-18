@@ -5,7 +5,7 @@
 
 from typing import Any
 
-from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
+from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import translate_to_current_language
 
@@ -14,22 +14,20 @@ from cmk.rulesets.v1.form_specs import CascadingSingleChoice
 
 from ._base import FormSpecVisitor
 from ._registry import get_visitor
-from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue, Value
+from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
 from ._utils import (
     compute_label,
-    compute_text_input_hint,
+    compute_title_input_hint,
     compute_validation_errors,
     compute_validators,
     create_validation_error,
     get_prefill_default,
     get_title_and_help,
-    migrate_value,
 )
 
 
 class CascadingSingleChoiceVisitor(FormSpecVisitor[CascadingSingleChoice, tuple[str, object]]):
     def _parse_value(self, raw_value: object) -> tuple[str, object] | EmptyValue:
-        raw_value = migrate_value(self.form_spec, self.options, raw_value)
         if isinstance(raw_value, DefaultValue):
             if isinstance(
                 prefill_default := get_prefill_default(self.form_spec.prefill), EmptyValue
@@ -46,7 +44,7 @@ class CascadingSingleChoiceVisitor(FormSpecVisitor[CascadingSingleChoice, tuple[
 
     def _to_vue(
         self, raw_value: object, parsed_value: tuple[str, object] | EmptyValue
-    ) -> tuple[VueComponents.CascadingSingleChoice, Value]:
+    ) -> tuple[shared_type_defs.CascadingSingleChoice, tuple[str, object]]:
         title, help_text = get_title_and_help(self.form_spec)
         if isinstance(parsed_value, EmptyValue):
             parsed_value = ("", None)
@@ -62,7 +60,7 @@ class CascadingSingleChoiceVisitor(FormSpecVisitor[CascadingSingleChoice, tuple[
                 selected_value = element_vue_value
 
             vue_elements.append(
-                VueComponents.CascadingSingleChoiceElement(
+                shared_type_defs.CascadingSingleChoiceElement(
                     name=element.name,
                     title=element.title.localize(translate_to_current_language),
                     default_value=element_vue_value,
@@ -71,20 +69,20 @@ class CascadingSingleChoiceVisitor(FormSpecVisitor[CascadingSingleChoice, tuple[
             )
 
         return (
-            VueComponents.CascadingSingleChoice(
+            shared_type_defs.CascadingSingleChoice(
                 title=title,
                 label=compute_label(self.form_spec.label),
                 help=help_text,
                 elements=vue_elements,
                 validators=build_vue_validators(compute_validators(self.form_spec)),
-                input_hint=compute_text_input_hint(self.form_spec.prefill),
+                input_hint=compute_title_input_hint(self.form_spec.prefill),
             ),
             (selected_name, selected_value),
         )
 
     def _validate(
         self, raw_value: object, parsed_value: tuple[str, object] | EmptyValue
-    ) -> list[VueComponents.ValidationMessage]:
+    ) -> list[shared_type_defs.ValidationMessage]:
         if isinstance(parsed_value, EmptyValue):
             return create_validation_error(raw_value, Title("Invalid selection"))
 
@@ -102,7 +100,7 @@ class CascadingSingleChoiceVisitor(FormSpecVisitor[CascadingSingleChoice, tuple[
             element_visitor = get_visitor(element.parameter_form, self.options)
             for validation in element_visitor.validate(selected_value):
                 element_validations.append(
-                    VueComponents.ValidationMessage(
+                    shared_type_defs.ValidationMessage(
                         location=[element.name] + validation.location,
                         message=validation.message,
                         invalid_value=validation.invalid_value,

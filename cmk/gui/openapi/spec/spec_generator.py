@@ -390,6 +390,7 @@ We cannot guarantee bug-for-bug backwards compatibility. If a behaviour of an en
 documented we may change it without incrementing the API version.
 
 """
+
 import enum
 import hashlib
 import http.client
@@ -407,6 +408,9 @@ from marshmallow.schema import SchemaMeta
 from werkzeug.utils import import_string
 
 from livestatus import SiteId
+
+from cmk.ccc import store
+from cmk.ccc.site import omd_site
 
 from cmk.gui import main_modules
 from cmk.gui.config import active_config
@@ -450,9 +454,6 @@ from cmk.gui.session import SuperUserContext
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.utils.script_helpers import gui_context
-
-from cmk.ccc import store
-from cmk.ccc.site import omd_site
 
 Ident = tuple[str, str]
 __version__ = "1.0"
@@ -622,6 +623,7 @@ def _redoc_spec() -> ReDocSpec:
             {"name": "Monitoring", "tags": []},
             {"name": "Setup", "tags": []},
             {"name": "Checkmk Internal", "tags": []},
+            {"name": "Undocumented Endpoint", "tags": []},
         ],
         "x-ignoredHeaderParameters": [
             "User-Agent",

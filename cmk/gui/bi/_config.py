@@ -9,6 +9,10 @@ import json
 from collections.abc import Collection, Iterable
 from typing import Any, overload, TypedDict
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
+
 from cmk.utils import paths
 from cmk.utils.rulesets.definition import RuleGroup
 
@@ -91,7 +95,6 @@ from cmk.gui.watolib.main_menu import (
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 
-import cmk.ccc.version as cmk_version
 from cmk.bi.actions import BICallARuleAction
 from cmk.bi.aggregation import BIAggregation, BIAggregationSchema
 from cmk.bi.aggregation_functions import BIAggregationFunctionSchema
@@ -100,8 +103,6 @@ from cmk.bi.lib import SitesCallback
 from cmk.bi.packs import BIAggregationPack, BIPackConfig
 from cmk.bi.rule import BIRule, BIRuleSchema
 from cmk.bi.type_defs import AggrConfigDict
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import omd_site
 
 from ._packs import get_cached_bi_packs
 from ._valuespecs import (
@@ -749,7 +750,7 @@ class ModeBIRules(ABCBIMode):
                                         button_name="_bulk_delete_bi_rules",
                                         title=_("Delete selected rules"),
                                     ),
-                                    is_enabled=bool(self.bi_pack and self.bi_pack.num_rules() > 0),
+                                    is_enabled=bool(self.bi_pack.num_rules() > 0),
                                 ),
                                 PageMenuEntry(
                                     title=_("Move rules"),
@@ -757,8 +758,7 @@ class ModeBIRules(ABCBIMode):
                                     name="move_rules",
                                     item=PageMenuPopup(self._render_bulk_move_form()),
                                     is_enabled=bool(
-                                        self.bi_pack
-                                        and self.bi_pack.num_rules() > 0
+                                        self.bi_pack.num_rules() > 0
                                         and self._show_bulk_move_choices()
                                     ),
                                 ),
@@ -2145,9 +2145,7 @@ class BIModeAggregations(ABCBIMode):
                                         button_name="_bulk_delete_bi_aggregations",
                                         title=_("Delete selected aggregations"),
                                     ),
-                                    is_enabled=bool(
-                                        self.bi_pack and self.bi_pack.num_aggregations() > 0
-                                    ),
+                                    is_enabled=bool(self.bi_pack.num_aggregations() > 0),
                                 ),
                                 PageMenuEntry(
                                     title=_("Move aggregations"),
@@ -2155,8 +2153,7 @@ class BIModeAggregations(ABCBIMode):
                                     name="move_aggregations",
                                     item=PageMenuPopup(self._render_bulk_move_form()),
                                     is_enabled=bool(
-                                        self.bi_pack
-                                        and self.bi_pack.num_aggregations() > 0
+                                        self.bi_pack.num_aggregations() > 0
                                         and self._show_bulk_move_choices()
                                     ),
                                 ),

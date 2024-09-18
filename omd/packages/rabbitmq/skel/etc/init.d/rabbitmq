@@ -4,26 +4,31 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 PIDFILE="${OMD_ROOT}/tmp/run/rabbitmq.pid"
-RABBITMQ_NODENAME="rabbit-###SITE###"
+RABBITMQ_NODENAME="rabbit-###SITE###@localhost"
 RABBITMQ_LOG_BASE="${OMD_ROOT}/var/log/rabbitmq"
 RABBITMQ_MNESIA_BASE="${OMD_ROOT}/var/rabbitmq/mnesia"
 RABBITMQ_CONFIG_FILES="${OMD_ROOT}/etc/rabbitmq/conf.d"
+RABBITMQ_ADVANCED_CONFIG_FILE="${OMD_ROOT}/etc/rabbitmq/advanced_conf.d/00-advanced.conf"
 RABBITMQ_ENABLED_PLUGINS_FILE="${OMD_ROOT}/etc/rabbitmq/enabled_plugins"
 RABBITMQ_DIST_PORT="${CONFIG_RABBITMQ_DIST_PORT:?}"
-EXECUTE="${OMD_ROOT}/bin/rabbitmq-server"
+BROKER_CERTIFICATES=$OMD_ROOT/bin/message-broker-certs
+EXECUTE="${OMD_ROOT}/lib/rabbitmq/sbin/rabbitmq-server"
+ERL_EPMD_ADDRESS="::1"
 
 getpid() {
     cat "${PIDFILE}" 2>/dev/null
 }
 
 process_is_running() {
-    [ -e "${PIDFILE}" ] && kill -0 "$(getpid)" 2>/dev/null
+    # when the process is killed, and the pidfile already removed
+    # the process can still run for a short time.
+    kill -0 "$1" 2>/dev/null
 }
 
 await_process_stop() {
     max=$(("${1}" * 10))
     for N in $(seq "${max}"); do
-        process_is_running || return 0
+        process_is_running "$2" || return 0
         [ $((N % 10)) -eq 0 ] && printf "."
         sleep 0.1
     done
@@ -58,22 +63,28 @@ exit_failure() {
     exit 1
 }
 
+ensure_broker_certs() {
+    printf "Ensuring broker certificates presence..."
+    if [ ! -f "${OMD_ROOT}/etc/rabbitmq/ssl/cert.pem" ]; then
+        printf "Creating broker certificates..."
+        "${BROKER_CERTIFICATES}" "${OMD_ROOT}" "###SITE###"
+    fi
+}
+
 case "$1" in
 
     start-blocking)
-        # this is just a temporary no-op:
-        trap 'rm --force "${PIDFILE}"' EXIT
-        flock "${PIDFILE}" --command "echo $$ >'${PIDFILE}'; while true; do sleep 1000; done"
-        # to test with systems rabbitmq: comment out the above two lines, and uncomment the following line
-        # EXECUTE=/usr/lib/rabbitmq/bin/rabbitmq-server
+        ensure_broker_certs
 
         RABBITMQ_NODENAME="${RABBITMQ_NODENAME}" \
             RABBITMQ_ENABLED_PLUGINS_FILE="${RABBITMQ_ENABLED_PLUGINS_FILE}" \
             RABBITMQ_CONFIG_FILES="${RABBITMQ_CONFIG_FILES}" \
+            RABBITMQ_ADVANCED_CONFIG_FILE="${RABBITMQ_ADVANCED_CONFIG_FILE}" \
             RABBITMQ_LOG_BASE="${RABBITMQ_LOG_BASE}" \
             RABBITMQ_PID_FILE="${PIDFILE}" \
             RABBITMQ_MNESIA_BASE="${RABBITMQ_MNESIA_BASE}" \
             RABBITMQ_DIST_PORT="${RABBITMQ_DIST_PORT}" \
+            ERL_EPMD_ADDRESS="${ERL_EPMD_ADDRESS}" \
             flock "${PIDFILE}" --command "${EXECUTE}"
         rm --force "${PIDFILE}" # should be removed by rabbitmq itself
         ;;
@@ -110,28 +121,23 @@ case "$1" in
         fi
 
         printf "killing %s..." "${PID}"
+        kill "${PID}" 2>/dev/null
 
-        if ! kill "${PID}" 2>/dev/null; then
-            # Remove the stale pidfile to have a clean state after this
-            rm "${PIDFILE}"
-            exit_successfully "OK"
-        fi
-
-        # signal could be sent. Patiently wait for 1 minute.
-        if await_process_stop 60; then
+        # signal could be sent. Patiently wait for max 1 minute.
+        if await_process_stop 60 "${PID}"; then
             exit_successfully "OK"
         fi
 
         # We insist...
         force_kill "${PID}"
-        if await_process_stop 10; then
+        if await_process_stop 10 "${PID}"; then
             exit_successfully "OK"
         fi
         # Give up
         exit_failure "failed"
         ;;
 
-    restart | reload)
+    reload)
         $0 stop
         $0 start
         ;;

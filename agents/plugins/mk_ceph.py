@@ -30,7 +30,6 @@ def _output_json_section(name, data):
 
 
 class RadosCMD(rados.Rados):  # type: ignore[misc]
-
     def command_mon(self, cmd, params=None):
         data = {"prefix": cmd, "format": "json"}
         if params:
@@ -121,7 +120,6 @@ def _make_osd_section(raw_df, raw_perf, localosds):
 
 
 def main() -> int:
-
     ceph_config, ceph_client = _load_plugin_config(os.environ["MK_CONFDIR"])
 
     cluster = RadosCMD(conffile=ceph_config, name=ceph_client)
@@ -139,7 +137,6 @@ def main() -> int:
         # only on MON hosts
         mons = status.get("quorum_names", [])
         if hostname in mons or fqdn in mons:
-
             _output_json_section("cephstatus", status)
 
             res = cluster.command_mon("df", params={"detail": "detail"})

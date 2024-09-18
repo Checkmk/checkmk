@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Test that the channel wrapper works as expected"""
+
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
@@ -15,7 +16,7 @@ from pydantic import BaseModel
 from cmk.messaging import Channel
 
 
-class Message(BaseModel):  # type: ignore[misc]
+class Message(BaseModel):
     """Test model for messages"""
 
     text: str
@@ -177,9 +178,7 @@ class TestChannel:
 
         channel.publish_for_site("other_site", message, routing="subrouting.key")
 
-        def _on_message(
-            _channel: object, _delivery: object, _properties: object, received: Message
-        ) -> None:
+        def _on_message(_channel: Channel[Message], received: Message) -> None:
             assert received == message
 
         channel.consume(_on_message)

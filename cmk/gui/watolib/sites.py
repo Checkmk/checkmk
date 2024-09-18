@@ -11,6 +11,10 @@ from typing import Any, cast, NamedTuple
 
 from livestatus import NetworkSocketDetails, SiteConfiguration, SiteConfigurations, SiteId
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc import store
+from cmk.ccc.site import omd_site
+
 from cmk.utils import paths
 
 import cmk.gui.sites
@@ -53,6 +57,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+from cmk.gui.watolib.broker_connections import BrokerConnectionsConfigFile
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import (
     ConfigDomainCACertificates,
@@ -63,10 +68,6 @@ from cmk.gui.watolib.config_sync import create_distributed_wato_files
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.utils import ldap_connections_are_configurable
-
-import cmk.ccc.version as cmk_version
-from cmk.ccc import store
-from cmk.ccc.site import omd_site
 
 
 class SitesConfigFile(WatoSingleConfigFile[SiteConfigurations]):
@@ -265,6 +266,18 @@ class SiteManagement:
         )
 
     @classmethod
+    def is_site_in_broker_connections(cls, site_id: SiteId) -> bool:
+        # make sure the site is not in a broker peer to peer connection
+        connections = BrokerConnectionsConfigFile().load_for_modification()
+        connections_ids = {
+            site_id
+            for connection in connections.values()
+            for site_id in (connection.connectee.site_id, connection.connecter.site_id)
+        }
+
+        return site_id in connections_ids
+
+    @classmethod
     def validate_configuration(  # pylint: disable=too-many-branches
         cls,
         site_id,
@@ -340,6 +353,16 @@ class SiteManagement:
                     "replication", _("You cannot do replication with the local site.")
                 )
 
+        if not is_replication_enabled(site_configuration) and cls.is_site_in_broker_connections(
+            site_id
+        ):
+            raise MKUserError(
+                "replication",
+                _(
+                    "You cannot disable the replication on this site. It is used in a broker peer to peer connection."
+                ),
+            )
+
         # User synchronization
         if ldap_connections_are_configurable():
             user_sync_valuespec = cls.user_sync_valuespec(site_id)
@@ -404,13 +427,25 @@ class SiteManagement:
                 % search_url,
             )
 
+        if cls.is_site_in_broker_connections(site_id):
+            raise MKUserError(
+                None,
+                _(
+                    "You cannot delete this connection. It is used in a broker peer to peer connection."
+                ),
+            )
+
         domains = cls._affected_config_domains()
 
         del all_sites[site_id]
         sites_config_file.save(all_sites)
         cmk.gui.watolib.activate_changes.clear_site_replication_status(site_id)
         cmk.gui.watolib.changes.add_change(
-            "edit-sites", _("Deleted site %s") % site_id, domains=domains, sites=[omd_site()]
+            "edit-sites",
+            _("Deleted site %s") % site_id,
+            domains=domains,
+            sites=[omd_site()],
+            need_restart=True,
         )
 
     @classmethod

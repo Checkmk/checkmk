@@ -11,9 +11,8 @@ from typing import Literal
 
 from cmk.utils.tags import TagID
 
-from cmk.gui.type_defs import ColumnName
+from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.type_defs import Icon as IconSpec
-from cmk.gui.type_defs import Row
 from cmk.gui.utils.html import HTML
 
 

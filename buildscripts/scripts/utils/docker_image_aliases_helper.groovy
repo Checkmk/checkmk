@@ -24,10 +24,19 @@ docker_reference_image = { ->
     }
 }
 
+/// Returns some string from @image we can use to separate folders by distro
 image_version = { image ->
-    return cmd_output("""
+    /// No clue how this can be done without manually try to use image.id with
+    /// or without registry prefix, but it works for now..
+    def result = cmd_output("""
         docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' ${image.id} | grep '^DISTRO=' | cut -d'=' -f2
+    """) ?: cmd_output("""
+        docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' ${docker_registry_no_http}/${image.id} | grep '^DISTRO=' | cut -d'=' -f2
     """);
+    if (! result) {
+        throw new Exception("Could not read .Config.Env from ${image.id}");
+    }
+    return result;
 }
 
 /// This function is the CI-equivalent to scripts/run-in-docker.sh. It should do

@@ -17,9 +17,9 @@ global:
     # source adresses in their ipv6-mapped form. I.e. if
     # 192.168.56.0/24 is listed, connections from ::ffff:c0a8:3800/120
     # are also possible
-    only_from: 
-        - 127.0.0.1 
-        - 192.168.56.0/24 
+    only_from:
+        - 127.0.0.1
+        - 192.168.56.0/24
         - ::1
 
     # Change port where the agent is listening ( default 6556 )
@@ -45,14 +45,14 @@ global:
     # Restrict the following configuration variables
     # in [global] to the following hosts
     # ?????????
-    host: 
-        - winsrv* 
+    host:
+        - winsrv*
         - zab???ad
 
     # Just output certain sections (e.g. for upper hosts)
     sections:
         enabled:
-            - check_mk 
+            - check_mk
             - winperf
             #- ps
         # forced to not use
@@ -71,27 +71,27 @@ global:
             # no matter if this timeout is "too high" or how many monitoring
             # systems are querying the agent.
             timeout: 90
-            # enable/disable encryption of regular agent output (default: disabled) 
+            # enable/disable encryption of regular agent output (default: disabled)
             # yes or no
             encrypted: default
             # passphrase for encrypted communication.
             passphrase: this is my password
             # which sections are realtime
             run:
-                - mem 
-                - df 
+                - mem
+                - df
                 - winperf_processor
 
     # Write a logfile for tackling down crashes of the agent
     debug:
         crash: yes
         # you may specify name of log file
-        file: 
+        file:
     trace:
         # you may trace agent in realtime using DbgView or WinDbg
         debugger: no
         file: 'c:\windows\logs\win_agent.log'
-        
+
     # by default the agent flushes the socket for each agent section.
     # this is mostly for debugging purposes in case the agent is slow
     # to respond.

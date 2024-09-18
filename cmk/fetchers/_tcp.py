@@ -11,12 +11,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
+from cmk.ccc.exceptions import MKFetcherError, MKTimeout
+
 from cmk.utils.agent_registration import get_uuid_link_manager
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.certs import write_cert_store
 from cmk.utils.hostaddress import HostAddress, HostName
-
-from cmk.ccc.exceptions import MKFetcherError, MKTimeout
 
 from ._abstract import Fetcher, Mode
 from ._agentprtcl import (
@@ -212,7 +212,7 @@ class TCPFetcher(Fetcher[AgentRawData]):
             self._logger.debug("Reading data from agent")
             output = recvall(sock, socket.MSG_WAITALL)
 
-        if not output:
+        if not memoryview(output):
             return AgentRawData(b"")  # nothing to to, validation will fail
 
         if protocol is TransportProtocol.PLAIN:

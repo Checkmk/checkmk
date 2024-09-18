@@ -90,7 +90,7 @@ def generate_sql_command(
 
 
 def _extract_levels(
-    levels: tuple[str, tuple[float, float] | None] | None
+    levels: tuple[str, tuple[float, float] | None] | None,
 ) -> tuple[str, str] | tuple[float, float]:
     match levels:
         case ("no_levels", None):

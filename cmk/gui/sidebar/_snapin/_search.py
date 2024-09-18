@@ -17,6 +17,9 @@ from typing import Final, Literal, TypeVar
 
 import livestatus
 
+import cmk.ccc.plugin_registry
+from cmk.ccc.exceptions import MKException, MKGeneralException
+
 from cmk.utils.redis import get_redis_client
 
 import cmk.gui.utils
@@ -56,9 +59,6 @@ from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.watolib.main_menu import main_module_registry
 from cmk.gui.watolib.search import IndexNotFoundException, IndexSearcher, PermissionsHandler
-
-import cmk.ccc.plugin_registry
-from cmk.ccc.exceptions import MKException, MKGeneralException
 
 from ._base import PageHandlers, SidebarSnapin
 
@@ -361,9 +361,7 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
             "hosts": ["name"],
             "hostgroups": ["name"],
             "servicegroups": ["name"],
-        }.get(
-            self.livestatus_table, []
-        )  # TODO: Is the default correct/necessary?
+        }.get(self.livestatus_table, [])  # TODO: Is the default correct/necessary?
 
     def get_search_url_params(self) -> HTTPVariables:
         exact_match = self.num_rows() == 1

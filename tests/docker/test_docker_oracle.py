@@ -217,7 +217,7 @@ class OracleDatabase:
             try:
                 wait_until(
                     lambda: "DATABASE IS READY TO USE!" in container.logs().decode("utf-8"),
-                    timeout=600,
+                    timeout=900,
                 )
             except TimeoutError:
                 logger.error(

@@ -11,12 +11,12 @@ import json
 import os
 import tarfile
 from collections.abc import Collection, Iterator
-from dataclasses import asdict
-from typing import NamedTuple
 
 from six import ensure_str
 
 from livestatus import SiteConfiguration, SiteId
+
+from cmk.ccc.version import Edition, edition, edition_has_enforced_licensing
 
 from cmk.utils import paths, render
 from cmk.utils.hostaddress import HostName
@@ -59,9 +59,11 @@ from cmk.gui.valuespec import Checkbox, Dictionary, DictionaryEntry, TextAreaUni
 from cmk.gui.watolib import activate_changes, backup_snapshots, read_only
 from cmk.gui.watolib.activate_changes import (
     affects_all_sites,
+    ConfigWarnings,
     has_been_activated,
     is_foreign_change,
     prevent_discard_changes,
+    verify_remote_site_config,
 )
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
 from cmk.gui.watolib.automations import MKAutomationException
@@ -69,8 +71,6 @@ from cmk.gui.watolib.config_domain_name import ABCConfigDomain, DomainRequest, D
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree, Host
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
-
-from cmk.ccc.version import edition, Edition, edition_has_enforced_licensing
 
 from .sites import sort_sites
 
@@ -1011,35 +1011,17 @@ class PageAjaxActivationState(AjaxPage):
         return manager.get_state()
 
 
-class ActivateChangesRequest(NamedTuple):
-    site_id: SiteId
-    domains: DomainRequests
-
-
-class AutomationActivateChanges(AutomationCommand):
-    def command_name(self):
+class AutomationActivateChanges(AutomationCommand[DomainRequests]):
+    def command_name(self) -> str:
         return "activate-changes"
 
-    def get_request(self):
-        site_id = SiteId(request.get_ascii_input_mandatory("site_id"))
-        activate_changes.verify_remote_site_config(site_id)
-
+    def get_request(self) -> DomainRequests:
+        verify_remote_site_config(SiteId(request.get_ascii_input_mandatory("site_id")))
+        domains = request.get_ascii_input_mandatory("domains")
         try:
-            serialized_domain_requests = ast.literal_eval(
-                request.get_ascii_input_mandatory("domains")
-            )
-            if serialized_domain_requests and isinstance(serialized_domain_requests[0], str):
-                serialized_domain_requests = [
-                    asdict(DomainRequest(x)) for x in serialized_domain_requests
-                ]
+            return [DomainRequest(**x) for x in ast.literal_eval(domains)]
         except SyntaxError:
-            raise MKAutomationException(
-                _("Invalid request: %r") % request.get_ascii_input_mandatory("domains")
-            )
+            raise MKAutomationException(_("Invalid request: %r") % domains)
 
-        return ActivateChangesRequest(site_id=site_id, domains=serialized_domain_requests)
-
-    def execute(self, api_request):
-        return activate_changes.execute_activate_changes(
-            activate_changes.parse_serialized_domain_requests(api_request.domains)
-        )
+    def execute(self, api_request: DomainRequests) -> ConfigWarnings:
+        return activate_changes.execute_activate_changes(api_request)

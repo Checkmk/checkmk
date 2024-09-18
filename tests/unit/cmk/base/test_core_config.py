@@ -14,6 +14,8 @@ from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
+import cmk.ccc.version as cmk_version
+
 import cmk.utils.config_path
 import cmk.utils.paths
 from cmk.utils import ip_lookup, password_store
@@ -30,8 +32,6 @@ from cmk.base import config, core_config
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.core_config import get_labels_from_attributes, get_tags_with_groups_from_attributes
 from cmk.base.core_factory import create_core
-
-import cmk.ccc.version as cmk_version
 
 
 @pytest.fixture(name="config_path")
@@ -148,6 +148,8 @@ def test_get_host_attributes(monkeypatch: MonkeyPatch) -> None:
 
     if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CME:
         expected_attrs["_CUSTOMER"] = "provider"
+        expected_attrs["__LABEL_cmk/customer"] = "provider"
+        expected_attrs["__LABELSOURCE_cmk/customer"] = "discovered"
 
     assert (
         config_cache.get_host_attributes(

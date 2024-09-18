@@ -133,11 +133,11 @@ export function call_ajax<HandlerData = any>(
     }
     if (
         typeof args.post_data == "string" &&
-        !args.post_data.includes("&csrf_token=") &&
-        !args.post_data.startsWith("csrf_token=")
+        !args.post_data.includes("&_csrf_token=") &&
+        !args.post_data.startsWith("_csrf_token=")
     ) {
         args.post_data +=
-            "&csrf_token=" + encodeURIComponent(global_csrf_token);
+            "&_csrf_token=" + encodeURIComponent(global_csrf_token);
     }
 
     AJAX.send(args.post_data);

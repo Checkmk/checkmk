@@ -8,6 +8,7 @@ Decorating a function with `Endpoint` will result in a change of the SPEC object
 which then has to be dumped into the checkmk.yaml file.
 
 """
+
 from __future__ import annotations
 
 import contextlib
@@ -17,13 +18,15 @@ import json
 import logging
 import warnings
 from collections.abc import Callable, Iterator, Mapping, Sequence
-from typing import Any, Final, Literal, TypeVar
+from typing import Any, Final, TypeVar
 from urllib import parse
 
 from marshmallow import fields as ma_fields
 from marshmallow import Schema, ValidationError
 from werkzeug.datastructures import MultiDict
 from werkzeug.http import parse_options_header
+
+from cmk.ccc import store
 
 from cmk.utils.paths import configuration_lockfile
 
@@ -46,6 +49,7 @@ from cmk.gui.openapi.restful_objects.type_defs import (
     LinkRelation,
     RawParameter,
     StatusCodeInt,
+    TagGroup,
 )
 from cmk.gui.openapi.utils import (
     EXT,
@@ -68,8 +72,6 @@ from cmk.gui.watolib.activate_changes import (
     update_config_generation as activate_changes_update_config_generation,
 )
 from cmk.gui.watolib.git import do_git_commit
-
-from cmk.ccc import store
 
 from .content_decoder import decode, KnownContentType
 
@@ -268,6 +270,9 @@ class Endpoint:
         accept:
             The content-type accepted by the endpoint.
 
+        internal_user_only:
+            If set to True, then this endpoint is only accesible via InternalToken authentication method
+
     """
 
     def __init__(  # pylint: disable=too-many-branches
@@ -287,7 +292,7 @@ class Endpoint:
         header_params: Sequence[RawParameter] | None = None,
         etag: ETagBehaviour | None = None,
         status_descriptions: dict[StatusCodeInt, str] | None = None,
-        tag_group: Literal["Monitoring", "Setup", "Checkmk Internal"] = "Setup",
+        tag_group: TagGroup = "Setup",
         blacklist_in: Sequence[EndpointTarget] | None = None,
         additional_status_codes: Sequence[StatusCodeInt] | None = None,
         permissions_required: permissions.BasePerm | None = None,  # will be permissions.NoPerm()
@@ -298,6 +303,7 @@ class Endpoint:
         update_config_generation: bool = True,
         sort: int = 0,
         accept: ACCEPT_FIELD_TYPE = "application/json",
+        internal_user_only: bool = False,
     ):
         self.path = path
         self.link_relation = link_relation
@@ -322,6 +328,7 @@ class Endpoint:
         self.valid_until = valid_until
         self.sort = sort
         self.accept = accept if isinstance(accept, list) else [accept]
+        self.internal_user_only = internal_user_only
 
         if deprecated_urls is not None:
             for url in deprecated_urls:
@@ -527,7 +534,6 @@ class Endpoint:
 
         # If we have an schema, or doing post/put, we need a content-type
         if self.request_schema and not request.content_type:
-
             raise RestAPIRequestContentTypeException(
                 detail=f"No content-type specified. Possible value is: {", ".join(self.accept)}",
                 title="Content type not valid for this endpoint.",

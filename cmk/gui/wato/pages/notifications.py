@@ -9,10 +9,14 @@ import json
 import time
 from collections.abc import Collection, Iterator, Mapping
 from copy import deepcopy
+from dataclasses import asdict
 from datetime import datetime
 from typing import Any, cast, Literal, NamedTuple, overload
 
 from livestatus import LivestatusResponse, SiteId
+
+from cmk.ccc import store
+from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
 from cmk.utils.labels import Labels
@@ -28,11 +32,23 @@ from cmk.gui import forms, permissions, sites, userdb
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs.vue.shared_type_defs import (
+    CoreStats,
+    CoreStatsI18n,
+    FallbackWarning,
+    FallbackWarningI18n,
+    Notifications,
+    NotificationStats,
+    NotificationStatsI18n,
+    Rule,
+    RuleSection,
+    RuleTopic,
+)
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.mkeventd import syslog_facilities, syslog_priorities
@@ -53,9 +69,22 @@ from cmk.gui.user_async_replication import user_profile_async_replication_dialog
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.notifications import (
+    get_disabled_notifications_infos,
+    get_failed_notification_count,
+    get_total_send_notifications,
+    OPTIMIZE_NOTIFICATIONS_ENTRIES,
+    SUPPORT_NOTIFICATIONS_ENTRIES,
+)
 from cmk.gui.utils.time import timezone_utc_offset_str
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import DocReference, make_confirm_delete_link, makeactionuri, makeuri
+from cmk.gui.utils.urls import (
+    DocReference,
+    make_confirm_delete_link,
+    makeactionuri,
+    makeuri,
+    makeuri_contextless,
+)
 from cmk.gui.valuespec import (
     Age,
     Alternative,
@@ -99,13 +128,11 @@ from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.notifications import load_user_notification_rules, NotificationRuleConfigFile
+from cmk.gui.watolib.rulesets import AllRulesets
 from cmk.gui.watolib.sample_config import get_default_notification_rule, new_notification_rule_id
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.users import notification_script_choices
-
-from cmk.ccc import store
-from cmk.ccc.version import edition, Edition
 
 from .._group_selection import ContactGroupSelection
 from .._notification_parameter import notification_parameter_registry
@@ -565,13 +592,13 @@ class ModeNotifications(ABCNotificationsMode):
             dropdowns=[
                 PageMenuDropdown(
                     name="notification_rules",
-                    title=_("Notification rules"),
+                    title=_("Notifications"),
                     topics=[
                         PageMenuTopic(
                             title=_("Add new"),
                             entries=[
                                 PageMenuEntry(
-                                    title=_("Add rule"),
+                                    title=_("Add notification rule"),
                                     icon_name="new",
                                     item=make_simple_link(
                                         folder_preserving_link([("mode", "notification_rule")])
@@ -579,6 +606,11 @@ class ModeNotifications(ABCNotificationsMode):
                                     is_shortcut=True,
                                     is_suggested=True,
                                 ),
+                            ],
+                        ),
+                        PageMenuTopic(
+                            title=_("Analyze"),
+                            entries=[
                                 PageMenuEntry(
                                     title=_("Test notifications"),
                                     name="test_notifications",
@@ -591,7 +623,7 @@ class ModeNotifications(ABCNotificationsMode):
                                 ),
                                 PageMenuEntry(
                                     title=_("Analyze recent notifications"),
-                                    icon_name="new",
+                                    icon_name="analyze",
                                     item=make_simple_link(
                                         folder_preserving_link([("mode", "analyze_notifications")])
                                     ),
@@ -602,6 +634,16 @@ class ModeNotifications(ABCNotificationsMode):
                         ),
                     ],
                 ),
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Global settings"),
+                            entries=list(self._page_menu_entries_related()),
+                        ),
+                    ],
+                ),
             ],
             breadcrumb=breadcrumb,
             inpage_search=PageMenuSearch(),
@@ -609,6 +651,60 @@ class ModeNotifications(ABCNotificationsMode):
         self._extend_display_dropdown(menu)
         menu.add_doc_reference(_("Notifications"), DocReference.NOTIFICATIONS)
         return menu
+
+    def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
+        yield PageMenuEntry(
+            title=_("Fallback email address for notifications"),
+            icon_name="configuration",
+            item=make_simple_link(
+                folder_preserving_link(
+                    [
+                        ("mode", "edit_configvar"),
+                        ("varname", "notification_fallback_email"),
+                    ]
+                )
+            ),
+        )
+
+        yield PageMenuEntry(
+            title=_("Failed notification horizon"),
+            icon_name="configuration",
+            item=make_simple_link(
+                folder_preserving_link(
+                    [
+                        ("mode", "edit_configvar"),
+                        ("varname", "failed_notification_horizon"),
+                    ]
+                )
+            ),
+        )
+
+        yield PageMenuEntry(
+            title=_("Notification log level"),
+            icon_name="configuration",
+            item=make_simple_link(
+                folder_preserving_link(
+                    [
+                        ("mode", "edit_configvar"),
+                        ("varname", "notification_logging"),
+                    ]
+                )
+            ),
+        )
+
+        # TODO this should be CEE only?!
+        yield PageMenuEntry(
+            title=_("Logging of the notification mechanics"),
+            icon_name="configuration",
+            item=make_simple_link(
+                folder_preserving_link(
+                    [
+                        ("mode", "edit_configvar"),
+                        ("varname", "cmc_debug_notifications"),
+                    ]
+                )
+            ),
+        )
 
     def _extend_display_dropdown(self, menu: PageMenu) -> None:
         display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
@@ -672,34 +768,14 @@ class ModeNotifications(ABCNotificationsMode):
         )
 
     def page(self) -> None:
-        self._show_no_fallback_contact_warning()
+        self._show_overview()
         self._show_rules(analyse=None)
 
-    def _show_no_fallback_contact_warning(self) -> None:
-        if not self._fallback_mail_contacts_configured():
-            url = "wato.py?mode=edit_configvar&varname=notification_fallback_email"
-            html.show_warning(
-                _(
-                    "<b>Warning</b><br><br>You haven't configured a "
-                    '<a href="%s">fallback email address</a> nor enabled receiving fallback emails for '
-                    "any user. If your monitoring produces a notification that is not matched by any of your "
-                    "notification rules, the notification will not be sent out. To prevent that, please "
-                    "configure either the global setting or enable the fallback contact option for at least "
-                    "one of your users."
-                )
-                % url
-            )
-
-    def _fallback_mail_contacts_configured(self) -> bool:
-        current_settings = load_configuration_settings()
-        if current_settings.get("notification_fallback_email"):
-            return True
-
-        for user_spec in userdb.load_users(lock=False).values():
-            if user_spec.get("fallback_contact", False):
-                return True
-
-        return False
+    def _show_overview(self) -> None:
+        html.vue_app(
+            app_name="notification_overview",
+            data=asdict(_get_vue_data()),
+        )
 
     def _get_date(self, context: NotificationContext) -> str:
         if "MICROTIME" in context:
@@ -809,6 +885,142 @@ class ModeNotifications(ABCNotificationsMode):
                     )
 
 
+def _fallback_mail_contacts_configured() -> bool:
+    current_settings = load_configuration_settings()
+    if current_settings.get("notification_fallback_email"):
+        return True
+
+    for user_spec in userdb.load_users(lock=False).values():
+        if user_spec.get("fallback_contact", False):
+            return True
+
+    return False
+
+
+def _get_vue_data() -> Notifications:
+    all_sites_count, sites_with_disabled_notifications = get_disabled_notifications_infos()
+    return Notifications(
+        fallback_warning=(
+            FallbackWarning(
+                i18n=FallbackWarningI18n(
+                    title=_("No fallback email address configured"),
+                    message=_(
+                        "If your monitoring produces a notification that is not matched by any of your notification rules, the notification will not be sent out. To prevent that, we recommend configuring either the global setting or enable the fallback contact option for at least one of your users."
+                    ),
+                    setup_link_title=_("Configure fallback email address"),
+                    do_not_show_again_title=_("Do not show again"),
+                ),
+                user_id=str(user.id),
+                setup_link=makeuri_contextless(
+                    request,
+                    [("varname", "notification_fallback_email"), ("mode", "edit_configvar")],
+                    filename="wato.py",
+                ),
+                do_not_show_again_link=makeuri_contextless(
+                    request,
+                    [("varname", "notification_fallback_email"), ("mode", "edit_configvar")],
+                    filename="wato.py",
+                ),
+            )
+            if not _fallback_mail_contacts_configured()
+            else None
+        ),
+        notification_stats=NotificationStats(
+            num_sent_notifications=get_total_send_notifications()[0][0],
+            num_failed_notifications=get_failed_notification_count(),
+            sent_notification_link=makeuri_contextless(
+                request,
+                [
+                    ("view_name", "alertstats"),
+                    ("_active", "logtime;log_notification_phase"),
+                    ("logtime_from_range", "86400"),
+                    ("is_log_notification_phase", "0"),
+                    ("filled_in", "filter"),
+                    ("logtime_from", "7"),
+                ],
+                filename="view.py",
+            ),
+            failed_notification_link=makeuri_contextless(
+                request,
+                [("view_name", "failed_notifications")],
+                filename="view.py",
+            ),
+            i18n=NotificationStatsI18n(
+                sent_notifications=_("Total sent notifications"),
+                failed_notifications=_("Failed notifications"),
+                sent_notifications_link_title=_("Last 7 days"),
+                failed_notifications_link_title=_("View failed notifications"),
+            ),
+        ),
+        core_stats=CoreStats(
+            sites=sites_with_disabled_notifications,
+            i18n=CoreStatsI18n(
+                title=_("Core status of notifications"),
+                sites_column_title=_("Sites"),
+                status_column_title=_("Notification core status"),
+                ok_msg=_("Notifications enabled on %d of %d %s")
+                % (
+                    all_sites_count,
+                    all_sites_count,
+                    site_prefix := ungettext("site", "sites", all_sites_count),
+                ),
+                warning_msg=_("Notifications disabled on %d of %d %s")
+                % (
+                    len(sites_with_disabled_notifications),
+                    all_sites_count,
+                    site_prefix,
+                ),
+                disabled_msg=_("Disabled via master control"),
+            ),
+        ),
+        rule_sections=[
+            RuleSection(
+                i18n=_("Optimize notifications"),
+                topics=_get_ruleset_infos(OPTIMIZE_NOTIFICATIONS_ENTRIES),
+            ),
+            RuleSection(
+                i18n=_("Supporting rules"),
+                topics=_get_ruleset_infos(SUPPORT_NOTIFICATIONS_ENTRIES),
+            ),
+        ],
+    )
+
+
+def _get_ruleset_infos(entries: dict[str, list[str]]) -> list[RuleTopic]:
+    all_rulesets = AllRulesets.load_all_rulesets()
+    rule_topic_list: list[RuleTopic] = []
+    for section, ruleset in entries.items():
+        rule_list: list[Rule] = []
+        for rule_id in ruleset:
+            try:
+                # Some rules are only available in CEE
+                rule = all_rulesets.get(rule_id)
+            except KeyError:
+                continue
+            # Should not happen
+            if rule is None:
+                continue
+
+            rule_list.append(
+                Rule(
+                    i18n=rule.title() or _("Unknown rule with ID %s") % rule_id,
+                    count=str(rule.num_rules()),
+                    link=makeuri_contextless(
+                        request,
+                        [("varname", rule_id), ("mode", "edit_ruleset")],
+                        filename="wato.py",
+                    ),
+                )
+            )
+        rule_topic_list.append(
+            RuleTopic(
+                i18n=section,
+                rules=rule_list,
+            )
+        )
+    return rule_topic_list
+
+
 class ModeAnalyzeNotifications(ModeNotifications):
     def __init__(self) -> None:
         super().__init__()
@@ -830,11 +1042,25 @@ class ModeAnalyzeNotifications(ModeNotifications):
         menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
-                    name="related",
-                    title=_("Related"),
+                    name="analyze_notifications",
+                    title=_("Analyze recent notifications"),
                     topics=[
                         PageMenuTopic(
-                            title=_("Notifications"),
+                            title=_("Add new"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Add notification rule"),
+                                    icon_name="new",
+                                    item=make_simple_link(
+                                        folder_preserving_link([("mode", "notification_rule")])
+                                    ),
+                                    is_shortcut=False,
+                                    is_suggested=False,
+                                ),
+                            ],
+                        ),
+                        PageMenuTopic(
+                            title=_("Test notifications"),
                             entries=[
                                 PageMenuEntry(
                                     title=_("Test notifications"),
@@ -846,14 +1072,52 @@ class ModeAnalyzeNotifications(ModeNotifications):
                                     is_shortcut=True,
                                     is_suggested=True,
                                 ),
+                            ],
+                        ),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Global settings"),
+                            entries=[
                                 PageMenuEntry(
-                                    title=_("Notifications"),
-                                    icon_name="notifications",
+                                    title=_("Store notifications for rule analysis"),
+                                    icon_name="configuration",
                                     item=make_simple_link(
-                                        folder_preserving_link([("mode", "notifications")])
+                                        folder_preserving_link(
+                                            [
+                                                ("mode", "edit_configvar"),
+                                                ("varname", "notification_backlog"),
+                                            ]
+                                        )
                                     ),
-                                    is_shortcut=True,
-                                    is_suggested=True,
+                                ),
+                                PageMenuEntry(
+                                    title=_("Notification log level"),
+                                    icon_name="configuration",
+                                    item=make_simple_link(
+                                        folder_preserving_link(
+                                            [
+                                                ("mode", "edit_configvar"),
+                                                ("varname", "notification_logging"),
+                                            ]
+                                        )
+                                    ),
+                                ),
+                                PageMenuEntry(
+                                    title=_("Logging of the notification mechanics"),
+                                    icon_name="configuration",
+                                    item=make_simple_link(
+                                        folder_preserving_link(
+                                            [
+                                                ("mode", "edit_configvar"),
+                                                ("varname", "cmc_debug_notifications"),
+                                            ]
+                                        )
+                                    ),
                                 ),
                             ],
                         ),
@@ -895,6 +1159,24 @@ class ModeAnalyzeNotifications(ModeNotifications):
                         ),
                         is_shortcut=True,
                         is_suggested=True,
+                    ),
+                    PageMenuEntry(
+                        title=(
+                            _("Hide user rules") if self._show_user_rules else _("Show user rules")
+                        ),
+                        icon_name={
+                            "icon": "checkbox",
+                            "emblem": "disable" if self._show_user_rules else "enable",
+                        },
+                        item=make_simple_link(
+                            makeactionuri(
+                                request,
+                                transactions,
+                                [
+                                    ("_show_user", "" if self._show_user_rules else "1"),
+                                ],
+                            )
+                        ),
                     ),
                 ],
             ),
@@ -1076,11 +1358,25 @@ class ModeTestNotifications(ModeNotifications):
         menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
-                    name="related",
-                    title=_("Related"),
+                    name="test_notifications",
+                    title=_("Test notifications"),
                     topics=[
                         PageMenuTopic(
-                            title=_("Notifications"),
+                            title=_("Add new"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Add notification rule"),
+                                    icon_name="new",
+                                    item=make_simple_link(
+                                        folder_preserving_link([("mode", "notification_rule")])
+                                    ),
+                                    is_shortcut=False,
+                                    is_suggested=False,
+                                ),
+                            ],
+                        ),
+                        PageMenuTopic(
+                            title=_("Analyze"),
                             entries=[
                                 PageMenuEntry(
                                     title=_("Analyze recent notifications"),
@@ -1092,6 +1388,17 @@ class ModeTestNotifications(ModeNotifications):
                                     is_shortcut=True,
                                     is_suggested=True,
                                 ),
+                            ],
+                        ),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Overview"),
+                            entries=[
                                 PageMenuEntry(
                                     title=_("Notifications"),
                                     icon_name="notifications",
@@ -1103,6 +1410,35 @@ class ModeTestNotifications(ModeNotifications):
                                 ),
                             ],
                         ),
+                        PageMenuTopic(
+                            title=_("Global settings"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Notification log level"),
+                                    icon_name="configuration",
+                                    item=make_simple_link(
+                                        folder_preserving_link(
+                                            [
+                                                ("mode", "edit_configvar"),
+                                                ("varname", "notification_logging"),
+                                            ]
+                                        )
+                                    ),
+                                ),
+                                PageMenuEntry(
+                                    title=_("Logging of the notification mechanics"),
+                                    icon_name="configuration",
+                                    item=make_simple_link(
+                                        folder_preserving_link(
+                                            [
+                                                ("mode", "edit_configvar"),
+                                                ("varname", "cmc_debug_notifications"),
+                                            ]
+                                        )
+                                    ),
+                                ),
+                            ],
+                        ),
                     ],
                 ),
             ],
@@ -1111,7 +1447,7 @@ class ModeTestNotifications(ModeNotifications):
         )
         self._extend_display_dropdown(menu)
         menu.add_doc_reference(
-            _("Rule evaluation by the notification module"),
+            _("Testing notifications"),
             DocReference.TEST_NOTIFICATIONS,
         )
         return menu
@@ -1337,7 +1673,7 @@ class ModeTestNotifications(ModeNotifications):
             context["HOSTSTATE"] = host_state_name(int(simulation_mode[1]["host_states"][1]))
             context["HOSTSTATEID"] = str(simulation_mode[1]["host_states"][1])
         else:
-            context["NOTIFICATIONTYPE"] = "DOWNTIME"
+            context["NOTIFICATIONTYPE"] = "DOWNTIMESTART"
             context["PREVIOUSHOSTHARDSTATE"] = "UP"
             context["HOSTSTATE"] = "UP"
 
@@ -1770,7 +2106,7 @@ class ModeUserNotifications(ABCUserNotificationsMode):
                             title=_("Add new"),
                             entries=[
                                 PageMenuEntry(
-                                    title=_("Add rule"),
+                                    title=_("Add notification rule"),
                                     icon_name="new",
                                     item=make_simple_link(
                                         folder_preserving_link(
@@ -2371,7 +2707,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
 
     @staticmethod
     def _migrate_bulk(
-        v: CascadingDropdownChoiceValue | Mapping[str, Any]
+        v: CascadingDropdownChoiceValue | Mapping[str, Any],
     ) -> CascadingDropdownChoiceValue:
         return v if isinstance(v, tuple) else ("always", v)
 

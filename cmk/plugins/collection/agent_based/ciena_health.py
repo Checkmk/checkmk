@@ -114,7 +114,7 @@ def parse_ciena_health(
 
 
 def make_parse_function(
-    references: Iterable[tuple[str, type[SNMPEnum]]]
+    references: Iterable[tuple[str, type[SNMPEnum]]],
 ) -> Callable[[Sequence[StringTable]], Section]:
     def parse(string_table: Sequence[StringTable]) -> Section:
         return parse_ciena_health(references, string_table)

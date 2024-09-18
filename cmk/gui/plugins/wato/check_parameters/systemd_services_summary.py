@@ -95,7 +95,7 @@ def _parameter_valuespec_systemd_units_summary() -> Dictionary:
                 "reloading_levels",
                 SimpleLevels(
                     Age,
-                    title=_("Tolderance period for 'reloading' state"),
+                    title=_("Tolerance period for 'reloading' state"),
                     help=_(
                         "Choose time levels (in seconds) for which a unit is allowed to be in a 'reloading' state"
                     ),

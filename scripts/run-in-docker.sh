@@ -7,7 +7,7 @@
 # By default the 'reference image' will be used to create the container, but this
 # behavior can be customized using either @IMAGE_ALIAS or @IMAGE_ID as follows:
 #   run-in-docker.sh <CMD>                                     will use reference image
-#   IMAGE_ALIAS=IMAGE_CENTOS_8 run-in-docker.sh <CMD>          will use dereferenced image alias IMAGE_CENTOS_8
+#   IMAGE_ALIAS=IMAGE_SLES_15sp6 run-in-docker.sh <CMD>        will use dereferenced image alias IMAGE_SLES_15sp6
 #   IMAGE_ID=ubuntu-22.04:master-latest run-in-docker.sh <CMD>  will use provided image id directly
 # Also DOCKER_RUN_ADDOPTS can be set to add additional arguments to be passed to `docker run`
 #
@@ -32,7 +32,7 @@ CHECKOUT_ROOT="$(git rev-parse --show-toplevel)"
     fi
 )"}"
 
-IMAGE_VERSION="$(docker run -v "${CHECKOUT_ROOT}/omd:/tmp" "${IMAGE_ID}" /tmp/distro '-')"
+IMAGE_VERSION="$(docker run --rm -v "${CHECKOUT_ROOT}/omd:/tmp" "${IMAGE_ID}" /tmp/distro '-')"
 
 # in case of worktrees $CHECKOUT_ROOT might not contain the actual repository clone
 GIT_COMMON_DIR="$(realpath "$(git rev-parse --git-common-dir)")"
@@ -144,6 +144,8 @@ docker run -a stdout -a stderr \
     ${DOCKER_RUN_ADDOPTS} \
     "${IMAGE_ID}" \
     sh -c "${CMD}"
+
+# FIXME: eventually created image is not being cleaned up
 
 ROOT_ARTIFACTS=$(find . -user root)
 if [ -n "${ROOT_ARTIFACTS}" ]; then

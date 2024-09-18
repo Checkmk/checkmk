@@ -122,7 +122,14 @@ export function register() {
         .then(function (response) {
             if (response.ok) {
                 show_info("Registration successful");
-                window.location.href = "user_two_factor_overview.py";
+                response.text().then(function (text) {
+                    if (JSON.parse(text).redirect) {
+                        window.location.href = "index.py";
+                    } else {
+                        window.location.href = "user_two_factor_overview.py";
+                    }
+                });
+                show_info("Registration successful");
             } else {
                 response.text().then(function (text) {
                     show_error(

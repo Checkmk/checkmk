@@ -31,6 +31,8 @@ SearchResults = list[SearchResult]
 ActionArgument = tuple[str, ...]
 ActionArguments = list[ActionArgument]
 
+from cmk.ccc import plugin_registry
+
 from cmk.utils.hostaddress import HostName
 from cmk.utils.macros import MacroMapping, replace_macros_in_str
 from cmk.utils.rulesets.ruleset_matcher import TagCondition
@@ -49,7 +51,6 @@ from cmk.bi.type_defs import (
     HostState,
     SearchConfig,
 )
-from cmk.ccc import plugin_registry
 
 
 class BIStates:

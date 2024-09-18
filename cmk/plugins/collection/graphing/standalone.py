@@ -1677,8 +1677,8 @@ metric_memory_used = metrics.Metric(
 # 1024) which means an invalidation of historic values.
 metric_kb_out_of_sync = metrics.Metric(
     name="kb_out_of_sync",
-    title=Title("KiB out of sync"),  # according to documentation
-    unit=UNIT_COUNTER,
+    title=Title("Out of sync"),
+    unit=UNIT_BYTES,
     color=metrics.Color.ORANGE,
 )
 metric_serverlog_storage_percent = metrics.Metric(

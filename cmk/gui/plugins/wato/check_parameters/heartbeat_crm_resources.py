@@ -3,31 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, Migrate, TextInput
-
-
-def _migrate_opt_string(
-    parameters: Mapping[str, str | None] | str | None
-) -> Mapping[str, str | None]:
-    """
-    >>> _migrate_opt_string(None)
-    {'expected_node': None}
-    >>> _migrate_opt_string("foobar")
-    {'expected_node': 'foobar'}
-    >>> _migrate_opt_string({'expected_node': 'mooo'})
-    {'expected_node': 'mooo'}
-    """
-    if parameters is None or isinstance(parameters, str):
-        return {"expected_node": parameters}
-    return parameters
+from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, MonitoringState, TextInput
 
 
 def _item_spec_heartbeat_crm_resources():
@@ -38,24 +20,28 @@ def _item_spec_heartbeat_crm_resources():
     )
 
 
-def _parameter_valuespec_heartbeat_crm_resources():
-    return Migrate(
-        Dictionary(
-            elements=[
-                (
-                    "expected_node",
-                    Alternative(
-                        title=_("Expected node"),
-                        help=_("The host name of the expected node to hold this resource."),
-                        elements=[
-                            FixedValue(value=None, totext="", title=_("Do not check the node")),
-                            TextInput(allow_empty=False, title=_("Expected node")),
-                        ],
-                    ),
+def _parameter_valuespec_heartbeat_crm_resources() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "expected_node",
+                Alternative(
+                    title=_("Expected node"),
+                    help=_("The host name of the expected node to hold this resource."),
+                    elements=[
+                        FixedValue(value=None, totext="", title=_("Do not check the node")),
+                        TextInput(allow_empty=False, title=_("Expected node")),
+                    ],
                 ),
-            ],
-        ),
-        migrate=_migrate_opt_string,
+            ),
+            (
+                "monitoring_state_if_unmanaged_nodes",
+                MonitoringState(
+                    title=_("State if at least one node is unmanaged"),
+                    default_value=1,
+                ),
+            ),
+        ],
     )
 
 

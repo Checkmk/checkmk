@@ -5,30 +5,27 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
-from typing import Callable, Iterable, Mapping, Sequence
 
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     GeneralStageErrors,
     ParsedFormData,
     QuickSetupId,
+    StageIndex,
 )
-from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, Widget
+from cmk.gui.quick_setup.v0_unstable.widgets import Widget
 
-from cmk.rulesets.v1.form_specs import FormSpec
-
-CallableValidator = Callable[[ParsedFormData, Mapping[FormSpecId, FormSpec]], GeneralStageErrors]
-CallableRecap = Callable[
-    [Sequence[ParsedFormData], Mapping[FormSpecId, FormSpec]],
-    Sequence[Widget],
-]
+CallableValidator = Callable[[QuickSetupId, StageIndex, ParsedFormData], GeneralStageErrors]
+CallableRecap = Callable[[QuickSetupId, StageIndex, ParsedFormData], Sequence[Widget]]
 CallableSaveAction = Callable[[ParsedFormData], str]
+WidgetConfigurator = Callable[[], Sequence[Widget]]
 
 
 @dataclass(frozen=True)
 class QuickSetupStage:
     title: str
-    configure_components: Sequence[Widget]
+    configure_components: WidgetConfigurator | Sequence[Widget]
     custom_validators: Iterable[CallableValidator]
     recap: Iterable[CallableRecap]
     button_label: str

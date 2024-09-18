@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Rulesets"""
+
 from __future__ import annotations
 
 from cmk.gui.logged_in import user
+from cmk.gui.openapi.endpoints.common_fields import field_include_extensions, field_include_links
 from cmk.gui.openapi.endpoints.ruleset.fields import (
     RULESET_NAME,
     RulesetCollection,
@@ -18,9 +20,15 @@ from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.utils.escaping import strip_tags
-from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, Ruleset
+from cmk.gui.watolib.rulesets import (
+    AllRulesets,
+    FolderRulesets,
+    Ruleset,
+    SingleRulesetRecursively,
+    visible_ruleset,
+    visible_rulesets,
+)
 from cmk.gui.watolib.rulesets import RulesetCollection as RulesetCollection_
-from cmk.gui.watolib.rulesets import SingleRulesetRecursively, visible_ruleset, visible_rulesets
 
 PERMISSIONS = permissions.Perm("wato.rulesets")
 
@@ -29,13 +37,15 @@ PERMISSIONS = permissions.Perm("wato.rulesets")
     constructors.collection_href(domain_type="ruleset"),
     ".../collection",
     method="get",
-    query_params=[RulesetSearchOptions],
+    query_params=[RulesetSearchOptions, field_include_links(), field_include_extensions()],
     response_schema=RulesetCollection,
     permissions_required=PERMISSIONS,
 )
 def list_rulesets(param):
     """Search rule sets"""
     user.need_permission("wato.rulesets")
+    include_links: bool = param["include_links"]
+    include_extensions: bool = param["include_extensions"]
     all_sets = (
         FolderRulesets.load_folder_rulesets(param["folder"])
         if param.get("folder")
@@ -65,7 +75,9 @@ def list_rulesets(param):
         constructors.collection_object(
             domain_type="ruleset",
             value=[
-                _serialize_ruleset(ruleset)
+                _serialize_ruleset(
+                    ruleset, include_links=include_links, include_extensions=include_extensions
+                )
                 for ruleset in visible_rulesets(rulesets.get_rulesets()).values()
             ],
         )
@@ -104,7 +116,9 @@ def show_ruleset(param):
     return serve_json(_serialize_ruleset(ruleset))
 
 
-def _serialize_ruleset(ruleset: Ruleset) -> DomainObject:
+def _serialize_ruleset(
+    ruleset: Ruleset, *, include_links: bool = True, include_extensions: bool = True
+) -> DomainObject:
     members = {}
     if ruleset.num_rules() > 0:
         members["rules"] = constructors.collection_property(
@@ -120,16 +134,21 @@ def _serialize_ruleset(ruleset: Ruleset) -> DomainObject:
         editable=False,
         deletable=False,
         members=members,
-        extensions={
-            "name": ruleset.name,
-            "title": ruleset.title(),
-            "item_type": ruleset.item_type(),
-            "item_name": ruleset.item_name(),
-            "item_enum": ruleset.item_enum(),
-            "match_type": ruleset.match_type(),
-            "help": strip_tags(ruleset.help()),
-            "number_of_rules": ruleset.num_rules(),
-        },
+        extensions=(
+            {
+                "name": ruleset.name,
+                "title": ruleset.title(),
+                "item_type": ruleset.item_type(),
+                "item_name": ruleset.item_name(),
+                "item_enum": ruleset.item_enum(),
+                "match_type": ruleset.match_type(),
+                "help": strip_tags(ruleset.help()),
+                "number_of_rules": ruleset.num_rules(),
+            }
+            if include_extensions
+            else None
+        ),
+        include_links=include_links,
     )
 
 

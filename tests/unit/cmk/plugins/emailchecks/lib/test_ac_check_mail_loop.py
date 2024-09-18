@@ -174,7 +174,10 @@ def test_ac_check_mail_loop(
     expected_result: tuple[int, str, Sequence[object]],
 ) -> None:
     state, info, perf = check_mail_loop.check_mails(
-        warning, critical, expected_mails.copy(), fetched_mails.copy()  # type: ignore[arg-type]  # FIXME
+        warning,  # type: ignore[arg-type]  # FIXME
+        critical,
+        expected_mails.copy(),  # type: ignore[arg-type]  # FIXME
+        fetched_mails.copy(),  # type: ignore[arg-type]  # FIXME
     )
     e_state, e_info, e_perf = expected_result
     assert state == e_state

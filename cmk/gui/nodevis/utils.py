@@ -8,6 +8,8 @@ from typing import Any
 
 from livestatus import lqencode
 
+from cmk.ccc import store
+
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
@@ -17,8 +19,6 @@ from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_javascript_link, PageMenuEntry
 from cmk.gui.watolib.utils import multisite_dir
-
-from cmk.ccc import store
 
 topology_dir = Path(cmk.utils.paths.var_dir) / "topology"
 topology_data_dir = topology_dir / "data"

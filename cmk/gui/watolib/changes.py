@@ -160,6 +160,10 @@ class ActivateChangesWriter:
         if need_sync is None:
             need_sync = any(d.needs_sync for d in domains)
 
+        # Only changes are currently capable of requesting an apache reload not the entire domain
+        if need_apache_reload is None:
+            need_apache_reload = False
+
         # Using attrencode here is against our regular rule to do the escaping
         # at the last possible time: When rendering. But this here is the last
         # place where we can distinguish between HTML() encapsulated (already)

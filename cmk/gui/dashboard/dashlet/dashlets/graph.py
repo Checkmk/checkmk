@@ -10,6 +10,8 @@ from typing import Any, Generic, TypeVar
 
 import livestatus
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.hostaddress import HostName
 from cmk.utils.macros import MacroMapping
 from cmk.utils.user import UserId
@@ -19,7 +21,11 @@ from cmk.gui.dashboard.type_defs import DashletId, DashletSize
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.graphing._graph_render_config import graph_grender_options_from_vs, GraphRenderConfig
 from cmk.gui.graphing._graph_specification import GraphSpecification
-from cmk.gui.graphing._graph_templates import get_graph_template_choices, TemplateGraphSpecification
+from cmk.gui.graphing._graph_templates import (
+    get_graph_template_choices,
+    get_template_graph_specification,
+    TemplateGraphSpecification,
+)
 from cmk.gui.graphing._html_render import GraphDestinations
 from cmk.gui.graphing._metrics import get_metric_spec
 from cmk.gui.graphing._utils import MKCombinedGraphLimitExceededError
@@ -39,8 +45,6 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.visuals import get_only_sites_from_context, get_singlecontext_vars
-
-from cmk.ccc.exceptions import MKGeneralException
 
 from ...title_macros import macro_mapping_from_context
 from ...type_defs import ABCGraphDashletConfig, DashboardConfig, DashboardName
@@ -87,11 +91,7 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
             return list(self.choices())
         return [
             next(
-                (
-                    (graph_id, graph_title)
-                    for graph_id, graph_title in get_graph_template_choices()
-                    if graph_id == value
-                ),
+                ((c.id, c.title) for c in get_graph_template_choices() if c.id == value),
                 (
                     value,
                     (
@@ -371,18 +371,18 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
         # handle this here
         raw_source = self._dashlet_spec["source"]
         if isinstance(raw_source, int):
-            return TemplateGraphSpecification(
-                site=site_id,
+            return get_template_graph_specification(
+                site_id=site_id,
                 host_name=host,
-                service_description=service,
+                service_name=service,
                 graph_index=raw_source - 1,
                 destination=GraphDestinations.dashlet,
             )
 
-        return TemplateGraphSpecification(
-            site=site_id,
+        return get_template_graph_specification(
+            site_id=site_id,
             host_name=host,
-            service_description=service,
+            service_name=service,
             graph_id=raw_source,
             destination=GraphDestinations.dashlet,
         )

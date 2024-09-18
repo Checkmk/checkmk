@@ -12,6 +12,7 @@ import shutil
 import uuid
 from pathlib import Path, PurePath
 from typing import NamedTuple
+from unittest.mock import mock_open, patch
 
 import pytest
 import requests
@@ -223,11 +224,13 @@ def test_diagnostics_element_filesize_content(tmp_path: PurePath) -> None:
     test_dir.mkdir(parents=True, exist_ok=True)
     test_file = test_dir.joinpath("testfile")
     test_content = "test\n"
+    test_group = "dummygroup"
     with test_file.open("w", encoding="utf-8") as f:
         f.write(test_content)
 
     tmppath = Path(tmp_path).joinpath("tmp")
-    filepath = next(diagnostics_element.add_or_get_files(tmppath))
+    with patch("pathlib.Path.group", return_value=test_group):
+        filepath = next(diagnostics_element.add_or_get_files(tmppath))
 
     assert isinstance(filepath, Path)
     assert filepath == tmppath.joinpath("file_size.csv")
@@ -235,18 +238,25 @@ def test_diagnostics_element_filesize_content(tmp_path: PurePath) -> None:
     column_headers = [
         "path",
         "size",
+        "owner",
+        "group",
+        "mode",
+        "changed",
     ]
 
-    csvdata = {}
+    size_of = {}
+    group_of = {}
     with open(filepath, newline="") as csvfile:
         csvreader = csv.DictReader(csvfile, delimiter=";", quotechar="'")
         for row in csvreader:
-            csvdata[row["path"]] = row["size"]
+            size_of[row["path"]] = row["size"]
+            group_of[row["path"]] = row["group"]
             last_row = row
 
     assert sorted(last_row.keys()) == sorted(column_headers)
-    assert str(test_file) in csvdata
-    assert csvdata[str(test_file)] == str(len(test_content))
+    assert str(test_file) in size_of
+    assert size_of[str(test_file)] == str(len(test_content))
+    assert group_of[str(test_file)] == test_group
 
 
 def test_diagnostics_element_omd_config() -> None:
@@ -769,6 +779,42 @@ def test_diagnostics_element_se_linux_content(monkeypatch, tmp_path):
         assert content["SELinux status"] == "enabled"
 
         shutil.rmtree(str(test_bin_dir))
+
+
+def test_diagnostics_element_cma():
+    diagnostics_element = diagnostics.CMAJSONDiagnosticsElement()
+    assert diagnostics_element.ident == "appliance"
+    assert diagnostics_element.title == "Checkmk Appliance information"
+    assert diagnostics_element.description == (
+        "Information about the Appliance hardware and firmware version."
+    )
+
+
+def test_diagnostics_element_cma_content(tmp_path):
+    data_dict = {
+        "/etc/cma/hw": "product='Checkmk rack1 Mark VI'",
+        "/ro/usr/share/cma/version": "1.7.5",
+    }
+
+    def open_side_effect(name, options):
+        return mock_open(read_data=data_dict.get(name))()
+
+    with patch("builtins.open") as bo, patch("os.path.exists") as ope:
+        bo.side_effect = open_side_effect
+        ope.return_value = True
+
+        diagnostics_element = diagnostics.CMAJSONDiagnosticsElement()
+        tmppath = Path(tmp_path).joinpath("tmp")
+        tmppath.mkdir(parents=True, exist_ok=True)
+        filepath = next(diagnostics_element.add_or_get_files(tmppath))
+
+        assert isinstance(filepath, Path)
+        assert filepath == tmppath.joinpath("appliance.json")
+
+        content = json.loads(filepath.open().read())
+
+        assert content["hw"]["product"] == "Checkmk rack1 Mark VI"
+        assert content["fw"] == "1.7.5"
 
 
 def test_diagnostics_element_crash_dumps():

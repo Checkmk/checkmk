@@ -26,6 +26,7 @@ from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Se
 from enum import Enum
 from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER
 from pathlib import Path
+from types import ModuleType
 from typing import (
     Any,
     AnyStr,
@@ -38,6 +39,12 @@ from typing import (
     TypeAlias,
     TypeVar,
 )
+
+import cmk.ccc.debug
+import cmk.ccc.version as cmk_version
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate
+from cmk.ccc.site import omd_site
 
 import cmk.utils
 import cmk.utils.check_utils
@@ -55,7 +62,7 @@ from cmk.utils.host_storage import apply_hosts_file_to_object, get_host_storage_
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
 from cmk.utils.ip_lookup import IPStackConfig
-from cmk.utils.labels import Labels, LabelSources
+from cmk.utils.labels import BuiltinHostLabelsStore, Labels, LabelSources
 from cmk.utils.legacy_check_api import LegacyCheckDefinition
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
@@ -122,17 +129,25 @@ from cmk.base.api.agent_based.register.section_plugins_legacy import (
 )
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.parent_scan import ScanConfig as ParentScanConfig
-from cmk.base.server_side_calls import load_special_agents, SpecialAgent, SpecialAgentCommandLine
+from cmk.base.server_side_calls import (
+    load_special_agents,
+    SpecialAgent,
+    SpecialAgentCommandLine,
+    SSCRules,
+)
 from cmk.base.sources import SNMPFetcherConfig
 
-import cmk.ccc.debug
-import cmk.ccc.version as cmk_version
 from cmk import piggyback
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate
-from cmk.ccc.site import omd_site
 from cmk.server_side_calls import v1 as server_side_calls_api
 from cmk.server_side_calls_backend.config_processing import PreprocessingResult
+
+cme_labels: ModuleType | None
+try:
+    from cmk.utils.cme import (  # type: ignore[import-untyped, no-redef, unused-ignore]
+        labels as cme_labels,
+    )
+except ModuleNotFoundError:
+    cme_labels = None
 
 try:
     from cmk.base.cee.rrd import RRDObjectConfig
@@ -170,9 +185,8 @@ CheckCommandArguments = Iterable[int | float | str | tuple[str, str, str]]
 LegacySSCConfigModel = object
 
 LegacySSCRules = Sequence[tuple[str, Sequence[LegacySSCConfigModel]]]
-SSCRules = Sequence[tuple[str, Sequence[Mapping[str, object]]]]
 
-MixedSSCRules = LegacySSCRules | SSCRules
+MixedSSCRules = LegacySSCRules | Sequence[SSCRules]
 
 
 class FilterMode(enum.Enum):
@@ -579,9 +593,7 @@ class SetFolderPathDict(SetFolderPathAbstract, dict):
 
 
 def _load_config_file(file_to_load: Path, into_dict: dict[str, Any]) -> None:
-    exec(
-        compile(file_to_load.read_text(), file_to_load, "exec"), into_dict, into_dict
-    )  # nosec B102 # BNS:aee528
+    exec(compile(file_to_load.read_text(), file_to_load, "exec"), into_dict, into_dict)  # nosec B102 # BNS:aee528
 
 
 def _load_config(with_conf_d: bool) -> set[str]:
@@ -771,7 +783,7 @@ class PackedConfigGenerator:
             return all_hosts_red
 
         def filter_clusters(
-            clusters_orig: dict[HostName, list[HostName]]
+            clusters_orig: dict[HostName, list[HostName]],
         ) -> dict[HostName, list[HostName]]:
             clusters_red = {}
             for cluster_entry, cluster_nodes in clusters_orig.items():
@@ -785,7 +797,7 @@ class PackedConfigGenerator:
             return clusters_red
 
         def filter_hostname_in_dict(
-            values: dict[HostName, dict[str, str]]
+            values: dict[HostName, dict[str, str]],
         ) -> dict[HostName, dict[str, str]]:
             values_red = {}
             for hostname, attributes in values.items():
@@ -794,7 +806,7 @@ class PackedConfigGenerator:
             return values_red
 
         def filter_extra_service_conf(
-            values: dict[str, list[dict[str, str]]]
+            values: dict[str, list[dict[str, str]]],
         ) -> dict[str, list[dict[str, str]]]:
             return {"check_interval": values.get("check_interval", [])}
 
@@ -1300,9 +1312,9 @@ NEGATE = tuple_rulesets.NEGATE
 #           _initialize_data_structures()
 # The following data structures will be filled by the checks
 # all known checks
-check_info: dict[object, object] = (
-    {}
-)  # want: dict[str, LegacyCheckDefinition], but don't trust the plugins!
+check_info: dict[
+    object, object
+] = {}  # want: dict[str, LegacyCheckDefinition], but don't trust the plugins!
 # for nagios config: keep track which plug-in lives where
 legacy_check_plugin_files: dict[str, str] = {}
 # Lookup for legacy names
@@ -1311,8 +1323,7 @@ legacy_check_plugin_names: dict[CheckPluginName, str] = {}
 precompile_params: dict[str, Callable[[str, str, dict[str, Any]], Any]] = {}
 # factory settings for dictionary-configured checks
 factory_settings: dict[str, Mapping[str, Any]] = {}
-# definitions of active "legacy" checks
-active_check_info: dict[str, dict[str, Any]] = {}
+# definitions of special agents
 special_agent_info: dict[str, SpecialAgentInfoFunction] = {}
 
 # workaround: set of check-groups that are to be treated as service-checks even if
@@ -1358,7 +1369,6 @@ def _initialize_data_structures() -> None:
     legacy_check_plugin_names.clear()
     precompile_params.clear()
     factory_settings.clear()
-    active_check_info.clear()
     special_agent_info.clear()
 
 
@@ -1446,7 +1456,6 @@ def new_check_context(get_check_api_context: GetCheckApiContext) -> CheckContext
     context = {
         "check_info": check_info,
         "precompile_params": precompile_params,
-        "active_check_info": active_check_info,
         "special_agent_info": special_agent_info,
     }
     # NOTE: For better separation it would be better to copy the values, but
@@ -1509,9 +1518,7 @@ def load_precompiled_plugin(path: str, check_context: CheckContext) -> bool:
         # The original file is from the version so the calculated mode is world readable...
         os.chmod(precompiled_path, 0o640)
 
-    exec(
-        marshal.loads(Path(precompiled_path).read_bytes()[_PYCHeader.SIZE :]), check_context
-    )  # nosec B102 # BNS:aee528
+    exec(marshal.loads(Path(precompiled_path).read_bytes()[_PYCHeader.SIZE :]), check_context)  # nosec B102 # BNS:aee528
 
     return do_compile
 
@@ -1556,7 +1563,7 @@ def _add_sections_to_register(sections: Iterable[SNMPSectionPlugin | AgentSectio
 
 
 def _make_agent_and_snmp_sections(
-    legacy_checks: Mapping[str, LegacyCheckDefinition]
+    legacy_checks: Mapping[str, LegacyCheckDefinition],
 ) -> tuple[list[str], Sequence[SNMPSectionPlugin | AgentSectionPlugin]]:
     """Here comes the next layer of converting-to-"new"-api.
 
@@ -1785,7 +1792,7 @@ def lookup_ip_address(
 
 
 def _get_ssc_ip_family(
-    ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+    ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
 ) -> server_side_calls_api.IPAddressFamily:
     match ip_family:
         case socket.AddressFamily.AF_INET:
@@ -1888,9 +1895,7 @@ class ConfigCache:
         self.__explicit_host_attributes: dict[HostName, dict[str, str]] = {}
         self.__computed_datasources: dict[HostName | HostAddress, ComputedDataSources] = {}
         self.__discovery_check_parameters: dict[HostName, DiscoveryCheckParameters] = {}
-        # TODO: active checks are actually "SSCRules" now (no longer mixed).
-        # This is currently validated very late.
-        self.__active_checks: dict[HostName, MixedSSCRules] = {}
+        self.__active_checks: dict[HostName, Sequence[SSCRules]] = {}
         self.__special_agents: dict[HostName, MixedSSCRules] = {}
         self.__hostgroups: dict[HostName, Sequence[str]] = {}
         self.__contactgroups: dict[HostName, Sequence[_ContactgroupName]] = {}
@@ -1935,6 +1940,7 @@ class ConfigCache:
             clusters_of=self._clusters_of_cache,
             nodes_of=self._nodes_cache,
             all_configured_hosts=list(set(self.hosts_config)),
+            builtin_host_labels_store=BuiltinHostLabelsStore(),
             debug_matching_stats=ruleset_matching_stats,
         )
 
@@ -2014,7 +2020,7 @@ class ConfigCache:
             return self.__snmp_config[(host_name, ip_address, source_type)]
 
         def _timeout_policy(
-            policy: Literal["stop_on_timeout", "continue_on_timeout"]
+            policy: Literal["stop_on_timeout", "continue_on_timeout"],
         ) -> Literal["stop", "continue"]:
             match policy:
                 case "stop_on_timeout":
@@ -2209,7 +2215,9 @@ class ConfigCache:
 
         return resolved
 
-    def enforced_services_table(self, hostname: HostName) -> Mapping[
+    def enforced_services_table(
+        self, hostname: HostName
+    ) -> Mapping[
         ServiceID,
         tuple[RulesetName, ConfiguredService],
     ]:
@@ -2515,12 +2523,14 @@ class ConfigCache:
             if not entries:
                 return defaults
 
-            if (entry := entries[0]) is None or not (check_interval := entry["check_interval"]):
+            if (entry := entries[0]) is None or not (
+                check_interval := int(entry["check_interval"])
+            ):
                 return dataclasses.replace(defaults, commandline_only=True)
 
             return DiscoveryCheckParameters(
                 commandline_only=False,
-                check_interval=int(check_interval),
+                check_interval=check_interval,
                 severity_new_services=int(entry["severity_unmonitored"]),
                 severity_vanished_services=int(entry["severity_vanished"]),
                 # TODO: should be changed via Transform & update-action of the periodic discovery rule
@@ -2558,15 +2568,15 @@ class ConfigCache:
         """Return the free form configured custom checks without formalization"""
         return self.ruleset_matcher.get_host_values(host_name, custom_checks)
 
-    def active_checks(self, host_name: HostName) -> MixedSSCRules:
-        """Returns the list of active checks configured for this host
+    def active_checks(self, host_name: HostName) -> Sequence[SSCRules]:
+        """Returns active checks configured for this host
 
         These are configured using the active check formalization of WATO
         where the whole parameter set is configured using valuespecs.
         """
 
-        def make_active_checks() -> MixedSSCRules:
-            configured_checks: list[tuple[str, Sequence[object]]] = []
+        def make_active_checks() -> Sequence[SSCRules]:
+            configured_checks: list[SSCRules] = []
             for plugin_name, ruleset in sorted(active_checks.items(), key=lambda x: x[0]):
                 # Skip Check_MK HW/SW Inventory for all ping hosts, even when the
                 # user has enabled the inventory for ping only hosts
@@ -2693,7 +2703,7 @@ class ConfigCache:
         }
 
         def _filter_newstyle_ssc_rule(
-            unfiltered: Sequence[Mapping[str, object] | LegacySSCConfigModel]
+            unfiltered: Sequence[Mapping[str, object] | LegacySSCConfigModel],
         ) -> Sequence[Mapping[str, object]]:
             return [
                 r for r in unfiltered if isinstance(r, dict) and all(isinstance(k, str) for k in r)
@@ -2705,7 +2715,7 @@ class ConfigCache:
             return [(name, _filter_newstyle_ssc_rule(unfiltered)) for name, unfiltered in rules]
 
         def _gather_secrets_from(
-            rules_function: Callable[[HostName], MixedSSCRules]
+            rules_function: Callable[[HostName], MixedSSCRules],
         ) -> Mapping[str, str]:
             return {
                 id_: secret
@@ -3550,9 +3560,7 @@ class ConfigCache:
             attrs["_ACTIONS"] = ",".join(actions)
 
         if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CME:
-            attrs[
-                "_CUSTOMER"
-            ] = current_customer  # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
+            attrs["_CUSTOMER"] = current_customer  # type: ignore[name-defined,unused-ignore] # pylint: disable=undefined-variable
 
         return attrs
 
@@ -3986,12 +3994,11 @@ def reset_config_cache() -> ConfigCache:
 
 def _create_config_cache() -> ConfigCache:
     """create clean config cache"""
-    cache_class = (
-        ConfigCache
-        if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE
-        else CEEConfigCache
-    )
-    return cache_class()
+    if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE:
+        return ConfigCache()
+    if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CME:
+        return CMEConfigCache()
+    return CEEConfigCache()
 
 
 # TODO(au): Find a way to retreive the matchtype_information directly from the
@@ -4702,3 +4709,13 @@ def get_ruleset_id_mapping() -> Mapping[int, str]:
         id(service_tag_rules): "service_tag_rules",
         id(management_bulkwalk_hosts): "management_bulkwalk_hosts",
     }
+
+
+class CMEConfigCache(CEEConfigCache):
+    def initialize(self) -> ConfigCache:
+        super().initialize()
+        if cme_labels:
+            self.ruleset_matcher.ruleset_optimizer.set_builtin_host_labels_store(
+                cme_labels.CMEBuiltinHostLabelsStore()
+            )
+        return self

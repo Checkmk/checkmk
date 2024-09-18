@@ -14,6 +14,9 @@ from contextlib import suppress
 from io import StringIO
 from typing import Any, cast, IO, Literal
 
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils.config_path
 import cmk.utils.paths
 from cmk.utils import config_warnings, ip_lookup, password_store, tty
@@ -25,7 +28,6 @@ from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.notify import NotificationHostConfig, write_notify_host_file
 from cmk.utils.servicename import MAX_SERVICE_NAME_LEN, ServiceName
-from cmk.utils.timeperiod import TimeperiodName
 
 from cmk.checkengine.checking import CheckPluginName
 
@@ -39,9 +41,6 @@ from cmk.base.core_config import (
     get_labels_from_attributes,
     get_tags_with_groups_from_attributes,
 )
-
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
 
 from ._precompile_host_checks import precompile_hostchecks, PrecompileMode
 
@@ -373,11 +372,12 @@ def transform_active_service_command(
         cfg.custom_commands_to_define.add("check-mk-simulation")
         return "check-mk-simulation!echo 'Simulation mode - cannot execute real check'"
 
-    if service_data.command == "check-mk-custom":
+    if service_data.command_name == "check-mk-custom":
         cfg.custom_commands_to_define.add("check-mk-custom")
-        return f"{service_data.command}!{service_data.command_line}"
+        return f"{service_data.command_name}!{service_data.command}"
 
-    return service_data.command_display
+    escaped_args = " ".join(service_data.command[1:]).replace("\\", "\\\\").replace("!", "\\!")
+    return f"{service_data.command_name}!{escaped_args}"
 
 
 def create_nagios_servicedefs(  # pylint: disable=too-many-branches
@@ -519,7 +519,6 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
         lambda x: config.get_final_service_description(x, translations),
         stored_passwords,
         password_store.core_password_store_path(LATEST_CONFIG),
-        escape_func=lambda a: a.replace("\\", "\\\\").replace("!", "\\!"),
     )
 
     active_checks = config_cache.active_checks(hostname)
@@ -557,7 +556,7 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
             _extra_service_conf_of(cfg, config_cache, hostname, service_data.description)
         )
 
-        cfg.active_checks_to_define[service_data.plugin_name] = service_data.detected_executable
+        cfg.active_checks_to_define[service_data.plugin_name] = service_data.command[0]
         active_services.append(service_spec)
 
     if actchecks:
@@ -879,17 +878,12 @@ def create_nagios_config_commands(cfg: NagiosConfig) -> None:
 
     # active_checks
     for acttype, detected_executable in cfg.active_checks_to_define.items():
-        command_line = (
-            core_config.autodetect_plugin(act_info["command_line"])
-            if (act_info := config.active_check_info.get(acttype)) is not None
-            else f"{detected_executable} $ARG1$"
-        )
         cfg.write(
             format_nagios_object(
                 "command",
                 {
                     "command_name": f"check_mk_active-{acttype}",
-                    "command_line": command_line,
+                    "command_line": f"{detected_executable} $ARG1$",
                 },
             )
         )
@@ -948,7 +942,7 @@ def _create_nagios_config_timeperiods(cfg: NagiosConfig) -> None:
                         timeperiod_spec[key] = times
 
             if "exclude" in tp:
-                timeperiod_spec["exclude"] = ",".join(cast(list[TimeperiodName], tp["exclude"]))
+                timeperiod_spec["exclude"] = ",".join(tp["exclude"])
 
             cfg.write(format_nagios_object("timeperiod", timeperiod_spec))
 
@@ -1005,8 +999,9 @@ def _create_nagios_config_contacts(cfg: NagiosConfig, hostnames: Sequence[HostNa
                     {
                         "%s_notification_options" % what: ",".join(no),
                         "%s_notification_period" % what: contact.get("notification_period", "24X7"),
-                        "%s_notification_commands"
-                        % what: contact.get("%s_notification_commands" % what, "check-mk-notify"),
+                        "%s_notification_commands" % what: contact.get(
+                            "%s_notification_commands" % what, "check-mk-notify"
+                        ),
                     }
                 )
 

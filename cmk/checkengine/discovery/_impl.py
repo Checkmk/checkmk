@@ -8,6 +8,8 @@ from collections import Counter
 from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from typing import Literal
 
+from cmk.ccc.exceptions import OnError
+
 import cmk.utils.paths
 import cmk.utils.resulttype as result
 from cmk.utils.agentdatatype import AgentRawData
@@ -27,8 +29,6 @@ from cmk.checkengine.parser import group_by_host, ParserFunction
 from cmk.checkengine.sectionparser import make_providers, SectionPlugin, store_piggybacked_sections
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.summarize import SummarizerFunction
-
-from cmk.ccc.exceptions import OnError
 
 from ._autochecks import AutocheckServiceWithNodes, DiscoveredService
 from ._autodiscovery import get_host_services_by_host_name, ServicesByTransition

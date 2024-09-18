@@ -12,6 +12,8 @@ import string
 from collections.abc import Iterator, Mapping, Sequence
 from typing import Any, Literal, NamedTuple, overload, TypedDict
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.structured_data import SDPath
 from cmk.utils.user import UserId
 
@@ -62,8 +64,6 @@ from cmk.gui.valuespec import (
 from cmk.gui.views.inventory import inv_display_hints, NodeDisplayHint
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
-
-from cmk.ccc.exceptions import MKGeneralException
 
 from .layout import layout_registry
 from .sorter import ParameterizedSorter, Sorter, sorter_registry, SorterRegistry
@@ -450,7 +450,7 @@ def _get_vs_column_dropdown(
 
 
 def _get_vs_link_or_tooltip_elements(
-    painters: Mapping[str, Painter]
+    painters: Mapping[str, Painter],
 ) -> list[tuple[str, ValueSpec]]:
     return [
         (
@@ -507,7 +507,7 @@ def _view_editor_spec(
             tuple[Literal["column"], _RawVSColumnSpec]
             | tuple[Literal["join_column"], _RawVSJoinColumnSpec]
             | tuple[Literal["join_inv_column"], _RawVSJoinInvColumnSpec]
-        )
+        ),
     ) -> ColumnSpec:
         if value[0] == "column":
             column_type, inner_value = value
@@ -692,8 +692,8 @@ def view_editor_sorter_specs(
                 continue
             # Sorters may provide a third element: That Dictionary will be displayed after the
             # sorter was choosen in the CascadingDropdown.
-            if isinstance(p, ParameterizedSorter) and (parameters := p.vs_parameters(painters)):
-                yield name, get_sorter_plugin_title_for_choices(p), parameters
+            if isinstance(p, ParameterizedSorter):
+                yield name, get_sorter_plugin_title_for_choices(p), p.vs_parameters(painters)
             else:
                 yield name, get_sorter_plugin_title_for_choices(p)
 

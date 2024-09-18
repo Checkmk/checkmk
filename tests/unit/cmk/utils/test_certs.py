@@ -162,6 +162,7 @@ def test_create_root_ca_and_key(tmp_path: Path) -> None:
 
     assert ca.private_key.get_raw_rsa_key().key_size == 1024
     assert ca.certificate.common_name == "peter"
+
     assert (
         str(ca.certificate.not_valid_before) == "1970-01-01 00:01:40+00:00"
     ), "creation time is respected"
@@ -227,6 +228,7 @@ MC4CAQAwBQYDK2VwBCIEIK/fWo6sKC4PDigGfEntUd/o8KKs76Hsi03su4QhpZox
     peter_cert = Certificate._create(
         subject_public_key=peter_key.public_key,
         subject_name=X509Name.create(common_name="peter"),
+        subject_alt_dns_names=None,
         expiry=relativedelta(days=1),
         start_date=datetime.now(timezone.utc),
         is_ca=True,
@@ -236,9 +238,11 @@ MC4CAQAwBQYDK2VwBCIEIK/fWo6sKC4PDigGfEntUd/o8KKs76Hsi03su4QhpZox
     peter_root_ca = RootCA(peter_cert, peter_key)
     with time_machine.travel(datetime.fromtimestamp(567892121, tz=ZoneInfo("UTC"))):
         daughter_cert, daughter_key = peter_root_ca.issue_new_certificate(
-            "peters_daughter",
-            relativedelta(days=100),
-            1024,
+            common_name="peters_daughter",
+            organization="Checkmk Testing",
+            subject_alt_dns_names=["peters_daughter"],
+            expiry=relativedelta(days=100),
+            key_size=1024,
         )
 
     assert str(daughter_cert.not_valid_before) == "1987-12-30 19:48:41+00:00"
@@ -248,4 +252,7 @@ MC4CAQAwBQYDK2VwBCIEIK/fWo6sKC4PDigGfEntUd/o8KKs76Hsi03su4QhpZox
     assert daughter_cert.public_key == daughter_key.public_key, "correct public key in the cert"
 
     assert daughter_cert.common_name == "peters_daughter", "subject CN is the daughter"
+    assert daughter_cert.get_subject_alt_names() == [
+        "peters_daughter"
+    ], "subject alt name is the daughter"
     assert daughter_cert.issuer == peter_cert.subject, "issuer is peter"

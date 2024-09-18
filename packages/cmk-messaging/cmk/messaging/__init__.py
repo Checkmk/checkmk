@@ -4,14 +4,46 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Library to connect to the message broker"""
 
-from ._config import cacert_file, cert_file, get_local_port, key_file
-from ._connection import Channel, Connection
+from . import rabbitmq
+from ._config import (
+    BrokerCertificates,
+    ca_key_file,
+    cacert_file,
+    get_local_port,
+    multisite_ca_key_file,
+    multisite_cacert_file,
+    multisite_cert_file,
+    multisite_key_file,
+    site_cert_file,
+    site_key_file,
+    TLS_PATH_CUSTOMERS,
+)
+from ._connection import (
+    Channel,
+    check_remote_connection,
+    Connection,
+    ConnectionFailed,
+    ConnectionOK,
+    ConnectionUnknown,
+)
 
 __all__ = [
-    "get_local_port",
+    "BrokerCertificates",
     "cacert_file",
-    "cert_file",
-    "key_file",
+    "ca_key_file",
+    "site_cert_file",
+    "get_local_port",
+    "site_key_file",
     "Channel",
     "Connection",
+    "multisite_ca_key_file",
+    "multisite_cacert_file",
+    "multisite_cert_file",
+    "multisite_key_file",
+    "TLS_PATH_CUSTOMERS",
+    "rabbitmq",
+    "check_remote_connection",
+    "ConnectionOK",
+    "ConnectionFailed",
+    "ConnectionUnknown",
 ]

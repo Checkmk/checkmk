@@ -11,9 +11,10 @@
 from collections.abc import Mapping, Sequence
 from typing import Any, Literal
 
+import cmk.ccc.version as cmk_version  # pylint: disable=cmk-module-layer-violation
+
 from cmk.utils import paths
 
-import cmk.ccc.version as cmk_version  # pylint: disable=cmk-module-layer-violation
 from cmk.agent_based.v2 import Attributes, InventoryPlugin, InventoryResult, TableRow
 
 

@@ -10,7 +10,11 @@ def cargo_deps(name, package):
         annotations = {
             "openssl-sys": [
                 crate.annotation(
+                    build_script_data = [
+                        "@openssl//:gen_dir",
+                    ],
                     build_script_env = {
+                        "OPENSSL_DIR": "$(execpath @openssl//:gen_dir)",
                         "OPENSSL_NO_VENDOR": "1",
                     },
                     deps = [

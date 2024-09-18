@@ -6,6 +6,7 @@
 Polyfactory has a limitation on more specific Callables, so we override the original dataclasses
 to have a more generic type definition for fields which involve those
 """
+
 from dataclasses import dataclass
 from typing import Callable, Sequence
 
@@ -17,6 +18,7 @@ from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupStage
 @dataclass(frozen=True)
 class QuickSetupStageForTest(QuickSetupStage):
     recap: Sequence
+    configure_components: Sequence
     custom_validators: Sequence
 
 

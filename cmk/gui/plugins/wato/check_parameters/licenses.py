@@ -24,7 +24,7 @@ from cmk.gui.valuespec import (
 
 
 def _migrate_licenses(
-    params: dict | tuple[float, float] | tuple[int, int] | None | Literal[False]
+    params: dict | tuple[float, float] | tuple[int, int] | None | Literal[False],
 ) -> dict:
     match params:
         case dict():

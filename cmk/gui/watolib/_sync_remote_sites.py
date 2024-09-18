@@ -12,6 +12,9 @@ from pathlib import Path
 
 from livestatus import SiteId
 
+from cmk.ccc import store
+from cmk.ccc.site import omd_site
+
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundJobRegistry,
@@ -30,9 +33,6 @@ from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCom
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.paths import wato_var_dir
 from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
-
-from cmk.ccc import store
-from cmk.ccc.site import omd_site
 
 AuditLogs = Sequence[AuditLogStore.Entry]
 SiteChangeSequence = Sequence[ChangeSpec]
@@ -71,7 +71,7 @@ class SyncRemoteSitesResult:
         return cls(audit_logs, site_changes)
 
 
-class AutomationSyncRemoteSites(AutomationCommand):
+class AutomationSyncRemoteSites(AutomationCommand[int]):
     def command_name(self) -> str:
         return "sync-remote-site"
 
@@ -87,11 +87,11 @@ class AutomationSyncRemoteSites(AutomationCommand):
         return int(request.get_str_input_mandatory("last_audit_log_timestamp"))
 
 
-class AutomationClearSiteChanges(AutomationCommand):
+class AutomationClearSiteChanges(AutomationCommand[None]):
     def command_name(self) -> str:
         return "clear-site-changes"
 
-    def execute(self, api_request: object = None) -> None:
+    def execute(self, api_request: None) -> None:
         site_id = omd_site()
         SiteChanges(site_id).clear()
 

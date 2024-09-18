@@ -8,7 +8,10 @@ from collections.abc import Callable, Mapping, Sequence
 import numpy as np
 import pytest
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.gui.graphing import get_first_matching_perfometer, PerfometerSpec
+from cmk.gui.graphing._formatter import AutoPrecision
 from cmk.gui.graphing._legacy import LegacyPerfometer, UnitInfo
 from cmk.gui.graphing._perfometer import (
     _make_projection,
@@ -20,9 +23,9 @@ from cmk.gui.graphing._perfometer import (
     MetricRendererStack,
     parse_perfometer,
 )
-from cmk.gui.graphing._type_defs import Original, ScalarBounds, TranslatedMetric
+from cmk.gui.graphing._translated_metrics import Original, ScalarBounds, TranslatedMetric
+from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api
 
@@ -44,13 +47,9 @@ from cmk.graphing.v1 import perfometers as perfometers_api
                     scalar={},
                     auto_graph=False,
                     title="",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#111111",
                 ),
@@ -60,13 +59,9 @@ from cmk.graphing.v1 import perfometers as perfometers_api
                     scalar={},
                     auto_graph=False,
                     title="",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#222222",
                 ),
@@ -76,13 +71,9 @@ from cmk.graphing.v1 import perfometers as perfometers_api
                     scalar={},
                     auto_graph=False,
                     title="",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#333333",
                 ),
@@ -92,13 +83,9 @@ from cmk.graphing.v1 import perfometers as perfometers_api
                     scalar={},
                     auto_graph=False,
                     title="",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#444444",
                 ),
@@ -119,13 +106,9 @@ from cmk.graphing.v1 import perfometers as perfometers_api
                     scalar={},
                     auto_graph=False,
                     title="",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#111111",
                 ),
@@ -135,13 +118,9 @@ from cmk.graphing.v1 import perfometers as perfometers_api
                     scalar={},
                     auto_graph=False,
                     title="",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#222222",
                 ),
@@ -151,13 +130,9 @@ from cmk.graphing.v1 import perfometers as perfometers_api
                     scalar={},
                     auto_graph=False,
                     title="",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#333333",
                 ),
@@ -167,13 +142,9 @@ from cmk.graphing.v1 import perfometers as perfometers_api
                     scalar={},
                     auto_graph=False,
                     title="",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#444444",
                 ),
@@ -183,13 +154,9 @@ from cmk.graphing.v1 import perfometers as perfometers_api
                     scalar={"max": 5},
                     auto_graph=False,
                     title="",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#555555",
                 ),
@@ -210,13 +177,9 @@ from cmk.graphing.v1 import perfometers as perfometers_api
                     scalar={},
                     auto_graph=False,
                     title="",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#111111",
                 ),
@@ -226,13 +189,9 @@ from cmk.graphing.v1 import perfometers as perfometers_api
                     scalar={},
                     auto_graph=False,
                     title="",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#222222",
                 ),
@@ -242,13 +201,9 @@ from cmk.graphing.v1 import perfometers as perfometers_api
                     scalar={},
                     auto_graph=False,
                     title="",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#333333",
                 ),
@@ -258,13 +213,9 @@ from cmk.graphing.v1 import perfometers as perfometers_api
                     scalar={},
                     auto_graph=False,
                     title="",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#444444",
                 ),
@@ -285,13 +236,9 @@ from cmk.graphing.v1 import perfometers as perfometers_api
                     scalar={},
                     auto_graph=False,
                     title="",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#111111",
                 ),
@@ -312,13 +259,9 @@ from cmk.graphing.v1 import perfometers as perfometers_api
                     scalar={},
                     auto_graph=False,
                     title="",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#111111",
                 ),
@@ -328,13 +271,9 @@ from cmk.graphing.v1 import perfometers as perfometers_api
                     scalar={},
                     auto_graph=False,
                     title="",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#222222",
                 ),
@@ -396,7 +335,7 @@ class TestMetricometerRendererLegacyLinear:
                     scalar={"warn": 80.0, "crit": 90.0},
                     auto_graph=True,
                     title="My metric",
-                    unit_info=unit_info,
+                    unit_spec=unit_info,
                     color="#ffa000",
                 )
             },
@@ -499,7 +438,7 @@ class TestMetricometerRendererLegacyLogarithmic:
                     scalar={"warn": 158.0, "crit": 176.0},
                     auto_graph=True,
                     title="My metric",
-                    unit_info=unit_info,
+                    unit_spec=unit_info,
                     color="#ffa000",
                 )
             },
@@ -739,13 +678,9 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
                     scalar={},
                     auto_graph=True,
                     title="Metric name 1",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#111111",
                 ),
@@ -762,13 +697,9 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
                     scalar={},
                     auto_graph=True,
                     title="Metric name 1",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#111111",
                 ),
@@ -778,13 +709,9 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
                     scalar={},
                     auto_graph=True,
                     title="Metric name 2",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#222222",
                 ),
@@ -801,13 +728,9 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
                     scalar={},
                     auto_graph=True,
                     title="Metric name 1",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#111111",
                 ),
@@ -817,13 +740,9 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
                     scalar={},
                     auto_graph=True,
                     title="Metric name 2",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#222222",
                 ),
@@ -833,13 +752,9 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
                     scalar={},
                     auto_graph=True,
                     title="Metric name 3",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#333333",
                 ),
@@ -896,13 +811,9 @@ def test_perfometer_renderer_stack_same_values(request_context: None, patch_them
                 scalar={},
                 auto_graph=True,
                 title="Metric name 1",
-                unit_info=UnitInfo(
-                    id="id",
-                    title="Title",
-                    symbol="",
-                    render=lambda v: f"{v}",
-                    js_render="v => v",
-                    conversion=lambda v: v,
+                unit_spec=ConvertibleUnitSpecification(
+                    notation=DecimalNotation(symbol=""),
+                    precision=AutoPrecision(digits=2),
                 ),
                 color="#111111",
             ),
@@ -912,13 +823,9 @@ def test_perfometer_renderer_stack_same_values(request_context: None, patch_them
                 scalar={},
                 auto_graph=True,
                 title="Metric name 2",
-                unit_info=UnitInfo(
-                    id="id",
-                    title="Title",
-                    symbol="",
-                    render=lambda v: f"{v}",
-                    js_render="v => v",
-                    conversion=lambda v: v,
+                unit_spec=ConvertibleUnitSpecification(
+                    notation=DecimalNotation(symbol=""),
+                    precision=AutoPrecision(digits=2),
                 ),
                 color="#222222",
             ),
@@ -939,19 +846,15 @@ def test_perfometer_renderer_stack_same_values(request_context: None, patch_them
                     scalar=ScalarBounds(),
                     auto_graph=True,
                     title="Metric name",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#111111",
                 ),
             },
             [[(100.0, "#111111"), (0.0, "#bdbdbd")]],
-            "101.0",
+            "101",
             id="one-metric",
         ),
         pytest.param(
@@ -963,13 +866,9 @@ def test_perfometer_renderer_stack_same_values(request_context: None, patch_them
                     scalar=ScalarBounds(),
                     auto_graph=True,
                     title="Metric name 1",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#111111",
                 ),
@@ -979,19 +878,15 @@ def test_perfometer_renderer_stack_same_values(request_context: None, patch_them
                     scalar=ScalarBounds(),
                     auto_graph=True,
                     title="Metric name 2",
-                    unit_info=UnitInfo(
-                        id="id",
-                        title="Title",
-                        symbol="",
-                        render=lambda v: f"{v}",
-                        js_render="v => v",
-                        conversion=lambda v: v,
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
                     ),
                     color="#111111",
                 ),
             },
             [[(98.02, "#111111"), (1.98, "#111111"), (0.0, "#bdbdbd")]],
-            "101.0",
+            "101",
             id="two-metrics",
         ),
     ],

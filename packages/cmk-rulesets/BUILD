@@ -1,0 +1,22 @@
+filegroup(
+    name = "files",
+    srcs = [
+        "Pipfile",
+        "Pipfile.lock",
+        "cmk/rulesets/__init__.py",
+        "cmk/rulesets/v1/__init__.py",
+        "cmk/rulesets/v1/_localize.py",
+        "cmk/rulesets/v1/form_specs/__init__.py",
+        "cmk/rulesets/v1/form_specs/_base.py",
+        "cmk/rulesets/v1/form_specs/_basic.py",
+        "cmk/rulesets/v1/form_specs/_composed.py",
+        "cmk/rulesets/v1/form_specs/_levels.py",
+        "cmk/rulesets/v1/form_specs/_migrations.py",
+        "cmk/rulesets/v1/form_specs/_preconfigured.py",
+        "cmk/rulesets/v1/form_specs/validators.py",
+        "cmk/rulesets/v1/rule_specs.py",
+        "pyproject.toml",
+        "setup.cfg",
+    ],
+    visibility = ["//visibility:public"],
+)

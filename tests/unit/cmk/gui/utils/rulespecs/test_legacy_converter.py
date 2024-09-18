@@ -9,6 +9,8 @@ from typing import Any, TypeVar
 
 import pytest
 
+from cmk.ccc.version import Edition
+
 from cmk.utils.rulesets.definition import RuleGroup
 
 import cmk.gui.graphing._valuespecs as legacy_graphing_valuespecs
@@ -37,7 +39,6 @@ from cmk.gui.watolib import rulespecs as legacy_rulespecs
 from cmk.gui.watolib import timeperiods as legacy_timeperiods
 
 import cmk.rulesets.v1 as api_v1
-from cmk.ccc.version import Edition
 from cmk.rulesets.v1.form_specs import FormSpec
 
 
@@ -2990,7 +2991,7 @@ def test_dictionary_groups_migrate(
                         ),
                     )
                 },
-                migrate=lambda x: x,  # type: ignore
+                migrate=lambda x: x,  # type: ignore[arg-type, return-value]
             ),
             {"key1": {"key2": ""}},
             id="inner group with outer migrate",

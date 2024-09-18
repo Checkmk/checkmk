@@ -28,6 +28,7 @@ from tests.testlib.utils import (
     edition_from_env,
     get_cmk_download_credentials,
     package_hash_path,
+    run,
     version_spec_from_env,
 )
 
@@ -36,6 +37,23 @@ from cmk.ccc.version import Edition
 logger = logging.getLogger()
 
 PackageUrl = NewType("PackageUrl", str)
+
+DISTRO_CODES = {
+    "cma-4": "cma-4",
+    "debian-11": "bullseye",
+    "debian-12": "bookworm",
+    "ubuntu-22.04": "jammy",
+    "ubuntu-23.04": "lunar",
+    "ubuntu-23.10": "mantic",
+    "ubuntu-24.04": "noble",
+    "almalinux-9": "el9",
+    "sles-15sp1": "sles15sp1",
+    "sles-15sp2": "sles15sp2",
+    "sles-15sp3": "sles15sp3",
+    "sles-15sp4": "sles15sp4",
+    "sles-15sp5": "sles15sp5",
+    "sles-15sp6": "sles15sp6",
+}
 
 
 # It's ok to make it currently only work on debian based distros
@@ -399,8 +417,8 @@ class ABCPackageManager(abc.ABC):
         if Path("/.dockerenv").exists():
             systemctl = Path("/bin/systemctl")
             if systemctl.exists():
-                systemctl.unlink()
-            systemctl.symlink_to("/bin/true")
+                run(["rm", "-f", systemctl.as_posix()], sudo=True)
+            run(["ln", "-s", "/bin/true", systemctl.as_posix()], sudo=True)
 
         if os.geteuid() != 0:
             cmd.insert(0, "sudo")
@@ -422,7 +440,7 @@ def sha256_file(path: Path) -> str:
 
 class PackageManagerDEB(ABCPackageManager):
     def package_name(self, edition: Edition, version: str) -> str:
-        return f"check-mk-{edition.long}-{version}_0.{self.distro_name}_amd64.deb"
+        return f"check-mk-{edition.long}-{version.split('-rc')[0]}_0.{self.distro_name}_amd64.deb"
 
     def _install_package(self, package_path: Path) -> None:
         # all dependencies are installed via install-cmk-dependencies.sh in the Dockerfile
@@ -432,7 +450,7 @@ class PackageManagerDEB(ABCPackageManager):
 
 class ABCPackageManagerRPM(ABCPackageManager):
     def package_name(self, edition: Edition, version: str) -> str:
-        return f"check-mk-{edition.long}-{version}-{self.distro_name}-38.x86_64.rpm"
+        return f"check-mk-{edition.long}-{version.split('-rc')[0]}-{self.distro_name}-38.x86_64.rpm"
 
 
 class PackageManagerSuSE(ABCPackageManagerRPM):
@@ -447,28 +465,12 @@ class PackageManagerRHEL(ABCPackageManagerRPM):
 
 class PackageManagerCMA(PackageManagerDEB):
     def package_name(self, edition: Edition, version: str) -> str:
-        return f"check-mk-{edition.long}-{version}-{self.distro_name.split('-')[1]}-x86_64.cma"
+        return f"check-mk-{edition.long}-{version.split('-rc')[0]}-{self.distro_name.split('-')[1]}-x86_64.cma"
 
 
 # TODO: Duplicated in cmk_dev.utils.distro_code
 def code_name(distro_name: str) -> str:
-    if code := {
-        "cma-4": "cma-4",
-        "debian-11": "bullseye",
-        "debian-12": "bookworm",
-        "ubuntu-22.04": "jammy",
-        "ubuntu-23.04": "lunar",
-        "ubuntu-23.10": "mantic",
-        "ubuntu-24.04": "noble",
-        "centos-7": "el7",
-        "centos-8": "el8",
-        "almalinux-9": "el9",
-        "sles-15sp1": "sles15sp1",
-        "sles-15sp2": "sles15sp2",
-        "sles-15sp3": "sles15sp3",
-        "sles-15sp4": "sles15sp4",
-        "sles-15sp5": "sles15sp5",
-    }.get(distro_name):
+    if code := DISTRO_CODES.get(distro_name):
         return code
     raise RuntimeError(f"Unknown distro: {distro_name}")
 

@@ -17,11 +17,11 @@ from ._formatter import (
     AutoPrecision,
     DecimalFormatter,
     EngineeringScientificFormatter,
-    FixedPrecision,
     IECFormatter,
     NotationFormatter,
     SIFormatter,
     StandardScientificFormatter,
+    StrictPrecision,
     TimeFormatter,
 )
 
@@ -69,7 +69,7 @@ class ConvertibleUnitSpecification(BaseModel, frozen=True):
         ...,
         discriminator="type",
     )
-    precision: AutoPrecision | FixedPrecision = Field(
+    precision: AutoPrecision | StrictPrecision = Field(
         ...,
         discriminator="type",
     )
@@ -88,7 +88,7 @@ class NonConvertibleUnitSpecification(BaseModel, frozen=True):
         ...,
         discriminator="type",
     )
-    precision: AutoPrecision | FixedPrecision = Field(
+    precision: AutoPrecision | StrictPrecision = Field(
         ...,
         discriminator="type",
     )
@@ -126,14 +126,7 @@ def user_specific_unit(
         if isinstance(unit_specification, ConvertibleUnitSpecification)
         else noop_conversion
     )
-    formatter: (
-        DecimalFormatter
-        | SIFormatter
-        | IECFormatter
-        | StandardScientificFormatter
-        | EngineeringScientificFormatter
-        | TimeFormatter
-    )
+    formatter: NotationFormatter
     match unit_specification.notation:
         case DecimalNotation():
             formatter = DecimalFormatter(
@@ -176,10 +169,7 @@ def user_specific_unit(
 
 def _degree_celsius_conversion(user: LoggedInUser, config: Config) -> _Conversion:
     match configured_temp_unit := TemperatureUnit(
-        user.get_attribute(
-            "temperature_unit",
-            config.default_temperature_unit,
-        )
+        user.get_attribute("temperature_unit") or config.default_temperature_unit
     ):
         case TemperatureUnit.CELSIUS:
             return _Conversion(symbol="°C", converter=lambda c: c)
@@ -191,10 +181,7 @@ def _degree_celsius_conversion(user: LoggedInUser, config: Config) -> _Conversio
 
 def _degree_fahrenheit_conversion(user: LoggedInUser, config: Config) -> _Conversion:
     match configured_temp_unit := TemperatureUnit(
-        user.get_attribute(
-            "temperature_unit",
-            config.default_temperature_unit,
-        )
+        user.get_attribute("temperature_unit") or config.default_temperature_unit
     ):
         case TemperatureUnit.CELSIUS:
             return _Conversion(symbol="°C", converter=lambda f: (f - 32) / 1.8)

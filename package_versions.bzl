@@ -1,6 +1,4 @@
 # PYTHON_VERSION is currently sed-ed from defines.make
+# This file won't be necessary anymore when we finished porting
+# to rules_py.
 PYTHON_VERSION = "3.12.3"
-PYTHON_VERSION_ARRAY = PYTHON_VERSION.split(".")
-PYTHON_VERSION_MAJOR = PYTHON_VERSION_ARRAY[0]
-PYTHON_VERSION_MINOR = PYTHON_VERSION_ARRAY[1]
-PYTHON_MAJOR_DOT_MINOR = "%s.%s" % (PYTHON_VERSION_MAJOR, PYTHON_VERSION_MINOR)

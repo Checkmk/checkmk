@@ -5,10 +5,12 @@
 import logging
 import re
 from re import Pattern
+from typing import overload
 from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
 
+from tests.testlib.playwright.helpers import DropdownListNameToID
 from tests.testlib.playwright.pom.page import CmkPage
 
 logger = logging.getLogger(__name__)
@@ -33,6 +35,9 @@ class Ruleset(CmkPage):
         self.main_area.check_page_title(self.rule_name)
         expect(self.main_area.get_suggestion("Add rule")).to_be_visible()
 
+    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
+        return DropdownListNameToID()
+
     @property
     def created_new_rule_message(self) -> Pattern[str]:
         return re.compile(f'Created new rule in ruleset "{self.rule_name}" .*')
@@ -56,15 +61,45 @@ class Ruleset(CmkPage):
             "heading", name=re.compile(f"Rules in folder {folder_path} \\([1-9][0-9]*\\)")
         )
 
-    def _rule_row(self, rule_description: str) -> Locator:
-        # table row which contains a cell with the given text
-        return self.main_area.locator(f"tr:has(td:text-is('{rule_description}'))")
+    @property
+    def rule_rows(self) -> Locator:
+        return self.main_area.locator("tr[class*='data']")
+
+    @overload
+    def _rule_row(self, rule_id: str) -> Locator: ...
+
+    @overload
+    def _rule_row(self, rule_id: int) -> Locator: ...
+
+    def _rule_row(self, rule_id: str | int) -> Locator:
+        """Return a locator for the specific rule row.
+
+        The rule can be identified by rule position, providing an integer input for this function
+        or by rule description, providing a string input for this function.
+        """
+        if isinstance(rule_id, str):
+            rule_row_locator = self.main_area.locator(
+                f"tr:has(td[class*='description']:text-is('{rule_id}'))"
+            )
+        elif isinstance(rule_id, int):
+            rule_row_locator = self.main_area.locator(
+                f"tr:has(td[class*='narrow']:text-is('{rule_id}'))"
+            )
+        else:
+            raise TypeError(
+                f"Unsupported rule_id type: {type(rule_id)}",
+                "Expected 'str' (rule description) or 'int' (rule position)!",
+            )
+        return rule_row_locator
 
     def rule_position(self, rule_description: str) -> Locator:
         return self._rule_row(rule_description).locator("td[class*='narrow']")
 
-    def move_icon(self, rule_description: str) -> Locator:
-        return self._rule_row(rule_description).get_by_role("link", name="Move this entry")
+    def rule_values(self, rule_id: str | int) -> Locator:
+        return self._rule_row(rule_id).locator("td[class*='value']")
 
-    def delete_icon(self, rule_description: str) -> Locator:
-        return self._rule_row(rule_description).get_by_role("link", name="Delete this rule")
+    def move_icon(self, rule_id: str | int) -> Locator:
+        return self._rule_row(rule_id).get_by_role("link", name="Move this entry")
+
+    def delete_icon(self, rule_id: str | int) -> Locator:
+        return self._rule_row(rule_id).get_by_role("link", name="Delete this rule")

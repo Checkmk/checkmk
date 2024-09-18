@@ -3,13 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.ccc.version as cmk_version
+
 from cmk.utils import paths
 from cmk.utils.user import UserId
 
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import ColumnSpec, SorterSpec, VisualLinkSpec
-
-import cmk.ccc.version as cmk_version
 
 from .builtin_dashboards import GROW, MAX
 from .dashlet import LinkedViewDashletConfig, StatsDashletConfig, ViewDashletConfig

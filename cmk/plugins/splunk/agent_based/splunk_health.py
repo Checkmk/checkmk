@@ -63,6 +63,11 @@ class HealthItem(pydantic.BaseModel):
         """Add entry into feature health mapping."""
         self.features[feature] = health
 
+    @property
+    def sorted_features(self) -> list[tuple[str, HealthStatus]]:
+        """Return sorted feature health pairs."""
+        return sorted(self.features.items())
+
 
 def format_service_name(value: str) -> SplunkServiceName:
     """Format service name to replace underscores with spaces."""
@@ -118,23 +123,14 @@ class CheckParams(TypedDict):
     red: StateValue
 
 
-def get_state(health_item: HealthItem, params: CheckParams) -> State:
-    """Returns the result state based on health status."""
-    return State(params[health_item.health.value])
-
-
-def summarize(health_item: HealthItem) -> str:
-    """Builds result summary based on the passed health item."""
-    base_summary = f"{health_item.name}: {health_item.health}"
-    sorted_features = sorted(health_item.features.items())
-    feature_summary = ", ".join(f"{feat}: {health}" for feat, health in sorted_features)
-
-    return f"{base_summary} ({feature_summary})" if feature_summary else base_summary
-
-
 def check_splunk_health(params: CheckParams, section: HealthSection) -> CheckResult:
-    """Checks the splunk health section returning a valid checkmk results."""
-    yield from (Result(state=get_state(item, params), summary=summarize(item)) for item in section)
+    """Checks the splunk health section returning valid checkmk results."""
+    for item in section:
+        state = State(params[item.health.value])
+        summary = f"{item.name}: {item.health}"
+        details = "\n".join(f"{feature}: {health}" for feature, health in item.sorted_features)
+
+        yield Result(state=state, summary=summary, details=details or None)
 
 
 agent_section_splunk_health = AgentSection(

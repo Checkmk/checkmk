@@ -9,8 +9,9 @@ from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
 
+from tests.testlib.host_details import HostDetails
+from tests.testlib.playwright.helpers import DropdownListNameToID
 from tests.testlib.playwright.pom.page import CmkPage
-from tests.testlib.playwright.pom.setup.hosts import HostDetails
 
 logger = logging.getLogger(__name__)
 
@@ -62,9 +63,7 @@ class HostStatus(CmkPage):
         self.page.wait_for_url(url=re.compile(services_of_host_url_pattern), wait_until="load")
 
         logger.info("Navigate to '%s'", self.page_title)
-        self.main_area.click_dropdown_menu_item(
-            dropdown_button="Host", menu_id="menu_host_single", menu_item="Status of host"
-        )
+        self.main_area.click_item_in_dropdown_list(dropdown_button="Host", item="Status of host")
         status_of_host_url_pattern = (
             quote_plus(f"host={self.host_details.name}") + ".*" + quote_plus("view_name=hoststatus")
         )
@@ -76,6 +75,11 @@ class HostStatus(CmkPage):
         self.main_area.check_page_title(self.page_title)
         expect(self._table_cell("Host name")).to_be_visible()
         expect(self._table_cell("Host state")).to_be_visible()
+
+    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
+        mapping = DropdownListNameToID()
+        setattr(mapping, "Host", "menu_host_single")
+        return mapping
 
     def _table_cell(self, text: str) -> Locator:
         return self.main_area.locator().get_by_role("cell", name=text, exact=True)

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, Union
 
 from .._localize import Help, Title
 
@@ -94,4 +94,4 @@ class InputHint(Generic[ModelT]):
     value: ModelT
 
 
-Prefill = DefaultValue[ModelT] | InputHint[ModelT]
+Prefill = Union[DefaultValue[ModelT], InputHint[ModelT]]

@@ -14,6 +14,8 @@ from typing import Any, Literal, NamedTuple, NewType, NotRequired, TypedDict
 
 from pydantic import BaseModel
 
+from livestatus import SiteId
+
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.labels import Labels
 from cmk.utils.metrics import MetricName
@@ -24,8 +26,8 @@ from cmk.utils.user import UserId
 from cmk.gui.exceptions import FinalizeRequest
 from cmk.gui.utils.speaklater import LazyString
 
-from cmk.crypto import HashAlgorithm
 from cmk.crypto.certificate import Certificate, CertificatePEM, CertificateWithPrivateKey
+from cmk.crypto.hash import HashAlgorithm
 from cmk.crypto.keys import EncryptedPrivateKeyPEM, PrivateKey
 from cmk.crypto.password import Password
 from cmk.crypto.password_hashing import PasswordHash
@@ -108,6 +110,8 @@ class SessionInfo:
     encrypter_secret: str = field(default_factory=lambda: Secret.generate(32).b64_str)
     # In case it is enabled: Was it already authenticated?
     two_factor_completed: bool = False
+    # Enable a 'login' state for enforcing two factor
+    two_factor_required: bool = False
     # We don't care about the specific object, because it's internal to the fido2 library
     webauthn_action_state: WebAuthnActionState | None = None
 
@@ -158,7 +162,7 @@ class UserSpec(TypedDict, total=False):
     """
 
     alias: str
-    authorized_sites: Any  # TODO: Improve this
+    authorized_sites: Sequence[SiteId] | None  # "None"/field missing => all sites
     automation_secret: str
     connector: str | None  # Contains the connection id this user was synced from
     contactgroups: list[_ContactgroupName]

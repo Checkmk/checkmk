@@ -26,7 +26,12 @@ repos:
           - id: trailing-whitespace
           - id: check-merge-conflict
             types: [file]
-          - id: check-yaml
+          - id: check-yaml # pre-commit cannot parse utf-16 files
+            exclude: |
+                (?x)(
+                    ^agents/wnx/test_files/config/check_mk_dev_malformed.yml|
+                    ^agents/wnx/test_files/config/check_mk_dev_utf16.yml
+                )
           - id: end-of-file-fixer
             exclude: .werks/.*
           - id: fix-encoding-pragma
@@ -53,14 +58,14 @@ repos:
             language: script
             entry: scripts/run-autoflake
             types: [file, python]
-          - id: isort
-            name: Run isort
-            entry: scripts/run-isort
+          - id: format
+            name: Run format
+            entry: scripts/run-format
             language: script
             types: [file, python]
-          - id: black
-            name: Run black
-            entry: scripts/run-black
+          - id: sort
+            name: Run sort imports
+            entry: scripts/run-sort
             language: script
             types: [file, python]
           - id: bandit

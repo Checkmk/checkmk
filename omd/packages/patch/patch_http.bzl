@@ -1,7 +1,8 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
 
-def patch(version_str, sha256):
+def patch_workspace():
+    version_str = "2.7.6"
     filename = "patch-" + version_str + ".tar.gz"
     http_archive(
         name = "patch",
@@ -9,7 +10,7 @@ def patch(version_str, sha256):
             "https://ftp.gnu.org/gnu/patch/" + filename,
             UPSTREAM_MIRROR_URL + filename,
         ],
-        sha256 = sha256,
+        sha256 = "8cf86e00ad3aaa6d26aca30640e86b0e3e1f395ed99f189b06d4c9f74bc58a4e",
         patches = [
             "//omd/packages/patch/patches:ed-style-01-missing-input-files.patch.dif",
             "//omd/packages/patch/patches:ed-style-02-fix-arbitrary-command-execution.patch.dif",

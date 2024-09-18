@@ -35,7 +35,6 @@ class ConvertCounters(UpdateAction):
 
     @staticmethod
     def convert_counter_files(counters_path: Path) -> None:
-
         for f in _ls(counters_path):
             if not (content := f.read_text().strip()) or _is_json(content):
                 continue

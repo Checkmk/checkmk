@@ -6,6 +6,7 @@
 Module which contains functions to parse and write out the performance data collected from the
 Cluster Collector for the Kubernetes Monitoring solution
 """
+
 from __future__ import annotations
 
 import enum

@@ -85,6 +85,9 @@ def main() {
                             EDITION: edition,
                             DISTRO: distro,
                         ],
+                        build_params_no_check: [
+                            CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
+                        ],
                         dest: "package_download",
                     );
                 }

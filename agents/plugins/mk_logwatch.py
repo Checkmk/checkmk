@@ -78,8 +78,8 @@ IPV4_REGEX = re.compile(r"^(::ffff:|::ffff:0:|)(?:[0-9]{1,3}\.){3}[0-9]{1,3}$")
 IPV6_REGEX = re.compile(r"^(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}$")
 
 ENCODINGS = (
-    (b"\xFF\xFE", "utf_16"),
-    (b"\xFE\xFF", "utf_16_be"),
+    (b"\xff\xfe", "utf_16"),
+    (b"\xfe\xff", "utf_16_be"),
 )
 
 TTY_COLORS = {
@@ -1037,12 +1037,8 @@ class LogfileSection:
         self.name_fs = logfile_ref[0]
         self.name_write = logfile_ref[1]
         self.options = Options()
-        self.patterns = (
-            []
-        )  # type: list[tuple[text_type, text_type, Sequence[text_type], Sequence[text_type]]]
-        self._compiled_patterns = (
-            None
-        )  # type: list[tuple[text_type, re.Pattern, Sequence[re.Pattern | int], Sequence[text_type]]] | None
+        self.patterns = []  # type: list[tuple[text_type, text_type, Sequence[text_type], Sequence[text_type]]]
+        self._compiled_patterns = None  # type: list[tuple[text_type, re.Pattern, Sequence[re.Pattern | int], Sequence[text_type]]] | None
 
     @property
     def compiled_patterns(self):
@@ -1050,9 +1046,7 @@ class LogfileSection:
         if self._compiled_patterns is not None:
             return self._compiled_patterns
 
-        compiled_patterns = (
-            []
-        )  # type: list[tuple[text_type, re.Pattern, Sequence[re.Pattern | int], Sequence[text_type]]]
+        compiled_patterns = []  # type: list[tuple[text_type, re.Pattern, Sequence[re.Pattern | int], Sequence[text_type]]]
         for level, raw_pattern, cont_list, rewrite_list in self.patterns:
             if not rewrite_list:
                 # it does not matter what the matched group is in this case

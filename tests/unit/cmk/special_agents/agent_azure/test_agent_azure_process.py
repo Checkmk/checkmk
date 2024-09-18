@@ -60,6 +60,7 @@ class MockMgmtApiClient(MgmtApiClient):
         super().__init__(
             _AuthorityURLs("login-url", "resource-url", "base-url"),
             NoProxyConfig(),
+            "mock_subscription",
         )
 
     def resourcegroups(self) -> Sequence[Mapping[str, Any]]:
@@ -252,7 +253,6 @@ def test_get_vm_labels_section(
 ) -> None:
     labels_section = get_vm_labels_section(vm, group_tags)
 
-    assert labels_section
     assert labels_section._cont == expected_result[0]
     assert labels_section._piggytargets == expected_result[1]
 
@@ -424,8 +424,7 @@ def test_process_resource(
     expected_result: Sequence[tuple[type[Section], Sequence[str], Sequence[str]]],
 ) -> None:
     resource = AzureResource(resource_info, args.tag_key_pattern)
-    function_args = (mgmt_client, resource, group_tags, args)
-    sections = process_resource(function_args)
+    sections = process_resource(mgmt_client, resource, group_tags, args)
     assert len(sections) == len(expected_result)
     for section, expected_section in zip(sections, expected_result):
         assert isinstance(section, expected_section[0])

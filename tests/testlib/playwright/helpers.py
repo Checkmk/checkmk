@@ -7,6 +7,7 @@
 
 import re
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from enum import Enum
 from pprint import pformat
 from re import Pattern
@@ -157,3 +158,14 @@ class CmkCredentials(NamedTuple):
 
     username: str
     password: str
+
+
+@dataclass
+class DropdownListNameToID:
+    """Common Checkmk UI mapping between `dropdown list`s and `menu ID`s."""
+
+    Commands: str = "menu_commands"
+    Display: str = "menu_display"
+    Export: str = "menu_export"
+    Help: str = "menu_help"
+    Related: str = "menu_related"

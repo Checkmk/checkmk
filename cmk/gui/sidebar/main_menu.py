@@ -6,6 +6,7 @@
 
 Cares about the main navigation of our GUI. This is a) the small sidebar and b) the mega menu
 """
+
 from typing import NamedTuple
 
 from cmk.gui import message

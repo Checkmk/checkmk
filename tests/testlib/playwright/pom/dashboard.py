@@ -4,10 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import re
+from re import Pattern
 from typing import override
 
-from playwright.sync_api import expect, Locator, Page
+from playwright.sync_api import expect, Locator
 
+from tests.testlib.playwright.helpers import DropdownListNameToID
 from tests.testlib.playwright.pom.page import CmkPage
 
 logger = logging.getLogger(__name__)
@@ -38,9 +40,6 @@ class Dashboard(CmkPage):
 
     dropdown_buttons: list[str] = ["Dashboard", "Add", "Dashboards", "Display", "Help"]
 
-    def __init__(self, page: Page, navigate_to_page: bool = True) -> None:
-        super().__init__(page, navigate_to_page)
-
     def navigate(self) -> None:
         logger.info("Navigate to 'Main dashboard' page")
         self.main_menu.main_page.click()
@@ -52,6 +51,9 @@ class Dashboard(CmkPage):
         self.main_area.check_page_title(self.page_title)
         expect(self.dashlet("Host statistics")).to_be_visible()
         expect(self.menu_icon("Filter")).to_be_visible()
+
+    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
+        return DropdownListNameToID()
 
     def menu_icon(self, icon_title: str) -> Locator:
         return self.main_area.locator().get_by_title(icon_title)
@@ -67,7 +69,6 @@ class Dashboard(CmkPage):
 
 
 class DashboardMobile(CmkPage):
-
     page_title: str = r"Checkmk Mobile"
 
     links: list[str] = [
@@ -91,8 +92,11 @@ class DashboardMobile(CmkPage):
         expect(self.classical_web_gui).to_be_visible()
         expect(self.logout).to_be_visible()
 
+    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
+        return DropdownListNameToID()
+
     @override
-    def get_link(self, name: str, exact: bool = True) -> Locator:
+    def get_link(self, name: str | Pattern[str], exact: bool = True) -> Locator:
         return self.page.get_by_role(role="link", name=name, exact=exact)
 
     @property

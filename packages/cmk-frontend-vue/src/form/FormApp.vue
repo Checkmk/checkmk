@@ -1,9 +1,15 @@
+<!--
+Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+conditions defined in the file COPYING, which is part of this source code package.
+-->
 <script setup lang="ts">
-import { computed, onBeforeMount, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import FormEdit from './components/FormEdit.vue'
 import FormReadonly from '@/form/components/FormReadonly.vue'
 import type { FormSpec } from '@/form/components/vue_formspec_components'
 import type { ValidationMessages } from '@/form/components/utils/validation'
+import { immediateWatch } from '@/form/components/utils/watch'
 
 const props = defineProps<{
   id: string
@@ -14,13 +20,19 @@ const props = defineProps<{
 }>()
 
 const dataRef = ref()
-onBeforeMount(() => {
-  dataRef.value = props.data
-})
+immediateWatch(
+  () => props.data,
+  (newValue) => {
+    dataRef.value = newValue
+  }
+)
 
-onMounted(() => {
-  activeMode.value = props.renderMode
-})
+immediateWatch(
+  () => props.renderMode,
+  (newValue) => {
+    activeMode.value = newValue
+  }
+)
 
 const valueAsJSON = computed(() => {
   return JSON.stringify(dataRef.value)
@@ -48,7 +60,7 @@ function toggleActiveMode() {
   >
   <div v-if="activeMode === 'readonly' || activeMode === 'both'">
     <FormReadonly
-      v-model:data="dataRef"
+      :data="dataRef"
       :backend-validation="backendValidation"
       :spec="spec"
     ></FormReadonly>

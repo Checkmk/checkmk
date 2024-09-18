@@ -23,6 +23,7 @@ def main() {
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+    def bazel_logs = load("${checkout_dir}/buildscripts/scripts/utils/bazel_logs.groovy");
 
     def omd_env_vars = [
         "DEBFULLNAME='Checkmk Team'",
@@ -51,6 +52,8 @@ def main() {
     /* groovylint-disable LineLength */
     def container_name = "build-cmk-package-${distro}-${edition}-${cmd_output("git --git-dir=${checkout_dir}/.git log -n 1 --pretty=format:'%h'")}";
     /* groovylint-enable LineLength */
+
+    def bazel_log_prefix = "bazel_log_";
 
     def causes = currentBuild.getBuildCauses();
     def triggerd_by = "";
@@ -213,10 +216,16 @@ def main() {
                             ${omd_env_vars.join(' ')} \
                             make ${distro_package_type(distro)}
                         """);
+
+                        bazel_logs.try_parse_bazel_execution_log(distro, checkout_dir, bazel_log_prefix)
                     }
                 }
             }
         }
+    }
+
+    stage("Plot cache hits") {
+        bazel_logs.try_plot_cache_hits(bazel_log_prefix, [distro]);
     }
 
     stage("Archive stuff") {

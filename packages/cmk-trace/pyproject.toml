@@ -2,10 +2,10 @@
 name = "cmk-trace"
 version = "1.0.0"
 dependencies = [
-    "opentelemetry-api==1.25.0",
-    "opentelemetry-sdk==1.25.0",
-    "opentelemetry-exporter-otlp==1.25.0",
-    "opentelemetry-semantic-conventions==0.46b0",
+  "opentelemetry-api==1.25.0",
+  "opentelemetry-sdk==1.25.0",
+  "opentelemetry-exporter-otlp==1.25.0",
+  "opentelemetry-semantic-conventions==0.46b0",
 ]
 
 [build-system]
@@ -17,17 +17,50 @@ build-backend = "setuptools.build_meta"
 
 [tool.bandit]
 
-[tool.black]
-line_length = 100
-quiet = true
+[tool.ruff]
+target-version = "py312"
+line-length = 100
 
-[tool.isort]
-profile = "black"
-order_by_type = false
-line_length = 100
-py_version = 312
+[tool.ruff.lint.isort]
+order-by-type = false
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "C90", "PL", "RUF100"]
+ignore = [
+  # Ignore findings which are incompatible with our "import" techonology.
+  "F401", # 'FOO' imported but unused
+  "E402", # module level import not at top of file
+  "F403", # 'from FOO import *' used; unable to detect undefined names
+  "F405", # 'FOO' may be undefined, or defined from star imports: BAR
+  # We should probably have a look at these findings.
+  "E731", # do not assign a lambda expression, use a def
+  "E741", # ambiguous variable name 'FOO'
+  # pylint doesn't complain about these
+  "PLC0414", # Import alias does not rename original package
+  "PLR0911", # Too many return statements
+  "PLR0912", # Too many branches
+  "PLR0913", # Too many arguments in function definition
+  "PLR0915", # Too many statements
+  "PLR2004", # Magic value used in comparison, consider replacing `FOO` with a constant variable
+  "PLR2044", # Line with empty comment
+  "PLW0603", # Using the global statement to update `FOO` is discouraged
+  "PLW2901", # `for` loop variable `FOO` overwritten by assignment target
+]
 
 [tool.mypy]
+enable_error_code = [
+  "explicit-override",
+  "ignore-without-code",
+  "mutable-override",
+  "possibly-undefined",
+  "redundant-expr",
+  "redundant-self",
+  "truthy-bool",
+  "truthy-iterable",
+  "unimported-reveal",
+  "unused-awaitable",
+  "unused-ignore",
+]
 explicit_package_bases = true
 packages = ["cmk", "tests"]
 strict = true

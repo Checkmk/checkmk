@@ -8,15 +8,15 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any, Literal, TypedDict
 
-from livestatus import SiteConfigurations
+from livestatus import BrokerConnections, SiteConfigurations
+
+from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
 from cmk.utils.tags import TagConfigSpec
 
 from cmk.gui.type_defs import GroupSpec, TrustedCertificateAuthorities, UserSpec
 from cmk.gui.utils.temperate_unit import TemperatureUnit
-
-from cmk.ccc.version import edition, Edition
 
 CustomLinkSpec = tuple[str, bool, list[tuple[str, str, str | None, str]]]
 
@@ -95,6 +95,7 @@ class CREConfig:
 
     # define default values for all settings
     sites: SiteConfigurations = field(default_factory=lambda: SiteConfigurations({}))
+    broker_connections: BrokerConnections = field(default_factory=lambda: BrokerConnections({}))
     debug: bool = False
     screenshotmode: bool = False
     profile: bool | str = False
@@ -392,6 +393,7 @@ class CREConfig:
     log_logon_failures: bool = True
     lock_on_logon_failures: int | None = 10
     default_dynamic_visual_permission: Literal["yes", "no"] = "yes"
+    require_two_factor_all_users: bool = False
     session_mgmt: dict[str, Any] = field(
         default_factory=lambda: {
             "max_duration": {"enforce_reauth": 86400, "enforce_reauth_warning_threshold": 900},
@@ -554,7 +556,6 @@ class CREConfig:
     wato_hide_filenames: bool = True
     wato_hide_hosttags: bool = False
     wato_hide_varnames: bool = True
-    wato_hide_help_in_lists: bool = True
     wato_max_snapshots: int = 50
     wato_num_hostspecs: int = 12
     wato_num_itemspecs: int = 15
@@ -635,6 +636,7 @@ class CREConfig:
     bi_compile_log: str | None = None
     bi_precompile_on_demand: bool = False
     bi_use_legacy_compilation: bool = False
+    wato_hide_help_in_lists: bool = True
 
     # new in 2.1
     config_storage_format: Literal["standard", "raw", "pickle"] = "pickle"

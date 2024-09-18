@@ -69,7 +69,6 @@ class SecondsRenderer(Renderer):
         )
 
 
-# NOTE: strftime's format *must* be of type str, both in Python 2 and 3.
 def date(timestamp: float | None) -> str:
     return time.strftime(
         str(

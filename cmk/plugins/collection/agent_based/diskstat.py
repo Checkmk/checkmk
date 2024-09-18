@@ -498,7 +498,7 @@ _ItemData = TypeVar("_ItemData")
 
 
 def _merge_cluster_sections(
-    cluster_section: Mapping[str, Mapping[str, _ItemData] | None]
+    cluster_section: Mapping[str, Mapping[str, _ItemData] | None],
 ) -> Mapping[str, _ItemData] | None:
     return {
         k: v

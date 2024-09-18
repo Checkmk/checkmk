@@ -339,7 +339,7 @@ this is the `description` with some *italic* and __bold__ ***formatting***.
 
 def test_parse_werkv1_missing_class() -> None:
     with pytest.raises(WerkError, match="class\n  Field required"):
-        assert load_werk(file_content=WERK_V1_MISSING_CLASS, file_name="1234")
+        load_werk(file_content=WERK_V1_MISSING_CLASS, file_name="1234")
 
 
 def test_loading_md_werk_without_body() -> None:

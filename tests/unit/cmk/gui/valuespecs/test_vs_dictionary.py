@@ -193,6 +193,4 @@ class TestValueSpecDictionary:
             elements=[
                 ("a", vs.TextInput()),
             ]
-        ).transform_value(
-            {"a": "lala"}
-        ) == {"a": "lala"}
+        ).transform_value({"a": "lala"}) == {"a": "lala"}

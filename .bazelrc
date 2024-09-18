@@ -1,6 +1,5 @@
 # https://docs.bazel.build/versions/main/best-practices.html#using-the-bazelrc-file
 try-import %workspace%/user.bazelrc
-try-import /etc/ci.bazelrc
 
 # default/common bazel args for all commands supporting it
 common --experimental_ui_max_stdouterr_bytes=10000000
@@ -12,6 +11,8 @@ common --remote_local_fallback
 common --cycles
 common --local_resources=cpu=HOST_CPUS-2
 common --local_resources=memory=HOST_RAM*.5
+# We standardized on Ubuntu, a Debian-based distro, so LSB
+common --@//:filesystem_layout=lsb
 
 ## For specific commands
 # Always require debug info.
@@ -23,6 +24,11 @@ build --flag_alias=cmk_version=//:cmk_version
 # Defining the symbol below has a small performance hit, but makes our stuff
 # valgrind-clean again, which is a crucial feature for debugging the NEB & CMC!
 build --copt="-DRE2_ON_VALGRIND"
+
+# Don't require system python for bootstrapping
+# See: https://github.com/bazelbuild/rules_python/commit/f5b19dce7bc0837396ac03a425cdb9b64643cf61
+# TODO: should be dropped as soon as this becomes the default
+build --@rules_python//python/config_settings:bootstrap_impl=script
 
 clean --async
 # all bazel-created temporary and build output files
@@ -41,6 +47,9 @@ common:ci --extra_toolchains="//omd/packages/toolchain:ci"
 common:ci --local_resources=cpu=HOST_CPUS
 common:ci --local_resources=memory=HOST_RAM*.67
 common:ci --lockfile_mode=error
+
+# No standard in the CI where we must explicitly differentiate between LSB and FHS.
+common:ci --@//:filesystem_layout=FILESYSTEM_LAYOUT_INVALID
 
 ## For specific commands
 # build:ci ...
@@ -81,3 +90,6 @@ build:iwyu --output_groups=report
 build:iwyu --@bazel_iwyu//:iwyu_executable=//omd/packages/bazel_iwyu:iwyu_bin
 build:iwyu --@bazel_iwyu//:iwyu_opts="--error"
 build:iwyu --@bazel_iwyu//:iwyu_mappings=//omd/packages/bazel_iwyu:iwyu_mappings
+
+# Must be last
+try-import /etc/ci.bazelrc

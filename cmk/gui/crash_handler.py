@@ -7,6 +7,10 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Self
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc.crash_reporting import ABCCrashReport, CrashReportRegistry, CrashReportStore
+from cmk.ccc.site import omd_site
+
 import cmk.utils.paths
 
 from cmk.gui.breadcrumb import Breadcrumb
@@ -19,10 +23,6 @@ from cmk.gui.logged_in import user
 from cmk.gui.utils import escaping
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri, requested_file_name
-
-import cmk.ccc.version as cmk_version
-from cmk.ccc.crash_reporting import ABCCrashReport, CrashReportRegistry, CrashReportStore
-from cmk.ccc.site import omd_site
 
 
 def register(crash_report_registry: CrashReportRegistry) -> None:

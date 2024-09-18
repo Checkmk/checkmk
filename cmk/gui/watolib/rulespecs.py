@@ -5,11 +5,16 @@
 
 # pylint: disable=protected-access
 """The rulespecs are the ruleset specifications registered to Setup."""
+
 import abc
 import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any, Literal
+
+import cmk.ccc.plugin_registry
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.version import Edition, edition, mark_edition_only
 
 from cmk.utils import paths
 from cmk.utils.rulesets.definition import is_from_ruleset_group, RuleGroup, RuleGroupType
@@ -45,10 +50,6 @@ from cmk.gui.valuespec import (
     ValueSpecText,
     ValueSpecValidateFunc,
 )
-
-import cmk.ccc.plugin_registry
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.version import Edition, edition, mark_edition_only
 
 from .check_mk_automations import get_check_information_cached
 from .main_menu import ABCMainModule, MainModuleRegistry

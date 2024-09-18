@@ -7,6 +7,8 @@ import time
 from contextlib import suppress
 from pathlib import Path
 
+from cmk.ccc.site import omd_site
+
 import cmk.utils.paths
 
 from cmk.checkengine.discovery import DiscoveryResult as SingleHostDiscoveryResult
@@ -19,8 +21,6 @@ from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.changes import add_service_change
 from cmk.gui.watolib.check_mk_automations import autodiscovery
 from cmk.gui.watolib.hosts_and_folders import Host
-
-from cmk.ccc.site import omd_site
 
 
 class AutodiscoveryBackgroundJob(BackgroundJob):

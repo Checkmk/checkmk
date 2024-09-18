@@ -13,6 +13,7 @@
 # as well as the sqlanydb Python DB driver for SqlAnywhere:
 # https://pypi.org/project/sqlanydb/
 """Checkmk SQL Database Request Check"""
+
 import argparse
 import logging
 import os
@@ -413,9 +414,7 @@ def execute(
             "oracle": oracle_execute,
             "db2": db2_execute,
             "sqlanywhere": sqlanywhere_execute,
-        }[dbms](
-            cursor, cmd, inpt, procedure
-        )  # type: ignore[operator]
+        }[dbms](cursor, cmd, inpt, procedure)  # type: ignore[operator]
     finally:
         cursor.close()
         connection.close()

@@ -26,6 +26,10 @@ import urllib3
 
 from livestatus import SiteConfiguration, SiteId
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils import paths
 from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import get_license_state
@@ -45,7 +49,7 @@ from cmk.gui.background_job import (
 )
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.http import request, Request
+from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
@@ -63,10 +67,7 @@ from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automation_types import PhaseOneResult
 from cmk.gui.watolib.utils import mk_repr
 
-import cmk.ccc.version as cmk_version
 from cmk import trace
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
 
 auto_logger = logger.getChild("automations")
 tracer = trace.get_tracer()
@@ -684,7 +685,7 @@ def _start_remote_automation_job(
     return job_id
 
 
-class AutomationCheckmkAutomationStart(AutomationCommand):
+class AutomationCheckmkAutomationStart(AutomationCommand[CheckmkAutomationRequest]):
     """Called by do_remote_automation_in_background_job to execute the background job on a remote site"""
 
     def command_name(self) -> str:
@@ -710,7 +711,7 @@ class AutomationCheckmkAutomationStart(AutomationCommand):
         return job.get_job_id()
 
 
-class AutomationCheckmkAutomationGetStatus(AutomationCommand):
+class AutomationCheckmkAutomationGetStatus(AutomationCommand[str]):
     """Called by do_remote_automation_in_background_job to get the background job state from on a
     remote site"""
 

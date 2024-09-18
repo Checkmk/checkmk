@@ -6,30 +6,35 @@
 
 from __future__ import annotations
 
-from typing import get_args, overload, TypeAlias, TypeGuard
+from typing import assert_never, get_args, NewType, overload, override, TypeAlias, TypeGuard
 
 import cryptography.exceptions
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec, ed448, ed25519, padding, rsa, types
 
-from ._types import HashAlgorithm, MKCryptoException, PEMDecodingError, SerializedPEM, Signature
+from . import MKCryptoException
+from .hash import HashAlgorithm
 from .password import Password
+from .pem import _PEMData, PEMDecodingError
 
 
 class InvalidSignatureError(MKCryptoException):
     """A signature could not be verified"""
 
 
-class PlaintextPrivateKeyPEM(SerializedPEM):
+class PlaintextPrivateKeyPEM(_PEMData):
     """A unencrypted private key in pem format"""
 
 
-class EncryptedPrivateKeyPEM(SerializedPEM):
+class EncryptedPrivateKeyPEM(_PEMData):
     """A encrypted private key in pem format"""
 
 
-class PublicKeyPEM(SerializedPEM):
+class PublicKeyPEM(_PEMData):
     """A public key in pem format"""
+
+
+Signature = NewType("Signature", bytes)
 
 
 PublicKeyType: TypeAlias = (
@@ -212,6 +217,7 @@ class PublicKey:
 
         return cls(key)
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, PublicKey):
             return NotImplemented
@@ -259,3 +265,16 @@ class PublicKey:
             )
         except cryptography.exceptions.InvalidSignature as e:
             raise InvalidSignatureError(e) from e
+
+    def show_type(self) -> str:
+        match self._key:
+            case ed25519.Ed25519PublicKey():
+                return "Ed25519"
+            case ed448.Ed448PublicKey():
+                return "Ed448"
+            case rsa.RSAPublicKey():
+                return f"RSA {self._key.key_size} bits"
+            case ec.EllipticCurvePublicKey():
+                return f"EC {self._key.curve.name}"
+            case _:
+                assert_never(self._key)

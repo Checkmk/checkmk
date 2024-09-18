@@ -2,9 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-from collections.abc import Iterable, Mapping
-from typing import Literal
+from collections.abc import Iterable, Mapping, Sequence
+from typing import cast, Literal
 
 from pydantic import BaseModel
 
@@ -25,28 +24,85 @@ class RoleArnId(BaseModel):
 
 class APIAccess(BaseModel):
     global_service_region: str | None = None
-    role_arn_id: RoleArnId | None = None
+    role_arn_id: tuple[str, str] | None = None
 
 
-Selection = Literal["none", "all", "tags", "names"]
-Service = tuple[Selection, dict | None]
+Tag = tuple[str, list[str]]
 
+# Used by various regional services
+LimitsActivated = bool
+# Used by cloudfront
+HostAssignment = Literal["aws_host", "domain_host"]
+# Used by various services
+Selection = Literal["all"] | tuple[Literal["tags"], list[Tag]] | tuple[Literal["names"], list[str]]
 
-class Tag(BaseModel):
-    key: str
-    values: list[str]
+ServiceConfig = Mapping[str, LimitsActivated | HostAssignment | Selection | None] | None
 
 
 class AwsParams(BaseModel):
     access_key_id: str
     secret_access_key: Secret
     proxy_details: ProxyDetails | None = None
-    access: APIAccess
-    global_services: Mapping[str, Service]
-    regions_to_monitor: list[str]
-    services: Mapping[str, Service]
-    piggyback_naming_convention: str
+    access: APIAccess | None = None
+    global_services: Mapping[str, ServiceConfig] | None = None
+    regions_to_monitor: list[str] | None = None
+    services: Mapping[str, ServiceConfig] | None = None
+    piggyback_naming_convention: Literal["ip_region_instance", "private_dns_name"]
     overall_tags: list[Tag] | None = None
+
+
+def _get_tag_options(tags: list[Tag], prefix: str) -> Sequence[str]:
+    options = []
+    for key, values in tags:
+        options.append("--%s-tag-key" % prefix)
+        options.append(key)
+        options.append("--%s-tag-values" % prefix)
+        options += values
+    return options
+
+
+def _get_services_args(services: Mapping[str, ServiceConfig]) -> Sequence[str]:
+    # '--services': {
+    #   's3': {'selection': ('tags', [('KEY', ['VAL1', 'VAL2'])])},
+    #   'ec2': {'selection': 'all'},
+    #   'ebs': {'selection': ('names', ['ebs1', 'ebs2'])},
+    # }
+    service_names: list[str] = []
+    service_args: list[str] = []
+    for service_name, service_config in services.items():
+        service_names.append(service_name)
+        if service_config is None:
+            continue
+
+        if service_config.get("limits"):
+            service_args.append("--%s-limits" % service_name)
+
+        if service_name == "cloudwatch_alarms" and (alarms := service_config.get("alarms")):
+            # {'alarms': 'all'} is handled by no additionally specified names
+            names = (alarms[1] if isinstance(alarms, tuple) else []) or []
+            if not all(isinstance(name, str) for name in names):
+                raise ValueError(f"Invalid value for {service_name} alarms: {names}")
+            service_args.extend(("--cloudwatch-alarms", *names))
+            continue
+
+        selection = service_config.get("selection")
+        if not isinstance(selection, tuple):
+            # Here: value of selection is 'all' which means there's no
+            # restriction (names or tags) to the instances of a specific
+            # AWS service. The commandline option already includes this
+            # service '--services SERVICE1 SERVICE2 ...' (see below).
+            continue
+
+        selection_type, selection_values = selection
+        if not selection_values:
+            continue
+        if selection_type == "names":
+            service_args.extend((f"--{service_name}-names", *selection_values))
+        elif selection_type == "tags":
+            if not all(isinstance(tag, tuple) for tag in selection_values):
+                raise ValueError(f"Invalid value for {service_name} tags: {selection_values}")
+            service_args += _get_tag_options(cast(list[Tag], selection_values), service_name)
+    return [*sorted(service_names), *service_args]
 
 
 def _proxy_args(details: ProxyDetails) -> list[str | Secret]:
@@ -65,73 +121,46 @@ def _proxy_args(details: ProxyDetails) -> list[str | Secret]:
     return proxy_args
 
 
-def _get_tag_options(tags: Tag, prefix: str) -> list[str]:
-    return ["--%s-tag-key" % prefix, tags.key, "--%s-tag-values" % prefix, *tags.values]
-
-
-def _get_services_args(services: Mapping[str, Service]) -> list[str]:
-    service_names: list[str] = []
-    service_args: list[str] = []
-    for service_name, service in services.items():
-        selection, service_config = service
-        if selection == "none":
-            continue
-
-        if service_name == "aws_lambda":
-            service_name = "lambda"
-
-        service_names.append(service_name)
-
-        if service_config is None:
-            continue
-
-        if service_config.get("limits") == "limits":
-            service_args.append("--%s-limits" % service_name)
-
-        if service_name == "cloudwatch_alarms":
-            service_args.extend(("--cloudwatch-alarms", *service_config.get("names", [])))
-        elif instance_names := service_config.get("names"):
-            service_args.extend(("--%s-names" % service_name, *instance_names))
-        elif instance_tags := service_config.get("tags"):
-            for tag in instance_tags:
-                service_args.extend(_get_tag_options(Tag.model_validate(tag), service_name))
-
-    return [*sorted(service_names), *service_args]
-
-
 def aws_arguments(
     params: AwsParams,
     host_config: HostConfig,
 ) -> Iterable[SpecialAgentCommand]:
-    args: list[str | Secret] = ["--access-key-id", params.access_key_id]
-    args.extend(("--secret-access-key-reference", params.secret_access_key))
+    args: list[str | Secret] = [
+        "--access-key-id",
+        params.access_key_id,
+        "--secret-access-key-reference",
+        params.secret_access_key,
+    ]
     if params.proxy_details:
         args.extend(_proxy_args(params.proxy_details))
-    if global_serv_region := params.access.global_service_region:
-        args.extend(("--global-service-region", global_serv_region.replace("_", "-")))
-    if role_arn_id := params.access.role_arn_id:
-        args.extend(("--assume-role", "--role-arn", role_arn_id.role_arn))
-        if role_arn_id.external_id:
-            args.extend(("--external-id", role_arn_id.external_id))
+    access = params.access or APIAccess()
+    if global_service_region := access.global_service_region:
+        args.extend(("--global-service-region", global_service_region))
+    if role_arn_id := access.role_arn_id:
+        args.extend(("--assume-role", "--role-arn", role_arn_id[0]))
+        if role_arn_id[1]:
+            args.extend(("--external-id", role_arn_id[1]))
     if params.regions_to_monitor:
-        args.extend(
-            ("--regions", *(region.replace("_", "-") for region in params.regions_to_monitor))
-        )
-    if global_service_args := _get_services_args(params.global_services):
+        args.extend(("--regions", *params.regions_to_monitor))
+    global_services = params.global_services or {}
+    if global_service_args := _get_services_args(global_services):
         args.extend(("--global-services", *global_service_args))
-    if cloudfront_config := params.global_services.get("cloudfront", ("None", None))[1]:
-        args.extend(("--cloudfront-host-assignment", cloudfront_config["host_assignment"]))
-    if service_args := _get_services_args(params.services):
+    services = params.services or {}
+    if service_args := _get_services_args(services):
         args.extend(("--services", *service_args))
-    if (s3_config := params.services.get("s3", ("None", None))[1]) and "requests" in s3_config:
+    if "requests" in (services.get("s3", {}) or {}):
         args.append("--s3-requests")
-    if (
-        wafv2_config := params.services.get("wafv2", ("None", None))[1]
-    ) and "cloudfront" in wafv2_config:
+    if "cloudfront" in (services.get("wafv2", {}) or {}):
         args.append("--wafv2-cloudfront")
+    if "cloudfront" in global_services:
+        cloudfront_host_assignment = (global_services["cloudfront"] or {}).get("host_assignment")
+        if not isinstance(cloudfront_host_assignment, str):
+            raise ValueError(
+                f"Invalid value for cloudfront host assignment: {cloudfront_host_assignment}"
+            )
+        args.extend(("--cloudfront-host-assignment", cloudfront_host_assignment))
     if params.overall_tags:
-        for tag in params.overall_tags:
-            args.extend(_get_tag_options(tag, "overall"))
+        args.extend(_get_tag_options(params.overall_tags, "overall"))
     args.extend(
         (
             "--hostname",

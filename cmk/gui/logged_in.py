@@ -14,6 +14,9 @@ from typing import Any, Final
 
 from livestatus import SiteConfigurations, SiteId
 
+from cmk.ccc import store
+from cmk.ccc.version import __version__, Edition, edition, Version
+
 import cmk.utils.paths
 from cmk.utils.local_secrets import AutomationUserSecret
 from cmk.utils.user import UserId
@@ -26,9 +29,6 @@ from cmk.gui.i18n import _
 from cmk.gui.utils.permission_verification import BasePerm
 from cmk.gui.utils.roles import may_with_roles, roles_of_user
 from cmk.gui.utils.transaction_manager import TransactionManager
-
-from cmk.ccc import store
-from cmk.ccc.version import __version__, edition, Edition, Version
 
 _logger = logging.getLogger(__name__)
 _ContactgroupName = str

@@ -143,6 +143,7 @@ def test_default_config_from_plugins() -> None:
         "bi_compile_log",
         "bi_precompile_on_demand",
         "bi_use_legacy_compilation",
+        "broker_connections",
         "sites",
         "config_storage_format",
         "tags",
@@ -155,6 +156,7 @@ def test_default_config_from_plugins() -> None:
         "load_frontend_vue",
         "configuration_bundles",
         "default_dynamic_visual_permission",
+        "require_two_factor_all_users",
     ]
 
     # The below lines are confusing and incorrect. The reason we need them is

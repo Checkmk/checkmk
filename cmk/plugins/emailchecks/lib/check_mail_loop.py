@@ -2,8 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Email server roundtrip active check
-"""
+"""Email server roundtrip active check"""
+
 import argparse
 import email.utils
 import logging
@@ -241,7 +241,7 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
         now = int(time.time())
 
         def filter_subject(subject: None | str, re_pattern: re.Pattern[str]) -> None | re.Match:
-            if re_pattern and not (match := re_pattern.match(subject or "")):
+            if not (match := re_pattern.match(subject or "")):
                 logging.debug("ignore message with subject %r", subject)
                 return None
             return match

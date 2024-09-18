@@ -18,19 +18,21 @@ from urllib.parse import quote, urlencode
 
 import livestatus
 
-import cmk.utils.daemon
+import cmk.ccc.daemon
+import cmk.ccc.debug
+from cmk.ccc.site import omd_site
+
 from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.notify import read_notify_host_file
-from cmk.utils.notify_types import EnrichedEventContext, EventContext, EventRule
+from cmk.utils.notify_types import EventRule
 from cmk.utils.regex import regex
 from cmk.utils.rulesets.ruleset_matcher import matches_host_tags
 from cmk.utils.rulesets.tuple_rulesets import in_extraconf_servicelist
 from cmk.utils.servicename import ServiceName
 from cmk.utils.timeperiod import check_timeperiod, cleanup_timeperiod_caches, TimeperiodSpecs
 
-import cmk.ccc.debug
-from cmk.ccc.site import omd_site
+from cmk.events.event_context import EnrichedEventContext, EventContext
 
 ContactList = list  # TODO Improve this
 
@@ -89,7 +91,7 @@ def event_keepalive(
                     # had an issue related to os.urandom() which kept FDs open.
                     # This specific issue of Python 2.7.9 should've been fixed
                     # since Python 2.7.10. Just to be sure we keep cleaning up.
-                    cmk.utils.daemon.closefrom(3)
+                    cmk.ccc.daemon.closefrom(3)
 
                     os.execvp("cmk", sys.argv)
 
@@ -266,7 +268,7 @@ def add_rulebased_macros(
         )
 
         contact_list = livestatus_fetch_contacts(
-            raw_context["HOSTNAME"], raw_context.get("SERVICEDESC")
+            HostName(raw_context["HOSTNAME"]), raw_context.get("SERVICEDESC")
         )
         if contact_list is not None:
             raw_context["CONTACTS"] = ",".join(contact_list)
@@ -442,7 +444,7 @@ def complete_raw_context(
 
 
 def _update_enriched_context_with_labels(enriched_context: EnrichedEventContext) -> None:
-    notify_host_config = read_notify_host_file(enriched_context["HOSTNAME"])
+    notify_host_config = read_notify_host_file(HostName(enriched_context["HOSTNAME"]))
     for k, v in notify_host_config.host_labels.items():
         # Dynamically added keys...
         enriched_context["HOSTLABEL_" + k] = v  # type: ignore[literal-required]
@@ -606,7 +608,7 @@ def event_match_hosttags(
 ) -> str | None:
     required_tags = rule.get("match_hosttags")
     if required_tags:
-        notify_host_config = read_notify_host_file(context["HOSTNAME"])
+        notify_host_config = read_notify_host_file(HostName(context["HOSTNAME"]))
         host_tags = notify_host_config.tags
         if not matches_host_tags(set(host_tags.items()), required_tags):
             return f"The host's tags {host_tags} do not " f"match the required tags {required_tags}"

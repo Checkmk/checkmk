@@ -67,7 +67,7 @@ def core_command(
                 commands, confirm_dialog_options = result
                 break
 
-    if commands is None or not confirm_dialog_options:
+    if commands is None:
         raise MKUserError(None, _("Sorry. This command is not implemented."))
 
     # Some commands return lists of commands, others

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import dataclasses
+import enum
 import glob
 import logging
 import os
@@ -14,9 +15,11 @@ import textwrap
 
 # pylint: disable=redefined-outer-name
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from pprint import pformat
+from typing import Any, assert_never
 
 import pexpect  # type: ignore[import-untyped]
 import pytest
@@ -25,16 +28,14 @@ from tests.testlib.repo import branch_from_env, current_branch_name, repo_path
 
 from cmk.ccc.version import Edition
 
-LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class UtilCalledProcessError(subprocess.CalledProcessError):
     def __str__(self) -> str:
-        return (
-            super().__str__()
-            if self.stderr is None
-            else f"{super().__str__()[:-1]} ({self.stderr!r})."
-        )
+        base_msg = f"\n{super().__str__()}"
+        err_msg = f"\nSTDERR:\n{self.stderr}" if self.stderr else ""
+        return f"{base_msg}{err_msg}"
 
 
 @dataclasses.dataclass
@@ -63,7 +64,18 @@ def is_containerized() -> bool:
 
 
 def get_cmk_download_credentials() -> tuple[str, str]:
-    credentials_file_path = Path("~").expanduser() / ".cmk-credentials"
+    jenkins_credentials_file_path = Path("/home") / "jenkins" / ".cmk-credentials"
+    etc_credentials_file_path = Path("/etc") / ".cmk-credentials"
+    user_credentials_file_path = Path("~").expanduser() / ".cmk-credentials"
+    credentials_file_path = (
+        jenkins_credentials_file_path
+        if jenkins_credentials_file_path.exists()
+        else (
+            user_credentials_file_path
+            if user_credentials_file_path.exists()
+            else etc_credentials_file_path
+        )
+    )
     try:
         with open(credentials_file_path) as credentials_file:
             username, password = credentials_file.read().strip().split(":", maxsplit=1)
@@ -146,7 +158,7 @@ def spawn_expect_process(
     2: unexpected timeout
     3: any other exception
     """
-    LOGGER.info("Executing: %s", subprocess.list2cmdline(args))
+    logger.info("Executing: %s", subprocess.list2cmdline(args))
     with open(logfile_path, "w") as logfile:
         p = pexpect.spawn(" ".join(args), encoding="utf-8", logfile=logfile)
         try:
@@ -162,7 +174,7 @@ def spawn_expect_process(
                                 break_long_words=break_long_words,
                             )
                         )
-                    LOGGER.info("Expecting: '%s'", dialog.expect)
+                    logger.info("Expecting: '%s'", dialog.expect)
                     rc = p.expect(
                         [
                             dialog.expect,  # rc=0
@@ -173,7 +185,7 @@ def spawn_expect_process(
                     )
                     if rc == 0:
                         # msg found; sending input
-                        LOGGER.info(
+                        logger.info(
                             "%s; sending: %s",
                             (
                                 "Optional message found"
@@ -184,10 +196,10 @@ def spawn_expect_process(
                         )
                         p.send(dialog.send)
                     elif dialog.optional:
-                        LOGGER.info("Optional message not found; ignoring!")
+                        logger.info("Optional message not found; ignoring!")
                         break
                     else:
-                        LOGGER.error(
+                        logger.error(
                             "Required message not found. "
                             "The following has been found instead:\n"
                             "%s",
@@ -202,8 +214,8 @@ def spawn_expect_process(
             else:
                 rc = p.status
         except Exception as e:
-            LOGGER.exception(e)
-            LOGGER.debug(p)
+            logger.exception(e)
+            logger.debug(p)
             rc = 3
 
     assert isinstance(rc, int)
@@ -215,21 +227,23 @@ def run(
     check: bool = True,
     sudo: bool = False,
     substitute_user: str | None = None,
+    **kwargs: Any,
 ) -> subprocess.CompletedProcess:
     """Run a process and return a CompletedProcess object."""
     if sudo:
         args = ["sudo"] + args
     if substitute_user:
         args = ["su", "-l", substitute_user, "-c"] + args
-    LOGGER.info("Executing: %s", subprocess.list2cmdline(args))
+    logger.info("Executing: %s", subprocess.list2cmdline(args))
     try:
         proc = subprocess.run(
             args,
             encoding="utf-8",
-            stdin=subprocess.DEVNULL,
+            stdin=None if kwargs.get("input") else kwargs.get("stdin", subprocess.DEVNULL),
             capture_output=True,
             close_fds=True,
             check=check,
+            **kwargs,
         )
     except subprocess.CalledProcessError as e:
         raise RuntimeError(
@@ -261,9 +275,65 @@ def execute(  # type: ignore[no-untyped-def]
     kwargs.setdefault("encoding", "utf-8")
     cmd = sudo_cmd + (su_cmd + ["-c", shlex.quote(shlex.join(cmd))] if substitute_user else cmd)
     cmd_txt = " ".join(cmd)
-    LOGGER.info("Executing: %s", cmd_txt)
+    logger.info("Executing: %s", cmd_txt)
     kwargs["shell"] = kwargs.get("shell", True)
     return subprocess.Popen(cmd_txt if kwargs.get("shell") else cmd, *args, **kwargs)
+
+
+class DaemonTerminationMode(enum.Enum):
+    PROCESS = enum.auto()
+    GROUP = enum.auto()
+
+
+@contextmanager
+def daemon(
+    cmd: list[str],
+    name_for_logging: str,
+    termination_mode: DaemonTerminationMode,
+    sudo: bool,
+) -> Iterator[subprocess.Popen]:
+    with execute(
+        cmd,
+        sudo=sudo,
+        shell=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        start_new_session=True,
+    ) as daemon_proc:
+        try:
+            yield daemon_proc
+        finally:
+            daemon_rc = daemon_proc.returncode
+            if daemon_rc is None:
+                logger.info("Terminating %s daemon...", name_for_logging)
+                _terminate_daemon(daemon_proc, termination_mode, sudo)
+            stdout, stderr = daemon_proc.communicate(timeout=5)
+            logger.info("Stdout from %s daemon:\n%s", name_for_logging, stdout)
+            logger.info("Stderr from %s daemon:\n%s", name_for_logging, stderr)
+            assert (
+                daemon_rc is None
+            ), f"{name_for_logging} daemon unexpectedly exited (RC={daemon_rc})!"
+
+
+def _terminate_daemon(
+    daemon_proc: subprocess.Popen,
+    termination_mode: DaemonTerminationMode,
+    sudo: bool,
+) -> None:
+    match termination_mode:
+        case DaemonTerminationMode.PROCESS:
+            run(
+                ["kill", "--", str(daemon_proc.pid)],
+                sudo=sudo,
+            )
+        case DaemonTerminationMode.GROUP:
+            run(
+                ["kill", "--", f"-{os.getpgid(daemon_proc.pid)}"],
+                sudo=sudo,
+            )
+        case _:
+            assert_never(termination_mode)
 
 
 def check_output(
@@ -349,7 +419,7 @@ def restart_httpd() -> None:
 
     # When executed locally and un-dockerized, DISTRO may not be set
     if os.environ.get("DISTRO") in {"centos-8", "almalinux-9"}:
-        run(["sudo", "httpd", "-k", "restart"])
+        run(["httpd", "-k", "restart"], sudo=True)
 
 
 @dataclasses.dataclass
@@ -372,7 +442,7 @@ def get_services_with_status(
             if host_data[service_name].state == state
         }
     for state, services in services_by_state.items():
-        LOGGER.debug(
+        logger.debug(
             "%s service(s) found in state %s (%s):\n%s",
             len(services),
             state,
@@ -396,12 +466,12 @@ def wait_until(condition: Callable[[], bool], timeout: float = 1, interval: floa
 def parse_files(pathname: Path, pattern: str, ignore_case: bool = True) -> dict[str, list[str]]:
     """Parse file(s) for a given pattern."""
     pattern_obj = re.compile(pattern, re.IGNORECASE if ignore_case else 0)
-    LOGGER.info("Parsing logs for '%s' in %s", pattern, pathname)
+    logger.info("Parsing logs for '%s' in %s", pattern, pathname)
     match_dict: dict[str, list[str]] = {}
     for file_path in glob.glob(str(pathname), recursive=True):
         with open(file_path, "r", encoding="utf-8") as file:
             for line in file:
                 if pattern_obj.search(line):
-                    LOGGER.info("Match found in %s: %s", file_path, line.strip())
+                    logger.info("Match found in %s: %s", file_path, line.strip())
                     match_dict[file_path] = match_dict.get(file_path, []) + [line]
     return match_dict

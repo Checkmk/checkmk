@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Any
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.gui.form_specs.private.list_extended import ListExtended
 
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.rulesets.v1.form_specs import DefaultValue, FormSpec, List
 
 
@@ -14,7 +15,7 @@ from cmk.rulesets.v1.form_specs import DefaultValue, FormSpec, List
 def recompose(form_spec: FormSpec[Any]) -> ListExtended[Any]:
     if not isinstance(form_spec, List):
         raise MKGeneralException(
-            f"Cannot decompose form spec. Expected a Percentage form spec, got {type(form_spec)}"
+            f"Cannot decompose form spec. Expected a String form spec, got {type(form_spec)}"
         )
 
     return ListExtended(

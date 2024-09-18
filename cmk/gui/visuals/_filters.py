@@ -45,9 +45,6 @@ from .filter import (
     display_filter_radiobuttons,
     DualListFilter,
     Filter,
-)
-from .filter import filter_registry as global_filter_registry
-from .filter import (
     FilterGroupCombo,
     FilterNumberRange,
     FilterOption,
@@ -56,6 +53,7 @@ from .filter import (
     InputTextFilter,
     RegexFilter,
 )
+from .filter import filter_registry as global_filter_registry
 
 
 def register(page_registry: PageRegistry, filter_registry: FilterRegistry) -> None:

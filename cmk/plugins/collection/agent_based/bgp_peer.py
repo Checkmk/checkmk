@@ -201,11 +201,12 @@ def _create_item_data(entry: list[str | list[int]]) -> BGPData:
 
 
 def _check_string_table(string_table: Sequence[StringByteTable]) -> None:
-    assert all(
-        len(entry) >= len(BGPData.__annotations__) - 1 for entry in string_table[0]
-    ), "Not all info elements have the size guessed from known names %d: %r" % (
-        len(BGPData.__annotations__),
-        [len(entry) for entry in string_table[0]],
+    assert all(len(entry) >= len(BGPData.__annotations__) - 1 for entry in string_table[0]), (
+        "Not all info elements have the size guessed from known names %d: %r"
+        % (
+            len(BGPData.__annotations__),
+            [len(entry) for entry in string_table[0]],
+        )
     )
 
 

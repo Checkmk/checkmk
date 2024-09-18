@@ -17,7 +17,7 @@ from typing import Self
 
 from cmk.utils.hostaddress import HostAddress, HostName
 
-from ._paths import payload_dir, source_status_dir
+from ._paths import distribution_status_dir, payload_dir, source_status_dir
 
 logger = logging.getLogger(__name__)
 
@@ -124,6 +124,7 @@ def store_piggyback_raw_data(
     piggybacked_raw_data: Mapping[HostName, Sequence[bytes]],
     timestamp: float,
     omd_root: Path,
+    status_file_timestamp: float | None = None,
 ) -> None:
     if not piggybacked_raw_data:
         # Cleanup the status file when no piggyback data was sent this turn.
@@ -150,7 +151,12 @@ def store_piggyback_raw_data(
     # Only do this for hosts that sent piggyback data this turn.
     logger.debug("Received piggyback data for %d hosts", len(piggybacked_raw_data))
     status_file_path = _get_source_status_file_path(source_hostname, omd_root)
-    _write_file_with_mtime(file_path=status_file_path, content=b"", mtime=timestamp)
+    # usually the status file is updated with the same timestamp as the piggyback files, but in
+    # case of distributed piggyback we want to keep the original timestamps so the fetchers etc.
+    # work as if on the source system
+    _write_file_with_mtime(
+        file_path=status_file_path, content=b"", mtime=status_file_timestamp or timestamp
+    )
 
 
 def _write_file_with_mtime(
@@ -170,6 +176,20 @@ def _write_file_with_mtime(
     tmp_stats = os.stat(tmp_path)
     os.utime(tmp_path, (tmp_stats.st_atime, mtime))
     os.rename(tmp_path, str(file_path))
+
+
+def store_last_distribution_time(
+    source_host: HostName, piggybacked_host: HostName, timestamp: float, omd_root: Path
+) -> None:
+    file_path = _get_distribution_status_file_path(source_host, piggybacked_host, omd_root)
+    _write_file_with_mtime(file_path=file_path, content=b"", mtime=timestamp)
+
+
+def load_last_distribution_time(
+    source_host: HostName, piggybacked_host: HostName, omd_root: Path
+) -> float | None:
+    file_path = _get_distribution_status_file_path(source_host, piggybacked_host, omd_root)
+    return _get_mtime(file_path)
 
 
 #   .--folders/files-------------------------------------------------------.
@@ -241,6 +261,12 @@ def _get_piggybacked_file_path(
     omd_root: Path,
 ) -> Path:
     return payload_dir(omd_root).joinpath(piggybacked_hostname, source_hostname)
+
+
+def _get_distribution_status_file_path(
+    source_hostname: HostName, piggybacked_hostname: HostName | HostAddress, omd_root: Path
+) -> Path:
+    return distribution_status_dir(omd_root).joinpath(piggybacked_hostname, source_hostname)
 
 
 # .

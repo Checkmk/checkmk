@@ -65,7 +65,6 @@ class CleanupMailboxError(Exception):
 
 
 class _Connection(abc.ABC):
-
     @final
     def __enter__(self) -> Self:
         try:
@@ -90,7 +89,6 @@ class _Connection(abc.ABC):
 
 
 class EWS(_Connection):
-
     def __init__(
         self,
         primary_smtp_address: str,
@@ -449,7 +447,6 @@ class IMAP(_Connection):
         before: float | None = None,
         after: float | None = None,
     ) -> Sequence[float]:
-
         def format_date(timestamp: float) -> str:
             return time.strftime("%d-%b-%Y", time.gmtime(timestamp))
 

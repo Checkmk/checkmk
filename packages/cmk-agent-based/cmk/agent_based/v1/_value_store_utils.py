@@ -7,7 +7,6 @@
 
 # pylint: disable=duplicate-code
 
-
 from collections.abc import MutableMapping
 from typing import Any, cast
 
@@ -90,8 +89,10 @@ def get_rate(  # type: ignore[misc]
 
     match last_state:
         case (
-            float() | int() as last_time,
-            float() | int() as last_value,
+            float()
+            | int() as last_time,
+            float()
+            | int() as last_value,
         ):
             pass
         case _other:
@@ -166,9 +167,12 @@ def get_average(  # type: ignore[misc]
 
     match value_store.get(key, ()):
         case (
-            float() | int() as start_time,
-            float() | int() as last_time,
-            float() | int() as last_average,
+            float()
+            | int() as start_time,
+            float()
+            | int() as last_time,
+            float()
+            | int() as last_average,
         ):
             pass
         case _other:

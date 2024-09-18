@@ -54,10 +54,14 @@ def check_dell_powerconnect_cpu(item, params, info):
         infoname="CPU utilization",
         boundaries=(0, 100),
     )
-    yield 0, "", [
-        ("util1", oneminuteperc, None, None, 0, 100),
-        ("util5", fiveminutesperc, None, None, 0, 100),
-    ]
+    yield (
+        0,
+        "",
+        [
+            ("util1", oneminuteperc, None, None, 0, 100),
+            ("util5", fiveminutesperc, None, None, 0, 100),
+        ],
+    )
 
 
 def parse_dell_powerconnect_cpu(string_table: StringTable) -> StringTable:

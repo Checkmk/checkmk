@@ -25,6 +25,10 @@ from redis.client import Pipeline
 
 from livestatus import SiteId
 
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
+
 import cmk.utils.paths
 from cmk.utils.global_ident_type import GlobalIdent, is_locked_by_quick_setup
 from cmk.utils.host_storage import (
@@ -102,10 +106,6 @@ from cmk.gui.watolib.utils import (
     rename_host_in_list,
     wato_root_dir,
 )
-
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import omd_site
 
 _ContactgroupName = str
 
@@ -221,7 +221,7 @@ PermittedGroupsOfFolder = Mapping[PathWithoutSlash, _ContactGroupsInfo]
 
 
 def _get_permitted_groups_of_all_folders(
-    all_folders: Mapping[PathWithoutSlash, Folder]
+    all_folders: Mapping[PathWithoutSlash, Folder],
 ) -> PermittedGroupsOfFolder:
     def _compute_tokens(folder_path: PathWithoutSlash) -> tuple[PathWithoutSlash, ...]:
         """Create tokens for each folder. The main folder requires some special treatment
@@ -3510,7 +3510,7 @@ def _validate_contact_group_modification(
         _must_be_in_contactgroups(diff_groups)
 
 
-def _must_be_in_contactgroups(cgs: Iterable[_ContactgroupName]) -> None:
+def _must_be_in_contactgroups(cgs: Collection[_ContactgroupName]) -> None:
     """Make sure that the user is in all of cgs contact groups
 
     This is needed when the user assigns contact groups to
@@ -3598,7 +3598,7 @@ def folder_preserving_link(add_vars: HTTPVariables) -> str:
 def make_action_link(vars_: HTTPVariables) -> str:
     session_vars: HTTPVariables = [("_transid", transactions.get())]
     if session and hasattr(session, "session_info"):
-        session_vars.append(("csrf_token", session.session_info.csrf_token))
+        session_vars.append(("_csrf_token", session.session_info.csrf_token))
 
     return folder_preserving_link(vars_ + session_vars)
 
@@ -3617,10 +3617,7 @@ def get_folder_title_path_with_links(path: PathWithoutSlash) -> list[HTML]:
 
 def get_folder_title(path: str) -> str:
     """Return the title of a folder - which is given as a string path"""
-    folder = folder_tree().folder(path)
-    if folder:
-        return folder.title()
-    return path
+    return folder_tree().folder(path).title()
 
 
 # TODO: Move to Folder()?

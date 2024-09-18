@@ -13,6 +13,8 @@ from typing import Any, assert_never, Self
 
 from livestatus import LocalConnection, SiteId
 
+from cmk.ccc.site import omd_site
+
 from cmk.utils.statename import short_service_state_name
 
 import cmk.gui.sites
@@ -22,8 +24,6 @@ from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.utils import escaping
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.sites import get_effective_global_setting
-
-from cmk.ccc.site import omd_site
 
 
 class ACResultState(enum.IntEnum):
@@ -216,11 +216,11 @@ class ACTestRegistry(cmk.ccc.plugin_registry.Registry[type[ACTest]]):
 ac_test_registry = ACTestRegistry()
 
 
-class AutomationCheckAnalyzeConfig(AutomationCommand):
+class AutomationCheckAnalyzeConfig(AutomationCommand[None]):
     def command_name(self) -> str:
         return "check-analyze-config"
 
-    def get_request(self):
+    def get_request(self) -> None:
         return None
 
     def execute(self, _unused_request: None) -> list[ACTestResult]:

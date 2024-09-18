@@ -23,6 +23,7 @@ from cmk.utils.notify_types import NotificationRuleID
 from cmk.gui.http import Response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.openapi.endpoints.common_fields import field_include_extensions, field_include_links
 from cmk.gui.openapi.endpoints.notification_rules.request_schemas import NotificationRuleRequest
 from cmk.gui.openapi.endpoints.notification_rules.response_schemas import (
     NotificationRuleResponse,
@@ -128,6 +129,7 @@ def show_rule(params: Mapping[str, Any]) -> Response:
     tag_group="Setup",
     response_schema=NotificationRuleResponseCollection,
     permissions_required=RO_PERMISSIONS,
+    query_params=[field_include_links(), field_include_extensions()],
 )
 def show_rules(params: Mapping[str, Any]) -> Response:
     """Show all notification rules"""
@@ -136,7 +138,12 @@ def show_rules(params: Mapping[str, Any]) -> Response:
         constructors.collection_object(
             domain_type="notification_rule",
             value=[
-                _serialize_notification_rule(rule) for rule in get_notification_rules().values()
+                _serialize_notification_rule(
+                    rule,
+                    include_links=params["include_links"],
+                    include_extensions=params["include_extensions"],
+                )
+                for rule in get_notification_rules().values()
             ],
         )
     )
@@ -210,12 +217,15 @@ def delete_rule(params: Mapping[str, Any]) -> Response:
     return Response(status=204)
 
 
-def _serialize_notification_rule(rule: NotificationRule) -> DomainObject:
+def _serialize_notification_rule(
+    rule: NotificationRule, *, include_links: bool = True, include_extensions: bool = True
+) -> DomainObject:
     return domain_object(
         domain_type="notification_rule",
         identifier=str(rule.rule_id),
         title=rule.rule_properties.description,
-        extensions={"rule_config": rule.api_response()},
+        extensions={"rule_config": rule.api_response()} if include_extensions else None,
+        include_links=include_links,
         editable=True,
         deletable=True,
     )

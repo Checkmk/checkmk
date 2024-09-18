@@ -5,8 +5,10 @@
 
 import json
 import logging
+import os
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -23,21 +25,36 @@ from cmk.ccc.version import Edition
 logger = logging.getLogger(__name__)
 
 
+def _create_site(
+    site_factory: SiteFactory, site_name: str, *args: Any, **kwargs: Any
+) -> Iterator[Site]:
+    try:
+        yield from site_factory.get_test_site(site_name, *args, **kwargs)
+    except Exception as excp:
+        if f"Version {site_factory.version.version} could not be installed" in str(excp):
+            pytest.skip(
+                f"Base-version '{site_factory.version.version}' not available in "
+                f"distro '{os.environ.get("DISTRO")}'."
+            )
+        else:
+            raise excp
+
+
 @pytest.fixture(name="site_factory", scope="function")
 def _site_factory() -> SiteFactory:
-    base_version = CMKVersion("2.3.0p4", Edition.CEE)
+    base_version = get_min_version()
     return SiteFactory(version=base_version, prefix="")
 
 
 @pytest.fixture(name="base_site", scope="function")
 def _base_site(site_factory: SiteFactory) -> Iterator[Site]:
     site_name = "update_central"
-    yield from site_factory.get_test_site(site_name, save_results=False)
+    yield from _create_site(site_factory, site_name, save_results=False)
 
 
 @pytest.fixture(name="site_factory_demo", scope="function")
 def _site_factory_demo():
-    base_version = CMKVersion("2.3.0p4", Edition.CCE)
+    base_version = get_min_version(edition=Edition.CCE)
     return SiteFactory(version=base_version, prefix="")
 
 
@@ -45,12 +62,14 @@ def _site_factory_demo():
 def _base_site_demo(site_factory_demo):
     # Note: to access the UI of the "play" site go to http://localhost/play/check_mk/login.py?_admin
     site_name = "play"
-    yield from site_factory_demo.get_test_site(site_name, save_results=False, report_crashes=False)
+    yield from _create_site(site_factory_demo, site_name, save_results=False, report_crashes=False)
 
 
 @pytest.mark.cee
 def test_update_from_backup(site_factory: SiteFactory, base_site: Site) -> None:
-    backup_path = qa_test_data_path() / Path("update/backups/update_central_2.3.0p4_backup.tar.gz")
+    backup_path = qa_test_data_path() / Path(
+        f"update/backups/update_central_{get_min_version().version}_backup.tar.gz"
+    )
     assert backup_path.exists()
 
     base_site = site_factory.restore_site_from_backup(backup_path, base_site.id, reuse=True)
@@ -80,7 +99,12 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site) -> None:
     assert target_version.edition == Edition.CEE, "This test works with CEE only"
 
     min_version = get_min_version()
-    target_site = site_factory.interactive_update(base_site, target_version, min_version)
+    target_site = site_factory.interactive_update(
+        base_site,
+        target_version,
+        min_version,
+        conflict_mode="install",
+    )
 
     target_services = {}
     target_ok_services = {}
@@ -125,7 +149,9 @@ def test_update_from_backup_demo(
     lost_services_path = Path(__file__).parent.resolve() / Path("lost_services_demo.json")
 
     # MKPs broken: disabled in the demo site via: 'mkp disable play_checkmk 0.0.1' TODO: investigate
-    backup_path = qa_test_data_path() / Path("update/backups/play_2.3.0p4_backup.tar.gz")
+    backup_path = qa_test_data_path() / Path(
+        f"update/backups/play_{get_min_version().version}_backup.tar.gz"
+    )
     assert backup_path.exists()
 
     base_site = site_factory_demo.restore_site_from_backup(

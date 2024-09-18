@@ -12,7 +12,6 @@ TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
                       --exclude=__pycache__ --exclude=*.pyc
 # TODO: Prefixing the command with the environment variable breaks xargs usage below!
 PIPENV             := PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR) scripts/run-pipenv
-BLACK              := scripts/run-black
 
 OPENAPI_SPEC       := web/htdocs/openapi/checkmk.yaml
 
@@ -124,7 +123,7 @@ cmk-frontend:
 	packages/cmk-frontend/run --setup-environment --all
 
 frontend-vue:
-	packages/cmk-frontend-vue/run --setup-environment --all
+	packages/cmk-frontend-vue/run --all
 
 announcement:
 	mkdir -p $(CHECK_MK_ANNOUNCE_FOLDER)
@@ -247,15 +246,10 @@ ifeq ($(ENTERPRISE),yes)
 	packages/cmc/run --check-format
 endif
 
-format-python: format-python-isort format-python-black
+format-python:
+	./scripts/run-pipenv run ruff check --select I --fix
+	./.venv/bin/ruff format
 
-format-python-isort:
-	if test -z "$$PYTHON_FILES"; then ./scripts/find-python-files; else echo "$$PYTHON_FILES"; fi | \
-	PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR)/simple xargs -n 1500 scripts/run-pipenv run isort --settings-path pyproject.toml
-
-format-python-black:
-	if test -z "$$PYTHON_FILES"; then ./scripts/find-python-files; else echo "$$PYTHON_FILES"; fi | \
-	xargs -n 1500 $(BLACK)
 
 format-shell:
 	$(MAKE)	-C tests format-shell
@@ -275,7 +269,7 @@ sw-documentation-docker:
 Pipfile.lock:
 	@( \
 		flock $(LOCK_FD); \
-		if ! SKIP_MAKEFILE_CALL=1 $(PIPENV) verify; then \
+		if ! SKIP_MAKEFILE_CALL=1 $(PIPENV) verify > /dev/null; then \
 			if [ "${CI}" == "true" ]; then \
 				echo "A locking of Pipfile.lock is needed, but we're executed in the CI, where this should not be done."; \
 				echo "It seems you forgot to commit the new Pipfile.lock. Regenerate Pipfile.lock with e.g.:"; \

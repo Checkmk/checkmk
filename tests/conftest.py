@@ -17,7 +17,10 @@ from typing import Final
 
 import pytest
 import pytest_check  # type: ignore[import-untyped]
+from playwright.sync_api import TimeoutError as PWTimeoutError
 from pytest_metadata.plugin import metadata_key  # type: ignore[import-untyped]
+
+from tests.testlib.utils import run
 
 # TODO: Can we somehow push some of the registrations below to the subdirectories?
 # Needs to be executed before the import of those modules
@@ -35,7 +38,12 @@ from tests.testlib.repo import (
     repo_path,
 )
 
-_logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
+
+# This allows exceptions to be handled by IDEs (rather than just printing the results)
+# when pytest based tests are being run from inside the IDE
+# To enable this, set `_PYTEST_RAISE` to some value != '0' in your IDE
+PYTEST_RAISE = os.getenv("_PYTEST_RAISE", "0") != "0"
 
 
 @pytest.fixture(scope="function", autouse=True)
@@ -51,16 +59,25 @@ def fail_on_log_exception(
             pytest_check.fail(record.message)
 
 
-if os.getenv("_PYTEST_RAISE", "0") != "0":
-    # This allows exceptions to be handled by IDEs (rather than just printing the results)
-    # when pytest based tests are being run from inside the IDE
-    # To enable this, set `_PYTEST_RAISE` to some value != '0' in your IDE
-    @pytest.hookimpl(tryfirst=True)
-    def pytest_exception_interact(call):
-        raise call.excinfo.value
+@pytest.hookimpl(tryfirst=True)
+def pytest_exception_interact(call: pytest.CallInfo) -> None:
+    if not (excinfo := call.excinfo):
+        return
+    if excinfo.type in (TimeoutError, PWTimeoutError):
+        try:
+            top_output = f"\n{run(["top", "-b", "-n", "1"], check=False).stdout}"
+            print(top_output)
+        except Exception:
+            # silence any exception when running top since
+            # we do not want to break the exception handling
+            logger.error('Could not get "top" output on TimeoutError!')
+    if PYTEST_RAISE:
+        raise excinfo.value
 
-    @pytest.hookimpl(tryfirst=True)
-    def pytest_internalerror(excinfo):
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_internalerror(excinfo: pytest.ExceptionInfo) -> None:
+    if PYTEST_RAISE:
         raise excinfo.value
 
 
@@ -259,7 +276,7 @@ def _fake_version_and_paths() -> None:
     }
 
     # patch `cmk.utils.paths` before `cmk.ccc.versions`
-    _logger.info("Patching `cmk.utils.paths`.")
+    logger.info("Patching `cmk.utils.paths`.")
     import cmk.utils.paths  # pylint: disable=import-outside-toplevel
 
     # Unit test context: load all available modules
@@ -284,7 +301,7 @@ def _fake_version_and_paths() -> None:
     monkeypatch.setattr("cmk.utils.paths.legacy_check_manpages_dir", "%s/checkman" % repo_path())
 
     # patch `cmk.ccc.versions`
-    _logger.info("Patching `cmk.ccc.versions`.")
+    logger.info("Patching `cmk.ccc.versions`.")
     import cmk.ccc.version as cmk_version  # pylint: disable=import-outside-toplevel
 
     monkeypatch.setattr(cmk_version, "orig_omd_version", cmk_version.omd_version, raising=False)

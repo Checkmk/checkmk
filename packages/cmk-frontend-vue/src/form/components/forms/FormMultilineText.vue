@@ -1,3 +1,8 @@
+<!--
+Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+conditions defined in the file COPYING, which is part of this source code package.
+-->
 <script setup lang="ts">
 import { computed } from 'vue'
 import type * as FormSpec from '@/form/components/vue_formspec_components'
@@ -9,7 +14,7 @@ const props = defineProps<{
   backendValidation: ValidationMessages
 }>()
 
-const data = defineModel('data', { type: String, required: true })
+const data = defineModel<string>('data', { required: true })
 const [validation, value] = useValidation<string>(
   data,
   props.spec.validators,
@@ -25,17 +30,19 @@ const style = computed(() => {
 </script>
 
 <template>
-  <div v-if="props.spec.label">
-    <label> {{ props.spec.label }}</label
-    ><br />
+  <div style="flex">
+    <div v-if="props.spec.label">
+      <label> {{ props.spec.label }}</label
+      ><br />
+    </div>
+    <textarea
+      v-model="value"
+      :style="style"
+      :placeholder="spec.input_hint || ''"
+      rows="20"
+      cols="60"
+      type="text"
+    />
+    <FormValidation :validation="validation"></FormValidation>
   </div>
-  <textarea
-    v-model="value"
-    :style="style"
-    :placeholder="spec.input_hint || ''"
-    rows="20"
-    cols="60"
-    type="text"
-  />
-  <FormValidation :validation="validation"></FormValidation>
 </template>

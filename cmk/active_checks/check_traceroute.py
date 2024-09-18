@@ -239,7 +239,9 @@ def _check_route(
         (
             2
             if any(missing_routers_crit + found_routers_crit)
-            else 1 if any(missing_routers_warn + found_routers_warn) else 0
+            else 1
+            if any(missing_routers_warn + found_routers_warn)
+            else 0
         ),
         f"%d hop{'' if route.n_hops == 1 else 's'}, missing routers: %s, bad routers: %s\n%s"
         % (
@@ -341,9 +343,10 @@ class _TracerouteRoutertrace:
         line = re.sub(r"[0-9]+(\.[0-9]+)? ms", "", line)
         yield from (
             part.lstrip("(").rstrip(")")
-            for part in line.strip().split()
-            # drop numbering
-            [1:]
+            for part in line.strip().split()[
+                # drop numbering
+                1:
+            ]
             # drop additional information such as !X
             if not part.startswith("!")
         )

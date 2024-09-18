@@ -4,32 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import re
-from dataclasses import dataclass
 from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
 from playwright.sync_api import TimeoutError as PWTimeoutError
 
+from tests.testlib.host_details import HostDetails
+from tests.testlib.playwright.helpers import DropdownListNameToID
 from tests.testlib.playwright.pom.page import CmkPage
 
 logger = logging.getLogger(__name__)
 
 
-@dataclass
-class HostDetails:
-    name: str
-    ip: str
-    site: str | None = None
-    tag_agent: str | None = None
-    tag_address_family: str | None = None
-    labels: dict | None = None
-
-
 class SetupHost(CmkPage):
     """Represent the page `setup -> Hosts`."""
-
-    def __init__(self, page: Page, navigate_to_page: bool = True) -> None:
-        super().__init__(page, navigate_to_page)
 
     def navigate(self) -> None:
         """Instructions to navigate to `setup -> Hosts` page.
@@ -46,6 +34,11 @@ class SetupHost(CmkPage):
         logger.info("Validate that current page is 'Setup hosts' page")
         expect(self.get_link("Add host")).to_be_visible()
         expect(self.get_link("Add folder")).to_be_visible()
+
+    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
+        mapping = DropdownListNameToID()
+        setattr(mapping, "Hosts", "menu_hosts")
+        return mapping
 
     @property
     def add_host(self) -> Locator:
@@ -71,9 +64,7 @@ class SetupHost(CmkPage):
 
     def delete_selected_hosts(self) -> None:
         logger.info("Delete selected hosts")
-        self.main_area.click_dropdown_menu_item(
-            dropdown_button="Hosts", menu_id="menu_hosts", menu_item="Delete hosts"
-        )
+        self.main_area.click_item_in_dropdown_list(dropdown_button="Hosts", item="Delete hosts")
         self.main_area.locator().get_by_role(role="button", name="Delete").click()
         try:
             expect(self.successfully_deleted_msg).to_be_visible(timeout=5000)
@@ -121,6 +112,9 @@ class AddHost(CmkPage):
         )
         self._validate_page()
 
+    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
+        return DropdownListNameToID()
+
     @property
     def host_name_text_field(self) -> Locator:
         return self.main_area.get_input("host")
@@ -139,6 +133,26 @@ class AddHost(CmkPage):
         expect(self.main_area.get_suggestion(self.suggestions[0])).to_be_visible()
         expect(self.host_name_text_field).to_be_visible()
 
+    @property
+    def agent_and_api_integration_checkbox(self) -> Locator:
+        return (
+            self.main_area.locator()
+            .get_by_role("cell", name="Checkmk agent / API")
+            .locator("label")
+        )
+
+    @property
+    def agent_and_api_integration_dropdown_button(self) -> Locator:
+        return self.main_area.locator("div#attr_entry_tag_agent >> b")
+
+    @property
+    def snmp_checkbox(self) -> Locator:
+        return self.main_area.locator().get_by_role("cell", name="SNMP").locator("label")
+
+    @property
+    def snmp_dropdown_button(self) -> Locator:
+        return self.main_area.locator("div#attr_entry_tag_snmp_ds >> b")
+
     def create_host(self, host: HostDetails) -> None:
         """On `Setup -> Hosts -> Add host` page, create a new host and activate changes.
 
@@ -149,6 +163,18 @@ class AddHost(CmkPage):
         self.host_name_text_field.fill(host.name)
         self.ipv4_address_checkbox.click()
         self.ipv4_address_text_field.fill(host.ip)
+
+        if host.agent_and_api_integration:
+            self.agent_and_api_integration_checkbox.click()
+            self.agent_and_api_integration_dropdown_button.click()
+            self.main_area.locator().get_by_role(
+                "option", name=host.agent_and_api_integration
+            ).click()
+
+        if host.snmp:
+            self.snmp_checkbox.click()
+            self.snmp_dropdown_button.click()
+            self.main_area.locator().get_by_role("option", name=host.snmp).click()
 
         logger.info("Save new host")
         self.main_area.get_suggestion("Save & view folder").click()
@@ -231,12 +257,15 @@ class HostProperties(CmkPage):
         expect(self.main_area.get_text(text=HostProperties.links[0])).to_be_visible()
         expect(self.main_area.get_text(text=HostProperties.properties[0])).to_be_visible()
 
+    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
+        mapping = DropdownListNameToID()
+        setattr(mapping, "Host", "menu_host")
+        return mapping
+
     def delete_host(self) -> None:
         """On `setup -> Hosts -> Properties`, delete host and activate changes."""
         logger.info("Delete host: %s", self.details.name)
-        self.main_area.click_dropdown_menu_item(
-            dropdown_button="Host", menu_id="menu_host", menu_item="Delete"
-        )
+        self.main_area.click_item_in_dropdown_list(dropdown_button="Host", item="Delete")
         self.main_area.locator().get_by_role(role="button", name="Delete").click()
         self.page.wait_for_url(
             url=re.compile(quote_plus("wato.py?folder=&mode=folder")), wait_until="load"

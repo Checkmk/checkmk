@@ -12,8 +12,13 @@ from black import FileMode, format_str
 STRIP_OPTIONAL = [
     ("FormSpec", "validators"),
     ("Dictionary", "elements"),
+    ("Dictionary", "layout"),
     ("SingleChoice", "elements"),
+    ("MultipleChoice", "elements"),
+    ("MultipleChoice", "show_toggle_all"),
     ("CascadingSingleChoice", "elements"),
+    ("CascadingSingleChoice", "layout"),
+    ("Tuple", "layout"),
 ]
 
 
@@ -31,8 +36,21 @@ class DataclassArgAppender(cst.CSTTransformer):
         return updated_node
 
 
+class EnumString(cst.CSTTransformer):
+    def leave_ClassDef(
+        self, original_node: cst.ClassDef, updated_node: cst.ClassDef
+    ) -> cst.ClassDef:
+        if len(updated_node.bases) == 1:
+            expression = updated_node.bases[0].value
+            if isinstance(expression, cst.Name) and expression.value == "Enum":
+                return updated_node.with_changes(
+                    bases=[cst.Arg(value=cst.Name(value="str"))] + list(updated_node.bases)
+                )
+        return updated_node
+
+
 class OptionalRemover(cst.CSTTransformer):
-    def __init__(self):
+    def __init__(self) -> None:
         self.current_class: Optional[str] = None
 
     def visit_ClassDef(self, node: cst.ClassDef) -> None:
@@ -62,6 +80,6 @@ class OptionalRemover(cst.CSTTransformer):
 
 def postprocess_vue_formspec_components(code: str) -> str:
     tree = cst.parse_module(code)
-    for transformer in (DataclassArgAppender(), OptionalRemover()):
+    for transformer in (DataclassArgAppender(), OptionalRemover(), EnumString()):
         tree = tree.visit(transformer)
     return format_str(tree.code, mode=FileMode())

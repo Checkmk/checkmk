@@ -24,6 +24,11 @@ from tests.testlib.repo import (
 
 import livestatus
 
+import cmk.ccc.debug
+import cmk.ccc.version as cmk_version
+from cmk.ccc import store
+from cmk.ccc.site import omd_site
+
 import cmk.utils.caching
 import cmk.utils.paths
 from cmk.utils import redis, tty
@@ -39,11 +44,7 @@ from cmk.utils.livestatus_helpers.testing import (
     MockLiveStatusConnection,
 )
 
-import cmk.ccc.debug
-import cmk.ccc.version as cmk_version
 import cmk.crypto.password_hashing
-from cmk.ccc import store
-from cmk.ccc.site import omd_site
 
 logger = logging.getLogger(__name__)
 
@@ -174,7 +175,8 @@ CONFIG_MULTISITE_COOKIE_AUTH='on'
 CONFIG_NSCA='off'
 CONFIG_NSCA_TCP_PORT='5667'
 CONFIG_PNP4NAGIOS='on'
-CONFIG_RABBITMQ_PORT='5672'
+CONFIG_RABBITMQ_PORT=5672'
+CONFIG_RABBITMQ_ONLY_FROM='0.0.0.0 ::'
 CONFIG_RABBITMQ_DIST_PORT='25672'
 CONFIG_TRACE_JAEGER_ADMIN_PORT='14269'
 CONFIG_TRACE_JAEGER_UI_PORT='13333'
@@ -321,7 +323,6 @@ class FixPluginLegacy:
             for k, v in config.check_info.items()
             if isinstance(k, str) and isinstance(v, LegacyCheckDefinition)
         }
-        self.active_check_info = copy.deepcopy(config.active_check_info)
         self.factory_settings = copy.deepcopy(config.factory_settings)
 
 

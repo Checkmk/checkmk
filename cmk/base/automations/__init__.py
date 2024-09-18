@@ -11,6 +11,10 @@ from contextlib import redirect_stdout, suppress
 from types import FrameType
 from typing import Any, NoReturn
 
+import cmk.ccc.debug
+from cmk.ccc import version as cmk_version
+from cmk.ccc.exceptions import MKException, MKTimeout
+
 from cmk.utils import log, paths
 from cmk.utils.log import console
 from cmk.utils.plugin_loader import import_plugins
@@ -18,10 +22,6 @@ from cmk.utils.plugin_loader import import_plugins
 from cmk.automations.results import ABCAutomationResult
 
 from cmk.base import check_api, config, profiling
-
-import cmk.ccc.debug
-from cmk.ccc import version as cmk_version
-from cmk.ccc.exceptions import MKException, MKTimeout
 
 
 # TODO: Inherit from MKGeneralException

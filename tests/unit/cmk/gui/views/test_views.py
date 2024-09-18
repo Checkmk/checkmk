@@ -13,6 +13,8 @@ from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from livestatus import SiteId
 
+import cmk.ccc.version as cmk_version
+
 from cmk.utils import paths
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
@@ -40,8 +42,6 @@ from cmk.gui.views.inventory.registry import inventory_displayhints
 from cmk.gui.views.layout import layout_registry
 from cmk.gui.views.page_show_view import get_limit
 from cmk.gui.views.store import multisite_builtin_views
-
-import cmk.ccc.version as cmk_version
 
 
 def test_registered_painter_options(request_context: None) -> None:

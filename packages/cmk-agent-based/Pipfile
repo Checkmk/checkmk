@@ -5,15 +5,12 @@ name = "pypi"
 
 [dev-packages]
 bandit = "*"
-black = "*"
-isort = "*"
-mypy = "==1.10.0"  # CMK-18399
+ruff = "*"
+mypy = "*"
 pylint = "*"
-pytest = "==8.1.1"  # CMK-18399
+pytest = "*"
 # LSP server stuff for IDEs
-pyls-isort = "*"
 pylsp-mypy = "*"
-python-lsp-black = "*"
 python-lsp-server = "*"
 
 [packages]

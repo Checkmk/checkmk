@@ -26,10 +26,9 @@ from dataclasses import dataclass, field
 from enum import Enum
 from functools import cache
 from io import BytesIO
-from typing import Any, Literal, NamedTuple, NewType, TypedDict
+from typing import Any, Literal, NamedTuple, NewType, override, TypedDict
 
 from opentelemetry import trace
-from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
 UserId = NewType("UserId", str)
 SiteId = NewType("SiteId", str)
@@ -116,6 +115,21 @@ class SiteConfiguration(TypedDict, total=False):
 
 
 SiteConfigurations = NewType("SiteConfigurations", dict[SiteId, SiteConfiguration])
+
+
+@dataclass
+class BrokerSite:
+    site_id: SiteId
+
+
+@dataclass(kw_only=True)
+class BrokerConnection:
+    connecter: BrokerSite
+    connectee: BrokerSite
+
+
+ConnectionId = NewType("ConnectionId", str)
+BrokerConnections = NewType("BrokerConnections", dict[ConnectionId, BrokerConnection])
 
 LivestatusColumn = Any
 LivestatusRow = NewType("LivestatusRow", list[LivestatusColumn])
@@ -326,7 +340,7 @@ class Helpers:
         of all lines in that column as a single list"""
         normalized_query = Query(query) if not isinstance(query, Query) else query
 
-        return [l[0] for l in self.query(normalized_query, "ColumnHeaders: off\n")]
+        return [row[0] for row in self.query(normalized_query, "ColumnHeaders: off\n")]
 
     def query_column_unique(self, query: QueryTypes) -> set[LivestatusColumn]:
         """Issues a query that returns exactly one column and returns the values
@@ -403,6 +417,7 @@ class QuerySpecification:
     columns: Sequence[LivestatusColumn] = field(default_factory=list)
     headers: str = ""
 
+    @override
     def __str__(self) -> str:
         query = f"GET {self.table}\n"
         if self.columns:
@@ -440,6 +455,7 @@ class Query:
         else:
             self.suppress_exceptions = suppress_exceptions
 
+    @override
     def __str__(self) -> str:
         if isinstance(self._query, QuerySpecification):
             return str(self._query)
@@ -688,13 +704,16 @@ class SingleSiteConnection(Helpers):
         return data.getvalue()
 
     def do_query(self, query: Query, add_headers: str = "") -> LivestatusResponse:
-        with tracer.start_as_current_span(
-            "do_query",
-            kind=trace.SpanKind.CLIENT,
-            attributes={
-                "cmk.livestatus.target_site_id": str(self.site_name),
-            },
-        ) as span, _livestatus_output_format_switcher(query, self):
+        with (
+            tracer.start_as_current_span(
+                "do_query",
+                kind=trace.SpanKind.CLIENT,
+                attributes={
+                    "cmk.livestatus.target_site_id": str(self.site_name),
+                },
+            ) as span,
+            _livestatus_output_format_switcher(query, self),
+        ):
             str_query = self.build_query(query, add_headers)
             span.set_attribute("cmk.livestatus.query", str_query)
 
@@ -855,6 +874,7 @@ class SingleSiteConnection(Helpers):
     def set_limit(self, limit: int | None = None) -> None:
         self.limit = limit
 
+    @override
     def query(self, query: QueryTypes, add_headers: str = "") -> LivestatusResponse:
         # Normalize argument types
         normalized_add_headers = add_headers
@@ -873,7 +893,9 @@ class SingleSiteConnection(Helpers):
         return response
 
     def command(
-        self, command: str, site: SiteId | None = None  # pylint: disable=unused-argument
+        self,
+        command: str,
+        site: SiteId | None = None,  # pylint: disable=unused-argument
     ) -> None:
         command_str = command.rstrip("\n")
         if not command_str.startswith("["):
@@ -1006,7 +1028,7 @@ class MultiSiteConnection(Helpers):
         for sitename, site in sites_dict.items():
             status_host = site.get("status_host")
             if status_host:
-                if not isinstance(status_host, tuple) or len(status_host) != 2:
+                if len(status_host) != 2:
                     raise MKLivestatusConfigError(
                         f"Status host of site {sitename} is {status_host!r}, "
                         "but must be pair of site and host"
@@ -1170,6 +1192,7 @@ class MultiSiteConnection(Helpers):
         for connected_site in self.connections:
             connected_site.connection.set_auth_domain(domain)
 
+    @override
     def query(self, query: QueryTypes, add_headers: str = "") -> LivestatusResponse:
         # Normalize argument types
         normalized_add_headers = add_headers

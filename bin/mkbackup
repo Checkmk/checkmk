@@ -19,7 +19,10 @@ from contextlib import contextmanager, ExitStack
 from pathlib import Path
 from typing import Any, IO, NamedTuple, NoReturn
 
-import cmk.utils.daemon as daemon
+import cmk.ccc.daemon as daemon
+import cmk.ccc.version as cmk_version
+from cmk.ccc.exceptions import MKGeneralException, MKTerminate
+
 import cmk.utils.render as render
 import cmk.utils.schedule as schedule
 from cmk.utils.backup.config import Config
@@ -35,17 +38,14 @@ from cmk.utils.backup.utils import (
     do_site_backup,
     do_site_restore,
     hostname,
-    log,
     Log,
+    log,
     makedirs,
     set_permissions,
     SITE_BACKUP_MARKER,
     State,
 )
 from cmk.utils.paths import mkbackup_lock_dir
-
-import cmk.ccc.version as cmk_version
-from cmk.ccc.exceptions import MKGeneralException, MKTerminate
 
 ################
 # Utility Code #

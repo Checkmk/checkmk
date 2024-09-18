@@ -5,6 +5,7 @@
 
 # pylint: disable=protected-access
 """A few upgraded Fields which handle some OpenAPI validation internally."""
+
 import ast
 import json
 import logging
@@ -21,6 +22,9 @@ from cryptography.x509.oid import NameOID
 from marshmallow import fields as _fields
 from marshmallow import post_load, pre_dump, utils, ValidationError
 from marshmallow_oneofschema import OneOfSchema
+
+from cmk.ccc import version
+from cmk.ccc.exceptions import MKException
 
 from cmk.utils import paths
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -50,8 +54,6 @@ from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
 from cmk.gui.watolib.tags import load_tag_group
 
-from cmk.ccc import version
-from cmk.ccc.exceptions import MKException
 from cmk.fields import base, DateTime, validators
 
 _logger = logging.getLogger(__name__)
@@ -863,7 +865,6 @@ class TagGroupAttributes(ValueTypedDictSchema):
     """Schema to validate tag groups
 
     Examples:
-
         >>> schema = TagGroupAttributes()
         >>> schema.load({"foo": "bar"})
         Traceback (most recent call last):
@@ -1053,12 +1054,6 @@ class SiteField(base.String):
         return super()._serialize(value, attr, obj, **kwargs)
 
 
-def customer_field(**kw):
-    if version.edition(paths.omd_root) is version.Edition.CME:
-        return _CustomerField(**kw)
-    return None
-
-
 class _CustomerField(base.String):
     """A field representing a customer"""
 
@@ -1106,6 +1101,18 @@ class _CustomerField(base.String):
     def _deserialize(self, value, attr, data, **kwargs):
         value = super()._deserialize(value, attr, data, **kwargs)
         return None if value == "global" else value
+
+
+def customer_field(**kw: Any) -> _CustomerField | None:
+    if version.edition(paths.omd_root) is version.Edition.CME:
+        return _CustomerField(**kw)
+    return None
+
+
+def customer_field_response(**kw: Any) -> _CustomerField | None:
+    if "description" not in kw:
+        kw["description"] = "The customer for which the object is configured."
+    return customer_field(**kw)
 
 
 def verify_group_exists(group_type: GroupType, name: GroupName) -> bool:
@@ -1540,6 +1547,7 @@ __all__ = [
     "host_attributes_field",
     "column_field",
     "customer_field",
+    "customer_field_response",
     "DateTime",
     "ExprSchema",
     "FolderField",

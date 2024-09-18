@@ -11,7 +11,7 @@ from typing import Any
 from cmk.gui import utils, visuals
 from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.graphing import PerfometerSpec
-from cmk.gui.graphing._type_defs import TranslatedMetric
+from cmk.gui.graphing._translated_metrics import TranslatedMetric
 from cmk.gui.i18n import _, _u
 from cmk.gui.pages import PageRegistry
 from cmk.gui.painter.v0 import painters

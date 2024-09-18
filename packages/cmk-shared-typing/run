@@ -101,8 +101,8 @@ run_pipenv() {
         pipenv "$@"
 }
 
-setup_venv() {
-    test "${SETUP_VENV_RAN}" = "yes" && return
+setup() {
+    test "${SETUP_RAN}" = "yes" && return
     # --quiet doesn't really work, see https://github.com/pypa/pipenv/issues/5037, but redirecting
     # stdout is OK, errors go to stderr, and so do the initial venv creation messages.
     run_pipenv sync --dev >/dev/null
@@ -110,16 +110,28 @@ setup_venv() {
     # poor man's "activate", but without any danger of naming clashes
     PATH="$(pwd)/.venv/bin:$PATH"
     hash -r
-    SETUP_VENV_RAN=yes
+
+    if [ ! -d node_modules ]; then
+        ARTIFACTS_BASE="https://artifacts.lan.tribe29.com"
+        export NPM_CONFIG_REGISTRY="${ARTIFACTS_BASE}/repository/npm-proxy/"
+        export NODE_OPTIONS="--dns-result-order=ipv4first",
+        npm \
+            ci \
+            --yes \
+            --unsafe-perm \
+            --audit=false
+    fi
+
+    SETUP_RAN=yes
 }
 
 run_clean() {
-    rm -rf .cache .mypy_cache .pytest_cache .venv ./*.egg-info build
+    rm -rf .cache .mypy_cache .pytest_cache .venv ./*.egg-info build node_modules
     find python -type d -name __pycache__ -print0 | xargs --null --no-run-if-empty rm -rf
 }
 
 run_build() {
-    setup_venv
+    setup
     mkdir -p python typescript
     cwd=$(pwd)
     export PYTHONPATH="$PYTHONPATH:$cwd"
@@ -132,22 +144,44 @@ run_build() {
             --output "python/${target_base}.py" \
             --target-python-version 3.12 \
             --output-model-type=dataclasses.dataclass \
+            --use-title-as-name \
             --use-double-quotes \
             --use-default \
             --use-standard-collections \
             --use-one-literal-as-default \
             --use-subclass-enum \
+            --use-title-as-name \
+            --custom-file-header-path header_py.txt \
+            --use-title-as-name \
             --custom-formatters "utils.format"
         npm run json2ts "${file}" -o "typescript/${target_base}.ts"
     done
+
+    SOURCE_PYTHON=python/vue_formspec_components.py
+    SOURCE_TYPESCRIPT=typescript/vue_formspec_components.ts
+    # you should also modify uildscripts/scripts/stages.yml if you change the destination!
+    DESTINATION_PYTHON=../../cmk/gui/form_specs/vue/shared_type_defs.py
+    DESTINATION_TYPESCRIPT=../../packages/cmk-frontend-vue/src/form/components/vue_formspec_components.ts
+
+    if [ "$CI" == "true" ]; then
+        # this is a hack, we should create another "copy" or "diff" target
+        diff $SOURCE_PYTHON $DESTINATION_PYTHON
+        diff $SOURCE_TYPESCRIPT $DESTINATION_TYPESCRIPT
+    else
+        echo "Copying vue type defs..."
+        cp $SOURCE_PYTHON $DESTINATION_PYTHON
+        cp $SOURCE_TYPESCRIPT $DESTINATION_TYPESCRIPT
+    fi
+
+    echo "Done."
 }
 
 run_check_format() {
-    echo "TODO..."
+    npm run prettier -- -c source/
 }
 
 run_format() {
-    echo "TODO..."
+    npm run prettier -- -w source/
 }
 
 main() {

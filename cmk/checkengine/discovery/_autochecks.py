@@ -9,6 +9,9 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import NamedTuple, TypedDict
 
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.store import ObjectStore
+
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import ServiceLabel
@@ -17,9 +20,6 @@ from cmk.utils.servicename import Item, ServiceName
 from cmk.checkengine.checking import CheckPluginName, ConfiguredService, ServiceID
 from cmk.checkengine.discovery._utils import DiscoveredItem
 from cmk.checkengine.parameters import TimespecificParameters
-
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.store import ObjectStore
 
 __all__ = [
     "AutocheckServiceWithNodes",

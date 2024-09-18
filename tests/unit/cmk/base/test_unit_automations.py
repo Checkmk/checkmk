@@ -9,16 +9,18 @@ from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc.version import Edition, edition
+
 from cmk.utils import paths
 from cmk.utils.hostaddress import HostName
+from cmk.utils.labels import LabelSource
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 
 from cmk.automations.results import AnalyseHostResult, GetServicesLabelsResult
 
 import cmk.base.automations
 import cmk.base.automations.check_mk as automations
-
-import cmk.ccc.version as cmk_version
 
 
 def test_registered_automations() -> None:
@@ -67,6 +69,12 @@ def test_registered_automations() -> None:
 
 
 def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
+    additional_labels: dict[str, str] = {}
+    additional_label_sources: dict[str, LabelSource] = {}
+    if edition(paths.omd_root) is Edition.CME:
+        additional_labels = {"cmk/customer": "provider"}
+        additional_label_sources = {"cmk/customer": "discovered"}
+
     automation = automations.AutomationAnalyseHost()
 
     ts = Scenario()
@@ -81,9 +89,17 @@ def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
     )
     ts.apply(monkeypatch)
 
+    label_sources: dict[str, LabelSource] = {
+        "cmk/site": "discovered",
+        "explicit": "explicit",
+    }
     assert automation.execute(["test-host"]) == AnalyseHostResult(
-        label_sources={"cmk/site": "discovered", "explicit": "explicit"},
-        labels={"cmk/site": "NO_SITE", "explicit": "ding"},
+        label_sources=label_sources | additional_label_sources,
+        labels={
+            "cmk/site": "NO_SITE",
+            "explicit": "ding",
+        }
+        | additional_labels,
     )
 
 

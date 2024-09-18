@@ -10,10 +10,10 @@ import subprocess
 from contextlib import suppress
 from typing import Final
 
+from cmk.ccc.exceptions import MKFetcherError
+
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.log import VERBOSE
-
-from cmk.ccc.exceptions import MKFetcherError
 
 from ._abstract import Fetcher, Mode
 
@@ -88,15 +88,13 @@ class ProgramFetcher(Fetcher[AgentRawData]):
             # We can not create a separate process group when running Nagios
             # Upon reaching the service_check_timeout Nagios only kills the process
             # group of the active check.
-            self._process = (
-                subprocess.Popen(  # nosec 602 # BNS:b00359 # pylint: disable=consider-using-with
-                    self.cmdline,
-                    shell=True,
-                    stdin=subprocess.PIPE if self.stdin else subprocess.DEVNULL,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    close_fds=True,
-                )
+            self._process = subprocess.Popen(  # nosec 602 # BNS:b00359 # pylint: disable=consider-using-with
+                self.cmdline,
+                shell=True,
+                stdin=subprocess.PIPE if self.stdin else subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                close_fds=True,
             )
 
     def close(self):

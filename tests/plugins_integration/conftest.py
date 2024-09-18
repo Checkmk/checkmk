@@ -115,13 +115,6 @@ def pytest_addoption(parser):
         default=None,
     )
 
-    parser.addoption(
-        "--enable-piggyback",
-        action="store_true",
-        default=False,
-        help="Enable piggyback hosts via a DCD connector",
-    )
-
 
 def pytest_configure(config):
     # parse options that control the test execution
@@ -141,7 +134,6 @@ def pytest_configure(config):
     checks.config.host_names = config.getoption(name="--host-names")
     checks.config.check_names = config.getoption(name="--check-names")
     checks.config.dump_types = config.getoption(name="--dump-types")
-    checks.config.piggyback = config.getoption(name="--enable-piggyback")
 
     checks.config.load()
 
@@ -175,15 +167,11 @@ def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
         if not checks.config.skip_cleanup:
             # cleanup existing agent-output folder in the test site
             logger.info('Removing folder "%s"...', dump_path)
-            assert run(["sudo", "rm", "-rf", dump_path]).returncode == 0
+            assert run(["rm", "-rf", dump_path], sudo=True).returncode == 0
 
 
-# Todo: perform a proper site-cleanup and change this fixture's scope: CMK-18659
-@pytest.fixture(name="test_site_piggyback", scope="function")
+@pytest.fixture(name="test_site_piggyback", scope="session")
 def _get_site_piggyback(request: pytest.FixtureRequest) -> Iterator[Site]:
-    if not request.config.getoption(name="--enable-piggyback"):
-        pytest.skip("Piggyback tests are not selected.")
-
     for site in get_site_factory(prefix="PB_").get_test_site(
         auto_cleanup=not checks.config.skip_cleanup
     ):
@@ -222,7 +210,7 @@ def _get_site_update(
         if not checks.config.skip_cleanup:
             # cleanup existing agent-output folder in the test site
             logger.info('Removing folder "%s"...', dump_path)
-            assert run(["sudo", "rm", "-rf", dump_path]).returncode == 0
+            assert run(["rm", "-rf", dump_path], sudo=True).returncode == 0
 
 
 @pytest.fixture(name="bulk_setup", scope="session")
@@ -289,33 +277,30 @@ def _create_periodic_service_discovery_rule(test_site_update: Site) -> Iterator[
     test_site_update.openapi.activate_changes_and_wait_for_completion()
 
 
-# Todo: perform a proper site-cleanup and change this fixture's scope: CMK-18659
-@pytest.fixture(name="dcd_connector", scope="function")
+@pytest.fixture(name="dcd_connector", scope="session")
 def _dcd_connector(test_site_piggyback: Site) -> Iterator[None]:
-    if checks.config.piggyback:
-        logger.info("Creating a DCD connection for piggyback hosts...")
-        dcd_id = "dcd_connector"
-        host_attributes = {
-            "tag_snmp_ds": "no-snmp",
-            "tag_agent": "no-agent",
-            "tag_piggyback": "piggyback",
-            "tag_address_family": "no-ip",
-        }
-        test_site_piggyback.openapi.create_dynamic_host_configuration(
-            dcd_id=dcd_id,
-            title="DCD Connector for piggyback hosts",
-            host_attributes=host_attributes,
-            interval=1,
-            validity_period=600,
-        )
+    logger.info("Creating a DCD connection for piggyback hosts...")
+    dcd_id = "dcd_connector"
+    host_attributes = {
+        "tag_snmp_ds": "no-snmp",
+        "tag_agent": "no-agent",
+        "tag_piggyback": "piggyback",
+        "tag_address_family": "no-ip",
+    }
+    test_site_piggyback.openapi.create_dynamic_host_configuration(
+        dcd_id=dcd_id,
+        title="DCD Connector for piggyback hosts",
+        host_attributes=host_attributes,
+        interval=1,
+        validity_period=60,
+        max_cache_age=60,
+        delete_hosts=True,
+        no_deletion_time_after_init=60,
+    )
+    test_site_piggyback.openapi.activate_changes_and_wait_for_completion(force_foreign_changes=True)
+    yield
+    if not checks.config.skip_cleanup:
+        test_site_piggyback.openapi.delete_dynamic_host_configuration(dcd_id)
         test_site_piggyback.openapi.activate_changes_and_wait_for_completion(
             force_foreign_changes=True
         )
-        yield
-        if not checks.config.skip_cleanup:
-            test_site_piggyback.openapi.delete_dynamic_host_configuration(dcd_id)
-            test_site_piggyback.openapi.activate_changes_and_wait_for_completion(
-                force_foreign_changes=True
-            )
-    else:
-        yield  # a fixture must yield or return something

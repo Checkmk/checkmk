@@ -180,7 +180,6 @@ def test_man_page_consistency(
     """Make sure we have one man page per plugin, and no additional ones"""
     expected_man_pages = (
         {str(plugin_name) for plugin_name in fix_register.check_plugins}
-        | {f"check_{name}" for name in fix_plugin_legacy.active_check_info}
         | {f"check_{plugin.name}" for plugin in load_active_checks()[1].values()}
         | {"check-mk", "check-mk-inventory"}
     )
@@ -202,9 +201,7 @@ def test_cluster_check_functions_match_manpages_cluster_sections(
             (
                 missing_cluster_description,
                 unexpected_cluster_description,
-            )[
-                has_cluster_doc
-            ].add(str(plugin.name))
+            )[has_cluster_doc].add(str(plugin.name))
 
     assert not missing_cluster_description
     assert not unexpected_cluster_description

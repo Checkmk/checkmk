@@ -17,7 +17,7 @@ import cmk.utils.paths
 
 from cmk.gui import http
 from cmk.gui.utils.script_helpers import session_wsgi_app
-from cmk.gui.utils.theme import theme, Theme
+from cmk.gui.utils.theme import Theme, theme
 
 
 @pytest.fixture(name="request_context")

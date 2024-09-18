@@ -30,10 +30,13 @@ def check_storeonce4x_d2d_services(_item, _params, parsed):
         healthLevelString = service_data["healthLevelString"]
         healthString = service_data["healthString"]
         subsystemState = service_data["subsystemState"]
-        yield health_map.get(healthLevelString, 3), "{}: {} ({})".format(
-            service_name,
-            healthString,
-            subsystemState,
+        yield (
+            health_map.get(healthLevelString, 3),
+            "{}: {} ({})".format(
+                service_name,
+                healthString,
+                subsystemState,
+            ),
         )
 
 

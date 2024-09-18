@@ -73,10 +73,13 @@ def check_ucs_bladecenter_fans(item, _no_params, parsed):
     yield 0, "%d Fans" % len(my_fans)
     for key, fan in sorted(my_fans.items()):
         if fan["OperState"] != "operable":
-            yield 2, "Fan {} {}: average speed {} RPM".format(
-                key.split()[-1][2:],
-                fan["OperState"],
-                fan.get("SpeedAvg"),
+            yield (
+                2,
+                "Fan {} {}: average speed {} RPM".format(
+                    key.split()[-1][2:],
+                    fan["OperState"],
+                    fan.get("SpeedAvg"),
+                ),
             )
 
 

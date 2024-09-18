@@ -13,9 +13,9 @@ import pytest
 
 from tests.testlib.repo import repo_path
 
-import cmk.utils.werks
-
 import cmk.ccc.version as cmk_version
+
+import cmk.utils.werks
 
 CVSS_REGEX_V31 = re.compile(
     r"CVSS:3.1/AV:[NALP]/AC:[LH]/PR:[NLH]/UI:[NR]/S:[UC]/C:[NLH]/I:[NLH]/A:[NLH]"
@@ -85,9 +85,9 @@ def test_werk_versions(precompiled_werks: None) -> None:
     for werk_id, werk in cmk.utils.werks.load().items():
         parsed_werk_version = cmk_version.Version.from_str(werk.version)
 
-        assert (
-            parsed_werk_version <= parsed_version
-        ), "Version %s of werk #%d is not allowed in this branch" % (werk.version, werk_id)
+        assert parsed_werk_version <= parsed_version, (
+            "Version %s of werk #%d is not allowed in this branch" % (werk.version, werk_id)
+        )
 
 
 def test_secwerk_has_cvss(precompiled_werks: None) -> None:

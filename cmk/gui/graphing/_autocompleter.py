@@ -8,9 +8,9 @@ from collections.abc import Iterable
 from cmk.gui.type_defs import Choices
 from cmk.gui.visuals import livestatus_query_bare
 
-from ._graph_templates import get_graph_template_choices, get_graph_templates
+from ._graph_templates import get_evaluated_graph_template_choices, get_graph_template_choices
 from ._metrics import get_metric_spec, registered_metrics
-from ._utils import translated_metrics_from_row
+from ._translated_metrics import translated_metrics_from_row
 from ._valuespecs import metrics_of_query
 
 
@@ -37,16 +37,16 @@ def graph_templates_autocompleter(value: str, params: dict) -> Choices:
     Called by the webservice with the current input field value and the
     completions_params to get the list of choices"""
     if not params.get("context") and params.get("show_independent_of_context") is True:
-        choices: Iterable[tuple[str, str]] = get_graph_template_choices()
+        choices: Iterable[tuple[str, str]] = [(c.id, c.title) for c in get_graph_template_choices()]
     else:
         choices = {
-            (template.id, template.title or str(get_metric_spec(template.id).title))
+            (c.id, c.title or str(get_metric_spec(c.id).title))
             for row in livestatus_query_bare(
                 "service",
                 params["context"],
                 ["service_check_command", "service_perf_data", "service_metrics"],
             )
-            for template in get_graph_templates(translated_metrics_from_row(row))
+            for c in get_evaluated_graph_template_choices(translated_metrics_from_row(row))
         }
 
     return sorted(

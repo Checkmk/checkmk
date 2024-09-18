@@ -118,11 +118,14 @@ def _get_metrics(metrics_data: Sequence[Sequence[str]]) -> Iterable[tuple[str, A
         metric_dict = json.loads(AZURE_AGENT_SEPARATOR.join(metric_line))
 
         key = f"{metric_dict['aggregation']}_{metric_dict['name'].replace(' ', '_')}"
-        yield key, AzureMetric(
-            metric_dict["name"],
-            metric_dict["aggregation"],
-            metric_dict["value"],
-            metric_dict["unit"],
+        yield (
+            key,
+            AzureMetric(
+                metric_dict["name"],
+                metric_dict["aggregation"],
+                metric_dict["value"],
+                metric_dict["unit"],
+            ),
         )
 
 
@@ -251,7 +254,7 @@ def create_discover_by_metrics_function_single(
 
 
 def iter_resource_attributes(
-    resource: Resource, include_keys: tuple[str] = ("location",)
+    resource: Resource, include_keys: tuple[str, ...] = ("location",)
 ) -> Generator[tuple[str, str | None], None, None]:
     def capitalize(string: str) -> str:
         return string[0].upper() + string[1:]

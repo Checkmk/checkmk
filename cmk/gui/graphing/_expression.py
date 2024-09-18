@@ -9,28 +9,75 @@ import abc
 import contextlib
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, KW_ONLY
-from typing import Literal
+from typing import assert_never, Literal
 
 from cmk.utils.metrics import MetricName
+from cmk.utils.resulttype import Error, OK, Result
 
-from ._color import mix_colors, parse_color, render_color, scalar_colors
-from ._from_api import get_unit_info
-from ._legacy import unit_info, UnitInfo
-from ._type_defs import GraphConsolidationFunction, TranslatedMetric
+from cmk.gui.i18n import _, translate_to_current_language
+
+from cmk.graphing.v1 import metrics as metrics_api
+
+from ._color import mix_colors, parse_color, parse_color_from_api, render_color, scalar_colors
+from ._formatter import AutoPrecision, StrictPrecision
+from ._from_api import parse_unit_from_api
+from ._legacy import get_unit_info, unit_info, UnitInfo
+from ._metrics import get_metric_spec
+from ._translated_metrics import TranslatedMetric
+from ._type_defs import GraphConsolidationFunction, LineType
+from ._unit import ConvertibleUnitSpecification, DecimalNotation
 
 # TODO CMK-15246 Checkmk 2.4: Remove legacy objects/RPNs
 
+_FALLBACK_UNIT_SPEC_FLOAT = ConvertibleUnitSpecification(
+    notation=DecimalNotation(symbol=""),
+    precision=AutoPrecision(digits=2),
+)
+_FALLBACK_UNIT_SPEC_INT = ConvertibleUnitSpecification(
+    notation=DecimalNotation(symbol=""),
+    precision=StrictPrecision(digits=2),
+)
 
-def _unit_mult(left_unit_info: UnitInfo, right_unit_info: UnitInfo) -> UnitInfo:
+
+def _unit_mult(
+    left_unit_spec: UnitInfo | ConvertibleUnitSpecification,
+    right_unit_spec: UnitInfo | ConvertibleUnitSpecification,
+) -> UnitInfo | ConvertibleUnitSpecification:
     # TODO: real unit computation!
-    return (
-        right_unit_info if left_unit_info in (unit_info[""], unit_info["count"]) else left_unit_info
-    )
+    if isinstance(left_unit_spec, UnitInfo) and left_unit_spec in (
+        unit_info[""],
+        unit_info["count"],
+    ):
+        return right_unit_spec
+    if (
+        isinstance(left_unit_spec, ConvertibleUnitSpecification)
+        and not left_unit_spec.notation.symbol
+    ):
+        return right_unit_spec
+    return left_unit_spec
 
 
-_unit_div: Callable[[UnitInfo, UnitInfo], UnitInfo] = _unit_mult
-_unit_add: Callable[[UnitInfo, UnitInfo], UnitInfo] = _unit_mult
-_unit_sub: Callable[[UnitInfo, UnitInfo], UnitInfo] = _unit_mult
+_unit_div: Callable[
+    [
+        UnitInfo | ConvertibleUnitSpecification,
+        UnitInfo | ConvertibleUnitSpecification,
+    ],
+    UnitInfo | ConvertibleUnitSpecification,
+] = _unit_mult
+_unit_add: Callable[
+    [
+        UnitInfo | ConvertibleUnitSpecification,
+        UnitInfo | ConvertibleUnitSpecification,
+    ],
+    UnitInfo | ConvertibleUnitSpecification,
+] = _unit_mult
+_unit_sub: Callable[
+    [
+        UnitInfo | ConvertibleUnitSpecification,
+        UnitInfo | ConvertibleUnitSpecification,
+    ],
+    UnitInfo | ConvertibleUnitSpecification,
+] = _unit_mult
 
 
 def _choose_operator_color(a: str, b: str) -> str:
@@ -42,553 +89,577 @@ def _choose_operator_color(a: str, b: str) -> str:
 
 
 @dataclass(frozen=True)
-class MetricExpressionResult:
+class BaseEvaluated:
     value: int | float
-    unit_info: UnitInfo
+    unit_spec: ConvertibleUnitSpecification | UnitInfo
     color: str
 
 
-class MetricExpression(abc.ABC):
+@dataclass(frozen=True)
+class EvaluationError:
+    reason: str
+    metric_name: str = ""
+
+
+@dataclass(frozen=True)
+class ScalarName:
+    metric_name: str
+    scalar_name: Literal["warn", "crit", "min", "max"]
+
+
+class BaseMetricExpression(abc.ABC):
+    @abc.abstractmethod
+    def ident(self) -> str:
+        raise NotImplementedError()
+
     @abc.abstractmethod
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
-    ) -> MetricExpressionResult:
+    ) -> Result[BaseEvaluated, EvaluationError]:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def metrics(self) -> Iterator[Metric]:
+    def metric_names(self) -> Iterator[str]:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
+    def scalar_names(self) -> Iterator[ScalarName]:
         raise NotImplementedError()
 
 
 @dataclass(frozen=True)
-class ScalarExpression(MetricExpression):
-    @property
-    @abc.abstractmethod
-    def name(self) -> Literal["warn", "crit", "min", "max"]:
-        raise NotImplementedError()
-
-
-@dataclass(frozen=True)
-class Constant(MetricExpression):
+class Constant(BaseMetricExpression):
     value: int | float
-    _: KW_ONLY
-    explicit_unit_id: str = ""
-    explicit_color: str = ""
+
+    def ident(self) -> str:
+        return f"{self.__class__.__name__}({self.value})"
 
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
-    ) -> MetricExpressionResult:
-        if self.explicit_unit_id:
-            unit_info_ = get_unit_info(self.explicit_unit_id)
-        elif isinstance(self.value, int):
-            unit_info_ = unit_info["count"]
-        else:
-            unit_info_ = unit_info[""]
-        return MetricExpressionResult(
-            self.value,
-            unit_info_,
-            self.explicit_color or "#000000",
+    ) -> Result[BaseEvaluated, EvaluationError]:
+        return OK(
+            BaseEvaluated(
+                self.value,
+                (
+                    _FALLBACK_UNIT_SPEC_INT
+                    if isinstance(self.value, int)
+                    else _FALLBACK_UNIT_SPEC_FLOAT
+                ),
+                "#000000",
+            )
         )
 
-    def metrics(self) -> Iterator[Metric]:
+    def metric_names(self) -> Iterator[str]:
         yield from ()
 
-    def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
+    def scalar_names(self) -> Iterator[ScalarName]:
         yield from ()
 
 
 @dataclass(frozen=True)
-class Metric(MetricExpression):
+class Metric(BaseMetricExpression):
     name: MetricName
-    consolidation_func_name: GraphConsolidationFunction | None = None
-    _: KW_ONLY
-    explicit_unit_id: str = ""
-    explicit_color: str = ""
+    consolidation: GraphConsolidationFunction | None = None
+
+    def ident(self) -> str:
+        return f"{self.__class__.__name__}({self.name},{self.consolidation})"
 
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
-    ) -> MetricExpressionResult:
-        return MetricExpressionResult(
-            translated_metrics[self.name].value,
-            (
-                get_unit_info(self.explicit_unit_id)
-                if self.explicit_unit_id
-                else translated_metrics[self.name].unit_info
-            ),
-            self.explicit_color or translated_metrics[self.name].color,
+    ) -> Result[BaseEvaluated, EvaluationError]:
+        if not (translated_metric := translated_metrics.get(self.name)):
+            return Error(EvaluationError(f"No such translated metric of {self.name!r}", self.name))
+        return OK(
+            BaseEvaluated(
+                translated_metric.value,
+                translated_metric.unit_spec,
+                translated_metric.color,
+            )
         )
 
-    def metrics(self) -> Iterator[Metric]:
-        yield self
+    def metric_names(self) -> Iterator[str]:
+        yield self.name
 
-    def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
+    def scalar_names(self) -> Iterator[ScalarName]:
         yield from ()
 
 
 @dataclass(frozen=True)
-class WarningOf(ScalarExpression):
+class WarningOf(BaseMetricExpression):
     metric: Metric
-    _: KW_ONLY
-    explicit_unit_id: str = ""
-    explicit_color: str = ""
 
-    @property
-    def name(self) -> Literal["warn"]:
-        return "warn"
+    def ident(self) -> str:
+        return f"{self.__class__.__name__}({self.metric.ident()})"
 
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
-    ) -> MetricExpressionResult:
-        return MetricExpressionResult(
-            translated_metrics[self.metric.name].scalar["warn"],
-            (
-                get_unit_info(self.explicit_unit_id)
-                if self.explicit_unit_id
-                else self.metric.evaluate(translated_metrics).unit_info
-            ),
-            self.explicit_color or scalar_colors.get("warn", "#808080"),
-        )
+    ) -> Result[BaseEvaluated, EvaluationError]:
+        if not (translated_metric := translated_metrics.get(self.metric.name)):
+            return Error(
+                EvaluationError(
+                    f"No such translated metric of {self.metric.name!r}",
+                    self.metric.name,
+                )
+            )
 
-    def metrics(self) -> Iterator[Metric]:
-        yield from self.metric.metrics()
+        if (warn_value := translated_metric.scalar.get("warn")) is None:
+            return Error(
+                EvaluationError(f"No such warning value of {self.metric.name!r}", self.metric.name)
+            )
 
-    def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
-        yield self
+        if (result := self.metric.evaluate(translated_metrics)).is_error():
+            return result
+
+        return OK(BaseEvaluated(warn_value, result.ok.unit_spec, scalar_colors["warn"]))
+
+    def metric_names(self) -> Iterator[str]:
+        yield from self.metric.metric_names()
+
+    def scalar_names(self) -> Iterator[ScalarName]:
+        yield ScalarName(self.metric.name, "warn")
 
 
 @dataclass(frozen=True)
-class CriticalOf(ScalarExpression):
+class CriticalOf(BaseMetricExpression):
     metric: Metric
-    _: KW_ONLY
-    explicit_unit_id: str = ""
-    explicit_color: str = ""
 
-    @property
-    def name(self) -> Literal["crit"]:
-        return "crit"
+    def ident(self) -> str:
+        return f"{self.__class__.__name__}({self.metric.ident()})"
 
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
-    ) -> MetricExpressionResult:
-        return MetricExpressionResult(
-            translated_metrics[self.metric.name].scalar["crit"],
-            (
-                get_unit_info(self.explicit_unit_id)
-                if self.explicit_unit_id
-                else self.metric.evaluate(translated_metrics).unit_info
-            ),
-            self.explicit_color or scalar_colors.get("crit", "#808080"),
-        )
+    ) -> Result[BaseEvaluated, EvaluationError]:
+        if not (translated_metric := translated_metrics.get(self.metric.name)):
+            return Error(
+                EvaluationError(
+                    f"No such translated metric of {self.metric.name!r}",
+                    self.metric.name,
+                )
+            )
 
-    def metrics(self) -> Iterator[Metric]:
-        yield from self.metric.metrics()
+        if (crit_value := translated_metric.scalar.get("crit")) is None:
+            return Error(
+                EvaluationError(f"No such critical value of {self.metric.name!r}", self.metric.name)
+            )
 
-    def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
-        yield self
+        if (result := self.metric.evaluate(translated_metrics)).is_error():
+            return result
+
+        return OK(BaseEvaluated(crit_value, result.ok.unit_spec, scalar_colors["crit"]))
+
+    def metric_names(self) -> Iterator[str]:
+        yield from self.metric.metric_names()
+
+    def scalar_names(self) -> Iterator[ScalarName]:
+        yield ScalarName(self.metric.name, "crit")
 
 
 @dataclass(frozen=True)
-class MinimumOf(ScalarExpression):
+class MinimumOf(BaseMetricExpression):
     metric: Metric
-    _: KW_ONLY
-    explicit_unit_id: str = ""
-    explicit_color: str = ""
 
-    @property
-    def name(self) -> Literal["min"]:
-        return "min"
+    def ident(self) -> str:
+        return f"{self.__class__.__name__}({self.metric.ident()})"
 
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
-    ) -> MetricExpressionResult:
-        return MetricExpressionResult(
-            translated_metrics[self.metric.name].scalar["min"],
-            (
-                get_unit_info(self.explicit_unit_id)
-                if self.explicit_unit_id
-                else self.metric.evaluate(translated_metrics).unit_info
-            ),
-            self.explicit_color or scalar_colors.get("min", "#808080"),
-        )
+    ) -> Result[BaseEvaluated, EvaluationError]:
+        if not (translated_metric := translated_metrics.get(self.metric.name)):
+            return Error(
+                EvaluationError(
+                    f"No such translated metric of {self.metric.name!r}",
+                    self.metric.name,
+                )
+            )
 
-    def metrics(self) -> Iterator[Metric]:
-        yield from self.metric.metrics()
+        if (min_value := translated_metric.scalar.get("min")) is None:
+            return Error(
+                EvaluationError(f"No such minimum value of {self.metric.name!r}", self.metric.name)
+            )
 
-    def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
-        yield self
+        if (result := self.metric.evaluate(translated_metrics)).is_error():
+            return result
+
+        return OK(BaseEvaluated(min_value, result.ok.unit_spec, "#808080"))
+
+    def metric_names(self) -> Iterator[str]:
+        yield from self.metric.metric_names()
+
+    def scalar_names(self) -> Iterator[ScalarName]:
+        yield ScalarName(self.metric.name, "min")
 
 
 @dataclass(frozen=True)
-class MaximumOf(ScalarExpression):
+class MaximumOf(BaseMetricExpression):
     metric: Metric
-    _: KW_ONLY
-    explicit_unit_id: str = ""
-    explicit_color: str = ""
 
-    @property
-    def name(self) -> Literal["max"]:
-        return "max"
+    def ident(self) -> str:
+        return f"{self.__class__.__name__}({self.metric.ident()})"
 
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
-    ) -> MetricExpressionResult:
-        return MetricExpressionResult(
-            translated_metrics[self.metric.name].scalar["max"],
-            (
-                get_unit_info(self.explicit_unit_id)
-                if self.explicit_unit_id
-                else self.metric.evaluate(translated_metrics).unit_info
-            ),
-            self.explicit_color or scalar_colors.get("max", "#808080"),
-        )
+    ) -> Result[BaseEvaluated, EvaluationError]:
+        if not (translated_metric := translated_metrics.get(self.metric.name)):
+            return Error(
+                EvaluationError(
+                    f"No such translated metric of {self.metric.name!r}",
+                    self.metric.name,
+                )
+            )
 
-    def metrics(self) -> Iterator[Metric]:
-        yield from self.metric.metrics()
+        if (max_value := translated_metric.scalar.get("max")) is None:
+            return Error(
+                EvaluationError(f"No such maximum value of {self.metric.name!r}", self.metric.name)
+            )
 
-    def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
-        yield self
+        if (result := self.metric.evaluate(translated_metrics)).is_error():
+            return result
+
+        return OK(BaseEvaluated(max_value, result.ok.unit_spec, "#808080"))
+
+    def metric_names(self) -> Iterator[str]:
+        yield from self.metric.metric_names()
+
+    def scalar_names(self) -> Iterator[ScalarName]:
+        yield ScalarName(self.metric.name, "max")
 
 
 @dataclass(frozen=True)
-class Sum(MetricExpression):
-    summands: Sequence[MetricExpression]
-    _: KW_ONLY
-    explicit_unit_id: str = ""
-    explicit_color: str = ""
+class Sum(BaseMetricExpression):
+    summands: Sequence[BaseMetricExpression]
+
+    def ident(self) -> str:
+        return f"{self.__class__.__name__}({','.join(s.ident() for s in self.summands)})"
 
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
-    ) -> MetricExpressionResult:
+    ) -> Result[BaseEvaluated, EvaluationError]:
         if len(self.summands) == 0:
-            return MetricExpressionResult(
-                0.0,
-                get_unit_info(self.explicit_unit_id) if self.explicit_unit_id else unit_info[""],
-                self.explicit_color or "#000000",
-            )
+            return Error(EvaluationError("No summands given"))
 
-        first_result = self.summands[0].evaluate(translated_metrics)
-        values = [first_result.value]
-        unit_info_ = first_result.unit_info
-        color = first_result.color
+        if (first_result := self.summands[0].evaluate(translated_metrics)).is_error():
+            return first_result
+
+        values = [first_result.ok.value]
+        unit_spec = first_result.ok.unit_spec
+        color = first_result.ok.color
         for successor in self.summands[1:]:
-            successor_result = successor.evaluate(translated_metrics)
-            values.append(successor_result.value)
-            unit_info_ = _unit_add(unit_info_, successor_result.unit_info)
-            color = _choose_operator_color(color, successor_result.color)
+            if (successor_result := successor.evaluate(translated_metrics)).is_error():
+                return successor_result
 
-        return MetricExpressionResult(
-            sum(values),
-            get_unit_info(self.explicit_unit_id) if self.explicit_unit_id else unit_info_,
-            self.explicit_color or color,
-        )
+            values.append(successor_result.ok.value)
+            unit_spec = _unit_add(unit_spec, successor_result.ok.unit_spec)
+            color = _choose_operator_color(color, successor_result.ok.color)
 
-    def metrics(self) -> Iterator[Metric]:
-        yield from (m for s in self.summands for m in s.metrics())
+        return OK(BaseEvaluated(sum(values), unit_spec, color))
 
-    def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
-        yield from (sc for s in self.summands for sc in s.scalars())
+    def metric_names(self) -> Iterator[str]:
+        yield from (n for s in self.summands for n in s.metric_names())
+
+    def scalar_names(self) -> Iterator[ScalarName]:
+        yield from (n for s in self.summands for n in s.scalar_names())
 
 
 @dataclass(frozen=True)
-class Product(MetricExpression):
-    factors: Sequence[MetricExpression]
-    _: KW_ONLY
-    explicit_unit_id: str = ""
-    explicit_color: str = ""
+class Product(BaseMetricExpression):
+    factors: Sequence[BaseMetricExpression]
+
+    def ident(self) -> str:
+        return f"{self.__class__.__name__}({','.join(f.ident() for f in self.factors)})"
 
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
-    ) -> MetricExpressionResult:
+    ) -> Result[BaseEvaluated, EvaluationError]:
         if len(self.factors) == 0:
-            return MetricExpressionResult(
-                1.0,
-                get_unit_info(self.explicit_unit_id) if self.explicit_unit_id else unit_info[""],
-                self.explicit_color or "#000000",
-            )
+            return Error(EvaluationError("No factors given"))
 
-        first_result = self.factors[0].evaluate(translated_metrics)
-        product = first_result.value
-        unit_info_ = first_result.unit_info
-        color = first_result.color
+        if (first_result := self.factors[0].evaluate(translated_metrics)).is_error():
+            return first_result
+
+        product = first_result.ok.value
+        unit_spec = first_result.ok.unit_spec
+        color = first_result.ok.color
         for successor in self.factors[1:]:
-            successor_result = successor.evaluate(translated_metrics)
-            product *= successor_result.value
-            unit_info_ = _unit_mult(unit_info_, successor_result.unit_info)
-            color = _choose_operator_color(color, successor_result.color)
+            if (successor_result := successor.evaluate(translated_metrics)).is_error():
+                return successor_result
 
-        return MetricExpressionResult(
-            product,
-            get_unit_info(self.explicit_unit_id) if self.explicit_unit_id else unit_info_,
-            self.explicit_color or color,
-        )
+            product *= successor_result.ok.value
+            unit_spec = _unit_mult(unit_spec, successor_result.ok.unit_spec)
+            color = _choose_operator_color(color, successor_result.ok.color)
 
-    def metrics(self) -> Iterator[Metric]:
-        yield from (m for f in self.factors for m in f.metrics())
+        return OK(BaseEvaluated(product, unit_spec, color))
 
-    def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
-        yield from (s for f in self.factors for s in f.scalars())
+    def metric_names(self) -> Iterator[str]:
+        yield from (n for f in self.factors for n in f.metric_names())
+
+    def scalar_names(self) -> Iterator[ScalarName]:
+        yield from (n for f in self.factors for n in f.scalar_names())
 
 
 @dataclass(frozen=True, kw_only=True)
-class Difference(MetricExpression):
-    minuend: MetricExpression
-    subtrahend: MetricExpression
-    explicit_unit_id: str = ""
-    explicit_color: str = ""
+class Difference(BaseMetricExpression):
+    minuend: BaseMetricExpression
+    subtrahend: BaseMetricExpression
+
+    def ident(self) -> str:
+        return f"{self.__class__.__name__}({self.minuend.ident()},{self.subtrahend.ident()})"
 
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
-    ) -> MetricExpressionResult:
-        minuend_result = self.minuend.evaluate(translated_metrics)
-        subtrahend_result = self.subtrahend.evaluate(translated_metrics)
+    ) -> Result[BaseEvaluated, EvaluationError]:
+        if (minuend_result := self.minuend.evaluate(translated_metrics)).is_error():
+            return minuend_result
 
-        if (subtrahend_result.value) == 0.0:
-            value = 0.0
-        else:
-            value = minuend_result.value - subtrahend_result.value
+        if (subtrahend_result := self.subtrahend.evaluate(translated_metrics)).is_error():
+            return subtrahend_result
 
-        return MetricExpressionResult(
-            value,
-            (
-                get_unit_info(self.explicit_unit_id)
-                if self.explicit_unit_id
-                else _unit_sub(minuend_result.unit_info, subtrahend_result.unit_info)
-            ),
-            (
-                self.explicit_color
-                or _choose_operator_color(minuend_result.color, subtrahend_result.color)
-            ),
+        return OK(
+            BaseEvaluated(
+                (
+                    0.0
+                    if subtrahend_result.ok.value == 0.0
+                    else minuend_result.ok.value - subtrahend_result.ok.value
+                ),
+                _unit_sub(minuend_result.ok.unit_spec, subtrahend_result.ok.unit_spec),
+                _choose_operator_color(minuend_result.ok.color, subtrahend_result.ok.color),
+            )
         )
 
-    def metrics(self) -> Iterator[Metric]:
-        yield from self.minuend.metrics()
-        yield from self.subtrahend.metrics()
+    def metric_names(self) -> Iterator[str]:
+        yield from self.minuend.metric_names()
+        yield from self.subtrahend.metric_names()
 
-    def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
-        yield from self.minuend.scalars()
-        yield from self.subtrahend.scalars()
+    def scalar_names(self) -> Iterator[ScalarName]:
+        yield from self.minuend.scalar_names()
+        yield from self.subtrahend.scalar_names()
 
 
 @dataclass(frozen=True, kw_only=True)
-class Fraction(MetricExpression):
-    dividend: MetricExpression
-    divisor: MetricExpression
-    explicit_unit_id: str = ""
-    explicit_color: str = ""
+class Fraction(BaseMetricExpression):
+    dividend: BaseMetricExpression
+    divisor: BaseMetricExpression
+
+    def ident(self) -> str:
+        return f"{self.__class__.__name__}({self.dividend.ident()},{self.divisor.ident()})"
 
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
-    ) -> MetricExpressionResult:
-        dividend_result = self.dividend.evaluate(translated_metrics)
-        divisor_result = self.divisor.evaluate(translated_metrics)
+    ) -> Result[BaseEvaluated, EvaluationError]:
+        if (dividend_result := self.dividend.evaluate(translated_metrics)).is_error():
+            return dividend_result
 
-        if (divisor_result.value) == 0.0:
-            value = 0.0
-        else:
-            value = dividend_result.value / divisor_result.value
+        if (divisor_result := self.divisor.evaluate(translated_metrics)).is_error():
+            return divisor_result
 
-        return MetricExpressionResult(
-            value,
-            (
-                get_unit_info(self.explicit_unit_id)
-                if self.explicit_unit_id
-                else _unit_div(dividend_result.unit_info, divisor_result.unit_info)
-            ),
-            (
-                self.explicit_color
-                or _choose_operator_color(dividend_result.color, divisor_result.color)
-            ),
+        return OK(
+            BaseEvaluated(
+                (
+                    0.0
+                    if divisor_result.ok.value == 0.0
+                    else dividend_result.ok.value / divisor_result.ok.value
+                ),
+                _unit_div(dividend_result.ok.unit_spec, divisor_result.ok.unit_spec),
+                _choose_operator_color(dividend_result.ok.color, divisor_result.ok.color),
+            )
         )
 
-    def metrics(self) -> Iterator[Metric]:
-        yield from self.dividend.metrics()
-        yield from self.divisor.metrics()
+    def metric_names(self) -> Iterator[str]:
+        yield from self.dividend.metric_names()
+        yield from self.divisor.metric_names()
 
-    def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
-        yield from self.dividend.scalars()
-        yield from self.divisor.scalars()
+    def scalar_names(self) -> Iterator[ScalarName]:
+        yield from self.dividend.scalar_names()
+        yield from self.divisor.scalar_names()
 
 
 @dataclass(frozen=True)
-class Minimum(MetricExpression):
-    operands: Sequence[MetricExpression]
-    _: KW_ONLY
-    explicit_unit_id: str = ""
-    explicit_color: str = ""
+class Minimum(BaseMetricExpression):
+    operands: Sequence[BaseMetricExpression]
+
+    def ident(self) -> str:
+        return f"{self.__class__.__name__}({','.join(o.ident() for o in self.operands)})"
 
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
-    ) -> MetricExpressionResult:
+    ) -> Result[BaseEvaluated, EvaluationError]:
         if len(self.operands) == 0:
-            return MetricExpressionResult(
-                float("nan"),
-                get_unit_info(self.explicit_unit_id) if self.explicit_unit_id else unit_info[""],
-                self.explicit_color or "#000000",
-            )
+            return Error(EvaluationError("No operands given"))
 
-        minimum = self.operands[0].evaluate(translated_metrics)
+        if (minimum_result := self.operands[0].evaluate(translated_metrics)).is_error():
+            return minimum_result
+
         for operand in self.operands[1:]:
-            operand_result = operand.evaluate(translated_metrics)
-            if operand_result.value < minimum.value:
-                minimum = operand_result
+            if (operand_result := operand.evaluate(translated_metrics)).is_error():
+                return operand_result
 
-        return minimum
+            if operand_result.ok.value < minimum_result.ok.value:
+                minimum_result = operand_result
 
-    def metrics(self) -> Iterator[Metric]:
-        yield from (m for o in self.operands for m in o.metrics())
+        return minimum_result
 
-    def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
-        yield from (s for o in self.operands for s in o.scalars())
+    def metric_names(self) -> Iterator[str]:
+        yield from (n for o in self.operands for n in o.metric_names())
+
+    def scalar_names(self) -> Iterator[ScalarName]:
+        yield from (n for o in self.operands for n in o.scalar_names())
 
 
 @dataclass(frozen=True)
-class Maximum(MetricExpression):
-    operands: Sequence[MetricExpression]
-    _: KW_ONLY
-    explicit_unit_id: str = ""
-    explicit_color: str = ""
+class Maximum(BaseMetricExpression):
+    operands: Sequence[BaseMetricExpression]
+
+    def ident(self) -> str:
+        return f"{self.__class__.__name__}({','.join(o.ident() for o in self.operands)})"
 
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
-    ) -> MetricExpressionResult:
+    ) -> Result[BaseEvaluated, EvaluationError]:
         if len(self.operands) == 0:
-            return MetricExpressionResult(
-                float("nan"),
-                get_unit_info(self.explicit_unit_id) if self.explicit_unit_id else unit_info[""],
-                self.explicit_color or "#000000",
-            )
+            return Error(EvaluationError("No operands given"))
 
-        maximum = self.operands[0].evaluate(translated_metrics)
+        if (maximum_result := self.operands[0].evaluate(translated_metrics)).is_error():
+            return maximum_result
+
         for operand in self.operands[1:]:
-            operand_result = operand.evaluate(translated_metrics)
-            if operand_result.value > maximum.value:
-                maximum = operand_result
+            if (operand_result := operand.evaluate(translated_metrics)).is_error():
+                return operand_result
 
-        return maximum
+            if operand_result.ok.value > maximum_result.ok.value:
+                maximum_result = operand_result
 
-    def metrics(self) -> Iterator[Metric]:
-        yield from (m for o in self.operands for m in o.metrics())
+        return maximum_result
 
-    def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
-        yield from (s for o in self.operands for s in o.scalars())
+    def metric_names(self) -> Iterator[str]:
+        yield from (n for o in self.operands for n in o.metric_names())
+
+    def scalar_names(self) -> Iterator[ScalarName]:
+        yield from (n for o in self.operands for n in o.scalar_names())
 
 
 # Composed metric declarations:
 
 
 @dataclass(frozen=True, kw_only=True)
-class Percent(MetricExpression):
+class Percent(BaseMetricExpression):
     """percentage = 100 * percent_value / base_value"""
 
-    percent_value: MetricExpression
-    base_value: MetricExpression
-    explicit_unit_id: str = ""
-    explicit_color: str = ""
+    percent_value: BaseMetricExpression
+    base_value: BaseMetricExpression
+
+    def ident(self) -> str:
+        return f"{self.__class__.__name__}({self.percent_value.ident()},{self.base_value.ident()})"
 
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
-    ) -> MetricExpressionResult:
-        return MetricExpressionResult(
-            (
-                Fraction(
-                    dividend=Product([Constant(100.0), self.percent_value]),
-                    divisor=self.base_value,
-                )
-                .evaluate(translated_metrics)
-                .value
-            ),
-            get_unit_info(self.explicit_unit_id) if self.explicit_unit_id else unit_info["%"],
-            self.explicit_color or self.percent_value.evaluate(translated_metrics).color,
+    ) -> Result[BaseEvaluated, EvaluationError]:
+        if (
+            result := Fraction(
+                dividend=Product([Constant(100.0), self.percent_value]),
+                divisor=self.base_value,
+            ).evaluate(translated_metrics)
+        ).is_error():
+            return result
+
+        if (percent_result := self.percent_value.evaluate(translated_metrics)).is_error():
+            return percent_result
+
+        return OK(
+            BaseEvaluated(
+                result.ok.value,
+                ConvertibleUnitSpecification(
+                    notation=DecimalNotation(symbol="%"),
+                    precision=AutoPrecision(digits=2),
+                ),
+                percent_result.ok.color,
+            )
         )
 
-    def metrics(self) -> Iterator[Metric]:
-        yield from self.percent_value.metrics()
-        yield from self.base_value.metrics()
+    def metric_names(self) -> Iterator[str]:
+        yield from self.percent_value.metric_names()
+        yield from self.base_value.metric_names()
 
-    def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
-        yield from self.percent_value.scalars()
-        yield from self.base_value.scalars()
+    def scalar_names(self) -> Iterator[ScalarName]:
+        yield from self.percent_value.scalar_names()
+        yield from self.base_value.scalar_names()
 
 
 # Special metric declarations for custom graphs
 
 
 @dataclass(frozen=True)
-class Average(MetricExpression):
-    operands: Sequence[MetricExpression]
-    _: KW_ONLY
-    explicit_unit_id: str = ""
-    explicit_color: str = ""
+class Average(BaseMetricExpression):
+    operands: Sequence[BaseMetricExpression]
+
+    def ident(self) -> str:
+        return f"{self.__class__.__name__}({','.join(o.ident() for o in self.operands)})"
 
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
-    ) -> MetricExpressionResult:
+    ) -> Result[BaseEvaluated, EvaluationError]:
         if len(self.operands) == 0:
-            return MetricExpressionResult(
-                float("nan"),
-                get_unit_info(self.explicit_unit_id) if self.explicit_unit_id else unit_info[""],
-                self.explicit_color or "#000000",
-            )
+            return Error(EvaluationError("No operands given"))
 
-        result = Sum(self.operands).evaluate(translated_metrics)
-        return MetricExpressionResult(
-            result.value / len(self.operands),
-            get_unit_info(self.explicit_unit_id) if self.explicit_unit_id else result.unit_info,
-            self.explicit_color or result.color,
+        if (result := Sum(self.operands).evaluate(translated_metrics)).is_error():
+            return result
+
+        return OK(
+            BaseEvaluated(
+                result.ok.value / len(self.operands),
+                result.ok.unit_spec,
+                result.ok.color,
+            )
         )
 
-    def metrics(self) -> Iterator[Metric]:
-        yield from (m for o in self.operands for m in o.metrics())
+    def metric_names(self) -> Iterator[str]:
+        yield from (n for o in self.operands for n in o.metric_names())
 
-    def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
-        yield from (s for o in self.operands for s in o.scalars())
+    def scalar_names(self) -> Iterator[ScalarName]:
+        yield from (n for o in self.operands for n in o.scalar_names())
 
 
 @dataclass(frozen=True)
-class Merge(MetricExpression):
-    operands: Sequence[MetricExpression]
-    _: KW_ONLY
-    explicit_unit_id: str = ""
-    explicit_color: str = ""
+class Merge(BaseMetricExpression):
+    operands: Sequence[BaseMetricExpression]
+
+    def ident(self) -> str:
+        return f"{self.__class__.__name__}({','.join(o.ident() for o in self.operands)})"
 
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
-    ) -> MetricExpressionResult:
-        # TODO None?
+    ) -> Result[BaseEvaluated, EvaluationError]:
+        if len(self.operands) == 0:
+            return Error(EvaluationError("No operands given"))
+
         for operand in self.operands:
-            if (result := operand.evaluate(translated_metrics)).value is not None:
+            if (result := operand.evaluate(translated_metrics)).is_error():
                 return result
-        return MetricExpressionResult(
-            float("nan"),
-            get_unit_info(self.explicit_unit_id) if self.explicit_unit_id else unit_info[""],
-            self.explicit_color or "#000000",
-        )
 
-    def metrics(self) -> Iterator[Metric]:
-        yield from (m for o in self.operands for m in o.metrics())
+            if result.value is not None:
+                return result
 
-    def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
-        yield from (s for o in self.operands for s in o.scalars())
+        return Error(EvaluationError("Unable to evaluate operands"))
+
+    def metric_names(self) -> Iterator[str]:
+        yield from (n for o in self.operands for n in o.metric_names())
+
+    def scalar_names(self) -> Iterator[ScalarName]:
+        yield from (n for o in self.operands for n in o.scalar_names())
 
 
 class ConditionalMetricExpression(abc.ABC):
@@ -602,74 +673,86 @@ class ConditionalMetricExpression(abc.ABC):
 
 @dataclass(frozen=True, kw_only=True)
 class GreaterThan(ConditionalMetricExpression):
-    left: MetricExpression
-    right: MetricExpression
+    left: BaseMetricExpression
+    right: BaseMetricExpression
 
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> bool:
-        return (
-            self.left.evaluate(translated_metrics).value
-            > self.right.evaluate(translated_metrics).value
-        )
+        if (left_result := self.left.evaluate(translated_metrics)).is_error():
+            return False
+
+        if (right_result := self.right.evaluate(translated_metrics)).is_error():
+            return False
+
+        return left_result.ok.value > right_result.ok.value
 
 
 @dataclass(frozen=True, kw_only=True)
 class GreaterEqualThan(ConditionalMetricExpression):
-    left: MetricExpression
-    right: MetricExpression
+    left: BaseMetricExpression
+    right: BaseMetricExpression
 
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> bool:
-        return (
-            self.left.evaluate(translated_metrics).value
-            >= self.right.evaluate(translated_metrics).value
-        )
+        if (left_result := self.left.evaluate(translated_metrics)).is_error():
+            return False
+
+        if (right_result := self.right.evaluate(translated_metrics)).is_error():
+            return False
+
+        return left_result.ok.value >= right_result.ok.value
 
 
 @dataclass(frozen=True, kw_only=True)
 class LessThan(ConditionalMetricExpression):
-    left: MetricExpression
-    right: MetricExpression
+    left: BaseMetricExpression
+    right: BaseMetricExpression
 
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> bool:
-        return (
-            self.left.evaluate(translated_metrics).value
-            < self.right.evaluate(translated_metrics).value
-        )
+        if (left_result := self.left.evaluate(translated_metrics)).is_error():
+            return False
+
+        if (right_result := self.right.evaluate(translated_metrics)).is_error():
+            return False
+
+        return left_result.ok.value < right_result.ok.value
 
 
 @dataclass(frozen=True, kw_only=True)
 class LessEqualThan(ConditionalMetricExpression):
-    left: MetricExpression
-    right: MetricExpression
+    left: BaseMetricExpression
+    right: BaseMetricExpression
 
     def evaluate(
         self,
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> bool:
-        return (
-            self.left.evaluate(translated_metrics).value
-            <= self.right.evaluate(translated_metrics).value
-        )
+        if (left_result := self.left.evaluate(translated_metrics)).is_error():
+            return False
+
+        if (right_result := self.right.evaluate(translated_metrics)).is_error():
+            return False
+
+        return left_result.ok.value <= right_result.ok.value
 
 
-def _extract_consolidation_func_name(
-    expression: str,
+def _extract_consolidation_function(
+    raw_expression: str,
 ) -> tuple[str, GraphConsolidationFunction | None]:
-    if expression.endswith(".max"):
-        return expression[:-4], "max"
-    if expression.endswith(".min"):
-        return expression[:-4], "min"
-    if expression.endswith(".average"):
-        return expression[:-8], "average"
-    return expression, None
+    if raw_expression.endswith(".max"):
+        return raw_expression[:-4], "max"
+    if raw_expression.endswith(".min"):
+        return raw_expression[:-4], "min"
+    if raw_expression.endswith(".average"):
+        return raw_expression[:-8], "average"
+    return raw_expression, None
 
 
 def _from_scalar(
@@ -688,36 +771,36 @@ def _from_scalar(
 
 
 def _parse_single_expression(
-    expression: str,
+    raw_expression: str,
     translated_metrics: Mapping[str, TranslatedMetric],
-) -> MetricExpression:
-    if expression not in translated_metrics:
+) -> BaseMetricExpression:
+    if raw_expression not in translated_metrics:
         with contextlib.suppress(ValueError):
-            return Constant(int(expression))
+            return Constant(int(raw_expression))
         with contextlib.suppress(ValueError):
-            return Constant(float(expression))
+            return Constant(float(raw_expression))
 
-    var_name, consolidation_func_name = _extract_consolidation_func_name(expression)
+    var_name, consolidation = _extract_consolidation_function(raw_expression)
     if percent := var_name.endswith("(%)"):
         var_name = var_name[:-3]
 
     if ":" in var_name:
         var_name, scalar_name = var_name.split(":")
-        metric = Metric(var_name, consolidation_func_name)
+        metric = Metric(var_name, consolidation=consolidation)
         scalar = _from_scalar(scalar_name, metric)
         return Percent(percent_value=scalar, base_value=MaximumOf(metric)) if percent else scalar
 
-    metric = Metric(var_name, consolidation_func_name)
+    metric = Metric(var_name, consolidation=consolidation)
     return Percent(percent_value=metric, base_value=MaximumOf(metric)) if percent else metric
 
 
-RPNOperators = Literal["+", "*", "-", "/", "MIN", "MAX", "AVERAGE", "MERGE", ">", ">=", "<", "<="]
+_RPNOperators = Literal["+", "*", "-", "/", "MIN", "MAX", "AVERAGE", "MERGE", ">", ">=", "<", "<="]
 
 
-def _parse_expression(
-    expression: str,
+def _parse_legacy_expression(
+    raw_expression: str,
     translated_metrics: Mapping[str, TranslatedMetric],
-) -> tuple[Sequence[MetricExpression | RPNOperators], str, str]:
+) -> tuple[Sequence[BaseMetricExpression | _RPNOperators], str, str]:
     # Evaluates an expression, returns a triple of value, unit and color.
     # e.g. "fs_used:max"    -> 12.455, "b", "#00ffc6",
     # e.g. "fs_used(%)"     -> 17.5,   "%", "#00ffc6",
@@ -729,17 +812,19 @@ def _parse_expression(
     # relevant when fetching RRD data and is used for selecting
     # the consolidation function MAX.
 
-    explicit_color = ""
-    if "#" in expression:
-        expression, explicit_color_ = expression.rsplit("#", 1)  # drop appended color information
-        explicit_color = f"#{explicit_color_}"
+    color = ""
+    if "#" in raw_expression:
+        # drop appended color information
+        raw_expression, color_ = raw_expression.rsplit("#", 1)
+        color = f"#{color_}"
 
-    explicit_unit_id = ""
-    if "@" in expression:
-        expression, explicit_unit_id = expression.rsplit("@", 1)  # appended unit name
+    unit_id = ""
+    if "@" in raw_expression:
+        # appended unit name
+        raw_expression, unit_id = raw_expression.rsplit("@", 1)
 
-    stack: list[MetricExpression | RPNOperators] = []
-    for p in expression.split(","):
+    stack: list[BaseMetricExpression | _RPNOperators] = []
+    for p in raw_expression.split(","):
         match p:
             case "+":
                 stack.append("+")
@@ -766,29 +851,24 @@ def _parse_expression(
             case "<=":
                 stack.append("<=")
             case _:
-                stack.append(
-                    _parse_single_expression(
-                        p,
-                        translated_metrics,
-                    )
-                )
+                stack.append(_parse_single_expression(p, translated_metrics))
 
-    return stack, explicit_unit_id, explicit_color
+    return stack, unit_id, color
 
 
 def _resolve_stack(
-    stack: Sequence[MetricExpression | RPNOperators],
-) -> MetricExpression | ConditionalMetricExpression:
-    resolved: list[MetricExpression | ConditionalMetricExpression] = []
+    stack: Sequence[BaseMetricExpression | _RPNOperators],
+) -> BaseMetricExpression | ConditionalMetricExpression:
+    resolved: list[BaseMetricExpression | ConditionalMetricExpression] = []
     for element in stack:
-        if isinstance(element, MetricExpression):
+        if isinstance(element, BaseMetricExpression):
             resolved.append(element)
             continue
 
-        if not isinstance(right := resolved.pop(), MetricExpression):
+        if not isinstance(right := resolved.pop(), BaseMetricExpression):
             raise TypeError(right)
 
-        if not isinstance(left := resolved.pop(), MetricExpression):
+        if not isinstance(left := resolved.pop(), BaseMetricExpression):
             raise TypeError(left)
 
         match element:
@@ -821,141 +901,336 @@ def _resolve_stack(
     return resolved[0]
 
 
-def _add_explicit_unit_id_or_color(
-    expression: MetricExpression, explicit_unit_id: str, explicit_color: str
-) -> MetricExpression:
-    match expression:
-        case Constant():
-            return Constant(
-                expression.value,
-                explicit_unit_id=explicit_unit_id,
-                explicit_color=explicit_color,
-            )
-        case Metric():
-            return Metric(
-                expression.name,
-                explicit_unit_id=explicit_unit_id,
-                explicit_color=explicit_color,
-            )
-        case WarningOf():
-            return WarningOf(
-                expression.metric,
-                explicit_unit_id=explicit_unit_id,
-                explicit_color=explicit_color,
-            )
-        case CriticalOf():
-            return CriticalOf(
-                expression.metric,
-                explicit_unit_id=explicit_unit_id,
-                explicit_color=explicit_color,
-            )
-        case MinimumOf():
-            return MinimumOf(
-                expression.metric,
-                explicit_unit_id=explicit_unit_id,
-                explicit_color=explicit_color,
-            )
-        case MaximumOf():
-            return MaximumOf(
-                expression.metric,
-                explicit_unit_id=explicit_unit_id,
-                explicit_color=explicit_color,
-            )
-        case Sum():
-            return Sum(
-                expression.summands,
-                explicit_unit_id=explicit_unit_id,
-                explicit_color=explicit_color,
-            )
-        case Product():
-            return Product(
-                expression.factors,
-                explicit_unit_id=explicit_unit_id,
-                explicit_color=explicit_color,
-            )
-        case Difference():
-            return Difference(
-                minuend=expression.minuend,
-                subtrahend=expression.subtrahend,
-                explicit_unit_id=explicit_unit_id,
-                explicit_color=explicit_color,
-            )
-        case Fraction():
-            return Fraction(
-                dividend=expression.dividend,
-                divisor=expression.divisor,
-                explicit_unit_id=explicit_unit_id,
-                explicit_color=explicit_color,
-            )
-        case Minimum():
-            return Minimum(
-                expression.operands,
-                explicit_unit_id=explicit_unit_id,
-                explicit_color=explicit_color,
-            )
-        case Maximum():
-            return Maximum(
-                expression.operands,
-                explicit_unit_id=explicit_unit_id,
-                explicit_color=explicit_color,
-            )
-        case Percent():
-            return Percent(
-                percent_value=expression.percent_value,
-                base_value=expression.base_value,
-                explicit_unit_id=explicit_unit_id,
-                explicit_color=explicit_color,
-            )
-        case Average():
-            return Average(
-                expression.operands,
-                explicit_unit_id=explicit_unit_id,
-                explicit_color=explicit_color,
-            )
-        case Merge():
-            return Merge(
-                expression.operands,
-                explicit_unit_id=explicit_unit_id,
-                explicit_color=explicit_color,
-            )
-    assert False, expression
-
-
-def parse_expression(
-    expression: str | int | float,
+def parse_legacy_base_expression(
+    raw_expression: str | int | float,
     translated_metrics: Mapping[str, TranslatedMetric],
-) -> MetricExpression:
-    if isinstance(expression, (int, float)):
-        return Constant(expression)
-
+) -> BaseMetricExpression:
+    if isinstance(raw_expression, (int, float)):
+        return Constant(raw_expression)
     (
         stack,
-        explicit_unit_id,
-        explicit_color,
-    ) = _parse_expression(expression, translated_metrics)
+        _unit_id,
+        _color,
+    ) = _parse_legacy_expression(raw_expression, translated_metrics)
+    if isinstance(resolved := _resolve_stack(stack), BaseMetricExpression):
+        return resolved
+    raise TypeError(resolved)
 
-    if isinstance(resolved := _resolve_stack(stack), MetricExpression):
-        return (
-            _add_explicit_unit_id_or_color(resolved, explicit_unit_id, explicit_color)
-            if explicit_unit_id or explicit_color
-            else resolved
+
+@dataclass(frozen=True)
+class SimpleMetricExpression:
+    base: BaseMetricExpression
+    _: KW_ONLY
+    unit_spec: ConvertibleUnitSpecification | str | None = None
+    color: str = ""
+
+    def evaluate(
+        self,
+        translated_metrics: Mapping[str, TranslatedMetric],
+    ) -> Result[BaseEvaluated, EvaluationError]:
+        if (result := self.base.evaluate(translated_metrics)).is_error():
+            return result
+        return OK(
+            BaseEvaluated(
+                result.ok.value,
+                (
+                    get_unit_info(self.unit_spec)
+                    if isinstance(self.unit_spec, str)
+                    else (self.unit_spec or result.ok.unit_spec)
+                ),
+                self.color or result.ok.color,
+            )
+        )
+
+    def metric_names(self) -> Iterator[str]:
+        yield from self.base.metric_names()
+
+    def scalar_names(self) -> Iterator[ScalarName]:
+        yield from self.base.scalar_names()
+
+
+def parse_legacy_simple_expression(
+    raw_expression: str | int | float,
+    translated_metrics: Mapping[str, TranslatedMetric],
+) -> SimpleMetricExpression:
+    if isinstance(raw_expression, (int, float)):
+        return SimpleMetricExpression(Constant(raw_expression))
+    (
+        stack,
+        unit_id,
+        color,
+    ) = _parse_legacy_expression(raw_expression, translated_metrics)
+    if isinstance(resolved := _resolve_stack(stack), BaseMetricExpression):
+        return SimpleMetricExpression(resolved, unit_spec=unit_id or None, color=color)
+    raise TypeError(resolved)
+
+
+@dataclass(frozen=True)
+class Evaluated:
+    base: BaseMetricExpression
+    value: int | float
+    unit_spec: ConvertibleUnitSpecification | UnitInfo
+    color: str
+    line_type: LineType
+    title: str
+
+    def ident(self) -> str:
+        return self.base.ident()
+
+    def metric_names(self) -> Iterator[str]:
+        yield from self.base.metric_names()
+
+
+@dataclass(frozen=True)
+class MetricExpression:
+    base: BaseMetricExpression
+    _: KW_ONLY
+    unit_spec: ConvertibleUnitSpecification | str | None = None
+    color: str = ""
+    line_type: LineType
+    title: str = ""
+
+    def ident(self) -> str:
+        return self.base.ident()
+
+    def evaluate(
+        self,
+        translated_metrics: Mapping[str, TranslatedMetric],
+    ) -> Result[Evaluated, EvaluationError]:
+        if (result := self.base.evaluate(translated_metrics)).is_error():
+            return Error(result.error)
+
+        def _title() -> str:
+            if self.title:
+                return self.title
+            if metric_names := list(self.metric_names()):
+                return translated_metrics[metric_names[0]].title
+            return ""
+
+        return OK(
+            Evaluated(
+                self.base,
+                result.ok.value,
+                (
+                    get_unit_info(self.unit_spec)
+                    if isinstance(self.unit_spec, str)
+                    else (self.unit_spec or result.ok.unit_spec)
+                ),
+                self.color or result.ok.color,
+                self.line_type,
+                _title(),
+            )
+        )
+
+    def metric_names(self) -> Iterator[str]:
+        yield from self.base.metric_names()
+
+    def scalar_names(self) -> Iterator[ScalarName]:
+        yield from self.base.scalar_names()
+
+    def mirror(self) -> MetricExpression:
+        def _mirror_line_type() -> LineType:
+            match self.line_type:
+                case "line":
+                    return "-line"
+                case "-line":
+                    return "line"
+                case "area":
+                    return "-area"
+                case "-area":
+                    return "area"
+                case "stack":
+                    return "-stack"
+                case "-stack":
+                    return "stack"
+                case _:
+                    assert_never(self.line_type)
+
+        return MetricExpression(
+            self.base,
+            unit_spec=self.unit_spec,
+            color=self.color,
+            line_type=_mirror_line_type(),
+            title=self.title,
+        )
+
+
+def parse_legacy_expression(
+    raw_expression: str | int | float,
+    line_type: LineType,
+    title: str,
+    translated_metrics: Mapping[str, TranslatedMetric],
+) -> MetricExpression:
+    if isinstance(raw_expression, (int, float)):
+        return MetricExpression(
+            Constant(raw_expression),
+            unit_spec=None,
+            color="",
+            line_type=line_type,
+            title=title,
+        )
+    (
+        stack,
+        unit_id,
+        color,
+    ) = _parse_legacy_expression(raw_expression, translated_metrics)
+    if isinstance(resolved := _resolve_stack(stack), BaseMetricExpression):
+        return MetricExpression(
+            resolved,
+            unit_spec=unit_id or None,
+            color=color,
+            line_type=line_type,
+            title=title,
         )
     raise TypeError(resolved)
 
 
-def parse_conditional_expression(
-    expression: str,
+def parse_legacy_conditional_expression(
+    raw_expression: str,
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> ConditionalMetricExpression:
     (
         stack,
-        _explicit_unit_id,
-        _explicit_color,
-    ) = _parse_expression(expression, translated_metrics)
-
-    if isinstance(
-        resolved := _resolve_stack(stack),
-        ConditionalMetricExpression,
-    ):
+        _unit_id,
+        _color,
+    ) = _parse_legacy_expression(raw_expression, translated_metrics)
+    if isinstance(resolved := _resolve_stack(stack), ConditionalMetricExpression):
         return resolved
     raise TypeError(resolved)
+
+
+def parse_base_expression_from_api(
+    quantity: (
+        str
+        | metrics_api.Constant
+        | metrics_api.WarningOf
+        | metrics_api.CriticalOf
+        | metrics_api.MinimumOf
+        | metrics_api.MaximumOf
+        | metrics_api.Sum
+        | metrics_api.Product
+        | metrics_api.Difference
+        | metrics_api.Fraction
+    ),
+) -> BaseMetricExpression:
+    match quantity:
+        case str():
+            return Metric(quantity)
+        case metrics_api.Constant():
+            return Constant(quantity.value)
+        case metrics_api.WarningOf():
+            return WarningOf(Metric(quantity.metric_name))
+        case metrics_api.CriticalOf():
+            return CriticalOf(Metric(quantity.metric_name))
+        case metrics_api.MinimumOf():
+            return MinimumOf(Metric(quantity.metric_name))
+        case metrics_api.MaximumOf():
+            return MaximumOf(Metric(quantity.metric_name))
+        case metrics_api.Sum():
+            return Sum([parse_base_expression_from_api(s) for s in quantity.summands])
+        case metrics_api.Product():
+            return Product([parse_base_expression_from_api(f) for f in quantity.factors])
+        case metrics_api.Difference():
+            return Difference(
+                minuend=parse_base_expression_from_api(quantity.minuend),
+                subtrahend=parse_base_expression_from_api(quantity.subtrahend),
+            )
+        case metrics_api.Fraction():
+            return Fraction(
+                dividend=parse_base_expression_from_api(quantity.dividend),
+                divisor=parse_base_expression_from_api(quantity.divisor),
+            )
+
+
+def parse_expression_from_api(
+    quantity: (
+        str
+        | metrics_api.Constant
+        | metrics_api.WarningOf
+        | metrics_api.CriticalOf
+        | metrics_api.MinimumOf
+        | metrics_api.MaximumOf
+        | metrics_api.Sum
+        | metrics_api.Product
+        | metrics_api.Difference
+        | metrics_api.Fraction
+    ),
+    line_type: Literal["line", "-line", "stack", "-stack"],
+) -> MetricExpression:
+    match quantity:
+        case str():
+            return MetricExpression(
+                Metric(quantity),
+                line_type=line_type,
+                title=get_metric_spec(quantity).title,
+            )
+        case metrics_api.Constant():
+            return MetricExpression(
+                Constant(quantity.value),
+                unit_spec=parse_unit_from_api(quantity.unit),
+                color=parse_color_from_api(quantity.color),
+                line_type=line_type,
+                title=str(quantity.title.localize(translate_to_current_language)),
+            )
+        case metrics_api.WarningOf():
+            return MetricExpression(
+                WarningOf(Metric(quantity.metric_name)),
+                line_type=line_type,
+                title=_("Warning of %s") % get_metric_spec(quantity.metric_name).title,
+            )
+        case metrics_api.CriticalOf():
+            return MetricExpression(
+                CriticalOf(Metric(quantity.metric_name)),
+                line_type=line_type,
+                title=_("Critical of %s") % get_metric_spec(quantity.metric_name).title,
+            )
+        case metrics_api.MinimumOf():
+            return MetricExpression(
+                MinimumOf(Metric(quantity.metric_name)),
+                color=parse_color_from_api(quantity.color),
+                line_type=line_type,
+                title=get_metric_spec(quantity.metric_name).title,
+            )
+        case metrics_api.MaximumOf():
+            return MetricExpression(
+                MaximumOf(Metric(quantity.metric_name)),
+                color=parse_color_from_api(quantity.color),
+                line_type=line_type,
+                title=get_metric_spec(quantity.metric_name).title,
+            )
+        case metrics_api.Sum():
+            return MetricExpression(
+                Sum([parse_base_expression_from_api(s) for s in quantity.summands]),
+                color=parse_color_from_api(quantity.color),
+                line_type=line_type,
+                title=str(quantity.title.localize(translate_to_current_language)),
+            )
+        case metrics_api.Product():
+            return MetricExpression(
+                Product([parse_base_expression_from_api(f) for f in quantity.factors]),
+                unit_spec=parse_unit_from_api(quantity.unit),
+                color=parse_color_from_api(quantity.color),
+                line_type=line_type,
+                title=str(quantity.title.localize(translate_to_current_language)),
+            )
+        case metrics_api.Difference():
+            return MetricExpression(
+                Difference(
+                    minuend=parse_base_expression_from_api(quantity.minuend),
+                    subtrahend=parse_base_expression_from_api(quantity.subtrahend),
+                ),
+                color=parse_color_from_api(quantity.color),
+                line_type=line_type,
+                title=str(quantity.title.localize(translate_to_current_language)),
+            )
+        case metrics_api.Fraction():
+            return MetricExpression(
+                Fraction(
+                    dividend=parse_base_expression_from_api(quantity.dividend),
+                    divisor=parse_base_expression_from_api(quantity.divisor),
+                ),
+                unit_spec=parse_unit_from_api(quantity.unit),
+                color=parse_color_from_api(quantity.color),
+                line_type=line_type,
+                title=str(quantity.title.localize(translate_to_current_language)),
+            )

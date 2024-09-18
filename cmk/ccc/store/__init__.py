@@ -5,6 +5,7 @@
 """This module cares about Check_MK's file storage accessing. Most important
 functionality is the locked file opening realized with the File() context
 manager."""
+
 import logging
 import pickle
 import pprint
@@ -14,7 +15,6 @@ from contextlib import nullcontext
 from pathlib import Path
 from typing import Any
 
-from cmk import trace
 from cmk.ccc.exceptions import MKGeneralException, MKTerminate, MKTimeout
 from cmk.ccc.i18n import _
 from cmk.ccc.store._file import (
@@ -26,9 +26,10 @@ from cmk.ccc.store._file import (
     Serializer,
     TextSerializer,
 )
-from cmk.ccc.store._locks import acquire_lock, cleanup_locks, have_lock
-from cmk.ccc.store._locks import leave_locked_unless_exception as _leave_locked_unless_exception
 from cmk.ccc.store._locks import (
+    acquire_lock,
+    cleanup_locks,
+    have_lock,
     lock_checkmk_configuration,
     lock_exclusive,
     locked,
@@ -37,6 +38,9 @@ from cmk.ccc.store._locks import (
     try_acquire_lock,
     try_locked,
 )
+from cmk.ccc.store._locks import leave_locked_unless_exception as _leave_locked_unless_exception
+
+from cmk import trace
 
 __all__ = [
     "BytesSerializer",
@@ -133,9 +137,7 @@ def load_mk_file(
             acquire_lock(path)
 
         try:
-            exec(
-                compile(path.read_bytes(), path, "exec"), globals(), default
-            )  # nosec B102 # BNS:aee528
+            exec(compile(path.read_bytes(), path, "exec"), globals(), default)  # nosec B102 # BNS:aee528
         except FileNotFoundError:
             pass
         except (MKTerminate, MKTimeout):

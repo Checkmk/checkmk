@@ -61,6 +61,10 @@ from six import ensure_str
 
 from livestatus import SiteId
 
+import cmk.ccc.plugin_registry
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.version import Version
+
 import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.regex
@@ -111,9 +115,6 @@ from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, urlencode
 from cmk.gui.view_utils import render_labels
 
-import cmk.ccc.plugin_registry
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.version import Version
 from cmk.crypto import certificate, keys
 
 seconds_per_day = 86400
@@ -2203,9 +2204,8 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
                 _("You can specify at most %d entries") % self._max_entries,
             )
 
-        if self._valuespec:
-            for nr, s in enumerate(value):
-                self._valuespec.validate_value(s, varprefix + "_%d" % nr)
+        for nr, s in enumerate(value):
+            self._valuespec.validate_value(s, varprefix + "_%d" % nr)
 
     def has_show_more(self) -> bool:
         return self._valuespec.has_show_more()
@@ -5930,9 +5930,8 @@ class Dictionary(ValueSpec[DictionaryModel]):
         render: Literal["normal", "form", "form_part"] = "normal",
         form_narrow: bool = False,
         form_isopen: bool = True,
-        headers: None | (
-            Sequence[tuple[str, Sequence[str]] | tuple[str, str, Sequence[str]]]
-        ) = None,
+        headers: None
+        | (Sequence[tuple[str, Sequence[str]] | tuple[str, str, Sequence[str]]]) = None,
         migrate: Callable[[tuple], dict] | None = None,
         indent: bool = True,
         horizontal: bool = False,
@@ -6137,7 +6136,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
 
     @staticmethod
     def _normalize_header(
-        header: tuple[str, Sequence[str]] | tuple[str, str, Sequence[str]]
+        header: tuple[str, Sequence[str]] | tuple[str, str, Sequence[str]],
     ) -> tuple[str, str | None, Sequence[str]]:
         if isinstance(header, tuple):
             if len(header) == 2:
@@ -8537,6 +8536,7 @@ def MonitoringSiteChoice() -> DropdownChoice:
 
 
 def LogLevelChoice(  # pylint: disable=redefined-builtin
+    with_verbose: bool = True,
     # DropdownChoice
     sorted: bool = False,
     label: str | None = None,
@@ -8559,14 +8559,24 @@ def LogLevelChoice(  # pylint: disable=redefined-builtin
     deprecated_choices: Sequence[int] = (),
 ) -> DropdownChoice:
     return DropdownChoice(
-        choices=[
-            (logging.CRITICAL, _("Critical")),
-            (logging.ERROR, _("Error")),
-            (logging.WARNING, _("Warning")),
-            (logging.INFO, _("Informational")),
-            (cmk.utils.log.VERBOSE, _("Verbose")),
-            (logging.DEBUG, _("Debug")),
-        ],
+        choices=(
+            [
+                (logging.CRITICAL, _("Critical")),
+                (logging.ERROR, _("Error")),
+                (logging.WARNING, _("Warning")),
+                (logging.INFO, _("Informational")),
+                (cmk.utils.log.VERBOSE, _("Verbose")),
+                (logging.DEBUG, _("Debug")),
+            ]
+            if with_verbose
+            else [
+                (logging.CRITICAL, _("Critical")),
+                (logging.ERROR, _("Error")),
+                (logging.WARNING, _("Warning")),
+                (logging.INFO, _("Informational")),
+                (logging.DEBUG, _("Debug")),
+            ]
+        ),
         sorted=sorted,
         label=label,
         help_separator=help_separator,

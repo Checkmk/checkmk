@@ -67,8 +67,9 @@ def check_blade_bays(item, params, parsed):
     yield from check_elphase(item, params, parsed)
 
     data = parsed[item]
-    yield 0, "Max. power: {} W, Type: {}, ID: {}".format(
-        data["power_max"], data["type"], data["id"]
+    yield (
+        0,
+        "Max. power: {} W, Type: {}, ID: {}".format(data["power_max"], data["type"], data["id"]),
     )
 
 

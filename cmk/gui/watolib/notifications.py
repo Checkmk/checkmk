@@ -2,24 +2,25 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-""" Module for managing rule based notifications
+"""Module for managing rule based notifications
 
-    The class 'NotificationRule' represents a single rule object that bridges
-    the mk file config format of a notification rule and an api response.
+The class 'NotificationRule' represents a single rule object that bridges
+the mk file config format of a notification rule and an api response.
 
-    The classes RuleProperties, NotificationMethod, ContactSelection &
-    Condition represent parts of a Notification rule and are handled by
-    the NotificationRule class.
+The classes RuleProperties, NotificationMethod, ContactSelection &
+Condition represent parts of a Notification rule and are handled by
+the NotificationRule class.
 
-    A NotificationRule object can be created from an api request
-    (APINotificationRule) or from a rule loaded from the notifications.mk
-    file (EventRule).
+A NotificationRule object can be created from an api request
+(APINotificationRule) or from a rule loaded from the notifications.mk
+file (EventRule).
 
-    obj = NotificationRule.from_mk_file_format(EventRule)
+obj = NotificationRule.from_mk_file_format(EventRule)
 
-    obj = NotificationRule.from_api_request(APINotificationRule)
+obj = NotificationRule.from_api_request(APINotificationRule)
 
 """
+
 from __future__ import annotations
 
 import logging
@@ -28,6 +29,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, cast
+
+from cmk.ccc import store
 
 from cmk.utils.notify_types import EventRule, NotificationRuleID, NotifyBulkType, NotifyPlugin
 from cmk.utils.user import UserId
@@ -66,13 +69,10 @@ from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoListConfi
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.utils import wato_root_dir
 
-from cmk.ccc import store
-
 logger = logging.getLogger(__name__)
 
 
 class NotificationRuleConfigFile(WatoListConfigFile[EventRule]):
-
     def __init__(self) -> None:
         super().__init__(
             config_file_path=Path(wato_root_dir() + "notifications.mk"),

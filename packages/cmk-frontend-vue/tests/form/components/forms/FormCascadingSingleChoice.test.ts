@@ -1,3 +1,8 @@
+/**
+ * Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
 import { fireEvent, render, screen } from '@testing-library/vue'
 import type * as FormSpec from '@/form/components/vue_formspec_components'
 import FormCascadingSingleChoice from '@/form/components/forms/FormCascadingSingleChoice.vue'
@@ -33,6 +38,7 @@ const spec: FormSpec.CascadingSingleChoice = {
   type: 'cascading_single_choice',
   title: 'fooTitle',
   label: 'fooLabel',
+  layout: 'horizontal',
   help: 'fooHelp',
   validators: [],
   input_hint: '',
@@ -97,6 +103,35 @@ test('FormCascadingSingleChoice sets default on switch', async () => {
   expect(integerElement.value).toBe('5')
 
   expect(getCurrentData()).toMatch('["integerChoice",5]')
+})
+
+test('FormCascadingSingleChoice keeps previously inserted data', async () => {
+  const { getCurrentData } = renderFormWithData({
+    spec,
+    data: ['stringChoice', 'bar'],
+    backendValidation: []
+  })
+
+  // make sure the non default text input value is actually there
+  expect(getCurrentData()).toMatch('["stringChoice","bar"]')
+
+  // change to a non default value
+  const stringElement = screen.getByRole<HTMLInputElement>('textbox')
+  await fireEvent.update(stringElement, 'other_value')
+  // make sure the input in the string field is propagated
+  expect(getCurrentData()).toMatch('["stringChoice","other_value"]')
+
+  // switch to integer input
+  const element = screen.getByRole<HTMLInputElement>('combobox', { name: 'fooLabel' })
+  await fireEvent.update(element, 'integerChoice')
+  // make sure the default value is propagated
+  expect(getCurrentData()).toMatch('["integerChoice",5]')
+
+  // now switch back to the string
+  await fireEvent.update(element, 'stringChoice')
+
+  // now the other value should still be there, not the default value
+  expect(getCurrentData()).toMatch('["stringChoice","other_value"]')
 })
 
 test('FormCascadingSingleChoice checks validators', async () => {

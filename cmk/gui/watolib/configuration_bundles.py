@@ -21,6 +21,9 @@ from typing import (
     TypeVar,
 )
 
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
+
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_QUICK_SETUP
 from cmk.utils.hostaddress import HostName
 from cmk.utils.password_store import Password
@@ -34,9 +37,6 @@ from cmk.gui.watolib.passwords import load_passwords, remove_password, save_pass
 from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, Rule, SingleRulesetRecursively
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.utils import multisite_dir
-
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import omd_site
 
 _T = TypeVar("_T")
 BundleId = NewType("BundleId", str)
@@ -73,7 +73,7 @@ def _get_affected_entities(bundle_group: str) -> set[Entity]:
 
 
 class CreateHost(TypedDict):
-    folder: str
+    folder: Folder
     name: HostName
     attributes: HostAttributes
     cluster_nodes: NotRequired[Sequence[HostName]]
@@ -119,12 +119,6 @@ class BundleReferences:
     passwords: Sequence[tuple[str, Password]] | None = None  # PasswordId, Password
     rules: Sequence[Rule] | None = None
     dcd_connections: Sequence[tuple[str, DCDConnectionSpec]] | None = None
-
-
-def identify_bundle_group_type(bundle_group: str) -> RuleGroupType:
-    if bundle_group.startswith(RuleGroupType.SPECIAL_AGENTS.value):
-        return RuleGroupType.SPECIAL_AGENTS
-    raise ValueError(f"Unknown bundle group: {bundle_group}")
 
 
 def valid_special_agent_bundle(bundle: BundleReferences) -> bool:
@@ -197,6 +191,15 @@ def read_config_bundle(bundle_id: BundleId) -> "ConfigBundle":
         return all_bundles[bundle_id]
 
     raise MKGeneralException(f'Configuration bundle "{bundle_id}" does not exist.')
+
+
+def edit_config_bundle_configuration(bundle_id: BundleId, bundle: "ConfigBundle") -> None:
+    store = ConfigBundleStore()
+    all_bundles = store.load_for_modification()
+    if bundle_id not in all_bundles:
+        raise MKGeneralException(f'Configuration bundle "{bundle_id}" does not exist.')
+    all_bundles[bundle_id] = bundle
+    store.save(all_bundles)
 
 
 def create_config_bundle(
@@ -279,10 +282,9 @@ def _create_hosts(bundle_ident: GlobalIdent, hosts: Iterable[CreateHost]) -> Non
     folder_getter = itemgetter("folder")
     hosts_sorted_by_folder: list[CreateHost] = sorted(hosts, key=folder_getter)
     folder_and_valid_hosts = []
-    for folder_name, hosts_iter in groupby(
-        hosts_sorted_by_folder, key=folder_getter
-    ):  # type: str, Iterable[CreateHost]
-        folder = folder_tree().folder(folder_name)
+
+    folder: Folder
+    for folder, hosts_iter in groupby(hosts_sorted_by_folder, key=folder_getter):
         folder.prepare_create_hosts()
         valid_hosts = [
             (
@@ -295,6 +297,7 @@ def _create_hosts(bundle_ident: GlobalIdent, hosts: Iterable[CreateHost]) -> Non
             )
             for host in hosts_iter
         ]
+
         folder_and_valid_hosts.append((folder, valid_hosts))
 
     for folder, valid_hosts in folder_and_valid_hosts:
@@ -307,9 +310,7 @@ def _delete_hosts(hosts: Iterable[Host]) -> None:
         ((host.folder(), host) for host in hosts),
         key=folder_getter,
     )
-    for folder, host_iter in groupby(
-        folders_and_hosts, key=folder_getter
-    ):  # type: Folder, Iterable[tuple[Folder, Host]]
+    for folder, host_iter in groupby(folders_and_hosts, key=folder_getter):  # type: Folder, Iterable[tuple[Folder, Host]]
         host_names = [host.name() for _folder, host in host_iter]
         folder.delete_hosts(
             host_names, automation=check_mk_automations.delete_hosts, allow_locked_deletion=True
@@ -361,15 +362,11 @@ def _collect_rules(
 def _create_rules(bundle_ident: GlobalIdent, rules: Iterable[CreateRule]) -> None:
     # sort by folder, then ruleset
     sorted_rules = sorted(rules, key=itemgetter("folder", "ruleset"))
-    for folder_name, rule_iter_outer in groupby(
-        sorted_rules, key=itemgetter("folder")
-    ):  # type: str, Iterable[CreateRule]
+    for folder_name, rule_iter_outer in groupby(sorted_rules, key=itemgetter("folder")):  # type: str, Iterable[CreateRule]
         folder = folder_tree().folder(folder_name)
         rulesets = FolderRulesets.load_folder_rulesets(folder)
 
-        for ruleset_name, rule_iter_inner in groupby(
-            rule_iter_outer, key=itemgetter("ruleset")
-        ):  # type: str, Iterable[CreateRule]
+        for ruleset_name, rule_iter_inner in groupby(rule_iter_outer, key=itemgetter("ruleset")):  # type: str, Iterable[CreateRule]
             ruleset = rulesets.get(ruleset_name)
             for create_rule in rule_iter_inner:
                 rule = Rule.from_config(folder, ruleset, create_rule["spec"])
@@ -382,9 +379,7 @@ def _create_rules(bundle_ident: GlobalIdent, rules: Iterable[CreateRule]) -> Non
 def _delete_rules(rules: Iterable[Rule]) -> None:
     folder_getter = itemgetter(0)
     sorted_rules = sorted(((rule.folder, rule) for rule in rules), key=folder_getter)
-    for folder, rule_iter in groupby(
-        sorted_rules, key=folder_getter
-    ):  # type: Folder, Iterable[tuple[Folder, Rule]]
+    for folder, rule_iter in groupby(sorted_rules, key=folder_getter):  # type: Folder, Iterable[tuple[Folder, Rule]]
         rulesets = FolderRulesets.load_folder_rulesets(folder)
         for _folder, rule in rule_iter:
             # the rule objects loaded into `rulesets` are different instances

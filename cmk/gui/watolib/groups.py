@@ -8,6 +8,9 @@ import re
 from collections.abc import Callable
 from typing import Any, Literal
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc.plugin_registry import Registry
+
 from cmk.utils import paths
 from cmk.utils.notify_types import EventRule
 from cmk.utils.regex import GROUP_NAME_PATTERN
@@ -44,9 +47,6 @@ from cmk.gui.watolib.host_attributes import (
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.rulesets import AllRulesets
 from cmk.gui.watolib.timeperiods import load_timeperiods
-
-import cmk.ccc.version as cmk_version
-from cmk.ccc.plugin_registry import Registry
 
 ContactGroupUsageFinder = Callable[[GroupName, GlobalSettings], list[tuple[str, str]]]
 
@@ -275,17 +275,17 @@ def is_alias_used(
 
     # Timeperiods
     timeperiods = load_timeperiods()
-    for key, value in timeperiods.items():
-        if timeperiod_spec_alias(value) == my_alias and (
-            my_what != "timeperiods" or my_name != key
+    for timeperiod_id, timeperiod_spec in timeperiods.items():
+        if timeperiod_spec_alias(timeperiod_spec) == my_alias and (
+            my_what != "timeperiods" or my_name != timeperiod_id
         ):
-            return False, _("This alias is already used in time period %s.") % key
+            return False, _("This alias is already used in time period %s.") % timeperiod_id
 
     # Roles
     roles = load_roles()
-    for key, value in roles.items():
-        if value.get("alias") == my_alias and (my_what != "roles" or my_name != key):
-            return False, _("This alias is already used in the role %s.") % key
+    for role_id, role_spec in roles.items():
+        if role_spec.get("alias") == my_alias and (my_what != "roles" or my_name != role_id):
+            return False, _("This alias is already used in the role %s.") % role_id
 
     return True, None
 

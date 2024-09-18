@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.ccc.exceptions import MKGeneralException
+
+from cmk.gui.form_specs.private import LegacyValueSpec
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Alternative,
@@ -17,7 +20,7 @@ from cmk.gui.valuespec import (
     ValueSpecHelp,
 )
 
-from cmk.ccc.exceptions import MKGeneralException
+from cmk.rulesets.v1 import form_specs, Title
 
 
 def IPMIParameters() -> Dictionary:
@@ -40,6 +43,29 @@ def IPMIParameters() -> Dictionary:
             ),
         ],
         optional_keys=[],
+    )
+
+
+def create_ipmi_parameters() -> form_specs.Dictionary:
+    return form_specs.Dictionary(
+        title=Title("IPMI credentials"),
+        elements={
+            "username": form_specs.DictElement(
+                required=True,
+                parameter_form=form_specs.String(
+                    title=Title("Username"),
+                ),
+            ),
+            "password": form_specs.DictElement(
+                required=True,
+                parameter_form=LegacyValueSpec.wrap(
+                    Password(
+                        title=_("Password"),
+                        allow_empty=False,
+                    ),
+                ),
+            ),
+        },
     )
 
 

@@ -51,9 +51,7 @@ def parse_hepta(string_table):
             local,
             sync_state,
         ),
-    ) = (
-        string_table[0] or string_table[1]
-    )
+    ) = string_table[0] or string_table[1]
     return {
         "devicetype": device_type,
         "serialnumber": serial_number,

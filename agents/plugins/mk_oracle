@@ -2812,7 +2812,7 @@ EOM
         # we can not read sqlnet.ora!
         # set_ora_env already checked that the file exists
         # and we want to transport a meaningful error message to the ui and in logging
-        local sqlnet_ora_error="${TNS_ADMIN}/sqlnet.ora can not be read by user \"${EXECUTION_USER}\"! Either use 'sqlnet.ora permission group' bakery rule, or directly modify permissions of the file."
+        local sqlnet_ora_error="${TNS_ADMIN}/sqlnet.ora can not be read by user \"${EXECUTION_USER}\"! If you use the bakery to roll out the agent use 'sqlnet.ora permission group' setting of the 'Oracle databases' agent rule or directly modify permissions of the file (use 'mk_oracle --no-spool -t' for instructions)."
         logging -c -e "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "$sqlnet_ora_error"
 
         echo '<<<oracle_instance:sep(124)>>>'

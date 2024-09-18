@@ -11,6 +11,11 @@ from collections.abc import Iterable
 from contextlib import nullcontext
 from datetime import datetime
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
+
 import cmk.utils.paths
 from cmk.utils.paths import configuration_lockfile
 from cmk.utils.user import UserId
@@ -28,7 +33,7 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.session import SuperUserContext
-from cmk.gui.watolib.automation_commands import automation_command_registry
+from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import (
     check_mk_local_automation_serialized,
     cmk_version_of_remote_automation_source,
@@ -36,11 +41,7 @@ from cmk.gui.watolib.automations import (
     verify_request_compatibility,
 )
 
-import cmk.ccc.version as cmk_version
 from cmk import trace
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import omd_site
 
 tracer = trace.get_tracer()
 
@@ -98,7 +99,7 @@ class PageAutomation(AjaxPage):
     login secret that has previously been exchanged during "site login" (see above).
     """
 
-    def _from_vars(self):
+    def _from_vars(self) -> None:
         self._authenticate()
         _set_version_headers()
         self._command = request.get_str_input_mandatory("command")
@@ -108,7 +109,7 @@ class PageAutomation(AjaxPage):
             ignore_license_compatibility=self._command == "distribute-verification-response"
         )
 
-    def _authenticate(self):
+    def _authenticate(self) -> None:
         secret = request.var("secret")
 
         if not secret:
@@ -147,7 +148,7 @@ class PageAutomation(AjaxPage):
             self._execute_automation()
         return None
 
-    def _execute_automation(self):
+    def _execute_automation(self) -> None:
         with tracer.start_as_current_span(f"_execute_automation[{self._command}]"):
             # TODO: Refactor these two calls to also use the automation_command_registry
             if self._command == "checkmk-automation":
@@ -183,7 +184,7 @@ class PageAutomation(AjaxPage):
                 exc=e,
             )
 
-    def _execute_cmk_automation(self):
+    def _execute_cmk_automation(self) -> None:
         cmk_command = request.get_str_input_mandatory("automation")
         args = watolib_utils.mk_eval(request.get_str_input_mandatory("arguments"))
         indata = watolib_utils.mk_eval(request.get_str_input_mandatory("indata"))
@@ -205,7 +206,7 @@ class PageAutomation(AjaxPage):
             )
         )
 
-    def _execute_push_profile(self):
+    def _execute_push_profile(self) -> None:
         try:
             response.set_data(str(watolib_utils.mk_repr(self._automation_push_profile())))
         except Exception as e:
@@ -214,7 +215,7 @@ class PageAutomation(AjaxPage):
                 raise
             response.set_data(_("Internal automation error: %s\n%s") % (e, traceback.format_exc()))
 
-    def _automation_push_profile(self):
+    def _automation_push_profile(self) -> bool:
         site_id = request.var("siteid")
         if not site_id:
             raise MKGeneralException(_("Missing variable siteid"))
@@ -241,7 +242,7 @@ class PageAutomation(AjaxPage):
 
         return True
 
-    def _execute_automation_command(self, automation_command):
+    def _execute_automation_command(self, automation_command: type[AutomationCommand]) -> None:
         try:
             # Don't use write_text() here (not needed, because no HTML document is rendered)
             automation = automation_command()

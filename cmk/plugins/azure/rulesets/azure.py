@@ -5,9 +5,10 @@
 from collections.abc import Mapping, Sequence
 from typing import Final
 
+from cmk.ccc.version import Edition, edition
+
 from cmk.utils import paths
 
-from cmk.ccc.version import edition, Edition
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
@@ -46,7 +47,8 @@ RAW_AZURE_SERVICES: Final = [
     ("Microsoft.Web/sites", Title("Web Servers (IIS)")),
     ("Microsoft.DBforMySQL/servers", Title("Database for MySQL single server")),
     ("Microsoft.DBforMySQL/flexibleServers", Title("Database for MySQL flexible server")),
-    ("Microsoft.DBforPostgreSQL/servers", Title("Database for PostgreSQL")),
+    ("Microsoft.DBforPostgreSQL/servers", Title("Database for PostgreSQL single server")),
+    ("Microsoft.DBforPostgreSQL/flexibleServers", Title("Database for PostgreSQL flexible server")),
     ("Microsoft.Network/trafficmanagerprofiles", Title("Traffic Manager")),
     ("Microsoft.Network/loadBalancers", Title("Load Balancer")),
 ]
@@ -200,6 +202,14 @@ def _get_services_fs() -> Mapping[str, DictElement]:
     }
 
 
+def _migrate_sequential(value: object) -> Mapping[str, object]:
+    if not isinstance(value, dict):
+        raise TypeError(value)
+
+    value.pop("sequential", None)
+    return value
+
+
 def _migrate_authority(value: object) -> str:
     if value == "global":
         return "global_"
@@ -210,6 +220,7 @@ def _migrate_authority(value: object) -> str:
 
 def _formspec() -> Dictionary:
     return Dictionary(
+        migrate=_migrate_sequential,
         elements={
             "authority": DictElement(
                 parameter_form=SingleChoice(
@@ -306,25 +317,6 @@ def _formspec() -> Dictionary:
                     prefill=DefaultValue("grouphost"),
                 ),
             ),
-            "sequential": DictElement(
-                parameter_form=SingleChoice(
-                    migrate=lambda value: "singlethreaded" if value else "multithreaded",
-                    title=Title("Force agent to run in single thread"),
-                    help_text=Help(
-                        "Check this to turn off multiprocessing."
-                        " Recommended for debugging purposes only."
-                    ),
-                    elements=[
-                        SingleChoiceElement(
-                            name="multithreaded", title=Title("Run agent multithreaded")
-                        ),
-                        SingleChoiceElement(
-                            name="singlethreaded", title=Title("Run agent in single thread")
-                        ),
-                    ],
-                    prefill=DefaultValue("multithreaded"),
-                ),
-            ),
             "import_tags": DictElement(
                 parameter_form=CascadingSingleChoice(
                     title=Title("Import tags as host/service labels"),
@@ -359,7 +351,7 @@ def _formspec() -> Dictionary:
                     prefill=DefaultValue("all_tags"),
                 ),
             ),
-        }
+        },
     )
 
 

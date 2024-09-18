@@ -9,6 +9,9 @@ from typing import Any, Literal
 
 from livestatus import OnlySites, SiteId
 
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 from cmk.utils.statename import short_service_state_name
@@ -28,7 +31,7 @@ from cmk.gui.data_source import ABCDataSource, RowTable
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, Request
+from cmk.gui.http import Request, request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.painter.v0.base import Cell, Painter
@@ -59,8 +62,6 @@ from cmk.bi.data_fetcher import get_cache_dir
 from cmk.bi.lib import FrozenMarker
 from cmk.bi.trees import BICompiledRule
 from cmk.bi.type_defs import frozen_aggregations_dir
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
 
 
 class DataSourceBIAggregations(ABCDataSource):
@@ -660,7 +661,10 @@ class PainterAggrOutput(Painter):
 
 
 def paint_aggr_hosts(
-    row: Row, link_to_view: str, *, request: Request  # pylint: disable=redefined-outer-name
+    row: Row,
+    link_to_view: str,
+    *,
+    request: Request,  # pylint: disable=redefined-outer-name
 ) -> CellSpec:
     h = []
     for site, host in row["aggr_hosts"]:

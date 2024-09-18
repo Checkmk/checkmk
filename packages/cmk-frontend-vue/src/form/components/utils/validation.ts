@@ -1,9 +1,11 @@
-import { computed, onMounted, ref, type Ref, watch, type WritableComputedRef } from 'vue'
-import type {
-  DictionaryElement,
-  ValidationMessage,
-  Validator
-} from '@/form/components/vue_formspec_components'
+/**
+ * Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+import { computed, ref, type Ref, type WritableComputedRef } from 'vue'
+import type { ValidationMessage, Validator } from '@/form/components/vue_formspec_components'
+import { immediateWatch } from './watch'
 
 /**
  * Hook to handle validation messages and update date if invalid value is provided
@@ -14,29 +16,22 @@ export function useValidation<Type>(
   data: Ref<Type>,
   validators: Validator[],
   getBackendValidation: () => ValidationMessages
-): [Ref<ValidationMessages>, WritableComputedRef<Type>] {
-  const validation = ref<ValidationMessages>([])
+): [Ref<Array<string>>, WritableComputedRef<Type>] {
+  const validation = ref<Array<string>>([])
 
-  const updateValidation = (newValidation: ValidationMessages) => {
-    validation.value = newValidation
+  immediateWatch(getBackendValidation, (newValidation: ValidationMessages) => {
+    validation.value = newValidation.map((m) => m.message)
     newValidation.forEach((message) => {
       data.value = message.invalid_value as Type
     })
-  }
-
-  onMounted(() => updateValidation(getBackendValidation()))
-
-  watch(getBackendValidation, updateValidation)
+  })
 
   const value = computed<Type>({
     get() {
       return data.value
     },
     set(value: Type) {
-      validation.value = []
-      validateValue(value, validators).forEach((error) => {
-        validation.value = [{ message: error, location: [], invalid_value: value }]
-      })
+      validation.value = validateValue(value, validators)
       data.value = value
     }
   })
@@ -90,7 +85,7 @@ export function isFloat(value: string): boolean {
 }
 
 export function groupDictionaryValidations(
-  elements: DictionaryElement[],
+  elements: Array<{ ident: string }>,
   newValidation: ValidationMessages
 ): [ValidationMessages, Record<string, ValidationMessages>] {
   // Prepare all elements with an empty list of validation messages
@@ -123,11 +118,11 @@ export function groupDictionaryValidations(
   return [dictionaryValidations, elementValidations]
 }
 
-export function groupListValidations(
+export function groupIndexedValidations(
   messages: ValidationMessages,
   numberOfElements: number
-): [ValidationMessages, Record<number, ValidationMessages>] {
-  const listValidations: ValidationMessages = []
+): [Array<string>, Record<number, ValidationMessages>] {
+  const ownValidations: Array<string> = []
   const elementValidations: Record<number, ValidationMessages> = []
   // This functions groups the validation messages by the index of the element they belong to
   // Initialize the array with empty arrays
@@ -137,7 +132,7 @@ export function groupListValidations(
   messages.forEach((msg) => {
     const index = msg.location.length == 0 ? -1 : parseInt(msg.location[0]!)
     if (index == -1) {
-      listValidations.push(msg)
+      ownValidations.push(msg.message)
       return
     }
     const elementMessages = elementValidations[index] || []
@@ -148,5 +143,5 @@ export function groupListValidations(
     })
     elementValidations[index] = elementMessages
   })
-  return [listValidations, elementValidations]
+  return [ownValidations, elementValidations]
 }

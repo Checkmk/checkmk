@@ -2,11 +2,11 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Classes used by the API for section plug-ins
-"""
+"""Classes used by the API for section plug-ins"""
+
 import string
 from collections.abc import Sequence
-from typing import Literal, NamedTuple, Self
+from typing import Literal, NamedTuple, override, Self
 
 
 class _OIDSpecTuple(NamedTuple):
@@ -34,6 +34,7 @@ class OIDBytes(_OIDSpecTuple):
     def __new__(cls, value: str) -> "OIDBytes":
         return super().__new__(cls, value, "binary", False)
 
+    @override
     def __repr__(self) -> str:
         return f"OIDBytes({self.column!r})"
 
@@ -53,6 +54,7 @@ class OIDCached(_OIDSpecTuple):
     def __new__(cls, value: str) -> "OIDCached":
         return super().__new__(cls, value, "string", True)
 
+    @override
     def __repr__(self) -> str:
         return f"OIDCached({self.column!r})"
 
@@ -69,6 +71,7 @@ class OIDEnd(_OIDSpecTuple):
     def __new__(cls) -> "OIDEnd":
         return super().__new__(cls, 0, "string", False)
 
+    @override
     def __repr__(self) -> str:
         return "OIDEnd()"
 
@@ -105,6 +108,7 @@ class SNMPTree(_SNMPTreeTuple):
         ...     ],
         ... )
     """
+
     VALID_CHARACTERS: set[str] = {".", *string.digits}
 
     def __new__(cls, base: str, oids: Sequence[str | _OIDSpecTuple]) -> Self:

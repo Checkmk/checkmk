@@ -7,6 +7,7 @@ password store compatible.
 
 We are working towards a more staight forward solution.
 """
+
 import shlex
 import sys
 from collections.abc import Callable, Iterable, Mapping
@@ -52,6 +53,7 @@ HACK_AGENTS = {
     "prometheus": False,
     "allnet_ip_sensoric": False,  # needs no secret
     "graylog": True,
+    "storeonce": True,
 }
 
 

@@ -12,6 +12,8 @@ from argparse import ArgumentParser
 from collections.abc import Callable, Sequence
 from typing import assert_never
 
+from cmk.ccc import debug
+
 from cmk.utils import paths
 from cmk.utils.rulesets.definition import RuleGroup
 
@@ -19,8 +21,10 @@ from cmk.checkengine.checkresults import (  # pylint: disable=cmk-module-layer-v
     ActiveCheckResult,
 )
 
-from cmk.base import check_api  # pylint: disable=cmk-module-layer-violation
-from cmk.base import server_side_calls  # pylint: disable=cmk-module-layer-violation
+from cmk.base import (  # pylint: disable=cmk-module-layer-violation
+    check_api,
+    server_side_calls,
+)
 from cmk.base.api.agent_based.register import (  # pylint: disable=cmk-module-layer-violation
     iter_all_check_plugins,
     iter_all_discovery_rulesets,
@@ -40,7 +44,6 @@ from cmk.gui.watolib.rulespecs import (  # pylint: disable=cmk-module-layer-viol
 )
 
 from cmk.agent_based import v2 as agent_based_v2
-from cmk.ccc import debug
 from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup
 from cmk.rulesets.v1 import entry_point_prefixes
 from cmk.rulesets.v1.rule_specs import (

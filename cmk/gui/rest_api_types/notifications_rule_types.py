@@ -883,7 +883,6 @@ class CheckboxMatchHostTags:
 
         resp["value"] = []
         for k, v in self.value.items():
-
             as_aux_tag = TagID(k)
             if as_aux_tag in aux_tags:
                 resp["value"].append(
@@ -2629,6 +2628,7 @@ class API_JiraData(TypedDict, total=False):
     host_summary: CheckboxStrAPIType
     service_summary: CheckboxStrAPIType
     label: CheckboxStrAPIType
+    graphs_per_notification: CheckboxIntAPIType
     resolution_id: CheckboxStrAPIType
     optional_timeout: CheckboxStrAPIType
 

@@ -11,7 +11,7 @@ from cmk.rulesets.v1.form_specs import Dictionary
 
 @dataclass(frozen=True, kw_only=True)
 class Topic:
-    key: str
+    ident: str
     dictionary: Dictionary
 
 

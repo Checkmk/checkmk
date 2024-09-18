@@ -11,6 +11,14 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
+from cmk.ccc.exceptions import (
+    MKAgentError,
+    MKFetcherError,
+    MKIPAddressLookupError,
+    MKSNMPError,
+    MKTimeout,
+)
+
 import cmk.utils.resulttype as result
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import SectionName
@@ -20,13 +28,6 @@ from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.fetcher import FetcherType, SourceInfo
 from cmk.checkengine.parser import AgentRawDataSection, HostSections
 
-from cmk.ccc.exceptions import (
-    MKAgentError,
-    MKFetcherError,
-    MKIPAddressLookupError,
-    MKSNMPError,
-    MKTimeout,
-)
 from cmk.piggyback import PiggybackMetaData
 from cmk.piggyback.config import Config as PiggybackConfig
 from cmk.piggyback.config import PiggybackTimeSettings
@@ -131,7 +132,6 @@ def summarize_piggyback(
 def _summarize_single_piggyback_source(
     meta: PiggybackMetaData, config: PiggybackConfig, now: float
 ) -> ActiveCheckResult:
-
     if (age := now - meta.last_update) > (allowed := config.max_cache_age(meta.source)):
         return ActiveCheckResult(
             0,

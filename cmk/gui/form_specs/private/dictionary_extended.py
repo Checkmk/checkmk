@@ -5,6 +5,8 @@
 from dataclasses import dataclass
 from typing import Any, Mapping, TypeVar
 
+from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout
+
 from cmk.rulesets.v1 import Message
 from cmk.rulesets.v1.form_specs import DefaultValue, DictElement, FormSpec
 
@@ -40,3 +42,4 @@ class DictionaryExtended(FormSpec[Mapping[str, object]]):
     """
 
     prefill: DefaultValue[Mapping[str, object]] | None = None
+    layout: DictionaryLayout = DictionaryLayout.one_column

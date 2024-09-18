@@ -41,15 +41,21 @@ def check_huawei_osn_laser(item, params, info):
             warn_out, crit_out = params["levels_low_out"]
 
             # In
-            yield 0, "In: %.1f dBm" % dbm_in, [
-                ("input_signal_power_dBm", dbm_in, warn_in, crit_in),
-            ]
+            yield (
+                0,
+                "In: %.1f dBm" % dbm_in,
+                [
+                    ("input_signal_power_dBm", dbm_in, warn_in, crit_in),
+                ],
+            )
             yield check_state(dbm_in, (warn_in, crit_in))
 
             # And out
-            yield 0, "Out: %.1f dBm" % dbm_out, [
-                ("output_signal_power_dBm", dbm_out, warn_out, crit_out)
-            ]
+            yield (
+                0,
+                "Out: %.1f dBm" % dbm_out,
+                [("output_signal_power_dBm", dbm_out, warn_out, crit_out)],
+            )
             yield check_state(dbm_out, (warn_out, crit_out))
 
             # FEC Correction

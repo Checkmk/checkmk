@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import base64
 import os
 import re
 import sys
@@ -17,12 +18,16 @@ from typing import Any, NamedTuple, NoReturn
 import requests
 from requests import JSONDecodeError
 
+from cmk.ccc import site
+
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.utils.escaping import escape, escape_permissive
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
+from cmk.utils.local_secrets import SiteInternalSecret
 from cmk.utils.notify import find_wato_folder, NotificationContext
 from cmk.utils.notify_types import PluginNotificationContext
+from cmk.utils.paths import omd_root
 
 from cmk.utils.html import (  # pylint: disable=unused-import  # isort:skip
     replace_state_markers as format_plugin_output,
@@ -456,3 +461,69 @@ def pretty_state(state: str) -> str:
     if state == "OK":
         return state
     return state.title()
+
+
+def _sanitize_filename(value: str) -> str:
+    value = value.replace(" ", "_")
+    # replace forbidden characters < > ? " : | \ / *
+    for token in ("<", ">", "?", '"', ":", "|", "\\", "/", "*"):
+        value = value.replace(token, "x%s" % ord(token))
+    return value
+
+
+class Graph(NamedTuple):
+    filename: str
+    data: bytes
+
+
+def render_cmk_graphs(context: dict[str, str], raise_exception: bool = False) -> list[Graph]:
+    if context["WHAT"] == "HOST":
+        svc_desc = "_HOST_"
+    else:
+        svc_desc = context["SERVICEDESC"]
+
+    request = requests.Request(
+        "GET",
+        f"http://localhost:{site.get_apache_port(omd_root)}/{os.environ['OMD_SITE']}/check_mk/ajax_graph_images.py",
+        params={
+            "host": context["HOSTNAME"],
+            "service": svc_desc,
+            "num_graphs": context["PARAMETER_GRAPHS_PER_NOTIFICATION"],
+        },
+        headers={"Authorization": f"InternalToken {SiteInternalSecret().secret.b64_str}"},
+    ).prepare()
+
+    timeout = 10
+    try:
+        response = requests.Session().send(
+            request,
+            timeout=timeout,
+        )
+    except requests.exceptions.ReadTimeout:
+        if raise_exception:
+            raise
+        sys.stderr.write(f"ERROR: Timed out fetching graphs ({timeout} sec)\nURL: {request.url}\n")
+        return []
+    except Exception as e:
+        if raise_exception:
+            raise
+        sys.stderr.write(f"ERROR: Failed to fetch graphs: {e}\nURL: {request.url}\n")
+        return []
+
+    try:
+        base64_strings = response.json()
+    except requests.exceptions.JSONDecodeError as e:
+        if response.text == "":
+            return []
+        if raise_exception:
+            raise
+        sys.stderr.write(
+            f"ERROR: Failed to decode graphs: {e}\nURL: {request.url}\nData: {response.text!r}\n"
+        )
+        return []
+
+    file_prefix = _sanitize_filename(f"{context['HOSTNAME']}-{svc_desc}")
+    return [
+        Graph(filename=f"{file_prefix}-{i}.png", data=base64.b64decode(s))
+        for i, s in enumerate(base64_strings)
+    ]

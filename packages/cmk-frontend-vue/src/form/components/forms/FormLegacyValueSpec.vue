@@ -1,3 +1,8 @@
+<!--
+Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+conditions defined in the file COPYING, which is part of this source code package.
+-->
 <script setup lang="ts">
 import type { LegacyValuespec } from '@/form/components/vue_formspec_components'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -10,18 +15,14 @@ const props = defineProps<{
   backendValidation: ValidationMessages
 }>()
 
-const validation = ref<ValidationMessages>([])
+const validation = ref<Array<string>>([])
 
 watch(
   () => props.backendValidation,
   (newValidation: ValidationMessages) => {
-    const validations: ValidationMessages = []
+    const validations: Array<string> = []
     newValidation.forEach((message) => {
-      validations.push({
-        location: [],
-        message: message.message,
-        invalid_value: message.invalid_value
-      })
+      validations.push(message.message)
     })
     validation.value = validations
   },
@@ -32,6 +33,10 @@ const data = defineModel<unknown>('data', { required: true })
 const legacyDOM = ref<HTMLFormElement>()
 
 onMounted(() => {
+  // @ts-expect-error comes from different javascript file
+  window['cmk'].forms.enable_dynamic_form_elements(legacyDOM.value!)
+  // @ts-expect-error comes from different javascript file
+  window['cmk'].valuespecs.initialize_autocompleters(legacyDOM.value!)
   select(legacyDOM.value!).selectAll('input,select').on('input.observer', collectData)
   collectData()
 })

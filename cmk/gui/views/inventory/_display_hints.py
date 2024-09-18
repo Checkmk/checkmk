@@ -43,7 +43,7 @@ class _RelatedLegacyHints:
 
 
 def _get_related_legacy_hints(
-    legacy_hints: Mapping[str, InventoryHintSpec]
+    legacy_hints: Mapping[str, InventoryHintSpec],
 ) -> Mapping[SDPath, _RelatedLegacyHints]:
     related_legacy_hints_by_path: dict[SDPath, _RelatedLegacyHints] = {}
     for raw_path, legacy_hint in legacy_hints.items():
@@ -284,7 +284,7 @@ _ALLOWED_KEYS: Sequence[
 
 
 def _parse_legacy_display_hints(
-    legacy_hints: Mapping[str, InventoryHintSpec]
+    legacy_hints: Mapping[str, InventoryHintSpec],
 ) -> Iterator[_NodeDisplayHint]:
     for path, related_legacy_hints in sorted(
         _get_related_legacy_hints(legacy_hints).items(), key=lambda t: t[0]

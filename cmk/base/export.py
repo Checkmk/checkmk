@@ -10,7 +10,6 @@ of Check_MK. The GUI is e.g. accessing this module for gathering things
 from the configuration.
 """
 
-
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RulesetMatchObject

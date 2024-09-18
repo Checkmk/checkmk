@@ -5,11 +5,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+import itertools
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from typing import assert_never, ClassVar, Container, Literal
+from typing import assert_never, Literal
 
 from livestatus import SiteId
+
+from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.utils import pnp_cleanup, regex
 from cmk.utils.hostaddress import HostName
@@ -20,32 +23,35 @@ from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import Row
 from cmk.gui.utils.speaklater import LazyString
 
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.graphing.v1 import metrics as metrics_api
 
-from ._color import parse_color_from_api
 from ._expression import (
     Average,
+    BaseMetricExpression,
     Constant,
     CriticalOf,
     Difference,
+    Evaluated,
     Fraction,
     Maximum,
-    MaximumOf,
     Merge,
     Metric,
     MetricExpression,
     Minimum,
-    MinimumOf,
-    parse_expression,
+    parse_base_expression_from_api,
+    parse_expression_from_api,
+    parse_legacy_base_expression,
+    parse_legacy_expression,
+    parse_legacy_simple_expression,
     Product,
     Sum,
     WarningOf,
 )
-from ._from_api import graphs_from_api, register_unit_info
+from ._from_api import graphs_from_api
 from ._graph_specification import (
     FixedVerticalRange,
+    graph_specification_registry,
     GraphMetric,
     GraphRecipe,
     GraphSpecification,
@@ -55,10 +61,11 @@ from ._graph_specification import (
     MetricOpRRDSource,
     MinimalVerticalRange,
 )
-from ._legacy import graph_info, RawGraphTemplate
-from ._metrics import get_metric_spec
-from ._type_defs import GraphConsolidationFunction, LineType, TranslatedMetric
-from ._utils import get_graph_data_from_livestatus, translated_metrics_from_row
+from ._legacy import get_render_function, graph_info, LegacyUnitSpecification, RawGraphTemplate
+from ._translated_metrics import translated_metrics_from_row, TranslatedMetric
+from ._type_defs import GraphConsolidationFunction, LineType
+from ._unit import ConvertibleUnitSpecification
+from ._utils import get_graph_data_from_livestatus
 
 
 def _graph_templates_from_plugins() -> (
@@ -83,174 +90,31 @@ def _parse_title(template: graphs_api.Graph | graphs_api.Bidirectional | RawGrap
             return str(template.get("title", ""))
 
 
-def get_graph_template_choices() -> list[tuple[str, str]]:
-    # TODO: v.get("title", k): Use same algorithm as used in
-    # GraphIdentificationTemplateBased._parse_template_metric()
-    return sorted(
-        [(t_id, _parse_title(t)) for t_id, t in _graph_templates_from_plugins()],
-        key=lambda k_v: k_v[1],
-    )
-
-
 @dataclass(frozen=True)
-class ScalarDefinition:
-    expression: MetricExpression
+class GraphTemplateChoice:
+    id: str
     title: str
 
 
-@dataclass(frozen=True)
-class MetricUnitColor:
-    unit: str
-    color: str
-
-
-@dataclass(frozen=True)
-class MetricDefinition:
-    expression: MetricExpression
-    line_type: LineType
-    title: str = ""
-
-    def compute_title(self, translated_metrics: Mapping[str, TranslatedMetric]) -> str:
-        if self.title:
-            return self.title
-        return translated_metrics[next(self.expression.metrics()).name].title
-
-    def compute_unit_color(
-        self,
-        translated_metrics: Mapping[str, TranslatedMetric],
-        optional_metrics: Sequence[str],
-    ) -> MetricUnitColor | None:
-        try:
-            result = self.expression.evaluate(translated_metrics)
-        except KeyError as err:  # because metric_name is not in translated_metrics
-            metric_name = err.args[0]
-            if optional_metrics and metric_name in optional_metrics:
-                return None
-            raise MKGeneralException(
-                _("Graph recipe '%s' uses undefined metric '%s', available are: %s")
-                % (
-                    self.expression,
-                    metric_name,
-                    ", ".join(sorted(translated_metrics.keys())) or "None",
-                )
-            )
-        return MetricUnitColor(result.unit_info.id, result.color)
-
-
-def _parse_quantity(
-    quantity: (
-        str
-        | metrics_api.Constant
-        | metrics_api.WarningOf
-        | metrics_api.CriticalOf
-        | metrics_api.MinimumOf
-        | metrics_api.MaximumOf
-        | metrics_api.Sum
-        | metrics_api.Product
-        | metrics_api.Difference
-        | metrics_api.Fraction
-    ),
-    line_type: Literal["line", "-line", "stack", "-stack"],
-) -> MetricDefinition:
-    match quantity:
-        case str():
-            return MetricDefinition(
-                expression=Metric(quantity),
-                line_type=line_type,
-                title=get_metric_spec(quantity).title,
-            )
-        case metrics_api.Constant():
-            return MetricDefinition(
-                expression=Constant(
-                    quantity.value,
-                    explicit_unit_id=register_unit_info(quantity.unit).id,
-                    explicit_color=parse_color_from_api(quantity.color),
-                ),
-                line_type=line_type,
-                title=str(quantity.title.localize(translate_to_current_language)),
-            )
-        case metrics_api.WarningOf():
-            return MetricDefinition(
-                expression=WarningOf(Metric(quantity.metric_name)),
-                line_type=line_type,
-                title=_("Warning of %s") % get_metric_spec(quantity.metric_name).title,
-            )
-        case metrics_api.CriticalOf():
-            return MetricDefinition(
-                expression=CriticalOf(Metric(quantity.metric_name)),
-                line_type=line_type,
-                title=_("Critical of %s") % get_metric_spec(quantity.metric_name).title,
-            )
-        case metrics_api.MinimumOf():
-            return MetricDefinition(
-                expression=MinimumOf(
-                    Metric(quantity.metric_name),
-                    explicit_color=parse_color_from_api(quantity.color),
-                ),
-                line_type=line_type,
-                title=get_metric_spec(quantity.metric_name).title,
-            )
-        case metrics_api.MaximumOf():
-            return MetricDefinition(
-                expression=MaximumOf(
-                    Metric(quantity.metric_name),
-                    explicit_color=parse_color_from_api(quantity.color),
-                ),
-                line_type=line_type,
-                title=get_metric_spec(quantity.metric_name).title,
-            )
-        case metrics_api.Sum():
-            return MetricDefinition(
-                expression=Sum(
-                    [_parse_quantity(s, line_type).expression for s in quantity.summands],
-                    explicit_color=parse_color_from_api(quantity.color),
-                ),
-                line_type=line_type,
-                title=str(quantity.title.localize(translate_to_current_language)),
-            )
-        case metrics_api.Product():
-            return MetricDefinition(
-                expression=Product(
-                    [_parse_quantity(f, line_type).expression for f in quantity.factors],
-                    explicit_unit_id=register_unit_info(quantity.unit).id,
-                    explicit_color=parse_color_from_api(quantity.color),
-                ),
-                line_type=line_type,
-                title=str(quantity.title.localize(translate_to_current_language)),
-            )
-        case metrics_api.Difference():
-            return MetricDefinition(
-                expression=Difference(
-                    minuend=_parse_quantity(quantity.minuend, line_type).expression,
-                    subtrahend=_parse_quantity(quantity.subtrahend, line_type).expression,
-                    explicit_color=parse_color_from_api(quantity.color),
-                ),
-                line_type=line_type,
-                title=str(quantity.title.localize(translate_to_current_language)),
-            )
-        case metrics_api.Fraction():
-            return MetricDefinition(
-                expression=Fraction(
-                    dividend=_parse_quantity(quantity.dividend, line_type).expression,
-                    divisor=_parse_quantity(quantity.divisor, line_type).expression,
-                    explicit_unit_id=register_unit_info(quantity.unit).id,
-                    explicit_color=parse_color_from_api(quantity.color),
-                ),
-                line_type=line_type,
-                title=str(quantity.title.localize(translate_to_current_language)),
-            )
+def get_graph_template_choices() -> Sequence[GraphTemplateChoice]:
+    # TODO: v.get("title", k): Use same algorithm as used in
+    # GraphIdentificationTemplateBased._parse_template_metric()
+    return sorted(
+        [GraphTemplateChoice(t_id, _parse_title(t)) for t_id, t in _graph_templates_from_plugins()],
+        key=lambda c: c.title,
+    )
 
 
 @dataclass(frozen=True, kw_only=True)
 class FixedGraphTemplateRange:
-    min: MetricExpression
-    max: MetricExpression
+    min: BaseMetricExpression
+    max: BaseMetricExpression
 
 
 @dataclass(frozen=True, kw_only=True)
 class MinimalGraphTemplateRange:
-    min: MetricExpression
-    max: MetricExpression
+    min: BaseMetricExpression
+    max: BaseMetricExpression
 
 
 def _parse_minimal_range(
@@ -260,12 +124,12 @@ def _parse_minimal_range(
         min=(
             Constant(minimal_range.lower)
             if isinstance(minimal_range.lower, (int, float))
-            else _parse_quantity(minimal_range.lower, "line").expression
+            else parse_base_expression_from_api(minimal_range.lower)
         ),
         max=(
             Constant(minimal_range.upper)
             if isinstance(minimal_range.upper, (int, float))
-            else _parse_quantity(minimal_range.upper, "line").expression
+            else parse_base_expression_from_api(minimal_range.upper)
         ),
     )
 
@@ -274,18 +138,18 @@ def _parse_minimal_range(
 class GraphTemplate:
     id: str
     title: str
-    scalars: Sequence[ScalarDefinition]
+    scalars: Sequence[MetricExpression]
     conflicting_metrics: Sequence[str]
     optional_metrics: Sequence[str]
     consolidation_function: GraphConsolidationFunction | None
     range: FixedGraphTemplateRange | MinimalGraphTemplateRange | None
     omit_zero_metrics: bool
-    metrics: Sequence[MetricDefinition]
+    metrics: Sequence[MetricExpression]
 
 
 def _graph_template_from_api_graph(id_: str, graph: graphs_api.Graph) -> GraphTemplate:
-    metrics = [_parse_quantity(l, "stack") for l in graph.compound_lines]
-    scalars: list[ScalarDefinition] = []
+    metrics = [parse_expression_from_api(l, "stack") for l in graph.compound_lines]
+    scalars: list[MetricExpression] = []
     for line in graph.simple_lines:
         match line:
             case (
@@ -294,10 +158,9 @@ def _graph_template_from_api_graph(id_: str, graph: graphs_api.Graph) -> GraphTe
                 | metrics_api.MinimumOf()
                 | metrics_api.MaximumOf()
             ):
-                parsed = _parse_quantity(line, "line")
-                scalars.append(ScalarDefinition(parsed.expression, parsed.title))
+                scalars.append(parse_expression_from_api(line, "line"))
             case _:
-                metrics.append(_parse_quantity(line, "line"))
+                metrics.append(parse_expression_from_api(line, "line"))
     return GraphTemplate(
         id=id_,
         title=_parse_title(graph),
@@ -325,10 +188,10 @@ def _graph_template_from_api_bidirectional(
         ranges_min.append(upper_range.min)
         ranges_max.append(upper_range.max)
 
-    metrics = [_parse_quantity(l, "-stack") for l in bidirectional.lower.compound_lines] + [
-        _parse_quantity(l, "stack") for l in bidirectional.upper.compound_lines
-    ]
-    scalars: list[ScalarDefinition] = []
+    metrics = [
+        parse_expression_from_api(l, "-stack") for l in bidirectional.lower.compound_lines
+    ] + [parse_expression_from_api(l, "stack") for l in bidirectional.upper.compound_lines]
+    scalars: list[MetricExpression] = []
     for line in bidirectional.lower.simple_lines:
         match line:
             case (
@@ -337,10 +200,9 @@ def _graph_template_from_api_bidirectional(
                 | metrics_api.MinimumOf()
                 | metrics_api.MaximumOf()
             ):
-                parsed = _parse_quantity(line, "-line")
-                scalars.append(ScalarDefinition(parsed.expression, parsed.title))
+                scalars.append(parse_expression_from_api(line, "-line"))
             case _:
-                metrics.append(_parse_quantity(line, "-line"))
+                metrics.append(parse_expression_from_api(line, "-line"))
     for line in bidirectional.upper.simple_lines:
         match line:
             case (
@@ -349,10 +211,9 @@ def _graph_template_from_api_bidirectional(
                 | metrics_api.MinimumOf()
                 | metrics_api.MaximumOf()
             ):
-                parsed = _parse_quantity(line, "line")
-                scalars.append(ScalarDefinition(parsed.expression, parsed.title))
+                scalars.append(parse_expression_from_api(line, "line"))
             case _:
-                metrics.append(_parse_quantity(line, "line"))
+                metrics.append(parse_expression_from_api(line, "line"))
     return GraphTemplate(
         id=id_,
         title=_parse_title(bidirectional),
@@ -375,59 +236,30 @@ def _graph_template_from_api_bidirectional(
     )
 
 
-def _parse_raw_scalar_definition(
-    raw_scalar_definition: str | tuple[str, str | LazyString]
-) -> ScalarDefinition:
-    if isinstance(raw_scalar_definition, tuple):
-        return ScalarDefinition(
-            expression=parse_expression(raw_scalar_definition[0], {}),
-            title=str(raw_scalar_definition[1]),
+def _parse_raw_scalar_expression(
+    raw_scalar_expression: str | tuple[str, str | LazyString],
+) -> MetricExpression:
+    if isinstance(raw_scalar_expression, tuple):
+        return parse_legacy_expression(
+            raw_scalar_expression[0], "line", str(raw_scalar_expression[1]), {}
         )
 
-    if raw_scalar_definition.endswith(":warn"):
+    if raw_scalar_expression.endswith(":warn"):
         title = _("Warning")
-    elif raw_scalar_definition.endswith(":crit"):
+    elif raw_scalar_expression.endswith(":crit"):
         title = _("Critical")
     else:
-        title = raw_scalar_definition
-    return ScalarDefinition(
-        expression=parse_expression(raw_scalar_definition, {}),
-        title=str(title),
-    )
+        title = raw_scalar_expression
+    return parse_legacy_expression(raw_scalar_expression, "line", str(title), {})
 
 
-def _parse_raw_graph_range(raw_graph_range: tuple[int | str, int | str]) -> FixedGraphTemplateRange:
-    return FixedGraphTemplateRange(
-        min=parse_expression(raw_graph_range[0], {}),
-        max=parse_expression(raw_graph_range[1], {}),
-    )
-
-
-def _parse_raw_metric_definition(
-    raw_metric_definition: (
+def _parse_raw_metric_expression(
+    raw_metric_expression: (
         tuple[str, LineType] | tuple[str, LineType, str] | tuple[str, LineType, LazyString]
-    )
-) -> MetricDefinition:
-    expression, line_type, *title = raw_metric_definition
-    return MetricDefinition(
-        expression=parse_expression(expression, {}),
-        line_type=line_type,
-        title=str(title[0]) if title else "",
-    )
-
-
-def _graph_template_from_legacy(id_: str, raw: RawGraphTemplate) -> GraphTemplate:
-    return GraphTemplate(
-        id=id_,
-        title=_parse_title(raw),
-        scalars=[_parse_raw_scalar_definition(r) for r in raw.get("scalars", [])],
-        conflicting_metrics=raw.get("conflicting_metrics", []),
-        optional_metrics=raw.get("optional_metrics", []),
-        consolidation_function=raw.get("consolidation_function"),
-        range=(_parse_raw_graph_range(raw_range) if (raw_range := raw.get("range")) else None),
-        omit_zero_metrics=raw.get("omit_zero_metrics", False),
-        metrics=[_parse_raw_metric_definition(r) for r in raw["metrics"]],
-    )
+    ),
+) -> MetricExpression:
+    raw_expression, line_type, *title = raw_metric_expression
+    return parse_legacy_expression(raw_expression, line_type, str(title[0]) if title else "", {})
 
 
 def _parse_graph_template(
@@ -439,19 +271,44 @@ def _parse_graph_template(
         case graphs_api.Bidirectional():
             return _graph_template_from_api_bidirectional(id_, template)
         case _:
-            return _graph_template_from_legacy(id_, template)
+            return GraphTemplate(
+                id=id_,
+                title=_parse_title(template),
+                scalars=[_parse_raw_scalar_expression(r) for r in template.get("scalars", [])],
+                conflicting_metrics=template.get("conflicting_metrics", []),
+                optional_metrics=template.get("optional_metrics", []),
+                consolidation_function=template.get("consolidation_function"),
+                range=(
+                    FixedGraphTemplateRange(
+                        min=parse_legacy_base_expression(template_range[0], {}),
+                        max=parse_legacy_base_expression(template_range[1], {}),
+                    )
+                    if (template_range := template.get("range"))
+                    else None
+                ),
+                omit_zero_metrics=template.get("omit_zero_metrics", False),
+                metrics=[_parse_raw_metric_expression(r) for r in template["metrics"]],
+            )
 
 
-def graph_template_from_name(name: str) -> GraphTemplate:
+def _get_graph_template_from_name(name: str) -> GraphTemplate:
     if name.startswith("METRIC_"):
         name = name[7:]
     return GraphTemplate(
         id=f"METRIC_{name}",
         title="",
-        metrics=[MetricDefinition(expression=Metric(name), line_type="area")],
+        metrics=[MetricExpression(Metric(name), line_type="area")],
         scalars=[
-            ScalarDefinition(expression=WarningOf(Metric(name)), title=str(_("Warning"))),
-            ScalarDefinition(expression=CriticalOf(Metric(name)), title=str(_("Critical"))),
+            MetricExpression(
+                WarningOf(Metric(name)),
+                line_type="line",
+                title=str(_("Warning")),
+            ),
+            MetricExpression(
+                CriticalOf(Metric(name)),
+                line_type="line",
+                title=str(_("Critical")),
+            ),
         ],
         conflicting_metrics=[],
         optional_metrics=[],
@@ -461,333 +318,284 @@ def graph_template_from_name(name: str) -> GraphTemplate:
     )
 
 
-def get_graph_template(template_id: str) -> GraphTemplate:
+def get_graph_template_from_id(template_id: str) -> GraphTemplate:
     if template_id.startswith("METRIC_"):
-        return graph_template_from_name(template_id)
+        return _get_graph_template_from_name(template_id)
     for id_, template in _graph_templates_from_plugins():
         if template_id == id_:
             return _parse_graph_template(id_, template)
     raise MKGeneralException(_("There is no graph template with the id '%s'") % template_id)
 
 
-def _compute_predictive_metrics(
-    translated_metrics: Mapping[str, TranslatedMetric], metrics: Sequence[MetricDefinition]
-) -> Iterator[MetricDefinition]:
-    for metric_defintion in metrics:
-        line_type: Literal["line", "-line"] = (
-            "-line" if metric_defintion.line_type.startswith("-") else "line"
-        )
-        for metric in metric_defintion.expression.metrics():
-            if (predict_metric_name := f"predict_{metric.name}") in translated_metrics:
-                yield MetricDefinition(
-                    expression=Metric(predict_metric_name),
-                    line_type=line_type,
-                )
-            if (predict_lower_metric_name := f"predict_lower_{metric.name}") in translated_metrics:
-                yield MetricDefinition(
-                    expression=Metric(predict_lower_metric_name),
-                    line_type=line_type,
-                )
+@dataclass(frozen=True)
+class EvaluatedMetricExpression:
+    expression: MetricExpression
+    evaluated: Evaluated
 
 
-def _filter_renderable_graph_metrics(
-    metric_definitions: Sequence[MetricDefinition],
-    translated_metrics: Mapping[str, TranslatedMetric],
-    optional_metrics: Sequence[str],
-) -> Iterator[MetricDefinition]:
-    for metric_definition in metric_definitions:
-        try:
-            metric_definition.expression.evaluate(translated_metrics)
-            yield metric_definition
-        except KeyError as err:  # because can't find necessary metric_name in translated_metrics
-            metric_name = err.args[0]
-            if metric_name in optional_metrics:
-                continue
-            raise err
-
-
-def applicable_metrics(
+def evaluate_metrics(
     *,
-    metrics_to_consider: Sequence[MetricDefinition],
-    conflicting_metrics: Iterable[str],
+    conflicting_metrics: Sequence[str],
     optional_metrics: Sequence[str],
+    metric_expressions: Sequence[MetricExpression],
     translated_metrics: Mapping[str, TranslatedMetric],
-) -> Sequence[MetricDefinition]:
+) -> Sequence[EvaluatedMetricExpression]:
     # Skip early on conflicting_metrics
     for var in conflicting_metrics:
         if var in translated_metrics:
             return []
-
-    try:
-        return list(
-            _filter_renderable_graph_metrics(
-                metrics_to_consider,
-                translated_metrics,
-                optional_metrics,
-            )
-        )
-    except KeyError:
-        return []
+    results = []
+    for metric_expression in metric_expressions:
+        if (result := metric_expression.evaluate(translated_metrics)).is_error():
+            if result.error.metric_name and result.error.metric_name in optional_metrics:
+                continue
+            return []
+        results.append(EvaluatedMetricExpression(metric_expression, result.ok))
+    return results
 
 
-def _get_explicit_graph_templates(
-    graph_templates: Iterable[
-        tuple[str, graphs_api.Graph | graphs_api.Bidirectional | RawGraphTemplate]
-    ],
+def get_evaluated_graph_template_choices(
     translated_metrics: Mapping[str, TranslatedMetric],
-) -> Iterable[GraphTemplate]:
-    for id_, template in graph_templates:
-        parsed = _parse_graph_template(id_, template)
-        if metrics := applicable_metrics(
-            metrics_to_consider=parsed.metrics,
-            conflicting_metrics=parsed.conflicting_metrics,
-            optional_metrics=parsed.optional_metrics,
+) -> Sequence[GraphTemplateChoice]:
+    graph_template_choices = []
+    already_graphed_metrics = set()
+    for id_, template in _graph_templates_from_plugins():
+        graph_template = _parse_graph_template(id_, template)
+        if evaluated_metrics := evaluate_metrics(
+            conflicting_metrics=graph_template.conflicting_metrics,
+            optional_metrics=graph_template.optional_metrics,
+            metric_expressions=graph_template.metrics,
             translated_metrics=translated_metrics,
         ):
-            yield GraphTemplate(
-                id=parsed.id,
-                title=parsed.title,
-                scalars=parsed.scalars,
-                conflicting_metrics=parsed.conflicting_metrics,
-                optional_metrics=parsed.optional_metrics,
-                consolidation_function=parsed.consolidation_function,
-                range=parsed.range,
-                omit_zero_metrics=parsed.omit_zero_metrics,
-                metrics=(
-                    list(metrics) + list(_compute_predictive_metrics(translated_metrics, metrics))
-                ),
-            )
-
-
-def _get_implicit_graph_templates(
-    translated_metrics: Mapping[str, TranslatedMetric],
-    already_graphed_metrics: Container[str],
-) -> Iterable[GraphTemplate]:
-    for metric_name, translated_metric in sorted(translated_metrics.items()):
-        if translated_metric.auto_graph and metric_name not in already_graphed_metrics:
-            yield graph_template_from_name(metric_name)
-
-
-def get_graph_templates(
-    translated_metrics: Mapping[str, TranslatedMetric]
-) -> Iterator[GraphTemplate]:
-    if not translated_metrics:
-        yield from ()
-        return
-
-    explicit_templates = list(
-        _get_explicit_graph_templates(
-            _graph_templates_from_plugins(),
-            translated_metrics,
-        )
-    )
-    yield from explicit_templates
-    yield from _get_implicit_graph_templates(
-        translated_metrics,
-        {m.name for gt in explicit_templates for md in gt.metrics for m in md.expression.metrics()},
-    )
-
-
-class TemplateGraphSpecification(GraphSpecification, frozen=True):
-    # Overwritten in cmk/gui/graphing/cee/__init__.py
-    TUNE_GRAPH_TEMPLATE: ClassVar[
-        Callable[[GraphTemplate, TemplateGraphSpecification], GraphTemplate | None]
-    ] = lambda graph_template, _spec: graph_template
-
-    site: SiteId | None
-    host_name: HostName
-    service_description: ServiceName
-    graph_index: int | None = None
-    graph_id: str | None = None
-    destination: str | None = None
-
-    @staticmethod
-    def graph_type_name() -> Literal["template"]:
-        return "template"
-
-    def recipes(self) -> list[GraphRecipe]:
-        row = get_graph_data_from_livestatus(self.site, self.host_name, self.service_description)
-        translated_metrics = translated_metrics_from_row(row)
-        return [
-            recipe
-            for index, graph_template in _matching_graph_templates(
-                graph_id=self.graph_id,
-                graph_index=self.graph_index,
-                translated_metrics=translated_metrics,
-            )
-            if (
-                recipe := self._build_recipe_from_template(
-                    graph_template=graph_template,
-                    row=row,
-                    translated_metrics=translated_metrics,
-                    index=index,
+            graph_template_choices.append(
+                GraphTemplateChoice(
+                    graph_template.id,
+                    graph_template.title,
                 )
             )
-        ]
-
-    def _build_recipe_from_template(
-        self,
-        *,
-        graph_template: GraphTemplate,
-        row: Row,
-        translated_metrics: Mapping[str, TranslatedMetric],
-        index: int,
-    ) -> GraphRecipe | None:
-        if not (
-            graph_template_tuned := TemplateGraphSpecification.TUNE_GRAPH_TEMPLATE(
-                graph_template,
-                self,
+            already_graphed_metrics.update(
+                {n for m in evaluated_metrics for n in m.evaluated.metric_names()}
             )
-        ):
-            return None
-
-        return create_graph_recipe_from_template(
-            row["site"],
-            row["host_name"],
-            row.get("service_description", "_HOST_"),
-            graph_template_tuned,
-            translated_metrics,
-            specification=TemplateGraphSpecification(
-                site=self.site,
-                host_name=self.host_name,
-                service_description=self.service_description,
-                destination=self.destination,
-                # Performance graph dashlets already use graph_id, but for example in reports, we still
-                # use graph_index. We should switch to graph_id everywhere (CMK-7308). Once this is
-                # done, we can remove the line below.
-                graph_index=index,
-                graph_id=graph_template_tuned.id,
-            ),
-        )
+    for metric_name, translated_metric in sorted(translated_metrics.items()):
+        if translated_metric.auto_graph and metric_name not in already_graphed_metrics:
+            graph_template_choices.append(
+                GraphTemplateChoice(
+                    metric_name[7:] if metric_name.startswith("METRIC_") else metric_name,
+                    "",
+                )
+            )
+    return graph_template_choices
 
 
-# Performance graph dashlets already use graph_id, but for example in reports, we still use
-# graph_index. Therefore, this function needs to support both. We should switch to graph_id
-# everywhere (CMK-7308) and remove the support for graph_index. However, note that we cannot easily
-# build a corresponding transform, so even after switching to graph_id everywhere, we will need to
-# keep this functionality here for some time to support already created dashlets, reports etc.
-def _matching_graph_templates(
-    *,
-    graph_id: str | None,
-    graph_index: int | None,
+def _to_metric_operation(
+    site_id: SiteId,
+    host_name: HostName,
+    service_name: ServiceName,
+    base_metric_expression: BaseMetricExpression,
     translated_metrics: Mapping[str, TranslatedMetric],
-) -> Iterable[tuple[int, GraphTemplate]]:
-    # Single metrics
-    if (
-        isinstance(graph_id, str)
-        and graph_id.startswith("METRIC_")
-        and graph_id[7:] in translated_metrics
-    ):
-        yield (0, graph_template_from_name(graph_id))
-        return
+    consolidation_function: GraphConsolidationFunction | None,
+) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
+    match base_metric_expression:
+        case Constant():
+            return MetricOpConstant(value=float(base_metric_expression.value))
+        case Metric():
+            metrics = [
+                MetricOpRRDSource(
+                    site_id=site_id,
+                    host_name=host_name,
+                    service_name=service_name,
+                    metric_name=pnp_cleanup(o.name),
+                    consolidation_func_name=(
+                        base_metric_expression.consolidation or consolidation_function
+                    ),
+                    scale=o.scale,
+                )
+                for o in translated_metrics[base_metric_expression.name].originals
+            ]
+            if len(metrics) > 1:
+                return MetricOpOperator(operator_name="MERGE", operands=metrics)
+            return metrics[0]
+        case Sum():
+            return MetricOpOperator(
+                operator_name="+",
+                operands=[
+                    _to_metric_operation(
+                        site_id,
+                        host_name,
+                        service_name,
+                        s,
+                        translated_metrics,
+                        consolidation_function,
+                    )
+                    for s in base_metric_expression.summands
+                ],
+            )
+        case Product():
+            return MetricOpOperator(
+                operator_name="*",
+                operands=[
+                    _to_metric_operation(
+                        site_id,
+                        host_name,
+                        service_name,
+                        f,
+                        translated_metrics,
+                        consolidation_function,
+                    )
+                    for f in base_metric_expression.factors
+                ],
+            )
+        case Difference():
+            return MetricOpOperator(
+                operator_name="-",
+                operands=[
+                    _to_metric_operation(
+                        site_id,
+                        host_name,
+                        service_name,
+                        base_metric_expression.minuend,
+                        translated_metrics,
+                        consolidation_function,
+                    ),
+                    _to_metric_operation(
+                        site_id,
+                        host_name,
+                        service_name,
+                        base_metric_expression.subtrahend,
+                        translated_metrics,
+                        consolidation_function,
+                    ),
+                ],
+            )
+        case Fraction():
+            return MetricOpOperator(
+                operator_name="/",
+                operands=[
+                    _to_metric_operation(
+                        site_id,
+                        host_name,
+                        service_name,
+                        base_metric_expression.dividend,
+                        translated_metrics,
+                        consolidation_function,
+                    ),
+                    _to_metric_operation(
+                        site_id,
+                        host_name,
+                        service_name,
+                        base_metric_expression.divisor,
+                        translated_metrics,
+                        consolidation_function,
+                    ),
+                ],
+            )
+        case Maximum():
+            return MetricOpOperator(
+                operator_name="MAX",
+                operands=[
+                    _to_metric_operation(
+                        site_id,
+                        host_name,
+                        service_name,
+                        o,
+                        translated_metrics,
+                        consolidation_function,
+                    )
+                    for o in base_metric_expression.operands
+                ],
+            )
+        case Minimum():
+            return MetricOpOperator(
+                operator_name="MIN",
+                operands=[
+                    _to_metric_operation(
+                        site_id,
+                        host_name,
+                        service_name,
+                        o,
+                        translated_metrics,
+                        consolidation_function,
+                    )
+                    for o in base_metric_expression.operands
+                ],
+            )
+        case Average():
+            return MetricOpOperator(
+                operator_name="AVERAGE",
+                operands=[
+                    _to_metric_operation(
+                        site_id,
+                        host_name,
+                        service_name,
+                        o,
+                        translated_metrics,
+                        consolidation_function,
+                    )
+                    for o in base_metric_expression.operands
+                ],
+            )
+        case Merge():
+            return MetricOpOperator(
+                operator_name="MERGE",
+                operands=[
+                    _to_metric_operation(
+                        site_id,
+                        host_name,
+                        service_name,
+                        o,
+                        translated_metrics,
+                        consolidation_function,
+                    )
+                    for o in base_metric_expression.operands
+                ],
+            )
+        case _:
+            raise TypeError(base_metric_expression)
 
-    yield from (
-        (index, graph_template)
-        for index, graph_template in enumerate(get_graph_templates(translated_metrics))
-        if (graph_index is None or index == graph_index)
-        and (graph_id is None or graph_template.id == graph_id)
+
+def metric_expression_to_graph_recipe_expression(
+    site_id: SiteId,
+    host_name: HostName,
+    service_name: ServiceName,
+    base_metric_expression: BaseMetricExpression,
+    translated_metrics: Mapping[str, TranslatedMetric],
+    consolidation_function: GraphConsolidationFunction | None,
+) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
+    return _to_metric_operation(
+        site_id,
+        host_name,
+        service_name,
+        base_metric_expression,
+        translated_metrics,
+        consolidation_function,
     )
 
 
-def _replace_expressions(text: str, translated_metrics: Mapping[str, TranslatedMetric]) -> str:
+def _evaluate_title(title: str, translated_metrics: Mapping[str, TranslatedMetric]) -> str:
     """Replace expressions in strings like CPU Load - %(load1:max@count) CPU Cores"""
     # Note: The 'CPU load' graph is the only example with such a replacement. We do not want to
     # offer such replacements in a generic way.
     reg = regex.regex(r"%\([^)]*\)")
-    if m := reg.search(text):
-        try:
-            result = parse_expression(m.group()[2:-1], translated_metrics).evaluate(
+    if m := reg.search(title):
+        if (
+            result := parse_legacy_simple_expression(m.group()[2:-1], translated_metrics).evaluate(
                 translated_metrics
             )
-        except (ValueError, KeyError):
-            return text.split("-")[0].strip()
-        return reg.sub(result.unit_info.render(result.value).strip(), text)
-
-    return text
-
-
-def _horizontal_rules_from_thresholds(
-    thresholds: Iterable[ScalarDefinition],
-    translated_metrics: Mapping[str, TranslatedMetric],
-) -> Sequence[HorizontalRule]:
-    horizontal_rules = []
-    for entry in thresholds:
-        try:
-            if (result := entry.expression.evaluate(translated_metrics)).value:
-                horizontal_rules.append(
-                    HorizontalRule(
-                        value=result.value,
-                        rendered_value=result.unit_info.render(result.value),
-                        color=result.color,
-                        title=entry.title,
-                    )
-                )
-        # Scalar value like min and max are always optional. This makes configuration
-        # of graphs easier.
-        except Exception:
-            pass
-
-    return horizontal_rules
-
-
-def create_graph_recipe_from_template(
-    site_id: SiteId,
-    host_name: HostName,
-    service_name: ServiceName,
-    graph_template: GraphTemplate,
-    translated_metrics: Mapping[str, TranslatedMetric],
-    specification: GraphSpecification,
-) -> GraphRecipe:
-    def _graph_metric(metric_definition: MetricDefinition) -> GraphMetric:
-        unit_color = metric_definition.compute_unit_color(
-            translated_metrics,
-            graph_template.optional_metrics,
+        ).is_error():
+            return title.split("-")[0].strip()
+        return reg.sub(
+            get_render_function(result.ok.unit_spec)(result.ok.value).strip(),
+            title,
         )
-        return GraphMetric(
-            title=metric_definition.compute_title(translated_metrics),
-            line_type=metric_definition.line_type,
-            operation=metric_expression_to_graph_recipe_expression(
-                site_id,
-                host_name,
-                service_name,
-                metric_definition.expression,
-                translated_metrics,
-                graph_template.consolidation_function or "max",
-            ),
-            unit=unit_color.unit if unit_color else "",
-            color=unit_color.color if unit_color else "#000000",
-        )
+    return title
 
-    metrics = list(map(_graph_metric, graph_template.metrics))
-    units = {m.unit for m in metrics}
-    if len(units) > 1:
-        raise MKGeneralException(
-            _("Cannot create graph with metrics of different units '%s'") % ", ".join(units)
-        )
 
-    title = _replace_expressions(graph_template.title or "", translated_metrics)
-    if not title:
-        title = next((m.title for m in metrics), "")
-
-    painter_options = PainterOptions.get_instance()
-    if painter_options.get("show_internal_graph_and_metric_ids"):
-        title = title + f" (Graph ID: {graph_template.id})"
-
-    return GraphRecipe(
-        title=title,
-        metrics=metrics,
-        unit=units.pop(),
-        explicit_vertical_range=evaluate_graph_template_range(
-            graph_template.range,
-            translated_metrics,
-        ),
-        horizontal_rules=_horizontal_rules_from_thresholds(
-            graph_template.scalars, translated_metrics
-        ),  # e.g. lines for WARN and CRIT
-        omit_zero_metrics=graph_template.omit_zero_metrics,
-        consolidation_function=graph_template.consolidation_function or "max",
-        specification=specification,
-    )
+def _evaluate_graph_template_range_boundary(
+    base_metric_expression: BaseMetricExpression, translated_metrics: Mapping[str, TranslatedMetric]
+) -> float | None:
+    if (result := base_metric_expression.evaluate(translated_metrics)).is_error():
+        return None
+    return result.ok.value
 
 
 def evaluate_graph_template_range(
@@ -811,194 +619,313 @@ def evaluate_graph_template_range(
             assert_never(graph_template_range)
 
 
-def _evaluate_graph_template_range_boundary(
-    boundary: MetricExpression, translated_metrics: Mapping[str, TranslatedMetric]
-) -> float | None:
-    try:
-        return boundary.evaluate(translated_metrics).value
-    except Exception:
-        return None
+def _horizontal_rules_from_thresholds(
+    metric_expressions: Iterable[MetricExpression],
+    translated_metrics: Mapping[str, TranslatedMetric],
+) -> Sequence[HorizontalRule]:
+    horizontal_rules = []
+    for metric_expression in metric_expressions:
+        if (result := metric_expression.evaluate(translated_metrics)).is_error():
+            # Scalar value like min and max are always optional. This makes configuration
+            # of graphs easier.
+            if result.error.metric_name:
+                continue
+            return []
+
+        horizontal_rules.append(
+            HorizontalRule(
+                value=result.ok.value,
+                rendered_value=get_render_function(result.ok.unit_spec)(result.ok.value),
+                color=result.ok.color,
+                title=metric_expression.title,
+            )
+        )
+    return horizontal_rules
 
 
-def _to_metric_operation(
+def _create_graph_recipe_from_template(
     site_id: SiteId,
     host_name: HostName,
     service_name: ServiceName,
-    expression: MetricExpression,
+    graph_template: GraphTemplate,
+    evaluated_metrics: Sequence[EvaluatedMetricExpression],
     translated_metrics: Mapping[str, TranslatedMetric],
-    enforced_consolidation_function: GraphConsolidationFunction | None,
-) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
-    match expression:
-        case Constant():
-            return MetricOpConstant(value=float(expression.value))
-        case Metric():
-            metrics = [
-                MetricOpRRDSource(
-                    site_id=site_id,
-                    host_name=host_name,
-                    service_name=service_name,
-                    metric_name=pnp_cleanup(original.name),
-                    consolidation_func_name=(
-                        expression.consolidation_func_name or enforced_consolidation_function
-                    ),
-                    scale=original.scale,
-                )
-                for original in translated_metrics[expression.name].originals
-            ]
-            if len(metrics) > 1:
-                return MetricOpOperator(operator_name="MERGE", operands=metrics)
-            return metrics[0]
-        case Sum():
-            return MetricOpOperator(
-                operator_name="+",
-                operands=[
-                    _to_metric_operation(
-                        site_id,
-                        host_name,
-                        service_name,
-                        s,
-                        translated_metrics,
-                        enforced_consolidation_function,
-                    )
-                    for s in expression.summands
-                ],
-            )
-        case Product():
-            return MetricOpOperator(
-                operator_name="*",
-                operands=[
-                    _to_metric_operation(
-                        site_id,
-                        host_name,
-                        service_name,
-                        f,
-                        translated_metrics,
-                        enforced_consolidation_function,
-                    )
-                    for f in expression.factors
-                ],
-            )
-        case Difference():
-            return MetricOpOperator(
-                operator_name="-",
-                operands=[
-                    _to_metric_operation(
-                        site_id,
-                        host_name,
-                        service_name,
-                        expression.minuend,
-                        translated_metrics,
-                        enforced_consolidation_function,
-                    ),
-                    _to_metric_operation(
-                        site_id,
-                        host_name,
-                        service_name,
-                        expression.subtrahend,
-                        translated_metrics,
-                        enforced_consolidation_function,
-                    ),
-                ],
-            )
-        case Fraction():
-            return MetricOpOperator(
-                operator_name="/",
-                operands=[
-                    _to_metric_operation(
-                        site_id,
-                        host_name,
-                        service_name,
-                        expression.dividend,
-                        translated_metrics,
-                        enforced_consolidation_function,
-                    ),
-                    _to_metric_operation(
-                        site_id,
-                        host_name,
-                        service_name,
-                        expression.divisor,
-                        translated_metrics,
-                        enforced_consolidation_function,
-                    ),
-                ],
-            )
-        case Maximum():
-            return MetricOpOperator(
-                operator_name="MAX",
-                operands=[
-                    _to_metric_operation(
-                        site_id,
-                        host_name,
-                        service_name,
-                        o,
-                        translated_metrics,
-                        enforced_consolidation_function,
-                    )
-                    for o in expression.operands
-                ],
-            )
-        case Minimum():
-            return MetricOpOperator(
-                operator_name="MIN",
-                operands=[
-                    _to_metric_operation(
-                        site_id,
-                        host_name,
-                        service_name,
-                        o,
-                        translated_metrics,
-                        enforced_consolidation_function,
-                    )
-                    for o in expression.operands
-                ],
-            )
-        case Average():
-            return MetricOpOperator(
-                operator_name="AVERAGE",
-                operands=[
-                    _to_metric_operation(
-                        site_id,
-                        host_name,
-                        service_name,
-                        o,
-                        translated_metrics,
-                        enforced_consolidation_function,
-                    )
-                    for o in expression.operands
-                ],
-            )
-        case Merge():
-            return MetricOpOperator(
-                operator_name="MERGE",
-                operands=[
-                    _to_metric_operation(
-                        site_id,
-                        host_name,
-                        service_name,
-                        o,
-                        translated_metrics,
-                        enforced_consolidation_function,
-                    )
-                    for o in expression.operands
-                ],
-            )
-        case _:
-            raise TypeError(expression)
+    specification: GraphSpecification,
+) -> GraphRecipe:
+    evaluated_by_id = {m.evaluated.ident(): m.evaluated for m in evaluated_metrics}
+    metrics = [
+        GraphMetric(
+            title=evaluated.title,
+            line_type=metric_expression.line_type,
+            operation=metric_expression_to_graph_recipe_expression(
+                site_id,
+                host_name,
+                service_name,
+                evaluated.base,
+                translated_metrics,
+                graph_template.consolidation_function or "max",
+            ),
+            unit=(
+                evaluated.unit_spec
+                if isinstance(evaluated.unit_spec, ConvertibleUnitSpecification)
+                else evaluated.unit_spec.id
+            ),
+            color=evaluated.color,
+        )
+        # TODO Keep metric expressions and evaluated in sync. Then we can use 'evaluated_metrics'
+        # instead of 'graph_template.metrics'. This is imnportant regarding graph tunings.
+        for metric_expression in graph_template.metrics
+        if (evaluated := evaluated_by_id.get(metric_expression.ident()))
+    ]
+    units = {m.unit for m in metrics}
 
+    # We cannot validate the hypothetical case of a mixture of metrics from the legacy and the new API
+    if all(isinstance(m.unit, str) for m in metrics) or all(
+        isinstance(m.unit, ConvertibleUnitSpecification) for m in metrics
+    ):
+        if len(units) > 1:
+            raise MKGeneralException(
+                _("Cannot create graph with metrics of different units '%s'")
+                % ", ".join(repr(unit) for unit in units)
+            )
 
-def metric_expression_to_graph_recipe_expression(
-    site_id: SiteId,
-    host_name: HostName,
-    service_name: ServiceName,
-    metric_expression: MetricExpression,
-    translated_metrics: Mapping[str, TranslatedMetric],
-    enforced_consolidation_function: GraphConsolidationFunction | None,
-) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
-    return _to_metric_operation(
-        site_id,
-        host_name,
-        service_name,
-        metric_expression,
-        translated_metrics,
-        enforced_consolidation_function,
+    title = _evaluate_title(graph_template.title or "", translated_metrics)
+    if not title:
+        title = next((m.title for m in metrics), "")
+
+    painter_options = PainterOptions.get_instance()
+    if painter_options.get("show_internal_graph_and_metric_ids"):
+        title = title + f" (Graph ID: {graph_template.id})"
+
+    return GraphRecipe(
+        title=title,
+        metrics=metrics,
+        unit_spec=(
+            LegacyUnitSpecification(id=unit) if isinstance(unit := units.pop(), str) else unit
+        ),
+        explicit_vertical_range=evaluate_graph_template_range(
+            graph_template.range,
+            translated_metrics,
+        ),
+        horizontal_rules=_horizontal_rules_from_thresholds(
+            graph_template.scalars, translated_metrics
+        ),  # e.g. lines for WARN and CRIT
+        omit_zero_metrics=graph_template.omit_zero_metrics,
+        consolidation_function=graph_template.consolidation_function or "max",
+        specification=specification,
     )
+
+
+def _evaluate_predictive_metrics(
+    translated_metrics: Mapping[str, TranslatedMetric],
+    metrics: Sequence[EvaluatedMetricExpression],
+) -> Iterator[EvaluatedMetricExpression]:
+    computed = set()
+    for metric in metrics:
+        line_type: Literal["line", "-line"] = (
+            "-line" if metric.expression.line_type.startswith("-") else "line"
+        )
+        for metric_name in metric.evaluated.metric_names():
+            if metric_name in computed:
+                continue
+            computed.add(metric_name)
+            for predictive_metric_expression in [
+                MetricExpression(Metric(f"predict_{metric_name}"), line_type=line_type),
+                MetricExpression(Metric(f"predict_lower_{metric_name}"), line_type=line_type),
+            ]:
+                if (result := predictive_metric_expression.evaluate(translated_metrics)).is_ok():
+                    yield EvaluatedMetricExpression(predictive_metric_expression, result.ok)
+
+
+def _get_evaluated_graph_templates(
+    translated_metrics: Mapping[str, TranslatedMetric],
+) -> Iterator[tuple[GraphTemplate, Sequence[EvaluatedMetricExpression]]]:
+    if not translated_metrics:
+        yield from ()
+        return
+
+    def _generate_graph_templates(
+        graph_template: GraphTemplate,
+    ) -> Iterator[tuple[GraphTemplate, Sequence[EvaluatedMetricExpression]]]:
+        if evaluated_metrics := evaluate_metrics(
+            conflicting_metrics=graph_template.conflicting_metrics,
+            optional_metrics=graph_template.optional_metrics,
+            metric_expressions=graph_template.metrics,
+            translated_metrics=translated_metrics,
+        ):
+            evaluated_predictive_metrics = list(
+                _evaluate_predictive_metrics(translated_metrics, evaluated_metrics)
+            )
+            yield (
+                GraphTemplate(
+                    id=graph_template.id,
+                    title=graph_template.title,
+                    scalars=graph_template.scalars,
+                    conflicting_metrics=graph_template.conflicting_metrics,
+                    optional_metrics=graph_template.optional_metrics,
+                    consolidation_function=graph_template.consolidation_function,
+                    range=graph_template.range,
+                    omit_zero_metrics=graph_template.omit_zero_metrics,
+                    metrics=list(
+                        itertools.chain(
+                            (m.expression for m in evaluated_metrics),
+                            (m.expression for m in evaluated_predictive_metrics),
+                        )
+                    ),
+                ),
+                list(itertools.chain(evaluated_metrics, evaluated_predictive_metrics)),
+            )
+
+    graph_templates = [
+        t
+        for id_, template in _graph_templates_from_plugins()
+        for t in _generate_graph_templates(_parse_graph_template(id_, template))
+    ]
+    yield from graph_templates
+
+    already_graphed_metrics = {
+        n for _t, e in graph_templates for m in e for n in m.evaluated.metric_names()
+    }
+    for metric_name, translated_metric in sorted(translated_metrics.items()):
+        if translated_metric.auto_graph and metric_name not in already_graphed_metrics:
+            graph_template = _get_graph_template_from_name(metric_name)
+            yield (
+                graph_template,
+                evaluate_metrics(
+                    conflicting_metrics=graph_template.conflicting_metrics,
+                    optional_metrics=graph_template.optional_metrics,
+                    metric_expressions=graph_template.metrics,
+                    translated_metrics=translated_metrics,
+                ),
+            )
+
+
+def _matching_graph_templates(
+    *,
+    graph_id: str | None,
+    graph_index: int | None,
+    translated_metrics: Mapping[str, TranslatedMetric],
+) -> Iterable[tuple[int, GraphTemplate, Sequence[EvaluatedMetricExpression]]]:
+    # Performance graph dashlets already use graph_id, but for example in reports, we still use
+    # graph_index. Therefore, this function needs to support both. We should switch to graph_id
+    # everywhere (CMK-7308) and remove the support for graph_index. However, note that we cannot
+    # easily build a corresponding transform, so even after switching to graph_id everywhere, we
+    # will need to keep this functionality here for some time to support already created dashlets,
+    # reports etc.
+    if (
+        isinstance(graph_id, str)
+        and graph_id.startswith("METRIC_")
+        and graph_id[7:] in translated_metrics
+    ):
+        # Single metrics
+        graph_template = _get_graph_template_from_name(graph_id)
+        yield (
+            0,
+            graph_template,
+            evaluate_metrics(
+                conflicting_metrics=graph_template.conflicting_metrics,
+                optional_metrics=graph_template.optional_metrics,
+                metric_expressions=graph_template.metrics,
+                translated_metrics=translated_metrics,
+            ),
+        )
+        return
+
+    yield from (
+        (index, graph_template, evaluated_metrics)
+        for index, (graph_template, evaluated_metrics) in enumerate(
+            _get_evaluated_graph_templates(translated_metrics)
+        )
+        if (graph_index is None or index == graph_index)
+        and (graph_id is None or graph_template.id == graph_id)
+    )
+
+
+class TemplateGraphSpecification(GraphSpecification, frozen=True):
+    site: SiteId | None
+    host_name: HostName
+    service_description: ServiceName
+    graph_index: int | None = None
+    graph_id: str | None = None
+    destination: str | None = None
+
+    @staticmethod
+    def graph_type_name() -> Literal["template"]:
+        return "template"
+
+    def _get_graph_data_from_livestatus(self) -> Row:
+        return get_graph_data_from_livestatus(
+            self.site,
+            self.host_name,
+            self.service_description,
+        )
+
+    def _build_recipe_from_template(
+        self,
+        *,
+        graph_template: GraphTemplate,
+        evaluated_metrics: Sequence[EvaluatedMetricExpression],
+        row: Row,
+        translated_metrics: Mapping[str, TranslatedMetric],
+        index: int,
+    ) -> GraphRecipe | None:
+        return _create_graph_recipe_from_template(
+            row["site"],
+            row["host_name"],
+            row.get("service_description", "_HOST_"),
+            graph_template,
+            evaluated_metrics,
+            translated_metrics,
+            specification=type(self)(
+                site=self.site,
+                host_name=self.host_name,
+                service_description=self.service_description,
+                destination=self.destination,
+                graph_index=index,
+                graph_id=graph_template.id,
+            ),
+        )
+
+    def recipes(self) -> list[GraphRecipe]:
+        row = self._get_graph_data_from_livestatus()
+        translated_metrics = translated_metrics_from_row(row)
+        return [
+            recipe
+            for index, graph_template, evaluated_metrics in _matching_graph_templates(
+                graph_id=self.graph_id,
+                graph_index=self.graph_index,
+                translated_metrics=translated_metrics,
+            )
+            if (
+                recipe := self._build_recipe_from_template(
+                    graph_template=graph_template,
+                    evaluated_metrics=evaluated_metrics,
+                    row=row,
+                    translated_metrics=translated_metrics,
+                    index=index,
+                )
+            )
+        ]
+
+
+def get_template_graph_specification(
+    *,
+    site_id: SiteId | None,
+    host_name: HostName,
+    service_name: ServiceName,
+    graph_index: int | None = None,
+    graph_id: str | None = None,
+    destination: str | None = None,
+) -> TemplateGraphSpecification:
+    if issubclass(
+        graph_specification := graph_specification_registry["template"], TemplateGraphSpecification
+    ):
+        return graph_specification(
+            site=site_id,
+            host_name=host_name,
+            service_description=service_name,
+            graph_index=graph_index,
+            graph_id=graph_id,
+            destination=destination,
+        )
+    raise TypeError(graph_specification)

@@ -154,8 +154,8 @@ run_unit_tests() {
 run_check_format() {
     command -v taplo >/dev/null && RUST_LOG=warn taplo format --check --diff pyproject.toml
     setup_venv
-    isort --check-only --diff cmk tests
-    black --check --diff cmk tests
+    ruff check --select I --diff cmk tests
+    ../../scripts/run-bazel.sh run :format.check "$(realpath cmk)" "$(realpath tests)"
 }
 
 run_mypy() {
@@ -179,8 +179,8 @@ run_bandit() {
 run_format() {
     command -v taplo >/dev/null && RUST_LOG=warn taplo format pyproject.toml
     setup_venv
-    isort cmk tests
-    black cmk tests
+    ruff check --select I --fix cmk tests
+    ../../scripts/run-bazel.sh run :format "$(realpath cmk)" "$(realpath tests)"
 }
 
 run_documentation() {

@@ -5,14 +5,14 @@
 
 # pylint: disable=protected-access
 
+from cmk.ccc.plugin_registry import Registry
+
 from cmk.utils.rulesets.definition import RuleGroup
 
 import cmk.gui.watolib.rulespecs as _rulespecs
 from cmk.gui.i18n import _
 from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfigurationNotifications
 from cmk.gui.watolib.users import notification_script_title
-
-from cmk.ccc.plugin_registry import Registry
 
 from ._base import NotificationParameter
 

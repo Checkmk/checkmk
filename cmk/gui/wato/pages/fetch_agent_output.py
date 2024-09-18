@@ -8,6 +8,10 @@ import ast
 import os
 from pathlib import Path
 
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
+
 from cmk.utils.hostaddress import HostName
 
 from cmk.gui.background_job import (
@@ -38,10 +42,6 @@ from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCom
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import get_agent_output
 from cmk.gui.watolib.hosts_and_folders import folder_from_request, Host
-
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import omd_site
 
 
 def register(
@@ -225,7 +225,7 @@ class PageFetchAgentOutput(AgentOutputPage):
         )
 
 
-class ABCAutomationFetchAgentOutput(AutomationCommand, abc.ABC):
+class ABCAutomationFetchAgentOutput(AutomationCommand[FetchAgentOutputRequest]):
     def get_request(self) -> FetchAgentOutputRequest:
         user.need_permission("wato.download_agent_output")
 
@@ -267,7 +267,7 @@ def start_fetch_agent_job(api_request: FetchAgentOutputRequest) -> None:
 class AutomationFetchAgentOutputGetStatus(ABCAutomationFetchAgentOutput):
     """Is called by AgentOutputPage._get_job_status() to execute the background job on a remote site"""
 
-    def command_name(self):
+    def command_name(self) -> str:
         return "fetch-agent-output-get-status"
 
     def execute(self, api_request: FetchAgentOutputRequest) -> dict:

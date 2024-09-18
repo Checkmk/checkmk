@@ -1,10 +1,15 @@
+<!--
+Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+conditions defined in the file COPYING, which is part of this source code package.
+-->
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import FormEdit from '@/form/components/FormEdit.vue'
 import type { List } from '@/form/components/vue_formspec_components'
 import FormValidation from '@/form/components/FormValidation.vue'
 import {
-  groupListValidations,
+  groupIndexedValidations,
   validateValue,
   type ValidationMessages
 } from '@/form/components/utils/validation'
@@ -18,7 +23,7 @@ const backendData = defineModel<unknown[]>('data', { required: true })
 
 type ElementIndex = number
 const data = ref<Record<ElementIndex, unknown>>({})
-const validation = ref<ValidationMessages>([])
+const validation = ref<Array<string>>([])
 const elementValidation = ref<Record<ElementIndex, ValidationMessages>>({})
 const frontendOrder = ref<ElementIndex[]>([])
 const newElementIndex = ref<ElementIndex>(0)
@@ -46,7 +51,7 @@ watch(
 )
 
 function setValidation(newBackendValidation: ValidationMessages) {
-  const [_listValidations, _elementValidations] = groupListValidations(
+  const [_listValidations, _elementValidations] = groupIndexedValidations(
     newBackendValidation,
     backendData.value.length
   )
@@ -55,9 +60,6 @@ function setValidation(newBackendValidation: ValidationMessages) {
 }
 
 let tableRef = ref<HTMLTableElement | null>(null)
-const CLASS_LISTOF_ELEMENT = 'listof_element'
-const CLASS_ELEMENT_DRAGGER = 'element_dragger'
-const CLASS_VLOF_BUTTONS = 'vlof_buttons'
 
 function dragStart(event: DragEvent) {
   ;(event.target! as HTMLTableCellElement).closest('tr')!.classList.add('dragging')
@@ -105,7 +107,7 @@ function dragging(event: DragEvent) {
 function validateList() {
   validation.value.splice(0)
   validateValue(backendData.value, props.spec.validators!).forEach((error) => {
-    validation.value.push({ message: error, location: [], invalid_value: backendData.value })
+    validation.value.push(error)
   })
 }
 
@@ -138,21 +140,20 @@ function sendDataUpstream() {
 </script>
 
 <template>
-  <table ref="tableRef" class="valuespec_listof">
+  <table ref="tableRef" class="valuespec_listof vue_list">
     <template v-for="backendIndex in frontendOrder" :key="backendIndex">
-      <tr :class="CLASS_LISTOF_ELEMENT">
-        <td :class="CLASS_VLOF_BUTTONS">
+      <tr class="listof_element">
+        <td class="vlof_buttons">
           <a
             v-if="props.spec.editable_order"
             @dragstart="dragStart"
             @drag="dragging"
             @dragend="dragEnd"
-            ><img src="themes/modern-dark/images/icon_drag.svg" :class="CLASS_ELEMENT_DRAGGER" />
+            ><img class="vue element_dragger" />
           </a>
           <a title="Delete this entry">
             <img
-              class="icon iconbutton"
-              src="themes/modern-dark/images/icon_close.svg"
+              class="icon iconbutton vue icon_close"
               @click.prevent="removeElement(backendIndex)"
             />
           </a>
@@ -168,6 +169,9 @@ function sendDataUpstream() {
       </tr>
     </template>
   </table>
-  <input type="button" class="button" :value="spec.add_element_label" @click.prevent="addElement" />
+  <a class="vlof_add_button" @click.prevent="addElement">
+    <img class="vue icon_plus" />
+    <span class="vue add_element_text">{{ spec.add_element_label }}</span>
+  </a>
   <FormValidation :validation="validation"></FormValidation>
 </template>

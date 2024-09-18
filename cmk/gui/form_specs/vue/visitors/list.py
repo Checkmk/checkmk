@@ -6,20 +6,19 @@
 from typing import Generic, Sequence, TypeVar
 
 from cmk.gui.form_specs.private.list_extended import ListExtended
-from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
+from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.i18n import translate_to_current_language
 
 from cmk.rulesets.v1 import Title
 
 from ._base import FormSpecVisitor
 from ._registry import get_visitor
-from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue, Value
+from ._type_defs import DEFAULT_VALUE, DefaultValue, EMPTY_VALUE, EmptyValue
 from ._utils import (
     compute_validation_errors,
     compute_validators,
     create_validation_error,
     get_title_and_help,
-    migrate_value,
 )
 
 T = TypeVar("T")
@@ -27,7 +26,6 @@ T = TypeVar("T")
 
 class ListVisitor(Generic[T], FormSpecVisitor[ListExtended[T], Sequence[T]]):
     def _parse_value(self, raw_value: object) -> Sequence[T] | EmptyValue:
-        raw_value = migrate_value(self.form_spec, self.options, raw_value)
         if isinstance(raw_value, DefaultValue):
             return self.form_spec.prefill.value
 
@@ -37,7 +35,7 @@ class ListVisitor(Generic[T], FormSpecVisitor[ListExtended[T], Sequence[T]]):
 
     def _to_vue(
         self, raw_value: object, parsed_value: Sequence[T] | EmptyValue
-    ) -> tuple[VueComponents.List, Value]:
+    ) -> tuple[shared_type_defs.List, list[object]]:
         if isinstance(parsed_value, EmptyValue):
             # TODO: fallback to default message
             parsed_value = []
@@ -55,7 +53,7 @@ class ListVisitor(Generic[T], FormSpecVisitor[ListExtended[T], Sequence[T]]):
             list_values.append(element_vue_value)
 
         return (
-            VueComponents.List(
+            shared_type_defs.List(
                 title=title,
                 help=help_text,
                 element_template=element_schema,
@@ -76,7 +74,7 @@ class ListVisitor(Generic[T], FormSpecVisitor[ListExtended[T], Sequence[T]]):
 
     def _validate(
         self, raw_value: object, parsed_value: Sequence[T] | EmptyValue
-    ) -> list[VueComponents.ValidationMessage]:
+    ) -> list[shared_type_defs.ValidationMessage]:
         if isinstance(parsed_value, EmptyValue):
             return create_validation_error(raw_value, Title("Invalid data for list"))
 
@@ -88,7 +86,7 @@ class ListVisitor(Generic[T], FormSpecVisitor[ListExtended[T], Sequence[T]]):
         for idx, entry in enumerate(parsed_value):
             for validation in element_visitor.validate(entry):
                 element_validations.append(
-                    VueComponents.ValidationMessage(
+                    shared_type_defs.ValidationMessage(
                         location=[str(idx)] + validation.location,
                         message=validation.message,
                         invalid_value=validation.invalid_value,

@@ -143,7 +143,9 @@ class RulesetAccess:
     @staticmethod
     def logwatch_rules_all(host_name: str, item: str) -> Sequence[ParameterLogwatchRules]:
         return cmk.base.config.get_config_cache().ruleset_matcher.service_extra_conf(
-            HostName(host_name), item, cmk.base.config.logwatch_rules  # type: ignore[arg-type]
+            HostName(host_name),
+            item,
+            cmk.base.config.logwatch_rules,  # type: ignore[arg-type]
         )
 
     # This is only wishful typing -- but lets assume this is what we get.

@@ -30,12 +30,12 @@ import pydantic
 
 from omdlib.type_defs import Config, ConfigChoiceHasError
 
+from cmk.ccc.exceptions import MKTerminate
+from cmk.ccc.version import edition
+
 import cmk.utils.resulttype as result
 from cmk.utils import paths
 from cmk.utils.log import VERBOSE
-
-from cmk.ccc.exceptions import MKTerminate
-from cmk.ccc.version import edition
 
 if TYPE_CHECKING:
     from omdlib.contexts import SiteContext

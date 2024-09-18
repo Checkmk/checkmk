@@ -18,31 +18,31 @@ def test_version() -> None:
 
 class TestVersion:
     def test_stable(self) -> None:
-        assert Version.from_str("1.2.3")
+        Version.from_str("1.2.3")
 
     def test_innovation(self) -> None:
-        assert Version.from_str("1.2.4i8")
+        Version.from_str("1.2.4i8")
 
     def test_beta(self) -> None:
-        assert Version.from_str("1.2.4b1")
+        Version.from_str("1.2.4b1")
 
     def test_patch(self) -> None:
-        assert Version.from_str("1.2.4p3")
+        Version.from_str("1.2.4p3")
 
     def test_stable_daily(self) -> None:
-        assert Version.from_str("1.2.3-2023.12.24")
+        Version.from_str("1.2.3-2023.12.24")
 
     def test_master_daily_old_scheme(self) -> None:
-        assert Version.from_str("2023.12.24")
+        Version.from_str("2023.12.24")
 
     def test_invalid_vtype(self) -> None:
         with pytest.raises(ValueError):
-            _version = Version.from_str("1.2.3g5")
+            Version.from_str("1.2.3g5")
 
     def test_invalid_combo(self) -> None:
         # currently invalid.
         with pytest.raises(ValueError):
-            _version = Version.from_str("1.2.3b5-2023.01.01")
+            Version.from_str("1.2.3b5-2023.01.01")
 
     def test_version_base_master(self) -> None:
         assert Version.from_str("1984.04.01").version_base == ""

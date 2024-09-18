@@ -7,11 +7,12 @@ from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
+import cmk.ccc.debug
+
 import cmk.utils.paths
 from cmk.utils import config_warnings, password_store
 from cmk.utils.hostaddress import HostAddress, HostName
 
-import cmk.ccc.debug
 from cmk.discover_plugins import discover_executable, family_libexec_dir, PluginLocation
 from cmk.server_side_calls.v1 import HostConfig, SpecialAgentConfig
 from cmk.server_side_calls_backend.config_processing import (
@@ -108,20 +109,21 @@ class SpecialAgent:
     def _iter_commands(
         self, special_agent: SpecialAgentConfig, conf_dict: Mapping[str, object]
     ) -> Iterator[SpecialAgentCommandLine]:
-
         proxy_config = ProxyConfig(self.host_name, self._http_proxies)
         processed = process_configuration_to_parameters(conf_dict, proxy_config)
 
         for command in special_agent(processed.value, self.host_config):
-            args = replace_passwords(
-                self.host_name,
-                command.command_arguments,
-                self.stored_passwords,
-                self.password_store_file,
-                processed.surrogates,
-                apply_password_store_hack=password_store.hack.HACK_AGENTS.get(
-                    special_agent.name, False
-                ),
+            args = " ".join(
+                replace_passwords(
+                    self.host_name,
+                    command.command_arguments,
+                    self.stored_passwords,
+                    self.password_store_file,
+                    processed.surrogates,
+                    apply_password_store_hack=password_store.hack.HACK_AGENTS.get(
+                        special_agent.name, False
+                    ),
+                )
             )
             # there's a test that currently prevents us from moving this out of the loop
             path = self._make_source_path(special_agent.name)

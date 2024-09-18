@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from typing import Any, TypedDict
 
 from cmk.agent_based.v2 import (
@@ -87,7 +87,7 @@ agent_section_solaris_services = AgentSection(
 #   '----------------------------------------------------------------------'
 
 
-def _regex_match(what: Iterable[str], name: str) -> bool:
+def _regex_match(what: Collection[str], name: str) -> bool:
     if not what:
         return True
     for entry in what:

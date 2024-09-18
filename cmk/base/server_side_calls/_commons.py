@@ -17,6 +17,10 @@ from cmk.server_side_calls.v1 import Secret
 CheckCommandArguments = Iterable[int | float | str | tuple[str, str, str]]
 
 
+ConfigSet = Mapping[str, object]
+SSCRules = tuple[str, Sequence[ConfigSet]]
+
+
 class SpecialAgentLegacyConfiguration(Protocol):
     args: Sequence[str]
     # None makes the stdin of subprocess /dev/null
@@ -104,7 +108,7 @@ def replace_passwords(
     surrogated_secrets: Mapping[int, str],
     *,
     apply_password_store_hack: bool,
-) -> str:
+) -> tuple[str, ...]:
     formatted: list[str | tuple[str, str, str]] = []
 
     for index, arg in enumerate(arguments):
@@ -141,7 +145,7 @@ def replace_passwords(
             secret_value = "%%%"
         formatted.append(shlex.quote(secret.format % secret_value))
 
-    return " ".join(
+    return tuple(
         password_store.hack.apply_password_hack(
             formatted,
             passwords,

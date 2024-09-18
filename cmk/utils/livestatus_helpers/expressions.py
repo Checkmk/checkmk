@@ -12,6 +12,7 @@ string concatenation.
 It's implementation is still a bit rudimentary but supports most necessary concepts already.
 
 """
+
 from __future__ import annotations
 
 import abc

@@ -8,6 +8,8 @@ import collections
 import json
 from collections.abc import Callable, Iterator
 
+import cmk.ccc.version as cmk_version
+
 import cmk.utils.paths
 
 import cmk.gui.pages
@@ -50,8 +52,6 @@ from cmk.gui.views.command import Command, do_actions, get_command_groups, shoul
 from cmk.gui.visuals import view_title
 from cmk.gui.visuals.filter import Filter
 from cmk.gui.watolib.activate_changes import get_pending_changes_tooltip, has_pending_changes
-
-import cmk.ccc.version as cmk_version
 
 
 def _filter_selected_rows(view_spec: ViewSpec, rows: Rows, selected_ids: list[str]) -> Rows:
@@ -233,7 +233,7 @@ class GUIViewRenderer(ABCViewRenderer):
         for message in self.view.warning_messages:
             html.show_warning(message)
 
-        call_hooks("view_banner", self.view.name)
+        call_hooks("rmk_view_banner", self.view.name)
 
         if not has_done_actions and not missing_single_infos:
             html.div("", id_="row_info")

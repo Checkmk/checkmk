@@ -43,37 +43,38 @@ class Label:
 
 class AutoPrecision(BaseModel, frozen=True):
     type: Literal["auto"] = "auto"
-    decimal_places: int
+    digits: int
 
 
-class FixedPrecision(BaseModel, frozen=True):
-    type: Literal["fixed"] = "fixed"
-    decimal_places: int
+class StrictPrecision(BaseModel, frozen=True):
+    type: Literal["strict"] = "strict"
+    digits: int
 
 
 @dataclass(frozen=True)
 class NotationFormatter:
     symbol: str
-    precision: AutoPrecision | FixedPrecision
+    precision: AutoPrecision | StrictPrecision
     use_max_digits_for_labels: bool = True
 
     @abc.abstractmethod
     def ident(
         self,
-    ) -> Literal["Decimal", "SI", "IEC", "StandardScientific", "EngineeringScientific", "Time"]:
-        raise NotImplementedError()
+    ) -> Literal["Decimal", "SI", "IEC", "StandardScientific", "EngineeringScientific", "Time"]: ...
+
+    @property
+    @abc.abstractmethod
+    def js_formatter_name(self) -> str: ...
 
     @abc.abstractmethod
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
-    ) -> Sequence[Preformatted]:
-        raise NotImplementedError()
+    ) -> Sequence[Preformatted]: ...
 
     @abc.abstractmethod
     def _preformat_large_number(
         self, value: int | float, use_prefix: str, use_symbol: str
-    ) -> Sequence[Preformatted]:
-        raise NotImplementedError()
+    ) -> Sequence[Preformatted]: ...
 
     def _apply_precision(
         self,
@@ -84,10 +85,10 @@ class NotationFormatter:
         value_floor = math.floor(value)
         if value == value_floor:
             return value
-        digits = self.precision.decimal_places
+        digits = self.precision.digits
         if isinstance(self.precision, AutoPrecision):
             if exponent := abs(math.ceil(math.log10(value - value_floor))):
-                digits = compute_auto_precision_digits(exponent, self.precision.decimal_places)
+                digits = compute_auto_precision_digits(exponent, self.precision.digits)
         return (
             round(value, min(digits, _MAX_DIGITS))
             if use_max_digits_for_labels
@@ -109,8 +110,7 @@ class NotationFormatter:
         return str(value)
 
     @abc.abstractmethod
-    def _compose(self, formatted: Formatted) -> str:
-        raise NotImplementedError()
+    def _compose(self, formatted: Formatted) -> str: ...
 
     def _postformat(
         self,
@@ -148,12 +148,10 @@ class NotationFormatter:
         return f"{sign}{postformatted}"
 
     @abc.abstractmethod
-    def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
-        raise NotImplementedError()
+    def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]: ...
 
     @abc.abstractmethod
-    def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
-        raise NotImplementedError()
+    def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]: ...
 
     def render_y_labels(
         self,
@@ -222,6 +220,10 @@ class DecimalFormatter(NotationFormatter):
     def ident(self) -> Literal["Decimal"]:
         return "Decimal"
 
+    @property
+    def js_formatter_name(self) -> Literal["DecimalFormatter"]:
+        return "DecimalFormatter"
+
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
     ) -> Sequence[Preformatted]:
@@ -282,6 +284,10 @@ class SIFormatter(NotationFormatter):
     def ident(self) -> Literal["SI"]:
         return "SI"
 
+    @property
+    def js_formatter_name(self) -> Literal["SIFormatter"]:
+        return "SIFormatter"
+
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
     ) -> Sequence[Preformatted]:
@@ -334,6 +340,10 @@ class IECFormatter(NotationFormatter):
     def ident(self) -> Literal["IEC"]:
         return "IEC"
 
+    @property
+    def js_formatter_name(self) -> Literal["IECFormatter"]:
+        return "IECFormatter"
+
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
     ) -> Sequence[Preformatted]:
@@ -367,6 +377,10 @@ class StandardScientificFormatter(NotationFormatter):
     def ident(self) -> Literal["StandardScientific"]:
         return "StandardScientific"
 
+    @property
+    def js_formatter_name(self) -> Literal["StandardScientificFormatter"]:
+        return "StandardScientificFormatter"
+
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
     ) -> Sequence[Preformatted]:
@@ -394,6 +408,10 @@ class StandardScientificFormatter(NotationFormatter):
 class EngineeringScientificFormatter(NotationFormatter):
     def ident(self) -> Literal["EngineeringScientific"]:
         return "EngineeringScientific"
+
+    @property
+    def js_formatter_name(self) -> Literal["EngineeringScientificFormatter"]:
+        return "EngineeringScientificFormatter"
 
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
@@ -463,6 +481,10 @@ _TIME_LARGE_SYMBOLS: Final = [
 class TimeFormatter(NotationFormatter):
     def ident(self) -> Literal["Time"]:
         return "Time"
+
+    @property
+    def js_formatter_name(self) -> Literal["TimeFormatter"]:
+        return "TimeFormatter"
 
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str

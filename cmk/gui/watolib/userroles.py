@@ -41,6 +41,7 @@ def clone_role(
     cloned_user_role = UserRole(
         name=new_role_id,
         basedon=role_to_clone.basedon or role_to_clone.name,
+        two_factor=role_to_clone.two_factor,
         alias=new_alias,
         permissions=role_to_clone.permissions,
     )

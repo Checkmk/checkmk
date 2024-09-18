@@ -59,9 +59,6 @@ VARIABLES:
     - NAME: CHANGED_FIND_PYTHON_FILES_SCRIPT
       SH: "echo '${CHANGED_FILES_REL}' | grep '^scripts/find-python-files' || true"
 
-    - NAME: CHANGED_RUN_BLACK_SCRIPT
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^scripts/run-black' || true"
-
     - NAME: CHANGED_RUN_MYPY_SCRIPT
       SH: "echo '${CHANGED_FILES_REL}' | grep '^scripts/run-mypy' || true"
 
@@ -161,6 +158,9 @@ VARIABLES:
     - NAME: CHANGED_FRONTEND_VUE_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-frontend-vue/' || true"
 
+    - NAME: CHANGED_SHARED_TYPING_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-shared-typing/\\|^cmk/gui/form_specs/vue/shared_type_defs.py\\|^packages/cmk-frontend-vue/src/form/components/vue_formspec_components.ts' || true"
+
     - NAME: CHANGED_CMK_FRONTEND_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-frontend/' || true"
 
@@ -176,7 +176,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/python-typing.txt"
 
     - NAME: "Python Format"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES,CHANGED_PIPFILE_LOCK,CHANGED_PYPROJECT_TOML_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT,CHANGED_RUN_BLACK_SCRIPT
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES,CHANGED_PIPFILE_LOCK,CHANGED_PYPROJECT_TOML_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT
       DIR: "tests"
       ENV_VARS:
           PYTHON_FILES: "${CHANGED_PYTHON_FILES}"
@@ -488,9 +488,16 @@ STAGES:
     - NAME: "Package cmk-frontend-vue"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FRONTEND_VUE_FILES
       DIR: "packages/cmk-frontend-vue"
-      COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/cmk-frontend-vue.txt"
+      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-frontend-vue.txt"
       TEXT_ON_SKIP: "No cmk-frontend-vue files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-frontend-vue.txt"
+
+    - NAME: "Package cmk-shared-typing"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_SHARED_TYPING_FILES
+      DIR: "packages/cmk-shared-typing"
+      COMMAND: "../../scripts/run-in-docker.sh ./run --clean --all &> ${RESULTS}/cmk-shared-typing.txt"
+      TEXT_ON_SKIP: "No cmk-shared-typing files changed"
+      RESULT_CHECK_FILE_PATTERN: "results/cmk-shared-typing.txt"
 
     - NAME: "Package mk-sql"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_MK_SQL_FILES

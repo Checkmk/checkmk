@@ -8,8 +8,10 @@ from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
 
+from tests.testlib.host_details import HostDetails
+from tests.testlib.playwright.helpers import DropdownListNameToID
 from tests.testlib.playwright.pom.page import CmkPage
-from tests.testlib.playwright.pom.setup.hosts import HostDetails, SetupHost
+from tests.testlib.playwright.pom.setup.hosts import SetupHost
 
 logger = logging.getLogger(__name__)
 
@@ -59,11 +61,21 @@ class HostEffectiveParameters(CmkPage):
         self.main_area.check_page_title(self.page_title)
         expect(self.section_title(HostEffectiveParameters.sections[0])).to_be_visible()
 
+    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
+        return DropdownListNameToID()
+
     def section_title(self, section_name: str) -> Locator:
         return self.main_area.locator().get_by_role("cell", name=section_name)
 
     def _section(self, section_name: str) -> Locator:
         return self.main_area.locator(f"table:has(td:text-is('{section_name}'))")
+
+    def _setting_row(self, setting_name: str) -> Locator:
+        return self.main_area.locator(f"tr:has(a:text-is('{setting_name}'))")
+
+    @property
+    def service_discovery_values(self) -> Locator:
+        return self._setting_row("Periodic service discovery").locator("td[class*='settingvalue']")
 
     @property
     def service_discovery_period(self) -> Locator:

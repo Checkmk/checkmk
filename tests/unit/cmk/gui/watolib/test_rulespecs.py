@@ -11,6 +11,9 @@ from collections.abc import Sequence
 import pytest
 from pytest import MonkeyPatch
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils import paths
 from cmk.utils.rulesets.definition import RuleGroup
 
@@ -40,9 +43,6 @@ from cmk.gui.watolib.rulespecs import (
     RulespecSubGroup,
 )
 from cmk.gui.watolib.search import MatchItem
-
-import cmk.ccc.version as cmk_version
-from cmk.ccc.exceptions import MKGeneralException
 
 
 def test_rulespec_sub_group() -> None:

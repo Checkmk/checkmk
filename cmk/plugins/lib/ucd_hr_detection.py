@@ -44,6 +44,7 @@ UCD = any_of(
     contains(".1.3.6.1.2.1.1.1.0", "beyondtrust"),
     contains(".1.3.6.1.2.1.1.1.0", "pulse secure"),
     contains(".1.3.6.1.2.1.1.1.0", "microsens"),
+    contains(".1.3.6.1.2.1.1.1.0", "netvision"),
     all_of(  # Artec email archive appliances
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.10"),
         contains(".1.3.6.1.2.1.1.1.0", "version"),

@@ -46,7 +46,6 @@ def tmpfs_mounted(sitename: str) -> bool:
 
 def prepare_tmpfs(version_info: VersionInfo, site_name: str, tmp_dir: str, tmpfs_hook: str) -> None:
     if tmpfs_mounted(site_name):
-        sys.stdout.write("Temporary filesystem already mounted\n")
         return  # Fine: Mounted
 
     if tmpfs_hook != "on":

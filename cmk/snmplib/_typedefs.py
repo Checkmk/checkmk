@@ -14,10 +14,10 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, Literal, NamedTuple, Protocol, Self
 
+from cmk.ccc.exceptions import MKSNMPError
+
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import SectionName
-
-from cmk.ccc.exceptions import MKSNMPError
 
 SNMPContext = str
 SNMPValueEncoding = Literal["string", "binary"]

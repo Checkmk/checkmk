@@ -12,7 +12,9 @@ from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from random import Random
-from typing import final, Final, IO, Literal
+from typing import Final, final, IO, Literal
+
+from cmk.ccc.exceptions import MKGeneralException
 
 import cmk.utils.paths
 from cmk.utils import tty
@@ -22,8 +24,6 @@ from cmk.utils.servicename import ServiceName
 from cmk.utils.timeout import Timeout
 
 from cmk.checkengine.checkresults import ServiceCheckResult
-
-from cmk.ccc.exceptions import MKGeneralException
 
 _CacheInfo = tuple[int, int]
 

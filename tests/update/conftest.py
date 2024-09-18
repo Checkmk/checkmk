@@ -14,19 +14,21 @@ from pathlib import Path
 import pytest
 import yaml
 
+from tests.testlib.licensing import license_site
 from tests.testlib.repo import repo_path
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import edition_from_env, parse_raw_edition, run
 from tests.testlib.version import CMKVersion, get_min_version, version_from_env
 
+from cmk.ccc.version import Edition
+
 from cmk.utils.licensing.helper import get_licensed_state_file_path
 from cmk.utils.paths import omd_root
 
-from cmk.ccc.version import Edition
-
 LOGGER = logging.getLogger(__name__)
-DUMPS_DIR = Path(__file__).parent.resolve() / "dumps"
-RULES_DIR = repo_path() / "tests" / "update" / "rules"
+MODULE_PATH = Path(__file__).parent.resolve()
+DUMPS_DIR = MODULE_PATH / "dumps"
+RULES_DIR = MODULE_PATH / "rules"
 
 
 def pytest_addoption(parser):
@@ -70,20 +72,50 @@ def pytest_configure(config):
 
 @dataclasses.dataclass
 class BaseVersions:
-    """Get all base versions used for the test."""
+    """Get all base versions used for the test. Up to five versions are used per branch:
+    The first one and the last four.
+    """
 
-    with open(Path(__file__).parent.resolve() / "base_versions.json") as f:
-        BASE_VERSIONS_STR = json.load(f)
+    @staticmethod
+    def _limit_versions(versions: list[str], min_version: CMKVersion) -> list[str]:
+        """Select supported earliest and latest versions and eliminate duplicates"""
+        max_earliest_versions = 1
+        max_latest_versions = 4
+
+        active_versions = [_ for _ in versions if CMKVersion(_, min_version.edition) >= min_version]
+        earliest_versions = active_versions[0:max_earliest_versions]
+        latest_versions = active_versions[-max_latest_versions:]
+        # do not use a set to retain the order
+        return list(dict.fromkeys(earliest_versions + latest_versions))
+
+    MIN_VERSION = get_min_version()
 
     if version_from_env().is_saas_edition():
-        BASE_VERSIONS = [
-            CMKVersion(CMKVersion.DAILY, edition_from_env(Edition.CSE), "2.3.0", "2.3.0")
-        ]
+        BASE_VERSIONS = [CMKVersion(CMKVersion.DAILY, Edition.CSE, "2.3.0", "2.3.0")]
     else:
+        base_versions_pb_file = MODULE_PATH / "base_versions_previous_branch.json"
+        if not base_versions_pb_file.exists():
+            base_versions_pb_file = MODULE_PATH / "base_versions.json"
+        BASE_VERSIONS_PB = _limit_versions(
+            json.loads(base_versions_pb_file.read_text(encoding="utf-8")), MIN_VERSION
+        )
+
+        base_versions_cb_file = MODULE_PATH / "base_versions_current_branch.json"
+        BASE_VERSIONS_CB = (
+            _limit_versions(
+                json.loads(base_versions_cb_file.read_text(encoding="utf-8")),
+                MIN_VERSION,
+            )
+            if base_versions_cb_file.exists()
+            else []
+        )
+
         BASE_VERSIONS = [
-            CMKVersion(base_version_str, edition_from_env(Edition.CEE))
-            for base_version_str in BASE_VERSIONS_STR
-            if not version_from_env().is_saas_edition()
+            CMKVersion(
+                base_version_str,
+                edition_from_env(Edition.CEE),
+            )
+            for base_version_str in BASE_VERSIONS_PB + BASE_VERSIONS_CB
         ]
 
 
@@ -91,7 +123,7 @@ class BaseVersions:
 class InteractiveModeDistros:
     @staticmethod
     def get_supported_distros():
-        with open(Path(__file__).parent.resolve() / "../../editions.yml") as stream:
+        with open(repo_path() / "editions.yml") as stream:
             yaml_file = yaml.safe_load(stream)
 
         return yaml_file["daily_extended"]
@@ -203,7 +235,8 @@ def update_site(base_site: Site, target_version: CMKVersion, interactive: bool) 
 
 
 def _get_rel_path(full_path: Path) -> Path:
-    return full_path if not omd_root else full_path.relative_to(omd_root)
+    # NOTE: omd_root is always truthy because it's a Path
+    return full_path.relative_to(omd_root)
 
 
 def is_test_site_licensed(test_site: Site) -> bool:
@@ -242,25 +275,12 @@ def _setup(request: pytest.FixtureRequest) -> Generator[tuple, None, None]:
     if not version_from_env().is_saas_edition():
         if not disable_rules_injection:
             inject_rules(test_site)
-    licensing_dir = Path(os.environ.get("OMD_ROOT", "")) / "var/check_mk/licensing"
-    verification_request_id_file_path = licensing_dir / "verification_request_id"
-    verification_response_file_path = licensing_dir / "verification_response"
 
-    # copy the desired license files to the test site
-    test_site.copy_file(
-        str(Path("license_files") / target_edition.short / "verification_response"),
-        str(_get_rel_path(verification_response_file_path)),
-    )
-    if test_site.version.edition in [Edition.CCE, Edition.CME]:  # enforced license editions
-        test_site.copy_file(
-            str(Path("license_files") / target_edition.short / "verification_request_id"),
-            str(_get_rel_path(verification_request_id_file_path)),
-        )
+    with license_site(test_site, target_edition):
+        test_site.activate_changes_and_wait_for_core_reload()
+        assert is_test_site_licensed(test_site)
+        yield test_site, target_edition, interactive_mode
 
-    test_site.activate_changes_and_wait_for_core_reload()
-    assert is_test_site_licensed(test_site)
-
-    yield test_site, target_edition, interactive_mode
     LOGGER.info("Removing test-site...")
     test_site.rm()
 
@@ -280,12 +300,12 @@ def inject_dumps(site: Site, dumps_dir: Path) -> None:
         assert (
             run(
                 [
-                    "sudo",
                     "cp",
                     "-f",
                     f"{dumps_dir}/{dump_name}",
                     f"{site_dumps_path}/{dump_name}",
-                ]
+                ],
+                sudo=True,
             ).returncode
             == 0
         )

@@ -220,10 +220,13 @@ def check_apc_symmetra(_no_item, params, parsed):  # pylint: disable=too-many-br
             "3": " (calibration in progress)",
         }.get(calib_result, " (calibration unexpected(%s))" % calib_result)
 
-        yield state, "Output status: {}{}{}".format(
-            state_readable,
-            calib_text,
-            " (self-test running)" if self_test_in_progress else "",
+        yield (
+            state,
+            "Output status: {}{}{}".format(
+                state_readable,
+                calib_text,
+                " (self-test running)" if self_test_in_progress else "",
+            ),
         )
 
     if battery_capacity:
@@ -242,9 +245,11 @@ def check_apc_symmetra(_no_item, params, parsed):  # pylint: disable=too-many-br
             state = 1
             levelstxt = f" (warn/crit below {warn_cap:.1f}%/{crit_cap:.1f}%)"
 
-        yield state, "Capacity: %d%%%s" % (battery_capacity, levelstxt), [
-            ("capacity", battery_capacity, warn_cap, crit_cap, 0, 100)
-        ]
+        yield (
+            state,
+            "Capacity: %d%%%s" % (battery_capacity, levelstxt),
+            [("capacity", battery_capacity, warn_cap, crit_cap, 0, 100)],
+        )
 
     if battery_time_remain:
         battery_time_remain = float(battery_time_remain) / 100.0

@@ -20,9 +20,7 @@ SYS5.OMVS.SYSPLEX.ROOT     720         224        372       38% /
 HFS, Read Only, Device:1, ACLS=Y
 Filetag : T=off   codeset=0
 ##########
-""".strip().split(
-        "\n"
-    )
+""".strip().split("\n")
 ]
 
 

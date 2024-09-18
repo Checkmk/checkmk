@@ -28,6 +28,11 @@ import requests
 
 import livestatus
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc import site, store
+from cmk.ccc.i18n import _
+from cmk.ccc.site import omd_site
+
 import cmk.utils.paths
 from cmk.utils import tty
 from cmk.utils.diagnostics import (
@@ -59,11 +64,6 @@ from cmk.utils.log import console, section
 from cmk.utils.paths import omd_root
 from cmk.utils.structured_data import load_tree, SDNodeName, SDRawTree
 from cmk.utils.user import UserId
-
-import cmk.ccc.version as cmk_version
-from cmk.ccc import site, store
-from cmk.ccc.i18n import _
-from cmk.ccc.site import omd_site
 
 if cmk_version.edition(cmk.utils.paths.omd_root) in [
     cmk_version.Edition.CEE,
@@ -163,6 +163,7 @@ class DiagnosticsDump:
             FilesSizeCSVDiagnosticsElement(),
             PipFreezeDiagnosticsElement(),
             SELinuxJSONDiagnosticsElement(),
+            CMAJSONDiagnosticsElement(),
         ]
 
     def _get_optional_elements(
@@ -403,12 +404,25 @@ class FilesSizeCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
 
     def _collect_infos(self) -> DiagnosticsElementCSVResult:
         csv_data = []
-        csv_data.append("size;path")
-        for path, _dirs, files in os.walk(cmk.utils.paths.omd_root):
-            for f in files:
-                fp = os.path.join(path, f)
-                if not os.path.islink(fp):
-                    csv_data.append("%d;%s" % (os.path.getsize(fp), str(fp)))
+        csv_data.append("size;path;owner;group;mode;changed")
+        for dirpath, _dirnames, filenames in os.walk(cmk.utils.paths.omd_root):
+            for file in filenames:
+                f = Path(dirpath).joinpath(file)
+                if f.is_symlink():
+                    continue
+                csv_data.append(
+                    ";".join(
+                        [
+                            str(f.stat().st_size),
+                            str(f),
+                            f.owner(),
+                            f.group(),
+                            str(oct(f.stat().st_mode)),
+                            datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S"),
+                        ]
+                    )
+                )
+
         return "\n".join(csv_data)
 
 
@@ -519,6 +533,7 @@ class HWDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
     def _cpuinfo_proc_parser(self, content: list[str]) -> dict[str, str]:
         cpu_info: dict[str, Any] = {}
+        physical_ids: list[str] = []
         num_processors = 0
 
         # Example lines from /proc/cpuinfo output:
@@ -561,7 +576,12 @@ class HWDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             if key == "processor":
                 num_processors += 1
 
-        cpu_info["num_processors"] = str(num_processors)
+            if key == "physical_id" and value not in physical_ids:
+                physical_ids.append(value)
+
+        cpu_info["num_logical_processors"] = str(num_processors)
+        cpu_info["cpus"] = len(physical_ids)
+
         return cpu_info
 
     def _load_avg_proc_parser(self, content: list[str]) -> dict[str, str]:
@@ -715,6 +735,37 @@ class SELinuxJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             for line in subprocess.check_output(selinux_binary, text=True).split("\n")
             if ":" in line
         }
+
+
+class CMAJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+    @property
+    def ident(self) -> str:
+        return "appliance"
+
+    @property
+    def title(self) -> str:
+        return _("Checkmk Appliance information")
+
+    @property
+    def description(self) -> str:
+        return _("Information about the Appliance hardware and firmware version.")
+
+    def _collect_infos(self) -> DiagnosticsElementJSONResult:
+        cma_infos: dict[str, str | dict[str, str]] = {}
+
+        hw_file = "/etc/cma/hw"
+        if os.path.exists(hw_file):
+            with open(hw_file, "r") as f:
+                cma_infos["hw"] = dict(
+                    [l.replace("'", "").split("=") for l in f.read().splitlines() if "=" in l]
+                )
+
+        fw_file = "/ro/usr/share/cma/version"
+        if os.path.exists(fw_file):
+            with open(fw_file, "r") as f:
+                cma_infos["fw"] = f.read().splitlines()[0]
+
+        return cma_infos
 
 
 class OMDConfigDiagnosticsElement(ABCDiagnosticsElementJSONDump):

@@ -28,11 +28,11 @@ def test_changestate_of_nonexistent_event(status_server: StatusServer) -> None:
 
 def test_change_event_state(event_status: EventStatus, status_server: StatusServer) -> None:
     """Changestate 1 event."""
-    event: ec.Event = {
-        "host": HostName("ABC1"),
-        "text": "not important",
-        "core_host": HostName("ABC"),
-    }
+    event = ec.Event(
+        host=HostName("ABC1"),
+        text="not important",
+        core_host=HostName("ABC"),
+    )
     event_status.new_event(new_event(event))
     assert len(event_status.events()) == 1
 

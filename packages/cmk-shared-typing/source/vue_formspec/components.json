@@ -23,12 +23,7 @@
                     "default": []
                 }
             },
-            "required": [
-                "type",
-                "title",
-                "help",
-                "validators"
-            ]
+            "required": ["type", "title", "help", "validators"]
         },
         "integer": {
             "type": "object",
@@ -47,9 +42,7 @@
                     "type": "string"
                 }
             },
-            "required": [
-                "type"
-            ],
+            "required": ["type"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -73,9 +66,7 @@
                     "type": "string"
                 }
             },
-            "required": [
-                "type"
-            ],
+            "required": ["type"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -99,11 +90,7 @@
                     "type": "string"
                 }
             },
-            "required": [
-                "type",
-                "html",
-                "varprefix"
-            ],
+            "required": ["type", "html", "varprefix"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -122,11 +109,71 @@
                 },
                 "input_hint": {
                     "type": "string"
+                },
+                "field_size": {
+                    "type": "string",
+                    "title": "StringFieldSize",
+                    "enum": ["SMALL", "MEDIUM", "LARGE"]
+                },
+                "autocompleter": {
+                    "$ref": "#/$defs/autocompleter"
                 }
             },
-            "required": [
-                "type"
-            ],
+            "required": ["type"],
+            "allOf": [
+                {
+                    "$ref": "#/$defs/form_spec"
+                }
+            ]
+        },
+        "password": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "password",
+                    "default": "password"
+                },
+                "password_store_choices": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "password_id": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": "string"
+                            }
+                        },
+                        "required": ["password_id", "name"]
+                    }
+                },
+                "i18n": {
+                    "type": "object",
+                    "title": "i18nPassword",
+                    "properties": {
+                        "explicit_password": {
+                            "type": "string"
+                        },
+                        "password_store": {
+                            "type": "string"
+                        },
+                        "no_password_store_choices": {
+                            "type": "string"
+                        },
+                        "password_choice_invalid": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "explicit_password",
+                        "password_store",
+                        "no_password_store_choices",
+                        "password_choice_invalid"
+                    ]
+                }
+            },
+            "required": ["type", "password_store_choices", "i18n"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -185,10 +232,7 @@
                     "type": "string"
                 }
             },
-            "required": [
-                "key",
-                "title"
-            ]
+            "required": ["key", "title"]
         },
         "dictionary_element": {
             "type": "object",
@@ -207,53 +251,57 @@
                     "$ref": "#/$defs/form_spec"
                 }
             },
-            "required": [
-                "ident",
-                "required",
-                "parameter_form",
-                "default_value"
-            ]
+            "required": ["ident", "required", "parameter_form", "default_value"]
         },
         "dictionary": {
-            "type": "object",
-            "properties": {
-                "type": {
-                    "const": "dictionary",
-                    "default": "dictionary"
-                },
-                "elements": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/$defs/dictionary_element"
-                    },
-                    "default": []
-                },
-                "groups": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/$defs/dictionary_group"
-                    }
-                },
-                "no_elements_text": {
-                    "type": "string"
-                },
-                "additional_static_elements": {
-                    "type": "object"
-                }
-            },
-            "required": [
-                "type",
-                "elements",
-                "static_elements_key",
-                "groups"
-            ],
+            "id": "dictionary",
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "const": "dictionary",
+                            "default": "dictionary"
+                        },
+                        "elements": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/dictionary_element"
+                            },
+                            "default": []
+                        },
+                        "groups": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/dictionary_group"
+                            }
+                        },
+                        "no_elements_text": {
+                            "type": "string"
+                        },
+                        "additional_static_elements": {
+                            "type": "object"
+                        },
+                        "layout": {
+                            "title": "DictionaryLayout",
+                            "enum": ["one_column", "two_columns"],
+                            "default": "one_column"
+                        }
+                    },
+                    "required": [
+                        "type",
+                        "elements",
+                        "static_elements_key",
+                        "groups",
+                        "layout"
+                    ]
                 }
             ]
         },
-        "single_choice_element_extended": {
+        "single_choice_element": {
             "type": "object",
             "properties": {
                 "name": {},
@@ -261,10 +309,7 @@
                     "type": "string"
                 }
             },
-            "required": [
-                "name",
-                "title"
-            ]
+            "required": ["name", "title"]
         },
         "single_choice": {
             "type": "object",
@@ -276,7 +321,7 @@
                 "elements": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/$defs/single_choice_element_extended"
+                        "$ref": "#/$defs/single_choice_element"
                     },
                     "default": []
                 },
@@ -291,12 +336,45 @@
                 },
                 "input_hint": {}
             },
-            "required": [
-                "type",
-                "frozen",
-                "elements",
-                "input_hint"
-            ],
+            "required": ["type", "frozen", "elements", "input_hint"],
+            "allOf": [
+                {
+                    "$ref": "#/$defs/form_spec"
+                }
+            ]
+        },
+        "multiple_choice_element": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            },
+            "required": ["name", "title"]
+        },
+        "multiple_choice": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "multiple_choice",
+                    "default": "multiple_choice"
+                },
+                "elements": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/multiple_choice_element"
+                    },
+                    "default": []
+                },
+                "show_toggle_all": {
+                    "type": "boolean",
+                    "default": false
+                }
+            },
+            "required": ["type", "elements", "show_toggle_all"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -317,12 +395,7 @@
                     "$ref": "#/$defs/form_spec"
                 }
             },
-            "required": [
-                "name",
-                "title",
-                "default_value",
-                "parameter_form"
-            ]
+            "required": ["name", "title", "default_value", "parameter_form"]
         },
         "cascading_single_choice": {
             "type": "object",
@@ -344,13 +417,14 @@
                 "label": {
                     "type": "string"
                 },
-                "input_hint": {}
+                "input_hint": {},
+                "layout": {
+                    "title": "CascadingChoiceLayout",
+                    "enum": ["vertical", "horizontal"],
+                    "default": "vertical"
+                }
             },
-            "required": [
-                "type",
-                "elements",
-                "input_hint"
-            ],
+            "required": ["type", "elements", "input_hint", "layout"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -369,10 +443,7 @@
                 },
                 "value": {}
             },
-            "required": [
-                "type",
-                "value"
-            ],
+            "required": ["type", "value"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -396,11 +467,7 @@
                     "type": "string"
                 }
             },
-            "required": [
-                "type",
-                "text_on",
-                "text_off"
-            ],
+            "required": ["type", "text_on", "text_off"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -408,33 +475,72 @@
             ]
         },
         "multiline_text": {
+            "id": "multiline_text",
             "type": "object",
             "properties": {
                 "type": {
                     "const": "multiline_text",
                     "default": "multiline_text"
-                },
-                "label": {
-                    "type": "string"
-                },
-                "macro_support": {
-                    "type": "boolean"
-                },
-                "monospaced": {
-                    "type": "boolean"
-                },
-                "input_hint": {
-                    "type": "string"
                 }
             },
-            "required": [
-                "type"
-            ],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "label": {
+                            "type": "string"
+                        },
+                        "macro_support": {
+                            "type": "boolean"
+                        },
+                        "monospaced": {
+                            "type": "boolean"
+                        },
+                        "input_hint": {
+                            "type": "string"
+                        }
+                    }
                 }
-            ]
+            ],
+            "required": ["type"]
+        },
+        "comment_text_area": {
+            "id": "comment_text_area",
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "comment_text_area",
+                    "default": "comment_text_area"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/$defs/multiline_text"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "user_name": {
+                            "type": "string"
+                        },
+                        "i18n": {
+                            "type": "object",
+                            "title": "comment_text_area_i18n",
+                            "properties": {
+                                "prefix_date_and_comment": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": ["prefix_date_and_comment"]
+                        }
+                    },
+                    "required": ["user_name", "i18n"]
+                }
+            ],
+            "required": ["type"]
         },
         "data_size": {
             "type": "object",
@@ -456,10 +562,7 @@
                     "type": "string"
                 }
             },
-            "required": [
-                "type",
-                "displayed_magnitudes"
-            ],
+            "required": ["type", "displayed_magnitudes"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
@@ -469,18 +572,14 @@
         "topic": {
             "type": "object",
             "properties": {
-                "key": {
+                "ident": {
                     "type": "string"
                 },
                 "dictionary": {
                     "$ref": "#/$defs/dictionary"
                 }
             },
-            "required": [
-                "key",
-                "title",
-                "dictionary"
-            ]
+            "required": ["ident", "dictionary"]
         },
         "catalog": {
             "type": "object",
@@ -496,15 +595,173 @@
                     }
                 }
             },
+            "required": ["type", "topics"],
+            "allOf": [
+                {
+                    "$ref": "#/$defs/form_spec"
+                }
+            ]
+        },
+        "time_span": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "time_span",
+                    "default": "time_span"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "i18n": {
+                    "title": "time_span_i18n",
+                    "type": "object",
+                    "properties": {
+                        "millisecond": {
+                            "type": "string"
+                        },
+                        "second": {
+                            "type": "string"
+                        },
+                        "minute": {
+                            "type": "string"
+                        },
+                        "hour": {
+                            "type": "string"
+                        },
+                        "day": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "millisecond",
+                        "second",
+                        "minute",
+                        "hour",
+                        "day"
+                    ]
+                },
+                "displayed_magnitudes": {
+                    "type": "array",
+                    "items": {
+                        "enum": [
+                            "millisecond",
+                            "second",
+                            "minute",
+                            "hour",
+                            "day"
+                        ],
+                        "title": "time_span_time_magnitude"
+                    }
+                },
+                "input_hint": {
+                    "type": "number"
+                }
+            },
+            "required": ["displayed_magnitudes", "i18n", "prefill"],
+            "allOf": [
+                {
+                    "$ref": "#/$defs/form_spec"
+                }
+            ]
+        },
+        "tuple": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "tuple",
+                    "default": "tuple"
+                },
+                "elements": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/form_spec"
+                    }
+                },
+                "layout": {
+                    "title": "TupleLayout",
+                    "enum": [
+                        "horizontal_titles_top",
+                        "horizontal",
+                        "vertical",
+                        "float"
+                    ],
+                    "default": "vertical"
+                },
+                "show_titles": {
+                    "type": "boolean",
+                    "default": true
+                }
+            },
+            "required": ["type", "elements", "layout", "show_titles"],
+            "allOf": [
+                {
+                    "$ref": "#/$defs/form_spec"
+                }
+            ]
+        },
+        "optional_choice": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "optional_choice",
+                    "default": "optional_choice"
+                },
+                "parameter_form": {
+                    "$ref": "#/$defs/form_spec"
+                },
+                "i18n": {
+                    "type": "object",
+                    "title": "i18nOptionalChoice",
+                    "properties": {
+                        "label": {
+                            "type": "string"
+                        },
+                        "none_label": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "parameter_form_default_value": {}
+            },
             "required": [
                 "type",
-                "topics"
+                "parameter_form",
+                "parameter_form_default_value",
+                "i18n"
             ],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
                 }
             ]
+        },
+        "simple_password": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "simple_password",
+                    "default": "simple_password"
+                }
+            },
+            "required": ["type"],
+            "allOf": [
+                {
+                    "$ref": "#/$defs/form_spec"
+                }
+            ]
+        },
+        "autocompleter": {
+            "type": "object",
+            "properties": {
+                "fetch_method": {
+                    "const": "ajax_vs_autocomplete",
+                    "default": "ajax_vs_autocomplete"
+                },
+                "data": {
+                    "type": "object"
+                }
+            },
+            "required": ["fetch_method", "data"]
         },
         "components": {
             "discriminator": {
@@ -545,15 +802,34 @@
                     "$ref": "#/$defs/multiline_text"
                 },
                 {
+                    "$ref": "#/$defs/comment_text_area"
+                },
+                {
+                    "$ref": "#/$defs/password"
+                },
+                {
                     "$ref": "#/$defs/data_size"
                 },
                 {
                     "$ref": "#/$defs/catalog"
+                },
+                {
+                    "$ref": "#/$defs/multiple_choice"
+                },
+                {
+                    "$ref": "#/$defs/time_span"
+                },
+                {
+                    "$ref": "#/$defs/tuple"
+                },
+                {
+                    "$ref": "#/$defs/optional_choice"
+                },
+                {
+                    "$ref": "#/$defs/simple_password"
                 }
             ],
-            "required": [
-                "type"
-            ]
+            "required": ["type"]
         }
     }
 }

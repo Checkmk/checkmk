@@ -20,24 +20,13 @@ from pydantic import BaseModel
 import cmk.utils.render
 
 from cmk.gui.config import active_config
-from cmk.gui.graphing._formatter import AutoPrecision
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
 
 from ._color import fade_color, parse_color, render_color
-from ._formatter import (
-    DecimalFormatter,
-    EngineeringScientificFormatter,
-    IECFormatter,
-    Label,
-    NotationFormatter,
-    SIFormatter,
-    StandardScientificFormatter,
-    TimeFormatter,
-)
-from ._from_api import get_unit_info
+from ._formatter import Label, NotationFormatter
 from ._graph_specification import (
     FixedVerticalRange,
     GraphDataRange,
@@ -46,7 +35,7 @@ from ._graph_specification import (
     HorizontalRule,
     MinimalVerticalRange,
 )
-from ._legacy import UnitInfo
+from ._legacy import get_unit_info, LegacyUnitSpecification, UnitInfo
 from ._rrd_fetch import fetch_rrd_data_for_graph
 from ._timeseries import clean_time_series_point
 from ._type_defs import LineType, RRDData
@@ -160,16 +149,17 @@ def compute_graph_artwork(
     graph_display_id: str = "",
 ) -> GraphArtwork:
     unit_spec: UserSpecificUnit | UnitInfo
-    if graph_recipe.unit_spec:
+
+    if isinstance(graph_recipe.unit_spec, LegacyUnitSpecification):
+        unit_spec = get_unit_info(graph_recipe.unit_spec.id)
+        renderer = unit_spec.render
+    else:
         unit_spec = user_specific_unit(
             graph_recipe.unit_spec,
             user,
             active_config,
         )
-        renderer: Callable[[float], str] = unit_spec.formatter.render
-    else:
-        unit_spec = get_unit_info(graph_recipe.unit)
-        renderer = unit_spec.render
+        renderer = unit_spec.formatter.render
 
     curves = list(compute_graph_artwork_curves(graph_recipe, graph_data_range))
 
@@ -330,7 +320,7 @@ def _areastack(
 
     # Make sure that first entry in pair is not greater than second
     def fix_swap(
-        pp: tuple[TimeSeriesValue, TimeSeriesValue]
+        pp: tuple[TimeSeriesValue, TimeSeriesValue],
     ) -> tuple[TimeSeriesValue, TimeSeriesValue]:
         lower, upper = pp
         if lower is None and upper is None:
@@ -346,7 +336,7 @@ def _areastack(
 
 
 def _compute_graph_curves(
-    metrics: Sequence[GraphMetric],
+    graph_metrics: Sequence[GraphMetric],
     rrd_data: RRDData,
 ) -> Iterator[Curve]:
     def _parse_line_type(
@@ -363,27 +353,27 @@ def _compute_graph_curves(
                 return "ref"
         assert_never((mirror_prefix, ts_line_type))
 
-    for metric in metrics:
-        time_series = metric.operation.compute_time_series(rrd_data)
+    for graph_metric in graph_metrics:
+        time_series = graph_metric.operation.compute_time_series(rrd_data)
         if not time_series:
             continue
 
         multi = len(time_series) > 1
-        mirror_prefix: Literal["", "-"] = "-" if metric.line_type.startswith("-") else ""
+        mirror_prefix: Literal["", "-"] = "-" if graph_metric.line_type.startswith("-") else ""
         for i, ts in enumerate(time_series):
-            title = metric.title
+            title = graph_metric.title
             if multi and ts.metadata.title:
                 title += " - " + ts.metadata.title
 
-            color = ts.metadata.color or metric.color
-            if i % 2 == 1 and metric.operation.fade_odd_color():
+            color = ts.metadata.color or graph_metric.color
+            if i % 2 == 1 and graph_metric.operation.fade_odd_color():
                 color = render_color(fade_color(parse_color(color), 0.3))
 
             yield Curve(
                 line_type=(
                     _parse_line_type(mirror_prefix, ts.metadata.line_type)
                     if multi and ts.metadata.line_type
-                    else metric.line_type
+                    else graph_metric.line_type
                 ),
                 color=color,
                 title=title,
@@ -436,7 +426,7 @@ def order_graph_curves_for_legend_and_mouse_hover(
 ) -> Iterator[_TCurveType]:
     yield from (
         reversed(list(curves))
-        if any(metric.line_type == "stack" for metric in graph_recipe.metrics)
+        if any(graph_metric.line_type == "stack" for graph_metric in graph_recipe.metrics)
         else curves
     )
 
@@ -528,35 +518,6 @@ def _get_value_at_timestamp(pin_time: int, rrddata: TimeSeries) -> TimeSeriesVal
 #   +----------------------------------------------------------------------+
 #   |  Computation of vertical axix, including labels and range            |
 #   '----------------------------------------------------------------------'
-
-
-def _make_formatter(
-    formatter_ident: Literal[
-        "Decimal", "SI", "IEC", "StandardScientific", "EngineeringScientific", "Time"
-    ],
-    symbol: str,
-) -> (
-    DecimalFormatter
-    | SIFormatter
-    | IECFormatter
-    | StandardScientificFormatter
-    | EngineeringScientificFormatter
-    | TimeFormatter
-):
-    precision = AutoPrecision(decimal_places=2)
-    match formatter_ident:
-        case "Decimal":
-            return DecimalFormatter(symbol, precision)
-        case "SI":
-            return SIFormatter(symbol, precision)
-        case "IEC":
-            return IECFormatter(symbol, precision)
-        case "StandardScientific":
-            return StandardScientificFormatter(symbol, precision)
-        case "EngineeringScientific":
-            return EngineeringScientificFormatter(symbol, precision)
-        case "Time":
-            return TimeFormatter(symbol, precision)
 
 
 def _compute_labels_from_api(
@@ -745,14 +706,9 @@ def _compute_graph_v_axis(
         height_ex,
     )
 
-    if isinstance(unit_spec, UserSpecificUnit) or unit_spec.formatter_ident:
-        if isinstance(unit_spec, UserSpecificUnit):
-            formatter = unit_spec.formatter
-        elif unit_spec.formatter_ident:
-            formatter = _make_formatter(unit_spec.formatter_ident, unit_spec.symbol)
-
+    if isinstance(unit_spec, UserSpecificUnit):
         labels = _compute_labels_from_api(
-            formatter,
+            unit_spec.formatter,
             height_ex,
             mirrored,
             min_y=v_axis_min_max.label_range[0],
@@ -1003,7 +959,7 @@ def _render_label_value(
 
 
 def render_labels(
-    label_specs: Iterable[tuple[float, str, int]]
+    label_specs: Iterable[tuple[float, str, int]],
 ) -> tuple[list[VerticalAxisLabel], int]:
     max_label_length = 0
     rendered_labels: list[VerticalAxisLabel] = []

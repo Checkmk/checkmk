@@ -5,9 +5,9 @@
 
 """The user profile mega menu and related AJAX endpoints"""
 
-import cmk.utils.paths
-
 import cmk.ccc.version as cmk_version
+
+import cmk.utils.paths
 
 if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CSE:
     from cmk.gui.cse.utils.roles import user_may_see_saas_onboarding

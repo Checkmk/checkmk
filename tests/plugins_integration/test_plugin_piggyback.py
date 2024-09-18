@@ -23,15 +23,14 @@ def _read_piggyback_hosts_from_dump(dump: str) -> set[str]:
     return piggyback_hosts
 
 
-@pytest.mark.parametrize("source_host_name", get_host_names())
+@pytest.mark.parametrize("source_host_name", get_host_names(piggyback=True))
 def test_plugin_piggyback(
     test_site_piggyback: Site,
     source_host_name: str,
     dcd_connector: None,
 ) -> None:
-
     with setup_source_host_piggyback(test_site_piggyback, source_host_name):
-        disk_dump = read_disk_dump(source_host_name)
+        disk_dump = read_disk_dump(source_host_name, piggyback=True)
         cmk_dump = read_cmk_dump(source_host_name, test_site_piggyback, "agent")
         assert disk_dump == cmk_dump != "", "Raw data mismatch!"
 

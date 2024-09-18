@@ -16,15 +16,11 @@ TAR_GZ := $(shell which tar) xzf
 TEST := $(shell which test)
 TOUCH := $(shell which touch)
 UNZIP := $(shell which unzip) -o
-BAZEL_BUILD := $(if $(CI),../scripts/run-bazel.sh build,bazel build)
+BAZEL_CMD ?= $(realpath ../scripts/run-bazel.sh)
 
 # Bazel paths
 BAZEL_BIN := "$(REPO_PATH)/bazel-bin"
 BAZEL_BIN_EXT := "$(BAZEL_BIN)/external"
-
- ifneq ($(filter $(DISTRO_CODE),sles15 sles15sp1 sles15sp2 sles15sp3 sles15sp4),)
-	 OPTIONAL_BUILD_ARGS := BAZEL_EXTRA_ARGS="--define git-ssl-no-verify=true"
- endif
 
 # Intermediate Install Target
 # intermediate_install used to be necessary to link external dependecies with each other.
@@ -37,7 +33,12 @@ INTERMEDIATE_INSTALL_BAZEL := '$(BUILD_HELPER_DIR)/intermediate_install_bazel'
 intermediate_install_bazel: $(INTERMEDIATE_INSTALL_BAZEL)
 
 $(INTERMEDIATE_INSTALL_BAZEL):
-	$(OPTIONAL_BUILD_ARGS) $(BAZEL_BUILD) //omd:intermediate_install
+	# NOTE: this might result in unexpected build behavior, when dependencies of //omd:intermediate_install
+	#       are built somewhere else without --define git-ssl-no-verify=true being specified, likely
+	#       resulting in different builds
+	$(BAZEL_CMD) build \
+	    $(if $(filter $(DISTRO_CODE),sles15 sles15sp1 sles15sp2 sles15sp3 sles15sp4 sles15sp5 sles15sp6),--define git-ssl-no-verify=true) \
+	    //omd:intermediate_install
 	tar -C $(BUILD_BASE_DIR) -xf $(BAZEL_BIN)/omd/intermediate_install.tar.gz
 
 	#TODO: The following code should be executed by Bazel instead of make
@@ -210,6 +211,7 @@ include \
     packages/xmlsec1/xmlsec1.make \
     packages/robotmk/robotmk.make \
     packages/redfish_mkp/redfish_mkp.make \
+    packages/rabbitmq/rabbitmq.make \
 
 ifeq ($(EDITION),enterprise)
 include \

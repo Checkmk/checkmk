@@ -42,6 +42,7 @@ def test_activate_changes_unknown_site(clients: ClientRegistry, is_licensed: boo
 
 @pytest.mark.usefixtures("allow_background_jobs")
 def test_activate_changes(
+    mocker: MockerFixture,
     clients: ClientRegistry,
     is_licensed: bool,
     monkeypatch: pytest.MonkeyPatch,
@@ -49,6 +50,11 @@ def test_activate_changes(
 ) -> None:
     # Create a host
     clients.HostConfig.create(host_name="foobar", folder="/")
+
+    monkeypatch.setattr(
+        "cmk.gui.watolib.activate_changes.ActivateChangesManager._distribute_piggyback_config",
+        lambda *args, **kwargs: None,
+    )
 
     # Activate changes
     with mock_livestatus(expect_status_query=True):
@@ -122,10 +128,14 @@ def test_list_activate_changes_star_etag(
     cleanup_start = mocker.patch(
         "cmk.gui.watolib.activate_changes.execute_activation_cleanup_background_job"
     )
+    distribute_piggyback_config = mocker.patch(
+        "cmk.gui.watolib.activate_changes.ActivateChangesManager._distribute_piggyback_config"
+    )
     with mock_livestatus(expect_status_query=True):
         clients.ActivateChanges.activate_changes(etag="star")
     activation_start.assert_called_once()
     cleanup_start.assert_called_once()
+    distribute_piggyback_config.assert_called_once()
 
 
 def test_list_activate_changes_valid_etag(
@@ -142,7 +152,11 @@ def test_list_activate_changes_valid_etag(
     cleanup_start = mocker.patch(
         "cmk.gui.watolib.activate_changes.execute_activation_cleanup_background_job"
     )
+    distribute_piggyback_config = mocker.patch(
+        "cmk.gui.watolib.activate_changes.ActivateChangesManager._distribute_piggyback_config"
+    )
     with mock_livestatus(expect_status_query=True):
         clients.ActivateChanges.activate_changes(etag="valid_etag")
     activation_start.assert_called_once()
     cleanup_start.assert_called_once()
+    distribute_piggyback_config.assert_called_once()

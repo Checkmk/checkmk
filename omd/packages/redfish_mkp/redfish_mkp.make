@@ -8,7 +8,7 @@ REDFISH_MKP_FILE_PATTERN := redfish-*.mkp
 
 .PHONY: $(REDFISH_MKP_BUILD)
 $(REDFISH_MKP_BUILD):
-	$(BAZEL_BUILD) //omd/packages/$(REDFISH_MKP):fetch_package
+	$(BAZEL_CMD) build //omd/packages/$(REDFISH_MKP):fetch_package
 
 .PHONY: $(REDFISH_MKP_INSTALL)
 $(REDFISH_MKP_INSTALL): $(REDFISH_MKP_BUILD)

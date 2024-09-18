@@ -3,15 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.graphing._expression import CriticalOf, Metric, WarningOf
-from cmk.gui.graphing._graph_templates import (
-    get_graph_template,
-    GraphTemplate,
-    MetricDefinition,
-    ScalarDefinition,
-)
+from cmk.gui.graphing._expression import CriticalOf, Metric, MetricExpression, WarningOf
+from cmk.gui.graphing._formatter import StrictPrecision
+from cmk.gui.graphing._graph_templates import get_graph_template_from_id, GraphTemplate
 from cmk.gui.graphing._legacy import check_metrics
 from cmk.gui.graphing._metrics import get_metric_spec
+from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 from cmk.gui.metrics import _add_graphing_plugins, _load_graphing_plugins
 
 
@@ -21,13 +18,19 @@ def test_add_graphing_plugins() -> None:
     idle_connections = get_metric_spec("idle_connections")
     assert idle_connections.name == "idle_connections"
     assert idle_connections.title == "Idle connections"
-    assert idle_connections.unit_info.id == "DecimalNotation__StrictPrecision_2"
+    assert idle_connections.unit_spec == ConvertibleUnitSpecification(
+        notation=DecimalNotation(symbol=""),
+        precision=StrictPrecision(digits=2),
+    )
     assert idle_connections.color == "#7814a0"
 
     active_connections = get_metric_spec("active_connections")
     assert active_connections.name == "active_connections"
     assert active_connections.title == "Active connections"
-    assert active_connections.unit_info.id == "DecimalNotation__StrictPrecision_2"
+    assert active_connections.unit_spec == ConvertibleUnitSpecification(
+        notation=DecimalNotation(symbol=""),
+        precision=StrictPrecision(digits=2),
+    )
     assert active_connections.color == "#b441f0"
 
     assert "check_mk-citrix_serverload" in check_metrics
@@ -46,18 +49,20 @@ def test_add_graphing_plugins() -> None:
         "write_latency": {"scale": 0.001},
     }
 
-    graph_template = get_graph_template("db_connections")
+    graph_template = get_graph_template_from_id("db_connections")
     assert graph_template == GraphTemplate(
         id="db_connections",
         title="DB Connections",
         scalars=[
-            ScalarDefinition(
+            MetricExpression(
                 WarningOf(Metric("active_connections")),
-                "Warning of Active connections",
+                line_type="line",
+                title="Warning of Active connections",
             ),
-            ScalarDefinition(
+            MetricExpression(
                 CriticalOf(Metric("active_connections")),
-                "Critical of Active connections",
+                line_type="line",
+                title="Critical of Active connections",
             ),
         ],
         conflicting_metrics=(),
@@ -66,15 +71,15 @@ def test_add_graphing_plugins() -> None:
         range=None,
         omit_zero_metrics=False,
         metrics=[
-            MetricDefinition(
+            MetricExpression(
                 Metric("active_connections"),
-                "line",
-                "Active connections",
+                line_type="line",
+                title="Active connections",
             ),
-            MetricDefinition(
+            MetricExpression(
                 Metric("idle_connections"),
-                "line",
-                "Idle connections",
+                line_type="line",
+                title="Idle connections",
             ),
         ],
     )

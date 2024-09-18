@@ -1,11 +1,18 @@
+<!--
+Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+conditions defined in the file COPYING, which is part of this source code package.
+-->
 <script setup lang="ts">
-import { computed, onBeforeMount, onUpdated, type PropType, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import FormEdit from '@/form/components/FormEdit.vue'
+import { immediateWatch } from '@/form/components/utils/watch'
 import type {
   CascadingSingleChoice,
   CascadingSingleChoiceElement,
   FormSpec
 } from '@/form/components/vue_formspec_components'
+import { useId } from '@/form/utils'
 import FormValidation from '@/form/components/FormValidation.vue'
 import { validateValue, type ValidationMessages } from '@/form/components/utils/validation'
 
@@ -14,7 +21,7 @@ const props = defineProps<{
   backendValidation: ValidationMessages
 }>()
 
-const validation = ref<ValidationMessages>([])
+const validation = ref<Array<string>>([])
 const elementValidation = ref<ValidationMessages>([])
 
 watch(
@@ -24,7 +31,7 @@ watch(
     elementValidation.value = []
     newValidation.forEach((msg) => {
       if (msg.location.length === 0) {
-        validation.value.push(msg)
+        validation.value.push(msg.message)
         return
       }
       elementValidation.value.push({
@@ -37,38 +44,35 @@ watch(
   { immediate: true }
 )
 
-const data = defineModel('data', {
-  type: Object as PropType<[string, unknown]>,
-  required: true
-})
+const data = defineModel<[string, unknown]>('data', { required: true })
 
 const currentValues: Record<string, unknown> = {}
-onBeforeMount(() => {
-  props.spec.elements.forEach((element: CascadingSingleChoiceElement) => {
-    const key = element.name
-    if (data.value[0] === key) {
-      currentValues[key] = data.value[1]
-    } else {
-      currentValues[key] = element.default_value
-    }
-  })
-})
-
-onUpdated(() => {
-  if (data.value[0] in currentValues) {
-    currentValues[data.value[0]] = data.value[1]
+immediateWatch(
+  () => props.spec.elements,
+  (newValue) => {
+    newValue.forEach((element: CascadingSingleChoiceElement) => {
+      const key = element.name
+      if (data.value[0] === key) {
+        currentValues[key] = data.value[1]
+      } else {
+        currentValues[key] = element.default_value
+      }
+    })
   }
-})
+)
 
-const value = computed({
+const selectedOption = computed({
   get(): string {
     return data.value[0] as string
   },
   set(value: string) {
+    // keep old data in case user switches back and they don't loose their modifications
+    currentValues[data.value[0]] = data.value[1]
+
     validation.value = []
     const newValue: [string, unknown] = [value, currentValues[value]]
     validateValue(value, props.spec.validators!).forEach((error) => {
-      validation.value = [{ message: error, location: [''], invalid_value: value }]
+      validation.value = [error]
     })
     data.value = newValue
   }
@@ -91,11 +95,13 @@ const activeElement = computed((): ActiveElement | null => {
     validation: []
   }
 })
+
+const componentId = useId()
 </script>
 
 <template>
-  <div>
-    <select :id="$componentId" v-model="value">
+  <div class="choice">
+    <select :id="componentId" v-model="selectedOption">
       <option v-if="activeElement == null" disabled selected hidden value="">
         {{ props.spec.input_hint }}
       </option>
@@ -103,10 +109,11 @@ const activeElement = computed((): ActiveElement | null => {
         {{ element.title }}
       </option>
     </select>
-    <label v-if="$props.spec.label" :for="$componentId">{{ props.spec.label }}</label>
+    <label v-if="$props.spec.label" :for="componentId">{{ props.spec.label }}</label>
   </div>
   <template v-if="activeElement != null">
     <FormEdit
+      :key="data[0]"
       v-model:data="data[1]"
       :spec="activeElement.spec"
       :backend-validation="elementValidation"
@@ -114,3 +121,10 @@ const activeElement = computed((): ActiveElement | null => {
     <FormValidation :validation="validation"></FormValidation>
   </template>
 </template>
+
+<style scoped>
+div.choice {
+  margin-bottom: 5px;
+  margin-right: 5px;
+}
+</style>

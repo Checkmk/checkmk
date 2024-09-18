@@ -47,6 +47,7 @@ RUN apt-get install -y --fix-missing \
     gtk-doc-tools \
     iputils-ping \
     joe \
+    jq \
     libc6-dbg \
     libcurl4-openssl-dev \
     libevent-dev \
@@ -190,6 +191,7 @@ COPY --from=scripts install-patchelf.sh /opt/
 RUN /opt/install-patchelf.sh
 
 COPY --from=scripts ci.bazelrc /etc/
+RUN echo "common:ci --@//:filesystem_layout=lsb" >> /etc/ci.bazelrc
 
 ARG VERS_TAG
 RUN echo "${VERS_TAG}" > /version.txt

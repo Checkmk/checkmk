@@ -21,13 +21,11 @@ from cmk.plugins.collection.agent_based.checkmk_agent import (
     _check_python_plugins,
     _check_transport,
     _check_version,
+    check_checkmk_agent,
+    discover_checkmk_agent,
 )
 from cmk.plugins.collection.agent_based.checkmk_agent import (
     _expand_curly_address_notation as expand_curly_address_notation,
-)
-from cmk.plugins.collection.agent_based.checkmk_agent import (
-    check_checkmk_agent,
-    discover_checkmk_agent,
 )
 from cmk.plugins.collection.agent_based.cmk_update_agent_status import (
     _parse_cmk_update_agent_status,

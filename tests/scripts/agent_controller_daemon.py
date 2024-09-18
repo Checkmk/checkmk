@@ -3,17 +3,30 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import argparse
 import contextlib
 import logging
 import socketserver
 import subprocess
+import sys
 from collections.abc import Iterator
 from multiprocessing import Process
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-agent_controller_path = Path("/usr/bin/cmk-agent-ctl")
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Runs an agent controller daemon in a non-systemd enabled environment."
+    )
+    parser.add_argument(
+        "--agent-controller-path",
+        type=Path,
+        default="/usr/bin/cmk-agent-ctl",
+        help="The agent controller path.",
+    )
+    return parser.parse_args()
 
 
 class _CMKAgentSocketHandler(socketserver.BaseRequestHandler):
@@ -48,8 +61,30 @@ def _provide_agent_unix_socket() -> Iterator[None]:
     try:
         yield
     finally:
-        proc.kill()
+        proc.terminate()
+        proc.join()
         socket_address.unlink(missing_ok=True)
+
+
+def _run_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen]:
+    with subprocess.Popen(
+        [ctl_path.as_posix(), "daemon"],
+        stderr=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        close_fds=True,
+        encoding="utf-8",
+    ) as proc:
+        try:
+            yield proc
+        finally:
+            proc.terminate()
+            try:
+                proc.wait(timeout=5)
+            except TimeoutError:
+                proc.kill()
+            stdout, stderr = proc.communicate()
+            logger.info("Stdout from controller daemon process:\n%s", stdout)
+            logger.info("Stderr from controller daemon process:\n%s", stderr)
 
 
 @contextlib.contextmanager
@@ -61,15 +96,14 @@ def _clean_agent_controller(ctl_path: Path) -> Iterator[None]:
         _clear_controller_connections(ctl_path)
 
 
-with _clean_agent_controller(agent_controller_path), _provide_agent_unix_socket():
-    with subprocess.Popen(
-        [
-            agent_controller_path.as_posix(),
-            "daemon",
-        ],
-        stderr=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        close_fds=True,
-        encoding="utf-8",
-    ) as agent_controller:
-        agent_controller.wait()
+@contextlib.contextmanager
+def agent_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen]:
+    """Manually take over systemds job if we are in a container (where we have no systemd)."""
+    with _clean_agent_controller(ctl_path), _provide_agent_unix_socket():
+        yield from _run_controller_daemon(ctl_path)
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    with agent_controller_daemon(args.agent_controller_path) as daemon:
+        sys.exit(daemon.wait())

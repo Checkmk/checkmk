@@ -38,12 +38,6 @@ class FormSpecWrapper(Widget):
     id: FormSpecId
     form_spec: object
     widget_type: str = field(default="form_spec")
-    rendering_option: str | None = None
-
-
-@dataclass
-class FormSpecDictWrapper(FormSpecWrapper):
-    rendering_option: Literal["table"] | None = None
 
 
 @dataclass

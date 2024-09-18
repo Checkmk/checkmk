@@ -122,25 +122,18 @@ from omdlib.version import (
 )
 from omdlib.version_info import VersionInfo
 
+from cmk.ccc.exceptions import MKTerminate
+from cmk.ccc.version import Version, versions_compatible, VersionsIncompatible
+
 import cmk.utils.log
 from cmk.utils import tty
-from cmk.utils.certs import (
-    cert_dir,
-    CN_TEMPLATE,
-    root_cert_path,
-    RootCA,
-    save_single_cert,
-    save_single_key,
-)
+from cmk.utils.certs import cert_dir, CN_TEMPLATE, root_cert_path, RootCA
 from cmk.utils.licensing.helper import get_instance_id_file_path, save_instance_id
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import mkbackup_lock_dir
 from cmk.utils.resulttype import Error, OK, Result
 from cmk.utils.werks.acknowledgement import unacknowledged_incompatible_werks
 
-from cmk import messaging
-from cmk.ccc.exceptions import MKTerminate
-from cmk.ccc.version import Version, versions_compatible, VersionsIncompatible
 from cmk.crypto.password import Password
 from cmk.crypto.password_hashing import hash_password
 
@@ -543,9 +536,7 @@ def _patch_template_file(  # pylint: disable=too-many-branches
                 ):
                     pass
             elif choice == "diff":
-                os.system(
-                    f"diff -u {old_orig_path} {new_orig_path}{pipe_pager()}"
-                )  # nosec B605 # BNS:2b5952
+                os.system(f"diff -u {old_orig_path} {new_orig_path}{pipe_pager()}")  # nosec B605 # BNS:2b5952
             elif choice == "brute":
                 os.system(  # nosec B605 # BNS:2b5952
                     f"sed 's@/{old_site_name}/@/{new_site.name}/@g' {dst}.orig > {dst}"
@@ -553,9 +544,7 @@ def _patch_template_file(  # pylint: disable=too-many-branches
                 changed = len(
                     [
                         l
-                        for l in os.popen(
-                            f"diff {dst}.orig {dst}"
-                        ).readlines()  # nosec B605 # BNS:2b5952
+                        for l in os.popen(f"diff {dst}.orig {dst}").readlines()  # nosec B605 # BNS:2b5952
                         if l.startswith(">")
                     ]
                 )
@@ -570,9 +559,7 @@ def _patch_template_file(  # pylint: disable=too-many-branches
                         pass
                     break
             elif choice == "you":
-                os.system(
-                    f"pwd ; diff -u {old_orig_path} {dst}.orig{pipe_pager()}"
-                )  # nosec B605 # BNS:2b5952
+                os.system(f"pwd ; diff -u {old_orig_path} {dst}.orig{pipe_pager()}")  # nosec B605 # BNS:2b5952
             elif choice == "restore":
                 os.rename(dst + ".orig", dst)
                 sys.stdout.write("Restored your version.\n")
@@ -597,9 +584,7 @@ def _patch_template_file(  # pylint: disable=too-many-branches
 
                 sys.stdout.write("\n Starting BASH. Type CTRL-D to continue.\n\n")
                 thedir = "/".join(dst.split("/")[:-1])
-                os.system(
-                    f"su - {new_site.name} -c 'cd {thedir} ; bash -i'"
-                )  # nosec B605 # BNS:2b5952
+                os.system(f"su - {new_site.name} -c 'cd {thedir} ; bash -i'")  # nosec B605 # BNS:2b5952
     # remove unnecessary files
     try:
         os.remove(dst + ".skel." + old_site_name)
@@ -688,13 +673,9 @@ def merge_update_file(  # pylint: disable=too-many-branches
             with subprocess.Popen([editor, user_path]):
                 pass
         elif choice == "diff":
-            os.system(
-                f"diff -u {user_path}.orig {user_path}-{new_version}{pipe_pager()}"
-            )  # nosec B605 # BNS:2b5952
+            os.system(f"diff -u {user_path}.orig {user_path}-{new_version}{pipe_pager()}")  # nosec B605 # BNS:2b5952
         elif choice == "you":
-            os.system(
-                f"diff -u {user_path}-{old_version} {user_path}.orig{pipe_pager()}"
-            )  # nosec B605 # BNS:2b5952
+            os.system(f"diff -u {user_path}-{old_version} {user_path}.orig{pipe_pager()}")  # nosec B605 # BNS:2b5952
         elif choice == "new":
             os.system(  # nosec B605 # BNS:2b5952
                 f"diff -u {user_path}-{old_version} {user_path}-{new_version}{pipe_pager()}"
@@ -1459,21 +1440,6 @@ def initialize_agent_ca(site: SiteContext) -> None:
     RootCA.load_or_create(root_cert_path(ca_path), f"Site '{site.name}' agent signing CA")
 
 
-def initialize_message_broker_ca(site: SiteContext, site_key_size: int = 4096) -> None:
-    """Initialize the CA and create the certificate for use with the message broker.
-    These might be replaced by the config sync later.
-    """
-    omd_root = Path(site.dir)
-    cert, key = RootCA.load_or_create(
-        messaging.cacert_file(omd_root),
-        CN_TEMPLATE.format(site.name),
-    ).issue_new_certificate(
-        common_name=site.name,  # used for user identification
-    )
-    save_single_cert(messaging.cert_file(omd_root), cert)
-    save_single_key(messaging.key_file(omd_root), key)
-
-
 def config_change(
     version_info: VersionInfo, site: SiteContext, config_hooks: ConfigHooks
 ) -> list[str]:
@@ -1901,13 +1867,19 @@ def call_scripts(
     for file in sorted(path.iterdir()):
         if file.name[0] == ".":
             continue
-        _call_script(phase, open_pty, env, file)
+        sys.stdout.write(f'Executing {phase} script "{file.name}"...')
+        returncode = _call_script(open_pty, env, str(file))
+
+        if not returncode:
+            sys.stdout.write(tty.ok + "\n")
+        else:
+            sys.stdout.write(tty.error + " (exit code: %d)\n" % returncode)
+            raise SystemExit(1)
 
 
 def _call_script(  # pylint: disable=too-many-branches
-    phase: str, open_pty: bool, env: Mapping[str, str], file: Path
-) -> None:
-    sys.stdout.write(f'Executing {phase} script "{file.name}"...')
+    open_pty: bool, env: Mapping[str, str], command: str
+) -> int:
     if open_pty:
         fd_parent, fd_child = pty.openpty()
         stdout = stderr = fd_child
@@ -1916,7 +1888,7 @@ def _call_script(  # pylint: disable=too-many-branches
         stderr = subprocess.STDOUT
 
     with subprocess.Popen(  # nosec B602 # BNS:2b5952
-        str(file),  # path-like args is not allowed when shell is true
+        command,  # path-like args is not allowed when shell is true
         shell=True,
         stdout=stdout,
         stderr=stderr,
@@ -1945,14 +1917,9 @@ def _call_script(  # pylint: disable=too-many-branches
         except OSError:
             pass
         finally:
-            if not pty:
+            if open_pty:
                 parent.close()
-
-    if not proc.returncode:
-        sys.stdout.write(tty.ok + "\n")
-    else:
-        sys.stdout.write(tty.error + " (exit code: %d)\n" % proc.returncode)
-        raise SystemExit(1)
+    return proc.returncode
 
 
 # .
@@ -2301,7 +2268,6 @@ def finalize_site_as_user(
     _update_cmk_core_config(site)
     initialize_site_ca(site)
     initialize_agent_ca(site)
-    initialize_message_broker_ca(site)
     save_site_conf(site)
 
     if command_type in [CommandType.create, CommandType.copy, CommandType.restore_as_new_site]:
@@ -2965,16 +2931,25 @@ def main_update(  # pylint: disable=too-many-branches
         # initialized tmpfs.
         mu.prepare_and_populate_tmpfs(version_info, site)
 
-        process = subprocess.run(
-            ["cmk-update-config", "--conflict", conflict_mode, "--dry-run"],
-            check=False,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
+        additional_update_env = {
+            "OMD_CONFLICT_MODE": conflict_mode,
+            "OMD_TO_EDITION": to_edition,
+            "OMD_FROM_VERSION": from_version,
+            "OMD_TO_VERSION": to_version,
+            "OMD_FROM_EDITION": from_edition,
+        }
+        returncode = _call_script(
+            is_tty,
+            {
+                **os.environ,
+                "OMD_ROOT": site.dir,
+                "OMD_SITE": site.name,
+                **additional_update_env,
+            },
+            f"cmk-update-config --conflict {conflict_mode} --dry-run",
         )
-        sys.stdout.write(process.stdout)
-        if process.returncode != 0:
-            sys.exit(process.returncode)
+        if returncode != 0:
+            sys.exit(returncode)
         sys.stdout.write(
             f"\nCompleted verifying site configuration. Your site now has version {to_version}.\n"
         )
@@ -2983,13 +2958,7 @@ def main_update(  # pylint: disable=too-many-branches
         site,
         "update-pre-hooks",
         open_pty=is_tty,
-        add_env={
-            "OMD_CONFLICT_MODE": conflict_mode,
-            "OMD_TO_EDITION": to_edition,
-            "OMD_FROM_VERSION": from_version,
-            "OMD_TO_VERSION": to_version,
-            "OMD_FROM_EDITION": from_edition,
-        },
+        add_env=additional_update_env,
     )
 
     save_site_conf(site)
@@ -3666,7 +3635,7 @@ def kill_site_user_processes(
 def get_current_and_parent_pids() -> list[int]:
     """Return list of PIDs of the current process and parent process tree till pid 0"""
     pids = []
-    process = psutil.Process()
+    process: psutil.Process | None = psutil.Process()
     while process and process.pid != 0:
         pids.append(process.pid)
         process = process.parent()

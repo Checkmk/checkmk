@@ -5,19 +5,19 @@
 
 from collections.abc import Sequence
 from datetime import datetime
-from typing import TypeAlias, TypeGuard
+from typing import NotRequired, TypeAlias, TypedDict, TypeGuard
 
 from dateutil.tz import tzlocal
 
 import livestatus
 
-import cmk.utils.cleanup
-from cmk.utils.caching import cache_manager
-from cmk.utils.dateutils import Weekday
-
 import cmk.ccc.debug
 from cmk.ccc.exceptions import MKTimeout
 from cmk.ccc.i18n import _
+
+import cmk.utils.cleanup
+from cmk.utils.caching import cache_manager
+from cmk.utils.dateutils import Weekday
 
 __all__ = [
     "TimeperiodName",
@@ -27,20 +27,25 @@ __all__ = [
 ]
 
 TimeperiodName: TypeAlias = str
+DayTimeFrame: TypeAlias = tuple[str, str]
 
-# TODO: TimeperiodSpec should really be a class or at least a NamedTuple! We
-# can easily transform back and forth for serialization.
-TimeperiodSpec = dict[str, str | list[str] | list[tuple[str, str]]]
-# class TimeperiodSpec(TypedDict):
-#    alias: str
-#    monday: NotRequired[list[tuple[str, str]]]
-#    tuesday: NotRequired[list[tuple[str, str]]]
-#    wednesday: NotRequired[list[tuple[str, str]]]
-#    thursday: NotRequired[list[tuple[str, str]]]
-#    friday: NotRequired[list[tuple[str, str]]]
-#    saturday: NotRequired[list[tuple[str, str]]]
-#    sunday: NotRequired[list[tuple[str, str]]]
-#    exclude: NotRequired[list[TimeperiodName]]
+
+# TODO: in python 3.13 we may be able to add support for the
+# timeperiod exceptions - see https://peps.python.org/pep-0728/
+
+
+class TimeperiodSpec(TypedDict):
+    alias: str
+    monday: NotRequired[list[DayTimeFrame]]
+    tuesday: NotRequired[list[DayTimeFrame]]
+    wednesday: NotRequired[list[DayTimeFrame]]
+    thursday: NotRequired[list[DayTimeFrame]]
+    friday: NotRequired[list[DayTimeFrame]]
+    saturday: NotRequired[list[DayTimeFrame]]
+    sunday: NotRequired[list[DayTimeFrame]]
+    exclude: NotRequired[list[TimeperiodName]]
+
+
 #    # In addition to the above fields the data structures allows arbitrary
 #    # fields in the following format. This is not supported by typed dicts,
 #    # so we definetely should use something else during runtime.

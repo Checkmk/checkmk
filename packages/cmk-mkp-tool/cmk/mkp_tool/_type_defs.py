@@ -23,9 +23,7 @@ _SortKeyElement = (
     #  b) Numeric identifiers always have lower precedence than non-numeric identifiers
     #  c) A larger set of fields has a higher precedence than a smaller set,
     #     if all of the preceding identifiers are equal.
-    tuple[Literal[0], str]
-    | tuple[Literal[1], int]
-    | tuple[Literal[2], None]
+    tuple[Literal[0], str] | tuple[Literal[1], int] | tuple[Literal[2], None]
 )
 
 

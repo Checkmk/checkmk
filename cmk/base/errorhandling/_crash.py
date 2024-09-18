@@ -9,6 +9,10 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Literal
 
+import cmk.ccc.debug
+import cmk.ccc.version as cmk_version
+from cmk.ccc import crash_reporting
+
 import cmk.utils.encoding
 import cmk.utils.paths
 from cmk.utils.agentdatatype import AgentRawData
@@ -20,9 +24,6 @@ from cmk.snmplib import SNMPBackendEnum
 
 from cmk.checkengine.checking import CheckPluginName
 
-import cmk.ccc.debug
-import cmk.ccc.version as cmk_version
-from cmk.ccc import crash_reporting
 from cmk.piggyback import get_piggyback_raw_data
 
 CrashReportStore = crash_reporting.CrashReportStore

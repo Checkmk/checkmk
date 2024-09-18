@@ -35,9 +35,11 @@ def check_mongodb_locks(_no_item, params, info):
                 state = 2
             elif count >= warn:
                 state = 1
-        yield state, f"{param_name.title()}-{name.title()}: {count}", [
-            (f"{param_name}_{name}_locks", count, warn, crit)
-        ]
+        yield (
+            state,
+            f"{param_name.title()}-{name.title()}: {count}",
+            [(f"{param_name}_{name}_locks", count, warn, crit)],
+        )
 
 
 def parse_mongodb_locks(string_table: StringTable) -> StringTable:

@@ -9,6 +9,8 @@ from typing import get_args
 
 from livestatus import SiteConfiguration, SiteId
 
+from cmk.ccc.exceptions import MKGeneralException
+
 from cmk.utils.user import UserId
 
 import cmk.gui.sites
@@ -25,8 +27,6 @@ from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.visuals._store import load_raw_visuals_of_a_user
 from cmk.gui.watolib.activate_changes import ACTIVATION_TIME_PROFILE_SYNC, update_activation_time
 from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional_wrapper
-
-from cmk.ccc.exceptions import MKGeneralException
 
 
 def register(page_registry: PageRegistry) -> None:

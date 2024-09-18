@@ -6,7 +6,7 @@
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, replace
 from enum import Enum, StrEnum
-from typing import Literal, TypeVar
+from typing import Literal, TypeVar, Union
 
 from cmk.agent_based.v1 import Metric, Result, State
 
@@ -20,7 +20,8 @@ PredictiveLevelsT = tuple[
     Literal["predictive"], tuple[str, float | None, tuple[_NumberT, _NumberT] | None]
 ]
 
-LevelsT = NoLevelsT | FixedLevelsT[_NumberT] | PredictiveLevelsT[_NumberT]
+# The name is part of the offial API, we have to live with the suppression.
+LevelsT = Union[NoLevelsT, FixedLevelsT[_NumberT], PredictiveLevelsT[_NumberT]]  # pylint: disable=invalid-name
 
 
 class Direction(StrEnum):

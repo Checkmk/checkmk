@@ -15,6 +15,9 @@ from typing import Any
 
 from livestatus import SiteConfiguration, SiteId
 
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore
@@ -38,9 +41,6 @@ from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation, MKAutomationException
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.paths import wato_var_dir
-
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
 
 UpdatedHostLabelsEntry = tuple[str, float, str]
 
@@ -294,7 +294,7 @@ def get_updated_host_label_files(newer_than: float) -> list[UpdatedHostLabelsEnt
     return updated_host_labels
 
 
-class AutomationDiscoveredHostLabelSync(AutomationCommand):
+class AutomationDiscoveredHostLabelSync(AutomationCommand[SiteRequest]):
     """Called by execute_site_sync to perform the sync with a remote site"""
 
     def command_name(self) -> str:

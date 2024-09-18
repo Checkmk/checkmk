@@ -1,4 +1,5 @@
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+load("@//omd/packages/rules:cc_export.bzl", "cc_export_shared_library")
 
 filegroup(
     name = "all_srcs",
@@ -80,33 +81,46 @@ configure_make(
     visibility = ["//visibility:public"],
 )
 
-filegroup(
-    name = "fg-libssl.so",
+cc_export_shared_library(
+    name = "libssl.so.3",
     srcs = [":openssl"],
-    output_group = "libssl.so.3",
+    shared_library = "libssl.so.3",
 )
 
-filegroup(
-    name = "fg-libcrypto.so",
-    srcs = [":openssl"],
-    output_group = "libcrypto.so.3",
-)
-
-cc_import(
+cc_export_shared_library(
     name = "libssl.so",
-    shared_library = ":fg-libssl.so",
+    srcs = [":openssl"],
+    shared_library = "libssl.so",
 )
 
-cc_import(
+cc_export_shared_library(
+    name = "libcrypto.so.3",
+    srcs = [":openssl"],
+    shared_library = "libcrypto.so.3",
+)
+
+cc_export_shared_library(
     name = "libcrypto.so",
-    shared_library = ":fg-libcrypto.so",
+    srcs = [":openssl"],
+    shared_library = "libcrypto.so",
+)
+
+filegroup(
+    name = "gen_dir",
+    srcs = [":openssl"],
+    output_group = "gen_dir",
+    visibility = ["//visibility:public"],
 )
 
 cc_library(
     name = "openssl_shared",
     visibility = ["//visibility:public"],
     deps = [
-        ":libcrypto.so",
+        # Note that for Linux builds, libssl must come before libcrypto on the
+        # linker command-line. As such, libssl must be listed before libcrypto.
         ":libssl.so",
+        ":libssl.so.3",
+        ":libcrypto.so",
+        ":libcrypto.so.3",
     ],
 )

@@ -1,67 +1,58 @@
+<!--
+Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+conditions defined in the file COPYING, which is part of this source code package.
+-->
 <script setup lang="ts">
-import type {
-  Catalog,
-  Dictionary,
-  FormSpec,
-  Topic
-} from '@/form/components/vue_formspec_components'
-import FormEdit from '@/form/components/FormEdit.vue'
-import { onBeforeMount, ref } from 'vue'
-import type { ValidationMessages } from '@/form/components/utils/validation'
+import type { Catalog, Topic } from '@/form/components/vue_formspec_components'
+import { ref } from 'vue'
+import { immediateWatch } from '@/form/components/utils/watch'
+import FormCatalogDictionary from './FormCatalogDictionary.vue'
+import {
+  groupDictionaryValidations,
+  type ValidationMessages
+} from '@/form/components/utils/validation'
 
 const props = defineProps<{
   spec: Catalog
   backendValidation: ValidationMessages
 }>()
 
-const data = defineModel<Record<string, object>>('data', { required: true })
+const data = defineModel<Record<string, Record<string, unknown>>>('data', { required: true })
 
-const openTopics = ref<Record<string, boolean>>({})
-onBeforeMount(() => {
-  openTopics.value = {}
-  props.spec.topics.forEach((topic) => {
-    openTopics.value[topic.key] = true
-    // TODO: fix FormSpec->Dictionary typing problem in vue_formspec_components.ts
-    const dictionary = topic.dictionary as unknown as Dictionary
-    dictionary.elements.forEach((element) => {
-      if (element.ident in data.value[topic.key]!) {
-        return
-      }
-      const topicData = data.value[topic.key]! as Record<string, unknown>
-      topicData[element.ident] = element.default_value
-    })
-  })
-})
+const hiddenTopics = ref<Record<string, boolean>>({})
+
+immediateWatch(
+  () => props.spec.topics,
+  () => {
+    hiddenTopics.value = {}
+  }
+)
+
+const elementValidation = ref<Record<string, ValidationMessages>>({})
+immediateWatch(
+  () => props.backendValidation,
+  (newValidation: ValidationMessages) => {
+    const [, _elementValidation] = groupDictionaryValidations(props.spec.topics, newValidation)
+    elementValidation.value = _elementValidation
+  }
+)
 
 function toggleTopic(topic: Topic) {
-  openTopics.value[topic.key] = !openTopics.value[topic.key]
+  hiddenTopics.value[topic.ident] = !hiddenTopics.value[topic.ident]
 }
 
 function setAllTopics(isOpen: boolean) {
-  for (const key in openTopics.value) {
-    openTopics.value[key] = isOpen
+  for (const topic of props.spec.topics) {
+    hiddenTopics.value[topic.ident] = !isOpen
   }
 }
 
-interface TopicEntry {
-  title: string
-  ident: string
-  required: boolean
-  form: FormSpec
-}
-
-function entriesForTopic(topic: Topic) {
-  const entries: TopicEntry[] = []
-  const dictionary = topic.dictionary as unknown as Dictionary
-  dictionary.elements.forEach((element) => {
-    entries.push({
-      title: element.parameter_form.title,
-      ident: element.ident,
-      required: element.required,
-      form: element.parameter_form
-    })
-  })
-  return entries
+function getClass(ident: string) {
+  return {
+    open: !hiddenTopics.value[ident],
+    closed: hiddenTopics.value[ident]
+  }
 }
 </script>
 
@@ -70,54 +61,27 @@ function entriesForTopic(topic: Topic) {
   <input type="button" value="Collapse all" @click="setAllTopics(false)" />
   <table
     v-for="topic in props.spec.topics"
-    :key="topic.key"
-    :class="{
-      nform: true,
-      open: openTopics[topic.key],
-      closed: !openTopics[topic.key]
-    }"
+    :key="topic.ident"
+    class="nform"
+    :class="getClass(topic.ident)"
   >
     <thead>
       <tr class="heading" @click="toggleTopic(topic)">
         <td colspan="2">
-          <img
-            :class="{
-              vue: true,
-              nform: true,
-              treeangle: true,
-              open: openTopics[topic.key],
-              closed: !openTopics[topic.key]
-            }"
-          />
+          <img class="vue nform treeangle" :class="getClass(topic.ident)" />
           {{ topic.dictionary.title }}
         </td>
       </tr>
     </thead>
-    <tbody :class="{ open: openTopics[topic.key], closed: !openTopics[topic.key] }">
+    <tbody :class="getClass(topic.ident)">
       <tr>
         <td colspan="2" />
       </tr>
-      <tr v-for="entry in entriesForTopic(topic)" :key="entry.ident">
-        <td class="legend">
-          <div class="title">
-            {{ entry.title }}
-            <span
-              :class="{
-                dots: true,
-                required: entry.required
-              }"
-              >{{ Array(200).join('.') }}</span
-            >
-          </div>
-        </td>
-        <td class="content">
-          <FormEdit
-            v-model:data="(data[topic.key]! as Record<string, object>)[entry.ident]!"
-            :backend-validation="backendValidation"
-            :spec="entry.form"
-          />
-        </td>
-      </tr>
+      <FormCatalogDictionary
+        v-model="data[topic.ident]!"
+        :entries="topic.dictionary.elements"
+        :backend-validation="elementValidation[topic.ident]!"
+      />
       <tr class="bottom">
         <td colspan="2"></td>
       </tr>

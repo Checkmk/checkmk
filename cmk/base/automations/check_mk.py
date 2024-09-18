@@ -29,6 +29,11 @@ from typing import Any
 
 import livestatus
 
+import cmk.ccc.debug
+from cmk.ccc import store, version
+from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKSNMPError, MKTimeout, OnError
+from cmk.ccc.version import edition_supports_nagvis
+
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.utils import config_warnings, ip_lookup, log, man_pages, tty
@@ -182,12 +187,8 @@ from cmk.base.server_side_calls import (
 )
 from cmk.base.sources import make_parser, SNMPFetcherConfig
 
-import cmk.ccc.debug
 import cmk.piggyback
 from cmk.agent_based.v1.value_store import set_value_store_manager
-from cmk.ccc import store, version
-from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKSNMPError, MKTimeout, OnError
-from cmk.ccc.version import edition_supports_nagvis
 from cmk.discover_plugins import discover_families, PluginGroup
 
 HistoryFile = str
@@ -542,7 +543,7 @@ def _active_check_preview_rows(
     host_name: HostName,
     ip_address_of: config.IPLookup,
 ) -> Sequence[CheckPreviewEntry]:
-    active_checks_ = config_cache.active_checks(host_name)
+    active_check_rules = config_cache.active_checks(host_name)
     host_attrs = config_cache.get_host_attributes(host_name, ip_address_of)
     ignored_services = config.IgnoredServices(config_cache, host_name)
     ruleset_matcher = config_cache.ruleset_matcher
@@ -585,30 +586,26 @@ def _active_check_preview_rows(
         password_store_file,
     )
 
-    return list(
-        {
-            active_service.description: CheckPreviewEntry(
-                check_source=make_check_source(active_service.description),
-                check_plugin_name=active_service.plugin_name,
-                ruleset_name=None,
-                discovery_ruleset_name=None,
-                item=active_service.description,
-                old_discovered_parameters={},
-                new_discovered_parameters={},
-                effective_parameters={},
-                description=active_service.description,
-                state=None,
-                output=make_output(active_service.description),
-                metrics=[],
-                old_labels={},
-                new_labels={},
-                found_on_nodes=[host_name],
-            )
-            for active_service in active_check_config.get_active_service_descriptions(
-                active_checks_
-            )
-        }.values()
-    )
+    return [
+        CheckPreviewEntry(
+            check_source=make_check_source(active_service.description),
+            check_plugin_name=active_service.plugin_name,
+            ruleset_name=None,
+            discovery_ruleset_name=None,
+            item=active_service.description,
+            old_discovered_parameters={},
+            new_discovered_parameters={},
+            effective_parameters=active_service.configuration,
+            description=active_service.description,
+            state=None,
+            output=make_output(active_service.description),
+            metrics=[],
+            old_labels={},
+            new_labels={},
+            found_on_nodes=[host_name],
+        )
+        for active_service in active_check_config.get_active_service_data(active_check_rules)
+    ]
 
 
 def _execute_discovery(
@@ -1540,12 +1537,12 @@ class AutomationAnalyseServices(Automation):
         )
 
         active_checks = config_cache.active_checks(host_name)
-        for active_service in active_check_config.get_active_service_descriptions(active_checks):
+        for active_service in active_check_config.get_active_service_data(active_checks):
             if active_service.description == servicedesc:
                 return {
                     "origin": "active",
                     "checktype": active_service.plugin_name,
-                    "parameters": active_service.params,
+                    "parameters": active_service.configuration,
                 }
 
         return {}  # not found
@@ -2109,13 +2106,20 @@ class AutomationDiagSpecialAgent(Automation):
                     fetched = fetcher.fetch(Mode.DISCOVERY)
 
                 if fetched.is_ok():
-                    yield 0, ensure_str_with_fallback(
-                        fetched.ok,
-                        encoding="utf-8",
-                        fallback="latin-1",
+                    yield (
+                        0,
+                        ensure_str_with_fallback(
+                            fetched.ok,
+                            encoding="utf-8",
+                            fallback="latin-1",
+                        ),
                     )
                 else:
                     yield 1, str(fetched.error)
+        except Exception as e:
+            if cmk.ccc.debug.enabled():
+                raise
+            yield 1, str(e)
         finally:
             if password_store_file.exists():
                 password_store_file.unlink()
@@ -2617,7 +2621,7 @@ class AutomationActiveCheck(Automation):
             command_line = self._replace_service_macros(
                 host_name,
                 service_data.description,
-                service_data.command_line,
+                " ".join(service_data.command),
             )
             return ActiveCheckResult(*self._execute_check_plugin(command_line))
 

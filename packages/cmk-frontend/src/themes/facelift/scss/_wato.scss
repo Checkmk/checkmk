@@ -777,11 +777,6 @@ div.filter_buttons {
     margin-right: 10px;
     margin-left: 10px;
 
-    &.nofloat {
-      float: none;
-      clear: left;
-    }
-
     div {
       height: 16px;
 
@@ -807,13 +802,6 @@ div.filter_buttons {
       float: left;
       width: 16px;
       text-align: right;
-    }
-
-    /* Only rendered, when the global "Setup" setting wato_hide_help_in_lists is turned off and
-     * inline help is enabled */
-    div.help {
-      height: auto;
-      clear: left;
     }
   }
 }

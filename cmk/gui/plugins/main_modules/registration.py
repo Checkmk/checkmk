@@ -5,10 +5,12 @@
 
 """Central module for common (non-edition specific) registrations"""
 
-
 from functools import partial
 
 from livestatus import MultiSiteConnection
+
+from cmk.ccc.crash_reporting import crash_report_registry
+from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
 from cmk.utils.licensing.registry import register_cre_licensing_handler
@@ -85,9 +87,9 @@ from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
 from cmk.gui.wato import notification_parameter_registry
 from cmk.gui.wato import registration as wato_registration
-from cmk.gui.watolib import configuration_bundles, groups_io
+from cmk.gui.watolib import broker_connections as broker_connections_config
+from cmk.gui.watolib import configuration_bundles, groups_io, password_store
 from cmk.gui.watolib import notifications as notifications_config
-from cmk.gui.watolib import password_store
 from cmk.gui.watolib import registration as watolib_registration
 from cmk.gui.watolib import rulesets as rule_config
 from cmk.gui.watolib import sites as sites_config
@@ -110,9 +112,6 @@ from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
 from cmk.gui.watolib.search import match_item_generator_registry
 from cmk.gui.watolib.simple_config_file import config_file_registry
 from cmk.gui.watolib.timeperiods import timeperiod_usage_finder_registry
-
-from cmk.ccc.crash_reporting import crash_report_registry
-from cmk.ccc.version import edition, Edition
 
 
 def register_sites_options() -> None:
@@ -307,6 +306,7 @@ def register() -> None:
     notifications_config.register(config_file_registry)
     tag_config.register(config_file_registry)
     sites_config.register(config_file_registry)
+    broker_connections_config.register(config_file_registry)
     user_connections_config(config_file_registry)
     user_config.register(config_file_registry)
     rule_config.register(config_file_registry)

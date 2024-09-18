@@ -28,6 +28,7 @@ Note:
 Module Attributes:
     match_on: Decorator used to register conversion functions for specific ValueSpec subclasses.
 """
+
 import typing
 
 from marshmallow import ValidationError

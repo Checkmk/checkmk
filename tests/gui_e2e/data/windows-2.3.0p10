@@ -1,0 +1,445 @@
+<<<check_mk>>>
+Version: 2.3.0p10
+BuildDate: Jul 15 2024
+AgentOS: windows
+Hostname: windows_host
+Architecture: 64bit
+OSName: Microsoft Windows Server 2019 Datacenter
+OSVersion: 10.0.17763
+OSType: windows
+Time: 2024-08-27T14:09:36+0200
+WorkingDirectory: C:\Windows\system32
+ConfigFile: C:\Program Files (x86)\checkmk\service\check_mk.yml
+LocalConfigFile: C:\ProgramData\checkmk\agent\check_mk.user.yml
+AgentDirectory: C:\Program Files (x86)\checkmk\service
+PluginsDirectory: C:\ProgramData\checkmk\agent\plugins
+StateDirectory: C:\ProgramData\checkmk\agent\state
+ConfigDirectory: C:\ProgramData\checkmk\agent\config
+TempDirectory: C:\ProgramData\checkmk\agent\tmp
+LogDirectory: C:\ProgramData\checkmk\agent\log
+SpoolDirectory: C:\ProgramData\checkmk\agent\spool
+LocalDirectory: C:\ProgramData\checkmk\agent\local
+OnlyFrom:
+<<<cmk_agent_ctl_status:sep(0)>>>
+{"version":"2.3.0p10","agent_socket_operational":true,"ip_allowlist":[],"allow_legacy_pull":true,"connections":[]}
+<<<wmi_cpuload:sep(124)>>>
+[system_perf]
+Name|ProcessorQueueLength|Timestamp_PerfTime|Frequency_PerfTime|WMIStatus
+|0|35307054165451|10000000|OK
+[computer_system]
+Name|NumberOfLogicalProcessors|NumberOfProcessors|WMIStatus
+windows_host|2|1|OK
+<<<uptime>>>
+3530705
+<<<mem>>>
+MemTotal:      2057756 kB
+MemFree:       953036 kB
+SwapTotal:     5505024 kB
+SwapFree:      4806056 kB
+PageTotal:     7562780 kB
+PageFree:      5759092 kB
+VirtualTotal:  137438953344 kB
+VirtualFree:   137434596908 kB
+<<<fileinfo:sep(124)>>>
+1724760575
+<<<df:sep(9)>>>
+C:\	NTFS	125827068	66236472	59590596	53%	C:\
+<<<logwatch>>>
+[[[Application]]]
+C Aug 27 14:08:57 49152.18456 MSSQLSERVER Login failed for user 'NT AUTHORITY\SYSTEM'. Reason: Failed to open the explicitly specified database 'DWDiagnostics'. [CLIENT: ::1]
+C Aug 27 14:08:57 49152.18456 MSSQLSERVER Login failed for user 'NT AUTHORITY\SYSTEM'. Reason: Failed to open the explicitly specified database 'model'. [CLIENT: ::1]
+C Aug 27 14:08:57 49152.18456 MSSQLSERVER Login failed for user 'NT AUTHORITY\SYSTEM'. Reason: Failed to open the explicitly specified database 'DWQueue'. [CLIENT: ::1]
+C Aug 27 14:08:57 49152.18456 MSSQLSERVER Login failed for user 'NT AUTHORITY\SYSTEM'. Reason: Failed to open the explicitly specified database 'DWConfiguration'. [CLIENT: ::1]
+C Aug 27 14:08:57 49152.18456 MSSQLSERVER Login failed for user 'NT AUTHORITY\SYSTEM'. Reason: Failed to open the explicitly specified database 'DWConfiguration'. [CLIENT: ::1]
+C Aug 27 14:08:57 49152.18456 MSSQLSERVER Login failed for user 'NT AUTHORITY\SYSTEM'. Reason: Failed to open the explicitly specified database 'DWDiagnostics'. [CLIENT: ::1]
+C Aug 27 14:08:57 49152.18456 MSSQLSERVER Login failed for user 'NT AUTHORITY\SYSTEM'. Reason: Failed to open the explicitly specified database 'model'. [CLIENT: ::1]
+C Aug 27 14:08:57 49152.18456 MSSQLSERVER Login failed for user 'NT AUTHORITY\SYSTEM'. Reason: Failed to open the explicitly specified database 'DWQueue'. [CLIENT: ::1]
+[[[HardwareEvents]]]
+[[[Internet Explorer]]]
+[[[Key Management Service]]]
+[[[PDW Component Failures]]]
+[[[Security]]]
+[[[System]]]
+[[[Windows PowerShell]]]
+<<<services>>>
+AJRouter stopped/demand AllJoyn Router Service
+ALG stopped/demand Application Layer Gateway Service
+AmazonSSMAgent running/auto Amazon SSM Agent
+AppIDSvc stopped/demand Application Identity
+Appinfo stopped/demand Application Information
+AppMgmt stopped/demand Application Management
+AppReadiness stopped/demand App Readiness
+AppVClient stopped/disabled Microsoft App-V Client
+AppXSvc stopped/demand AppX Deployment Service (AppXSVC)
+AudioEndpointBuilder stopped/demand Windows Audio Endpoint Builder
+Audiosrv stopped/demand Windows Audio
+AWSLiteAgent stopped/auto AWS Lite Guest Agent
+AxInstSV stopped/disabled ActiveX Installer (AxInstSV)
+AzureAttestService running/auto AzureAttestService
+BFE running/auto Base Filtering Engine
+BITS running/auto Background Intelligent Transfer Service
+BrokerInfrastructure running/auto Background Tasks Infrastructure Service
+BTAGService stopped/demand Bluetooth Audio Gateway Service
+BthAvctpSvc stopped/demand AVCTP service
+bthserv stopped/demand Bluetooth Support Service
+camsvc stopped/demand Capability Access Manager Service
+CDPSvc running/auto Connected Devices Platform Service
+CertPropSvc running/demand Certificate Propagation
+cfn-hup stopped/demand CloudFormation cfn-hup
+CheckmkService running/auto Checkmk Service
+ClipSVC stopped/demand Client License Service (ClipSVC)
+COMSysApp stopped/demand COM+ System Application
+CoreMessagingRegistrar running/auto CoreMessaging
+CryptSvc running/auto Cryptographic Services
+CscService stopped/disabled Offline Files
+CWAUpdaterService running/auto Citrix Workspace Advanced Service
+DcomLaunch running/auto DCOM Server Process Launcher
+defragsvc stopped/demand Optimize drives
+DeviceAssociationService stopped/demand Device Association Service
+DeviceInstall stopped/demand Device Install Service
+DevQueryBroker stopped/demand DevQuery Background Discovery Broker
+Dhcp running/auto DHCP Client
+diagnosticshub.standardcollector.service stopped/demand Microsoft (R) Diagnostics Hub Standard Collector Service
+DiagTrack stopped/disabled Connected User Experiences and Telemetry
+DmEnrollmentSvc stopped/demand Device Management Enrollment Service
+dmwappushservice stopped/disabled Device Management Wireless Application Protocol (WAP) Push message Routing Service
+Dnscache running/auto DNS Client
+DoSvc stopped/demand Delivery Optimization
+dot3svc stopped/demand Wired AutoConfig
+DPS running/auto Diagnostic Policy Service
+DsmSvc stopped/demand Device Setup Manager
+DsSvc running/demand Data Sharing Service
+Eaphost stopped/demand Extensible Authentication Protocol
+edgeupdate stopped/auto Microsoft Edge Update Service (edgeupdate)
+edgeupdatem stopped/demand Microsoft Edge Update Service (edgeupdatem)
+EFS stopped/demand Encrypting File System (EFS)
+embeddedmode stopped/demand Embedded Mode
+EntAppSvc stopped/demand Enterprise App Management Service
+EventLog running/auto Windows Event Log
+EventSystem running/auto COM+ Event System
+fdPHost running/demand Function Discovery Provider Host
+FDResPub running/demand Function Discovery Resource Publication
+FontCache running/auto Windows Font Cache Service
+FrameServer stopped/demand Windows Camera Frame Server
+GoogleChromeElevationService stopped/demand Google Chrome Elevation Service (GoogleChromeElevationService)
+gpsvc running/auto Group Policy Client
+GraphicsPerfSvc stopped/disabled GraphicsPerfSvc
+hidserv stopped/demand Human Interface Device Service
+HvHost stopped/demand HV Host Service
+icssvc stopped/disabled Windows Mobile Hotspot Service
+IKEEXT running/auto IKE and AuthIP IPsec Keying Modules
+InstallService stopped/demand Microsoft Store Install Service
+iphlpsvc running/auto IP Helper
+KeyIso running/demand CNG Key Isolation
+KPSSVC stopped/demand KDC Proxy Server service (KPS)
+KtmRm stopped/demand KtmRm for Distributed Transaction Coordinator
+LanmanServer running/auto Server
+LanmanWorkstation running/auto Workstation
+lfsvc stopped/disabled Geolocation Service
+LicenseManager stopped/demand Windows License Manager Service
+lltdsvc stopped/disabled Link-Layer Topology Discovery Mapper
+lmhosts running/demand TCP/IP NetBIOS Helper
+LSM running/auto Local Session Manager
+MapsBroker stopped/disabled Downloaded Maps Manager
+MozillaMaintenance stopped/demand Mozilla Maintenance Service
+mpssvc running/auto Windows Defender Firewall
+MSDTC running/auto Distributed Transaction Coordinator
+MSiSCSI stopped/demand Microsoft iSCSI Initiator Service
+msiserver stopped/demand Windows Installer
+MsMpiLaunchSvc stopped/demand MS-MPI Launch Service
+MSSQLFDLauncher running/demand SQL Full-text Filter Daemon Launcher (MSSQLSERVER)
+MSSQLLaunchpad running/auto SQL Server Launchpad (MSSQLSERVER)
+MSSQLSERVER running/auto SQL Server (MSSQLSERVER)
+MSSQLServerOLAPService stopped/disabled SQL Server Analysis Services (MSSQLSERVER)
+NcaSvc stopped/demand Network Connectivity Assistant
+NcbService running/demand Network Connection Broker
+Netlogon stopped/demand Netlogon
+Netman stopped/demand Network Connections
+netprofm running/demand Network List Service
+NetSetupSvc stopped/demand Network Setup Service
+NetTcpPortSharing stopped/disabled Net.Tcp Port Sharing Service
+NgcCtnrSvc stopped/demand Microsoft Passport Container
+NgcSvc stopped/demand Microsoft Passport
+NlaSvc running/auto Network Location Awareness
+nsi running/auto Network Store Interface Service
+PcaSvc running/demand Program Compatibility Assistant Service
+PerfHost stopped/demand Performance Counter DLL Host
+PhoneSvc stopped/disabled Phone Service
+pla stopped/demand Performance Logs & Alerts
+PlugPlay running/demand Plug and Play
+PolicyAgent running/demand IPsec Policy Agent
+Power running/auto Power
+PrintNotify stopped/demand Printer Extensions and Notifications
+ProfSvc running/auto User Profile Service
+PushToInstall stopped/disabled Windows PushToInstall Service
+QWAVE stopped/demand Quality Windows Audio Video Experience
+RasAuto stopped/demand Remote Access Auto Connection Manager
+RasMan running/auto Remote Access Connection Manager
+RemoteAccess stopped/disabled Routing and Remote Access
+RemoteRegistry stopped/auto Remote Registry
+RmSvc stopped/disabled Radio Management Service
+RpcEptMapper running/auto RPC Endpoint Mapper
+RpcLocator stopped/demand Remote Procedure Call (RPC) Locator
+RpcSs running/auto Remote Procedure Call (RPC)
+RSoPProv stopped/demand Resultant Set of Policy Provider
+sacsvr stopped/demand Special Administration Console Helper
+SamSs running/auto Security Accounts Manager
+SCardSvr stopped/demand Smart Card
+ScDeviceEnum stopped/disabled Smart Card Device Enumeration Service
+Schedule running/auto Task Scheduler
+SCPolicySvc stopped/demand Smart Card Removal Policy
+seclogon stopped/demand Secondary Logon
+SecurityHealthService running/demand Windows Security Service
+SEMgrSvc stopped/disabled Payments and NFC/SE Manager
+SENS running/auto System Event Notification Service
+Sense stopped/demand Windows Defender Advanced Threat Protection Service
+SensorDataService stopped/disabled Sensor Data Service
+SensorService stopped/demand Sensor Service
+SensrSvc stopped/demand Sensor Monitoring Service
+SessionEnv running/demand Remote Desktop Configuration
+SgrmBroker stopped/demand System Guard Runtime Monitor Broker
+SharedAccess stopped/disabled Internet Connection Sharing (ICS)
+ShellHWDetection running/auto Shell Hardware Detection
+shpamsvc stopped/disabled Shared PC Account Manager
+smphost stopped/demand Microsoft Storage Spaces SMP
+SNMPTRAP stopped/demand SNMP Trap
+Spooler running/auto Print Spooler
+sppsvc stopped/auto Software Protection
+SQLBrowser stopped/disabled SQL Server Browser
+SQLPBDMS stopped/disabled SQL Server PolyBase Data Movement (MSSQLSERVER)
+SQLPBENGINE stopped/disabled SQL Server PolyBase Engine (MSSQLSERVER)
+SQLSERVERAGENT stopped/demand SQL Server Agent (MSSQLSERVER)
+SQLTELEMETRY running/auto SQL Server CEIP service (MSSQLSERVER)
+SQLWriter running/auto SQL Server VSS Writer
+SSASTELEMETRY running/auto SQL Server Analysis Services CEIP (MSSQLSERVER)
+SSDPSRV stopped/disabled SSDP Discovery
+ssh-agent stopped/disabled OpenSSH Authentication Agent
+SstpSvc running/demand Secure Socket Tunneling Protocol Service
+StateRepository running/demand State Repository Service
+stisvc stopped/demand Windows Image Acquisition (WIA)
+StorSvc running/demand Storage Service
+svsvc stopped/demand Spot Verifier
+swprv stopped/demand Microsoft Software Shadow Copy Provider
+SysMain running/auto SysMain
+SystemEventsBroker running/auto System Events Broker
+TabletInputService stopped/demand Touch Keyboard and Handwriting Panel Service
+tapisrv stopped/demand Telephony
+TermService running/demand Remote Desktop Services
+Themes running/auto Themes
+TieringEngineService stopped/demand Storage Tiers Management
+TimeBrokerSvc running/demand Time Broker
+TokenBroker stopped/demand Web Account Manager
+TrkWks running/auto Distributed Link Tracking Client
+TrustedInstaller stopped/demand Windows Modules Installer
+tzautoupdate stopped/disabled Auto Time Zone Updater
+UALSVC running/auto User Access Logging Service
+UevAgentService stopped/disabled User Experience Virtualization Service
+UmRdpService running/demand Remote Desktop Services UserMode Port Redirector
+upnphost stopped/disabled UPnP Device Host
+UserManager running/auto User Manager
+UsoSvc running/auto Update Orchestrator Service
+VaultSvc stopped/demand Credential Manager
+vds stopped/demand Virtual Disk
+vmicguestinterface stopped/demand Hyper-V Guest Service Interface
+vmicheartbeat stopped/demand Hyper-V Heartbeat Service
+vmickvpexchange stopped/demand Hyper-V Data Exchange Service
+vmicrdv stopped/demand Hyper-V Remote Desktop Virtualization Service
+vmicshutdown stopped/demand Hyper-V Guest Shutdown Service
+vmictimesync stopped/demand Hyper-V Time Synchronization Service
+vmicvmsession stopped/demand Hyper-V PowerShell Direct Service
+vmicvss stopped/demand Hyper-V Volume Shadow Copy Requestor
+VSS stopped/demand Volume Shadow Copy
+W32Time running/auto Windows Time
+WaaSMedicSvc running/demand Windows Update Medic Service
+WalletService stopped/disabled WalletService
+WarpJITSvc stopped/demand WarpJITSvc
+WbioSrvc stopped/demand Windows Biometric Service
+Wcmsvc running/auto Windows Connection Manager
+WdiServiceHost stopped/demand Diagnostic Service Host
+WdiSystemHost stopped/demand Diagnostic System Host
+WdNisSvc stopped/demand Windows Defender Antivirus Network Inspection Service
+Wecsvc stopped/demand Windows Event Collector
+WEPHOSTSVC stopped/demand Windows Encryption Provider Host Service
+wercplsupport stopped/demand Problem Reports and Solutions Control Panel Support
+WerSvc stopped/demand Windows Error Reporting Service
+WiaRpc stopped/demand Still Image Acquisition Events
+WinDefend running/auto Windows Defender Antivirus Service
+WinHttpAutoProxySvc running/demand WinHTTP Web Proxy Auto-Discovery Service
+Winmgmt running/auto Windows Management Instrumentation
+WinRM running/auto Windows Remote Management (WS-Management)
+wisvc stopped/disabled Windows Insider Service
+wlidsvc stopped/demand Microsoft Account Sign-in Assistant
+wmiApSrv stopped/demand WMI Performance Adapter
+WMPNetworkSvc stopped/demand Windows Media Player Network Sharing Service
+WPDBusEnum stopped/demand Portable Device Enumerator Service
+WpnService running/auto Windows Push Notifications System Service
+WSearch stopped/disabled Windows Search
+wuauserv stopped/demand Windows Update
+GoogleUpdaterInternalService129.0.6651.0 stopped/auto GoogleUpdater InternalService 129.0.6651.0 (GoogleUpdaterInternalService129.0.6651.0)
+GoogleUpdaterService129.0.6651.0 stopped/auto GoogleUpdater Service 129.0.6651.0 (GoogleUpdaterService129.0.6651.0)
+<<<checkmk_agent_plugins_win:sep(0)>>>
+pluginsdir C:\ProgramData\checkmk\agent\plugins
+localdir C:\ProgramData\checkmk\agent\local
+C:\ProgramData\checkmk\agent\plugins\cmk_update_agent.checkmk.py:CMK_VERSION = "2.3.0p10"
+C:\ProgramData\checkmk\agent\plugins\mk_inventory.vbs:CMK_VERSION = "2.3.0p10"
+<<<ps:sep(9)>>>
+(SYSTEM,0,8,0,0,0,0,62066985937500,0,2,3530703)	System Idle Process
+(SYSTEM,0,140,0,4,0,0,279084531250,1484,113,3530703)	System
+(SYSTEM,0,65192,0,84,0,0,397343750,0,4,3530704)	Registry
+(SYSTEM,0,412,0,276,0,156250,66250000,53,2,3530703)	smss.exe
+(SYSTEM,0,2096,0,380,2,1567343750,9007187500,577,10,3530689)	csrss.exe
+(SYSTEM,0,436,0,456,1,0,625000,172,1,3530689)	wininit.exe
+(SYSTEM,0,604,0,464,1,156250,29218750,162,10,3530689)	csrss.exe
+(\\NT AUTHORITY\SYSTEM,3548,2992,0,548,3,781250,1250000,245,3,3530689)	winlogon.exe
+(SYSTEM,0,5992,0,588,4,19157968750,25022343750,367,6,3530689)	services.exe
+(\\NT AUTHORITY\SYSTEM,17560,19268,0,608,17,141139531250,21486562500,23947,7,3530689)	lsass.exe
+(\\NT AUTHORITY\SYSTEM,5120,8812,0,724,5,574531250,862656250,678,7,3530689)	svchost.exe
+(\\Font Driver Host\UMFD-1,1680,2144,0,736,1,5781250,312500,64,5,3530689)	fontdrvhost.exe
+(\\Font Driver Host\UMFD-0,2228,1664,0,752,2,196250000,390625000,64,5,3530689)	fontdrvhost.exe
+(\\NT AUTHORITY\NETWORK SERVICE,27560,21152,0,840,26,4642343750,2615000000,641,11,3530683)	svchost.exe
+(\\NT AUTHORITY\SYSTEM,56252,50868,0,940,54,34838437500,17859375000,5379,50,3530683)	svchost.exe
+(\\NT AUTHORITY\NETWORK SERVICE,4432,8792,0,948,4,253125000,319062500,508,22,3530683)	svchost.exe
+(\\NT AUTHORITY\SYSTEM,12348,11232,0,1012,12,413750000,652187500,553,15,3530683)	svchost.exe
+(\\NT AUTHORITY\LOCAL SERVICE,14648,15364,0,304,14,7488593750,12889062500,577,14,3530683)	svchost.exe
+(\\NT AUTHORITY\SYSTEM,11476,44908,0,372,11,374531250,245312500,470,10,3530683)	LogonUI.exe
+(\\Window Manager\DWM-1,16584,10404,0,452,16,194062500,67968750,539,12,3530683)	dwm.exe
+(\\NT AUTHORITY\LOCAL SERVICE,8524,13008,0,1060,8,813125000,655000000,575,18,3530683)	svchost.exe
+(\\NT AUTHORITY\NETWORK SERVICE,16144,18044,0,1132,15,4957812500,6561562500,1007,20,3530683)	svchost.exe
+(\\NT AUTHORITY\LOCAL SERVICE,13688,14668,0,1152,13,12884375000,52601093750,350,21,3530683)	svchost.exe
+(\\NT AUTHORITY\LOCAL SERVICE,1964,2384,0,1540,1,156250,4843750,321,4,3530682)	svchost.exe
+(\\NT AUTHORITY\SYSTEM,3624,2408,0,1592,3,169531250,362187500,440,14,3530682)	svchost.exe
+(\\NT AUTHORITY\LOCAL SERVICE,7604,7976,0,1664,7,195781250,277343750,408,13,3530682)	svchost.exe
+(\\NT AUTHORITY\NETWORK SERVICE,1636,3220,0,1948,1,625000,1093750,166,3,3530681)	svchost.exe
+(\\NT AUTHORITY\LOCAL SERVICE,2688,2300,0,1108,2,781250,1093750,260,4,3530681)	svchost.exe
+(\\NT AUTHORITY\SYSTEM,8444,5124,0,1144,8,193125000,132656250,517,9,3530681)	spoolsv.exe
+(\\NT AUTHORITY\SYSTEM,18424,8140,0,1140,17,1457343750,5055468750,158,11,3530681)	amazon-ssm-agent.exe
+(\\NT AUTHORITY\SYSTEM,1204,1116,0,1584,1,156250,468750,116,1,3530681)	svchost.exe
+(\\NT AUTHORITY\SYSTEM,20880,18624,0,1960,20,155050937500,121095312500,394,16,3530681)	check_mk_agent.exe
+(\\NT AUTHORITY\SYSTEM,11876,11008,0,2104,11,11250000,6406250,384,12,3530681)	UpdaterService.exe
+(\\NT AUTHORITY\SYSTEM,2436,3384,0,2164,2,70468750,115468750,202,6,3530681)	svchost.exe
+(\\NT AUTHORITY\SYSTEM,1880,504,0,2304,1,312500,312500,158,2,3530681)	sqlwriter.exe
+(\\NT AUTHORITY\LOCAL SERVICE,1724,5016,0,2312,1,7031250,19218750,207,4,3530681)	svchost.exe
+(\\NT AUTHORITY\SYSTEM,2160,3828,0,2952,2,306250000,472187500,57522,5,3530678)	cmk-agent-ctl.exe
+(\\NT AUTHORITY\SYSTEM,3060,3728,0,3256,2,2500000,39843750,207,5,3530677)	WmiPrvSE.exe
+(\\NT AUTHORITY\SYSTEM,7504,18276,0,3616,7,2993593750,5386250000,162,7,3530675)	robotmk_scheduler.exe
+(\\NT AUTHORITY\SYSTEM,6892,4680,0,3640,6,469687500,982500000,161,4,3530675)	conhost.exe
+(\\NT AUTHORITY\SYSTEM,19468,11496,0,3476,19,1273750000,2455781250,174,11,3530672)	ssm-agent-worker.exe
+(\\NT AUTHORITY\SYSTEM,6628,2276,0,3444,6,159531250,189062500,161,4,3530672)	conhost.exe
+(\\NT AUTHORITY\SYSTEM,3836,4116,0,3704,3,2656250,2656250,140,1,3530636)	svchost.exe
+(\\NT AUTHORITY\SYSTEM,37808,42968,0,3408,36,27707812500,20185312500,327,10,3530620)	WmiPrvSE.exe
+(\\NT AUTHORITY\NETWORK SERVICE,2736,2908,0,1436,2,156250,781250,222,9,3530553)	msdtc.exe
+(\\NT SERVICE\MSSQLSERVER,528984,187152,0,3568,516,694615156250,243338750000,949,80,3530551)	sqlservr.exe
+(\\NT SERVICE\MSSQLFDLauncher,1012,1444,0,3924,0,0,0,113,1,3530543)	fdlauncher.exe
+(\\NT SERVICE\MSSQLFDLauncher,1848,2464,0,972,1,13281250,27656250,182,4,3530543)	fdhost.exe
+(\\NT SERVICE\MSSQLFDLauncher,6452,1292,0,2476,6,468750,2031250,133,2,3530543)	conhost.exe
+(\\NT SERVICE\SQLTELEMETRY,69948,57956,0,1096,68,10732500000,1647812500,577,11,3530543)	sqlceip.exe
+(\\NT SERVICE\SSASTELEMETRY,27760,20364,0,2280,27,201875000,193437500,1164,10,3530542)	sqlceip.exe
+(\\NT SERVICE\MSSQLLaunchpad,54340,6652,0,1684,53,208750000,105156250,400,16,3530537)	Launchpad.exe
+(SYSTEM,0,7708,0,4936,2,2968750,7500000,234,4,3170678)	SecurityHealthService.exe
+(SYSTEM,0,5172,0,4908,1,781250,4062500,195,1,2274857)	svchost.exe
+(SYSTEM,0,39792,0,644,227,18686406250,5284531250,654,7,1629219)	MsMpEng.exe
+(\\NT AUTHORITY\LOCAL SERVICE,5832,12720,0,4948,5,8437500,14218750,269,6,10613)	WmiPrvSE.exe
+(\\NT AUTHORITY\NETWORK SERVICE,5064,12196,0,4172,4,7812500,10156250,220,8,5450)	WmiPrvSE.exe
+(\\NT AUTHORITY\SYSTEM,2440,76,0,3992,0,0,0,0,1,0)	check_mk_agent.exe
+<<<dotnet_clrmemory:sep(124)>>>
+AllocatedBytesPersec|Caption|Description|FinalizationSurvivors|Frequency_Object|Frequency_PerfTime|Frequency_Sys100NS|Gen0heapsize|Gen0PromotedBytesPerSec|Gen1heapsize|Gen1PromotedBytesPerSec|Gen2heapsize|LargeObjectHeapsize|Name|NumberBytesinallHeaps|NumberGCHandles|NumberGen0Collections|NumberGen1Collections|NumberGen2Collections|NumberInducedGC|NumberofPinnedObjects|NumberofSinkBlocksinuse|NumberTotalcommittedBytes|NumberTotalreservedBytes|PercentTimeinGC|PercentTimeinGC_Base|ProcessID|PromotedFinalizationMemoryfromGen0|PromotedMemoryfromGen0|PromotedMemoryfromGen1|Timestamp_Object|Timestamp_PerfTime|Timestamp_Sys100NS|WMIStatus
+912085279776|||343|0|10000000|10000000|12582912|5771920|12583696|192|9351184|22770288|_Global_|44705168|681|32918|18876|8249|0|0|58|51044352|805289984|380590464|4294967295|0|47701|5771920|192|0|35307058458304|133692413757140000|OK
+706309000|||343|0|10000000|10000000|6291456|56464|216|192|1639552|1364528|sqlceip|3004296|324|998|996|33|0|0|30|9302016|402644992|29|379694984|2280|47701|56464|192|0|35307058458304|133692413757140000|OK
+455336330888|||0|0|10000000|10000000|6291456|5715456|12583480|0|7711632|21405760|sqlceip#1|41700872|357|31920|17880|8216|0|0|27|41742336|402644992|62376|234638|1096|0|5715456|0|0|35307058458304|133692413757140000|OK
+0|||0|0|10000000|10000000|0|0|0|0|0|0|sqlservr|0|0|0|0|0|0|0|1|0|0|0|0|0|0|0|0|0|35307058458304|133692413757140000|OK
+<<<winperf_phydisk>>>
+1724760575.65 234 10000000
+2 instances: 0_C: _Total
+-36 0 0 rawcount
+-34 129203443492420 129203443492420 type(542573824)
+-34 133692341756361838 133692341756361838 type(1073939712)
+1166 129203443492420 129203443492420 type(5571840)
+-32 128682358215431 128682358215431 type(542573824)
+-32 133692341756361838 133692341756361838 type(1073939712)
+1168 128682358215431 128682358215431 type(5571840)
+-30 521085276989 521085276989 type(542573824)
+-30 133692341756361838 133692341756361838 type(1073939712)
+1170 521085276989 521085276989 type(5571840)
+-28 2237294148 2237294148 average_timer
+-28 76390174 76390174 average_base
+-26 843059975 843059975 average_timer
+-26 26492940 26492940 average_base
+-24 1394234173 1394234173 average_timer
+-24 49897234 49897234 average_base
+-22 76390174 76390174 counter
+-20 26492940 26492940 counter
+-18 49897234 49897234 counter
+-16 2786603610624 2786603610624 bulk_count
+-14 1713839282176 1713839282176 bulk_count
+-12 1072764328448 1072764328448 bulk_count
+-10 2786603610624 2786603610624 average_bulk
+-10 76390174 76390174 average_base
+-8 1713839282176 1713839282176 average_bulk
+-8 26492940 26492940 average_base
+-6 1072764328448 1072764328448 average_bulk
+-6 49897234 49897234 average_base
+1248 35246920826624 35246920826624 type(542573824)
+1248 133692341756361838 133692341756361838 type(1073939712)
+1250 14634257 14634257 counter
+<<<winperf_if>>>
+1724760575.67 510 10000000
+1 instances: Amazon_Elastic_Network_Adapter
+-122 115394976541 bulk_count
+-110 90462307 bulk_count
+-244 68757287 bulk_count
+-58 21705020 bulk_count
+10 25000000000 large_rawcount
+-246 75095008853 bulk_count
+14 68684386 bulk_count
+16 62691 bulk_count
+18 10210 large_rawcount
+20 0 large_rawcount
+22 0 large_rawcount
+-4 40299967688 bulk_count
+26 21660164 bulk_count
+28 44856 bulk_count
+30 0 large_rawcount
+32 0 large_rawcount
+34 0 large_rawcount
+1086 0 large_rawcount
+1088 0 large_rawcount
+1090 0 bulk_count
+1092 0 bulk_count
+1094 7277 large_rawcount
+2002 1 text
+<<<winperf_processor>>>
+1724760575.71 238 10000000
+3 instances: 0 1 _Total
+-232 31186936562500 30880049375000 31033492968750 100nsec_timer_inv
+-96 2639894843750 3011489531250 2825692187500 100nsec_timer
+-94 1480226562500 1415515937500 1447871250000 100nsec_timer
+-90 1367767251 1217754105 2585521356 counter
+458 6193593750 5329531250 5761562500 100nsec_timer
+460 15662031250 9664218750 12663125000 100nsec_timer
+1096 72198195 39751035 111949230 counter
+1098 0 0 0 rawcount
+1508 31036884471699 30651073725452 30843979098575 100nsec_timer
+1510 31036884471699 30651073725452 30843979098575 100nsec_timer
+1512 0 0 0 100nsec_timer
+1514 0 0 0 100nsec_timer
+1516 490070362 484191695 974262057 bulk_count
+1518 0 0 0 bulk_count
+1520 0 0 0 bulk_count
+<<<winperf_tcp_conn>>>
+1724760575.73 638 10000000
+2 233414485 counter
+4 1 rawcount
+6 568107 rawcount
+8 197602 rawcount
+10 3053 rawcount
+12 80375 rawcount
+14 105433217 counter
+16 127981268 counter
+18 45495 counter
+<<<winperf_ts_sessions>>>
+1724760575.82 5162 10000000
+2 0 rawcount
+4 2 rawcount
+6 2 rawcount
+<<<systemtime>>>
+1724760576

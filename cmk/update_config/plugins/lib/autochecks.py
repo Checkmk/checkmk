@@ -9,6 +9,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, NamedTuple, Self, TypeVar
 
+from cmk.ccc import debug
+from cmk.ccc.store import ObjectStore
+
 from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import autochecks_dir
 from cmk.utils.rulesets.definition import RuleGroup
@@ -20,9 +23,6 @@ from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.base.api.agent_based import register
 
 from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
-
-from cmk.ccc import debug
-from cmk.ccc.store import ObjectStore
 
 REPLACED_CHECK_PLUGINS: dict[CheckPluginName, CheckPluginName] = {}
 
@@ -185,7 +185,7 @@ def _fix_entry(
         check_plugin_name=new_plugin_name,
         item=explicit_item_transform(entry.item),
         parameters=_transformed_params(
-            new_plugin_name or entry.check_plugin_name,
+            new_plugin_name,
             explicit_parameters_transform(entry.parameters),
             all_rulesets,
             hostname,

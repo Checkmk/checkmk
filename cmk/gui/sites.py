@@ -23,6 +23,9 @@ from livestatus import (
     UnixSocketInfo,
 )
 
+from cmk.ccc.site import omd_site
+from cmk.ccc.version import __version__, Edition, edition, Version, VersionsIncompatible
+
 from cmk.utils import paths
 from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import get_license_state
@@ -42,9 +45,6 @@ from cmk.gui.utils.compatibility import (
     LicensingCompatible,
     make_incompatible_info,
 )
-
-from cmk.ccc.site import omd_site
-from cmk.ccc.version import __version__, Edition, edition, Version, VersionsIncompatible
 
 #   .--API-----------------------------------------------------------------.
 #   |                             _    ____ ___                            |
@@ -108,7 +108,8 @@ def cleanup_connections() -> Iterator[None]:
 # sockets and connection classes. This should really be cleaned up (context managers, ...)
 def disconnect() -> None:
     """Actively closes all Livestatus connections."""
-    if not g:
+    # NOTE: g.__bool__() *can* return False due to the LocalProxy Kung Fu!
+    if not g:  # type: ignore[truthy-bool]
         return
     logger.debug("Disconnecting site connections")
     if "live" in g:
@@ -134,8 +135,8 @@ def all_groups(what: str) -> list[tuple[str, str]]:
 
 # TODO: this too does not really belong here...
 def get_alias_of_host(site_id: SiteId | None, host_name: str) -> SiteId:
-    query = (
-        "GET hosts\n" "Cache: reload\n" "Columns: alias\n" "Filter: name = %s" % lqencode(host_name)
+    query = "GET hosts\n" "Cache: reload\n" "Columns: alias\n" "Filter: name = %s" % lqencode(
+        host_name
     )
 
     with only_sites(site_id):
@@ -444,10 +445,12 @@ _STATUS_NAMES = {
 }
 
 
-def site_state_titles() -> dict[
-    Literal["online", "disabled", "down", "unreach", "dead", "waiting", "missing", "unknown"],
-    str,
-]:
+def site_state_titles() -> (
+    dict[
+        Literal["online", "disabled", "down", "unreach", "dead", "waiting", "missing", "unknown"],
+        str,
+    ]
+):
     return {
         "online": _("This site is online."),
         "disabled": _("The connection to this site has been disabled."),

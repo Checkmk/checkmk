@@ -6,8 +6,8 @@
 import argparse
 from typing import Final
 
-UTF_16_LE_BOM: Final = b"\xFF\xFE"
-UTF_8_BOM: Final = b"\xEF\xBB\xBF"
+UTF_16_LE_BOM: Final = b"\xff\xfe"
+UTF_8_BOM: Final = b"\xef\xbb\xbf"
 
 
 def _offset_by_bom(data: bytes) -> int:

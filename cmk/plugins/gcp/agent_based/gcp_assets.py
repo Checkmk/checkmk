@@ -5,16 +5,15 @@
 # mypy: disallow_untyped_defs
 import json
 from collections import defaultdict
-from collections.abc import Callable, Mapping
 
 from cmk.agent_based.v2 import AgentSection, StringTable
+from cmk.plugins.gcp.lib.constants import Extractors
 from cmk.plugins.gcp.lib.gcp import (
     AssetSection,
     AssetType,
     AssetTypeSection,
     Config,
     GCPAsset,
-    Item,
 )
 
 
@@ -27,25 +26,11 @@ def parse_assets(string_table: StringTable) -> AssetSection:
     for a in assets:
         sorted_assets[a.asset_type].append(a)
 
-    # Known asset types that downstream checks can work with. Ignore others
-    extractors: Mapping[AssetType, Callable[[GCPAsset], Item]] = {
-        AssetType("file.googleapis.com/Instance"): lambda a: a.resource_data["name"].split("/")[-1],
-        AssetType("cloudfunctions.googleapis.com/CloudFunction"): lambda a: a.resource_data[
-            "name"
-        ].split("/")[-1],
-        AssetType("storage.googleapis.com/Bucket"): lambda a: a.resource_data["id"],
-        AssetType("redis.googleapis.com/Instance"): lambda a: a.resource_data["name"],
-        AssetType("run.googleapis.com/Service"): lambda a: a.resource_data["metadata"]["name"],
-        AssetType("sqladmin.googleapis.com/Instance"): lambda a: a.resource_data["name"],
-        AssetType("compute.googleapis.com/Instance"): lambda a: a.resource_data["name"],
-        AssetType("compute.googleapis.com/Disk"): lambda a: a.resource_data["name"],
-        AssetType("compute.googleapis.com/UrlMap"): lambda a: a.resource_data["name"],
-    }
     typed_assets: dict[AssetType, AssetTypeSection] = {}
     for asset_type, assets in sorted_assets.items():
-        if asset_type not in extractors:
+        if asset_type not in Extractors:
             continue
-        extract = extractors[asset_type]
+        extract = Extractors[asset_type]
         typed_assets[asset_type] = {extract(a): a for a in assets}
 
     return AssetSection(config, typed_assets)

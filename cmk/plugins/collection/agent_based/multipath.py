@@ -56,7 +56,6 @@ class _RawGroup(TypedDict):
 def parse_multipath(  # pylint: disable=too-many-branches
     string_table: StringTable,
 ) -> multipath.Section:
-
     uuid: str | None = None
     alias = None
     groups: dict[str, _RawGroup] = {}

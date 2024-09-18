@@ -26,12 +26,13 @@ from docker.models.images import Image  # type: ignore[import-untyped]
 
 from tests.testlib.repo import git_commit_id, git_essential_directories, repo_path
 from tests.testlib.utils import get_cmk_download_credentials, package_hash_path
-from tests.testlib.version import CMKVersion
+from tests.testlib.version import CMKVersion, DISTRO_CODES
 
 _DOCKER_REGISTRY = "artifacts.lan.tribe29.com:4000"
 _DOCKER_REGISTRY_URL = "https://%s/v2/" % _DOCKER_REGISTRY
 # Increase this to enforce invalidation of all existing images
 _DOCKER_BUILD_ID = 1
+_TESTUSER = "testuser"
 
 logger = logging.getLogger()
 
@@ -79,8 +80,8 @@ def execute_tests_in_container(
         stdin_open=True,
         tty=True,
     ) as container:
-        # Ensure we can make changes to the git directory (not persisting it outside of the container)
-        _prepare_git_overlay(container, "/git-lowerdir", "/git")
+        _prepare_testuser(container, _TESTUSER)
+        _prepare_git_overlay(container, "/git-lowerdir", "/git", _TESTUSER)
         _cleanup_previous_virtual_environment(container, version)
         _reuse_persisted_virtual_environment(container, version)
 
@@ -116,9 +117,13 @@ def execute_tests_in_container(
                 dockerpty.exec_command(
                     client.api,
                     container.id,
-                    ["/git/scripts/run-pipenv", "run"] + command,
+                    ["sudo", "-u", _TESTUSER, "/git/scripts/run-pipenv", "run"] + command,
                 )
-            dockerpty.exec_command(client.api, container.id, ["/git/scripts/run-pipenv", "shell"])
+            dockerpty.exec_command(
+                client.api,
+                container.id,
+                ["sudo", "-u", _TESTUSER, "/git/scripts/run-pipenv", "shell"],
+            )
 
             return 0
 
@@ -127,6 +132,7 @@ def execute_tests_in_container(
             container,
             command,
             check=False,
+            user=_TESTUSER,
             environment=_container_env(version),
             workdir="/git",
             stream=True,
@@ -225,18 +231,7 @@ def check_for_local_package(version: CMKVersion, distro_name: str) -> bool:
             raise SystemExit(1)
 
         package_name = available_packages[0].name
-        os_name = {
-            "debian-11": "bullseye",
-            "debian-12": "bookworm",
-            "ubuntu-22.04": "jammy",
-            "ubuntu-23.10": "mantic",
-            "ubuntu-24.04": "noble",
-            "centos-8": "el8",
-            "almalinux-9": "el9",
-            "sles-15sp3": "sles15sp3",
-            "sles-15sp4": "sles15sp4",
-            "sles-15sp5": "sles15sp5",
-        }.get(distro_name, f"UNKNOWN DISTRO: {distro_name}")
+        os_name = DISTRO_CODES.get(distro_name, f"UNKNOWN DISTRO: {distro_name}")
         pkg_pattern = rf"check-mk-{version.edition.long}-{version.version}.*{os_name}.*\.(deb|rpm)"
         if not re.match(f"^{pkg_pattern}$", package_name):
             logger.error("Error: '%s' does not match version=%s", package_name, version)
@@ -328,11 +323,6 @@ def _create_cmk_image(
         logger.info(
             "Building in container %s (from [%s])", container.short_id, base_image_name_with_tag
         )
-        _exec_run(container, f"groupadd -g {os.getgid()} testuser")
-        _exec_run(container, f"useradd -m -u {os.getuid()} -g {os.getgid()} -s /bin/bash testuser")
-        _exec_run(container, "mkdir -p /home/testuser/.cache")
-        _exec_run(container, "mkdir -p /results")
-
         # Ensure we can make changes to the git directory (not persisting it outside of the container)
         _prepare_git_overlay(container, "/git-lowerdir", "/git")
         _prepare_virtual_environment(container, version)
@@ -486,7 +476,7 @@ def _runtime_binds() -> Mapping[str, DockerBind]:
         # at the file mount that was used while building the image. This is not
         # really needed during runtime of the test. We could mount any file.
         (Path(os.environ["HOME"]) / ".cmk-credentials").as_posix(): DockerBind(
-            bind="/root/.cmk-credentials",
+            bind="/etc/.cmk-credentials",
             mode="ro",
         ),
     }
@@ -658,7 +648,9 @@ def _copy_directory(
         tar.extractall(str(dest_path), filter="data")
 
 
-def _prepare_git_overlay(container: docker.Container, lower_path: str, target_path: str) -> None:
+def _prepare_git_overlay(
+    container: docker.Container, lower_path: str, target_path: str, username: str | None = None
+) -> None:
     """Prevent modification of git checkout volume contents
 
     Create some tmpfs that is mounted as rw layer over the the git checkout
@@ -706,6 +698,30 @@ def _prepare_git_overlay(container: docker.Container, lower_path: str, target_pa
             target_path,
         ],
     )
+
+    if username:
+        _exec_run(container, ["chown", "-R", f"{username}:{username}", "/git"])
+
+
+def _prepare_testuser(container: docker.Container, username: str) -> None:
+    """Setup the environment for use with the testuser
+
+    Make sure all relevant files are owned by testuser and allow passwordless sudo, which is
+    required for tests that need to install packages or modify the system configuration.
+    """
+    uid = str(os.getuid())
+    gid = str(os.getgid())
+    _exec_run(container, ["groupadd", "-g", gid, username], check=False)
+    _exec_run(
+        container, ["useradd", "-m", "-u", uid, "-g", gid, "-s", "/bin/bash", username], check=False
+    )
+    _exec_run(container, ["bash", "-c", f'echo "{username} ALL=(ALL) NOPASSWD: ALL">>/etc/sudoers'])
+
+    _exec_run(container, ["mkdir", "-p", f"/home/{username}/.cache"])
+    _exec_run(container, ["chown", "-R", f"{username}:{username}", f"/home/{username}"])
+
+    _exec_run(container, ["mkdir", "-p", "/results"])
+    _exec_run(container, ["chown", "-R", f"{username}:{username}", "/results"])
 
 
 def _prepare_virtual_environment(container: docker.Container, version: CMKVersion) -> None:

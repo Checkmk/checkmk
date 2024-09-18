@@ -3,14 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc import store
+
 from cmk.utils import paths
 
 from cmk.gui import hooks, utils
 from cmk.gui.pages import PageRegistry
 from cmk.gui.valuespec import autocompleter_registry
-
-import cmk.ccc.version as cmk_version
-from cmk.ccc import store
 
 from . import _filters, info
 from ._add_to_visual import (
@@ -70,12 +70,16 @@ from ._store import available as available
 from ._store import available_by_owner as available_by_owner
 from ._store import declare_custom_permissions as declare_custom_permissions
 from ._store import declare_packaged_visuals_permissions as declare_packaged_visuals_permissions
-from ._store import delete_local_file, get_installed_packages
+from ._store import (
+    delete_local_file,
+    get_installed_packages,
+    invalidate_all_caches,
+    local_file_exists,
+    move_visual_to_local,
+)
 from ._store import get_permissioned_visual as get_permissioned_visual
-from ._store import invalidate_all_caches
 from ._store import load as load
 from ._store import load_visuals_of_a_user as load_visuals_of_a_user
-from ._store import local_file_exists, move_visual_to_local
 from ._store import save as save
 from ._store import TVisual as TVisual
 from ._title import view_title as view_title

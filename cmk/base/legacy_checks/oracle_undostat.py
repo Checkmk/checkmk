@@ -51,14 +51,18 @@ def check_oracle_undostat(item, params, parsed):
     state_errcnt = params["nospaceerrcnt_state"] if nospaceerrcnt else 0
     yield state_errcnt, "Space errors: %d" % nospaceerrcnt
 
-    yield 0, "", [
-        ("activeblk", activeblks),
-        ("transconcurrent", maxconcurrency),
-        # lower levels are unorthodox here (at least), but we keep it for compatibility (for now)
-        ("tunedretention", tuned_undoretention, warn, crit),
-        ("querylen", maxquerylen),
-        ("nonspaceerrcount", nospaceerrcnt),
-    ]
+    yield (
+        0,
+        "",
+        [
+            ("activeblk", activeblks),
+            ("transconcurrent", maxconcurrency),
+            # lower levels are unorthodox here (at least), but we keep it for compatibility (for now)
+            ("tunedretention", tuned_undoretention, warn, crit),
+            ("querylen", maxquerylen),
+            ("nonspaceerrcount", nospaceerrcnt),
+        ],
+    )
 
 
 check_info["oracle_undostat"] = LegacyCheckDefinition(

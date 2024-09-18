@@ -125,9 +125,7 @@ def _get_jobname_and_running_state(
 
 def parse_job(string_table: StringTable) -> Section:
     parsed: Section = {}
-    pseudo_running_jobs: Section = (
-        {}
-    )  # contains jobs that are flagged as running but are not, e.g. killed jobs
+    pseudo_running_jobs: Section = {}  # contains jobs that are flagged as running but are not, e.g. killed jobs
     job: Job = {}
     for idx, line in enumerate(string_table):
         if line[0] == "==>" and line[-1] == "<==":

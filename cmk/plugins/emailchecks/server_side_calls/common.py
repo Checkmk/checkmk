@@ -14,7 +14,6 @@ def fetching_options_to_args(
     params: FetchingParameters,
     host_config: HostConfig,
 ) -> Sequence[str | Secret]:
-
     fetch_protocol, fetch_params = params
     fetch_server = (
         host_config.primary_ip_config.address

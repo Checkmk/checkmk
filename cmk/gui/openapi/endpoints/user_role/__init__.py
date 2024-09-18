@@ -39,6 +39,7 @@ from marshmallow import ValidationError
 from cmk.gui.fields.definitions import UserRoleID
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
+from cmk.gui.openapi.endpoints.common_fields import field_include_extensions, field_include_links
 from cmk.gui.openapi.endpoints.user_role.request_schemas import CreateUserRole, EditUserRole
 from cmk.gui.openapi.endpoints.user_role.response_schemas import UserRoleCollection, UserRoleObject
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
@@ -62,22 +63,28 @@ RW_PERMISSIONS = permissions.AllPerm(
 )
 
 
-def serialize_user_role(user_role: UserRole) -> DomainObject:
-    extns = {
+def _serialize_user_role_extensions(user_role: UserRole) -> dict[str, Any]:
+    extensions = {
         "alias": user_role.alias,
         "builtin": user_role.builtin,
         "permissions": get_role_permissions().get(user_role.name),
     }
     if not user_role.builtin:
-        extns["basedon"] = user_role.basedon
+        extensions["basedon"] = user_role.basedon
+    return extensions
 
+
+def serialize_user_role(
+    user_role: UserRole, *, include_links: bool = True, include_extensions: bool = True
+) -> DomainObject:
     return constructors.domain_object(
         domain_type="user_role",
         identifier=user_role.name,
         title=user_role.alias,
-        extensions=extns,
+        extensions=_serialize_user_role_extensions(user_role) if include_extensions else None,
+        include_links=include_links,
         editable=True,
-        deletable=not (user_role.builtin),
+        deletable=not user_role.builtin,
     )
 
 
@@ -115,6 +122,7 @@ def show_user_role(params: Mapping[str, Any]) -> Response:
     tag_group="Setup",
     response_schema=UserRoleCollection,
     permissions_required=PERMISSIONS,
+    query_params=[field_include_links(), field_include_extensions()],
 )
 def list_user_roles(params: Mapping[str, Any]) -> Response:
     """Show all user roles"""
@@ -126,7 +134,12 @@ def list_user_roles(params: Mapping[str, Any]) -> Response:
         constructors.collection_object(
             domain_type="user_role",
             value=[
-                serialize_user_role(user_role) for user_role in userroles.get_all_roles().values()
+                serialize_user_role(
+                    user_role,
+                    include_links=params["include_links"],
+                    include_extensions=params["include_extensions"],
+                )
+                for user_role in userroles.get_all_roles().values()
             ],
         )
     )

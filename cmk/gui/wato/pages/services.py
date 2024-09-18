@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Modes for services and discovery"""
+
 import dataclasses
 import json
 import pprint
@@ -12,6 +13,10 @@ from dataclasses import asdict
 from typing import Any, Literal, NamedTuple
 
 from livestatus import SiteId
+
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
+from cmk.ccc.version import __version__, Version
 
 import cmk.utils.render
 from cmk.utils.check_utils import worst_service_state
@@ -92,10 +97,6 @@ from cmk.gui.watolib.services import (
 )
 from cmk.gui.watolib.utils import may_edit_ruleset, mk_repr
 
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import omd_site
-from cmk.ccc.version import __version__, Version
-
 from ._status_links import make_host_status_link
 
 AjaxDiscoveryRequest = dict[str, Any]
@@ -147,8 +148,6 @@ class ModeDiscovery(WatoMode):
         self._host = folder_from_request(
             request.var("folder"), request.get_ascii_input("host")
         ).load_host(request.get_validated_type_input_mandatory(HostName, "host"))
-        if not self._host:
-            raise MKUserError("host", _("You called this page with an invalid host name."))
 
         self._host.permissions.need_permission("read")
 
@@ -216,7 +215,7 @@ class _AutomationServiceDiscoveryRequest(NamedTuple):
     raise_errors: bool
 
 
-class AutomationServiceDiscoveryJobSnapshot(AutomationCommand):
+class AutomationServiceDiscoveryJobSnapshot(AutomationCommand[HostName]):
     """Fetch the service discovery background job snapshot on a remote site"""
 
     def command_name(self) -> str:
@@ -234,7 +233,7 @@ class AutomationServiceDiscoveryJobSnapshot(AutomationCommand):
         return json.dumps(job_snapshot)
 
 
-class AutomationServiceDiscoveryJob(AutomationCommand):
+class AutomationServiceDiscoveryJob(AutomationCommand[_AutomationServiceDiscoveryRequest]):
     """Is called by _get_check_table() to execute the background job on a remote site"""
 
     def command_name(self) -> str:
@@ -2165,7 +2164,7 @@ def ajax_popup_service_action_menu() -> None:
     checkbox_name = request.get_ascii_input_mandatory("checkboxname")
     hostname = request.get_validated_type_input_mandatory(HostName, "hostname")
     entry = CheckPreviewEntry(*json.loads(request.get_ascii_input_mandatory("entry")))
-    if checkbox_name is None or hostname is None or not entry:
+    if checkbox_name is None or hostname is None:
         html.show_error(_("Cannot render dropdown: Missing required information"))
         return
 

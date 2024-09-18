@@ -2,13 +2,15 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Background tools required to register a section plug-in
-"""
+"""Background tools required to register a section plug-in"""
+
 import functools
 import inspect
 import itertools
 from collections.abc import Generator
 from typing import Any, List, Sequence
+
+from cmk.ccc.exceptions import MKGeneralException
 
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.regex import regex
@@ -37,7 +39,6 @@ from cmk.agent_based.v1 import HostLabel, SNMPTree
 from cmk.agent_based.v1.register import RuleSetType
 from cmk.agent_based.v1.type_defs import StringByteTable, StringTable
 from cmk.agent_based.v2 import AgentSection, SimpleSNMPSection, SNMPSection
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.discover_plugins import PluginLocation
 
 

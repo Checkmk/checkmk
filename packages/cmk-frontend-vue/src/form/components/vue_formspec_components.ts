@@ -17,150 +17,298 @@ export type Components =
   | FixedValue
   | BooleanChoice
   | MultilineText
+  | CommentTextArea
+  | Password
   | DataSize
   | Catalog
+  | MultipleChoice
+  | TimeSpan
+  | Tuple
+  | OptionalChoice
+  | SimplePassword;
 export type Integer = FormSpec & {
-  type: 'integer'
-  label?: string
-  unit?: string
-  input_hint?: string
-}
-export type Validator = IsInteger | IsFloat | NumberInRange | LengthInRange
+  type: "integer";
+  label?: string;
+  unit?: string;
+  input_hint?: string;
+};
+export type Validator = IsInteger | IsFloat | NumberInRange | LengthInRange;
 export type Float = FormSpec & {
-  type: 'float'
-  label?: string
-  unit?: string
-  input_hint?: string
-}
+  type: "float";
+  label?: string;
+  unit?: string;
+  input_hint?: string;
+};
 export type String = FormSpec & {
-  type: 'string'
-  placeholder?: string
-  input_hint?: string
-}
+  type: "string";
+  placeholder?: string;
+  input_hint?: string;
+  field_size?: StringFieldSize;
+  autocompleter?: Autocompleter;
+};
+export type StringFieldSize = "SMALL" | "MEDIUM" | "LARGE";
 export type Dictionary = FormSpec & {
-  type: 'dictionary'
-  elements: DictionaryElement[]
-  groups: DictionaryGroup[]
-  no_elements_text?: string
-  additional_static_elements?: {}
-}
+  type: "dictionary";
+  elements: DictionaryElement[];
+  groups: DictionaryGroup[];
+  no_elements_text?: string;
+  additional_static_elements?: {};
+  layout: DictionaryLayout;
+};
+export type DictionaryLayout = "one_column" | "two_columns";
 export type List = FormSpec & {
-  type: 'list'
-  element_template: FormSpec
-  element_default_value: unknown
-  editable_order: boolean
-  add_element_label: string
-  remove_element_label: string
-  no_element_label: string
-}
+  type: "list";
+  element_template: FormSpec;
+  element_default_value: unknown;
+  editable_order: boolean;
+  add_element_label: string;
+  remove_element_label: string;
+  no_element_label: string;
+};
 export type LegacyValuespec = FormSpec & {
-  type: 'legacy_valuespec'
-  input_html?: string
-  readonly_html?: string
-  varprefix: string
-}
+  type: "legacy_valuespec";
+  input_html?: string;
+  readonly_html?: string;
+  varprefix: string;
+};
 export type SingleChoice = FormSpec & {
-  type: 'single_choice'
-  elements: SingleChoiceElementExtended[]
-  no_elements_text?: string
-  frozen: boolean
-  label?: string
-  input_hint: unknown
-}
+  type: "single_choice";
+  elements: SingleChoiceElement[];
+  no_elements_text?: string;
+  frozen: boolean;
+  label?: string;
+  input_hint: unknown;
+};
 export type CascadingSingleChoice = FormSpec & {
-  type: 'cascading_single_choice'
-  elements: CascadingSingleChoiceElement[]
-  no_elements_text?: string
-  label?: string
-  input_hint: unknown
-}
+  type: "cascading_single_choice";
+  elements: CascadingSingleChoiceElement[];
+  no_elements_text?: string;
+  label?: string;
+  input_hint: unknown;
+  layout: CascadingChoiceLayout;
+};
+export type CascadingChoiceLayout = "vertical" | "horizontal";
 export type FixedValue = FormSpec & {
-  type: 'fixed_value'
-  label?: string
-  value: unknown
-}
+  type: "fixed_value";
+  label?: string;
+  value: unknown;
+};
 export type BooleanChoice = FormSpec & {
-  type: 'boolean_choice'
-  label?: string
-  text_on: string
-  text_off: string
-}
-export type MultilineText = FormSpec & {
-  type: 'multiline_text'
-  label?: string
-  macro_support?: boolean
-  monospaced?: boolean
-  input_hint?: string
-}
+  type: "boolean_choice";
+  label?: string;
+  text_on: string;
+  text_off: string;
+};
+export type MultilineText = (FormSpec & {
+  label?: string;
+  macro_support?: boolean;
+  monospaced?: boolean;
+  input_hint?: string;
+}) & {
+  type: "multiline_text";
+};
+export type CommentTextArea = ((FormSpec & {
+  label?: string;
+  macro_support?: boolean;
+  monospaced?: boolean;
+  input_hint?: string;
+}) & {
+  user_name: string;
+  i18n: CommentTextAreaI18N;
+}) & {
+  type: "comment_text_area";
+};
+export type Password = FormSpec & {
+  type: "password";
+  password_store_choices: {
+    password_id: string;
+    name: string;
+  }[];
+  i18n: I18NPassword;
+};
 export type DataSize = FormSpec & {
-  type: 'data_size'
-  label?: string
-  displayed_magnitudes: string[]
-  input_hint?: string
-}
+  type: "data_size";
+  label?: string;
+  displayed_magnitudes: string[];
+  input_hint?: string;
+};
 export type Catalog = FormSpec & {
-  type: 'catalog'
-  topics: Topic[]
-}
+  type: "catalog";
+  topics: Topic[];
+};
+export type MultipleChoice = FormSpec & {
+  type: "multiple_choice";
+  elements: MultipleChoiceElement[];
+  show_toggle_all: boolean;
+};
+export type TimeSpan = FormSpec & {
+  type?: "time_span";
+  label?: string;
+  i18n: TimeSpanI18N;
+  displayed_magnitudes: TimeSpanTimeMagnitude[];
+  input_hint?: number;
+};
+export type TimeSpanTimeMagnitude = "millisecond" | "second" | "minute" | "hour" | "day";
+export type Tuple = FormSpec & {
+  type: "tuple";
+  elements: FormSpec[];
+  layout: TupleLayout;
+  show_titles: boolean;
+};
+export type TupleLayout = "horizontal_titles_top" | "horizontal" | "vertical" | "float";
+export type OptionalChoice = FormSpec & {
+  type: "optional_choice";
+  parameter_form: FormSpec;
+  i18n: I18NOptionalChoice;
+  parameter_form_default_value: unknown;
+};
+export type SimplePassword = FormSpec & {
+  type: "simple_password";
+};
 
 export interface VueFormspecComponents {
-  components?: Components
-  validation_message?: ValidationMessage
+  components?: Components;
+  validation_message?: ValidationMessage;
+  notifications?: Notifications;
 }
 export interface FormSpec {
-  type: string
-  title: string
-  help: string
-  validators: Validator[]
+  type: string;
+  title: string;
+  help: string;
+  validators: Validator[];
 }
 export interface IsInteger {
-  type: 'is_integer'
-  error_message?: string
+  type: "is_integer";
+  error_message?: string;
 }
 export interface IsFloat {
-  type: 'is_float'
-  error_message?: string
+  type: "is_float";
+  error_message?: string;
 }
 export interface NumberInRange {
-  type: 'number_in_range'
-  min_value?: number
-  max_value?: number
-  error_message?: string
+  type: "number_in_range";
+  min_value?: number;
+  max_value?: number;
+  error_message?: string;
 }
 export interface LengthInRange {
-  type: 'length_in_range'
-  min_value?: number
-  max_value?: number
-  error_message?: string
+  type: "length_in_range";
+  min_value?: number;
+  max_value?: number;
+  error_message?: string;
+}
+export interface Autocompleter {
+  fetch_method: "ajax_vs_autocomplete";
+  data: {};
 }
 export interface DictionaryElement {
-  ident: string
-  required: boolean
-  group?: DictionaryGroup
-  default_value: unknown
-  parameter_form: FormSpec
+  ident: string;
+  required: boolean;
+  group?: DictionaryGroup;
+  default_value: unknown;
+  parameter_form: FormSpec;
 }
 export interface DictionaryGroup {
-  key: string
-  title: string
-  help?: string
+  key: string;
+  title: string;
+  help?: string;
 }
-export interface SingleChoiceElementExtended {
-  name: unknown
-  title: string
+export interface SingleChoiceElement {
+  name: unknown;
+  title: string;
 }
 export interface CascadingSingleChoiceElement {
-  name: string
-  title: string
-  default_value: unknown
-  parameter_form: FormSpec
+  name: string;
+  title: string;
+  default_value: unknown;
+  parameter_form: FormSpec;
+}
+export interface CommentTextAreaI18N {
+  prefix_date_and_comment: string;
+}
+export interface I18NPassword {
+  explicit_password: string;
+  password_store: string;
+  no_password_store_choices: string;
+  password_choice_invalid: string;
 }
 export interface Topic {
-  key: string
-  dictionary: FormSpec
+  ident: string;
+  dictionary: Dictionary;
+}
+export interface MultipleChoiceElement {
+  name: string;
+  title: string;
+}
+export interface TimeSpanI18N {
+  millisecond: string;
+  second: string;
+  minute: string;
+  hour: string;
+  day: string;
+}
+export interface I18NOptionalChoice {
+  label?: string;
+  none_label?: string;
 }
 export interface ValidationMessage {
-  location: string[]
-  message: string
-  invalid_value: unknown
+  location: string[];
+  message: string;
+  invalid_value: unknown;
+}
+export interface Notifications {
+  fallback_warning?: FallbackWarning;
+  notification_stats: NotificationStats;
+  core_stats: CoreStats;
+  rule_sections: RuleSection[];
+}
+export interface FallbackWarning {
+  i18n: FallbackWarningI18N;
+  user_id: string;
+  setup_link: string;
+  do_not_show_again_link: string;
+}
+export interface FallbackWarningI18N {
+  title: string;
+  message: string;
+  setup_link_title: string;
+  do_not_show_again_title: string;
+}
+export interface NotificationStats {
+  num_sent_notifications: number;
+  num_failed_notifications: number;
+  sent_notification_link: string;
+  failed_notification_link: string;
+  i18n: NotificationStatsI18N;
+}
+export interface NotificationStatsI18N {
+  sent_notifications: string;
+  failed_notifications: string;
+  sent_notifications_link_title: string;
+  failed_notifications_link_title: string;
+}
+export interface CoreStats {
+  sites: string[];
+  i18n: CoreStatsI18N;
+}
+export interface CoreStatsI18N {
+  title: string;
+  sites_column_title: string;
+  status_column_title: string;
+  ok_msg: string;
+  warning_msg: string;
+  disabled_msg: string;
+}
+export interface RuleSection {
+  i18n: string;
+  topics: RuleTopic[];
+}
+export interface RuleTopic {
+  i18n: string;
+  rules: Rule[];
+}
+export interface Rule {
+  i18n: string;
+  count: string;
+  link: string;
 }

@@ -1,12 +1,10 @@
 [tool.ruff]
-src = ["cmk", "tests"]
 extend-exclude = ["agents/plugins/mk_sap_2.py", "doc/**/*.py"]
 target-version = "py312"
 line-length = 100
 
 [tool.ruff.lint]
-# NOTE: No "I" yet due to various tiny formatting differences
-select = ["E", "F", "W", "C90", "PL"]
+select = ["E", "F", "I", "W", "C90", "PL"]
 ignore = [
   # Black is our formatting tool, so ignore any formatting-related findings.
   "E501", # line too long
@@ -51,6 +49,7 @@ section-order = [
   "omd",
   "cmk_ccc",
   "cmk_utils",
+  "cmk_events",
   "cmk_automations",
   "cmk_snmplib",
   "cmk_fetchers",
@@ -74,6 +73,7 @@ unittests = ["tests.unit", "tests.plugins_integration", "tests.update"]
 livestatus = ["livestatus"]
 omd = ["omdlib"]
 cmk_ccc = ["cmk.ccc"]
+cmk_events = ["cmk.events"]
 cmk_utils = ["cmk.utils"]
 cmk_automations = ["cmk.automations"]
 cmk_snmplib = ["cmk.snmplib"]
@@ -85,49 +85,24 @@ cmk_gui = ["cmk.gui"]
 cmk_cee = ["cmk.cee.dcd", "cmk.cee.liveproxy", "cmk.cee.mknotifyd"]
 cmk_notification_plugins = ["cmk.notification_plugins"]
 
-
-[tool.isort]
-known_werks = "werks"
-known_cmc_proto = "cmc_proto"
-known_testlib = "tests.testlib"
-known_integrationtests = "tests.integration"
-known_compositiontests = "tests.composition"
-known_unittests = "tests.unit,tests.plugins_integration,tests.update"
-known_livestatus = "livestatus"
-known_omd = "omdlib"
-known_cmk_utils = "cmk.utils"
-known_cmk_automations = "cmk.automations"
-known_cmk_snmplib = "cmk.snmplib"
-known_cmk_fetchers = "cmk.fetchers"
-known_cmk_checkengine = "cmk.checkengine"
-known_cmk_base = "cmk.base"
-known_cmk_ec = "cmk.ec"
-known_cmk_gui = "cmk.gui"
-known_cmk_cee = "cmk.cee.dcd,cmk.cee.liveproxy,cmk.cee.mknotifyd"
-known_cmk_notification_plugins = "cmk.notification_plugins"
-known_first_party = "cmk"
-
-# Order sections according to our layering.
-sections = """FUTURE,STDLIB,THIRDPARTY,WERKS,CMC_PROTO,TESTLIB,INTEGRATIONTESTS,COMPOSITIONTESTS,UNITTESTS,LIVESTATUS,OMD,
-CMK_UTILS,CMK_AUTOMATIONS,CMK_SNMPLIB,CMK_FETCHERS,CMK_CHECKENGINE,CMK_BASE,CMK_EC,CMK_GUI,CMK_CEE,
-CMK_NOTIFICATION_PLUGINS,FIRSTPARTY,LOCALFOLDER"""
-
-profile = "black"
-order_by_type = "False"
-line_length = 100
-py_version = "312"
-
-
-[tool.black]
-line-length = 100
-target-version = ['py312']
-
-
 # NOTE: Keep this is sync with mypy-raw.ini!
 # The number of errors/files below are just a snapshot to give a rough idea. In
 # addition, a single cause can imply multiple symptoms, so these numbers have to
 # be taken with a grain of salt...
 [tool.mypy]
+enable_error_code = [
+  # "explicit-override",   # 9999 errors in 762 files
+  "ignore-without-code",
+  # "mutable-override",    # 336 errors in 71 files
+  # "possibly-undefined",  # 401 errors in 183 files
+  # "redundant-expr",      # 115 errors in 86 files
+  "redundant-self",
+  "truthy-bool",
+  "truthy-iterable",
+  "unimported-reveal",
+  "unused-awaitable",
+  "unused-ignore",
+]
 explicit_package_bases = true
 mypy_path = """\
     $MYPY_CONFIG_FILE_DIR:\
@@ -263,7 +238,7 @@ filterwarnings = [
   # ignore PytestCollectionWarning caused by webtest
   'ignore:^cannot collect test class .* because it has a __init__ constructor.*$:UserWarning:.*webtest.*:0',
   # openapi collector uses pkg resources
-  'ignore:pkg_resources:DeprecationWarning:.*opentelemetry.*'
+  'ignore:pkg_resources:DeprecationWarning:.*opentelemetry.*',
 ]
 # When writing a junit.xml, also write the output of a test to the junit
 # file in addition to the console.

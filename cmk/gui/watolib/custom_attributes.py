@@ -7,14 +7,14 @@ import pprint
 from datetime import datetime
 from typing import Literal, TypedDict
 
+from cmk.ccc import store
+
 from cmk.gui import userdb
 from cmk.gui.config import load_config
 from cmk.gui.watolib.config_domain_name import wato_fileheader
 from cmk.gui.watolib.host_attributes import transform_pre_16_host_topics
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.utils import multisite_dir
-
-from cmk.ccc import store
 
 
 class CustomAttrSpec(TypedDict):

@@ -225,7 +225,7 @@ def main(
         all_werks_by_id[str(werk_id)] = WebsiteWerk(
             versions=versions,
             product=flavor,
-            **werk_dict,  # type: ignore
+            **werk_dict,  # type: ignore[arg-type]
         ).model_dump(by_alias=True, mode="json")
 
     print(json.dumps(all_werks_by_id))

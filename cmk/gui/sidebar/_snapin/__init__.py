@@ -3,12 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.ccc import version
+from cmk.ccc.version import edition_supports_nagvis
+
 from cmk.utils import paths
 
 from cmk.gui.pages import PageRegistry
-
-from cmk.ccc import version
-from cmk.ccc.version import edition_supports_nagvis
 
 from ._base import CustomizableSidebarSnapin as CustomizableSidebarSnapin
 from ._base import PageHandlers as PageHandlers

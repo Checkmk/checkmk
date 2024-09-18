@@ -23,6 +23,8 @@ from pathlib import Path
 from typing import Any, Literal, Protocol
 from urllib.parse import quote as url_quote
 
+import cmk.ccc.debug  # pylint: disable=cmk-module-layer-violation
+
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
 from cmk.utils.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
 
@@ -31,7 +33,6 @@ from cmk.ec.event import (  # pylint: disable=cmk-module-layer-violation
     create_event_from_syslog_message,
 )
 
-import cmk.ccc.debug  # pylint: disable=cmk-module-layer-violation
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -234,6 +235,7 @@ class MessageForwarderProto(Protocol):
         self,
         method: str | tuple,
         messages: Sequence[ec.SyslogMessage],
+        timestamp: float,
     ) -> LogwatchForwardedResult: ...
 
 
@@ -281,6 +283,7 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
     value_store: MutableMapping[str, Any],
     message_forwarder: MessageForwarderProto,
 ) -> CheckResult:
+    timestamp = time.time()
     yield from logwatch.check_errors(parsed)
 
     host_name = params["host_name"]
@@ -323,8 +326,6 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
     # <facility+priority> timestamp hostname logfile: message
     facility = params["facility"]
     syslog_messages = []
-    cur_time = int(time.time())
-
     forwarded_logfiles = set()
 
     # Keep track of reclassifed lines
@@ -359,7 +360,7 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
                 ec.SyslogMessage(
                     facility=facility,
                     severity=logwatch_to_prio(rclfd_level or line[0]),
-                    timestamp=cur_time,
+                    timestamp=int(timestamp),
                     host_name=host_name,
                     application=logfile,
                     text=line[2:],
@@ -374,7 +375,7 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
         else:
             logfile_info = ""
 
-        result = message_forwarder(params["method"], syslog_messages)
+        result = message_forwarder(params["method"], syslog_messages, timestamp)
 
         yield Result(
             state=State.OK,
@@ -458,6 +459,7 @@ class MessageForwarder:
         self,
         method: str | tuple,
         messages: Sequence[ec.SyslogMessage],
+        timestamp: float,
     ) -> LogwatchForwardedResult:
         if not method:
             method = str(cmk.utils.paths.omd_root / "tmp/run/mkeventd/eventsocket")
@@ -468,6 +470,7 @@ class MessageForwarder:
             return self._forward_tcp(
                 method,
                 messages,
+                timestamp,
             )
 
         if not method.startswith("spool:"):
@@ -476,7 +479,7 @@ class MessageForwarder:
                 messages,
             )
 
-        return self._forward_spool_directory(method, messages)
+        return self._forward_spool_directory(method, messages, timestamp)
 
     # write into local UNIX socket
     # Important: When the event daemon is stopped, then the socket
@@ -498,6 +501,7 @@ class MessageForwarder:
         self,
         method: str,
         syslog_messages: Sequence[ec.SyslogMessage],
+        timestamp: float,
     ) -> LogwatchForwardedResult:
         if not syslog_messages:
             return LogwatchForwardedResult()
@@ -506,7 +510,7 @@ class MessageForwarder:
             message + "\n" for message in map(repr, syslog_messages)
         )
         for file_index, file_content in enumerate(split_files):
-            spool_file = self._get_new_spool_file(method, file_index)
+            spool_file = self._get_new_spool_file(method, file_index, timestamp)
             with spool_file.open("w") as f:
                 for message in file_content:
                     f.write(message)
@@ -533,6 +537,7 @@ class MessageForwarder:
         self,
         method: str,
         file_index: int,
+        timestamp: float,
     ) -> Path:
         spool_file = Path(
             method[6:],
@@ -540,7 +545,7 @@ class MessageForwarder:
             % (
                 self.hostname,
                 (self.item.replace("/", "\\") + "_") if self.item else "",
-                time.time(),
+                timestamp,
                 file_index,
             ),
         )
@@ -551,6 +556,7 @@ class MessageForwarder:
         self,
         method: tuple,
         syslog_messages: Sequence[ec.SyslogMessage],
+        timestamp: float,
     ) -> LogwatchForwardedResult:
         # Transform old format: (proto, address, port)
         if not isinstance(method[1], dict):
@@ -561,11 +567,11 @@ class MessageForwarder:
         message_chunks = []
 
         if self._shall_spool_messages(method):
-            message_chunks += self._load_spooled_messages(method, result)
+            message_chunks += self._load_spooled_messages(method, result, timestamp)
 
         # Add chunk of new messages (when there are new ones)
         if syslog_messages:
-            message_chunks.append((time.time(), 0, list(map(repr, syslog_messages))))
+            message_chunks.append((timestamp, 0, list(map(repr, syslog_messages))))
 
         if not message_chunks:
             return result  # Nothing to process
@@ -672,6 +678,7 @@ class MessageForwarder:
         self,
         method: tuple,
         result: LogwatchForwardedResult,
+        timestamp: float,
     ) -> list[tuple[float, int, list[str]]]:
         spool_params = method[1]["spool"]
 
@@ -706,7 +713,7 @@ class MessageForwarder:
             # delete the file? this way total_size is too big?!
 
             # Delete too old files by age
-            if time_spooled < time.time() - spool_params["max_age"]:
+            if time_spooled < timestamp - spool_params["max_age"]:
                 self._spool_drop_messages(path, result)
                 continue
 

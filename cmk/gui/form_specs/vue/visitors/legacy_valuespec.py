@@ -8,7 +8,7 @@ from typing import Any
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.private.definitions import LegacyValueSpec
-from cmk.gui.form_specs.vue import shared_type_defs as VueComponents
+from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.http import request
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.user_errors import user_errors
@@ -17,8 +17,8 @@ from cmk.gui.valuespec import Transform
 from cmk.rulesets.v1 import Title
 
 from ._base import FormSpecVisitor
-from ._type_defs import DataOrigin, DefaultValue, EMPTY_VALUE, EmptyValue, Value
-from ._utils import create_validation_error, get_title_and_help, migrate_value
+from ._type_defs import DataOrigin, DefaultValue, EMPTY_VALUE, EmptyValue
+from ._utils import create_validation_error, get_title_and_help
 
 
 class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, object]):
@@ -29,11 +29,14 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, object]):
     have a clear distinction
     """
 
-    def _parse_value(self, raw_value: object) -> object | EmptyValue:
+    def _migrate_disk_value(self, value: object) -> object:
         try:
-            return migrate_value(self.form_spec, self.options, raw_value)
+            return super()._migrate_disk_value(value)
         except MKUserError:
             return EMPTY_VALUE
+
+    def _parse_value(self, raw_value: object) -> object | EmptyValue:
+        return raw_value
 
     def _prepare_request_context(self, value: dict[str, Any]) -> None:
         assert "input_context" in value
@@ -50,7 +53,7 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, object]):
 
     def _to_vue(
         self, raw_value: object, parsed_value: object | EmptyValue
-    ) -> tuple[VueComponents.LegacyValuespec, Value]:
+    ) -> tuple[shared_type_defs.LegacyValuespec, object]:
         title, help_text = get_title_and_help(self.form_spec)
 
         varprefix = None
@@ -78,7 +81,7 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, object]):
                         varprefix, self.form_spec.valuespec.default_value()
                     )
                     return (
-                        VueComponents.LegacyValuespec(
+                        shared_type_defs.LegacyValuespec(
                             title=title,
                             help=help_text,
                             input_html=input_html,
@@ -95,7 +98,7 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, object]):
         # Renders data from disk or data which was successfully parsed from frontend
         input_html, readonly_html = self._create_input_and_readonly_html(varprefix, value_to_render)
         return (
-            VueComponents.LegacyValuespec(
+            shared_type_defs.LegacyValuespec(
                 title=title,
                 help=help_text,
                 input_html=input_html,
@@ -107,7 +110,7 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, object]):
 
     def _validate(
         self, raw_value: object, parsed_value: object | EmptyValue
-    ) -> list[VueComponents.ValidationMessage]:
+    ) -> list[shared_type_defs.ValidationMessage]:
         if isinstance(parsed_value, EmptyValue):
             return create_validation_error(raw_value, Title("Invalid value for valuespec"))
 
@@ -129,7 +132,7 @@ class LegacyValuespecVisitor(FormSpecVisitor[LegacyValueSpec, object]):
                 self.form_spec.valuespec.validate_value(value, varprefix)
             except MKUserError as e:
                 return [
-                    VueComponents.ValidationMessage(
+                    shared_type_defs.ValidationMessage(
                         location=[e.varname or ""], message=str(e), invalid_value=None
                     )
                 ]

@@ -13,6 +13,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, assert_never, TypeVar
 
+import cmk.ccc.debug
+
 import cmk.utils.paths
 from cmk.utils import tty
 from cmk.utils.hostaddress import HostName
@@ -33,7 +35,6 @@ from cmk.utils.structured_data import (
 )
 from cmk.utils.validatedstr import ValidatedString
 
-import cmk.ccc.debug
 from cmk.agent_based.v1 import Attributes, TableRow
 
 from .checkresults import ActiveCheckResult

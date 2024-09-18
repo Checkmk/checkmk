@@ -11,14 +11,17 @@ smth (needed for endpoint registration in test_openapi_endpoint_decorator_resets
 import base64
 import json
 from collections.abc import Mapping
+from pathlib import Path
 from typing import Any
 from unittest import mock
 
 import pytest
 
-from tests.testlib.rest_api_client import ClientRegistry
+from tests.testlib.rest_api_client import ClientRegistry, RestApiClient
 
 from tests.unit.cmk.gui.conftest import SetConfig, WebTestAppForCMK
+
+from cmk.utils.local_secrets import SiteInternalSecret
 
 from cmk.gui import hooks
 from cmk.gui.fields.utils import BaseSchema
@@ -26,8 +29,6 @@ from cmk.gui.http import Response
 from cmk.gui.openapi.restful_objects.decorators import Endpoint, WrappedEndpoint
 from cmk.gui.openapi.restful_objects.registry import endpoint_registry
 from cmk.gui.openapi.utils import ProblemException, RestAPIResponseGeneralException
-from cmk.gui.utils.script_helpers import session_wsgi_app
-from cmk.gui.wsgi.blueprints import checkmk, rest_api
 
 from cmk import fields
 
@@ -77,13 +78,6 @@ def test_openapi_accept_header_invalid(aut_user_auth_wsgi_app: WebTestAppForCMK)
 
 class SomeSchema(BaseSchema):
     permission = fields.String(description="smth", example="smth")
-
-
-@pytest.fixture(name="fresh_app_instance", scope="function")
-def _fresh_app_instance():
-    session_wsgi_app.cache_clear()
-    rest_api.app_instance.cache_clear()
-    checkmk.app_instance.cache_clear()
 
 
 @pytest.fixture(name="test_endpoint")
@@ -136,6 +130,26 @@ def install_multi_accept_endpoint(fresh_app_instance):
     yield multiaccept_test
 
     endpoint_registry.unregister(multiaccept_test)
+
+
+@pytest.fixture(name="test_internal_endpoint")
+def install_reserved_endpoint(fresh_app_instance):
+    @Endpoint(
+        path="/i_am_reserved",
+        method="get",
+        link_relation="help",
+        tag_group="Monitoring",
+        output_empty=True,
+        internal_user_only=True,
+    )
+    def reserved_test(param: Mapping[str, Any]) -> Response:
+        return Response(status=204)
+
+    endpoint_registry.register(reserved_test)
+
+    yield reserved_test
+
+    endpoint_registry.unregister(reserved_test)
 
 
 def test_openapi_endpoint_decorator_resets_used_permissions(
@@ -448,7 +462,6 @@ def test_invalid_payload(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     payload: str,
 ) -> None:
-
     response = aut_user_auth_wsgi_app.call_method(
         "post",
         "/NO_SITE/check_mk/api/1.0/test_accept_parameter",
@@ -488,7 +501,6 @@ def test_endpoint_accept_multiple_types(
     content_type: str,
     payload: str,
 ) -> None:
-
     res = aut_user_auth_wsgi_app.call_method(
         "post",
         "/NO_SITE/check_mk/api/1.0/test_multiple_content_types",
@@ -498,3 +510,37 @@ def test_endpoint_accept_multiple_types(
     )
 
     assert res.json["permission"] == content_type
+
+
+# ========= Authorization of reserved endpoint validation =========
+def test_reserved_endpoint_auth(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    test_internal_endpoint: WrappedEndpoint,
+    api_client: RestApiClient,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    res = aut_user_auth_wsgi_app.call_method(
+        "get",
+        "/NO_SITE/check_mk/api/1.0/i_am_reserved",
+        "",
+        {"Accept": "application/json"},
+        status=401,
+    )
+
+    assert res.json["detail"] == "This endpoint is reserved for Checkmk."
+
+    mocked_secret_path = tmp_path / "siteinternal.secret"
+    mocked_secret_path.write_bytes(b"unittestsecret")
+    monkeypatch.setattr(SiteInternalSecret, "path", mocked_secret_path)
+
+    res = api_client.request(
+        method="get",
+        url="/i_am_reserved",
+        headers={
+            "Accept": "application/json",
+            "Authorization": "InternalToken dW5pdHRlc3RzZWNyZXQ=",  # unittestsecret
+        },
+    )
+
+    assert res.status_code == 204

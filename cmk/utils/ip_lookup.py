@@ -12,14 +12,14 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, assert_never, Literal, NamedTuple
 
+import cmk.ccc.debug
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKIPAddressLookupError, MKTerminate, MKTimeout
+
 import cmk.utils.paths
 from cmk.utils.caching import cache_manager
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import console
-
-import cmk.ccc.debug
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKIPAddressLookupError, MKTerminate, MKTimeout
 
 IPLookupCacheId = tuple[HostName | HostAddress, socket.AddressFamily]
 
@@ -47,7 +47,7 @@ class IPLookupConfig(NamedTuple):
 
 
 def fallback_ip_for(
-    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
 ) -> HostAddress:
     match family:
         case socket.AddressFamily.AF_INET:
@@ -59,7 +59,7 @@ def fallback_ip_for(
 
 
 def _local_ip_for(
-    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
 ) -> HostAddress:
     match family:
         case socket.AddressFamily.AF_INET:

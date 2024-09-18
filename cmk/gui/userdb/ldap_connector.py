@@ -49,6 +49,11 @@ import ldap.filter  # type: ignore[import-untyped]
 from ldap.controls import SimplePagedResultsControl  # type: ignore[import-untyped]
 from six import ensure_str
 
+import cmk.ccc.version as cmk_version
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
+
 import cmk.utils.paths
 from cmk.utils import password_store
 from cmk.utils.log.security_event import log_security_event
@@ -82,10 +87,6 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.watolib.groups_io import load_contact_group_information
 
-import cmk.ccc.version as cmk_version
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import omd_site
 from cmk.crypto.password import Password
 
 from ._connections import (
@@ -1385,8 +1386,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             # disabled or not known any more
             is_known_connection: UserConnector | None = get_connection(user_connection_id)
             if not mode_create and (
-                not is_known_connection
-                or (is_known_connection and user_connection_id not in all_active_connections)
+                not is_known_connection or (user_connection_id not in all_active_connections)
             ):
                 user_connection_id = connection_id
                 user["connector"] = connection_id
@@ -1539,7 +1539,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         for key, params, plugin in self._active_sync_plugins():
             # sync_func doesn't expect UserSpec yet. In fact, it will access some LDAP-specific
             # attributes that aren't defined by UserSpec.
-            user.update(plugin.sync_func(self, key, params, user_id, ldap_user, user))  # type: ignore
+            user.update(plugin.sync_func(self, key, params, user_id, ldap_user, user))  # type: ignore[arg-type, typeddict-item]
 
     def _flush_caches(self):
         self._num_queries = 0
@@ -1785,7 +1785,13 @@ def register_user_attribute_sync_plugins() -> None:
                         ),
                     ],
                 ),
-                "sync_func": lambda self, connection, plugin, params, user_id, ldap_user, user: _ldap_sync_simple(
+                "sync_func": lambda self,
+                connection,
+                plugin,
+                params,
+                user_id,
+                ldap_user,
+                user: _ldap_sync_simple(
                     user_id, ldap_user, user, plugin, self.needed_attributes(connection, params)[0]
                 ),
             },
@@ -1900,7 +1906,7 @@ def _group_membership_parameters():
                 ),
                 # TODO typing: ListChoice doesn't actually allow None in the choice tuples
                 # (aka ListChoiceChoice), yet that's what we get here.
-                choices=lambda: _get_connection_choices(add_this=False),  # type: ignore
+                choices=lambda: _get_connection_choices(add_this=False),  # type: ignore[arg-type]
             ),
         ),
     ]

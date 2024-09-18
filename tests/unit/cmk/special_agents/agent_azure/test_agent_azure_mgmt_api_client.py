@@ -49,6 +49,7 @@ def test_get_available_metrics_from_exception(
     client = MgmtApiClient(
         _AuthorityURLs("login-url", "resource-url", "base-url"),
         EnvironmentProxyConfig(),
+        "subscription",
     )
 
     result = client._get_available_metrics_from_exception(desired_names, api_error, RESOURCE_ID)
@@ -80,6 +81,7 @@ def test_get_available_metrics_from_exception_error(
     client = MgmtApiClient(
         _AuthorityURLs("login-url", "resource-url", "base-url"),
         ExplicitProxyConfig("http://my-proxy:1234"),
+        "subscription",
     )
 
     with pytest.raises(ApiError, match=expected_error):

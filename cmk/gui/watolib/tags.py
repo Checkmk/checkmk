@@ -10,6 +10,10 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, TypeVar
 
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.i18n import _
+
 import cmk.utils.paths
 import cmk.utils.tags
 from cmk.utils.tags import BuiltinTagConfig, TagConfig, TagConfigSpec, TagGroup, TagGroupID, TagID
@@ -23,10 +27,6 @@ from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 from cmk.gui.watolib.rulesets import AllRulesets, Rule, RuleConditions, Ruleset
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.utils import format_php, multisite_dir, wato_root_dir
-
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.i18n import _
 
 
 class TagConfigFile(WatoSingleConfigFile[TagConfigSpec]):
@@ -96,8 +96,7 @@ def update_tag_config(tag_config: TagConfig) -> None:
             The tag config object to persist
 
     """
-    if user:
-        user.need_permission("wato.hosttags")
+    user.need_permission("wato.hosttags")
     TagConfigFile().save(tag_config.get_dict_format())
     _update_tag_dependencies()
     hooks.call("tags-changed")
@@ -132,10 +131,8 @@ def save_tag_group(tag_group: TagGroup) -> None:
 
 def is_builtin(ident: TagGroupID) -> bool:
     """Verify if a tag group is a built-in"""
-    if user:
-        user.need_permission("wato.hosttags")
-    tag_config = BuiltinTagConfig()
-    return tag_config.tag_group_exists(ident)
+    user.need_permission("wato.hosttags")
+    return BuiltinTagConfig().tag_group_exists(ident)
 
 
 def tag_group_exists(ident: TagGroupID, builtin_included: bool = False) -> bool:

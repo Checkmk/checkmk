@@ -32,28 +32,20 @@ from functools import partial
 from pathlib import Path
 from typing import Any, Callable, cast, Literal, overload
 
+import cmk.ccc.debug
+from cmk.ccc import store
+from cmk.ccc.exceptions import MKGeneralException
+
 import cmk.utils.paths
 from cmk.utils import log
 from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
-from cmk.utils.notify import (
-    create_spoolfile,
-    find_wato_folder,
-    log_to_history,
-    notification_message,
-    notification_result_message,
-    NotificationForward,
-    NotificationPluginName,
-    NotificationResultCode,
-    NotificationViaPlugin,
-)
+from cmk.utils.notify import find_wato_folder
 from cmk.utils.notify_types import (
     Contact,
     ContactName,
-    EnrichedEventContext,
-    EventContext,
     EventRule,
     HostEventType,
     is_always_bulk,
@@ -76,11 +68,20 @@ from cmk.utils.regex import regex
 from cmk.utils.timeout import MKTimeout, Timeout
 from cmk.utils.timeperiod import is_timeperiod_active, timeperiod_active, TimeperiodSpecs
 
-from cmk.base import events
+from cmk.events.event_context import EnrichedEventContext, EventContext
+from cmk.events.log_to_history import (
+    log_to_history,
+    notification_message,
+    notification_result_message,
+)
+from cmk.events.notification_result import NotificationPluginName, NotificationResultCode
+from cmk.events.notification_spool_file import (
+    create_spool_file,
+    NotificationForward,
+    NotificationViaPlugin,
+)
 
-import cmk.ccc.debug
-from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
+from cmk.base import events
 
 logger = logging.getLogger("cmk.base.notify")
 
@@ -436,7 +437,7 @@ def notify_notify(
 
     # Spool notification to remote host, if this is enabled
     if spooling in ("remote", "both"):
-        create_spoolfile(
+        create_spool_file(
             logger,
             Path(notification_spooldir),
             NotificationForward({"context": enriched_context, "forward": True}),
@@ -857,7 +858,10 @@ def _create_notifications(
         bulk = rbn_get_bulk_params(rule)
 
         final_parameters = rbn_finalize_plugin_parameters(
-            enriched_context["HOSTNAME"], plugin_name, host_parameters_cb, plugin_parameters
+            HostName(enriched_context["HOSTNAME"]),
+            plugin_name,
+            host_parameters_cb,
+            plugin_parameters,
         )
         notifications[key] = (not rule.get("allow_disable"), final_parameters, bulk)
 
@@ -897,7 +901,10 @@ def _process_notifications(
 
                 plugin_name, fallback_params = fallback_format
                 fallback_params = rbn_finalize_plugin_parameters(
-                    enriched_context["HOSTNAME"], plugin_name, host_parameters_cb, fallback_params
+                    HostName(enriched_context["HOSTNAME"]),
+                    plugin_name,
+                    host_parameters_cb,
+                    fallback_params,
                 )
                 plugin_context = create_plugin_context(
                     enriched_context, fallback_params, get_http_proxy
@@ -953,7 +960,7 @@ def _process_notifications(
                     if bulk:
                         do_bulk_notify(plugin_name, params, context, bulk)
                     elif spooling in ("local", "both"):
-                        create_spoolfile(
+                        create_spool_file(
                             logger,
                             Path(notification_spooldir),
                             NotificationViaPlugin({"context": context, "plugin": plugin_name}),

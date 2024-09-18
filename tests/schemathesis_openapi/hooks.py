@@ -200,9 +200,9 @@ def hook_before_load_schema(  # pylint: disable=too-many-branches
             and schemas[schema_name]["additionalProperties"].get("type") == "string"
             and not schemas[schema_name]["additionalProperties"].get("pattern")
         ):
-            schemas[schema_name]["additionalProperties"][
-                "pattern"
-            ] = settings.default_string_pattern
+            schemas[schema_name]["additionalProperties"]["pattern"] = (
+                settings.default_string_pattern
+            )
 
     # PATH modifications
     # ignore some endpoints (via deprecating them) to avoid failures during parametrization

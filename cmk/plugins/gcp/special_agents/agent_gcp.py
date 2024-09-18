@@ -22,6 +22,8 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build, Resource  # type: ignore[import-untyped]
 from googleapiclient.http import HttpError, HttpRequest  # type: ignore[import-untyped]
 
+from cmk.plugins.gcp.lib.constants import Extractors
+
 # Those are enum classes defined in the Aggregation class. Not nice but works
 Aligner = GoogleAggregation.Aligner
 Reducer = GoogleAggregation.Reducer
@@ -476,7 +478,9 @@ def run_metrics(client: ClientProtocol, services: Iterable[Service]) -> Iterator
 
 def gather_assets(client: ClientProtocol) -> Sequence[Asset]:
     request = asset_v1.ListAssetsRequest(
-        parent=f"projects/{client.project}", content_type=asset_v1.ContentType.RESOURCE
+        parent=f"projects/{client.project}",
+        content_type=asset_v1.ContentType.RESOURCE,
+        asset_types=list(Extractors),
     )
     all_assets = client.list_assets(request)
     return [Asset(a) for a in all_assets]

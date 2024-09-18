@@ -12,8 +12,10 @@
 # warnings.simplefilter("error", RemovedInMarshmallow4Warning)
 
 
-from marshmallow.fields import missing_  # type: ignore[attr-defined]
-from marshmallow.fields import Field
+from marshmallow.fields import (  # type: ignore[attr-defined]
+    Field,
+    missing_,
+)
 
 from cmk.gui.fields.attributes import (
     HostAttributeManagementBoardField,

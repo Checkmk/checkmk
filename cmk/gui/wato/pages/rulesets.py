@@ -91,9 +91,11 @@ from cmk.gui.utils.urls import (
     makeuri,
     makeuri_contextless,
 )
-from cmk.gui.valuespec import Checkbox, Dictionary, DropdownChoice, FixedValue
-from cmk.gui.valuespec import LabelGroups as VSLabelGroups
 from cmk.gui.valuespec import (
+    Checkbox,
+    Dictionary,
+    DropdownChoice,
+    FixedValue,
     ListChoice,
     ListOfStrings,
     RegExp,
@@ -103,6 +105,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
     ValueSpecText,
 )
+from cmk.gui.valuespec import LabelGroups as VSLabelGroups
 from cmk.gui.view_utils import render_label_groups
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.check_mk_automations import analyse_service, get_check_information
@@ -311,14 +314,7 @@ class ABCRulesetMode(WatoMode):
                 forms.container()
 
                 for ruleset in group_rulesets:
-                    float_cls = (
-                        []
-                        if active_config.wato_hide_help_in_lists
-                        else ["nofloat" if user.show_help else "float"]
-                    )
-                    html.open_div(
-                        class_=["ruleset"] + float_cls, title=strip_tags(ruleset.help() or "")
-                    )
+                    html.open_div(class_=["ruleset"], title=strip_tags(ruleset.help() or ""))
                     html.open_div(class_="text")
 
                     url_vars: HTTPVariables = [
@@ -346,9 +342,6 @@ class ABCRulesetMode(WatoMode):
                         num_rules_txt,
                         class_=["rulecount", "nonzero" if ruleset.is_empty() else "zero"],
                     )
-                    if not active_config.wato_hide_help_in_lists and ruleset.help():
-                        html.help(ruleset.help())
-
                     html.close_div()
                 forms.end()
 
@@ -2139,7 +2132,7 @@ class ABCEditRuleMode(WatoMode):
         return "_vue_edit_rule"
 
     def page(self) -> None:
-        call_hooks("ruleset_banner", self._ruleset.name)
+        call_hooks("rmk_ruleset_banner", self._ruleset.name)
 
         help_text = self._ruleset.help()
         if help_text:
@@ -2187,6 +2180,7 @@ class ABCEditRuleMode(WatoMode):
             show_more_toggle=valuespec.has_show_more(),
         )
         forms.section()
+        html.form_has_submit_button = True
         html.prevent_password_auto_completion()
         try:
             # Experimental rendering: Only render form_spec if they are in the form_spec_registry

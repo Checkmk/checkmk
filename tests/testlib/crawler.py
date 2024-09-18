@@ -179,10 +179,8 @@ class Crawler:
             "text/x-sh",
         }
 
-        # override value using environment-variable
-        maxlen = int(os.environ.get("GUI_CRAWLER_URL_LIMIT", "0")) or max_urls
         # limit minimum value to 0.
-        self._max_urls = max(0, maxlen)
+        self._max_urls = max(0, max_urls)
         self._todos = deque([Url(self.site.internal_url)])
 
     async def crawl(self, max_tasks: int) -> None:
@@ -627,12 +625,7 @@ class Crawler:
         testsuite.attrib["time"] = f"{self.duration:.3f}"
         testsuite.attrib["timestamp"] = time.strftime("%Y-%m-%dT%H:%M:%S")
 
-        report_file_path = Path(self.report_file)
-        try:
-            report_file_path.write_bytes(etree.tostring(root, pretty_print=True))
-        except PermissionError:
-            # write to the current directory when no permissions to write to the site directory
-            Path(report_file_path.name).write_bytes(etree.tostring(root, pretty_print=True))
+        self.report_file.write_bytes(etree.tostring(root, pretty_print=True))
 
 
 class XssCrawler(Crawler):

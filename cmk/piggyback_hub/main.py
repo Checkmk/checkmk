@@ -15,17 +15,17 @@ from logging.handlers import WatchedFileHandler
 from pathlib import Path
 from types import FrameType
 
-from cmk.utils.daemon import daemonize, pid_file_lock
+from cmk.ccc.daemon import daemonize, pid_file_lock
+
+from cmk.piggyback_hub.config import PiggybackConfig, save_config
+from cmk.piggyback_hub.payload import PiggybackPayload, save_payload, SendingPayloadThread
+from cmk.piggyback_hub.utils import ReceivingThread, SignalException
 
 VERBOSITY_MAP = {
     0: logging.INFO,
     1: 15,
     2: logging.DEBUG,
 }
-
-
-class SignalException(Exception):
-    pass
 
 
 @dataclass
@@ -93,8 +93,24 @@ def _register_signal_handler() -> None:
 
 
 def run_piggyback_hub(logger: logging.Logger, omd_root: Path) -> None:
-    while True:
-        time.sleep(5)
+    # TODO: remove this loop when rabbitmq available in site
+    for _ in range(1_000_000):
+        time.sleep(1_000)
+
+    receiving_thread = ReceivingThread(
+        logger, omd_root, PiggybackPayload, save_payload(logger, omd_root), "payload"
+    )
+    sending_thread = SendingPayloadThread(logger, omd_root)
+    receive_config_thread = ReceivingThread(
+        logger, omd_root, PiggybackConfig, save_config(logger, omd_root), "config"
+    )
+
+    receiving_thread.start()
+    sending_thread.start()
+    receive_config_thread.start()
+    receiving_thread.join()
+    sending_thread.join()
+    receive_config_thread.join()
 
 
 def main(argv: list[str] | None = None) -> int:

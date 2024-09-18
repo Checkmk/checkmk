@@ -1,0 +1,20 @@
+title: MySQL: Replica/Slave Sync Status
+agents: linux
+catalog: app/mysql
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the synchronsiation state of MySQL replica/slave databases.
+
+ This check needs the agent plug-in {mk_mysql} to be installed on the
+ monitored database server. Further details about this plug-in and
+ monitoring of MySQL can be found in the Checkmk online documentation
+ in the article "Monitoring MySQL with Checkmk".
+
+ When upgraded to MySQL 8.0, the summary will containg Replica instead of Slave.
+item:
+ Name of the instance
+
+discovery:
+ One service is created for each instance on each host where the agent plugin
+ {mk_mysql} is installed and the MySQL daemon is running.

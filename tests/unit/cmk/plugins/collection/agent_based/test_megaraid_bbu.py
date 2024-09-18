@@ -78,9 +78,7 @@ BBU GasGauge Status: 0x6ef7
 Pack energy : 247 J
 Capacitance : 110
 Remaining reserve space : 0
-""".split(
-                "\n"
-            )
+""".split("\n")
             if line
         ]
     )

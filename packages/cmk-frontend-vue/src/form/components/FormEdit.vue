@@ -1,3 +1,8 @@
+<!--
+Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+conditions defined in the file COPYING, which is part of this source code package.
+-->
 <script setup lang="ts">
 import FormInteger from '@/form/components/forms/FormInteger.vue'
 import FormFloat from '@/form/components/forms/FormFloat.vue'
@@ -15,7 +20,14 @@ import FormMultilineText from '@/form/components/forms/FormMultilineText.vue'
 import FormHelp from '@/form/components/FormHelp.vue'
 import FormDataSize from '@/form/components/forms/FormDataSize.vue'
 import FormCatalog from '@/form/components/forms/FormCatalog.vue'
+import FormTimeSpan from '@/form/components/forms/FormTimeSpan.vue'
 import type { ValidationMessages } from '@/form/components/utils/validation'
+import FormMultipleChoice from '@/form/components/forms/FormMultipleChoice.vue'
+import FormPassword from './forms/FormPassword.vue'
+import FormTuple from '@/form/components/forms/FormTuple.vue'
+import FormOptionalChoice from '@/form/components/forms/FormOptionalChoice.vue'
+import FormSimplePassword from '@/form/components/forms/FormSimplePassword.vue'
+import FormCommentTextArea from './forms/FormCommentTextArea.vue'
 
 const props = defineProps<{
   spec: FormSpec
@@ -35,10 +47,17 @@ const components: Record<Components['type'], unknown> = {
   list: FormList,
   legacy_valuespec: FormLegacyValueSpec,
   fixed_value: FormFixedValue,
+  time_span: FormTimeSpan,
   boolean_choice: FormBooleanChoice,
   multiline_text: FormMultilineText,
+  comment_text_area: FormCommentTextArea,
+  multiple_choice: FormMultipleChoice,
+  password: FormPassword,
   data_size: FormDataSize,
-  catalog: FormCatalog
+  catalog: FormCatalog,
+  tuple: FormTuple,
+  optional_choice: FormOptionalChoice,
+  simple_password: FormSimplePassword
 }
 
 function getComponent(): IComponent {
@@ -51,7 +70,7 @@ function getComponent(): IComponent {
 </script>
 
 <template>
-  <div>
+  <span>
     <FormHelp :help="spec.help" />
     <component
       :is="getComponent()"
@@ -59,5 +78,5 @@ function getComponent(): IComponent {
       :backend-validation="backendValidation"
       :spec="spec"
     />
-  </div>
+  </span>
 </template>

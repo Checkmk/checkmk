@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._active_checks import ActiveCheck, ActiveServiceData
-from ._commons import SpecialAgentInfoFunctionResult
+from ._commons import ConfigSet, SpecialAgentInfoFunctionResult, SSCRules
 from ._loading import load_active_checks, load_special_agents
 from ._special_agents import SpecialAgent, SpecialAgentCommandLine
 
@@ -16,4 +16,6 @@ __all__ = [
     "SpecialAgent",
     "SpecialAgentCommandLine",
     "SpecialAgentInfoFunctionResult",
+    "SSCRules",
+    "ConfigSet",
 ]

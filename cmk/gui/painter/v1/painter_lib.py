@@ -6,14 +6,14 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Generic, TypeVar
 
+import cmk.ccc.plugin_registry
+
 import cmk.utils
 
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import ColumnName, PainterParameters, Rows
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.view_utils import CellSpec
-
-import cmk.ccc.plugin_registry
 
 T = TypeVar("T")
 
@@ -28,7 +28,7 @@ class PainterConfiguration:
 
 
 def strip_css_from_cell_spec(
-    html_formatter: Callable[[T, PainterConfiguration], CellSpec]
+    html_formatter: Callable[[T, PainterConfiguration], CellSpec],
 ) -> Callable[[T, PainterConfiguration], str]:
     def css_remover(painter_data: T, painter_configuration: PainterConfiguration) -> str:
         return str(html_formatter(painter_data, painter_configuration)[1])

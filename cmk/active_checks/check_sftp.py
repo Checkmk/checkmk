@@ -16,6 +16,7 @@ import paramiko
 from pydantic import BaseModel
 
 from cmk.utils import password_store
+from cmk.utils.ssh_client import get_ssh_client
 
 _LOCAL_DIR = "var/check_mk/active_checks/check_sftp"
 
@@ -49,7 +50,6 @@ class Args(BaseModel):
 
 
 def parse_arguments(sys_args: Sequence[str]) -> Args:
-
     parser = argparse.ArgumentParser(prog=__doc__)
 
     parser.add_argument("--host", default="localhost", help="SFTP server address")
@@ -290,11 +290,16 @@ def main() -> int:
     args = parse_arguments(sys.argv[1:])
 
     try:
-        check = CheckSftp(paramiko.SSHClient(), omd_root, args)
+        check = CheckSftp(get_ssh_client(), omd_root, args)
     except SecurityError as e:
         if args.debug:
             raise
         output_check_result(f"Security issue detected: {e}")
+        return 2
+    except paramiko.ssh_exception.BadHostKeyException as e:
+        if args.debug:
+            raise
+        output_check_result(str(e))
         return 2
     except Exception:
         if args.debug:

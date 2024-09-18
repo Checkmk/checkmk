@@ -2,15 +2,14 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Classes used by the API for check plug-ins
-"""
+"""Classes used by the API for check plug-ins"""
 
 from __future__ import annotations
 
 import enum
 import sys
 from collections.abc import Iterable, Mapping, Sequence
-from typing import NamedTuple, overload, Self
+from typing import NamedTuple, overload, override, Self
 
 # we may have 0/None for min/max for instance.
 _OptionalPair = tuple[float | None, float | None] | None
@@ -25,9 +24,11 @@ class _EvalableFloat(float):
     """Extends the float representation for Infinities in such way that
     they can be parsed by eval"""
 
+    @override
     def __str__(self) -> str:
         return super().__repr__()
 
+    @override
     def __repr__(self) -> str:
         if self > sys.float_info.max:
             return f"1e{sys.float_info.max_10_exp + 1}"
@@ -55,6 +56,7 @@ class HostLabel(_KV):
             raise TypeError(f"Invalid label value given: Expected string (got {value!r})")
         return super().__new__(cls, name, value)
 
+    @override
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self.name!r}, {self.value!r})"
 
@@ -78,6 +80,7 @@ class ServiceLabel(_KV):
             raise TypeError(f"Invalid label value given: Expected string (got {value!r})")
         return super().__new__(cls, name, value)
 
+    @override
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self.name!r}, {self.value!r})"
 
@@ -139,10 +142,11 @@ class Service(_ServiceTuple):
     def _parse_labels(labels: Sequence[ServiceLabel] | None) -> Sequence[ServiceLabel]:
         if not labels:
             return []
-        if isinstance(labels, list) and all(isinstance(l, ServiceLabel) for l in labels):
+        if isinstance(labels, list) and all(isinstance(label, ServiceLabel) for label in labels):
             return labels
         raise TypeError(f"'labels' must be list of ServiceLabels or None, got {labels!r}")
 
+    @override
     def __repr__(self) -> str:
         args = ", ".join(
             f"{k}={v!r}"
@@ -316,6 +320,7 @@ class Metric(_MetricTuple):
             cls._sanitize_single_value(field, values[1]),
         )
 
+    @override
     def __repr__(self) -> str:
         levels = "" if self.levels == (None, None) else f", levels={self.levels!r}"
         boundaries = "" if self.boundaries == (None, None) else f", boundaries={self.boundaries!r}"
@@ -408,6 +413,7 @@ class Result(_ResultTuple):
             details=details,
         )
 
+    @override
     def __repr__(self) -> str:
         if not self.summary:
             text_args = f"notice={self.details!r}"
@@ -494,12 +500,15 @@ class IgnoreResults:
     def __init__(self, value: str = "currently no results") -> None:
         self._value = value
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self._value!r})"
 
+    @override
     def __str__(self) -> str:
         return self._value if isinstance(self._value, str) else repr(self._value)
 
+    @override
     def __eq__(self, other: object) -> bool:
         return isinstance(other, IgnoreResults) and self._value == other._value
 

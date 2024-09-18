@@ -20,6 +20,9 @@ from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
+import cmk.ccc.debug
+import cmk.ccc.version as cmk_version
+
 from cmk.utils import paths
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -29,8 +32,6 @@ from cmk.checkengine.discovery import AutocheckEntry
 
 from cmk.base import config, core_nagios, server_side_calls
 
-import cmk.ccc.debug
-import cmk.ccc.version as cmk_version
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig
 
@@ -260,6 +261,8 @@ def test_create_nagios_host_spec(
     if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
         result = result.copy()
         result["_CUSTOMER"] = "provider"
+        result["__LABELSOURCE_cmk/customer"] = "discovered"
+        result["__LABEL_cmk/customer"] = "provider"
 
     ts = Scenario()
     ts.add_host(HostName("localhost"))
@@ -481,7 +484,7 @@ MOCK_PLUGIN = ActiveCheckConfig(
             "# Active checks\n"
             "define service {\n"
             "  active_checks_enabled         1\n"
-            '  check_command                 check-mk-custom!echo "CRIT - Failed to lookup IP address and no explicit IP address configured"; exit 2\n'
+            "  check_command                 check_mk_active-my_active_check!'Failed to lookup IP address and no explicit IP address configured'\n"
             "  check_interval                1.0\n"
             "  host_name                     my_host\n"
             "  service_description           Active check of my_host\n"

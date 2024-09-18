@@ -2,6 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from cmk.ccc.site import omd_site
+
 import cmk.gui.utils
 import cmk.gui.view_utils
 from cmk.gui import visuals
@@ -42,8 +44,6 @@ from cmk.gui.views.page_show_view import (
 from cmk.gui.views.store import get_permitted_views
 from cmk.gui.visuals import get_only_sites_from_context, view_title
 from cmk.gui.visuals.filter import Filter
-
-from cmk.ccc.site import omd_site
 
 HeaderButton = tuple[str, str, str] | tuple[str, str, str, str]
 Items = list[tuple[str, str, str]]

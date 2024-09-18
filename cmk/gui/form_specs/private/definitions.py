@@ -10,7 +10,13 @@ from typing import Any, Generic, TypeVar
 from cmk.gui.valuespec import ValueSpec
 
 from cmk.rulesets.v1 import Help, Label, Message, Title
-from cmk.rulesets.v1.form_specs import DefaultValue, FormSpec, InputHint, InvalidElementValidator
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    FormSpec,
+    InputHint,
+    InvalidElementValidator,
+)
+from cmk.rulesets.v1.form_specs._basic import MultilineText
 
 T = TypeVar("T")
 
@@ -58,3 +64,8 @@ class SingleChoiceExtended(Generic[T], FormSpec[T]):
     type: type[T]
 
     # TODO: copy the code of the post init function?
+
+
+@dataclass(frozen=True, kw_only=True)
+class CommentTextArea(MultilineText):
+    pass

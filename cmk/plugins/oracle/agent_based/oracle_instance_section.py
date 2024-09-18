@@ -166,8 +166,8 @@ def parse_oracle_instance(string_table: StringTable) -> Section:
             # ORA-99999 tnsping failed for +ASM1
             and not (line[0].startswith("ORA-") and line[0][4].isdigit() and len(line[0]) < 16)
             and not len(line) == 1
-            and (data := _parse_agent_line(line))
         )
+        for data in [_parse_agent_line(line)]
     }
 
 

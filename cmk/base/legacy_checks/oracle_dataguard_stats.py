@@ -60,9 +60,12 @@ def check_oracle_dataguard_stats(item, params, parsed):  # pylint: disable=too-m
             if dgdata["fs_failover_observer_present"] != "YES":
                 yield 2, "Observer not connected"
             else:
-                yield 0, "Observer connected {} from host {}".format(
-                    dgdata["fs_failover_observer_present"].lower(),
-                    dgdata["fs_failover_observer_host"],
+                yield (
+                    0,
+                    "Observer connected {} from host {}".format(
+                        dgdata["fs_failover_observer_present"].lower(),
+                        dgdata["fs_failover_observer_host"],
+                    ),
                 )
 
                 if (
@@ -91,9 +94,11 @@ def check_oracle_dataguard_stats(item, params, parsed):  # pylint: disable=too-m
                 primary_broker_state = params.get("primary_broker_state")
                 if primary_broker_state or dgdata["broker_state"].lower() == "enabled":
                     # We need primary_broker_state False for Data-Guards without Broker
-                    yield 2, "Switchover to standby not possible! reason: %s" % dgdata[
-                        "switchover_status"
-                    ].lower()
+                    yield (
+                        2,
+                        "Switchover to standby not possible! reason: %s"
+                        % dgdata["switchover_status"].lower(),
+                    )
                 else:
                     yield 0, "Switchoverstate ignored "
 
@@ -102,9 +107,10 @@ def check_oracle_dataguard_stats(item, params, parsed):  # pylint: disable=too-m
             if dgdata["switchover_status"] in ("SYNCHRONIZED", "NOT ALLOWED", "SESSIONS ACTIVE"):
                 yield 0, "Switchover to primary possible"
             else:
-                yield 2, "Switchover to primary not possible! reason: %s" % dgdata[
-                    "switchover_status"
-                ]
+                yield (
+                    2,
+                    "Switchover to primary not possible! reason: %s" % dgdata["switchover_status"],
+                )
 
     if dgdata["database_role"] != "PHYSICAL STANDBY":
         return

@@ -4,25 +4,27 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Managing the available automation calls"""
 
-import abc
-from typing import Any
-
-from cmk.utils import paths
-from cmk.utils.licensing.registry import get_license_state
+from abc import ABC, abstractmethod
+from typing import Generic, TypeVar
 
 import cmk.ccc.plugin_registry
 import cmk.ccc.version as cmk_version
 
+from cmk.utils import paths
+from cmk.utils.licensing.registry import get_license_state
 
-class AutomationCommand(abc.ABC):
+T = TypeVar("T")
+
+
+class AutomationCommand(ABC, Generic[T]):
     """Abstract base class for all automation commands"""
 
-    @abc.abstractmethod
+    @abstractmethod
     def command_name(self) -> str:
         raise NotImplementedError()
 
-    @abc.abstractmethod
-    def get_request(self) -> Any:
+    @abstractmethod
+    def get_request(self) -> T:
         """Get request variables from environment
 
         In case an automation command needs to read variables from the HTTP request this has to be done
@@ -30,8 +32,8 @@ class AutomationCommand(abc.ABC):
         """
         raise NotImplementedError()
 
-    @abc.abstractmethod
-    def execute(self, api_request: Any) -> Any:
+    @abstractmethod
+    def execute(self, api_request: T) -> object:
         raise NotImplementedError()
 
 
@@ -43,7 +45,7 @@ class AutomationCommandRegistry(cmk.ccc.plugin_registry.Registry[type[Automation
 automation_command_registry = AutomationCommandRegistry()
 
 
-class AutomationPing(AutomationCommand):
+class AutomationPing(AutomationCommand[None]):
     def command_name(self) -> str:
         return "ping"
 

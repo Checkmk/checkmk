@@ -6,6 +6,8 @@
 
 from tests.testlib.rest_api_client import ClientRegistry
 
+from cmk.gui.userdb.ldap_connector import LDAPUserConnector
+
 
 # LDAP API Schema Example
 def ldap_api_schema(ldap_id: str) -> dict:
@@ -35,7 +37,7 @@ def ldap_api_schema(ldap_id: str) -> dict:
             "ldap_version": {"state": "enabled", "version": 3},
             "page_size": {"state": "enabled", "size": 1000},
             "response_timeout": {"state": "enabled", "seconds": 60},
-            "connection_suffix": {"state": "enabled", "suffix": "dc=corp,dc=de"},
+            "connection_suffix": {"state": "enabled", "suffix": f"suffix_{ldap_id}"},
         },
         "users": {
             "user_base_dn": "ou=Benutzer,dc=corp,dc=de",
@@ -256,6 +258,32 @@ def test_get_ldap_connections(clients: ClientRegistry) -> None:
     assert resp.json["value"][3]["extensions"] == cnx4
 
 
+def test_list_ldap_connections_include_links(clients: ClientRegistry) -> None:
+    create_ldap_connections(clients)
+    default_response = clients.LdapConnection.get_all()
+    enabled_response = clients.LdapConnection.get_all(include_links=True)
+    disabled_response = clients.LdapConnection.get_all(include_links=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == enabled_response.json
+    assert any(bool(value["links"]) for value in enabled_response.json["value"])
+    assert all(value["links"] == [] for value in disabled_response.json["value"])
+
+
+def test_list_ldap_connections_include_extensions(clients: ClientRegistry) -> None:
+    create_ldap_connections(clients)
+    default_response = clients.LdapConnection.get_all()
+    enabled_response = clients.LdapConnection.get_all(include_extensions=True)
+    disabled_response = clients.LdapConnection.get_all(include_extensions=False)
+
+    assert len(default_response.json["value"]) > 0
+
+    assert default_response.json == enabled_response.json
+    assert any(bool(value["extensions"]) for value in enabled_response.json["value"])
+    assert all("extensions" not in value for value in disabled_response.json["value"])
+
+
 def test_create_ldap_connection_existing_id(clients: ClientRegistry) -> None:
     create_ldap_connections(clients)
     clients.LdapConnection.create(
@@ -333,3 +361,51 @@ def test_edit_ldap_connection_invalid_etag(clients: ClientRegistry) -> None:
         etag="invalid_etag",
         expect_ok=False,
     ).assert_status_code(412)
+
+
+def test_cant_create_with_the_same_suffix(clients: ClientRegistry) -> None:
+    clients.LdapConnection.create(
+        ldap_data={
+            "general_properties": {"id": "LDAP_1"},
+            "ldap_connection": {
+                "directory_type": {
+                    "type": "active_directory_manual",
+                    "ldap_server": "10.200.3.32",
+                },
+                "connection_suffix": {"state": "enabled", "suffix": "suffix_1"},
+            },
+        }
+    )
+    clients.LdapConnection.create(
+        ldap_data={
+            "general_properties": {"id": "LDAP_2"},
+            "ldap_connection": {
+                "directory_type": {
+                    "type": "active_directory_manual",
+                    "ldap_server": "10.200.3.33",
+                },
+                "connection_suffix": {"state": "enabled", "suffix": "suffix_1"},
+            },
+        },
+        expect_ok=False,
+    ).assert_status_code(400)
+
+
+def test_update_ldap_suffixes_after_delete(clients: ClientRegistry) -> None:
+    LDAPUserConnector.connection_suffixes = {}
+    clients.LdapConnection.create(
+        ldap_data={
+            "general_properties": {"id": "LDAP_1"},
+            "ldap_connection": {
+                "directory_type": {
+                    "type": "active_directory_manual",
+                    "ldap_server": "10.200.3.32",
+                },
+                "connection_suffix": {"state": "enabled", "suffix": "suffix_1"},
+            },
+        }
+    )
+
+    assert LDAPUserConnector.get_connection_suffixes() == {"suffix_1": "LDAP_1"}
+    clients.LdapConnection.delete(ldap_connection_id="LDAP_1").assert_status_code(204)
+    assert not LDAPUserConnector.get_connection_suffixes()

@@ -22,6 +22,17 @@ set -e
 
 ROOT_DIR="$(dirname "$(dirname "$(realpath "$0")")")"
 
+if ! command -v bazel &>/dev/null; then
+    cat <<EOF
+bazel command not found in PATH. Please install bazelisk via:
+https://github.com/bazelbuild/bazelisk?tab=readme-ov-file#installation
+
+or use the installation script:
+./buildscripts/infrastructure/build-nodes/scripts/install-development.sh --profile bazel --only
+EOF
+    exit 1
+fi
+
 ACTION="$1"
 TARGET=("${@:2}")
 TARGET_S1=$(echo "${TARGET[-1]}" | sed -e 's/\/\///g' -e 's/@//g' -e 's/:/_/g' -e 's/\//_/g')
@@ -87,8 +98,10 @@ bazel "${ACTION}" \
     ${BAZEL_CONFIG_ARGS} \
     --execution_log_json_file="${EXECUTION_LOG_FILE_NAME}" \
     --action_env=SYSTEM_DIGEST="$SYSTEM_DIGEST" \
+    --action_env=CMK_BASE_BRANCH="master" \
     ${RUSTUP_HOME:+--action_env=RUSTUP_HOME="$RUSTUP_HOME"} \
     --host_action_env=SYSTEM_DIGEST="$SYSTEM_DIGEST" \
+    --host_action_env=CMK_BASE_BRANCH="master" \
     ${RUSTUP_HOME:+--host_action_env=RUSTUP_HOME="$RUSTUP_HOME"} \
     "${BAZEL_REMOTE_CACHE_ARGUMENT}" \
     ${BAZEL_EXTRA_ARGS} \

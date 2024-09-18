@@ -34,11 +34,9 @@ def parse_netapp_ontap_environment(section: StringTable) -> Section:
     return {
         f"{discriminator.sensor.node_name} / {discriminator.sensor.name}": discriminator.sensor
         for line in section
-        if (
-            discriminator := models.DiscrimnatorEnvSensorModel.model_validate(
-                {"sensor": json.loads(line[0])}
-            )
-        )
+        for discriminator in [
+            models.DiscrimnatorEnvSensorModel.model_validate({"sensor": json.loads(line[0])})
+        ]
     }
 
 

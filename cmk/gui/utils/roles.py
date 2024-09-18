@@ -70,6 +70,14 @@ def may_with_roles(some_role_ids: list[str], pname: str) -> bool:
     return False
 
 
+def is_two_factor_required(user_id: UserId) -> bool:
+    users_roles = roles_of_user(user_id)
+
+    return any(
+        active_config.roles.get(role_id, {}).get("two_factor", False) for role_id in users_roles
+    )
+
+
 def is_user_with_publish_permissions(
     for_type: Literal["visual", "pagetype"],
     user_id: UserId | None,

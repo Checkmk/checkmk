@@ -8,14 +8,14 @@ from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Any, cast, Literal, NotRequired, TypedDict
 
+from cmk.ccc import store
+
 from cmk.utils.config_validation_layer.user_connections import PrivateKeyPath, PublicKeyPath
 
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoListConfigFile
 from cmk.gui.watolib.utils import multisite_dir
-
-from cmk.ccc import store
 
 from ._connector import ConnectorType, user_connector_registry, UserConnectionConfig, UserConnector
 

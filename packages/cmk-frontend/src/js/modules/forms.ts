@@ -482,7 +482,7 @@ export function confirm_link(
             document.createElement("input"),
             {
                 type: "hidden",
-                name: "csrf_token",
+                name: "_csrf_token",
                 value: global_csrf_token,
             }
         );

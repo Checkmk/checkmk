@@ -1,7 +1,5 @@
 # Contributing to Checkmk
 
-> ⚠️ Due to our development for 2.4, we are not processing any pull requests until the 1st of September. We are still interested in your contributions and will review them after this date (see [forum post](https://forum.checkmk.com/t/update-on-github-pull-requests/47922)).
-
 Thanks for your interest to contribute to [Checkmk on Github](https://github.com/Checkmk/checkmk)!
 
 Here are some ways you can help out:
@@ -162,7 +160,7 @@ Once done, you are ready for the next chapter.
 
     On GitHub in your browser, submit a pull request from your `my-feature-branch` to the official Checkmk branch you forked from.
 
-    The Travis CI bot will start testing your commits for issues.
+    The Github Actions CI bot will start testing your commits for issues.
     In case there are issues, it will send you a mail and ask you to [fix the issues](#help-i-need-to-change-my-commits).
 
 ### Help: I have a conflict
@@ -187,7 +185,7 @@ $ git pull --rebase upstream master
 
 ### Help: I need to change my commits
 
-In case Travis notifies you about issues or the reviewer asks you to change your code, you will have to rework your commits.
+In case Github Actions notifies you about issues or the reviewer asks you to change your code, you will have to rework your commits.
 Be sure, we don't want to upset you :-).
 
 There are several ways to update your changes in Git.
@@ -197,10 +195,10 @@ This article on [how to amend a commit](https://www.burntfen.com/2015-10-30/how-
 
 ## How to execute tests
 
-The public repository of [Checkmk](https://github.com/Checkmk/checkmk) is integrated with Travis CI.
-Each time a Pull request is submitted, Travis will have a look at the changes.
+The public repository of [Checkmk](https://github.com/Checkmk/checkmk) is integrated with Github Actions CI.
+Each time a Pull request is submitted, Github Actions will have a look at the changes.
 
-**⚠ Important:** We only review PRs that are confirmed to be OK by Travis.
+**⚠ Important:** We only review PRs that are confirmed to be OK by Github Actions.
 If a check failed, please fix it and update the PR.
 PRs will be closed if the author didn't respond for at least 14 days.
 
@@ -215,14 +213,10 @@ $ make -C tests test-format-python
 $ make -C tests test-mypy-raw
 ```
 
-Some of these commands take several minutes, for example the command `test-format-python` because it tests the formatting of the whole code base.
-Normally you only change a small set of files in your commits.
-If you execute `black [filename]` to format the changed code, this should be enough and you don't need to execute the formatting test at all.
-
-> We highly recommend integrating black, isort, pylint and mypy into the editor you work with.
+> We highly recommend integrating ruff, pylint and mypy into the editor you work with.
 > Most editors will notify you about issues the moment you edit the code.
 
-You could also push your changes to your forked repository and wait for Travis to execute the tests for you, but that takes several minutes for each try.
+You could also push your changes to your forked repository and wait for Github Actions to execute the tests for you, but that takes several minutes for each try.
 
 ## Style guide
 
@@ -462,53 +456,38 @@ def worst_service_state(*states: int, default: int) -> int:
 
 * We supply an `.editorconfig` file, which is used to automatically configure your editor to adhere to the most basic formatting style, like indents or line-lengths.
   If your editor doesn't already come with Editorconfig support, install [one of the available plugins](https://editorconfig.org/#download).
-* We use Black for automatic formatting of the Python code.
+* We use [`ruff`](https://docs.astral.sh/ruff/) for automatic formatting of the Python code.
   Have a look [below](#automatic-formatting) for further information.
-* We use isort for automatic sorting of imports in Python code.
+* We use also `ruff` for automatic sorting of imports in Python code.
 
-### Automatic formatting with black and isort
+### Automatic formatting/sorting with ruff
 
-The black configuration file, `pyproject.toml`, lives in the root directory of the project repository, where Black picks it up automatically.
-Black itself lives in a virtualenv managed by pipenv in `check_mk/.venv`, you can run it with `make format-python-black` or `scripts/run-pipenv run black`.
+The `ruff` configuration file, `pyproject.toml`, lives in the root directory of the project repository, where `ruff` picks it up automatically.
+`ruff` itself lives in a virtualenv managed by pipenv in `check_mk/.venv`, you can run it with `make format-python`.
 
-The imports are also sorted with isort.
-Configuration is in `pyproject.toml` file in the root directory of the project repository.
-If you have isort installed in you virtualenv you can run it with `make format-python-isort`
+This make target will then format your code base as well as sort the import statements.
 
-#### Manual black invocation: Single file
+*NOTE*: You will also find other `pyproject.toml` files in our code base (at the time of writing, e.g. under `packges/cmk-*`).
+Those are individual project settings for our own python packages and may differ from the top-level `pyproject.toml`.
+
+#### Manual ruff formatting invocation: Single file
 
 ```console
-black [the_file.py]
+ruff format [the_file.py]
 ```
 
-#### Manual isort invocation: Single file
+#### Manual ruff import sorting invocation: Single file
 
 ```console
-$ isort [the_file.py]
+$ run ruff check --select I --fix [the_file.py]
 
 # or with pre-commit installed
-$ pre-commit run isort
-```
-
-#### Manual black invocation: Whole code base
-
-If you want to black format all Python files in the repository, you can run:
-
-```console
-$ make format-python-black
-```
-
-#### Manual isort invocation: Whole code base
-
-If you want to isort format all Python files in the repository, you can run:
-
-```console
-$ make format-python-isort
+$ pre-commit run ruff
 ```
 
 #### Integration with CI
 
-Our CI executes black and isort formatting test on the whole code base:
+Our CI executes `ruff` formatting/sorting test on the whole code base:
 
 ```console
 $ make -C tests test-format-python
@@ -516,9 +495,9 @@ $ make -C tests test-format-python
 
 Our review tests jobs prevent un-formatted code from being added to the repository.
 
-#### Editor integration with black:
+#### Editor integration with ruff:
 
-[Black editor integration](https://black.readthedocs.io/en/stable/integrations/editors.html)
+[Ruff editor integration](https://docs.astral.sh/ruff/editors/)
 
 ### Type checking: mypy
 
@@ -952,8 +931,8 @@ Some of them are:
 
 ### Consistency
 
-Be consistent in the terms you use for a thing.
-E.g. in case for a server one could say something like "host", "system", "server" or "device".
+Be consistent in the terms you use for a thing,
+e.g. in case of a server one could say something like "host", "system", "server" or "device".
 Decide to use one name for one thing and use it consistently in all translations.
 
 ## Copyright and Licensing

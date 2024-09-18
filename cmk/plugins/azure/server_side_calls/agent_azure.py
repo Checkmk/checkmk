@@ -45,7 +45,6 @@ class AzureParams(BaseModel):
     services: list[str]
     config: Config
     piggyback_vms: str | None = None
-    sequential: str | None = None
     import_tags: tuple[str, str | None] | None = None
 
 
@@ -85,8 +84,6 @@ def agent_azure_arguments(
         args += ["--subscription", params.subscription]
     if params.piggyback_vms:
         args += ["--piggyback-vms", params.piggyback_vms]
-    if params.sequential == "singlethreaded":
-        args += ["--sequential"]
 
     if params.proxy:
         match params.proxy:

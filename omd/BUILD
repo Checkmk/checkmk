@@ -16,6 +16,7 @@ PACKAGES_INT = [
     "//omd/packages/perl-modules:perl-modules.tar",
     "//omd/packages/python3-modules:python3-modules.tar",
     "//packages/cmk-agent-based:pkg_tar",
+    "//packages/cmk-werks:pkg_tar",
 ]
 
 genrule(

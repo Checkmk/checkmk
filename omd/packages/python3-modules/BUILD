@@ -104,10 +104,6 @@ config_setting(
         "@omd_packages//packages/cmk-server-side-calls:files",
     ),
     (
-        "werks",
-        "@omd_packages//packages/cmk-werks:files",
-    ),
-    (
         "trace",
         "@omd_packages//packages/cmk-trace:files",
     ),
@@ -174,7 +170,6 @@ genrule(
             "mkp-tool",
             "rulesets",
             "server-side-calls",
-            "werks",
             "trace",
             "livestatus-client",
             "netapp-ontap",

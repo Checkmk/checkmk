@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Literal
+from typing import assert_never, Literal
 
 from livestatus import SiteId
 
@@ -16,8 +16,26 @@ from cmk.gui.time_series import TimeSeries
 
 GraphConsolidationFunction = Literal["max", "min", "average"]
 GraphPresentation = Literal["lines", "stacked", "sum", "average", "min", "max"]
-LineType = Literal["line", "area", "stack", "-line", "-area", "-stack"]
 Operators = Literal["+", "*", "-", "/", "MAX", "MIN", "AVERAGE", "MERGE"]
+LineType = Literal["line", "area", "stack", "-line", "-area", "-stack"]
+
+
+def line_type_mirror(line_type: LineType) -> LineType:
+    match line_type:
+        case "line":
+            return "-line"
+        case "-line":
+            return "line"
+        case "area":
+            return "-area"
+        case "-area":
+            return "area"
+        case "stack":
+            return "-stack"
+        case "-stack":
+            return "stack"
+        case other:
+            assert_never(other)
 
 
 @dataclass(frozen=True)

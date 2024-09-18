@@ -652,30 +652,26 @@ def _create_graph_recipe_from_template(
     translated_metrics: Mapping[str, TranslatedMetric],
     specification: GraphSpecification,
 ) -> GraphRecipe:
-    evaluated_by_id = {m.evaluated.ident(): m.evaluated for m in evaluated_metrics}
     metrics = [
         GraphMetric(
-            title=evaluated.title,
-            line_type=metric_expression.line_type,
+            title=metric.evaluated.title,
+            line_type=metric.evaluated.line_type,
             operation=metric_expression_to_graph_recipe_expression(
                 site_id,
                 host_name,
                 service_name,
-                evaluated.base,
+                metric.evaluated.base,
                 translated_metrics,
                 graph_template.consolidation_function or "max",
             ),
             unit=(
-                evaluated.unit_spec
-                if isinstance(evaluated.unit_spec, ConvertibleUnitSpecification)
-                else evaluated.unit_spec.id
+                metric.evaluated.unit_spec
+                if isinstance(metric.evaluated.unit_spec, ConvertibleUnitSpecification)
+                else metric.evaluated.unit_spec.id
             ),
-            color=evaluated.color,
+            color=metric.evaluated.color,
         )
-        # TODO Keep metric expressions and evaluated in sync. Then we can use 'evaluated_metrics'
-        # instead of 'graph_template.metrics'. This is imnportant regarding graph tunings.
-        for metric_expression in graph_template.metrics
-        if (evaluated := evaluated_by_id.get(metric_expression.ident()))
+        for metric in evaluated_metrics
     ]
     units = {m.unit for m in metrics}
 

@@ -9,7 +9,7 @@ import abc
 import contextlib
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, KW_ONLY
-from typing import assert_never, Literal
+from typing import Literal
 
 from cmk.utils.metrics import MetricName
 from cmk.utils.resulttype import Error, OK, Result
@@ -24,7 +24,7 @@ from ._from_api import parse_unit_from_api
 from ._legacy import get_unit_info, unit_info, UnitInfo
 from ._metrics import get_metric_spec
 from ._translated_metrics import TranslatedMetric
-from ._type_defs import GraphConsolidationFunction, LineType
+from ._type_defs import GraphConsolidationFunction, line_type_mirror, LineType
 from ._unit import ConvertibleUnitSpecification, DecimalNotation
 
 # TODO CMK-15246 Checkmk 2.4: Remove legacy objects/RPNs
@@ -977,6 +977,16 @@ class Evaluated:
     def ident(self) -> str:
         return self.base.ident()
 
+    def mirror(self) -> Evaluated:
+        return Evaluated(
+            self.base,
+            self.value,
+            self.unit_spec,
+            self.color,
+            line_type_mirror(self.line_type),
+            self.title,
+        )
+
     def metric_names(self) -> Iterator[str]:
         yield from self.base.metric_names()
 
@@ -1029,28 +1039,11 @@ class MetricExpression:
         yield from self.base.scalar_names()
 
     def mirror(self) -> MetricExpression:
-        def _mirror_line_type() -> LineType:
-            match self.line_type:
-                case "line":
-                    return "-line"
-                case "-line":
-                    return "line"
-                case "area":
-                    return "-area"
-                case "-area":
-                    return "area"
-                case "stack":
-                    return "-stack"
-                case "-stack":
-                    return "stack"
-                case _:
-                    assert_never(self.line_type)
-
         return MetricExpression(
             self.base,
             unit_spec=self.unit_spec,
             color=self.color,
-            line_type=_mirror_line_type(),
+            line_type=line_type_mirror(self.line_type),
             title=self.title,
         )
 

@@ -1,0 +1,13 @@
+Title: mbg_lantime_ng_state: ValueError (could not convert string to float: 'n/a')
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1726646651
+Edition: cre
+Level: 1
+Version: 2.2.0p35
+
+Value for {{mbgLtNgNtpRefclockOffset}} may be 'n/a' instead of a float representation, resulting
+in {{ValueError (could not convert string to float: 'n/a')}} being thrown in the check function.
+
+This change skips preprocessing and evaluating a value of {{'n/a'}} for {{mbgLtNgNtpRefclockOffset}}

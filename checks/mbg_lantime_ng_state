@@ -22,9 +22,13 @@ def check_mbg_lantime_ng_state(_no_item, params, info):
         "1": (2, "not synchronized"),
         "2": (0, "synchronized"),
     }
-    ntp_state, stratum, refclock_name = info[0][:-1]
-    # Convert to microseconds
-    refclock_offset = float(info[0][-1]) * 1000
+    ntp_state, stratum, refclock_name, refclock_offset_str = info[0]
+    # Convert from milliseconds to microseconds
+    # make sure, we don't try to parse "n/a" but pass 0 instead, because check_mbg_lantime_state_common()
+    # also tries to parse it as float
+    refclock_offset = (
+        refclock_offset_str if refclock_offset_str == "n/a" else float(refclock_offset_str) * 1000
+    )
     newinfo = [[ntp_state, stratum, refclock_name, refclock_offset]]
     return check_mbg_lantime_state_common(states, _no_item, params, newinfo)
 

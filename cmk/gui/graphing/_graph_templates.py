@@ -391,13 +391,13 @@ def _to_metric_operation(
     site_id: SiteId,
     host_name: HostName,
     service_name: ServiceName,
-    metric_expression: BaseMetricExpression,
+    base_metric_expression: BaseMetricExpression,
     translated_metrics: Mapping[str, TranslatedMetric],
     consolidation_function: GraphConsolidationFunction | None,
 ) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
-    match metric_expression:
+    match base_metric_expression:
         case Constant():
-            return MetricOpConstant(value=float(metric_expression.value))
+            return MetricOpConstant(value=float(base_metric_expression.value))
         case Metric():
             metrics = [
                 MetricOpRRDSource(
@@ -406,11 +406,11 @@ def _to_metric_operation(
                     service_name=service_name,
                     metric_name=pnp_cleanup(o.name),
                     consolidation_func_name=(
-                        metric_expression.consolidation or consolidation_function
+                        base_metric_expression.consolidation or consolidation_function
                     ),
                     scale=o.scale,
                 )
-                for o in translated_metrics[metric_expression.name].originals
+                for o in translated_metrics[base_metric_expression.name].originals
             ]
             if len(metrics) > 1:
                 return MetricOpOperator(operator_name="MERGE", operands=metrics)
@@ -427,7 +427,7 @@ def _to_metric_operation(
                         translated_metrics,
                         consolidation_function,
                     )
-                    for s in metric_expression.summands
+                    for s in base_metric_expression.summands
                 ],
             )
         case Product():
@@ -442,7 +442,7 @@ def _to_metric_operation(
                         translated_metrics,
                         consolidation_function,
                     )
-                    for f in metric_expression.factors
+                    for f in base_metric_expression.factors
                 ],
             )
         case Difference():
@@ -453,7 +453,7 @@ def _to_metric_operation(
                         site_id,
                         host_name,
                         service_name,
-                        metric_expression.minuend,
+                        base_metric_expression.minuend,
                         translated_metrics,
                         consolidation_function,
                     ),
@@ -461,7 +461,7 @@ def _to_metric_operation(
                         site_id,
                         host_name,
                         service_name,
-                        metric_expression.subtrahend,
+                        base_metric_expression.subtrahend,
                         translated_metrics,
                         consolidation_function,
                     ),
@@ -475,7 +475,7 @@ def _to_metric_operation(
                         site_id,
                         host_name,
                         service_name,
-                        metric_expression.dividend,
+                        base_metric_expression.dividend,
                         translated_metrics,
                         consolidation_function,
                     ),
@@ -483,7 +483,7 @@ def _to_metric_operation(
                         site_id,
                         host_name,
                         service_name,
-                        metric_expression.divisor,
+                        base_metric_expression.divisor,
                         translated_metrics,
                         consolidation_function,
                     ),
@@ -501,7 +501,7 @@ def _to_metric_operation(
                         translated_metrics,
                         consolidation_function,
                     )
-                    for o in metric_expression.operands
+                    for o in base_metric_expression.operands
                 ],
             )
         case Minimum():
@@ -516,7 +516,7 @@ def _to_metric_operation(
                         translated_metrics,
                         consolidation_function,
                     )
-                    for o in metric_expression.operands
+                    for o in base_metric_expression.operands
                 ],
             )
         case Average():
@@ -531,7 +531,7 @@ def _to_metric_operation(
                         translated_metrics,
                         consolidation_function,
                     )
-                    for o in metric_expression.operands
+                    for o in base_metric_expression.operands
                 ],
             )
         case Merge():
@@ -546,18 +546,18 @@ def _to_metric_operation(
                         translated_metrics,
                         consolidation_function,
                     )
-                    for o in metric_expression.operands
+                    for o in base_metric_expression.operands
                 ],
             )
         case _:
-            raise TypeError(metric_expression)
+            raise TypeError(base_metric_expression)
 
 
 def metric_expression_to_graph_recipe_expression(
     site_id: SiteId,
     host_name: HostName,
     service_name: ServiceName,
-    metric_expression: MetricExpression,
+    base_metric_expression: BaseMetricExpression,
     translated_metrics: Mapping[str, TranslatedMetric],
     consolidation_function: GraphConsolidationFunction | None,
 ) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
@@ -565,7 +565,7 @@ def metric_expression_to_graph_recipe_expression(
         site_id,
         host_name,
         service_name,
-        metric_expression.base,
+        base_metric_expression,
         translated_metrics,
         consolidation_function,
     )
@@ -661,7 +661,7 @@ def _create_graph_recipe_from_template(
                 site_id,
                 host_name,
                 service_name,
-                metric_expression,
+                metric_expression.base,
                 translated_metrics,
                 graph_template.consolidation_function or "max",
             ),

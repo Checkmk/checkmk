@@ -92,7 +92,7 @@ def test_rpn_stack(raw_expression: str, result: MetricOperation) -> None:
             SiteId(""),
             HostName(""),
             "",
-            parse_legacy_expression(raw_expression, "line", "", translated_metrics),
+            parse_legacy_expression(raw_expression, "line", "", translated_metrics).base,
             translated_metrics,
             None,
         )

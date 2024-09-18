@@ -84,10 +84,6 @@ config_setting(
     # As soon you extend this list bc you want to add a new cmk package, keep in mind to
     # extend as well WORKSPACE -> create_python_requirements -> ignored_modules
     (
-        "graphing",
-        "@omd_packages//packages/cmk-graphing:files",
-    ),
-    (
         "rulesets",
         "@omd_packages//packages/cmk-rulesets:files",
     ),
@@ -151,7 +147,6 @@ genrule(
     srcs = [
         "%s_compile" % module
         for module in all_requirements + [
-            "graphing",
             "messaging",
             "rulesets",
             "server-side-calls",

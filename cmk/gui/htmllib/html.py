@@ -265,18 +265,12 @@ class HTMLGenerator(HTMLWriter):
         for js in javascripts:
             js_filepath = f"js/{js}_min.js"
             js_url = HTMLGenerator._append_cache_busting_query(js_filepath)
-            if js == "vue" and active_config.load_frontend_vue == "inject":
-                # stage1 will try to load the hot reloading files. if this fails,
-                # an error will be shown and the fallback files will be loaded.
-                self.js_entrypoint(
-                    json.dumps({"fallback": [js_url]}),
-                    type_="cmk-entrypoint-vue-stage1",
-                )
-                self.javascript_file(HTMLGenerator._append_cache_busting_query("js/vue_stage1.js"))
-            else:
-                if current_app.debug:
-                    HTMLGenerator._verify_file_exists_in_web_dirs(js_filepath)
-                self.javascript_file(js_url)
+            if current_app.debug:
+                HTMLGenerator._verify_file_exists_in_web_dirs(js_filepath)
+            self.javascript_file(js_url)
+
+        if "main" in javascripts:
+            self._inject_vue_frontend()
 
         self.set_js_csrf_token()
 
@@ -284,6 +278,29 @@ class HTMLGenerator(HTMLWriter):
             self.javascript(f"cmk.utils.set_reload({self.browser_reload})")
 
         self.close_head()
+
+    def _inject_vue_frontend(self):
+        base = Path(cmk.utils.paths.web_dir, "htdocs", "cmk-frontend-vue")
+        with (base / ".manifest.json").open() as fo:
+            manifest = json.load(fo)
+
+        main = f'cmk-frontend-vue/{manifest["src/main.ts"]["file"]}'
+        stylesheets = manifest["src/main.ts"]["css"]
+        stage1 = f'cmk-frontend-vue/{manifest["src/stage1.ts"]["file"]}'
+
+        if active_config.load_frontend_vue == "inject":
+            # stage1 will try to load the hot reloading files. if this fails,
+            # an error will be shown and the fallback files will be loaded.
+            self.js_entrypoint(
+                json.dumps({"fallback": [main]}),
+                type_="cmk-entrypoint-vue-stage1",
+            )
+            self.javascript_file(stage1)
+        else:
+            # production setup
+            self.javascript_file(main, type_="module")
+            for stylesheet in stylesheets:
+                self.stylesheet(f"cmk-frontend-vue/{stylesheet}")
 
     def _inject_profiling_code(self):
         self.javascript("const startTime = Date.now();")
@@ -351,7 +368,7 @@ class HTMLGenerator(HTMLWriter):
         main_javascript: str = "main",
         force: bool = False,
     ) -> None:
-        javascript_files = [main_javascript, "vue"]
+        javascript_files = [main_javascript]
         if force or not self._header_sent:
             self.write_html(HTML.without_escaping("<!DOCTYPE HTML>\n"))
             self.open_html()

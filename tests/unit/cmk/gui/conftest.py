@@ -114,6 +114,9 @@ def fake_detect_icon_path(_: None, icon_name: str = "", prefix: str = "") -> str
 def patch_theme() -> Iterator[None]:
     with (
         patch(
+            "cmk.gui.htmllib.html.HTMLGenerator._inject_vue_frontend",
+        ),
+        patch(
             "cmk.gui.utils.theme.Theme.detect_icon_path",
             new=fake_detect_icon_path,
         ),

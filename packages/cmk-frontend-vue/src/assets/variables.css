@@ -26,22 +26,22 @@
   --border-radius: 4px;
 
   /* Icons */
-  --icon-checkmark: url('themes/facelift/images/icon_checkmark.svg');
-  --icon-crit-problem: url('themes/facelift/images/icon_crit_problem.svg');
-  --icon-info: url('themes/facelift/images/icon_info.svg');
+  --icon-checkmark: url('~cmk-frontend/src/themes/facelift/images/icon_checkmark.svg');
+  --icon-crit-problem: url('~cmk-frontend/src/themes/facelift/images/icon_crit_problem.svg');
+  --icon-info: url('~cmk-frontend/src/themes/facelift/images/icon_info.svg');
 }
 
 @layer theme {
   body[data-theme='facelift'] {
     /* Icons */
-    --icon-alert-crit: url('themes/facelift/images/icon_alert_crit.svg');
-    --icon-back: url('themes/facelift/images/icon_back.png');
-    --icon-check: url('themes/facelift/images/icon_check.svg');
-    --icon-continue: url('themes/facelift/images/icon_continue.png');
-    --icon-main-help: url('themes/facelift/images/icon_main_help.svg');
-    --icon-save-to-services: url('themes/facelift/images/icon_save_to_services.svg');
-    --icon-insertdate: url('themes/facelift/images/icon_insertdate.png');
-    --icon-select-arrow: url('themes/facelift/images/select_arrow.png');
+    --icon-alert-crit: url('~cmk-frontend/src/themes/facelift/images/icon_alert_crit.svg');
+    --icon-back: url('~cmk-frontend/src/themes/facelift/images/icon_back.png');
+    --icon-check: url('~cmk-frontend/src/themes/facelift/images/icon_check.svg');
+    --icon-continue: url('~cmk-frontend/src/themes/facelift/images/icon_continue.png');
+    --icon-main-help: url('~cmk-frontend/src/themes/facelift/images/icon_main_help.svg');
+    --icon-save-to-services: url('~cmk-frontend/src/themes/facelift/images/icon_save_to_services.svg');
+    --icon-insertdate: url('~cmk-frontend/src/themes/facelift/images/icon_insertdate.png');
+    --icon-select-arrow: url('~cmk-frontend/src/themes/facelift/images/select_arrow.png');
 
     /* Colors */
     --default-submit-button-border-color: var(--success-dimmed);
@@ -53,14 +53,14 @@
 
   body[data-theme='modern-dark'] {
     /* Icons */
-    --icon-alert-crit: url('themes/modern-dark/images/icon_alert_crit.svg');
-    --icon-back: url('themes/modern-dark/images/icon_back.png');
-    --icon-check: url('themes/modern-dark/images/icon_check.svg');
-    --icon-continue: url('themes/modern-dark/images/icon_continue.png');
-    --icon-main-help: url('themes/modern-dark/images/icon_main_help.svg');
-    --icon-save-to-services: url('themes/modern-dark/images/icon_save_to_services.svg');
-    --icon-insertdate: url('themes/modern-dark/images/icon_insertdate.png');
-    --icon-select-arrow: url('themes/modern-dark/images/select_arrow.png');
+    --icon-alert-crit: url('~cmk-frontend/src/themes/facelift/images/icon_alert_crit.svg');
+    --icon-back: url('~cmk-frontend/src/themes/facelift/images/icon_back.png');
+    --icon-check: url('~cmk-frontend/src/themes/facelift/images/icon_check.svg');
+    --icon-continue: url('~cmk-frontend/src/themes/facelift/images/icon_continue.png');
+    --icon-main-help: url('~cmk-frontend/src/themes/modern-dark/images/icon_main_help.svg');
+    --icon-save-to-services: url('~cmk-frontend/src/themes/facelift/images/icon_save_to_services.svg');
+    --icon-insertdate: url('~cmk-frontend/src/themes/facelift/images/icon_insertdate.png');
+    --icon-select-arrow: url('~cmk-frontend/src/themes/modern-dark/images/select_arrow.png');
 
     /* Colors */
     --default-submit-button-border-color: rgb(8 94 61);

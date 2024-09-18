@@ -27,28 +27,21 @@ export default defineConfig(({ command }) => {
     ],
     resolve: {
       alias: {
-        '@': fileURLToPath(new URL('./src', import.meta.url))
+        '@': fileURLToPath(new URL('./src', import.meta.url)),
+        '~cmk-frontend': fileURLToPath(new URL('../cmk-frontend/', import.meta.url))
       }
     },
     build: {
+      manifest: '.manifest.json',
       sourcemap: true,
       rollupOptions: {
         input: {
-          'vue_min.js': './src/main.ts',
-          'vue_stage1.js': './src/vue_stage1.ts'
-        },
-        output: {
-          // the Checkmk site does not support dynamic filenames for assets.
-          // we can not rename the file, otherwise the sourcemap would no longer match.
-          entryFileNames: 'assets/[name]'
-        },
-        external: [
-          // treat all themes files as external to the build
-          // so the build process will ignore them
-          /themes\/.*/
-        ]
+          'main.js': './src/main.ts',
+          'stage1.js': './src/stage1.ts'
+        }
       }
-    }
+    },
+    base: ''
   }
   if (command == 'build') {
     return resultBuild
@@ -65,6 +58,9 @@ export default defineConfig(({ command }) => {
       },
       server: {
         strictPort: true,
+        fs: {
+          allow: ['.', '../cmk-frontend/']
+        },
         proxy: {
           // dev server proxies whole checkmk to inject js resources and support auto hot reloading
           '^(?!/cmk-frontend-vue-ahr)': 'http://localhost/'

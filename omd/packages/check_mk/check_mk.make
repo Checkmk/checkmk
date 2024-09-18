@@ -101,10 +101,11 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	    . | \
 	    tar -x -C $(CHECK_MK_INSTALL_DIR)/share/check_mk/web/htdocs
 
-	tar -c -C $(REPO_PATH)/packages/cmk-frontend-vue/dist/assets/ \
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/web/htdocs/cmk-frontend-vue
+	tar -c -C $(REPO_PATH)/packages/cmk-frontend-vue/dist \
 	    $(CHECK_MK_TAROPTS) \
 	    . | \
-	    tar -x -C $(CHECK_MK_INSTALL_DIR)/share/check_mk/web/htdocs/js/
+	    tar -x -C $(CHECK_MK_INSTALL_DIR)/share/check_mk/web/htdocs/cmk-frontend-vue
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk
 	install -m 644 $(REPO_PATH)/{COPYING,AUTHORS} $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk

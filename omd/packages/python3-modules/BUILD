@@ -87,10 +87,6 @@ config_setting(
         "trace",
         "@omd_packages//packages/cmk-trace:files",
     ),
-    (
-        "livestatus-client",
-        "@omd_packages//packages/cmk-livestatus-client:files",
-    ),
 ]]
 
 # TODO: Switch to official release when netapp has fixed their build process
@@ -136,7 +132,6 @@ genrule(
         "%s_compile" % module
         for module in all_requirements + [
             "trace",
-            "livestatus-client",
             "netapp-ontap",
         ]
     ],

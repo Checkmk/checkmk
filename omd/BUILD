@@ -24,6 +24,7 @@ PACKAGES_INT = [
     "//packages/cmk-messaging:pkg_tar",
     "//packages/cmk-rulesets:pkg_tar",
     "//packages/cmk-server-side-calls:pkg_tar",
+    "//packages/cmk-livestatus-client:pkg_tar",
 ]
 
 genrule(

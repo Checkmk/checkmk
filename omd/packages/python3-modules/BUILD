@@ -84,10 +84,6 @@ config_setting(
     # As soon you extend this list bc you want to add a new cmk package, keep in mind to
     # extend as well WORKSPACE -> create_python_requirements -> ignored_modules
     (
-        "rulesets",
-        "@omd_packages//packages/cmk-rulesets:files",
-    ),
-    (
         "server-side-calls",
         "@omd_packages//packages/cmk-server-side-calls:files",
     ),
@@ -143,7 +139,6 @@ genrule(
     srcs = [
         "%s_compile" % module
         for module in all_requirements + [
-            "rulesets",
             "server-side-calls",
             "trace",
             "livestatus-client",

@@ -1,8 +1,10 @@
-filegroup(
-    name = "files",
+load("@aspect_rules_py//py:defs.bzl", "py_library")
+load("@rules_python//python:packaging.bzl", "py_wheel")
+load("@omd_packages//omd/packages/rules:package_wheel.bzl", "package_wheel")
+
+py_library(
+    name = "cmk-rulesets",
     srcs = [
-        "Pipfile",
-        "Pipfile.lock",
         "cmk/rulesets/__init__.py",
         "cmk/rulesets/v1/__init__.py",
         "cmk/rulesets/v1/_localize.py",
@@ -15,8 +17,18 @@ filegroup(
         "cmk/rulesets/v1/form_specs/_preconfigured.py",
         "cmk/rulesets/v1/form_specs/validators.py",
         "cmk/rulesets/v1/rule_specs.py",
-        "pyproject.toml",
-        "setup.cfg",
     ],
-    visibility = ["//visibility:public"],
 )
+
+py_wheel(
+    name = "wheel",
+    distribution = "cmk-rulesets",
+    strip_path_prefixes = ["packages/cmk-rulesets"],
+    # TODO: Duplicated from pyproject.toml
+    version = "1.0.0",
+    deps = [
+        ":cmk-rulesets",
+    ],
+)
+
+package_wheel(wheel_target = "wheel")

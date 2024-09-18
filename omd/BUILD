@@ -23,6 +23,7 @@ PACKAGES_INT = [
     "//packages/cmk-graphing:pkg_tar",
     "//packages/cmk-messaging:pkg_tar",
     "//packages/cmk-rulesets:pkg_tar",
+    "//packages/cmk-server-side-calls:pkg_tar",
 ]
 
 genrule(

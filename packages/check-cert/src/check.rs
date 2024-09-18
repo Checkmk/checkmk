@@ -483,6 +483,36 @@ enum Details {
 }
 
 #[derive(Debug)]
+enum FlatDetailsView<'a> {
+    Text(&'a String),
+    Metric(&'a Metric<Real>),
+}
+
+impl Display for FlatDetailsView<'_> {
+    fn fmt(&self, f: &mut Formatter) -> FormatResult {
+        match self {
+            Self::Text(t) => write!(f, "{}", t),
+            Self::Metric(m) => write!(f, "{}", m),
+        }
+    }
+}
+
+impl<'a> IntoIterator for &'a Details {
+    type Item = FlatDetailsView<'a>;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        match self {
+            Details::Text(t) => vec![FlatDetailsView::Text(t)].into_iter(),
+            Details::Metric(m) => vec![FlatDetailsView::Metric(m)].into_iter(),
+            Details::TextMetric(t, m) => {
+                vec![FlatDetailsView::Text(t), FlatDetailsView::Metric(m)].into_iter()
+            }
+        }
+    }
+}
+
+#[derive(Debug)]
 struct Summary {
     state: State,
     text: Option<String>,
@@ -518,6 +548,11 @@ impl Display for Collection {
             })
             .collect::<Vec<_>>()
             .join(", ");
+        let (details, metrics): (Vec<_>, Vec<_>) =
+            self.details.iter().flatten().partition(|elem| match elem {
+                FlatDetailsView::Text(_) => true,
+                FlatDetailsView::Metric(_) => false,
+            });
         let mut out = if summary.is_empty() {
             String::from(self.state.as_str())
         } else {
@@ -525,18 +560,27 @@ impl Display for Collection {
             // but follows our internal requirements.
             summary.to_string()
         };
-        let details = self
-            .details
-            .iter()
-            .map(|details| match details {
-                Details::Text(text) => text.to_owned(),
-                Details::Metric(metric) => metric.to_string(),
-                Details::TextMetric(text, metric) => format!("{} | {}", text, metric),
-            })
-            .collect::<Vec<_>>()
-            .join("\n");
+        if !metrics.is_empty() {
+            out = format!(
+                "{} | {}",
+                out,
+                metrics
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+                    .join(" ")
+            );
+        }
         if !details.is_empty() {
-            out = format!("{}\n{}", out, details);
+            out = format!(
+                "{}\n{}",
+                out,
+                details
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            );
         }
         write!(f, "{}", out)?;
         Ok(())
@@ -901,10 +945,7 @@ mod test_writer_format {
         assert_eq!(coll.state, State::Crit);
         assert_eq!(
             format!("{}", coll),
-            "summary 1, summary 2 (!), summary 3 (!!)\n\
-            m1=13;;;;\n\
-            m2=37;;;;\n\
-            m3=42;;;;"
+            "summary 1, summary 2 (!), summary 3 (!!) | m1=13;;;; m2=37;;;; m3=42;;;;"
         );
         assert!(vec.is_empty());
     }
@@ -928,10 +969,7 @@ mod test_writer_format {
         assert_eq!(coll.state, State::Crit);
         assert_eq!(
             format!("{}", coll),
-            "summary 1, summary 2 (!), summary 3 (!!)\n\
-            m1=13;;;;\n\
-            m2=37;;;;\n\
-            m3=42;;;;"
+            "summary 1, summary 2 (!), summary 3 (!!) | m1=13;;;; m2=37;;;; m3=42;;;;"
         );
     }
 
@@ -970,10 +1008,10 @@ mod test_writer_format {
         assert_eq!(coll.state, State::Crit);
         assert_eq!(
             format!("{}", coll),
-            "summary ok, summary warn (!), summary crit (!!)\n\
+            "summary ok, summary warn (!), summary crit (!!) | mwarn=13;;;; mcrit=37;;;;\n\
             notice\n\
-            details warn | mwarn=13;;;;\n\
-            details crit | mcrit=37;;;;"
+            details warn\n\
+            details crit"
         );
     }
 
@@ -988,10 +1026,9 @@ mod test_writer_format {
         assert_eq!(coll.state, State::Crit);
         assert_eq!(
             format!("{}", coll),
-            "summary ok, summary warn (!), summary crit (!!)\n\
+            "summary ok, summary warn (!), summary crit (!!) | mwarn=13;;;; mcrit=37;;;;\n\
             notice\n\
-            details warn | mwarn=13;;;;\n\
-            mcrit=37;;;;"
+            details warn"
         );
     }
 }

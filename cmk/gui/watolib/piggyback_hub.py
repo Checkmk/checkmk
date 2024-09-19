@@ -3,14 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
-from collections.abc import Mapping, Sequence
-
-from pydantic import BaseModel
+from collections.abc import Mapping
 
 from livestatus import SiteConfiguration, SiteId
-
-from cmk.ccc import store
 
 from cmk.utils.paths import omd_root
 
@@ -19,28 +14,8 @@ from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 
-from cmk.piggyback_hub.config import PiggybackHubConfig, Target
-from cmk.piggyback_hub.paths import create_paths
+from cmk.piggyback_hub.config import load_config, PiggybackHubConfig, save_config, Target
 from cmk.piggyback_hub.utils import distribute
-
-
-class PiggybackHubConfigs(BaseModel):
-    configs: Mapping[str, Sequence[Target]]
-
-
-def load_config():
-    config_path = create_paths(omd_root).config
-    if not config_path.exists():
-        return PiggybackHubConfig()
-    config = store.load_text_from_file(config_path)
-    return PiggybackHubConfig.model_validate_json(json.loads(config))
-
-
-def save_config(config: PiggybackHubConfig) -> None:
-    store.save_text_to_file(
-        create_paths(omd_root).config,
-        json.dumps(config.model_dump_json()),
-    )
 
 
 def piggyback_hub_enabled(site_config: SiteConfiguration, global_settings: GlobalSettings) -> bool:
@@ -74,9 +49,9 @@ def get_piggyback_hub_config(
 def distribute_config() -> None:
     site_configs = get_piggyback_site_configs()
 
-    old_config = load_config()
+    old_config = load_config(omd_root)
     new_config = get_piggyback_hub_config(site_configs)
 
     if set(old_config.targets) != set(new_config.targets):
         distribute({site: new_config for site in site_configs.keys()}, omd_root)
-        save_config(new_config)
+        save_config(omd_root, new_config)

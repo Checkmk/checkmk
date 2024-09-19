@@ -14,6 +14,8 @@ from typing import Callable
 
 from pydantic import BaseModel
 
+from cmk.ccc import store
+
 from cmk.utils.hostaddress import HostName
 
 from cmk.messaging import Channel
@@ -48,3 +50,18 @@ def save_config_on_message(
         os.rename(tmp_path, str(config_path))
 
     return _on_message
+
+
+def save_config(root_path: Path, config: PiggybackHubConfig) -> None:
+    store.save_text_to_file(
+        create_paths(root_path).config,
+        json.dumps(config.model_dump_json()),
+    )
+
+
+def load_config(root_path: Path) -> PiggybackHubConfig:
+    config_path = create_paths(root_path).config
+    if not config_path.exists():
+        return PiggybackHubConfig()
+    config = store.load_text_from_file(config_path)
+    return PiggybackHubConfig.model_validate_json(json.loads(config))

@@ -1,0 +1,13 @@
+Title: kube: Continue Upon Unresponsive Node
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1726734855
+Edition: cre
+Level: 1
+Version: 2.2.0p37
+
+Previously, the Kubernetes special agent would raise an exception, if it was
+unable to connect to one of the Kubernetes Nodes. With this Werk, the exception
+is forwarded to the Kubelet Health service, and the agent will continue
+execution.

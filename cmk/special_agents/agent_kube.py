@@ -490,7 +490,7 @@ def statefulset_info(
 class Node(PodOwner):
     metadata: api.NodeMetaData
     status: api.NodeStatus
-    kubelet_health: api.HealthZ
+    kubelet_health: api.HealthZ | api.NodeConnectionError
 
     def allocatable_pods(self) -> section.AllocatablePods:
         return section.AllocatablePods(

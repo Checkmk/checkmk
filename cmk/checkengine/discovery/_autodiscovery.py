@@ -626,7 +626,6 @@ def get_host_services_by_host_name(
                         providers=providers,
                         plugins=plugins,
                         on_error=on_error,
-                        ignore_plugin=ignore_plugin,
                     ),
                     ignore_service=ignore_service,
                     ignore_plugin=ignore_plugin,
@@ -660,24 +659,19 @@ def _get_services_result(
     providers: Mapping[HostKey, Provider],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     on_error: OnError,
-    ignore_plugin: Callable[[HostName, CheckPluginName], bool],
 ) -> QualifiedDiscovery[AutocheckEntry]:
     candidates = find_plugins(
         providers,
         [(plugin_name, plugin.sections) for plugin_name, plugin in plugins.items()],
     )
-    skip = {plugin_name for plugin_name in candidates if ignore_plugin(host_name, plugin_name)}
 
     section.section_step("Executing discovery plugins (%d)" % len(candidates))
     console.debug(f"  Trying discovery with: {', '.join(str(n) for n in candidates)}")
 
-    for plugin_name in skip:
-        console.debug(f"  Skip ignored check plug-in name {plugin_name!r}")
-
     autocheck_store = AutochecksStore(host_name)
     try:
         discovered_services = discover_services(
-            host_name, candidates - skip, providers=providers, plugins=plugins, on_error=on_error
+            host_name, candidates, providers=providers, plugins=plugins, on_error=on_error
         )
     except KeyboardInterrupt:
         raise MKGeneralException("Interrupted by Ctrl-C.")
@@ -806,7 +800,6 @@ def _get_cluster_services(
             providers=providers,
             plugins=plugins,
             on_error=on_error,
-            ignore_plugin=ignore_plugin,
         )
         cluster_items[node] = {
             **make_table(

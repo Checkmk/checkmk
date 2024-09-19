@@ -212,6 +212,7 @@ CATALOG_TITLES: Final = {
     "elasticsearch": "Elasticsearch",
     "entersekt": "Entersekt",
     "exchange": "Microsoft Exchange",
+    "gerrit": "Gerrit",
     "graylog": "Graylog",
     "haproxy": "HAProxy Loadbalancer",
     "iis": "Microsoft Internet Information Service",

@@ -32,6 +32,7 @@ from cmk.special_agents import (
     agent_couchbase,
     agent_datadog,
     agent_elasticsearch,
+    agent_gerrit,
     agent_graylog,
     agent_hivemanager_ng,
     agent_innovaphone,
@@ -70,6 +71,7 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "fritzbox": agent_fritzbox,
     "gcp": agent_gcp,
     "gcp_status": agent_gcp_status,
+    "gerrit": agent_gerrit,
     "graylog": agent_graylog,
     "hivemanager": None,
     "hivemanager_ng": agent_hivemanager_ng,
@@ -146,6 +148,7 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
     "couchbase": ["HOSTNAME"],
     "elasticsearch": ["HOSTNAME"],
     "fritzbox": ["HOSTNAME"],
+    "gerrit": ["--user", "USER", "--password", "PASSWORD", "HOSTNAME"],
     "graylog": ["HOSTNAME"],
     "hivemanager": ["IP", "USER", "PASSWORD"],
     "hivemanager_ng": [

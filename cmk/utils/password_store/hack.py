@@ -34,6 +34,7 @@ HACK_AGENTS = {
     "elasticsearch": True,
     "fritzbox": False,  # needs no secret
     "gcp": True,
+    "gerrit": False,
     "jenkins": True,
     "mobileiron": True,
     "netapp_ontap": True,

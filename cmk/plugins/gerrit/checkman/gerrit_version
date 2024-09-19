@@ -1,0 +1,16 @@
+title: Gerrit: Version
+agents: gerrit
+catalog: app/gerrit
+license: GPLv2
+distribution: check_mk
+description:
+ This check compares a currently deployed Gerrit instance with newer available releases.
+
+ Since Gerrit uses a release cycle similar to semantic versioning, this check can monitor when
+ a major, minor, or patch release is available. With the service configuration, a user can specify
+ the specific type of release(s) they would like to be notified about.
+
+ Requires the integration "Gerrit" to be configured.
+
+discovery:
+ One service is created ({"Gerrit Version"}).

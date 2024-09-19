@@ -13,6 +13,7 @@ import time
 import typing
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from enum import Enum
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Literal, overload
 
@@ -67,6 +68,12 @@ class ExperimentalRenderMode(Enum):
     BACKEND = "backend"
     FRONTEND = "frontend"
     BACKEND_AND_FRONTEND = "backend_and_frontend"
+
+
+class _Manifest(typing.NamedTuple):
+    main: str
+    main_stylesheets: list[str]
+    stage1: str
 
 
 @request_memoize()
@@ -279,27 +286,31 @@ class HTMLGenerator(HTMLWriter):
 
         self.close_head()
 
-    def _inject_vue_frontend(self):
+    @lru_cache
+    def _load_vue_manifest(self) -> _Manifest:
         base = Path(cmk.utils.paths.web_dir, "htdocs", "cmk-frontend-vue")
         with (base / ".manifest.json").open() as fo:
             manifest = json.load(fo)
 
         main = f'cmk-frontend-vue/{manifest["src/main.ts"]["file"]}'
-        stylesheets = manifest["src/main.ts"]["css"]
+        main_stylesheets = manifest["src/main.ts"]["css"]
         stage1 = f'cmk-frontend-vue/{manifest["src/stage1.ts"]["file"]}'
+        return _Manifest(main, main_stylesheets, stage1)
 
+    def _inject_vue_frontend(self):
+        manifest = self._load_vue_manifest()
         if active_config.load_frontend_vue == "inject":
             # stage1 will try to load the hot reloading files. if this fails,
             # an error will be shown and the fallback files will be loaded.
             self.js_entrypoint(
-                json.dumps({"fallback": [main]}),
+                json.dumps({"fallback": [manifest.main]}),
                 type_="cmk-entrypoint-vue-stage1",
             )
-            self.javascript_file(stage1)
+            self.javascript_file(manifest.stage1)
         else:
             # production setup
-            self.javascript_file(main, type_="module")
-            for stylesheet in stylesheets:
+            self.javascript_file(manifest.main, type_="module")
+            for stylesheet in manifest.main_stylesheets:
                 self.stylesheet(f"cmk-frontend-vue/{stylesheet}")
 
     def _inject_profiling_code(self):

@@ -1,5 +1,5 @@
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
-load("@//omd/packages/rules:cc_export.bzl", "cc_export_shared_library")
+load("@//omd/packages/rules:cc_export.bzl", "cc_export_shared_library", "cc_export_static_library")
 
 filegroup(
     name = "all_srcs",
@@ -97,6 +97,18 @@ cc_export_shared_library(
     shared_library = "libcrypto.so",
 )
 
+cc_export_static_library(
+    name = "libssl.a",
+    srcs = [":openssl"],
+    static_library = "libssl.a",
+)
+
+cc_export_static_library(
+    name = "libcrypto.a",
+    srcs = [":openssl"],
+    static_library = "libcrypto.a",
+)
+
 filegroup(
     name = "gen_dir",
     srcs = [":openssl"],
@@ -114,5 +126,14 @@ cc_library(
         ":libssl.so.3",
         ":libcrypto.so",
         ":libcrypto.so.3",
+    ],
+)
+
+cc_library(
+    name = "openssl_static",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":libcrypto.a",
+        ":libssl.a",
     ],
 )

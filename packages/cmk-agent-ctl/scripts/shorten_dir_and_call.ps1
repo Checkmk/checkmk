@@ -20,5 +20,6 @@
 [string]$new = $inp.tolower().replace($args[0], $args[1])
 Write-Host "shorten dir: " $new
 Set-Location $new
+(Get-Item .).FullName
 &$args[2]
 [Environment]::Exit($LASTEXITCODE)

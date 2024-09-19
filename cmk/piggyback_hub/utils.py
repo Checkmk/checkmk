@@ -5,12 +5,15 @@
 
 import logging
 import threading
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Callable, Generic, TypeVar
 
 from pydantic import BaseModel
 
 from cmk.messaging import Channel, Connection
+
+from .config import PiggybackConfig
 
 _ModelT = TypeVar("_ModelT", bound=BaseModel)
 
@@ -49,3 +52,12 @@ class ReceivingThread(threading.Thread, Generic[_ModelT]):
             return
         except Exception as e:
             self.logger.exception("Unhandled exception: %s.", e)
+
+
+def distribute(configs: Mapping[str, PiggybackConfig], omd_root: Path) -> None:
+    # TODO: remove the return statement and uncomment the code below after fix the flaky integration test
+    return
+    # for site_id, config in configs.items():
+    #     with Connection("piggyback-hub", omd_root) as conn:
+    #         channel = conn.channel(PiggybackConfig)
+    #         channel.publish_for_site(site_id, config, routing="config")

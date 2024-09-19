@@ -7,7 +7,7 @@ import json
 import logging
 import os
 import tempfile
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Final
@@ -40,15 +40,6 @@ def config_path(omd_root: Path) -> Path:
 def multisite_config_path(omd_root: Path) -> Path:
     """Get the path of the multisite configuration"""
     return omd_root / MULTISITE_CONFIG
-
-
-def distribute(configs: Mapping[str, PiggybackConfig], omd_root: Path) -> None:
-    # TODO: remove the return statement and uncomment the code below after fix the flaky integration test
-    return
-    # for site_id, config in configs.items():
-    #     with Connection("piggyback-hub", omd_root) as conn:
-    #         channel = conn.channel(PiggybackConfig)
-    #         channel.publish_for_site(site_id, config, routing="config")
 
 
 def save_config(

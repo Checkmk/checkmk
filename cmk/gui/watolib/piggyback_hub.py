@@ -19,7 +19,8 @@ from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 
-from cmk.piggyback_hub.config import config_path, distribute, PiggybackConfig, Target
+from cmk.piggyback_hub.config import config_path, PiggybackConfig, Target
+from cmk.piggyback_hub.utils import distribute
 
 
 class PiggybackConfigs(BaseModel):

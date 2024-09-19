@@ -91,6 +91,41 @@ load("@cargo_deps_site//:defs.bzl", site_crate_repository = "crate_repositories"
 
 site_crate_repository()
 
+# Repin with `CARGO_BAZEL_REPIN=1 bazel sync --only=cargo_deps_host`.
+crates_repository(
+    # Repository for rust binaries deployed on the host.
+    name = "cargo_deps_host",
+    annotations = {
+        "openssl-sys": [
+            crate.annotation(
+                build_script_data = [
+                    "@openssl//:gen_dir",
+                ],
+                build_script_env = {
+                    "OPENSSL_DIR": "$(execpath @openssl//:gen_dir)",
+                    "OPENSSL_NO_VENDOR": "1",
+                    "OPENSSL_STATIC": "1",
+                },
+                data = ["@openssl//:gen_dir"],
+                deps = [
+                    "@openssl",
+                ],
+            ),
+        ],
+    },
+    cargo_lockfile = "//:Cargo.host.lock",
+    lockfile = "//:Cargo.host.lock.bazel",
+    manifests = [
+        "//:Cargo.host.toml",
+        "//packages/cmk-agent-ctl:Cargo.toml",
+        "//packages/mk-sql:Cargo.toml",
+    ],
+)
+
+load("@cargo_deps_host//:defs.bzl", host_crate_repository = "crate_repositories")
+
+host_crate_repository()
+
 load("//omd/packages/patch:patch_http.bzl", "patch_workspace")
 
 patch_workspace()

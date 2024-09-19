@@ -1,0 +1,10 @@
+# Cargo.toml file used to lock the deps for bazel.
+#
+# See Also:
+#    https://earthly.dev/blog/rust-monorepo/
+
+[workspace]
+members = [
+    "packages/cmk-agent-ctl",
+    "packages/mk-sql",
+]

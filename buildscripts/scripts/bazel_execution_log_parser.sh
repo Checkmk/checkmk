@@ -66,16 +66,14 @@ fi
 
 query='[ .[] | {
   targetLabel: .targetLabel ,
-  cacheHit: (.cacheHit // false),
-  cacheable: (.cacheable // false),
-  remoteable: (.remoteable // false)
+  cacheHit: (.remoteCacheHit // false),
+  cacheable: (.remoteCacheable // false),
 }] | {
   overallTargets: length,
   cacheHits: map(select(.cacheHit == true)) | length,
   percentRemoteCacheHits: ((map(select(.cacheHit == true)) | length) / length * 100 | round ),
   targetsWithMissedCache: map(select(.cacheHit == false) | .targetLabel),
   numberUncacheableTargets: map(select(.cacheable == false)) | length,
-  numberRemotableTargets: map(select(.remoteable == true)) | length,
 }'
 
 # we explicitely want globing here!

@@ -370,7 +370,7 @@ def test_rest_api_access_with_enabled_2fa(site: Site) -> None:
             auth=(username, password),
             expected_code=401,
         )
-        assert not "site" in response.json()
+        assert "site" not in response.json()
         assert not session.is_logged_in()
 
 
@@ -400,5 +400,5 @@ def test_rest_api_access_by_cookie_2fa(site: Site) -> None:
             f"/{site.id}/check_mk/api/1.0/version",
             expected_code=401,
         )
-        assert not "site" in response.json()
+        assert "site" not in response.json()
         assert not session.is_logged_in()

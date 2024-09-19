@@ -305,9 +305,9 @@ FROM dbo.sysjobs sj \
 LEFT JOIN dbo.sysjobschedules sjs ON sj.job_id = sjs.job_id \
 LEFT JOIN dbo.sysjobservers sjserver ON sj.job_id = sjserver.job_id \
 LEFT JOIN dbo.sysschedules ss ON sjs.schedule_id = ss.schedule_id \
-ORDER BY sj.name, \
-         sjs.next_run_date ASC, \
-         sjs.next_run_time ASC \
+ORDER BY job_name, \
+         next_run_date ASC, \
+         next_run_time ASC \
 ";
 
     pub const MIRRORING: &str = "SELECT @@SERVERNAME as server_name, \

@@ -59543,6 +59543,15 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"The placeholder <tt>\\0</tt> will be replaced by the original message text. "
+"This allows you to add new information at the beginning or at the end."
+msgstr ""
+"De plaatshouder <tt>0</tt> wordt vervangen door de oorspronkelijke tekst. "
+"Dit maakt het mogelijk om nieuwe informatie vooraan of aan het eind toe te "
+"voegen."
+
+#, fuzzy
+msgid ""
 "The placeholder <tt>\\0</tt> will be replaced by the original text of this "
 "field to match. Note that as an alternative, you may also use the rule Host "
 "name translation for Incoming Messages in the Global Settings of the EC to "

@@ -5,7 +5,7 @@ Component: wato
 Date: 1725874171
 Edition: cre
 Level: 1
-Version: 2.2.0p35
+Version: 2.2.0p34
 
 Previous to this Werk the RestAPI did not properly check if a user that is supposed to authenticated with multiple factors indeed authenticated fully.
 

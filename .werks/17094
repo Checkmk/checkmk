@@ -5,7 +5,7 @@ Component: wato
 Date: 1725549833
 Edition: cee
 Level: 1
-Version: 2.2.0p35
+Version: 2.2.0p34
 
 Prior to Werk, attackers could craft URLs that rendered clickable HTML links in the error box on the SAML login page.
 This could facilitate phishing attacks by tricking users into clicking malicious links.

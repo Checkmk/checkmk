@@ -670,8 +670,6 @@ def _get_services_result(
 
     section.section_step("Executing discovery plugins (%d)" % len(candidates))
     console.debug(f"  Trying discovery with: {', '.join(str(n) for n in candidates)}")
-    # The host name must be set for the host_name() calls commonly used to determine the
-    # host name for get_host_values{_merged,} calls in the legacy checks.
 
     for plugin_name in skip:
         console.debug(f"  Skip ignored check plug-in name {plugin_name!r}")

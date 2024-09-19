@@ -98,7 +98,7 @@ def register(
     permission_registry.register(PermissionBISeeAll)
 
     command_group_registry.register(CommandGroupAggregations)
-    command_registry.register(CommandFreezeAggregation)
+    command_registry.register(CommandFreezeAggregation())
 
     page_registry.register_page_handler("bi_set_assumption", ajax_set_assumption)
     page_registry.register_page_handler("bi_save_treestate", ajax_save_treestate)

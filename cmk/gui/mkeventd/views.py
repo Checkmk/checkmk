@@ -122,11 +122,11 @@ def register(
     painter_registry.register(PainterHistoryWho)
     painter_registry.register(PainterHistoryAddinfo)
 
-    command_registry.register(CommandECUpdateEvent)
-    command_registry.register(CommandECChangeState)
-    command_registry.register(CommandECCustomAction)
-    command_registry.register(CommandECArchiveEvent)
-    command_registry.register(CommandECArchiveEventsOfHost)
+    command_registry.register(CommandECUpdateEvent())
+    command_registry.register(CommandECChangeState())
+    command_registry.register(CommandECCustomAction())
+    command_registry.register(CommandECArchiveEvent())
+    command_registry.register(CommandECArchiveEventsOfHost())
 
     sorter_registry.register(SorterServicelevel)
 

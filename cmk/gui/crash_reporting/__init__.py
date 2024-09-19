@@ -37,7 +37,7 @@ def register(
     crash_reporting_pages.register(page_registry)
     data_source_registry.register(DataSourceCrashReports)
     sorter_registry.register(SorterCrashTime)
-    command_registry.register(CommandDeleteCrashReports)
+    command_registry.register(CommandDeleteCrashReports())
     painter_registry.register(PainterCrashException)
     painter_registry.register(PainterCrashIdent)
     painter_registry.register(PainterCrashTime)

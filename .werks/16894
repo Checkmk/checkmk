@@ -5,7 +5,7 @@ Component: checks
 Date: 1725978045
 Edition: cre
 Level: 1
-Version: 2.2.0p34
+Version: 2.2.0p35
 
 Newer firmware for NetVision cards was not supported due to changed SNMP OIDs for UPS entries.
 

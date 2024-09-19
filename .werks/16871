@@ -5,7 +5,7 @@ Component: checks
 Date: 1726577620
 Edition: cre
 Level: 1
-Version: 2.2.0p34
+Version: 2.2.0p35
 
 Previously, SATA disks connected via HBA weren't monitored by the smart
 agent plugin. Now, they are monitored the same way as other ATA disks.

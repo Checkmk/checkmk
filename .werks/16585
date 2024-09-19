@@ -5,7 +5,7 @@ Component: checks
 Date: 1711037404
 Edition: cre
 Level: 1
-Version: 2.2.0p34
+Version: 2.2.0p35
 
 Previously it was not possible to select an MBean that had a path separator. This Werk implements the Jolokia path separator <code>!/</code>.
 

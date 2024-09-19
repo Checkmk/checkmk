@@ -11,7 +11,8 @@ use check_cert::fetcher::{self, Config as FetcherConfig};
 use check_cert::truststore;
 use clap::{Parser, ValueEnum};
 use std::time::Duration as StdDuration;
-use time::{Duration, Instant};
+use std::time::Instant;
+use time::Duration;
 
 #[allow(non_camel_case_types)]
 #[allow(clippy::upper_case_acronyms)]
@@ -178,7 +179,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let response_time = parse_levels(
         LevelsStrategy::Upper,
         args.response_time,
-        Duration::seconds_f64,
+        StdDuration::from_secs_f64,
     );
 
     info("load trust store...");

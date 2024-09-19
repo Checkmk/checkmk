@@ -458,12 +458,16 @@ class HealthZ(BaseModel):
     response: str
 
 
+class NodeConnectionError(BaseModel):
+    message: str
+
+
 class KubeletInfo(Section):
     """section: kube_node_kubelet_v1"""
 
     version: str
     proxy_version: str
-    health: HealthZ
+    health: HealthZ | NodeConnectionError
 
 
 class APIHealth(BaseModel):

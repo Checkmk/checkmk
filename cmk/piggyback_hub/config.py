@@ -31,7 +31,7 @@ class PiggybackHubConfig(BaseModel):
     targets: Sequence[Target] = []
 
 
-def save_config(
+def save_config_on_message(
     logger: logging.Logger, omd_root: Path
 ) -> Callable[[Channel[PiggybackHubConfig], PiggybackHubConfig], None]:
     def _on_message(_channel: Channel[PiggybackHubConfig], received: PiggybackHubConfig) -> None:

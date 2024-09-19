@@ -17,7 +17,7 @@ from types import FrameType
 
 from cmk.ccc.daemon import daemonize, pid_file_lock
 
-from cmk.piggyback_hub.config import PiggybackHubConfig, save_config
+from cmk.piggyback_hub.config import PiggybackHubConfig, save_config_on_message
 from cmk.piggyback_hub.payload import PiggybackPayload, save_payload, SendingPayloadThread
 from cmk.piggyback_hub.utils import ReceivingThread, SignalException
 
@@ -102,7 +102,7 @@ def run_piggyback_hub(logger: logging.Logger, omd_root: Path) -> None:
     )
     sending_thread = SendingPayloadThread(logger, omd_root)
     receive_config_thread = ReceivingThread(
-        logger, omd_root, PiggybackHubConfig, save_config(logger, omd_root), "config"
+        logger, omd_root, PiggybackHubConfig, save_config_on_message(logger, omd_root), "config"
     )
 
     receiving_thread.start()

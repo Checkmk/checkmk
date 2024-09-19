@@ -46,7 +46,10 @@ class Automations:
             try:
                 automation = self._automations[cmd]
             except KeyError:
-                raise MKAutomationError("Automation command '%s' is not implemented." % cmd)
+                raise MKAutomationError(
+                    f"Unknown automation command: {cmd!r}"
+                    f" (available: {', '.join(sorted(self._automations))})"
+                )
 
             if automation.needs_checks:
                 with redirect_stdout(open(os.devnull, "w")):

@@ -27,14 +27,14 @@ class Target:
     site_id: str
 
 
-class PiggybackConfig(BaseModel):
+class PiggybackHubConfig(BaseModel):
     targets: Sequence[Target] = []
 
 
 def save_config(
     logger: logging.Logger, omd_root: Path
-) -> Callable[[Channel[PiggybackConfig], PiggybackConfig], None]:
-    def _on_message(_channel: Channel[PiggybackConfig], received: PiggybackConfig) -> None:
+) -> Callable[[Channel[PiggybackHubConfig], PiggybackHubConfig], None]:
+    def _on_message(_channel: Channel[PiggybackHubConfig], received: PiggybackHubConfig) -> None:
         logger.debug("New configuration received")
         config_path = create_paths(omd_root).config
         config_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)

@@ -19,24 +19,24 @@ from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 
-from cmk.piggyback_hub.config import PiggybackConfig, Target
+from cmk.piggyback_hub.config import PiggybackHubConfig, Target
 from cmk.piggyback_hub.paths import create_paths
 from cmk.piggyback_hub.utils import distribute
 
 
-class PiggybackConfigs(BaseModel):
+class PiggybackHubConfigs(BaseModel):
     configs: Mapping[str, Sequence[Target]]
 
 
 def load_config():
     config_path = create_paths(omd_root).config
     if not config_path.exists():
-        return PiggybackConfig()
+        return PiggybackHubConfig()
     config = store.load_text_from_file(config_path)
-    return PiggybackConfig.model_validate_json(json.loads(config))
+    return PiggybackHubConfig.model_validate_json(json.loads(config))
 
 
-def save_config(config: PiggybackConfig) -> None:
+def save_config(config: PiggybackHubConfig) -> None:
     store.save_text_to_file(
         create_paths(omd_root).config,
         json.dumps(config.model_dump_json()),
@@ -60,10 +60,9 @@ def get_piggyback_site_configs() -> Mapping[SiteId, SiteConfiguration]:
 
 def get_piggyback_hub_config(
     piggyback_hub_sites: Mapping[SiteId, SiteConfiguration],
-) -> PiggybackConfig:
+) -> PiggybackHubConfig:
     root_folder = folder_tree().root_folder()
-
-    return PiggybackConfig(
+    return PiggybackHubConfig(
         targets=[
             Target(host_name=host_name, site_id=host.site_id())
             for host_name, host in root_folder.all_hosts_recursively().items()

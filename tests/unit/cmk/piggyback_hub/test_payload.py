@@ -21,7 +21,7 @@ from cmk.piggyback import (
     store_last_distribution_time,
     store_piggyback_raw_data,
 )
-from cmk.piggyback_hub.config import PiggybackConfig, Target
+from cmk.piggyback_hub.config import PiggybackHubConfig, Target
 from cmk.piggyback_hub.payload import (
     _get_piggyback_raw_data_to_send,
     _load_piggyback_targets,
@@ -139,12 +139,12 @@ def test__load_piggyback_targets_missing_config_file(tmpdir: Path) -> None:
     "config, expected_targets",
     [
         pytest.param(
-            PiggybackConfig(targets=[Target(host_name=HostName("host1"), site_id="site1")]),
+            PiggybackHubConfig(targets=[Target(host_name=HostName("host1"), site_id="site1")]),
             [],
             id="skip_self",
         ),
         pytest.param(
-            PiggybackConfig(
+            PiggybackHubConfig(
                 targets=[
                     Target(host_name=HostName("host1"), site_id="site1"),
                     Target(host_name=HostName("host2"), site_id="site2"),
@@ -156,7 +156,7 @@ def test__load_piggyback_targets_missing_config_file(tmpdir: Path) -> None:
     ],
 )
 def test__load_piggyback_targets(
-    tmpdir: Path, config: PiggybackConfig, expected_targets: Sequence[Target]
+    tmpdir: Path, config: PiggybackHubConfig, expected_targets: Sequence[Target]
 ) -> None:
     config_file = tmpdir / "piggyback_hub.conf"
     with open(config_file, "w") as f:

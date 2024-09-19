@@ -10,14 +10,14 @@ from unittest.mock import Mock
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.piggyback_hub.config import PiggybackConfig, save_config, Target
+from cmk.piggyback_hub.config import PiggybackHubConfig, save_config, Target
 
 
 def test__on_message(
     tmp_path: Path,
 ) -> None:
     test_logger = logging.getLogger("test")
-    input_payload = PiggybackConfig(
+    input_payload = PiggybackHubConfig(
         targets=[Target(host_name=HostName("test_host"), site_id="test_site")]
     )
     on_message = save_config(test_logger, tmp_path)
@@ -27,9 +27,9 @@ def test__on_message(
 
     on_message(Mock(), input_payload)
 
-    expected_config = PiggybackConfig(
+    expected_config = PiggybackHubConfig(
         targets=[Target(host_name=HostName("test_host"), site_id="test_site")]
     )
     with open(tmp_path / "etc/check_mk/piggyback_hub.conf") as f:
         actual_config = json.loads(f.read())
-    assert PiggybackConfig.model_validate_json(actual_config) == expected_config
+    assert PiggybackHubConfig.model_validate_json(actual_config) == expected_config

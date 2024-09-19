@@ -24,7 +24,7 @@ from cmk.piggyback import (
     store_last_distribution_time,
     store_piggyback_raw_data,
 )
-from cmk.piggyback_hub.config import PiggybackConfig, Target
+from cmk.piggyback_hub.config import PiggybackHubConfig, Target
 from cmk.piggyback_hub.paths import create_paths
 from cmk.piggyback_hub.utils import SignalException
 
@@ -66,7 +66,7 @@ def _load_piggyback_targets(
     if not piggyback_hub_config_path.exists():
         return []
     with open(piggyback_hub_config_path, "r") as f:
-        piggyback_hub_config = PiggybackConfig.model_validate_json(json.loads(f.read()))
+        piggyback_hub_config = PiggybackHubConfig.model_validate_json(json.loads(f.read()))
 
     targets = []
     for target in piggyback_hub_config.targets:

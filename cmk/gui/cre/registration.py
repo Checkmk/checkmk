@@ -10,11 +10,9 @@ import cmk.gui.graphing._html_render as html_render
 import cmk.gui.pages
 from cmk.gui.i18n import _
 from cmk.gui.metrics import PageGraphDashlet, PageHostServiceGraphPopup
-from cmk.gui.openapi.endpoints import host_config
 from cmk.gui.painter.v0 import painters
 from cmk.gui.painter.v0.base import Cell, painter_registry
 from cmk.gui.type_defs import Row
-from cmk.gui.view_renderer import GUIViewRenderer
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views import graph
 from cmk.gui.wato import notification_parameter_registry, NotificationParameterMail
@@ -45,8 +43,5 @@ def register_painters() -> None:
 
 def register() -> None:
     notification_parameter_registry.register(NotificationParameterMail)
-    GUIViewRenderer.page_menu_dropdowns_hook = lambda v, r, p: None
-    host_config.agent_links_hook = lambda h: []
-
     register_pages()
     register_painters()

@@ -11,6 +11,7 @@ RABBITMQ_CONFIG_FILES="${OMD_ROOT}/etc/rabbitmq/conf.d"
 RABBITMQ_ADVANCED_CONFIG_FILE="${OMD_ROOT}/etc/rabbitmq/advanced_conf.d/00-advanced.conf"
 RABBITMQ_ENABLED_PLUGINS_FILE="${OMD_ROOT}/etc/rabbitmq/enabled_plugins"
 RABBITMQ_DIST_PORT="${CONFIG_RABBITMQ_DIST_PORT:?}"
+RABBITMQ_DIAGNOSTICS="${OMD_ROOT}/lib/rabbitmq/sbin/rabbitmq-diagnostics"
 BROKER_CERTIFICATES=$OMD_ROOT/bin/message-broker-certs
 EXECUTE="${OMD_ROOT}/lib/rabbitmq/sbin/rabbitmq-server"
 ERL_EPMD_ADDRESS="::1"
@@ -35,11 +36,15 @@ await_process_stop() {
     return 1
 }
 
+rabbitmq_accepting_connections() {
+    "${RABBITMQ_DIAGNOSTICS}" -q check_port_connectivity --node "${RABBITMQ_NODENAME}" &>/dev/null
+}
+
 await_process_start() {
     max=$(("${1}" * 10))
     # If the PIDFILE gets filled, rabbitmq started
     for N in $(seq "${max}"); do
-        [ -s "${PIDFILE}" ] && return 0
+        [ -s "${PIDFILE}" ] && rabbitmq_accepting_connections && return 0
         [ -e "${PIDFILE}" ] || return 1
         [ $((N % 10)) -eq 0 ] && printf "."
         sleep 0.1

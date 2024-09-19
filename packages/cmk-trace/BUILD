@@ -1,6 +1,6 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
-load("@rules_python//python:packaging.bzl", "py_wheel")
 load("@omd_packages//omd/packages/rules:package_wheel.bzl", "package_wheel")
+load("@rules_python//python:packaging.bzl", "py_wheel")
 
 py_library(
     name = "cmk-trace",

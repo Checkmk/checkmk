@@ -1,8 +1,8 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
 load("@cmk_werks//:requirements.bzl", "requirement")
-load("@rules_python//python:pip.bzl", "compile_pip_requirements")
-load("@rules_python//python:packaging.bzl", "py_wheel")
 load("@omd_packages//omd/packages/rules:package_wheel.bzl", "package_wheel")
+load("@rules_python//python:packaging.bzl", "py_wheel")
+load("@rules_python//python:pip.bzl", "compile_pip_requirements")
 
 filegroup(
     name = "files",

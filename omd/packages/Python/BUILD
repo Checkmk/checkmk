@@ -1,7 +1,7 @@
-load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mklink")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@omd_packages//:package_versions.bzl", "PYTHON_VERSION")
 load("@omd_packages//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR", "PYTHON_VERSION_MAJOR")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mklink")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//omd/packages/rules:exclude_from_filegroup.bzl", "exclude_from_filegroup")
 load("//omd/packages/rules:make_deployable.bzl", "make_deployable")
 

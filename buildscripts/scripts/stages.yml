@@ -66,7 +66,7 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^scripts/run-pipenv' || true"
 
     - NAME: CHANGED_BAZEL_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep -e '\\.bzl$' -e 'BUILD.*' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep -e '\\.bzl$' -e 'BUILD' || true"
 
     - NAME: CHANGED_AGENT_PLUGINS
       SH: "echo '${CHANGED_FILES_REL}' | grep '^agents/plugins/' || true"

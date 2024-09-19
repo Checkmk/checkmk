@@ -1,7 +1,7 @@
-load("@rules_python//python:pip.bzl", "whl_filegroup")
+load("@omd_packages//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("@omd_packages//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
+load("@rules_python//python:pip.bzl", "whl_filegroup")
 
 def package_wheel(wheel_target):
     """Packages a python wheel into our omd site-packages."""

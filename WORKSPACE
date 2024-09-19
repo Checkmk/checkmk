@@ -40,7 +40,7 @@ http_archive(
     ],
 )
 
-load("//omd/packages/rules:cargo_deps.bzl", "cargo_deps")
+load("@rules_rust//crate_universe:defs.bzl", "crate", "crates_repository")
 load("//omd/packages/rules:rust_workspace.bzl", "rust_workspace")
 
 rust_workspace()
@@ -58,23 +58,38 @@ rules_pkg_dependencies()
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-cargo_deps(
-    name = "check-cert-deps",
-    package = "packages/check-cert",
+# Repin with `CARGO_BAZEL_REPIN=1 bazel sync --only=cargo_deps_site`.
+crates_repository(
+    # Repository for rust binaries or libraries deployed in the site.
+    name = "cargo_deps_site",
+    annotations = {
+        "openssl-sys": [
+            crate.annotation(
+                build_script_data = [
+                    "@openssl//:gen_dir",
+                ],
+                build_script_env = {
+                    "OPENSSL_DIR": "$(execpath @openssl//:gen_dir)",
+                    "OPENSSL_NO_VENDOR": "1",
+                },
+                deps = [
+                    "@openssl//:openssl_shared",
+                ],
+            ),
+        ],
+    },
+    cargo_lockfile = "//:Cargo.site.lock",
+    lockfile = "//:Cargo.site.lock.bazel",
+    manifests = [
+        "//:Cargo.site.toml",
+        "//packages/check-cert:Cargo.toml",
+        "//packages/check-http:Cargo.toml",
+    ],
 )
 
-load("@check-cert-deps//:defs.bzl", check_cert_deps = "crate_repositories")
+load("@cargo_deps_site//:defs.bzl", site_crate_repository = "crate_repositories")
 
-check_cert_deps()
-
-cargo_deps(
-    name = "check-http-deps",
-    package = "packages/check-http",
-)
-
-load("@check-http-deps//:defs.bzl", check_http_deps = "crate_repositories")
-
-check_http_deps()
+site_crate_repository()
 
 load("//omd/packages/patch:patch_http.bzl", "patch_workspace")
 

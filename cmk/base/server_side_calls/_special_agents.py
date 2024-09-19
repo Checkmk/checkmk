@@ -21,9 +21,9 @@ from cmk.server_side_calls_backend.config_processing import (
 )
 
 from ._commons import (
-    commandline_arguments,
     ExecutableFinderProtocol,
     InfoFunc,
+    legacy_commandline_arguments,
     replace_macros,
     replace_passwords,
     SpecialAgentInfoFunctionResult,
@@ -72,13 +72,13 @@ class SpecialAgent:
     def _make_source_path(self, agent_name: str) -> str:
         return self._finder(f"agent_{agent_name}", self._modules.get(agent_name))
 
-    def _make_special_agent_cmdline(
+    def _make_legacy_special_agent_cmdline(
         self,
         agent_name: str,
         agent_configuration: SpecialAgentInfoFunctionResult,
     ) -> str:
         path = self._make_source_path(agent_name)
-        args = commandline_arguments(
+        args = legacy_commandline_arguments(
             self.host_name,
             None,
             agent_configuration,
@@ -92,7 +92,7 @@ class SpecialAgent:
     ) -> Iterator[SpecialAgentCommandLine]:
         agent_configuration = info_func(params, self.host_name, self.host_address)
 
-        cmdline = self._make_special_agent_cmdline(
+        cmdline = self._make_legacy_special_agent_cmdline(
             agent_name,
             agent_configuration,
         )

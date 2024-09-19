@@ -39,7 +39,7 @@ class ActiveCheckError(Exception):  # or agent
     pass
 
 
-def commandline_arguments(
+def legacy_commandline_arguments(
     hostname: HostName,
     description: ServiceName | None,
     commandline_args: SpecialAgentInfoFunctionResult,

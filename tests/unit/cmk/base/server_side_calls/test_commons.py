@@ -16,8 +16,8 @@ from cmk.utils.hostaddress import HostName
 from cmk.base.server_side_calls import SpecialAgentInfoFunctionResult
 from cmk.base.server_side_calls._commons import (
     ActiveCheckError,
-    commandline_arguments,
     ExecutableFinder,
+    legacy_commandline_arguments,
 )
 
 
@@ -56,7 +56,7 @@ def test_commandline_arguments(
     passwords: Mapping[str, str],
     expected_result: str,
 ) -> None:
-    cmdline_args = commandline_arguments(
+    cmdline_args = legacy_commandline_arguments(
         HostName("test"),
         "test service",
         args,
@@ -95,7 +95,7 @@ def test_commandline_arguments_nonexisting_password(
     expected_warning: str,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    commandline_arguments(
+    legacy_commandline_arguments(
         host_name,
         service_name,
         ["arg1", ("store", "pw-id", "--password=%s"), "arg3"],
@@ -119,7 +119,7 @@ def test_commandline_arguments_invalid_arguments_type(args: int | tuple[int, int
         ActiveCheckError,
         match=r"The check argument function needs to return either a list of arguments or a string of the concatenated arguments \(Service: test service\).",
     ):
-        commandline_arguments(
+        legacy_commandline_arguments(
             HostName("test"),
             "test service",
             args,  # type: ignore[arg-type]
@@ -133,7 +133,7 @@ def test_commandline_arguments_invalid_argument() -> None:
         ActiveCheckError,
         match=r"Invalid argument for command line: \(1, 2\)",
     ):
-        commandline_arguments(
+        legacy_commandline_arguments(
             HostName("test"),
             "test service",
             ["arg1", (1, 2), "arg3"],  # type: ignore[list-item]

@@ -21,5 +21,6 @@
 Write-Host "shorten dir: " $new
 Set-Location $new
 (Get-Item .).FullName
-&$args[2]
+& dir $args[2]
+& $args[2]
 [Environment]::Exit($LASTEXITCODE)

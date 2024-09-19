@@ -122,11 +122,11 @@ class BaseVersions:
 @dataclasses.dataclass
 class InteractiveModeDistros:
     @staticmethod
-    def get_supported_distros():
+    def get_supported_distros() -> list[str]:
         with open(repo_path() / "editions.yml") as stream:
             yaml_file = yaml.safe_load(stream)
 
-        return yaml_file["daily_extended"]
+        return yaml_file["common"]
 
     DISTROS = ["ubuntu-22.04", "almalinux-9"]
     assert set(DISTROS).issubset(set(get_supported_distros()))

@@ -14,10 +14,10 @@
         />
         Contact groups
     </p>
-    <div class="cg_list" style="padding: 10px 0 10px 0">
-        {% for item in data.HOSTCONTACTGROUPNAMES.split(' ')
+    <div class="cg_list" style="padding-top: 10px">
+        {% for item in data.HOSTCONTACTGROUPNAMES.split(',')
         %}
-        <span style="padding-right: 8px">• {{ item }}</span>
+        <span style="padding-right: 8px; font-size: 14px;">• {{ item }}</span>
         {% endfor %}
     </div>
 </div>

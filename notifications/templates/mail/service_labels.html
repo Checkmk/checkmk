@@ -4,8 +4,8 @@
         <img src="cid:label.png" style="width: 18px; height: 19px" />
         Service labels
     </p>
-    {% set has_labels = false %} {% for key, value in data.items() %} {% if
-    key.startswith('SERVICELABEL_')%} {% set found = true %}
+    {% set ns = namespace(has_labels = false) %} {% for key, value in data.items() %} {% if
+    key.startswith('SERVICELABEL_')%} {% set ns.has_labels = true %}
     <div
         class="label"
         style="
@@ -20,13 +20,13 @@
             text-decoration: none;
             font-size: 14px;
             padding: 0 10px 0px 10px;
-            margin-top: 10px;
+            margin: 10px 10px 0 0;
             line-height: 25px;
         "
     >
         {{ key[13:] }}:{{ value }}
     </div>
-    {% endif %} {% endfor %} {% if not has_labels %}
-    <p style="margin-top: 10px;">No Service labels</p>
+    {% endif %} {% endfor %} {% if not ns.has_labels %}
+    <p style="margin-top: 10px;font-size: 14px;">No Service labels</p>
     {% endif %}
 </div>

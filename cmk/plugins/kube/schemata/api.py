@@ -449,6 +449,10 @@ class HealthZ(BaseModel):
     response: str
 
 
+class NodeConnectionError(BaseModel):
+    message: str
+
+
 class APIHealth(BaseModel):
     ready: HealthZ
     live: HealthZ
@@ -535,7 +539,7 @@ def _give_root_if_prefix_present(label: LabelName, prefix: str) -> str | None:
 class Node(BaseModel):
     metadata: NodeMetaData
     status: NodeStatus
-    kubelet_health: HealthZ
+    kubelet_health: HealthZ | NodeConnectionError
 
     def roles(self) -> Sequence[str]:
         return [

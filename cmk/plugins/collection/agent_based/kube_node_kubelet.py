@@ -14,6 +14,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.plugins.kube.schemata.api import NodeConnectionError
 from cmk.plugins.kube.schemata.section import KubeletInfo
 
 
@@ -24,7 +25,13 @@ def parse_kube_node_kubelet_v1(string_table: StringTable) -> KubeletInfo:
 def check_kube_node_kubelet(section: KubeletInfo) -> CheckResult:
     # The conversion of the status code is based on:
     # https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
-    if section.health.status_code == 200:
+    if isinstance(section.health, NodeConnectionError):
+        yield Result(state=State.CRIT, summary="Unresponsive Node")
+        yield Result(
+            state=State.OK,
+            notice=f"Verbose response:\n{section.health.message}",
+        )
+    elif section.health.status_code == 200:
         yield Result(state=State.OK, summary="Healthy")
     else:
         yield Result(state=State.CRIT, summary="Not healthy")

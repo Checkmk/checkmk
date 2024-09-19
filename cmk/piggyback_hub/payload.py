@@ -24,7 +24,8 @@ from cmk.piggyback import (
     store_last_distribution_time,
     store_piggyback_raw_data,
 )
-from cmk.piggyback_hub.config import config_path, PiggybackConfig, Target
+from cmk.piggyback_hub.config import PiggybackConfig, Target
+from cmk.piggyback_hub.paths import create_paths
 from cmk.piggyback_hub.utils import SignalException
 
 SENDING_PAUSE = 60  # [s]
@@ -128,6 +129,7 @@ class SendingPayloadThread(threading.Thread):
         super().__init__()
         self.logger = logger
         self.omd_root = omd_root
+        self.config_path = create_paths(omd_root).config
 
     def run(self):
         try:
@@ -135,9 +137,7 @@ class SendingPayloadThread(threading.Thread):
                 channel = conn.channel(PiggybackPayload)
 
                 while True:
-                    targets = _load_piggyback_targets(
-                        config_path(self.omd_root), self.omd_root.name
-                    )
+                    targets = _load_piggyback_targets(self.config_path, self.omd_root.name)
                     for target in targets:
                         for piggyback_message in _get_piggyback_raw_data_to_send(
                             target.host_name, self.omd_root

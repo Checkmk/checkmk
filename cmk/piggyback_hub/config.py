@@ -10,7 +10,7 @@ import tempfile
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Final
+from typing import Callable
 
 from pydantic import BaseModel
 
@@ -18,8 +18,7 @@ from cmk.utils.hostaddress import HostName
 
 from cmk.messaging import Channel
 
-PIGGYBACK_HUB_CONFIG_PATH: Final = Path("etc/check_mk/piggyback_hub.conf")
-MULTISITE_CONFIG: Final = Path("etc/check_mk/piggyback_hub.d/multisite.conf")
+from .paths import create_paths
 
 
 @dataclass(frozen=True)
@@ -32,30 +31,20 @@ class PiggybackConfig(BaseModel):
     targets: Sequence[Target] = []
 
 
-def config_path(omd_root: Path) -> Path:
-    """Get the path of the local piggyback hub configuration"""
-    return omd_root / PIGGYBACK_HUB_CONFIG_PATH
-
-
-def multisite_config_path(omd_root: Path) -> Path:
-    """Get the path of the multisite configuration"""
-    return omd_root / MULTISITE_CONFIG
-
-
 def save_config(
     logger: logging.Logger, omd_root: Path
 ) -> Callable[[Channel[PiggybackConfig], PiggybackConfig], None]:
     def _on_message(_channel: Channel[PiggybackConfig], received: PiggybackConfig) -> None:
         logger.debug("New configuration received")
-        file_path = config_path(omd_root)
-        file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
+        config_path = create_paths(omd_root).config
+        config_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
 
         with tempfile.NamedTemporaryFile(
-            "w", dir=str(file_path.parent), prefix=f".{file_path.name}.new", delete=False
+            "w", dir=str(config_path.parent), prefix=f".{config_path.name}.new", delete=False
         ) as tmp:
             tmp_path = tmp.name
             tmp.write(json.dumps(received.model_dump_json()))
 
-        os.rename(tmp_path, str(file_path))
+        os.rename(tmp_path, str(config_path))
 
     return _on_message

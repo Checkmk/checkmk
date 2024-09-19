@@ -19,7 +19,8 @@ from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 
-from cmk.piggyback_hub.config import config_path, PiggybackConfig, Target
+from cmk.piggyback_hub.config import PiggybackConfig, Target
+from cmk.piggyback_hub.paths import create_paths
 from cmk.piggyback_hub.utils import distribute
 
 
@@ -28,17 +29,18 @@ class PiggybackConfigs(BaseModel):
 
 
 def load_config():
-    config_file = config_path(omd_root)
-    if not config_file.exists():
+    config_path = create_paths(omd_root).config
+    if not config_path.exists():
         return PiggybackConfig()
-    config = store.load_text_from_file(config_file)
-
+    config = store.load_text_from_file(config_path)
     return PiggybackConfig.model_validate_json(json.loads(config))
 
 
 def save_config(config: PiggybackConfig) -> None:
-    config_file = config_path(omd_root)
-    store.save_text_to_file(config_file, json.dumps(config.model_dump_json()))
+    store.save_text_to_file(
+        create_paths(omd_root).config,
+        json.dumps(config.model_dump_json()),
+    )
 
 
 def piggyback_hub_enabled(site_config: SiteConfiguration, global_settings: GlobalSettings) -> bool:

@@ -19,13 +19,6 @@ daily_reduced: &daily_reduced
     - "debian-12"
     - "sles-15sp6"
 
-daily_extended: &daily_extended
-    - "debian-12"
-    - "ubuntu-22.04"
-    - "ubuntu-24.04"
-    - "almalinux-9"
-    - "sles-15sp6"
-
 daily_saas: &daily_saas
     - "ubuntu-22.04"
     - "ubuntu-24.04"
@@ -50,10 +43,10 @@ cma_distros: &cma_distros
 editions:
     enterprise:
         release: [*common, *cma_distros]
-        daily: [*daily_extended, *internal_distros, "cma-4"]
-        daily_tests: [*daily_extended, *internal_distros]
+        daily: [*common, *cma_distros, *internal_distros]
+        daily_tests: [*common, *cma_distros, *internal_distros]
         # Don't test the update process for internal distros, they are not public anyway
-        daily_update_tests: [*daily_extended]
+        daily_update_tests: [*common, *cma_distros]
         weekly: [*common, *cma_distros]
         testbuild: ["ubuntu-24.04", "sles-15sp6", "cma-4"]
     cloud:

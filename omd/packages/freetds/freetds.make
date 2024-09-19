@@ -1,5 +1,5 @@
 FREETDS := freetds
-FREETDS_VERS := 0.95.95
+FREETDS_VERS := 1.4.22
 FREETDS_DIR := $(FREETDS)-$(FREETDS_VERS)
 # Increase this to enforce a recreation of the build cache
 FREETDS_BUILD_ID := 0

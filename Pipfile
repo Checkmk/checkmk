@@ -131,7 +131,7 @@ msal = "==1.26.0"  # needed by agent_azure
 Pillow = ">10.1.0,<11.0"  # pinned to <11.0, because 11.0 changes types
 python-ldap = "==3.4.3"  # needed by GUI (User sync), python-active-directory
 dicttoxml = "==1.7.16"  # needed by GUI (API XML format)
-Cython = "==0.29.32"  # needed by numpy
+Cython = "==3.0.11"  # needed by numpy & pymssql
 numpy = "==1.24.2"  # needed by GUI (metrics)
 reportlab = "==3.6.13"  # needed by GUI (reporting)
 PyPDF3 = "==1.0.5"  # needed by GUI (reporting)
@@ -145,7 +145,7 @@ botocore = "==1.20.102"  # needed by boto3 (aws)
 s3transfer = "==0.4.2"  # needed by boto3 (aws)
 boto3 = "==1.17.102"  # needed by boto3 (aws)
 python-snap7 = "==1.2"  # needed by Siemens PLC special agent
-pymssql = "==2.2.8"  # needed by check_sql active check
+pymssql = "==2.3.1"  # needed by check_sql active check
 PyMySQL = "==0.9.3"  # needed by check_sql active check
 psycopg2-binary = "==2.9.5"  # needed by check_sql active check
 apispec = "==5.2.2"  # direct dependency

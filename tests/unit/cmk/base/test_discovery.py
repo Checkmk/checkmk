@@ -5,7 +5,6 @@
 
 # pylint: disable=redefined-outer-name
 
-import functools
 import logging
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
@@ -50,7 +49,6 @@ from cmk.checkengine.discovery import (
 from cmk.checkengine.discovery._active_check import _check_host_labels, _check_service_lists
 from cmk.checkengine.discovery._autochecks import DiscoveredService
 from cmk.checkengine.discovery._autodiscovery import (
-    _get_cluster_services,
     _get_post_discovery_autocheck_services,
     _group_by_transition,
     _make_diff,
@@ -1864,40 +1862,36 @@ def test__perform_host_label_discovery_on_realhost(
 
 
 @pytest.mark.usefixtures("fix_register")
-@pytest.mark.parametrize("discovery_test_case", _discovery_test_cases)
-def test__discover_services_on_cluster(
-    cluster_scenario: ClusterScenario, discovery_test_case: DiscoveryTestCase
-) -> None:
-    if discovery_test_case.only_host_labels:
-        # check for consistency of the test case
-        assert not discovery_test_case.expected_services
-        return
-
-    scenario = cluster_scenario
-    config_cache = scenario.config_cache
-    ruleset_matcher = config_cache.ruleset_matcher
-    nodes = config_cache.nodes(scenario.parent)
-    assert nodes
-
-    discovered_services = _get_cluster_services(
-        scenario.parent,
-        existing_services={n: AutochecksStore(n).read() for n in nodes},
-        discovered_services=discovery_by_host(
-            nodes,
-            scenario.providers,
-            DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher),
-            OnError.RAISE,
-        ),
-        cluster_nodes=nodes,
-        ignore_plugin=lambda *args, **kw: False,
-        ignore_service=lambda *args, **kw: False,
-        get_effective_host=lambda *args, **kw: scenario.parent,
-        get_service_description=functools.partial(config.service_description, ruleset_matcher),
-    )
-
-    services = set(discovered_services[scenario.parent])
-
-    assert services == discovery_test_case.expected_services
+def test__discover_services_on_cluster(cluster_scenario: ClusterScenario) -> None:
+    assert discovery_by_host(
+        cluster_scenario.config_cache.nodes(cluster_scenario.parent),
+        cluster_scenario.providers,
+        DiscoveryPluginMapper(ruleset_matcher=cluster_scenario.config_cache.ruleset_matcher),
+        OnError.RAISE,
+    ) == {
+        "test-node1": [
+            AutocheckEntry(
+                check_plugin_name=CheckPluginName("df"),
+                item="/boot/test-efi",
+                parameters={
+                    "mountpoint_for_block_devices": "volume_name",
+                    "item_appearance": "mountpoint",
+                },
+                service_labels={},
+            ),
+        ],
+        "test-node2": [
+            AutocheckEntry(
+                check_plugin_name=CheckPluginName("df"),
+                item="/boot/test-efi",
+                parameters={
+                    "mountpoint_for_block_devices": "volume_name",
+                    "item_appearance": "mountpoint",
+                },
+                service_labels={},
+            ),
+        ],
+    }
 
 
 @pytest.mark.usefixtures("fix_register")

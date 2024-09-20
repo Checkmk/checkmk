@@ -228,6 +228,7 @@ def test_registered_pages() -> None:
             "robotmk_suite_log",
             "robotmk_suite_report",
             "download_robotmk_suite_report",
+            "robotmk_managed_robots",
         ]
 
     if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CSE:

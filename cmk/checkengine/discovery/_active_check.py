@@ -31,7 +31,7 @@ from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.summarize import SummarizerFunction
 
 from ._autochecks import AutocheckServiceWithNodes, AutochecksStore, DiscoveredService
-from ._autodiscovery import get_host_services_by_host_name, ServicesByTransition
+from ._autodiscovery import discovery_by_host, get_host_services_by_host_name, ServicesByTransition
 from ._discovery import DiscoveryPlugin
 from ._filters import ServiceFilter as _ServiceFilter
 from ._filters import ServiceFilters as _ServiceFilters
@@ -150,16 +150,16 @@ def execute_check_discovery(
             if is_cluster
             else {host_name: AutochecksStore(host_name).read()}
         ),
+        discovered_services=discovery_by_host(
+            cluster_nodes if is_cluster else (host_name,), providers, plugins, OnError.RAISE
+        ),
         is_cluster=is_cluster,
         cluster_nodes=cluster_nodes,
-        providers=providers,
-        plugins=plugins,
         ignore_service=ignore_service,
         ignore_plugin=ignore_plugin,
         get_effective_host=get_effective_host,
         get_service_description=find_service_description,
         enforced_services=enforced_services,
-        on_error=OnError.RAISE,
     )
 
     services_result, services_need_rediscovery = _check_service_lists(

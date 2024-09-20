@@ -54,6 +54,7 @@ from cmk.checkengine.discovery._autodiscovery import (
     _get_post_discovery_autocheck_services,
     _group_by_transition,
     _make_diff,
+    discovery_by_host,
     make_table,
     ServicesByTransition,
     ServicesTable,
@@ -1881,14 +1882,17 @@ def test__discover_services_on_cluster(
     discovered_services = _get_cluster_services(
         scenario.parent,
         existing_services={n: AutochecksStore(n).read() for n in nodes},
+        discovered_services=discovery_by_host(
+            nodes,
+            scenario.providers,
+            DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher),
+            OnError.RAISE,
+        ),
         cluster_nodes=nodes,
-        providers=scenario.providers,
-        plugins=DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher),
         ignore_plugin=lambda *args, **kw: False,
         ignore_service=lambda *args, **kw: False,
         get_effective_host=lambda *args, **kw: scenario.parent,
         get_service_description=functools.partial(config.service_description, ruleset_matcher),
-        on_error=OnError.RAISE,
     )
 
     services = set(discovered_services[scenario.parent])

@@ -52,7 +52,7 @@ from ._host_labels import discover_host_labels, HostLabelPlugin
 from ._services import analyse_services, discover_services, find_plugins
 from ._utils import DiscoveredItem, DiscoverySettings, QualifiedDiscovery
 
-__all__ = ["get_host_services_by_host_name"]
+__all__ = ["get_host_services_by_host_name", "discovery_by_host"]
 
 
 @dataclass
@@ -204,16 +204,19 @@ def automation_discovery(
                 if is_cluster
                 else {host_name: AutochecksStore(host_name).read()}
             ),
+            discovered_services=discovery_by_host(
+                cluster_nodes if is_cluster else (host_name,),
+                providers,
+                plugins,
+                on_error,
+            ),
             is_cluster=is_cluster,
             cluster_nodes=cluster_nodes,
-            providers=providers,
-            plugins=plugins,
             ignore_service=ignore_service,
             ignore_plugin=ignore_plugin,
             get_effective_host=get_effective_host,
             get_service_description=get_service_description,
             enforced_services=enforced_services,
-            on_error=on_error,
         )
 
         existing_services_by_host = {
@@ -596,16 +599,14 @@ def get_host_services_by_host_name(
     host_name: HostName,
     *,
     existing_services: Mapping[HostName, Sequence[AutocheckEntry]],
+    discovered_services: Mapping[HostName, Sequence[AutocheckEntry]],
     is_cluster: bool,
     cluster_nodes: Iterable[HostName],
-    plugins: Mapping[CheckPluginName, DiscoveryPlugin],
-    providers: Mapping[HostKey, Provider],
     ignore_service: Callable[[HostName, ServiceName], bool],
     ignore_plugin: Callable[[HostName, CheckPluginName], bool],
     get_effective_host: Callable[[HostName, ServiceName], HostName],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     enforced_services: Container[ServiceID],
-    on_error: OnError,
 ) -> dict[HostName, ServicesByTransition]:
     services_by_host_name: dict[HostName, ServicesTable[_Transition]]
     if is_cluster:
@@ -613,14 +614,12 @@ def get_host_services_by_host_name(
             **_get_cluster_services(
                 host_name,
                 existing_services=existing_services,
+                discovered_services=discovered_services,
                 cluster_nodes=cluster_nodes,
-                providers=providers,
-                plugins=plugins,
                 ignore_plugin=ignore_plugin,
                 ignore_service=ignore_service,
                 get_effective_host=get_effective_host,
                 get_service_description=get_service_description,
-                on_error=on_error,
             )
         }
     else:
@@ -628,12 +627,12 @@ def get_host_services_by_host_name(
             host_name: {
                 **make_table(
                     host_name,
-                    _get_services_result(
-                        host_name,
+                    analyse_services(
                         existing_services=existing_services[host_name],
-                        providers=providers,
-                        plugins=plugins,
-                        on_error=on_error,
+                        discovered_services=discovered_services[host_name],
+                        run_plugin_names=EVERYTHING,
+                        forget_existing=False,
+                        keep_vanished=False,
                     ),
                     ignore_service=ignore_service,
                     ignore_plugin=ignore_plugin,
@@ -661,14 +660,12 @@ def get_host_services_by_host_name(
     }
 
 
-def _get_services_result(
-    host_name: HostName,
-    *,
-    existing_services: Sequence[AutocheckEntry],
+def discovery_by_host(  # should go to a different file, I think.
+    host_names: Sequence[HostName],
     providers: Mapping[HostKey, Provider],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     on_error: OnError,
-) -> QualifiedDiscovery[AutocheckEntry]:
+) -> Mapping[HostName, Sequence[AutocheckEntry]]:
     candidates = find_plugins(
         providers,
         [(plugin_name, plugin.sections) for plugin_name, plugin in plugins.items()],
@@ -678,19 +675,16 @@ def _get_services_result(
     console.debug(f"  Trying discovery with: {', '.join(str(n) for n in candidates)}")
 
     try:
-        discovered_services = discover_services(
-            host_name, candidates, providers=providers, plugins=plugins, on_error=on_error
-        )
+        discovered_services = {
+            host_name: discover_services(
+                host_name, candidates, providers=providers, plugins=plugins, on_error=on_error
+            )
+            for host_name in host_names
+        }
     except KeyboardInterrupt:
         raise MKGeneralException("Interrupted by Ctrl-C.")
 
-    return analyse_services(
-        existing_services=existing_services,
-        discovered_services=discovered_services,
-        run_plugin_names=EVERYTHING,
-        forget_existing=False,
-        keep_vanished=False,
-    )
+    return discovered_services
 
 
 def make_table(
@@ -790,13 +784,11 @@ def _get_cluster_services(
     *,
     cluster_nodes: Iterable[HostName],
     existing_services: Mapping[HostName, Sequence[AutocheckEntry]],
-    plugins: Mapping[CheckPluginName, DiscoveryPlugin],
-    providers: Mapping[HostKey, Provider],
+    discovered_services: Mapping[HostName, Sequence[AutocheckEntry]],
     ignore_plugin: Callable[[HostName, CheckPluginName], bool],
     ignore_service: Callable[[HostName, ServiceName], bool],
     get_effective_host: Callable[[HostName, ServiceName], HostName],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
-    on_error: OnError,
 ) -> dict[HostName, ServicesTable[_Transition]]:
     cluster_items: dict[
         HostName, ServicesTable[_Transition]
@@ -804,13 +796,14 @@ def _get_cluster_services(
     cluster_items[host_name] = {}
 
     for node in cluster_nodes:
-        entries = _get_services_result(
-            node,
+        entries = analyse_services(
             existing_services=existing_services[node],
-            providers=providers,
-            plugins=plugins,
-            on_error=on_error,
+            discovered_services=discovered_services[node],
+            run_plugin_names=EVERYTHING,
+            forget_existing=False,
+            keep_vanished=False,
         )
+
         cluster_items[node] = {
             **make_table(
                 node,

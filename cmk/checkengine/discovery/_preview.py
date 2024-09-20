@@ -39,7 +39,7 @@ from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.summarize import SummarizerFunction
 
 from ._autochecks import AutocheckEntry, AutochecksStore, DiscoveredService
-from ._autodiscovery import _Transition, get_host_services_by_host_name
+from ._autodiscovery import _Transition, discovery_by_host, get_host_services_by_host_name
 from ._discovery import DiscoveryPlugin
 from ._host_labels import analyse_cluster_labels, discover_host_labels, HostLabelPlugin
 from ._utils import QualifiedDiscovery
@@ -162,16 +162,16 @@ def get_check_preview(
             if is_cluster
             else {host_name: AutochecksStore(host_name).read()}
         ),
+        discovered_services=discovery_by_host(
+            cluster_nodes if is_cluster else (host_name,), providers, discovery_plugins, on_error
+        ),
         is_cluster=is_cluster,
         cluster_nodes=cluster_nodes,
-        providers=providers,
-        plugins=discovery_plugins,
         ignore_service=ignore_service,
         ignore_plugin=ignore_plugin,
         get_effective_host=get_effective_host,
         get_service_description=find_service_description,
         enforced_services=enforced_services,
-        on_error=on_error,
     )
 
     passive_rows_by_host = {

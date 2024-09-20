@@ -18,7 +18,7 @@ from cmk.piggyback_hub.config import load_config, PiggybackHubConfig, save_confi
 from cmk.piggyback_hub.utils import distribute
 
 
-def piggyback_hub_enabled(site_config: SiteConfiguration, global_settings: GlobalSettings) -> bool:
+def _piggyback_hub_enabled(site_config: SiteConfiguration, global_settings: GlobalSettings) -> bool:
     if (enabled := site_config.get("globals", {}).get("piggyback_hub_enabled")) is not None:
         return enabled
     return global_settings.get("piggyback_hub_enabled", True)
@@ -29,11 +29,11 @@ def get_enabled_piggyback_hub_site_configs() -> Mapping[SiteId, SiteConfiguratio
     return {
         site_id: site_config
         for site_id, site_config in configured_sites().items()
-        if piggyback_hub_enabled(site_config, global_settings) is True
+        if _piggyback_hub_enabled(site_config, global_settings) is True
     }
 
 
-def get_piggyback_hub_config(
+def _get_piggyback_hub_config(
     site_configs: Mapping[SiteId, SiteConfiguration],
 ) -> PiggybackHubConfig:
     root_folder = folder_tree().root_folder()
@@ -50,7 +50,7 @@ def distribute_config() -> None:
     site_configs = get_enabled_piggyback_hub_site_configs()
 
     old_config = load_config(omd_root)
-    new_config = get_piggyback_hub_config(site_configs)
+    new_config = _get_piggyback_hub_config(site_configs)
 
     if set(old_config.targets) != set(new_config.targets):
         distribute({site: new_config for site in site_configs.keys()}, omd_root)

@@ -34,14 +34,14 @@ def get_enabled_piggyback_hub_site_configs() -> Mapping[SiteId, SiteConfiguratio
 
 
 def get_piggyback_hub_config(
-    piggyback_hub_sites: Mapping[SiteId, SiteConfiguration],
+    site_configs: Mapping[SiteId, SiteConfiguration],
 ) -> PiggybackHubConfig:
     root_folder = folder_tree().root_folder()
     return PiggybackHubConfig(
         targets=[
             Target(host_name=host_name, site_id=host.site_id())
             for host_name, host in root_folder.all_hosts_recursively().items()
-            if host.site_id() in piggyback_hub_sites.keys()
+            if host.site_id() in site_configs.keys()
         ]
     )
 

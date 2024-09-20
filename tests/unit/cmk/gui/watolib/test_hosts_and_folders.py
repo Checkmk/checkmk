@@ -1161,3 +1161,32 @@ def test_folder_times() -> None:
 
     folder.persist_instance()
     assert int(meta_data["updated_at"]) > int(current)
+
+
+def test_subfolder_attributes_are_cached() -> None:
+    # GIVEN folder with cached attributes
+    root = folder_tree().root_folder()
+    subfolder = root.create_subfolder("sub1", "sub1", {"alias": "sub1"})
+    subfolder.effective_attributes()
+
+    # WHEN
+    subfolder.attributes["alias"] = "other_alias"
+
+    # THEN return cached attribute
+    assert subfolder.effective_attributes()["alias"] == "sub1"
+
+
+def test_subfolder_cache_invalidated() -> None:
+    # GIVEN folder with cached attributes
+    subfolder = folder_tree().root_folder().create_subfolder("sub1", "sub1", {"alias": "sub1"})
+    subfolder.effective_attributes()
+
+    # WHEN cache is invalidated from folder_tree and attribute is updated
+    folder_tree().invalidate_caches()
+    subfolder.attributes["alias"] = "other_alias"
+
+    # THEN we read updated attribute
+    # There is a bug when invalidating cache from folder_tree(), not all
+    # subfolders are part of the tree
+    with pytest.raises(AssertionError):
+        assert subfolder.effective_attributes()["alias"] == "other_alias"

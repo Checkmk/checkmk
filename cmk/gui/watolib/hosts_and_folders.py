@@ -984,6 +984,12 @@ class FolderTree:
         return self.folder("")
 
     def invalidate_caches(self) -> None:
+        # Attention: This will not invalidate all folder caches. (CMK-19211)
+        # You might have some references in your code which are not part of the
+        # root_folder() hierarchy since the root folder python object is
+        # regenerated after calling this method (since we are dropping
+        # "wato_folders"), losing all references to its subfolders. This leads
+        # to the recursive .drop_caches missing them them.
         self.root_folder().drop_caches()
         if may_use_redis():
             get_wato_redis_client(self).clear_cached_folders()

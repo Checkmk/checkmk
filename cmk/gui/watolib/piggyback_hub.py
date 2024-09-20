@@ -24,7 +24,7 @@ def piggyback_hub_enabled(site_config: SiteConfiguration, global_settings: Globa
     return global_settings.get("piggyback_hub_enabled", True)
 
 
-def get_piggyback_site_configs() -> Mapping[SiteId, SiteConfiguration]:
+def get_enabled_piggyback_hub_site_configs() -> Mapping[SiteId, SiteConfiguration]:
     global_settings = load_configuration_settings()
     return {
         site_id: site_config
@@ -47,7 +47,7 @@ def get_piggyback_hub_config(
 
 
 def distribute_config() -> None:
-    site_configs = get_piggyback_site_configs()
+    site_configs = get_enabled_piggyback_hub_site_configs()
 
     old_config = load_config(omd_root)
     new_config = get_piggyback_hub_config(site_configs)

@@ -21,10 +21,14 @@ from cmk.gui.painter_options import paint_age
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.view_utils import CellSpec
-from cmk.gui.views.command import Command, CommandActionResult, PermissionSectionAction
+from cmk.gui.views.command import (
+    Command,
+    CommandActionResult,
+    CommandGroupVarious,
+    PermissionSectionAction,
+)
 from cmk.gui.views.sorter import cmp_simple_number, Sorter
 from cmk.gui.visuals.filter import Filter
 
@@ -323,59 +327,52 @@ PermissionActionDeleteCrashReport = permission_registry.register(
 )
 
 
-class CommandDeleteCrashReports(Command):
-    @property
-    def ident(self) -> str:
-        return "delete_crash_reports"
-
-    @property
-    def title(self) -> str:
-        return _("Delete crash reports")
-
-    @property
-    def confirm_title(self) -> str:
-        return _("Delete crash reports?")
-
-    @property
-    def confirm_button(self) -> LazyString:
-        return _l("Delete")
-
-    @property
-    def permission(self) -> Permission:
-        return PermissionActionDeleteCrashReport
-
-    @property
-    def tables(self) -> list[str]:
-        return ["crash"]
-
-    def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
-        return HTML.without_escaping(
-            _("Affected %s: %s")
-            % (
-                ungettext(
-                    "crash report",
-                    "crash reports",
-                    len_action_rows,
-                ),
+def command_delete_crash_report_affected(
+    len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
+) -> HTML:
+    return HTML.without_escaping(
+        _("Affected %s: %s")
+        % (
+            ungettext(
+                "crash report",
+                "crash reports",
                 len_action_rows,
-            )
+            ),
+            len_action_rows,
         )
+    )
 
-    def render(self, what: str) -> None:
-        html.open_div(class_="group")
-        html.button("_delete_crash_reports", _("Delete"), cssclass="hot")
-        html.button("_cancel", _("Cancel"))
-        html.close_div()
 
-    def _action(
-        self,
-        cmdtag: Literal["HOST", "SVC"],
-        spec: str,
-        row: dict,
-        row_index: int,
-        action_rows: Rows,
-    ) -> CommandActionResult:
-        if request.has_var("_delete_crash_reports"):
-            commands = [("DEL_CRASH_REPORT;%s" % row["crash_id"])]
-            return commands, self.confirm_dialog_options(cmdtag, row, len(action_rows))
-        return None
+def command_delete_crash_report_render(what: str) -> None:
+    html.open_div(class_="group")
+    html.button("_delete_crash_reports", _("Delete"), cssclass="hot")
+    html.button("_cancel", _("Cancel"))
+    html.close_div()
+
+
+def command_delete_crash_report_action(
+    command: Command,
+    cmdtag: Literal["HOST", "SVC"],
+    spec: str,
+    row: dict,
+    row_index: int,
+    action_rows: Rows,
+) -> CommandActionResult:
+    if request.has_var("_delete_crash_reports"):
+        commands = [("DEL_CRASH_REPORT;%s" % row["crash_id"])]
+        return commands, command.confirm_dialog_options(cmdtag, row, len(action_rows))
+    return None
+
+
+CommandDeleteCrashReports = Command(
+    ident="delete_crash_reports",
+    title=_l("Delete crash reports"),
+    confirm_title=_l("Delete crash reports?"),
+    confirm_button=_l("Delete"),
+    permission=PermissionActionDeleteCrashReport,
+    group=CommandGroupVarious,
+    tables=["crash"],
+    render=command_delete_crash_report_render,
+    action=command_delete_crash_report_action,
+    affected_output_cb=command_delete_crash_report_affected,
+)

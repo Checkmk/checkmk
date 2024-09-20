@@ -6,16 +6,14 @@
 # pylint: disable=protected-access
 
 import re
-from typing import Any, Literal
+from typing import Any
 
 from cmk.ccc.plugin_registry import Registry
 
-from cmk.gui.permissions import Permission, permission_registry
-from cmk.gui.type_defs import Row, Rows
-from cmk.gui.utils.speaklater import LazyString
+from cmk.gui.permissions import permission_registry
 
-from .base import Command, CommandActionResult
-from .group import command_group_registry, CommandGroup
+from .base import Command
+from .group import command_group_registry
 
 
 class CommandRegistry(Registry[Command]):
@@ -28,65 +26,18 @@ command_registry = CommandRegistry()
 
 # TODO: Kept for pre 1.6 compatibility
 def register_legacy_command(spec: dict[str, Any]) -> None:
-    class LegacyCommand(Command):
-        def __init__(self, ident: str, spec: dict[str, Any]):
-            self._ident = ident
-            self._spec = spec
-
-        @property
-        def ident(self) -> str:
-            return self._ident
-
-        @property
-        def title(self) -> str:
-            return self._spec["title"]
-
-        @property
-        def confirm_button(self) -> LazyString:
-            return self._spec.get("confirm_button", "Submit")
-
-        @property
-        def permission(self) -> Permission:
-            return permission_registry[self._spec["permission"]]
-
-        @property
-        def tables(self) -> list[str]:
-            return self._spec["tables"]
-
-        def render(self, what: str) -> None:
-            self._spec["render"]()
-
-        def action(
-            self,
-            cmdtag: Literal["HOST", "SVC"],
-            spec: str,
-            row: Row,
-            row_index: int,
-            action_rows: Rows,
-        ) -> CommandActionResult:
-            return self._spec["action"](cmdtag, spec, row)
-
-        def _action(
-            self,
-            cmdtag: Literal["HOST", "SVC"],
-            spec: str,
-            row: Row,
-            row_index: int,
-            action_rows: Rows,
-        ) -> CommandActionResult:
-            return self._spec["_action"](cmdtag, spec, row)
-
-        @property
-        def group(self) -> type[CommandGroup]:
-            return command_group_registry[self._spec.get("group", "various")]
-
-        @property
-        def only_view(self) -> str | None:
-            return self._spec.get("only_view")
-
     command_registry.register(
-        LegacyCommand(
+        Command(
             ident=re.sub("[^a-zA-Z]", "", spec["title"]).lower(),
-            spec=spec,
+            title=spec["title"],
+            confirm_button=spec.get("confirm_button", "Submit"),
+            permission=permission_registry[spec["permission"]],
+            tables=spec["tables"],
+            render=spec["render"],
+            action=lambda command, cmdtag, cmd_spec, row, row_index, action_rows: spec["action"](
+                cmdtag, cmd_spec, row
+            ),
+            group=command_group_registry[spec.get("group", "various")],
+            only_view=spec.get("only_view"),
         )
     )

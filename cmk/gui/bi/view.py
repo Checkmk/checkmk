@@ -41,7 +41,6 @@ from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
 from cmk.gui.utils.escaping import escape_attribute
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
-from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.urls import makeuri, urlencode_vars
 from cmk.gui.valuespec import DropdownChoice, ValueSpec
 from cmk.gui.view_utils import CellSpec, CSVExportError
@@ -1126,91 +1125,74 @@ class CommandGroupAggregations(CommandGroup):
         return 10
 
 
-class CommandFreezeAggregation(Command):
-    @property
-    def ident(self) -> str:
-        return "freeze_aggregation"
+def command_freeze_aggregation_render(what: str) -> None:
+    html.open_div(class_="group")
+    html.button(_button_name(), _("Freeze selected"), cssclass="hot")
+    html.button("_cancel", _("Cancel"))
+    html.close_div()
 
-    @property
-    def title(self) -> str:
-        return _("Freeze aggregations")
 
-    @property
-    def confirm_title(self) -> str:
-        return _("Freeze aggregation?")
-
-    @property
-    def confirm_button(self) -> LazyString:
-        return _l("Freeze")
-
-    @property
-    def icon_name(self):
-        return "bi_freeze"
-
-    @property
-    def is_shortcut(self) -> bool:
-        return True
-
-    @property
-    def is_suggested(self) -> bool:
-        return True
-
-    @property
-    def permission(self) -> Permission:
-        return PermissionFreezeAggregation
-
-    @property
-    def group(self) -> type[CommandGroup]:
-        return CommandGroupAggregations
-
-    @property
-    def tables(self) -> list[str]:
-        return ["aggr"]
-
-    @property
-    def only_view(self) -> str | None:
-        """View name to show a view exclusive command for"""
-        return "aggr_frozen_diff"
-
-    def render(self, what: str) -> None:
-        html.open_div(class_="group")
-        html.button(self._button_name, _("Freeze selected"), cssclass="hot")
-        html.button("_cancel", _("Cancel"))
-        html.close_div()
-
-    def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
-        return HTML.without_escaping(
-            _("Affected %s: %s")
-            % (
-                ungettext(
-                    "aggregation",
-                    "aggregations",
-                    len_action_rows,
-                ),
+def command_freeze_aggregation_affected(
+    len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
+) -> HTML:
+    return HTML.without_escaping(
+        _("Affected %s: %s")
+        % (
+            ungettext(
+                "aggregation",
+                "aggregations",
                 len_action_rows,
-            )
+            ),
+            len_action_rows,
         )
+    )
 
-    @property
-    def _button_name(self) -> str:
-        return "_freeze_aggregations"
 
-    def _action(
-        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
-    ) -> CommandActionResult:
-        if not request.has_var(self._button_name):
-            return None
+def _button_name() -> str:
+    return "_freeze_aggregations"
 
-        if (compiled_aggregation := row.get("aggr_compiled_aggregation")) is not None:
-            if compiled_aggregation.frozen_info:
-                return (
-                    [compiled_aggregation.frozen_info.based_on_branch_title],
-                    self.confirm_dialog_options(cmdtag, row, len(action_rows)),
-                )
 
+def command_freeze_aggregation_action(
+    command: Command,
+    cmdtag: Literal["HOST", "SVC"],
+    spec: str,
+    row: Row,
+    row_index: int,
+    action_rows: Rows,
+) -> CommandActionResult:
+    if not request.has_var(_button_name()):
         return None
 
-    def executor(self, command: CommandSpec, site: SiteId | None) -> None:
-        """Function that is called to execute this action"""
-        assert isinstance(command, CommandSpecWithoutSite)
-        (frozen_aggregations_dir / Path(command).name).unlink(missing_ok=True)
+    if (compiled_aggregation := row.get("aggr_compiled_aggregation")) is not None:
+        if compiled_aggregation.frozen_info:
+            return (
+                [compiled_aggregation.frozen_info.based_on_branch_title],
+                command.confirm_dialog_options(cmdtag, row, len(action_rows)),
+            )
+
+    return None
+
+
+def command_freeze_aggregation_executor(command: CommandSpec, site: SiteId | None) -> None:
+    """Function that is called to execute this action"""
+    assert isinstance(command, CommandSpecWithoutSite)
+    (frozen_aggregations_dir / Path(command).name).unlink(missing_ok=True)
+
+
+CommandFreezeAggregation = Command(
+    ident="freeze_aggregation",
+    title=_l("Freeze aggregations"),
+    confirm_title=_l("Freeze aggregation?"),
+    confirm_button=_l("Freeze"),
+    icon_name="bi_freeze",
+    is_shortcut=True,
+    is_suggested=True,
+    permission=PermissionFreezeAggregation,
+    group=CommandGroupAggregations,
+    tables=["aggr"],
+    only_view="aggr_frozen_diff",
+    render=command_freeze_aggregation_render,
+    action=command_freeze_aggregation_action,
+    affected_output_cb=command_freeze_aggregation_affected,
+    executor=command_freeze_aggregation_executor,
+)

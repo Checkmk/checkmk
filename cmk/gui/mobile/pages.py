@@ -487,7 +487,7 @@ def _show_command_form(datasource: ABCDataSource, rows: Rows) -> None:
     for command in command_registry.values():
         if what in command.tables and user.may(command.permission.name):
             html.open_div(class_=["command_group"], **{"data-role": "collapsible"})
-            html.h3(command.title)
+            html.h3(str(command.title))
             html.open_p()
 
             with html.form_context("actions"):

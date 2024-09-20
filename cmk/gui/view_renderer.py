@@ -402,7 +402,7 @@ class GUIViewRenderer(ABCViewRenderer):
         for _group_class, commands in sorted(by_group.items(), key=lambda x: x[0]().sort_index):
             for command in commands:
                 yield PageMenuEntry(
-                    title=command.title,
+                    title=str(command.title),
                     icon_name=command.icon_name,
                     item=(
                         PageMenuPopup(self._render_command_form(info_name, command))

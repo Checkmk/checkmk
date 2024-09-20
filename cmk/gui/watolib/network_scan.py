@@ -159,7 +159,7 @@ def _add_scanned_hosts_to_folder(
 
     with store.lock_checkmk_configuration(configuration_lockfile):
         folder.create_hosts(entries)
-        folder.save()
+        folder.save_folder_attributes()
         folder_tree().invalidate_caches()
 
     bakery.try_bake_agents_for_hosts(tuple(e[0] for e in entries))
@@ -172,7 +172,7 @@ def _save_network_scan_result(folder: Folder, result: NetworkScanResult) -> None
         # folder again to get the current state.
         write_folder = folder_tree().folder(folder.path())
         write_folder.attributes["network_scan_result"] = result
-        write_folder.save()
+        write_folder.save_folder_attributes()
         folder_tree().invalidate_caches()
 
 

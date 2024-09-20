@@ -1469,7 +1469,9 @@ class Folder(FolderProtocol):
         return {}
 
     def save(self) -> None:
-        self.persist_instance()
+        self.save_folder_attributes()
+        folder_tree().invalidate_caches()
+        self.save_hosts()
 
     def serialize(self) -> WATOFolderInfo:
         return {
@@ -1548,7 +1550,7 @@ class Folder(FolderProtocol):
             g.wato_info_storage_manager = _WATOInfoStorageManager()
         return g.wato_info_storage_manager
 
-    def persist_instance(self) -> None:
+    def save_folder_attributes(self) -> None:
         """Save the current state of the instance to a file."""
         self.attributes = update_metadata(self.attributes)
         store.makedirs(os.path.dirname(self.wato_info_path()))
@@ -2169,8 +2171,6 @@ class Folder(FolderProtocol):
         )
         self._subfolders[name] = new_subfolder
         new_subfolder.save()
-        folder_tree().invalidate_caches()
-        new_subfolder.save_hosts()
         add_change(
             "new-folder",
             _l("Created new folder %s") % new_subfolder.alias_path(),
@@ -2320,7 +2320,7 @@ class Folder(FolderProtocol):
         # Due to changes in folder/file attributes, host files
         # might need to be rewritten in order to reflect Changes
         # in Nagios-relevant attributes.
-        self.save()
+        self.save_folder_attributes()
         folder_tree().invalidate_caches()
         self.rewrite_hosts_files()
 
@@ -2381,8 +2381,6 @@ class Folder(FolderProtocol):
             self.propagate_hosts_changes(host_name, attributes, cluster_nodes)
 
         self.save()  # num_hosts has changed
-        folder_tree().invalidate_caches()
-        self.save_hosts()
 
         folder_path = self.path()
         folder_lookup_cache().add_hosts([(x[0], folder_path) for x in entries])
@@ -2448,7 +2446,7 @@ class Folder(FolderProtocol):
                 sites=[host.site_id()],
             )
 
-        self.persist_instance()  # num_hosts has changed
+        self.save_folder_attributes()  # num_hosts has changed
         self.save_hosts()
         folder_lookup_cache().delete_hosts(host_names)
 
@@ -2558,10 +2556,10 @@ class Folder(FolderProtocol):
                 sites=affected_sites,
             )
 
-        self.persist_instance()  # num_hosts has changed
+        self.save_folder_attributes()  # num_hosts has changed
         self.save_hosts()
 
-        target_folder.persist_instance()
+        target_folder.save_folder_attributes()
         target_folder.save_hosts()
 
         folder_path = target_folder.path()
@@ -2607,9 +2605,7 @@ class Folder(FolderProtocol):
             object_ref=self.object_ref(),
             sites=self.all_site_ids(),
         )
-        self.save_hosts()
         self.save()
-        folder_tree().invalidate_caches()
         return True
 
     def rewrite_hosts_files(self):
@@ -2618,7 +2614,7 @@ class Folder(FolderProtocol):
             subfolder.rewrite_hosts_files()
 
     def rewrite_folders(self):
-        self.persist_instance()
+        self.save_folder_attributes()
         for subfolder in self.subfolders():
             subfolder.rewrite_folders()
 

@@ -19,8 +19,6 @@ class CreatePrecompiledFiles(UpdateAction):
     def __call__(self, _logger: Logger) -> None:
         for folder in folder_tree().root_folder().subfolders_recursively():
             folder.save()
-            folder_tree().invalidate_caches()
-            folder.save_hosts()
 
 
 update_action_registry.register(

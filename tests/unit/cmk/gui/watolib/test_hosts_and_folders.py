@@ -260,10 +260,10 @@ def test_create_nested_folders(request_context: None) -> None:
         root = tree.root_folder()
 
         folder1 = hosts_and_folders.Folder.new(tree=tree, name="folder1", parent_folder=root)
-        folder1.persist_instance()
+        folder1.save_folder_attributes()
 
         folder2 = hosts_and_folders.Folder.new(tree=tree, name="folder2", parent_folder=folder1)
-        folder2.persist_instance()
+        folder2.save_folder_attributes()
 
         shutil.rmtree(os.path.dirname(folder1.wato_info_path()))
 
@@ -273,7 +273,7 @@ def test_eq_operation(request_context: None) -> None:
         tree = folder_tree()
         root = tree.root_folder()
         folder1 = hosts_and_folders.Folder.new(tree=tree, name="folder1", parent_folder=root)
-        folder1.persist_instance()
+        folder1.save_folder_attributes()
 
         folder1_new = hosts_and_folders.Folder.load(tree=tree, name="folder1", parent_folder=root)
 
@@ -282,7 +282,7 @@ def test_eq_operation(request_context: None) -> None:
         assert folder1 in [folder1_new]
 
         folder2 = hosts_and_folders.Folder.new(tree=tree, name="folder2", parent_folder=folder1)
-        folder2.persist_instance()
+        folder2.save_folder_attributes()
 
         assert folder1 not in [folder2]
 
@@ -1078,7 +1078,7 @@ def test_new_loaded_folder(monkeypatch: pytest.MonkeyPatch) -> None:
     tree = folder_tree()
     with time_machine.travel(datetime.datetime(2018, 1, 10, 2, tzinfo=ZoneInfo("UTC")), tick=False):
         folder1 = Folder.new(tree=tree, name="folder1", parent_folder=tree.root_folder())
-        folder1.persist_instance()
+        folder1.save_folder_attributes()
         tree.invalidate_caches()
 
     folder = Folder.load(tree=tree, name="folder1", parent_folder=tree.root_folder())
@@ -1151,17 +1151,17 @@ def test_folder_times() -> None:
 
     with time_machine.travel(datetime.datetime(2020, 2, 2, 2, 2, 2)):
         current = time.time()
-        Folder.new(tree=tree, name="test", parent_folder=root).save()
+        Folder.new(tree=tree, name="test", parent_folder=root).save_folder_attributes()
         folder_tree().invalidate_caches()
         folder = Folder.load(tree=tree, name="test", parent_folder=root)
-        folder.save()
+        folder.save_folder_attributes()
         folder_tree().invalidate_caches()
 
     meta_data = folder.attributes["meta_data"]
     assert int(meta_data["created_at"]) == int(current)
     assert int(meta_data["updated_at"]) == int(current)
 
-    folder.persist_instance()
+    folder.save_folder_attributes()
     assert int(meta_data["updated_at"]) > int(current)
 
 

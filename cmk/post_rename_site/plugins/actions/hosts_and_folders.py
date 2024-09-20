@@ -37,8 +37,6 @@ def update_hosts_and_folders(old_site_id: SiteId, new_site_id: SiteId, logger: L
         # config
         logger.debug("Folder %s: Saving config", folder.alias_path())
         folder.save()
-        folder_tree().invalidate_caches()
-        folder.save_hosts()
 
 
 rename_action_registry.register(

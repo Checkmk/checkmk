@@ -18,7 +18,11 @@ from types import FrameType
 from cmk.ccc.daemon import daemonize, pid_file_lock
 
 from cmk.piggyback_hub.config import PiggybackHubConfig, save_config_on_message
-from cmk.piggyback_hub.payload import PiggybackPayload, save_payload, SendingPayloadThread
+from cmk.piggyback_hub.payload import (
+    PiggybackPayload,
+    save_payload_on_message,
+    SendingPayloadThread,
+)
 from cmk.piggyback_hub.utils import ReceivingThread, SignalException
 
 VERBOSITY_MAP = {
@@ -98,7 +102,7 @@ def run_piggyback_hub(logger: logging.Logger, omd_root: Path) -> None:
         time.sleep(1_000)
 
     receiving_thread = ReceivingThread(
-        logger, omd_root, PiggybackPayload, save_payload(logger, omd_root), "payload"
+        logger, omd_root, PiggybackPayload, save_payload_on_message(logger, omd_root), "payload"
     )
     sending_thread = SendingPayloadThread(logger, omd_root)
     receive_config_thread = ReceivingThread(

@@ -39,7 +39,7 @@ class PiggybackPayload(BaseModel):
     sections: Sequence[bytes]
 
 
-def save_payload(
+def save_payload_on_message(
     logger: logging.Logger,
     omd_root: Path,
 ) -> Callable[[Channel[PiggybackPayload], PiggybackPayload], None]:

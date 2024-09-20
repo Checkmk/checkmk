@@ -34,6 +34,8 @@ OS_PACKAGES    += rpcbind # otherwise missing path in util.pm
 OS_PACKAGES    += unzip
 OS_PACKAGES    += xinetd
 OS_PACKAGES    += freeradius-utils
+OS_PACKAGES    += bc # Needed by some third-party check plugins
+OS_PACKAGES    += file # Needed by some third-party check plugins
 #
 # Checkmk build specific packages below
 #

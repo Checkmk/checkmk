@@ -191,7 +191,10 @@ function renderBooleanChoice(formSpec: BooleanChoice, value: boolean): VNode {
 }
 
 function renderFixedValue(formSpec: FixedValue): VNode {
-  const shownValue = formSpec.label ? formSpec.label : formSpec.value
+  let shownValue = formSpec.value
+  if (formSpec.label != null) {
+    shownValue = formSpec.label
+  }
   return h('div', shownValue as string)
 }
 

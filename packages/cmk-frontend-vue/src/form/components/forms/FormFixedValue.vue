@@ -22,11 +22,14 @@ const [validation, _value] = useValidation<unknown>(
 )
 
 const fixedValue = computed(() => {
-  return props.spec.label || props.spec.value
+  if (props.spec.label != null) {
+    return props.spec.label
+  }
+  return props.spec.value
 })
 </script>
 
 <template>
-  <label>{{ fixedValue }}</label>
-  <FormValidation :validation="validation"></FormValidation>
+  <label v-if="fixedValue">{{ fixedValue }}</label>
+  <FormValidation v-if="fixedValue" :validation="validation"></FormValidation>
 </template>

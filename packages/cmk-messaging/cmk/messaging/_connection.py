@@ -16,12 +16,18 @@ import pika
 import pika.adapters.blocking_connection
 import pika.channel
 from pika.exceptions import AMQPConnectionError
-from pydantic import BaseModel
 
 from ._config import get_local_port, make_connection_params
 from ._constants import APP_PREFIX, INTERSITE_EXCHANGE, LOCAL_EXCHANGE
 
-_ModelT = TypeVar("_ModelT", bound=BaseModel)
+
+class _ModelP(Protocol):
+    def serialize(self) -> str: ...
+    @classmethod
+    def deserialize(cls, raw: str) -> Self: ...
+
+
+_ModelT = TypeVar("_ModelT", bound=_ModelP)
 
 
 @dataclass(frozen=True)
@@ -150,7 +156,7 @@ class Channel(Generic[_ModelT]):
         self._pchannel.basic_publish(
             exchange=LOCAL_EXCHANGE,
             routing_key=self._make_routing_key("local-site", routing),
-            body=message.model_dump_json().encode("utf-8"),
+            body=message.serialize().encode("utf-8"),
             properties=properties,
         )
 
@@ -165,7 +171,7 @@ class Channel(Generic[_ModelT]):
         self._pchannel.basic_publish(
             exchange=INTERSITE_EXCHANGE,
             routing_key=self._make_routing_key(site, routing),
-            body=message.model_dump_json().encode("utf-8"),
+            body=message.serialize().encode("utf-8"),
             properties=properties,
         )
 
@@ -188,7 +194,7 @@ class Channel(Generic[_ModelT]):
             _properties: pika.BasicProperties,
             body: bytes,
         ) -> None:
-            callback(self, self._model.model_validate_json(body.decode("utf-8")))
+            callback(self, self._model.deserialize(body.decode("utf-8")))
 
         self._pchannel.basic_consume(
             queue=self._make_queue_name(queue),

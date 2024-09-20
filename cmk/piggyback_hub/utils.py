@@ -7,15 +7,20 @@ import logging
 import threading
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Callable, Generic, TypeVar
-
-from pydantic import BaseModel
+from typing import Callable, Generic, Protocol, Self, TypeVar
 
 from cmk.messaging import Channel, Connection
 
 from .config import PiggybackHubConfig
 
-_ModelT = TypeVar("_ModelT", bound=BaseModel)
+
+class _ModelP(Protocol):
+    def serialize(self) -> str: ...
+    @classmethod
+    def deserialize(cls, raw: str) -> Self: ...
+
+
+_ModelT = TypeVar("_ModelT", bound=_ModelP)
 
 
 class SignalException(Exception):

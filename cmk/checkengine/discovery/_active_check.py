@@ -30,7 +30,7 @@ from cmk.checkengine.sectionparser import make_providers, SectionPlugin, store_p
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.summarize import SummarizerFunction
 
-from ._autochecks import AutocheckServiceWithNodes, DiscoveredService
+from ._autochecks import AutocheckServiceWithNodes, AutochecksStore, DiscoveredService
 from ._autodiscovery import get_host_services_by_host_name, ServicesByTransition
 from ._discovery import DiscoveryPlugin
 from ._filters import ServiceFilter as _ServiceFilter
@@ -145,6 +145,11 @@ def execute_check_discovery(
 
     services_by_host = get_host_services_by_host_name(
         host_name,
+        existing_services=(
+            {n: AutochecksStore(n).read() for n in cluster_nodes}
+            if is_cluster
+            else {host_name: AutochecksStore(host_name).read()}
+        ),
         is_cluster=is_cluster,
         cluster_nodes=cluster_nodes,
         providers=providers,

@@ -1880,6 +1880,7 @@ def test__discover_services_on_cluster(
 
     discovered_services = _get_cluster_services(
         scenario.parent,
+        existing_services={n: AutochecksStore(n).read() for n in nodes},
         cluster_nodes=nodes,
         providers=scenario.providers,
         plugins=DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher),

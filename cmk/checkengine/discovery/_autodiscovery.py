@@ -199,6 +199,11 @@ def automation_discovery(
         # Compute current state of new and existing checks
         services_by_host_name = get_host_services_by_host_name(
             host_name,
+            existing_services=(
+                {n: AutochecksStore(n).read() for n in cluster_nodes}
+                if is_cluster
+                else {host_name: AutochecksStore(host_name).read()}
+            ),
             is_cluster=is_cluster,
             cluster_nodes=cluster_nodes,
             providers=providers,
@@ -590,6 +595,7 @@ def _may_rediscover(
 def get_host_services_by_host_name(
     host_name: HostName,
     *,
+    existing_services: Mapping[HostName, Sequence[AutocheckEntry]],
     is_cluster: bool,
     cluster_nodes: Iterable[HostName],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
@@ -606,6 +612,7 @@ def get_host_services_by_host_name(
         services_by_host_name = {
             **_get_cluster_services(
                 host_name,
+                existing_services=existing_services,
                 cluster_nodes=cluster_nodes,
                 providers=providers,
                 plugins=plugins,
@@ -623,6 +630,7 @@ def get_host_services_by_host_name(
                     host_name,
                     _get_services_result(
                         host_name,
+                        existing_services=existing_services[host_name],
                         providers=providers,
                         plugins=plugins,
                         on_error=on_error,
@@ -656,6 +664,7 @@ def get_host_services_by_host_name(
 def _get_services_result(
     host_name: HostName,
     *,
+    existing_services: Sequence[AutocheckEntry],
     providers: Mapping[HostKey, Provider],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     on_error: OnError,
@@ -668,7 +677,6 @@ def _get_services_result(
     section.section_step("Executing discovery plugins (%d)" % len(candidates))
     console.debug(f"  Trying discovery with: {', '.join(str(n) for n in candidates)}")
 
-    autocheck_store = AutochecksStore(host_name)
     try:
         discovered_services = discover_services(
             host_name, candidates, providers=providers, plugins=plugins, on_error=on_error
@@ -677,7 +685,7 @@ def _get_services_result(
         raise MKGeneralException("Interrupted by Ctrl-C.")
 
     return analyse_services(
-        existing_services=autocheck_store.read(),
+        existing_services=existing_services,
         discovered_services=discovered_services,
         run_plugin_names=EVERYTHING,
         forget_existing=False,
@@ -781,6 +789,7 @@ def _get_cluster_services(
     host_name: HostName,
     *,
     cluster_nodes: Iterable[HostName],
+    existing_services: Mapping[HostName, Sequence[AutocheckEntry]],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     providers: Mapping[HostKey, Provider],
     ignore_plugin: Callable[[HostName, CheckPluginName], bool],
@@ -797,6 +806,7 @@ def _get_cluster_services(
     for node in cluster_nodes:
         entries = _get_services_result(
             node,
+            existing_services=existing_services[node],
             providers=providers,
             plugins=plugins,
             on_error=on_error,

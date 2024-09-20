@@ -137,11 +137,15 @@ def test_list_activate_changes_star_etag(
     distribute_piggyback_config = mocker.patch(
         "cmk.gui.watolib.activate_changes.distribute_piggyback_hub_configs"
     )
+    restart_rabbitmq_when_changed = mocker.patch(
+        "cmk.gui.watolib.activate_changes._restart_rabbitmq_when_changed"
+    )
     with mock_livestatus(expect_status_query=True):
         clients.ActivateChanges.activate_changes(etag="star")
     activation_start.assert_called_once()
     cleanup_start.assert_called_once()
     distribute_piggyback_config.assert_called_once()
+    restart_rabbitmq_when_changed.assert_called_once()
 
 
 def test_list_activate_changes_valid_etag(
@@ -161,8 +165,12 @@ def test_list_activate_changes_valid_etag(
     distribute_piggyback_config = mocker.patch(
         "cmk.gui.watolib.activate_changes.distribute_piggyback_hub_configs"
     )
+    restart_rabbitmq_when_changed = mocker.patch(
+        "cmk.gui.watolib.activate_changes._restart_rabbitmq_when_changed"
+    )
     with mock_livestatus(expect_status_query=True):
         clients.ActivateChanges.activate_changes(etag="valid_etag")
     activation_start.assert_called_once()
     cleanup_start.assert_called_once()
     distribute_piggyback_config.assert_called_once()
+    restart_rabbitmq_when_changed.assert_called_once()

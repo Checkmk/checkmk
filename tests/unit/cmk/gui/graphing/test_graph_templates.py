@@ -101,7 +101,7 @@ _EVALUATED_GRAPH_TEMPLATES = [
         id="1",
         title="Graph 1",
         scalars=[],
-        consolidation_function=None,
+        consolidation_function="max",
         range=None,
         omit_zero_metrics=False,
         metrics=[],
@@ -110,7 +110,7 @@ _EVALUATED_GRAPH_TEMPLATES = [
         id="2",
         title="Graph 2",
         scalars=[],
-        consolidation_function=None,
+        consolidation_function="max",
         range=None,
         omit_zero_metrics=False,
         metrics=[],
@@ -1410,7 +1410,7 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                     id="inbound_and_outbound_messages",
                     title="Inbound and Outbound Messages",
                     scalars=[],
-                    consolidation_function=None,
+                    consolidation_function="max",
                     range=None,
                     omit_zero_metrics=False,
                     metrics=[
@@ -1503,7 +1503,7 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                     id="inbound_and_outbound_messages",
                     title="Inbound and Outbound Messages",
                     scalars=[],
-                    consolidation_function=None,
+                    consolidation_function="max",
                     range=None,
                     omit_zero_metrics=False,
                     metrics=[
@@ -1546,7 +1546,7 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                             title="Critical",
                         ),
                     ],
-                    consolidation_function=None,
+                    consolidation_function="max",
                     range=None,
                     omit_zero_metrics=False,
                     metrics=[
@@ -1578,7 +1578,7 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                             title="Critical",
                         ),
                     ],
-                    consolidation_function=None,
+                    consolidation_function="max",
                     range=None,
                     omit_zero_metrics=False,
                     metrics=[
@@ -1610,7 +1610,7 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                             title="Critical",
                         ),
                     ],
-                    consolidation_function=None,
+                    consolidation_function="max",
                     range=None,
                     omit_zero_metrics=False,
                     metrics=[

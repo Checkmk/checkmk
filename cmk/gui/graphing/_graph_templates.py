@@ -653,7 +653,7 @@ def _create_graph_recipe_from_template(
                 service_name,
                 evaluated.base,
                 translated_metrics,
-                graph_template.consolidation_function or "max",
+                graph_template.consolidation_function,
             ),
             unit=(
                 evaluated.unit_spec
@@ -698,7 +698,7 @@ def _create_graph_recipe_from_template(
             graph_template.scalars, translated_metrics
         ),  # e.g. lines for WARN and CRIT
         omit_zero_metrics=graph_template.omit_zero_metrics,
-        consolidation_function=graph_template.consolidation_function or "max",
+        consolidation_function=graph_template.consolidation_function,
         specification=specification,
     )
 
@@ -729,7 +729,7 @@ class EvaluatedGraphTemplate:
     id: str
     title: str
     scalars: Sequence[MetricExpression]
-    consolidation_function: GraphConsolidationFunction | None
+    consolidation_function: GraphConsolidationFunction
     range: FixedGraphTemplateRange | MinimalGraphTemplateRange | None
     omit_zero_metrics: bool
     metrics: Sequence[Evaluated]
@@ -744,7 +744,7 @@ def _create_evaluated_graph_template(
         id=graph_template.id,
         title=graph_template.title,
         scalars=graph_template.scalars,
-        consolidation_function=graph_template.consolidation_function,
+        consolidation_function=graph_template.consolidation_function or "max",
         range=graph_template.range,
         omit_zero_metrics=graph_template.omit_zero_metrics,
         metrics=evaluated_metrics,

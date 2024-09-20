@@ -201,6 +201,11 @@ const componentId = useId()
   margin: 1em 0 0.2em 0;
 }
 
+span.checkbox {
+  margin-bottom: 5px;
+  margin-right: 5px;
+}
+
 /* Variants */
 .form-dictionary--two_columns {
   .form-dictionary__group_elem {

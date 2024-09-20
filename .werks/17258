@@ -1,0 +1,14 @@
+Title: Fix host renaming failing when host is node of cluster
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1726756410
+Edition: cre
+Level: 1
+Version: 2.2.0p35
+
+There was a bug when renaming a host which is a node of a cluster and inside a
+folder. The cluster would show the new name but the host itself would keep its
+old name.
+
+With this werk, hosts are now properly renamed as expected.

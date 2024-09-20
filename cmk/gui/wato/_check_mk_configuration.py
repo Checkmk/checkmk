@@ -506,7 +506,16 @@ class ConfigVariableLogLevels(ConfigVariable):
                     "background jobs."
                 ),
             ),
-            ("cmk.web.slow-views", _("Slow views"), _slow_view_logging_help()),
+            (
+                "cmk.web.slow-views",
+                _("Slow views"),
+                _slow_view_logging_help(),
+            ),
+            (
+                "cmk.web.automatic_host_removal",
+                _("Automatic host removal"),
+                _("Log the automatic host removal process."),
+            ),
         ]
 
         if edition(cmk.utils.paths.omd_root) is not Edition.CRE:

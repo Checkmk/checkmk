@@ -19,14 +19,26 @@ logger = logging.getLogger(__name__)
 class Ruleset(CmkPage):
     """Represent any page with service ruleset."""
 
-    def __init__(self, page: Page, rule_name: str, navigate_to_page: bool = True) -> None:
+    def __init__(
+        self,
+        page: Page,
+        rule_name: str,
+        section_name: str | None = None,
+        navigate_to_page: bool = True,
+    ) -> None:
         self.rule_name = rule_name
+        self.section_name = section_name
         super().__init__(page, navigate_to_page)
 
     def navigate(self) -> None:
         logger.info("Navigate to '%s' page", self.rule_name)
         self.main_menu.setup_searchbar.fill(self.rule_name)
-        self.main_menu.locator().get_by_role(role="link", name=self.rule_name).click()
+        if self.section_name:
+            self.main_menu.locator(f"div[id='{self.section_name}']").get_by_role(
+                role="link", name=self.rule_name
+            ).click()
+        else:
+            self.main_menu.locator().get_by_role(role="link", name=self.rule_name).click()
         self.page.wait_for_url(url=re.compile(quote_plus("mode=edit_ruleset")), wait_until="load")
         self._validate_page()
 
@@ -103,3 +115,8 @@ class Ruleset(CmkPage):
 
     def delete_icon(self, rule_id: str | int) -> Locator:
         return self._rule_row(rule_id).get_by_role("link", name="Delete this rule")
+
+    def delete_rule(self, rule_id: str | int) -> None:
+        self.delete_icon(rule_id).click()
+        self.delete_button.click()
+        self.page.wait_for_load_state("load")

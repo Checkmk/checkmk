@@ -42,6 +42,23 @@ class ServiceSearchPage(CmkPage):
         """Return a locator for all rows corresponding to the services."""
         return self.main_area.locator("tr[class*='data']")
 
+    def service_row(self, service_name: str) -> Locator:
+        """Return a locator for a row corresponding to the service."""
+        return self.main_area.locator(f"tr[class*='data']:has(a:text-is('{service_name}'))")
+
+    def open_action_menu_button(self, service_name: str) -> Locator:
+        return self.service_row(service_name).get_by_title("Open the action menu")
+
+    def service_summary(self, service_name: str) -> Locator:
+        return self.service_row(service_name).locator("td:nth-child(4)")
+
+    @property
+    def action_menu(self) -> Locator:
+        return self.main_area.locator("div#popup_menu")
+
+    def action_menu_item(self, item_name: str) -> Locator:
+        return self.action_menu.get_by_text(item_name)
+
     @property
     def services_table(self) -> Locator:
         return self.main_area.locator("table[class*='data'] > tbody")
@@ -80,3 +97,8 @@ class ServiceSearchPage(CmkPage):
     @property
     def back_to_view_link(self) -> Locator:
         return self.main_area.locator().get_by_role("link", name="Back to view")
+
+    def reschedule_check(self, check_name: str) -> None:
+        self.open_action_menu_button(check_name).click()
+        self.action_menu_item("Reschedule check").click()
+        self.page.wait_for_load_state("load")

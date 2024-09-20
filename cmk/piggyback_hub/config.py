@@ -63,5 +63,5 @@ def load_config(root_path: Path) -> PiggybackHubConfig:
     config_path = create_paths(root_path).config
     if not config_path.exists():
         return PiggybackHubConfig()
-    config = store.load_text_from_file(config_path)
-    return PiggybackHubConfig.model_validate_json(json.loads(config))
+    raw = store.load_text_from_file(config_path)
+    return PiggybackHubConfig.model_validate_json(json.loads(raw))

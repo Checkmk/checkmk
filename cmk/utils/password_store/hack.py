@@ -62,6 +62,7 @@ HACK_AGENTS = {
     "hp_msa": True,
     "ibmsvc": False,  # needs no secret
     "innovaphone": True,
+    "storeonce4x": True,
 }
 
 

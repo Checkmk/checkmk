@@ -112,7 +112,6 @@ UNMIGRATED = {
     "salesforce",
     "smb_share",
     "splunk",
-    "storeonce4x",
     "ucs_bladecenter",
     "vnx_quotas",
 }

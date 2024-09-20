@@ -709,6 +709,10 @@ msgid "%s was stopped after %s at %s."
 msgstr "%s a fost oprit după %s la %s."
 
 #, python-format
+msgid "%s | %s"
+msgstr ""
+
+#, python-format
 msgid ""
 "%s. Checkmk is now unlicensed, and you are no longer able to 'Activate "
 "changes'."
@@ -1246,6 +1250,26 @@ msgstr ""
 
 msgid "<b>Beware:</b> This will leave your environment in an undefined state."
 msgstr "<b>Atenție:</b> Acest lucru vă va lăsa mediul într-o stare nedefinită."
+
+msgid ""
+"<b>Gather all service instances and restrict by overall tags:</b><br>If "
+"overall tags are specified above, then all service instances will be "
+"filtered by those tags. Otherwise, all instances will be collected."
+"<br><br><b>Explicit service tags and overwrite overall tags:</b><br>Specify "
+"explicit tags for these services. The overall tags will be ignored for these "
+"services.<br><br><b>Explicit service names and ignore overall tags:</"
+"b><br>Use this option to specify explicit names. The overall tags will be "
+"ignored for these services."
+msgstr ""
+"<b>Adunați toate instanțele de servicii și restricționați după etichete "
+"generale:</b><br>Dacă etichetele generale sunt specificate mai sus, atunci "
+"toate instanțele de servicii vor fi filtrate după aceste etichete. În caz "
+"contrar, toate instanțele vor fi colectate.<br><br><b>Etichete de serviciu "
+"explicite și suprascrierea etichetelor globale:</b><br>Specificați etichete "
+"explicite pentru aceste servicii. Etichetele globale vor fi ignorate pentru "
+"aceste servicii.<br><br><b>Explicit service names and ignore overall tags:</"
+"b><br>Utilizați această opțiune pentru a specifica nume explicite. "
+"Etichetele globale vor fi ignorate pentru aceste servicii."
 
 #, fuzzy
 msgid ""
@@ -2617,6 +2641,9 @@ msgstr "AWS S3 (stocare de obiecte)"
 
 msgid "AWS S3 Bucket"
 msgstr "Bucket AWS S3"
+
+msgid "AWS Tags"
+msgstr "Etichete AWS"
 
 #, fuzzy
 msgid "AWS account name"
@@ -13287,9 +13314,6 @@ msgstr "Se angajează"
 msgid "Committed memory"
 msgstr "Memorie angajată"
 
-msgid "Common Name"
-msgstr "Denumire comună"
-
 msgid "Common Provisioning Groups: Virtual pool configuration"
 msgstr ""
 
@@ -14789,6 +14813,11 @@ msgid "Could not determine current theme."
 msgstr "Nu s-a putut determina tema actuală."
 
 #, python-format
+msgid ""
+"Could not find a running service discovery for host %s on remote site %s"
+msgstr ""
+
+#, python-format
 msgid "Could not find an entry matching %r in choices"
 msgstr "Nu s-a putut găsi o intrare care să corespundă cu %r în alegeri"
 
@@ -14945,9 +14974,6 @@ msgstr "Contoare"
 
 msgid "Counting & Timing"
 msgstr "Numărare & Cronometrare"
-
-msgid "Country"
-msgstr "Țara"
 
 msgid "Country (C)"
 msgstr "Țară (C)"
@@ -19876,6 +19902,9 @@ msgstr "Nu utilizați prefixul 'aws:' pentru cheie."
 msgid "Do not use 'aws:' prefix for the value."
 msgstr "Nu utilizați prefixul 'aws:' pentru valori."
 
+msgid "Do not use 'aws:' prefix for the values."
+msgstr "Nu utilizați prefixul 'aws:' pentru valori."
+
 msgid "Do not use Checkmk Python, even if it has been installed"
 msgstr "Nu utilizați Checkmk Python, chiar dacă a fost instalat."
 
@@ -20554,6 +20583,21 @@ msgstr "IEȘIT"
 
 #, fuzzy
 msgid ""
+"Each EC2 instance creates a piggyback host.<br><b>Note:</b> Not every host "
+"name is pingable and changing the piggyback name will reset the piggyback "
+"host.<br><br><b>IP - Region - Instance ID:</b><br>The name consists of "
+"\"{Private IPv4 address}-{Region}-{Instance ID}\". This uniquely identifies "
+"the EC2 instance. It is not possible to ping this host name."
+msgstr ""
+"Fiecare instanță EC2 creează o gazdă piggyback.<br><b>Notă:</b> Nu orice "
+"nume de gazdă este pingabil și schimbarea numelui piggyback va reseta gazda "
+"piggyback.<br><br><b>IP - Regiune - ID de instanță:</b><br>Numele este "
+"format din \"{Adresa IPv4 privată}-{Regiune}-{Identificare de instanță}\". "
+"Aceasta identifică în mod unic instanța EC2. Nu este posibilă efectuarea "
+"unui ping la acest nume de gazdă."
+
+#, fuzzy
+msgid ""
 "Each EC2 instance creates a piggyback host.<br><b>Note:</b> Not every "
 "hostname is pingable and changing the piggyback name will reset the "
 "piggyback host.<br><br><b>IP - Region - Instance ID:</b><br>The name "
@@ -20692,6 +20736,11 @@ msgstr ""
 
 #, fuzzy
 msgid "Each tag key must be unique and cannot be used multiple times."
+msgstr ""
+"Fiecare etichetă trebuie să fie unică și nu poate fi folosită de mai multe "
+"ori."
+
+msgid "Each tag must be unique and cannot be used multiple times"
 msgstr ""
 "Fiecare etichetă trebuie să fie unică și nu poate fi folosită de mai multe "
 "ori."
@@ -25287,6 +25336,14 @@ msgstr "Gateway"
 msgid "Gateway route"
 msgstr "Traseu de trecere"
 
+msgid "Gather all"
+msgstr "Adunați toate"
+
+msgid "Gather all service instances and restrict by overall AWS tags"
+msgstr ""
+"Adunați toate instanțele de servicii și restricționați-le în funcție de "
+"etichetele AWS generale"
+
 msgid "Gathered container information (piggybacked)"
 msgstr "Informații colectate din containere (piggybacked)"
 
@@ -29753,6 +29810,9 @@ msgstr "IOPS"
 msgid "IP - Region - Instance ID"
 msgstr "IP - regiune - ID instanță"
 
+msgid "IP - region - instance ID"
+msgstr "IP - regiune - ID instanță"
+
 msgid "IP Address"
 msgstr "Adresa IP"
 
@@ -30365,6 +30425,13 @@ msgstr ""
 "Dacă în acest interval de timp se declanșează numărul configurat de ori "
 "regula, se creează un eveniment. Dacă nu se atinge numărul necesar, atunci "
 "numărul este resetat la zero."
+
+msgid ""
+"If limits are enabled, all instances will be fetched regardless of any name "
+"or tag restrictions that may have been configured."
+msgstr ""
+"Dacă sunt activate limitele, toate instanțele vor fi preluate indiferent de "
+"restricțiile de nume sau de etichete care au fost configurate."
 
 #, fuzzy
 msgid ""
@@ -31790,6 +31857,10 @@ msgstr "Ignoră pachetele TCP RST atunci când se determină starea gazdei"
 
 msgid "Ignore TCP Reset Packets"
 msgstr "Ignoră pachetele TCP Reset"
+
+#, fuzzy
+msgid "Ignore TLS certificate"
+msgstr "Ignorați erorile de certificat SSL"
 
 msgid "Ignore TLS errors"
 msgstr "Ignoră erorile TLS"
@@ -36672,9 +36743,6 @@ msgstr ""
 "Local: Spooling - Trimiterea evenimentelor către consola de evenimente "
 "locală din același site OMD"
 
-msgid "Locality Name"
-msgstr "Denumirea localității"
-
 msgid "Localizations"
 msgstr "Localizări"
 
@@ -39925,6 +39993,9 @@ msgstr "Monitorizați dispozitivele Android"
 msgid "Monitor CloudFront WAFs"
 msgstr "Monitorizarea WAF-urilor CloudFront"
 
+msgid "Monitor Route53"
+msgstr "Monitorizarea Route53"
+
 msgid "Monitor all files in folder"
 msgstr "Monitorizați toate fișierele din dosar"
 
@@ -39941,6 +40012,9 @@ msgstr "Monitorizarea tuturor instanțelor găsite"
 msgid "Monitor and graph the lanes, if the port has multiple"
 msgstr ""
 "Monitorizați și reprezentați grafic benzile, dacă portul are mai multe benzi"
+
+msgid "Monitor costs and usage"
+msgstr "Monitorizarea costurilor și a utilizării"
 
 #, fuzzy
 msgid "Monitor databases"
@@ -40014,6 +40088,9 @@ msgstr "Monitorizarea altor dispozitive decât Android sau iOS"
 msgid "Monitor request metrics using the filter <tt>EntireBucket</tt>"
 msgstr ""
 "Monitorizați parametrii de cerere utilizând filtrul <tt>EntireBucket</tt>"
+
+msgid "Monitor service limits"
+msgstr "Monitorizarea limitelor de serviciu"
 
 msgid "Monitor specific TCP/UDP connections and listeners"
 msgstr "Monitorizarea conexiunilor TCP/UDP și a ascultătorilor specifici"
@@ -42283,6 +42360,10 @@ msgstr ""
 
 msgid "Not"
 msgstr "Nu"
+
+#, python-format
+msgid "Not Before: %s - Not After: %s"
+msgstr ""
 
 msgid "Not a valid URL (Only http and https URLs are allowed)."
 msgstr ""
@@ -45316,9 +45397,6 @@ msgstr "Organizația"
 
 msgid "Organization (O)"
 msgstr "Organizație (O)"
-
-msgid "Organization Name"
-msgstr "Numele organizației"
 
 #, fuzzy
 msgid "Organization device statuses"
@@ -52443,7 +52521,7 @@ msgid "SAML connections"
 msgstr "Conexiuni SAML"
 
 #, fuzzy, python-format
-msgid "SAML custom encryption certificate for the connection %s"
+msgid "SAML custom encryption certificate for the connection '%s'"
 msgstr "Setări de timp pentru certificatul routerului SAP"
 
 #, python-format
@@ -53916,6 +53994,9 @@ msgstr ""
 msgid "Selection"
 msgstr "Selecție"
 
+msgid "Selection of alarms"
+msgstr "Selectarea alarmelor"
+
 msgid "Selection of hosts to activate agent updates for"
 msgstr "Selectarea gazdelor pentru care se activează actualizările agentului"
 
@@ -53924,6 +54005,9 @@ msgstr "Selectarea mai multor grupuri de gazde"
 
 msgid "Selection of multiple service groups"
 msgstr "Selectarea mai multor grupuri de servicii"
+
+msgid "Selection of service instances"
+msgstr "Selectarea instanțelor de servicii"
 
 msgid "Selection of site is enforced, use this filter for joining"
 msgstr ""
@@ -58567,9 +58651,6 @@ msgstr "Stare la eroarea de citire dură"
 msgid "State on hard write error"
 msgstr "Stare la o eroare de scriere dură"
 
-msgid "State or Province Name"
-msgstr "Numele statului sau al provinciei"
-
 msgid "State retention interval"
 msgstr "Intervalul de reținere a stării"
 
@@ -61359,6 +61440,9 @@ msgstr ""
 "plugins and local checks</i> și <i>Set execution mode for plugins and local "
 "checks</i>."
 
+msgid "The access key ID for your AWS account"
+msgstr "ID-ul cheii de acces pentru contul dvs. AWS"
+
 msgid "The access key for your AWS account"
 msgstr "Cheia de acces pentru contul dvs. AWS"
 
@@ -63999,6 +64083,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"The placeholder <tt>\\0</tt> will be replaced by the original message text. "
+"This allows you to add new information at the beginning or at the end."
+msgstr ""
+"Marca de poziție <tt>\\0</tt> va fi înlocuită cu textul original. Acest "
+"lucru vă permite să adăugați informații noi în față sau la sfârșit."
+
+#, fuzzy
+msgid ""
 "The placeholder <tt>\\0</tt> will be replaced by the original text of this "
 "field to match. Note that as an alternative, you may also use the rule Host "
 "name translation for Incoming Messages in the Global Settings of the EC to "
@@ -64459,6 +64551,9 @@ msgstr "Programul pe care încercați să îl ștergeți nu există."
 msgid "The schedule you are trying to edit does not exist."
 msgstr "Programul pe care încercați să îl editați nu există."
 
+msgid "The secret access key for your AWS account"
+msgstr "Cheia secretă de acces pentru contul AWS"
+
 msgid "The secret key for your AWS account"
 msgstr "Cheia secretă pentru contul dvs. AWS"
 
@@ -64797,6 +64892,10 @@ msgid ""
 msgstr ""
 "Subfolderul <i>%s</i> are setul explicit de site-uri <i>%s</i>, care "
 "aparține clientului <i>%s</i>. Acest lucru încalcă ierarhia dosarelor CME."
+
+#, fuzzy, python-format
+msgid "The suffix '%s' is already in use by another LDAP connection."
+msgstr "Acest id este deja utilizat de o altă conexiune."
 
 #, fuzzy
 msgid ""
@@ -68822,14 +68921,6 @@ msgstr ""
 "Acest set de reguli selectează agentul special NetApp în locul agentului "
 "Checkmk normal și permite monitorizarea prin intermediul NetApp Ontap REST "
 "API."
-
-msgid ""
-"This rule set selects the special agent for HPE StoreOnce Applainces instead "
-"of the normal Checkmk agent and allows monitoring via Web API. "
-msgstr ""
-"Acest set de reguli selectează agentul special pentru HPE StoreOnce "
-"Applainces în locul agentului Checkmk normal și permite monitorizarea prin "
-"intermediul API-ului web. "
 
 msgid ""
 "This rule set selects the special agent for HPE StoreOnce Appliances instead "
@@ -75789,8 +75880,20 @@ msgstr "Utilizați ghilimele duble, scăpați ghilimelele conținute cu backslas
 msgid "Use environment variables from host"
 msgstr "Utilizați variabilele de mediu de la gazdă"
 
+msgid "Use explicit AWS service tags and overrule overall AWS tags"
+msgstr ""
+"Utilizați etichete explicite ale serviciilor AWS și anulați etichetele AWS "
+"generale"
+
+msgid "Use explicit names"
+msgstr "Utilizați nume explicite"
+
 msgid "Use explicit proxy settings"
 msgstr "Utilizați setări proxy explicite"
+
+msgid "Use explicit service names and ignore overall AWS tags"
+msgstr ""
+"Utilizați nume de servicii explicite și ignorați etichetele AWS generale"
 
 msgid "Use fixed width (relative to font size)"
 msgstr "Utilizați lățimea fixă (în raport cu dimensiunea fontului)"
@@ -77564,6 +77667,10 @@ msgstr "Valabil până la versiunea Checkmk"
 
 msgid "Validate server certificate during port query"
 msgstr "Validarea certificatului serverului în timpul interogării portului"
+
+#, fuzzy
+msgid "Validity"
+msgstr "Valabil până la"
 
 msgid "Validity of missing data"
 msgstr "Validitatea datelor lipsă"
@@ -80628,8 +80735,8 @@ msgstr ""
 msgid "You are not allowed to access the host %s."
 msgstr "Nu aveți permisiunea de a accesa gazda %s."
 
-#, python-format
-msgid "You are not allowed to access this page (%s)."
+#, fuzzy
+msgid "You are not allowed to access this page."
 msgstr "Nu aveți permisiunea de a accesa această pagină (%s)."
 
 #, python-format
@@ -84638,6 +84745,13 @@ msgstr "sus"
 msgid "upper limit"
 msgstr "limita superioara"
 
+msgid ""
+"us-gov-* or cn-* regions have their own global services and may not reach "
+"the default one."
+msgstr ""
+"Regiunile us-gov-* sau cn-* au propriile servicii globale și este posibil să "
+"nu ajungă la cel implicit."
+
 msgid "use SSL"
 msgstr "foloseste SSL"
 
@@ -84814,6 +84928,29 @@ msgstr ""
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 
+#~ msgid "Common Name"
+#~ msgstr "Denumire comună"
+
+#~ msgid "Country"
+#~ msgstr "Țara"
+
+#~ msgid "Locality Name"
+#~ msgstr "Denumirea localității"
+
+#~ msgid "Organization Name"
+#~ msgstr "Numele organizației"
+
+#~ msgid "State or Province Name"
+#~ msgstr "Numele statului sau al provinciei"
+
+#~ msgid ""
+#~ "This rule set selects the special agent for HPE StoreOnce Applainces "
+#~ "instead of the normal Checkmk agent and allows monitoring via Web API. "
+#~ msgstr ""
+#~ "Acest set de reguli selectează agentul special pentru HPE StoreOnce "
+#~ "Applainces în locul agentului Checkmk normal și permite monitorizarea "
+#~ "prin intermediul API-ului web. "
+
 #~ msgid ""
 #~ "Check this to turn off multiprocessing. Recommended for debugging "
 #~ "purposes only."
@@ -84869,12 +85006,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 
 #~ msgid "Hide help text of rules in list views"
 #~ msgstr "Ascundeți textul de ajutor al regulilor în vizualizările de listă"
-
-#~ msgid "The access key ID for your AWS account"
-#~ msgstr "ID-ul cheii de acces pentru contul dvs. AWS"
-
-#~ msgid "The secret access key for your AWS account"
-#~ msgstr "Cheia secretă de acces pentru contul AWS"
 
 #~ msgid "The version of this site is not a Checkmk managed services edition"
 #~ msgstr "Versiunea din acest site nu este o ediție Checkmk managed services"
@@ -85486,106 +85617,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #, fuzzy
 #~ msgid "(dev internal, unreleased) Amazon Web Services (AWS)"
 #~ msgstr "Monitorizarea serviciilor web Amazon (AWS)"
-
-#~ msgid ""
-#~ "<b>Gather all service instances and restrict by overall tags:</b><br>If "
-#~ "overall tags are specified above, then all service instances will be "
-#~ "filtered by those tags. Otherwise, all instances will be collected."
-#~ "<br><br><b>Explicit service tags and overwrite overall tags:</"
-#~ "b><br>Specify explicit tags for these services. The overall tags will be "
-#~ "ignored for these services.<br><br><b>Explicit service names and ignore "
-#~ "overall tags:</b><br>Use this option to specify explicit names. The "
-#~ "overall tags will be ignored for these services."
-#~ msgstr ""
-#~ "<b>Adunați toate instanțele de servicii și restricționați după etichete "
-#~ "generale:</b><br>Dacă etichetele generale sunt specificate mai sus, "
-#~ "atunci toate instanțele de servicii vor fi filtrate după aceste etichete. "
-#~ "În caz contrar, toate instanțele vor fi colectate.<br><br><b>Etichete de "
-#~ "serviciu explicite și suprascrierea etichetelor globale:</"
-#~ "b><br>Specificați etichete explicite pentru aceste servicii. Etichetele "
-#~ "globale vor fi ignorate pentru aceste servicii.<br><br><b>Explicit "
-#~ "service names and ignore overall tags:</b><br>Utilizați această opțiune "
-#~ "pentru a specifica nume explicite. Etichetele globale vor fi ignorate "
-#~ "pentru aceste servicii."
-
-#~ msgid "AWS Tags"
-#~ msgstr "Etichete AWS"
-
-#~ msgid "Do not use 'aws:' prefix for the values."
-#~ msgstr "Nu utilizați prefixul 'aws:' pentru valori."
-
-#, fuzzy
-#~ msgid ""
-#~ "Each EC2 instance creates a piggyback host.<br><b>Note:</b> Not every "
-#~ "host name is pingable and changing the piggyback name will reset the "
-#~ "piggyback host.<br><br><b>IP - Region - Instance ID:</b><br>The name "
-#~ "consists of \"{Private IPv4 address}-{Region}-{Instance ID}\". This "
-#~ "uniquely identifies the EC2 instance. It is not possible to ping this "
-#~ "host name."
-#~ msgstr ""
-#~ "Fiecare instanță EC2 creează o gazdă piggyback.<br><b>Notă:</b> Nu orice "
-#~ "nume de gazdă este pingabil și schimbarea numelui piggyback va reseta "
-#~ "gazda piggyback.<br><br><b>IP - Regiune - ID de instanță:</b><br>Numele "
-#~ "este format din \"{Adresa IPv4 privată}-{Regiune}-{Identificare de "
-#~ "instanță}\". Aceasta identifică în mod unic instanța EC2. Nu este "
-#~ "posibilă efectuarea unui ping la acest nume de gazdă."
-
-#~ msgid "Each tag must be unique and cannot be used multiple times"
-#~ msgstr ""
-#~ "Fiecare etichetă trebuie să fie unică și nu poate fi folosită de mai "
-#~ "multe ori."
-
-#~ msgid "Gather all"
-#~ msgstr "Adunați toate"
-
-#~ msgid "Gather all service instances and restrict by overall AWS tags"
-#~ msgstr ""
-#~ "Adunați toate instanțele de servicii și restricționați-le în funcție de "
-#~ "etichetele AWS generale"
-
-#~ msgid "IP - region - instance ID"
-#~ msgstr "IP - regiune - ID instanță"
-
-#~ msgid ""
-#~ "If limits are enabled, all instances will be fetched regardless of any "
-#~ "name or tag restrictions that may have been configured."
-#~ msgstr ""
-#~ "Dacă sunt activate limitele, toate instanțele vor fi preluate indiferent "
-#~ "de restricțiile de nume sau de etichete care au fost configurate."
-
-#~ msgid "Monitor Route53"
-#~ msgstr "Monitorizarea Route53"
-
-#~ msgid "Monitor costs and usage"
-#~ msgstr "Monitorizarea costurilor și a utilizării"
-
-#~ msgid "Monitor service limits"
-#~ msgstr "Monitorizarea limitelor de serviciu"
-
-#~ msgid "Selection of alarms"
-#~ msgstr "Selectarea alarmelor"
-
-#~ msgid "Selection of service instances"
-#~ msgstr "Selectarea instanțelor de servicii"
-
-#~ msgid "Use explicit AWS service tags and overrule overall AWS tags"
-#~ msgstr ""
-#~ "Utilizați etichete explicite ale serviciilor AWS și anulați etichetele "
-#~ "AWS generale"
-
-#~ msgid "Use explicit names"
-#~ msgstr "Utilizați nume explicite"
-
-#~ msgid "Use explicit service names and ignore overall AWS tags"
-#~ msgstr ""
-#~ "Utilizați nume de servicii explicite și ignorați etichetele AWS generale"
-
-#~ msgid ""
-#~ "us-gov-* or cn-* regions have their own global services and may not reach "
-#~ "the default one."
-#~ msgstr ""
-#~ "Regiunile us-gov-* sau cn-* au propriile servicii globale și este posibil "
-#~ "să nu ajungă la cel implicit."
 
 #~ msgid ""
 #~ "Local path including filename. Base directory for this relative path will "

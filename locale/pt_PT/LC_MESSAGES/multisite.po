@@ -707,6 +707,10 @@ msgid "%s was stopped after %s at %s."
 msgstr "%s parou depois de %s ás %s."
 
 #, python-format
+msgid "%s | %s"
+msgstr ""
+
+#, python-format
 msgid ""
 "%s. Checkmk is now unlicensed, and you are no longer able to 'Activate "
 "changes'."
@@ -1236,6 +1240,26 @@ msgstr ""
 
 msgid "<b>Beware:</b> This will leave your environment in an undefined state."
 msgstr "<b>Cuidado:</b> Isso deixará seu ambiente em um estado indefinido."
+
+msgid ""
+"<b>Gather all service instances and restrict by overall tags:</b><br>If "
+"overall tags are specified above, then all service instances will be "
+"filtered by those tags. Otherwise, all instances will be collected."
+"<br><br><b>Explicit service tags and overwrite overall tags:</b><br>Specify "
+"explicit tags for these services. The overall tags will be ignored for these "
+"services.<br><br><b>Explicit service names and ignore overall tags:</"
+"b><br>Use this option to specify explicit names. The overall tags will be "
+"ignored for these services."
+msgstr ""
+"<b>Reunir todas as instâncias de serviço e restringir por tags gerais:</"
+"b><br>Se as tags gerais forem especificadas acima, então todas as instâncias "
+"de serviço serão filtradas por essas tags. Caso contrário, todas as "
+"instâncias serão recolhidas.<br><br><b>Etiquetas de serviço explícitas e "
+"substituem as etiquetas gerais:</b><br>Especifique etiquetas explícitas para "
+"estes serviços. As etiquetas gerais serão ignoradas para estes serviços."
+"<br><br><b>Nomes de serviços explícitos e ignorar etiquetas gerais:</"
+"b><br>Utilize esta opção para especificar nomes explícitos. As etiquetas "
+"gerais serão ignoradas para estes serviços."
 
 #, fuzzy
 msgid ""
@@ -2593,6 +2617,9 @@ msgstr "AWS S3 (armazenamento de objectos)"
 
 msgid "AWS S3 Bucket"
 msgstr "Balde AWS S3"
+
+msgid "AWS Tags"
+msgstr "Tags AWS"
 
 #, fuzzy
 msgid "AWS account name"
@@ -13270,9 +13297,6 @@ msgstr "Compromissos"
 msgid "Committed memory"
 msgstr "Memória comprometida"
 
-msgid "Common Name"
-msgstr "Nome Comum"
-
 msgid "Common Provisioning Groups: Virtual pool configuration"
 msgstr ""
 
@@ -14778,6 +14802,11 @@ msgid "Could not determine current theme."
 msgstr "Não consegui determinar o tema actual."
 
 #, python-format
+msgid ""
+"Could not find a running service discovery for host %s on remote site %s"
+msgstr ""
+
+#, python-format
 msgid "Could not find an entry matching %r in choices"
 msgstr ""
 "Não foi possível encontrar uma entrada correspondente a %r nas escolhas"
@@ -14933,9 +14962,6 @@ msgstr "Contador"
 
 msgid "Counting & Timing"
 msgstr "Contagem e Cronograma"
-
-msgid "Country"
-msgstr "País"
 
 #, fuzzy
 msgid "Country (C)"
@@ -19840,6 +19866,9 @@ msgstr "Não use o prefixo 'aws:' para a chave."
 msgid "Do not use 'aws:' prefix for the value."
 msgstr "Não utilize o prefixo \"aws:\" para os valores."
 
+msgid "Do not use 'aws:' prefix for the values."
+msgstr "Não utilize o prefixo \"aws:\" para os valores."
+
 msgid "Do not use Checkmk Python, even if it has been installed"
 msgstr "Não utilize Checkmk Python, mesmo que tenha sido instalado"
 
@@ -20517,6 +20546,21 @@ msgstr "SAÍDA"
 
 #, fuzzy
 msgid ""
+"Each EC2 instance creates a piggyback host.<br><b>Note:</b> Not every host "
+"name is pingable and changing the piggyback name will reset the piggyback "
+"host.<br><br><b>IP - Region - Instance ID:</b><br>The name consists of "
+"\"{Private IPv4 address}-{Region}-{Instance ID}\". This uniquely identifies "
+"the EC2 instance. It is not possible to ping this host name."
+msgstr ""
+"Cada instância EC2 cria um anfitrião piggyback. Nota:<br><b>Nota:</b> Nem "
+"todos os nomes de anfitrião são pingáveis e a alteração do nome piggyback "
+"irá repor o anfitrião piggyback.<br><br><b>IP - Região - ID da Instância:</"
+"b><br>O nome consiste em \"{Endereço IPv4 privado}-{Region}-{ID da "
+"Instância}\". Isto identifica de forma exclusiva a instância EC2. Não é "
+"possível fazer ping a este nome de anfitrião."
+
+#, fuzzy
+msgid ""
 "Each EC2 instance creates a piggyback host.<br><b>Note:</b> Not every "
 "hostname is pingable and changing the piggyback name will reset the "
 "piggyback host.<br><br><b>IP - Region - Instance ID:</b><br>The name "
@@ -20649,6 +20693,9 @@ msgstr ""
 
 #, fuzzy
 msgid "Each tag key must be unique and cannot be used multiple times."
+msgstr "Cada etiqueta deve ser única e não pode ser usada várias vezes"
+
+msgid "Each tag must be unique and cannot be used multiple times"
 msgstr "Cada etiqueta deve ser única e não pode ser usada várias vezes"
 
 #, fuzzy
@@ -25249,6 +25296,13 @@ msgstr "Porta de entrada"
 msgid "Gateway route"
 msgstr "rota de entrada"
 
+msgid "Gather all"
+msgstr "Reúna todos"
+
+msgid "Gather all service instances and restrict by overall AWS tags"
+msgstr ""
+"Reúna todas as instâncias de serviço e restrinja por etiquetas AWS em geral"
+
 msgid "Gathered container information (piggybacked)"
 msgstr "Recolha de informações sobre contentores (piggybacked)"
 
@@ -29732,6 +29786,9 @@ msgstr "IOPS"
 msgid "IP - Region - Instance ID"
 msgstr "IP - região - ID da instância"
 
+msgid "IP - region - instance ID"
+msgstr "IP - região - ID da instância"
+
 msgid "IP Address"
 msgstr "Endereço IP"
 
@@ -30339,6 +30396,14 @@ msgstr ""
 "Se nesse intervalo de tempo o número de tempo configurado para a regra for "
 "acionado, um evento está sendo criado. Se a contagem necessária não for "
 "atingida, a contagem é reinicializada para zero."
+
+msgid ""
+"If limits are enabled, all instances will be fetched regardless of any name "
+"or tag restrictions that may have been configured."
+msgstr ""
+"Se os limites estiverem activados, todas as instâncias serão obtidas "
+"independentemente de quaisquer restrições de nome ou etiqueta que possam ter "
+"sido configuradas."
 
 #, fuzzy
 msgid ""
@@ -31731,6 +31796,10 @@ msgstr "Ignorar os pacotes TCP RST ao determinar o estado do hospedeiro"
 
 msgid "Ignore TCP Reset Packets"
 msgstr "Ignorar pacotes de reinicialização TCP"
+
+#, fuzzy
+msgid "Ignore TLS certificate"
+msgstr "Ignorar erros no certificado SSL"
 
 msgid "Ignore TLS errors"
 msgstr "Ignorar erros de TLS"
@@ -36606,9 +36675,6 @@ msgstr ""
 "Local: Spooling - Enviar eventos para o console de eventos local no mesmo "
 "site OMD"
 
-msgid "Locality Name"
-msgstr "Nome da Localidade"
-
 msgid "Localizations"
 msgstr "Localizações"
 
@@ -39877,6 +39943,9 @@ msgstr "Monitorizar dispositivos Android"
 msgid "Monitor CloudFront WAFs"
 msgstr "Monitor CloudFront WAFs"
 
+msgid "Monitor Route53"
+msgstr "Monitorizar Route53"
+
 msgid "Monitor all files in folder"
 msgstr "Monitorar todos os arquivos na pasta"
 
@@ -39893,6 +39962,9 @@ msgstr "Monitore todas as instâncias encontradas"
 
 msgid "Monitor and graph the lanes, if the port has multiple"
 msgstr "Monitore e faça um gráfico das pistas, se a porta tiver múltiplos"
+
+msgid "Monitor costs and usage"
+msgstr "Monitorar custos e uso"
 
 #, fuzzy
 msgid "Monitor databases"
@@ -39960,6 +40032,9 @@ msgstr "Monitorizar dispositivos que não sejam Android ou iOS"
 msgid "Monitor request metrics using the filter <tt>EntireBucket</tt>"
 msgstr ""
 "Monitorizar as métricas dos pedidos utilizando o filtro <tt>EntireBucket</tt>"
+
+msgid "Monitor service limits"
+msgstr "Monitorar limites de serviço"
 
 msgid "Monitor specific TCP/UDP connections and listeners"
 msgstr "Monitorar conexões TCP/UDP específicas e ouvintes"
@@ -42211,6 +42286,10 @@ msgstr ""
 
 msgid "Not"
 msgstr "Não"
+
+#, python-format
+msgid "Not Before: %s - Not After: %s"
+msgstr ""
 
 msgid "Not a valid URL (Only http and https URLs are allowed)."
 msgstr "Não é um URL válido (só são permitidos URLs http e https)."
@@ -45230,9 +45309,6 @@ msgstr "Organização"
 #, fuzzy
 msgid "Organization (O)"
 msgstr "Organização"
-
-msgid "Organization Name"
-msgstr "Nome da Organização"
 
 #, fuzzy
 msgid "Organization device statuses"
@@ -52378,7 +52454,7 @@ msgid "SAML connections"
 msgstr "Ligações SAML"
 
 #, fuzzy, python-format
-msgid "SAML custom encryption certificate for the connection %s"
+msgid "SAML custom encryption certificate for the connection '%s'"
 msgstr "Opções de tempo do certificado de roteador SAP"
 
 #, python-format
@@ -53836,6 +53912,9 @@ msgstr ""
 msgid "Selection"
 msgstr "Seleção"
 
+msgid "Selection of alarms"
+msgstr "Seleção de alarmes"
+
 msgid "Selection of hosts to activate agent updates for"
 msgstr "Seleção de hosts para ativar atualizações de agentes para"
 
@@ -53844,6 +53923,9 @@ msgstr "Selecção de vários grupos de acolhimento"
 
 msgid "Selection of multiple service groups"
 msgstr "Selecção de vários grupos de serviços"
+
+msgid "Selection of service instances"
+msgstr "Seleção de instâncias de serviço"
 
 msgid "Selection of site is enforced, use this filter for joining"
 msgstr "A selecção do sítio é obrigatória, utilize este filtro para aderir"
@@ -58423,9 +58505,6 @@ msgstr "Estado em erro de leitura"
 msgid "State on hard write error"
 msgstr "Indique o erro de escrita dura"
 
-msgid "State or Province Name"
-msgstr "Nome do Estado ou Província"
-
 msgid "State retention interval"
 msgstr "intervalo de retenção do Estado"
 
@@ -61212,6 +61291,9 @@ msgstr ""
 "cache para plugins e verificações locais</i> e <i>Definir o modo de execução "
 "para plugins e verificações locais</i>."
 
+msgid "The access key ID for your AWS account"
+msgstr "A ID da chave de acesso para a sua conta AWS"
+
 msgid "The access key for your AWS account"
 msgstr "A chave de acesso para a sua conta AWS"
 
@@ -63817,6 +63899,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"The placeholder <tt>\\0</tt> will be replaced by the original message text. "
+"This allows you to add new information at the beginning or at the end."
+msgstr ""
+"O espaço reservado <tt>\\0</tt> será substituído pelo texto original. Isto "
+"permite adicionar novas informações na frente ou no final."
+
+#, fuzzy
+msgid ""
 "The placeholder <tt>\\0</tt> will be replaced by the original text of this "
 "field to match. Note that as an alternative, you may also use the rule Host "
 "name translation for Incoming Messages in the Global Settings of the EC to "
@@ -64274,6 +64364,9 @@ msgstr "O horário que você está tentando apagar não existe."
 msgid "The schedule you are trying to edit does not exist."
 msgstr "O horário que você está tentando editar não existe."
 
+msgid "The secret access key for your AWS account"
+msgstr "A chave de acesso secreto para a sua conta AWS"
+
 msgid "The secret key for your AWS account"
 msgstr "A chave secreta da sua conta AWS"
 
@@ -64605,6 +64698,10 @@ msgid ""
 msgstr ""
 "A subpasta <i>%s</i> tem o site explícito <i>%s</i> definido, que pertence "
 "ao cliente <i>%s</i>. Isto viola a hierarquia de pastas CME."
+
+#, fuzzy, python-format
+msgid "The suffix '%s' is already in use by another LDAP connection."
+msgstr "Esta identificação já está a ser usada por outra ligação."
 
 #, fuzzy
 msgid ""
@@ -68555,14 +68652,6 @@ msgstr ""
 msgid ""
 "This rule set selects the NetApp special agent instead of the normal Checkmk "
 "Agent and allows monitoring via the NetApp Ontap REST API."
-msgstr ""
-"Este conjunto de regras selecciona o agente especial para HPE StoreOnce "
-"Applainces em vez do agente Checkmk normal e permite a monitorização através "
-"da API Web. "
-
-msgid ""
-"This rule set selects the special agent for HPE StoreOnce Applainces instead "
-"of the normal Checkmk agent and allows monitoring via Web API. "
 msgstr ""
 "Este conjunto de regras selecciona o agente especial para HPE StoreOnce "
 "Applainces em vez do agente Checkmk normal e permite a monitorização através "
@@ -75587,8 +75676,17 @@ msgstr "Use aspas duplas, aspas de fuga contidas com contrabarra"
 msgid "Use environment variables from host"
 msgstr "Usar variáveis de ambiente do host"
 
+msgid "Use explicit AWS service tags and overrule overall AWS tags"
+msgstr "Utilize tags de serviço AWS explícitas e anule as tags AWS gerais"
+
+msgid "Use explicit names"
+msgstr "Usar nomes explícitos"
+
 msgid "Use explicit proxy settings"
 msgstr "Utilizar definições de proxy explícitas"
+
+msgid "Use explicit service names and ignore overall AWS tags"
+msgstr "Use nomes de serviço explícitos e ignore as tags AWS em geral"
 
 msgid "Use fixed width (relative to font size)"
 msgstr "Usar largura fixa (em relação ao tamanho da fonte)"
@@ -77342,6 +77440,10 @@ msgstr "Válido até a versão Checkmk"
 
 msgid "Validate server certificate during port query"
 msgstr "Validar o certificado do servidor durante a consulta do porto"
+
+#, fuzzy
+msgid "Validity"
+msgstr "Válido até"
 
 msgid "Validity of missing data"
 msgstr "Validade dos dados em falta"
@@ -80379,8 +80481,8 @@ msgstr ""
 msgid "You are not allowed to access the host %s."
 msgstr "Você não está autorizado a acessar as %s anfitriãs."
 
-#, python-format
-msgid "You are not allowed to access this page (%s)."
+#, fuzzy
+msgid "You are not allowed to access this page."
 msgstr "Você não está autorizado a acessar esta página (%s)."
 
 #, python-format
@@ -84378,6 +84480,13 @@ msgstr "acima"
 msgid "upper limit"
 msgstr "limite máximo"
 
+msgid ""
+"us-gov-* or cn-* regions have their own global services and may not reach "
+"the default one."
+msgstr ""
+"As regiões us-gov-* ou cn-* têm os seus próprios serviços globais e podem "
+"não alcançar o serviço predefinido."
+
 msgid "use SSL"
 msgstr "usar SSL"
 
@@ -84553,6 +84662,29 @@ msgstr ""
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
 
+#~ msgid "Common Name"
+#~ msgstr "Nome Comum"
+
+#~ msgid "Country"
+#~ msgstr "País"
+
+#~ msgid "Locality Name"
+#~ msgstr "Nome da Localidade"
+
+#~ msgid "Organization Name"
+#~ msgstr "Nome da Organização"
+
+#~ msgid "State or Province Name"
+#~ msgstr "Nome do Estado ou Província"
+
+#~ msgid ""
+#~ "This rule set selects the special agent for HPE StoreOnce Applainces "
+#~ "instead of the normal Checkmk agent and allows monitoring via Web API. "
+#~ msgstr ""
+#~ "Este conjunto de regras selecciona o agente especial para HPE StoreOnce "
+#~ "Applainces em vez do agente Checkmk normal e permite a monitorização "
+#~ "através da API Web. "
+
 #~ msgid ""
 #~ "Check this to turn off multiprocessing. Recommended for debugging "
 #~ "purposes only."
@@ -84608,12 +84740,6 @@ msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
 
 #~ msgid "Hide help text of rules in list views"
 #~ msgstr "Ocultar texto de ajuda das regras nas visualizações da lista"
-
-#~ msgid "The access key ID for your AWS account"
-#~ msgstr "A ID da chave de acesso para a sua conta AWS"
-
-#~ msgid "The secret access key for your AWS account"
-#~ msgstr "A chave de acesso secreto para a sua conta AWS"
 
 #~ msgid "The version of this site is not a Checkmk managed services edition"
 #~ msgstr ""
@@ -85204,101 +85330,6 @@ msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
 #, fuzzy
 #~ msgid "(dev internal, unreleased) Amazon Web Services (AWS)"
 #~ msgstr "Monitorização de Amazon Web Services (AWS)"
-
-#~ msgid ""
-#~ "<b>Gather all service instances and restrict by overall tags:</b><br>If "
-#~ "overall tags are specified above, then all service instances will be "
-#~ "filtered by those tags. Otherwise, all instances will be collected."
-#~ "<br><br><b>Explicit service tags and overwrite overall tags:</"
-#~ "b><br>Specify explicit tags for these services. The overall tags will be "
-#~ "ignored for these services.<br><br><b>Explicit service names and ignore "
-#~ "overall tags:</b><br>Use this option to specify explicit names. The "
-#~ "overall tags will be ignored for these services."
-#~ msgstr ""
-#~ "<b>Reunir todas as instâncias de serviço e restringir por tags gerais:</"
-#~ "b><br>Se as tags gerais forem especificadas acima, então todas as "
-#~ "instâncias de serviço serão filtradas por essas tags. Caso contrário, "
-#~ "todas as instâncias serão recolhidas.<br><br><b>Etiquetas de serviço "
-#~ "explícitas e substituem as etiquetas gerais:</b><br>Especifique etiquetas "
-#~ "explícitas para estes serviços. As etiquetas gerais serão ignoradas para "
-#~ "estes serviços.<br><br><b>Nomes de serviços explícitos e ignorar "
-#~ "etiquetas gerais:</b><br>Utilize esta opção para especificar nomes "
-#~ "explícitos. As etiquetas gerais serão ignoradas para estes serviços."
-
-#~ msgid "AWS Tags"
-#~ msgstr "Tags AWS"
-
-#~ msgid "Do not use 'aws:' prefix for the values."
-#~ msgstr "Não utilize o prefixo \"aws:\" para os valores."
-
-#, fuzzy
-#~ msgid ""
-#~ "Each EC2 instance creates a piggyback host.<br><b>Note:</b> Not every "
-#~ "host name is pingable and changing the piggyback name will reset the "
-#~ "piggyback host.<br><br><b>IP - Region - Instance ID:</b><br>The name "
-#~ "consists of \"{Private IPv4 address}-{Region}-{Instance ID}\". This "
-#~ "uniquely identifies the EC2 instance. It is not possible to ping this "
-#~ "host name."
-#~ msgstr ""
-#~ "Cada instância EC2 cria um anfitrião piggyback. Nota:<br><b>Nota:</b> Nem "
-#~ "todos os nomes de anfitrião são pingáveis e a alteração do nome piggyback "
-#~ "irá repor o anfitrião piggyback.<br><br><b>IP - Região - ID da Instância:"
-#~ "</b><br>O nome consiste em \"{Endereço IPv4 privado}-{Region}-{ID da "
-#~ "Instância}\". Isto identifica de forma exclusiva a instância EC2. Não é "
-#~ "possível fazer ping a este nome de anfitrião."
-
-#~ msgid "Each tag must be unique and cannot be used multiple times"
-#~ msgstr "Cada etiqueta deve ser única e não pode ser usada várias vezes"
-
-#~ msgid "Gather all"
-#~ msgstr "Reúna todos"
-
-#~ msgid "Gather all service instances and restrict by overall AWS tags"
-#~ msgstr ""
-#~ "Reúna todas as instâncias de serviço e restrinja por etiquetas AWS em "
-#~ "geral"
-
-#~ msgid "IP - region - instance ID"
-#~ msgstr "IP - região - ID da instância"
-
-#~ msgid ""
-#~ "If limits are enabled, all instances will be fetched regardless of any "
-#~ "name or tag restrictions that may have been configured."
-#~ msgstr ""
-#~ "Se os limites estiverem activados, todas as instâncias serão obtidas "
-#~ "independentemente de quaisquer restrições de nome ou etiqueta que possam "
-#~ "ter sido configuradas."
-
-#~ msgid "Monitor Route53"
-#~ msgstr "Monitorizar Route53"
-
-#~ msgid "Monitor costs and usage"
-#~ msgstr "Monitorar custos e uso"
-
-#~ msgid "Monitor service limits"
-#~ msgstr "Monitorar limites de serviço"
-
-#~ msgid "Selection of alarms"
-#~ msgstr "Seleção de alarmes"
-
-#~ msgid "Selection of service instances"
-#~ msgstr "Seleção de instâncias de serviço"
-
-#~ msgid "Use explicit AWS service tags and overrule overall AWS tags"
-#~ msgstr "Utilize tags de serviço AWS explícitas e anule as tags AWS gerais"
-
-#~ msgid "Use explicit names"
-#~ msgstr "Usar nomes explícitos"
-
-#~ msgid "Use explicit service names and ignore overall AWS tags"
-#~ msgstr "Use nomes de serviço explícitos e ignore as tags AWS em geral"
-
-#~ msgid ""
-#~ "us-gov-* or cn-* regions have their own global services and may not reach "
-#~ "the default one."
-#~ msgstr ""
-#~ "As regiões us-gov-* ou cn-* têm os seus próprios serviços globais e podem "
-#~ "não alcançar o serviço predefinido."
 
 #~ msgid ""
 #~ "Local path including filename. Base directory for this relative path will "

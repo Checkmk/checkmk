@@ -668,7 +668,7 @@ def _create_graph_recipe_from_template(
                 % ", ".join(repr(unit) for unit in units)
             )
 
-    title = _evaluate_title(graph_template.title or "", translated_metrics)
+    title = graph_template.title
     if not title:
         title = next((m.title for m in metrics), "")
 
@@ -740,7 +740,7 @@ def _create_evaluated_graph_template(
 ) -> EvaluatedGraphTemplate:
     return EvaluatedGraphTemplate(
         id=graph_template.id,
-        title=graph_template.title,
+        title=_evaluate_title(graph_template.title, translated_metrics),
         scalars=_evaluate_scalars(graph_template.scalars, translated_metrics),
         consolidation_function=graph_template.consolidation_function or "max",
         range=graph_template.range,

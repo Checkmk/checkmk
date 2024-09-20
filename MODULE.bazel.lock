@@ -1,6 +1,6 @@
 {
   "lockFileVersion": 6,
-  "moduleFileHash": "989f38c7f591ae807d09fbab48e66845abe80167821e049f7c9ac8c264db021c",
+  "moduleFileHash": "c4579a6c4929e06cb910dcf9ad6b9a62fa434c2167e53c04aa0ba08de99a47bd",
   "flags": {
     "cmdRegistries": [
       "https://bcr.bazel.build/"
@@ -30,7 +30,7 @@
           "usingModule": "<root>",
           "location": {
             "file": "@@//:MODULE.bazel",
-            "line": 20,
+            "line": 27,
             "column": 23
           },
           "imports": {},
@@ -45,7 +45,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 21,
+                "line": 28,
                 "column": 17
               }
             }
@@ -59,7 +59,7 @@
           "usingModule": "<root>",
           "location": {
             "file": "@@//:MODULE.bazel",
-            "line": 30,
+            "line": 37,
             "column": 20
           },
           "imports": {
@@ -80,7 +80,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 31,
+                "line": 38,
                 "column": 10
               }
             },
@@ -96,7 +96,7 @@
               "devDependency": false,
               "location": {
                 "file": "@@//:MODULE.bazel",
-                "line": 39,
+                "line": 46,
                 "column": 10
               }
             }
@@ -109,7 +109,7 @@
         "hedron_compile_commands": "hedron_compile_commands@_",
         "rules_cc": "rules_cc@0.0.9",
         "rules_rust": "rules_rust@0.49.3",
-        "rules_python": "rules_python@0.35.0",
+        "rules_python": "rules_python@_",
         "aspect_rules_py": "aspect_rules_py@0.7.4",
         "aspect_rules_lint": "aspect_rules_lint@1.0.0-rc9",
         "bazel_tools": "bazel_tools@_",
@@ -454,10 +454,10 @@
         }
       }
     },
-    "rules_python@0.35.0": {
+    "rules_python@_": {
       "name": "rules_python",
-      "version": "0.35.0",
-      "key": "rules_python@0.35.0",
+      "version": "0.0.0",
+      "key": "rules_python@_",
       "repoName": "rules_python",
       "executionPlatformsToRegister": [],
       "toolchainsToRegister": [
@@ -467,9 +467,9 @@
         {
           "extensionBzlFile": "@rules_python//python/private:internal_deps.bzl",
           "extensionName": "internal_deps",
-          "usingModule": "rules_python@0.35.0",
+          "usingModule": "rules_python@_",
           "location": {
-            "file": "https://bcr.bazel.build/modules/rules_python/0.35.0/MODULE.bazel",
+            "file": "@@rules_python~//:MODULE.bazel",
             "line": 16,
             "column": 30
           },
@@ -499,9 +499,9 @@
         {
           "extensionBzlFile": "@rules_python//python/extensions:python.bzl",
           "extensionName": "python",
-          "usingModule": "rules_python@0.35.0",
+          "usingModule": "rules_python@_",
           "location": {
-            "file": "https://bcr.bazel.build/modules/rules_python/0.35.0/MODULE.bazel",
+            "file": "@@rules_python~//:MODULE.bazel",
             "line": 39,
             "column": 23
           },
@@ -520,7 +520,7 @@
               },
               "devDependency": false,
               "location": {
-                "file": "https://bcr.bazel.build/modules/rules_python/0.35.0/MODULE.bazel",
+                "file": "@@rules_python~//:MODULE.bazel",
                 "line": 45,
                 "column": 17
               }
@@ -532,9 +532,9 @@
         {
           "extensionBzlFile": "@rules_python//python/private/pypi:pip.bzl",
           "extensionName": "pip_internal",
-          "usingModule": "rules_python@0.35.0",
+          "usingModule": "rules_python@_",
           "location": {
-            "file": "https://bcr.bazel.build/modules/rules_python/0.35.0/MODULE.bazel",
+            "file": "@@rules_python~//:MODULE.bazel",
             "line": 57,
             "column": 20
           },
@@ -556,7 +556,7 @@
               },
               "devDependency": false,
               "location": {
-                "file": "https://bcr.bazel.build/modules/rules_python/0.35.0/MODULE.bazel",
+                "file": "@@rules_python~//:MODULE.bazel",
                 "line": 58,
                 "column": 10
               }
@@ -575,21 +575,6 @@
         "com_google_protobuf": "protobuf@24.4",
         "bazel_tools": "bazel_tools@_",
         "local_config_platform": "local_config_platform@_"
-      },
-      "repoSpec": {
-        "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
-        "ruleClassName": "http_archive",
-        "attributes": {
-          "urls": [
-            "https://github.com/bazelbuild/rules_python/releases/download/0.35.0/rules_python-0.35.0.tar.gz"
-          ],
-          "integrity": "sha256-vgS2Nce+RgS+HvIFQumHCvPEl3jOhB7i2S/LQvnZUWo=",
-          "strip_prefix": "rules_python-0.35.0",
-          "remote_patches": {
-            "https://bcr.bazel.build/modules/rules_python/0.35.0/patches/module_dot_bazel_version.patch": "sha256-CXFJYTzyfhPzSinBGZ3QrfymhcaEMqaJDOfGmlgU97c="
-          },
-          "remote_patch_strip": 1
-        }
       }
     },
     "aspect_rules_py@0.7.4": {
@@ -665,7 +650,7 @@
       "deps": {
         "aspect_bazel_lib": "aspect_bazel_lib@2.7.7",
         "bazel_skylib": "bazel_skylib@1.6.1",
-        "rules_python": "rules_python@0.35.0",
+        "rules_python": "rules_python@_",
         "platforms": "platforms@0.0.8",
         "bazel_tools": "bazel_tools@_",
         "local_config_platform": "local_config_platform@_"
@@ -910,7 +895,7 @@
         "rules_java": "rules_java@7.4.0",
         "rules_license": "rules_license@0.0.8",
         "rules_proto": "rules_proto@6.0.2",
-        "rules_python": "rules_python@0.35.0",
+        "rules_python": "rules_python@_",
         "buildozer": "buildozer@6.4.0.2",
         "platforms": "platforms@0.0.8",
         "com_google_protobuf": "protobuf@24.4",
@@ -1215,7 +1200,7 @@
       ],
       "deps": {
         "bazel_skylib": "bazel_skylib@1.6.1",
-        "rules_python": "rules_python@0.35.0",
+        "rules_python": "rules_python@_",
         "rules_cc": "rules_cc@0.0.9",
         "rules_proto": "rules_proto@6.0.2",
         "rules_java": "rules_java@7.4.0",
@@ -1546,7 +1531,7 @@
       "extensionUsages": [],
       "deps": {
         "bazel_skylib": "bazel_skylib@1.6.1",
-        "rules_python": "rules_python@0.35.0",
+        "rules_python": "rules_python@_",
         "bazel_tools": "bazel_tools@_",
         "local_config_platform": "local_config_platform@_"
       },
@@ -1938,7 +1923,7 @@
       "toolchainsToRegister": [],
       "extensionUsages": [],
       "deps": {
-        "rules_python": "rules_python@0.35.0",
+        "rules_python": "rules_python@_",
         "bazel_skylib": "bazel_skylib@1.6.1",
         "rules_license": "rules_license@0.0.8",
         "bazel_tools": "bazel_tools@_",
@@ -5117,7 +5102,7 @@
     },
     "@@rules_python~//python/private/pypi:pip.bzl%pip_internal": {
       "general": {
-        "bzlTransitiveDigest": "jdeOjZwlxiiL178KTMiOrx3plfmUCDPOtsm6YMD0yCQ=",
+        "bzlTransitiveDigest": "H+DH88SNvq6JY6+HlxNwz1YGNoModIYcyGwHAzpw3pI=",
         "recordedFileInputs": {
           "@@rules_python~//tools/publish/requirements.txt": "031e35d03dde03ae6305fe4b3d1f58ad7bdad857379752deede0f93649991b8a",
           "@@rules_python~//tools/publish/requirements_windows.txt": "15472d5a28e068d31ba9e2dc389459698afaff366e9db06e15890283a3ea252e",

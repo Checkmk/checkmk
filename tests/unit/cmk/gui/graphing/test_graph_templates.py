@@ -19,9 +19,11 @@ from cmk.utils.hostaddress import HostName
 from cmk.gui.config import active_config
 from cmk.gui.graphing import _graph_templates as gt
 from cmk.gui.graphing._expression import (
+    BaseMetricExpression,
     Constant,
     CriticalOf,
     Difference,
+    Evaluated,
     Fraction,
     Maximum,
     MaximumOf,
@@ -41,7 +43,6 @@ from cmk.gui.graphing._graph_specification import (
     MetricOpRRDSource,
 )
 from cmk.gui.graphing._graph_templates import (
-    _evaluate_metrics,
     _evaluate_predictive_metrics,
     _get_evaluated_graph_templates,
     _get_graph_plugins,
@@ -49,6 +50,8 @@ from cmk.gui.graphing._graph_templates import (
     _parse_bidirectional_from_api,
     _parse_graph_from_api,
     _parse_graph_plugin,
+    evaluate_metrics,
+    EvaluatedGraphTemplate,
     GraphTemplate,
     MinimalGraphTemplateRange,
 )
@@ -59,6 +62,7 @@ from cmk.gui.graphing._translated_metrics import (
     translate_metrics,
     TranslatedMetric,
 )
+from cmk.gui.graphing._type_defs import LineType
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 
@@ -84,6 +88,28 @@ _GRAPH_TEMPLATES = [
         scalars=[],
         conflicting_metrics=[],
         optional_metrics=[],
+        consolidation_function=None,
+        range=None,
+        omit_zero_metrics=False,
+        metrics=[],
+    ),
+]
+
+
+_EVALUATED_GRAPH_TEMPLATES = [
+    EvaluatedGraphTemplate(
+        id="1",
+        title="Graph 1",
+        scalars=[],
+        consolidation_function=None,
+        range=None,
+        omit_zero_metrics=False,
+        metrics=[],
+    ),
+    EvaluatedGraphTemplate(
+        id="2",
+        title="Graph 2",
+        scalars=[],
         consolidation_function=None,
         range=None,
         omit_zero_metrics=False,
@@ -143,20 +169,23 @@ def test__matching_graph_templates(
     monkeypatch: MonkeyPatch,
     graph_id: str | None,
     graph_index: int | None,
-    expected_result: Sequence[tuple[int, GraphTemplate]],
+    expected_result: Sequence[tuple[int, EvaluatedGraphTemplate]],
 ) -> None:
     monkeypatch.setattr(
         gt,
         "_get_evaluated_graph_templates",
-        lambda *args, **kwargs: [(t, []) for t in _GRAPH_TEMPLATES],
+        lambda *args, **kwargs: _GRAPH_TEMPLATES,
     )
-    assert list(
-        _matching_graph_templates(
-            graph_id=graph_id,
-            graph_index=graph_index,
-            translated_metrics={},
+    assert (
+        list(
+            _matching_graph_templates(
+                graph_id=graph_id,
+                graph_index=graph_index,
+                translated_metrics={},
+            )
         )
-    ) == [(i, t, []) for i, t in expected_result]
+        == expected_result
+    )
 
 
 def test__evaluate_title() -> None:
@@ -1150,7 +1179,7 @@ def test__get_evaluated_graph_templates_1(
 ) -> None:
     perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
     translated_metrics = translate_metrics(perfdata, check_command)
-    assert sorted([t.id for t, _e in _get_evaluated_graph_templates(translated_metrics)]) == sorted(
+    assert sorted([t.id for t in _get_evaluated_graph_templates(translated_metrics)]) == sorted(
         graph_ids
     )
 
@@ -1176,7 +1205,7 @@ def test__get_evaluated_graph_templates_2(
 ) -> None:
     perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", *warn_crit_min_max) for n in metric_names]
     translated_metrics = translate_metrics(perfdata, check_command)
-    assert sorted([t.id for t, _e in _get_evaluated_graph_templates(translated_metrics)]) == sorted(
+    assert sorted([t.id for t in _get_evaluated_graph_templates(translated_metrics)]) == sorted(
         graph_ids
     )
 
@@ -1192,48 +1221,48 @@ def test__get_evaluated_graph_templates_2(
         pytest.param(
             [MetricExpression(Metric("metric_name"), line_type="line")],
             [
-                MetricExpression(Metric("predict_metric_name"), line_type="line"),
-                MetricExpression(Metric("predict_lower_metric_name"), line_type="line"),
+                (Metric("predict_metric_name"), "line"),
+                (Metric("predict_lower_metric_name"), "line"),
             ],
             id="line",
         ),
         pytest.param(
             [MetricExpression(Metric("metric_name"), line_type="area")],
             [
-                MetricExpression(Metric("predict_metric_name"), line_type="line"),
-                MetricExpression(Metric("predict_lower_metric_name"), line_type="line"),
+                (Metric("predict_metric_name"), "line"),
+                (Metric("predict_lower_metric_name"), "line"),
             ],
             id="area",
         ),
         pytest.param(
             [MetricExpression(Metric("metric_name"), line_type="stack")],
             [
-                MetricExpression(Metric("predict_metric_name"), line_type="line"),
-                MetricExpression(Metric("predict_lower_metric_name"), line_type="line"),
+                (Metric("predict_metric_name"), "line"),
+                (Metric("predict_lower_metric_name"), "line"),
             ],
             id="stack",
         ),
         pytest.param(
             [MetricExpression(Metric("metric_name"), line_type="-line")],
             [
-                MetricExpression(Metric("predict_metric_name"), line_type="-line"),
-                MetricExpression(Metric("predict_lower_metric_name"), line_type="-line"),
+                (Metric("predict_metric_name"), "-line"),
+                (Metric("predict_lower_metric_name"), "-line"),
             ],
             id="-line",
         ),
         pytest.param(
             [MetricExpression(Metric("metric_name"), line_type="-area")],
             [
-                MetricExpression(Metric("predict_metric_name"), line_type="-line"),
-                MetricExpression(Metric("predict_lower_metric_name"), line_type="-line"),
+                (Metric("predict_metric_name"), "-line"),
+                (Metric("predict_lower_metric_name"), "-line"),
             ],
             id="-area",
         ),
         pytest.param(
             [MetricExpression(Metric("metric_name"), line_type="-stack")],
             [
-                MetricExpression(Metric("predict_metric_name"), line_type="-line"),
-                MetricExpression(Metric("predict_lower_metric_name"), line_type="-line"),
+                (Metric("predict_metric_name"), "-line"),
+                (Metric("predict_lower_metric_name"), "-line"),
             ],
             id="-stack",
         ),
@@ -1241,7 +1270,7 @@ def test__get_evaluated_graph_templates_2(
 )
 def test__evaluate_predictive_metrics_line_type(
     metric_expressions: Sequence[MetricExpression],
-    expected_predictive_metric_expressions: Sequence[MetricExpression],
+    expected_predictive_metric_expressions: Sequence[tuple[BaseMetricExpression, LineType]],
 ) -> None:
     translated_metrics = {
         "metric_name": TranslatedMetric(
@@ -1282,10 +1311,10 @@ def test__evaluate_predictive_metrics_line_type(
         ),
     }
     assert [
-        m.expression
-        for m in _evaluate_predictive_metrics(
+        (e.base, e.line_type)
+        for e in _evaluate_predictive_metrics(
             translated_metrics,
-            _evaluate_metrics(
+            evaluate_metrics(
                 conflicting_metrics=[],
                 optional_metrics=[],
                 metric_expressions=metric_expressions,
@@ -1335,10 +1364,10 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
         ),
     }
     assert [
-        m.expression
-        for m in _evaluate_predictive_metrics(
+        (e.base, e.line_type)
+        for e in _evaluate_predictive_metrics(
             translated_metrics,
-            _evaluate_metrics(
+            evaluate_metrics(
                 conflicting_metrics=[],
                 optional_metrics=[],
                 metric_expressions=[
@@ -1354,8 +1383,8 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
             ),
         )
     ] == [
-        MetricExpression(Metric("predict_metric_name"), line_type="line"),
-        MetricExpression(Metric("predict_lower_metric_name"), line_type="line"),
+        (Metric("predict_metric_name"), "line"),
+        (Metric("predict_lower_metric_name"), "line"),
     ]
 
 
@@ -1377,33 +1406,79 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
             ],
             "check_mk-inbound_and_outbound_messages",
             [
-                GraphTemplate(
+                EvaluatedGraphTemplate(
                     id="inbound_and_outbound_messages",
                     title="Inbound and Outbound Messages",
                     scalars=[],
-                    conflicting_metrics=(),
-                    optional_metrics=(),
                     consolidation_function=None,
                     range=None,
                     omit_zero_metrics=False,
                     metrics=[
-                        MetricExpression(
+                        Evaluated(
                             Metric("messages_outbound"),
-                            line_type="stack",
-                            title="Outbound messages",
+                            0.0,
+                            ConvertibleUnitSpecification(
+                                notation=DecimalNotation(symbol="/s"),
+                                precision=AutoPrecision(digits=2),
+                            ),
+                            "#1e90ff",
+                            "stack",
+                            "Outbound messages",
                         ),
-                        MetricExpression(
+                        Evaluated(
                             Metric("messages_inbound"),
-                            line_type="stack",
-                            title="Inbound messages",
+                            0.0,
+                            ConvertibleUnitSpecification(
+                                notation=DecimalNotation(symbol="/s"),
+                                precision=AutoPrecision(digits=2),
+                            ),
+                            "#1ee6e6",
+                            "stack",
+                            "Inbound messages",
                         ),
-                        MetricExpression(Metric("predict_messages_outbound"), line_type="line"),
-                        MetricExpression(
-                            Metric("predict_lower_messages_outbound"), line_type="line"
+                        Evaluated(
+                            base=Metric("predict_messages_outbound"),
+                            value=0.0,
+                            unit_spec=ConvertibleUnitSpecification(
+                                notation=DecimalNotation(symbol="/s"),
+                                precision=AutoPrecision(digits=2),
+                            ),
+                            color="#4b4b4b",
+                            line_type="line",
+                            title="Prediction of Outbound messages (upper levels)",
                         ),
-                        MetricExpression(Metric("predict_messages_inbound"), line_type="line"),
-                        MetricExpression(
-                            Metric("predict_lower_messages_inbound"), line_type="line"
+                        Evaluated(
+                            base=Metric("predict_lower_messages_outbound"),
+                            value=0.0,
+                            unit_spec=ConvertibleUnitSpecification(
+                                notation=DecimalNotation(symbol="/s"),
+                                precision=AutoPrecision(digits=2),
+                            ),
+                            color="#696969",
+                            line_type="line",
+                            title="Prediction of Outbound messages (lower levels)",
+                        ),
+                        Evaluated(
+                            base=Metric("predict_messages_inbound"),
+                            value=0.0,
+                            unit_spec=ConvertibleUnitSpecification(
+                                notation=DecimalNotation(symbol="/s"),
+                                precision=AutoPrecision(digits=2),
+                            ),
+                            color="#5a5a5a",
+                            line_type="line",
+                            title="Prediction of Inbound messages (upper levels)",
+                        ),
+                        Evaluated(
+                            base=Metric("predict_lower_messages_inbound"),
+                            value=0.0,
+                            unit_spec=ConvertibleUnitSpecification(
+                                notation=DecimalNotation(symbol="/s"),
+                                precision=AutoPrecision(digits=2),
+                            ),
+                            color="#787878",
+                            line_type="line",
+                            title="Prediction of Inbound messages (lower levels)",
                         ),
                     ],
                 )
@@ -1424,29 +1499,39 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
             ],
             "check_mk-inbound_and_outbound_messages",
             [
-                GraphTemplate(
+                EvaluatedGraphTemplate(
                     id="inbound_and_outbound_messages",
                     title="Inbound and Outbound Messages",
                     scalars=[],
-                    conflicting_metrics=(),
-                    optional_metrics=(),
                     consolidation_function=None,
                     range=None,
                     omit_zero_metrics=False,
                     metrics=[
-                        MetricExpression(
+                        Evaluated(
                             Metric("messages_outbound"),
-                            line_type="stack",
-                            title="Outbound messages",
+                            0.0,
+                            ConvertibleUnitSpecification(
+                                notation=DecimalNotation(symbol="/s"),
+                                precision=AutoPrecision(digits=2),
+                            ),
+                            "#1e90ff",
+                            "stack",
+                            "Outbound messages",
                         ),
-                        MetricExpression(
+                        Evaluated(
                             Metric("messages_inbound"),
-                            line_type="stack",
-                            title="Inbound messages",
+                            0.0,
+                            ConvertibleUnitSpecification(
+                                notation=DecimalNotation(symbol="/s"),
+                                precision=AutoPrecision(digits=2),
+                            ),
+                            "#1ee6e6",
+                            "stack",
+                            "Inbound messages",
                         ),
                     ],
                 ),
-                GraphTemplate(
+                EvaluatedGraphTemplate(
                     id="METRIC_foo",
                     title="",
                     scalars=[
@@ -1461,14 +1546,24 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                             title="Critical",
                         ),
                     ],
-                    conflicting_metrics=[],
-                    optional_metrics=[],
                     consolidation_function=None,
                     range=None,
                     omit_zero_metrics=False,
-                    metrics=[MetricExpression(Metric("foo"), line_type="area")],
+                    metrics=[
+                        Evaluated(
+                            Metric("foo"),
+                            0.0,
+                            ConvertibleUnitSpecification(
+                                notation=DecimalNotation(symbol=""),
+                                precision=AutoPrecision(digits=2),
+                            ),
+                            "#cc00ff",
+                            "area",
+                            "Foo",
+                        )
+                    ],
                 ),
-                GraphTemplate(
+                EvaluatedGraphTemplate(
                     id="METRIC_predict_foo",
                     title="",
                     scalars=[
@@ -1483,14 +1578,24 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                             title="Critical",
                         ),
                     ],
-                    conflicting_metrics=[],
-                    optional_metrics=[],
                     consolidation_function=None,
                     range=None,
                     omit_zero_metrics=False,
-                    metrics=[MetricExpression(Metric("predict_foo"), line_type="area")],
+                    metrics=[
+                        Evaluated(
+                            Metric("predict_foo"),
+                            0.0,
+                            ConvertibleUnitSpecification(
+                                notation=DecimalNotation(symbol=""),
+                                precision=AutoPrecision(digits=2),
+                            ),
+                            "#4b4b4b",
+                            "area",
+                            "Prediction of Foo (upper levels)",
+                        )
+                    ],
                 ),
-                GraphTemplate(
+                EvaluatedGraphTemplate(
                     id="METRIC_predict_lower_foo",
                     title="",
                     scalars=[
@@ -1505,12 +1610,22 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                             title="Critical",
                         ),
                     ],
-                    conflicting_metrics=[],
-                    optional_metrics=[],
                     consolidation_function=None,
                     range=None,
                     omit_zero_metrics=False,
-                    metrics=[MetricExpression(Metric("predict_lower_foo"), line_type="area")],
+                    metrics=[
+                        Evaluated(
+                            Metric("predict_lower_foo"),
+                            0.0,
+                            ConvertibleUnitSpecification(
+                                notation=DecimalNotation(symbol=""),
+                                precision=AutoPrecision(digits=2),
+                            ),
+                            "#5a5a5a",
+                            "area",
+                            "Prediction of Foo (lower levels)",
+                        )
+                    ],
                 ),
             ],
             id="does-not-match",
@@ -1522,7 +1637,7 @@ def test__get_evaluated_graph_templates_with_predictive_metrics(
     predict_metric_names: Sequence[str],
     predict_lower_metric_names: Sequence[str],
     check_command: str,
-    graph_templates: Sequence[GraphTemplate],
+    graph_templates: Sequence[EvaluatedGraphTemplate],
     request_context: None,
 ) -> None:
     perfdata: Perfdata = (
@@ -1534,8 +1649,7 @@ def test__get_evaluated_graph_templates_with_predictive_metrics(
         ]
     )
     translated_metrics = translate_metrics(perfdata, check_command)
-    found_graph_templates = [t for t, _e in _get_evaluated_graph_templates(translated_metrics)]
-    assert found_graph_templates == graph_templates
+    assert list(_get_evaluated_graph_templates(translated_metrics)) == graph_templates
 
 
 @pytest.mark.parametrize(
@@ -1883,6 +1997,6 @@ def test_conflicting_metrics(
     # 2. use metric names from (1) and conflicting metrics
     perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
     translated_metrics = translate_metrics(perfdata, "check_command")
-    assert sorted([t.id for t, _e in _get_evaluated_graph_templates(translated_metrics)]) == sorted(
+    assert sorted([t.id for t in _get_evaluated_graph_templates(translated_metrics)]) == sorted(
         graph_ids
     )

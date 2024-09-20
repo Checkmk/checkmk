@@ -327,19 +327,13 @@ def get_graph_template_from_id(template_id: str) -> GraphTemplate:
     raise MKGeneralException(_("There is no graph graph_plugin with the id '%s'") % template_id)
 
 
-@dataclass(frozen=True)
-class _EvaluatedMetricExpression:
-    expression: MetricExpression
-    evaluated: Evaluated
-
-
-def _evaluate_metrics(
+def evaluate_metrics(
     *,
     conflicting_metrics: Sequence[str],
     optional_metrics: Sequence[str],
     metric_expressions: Sequence[MetricExpression],
     translated_metrics: Mapping[str, TranslatedMetric],
-) -> Sequence[_EvaluatedMetricExpression]:
+) -> Sequence[Evaluated]:
     # Skip early on conflicting_metrics
     for var in conflicting_metrics:
         if var in translated_metrics:
@@ -350,26 +344,8 @@ def _evaluate_metrics(
             if result.error.metric_name and result.error.metric_name in optional_metrics:
                 continue
             return []
-        results.append(_EvaluatedMetricExpression(metric_expression, result.ok))
+        results.append(result.ok)
     return results
-
-
-def evaluate_metrics(
-    *,
-    conflicting_metrics: Sequence[str],
-    optional_metrics: Sequence[str],
-    metric_expressions: Sequence[MetricExpression],
-    translated_metrics: Mapping[str, TranslatedMetric],
-) -> Sequence[Evaluated]:
-    return [
-        m.evaluated
-        for m in _evaluate_metrics(
-            conflicting_metrics=conflicting_metrics,
-            optional_metrics=optional_metrics,
-            metric_expressions=metric_expressions,
-            translated_metrics=translated_metrics,
-        )
-    ]
 
 
 def get_evaluated_graph_template_choices(
@@ -663,8 +639,7 @@ def _create_graph_recipe_from_template(
     site_id: SiteId,
     host_name: HostName,
     service_name: ServiceName,
-    graph_template: GraphTemplate,
-    evaluated_metrics: Sequence[Evaluated],
+    graph_template: EvaluatedGraphTemplate,
     translated_metrics: Mapping[str, TranslatedMetric],
     specification: GraphSpecification,
 ) -> GraphRecipe:
@@ -687,7 +662,7 @@ def _create_graph_recipe_from_template(
             ),
             color=evaluated.color,
         )
-        for evaluated in evaluated_metrics
+        for evaluated in graph_template.metrics
     ]
     units = {m.unit for m in metrics}
 
@@ -730,14 +705,14 @@ def _create_graph_recipe_from_template(
 
 def _evaluate_predictive_metrics(
     translated_metrics: Mapping[str, TranslatedMetric],
-    evaluated_metrics: Sequence[_EvaluatedMetricExpression],
-) -> Iterator[_EvaluatedMetricExpression]:
+    evaluated_metrics: Sequence[Evaluated],
+) -> Iterator[Evaluated]:
     computed = set()
-    for metric in evaluated_metrics:
+    for evaluated in evaluated_metrics:
         line_type: Literal["line", "-line"] = (
-            "-line" if metric.evaluated.line_type.startswith("-") else "line"
+            "-line" if evaluated.line_type.startswith("-") else "line"
         )
-        for metric_name in metric.evaluated.metric_names():
+        for metric_name in evaluated.metric_names():
             if metric_name in computed:
                 continue
             computed.add(metric_name)
@@ -746,49 +721,47 @@ def _evaluate_predictive_metrics(
                 MetricExpression(Metric(f"predict_lower_{metric_name}"), line_type=line_type),
             ]:
                 if (result := predictive_metric_expression.evaluate(translated_metrics)).is_ok():
-                    yield _EvaluatedMetricExpression(predictive_metric_expression, result.ok)
+                    yield result.ok
+
+
+@dataclass(frozen=True)
+class EvaluatedGraphTemplate:
+    id: str
+    title: str
+    scalars: Sequence[MetricExpression]
+    consolidation_function: GraphConsolidationFunction | None
+    range: FixedGraphTemplateRange | MinimalGraphTemplateRange | None
+    omit_zero_metrics: bool
+    metrics: Sequence[Evaluated]
 
 
 def _get_evaluated_graph_templates(
     translated_metrics: Mapping[str, TranslatedMetric],
-) -> Iterator[tuple[GraphTemplate, Sequence[Evaluated]]]:
+) -> Iterator[EvaluatedGraphTemplate]:
     if not translated_metrics:
         yield from ()
         return
 
     def _generate_graph_templates(
         graph_template: GraphTemplate,
-    ) -> Iterator[tuple[GraphTemplate, Sequence[Evaluated]]]:
-        if evaluated_metrics := _evaluate_metrics(
+    ) -> Iterator[EvaluatedGraphTemplate]:
+        if evaluated_metrics := evaluate_metrics(
             conflicting_metrics=graph_template.conflicting_metrics,
             optional_metrics=graph_template.optional_metrics,
             metric_expressions=graph_template.metrics,
             translated_metrics=translated_metrics,
         ):
-            evaluated_predictive_metrics = list(
-                _evaluate_predictive_metrics(translated_metrics, evaluated_metrics)
-            )
-            yield (
-                GraphTemplate(
-                    id=graph_template.id,
-                    title=graph_template.title,
-                    scalars=graph_template.scalars,
-                    conflicting_metrics=graph_template.conflicting_metrics,
-                    optional_metrics=graph_template.optional_metrics,
-                    consolidation_function=graph_template.consolidation_function,
-                    range=graph_template.range,
-                    omit_zero_metrics=graph_template.omit_zero_metrics,
-                    metrics=list(
-                        itertools.chain(
-                            (m.expression for m in evaluated_metrics),
-                            (m.expression for m in evaluated_predictive_metrics),
-                        )
-                    ),
-                ),
-                list(
+            yield EvaluatedGraphTemplate(
+                id=graph_template.id,
+                title=graph_template.title,
+                scalars=graph_template.scalars,
+                consolidation_function=graph_template.consolidation_function,
+                range=graph_template.range,
+                omit_zero_metrics=graph_template.omit_zero_metrics,
+                metrics=list(
                     itertools.chain(
-                        (m.evaluated for m in evaluated_metrics),
-                        (m.evaluated for m in evaluated_predictive_metrics),
+                        evaluated_metrics,
+                        _evaluate_predictive_metrics(translated_metrics, evaluated_metrics),
                     )
                 ),
             )
@@ -801,14 +774,19 @@ def _get_evaluated_graph_templates(
     yield from graph_templates
 
     already_graphed_metrics = {
-        n for _t, em in graph_templates for e in em for n in e.metric_names()
+        n for t in graph_templates for e in t.metrics for n in e.metric_names()
     }
     for metric_name, translated_metric in sorted(translated_metrics.items()):
         if translated_metric.auto_graph and metric_name not in already_graphed_metrics:
             graph_template = _create_graph_template_from_name(metric_name)
-            yield (
-                graph_template,
-                evaluate_metrics(
+            yield EvaluatedGraphTemplate(
+                id=graph_template.id,
+                title=graph_template.title,
+                scalars=graph_template.scalars,
+                consolidation_function=graph_template.consolidation_function,
+                range=graph_template.range,
+                omit_zero_metrics=graph_template.omit_zero_metrics,
+                metrics=evaluate_metrics(
                     conflicting_metrics=graph_template.conflicting_metrics,
                     optional_metrics=graph_template.optional_metrics,
                     metric_expressions=graph_template.metrics,
@@ -822,7 +800,7 @@ def _matching_graph_templates(
     graph_id: str | None,
     graph_index: int | None,
     translated_metrics: Mapping[str, TranslatedMetric],
-) -> Iterable[tuple[int, GraphTemplate, Sequence[Evaluated]]]:
+) -> Iterable[tuple[int, EvaluatedGraphTemplate]]:
     # Performance graph dashlets already use graph_id, but for example in reports, we still use
     # graph_index. Therefore, this function needs to support both. We should switch to graph_id
     # everywhere (CMK-7308) and remove the support for graph_index. However, note that we cannot
@@ -838,21 +816,26 @@ def _matching_graph_templates(
         graph_template = _create_graph_template_from_name(graph_id)
         yield (
             0,
-            graph_template,
-            evaluate_metrics(
-                conflicting_metrics=graph_template.conflicting_metrics,
-                optional_metrics=graph_template.optional_metrics,
-                metric_expressions=graph_template.metrics,
-                translated_metrics=translated_metrics,
+            EvaluatedGraphTemplate(
+                id=graph_template.id,
+                title=graph_template.title,
+                scalars=graph_template.scalars,
+                consolidation_function=graph_template.consolidation_function,
+                range=graph_template.range,
+                omit_zero_metrics=graph_template.omit_zero_metrics,
+                metrics=evaluate_metrics(
+                    conflicting_metrics=graph_template.conflicting_metrics,
+                    optional_metrics=graph_template.optional_metrics,
+                    metric_expressions=graph_template.metrics,
+                    translated_metrics=translated_metrics,
+                ),
             ),
         )
         return
 
     yield from (
-        (index, graph_template, evaluated_metrics)
-        for index, (graph_template, evaluated_metrics) in enumerate(
-            _get_evaluated_graph_templates(translated_metrics)
-        )
+        (index, graph_template)
+        for index, graph_template in enumerate(_get_evaluated_graph_templates(translated_metrics))
         if (graph_index is None or index == graph_index)
         and (graph_id is None or graph_template.id == graph_id)
     )
@@ -880,8 +863,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
     def _build_recipe_from_template(
         self,
         *,
-        graph_template: GraphTemplate,
-        evaluated_metrics: Sequence[Evaluated],
+        graph_template: EvaluatedGraphTemplate,
         row: Row,
         translated_metrics: Mapping[str, TranslatedMetric],
         index: int,
@@ -891,7 +873,6 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
             row["host_name"],
             row.get("service_description", "_HOST_"),
             graph_template,
-            evaluated_metrics,
             translated_metrics,
             specification=type(self)(
                 site=self.site,
@@ -908,7 +889,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         translated_metrics = translated_metrics_from_row(row)
         return [
             recipe
-            for index, graph_template, evaluated_metrics in _matching_graph_templates(
+            for index, graph_template in _matching_graph_templates(
                 graph_id=self.graph_id,
                 graph_index=self.graph_index,
                 translated_metrics=translated_metrics,
@@ -916,7 +897,6 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
             if (
                 recipe := self._build_recipe_from_template(
                     graph_template=graph_template,
-                    evaluated_metrics=evaluated_metrics,
                     row=row,
                     translated_metrics=translated_metrics,
                     index=index,

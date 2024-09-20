@@ -1152,8 +1152,10 @@ def test_folder_times() -> None:
     with time_machine.travel(datetime.datetime(2020, 2, 2, 2, 2, 2)):
         current = time.time()
         Folder.new(tree=tree, name="test", parent_folder=root).save()
+        folder_tree().invalidate_caches()
         folder = Folder.load(tree=tree, name="test", parent_folder=root)
         folder.save()
+        folder_tree().invalidate_caches()
 
     meta_data = folder.attributes["meta_data"]
     assert int(meta_data["created_at"]) == int(current)

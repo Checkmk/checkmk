@@ -1468,13 +1468,8 @@ class Folder(FolderProtocol):
             }
         return {}
 
-    def save(self, is_custom_folder: bool = False) -> None:
+    def save(self) -> None:
         self.persist_instance()
-        if is_custom_folder:
-            # save a folder that is used only temporarily for a specific purpose (e.g. syncing to
-            # remote sites) -> skip further saving functionality (e.g. communicating with redis)
-            return
-        folder_tree().invalidate_caches()
 
     def serialize(self) -> WATOFolderInfo:
         return {
@@ -2174,6 +2169,7 @@ class Folder(FolderProtocol):
         )
         self._subfolders[name] = new_subfolder
         new_subfolder.save()
+        folder_tree().invalidate_caches()
         new_subfolder.save_hosts()
         add_change(
             "new-folder",
@@ -2325,6 +2321,7 @@ class Folder(FolderProtocol):
         # might need to be rewritten in order to reflect Changes
         # in Nagios-relevant attributes.
         self.save()
+        folder_tree().invalidate_caches()
         self.rewrite_hosts_files()
 
         affected_sites = list(set(affected_sites + self.all_site_ids()))
@@ -2384,6 +2381,7 @@ class Folder(FolderProtocol):
             self.propagate_hosts_changes(host_name, attributes, cluster_nodes)
 
         self.save()  # num_hosts has changed
+        folder_tree().invalidate_caches()
         self.save_hosts()
 
         folder_path = self.path()
@@ -2611,6 +2609,7 @@ class Folder(FolderProtocol):
         )
         self.save_hosts()
         self.save()
+        folder_tree().invalidate_caches()
         return True
 
     def rewrite_hosts_files(self):

@@ -62,7 +62,7 @@ mkdir %worker_arte% 2> nul
 
 :: Setup shortcut call for CI(to make names shorter than 255 chars)
 set ci_root_dir=workdir\workspace\checkmk\master
-set ci_junction_to_root_dir=y
+set ci_junction_to_root_dir=yy
 set script_to_run=.\scripts\cargo_build_core.cmd
 powershell -ExecutionPolicy ByPass -File %worker_root_dir%/scripts/windows/shorten_dir_and_call.ps1 %ci_root_dir% %ci_junction_to_root_dir% %script_to_run%
 GOTO :EOF

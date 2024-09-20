@@ -44,6 +44,7 @@ from cmk.gui.graphing._graph_specification import (
 )
 from cmk.gui.graphing._graph_templates import (
     _evaluate_predictive_metrics,
+    _evaluate_scalars,
     _get_evaluated_graph_templates,
     _get_graph_plugins,
     _matching_graph_templates,
@@ -55,7 +56,7 @@ from cmk.gui.graphing._graph_templates import (
     GraphTemplate,
     MinimalGraphTemplateRange,
 )
-from cmk.gui.graphing._legacy import RawGraphTemplate
+from cmk.gui.graphing._legacy import get_render_function, RawGraphTemplate
 from cmk.gui.graphing._translated_metrics import (
     Original,
     parse_perf_data,
@@ -247,8 +248,14 @@ def test_horizontal_rules_from_thresholds(
 ) -> None:
     perf_data, check_command = parse_perf_data(perf_data_string, None, config=active_config)
     translated_metrics = translate_metrics(perf_data, check_command)
-    assert (
-        gt._horizontal_rules_from_thresholds(
+    assert [
+        HorizontalRule(
+            value=e.value,
+            rendered_value=get_render_function(e.unit_spec)(e.value),
+            color=e.color,
+            title=e.title,
+        )
+        for e in _evaluate_scalars(
             [
                 MetricExpression(
                     WarningOf(Metric("one")),
@@ -268,8 +275,7 @@ def test_horizontal_rules_from_thresholds(
             ],
             translated_metrics,
         )
-        == result
-    )
+    ] == result
 
 
 def test_duplicate_graph_templates(request_context: None) -> None:
@@ -1534,18 +1540,7 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                 EvaluatedGraphTemplate(
                     id="METRIC_foo",
                     title="",
-                    scalars=[
-                        MetricExpression(
-                            WarningOf(metric=Metric("foo")),
-                            line_type="line",
-                            title="Warning",
-                        ),
-                        MetricExpression(
-                            CriticalOf(metric=Metric("foo")),
-                            line_type="line",
-                            title="Critical",
-                        ),
-                    ],
+                    scalars=[],
                     consolidation_function="max",
                     range=None,
                     omit_zero_metrics=False,
@@ -1567,15 +1562,27 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                     id="METRIC_predict_foo",
                     title="",
                     scalars=[
-                        MetricExpression(
+                        Evaluated(
                             WarningOf(metric=Metric("predict_foo")),
-                            line_type="line",
-                            title="Warning",
+                            1.0,
+                            ConvertibleUnitSpecification(
+                                notation=DecimalNotation(symbol=""),
+                                precision=AutoPrecision(digits=2),
+                            ),
+                            "#ffd000",
+                            "line",
+                            "Warning",
                         ),
-                        MetricExpression(
+                        Evaluated(
                             CriticalOf(metric=Metric("predict_foo")),
-                            line_type="line",
-                            title="Critical",
+                            2.0,
+                            ConvertibleUnitSpecification(
+                                notation=DecimalNotation(symbol=""),
+                                precision=AutoPrecision(digits=2),
+                            ),
+                            "#ff3232",
+                            "line",
+                            "Critical",
                         ),
                     ],
                     consolidation_function="max",
@@ -1599,15 +1606,27 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                     id="METRIC_predict_lower_foo",
                     title="",
                     scalars=[
-                        MetricExpression(
+                        Evaluated(
                             WarningOf(metric=Metric("predict_lower_foo")),
-                            line_type="line",
-                            title="Warning",
+                            3.0,
+                            ConvertibleUnitSpecification(
+                                notation=DecimalNotation(symbol=""),
+                                precision=AutoPrecision(digits=2),
+                            ),
+                            "#ffd000",
+                            "line",
+                            "Warning",
                         ),
-                        MetricExpression(
+                        Evaluated(
                             CriticalOf(metric=Metric("predict_lower_foo")),
-                            line_type="line",
-                            title="Critical",
+                            4.0,
+                            ConvertibleUnitSpecification(
+                                notation=DecimalNotation(symbol=""),
+                                precision=AutoPrecision(digits=2),
+                            ),
+                            "#ff3232",
+                            "line",
+                            "Critical",
                         ),
                     ],
                     consolidation_function="max",
@@ -1642,11 +1661,8 @@ def test__get_evaluated_graph_templates_with_predictive_metrics(
 ) -> None:
     perfdata: Perfdata = (
         [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
-        + [PerfDataTuple(n, n[8:], 0, "", None, None, None, None) for n in predict_metric_names]
-        + [
-            PerfDataTuple(n, n[14:], 0, "", None, None, None, None)
-            for n in predict_lower_metric_names
-        ]
+        + [PerfDataTuple(n, n[8:], 0, "", 1, 2, None, None) for n in predict_metric_names]
+        + [PerfDataTuple(n, n[14:], 0, "", 3, 4, None, None) for n in predict_lower_metric_names]
     )
     translated_metrics = translate_metrics(perfdata, check_command)
     assert list(_get_evaluated_graph_templates(translated_metrics)) == graph_templates

@@ -327,6 +327,22 @@ def get_graph_template_from_id(template_id: str) -> GraphTemplate:
     raise MKGeneralException(_("There is no graph graph_plugin with the id '%s'") % template_id)
 
 
+def _evaluate_scalars(
+    metric_expressions: Sequence[MetricExpression],
+    translated_metrics: Mapping[str, TranslatedMetric],
+) -> Sequence[Evaluated]:
+    results = []
+    for metric_expression in metric_expressions:
+        if (result := metric_expression.evaluate(translated_metrics)).is_error():
+            # Scalar value like min and max are always optional. This makes configuration
+            # of graphs easier.
+            if result.error.metric_name:
+                continue
+            return []
+        results.append(result.ok)
+    return results
+
+
 def evaluate_metrics(
     *,
     conflicting_metrics: Sequence[str],
@@ -611,30 +627,6 @@ def evaluate_graph_template_range(
             assert_never(graph_template_range)
 
 
-def _horizontal_rules_from_thresholds(
-    metric_expressions: Iterable[MetricExpression],
-    translated_metrics: Mapping[str, TranslatedMetric],
-) -> Sequence[HorizontalRule]:
-    horizontal_rules = []
-    for metric_expression in metric_expressions:
-        if (result := metric_expression.evaluate(translated_metrics)).is_error():
-            # Scalar value like min and max are always optional. This makes configuration
-            # of graphs easier.
-            if result.error.metric_name:
-                continue
-            return []
-
-        horizontal_rules.append(
-            HorizontalRule(
-                value=result.ok.value,
-                rendered_value=get_render_function(result.ok.unit_spec)(result.ok.value),
-                color=result.ok.color,
-                title=metric_expression.title,
-            )
-        )
-    return horizontal_rules
-
-
 def _create_graph_recipe_from_template(
     site_id: SiteId,
     host_name: HostName,
@@ -694,9 +686,15 @@ def _create_graph_recipe_from_template(
             graph_template.range,
             translated_metrics,
         ),
-        horizontal_rules=_horizontal_rules_from_thresholds(
-            graph_template.scalars, translated_metrics
-        ),  # e.g. lines for WARN and CRIT
+        horizontal_rules=[
+            HorizontalRule(
+                value=evaluated.value,
+                rendered_value=get_render_function(evaluated.unit_spec)(evaluated.value),
+                color=evaluated.color,
+                title=evaluated.title,
+            )
+            for evaluated in graph_template.scalars
+        ],
         omit_zero_metrics=graph_template.omit_zero_metrics,
         consolidation_function=graph_template.consolidation_function,
         specification=specification,
@@ -728,7 +726,7 @@ def _evaluate_predictive_metrics(
 class EvaluatedGraphTemplate:
     id: str
     title: str
-    scalars: Sequence[MetricExpression]
+    scalars: Sequence[Evaluated]
     consolidation_function: GraphConsolidationFunction
     range: FixedGraphTemplateRange | MinimalGraphTemplateRange | None
     omit_zero_metrics: bool
@@ -743,7 +741,7 @@ def _create_evaluated_graph_template(
     return EvaluatedGraphTemplate(
         id=graph_template.id,
         title=graph_template.title,
-        scalars=graph_template.scalars,
+        scalars=_evaluate_scalars(graph_template.scalars, translated_metrics),
         consolidation_function=graph_template.consolidation_function or "max",
         range=graph_template.range,
         omit_zero_metrics=graph_template.omit_zero_metrics,

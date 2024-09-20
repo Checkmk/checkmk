@@ -78,23 +78,35 @@ def perform_rename_hosts(
         job_interface.send_progress_update(message)
 
     actions: list[str] = []
-    all_hosts = list(Host.all().values())
 
     # 1. Fix Setup configuration itself ----------------
     auth_problems = []
     successful_renamings = []
     update_interface(_("Renaming Setup configuration..."))
-    for folder, oldname, newname in renamings:
+
+    setup_actions: dict[tuple[Folder, HostName, HostName], list[str]] = {}
+    for renaming in renamings:
+        folder, oldname, newname = renaming
         try:
-            this_host_actions = []
             update_interface(_("Renaming host(s) in folders..."))
-            this_host_actions += _rename_host_in_folder(folder, oldname, newname)
+            setup_actions[renaming] = _rename_host_in_folder(folder, oldname, newname)
+        except MKAuthException as e:
+            auth_problems.append((oldname, e))
+
+    # Precompute cluster host list for node renaming due to expensive Host.all()
+    # call. This currently also needs to be done after the host renaming as the
+    # folder_tree cache_invalidation still misses some caches.
+    cluster_hosts = [host for host in Host.all().values() if host.is_cluster()]
+
+    for renaming, this_host_actions in setup_actions.items():
+        folder, oldname, newname = renaming
+        try:
             update_interface(_("Renaming host(s) in cluster nodes..."))
-            this_host_actions += _rename_host_as_cluster_node(all_hosts, oldname, newname)
+            this_host_actions.extend(_rename_host_as_cluster_node(cluster_hosts, oldname, newname))
             update_interface(_("Renaming host(s) in parents..."))
-            this_host_actions += _rename_parents(oldname, newname)
+            this_host_actions.extend(_rename_parents(oldname, newname))
             update_interface(_("Renaming host(s) in rulesets..."))
-            this_host_actions += _rename_host_in_rulesets(oldname, newname)
+            this_host_actions.extend(_rename_host_in_rulesets(oldname, newname))
 
             for hook in rename_host_hook_registry.hooks_by_phase(RenamePhase.SETUP):
                 update_interface(_("Renaming host(s) in %s...") % hook.title)
@@ -144,16 +156,13 @@ def _rename_host_in_folder(folder: Folder, oldname: HostName, newname: HostName)
 
 
 def _rename_host_as_cluster_node(
-    all_hosts: Iterable[Host], oldname: HostName, newname: HostName
+    cluster_hosts: list[Host], oldname: HostName, newname: HostName
 ) -> list[str]:
-    clusters = []
-    for somehost in all_hosts:
-        if somehost.is_cluster():
-            if somehost.rename_cluster_node(oldname, newname):
-                clusters.append(somehost.name())
-    if clusters:
-        return ["cluster_nodes"] * len(clusters)
-    return []
+    renamed_cluster_nodes = 0
+    for cluster_host in cluster_hosts:
+        if cluster_host.rename_cluster_node(oldname, newname):
+            renamed_cluster_nodes += 1
+    return ["cluster_nodes"] * renamed_cluster_nodes
 
 
 def _rename_parents(

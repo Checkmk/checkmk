@@ -9,7 +9,6 @@ from cmk.ccc.i18n import _
 
 from cmk.utils.rulesets.definition import RuleGroup
 
-from cmk.gui.fields.definitions import FOLDER_PATTERN, HOST_NAME_REGEXP
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
 from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout
 from cmk.gui.quick_setup.config_setups.aws import form_specs as aws
@@ -37,12 +36,9 @@ from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
-    FieldSize,
     InputHint,
     SingleChoice,
     SingleChoiceElement,
-    String,
-    validators,
 )
 
 
@@ -97,36 +93,7 @@ def configure_host_and_regions() -> QuickSetupStage:
             "Name your host, define the path and select the regions you would like to monitor"
         ),
         configure_components=[
-            FormSpecWrapper(
-                id=FormSpecId("host_data"),
-                form_spec=DictionaryExtended(
-                    elements={
-                        "host_name": DictElement(
-                            parameter_form=String(
-                                title=Title("Host name"),
-                                field_size=FieldSize.MEDIUM,
-                                custom_validate=(
-                                    validators.LengthInRange(min_value=1),
-                                    validators.MatchRegex(HOST_NAME_REGEXP),
-                                ),
-                            ),
-                            required=True,
-                        ),
-                        "host_path": DictElement(
-                            parameter_form=String(
-                                title=Title("Host path"),
-                                field_size=FieldSize.MEDIUM,
-                                custom_validate=(
-                                    validators.LengthInRange(min_value=1),
-                                    validators.MatchRegex(FOLDER_PATTERN),
-                                ),
-                            ),
-                            required=True,
-                        ),
-                    },
-                    layout=DictionaryLayout.two_columns,
-                ),
-            ),
+            widgets.host_name_and_host_path_formspec_wrapper(),
             FormSpecWrapper(
                 id=FormSpecId("configure_host_and_regions"),
                 form_spec=DictionaryExtended(

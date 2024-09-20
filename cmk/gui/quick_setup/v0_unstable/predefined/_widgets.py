@@ -2,7 +2,9 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 from cmk.gui.default_name import unique_default_name_suggestion
+from cmk.gui.fields.definitions import HOST_NAME_REGEXP
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
 from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout
 from cmk.gui.quick_setup.v0_unstable.definitions import UniqueBundleIDStr, UniqueFormSpecIDStr
@@ -36,6 +38,49 @@ def unique_id_formspec_wrapper(
                     ),
                     required=True,
                 )
+            },
+            layout=DictionaryLayout.two_columns,
+        ),
+    )
+
+
+def _host_name_dict_element(title: Title = Title("Host name")) -> DictElement:
+    return DictElement(
+        parameter_form=String(
+            title=title,
+            field_size=FieldSize.MEDIUM,
+            custom_validate=(
+                validators.LengthInRange(min_value=1),
+                validators.MatchRegex(HOST_NAME_REGEXP),
+            ),
+        ),
+        required=True,
+    )
+
+
+FOLDER_PATTERN = (
+    r"^(?:[~\\\/]?[-_ a-zA-Z0-9.]{1,32}(?:[~\\\/][-_ a-zA-Z0-9.]{1,32})*[~\\\/]?|[~\\\/]?)$"
+)
+
+
+def _host_path_dict_element(title: Title = Title("Host Path")) -> DictElement:
+    return DictElement(
+        parameter_form=String(
+            title=title,
+            field_size=FieldSize.MEDIUM,
+            custom_validate=(validators.MatchRegex(FOLDER_PATTERN),),
+        ),
+        required=True,
+    )
+
+
+def host_name_and_host_path_formspec_wrapper() -> FormSpecWrapper:
+    return FormSpecWrapper(
+        id=FormSpecId("host_data"),
+        form_spec=DictionaryExtended(
+            elements={
+                "host_name": _host_name_dict_element(),
+                "host_path": _host_path_dict_element(),
             },
             layout=DictionaryLayout.two_columns,
         ),

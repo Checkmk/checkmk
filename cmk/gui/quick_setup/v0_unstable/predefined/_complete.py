@@ -84,7 +84,7 @@ def _normalize_folder_path_str(folder_path: str) -> str:
 
     """
 
-    if folder_path in ["/", "~", "\\"]:
+    if folder_path in ["/", "~", "\\", ""]:
         return ""
 
     prev = folder_path

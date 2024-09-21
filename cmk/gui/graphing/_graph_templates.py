@@ -735,6 +735,22 @@ class EvaluatedGraphTemplate:
     metrics: Sequence[Evaluated]
 
 
+def _create_evaluated_graph_template(
+    translated_metrics: Mapping[str, TranslatedMetric],
+    graph_template: GraphTemplate,
+    evaluated_metrics: Sequence[Evaluated],
+) -> EvaluatedGraphTemplate:
+    return EvaluatedGraphTemplate(
+        id=graph_template.id,
+        title=graph_template.title,
+        scalars=graph_template.scalars,
+        consolidation_function=graph_template.consolidation_function,
+        range=graph_template.range,
+        omit_zero_metrics=graph_template.omit_zero_metrics,
+        metrics=evaluated_metrics,
+    )
+
+
 def _get_evaluated_graph_templates(
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> Iterator[EvaluatedGraphTemplate]:
@@ -742,34 +758,27 @@ def _get_evaluated_graph_templates(
         yield from ()
         return
 
-    def _generate_graph_templates(
-        graph_template: GraphTemplate,
-    ) -> Iterator[EvaluatedGraphTemplate]:
-        if evaluated_metrics := evaluate_metrics(
-            conflicting_metrics=graph_template.conflicting_metrics,
-            optional_metrics=graph_template.optional_metrics,
-            metric_expressions=graph_template.metrics,
-            translated_metrics=translated_metrics,
-        ):
-            yield EvaluatedGraphTemplate(
-                id=graph_template.id,
-                title=graph_template.title,
-                scalars=graph_template.scalars,
-                consolidation_function=graph_template.consolidation_function,
-                range=graph_template.range,
-                omit_zero_metrics=graph_template.omit_zero_metrics,
-                metrics=list(
-                    itertools.chain(
-                        evaluated_metrics,
-                        _evaluate_predictive_metrics(translated_metrics, evaluated_metrics),
-                    )
-                ),
-            )
-
     graph_templates = [
-        t
+        _create_evaluated_graph_template(
+            translated_metrics,
+            graph_template,
+            list(
+                itertools.chain(
+                    evaluated_metrics,
+                    _evaluate_predictive_metrics(translated_metrics, evaluated_metrics),
+                )
+            ),
+        )
         for id_, graph_plugin in _get_graph_plugins()
-        for t in _generate_graph_templates(_parse_graph_plugin(id_, graph_plugin))
+        for graph_template in [_parse_graph_plugin(id_, graph_plugin)]
+        if (
+            evaluated_metrics := evaluate_metrics(
+                conflicting_metrics=graph_template.conflicting_metrics,
+                optional_metrics=graph_template.optional_metrics,
+                metric_expressions=graph_template.metrics,
+                translated_metrics=translated_metrics,
+            )
+        )
     ]
     yield from graph_templates
 
@@ -779,14 +788,10 @@ def _get_evaluated_graph_templates(
     for metric_name, translated_metric in sorted(translated_metrics.items()):
         if translated_metric.auto_graph and metric_name not in already_graphed_metrics:
             graph_template = _create_graph_template_from_name(metric_name)
-            yield EvaluatedGraphTemplate(
-                id=graph_template.id,
-                title=graph_template.title,
-                scalars=graph_template.scalars,
-                consolidation_function=graph_template.consolidation_function,
-                range=graph_template.range,
-                omit_zero_metrics=graph_template.omit_zero_metrics,
-                metrics=evaluate_metrics(
+            yield _create_evaluated_graph_template(
+                translated_metrics,
+                graph_template,
+                evaluate_metrics(
                     conflicting_metrics=graph_template.conflicting_metrics,
                     optional_metrics=graph_template.optional_metrics,
                     metric_expressions=graph_template.metrics,
@@ -816,14 +821,10 @@ def _matching_graph_templates(
         graph_template = _create_graph_template_from_name(graph_id)
         yield (
             0,
-            EvaluatedGraphTemplate(
-                id=graph_template.id,
-                title=graph_template.title,
-                scalars=graph_template.scalars,
-                consolidation_function=graph_template.consolidation_function,
-                range=graph_template.range,
-                omit_zero_metrics=graph_template.omit_zero_metrics,
-                metrics=evaluate_metrics(
+            _create_evaluated_graph_template(
+                translated_metrics,
+                graph_template,
+                evaluate_metrics(
                     conflicting_metrics=graph_template.conflicting_metrics,
                     optional_metrics=graph_template.optional_metrics,
                     metric_expressions=graph_template.metrics,

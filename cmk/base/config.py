@@ -100,7 +100,12 @@ from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import MaxAge
 
 from cmk.checkengine.checking import CheckPluginName, ConfiguredService, ServiceID
-from cmk.checkengine.discovery import AutochecksManager, CheckPreviewEntry, DiscoveryCheckParameters
+from cmk.checkengine.discovery import (
+    AutochecksManager,
+    CheckPreviewEntry,
+    DiscoveredLabelsCache,
+    DiscoveryCheckParameters,
+)
 from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.fetcher import FetcherType, SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin
@@ -1916,6 +1921,9 @@ class ConfigCache:
         self._hosttags: dict[HostName, Sequence[TagID]] = {}
 
         self._autochecks_manager = AutochecksManager()
+        self._discovered_labels_cache = DiscoveredLabelsCache(
+            self._autochecks_manager.get_autochecks
+        )
 
         self._clusters_of_cache: dict[HostName, list[HostName]] = {}
         self._nodes_cache: dict[HostName, list[HostName]] = {}
@@ -1985,7 +1993,7 @@ class ConfigCache:
     ) -> Labels:
         return {
             label.name: label.value
-            for label in self._autochecks_manager.discovered_labels_of(
+            for label in self._discovered_labels_cache.discovered_labels_of(
                 hostname,
                 service_desc,
                 functools.partial(service_description, self.ruleset_matcher),

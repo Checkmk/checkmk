@@ -150,11 +150,6 @@ class AutochecksManager:
     def __init__(self) -> None:
         super().__init__()
         self._configured_services_cache: dict[HostName, Sequence[ConfiguredService]] = {}
-        # Extract of the autochecks: This cache is populated either on the way while
-        # processing get_autochecks_of() or when directly calling discovered_labels_of().
-        self._discovered_labels_of: dict[
-            HostName, dict[ServiceName, Mapping[str, ServiceLabel]]
-        ] = {}
         self._raw_autochecks_cache: dict[HostName, Sequence[AutocheckEntry]] = {}
 
     def get_configured_services(
@@ -183,7 +178,7 @@ class AutochecksManager:
         get_effective_host: GetEffectiveHost,
     ) -> Iterable[ConfiguredService]:
         """Read automatically discovered checks of one host"""
-        for autocheck_entry in self._get_autochecks(hostname):
+        for autocheck_entry in self.get_autochecks(hostname):
             service_name = get_service_description(hostname, *autocheck_entry.id())
 
             yield ConfiguredService(
@@ -203,32 +198,7 @@ class AutochecksManager:
                 is_enforced=False,
             )
 
-    def discovered_labels_of(
-        self,
-        hostname: HostName,
-        service_desc: ServiceName,
-        get_service_description: GetServiceDescription,
-    ) -> Mapping[str, ServiceLabel]:
-        # NOTE: this returns an empty labels object for non-existing services
-        if (loaded_labels := self._discovered_labels_of.get(hostname)) is not None:
-            return loaded_labels.get(service_desc, {})
-
-        hosts_labels = self._discovered_labels_of.setdefault(hostname, {})
-        # Only read the raw autochecks here, do not compute the effective
-        # check parameters. The latter would involve ruleset matching which
-        # in turn would require already computed labels.
-        for autocheck_entry in self._get_autochecks(hostname):
-            hosts_labels[
-                get_service_description(
-                    hostname, autocheck_entry.check_plugin_name, autocheck_entry.item
-                )
-            ] = {n: ServiceLabel(n, v) for n, v in autocheck_entry.service_labels.items()}
-
-        if (labels := hosts_labels.get(service_desc)) is not None:
-            return labels
-        return {}
-
-    def _get_autochecks(
+    def get_autochecks(
         self,
         hostname: HostName,
     ) -> Sequence[AutocheckEntry]:
@@ -401,3 +371,36 @@ class DiscoveredService:
         if discovered_item.previous is not None:
             return discovered_item.previous
         raise ValueError("Neither previous nor new service is set.")
+
+
+class DiscoveredLabelsCache:
+    def __init__(self, get_autochecks: Callable[[HostName], Iterable[AutocheckEntry]]) -> None:
+        self._get_autochecks = get_autochecks
+        self._discovered_labels_of: dict[
+            HostName, dict[ServiceName, Mapping[str, ServiceLabel]]
+        ] = {}
+
+    def discovered_labels_of(
+        self,
+        hostname: HostName,
+        service_desc: ServiceName,
+        get_service_description: GetServiceDescription,
+    ) -> Mapping[str, ServiceLabel]:
+        # NOTE: this returns an empty labels object for non-existing services
+        if (loaded_labels := self._discovered_labels_of.get(hostname)) is not None:
+            return loaded_labels.get(service_desc, {})
+
+        hosts_labels = self._discovered_labels_of.setdefault(hostname, {})
+        # Only read the raw autochecks here, do not compute the effective
+        # check parameters. The latter would involve ruleset matching which
+        # in turn would require already computed labels.
+        for autocheck_entry in self._get_autochecks(hostname):
+            hosts_labels[
+                get_service_description(
+                    hostname, autocheck_entry.check_plugin_name, autocheck_entry.item
+                )
+            ] = {n: ServiceLabel(n, v) for n, v in autocheck_entry.service_labels.items()}
+
+        if (labels := hosts_labels.get(service_desc)) is not None:
+            return labels
+        return {}

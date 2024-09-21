@@ -17,7 +17,7 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.tags import TagGroupID, TagID
 
-from cmk.checkengine.discovery import AutocheckEntry, AutochecksManager
+from cmk.checkengine.discovery import AutocheckEntry, AutochecksManager, DiscoveredLabelsCache
 
 from cmk.base import config
 from cmk.base.config import ConfigCache
@@ -28,7 +28,7 @@ class _AutochecksMocker(AutochecksManager):
         super().__init__()
         self.raw_autochecks: dict[HostName, Sequence[AutocheckEntry]] = {}
 
-    def _get_autochecks(self, hostname: HostName) -> Sequence[AutocheckEntry]:
+    def get_autochecks(self, hostname: HostName) -> Sequence[AutocheckEntry]:
         return self.raw_autochecks.get(hostname, [])
 
 
@@ -190,6 +190,12 @@ class Scenario:
                 self.config_cache,
                 "_autochecks_manager",
                 self._autochecks_mocker,
+                raising=False,
+            )
+            monkeypatch.setattr(
+                self.config_cache,
+                "_discovered_labels_cache",
+                DiscoveredLabelsCache(self._autochecks_mocker.get_autochecks),
                 raising=False,
             )
 

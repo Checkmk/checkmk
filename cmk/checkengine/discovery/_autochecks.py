@@ -149,7 +149,7 @@ class AutochecksManager:
 
     def __init__(self) -> None:
         super().__init__()
-        self._autochecks: dict[HostName, Sequence[ConfiguredService]] = {}
+        self._configured_services_cache: dict[HostName, Sequence[ConfiguredService]] = {}
         # Extract of the autochecks: This cache is populated either on the way while
         # processing get_autochecks_of() or when directly calling discovered_labels_of().
         self._discovered_labels_of: dict[
@@ -157,15 +157,15 @@ class AutochecksManager:
         ] = {}
         self._raw_autochecks_cache: dict[HostName, Sequence[AutocheckEntry]] = {}
 
-    def get_autochecks_of(
+    def get_configured_services(
         self,
         hostname: HostName,
         compute_check_parameters: ComputeCheckParameters,
         get_service_description: GetServiceDescription,
         get_effective_host: GetEffectiveHost,
     ) -> Sequence[ConfiguredService]:
-        if hostname not in self._autochecks:
-            self._autochecks[hostname] = list(
+        if hostname not in self._configured_services_cache:
+            self._configured_services_cache[hostname] = list(
                 self._get_autochecks_of_uncached(
                     hostname,
                     compute_check_parameters,
@@ -173,7 +173,7 @@ class AutochecksManager:
                     get_effective_host,
                 )
             )
-        return self._autochecks[hostname]
+        return self._configured_services_cache[hostname]
 
     def _get_autochecks_of_uncached(
         self,

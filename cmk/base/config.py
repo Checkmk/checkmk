@@ -3465,7 +3465,7 @@ class ConfigCache:
             return {}
 
     def get_autochecks_of(self, hostname: HostName) -> Sequence[ConfiguredService]:
-        return self._autochecks_manager.get_autochecks_of(
+        return self._autochecks_manager.get_configured_services(
             hostname,
             functools.partial(compute_check_parameters, self.ruleset_matcher),
             functools.partial(service_description, self.ruleset_matcher),

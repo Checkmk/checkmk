@@ -114,7 +114,7 @@ def test_manager_get_autochecks_of(
 
     manager = config_cache._autochecks_manager
 
-    result = manager.get_autochecks_of(
+    result = manager.get_configured_services(
         HostName("host"),
         lambda *a: _COMPUTED_PARAMETERS_SENTINEL,
         lambda _host, check, item: f"{check}-{item}",

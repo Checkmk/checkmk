@@ -5,7 +5,8 @@
 
 from abc import ABC, abstractmethod
 
-from cmk.gui.valuespec import Dictionary
+from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
+from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
 
 
 class NotificationParameter(ABC):
@@ -16,5 +17,8 @@ class NotificationParameter(ABC):
 
     @property
     @abstractmethod
-    def spec(self) -> Dictionary:
+    def spec(self) -> ValueSpecDictionary:
+        raise NotImplementedError()
+
+    def _form_spec(self) -> DictionaryExtended:
         raise NotImplementedError()

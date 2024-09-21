@@ -183,7 +183,7 @@ class AutochecksManager:
         get_effective_host: GetEffectiveHost,
     ) -> Iterable[ConfiguredService]:
         """Read automatically discovered checks of one host"""
-        for autocheck_entry in self._read_raw_autochecks(hostname):
+        for autocheck_entry in self._get_autochecks(hostname):
             service_name = get_service_description(hostname, *autocheck_entry.id())
 
             yield ConfiguredService(
@@ -217,7 +217,7 @@ class AutochecksManager:
         # Only read the raw autochecks here, do not compute the effective
         # check parameters. The latter would involve ruleset matching which
         # in turn would require already computed labels.
-        for autocheck_entry in self._read_raw_autochecks(hostname):
+        for autocheck_entry in self._get_autochecks(hostname):
             hosts_labels[
                 get_service_description(
                     hostname, autocheck_entry.check_plugin_name, autocheck_entry.item
@@ -228,7 +228,7 @@ class AutochecksManager:
             return labels
         return {}
 
-    def _read_raw_autochecks(
+    def _get_autochecks(
         self,
         hostname: HostName,
     ) -> Sequence[AutocheckEntry]:

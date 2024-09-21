@@ -28,7 +28,7 @@ class _AutochecksMocker(AutochecksManager):
         super().__init__()
         self.raw_autochecks: dict[HostName, Sequence[AutocheckEntry]] = {}
 
-    def _read_raw_autochecks(self, hostname: HostName) -> Sequence[AutocheckEntry]:
+    def _get_autochecks(self, hostname: HostName) -> Sequence[AutocheckEntry]:
         return self.raw_autochecks.get(hostname, [])
 
 

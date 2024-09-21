@@ -1319,13 +1319,13 @@ def test__evaluate_predictive_metrics_line_type(
     assert [
         (e.base, e.line_type)
         for e in _evaluate_predictive_metrics(
-            translated_metrics,
             evaluate_metrics(
                 conflicting_metrics=[],
                 optional_metrics=[],
                 metric_expressions=metric_expressions,
                 translated_metrics=translated_metrics,
             ),
+            translated_metrics,
         )
     ] == expected_predictive_metric_expressions
 
@@ -1372,7 +1372,6 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
     assert [
         (e.base, e.line_type)
         for e in _evaluate_predictive_metrics(
-            translated_metrics,
             evaluate_metrics(
                 conflicting_metrics=[],
                 optional_metrics=[],
@@ -1387,6 +1386,7 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                 ],
                 translated_metrics=translated_metrics,
             ),
+            translated_metrics,
         )
     ] == [
         (Metric("predict_metric_name"), "line"),

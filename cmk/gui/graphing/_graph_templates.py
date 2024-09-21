@@ -327,22 +327,6 @@ def get_graph_template_from_id(template_id: str) -> GraphTemplate:
     raise MKGeneralException(_("There is no graph graph_plugin with the id '%s'") % template_id)
 
 
-def _evaluate_scalars(
-    metric_expressions: Sequence[MetricExpression],
-    translated_metrics: Mapping[str, TranslatedMetric],
-) -> Sequence[Evaluated]:
-    results = []
-    for metric_expression in metric_expressions:
-        if (result := metric_expression.evaluate(translated_metrics)).is_error():
-            # Scalar value like min and max are always optional. This makes configuration
-            # of graphs easier.
-            if result.error.metric_name:
-                continue
-            return []
-        results.append(result.ok)
-    return results
-
-
 def evaluate_metrics(
     *,
     conflicting_metrics: Sequence[str],
@@ -579,25 +563,6 @@ def metric_expression_to_graph_recipe_expression(
     )
 
 
-def _evaluate_title(title: str, translated_metrics: Mapping[str, TranslatedMetric]) -> str:
-    """Replace expressions in strings like CPU Load - %(load1:max@count) CPU Cores"""
-    # Note: The 'CPU load' graph is the only example with such a replacement. We do not want to
-    # offer such replacements in a generic way.
-    reg = regex.regex(r"%\([^)]*\)")
-    if m := reg.search(title):
-        if (
-            result := parse_legacy_simple_expression(m.group()[2:-1], translated_metrics).evaluate(
-                translated_metrics
-            )
-        ).is_error():
-            return title.split("-")[0].strip()
-        return reg.sub(
-            get_render_function(result.ok.unit_spec)(result.ok.value).strip(),
-            title,
-        )
-    return title
-
-
 def _evaluate_graph_template_range_boundary(
     base_metric_expression: BaseMetricExpression, translated_metrics: Mapping[str, TranslatedMetric]
 ) -> float | None:
@@ -702,8 +667,8 @@ def _create_graph_recipe_from_template(
 
 
 def _evaluate_predictive_metrics(
-    translated_metrics: Mapping[str, TranslatedMetric],
     evaluated_metrics: Sequence[Evaluated],
+    translated_metrics: Mapping[str, TranslatedMetric],
 ) -> Iterator[Evaluated]:
     computed = set()
     for evaluated in evaluated_metrics:
@@ -722,6 +687,41 @@ def _evaluate_predictive_metrics(
                     yield result.ok
 
 
+def _evaluate_title(title: str, translated_metrics: Mapping[str, TranslatedMetric]) -> str:
+    """Replace expressions in strings like CPU Load - %(load1:max@count) CPU Cores"""
+    # Note: The 'CPU load' graph is the only example with such a replacement. We do not want to
+    # offer such replacements in a generic way.
+    reg = regex.regex(r"%\([^)]*\)")
+    if m := reg.search(title):
+        if (
+            result := parse_legacy_simple_expression(m.group()[2:-1], translated_metrics).evaluate(
+                translated_metrics
+            )
+        ).is_error():
+            return title.split("-")[0].strip()
+        return reg.sub(
+            get_render_function(result.ok.unit_spec)(result.ok.value).strip(),
+            title,
+        )
+    return title
+
+
+def _evaluate_scalars(
+    metric_expressions: Sequence[MetricExpression],
+    translated_metrics: Mapping[str, TranslatedMetric],
+) -> Sequence[Evaluated]:
+    results = []
+    for metric_expression in metric_expressions:
+        if (result := metric_expression.evaluate(translated_metrics)).is_error():
+            # Scalar value like min and max are always optional. This makes configuration
+            # of graphs easier.
+            if result.error.metric_name:
+                continue
+            return []
+        results.append(result.ok)
+    return results
+
+
 @dataclass(frozen=True)
 class EvaluatedGraphTemplate:
     id: str
@@ -734,9 +734,9 @@ class EvaluatedGraphTemplate:
 
 
 def _create_evaluated_graph_template(
-    translated_metrics: Mapping[str, TranslatedMetric],
     graph_template: GraphTemplate,
     evaluated_metrics: Sequence[Evaluated],
+    translated_metrics: Mapping[str, TranslatedMetric],
 ) -> EvaluatedGraphTemplate:
     return EvaluatedGraphTemplate(
         id=graph_template.id,
@@ -758,14 +758,14 @@ def _get_evaluated_graph_templates(
 
     graph_templates = [
         _create_evaluated_graph_template(
-            translated_metrics,
             graph_template,
             list(
                 itertools.chain(
                     evaluated_metrics,
-                    _evaluate_predictive_metrics(translated_metrics, evaluated_metrics),
+                    _evaluate_predictive_metrics(evaluated_metrics, translated_metrics),
                 )
             ),
+            translated_metrics,
         )
         for id_, graph_plugin in _get_graph_plugins()
         for graph_template in [_parse_graph_plugin(id_, graph_plugin)]
@@ -787,7 +787,6 @@ def _get_evaluated_graph_templates(
         if translated_metric.auto_graph and metric_name not in already_graphed_metrics:
             graph_template = _create_graph_template_from_name(metric_name)
             yield _create_evaluated_graph_template(
-                translated_metrics,
                 graph_template,
                 evaluate_metrics(
                     conflicting_metrics=graph_template.conflicting_metrics,
@@ -795,6 +794,7 @@ def _get_evaluated_graph_templates(
                     metric_expressions=graph_template.metrics,
                     translated_metrics=translated_metrics,
                 ),
+                translated_metrics,
             )
 
 
@@ -820,7 +820,6 @@ def _matching_graph_templates(
         yield (
             0,
             _create_evaluated_graph_template(
-                translated_metrics,
                 graph_template,
                 evaluate_metrics(
                     conflicting_metrics=graph_template.conflicting_metrics,
@@ -828,6 +827,7 @@ def _matching_graph_templates(
                     metric_expressions=graph_template.metrics,
                     translated_metrics=translated_metrics,
                 ),
+                translated_metrics,
             ),
         )
         return

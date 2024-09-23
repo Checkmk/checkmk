@@ -1,0 +1,15 @@
+Title: mk_filestats: Fix recent regression in filter filtering
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1727079696
+Edition: cre
+Level: 1
+Version: 2.2.0p35
+
+<a href="https://checkmk.com/werk/17129">Werk 17129</a> introduced a regression when filtering files according
+to the configured globbing and regular expression patterns. In particular, the following combination
+never yielded any matches:
+
+LI: A globbing pattern that matches a folder name exactly.
+LI: Regular expressions that do <em>not</em> match the folder, but files inside the folder.

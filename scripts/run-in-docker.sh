@@ -36,6 +36,9 @@ echo >&2 "run-in-docker.sh checkpoint 1"
 
 echo >&2 "run-in-docker.sh checkpoint 2 $IMAGE_ID"
 
+# TODO: Remove all operations on *.cid files as soon as we finished debugging
+find "${CHECKOUT_ROOT}" -name "*.cid" -delete
+
 IMAGE_VERSION="$(docker run --rm -v "${CHECKOUT_ROOT}/omd:/tmp" "${IMAGE_ID}" /tmp/distro '-')"
 
 echo >&2 "run-in-docker.sh checkpoint 3 $IMAGE_VERSION"
@@ -134,7 +137,7 @@ trap cleanup EXIT
 
 # shellcheck disable=SC2086
 docker run -a stdout -a stderr \
-    --cidfile "$CONTAINER_NAME.cid" \
+    --cidfile "${CHECKOUT_ROOT}/${CONTAINER_NAME}.cid" \
     --rm \
     --name $CONTAINER_NAME \
     ${TERMINAL_FLAG} \

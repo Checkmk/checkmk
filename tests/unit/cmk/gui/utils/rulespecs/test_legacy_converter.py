@@ -1506,7 +1506,11 @@ def test_convert_to_legacy_rulespec(
 
 
 def _compare_specs(actual: object, expected: object) -> None:
-    ignored_attrs = {"__orig_class__"}
+    # The form_spec fields are only available if the rulespec uses a form_spec
+    ignored_attrs = {
+        "__orig_class__",
+        "_form_spec_definition",
+    }
 
     if isinstance(expected, Sequence) and not isinstance(expected, str):
         assert isinstance(actual, Sequence) and not isinstance(actual, str)

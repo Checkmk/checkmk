@@ -10,7 +10,7 @@ import abc
 import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import Any, Literal, NamedTuple
 
 import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKGeneralException
@@ -50,6 +50,8 @@ from cmk.gui.valuespec import (
     ValueSpecText,
     ValueSpecValidateFunc,
 )
+
+from cmk.rulesets.v1.form_specs import FormSpec
 
 from .check_mk_automations import get_check_information_cached
 from .main_menu import ABCMainModule, MainModuleRegistry
@@ -303,6 +305,15 @@ def _validate_function_args(arg_infos: list[tuple[Any, bool, bool]], hint: str) 
             )
 
 
+class FormSpecDefinition(NamedTuple):
+    value: Callable[[], FormSpec]
+    item: Callable[[], FormSpec] | None
+
+
+class FormSpecNotImplementedError(Exception):
+    pass
+
+
 class Rulespec(abc.ABC):
     NO_FACTORY_DEFAULT: list = []
     # This option has the same effect as `NO_FACTORY_DEFAULT`. It's often used in MKPs.
@@ -330,6 +341,7 @@ class Rulespec(abc.ABC):
         factory_default: Any,
         help_func: Callable[[], str] | None,
         doc_references: dict[DocReference, str] | None,
+        form_spec_definition: FormSpecDefinition | None = None,
     ) -> None:
         super().__init__()
 
@@ -350,6 +362,7 @@ class Rulespec(abc.ABC):
             (is_binary_ruleset, False, False),
             (factory_default, False, True),
             (help_func, True, True),
+            (form_spec_definition, False, True),
         ]
         _validate_function_args(arg_infos, name)
 
@@ -370,6 +383,7 @@ class Rulespec(abc.ABC):
         self._factory_default = factory_default
         self._help = help_func
         self._doc_references = doc_references
+        self._form_spec_definition = form_spec_definition
 
     @property
     def name(self) -> str:
@@ -382,6 +396,20 @@ class Rulespec(abc.ABC):
     @property
     def valuespec(self) -> ValueSpec:
         return self._valuespec()
+
+    @property
+    def form_spec(self) -> FormSpec:
+        if self._form_spec_definition is None:
+            raise FormSpecNotImplementedError()
+        return self._form_spec_definition.value()
+
+    @property
+    def item_form_spec(self) -> FormSpec | None:
+        if self._form_spec_definition is None:
+            raise FormSpecNotImplementedError()
+        if self._form_spec_definition.item is None:
+            return None
+        return self._form_spec_definition.item()
 
     @property
     def title(self) -> str | None:

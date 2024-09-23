@@ -1696,9 +1696,13 @@ def compute_check_parameters(
     params: Mapping[str, object],
     configured_parameters: TimespecificParameters | None = None,
 ) -> TimespecificParameters:
-    """Compute parameters for a check honoring factory settings,
-    default settings of user in main.mk, check_parameters[] and
-    the values code in autochecks (given as parameter params)"""
+    """Compute effective check parameters.
+
+    Honoring (in order of precedence):
+     * the configured parameters
+     * the discovered parameters
+     * the plugins defaults
+    """
     check_plugin = agent_based_register.get_check_plugin(plugin_name)
     if check_plugin is None:  # handle vanished check plug-in
         return TimespecificParameters()
@@ -1724,24 +1728,15 @@ def _get_configured_parameters(
     ruleset_name: RuleSetName | None,
     item: Item,
 ) -> TimespecificParameters:
-    descr = service_description(matcher, host, plugin_name, item)
-
-    # parameters configured via check_parameters
-    extra = [
-        TimespecificParameterSet.from_parameters(p)
-        for p in matcher.service_extra_conf(host, descr, check_parameters)
-    ]
-
     if ruleset_name is None:
-        return TimespecificParameters(extra)
-
+        return TimespecificParameters()
+    descr = service_description(matcher, host, plugin_name, item)
     return TimespecificParameters(
         [
             # parameters configured via checkgroup_parameters
             TimespecificParameterSet.from_parameters(p)
             for p in _get_checkgroup_parameters(matcher, host, str(ruleset_name), item, descr)
         ]
-        + extra
     )
 
 
@@ -4697,7 +4692,6 @@ def get_ruleset_id_mapping() -> Mapping[int, str]:
         id(cmc_service_rrd_config): "cmc_service_rrd_config",
         id(inv_retention_intervals): "inv_retention_intervals",
         id(periodic_discovery): "periodic_discovery",
-        id(check_parameters): "check_parameters",
         id(custom_checks): "custom_checks",
         id(host_label_rules): "host_label_rules",
         id(bulkwalk_hosts): "bulkwalk_hosts",

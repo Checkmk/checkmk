@@ -34,6 +34,37 @@ from cmk.utils.structured_data import (
 )
 
 
+@pytest.mark.parametrize(
+    "left, right",
+    [
+        pytest.param(
+            MutableTree(nodes_by_name={SDNodeName("lnode"): MutableTree()}),
+            MutableTree(nodes_by_name={SDNodeName("rnode"): MutableTree()}),
+            id="m-m",
+        ),
+        pytest.param(
+            MutableTree(nodes_by_name={SDNodeName("lnode"): MutableTree()}),
+            ImmutableTree(nodes_by_name={SDNodeName("rnode"): ImmutableTree()}),
+            id="m-i",
+        ),
+        pytest.param(
+            ImmutableTree(nodes_by_name={SDNodeName("lnode"): ImmutableTree()}),
+            MutableTree(nodes_by_name={SDNodeName("rnode"): MutableTree()}),
+            id="i-m",
+        ),
+        pytest.param(
+            ImmutableTree(nodes_by_name={SDNodeName("lnode"): ImmutableTree()}),
+            ImmutableTree(nodes_by_name={SDNodeName("rnode"): ImmutableTree()}),
+            id="i-i",
+        ),
+    ],
+)
+def test_equality_with_non_empty_nodes(
+    left: MutableTree | ImmutableTree, right: MutableTree | ImmutableTree
+) -> None:
+    assert left != right
+
+
 def _make_mutable_tree(tree: ImmutableTree) -> MutableTree:
     return MutableTree(
         path=tree.path,

@@ -266,9 +266,6 @@ class PatternIterator:
             # b'\x2A' refers to a wildcard. Instead iglob is responsible for conversion.
             for item in glob.iglob(pattern):
                 if os.path.isdir(item):
-                    if not all(f.matches(_sanitize_path(item)) for f in self._regex_filters):
-                        LOGGER.debug("Folder %r does not match any regex filter", item)
-                        continue
                     # equivalent to `find -type f`
                     for currentpath, _folders, file_names in os.walk(item):
                         for file_stat in self._file_stats(  # pylint: disable=use-yield-from

@@ -6,12 +6,11 @@
 
 from collections.abc import Iterable
 from functools import partial
-from typing import Literal
 
 from cmk.ccc.i18n import _
 from cmk.ccc.version import parse_check_mk_version
 
-from cmk.werks.models import Class, Compatibility, Werk, WerkV2Base
+from cmk.werks.models import Class, Compatibility, Werk
 
 _CLASS_SORTING_VALUE = {
     Class.FEATURE: 1,
@@ -23,18 +22,6 @@ _COMPATIBLE_SORTING_VALUE = {
     Compatibility.NOT_COMPATIBLE: 1,
     Compatibility.COMPATIBLE: 3,
 }
-
-
-class WebsiteWerk(WerkV2Base):
-    # ATTENTION! If you change this model, you have to inform
-    # the website team first! They rely on those fields.
-    """
-    This Model is used to built up a file containing all werks.
-    The file is called all_werks.json or all_werks_v2.json
-    """
-
-    versions: dict[str, str]
-    product: Literal["cmk", "cma", "checkmk_kube_agent"]
 
 
 def get_sort_key_by_version_and_component(

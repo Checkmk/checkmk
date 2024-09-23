@@ -15,6 +15,7 @@ py_library(
     srcs = [
         "cmk/werks/__init__.py",
         "cmk/werks/cli.py",
+        "cmk/werks/collect.py",
         "cmk/werks/config.py",
         "cmk/werks/convert.py",
         "cmk/werks/error.py",
@@ -30,6 +31,7 @@ py_library(
         requirement("markdown"),
         requirement("lxml"),
         requirement("pydantic"),
+        requirement("GitPython"),
     ],
 )
 

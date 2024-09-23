@@ -1,0 +1,45 @@
+Title: Sanitize Host and Folder Credentials in Audit Log
+Class: security
+Compatible: incomp
+Component: wato
+Date: 1728280624
+Edition: cre
+Level: 1
+Version: 2.1.0p48
+
+Before this Werk, adding, changing, or removing SNMP and IMPI credentials in a host or folder's properties would log those credentials in the WATO audit log. Now, credentials are masked before being written to the log.
+
+The affected logs, both via the rendering functionality in WATO as well as the files on the file system, are only accessible to authenticated users.
+
+This issue was found during internal review.
+
+<em>Affected Versions</em>:
+
+LI: 2.3.0
+LI: 2.2.0
+LI: 2.1.0
+LI: 2.0.0 (EOL)
+
+<em>Recommendations</em>:
+
+We have marked this Werk incompatible because we recommend taking manual action:
+
+Consider rotating affected credentials.
+If that is not feasible, consider sanitizing the log files.
+Also take into account that log files containing credentials might have been written to backups.
+
+The affected log files can be found in <code>~/var/check_mk/wato/log</code>.
+
+Note that entries in the files are not separated by newlines, but by null bytes, so they will appear as one long line.
+Entries that might contain credentials are all entries where the <code>'action'</code> is <code>'edit-folder'</code> or <code>'edit-host'</code>, and the <code>'diff_text'</code> contains any of the following strings:
+
+LI: <code>Attribute "snmp_community"</code>
+LI: <code>Value of "snmp_community"</code>
+LI: <code>Attribute "management_snmp_community"</code>
+LI: <code>Value of "management_snmp_community"</code>
+LI: <code>Attribute "management_ipmi_credentials"</code>
+LI: <code>Value of "management_ipmi_credentials"</code>
+
+<em>Vulnerability Management</em>:
+
+We have rated the issue with a CVSS Score of 5.1 Medium (<code>CVSS:4.0/AV:N/AC:L/AT:N/PR:H/UI:N/VC:N/VI:N/VA:N/SC:L/SI:N/SA:N</code>) and assigned <code>CVE-2024-38862</code>.

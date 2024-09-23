@@ -46,6 +46,7 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils import store
 from cmk.utils.iterables import first
+from cmk.utils.object_diff import make_diff
 from cmk.utils.redis import get_redis_client, Pipeline
 from cmk.utils.regex import regex, WATO_FOLDER_PATH_NAME_CHARS, WATO_FOLDER_PATH_NAME_REGEX
 from cmk.utils.site import omd_site
@@ -85,7 +86,11 @@ from cmk.gui.valuespec import Choices
 from cmk.gui.watolib.changes import add_change, make_diff_text, ObjectRef, ObjectRefType
 from cmk.gui.watolib.check_mk_automations import delete_hosts
 from cmk.gui.watolib.config_domains import ConfigDomainCore
-from cmk.gui.watolib.host_attributes import collect_attributes, host_attribute_registry
+from cmk.gui.watolib.host_attributes import (
+    collect_attributes,
+    host_attribute_registry,
+    mask_attributes,
+)
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
     match_item_generator_registry,
@@ -2497,10 +2502,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             _("Created new folder %s") % new_subfolder.alias_path(),
             object_ref=new_subfolder.object_ref(),
             sites=[new_subfolder.site_id()],
-            diff_text=make_diff_text(
-                make_folder_audit_log_object({}),
-                make_folder_audit_log_object(new_subfolder.attributes()),
-            ),
+            diff_text=diff_attributes({}, None, new_subfolder.attributes(), None),
         )
         hooks.call("folder-created", new_subfolder)
         need_sidebar_reload()
@@ -2639,7 +2641,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         # to the new mapping.
         affected_sites = self.all_site_ids()
 
-        old_object = make_folder_audit_log_object(self._attributes)
+        diff = diff_attributes(self._attributes, None, new_attributes, None)
 
         self._title = new_title
         self._attributes = new_attributes
@@ -2656,7 +2658,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             _("Edited properties of folder %s") % self.title(),
             object_ref=self.object_ref(),
             sites=affected_sites,
-            diff_text=make_diff_text(old_object, make_folder_audit_log_object(self._attributes)),
+            diff_text=diff,
         )
 
     def prepare_create_hosts(self):
@@ -2700,14 +2702,13 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         host = Host(self, host_name, attributes, cluster_nodes)
         self._hosts[host_name] = host
         self._num_hosts = len(self._hosts)
+
         add_change(
             "create-host",
             _("Created new host %s.") % host_name,
             object_ref=host.object_ref(),
             sites=[host.site_id()],
-            diff_text=make_diff_text(
-                {}, make_host_audit_log_object(host.attributes(), host.cluster_nodes())
-            ),
+            diff_text=diff_attributes({}, None, host.attributes(), host.cluster_nodes()),
             domain_settings=ConfigDomainCore.generate_domain_settings([host_name]),
         )
 
@@ -3497,8 +3498,7 @@ class CREHost(WithPermissions, WithAttributes):
             _get_cgconf_from_attributes(attributes)["groups"],
         )
 
-        old_object = make_host_audit_log_object(self._attributes, self._cluster_nodes)
-        new_object = make_host_audit_log_object(attributes, cluster_nodes)
+        diff = diff_attributes(self.attributes(), self._cluster_nodes, attributes, cluster_nodes)
 
         # 2. Actual modification
         affected_sites = [self.site_id()]
@@ -3506,12 +3506,13 @@ class CREHost(WithPermissions, WithAttributes):
         self._cluster_nodes = cluster_nodes
         affected_sites = list(set(affected_sites + [self.site_id()]))
         self.folder().save_hosts()
+
         add_change(
             "edit-host",
             _("Modified host %s.") % self.name(),
             object_ref=self.object_ref(),
             sites=affected_sites,
-            diff_text=make_diff_text(old_object, new_object),
+            diff_text=diff,
             domain_settings=ConfigDomainCore.generate_domain_settings([self.name()]),
         )
 
@@ -3526,7 +3527,8 @@ class CREHost(WithPermissions, WithAttributes):
             self._need_folder_write_permissions()
         self.need_unlocked()
 
-        old = make_host_audit_log_object(self._attributes.copy(), self._cluster_nodes)
+        old_attrs = self._attributes.copy()
+        old_nodes = self._cluster_nodes
 
         # 2. Actual modification
         affected_sites = [self.site_id()]
@@ -3535,14 +3537,13 @@ class CREHost(WithPermissions, WithAttributes):
                 del self._attributes[attrname]
         affected_sites = list(set(affected_sites + [self.site_id()]))
         self.folder().save_hosts()
+
         add_change(
             "edit-host",
             _("Removed explicit attributes of host %s.") % self.name(),
             object_ref=self.object_ref(),
             sites=affected_sites,
-            diff_text=make_diff_text(
-                old, make_host_audit_log_object(self._attributes, self._cluster_nodes)
-            ),
+            diff_text=diff_attributes(old_attrs, old_nodes, self.attributes(), self._cluster_nodes),
         )
 
     def _need_folder_write_permissions(self):
@@ -3619,20 +3620,35 @@ class CREHost(WithPermissions, WithAttributes):
         self._name = new_name
 
 
-def make_host_audit_log_object(attributes, cluster_nodes):
-    """The resulting object is used for building object diffs"""
-    obj = attributes.copy()
-    if cluster_nodes:
-        obj["nodes"] = cluster_nodes
-    obj.pop("meta_data", None)
-    return obj
-
-
-def make_folder_audit_log_object(attributes):
-    """The resulting object is used for building object diffs"""
-    obj = attributes.copy()
-    obj.pop("meta_data", None)
-    return obj
+def diff_attributes(
+    left_attributes: Mapping[str, object],
+    left_cluster_nodes: object | None,
+    right_attributes: Mapping[str, object],
+    right_cluster_nodes: object | None,
+) -> str:
+    """Diff two sets of host attributes, masking secrets"""
+    # The diff has no type infomation, so in order to detect secrets, we have to mask them before
+    # diffing. However, all masked secrets look the same in the diff, so then we couldn't detect
+    # the changes anymore.
+    # To add them manually, see if masking changes the diff. If so, secrets must have changed.
+    (left_attributes := dict(left_attributes)).pop("meta_data", None)
+    if left_cluster_nodes:
+        left_attributes["nodes"] = left_cluster_nodes
+    (right_attributes := dict(right_attributes)).pop("meta_data", None)
+    if right_cluster_nodes:
+        right_attributes["nodes"] = right_cluster_nodes
+    unmasked_diff = make_diff(left_attributes, right_attributes)
+    masked_diff = make_diff(
+        left_masked := mask_attributes(left_attributes),
+        right_masked := mask_attributes(right_attributes),
+    )
+    if unmasked_diff == masked_diff:
+        # no special treatment needed
+        text = make_diff_text(left_masked, right_masked)
+        # it could be "Nothing changed", but not None since both left and right are Some
+        assert text is not None
+        return text
+    return (masked_diff + "\n" if masked_diff else "") + _("Redacted secrets changed.")
 
 
 def _validate_contact_group_modification(

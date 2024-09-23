@@ -12,14 +12,19 @@ from deepdiff.helper import get_type  # type: ignore[import]
 from cmk.utils.i18n import _
 
 __all__ = [
+    "make_diff",
     "make_object_diff",
 ]
 
 
+def make_diff(old: object, new: object) -> str:
+    diff = DeepDiff(old, new, view="tree")
+    return pretty(diff)
+
+
 def make_object_diff(old: Any, new: Any) -> str:
     """Creates a text representing the object differences for humans"""
-    diff = DeepDiff(old, new, view="tree")
-    text = pretty(diff)
+    text = make_diff(old, new)
     return text or _("Nothing was changed.")
 
 

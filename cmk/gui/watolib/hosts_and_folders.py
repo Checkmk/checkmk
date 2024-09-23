@@ -29,7 +29,7 @@ from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
-from cmk.utils.object_diff import make_diff_text
+from cmk.utils.object_diff import make_diff, make_diff_text
 from cmk.utils.redis import get_redis_client, redis_enabled, redis_server_reachable
 from cmk.utils.regex import (
     regex,
@@ -92,6 +92,7 @@ from cmk.gui.watolib.host_attributes import (
     host_attribute_registry,
     HostAttributes,
     HostContactGroupSpec,
+    mask_attributes,
     MetaData,
 )
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
@@ -2184,10 +2185,7 @@ class Folder(FolderProtocol):
             _l("Created new folder %s") % new_subfolder.alias_path(),
             object_ref=new_subfolder.object_ref(),
             sites=[new_subfolder.site_id()],
-            diff_text=make_diff_text(
-                make_folder_audit_log_object({}),
-                make_folder_audit_log_object(new_subfolder.attributes),
-            ),
+            diff_text=diff_attributes({}, None, new_subfolder.attributes, None),
         )
         hooks.call("folder-created", new_subfolder)
         need_sidebar_reload()
@@ -2331,7 +2329,7 @@ class Folder(FolderProtocol):
         # to the new mapping.
         affected_sites = self.all_site_ids()
 
-        old_object = make_folder_audit_log_object(self.attributes)
+        diff = diff_attributes(self.attributes, None, new_attributes, None)
 
         self._title = new_title
         self.attributes = new_attributes
@@ -2348,7 +2346,7 @@ class Folder(FolderProtocol):
             _l("Edited properties of folder %s") % self.title(),
             object_ref=self.object_ref(),
             sites=affected_sites,
-            diff_text=make_diff_text(old_object, make_folder_audit_log_object(self.attributes)),
+            diff_text=diff,
         )
 
     def prepare_create_hosts(self) -> None:
@@ -2423,14 +2421,13 @@ class Folder(FolderProtocol):
         assert self._hosts is not None
         self._hosts[host_name] = host
         self._num_hosts = len(self._hosts)
+
         add_change(
             "create-host",
             _l("Created new host %s.") % host_name,
             object_ref=host.object_ref(),
             sites=[host.site_id()],
-            diff_text=make_diff_text(
-                {}, make_host_audit_log_object(host.attributes, host.cluster_nodes())
-            ),
+            diff_text=diff_attributes({}, None, host.attributes, host.cluster_nodes()),
             domain_settings=_generate_domain_settings("check_mk", [host_name]),
         )
 
@@ -3328,8 +3325,7 @@ class Host:
             _get_cgconf_from_attributes(attributes)["groups"],
         )
 
-        old_object = make_host_audit_log_object(self.attributes, self._cluster_nodes)
-        new_object = make_host_audit_log_object(attributes, cluster_nodes)
+        diff = diff_attributes(self.attributes, self._cluster_nodes, attributes, cluster_nodes)
 
         # 2. Actual modification
         affected_sites = [self.site_id()]
@@ -3337,12 +3333,13 @@ class Host:
         self._cluster_nodes = cluster_nodes
         affected_sites = list(set(affected_sites + [self.site_id()]))
         self.folder().save_hosts()
+
         add_change(
             "edit-host",
             _l("Modified host %s.") % self.name(),
             object_ref=self.object_ref(),
             sites=affected_sites,
-            diff_text=make_diff_text(old_object, new_object),
+            diff_text=diff,
             domain_settings=_generate_domain_settings("check_mk", [self.name()]),
         )
 
@@ -3357,7 +3354,8 @@ class Host:
             self._need_folder_write_permissions()
         self.need_unlocked()
 
-        old = make_host_audit_log_object(self.attributes.copy(), self._cluster_nodes)
+        old_attrs = self.attributes.copy()
+        old_nodes = self._cluster_nodes
 
         # 2. Actual modification
         affected_sites = [self.site_id()]
@@ -3367,14 +3365,13 @@ class Host:
                 del self.attributes[attrname]  # type: ignore[misc]
         affected_sites = list(set(affected_sites + [self.site_id()]))
         self.folder().save_hosts()
+
         add_change(
             "edit-host",
             _l("Removed explicit attributes of host %s.") % self.name(),
             object_ref=self.object_ref(),
             sites=affected_sites,
-            diff_text=make_diff_text(
-                old, make_host_audit_log_object(self.attributes, self._cluster_nodes)
-            ),
+            diff_text=diff_attributes(old_attrs, old_nodes, self.attributes, self._cluster_nodes),
         )
 
     def _need_folder_write_permissions(self) -> None:
@@ -3459,22 +3456,35 @@ class Host:
         self._name = new_name
 
 
-def make_host_audit_log_object(
-    attributes: Mapping[str, object], cluster_nodes: Sequence[HostName] | None
-) -> dict[str, object]:
-    """The resulting object is used for building object diffs"""
-    obj = {**attributes}
-    if cluster_nodes:
-        obj["nodes"] = cluster_nodes
-    obj.pop("meta_data", None)
-    return obj
+def diff_attributes(
+    left_attributes: Mapping[str, object],
+    left_cluster_nodes: Sequence[HostName] | None,
+    right_attributes: Mapping[str, object],
+    right_cluster_nodes: Sequence[HostName] | None,
+) -> str:
+    """Diff two sets of host attributes, masking secrets"""
+    # The diff has no type infomation, so in order to detect secrets, we have to mask them before
+    # diffing. However, all masked secrets look the same in the diff, so then we couldn't detect
+    # the changes anymore.
+    # To add them manually, see if masking changes the diff. If so, secrets must have changed.
+    (left_attributes := dict(left_attributes)).pop("meta_data", None)
+    if left_cluster_nodes:
+        left_attributes["nodes"] = left_cluster_nodes
+    (right_attributes := dict(right_attributes)).pop("meta_data", None)
+    if right_cluster_nodes:
+        right_attributes["nodes"] = right_cluster_nodes
 
+    unmasked_diff = make_diff(left_attributes, right_attributes)
+    masked_diff = make_diff(
+        left_masked := mask_attributes(left_attributes),
+        right_masked := mask_attributes(right_attributes),
+    )
 
-def make_folder_audit_log_object(attributes: Mapping[str, object]) -> dict[str, object]:
-    """The resulting object is used for building object diffs"""
-    obj = {**attributes}
-    obj.pop("meta_data", None)
-    return obj
+    if unmasked_diff == masked_diff:
+        # no special treatment needed
+        return make_diff_text(left_masked, right_masked)
+
+    return (masked_diff + "\n" if masked_diff else "") + _("Redacted secrets changed.")
 
 
 def _validate_contact_group_modification(

@@ -36,6 +36,7 @@ from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.logged_in import user as logged_in_user
+from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import EffectiveAttributes, Folder, folder_tree
 from cmk.gui.watolib.search import MatchItem
@@ -269,6 +270,11 @@ def test_eq_operation(request_context: None) -> None:
         assert folder1 not in [folder2]
 
 
+def _not_in_latest_log(secret: str) -> bool:
+    """Check that the most recent entry does not contain the secret"""
+    return secret not in (AuditLogStore().read()[-1].diff_text or "")
+
+
 def test_mgmt_inherit_credentials_explicit_host_snmp() -> None:
     folder = folder_tree().root_folder()
     folder.attributes["management_snmp_community"] = "FOLDER"
@@ -293,6 +299,8 @@ def test_mgmt_inherit_credentials_explicit_host_snmp() -> None:
     assert data is not None
     assert data["management_protocol"]["test-host"] == "snmp"
     assert data["management_snmp_credentials"]["test-host"] == "HOST"
+
+    assert _not_in_latest_log("HOST")
 
 
 def test_mgmt_inherit_credentials_explicit_host_ipmi() -> None:
@@ -329,6 +337,8 @@ def test_mgmt_inherit_credentials_explicit_host_ipmi() -> None:
         "password": "PASS",
     }
 
+    assert _not_in_latest_log("PASS")
+
 
 def test_mgmt_inherit_credentials_snmp() -> None:
     folder = folder_tree().root_folder()
@@ -351,6 +361,8 @@ def test_mgmt_inherit_credentials_snmp() -> None:
     assert data is not None
     assert data["management_protocol"]["mgmt-host"] == "snmp"
     assert data["management_snmp_credentials"]["mgmt-host"] == "FOLDER"
+
+    assert _not_in_latest_log("FOLDER")
 
 
 def test_mgmt_inherit_credentials_ipmi() -> None:
@@ -381,6 +393,8 @@ def test_mgmt_inherit_credentials_ipmi() -> None:
         "password": "FOLDERPASS",
     }
 
+    assert _not_in_latest_log("FOLDERPASS")
+
 
 def test_mgmt_inherit_protocol_explicit_host_snmp() -> None:
     folder = folder_tree().root_folder()
@@ -405,6 +419,8 @@ def test_mgmt_inherit_protocol_explicit_host_snmp() -> None:
     assert data is not None
     assert data["management_protocol"]["mgmt-host"] == "snmp"
     assert data["management_snmp_credentials"]["mgmt-host"] == "HOST"
+
+    assert _not_in_latest_log("HOST")
 
 
 def test_mgmt_inherit_protocol_explicit_host_ipmi() -> None:
@@ -439,6 +455,8 @@ def test_mgmt_inherit_protocol_explicit_host_ipmi() -> None:
         "username": "USER",
         "password": "PASS",
     }
+
+    assert _not_in_latest_log("PASS")
 
 
 @pytest.fixture(name="patch_may")

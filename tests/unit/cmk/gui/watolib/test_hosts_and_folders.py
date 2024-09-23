@@ -26,6 +26,7 @@ from cmk.gui import userdb
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.bakery import has_agent_bakery
 from cmk.gui.watolib.search import MatchItem
 
@@ -53,6 +54,11 @@ def fake_start_bake_agents(monkeypatch: MonkeyPatch) -> None:
         pass
 
     monkeypatch.setattr(agent_bakery, "start_bake_agents", _fake_start_bake_agents)
+
+
+def _not_in_latest_log(secret: str) -> bool:
+    """Check that the most recent entry does not contain the secret"""
+    return secret not in (AuditLogStore(AuditLogStore.make_path()).read()[-1].diff_text or "")
 
 
 @pytest.mark.parametrize(
@@ -275,6 +281,8 @@ def test_mgmt_inherit_credentials_explicit_host(
     assert data["management_protocol"]["test-host"] == protocol
     assert data[base_variable]["test-host"] == credentials
 
+    assert _not_in_latest_log("PASS")
+
 
 @pytest.mark.parametrize(
     "protocol,host_attribute,base_variable,folder_credentials",
@@ -317,6 +325,8 @@ def test_mgmt_inherit_credentials(
     assert data is not None
     assert data["management_protocol"]["mgmt-host"] == protocol
     assert data[base_variable]["mgmt-host"] == folder_credentials
+
+    assert _not_in_latest_log("PASS")
 
 
 @pytest.mark.parametrize(
@@ -368,6 +378,8 @@ def test_mgmt_inherit_protocol_explicit_host(
     assert data["management_protocol"]["mgmt-host"] == protocol
     assert data[base_variable]["mgmt-host"] == credentials
 
+    assert _not_in_latest_log("PASS")
+
 
 @pytest.mark.parametrize(
     "protocol,host_attribute,base_variable,folder_credentials",
@@ -410,6 +422,8 @@ def test_mgmt_inherit_protocol(
     assert data is not None
     assert data["management_protocol"]["mgmt-host"] == protocol
     assert data[base_variable]["mgmt-host"] == folder_credentials
+
+    assert _not_in_latest_log("PASS")
 
 
 @pytest.fixture(name="make_folder")

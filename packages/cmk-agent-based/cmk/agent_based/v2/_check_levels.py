@@ -81,7 +81,7 @@ def _check_fixed_levels(
     return CheckLevelsResult(Type.FIXED, State.OK, levels)
 
 
-def _check_predictive_levels(  # pylint: disable=too-many-arguments
+def _check_predictive_levels(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     value: float,
     metric_name: str,
     predicted_value: float | None,

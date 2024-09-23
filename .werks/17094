@@ -19,6 +19,8 @@ This issue was identified during internal review.
 LI: 2.3.0
 LI: 2.2.0
 
+Only users who have configured at least one SAML connection are affected.
+
 <em>Vulnerability Management</em>:
 
 We have rated the issue with a CVSS Score of 5.1 Medium (<code>CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:A/VC:N/VI:N/VA:N/SC:N/SI:L/SA:N</code>) and assigned <code>CVE-2024-38860</code>.

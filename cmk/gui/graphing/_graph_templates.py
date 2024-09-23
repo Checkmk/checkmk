@@ -68,17 +68,17 @@ from ._unit import ConvertibleUnitSpecification
 from ._utils import get_graph_data_from_livestatus
 
 
-def _graph_templates_from_plugins() -> (
+def _get_graph_plugins() -> (
     Iterator[tuple[str, graphs_api.Graph | graphs_api.Bidirectional | RawGraphTemplate]]
 ):
     # TODO CMK-15246 Checkmk 2.4: Remove legacy objects
-    known_graph_templates: set[str] = set()
+    known_plugins: set[str] = set()
     for graph in graphs_from_api.values():
         if isinstance(graph, (graphs_api.Graph, graphs_api.Bidirectional)):
-            known_graph_templates.add(graph.name)
+            known_plugins.add(graph.name)
             yield graph.name, graph
     for template_id, template in graph_info.items():
-        if template_id not in known_graph_templates:
+        if template_id not in known_plugins:
             yield template_id, template
 
 
@@ -100,7 +100,7 @@ def get_graph_template_choices() -> Sequence[GraphTemplateChoice]:
     # TODO: v.get("title", k): Use same algorithm as used in
     # GraphIdentificationTemplateBased._parse_template_metric()
     return sorted(
-        [GraphTemplateChoice(t_id, _parse_title(t)) for t_id, t in _graph_templates_from_plugins()],
+        [GraphTemplateChoice(p_id, _parse_title(p)) for p_id, p in _get_graph_plugins()],
         key=lambda c: c.title,
     )
 
@@ -321,10 +321,10 @@ def _get_graph_template_from_name(name: str) -> GraphTemplate:
 def get_graph_template_from_id(template_id: str) -> GraphTemplate:
     if template_id.startswith("METRIC_"):
         return _get_graph_template_from_name(template_id)
-    for id_, template in _graph_templates_from_plugins():
+    for id_, graph_plugin in _get_graph_plugins():
         if template_id == id_:
-            return _parse_graph_template(id_, template)
-    raise MKGeneralException(_("There is no graph template with the id '%s'") % template_id)
+            return _parse_graph_template(id_, graph_plugin)
+    raise MKGeneralException(_("There is no graph graph_plugin with the id '%s'") % template_id)
 
 
 @dataclass(frozen=True)
@@ -377,8 +377,8 @@ def get_evaluated_graph_template_choices(
 ) -> Sequence[GraphTemplateChoice]:
     graph_template_choices = []
     already_graphed_metrics = set()
-    for id_, template in _graph_templates_from_plugins():
-        graph_template = _parse_graph_template(id_, template)
+    for id_, graph_plugin in _get_graph_plugins():
+        graph_template = _parse_graph_template(id_, graph_plugin)
         if evaluated_metrics := evaluate_metrics(
             conflicting_metrics=graph_template.conflicting_metrics,
             optional_metrics=graph_template.optional_metrics,
@@ -795,8 +795,8 @@ def _get_evaluated_graph_templates(
 
     graph_templates = [
         t
-        for id_, template in _graph_templates_from_plugins()
-        for t in _generate_graph_templates(_parse_graph_template(id_, template))
+        for id_, graph_plugin in _get_graph_plugins()
+        for t in _generate_graph_templates(_parse_graph_template(id_, graph_plugin))
     ]
     yield from graph_templates
 

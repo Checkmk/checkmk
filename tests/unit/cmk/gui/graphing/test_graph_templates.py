@@ -44,9 +44,9 @@ from cmk.gui.graphing._graph_templates import (
     _evaluate_metrics,
     _evaluate_predictive_metrics,
     _get_evaluated_graph_templates,
+    _get_graph_plugins,
     _graph_template_from_api_bidirectional,
     _graph_template_from_api_graph,
-    _graph_templates_from_plugins,
     _matching_graph_templates,
     _parse_graph_template,
     GraphTemplate,
@@ -245,8 +245,8 @@ def test_horizontal_rules_from_thresholds(
 
 def test_duplicate_graph_templates(request_context: None) -> None:
     idents_by_metrics: dict[tuple[str, ...], list[str]] = {}
-    for id_, template in _graph_templates_from_plugins():
-        parsed = _parse_graph_template(id_, template)
+    for id_, plugin in _get_graph_plugins():
+        parsed = _parse_graph_template(id_, plugin)
         expressions = [m.base for m in parsed.metrics] + [s.base for s in parsed.scalars]
         if parsed.range:
             expressions.extend((parsed.range.min, parsed.range.max))
@@ -270,8 +270,8 @@ def test_graph_template_with_layered_areas(request_context: None) -> None:
         neg: list[Literal["-area", "-stack"]] = field(default_factory=list)
 
     areas_by_ident: dict[str, _GraphTemplateArea] = {}
-    for id_, template in _graph_templates_from_plugins():
-        parsed = _parse_graph_template(id_, template)
+    for id_, plugin in _get_graph_plugins():
+        parsed = _parse_graph_template(id_, plugin)
         for metric_expression in parsed.metrics:
             if metric_expression.line_type == "area":
                 areas_by_ident.setdefault(parsed.id, _GraphTemplateArea()).pos.append(

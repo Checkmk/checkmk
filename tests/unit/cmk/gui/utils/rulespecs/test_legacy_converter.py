@@ -1545,6 +1545,7 @@ def _compare_specs(actual: object, expected: object) -> None:
             #  check that the field was set during conversion and test behavior separately
             assert (actual_value is not None) is (expected_value is not None)
             continue
+
         if not callable(expected_value):
             _compare_specs(actual_value, expected_value)
             continue

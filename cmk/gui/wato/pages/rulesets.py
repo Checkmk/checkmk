@@ -49,9 +49,6 @@ from cmk.gui.form_specs.vue.form_spec_visitor import (
     RenderMode,
 )
 from cmk.gui.form_specs.vue.visitors import DataOrigin
-
-# The following import will be fixed by the upcoming registry rework
-from cmk.gui.form_specs.vue.visitors._registry import form_spec_registry
 from cmk.gui.hooks import call as call_hooks
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import ExperimentalRenderMode, get_render_mode, html
@@ -139,6 +136,7 @@ from cmk.gui.watolib.rulesets import (
     visible_rulesets,
 )
 from cmk.gui.watolib.rulespecs import (
+    FormSpecNotImplementedError,
     get_rulegroup,
     main_module_from_rulespec_group_name,
     MatchType,
@@ -1445,7 +1443,7 @@ class ModeEditRuleset(WatoMode):
                 display_mode=RenderMode.READONLY,
             )
 
-        render_mode, form_spec = _get_render_mode(self._rulespec.name, self._rulespec.valuespec)
+        render_mode, form_spec = _get_render_mode(self._rulespec)
         match render_mode:
             case ExperimentalRenderMode.BACKEND:
                 _show_rule_backend()
@@ -1813,20 +1811,17 @@ def render_hidden_if_locked(vs: ValueSpec, varprefix: str, value: object, locked
         html.close_div()
 
 
-def _get_render_mode(
-    name: str,
-    valuespec: ValueSpec,
-) -> tuple[ExperimentalRenderMode, FormSpec | None]:
-    # NOTE: This code is still experimental
+def _get_render_mode(rulespec: Rulespec) -> tuple[ExperimentalRenderMode, FormSpec | None]:
     configured_mode = get_render_mode()
     if configured_mode == ExperimentalRenderMode.BACKEND:
         return configured_mode, None
 
-    if (form_spec := form_spec_registry.get(name.split(":")[-1])) is not None:
-        assert form_spec.rule_spec.parameter_form is not None
-        return configured_mode, form_spec.rule_spec.parameter_form()
+    try:
+        return configured_mode, rulespec.form_spec
+    except FormSpecNotImplementedError:
+        pass
 
-    return configured_mode, LegacyValueSpec(valuespec=valuespec)
+    return configured_mode, LegacyValueSpec(valuespec=rulespec.valuespec)
 
 
 class ABCEditRuleMode(WatoMode):
@@ -2061,9 +2056,7 @@ class ABCEditRuleMode(WatoMode):
         self._rule.update_conditions(rule_conditions)
 
         # VALUE
-        render_mode, registered_form_spec = _get_render_mode(
-            self._ruleset.name, self._ruleset.rulespec.valuespec
-        )
+        render_mode, registered_form_spec = _get_render_mode(self._ruleset.rulespec)
         self._do_validate_on_render = True
         match render_mode:
             case ExperimentalRenderMode.FRONTEND | ExperimentalRenderMode.BACKEND_AND_FRONTEND:
@@ -2184,9 +2177,7 @@ class ABCEditRuleMode(WatoMode):
         html.prevent_password_auto_completion()
         try:
             # Experimental rendering: Only render form_spec if they are in the form_spec_registry
-            render_mode, registered_form_spec = _get_render_mode(
-                self._ruleset.name, self._ruleset.rulespec.valuespec
-            )
+            render_mode, registered_form_spec = _get_render_mode(self._ruleset.rulespec)
             match render_mode:
                 case ExperimentalRenderMode.BACKEND:
                     valuespec.validate_datatype(self._rule.value, "ve")

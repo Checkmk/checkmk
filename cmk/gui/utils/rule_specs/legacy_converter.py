@@ -36,6 +36,7 @@ from cmk.gui.watolib import timeperiods as legacy_timeperiods
 from cmk.gui.watolib.rulespecs import (
     CheckParameterRulespecWithItem,
     CheckParameterRulespecWithoutItem,
+    FormSpecDefinition,
     ManualCheckParameterRulespec,
     rulespec_group_registry,
 )
@@ -195,7 +196,8 @@ def _convert_to_legacy_check_parameter_rulespec(
     edition_only: Edition,
     localizer: Callable[[str], str],
 ) -> CheckParameterRulespecWithItem | CheckParameterRulespecWithoutItem:
-    if isinstance(to_convert.condition, ruleset_api_v1.rule_specs.HostAndItemCondition):
+    convert_condition = to_convert.condition
+    if isinstance(convert_condition, ruleset_api_v1.rule_specs.HostAndItemCondition):
         return CheckParameterRulespecWithItem(
             check_group_name=to_convert.name,
             title=(
@@ -206,7 +208,7 @@ def _convert_to_legacy_check_parameter_rulespec(
                 to_convert.topic,
                 localizer,
             ),
-            item_spec=_get_item_spec_maker(to_convert.condition, localizer),
+            item_spec=_get_item_spec_maker(convert_condition, localizer),
             match_type="dict",
             parameter_valuespec=partial(
                 convert_to_legacy_valuespec, to_convert.parameter_form(), localizer
@@ -216,6 +218,9 @@ def _convert_to_legacy_check_parameter_rulespec(
             # weird field since the CME, as well as the CSE is based on a CCE, but we currently only
             # want to mark rulespecs that are available in both the CCE and CME as such
             is_cloud_and_managed_edition_only=edition_only is Edition.CCE,
+            form_spec_definition=FormSpecDefinition(
+                to_convert.parameter_form, lambda: convert_condition.item_form
+            ),
         )
     return CheckParameterRulespecWithoutItem(
         check_group_name=to_convert.name,
@@ -229,6 +234,7 @@ def _convert_to_legacy_check_parameter_rulespec(
         ),
         create_manual_check=False,
         is_cloud_and_managed_edition_only=edition_only is Edition.CCE,
+        form_spec_definition=FormSpecDefinition(to_convert.parameter_form, None),
     )
 
 
@@ -240,8 +246,15 @@ def _convert_to_legacy_manual_check_parameter_rulespec(
     match to_convert.condition:
         case ruleset_api_v1.rule_specs.HostCondition():
             item_spec = None
+            item_form_spec = None
         case ruleset_api_v1.rule_specs.HostAndItemCondition():
             item_spec = _get_item_spec_maker(to_convert.condition, localizer)
+            wrapped_item_form_spec = to_convert.condition.item_form
+
+            def wrapped_value():
+                return wrapped_item_form_spec
+
+            item_form_spec = wrapped_value
         case other:
             assert_never(other)
 
@@ -260,6 +273,9 @@ def _convert_to_legacy_manual_check_parameter_rulespec(
         match_type="dict",
         item_spec=item_spec,
         is_cloud_and_managed_edition_only=edition_only is Edition.CCE,
+        form_spec_definition=None
+        if to_convert.parameter_form is None
+        else FormSpecDefinition(to_convert.parameter_form, item_form_spec),
     )
 
 
@@ -332,6 +348,7 @@ def _convert_to_legacy_host_rule_spec_rulespec(
         is_deprecated=to_convert.is_deprecated,
         match_type=_convert_to_legacy_match_type(to_convert),
         doc_references=_get_doc_references(config_scope_prefix(to_convert.name), localizer),
+        form_spec_definition=FormSpecDefinition(to_convert.parameter_form, None),
     )
 
 
@@ -350,6 +367,7 @@ def _convert_to_legacy_agent_config_rule_spec(
         is_deprecated=to_convert.is_deprecated,
         match_type=_convert_to_legacy_match_type(to_convert),
         doc_references=_get_doc_references(RuleGroup.AgentConfig(to_convert.name), localizer),
+        form_spec_definition=FormSpecDefinition(to_convert.parameter_form, None),
     )
 
 
@@ -397,6 +415,7 @@ def _convert_to_legacy_service_rule_spec_rulespec(
             "dict" if to_convert.eval_type == ruleset_api_v1.rule_specs.EvalType.MERGE else "all"
         ),
         doc_references=_get_doc_references(config_scope_prefix(to_convert.name), localizer),
+        form_spec_definition=FormSpecDefinition(to_convert.parameter_form, None),
     )
 
 

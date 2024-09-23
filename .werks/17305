@@ -1,4 +1,4 @@
-Title: mk_filestats: Fix recent regression in filter filtering
+Title: mk_filestats: Fix recent regression in file filtering
 Class: fix
 Compatible: compat
 Component: checks

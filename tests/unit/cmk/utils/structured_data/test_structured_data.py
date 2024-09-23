@@ -30,6 +30,14 @@ from cmk.utils.structured_data import (
 from cmk.utils.type_defs import HostName
 
 
+def test_equality_with_non_empty_nodes() -> None:
+    left = StructuredDataNode()
+    left.setdefault_node(("lnode",))
+    right = StructuredDataNode()
+    right.setdefault_node(("rnode",))
+    assert not left.is_equal(right)
+
+
 def _make_filters(allowed_paths):
     return [make_filter(entry) for entry in allowed_paths]
 

@@ -117,21 +117,3 @@ configure_make(
     visibility = VISIBILITY,
     deps = ["@openssl"],
 )
-
-configure_make(
-    name = "monitoring-plugins-root",
-    args = ARGS,
-    build_data = BUILD_DATA,
-    configure_command = CONFIGURE_COMMAND,
-    configure_in_place = CONFIGURE_IN_PLACE,
-    configure_options = CONFIGURE_OPTIONS,
-    copts = COPTS,
-    env = ENV,
-    lib_source = LIB_SOURCE,
-    out_data_dirs = OUT_DATA_DIRS,
-    out_headers_only = OUT_HEADERS_ONLY,
-    postfix_script = POSTFIX_SCRIPT,
-    targets = TARGETS,
-    visibility = VISIBILITY,
-    deps = ["@openssl//:openssl_static"],
-)

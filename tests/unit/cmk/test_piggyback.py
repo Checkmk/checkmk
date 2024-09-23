@@ -5,11 +5,17 @@
 
 # pylint: disable=protected-access
 
+import logging
 import pprint
+from pathlib import Path
 
 import cmk.utils.log
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostAddress
+
+from cmk.cee.dcd.config import Config
+from cmk.cee.dcd.connectors.piggyback import PiggybackConnectorConfig
+from cmk.cee.dcd.site_api import HostOrder
 
 from cmk import piggyback
 
@@ -21,6 +27,53 @@ _PAYLOAD = (
 )
 
 _REF_TIME = 1640000000.0
+
+
+def test_piggyback_config() -> None:
+    logger = logging.getLogger()
+    config = Config(logger, "central", Path("/omd/sites/central"))
+
+    c = config.dcd_connections
+    c.from_config(
+        {
+            "piggy_bla": {
+                "disabled": False,
+                "site": "central",
+                "connector": (
+                    "piggyback",
+                    {
+                        "interval": 31,
+                        "no_deletion_time_after_init": 600,
+                        "creation_rules": [
+                            {
+                                "create_folder_path": "x",
+                                "host_attributes": [],
+                                "delete_hosts": True,
+                            }
+                        ],
+                        "discover_on_creation": True,
+                    },
+                ),
+            },
+        }
+    )
+
+    assert PiggybackConnectorConfig.load(
+        c.active_connections["piggy_bla"]
+    ) == PiggybackConnectorConfig(
+        disabled=False,
+        site="central",
+        interval=31,
+        discover_on_creation=True,
+        no_deletion_time_after_init=600,
+        _host_orders=[
+            HostOrder(folder_path="x", delete_hosts=True, host_attributes={}, host_filters=[])
+        ],
+        _source_filters=[],
+        activation_throttle=False,
+        activation_exclude_times=[],
+        time_settings=[(None, "max_cache_age", 3600)],
+    )
 
 
 def _get_only_raw_data_element(host_name: HostAddress) -> piggyback.PiggybackMessage:

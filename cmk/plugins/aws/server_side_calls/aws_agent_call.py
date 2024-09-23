@@ -45,7 +45,7 @@ class AwsParams(BaseModel):
     proxy_details: ProxyDetails | None = None
     access: APIAccess | None = None
     global_services: Mapping[str, ServiceConfig] | None = None
-    regions_to_monitor: list[str] | None = None
+    regions: list[str] | None = None
     services: Mapping[str, ServiceConfig] | None = None
     piggyback_naming_convention: Literal["ip_region_instance", "private_dns_name"]
     overall_tags: list[Tag] | None = None
@@ -140,8 +140,8 @@ def aws_arguments(
         args.extend(("--assume-role", "--role-arn", role_arn_id[0]))
         if role_arn_id[1]:
             args.extend(("--external-id", role_arn_id[1]))
-    if params.regions_to_monitor:
-        args.extend(("--regions", *params.regions_to_monitor))
+    if params.regions:
+        args.extend(("--regions", *params.regions))
     global_services = params.global_services or {}
     if global_service_args := _get_services_args(global_services):
         args.extend(("--global-services", *global_service_args))

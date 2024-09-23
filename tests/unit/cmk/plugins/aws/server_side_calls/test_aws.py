@@ -43,7 +43,7 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                         "host_assignment": "domain_host",
                     },
                 },
-                "regions_to_monitor": ["ap-northeast-2", "ap-southeast-2"],
+                "regions": ["ap-northeast-2", "ap-southeast-2"],
                 "services": {
                     "ec2": {
                         "selection": (

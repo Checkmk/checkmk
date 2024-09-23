@@ -14,7 +14,7 @@ from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_QUICK_SETUP
 from cmk.utils.hostaddress import HostName
 from cmk.utils.password_store import Password as StorePassword
 from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.rulesets.ruleset_matcher import RuleConditionsSpec, RuleSpec
+from cmk.utils.rulesets.ruleset_matcher import RuleConditionsSpec, RuleOptionsSpec, RuleSpec
 
 from cmk.gui.config import active_config
 from cmk.gui.http import request
@@ -182,6 +182,7 @@ def create_rule(
                 host_name=[host_name],
                 host_folder=host_path,
             ),
+            options=RuleOptionsSpec(disabled=False, description=""),
         ),
     )
 

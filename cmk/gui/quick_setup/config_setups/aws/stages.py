@@ -241,7 +241,8 @@ def aws_transform_to_disk(params: Mapping[str, object]) -> Mapping[str, object]:
         "access_key_id": params["access_key_id"],
         "secret_access_key": params["secret_access_key"],
         "global_services": {k: _migrate_aws_service(k) for k in global_services},
-        "regions_to_monitor": [region.replace("_", "-") for region in regions_to_monitor],
+        "regions": [region.replace("_", "-") for region in regions_to_monitor],
+        "access": {},  # TODO required key but not yet implemented. It's part of quick_setup_advanced()
         "services": {keys_to_rename.get(k, k): _migrate_aws_service(k) for k in services},
         "piggyback_naming_convention": "ip_region_instance",
         "overall_tags": [(tag["key"], tag["values"]) for tag in overall_tags],

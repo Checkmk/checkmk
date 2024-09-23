@@ -57,7 +57,8 @@ EXPECTED_RULE_PARAMS = {
             "host_assignment": "aws_host",
         },
     },
-    "regions_to_monitor": ["eu-central-1"],
+    "access": {},
+    "regions": ["eu-central-1"],
     "services": {
         "ec2": {"selection": "all", "limits": True},
         "ebs": {"selection": "all", "limits": True},

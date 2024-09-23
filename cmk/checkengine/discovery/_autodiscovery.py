@@ -642,16 +642,6 @@ def get_host_services_by_host_name(
             }
         }
 
-        services_by_host_name[host_name].update(
-            _reclassify_disabled_items(
-                host_name,
-                services_by_host_name[host_name],
-                ignore_service,
-                ignore_plugin,
-                get_service_description,
-            )
-        )
-
     # remove the ones shadowed by enforced services
     return {
         h: _group_by_transition({k: v for k, v in s.items() if k not in enforced_services})
@@ -729,8 +719,14 @@ def _node_service_source(
     service_name: ServiceName,
 ) -> _Transition:
     if host_name == cluster_name:
-        return check_source
+        return (
+            "ignored"
+            if ignore_plugin(host_name, check_plugin_name)
+            or ignore_service(host_name, service_name)
+            else check_source
+        )
 
+    # TODO: this does not make much sense. If the service is clustered, but ignored _on that cluster_, it should be shown there.
     if ignore_service(cluster_name, service_name) or ignore_plugin(cluster_name, check_plugin_name):
         return "ignored"
 
@@ -828,16 +824,15 @@ def _get_cluster_services(
                     ),
                 )
             )
-    for h, services in cluster_items.items():
-        services.update(
-            _reclassify_disabled_items(
-                h,
-                services,
-                ignore_service,
-                ignore_plugin,
-                get_service_description,
-            )
+    cluster_items[host_name].update(
+        _reclassify_disabled_items(
+            host_name,
+            cluster_items[host_name],
+            ignore_service,
+            ignore_plugin,
+            get_service_description,
         )
+    )
 
     return cluster_items
 

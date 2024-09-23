@@ -7,7 +7,7 @@ import pytest
 
 from cmk.agent_based.v2 import CheckResult, Result, State
 from cmk.plugins.collection.agent_based.kube_node_kubelet import check_kube_node_kubelet
-from cmk.plugins.kube.schemata.api import HealthZ
+from cmk.plugins.kube.schemata.api import HealthZ, NodeConnectionError
 from cmk.plugins.kube.schemata.section import KubeletInfo
 
 
@@ -41,6 +41,22 @@ from cmk.plugins.kube.schemata.section import KubeletInfo
                 Result(state=State.OK, summary="Version 1.2.3"),
             ],
             id="status_code_critical",
+        ),
+        pytest.param(
+            KubeletInfo(
+                version="1.2.3",
+                proxy_version="1.2.3",
+                health=NodeConnectionError(message="MaxRetryError..."),
+            ),
+            [
+                Result(state=State.CRIT, summary="Unresponsive Node"),
+                Result(
+                    state=State.OK,
+                    notice="Verbose response:\nMaxRetryError...",
+                ),
+                Result(state=State.OK, summary="Version 1.2.3"),
+            ],
+            id="connection timeout",
         ),
     ],
 )

@@ -24,6 +24,7 @@ from tests.testlib.site import Site
 from tests.testlib.utils import run
 
 logger = logging.getLogger(__name__)
+dump_path_site = Path("var/check_mk/dumps")
 
 
 @dataclass
@@ -504,14 +505,13 @@ def setup_source_host_piggyback(site: Site, source_host_name: str) -> Iterator:
 
     logger.info("Injecting agent-output...")
     dump_path_repo = str(qa_test_data_path() / "plugins_integration/dumps/piggyback")
-    dump_path_site = site.path("var/check_mk/dumps")
     assert (
         run(
             [
                 "cp",
                 "-f",
                 f"{dump_path_repo}/{source_host_name}",
-                f"{dump_path_site}/{source_host_name}",
+                f"{site.path(dump_path_site)}/{source_host_name}",
             ],
             sudo=True,
         ).returncode

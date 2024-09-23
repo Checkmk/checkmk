@@ -155,7 +155,7 @@ def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
     for site in get_site_factory(prefix="plugins_").get_test_site(
         auto_cleanup=not checks.config.skip_cleanup
     ):
-        dump_path = site.path("var/check_mk/dumps")
+        dump_path = site.path(checks.dump_path_site)
         checks.setup_site(site, dump_path)
 
         yield site
@@ -175,7 +175,7 @@ def _get_site_piggyback(request: pytest.FixtureRequest) -> Iterator[Site]:
     for site in get_site_factory(prefix="PB_").get_test_site(
         auto_cleanup=not checks.config.skip_cleanup
     ):
-        dump_path = site.path("var/check_mk/dumps")
+        dump_path = site.path(checks.dump_path_site)
 
         # create dump folder in the test site
         logger.info('Creating folder "%s"...', dump_path)
@@ -211,7 +211,7 @@ def _get_site_update(
 ) -> Iterator[Site]:
     """Setup test-site and perform cleanup after test execution."""
     for site in site_factory_update.get_test_site(auto_cleanup=not checks.config.skip_cleanup):
-        dump_path = site.path("var/check_mk/dumps")
+        dump_path = site.path(checks.dump_path_site)
         checks.setup_site(site, dump_path)
 
         yield site

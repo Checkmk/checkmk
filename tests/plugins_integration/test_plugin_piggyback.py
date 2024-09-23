@@ -11,6 +11,7 @@ from tests.plugins_integration.checks import (
     read_cmk_dump,
     read_disk_dump,
     setup_source_host_piggyback,
+    dump_path_site,
 )
 import logging
 import time
@@ -99,9 +100,7 @@ def test_plugin_piggyback(
         # test removal of piggyback host
         pb_host_to_rm = piggyback_hostnames[0]
         updated_dump = _rm_piggyback_host_from_dump(disk_dump, pb_host_to_rm)
-        write_file(
-            test_site_piggyback.path(f"var/check_mk/dumps/{source_host_name}"), updated_dump
-        )  # todo: rm hard-coded path from here
+        write_file(test_site_piggyback.path(dump_path_site / source_host_name), updated_dump)
 
         assert pb_host_to_rm not in _read_piggyback_hosts_from_dump(
             updated_dump

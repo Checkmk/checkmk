@@ -927,13 +927,13 @@ def _merge_tables_by_same_or_empty_key_columns(
     key_columns: Sequence[SDKey], left: ImmutableTable, right: ImmutableTable
 ) -> ImmutableTable:
     compared_row_idents = _DictKeys.compare(
-        left=set(right.rows_by_ident),
-        right=set(left.rows_by_ident),
+        left=set(left.rows_by_ident),
+        right=set(right.rows_by_ident),
     )
 
     rows_by_ident: dict[SDRowIdent, Mapping[SDKey, SDValue]] = {}
     for ident in compared_row_idents.only_left:
-        rows_by_ident.setdefault(ident, right.rows_by_ident[ident])
+        rows_by_ident.setdefault(ident, left.rows_by_ident[ident])
 
     for ident in compared_row_idents.both:
         rows_by_ident.setdefault(
@@ -945,7 +945,7 @@ def _merge_tables_by_same_or_empty_key_columns(
         )
 
     for ident in compared_row_idents.only_right:
-        rows_by_ident.setdefault(ident, left.rows_by_ident[ident])
+        rows_by_ident.setdefault(ident, right.rows_by_ident[ident])
 
     return ImmutableTable(
         key_columns=key_columns,
@@ -979,13 +979,13 @@ def _merge_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableTable
 
 def _merge_nodes(left: ImmutableTree, right: ImmutableTree) -> ImmutableTree:
     compared_node_names = _DictKeys.compare(
-        left=set(right.nodes_by_name),
-        right=set(left.nodes_by_name),
+        left=set(left.nodes_by_name),
+        right=set(right.nodes_by_name),
     )
 
     nodes_by_name: dict[SDNodeName, ImmutableTree] = {}
     for name in compared_node_names.only_left:
-        nodes_by_name[name] = right.nodes_by_name[name]
+        nodes_by_name[name] = left.nodes_by_name[name]
 
     for name in compared_node_names.both:
         nodes_by_name[name] = _merge_nodes(
@@ -993,7 +993,7 @@ def _merge_nodes(left: ImmutableTree, right: ImmutableTree) -> ImmutableTree:
         )
 
     for name in compared_node_names.only_right:
-        nodes_by_name[name] = left.nodes_by_name[name]
+        nodes_by_name[name] = right.nodes_by_name[name]
 
     return ImmutableTree(
         path=left.path,
@@ -1038,8 +1038,8 @@ class _DeltaDict:
             elif keep_identical:
                 compared_dict.setdefault(key, SDDeltaValue(old_value, old_value))
 
-        compared_dict |= {k: _encode_as_new(right[k]) for k in compared_keys.only_right}
-        compared_dict |= {k: _encode_as_removed(left[k]) for k in compared_keys.only_left}
+        compared_dict |= {k: _encode_as_removed(right[k]) for k in compared_keys.only_right}
+        compared_dict |= {k: _encode_as_new(left[k]) for k in compared_keys.only_left}
 
         return cls(
             result=compared_dict,
@@ -1052,8 +1052,8 @@ def _compare_attributes(
 ) -> ImmutableDeltaAttributes:
     return ImmutableDeltaAttributes(
         pairs=_DeltaDict.compare(
-            left=right.pairs,
-            right=left.pairs,
+            left=left.pairs,
+            right=right.pairs,
             keep_identical=False,
         ).result,
     )
@@ -1061,14 +1061,14 @@ def _compare_attributes(
 
 def _compare_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableDeltaTable:
     compared_row_idents = _DictKeys.compare(
-        left=set(right.rows_by_ident),
-        right=set(left.rows_by_ident),
+        left=set(left.rows_by_ident),
+        right=set(right.rows_by_ident),
     )
 
     rows: list[Mapping[SDKey, SDDeltaValue]] = []
 
     for ident in compared_row_idents.only_left:
-        rows.append({k: _encode_as_removed(v) for k, v in right.rows_by_ident[ident].items()})
+        rows.append({k: _encode_as_new(v) for k, v in left.rows_by_ident[ident].items()})
 
     for ident in compared_row_idents.both:
         # Note: Rows which have at least one change also provide all table fields.
@@ -1077,15 +1077,15 @@ def _compare_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableDel
         # then it would be very annoying if the rest of the row is not shown.
         if (
             compared_dict_result := _DeltaDict.compare(
-                left=right.rows_by_ident[ident],
-                right=left.rows_by_ident[ident],
+                left=left.rows_by_ident[ident],
+                right=right.rows_by_ident[ident],
                 keep_identical=True,
             )
         ).has_changes:
             rows.append(compared_dict_result.result)
 
     for ident in compared_row_idents.only_right:
-        rows.append({k: _encode_as_new(v) for k, v in left.rows_by_ident[ident].items()})
+        rows.append({k: _encode_as_removed(v) for k, v in right.rows_by_ident[ident].items()})
 
     return ImmutableDeltaTable(
         key_columns=sorted(set(left.key_columns).union(right.key_columns)),
@@ -1097,11 +1097,11 @@ def _compare_trees(left: ImmutableTree, right: ImmutableTree) -> ImmutableDeltaT
     nodes: dict[SDNodeName, ImmutableDeltaTree] = {}
 
     compared_node_names = _DictKeys.compare(
-        left=set(right.nodes_by_name),
-        right=set(left.nodes_by_name),
+        left=set(left.nodes_by_name),
+        right=set(right.nodes_by_name),
     )
 
-    for name in compared_node_names.only_right:
+    for name in compared_node_names.only_left:
         if child_left := left.nodes_by_name[name]:
             nodes[name] = ImmutableDeltaTree.from_tree(
                 tree=child_left,
@@ -1115,7 +1115,7 @@ def _compare_trees(left: ImmutableTree, right: ImmutableTree) -> ImmutableDeltaT
         if (node := _compare_trees(child_left, child_right)).get_stats():
             nodes[name] = node
 
-    for name in compared_node_names.only_left:
+    for name in compared_node_names.only_right:
         if child_right := right.nodes_by_name[name]:
             nodes[name] = ImmutableDeltaTree.from_tree(
                 tree=child_right,
@@ -1439,13 +1439,13 @@ SDDeltaCounter = Counter[Literal["new", "changed", "removed"]]
 
 def _compute_delta_stats(dict_: Mapping[SDKey, SDDeltaValue]) -> SDDeltaCounter:
     counter: SDDeltaCounter = Counter()
-    for value0, value1 in dict_.values():
-        match [value0 is None, value1 is None]:
+    for left, right in dict_.values():
+        match [left is None, right is None]:
             case [True, False]:
                 counter["new"] += 1
             case [False, True]:
                 counter["removed"] += 1
-            case [False, False] if value0 != value1:
+            case [False, False] if left != right:
                 counter["changed"] += 1
     return counter
 

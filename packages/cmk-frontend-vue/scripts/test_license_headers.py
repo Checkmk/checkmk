@@ -40,12 +40,13 @@ ROOT_FOLDERS_IGNORED = set(
     ]
 )
 
-SUFFIX_IGNORED = set(
-    [
-        ".log",  # added by ci
-        ".json",  # can not add comments to json, so no header possible
-    ]
-)
+SUFFIX_IGNORED = set([".swp"])
+
+GLOB_IGNORED = [
+    "*.log",  # added by ci
+    "*.cid",  # added by ci
+    "*.json",  # can not add comments to json, so no header possible
+]
 
 PATH_TO_SUFFIX = {
     Path("run"): ".sh",
@@ -101,7 +102,10 @@ CHECKER = {
 
 
 def check(suffix: str, path: Path) -> bool:
-    return CHECKER[suffix].check(path)
+    try:
+        return CHECKER[suffix].check(path)
+    except Exception as e:
+        raise RuntimeError(f"Could not find Checker for {path}") from e
 
 
 def main() -> int:
@@ -114,6 +118,9 @@ def main() -> int:
             path = root / file
 
             if path.suffix in SUFFIX_IGNORED:
+                continue
+
+            if any(path.match(glob) for glob in GLOB_IGNORED):
                 continue
 
             if path in FILES_IGNORED:

@@ -59,7 +59,7 @@ def test_builtin_icons_and_actions() -> None:
             "deployment_status",
             "status_shadow",
             "ntop_host",
-            "robotmk_suite_ok_log",
+            "robotmk_html_log",
         ]
 
     cmk.gui.views.register_legacy_icons()

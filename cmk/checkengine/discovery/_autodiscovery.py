@@ -642,11 +642,10 @@ def get_host_services_by_host_name(
             }
         }
 
-    for h, services in services_by_host_name.items():
-        services_by_host_name[h].update(
+        services_by_host_name[host_name].update(
             _reclassify_disabled_items(
                 host_name,
-                services,
+                services_by_host_name[host_name],
                 ignore_service,
                 ignore_plugin,
                 get_service_description,
@@ -829,6 +828,16 @@ def _get_cluster_services(
                     ),
                 )
             )
+    for h, services in cluster_items.items():
+        services.update(
+            _reclassify_disabled_items(
+                h,
+                services,
+                ignore_service,
+                ignore_plugin,
+                get_service_description,
+            )
+        )
 
     return cluster_items
 

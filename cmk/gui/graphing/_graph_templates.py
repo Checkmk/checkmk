@@ -147,7 +147,7 @@ class GraphTemplate:
     metrics: Sequence[MetricExpression]
 
 
-def _graph_template_from_api_graph(id_: str, graph: graphs_api.Graph) -> GraphTemplate:
+def _parse_graph_from_api(id_: str, graph: graphs_api.Graph) -> GraphTemplate:
     metrics = [parse_expression_from_api(l, "stack") for l in graph.compound_lines]
     scalars: list[MetricExpression] = []
     for line in graph.simple_lines:
@@ -174,7 +174,7 @@ def _graph_template_from_api_graph(id_: str, graph: graphs_api.Graph) -> GraphTe
     )
 
 
-def _graph_template_from_api_bidirectional(
+def _parse_bidirectional_from_api(
     id_: str, bidirectional: graphs_api.Bidirectional
 ) -> GraphTemplate:
     ranges_min = []
@@ -267,9 +267,9 @@ def _parse_graph_plugin(
 ) -> GraphTemplate:
     match template:
         case graphs_api.Graph():
-            return _graph_template_from_api_graph(id_, template)
+            return _parse_graph_from_api(id_, template)
         case graphs_api.Bidirectional():
-            return _graph_template_from_api_bidirectional(id_, template)
+            return _parse_bidirectional_from_api(id_, template)
         case _:
             return GraphTemplate(
                 id=id_,

@@ -45,9 +45,9 @@ from cmk.gui.graphing._graph_templates import (
     _evaluate_predictive_metrics,
     _get_evaluated_graph_templates,
     _get_graph_plugins,
-    _graph_template_from_api_bidirectional,
-    _graph_template_from_api_graph,
     _matching_graph_templates,
+    _parse_bidirectional_from_api,
+    _parse_graph_from_api,
     _parse_graph_plugin,
     GraphTemplate,
     MinimalGraphTemplateRange,
@@ -703,7 +703,7 @@ COLOR_HEX = "#1e90ff"
         ),
     ],
 )
-def test__graph_template_from_api_graph(
+def test__parse_graph_from_api(
     graph: graphs_api.Graph, raw_metric_names: Sequence[str], expected_template: GraphTemplate
 ) -> None:
     for r in raw_metric_names:
@@ -718,7 +718,7 @@ def test__graph_template_from_api_graph(
                 color="#000000",
             )
         )
-    assert _graph_template_from_api_graph(graph.name, graph) == expected_template
+    assert _parse_graph_from_api(graph.name, graph) == expected_template
 
 
 @pytest.mark.parametrize(
@@ -945,7 +945,7 @@ def test__graph_template_from_api_graph(
         ),
     ],
 )
-def test__graph_template_from_api_bidirectional(
+def test__parse_bidirectional_from_api(
     graph: graphs_api.Bidirectional,
     raw_metric_names: Sequence[str],
     expected_template: GraphTemplate,
@@ -962,7 +962,7 @@ def test__graph_template_from_api_bidirectional(
                 color="#000000",
             )
         )
-    assert _graph_template_from_api_bidirectional(graph.name, graph) == expected_template
+    assert _parse_bidirectional_from_api(graph.name, graph) == expected_template
 
 
 @pytest.mark.parametrize(

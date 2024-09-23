@@ -28,6 +28,8 @@ from tests.testlib.repo import repo_path
 from tests.testlib.site import ADMIN_USER, get_site_factory, Site
 from tests.testlib.utils import run
 
+from cmk.ccc.version import Edition
+
 logger = logging.getLogger(__name__)
 
 
@@ -52,6 +54,8 @@ def _log_in(
     request: pytest.FixtureRequest,
     test_site: Site,
 ) -> None:
+    if test_site.version.edition == Edition.CSE:
+        return
     video_name = f"login_for_{request.node.name.replace('.py', '')}"
     with manage_new_page_from_browser_context(context, request, video_name) as page:
         login_page = LoginPage(page, site_url=test_site.internal_url)

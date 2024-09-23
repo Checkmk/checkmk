@@ -145,58 +145,17 @@ class AutochecksManager:
     """Read autochecks from the configuration
 
     Autochecks of a host are once read and cached for the whole lifetime of the
-    AutochecksManager."""
+    AutochecksManager.
+
+    When trying to remove this cache (which we should consider), make sure to keep
+    the case of overlapping clusters in mind. Autochecks of a node might be read
+    multiple times (to a degree where it's not accepteble).
+    """
 
     def __init__(self) -> None:
         super().__init__()
         self._configured_services_cache: dict[HostName, Sequence[ConfiguredService]] = {}
         self._raw_autochecks_cache: dict[HostName, Sequence[AutocheckEntry]] = {}
-
-    def get_configured_services(
-        self,
-        hostname: HostName,
-        compute_check_parameters: ComputeCheckParameters,
-        get_service_description: GetServiceDescription,
-        get_effective_host: GetEffectiveHost,
-    ) -> Sequence[ConfiguredService]:
-        if hostname not in self._configured_services_cache:
-            self._configured_services_cache[hostname] = list(
-                self._get_autochecks_of_uncached(
-                    hostname,
-                    compute_check_parameters,
-                    get_service_description,
-                    get_effective_host,
-                )
-            )
-        return self._configured_services_cache[hostname]
-
-    def _get_autochecks_of_uncached(
-        self,
-        hostname: HostName,
-        compute_check_parameters: ComputeCheckParameters,
-        get_service_description: GetServiceDescription,
-        get_effective_host: GetEffectiveHost,
-    ) -> Iterable[ConfiguredService]:
-        """Read automatically discovered checks of one host"""
-        for autocheck_entry in self.get_autochecks(hostname):
-            service_name = get_service_description(hostname, *autocheck_entry.id())
-
-            yield ConfiguredService(
-                check_plugin_name=autocheck_entry.check_plugin_name,
-                item=autocheck_entry.item,
-                description=service_name,
-                parameters=compute_check_parameters(
-                    get_effective_host(hostname, service_name),
-                    *autocheck_entry.id(),
-                    autocheck_entry.parameters,
-                ),
-                discovered_parameters=autocheck_entry.parameters,
-                service_labels={
-                    name: ServiceLabel(name, value)
-                    for name, value in autocheck_entry.service_labels.items()
-                },
-                is_enforced=False,
-            )
 
     def get_autochecks(
         self,

@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+from dataclasses import dataclass
+
+from cmk.utils.hostaddress import HostAddress
 from cmk.utils.servicename import ServiceName
 
 from cmk.checkengine.checking import (
@@ -10,6 +14,7 @@ from cmk.checkengine.checking import (
     check_plugins_missing_data,
     CheckPluginName,
     ConfiguredService,
+    ServiceConfigurer,
 )
 from cmk.checkengine.checkresults import UnsubmittableServiceCheckResult
 from cmk.checkengine.exitspec import ExitSpec
@@ -154,3 +159,39 @@ def test_missing_data_regex_and_default() -> None:
         (3, "not_2"),
         (0, "not_3"),
     ]
+
+
+@dataclass
+class AutocheckEntryLike:
+    check_plugin_name: CheckPluginName
+    item: str | None
+    parameters: Mapping[str, str]
+    service_labels: Mapping[str, str]
+
+
+def test_service_configurer() -> None:
+    _COMPUTED_PARAMETERS_SENTINEL = TimespecificParameters(())
+
+    service_configurer = ServiceConfigurer(
+        compute_check_parameters=lambda *a: _COMPUTED_PARAMETERS_SENTINEL,
+        get_service_description=lambda _host, check, item: f"{check}-{item}",
+        get_effective_host=lambda hostname, _desc: hostname,
+    )
+
+    assert (
+        result := service_configurer.configure_autochecks(
+            HostAddress("somehost"), [AutocheckEntryLike(CheckPluginName("df"), "/", {}, {})]
+        )
+    ) == [
+        ConfiguredService(
+            check_plugin_name=CheckPluginName("df"),
+            item="/",
+            description="df-/",  # we pass a simple callback, not the real one!
+            parameters=_COMPUTED_PARAMETERS_SENTINEL,
+            discovered_parameters={},
+            service_labels={},
+            is_enforced=False,
+        ),
+    ]
+    # see that compute_check_parameters has been called:
+    assert result[0].parameters is _COMPUTED_PARAMETERS_SENTINEL

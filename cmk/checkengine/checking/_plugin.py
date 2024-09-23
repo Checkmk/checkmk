@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Final, NamedTuple, Protocol
 
@@ -25,7 +25,9 @@ __all__ = [
     "CheckPlugin",
     "CheckPluginName",
     "ConfiguredService",
+    "ServiceConfigurer",
     "ServiceID",
+    "AutocheckEntryProtocol",
 ]
 
 
@@ -72,6 +74,65 @@ class ConfiguredService(NamedTuple):
         items.
         """
         return ServiceID(self.check_plugin_name, self.item or "")
+
+
+class AutocheckEntryProtocol(Protocol):
+    @property
+    def check_plugin_name(self) -> CheckPluginName: ...
+
+    @property
+    def item(self) -> Item: ...
+
+    @property
+    def parameters(self) -> Mapping[str, object]: ...
+
+    @property
+    def service_labels(self) -> Mapping[str, str]: ...
+
+
+class ServiceConfigurer:
+    def __init__(
+        self,
+        compute_check_parameters: Callable[
+            [HostName, CheckPluginName, Item, Mapping[str, object]], TimespecificParameters
+        ],
+        get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
+        get_effective_host: Callable[[HostName, str], HostName],
+    ) -> None:
+        self._compute_check_parameters = compute_check_parameters
+        self._get_service_description = get_service_description
+        self._get_effective_host = get_effective_host
+
+    def _configure_autocheck(
+        self, hostname: HostName, autocheck_entry: AutocheckEntryProtocol
+    ) -> ConfiguredService:
+        # TODO: only call this function when we know "effective host" == hostname and simplify accordingly
+        service_name = self._get_service_description(
+            hostname, autocheck_entry.check_plugin_name, autocheck_entry.item
+        )
+
+        return ConfiguredService(
+            check_plugin_name=autocheck_entry.check_plugin_name,
+            item=autocheck_entry.item,
+            description=service_name,
+            parameters=self._compute_check_parameters(
+                self._get_effective_host(hostname, service_name),
+                autocheck_entry.check_plugin_name,
+                autocheck_entry.item,
+                autocheck_entry.parameters,
+            ),
+            discovered_parameters=autocheck_entry.parameters,
+            service_labels={
+                name: ServiceLabel(name, value)
+                for name, value in autocheck_entry.service_labels.items()
+            },
+            is_enforced=False,
+        )
+
+    def configure_autochecks(
+        self, hostname: HostName, autocheck_entries: Iterable[AutocheckEntryProtocol]
+    ) -> Sequence[ConfiguredService]:
+        return [self._configure_autocheck(hostname, entry) for entry in autocheck_entries]
 
 
 @dataclass(frozen=True)

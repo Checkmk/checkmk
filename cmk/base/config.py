@@ -99,7 +99,12 @@ from cmk.fetchers import (
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import MaxAge
 
-from cmk.checkengine.checking import CheckPluginName, ConfiguredService, ServiceID
+from cmk.checkengine.checking import (
+    CheckPluginName,
+    ConfiguredService,
+    ServiceConfigurer,
+    ServiceID,
+)
 from cmk.checkengine.discovery import (
     AutochecksManager,
     CheckPreviewEntry,
@@ -1924,7 +1929,6 @@ class ConfigCache:
         self._discovered_labels_cache = DiscoveredLabelsCache(
             self._autochecks_manager.get_autochecks
         )
-
         self._clusters_of_cache: dict[HostName, list[HostName]] = {}
         self._nodes_cache: dict[HostName, list[HostName]] = {}
         self._effective_host_cache: dict[tuple[HostName, ServiceName, tuple | None], HostName] = {}
@@ -1958,6 +1962,11 @@ class ConfigCache:
                 for hn in set(self.hosts_config.hosts).union(self.hosts_config.clusters)
                 if self.is_active(hn) and self.is_online(hn)
             }
+        )
+        self._service_configurer = ServiceConfigurer(
+            functools.partial(compute_check_parameters, self.ruleset_matcher),
+            functools.partial(service_description, self.ruleset_matcher),
+            self.effective_host,
         )
 
         return self
@@ -3473,11 +3482,8 @@ class ConfigCache:
             return {}
 
     def get_autochecks_of(self, hostname: HostName) -> Sequence[ConfiguredService]:
-        return self._autochecks_manager.get_configured_services(
-            hostname,
-            functools.partial(compute_check_parameters, self.ruleset_matcher),
-            functools.partial(service_description, self.ruleset_matcher),
-            self.effective_host,
+        return self._service_configurer.configure_autochecks(
+            hostname, self._autochecks_manager.get_autochecks(hostname)
         )
 
     def section_name_of(self, section: str) -> str:

@@ -506,12 +506,15 @@ class _MutableTable:
             left=set(self.rows_by_ident),
             right=set(other.rows_by_ident),
         )
-        return (
-            not compared_row_idents.only_old
-            and not compared_row_idents.only_new
-            and all(
-                self.rows_by_ident[i] == other.rows_by_ident[i] for i in compared_row_idents.both
-            )
+
+        if compared_row_idents.only_old:
+            return False
+
+        if compared_row_idents.only_new:
+            return False
+
+        return all(
+            self.rows_by_ident[i] == other.rows_by_ident[i] for i in compared_row_idents.both
         )
 
     def _add_key_columns(self, key_columns: Iterable[SDKey]) -> None:
@@ -657,10 +660,7 @@ class MutableTree:
 
     def __len__(self) -> int:
         return sum(
-            [
-                len(self.attributes),
-                len(self.table),
-            ]
+            [len(self.attributes), len(self.table)]
             + [len(node) for node in self.nodes_by_name.values()]
         )
 
@@ -675,12 +675,15 @@ class MutableTree:
             left=set(self.nodes_by_name),
             right=set(other.nodes_by_name),
         )
-        return (
-            not compared_node_names.only_old
-            and not compared_node_names.only_new
-            and all(
-                self.nodes_by_name[n] == other.nodes_by_name[n] for n in compared_node_names.both
-            )
+
+        if any(self.nodes_by_name[n] for n in compared_node_names.only_old):
+            return False
+
+        if any(other.nodes_by_name[n] for n in compared_node_names.only_new):
+            return False
+
+        return all(
+            self.nodes_by_name[n] == other.nodes_by_name[n] for n in compared_node_names.both
         )
 
     def add(
@@ -1188,12 +1191,15 @@ class ImmutableTable:
             left=set(self.rows_by_ident),
             right=set(other.rows_by_ident),
         )
-        return (
-            not compared_row_idents.only_old
-            and not compared_row_idents.only_new
-            and all(
-                self.rows_by_ident[i] == other.rows_by_ident[i] for i in compared_row_idents.both
-            )
+
+        if compared_row_idents.only_old:
+            return False
+
+        if compared_row_idents.only_new:
+            return False
+
+        return all(
+            self.rows_by_ident[i] == other.rows_by_ident[i] for i in compared_row_idents.both
         )
 
     @property
@@ -1266,10 +1272,7 @@ class ImmutableTree:
 
     def __len__(self) -> int:
         return sum(
-            [
-                len(self.attributes),
-                len(self.table),
-            ]
+            [len(self.attributes), len(self.table)]
             + [len(node) for node in self.nodes_by_name.values()]
         )
 
@@ -1284,12 +1287,15 @@ class ImmutableTree:
             left=set(self.nodes_by_name),
             right=set(other.nodes_by_name),
         )
-        return (
-            not compared_node_names.only_old
-            and not compared_node_names.only_new
-            and all(
-                self.nodes_by_name[n] == other.nodes_by_name[n] for n in compared_node_names.both
-            )
+
+        if any(self.nodes_by_name[n] for n in compared_node_names.only_old):
+            return False
+
+        if any(other.nodes_by_name[n] for n in compared_node_names.only_new):
+            return False
+
+        return all(
+            self.nodes_by_name[n] == other.nodes_by_name[n] for n in compared_node_names.both
         )
 
     def filter(self, filters: Iterable[SDFilterChoice]) -> ImmutableTree:

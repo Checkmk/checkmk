@@ -62,7 +62,7 @@ from cmk.utils.structured_data import (
 def test_equality_with_non_empty_nodes(
     left: MutableTree | ImmutableTree, right: MutableTree | ImmutableTree
 ) -> None:
-    assert left != right
+    assert left == right
 
 
 def _make_mutable_tree(tree: ImmutableTree) -> MutableTree:

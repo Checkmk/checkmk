@@ -1,0 +1,16 @@
+Title: mk_logwatch: Remove colored output support in debug mode
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1727081920
+Edition: cre
+Level: 1
+Version: 2.2.0p35
+
+Until now the debug mode ("-d" flag) would color the lines of the mk_logwatch output depending on their log level. This causes problems when processing the output, leading to the e.g. <code>maxcontextlines</code> setting no longer being effective.
+To improve the stability of the agent plugin, its output will no longer be colored.
+If you need the output to be colored, you can do so via e.g.
+
+C+:
+mk_logwatch.py -d  | sed  -e 's/^C .*/\x1b[1;31m&\x1b[0m/' -e 's/^W .*/\x1b[1;33m&\x1b[0m/' -e 's/^O .*/\x1b[1;32m&\x1b[0m/' -e 's/^I .*/\x1b[1;34m&\x1b[0m/'
+C-:

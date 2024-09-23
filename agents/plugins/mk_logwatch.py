@@ -8,7 +8,7 @@ This is the Check_MK Agent plugin. If configured it will be called by the
 agent without arguments.
 
 Options:
-    -d               Debug mode: Colored output, no saving of status.
+    -d               Debug mode: No saving of status.
     -c CONFIG_FILE   Use this config file
     -h               Show help.
     --no_state       No state
@@ -83,15 +83,6 @@ ENCODINGS = (
     (b"\xFF\xFE", "utf_16"),
     (b"\xFE\xFF", "utf_16_be"),
 )
-
-TTY_COLORS = {
-    "C": "\033[1;31m",  # red
-    "W": "\033[1;33m",  # yellow
-    "O": "\033[1;32m",  # green
-    "I": "\033[1;34m",  # blue
-    ".": "",  # remain same
-    "normal": "\033[0m",
-}
 
 CONFIG_ERROR_PREFIX = "CANNOT READ CONFIG FILE: "  # detected by check plugin
 
@@ -623,11 +614,7 @@ def get_formatted_line(line, level):
     # type: (text_type, str) -> text_type
     formatted_line = "%s %s" % (level, line)
     if sys.stdout.isatty():
-        formatted_line = "%s%s%s" % (
-            TTY_COLORS[level],
-            formatted_line.replace("\1", "\nCONT:"),
-            TTY_COLORS["normal"],
-        )
+        formatted_line = formatted_line.replace("\1", "\nCONT:")
     return formatted_line
 
 
@@ -800,13 +787,8 @@ def process_logfile(section, filestate, debug):  # pylint: disable=too-many-bran
         offset_wrap = new_offset // section.options.maxfilesize
         if ((offset or 0) // section.options.maxfilesize) < offset_wrap:
             warnings_and_errors.append(
-                "%sW Maximum allowed logfile size (%d bytes) exceeded for the %dth time.%s\n"
-                % (
-                    TTY_COLORS["W"] if sys.stdout.isatty() else "",
-                    section.options.maxfilesize,
-                    offset_wrap,
-                    TTY_COLORS["normal"] if sys.stdout.isatty() else "",
-                )
+                "W Maximum allowed logfile size (%d bytes) exceeded for the %dth time.\n"
+                % (section.options.maxfilesize, offset_wrap)
             )
 
     # output all lines if at least one warning, error or ok has been found

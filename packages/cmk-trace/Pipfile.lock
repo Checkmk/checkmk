@@ -610,12 +610,12 @@
         },
         "ruff": {
             "hashes": [
-                "sha256:0fc030b6fd14814d69ac0196396f6761921bd20831725c7361e1b8100b818034",
-                "sha256:2653fc3b2a9315bd809725c88dd2446550099728d077a04191febb5ea79a4f79"
+                "sha256:44e52129d82266fa59b587e2cd74def5637b730a69c4542525dfdecfaae38bd5",
+                "sha256:6b1462fa56c832dc0cea5b4041cfc9c97813505d11cce74ebc6d1aae068de36b"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.7'",
-            "version": "==0.6.6"
+            "version": "==0.6.7"
         },
         "stevedore": {
             "hashes": [

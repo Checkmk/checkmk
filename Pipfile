@@ -35,7 +35,7 @@ networkx = "==3.2.1" # needed for py-import-cycles
 pexpect = "==4.9.0" # used for update testing
 pipfile = "==0.0.2" # for generating import names during int tests
 playwright = "==1.41.1"  # used for in-browser testing
-polyfactory = "==2.14.1" # used for generating mock data for unit tests
+polyfactory = "==2.17.0" # used for generating mock data for unit tests
 pre-commit = "==3.6.0"  # used to fix / find issues before committing changes
 preprocess = "==2.0.0" # implicit dependency of pytest-testmon, might be removed when testmon is updated
 py = "==1.11.0" # used by pytest, shim is not fully working: https://github.com/pytest-dev/pytest/issues/10479
@@ -159,9 +159,9 @@ apispec = "==6.4.0"  # direct dependency
 marshmallow = "==3.19.0"  # direct dependency
 marshmallow-oneofschema = "==3.0.1"  # direct dependency
 apispec-oneofschema = "==3.0.0"  # direct dependency
-pydantic = "==2.5.2"
-pydantic_core = "==2.14.5"  # used by pydantic and by us
-annotated-types = "==0.5.0"  # provides validators for pydantic2
+pydantic = "==2.9.0"
+pydantic_core = "==2.23.2"  # used by pydantic and by us
+annotated-types = "==0.7.0"  # provides validators for pydantic2
 paho-mqtt = "==1.6.1"  # needed for MQTT special agent
 python-active-directory = "==2.0.1"
 rrdtool = "==0.1.16"  # Actually we ship the binding which comes with rrdtool itself...

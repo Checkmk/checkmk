@@ -386,7 +386,11 @@ class StructuredDataNode:
             return False
 
         compared_keys = _compare_dict_keys(old_dict=other._nodes, new_dict=self._nodes)
-        if compared_keys.only_old or compared_keys.only_new:
+
+        if any(not other._nodes[n].is_empty() for n in compared_keys.only_old):
+            return False
+
+        if any(not self._nodes[n].is_empty() for n in compared_keys.only_new):
             return False
 
         for key in compared_keys.both:

@@ -35,7 +35,7 @@ def test_equality_with_non_empty_nodes() -> None:
     left.setdefault_node(("lnode",))
     right = StructuredDataNode()
     right.setdefault_node(("rnode",))
-    assert not left.is_equal(right)
+    assert left.is_equal(right)
 
 
 def _make_filters(allowed_paths):
@@ -204,7 +204,7 @@ def test_empty_but_different_structure() -> None:
 
     assert root.is_empty()
     assert root.count_entries() == 0
-    assert not root.is_equal(StructuredDataNode())
+    assert root.is_equal(StructuredDataNode())
 
 
 def test_not_empty() -> None:

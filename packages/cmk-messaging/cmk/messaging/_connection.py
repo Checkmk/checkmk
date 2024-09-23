@@ -21,6 +21,11 @@ from pydantic import BaseModel
 from ._config import get_local_port, make_connection_params
 from ._constants import APP_PREFIX, INTERSITE_EXCHANGE, LOCAL_EXCHANGE
 
+
+class CMKConnectionError(Exception):
+    pass
+
+
 _ModelT = TypeVar("_ModelT", bound=BaseModel)
 
 
@@ -162,12 +167,15 @@ class Channel(Generic[_ModelT]):
         properties: pika.BasicProperties = pika.BasicProperties(),
         routing: str | None = None,
     ) -> None:
-        self._pchannel.basic_publish(
-            exchange=INTERSITE_EXCHANGE,
-            routing_key=self._make_routing_key(site, routing),
-            body=message.model_dump_json().encode("utf-8"),
-            properties=properties,
-        )
+        try:
+            self._pchannel.basic_publish(
+                exchange=INTERSITE_EXCHANGE,
+                routing_key=self._make_routing_key(site, routing),
+                body=message.model_dump_json().encode("utf-8"),
+                properties=properties,
+            )
+        except AMQPConnectionError as e:
+            raise CMKConnectionError from e
 
     def consume(
         self,
@@ -195,7 +203,10 @@ class Channel(Generic[_ModelT]):
             on_message_callback=_on_message,
             auto_ack=auto_ack,
         )
-        self._pchannel.start_consuming()
+        try:
+            self._pchannel.start_consuming()
+        except AMQPConnectionError as e:
+            raise CMKConnectionError from e
 
         raise RuntimeError("start_consuming() should never return")
 
@@ -239,9 +250,12 @@ class Connection:
             raise ValueError(app)
         self.app: Final = app
         self._omd_root = omd_root
-        self._pconnection = pika.BlockingConnection(
-            make_connection_params(omd_root, "localhost", get_local_port())
-        )
+        try:
+            self._pconnection = pika.BlockingConnection(
+                make_connection_params(omd_root, "localhost", get_local_port())
+            )
+        except AMQPConnectionError as e:
+            raise CMKConnectionError from e
 
     def channel(self, model: type[_ModelT]) -> Channel[_ModelT]:
         return Channel(self.app, self._pconnection.channel(), model)
@@ -256,7 +270,10 @@ class Connection:
         value: BaseException | None,
         traceback: TracebackType | None,
     ) -> None:
-        return self._pconnection.__exit__(exc_type, value, traceback)
+        try:
+            return self._pconnection.__exit__(exc_type, value, traceback)
+        except AMQPConnectionError as e:
+            raise CMKConnectionError from e
 
 
 def check_remote_connection(

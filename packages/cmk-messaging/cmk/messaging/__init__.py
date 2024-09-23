@@ -21,6 +21,7 @@ from ._config import (
 from ._connection import (
     Channel,
     check_remote_connection,
+    CMKConnectionError,
     Connection,
     ConnectionFailed,
     ConnectionOK,
@@ -43,6 +44,7 @@ __all__ = [
     "TLS_PATH_CUSTOMERS",
     "rabbitmq",
     "check_remote_connection",
+    "CMKConnectionError",
     "ConnectionOK",
     "ConnectionFailed",
     "ConnectionUnknown",

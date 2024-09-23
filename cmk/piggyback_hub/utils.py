@@ -11,7 +11,7 @@ from typing import Callable, Generic, TypeVar
 
 from pydantic import BaseModel
 
-from cmk.messaging import Channel, Connection
+from cmk.messaging import Channel, CMKConnectionError, Connection
 
 from .config import PiggybackHubConfig
 
@@ -47,6 +47,8 @@ class ReceivingThread(threading.Thread, Generic[_ModelT]):
                 self.logger.debug("Waiting for messages in queue %s", self.queue)
                 channel.consume(self.callback, queue=self.queue)
 
+        except CMKConnectionError:
+            self.logger.error("RabbitMQ is not running. Stopping thread.")
         except SignalException:
             self.logger.debug("Stopping receiving messages")
             return

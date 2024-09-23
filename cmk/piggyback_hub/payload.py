@@ -14,7 +14,7 @@ from pydantic import BaseModel
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.messaging import Channel, Connection
+from cmk.messaging import Channel, CMKConnectionError, Connection
 from cmk.piggyback import (
     get_piggyback_raw_data,
     load_last_distribution_time,
@@ -140,6 +140,8 @@ class SendingPayloadThread(threading.Thread):
                             )
 
                     time.sleep(SENDING_PAUSE)
+        except CMKConnectionError:
+            self.logger.error("RabbitMQ is not running. Stopping thread.")
         except SignalException:
             self.logger.debug("Stopping distributing messages")
             return

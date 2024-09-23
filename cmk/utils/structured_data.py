@@ -234,9 +234,9 @@ _T = TypeVar("_T")
 
 @dataclass(frozen=True, kw_only=True)
 class _DictKeys(Generic[_T]):
-    only_old: set[_T]
+    only_left: set[_T]
     both: set[_T]
-    only_new: set[_T]
+    only_right: set[_T]
 
     @classmethod
     def compare(cls, *, left: set[_T], right: set[_T]) -> Self:
@@ -247,9 +247,9 @@ class _DictKeys(Generic[_T]):
         - relative complement of left in right
         """
         return cls(
-            only_old=left - right,
+            only_left=left - right,
             both=left.intersection(right),
-            only_new=right - left,
+            only_right=right - left,
         )
 
 
@@ -453,11 +453,11 @@ class _MutableAttributes:
 
         pairs: dict[SDKey, SDValue] = {}
         retentions: dict[SDKey, RetentionInterval] = {}
-        for key in compared_keys.only_old:
+        for key in compared_keys.only_left:
             pairs.setdefault(key, other.pairs[key])
             retentions[key] = RetentionInterval.from_previous(other.retentions[key])
 
-        for key in compared_keys.both.union(compared_keys.only_new):
+        for key in compared_keys.both.union(compared_keys.only_right):
             retentions[key] = retention_interval
 
         if pairs:
@@ -507,10 +507,10 @@ class _MutableTable:
             right=set(other.rows_by_ident),
         )
 
-        if compared_row_idents.only_old:
+        if compared_row_idents.only_left:
             return False
 
-        if compared_row_idents.only_new:
+        if compared_row_idents.only_right:
             return False
 
         return all(
@@ -566,7 +566,7 @@ class _MutableTable:
         )
 
         retentions: dict[SDRowIdent, dict[SDKey, RetentionInterval]] = {}
-        for ident in compared_row_idents.only_old:
+        for ident in compared_row_idents.only_left:
             old_row: dict[SDKey, SDValue] = {}
             for key, value in old_filtered_rows[ident].items():
                 old_row.setdefault(key, value)
@@ -586,13 +586,13 @@ class _MutableTable:
                 right=set(self_filtered_rows[ident]),
             )
             row: dict[SDKey, SDValue] = {}
-            for key in compared_keys.only_old:
+            for key in compared_keys.only_left:
                 row.setdefault(key, other.rows_by_ident[ident][key])
                 retentions.setdefault(ident, {})[key] = RetentionInterval.from_previous(
                     other.retentions[ident][key]
                 )
 
-            for key in compared_keys.both.union(compared_keys.only_new):
+            for key in compared_keys.both.union(compared_keys.only_right):
                 retentions.setdefault(ident, {})[key] = retention_interval
 
             if row:
@@ -606,7 +606,7 @@ class _MutableTable:
                 self._add_row(ident, row)
                 update_result.add_row_reason(path, ident, "Added row", row)
 
-        for ident in compared_row_idents.only_new:
+        for ident in compared_row_idents.only_right:
             for key in self_filtered_rows[ident]:
                 retentions.setdefault(ident, {})[key] = retention_interval
 
@@ -676,10 +676,10 @@ class MutableTree:
             right=set(other.nodes_by_name),
         )
 
-        if any(self.nodes_by_name[n] for n in compared_node_names.only_old):
+        if any(self.nodes_by_name[n] for n in compared_node_names.only_left):
             return False
 
-        if any(other.nodes_by_name[n] for n in compared_node_names.only_new):
+        if any(other.nodes_by_name[n] for n in compared_node_names.only_right):
             return False
 
         return all(
@@ -932,7 +932,7 @@ def _merge_tables_by_same_or_empty_key_columns(
     )
 
     rows_by_ident: dict[SDRowIdent, Mapping[SDKey, SDValue]] = {}
-    for ident in compared_row_idents.only_old:
+    for ident in compared_row_idents.only_left:
         rows_by_ident.setdefault(ident, right.rows_by_ident[ident])
 
     for ident in compared_row_idents.both:
@@ -944,7 +944,7 @@ def _merge_tables_by_same_or_empty_key_columns(
             },
         )
 
-    for ident in compared_row_idents.only_new:
+    for ident in compared_row_idents.only_right:
         rows_by_ident.setdefault(ident, left.rows_by_ident[ident])
 
     return ImmutableTable(
@@ -984,7 +984,7 @@ def _merge_nodes(left: ImmutableTree, right: ImmutableTree) -> ImmutableTree:
     )
 
     nodes_by_name: dict[SDNodeName, ImmutableTree] = {}
-    for name in compared_node_names.only_old:
+    for name in compared_node_names.only_left:
         nodes_by_name[name] = right.nodes_by_name[name]
 
     for name in compared_node_names.both:
@@ -992,7 +992,7 @@ def _merge_nodes(left: ImmutableTree, right: ImmutableTree) -> ImmutableTree:
             left=left.nodes_by_name[name], right=right.nodes_by_name[name]
         )
 
-    for name in compared_node_names.only_new:
+    for name in compared_node_names.only_right:
         nodes_by_name[name] = left.nodes_by_name[name]
 
     return ImmutableTree(
@@ -1038,12 +1038,12 @@ class _DeltaDict:
             elif keep_identical:
                 compared_dict.setdefault(key, SDDeltaValue(old_value, old_value))
 
-        compared_dict |= {k: _encode_as_new(right[k]) for k in compared_keys.only_new}
-        compared_dict |= {k: _encode_as_removed(left[k]) for k in compared_keys.only_old}
+        compared_dict |= {k: _encode_as_new(right[k]) for k in compared_keys.only_right}
+        compared_dict |= {k: _encode_as_removed(left[k]) for k in compared_keys.only_left}
 
         return cls(
             result=compared_dict,
-            has_changes=bool(has_changes or compared_keys.only_new or compared_keys.only_old),
+            has_changes=bool(has_changes or compared_keys.only_right or compared_keys.only_left),
         )
 
 
@@ -1067,7 +1067,7 @@ def _compare_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableDel
 
     rows: list[Mapping[SDKey, SDDeltaValue]] = []
 
-    for ident in compared_row_idents.only_old:
+    for ident in compared_row_idents.only_left:
         rows.append({k: _encode_as_removed(v) for k, v in right.rows_by_ident[ident].items()})
 
     for ident in compared_row_idents.both:
@@ -1084,7 +1084,7 @@ def _compare_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableDel
         ).has_changes:
             rows.append(compared_dict_result.result)
 
-    for ident in compared_row_idents.only_new:
+    for ident in compared_row_idents.only_right:
         rows.append({k: _encode_as_new(v) for k, v in left.rows_by_ident[ident].items()})
 
     return ImmutableDeltaTable(
@@ -1101,7 +1101,7 @@ def _compare_trees(left: ImmutableTree, right: ImmutableTree) -> ImmutableDeltaT
         right=set(left.nodes_by_name),
     )
 
-    for name in compared_node_names.only_new:
+    for name in compared_node_names.only_right:
         if child_left := left.nodes_by_name[name]:
             nodes[name] = ImmutableDeltaTree.from_tree(
                 tree=child_left,
@@ -1115,7 +1115,7 @@ def _compare_trees(left: ImmutableTree, right: ImmutableTree) -> ImmutableDeltaT
         if (node := _compare_trees(child_left, child_right)).get_stats():
             nodes[name] = node
 
-    for name in compared_node_names.only_old:
+    for name in compared_node_names.only_left:
         if child_right := right.nodes_by_name[name]:
             nodes[name] = ImmutableDeltaTree.from_tree(
                 tree=child_right,
@@ -1192,10 +1192,10 @@ class ImmutableTable:
             right=set(other.rows_by_ident),
         )
 
-        if compared_row_idents.only_old:
+        if compared_row_idents.only_left:
             return False
 
-        if compared_row_idents.only_new:
+        if compared_row_idents.only_right:
             return False
 
         return all(
@@ -1288,10 +1288,10 @@ class ImmutableTree:
             right=set(other.nodes_by_name),
         )
 
-        if any(self.nodes_by_name[n] for n in compared_node_names.only_old):
+        if any(self.nodes_by_name[n] for n in compared_node_names.only_left):
             return False
 
-        if any(other.nodes_by_name[n] for n in compared_node_names.only_new):
+        if any(other.nodes_by_name[n] for n in compared_node_names.only_right):
             return False
 
         return all(

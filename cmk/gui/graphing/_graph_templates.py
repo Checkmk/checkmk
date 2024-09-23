@@ -291,7 +291,7 @@ def _parse_graph_plugin(
             )
 
 
-def _get_graph_template_from_name(name: str) -> GraphTemplate:
+def _create_graph_template_from_name(name: str) -> GraphTemplate:
     if name.startswith("METRIC_"):
         name = name[7:]
     return GraphTemplate(
@@ -320,7 +320,7 @@ def _get_graph_template_from_name(name: str) -> GraphTemplate:
 
 def get_graph_template_from_id(template_id: str) -> GraphTemplate:
     if template_id.startswith("METRIC_"):
-        return _get_graph_template_from_name(template_id)
+        return _create_graph_template_from_name(template_id)
     for id_, graph_plugin in _get_graph_plugins():
         if template_id == id_:
             return _parse_graph_plugin(id_, graph_plugin)
@@ -805,7 +805,7 @@ def _get_evaluated_graph_templates(
     }
     for metric_name, translated_metric in sorted(translated_metrics.items()):
         if translated_metric.auto_graph and metric_name not in already_graphed_metrics:
-            graph_template = _get_graph_template_from_name(metric_name)
+            graph_template = _create_graph_template_from_name(metric_name)
             yield (
                 graph_template,
                 evaluate_metrics(
@@ -835,7 +835,7 @@ def _matching_graph_templates(
         and graph_id[7:] in translated_metrics
     ):
         # Single metrics
-        graph_template = _get_graph_template_from_name(graph_id)
+        graph_template = _create_graph_template_from_name(graph_id)
         yield (
             0,
             graph_template,

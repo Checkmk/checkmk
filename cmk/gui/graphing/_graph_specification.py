@@ -269,9 +269,7 @@ class GraphRecipe(BaseModel, frozen=True):
     horizontal_rules: Sequence[HorizontalRule]
     omit_zero_metrics: bool
     consolidation_function: GraphConsolidationFunction | None
-    # TODO: Use Sequence once https://github.com/pydantic/pydantic/issues/9319 is resolved
-    # Internal marker: pydantic-9319
-    metrics: list[GraphMetric]
+    metrics: Sequence[GraphMetric]
     additional_html: AdditionalGraphHTML | None = None
     render_options: GraphRenderOptions = GraphRenderOptions()
     data_range: GraphDataRange | None = None

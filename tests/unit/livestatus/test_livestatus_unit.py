@@ -36,7 +36,7 @@ def prevent_livestatus_connect() -> None:
 def ca(tmp_path: Path) -> CertificateAuthority:
     p = tmp_path / "etc" / "ssl"
     ca = CertificateAuthority(
-        root_ca=RootCA.load_or_create(root_cert_path(p), "ca-name"), ca_path=p
+        root_ca=RootCA.load_or_create(root_cert_path(p), "ca-name", key_size=1024), ca_path=p
     )
     ssl_dir = tmp_path / "var/ssl"
     ssl_dir.mkdir(parents=True)

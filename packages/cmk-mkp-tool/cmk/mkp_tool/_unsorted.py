@@ -217,11 +217,15 @@ def create(
     _validate_package_files(manifest, installer)
     installer.add_installed_manifest(manifest)
     _create_enabled_mkp_from_installed_package(
-        package_store, manifest, path_config, persisting_function, version_packaged=version_packaged
+        package_store,
+        manifest,
+        path_config,
+        persisting_function,
+        version_packaged=version_packaged,
     )
 
 
-def edit(
+def edit(  # pylint: disable=too-many-positional-arguments
     installer: Installer,
     pacname: PackageName,
     new_manifest: Manifest,
@@ -333,7 +337,13 @@ def _install(
         _logger.info("[%s %s]: Installing", manifest.name, manifest.version)
 
     _raise_for_installability(
-        installer, path_config, manifest, old_manifest, site_version, allow_outdated, parse_version
+        installer,
+        path_config,
+        manifest,
+        old_manifest,
+        site_version,
+        allow_outdated,
+        parse_version,
     )
 
     extract_mkp(manifest, mkp, path_config.get_path)
@@ -361,7 +371,9 @@ def _install(
 
 
 def remove_files(
-    manifest: Manifest, keep_files: Mapping[PackagePart, Iterable[Path]], path_config: PathConfig
+    manifest: Manifest,
+    keep_files: Mapping[PackagePart, Iterable[Path]],
+    path_config: PathConfig,
 ) -> tuple[str, ...]:
     errors = []
     for part, files in manifest.files.items():
@@ -377,7 +389,7 @@ def remove_files(
     return tuple(errors)
 
 
-def _raise_for_installability(
+def _raise_for_installability(  # pylint: disable=too-many-positional-arguments
     installer: Installer,
     path_config: PathConfig,
     package: Manifest,
@@ -438,7 +450,10 @@ def _fix_files_permissions(manifest: Manifest, path_config: PathConfig) -> None:
             has_perm = path.stat().st_mode & 0o7777
             if has_perm != desired_perm:
                 _logger.debug(
-                    "Fixing %s: %s -> %s", path, filemode(has_perm), filemode(desired_perm)
+                    "Fixing %s: %s -> %s",
+                    path,
+                    filemode(has_perm),
+                    filemode(desired_perm),
                 )
                 path.chmod(desired_perm)
 
@@ -465,7 +480,9 @@ def _raise_for_collision(manifest: Manifest, other_manifest: Manifest) -> None:
 
 
 def _raise_for_too_old_cmk_version(
-    parse_version: Callable[[str], ComparableVersion], min_version: str, site_version: str
+    parse_version: Callable[[str], ComparableVersion],
+    min_version: str,
+    site_version: str,
 ) -> None:
     """Raise PackageException if the site is too old for this package
 
@@ -484,7 +501,9 @@ def _raise_for_too_old_cmk_version(
 
 
 def _raise_for_too_new_cmk_version(
-    parse_version: Callable[[str], ComparableVersion], until_version: str | None, site_version: str
+    parse_version: Callable[[str], ComparableVersion],
+    until_version: str | None,
+    site_version: str,
 ) -> None:
     """Raise PackageException if the site is too new for this package
 
@@ -574,7 +593,7 @@ def id_to_mkp(
     }
 
 
-def update_active_packages(
+def update_active_packages(  # pylint: disable=too-many-positional-arguments
     installer: Installer,
     path_config: PathConfig,
     package_store: PackageStore,

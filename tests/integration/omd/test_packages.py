@@ -22,7 +22,7 @@ class MonitoringPlugin:
     binary_name: str
     path: str = "lib/nagios/plugins"
     cmd_line_option: str = "-V"
-    expected: str = "v2.4.0"
+    expected: str = "v2.3.3"
 
 
 @dataclass(frozen=True)

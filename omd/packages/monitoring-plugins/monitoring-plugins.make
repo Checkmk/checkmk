@@ -1,4 +1,5 @@
 MONITORING_PLUGINS := monitoring-plugins
+MONITORING_PLUGINS_ROOT := $(MONITORING_PLUGINS)-root
 
 MONITORING_PLUGINS_INSTALL := $(BUILD_HELPER_DIR)/$(MONITORING_PLUGINS)-install
 
@@ -6,6 +7,7 @@ MONITORING_PLUGINS_INSTALL := $(BUILD_HELPER_DIR)/$(MONITORING_PLUGINS)-install
 $(MONITORING_PLUGINS_INSTALL):
 	# run the Bazel build process which does all the dependency stuff
 	$(BAZEL_CMD) build @$(MONITORING_PLUGINS)//:$(MONITORING_PLUGINS)
+	$(BAZEL_CMD) build @$(MONITORING_PLUGINS)//:$(MONITORING_PLUGINS_ROOT)
 
 	# THIS IS ALL HACKY WORKAROUND STUFF - BETTER GET RID OF IT BY LETTING
 	# BAZEL HANDLE ALL THIS RATHER THAN MODIFYING IT!
@@ -16,9 +18,17 @@ $(MONITORING_PLUGINS_INSTALL):
 	$(eval TMP_DIR := $(shell mktemp -d))
 	# copy over all the plugins we built
 	mkdir -p "$(TMP_DIR)/lib/nagios"
-	$(RSYNC) -r --chmod=u+w \
+
+	# All plugins WITHOUT capabilities must link dynamically against our openssl
+	$(RSYNC) -r --chmod=u+w --exclude 'check_icmp' --exclude 'check_dhcp' \
 	    "$(BAZEL_BIN_EXT)/$(MONITORING_PLUGINS)/$(MONITORING_PLUGINS)/libexec/" \
 	    "$(TMP_DIR)/lib/nagios/plugins/"
+
+	# All plugins WITH capabitlies must be linked statically -> get them from the -root target
+	$(RSYNC) -r --chmod=u+w --include 'check_icmp' --include 'check_dhcp' \
+	    "$(BAZEL_BIN_EXT)/$(MONITORING_PLUGINS)/$(MONITORING_PLUGINS_ROOT)/libexec/" \
+	    "$(TMP_DIR)/lib/nagios/plugins/"
+
 	# copy locales and 'documentation'
 	$(RSYNC) -r --chmod=u+w \
 	    "$(BAZEL_BIN_EXT)/$(MONITORING_PLUGINS)/$(MONITORING_PLUGINS)/share/" \

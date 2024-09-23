@@ -253,7 +253,7 @@ def _aggregate_check_table_services(
     # process all entries that are specific to the host
     # in search (single host) or that might match the host.
     if not config_cache.is_ping_host(host_name):
-        yield from (s for s in config_cache.get_autochecks_of(host_name) if sfilter.keep(s))
+        yield from (s for s in config_cache.get_discovered_services(host_name) if sfilter.keep(s))
 
     # Now add checks a cluster might receive from its nodes
     if host_name in config_cache.hosts_config.clusters:
@@ -357,7 +357,7 @@ def _get_clustered_services(
     for node in config_cache.nodes(cluster_name):
         node_checks: list[ConfiguredService] = []
         if not config_cache.is_ping_host(cluster_name):
-            node_checks += config_cache.get_autochecks_of(node)
+            node_checks += config_cache.get_discovered_services(node)
         node_checks.extend(svc for _, svc in config_cache.enforced_services_table(node).values())
 
         yield from (
@@ -3481,7 +3481,7 @@ class ConfigCache:
         except KeyError:
             return {}
 
-    def get_autochecks_of(self, hostname: HostName) -> Sequence[ConfiguredService]:
+    def get_discovered_services(self, hostname: HostName) -> Sequence[ConfiguredService]:
         return self._service_configurer.configure_autochecks(
             hostname, self._autochecks_manager.get_autochecks(hostname)
         )

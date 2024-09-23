@@ -1558,11 +1558,11 @@ class AutomationAnalyseServices(Automation):
             [
                 service
                 for node in config_cache.nodes(host_name)
-                for service in config_cache.get_autochecks_of(node)
+                for service in config_cache.get_discovered_services(node)
                 if host_name == config_cache.effective_host(node, service.description)
             ]
             if host_name in config_cache.hosts_config.clusters
-            else config_cache.get_autochecks_of(host_name)
+            else config_cache.get_discovered_services(host_name)
         )
 
         for service in services:

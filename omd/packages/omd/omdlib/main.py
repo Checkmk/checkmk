@@ -1877,43 +1877,41 @@ def call_scripts(
             raise SystemExit(1)
 
 
-def _call_script(  # pylint: disable=too-many-branches
+def _call_script(
     open_pty: bool,
     env: Mapping[str, str],
     command: Sequence[str],
 ) -> int:
+    def forward_to_stdout(text_io: IO[str]) -> None:
+        line = text_io.readline()
+        if line:
+            sys.stdout.write("\n")
+            for line in text_io:
+                sys.stdout.write(f"-| {line}")
+
     if open_pty:
         fd_parent, fd_child = pty.openpty()
-        stdout = stderr = fd_child
-    else:
-        stdout = subprocess.PIPE
-        stderr = subprocess.STDOUT
-
-    with subprocess.Popen(
-        command,
-        stdout=stdout,
-        stderr=stderr,
-        encoding="utf-8",
-        env=env,
-    ) as proc:
-        if open_pty:
+        with subprocess.Popen(
+            command,
+            stdout=fd_child,
+            stderr=fd_child,
+            encoding="utf-8",
+            env=env,
+        ) as proc:
             os.close(fd_child)
-            parent: IO[str] = os.fdopen(fd_parent, buffering=1)
-        else:
+            with open(fd_parent) as parent:
+                with contextlib.suppress(OSError):
+                    forward_to_stdout(parent)
+    else:
+        with subprocess.Popen(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            encoding="utf-8",
+            env=env,
+        ) as proc:
             assert proc.stdout is not None
-            parent = proc.stdout
-
-        try:
-            line = parent.readline()
-            if line:
-                sys.stdout.write("\n")
-                for line in parent:
-                    sys.stdout.write(f"-| {line}")
-        except OSError:
-            pass
-        finally:
-            if open_pty:
-                parent.close()
+            forward_to_stdout(proc.stdout)
     return proc.returncode
 
 

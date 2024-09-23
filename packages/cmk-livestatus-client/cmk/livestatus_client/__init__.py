@@ -506,7 +506,7 @@ class SingleSiteConnection(Helpers):
     # a class-variable for this case, so we activate this across all sites at once.
     collect_queries = threading.local()
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         socketurl: str,
         site_name: SiteId | None = None,
@@ -631,7 +631,11 @@ class SingleSiteConnection(Helpers):
         It ensures that either a TLS secured socket or a plain text socket
         is being created."""
         return create_client_socket(
-            family, self.tls, self.tls_verify, self._tls_ca_file_path, do_handshake_on_connect=False
+            family,
+            self.tls,
+            self.tls_verify,
+            self._tls_ca_file_path,
+            do_handshake_on_connect=False,
         )
 
     def disconnect(self) -> None:
@@ -683,7 +687,8 @@ class SingleSiteConnection(Helpers):
             self.send_query(str_query)
             try:
                 return self.parse_raw_response(
-                    self.receive_raw_response(str_query, query.suppress_exceptions), query
+                    self.receive_raw_response(str_query, query.suppress_exceptions),
+                    query,
                 )
             except MKLivestatusQueryError:
                 self.disconnect()
@@ -852,7 +857,9 @@ class SingleSiteConnection(Helpers):
         return response
 
     def command(
-        self, command: str, site: SiteId | None = None  # pylint: disable=unused-argument
+        self,
+        command: str,
+        site: SiteId | None = None,  # pylint: disable=unused-argument
     ) -> None:
         command_str = command.rstrip("\n")
         if not command_str.startswith("["):
@@ -924,7 +931,9 @@ ConnectedSites = list[ConnectedSite]
 
 class MultiSiteConnection(Helpers):
     def __init__(  # pylint: disable=too-many-branches
-        self, sites: SiteConfigurations, disabled_sites: SiteConfigurations | None = None
+        self,
+        sites: SiteConfigurations,
+        disabled_sites: SiteConfigurations | None = None,
     ) -> None:
         if disabled_sites is None:
             disabled_sites = SiteConfigurations({})
@@ -1438,7 +1447,7 @@ def livestatus_lql(
     return f"GET {what}s\n{query_filter}"
 
 
-def get_rrd_data(
+def get_rrd_data(  # pylint: disable=too-many-positional-arguments
     connection: SingleSiteConnection,
     host_name: str,
     service_description: str,

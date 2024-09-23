@@ -48,7 +48,7 @@ from cmk.gui.graphing._graph_templates import (
     _graph_template_from_api_bidirectional,
     _graph_template_from_api_graph,
     _matching_graph_templates,
-    _parse_graph_template,
+    _parse_graph_plugin,
     GraphTemplate,
     MinimalGraphTemplateRange,
 )
@@ -246,7 +246,7 @@ def test_horizontal_rules_from_thresholds(
 def test_duplicate_graph_templates(request_context: None) -> None:
     idents_by_metrics: dict[tuple[str, ...], list[str]] = {}
     for id_, plugin in _get_graph_plugins():
-        parsed = _parse_graph_template(id_, plugin)
+        parsed = _parse_graph_plugin(id_, plugin)
         expressions = [m.base for m in parsed.metrics] + [s.base for s in parsed.scalars]
         if parsed.range:
             expressions.extend((parsed.range.min, parsed.range.max))
@@ -271,7 +271,7 @@ def test_graph_template_with_layered_areas(request_context: None) -> None:
 
     areas_by_ident: dict[str, _GraphTemplateArea] = {}
     for id_, plugin in _get_graph_plugins():
-        parsed = _parse_graph_template(id_, plugin)
+        parsed = _parse_graph_plugin(id_, plugin)
         for metric_expression in parsed.metrics:
             if metric_expression.line_type == "area":
                 areas_by_ident.setdefault(parsed.id, _GraphTemplateArea()).pos.append(
@@ -1080,11 +1080,11 @@ def test__graph_template_from_api_bidirectional(
         ),
     ],
 )
-def test__parse_graph_template(
+def test__parse_graph_plugin(
     raw: RawGraphTemplate,
     expected_graph_template: GraphTemplate,
 ) -> None:
-    assert _parse_graph_template("ident", raw) == expected_graph_template
+    assert _parse_graph_plugin("ident", raw) == expected_graph_template
 
 
 @pytest.mark.parametrize(

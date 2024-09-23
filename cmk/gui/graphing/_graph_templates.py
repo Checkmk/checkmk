@@ -262,7 +262,7 @@ def _parse_raw_metric_expression(
     return parse_legacy_expression(raw_expression, line_type, str(title[0]) if title else "", {})
 
 
-def _parse_graph_template(
+def _parse_graph_plugin(
     id_: str, template: graphs_api.Graph | graphs_api.Bidirectional | RawGraphTemplate
 ) -> GraphTemplate:
     match template:
@@ -323,7 +323,7 @@ def get_graph_template_from_id(template_id: str) -> GraphTemplate:
         return _get_graph_template_from_name(template_id)
     for id_, graph_plugin in _get_graph_plugins():
         if template_id == id_:
-            return _parse_graph_template(id_, graph_plugin)
+            return _parse_graph_plugin(id_, graph_plugin)
     raise MKGeneralException(_("There is no graph graph_plugin with the id '%s'") % template_id)
 
 
@@ -378,7 +378,7 @@ def get_evaluated_graph_template_choices(
     graph_template_choices = []
     already_graphed_metrics = set()
     for id_, graph_plugin in _get_graph_plugins():
-        graph_template = _parse_graph_template(id_, graph_plugin)
+        graph_template = _parse_graph_plugin(id_, graph_plugin)
         if evaluated_metrics := evaluate_metrics(
             conflicting_metrics=graph_template.conflicting_metrics,
             optional_metrics=graph_template.optional_metrics,
@@ -796,7 +796,7 @@ def _get_evaluated_graph_templates(
     graph_templates = [
         t
         for id_, graph_plugin in _get_graph_plugins()
-        for t in _generate_graph_templates(_parse_graph_template(id_, graph_plugin))
+        for t in _generate_graph_templates(_parse_graph_plugin(id_, graph_plugin))
     ]
     yield from graph_templates
 

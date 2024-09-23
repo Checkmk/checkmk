@@ -4,28 +4,6 @@ load("@omd_packages//omd/packages/rules:package_wheel.bzl", "package_wheel")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("@rules_python//python:pip.bzl", "compile_pip_requirements")
 
-filegroup(
-    name = "files",
-    srcs = [
-        "Pipfile",
-        "Pipfile.lock",
-        "cmk/werks/__init__.py",
-        "cmk/werks/cli.py",
-        "cmk/werks/config.py",
-        "cmk/werks/convert.py",
-        "cmk/werks/error.py",
-        "cmk/werks/format.py",
-        "cmk/werks/load.py",
-        "cmk/werks/markup.py",
-        "cmk/werks/models.py",
-        "cmk/werks/parse.py",
-        "cmk/werks/validate.py",
-        "pyproject.toml",
-        "setup.cfg",
-    ],
-    visibility = ["//visibility:public"],
-)
-
 compile_pip_requirements(
     name = "requirements",
     requirements_in = "pyproject.toml",

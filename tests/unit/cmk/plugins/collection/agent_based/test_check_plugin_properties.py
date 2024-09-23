@@ -63,7 +63,10 @@ def test_check_plugins_do_not_discover_upon_empty_snmp_input(fix_register: FixRe
     plugins_discovering_upon_empty = set()
     for _name, plugin in sorted(fix_register.check_plugins.items()):
         for sections in _section_permutations(plugin.sections):
-            kwargs = {str(section.name): _get_empty_parsed_result(section) for section in sections}
+            kwargs = {
+                str(section.parsed_section_name): _get_empty_parsed_result(section)
+                for section in sections
+            }
             if all(v is None for v in kwargs.values()):
                 continue
 

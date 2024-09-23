@@ -2,7 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import json
+
 import logging
 from collections.abc import Sequence
 from pathlib import Path
@@ -21,7 +21,7 @@ from cmk.piggyback import (
     store_last_distribution_time,
     store_piggyback_raw_data,
 )
-from cmk.piggyback_hub.config import PiggybackHubConfig, Target
+from cmk.piggyback_hub.config import PiggybackHubConfig, save_config, Target
 from cmk.piggyback_hub.payload import (
     _get_piggyback_raw_data_to_send,
     _load_piggyback_targets,
@@ -156,11 +156,7 @@ def test__load_piggyback_targets_missing_config_file(tmpdir: Path) -> None:
     ],
 )
 def test__load_piggyback_targets(
-    tmpdir: Path, config: PiggybackHubConfig, expected_targets: Sequence[Target]
+    tmp_path: Path, config: PiggybackHubConfig, expected_targets: Sequence[Target]
 ) -> None:
-    config_file = tmpdir / "piggyback_hub.conf"
-    with open(config_file, "w") as f:
-        f.write(json.dumps(config.model_dump_json()))
-
-    actual_targets = _load_piggyback_targets(tmpdir / "piggyback_hub.conf", "site1")
-    assert actual_targets == expected_targets
+    save_config(tmp_path, config)
+    assert _load_piggyback_targets(tmp_path, "site1") == expected_targets

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 import logging
 import threading
 import time
@@ -24,7 +23,7 @@ from cmk.piggyback import (
     store_last_distribution_time,
     store_piggyback_raw_data,
 )
-from cmk.piggyback_hub.config import PiggybackHubConfig, Target
+from cmk.piggyback_hub.config import load_config, Target
 from cmk.piggyback_hub.paths import create_paths
 from cmk.piggyback_hub.utils import SignalException
 
@@ -60,23 +59,8 @@ def save_payload_on_message(
     return _on_message
 
 
-def _load_piggyback_targets(
-    piggyback_hub_config_path: Path, current_site_id: str
-) -> Sequence[Target]:
-    if not piggyback_hub_config_path.exists():
-        return []
-    with open(piggyback_hub_config_path, "r") as f:
-        piggyback_hub_config = PiggybackHubConfig.model_validate_json(json.loads(f.read()))
-
-    targets = []
-    for target in piggyback_hub_config.targets:
-        match target:
-            case Target():
-                if target.site_id != current_site_id:
-                    targets.append(target)
-            case other:
-                raise ValueError(f"Invalid piggyback_hub configuration: {other}")
-    return targets
+def _load_piggyback_targets(config_path: Path, current_site_id: str) -> Sequence[Target]:
+    return [t for t in load_config(config_path).targets if t.site_id != current_site_id]
 
 
 def _is_message_already_distributed(meta: PiggybackMetaData, omd_root: Path) -> bool:
@@ -137,8 +121,7 @@ class SendingPayloadThread(threading.Thread):
                 channel = conn.channel(PiggybackPayload)
 
                 while True:
-                    targets = _load_piggyback_targets(self.config_path, self.omd_root.name)
-                    for target in targets:
+                    for target in _load_piggyback_targets(self.config_path, self.omd_root.name):
                         for piggyback_message in _get_piggyback_raw_data_to_send(
                             target.host_name, self.omd_root
                         ):

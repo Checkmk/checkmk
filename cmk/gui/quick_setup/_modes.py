@@ -214,13 +214,34 @@ class ModeEditConfigurationBundles(WatoMode):
     def _bundles_listing(self, group_name: str) -> None:
         bundle_ids = set(load_group_bundles(group_name).keys())
         if not bundle_ids:
-            # TODO (CMK-18347): add redesigned overview for empty configurations
-            html.div(_("No configuration yet"))
+            self._no_bundles()
             return
 
         bundles_with_references = identify_bundle_references(group_name, bundle_ids)
         if self._bundle_group_type is RuleGroupType.SPECIAL_AGENTS:
             self._special_agent_bundles_listing(group_name, bundles_with_references)
+            return
+
+        raise MKGeneralException("Not implemented")
+
+    def _no_bundles(self) -> None:
+        if self._bundle_group_type is RuleGroupType.SPECIAL_AGENTS:
+            subtype = self._name.split(":", maxsplit=1)[1]
+            html.div(
+                html.render_icon(f"qs_{subtype}")
+                + html.render_b(_("No %s configuration yet") % self.title())
+                + html.render_p(
+                    _(
+                        'Click the "Add configuration" button to start setting up your first '
+                        "configuration."
+                    )
+                )
+                + html.render_a(
+                    _("Add configuration"),
+                    mode_url(ModeQuickSetupSpecialAgent.name(), varname=self._name),
+                ),
+                css=["no-config-bundles"],
+            )
             return
 
         raise MKGeneralException("Not implemented")

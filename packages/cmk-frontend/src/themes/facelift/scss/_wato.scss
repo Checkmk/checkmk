@@ -822,6 +822,36 @@ div.filter_buttons {
   }
 }
 
+.wato div.no-config-bundles {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 100px;
+  font-size: $font-size-large;
+  text-align: center;
+
+  img {
+    width: 140px;
+    height: 140px;
+    margin-bottom: 32px;
+  }
+
+  p {
+    max-width: 280px;
+    line-height: 1.5;
+  }
+
+  a {
+    text-decoration: none;
+    font-weight: $font-weight-bold;
+    color: $font-color-light-bg;
+    background-color: $success-dimmed;
+    border: 1px solid $default-button-border-color;
+    border-radius: $theme-border-radius;
+    padding: 12px 16px;
+  }
+}
+
 /* page "global settings*/
 .wato div.globalvars {
   a {

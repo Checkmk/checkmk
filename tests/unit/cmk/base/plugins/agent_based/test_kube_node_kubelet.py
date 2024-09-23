@@ -8,7 +8,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.kube_node_kubelet import check_kube_node_kubelet
 
-from cmk.plugins.lib.kube import HealthZ, KubeletInfo
+from cmk.plugins.lib.kube import HealthZ, KubeletInfo, NodeConnectionError
 
 
 @pytest.mark.parametrize(
@@ -41,6 +41,22 @@ from cmk.plugins.lib.kube import HealthZ, KubeletInfo
                 Result(state=State.OK, summary="Version 1.2.3"),
             ],
             id="status_code_critical",
+        ),
+        pytest.param(
+            KubeletInfo(
+                version="1.2.3",
+                proxy_version="1.2.3",
+                health=NodeConnectionError(message="MaxRetryError..."),
+            ),
+            [
+                Result(state=State.CRIT, summary="Unresponsive Node"),
+                Result(
+                    state=State.OK,
+                    notice="Verbose response:\nMaxRetryError...",
+                ),
+                Result(state=State.OK, summary="Version 1.2.3"),
+            ],
+            id="connection timeout",
         ),
     ],
 )

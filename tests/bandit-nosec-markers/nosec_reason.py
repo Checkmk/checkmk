@@ -213,7 +213,7 @@ def find_nosecs(src_root: Path, excluded: Sequence[Path]) -> Sequence[Nosec]:
     files = _format_output(
         subprocess.run(run_find_files, cwd=src_root, check=False, capture_output=True).stdout
     )
-    logging.info(
+    logging.info(  # pylint: disable=logging-not-lazy
         f"Checking {len(files)} python files in '{src_root}'"
         + (f" excluding '{', '.join(map(str, excluded))}'." if excluded else "")
     )

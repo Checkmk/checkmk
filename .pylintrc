@@ -69,6 +69,7 @@ disable=
     # will be a non-trivial amount of work.
     too-few-public-methods,
     too-many-arguments,
+    too-many-positional-arguments,
     too-many-boolean-expressions,
     too-many-instance-attributes,
     too-many-lines,

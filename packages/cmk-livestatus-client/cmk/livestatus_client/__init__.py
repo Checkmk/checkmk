@@ -532,7 +532,7 @@ class SingleSiteConnection(Helpers):
     # a class-variable for this case, so we activate this across all sites at once.
     collect_queries = threading.local()
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-positional-arguments
         self,
         socketurl: str,
         site_name: SiteId | None = None,
@@ -1535,7 +1535,7 @@ def livestatus_lql(
     return f"GET {what}s\n{query_filter}"
 
 
-def get_rrd_data(
+def get_rrd_data(  # pylint: disable=too-many-positional-arguments
     connection: SingleSiteConnection,
     host_name: str,
     service_description: str,

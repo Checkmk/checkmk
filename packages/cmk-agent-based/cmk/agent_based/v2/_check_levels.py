@@ -80,7 +80,7 @@ def _check_fixed_levels(
     return CheckLevelsResult(Type.FIXED, State.OK, levels)
 
 
-def _check_predictive_levels(  # pylint: disable=too-many-arguments
+def _check_predictive_levels(  # pylint: disable=too-many-arguments, too-many-positional-arguments
     value: float,
     metric_name: str,
     predicted_value: float | None,
@@ -221,7 +221,12 @@ def check_levels(  # pylint: disable=too-many-arguments,too-many-locals
         result_upper, result_lower, render_func
     )
 
-    messages = [info_text, prediction_text, result_upper.levels_text, result_lower.levels_text]
+    messages = [
+        info_text,
+        prediction_text,
+        result_upper.levels_text,
+        result_lower.levels_text,
+    ]
     summary = " ".join(m for m in messages if m)
 
     if notice_only:

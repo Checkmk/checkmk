@@ -39,7 +39,11 @@ def test_check_predictive_levels() -> None:
             5.0,
             None,
             CheckLevelsResult(
-                type=Type.NO_LEVELS, state=State.OK, levels=None, levels_text="", prediction=None
+                type=Type.NO_LEVELS,
+                state=State.OK,
+                levels=None,
+                levels_text="",
+                prediction=None,
             ),
             id="levels not provided",
         ),
@@ -47,7 +51,11 @@ def test_check_predictive_levels() -> None:
             5.0,
             ("no_levels", None),
             CheckLevelsResult(
-                type=Type.NO_LEVELS, state=State.OK, levels=None, levels_text="", prediction=None
+                type=Type.NO_LEVELS,
+                state=State.OK,
+                levels=None,
+                levels_text="",
+                prediction=None,
             ),
             id="no_levels",
         ),
@@ -134,7 +142,11 @@ def test__check_levels_errors(
         pytest.param(
             CheckLevelsResult(Type.FIXED, State.WARN, (6.0, 7.0), "(warn/crit at 6.00/7.00)", None),
             CheckLevelsResult(
-                Type.PREDICTIVE, State.OK, (2.0, 1.0), "", Metric("predict_test_metric", 6.5)
+                Type.PREDICTIVE,
+                State.OK,
+                (2.0, 1.0),
+                "",
+                Metric("predict_test_metric", 6.5),
             ),
             (
                 [
@@ -153,10 +165,17 @@ def test__check_levels_errors(
                 Metric("predict_test_metric", 6.5),
             ),
             CheckLevelsResult(
-                Type.PREDICTIVE, State.OK, (2.0, 1.0), "", Metric("predict_lower_test_metric", 6.5)
+                Type.PREDICTIVE,
+                State.OK,
+                (2.0, 1.0),
+                "",
+                Metric("predict_lower_test_metric", 6.5),
             ),
             (
-                [Metric("predict_test_metric", 6.5), Metric("predict_lower_test_metric", 6.5)],
+                [
+                    Metric("predict_test_metric", 6.5),
+                    Metric("predict_lower_test_metric", 6.5),
+                ],
                 "(prediction: 6.50%)",
             ),
             id="2 directions predictive levels, same predictions",
@@ -170,10 +189,17 @@ def test__check_levels_errors(
                 Metric("predict_test_metric", 6.5),
             ),
             CheckLevelsResult(
-                Type.PREDICTIVE, State.OK, (2.0, 1.0), "", Metric("predict_lower_test_metric", 3.0)
+                Type.PREDICTIVE,
+                State.OK,
+                (2.0, 1.0),
+                "",
+                Metric("predict_lower_test_metric", 3.0),
             ),
             (
-                [Metric("predict_test_metric", 6.5), Metric("predict_lower_test_metric", 3.0)],
+                [
+                    Metric("predict_test_metric", 6.5),
+                    Metric("predict_lower_test_metric", 3.0),
+                ],
                 "(upper levels prediction: 6.50%, lower levels prediction: 3.00%)",
             ),
             id="2 directions predictive levels, different predictions",
@@ -235,7 +261,7 @@ def test_summarize_predictions(
         ),
     ],
 )
-def test_check_levels(  # pylint: disable=too-many-arguments
+def test_check_levels(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     value: float,
     levels_upper: NoLevelsT | FixedLevelsT[float] | None,
     levels_lower: NoLevelsT | FixedLevelsT[float] | None,
@@ -275,7 +301,10 @@ def test_check_levels(  # pylint: disable=too-many-arguments
             (0.0, 10.0),
             True,
             [
-                Result(state=State.WARN, summary="test label: 5.00% (warn/crit below 6.00%/3.00%)"),
+                Result(
+                    state=State.WARN,
+                    summary="test label: 5.00% (warn/crit below 6.00%/3.00%)",
+                ),
                 Metric("test_metric", 5.0, boundaries=(0.0, 10.0)),
             ],
             id="all params are present",
@@ -317,7 +346,7 @@ def test_check_levels(  # pylint: disable=too-many-arguments
         ),
     ],
 )
-def test_check_levels_with_metric(  # pylint: disable=too-many-arguments
+def test_check_levels_with_metric(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     value: float,
     levels_upper: LevelsT[float] | None,
     levels_lower: LevelsT[float] | None,

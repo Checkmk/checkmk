@@ -61,6 +61,7 @@ HACK_AGENTS = {
     "hivemanager": True,
     "hp_msa": True,
     "ibmsvc": False,  # needs no secret
+    "innovaphone": True,
 }
 
 

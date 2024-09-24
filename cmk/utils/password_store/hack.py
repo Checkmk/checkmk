@@ -60,6 +60,7 @@ HACK_AGENTS = {
     "hivemanager_ng": True,
     "hivemanager": True,
     "hp_msa": True,
+    "ibmsvc": False,  # needs no secret
 }
 
 

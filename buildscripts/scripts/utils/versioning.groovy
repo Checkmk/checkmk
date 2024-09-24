@@ -25,10 +25,8 @@ def REPO_PATCH_RULES = [\
         "saas", \
         "cse", \
         "cse.py", \
-        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/{cme,cee,cce}", \
         "cmk.cee.dcd.plugins.connectors.connectors_api"],\
-    "folders_to_be_created": [\
-        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/{cme,cee,cce}"]], \
+    "folders_to_be_created": []], \
 "enterprise": [\
     "paths_to_be_removed": [\
         "managed", \
@@ -39,10 +37,8 @@ def REPO_PATCH_RULES = [\
         "cce.py", \
         "saas", \
         "cse", \
-        "cse.py", \
-        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/{cme,cce}"], \
-    "folders_to_be_created": [\
-        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/{cme,cce}"]], \
+        "cse.py"], \
+    "folders_to_be_created": []], \
 "managed": [\
     "paths_to_be_removed": [\
         "saas", \
@@ -56,18 +52,14 @@ def REPO_PATCH_RULES = [\
         "cme.py", \
         "saas", \
         "cse", \
-        "cse.py", \
-        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/cme"], \
-    "folders_to_be_created": [\
-        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/cme"]], \
+        "cse.py"], \
+    "folders_to_be_created": []], \
 "saas": [\
     "paths_to_be_removed": [\
         "managed", \
         "cme", \
-        "cme.py", \
-        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/cme"], \
-    "folders_to_be_created": [\
-        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/cme"]], \
+        "cme.py"], \
+    "folders_to_be_created": []], \
 ];
 /* groovylint-enable DuplicateListLiteral */
 

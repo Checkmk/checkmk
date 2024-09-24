@@ -28,7 +28,7 @@ def _service(plugin: str, item: str | None) -> ConfiguredService:
         description=f"test description {plugin}/{item}",
         parameters=TimespecificParameters(),
         discovered_parameters={},
-        service_labels={},
+        discovered_labels={},
         is_enforced=False,
     )
 
@@ -58,7 +58,7 @@ def make_aggregated_result(*, name: str, data_received: bool) -> AggregatedResul
             description=ServiceName("ut_service_name"),
             parameters=TimespecificParameters(),
             discovered_parameters={},
-            service_labels={},
+            discovered_labels={},
             is_enforced=False,
         ),
         data_received=data_received,
@@ -189,7 +189,7 @@ def test_service_configurer() -> None:
             description="df-/",  # we pass a simple callback, not the real one!
             parameters=_COMPUTED_PARAMETERS_SENTINEL,
             discovered_parameters={},
-            service_labels={},
+            discovered_labels={},
             is_enforced=False,
         ),
     ]

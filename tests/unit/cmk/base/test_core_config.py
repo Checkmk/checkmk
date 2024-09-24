@@ -225,7 +225,7 @@ def test_get_cmk_passive_service_attributes(
         description="CPU load",
         parameters=TimespecificParameters(),
         discovered_parameters={},
-        service_labels={},
+        discovered_labels={},
         is_enforced=False,
     )
     service_spec = core_config.get_cmk_passive_service_attributes(

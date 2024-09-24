@@ -2285,7 +2285,7 @@ class ConfigCache:
                             configured_parameters=TimespecificParameters((params,)),
                         ),
                         discovered_parameters={},
-                        service_labels={},
+                        discovered_labels={},
                         is_enforced=True,
                     ),
                 )

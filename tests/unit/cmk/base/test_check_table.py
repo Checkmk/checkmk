@@ -177,7 +177,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                         )
                     ),
                     discovered_parameters={},
-                    service_labels={},
+                    discovered_labels={},
                     is_enforced=True,
                 ),
             },
@@ -192,7 +192,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                     description="Unimplemented check bla_blub / ITEM",
                     parameters=TimespecificParameters(()),
                     discovered_parameters={},
-                    service_labels={},
+                    discovered_labels={},
                     is_enforced=False,
                 ),
                 (CheckPluginName("blub_bla"), "ITEM"): ConfiguredService(
@@ -201,7 +201,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                     description="Unimplemented check blub_bla / ITEM",
                     parameters=TimespecificParameters(),
                     discovered_parameters={},
-                    service_labels={},
+                    discovered_labels={},
                     is_enforced=True,
                 ),
             },
@@ -222,7 +222,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                         )
                     ),
                     discovered_parameters={},
-                    service_labels={},
+                    discovered_labels={},
                     is_enforced=True,
                 ),
             },
@@ -242,7 +242,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                         )
                     ),
                     discovered_parameters={},
-                    service_labels={},
+                    discovered_labels={},
                     is_enforced=False,
                 ),
                 (CheckPluginName("smart_temp"), "static-node1"): ConfiguredService(
@@ -257,7 +257,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                         )
                     ),
                     discovered_parameters={},
-                    service_labels={},
+                    discovered_labels={},
                     is_enforced=True,
                 ),
             },
@@ -278,7 +278,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                         )
                     ),
                     discovered_parameters={},
-                    service_labels={},
+                    discovered_labels={},
                     is_enforced=True,
                 ),
                 (CheckPluginName("smart_temp"), "auto-clustered"): ConfiguredService(
@@ -292,7 +292,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                         )
                     ),
                     discovered_parameters={},
-                    service_labels={},
+                    discovered_labels={},
                     is_enforced=False,
                 ),
             },
@@ -312,7 +312,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                         )
                     ),
                     discovered_parameters={},
-                    service_labels={},
+                    discovered_labels={},
                     is_enforced=False,
                 )
             },
@@ -332,7 +332,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                         )
                     ),
                     discovered_parameters={},
-                    service_labels={},
+                    discovered_labels={},
                     is_enforced=False,
                 )
             },
@@ -352,7 +352,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
                         )
                     ),
                     discovered_parameters={},
-                    service_labels={},
+                    discovered_labels={},
                     is_enforced=False,
                 )
             },

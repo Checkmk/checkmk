@@ -13,7 +13,7 @@ from cmk.ccc.exceptions import OnError
 import cmk.utils.paths
 from cmk.utils import tty
 from cmk.utils.hostaddress import HostAddress, HostName
-from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel, ServiceLabel
+from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
 from cmk.utils.sectionname import SectionMap, SectionName
@@ -185,17 +185,11 @@ def get_check_preview(
                     description=find_service_description(h, *DiscoveredService.id(entry)),
                     parameters=compute_check_parameters(h, DiscoveredService.older(entry)),
                     discovered_parameters=DiscoveredService.older(entry).parameters,
-                    service_labels={
-                        n: ServiceLabel(n, v)
-                        for n, v in DiscoveredService.older(entry).service_labels.items()
-                    },
+                    discovered_labels=DiscoveredService.older(entry).service_labels,
                     is_enforced=False,
                 ),
                 new_discovered_parameters=DiscoveredService.newer(entry).parameters,
-                new_service_labels={
-                    n: ServiceLabel(n, v)
-                    for n, v in DiscoveredService.newer(entry).service_labels.items()
-                },
+                new_service_labels=DiscoveredService.newer(entry).service_labels,
                 check_source=check_source,
                 providers=providers,
                 found_on_nodes=found_on_nodes,
@@ -233,7 +227,7 @@ def _check_preview_table_row(
     *,
     service: ConfiguredService,
     new_discovered_parameters: Mapping[str, object],
-    new_service_labels: Mapping[str, ServiceLabel],
+    new_service_labels: Mapping[str, str],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     check_source: _Transition | Literal["manual"],
     providers: Mapping[HostKey, Provider],
@@ -274,7 +268,7 @@ def _check_preview_table_row(
         state=result.state,
         output=make_output(),
         metrics=[],
-        old_labels={l.name: l.value for l in service.service_labels.values()},
-        new_labels={l.name: l.value for l in new_service_labels.values()},
+        old_labels=service.discovered_labels,
+        new_labels=new_service_labels,
         found_on_nodes=list(found_on_nodes),
     )

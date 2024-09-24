@@ -1428,7 +1428,7 @@ def test_host_config_custom_checks(
                             )
                         ),
                         discovered_parameters={},
-                        service_labels={},
+                        discovered_labels={},
                         is_enforced=True,
                     ),
                 ),
@@ -1446,7 +1446,7 @@ def test_host_config_custom_checks(
                             )
                         ),
                         discovered_parameters={},
-                        service_labels={},
+                        discovered_labels={},
                         is_enforced=True,
                     ),
                 ),
@@ -1770,7 +1770,7 @@ def _service_list() -> list[ConfiguredService]:
             description="description %s" % d,
             parameters=TimespecificParameters(),
             discovered_parameters={},
-            service_labels={},
+            discovered_labels={},
             is_enforced=False,
         )
         for d in "FDACEB"

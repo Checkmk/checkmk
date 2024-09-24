@@ -10,7 +10,6 @@ from dataclasses import dataclass
 from typing import Final, NamedTuple, Protocol
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.labels import ServiceLabel
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.validatedstr import ValidatedString
@@ -53,15 +52,19 @@ class ServiceID(NamedTuple):
     item: Item
 
 
-class ConfiguredService(NamedTuple):
-    """A service with all information derived from the config"""
+@dataclass(frozen=True)
+class ConfiguredService:
+    """A service with almost all information derived from the config
+
+    Currently missing the configured service labels.
+    """
 
     check_plugin_name: CheckPluginName
     item: Item
     description: ServiceName
     parameters: TimespecificParameters
     discovered_parameters: Mapping[str, object]
-    service_labels: Mapping[str, ServiceLabel]
+    discovered_labels: Mapping[str, str]
     is_enforced: bool
 
     def id(self) -> ServiceID:
@@ -122,10 +125,7 @@ class ServiceConfigurer:
                 autocheck_entry.parameters,
             ),
             discovered_parameters=autocheck_entry.parameters,
-            service_labels={
-                name: ServiceLabel(name, value)
-                for name, value in autocheck_entry.service_labels.items()
-            },
+            discovered_labels=autocheck_entry.service_labels,
             is_enforced=False,
         )
 

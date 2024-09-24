@@ -57,7 +57,7 @@ This procedure may be quite annoying, you have to check next points:
 ##### Building
 
 ```
-make build PY_VER=3.12 PY_SUBVER=6
+make build PY_VER=3.12 PY_SUBVER=0
 ```
 
 ##### Testing
@@ -79,7 +79,7 @@ In one turn the script makes two calls:
 
 ```bat
 :: build_the_cached.cmd <ARTEFACT_DIR> <CREDENTIALS> <CACHE_URL> <PYTHON_VERSION> <PYTHON_SUBVERSION>
-build_the_cached.cmd artefact_dir credentials url 3.12 6
+build_the_cached.cmd artefact_dir credentials url 3.12 1
 ```
 
 #### Caching

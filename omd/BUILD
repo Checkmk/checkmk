@@ -24,7 +24,8 @@ PACKAGES_INT = [
     "//packages/cmk-messaging:pkg_tar",
     "//packages/cmk-rulesets:pkg_tar",
     "//packages/cmk-server-side-calls:pkg_tar",
-    "//packages/cmk-livestatus-client:pkg_tar",
+    "//packages/cmk-livestatus-client:cmk_livestatus_client_pkg_tar",
+    "//packages/cmk-livestatus-client:cmk_livestatus_pkg_tar",
     "//packages/cmk-trace:pkg_tar",
 ]
 

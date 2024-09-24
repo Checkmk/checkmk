@@ -19,6 +19,7 @@ class EmailManager:
         self.setup_postfix_script = scripts_folder / "setup_postfix.sh"
         self.teardown_postfix_script = scripts_folder / "teardown_postfix.sh"
         self._username = getuser()
+        self.html_file_path = repo_path() / "email_content.html"
 
     def __enter__(self):
         self.setup_postfix()
@@ -26,6 +27,7 @@ class EmailManager:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.teardown_postfix()
+        self.delete_html_file()
 
     def setup_postfix(self) -> None:
         """Install and configure Postfix to send emails to a local Maildir."""
@@ -93,11 +95,30 @@ class EmailManager:
                         raise ValueError("Unexpected payload type: %s" % type(payload))
                     text_dict = self.convert_text_into_dict(text)
                     for key, expected_value in expected_text_content.items():
-                        if key == "Summary":
-                            actual_value = re.sub(r"\s*\([^)]*\)", "", text_dict[key])
-                        else:
-                            actual_value = text_dict[key]
+                        actual_value = text_dict[key]
                         assert expected_value == actual_value, f"Field '{key}' has unexpected value"
+
+    def copy_html_content_into_file(self, file_path: Path) -> Path:
+        """Copy the html content of the email into a file and return the file path."""
+        with open(file_path, "r") as file:
+            msg = email.message_from_file(file, policy=default)
+            for part in msg.walk():
+                if part.get_content_type() == "text/html":
+                    payload = part.get_payload(decode=True)
+                    if isinstance(payload, bytes):
+                        html_content = payload.decode()
+                    else:
+                        raise ValueError("Unexpected payload type")
+                    with open(self.html_file_path, "w") as html_file:
+                        html_file.write(html_content)
+                    break
+        return self.html_file_path.absolute()
+
+    def delete_html_file(self) -> None:
+        """Delete the html file if exists."""
+        if self.html_file_path.exists():
+            logger.info("Delete the html file with email content")
+            self.html_file_path.unlink()
 
     @staticmethod
     def convert_text_into_dict(text: str) -> dict[str, str]:

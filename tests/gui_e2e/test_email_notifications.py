@@ -10,7 +10,9 @@ from faker import Faker
 from playwright.sync_api import expect
 
 from tests.testlib.emails import EmailManager
+from tests.testlib.playwright.plugin import manage_new_page_from_browser_context
 from tests.testlib.playwright.pom.dashboard import Dashboard
+from tests.testlib.playwright.pom.email import EmailPage
 from tests.testlib.playwright.pom.monitor.service_search import ServiceSearchPage
 from tests.testlib.playwright.pom.setup.add_rule_filesystems import AddRuleFilesystems
 from tests.testlib.playwright.pom.setup.edit_notification_rule import EditNotificationRule
@@ -117,9 +119,19 @@ def test_filesystem_email_notifications(
             "Service": service_name,
             "Event": expected_event,
             "Address": test_site.http_address,
-            "Summary": service_summary,
+            "Summary": service_summary.replace(
+                ",", f" (warn/crit at {float(used_space):.2f}%/90.00% used)(!),", 1
+            ),
         }
         email_manager.check_email_content(email_file_path, expected_fields, expected_content)
+
+        html_file_path = email_manager.copy_html_content_into_file(email_file_path)
+        expected_content["Event"] = "OK → WARNING"
+        expected_content["Summary"] = expected_content["Summary"].replace("(!)", "WARN", 1)
+
+        with manage_new_page_from_browser_context(service_search_page.page.context) as new_page:
+            email_page = EmailPage(new_page, html_file_path)
+            email_page.check_table_content(expected_content)
 
     finally:
         edit_notification_rule_page.navigate()

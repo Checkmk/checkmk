@@ -10,15 +10,17 @@ from cmk.utils.hostaddress import HostAddress
 from cmk.utils.servicename import ServiceName
 
 from cmk.checkengine.checking import (
+    aggregate_enforced_services,
     AggregatedResult,
     check_plugins_missing_data,
     CheckPluginName,
     ConfiguredService,
     ServiceConfigurer,
+    ServiceID,
 )
 from cmk.checkengine.checkresults import UnsubmittableServiceCheckResult
 from cmk.checkengine.exitspec import ExitSpec
-from cmk.checkengine.parameters import TimespecificParameters
+from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 
 
 def _service(plugin: str, item: str | None) -> ConfiguredService:
@@ -195,3 +197,76 @@ def test_service_configurer() -> None:
     ]
     # see that compute_check_parameters has been called:
     assert result[0].parameters is _COMPUTED_PARAMETERS_SENTINEL
+
+
+def _dummy_service(sid: ServiceID) -> ConfiguredService:
+    return ConfiguredService(*sid, "", TimespecificParameters(), {}, {}, True)
+
+
+def test_aggregate_enforced_services_filters_unclustered() -> None:
+    sid1 = ServiceID(CheckPluginName("check1"), None)
+    sid2 = ServiceID(CheckPluginName("check2"), None)
+    assert tuple(
+        aggregate_enforced_services(
+            {
+                HostAddress("host1"): {sid1: ("ruleset_name1", _dummy_service(sid1))},
+                HostAddress("host2"): {sid2: ("ruleset_name2", _dummy_service(sid2))},
+            },
+            lambda host_name, servic_name: host_name == HostAddress("host1"),
+        )
+    ) == (_dummy_service(sid1),)
+
+
+def _make_params(raw: Mapping[str, object]) -> TimespecificParameters:
+    return TimespecificParameters((TimespecificParameterSet.from_parameters(raw),))
+
+
+def test_aggregate_enforced_services_merge() -> None:
+    sid = ServiceID(CheckPluginName("check"), None)
+    assert tuple(
+        aggregate_enforced_services(
+            {
+                HostAddress("host1"): {
+                    sid: (
+                        "ruleset_name",
+                        ConfiguredService(
+                            *sid,
+                            "Description",
+                            _make_params({"common": 1, "1": 1}),
+                            {"common": 1, "1": 1},
+                            {"common": "1", "1": "1"},
+                            True,
+                        ),
+                    )
+                },
+                HostAddress("host2"): {
+                    sid: (
+                        "ruleset_name",
+                        ConfiguredService(
+                            *sid,
+                            "Description",
+                            _make_params({"common": 2, "2": 2}),
+                            {"common": 2, "2": 2},
+                            {"common": "2", "2": "2"},
+                            True,
+                        ),
+                    )
+                },
+            },
+            lambda host_name, servic_name: True,
+        )
+    ) == (
+        ConfiguredService(
+            *sid,
+            "Description",
+            TimespecificParameters(
+                (
+                    TimespecificParameterSet.from_parameters({"common": 1, "1": 1}),
+                    TimespecificParameterSet.from_parameters({"common": 2, "2": 2}),
+                )
+            ),
+            {"common": 1, "1": 1, "2": 2},
+            {"common": "1", "1": "1", "2": "2"},
+            True,
+        ),
+    )

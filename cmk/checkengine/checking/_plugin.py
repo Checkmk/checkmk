@@ -5,11 +5,13 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Final, NamedTuple, Protocol
 
-from cmk.utils.hostaddress import HostName
+from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.parameters import merge_parameters
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.validatedstr import ValidatedString
@@ -25,6 +27,7 @@ __all__ = [
     "CheckPluginName",
     "ConfiguredService",
     "ServiceConfigurer",
+    "aggregate_enforced_services",
     "ServiceID",
     "AutocheckEntryProtocol",
 ]
@@ -160,3 +163,32 @@ class CheckPlugin:
     default_parameters: Mapping[str, object] | None
     ruleset_name: RuleSetName | None
     discovery_ruleset_name: RuleSetName | None
+
+
+def aggregate_enforced_services(
+    services: Mapping[HostAddress, Mapping[ServiceID, tuple[object, ConfiguredService]]],
+    appears_on_cluster: Callable[[HostAddress, ServiceName], bool],
+) -> Iterable[ConfiguredService]:
+    """Aggregate services from multiple nodes"""
+    entries_by_id: dict[ServiceID, list[ConfiguredService]] = defaultdict(list)
+    for node, node_services in services.items():
+        for sid, (_, service) in node_services.items():
+            if appears_on_cluster(node, service.description):
+                entries_by_id[sid].append(service)
+
+    return [
+        ConfiguredService(
+            check_plugin_name=sid[0],
+            item=sid[1],
+            description=entries[0].description,
+            parameters=TimespecificParameters(
+                [ps for entry in entries for ps in entry.parameters.entries]
+            ),
+            # For consistency we merge the following two fields. At the time of writing, they are
+            # always empty for enforced services.
+            discovered_parameters=merge_parameters([e.discovered_parameters for e in entries], {}),
+            discovered_labels=merge_parameters([e.discovered_labels for e in entries], {}),
+            is_enforced=True,
+        )
+        for sid, entries in entries_by_id.items()
+    ]

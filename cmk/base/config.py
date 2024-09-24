@@ -100,6 +100,7 @@ from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import MaxAge
 
 from cmk.checkengine.checking import (
+    aggregate_enforced_services,
     CheckPluginName,
     ConfiguredService,
     ServiceConfigurer,
@@ -365,28 +366,26 @@ def _get_clustered_services(
 ) -> Iterable[ConfiguredService]:
     nodes = config_cache.nodes(cluster_name)
 
+    def appears_on_cluster(node_name: HostName, service_name: ServiceName) -> bool:
+        return config_cache.effective_host(node_name, service_name) == cluster_name
+
     nodes_discovered_services = (
         {}
         if config_cache.is_ping_host(cluster_name)
         else {node: config_cache.get_discovered_services(node) for node in nodes}
     )
 
-    nodes_enforced_services = {node: config_cache.enforced_services_table(node) for node in nodes}
-
-    # Note: the way we return the services here means that for a service that is enforced on some
-    # nodes and discovered on others, the parameters of the service on the cluster will depend
-    # on the order of the nodes in the cluster.
     for node in nodes:
         yield from (
             service
             for service in nodes_discovered_services[node]
             if config_cache.effective_host(node, service.description) == cluster_name
         )
-        yield from (
-            service
-            for _ruleset_name, service in nodes_enforced_services[node].values()
-            if config_cache.effective_host(node, service.description) == cluster_name
-        )
+
+    yield from aggregate_enforced_services(
+        {node: config_cache.enforced_services_table(node) for node in nodes},
+        appears_on_cluster,
+    )
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)

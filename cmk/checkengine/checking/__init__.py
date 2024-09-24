@@ -5,6 +5,7 @@
 
 from ._checking import check_host_services, check_plugins_missing_data, execute_checkmk_checks
 from ._plugin import (
+    aggregate_enforced_services,
     AggregatedResult,
     CheckPlugin,
     CheckPluginName,
@@ -24,5 +25,6 @@ __all__ = [
     "execute_checkmk_checks",
     "make_timing_results",
     "ServiceConfigurer",
+    "aggregate_enforced_services",
     "ServiceID",
 ]

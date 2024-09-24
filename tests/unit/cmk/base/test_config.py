@@ -3083,7 +3083,6 @@ def test_boil_down_agent_rules(
     [
         pytest.param(
             [HostName("node1"), HostName("node2")],
-            # Fixme: Enforced should win over discovered, even if discovered is last.
             config.HostCheckTable(
                 services=[
                     ConfiguredService(
@@ -3093,7 +3092,7 @@ def test_boil_down_agent_rules(
                         parameters=TimespecificParameters(()),
                         discovered_parameters={},
                         discovered_labels={},
-                        is_enforced=False,
+                        is_enforced=True,
                     )
                 ]
             ),

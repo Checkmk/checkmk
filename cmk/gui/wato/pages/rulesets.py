@@ -2176,7 +2176,6 @@ class ABCEditRuleMode(WatoMode):
         html.form_has_submit_button = True
         html.prevent_password_auto_completion()
         try:
-            # Experimental rendering: Only render form_spec if they are in the form_spec_registry
             render_mode, registered_form_spec = _get_render_mode(self._ruleset.rulespec)
             match render_mode:
                 case ExperimentalRenderMode.BACKEND:

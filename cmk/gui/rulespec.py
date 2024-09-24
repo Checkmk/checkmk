@@ -8,7 +8,6 @@ from pathlib import Path
 
 from cmk.ccc.debug import enabled as debug_enabled
 
-from cmk.gui.form_specs.vue.visitors._registry import form_spec_registry
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.utils import add_failed_plugin
@@ -44,9 +43,6 @@ def register_plugins(loaded_rule_specs: Sequence[LoadedRuleSpec]) -> None:
                     "Duplicate rule_spec '%s', keeping legacy rulespec", legacy_rulespec.name
                 )
                 continue
-            # This isn't actually a "real" registry
-            # Just some lookup for the experimental formspec rendering
-            form_spec_registry[loaded_rule_spec.rule_spec.name] = loaded_rule_spec
 
             rulespec_registry.register(legacy_rulespec)
         except Exception as e:

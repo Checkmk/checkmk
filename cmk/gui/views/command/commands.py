@@ -73,7 +73,8 @@ def register(
             recurring_downtimes=NoRecurringDowntimes(),
         )
     )
-    command_registry.register(CommandRemoveDowntimes)
+    command_registry.register(CommandRemoveDowntimesHostServicesTable)
+    command_registry.register(CommandRemoveDowntimesDowntimesTable)
     command_registry.register(CommandRemoveComments)
     permission_section_registry.register(PermissionSectionAction)
     permission_registry.register(PermissionActionReschedule)
@@ -2024,29 +2025,30 @@ def _rm_downtime_from_hst_or_svc_datasource(
     return commands, command.confirm_dialog_options(cmdtag, row, len(action_rows))
 
 
-CommandRemoveDowntimes = Command(
+CommandRemoveDowntimesHostServicesTable = Command(
+    ident="remove_downtimes_hosts_services",
+    title=_l("Remove downtimes"),
+    confirm_title=_l("Remove scheduled downtimes?"),
+    confirm_button=_l("Remove"),
+    permission=PermissionActionDowntimes,
+    group=CommandGroupDowntimes,
+    tables=["host", "service"],
+    is_shortcut=False,
+    is_suggested=False,
+    render=command_remove_downtime_render,
+    action=command_remove_downtime_action,
+)
+
+CommandRemoveDowntimesDowntimesTable = Command(
     ident="remove_downtimes",
     title=_l("Remove downtimes"),
     confirm_title=_l("Remove scheduled downtimes?"),
     confirm_button=_l("Remove"),
     permission=PermissionActionDowntimes,
     group=CommandGroupDowntimes,
-    tables=["host", "service", "downtime"],
-    # TODO: Needs to be fixed in a separate commit
-    ## we only want to show the button and shortcut in the explicit downtime
-    ## view
-    # is_shortcut=lambda: request.var("view_name", "")
-    # in [
-    #    "downtimes",
-    #    "downtimes_of_host",
-    #    "downtimes_of_service",
-    # ],
-    # is_suggested=lambda: request.var("view_name", "")
-    # in [
-    #    "downtimes",
-    #    "downtimes_of_host",
-    #    "downtimes_of_service",
-    # ],
+    tables=["downtime"],
+    is_shortcut=True,
+    is_suggested=True,
     render=command_remove_downtime_render,
     action=command_remove_downtime_action,
 )

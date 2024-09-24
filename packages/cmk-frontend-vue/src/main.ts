@@ -16,6 +16,7 @@ import Table from './views/CmkTable.vue'
 import QuickSetup from './quick-setup/QuickSetupApp.vue'
 import NotificationOverview from './notification/NotificationOverviewApp.vue'
 import { FormApp } from '@/form'
+import NotificationParametersOverviewApp from '@/notification/NotificationParametersOverviewApp.vue'
 
 function setupVue() {
   document
@@ -74,6 +75,12 @@ function setupVue() {
             notification_stats: appData.notification_stats,
             core_stats: appData.core_stats,
             rule_sections: appData.rule_sections
+          })
+          break
+        }
+        case 'notification_parameters_overview': {
+          app = createApp(NotificationParametersOverviewApp, {
+            notification_parameters: appData.notification_parameters
           })
           break
         }

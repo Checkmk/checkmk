@@ -451,7 +451,13 @@ class Notifications:
 
 
 @dataclass(kw_only=True)
+class NotificationParametersOverview:
+    parameters: list[RuleSection]
+
+
+@dataclass(kw_only=True)
 class VueFormspecComponents:
     components: Optional[Components] = None
     validation_message: Optional[ValidationMessage] = None
     notifications: Optional[Notifications] = None
+    notifications_parameters_overview: Optional[NotificationParametersOverview] = None

@@ -27,6 +27,19 @@
             },
             "required": ["notification_stats", "core_stats", "rule_sections"]
         },
+        "notification_parameters_overview": {
+            "type": "object",
+            "properties": {
+                "parameters": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#/$defs/rule_section"
+                    }
+                }
+            },
+            "required": ["parameters"]
+        },
         "fallback_warning": {
             "type": "object",
             "properties": {

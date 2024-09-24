@@ -14,6 +14,10 @@
         "notifications": {
             "type": "object",
             "$ref": "vue_formspec/notifications.json#/$defs/notifications"
+        },
+        "notifications_parameters_overview": {
+            "type": "object",
+            "$ref": "vue_formspec/notifications.json#/$defs/notification_parameters_overview"
         }
     }
 }

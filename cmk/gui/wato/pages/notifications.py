@@ -7,7 +7,7 @@
 import abc
 import json
 import time
-from collections.abc import Collection, Iterator, Mapping
+from collections.abc import Collection, Generator, Iterator, Mapping
 from copy import deepcopy
 from dataclasses import asdict
 from datetime import datetime
@@ -22,6 +22,7 @@ from cmk.utils import paths
 from cmk.utils.labels import Labels
 from cmk.utils.notify import NotificationContext
 from cmk.utils.notify_types import EventRule, is_always_bulk, NotifyAnalysisInfo
+from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.statename import host_state_name, service_state_name
 from cmk.utils.user import UserId
 
@@ -37,6 +38,7 @@ from cmk.gui.form_specs.vue.shared_type_defs import (
     CoreStatsI18n,
     FallbackWarning,
     FallbackWarningI18n,
+    NotificationParametersOverview,
     Notifications,
     NotificationStats,
     NotificationStatsI18n,
@@ -128,7 +130,7 @@ from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.notifications import load_user_notification_rules, NotificationRuleConfigFile
-from cmk.gui.watolib.rulesets import AllRulesets
+from cmk.gui.watolib.rulesets import AllRulesets, Ruleset
 from cmk.gui.watolib.sample_config import get_default_notification_rule, new_notification_rule_id
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.user_scripts import load_notification_scripts
@@ -147,6 +149,7 @@ def register(mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeEditNotificationRule)
     mode_registry.register(ModeEditUserNotificationRule)
     mode_registry.register(ModeEditPersonalNotificationRule)
+    mode_registry.register(ModeNotificationParametersOverview)
 
 
 class ABCNotificationsMode(ABCEventsMode):
@@ -602,6 +605,17 @@ class ModeNotifications(ABCNotificationsMode):
                                     icon_name="new",
                                     item=make_simple_link(
                                         folder_preserving_link([("mode", "notification_rule")])
+                                    ),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                                PageMenuEntry(
+                                    title=_("Parameters for notification methods"),
+                                    icon_name="clipboard",
+                                    item=make_simple_link(
+                                        folder_preserving_link(
+                                            [("mode", ModeNotificationParametersOverview.name())]
+                                        )
                                     ),
                                     is_shortcut=True,
                                     is_suggested=True,
@@ -2891,3 +2905,105 @@ class ModeEditPersonalNotificationRule(ABCEditUserNotificationRuleMode):
         if self._new:
             return _("Create new notification rule")
         return _("Edit notification rule %d") % self._edit_nr
+
+
+class ModeNotificationParametersOverview(WatoMode):
+    @classmethod
+    def name(cls) -> str:
+        return "notification_parameters_overview"
+
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
+        return ["notifications"]
+
+    @classmethod
+    def parent_mode(cls) -> type[WatoMode] | None:
+        return ModeNotifications
+
+    def title(self) -> str:
+        return _("Parameters for notification methods")
+
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="notification_rules",
+                    title=_("Parameters for notification methods"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Add"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Define parameters for HTML mail"),
+                                    icon_name="new",
+                                    item=make_simple_link(
+                                        folder_preserving_link(
+                                            [
+                                                ("mode", "new_rule"),
+                                                (
+                                                    "varname",
+                                                    RuleGroup.NotificationParameters("mail"),
+                                                ),
+                                                ("back_mode", self.name()),
+                                                ("rule_folder", ""),
+                                            ]
+                                        )
+                                    ),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[],  # TODO: add related topics here
+                ),
+            ],
+            breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
+        )
+        menu.add_doc_reference(_("Notifications"), DocReference.NOTIFICATIONS)
+        return menu
+
+    def page(self) -> None:
+        html.vue_app(
+            app_name="notification_parameters_overview",
+            data=asdict(self._get_notification_parameters_data()),
+        )
+
+    def _get_parameter_rulesets(self, all_rulesets: AllRulesets) -> Generator[Rule]:
+        for script_name, title in notification_script_choices():
+            if not all_rulesets.exists(RuleGroup.NotificationParameters(script_name)):
+                continue
+            ruleset: Ruleset = all_rulesets.get(RuleGroup.NotificationParameters(script_name))
+            yield Rule(
+                i18n=title,
+                count=f"{len(ruleset.get_rules())}",
+                link=makeuri(
+                    request,
+                    [
+                        ("mode", "edit_ruleset"),
+                        ("varname", RuleGroup.NotificationParameters(script_name)),
+                        ("back_mode", self.name()),
+                    ],
+                ),
+            )
+
+    def _get_notification_parameters_data(self) -> NotificationParametersOverview:
+        all_rulesets = AllRulesets.load_all_rulesets()
+        return NotificationParametersOverview(
+            parameters=[
+                RuleSection(
+                    i18n=_("Parameters for"),
+                    topics=[
+                        RuleTopic(
+                            i18n=None,
+                            rules=list(self._get_parameter_rulesets(all_rulesets)),
+                        )
+                    ],
+                )
+            ]
+        )

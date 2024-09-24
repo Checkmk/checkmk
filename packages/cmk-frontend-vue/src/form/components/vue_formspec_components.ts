@@ -178,6 +178,7 @@ export interface VueFormspecComponents {
   components?: Components;
   validation_message?: ValidationMessage;
   notifications?: Notifications;
+  notifications_parameters_overview?: NotificationParametersOverview;
 }
 export interface FormSpec {
   type: string;
@@ -319,4 +320,11 @@ export interface Rule {
   i18n: string;
   count: string;
   link: string;
+}
+export interface NotificationParametersOverview {
+  parameters: RuleSection1[];
+}
+export interface RuleSection1 {
+  i18n: string;
+  topics: RuleTopic[];
 }

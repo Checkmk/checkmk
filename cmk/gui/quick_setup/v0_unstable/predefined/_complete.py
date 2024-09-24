@@ -51,6 +51,8 @@ from cmk.gui.watolib.services import (
     perform_fix_all,
 )
 
+from cmk.rulesets.v1.form_specs import Dictionary
+
 
 def _normalize_folder_path_str(folder_path: str) -> str:
     r"""Normalizes a folder representation
@@ -189,22 +191,26 @@ def create_rule(
 
 def create_and_save_special_agent_bundle(
     special_agent_name: str,
+    parameter_form: Dictionary,
     all_stages_form_data: ParsedFormData,
 ) -> str:
     return _create_and_save_special_agent_bundle(
         special_agent_name=special_agent_name,
         all_stages_form_data=all_stages_form_data,
         collect_params=_collect_params_with_defaults_from_form_data,
+        parameter_form=parameter_form,
     )
 
 
 def create_and_save_special_agent_bundle_custom_collect_params(
     special_agent_name: str,
+    parameter_form: Dictionary,
     all_stages_form_data: ParsedFormData,
-    custom_collect_params: Callable[[ParsedFormData, str], Mapping[str, object]],
+    custom_collect_params: Callable[[ParsedFormData, Dictionary], Mapping[str, object]],
 ) -> str:
     return _create_and_save_special_agent_bundle(
         special_agent_name=special_agent_name,
+        parameter_form=parameter_form,
         all_stages_form_data=all_stages_form_data,
         collect_params=custom_collect_params,
     )
@@ -212,8 +218,9 @@ def create_and_save_special_agent_bundle_custom_collect_params(
 
 def _create_and_save_special_agent_bundle(
     special_agent_name: str,
+    parameter_form: Dictionary,
     all_stages_form_data: ParsedFormData,
-    collect_params: Callable[[ParsedFormData, str], Mapping[str, object]],
+    collect_params: Callable[[ParsedFormData, Dictionary], Mapping[str, object]],
 ) -> str:
     rulespec_name = RuleGroup.SpecialAgents(special_agent_name)
     bundle_id = _find_unique_id(form_data=all_stages_form_data, target_key=UniqueBundleIDStr)
@@ -225,8 +232,8 @@ def _create_and_save_special_agent_bundle(
 
     site_selection = _find_unique_id(all_stages_form_data, "site_selection")
     site_id = SiteId(site_selection) if site_selection else omd_site()
-    params = collect_params(all_stages_form_data, rulespec_name)
-    passwords = _collect_passwords_from_form_data(all_stages_form_data, rulespec_name)
+    params = collect_params(all_stages_form_data, parameter_form)
+    passwords = _collect_passwords_from_form_data(all_stages_form_data, parameter_form)
 
     # TODO: DCD still to be implemented cmk-18341
 

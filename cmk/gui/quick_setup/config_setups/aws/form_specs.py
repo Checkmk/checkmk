@@ -5,11 +5,7 @@
 
 from collections.abc import Mapping, Sequence
 
-from cmk.ccc.version import Edition
-
-from cmk.gui.form_specs.vue.visitors._registry import form_spec_registry
 from cmk.gui.quick_setup.config_setups.aws.ruleset_helper import formspec_aws_tags
-from cmk.gui.utils.rule_specs.loader import LoadedRuleSpec
 
 from cmk.plugins.aws.lib import aws_region_to_monitor  # pylint: disable=cmk-module-layer-violation
 
@@ -40,7 +36,6 @@ from cmk.rulesets.v1.form_specs import (
     String,
     validators,
 )
-from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
 
 def _global_services() -> Sequence[MultipleChoiceElement]:
@@ -271,7 +266,7 @@ def quick_setup_advanced() -> Mapping[str, DictElement]:
     }
 
 
-def _formspec():
+def quick_setup_aws_form_spec():
     return Dictionary(
         title=Title("Amazon Web Services (AWS)"),
         elements={
@@ -281,15 +276,3 @@ def _formspec():
             **quick_setup_advanced(),
         },
     )
-
-
-# Add the form spec to the registry but don't register the rule spec.
-form_spec_registry["aws"] = LoadedRuleSpec(
-    rule_spec=SpecialAgent(
-        name="aws",
-        title=Title("Amazon Web Services (AWS)"),
-        topic=Topic.CLOUD,
-        parameter_form=_formspec,
-    ),
-    edition_only=Edition.CRE,
-)

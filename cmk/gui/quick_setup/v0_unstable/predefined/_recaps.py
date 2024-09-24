@@ -36,6 +36,8 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecRecap, ListOfWidgets, Text, Widget
 from cmk.gui.watolib.check_mk_automations import special_agent_discovery_preview
 
+from cmk.rulesets.v1.form_specs import Dictionary
+
 
 def recaps_form_spec(
     quick_setup_id: QuickSetupId,
@@ -66,12 +68,14 @@ def recaps_form_spec(
 
 def recap_service_discovery_custom_collect_params(
     rulespec_name: str,
+    parameter_form: Dictionary,
     services_of_interest: Sequence[ServiceInterest],
-    custom_collect_params: Callable[[ParsedFormData, str], Mapping[str, object]],
+    custom_collect_params: Callable[[ParsedFormData, Dictionary], Mapping[str, object]],
 ) -> CallableRecap:
     return partial(
         _recap_service_discovery,
         rulespec_name,
+        parameter_form,
         services_of_interest,
         custom_collect_params,
     )
@@ -79,11 +83,13 @@ def recap_service_discovery_custom_collect_params(
 
 def recap_service_discovery(
     rulespec_name: str,
+    parameter_form: Dictionary,
     services_of_interest: Sequence[ServiceInterest],
 ) -> CallableRecap:
     return partial(
         _recap_service_discovery,
         rulespec_name,
+        parameter_form,
         services_of_interest,
         _collect_params_with_defaults_from_form_data,
     )
@@ -91,14 +97,15 @@ def recap_service_discovery(
 
 def _recap_service_discovery(
     rulespec_name: str,
+    parameter_form: Dictionary,
     services_of_interest: Sequence[ServiceInterest],
-    collect_params: Callable[[ParsedFormData, str], Mapping[str, object]],
+    collect_params: Callable[[ParsedFormData, Dictionary], Mapping[str, object]],
     _quick_setup_id: QuickSetupId,
     _stage_index: StageIndex,
     all_stages_form_data: ParsedFormData,
 ) -> Sequence[Widget]:
-    params = collect_params(all_stages_form_data, rulespec_name)
-    passwords = _collect_passwords_from_form_data(all_stages_form_data, rulespec_name)
+    params = collect_params(all_stages_form_data, parameter_form)
+    passwords = _collect_passwords_from_form_data(all_stages_form_data, parameter_form)
     site_id = _find_unique_id(all_stages_form_data, "site_selection")
     host_name = _find_unique_id(all_stages_form_data, "host_name")
 

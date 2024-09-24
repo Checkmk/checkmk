@@ -13,6 +13,7 @@ from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
 from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout
 from cmk.gui.quick_setup.config_setups.aws import form_specs as aws
 from cmk.gui.quick_setup.config_setups.aws import ruleset_helper
+from cmk.gui.quick_setup.config_setups.aws.form_specs import quick_setup_aws_form_spec
 from cmk.gui.quick_setup.v0_unstable.predefined import (
     collect_params_from_form_data,
     complete,
@@ -36,6 +37,7 @@ from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
+    Dictionary,
     InputHint,
     SingleChoice,
     SingleChoiceElement,
@@ -187,13 +189,16 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
         configure_components=[],
         custom_validators=[
             qs_validators.validate_test_connection_custom_collect_params(
-                RuleGroup.SpecialAgents("aws"), custom_collect_params=aws_collect_params
+                rulespec_name=RuleGroup.SpecialAgents("aws"),
+                parameter_form=quick_setup_aws_form_spec(),
+                custom_collect_params=aws_collect_params,
             )
         ],
         recap=[
             recaps.recap_service_discovery_custom_collect_params(
-                RuleGroup.SpecialAgents("aws"),
-                [ServiceInterest(".*", "services")],
+                rulespec_name=RuleGroup.SpecialAgents("aws"),
+                parameter_form=quick_setup_aws_form_spec(),
+                services_of_interest=[ServiceInterest(".*", "services")],
                 custom_collect_params=aws_collect_params,
             )
         ],
@@ -204,15 +209,18 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
 def save_action(all_stages_form_data: ParsedFormData) -> str:
     return complete.create_and_save_special_agent_bundle_custom_collect_params(
         special_agent_name="aws",
+        parameter_form=quick_setup_aws_form_spec(),
         all_stages_form_data=all_stages_form_data,
         custom_collect_params=aws_collect_params,
     )
 
 
 def aws_collect_params(
-    all_stages_form_data: ParsedFormData, rulespec_name: str
+    all_stages_form_data: ParsedFormData, parameter_form: Dictionary
 ) -> Mapping[str, object]:
-    return aws_transform_to_disk(collect_params_from_form_data(all_stages_form_data, rulespec_name))
+    return aws_transform_to_disk(
+        collect_params_from_form_data(all_stages_form_data, parameter_form)
+    )
 
 
 def _migrate_aws_service(service: str) -> object:

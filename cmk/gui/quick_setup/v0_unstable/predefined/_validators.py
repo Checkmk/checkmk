@@ -27,28 +27,38 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
 from cmk.gui.watolib.check_mk_automations import diag_special_agent
 from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
 
+from cmk.rulesets.v1.form_specs import Dictionary
+
 
 def validate_test_connection_custom_collect_params(
-    rulespec_name: str, custom_collect_params: Callable[[ParsedFormData, str], Mapping[str, object]]
+    rulespec_name: str,
+    parameter_form: Dictionary,
+    custom_collect_params: Callable[[ParsedFormData, Dictionary], Mapping[str, object]],
 ) -> CallableValidator:
     return partial(
         _validate_test_connection,
         rulespec_name,
+        parameter_form,
         custom_collect_params,
     )
 
 
-def validate_test_connection(rulespec_name: str) -> CallableValidator:
+def validate_test_connection(
+    rulespec_name: str,
+    parameter_form: Dictionary,
+) -> CallableValidator:
     return partial(
         _validate_test_connection,
         rulespec_name,
+        parameter_form,
         _collect_params_with_defaults_from_form_data,
     )
 
 
 def _validate_test_connection(
     rulespec_name: str,
-    collect_params: Callable[[ParsedFormData, str], Mapping[str, object]],
+    parameter_form: Dictionary,
+    collect_params: Callable[[ParsedFormData, Dictionary], Mapping[str, object]],
     _quick_setup_id: QuickSetupId,
     _stage_index: StageIndex,
     all_stages_form_data: ParsedFormData,
@@ -56,8 +66,8 @@ def _validate_test_connection(
     general_errors: GeneralStageErrors = []
     site_id = _find_unique_id(all_stages_form_data, "site_selection")
     host_name = _find_unique_id(all_stages_form_data, "host_name")
-    params = collect_params(all_stages_form_data, rulespec_name)
-    passwords = _collect_passwords_from_form_data(all_stages_form_data, rulespec_name)
+    params = collect_params(all_stages_form_data, parameter_form)
+    passwords = _collect_passwords_from_form_data(all_stages_form_data, parameter_form)
     output = diag_special_agent(
         SiteId(site_id) if site_id else omd_site(),
         _create_diag_special_agent_input(

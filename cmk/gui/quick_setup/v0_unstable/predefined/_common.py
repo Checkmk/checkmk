@@ -15,7 +15,6 @@ from cmk.checkengine.discovery import CheckPreviewEntry
 
 from cmk.gui.form_specs.vue.form_spec_visitor import serialize_data_for_frontend
 from cmk.gui.form_specs.vue.visitors import DataOrigin
-from cmk.gui.form_specs.vue.visitors._registry import form_spec_registry
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupStage
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, ServiceInterest
 from cmk.gui.quick_setup.v0_unstable.widgets import (
@@ -31,19 +30,17 @@ from cmk.rulesets.v1.form_specs import Dictionary, FormSpec, Password
 
 
 def _collect_params_with_defaults_from_form_data(
-    all_stages_form_data: ParsedFormData, rulespec_name: str
+    all_stages_form_data: ParsedFormData, parameter_form: Dictionary
 ) -> Mapping[str, object]:
     return _add_defaults_to_form_data(
-        _get_rule_defaults(rulespec_name),
-        _collect_params_from_form_data(all_stages_form_data, rulespec_name),
+        _get_rule_defaults(parameter_form),
+        _collect_params_from_form_data(all_stages_form_data, parameter_form),
     )
 
 
 def _collect_passwords_from_form_data(
-    all_stages_form_data: ParsedFormData, rulespec_name: str
+    all_stages_form_data: ParsedFormData, parameter_form: Dictionary
 ) -> Mapping[str, str]:
-    if (parameter_form := _get_parameter_form_from_rulespec_name(rulespec_name)) is None:
-        return {}
     possible_expected_password_keys = [
         key
         for key in parameter_form.elements.keys()
@@ -115,16 +112,10 @@ def _add_defaults_to_form_data(
     }
 
 
-def _get_parameter_form_from_rulespec_name(rulespec_name: str) -> Dictionary | None:
-    _parameter_form = form_spec_registry[rulespec_name.split(":")[1]].rule_spec.parameter_form
-    return _parameter_form() if callable(_parameter_form) else _parameter_form
-
-
 def _collect_params_from_form_data(
-    all_stages_form_data: ParsedFormData, rulespec_name: str
+    all_stages_form_data: ParsedFormData,
+    parameter_form: Dictionary,
 ) -> Mapping[str, object]:
-    if (parameter_form := _get_parameter_form_from_rulespec_name(rulespec_name)) is None:
-        return {}
     possible_expected_keys = parameter_form.elements.keys()
 
     return {
@@ -136,10 +127,7 @@ def _collect_params_from_form_data(
     }
 
 
-def _get_rule_defaults(rulespec_name: str) -> dict[str, object]:
-    if (parameter_form := _get_parameter_form_from_rulespec_name(rulespec_name)) is None:
-        return {}
-
+def _get_rule_defaults(parameter_form: Dictionary) -> dict[str, object]:
     return serialize_data_for_frontend(
         form_spec=parameter_form,
         field_id="rule_id",

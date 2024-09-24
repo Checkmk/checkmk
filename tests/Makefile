@@ -393,7 +393,9 @@ test-unit-doctests: prepare-protobuf-files
 		cmk/
 
 test-unit: prepare-protobuf-files test-unit-doctests
-	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
+	cd .. \
+	    && ./scripts/run-bazel.sh test //tests/unit:all \
+	    && TZ=$(RANDOM_TZ) $(PYTEST) \
 		-T unit \
 		--config-file=pyproject.toml \
 		--override-ini="pythonpath=." \

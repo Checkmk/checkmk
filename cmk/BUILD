@@ -160,7 +160,10 @@ py_library(
         exclude = CRE_PY + CCE_PY + CEE_PY + CME_PY + CSE_PY,
     ),
     imports = [".."],
-    visibility = ["//visibility:private"],
+    visibility = [
+        # for conftest
+        "//tests:__subpackages__",
+    ],
     deps = [
         "//packages/cmk-agent-based",
         "//packages/cmk-agent-receiver",
@@ -182,6 +185,7 @@ py_library(
     name = "lib_cmk_cre",
     srcs = CRE_PY,
     imports = [".."],
+    visibility = ["//tests:__subpackages__"],
     deps = [
         "lib_cmk",
     ],
@@ -191,6 +195,7 @@ py_library(
     name = "lib_cmk_" + edition,
     srcs = srcs,
     imports = [".."],
+    visibility = ["//tests:__subpackages__"],
     deps = [
         "lib_cmk",
         "//non-free/cmc-protocols/protocols:py_config_proto",

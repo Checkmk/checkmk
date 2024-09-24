@@ -16,7 +16,10 @@ py_library(
     name = "py_livestatus",
     srcs = ["livestatus/__init__.py"],
     imports = ["."],
-    visibility = ["//cmk:__pkg__"],
+    visibility = [
+        "//cmk:__pkg__",
+        "//tests:__subpackages__",
+    ],
     deps = [":cmk-livestatus-client"],
 )
 

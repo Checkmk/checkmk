@@ -79,7 +79,7 @@ GCC_VERSION	       := ${GCC_VERSION_MAJOR}.${GCC_VERSION_MINOR}.${GCC_VERSION_PA
 # `PY_SUBVER          ?= 7` with 
 # `PY_SUBVER          ?= $(PYTHON_VERSION_PATCH)`
 # again
-PYTHON_VERSION  := 3.11.5
+PYTHON_VERSION  := 3.11.10
 
 # convenience stuff derived from PYTHON_VERSION
 PY_ARRAY	       := $(subst ., ,$(PYTHON_VERSION))

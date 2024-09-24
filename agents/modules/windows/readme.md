@@ -1,10 +1,10 @@
 # Windows Modules to deploy wint Windows Agent 2.0 and later
 
-## Python 3.11.8 & Python 3.4.4
+## Python 3.11.10 & Python 3.4.4
 
 ### Source
 
-PYTHON 3.11.8, provided as source tarball by standard Checkmk development process
+PYTHON 3.11.10, provided as source tarball by standard Checkmk development process
 PYTHON 3.4.4, downloaded as MSI installer from the python.org
 
 ### Changing or Updating the Python
@@ -66,7 +66,7 @@ This procedure may quite annoying, you have to check next points:
 #### Execution local
 
 ##### Building
-make build PY_VER=3.9 PY_SUBVER=8
+make build PY_VER=3.9 PY_SUBVER=10
 make python_344 PY_VER=3.4 PY_SUBVER=4
 
 ##### Testing
@@ -81,7 +81,7 @@ build_the_module cached
 
 In a turn the script makes two calls:
 build_the_cached artefact_dir credentials url 3.4 4
-build_the_cached artefact_dir credentials url 3.9 8
+build_the_cached artefact_dir credentials url 3.9 10
 
 #### Caching
 

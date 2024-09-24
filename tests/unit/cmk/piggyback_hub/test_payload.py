@@ -5,7 +5,6 @@
 
 import logging
 from collections.abc import Sequence
-from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
@@ -21,10 +20,10 @@ from cmk.piggyback import (
     store_last_distribution_time,
     store_piggyback_raw_data,
 )
-from cmk.piggyback_hub.config import PiggybackHubConfig, save_config, Target
+from cmk.piggyback_hub.config import PiggybackHubConfig, Target
 from cmk.piggyback_hub.payload import (
+    _filter_piggyback_hub_targets,
     _get_piggyback_raw_data_to_send,
-    _load_piggyback_targets,
     _send_message,
     PiggybackPayload,
     save_payload_on_message,
@@ -130,11 +129,6 @@ def test__get_piggyback_raw_data_to_send(
     assert actual_payload == expected_result
 
 
-def test__load_piggyback_targets_missing_config_file(tmpdir: Path) -> None:
-    actual_targets = _load_piggyback_targets(tmpdir / "piggyback_hub.conf", "site1")
-    assert not actual_targets
-
-
 @pytest.mark.parametrize(
     "config, expected_targets",
     [
@@ -155,8 +149,7 @@ def test__load_piggyback_targets_missing_config_file(tmpdir: Path) -> None:
         ),
     ],
 )
-def test__load_piggyback_targets(
-    tmp_path: Path, config: PiggybackHubConfig, expected_targets: Sequence[Target]
+def test__filter_piggyback_hub_targets(
+    config: PiggybackHubConfig, expected_targets: Sequence[Target]
 ) -> None:
-    save_config(tmp_path, config)
-    assert _load_piggyback_targets(tmp_path, "site1") == expected_targets
+    assert _filter_piggyback_hub_targets(config, "site1") == expected_targets

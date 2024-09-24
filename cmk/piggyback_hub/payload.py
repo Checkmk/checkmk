@@ -23,7 +23,7 @@ from cmk.piggyback import (
     store_last_distribution_time,
     store_piggyback_raw_data,
 )
-from cmk.piggyback_hub.config import load_config, Target
+from cmk.piggyback_hub.config import load_config, PiggybackHubConfig, Target
 from cmk.piggyback_hub.paths import create_paths
 from cmk.piggyback_hub.utils import SignalException
 
@@ -59,8 +59,10 @@ def save_payload_on_message(
     return _on_message
 
 
-def _load_piggyback_targets(config_path: Path, current_site_id: str) -> Sequence[Target]:
-    return [t for t in load_config(config_path).targets if t.site_id != current_site_id]
+def _filter_piggyback_hub_targets(
+    config: PiggybackHubConfig, current_site_id: str
+) -> Sequence[Target]:
+    return [t for t in config.targets if t.site_id != current_site_id]
 
 
 def _is_message_already_distributed(meta: PiggybackMetaData, omd_root: Path) -> bool:
@@ -121,7 +123,9 @@ class SendingPayloadThread(threading.Thread):
                 channel = conn.channel(PiggybackPayload)
 
                 while True:
-                    for target in _load_piggyback_targets(self.config_path, self.omd_root.name):
+                    for target in _filter_piggyback_hub_targets(
+                        load_config(self.config_path), self.omd_root.name
+                    ):
                         for piggyback_message in _get_piggyback_raw_data_to_send(
                             target.host_name, self.omd_root
                         ):

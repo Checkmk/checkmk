@@ -12,11 +12,13 @@ defineProps<FormSpecWidgetProps>()
 
 <template>
   <table class="qs-formspec-recap-widget">
-    <tr>
-      <td>
-        <FormReadonly :data="form_spec.data" :spec="form_spec.spec" :backend-validation="[]" />
-      </td>
-    </tr>
+    <tbody>
+      <tr>
+        <td>
+          <FormReadonly :data="form_spec.data" :spec="form_spec.spec" :backend-validation="[]" />
+        </td>
+      </tr>
+    </tbody>
   </table>
 </template>
 

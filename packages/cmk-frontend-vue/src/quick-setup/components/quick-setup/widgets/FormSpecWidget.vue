@@ -30,15 +30,17 @@ watch(internal.value, (newValue) => {
 
 <template>
   <table class="qs-formspec-widget">
-    <tr>
-      <td>
-        <FormEdit
-          v-model:data="internal"
-          :spec="form_spec.spec"
-          :backend-validation="validationErrors"
-        />
-      </td>
-    </tr>
+    <tbody>
+      <tr>
+        <td>
+          <FormEdit
+            v-model:data="internal"
+            :spec="form_spec.spec"
+            :backend-validation="validationErrors"
+          />
+        </td>
+      </tr>
+    </tbody>
   </table>
 </template>
 

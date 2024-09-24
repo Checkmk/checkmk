@@ -5,41 +5,51 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { QuickSetupStageContentSpec, StageData } from './quick_setup_types'
-
-import CompositeWidget from './widgets/CompositeWidget.vue'
-import ErrorBoundary from '@/quick-setup/components/ErrorBoundary.vue'
+import Button from '@/quick-setup/components/IconButton.vue'
+import LoadingIcon from '@/quick-setup/components/LoadingIcon.vue'
 import AlertBox from '@/quick-setup/components/AlertBox.vue'
-import { asStringArray } from '@/quick-setup/utils'
+import type { QuickSetupStageContent } from './quick_setup_types'
 
-const props = defineProps<QuickSetupStageContentSpec>()
-const emit = defineEmits(['update'])
+const props = defineProps<QuickSetupStageContent>()
 
-const combinedErrors = computed(() => {
-  const errors = [...asStringArray(props?.stage_errors), ...asStringArray(props?.other_errors)]
-  return errors
-})
-
-const updateData = (...args: unknown[]) => emit('update', ...args)
+const isLast = computed(() => props.index == props.numberOfStages - 1)
 </script>
 
 <template>
-  <ErrorBoundary>
-    <CompositeWidget
-      v-if="props.components?.length"
-      :items="props.components"
-      :data="(props.user_input || {}) as StageData"
-      :errors="props?.form_spec_errors || {}"
-      @update="updateData"
-    />
-  </ErrorBoundary>
-  <AlertBox v-if="combinedErrors.length" variant="error">
-    <p v-for="error in combinedErrors" :key="error">{{ error }}</p>
-  </AlertBox>
+  <div>
+    <component :is="content" v-if="content" />
+
+    <AlertBox v-if="errors && errors.length > 0" variant="error">
+      <p v-for="error in errors" :key="error">{{ error }}</p>
+    </AlertBox>
+
+    <div v-if="!loading" class="qs-stage-content__action">
+      <Button
+        v-for="button in buttons"
+        :key="button.label"
+        :label="button.label"
+        :variant="button.variant"
+        @click="button.action"
+      />
+    </div>
+    <div v-else class="qs-stage-content__loading">
+      <LoadingIcon size="lg" />
+      <!-- TODO: move these texts to the backend to make them translatable (CMK-19020) -->
+      <span v-if="isLast">This process may take several minutes, please wait...</span>
+      <span v-else>Please wait...</span>
+    </div>
+  </div>
 </template>
 
 <style scoped>
-p {
-  margin: 0;
+.qs-stage-content__action {
+  padding-top: var(--spacing);
+  position: relative;
+}
+
+.qs-stage-content__loading {
+  display: flex;
+  align-items: center;
+  padding-top: 12px;
 }
 </style>

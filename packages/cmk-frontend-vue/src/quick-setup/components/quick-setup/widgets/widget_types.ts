@@ -4,7 +4,6 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { FormSpec } from '@/form/components/vue_formspec_components'
-import { type StageData } from '@/quick-setup/components/quick-setup/quick_setup_types'
 import type { ValidationMessages } from '@/form'
 
 export interface FormSpecRecapWidgetProps {
@@ -85,3 +84,9 @@ type SingleComponentSpec = SingleWidgetSpec & { widget_type: SingleWigetType }
 type CompositeComponentSpec = CompositeWidgetSpec & { widget_type: CompositeWidgetType }
 
 export type ComponentSpec = SingleComponentSpec | CompositeComponentSpec
+
+/** @type {StageData} - User's data input, stored as {'field_name': value} */
+export type StageData = Record<string, object>
+
+/** @type {AllValidationMessages} - Formspec errors, stored as {'field_name': error} */
+export type AllValidationMessages = Record<string, ValidationMessages>

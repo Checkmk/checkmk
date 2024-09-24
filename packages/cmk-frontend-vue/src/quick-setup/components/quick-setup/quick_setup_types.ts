@@ -3,68 +3,87 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { ComponentSpec } from './widgets/widget_types'
-import type { ValidationMessages } from '@/form'
+import type { VNode } from 'vue'
+import { type ButtonVariants } from '@/quick-setup/components/IconButton.vue'
 
-//Quick setup
-export interface QuickSetupSpec {
-  /** @property {string} quick_setup_id - The quick setup id  */
-  quick_setup_id: string
-}
-
-//Quick setup stage
-export type StageData = Record<string, object>
-type AllValidationMessages = Record<string, ValidationMessages>
-
-export interface QuickSetupStageContentSpec {
-  /** @property {ComponentSpec[]} components - List of widgets to render in current stage */
-  components?: ComponentSpec[]
-
-  /** @property {unknown} user_input - Input from the user */
-  user_input?: unknown
-
-  /** @property {AllValidationMessages} form_spec_errors - Object containing the validation errors of all FormSpecWidgets from current stage*/
-  form_spec_errors?: AllValidationMessages
-
-  /** @property {string[] | sttring} stage_errors - List of validation errors from the current stage */
-  stage_errors?: string[] | string
-
-  /** @property {string[] | string} other_errors - List of validation errors from the current stage */
-  other_errors?: string[] | string
-}
-export interface QuickSetupStageSpec extends QuickSetupStageContentSpec {
-  /** @property {string} title - String to be displayed next to the stage number */
-  title: string
-
-  /** @property {string} sub_title - String to be displayed below the title in current stage */
-  sub_title?: string | null
-
-  /** @property {string} next_button_label - Label for the "go to the next stage" button */
-  next_button_label?: string | null
-
-  /** @property {ComponentSpec[]} recap - List of widgets to render in completed stages*/
-  recap?: ComponentSpec[]
-}
-
-export interface QuickSetupStageWithIndexSpec {
-  /**@property {number} index - The index of the current stage */
-  index: number
-
-  /**@property {number} numberOfStages - Total stages count */
-  numberOfStages: number
-
-  /**@property {number} selectedStage - The selected stage's index  */
-  selectedStage: number
-
-  /** @property {boolean} loading - A flag to indicate if the quick-setup is performing a request */
+export interface QuickSetupProps {
+  /** @property {boolean} loading - when true, it hides the current stage's buttons */
   loading: boolean
 
-  /** @property {QuickSetupStageSpec} spec - Components, titles, subtitles, text, error messages, data, etc of current stage */
-  spec: QuickSetupStageSpec
+  /** @property {boolean} currentStage - Currently selected stage */
+  currentStage: number
 
-  /** @property {string[] | string} other_errors - Data of the current stage */
-  other_errors?: string[] | string
+  /** @property {QuickSetupStageSpec[]} - List of stages */
+  regularStages: QuickSetupStageSpec[]
 
-  /** @property {string} next_button_label - Label for the "save" button */
-  save_button_label: string
+  /** @property {QuickSetupSaveStageSpec} - This is the last stage, displayed without title, subtitle, or stage number */
+  saveStage?: QuickSetupSaveStageSpec | null
 }
+
+/**
+ * Specs for stages properties
+ */
+
+export interface QuickSetupSaveStageSpec {
+  /** @property {Vnode | null} content - Component to be displayed as last stage content */
+  content?: VnodeOrNull
+
+  /** @property {string[]} errors - List of errors (General + stage validation) */
+  errors: Readonly<string[]>
+
+  /** @property {StageButtonSpec} - List of butons to be rendered at the bottom of the stage */
+  buttons: Readonly<StageButtonSpec[]>
+}
+
+export interface QuickSetupStageSpec extends QuickSetupSaveStageSpec {
+  /** @property {string} title - Title of the stage */
+  title: string
+
+  /** @property {string | null | undefined} sub_title - Subtitle of the stage */
+  sub_title?: string | null
+
+  /** @property {Vnode | null | undefined} recapContent - Component to be displayed when the stage is completed */
+  recapContent?: VnodeOrNull
+}
+
+/**
+ * Stage and Save Stage properties
+ */
+interface QuickSetupSaveAndStageContentProps extends QuickSetupSaveStageSpec {
+  /** @property {number} index - Stage index  */
+  index: number
+
+  /** @property {number} numberOfStages - How many stages are in total */
+  numberOfStages: number
+
+  /** @property {bolean} loading - When true, the buttons of the stage are hidden */
+  loading: boolean
+}
+
+export interface QuickSetupSaveStageProps extends QuickSetupSaveAndStageContentProps {
+  /** @property {number} currentStage - Currently selected stage */
+  currentStage: number
+}
+
+export interface QuickSetupStageProps extends QuickSetupStageSpec, QuickSetupSaveStageProps {}
+
+/**
+ * Stage Content
+ */
+export interface StageButtonSpec {
+  /** @property {string} label - Button's caption */
+  label: string
+
+  /** @property {ButtonVariants['variant']} variant - type of button */
+  variant: ButtonVariants['variant']
+
+  /** @property { () => void } action - Callback to be called on click */
+  action: () => void
+}
+
+export interface QuickSetupStageContent extends QuickSetupSaveAndStageContentProps {
+  /** @property {Vnode | null} content - Element to be rendered as stage's content */
+  content: VnodeOrNull
+}
+
+export type VnodeOrNull = Readonly<VNode> | null

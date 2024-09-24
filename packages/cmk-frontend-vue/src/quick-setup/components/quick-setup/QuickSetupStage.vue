@@ -9,80 +9,42 @@ import { Collapsible, CollapsibleContent } from '@/quick-setup/components/ui/col
 import { Label } from '@/quick-setup/components/ui/label'
 
 import QuickSetupStageContent from './QuickSetupStageContent.vue'
-import CompositeWidget from './widgets/CompositeWidget.vue'
-import Button from '@/quick-setup/components/IconButton.vue'
-import LoadingIcon from '@/quick-setup/components/LoadingIcon.vue'
 import ErrorBoundary from '@/quick-setup/components/ErrorBoundary.vue'
 
-import { type QuickSetupStageWithIndexSpec, type StageData } from './quick_setup_types'
+import type { QuickSetupStageProps } from './quick_setup_types'
 
-const emit = defineEmits(['prevStage', 'nextStage', 'save', 'update'])
-const props = defineProps<QuickSetupStageWithIndexSpec>()
+const props = defineProps<QuickSetupStageProps>()
 
-const isFirst = computed(() => props.index == 0)
-const isCompleted = computed(() => props.index < props.selectedStage)
-const isLast = computed(() => props.index == props.numberOfStages - 1)
-
-let userInput: StageData = (props?.spec.user_input as StageData) || {}
-
-const updateData = (id: string, value: object) => {
-  userInput[id] = value
-  emit('update', props.index, userInput)
-}
+const isSelectedStage = computed(() => props.index == props.currentStage)
+const isCompleted = computed(() => props.index < props.currentStage)
 </script>
 
 <template>
   <li
     class="qs-stage"
     :class="{
-      active: props.index == props.selectedStage,
+      active: isSelectedStage,
       complete: isCompleted
     }"
   >
     <div class="qs-stage__content">
-      <Label variant="title">{{ props.spec.title }}</Label>
-      <Label v-if="!isCompleted && props.spec.sub_title" variant="subtitle">{{
-        props.spec.sub_title
-      }}</Label>
+      <Label variant="title">{{ title }}</Label>
+      <Label v-if="!isCompleted && sub_title" variant="subtitle">{{ sub_title }}</Label>
 
-      <ErrorBoundary>
-        <CompositeWidget v-if="isCompleted" :items="props.spec.recap || []" />
+      <ErrorBoundary v-if="isCompleted && recapContent">
+        <component :is="recapContent" />
       </ErrorBoundary>
 
-      <Collapsible :open="props.index == props.selectedStage">
+      <Collapsible :open="isSelectedStage">
         <CollapsibleContent>
-          <div>
-            <QuickSetupStageContent
-              :components="props.spec?.components || []"
-              :form_spec_errors="props.spec?.form_spec_errors || {}"
-              :stage_errors="props.spec?.stage_errors || []"
-              :other_errors="props.other_errors || []"
-              :user_input="userInput"
-              @update="updateData"
-            />
-          </div>
-
-          <div v-if="!loading" class="qs-stage__action">
-            <Button
-              v-if="!isLast"
-              :label="props.spec.next_button_label || 'Next'"
-              variant="next"
-              @click="$emit('nextStage')"
-            />
-            <Button
-              v-if="isLast"
-              :label="props.spec.next_button_label || 'Save'"
-              variant="save"
-              @click="$emit('nextStage')"
-            />
-            <Button v-if="!isFirst" label="Back" variant="prev" @click="$emit('prevStage')" />
-          </div>
-          <div v-else class="qs-stage__loading">
-            <LoadingIcon size="lg" />
-            <!-- TODO: move these texts to the backend to make them translatable (CMK-19020) -->
-            <span v-if="isLast">This process may take several minutes, please wait...</span>
-            <span v-else>Please wait...</span>
-          </div>
+          <QuickSetupStageContent
+            :index="index"
+            :number-of-stages="numberOfStages"
+            :loading="loading"
+            :errors="errors"
+            :buttons="buttons"
+            :content="content || null"
+          />
         </CollapsibleContent>
       </Collapsible>
     </div>

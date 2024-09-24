@@ -212,6 +212,9 @@ class HostCheckTable(Mapping[ServiceID, ConfiguredService]):
     ) -> None:
         self._data = {s.id(): s for s in services}
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(services={list(self._data.values())!r})"
+
     def __getitem__(self, key: ServiceID) -> ConfiguredService:
         return self._data[key]
 

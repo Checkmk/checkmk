@@ -3076,3 +3076,74 @@ def test_boil_down_agent_rules(
     input_rulesets: Mapping[str, Any], expected: Mapping[str, Any]
 ) -> None:
     assert config.boil_down_agent_rules(defaults={}, rulesets=input_rulesets) == expected
+
+
+@pytest.mark.parametrize(
+    ["nodes", "expected"],
+    [
+        pytest.param(
+            [HostName("node1"), HostName("node2")],
+            # Fixme: Enforced should win over discovered, even if discovered is last.
+            config.HostCheckTable(
+                services=[
+                    ConfiguredService(
+                        check_plugin_name=CheckPluginName("check1"),
+                        item="item",
+                        description="Unimplemented check check1 / item",
+                        parameters=TimespecificParameters(()),
+                        discovered_parameters={},
+                        discovered_labels={},
+                        is_enforced=False,
+                    )
+                ]
+            ),
+            id="discovered_last",
+        ),
+        pytest.param(
+            [HostName("node2"), HostName("node1")],
+            config.HostCheckTable(
+                services=[
+                    ConfiguredService(
+                        check_plugin_name=CheckPluginName("check1"),
+                        item="item",
+                        description="Unimplemented check check1 / item",
+                        parameters=TimespecificParameters(()),
+                        discovered_parameters={},
+                        discovered_labels={},
+                        is_enforced=True,
+                    )
+                ]
+            ),
+            id="enforced last",
+        ),
+    ],
+)
+def test_check_table_cluster_merging_enforced_and_discovered(
+    monkeypatch: MonkeyPatch, nodes: Sequence[HostName], expected: config.HostCheckTable
+) -> None:
+    ts = Scenario()
+    ts.add_host(N1 := HostName("node1"))
+    ts.add_host(N2 := HostName("node2"))
+    ts.add_cluster(CN := HostName("cluster"), nodes=nodes)
+    ts.set_ruleset(
+        "clustered_services", [{"id": "01", "condition": {}, "value": True}]
+    )  # cluster everything everywhere
+    ts.set_ruleset_bundle(
+        "static_checks",
+        {
+            "rule_name": [
+                {
+                    "id": "01",
+                    "condition": {"host_name": [str(N1)]},
+                    "value": ("check1", "item", {"origin": "enforced1"}),
+                },
+            ]
+        },
+    )
+    ts.set_autochecks(
+        N2,
+        [AutocheckEntry(CheckPluginName("check1"), "item", {}, {})],
+    )
+    config_cache = ts.apply(monkeypatch)
+
+    assert config_cache.check_table(CN) == expected

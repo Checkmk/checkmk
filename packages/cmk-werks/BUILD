@@ -26,6 +26,11 @@ py_library(
         "cmk/werks/validate.py",
     ],
     visibility = ["//visibility:public"],
+    deps = [
+        requirement("markdown"),
+        requirement("lxml"),
+        requirement("pydantic"),
+    ],
 )
 
 py_pytest_main(
@@ -46,9 +51,6 @@ py_test(
         ":__test__",
         ":cmk-werks",
         requirement("pytest"),
-        requirement("markdown"),
-        requirement("lxml"),
-        requirement("pydantic"),
     ],
 )
 

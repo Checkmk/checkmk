@@ -150,8 +150,10 @@ class RetentionInterval:
     source: Literal["previous", "current"]
 
     @classmethod
-    def from_previous(cls, other: RetentionInterval) -> RetentionInterval:
-        return cls(other.cached_at, other.cache_interval, other.retention_interval, "previous")
+    def from_previous(cls, previous: RetentionInterval) -> RetentionInterval:
+        return cls(
+            previous.cached_at, previous.cache_interval, previous.retention_interval, "previous"
+        )
 
     @classmethod
     def from_config(
@@ -429,7 +431,7 @@ class _MutableAttributes:
     def update(
         self,
         now: int,
-        other: ImmutableAttributes,
+        previous: ImmutableAttributes,
         path: SDPath,
         interval: int,
         choice: _SDRetentionFilterChoice,
@@ -440,10 +442,10 @@ class _MutableAttributes:
         compared_keys = _DictKeys.compare(
             left=set(
                 _get_filtered_dict(
-                    other.pairs,
+                    previous.pairs,
                     _make_retentions_filter_func(
                         filter_func=filter_func,
-                        intervals_by_key=other.retentions,
+                        intervals_by_key=previous.retentions,
                         now=now,
                     ),
                 )
@@ -454,8 +456,8 @@ class _MutableAttributes:
         pairs: dict[SDKey, SDValue] = {}
         retentions: dict[SDKey, RetentionInterval] = {}
         for key in compared_keys.only_left:
-            pairs.setdefault(key, other.pairs[key])
-            retentions[key] = RetentionInterval.from_previous(other.retentions[key])
+            pairs.setdefault(key, previous.pairs[key])
+            retentions[key] = RetentionInterval.from_previous(previous.retentions[key])
 
         for key in compared_keys.both.union(compared_keys.only_right):
             retentions[key] = retention_interval
@@ -532,7 +534,7 @@ class _MutableTable:
     def update(  # pylint: disable=too-many-branches
         self,
         now: int,
-        other: ImmutableTable,
+        previous: ImmutableTable,
         path: SDPath,
         interval: int,
         choice: _SDRetentionFilterChoice,
@@ -540,56 +542,56 @@ class _MutableTable:
     ) -> None:
         filter_func = _make_filter_func(choice.choice)
         retention_interval = RetentionInterval.from_config(*choice.cache_info, interval)
-        self._add_key_columns(other.key_columns)
-        old_filtered_rows = {
+        self._add_key_columns(previous.key_columns)
+        previous_filtered_rows = {
             ident: filtered_row
-            for ident, row in other.rows_by_ident.items()
+            for ident, row in previous.rows_by_ident.items()
             if (
                 filtered_row := _get_filtered_dict(
                     row,
                     _make_retentions_filter_func(
                         filter_func=filter_func,
-                        intervals_by_key=other.retentions.get(ident),
+                        intervals_by_key=previous.retentions.get(ident),
                         now=now,
                     ),
                 )
             )
         }
-        self_filtered_rows = {
+        current_filtered_rows = {
             ident: filtered_row
             for ident, row in self.rows_by_ident.items()
             if (filtered_row := _get_filtered_dict(row, filter_func))
         }
         compared_row_idents = _DictKeys.compare(
-            left=set(old_filtered_rows),
-            right=set(self_filtered_rows),
+            left=set(previous_filtered_rows),
+            right=set(current_filtered_rows),
         )
 
         retentions: dict[SDRowIdent, dict[SDKey, RetentionInterval]] = {}
         for ident in compared_row_idents.only_left:
-            old_row: dict[SDKey, SDValue] = {}
-            for key, value in old_filtered_rows[ident].items():
-                old_row.setdefault(key, value)
+            previous_row: dict[SDKey, SDValue] = {}
+            for key, value in previous_filtered_rows[ident].items():
+                previous_row.setdefault(key, value)
                 retentions.setdefault(ident, {})[key] = RetentionInterval.from_previous(
-                    other.retentions[ident][key]
+                    previous.retentions[ident][key]
                 )
 
-            if old_row:
+            if previous_row:
                 # Update row with key column entries
-                old_row |= {k: other.rows_by_ident[ident][k] for k in other.key_columns}
-                self._add_row(ident, old_row)
-                update_result.add_row_reason(path, ident, "Added row", old_row)
+                previous_row |= {k: previous.rows_by_ident[ident][k] for k in previous.key_columns}
+                self._add_row(ident, previous_row)
+                update_result.add_row_reason(path, ident, "Added row", previous_row)
 
         for ident in compared_row_idents.both:
             compared_keys = _DictKeys.compare(
-                left=set(old_filtered_rows[ident]),
-                right=set(self_filtered_rows[ident]),
+                left=set(previous_filtered_rows[ident]),
+                right=set(current_filtered_rows[ident]),
             )
             row: dict[SDKey, SDValue] = {}
             for key in compared_keys.only_left:
-                row.setdefault(key, other.rows_by_ident[ident][key])
+                row.setdefault(key, previous.rows_by_ident[ident][key])
                 retentions.setdefault(ident, {})[key] = RetentionInterval.from_previous(
-                    other.retentions[ident][key]
+                    previous.retentions[ident][key]
                 )
 
             for key in compared_keys.both.union(compared_keys.only_right):
@@ -599,7 +601,7 @@ class _MutableTable:
                 # Update row with key column entries
                 row.update(
                     {
-                        **{k: other.rows_by_ident[ident][k] for k in other.key_columns},
+                        **{k: previous.rows_by_ident[ident][k] for k in previous.key_columns},
                         **{k: self.rows_by_ident[ident][k] for k in self.key_columns},
                     }
                 )
@@ -607,7 +609,7 @@ class _MutableTable:
                 update_result.add_row_reason(path, ident, "Added row", row)
 
         for ident in compared_row_idents.only_right:
-            for key in self_filtered_rows[ident]:
+            for key in current_filtered_rows[ident]:
                 retentions.setdefault(ident, {})[key] = retention_interval
 
         if retentions:

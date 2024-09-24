@@ -173,6 +173,7 @@ CMK_PACKAGES = [
     "//packages/cmk-plugin-apis:graphing",
     "//packages/cmk-plugin-apis:rulesets",
     "//packages/cmk-plugin-apis:server_side_calls",
+    "//packages/cmk-plugin-apis:inventory_ui",
     "//packages/cmk-trace",
     "//packages/cmk-werks",
 ] + select({

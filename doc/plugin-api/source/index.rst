@@ -36,6 +36,7 @@ Below the family folder, plugins are categorized into plugin groups:
    * graphing plugins under the ``graphing`` folder
    * man pages are found in ``checkman``
    * executables (to be run by the code, for instance) go into ``libexec``
+   * inventory UI plugins are located under the ``inventory_ui`` folder
 
 In order for Checkmk to load your plugin, you have to follow the folder structure described above.
 Checkmk will load an agent based plugin only if it's located under ``~/local/lib/python3/cmk/plugins/{family_name}/agent_based`` or ``~/local/lib/python3/cmk_addons/plugins/{family_name}/agent_based`` folder.
@@ -56,6 +57,7 @@ Each plugin expects a different prefix in the variable name:
    - translations the ``translation_`` prefix
    - perfometers the ``perfometer_`` prefix
    - graphs the ``graph_`` prefix
+   - nodes (inventory UI) the ``node_`` prefix
 
 .. toctree::
    :glob:

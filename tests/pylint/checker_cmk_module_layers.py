@@ -128,6 +128,7 @@ def _is_allowed_import(imported: ModuleName) -> bool:
             imported.in_component(Component("cmk.events")),
             imported.in_component(Component("cmk.otel_collector")),
             imported.in_component(Component("cmk.inventory.config")),
+            imported.in_component(Component("cmk.inventory_ui")),
         )
     )
 
@@ -446,6 +447,7 @@ def _is_allowed_for_plugins(
             imported.in_component(Component("cmk.plugins")),
             imported.in_component(Component("cmk.utils")),
             imported.in_component(Component("cmk.ccc")),
+            imported.in_component(Component("cmk.inventory_ui.v1_alpha")),
         )
     )
 
@@ -569,6 +571,7 @@ def _allowed_for_robotmk(
                 "cmk.plugins",
                 "cmk.checkengine",
                 "cmk.cee.bakery",
+                "cmk.inventory_ui.v1_alpha",
             ),
         )
     )
@@ -739,6 +742,7 @@ _COMPONENTS = (
             "cmk.checkengine",
             "cmk.utils",
             "cmk.ccc",
+            "cmk.inventory_ui.v1_alpha",
         ),
     ),
     (
@@ -752,6 +756,7 @@ _COMPONENTS = (
             "cmk.server_side_calls.v1",
             "cmk.special_agents.v0_unstable",
             "cmk.plugins",
+            "cmk.inventory_ui.v1_alpha",
         ),
     ),
     (
@@ -766,6 +771,7 @@ _COMPONENTS = (
             "cmk.plugins",
             "cmk.utils",  # FIXME (should only be password store)
             "cmk.ccc",  # FIXME
+            "cmk.inventory_ui.v1_alpha",
         ),
     ),
     (Component("cmk.server_side_calls_backend"), _is_default_allowed_import),

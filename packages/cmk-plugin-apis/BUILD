@@ -95,12 +95,28 @@ py_library(
     ],
 )
 
+py_library(
+    name = "inventory_ui",
+    srcs = [
+        "cmk/inventory_ui/__init__.py",
+        "cmk/inventory_ui/v1_alpha/__init__.py",
+        "cmk/inventory_ui/v1_alpha/_localize.py",
+        "cmk/inventory_ui/v1_alpha/_node.py",
+        "cmk/inventory_ui/v1_alpha/_style.py",
+        "cmk/inventory_ui/v1_alpha/_types.py",
+        "cmk/inventory_ui/v1_alpha/_unit.py",
+    ],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+)
+
 py_doc_test(
     name = "doctest",
     size = "small",
     srcs = [
         ":agent_based",
         ":graphing",
+        ":inventory_ui",
         ":rulesets",
         ":server_side_calls",
     ],
@@ -162,6 +178,18 @@ py_test(
     ],
 )
 
+py_test(
+    name = "inventory_ui-test",
+    size = "small",
+    srcs = glob(["tests/cmk/inventory_ui/**/*.py"]) + [":__test__.py"],
+    main = ":__test__.py",
+    deps = [
+        ":__test__",
+        ":inventory_ui",
+        requirement("pytest"),
+    ],
+)
+
 py_wheel(
     name = "wheel",
     distribution = "cmk-plugin-apis",
@@ -171,6 +199,7 @@ py_wheel(
     deps = [
         ":agent_based",
         ":graphing",
+        ":inventory_ui",
         ":rulesets",
         ":server_side_calls",
     ],

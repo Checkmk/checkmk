@@ -480,6 +480,34 @@ strict_optional = true
 warn_unreachable = true
 
 [[tool.mypy.overrides]]
+module = ["cmk.inventory_ui.*"]
+enable_error_code = [
+  "explicit-override",
+  "ignore-without-code",
+  "mutable-override",
+  "possibly-undefined",
+  # The few findings need to be investigated
+  #"redundant-expr",
+  "redundant-self",
+  "truthy-bool",
+  "truthy-iterable",
+  "unimported-reveal",
+  "unused-awaitable",
+  "unused-ignore",
+]
+strict = true
+# Miscellaneous stuff not in --strict
+disallow_any_decorated = true
+disallow_any_explicit = true
+disallow_any_expr = true
+disallow_any_generics = true
+disallow_any_unimported = true
+disallow_subclassing_any = true
+no_implicit_optional = true
+strict_optional = true
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
 module = ["cmk.livestatus_client.*", "livestatus.*"]
 enable_error_code = [
   "explicit-override",

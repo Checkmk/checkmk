@@ -12,6 +12,7 @@ from collections.abc import Sequence
 import requests
 
 from cmk.special_agents.v0_unstable.agent_common import special_agent_main
+from cmk.special_agents.v0_unstable.request_helper import HostnameValidationAdapter
 
 
 def main() -> int:
@@ -32,13 +33,20 @@ def _parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         "password",
         help="Hivemanager API password",
     )
+    parser.add_argument(
+        "--cert-server-name",
+        metavar="CERT-SERVER-NAME",
+        help="Use this server name for TLS certificate validation",
+    )
     return parser.parse_args(argv)
 
 
 def _main(args: argparse.Namespace) -> int:
     session = _session(
+        server=args.server,
         username=args.user,
         password=args.password,
+        cert_server_name=args.cert_server_name,
     )
 
     try:
@@ -76,8 +84,10 @@ def _main(args: argparse.Namespace) -> int:
 
 def _session(
     *,
+    server: str,
     username: str,
     password: str,
+    cert_server_name: str | None,
 ) -> requests.Session:
     session = requests.session()
     session.headers.update(
@@ -91,4 +101,9 @@ def _session(
             "Content-Type": "application/json",
         }
     )
+    if cert_server_name:
+        session.mount(
+            f"https://{server}",
+            HostnameValidationAdapter(cert_server_name),
+        )
     return session

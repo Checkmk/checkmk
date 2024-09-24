@@ -58,6 +58,7 @@ HACK_AGENTS = {
     "ddn_s2a": True,
     "gcp_status": False,  # needs no secret
     "hivemanager_ng": True,
+    "hivemanager": True,
 }
 
 

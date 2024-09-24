@@ -89,15 +89,11 @@ NotifyBulkType = (
 )
 
 
-def is_always_bulk(
-    bulk_params: NotifyBulkParameters,
-) -> TypeGuard[AlwaysBulkParameters]:
+def is_always_bulk(bulk_params: NotifyBulkParameters) -> TypeGuard[AlwaysBulkParameters]:
     return "interval" in bulk_params
 
 
-def is_timeperiod_bulk(
-    bulk_params: NotifyBulkParameters,
-) -> TypeGuard[TimeperiodBulkParameters]:
+def is_timeperiod_bulk(bulk_params: NotifyBulkParameters) -> TypeGuard[TimeperiodBulkParameters]:
     return "timeperiod" in bulk_params
 
 
@@ -796,8 +792,8 @@ NotifyPluginParamsDict = (
 NotifyPluginParams = NotifyPluginParamsList | NotifyPluginParamsDict
 
 
-custom_plugin_type_adapter: TypeAdapter[CustomPluginType] = TypeAdapter(CustomPluginType)
-known_plugin_type_adapter: TypeAdapter[KnownPlugins] = TypeAdapter(KnownPlugins)
+custom_plugin_type_adapter = TypeAdapter(CustomPluginType)
+known_plugin_type_adapter = TypeAdapter(KnownPlugins)
 
 
 def validate_plugin(value: Any, _handler: ValidationInfo) -> NotifyPlugin:
@@ -874,10 +870,7 @@ class EventRule(_EventRuleMandatory, total=False):
 NotifyRuleInfo = tuple[str, EventRule, str]
 NotifyPluginName = str
 NotifyPluginInfo = tuple[
-    ContactName,
-    NotificationPluginNameStr,
-    NotifyPluginParams,
-    NotifyBulkParameters | None,
+    ContactName, NotificationPluginNameStr, NotifyPluginParams, NotifyBulkParameters | None
 ]
 NotifyAnalysisInfo = tuple[list[NotifyRuleInfo], list[NotifyPluginInfo]]
 

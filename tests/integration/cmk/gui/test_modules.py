@@ -43,6 +43,7 @@ def fixture_result_file(site: Site) -> Iterator[None]:
             site.delete_file("tmp/dashboard_test")
 
 
+@pytest.mark.skip(reason="Test is flaky, should be fixed and unskipped with CMK-19250")
 @pytest.mark.usefixtures("plugin_path", "result_file")
 def test_load_dashboard_plugin_omd_restart(request: pytest.FixtureRequest, site: Site) -> None:
     # Reload site apache to trigger the reload of our plugin

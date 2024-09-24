@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type VariantProps, cva } from 'class-variance-authority'
 
 import { getIconVariable } from '@/lib/utils'
-import { Button } from '@/quick-setup/ui/button'
+import { Button } from './ui/button'
 
 const buttonVariants = cva('', {
   variants: {
@@ -22,7 +22,7 @@ const buttonVariants = cva('', {
     variant: 'custom'
   }
 })
-type ButtonVariants = VariantProps<typeof buttonVariants>
+export type ButtonVariants = VariantProps<typeof buttonVariants>
 
 interface IconButtonProps {
   /** @property {string} label - Button's caption */

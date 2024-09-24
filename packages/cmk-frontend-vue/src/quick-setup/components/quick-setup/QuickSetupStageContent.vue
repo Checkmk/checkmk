@@ -10,7 +10,7 @@ import type { QuickSetupStageContentSpec, StageData } from './quick_setup_types'
 import CompositeWidget from './widgets/CompositeWidget.vue'
 import ErrorBoundary from '@/quick-setup/components/ErrorBoundary.vue'
 import AlertBox from '@/quick-setup/components/AlertBox.vue'
-import { asStringArray } from './utils'
+import { asStringArray } from '@/quick-setup/utils'
 
 const props = defineProps<QuickSetupStageContentSpec>()
 const emit = defineEmits(['update'])

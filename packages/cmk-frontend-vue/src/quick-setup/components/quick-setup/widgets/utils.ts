@@ -3,13 +3,13 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import TextWidget from '@/quick-setup/widgets/TextWidget.vue'
-import NoteTextWidget from '@/quick-setup/widgets/NoteTextWidget.vue'
-import ListWidget from '@/quick-setup/widgets/ListWidget.vue'
-import NoneWidget from '@/quick-setup/widgets/NoneWidget.vue'
-import FormSpecWidget from '@/quick-setup/widgets/FormSpecWidget.vue'
-import CollapsibleWidget from '@/quick-setup/widgets/CollapsibleWidget.vue'
-import FormSpecRecapWidget from '@/quick-setup/widgets/FormSpecRecapWidget.vue'
+import TextWidget from './TextWidget.vue'
+import NoteTextWidget from './NoteTextWidget.vue'
+import ListWidget from './ListWidget.vue'
+import NoneWidget from './NoneWidget.vue'
+import FormSpecWidget from './FormSpecWidget.vue'
+import CollapsibleWidget from './CollapsibleWidget.vue'
+import FormSpecRecapWidget from './FormSpecRecapWidget.vue'
 import type { ComponentSpec, FormSpecWidgetProps } from './widget_types'
 
 export const getWidget = (widgetType: string): unknown => {

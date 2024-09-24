@@ -9,7 +9,7 @@ import {
   GET_QUICK_SETUP_OVERVIEW_URL,
   VALIDATE_QUICK_SETUP_STAGE_URL
 } from '@/quick-setup/constants/rest_api'
-import { type StageData } from './quick_setup_types'
+import { type StageData } from './components/quick-setup/quick_setup_types'
 
 import {
   type GeneralError,

@@ -5,8 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Collapsible, CollapsibleContent } from '@/quick-setup/ui/collapsible'
-import { Label } from '@/quick-setup/ui/label'
+import { Collapsible, CollapsibleContent } from '@/quick-setup/components/ui/collapsible'
+import { Label } from '@/quick-setup/components/ui/label'
 
 import QuickSetupStageContent from './QuickSetupStageContent.vue'
 import CompositeWidget from './widgets/CompositeWidget.vue'

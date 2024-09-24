@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { FormSpec } from '@/form/components/vue_formspec_components'
-import { type StageData } from '../quick_setup_types'
+import { type StageData } from '@/quick-setup/components/quick-setup/quick_setup_types'
 import type { ValidationMessages } from '@/form'
 
 export interface FormSpecRecapWidgetProps {

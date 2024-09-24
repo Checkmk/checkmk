@@ -16,10 +16,10 @@ import {
   type GeneralError,
   type RestApiError,
   type QSStageResponse
-} from './rest_api_types'
+} from '@/quick-setup/rest_api_types'
 
-import { completeQuickSetup, getOverview, validateStage } from './rest_api'
-import { asStringArray } from './utils'
+import { completeQuickSetup, getOverview, validateStage } from '@/quick-setup/rest_api'
+import { asStringArray } from '@/quick-setup/utils'
 import AlertBox from '@/quick-setup/components/AlertBox.vue'
 
 const props = defineProps<QuickSetupSpec>()

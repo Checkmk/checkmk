@@ -36,16 +36,14 @@ def _parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
 
 
 def _main(args: argparse.Namespace) -> int:
-    auth = f"{args.user}:{args.password}"
-    auth_encoded = base64.encodebytes(auth.encode("utf-8")).decode("utf-8").replace("\n", "")
-    headers = {
-        "Authorization": "Basic %s" % auth_encoded,
-        "Content-Type": "application/json",
-    }
+    session = _session(
+        username=args.user,
+        password=args.password,
+    )
+
     try:
-        data = requests.get(  # nosec B113 # BNS:0b0eac
+        data = session.get(  # nosec B113 # BNS:0b0eac
             f"https://{args.server}/hm/api/v1/devices",
-            headers=headers,
         ).text
     except Exception as e:
         sys.stderr.write("Connection error: %s" % e)
@@ -74,3 +72,23 @@ def _main(args: argparse.Namespace) -> int:
             line["upTime"] = "down"
         print("|".join(map(str, [f"{x}::{y}" for x, y in line.items() if x in informations])))
     return 0
+
+
+def _session(
+    *,
+    username: str,
+    password: str,
+) -> requests.Session:
+    session = requests.session()
+    session.headers.update(
+        {
+            "Authorization": "Basic %s"
+            % (
+                base64.encodebytes(f"{username}:{password}".encode("utf-8"))
+                .decode("utf-8")
+                .replace("\n", "")
+            ),
+            "Content-Type": "application/json",
+        }
+    )
+    return session

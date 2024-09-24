@@ -2268,7 +2268,7 @@ class Folder(FolderProtocol):
 
             # Do not update redis while rewriting a plethora of host files
             # Redis automatically updates on the next request
-            moved_subfolder.rewrite_hosts_files()  # fixes changed inheritance
+            moved_subfolder.recursively_save_hosts()  # fixes changed inheritance
 
         affected_sites = list(set(affected_sites + moved_subfolder.all_site_ids()))
         add_change(
@@ -2322,7 +2322,7 @@ class Folder(FolderProtocol):
         # in Nagios-relevant attributes.
         self.save_folder_attributes()
         folder_tree().invalidate_caches()
-        self.rewrite_hosts_files()
+        self.recursively_save_hosts()
 
         affected_sites = list(set(affected_sites + self.all_site_ids()))
         add_change(
@@ -2608,15 +2608,11 @@ class Folder(FolderProtocol):
         self.save()
         return True
 
-    def rewrite_hosts_files(self):
-        self._rewrite_hosts_file()
+    def recursively_save_hosts(self):
+        self._load_hosts_on_demand()
+        self.save_hosts()
         for subfolder in self.subfolders():
-            subfolder.rewrite_hosts_files()
-
-    def rewrite_folders(self):
-        self.save_folder_attributes()
-        for subfolder in self.subfolders():
-            subfolder.rewrite_folders()
+            subfolder.recursively_save_hosts()
 
     def _add_host(self, host):
         self._load_hosts_on_demand()
@@ -2638,10 +2634,6 @@ class Folder(FolderProtocol):
             site_ids.add(host.site_id())
         for subfolder in self.subfolders():
             subfolder._add_all_sites_to_set(site_ids)
-
-    def _rewrite_hosts_file(self):
-        self._load_hosts_on_demand()
-        self.save_hosts()
 
     # .-----------------------------------------------------------------------.
     # | HTML Generation                                                       |

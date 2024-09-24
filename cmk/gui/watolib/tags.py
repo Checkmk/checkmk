@@ -147,7 +147,7 @@ def _update_tag_dependencies() -> None:
     load_config()
     tree = folder_tree()
     tree.invalidate_caches()
-    tree.root_folder().rewrite_hosts_files()
+    tree.root_folder().recursively_save_hosts()
 
 
 class RepairError(MKGeneralException):

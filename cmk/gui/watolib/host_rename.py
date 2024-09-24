@@ -175,7 +175,7 @@ def _rename_parents(
     # Needed because hosts.mk in folders with parent as effective attribute
     # would not be updated
     for folder in folder_parent_renamed:
-        folder.rewrite_hosts_files()
+        folder.recursively_save_hosts()
 
     return parent_renamed
 

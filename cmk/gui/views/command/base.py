@@ -57,7 +57,7 @@ class Command(abc.ABC):
         group: type[CommandGroup],
         confirm_button: LazyString | Callable[[], LazyString],
         confirm_title: LazyString | Callable[[], LazyString] | None = None,
-        confirm_dialog_additions: Callable[[Literal["HOST", "SVC"], Row, int], HTML] | None = None,
+        confirm_dialog_additions: Callable[[Literal["HOST", "SVC"], Row, Rows], HTML] | None = None,
         confirm_dialog_icon_class: Callable[[], Literal["question", "warning"]] | None = None,
         cancel_button: LazyString = _l("Cancel"),
         deny_button: LazyString | None = None,
@@ -101,13 +101,13 @@ class Command(abc.ABC):
         return ("%s %s?") % (self.confirm_button, str(self.title).lower())
 
     def confirm_dialog_options(
-        self, cmdtag: Literal["HOST", "SVC"], row: Row, len_action_rows: int
+        self, cmdtag: Literal["HOST", "SVC"], row: Row, action_rows: Rows
     ) -> CommandConfirmDialogOptions:
         return CommandConfirmDialogOptions(
             self.confirm_title,
-            self.affected(len_action_rows, cmdtag),
+            self.affected(len(action_rows), cmdtag),
             (
-                self._confirm_dialog_additions(cmdtag, row, len_action_rows)
+                self._confirm_dialog_additions(cmdtag, row, action_rows)
                 if self._confirm_dialog_additions
                 else HTML.empty()
             ),

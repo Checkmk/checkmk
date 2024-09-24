@@ -360,7 +360,7 @@ def command_delete_crash_report_action(
 ) -> CommandActionResult:
     if request.has_var("_delete_crash_reports"):
         commands = [("DEL_CRASH_REPORT;%s" % row["crash_id"])]
-        return commands, command.confirm_dialog_options(cmdtag, row, len(action_rows))
+        return commands, command.confirm_dialog_options(cmdtag, row, action_rows)
     return None
 
 

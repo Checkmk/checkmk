@@ -1352,7 +1352,7 @@ def command_update_event_action(
         events = ",".join(str(entry["event_id"]) for entry in action_rows)
         return (
             f"UPDATE;{events};{user.id};{ack and 1 or 0};{comment};{contact}",
-            command.confirm_dialog_options(cmdtag, row, len(action_rows)),
+            command.confirm_dialog_options(cmdtag, row, action_rows),
         )
     return None
 
@@ -1390,7 +1390,7 @@ PermissionECChangeEventState = Permission(
 def command_change_state_confirm_dialog_additions(
     cmdtag: Literal["HOST", "SVC"],
     row: Row,
-    len_action_rows: int,
+    action_rows: Rows,
 ) -> HTML:
     value = MonitoringState().from_html_vars("_mkeventd_state")
     assert value is not None
@@ -1430,7 +1430,7 @@ def command_change_state_action(
         state = MonitoringState().from_html_vars("_mkeventd_state")
         return (
             f"CHANGESTATE;{events};{user.id};{state}",
-            command.confirm_dialog_options(cmdtag, row, len(action_rows)),
+            command.confirm_dialog_options(cmdtag, row, action_rows),
         )
     return None
 
@@ -1483,7 +1483,7 @@ def command_custom_actions_action(
             events = ",".join(str(entry["event_id"]) for entry in action_rows)
             return (
                 f"ACTION;{events};{user.id};{action_id}",
-                command.confirm_dialog_options(cmdtag, row, len(action_rows)),
+                command.confirm_dialog_options(cmdtag, row, action_rows),
             )
     return None
 
@@ -1529,7 +1529,7 @@ def command_archive_event_action(
     if request.var("_delete_event"):
         events = ",".join(str(entry["event_id"]) for entry in action_rows)
         cmd = f"DELETE;{events};{user.id}"
-        return cmd, command.confirm_dialog_options(cmdtag, row, len(action_rows))
+        return cmd, command.confirm_dialog_options(cmdtag, row, action_rows)
     return None
 
 
@@ -1557,7 +1557,7 @@ PermissionECArchiveEventsOfHost = Permission(
 def command_archive_events_of_host_confirm_dialog_additions(
     cmdtag: Literal["HOST", "SVC"],
     row: Row,
-    len_action_rows: int,
+    action_rows: Rows,
 ) -> HTML:
     return HTML.empty() + _(
         "All events of the host '%s' will be removed from the open events list. You can still access them in the archive."
@@ -1590,7 +1590,7 @@ def command_archive_events_of_host_action(
         commands = [f"DELETE_EVENTS_OF_HOST;{row['host_name']};{user.id}"]
         return (
             commands,
-            command.confirm_dialog_options(cmdtag, row, len(action_rows)),
+            command.confirm_dialog_options(cmdtag, row, action_rows),
         )
     return None
 

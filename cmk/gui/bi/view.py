@@ -1167,7 +1167,7 @@ def command_freeze_aggregation_action(
         if compiled_aggregation.frozen_info:
             return (
                 [compiled_aggregation.frozen_info.based_on_branch_title],
-                command.confirm_dialog_options(cmdtag, row, len(action_rows)),
+                command.confirm_dialog_options(cmdtag, row, action_rows),
             )
 
     return None

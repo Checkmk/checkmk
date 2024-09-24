@@ -138,7 +138,7 @@ PermissionActionReschedule = Permission(
 def command_reschedule_confirm_dialog_additions(
     cmdtag: Literal["HOST", "SVC"],
     row: Row,
-    len_action_rows: int,
+    action_rows: Rows,
 ) -> HTML:
     return (
         HTMLWriter.render_br()
@@ -190,7 +190,7 @@ def command_reschedule_action(
         return cmd, command.confirm_dialog_options(
             cmdtag,
             row,
-            len(action_rows),
+            action_rows,
         )
     return None
 
@@ -238,7 +238,7 @@ PermissionActionNotifications = Permission(
 def command_notifications_confirm_dialog_additions(
     cmdtag: Literal["HOST", "SVC"],
     row: Row,
-    len_action_rows: int,
+    action_rows: Rows,
 ) -> HTML:
     return (
         HTMLWriter.render_br()
@@ -276,20 +276,12 @@ def command_notifications_action(
     if request.var("_enable_notifications"):
         return (
             "ENABLE_" + cmdtag + "_NOTIFICATIONS;%s" % spec,
-            command.confirm_dialog_options(
-                cmdtag,
-                row,
-                len(action_rows),
-            ),
+            command.confirm_dialog_options(cmdtag, row, action_rows),
         )
     if request.var("_disable_notifications"):
         return (
             "DISABLE_" + cmdtag + "_NOTIFICATIONS;%s" % spec,
-            command.confirm_dialog_options(
-                cmdtag,
-                row,
-                len(action_rows),
-            ),
+            command.confirm_dialog_options(cmdtag, row, action_rows),
         )
     return None
 
@@ -356,20 +348,12 @@ def command_toggle_active_checks_action(
     if request.var("_enable_checks"):
         return (
             "ENABLE_" + cmdtag + "_CHECK;%s" % spec,
-            command.confirm_dialog_options(
-                cmdtag,
-                row,
-                len(action_rows),
-            ),
+            command.confirm_dialog_options(cmdtag, row, action_rows),
         )
     if request.var("_disable_checks"):
         return (
             "DISABLE_" + cmdtag + "_CHECK;%s" % spec,
-            command.confirm_dialog_options(
-                cmdtag,
-                row,
-                len(action_rows),
-            ),
+            command.confirm_dialog_options(cmdtag, row, action_rows),
         )
     return None
 
@@ -425,20 +409,12 @@ def command_toggle_passive_checks_action(
     if request.var("_enable_passive_checks"):
         return (
             "ENABLE_PASSIVE_" + cmdtag + "_CHECKS;%s" % spec,
-            command.confirm_dialog_options(
-                cmdtag,
-                row,
-                len(action_rows),
-            ),
+            command.confirm_dialog_options(cmdtag, row, action_rows),
         )
     if request.var("_disable_passive_checks"):
         return (
             "DISABLE_PASSIVE_" + cmdtag + "_CHECKS;%s" % spec,
-            command.confirm_dialog_options(
-                cmdtag,
-                row,
-                len(action_rows),
-            ),
+            command.confirm_dialog_options(cmdtag, row, action_rows),
         )
     return None
 
@@ -498,7 +474,7 @@ def command_clear_modified_attributes_render(what: str) -> None:
 def command_clear_modified_attributes_confirm_dialog_additions(
     cmdtag: Literal["HOST", "SVC"],
     row: Row,
-    len_action_rows: int,
+    action_rows: Rows,
 ) -> HTML:
     return (
         HTMLWriter.render_br()
@@ -523,11 +499,7 @@ def command_clear_modified_attributes_action(
     if request.var("_clear_modattr"):
         return (
             "CHANGE_" + cmdtag + "_MODATTR;%s;0" % spec,
-            command.confirm_dialog_options(
-                cmdtag,
-                row,
-                len(action_rows),
-            ),
+            command.confirm_dialog_options(cmdtag, row, action_rows),
         )
     return None
 
@@ -692,11 +664,7 @@ def command_fake_check_result_action(
             livestatus.lqencode(pluginoutput),
         )
 
-        return cmd, command.confirm_dialog_options(
-            cmdtag,
-            row,
-            len(action_rows),
-        )
+        return cmd, command.confirm_dialog_options(cmdtag, row, action_rows)
 
     return None
 
@@ -798,11 +766,7 @@ def command_custom_notification_action(
             user.id,
             livestatus.lqencode(comment),
         )
-        return cmd, command.confirm_dialog_options(
-            cmdtag,
-            row,
-            len(action_rows),
-        )
+        return cmd, command.confirm_dialog_options(cmdtag, row, action_rows)
     return None
 
 
@@ -856,7 +820,7 @@ class CommandGroupAcknowledge(CommandGroup):
 def command_acknowledge_confirm_dialog_additions(
     cmdtag: Literal["HOST", "SVC"],
     row: Row,
-    len_action_rows: int,
+    action_rows: Rows,
 ) -> HTML:
     if request.var("_ack_expire"):
         date = request.get_str_input("_ack_expire_date")
@@ -1082,11 +1046,7 @@ def command_acknowledge_action(  # pylint: disable=too-many-branches
         else:
             commands = [make_command_ack(spec, cmdtag)]
 
-        return commands, command.confirm_dialog_options(
-            cmdtag,
-            row,
-            len(action_rows),
-        )
+        return commands, command.confirm_dialog_options(cmdtag, row, action_rows)
 
     return None
 
@@ -1128,9 +1088,8 @@ def _vs_time() -> TimePicker:
 def command_remove_acknowledgements_confirm_dialog_additions(
     cmdtag: Literal["HOST", "SVC"],
     row: Row,
-    len_action_rows: int,
+    action_rows: Rows,
 ) -> HTML:
-    action_rows: Rows = []  # TODO: API needs to be fixed for this to work
     if (acks := _number_of_acknowledgements(row, action_rows, cmdtag)) is None:
         return HTML.empty()
 
@@ -1165,7 +1124,7 @@ def command_remove_acknowledgements_action(
     else:
         commands = [make_command_rem(spec, cmdtag)]
 
-    return commands, command.confirm_dialog_options(cmdtag, row, len(action_rows))
+    return commands, command.confirm_dialog_options(cmdtag, row, action_rows)
 
 
 def _number_of_acknowledgements(
@@ -1264,7 +1223,7 @@ def command_add_comment_action(
             + f"_COMMENT;{spec};1;{user.id}"
             + (";%s" % livestatus.lqencode(comment))
         )
-        return cmd, command.confirm_dialog_options(cmdtag, row, len(action_rows))
+        return cmd, command.confirm_dialog_options(cmdtag, row, action_rows)
     return None
 
 
@@ -1662,20 +1621,16 @@ class CommandScheduleDowntimesForm:
             delayed_duration = self._flexible_option()
             mode = determine_downtime_mode(recurring_number, delayed_duration)
             downtime = DowntimeSchedule(start_time, end_time, mode, delayed_duration, comment)
-            cmdtag, specs, len_action_rows = self._downtime_specs(cmdtag, row, action_rows, spec)
+            cmdtag, specs, action_rows = self._downtime_specs(cmdtag, row, action_rows, spec)
             if "aggr_tree" in row:  # BI mode
                 node: CompiledAggrTree = row["aggr_tree"]
                 return (
                     _bi_commands(downtime, node),
-                    command.confirm_dialog_options(
-                        cmdtag,
-                        row,
-                        len(action_rows),
-                    ),
+                    command.confirm_dialog_options(cmdtag, row, action_rows),
                 )
             return (
                 [downtime.livestatus_command(spec_, cmdtag) for spec_ in specs],
-                command.confirm_dialog_options(cmdtag, row, len_action_rows),
+                command.confirm_dialog_options(cmdtag, row, action_rows),
             )
 
         return None
@@ -1687,7 +1642,7 @@ class CommandScheduleDowntimesForm:
         self,
         cmdtag: Literal["HOST", "SVC"],
         row: Row,
-        len_action_rows: int,
+        action_rows: Rows,
     ) -> HTML:
         start_at = self._custom_start_time()
         additions = HTMLWriter.render_table(
@@ -1755,7 +1710,7 @@ class CommandScheduleDowntimesForm:
             % ungettext(
                 "host",
                 "hosts",
-                len_action_rows,
+                len(action_rows),
             )
             if cmdtag == "HOST"
             else _("<u>Info</u>: Downtime does not apply to host.")
@@ -1834,9 +1789,7 @@ class CommandScheduleDowntimesForm:
         row: Row,
         action_rows: Rows,
         spec: str,
-    ) -> tuple[Literal["HOST", "SVC"], list[str], int]:
-        len_action_rows = len(action_rows)
-
+    ) -> tuple[Literal["HOST", "SVC"], list[str], Rows]:
         vs_host_downtime = self._vs_host_downtime()
         included_from_html = vs_host_downtime.from_html_vars("_include_children")
         vs_host_downtime.validate_value(included_from_html, "_include_children")
@@ -1846,10 +1799,20 @@ class CommandScheduleDowntimesForm:
         elif request.var("_down_host"):  # set on hosts instead of services
             specs = [spec.split(";")[0]]
             cmdtag = "HOST"
-            len_action_rows = len({row["host_name"] for row in action_rows})
+            # We do not want to count the services but the affected hosts in this case.
+            # Since we can not get actual host rows here, we use one row per affected host
+            # as an approximation. This is good enough to count the affected hosts.
+            seen = set()
+            host_action_rows = []
+            for action_row in action_rows:
+                if row["host_name"] not in seen:
+                    seen.add(action_row["host_name"])
+                    host_action_rows.append(action_row)
+            action_rows = host_action_rows
+
         else:
             specs = [spec]
-        return cmdtag, specs, len_action_rows
+        return cmdtag, specs, action_rows
 
     def _vs_down_from(self) -> AbsoluteDate:
         return AbsoluteDate(
@@ -2000,7 +1963,7 @@ def _rm_downtime_from_downtime_datasource(
         command.confirm_dialog_options(
             cmdtag,
             row,
-            len(action_rows),
+            action_rows,
         ),
     )
 
@@ -2022,7 +1985,7 @@ def _rm_downtime_from_hst_or_svc_datasource(
     commands = []
     for dtid in downtime_ids:
         commands.append(f"DEL_{cmdtag}_DOWNTIME;{dtid}\n")
-    return commands, command.confirm_dialog_options(cmdtag, row, len(action_rows))
+    return commands, command.confirm_dialog_options(cmdtag, row, action_rows)
 
 
 CommandRemoveDowntimesHostServicesTable = Command(
@@ -2091,10 +2054,10 @@ def _acknowledgement_needs_removal(
 def command_remove_comments_confirm_dialog_additions(
     cmdtag: Literal["HOST", "SVC"],
     row: Row,
-    len_action_rows: int,
+    action_rows: Rows,
 ) -> HTML:
-    if len_action_rows > 1:
-        return HTML.without_escaping(_("Total comments: %d") % len_action_rows)
+    if len(action_rows) > 1:
+        return HTML.without_escaping(_("Total comments: %d") % len(action_rows))
     return HTML.without_escaping(_("Author: ")) + row["comment_author"]
 
 
@@ -2142,7 +2105,7 @@ def command_remove_comments_action(
     return commands, command.confirm_dialog_options(
         cmdtag,
         row,
-        len(action_rows),
+        action_rows,
     )
 
 

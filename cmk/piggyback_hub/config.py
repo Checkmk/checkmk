@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 import logging
 import os
 import tempfile
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Self
+from typing import Callable
 
 from pydantic import BaseModel
 
@@ -31,13 +32,6 @@ class Target:
 class PiggybackHubConfig(BaseModel):
     targets: Sequence[Target] = []
 
-    def serialize(self) -> str:
-        return self.model_dump_json()
-
-    @classmethod
-    def deserialize(cls, raw: str) -> Self:
-        return cls.model_validate_json(raw)
-
 
 def save_config_on_message(
     logger: logging.Logger, omd_root: Path
@@ -51,7 +45,7 @@ def save_config_on_message(
             "w", dir=str(config_path.parent), prefix=f".{config_path.name}.new", delete=False
         ) as tmp:
             tmp_path = tmp.name
-            tmp.write(received.serialize())
+            tmp.write(json.dumps(received.model_dump_json()))
 
         os.rename(tmp_path, str(config_path))
 
@@ -59,11 +53,15 @@ def save_config_on_message(
 
 
 def save_config(root_path: Path, config: PiggybackHubConfig) -> None:
-    store.save_text_to_file(create_paths(root_path).config, config.serialize())
+    store.save_text_to_file(
+        create_paths(root_path).config,
+        json.dumps(config.model_dump_json()),
+    )
 
 
 def load_config(root_path: Path) -> PiggybackHubConfig:
     config_path = create_paths(root_path).config
     if not config_path.exists():
         return PiggybackHubConfig()
-    return PiggybackHubConfig.deserialize(store.load_text_from_file(config_path))
+    raw = store.load_text_from_file(config_path)
+    return PiggybackHubConfig.model_validate_json(json.loads(raw))

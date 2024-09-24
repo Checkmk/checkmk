@@ -6,7 +6,6 @@
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Self
 
 import pika
 import pika.adapters.blocking_connection
@@ -25,13 +24,6 @@ class Message(BaseModel):
     """Test model for messages"""
 
     text: str
-
-    def serialize(self) -> str:
-        return self.model_dump_json()
-
-    @classmethod
-    def deserialize(cls, raw: str) -> Self:
-        return cls.model_validate_json(raw)
 
 
 @dataclass(frozen=True)

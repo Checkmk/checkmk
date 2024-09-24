@@ -9,7 +9,7 @@ import threading
 import time
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Callable, Self
+from typing import Callable
 
 from pydantic import BaseModel
 
@@ -37,13 +37,6 @@ class PiggybackPayload(BaseModel):
     last_update: int
     last_contact: int | None
     sections: Sequence[bytes]
-
-    def serialize(self) -> str:
-        return self.model_dump_json()
-
-    @classmethod
-    def deserialize(cls, raw: str) -> Self:
-        return cls.model_validate_json(raw)
 
 
 def save_payload_on_message(

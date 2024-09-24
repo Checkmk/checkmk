@@ -104,7 +104,6 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
 
 UNMIGRATED = {
     "hivemanager",
-    "hivemanager_ng",
     "hp_msa",
     "ibmsvc",
     "innovaphone",

@@ -59,6 +59,7 @@ HACK_AGENTS = {
     "gcp_status": False,  # needs no secret
     "hivemanager_ng": True,
     "hivemanager": True,
+    "hp_msa": True,
 }
 
 

@@ -103,7 +103,6 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
 }
 
 UNMIGRATED = {
-    "hp_msa",
     "ibmsvc",
     "innovaphone",
     "ipmi_sensors",

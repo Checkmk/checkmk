@@ -10,6 +10,7 @@ from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout
 from cmk.gui.quick_setup.v0_unstable.definitions import UniqueBundleIDStr, UniqueFormSpecIDStr
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, FormSpecWrapper
 from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import DictElement, FieldSize, String, validators
@@ -44,7 +45,10 @@ def unique_id_formspec_wrapper(
     )
 
 
-def _host_name_dict_element(title: Title = Title("Host name")) -> DictElement:
+def _host_name_dict_element(
+    title: Title = Title("Host name"),
+    prefill_template: str = "qs_host",
+) -> DictElement:
     return DictElement(
         parameter_form=String(
             title=title,
@@ -52,6 +56,12 @@ def _host_name_dict_element(title: Title = Title("Host name")) -> DictElement:
             custom_validate=(
                 validators.LengthInRange(min_value=1),
                 validators.MatchRegex(HOST_NAME_REGEXP),
+            ),
+            prefill=DefaultValue(
+                unique_default_name_suggestion(
+                    template=prefill_template,
+                    used_names=set(folder_tree().root_folder().all_hosts_recursively()),
+                )
             ),
         ),
         required=True,
@@ -74,12 +84,14 @@ def _host_path_dict_element(title: Title = Title("Host Path")) -> DictElement:
     )
 
 
-def host_name_and_host_path_formspec_wrapper() -> FormSpecWrapper:
+def host_name_and_host_path_formspec_wrapper(
+    host_prefill_template: str = "qs_host",
+) -> FormSpecWrapper:
     return FormSpecWrapper(
         id=FormSpecId("host_data"),
         form_spec=DictionaryExtended(
             elements={
-                "host_name": _host_name_dict_element(),
+                "host_name": _host_name_dict_element(prefill_template=host_prefill_template),
                 "host_path": _host_path_dict_element(),
             },
             layout=DictionaryLayout.two_columns,

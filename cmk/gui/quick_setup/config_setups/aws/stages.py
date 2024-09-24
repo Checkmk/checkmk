@@ -95,7 +95,7 @@ def configure_host_and_regions() -> QuickSetupStage:
             "Name your host, define the path and select the regions you would like to monitor"
         ),
         configure_components=[
-            widgets.host_name_and_host_path_formspec_wrapper(),
+            widgets.host_name_and_host_path_formspec_wrapper(host_prefill_template="aws"),
             FormSpecWrapper(
                 id=FormSpecId("configure_host_and_regions"),
                 form_spec=DictionaryExtended(

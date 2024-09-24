@@ -1032,11 +1032,11 @@ class _DeltaDict:
 
         has_changes = False
         for key in compared_keys.both:
-            if (new_value := right[key]) != (old_value := left[key]):
-                compared_dict.setdefault(key, SDDeltaValue(old_value, new_value))
+            if (left_value := left[key]) != (right_value := right[key]):
+                compared_dict.setdefault(key, SDDeltaValue(left_value, right_value))
                 has_changes = True
             elif keep_identical:
-                compared_dict.setdefault(key, SDDeltaValue(old_value, old_value))
+                compared_dict.setdefault(key, SDDeltaValue(left_value, left_value))
 
         compared_dict |= {k: _encode_as_removed(right[k]) for k in compared_keys.only_right}
         compared_dict |= {k: _encode_as_new(left[k]) for k in compared_keys.only_left}

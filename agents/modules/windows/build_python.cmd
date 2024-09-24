@@ -11,7 +11,7 @@ cd %build_msi% 2> nul  || powershell Write-Host "cannot find a python sources" -
 powershell Write-Host "Starting build" -foreground Green
 set GIT=c:\Program Files\git\cmd\git.exe
 if not exist "%GIT%" powershell Write-Host "You should install Git as %GIT%" -Foreground Red && exit /b 3
-set HOST_PYTHON=c:\python310\python.exe
+set HOST_PYTHON=c:\python312\python.exe
 if not exist "%HOST_PYTHON%" powershell Write-Host "You should install Python as %HOST_PYTHON%" -Foreground Red && exit /b 4
 set
 @echo call buildrelease.bat  -o %build_dir% -b -x86 --skip-nuget --skip-pgo --skip-zip

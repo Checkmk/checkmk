@@ -12,6 +12,7 @@ from tests.unit.cmk.gui.conftest import (  # pylint: disable=unused-import
     flask_app,
     gui_cleanup_after_test,
     load_config,
+    load_plugins,
     request_context,
     with_admin,
     wsgi_app,

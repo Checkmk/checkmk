@@ -39,7 +39,9 @@ def check_hp_webmgmt_status(item, _no_params, info):
     return None
 
 
-def parse_hp_webmgmt_status(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+def parse_hp_webmgmt_status(
+    string_table: Sequence[StringTable],
+) -> Sequence[StringTable]:
     return string_table
 
 

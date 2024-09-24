@@ -112,7 +112,10 @@ def scan_parents_of(
             dot(tty.red, "*")
             gateways.append(
                 GatewayResult(
-                    None, "failed", 0, "Traceroute failed with exit code %d" % (exitstatus & 255)
+                    None,
+                    "failed",
+                    0,
+                    "Traceroute failed with exit code %d" % (exitstatus & 255),
                 )
             )
             continue

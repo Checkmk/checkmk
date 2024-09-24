@@ -38,6 +38,7 @@ file, there is the `extract` function which can be used like this:
   password = cmk.utils.password_store.extract("pw_id")
 
 """
+
 import os
 import sys
 from collections.abc import Mapping
@@ -52,7 +53,11 @@ import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.config_path import ConfigPath, LATEST_CONFIG
 from cmk.utils.crypto.secrets import PasswordStoreSecret
-from cmk.utils.crypto.symmetric import aes_gcm_decrypt, aes_gcm_encrypt, TaggedCiphertext
+from cmk.utils.crypto.symmetric import (
+    aes_gcm_decrypt,
+    aes_gcm_encrypt,
+    TaggedCiphertext,
+)
 from cmk.utils.exceptions import MKGeneralException
 
 from . import hack
@@ -212,8 +217,17 @@ class PasswordStore:
             raw[: PasswordStore.VERSION_BYTE_LENGTH],
             raw[PasswordStore.VERSION_BYTE_LENGTH :],
         )
-        salt, rest = rest[: PasswordStore.SALT_LENGTH], rest[PasswordStore.SALT_LENGTH :]
-        nonce, rest = rest[: PasswordStore.NONCE_LENGTH], rest[PasswordStore.NONCE_LENGTH :]
-        tag, encrypted = rest[: TaggedCiphertext.TAG_LENGTH], rest[TaggedCiphertext.TAG_LENGTH :]
+        salt, rest = (
+            rest[: PasswordStore.SALT_LENGTH],
+            rest[PasswordStore.SALT_LENGTH :],
+        )
+        nonce, rest = (
+            rest[: PasswordStore.NONCE_LENGTH],
+            rest[PasswordStore.NONCE_LENGTH :],
+        )
+        tag, encrypted = (
+            rest[: TaggedCiphertext.TAG_LENGTH],
+            rest[TaggedCiphertext.TAG_LENGTH :],
+        )
         key = PasswordStoreSecret().derive_secret_key(salt)
         return aes_gcm_decrypt(key, nonce, TaggedCiphertext(ciphertext=encrypted, tag=tag))

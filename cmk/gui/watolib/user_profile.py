@@ -22,11 +22,19 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import RequestTimeout
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
-from cmk.gui.site_config import get_login_slave_sites, get_site_config, is_wato_slave_site
+from cmk.gui.site_config import (
+    get_login_slave_sites,
+    get_site_config,
+    is_wato_slave_site,
+)
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.watolib.automation_commands import AutomationCommand
-from cmk.gui.watolib.automations import do_remote_automation, get_url, MKAutomationException
+from cmk.gui.watolib.automations import (
+    do_remote_automation,
+    get_url,
+    MKAutomationException,
+)
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.utils import mk_eval, mk_repr
 
@@ -225,7 +233,10 @@ def push_user_profiles_to_site(site, user_profiles):
         }
 
     return do_remote_automation(
-        site, "push-profiles", [("profiles", repr(_serialize(user_profiles)))], timeout=60
+        site,
+        "push-profiles",
+        [("profiles", repr(_serialize(user_profiles)))],
+        timeout=60,
     )
 
 

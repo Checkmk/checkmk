@@ -8,7 +8,13 @@ from collections import defaultdict
 
 from cmk.agent_based.v2 import AgentSection, StringTable
 from cmk.plugins.gcp.lib.constants import Extractors
-from cmk.plugins.gcp.lib.gcp import AssetSection, AssetType, AssetTypeSection, Config, GCPAsset
+from cmk.plugins.gcp.lib.gcp import (
+    AssetSection,
+    AssetType,
+    AssetTypeSection,
+    Config,
+    GCPAsset,
+)
 
 
 def parse_assets(string_table: StringTable) -> AssetSection:

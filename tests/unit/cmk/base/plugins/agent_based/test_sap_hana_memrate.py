@@ -12,8 +12,16 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+)
 
 from cmk.agent_based.v1.type_defs import StringTable
 from cmk.plugins.lib.sap_hana import ParsedSection
@@ -91,7 +99,10 @@ def test_inventory_sap_hana_memrate(
     ],
 )
 def test_check_sap_hana_memrate(
-    fix_register: FixRegister, item: str, info: StringTable, expected_result: CheckResult
+    fix_register: FixRegister,
+    item: str,
+    info: StringTable,
+    expected_result: CheckResult,
 ) -> None:
     section = fix_register.agent_sections[SectionName("sap_hana_memrate")].parse_function(info)
     plugin = fix_register.check_plugins[CheckPluginName("sap_hana_memrate")]

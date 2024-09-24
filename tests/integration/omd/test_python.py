@@ -106,7 +106,11 @@ def test_03_python_interpreter_version(site: Site) -> None:
 def test_03_python_path(site: Site) -> None:
     python_version = _get_python_version_from_defines_make()
     p = site.execute(
-        [f"python{python_version.major}", "-c", "import sys,json; json.dump(sys.path, sys.stdout)"],
+        [
+            f"python{python_version.major}",
+            "-c",
+            "import sys,json; json.dump(sys.path, sys.stdout)",
+        ],
         stdout=subprocess.PIPE,
     )
     sys_path = json.loads(p.stdout.read()) if p.stdout else "<NO STDOUT>"
@@ -196,7 +200,11 @@ def test_python_preferred_encoding(site: Site) -> None:
 
 def test_python_optimized_and_lto_enable(site: Site) -> None:
     output = site.execute(
-        ["python3", "-c", "import sysconfig; print(sysconfig.get_config_vars('CONFIG_ARGS'));"],
+        [
+            "python3",
+            "-c",
+            "import sysconfig; print(sysconfig.get_config_vars('CONFIG_ARGS'));",
+        ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,

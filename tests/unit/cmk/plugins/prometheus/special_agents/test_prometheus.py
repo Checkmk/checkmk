@@ -121,7 +121,10 @@ from cmk.special_agents.utils.prometheus import extract_connection_args
                                 "metric_label": "label",
                                 "metric_name": "k8s_cpu_allocatable",
                                 "promql_query": "promql:query",
-                                "levels": {"lower_levels": (0.0, 0.0), "upper_levels": (0.0, 0.0)},
+                                "levels": {
+                                    "lower_levels": (0.0, 0.0),
+                                    "upper_levels": (0.0, 0.0),
+                                },
                             }
                         ],
                     }

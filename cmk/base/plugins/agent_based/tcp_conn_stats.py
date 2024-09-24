@@ -5,7 +5,11 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.plugins.lib.tcp_connections import empty_stats, MAP_COUNTER_KEYS, TCPConnections
+from cmk.plugins.lib.tcp_connections import (
+    empty_stats,
+    MAP_COUNTER_KEYS,
+    TCPConnections,
+)
 
 from .agent_based_api.v1 import check_levels, register, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable

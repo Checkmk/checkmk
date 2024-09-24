@@ -105,7 +105,9 @@ _InventorySpec = tuple[
 ProcessLine = tuple[str | None, PsInfo, Sequence[str], int]
 
 
-def get_discovery_specs(params: Sequence[Mapping[str, Any]]) -> Sequence[_InventorySpec]:
+def get_discovery_specs(
+    params: Sequence[Mapping[str, Any]],
+) -> Sequence[_InventorySpec]:
     inventory_specs = []
     for value in params[:-1]:  # skip empty default parameters
         inventory_specs.append(
@@ -133,7 +135,14 @@ def host_labels_ps(
     """
     specs = get_discovery_specs(params)
     for process_info, command_line in section[1]:
-        for _servicedesc, pattern, userspec, cgroupspec, labels, _default_params in specs:
+        for (
+            _servicedesc,
+            pattern,
+            userspec,
+            cgroupspec,
+            labels,
+            _default_params,
+        ) in specs:
             # First entry in line is the node name or None for non-clusters
             if not process_attributes_match(process_info, userspec, cgroupspec):
                 continue
@@ -179,7 +188,12 @@ def replace_service_description(service_description, match_groups, pattern):
         raise ValueError(
             "Invalid entry in inventory_processes_rules: service description '%s' contains %d "
             "replaceable elements, but regular expression %r contains only %d subexpression(s)."
-            % (service_description, total_replacements_count, pattern, len(match_groups))
+            % (
+                service_description,
+                total_replacements_count,
+                pattern,
+                len(match_groups),
+            )
         )
 
 
@@ -422,7 +436,10 @@ class ProcessAggregator:
                 value_store, "user.%s" % pid, ps_time, int(process_info.usermode_time)
             )
             kernel_per_sec = cpu_rate(
-                value_store, "kernel.%s" % pid, ps_time, int(process_info.kernelmode_time)
+                value_store,
+                "kernel.%s" % pid,
+                ps_time,
+                int(process_info.kernelmode_time),
             )
 
             if not all([user_per_sec, kernel_per_sec]):
@@ -517,7 +534,14 @@ def discover_ps(
     inventory_specs = get_discovery_specs(params)
 
     for process_info, command_line in section_ps[1]:
-        for servicedesc, pattern, userspec, cgroupspec, _labels, default_params in inventory_specs:
+        for (
+            servicedesc,
+            pattern,
+            userspec,
+            cgroupspec,
+            _labels,
+            default_params,
+        ) in inventory_specs:
             if not process_attributes_match(process_info, userspec, cgroupspec):
                 continue
             matches = process_matches(command_line, pattern)
@@ -751,7 +775,9 @@ def cpu_check(percent_cpu: float, params: Mapping[str, Any]) -> CheckResult:
     )
 
 
-def extract_process_data(process: _Process) -> tuple[str | None, str | None, float, float, float]:
+def extract_process_data(
+    process: _Process,
+) -> tuple[str | None, str | None, float, float, float]:
     name, pid, cpu_usage, virt_usage, res_usage = None, None, 0.0, 0.0, 0.0
     for the_item, (value, _unit) in process:
         if the_item == "name":
@@ -803,7 +829,12 @@ def individual_process_check(
             (cpu_levels, "CPU", cpu_usage, render.percent),
             (virt_levels, "virtual memory", virt_usage, render.bytes),
             (res_levels, "resident memory", res_usage, render.bytes),
-            (res_levels_perc, "percentage of resident memory", res_usage_pct, render.percent),
+            (
+                res_levels_perc,
+                "percentage of resident memory",
+                res_usage_pct,
+                render.percent,
+            ),
         ):
             if levels is None or metric_value is None:
                 continue

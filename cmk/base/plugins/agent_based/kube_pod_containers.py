@@ -7,7 +7,13 @@ import json
 import time
 from collections.abc import Mapping
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import register, render, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    register,
+    render,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,

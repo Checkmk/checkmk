@@ -17,11 +17,18 @@ from typing_extensions import TypedDict
 import cmk.utils.werks.werk as utils_werks_werk
 from cmk.utils.man_pages import make_man_page_path_map
 from cmk.utils.version import __version__, Edition, Version
-from cmk.utils.werks.acknowledgement import is_acknowledged
-from cmk.utils.werks.acknowledgement import load_acknowledgements as werks_load_acknowledgements
-from cmk.utils.werks.acknowledgement import load_werk_entries
-from cmk.utils.werks.acknowledgement import save_acknowledgements as werks_save_acknowledgements
-from cmk.utils.werks.acknowledgement import sort_by_date, unacknowledged_incompatible_werks
+from cmk.utils.werks.acknowledgement import (
+    is_acknowledged,
+    load_werk_entries,
+    sort_by_date,
+    unacknowledged_incompatible_werks,
+)
+from cmk.utils.werks.acknowledgement import (
+    load_acknowledgements as werks_load_acknowledgements,
+)
+from cmk.utils.werks.acknowledgement import (
+    save_acknowledgements as werks_save_acknowledgements,
+)
 from cmk.utils.werks.werk import WerkTranslator
 
 from cmk.gui.breadcrumb import (
@@ -59,7 +66,12 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, makeuri_contextless
+from cmk.gui.utils.urls import (
+    make_confirm_delete_link,
+    makeactionuri,
+    makeuri,
+    makeuri_contextless,
+)
 from cmk.gui.valuespec import (
     DropdownChoice,
     Integer,
@@ -176,7 +188,11 @@ class AboutCheckmkPage(Page):
 
         html.open_div(id_="info_footer")
         html.span(_("© %s Checkmk GmbH. All Rights Reserved.") % time.strftime("%Y"))
-        html.a(_("License agreement"), href="https://checkmk.com/legal.html", target="_blank")
+        html.a(
+            _("License agreement"),
+            href="https://checkmk.com/legal.html",
+            target="_blank",
+        )
         html.close_div()
         return None
 
@@ -480,7 +496,12 @@ def _werk_table_option_entries() -> list[tuple[_WerkTableOptionColumns, str, Val
             ),
             [1, 2, 3],
         ),
-        ("date", "double", Timerange(title=_("Date")), ("date", (1383149313, int(time.time())))),
+        (
+            "date",
+            "double",
+            Timerange(title=_("Date")),
+            ("date", (1383149313, int(time.time()))),
+        ),
         (
             "id",
             "single",
@@ -649,7 +670,9 @@ def render_werks_table(werk_table_options: WerkTableOptions) -> None:
     number_of_werks = 0
     sorter, grouper = _SORT_AND_GROUP[werk_table_options["grouping"]]
     list_of_werks = sorter(
-        werk for werk in load_werk_entries() if werk_matches_options(werk, werk_table_options)  #
+        werk
+        for werk in load_werk_entries()
+        if werk_matches_options(werk, werk_table_options)  #
     )
     groups = itertools.groupby(list_of_werks, key=grouper)
     for group_title, werks in itertools.islice(groups, werk_table_options["group_limit"]):

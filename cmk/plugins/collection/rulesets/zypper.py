@@ -4,7 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import DefaultValue, DictElement, Dictionary, ServiceState
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    ServiceState,
+)
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
 
 

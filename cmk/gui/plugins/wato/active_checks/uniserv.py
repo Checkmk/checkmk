@@ -8,7 +8,13 @@ from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import CascadingDropdown, Dictionary, Integer, NetworkPort, TextInput
+from cmk.gui.valuespec import (
+    CascadingDropdown,
+    Dictionary,
+    Integer,
+    NetworkPort,
+    TextInput,
+)
 from cmk.gui.wato import RulespecGroupIntegrateOtherServices
 
 

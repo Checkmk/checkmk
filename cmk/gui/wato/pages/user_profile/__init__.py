@@ -5,7 +5,14 @@
 
 from cmk.gui.pages import PageRegistry
 
-from . import async_replication, change_password, edit_profile, mega_menu, replicate, two_factor
+from . import (
+    async_replication,
+    change_password,
+    edit_profile,
+    mega_menu,
+    replicate,
+    two_factor,
+)
 
 
 def register(page_registry: PageRegistry) -> None:

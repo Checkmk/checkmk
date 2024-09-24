@@ -48,7 +48,11 @@ def LowerMemoryLevels(what, default_percents=None, of_what=None, help_text=None)
         title=_("Lower levels for %s") % what,
         help=help_text,
         choices=[
-            ("perc_free", _("Percentual levels"), FreePercentage(default_percents, of_what)),
+            (
+                "perc_free",
+                _("Percentual levels"),
+                FreePercentage(default_percents, of_what),
+            ),
             ("abs_free", _("Absolute levels"), FreeSize()),
             # PredictiveMemoryChoice(what), # not yet implemented
             ("ignore", _("Do not impose levels")),
@@ -61,13 +65,22 @@ def _parameter_valuespec_memory_linux() -> Dictionary:
         elements=[
             ("levels_ram", DualMemoryLevels(_("RAM"))),
             ("levels_swap", DualMemoryLevels(_("Swap"))),
-            ("levels_virtual", DualMemoryLevels(_("Total virtual memory"), (80.0, 90.0))),
+            (
+                "levels_virtual",
+                DualMemoryLevels(_("Total virtual memory"), (80.0, 90.0)),
+            ),
             (
                 "levels_total",
                 UpperMemoryLevels(_("Total data in relation to RAM"), (120.0, 150.0), _("RAM")),
             ),
-            ("levels_shm", UpperMemoryLevels(_("Shared memory"), (20.0, 30.0), _("RAM"))),
-            ("levels_pagetables", UpperMemoryLevels(_("Page tables"), (8.0, 16.0), _("RAM"))),
+            (
+                "levels_shm",
+                UpperMemoryLevels(_("Shared memory"), (20.0, 30.0), _("RAM")),
+            ),
+            (
+                "levels_pagetables",
+                UpperMemoryLevels(_("Page tables"), (8.0, 16.0), _("RAM")),
+            ),
             ("levels_writeback", UpperMemoryLevels(_("Disk writeback"))),
             (
                 "levels_committed",

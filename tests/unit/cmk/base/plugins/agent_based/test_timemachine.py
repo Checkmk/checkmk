@@ -62,7 +62,10 @@ def test_check_agent_failure() -> None:
     info = "Unable to locate machine directory for host."
     result = list(timemachine.check_timemachine(params={"age": (86400, 172800)}, section=info))
     assert result == [
-        Result(state=State.CRIT, summary=f"Backup seems to have failed, message was: {info}")
+        Result(
+            state=State.CRIT,
+            summary=f"Backup seems to have failed, message was: {info}",
+        )
     ]
 
 

@@ -32,7 +32,11 @@ def _parameter_valuespec_mysql_sessions():
                     title=_("Number of current sessions"),
                     elements=[
                         Integer(title=_("Warning at"), unit=_("sessions"), default_value=100),
-                        Integer(title=_("Critical at"), unit=_("sessions"), default_value=200),
+                        Integer(
+                            title=_("Critical at"),
+                            unit=_("sessions"),
+                            default_value=200,
+                        ),
                     ],
                 ),
             ),
@@ -52,8 +56,16 @@ def _parameter_valuespec_mysql_sessions():
                 Tuple(
                     title=_("Number of new connections per second"),
                     elements=[
-                        Integer(title=_("Warning at"), unit=_("connection/sec"), default_value=20),
-                        Integer(title=_("Critical at"), unit=_("connection/sec"), default_value=40),
+                        Integer(
+                            title=_("Warning at"),
+                            unit=_("connection/sec"),
+                            default_value=20,
+                        ),
+                        Integer(
+                            title=_("Critical at"),
+                            unit=_("connection/sec"),
+                            default_value=40,
+                        ),
                     ],
                 ),
             ),

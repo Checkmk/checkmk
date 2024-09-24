@@ -139,7 +139,9 @@ from cmk.graphing.v1 import metrics
     ],
 )
 def test_parse_or_add_unit(
-    precision: metrics.AutoPrecision | metrics.StrictPrecision, value: int | float, expected: str
+    precision: metrics.AutoPrecision | metrics.StrictPrecision,
+    value: int | float,
+    expected: str,
 ) -> None:
     unit = metrics.Unit(metrics.DecimalNotation("unit"), precision)
     assert parse_or_add_unit(unit)["render"](value) == expected
@@ -372,7 +374,10 @@ def test_render_unit_notation(
             id="engineering-scientific-auto",
         ),
         pytest.param(
-            metrics.Unit(metrics.EngineeringScientificNotation("unit"), metrics.StrictPrecision(2)),
+            metrics.Unit(
+                metrics.EngineeringScientificNotation("unit"),
+                metrics.StrictPrecision(2),
+            ),
             """v => new cmk.number_format.EngineeringScientificFormatter(
     "unit",
     new cmk.number_format.StrictPrecision(2),

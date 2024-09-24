@@ -10,7 +10,12 @@ from tests.testlib import set_timezone
 from cmk.checkengine.parameters import Parameters
 
 import cmk.base.plugins.agent_based.livestatus_status as livestatus_status
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
 STRING_TABLE_STATUS = [
@@ -698,20 +703,36 @@ _RESULTS = [
     Result(state=State.OK, notice="Log messages: 0.0/s"),
     Metric("log_messages", 1.84655e-07, boundaries=(0.0, None)),
     Result(state=State.OK, notice="Average active check latency: 0.000s"),
-    Metric("average_latency_generic", 2.23711e-06, levels=(30.0, 60.0), boundaries=(0.0, None)),
+    Metric(
+        "average_latency_generic",
+        2.23711e-06,
+        levels=(30.0, 60.0),
+        boundaries=(0.0, None),
+    ),
     Result(state=State.OK, notice="Average checker latency: 0.000s"),
     Metric("average_latency_cmk", 2.01088e-05, levels=(30.0, 60.0), boundaries=(0.0, None)),
     Result(state=State.OK, notice="Average fetcher latency: 0.000s"),
-    Metric("average_latency_fetcher", 2.01088e-05, levels=(30.0, 60.0), boundaries=(0.0, None)),
+    Metric(
+        "average_latency_fetcher",
+        2.01088e-05,
+        levels=(30.0, 60.0),
+        boundaries=(0.0, None),
+    ),
     Result(state=State.OK, notice="Active check helper usage: 1.43%"),
     Metric("helper_usage_generic", 1.42967, levels=(80.0, 90.0), boundaries=(0.0, None)),
     Result(state=State.OK, notice="Fetcher helper usage: 0.04%"),
     Metric(
-        "helper_usage_fetcher", 0.043827200000000004, levels=(80.0, 90.0), boundaries=(0.0, None)
+        "helper_usage_fetcher",
+        0.043827200000000004,
+        levels=(80.0, 90.0),
+        boundaries=(0.0, None),
     ),
     Result(state=State.OK, notice="Checker helper usage: 0.04%"),
     Metric(
-        "helper_usage_checker", 0.043827200000000004, levels=(80.0, 90.0), boundaries=(0.0, None)
+        "helper_usage_checker",
+        0.043827200000000004,
+        levels=(80.0, 90.0),
+        boundaries=(0.0, None),
     ),
     Result(state=State.OK, notice="Livestatus usage: <0.01%"),
     Metric("livestatus_usage", 3.46e-321, levels=(60.0, 80.0), boundaries=(0.0, None)),

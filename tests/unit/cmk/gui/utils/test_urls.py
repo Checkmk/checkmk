@@ -7,7 +7,12 @@ import pytest
 
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import HTTPVariables
-from cmk.gui.utils.urls import doc_reference_url, DocReference, urlencode, urlencode_vars
+from cmk.gui.utils.urls import (
+    doc_reference_url,
+    DocReference,
+    urlencode,
+    urlencode_vars,
+)
 
 
 @pytest.mark.parametrize(

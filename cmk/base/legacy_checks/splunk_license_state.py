@@ -39,7 +39,14 @@ def parse_splunk_license_state(string_table):
 
     for lcs_detail in string_table:
         try:
-            label, max_violations, window_period, quota, expiration_time, status = lcs_detail
+            (
+                label,
+                max_violations,
+                window_period,
+                quota,
+                expiration_time,
+                status,
+            ) = lcs_detail
 
             time_to_expiration = float(expiration_time) - time.time()
             parsed.setdefault(label, []).append(
@@ -90,10 +97,13 @@ def check_splunk_license_state(item, params, parsed):
 
         yield state, infotext
 
-    yield 0, "Max violations: {} within window period of {} Days, Quota: {}".format(
-        data.max_violations,
-        data.window_period,
-        data.quota,
+    yield (
+        0,
+        "Max violations: {} within window period of {} Days, Quota: {}".format(
+            data.max_violations,
+            data.window_period,
+            data.quota,
+        ),
     )
 
 

@@ -7,7 +7,10 @@ import pytest
 
 from cmk.base.plugins.agent_based import zypper
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    StringTable,
+)
 
 
 @pytest.mark.parametrize("string_table", [None])

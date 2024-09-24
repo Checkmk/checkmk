@@ -16,8 +16,14 @@ def parse_ups_socomec_outphase(string_table):
     parsed = {}
     for index, rawvolt, rawcurr, rawload in string_table:
         parsed["Phase " + index] = {
-            "voltage": (int(rawvolt) // 10, None),  # The actual precision does not appear to
-            "current": (int(rawcurr) // 10, None),  # go beyond degrees, thus we drop the trailing 0
+            "voltage": (
+                int(rawvolt) // 10,
+                None,
+            ),  # The actual precision does not appear to
+            "current": (
+                int(rawcurr) // 10,
+                None,
+            ),  # go beyond degrees, thus we drop the trailing 0
             "output_load": (int(rawload), None),
         }
     return parsed

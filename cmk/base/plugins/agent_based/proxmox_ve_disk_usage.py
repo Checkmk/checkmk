@@ -75,7 +75,8 @@ def check_proxmox_ve_disk_usage(params: Mapping[str, Any], section: Section) -> 
         label="Used",
     )
     yield Result(
-        state=State.OK, summary=f"{render.disksize(used_bytes)} of {render.disksize(total_bytes)}"
+        state=State.OK,
+        summary=f"{render.disksize(used_bytes)} of {render.disksize(total_bytes)}",
     )
 
     yield Metric(

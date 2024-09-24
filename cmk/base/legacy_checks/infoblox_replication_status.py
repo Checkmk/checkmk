@@ -43,12 +43,15 @@ def check_infoblox_replication_status(item, _no_params, info):
             else:
                 state = 2
 
-            return state, "Status: {}, Queue from master: {} ({}), Queue to master: {} ({})".format(
-                status_readable,
-                queue_from_master,
-                time_from_master,
-                queue_to_master,
-                time_to_master,
+            return (
+                state,
+                "Status: {}, Queue from master: {} ({}), Queue to master: {} ({})".format(
+                    status_readable,
+                    queue_from_master,
+                    time_from_master,
+                    queue_to_master,
+                    time_to_master,
+                ),
             )
     return None
 

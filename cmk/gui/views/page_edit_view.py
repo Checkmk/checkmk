@@ -370,7 +370,10 @@ def _get_join_inv_vs_column_choice(ds_name: str) -> _VSColumnChoice | None:
                                         magic="#@inv@#",
                                     ),
                                 ),
-                                ("path_to_table", FixedValue(table_info.path, totext="")),
+                                (
+                                    "path_to_table",
+                                    FixedValue(table_info.path, totext=""),
+                                ),
                             ],
                             optional_keys=[],
                         ),
@@ -457,7 +460,7 @@ def _get_vs_column_dropdown(
 
 
 def _get_vs_link_or_tooltip_elements(
-    painters: Mapping[str, Painter]
+    painters: Mapping[str, Painter],
 ) -> list[tuple[str, ValueSpec]]:
     return [
         (
@@ -514,7 +517,7 @@ def _view_editor_spec(
             tuple[Literal["column"], _RawVSColumnSpec]
             | tuple[Literal["join_column"], _RawVSJoinColumnSpec]
             | tuple[Literal["join_inv_column"], _RawVSJoinInvColumnSpec]
-        )
+        ),
     ) -> ColumnSpec:
         if value[0] == "column":
             column_type, inner_value = value
@@ -572,7 +575,9 @@ def _view_editor_spec(
     def _get_params(value: _RawVSColumnSpec) -> PainterParameters:
         return ps[1] if isinstance((ps := value["painter_spec"]), tuple) else PainterParameters()
 
-    def _get_link_spec(value: _RawVSColumnSpec | _RawVSJoinInvColumnSpec) -> VisualLinkSpec | None:
+    def _get_link_spec(
+        value: _RawVSColumnSpec | _RawVSJoinInvColumnSpec,
+    ) -> VisualLinkSpec | None:
         return None if (ls := value.get("link_spec")) is None else VisualLinkSpec.from_raw(ls)
 
     def _to_vs(
@@ -722,7 +727,10 @@ def view_editor_sorter_specs(
                             ),
                             DropdownChoice(
                                 title=_("Order"),
-                                choices=[(False, _("Ascending")), (True, _("Descending"))],
+                                choices=[
+                                    (False, _("Ascending")),
+                                    (True, _("Descending")),
+                                ],
                             ),
                         ],
                         orientation="horizontal",
@@ -801,7 +809,13 @@ def _transform_view_to_valuespec_value(view: ViewSpec) -> dict[str, Any]:
     value: dict[str, Any] = {**view}
     value["view"] = {}  # Several global variables are put into a sub-dict
     # Only copy our known keys. Reporting element, etc. might have their own keys as well
-    for key in ["datasource", "browser_reload", "layout", "num_columns", "column_headers"]:
+    for key in [
+        "datasource",
+        "browser_reload",
+        "layout",
+        "num_columns",
+        "column_headers",
+    ]:
         if key in value:
             value["view"][key] = value[key]
 
@@ -885,7 +899,9 @@ def _painter_choices(painters: Mapping[str, Painter]) -> DropdownChoiceEntries:
     return [(c[0], c[1]) for c in _painter_choices_with_params(painters)]
 
 
-def _painter_choices_with_params(painters: Mapping[str, Painter]) -> list[CascadingDropdownChoice]:
+def _painter_choices_with_params(
+    painters: Mapping[str, Painter],
+) -> list[CascadingDropdownChoice]:
     return sorted(
         (
             (

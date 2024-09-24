@@ -96,7 +96,9 @@ def check_mem_windows_static(
             avg_text = f" (averaged over {int(average)} min)"
             avg_suffix = "_avg"
             yield Metric(
-                f"{metric_prefix}_used_percent", used_raw / total * 100.0, boundaries=(0.0, 100.0)
+                f"{metric_prefix}_used_percent",
+                used_raw / total * 100.0,
+                boundaries=(0.0, 100.0),
             )
             yield Metric(f"{metric_prefix}_used", used_raw, boundaries=(0.0, total))
             yield Metric(f"{metric_prefix}_free", free_raw, boundaries=(0.0, total))

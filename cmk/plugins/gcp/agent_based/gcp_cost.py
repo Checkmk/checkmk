@@ -71,7 +71,9 @@ def parse(string_table: StringTable) -> Section:
             )
         else:
             cost = ProjectCost(
-                current_month=month_costs[0], previous_month=None, project=month_costs[0].project
+                current_month=month_costs[0],
+                previous_month=None,
+                project=month_costs[0].project,
             )
         if cost.current_month.month != query_month:
             continue

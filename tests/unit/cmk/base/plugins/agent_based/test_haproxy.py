@@ -9,7 +9,12 @@ from unittest import mock
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -681,7 +686,10 @@ def test_discover_haproxy_frontent(info: StringTable, expected_result: Discovery
     mock.MagicMock(return_value={"sessions.some_server": (time(), 0.0)}),
 )
 def test_haproxy_frontend(
-    item: str, params: Mapping[str, object], info: StringTable, expected_result: CheckResult
+    item: str,
+    params: Mapping[str, object],
+    info: StringTable,
+    expected_result: CheckResult,
 ) -> None:
     data = parse_haproxy(info)
     result = check_haproxy_frontend(item, params, data)
@@ -1361,7 +1369,10 @@ def test_discover_haproxy_server(info: StringTable, expected_result: DiscoveryRe
     ],
 )
 def test_haproxy_server(
-    item: str, params: Mapping[str, object], info: StringTable, expected_result: CheckResult
+    item: str,
+    params: Mapping[str, object],
+    info: StringTable,
+    expected_result: CheckResult,
 ) -> None:
     data = parse_haproxy(info)
     result = check_haproxy_server(item, params, data)

@@ -72,7 +72,9 @@ class BackgroundProcess(multiprocessing.Process):
         try:
             self.initialize_environment()
             self._logger.log(
-                VERBOSE, "Initialized background job (Job ID: %s)", self._job_interface.get_job_id()
+                VERBOSE,
+                "Initialized background job (Job ID: %s)",
+                self._job_interface.get_job_id(),
             )
             self._jobstatus_store.update(
                 {
@@ -103,7 +105,8 @@ class BackgroundProcess(multiprocessing.Process):
             self._jobstatus_store.update({"state": JobStatusStates.STOPPED})
         except Exception:
             self._logger.error(
-                "Exception while preparing background function environment", exc_info=True
+                "Exception while preparing background function environment",
+                exc_info=True,
             )
             self._jobstatus_store.update({"state": JobStatusStates.EXCEPTION})
 

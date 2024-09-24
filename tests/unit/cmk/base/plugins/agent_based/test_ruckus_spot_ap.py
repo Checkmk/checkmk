@@ -6,7 +6,12 @@
 import json
 from typing import Final
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.ruckus_spot_ap import (
     check_ruckus_spot_ap,
     discover_ruckus_spot_ap,

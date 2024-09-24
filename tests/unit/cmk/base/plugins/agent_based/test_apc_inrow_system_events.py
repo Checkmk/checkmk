@@ -25,6 +25,7 @@ def test_no_events_are_ok() -> None:
 def test_report_an_event() -> None:
     assert list(
         check_apc_inrow_system_events(
-            {"state": 2}, parse_apc_inrow_system_events([["Zombie-appocalypse", "is", "happening"]])
+            {"state": 2},
+            parse_apc_inrow_system_events([["Zombie-appocalypse", "is", "happening"]]),
         )
     ) == [Result(state=State.CRIT, summary="Zombie-appocalypse")]

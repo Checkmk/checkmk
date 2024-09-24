@@ -223,7 +223,15 @@ class StubFileCache(Generic[_TRawData], FileCache[_TRawData]):
 class TestIPMISensor:
     def test_parse_sensor_reading_standard_case(self) -> None:
         reading = SensorReading(  #
-            ["lower non-critical threshold"], 1, "Hugo", None, "", [42], "hugo-type", None, 0
+            ["lower non-critical threshold"],
+            1,
+            "Hugo",
+            None,
+            "",
+            [42],
+            "hugo-type",
+            None,
+            0,
         )
         assert IPMISensor.from_reading(0, reading) == IPMISensor(
             id=b"0",
@@ -236,7 +244,15 @@ class TestIPMISensor:
 
     def test_parse_sensor_reading_false_positive(self) -> None:
         reading = SensorReading(  #
-            ["Present"], 1, "Dingeling", 0.2, b"\xc2\xb0C", [], "FancyDevice", 3.14159265, 1
+            ["Present"],
+            1,
+            "Dingeling",
+            0.2,
+            b"\xc2\xb0C",
+            [],
+            "FancyDevice",
+            3.14159265,
+            1,
         )
         assert IPMISensor.from_reading(0, reading) == IPMISensor(
             id=b"0",
@@ -662,7 +678,9 @@ class TestSNMPFetcherFetch:
         table = [["1"]]
         monkeypatch.setattr(snmp, "get_snmp_table", lambda tree, **__: table)
         monkeypatch.setattr(
-            SNMPFetcher, "disabled_sections", property(lambda self: {SectionName("pam")})
+            SNMPFetcher,
+            "disabled_sections",
+            property(lambda self: {SectionName("pam")}),
         )
         monkeypatch.setattr(
             SNMPFetcher,
@@ -672,7 +690,10 @@ class TestSNMPFetcherFetch:
         return table
 
     def test_mode_inventory_do_status_data_inventory(
-        self, set_sections: list[list[str]], fetcher: SNMPFetcher, monkeypatch: MonkeyPatch
+        self,
+        set_sections: list[list[str]],
+        fetcher: SNMPFetcher,
+        monkeypatch: MonkeyPatch,
     ) -> None:
         table = set_sections
         monkeypatch.setattr(fetcher, "do_status_data_inventory", True)
@@ -694,7 +715,10 @@ class TestSNMPFetcherFetch:
         )
 
     def test_mode_inventory_not_do_status_data_inventory(
-        self, set_sections: list[list[str]], fetcher: SNMPFetcher, monkeypatch: MonkeyPatch
+        self,
+        set_sections: list[list[str]],
+        fetcher: SNMPFetcher,
+        monkeypatch: MonkeyPatch,
     ) -> None:
         table = set_sections
         monkeypatch.setattr(fetcher, "do_status_data_inventory", False)
@@ -716,7 +740,10 @@ class TestSNMPFetcherFetch:
         )
 
     def test_mode_checking_do_status_data_inventory(
-        self, set_sections: list[list[str]], fetcher: SNMPFetcher, monkeypatch: MonkeyPatch
+        self,
+        set_sections: list[list[str]],
+        fetcher: SNMPFetcher,
+        monkeypatch: MonkeyPatch,
     ) -> None:
         table = set_sections
         monkeypatch.setattr(fetcher, "do_status_data_inventory", True)

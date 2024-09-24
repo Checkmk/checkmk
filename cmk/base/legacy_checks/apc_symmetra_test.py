@@ -63,7 +63,10 @@ def _days_difference(date: str, today: datetime.date) -> int:
 
 
 def check_apc_test(item, params, info):
-    days_warn, days_crit = params.get("levels_elapsed_time") or (0, 0)  # TODO: clean this up
+    days_warn, days_crit = params.get("levels_elapsed_time") or (
+        0,
+        0,
+    )  # TODO: clean this up
     if not info:
         return 3, "Data Missing"
     last_result = int(info[0][0])

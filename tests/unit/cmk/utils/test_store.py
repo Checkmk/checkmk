@@ -269,7 +269,12 @@ def test_save_text_to_file(tmp_path: Path, path_type: type[str] | type[Path], da
 
 
 @pytest.mark.parametrize(
-    "load_fun", [store.load_bytes_from_file, store.load_object_from_file, store.load_text_from_file]
+    "load_fun",
+    [
+        store.load_bytes_from_file,
+        store.load_object_from_file,
+        store.load_text_from_file,
+    ],
 )
 @pytest.mark.parametrize("permissions", [0o002, 0o666, 0o777])
 def test_load_world_writable_file(tmp_path: Path, load_fun: Callable, permissions: int) -> None:
@@ -424,7 +429,9 @@ def test_acquire_lock_twice(test_file: Path, path_type: type[str] | type[Path]) 
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
-def test_release_lock_not_locked_no_exception(path_type: type[str] | type[Path]) -> None:
+def test_release_lock_not_locked_no_exception(
+    path_type: type[str] | type[Path],
+) -> None:
     store.release_lock(path_type("/asdasd/aasdasd"))
 
 
@@ -693,7 +700,10 @@ def test_non_blocking_lock_from_multiple_threads(
 
 @pytest.mark.parametrize("path_type", [str, Path])
 def test_blocking_lock_while_other_holds_the_lock(
-    test_file: Path, path_type: type[str] | type[Path], t1: LockTestThread, t2: LockTestThread
+    test_file: Path,
+    path_type: type[str] | type[Path],
+    t1: LockTestThread,
+    t2: LockTestThread,
 ) -> None:
     assert t1.store != t2.store
 

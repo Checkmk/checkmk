@@ -58,7 +58,10 @@ class SpecGeneratorBackgroundJob(BackgroundJob):
 def _generate_spec_in_background_job(job_interface: BackgroundProcessInterface) -> None:
     job_interface.send_progress_update(_("Generating REST API specification"))
     with subprocess.Popen(
-        ["cmk-compute-api-spec"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding="utf-8"
+        ["cmk-compute-api-spec"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        encoding="utf-8",
     ) as p:
         output = p.communicate()[0]
         if p.returncode != 0:

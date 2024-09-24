@@ -89,7 +89,11 @@ class Socket:
         verify = verify_dict.get("verify")
 
         return cls(
-            socket_type=internal_config[0], host=host, port=port, verify=verify, encrypted=encrypted
+            socket_type=internal_config[0],
+            host=host,
+            port=port,
+            verify=verify,
+            encrypted=encrypted,
         )
 
     def to_external(self) -> Iterator[tuple[str, str | int | bool]]:
@@ -138,7 +142,11 @@ class StatusHost:
         if internal_config is None:
             return cls(status_host_set="disabled")
 
-        return cls(site=internal_config[0], host=str(internal_config[1]), status_host_set="enabled")
+        return cls(
+            site=internal_config[0],
+            host=str(internal_config[1]),
+            status_host_set="enabled",
+        )
 
     def to_external(self) -> Iterator[tuple[str, str | bool | None]]:
         yield "status_host_set", self.status_host_set
@@ -201,7 +209,10 @@ class ProxyParams:
             proxyconfigparams["channels"] = self.channels
 
         if self.heartbeat:
-            proxyconfigparams["heartbeat"] = (self.heartbeat.interval, self.heartbeat.timeout)
+            proxyconfigparams["heartbeat"] = (
+                self.heartbeat.interval,
+                self.heartbeat.timeout,
+            )
 
         if self.channel_timeout is not None:
             proxyconfigparams["channel_timeout"] = self.channel_timeout
@@ -477,7 +488,9 @@ class ConfigurationConnection:
         external_config["user_sync"] = UserSync(**external_config["user_sync"])
         return cls(**external_config)
 
-    def to_external(self) -> Iterator[tuple[str, dict[str, str | list[str] | None] | bool | str]]:
+    def to_external(
+        self,
+    ) -> Iterator[tuple[str, dict[str, str | list[str] | None] | bool | str]]:
         for k, v in self.__dict__.items():
             if k == "user_sync":
                 yield k, dict(self.user_sync.to_external())
@@ -531,7 +544,10 @@ class SiteConfig:
     def to_external(self) -> Iterator[tuple[str, dict | None | str]]:
         yield "basic_settings", dict(self.basic_settings.to_external())
         yield "status_connection", dict(self.status_connection.to_external())
-        yield "configuration_connection", dict(self.configuration_connection.to_external())
+        yield (
+            "configuration_connection",
+            dict(self.configuration_connection.to_external()),
+        )
         if self.secret:
             yield "secret", self.secret
 

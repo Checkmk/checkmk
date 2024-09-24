@@ -25,7 +25,8 @@ def get_time(timefromdevice):
         timedecoded = struct.unpack(DateAndTime[length], timefromdevice.encode("latin-1"))
         if length == 8:
             timedevice = time.strftime(
-                "%d-%m-%Y %H:%M:%S", time.strptime(str(timedecoded), "(%Y, %m, %d, %H, %M, %S, %f)")
+                "%d-%m-%Y %H:%M:%S",
+                time.strptime(str(timedecoded), "(%Y, %m, %d, %H, %M, %S, %f)"),
             )
         else:
             offset = str(timedecoded[7]) + str(timedecoded[8]) + ":" + str(timedecoded[9])
@@ -51,9 +52,7 @@ def parse_hepta(string_table):
             local,
             sync_state,
         ),
-    ) = (
-        string_table[0] or string_table[1]
-    )
+    ) = string_table[0] or string_table[1]
     return {
         "devicetype": device_type,
         "serialnumber": serial_number,
@@ -91,11 +90,29 @@ check_info["hepta"] = LegacyCheckDefinition(
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.12527.29",
-            oids=["1.1.0", "1.3.0", "1.4.0", "1.5.0", "1.6.0", "2.1.2.0", "3.1.0", "3.5.0"],
+            oids=[
+                "1.1.0",
+                "1.3.0",
+                "1.4.0",
+                "1.5.0",
+                "1.6.0",
+                "2.1.2.0",
+                "3.1.0",
+                "3.5.0",
+            ],
         ),
         SNMPTree(
             base=".1.3.6.1.4.1.12527.40",
-            oids=["1.1.0", "1.3.0", "1.4.0", "1.5.0", "1.6.0", "2.1.2.0", "3.1.0", "3.5.0"],
+            oids=[
+                "1.1.0",
+                "1.3.0",
+                "1.4.0",
+                "1.5.0",
+                "1.6.0",
+                "2.1.2.0",
+                "3.1.0",
+                "3.5.0",
+            ],
         ),
     ],
     parse_function=parse_hepta,

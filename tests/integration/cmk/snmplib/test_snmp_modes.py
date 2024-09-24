@@ -23,7 +23,13 @@ from tests.testlib.site import Site
 
 from cmk.utils.hostaddress import HostAddress
 
-from cmk.snmplib import OID, SNMPBackendEnum, SNMPHostConfig, SNMPRowInfoForStoredWalk, SNMPVersion
+from cmk.snmplib import (
+    OID,
+    SNMPBackendEnum,
+    SNMPHostConfig,
+    SNMPRowInfoForStoredWalk,
+    SNMPVersion,
+)
 
 from .snmp_helpers import default_config, get_single_oid
 
@@ -200,18 +206,27 @@ def test_get_single_oid_not_resolvable(site: Site, backend_type: SNMPBackendEnum
             ".1.3.6.1.2.1.1.9.1.3",
             [
                 (".1.3.6.1.2.1.1.9.1.3.1", "The SNMP Management Architecture MIB."),
-                (".1.3.6.1.2.1.1.9.1.3.2", "The MIB for Message Processing and Dispatching."),
+                (
+                    ".1.3.6.1.2.1.1.9.1.3.2",
+                    "The MIB for Message Processing and Dispatching.",
+                ),
                 (
                     ".1.3.6.1.2.1.1.9.1.3.3",
                     "The management information definitions for the SNMP User-based Security Model.",
                 ),
                 (".1.3.6.1.2.1.1.9.1.3.4", "The MIB module for SNMPv2 entities"),
-                (".1.3.6.1.2.1.1.9.1.3.5", "The MIB module for managing TCP implementations"),
+                (
+                    ".1.3.6.1.2.1.1.9.1.3.5",
+                    "The MIB module for managing TCP implementations",
+                ),
                 (
                     ".1.3.6.1.2.1.1.9.1.3.6",
                     "The MIB module for managing IP and ICMP implementations",
                 ),
-                (".1.3.6.1.2.1.1.9.1.3.7", "The MIB module for managing UDP implementations"),
+                (
+                    ".1.3.6.1.2.1.1.9.1.3.7",
+                    "The MIB module for managing UDP implementations",
+                ),
                 (".1.3.6.1.2.1.1.9.1.3.8", "View-based Access Control Model for SNMP."),
             ],
         ),
@@ -234,7 +249,10 @@ def test_get_single_oid_not_resolvable(site: Site, backend_type: SNMPBackendEnum
 )
 @pytest.mark.usefixtures("snmpsim")
 def test_walk_for_export(
-    site: Site, backend_type: SNMPBackendEnum, oid: OID, expected_table: Sequence[tuple[OID, str]]
+    site: Site,
+    backend_type: SNMPBackendEnum,
+    oid: OID,
+    expected_table: Sequence[tuple[OID, str]],
 ) -> None:
     if backend_type is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")

@@ -11,7 +11,9 @@ from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.mcafee_gateway import DETECT_EMAIL_GATEWAY
 
 
-def parse_mcafee_emailgateway_av_mcafee(string_table: StringTable) -> StringTable | None:
+def parse_mcafee_emailgateway_av_mcafee(
+    string_table: StringTable,
+) -> StringTable | None:
     return string_table or None
 
 

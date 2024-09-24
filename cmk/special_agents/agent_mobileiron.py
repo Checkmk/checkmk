@@ -9,6 +9,7 @@ https://help.ivanti.com/mi/help/en_us/cld/76/api/Content/MobileIronCloudCustomer
 
 api call url parameters: "https://" + $tenantURL + "/api/v1/device?q=&rows=" + $interval + "&start=" + $start + "&dmPartitionId=" + $spaceId + "&fq=" + $filterCriteria + ""
 """
+
 from __future__ import annotations
 
 import enum
@@ -31,7 +32,10 @@ from cmk.special_agents.v0_unstable.agent_common import (
     SectionWriter,
     special_agent_main,
 )
-from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.argument_parsing import (
+    Args,
+    create_default_argument_parser,
+)
 
 LOGGER = logging.getLogger("agent_mobileiron")
 
@@ -105,7 +109,10 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     )
     parser.add_argument("--ios-regex", action="append", default=[], help="Regex for iOS hosts.")
     parser.add_argument(
-        "--other-regex", action="append", default=[], help="Regex for other platform hosts."
+        "--other-regex",
+        action="append",
+        default=[],
+        help="Regex for other platform hosts.",
     )
     parser.add_argument(
         "--proxy",

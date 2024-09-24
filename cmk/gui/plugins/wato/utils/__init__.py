@@ -19,7 +19,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.version import edition, Edition
+from cmk.utils.version import Edition, edition
 
 from cmk.checkengine.checking import CheckPluginName
 
@@ -93,7 +93,9 @@ from cmk.gui.wato import (
 from cmk.gui.wato import (
     RulespecGroupCheckParametersPrinters as RulespecGroupCheckParametersPrinters,
 )
-from cmk.gui.wato import RulespecGroupCheckParametersStorage as RulespecGroupCheckParametersStorage
+from cmk.gui.wato import (
+    RulespecGroupCheckParametersStorage as RulespecGroupCheckParametersStorage,
+)
 from cmk.gui.wato import (
     RulespecGroupCheckParametersVirtualization as RulespecGroupCheckParametersVirtualization,
 )
@@ -117,15 +119,21 @@ from cmk.gui.watolib.config_variable_groups import (
 from cmk.gui.watolib.config_variable_groups import (
     ConfigVariableGroupWATO as ConfigVariableGroupWATO,
 )
-from cmk.gui.watolib.host_attributes import ABCHostAttributeNagiosText as ABCHostAttributeNagiosText
+from cmk.gui.watolib.host_attributes import (
+    ABCHostAttributeNagiosText as ABCHostAttributeNagiosText,
+)
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttributeNagiosValueSpec as ABCHostAttributeNagiosValueSpec,
 )
-from cmk.gui.watolib.host_attributes import ABCHostAttributeValueSpec as ABCHostAttributeValueSpec
+from cmk.gui.watolib.host_attributes import (
+    ABCHostAttributeValueSpec as ABCHostAttributeValueSpec,
+)
 from cmk.gui.watolib.host_attributes import (
     host_attribute_topic_registry as host_attribute_topic_registry,
 )
-from cmk.gui.watolib.host_attributes import HostAttributeTopicAddress as HostAttributeTopicAddress
+from cmk.gui.watolib.host_attributes import (
+    HostAttributeTopicAddress as HostAttributeTopicAddress,
+)
 from cmk.gui.watolib.host_attributes import (
     HostAttributeTopicBasicSettings as HostAttributeTopicBasicSettings,
 )
@@ -135,11 +143,15 @@ from cmk.gui.watolib.host_attributes import (
 from cmk.gui.watolib.host_attributes import (
     HostAttributeTopicDataSources as HostAttributeTopicDataSources,
 )
-from cmk.gui.watolib.host_attributes import HostAttributeTopicHostTags as HostAttributeTopicHostTags
+from cmk.gui.watolib.host_attributes import (
+    HostAttributeTopicHostTags as HostAttributeTopicHostTags,
+)
 from cmk.gui.watolib.host_attributes import (
     HostAttributeTopicManagementBoard as HostAttributeTopicManagementBoard,
 )
-from cmk.gui.watolib.host_attributes import HostAttributeTopicMetaData as HostAttributeTopicMetaData
+from cmk.gui.watolib.host_attributes import (
+    HostAttributeTopicMetaData as HostAttributeTopicMetaData,
+)
 from cmk.gui.watolib.host_attributes import (
     HostAttributeTopicNetworkScan as HostAttributeTopicNetworkScan,
 )
@@ -153,7 +165,9 @@ from cmk.gui.watolib.main_menu import main_module_registry as main_module_regist
 from cmk.gui.watolib.main_menu import MainModuleTopic as MainModuleTopic
 from cmk.gui.watolib.main_menu import MenuItem as MenuItem
 from cmk.gui.watolib.password_store import PasswordStore as PasswordStore
-from cmk.gui.watolib.rulespec_groups import RulespecGroupAgentSNMP as RulespecGroupAgentSNMP
+from cmk.gui.watolib.rulespec_groups import (
+    RulespecGroupAgentSNMP as RulespecGroupAgentSNMP,
+)
 from cmk.gui.watolib.rulespec_groups import (
     RulespecGroupEnforcedServicesApplications as RulespecGroupEnforcedServicesApplications,
 )
@@ -211,7 +225,9 @@ from cmk.gui.watolib.rulespecs import (
     CheckParameterRulespecWithoutItem as CheckParameterRulespecWithoutItem,
 )
 from cmk.gui.watolib.rulespecs import HostRulespec as HostRulespec
-from cmk.gui.watolib.rulespecs import ManualCheckParameterRulespec as ManualCheckParameterRulespec
+from cmk.gui.watolib.rulespecs import (
+    ManualCheckParameterRulespec as ManualCheckParameterRulespec,
+)
 from cmk.gui.watolib.rulespecs import Rulespec as Rulespec
 from cmk.gui.watolib.rulespecs import rulespec_group_registry as rulespec_group_registry
 from cmk.gui.watolib.rulespecs import rulespec_registry as rulespec_registry

@@ -116,16 +116,22 @@ def test_check_ebs_limits() -> None:
     parsed_section = parse_aws_ebs_limits(_STRING_TABLE)
     assert list(
         check_aws_ebs_limits(
-            item=_AWS_REGION, params=AWS_EBS_LIMITS_DEFAULT_PARAMS, section=parsed_section
+            item=_AWS_REGION,
+            params=AWS_EBS_LIMITS_DEFAULT_PARAMS,
+            section=parsed_section,
         )
     ) == [
         Metric("aws_ebs_block_store_snapshots", 56.0),
         Result(state=State.OK, notice="Block store snapshots: 56 (of max. 100000), 0.06%"),
         Metric("aws_ebs_block_store_space_standard", 296352743424.0),
-        Result(state=State.OK, notice="Magnetic volumes space: 276 GiB (of max. 300 TiB), 0.09%"),
+        Result(
+            state=State.OK,
+            notice="Magnetic volumes space: 276 GiB (of max. 300 TiB), 0.09%",
+        ),
         Metric("aws_ebs_block_store_space_io1", 0.0),
         Result(
-            state=State.OK, notice="Provisioned IOPS SSD (io1) space: 0 B (of max. 300 TiB), 0%"
+            state=State.OK,
+            notice="Provisioned IOPS SSD (io1) space: 0 B (of max. 300 TiB), 0%",
         ),
         Metric("aws_ebs_block_store_iops_io1", 0.0),
         Result(
@@ -134,7 +140,8 @@ def test_check_ebs_limits() -> None:
         ),
         Metric("aws_ebs_block_store_space_io2", 0.0),
         Result(
-            state=State.OK, notice="Provisioned IOPS SSD (io2) space: 0 B (of max. 20.0 TiB), 0%"
+            state=State.OK,
+            notice="Provisioned IOPS SSD (io2) space: 0 B (of max. 20.0 TiB), 0%",
         ),
         Metric("aws_ebs_block_store_iops_io2", 0.0),
         Result(
@@ -147,9 +154,15 @@ def test_check_ebs_limits() -> None:
             notice="General Purpose SSD (gp2) space: 1.64 TiB (of max. 300 TiB), 0.55%",
         ),
         Metric("aws_ebs_block_store_space_gp3", 0.0),
-        Result(state=State.OK, notice="General Purpose SSD (gp3) space: 0 B (of max. 300 TiB), 0%"),
+        Result(
+            state=State.OK,
+            notice="General Purpose SSD (gp3) space: 0 B (of max. 300 TiB), 0%",
+        ),
         Metric("aws_ebs_block_store_space_sc1", 0.0),
         Result(state=State.OK, notice="Cold HDD space: 0 B (of max. 300 TiB), 0%"),
         Metric("aws_ebs_block_store_space_st1", 0.0),
-        Result(state=State.OK, notice="Throughput Optimized HDD space: 0 B (of max. 300 TiB), 0%"),
+        Result(
+            state=State.OK,
+            notice="Throughput Optimized HDD space: 0 B (of max. 300 TiB), 0%",
+        ),
     ]

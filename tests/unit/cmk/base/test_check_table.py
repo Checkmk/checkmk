@@ -98,12 +98,20 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
             "temperature": [
                 {
                     "id": "01",
-                    "value": ("smart_temp", "cluster-item", {"source": "enforced-on-node"}),
+                    "value": (
+                        "smart_temp",
+                        "cluster-item",
+                        {"source": "enforced-on-node"},
+                    ),
                     "condition": {"host_name": [node]},
                 },
                 {
                     "id": "02",
-                    "value": ("smart_temp", "node-item", {"source": "enforced-on-node"}),
+                    "value": (
+                        "smart_temp",
+                        "node-item",
+                        {"source": "enforced-on-node"},
+                    ),
                     "condition": {"host_name": [node]},
                 },
                 {
@@ -229,7 +237,10 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
             "node1",
             FilterMode.NONE,
             {
-                (CheckPluginName("smart_temp"), "auto-not-clustered"): ConfiguredService(
+                (
+                    CheckPluginName("smart_temp"),
+                    "auto-not-clustered",
+                ): ConfiguredService(
                     check_plugin_name=CheckPluginName("smart_temp"),
                     item="auto-not-clustered",
                     description="Temperature SMART auto-not-clustered",
@@ -379,7 +390,8 @@ def test_check_table(
     ts.add_host(HostName("node3"))
     ts.add_host(HostName("node4"))
     ts.add_cluster(
-        HostName("cluster2"), nodes=[HostName("node2"), HostName("node3"), HostName("node4")]
+        HostName("cluster2"),
+        nodes=[HostName("node2"), HostName("node3"), HostName("node4")],
     )
     ts.set_option(
         "static_checks",

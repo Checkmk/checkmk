@@ -20,7 +20,10 @@ CHECK_NAME = "alcatel_fans"
     "info, result_expected",
     [
         ([["doesnt matter"]], [("1", None)]),
-        ([["doesnt matter", "doesent matter"], ["doesnt matter"]], [("1", None), ("2", None)]),
+        (
+            [["doesnt matter", "doesent matter"], ["doesnt matter"]],
+            [("1", None), ("2", None)],
+        ),
     ],
 )
 def test_inventory_function(info: StringTable, result_expected: Sequence[tuple[str, None]]) -> None:

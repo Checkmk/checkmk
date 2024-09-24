@@ -5,7 +5,10 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.fireeye import check_fireeye_states, inventory_fireeye_generic
+from cmk.base.check_legacy_includes.fireeye import (
+    check_fireeye_states,
+    inventory_fireeye_generic,
+)
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import SNMPTree, StringTable

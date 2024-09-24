@@ -29,7 +29,10 @@ from .agent_aws_fake_clients import (
 
 class FakeGlacierClient:
     def list_vaults(self):
-        return {"VaultList": GlacierListVaultsIB.create_instances(amount=4), "Marker": "string"}
+        return {
+            "VaultList": GlacierListVaultsIB.create_instances(amount=4),
+            "Marker": "string",
+        }
 
     def list_tags_for_vault(self, vaultName=""):
         if vaultName == "VaultName-0":
@@ -65,7 +68,12 @@ def get_glacier_sections() -> GlacierSections:
 
         # TODO: FakeGlacierClient shoud actually subclass GlacierClient, etc.
         glacier_limits = GlacierLimits(fake_glacier_client, region, config, distributor)  # type: ignore[arg-type]
-        glacier_summary = GlacierSummary(fake_glacier_client, region, config, distributor)  # type: ignore[arg-type]
+        glacier_summary = GlacierSummary(
+            fake_glacier_client,  # type: ignore[arg-type]
+            region,
+            config,
+            distributor,
+        )
         glacier = Glacier(fake_cloudwatch_client, region, config)  # type: ignore[arg-type]
 
         distributor.add(glacier_limits.name, glacier_summary)

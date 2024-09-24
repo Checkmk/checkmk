@@ -8,7 +8,10 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.netscaler_vserver import _check_netscaler_vservers, VServer
+from cmk.base.plugins.agent_based.netscaler_vserver import (
+    _check_netscaler_vservers,
+    VServer,
+)
 
 
 @pytest.fixture(name="clustered_vservers")

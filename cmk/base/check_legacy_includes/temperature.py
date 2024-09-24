@@ -97,11 +97,21 @@ def check_temperature_determine_levels(  # pylint: disable=too-many-branches
 
     # Ignore device's own levels
     if dlh == "usr":
-        warn, crit, warn_lower, crit_lower = usr_warn, usr_crit, usr_warn_lower, usr_crit_lower
+        warn, crit, warn_lower, crit_lower = (
+            usr_warn,
+            usr_crit,
+            usr_warn_lower,
+            usr_crit_lower,
+        )
 
     # Only use device's levels, ignore yours
     elif dlh == "dev":
-        warn, crit, warn_lower, crit_lower = dev_warn, dev_crit, dev_warn_lower, dev_crit_lower
+        warn, crit, warn_lower, crit_lower = (
+            dev_warn,
+            dev_crit,
+            dev_warn_lower,
+            dev_crit_lower,
+        )
 
     # The following four cases are all identical, if either *only* device levels or *only*
     # user levels exist (or no levels at all).
@@ -111,15 +121,17 @@ def check_temperature_determine_levels(  # pylint: disable=too-many-branches
     # minn is a min that deals with None in the way we want here.
     elif dlh == "best":
         warn, crit = maxx(usr_warn, dev_warn), maxx(usr_crit, dev_crit)
-        warn_lower, crit_lower = minn(usr_warn_lower, dev_warn_lower), minn(
-            usr_crit_lower, dev_crit_lower
+        warn_lower, crit_lower = (
+            minn(usr_warn_lower, dev_warn_lower),
+            minn(usr_crit_lower, dev_crit_lower),
         )
 
     # Use most critical of your and device's levels
     elif dlh == "worst":
         warn, crit = minn(usr_warn, dev_warn), minn(usr_crit, dev_crit)
-        warn_lower, crit_lower = maxx(usr_warn_lower, dev_warn_lower), maxx(
-            usr_crit_lower, dev_crit_lower
+        warn_lower, crit_lower = (
+            maxx(usr_warn_lower, dev_warn_lower),
+            maxx(usr_crit_lower, dev_crit_lower),
         )
 
     # Use user's levels if present, otherwise the device's
@@ -190,7 +202,10 @@ def check_temperature_trend(  # pylint: disable=too-many-branches
         # rate_avg is growth in C/s, trend is in C per trend range minutes
         trend = float(rate_avg * trend_range_min * 60.0)
         sign = "+" if trend > 0 else ""
-        combiner(0, f"rate: {sign}{render_temp(trend, output_unit, True)}/{trend_range_min:g} min")
+        combiner(
+            0,
+            f"rate: {sign}{render_temp(trend, output_unit, True)}/{trend_range_min:g} min",
+        )
 
         if "trend_levels" in params:
             warn_upper_trend, crit_upper_trend = params["trend_levels"]
@@ -247,9 +262,15 @@ def check_temperature_trend(  # pylint: disable=too-many-branches
 
                 warn, crit = params["trend_timeleft"]
                 if minutes_left <= crit:
-                    combiner(2, "%s until temp limit reached(!!)" % format_minutes(minutes_left))
+                    combiner(
+                        2,
+                        "%s until temp limit reached(!!)" % format_minutes(minutes_left),
+                    )
                 elif minutes_left <= warn:
-                    combiner(1, "%s until temp limit reached(!)" % format_minutes(minutes_left))
+                    combiner(
+                        1,
+                        "%s until temp limit reached(!)" % format_minutes(minutes_left),
+                    )
     except IgnoreResultsError:
         pass
     return combiner.status, combiner.infotext  # type: ignore[attr-defined]
@@ -520,7 +541,15 @@ def check_temperature_list(sensorlist, params, unique_name):
         # no support for dev_unit or dev_levels in check_temperature_list so
         # this ignores the device level handling set in params
         _warn, crit, _warn_lower, crit_lower = check_temperature_determine_levels(
-            "usr", usr_warn, usr_crit, usr_warn_lower, usr_crit_lower, None, None, None, None
+            "usr",
+            usr_warn,
+            usr_crit,
+            usr_warn_lower,
+            usr_crit_lower,
+            None,
+            None,
+            None,
+            None,
         )
 
         trend_status, trend_infotext = check_temperature_trend(

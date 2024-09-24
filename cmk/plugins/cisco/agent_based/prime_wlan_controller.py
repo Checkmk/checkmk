@@ -59,7 +59,9 @@ class WlanController(NamedTuple):
     last_backup: datetime | None
 
 
-def get_controllers(controller_data: dict[str, Any]) -> Generator[dict[str, Any], None, None]:
+def get_controllers(
+    controller_data: dict[str, Any],
+) -> Generator[dict[str, Any], None, None]:
     for entity in controller_data["queryResponse"]["entity"]:
         dto_type = entity["@dtoType"]
         yield entity[dto_type]
@@ -72,7 +74,9 @@ def get_last_backup(last_backup: str | None) -> datetime | None:
     return datetime.strptime(last_backup, "%Y-%m-%dT%H:%M:%S.%f%z")
 
 
-def parse_cisco_prime_wlan_controller(string_table: StringTable) -> dict[str, WlanController]:
+def parse_cisco_prime_wlan_controller(
+    string_table: StringTable,
+) -> dict[str, WlanController]:
     controller_data = json.loads(string_table[0][0])
 
     return {

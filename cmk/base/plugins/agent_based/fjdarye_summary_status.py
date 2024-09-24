@@ -12,7 +12,15 @@
 
 from typing import NewType
 
-from .agent_based_api.v1 import any_of, equals, register, Result, Service, SNMPTree, State
+from .agent_based_api.v1 import (
+    any_of,
+    equals,
+    register,
+    Result,
+    Service,
+    SNMPTree,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 FJDARYE_SUPPORTED_DEVICES = [

@@ -92,7 +92,12 @@ def make_section(
 ) -> synology_disks.Section:
     return {
         disk: synology_disks.Disk(
-            state=state, temperature=temperature, disk=disk, model=model, role=role, health=health
+            state=state,
+            temperature=temperature,
+            disk=disk,
+            model=model,
+            role=role,
+            health=health,
         )
     }
 
@@ -123,7 +128,12 @@ def test_temperature_metric() -> None:
 @pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "role, expected",
-    [("hotspare", State.OK), ("ssd_cache", State.OK), ("none", State.WARN), ("data", State.WARN)],
+    [
+        ("hotspare", State.OK),
+        ("ssd_cache", State.OK),
+        ("none", State.WARN),
+        ("data", State.WARN),
+    ],
 )
 def test_check_role_is_ok_even_if_not_initialized(role: str, expected: State) -> None:
     section = make_section(role=role, state=3)
@@ -156,7 +166,10 @@ def test_disk_health_status_missing(
         Result(state=State.OK, summary="Temperature: 27.0 °C"),
         Result(state=State.OK, summary="Allocation status: OK"),
         Result(state=State.OK, summary="Model: HAT5300-8T"),
-        Result(state=State.OK, summary="Health: Not provided (available with DSM 7.1 and above)"),
+        Result(
+            state=State.OK,
+            summary="Health: Not provided (available with DSM 7.1 and above)",
+        ),
     ]
 
 
@@ -169,5 +182,8 @@ def test_hotspare(fix_register: FixRegister, as_path: Callable[[str], Path]) -> 
         Result(state=State.OK, summary="Temperature: 35.0 °C"),
         Result(state=State.OK, summary="Allocation status: disk is hotspare"),
         Result(state=State.OK, summary="Model: WD40000000-6666666"),
-        Result(state=State.OK, summary="Health: Not provided (available with DSM 7.1 and above)"),
+        Result(
+            state=State.OK,
+            summary="Health: Not provided (available with DSM 7.1 and above)",
+        ),
     ]

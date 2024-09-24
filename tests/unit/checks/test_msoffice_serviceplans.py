@@ -24,7 +24,9 @@ pytestmark = pytest.mark.checks
     ],
 )
 def test_check_win_license(
-    params: Mapping[str, tuple[float, float]], expected_status: int, expected_levels_info: str
+    params: Mapping[str, tuple[float, float]],
+    expected_status: int,
+    expected_levels_info: str,
 ) -> None:
     check = Check("msoffice_serviceplans")
 

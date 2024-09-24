@@ -24,9 +24,18 @@ def _parameter_valuespec_hp_hh3c_ext_states():
                             "not_supported",
                             MonitoringState(title=_("Not supported"), default_value=1),
                         ),
-                        ("disabled", MonitoringState(title=_("Disabled"), default_value=2)),
-                        ("enabled", MonitoringState(title=_("Enabled"), default_value=0)),
-                        ("dangerous", MonitoringState(title=_("Dangerous"), default_value=2)),
+                        (
+                            "disabled",
+                            MonitoringState(title=_("Disabled"), default_value=2),
+                        ),
+                        (
+                            "enabled",
+                            MonitoringState(title=_("Enabled"), default_value=0),
+                        ),
+                        (
+                            "dangerous",
+                            MonitoringState(title=_("Dangerous"), default_value=2),
+                        ),
                     ],
                 ),
             ),
@@ -44,7 +53,10 @@ def _parameter_valuespec_hp_hh3c_ext_states():
                             "shutting_down",
                             MonitoringState(title=_("Shutting down"), default_value=2),
                         ),
-                        ("unlocked", MonitoringState(title=_("Unlocked"), default_value=2)),
+                        (
+                            "unlocked",
+                            MonitoringState(title=_("Unlocked"), default_value=2),
+                        ),
                     ],
                 ),
             ),

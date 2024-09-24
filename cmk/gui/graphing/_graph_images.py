@@ -36,8 +36,16 @@ from ._graph_pdf import (
     graph_legend_height,
     render_graph_pdf,
 )
-from ._graph_render_config import GraphRenderConfigImage, GraphRenderOptions, GraphTitleFormat
-from ._graph_specification import GraphDataRange, GraphRecipe, parse_raw_graph_specification
+from ._graph_render_config import (
+    GraphRenderConfigImage,
+    GraphRenderOptions,
+    GraphTitleFormat,
+)
+from ._graph_specification import (
+    GraphDataRange,
+    GraphRecipe,
+    parse_raw_graph_specification,
+)
 from ._html_render import GraphDestinations
 from ._utils import get_graph_data_from_livestatus
 
@@ -125,7 +133,9 @@ def graph_image_data_range(
     return compute_pdf_graph_data_range(width_mm, start_time, end_time)
 
 
-def graph_image_render_options(api_request: dict[str, Any] | None = None) -> GraphRenderOptions:
+def graph_image_render_options(
+    api_request: dict[str, Any] | None = None,
+) -> GraphRenderOptions:
     graph_render_options = GraphRenderOptions(
         font_size=SizePT(8.0),
         resizable=False,
@@ -186,7 +196,7 @@ def render_graph_image(
 
 
 def graph_recipes_for_api_request(
-    api_request: dict[str, Any]
+    api_request: dict[str, Any],
 ) -> tuple[GraphDataRange, Sequence[GraphRecipe]]:
     # Get and validate the specification
     if not (raw_graph_spec := api_request.get("specification")):

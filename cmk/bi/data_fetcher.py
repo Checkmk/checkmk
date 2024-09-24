@@ -9,7 +9,12 @@ import time
 from collections.abc import Mapping
 from pathlib import Path
 
-from livestatus import LivestatusColumn, LivestatusOutputFormat, LivestatusResponse, SiteId
+from livestatus import (
+    LivestatusColumn,
+    LivestatusOutputFormat,
+    LivestatusResponse,
+    SiteId,
+)
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import tmp_dir
@@ -234,7 +239,17 @@ class BIStructureFetcher:
         # ("name", str),
 
         for host_name, values in hosts.items():
-            site_id, tags, labels, folder, services, children, parents, alias, name = values
+            (
+                site_id,
+                tags,
+                labels,
+                folder,
+                services,
+                children,
+                parents,
+                alias,
+                name,
+            ) = values
             self._hosts[host_name] = BIHostData(
                 site_id,
                 tags,
@@ -324,7 +339,12 @@ class BIStatusFetcher(ABCBIStatusFetcher):
         required_aggregations: list[tuple[BICompiledAggregation, list[BICompiledRule]]],
     ) -> None:
         self.states = self._get_status_info_filtered(
-            filter_header, only_sites, limit, host_columns, bygroup, required_aggregations
+            filter_header,
+            only_sites,
+            limit,
+            host_columns,
+            bygroup,
+            required_aggregations,
         )
 
     def cleanup(self) -> None:
@@ -415,7 +435,9 @@ class BIStatusFetcher(ABCBIStatusFetcher):
 
     @classmethod
     def create_bi_status_data(
-        cls, rows: LivestatusResponse, extra_columns: list[LivestatusColumn] | None = None
+        cls,
+        rows: LivestatusResponse,
+        extra_columns: list[LivestatusColumn] | None = None,
     ) -> BIStatusInfo:
         response = {}
         bi_data_end = len(cls.get_status_columns())

@@ -15,7 +15,9 @@ from cmk.utils.version import Edition, edition
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.special_agents.common_tls_verification import tls_verify_flag_default_no
+from cmk.gui.plugins.wato.special_agents.common_tls_verification import (
+    tls_verify_flag_default_no,
+)
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -424,7 +426,10 @@ def _valuespec_special_agents_kube():
                                     default_value=["control-plane", "infra"],
                                 ),
                             ),
-                            ("cluster-aggregation-include-all-nodes", _("Include all Nodes")),
+                            (
+                                "cluster-aggregation-include-all-nodes",
+                                _("Include all Nodes"),
+                            ),
                         ],
                         orientation="horizontal",
                         help=_(

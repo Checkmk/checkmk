@@ -6,7 +6,12 @@
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.kube_cronjob_info import check_kube_cronjob_info
 
-from cmk.plugins.lib.kube import ConcurrencyPolicy, CronJobInfo, NamespaceName, Timestamp
+from cmk.plugins.lib.kube import (
+    ConcurrencyPolicy,
+    CronJobInfo,
+    NamespaceName,
+    Timestamp,
+)
 
 
 def test_check_kube_cronjob_info() -> None:

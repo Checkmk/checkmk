@@ -7,7 +7,10 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    InventoryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.inventory_oracle_systemparameter import (
     inventory_oracle_systemparameter,
     parse_oracle_systemparameter,

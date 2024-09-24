@@ -39,7 +39,10 @@ def type_and_format_of_field(field: fields.Field) -> tuple[str, str | None]:
         A tuple representing the type and the format of this field.
 
     """
-    for class_, (schema_type, schema_format) in field_converter.DEFAULT_FIELD_MAPPING.items():
+    for class_, (
+        schema_type,
+        schema_format,
+    ) in field_converter.DEFAULT_FIELD_MAPPING.items():
         if isinstance(field, class_):
             if schema_type is None:
                 raise ValueError(f"No spec possible for field {field!r}.")
@@ -149,7 +152,6 @@ class CheckmkOpenAPIConverter(marshmallow.OpenAPIConverter):  # type: ignore[nam
 
 
 class CheckmkOpenAPIResolver(marshmallow.SchemaResolver):  # type: ignore[name-defined]
-
     def resolve_parameters(self, parameters: list[object]) -> list[object]:
         parameters = super().resolve_parameters(parameters)
 

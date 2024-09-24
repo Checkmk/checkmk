@@ -7,7 +7,12 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.ibm_imm_temp import (
     _check_ibm_imm_temp,
     discover_ibm_imm_temp,
@@ -95,6 +100,8 @@ def test_inventory_ibm_imm_temp(section: Mapping[str, SensorTemperature]) -> Non
     ],
 )
 def test_check_ibm_imm_temp(
-    section: Mapping[str, SensorTemperature], item: str, expected_output: Sequence[object]
+    section: Mapping[str, SensorTemperature],
+    item: str,
+    expected_output: Sequence[object],
 ) -> None:
     assert list(_check_ibm_imm_temp(item, {}, section, {})) == expected_output

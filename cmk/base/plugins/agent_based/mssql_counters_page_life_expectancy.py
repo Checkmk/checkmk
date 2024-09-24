@@ -89,6 +89,9 @@ register.check_plugin(
     check_function=check_mssql_counters_page_life_expectancy,
     check_ruleset_name="mssql_counters_page_life_expectancy",
     check_default_parameters={
-        "mssql_min_page_life_expectancy": (350, 300),  # 300 sec is the min defined by Microsoft
+        "mssql_min_page_life_expectancy": (
+            350,
+            300,
+        ),  # 300 sec is the min defined by Microsoft
     },
 )

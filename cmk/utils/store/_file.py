@@ -93,7 +93,10 @@ def _raise_for_permissions(path: Path) -> None:
     Raise an exception otherwise."""
     stat = path.stat()
     # we trust root and ourselves
-    owned_by_current_user_or_root = stat.st_uid in [0, getuid()] and stat.st_gid in [0, getgid()]
+    owned_by_current_user_or_root = stat.st_uid in [0, getuid()] and stat.st_gid in [
+        0,
+        getgid(),
+    ]
     world_writable = S_IMODE(stat.st_mode) & S_IWOTH != 0
 
     if not owned_by_current_user_or_root:

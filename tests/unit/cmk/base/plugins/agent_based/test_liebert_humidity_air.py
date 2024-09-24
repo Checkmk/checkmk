@@ -7,7 +7,12 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -78,7 +83,9 @@ def test_parse_liebert_humidity_air(string_table: list[StringTable], result: Par
     ],
 )
 def test_discover_liebert_humidity_air(
-    section: ParsedSection | None, extra_section: SystemSection | None, result: DiscoveryResult
+    section: ParsedSection | None,
+    extra_section: SystemSection | None,
+    result: DiscoveryResult,
 ) -> None:
     discovered = list(discover_liebert_humidity_air(section, extra_section))
     assert discovered == result
@@ -94,7 +101,12 @@ def test_discover_liebert_humidity_air(
             PARSED_EXTRA_SECTION,
             [
                 Result(state=State.OK, summary="36.50 % RH"),
-                Metric(name="humidity", value=36.5, levels=(50.0, 55.0), boundaries=(0.0, None)),
+                Metric(
+                    name="humidity",
+                    value=36.5,
+                    levels=(50.0, 55.0),
+                    boundaries=(0.0, None),
+                ),
             ],
         ),
         (

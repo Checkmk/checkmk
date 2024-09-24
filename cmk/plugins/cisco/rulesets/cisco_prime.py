@@ -17,7 +17,11 @@ from cmk.rulesets.v1.form_specs import (
     Password,
     String,
 )
-from cmk.rulesets.v1.form_specs.validators import LengthInRange, NetworkPort, NumberInRange
+from cmk.rulesets.v1.form_specs.validators import (
+    LengthInRange,
+    NetworkPort,
+    NumberInRange,
+)
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
 
@@ -31,7 +35,10 @@ def _migrate(value: object) -> Mapping[str, object]:
         value["no_tls"] = value.pop("no-tls")
     if "basicauth" in value and isinstance(value["basicauth"], tuple):
         username, password = value.pop("basicauth")
-        value["basicauth"] = {"username": username, "password": migrate_to_password(password)}
+        value["basicauth"] = {
+            "username": username,
+            "password": migrate_to_password(password),
+        }
     if "host" in value and value["host"] in ("ip_address", "host_name"):
         value["host"] = (value.pop("host"), None)
     return value

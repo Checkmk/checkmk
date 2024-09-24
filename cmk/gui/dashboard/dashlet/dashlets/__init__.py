@@ -9,7 +9,12 @@ from .failed_notifications import FailedNotificationsDashlet
 from .graph import default_dashlet_graph_render_options, TemplateGraphDashlet
 from .logo import MKLogoDashlet
 from .static_text import StaticTextDashlet, StaticTextDashletConfig
-from .stats import EventStatsDashlet, HostStatsDashlet, ServiceStatsDashlet, StatsDashletConfig
+from .stats import (
+    EventStatsDashlet,
+    HostStatsDashlet,
+    ServiceStatsDashlet,
+    StatsDashletConfig,
+)
 from .user_messages import MessageUsersDashlet
 from .view import (
     copy_view_into_dashlet,

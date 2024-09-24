@@ -479,7 +479,10 @@ def grouping_multiple_groups(config_section_name, files_iter, grouping_condition
         grouped_files[matching_child_group].append(single_file)
 
     for matching_child_group, files in grouped_files.items():
-        yield _grouping_construct_group_name(parent_group_name, matching_child_group), files
+        yield (
+            _grouping_construct_group_name(parent_group_name, matching_child_group),
+            files,
+        )
 
 
 def grouping_single_group(config_section_name, files_iter, _grouping_conditions):

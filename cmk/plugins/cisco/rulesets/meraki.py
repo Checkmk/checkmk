@@ -48,13 +48,16 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                     title=Title("Sections"),
                     elements=[
                         MultipleChoiceElement(
-                            name="licenses_overview", title=Title("Organization licenses overview")
+                            name="licenses_overview",
+                            title=Title("Organization licenses overview"),
                         ),
                         MultipleChoiceElement(
-                            name="device_statuses", title=Title("Organization device statuses")
+                            name="device_statuses",
+                            title=Title("Organization device statuses"),
                         ),
                         MultipleChoiceElement(
-                            name="sensor_readings", title=Title("Organization sensor readings")
+                            name="sensor_readings",
+                            title=Title("Organization sensor readings"),
                         ),
                     ],
                     migrate=_migrate_to_valid_ident,
@@ -62,7 +65,8 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
             ),
             "orgs": DictElement(
                 parameter_form=List(
-                    element_template=String(macro_support=True), title=Title("Organizations")
+                    element_template=String(macro_support=True),
+                    title=Title("Organizations"),
                 )
             ),
         },

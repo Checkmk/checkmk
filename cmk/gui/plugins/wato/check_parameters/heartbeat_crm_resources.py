@@ -15,7 +15,7 @@ from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, Migrate, Text
 
 
 def _migrate_opt_string(
-    parameters: Mapping[str, str | None] | str | None
+    parameters: Mapping[str, str | None] | str | None,
 ) -> Mapping[str, str | None]:
     """
     >>> _migrate_opt_string(None)

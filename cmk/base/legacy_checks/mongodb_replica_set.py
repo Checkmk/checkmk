@@ -102,9 +102,13 @@ def check_mongodb_replica_set_lag(_item, params, status_dict):
             )
         else:
             # no info available yet
-            yield 0, "%s: no replication info yet, State: %d" % (
-                member_name,
-                member.get("state", 0),
+            yield (
+                0,
+                "%s: no replication info yet, State: %d"
+                % (
+                    member_name,
+                    member.get("state", 0),
+                ),
             )
 
     yield 0, "\n" + "\n".join(long_output)
@@ -147,7 +151,12 @@ def _get_long_output(member_name, member_optime_date, replication_lag_sec, name)
     )
     log.append(
         "member (%s) is %ds (%dh) behind %s"
-        % (member_name, round(replication_lag_sec), round((replication_lag_sec / 36) / 100.0), name)
+        % (
+            member_name,
+            round(replication_lag_sec),
+            round((replication_lag_sec / 36) / 100.0),
+            name,
+        )
     )
     log.append("")
     return "\n".join(log)
@@ -260,15 +269,21 @@ def check_mongodb_primary_election(_item, _params, status_dict):
 
     # warning if primary has changed
     if last_primary_dict and (primary_name_changed or election_date_changed):
-        yield 1, "New primary '{}' elected {} {}".format(
-            primary_name,
-            render.datetime(primary_election_time),
-            "(%s)" % ("node changed" if primary_name_changed else "election date changed"),
+        yield (
+            1,
+            "New primary '{}' elected {} {}".format(
+                primary_name,
+                render.datetime(primary_election_time),
+                "(%s)" % ("node changed" if primary_name_changed else "election date changed"),
+            ),
         )
     else:
-        yield 0, "Primary '{}' elected {}".format(
-            primary_name,
-            render.datetime(primary_election_time),
+        yield (
+            0,
+            "Primary '{}' elected {}".format(
+                primary_name,
+                render.datetime(primary_election_time),
+            ),
         )
 
     # update primary information

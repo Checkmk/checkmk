@@ -72,7 +72,10 @@ from tests.testlib import SpecialAgent
                 "secret": ("store", "azure"),
                 "config": {
                     "explicit": [{"group_name": "my_res_group", "resources": ["res1", "res2"]}],
-                    "tag_based": [("my_tag_1", "exists"), ("my_tag_2", ("value", "t1"))],
+                    "tag_based": [
+                        ("my_tag_1", "exists"),
+                        ("my_tag_2", ("value", "t1")),
+                    ],
                 },
                 "proxy": ("environment", "environment"),
             },

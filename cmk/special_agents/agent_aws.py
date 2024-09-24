@@ -23,7 +23,15 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum, StrEnum
 from time import sleep
-from typing import Any, assert_never, Literal, NamedTuple, NotRequired, TYPE_CHECKING, TypeVar
+from typing import (
+    Any,
+    assert_never,
+    Literal,
+    NamedTuple,
+    NotRequired,
+    TYPE_CHECKING,
+    TypeVar,
+)
 
 import boto3
 import botocore
@@ -300,7 +308,10 @@ class AWSConfig:
     @staticmethod
     def _compute_config_hash(sys_argv: Args) -> str:
         filtered_sys_argv = dict(
-            filter(lambda el: el[0] not in ["debug", "verbose", "no_cache"], vars(sys_argv).items())
+            filter(
+                lambda el: el[0] not in ["debug", "verbose", "no_cache"],
+                vars(sys_argv).items(),
+            )
         )
 
         # Be careful to use a hashing mechanism that generates the same hash across
@@ -312,7 +323,9 @@ class AWSConfig:
         old_config_hash = self._load_config_hash()
         if old_config_hash is None:
             logging.info(
-                "AWSConfig: %s: New config: '%s'", self.hostname, self._current_config_hash
+                "AWSConfig: %s: New config: '%s'",
+                self.hostname,
+                self._current_config_hash,
             )
             self._write_config_hash()
             return False
@@ -328,7 +341,9 @@ class AWSConfig:
             return False
 
         logging.info(
-            "AWSConfig: %s: Config is up-to-date: '%s'", self.hostname, self._current_config_hash
+            "AWSConfig: %s: Config is up-to-date: '%s'",
+            self.hostname,
+            self._current_config_hash,
         )
         return True
 
@@ -359,7 +374,9 @@ def _chunks(list_: Sequence[T], length: int = 100) -> Sequence[Sequence[T]]:
 
 
 def _get_ec2_piggyback_hostname(
-    piggyback_naming_convention: NamingConvention, inst: Mapping[str, object], region: str
+    piggyback_naming_convention: NamingConvention,
+    inst: Mapping[str, object],
+    region: str,
 ) -> str | None:
     # PrivateIpAddress and InstanceId is available although the instance is stopped
     # When we terminate an instance, the instance gets the state "terminated":
@@ -424,7 +441,10 @@ def _describe_dynamodb_tables(
     for table_name in table_names:
         try:
             tables.append(
-                get_response_content(client.describe_table(TableName=table_name), "Table")  # type: ignore[attr-defined]
+                get_response_content(
+                    client.describe_table(TableName=table_name),  # type: ignore[attr-defined]
+                    "Table",
+                )
             )
         except client.exceptions.ResourceNotFoundException:
             # we raise the exception if we fetched the table names from the API, since in that case
@@ -455,7 +475,10 @@ def _validate_wafv2_scope_and_region(scope: Scope, region: str) -> str:
 
 
 def _iterate_through_wafv2_list_operations(
-    list_operation: Callable, scope: str, entry_name: str, get_response_content: Callable
+    list_operation: Callable,
+    scope: str,
+    entry_name: str,
+    get_response_content: Callable,
 ) -> Sequence:
     """
     For some reason, the return objects of the list_... functions of the WAFV2-client seem to
@@ -484,7 +507,10 @@ def _get_wafv2_web_acls(
 ) -> Sequence[dict[str, object]]:
     if web_acls_info is None:
         web_acls_info = _iterate_through_wafv2_list_operations(
-            client.list_web_acls, scope, "WebACLs", get_response_content  # type: ignore[attr-defined]
+            client.list_web_acls,  # type: ignore[attr-defined]
+            scope,
+            "WebACLs",
+            get_response_content,
         )
 
     if web_acls_names is not None:
@@ -494,7 +520,9 @@ def _get_wafv2_web_acls(
 
     web_acls = [
         get_response_content(
-            client.get_web_acl(Name=web_acl_info["Name"], Scope=scope, Id=web_acl_info["Id"]),  # type: ignore[attr-defined]
+            client.get_web_acl(  # type: ignore[attr-defined]
+                Name=web_acl_info["Name"], Scope=scope, Id=web_acl_info["Id"]
+            ),
             "WebACL",
         )
         for web_acl_info in web_acls_info
@@ -585,7 +613,9 @@ def fetch_resources_matching_tags(
 
 
 def _describe_alarms(
-    client: BaseClient, get_response_content: Callable, names: Sequence[str] | None = None
+    client: BaseClient,
+    get_response_content: Callable,
+    names: Sequence[str] | None = None,
 ) -> Iterator[Mapping[str, object]]:
     paginator = client.get_paginator("describe_alarms")
     kwargs = {"AlarmNames": names} if names else {}
@@ -2238,7 +2268,9 @@ class S3Limits(AWSSectionLimits):
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
         self._add_limit(
-            "", AWSLimit("buckets", "Buckets", 100, len(raw_content.content)), region="Global"
+            "",
+            AWSLimit("buckets", "Buckets", 100, len(raw_content.content)),
+            region="Global",
         )
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
@@ -2335,7 +2367,8 @@ class S3Summary(AWSSection):
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
         return AWSComputedContent(
-            {bucket["Name"]: bucket for bucket in raw_content.content}, raw_content.cache_timestamp
+            {bucket["Name"]: bucket for bucket in raw_content.content},
+            raw_content.cache_timestamp,
         )
 
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
@@ -2846,8 +2879,12 @@ class ELBSummaryGeneric(AWSSection):
 
     def _get_load_balancer_tags(self, load_balancer):
         if self._resource == "elb":
-            return self._client.describe_tags(LoadBalancerNames=[load_balancer["LoadBalancerName"]])  # type: ignore[attr-defined]
-        return self._client.describe_tags(ResourceArns=[load_balancer["LoadBalancerArn"]])  # type: ignore[attr-defined]
+            return self._client.describe_tags(  # type: ignore[attr-defined]
+                LoadBalancerNames=[load_balancer["LoadBalancerName"]]
+            )
+        return self._client.describe_tags(  # type: ignore[attr-defined]
+            ResourceArns=[load_balancer["LoadBalancerArn"]]
+        )
 
     def _describe_load_balancers(
         self, colleague_contents: AWSColleagueContents
@@ -2969,7 +3006,9 @@ class ELBHealth(AWSSection):
         load_balancers: dict[str, list[str]] = {}
         for load_balancer_dns_name, load_balancer in colleague_contents.content.items():
             load_balancer_name = load_balancer["LoadBalancerName"]
-            response = self._client.describe_instance_health(LoadBalancerName=load_balancer_name)  # type: ignore[attr-defined]
+            response = self._client.describe_instance_health(  # type: ignore[attr-defined]
+                LoadBalancerName=load_balancer_name
+            )
             states = self._get_response_content(response, "InstanceStates")
             if states:
                 load_balancers.setdefault(load_balancer_dns_name, states)
@@ -3116,7 +3155,9 @@ class ELBv2Limits(AWSSectionLimits):
             if load_balancer["Type"] == "application":
                 rules = []
                 for listener in listeners:
-                    response = self._client.describe_rules(ListenerArn=listener["ListenerArn"])  # type: ignore[attr-defined]
+                    response = self._client.describe_rules(  # type: ignore[attr-defined]
+                        ListenerArn=listener["ListenerArn"]
+                    )
                     rules.extend(self._get_response_content(response, "Rules"))
 
                 # Limit 100 holds for rules which are not default, see AWS docs:
@@ -3474,7 +3515,10 @@ class ELBv2ApplicationTargetGroupsResponses(AWSSectionCloudwatch):
                                             "Name": "LoadBalancer",
                                             "Value": load_balancer_dim,
                                         },
-                                        {"Name": "TargetGroup", "Value": target_group_dim},
+                                        {
+                                            "Name": "TargetGroup",
+                                            "Value": target_group_dim,
+                                        },
                                     ],
                                 },
                                 "Period": self.period,
@@ -3638,7 +3682,10 @@ class ELBv2Network(AWSSectionCloudwatch):
 
 AWSRDSLimitNameMap: Mapping[str, tuple[str, str]] = {
     "DBClusters": ("db_clusters", "DB clusters"),
-    "DBClusterParameterGroups": ("db_cluster_parameter_groups", "DB cluster parameter groups"),
+    "DBClusterParameterGroups": (
+        "db_cluster_parameter_groups",
+        "DB cluster parameter groups",
+    ),
     "DBInstances": ("db_instances", "DB instances"),
     "EventSubscriptions": ("event_subscriptions", "Event subscriptions"),
     "ManualSnapshots": ("manual_snapshots", "Manual snapshots"),
@@ -3648,7 +3695,10 @@ AWSRDSLimitNameMap: Mapping[str, tuple[str, str]] = {
     "ReservedDBInstances": ("reserved_db_instances", "Reserved DB instances"),
     "DBSecurityGroups": ("db_security_groups", "DB security groups"),
     "DBSubnetGroups": ("db_subnet_groups", "DB subnet groups"),
-    "SubnetsPerDBSubnetGroup": ("subnet_per_db_subnet_groups", "Subnet per DB subnet groups"),
+    "SubnetsPerDBSubnetGroup": (
+        "subnet_per_db_subnet_groups",
+        "Subnet per DB subnet groups",
+    ),
     "AllocatedStorage": ("allocated_storage", "Allocated storage"),
     "AuthorizationsPerDBSecurityGroup": (
         "auths_per_db_security_groups",
@@ -3763,7 +3813,8 @@ class RDSSummary(AWSSection):
     def _get_instance_tags(self, instance_arn: str) -> Tags:
         # list_tags_for_resource cannot be paginated
         return self._get_response_content(
-            self._client.list_tags_for_resource(ResourceName=instance_arn), "TagList"  # type: ignore[attr-defined]
+            self._client.list_tags_for_resource(ResourceName=instance_arn),  # type: ignore[attr-defined]
+            "TagList",
         )
 
     def _matches_tag_conditions(self, tagging: Tags) -> bool:
@@ -4649,7 +4700,10 @@ class WAFV2Summary(AWSSection):
                 web_acl for web_acl in colleague_contents.content if web_acl["Name"] in self._names
             ]
         return _get_wafv2_web_acls(
-            self._client, self._scope, self._get_response_content, web_acls_names=self._names
+            self._client,
+            self._scope,
+            self._get_response_content,
+            web_acls_names=self._names,
         )
 
     def _matches_tag_conditions(self, tagging: Tags) -> bool:
@@ -4668,7 +4722,8 @@ class WAFV2Summary(AWSSection):
         content_by_piggyback_hosts: dict[str, str] = {}
         for web_acl in raw_content.content:
             content_by_piggyback_hosts.setdefault(
-                _hostname_from_name_and_region(web_acl["Name"], self._region_report), web_acl
+                _hostname_from_name_and_region(web_acl["Name"], self._region_report),
+                web_acl,
             )
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
@@ -4871,7 +4926,10 @@ class LambdaSummary(AWSSection):
         return functions
 
     def _get_tagging_for(self, function_arn: str) -> Tags:
-        tagging = self._get_response_content(self._client.list_tags(Resource=function_arn), "Tags")  # type: ignore[attr-defined]
+        tagging = self._get_response_content(
+            self._client.list_tags(Resource=function_arn),  # type: ignore[attr-defined]
+            "Tags",
+        )
         # adapt to format of _prepare_tags_for_api_response
         return [{"Key": key, "Value": value} for key, value in tagging.items()]
 
@@ -4930,7 +4988,10 @@ class LambdaCloudwatch(AWSSectionCloudwatch):
     def _get_metrics(self, colleague_contents: AWSColleagueContents) -> Metrics:
         def _get_function_arns(colleague_content: dict) -> Sequence[str]:
             function_arns = []
-            for function_arn, provisioned_concurrency_configurations in colleague_content.items():
+            for (
+                function_arn,
+                provisioned_concurrency_configurations,
+            ) in colleague_content.items():
                 for config in provisioned_concurrency_configurations:
                     function_arns.append(config["FunctionArn"])
                 function_arns.append(function_arn)
@@ -5426,7 +5487,11 @@ class SNSTopic:
     def from_arn(cls: type["SNSTopic"], arn_str: str) -> "SNSTopic":
         """Example topic ARN: 'arn:aws:sns:eu-central-1:710145618630:TestTopicGiordano'"""
         splitted_arn = arn_str.split(":")
-        return cls(region=splitted_arn[3], account_id=splitted_arn[4], topic_name=splitted_arn[5])
+        return cls(
+            region=splitted_arn[3],
+            account_id=splitted_arn[4],
+            topic_name=splitted_arn[5],
+        )
 
     def to_arn(self) -> str:
         return f"arn:aws:sns:{self.region}:{self.account_id}:{self.topic_name}"
@@ -6018,7 +6083,10 @@ class ParameterGroup(BaseModel):
 
 
 def get_paginated_resources(
-    client: BaseClient, paginator_name: str, resource_name: str, resource_type: type[BaseModel]
+    client: BaseClient,
+    paginator_name: str,
+    resource_name: str,
+    resource_type: type[BaseModel],
 ) -> Iterable[BaseModel]:
     for page in client.get_paginator(paginator_name).paginate():
         for resource_dict in page[resource_name]:
@@ -6041,7 +6109,9 @@ class ElastiCacheLimits(AWSSectionLimits):
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
-    def get_live_data(self, *args: AWSColleagueContents) -> tuple[
+    def get_live_data(
+        self, *args: AWSColleagueContents
+    ) -> tuple[
         Sequence[Mapping[str, object]],
         Sequence[Mapping[str, object]],
         Sequence[Mapping[str, object]],
@@ -6054,20 +6124,29 @@ class ElastiCacheLimits(AWSSectionLimits):
         cluster_dicts = [
             c.model_dump()
             for c in get_paginated_resources(
-                self._client, "describe_replication_groups", "ReplicationGroups", ElastiCacheCluster
+                self._client,
+                "describe_replication_groups",
+                "ReplicationGroups",
+                ElastiCacheCluster,
             )
         ]
 
         node_dicts = [
             n.model_dump()
             for n in get_paginated_resources(
-                self._client, "describe_cache_clusters", "CacheClusters", ElastiCacheNode
+                self._client,
+                "describe_cache_clusters",
+                "CacheClusters",
+                ElastiCacheNode,
             )
         ]
 
         subnet_groups = list(
             get_paginated_resources(
-                self._client, "describe_cache_subnet_groups", "CacheSubnetGroups", SubnetGroup
+                self._client,
+                "describe_cache_subnet_groups",
+                "CacheSubnetGroups",
+                SubnetGroup,
             )
         )
 
@@ -6110,7 +6189,8 @@ class ElastiCacheLimits(AWSSectionLimits):
                     key="nodes_per_cluster",
                     title=f"Nodes of {cluster.ClusterId}",
                     limit=ElastiCacheLimits._get_quota_limit(
-                        quotas, "Nodes per cluster per instance type (Redis cluster mode enabled)"
+                        quotas,
+                        "Nodes per cluster per instance type (Redis cluster mode enabled)",
                     ),
                     amount=len(cluster.MemberNodes),
                 ),
@@ -6186,20 +6266,27 @@ class ElastiCacheSummary(AWSSection):
         return AWSColleagueContents((), 0.0)
 
     def _fetch_data(
-        self, colleague_content: tuple[Sequence[ElastiCacheCluster], Sequence[ElastiCacheNode]]
+        self,
+        colleague_content: tuple[Sequence[ElastiCacheCluster], Sequence[ElastiCacheNode]],
     ) -> tuple[Sequence[ElastiCacheCluster], Sequence[ElastiCacheNode]]:
         if colleague_content:
             return colleague_content
 
         clusters = list(
             get_paginated_resources(
-                self._client, "describe_replication_groups", "ReplicationGroups", ElastiCacheCluster
+                self._client,
+                "describe_replication_groups",
+                "ReplicationGroups",
+                ElastiCacheCluster,
             )
         )
 
         nodes = list(
             get_paginated_resources(
-                self._client, "describe_cache_clusters", "CacheClusters", ElastiCacheNode
+                self._client,
+                "describe_cache_clusters",
+                "CacheClusters",
+                ElastiCacheNode,
             )
         )
 
@@ -6405,7 +6492,11 @@ class AWSSections(abc.ABC):
                 exceptions.append(e)
             else:
                 results.setdefault(
-                    (section.name, section_result.cache_timestamp, section.cache_interval),
+                    (
+                        section.name,
+                        section_result.cache_timestamp,
+                        section.cache_interval,
+                    ),
                     section_result.results,
                 )
 
@@ -6462,7 +6553,11 @@ class AWSSections(abc.ABC):
             logging.info("%s: No results or cached data", self.__class__.__name__)
             return
 
-        for (section_name, cache_timestamp, section_interval), result in results.items():
+        for (
+            section_name,
+            cache_timestamp,
+            section_interval,
+        ), result in results.items():
             if not result:
                 logging.info("%s: No results", section_name)
                 continue
@@ -6841,12 +6936,20 @@ class AWSSectionsGeneric(AWSSections):
             sns_client = self._init_client("sns")
             sns_topics_fetcher = SNSTopicsFetcher(sns_client, tagging_client, region, config)
             sns_cloudwatch = SNS(
-                cloudwatch_client, region, config, sns_topics_fetcher, distributor=distributor
+                cloudwatch_client,
+                region,
+                config,
+                sns_topics_fetcher,
+                distributor=distributor,
             )
             sns_sms_cloudwatch = SNSSMS(cloudwatch_client, region, config)
             if config.service_config.get("sns_limits"):
                 sns_limits = SNSLimits(
-                    sns_client, region, config, sns_topics_fetcher, distributor=distributor
+                    sns_client,
+                    region,
+                    config,
+                    sns_topics_fetcher,
+                    distributor=distributor,
                 )
                 distributor.add("sns_limits", sns_cloudwatch)
                 self._sections.append(sns_limits)
@@ -7161,7 +7264,9 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     for service in AWSServices:
         if service.filter_by_names:
             parser.add_argument(
-                "--%s-names" % service.key, nargs="+", help="Names for %s" % service.title
+                "--%s-names" % service.key,
+                nargs="+",
+                help="Names for %s" % service.title,
             )
         if service.filter_by_tags:
             parser.add_argument(
@@ -7235,7 +7340,9 @@ def _sts_assume_role(
         sts_client = session.client("sts", config=config)
         if external_id:
             assumed_role_object = sts_client.assume_role(
-                RoleArn=role_arn, RoleSessionName="AssumeRoleSession", ExternalId=external_id
+                RoleArn=role_arn,
+                RoleSessionName="AssumeRoleSession",
+                ExternalId=external_id,
             )
         else:
             assumed_role_object = sts_client.assume_role(
@@ -7337,8 +7444,18 @@ def _configure_aws(args: Args) -> AWSConfig:
         args.piggyback_naming_convention,
     )
     for service_key, service_names, service_tags, service_limits in [
-        ("ec2", args.ec2_names, (args.ec2_tag_key, args.ec2_tag_values), args.ec2_limits),
-        ("ebs", args.ebs_names, (args.ebs_tag_key, args.ebs_tag_values), args.ebs_limits),
+        (
+            "ec2",
+            args.ec2_names,
+            (args.ec2_tag_key, args.ec2_tag_values),
+            args.ec2_limits,
+        ),
+        (
+            "ebs",
+            args.ebs_names,
+            (args.ebs_tag_key, args.ebs_tag_values),
+            args.ebs_limits,
+        ),
         ("s3", args.s3_names, (args.s3_tag_key, args.s3_tag_values), args.s3_limits),
         (
             "glacier",
@@ -7346,31 +7463,66 @@ def _configure_aws(args: Args) -> AWSConfig:
             (args.glacier_tag_key, args.glacier_tag_values),
             args.glacier_limits,
         ),
-        ("elb", args.elb_names, (args.elb_tag_key, args.elb_tag_values), args.elb_limits),
-        ("elbv2", args.elbv2_names, (args.elbv2_tag_key, args.elbv2_tag_values), args.elbv2_limits),
-        ("rds", args.rds_names, (args.rds_tag_key, args.rds_tag_values), args.rds_limits),
+        (
+            "elb",
+            args.elb_names,
+            (args.elb_tag_key, args.elb_tag_values),
+            args.elb_limits,
+        ),
+        (
+            "elbv2",
+            args.elbv2_names,
+            (args.elbv2_tag_key, args.elbv2_tag_values),
+            args.elbv2_limits,
+        ),
+        (
+            "rds",
+            args.rds_names,
+            (args.rds_tag_key, args.rds_tag_values),
+            args.rds_limits,
+        ),
         (
             "dynamodb",
             args.dynamodb_names,
             (args.dynamodb_tag_key, args.dynamodb_tag_values),
             args.dynamodb_limits,
         ),
-        ("wafv2", args.wafv2_names, (args.wafv2_tag_key, args.wafv2_tag_values), args.wafv2_limits),
+        (
+            "wafv2",
+            args.wafv2_names,
+            (args.wafv2_tag_key, args.wafv2_tag_values),
+            args.wafv2_limits,
+        ),
         (
             "lambda",
             args.lambda_names,
             (args.lambda_tag_key, args.lambda_tag_values),
             args.lambda_limits,
         ),
-        ("route53", args.route53_names, (args.route53_tag_key, args.route53_tag_values), None),
-        ("sns", args.sns_names, (args.sns_tag_key, args.sns_tag_values), args.sns_limits),
+        (
+            "route53",
+            args.route53_names,
+            (args.route53_tag_key, args.route53_tag_values),
+            None,
+        ),
+        (
+            "sns",
+            args.sns_names,
+            (args.sns_tag_key, args.sns_tag_values),
+            args.sns_limits,
+        ),
         (
             "cloudfront",
             args.cloudfront_names,
             (args.cloudfront_tag_key, args.cloudfront_tag_values),
             None,
         ),
-        ("ecs", args.ecs_names, (args.ecs_tag_key, args.ecs_tag_values), args.ecs_limits),
+        (
+            "ecs",
+            args.ecs_names,
+            (args.ecs_tag_key, args.ecs_tag_values),
+            args.ecs_limits,
+        ),
         (
             "elasticache",
             args.elasticache_names,
@@ -7459,7 +7611,11 @@ def agent_aws_main(args: Args) -> int:  # pylint: disable=too-many-branches
             try:
                 session = _create_session_from_args(args, region, proxy_config)
                 sections = aws_sections(
-                    args.hostname, session, account_id, debug=args.debug, config=proxy_config
+                    args.hostname,
+                    session,
+                    account_id,
+                    debug=args.debug,
+                    config=proxy_config,
                 )
                 sections.init_sections(aws_services, region, aws_config, s3_limits_distributor)
                 sections.run(use_cache=use_cache)

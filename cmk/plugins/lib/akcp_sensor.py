@@ -4,7 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v1.type_defs import StringTable
-from cmk.agent_based.v2 import CheckResult, DiscoveryResult, get_value_store, Result, Service, State
+from cmk.agent_based.v2 import (
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Result,
+    Service,
+    State,
+)
 
 from .humidity import check_humidity, CheckParams
 from .temperature import check_temperature, TempParamDict

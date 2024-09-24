@@ -10,7 +10,9 @@ import pytest
 from polyfactory.factories.pydantic_factory import ModelFactory
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State
-from cmk.plugins.netapp.agent_based.netapp_ontap_snapshots import check_netapp_ontap_snapshots
+from cmk.plugins.netapp.agent_based.netapp_ontap_snapshots import (
+    check_netapp_ontap_snapshots,
+)
 from cmk.plugins.netapp.models import VolumeModel
 
 

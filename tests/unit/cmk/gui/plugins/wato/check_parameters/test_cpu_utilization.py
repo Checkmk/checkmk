@@ -7,7 +7,9 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.gui.plugins.wato.check_parameters.cpu_utilization import _cpu_utilization_to_dict
+from cmk.gui.plugins.wato.check_parameters.cpu_utilization import (
+    _cpu_utilization_to_dict,
+)
 
 
 @pytest.mark.parametrize(

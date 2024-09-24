@@ -9,7 +9,14 @@ from typing import Any
 import pytest
 from pytest import MonkeyPatch
 
-from cmk.agent_based.v2 import IgnoreResults, Metric, Result, Service, ServiceLabel, State
+from cmk.agent_based.v2 import (
+    IgnoreResults,
+    Metric,
+    Result,
+    Service,
+    ServiceLabel,
+    State,
+)
 from cmk.plugins.lib import interfaces
 
 CheckResults = Sequence[Result | Metric | IgnoreResults]
@@ -858,14 +865,25 @@ ITEM_PARAMS_RESULTS = (
             Result(state=State.OK, summary="Speed: 100 MBit/s (assumed)"),
             Metric("outqlen", 0.0),
             Result(
-                state=State.WARN, summary="In: 800 kB/s (warn/crit at 625 kB/s/2.50 MB/s) (6.40%)"
+                state=State.WARN,
+                summary="In: 800 kB/s (warn/crit at 625 kB/s/2.50 MB/s) (6.40%)",
             ),
-            Metric("in", 800000.0, levels=(625000.0, 2500000.0), boundaries=(0.0, 12500000.0)),
+            Metric(
+                "in",
+                800000.0,
+                levels=(625000.0, 2500000.0),
+                boundaries=(0.0, 12500000.0),
+            ),
             Result(
                 state=State.CRIT,
                 summary="Out: 3.20 MB/s (warn/crit at 625 kB/s/2.50 MB/s) (25.60%)",
             ),
-            Metric("out", 3200000.0, levels=(625000.0, 2500000.0), boundaries=(0.0, 12500000.0)),
+            Metric(
+                "out",
+                3200000.0,
+                levels=(625000.0, 2500000.0),
+                boundaries=(0.0, 12500000.0),
+            ),
             Result(state=State.OK, summary="Total: 4.00 MB/s (16.00%)"),
             Metric("total", 4000000.0, boundaries=(0.0, 25000000.0)),
             Result(state=State.OK, notice="Errors in: 0 packets/s"),
@@ -911,14 +929,25 @@ ITEM_PARAMS_RESULTS = (
             Result(state=State.OK, summary="Speed: 100 MBit/s (assumed)"),
             Metric("outqlen", 0.0),
             Result(
-                state=State.WARN, summary="In: 800 kB/s (warn/crit at 625 kB/s/2.50 MB/s) (6.40%)"
+                state=State.WARN,
+                summary="In: 800 kB/s (warn/crit at 625 kB/s/2.50 MB/s) (6.40%)",
             ),
-            Metric("in", 800000.0, levels=(625000.0, 2500000.0), boundaries=(0.0, 12500000.0)),
+            Metric(
+                "in",
+                800000.0,
+                levels=(625000.0, 2500000.0),
+                boundaries=(0.0, 12500000.0),
+            ),
             Result(
                 state=State.CRIT,
                 summary="Out: 3.20 MB/s (warn/crit at 625 kB/s/2.50 MB/s) (25.60%)",
             ),
-            Metric("out", 3200000.0, levels=(625000.0, 2500000.0), boundaries=(0.0, 12500000.0)),
+            Metric(
+                "out",
+                3200000.0,
+                levels=(625000.0, 2500000.0),
+                boundaries=(0.0, 12500000.0),
+            ),
             Result(state=State.OK, notice="Errors in: 0 packets/s"),
             Metric("inerr", 0.0, levels=(10.0, 20.0)),
             Result(state=State.OK, notice="Discards in: 0 packets/s"),
@@ -1789,7 +1818,8 @@ def test_check_multiple_interfaces_group_simple() -> None:
         ),
         Result(state=State.WARN, summary="Speed: 10 MBit/s (expected: 123 kBit/s)"),
         Result(
-            state=State.CRIT, summary="Out: 3.20 MB/s (warn/crit at 62.5 kB/s/250 kB/s) (256.00%)"
+            state=State.CRIT,
+            summary="Out: 3.20 MB/s (warn/crit at 62.5 kB/s/250 kB/s) (256.00%)",
         ),
         Metric("out", 3200000.0, levels=(62500.0, 250000.0), boundaries=(0.0, 1250000.0)),
         Result(state=State.OK, notice="Unicast out: 0 packets/s"),
@@ -1835,19 +1865,33 @@ def test_check_multiple_interfaces_group_exclude() -> None:
         )
     ) == [
         Result(state=State.OK, summary="Interface group"),
-        Result(state=State.CRIT, summary="(degraded)", details="Operational state: degraded"),
+        Result(
+            state=State.CRIT,
+            summary="(degraded)",
+            details="Operational state: degraded",
+        ),
         Result(state=State.OK, summary="Members: [1 (up), 2 (down), 3 (down), 6 (up)]"),
         Result(state=State.OK, summary="Speed: 20 MBit/s (assumed)"),
-        Result(state=State.CRIT, summary="In: 800 kB/s (warn/crit at 125 kB/s/500 kB/s) (32.00%)"),
+        Result(
+            state=State.CRIT,
+            summary="In: 800 kB/s (warn/crit at 125 kB/s/500 kB/s) (32.00%)",
+        ),
         Metric("in", 800000.0, levels=(125000.0, 500000.0), boundaries=(0.0, 2500000.0)),
         Result(
-            state=State.CRIT, summary="Out: 3.20 MB/s (warn/crit at 125 kB/s/500 kB/s) (128.00%)"
+            state=State.CRIT,
+            summary="Out: 3.20 MB/s (warn/crit at 125 kB/s/500 kB/s) (128.00%)",
         ),
         Metric("out", 3200000.0, levels=(125000.0, 500000.0), boundaries=(0.0, 2500000.0)),
         Result(
-            state=State.CRIT, summary="Total: 4.00 MB/s (warn/crit at 500 kB/s/1.50 MB/s) (80.00%)"
+            state=State.CRIT,
+            summary="Total: 4.00 MB/s (warn/crit at 500 kB/s/1.50 MB/s) (80.00%)",
         ),
-        Metric("total", 4000000.0, levels=(500000.0, 1500000.0), boundaries=(0.0, 5000000.0)),
+        Metric(
+            "total",
+            4000000.0,
+            levels=(500000.0, 1500000.0),
+            boundaries=(0.0, 5000000.0),
+        ),
         Result(state=State.OK, notice="Unicast in: 0 packets/s"),
         Metric("inucast", 0.0),
         Result(state=State.OK, notice="Unicast out: 0 packets/s"),
@@ -1898,20 +1942,34 @@ def test_check_multiple_interfaces_group_by_agent() -> None:
         )
     ) == [
         Result(state=State.OK, summary="Interface group"),
-        Result(state=State.CRIT, summary="(degraded)", details="Operational state: degraded"),
+        Result(
+            state=State.CRIT,
+            summary="(degraded)",
+            details="Operational state: degraded",
+        ),
         Result(state=State.OK, summary="Members: [4 (down), 6 (up)]"),
         Result(state=State.OK, summary="Speed: 20 MBit/s (assumed)"),
         Metric("outqlen", 0.0),
-        Result(state=State.CRIT, summary="In: 800 kB/s (warn/crit at 125 kB/s/500 kB/s) (32.00%)"),
+        Result(
+            state=State.CRIT,
+            summary="In: 800 kB/s (warn/crit at 125 kB/s/500 kB/s) (32.00%)",
+        ),
         Metric("in", 800000.0, levels=(125000.0, 500000.0), boundaries=(0.0, 2500000.0)),
         Result(
-            state=State.CRIT, summary="Out: 3.20 MB/s (warn/crit at 125 kB/s/500 kB/s) (128.00%)"
+            state=State.CRIT,
+            summary="Out: 3.20 MB/s (warn/crit at 125 kB/s/500 kB/s) (128.00%)",
         ),
         Metric("out", 3200000.0, levels=(125000.0, 500000.0), boundaries=(0.0, 2500000.0)),
         Result(
-            state=State.CRIT, summary="Total: 4.00 MB/s (warn/crit at 500 kB/s/1.50 MB/s) (80.00%)"
+            state=State.CRIT,
+            summary="Total: 4.00 MB/s (warn/crit at 500 kB/s/1.50 MB/s) (80.00%)",
         ),
-        Metric("total", 4000000.0, levels=(500000.0, 1500000.0), boundaries=(0.0, 5000000.0)),
+        Metric(
+            "total",
+            4000000.0,
+            levels=(500000.0, 1500000.0),
+            boundaries=(0.0, 5000000.0),
+        ),
         Result(state=State.OK, notice="Errors in: 0 packets/s"),
         Metric("inerr", 0.0, levels=(10.0, 20.0)),
         Result(state=State.OK, notice="Discards in: 0 packets/s"),
@@ -2064,7 +2122,8 @@ def test_check_multiple_interfaces_group_multiple_nodes() -> None:
         Result(state=State.OK, summary="Speed: 20 MBit/s"),
         Metric("outqlen", 64.4),
         Result(
-            state=State.CRIT, summary="Out: 6.40 MB/s (warn/crit at 125 kB/s/500 kB/s) (256.00%)"
+            state=State.CRIT,
+            summary="Out: 6.40 MB/s (warn/crit at 125 kB/s/500 kB/s) (256.00%)",
         ),
         Metric("out", 6400000.0, levels=(125000.0, 500000.0), boundaries=(0.0, 2500000.0)),
         Result(state=State.OK, notice="Unicast out: 0 packets/s"),

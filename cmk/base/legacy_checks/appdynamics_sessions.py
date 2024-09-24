@@ -50,7 +50,11 @@ def check_appdynamics_sessions(item, params, info):
             yield check_levels(counter_rate, None, None, human_readable_func=lambda x: f"{x}/sec")
 
             yield check_levels(
-                rejected, "rejected_sessions", None, human_readable_func=str, infoname="Rejected"
+                rejected,
+                "rejected_sessions",
+                None,
+                human_readable_func=str,
+                infoname="Rejected",
             )
 
             yield 0, "Maximum active: %d" % max_active

@@ -9,7 +9,14 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, Filesize, Integer, Percentage, TextInput, Tuple
+from cmk.gui.valuespec import (
+    Dictionary,
+    Filesize,
+    Integer,
+    Percentage,
+    TextInput,
+    Tuple,
+)
 
 
 def _parameter_valuespec_couchbase_vbuckets():

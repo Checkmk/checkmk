@@ -14,7 +14,8 @@ from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 
 def _item_spec_mq_queues():
     return TextInput(
-        title=_("Queue Name"), help=_("The name of the queue like in the Apache queue manager")
+        title=_("Queue Name"),
+        help=_("The name of the queue like in the Apache queue manager"),
     )
 
 

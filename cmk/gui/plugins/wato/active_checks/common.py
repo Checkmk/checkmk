@@ -10,8 +10,10 @@ from cmk.gui.valuespec import DropdownChoice
 
 # courtesy to imap-3.0.0.mkp:
 # courtesy to RS: leave this in until 2.4 for MKP compatibility
-from cmk.gui.wato import RulespecGroupActiveChecks  # pylint: disable=unused-import
-from cmk.gui.wato import RulespecGroupIntegrateOtherServices  # pylint: disable=unused-import
+from cmk.gui.wato import (  # pylint: disable=unused-import
+    RulespecGroupActiveChecks,
+    RulespecGroupIntegrateOtherServices,
+)
 
 
 def ip_address_family_element() -> tuple[Literal["address_family"], DropdownChoice]:

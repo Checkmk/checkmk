@@ -59,7 +59,9 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 # combinedUserBytes   265622218292968
 
 
-def parse_storeonce_servicesets(string_table: StringTable) -> storeonce.SectionServiceSets:
+def parse_storeonce_servicesets(
+    string_table: StringTable,
+) -> storeonce.SectionServiceSets:
     return {
         data["ServiceSet ID"]: data
         for data in storeonce.parse_storeonce_servicesets(string_table).values()
@@ -72,7 +74,9 @@ register.agent_section(
 )
 
 
-def discover_storeonce_servicesets(section: storeonce.SectionServiceSets) -> DiscoveryResult:
+def discover_storeonce_servicesets(
+    section: storeonce.SectionServiceSets,
+) -> DiscoveryResult:
     yield from (Service(item=item) for item in section)
 
 

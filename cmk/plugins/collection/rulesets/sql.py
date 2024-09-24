@@ -10,7 +10,9 @@ from cmk.rulesets.v1 import form_specs, Help, Label, rule_specs, Title
 from cmk.rulesets.v1.form_specs import validators
 
 
-def _migrate_port_spec(x: object) -> tuple[Literal["explicit"], int] | tuple[Literal["macro"], str]:
+def _migrate_port_spec(
+    x: object,
+) -> tuple[Literal["explicit"], int] | tuple[Literal["macro"], str]:
     """
     >>> _migrate_port_spec(1234)
     ('explicit', 1234)

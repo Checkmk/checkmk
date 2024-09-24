@@ -221,7 +221,13 @@ class SnapshotCreationBase:
             # Sync the content of the directory, but not the directory itself
             source_path += "/"
 
-        return ["rsync", "-av", "--delete", source_path, rsync_target_dir] + exclude_args
+        return [
+            "rsync",
+            "-av",
+            "--delete",
+            source_path,
+            rsync_target_dir,
+        ] + exclude_args
 
     def _get_subtar_command(
         self, component: ReplicationPath, source_dir: str, tarfile_target_dir: str
@@ -272,7 +278,10 @@ class SnapshotCreationBase:
                 )
 
     def _create_custom_components_tarfiles(
-        self, snapshot_work_dir: str, custom_components: list[ReplicationPath], tarfile_dir: str
+        self,
+        snapshot_work_dir: str,
+        custom_components: list[ReplicationPath],
+        tarfile_dir: str,
     ) -> None:
         # Add any custom_components
         custom_components_commands = []
@@ -455,7 +464,11 @@ class SnapshotCreator(SnapshotCreationBase):
 
 def is_user_file(filepath) -> bool:  # type: ignore[no-untyped-def]
     entry = os.path.basename(filepath)
-    return entry.startswith("user_") or entry in ["tableoptions.mk", "treestates.mk", "sidebar.mk"]
+    return entry.startswith("user_") or entry in [
+        "tableoptions.mk",
+        "treestates.mk",
+        "sidebar.mk",
+    ]
 
 
 def get_site_globals(site_id: SiteId, site_config: SiteConfiguration) -> dict[str, Any]:

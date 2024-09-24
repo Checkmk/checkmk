@@ -6,7 +6,10 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.kaspersky_av_tasks import (
     check_kaspersky_av_tasks,
     parse_kaspersky_av_tasks,

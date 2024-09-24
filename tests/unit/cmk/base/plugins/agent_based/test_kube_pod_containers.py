@@ -16,7 +16,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import render, Result, Stat
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
 from cmk.agent_based.v1.type_defs import StringTable
-from cmk.plugins.lib.kube import ContainerStateType, ContainerTerminatedState, PodContainers
+from cmk.plugins.lib.kube import (
+    ContainerStateType,
+    ContainerTerminatedState,
+    PodContainers,
+)
 
 TIMESTAMP = 359
 MINUTE = 60
@@ -75,7 +79,9 @@ StringTableElem = Mapping[str, Mapping[object, Mapping[str, object]]]
 
 @pytest.fixture
 def string_table_element(
-    container_name: str, container_state_dict: Mapping[str, str | int], num_of_containers: int
+    container_name: str,
+    container_state_dict: Mapping[str, str | int],
+    num_of_containers: int,
 ) -> StringTableElem:
     return {
         "containers": {
@@ -149,7 +155,9 @@ def test_check_result_summary_status(check_result: CheckResult) -> None:
 
 
 def test_check_result_summary_image(
-    container_name: str, string_table_element: StringTableElem, check_result: CheckResult
+    container_name: str,
+    string_table_element: StringTableElem,
+    check_result: CheckResult,
 ) -> None:
     expected_summary = f"Image: {string_table_element['containers'][container_name]['image']}"
     _, result, _ = check_result
@@ -158,7 +166,9 @@ def test_check_result_summary_image(
 
 
 def test_check_result_summary_restart_count(
-    container_name: str, string_table_element: StringTableElem, check_result: CheckResult
+    container_name: str,
+    string_table_element: StringTableElem,
+    check_result: CheckResult,
 ) -> None:
     expected_summary = (
         f"Restart count: {string_table_element['containers'][container_name]['restart_count']}"
@@ -218,7 +228,8 @@ def test_check_result_terminated_non_zero_exit_code_status(
 @pytest.mark.parametrize("container_state", ["terminated"])
 @pytest.mark.parametrize("exit_code", [1])
 @pytest.mark.parametrize(
-    "failed_state", [int(State.OK), int(State.WARN), int(State.CRIT), int(State.UNKNOWN)]
+    "failed_state",
+    [int(State.OK), int(State.WARN), int(State.CRIT), int(State.UNKNOWN)],
 )
 def test_check_result_terminated_non_zero_exit_code_status_specified_params(
     failed_state, check_result

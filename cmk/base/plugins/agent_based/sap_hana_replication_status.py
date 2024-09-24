@@ -12,7 +12,9 @@ from .agent_based_api.v1 import IgnoreResultsError, register, Result, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
-def parse_sap_hana_replication_status(string_table: StringTable) -> sap_hana.ParsedSection:
+def parse_sap_hana_replication_status(
+    string_table: StringTable,
+) -> sap_hana.ParsedSection:
     section: sap_hana.ParsedSection = {}
 
     for sid_instance, lines in sap_hana.parse_sap_hana(string_table).items():
@@ -33,7 +35,9 @@ register.agent_section(
 )
 
 
-def discovery_sap_hana_replication_status(section: sap_hana.ParsedSection) -> DiscoveryResult:
+def discovery_sap_hana_replication_status(
+    section: sap_hana.ParsedSection,
+) -> DiscoveryResult:
     for sid_instance, data in section.items():
         if not data or (
             data["sys_repl_status"] != "10"
@@ -54,7 +58,8 @@ def check_sap_hana_replication_status(
     state, state_readable, param_key = sap_hana.get_replication_state(data["sys_repl_status"])
 
     yield Result(
-        state=params.get(param_key, state), summary="System replication: %s" % state_readable
+        state=params.get(param_key, state),
+        summary="System replication: %s" % state_readable,
     )
 
 

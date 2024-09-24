@@ -7,7 +7,13 @@
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import Dictionary, DropdownChoice, ListChoice, NetworkPort, TextInput
+from cmk.gui.valuespec import (
+    Dictionary,
+    DropdownChoice,
+    ListChoice,
+    NetworkPort,
+    TextInput,
+)
 from cmk.gui.wato import (
     IndividualOrStoredPassword,
     monitoring_macro_help,

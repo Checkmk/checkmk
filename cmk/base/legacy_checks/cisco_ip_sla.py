@@ -86,7 +86,12 @@ def parse_cisco_ip_sla(string_table):
         (  # rttMonCtrlOperEntry
             ("State", lambda x: states.get(x, "unknown"), "", "option"),
             ("Text", None, "", None),
-            ("Connection lost occured", lambda x: "yes" if x == "1" else "no", "", "option"),
+            (
+                "Connection lost occured",
+                lambda x: "yes" if x == "1" else "no",
+                "",
+                "option",
+            ),
             ("Timeout occured", lambda x: "yes" if x == "1" else "no", "", "option"),
             (
                 "Completion time over treshold occured",

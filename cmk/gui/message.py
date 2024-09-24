@@ -390,9 +390,8 @@ def message_mail(user_id: UserId, msg: Message) -> bool:
 
     # Code mostly taken from message_via_email() from message.py module
     subject = _("Checkmk: Message")
-    body = (
-        _(
-            """Greetings %s,
+    body = _(
+        """Greetings %s,
 
 %s sent you a message:
 
@@ -401,9 +400,7 @@ def message_mail(user_id: UserId, msg: Message) -> bool:
 ---
 
 """
-        )
-        % (recipient_name, sender_name, msg["text"])
-    )
+    ) % (recipient_name, sender_name, msg["text"])
 
     if msg["valid_till"]:
         body += _("This message has been created at %s and is valid till %s.") % (

@@ -8,7 +8,10 @@ from unittest import mock
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.printer_alerts import (
     check_printer_alerts,
     discovery_printer_alerts,
@@ -23,7 +26,10 @@ def test_discover_always() -> None:
 @pytest.mark.parametrize(
     "info, expected_result",
     [
-        ([[["3", "0", "0", "0", ""]]], [Result(state=State.OK, summary="No alerts present")]),
+        (
+            [[["3", "0", "0", "0", ""]]],
+            [Result(state=State.OK, summary="No alerts present")],
+        ),
         (
             [[["1", "2", "15", "3", "Alert desc"]]],
             [Result(state=State.WARN, summary="unknown alert group 2#15: Alert desc")],
@@ -36,7 +42,8 @@ def test_discover_always() -> None:
             [[["1", "-1", "15", "1111111", ""]]],
             [
                 Result(
-                    state=State.OK, summary="unknown alert group -1#15: unknown alert code: 1111111"
+                    state=State.OK,
+                    summary="unknown alert group -1#15: unknown alert code: 1111111",
                 )
             ],
         ),
@@ -52,7 +59,10 @@ def test_discover_always() -> None:
             [[["1", "5", "-1", "23", "Bereitschafts-\nmodus ein"]]],
             [Result(state=State.OK, summary="generalPrinter: Bereitschaftsmodus ein")],
         ),
-        ([[["2", "5", "-1", "-1", ""]]], [Result(state=State.UNKNOWN, summary="generalPrinter: ")]),
+        (
+            [[["2", "5", "-1", "-1", ""]]],
+            [Result(state=State.UNKNOWN, summary="generalPrinter: ")],
+        ),
         (
             [[["2", "5", "-1", "11", ""]]],
             [Result(state=State.CRIT, summary="generalPrinter: subunitLifeOver")],

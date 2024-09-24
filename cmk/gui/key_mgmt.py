@@ -40,7 +40,11 @@ from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Key
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri_contextless
+from cmk.gui.utils.urls import (
+    make_confirm_delete_link,
+    makeactionuri,
+    makeuri_contextless,
+)
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
@@ -70,7 +74,8 @@ class KeypairStore:
         store.makedirs(self._path.parent)
         with store.locked(self._path):
             store.save_mk_file(
-                self._path, f"{self._attr}.update({pprint.pformat(self._unparse(keys))})"
+                self._path,
+                f"{self._attr}.update({pprint.pformat(self._unparse(keys))})",
             )
 
     def _parse(self, raw_keys: Mapping[int, dict[str, Any]]) -> dict[int, Key]:
@@ -254,7 +259,11 @@ class PageEditKey:
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
-            _("Key"), breadcrumb, form_name="key", button_name="_save", save_title=_("Create")
+            _("Key"),
+            breadcrumb,
+            form_name="key",
+            button_name="_save",
+            save_title=_("Create"),
         )
 
     def action(self) -> ActionResult:
@@ -349,7 +358,11 @@ class PageUploadKey:
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
-            _("Key"), breadcrumb, form_name="key", button_name="_save", save_title=_("Upload")
+            _("Key"),
+            breadcrumb,
+            form_name="key",
+            button_name="_save",
+            save_title=_("Upload"),
         )
 
     def action(self) -> ActionResult:
@@ -511,7 +524,11 @@ class PageDownloadKey:
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
-            _("Key"), breadcrumb, form_name="key", button_name="_save", save_title=_("Download")
+            _("Key"),
+            breadcrumb,
+            form_name="key",
+            button_name="_save",
+            save_title=_("Download"),
         )
 
     def action(self) -> ActionResult:

@@ -9,7 +9,14 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersNetworking,
 )
-from cmk.gui.valuespec import Dictionary, IPv4Address, ListOf, MonitoringState, TextInput, Tuple
+from cmk.gui.valuespec import (
+    Dictionary,
+    IPv4Address,
+    ListOf,
+    MonitoringState,
+    TextInput,
+    Tuple,
+)
 
 
 def _parameter_valuespec_vpn_tunnel():

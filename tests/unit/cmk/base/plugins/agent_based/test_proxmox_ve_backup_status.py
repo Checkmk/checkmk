@@ -120,7 +120,8 @@ def set_null_values(backup_data):
                 Result(state=State.OK, summary="Age: 18 hours 39 minutes"),
                 Metric("age", 67157.0, boundaries=(0.0, None)),
                 Result(
-                    state=State.OK, summary="Server local start time: 2020-04-16 22:20:43+00:00"
+                    state=State.OK,
+                    summary="Server local start time: 2020-04-16 22:20:43+00:00",
                 ),
                 Result(state=State.OK, summary="Duration: 2 minutes 0 seconds"),
                 Metric("backup_duration", 120.0, boundaries=(0.0, None)),
@@ -140,7 +141,8 @@ def set_null_values(backup_data):
                 ),
                 Metric("age", 67157.0, levels=(43200.0, 86400.0), boundaries=(0.0, None)),
                 Result(
-                    state=State.OK, summary="Server local start time: 2020-04-16 22:20:43+00:00"
+                    state=State.OK,
+                    summary="Server local start time: 2020-04-16 22:20:43+00:00",
                 ),
                 Result(state=State.OK, summary="Duration: 2 minutes 0 seconds"),
                 Metric("backup_duration", 120.0, boundaries=(0.0, None)),
@@ -157,7 +159,8 @@ def set_null_values(backup_data):
                 Result(state=State.OK, summary="Age: 18 hours 39 minutes"),
                 Metric("age", 67157.0, boundaries=(0.0, None)),
                 Result(
-                    state=State.OK, summary="Server local start time: 2020-04-16 22:20:43+00:00"
+                    state=State.OK,
+                    summary="Server local start time: 2020-04-16 22:20:43+00:00",
                 ),
                 Result(state=State.OK, summary="Duration: 2 minutes 20 seconds"),
                 Metric("backup_duration", 140.0, boundaries=(0.0, None)),
@@ -174,7 +177,8 @@ def set_null_values(backup_data):
                 Result(state=State.OK, summary="Age: 18 hours 39 minutes"),
                 Metric("age", 67157.0, boundaries=(0.0, None)),
                 Result(
-                    state=State.OK, summary="Server local start time: 2020-04-16 22:20:43+00:00"
+                    state=State.OK,
+                    summary="Server local start time: 2020-04-16 22:20:43+00:00",
                 ),
                 Result(state=State.OK, summary="Duration: 2 minutes 20 seconds"),
                 Metric("backup_duration", 140.0, boundaries=(0.0, None)),
@@ -190,7 +194,8 @@ def set_null_values(backup_data):
                 Result(state=State.OK, summary="Age: 18 hours 39 minutes"),
                 Metric("age", 67157.0, boundaries=(0.0, None)),
                 Result(
-                    state=State.OK, summary="Server local start time: 2020-04-16 22:20:43+00:00"
+                    state=State.OK,
+                    summary="Server local start time: 2020-04-16 22:20:43+00:00",
                 ),
                 Result(state=State.OK, summary="Duration: 2 minutes 20 seconds"),
                 Metric("backup_duration", 140.0, boundaries=(0.0, None)),
@@ -207,7 +212,8 @@ def set_null_values(backup_data):
                 Result(state=State.OK, summary="Age: 18 hours 39 minutes"),
                 Metric("age", 67157.0, boundaries=(0.0, None)),
                 Result(
-                    state=State.OK, summary="Server local start time: 2020-04-16 22:20:43+00:00"
+                    state=State.OK,
+                    summary="Server local start time: 2020-04-16 22:20:43+00:00",
                 ),
                 Result(state=State.OK, summary="Duration: 2 minutes 0 seconds"),
                 Metric("backup_duration", 120.0, boundaries=(0.0, None)),
@@ -222,7 +228,8 @@ def set_null_values(backup_data):
                 Result(state=State.OK, summary="Age: 18 hours 39 minutes"),
                 Metric("age", 67157.0, boundaries=(0.0, None)),
                 Result(
-                    state=State.OK, summary="Server local start time: 2020-04-16 22:20:43+00:00"
+                    state=State.OK,
+                    summary="Server local start time: 2020-04-16 22:20:43+00:00",
                 ),
                 Result(state=State.OK, summary="Duration: 2 minutes 20 seconds"),
                 Metric("backup_duration", 140.0, boundaries=(0.0, None)),
@@ -236,7 +243,8 @@ def set_null_values(backup_data):
                 Result(state=State.OK, summary="Age: 18 hours 39 minutes"),
                 Metric("age", 67157.0, boundaries=(0.0, None)),
                 Result(
-                    state=State.OK, summary="Server local start time: 2020-04-16 22:20:43+00:00"
+                    state=State.OK,
+                    summary="Server local start time: 2020-04-16 22:20:43+00:00",
                 ),
                 Result(state=State.OK, summary="Duration: 2 minutes 20 seconds"),
                 Metric("backup_duration", 140.0, boundaries=(0.0, None)),

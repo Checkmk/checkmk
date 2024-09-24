@@ -33,7 +33,11 @@ def fixture_test_cfg() -> TagConfig:
                             "id": TagID("prod"),
                             "title": "Productive system",
                         },
-                        {"aux_tags": [], "id": TagID("critical"), "title": "Business critical"},
+                        {
+                            "aux_tags": [],
+                            "id": TagID("critical"),
+                            "title": "Business critical",
+                        },
                         {"aux_tags": [], "id": TagID("test"), "title": "Test system"},
                         {
                             "aux_tags": [],
@@ -51,7 +55,11 @@ def fixture_test_cfg() -> TagConfig:
                             "id": TagID("lan"),
                             "title": "Local network (low latency)",
                         },
-                        {"aux_tags": [], "id": TagID("wan"), "title": "WAN (high latency)"},
+                        {
+                            "aux_tags": [],
+                            "id": TagID("wan"),
+                            "title": "WAN (high latency)",
+                        },
                         {
                             "aux_tags": [],
                             "id": TagID("dmz"),
@@ -64,7 +72,11 @@ def fixture_test_cfg() -> TagConfig:
                     "id": TagGroupID("none_choice"),
                     "tags": [
                         {"aux_tags": [TagID("bla")], "id": None, "title": "None"},
-                        {"aux_tags": [], "id": TagID("none_val"), "title": "None value"},
+                        {
+                            "aux_tags": [],
+                            "id": TagID("none_val"),
+                            "title": "None value",
+                        },
                     ],
                     "title": "None choice",
                 },
@@ -76,7 +88,11 @@ def fixture_test_cfg() -> TagConfig:
                             "id": TagID("none_val"),
                             "title": "None value 2",
                         },
-                        {"aux_tags": [], "id": TagID("none_val_2"), "title": "None value again"},
+                        {
+                            "aux_tags": [],
+                            "id": TagID("none_val_2"),
+                            "title": "None value again",
+                        },
                     ],
                     "title": "None 2",
                 },
@@ -242,10 +258,12 @@ def test_tag_config_get_tag_ids(test_cfg: TagConfig) -> None:
 def test_tag_config_get_tag_or_aux_tag(test_cfg: TagConfig) -> None:
     assert test_cfg.get_tag_or_aux_tag(TagGroupID("nonexisting_group"), TagID("blä")) is None
     assert isinstance(
-        test_cfg.get_tag_or_aux_tag(TagGroupID("nonexisting_group"), TagID("bla")), AuxTag
+        test_cfg.get_tag_or_aux_tag(TagGroupID("nonexisting_group"), TagID("bla")),
+        AuxTag,
     )
     assert isinstance(
-        test_cfg.get_tag_or_aux_tag(TagGroupID("criticality"), TagID("prod")), GroupedTag
+        test_cfg.get_tag_or_aux_tag(TagGroupID("criticality"), TagID("prod")),
+        GroupedTag,
     )
 
 
@@ -318,7 +336,9 @@ def test_tag_config_insert_tag_group_missing_title(cfg: TagConfig) -> None:
         cfg.validate_config()
 
 
-def test_tag_config_insert_tag_group_missing_multiple_tags_empty(cfg: TagConfig) -> None:
+def test_tag_config_insert_tag_group_missing_multiple_tags_empty(
+    cfg: TagConfig,
+) -> None:
     with pytest.raises(MKGeneralException, match="Only one tag may be empty"):
         tg = TagGroup.from_config(
             {
@@ -385,7 +405,12 @@ def test_tag_config_insert_tag_group_aux_tag_id_conflict(cfg: TagConfig) -> None
 def test_tag_config_insert_tag_group_no_tag(cfg: TagConfig) -> None:
     with pytest.raises(MKGeneralException, match="at least one tag"):
         tg = TagGroup.from_config(
-            {"id": TagGroupID("tgid7"), "topic": "Topics", "title": "titlor", "tags": []}
+            {
+                "id": TagGroupID("tgid7"),
+                "topic": "Topics",
+                "title": "titlor",
+                "tags": [],
+            }
         )
         cfg.insert_tag_group(tg)
         cfg.validate_config()
@@ -550,7 +575,8 @@ def test_aux_tag_list_remove(test_cfg: TagConfig) -> None:
     ],
 )
 def test_compute_datasources(
-    tag_groups: Mapping[TagGroupID, TagID], expected_computed_datasources: tags.ComputedDataSources
+    tag_groups: Mapping[TagGroupID, TagID],
+    expected_computed_datasources: tags.ComputedDataSources,
 ) -> None:
     assert tags.compute_datasources(tag_groups) == expected_computed_datasources
 

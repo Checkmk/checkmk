@@ -6,7 +6,12 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.netapp_api_luns import (
     _check_netapp_api_luns,
     discover_netapp_api_luns,
@@ -73,7 +78,12 @@ def test_checks(section: SectionSingleInstance) -> None:
     assert list(
         _check_netapp_api_luns(
             "crm_dblogs_lu01",
-            {"levels": (80.0, 90.0), "trend_range": 24, "trend_perfdata": True, "read_only": False},
+            {
+                "levels": (80.0, 90.0),
+                "trend_range": 24,
+                "trend_perfdata": True,
+                "read_only": False,
+            },
             section,
             {"crm_dblogs_lu01.delta": (0, 0)},
             60.0,
@@ -88,7 +98,12 @@ def test_checks(section: SectionSingleInstance) -> None:
             boundaries=(0, 614439.1845703125),
         ),
         Metric("fs_free", 100480.8056640625, boundaries=(0, None)),
-        Metric("fs_used_percent", 83.64674516415643, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+        Metric(
+            "fs_used_percent",
+            83.64674516415643,
+            levels=(80.0, 90.0),
+            boundaries=(0.0, 100.0),
+        ),
         Result(
             state=State.WARN,
             summary="Used: 83.65% - 502 GiB of 600 GiB (warn/crit at 80.00%/90.00% used)",

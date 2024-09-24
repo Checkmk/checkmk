@@ -7,7 +7,14 @@ import copy
 import dataclasses
 import logging
 import time
-from collections.abc import Collection, Iterable, Iterator, Mapping, MutableMapping, Sequence
+from collections.abc import (
+    Collection,
+    Iterable,
+    Iterator,
+    Mapping,
+    MutableMapping,
+    Sequence,
+)
 from pathlib import Path
 from typing import Any, Final
 
@@ -36,9 +43,7 @@ from .snmp import make_backend, SNMPPluginStore
 __all__ = ["SNMPFetcher", "SNMPSectionMeta"]
 
 
-class WalkCache(
-    MutableMapping[tuple[str, str, bool], SNMPRowInfo]
-):  # pylint: disable=too-many-ancestors
+class WalkCache(MutableMapping[tuple[str, str, bool], SNMPRowInfo]):  # pylint: disable=too-many-ancestors
     """A cache on a per-fetchoid basis
 
     This cache is different from section stores in that is per-fetchoid,
@@ -331,7 +336,8 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         persisted_sections = self._section_store.load() if mode is Mode.CHECKING else {}
         section_names = self._get_selection(mode)
         section_names |= self._detect(
-            select_from=self._get_detected_sections(mode) - section_names, backend=self._backend
+            select_from=self._get_detected_sections(mode) - section_names,
+            backend=self._backend,
         )
         if mode is Mode.DISCOVERY and not section_names:
             # Nothing to discover? That can't be right.
@@ -381,5 +387,8 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         # to re-order the section names.
         return sorted(
             section_names,
-            key=lambda x: (not ("cpu" in str(x) or x in cls.CPU_SECTIONS_WITHOUT_CPU_IN_NAME), x),
+            key=lambda x: (
+                not ("cpu" in str(x) or x in cls.CPU_SECTIONS_WITHOUT_CPU_IN_NAME),
+                x,
+            ),
         )

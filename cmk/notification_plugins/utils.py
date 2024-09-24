@@ -83,7 +83,9 @@ def service_url_from_context(context: PluginNotificationContext) -> str:
     return base + context["SERVICEURL"] if base and context["WHAT"] == "SERVICE" else ""
 
 
-def html_escape_context(context: PluginNotificationContext) -> PluginNotificationContext:
+def html_escape_context(
+    context: PluginNotificationContext,
+) -> PluginNotificationContext:
     unescaped_variables = {
         "CONTACTALIAS",
         "CONTACTNAME",

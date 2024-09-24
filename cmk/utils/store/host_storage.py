@@ -165,7 +165,10 @@ class ABCHostsStorage(Generic[THostsReadData]):
         return file_path.with_suffix(self._storage_format.extension())
 
     def write(
-        self, file_path: Path, data: HostsStorageData, value_formatter: Callable[[Any], str]
+        self,
+        file_path: Path,
+        data: HostsStorageData,
+        value_formatter: Callable[[Any], str],
     ) -> None:
         return self._write(self.add_file_extension(file_path), data, value_formatter)
 
@@ -174,7 +177,10 @@ class ABCHostsStorage(Generic[THostsReadData]):
 
     @abc.abstractmethod
     def _write(
-        self, file_path: Path, data: HostsStorageData, value_formatter: Callable[[Any], str]
+        self,
+        file_path: Path,
+        data: HostsStorageData,
+        value_formatter: Callable[[Any], str],
     ) -> None:
         raise NotImplementedError()
 
@@ -188,7 +194,10 @@ class StandardHostsStorage(ABCHostsStorage[str]):
         super().__init__(StorageFormat.STANDARD)
 
     def _write(  # pylint: disable=too-many-branches
-        self, file_path: Path, data: HostsStorageData, value_formatter: Callable[[Any], str]
+        self,
+        file_path: Path,
+        data: HostsStorageData,
+        value_formatter: Callable[[Any], str],
     ) -> None:
         out = io.StringIO()
         contact_groups = data.contact_groups
@@ -253,7 +262,10 @@ class PickleHostsStorage(ABCHostsStorage[HostsData]):
         super().__init__(StorageFormat.PICKLE)
 
     def _write(
-        self, file_path: Path, data: HostsStorageData, value_formatter: Callable[[Any], str]
+        self,
+        file_path: Path,
+        data: HostsStorageData,
+        value_formatter: Callable[[Any], str],
     ) -> None:
         pickle_store = store.ObjectStore(file_path, serializer=store.PickleSerializer[HostsData]())
         with pickle_store.locked():
@@ -270,7 +282,10 @@ class RawHostsStorage(ABCHostsStorage[HostsData]):
         super().__init__(StorageFormat.RAW)
 
     def _write(
-        self, file_path: Path, data: HostsStorageData, value_formatter: Callable[[Any], str]
+        self,
+        file_path: Path,
+        data: HostsStorageData,
+        value_formatter: Callable[[Any], str],
     ) -> None:
         store.save_text_to_file(str(file_path), value_formatter(data))
 
@@ -279,7 +294,9 @@ class RawHostsStorage(ABCHostsStorage[HostsData]):
 
 
 @cache
-def make_experimental_hosts_storage(storage_format: StorageFormat) -> ABCHostsStorage | None:
+def make_experimental_hosts_storage(
+    storage_format: StorageFormat,
+) -> ABCHostsStorage | None:
     if storage_format == StorageFormat.RAW:
         return RawHostsStorage()
     if storage_format == StorageFormat.PICKLE:

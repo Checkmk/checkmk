@@ -29,6 +29,7 @@ v returned data rows, includes end y
         |---------------|
       x---v---v---v---v---y
 """
+
 import ast
 from collections.abc import Mapping, Sequence
 from pathlib import Path
@@ -52,7 +53,15 @@ def fixture_rrd_database(site: Site) -> Path:
         pytest.param(
             (1500000343, 1500000401),
             {
-                "data": [(350.0,), (360.0,), (370.0,), (380.0,), (390.0,), (400.0,), (None,)],
+                "data": [
+                    (350.0,),
+                    (360.0,),
+                    (370.0,),
+                    (380.0,),
+                    (390.0,),
+                    (400.0,),
+                    (None,),
+                ],
                 "meta": {
                     "start": 1500000340,
                     "end": 1500000410,
@@ -106,7 +115,10 @@ def fixture_rrd_database(site: Site) -> Path:
     ],
 )
 def test_xport(
-    site: Site, rrd_database: Path, bounds: tuple[int, int], result: Mapping[str, object]
+    site: Site,
+    rrd_database: Path,
+    bounds: tuple[int, int],
+    result: Mapping[str, object],
 ) -> None:
     "Test python binding and that direct memory access behaves correctly"
     qstart, qend = bounds
@@ -169,7 +181,11 @@ def test_xport(
     ],
 )
 def test_cli_xport(
-    site: Site, rrd_database: str, bounds: tuple[int, int], out_fmt: Sequence[str], result: str
+    site: Site,
+    rrd_database: str,
+    bounds: tuple[int, int],
+    out_fmt: Sequence[str],
+    result: str,
 ) -> None:
     """Test CLI so that when debugging output from tool it matches state in memory
 

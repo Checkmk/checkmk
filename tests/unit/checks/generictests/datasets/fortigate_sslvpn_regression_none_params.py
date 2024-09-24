@@ -18,7 +18,11 @@ checks = {
             [
                 (0, "disabled", []),
                 (0, "Users: 0", [("active_vpn_users", 0, None, None, None, None)]),
-                (0, "Web sessions: 0", [("active_vpn_websessions", 0, None, None, None, None)]),
+                (
+                    0,
+                    "Web sessions: 0",
+                    [("active_vpn_websessions", 0, None, None, None, None)],
+                ),
                 (
                     0,
                     "Tunnels: 0",

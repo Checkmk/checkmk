@@ -36,7 +36,11 @@ from cmk.plugins.lib.sap_hana import ParsedSection
                 ["high_alerts", "0"],
             ],
             {
-                "HXE 90 SYSTEMDB": {"disabled_alerts": 1, "high_alerts": 0, "open_events": 4},
+                "HXE 90 SYSTEMDB": {
+                    "disabled_alerts": 1,
+                    "high_alerts": 0,
+                    "open_events": 4,
+                },
             },
         ),
         (
@@ -119,7 +123,10 @@ def test_inventory_sap_hana_events(
     ],
 )
 def test_check_sap_hana_events(
-    fix_register: FixRegister, item: str, info: StringTable, expected_result: DiscoveryResult
+    fix_register: FixRegister,
+    item: str,
+    info: StringTable,
+    expected_result: DiscoveryResult,
 ) -> None:
     section = fix_register.agent_sections[SectionName("sap_hana_events")].parse_function(info)
     plugin = fix_register.check_plugins[CheckPluginName("sap_hana_events")]

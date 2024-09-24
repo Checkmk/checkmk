@@ -198,7 +198,11 @@ class PageCrash(ABCCrashReportPage):
                                     title=_("Download"),
                                     icon_name="download",
                                     item=make_simple_link(
-                                        makeuri(request, [], filename="download_crash_report.py")
+                                        makeuri(
+                                            request,
+                                            [],
+                                            filename="download_crash_report.py",
+                                        )
                                     ),
                                     is_shortcut=True,
                                     is_suggested=True,
@@ -378,7 +382,10 @@ class PageCrash(ABCCrashReportPage):
             pre=True,
         )
         _crash_row(
-            _("Traceback"), self._format_traceback(info["exc_traceback"]), odd=False, pre=True
+            _("Traceback"),
+            self._format_traceback(info["exc_traceback"]),
+            odd=False,
+            pre=True,
         )
         _crash_row(
             _("Local Variables"),
@@ -389,7 +396,9 @@ class PageCrash(ABCCrashReportPage):
 
         _crash_row(_("Crash Type"), info["crash_type"], odd=False, legend=True)
         _crash_row(
-            _("Time"), time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(info["time"])), odd=True
+            _("Time"),
+            time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(info["time"])),
+            odd=True,
         )
         _crash_row(_("Operating System"), info["os"], False)
         _crash_row(_("Checkmk Version"), info["version"], True)
@@ -491,8 +500,17 @@ class ReportRendererSection(ABCReportRenderer):
         html.open_table(class_=["data", "crash_report"])
 
         _crash_row(_("Section Name"), details["section_name"], odd=True)
-        _crash_row(_("Inline-SNMP"), format_bool(details.get("inline_snmp")), odd=False, pre=True)
-        _crash_row(_("Section Content"), pprint.pformat(details.get("section_content")), pre=True)
+        _crash_row(
+            _("Inline-SNMP"),
+            format_bool(details.get("inline_snmp")),
+            odd=False,
+            pre=True,
+        )
+        _crash_row(
+            _("Section Content"),
+            pprint.pformat(details.get("section_content")),
+            pre=True,
+        )
 
         html.close_table()
 
@@ -563,9 +581,17 @@ class ReportRendererCheck(ABCReportRenderer):
         _crash_row(_("Is cluster host"), format_bool(details.get("is_cluster")), odd=True)
         _crash_row(_("Check type"), details["check_type"], odd=False)
         _crash_row(
-            _("Enforced service"), format_bool(details.get("enforced_service")), odd=True, pre=True
+            _("Enforced service"),
+            format_bool(details.get("enforced_service")),
+            odd=True,
+            pre=True,
         )
-        _crash_row(_("Inline-SNMP"), format_bool(details.get("inline_snmp")), odd=True, pre=True)
+        _crash_row(
+            _("Inline-SNMP"),
+            format_bool(details.get("inline_snmp")),
+            odd=True,
+            pre=True,
+        )
         _crash_row(_("Check item"), details.get("item", "This check has no item."), odd=False)
         _crash_row(_("Description"), details["description"], odd=True)
         if "params" in details:
@@ -612,7 +638,11 @@ class ReportRendererGUI(ABCReportRenderer):
 
 
 def _crash_row(
-    title: str, infotext: HTMLContent, odd: bool = True, legend: bool = False, pre: bool = False
+    title: str,
+    infotext: HTMLContent,
+    odd: bool = True,
+    legend: bool = False,
+    pre: bool = False,
 ) -> None:
     trclass = "data odd0" if odd else "data even0"
     tdclass = "left legend" if legend else "left"

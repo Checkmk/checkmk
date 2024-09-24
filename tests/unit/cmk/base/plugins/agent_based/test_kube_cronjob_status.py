@@ -90,7 +90,10 @@ def test_cron_job_status_time_outputs() -> None:
     )
 
     assert {r.summary for r in check_result if isinstance(r, Result)}.issuperset(
-        {"Time since last successful completion: 1 second", "Time since last schedule: 1 second"}
+        {
+            "Time since last successful completion: 1 second",
+            "Time since last schedule: 1 second",
+        }
     )
     assert {r.name for r in check_result if isinstance(r, Metric)}.issuperset(
         {
@@ -170,7 +173,8 @@ def test_cron_job_status_with_failed_job() -> None:
     latest_job = CronJobLatestJobFactory.build(
         pods=[
             JobPodFactory.build(
-                containers={waiting_container.container_id: waiting_container}, init_containers={}
+                containers={waiting_container.container_id: waiting_container},
+                init_containers={},
             )
         ],
         status=JobStatusFactory.build(

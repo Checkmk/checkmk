@@ -121,7 +121,9 @@ class ModeRoles(WatoMode):
             role_id = RoleID(request.get_ascii_input_mandatory("_clone"))
             userroles.clone_role(role_id)
             _changes.add_change(
-                "edit-roles", _("Created new role '%s'") % role_id, sites=get_login_sites()
+                "edit-roles",
+                _("Created new role '%s'") % role_id,
+                sites=get_login_sites(),
             )
 
         return redirect(self.mode_url())
@@ -340,7 +342,10 @@ class ModeEditRole(WatoMode):
                 choices: Choices = [
                     ("yes", _("yes")),
                     ("no", _("no")),
-                    ("default", _("default (%s)") % (def_value and _("yes") or _("no"))),
+                    (
+                        "default",
+                        _("default (%s)") % (def_value and _("yes") or _("no")),
+                    ),
                 ]
 
                 deflt = {True: "yes", False: "no", None: "default"}[pvalue]
@@ -393,7 +398,8 @@ class ModeRoleMatrix(WatoMode):
                     html.help(perm.description)
 
                     for role in sorted(
-                        userroles.get_all_roles().values(), key=lambda a: (a.alias, a.name)
+                        userroles.get_all_roles().values(),
+                        key=lambda a: (a.alias, a.name),
                     ):
                         base_on_id = role.basedon if role.basedon is not None else role.name
                         pvalue = role.permissions.get(perm.name)

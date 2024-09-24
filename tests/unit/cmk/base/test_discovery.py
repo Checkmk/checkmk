@@ -1185,7 +1185,8 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
     }
 
     def __iter(
-        section_names: Iterable[ParsedSectionName], providers: Mapping[HostKey, Provider]
+        section_names: Iterable[ParsedSectionName],
+        providers: Mapping[HostKey, Provider],
     ) -> Iterable[tuple[HostKey, ParsedSectionName]]:
         for host_key, provider in providers.items():
             # filter section names for sections that cannot be resolved
@@ -1669,7 +1670,11 @@ def test__discovery_considers_host_labels(
     assert {
         entry.id()
         for entry in discover_services(
-            host_name, plugin_names, providers=providers, plugins=plugins, on_error=OnError.RAISE
+            host_name,
+            plugin_names,
+            providers=providers,
+            plugins=plugins,
+            on_error=OnError.RAISE,
         )
     } == expected_services
 
@@ -1698,7 +1703,11 @@ _discovery_test_cases = [
         ),
         on_cluster=ExpectedDiscoveryResultOnCluster(
             expected_vanished_host_labels=[
-                HostLabel("node1_existing_label", "true", plugin_name=SectionName("node1_plugin"))
+                HostLabel(
+                    "node1_existing_label",
+                    "true",
+                    plugin_name=SectionName("node1_plugin"),
+                )
             ],
             expected_old_host_labels=[],
             expected_new_host_labels=[
@@ -1818,7 +1827,11 @@ def test__discover_host_labels_and_services_on_realhost(
     )
 
     discovered_services = discover_services(
-        host_name, plugin_names, providers=providers, plugins=plugins, on_error=OnError.RAISE
+        host_name,
+        plugin_names,
+        providers=providers,
+        plugins=plugins,
+        on_error=OnError.RAISE,
     )
 
     services = {s.id() for s in discovered_services}
@@ -1958,7 +1971,10 @@ def test_get_node_services() -> None:
             transition="vanished",
             autocheck=DiscoveredItem[AutocheckEntry](
                 previous=AutocheckEntry(
-                    CheckPluginName("plugin_vanished"), item=None, parameters={}, service_labels={}
+                    CheckPluginName("plugin_vanished"),
+                    item=None,
+                    parameters={},
+                    service_labels={},
                 ),
                 new=None,
             ),
@@ -1968,10 +1984,16 @@ def test_get_node_services() -> None:
             transition="unchanged",
             autocheck=DiscoveredItem[AutocheckEntry](
                 previous=AutocheckEntry(
-                    CheckPluginName("plugin_unchanged"), item=None, parameters={}, service_labels={}
+                    CheckPluginName("plugin_unchanged"),
+                    item=None,
+                    parameters={},
+                    service_labels={},
                 ),
                 new=AutocheckEntry(
-                    CheckPluginName("plugin_unchanged"), item=None, parameters={}, service_labels={}
+                    CheckPluginName("plugin_unchanged"),
+                    item=None,
+                    parameters={},
+                    service_labels={},
                 ),
             ),
             hosts=[host_name],
@@ -1980,7 +2002,10 @@ def test_get_node_services() -> None:
             transition="new",
             autocheck=DiscoveredItem[AutocheckEntry](
                 new=AutocheckEntry(
-                    CheckPluginName("plugin_new"), item=None, parameters={}, service_labels={}
+                    CheckPluginName("plugin_new"),
+                    item=None,
+                    parameters={},
+                    service_labels={},
                 ),
                 previous=None,
             ),
@@ -1999,14 +2024,27 @@ class _MockService(NamedTuple):
 
 
 def test_make_discovery_diff() -> None:
-    assert _make_diff(
-        (HostLabel("foo", "bar"),),
-        (HostLabel("gee", "boo"),),
-        (DiscoveredItem(previous=_MockService(CheckPluginName("norris"), "chuck"), new=None),),  # type: ignore[arg-type]
-        (DiscoveredItem(previous=_MockService(CheckPluginName("chan"), None), new=None),),  # type: ignore[arg-type]
-    ) == (
-        "Removed host label: 'foo:bar'.\n"
-        "Added host label: 'gee:boo'.\n"
-        "Removed service: Check plug-in 'norris' / item 'chuck'.\n"
-        "Added service: Check plug-in 'chan'."
+    assert (
+        _make_diff(
+            (HostLabel("foo", "bar"),),
+            (HostLabel("gee", "boo"),),
+            (
+                DiscoveredItem(
+                    previous=_MockService(CheckPluginName("norris"), "chuck"),  # type: ignore[arg-type]
+                    new=None,
+                ),
+            ),
+            (
+                DiscoveredItem(
+                    previous=_MockService(CheckPluginName("chan"), None),  # type: ignore[arg-type]
+                    new=None,
+                ),
+            ),
+        )
+        == (
+            "Removed host label: 'foo:bar'.\n"
+            "Added host label: 'gee:boo'.\n"
+            "Removed service: Check plug-in 'norris' / item 'chuck'.\n"
+            "Added service: Check plug-in 'chan'."
+        )
     )

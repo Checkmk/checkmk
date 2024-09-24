@@ -249,7 +249,16 @@ def check_dell_poweredge_amperage(item, _no_params, info):
             if ProbeType in ("23", "25"):  # Amps
                 current = str(int(Reading) / 10.0)
                 infotext = f"{current} Ampere {state_txt}"
-                perfdata = [("current", current + "A", UpperNonCritical, UpperCritical, "", maxi)]
+                perfdata = [
+                    (
+                        "current",
+                        current + "A",
+                        UpperNonCritical,
+                        UpperCritical,
+                        "",
+                        maxi,
+                    )
+                ]
             elif ProbeType in ("24", "26"):  # Watts
                 infotext = f"{Reading} Watt {state_txt}"
                 perfdata = [("power", Reading + "W", UpperNonCritical, UpperCritical, "", maxi)]

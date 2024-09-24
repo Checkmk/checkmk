@@ -38,7 +38,9 @@ def _get_empty_parsed_result(section: SectionPlugin) -> object:
     )
 
 
-def test_check_plugins_do_not_discover_upon_empty_snmp_input(fix_register: FixRegister) -> None:
+def test_check_plugins_do_not_discover_upon_empty_snmp_input(
+    fix_register: FixRegister,
+) -> None:
     """
     In Checkmk < 1.6 the parse function has not been called for empty table data,
     unless "handle_empty_info" has been set.

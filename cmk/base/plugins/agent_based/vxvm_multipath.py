@@ -39,7 +39,15 @@ def parse_vxvm_multipath(string_table: StringTable) -> VXVMMultipathSection:
 
     for line in string_table:
         try:
-            name, status, _enc_type, paths, active_paths, inactive_paths, enclosure = line
+            (
+                name,
+                status,
+                _enc_type,
+                paths,
+                active_paths,
+                inactive_paths,
+                enclosure,
+            ) = line
         except ValueError:
             continue
 

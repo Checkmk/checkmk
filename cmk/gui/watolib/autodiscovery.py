@@ -12,7 +12,11 @@ from cmk.utils.site import omd_site
 
 from cmk.checkengine.discovery import DiscoveryResult as SingleHostDiscoveryResult
 
-from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
+from cmk.gui.background_job import (
+    BackgroundJob,
+    BackgroundProcessInterface,
+    InitialStatusArgs,
+)
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user

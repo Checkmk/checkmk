@@ -2571,7 +2571,10 @@ class DynamoDBDescribeTableIB(InstanceBuilder):
                 [Str("AttributeName"), Choice("AttributeType", ["S", "N", "B"])],
             ),
             Str("TableName"),
-            List("KeySchema", [Str("AttributeName"), Choice("KeyType", ["HASH", "RANGE"])]),
+            List(
+                "KeySchema",
+                [Str("AttributeName"), Choice("KeyType", ["HASH", "RANGE"])],
+            ),
             Choice(
                 "TableStatus",
                 [
@@ -2684,7 +2687,13 @@ class DynamoDBDescribeTableIB(InstanceBuilder):
                     Str("RegionName"),
                     Choice(
                         "ReplicaStatus",
-                        ["CREATING", "CREATION_FAILED", "UPDATING", "DELETING", "ACTIVE"],
+                        [
+                            "CREATING",
+                            "CREATION_FAILED",
+                            "UPDATING",
+                            "DELETING",
+                            "ACTIVE",
+                        ],
                     ),
                     Str("ReplicaStatusDescription"),
                     Str("ReplicaStatusPercentProgress"),
@@ -2694,7 +2703,10 @@ class DynamoDBDescribeTableIB(InstanceBuilder):
                         "GlobalSecondaryIndexes",
                         [
                             Str("IndexName"),
-                            Dict("ProvisionedThroughputOverride", [Int("ReadCapacityUnits")]),
+                            Dict(
+                                "ProvisionedThroughputOverride",
+                                [Int("ReadCapacityUnits")],
+                            ),
                         ],
                     ),
                 ],
@@ -2711,7 +2723,10 @@ class DynamoDBDescribeTableIB(InstanceBuilder):
             Dict(
                 "SSEDescription",
                 [
-                    Choice("Status", ["ENABLING", "ENABLED", "DISABLING", "DISABLED", "UPDATING"]),
+                    Choice(
+                        "Status",
+                        ["ENABLING", "ENABLED", "DISABLING", "DISABLED", "UPDATING"],
+                    ),
                     Choice("SSEType", ["AES256", "KMS"]),
                     Str("KMSMasterKeyArn"),
                     Timestamp("InaccessibleEncryptionDateTime"),
@@ -2742,7 +2757,13 @@ class DynamoDBListTagsOfResourceIB(InstanceBuilder):
 
 class WAFV2ListOperationIB(InstanceBuilder):
     def _fill_instance(self) -> Iterable[Entity]:
-        return [Str("Name"), Str("Id"), Str("Description"), Str("LockToken"), Str("ARN")]
+        return [
+            Str("Name"),
+            Str("Id"),
+            Str("Description"),
+            Str("LockToken"),
+            Str("ARN"),
+        ]
 
 
 class WAFV2GetWebACLIB(InstanceBuilder):
@@ -2800,7 +2821,11 @@ class WAFV2GetWebACLIB(InstanceBuilder):
                     [
                         Dict(
                             "ManagedRuleGroupStatement",
-                            [Str("VendorName"), Str("Name"), List("ExcludedRules", [Str("Name")])],
+                            [
+                                Str("VendorName"),
+                                Str("Name"),
+                                List("ExcludedRules", [Str("Name")]),
+                            ],
                         ),
                         Dict(
                             "RuleGroupReferenceStatement",
@@ -2859,7 +2884,8 @@ class WAFV2GetWebACLIB(InstanceBuilder):
                                 [
                                     self._field_to_match(),
                                     Choice(
-                                        "ComparisonOperator", ["EQ", "NE", "LE", "LT", "GE", "GT"]
+                                        "ComparisonOperator",
+                                        ["EQ", "NE", "LE", "LT", "GE", "GT"],
                                     ),
                                     Int("Size"),
                                     self._text_transformations(),
@@ -2873,7 +2899,11 @@ class WAFV2GetWebACLIB(InstanceBuilder):
                             Dict("IPSetReferenceStatement", [Str("ARN")]),
                             Dict(
                                 "RegexPatternSetReferenceStatement",
-                                [Str("ARN"), self._field_to_match(), self._text_transformations()],
+                                [
+                                    Str("ARN"),
+                                    self._field_to_match(),
+                                    self._text_transformations(),
+                                ],
                             ),
                             Dict(
                                 "RateBasedStatement",
@@ -2976,7 +3006,12 @@ class WAFV2GetWebACLIB(InstanceBuilder):
                                 ],
                             ),
                             Dict(
-                                "Action", [Dict("Block", []), Dict("Allow", []), Dict("Count", [])]
+                                "Action",
+                                [
+                                    Dict("Block", []),
+                                    Dict("Allow", []),
+                                    Dict("Count", []),
+                                ],
                             ),
                             Dict("OverrideAction", [Dict("Count", []), Dict("None", [])]),
                             self._visibility_config(),
@@ -3239,7 +3274,10 @@ class LambdaListFunctionsIB(InstanceBuilder):
     def _fill_instance(self) -> Iterable[Entity]:
         return {
             Str("FunctionName"),
-            Str("FunctionArn", value="arn:aws:lambda:eu-central-1:123456789:function:FunctionName"),
+            Str(
+                "FunctionArn",
+                value="arn:aws:lambda:eu-central-1:123456789:function:FunctionName",
+            ),
             Choice("Runtime", ["nodejs", "python2.7", "dotnetcore3.1"]),
             Str("Role"),
             Str("Handler"),
@@ -3288,7 +3326,8 @@ class LambdaListFunctionsIB(InstanceBuilder):
             Str("LastUpdateStatus"),
             Str("LastUpdateStatusReason"),
             Choice(
-                "LastUpdateStatusReasonCode", ["EniLimitExceeded", "InsufficientRolePermissions"]
+                "LastUpdateStatusReasonCode",
+                ["EniLimitExceeded", "InsufficientRolePermissions"],
             ),
             Dict(
                 "FileSystemConfigs",

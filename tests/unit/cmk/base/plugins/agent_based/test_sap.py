@@ -14,7 +14,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
     State,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    StringTable,
+)
 
 SECTION = [
     sap.Entry(
@@ -41,8 +44,22 @@ SECTION = [
     [
         (
             [
-                ["sap_XYZ", "1", "50", "Nagios/Allgemein/Intern/ResponseTime", "249", "msec"],
-                ["sap_XYZ", "2", "50", "Nagios/Allgemein/Intern/ResponseTimeDialog", "249", "msec"],
+                [
+                    "sap_XYZ",
+                    "1",
+                    "50",
+                    "Nagios/Allgemein/Intern/ResponseTime",
+                    "249",
+                    "msec",
+                ],
+                [
+                    "sap_XYZ",
+                    "2",
+                    "50",
+                    "Nagios/Allgemein/Intern/ResponseTimeDialog",
+                    "249",
+                    "msec",
+                ],
                 [
                     "sap_XYZ",
                     "3",
@@ -51,7 +68,14 @@ SECTION = [
                     "249",
                     "msec",
                 ],
-                ["sap_XYZ", "1", "50", "Nagios/Allgemein/Intern/ResponseTimeHTTP", "9830", "msec"],
+                [
+                    "sap_XYZ",
+                    "1",
+                    "50",
+                    "Nagios/Allgemein/Intern/ResponseTimeHTTP",
+                    "9830",
+                    "msec",
+                ],
                 [
                     "sap_XYZ",
                     "1",

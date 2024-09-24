@@ -76,5 +76,7 @@ def check_by_ssh_command(
 
 
 active_check_by_ssh = ActiveCheckConfig(
-    name="by_ssh", parameter_parser=_check_by_ssh_parser, commands_function=check_by_ssh_command
+    name="by_ssh",
+    parameter_parser=_check_by_ssh_parser,
+    commands_function=check_by_ssh_command,
 )

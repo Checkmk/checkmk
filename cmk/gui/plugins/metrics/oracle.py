@@ -240,7 +240,11 @@ def register_oracle_graphs():
         "metrics": [
             ("oracle_sga_size#80ff40", "stack"),
             ("oracle_pga_total_pga_allocated#408f20", "stack"),
-            ("oracle_sga_size,oracle_pga_total_pga_allocated,+", "line", _("Oracle total Memory")),
+            (
+                "oracle_sga_size,oracle_pga_total_pga_allocated,+",
+                "line",
+                _("Oracle total Memory"),
+            ),
         ],
     }
     graph_info["oracle_sga_info"] = {

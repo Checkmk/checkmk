@@ -10,7 +10,12 @@ import pytest
 from tests.testlib import on_time
 
 from cmk.base.plugins.agent_based import cisco_meraki_org_sensor_readings
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 _STRING_TABLE = [

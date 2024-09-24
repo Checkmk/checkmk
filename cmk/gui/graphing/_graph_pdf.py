@@ -173,7 +173,11 @@ def render_graph_pdf(  # pylint: disable=too-many-branches
                 v_orig,
                 t_orig,
                 v_orig + v_mm,
-                (darken_color(color, color_gradient), color, lighten_color(color, color_gradient)),
+                (
+                    darken_color(color, color_gradient),
+                    color,
+                    lighten_color(color, color_gradient),
+                ),
                 (0.0, 0.5, 1.0),
             )
 
@@ -391,7 +395,13 @@ def render_graph_pdf(  # pylint: disable=too-many-branches
                 legend_top -= legend_lineskip
                 paint_legend_line(
                     parse_color(horizontal_rule.color),
-                    [str(horizontal_rule.title), None, None, None, horizontal_rule.rendered_value],
+                    [
+                        str(horizontal_rule.title),
+                        None,
+                        None,
+                        None,
+                        horizontal_rule.rendered_value,
+                    ],
                 )
 
     if graph_artwork.mark_requested_end_time:

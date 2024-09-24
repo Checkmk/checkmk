@@ -21,7 +21,10 @@ TEST_HOST_CONFIG = HostConfig(
     "params,expected_args",
     [
         ({"options": ("foo", {})}, ["-H", "1.2.3.4", "-C", "foo"]),
-        ({"options": ("foo", {"port": 22})}, ["-H", "1.2.3.4", "-C", "foo", "-p", "22"]),
+        (
+            {"options": ("foo", {"port": 22})},
+            ["-H", "1.2.3.4", "-C", "foo", "-p", "22"],
+        ),
     ],
 )
 def test_check_by_ssh_argument_parsing(

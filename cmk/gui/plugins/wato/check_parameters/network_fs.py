@@ -4,7 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.check_parameters.filesystem_utils import FilesystemElements, vs_filesystem
+from cmk.gui.plugins.wato.check_parameters.filesystem_utils import (
+    FilesystemElements,
+    vs_filesystem,
+)
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
@@ -15,7 +18,8 @@ from cmk.gui.valuespec import DropdownChoice, TextInput
 
 def _item_spec_network_fs():
     return TextInput(
-        title=_("Name of the mount point"), help=_("For NFS enter the name of the mount point.")
+        title=_("Name of the mount point"),
+        help=_("For NFS enter the name of the mount point."),
     )
 
 

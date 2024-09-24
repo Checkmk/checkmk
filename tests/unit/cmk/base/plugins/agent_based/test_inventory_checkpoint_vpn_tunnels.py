@@ -6,7 +6,10 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    InventoryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.inventory_checkpoint_vpn_tunnels import (
     inventory_checkpoint_vpn_tunnels,
     parse_checkpoint_vpn_tunnels,

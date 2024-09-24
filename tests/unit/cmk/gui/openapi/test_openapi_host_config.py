@@ -428,7 +428,8 @@ def test_openapi_bulk_hosts(
 
     # adding invalid attribute should fail
     clients.HostConfig.bulk_edit(
-        entries=[{"host_name": "foobar", "attributes": {"foobaz": "bar"}}], expect_ok=False
+        entries=[{"host_name": "foobar", "attributes": {"foobaz": "bar"}}],
+        expect_ok=False,
     ).assert_status_code(400)
 
     # delete host with bulk delete
@@ -455,7 +456,8 @@ def test_openapi_bulk_with_failed(
         return _attributes
 
     monkeypatch.setattr(
-        "cmk.gui.watolib.hosts_and_folders.Folder.verify_and_update_host_details", _raise
+        "cmk.gui.watolib.hosts_and_folders.Folder.verify_and_update_host_details",
+        _raise,
     )
 
     resp = clients.HostConfig.bulk_create(
@@ -742,7 +744,9 @@ def test_openapi_host_move_to_non_valid_folder(clients: ClientRegistry) -> None:
         folder="/",
     )
     clients.HostConfig.move(
-        host_name="TestHost1", target_folder="/folder-that-does-not-exist", expect_ok=False
+        host_name="TestHost1",
+        target_folder="/folder-that-does-not-exist",
+        expect_ok=False,
     ).assert_status_code(400)
 
 
@@ -859,7 +863,9 @@ def test_openapi_host_with_labels(clients: ClientRegistry) -> None:
     assert resp.json["extensions"]["attributes"]["labels"] == {"label": "value"}
 
 
-def test_openapi_host_with_invalid_snmp_community_option(clients: ClientRegistry) -> None:
+def test_openapi_host_with_invalid_snmp_community_option(
+    clients: ClientRegistry,
+) -> None:
     clients.HostConfig.create(
         folder="/",
         host_name="example.com",
@@ -903,11 +909,15 @@ def test_openapi_host_with_non_existing_site(
     assert resp.json["extensions"]["attributes"]["site"] == "Unknown Site: a_non_existing_site"
 
 
-def test_openapi_bulk_create_permission_missmatch_regression(clients: ClientRegistry) -> None:
+def test_openapi_bulk_create_permission_missmatch_regression(
+    clients: ClientRegistry,
+) -> None:
     clients.HostConfig.bulk_create(entries=[])
 
 
-def test_openapi_host_config_attributes_as_string_crash_regression(clients: ClientRegistry) -> None:
+def test_openapi_host_config_attributes_as_string_crash_regression(
+    clients: ClientRegistry,
+) -> None:
     resp = clients.HostConfig.create(
         folder="/",
         host_name="example.com",
@@ -953,7 +963,9 @@ def test_openapi_host_config_ipmi_credentials_empty(
 
 @managedtest
 @pytest.mark.usefixtures("with_host")
-def test_openapi_host_config_show_host_disregards_contact_groups(clients: ClientRegistry) -> None:
+def test_openapi_host_config_show_host_disregards_contact_groups(
+    clients: ClientRegistry,
+) -> None:
     """This test makes sure a user cannot see the config of a host that is not assigned to their contact groups."""
     clients.ContactGroup.create("no_hosts_in_here", alias="no_hosts_in_here")
     clients.ContactGroup.create("all_hosts_in_here", alias="all_hosts_in_here")
@@ -981,7 +993,9 @@ def test_openapi_host_config_show_host_disregards_contact_groups(clients: Client
 
 
 @managedtest
-def test_openapi_list_hosts_does_not_show_inaccessible_hosts(clients: ClientRegistry) -> None:
+def test_openapi_list_hosts_does_not_show_inaccessible_hosts(
+    clients: ClientRegistry,
+) -> None:
     clients.ContactGroup.create(name="does_not_see_everything", alias="does_not_see_everything")
     clients.User.create(
         username="unable_to_see_all_host",
@@ -1066,7 +1080,10 @@ def test_move_to_folder_with_different_contact_group(clients: ClientRegistry) ->
         fullname="user1_fullname",
         customer="provider",
         contactgroups=["test_contact_group"],
-        auth_option={"auth_type": "password", "password": "asflkjas^asf@adf%5Ah!@%^sfadf"},
+        auth_option={
+            "auth_type": "password",
+            "password": "asflkjas^asf@adf%5Ah!@%^sfadf",
+        },
         roles=["user"],
     )
 
@@ -1139,7 +1156,10 @@ def test_move_from_folder_with_different_contact_group(clients: ClientRegistry) 
         fullname="user1_fullname",
         customer="provider",
         contactgroups=["test_contact_group"],
-        auth_option={"auth_type": "password", "password": "asflkjas^asf@adf%5Ah!@%^sfadf"},
+        auth_option={
+            "auth_type": "password",
+            "password": "asflkjas^asf@adf%5Ah!@%^sfadf",
+        },
         roles=["user"],
     )
 
@@ -1190,7 +1210,10 @@ def test_move_host_different_contact_group(clients: ClientRegistry) -> None:
         fullname="user1_fullname",
         customer="provider",
         contactgroups=["test_contact_group_1"],
-        auth_option={"auth_type": "password", "password": "asflkjas^asf@adf%5Ah!@%^sfadf"},
+        auth_option={
+            "auth_type": "password",
+            "password": "asflkjas^asf@adf%5Ah!@%^sfadf",
+        },
         roles=["user"],
     )
 
@@ -1354,7 +1377,12 @@ def test_openapi_host_config_effective_attributes_includes_all_host_attributes_r
                 "set_ip_address": True,
                 "time_allowed": [{"end": "23:59:59", "start": "00:00:00"}],
             },
-            "network_scan_result": {"end": None, "output": "", "start": None, "state": "running"},
+            "network_scan_result": {
+                "end": None,
+                "output": "",
+                "start": None,
+                "state": "running",
+            },
             "parents": [],
             "site": "NO_SITE",
             "snmp_community": None,
@@ -1399,7 +1427,12 @@ def test_openapi_host_config_effective_attributes_includes_all_host_attributes_r
                 "set_ip_address": True,
                 "time_allowed": [{"end": "23:59:59", "start": "00:00:00"}],
             },
-            "network_scan_result": {"end": None, "output": "", "start": None, "state": "running"},
+            "network_scan_result": {
+                "end": None,
+                "output": "",
+                "start": None,
+                "state": "running",
+            },
             "parents": [],
             "site": "NO_SITE",
             "snmp_community": None,
@@ -1551,7 +1584,9 @@ def test_update_host_parent_must_exist(clients: ClientRegistry) -> None:
     clients.HostConfig.create(host_name="test_host")
     clients.HostConfig.create(host_name="parent_host", attributes={"parents": ["test_host"]})
     resp = clients.HostConfig.edit(
-        host_name="test_host", update_attributes={"parents": ["non-existent"]}, expect_ok=False
+        host_name="test_host",
+        update_attributes={"parents": ["non-existent"]},
+        expect_ok=False,
     )
     resp.assert_status_code(400)
     assert resp.json["detail"] == "These fields have problems: update_attributes"
@@ -1565,7 +1600,9 @@ def test_update_host_parent_must_exist(clients: ClientRegistry) -> None:
 def test_update_host_parent_must_be_list_of_strings(clients: ClientRegistry) -> None:
     clients.HostConfig.create(host_name="test_host")
     resp = clients.HostConfig.edit(
-        host_name="test_host", update_attributes={"parents": "wrong-type"}, expect_ok=False
+        host_name="test_host",
+        update_attributes={"parents": "wrong-type"},
+        expect_ok=False,
     )
     resp.assert_status_code(400)
     assert resp.json["detail"] == "These fields have problems: update_attributes"

@@ -274,7 +274,10 @@ class UniqueFields:
                             optional_values[key] = _value
 
                     raise self.make_error(
-                        "duplicate_vary", idx=idx, optional=optional_values, entry=required_values
+                        "duplicate_vary",
+                        idx=idx,
+                        optional=optional_values,
+                        entry=required_values,
                     )
                 raise self.make_error("duplicate", idx=idx, entry=dict(sorted(entry.items())))
 

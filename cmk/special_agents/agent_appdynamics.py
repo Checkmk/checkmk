@@ -137,7 +137,9 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
             headers = {"Authorization": "Basic " + auth.decode()}
             for obj in ["Agent", "*|*"]:
                 connection.request(
-                    "GET", url % {"application": arg_application, "object": obj}, headers=headers
+                    "GET",
+                    url % {"application": arg_application, "object": obj},
+                    headers=headers,
                 )
                 response = connection.getresponse()
 

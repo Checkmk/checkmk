@@ -38,7 +38,12 @@ from cmk.utils.user import UserId
 import cmk.gui.inventory as inventory
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config
-from cmk.gui.data_source import ABCDataSource, data_source_registry, DataSourceRegistry, RowTable
+from cmk.gui.data_source import (
+    ABCDataSource,
+    data_source_registry,
+    DataSourceRegistry,
+    RowTable,
+)
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.hooks import request_memoize
@@ -63,7 +68,12 @@ from cmk.gui.inventory.filters import (
 )
 from cmk.gui.pages import PageRegistry
 from cmk.gui.painter.v0.base import Cell, Painter, PainterRegistry, register_painter
-from cmk.gui.painter_options import paint_age, PainterOption, PainterOptionRegistry, PainterOptions
+from cmk.gui.painter_options import (
+    paint_age,
+    PainterOption,
+    PainterOptionRegistry,
+    PainterOptions,
+)
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
@@ -1062,7 +1072,7 @@ class DisplayHints:
 
     @staticmethod
     def _get_related_raw_hints(
-        raw_hints: Mapping[str, InventoryHintSpec]
+        raw_hints: Mapping[str, InventoryHintSpec],
     ) -> Mapping[SDPath, _RelatedRawHints]:
         related_raw_hints_by_path: dict[SDPath, _RelatedRawHints] = {}
         for raw_path, raw_hint in raw_hints.items():
@@ -1466,7 +1476,8 @@ class RowTableInventory(ABCRowTable):
             return []
 
     def _prepare_rows(
-        self, inv_data: Sequence[Mapping[SDKey, tuple[SDValue, RetentionInterval | None]]]
+        self,
+        inv_data: Sequence[Mapping[SDKey, tuple[SDValue, RetentionInterval | None]]],
     ) -> Iterable[Row]:
         if not (self._info_names and (info_name := self._info_names[0])):
             return []
@@ -2206,7 +2217,9 @@ def _sort_delta_rows(
 
     min_type = _MinType()
 
-    def _sanitize(value: tuple[SDValue, SDValue]) -> tuple[_MinType | SDValue, _MinType | SDValue]:
+    def _sanitize(
+        value: tuple[SDValue, SDValue],
+    ) -> tuple[_MinType | SDValue, _MinType | SDValue]:
         return (
             min_type if value[0] is None else value[0],
             min_type if value[1] is None else value[1],
@@ -2215,7 +2228,8 @@ def _sort_delta_rows(
     return [
         _sort_row(row, columns)
         for row in sorted(
-            table.rows, key=lambda r: tuple(_sanitize(r.get(c) or (None, None)) for c in columns)
+            table.rows,
+            key=lambda r: tuple(_sanitize(r.get(c) or (None, None)) for c in columns),
         )
         if not all(left == right for left, right in row.values())
     ]
@@ -2403,7 +2417,9 @@ class TreeRenderer:
         return header
 
     def _show_attributes(
-        self, attributes: ImmutableAttributes | ImmutableDeltaAttributes, hints: DisplayHints
+        self,
+        attributes: ImmutableAttributes | ImmutableDeltaAttributes,
+        hints: DisplayHints,
     ) -> None:
         sorted_pairs: Sequence[_InventoryTreeValueInfo] | Sequence[_DeltaTreeValueInfo]
         if isinstance(attributes, ImmutableAttributes):
@@ -2498,7 +2514,10 @@ class TreeRenderer:
                     ("site", self._site_id),
                     ("host", self._hostname),
                     ("raw_path", raw_path),
-                    ("show_internal_tree_paths", "on" if self._show_internal_tree_paths else ""),
+                    (
+                        "show_internal_tree_paths",
+                        "on" if self._show_internal_tree_paths else "",
+                    ),
                     ("tree_id", self._tree_id),
                 ],
                 "ajax_inv_render_tree.py",

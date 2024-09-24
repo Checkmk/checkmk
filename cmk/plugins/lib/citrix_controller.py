@@ -46,9 +46,17 @@ def parse_citrix_controller(string_table: StringTable) -> Section | None:
             case ["ControllerState", *_]:
                 section.state = Error()
             # piggy back data might deliver double data
-            case ["LicensingGraceState", grace, *_] if section.licensing_grace_state is None:
+            case [
+                "LicensingGraceState",
+                grace,
+                *_,
+            ] if section.licensing_grace_state is None:
                 section.licensing_grace_state = grace
-            case ["LicensingServerState", server, *_] if section.licensing_server_state is None:
+            case [
+                "LicensingServerState",
+                server,
+                *_,
+            ] if section.licensing_server_state is None:
                 section.licensing_server_state = server
             case ["TotalFarmActiveSessions", active, *_]:
                 session.active = int(active)

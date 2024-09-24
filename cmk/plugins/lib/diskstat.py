@@ -5,7 +5,14 @@
 
 import re
 from collections import defaultdict
-from collections.abc import Callable, Generator, Iterable, Mapping, MutableMapping, Sequence
+from collections.abc import (
+    Callable,
+    Generator,
+    Iterable,
+    Mapping,
+    MutableMapping,
+    Sequence,
+)
 from typing import Any, DefaultDict, TypedDict
 
 from cmk.agent_based.v1 import check_levels, check_levels_predictive

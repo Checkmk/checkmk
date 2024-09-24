@@ -12,7 +12,9 @@ from cmk.base.config import check_info
 from cmk.agent_based.v2 import all_of, any_of, exists, SNMPTree, startswith, StringTable
 
 
-def parse_fast_lta_headunit(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+def parse_fast_lta_headunit(
+    string_table: Sequence[StringTable],
+) -> Sequence[StringTable]:
     return string_table
 
 

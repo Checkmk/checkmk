@@ -240,7 +240,11 @@ def test_fileinfo_groups_get_group_name_error(
         ),
         (
             FileinfoItem(
-                name="/home/tim/test.txt", missing=True, failed=False, size=None, time=None
+                name="/home/tim/test.txt",
+                missing=True,
+                failed=False,
+                size=None,
+                time=None,
             ),
             1653985037,
             {"state_missing": 2},
@@ -248,7 +252,11 @@ def test_fileinfo_groups_get_group_name_error(
         ),
         (
             FileinfoItem(
-                name="/home/tim/test.txt", missing=True, failed=False, size=None, time=None
+                name="/home/tim/test.txt",
+                missing=True,
+                failed=False,
+                size=None,
+                time=None,
             ),
             1653985037,
             {},
@@ -258,7 +266,10 @@ def test_fileinfo_groups_get_group_name_error(
 )
 @freeze_time("2021-07-12 12:00")
 def test_check_fileinfo_data(
-    file_stat: FileinfoItem, reftime: int, params: dict[str, Any], expected_result: CheckResult
+    file_stat: FileinfoItem,
+    reftime: int,
+    params: dict[str, Any],
+    expected_result: CheckResult,
 ) -> None:
     result = list(check_fileinfo_data(file_stat, reftime, params))
 
@@ -285,7 +296,11 @@ def test_check_fileinfo_data(
     ],
 )
 def test__filename_matches(
-    filename: str, reftime: int, inclusion: str, exclusion: str, expected_result: tuple[bool, str]
+    filename: str,
+    reftime: int,
+    inclusion: str,
+    exclusion: str,
+    expected_result: tuple[bool, str],
 ) -> None:
     result = _filename_matches(filename, reftime, inclusion, exclusion)
     assert result == expected_result
@@ -365,7 +380,10 @@ def test__filename_matches(
                     state=State.OK,
                     notice="[my_folder/filename456] Age: 3 years 41 days, Size: 348 B",
                 ),
-                Result(state=State.WARN, summary="Files with unknown stat: my_folder/filename123"),
+                Result(
+                    state=State.WARN,
+                    summary="Files with unknown stat: my_folder/filename123",
+                ),
                 Result(state=State.OK, summary="Count: 1"),
                 Metric("count", 1),
                 Result(state=State.OK, summary="Size: 348 B"),
@@ -453,7 +471,10 @@ def test__filename_matches(
         ),
         pytest.param(
             "my_folder/filename123",
-            {"group_patterns": [("~my_folder/file.*", "")], "negative_age_tolerance": 150},
+            {
+                "group_patterns": [("~my_folder/file.*", "")],
+                "negative_age_tolerance": 150,
+            },
             Fileinfo(
                 reftime=1563288717,
                 files={
@@ -469,7 +490,8 @@ def test__filename_matches(
             [
                 Result(state=State.OK, notice="Include patterns: ~my_folder/file.*"),
                 Result(
-                    state=State.OK, notice="[my_folder/filename456] Age: 0 seconds, Size: 348 B"
+                    state=State.OK,
+                    notice="[my_folder/filename456] Age: 0 seconds, Size: 348 B",
                 ),
                 Result(state=State.OK, summary="Count: 1"),
                 Metric("count", 1),
@@ -556,7 +578,9 @@ def test_check_fileinfo_groups_data(
     ],
 )
 def test__fileinfo_check_function(
-    check_definition: list[MetricInfo], params: Mapping[str, object], expected_result: CheckResult
+    check_definition: list[MetricInfo],
+    params: Mapping[str, object],
+    expected_result: CheckResult,
 ) -> None:
     result = list(_fileinfo_check_function(check_definition, params))
     assert result == expected_result
@@ -581,7 +605,9 @@ def test__fileinfo_check_function(
     ],
 )
 def test__fileinfo_check_conjunctions(
-    check_definition: list[MetricInfo], params: Mapping[str, object], expected_result: CheckResult
+    check_definition: list[MetricInfo],
+    params: Mapping[str, object],
+    expected_result: CheckResult,
 ) -> None:
     result = list(_fileinfo_check_conjunctions(check_definition, params))
     assert result == expected_result

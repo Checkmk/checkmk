@@ -12,7 +12,7 @@ from typing import Any
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.config_warnings import ConfigurationWarnings
-from cmk.utils.version import edition, Edition
+from cmk.utils.version import Edition, edition
 
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -48,7 +48,8 @@ from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupSiteManage
 
 
 def register(
-    config_domain_registry: ConfigDomainRegistry, config_variable_registry: ConfigVariableRegistry
+    config_domain_registry: ConfigDomainRegistry,
+    config_variable_registry: ConfigVariableRegistry,
 ) -> None:
     config_domain_registry.register(ConfigDomainDiskspace)
     config_domain_registry.register(ConfigDomainApache)

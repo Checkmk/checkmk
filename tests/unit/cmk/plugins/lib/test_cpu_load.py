@@ -74,7 +74,10 @@ def test_cpu_loads_predictive(mocker: Mock, tmp_path: Path) -> None:
             ),
         )
     ) == [
-        Result(state=State.OK, summary="15 min load: 1.50 (no reference for prediction yet)"),
+        Result(
+            state=State.OK,
+            summary="15 min load: 1.50 (no reference for prediction yet)",
+        ),
         Metric("load15", 1.5, levels=(2.2, 4.2)),  # those are the predicted values
         Result(state=State.OK, summary="15 min load per core: 0.38 (4 cores)"),
         Result(state=State.OK, notice="1 min load: 0.50"),

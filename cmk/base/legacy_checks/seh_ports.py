@@ -36,7 +36,10 @@ def check_seh_ports(item, params, parsed):
             yield 0, f"{key.title()}: {data[key]}"
 
     if params.get("status_at_discovery") != data.get("status"):
-        yield 1, "Status during discovery: %s" % (params.get("status_at_discovery") or "unknown")
+        yield (
+            1,
+            "Status during discovery: %s" % (params.get("status_at_discovery") or "unknown"),
+        )
 
 
 check_info["seh_ports"] = LegacyCheckDefinition(

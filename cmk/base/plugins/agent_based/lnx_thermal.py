@@ -82,7 +82,11 @@ def _get_thermal_info(
     ):
         try:
             unscaled_temp = int(line[temp_idx])
-            return dict(zip(header, line[:temp_idx])), unscaled_temp, line[temp_idx + 1 :]
+            return (
+                dict(zip(header, line[:temp_idx])),
+                unscaled_temp,
+                line[temp_idx + 1 :],
+            )
         except (IndexError, ValueError):
             pass
     return None

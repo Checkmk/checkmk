@@ -22,16 +22,31 @@ def _parameter_valuespec_iis_app_pool_state():
                     title="Map of Application Pool States to Service States",
                     optional_keys=[],
                     elements=[
-                        ("Uninitialized", MonitoringState(default_value=2, title="Uninitialized")),
-                        ("Initialized", MonitoringState(default_value=1, title="Initialized")),
+                        (
+                            "Uninitialized",
+                            MonitoringState(default_value=2, title="Uninitialized"),
+                        ),
+                        (
+                            "Initialized",
+                            MonitoringState(default_value=1, title="Initialized"),
+                        ),
                         ("Running", MonitoringState(default_value=0, title="Running")),
-                        ("Disabling", MonitoringState(default_value=2, title="Disabling")),
-                        ("Disabled", MonitoringState(default_value=2, title="Disabled")),
+                        (
+                            "Disabling",
+                            MonitoringState(default_value=2, title="Disabling"),
+                        ),
+                        (
+                            "Disabled",
+                            MonitoringState(default_value=2, title="Disabled"),
+                        ),
                         (
                             "ShutdownPending",
                             MonitoringState(default_value=2, title="ShutdownPending"),
                         ),
-                        ("DeletePending", MonitoringState(default_value=2, title="DeletePending")),
+                        (
+                            "DeletePending",
+                            MonitoringState(default_value=2, title="DeletePending"),
+                        ),
                     ],
                 ),
             ),

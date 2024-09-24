@@ -5,7 +5,12 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.hr_fs import (
     check_hr_fs_testable,
     discover_hr_fs,
@@ -39,7 +44,13 @@ def section_fixture() -> Section:
             [".1.3.6.1.2.1.25.2.1.4", "/sys/fs/cgroup", "4096", "503736", "0"],
             [".1.3.6.1.2.1.25.2.1.4", "/sys/fs/cgroup/memory", "4096", "0", "0"],
             [".1.3.6.1.2.1.25.2.1.4", "/mnt/pool1", "4096", "564962", "875"],
-            [".1.3.6.1.2.1.25.2.1.4", "/share/CACHEDEV1_DATA", "8192", "1415469511", "685296421"],
+            [
+                ".1.3.6.1.2.1.25.2.1.4",
+                "/share/CACHEDEV1_DATA",
+                "8192",
+                "1415469511",
+                "685296421",
+            ],
             [".1.3.6.1.2.1.25.2.1.4", "/sys/fs/cgroup/cpu", "4096", "0", "0"],
             [".1.3.6.1.2.1.25.2.1.4", "/mnt/ext", "4096", "106746", "104033"],
             [".1.3.6.1.2.1.25.2.1.4", "/samba_third_party", "4096", "8192", "6975"],

@@ -59,6 +59,9 @@ def ibm_tape_library_get_device_state(avail, status):
             "32768": (3, "vendor reserved"),
         },
     }
-    for what, val, text in [("avail", avail, "Availability"), ("status", status, "Status")]:
+    for what, val, text in [
+        ("avail", avail, "Availability"),
+        ("status", status, "Status"),
+    ]:
         state, state_readable = mapping[what][val]
         yield state, f"{text}: {state_readable}"

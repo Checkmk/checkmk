@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.version import edition, Edition
+from cmk.utils.version import Edition, edition
 
 from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.pages import PageRegistry
@@ -51,7 +51,9 @@ from . import (
     user_profile,
     users,
 )
-from ._password_store_valuespecs import IndividualOrStoredPassword as IndividualOrStoredPassword
+from ._password_store_valuespecs import (
+    IndividualOrStoredPassword as IndividualOrStoredPassword,
+)
 from ._password_store_valuespecs import (
     MigrateNotUpdatedToIndividualOrStoredPassword as MigrateNotUpdatedToIndividualOrStoredPassword,
 )

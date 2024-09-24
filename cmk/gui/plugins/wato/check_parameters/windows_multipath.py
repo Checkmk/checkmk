@@ -9,7 +9,14 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Alternative, Dictionary, Integer, Migrate, Percentage, Tuple
+from cmk.gui.valuespec import (
+    Alternative,
+    Dictionary,
+    Integer,
+    Migrate,
+    Percentage,
+    Tuple,
+)
 
 
 def _parameter_valuespec_windows_multipath():

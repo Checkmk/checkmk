@@ -92,7 +92,8 @@ def _filter_thresholds_for_relation(
 def _parse_specified_thresholds(
     thresholds: Sequence[EntSensorThreshold],
     specified_relation: Literal[
-        EntSensorThresholdRelation.GREATER_OR_EQUAL, EntSensorThresholdRelation.LESS_THAN
+        EntSensorThresholdRelation.GREATER_OR_EQUAL,
+        EntSensorThresholdRelation.LESS_THAN,
     ],
     factor: float,
 ) -> _Levels:
@@ -235,7 +236,13 @@ def parse_cisco_temperature(  # pylint: disable=too-many-branches
             container[contained_in].add(sensor_id)
 
     else:
-        (description_info, state_info, levels_info, perfstuff, admin_states) = string_table
+        (
+            description_info,
+            state_info,
+            levels_info,
+            perfstuff,
+            admin_states,
+        ) = string_table
         descriptions = dict(description_info)
         sensor_if_map = []
 
@@ -243,7 +250,14 @@ def parse_cisco_temperature(  # pylint: disable=too-many-branches
 
     # Create dict with thresholds
     thresholds: dict[str, list[EntSensorThreshold]] = {}
-    for sensor_id, sensortype_id, scalecode, magnitude, value, sensorstate in state_info:
+    for (
+        sensor_id,
+        sensortype_id,
+        scalecode,
+        magnitude,
+        value,
+        sensorstate,
+    ) in state_info:
         thresholds.setdefault(sensor_id, [])
 
     for endoid, severity, relation, thresh_value in levels_info:
@@ -259,7 +273,14 @@ def parse_cisco_temperature(  # pylint: disable=too-many-branches
 
     # Parse OIDs described by CISCO-ENTITY-SENSOR-MIB
     entity_parsed: dict[str, dict[str, dict[str, str]]] = {}
-    for sensor_id, sensortype_id, scalecode, magnitude, value, sensorstate in state_info:
+    for (
+        sensor_id,
+        sensortype_id,
+        scalecode,
+        magnitude,
+        value,
+        sensorstate,
+    ) in state_info:
         sensortype = cisco_sensor_types.get(sensortype_id)
         if sensortype not in ("dBm", "celsius"):
             continue
@@ -555,7 +576,12 @@ register.snmp_section(
 
 
 def discover_cisco_temperature(section: Section) -> DiscoveryResult:
-    discoverable_sensor_state = ["1", "2", "3", "4"]  # normal, warning, critical, shutdown
+    discoverable_sensor_state = [
+        "1",
+        "2",
+        "3",
+        "4",
+    ]  # normal, warning, critical, shutdown
     for item, value in section.get("8", {}).items():
         if env_mon_state := value.get("raw_env_mon_state"):
             if env_mon_state not in discoverable_sensor_state:

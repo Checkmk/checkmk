@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.check_parameters.mssql_utils import mssql_item_spec_instance_tablespace
+from cmk.gui.plugins.wato.check_parameters.mssql_utils import (
+    mssql_item_spec_instance_tablespace,
+)
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     HostRulespec,
@@ -19,7 +21,10 @@ def _valuespec_inventory_mssql_counters_rules():
     return Dictionary(
         title=_("MSSQL counter discovery"),
         elements=[
-            ("add_zero_based_services", Checkbox(title=_("Include service with zero base."))),
+            (
+                "add_zero_based_services",
+                Checkbox(title=_("Include service with zero base.")),
+            ),
         ],
         optional_keys=[],
     )

@@ -62,7 +62,10 @@ def check_iptables(_no_item, params, parsed):
     item_state = value_store.get("iptables.config")
 
     if not item_state:
-        value_store["iptables.config"] = {"config": parsed, "hash": iptables_hash(parsed)}
+        value_store["iptables.config"] = {
+            "config": parsed,
+            "hash": iptables_hash(parsed),
+        }
         raise IgnoreResultsError(
             "Initial configuration has been saved. The next check interval will contain a valid state."
         )

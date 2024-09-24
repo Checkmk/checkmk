@@ -96,7 +96,12 @@ class AjaxDropdownFilter(Filter):
 
 
 GroupType = Literal[
-    "host", "service", "contact", "host_contact", "service_contact", "event_effective_contact"
+    "host",
+    "service",
+    "contact",
+    "host_contact",
+    "service_contact",
+    "event_effective_contact",
 ]
 
 

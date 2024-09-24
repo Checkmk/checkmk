@@ -7,7 +7,9 @@ from datetime import datetime, timezone
 from functools import cache
 
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
-from cryptography.hazmat.primitives.asymmetric.types import CertificateIssuerPrivateKeyTypes
+from cryptography.hazmat.primitives.asymmetric.types import (
+    CertificateIssuerPrivateKeyTypes,
+)
 from cryptography.hazmat.primitives.hashes import SHA256
 from cryptography.hazmat.primitives.serialization import Encoding, load_pem_private_key
 from cryptography.x509 import (

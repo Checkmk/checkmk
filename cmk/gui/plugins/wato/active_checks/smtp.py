@@ -171,8 +171,16 @@ def _valuespec_active_checks_smtp() -> Migrate:
                     Tuple(
                         title=_("Expected response time"),
                         elements=[
-                            Float(title=_("Warning if above"), unit=_("sec"), allow_int=True),
-                            Float(title=_("Critical if above"), unit=_("sec"), allow_int=True),
+                            Float(
+                                title=_("Warning if above"),
+                                unit=_("sec"),
+                                allow_int=True,
+                            ),
+                            Float(
+                                title=_("Critical if above"),
+                                unit=_("sec"),
+                                allow_int=True,
+                            ),
                         ],
                     ),
                 ),

@@ -7,8 +7,14 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
-from cmk.base.plugins.agent_based.inventory_win_disks import inventory_win_disks, parse_win_disks
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    InventoryResult,
+    StringTable,
+)
+from cmk.base.plugins.agent_based.inventory_win_disks import (
+    inventory_win_disks,
+    parse_win_disks,
+)
 
 from .utils_inventory import sort_inventory_result
 
@@ -29,7 +35,10 @@ from .utils_inventory import sort_inventory_result
                 ["MediaType                   ", " Fixed hard disk media"],
                 ["Model                       ", " VBOX HARDDISK ATA Device"],
                 ["Name                        ", " \\.\\PHYSICALDRIVE0"],
-                ["SerialNumber                ", " 42566539323537333930652d3836636263352065"],
+                [
+                    "SerialNumber                ",
+                    " 42566539323537333930652d3836636263352065",
+                ],
                 ["CapabilityDescriptions      ", " {Random Access, Supports Writing}"],
                 ["BytesPerSector              ", " 512"],
                 ["Index                       ", " 0"],
@@ -81,7 +90,10 @@ from .utils_inventory import sort_inventory_result
                 ["MediaType                   ", " Fixed hard disk media"],
                 ["Model                       ", " VBOX HARDDISK ATA Device"],
                 ["Name                        ", " \\.\\PHYSICALDRIVE0"],
-                ["SerialNumber                ", " 42566539323537333930652d3836636263352065"],
+                [
+                    "SerialNumber                ",
+                    " 42566539323537333930652d3836636263352065",
+                ],
                 ["CapabilityDescriptions      ", " {Random Access, Supports Writing}"],
                 ["BytesPerSector              ", " 512"],
                 ["Index                       ", " 0"],
@@ -110,7 +122,10 @@ from .utils_inventory import sort_inventory_result
                 ["MediaType                   ", " Fixed hard disk media"],
                 ["Model                       ", " VBOX HARDDISK ATA Device"],
                 ["Name                        ", " \\.\\PHYSICALDRIVE1"],
-                ["SerialNumber                ", " 42566539323537333930652d3836636263352065"],
+                [
+                    "SerialNumber                ",
+                    " 42566539323537333930652d3836636263352065",
+                ],
                 ["CapabilityDescriptions      ", " {Random Access, Supports Writing}"],
                 ["BytesPerSector              ", " 512"],
                 ["Index                       ", " 0"],

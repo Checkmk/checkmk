@@ -6,7 +6,11 @@
 from collections.abc import Iterable, Sequence
 from typing import TypeVar
 
-from cmk.special_agents.utils.node_exporter import NodeExporter, PromQLMetric, SectionStr
+from cmk.special_agents.utils.node_exporter import (
+    NodeExporter,
+    PromQLMetric,
+    SectionStr,
+)
 from cmk.special_agents.utils_kubernetes import common, prometheus_api, query
 from cmk.special_agents.utils_kubernetes.schemata import section
 
@@ -33,7 +37,9 @@ class MemoryMeasurement(Measurement):
     pass
 
 
-def _filter_fully_labeled(samples: Sequence[prometheus_api.Sample]) -> list[prometheus_api.Sample]:
+def _filter_fully_labeled(
+    samples: Sequence[prometheus_api.Sample],
+) -> list[prometheus_api.Sample]:
     # A Prometheus operator (here the sum operator) removes all labels, which are not listed
     # behind the `by` keyword. This means the query `sum(up) by (job, container)` will result in
     # samples with both labels 'job', 'container', one label 'job' or one label 'container' or none.
@@ -70,13 +76,17 @@ def create_selectors(
     )
 
 
-def _aggregate_cpu_metrics(metrics: Iterable[CPUMeasurement]) -> section.PerformanceUsage:
+def _aggregate_cpu_metrics(
+    metrics: Iterable[CPUMeasurement],
+) -> section.PerformanceUsage:
     return section.PerformanceUsage(
         resource=section.Cpu(usage=sum((m.value for m in metrics), start=0.0))
     )
 
 
-def _aggregate_memory_metrics(metrics: Iterable[MemoryMeasurement]) -> section.PerformanceUsage:
+def _aggregate_memory_metrics(
+    metrics: Iterable[MemoryMeasurement],
+) -> section.PerformanceUsage:
     return section.PerformanceUsage(
         resource=section.Memory(usage=sum((m.value for m in metrics), start=0.0))
     )

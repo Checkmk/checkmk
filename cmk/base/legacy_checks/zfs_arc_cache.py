@@ -229,10 +229,10 @@
 # }
 
 
+# mypy: disable-error-code="arg-type"
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
-# mypy: disable-error-code="arg-type"
 from cmk.agent_based.v2 import render
 
 
@@ -277,34 +277,46 @@ def check_zfs_arc_cache(_no_item, _no_params, parsed):
 
             if total_hits_misses:
                 hit_ratio = float(parsed["%shits" % key]) / total_hits_misses * 100
-                yield 0, f"{human_key.title()}Hit Ratio: {hit_ratio:0.2f}%", [
-                    ("%shit_ratio" % key, hit_ratio, None, None, 0, 100)
-                ]
+                yield (
+                    0,
+                    f"{human_key.title()}Hit Ratio: {hit_ratio:0.2f}%",
+                    [("%shit_ratio" % key, hit_ratio, None, None, 0, 100)],
+                )
 
             else:
-                yield 0, "No %sHits or Misses" % human_key, [
-                    ("%shit_ratio" % key, 0, None, None, 0, 100)
-                ]
+                yield (
+                    0,
+                    "No %sHits or Misses" % human_key,
+                    [("%shit_ratio" % key, 0, None, None, 0, 100)],
+                )
 
     # size
     if "size" in parsed:
         size_bytes = parsed["size"]
         size_readable = render.bytes(size_bytes)
-        yield 0, "Cache size: %s" % size_readable, [("size", float(size_bytes), None, None, 0)]
+        yield (
+            0,
+            "Cache size: %s" % size_readable,
+            [("size", float(size_bytes), None, None, 0)],
+        )
 
     # arc_meta
     # these values may be missing, this is ok too
     # in this case just do not report these values
     if "arc_meta_used" in parsed and "arc_meta_limit" in parsed and "arc_meta_max" in parsed:
-        yield 0, "Arc Meta {} used, Limit {}, Max {}".format(
-            render.bytes(parsed["arc_meta_used"]),
-            render.bytes(parsed["arc_meta_limit"]),
-            render.bytes(parsed["arc_meta_max"]),
-        ), [
-            ("arc_meta_used", float(parsed["arc_meta_used"]), None, None, 0),
-            ("arc_meta_limit", float(parsed["arc_meta_limit"]), None, None, 0),
-            ("arc_meta_max", float(parsed["arc_meta_max"]), None, None, 0),
-        ]
+        yield (
+            0,
+            "Arc Meta {} used, Limit {}, Max {}".format(
+                render.bytes(parsed["arc_meta_used"]),
+                render.bytes(parsed["arc_meta_limit"]),
+                render.bytes(parsed["arc_meta_max"]),
+            ),
+            [
+                ("arc_meta_used", float(parsed["arc_meta_used"]), None, None, 0),
+                ("arc_meta_limit", float(parsed["arc_meta_limit"]), None, None, 0),
+                ("arc_meta_max", float(parsed["arc_meta_max"]), None, None, 0),
+            ],
+        )
 
 
 check_info["zfs_arc_cache"] = LegacyCheckDefinition(

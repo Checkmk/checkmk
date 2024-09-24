@@ -82,7 +82,9 @@ def test_parse(section: Section) -> None:
                     type="ora.diskgroup.type", state="ONLINE on host2", target="ONLINE"
                 ),
                 "oracle_host": Resource(
-                    type="ora.diskgroup.type", state="OFF on oracle_host", target="ONLINE"
+                    type="ora.diskgroup.type",
+                    state="OFF on oracle_host",
+                    target="ONLINE",
                 ),
                 None: Resource(type="ora.diskgroup.type", state="ONLINE on host3", target="ONLINE"),
             },

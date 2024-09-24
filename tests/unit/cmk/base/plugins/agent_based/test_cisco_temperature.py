@@ -785,12 +785,36 @@ def _get_section_dom() -> ct.Section:
     return ct.parse_cisco_temperature(
         [
             [
-                ["300000013", "", "Ethernet1/1 Lane 1 Transceiver Receive Power Sensor"],
-                ["300000014", "", "Ethernet1/1 Lane 1 Transceiver Transmit Power Sensor"],
-                ["300003533", "", "Ethernet1/3 Lane 1 Transceiver Receive Power Sensor"],
-                ["300003534", "", "Ethernet1/3 Lane 1 Transceiver Transmit Power Sensor"],
-                ["300005293", "", "Ethernet1/4 Lane 1 Transceiver Receive Power Sensor"],
-                ["300005294", "", "Ethernet1/4 Lane 1 Transceiver Transmit Power Sensor"],
+                [
+                    "300000013",
+                    "",
+                    "Ethernet1/1 Lane 1 Transceiver Receive Power Sensor",
+                ],
+                [
+                    "300000014",
+                    "",
+                    "Ethernet1/1 Lane 1 Transceiver Transmit Power Sensor",
+                ],
+                [
+                    "300003533",
+                    "",
+                    "Ethernet1/3 Lane 1 Transceiver Receive Power Sensor",
+                ],
+                [
+                    "300003534",
+                    "",
+                    "Ethernet1/3 Lane 1 Transceiver Transmit Power Sensor",
+                ],
+                [
+                    "300005293",
+                    "",
+                    "Ethernet1/4 Lane 1 Transceiver Receive Power Sensor",
+                ],
+                [
+                    "300005294",
+                    "",
+                    "Ethernet1/4 Lane 1 Transceiver Transmit Power Sensor",
+                ],
             ],
             [
                 ["300000013", "14", "8", "0", "-3271", "1"],
@@ -916,8 +940,16 @@ def _get_section_temp() -> ct.Section:
                 ["300000003", "", "Ethernet1/1 Lane 1 Transceiver Voltage Sensor"],
                 ["300000004", "", "Ethernet1/1 Lane 1 Transceiver Bias Current Sensor"],
                 ["300000007", "", "Ethernet1/1 Lane 1 Transceiver Temperature Sensor"],
-                ["300000013", "", "Ethernet1/1 Lane 1 Transceiver Receive Power Sensor"],
-                ["300000014", "", "Ethernet1/1 Lane 1 Transceiver Transmit Power Sensor"],
+                [
+                    "300000013",
+                    "",
+                    "Ethernet1/1 Lane 1 Transceiver Receive Power Sensor",
+                ],
+                [
+                    "300000014",
+                    "",
+                    "Ethernet1/1 Lane 1 Transceiver Transmit Power Sensor",
+                ],
             ],
             [
                 ["1176", "1", "9", "1613258611", "0", "1"],

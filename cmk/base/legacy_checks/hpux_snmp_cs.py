@@ -59,10 +59,19 @@ def check_hpux_snmp_cpu(item, _no_params, info):
     this_time = time.time()
     total_rate = 0.0
     rates = []
-    for what, oid in [("user", "13.0"), ("system", "14.0"), ("idle", "15.0"), ("nice", "16.0")]:
+    for what, oid in [
+        ("user", "13.0"),
+        ("system", "14.0"),
+        ("idle", "15.0"),
+        ("nice", "16.0"),
+    ]:
         value = int(parts[oid])
         rate = get_rate(
-            get_value_store(), "snmp_cpu_util.%s" % what, this_time, value, raise_overflow=True
+            get_value_store(),
+            "snmp_cpu_util.%s" % what,
+            this_time,
+            value,
+            raise_overflow=True,
         )
         total_rate += rate
         rates.append(rate)

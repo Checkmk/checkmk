@@ -71,7 +71,10 @@ _test_config: Config = {
     [
         {
             "id": "test-golden-ldap-connector",
-            "directory_type": ("ad", {"connect_to": ("discover", {"domain": "corp.de"})}),
+            "directory_type": (
+                "ad",
+                {"connect_to": ("discover", {"domain": "corp.de"})},
+            ),
         },
         {
             "id": "test-golden-ldap-connector",

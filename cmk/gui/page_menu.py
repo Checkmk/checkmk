@@ -327,7 +327,9 @@ class PageMenu:
         help_dropdown = self.get_dropdown_by_name("help", make_help_dropdown())
         help_dropdown.topics[1].entries.append(
             PageMenuEntry(
-                title=title, icon_name="manual", item=make_external_link(doc_reference_url(doc_ref))
+                title=title,
+                icon_name="manual",
+                item=make_external_link(doc_reference_url(doc_ref)),
             )
         )
 
@@ -744,7 +746,10 @@ class ShortcutRenderer:
 
     def _show_link_item(self, entry: PageMenuEntry, item: PageMenuLink) -> None:
         self._show_link(
-            entry=entry, url=item.link.url, onclick=item.link.onclick, target=item.link.target
+            entry=entry,
+            url=item.link.url,
+            onclick=item.link.onclick,
+            target=item.link.target,
         )
 
     def _show_popup_link_item(self, entry: PageMenuEntry, item: PageMenuPopup) -> None:

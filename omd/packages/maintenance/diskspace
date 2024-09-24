@@ -118,7 +118,10 @@ def _load_plugins() -> None:
 
     plugin_files: list[str] = [p.name for p in plugin_dir.iterdir() if p.name not in local_plugins]
 
-    for base_dir, file_list in [(plugin_dir, plugin_files), (plugin_dir_local, local_plugins)]:
+    for base_dir, file_list in [
+        (plugin_dir, plugin_files),
+        (plugin_dir_local, local_plugins),
+    ]:
         for file_name in file_list:
             if file_name[0] == ".":
                 continue
@@ -161,7 +164,14 @@ def _get_free_space():
         encoding="utf-8",
     ).split("\n"):
         if filesystem[0] == "/":
-            _vol, _size_bytes, _used_bytes, free_bytes, _used_perc, _mp = filesystem.split()
+            (
+                _vol,
+                _size_bytes,
+                _used_bytes,
+                free_bytes,
+                _used_perc,
+                _mp,
+            ) = filesystem.split()
             return int(free_bytes)
     return None
 
@@ -311,7 +321,8 @@ def _get_configured_hosts() -> tuple[set, set, bool]:
     if not is_wato_remote_site:
         all_hosts.update(
             subprocess.check_output(
-                ["check_mk", "--list-hosts", "--all-sites", "--include-offline"], encoding="utf-8"
+                ["check_mk", "--list-hosts", "--all-sites", "--include-offline"],
+                encoding="utf-8",
             ).splitlines()
         )
 

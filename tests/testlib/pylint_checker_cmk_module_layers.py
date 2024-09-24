@@ -269,10 +269,12 @@ def _allow_for_gui_cee(
             _in_component(imported=imported, component=Component("cmk.cee.robotmk.dashboards")),
             _in_component(imported=imported, component=Component("cmk.cee.robotmk.pages")),
             _in_component(
-                imported=imported, component=Component("cmk.cee.robotmk.bakery.rulespecs")
+                imported=imported,
+                component=Component("cmk.cee.robotmk.bakery.rulespecs"),
             ),
             _in_component(
-                imported=imported, component=Component("cmk.cee.robotmk.free_tier_banner")
+                imported=imported,
+                component=Component("cmk.cee.robotmk.free_tier_banner"),
             ),
         )
     )
@@ -570,10 +572,19 @@ _COMPONENTS = (
     (Component("tests.unit.cmk"), _allow_default_plus_component_under_test),
     (Component("tests.unit.checks"), _is_allowed_for_legacy_check_tests),
     (Component("tests.extension_compatibility"), _allow_default_plus_gui_and_base),
-    (Component("tests.integration.cmk.post_rename_site"), _allow_default_plus_component_under_test),
-    (Component("tests.integration.cmk.snmplib"), _allow_default_plus_component_under_test),
+    (
+        Component("tests.integration.cmk.post_rename_site"),
+        _allow_default_plus_component_under_test,
+    ),
+    (
+        Component("tests.integration.cmk.snmplib"),
+        _allow_default_plus_component_under_test,
+    ),
     (Component("tests.integration.cmk.gui"), _allow_default_plus_component_under_test),
-    (Component("tests.integration.cmk.cee.liveproxy"), _allow_default_plus_component_under_test),
+    (
+        Component("tests.integration.cmk.cee.liveproxy"),
+        _allow_default_plus_component_under_test,
+    ),
     (
         Component("tests.integration.cmk.base"),
         _allow_default_plus_component_under_test_bakery_checkengine,
@@ -587,7 +598,10 @@ _COMPONENTS = (
     # but they (almost) adhere to the same import restrictions,
     # and we want to encourage that
     (Component("cmk.base.api.agent_based.value_store"), _allow_default_plus_checkers),
-    (Component("cmk.base.api.agent_based"), _allow_default_plus_fetchers_checkers_and_snmplib),
+    (
+        Component("cmk.base.api.agent_based"),
+        _allow_default_plus_fetchers_checkers_and_snmplib,
+    ),
     (Component("cmk.base.check_legacy_includes"), _is_allowed_for_legacy_checks),
     (Component("cmk.base.legacy_checks"), _is_allowed_for_legacy_checks),
     (
@@ -626,7 +640,10 @@ _COMPONENTS = (
     (Component("cmk.special_agents"), _is_default_allowed_import),
     (Component("cmk.update_config"), _allow_default_plus_gui_base_and_bakery),
     (Component("cmk.validate_plugins"), _is_default_allowed_import),
-    (Component("cmk.mkp_tool"), _in_component),  # wants to grow up to be a package one day
+    (
+        Component("cmk.mkp_tool"),
+        _in_component,
+    ),  # wants to grow up to be a package one day
     (Component("cmk.utils"), _is_default_allowed_import),
     (Component("cmk.cee.bakery"), _is_default_allowed_import),
     (Component("cmk.cee.dcd"), _is_default_allowed_import),
@@ -662,7 +679,11 @@ _EXPLICIT_FILE_TO_COMPONENT = {
 class CMKModuleLayerChecker(BaseChecker):
     name = "cmk-module-layer-violation"
     msgs = {
-        "C8410": ("Import of %r not allowed in module %r", "cmk-module-layer-violation", "whoop?"),
+        "C8410": (
+            "Import of %r not allowed in module %r",
+            "cmk-module-layer-violation",
+            "whoop?",
+        ),
     }
 
     # This doesn't change during a pylint run, so let's save a realpath() call per import.

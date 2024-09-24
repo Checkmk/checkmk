@@ -13,7 +13,7 @@ from livestatus import MultiSiteConnection, SiteId
 from cmk.utils import version
 from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
 from cmk.utils.livestatus_helpers.tables.hosts import Hosts
-from cmk.utils.version import edition, Edition
+from cmk.utils.version import Edition, edition
 
 from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKHTTPException

@@ -23,8 +23,18 @@ from cmk.utils.servicename import ServiceName
 from cmk.gui.time_series import TimeSeries
 
 from ._graph_render_config import GraphRenderOptions
-from ._timeseries import AugmentedTimeSeries, derive_num_points_twindow, time_series_math
-from ._type_defs import GraphConsoldiationFunction, LineType, Operators, RRDData, RRDDataKey
+from ._timeseries import (
+    AugmentedTimeSeries,
+    derive_num_points_twindow,
+    time_series_math,
+)
+from ._type_defs import (
+    GraphConsoldiationFunction,
+    LineType,
+    Operators,
+    RRDData,
+    RRDDataKey,
+)
 
 
 class HorizontalRule(NamedTuple):

@@ -8,7 +8,9 @@ from typing import Any
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.special_agents.common_tls_verification import tls_verify_flag_default_yes
+from cmk.gui.plugins.wato.special_agents.common_tls_verification import (
+    tls_verify_flag_default_yes,
+)
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
@@ -23,7 +25,9 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.wato import MigrateToIndividualOrStoredPassword
 
-from cmk.plugins.aws import constants as aws_constants  # pylint: disable=cmk-module-layer-violation
+from cmk.plugins.aws import (  # pylint: disable=cmk-module-layer-violation
+    constants as aws_constants,
+)
 
 
 def prometheus_connection() -> Migrate[TextInput]:
@@ -318,7 +322,8 @@ def validate_aws_tags(value, varprefix):
             used_keys.append(tag_key)
         else:
             raise MKUserError(
-                tag_field, _("Each tag must be unique and cannot be used multiple times")
+                tag_field,
+                _("Each tag must be unique and cannot be used multiple times"),
             )
         if tag_key.startswith("aws:"):
             raise MKUserError(tag_field, _("Do not use 'aws:' prefix for the key."))

@@ -20,7 +20,10 @@ import urllib.parse
 # If you want to use the old behaviour just use old_stdout.
 if sys.version_info[0] >= 3:
     new_stdout = io.TextIOWrapper(
-        sys.stdout.buffer, newline="\n", encoding=sys.stdout.encoding, errors=sys.stdout.errors
+        sys.stdout.buffer,
+        newline="\n",
+        encoding=sys.stdout.encoding,
+        errors=sys.stdout.errors,
     )
     old_stdout, sys.stdout = sys.stdout, new_stdout
 
@@ -232,7 +235,13 @@ QUERY_SPECS_SPECIFIC_LEGACY = {
         ("*:*", "QueueLength", None, ["ServerRuntime"], False),
         ("*:*", "StandbyThreadCount", None, ["ServerRuntime"], False),
         ("*:*", "PendingUserRequestCount", None, ["ServerRuntime"], False),
-        ("*:Name=ThreadPoolRuntime,*", "ExecuteThreadTotalCount", None, ["ServerRuntime"], False),
+        (
+            "*:Name=ThreadPoolRuntime,*",
+            "ExecuteThreadTotalCount",
+            None,
+            ["ServerRuntime"],
+            False,
+        ),
         ("*:*", "ExecuteThreadIdleCount", None, ["ServerRuntime"], False),
         ("*:*", "HoggingThreadCount", None, ["ServerRuntime"], False),
         (
@@ -244,15 +253,33 @@ QUERY_SPECS_SPECIFIC_LEGACY = {
         ),
     ],
     "tomcat": [
-        ("*:type=Manager,*", "activeSessions,maxActiveSessions", None, ["path", "context"], False),
+        (
+            "*:type=Manager,*",
+            "activeSessions,maxActiveSessions",
+            None,
+            ["path", "context"],
+            False,
+        ),
         ("*:j2eeType=Servlet,name=default,*", "stateName", None, ["WebModule"], False),
         # Check not yet working
-        ("*:j2eeType=Servlet,name=default,*", "requestCount", None, ["WebModule"], False),
+        (
+            "*:j2eeType=Servlet,name=default,*",
+            "requestCount",
+            None,
+            ["WebModule"],
+            False,
+        ),
         # too wide location for addressing the right info
         # ( "*:j2eeType=Servlet,*", "requestCount", None, [ "WebModule" ] , False),
     ],
     "jboss": [
-        ("*:type=Manager,*", "activeSessions,maxActiveSessions", None, ["path", "context"], False),
+        (
+            "*:type=Manager,*",
+            "activeSessions,maxActiveSessions",
+            None,
+            ["path", "context"],
+            False,
+        ),
     ],
 }
 

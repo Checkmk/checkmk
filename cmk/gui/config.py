@@ -24,7 +24,9 @@ import cmk.gui.utils as utils
 from cmk.gui.ctx_stack import request_local_attr, set_global_var
 from cmk.gui.exceptions import MKConfigError
 from cmk.gui.i18n import _
-from cmk.gui.plugins.config.base import CREConfig  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.plugins.config.base import (  # pylint: disable=cmk-module-layer-violation
+    CREConfig,
+)
 from cmk.gui.type_defs import Key, RoleName
 
 if cmk_version.edition() is not cmk_version.Edition.CRE:

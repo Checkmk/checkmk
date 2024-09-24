@@ -40,7 +40,9 @@ def components(collector_type: CollectorType) -> Components:
 
 def node_collector_metadata(collector_type: CollectorType, node_name: str) -> NodeCollectorMetadata:
     return NodeCollectorMetadataFactory.build(
-        collector_type=collector_type, node=node_name, components=components(collector_type)
+        collector_type=collector_type,
+        node=node_name,
+        components=components(collector_type),
     )
 
 

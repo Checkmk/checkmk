@@ -8,7 +8,10 @@ import time
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    InventoryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.inventory_solaris_pkginfo import (
     inventory_solaris_pkginfo,
     parse_solaris_pkginfo,

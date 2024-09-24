@@ -6,7 +6,9 @@ from typing import Final
 
 import pytest
 
-from cmk.base.plugins.agent_based.storcli_physical_disks import parse_storcli_physical_disks
+from cmk.base.plugins.agent_based.storcli_physical_disks import (
+    parse_storcli_physical_disks,
+)
 
 from cmk.plugins.lib import megaraid
 

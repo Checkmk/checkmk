@@ -371,13 +371,15 @@ class ACTestLivestatusSecured(ACTest):
         cfg = ConfigDomainOMD().default_globals()
         if not cfg["site_livestatus_tcp"]:
             yield ACSingleResult(
-                state=ACResultState.OK, text=_("Livestatus network traffic is encrypted")
+                state=ACResultState.OK,
+                text=_("Livestatus network traffic is encrypted"),
             )
             return
 
         if not cfg["site_livestatus_tcp"]["tls"]:
             yield ACSingleResult(
-                state=ACResultState.CRIT, text=_("Livestatus network traffic is unencrypted")
+                state=ACResultState.CRIT,
+                text=_("Livestatus network traffic is unencrypted"),
             )
 
 
@@ -407,7 +409,8 @@ class ACTestNumberOfUsers(ACTest):
 
         if num_users <= user_warn_threshold:
             yield ACSingleResult(
-                state=ACResultState.OK, text=_("You have %d users configured") % num_users
+                state=ACResultState.OK,
+                text=_("You have %d users configured") % num_users,
             )
         else:
             yield ACSingleResult(
@@ -490,7 +493,8 @@ class ACTestOldDefaultCredentials(ACTest):
             )
         else:
             yield ACSingleResult(
-                state=ACResultState.OK, text=_("Found <tt>omdadmin</tt> using custom password.")
+                state=ACResultState.OK,
+                text=_("Found <tt>omdadmin</tt> using custom password."),
             )
 
 
@@ -606,11 +610,13 @@ class ACTestBackupNotEncryptedConfigured(ACTest):
         for job in BackupConfig.load().jobs.values():
             if job.is_encrypted():
                 yield ACSingleResult(
-                    state=ACResultState.OK, text=_('The job "%s" is encrypted') % job.title
+                    state=ACResultState.OK,
+                    text=_('The job "%s" is encrypted') % job.title,
                 )
             else:
                 yield ACSingleResult(
-                    state=ACResultState.WARN, text=_('There job "%s" is not encrypted') % job.title
+                    state=ACResultState.WARN,
+                    text=_('There job "%s" is not encrypted') % job.title,
                 )
 
 
@@ -1061,7 +1067,8 @@ class ACTestAlertHandlerEventTypes(ACTest):
             )
         else:
             yield ACSingleResult(
-                state=ACResultState.OK, text=_("Alert handlers will handle state changes.")
+                state=ACResultState.OK,
+                text=_("Alert handlers will handle state changes."),
             )
 
 
@@ -1229,7 +1236,10 @@ class ACTestESXDatasources(ACTest):
     def execute(self) -> Iterator[ACSingleResult]:
         all_rules_ok = True
         for folder, rule_index, rule in self._get_rules():
-            vsphere_queries_agent = rule.value.get("direct") in ["agent", "hostsystem_agent"]
+            vsphere_queries_agent = rule.value.get("direct") in [
+                "agent",
+                "hostsystem_agent",
+            ]
             if vsphere_queries_agent:
                 all_rules_ok = False
                 yield ACSingleResult(
@@ -1363,7 +1373,10 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
         ).get(RuleGroup.CheckgroupParameters("agent_update"))
         state_map = {0: "OK", 1: "WARN", 2: "CRIT", 3: "UNKNOWN"}
         return [
-            (folder.title(), state_map[rule.value.get("restricted_address_mismatch", 1)])
+            (
+                folder.title(),
+                state_map[rule.value.get("restricted_address_mismatch", 1)],
+            )
             for folder, _rule_index, rule in ruleset.get_rules()
             if rule.value.get("restricted_address_mismatch", 1) not in (1, 2)
         ]
@@ -1410,5 +1423,6 @@ class ACTestCheckMKCheckerNumber(ACTest):
             return
 
         yield ACSingleResult(
-            state=ACResultState.OK, text=_("Number of Checkmk checkers is less than number of CPUs")
+            state=ACResultState.OK,
+            text=_("Number of Checkmk checkers is less than number of CPUs"),
         )

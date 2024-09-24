@@ -78,7 +78,12 @@ def check_storage(
         ),
     }
     yield from gcp.check(
-        metrics, item, params, section_gcp_service_gce_storage, ASSET_TYPE, section_gcp_assets
+        metrics,
+        item,
+        params,
+        section_gcp_service_gce_storage,
+        ASSET_TYPE,
+        section_gcp_assets,
     )
 
 

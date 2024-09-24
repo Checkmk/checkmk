@@ -80,7 +80,11 @@ _BasicTransition = Literal["changed", "unchanged", "new", "vanished"]
 _Transition = (
     _BasicTransition
     | Literal[
-        "ignored", "clustered_old", "clustered_new", "clustered_vanished", "clustered_ignored"
+        "ignored",
+        "clustered_old",
+        "clustered_new",
+        "clustered_vanished",
+        "clustered_ignored",
     ]
 )
 
@@ -657,7 +661,11 @@ def _get_node_services(
     autocheck_store = AutochecksStore(host_name)
     try:
         discovered_services = discover_services(
-            host_name, candidates - skip, providers=providers, plugins=plugins, on_error=on_error
+            host_name,
+            candidates - skip,
+            providers=providers,
+            plugins=plugins,
+            on_error=on_error,
         )
     except KeyboardInterrupt:
         raise MKGeneralException("Interrupted by Ctrl-C.")
@@ -705,7 +713,9 @@ def make_table(
         for service_transition, entry in entries.chain_with_transition()
         if (
             service_name := get_service_description(
-                host_name, DiscoveredService.check_plugin_name(entry), DiscoveredService.item(entry)
+                host_name,
+                DiscoveredService.check_plugin_name(entry),
+                DiscoveredService.item(entry),
             )
         )
     }
@@ -753,7 +763,8 @@ def _reclassify_disabled_items(
         )
         for service in services.values()
         if ignore_service(
-            host_name, get_service_description(host_name, *DiscoveredService.id(service.autocheck))
+            host_name,
+            get_service_description(host_name, *DiscoveredService.id(service.autocheck)),
         )
         or ignore_plugin(host_name, DiscoveredService.check_plugin_name(service.autocheck))
     )
@@ -821,7 +832,8 @@ def _get_cluster_services(
                     host_name=host_name,
                     node_name=node,
                     services_cluster=get_effective_host(
-                        node, get_service_description(node, *DiscoveredService.id(entry))
+                        node,
+                        get_service_description(node, *DiscoveredService.id(entry)),
                     ),
                     entry=entry,
                     current_recorded_entry=cluster_items.get(DiscoveredService.id(entry)),
@@ -869,10 +881,13 @@ def _cluster_service_entry(
         return  # not part of this host
 
     if current_recorded_entry is None:
-        yield DiscoveredService.id(entry), ServicesTableEntry(
-            transition=node_transition,
-            autocheck=entry,
-            hosts=[node_name],
+        yield (
+            DiscoveredService.id(entry),
+            ServicesTableEntry(
+                transition=node_transition,
+                autocheck=entry,
+                hosts=[node_name],
+            ),
         )
         return
 
@@ -897,17 +912,20 @@ def _cluster_service_entry(
             # --> node1 service will be taken (first node appearance wins)
             assert existing_autocheck_entry.new is not None
             assert entry.previous is not None
-            yield DiscoveredService.id(entry), ServicesTableEntry(
-                transition=(
-                    "changed"
-                    if _changed_service(existing_autocheck_entry.new, entry.previous)
-                    else "unchanged"
+            yield (
+                DiscoveredService.id(entry),
+                ServicesTableEntry(
+                    transition=(
+                        "changed"
+                        if _changed_service(existing_autocheck_entry.new, entry.previous)
+                        else "unchanged"
+                    ),
+                    autocheck=DiscoveredItem[AutocheckEntry](
+                        new=existing_autocheck_entry.new,
+                        previous=entry.previous,
+                    ),
+                    hosts=nodes_with_service,
                 ),
-                autocheck=DiscoveredItem[AutocheckEntry](
-                    new=existing_autocheck_entry.new,
-                    previous=entry.previous,
-                ),
-                hosts=nodes_with_service,
             )
         case "new", "new":
             # still new, first new node appearance wins so we keep the existing entry
@@ -917,17 +935,20 @@ def _cluster_service_entry(
             # present before
             assert current_recorded_entry.autocheck.previous is not None
             assert entry.new is not None
-            yield DiscoveredService.id(entry), ServicesTableEntry(
-                transition=(
-                    "changed"
-                    if _changed_service(current_recorded_entry.autocheck.previous, entry.new)
-                    else "unchanged"
+            yield (
+                DiscoveredService.id(entry),
+                ServicesTableEntry(
+                    transition=(
+                        "changed"
+                        if _changed_service(current_recorded_entry.autocheck.previous, entry.new)
+                        else "unchanged"
+                    ),
+                    autocheck=DiscoveredItem[AutocheckEntry](
+                        new=entry.new,
+                        previous=current_recorded_entry.autocheck.previous,
+                    ),
+                    hosts=nodes_with_service,
                 ),
-                autocheck=DiscoveredItem[AutocheckEntry](
-                    new=entry.new,
-                    previous=current_recorded_entry.autocheck.previous,
-                ),
-                hosts=nodes_with_service,
             )
         case "vanished", "vanished":
             # still vanished, first vanished node appearance wins so we keep the existing entry

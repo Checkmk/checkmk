@@ -12,7 +12,11 @@ from typing import Any
 import pytest
 from google.cloud import monitoring_v3
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, ServiceLabel
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Result,
+    Service,
+    ServiceLabel,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -120,7 +124,10 @@ def generate_stringtable(
         ts = monitoring_v3.TimeSeries(
             {
                 "metric": {"type": metric_type, "labels": metric_labels},
-                "resource": {"type": "does_not_matter_i_think", "labels": resource_labels},
+                "resource": {
+                    "type": "does_not_matter_i_think",
+                    "labels": resource_labels,
+                },
                 "metric_kind": 1,
                 "value_type": 3,
                 "points": [point],

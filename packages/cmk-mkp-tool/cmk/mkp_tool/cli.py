@@ -345,7 +345,16 @@ def _command_list(
         if m.id not in enabled_ids
     ]
     table = _render_table(
-        ["Name", "Version", "Title", "Author", "Req. Version", "Until Version", "Files", "State"],
+        [
+            "Name",
+            "Version",
+            "Title",
+            "Author",
+            "Req. Version",
+            "Until Version",
+            "Files",
+            "State",
+        ],
         [
             *(_row(m, "Enabled (active on this site)") for m in classified_manifests.installed),
             *(_row(m, "Enabled (inactive on this site)") for m in classified_manifests.inactive),
@@ -753,10 +762,16 @@ def _parse_arguments(argv: list[str], site_context: SiteContext | None) -> argpa
     _add_command(subparsers, "enable", _args_package_id, partial(_command_enable, site_context))
     _add_command(subparsers, "disable", _args_package_id, partial(_command_disable, site_context))
     _add_command(
-        subparsers, "disable-outdated", _no_args, partial(_command_disable_outdated, site_context)
+        subparsers,
+        "disable-outdated",
+        _no_args,
+        partial(_command_disable_outdated, site_context),
     )
     _add_command(
-        subparsers, "update-active", _no_args, partial(_command_update_active, site_context)
+        subparsers,
+        "update-active",
+        _no_args,
+        partial(_command_update_active, site_context),
     )
 
     return parser.parse_args(argv)

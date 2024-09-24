@@ -40,9 +40,20 @@ from cmk.bi.aggregation_functions import (
     BIAggregationFunctionCountOK,
     BIAggregationFunctionWorst,
 )
-from cmk.bi.lib import ABCBIAction, ABCBIAggregationFunction, ABCBISearch, ActionKind, SearchKind
+from cmk.bi.lib import (
+    ABCBIAction,
+    ABCBIAggregationFunction,
+    ABCBISearch,
+    ActionKind,
+    SearchKind,
+)
 from cmk.bi.packs import BIAggregationPack
-from cmk.bi.search import BIEmptySearch, BIFixedArgumentsSearch, BIHostSearch, BIServiceSearch
+from cmk.bi.search import (
+    BIEmptySearch,
+    BIFixedArgumentsSearch,
+    BIHostSearch,
+    BIServiceSearch,
+)
 
 from ._packs import get_cached_bi_packs
 
@@ -195,7 +206,10 @@ def _convert_bi_rule_to_vs(value):
     if value["search"]["type"] == "empty":
         return value["action"]["type"], value["action"]
 
-    return value["search"]["type"], (value["search"], (value["action"]["type"], value["action"]))
+    return value["search"]["type"], (
+        value["search"],
+        (value["action"]["type"], value["action"]),
+    )
 
 
 def _convert_bi_rule_from_vs(value):
@@ -366,7 +380,9 @@ class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
                 (
                     "conditions",
                     Dictionary(
-                        title=_("Conditions"), elements=cls.get_host_conditions(), optional_keys=[]
+                        title=_("Conditions"),
+                        elements=cls.get_host_conditions(),
+                        optional_keys=[],
                     ),
                 ),
                 (
@@ -438,7 +454,11 @@ class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
 class BIConfigServiceSearch(BIServiceSearch, ABCBIConfigSearch):
     @classmethod
     def cascading_dropdown_choice_element(cls) -> tuple[SearchKind, str, ValueSpec]:
-        return (cls.kind(), _("Create nodes based on a service search"), cls.valuespec())
+        return (
+            cls.kind(),
+            _("Create nodes based on a service search"),
+            cls.valuespec(),
+        )
 
     @classmethod
     def valuespec(cls) -> ValueSpec:
@@ -897,7 +917,10 @@ class BIConfigAggregationFunctionCountOK(
 ):
     def __str__(self) -> str:
         info = []
-        for state, settings in [(_("OK"), self.levels_ok), (_("WARN"), self.levels_warn)]:
+        for state, settings in [
+            (_("OK"), self.levels_ok),
+            (_("WARN"), self.levels_warn),
+        ]:
             if settings["type"] == "count":
                 info.append(
                     "{state} ({value} OK nodes)".format(state=state, value=settings["value"])
@@ -944,7 +967,9 @@ class BIConfigAggregationFunctionCountOK(
                         _("Required number of OK-nodes for a total state of OK:"), 2, 50
                     ),
                     cls._vs_count_ok_count(
-                        _("Required number of OK-nodes for a total state of WARN:"), 1, 25
+                        _("Required number of OK-nodes for a total state of WARN:"),
+                        1,
+                        25,
                     ),
                 ]
             ),

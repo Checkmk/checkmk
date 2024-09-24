@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-""" definitions of timeouts during e2e testing
-"""
+"""definitions of timeouts during e2e testing"""
+
 from types import TracebackType
 
 from playwright.sync_api import Page
@@ -30,6 +30,9 @@ class TemporaryTimeout:
         self.page.set_default_timeout(self.timeout)
 
     def __exit__(
-        self, exc_type: type[BaseException], exc_value: BaseException, exc_tb: TracebackType
+        self,
+        exc_type: type[BaseException],
+        exc_value: BaseException,
+        exc_tb: TracebackType,
     ) -> None:
         self.page.set_default_timeout(self.default_timeout_ms)

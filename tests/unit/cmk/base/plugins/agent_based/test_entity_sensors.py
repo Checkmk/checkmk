@@ -7,8 +7,16 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+)
 from cmk.base.plugins.agent_based.entity_sensors import (
     check_entity_sensors_fan,
     check_entity_sensors_power_presence,
@@ -218,7 +226,10 @@ def test_discover_entity_sensors_power_presence(
     ],
 )
 def test_check_entity_sensors_temp(
-    item: str, params: TempParamType, section: EntitySensorSection, expected_result: CheckResult
+    item: str,
+    params: TempParamType,
+    section: EntitySensorSection,
+    expected_result: CheckResult,
 ) -> None:
     assert list(check_entity_sensors_temp(item, params, section)) == expected_result
 
@@ -268,7 +279,8 @@ def test_check_entity_sensors_temp(
             [
                 Result(state=State.OK, summary="Operational status: OK"),
                 Result(
-                    state=State.CRIT, summary="Speed: 1 RPM (warn/crit below 2000 RPM/1000 RPM)"
+                    state=State.CRIT,
+                    summary="Speed: 1 RPM (warn/crit below 2000 RPM/1000 RPM)",
                 ),
             ],
         ),

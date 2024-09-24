@@ -90,9 +90,12 @@ def check_pvecm_status(_no_item, _no_params, parsed):
         if int(parsed["expected votes"]) == int(parsed["total votes"]):
             yield 0, "No faults"
         else:
-            yield 2, "Expected votes: {}, Total votes: {}".format(
-                parsed["expected votes"],
-                parsed["total votes"],
+            yield (
+                2,
+                "Expected votes: {}, Total votes: {}".format(
+                    parsed["expected votes"],
+                    parsed["total votes"],
+                ),
             )
 
 

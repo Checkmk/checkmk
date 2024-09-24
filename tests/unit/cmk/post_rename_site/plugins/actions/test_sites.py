@@ -101,7 +101,8 @@ def test_update_remote_site_status_host_config(site_config_file: Path) -> None:
                     socket=(
                         "tcp",
                         NetworkSocketDetails(
-                            address=("127.0.0.1", 6810), tls=("encrypted", TLSParams(verify=True))
+                            address=("127.0.0.1", 6810),
+                            tls=("encrypted", TLSParams(verify=True)),
                         ),
                     ),
                     proxy=ProxyConfig(params=None),

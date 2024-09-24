@@ -9,7 +9,12 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import StringTable
-from cmk.plugins.lib.docker import cleanup_oci_error_message, MemorySection, parse, parse_multiline
+from cmk.plugins.lib.docker import (
+    cleanup_oci_error_message,
+    MemorySection,
+    parse,
+    parse_multiline,
+)
 
 
 def test_parse_strict() -> None:
@@ -52,7 +57,12 @@ def test_parse_strict_empty_version() -> None:
 
 def test_parse_multiline() -> None:
     result = parse_multiline(
-        [["@docker_version_info", "{}"], ['{"value": 1}'], ['{"value": 2}'], ['{"value": 3}']]
+        [
+            ["@docker_version_info", "{}"],
+            ['{"value": 1}'],
+            ['{"value": 2}'],
+            ['{"value": 3}'],
+        ]
     )
     assert result.version == {}
     assert list(result.data) == [{"value": 1}, {"value": 2}, {"value": 3}]
@@ -108,7 +118,10 @@ def test_parse_remove_error_message(data_in: StringTable, data_out: StringTable)
             MemorySection(mem_total=16, mem_usage=3, mem_cache=0),
             {"MemFree": 16 - 3, "MemTotal": 16},
         ],
-        [MemorySection(mem_total=16, mem_usage=3, mem_cache=4), {"MemFree": 16, "MemTotal": 16}],
+        [
+            MemorySection(mem_total=16, mem_usage=3, mem_cache=4),
+            {"MemFree": 16, "MemTotal": 16},
+        ],
     ],
 )
 def test_to_mem_used(memory_section: MemorySection, result: dict[str, int]) -> None:

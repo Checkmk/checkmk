@@ -6,7 +6,12 @@
 from collections.abc import Mapping
 from enum import Enum
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import register, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    register,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -23,7 +28,9 @@ class PostfixError(Enum):
 class PostfixPid(int): ...
 
 
-def parse_postfix_mailq_status(string_table: StringTable) -> dict[str, PostfixPid | PostfixError]:
+def parse_postfix_mailq_status(
+    string_table: StringTable,
+) -> dict[str, PostfixPid | PostfixError]:
     parsed: dict[str, PostfixPid | PostfixError] = {}
 
     for line in string_table:
@@ -56,7 +63,7 @@ register.agent_section(
 
 
 def discovery_postfix_mailq_status(
-    section: Mapping[str, PostfixError | PostfixPid]
+    section: Mapping[str, PostfixError | PostfixPid],
 ) -> DiscoveryResult:
     yield from (
         Service(item=queuename)

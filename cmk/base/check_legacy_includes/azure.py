@@ -49,7 +49,13 @@ def get_data_or_go_stale(check_function):
 
 
 def check_azure_metric(  # pylint: disable=too-many-locals
-    resource, metric_key, cmk_key, display_name, levels=None, levels_lower=None, use_rate=False
+    resource,
+    metric_key,
+    cmk_key,
+    display_name,
+    levels=None,
+    levels_lower=None,
+    use_rate=False,
 ):
     metric = resource.metrics.get(metric_key)
     if metric is None:
@@ -58,7 +64,11 @@ def check_azure_metric(  # pylint: disable=too-many-locals
     if use_rate:
         countername = f"{resource.id}.{metric_key}"
         value = get_rate(
-            get_value_store(), countername, time.time(), metric.value, raise_overflow=True
+            get_value_store(),
+            countername,
+            time.time(),
+            metric.value,
+            raise_overflow=True,
         )
         unit = "%s_rate" % metric.unit
     else:
@@ -108,7 +118,8 @@ def discover_azure_by_metrics(*desired_metrics):
             metr = resource.metrics
             if set(desired_metrics) & set(metr):
                 yield Service(
-                    item=name, labels=get_service_labels_from_resource_tags(resource.tags)
+                    item=name,
+                    labels=get_service_labels_from_resource_tags(resource.tags),
                 )
 
     return discovery_function

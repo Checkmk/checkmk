@@ -2,7 +2,7 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-""" Pre update checks, executed before any configuration is changed. """
+"""Pre update checks, executed before any configuration is changed."""
 
 from collections.abc import Sequence
 from logging import Logger
@@ -21,7 +21,11 @@ from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 
 from cmk.update_config.plugins.actions.rulesets import REPLACED_RULESETS
-from cmk.update_config.plugins.pre_actions.utils import ConflictMode, prompt, USER_INPUT_CONTINUE
+from cmk.update_config.plugins.pre_actions.utils import (
+    ConflictMode,
+    prompt,
+    USER_INPUT_CONTINUE,
+)
 from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
 
 
@@ -111,7 +115,10 @@ def _validate_rule_values(
             continue
 
         for folder, index, rule in ruleset.get_rules():
-            logger.log(VERBOSE, f"Validating ruleset '{ruleset.name}' in folder '{folder.name()}'")
+            logger.log(
+                VERBOSE,
+                f"Validating ruleset '{ruleset.name}' in folder '{folder.name()}'",
+            )
             try:
                 ruleset.rulespec.valuespec.validate_value(
                     rule.value,

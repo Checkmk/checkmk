@@ -16,7 +16,14 @@ from cmk.utils.exceptions import MKException, MKGeneralException, MKSNMPError
 from cmk.utils.log import console
 from cmk.utils.sectionname import SectionName
 
-from cmk.snmplib import OID, SNMPBackend, SNMPContext, SNMPHostConfig, SNMPRawValue, SNMPRowInfo
+from cmk.snmplib import (
+    OID,
+    SNMPBackend,
+    SNMPContext,
+    SNMPHostConfig,
+    SNMPRawValue,
+    SNMPRowInfo,
+)
 
 from ._utils import strip_snmp_value
 
@@ -25,7 +32,10 @@ __all__ = ["StoredWalkSNMPBackend"]
 
 class StoredWalkSNMPBackend(SNMPBackend):
     def __init__(
-        self, snmp_config: SNMPHostConfig, logger: logging.Logger, path: Path | None = None
+        self,
+        snmp_config: SNMPHostConfig,
+        logger: logging.Logger,
+        path: Path | None = None,
     ) -> None:
         super().__init__(snmp_config, logger)
         self.path: Final = (

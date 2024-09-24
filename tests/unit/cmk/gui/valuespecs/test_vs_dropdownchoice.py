@@ -87,7 +87,8 @@ class TestValueSpecDropdownChoice:
 
         with request_var(value="smth"):
             with pytest.raises(
-                MKUserError, match="There are no elements defined for this selection yet."
+                MKUserError,
+                match="There are no elements defined for this selection yet.",
             ):
                 get_dropdown_choice(choices=[]).from_html_vars("value")
 
@@ -131,7 +132,8 @@ class TestValueSpecDropdownChoice:
         assert get_dropdown_choice().value_to_html("b") == "bee"
         assert (
             get_dropdown_choice(
-                help_separator=" - ", choices=[("a", "ant - ameise"), ("b", "bee - biene")]
+                help_separator=" - ",
+                choices=[("a", "ant - ameise"), ("b", "bee - biene")],
             ).value_to_html("b")
             == "bee"
         )

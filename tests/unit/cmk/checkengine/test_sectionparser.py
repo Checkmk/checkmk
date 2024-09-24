@@ -10,9 +10,15 @@ import pytest
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionMap, SectionName
 
-from cmk.checkengine.discovery._host_labels import _all_parsing_results as all_parsing_results
+from cmk.checkengine.discovery._host_labels import (
+    _all_parsing_results as all_parsing_results,
+)
 from cmk.checkengine.fetcher import HostKey, SourceType
-from cmk.checkengine.parser import AgentRawDataSection, AgentRawDataSectionElem, HostSections
+from cmk.checkengine.parser import (
+    AgentRawDataSection,
+    AgentRawDataSectionElem,
+    HostSections,
+)
 from cmk.checkengine.sectionparser import _ParsingResult as ParsingResult
 from cmk.checkengine.sectionparser import (
     ParsedSectionName,
@@ -208,7 +214,8 @@ def test_parse_sections_unsuperseded() -> None:
 def test_parse_sections_superseded() -> None:
     assert (
         ParsedSectionsResolver(
-            make_parser(), section_plugins=dict((SECTION_ONE, SECTION_THREE, SECTION_FOUR))
+            make_parser(),
+            section_plugins=dict((SECTION_ONE, SECTION_THREE, SECTION_FOUR)),
         ).resolve(ParsedSectionName("parsed"))
         is None
     )

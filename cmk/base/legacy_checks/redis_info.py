@@ -188,7 +188,11 @@ def check_redis_info_persistence(item, params, item_data):
 
     for status, duration, infotext in [
         ("rdb_last_bgsave_status", "rdb_last_bgsave", "Last RDB save operation: "),
-        ("aof_last_bgrewrite_status", "aof_last_rewrite", "Last AOF rewrite operation: "),
+        (
+            "aof_last_bgrewrite_status",
+            "aof_last_rewrite",
+            "Last AOF rewrite operation: ",
+        ),
     ]:
         value = persistence_data.get(status)
         if value is not None:

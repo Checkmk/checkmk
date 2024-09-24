@@ -46,7 +46,7 @@ from cmk.gui.background_job import (
 )
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.http import request, Request
+from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
@@ -74,7 +74,9 @@ class MKAutomationException(MKGeneralException):
     pass
 
 
-def cmk_version_of_remote_automation_source(remote_request: Request) -> cmk_version.Version:
+def cmk_version_of_remote_automation_source(
+    remote_request: Request,
+) -> cmk_version.Version:
     # The header is sent by Checkmk as of 2.0.0p1. In case it is missing, assume we are too old.
     return cmk_version.Version.from_str(remote_request.headers.get("x-checkmk-version", "1.6.0p1"))
 
@@ -216,7 +218,8 @@ def check_mk_remote_automation_serialized(
         # This will start a background job process on the remote site to execute the automation
         # asynchronously. It then polls the remote site, waiting for completion of the job.
         return _do_check_mk_remote_automation_in_background_job_serialized(
-            site_id, CheckmkAutomationRequest(command, args, indata, stdin_data, timeout)
+            site_id,
+            CheckmkAutomationRequest(command, args, indata, stdin_data, timeout),
         )
 
     # Synchronous execution of the actual remote command in a single blocking HTTP request
@@ -226,9 +229,15 @@ def check_mk_remote_automation_serialized(
             command="checkmk-automation",
             vars_=[
                 ("automation", command),  # The Checkmk automation command
-                ("arguments", mk_repr(args).decode("ascii")),  # The arguments for the command
+                (
+                    "arguments",
+                    mk_repr(args).decode("ascii"),
+                ),  # The arguments for the command
                 ("indata", mk_repr(indata).decode("ascii")),  # The input data
-                ("stdin_data", mk_repr(stdin_data).decode("ascii")),  # The input data for stdin
+                (
+                    "stdin_data",
+                    mk_repr(stdin_data).decode("ascii"),
+                ),  # The input data for stdin
                 ("timeout", mk_repr(timeout).decode("ascii")),  # The timeout
             ],
         )
@@ -248,7 +257,10 @@ def call_hook_pre_activate_changes() -> None:
         # TODO: Cleanup this local import
         import cmk.gui.watolib.hosts_and_folders  # pylint: disable=redefined-outer-name
 
-        hooks.call("pre-activate-changes", cmk.gui.watolib.hosts_and_folders.collect_all_hosts())
+        hooks.call(
+            "pre-activate-changes",
+            cmk.gui.watolib.hosts_and_folders.collect_all_hosts(),
+        )
 
 
 # This hook is executed when one applies the pending configuration changes
@@ -311,13 +323,20 @@ def execute_phase1_result(site_id: SiteId, connection_id: str) -> PhaseOneResult
         ("request_format", "python"),
         (
             "request",
-            repr({"action": "get_phase1_result", "kwargs": {"connection_id": connection_id}}),
+            repr(
+                {
+                    "action": "get_phase1_result",
+                    "kwargs": {"connection_id": connection_id},
+                }
+            ),
         ),
     ]
     return ast.literal_eval(
         str(
             do_remote_automation(
-                site=get_site_config(site_id), command="execute-dcd-command", vars_=command_args
+                site=get_site_config(site_id),
+                command="execute-dcd-command",
+                vars_=command_args,
             )
         )
     )
@@ -704,7 +723,9 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
         return _("Checkmk automation")
 
     def __init__(
-        self, job_id: str | None = None, api_request: CheckmkAutomationRequest | None = None
+        self,
+        job_id: str | None = None,
+        api_request: CheckmkAutomationRequest | None = None,
     ) -> None:
         if job_id is not None:
             # Loading an existing job

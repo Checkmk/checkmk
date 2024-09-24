@@ -199,7 +199,8 @@ def _check_auth_by_remote_user() -> UserId | None:
 
 
 def _check_auth_by_header(
-    token_name: Literal["Basic", "Bearer"], parse_token: Callable[[str], tuple[str, str]]
+    token_name: Literal["Basic", "Bearer"],
+    parse_token: Callable[[str], tuple[str, str]],
 ) -> UserId | None:
     """Parse the auth header and verify the credentials"""
     if not (

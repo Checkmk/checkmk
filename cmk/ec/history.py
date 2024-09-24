@@ -48,7 +48,12 @@ class History(ABC):
 
 
 def _log_event(
-    config: Config, logger: Logger, event: Event, what: HistoryWhat, who: str, addinfo: str
+    config: Config,
+    logger: Logger,
+    event: Event,
+    what: HistoryWhat,
+    who: str,
+    addinfo: str,
 ) -> None:
     if config["debug_rules"]:
         logger.info("Event %d: %s/%s/%s - %s", event["id"], what, who, addinfo, event["text"])

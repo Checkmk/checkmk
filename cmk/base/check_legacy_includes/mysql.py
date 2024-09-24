@@ -12,10 +12,12 @@ _TSection = TypeVar("_TSection")
 
 
 def mysql_parse_per_item(
-    parse_function: Callable[[Sequence[Sequence[str]]], _TSection]
+    parse_function: Callable[[Sequence[Sequence[str]]], _TSection],
 ) -> Callable[[Sequence[Sequence[str]]], Mapping[str, _TSection]]:
     @functools.wraps(parse_function)
-    def wrapped_parse_function(info: Sequence[Sequence[str]]) -> Mapping[str, _TSection]:
+    def wrapped_parse_function(
+        info: Sequence[Sequence[str]],
+    ) -> Mapping[str, _TSection]:
         item = "mysql"
         grouped: dict[str, MutableSequence[Sequence[str]]] = {}
         for line in info:

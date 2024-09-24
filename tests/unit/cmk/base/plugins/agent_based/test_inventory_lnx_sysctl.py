@@ -8,8 +8,14 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
-from cmk.base.plugins.agent_based.inventory_lnx_sysctl import inventory_lnx_sysctl, parse_lnx_sysctl
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    InventoryResult,
+    StringTable,
+)
+from cmk.base.plugins.agent_based.inventory_lnx_sysctl import (
+    inventory_lnx_sysctl,
+    parse_lnx_sysctl,
+)
 
 from .utils_inventory import sort_inventory_result
 

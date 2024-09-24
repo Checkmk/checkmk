@@ -163,7 +163,11 @@ class FilterOption(Filter):
 
 
 def display_filter_radiobuttons(
-    *, varname: str, options: list[tuple[str, str]], default: str, value: FilterHTTPVariables
+    *,
+    varname: str,
+    options: list[tuple[str, str]],
+    default: str,
+    value: FilterHTTPVariables,
 ) -> None:
     pick = value.get(varname, default)
     html.begin_radio_group(horizontal=True)
@@ -214,14 +218,18 @@ class FilterNumberRange(Filter):  # type is int
     def display(self, value: FilterHTTPVariables) -> None:
         html.write_text(_("From:") + "&nbsp;")
         html.text_input(
-            self.htmlvars[0], default_value=value.get(self.htmlvars[0], ""), style="width: 80px;"
+            self.htmlvars[0],
+            default_value=value.get(self.htmlvars[0], ""),
+            style="width: 80px;",
         )
         if self.unit:
             html.write_text(" %s " % self.unit)
 
         html.write_text(" &nbsp; " + _("To:") + "&nbsp;")
         html.text_input(
-            self.htmlvars[1], default_value=value.get(self.htmlvars[1], ""), style="width: 80px;"
+            self.htmlvars[1],
+            default_value=value.get(self.htmlvars[1], ""),
+            style="width: 80px;",
         )
         if self.unit:
             html.write_text(" %s " % self.unit)
@@ -326,7 +334,9 @@ class InputTextFilter(Filter):
     def display(self, value: FilterHTTPVariables) -> None:
         current_value = value.get(self.query_filter.request_vars[0], "")
         html.text_input(
-            self.htmlvars[0], current_value, self.query_filter.negateable and "neg" or ""
+            self.htmlvars[0],
+            current_value,
+            self.query_filter.negateable and "neg" or "",
         )
 
         if self.query_filter.negateable:

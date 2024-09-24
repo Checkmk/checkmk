@@ -7,7 +7,11 @@ import time
 from collections.abc import Mapping, MutableMapping
 from typing import Any
 
-from cmk.plugins.lib.mssql_counters import discovery_mssql_counters_generic, get_item, Section
+from cmk.plugins.lib.mssql_counters import (
+    discovery_mssql_counters_generic,
+    get_item,
+    Section,
+)
 
 from .agent_based_api.v1 import (
     check_levels,

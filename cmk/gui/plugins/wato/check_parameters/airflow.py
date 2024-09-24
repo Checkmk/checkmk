@@ -41,7 +41,10 @@ def _parameter_valuespec_airflow():
                     title=_("Upper levels"),
                     elements=[
                         Float(
-                            title=_("Warning at"), unit=_("l/s"), default_value=10.0, allow_int=True
+                            title=_("Warning at"),
+                            unit=_("l/s"),
+                            default_value=10.0,
+                            allow_int=True,
                         ),
                         Float(
                             title=_("Critical at"),

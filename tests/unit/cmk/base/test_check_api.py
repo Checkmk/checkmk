@@ -45,7 +45,11 @@ def test_boundaries(
             "disk",
             (4, 8),
             {"unit": "years", "infoname": "Disk Age"},
-            (1, "Disk Age: 6.00 years (warn/crit at 4.00 years/8.00 years)", [("disk", 6.0, 4, 8)]),
+            (
+                1,
+                "Disk Age: 6.00 years (warn/crit at 4.00 years/8.00 years)",
+                [("disk", 6.0, 4, 8)],
+            ),
         ),
         (
             5e-7,

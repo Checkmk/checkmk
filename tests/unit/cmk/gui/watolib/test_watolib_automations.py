@@ -12,7 +12,11 @@ import pytest
 
 from cmk.utils import version as cmk_version
 
-from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry, SerializedResult
+from cmk.automations.results import (
+    ABCAutomationResult,
+    ResultTypeRegistry,
+    SerializedResult,
+)
 
 from cmk.gui.http import request
 from cmk.gui.watolib import automations

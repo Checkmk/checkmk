@@ -8,7 +8,12 @@ from typing import Any
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -102,7 +107,10 @@ def test_discover_volume_capacity(
                 Metric("fs_size", 107374182400.0, boundaries=(0.0, None)),
                 Result(state=State.OK, notice="Physical capacity used - volume: 427 MiB"),
                 Metric("unique_size", 447850921.0),
-                Result(state=State.OK, notice="Physical capacity used - snapshots: 2.76 MiB"),
+                Result(
+                    state=State.OK,
+                    notice="Physical capacity used - snapshots: 2.76 MiB",
+                ),
                 Metric("snapshots_size", 2890766.0),
                 Result(state=State.OK, notice="Virtual capacity used - volume: 3.56 GiB"),
                 Metric("virtual_size", 3820131840.0),

@@ -22,7 +22,9 @@ from .schemata.api import convert_to_timestamp, parse_cpu_cores, parse_resource_
 from .transform_any import parse_match_labels
 
 
-def parse_metadata_no_namespace(metadata: client.V1ObjectMeta) -> api.MetaDataNoNamespace:
+def parse_metadata_no_namespace(
+    metadata: client.V1ObjectMeta,
+) -> api.MetaDataNoNamespace:
     return api.MetaDataNoNamespace.model_validate(metadata)
 
 
@@ -51,7 +53,9 @@ def container_resources(container: client.V1Container) -> api.ContainerResources
     )
 
 
-def containers_spec(containers: Sequence[client.V1Container]) -> Sequence[api.ContainerSpec]:
+def containers_spec(
+    containers: Sequence[client.V1Container],
+) -> Sequence[api.ContainerSpec]:
     return [
         api.ContainerSpec(
             name=container.name,
@@ -258,7 +262,9 @@ def parse_selector(selector: client.V1LabelSelector) -> api.Selector:
     )
 
 
-def parse_deployment_spec(deployment_spec: client.V1DeploymentSpec) -> api.DeploymentSpec:
+def parse_deployment_spec(
+    deployment_spec: client.V1DeploymentSpec,
+) -> api.DeploymentSpec:
     if deployment_spec.strategy.type == "Recreate":
         return api.DeploymentSpec(
             min_ready_seconds=deployment_spec.min_ready_seconds or 0,

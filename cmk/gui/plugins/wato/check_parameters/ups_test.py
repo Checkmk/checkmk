@@ -15,7 +15,7 @@ from cmk.gui.valuespec import Age, Dictionary, Migrate
 
 
 def _migrate(
-    params: tuple[int, int] | dict[str, tuple[int, int] | None]
+    params: tuple[int, int] | dict[str, tuple[int, int] | None],
 ) -> dict[str, tuple[int, int] | None]:
     if isinstance(params, dict):
         return params

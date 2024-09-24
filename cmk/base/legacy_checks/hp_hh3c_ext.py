@@ -18,7 +18,15 @@ from cmk.agent_based.v2 import any_of, OIDCached, OIDEnd, SNMPTree, startswith
 def parse_hp_hh3c_ext(string_table):
     entity_info = dict(string_table[1])
     parsed = {}
-    for index, admin_state, oper_state, cpu, mem_usage, temperature, mem_size in string_table[0]:
+    for (
+        index,
+        admin_state,
+        oper_state,
+        cpu,
+        mem_usage,
+        temperature,
+        mem_size,
+    ) in string_table[0]:
         name = entity_info.get(index, (None, None))
 
         # mem_size measured in 'bytes' (hh3cEntityExtMemSize)

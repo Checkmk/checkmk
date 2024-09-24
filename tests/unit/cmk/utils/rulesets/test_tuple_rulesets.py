@@ -36,12 +36,18 @@ def ts(monkeypatch):
     ts = Scenario(site_id="site1")
     ts.add_host(
         HostName("host1"),
-        tags={TagGroupID("agent"): TagID("no-agent"), TagGroupID("criticality"): TagID("test")},
+        tags={
+            TagGroupID("agent"): TagID("no-agent"),
+            TagGroupID("criticality"): TagID("test"),
+        },
     )
     ts.add_host(HostName("host2"), tags={TagGroupID("agent"): TagID("no-agent")})
     ts.add_host(
         HostName("host3"),
-        tags={TagGroupID("agent"): TagID("no-agent"), TagGroupID("site"): TagID("site2")},
+        tags={
+            TagGroupID("agent"): TagID("no-agent"),
+            TagGroupID("site"): TagID("site2"),
+        },
     )
     ts.apply(monkeypatch)
     return ts
@@ -70,26 +76,43 @@ def test_service_extra_conf(ts: Scenario) -> None:
             "value": "5",
         },
         {
-            "condition": {"host_tags": {TagGroupID("tag3"): TagID("tag3")}, "host_name": ["host1"]},
+            "condition": {
+                "host_tags": {TagGroupID("tag3"): TagID("tag3")},
+                "host_name": ["host1"],
+            },
             "id": "06",
             "options": {},
             "value": "6",
         },
-        {"condition": {"host_name": ["host1"]}, "options": {}, "id": "07", "value": "7"},
         {
-            "condition": {"service_description": [{"$regex": "service1$"}], "host_name": ["host1"]},
+            "condition": {"host_name": ["host1"]},
+            "options": {},
+            "id": "07",
+            "value": "7",
+        },
+        {
+            "condition": {
+                "service_description": [{"$regex": "service1$"}],
+                "host_name": ["host1"],
+            },
             "id": "08",
             "options": {},
             "value": "8",
         },
         {
-            "condition": {"service_description": [{"$regex": "ser$"}], "host_name": ["host1"]},
+            "condition": {
+                "service_description": [{"$regex": "ser$"}],
+                "host_name": ["host1"],
+            },
             "id": "09",
             "options": {},
             "value": "9",
         },
         {
-            "condition": {"service_description": [{"$regex": "^serv$"}], "host_name": ["host1"]},
+            "condition": {
+                "service_description": [{"$regex": "^serv$"}],
+                "host_name": ["host1"],
+            },
             "id": "10",
             "options": {},
             "value": "10",
@@ -100,7 +123,12 @@ def test_service_extra_conf(ts: Scenario) -> None:
             "options": {},
             "value": "11",
         },
-        {"condition": {"host_name": {"$nor": ["host2"]}}, "id": "12", "options": {}, "value": "12"},
+        {
+            "condition": {"host_name": {"$nor": ["host2"]}},
+            "id": "12",
+            "options": {},
+            "value": "12",
+        },
     ]
 
     matcher = ts.config_cache.ruleset_matcher
@@ -164,12 +192,20 @@ HOST_RULESET: Final[Sequence[RuleSpec[Mapping[str, bool]]]] = [
         "value": {"5": True},
     },
     {
-        "condition": {"host_tags": {TagGroupID("tag3"): TagID("tag3")}, "host_name": ["host1"]},
+        "condition": {
+            "host_tags": {TagGroupID("tag3"): TagID("tag3")},
+            "host_name": ["host1"],
+        },
         "id": "06",
         "options": {},
         "value": {"6": True},
     },
-    {"condition": {"host_name": ["host1"]}, "id": "07", "options": {}, "value": {"7": True}},
+    {
+        "condition": {"host_name": ["host1"]},
+        "id": "07",
+        "options": {},
+        "value": {"7": True},
+    },
     {
         "condition": {"host_name": [{"$regex": "host"}]},
         "id": "08",
@@ -390,19 +426,23 @@ def test_get_service_bool_value(
 def test_all_matching_hosts(ts: Scenario) -> None:
     ruleset_matcher = ts.config_cache.ruleset_matcher
     assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
-        {"host_tags": {TagGroupID("agent"): TagID("no-agent")}}, with_foreign_hosts=False
+        {"host_tags": {TagGroupID("agent"): TagID("no-agent")}},
+        with_foreign_hosts=False,
     ) == {"host1", "host2"}
 
     assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
-        {"host_tags": {TagGroupID("criticality"): TagID("test")}}, with_foreign_hosts=False
+        {"host_tags": {TagGroupID("criticality"): TagID("test")}},
+        with_foreign_hosts=False,
     ) == {"host1"}
 
     assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
-        {"host_tags": {TagGroupID("criticality"): {"$ne": TagID("test")}}}, with_foreign_hosts=False
+        {"host_tags": {TagGroupID("criticality"): {"$ne": TagID("test")}}},
+        with_foreign_hosts=False,
     ) == {"host2"}
 
     assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
-        {"host_tags": {TagGroupID("criticality"): {"$ne": TagID("test")}}}, with_foreign_hosts=True
+        {"host_tags": {TagGroupID("criticality"): {"$ne": TagID("test")}}},
+        with_foreign_hosts=True,
     ) == {"host2", "host3"}
 
     assert (
@@ -430,23 +470,35 @@ def test_all_matching_hosts(ts: Scenario) -> None:
     )
 
     assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
-        {"host_tags": {TagGroupID("agent"): TagID("no-agent")}, "host_name": [{"$regex": "h"}]},
+        {
+            "host_tags": {TagGroupID("agent"): TagID("no-agent")},
+            "host_name": [{"$regex": "h"}],
+        },
         with_foreign_hosts=False,
     ) == {"host1", "host2"}
 
     assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
-        {"host_tags": {TagGroupID("agent"): TagID("no-agent")}, "host_name": [{"$regex": ".*2"}]},
+        {
+            "host_tags": {TagGroupID("agent"): TagID("no-agent")},
+            "host_name": [{"$regex": ".*2"}],
+        },
         with_foreign_hosts=False,
     ) == {"host2"}
 
     assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
-        {"host_tags": {TagGroupID("agent"): TagID("no-agent")}, "host_name": [{"$regex": ".*2$"}]},
+        {
+            "host_tags": {TagGroupID("agent"): TagID("no-agent")},
+            "host_name": [{"$regex": ".*2$"}],
+        },
         with_foreign_hosts=False,
     ) == {"host2"}
 
     assert (
         ruleset_matcher.ruleset_optimizer._all_matching_hosts(
-            {"host_tags": {TagGroupID("agent"): TagID("no-agent")}, "host_name": [{"$regex": "2"}]},
+            {
+                "host_tags": {TagGroupID("agent"): TagID("no-agent")},
+                "host_name": [{"$regex": "2"}],
+            },
             with_foreign_hosts=False,
         )
         == set()
@@ -476,13 +528,23 @@ def test_in_extraconf_hostlist() -> None:
 
 def test_get_rule_options_regular_rule() -> None:
     options = {"description": 'Put all hosts into the contact group "all"'}
-    entry: tuple[str, list[str], list[str], dict] = ("all", [], tuple_rulesets.ALL_HOSTS, options)
+    entry: tuple[str, list[str], list[str], dict] = (
+        "all",
+        [],
+        tuple_rulesets.ALL_HOSTS,
+        options,
+    )
     assert tuple_rulesets.get_rule_options(entry) == (entry[:-1], options)
 
 
 def test_get_rule_options_empty_options() -> None:
     options: dict = {}
-    entry: tuple[str, list[str], list[str], dict] = ("all", [], tuple_rulesets.ALL_HOSTS, options)
+    entry: tuple[str, list[str], list[str], dict] = (
+        "all",
+        [],
+        tuple_rulesets.ALL_HOSTS,
+        options,
+    )
     assert tuple_rulesets.get_rule_options(entry) == (entry[:-1], options)
 
 

@@ -566,7 +566,11 @@ class LogwatchIcon(Icon):
         ]:
             return None
 
-        sitename, hostname, item = row["site"], row["host_name"], row["service_description"][4:]
+        sitename, hostname, item = (
+            row["site"],
+            row["host_name"],
+            row["service_description"][4:],
+        )
         url = makeuri_contextless(
             request,
             [("site", sitename), ("host", hostname), ("file", item)],
@@ -689,7 +693,11 @@ class DowntimesIcon(Icon):
             title = _("Currently in downtime")
             title += detail_txt(row[what + "_downtimes_with_extra_info"])
 
-            return icon, title, url_to_visual(row, VisualLinkSpec("views", "downtimes_of_" + what))
+            return (
+                icon,
+                title,
+                url_to_visual(row, VisualLinkSpec("views", "downtimes_of_" + what)),
+            )
 
         if what == "service" and row["host_scheduled_downtime_depth"] > 0:
             title = _("The host is currently in downtime")

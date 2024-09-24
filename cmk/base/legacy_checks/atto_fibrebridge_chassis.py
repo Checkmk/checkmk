@@ -49,7 +49,9 @@ def inventory_atto_fibrebridge_chassis_temp(parsed):
 
 def check_atto_fibrebridge_chassis_temp(item, params, parsed):
     return check_temperature(
-        params=params, unique_name="atto_fibrebridge_chassis_temp", **parsed["temperature"]
+        params=params,
+        unique_name="atto_fibrebridge_chassis_temp",
+        **parsed["temperature"],
     )
 
 

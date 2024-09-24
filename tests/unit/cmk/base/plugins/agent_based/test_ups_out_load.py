@@ -7,7 +7,12 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -39,14 +44,20 @@ def test_ups_out_load_discovery(info: list[StringTable], expected_result: Discov
             "1",
             {"levels": (85, 90)},
             [[["1", "2", "1"]]],
-            [Result(state=State.OK, summary="load: 2.00%"), Metric("out_load", 2, levels=(85, 90))],
+            [
+                Result(state=State.OK, summary="load: 2.00%"),
+                Metric("out_load", 2, levels=(85, 90)),
+            ],
         ),
         (
             "1",
             {"levels": (85, 90)},
             [[["1", "89", "1"]]],
             [
-                Result(state=State.WARN, summary="load: 89.00% (warn/crit at 85.00%/90.00%)"),
+                Result(
+                    state=State.WARN,
+                    summary="load: 89.00% (warn/crit at 85.00%/90.00%)",
+                ),
                 Metric("out_load", 89, levels=(85, 90)),
             ],
         ),
@@ -55,7 +66,10 @@ def test_ups_out_load_discovery(info: list[StringTable], expected_result: Discov
             {"levels": (85, 90)},
             [[["1", "99", "1"]]],
             [
-                Result(state=State.CRIT, summary="load: 99.00% (warn/crit at 85.00%/90.00%)"),
+                Result(
+                    state=State.CRIT,
+                    summary="load: 99.00% (warn/crit at 85.00%/90.00%)",
+                ),
                 Metric("out_load", 99, levels=(85, 90)),
             ],
         ),
@@ -77,7 +91,10 @@ def test_ups_out_load_discovery(info: list[StringTable], expected_result: Discov
     ],
 )
 def test_ups_out_load_check(
-    item: str, params: Mapping[str, object], info: list[StringTable], expected_result: CheckResult
+    item: str,
+    params: Mapping[str, object],
+    info: list[StringTable],
+    expected_result: CheckResult,
 ) -> None:
     section = parse_ups_load(info)
     result = check_ups_out_load(item, params, section)

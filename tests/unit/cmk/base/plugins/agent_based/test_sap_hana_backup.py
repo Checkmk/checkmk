@@ -100,7 +100,9 @@ def test_check_sap_hana_backup_OK() -> None:
 
     assert yielded_results[2:] == [
         Result(
-            state=State.OK, summary="Age: 22 hours 0 minutes", details="Age: 22 hours 0 minutes"
+            state=State.OK,
+            summary="Age: 22 hours 0 minutes",
+            details="Age: 22 hours 0 minutes",
         ),
         Metric("backup_age", 79200.0, levels=(86400.0, 172800.0)),
         Result(state=State.OK, summary="Message: <ok>"),

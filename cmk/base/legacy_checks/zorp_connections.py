@@ -9,7 +9,6 @@ This check displays individual connections returned by
 It sums up all connections and checks against configurable maximum values.
 """
 
-
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 

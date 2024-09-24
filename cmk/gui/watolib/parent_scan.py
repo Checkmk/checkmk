@@ -16,7 +16,11 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.automations.results import Gateway, GatewayResult
 
 import cmk.gui.watolib.bakery as bakery
-from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
+from cmk.gui.background_job import (
+    BackgroundJob,
+    BackgroundProcessInterface,
+    InitialStatusArgs,
+)
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -155,7 +159,10 @@ class ParentScanBackgroundJob(BackgroundJob):
         ).results
 
     def _process_parent_scan_results(
-        self, task: ParentScanTask, settings: ParentScanSettings, results: Sequence[GatewayResult]
+        self,
+        task: ParentScanTask,
+        settings: ParentScanSettings,
+        results: Sequence[GatewayResult],
     ) -> None:
         for result in results:
             if result.state in ["direct", "root", "gateway"]:

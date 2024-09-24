@@ -179,7 +179,9 @@ def _send_query_request_get(
 def node_exporter_getter(
     config: PrometheusSessionConfig, logger: logging.Logger, promql_expression: str
 ) -> list[node_exporter.PromQLMetric]:
-    _query, result = next(send_requests(config=config, queries=[promql_expression], logger=logger))  # type: ignore[list-item] # NodeExporter passes queries as str
+    _query, result = next(
+        send_requests(config=config, queries=[promql_expression], logger=logger)  # type: ignore[list-item] # NodeExporter passes queries as str
+    )
     if isinstance(result, ResponseSuccess) and isinstance(result.data, Vector):
         return [
             {"value": sample.value[1], "labels": sample.metric} for sample in result.data.result

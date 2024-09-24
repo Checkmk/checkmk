@@ -8,7 +8,12 @@ from collections import OrderedDict
 import pytest
 
 from cmk.base.plugins.agent_based import esx_vsphere_counters
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 
 from cmk.plugins.lib import interfaces
 
@@ -17,8 +22,18 @@ def test_parse_esx_vsphere_counters() -> None:
     assert esx_vsphere_counters.parse_esx_vsphere_counters(
         [
             ["disk.numberReadAveraged", "naa.5000cca05688e814", "0#0", "number"],
-            ["disk.numberReadAveraged", "naa.60002ac0000000000000000e0000586d", "0#0", "number"],
-            ["disk.write", "naa.6000eb39f31c58130000000000000015", "0#0", "kiloBytesPerSecond"],
+            [
+                "disk.numberReadAveraged",
+                "naa.60002ac0000000000000000e0000586d",
+                "0#0",
+                "number",
+            ],
+            [
+                "disk.write",
+                "naa.6000eb39f31c58130000000000000015",
+                "0#0",
+                "kiloBytesPerSecond",
+            ],
             ["net.bytesRx", "vmnic0", "1#1", "kiloBytesPerSecond"],
             ["net.droppedRx", "vmnic1", "0#0", "number"],
             ["net.errorsRx", "", "0#0", "number"],
@@ -29,12 +44,42 @@ def test_parse_esx_vsphere_counters() -> None:
             ["net.received", "vmnic5", "63#46", "kiloBytesPerSecond"],
             ["net.transmitted", "vmnic3", "0#0", "kiloBytesPerSecond"],
             ["sys.resourceMemConsumed", "host/user", "83527720#83529784", "kiloBytes"],
-            ["sys.resourceMemConsumed", "host/vim/vmvisor", "291820#291832", "kiloBytes"],
-            ["sys.resourceMemConsumed", "host/vim/vmvisor/init", "1568#1568", "kiloBytes"],
-            ["sys.resourceMemConsumed", "host/vim/vmvisor/ntpd", "1572#1572", "kiloBytes"],
-            ["sys.resourceMemConsumed", "host/vim/vmvisor/vmkdevmgr", "5304#5304", "kiloBytes"],
-            ["sys.resourceMemConsumed", "host/vim/vmvisor/vmsupport", "0#0", "kiloBytes"],
-            ["sys.resourceMemConsumed", "host/vim/vmvisor/vvold", "9192#9192", "kiloBytes"],
+            [
+                "sys.resourceMemConsumed",
+                "host/vim/vmvisor",
+                "291820#291832",
+                "kiloBytes",
+            ],
+            [
+                "sys.resourceMemConsumed",
+                "host/vim/vmvisor/init",
+                "1568#1568",
+                "kiloBytes",
+            ],
+            [
+                "sys.resourceMemConsumed",
+                "host/vim/vmvisor/ntpd",
+                "1572#1572",
+                "kiloBytes",
+            ],
+            [
+                "sys.resourceMemConsumed",
+                "host/vim/vmvisor/vmkdevmgr",
+                "5304#5304",
+                "kiloBytes",
+            ],
+            [
+                "sys.resourceMemConsumed",
+                "host/vim/vmvisor/vmsupport",
+                "0#0",
+                "kiloBytes",
+            ],
+            [
+                "sys.resourceMemConsumed",
+                "host/vim/vmvisor/vvold",
+                "9192#9192",
+                "kiloBytes",
+            ],
             ["net.macaddress", "vmnic4", "64:51:06:f0:c5:d0", "mac"],
         ]
     ) == {
@@ -47,7 +92,10 @@ def test_parse_esx_vsphere_counters() -> None:
         },
         "net.bytesRx": {"vmnic0": [(["1", "1"], "kiloBytesPerSecond")]},
         "net.droppedRx": {"vmnic1": [(["0", "0"], "number")]},
-        "net.errorsRx": {"": [(["0", "0"], "number")], "vmnic2": [(["0", "0"], "number")]},
+        "net.errorsRx": {
+            "": [(["0", "0"], "number")],
+            "vmnic2": [(["0", "0"], "number")],
+        },
         "net.errorsTx": {"": [(["0", "0"], "number")]},
         "net.macaddress": {"vmnic4": [(["64:51:06:f0:c5:d0"], "mac")]},
         "net.packetsTx": {"": [(["3162", "3488"], "number")]},

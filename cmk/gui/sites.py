@@ -30,7 +30,13 @@ from cmk.utils.licensing.registry import get_license_state
 from cmk.utils.paths import livestatus_unix_socket
 from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
-from cmk.utils.version import __version__, Edition, edition, Version, VersionsIncompatible
+from cmk.utils.version import (
+    __version__,
+    Edition,
+    edition,
+    Version,
+    VersionsIncompatible,
+)
 
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
@@ -128,14 +134,15 @@ def all_groups(what: str) -> list[tuple[str, str]]:
     groups = cast(list[tuple[str, str]], live().query(query))
     # The dict() removes duplicate group names. Aliases don't need be deduplicated.
     return sorted(
-        [(name, alias or name) for name, alias in dict(groups).items()], key=lambda e: e[1].lower()
+        [(name, alias or name) for name, alias in dict(groups).items()],
+        key=lambda e: e[1].lower(),
     )
 
 
 # TODO: this too does not really belong here...
 def get_alias_of_host(site_id: SiteId | None, host_name: str) -> SiteId:
-    query = (
-        "GET hosts\n" "Cache: reload\n" "Columns: alias\n" "Filter: name = %s" % lqencode(host_name)
+    query = "GET hosts\n" "Cache: reload\n" "Columns: alias\n" "Filter: name = %s" % lqencode(
+        host_name
     )
 
     with only_sites(site_id):
@@ -237,7 +244,9 @@ def _get_distributed_monitoring_compatibility(
     )
 
 
-def _get_distributed_monitoring_connection_from_site_id(site_id: str) -> ConnectedSite | None:
+def _get_distributed_monitoring_connection_from_site_id(
+    site_id: str,
+) -> ConnectedSite | None:
     for connected_site in g.live.connections:
         if connected_site.id == site_id:
             return connected_site
@@ -321,7 +330,11 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
         central_license_state = get_license_state()
 
         compatibility = _get_distributed_monitoring_compatibility(
-            site_id, central_version, central_edition, central_license_state, remote_edition
+            site_id,
+            central_version,
+            central_edition,
+            central_license_state,
+            remote_edition,
         )
 
         if not isinstance(compatibility, LicensingCompatible):
@@ -387,7 +400,10 @@ def _site_config_for_livestatus(site_id: SiteId, site_spec: SiteConfiguration) -
         assert site_spec["proxy"] is not None
         copied_site["cache"] = site_spec["proxy"].get("cache", True)
     else:
-        if isinstance(site_spec["socket"], tuple) and site_spec["socket"][0] in ["tcp", "tcp6"]:
+        if isinstance(site_spec["socket"], tuple) and site_spec["socket"][0] in [
+            "tcp",
+            "tcp6",
+        ]:
             copied_site["tls"] = cast(NetworkSocketDetails, site_spec["socket"][1])["tls"]
     copied_site["socket"] = encode_socket_for_livestatus(site_id, site_spec)
 
@@ -443,10 +459,21 @@ _STATUS_NAMES = {
 }
 
 
-def site_state_titles() -> dict[
-    Literal["online", "disabled", "down", "unreach", "dead", "waiting", "missing", "unknown"],
-    str,
-]:
+def site_state_titles() -> (
+    dict[
+        Literal[
+            "online",
+            "disabled",
+            "down",
+            "unreach",
+            "dead",
+            "waiting",
+            "missing",
+            "unknown",
+        ],
+        str,
+    ]
+):
     return {
         "online": _("This site is online."),
         "disabled": _("The connection to this site has been disabled."),
@@ -583,7 +610,9 @@ def _map_site_state(state: str) -> str:
     return "error"
 
 
-def filter_available_site_choices(choices: list[tuple[SiteId, str]]) -> list[tuple[SiteId, str]]:
+def filter_available_site_choices(
+    choices: list[tuple[SiteId, str]],
+) -> list[tuple[SiteId, str]]:
     # Only add enabled sites to choices
     all_site_states = states()
     sites_enabled = []

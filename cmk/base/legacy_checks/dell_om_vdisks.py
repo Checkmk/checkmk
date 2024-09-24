@@ -5,7 +5,10 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.dell_om import parse_omreport, status_translate_omreport
+from cmk.base.check_legacy_includes.dell_om import (
+    parse_omreport,
+    status_translate_omreport,
+)
 from cmk.base.config import check_info
 
 # sample agent output:

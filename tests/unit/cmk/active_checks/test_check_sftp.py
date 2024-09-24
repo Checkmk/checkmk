@@ -141,7 +141,9 @@ def test_parse_arguments(params: list[str], expected_args: Args) -> None:
     ],
 )
 def test_put_options(
-    mock_omd_root: None, arguments: str, expected_options: None | CheckSftp.TransferOptions
+    mock_omd_root: None,
+    arguments: str,
+    expected_options: None | CheckSftp.TransferOptions,
 ) -> None:
     """Check that testing file upload options work, given the put-local/put-remote arguments"""
     check = CheckSftp(MockSSHClient(), parse_arguments(arguments.split()))
@@ -191,7 +193,9 @@ def test_put_options(
     ],
 )
 def test_get_options(
-    mock_omd_root: None, arguments: str, expected_options: None | CheckSftp.TransferOptions
+    mock_omd_root: None,
+    arguments: str,
+    expected_options: None | CheckSftp.TransferOptions,
 ) -> None:
     """Check that testing file download options work, given the get-local/get-remote arguments"""
     check = CheckSftp(MockSSHClient(), parse_arguments(arguments.split()))

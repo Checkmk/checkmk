@@ -572,7 +572,8 @@ rulespec_registry.register(
 
 def _parameter_valuespec_aws_s3_http_erros():
     return Dictionary(
-        title=_("Upper levels for HTTP errors"), elements=_vs_elements_http_errors(["4xx", "5xx"])
+        title=_("Upper levels for HTTP errors"),
+        elements=_vs_elements_http_errors(["4xx", "5xx"]),
     )
 
 
@@ -656,16 +657,25 @@ def _vs_limits_vcpu_families():
 def _parameter_valuespec_aws_ec2_limits() -> Dictionary:
     return Dictionary(
         elements=[
-            ("vpc_elastic_ip_addresses", vs_aws_limits(_("VPC Elastic IP addresses"), 5)),
+            (
+                "vpc_elastic_ip_addresses",
+                vs_aws_limits(_("VPC Elastic IP addresses"), 5),
+            ),
             ("elastic_ip_addresses", vs_aws_limits(_("Elastic IP addresses"), 5)),
-            ("vpc_sec_group_rules", vs_aws_limits(_("Rules of VPC security group"), 120)),
+            (
+                "vpc_sec_group_rules",
+                vs_aws_limits(_("Rules of VPC security group"), 120),
+            ),
             ("vpc_sec_groups", vs_aws_limits(_("VPC security groups"), 2500)),
             (
                 "if_vpc_sec_group",
                 vs_aws_limits(_("VPC security groups of elastic network interface"), 5),
             ),
             ("spot_inst_requests", vs_aws_limits(_("Spot Instance Requests"), 20)),
-            ("active_spot_fleet_requests", vs_aws_limits(_("Active Spot Fleet Requests"), 1000)),
+            (
+                "active_spot_fleet_requests",
+                vs_aws_limits(_("Active Spot Fleet Requests"), 1000),
+            ),
             (
                 "spot_fleet_total_target_capacity",
                 vs_aws_limits(_("Spot Fleet Requests Total Target Capacity"), 5000),
@@ -941,7 +951,10 @@ def _parameter_valuespec_aws_elb_limits() -> Dictionary:
     return Dictionary(
         elements=[
             ("load_balancers", vs_aws_limits(_("Load balancers"), 20)),
-            ("load_balancer_listeners", vs_aws_limits(_("Listeners per load balancer"), 100)),
+            (
+                "load_balancer_listeners",
+                vs_aws_limits(_("Listeners per load balancer"), 100),
+            ),
             (
                 "load_balancer_registered_instances",
                 vs_aws_limits(_("Registered instances per load balancer"), 1000),
@@ -975,7 +988,10 @@ rulespec_registry.register(
 def _parameter_valuespec_aws_elbv2_limits() -> Dictionary:
     return Dictionary(
         elements=[
-            ("application_load_balancers", vs_aws_limits(_("Application Load balancers"), 20)),
+            (
+                "application_load_balancers",
+                vs_aws_limits(_("Application Load balancers"), 20),
+            ),
             (
                 "application_load_balancer_rules",
                 vs_aws_limits(_("Application Load Balancer Rules"), 100),
@@ -1001,7 +1017,10 @@ def _parameter_valuespec_aws_elbv2_limits() -> Dictionary:
                 "network_load_balancer_target_groups",
                 vs_aws_limits(_("Network Load Balancer Target Groups"), 3000),
             ),
-            ("load_balancer_target_groups", vs_aws_limits(_("Load balancers target groups"), 3000)),
+            (
+                "load_balancer_target_groups",
+                vs_aws_limits(_("Load balancers target groups"), 3000),
+            ),
         ]
     )
 
@@ -1120,11 +1139,16 @@ rulespec_registry.register(
 def _parameter_valuespec_aws_ebs_limits() -> Dictionary:
     return Dictionary(
         elements=[
-            ("block_store_snapshots", vs_aws_limits(_("Total Block store snapshots"), 100000)),
+            (
+                "block_store_snapshots",
+                vs_aws_limits(_("Total Block store snapshots"), 100000),
+            ),
             (
                 "block_store_space_standard",
                 vs_aws_limits(
-                    _("Total Magnetic volumes space"), 300 * 1024**4, vs_limit_cls=Filesize
+                    _("Total Magnetic volumes space"),
+                    300 * 1024**4,
+                    vs_limit_cls=Filesize,
                 ),
             ),
             (
@@ -1138,7 +1162,8 @@ def _parameter_valuespec_aws_ebs_limits() -> Dictionary:
             (
                 "block_store_iops_io1",
                 vs_aws_limits(
-                    _("Total Provisioned IOPS SSD (io1) IO operations per seconds"), 300000
+                    _("Total Provisioned IOPS SSD (io1) IO operations per seconds"),
+                    300000,
                 ),
             ),
             (
@@ -1152,7 +1177,8 @@ def _parameter_valuespec_aws_ebs_limits() -> Dictionary:
             (
                 "block_store_iops_io2",
                 vs_aws_limits(
-                    _("Total Provisioned IOPS SSD (io2) IO operations per seconds"), 100000
+                    _("Total Provisioned IOPS SSD (io2) IO operations per seconds"),
+                    100000,
                 ),
             ),
             (
@@ -1371,10 +1397,16 @@ def _parameter_valuespec_aws_rds_limits() -> Dictionary:
             ("event_subscriptions", vs_aws_limits(_("Event subscriptions"), 20)),
             ("db_subnet_groups", vs_aws_limits(_("DB subnet groups"), 50)),
             ("option_groups", vs_aws_limits(_("Option groups"), 20)),
-            ("subnet_per_db_subnet_groups", vs_aws_limits(_("Subnet per DB subnet groups"), 20)),
+            (
+                "subnet_per_db_subnet_groups",
+                vs_aws_limits(_("Subnet per DB subnet groups"), 20),
+            ),
             ("read_replica_per_master", vs_aws_limits(_("Read replica per master"), 5)),
             ("db_clusters", vs_aws_limits(_("DB clusters"), 40)),
-            ("db_cluster_parameter_groups", vs_aws_limits(_("DB cluster parameter groups"), 50)),
+            (
+                "db_cluster_parameter_groups",
+                vs_aws_limits(_("DB cluster parameter groups"), 50),
+            ),
             ("db_cluster_roles", vs_aws_limits(_("DB cluster roles"), 5)),
         ]
     )
@@ -1528,8 +1560,14 @@ def _vs_aws_dynamodb_capacity(title: str, unit: str) -> Dictionary:
             Dictionary(
                 title=_("Levels on %s single-request consumption") % extr,
                 elements=[
-                    ("levels_upper", Tuple(title=_("Upper levels"), elements=elements_extr)),
-                    ("levels_lower", Tuple(title=_("Lower levels"), elements=elements_extr)),
+                    (
+                        "levels_upper",
+                        Tuple(title=_("Upper levels"), elements=elements_extr),
+                    ),
+                    (
+                        "levels_lower",
+                        Tuple(title=_("Lower levels"), elements=elements_extr),
+                    ),
                 ],
             ),
         )

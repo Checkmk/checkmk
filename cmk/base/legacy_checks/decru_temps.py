@@ -4,7 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.temperature import check_temperature, fahrenheit_to_celsius
+from cmk.base.check_legacy_includes.temperature import (
+    check_temperature,
+    fahrenheit_to_celsius,
+)
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import SNMPTree, StringTable

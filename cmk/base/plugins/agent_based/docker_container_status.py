@@ -11,7 +11,14 @@ from dateutil import parser as date_parser
 
 from cmk.plugins.lib import docker, uptime
 
-from .agent_based_api.v1 import HostLabel, IgnoreResults, register, Result, Service, State
+from .agent_based_api.v1 import (
+    HostLabel,
+    IgnoreResults,
+    register,
+    Result,
+    Service,
+    State,
+)
 from .agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,

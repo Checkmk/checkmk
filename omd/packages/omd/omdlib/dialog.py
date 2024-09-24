@@ -69,7 +69,12 @@ def dialog_regex(
 
 
 def dialog_config_choice_has_error(
-    title: str, text: str, pattern: ConfigChoiceHasError, value: str, oktext: str, canceltext: str
+    title: str,
+    text: str,
+    pattern: ConfigChoiceHasError,
+    value: str,
+    oktext: str,
+    canceltext: str,
 ) -> DialogResult:
     while True:
         args = [

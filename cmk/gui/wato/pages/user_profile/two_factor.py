@@ -44,7 +44,12 @@ from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
-from cmk.gui.log import AuthenticationFailureEvent, logger, TwoFactorEvent, TwoFactorEventType
+from cmk.gui.log import (
+    AuthenticationFailureEvent,
+    logger,
+    TwoFactorEvent,
+    TwoFactorEventType,
+)
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
@@ -443,7 +448,9 @@ class UserTwoFactorOverview(ABCUserProfilePage):
             )
             delete_url = make_confirm_delete_link(
                 url=makeactionuri(
-                    request, transactions, [("_delete_credential", credential["credential_id"])]
+                    request,
+                    transactions,
+                    [("_delete_credential", credential["credential_id"])],
                 ),
                 title=delete_title,
                 message=_("Registered at ")
@@ -546,7 +553,10 @@ class RegisterTotpSecret(ABCUserProfilePage):
                 html.render_span(base32_secret) + html.render_icon("insert"),
                 href="javascript:void(0)",
                 onclick="cmk.utils.copy_to_clipboard(%s, %s);"
-                % (json.dumps(base32_secret), json.dumps(_("Successfully copied to clipboard"))),
+                % (
+                    json.dumps(base32_secret),
+                    json.dumps(_("Successfully copied to clipboard")),
+                ),
                 title=_("Copy secret to clipboard"),
                 class_="copy_to_clipboard",
             )
@@ -596,7 +606,11 @@ class EditCredentialAlias(ABCUserProfilePage):
 
     def _page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
-            _("Profile"), breadcrumb, form_name="profile", button_name="_save", add_cancel_link=True
+            _("Profile"),
+            breadcrumb,
+            form_name="profile",
+            button_name="_save",
+            add_cancel_link=True,
         )
         return menu
 
@@ -631,7 +645,9 @@ class EditCredentialAlias(ABCUserProfilePage):
         if user.authorized_login_sites():
             raise redirect(
                 makeuri_contextless(
-                    request, [("back", origtarget)], filename="user_profile_replicate.py"
+                    request,
+                    [("back", origtarget)],
+                    filename="user_profile_replicate.py",
                 )
             )
         raise redirect(origtarget)
@@ -824,11 +840,15 @@ class UserLoginTwoFactor(Page):
     def _render_totp(cls, available_methods: set[str]) -> None:
         html.p(_("Enter the six-digit code from your authenticator app to log in."))
         with html.form_context(
-            "totp_login", method="POST", add_transid=False, action="user_login_two_factor.py"
+            "totp_login",
+            method="POST",
+            add_transid=False,
+            action="user_login_two_factor.py",
         ):
             html.prevent_password_auto_completion()
             html.hidden_field(
-                "_origtarget", origtarget := request.get_url_input("_origtarget", "index.py")
+                "_origtarget",
+                origtarget := request.get_url_input("_origtarget", "index.py"),
             )
 
             html.open_div(id_="code_input")
@@ -856,7 +876,8 @@ class UserLoginTwoFactor(Page):
         ):
             html.prevent_password_auto_completion()
             html.hidden_field(
-                "_origtarget", origtarget := request.get_url_input("_origtarget", "index.py")
+                "_origtarget",
+                origtarget := request.get_url_input("_origtarget", "index.py"),
             )
 
             html.open_div(id_="code_input")
@@ -878,7 +899,8 @@ class UserLoginTwoFactor(Page):
         html.p(_("Please follow your browser's instructions for authentication."))
         html.prevent_password_auto_completion()
         html.hidden_field(
-            "_origtarget", origtarget := request.get_url_input("_origtarget", "index.py")
+            "_origtarget",
+            origtarget := request.get_url_input("_origtarget", "index.py"),
         )
         html.div("", id_="webauthn_message")
         html.javascript("cmk.webauthn.login()")
@@ -905,7 +927,8 @@ class UserLoginTwoFactor(Page):
             )
         )
         html.hidden_field(
-            "_origtarget", origtarget := request.get_url_input("_origtarget", "index.py")
+            "_origtarget",
+            origtarget := request.get_url_input("_origtarget", "index.py"),
         )
         if "totp_credentials" in available_methods:
             html.open_div(class_="button_text")

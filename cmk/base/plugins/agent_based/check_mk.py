@@ -7,7 +7,11 @@
 from cmk.plugins.lib.checkmk import CheckmkSection
 
 from .agent_based_api.v1 import Attributes, HostLabel, register
-from .agent_based_api.v1.type_defs import HostLabelGenerator, InventoryResult, StringTable
+from .agent_based_api.v1.type_defs import (
+    HostLabelGenerator,
+    InventoryResult,
+    StringTable,
+)
 
 
 def parse_checkmk_labels(string_table: StringTable) -> CheckmkSection:

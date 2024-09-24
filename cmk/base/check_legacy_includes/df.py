@@ -7,7 +7,9 @@
 
 from cmk.agent_based.v2 import Metric, render, Result, State
 from cmk.plugins.lib.df import check_filesystem_levels, check_inodes
-from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_LEVELS as FILESYSTEM_DEFAULT_LEVELS  # noqa: F401
+from cmk.plugins.lib.df import (
+    FILESYSTEM_DEFAULT_LEVELS as FILESYSTEM_DEFAULT_LEVELS,  # noqa: F401
+)
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS as FILESYSTEM_DEFAULT_PARAMS
 from cmk.plugins.lib.df import INODES_DEFAULT_PARAMS as INODES_DEFAULT_PARAMS
 from cmk.plugins.lib.df import mountpoints_in_group as mountpoints_in_group
@@ -199,9 +201,11 @@ def df_check_filesystem_single_coroutine(  # pylint: disable=too-many-branches
     metric, result = check_inodes(params, inodes_total, inodes_avail)
     assert isinstance(metric, Metric)
     assert isinstance(result, Result)
-    yield int(result.state), result.summary, [
-        (metric.name, metric.value) + metric.levels + metric.boundaries
-    ]
+    yield (
+        int(result.state),
+        result.summary,
+        [(metric.name, metric.value) + metric.levels + metric.boundaries],
+    )
 
 
 def _aggregate(generator):
@@ -213,7 +217,11 @@ def _aggregate(generator):
         except ValueError:
             # BasicResult needs None - defaulting to ((), (), ()) doesn't help
             return None
-        return max(state), ", ".join(elem.strip(" ,") for elem in text if elem), sum(perfdata, [])
+        return (
+            max(state),
+            ", ".join(elem.strip(" ,") for elem in text if elem),
+            sum(perfdata, []),
+        )
 
     return wrapped
 

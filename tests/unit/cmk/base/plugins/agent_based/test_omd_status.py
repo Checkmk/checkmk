@@ -8,7 +8,10 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.omd_status import (
     check_omd_status,
     cluster_check_omd_status,
@@ -32,8 +35,16 @@ from cmk.base.plugins.agent_based.omd_status import (
                 ["OVERALL", "0"],
             ],
             {
-                "heute": {"stopped": [], "existing": ["cmc", "apache"], "overall": "running"},
-                "stable": {"stopped": [], "existing": ["cmc", "apache"], "overall": "running"},
+                "heute": {
+                    "stopped": [],
+                    "existing": ["cmc", "apache"],
+                    "overall": "running",
+                },
+                "stable": {
+                    "stopped": [],
+                    "existing": ["cmc", "apache"],
+                    "overall": "running",
+                },
             },
         ),
         ([], {}),
@@ -51,12 +62,26 @@ def test_parse_omd_status(string_table: StringTable, expected_parsed_data: Secti
             {
                 "heute": {
                     "stopped": [],
-                    "existing": ["mknotifyd", "rrdcached", "cmc", "apache", "dcd", "crontab"],
+                    "existing": [
+                        "mknotifyd",
+                        "rrdcached",
+                        "cmc",
+                        "apache",
+                        "dcd",
+                        "crontab",
+                    ],
                     "overall": "running",
                 },
                 "stable": {
                     "stopped": [],
-                    "existing": ["mknotifyd", "rrdcached", "cmc", "apache", "dcd", "crontab"],
+                    "existing": [
+                        "mknotifyd",
+                        "rrdcached",
+                        "cmc",
+                        "apache",
+                        "dcd",
+                        "crontab",
+                    ],
                     "overall": "running",
                 },
             },
@@ -70,7 +95,11 @@ def test_parse_omd_status(string_table: StringTable, expected_parsed_data: Secti
                     },
                 },
                 "sites": {
-                    "heute": {"site": "heute", "used_version": "2020.07.29.cee", "autostart": "1"},
+                    "heute": {
+                        "site": "heute",
+                        "used_version": "2020.07.29.cee",
+                        "autostart": "1",
+                    },
                     "stable": {
                         "site": "stable",
                         "used_version": "1.6.0-2020.07.22.cee",
@@ -100,12 +129,26 @@ def test_check_omd_status(
                 "monitoring": {
                     "heute": {
                         "stopped": [],
-                        "existing": ["mknotifyd", "rrdcached", "cmc", "apache", "dcd", "crontab"],
+                        "existing": [
+                            "mknotifyd",
+                            "rrdcached",
+                            "cmc",
+                            "apache",
+                            "dcd",
+                            "crontab",
+                        ],
                         "overall": "running",
                     },
                     "stable": {
                         "stopped": [],
-                        "existing": ["mknotifyd", "rrdcached", "cmc", "apache", "dcd", "crontab"],
+                        "existing": [
+                            "mknotifyd",
+                            "rrdcached",
+                            "cmc",
+                            "apache",
+                            "dcd",
+                            "crontab",
+                        ],
                         "overall": "running",
                     },
                 }

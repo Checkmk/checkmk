@@ -50,7 +50,14 @@ def check_smtp_arguments(params):  # pylint: disable=too-many-branches
 
     if "auth" in params:
         username, password = params["auth"]
-        args += ["-A", "LOGIN", "-U", username, "-P", passwordstore_get_cmdline("%s", password)]
+        args += [
+            "-A",
+            "LOGIN",
+            "-U",
+            username,
+            "-P",
+            passwordstore_get_cmdline("%s", password),
+        ]
 
     if params.get("starttls", False):
         args.append("-S")

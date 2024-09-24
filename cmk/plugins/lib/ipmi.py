@@ -8,7 +8,14 @@ from dataclasses import dataclass
 from typing import Any, Literal, TypedDict
 
 from cmk.agent_based.v1 import check_levels
-from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Metric, Result, Service, State
+from cmk.agent_based.v2 import (
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    Result,
+    Service,
+    State,
+)
 
 # TODO: Cleanup the whole status text mapping in utils/ipmi.py, ipmi_sensors.include, ipmi.py
 
@@ -283,7 +290,10 @@ def _check_individual_sensors(
             continue
 
         status_result = _check_status(
-            sensor, status_txt_mapping, params.get("sensor_states", []), label=sensor_name
+            sensor,
+            status_txt_mapping,
+            params.get("sensor_states", []),
+            label=sensor_name,
         )
 
         if sensor.value is not None and (levels := user_levels_map.get(sensor_name)):

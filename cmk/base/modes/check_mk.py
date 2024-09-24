@@ -77,7 +77,11 @@ from cmk.fetchers import Mode as FetchMode
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
 import cmk.checkengine.inventory as inventory
-from cmk.checkengine.checking import CheckPluginName, execute_checkmk_checks, make_timing_results
+from cmk.checkengine.checking import (
+    CheckPluginName,
+    execute_checkmk_checks,
+    make_timing_results,
+)
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.discovery import (
     commandline_discovery,
@@ -85,7 +89,11 @@ from cmk.checkengine.discovery import (
     remove_autochecks_of_host,
 )
 from cmk.checkengine.fetcher import FetcherFunction, FetcherType, SourceInfo, SourceType
-from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin, InventoryPluginName
+from cmk.checkengine.inventory import (
+    HWSWInventoryParameters,
+    InventoryPlugin,
+    InventoryPluginName,
+)
 from cmk.checkengine.parser import (
     NO_SELECTION,
     parse_raw_data,
@@ -326,7 +334,10 @@ def mode_list_hosts(options: dict, args: list[str]) -> None:
 
 # TODO: Does not care about internal group "check_mk"
 def _list_all_hosts(
-    config_cache: ConfigCache, ruleset_matcher: RulesetMatcher, hostgroups: list[str], options: dict
+    config_cache: ConfigCache,
+    ruleset_matcher: RulesetMatcher,
+    hostgroups: list[str],
+    options: dict,
 ) -> list[HostName]:
     hosts_config = config_cache.hosts_config
     hostnames: Iterable[HostName]
@@ -455,7 +466,8 @@ def mode_list_checks() -> None:
     all_check_manuals = {
         n: man_pages.parse_man_page(n, p)
         for n, p in man_pages.make_man_page_path_map(
-            discover_families(raise_errors=cmk.utils.debug.enabled()), PluginGroup.CHECKMAN.value
+            discover_families(raise_errors=cmk.utils.debug.enabled()),
+            PluginGroup.CHECKMAN.value,
         ).items()
     }
 
@@ -910,7 +922,9 @@ def _do_snmpwalk(options: _SNMPWalkOptions, *, backend: SNMPBackend) -> None:
     # TODO: What about SNMP management boards?
     try:
         _do_snmpwalk_on(
-            options, cmk.utils.paths.snmpwalks_dir + "/" + backend.hostname, backend=backend
+            options,
+            cmk.utils.paths.snmpwalks_dir + "/" + backend.hostname,
+            backend=backend,
         )
     except Exception as e:
         console.error(f"Error walking {backend.hostname}: {e}\n")
@@ -1211,7 +1225,9 @@ modes.register(
 def mode_dump_nagios_config(args: list[HostName]) -> None:
     from cmk.utils.config_path import VersionedConfigPath
 
-    from cmk.base.core_nagios import create_config  # pylint: disable=import-outside-toplevel
+    from cmk.base.core_nagios import (
+        create_config,  # pylint: disable=import-outside-toplevel
+    )
 
     create_config(
         sys.stdout,
@@ -1251,7 +1267,9 @@ modes.register(
 
 
 def mode_update() -> None:
-    from cmk.base.core_config import do_create_config  # pylint: disable=import-outside-toplevel
+    from cmk.base.core_config import (
+        do_create_config,  # pylint: disable=import-outside-toplevel
+    )
 
     config_cache = config.get_config_cache()
     hosts_config = config_cache.hosts_config
@@ -1396,7 +1414,8 @@ def mode_man(options: Mapping[str, str], args: list[str]) -> None:
     import cmk.utils.man_pages as man_pages  # pylint: disable=import-outside-toplevel
 
     man_page_path_map = man_pages.make_man_page_path_map(
-        discover_families(raise_errors=cmk.utils.debug.enabled()), PluginGroup.CHECKMAN.value
+        discover_families(raise_errors=cmk.utils.debug.enabled()),
+        PluginGroup.CHECKMAN.value,
     )
     if not args:
         man_pages.print_man_page_table(man_page_path_map)
@@ -1467,7 +1486,8 @@ def mode_browse_man() -> None:
 
     man_pages.print_man_page_browser(
         man_pages.load_man_page_catalog(
-            discover_families(raise_errors=cmk.utils.debug.enabled()), PluginGroup.CHECKMAN.value
+            discover_families(raise_errors=cmk.utils.debug.enabled()),
+            PluginGroup.CHECKMAN.value,
         )
     )
 
@@ -1686,7 +1706,9 @@ def register_mode_check_discovery(
         Mode(
             long_option="check-discovery",
             handler_function=partial(
-                mode_check_discovery, active_check_handler=active_check_handler, keepalive=keepalive
+                mode_check_discovery,
+                active_check_handler=active_check_handler,
+                keepalive=keepalive,
             ),
             argument=True,
             argument_descr="HOSTNAME",
@@ -1886,7 +1908,8 @@ def _preprocess_hostnames(
 
     console.verbose(
         "Discovering {}host labels on: {}\n".format(
-            "services and " if not only_host_labels else "", ", ".join(sorted(node_names))
+            "services and " if not only_host_labels else "",
+            ", ".join(sorted(node_names)),
         )
     )
 
@@ -1952,7 +1975,9 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     ):
 
         def section_error_handling(
-            section_name: SectionName, raw_data: Sequence[object], host_name: HostName = hostname
+            section_name: SectionName,
+            raw_data: Sequence[object],
+            host_name: HostName = hostname,
         ) -> str:
             return create_section_crash_dump(
                 operation="parsing",

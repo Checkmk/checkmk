@@ -12,7 +12,12 @@ import pytest
 from tests.testlib.rest_api_client import ClientRegistry
 
 from cmk.utils import version
-from cmk.utils.notify_types import CaseStateStr, CustomPluginName, IncidentStateStr, PluginOptions
+from cmk.utils.notify_types import (
+    CaseStateStr,
+    CustomPluginName,
+    IncidentStateStr,
+    PluginOptions,
+)
 
 from cmk.gui.openapi.endpoints.notification_rules.request_example import (
     notification_rule_request_example,
@@ -225,14 +230,20 @@ def conditions_set_1() -> APIConditions:
         },
         "match_host_labels": {
             "state": "enabled",
-            "value": [{"key": "label1", "value": "value1"}, {"key": "label2", "value": "value2"}],
+            "value": [
+                {"key": "label1", "value": "value1"},
+                {"key": "label2", "value": "value2"},
+            ],
         },
         "match_host_groups": {"state": "enabled", "value": ["hg1", "hg2"]},
         "match_hosts": {"state": "enabled", "value": ["example.com"]},
         "match_exclude_hosts": {"state": "enabled", "value": ["example.com"]},
         "match_service_labels": {
             "state": "enabled",
-            "value": [{"key": "label1", "value": "value1"}, {"key": "label2", "value": "value2"}],
+            "value": [
+                {"key": "label1", "value": "value1"},
+                {"key": "label2", "value": "value2"},
+            ],
         },
         "match_service_groups": {"state": "enabled", "value": ["sg1", "sg2"]},
         "match_exclude_service_groups": {"state": "enabled", "value": ["sg1", "sg2"]},
@@ -245,7 +256,10 @@ def conditions_set_1() -> APIConditions:
             "value": {"match_type": "match_alias", "regex_list": ["alias1", "alias2"]},
         },
         "match_services": {"state": "enabled", "value": ["str1", "str2", "str3"]},
-        "match_exclude_services": {"state": "enabled", "value": ["str4", "str5", "str6"]},
+        "match_exclude_services": {
+            "state": "enabled",
+            "value": ["str4", "str5", "str6"],
+        },
         "match_check_types": {"state": "enabled", "value": ["ch1", "ch2", "ch3"]},
         "match_plugin_output": {"state": "enabled", "value": "str1"},
         "match_contact_groups": {"state": "enabled", "value": ["cg1", "cg2"]},
@@ -492,7 +506,10 @@ bulking_method_test_data: list[NotificationBulkingAPIAttrs] = [
         "when_to_bulk": "always",
         "params": {
             "time_horizon": 1212,
-            "subject_for_bulk_notifications": {"state": "enabled", "value": "always_subject"},
+            "subject_for_bulk_notifications": {
+                "state": "enabled",
+                "value": "always_subject",
+            },
             "max_bulk_size": 111,
             "notification_bulks_based_on": ["folder", "sl", "ec_comment", "state"],
             "notification_bulks_based_on_custom_macros": ["macro1", "macro2"],
@@ -502,9 +519,17 @@ bulking_method_test_data: list[NotificationBulkingAPIAttrs] = [
         "when_to_bulk": "timeperiod",
         "params": {
             "time_period": "24X7",
-            "subject_for_bulk_notifications": {"state": "enabled", "value": "time_period_subject"},
+            "subject_for_bulk_notifications": {
+                "state": "enabled",
+                "value": "time_period_subject",
+            },
             "max_bulk_size": 222,
-            "notification_bulks_based_on": ["host", "service", "check_type", "ec_contact"],
+            "notification_bulks_based_on": [
+                "host",
+                "service",
+                "check_type",
+                "ec_contact",
+            ],
             "notification_bulks_based_on_custom_macros": ["macro3", "macro4"],
             "bulk_outside_timeperiod": {"state": "disabled"},
         },
@@ -513,9 +538,17 @@ bulking_method_test_data: list[NotificationBulkingAPIAttrs] = [
         "when_to_bulk": "timeperiod",
         "params": {
             "time_period": "24X7",
-            "subject_for_bulk_notifications": {"state": "enabled", "value": "time_period_subject"},
+            "subject_for_bulk_notifications": {
+                "state": "enabled",
+                "value": "time_period_subject",
+            },
             "max_bulk_size": 333,
-            "notification_bulks_based_on": ["host", "service", "check_type", "ec_contact"],
+            "notification_bulks_based_on": [
+                "host",
+                "service",
+                "check_type",
+                "ec_contact",
+            ],
             "notification_bulks_based_on_custom_macros": ["macro3", "macro4"],
             "bulk_outside_timeperiod": {
                 "state": "enabled",
@@ -543,7 +576,10 @@ def test_create_and_update_rule_with_bulking_method_data(
     config = notification_rule_request_example()
     r1 = clients.RuleNotification.create(rule_config=config)
 
-    notification_bulking: NotificationBulkingAPIValueType = {"state": "enabled", "value": testdata}
+    notification_bulking: NotificationBulkingAPIValueType = {
+        "state": "enabled",
+        "value": testdata,
+    }
     config["notification_method"]["notification_bulking"] = notification_bulking
     r2 = clients.RuleNotification.edit(
         rule_id=r1.json["id"],
@@ -660,7 +696,10 @@ plugin_test_data: list[PluginType] = [
         "plugin_name": "mail",
         "from_details": {
             "state": "enabled",
-            "value": {"address": "asdfasfdsa@ladjf.com", "display_name": "name_example"},
+            "value": {
+                "address": "asdfasfdsa@ladjf.com",
+                "display_name": "name_example",
+            },
         },
         "reply_to": {
             "state": "enabled",
@@ -695,14 +734,21 @@ plugin_test_data: list[PluginType] = [
             "state": "enabled",
             "value": {"option": "automatic", "schema": "https"},
         },
-        "sort_order_for_bulk_notifications": {"state": "enabled", "value": "newest_first"},
+        "sort_order_for_bulk_notifications": {
+            "state": "enabled",
+            "value": "newest_first",
+        },
         "send_separate_notification_to_every_recipient": {"state": "enabled"},
         "enable_sync_smtp": {
             "state": "enabled",
             "value": {
                 "auth": {
                     "state": "enabled",
-                    "value": {"method": "plaintext", "password": "gav1234", "user": "gav"},
+                    "value": {
+                        "method": "plaintext",
+                        "password": "gav1234",
+                        "user": "gav",
+                    },
                 },
                 "encryption": "ssl_tls",
                 "port": 25,
@@ -1273,12 +1319,18 @@ plugin_test_data: list[PluginType] = [
             "<br>\n"
             "$LONGSERVICEOUTPUT$\n",
         },
-        "host_summary": {"state": "enabled", "value": "Checkmk: $HOSTNAME$ - $EVENT_TXT$"},
+        "host_summary": {
+            "state": "enabled",
+            "value": "Checkmk: $HOSTNAME$ - $EVENT_TXT$",
+        },
         "service_summary": {
             "state": "enabled",
             "value": "Checkmk: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$",
         },
-        "host_title": {"state": "enabled", "value": "Checkmk: $HOSTNAME$ - $HOSTSHORTSTATE$"},
+        "host_title": {
+            "state": "enabled",
+            "value": "Checkmk: $HOSTNAME$ - $HOSTSHORTSTATE$",
+        },
         "service_title": {
             "state": "enabled",
             "value": "Checkmk: $HOSTNAME$/$SERVICEDESC$ $SERVICESHORTSTATE$",
@@ -1435,7 +1487,10 @@ service_now_incident: MgmtTypeAPI = {
             "state": "disabled",
         },
         "state_acknowledgement": {"state": "enabled", "value": {"start_integer": 4}},
-        "state_downtime": {"state": "enabled", "value": {"start_integer": 1, "end_integer": 2}},
+        "state_downtime": {
+            "state": "enabled",
+            "value": {"start_integer": 1, "end_integer": 2},
+        },
         "state_recovery": {"state": "enabled", "value": {"start_integer": 3}},
         "urgency": {
             "state": "disabled",
@@ -1594,7 +1649,7 @@ def config_with_bulk(plugin: PluginType) -> APINotificationRule:
 
 
 def plugin_with_bulking(
-    bulking: Literal["allowed", "not_allowed"]
+    bulking: Literal["allowed", "not_allowed"],
 ) -> Iterator[APINotificationRule]:
     notification_scripts = load_notification_scripts()
     plugins: list[str] = []
@@ -1750,7 +1805,13 @@ def register_custom_plugin() -> Generator:
     register_notification_parameters(
         "my_cool_plugin",
         Dictionary(
-            optional_keys=["originator", "list_of_strings", "test_dict", "test_int", "test_bool"],
+            optional_keys=[
+                "originator",
+                "list_of_strings",
+                "test_dict",
+                "test_int",
+                "test_bool",
+            ],
             elements=[
                 (
                     "user_key",
@@ -1906,7 +1967,10 @@ invalid_dict_configs = [
         {
             "plugin_name": "my_cool_plugin",
             "user_key": "some_user_key",
-            "api_password": {"some_api_password": "pass", "non_valid_key": "some_invalid_key"},
+            "api_password": {
+                "some_api_password": "pass",
+                "non_valid_key": "some_invalid_key",
+            },
         },
         {"api_password": ["The value must be of type str, but it has type dict"]},
     ),

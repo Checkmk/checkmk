@@ -42,7 +42,10 @@ def test_try_update_license_usage() -> None:
     site_hash = "site-hash"
 
     try_update_license_usage(
-        Now(dt=datetime.fromtimestamp(time.mktime(time.localtime(time.time() * 2))), tz=""),
+        Now(
+            dt=datetime.fromtimestamp(time.mktime(time.localtime(time.time() * 2))),
+            tz="",
+        ),
         instance_id,
         site_hash,
         lambda *args, **kwargs: LicenseUsageSample(

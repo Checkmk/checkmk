@@ -7,7 +7,12 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.cisco_qos import (
     check_cisco_qos_,
@@ -766,9 +771,15 @@ def test_discover_cisco_qos(section: Section) -> None:
                 "qos_dropped_bits_rate.avg": (50, 1600),
             },
             [
-                Result(state=State.OK, summary="Outbound traffic (10-min. average): 19.4 kBit/s"),
+                Result(
+                    state=State.OK,
+                    summary="Outbound traffic (10-min. average): 19.4 kBit/s",
+                ),
                 Metric("qos_outbound_bits_rate", 19360.0, boundaries=(0.0, 100000.0)),
-                Result(state=State.OK, summary="Dropped traffic (10-min. average): 900 Bit/s"),
+                Result(
+                    state=State.OK,
+                    summary="Dropped traffic (10-min. average): 900 Bit/s",
+                ),
                 Metric("qos_dropped_bits_rate", 899.84, boundaries=(0.0, 100000.0)),
                 Result(state=State.OK, summary="Policy map name: 200Mbit"),
                 Result(state=State.OK, summary="Bandwidth: 100 kBit/s"),
@@ -800,7 +811,10 @@ def test_discover_cisco_qos(section: Section) -> None:
                     levels=(10000.0, 20000.0),
                     boundaries=(0.0, 100000.0),
                 ),
-                Result(state=State.OK, summary="Dropped traffic (10-min. average): 900 Bit/s"),
+                Result(
+                    state=State.OK,
+                    summary="Dropped traffic (10-min. average): 900 Bit/s",
+                ),
                 Metric(
                     "qos_dropped_bits_rate",
                     899.84,
@@ -921,12 +935,22 @@ def fixture_section_zero_speed() -> Section:
                     state=State.WARN,
                     summary="Outbound traffic: 0.00 Bit/s (warn/crit at 0.00 Bit/s/1.00 Bit/s)",
                 ),
-                Metric("qos_outbound_bits_rate", 0.0, levels=(0.0, 1.0), boundaries=(0.0, 0.0)),
+                Metric(
+                    "qos_outbound_bits_rate",
+                    0.0,
+                    levels=(0.0, 1.0),
+                    boundaries=(0.0, 0.0),
+                ),
                 Result(
                     state=State.WARN,
                     summary="Dropped traffic: 0.00 Bit/s (warn/crit at 0.00 Bit/s/1.00 Bit/s)",
                 ),
-                Metric("qos_dropped_bits_rate", 0.0, levels=(0.0, 1.0), boundaries=(0.0, 0.0)),
+                Metric(
+                    "qos_dropped_bits_rate",
+                    0.0,
+                    levels=(0.0, 1.0),
+                    boundaries=(0.0, 0.0),
+                ),
                 Result(state=State.OK, summary="Policy map name: mypolicy"),
                 Result(state=State.OK, summary="Bandwidth: 0 Bit/s"),
             ],

@@ -16,7 +16,10 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
-from cmk.gui.wato import MigrateToIndividualOrStoredPassword, RulespecGroupIntegrateOtherServices
+from cmk.gui.wato import (
+    MigrateToIndividualOrStoredPassword,
+    RulespecGroupIntegrateOtherServices,
+)
 from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 
@@ -59,7 +62,10 @@ def _valuespec_active_checks_bi_aggr() -> Dictionary:
                 "credentials",
                 CascadingDropdown(
                     choices=[
-                        ("automation", _("Use the credentials of the 'automation' user")),
+                        (
+                            "automation",
+                            _("Use the credentials of the 'automation' user"),
+                        ),
                         (
                             "configured",
                             _("Use the following credentials"),
@@ -130,7 +136,10 @@ def _valuespec_active_checks_bi_aggr() -> Dictionary:
                                 choices=[
                                     (None, _("Use normal state, ignore downtime")),
                                     ("ok", _("Force to be OK")),
-                                    ("warn", _("Force to be WARN, if aggregate is not OK")),
+                                    (
+                                        "warn",
+                                        _("Force to be WARN, if aggregate is not OK"),
+                                    ),
                                 ],
                             ),
                         ),
@@ -139,9 +148,15 @@ def _valuespec_active_checks_bi_aggr() -> Dictionary:
                             DropdownChoice(
                                 title=_("State, if BI aggregate is acknowledged"),
                                 choices=[
-                                    (None, _("Use normal state, ignore acknowledgement")),
+                                    (
+                                        None,
+                                        _("Use normal state, ignore acknowledgement"),
+                                    ),
                                     ("ok", _("Force to be OK")),
-                                    ("warn", _("Force to be WARN, if aggregate is not OK")),
+                                    (
+                                        "warn",
+                                        _("Force to be WARN, if aggregate is not OK"),
+                                    ),
                                 ],
                             ),
                         ),

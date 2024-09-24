@@ -29,11 +29,16 @@ from cmk.gui.permissions import (
 )
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri_contextless
+from cmk.gui.utils.urls import (
+    make_confirm_delete_link,
+    makeactionuri,
+    makeuri_contextless,
+)
 
 
 def register(
-    permission_section_registry: PermissionSectionRegistry, permission_registry: PermissionRegistry
+    permission_section_registry: PermissionSectionRegistry,
+    permission_registry: PermissionRegistry,
 ) -> None:
     permission_section_registry.register(PermissionSectionBackgroundJobs)
     permission_registry.register(PermissionManageJobs)
@@ -165,7 +170,10 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
                 "Background job with id <i>%s</i> not found" % job_snapshot.job_id
             )
         JobRenderer.show_job_details(
-            job_snapshot.job_id, job_snapshot.status, job_snapshot.may_stop, job_snapshot.may_delete
+            job_snapshot.job_id,
+            job_snapshot.status,
+            job_snapshot.may_stop,
+            job_snapshot.may_delete,
         )
 
     def _get_job_infos(

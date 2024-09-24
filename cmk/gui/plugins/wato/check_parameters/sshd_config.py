@@ -11,7 +11,13 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, DropdownChoice, ListOfNetworkPorts, ListOfStrings, Migrate
+from cmk.gui.valuespec import (
+    Dictionary,
+    DropdownChoice,
+    ListOfNetworkPorts,
+    ListOfStrings,
+    Migrate,
+)
 
 
 def _parameter_valuespec_sshd_config() -> Migrate:
@@ -25,7 +31,10 @@ def _parameter_valuespec_sshd_config() -> Migrate:
                         title=_("Permit root login"),
                         choices=[
                             ("yes", _("yes")),
-                            ("key-based", _("without-password/prohibit-password (Key based)")),
+                            (
+                                "key-based",
+                                _("without-password/prohibit-password (Key based)"),
+                            ),
                             ("forced-commands-only", _("forced-commands-only")),
                             ("no", _("no")),
                         ],
@@ -48,7 +57,10 @@ def _parameter_valuespec_sshd_config() -> Migrate:
                         default_value="2",
                     ),
                 ),
-                ("port", ListOfNetworkPorts(title=_("Allowed Ports"), default_value=[22])),
+                (
+                    "port",
+                    ListOfNetworkPorts(title=_("Allowed Ports"), default_value=[22]),
+                ),
                 (
                     "passwordauthentication",
                     DropdownChoice(

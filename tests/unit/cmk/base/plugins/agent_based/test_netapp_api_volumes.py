@@ -10,7 +10,12 @@ import pytest
 from tests.testlib import on_time
 
 from cmk.base.plugins.agent_based import netapp_api_volumes as nav
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 
 from cmk.plugins.lib.df import (
     FILESYSTEM_DEFAULT_LEVELS,
@@ -537,8 +542,16 @@ DISCOVERY_PARAMS = [
                 "patterns_include": ["euedcnas1710.v_1710_data"],
                 "patterns_exclude": [],
             },
-            {"group_name": "group1", "patterns_include": ["vol0"], "patterns_exclude": []},
-            {"group_name": "group2", "patterns_include": ["vol_bronze1*"], "patterns_exclude": []},
+            {
+                "group_name": "group1",
+                "patterns_include": ["vol0"],
+                "patterns_exclude": [],
+            },
+            {
+                "group_name": "group2",
+                "patterns_include": ["vol_bronze1*"],
+                "patterns_exclude": [],
+            },
             {
                 "group_name": "group2",
                 "patterns_include": [],
@@ -568,7 +581,8 @@ def test_discovery(section: nav.Section) -> None:
             ),
             Service(item="group1", parameters={"patterns": (["vol0"], [])}),
             Service(
-                item="group2", parameters={"patterns": (["vol_bronze1*"], ["vol_bronze1_cifs"])}
+                item="group2",
+                parameters={"patterns": (["vol_bronze1*"], ["vol_bronze1_cifs"])},
             ),
             Service(item="vol_bronze1_cifs"),
         ]
@@ -608,11 +622,17 @@ def test_check_grouped(section: nav.Section, monkeypatch: pytest.MonkeyPatch) ->
             )
         ) == [
             Metric(
-                "fs_used", 17738.44921875, levels=(174080.0, 195840.0), boundaries=(0.0, 217600.0)
+                "fs_used",
+                17738.44921875,
+                levels=(174080.0, 195840.0),
+                boundaries=(0.0, 217600.0),
             ),
             Metric("fs_free", 199861.55078125, boundaries=(0.0, None)),
             Metric(
-                "fs_used_percent", 8.151860854204964, levels=(80.0, 90.0), boundaries=(0.0, 100.0)
+                "fs_used_percent",
+                8.151860854204964,
+                levels=(80.0, 90.0),
+                boundaries=(0.0, 100.0),
             ),
             Result(state=State.OK, summary="Used: 8.15% - 17.3 GiB of 212 GiB"),
             Metric("fs_size", 217600.0, boundaries=(0.0, None)),
@@ -628,7 +648,8 @@ def test_check_grouped(section: nav.Section, monkeypatch: pytest.MonkeyPatch) ->
                 boundaries=(0.0, 7782396.0),
             ),
             Result(
-                state=State.OK, notice="Inodes used: 0.14%, Inodes available: 7,771,659 (99.86%)"
+                state=State.OK,
+                notice="Inodes used: 0.14%, Inodes available: 7,771,659 (99.86%)",
             ),
             Result(state=State.OK, notice="1 volume(s) in group"),
         ]
@@ -677,11 +698,17 @@ def test_check_with_perf_data(section: nav.Section, monkeypatch: pytest.MonkeyPa
             )
         ) == [
             Metric(
-                "fs_used", 184455.7265625, levels=(153600.0, 184320.0), boundaries=(0.0, 307200.0)
+                "fs_used",
+                184455.7265625,
+                levels=(153600.0, 184320.0),
+                boundaries=(0.0, 307200.0),
             ),
             Metric("fs_free", 122744.2734375, boundaries=(0.0, None)),
             Metric(
-                "fs_used_percent", 60.04418182373047, levels=(50.0, 60.0), boundaries=(0.0, 100.0)
+                "fs_used_percent",
+                60.04418182373047,
+                levels=(50.0, 60.0),
+                boundaries=(0.0, 100.0),
             ),
             Result(
                 state=State.CRIT,
@@ -704,10 +731,14 @@ def test_check_with_perf_data(section: nav.Section, monkeypatch: pytest.MonkeyPa
             ),
             Metric("trend_hoursleft", 1.3445590886696375),
             Metric(
-                "inodes_used", 3414.0, levels=(8404987.5, 8871931.25), boundaries=(0.0, 9338875.0)
+                "inodes_used",
+                3414.0,
+                levels=(8404987.5, 8871931.25),
+                boundaries=(0.0, 9338875.0),
             ),
             Result(
-                state=State.OK, summary="Inodes used: 0.04%, Inodes available: 9,335,461 (99.96%)"
+                state=State.OK,
+                summary="Inodes used: 0.04%, Inodes available: 9,335,461 (99.96%)",
             ),
             Metric("read_data", 9716.487764641188),
             Metric("read_ops", 18.67761891668958),

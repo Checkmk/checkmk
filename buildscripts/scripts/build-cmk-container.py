@@ -96,7 +96,9 @@ def parse_arguments() -> argparse.Namespace:
     )
     parser.add_argument("--version", required=True, help="Version to build e.g. '2023.10.19'")
     parser.add_argument(
-        "--source_path", required=True, help="Full path to downloaded tar.gz and deb files"
+        "--source_path",
+        required=True,
+        help="Full path to downloaded tar.gz and deb files",
     )
     parser.add_argument(
         "--action",
@@ -135,7 +137,8 @@ def parse_arguments() -> argparse.Namespace:
         help="Flag to build image without docker cache",
     )
     parser.add_argument(
-        "--image_cmk_base", help="Custom CMK base image, defaults to checked in IMAGE_CMK_BASE"
+        "--image_cmk_base",
+        help="Custom CMK base image, defaults to checked in IMAGE_CMK_BASE",
     )
 
     return parser.parse_args()
@@ -203,7 +206,7 @@ def docker_tag(
     if target_version is None:
         target_version = version_tag
 
-    LOG.info(f"Creating tag ...")
+    LOG.info("Creating tag ...")
     LOG.debug(f"target_version: {target_version}")
     LOG.debug(f"args: {args}")
     LOG.debug(f"version_tag: {version_tag}")
@@ -231,7 +234,7 @@ def docker_tag(
         )
         LOG.debug("Done")
     else:
-        LOG.info(f"Create 'daily' tag ...")
+        LOG.info("Create 'daily' tag ...")
         LOG.debug(f"placing new tag, repo: {this_repository}, tag: {args.branch}-daily")
         image.tag(
             repository=this_repository,
@@ -240,7 +243,7 @@ def docker_tag(
         LOG.debug("Done")
 
     if args.set_latest_tag:
-        LOG.info(f"Create 'latest' tag ...")
+        LOG.info("Create 'latest' tag ...")
 
         LOG.debug(f"placing new tag, repo: {this_repository}, tag: latest")
         image.tag(
@@ -290,12 +293,18 @@ def docker_push(args: argparse.Namespace, version_tag: str, registry: str, folde
     if args.set_branch_latest_tag:
         LOG.info(f"Pushing '{this_repository}' as '{args.branch}-latest' ...")
         resp = docker_client.images.push(
-            repository=this_repository, tag=f"{args.branch}-latest", stream=True, decode=True
+            repository=this_repository,
+            tag=f"{args.branch}-latest",
+            stream=True,
+            decode=True,
         )
     else:
         LOG.info(f"Pushing '{this_repository}' as '{args.branch}-daily' ...")
         resp = docker_client.images.push(
-            repository=this_repository, tag=f"{args.branch}-daily", stream=True, decode=True
+            repository=this_repository,
+            tag=f"{args.branch}-daily",
+            stream=True,
+            decode=True,
         )
 
     for line in resp:
@@ -471,7 +480,8 @@ def build_image(
     if version_tag is None:
         raise Exception("Required VERSION_TAG is not set.")
     needed_packages(
-        mk_file="omd/distros/UBUNTU_22.04.mk", output_file=f"{docker_path}/needed-packages"
+        mk_file="omd/distros/UBUNTU_22.04.mk",
+        output_file=f"{docker_path}/needed-packages",
     )
 
     build_tar_gz(
@@ -542,7 +552,11 @@ def main() -> None:
     match args.action:
         case "build":
             build_image(
-                args=args, registry=registry, folder=folder, version_tag=version_tag, suffix=suffix
+                args=args,
+                registry=registry,
+                folder=folder,
+                version_tag=version_tag,
+                suffix=suffix,
             )
         case "push":
             docker_push(args=args, registry=registry, folder=folder, version_tag=version_tag)

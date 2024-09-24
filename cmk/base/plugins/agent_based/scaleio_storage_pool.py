@@ -23,7 +23,14 @@ from cmk.plugins.lib.scaleio import (
     StorageConversionError,
 )
 
-from .agent_based_api.v1 import get_value_store, register, render, Result, Service, State
+from .agent_based_api.v1 import (
+    get_value_store,
+    register,
+    render,
+    Result,
+    Service,
+    State,
+)
 
 # <<<scaleio_storage_pool>>>
 # STORAGE_POOL 59c7748300000000:
@@ -110,7 +117,9 @@ register.agent_section(
 )
 
 
-def discover_scaleio_storage_pool(section: ScaleioStoragePoolSection) -> DiscoveryResult:
+def discover_scaleio_storage_pool(
+    section: ScaleioStoragePoolSection,
+) -> DiscoveryResult:
     for pool_id in section:
         yield Service(item=pool_id)
 

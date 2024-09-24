@@ -171,5 +171,7 @@ def request_memoize(
 
     """
     return _scoped_memoize(
-        clear_events=["request-end", "request-context-exit"], maxsize=maxsize, typed=typed
+        clear_events=["request-end", "request-context-exit"],
+        maxsize=maxsize,
+        typed=typed,
     )

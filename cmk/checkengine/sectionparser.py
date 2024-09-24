@@ -80,7 +80,9 @@ class SectionsParser(Generic[_TSeq]):
         )
 
     def parse(
-        self, section_name: SectionName, parse_function: Callable[[Sequence[_TSeq]], Any]
+        self,
+        section_name: SectionName,
+        parse_function: Callable[[Sequence[_TSeq]], Any],
     ) -> _ParsingResult | None:
         if section_name in self._memoized_results:
             return self._memoized_results[section_name]
@@ -102,7 +104,9 @@ class SectionsParser(Generic[_TSeq]):
             self._memoized_results[section_name] = None
 
     def _parse_raw_data(
-        self, section_name: SectionName, parse_function: Callable[[Sequence[_TSeq]], Any]
+        self,
+        section_name: SectionName,
+        parse_function: Callable[[Sequence[_TSeq]], Any],
     ) -> Any:  # yes *ANY*
         try:
             raw_data = self._host_sections.sections[section_name]
@@ -195,7 +199,9 @@ class ParsedSectionsResolver:
 Provider = ParsedSectionsResolver
 
 
-def store_piggybacked_sections(collected_host_sections: Mapping[HostKey, HostSections]) -> None:
+def store_piggybacked_sections(
+    collected_host_sections: Mapping[HostKey, HostSections],
+) -> None:
     for host_key, host_sections in collected_host_sections.items():
         # Store piggyback information received from all sources of this host. This
         # also implies a removal of piggyback files received during previous calls.

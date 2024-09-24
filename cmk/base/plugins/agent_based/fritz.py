@@ -9,7 +9,12 @@ from typing import Any
 from cmk.plugins.lib import interfaces, uptime
 
 from .agent_based_api.v1 import Attributes, register, Result, Service, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
+from .agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    InventoryResult,
+    StringTable,
+)
 
 Section = Mapping[str, str]
 
@@ -37,7 +42,9 @@ _LINK_STATUS_MAP = {
 }
 
 
-def _section_to_interface(section: Section) -> interfaces.Section[interfaces.InterfaceWithCounters]:
+def _section_to_interface(
+    section: Section,
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     if not _WAN_IF_KEYS & set(section):
         return []
     return [

@@ -114,7 +114,11 @@ def test_bi_rule(clients: ClientRegistry) -> None:
     rule_dependent["nodes"] = [
         {
             "search": {"type": "empty"},
-            "action": {"type": "call_a_rule", "rule_id": "some_rule", "params": {"arguments": []}},
+            "action": {
+                "type": "call_a_rule",
+                "rule_id": "some_rule",
+                "params": {"arguments": []},
+            },
         }
     ]
     clients.BiRule.create(rule_id="dependent", body=rule_dependent)
@@ -429,7 +433,11 @@ def test_post_bi_pack_creating_contact_groups_regression(
     # try to create it indirectly through posting it in a BI Pack,  unsuccessfully
     clients.BiPack.create(
         pack_id="testpack",
-        body={"title": "my_cool_pack", "contact_groups": [contact_group], "public": False},
+        body={
+            "title": "my_cool_pack",
+            "contact_groups": [contact_group],
+            "public": False,
+        },
         expect_ok=False,
     ).assert_status_code(400)
 
@@ -577,7 +585,11 @@ def create_bipack_get_partial_rule_test_data(clients: ClientRegistry) -> dict:
                         "service_regex": "(.*)",
                     },
                 },
-                "action": {"type": "state_of_service", "host_regex": "$1$", "service_regex": "$2$"},
+                "action": {
+                    "type": "state_of_service",
+                    "host_regex": "$1$",
+                    "service_regex": "$2$",
+                },
             }
         ],
         "params": {"arguments": []},
@@ -755,7 +767,9 @@ def test_create_rule_with_invalid_labels_and_label_group_combos(
     ).assert_status_code(400)
 
 
-def test_create_rule_with_label_groups_no_first_operator(clients: ClientRegistry) -> None:
+def test_create_rule_with_label_groups_no_first_operator(
+    clients: ClientRegistry,
+) -> None:
     test_rule = create_bipack_get_partial_rule_test_data(clients)
 
     test_rule["nodes"][0]["search"]["conditions"]["host_label_groups"] = [

@@ -185,7 +185,10 @@ def test_parse_infoblox_services(
 @pytest.mark.parametrize(
     "section,result",
     [
-        (example_parsed_data_lower_v9, [Service(item=key) for key in example_parsed_data_lower_v9]),
+        (
+            example_parsed_data_lower_v9,
+            [Service(item=key) for key in example_parsed_data_lower_v9],
+        ),
         (example_parsed_data_v9, [Service(item=key) for key in example_parsed_data_v9]),
     ],
 )
@@ -199,12 +202,22 @@ def test_discovery_infoblox_services(section: Section, result: DiscoveryResult) 
         (
             "memory",
             example_parsed_data_lower_v9,
-            [Result(state=State.OK, summary="Status: working (14% - System memory usage is OK.)")],
+            [
+                Result(
+                    state=State.OK,
+                    summary="Status: working (14% - System memory usage is OK.)",
+                )
+            ],
         ),
         (
             "memory",
             example_parsed_data_v9,
-            [Result(state=State.OK, summary="Status: working (14% - System memory usage is OK.)")],
+            [
+                Result(
+                    state=State.OK,
+                    summary="Status: working (14% - System memory usage is OK.)",
+                )
+            ],
         ),
     ],
 )

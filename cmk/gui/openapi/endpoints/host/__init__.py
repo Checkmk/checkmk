@@ -37,6 +37,7 @@ To search for hosts with specific tags set on them:
     {'op': '~', 'left': 'tag_names', 'right': 'windows'}
 
 """
+
 import ast
 from collections.abc import Generator, Mapping, Sequence
 from typing import Any
@@ -48,7 +49,12 @@ from cmk.gui import fields as gui_fields
 from cmk.gui import sites
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import Response
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions, response_schemas
+from cmk.gui.openapi.restful_objects import (
+    constructors,
+    Endpoint,
+    permissions,
+    response_schemas,
+)
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, serve_json
@@ -194,7 +200,7 @@ def contains_an_inventory_colum(columns: Sequence[str]) -> bool:
 
 
 def fixup_inventory_column(
-    result: Generator[ResultRow, None, None]
+    result: Generator[ResultRow, None, None],
 ) -> Generator[ResultRow, None, None]:
     for row in result:
         if inventory_data := row.get(INVENTORY_COLUMN):

@@ -111,7 +111,11 @@ from cmk.plugins.lib.kube import AllocatablePods, PodResources, PodSequence
                 ["pod_z", "pod_2"],
                 ["pod_z", "pod_2", "pod_3"],
                 ["pod_z", "pod_2", "pod_3"],
-                ["pod_2", "pod_z", "pod_3"],  # let us put these pods in some random order
+                [
+                    "pod_2",
+                    "pod_z",
+                    "pod_3",
+                ],  # let us put these pods in some random order
             ),
             (
                 Result(state=State.OK, summary="Pending: 1"),
@@ -471,7 +475,9 @@ def test_check_kube_pod_resources_overall_look(
 ) -> None:
     value_store: ValueStore = {}
     for time, pod_names, params in zip(
-        itertools.count(0.1, 60.1), pending_pods_in_each_check_call, params_in_each_check_call
+        itertools.count(0.1, 60.1),
+        pending_pods_in_each_check_call,
+        params_in_each_check_call,
     ):
         result = tuple(
             _check_kube_pod_resources(
@@ -496,7 +502,9 @@ def test_check_kube_pod_resources_with_capacity_overall_look(
 ) -> None:
     value_store: ValueStore = {}
     for time, pod_names, params in zip(
-        itertools.count(0.1, 60.1), pending_pods_in_each_check_call, params_in_each_check_call
+        itertools.count(0.1, 60.1),
+        pending_pods_in_each_check_call,
+        params_in_each_check_call,
     ):
         result = tuple(
             _check_kube_pod_resources(

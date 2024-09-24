@@ -78,7 +78,11 @@ def test_check_form_submit_main(
         ({"foo": (0, "SOME_TEXT")}, 0, "1 succeeded, 0 failed"),
         ({"foo": (1, "SOME_TEXT")}, 1, "0 succeeded, 1 failed (foo: SOME_TEXT)"),
         ({"foo": (2, "SOME_TEXT")}, 2, "0 succeeded, 1 failed (foo: SOME_TEXT)"),
-        ({"foo": (0, "SOME_TEXT_1"), "bar": (0, "SOME_TEXT_2")}, 0, "2 succeeded, 0 failed"),
+        (
+            {"foo": (0, "SOME_TEXT_1"), "bar": (0, "SOME_TEXT_2")},
+            0,
+            "2 succeeded, 0 failed",
+        ),
         (
             {"foo": (1, "SOME_TEXT_1"), "bar": (0, "SOME_TEXT_2")},
             1,
@@ -105,7 +109,11 @@ def test_check_form_submit_main(
             "0 succeeded, 2 failed (bar: SOME_TEXT_2, foo: SOME_TEXT_1)",
         ),
         (
-            {"foo": (0, "SOME_TEXT_1"), "bar": (0, "SOME_TEXT_2"), "baz": (0, "SOME_TEXT_3")},
+            {
+                "foo": (0, "SOME_TEXT_1"),
+                "bar": (0, "SOME_TEXT_2"),
+                "baz": (0, "SOME_TEXT_3"),
+            },
             0,
             "3 succeeded, 0 failed",
         ),
@@ -130,9 +138,24 @@ def test_ac_check_form_submit_host_states_no_levels(
         ({"foo": (0, "SOME_TEXT_1")}, None, 0, "1 succeeded, 0 failed"),
         ({"foo": (0, "SOME_TEXT_1")}, (0, 0), 0, "1 succeeded, 0 failed"),
         ({"foo": (0, "SOME_TEXT_1")}, (1, 1), 2, "1 succeeded, 0 failed"),
-        ({"foo": (3, "SOME_TEXT_1")}, None, 3, "0 succeeded, 1 failed (foo: SOME_TEXT_1)"),
-        ({"foo": (3, "SOME_TEXT_1")}, (0, 0), 2, "0 succeeded, 1 failed (foo: SOME_TEXT_1)"),
-        ({"foo": (3, "SOME_TEXT_1")}, (1, 1), 2, "0 succeeded, 1 failed (foo: SOME_TEXT_1)"),
+        (
+            {"foo": (3, "SOME_TEXT_1")},
+            None,
+            3,
+            "0 succeeded, 1 failed (foo: SOME_TEXT_1)",
+        ),
+        (
+            {"foo": (3, "SOME_TEXT_1")},
+            (0, 0),
+            2,
+            "0 succeeded, 1 failed (foo: SOME_TEXT_1)",
+        ),
+        (
+            {"foo": (3, "SOME_TEXT_1")},
+            (1, 1),
+            2,
+            "0 succeeded, 1 failed (foo: SOME_TEXT_1)",
+        ),
     ],
 )
 def test_ac_check_form_submit_host_states_levels(

@@ -573,7 +573,11 @@ def test_migrate_to_upper_integer_levels_scaled_predictive_stdev() -> None:
     [
         pytest.param(
             ("password", "secret-password"),
-            ("cmk_postprocessed", "explicit_password", ("throwaway-id", "secret-password")),
+            (
+                "cmk_postprocessed",
+                "explicit_password",
+                ("throwaway-id", "secret-password"),
+            ),
             id="migrate explicit password",
         ),
         pytest.param(

@@ -117,7 +117,11 @@ class BIAggregation:
         aggregation_visualization = schema_config["aggregation_visualization"]
         groups = BIAggregationGroups(schema_config["groups"])
         return BICompiledAggregation(
-            aggregation_id, branches, computation_options, aggregation_visualization, groups
+            aggregation_id,
+            branches,
+            computation_options,
+            aggregation_visualization,
+            groups,
         )
 
 

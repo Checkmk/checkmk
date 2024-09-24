@@ -55,7 +55,11 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.watolib.main_menu import main_module_registry
-from cmk.gui.watolib.search import IndexNotFoundException, IndexSearcher, PermissionsHandler
+from cmk.gui.watolib.search import (
+    IndexNotFoundException,
+    IndexSearcher,
+    PermissionsHandler,
+)
 
 from ._base import PageHandlers, SidebarSnapin
 
@@ -358,9 +362,7 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
             "hosts": ["name"],
             "hostgroups": ["name"],
             "servicegroups": ["name"],
-        }.get(
-            self.livestatus_table, []
-        )  # TODO: Is the default correct/necessary?
+        }.get(self.livestatus_table, [])  # TODO: Is the default correct/necessary?
 
     def get_search_url_params(self) -> HTTPVariables:
         exact_match = self.num_rows() == 1
@@ -722,7 +724,10 @@ class QuicksearchSnapin(SidebarSnapin):
         html.open_div(id_="mk_side_search", onclick="cmk.quicksearch.close_popup();")
         html.input(id_=id_, type_="text", name="search", autocomplete="off")
         html.icon_button(
-            "#", _("Search"), "quicksearch", onclick="cmk.quicksearch.on_search_click();"
+            "#",
+            _("Search"),
+            "quicksearch",
+            onclick="cmk.quicksearch.on_search_click();",
         )
         html.close_div()
         html.div("", id_="mk_side_clear")
@@ -966,7 +971,10 @@ class GroupMatchPlugin(ABCLivestatusMatchPlugin):
             "servicegroup": ["servicegroup", "name"],
             "svcgroups": ["servicegroup_regex", "name"],
             # Host/Service domain (hosts, services)
-            "allservices": ["%sgroups" % self._group_type, "%s_groups" % self._group_type],
+            "allservices": [
+                "%sgroups" % self._group_type,
+                "%s_groups" % self._group_type,
+            ],
             "searchsvc": [
                 "%sgroups" % self._group_type,
                 self._group_type == "service" and "groups" or "host_groups",
@@ -1095,10 +1103,22 @@ class HostMatchPlugin(ABCLivestatusMatchPlugin):
             # View name     Filter name
             # Exact matches (always uses hostname as filter)
             "host": {"name": "host", "address": "host", "alias": "host"},
-            "allservices": {"name": "host_regex", "address": "host_regex", "alias": "host_regex"},
+            "allservices": {
+                "name": "host_regex",
+                "address": "host_regex",
+                "alias": "host_regex",
+            },
             # Multi matches
-            "searchhost": {"name": "host_regex", "address": "host_address", "alias": "hostalias"},
-            "searchsvc": {"name": "host_regex", "address": "host_address", "alias": "hostalias"},
+            "searchhost": {
+                "name": "host_regex",
+                "address": "host_address",
+                "alias": "hostalias",
+            },
+            "searchsvc": {
+                "name": "host_regex",
+                "address": "host_address",
+                "alias": "hostalias",
+            },
         }
 
         view_info = supported_views.get(for_view)
@@ -1456,7 +1476,10 @@ class MenuSearchResultsRenderer(abc.ABC):
         results: SearchResultsByTopic,
     ) -> str:
         with output_funnel.plugged():
-            default_icons = ("main_" + self.search_type + "_active", "main_" + self.search_type)
+            default_icons = (
+                "main_" + self.search_type + "_active",
+                "main_" + self.search_type,
+            )
             icon_mapping = self._get_icon_mapping(default_icons)
 
             for topic, search_results_iter in results:
@@ -1464,7 +1487,10 @@ class MenuSearchResultsRenderer(abc.ABC):
                     search_results_list = list(search_results_iter)
                     show_all_limit_exceeded = False
                 else:
-                    search_results_list, show_all_limit_exceeded = _evaluate_iterable_up_to(
+                    (
+                        search_results_list,
+                        show_all_limit_exceeded,
+                    ) = _evaluate_iterable_up_to(
                         search_results_iter,
                         self.max_results_after_show_all,
                     )

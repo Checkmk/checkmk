@@ -394,7 +394,10 @@ def _check_heartbeat_crm(
     # Check for number of resources when enabled
     if params["num_resources"] is not None and section.cluster.num_resources is not None:
         if section.cluster.num_resources == params["num_resources"]:
-            yield Result(state=State.OK, summary="Resources: %d" % (section.cluster.num_resources,))
+            yield Result(
+                state=State.OK,
+                summary="Resources: %d" % (section.cluster.num_resources,),
+            )
         else:
             yield Result(
                 state=State.CRIT,

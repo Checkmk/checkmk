@@ -16,7 +16,10 @@ from cmk.gui.pagetypes import _deserialize_public
     [
         (None, False),
         (True, True),
-        (("contact_groups", ["first", "second"]), ("contact_groups", ["first", "second"])),
+        (
+            ("contact_groups", ["first", "second"]),
+            ("contact_groups", ["first", "second"]),
+        ),
         (("sites", ["mysite", "mysite_2"]), ("sites", ["mysite", "mysite_2"])),
     ],
 )

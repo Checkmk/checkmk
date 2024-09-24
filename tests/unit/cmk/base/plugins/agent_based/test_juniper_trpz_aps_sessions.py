@@ -9,7 +9,10 @@ from typing import Any
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.juniper_trpz_aps import (
     check_juniper_trpz_aps,
     cluster_check_juniper_trpz_aps,
@@ -689,8 +692,14 @@ def test_check_juniper_trpz_aps(section: SectionAps, expected_results: CheckResu
                 Result(state=State.OK, summary="Total: 4 access points, Sessions: 6"),
                 Metric("ap_devices_total", 4.0),
                 Metric("total_sessions", 6.0),
-                Result(state=State.OK, summary="[node1] Online access points: 1, Sessions: 2"),
-                Result(state=State.OK, summary="[node2] Online access points: 3, Sessions: 4"),
+                Result(
+                    state=State.OK,
+                    summary="[node1] Online access points: 1, Sessions: 2",
+                ),
+                Result(
+                    state=State.OK,
+                    summary="[node2] Online access points: 3, Sessions: 4",
+                ),
             ],
         ),
     ],
@@ -711,7 +720,8 @@ def test_cluster_check_juniper_trpz_aps(
     ],
 )
 def test_parse_juniper_trpz_aps_sessions(
-    node_sections: Mapping[str, list[StringTable]], parsed_sections: Mapping[str, object]
+    node_sections: Mapping[str, list[StringTable]],
+    parsed_sections: Mapping[str, object],
 ) -> None:
     assert {
         node_name: parse_juniper_trpz_aps_sessions(string_list)

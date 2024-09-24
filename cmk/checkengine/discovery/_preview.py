@@ -17,8 +17,17 @@ from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.timeperiod import timeperiod_active
 
-from cmk.checkengine.checking import CheckPlugin, CheckPluginName, ConfiguredService, ServiceID
-from cmk.checkengine.checkresults import ActiveCheckResult, MetricTuple, ServiceCheckResult
+from cmk.checkengine.checking import (
+    CheckPlugin,
+    CheckPluginName,
+    ConfiguredService,
+    ServiceID,
+)
+from cmk.checkengine.checkresults import (
+    ActiveCheckResult,
+    MetricTuple,
+    ServiceCheckResult,
+)
 from cmk.checkengine.fetcher import FetcherFunction, HostKey
 from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters

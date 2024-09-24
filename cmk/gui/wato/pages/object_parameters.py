@@ -5,6 +5,7 @@
 """Mode for displaying and modifying the rule based host and service
 parameters. This is a host/service overview page over all things that can be
 modified via rules."""
+
 import functools
 from collections.abc import Callable, Collection, Iterator
 
@@ -190,7 +191,12 @@ class ModeObjectParameters(WatoMode):
         if not serviceinfo:
             return
 
-        forms.header(_("Check origin and parameters"), isopen=True, narrow=True, css="rulesettings")
+        forms.header(
+            _("Check origin and parameters"),
+            isopen=True,
+            narrow=True,
+            css="rulesettings",
+        )
         origin = serviceinfo["origin"]
         origin_txt = {
             "active": _("Active check"),
@@ -207,11 +213,18 @@ class ModeObjectParameters(WatoMode):
             "classic": self._handle_classic_origin,
         }
         render_labels = functools.partial(
-            self._show_labels, service_result.labels, "service", service_result.label_sources
+            self._show_labels,
+            service_result.labels,
+            "service",
+            service_result.label_sources,
         )
         rulespec_allow_list = get_rulespec_allow_list()
         handler[origin](
-            serviceinfo, all_rulesets, rulespec_allow_list, service_result, render_labels
+            serviceinfo,
+            all_rulesets,
+            rulespec_allow_list,
+            service_result,
+            render_labels,
         )
         return
 
@@ -386,7 +399,11 @@ class ModeObjectParameters(WatoMode):
         rule_folder, rule_index, rule = origin_rule_result
 
         url = folder_preserving_link(
-            [("mode", "edit_ruleset"), ("varname", "custom_checks"), ("host", self._hostname)]
+            [
+                ("mode", "edit_ruleset"),
+                ("varname", "custom_checks"),
+                ("host", self._hostname),
+            ]
         )
         forms.section(HTMLWriter.render_a(_("Command Line"), href=url))
         url = folder_preserving_link(
@@ -403,7 +420,10 @@ class ModeObjectParameters(WatoMode):
         html.open_tr()
 
         html.open_td(class_="reason")
-        html.a("%s %d %s %s" % (_("Rule"), rule_index + 1, _("in"), rule_folder.title()), href=url)
+        html.a(
+            "%s %d %s %s" % (_("Rule"), rule_index + 1, _("in"), rule_folder.title()),
+            href=url,
+        )
         html.close_td()
         html.open_td(class_=["settingvalue", "used"])
         if "command_line" in serviceinfo:
@@ -417,7 +437,11 @@ class ModeObjectParameters(WatoMode):
         render_labels()
 
     def _get_custom_check_origin_rule(
-        self, ruleset: Ruleset, hostname: str, svc_desc: str, service_result: AnalyseServiceResult
+        self,
+        ruleset: Ruleset,
+        hostname: str,
+        svc_desc: str,
+        service_result: AnalyseServiceResult,
     ) -> tuple[Folder, int, Rule] | None:
         # We could use the outcome of _setting instead of the outcome of
         # the automation call in the future
@@ -458,7 +482,13 @@ class ModeObjectParameters(WatoMode):
         html.close_table()
 
     def _render_rule_reason(  # type: ignore[no-untyped-def]
-        self, title, title_url, reason, reason_url, is_default, setting: ValueSpecText | Item
+        self,
+        title,
+        title_url,
+        reason,
+        reason_url,
+        is_default,
+        setting: ValueSpecText | Item,
     ) -> None:
         if title_url:
             title = HTMLWriter.render_a(title, href=title_url)
@@ -537,7 +567,10 @@ class ModeObjectParameters(WatoMode):
         if len(rules) == 1:
             rule_folder, rule_index, rule = rules[0]
             url = rule_url(rule)
-            html.a(_("Rule %d in %s") % (rule_index + 1, rule_folder.title()), href=rule_url(rule))
+            html.a(
+                _("Rule %d in %s") % (rule_index + 1, rule_folder.title()),
+                href=rule_url(rule),
+            )
 
         elif len(rules) > 1:
             html.a("%d %s" % (len(rules), _("Rules")), href=url)

@@ -23,6 +23,7 @@ def test_check_mssql_instance_vanished(
 ) -> None:
     assert list(check_plugin.check_function(item="MSSQL instance", params={}, section={})) == [
         Result(
-            state=State.CRIT, summary="Database or necessary processes not running or login failed"
+            state=State.CRIT,
+            summary="Database or necessary processes not running or login failed",
         ),
     ]

@@ -12,7 +12,15 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersOperatingSystem,
 )
-from cmk.gui.valuespec import Age, Dictionary, DropdownChoice, Float, Integer, TextInput, Tuple
+from cmk.gui.valuespec import (
+    Age,
+    Dictionary,
+    DropdownChoice,
+    Float,
+    Integer,
+    TextInput,
+    Tuple,
+)
 
 
 def _valuespec_ntp_rules() -> Dictionary:

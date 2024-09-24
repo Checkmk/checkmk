@@ -19,7 +19,13 @@
 from cmk.base.check_api import check_levels, LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import contains, IgnoreResultsError, render, SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    contains,
+    IgnoreResultsError,
+    render,
+    SNMPTree,
+    StringTable,
+)
 
 
 # Inventory of dell power connect CPU details.
@@ -55,10 +61,14 @@ def check_dell_powerconnect_cpu(item, params, info):
         infoname="CPU utilization",
         boundaries=(0, 100),
     )
-    yield 0, "", [
-        ("util1", "%d%%" % saveint(oneminuteperc), params[0], params[1], 0, 100),
-        ("util5", "%d%%" % saveint(fiveminutesperc), params[0], params[1], 0, 100),
-    ]
+    yield (
+        0,
+        "",
+        [
+            ("util1", "%d%%" % saveint(oneminuteperc), params[0], params[1], 0, 100),
+            ("util5", "%d%%" % saveint(fiveminutesperc), params[0], params[1], 0, 100),
+        ],
+    )
 
 
 def parse_dell_powerconnect_cpu(string_table: StringTable) -> StringTable:

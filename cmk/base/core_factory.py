@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.utils.licensing.handler import LicensingHandler
-from cmk.utils.version import edition, Edition
+from cmk.utils.version import Edition, edition
 
 from cmk.base.core_config import MonitoringCore
 
@@ -26,7 +26,9 @@ def create_core(core_name: str) -> MonitoringCore:
         return CmcPb(get_licensing_handler_type())
 
     if core_name == "nagios":
-        from cmk.base.core_nagios import NagiosCore  # pylint: disable=import-outside-toplevel
+        from cmk.base.core_nagios import (
+            NagiosCore,  # pylint: disable=import-outside-toplevel
+        )
 
         return NagiosCore(get_licensing_handler_type())
 

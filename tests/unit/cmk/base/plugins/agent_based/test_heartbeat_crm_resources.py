@@ -52,11 +52,35 @@ def _get_section_1() -> Section:
             ["Online:", "[", "hrssc61i01", "hrssc61i02", "]"],
             ["Full", "list", "of", "resources:"],
             ["Resource", "Group:", "grp_IFG_ASCS22"],
-            ["_", "rsc_ip_IFG_ASCS22", "(ocf::heartbeat:IPaddr2):", "Started", "hrssc61i01"],
-            ["_", "rsc_sap_IFG_ASCS22", "(ocf::heartbeat:SAPInstance):", "Started", "hrssc61i01"],
+            [
+                "_",
+                "rsc_ip_IFG_ASCS22",
+                "(ocf::heartbeat:IPaddr2):",
+                "Started",
+                "hrssc61i01",
+            ],
+            [
+                "_",
+                "rsc_sap_IFG_ASCS22",
+                "(ocf::heartbeat:SAPInstance):",
+                "Started",
+                "hrssc61i01",
+            ],
             ["Resource", "Group:", "grp_IFG_ERS23"],
-            ["_", "rsc_ip_IFG_ERS23", "(ocf::heartbeat:IPaddr2):", "Started", "hrssc61i02"],
-            ["_", "rsc_sap_IFG_ERS23", "(ocf::heartbeat:SAPInstance):", "Started", "hrssc61i02"],
+            [
+                "_",
+                "rsc_ip_IFG_ERS23",
+                "(ocf::heartbeat:IPaddr2):",
+                "Started",
+                "hrssc61i02",
+            ],
+            [
+                "_",
+                "rsc_sap_IFG_ERS23",
+                "(ocf::heartbeat:SAPInstance):",
+                "Started",
+                "hrssc61i02",
+            ],
             ["Clone", "Set:", "clone_nfs_sapmnt_IFG", "[nfs_sapmnt_IFG]"],
             ["_", "Started:", "[", "hrssc61i01", "hrssc61i02", "]"],
             ["Clone", "Set:", "clone_nfs_usr_sap_IFG", "[nfs_usr_sap_IFG]"],
@@ -228,7 +252,14 @@ def _section_pacemaker_v2() -> Section:
         ["Full", "List", "of", "Resources:"],
         ["_*", "rhevfence", "(stonith:fence_rhevm):", "Started", "cbgdevd01"],
         ["_*", "Resource", "Group:", "QPID:"],
-        ["_", "*", "qpid_lvm", "(ocf::heartbeat:LVM-activate):", "Started", "cbgdevd01"],
+        [
+            "_",
+            "*",
+            "qpid_lvm",
+            "(ocf::heartbeat:LVM-activate):",
+            "Started",
+            "cbgdevd01",
+        ],
         ["_", "*", "qpid_fs", "(ocf::heartbeat:Filesystem):", "Started", "cbgdevd01"],
         ["_", "*", "qpid_ip", "(ocf::heartbeat:IPaddr2):", "Started", "cbgdevd01"],
         ["_", "*", "qpid_jb", "(ocf::custom:AmqpService):", "Started", "cbgdevd01"],
@@ -288,7 +319,10 @@ def test_check_heartbeat_crm_resources_ok(section_1: Section) -> None:
             section_1,
         )
     ) == [
-        Result(state=State.OK, summary="clone_nfs_sapmnt_IFG Clone Started hrssc61i01, hrssc61i02"),
+        Result(
+            state=State.OK,
+            summary="clone_nfs_sapmnt_IFG Clone Started hrssc61i01, hrssc61i02",
+        ),
     ]
 
 
@@ -300,14 +334,23 @@ def test_check_heartbeat_crm_resources_started(section_2: Section) -> None:
             section_2,
         )
     ) == [
-        Result(state=State.OK, summary="cluster1_fence(stonith:fence_ipmilan): Started cluster2"),
+        Result(
+            state=State.OK,
+            summary="cluster1_fence(stonith:fence_ipmilan): Started cluster2",
+        ),
         # TODO: check if this maaaaaybe should read 'state "Started"'
         Result(state=State.CRIT, summary='Resource is in state "cluster2"'),
     ]
 
 
-def test_discover_heartbeat_crm_resources_pacemaker_v2(section_pacemaker_v2: Section) -> None:
+def test_discover_heartbeat_crm_resources_pacemaker_v2(
+    section_pacemaker_v2: Section,
+) -> None:
     discovered_services = list(discover_heartbeat_crm_resources({}, section_pacemaker_v2))
-    expected_services = [Service(item="rhevfence"), Service(item="QPID"), Service(item="BRIDGE")]
+    expected_services = [
+        Service(item="rhevfence"),
+        Service(item="QPID"),
+        Service(item="BRIDGE"),
+    ]
 
     assert discovered_services == expected_services

@@ -175,7 +175,9 @@ def _check_kube_replicas(
             summary=f"Available: {section_kube_replicas.available}/{section_kube_replicas.desired}",
         )
         yield Metric(
-            "kube_available_replicas", section_kube_replicas.available, boundaries=metric_boundary
+            "kube_available_replicas",
+            section_kube_replicas.available,
+            boundaries=metric_boundary,
         )
 
     yield Result(
@@ -187,9 +189,17 @@ def _check_kube_replicas(
         summary=f"Up-to-date: {section_kube_replicas.updated}/{section_kube_replicas.desired}",
     )
 
-    yield Metric("kube_desired_replicas", section_kube_replicas.desired, boundaries=metric_boundary)
+    yield Metric(
+        "kube_desired_replicas",
+        section_kube_replicas.desired,
+        boundaries=metric_boundary,
+    )
     yield Metric("kube_ready_replicas", section_kube_replicas.ready, boundaries=metric_boundary)
-    yield Metric("kube_updated_replicas", section_kube_replicas.updated, boundaries=metric_boundary)
+    yield Metric(
+        "kube_updated_replicas",
+        section_kube_replicas.updated,
+        boundaries=metric_boundary,
+    )
 
     if isinstance(section_kube_replicas, DaemonSetReplicas):
         yield Result(

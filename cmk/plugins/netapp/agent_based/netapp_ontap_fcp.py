@@ -186,7 +186,8 @@ def _speed_result(params: Mapping[str, Any], speed: int | None) -> CheckResult:
     if speed is None:
         if expected_speed is not None:
             yield Result(
-                state=State.WARN, summary=f"Speed: unknown (expected: {expected_speed_str})"
+                state=State.WARN,
+                summary=f"Speed: unknown (expected: {expected_speed_str})",
             )
         return
 
@@ -198,7 +199,10 @@ def _speed_result(params: Mapping[str, Any], speed: int | None) -> CheckResult:
 
 
 def _io_bytes_results(
-    item: str, params: Mapping[str, Any], fcp_if: Mapping[str, int | float], speed: int | None
+    item: str,
+    params: Mapping[str, Any],
+    fcp_if: Mapping[str, int | float],
+    speed: int | None,
 ) -> CheckResult:
     bw_levels = bandwidth_levels(
         params=params,
@@ -257,7 +261,11 @@ def _io_ops_results(
             continue
 
         yield from check_levels(
-            value=value, metric_name=what, render_func=str, label=descr, notice_only=True
+            value=value,
+            metric_name=what,
+            render_func=str,
+            label=descr,
+            notice_only=True,
         )
 
 
@@ -280,7 +288,11 @@ def _latency_results(
             # According to NetApp's "Performance Management Design Guide",
             # the latency is a function of `total_ops`.
             value = get_rate(
-                value_store, f"{item}.{what}", total_ops, counter_val, raise_overflow=True
+                value_store,
+                f"{item}.{what}",
+                total_ops,
+                counter_val,
+                raise_overflow=True,
             )
         except IgnoreResultsError:
             continue
@@ -288,7 +300,10 @@ def _latency_results(
         levels_upper = params.get(what)
         if isinstance(levels_upper, dict):
             yield from check_levels_predictive(
-                value=value, metric_name=f"{what}_latency", levels=levels_upper, label=text
+                value=value,
+                metric_name=f"{what}_latency",
+                levels=levels_upper,
+                label=text,
             )
         else:
             yield from check_levels(

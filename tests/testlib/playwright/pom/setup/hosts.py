@@ -49,7 +49,8 @@ class SetupHost(CmkPage):
         # add host
         self.add_host.click()
         self.page.wait_for_url(
-            url=re.compile(quote_plus("wato.py?folder=&mode=newhost")), wait_until="load"
+            url=re.compile(quote_plus("wato.py?folder=&mode=newhost")),
+            wait_until="load",
         )
         # fill details
         self.main_area.get_input("host").fill(host.name)

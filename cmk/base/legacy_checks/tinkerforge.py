@@ -115,7 +115,15 @@ def check_tinkerforge_motion(item, params, parsed):
                 return True
         return False
 
-    weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+    weekdays = [
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday",
+    ]
     if "motion" in parsed and item in parsed["motion"]:
         today = time.localtime()
         if "time_periods" in params:

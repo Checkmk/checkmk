@@ -214,7 +214,8 @@ class DiscoveredHostLabelSyncJob(BackgroundJob):
 
     def _save_newest_host_labels_per_site(self, newest_host_labels: dict[SiteId, float]) -> None:
         store.save_object_to_file(
-            DiscoveredHostLabelSyncJob.newest_host_labels_per_site_path(), newest_host_labels
+            DiscoveredHostLabelSyncJob.newest_host_labels_per_site_path(),
+            newest_host_labels,
         )
 
 
@@ -270,7 +271,9 @@ def get_host_labels_entry_of_host(host_name: HostName) -> UpdatedHostLabelsEntry
         return (path.name, path.stat().st_mtime, f.read())
 
 
-def save_updated_host_label_files(updated_host_labels: list[UpdatedHostLabelsEntry]) -> None:
+def save_updated_host_label_files(
+    updated_host_labels: list[UpdatedHostLabelsEntry],
+) -> None:
     """Persists the data previously read by get_updated_host_label_files()"""
     for file_name, mtime, content in updated_host_labels:
         file_path = cmk.utils.paths.discovered_host_labels_dir / file_name

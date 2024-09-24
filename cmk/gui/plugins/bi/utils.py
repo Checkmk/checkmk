@@ -11,6 +11,8 @@ from cmk.bi.lib import ABCBIAggregationFunction as ABCBIAggregationFunction
 from cmk.bi.lib import ABCBICompiledNode as ABCBICompiledNode
 from cmk.bi.lib import ABCBISearch as ABCBISearch
 from cmk.bi.lib import bi_action_registry as bi_action_registry
-from cmk.bi.lib import bi_aggregation_function_registry as bi_aggregation_function_registry
+from cmk.bi.lib import (
+    bi_aggregation_function_registry as bi_aggregation_function_registry,
+)
 from cmk.bi.lib import bi_search_registry as bi_search_registry
 from cmk.bi.lib import replace_macros as replace_macros

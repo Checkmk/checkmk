@@ -34,7 +34,12 @@ HOST_CONFIG = HostConfig(
             id="explicit password and no port",
         ),
         pytest.param(
-            {"username": "userid", "password": Secret(23), "no_cert_check": False, "port": 9440},
+            {
+                "username": "userid",
+                "password": Secret(23),
+                "no_cert_check": False,
+                "port": 9440,
+            },
             [
                 "--server",
                 "address",
@@ -50,7 +55,12 @@ HOST_CONFIG = HostConfig(
             id="explicit password and port",
         ),
         pytest.param(
-            {"username": "userid", "password": Secret(42), "no_cert_check": True, "port": 9440},
+            {
+                "username": "userid",
+                "password": Secret(42),
+                "no_cert_check": True,
+                "port": 9440,
+            },
             [
                 "--server",
                 "address",

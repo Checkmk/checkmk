@@ -118,12 +118,19 @@ def test_discovery_single() -> None:
         ),
         (
             "aix agent files",
-            {"maxsize_largest": (12 * 1024, 13 * 1024), "minage_newest": (3600 * 72, 3600 * 96)},
+            {
+                "maxsize_largest": (12 * 1024, 13 * 1024),
+                "minage_newest": (3600 * 72, 3600 * 96),
+            },
             [
                 (0, "Files in total: 6", [("file_count", 6, None, None)]),
                 (0, "Smallest: 1.15 kB", []),
                 (1, "Largest: 12.9 kB (warn/crit at 12.3 kB/13.3 kB)", []),
-                (2, "Newest: 2 days 15 hours (warn/crit below 3 days 0 hours/4 days 0 hours)", []),
+                (
+                    2,
+                    "Newest: 2 days 15 hours (warn/crit below 3 days 0 hours/4 days 0 hours)",
+                    [],
+                ),
                 (0, "Oldest: 217 days 0 hours", []),
                 (0, "\n"),
             ],

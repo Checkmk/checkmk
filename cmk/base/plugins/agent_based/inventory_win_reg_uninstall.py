@@ -34,7 +34,16 @@ def parse_win_reg_uninstall(string_table: StringTable) -> Section:
             display_name, publisher, path, pacname, version, estimated_size, date = line
             language = ""
         elif len(line) == 8:
-            display_name, publisher, path, pacname, version, estimated_size, date, language = line
+            (
+                display_name,
+                publisher,
+                path,
+                pacname,
+                version,
+                estimated_size,
+                date,
+                language,
+            ) = line
         else:
             continue
 

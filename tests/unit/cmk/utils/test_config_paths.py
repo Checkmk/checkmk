@@ -10,7 +10,12 @@ from pathlib import Path
 import pytest
 
 import cmk.utils.paths
-from cmk.utils.config_path import _LatestConfigPath, ConfigPath, LATEST_CONFIG, VersionedConfigPath
+from cmk.utils.config_path import (
+    _LatestConfigPath,
+    ConfigPath,
+    LATEST_CONFIG,
+    VersionedConfigPath,
+)
 
 
 class TestVersionedConfigPath:

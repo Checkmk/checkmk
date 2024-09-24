@@ -67,7 +67,10 @@ def _make_immutable_tree(tree: MutableTree) -> ImmutableTree:
 @pytest.mark.parametrize(
     "item, known_class_name",
     [
-        (Attributes(path=["a", "b", "c"], status_attributes={"foo": "bar"}), "TableRow"),
+        (
+            Attributes(path=["a", "b", "c"], status_attributes={"foo": "bar"}),
+            "TableRow",
+        ),
         (TableRow(path=["a", "b", "c"], key_columns={"foo": "bar"}), "Attributes"),
     ],
 )
@@ -845,7 +848,9 @@ def test_updater_merge_previous_attributes(
         ("choices", ["old", "keyz"]),
     ],
 )
-def test_updater_merge_previous_attributes_outdated(choices: tuple[str, list[str]]) -> None:
+def test_updater_merge_previous_attributes_outdated(
+    choices: tuple[str, list[str]],
+) -> None:
     previous_tree, _items_of_inventory_plugins = _make_tree_or_items(
         previous_attributes_retentions={"old": RetentionInterval(1, 2, 3, "current")},
         previous_table_retentions={},
@@ -1346,7 +1351,10 @@ def _create_cluster_tree(pairs: Mapping[str, int | float | str | None]) -> Mutab
             _create_cluster_tree({"is_cluster": True}),
             [
                 ActiveCheckResult(
-                    state=0, summary="No further data for tree update", details=(), metrics=()
+                    state=0,
+                    summary="No further data for tree update",
+                    details=(),
+                    metrics=(),
                 ),
                 ActiveCheckResult(
                     state=0, summary="Found 1 inventory entries", details=(), metrics=()
@@ -1358,7 +1366,10 @@ def _create_cluster_tree(pairs: Mapping[str, int | float | str | None]) -> Mutab
             _create_cluster_tree({"is_cluster": False}),
             [
                 ActiveCheckResult(
-                    state=0, summary="No further data for tree update", details=(), metrics=()
+                    state=0,
+                    summary="No further data for tree update",
+                    details=(),
+                    metrics=(),
                 ),
                 ActiveCheckResult(
                     state=0, summary="Found 1 inventory entries", details=(), metrics=()
@@ -1397,7 +1408,11 @@ def _create_root_tree(pairs: Mapping[str, int | float | str | None]) -> MutableT
     [
         (
             ImmutableTree.deserialize(
-                {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
+                {
+                    "Attributes": {"Pairs": {"key": "old value"}},
+                    "Table": {},
+                    "Nodes": {},
+                }
             ),
             # No further impact, may not be realistic here
             MutableTree(),
@@ -1414,7 +1429,11 @@ def _create_root_tree(pairs: Mapping[str, int | float | str | None]) -> MutableT
         ),
         (
             ImmutableTree.deserialize(
-                {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
+                {
+                    "Attributes": {"Pairs": {"key": "old value"}},
+                    "Table": {},
+                    "Nodes": {},
+                }
             ),
             _create_root_tree({"key": "new value"}),
             # Content of path does not matter here
@@ -1423,7 +1442,11 @@ def _create_root_tree(pairs: Mapping[str, int | float | str | None]) -> MutableT
         ),
         (
             ImmutableTree.deserialize(
-                {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
+                {
+                    "Attributes": {"Pairs": {"key": "old value"}},
+                    "Table": {},
+                    "Nodes": {},
+                }
             ),
             _create_root_tree({"key": "new value"}),
             UpdateResult(),

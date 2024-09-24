@@ -29,7 +29,10 @@ class TestListOf:
         assert get_list_of().mask([(1, "pwd")]) == [(1, "******")]
 
     def test_value_to_json(self) -> None:
-        assert get_list_of().value_to_json([(1, "eins"), (2, "zwei")]) == [[1, "eins"], [2, "zwei"]]
+        assert get_list_of().value_to_json([(1, "eins"), (2, "zwei")]) == [
+            [1, "eins"],
+            [2, "zwei"],
+        ]
 
     def test_from_json(self) -> None:
         assert get_list_of().value_from_json([[1, "eins"], [2, "zwei"]]) == [

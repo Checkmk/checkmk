@@ -24,7 +24,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTabl
     ],
 )
 def test_parse_pulse_secure_users(
-    string_table: list[StringTable], expected_parsed_data: pulse_secure_users.Section | None
+    string_table: list[StringTable],
+    expected_parsed_data: pulse_secure_users.Section | None,
 ) -> None:
     assert pulse_secure_users.parse_pulse_secure_users(string_table) == expected_parsed_data
 

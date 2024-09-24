@@ -31,7 +31,11 @@ def _parameter_valuespec_efreq():
                         ),
                         elements=[
                             Integer(title=_("warning if below"), unit="Hz", default_value=40),
-                            Integer(title=_("critical if below"), unit="Hz", default_value=45),
+                            Integer(
+                                title=_("critical if below"),
+                                unit="Hz",
+                                default_value=45,
+                            ),
                         ],
                     ),
                 ),

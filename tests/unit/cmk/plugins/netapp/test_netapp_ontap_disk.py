@@ -94,7 +94,8 @@ _DISK_MODELS = [
             },
             [
                 Result(
-                    state=State.WARN, summary="Spare disks: 1: 1.00 (warn/crit below 50.00/1.00)"
+                    state=State.WARN,
+                    summary="Spare disks: 1: 1.00 (warn/crit below 50.00/1.00)",
                 ),
                 Metric("spare_disks", 1.0),
                 Result(state=State.OK, summary="Failed disks: 0"),

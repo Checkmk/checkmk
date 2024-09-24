@@ -76,7 +76,11 @@ def test_check_mk_agent_cmd_line_show_config(
     "command, code, starts_with",
     [
         ("trash", 13, 'Provided Parameter "trash" is not allowed'),
-        ("updater", 1, "\r\n\tYou must install Agent Updater Python plugin to use the updater"),
+        (
+            "updater",
+            1,
+            "\r\n\tYou must install Agent Updater Python plugin to use the updater",
+        ),
     ],
 )
 def test_check_mk_agent_cmd_line_bad(

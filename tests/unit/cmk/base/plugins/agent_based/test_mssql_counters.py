@@ -25,8 +25,12 @@ from cmk.base.plugins.agent_based.mssql_counters_file_sizes import (
     check_mssql_counters_file_sizes,
     discovery_mssql_counters_file_sizes,
 )
-from cmk.base.plugins.agent_based.mssql_counters_locks import _check_base as check_locks_base
-from cmk.base.plugins.agent_based.mssql_counters_locks import discovery_mssql_counters_locks
+from cmk.base.plugins.agent_based.mssql_counters_locks import (
+    _check_base as check_locks_base,
+)
+from cmk.base.plugins.agent_based.mssql_counters_locks import (
+    discovery_mssql_counters_locks,
+)
 from cmk.base.plugins.agent_based.mssql_counters_locks_per_batch import (
     _check_base as check_locks_per_batch_base,
 )
@@ -40,8 +44,12 @@ from cmk.base.plugins.agent_based.mssql_counters_pageactivity import (
     discovery_mssql_counters_pageactivity,
 )
 from cmk.base.plugins.agent_based.mssql_counters_section import parse_mssql_counters
-from cmk.base.plugins.agent_based.mssql_counters_sqlstats import _check_base as check_sqlstats_base
-from cmk.base.plugins.agent_based.mssql_counters_sqlstats import discovery_mssql_counters_sqlstats
+from cmk.base.plugins.agent_based.mssql_counters_sqlstats import (
+    _check_base as check_sqlstats_base,
+)
+from cmk.base.plugins.agent_based.mssql_counters_sqlstats import (
+    discovery_mssql_counters_sqlstats,
+)
 from cmk.base.plugins.agent_based.mssql_counters_transactions import (
     _check_base as check_transactions_base,
 )

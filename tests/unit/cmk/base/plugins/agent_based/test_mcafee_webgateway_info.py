@@ -33,20 +33,32 @@ WALK_SKYHIGH = """
 
 @pytest.mark.parametrize(
     "walk, detected_section",
-    [(WALK_MCAFEE, "mcafee_webgateway_info"), (WALK_SKYHIGH, "skyhigh_security_webgateway_info")],
+    [
+        (WALK_MCAFEE, "mcafee_webgateway_info"),
+        (WALK_SKYHIGH, "skyhigh_security_webgateway_info"),
+    ],
 )
 def test_detect(
-    walk: str, detected_section: str, fix_register: FixRegister, as_path: Callable[[str], Path]
+    walk: str,
+    detected_section: str,
+    fix_register: FixRegister,
+    as_path: Callable[[str], Path],
 ) -> None:
     assert snmp_is_detected(SectionName(detected_section), as_path(walk))
 
 
 @pytest.mark.parametrize(
     "walk, detected_section",
-    [(WALK_MCAFEE, "mcafee_webgateway_info"), (WALK_SKYHIGH, "skyhigh_security_webgateway_info")],
+    [
+        (WALK_MCAFEE, "mcafee_webgateway_info"),
+        (WALK_SKYHIGH, "skyhigh_security_webgateway_info"),
+    ],
 )
 def test_parse(
-    walk: str, detected_section: str, fix_register: FixRegister, as_path: Callable[[str], Path]
+    walk: str,
+    detected_section: str,
+    fix_register: FixRegister,
+    as_path: Callable[[str], Path],
 ) -> None:
     section = get_parsed_snmp_section(SectionName(detected_section), as_path(walk))
 
@@ -55,10 +67,16 @@ def test_parse(
 
 @pytest.mark.parametrize(
     "walk, detected_section",
-    [(WALK_MCAFEE, "mcafee_webgateway_info"), (WALK_SKYHIGH, "skyhigh_security_webgateway_info")],
+    [
+        (WALK_MCAFEE, "mcafee_webgateway_info"),
+        (WALK_SKYHIGH, "skyhigh_security_webgateway_info"),
+    ],
 )
 def test_discovery(
-    walk: str, detected_section: str, fix_register: FixRegister, as_path: Callable[[str], Path]
+    walk: str,
+    detected_section: str,
+    fix_register: FixRegister,
+    as_path: Callable[[str], Path],
 ) -> None:
     section = get_parsed_snmp_section(SectionName(detected_section), as_path(walk))
     assert section is not None
@@ -74,13 +92,23 @@ def test_discovery(
         pytest.param(
             WALK_MCAFEE,
             "mcafee_webgateway_info",
-            [v1.Result(state=v1.State.OK, summary="Product version: 7.6.1.2.0, Revision: 64221")],
+            [
+                v1.Result(
+                    state=v1.State.OK,
+                    summary="Product version: 7.6.1.2.0, Revision: 64221",
+                )
+            ],
             id="Check mcafee",
         ),
         pytest.param(
             WALK_SKYHIGH,
             "skyhigh_security_webgateway_info",
-            [v1.Result(state=v1.State.OK, summary="Product version: 7.6.1.2.0, Revision: 64221")],
+            [
+                v1.Result(
+                    state=v1.State.OK,
+                    summary="Product version: 7.6.1.2.0, Revision: 64221",
+                )
+            ],
             id="Check skyhigh",
         ),
     ],

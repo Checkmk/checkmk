@@ -9,7 +9,14 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, Integer, TextInput, Tuple
+from cmk.gui.valuespec import (
+    Alternative,
+    Dictionary,
+    FixedValue,
+    Integer,
+    TextInput,
+    Tuple,
+)
 
 
 def _item_spec_ibm_svc_enclosure():

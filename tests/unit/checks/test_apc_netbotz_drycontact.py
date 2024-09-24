@@ -51,9 +51,18 @@ def test_apc_netbotz_drycontact_inventory(
                 ["2.6", "Pumpe 2 RZ4", "Kaeltepark RZ4", "3"],
             ],
             {
-                "Pumpe 0 RZ4 1.6": {"location": "Kaeltepark RZ4", "state": ("Open low mem", 0)},
-                "Pumpe 1 RZ4 2.5": {"location": "Kaeltepark RZ4", "state": ("Closed high mem", 2)},
-                "Pumpe 2 RZ4 2.6": {"location": "Kaeltepark RZ4", "state": ("Disabled", 1)},
+                "Pumpe 0 RZ4 1.6": {
+                    "location": "Kaeltepark RZ4",
+                    "state": ("Open low mem", 0),
+                },
+                "Pumpe 1 RZ4 2.5": {
+                    "location": "Kaeltepark RZ4",
+                    "state": ("Closed high mem", 2),
+                },
+                "Pumpe 2 RZ4 2.6": {
+                    "location": "Kaeltepark RZ4",
+                    "state": ("Disabled", 1),
+                },
             },
         ),
         (

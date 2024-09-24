@@ -19,7 +19,12 @@ from .agent_based_api.v1 import (
     State,
     TableRow,
 )
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
+from .agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    InventoryResult,
+    StringTable,
+)
 
 # no used space check for Tablsspaces with CONTENTS in ('TEMPORARY','UNDO')
 # It is impossible to check the used space in UNDO and TEMPORARY Tablespaces
@@ -185,7 +190,10 @@ def check_oracle_tablespaces(  # pylint: disable=too-many-branches
         else:
             sid, ts_name = item.split(".", 1)
     except ValueError:
-        yield Result(state=State.UNKNOWN, summary="Invalid check item (must be <SID>.<tablespace>)")
+        yield Result(
+            state=State.UNKNOWN,
+            summary="Invalid check item (must be <SID>.<tablespace>)",
+        )
         return
 
     if sid in section["error_sids"]:
@@ -287,7 +295,8 @@ def check_oracle_tablespaces(  # pylint: disable=too-many-branches
 
             if autoext_info:
                 yield Result(
-                    state=State(params.get("autoextend_severity", 2)), summary=autoext_info
+                    state=State(params.get("autoextend_severity", 2)),
+                    summary=autoext_info,
                 )
 
         elif stats.num_extensible > 0:
@@ -336,7 +345,10 @@ def check_oracle_tablespaces(  # pylint: disable=too-many-branches
 def cluster_check_oracle_tablespaces(  # type: ignore[no-untyped-def]
     item, params, section: Mapping[str, oracle.SectionTableSpaces | None]
 ) -> CheckResult:
-    selected_tablespaces: oracle.SectionTableSpaces = {"tablespaces": {}, "error_sids": {}}
+    selected_tablespaces: oracle.SectionTableSpaces = {
+        "tablespaces": {},
+        "error_sids": {},
+    }
 
     # If there are more than one nodes per tablespace, then we select the node with the
     # most data files

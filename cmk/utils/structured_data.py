@@ -281,12 +281,16 @@ class SDRetentionFilterChoices:
         return self._columns
 
     def add_pairs_choice(
-        self, choice: Literal["nothing", "all"] | Sequence[SDKey], cache_info: tuple[int, int]
+        self,
+        choice: Literal["nothing", "all"] | Sequence[SDKey],
+        cache_info: tuple[int, int],
     ) -> None:
         self._pairs.append(_SDRetentionFilterChoice(choice, cache_info))
 
     def add_columns_choice(
-        self, choice: Literal["nothing", "all"] | Sequence[SDKey], cache_info: tuple[int, int]
+        self,
+        choice: Literal["nothing", "all"] | Sequence[SDKey],
+        cache_info: tuple[int, int],
     ) -> None:
         self._columns.append(_SDRetentionFilterChoice(choice, cache_info))
 
@@ -294,7 +298,9 @@ class SDRetentionFilterChoices:
 _CT = TypeVar("_CT", SDKey, SDNodeName)
 
 
-def _make_filter_func(choice: Literal["nothing", "all"] | Sequence[_CT]) -> Callable[[_CT], bool]:
+def _make_filter_func(
+    choice: Literal["nothing", "all"] | Sequence[_CT],
+) -> Callable[[_CT], bool]:
     match choice:
         case "nothing":
             return lambda k: False
@@ -305,7 +311,7 @@ def _make_filter_func(choice: Literal["nothing", "all"] | Sequence[_CT]) -> Call
 
 
 def _consolidate_filter_funcs(
-    choices: Sequence[Literal["nothing", "all"] | Sequence[_CT]]
+    choices: Sequence[Literal["nothing", "all"] | Sequence[_CT]],
 ) -> Callable[[_CT], bool]:
     return lambda kn: any(_make_filter_func(c)(kn) for c in choices)
 
@@ -456,7 +462,9 @@ class _MutableAttributes:
         if retentions:
             self.retentions = retentions
             update_result.add_attr_reason(
-                path, "Keep until", [f"{k} ({v.keep_until})" for k, v in retentions.items()]
+                path,
+                "Keep until",
+                [f"{k} ({v.keep_until})" for k, v in retentions.items()],
             )
 
     def serialize(self) -> SDRawAttributes:
@@ -780,11 +788,15 @@ class MutableTree:
 #   '----------------------------------------------------------------------'
 
 
-def _deserialize_legacy_attributes(raw_pairs: Mapping[SDKey, SDValue]) -> ImmutableAttributes:
+def _deserialize_legacy_attributes(
+    raw_pairs: Mapping[SDKey, SDValue],
+) -> ImmutableAttributes:
     return ImmutableAttributes(pairs=raw_pairs)
 
 
-def _deserialize_legacy_table(raw_rows: Sequence[Mapping[SDKey, SDValue]]) -> ImmutableTable:
+def _deserialize_legacy_table(
+    raw_rows: Sequence[Mapping[SDKey, SDValue]],
+) -> ImmutableTable:
     key_columns = sorted({k for r in raw_rows for k in r})
     rows_by_ident: dict[SDRowIdent, dict[SDKey, SDValue]] = {}
     for row in raw_rows:
@@ -1007,7 +1019,11 @@ class _DeltaDict:
 
     @classmethod
     def compare(
-        cls, *, left: Mapping[SDKey, SDValue], right: Mapping[SDKey, SDValue], keep_identical: bool
+        cls,
+        *,
+        left: Mapping[SDKey, SDValue],
+        right: Mapping[SDKey, SDValue],
+        keep_identical: bool,
     ) -> Self:
         """
         Format of compared entries:
@@ -1426,7 +1442,9 @@ _SDEncodeAs = Callable[[SDValue], tuple[SDValue, SDValue]]
 SDDeltaCounter = Counter[Literal["new", "changed", "removed"]]
 
 
-def _compute_delta_stats(dict_: Mapping[SDKey, tuple[SDValue, SDValue]]) -> SDDeltaCounter:
+def _compute_delta_stats(
+    dict_: Mapping[SDKey, tuple[SDValue, SDValue]],
+) -> SDDeltaCounter:
     counter: SDDeltaCounter = Counter()
     for value0, value1 in dict_.values():
         match [value0 is None, value1 is None]:

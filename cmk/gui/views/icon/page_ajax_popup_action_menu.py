@@ -18,7 +18,13 @@ from cmk.gui.i18n import _
 from cmk.gui.painter.v0.helpers import replace_action_url_macros, transform_action_url
 from cmk.gui.type_defs import Row
 
-from .painter import get_icons, IconEntry, IconObjectType, iconpainter_columns, LegacyIconEntry
+from .painter import (
+    get_icons,
+    IconEntry,
+    IconObjectType,
+    iconpainter_columns,
+    LegacyIconEntry,
+)
 
 
 def ajax_popup_action_menu() -> None:

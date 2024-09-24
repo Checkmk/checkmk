@@ -25,7 +25,11 @@ def parse_arguments(argv):
 
     # flags
     parser.add_argument(
-        "-a", "--authentication", default="windows", type=str, help="Authentication method"
+        "-a",
+        "--authentication",
+        default="windows",
+        type=str,
+        help="Authentication method",
     )
     parser.add_argument(
         "-d", "--debug", action="store_true", help="Debug mode: raise Python exceptions"
@@ -54,7 +58,10 @@ def parse_arguments(argv):
 class ZertoRequest:
     def __init__(self, connection_url, session_id) -> None:  # type: ignore[no-untyped-def]
         self._endpoint = "%s/vms" % connection_url
-        self._headers = {"x-zerto-session": session_id, "content-type": "application/json"}
+        self._headers = {
+            "x-zerto-session": session_id,
+            "content-type": "application/json",
+        }
 
     def get_vms_data(self):
         response = requests.get(  # nosec B501, B113 # BNS:016141, BNS:773085

@@ -7,7 +7,9 @@ from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any, TypedDict
 
-from cmk.checkengine.checkresults import state_markers  # pylint: disable=cmk-module-layer-violation
+from cmk.checkengine.checkresults import (  # pylint: disable=cmk-module-layer-violation
+    state_markers,
+)
 
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable

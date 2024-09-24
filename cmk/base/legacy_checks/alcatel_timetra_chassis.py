@@ -53,14 +53,21 @@ def check_alcatel_timetra_chassis(item, _no_params, info):
             adminstate, operstate, alarmstate = map(int, line[1:])
             if operstate != adminstate:
                 if admin_states[adminstate][0] != 0:
-                    yield admin_states[adminstate][0], "Admin state: %s" % admin_states[adminstate][
-                        1
-                    ]
+                    yield (
+                        admin_states[adminstate][0],
+                        "Admin state: %s" % admin_states[adminstate][1],
+                    )
 
-            yield oper_states[operstate][0], "Operational state: %s" % oper_states[operstate][1]
+            yield (
+                oper_states[operstate][0],
+                "Operational state: %s" % oper_states[operstate][1],
+            )
 
             if alarm_states[alarmstate][0] != 0:
-                yield alarm_states[alarmstate][0], "Alarm state: %s" % alarm_states[alarmstate][1]
+                yield (
+                    alarm_states[alarmstate][0],
+                    "Alarm state: %s" % alarm_states[alarmstate][1],
+                )
             return
 
 

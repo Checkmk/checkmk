@@ -31,9 +31,17 @@ from cmk.gui.page_menu import (
 from cmk.gui.site_config import get_login_sites, sitenames
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult
-from cmk.gui.userdb import load_connection_config, save_connection_config, UserConnectionSpec
+from cmk.gui.userdb import (
+    load_connection_config,
+    save_connection_config,
+    UserConnectionSpec,
+)
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import DocReference, make_confirm_delete_link, makeuri_contextless
+from cmk.gui.utils.urls import (
+    DocReference,
+    make_confirm_delete_link,
+    makeuri_contextless,
+)
 from cmk.gui.watolib.audit_log import LogMessage
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
@@ -148,7 +156,11 @@ def render_connections_page(
             table.cell(_("Actions"), css=["buttons"])
             connection_id = connection["id"]
             edit_url = folder_preserving_link(
-                [("mode", edit_mode_path), ("id", connection_id), ("edit", connection_id)]
+                [
+                    ("mode", edit_mode_path),
+                    ("id", connection_id),
+                    ("edit", connection_id),
+                ]
             )
             delete_url = make_confirm_delete_link(
                 url=make_action_link([("mode", config_mode_path), ("_delete", real_index)]),
@@ -192,7 +204,10 @@ def render_connections_page(
             url = connection.get("docu_url")
             if url:
                 html.icon_button(
-                    url, _("Context information about this connection"), "url", target="_blank"
+                    url,
+                    _("Context information about this connection"),
+                    "url",
+                    target="_blank",
                 )
                 html.write_text("&nbsp;")
             html.write_text(connection["description"])
@@ -253,7 +268,9 @@ def _move_connection(from_index: int, to_index: int, connection_type: str) -> No
 
 
 def _gui_index_to_real_index(
-    connection_type: str, gui_index: DisplayIndex, all_connections: Sequence[Mapping[str, Any]]
+    connection_type: str,
+    gui_index: DisplayIndex,
+    all_connections: Sequence[Mapping[str, Any]],
 ) -> RealIndex:
     """Map the index that's shown in the GUI and available as '_index' HTTP parameter in case of a
     move connection action to its actual index in the user_connections.mk file.

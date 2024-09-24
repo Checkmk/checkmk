@@ -22,7 +22,11 @@ def _parameter_valuespec_epower_single():
                     Tuple(
                         elements=[
                             Integer(title=_("warning if at"), unit="Watt", default_value=300),
-                            Integer(title=_("critical if at"), unit="Watt", default_value=400),
+                            Integer(
+                                title=_("critical if at"),
+                                unit="Watt",
+                                default_value=400,
+                            ),
                         ],
                     ),
                 ),

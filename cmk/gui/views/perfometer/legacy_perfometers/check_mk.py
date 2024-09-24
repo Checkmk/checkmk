@@ -258,7 +258,10 @@ def perfometer_check_mk_mem_used(
     # used virtual memory < ram => show free ram and free total virtual memory
     if virt_used < ram_total:
         data.append(
-            ((ram_total - virt_used) * 100.0 / virt_total, get_themed_perfometer_bg_color())
+            (
+                (ram_total - virt_used) * 100.0 / virt_total,
+                get_themed_perfometer_bg_color(),
+            )
         )
         data.append(((virt_total - ram_total) * 100.0 / virt_total, "#ccc"))
     # usage exceeds ram => show only free virtual memory
@@ -708,14 +711,23 @@ def perfometer_fileinfo(
     code = []
     texts = []
     for i, color, base, scale, verbfunc in [
-        (0, "#ffcc50", 1000000, 10, lambda v: number_human_readable(v, precision=0)),  # size
+        (
+            0,
+            "#ffcc50",
+            1000000,
+            10,
+            lambda v: number_human_readable(v, precision=0),
+        ),  # size
         (1, "#ccff50", 3600, 10, cmk.utils.render.approx_age),
     ]:  # age
         val = float(perf_data[i].value)
         code.append(perfometer_logarithmic(val, base, scale, color))
         texts.append(verbfunc(val))
     # perfometer_logarithmic(100, 200, 2, "#883875")
-    return (" / ".join(texts), HTMLWriter.render_div(HTML().join(code), class_="stacked"))
+    return (
+        " / ".join(texts),
+        HTMLWriter.render_div(HTML().join(code), class_="stacked"),
+    )
 
 
 def perfometer_fileinfo_groups(
@@ -757,7 +769,11 @@ def perfometer_mssql_tablespaces(
     return (
         "%.1f%%" % (data_perc + indexes_perc),
         render_perfometer(
-            [(data_perc, "#80c0ff"), (indexes_perc, "#00ff80"), (unused_perc, "#f0b000")]
+            [
+                (data_perc, "#80c0ff"),
+                (indexes_perc, "#00ff80"),
+                (unused_perc, "#f0b000"),
+            ]
         ),
     )
 
@@ -994,7 +1010,10 @@ def perfometer_check_mk_ibm_svc_cache(
         (read_cache_pc, "#60a0e0"),
         (free_cache_pc, get_themed_perfometer_bg_color()),
     ]
-    return "%d %% write, %d %% read" % (write_cache_pc, read_cache_pc), render_perfometer(data)
+    return "%d %% write, %d %% read" % (
+        write_cache_pc,
+        read_cache_pc,
+    ), render_perfometer(data)
 
 
 def perfometer_licenses_percent(

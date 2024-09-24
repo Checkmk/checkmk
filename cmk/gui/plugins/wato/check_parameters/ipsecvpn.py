@@ -25,7 +25,10 @@ def _parameter_valuespec_ipsecvpn() -> Dictionary:
                     ],
                 ),
             ),
-            ("tunnels_ignore_levels", ListOfStrings(title=_("Tunnels which ignore levels"))),
+            (
+                "tunnels_ignore_levels",
+                ListOfStrings(title=_("Tunnels which ignore levels")),
+            ),
         ],
         optional_keys=[],
     )

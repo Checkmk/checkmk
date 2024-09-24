@@ -4,7 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import CascadingDropdown, Dictionary, DropdownChoice, FixedValue, TextInput
+from cmk.gui.valuespec import (
+    CascadingDropdown,
+    Dictionary,
+    DropdownChoice,
+    FixedValue,
+    TextInput,
+)
 from cmk.gui.wato import HTTPProxyReference
 from cmk.gui.watolib.password_store import passwordstore_choices
 

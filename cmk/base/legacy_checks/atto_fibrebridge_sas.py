@@ -65,7 +65,10 @@ def check_atto_fibrebridge_sas(item, _no_params, parsed):
     yield operstate_severities[oper_state], "Operational state: " + oper_state
 
     for phy_index in range(1, 5):
-        yield 0, "PHY%d operational state: %s" % (phy_index, port_info["state_phy_%d" % phy_index])
+        yield (
+            0,
+            "PHY%d operational state: %s" % (phy_index, port_info["state_phy_%d" % phy_index]),
+        )
 
 
 check_info["atto_fibrebridge_sas"] = LegacyCheckDefinition(

@@ -127,7 +127,12 @@ ProblemsDashboard = DashboardConfig(
                     "context": {
                         "service_acknowledged": {"is_service_acknowledged": "0"},
                         "in_downtime": {"is_in_downtime": "0"},
-                        "hoststate": {"hst0": "on", "hst1": "", "hst2": "", "hstp": "on"},
+                        "hoststate": {
+                            "hst0": "on",
+                            "hst1": "",
+                            "hst2": "",
+                            "hstp": "on",
+                        },
                         "svcstate": {
                             "st0": "",
                             "st1": "on",
@@ -254,7 +259,12 @@ SimpleProblemsDashboard = DashboardConfig(
                     "context": {
                         "host_acknowledged": {"is_host_acknowledged": "0"},
                         "host_scheduled_downtime_depth": {"is_host_scheduled_downtime_depth": "0"},
-                        "hoststate": {"hst0": "", "hst1": "on", "hst2": "on", "hstp": ""},
+                        "hoststate": {
+                            "hst0": "",
+                            "hst1": "on",
+                            "hst2": "on",
+                            "hstp": "",
+                        },
                     },
                     "layout": "table",
                     "mustsearch": False,
@@ -292,7 +302,12 @@ SimpleProblemsDashboard = DashboardConfig(
                     "context": {
                         "service_acknowledged": {"is_service_acknowledged": "0"},
                         "in_downtime": {"is_in_downtime": "0"},
-                        "hoststate": {"hst0": "on", "hst1": "", "hst2": "", "hstp": "on"},
+                        "hoststate": {
+                            "hst0": "on",
+                            "hst1": "",
+                            "hst2": "",
+                            "hstp": "on",
+                        },
                         "svcstate": {
                             "st0": "",
                             "st1": "on",

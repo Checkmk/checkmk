@@ -30,7 +30,8 @@ def test_update(  # pylint: disable=too-many-branches
     ip_address = "127.0.0.1"
     logger.info("Creating new host: %s", hostname)
     base_site.openapi.create_host(
-        hostname=hostname, attributes={"ipaddress": ip_address, "tag_agent": "cmk-agent"}
+        hostname=hostname,
+        attributes={"ipaddress": ip_address, "tag_agent": "cmk-agent"},
     )
 
     base_site.activate_changes_and_wait_for_core_reload()
@@ -61,7 +62,11 @@ def test_update(  # pylint: disable=too-many-branches
     # get the service status codes and check them
     assert get_site_status(target_site) == "running", "Invalid service status after updating!"
 
-    logger.info("Successfully tested updating %s>%s!", base_version.version, target_version.version)
+    logger.info(
+        "Successfully tested updating %s>%s!",
+        base_version.version,
+        target_version.version,
+    )
 
     logger.info("Discovering services and waiting for completion...")
     target_site.openapi.bulk_discover_services_and_wait_for_completion([str(hostname)])

@@ -37,7 +37,13 @@ def main() -> None:
     report_suffix = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     report_file = f"./junit.{report_suffix}.xml"
 
-    pytest_cmd = ["pytest", "-T", args.test_type, args.test_path, "--bulk-mode"] + unknown_args
+    pytest_cmd = [
+        "pytest",
+        "-T",
+        args.test_type,
+        args.test_path,
+        "--bulk-mode",
+    ] + unknown_args
     if args.filter_expression:
         pytest_cmd.append("-k")
         pytest_cmd.append(args.filter_expression)
@@ -53,7 +59,10 @@ def main() -> None:
         chunks = [args.chunk_index]
     else:
         chunks = [
-            *range(0, (test_count // args.chunk_size) + int(bool(test_count % args.chunk_size)))
+            *range(
+                0,
+                (test_count // args.chunk_size) + int(bool(test_count % args.chunk_size)),
+            )
         ]
 
     logger.info("Chunk size: %s", args.chunk_size)
@@ -82,7 +91,10 @@ def main() -> None:
         os.remove(chunk_report)
 
     # generate HTML report
-    run(["junit2html", report_file, f"{report_file.removesuffix('.xml')}.htm"], check=False)
+    run(
+        ["junit2html", report_file, f"{report_file.removesuffix('.xml')}.htm"],
+        check=False,
+    )
 
 
 if __name__ == "__main__":

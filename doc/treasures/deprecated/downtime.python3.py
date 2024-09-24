@@ -130,7 +130,9 @@ for o, a in opts:
 if omd_site and not opt_secret:
     try:
         opt_secret = (
-            open(omd_root + "/var/check_mk/web/" + opt_user + "/automation.secret").read().strip()
+            open(omd_root + "/var/check_mk/web/" + opt_user + "/automation.secret")
+            .read()
+            .strip()
         )
     except Exception as e:
         bail_out("Cannot read automation secret from user {}: {}".format(opt_user, e))
@@ -165,7 +167,10 @@ verbose("Secret:        " + (opt_secret or "(none specified)"))
 
 def make_url(base, variables):
     vartext = "&".join(
-        ["{}={}".format(varname, urllib.parse.quote(value)) for (varname, value) in variables]
+        [
+            "{}={}".format(varname, urllib.parse.quote(value))
+            for (varname, value) in variables
+        ]
     )
     return base + "?" + vartext
 

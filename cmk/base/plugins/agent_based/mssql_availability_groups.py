@@ -62,7 +62,9 @@ def _match_error_message(string_table: StringTable) -> ErrorMessage | None:
     return ErrorMessage(instance=error_match.group(1), message=error_match.group(2))
 
 
-def parse_mssql_availability_groups(string_table: StringTable) -> Section | ErrorMessage:
+def parse_mssql_availability_groups(
+    string_table: StringTable,
+) -> Section | ErrorMessage:
     if (error_msg := _match_error_message(string_table)) is not None:
         return error_msg
 
@@ -73,7 +75,9 @@ def parse_mssql_availability_groups(string_table: StringTable) -> Section | Erro
     }
 
 
-def discover_mssql_availability_groups(section: Section | ErrorMessage) -> DiscoveryResult:
+def discover_mssql_availability_groups(
+    section: Section | ErrorMessage,
+) -> DiscoveryResult:
     if isinstance(section, ErrorMessage):
         return
 

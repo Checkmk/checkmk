@@ -270,7 +270,9 @@ class TestValidateAgentProtocol:
     def test_validate_protocol_plaintext_with_enforce_raises(self) -> None:
         with pytest.raises(MKFetcherError):
             validate_agent_protocol(
-                TransportProtocol.PLAIN, TCPEncryptionHandling.ANY_ENCRYPTED, is_registered=False
+                TransportProtocol.PLAIN,
+                TCPEncryptionHandling.ANY_ENCRYPTED,
+                is_registered=False,
             )
 
     def test_validate_protocol_no_tls_with_registered_host_raises(self) -> None:

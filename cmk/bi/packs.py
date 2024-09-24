@@ -431,7 +431,9 @@ class BIAggregationPackSchema(Schema):
         description="If the rule is not public, users must be administrators of members of a permitted contact group to use it.",
     )
     rules = ReqList(
-        fields.Nested(BIRuleSchema()), dump_default=[], description="Rules in this BI pack."
+        fields.Nested(BIRuleSchema()),
+        dump_default=[],
+        description="Rules in this BI pack.",
     )
     aggregations = ReqList(
         fields.Nested(BIAggregationSchema()),
@@ -502,7 +504,11 @@ class BIHostRenamer:
         # TODO: renaming can be moved into the action class itself. allows easier plug-ins
         if isinstance(
             bi_node.action,
-            (BIStateOfHostAction, BIStateOfServiceAction, BIStateOfRemainingServicesAction),
+            (
+                BIStateOfHostAction,
+                BIStateOfServiceAction,
+                BIStateOfRemainingServicesAction,
+            ),
         ):
             if bi_node.action.host_regex == oldname:
                 bi_node.action.host_regex = newname

@@ -47,7 +47,14 @@ def handle_request(args):
             "bool": {
                 "must": [
                     {"query_string": {"query": args.pattern}},
-                    {"range": {"@timestamp": {"gte": "now-%ds" % args.timerange, "lt": "now"}}},
+                    {
+                        "range": {
+                            "@timestamp": {
+                                "gte": "now-%ds" % args.timerange,
+                                "lt": "now",
+                            }
+                        }
+                    },
                 ]
             }
         },

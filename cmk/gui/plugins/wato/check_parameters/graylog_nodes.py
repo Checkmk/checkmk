@@ -24,7 +24,8 @@ def _parameter_valuespec_graylog_nodes():
             (
                 "lb_throttled",
                 MonitoringState(
-                    title=_("State when load balancer state is throttled"), default_value=2
+                    title=_("State when load balancer state is throttled"),
+                    default_value=2,
                 ),
             ),
             (
@@ -52,7 +53,8 @@ def _parameter_valuespec_graylog_nodes():
             (
                 "lc_uninitialized",
                 MonitoringState(
-                    title=_("State when life cycle state is uninitialized"), default_value=1
+                    title=_("State when life cycle state is uninitialized"),
+                    default_value=1,
                 ),
             ),
             (
@@ -68,19 +70,22 @@ def _parameter_valuespec_graylog_nodes():
             (
                 "lc_override_lb_alive",
                 MonitoringState(
-                    title=_("State when life cycle state is override_lb_alive"), default_value=0
+                    title=_("State when life cycle state is override_lb_alive"),
+                    default_value=0,
                 ),
             ),
             (
                 "lc_override_lb_dead",
                 MonitoringState(
-                    title=_("State when life cycle state is override_lb_dead"), default_value=1
+                    title=_("State when life cycle state is override_lb_dead"),
+                    default_value=1,
                 ),
             ),
             (
                 "lc_override_lb_throttled",
                 MonitoringState(
-                    title=_("State when life cycle state is override_lb_throttled"), default_value=1
+                    title=_("State when life cycle state is override_lb_throttled"),
+                    default_value=1,
                 ),
             ),
             (

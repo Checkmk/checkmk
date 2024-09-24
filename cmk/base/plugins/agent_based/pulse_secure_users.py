@@ -23,7 +23,9 @@ Section = Mapping[str, int]
 CheckOutput = Generator[Result | Metric, None, None]
 
 
-def parse_pulse_secure_users(string_table: list[type_defs.StringTable]) -> Section | None:
+def parse_pulse_secure_users(
+    string_table: list[type_defs.StringTable],
+) -> Section | None:
     try:
         return {"n_users": int(string_table[0][0][0])}
     except IndexError:

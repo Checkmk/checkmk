@@ -11,7 +11,9 @@ from pydantic import ConfigDict
 from tests.unit.cmk.special_agents.agent_kubernetes.utils import FakeResponse
 
 from cmk.special_agents.utils_kubernetes.schemata import api
-from cmk.special_agents.utils_kubernetes.transform_json import _metadata_no_namespace_from_json
+from cmk.special_agents.utils_kubernetes.transform_json import (
+    _metadata_no_namespace_from_json,
+)
 
 
 class NodeConditions(pydantic.RootModel):

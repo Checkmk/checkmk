@@ -9,8 +9,10 @@ from cmk.utils.rulesets.definition import RuleGroup
 
 import cmk.gui.watolib.rulespecs as rulespecs
 from cmk.gui.valuespec import Dictionary
-from cmk.gui.wato import register_notification_parameters  # type: ignore[attr-defined]
-from cmk.gui.wato import notification_parameter_registry
+from cmk.gui.wato import (  # type: ignore[attr-defined]
+    notification_parameter_registry,
+    register_notification_parameters,
+)
 from cmk.gui.wato._notification_parameter import _registry
 
 expected_plugins = [
@@ -42,12 +44,16 @@ def test_register_legacy_notification_parameters(
     monkeypatch: MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
-        _registry, "notification_parameter_registry", _registry.NotificationParameterRegistry()
+        _registry,
+        "notification_parameter_registry",
+        _registry.NotificationParameterRegistry(),
     )
     rulespec_group_registry = rulespecs.RulespecGroupRegistry()
     monkeypatch.setattr(rulespecs, "rulespec_group_registry", rulespec_group_registry)
     monkeypatch.setattr(
-        rulespecs, "rulespec_registry", rulespecs.RulespecRegistry(rulespec_group_registry)
+        rulespecs,
+        "rulespec_registry",
+        rulespecs.RulespecRegistry(rulespec_group_registry),
     )
 
     assert RuleGroup.NotificationParameters("xyz") not in rulespecs.rulespec_registry

@@ -35,7 +35,8 @@ pytestmark = pytest.mark.checks
     ],
 )
 def test_parse_netstat(
-    info: StringTable, expected_parsed: Sequence[tuple[str, Sequence[str], Sequence[str], str]]
+    info: StringTable,
+    expected_parsed: Sequence[tuple[str, Sequence[str], Sequence[str], str]],
 ) -> None:
     parsed = Check("netstat").run_parse(info)
     assert parsed == expected_parsed

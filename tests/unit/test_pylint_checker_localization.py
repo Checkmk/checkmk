@@ -8,7 +8,10 @@ import pytest
 from pylint.lint import PyLinter
 from pytest_mock import MockerFixture
 
-from tests.testlib.pylint_checker_localization import HTMLTagsChecker, LiteralStringChecker
+from tests.testlib.pylint_checker_localization import (
+    HTMLTagsChecker,
+    LiteralStringChecker,
+)
 
 
 # Using astroid within a pytest context causes recursion errors. This fixture avoids these errors,
@@ -44,7 +47,8 @@ def test_literal_string_checker(
         pytest.param("_l('<tt>bold</tt>')", False),
         pytest.param("_('* ? <a href=\"%s\">%s</a>')", False),
         pytest.param(
-            '_(\'&copy; <a target="_blank" href="https://checkmk.com">Checkmk GmbH</a>\')', False
+            '_(\'&copy; <a target="_blank" href="https://checkmk.com">Checkmk GmbH</a>\')',
+            False,
         ),
         pytest.param("_('123 <script>injection</script>')", True),
     ],

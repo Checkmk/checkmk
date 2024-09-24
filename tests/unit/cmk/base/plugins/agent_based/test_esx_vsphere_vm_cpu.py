@@ -9,7 +9,11 @@ from polyfactory.factories.pydantic_factory import ModelFactory
 from tests.unit.cmk.base.plugins.agent_based.esx_vsphere_vm_util import esx_vm_section
 
 from cmk.base.plugins.agent_based import esx_vsphere_vm, esx_vsphere_vm_cpu
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, Metric, Result
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    IgnoreResultsError,
+    Metric,
+    Result,
+)
 
 from cmk.plugins.lib import esx_vsphere
 

@@ -11,9 +11,15 @@ from typing import Any
 
 import cmk.utils.debug
 import cmk.utils.paths
-from cmk.utils.version import edition, Edition
+from cmk.utils.version import Edition, edition
 
-from cmk.snmplib import OID, SNMPBackend, SNMPBackendEnum, SNMPHostConfig, walk_for_export
+from cmk.snmplib import (
+    OID,
+    SNMPBackend,
+    SNMPBackendEnum,
+    SNMPHostConfig,
+    walk_for_export,
+)
 
 from cmk.fetchers.snmp_backend import (  # pylint: disable=cmk-module-layer-violation
     ClassicSNMPBackend,

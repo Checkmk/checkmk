@@ -52,7 +52,10 @@ from cmk.gui.watolib.config_domain_name import (
     ConfigVariableGroup,
 )
 from cmk.gui.watolib.config_domains import ConfigDomainCore
-from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
+from cmk.gui.watolib.global_settings import (
+    load_configuration_settings,
+    save_global_settings,
+)
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.search import (
@@ -153,7 +156,10 @@ class ABCGlobalSettingsMode(WatoMode):
                     request,
                     transactions,
                     [
-                        ("_show_only_modified", "0" if self._show_only_modified else "1"),
+                        (
+                            "_show_only_modified",
+                            "0" if self._show_only_modified else "1",
+                        ),
                     ],
                 )
             ),
@@ -269,7 +275,9 @@ class ABCGlobalSettingsMode(WatoMode):
                         help_txt=(value_title + " " if value_title else "")
                         + _("Click to toggle this setting"),
                         href=makeactionuri(
-                            request, transactions, [("_action", "toggle"), ("_varname", varname)]
+                            request,
+                            transactions,
+                            [("_action", "toggle"), ("_varname", varname)],
                         ),
                         class_=[*modified_cls, "large"],
                     )

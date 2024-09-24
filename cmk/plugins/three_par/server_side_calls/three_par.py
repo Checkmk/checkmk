@@ -8,7 +8,12 @@ from collections.abc import Iterator, Sequence
 
 from pydantic import BaseModel
 
-from cmk.server_side_calls.v1 import HostConfig, Secret, SpecialAgentCommand, SpecialAgentConfig
+from cmk.server_side_calls.v1 import (
+    HostConfig,
+    Secret,
+    SpecialAgentCommand,
+    SpecialAgentConfig,
+)
 
 
 class ThreeParParams(BaseModel):

@@ -194,10 +194,13 @@ class LegacyDeprecatedMixin:
         for name, values in self.values.lists():  # type: ignore[attr-defined]
             if name.startswith(prefix):
                 # Preserve previous behaviour
-                yield name, (
-                    ensure_str(values[-1])  # pylint: disable= six-ensure-str-bin-call
-                    if values
-                    else None
+                yield (
+                    name,
+                    (
+                        ensure_str(values[-1])  # pylint: disable= six-ensure-str-bin-call
+                        if values
+                        else None
+                    ),
                 )
 
     @overload
@@ -464,7 +467,10 @@ class Request(
         return value
 
     def get_ascii_input_mandatory(
-        self, varname: str, deflt: str | None = None, allowed_values: set[str] | None = None
+        self,
+        varname: str,
+        deflt: str | None = None,
+        allowed_values: set[str] | None = None,
     ) -> str:
         value = mandatory_parameter(varname, self.get_ascii_input(varname, deflt))
         if allowed_values is not None and value not in allowed_values:
@@ -600,7 +606,8 @@ class Request(
                 request_ = ast.literal_eval(python_request)
             except (SyntaxError, ValueError) as e:
                 raise MKUserError(
-                    "request", _("Failed to parse Python request: '%s': %s") % (python_request, e)
+                    "request",
+                    _("Failed to parse Python request: '%s': %s") % (python_request, e),
                 )
         else:
             json_request = self.var("request", "{}")
@@ -610,7 +617,8 @@ class Request(
                 request_["request_format"] = "json"
             except ValueError as e:  # Python3: json.JSONDecodeError
                 raise MKUserError(
-                    "request", _("Failed to parse JSON request: '%s': %s") % (json_request, e)
+                    "request",
+                    _("Failed to parse JSON request: '%s': %s") % (json_request, e),
                 )
 
         for key, val in self.itervars():

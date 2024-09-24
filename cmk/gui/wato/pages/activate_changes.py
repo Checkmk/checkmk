@@ -21,9 +21,12 @@ from livestatus import SiteConfiguration, SiteId
 import cmk.utils.render as render
 from cmk.utils.hostaddress import HostName
 from cmk.utils.licensing.registry import get_licensing_user_effect
-from cmk.utils.licensing.usage import get_license_usage_report_validity, LicenseUsageReportValidity
+from cmk.utils.licensing.usage import (
+    get_license_usage_report_validity,
+    LicenseUsageReportValidity,
+)
 from cmk.utils.setup_search_index import request_index_rebuild
-from cmk.utils.version import edition, Edition, edition_has_enforced_licensing
+from cmk.utils.version import Edition, edition, edition_has_enforced_licensing
 
 import cmk.gui.forms as forms
 import cmk.gui.watolib.changes as _changes
@@ -65,9 +68,16 @@ from cmk.gui.watolib.activate_changes import (
     is_foreign_change,
     prevent_discard_changes,
 )
-from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
+from cmk.gui.watolib.automation_commands import (
+    AutomationCommand,
+    AutomationCommandRegistry,
+)
 from cmk.gui.watolib.automations import MKAutomationException
-from cmk.gui.watolib.config_domain_name import ABCConfigDomain, DomainRequest, DomainRequests
+from cmk.gui.watolib.config_domain_name import (
+    ABCConfigDomain,
+    DomainRequest,
+    DomainRequests,
+)
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree, Host
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
@@ -738,7 +748,9 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
 
                 # Livestatus-/Checkmk-Version
                 table.cell(
-                    _("Version"), site_status.get("livestatus_version", ""), css=["narrow nobr"]
+                    _("Version"),
+                    site_status.get("livestatus_version", ""),
+                    css=["narrow nobr"],
                 )
 
                 table.cell(_("Changes"), "%d" % nr_changes, css=["number narrow nobr"])
@@ -843,7 +855,9 @@ def render_object_ref(object_ref: ObjectRef | None) -> str | HTML | None:
 
 
 # TODO: Move this to some generic place
-def _get_object_reference(object_ref: ObjectRef | None) -> tuple[str | None, str | None]:
+def _get_object_reference(
+    object_ref: ObjectRef | None,
+) -> tuple[str | None, str | None]:
     if object_ref is None:
         return None, None
 

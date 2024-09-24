@@ -8,7 +8,6 @@ see https://solutionpartner.cisco.com/media/prime-infrastructure/api-reference/
       szier-m8-106.cisco.com/webacs/api/v1/data/AccessPointscc3b.html
 """
 
-
 import collections
 from collections.abc import Iterable, Mapping
 
@@ -25,7 +24,9 @@ def parse_cisco_prime_wifi_access_points(string_table: StringTable) -> Section:
     return parse_cisco_prime("accessPointsDTO", string_table)
 
 
-def discover_cisco_prime_wifi_access_points(section: Section) -> Iterable[tuple[None, dict]]:
+def discover_cisco_prime_wifi_access_points(
+    section: Section,
+) -> Iterable[tuple[None, dict]]:
     if section:
         yield None, {}
 

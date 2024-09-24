@@ -14,7 +14,15 @@ from cmk.gui.plugins.wato.utils import (
     TextInput,
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import Age, Dictionary, DropdownChoice, Integer, Migrate, Percentage, Tuple
+from cmk.gui.valuespec import (
+    Age,
+    Dictionary,
+    DropdownChoice,
+    Integer,
+    Migrate,
+    Percentage,
+    Tuple,
+)
 
 
 def cpu_util_elements():
@@ -24,7 +32,11 @@ def cpu_util_elements():
             Tuple(
                 title=_("Levels over an extended time period on total CPU utilization"),
                 elements=[
-                    Percentage(title=_("High utilization at "), default_value=100.0, maxvalue=None),
+                    Percentage(
+                        title=_("High utilization at "),
+                        default_value=100.0,
+                        maxvalue=None,
+                    ),
                     Age(title=_("Warning after "), default_value=5 * 60),
                     Age(title=_("Critical after "), default_value=15 * 60),
                 ],
@@ -240,7 +252,7 @@ rulespec_registry.register(
 
 
 def _cpu_utilization_to_dict(
-    param: tuple[float, float] | dict[str, tuple[float, float]]
+    param: tuple[float, float] | dict[str, tuple[float, float]],
 ) -> dict[str, tuple[float, float]]:
     if not param:
         return {}
@@ -263,8 +275,14 @@ def _parameter_valuespec_cpu_utilization() -> Migrate:
                     "util",
                     Tuple(
                         elements=[
-                            Percentage(title=_("Warning at a utilization of"), default_value=90.0),
-                            Percentage(title=_("Critical at a utilization of"), default_value=95.0),
+                            Percentage(
+                                title=_("Warning at a utilization of"),
+                                default_value=90.0,
+                            ),
+                            Percentage(
+                                title=_("Critical at a utilization of"),
+                                default_value=95.0,
+                            ),
                         ],
                         title=_("Alert on excessive CPU utilization"),
                         help=_(

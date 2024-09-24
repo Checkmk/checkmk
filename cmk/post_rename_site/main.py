@@ -12,7 +12,7 @@ import cmk.utils.plugin_registry
 import cmk.utils.site
 from cmk.utils.log import VERBOSE
 from cmk.utils.plugin_loader import load_plugins_with_exceptions, PluginFailures
-from cmk.utils.version import edition, Edition
+from cmk.utils.version import Edition, edition
 
 # This special script needs persistence and conversion code from different places of Checkmk. We may
 # centralize the conversion and move the persistence to a specific layer in the future, but for the

@@ -97,7 +97,9 @@ class SNMPContextConfig:
     def default(cls) -> Self:
         return cls(section=None, contexts=[""], timeout_policy="stop")
 
-    def serialize(self) -> tuple[str | None, Sequence[SNMPContext], Literal["stop", "continue"]]:
+    def serialize(
+        self,
+    ) -> tuple[str | None, Sequence[SNMPContext], Literal["stop", "continue"]]:
         return (
             str(self.section) if self.section is not None else None,
             self.contexts,
@@ -106,7 +108,8 @@ class SNMPContextConfig:
 
     @classmethod
     def deserialize(
-        cls, serialized: tuple[str | None, Sequence[SNMPContext], Literal["stop", "continue"]]
+        cls,
+        serialized: tuple[str | None, Sequence[SNMPContext], Literal["stop", "continue"]],
     ) -> Self:
         section, contexts, timeout = serialized
         return cls(
@@ -253,7 +256,9 @@ class BackendOIDSpec(NamedTuple):
         save_to_cache: bool,
     ) -> Self:
         return cls(
-            SpecialColumn(column) if isinstance(column, int) else column, encoding, save_to_cache
+            SpecialColumn(column) if isinstance(column, int) else column,
+            encoding,
+            save_to_cache,
         )
 
 

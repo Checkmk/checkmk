@@ -52,7 +52,10 @@ def iter_inbound_nat_rules(
         else:
             yield TableRow(
                 path=path + ["inbound_nat_rules", "private_ips"],
-                key_columns={"load_balancer": load_balancer, "inbound_nat_rule": rule.name},
+                key_columns={
+                    "load_balancer": load_balancer,
+                    "inbound_nat_rule": rule.name,
+                },
                 inventory_columns={
                     "ip_address": frontend_ip_config.privateIPAddress,
                     "ip_allocation_method": frontend_ip_config.privateIPAllocationMethod,
@@ -140,7 +143,10 @@ def inventory_load_balancer(
         )
 
         yield from iter_outbound_rules(
-            load_balancer.outbound_rules, load_balancer.backend_pools, load_balancer.name, path
+            load_balancer.outbound_rules,
+            load_balancer.backend_pools,
+            load_balancer.name,
+            path,
         )
 
 

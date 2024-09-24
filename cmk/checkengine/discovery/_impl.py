@@ -24,7 +24,11 @@ from cmk.checkengine.checking import CheckPluginName, ServiceID
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.fetcher import HostKey, SourceInfo
 from cmk.checkengine.parser import group_by_host, ParserFunction
-from cmk.checkengine.sectionparser import make_providers, SectionPlugin, store_piggybacked_sections
+from cmk.checkengine.sectionparser import (
+    make_providers,
+    SectionPlugin,
+    store_piggybacked_sections,
+)
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.summarize import SummarizerFunction
 
@@ -206,7 +210,12 @@ def _check_service_lists(
     subresults = []
     need_rediscovery = False
 
-    for transition, discovered_services, severity, service_filter in _iter_output_services(
+    for (
+        transition,
+        discovered_services,
+        severity,
+        service_filter,
+    ) in _iter_output_services(
         services_by_transition,
         params,
         service_filters,
@@ -220,7 +229,9 @@ def _check_service_lists(
                 host_name, *DiscoveredService.id(service)
             )
             service_result = _make_service_result(
-                transition.title, check_plugin_name, service_description=service_description
+                transition.title,
+                check_plugin_name,
+                service_description=service_description,
             )
 
             affected_check_plugins[check_plugin_name] += 1

@@ -8,14 +8,24 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.base.plugins.agent_based import oracle_performance_check as opc
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State, TableRow
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+    TableRow,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     InventoryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.oracle_performance_inventory import inventory_oracle_performance
-from cmk.base.plugins.agent_based.oracle_performance_section import parse_oracle_performance
+from cmk.base.plugins.agent_based.oracle_performance_inventory import (
+    inventory_oracle_performance,
+)
+from cmk.base.plugins.agent_based.oracle_performance_section import (
+    parse_oracle_performance,
+)
 
 from cmk.plugins.lib.oracle import SectionPerformance
 
@@ -45,7 +55,17 @@ _AGENT_OUTPUT_1 = [
         "13830",
         "14665",
     ],
-    ["TWH", "librarycache", "TABLE/PROCEDURE", "99440", "90692", "467944", "453367", "838", "3"],
+    [
+        "TWH",
+        "librarycache",
+        "TABLE/PROCEDURE",
+        "99440",
+        "90692",
+        "467944",
+        "453367",
+        "838",
+        "3",
+    ],
 ]
 _AGENT_OUTPUT_2 = [
     ["SGP", "sys_time_model", "DB CPU", "55555899"],
@@ -152,7 +172,10 @@ def test_discover_oracle_performance(
     ],
 )
 def test_check_oracle_performance(
-    get_rate_zero: None, string_table: StringTable, item: str, expected_result: CheckResult
+    get_rate_zero: None,
+    string_table: StringTable,
+    item: str,
+    expected_result: CheckResult,
 ) -> None:
     section = parse_oracle_performance(string_table)
     assert (

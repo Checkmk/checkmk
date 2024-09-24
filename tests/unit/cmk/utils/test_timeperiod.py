@@ -145,7 +145,13 @@ def test_convert_full_day_exceptions() -> None:
         ice = ICalEvent(e)
         exceptions = {**exceptions, **ice.to_timeperiod_exception()}
 
-    available_dates = ["2024-08-01", "2024-08-10", "2024-08-11", "2024-08-12", "2024-08-13"]
+    available_dates = [
+        "2024-08-01",
+        "2024-08-10",
+        "2024-08-11",
+        "2024-08-12",
+        "2024-08-13",
+    ]
 
     assert len(exceptions) == 5
 

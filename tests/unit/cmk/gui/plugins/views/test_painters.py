@@ -1006,7 +1006,11 @@ def _service_row():
                             "type": "ipv6",
                         },
                         {"address": "172.17.0.1", "device": "docker0", "type": "ipv4"},
-                        {"address": "fe80::42:9aff:fef7:8238", "device": "docker0", "type": "ipv6"},
+                        {
+                            "address": "fe80::42:9aff:fef7:8238",
+                            "device": "docker0",
+                            "type": "ipv6",
+                        },
                         {
                             "address": "fe80::d465:a5ff:fe86:4139",
                             "device": "vethb457925",
@@ -1418,7 +1422,10 @@ def _service_row():
             }
         ),
         "host_is_flapping": 0,
-        "host_label_sources": {"cmk/check_mk_server": "discovered", "cmk/os_family": "discovered"},
+        "host_label_sources": {
+            "cmk/check_mk_server": "discovered",
+            "cmk/os_family": "discovered",
+        },
         "host_labels": {"cmk/check_mk_server": "yes", "cmk/os_family": "linux"},
         "host_last_check": 1617468248,
         "host_last_notification": 0,
@@ -2143,7 +2150,10 @@ def test_paint_custom_notes_file_inclusion_and_html_tags(
     ],
 )
 def test_paint_service_check_command_for_active_check(
-    in_command: str, in_expanded_command: str, expected_command: str, expected_expanded_command: str
+    in_command: str,
+    in_expanded_command: str,
+    expected_command: str,
+    expected_expanded_command: str,
 ) -> None:
     assert PainterSvcCheckCommand().render(
         {"service_check_command": in_command},

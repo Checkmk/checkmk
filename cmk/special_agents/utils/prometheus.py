@@ -10,7 +10,10 @@ from typing import Required, TypedDict
 
 from cmk.utils import password_store
 
-from cmk.special_agents.v0_unstable.request_helper import create_api_connect_session, parse_api_url
+from cmk.special_agents.v0_unstable.request_helper import (
+    create_api_connect_session,
+    parse_api_url,
+)
 
 
 class ConnectionConfig(TypedDict):

@@ -7,7 +7,7 @@
 from collections.abc import Iterable, Mapping
 
 from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.version import edition, Edition
+from cmk.utils.version import Edition, edition
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -725,7 +725,10 @@ def _valuespec_active_checks_mailboxes() -> Migrate:
                     "count",
                     Tuple(
                         title=_("Message Count"),
-                        elements=[Integer(title=_("Warning at")), Integer(title=_("Critical at"))],
+                        elements=[
+                            Integer(title=_("Warning at")),
+                            Integer(title=_("Critical at")),
+                        ],
                     ),
                 ),
                 (

@@ -196,7 +196,8 @@ class ModeBulkImport(WatoMode):
             csv_file = self._file_path().open(encoding="utf-8")
         except OSError:
             raise MKUserError(
-                None, _("Failed to read the previously uploaded CSV file. Please upload it again.")
+                None,
+                _("Failed to read the previously uploaded CSV file. Please upload it again."),
             )
 
         if list(request.itervars(prefix="_preview")):
@@ -269,7 +270,7 @@ class ModeBulkImport(WatoMode):
                 yield dict(zip(_attr_names, csv_row))
 
         def _transform_and_validate_raw_rows(
-            iterator: typing.Iterator[dict[str, str]]
+            iterator: typing.Iterator[dict[str, str]],
         ) -> typing.Generator[ImportTuple, None, None]:
             """Here we transform each row into a tuple of HostName and HostAttributes and None.
 
@@ -329,7 +330,8 @@ class ModeBulkImport(WatoMode):
 
                 if _host_name is None:
                     raise MKUserError(
-                        None, _("The host name attribute needs to be assigned to a column.")
+                        None,
+                        _("The host name attribute needs to be assigned to a column."),
                     )
 
                 yield _host_name, typing.cast(HostAttributes, entry), None

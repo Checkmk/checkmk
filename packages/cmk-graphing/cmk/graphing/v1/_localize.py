@@ -92,7 +92,8 @@ class Title:
 
     def __mod__(self, other: str | Self | tuple[str | Self, ...]) -> Self:
         return self.__class__(
-            self, _modifier=(_Operation.MOD, other if isinstance(other, tuple) else (other,))
+            self,
+            _modifier=(_Operation.MOD, other if isinstance(other, tuple) else (other,)),
         )
 
     def __rmod__(self, other: Self) -> Self:

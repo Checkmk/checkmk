@@ -146,13 +146,25 @@ def _get_details(context: PluginNotificationContext, details: str) -> Iterable[d
             continue
 
         if add_separator:
-            yield {"type": "TextBlock", "text": segment, "wrap": True, "separator": True}
+            yield {
+                "type": "TextBlock",
+                "text": segment,
+                "wrap": True,
+                "separator": True,
+            }
             add_separator = False
         else:
-            yield {"type": "TextBlock", "text": segment, "wrap": True, "spacing": "none"}
+            yield {
+                "type": "TextBlock",
+                "text": segment,
+                "wrap": True,
+                "spacing": "none",
+            }
 
 
-def _get_section_facts(context: PluginNotificationContext) -> Iterable[dict[str, object]]:
+def _get_section_facts(
+    context: PluginNotificationContext,
+) -> Iterable[dict[str, object]]:
     section_facts = []
     if "PARAMETER_AFFECTED_HOST_GROUPS" in context:
         section_facts += [{"title": "Affected host groups", "value": context["HOSTGROUPNAMES"]}]

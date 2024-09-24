@@ -6,5 +6,6 @@
 from cmk.agent_based.v2 import any_of, startswith
 
 DETECT_QNAP = any_of(
-    startswith(".1.3.6.1.2.1.1.1.0", "Linux TS-"), startswith(".1.3.6.1.2.1.1.1.0", "NAS Q")
+    startswith(".1.3.6.1.2.1.1.1.0", "Linux TS-"),
+    startswith(".1.3.6.1.2.1.1.1.0", "NAS Q"),
 )

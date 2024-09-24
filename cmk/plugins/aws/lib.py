@@ -127,7 +127,13 @@ def is_valid_aws_limits_perf_data(perfvar: str) -> bool:
 def check_aws_limits(
     aws_service: str, params: Mapping[str, Any], parsed_region_data: list[list]
 ) -> CheckResult:
-    for resource_key, resource_title, limit, amount, human_readable_func in parsed_region_data:
+    for (
+        resource_key,
+        resource_title,
+        limit,
+        amount,
+        human_readable_func,
+    ) in parsed_region_data:
         try:
             p_limit, warn, crit = params[resource_key]
         except KeyError:

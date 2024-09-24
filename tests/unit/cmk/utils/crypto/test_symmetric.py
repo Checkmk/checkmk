@@ -6,7 +6,11 @@
 import secrets
 from base64 import b64decode
 
-from cmk.utils.crypto.symmetric import aes_gcm_decrypt, aes_gcm_encrypt, TaggedCiphertext
+from cmk.utils.crypto.symmetric import (
+    aes_gcm_decrypt,
+    aes_gcm_encrypt,
+    TaggedCiphertext,
+)
 
 
 def test_decrypt() -> None:

@@ -9,7 +9,12 @@ from typing import NamedTuple
 from cmk.plugins.lib.hp_proliant import DETECT
 
 from .agent_based_api.v1 import register, Result, Service, SNMPTree, State, TableRow
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
+from .agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    InventoryResult,
+    StringTable,
+)
 
 _MAP_CONDITION = {
     "0": "n/a",
@@ -66,8 +71,7 @@ Section = Mapping[str, PhysicalDrive]
 
 def parse_hp_proliant_da_phydrv(string_table: StringTable) -> Section:
     return {
-        "%s/%s"
-        % (cntlr_index, index): PhysicalDrive(
+        "%s/%s" % (cntlr_index, index): PhysicalDrive(
             controller_index=cntlr_index,
             drive_index=index,
             bay=bay,

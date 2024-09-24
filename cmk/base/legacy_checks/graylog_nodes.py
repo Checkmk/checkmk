@@ -79,9 +79,12 @@ def check_graylog_nodes(item, params, parsed):  # pylint: disable=too-many-branc
 
                 state = params.get(f"{levels}{str(value).lower()}", 1)
 
-                yield state, "{}: {}".format(
-                    infotext,
-                    str(value).replace("True", "yes").replace("False", "no"),
+                yield (
+                    state,
+                    "{}: {}".format(
+                        infotext,
+                        str(value).replace("True", "yes").replace("False", "no"),
+                    ),
                 )
 
             long_output = []

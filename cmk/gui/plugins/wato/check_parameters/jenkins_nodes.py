@@ -23,7 +23,10 @@ from cmk.gui.valuespec import (
 def _parameter_valuespec_jenkins_nodes():
     return Dictionary(
         elements=[
-            ("jenkins_offline", MonitoringState(title=_("Node state: Offline"), default_value=2)),
+            (
+                "jenkins_offline",
+                MonitoringState(title=_("Node state: Offline"), default_value=2),
+            ),
             (
                 "jenkins_mode",
                 DropdownChoice(

@@ -214,7 +214,11 @@ def test_depth_param_percentage_error() -> None:
 def test_depth_param_percentage_ignored_in_wato() -> None:
     params = {"curdepth_perc": (None, None)}
     curdepth, maxdepth = 4900, 5000
-    expected = (0, "Queue depth: 4900 (98.0%)", [("curdepth", 4900, None, None, 0, 5000)])
+    expected = (
+        0,
+        "Queue depth: 4900 (98.0%)",
+        [("curdepth", 4900, None, None, 0, 5000)],
+    )
     assert_depth(curdepth, maxdepth, params, expected)
 
 
@@ -271,7 +275,11 @@ def assert_depth(curdepth, maxdepth, params, expected):
 def test_age_no_params() -> None:
     params: dict[str, Any] = {}
     msgage = 1800
-    expected = (0, "Oldest message: 30 minutes 0 seconds", [("msgage", 1800, None, None)])
+    expected = (
+        0,
+        "Oldest message: 30 minutes 0 seconds",
+        [("msgage", 1800, None, None)],
+    )
     assert_age(msgage, params, expected)
 
 
@@ -285,7 +293,11 @@ def test_age_no_msgage() -> None:
 def test_age_ok() -> None:
     params = {"msgage": (1800, 3600)}
     msgage = 1200
-    expected = (0, "Oldest message: 20 minutes 0 seconds", [("msgage", 1200, 1800, 3600)])
+    expected = (
+        0,
+        "Oldest message: 20 minutes 0 seconds",
+        [("msgage", 1200, 1800, 3600)],
+    )
     assert_age(msgage, params, expected)
 
 
@@ -429,19 +441,35 @@ def test_procs_upper() -> None:
     assert_procs(opprocs, params, expected)
 
     opprocs = 10
-    expected = (1, "Open output handles: 10 (warn/crit at 10/20)", [("opprocs", 10, 10, 20)])
+    expected = (
+        1,
+        "Open output handles: 10 (warn/crit at 10/20)",
+        [("opprocs", 10, 10, 20)],
+    )
     assert_procs(opprocs, params, expected)
 
     opprocs = 11
-    expected = (1, "Open output handles: 11 (warn/crit at 10/20)", [("opprocs", 11, 10, 20)])
+    expected = (
+        1,
+        "Open output handles: 11 (warn/crit at 10/20)",
+        [("opprocs", 11, 10, 20)],
+    )
     assert_procs(opprocs, params, expected)
 
     opprocs = 20
-    expected = (2, "Open output handles: 20 (warn/crit at 10/20)", [("opprocs", 20, 10, 20)])
+    expected = (
+        2,
+        "Open output handles: 20 (warn/crit at 10/20)",
+        [("opprocs", 20, 10, 20)],
+    )
     assert_procs(opprocs, params, expected)
 
     opprocs = 21
-    expected = (2, "Open output handles: 21 (warn/crit at 10/20)", [("opprocs", 21, 10, 20)])
+    expected = (
+        2,
+        "Open output handles: 21 (warn/crit at 10/20)",
+        [("opprocs", 21, 10, 20)],
+    )
     assert_procs(opprocs, params, expected)
 
 
@@ -453,15 +481,27 @@ def test_procs_lower() -> None:
     assert_procs(opprocs, params, expected)
 
     opprocs = 2
-    expected = (1, "Open output handles: 2 (warn/crit below 3/1)", [("opprocs", 2, None, None)])
+    expected = (
+        1,
+        "Open output handles: 2 (warn/crit below 3/1)",
+        [("opprocs", 2, None, None)],
+    )
     assert_procs(opprocs, params, expected)
 
     opprocs = 1
-    expected = (1, "Open output handles: 1 (warn/crit below 3/1)", [("opprocs", 1, None, None)])
+    expected = (
+        1,
+        "Open output handles: 1 (warn/crit below 3/1)",
+        [("opprocs", 1, None, None)],
+    )
     assert_procs(opprocs, params, expected)
 
     opprocs = 0
-    expected = (2, "Open output handles: 0 (warn/crit below 3/1)", [("opprocs", 0, None, None)])
+    expected = (
+        2,
+        "Open output handles: 0 (warn/crit below 3/1)",
+        [("opprocs", 0, None, None)],
+    )
     assert_procs(opprocs, params, expected)
 
 
@@ -474,15 +514,27 @@ def test_procs_lower_and_upper() -> None:
     }
 
     opprocs = 1
-    expected = (1, "Open output handles: 1 (warn/crit below 3/1)", [("opprocs", 1, 10, 20)])
+    expected = (
+        1,
+        "Open output handles: 1 (warn/crit below 3/1)",
+        [("opprocs", 1, 10, 20)],
+    )
     assert_procs(opprocs, params, expected)
 
     opprocs = 0
-    expected = (2, "Open output handles: 0 (warn/crit below 3/1)", [("opprocs", 0, 10, 20)])
+    expected = (
+        2,
+        "Open output handles: 0 (warn/crit below 3/1)",
+        [("opprocs", 0, 10, 20)],
+    )
     assert_procs(opprocs, params, expected)
 
     opprocs = 21
-    expected = (2, "Open output handles: 21 (warn/crit at 10/20)", [("opprocs", 21, 10, 20)])
+    expected = (
+        2,
+        "Open output handles: 21 (warn/crit at 10/20)",
+        [("opprocs", 21, 10, 20)],
+    )
     assert_procs(opprocs, params, expected)
 
 

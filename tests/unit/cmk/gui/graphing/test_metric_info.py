@@ -58,9 +58,15 @@ def test_metric_info_color() -> None:
 
 
 _DUPLICATE_METRIC_INFOS = [
-    ["kube_memory_cluster_allocatable_utilization", "kube_cpu_cluster_allocatable_utilization"],
+    [
+        "kube_memory_cluster_allocatable_utilization",
+        "kube_cpu_cluster_allocatable_utilization",
+    ],
     ["kube_memory_limit_utilization", "kube_cpu_limit_utilization"],
-    ["kube_memory_node_allocatable_utilization", "kube_cpu_node_allocatable_utilization"],
+    [
+        "kube_memory_node_allocatable_utilization",
+        "kube_cpu_node_allocatable_utilization",
+    ],
     ["kube_memory_request_utilization", "kube_cpu_request_utilization"],
 ]
 

@@ -47,7 +47,10 @@ def check_jira_custom_svc(item, params, parsed):
 
     msg_error = item_data.get("error")
     if msg_error is not None:
-        yield 2, "Jira error while searching (see long output for details)\n%s" % msg_error
+        yield (
+            2,
+            "Jira error while searching (see long output for details)\n%s" % msg_error,
+        )
         return
 
     for computation, infotext, hr_func in [
@@ -77,7 +80,10 @@ def check_jira_custom_svc(item, params, parsed):
             avg_total = item_data.get("avg_total")
             avg_sum = item_data.get("avg_sum")
             if avg_total is not None and avg_sum is not None:
-                yield 0, f"(Summed up values: {avg_sum} / Total search results: {avg_total})"
+                yield (
+                    0,
+                    f"(Summed up values: {avg_sum} / Total search results: {avg_total})",
+                )
 
         else:
             diff_key = "%s_diff" % computation

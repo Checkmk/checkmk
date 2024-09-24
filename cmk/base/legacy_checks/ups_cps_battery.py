@@ -104,7 +104,10 @@ def check_ups_cps_battery(item, params, parsed):
         levelstext = " (warn/crit at %d/%d min)" % battime_params
     else:
         levelstext = ""
-    yield battime_status, ("%.0f minutes remaining on battery" % (battime / 60.0)) + levelstext
+    yield (
+        battime_status,
+        ("%.0f minutes remaining on battery" % (battime / 60.0)) + levelstext,
+    )
 
 
 check_info["ups_cps_battery"] = LegacyCheckDefinition(

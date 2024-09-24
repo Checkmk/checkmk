@@ -2,8 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Classes used by the API for section plug-ins
-"""
+"""Classes used by the API for section plug-ins"""
+
 import string
 from collections.abc import Sequence
 from typing import Literal, NamedTuple, Self
@@ -105,6 +105,7 @@ class SNMPTree(_SNMPTreeTuple):
         ...     ],
         ... )
     """
+
     VALID_CHARACTERS: set[str] = {".", *string.digits}
 
     def __new__(cls, base: str, oids: Sequence[str | _OIDSpecTuple]) -> Self:
@@ -156,7 +157,13 @@ class SNMPTree(_SNMPTreeTuple):
         heads: list[str] = []
 
         for column, _encoding, _save_to_cache in oid_list:
-            if column in (0, -1, -2, -3, -4):  # alowed for legacy checks. Remove some day (tm).
+            if column in (
+                0,
+                -1,
+                -2,
+                -3,
+                -4,
+            ):  # alowed for legacy checks. Remove some day (tm).
                 continue
             if not isinstance(column, str):
                 raise ValueError(f"invalid OID column {column!r}")

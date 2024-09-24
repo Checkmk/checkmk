@@ -41,7 +41,10 @@ def check_winperf_ts_sessions(_unused, params, info):
 
     state = 0
     state_txt = []
-    for val, key, title in [(active, "active", "Active"), (inactive, "inactive", "Inactive")]:
+    for val, key, title in [
+        (active, "active", "Active"),
+        (inactive, "inactive", "Inactive"),
+    ]:
         txt = "%d %s" % (val, title)
         if key in params:
             if val > params[key][0]:

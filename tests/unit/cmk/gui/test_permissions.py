@@ -12,7 +12,9 @@ import cmk.gui.permissions as permissions
 
 def test_declare_permission_section(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        permissions, "permission_section_registry", permissions.PermissionSectionRegistry()
+        permissions,
+        "permission_section_registry",
+        permissions.PermissionSectionRegistry(),
     )
     assert "bla" not in permissions.permission_section_registry
     permissions.declare_permission_section("bla", "bla perm", do_sort=False)
@@ -26,7 +28,9 @@ def test_declare_permission_section(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_declare_permission(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        permissions, "permission_section_registry", permissions.PermissionSectionRegistry()
+        permissions,
+        "permission_section_registry",
+        permissions.PermissionSectionRegistry(),
     )
     assert "bla" not in permissions.permission_section_registry
     permissions.declare_permission_section("bla", "bla perm", do_sort=False)

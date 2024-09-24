@@ -38,7 +38,8 @@ def _parameter_valuespec_graylog_streams():
             (
                 "stream_disabled",
                 MonitoringState(
-                    title=_("State when one of the streams is in state disabled"), default_value=1
+                    title=_("State when one of the streams is in state disabled"),
+                    default_value=1,
                 ),
             ),
         ],

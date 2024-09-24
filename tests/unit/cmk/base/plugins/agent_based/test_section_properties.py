@@ -90,7 +90,11 @@ def test_detect_spec_dedup(
         ("cisco_srst_call_legs", "cisco_srst_phones", "cisco_srst_state"),
         ("climaveneta_alarm", "climaveneta_fan", "climaveneta_temp"),
         ("dell_idrac_fans", "dell_idrac_power", "dell_idrac_raid"),
-        ("f5_bigip_cluster_status_v11_2", "f5_bigip_vcmpfailover", "f5_bigip_vcmpguests"),
+        (
+            "f5_bigip_cluster_status_v11_2",
+            "f5_bigip_vcmpfailover",
+            "f5_bigip_vcmpguests",
+        ),
         ("hp_procurve_cpu", "hp_procurve_mem", "hp_procurve_sensors"),
         ("orion_backup", "orion_batterytest", "orion_system"),
         ("pfsense_counter", "pfsense_if", "pfsense_status"),
@@ -200,13 +204,13 @@ def test_section_detection_uses_sysdescr_or_sysobjid(
 
     for section in fix_register.snmp_sections.values():
         for (first_checked_oid, *_rest1), *_rest2 in (  #
-            criterion for criterion in section.detect_spec if criterion  #
+            criterion
+            for criterion in section.detect_spec
+            if criterion  #
         ):
             if first_checked_oid in allowed_oids:
                 continue
-            assert str(section.name) in known_exceptions.get(
-                first_checked_oid, ()
-            ), f"""
+            assert str(section.name) in known_exceptions.get(first_checked_oid, ()), f"""
             If you've made it here, you have added a case to the known exceptions above.
             Even worse: You may have added an OID to the list of OIDs that are fetched
             from *all SNMP devices* known to the Checkmk site. Please reconsider!

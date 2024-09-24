@@ -39,7 +39,9 @@ from cmk.gui.table import table_element
 from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri
-from cmk.gui.wato.pages.user_profile.async_replication import user_profile_async_replication_page
+from cmk.gui.wato.pages.user_profile.async_replication import (
+    user_profile_async_replication_page,
+)
 from cmk.gui.watolib.user_scripts import declare_notification_plugin_permissions
 
 
@@ -243,7 +245,8 @@ class ClearFailedNotificationPage(Page):
             for row in failed_notifications:
                 table.row()
                 table.cell(
-                    _("Time"), cmk.utils.render.approx_age(time.time() - row[header["time"]])
+                    _("Time"),
+                    cmk.utils.render.approx_age(time.time() - row[header["time"]]),
                 )
                 table.cell(_("Contact"), row[header["contact_name"]])
                 table.cell(_("Plug-in"), row[header["type"]])
@@ -252,12 +255,17 @@ class ClearFailedNotificationPage(Page):
                 table.cell(_("Output"), row[header["comment"]])
 
     def _page_menu(
-        self, acktime: float, failed_notifications: LivestatusResponse, breadcrumb: Breadcrumb
+        self,
+        acktime: float,
+        failed_notifications: LivestatusResponse,
+        breadcrumb: Breadcrumb,
     ) -> PageMenu:
         confirm_url = make_simple_link(
             make_confirm_delete_link(
                 url=makeactionuri(
-                    request, transactions, [("acktime", str(acktime)), ("_confirm", "1")]
+                    request,
+                    transactions,
+                    [("acktime", str(acktime)), ("_confirm", "1")],
                 ),
                 title=_("Acknowledge all failed notifications"),
                 message=("Up to: %s") % cmk.utils.render.date_and_time(acktime),

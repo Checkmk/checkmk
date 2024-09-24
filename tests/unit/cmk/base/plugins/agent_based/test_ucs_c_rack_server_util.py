@@ -5,7 +5,12 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.ucs_c_rack_server_util import (
     check_ucs_c_rack_server_util,
@@ -101,7 +106,10 @@ def test_check_ucs_c_rack_server_util(
         pytest.param(
             "Rack unit 2",
             [
-                Result(state=State.WARN, summary="Total CPU: 92.00% (warn/crit at 90.00%/95.00%)"),
+                Result(
+                    state=State.WARN,
+                    summary="Total CPU: 92.00% (warn/crit at 90.00%/95.00%)",
+                ),
                 Metric("util", 92.0, levels=(90.0, 95.0), boundaries=(0.0, None)),
             ],
             id="warn",

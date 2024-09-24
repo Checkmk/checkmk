@@ -36,7 +36,9 @@ def request_context(app: Flask, environ: dict[str, Any] | None = None) -> Iterat
 
 
 @contextmanager
-def application_and_request_context(environ: dict[str, Any] | None = None) -> Iterator[None]:
+def application_and_request_context(
+    environ: dict[str, Any] | None = None,
+) -> Iterator[None]:
     app = session_wsgi_app(testing=True)
     with application_context(app), request_context(app, environ):
         yield

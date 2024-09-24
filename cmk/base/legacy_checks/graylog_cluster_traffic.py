@@ -30,7 +30,9 @@ from cmk.plugins.lib.graylog import deserialize_and_merge_json, GraylogSection
 # 15022425, "2019-09-10T21:00:00.000Z": 7688443}}
 
 
-def discover_graylog_cluster_traffic(section: GraylogSection) -> Iterable[tuple[None, dict]]:
+def discover_graylog_cluster_traffic(
+    section: GraylogSection,
+) -> Iterable[tuple[None, dict]]:
     if section:
         yield None, {}
 

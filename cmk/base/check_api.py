@@ -38,8 +38,12 @@ from cmk.checkengine.checkresults import state_markers as state_markers
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 
 import cmk.base.config as _config
-from cmk.base.plugin_contexts import host_name as host_name  # pylint: disable=unused-import
-from cmk.base.plugin_contexts import service_description  # pylint: disable=unused-import
+from cmk.base.plugin_contexts import (
+    host_name as host_name,  # pylint: disable=unused-import
+)
+from cmk.base.plugin_contexts import (
+    service_description,  # pylint: disable=unused-import
+)
 
 from cmk.agent_based import v1 as _v1
 
@@ -296,7 +300,11 @@ def check_levels(  # pylint: disable=too-many-branches
         levels = _normalize_levels(params)
 
     state, levelstext = _do_check_levels(value, levels, render_func)
-    return state, infotext + levelstext, _build_perfdata(dsname, value, levels, boundaries)
+    return (
+        state,
+        infotext + levelstext,
+        _build_perfdata(dsname, value, levels, boundaries),
+    )
 
 
 def passwordstore_get_cmdline(fmt: str, pw: tuple | str) -> str | tuple[str, str, str]:

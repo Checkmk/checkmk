@@ -205,7 +205,10 @@ def _execute_backup(site: Site, job_id: str = "testjob") -> str:
 
 
 def _execute_restore(
-    site: Site, backup_id: str, env: Mapping[str, str] | None = None, stop_on_failure: bool = False
+    site: Site,
+    backup_id: str,
+    env: Mapping[str, str] | None = None,
+    stop_on_failure: bool = False,
 ) -> None:
     p = site.execute(
         ["mkbackup", "restore", "test-target", backup_id],
@@ -253,7 +256,10 @@ def test_mkbackup_help(site: Site) -> None:
 @pytest.mark.usefixtures("test_cfg")
 def test_mkbackup_list_targets(site: Site) -> None:
     p = site.execute(
-        ["mkbackup", "targets"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8"
+        ["mkbackup", "targets"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        encoding="utf-8",
     )
     stdout, stderr = p.communicate()
     assert stderr == ""
@@ -294,7 +300,10 @@ def test_mkbackup_list_backups_invalid_target(site: Site) -> None:
 @pytest.mark.usefixtures("test_cfg")
 def test_mkbackup_list_jobs(site: Site) -> None:
     p = site.execute(
-        ["mkbackup", "jobs"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8"
+        ["mkbackup", "jobs"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        encoding="utf-8",
     )
     stdout, stderr = p.communicate()
     assert stderr == ""

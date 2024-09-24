@@ -269,7 +269,11 @@ def check_ibm_svc_nodestats_disk_latency(item, _no_params, section):
     write_latency = data["w_ms"]
     perfdata = [("read_latency", read_latency), ("write_latency", write_latency)]
 
-    return 0, f"Latency is {read_latency} ms for read, {write_latency} ms for write", perfdata
+    return (
+        0,
+        f"Latency is {read_latency} ms for read, {write_latency} ms for write",
+        perfdata,
+    )
 
 
 check_info["ibm_svc_nodestats.disk_latency"] = LegacyCheckDefinition(

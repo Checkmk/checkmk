@@ -105,7 +105,11 @@ from cmk.gui.availability import (
                 "downtimes": {"include": "honor", "exclude_ok": False},
                 "consider": {"flapping": True, "host_down": True, "unmonitored": True},
                 "host_state_grouping": {"unreach": "unreach"},
-                "state_grouping": {"warn": "warn", "unknown": "unknown", "host_down": "host_down"},
+                "state_grouping": {
+                    "warn": "warn",
+                    "unknown": "unknown",
+                    "host_down": "host_down",
+                },
             },
             "standalone",
             [
@@ -253,7 +257,11 @@ def test_layout_timeline_spans(
                 "downtimes": {"include": "honor", "exclude_ok": False},
                 "consider": {"flapping": True, "host_down": True, "unmonitored": True},
                 "host_state_grouping": {"unreach": "unreach"},
-                "state_grouping": {"warn": "warn", "unknown": "unknown", "host_down": "host_down"},
+                "state_grouping": {
+                    "warn": "warn",
+                    "unknown": "unknown",
+                    "host_down": "host_down",
+                },
             },
             "standalone",
             [
@@ -387,7 +395,11 @@ def test_layout_timeline_spans(
                 "downtimes": {"include": "honor", "exclude_ok": False},
                 "consider": {"flapping": True, "host_down": True, "unmonitored": True},
                 "host_state_grouping": {"unreach": "unreach"},
-                "state_grouping": {"warn": "warn", "unknown": "unknown", "host_down": "host_down"},
+                "state_grouping": {
+                    "warn": "warn",
+                    "unknown": "unknown",
+                    "host_down": "host_down",
+                },
             },
             "standalone",
             [

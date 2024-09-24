@@ -24,7 +24,10 @@ from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import Response
 from cmk.gui.i18n import _l
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.endpoints.host_internal.request_schemas import LinkHostUUID, RegisterHost
+from cmk.gui.openapi.endpoints.host_internal.request_schemas import (
+    LinkHostUUID,
+    RegisterHost,
+)
 from cmk.gui.openapi.endpoints.host_internal.response_schemas import (
     ConnectionMode,
     HostConfigSchemaInternal,

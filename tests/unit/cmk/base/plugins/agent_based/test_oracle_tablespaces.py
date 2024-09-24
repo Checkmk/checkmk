@@ -26,7 +26,25 @@ from .utils_inventory import sort_inventory_result
 
 StringTable = [
     ["line", "too", "short"],
-    ["line", "too", "l", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "o", "ong!"],
+    [
+        "line",
+        "too",
+        "l",
+        "o",
+        "o",
+        "o",
+        "o",
+        "o",
+        "o",
+        "o",
+        "o",
+        "o",
+        "o",
+        "o",
+        "o",
+        "o",
+        "ong!",
+    ],
     ["ORA-bar", "some", "data"],
     [
         "PRD",
@@ -587,7 +605,9 @@ def test_check_cluster() -> None:
             details="ONLINE (TEMPORARY), Size: 35.2 GiB, 53.10% used (20.7 GiB of max. 39.1 GiB), Free: 20.3 GiB",
         ),
         Result(
-            state=State.OK, summary="20 increments (3.91 GiB)", details="20 increments (3.91 GiB)"
+            state=State.OK,
+            summary="20 increments (3.91 GiB)",
+            details="20 increments (3.91 GiB)",
         ),
         Metric(
             "size",
@@ -662,7 +682,11 @@ def test_inventory() -> None:
             TableRow(
                 path=["software", "applications", "oracle", "tablespaces"],
                 key_columns={"sid": "CLUSTER", "name": "FOO"},
-                inventory_columns={"version": "", "type": "TEMPORARY", "autoextensible": "YES"},
+                inventory_columns={
+                    "version": "",
+                    "type": "TEMPORARY",
+                    "autoextensible": "YES",
+                },
                 status_columns={
                     "current_size": 37748736000,
                     "max_size": 41943040000,
@@ -751,6 +775,7 @@ def test_undo_table_spaces__sup_11158() -> None:
         Metric("max_size", 10737418240.0),
         Result(state=State.OK, summary="autoextend"),
         Result(
-            state=State.WARN, summary="Space left: 9.98 GiB (warn/crit below 10.00 GiB/1.00 GiB)"
+            state=State.WARN,
+            summary="Space left: 9.98 GiB (warn/crit below 10.00 GiB/1.00 GiB)",
         ),
     ]

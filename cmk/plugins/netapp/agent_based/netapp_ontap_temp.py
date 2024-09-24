@@ -149,7 +149,10 @@ def discovery_netapp_ontap_temp(section: Section) -> DiscoveryResult:
 
 
 def _check_netapp_ontap_temp(
-    item: str, params: TempParamDict, section: Section, value_store: MutableMapping[str, Any]
+    item: str,
+    params: TempParamDict,
+    section: Section,
+    value_store: MutableMapping[str, Any],
 ) -> CheckResult:
     if not (sensors := section.get(item)):
         return

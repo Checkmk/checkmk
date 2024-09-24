@@ -31,7 +31,16 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 
 PortStats = Mapping[str, int]
 
-_FIELDS = ["bcast", "mcast", "0-63b", "64-127b", "128-255b", "256-511b", "512-1023b", "1024-1518b"]
+_FIELDS = [
+    "bcast",
+    "mcast",
+    "0-63b",
+    "64-127b",
+    "128-255b",
+    "256-511b",
+    "512-1023b",
+    "1024-1518b",
+]
 
 
 def parse_rmon_stats(string_table: StringTable) -> Mapping[str, PortStats]:
@@ -62,7 +71,10 @@ def check_rmon_stats(item: str, section: Mapping[str, PortStats]) -> CheckResult
             yield IgnoreResults()
         else:
             yield from check_levels(
-                rate, metric_name=metric, render_func=lambda v: "%.0f octets/sec" % v, label=metric
+                rate,
+                metric_name=metric,
+                render_func=lambda v: "%.0f octets/sec" % v,
+                label=metric,
             )
 
 

@@ -28,7 +28,10 @@ def test_print_colored_table(capsys: pytest.CaptureFixture[str]) -> None:
 
 def test_print_indented_colored_table(capsys: pytest.CaptureFixture[str]) -> None:
     tty.print_table(
-        ["foo", "bar"], ["XX", "YY"], [["Dieter", "Bohlen"], ["Thomas", "Anders"]], indent="===="
+        ["foo", "bar"],
+        ["XX", "YY"],
+        [["Dieter", "Bohlen"], ["Thomas", "Anders"]],
+        indent="====",
     )
     captured = capsys.readouterr()
     assert captured.out == (

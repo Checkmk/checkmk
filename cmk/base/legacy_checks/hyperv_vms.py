@@ -100,20 +100,29 @@ def check_hyperv_vms(item, params, parsed):
 
         # this means that the check is executed as a manual check
         if discovered_state is None:
-            yield 3, "State is {} ({}), discovery state is not available".format(
-                vm["state"],
-                vm["state_msg"],
+            yield (
+                3,
+                "State is {} ({}), discovery state is not available".format(
+                    vm["state"],
+                    vm["state_msg"],
+                ),
             )
             return
 
         if vm["state"] == discovered_state:
-            yield 0, "State {} ({}) matches discovery".format(vm["state"], vm["state_msg"])
+            yield (
+                0,
+                "State {} ({}) matches discovery".format(vm["state"], vm["state_msg"]),
+            )
             return
 
-        yield 2, "State {} ({}) does not match discovery ({})".format(
-            vm["state"],
-            vm["state_msg"],
-            discovered_state,
+        yield (
+            2,
+            "State {} ({}) does not match discovery ({})".format(
+                vm["state"],
+                vm["state_msg"],
+                discovered_state,
+            ),
         )
         return
 

@@ -92,7 +92,8 @@ def check_cisco_secure(_item, _params, parsed):
 
 check_info["cisco_secure"] = LegacyCheckDefinition(
     detect=all_of(
-        contains(".1.3.6.1.2.1.1.1.0", "cisco"), exists(".1.3.6.1.4.1.9.9.315.1.2.1.1.1.*")
+        contains(".1.3.6.1.2.1.1.1.0", "cisco"),
+        exists(".1.3.6.1.4.1.9.9.315.1.2.1.1.1.*"),
     ),
     fetch=[
         SNMPTree(

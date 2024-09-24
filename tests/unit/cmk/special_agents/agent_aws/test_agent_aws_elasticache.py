@@ -29,7 +29,8 @@ from cmk.special_agents.agent_aws import (
 from .agent_aws_fake_clients import FakeCloudwatchClient, FakeServiceQuotasClient
 
 GetSectionsCallable = Callable[
-    [Sequence[str] | None, OverallTags], tuple[ElastiCacheLimits, ElastiCacheSummary, ElastiCache]
+    [Sequence[str] | None, OverallTags],
+    tuple[ElastiCacheLimits, ElastiCacheSummary, ElastiCache],
 ]
 
 CLUSTERS_RESPONSE1: Final[Sequence[Mapping[str, object]]] = [
@@ -356,10 +357,18 @@ def get_elasticache_sections() -> GetSectionsCallable:
 
         # TODO: FakeElastiCacheClient shoud actually subclass ElastiCacheClient, etc.
         elasticache_limits = ElastiCacheLimits(
-            fake_elasticache_client1, region, config, distributor, fake_quota_client  # type: ignore[arg-type]
+            fake_elasticache_client1,  # type: ignore[arg-type]
+            region,
+            config,
+            distributor,
+            fake_quota_client,  # type: ignore[arg-type]
         )
         elasticache_summary = ElastiCacheSummary(
-            fake_elasticache_client2, fake_tagging_client, region, config, distributor  # type: ignore[arg-type]
+            fake_elasticache_client2,  # type: ignore[arg-type]
+            fake_tagging_client,  # type: ignore[arg-type]
+            region,
+            config,
+            distributor,
         )
         elasticache = ElastiCache(fake_cloudwatch_client, region, config)  # type: ignore[arg-type]
 
@@ -400,10 +409,18 @@ def test_agent_aws_elasticache_limits(
         ),
         AWSRegionLimit(key="nodes", title="Nodes", limit=300, amount=2, region="region"),
         AWSRegionLimit(
-            key="subnet_groups", title="Subnet groups", limit=150, amount=1, region="region"
+            key="subnet_groups",
+            title="Subnet groups",
+            limit=150,
+            amount=1,
+            region="region",
         ),
         AWSRegionLimit(
-            key="parameter_groups", title="Parameter groups", limit=150, amount=2, region="region"
+            key="parameter_groups",
+            title="Parameter groups",
+            limit=150,
+            amount=2,
+            region="region",
         ),
     ]
 
@@ -440,10 +457,18 @@ def test_agent_aws_elasticache_limits_without_quota_client() -> None:
         ),
         AWSRegionLimit(key="nodes", title="Nodes", limit=300, amount=2, region="region"),
         AWSRegionLimit(
-            key="subnet_groups", title="Subnet groups", limit=150, amount=1, region="region"
+            key="subnet_groups",
+            title="Subnet groups",
+            limit=150,
+            amount=1,
+            region="region",
         ),
         AWSRegionLimit(
-            key="parameter_groups", title="Parameter groups", limit=150, amount=2, region="region"
+            key="parameter_groups",
+            title="Parameter groups",
+            limit=150,
+            amount=2,
+            region="region",
         ),
     ]
 

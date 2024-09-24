@@ -8,7 +8,15 @@ from typing import NamedTuple
 
 from cmk.plugins.lib.stormshield import DETECT_STORMSHIELD
 
-from .agent_based_api.v1 import check_levels, register, render, Result, Service, SNMPTree, State
+from .agent_based_api.v1 import (
+    check_levels,
+    register,
+    render,
+    Result,
+    Service,
+    SNMPTree,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 _SERVICE_STATE_MAP = {"0": "down", "1": "up"}

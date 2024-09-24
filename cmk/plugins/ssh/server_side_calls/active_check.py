@@ -34,9 +34,15 @@ def commands_function(
     if params.port is not None:
         command_arguments += ["-p", str(params.port)]
     if params.remote_version is not None:
-        command_arguments += ["-r", replace_macros(params.remote_version, host_config.macros)]
+        command_arguments += [
+            "-r",
+            replace_macros(params.remote_version, host_config.macros),
+        ]
     if params.remote_protocol is not None:
-        command_arguments += ["-P", replace_macros(params.remote_protocol, host_config.macros)]
+        command_arguments += [
+            "-P",
+            replace_macros(params.remote_protocol, host_config.macros),
+        ]
 
     description = (
         replace_macros(params.description, host_config.macros) if params.description else ""

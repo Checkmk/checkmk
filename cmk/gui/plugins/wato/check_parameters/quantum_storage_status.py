@@ -27,8 +27,14 @@ def _parameter_valuespec_quantum_storage_status():
                             "available",
                             MonitoringState(title=_("Device available"), default_value=0),
                         ),
-                        ("online", MonitoringState(title=_("Device online"), default_value=0)),
-                        ("offline", MonitoringState(title=_("Device offline"), default_value=2)),
+                        (
+                            "online",
+                            MonitoringState(title=_("Device online"), default_value=0),
+                        ),
+                        (
+                            "offline",
+                            MonitoringState(title=_("Device offline"), default_value=2),
+                        ),
                         (
                             "going online",
                             MonitoringState(title=_("Device going online"), default_value=1),

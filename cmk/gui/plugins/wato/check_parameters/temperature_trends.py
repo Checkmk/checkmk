@@ -39,9 +39,15 @@ def _parameter_valuespec_temperature_trends():
                 Tuple(
                     title=_("Levels on trends in degrees Celsius per time range"),
                     elements=[
-                        Integer(title=_("Warning at"), unit="°C / " + _("range"), default_value=5),
                         Integer(
-                            title=_("Critical at"), unit="°C / " + _("range"), default_value=10
+                            title=_("Warning at"),
+                            unit="°C / " + _("range"),
+                            default_value=5,
+                        ),
+                        Integer(
+                            title=_("Critical at"),
+                            unit="°C / " + _("range"),
+                            default_value=10,
                         ),
                     ],
                 ),

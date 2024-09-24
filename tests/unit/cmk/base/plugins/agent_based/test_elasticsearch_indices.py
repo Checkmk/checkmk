@@ -8,8 +8,16 @@ from typing import Final
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+)
 from cmk.base.plugins.agent_based.elasticsearch_indices import (
     _check_elasticsearch_indices,
     _CheckParams,
@@ -143,8 +151,14 @@ SECTION: Final = parse_elasticsearch_indices(
             [
                 Service(item="my-index-10.2022", parameters={"grouping_regex": None}),
                 Service(item="my-index-11.2022", parameters={"grouping_regex": None}),
-                Service(item="my-other-index-2016-04-12", parameters={"grouping_regex": None}),
-                Service(item="my-other-index-2016-04-22", parameters={"grouping_regex": None}),
+                Service(
+                    item="my-other-index-2016-04-12",
+                    parameters={"grouping_regex": None},
+                ),
+                Service(
+                    item="my-other-index-2016-04-22",
+                    parameters={"grouping_regex": None},
+                ),
                 Service(item="yet_another_index", parameters={"grouping_regex": None}),
             ],
             id="no grouping",
@@ -153,7 +167,10 @@ SECTION: Final = parse_elasticsearch_indices(
             {"grouping": ("enabled", ["my-index", "my-other-index"])},
             [
                 Service(item="my-index", parameters={"grouping_regex": "my-index"}),
-                Service(item="my-other-index", parameters={"grouping_regex": "my-other-index"}),
+                Service(
+                    item="my-other-index",
+                    parameters={"grouping_regex": "my-other-index"},
+                ),
                 Service(item="yet_another_index", parameters={"grouping_regex": None}),
             ],
             id="manual grouping",
@@ -174,8 +191,14 @@ SECTION: Final = parse_elasticsearch_indices(
             {"grouping": ("enabled", ["my-index", "[0-9]*my-index"])},
             [
                 Service(item="my-index", parameters={"grouping_regex": "my-index"}),
-                Service(item="my-other-index-2016-04-12", parameters={"grouping_regex": None}),
-                Service(item="my-other-index-2016-04-22", parameters={"grouping_regex": None}),
+                Service(
+                    item="my-other-index-2016-04-12",
+                    parameters={"grouping_regex": None},
+                ),
+                Service(
+                    item="my-other-index-2016-04-22",
+                    parameters={"grouping_regex": None},
+                ),
                 Service(item="yet_another_index", parameters={"grouping_regex": None}),
             ],
             id="overlapping groups",

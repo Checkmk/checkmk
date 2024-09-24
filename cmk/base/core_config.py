@@ -26,7 +26,11 @@ from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.licensing.helper import get_licensed_state_file_path
 from cmk.utils.paths import core_helper_config_dir
 from cmk.utils.servicename import Item, ServiceName
-from cmk.utils.store import load_object_from_file, lock_checkmk_configuration, save_object_to_file
+from cmk.utils.store import (
+    load_object_from_file,
+    lock_checkmk_configuration,
+    save_object_to_file,
+)
 
 from cmk.checkengine.checking import CheckPluginName, ConfiguredService, ServiceID
 from cmk.checkengine.parameters import TimespecificParameters
@@ -367,7 +371,10 @@ def _create_core_config(
     config_path = next(VersionedConfigPath.current())
     with config_path.create(is_cmc=core.is_cmc()), _backup_objects_file(core):
         core.create_config(
-            config_path, config_cache, hosts_to_update=hosts_to_update, passwords=passwords
+            config_path,
+            config_cache,
+            hosts_to_update=hosts_to_update,
+            passwords=passwords,
         )
 
     cmk.utils.password_store.save(
@@ -464,7 +471,8 @@ def get_service_attributes(
 
     attrs.update(
         ConfigCache._get_tag_attributes(
-            config_cache.ruleset_matcher.labels_of_service(hostname, description), "LABEL"
+            config_cache.ruleset_matcher.labels_of_service(hostname, description),
+            "LABEL",
         )
     )
     attrs.update(

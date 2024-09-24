@@ -10,7 +10,14 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, DictionaryEntry, Integer, ListOfStrings, TextInput, Tuple
+from cmk.gui.valuespec import (
+    Dictionary,
+    DictionaryEntry,
+    Integer,
+    ListOfStrings,
+    TextInput,
+    Tuple,
+)
 
 
 def __levels(key: str, title_upper: str | None, title_lower: str | None) -> list[DictionaryEntry]:

@@ -5,7 +5,12 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Attributes,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.snmp_info import (
     check_snmp_info,
     discover_snmp_info,

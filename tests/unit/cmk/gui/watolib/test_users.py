@@ -115,7 +115,9 @@ def test_only_affected_sites_require_activation_when_adding_users(
 
 
 @pytest.mark.usefixtures("request_context", "with_admin_login")
-def test_only_affected_sites_require_activation_when_changing_user(sites: list[SiteId]) -> None:
+def test_only_affected_sites_require_activation_when_changing_user(
+    sites: list[SiteId],
+) -> None:
     # GIVEN one user added on site1
     edit_users(
         {
@@ -167,7 +169,9 @@ def test_only_affected_sites_require_activation_when_changing_user(sites: list[S
 )
 @pytest.mark.usefixtures("request_context", "with_admin_login")
 def test_only_affected_sites_require_activation_when_deleting_users(
-    sites: list[SiteId], users_to_delete: list[UserId], expected_changed_sites: list[SiteId]
+    sites: list[SiteId],
+    users_to_delete: list[UserId],
+    expected_changed_sites: list[SiteId],
 ) -> None:
     # GIVEN "global" user1 and user2 on site2
     edit_users(

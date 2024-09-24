@@ -82,7 +82,10 @@ def check_ibm_svc_host(item, params, parsed):  # pylint: disable=too-many-branch
         if offline > 0:
             yield (not params["always_ok"] and 2 or 0), "%s offline" % offline
         if other > 0:
-            yield (not params["always_ok"] and 1 or 0), "%s in an unidentified state" % other
+            yield (
+                (not params["always_ok"] and 1 or 0),
+                "%s in an unidentified state" % other,
+            )
     else:
         warn, crit = params.get("active_hosts", (None, None))
 

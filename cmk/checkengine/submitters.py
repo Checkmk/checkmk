@@ -11,7 +11,7 @@ import time
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from random import Random
-from typing import final, Final, IO, Literal, NamedTuple
+from typing import Final, final, IO, Literal, NamedTuple
 
 import cmk.utils.paths
 import cmk.utils.tty as tty

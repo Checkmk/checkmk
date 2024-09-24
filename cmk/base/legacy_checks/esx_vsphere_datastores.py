@@ -7,7 +7,10 @@
 # mypy: disable-error-code="var-annotated"
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.check_legacy_includes.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
+from cmk.base.check_legacy_includes.df import (
+    df_check_filesystem_single,
+    FILESYSTEM_DEFAULT_PARAMS,
+)
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import render
@@ -65,7 +68,11 @@ def check_esx_vsphere_datastores(item, params, parsed):
     if uncommitted_bytes is None:
         return
     text_uncommitted = "Uncommitted: %s" % render.bytes(uncommitted_bytes)
-    yield 0, text_uncommitted, [("uncommitted", uncommitted_bytes / mib)]  # fixed: true-division
+    yield (
+        0,
+        text_uncommitted,
+        [("uncommitted", uncommitted_bytes / mib)],
+    )  # fixed: true-division
 
     used_bytes = size_bytes - avail_bytes
     prov_bytes = used_bytes + uncommitted_bytes
@@ -87,9 +94,11 @@ def check_esx_vsphere_datastores(item, params, parsed):
     if warn is not None:
         # convert percent to abs MiB
         scale = (size_bytes / mib) / 100.0  # fixed: true-division
-        yield 0, "", [
-            ("overprovisioned", prov_bytes / mib, scale * warn, scale * crit)
-        ]  # fixed: true-division
+        yield (
+            0,
+            "",
+            [("overprovisioned", prov_bytes / mib, scale * warn, scale * crit)],
+        )  # fixed: true-division
     else:
         yield 0, "", [("overprovisioned", prov_bytes / mib)]  # fixed: true-division
 

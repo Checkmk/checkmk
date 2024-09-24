@@ -233,7 +233,9 @@ def _check_kube_pod_resources(
         notice=_summary("capacity", section_kube_allocatable_pods.capacity),
     )
     yield from check_free_pods(
-        params["free"], section_kube_pod_resources, section_kube_allocatable_pods.allocatable
+        params["free"],
+        section_kube_pod_resources,
+        section_kube_allocatable_pods.allocatable,
     )
     yield Metric(name="kube_pod_allocatable", value=section_kube_allocatable_pods.allocatable)
 

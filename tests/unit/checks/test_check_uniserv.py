@@ -25,7 +25,12 @@ pytestmark = pytest.mark.checks
                 "service": "foobar",
                 "job": (
                     "address",
-                    {"street": "street", "street_no": 0, "city": "city", "search_regex": "regex"},
+                    {
+                        "street": "street",
+                        "street_no": 0,
+                        "city": "city",
+                        "search_regex": "regex",
+                    },
                 ),
             },
             ["$HOSTADDRESS$", 123, "foobar", "ADDRESS", "street", 0, "city", "regex"],

@@ -298,7 +298,11 @@ def parse_arguments(argv):
         help="Use 'http' or 'https' for connection to graylog (default=https)",
     )
     parser.add_argument(
-        "-p", "--port", default=443, type=int, help="Use alternative port (default: 443)"
+        "-p",
+        "--port",
+        default=443,
+        type=int,
+        help="Use alternative port (default: 443)",
     )
     parser.add_argument(
         "-t",
@@ -354,7 +358,9 @@ def parse_arguments(argv):
         Default is the queried graylog host. Possible values: host, source (default: host)""",
     )
     parser.add_argument(
-        "--debug", action="store_true", help="Debug mode: let Python exceptions come through"
+        "--debug",
+        action="store_true",
+        help="Debug mode: let Python exceptions come through",
     )
 
     parser.add_argument(

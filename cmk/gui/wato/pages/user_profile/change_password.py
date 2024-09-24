@@ -105,7 +105,9 @@ class UserChangePasswordPage(ABCUserProfilePage):
         if user.authorized_login_sites():
             raise redirect(
                 makeuri_contextless(
-                    request, [("back", origtarget)], filename="user_profile_replicate.py"
+                    request,
+                    [("back", origtarget)],
+                    filename="user_profile_replicate.py",
                 )
             )
         raise redirect(origtarget)

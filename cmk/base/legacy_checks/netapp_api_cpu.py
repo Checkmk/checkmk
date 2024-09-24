@@ -49,7 +49,11 @@ def check_netapp_api_cpu_utilization(item, params, parsed, mode):
     cpu_busy = int(data["cpu_busy"])
     num_cpus_str = data.get("num_processors")
     ticks_per_sec = get_rate(
-        get_value_store(), "netapp_api_cpu.utilization", now, cpu_busy, raise_overflow=True
+        get_value_store(),
+        "netapp_api_cpu.utilization",
+        now,
+        cpu_busy,
+        raise_overflow=True,
     )
     cpusecs_per_sec = ticks_per_sec / 1000000.0
     used_perc = 100.0 * cpusecs_per_sec
@@ -123,9 +127,10 @@ def check_netapp_api_nvram_bat(item, _no_params, parsed):
     if not info or "nvram-battery-status" not in info:
         return
 
-    yield state_map.get(info["nvram-battery-status"], 3), "Status: %s" % info[
-        "nvram-battery-status"
-    ].replace("_", " ").title()
+    yield (
+        state_map.get(info["nvram-battery-status"], 3),
+        "Status: %s" % info["nvram-battery-status"].replace("_", " ").title(),
+    )
 
 
 # Clustermode NVRAM Bat

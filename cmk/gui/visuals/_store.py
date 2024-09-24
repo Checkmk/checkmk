@@ -26,7 +26,13 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import save_user_file, user
 from cmk.gui.permissions import declare_permission, permission_registry
-from cmk.gui.type_defs import PermissionName, RoleName, Visual, VisualName, VisualTypeName
+from cmk.gui.type_defs import (
+    PermissionName,
+    RoleName,
+    Visual,
+    VisualName,
+    VisualTypeName,
+)
 from cmk.gui.utils.roles import user_may
 from cmk.gui.utils.speaklater import LazyString
 
@@ -103,7 +109,10 @@ def _fix_lazy_strings(obj: TVisual) -> TVisual:
     match obj:
         case dict():
             # cast is needed for the TypedDicts
-            return cast(TVisual, {attr: _fix_lazy_strings(value) for (attr, value) in obj.items()})
+            return cast(
+                TVisual,
+                {attr: _fix_lazy_strings(value) for (attr, value) in obj.items()},
+            )
         case list():
             return list(map(_fix_lazy_strings, obj))
         case tuple():
@@ -260,7 +269,10 @@ def load_visuals_of_a_user(
 ) -> CustomUserVisuals[TVisual]:
     user_visuals: CustomUserVisuals[TVisual] = {}
     for name, raw_visual in store.try_load_file_from_pickle_cache(
-        path, default={}, temp_dir=cmk.utils.paths.tmp_dir, root_dir=cmk.utils.paths.omd_root
+        path,
+        default={},
+        temp_dir=cmk.utils.paths.tmp_dir,
+        root_dir=cmk.utils.paths.omd_root,
     ).items():
         visual = internal_to_runtime_transformer(raw_visual)
         visual["owner"] = user_id
@@ -302,7 +314,8 @@ def _get_packaged_visuals(
                 local_visuals[(UserId.builtin(), name)] = visual
         except Exception:
             logger.exception(
-                "Error on loading packaged visuals from file %s. Skipping it...", dirpath
+                "Error on loading packaged visuals from file %s. Skipping it...",
+                dirpath,
             )
     return local_visuals
 
@@ -418,7 +431,8 @@ def declare_custom_permissions(what: VisualTypeName) -> None:
                     declare_visual_permission(what, name, visual)
         except Exception:
             logger.exception(
-                "Error on declaring permissions for customized visuals in file %s", dirpath
+                "Error on declaring permissions for customized visuals in file %s",
+                dirpath,
             )
             if active_config.debug:
                 raise
@@ -440,7 +454,8 @@ def declare_packaged_visuals_permissions(what: VisualTypeName) -> None:
                 declare_packaged_visual_permission(what, name, visual)
         except Exception:
             logger.exception(
-                "Error on declaring permissions for packaged visuals in file %s", dirpath
+                "Error on declaring permissions for packaged visuals in file %s",
+                dirpath,
             )
             if active_config.debug:
                 raise

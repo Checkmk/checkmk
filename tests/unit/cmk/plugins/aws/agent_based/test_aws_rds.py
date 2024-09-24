@@ -3185,7 +3185,10 @@ def test_aws_rds_discovery(
             {"disk": {"CPUUtilization": 91}},
             {"util": (90.0, 95.0)},
             [
-                Result(state=State.WARN, summary="Total CPU: 91.00% (warn/crit at 90.00%/95.00%)"),
+                Result(
+                    state=State.WARN,
+                    summary="Total CPU: 91.00% (warn/crit at 90.00%/95.00%)",
+                ),
                 Metric("util", 91.0, levels=(90.0, 95.0), boundaries=(0.0, None)),
             ],
             id="If the CPU Utilization is above the set warning level, the result is WARN and the appropriate description is displayed.",
@@ -3194,7 +3197,10 @@ def test_aws_rds_discovery(
             {"disk": {"CPUUtilization": 99}},
             {"util": (90.0, 95.0)},
             [
-                Result(state=State.CRIT, summary="Total CPU: 99.00% (warn/crit at 90.00%/95.00%)"),
+                Result(
+                    state=State.CRIT,
+                    summary="Total CPU: 99.00% (warn/crit at 90.00%/95.00%)",
+                ),
                 Metric("util", 99.0, levels=(90.0, 95.0), boundaries=(0.0, None)),
             ],
             id="If the CPU Utilization is above the set critical level, the result is CRIT and the appropriate description is displayed.",
@@ -3346,7 +3352,13 @@ def test_check_aws_rds_cpu_credits_metric_not_found() -> None:
     "section, params, expected_check_result",
     [
         pytest.param(
-            {"disk": {"CPUCreditUsage": 99, "CPUCreditBalance": 30, "BurstBalance": 30}},
+            {
+                "disk": {
+                    "CPUCreditUsage": 99,
+                    "CPUCreditBalance": 30,
+                    "BurstBalance": 30,
+                }
+            },
             {"balance_levels_lower": (10, 5), "burst_balance_levels_lower": (10, 5)},
             [
                 Result(state=State.OK, summary="CPU Credit Usage: 99.00"),
@@ -3368,7 +3380,8 @@ def test_check_aws_rds_cpu_credits_metric_not_found() -> None:
                 ),
                 Metric("aws_cpu_credit_balance", 8.0),
                 Result(
-                    state=State.WARN, summary="Burst Balance: 8.00% (warn/crit below 10.00%/5.00%)"
+                    state=State.WARN,
+                    summary="Burst Balance: 8.00% (warn/crit below 10.00%/5.00%)",
                 ),
                 Metric("aws_burst_balance", 8.0),
             ],
@@ -3385,7 +3398,8 @@ def test_check_aws_rds_cpu_credits_metric_not_found() -> None:
                 ),
                 Metric("aws_cpu_credit_balance", 3.0),
                 Result(
-                    state=State.CRIT, summary="Burst Balance: 3.00% (warn/crit below 10.00%/5.00%)"
+                    state=State.CRIT,
+                    summary="Burst Balance: 3.00% (warn/crit below 10.00%/5.00%)",
                 ),
                 Metric("aws_burst_balance", 3.0),
             ],
@@ -3639,7 +3653,9 @@ def test_check_aws_rds_transaction_logs_usage_allocated_storage_is_zero() -> Non
                 Result(state=State.OK, summary="60 B"),
                 Result(state=State.WARN, summary="92.31% (warn/crit at 90.00%/95.00%)"),
                 Metric(
-                    "aws_rds_transaction_logs_disk_usage", 92.3076923076923, levels=(90.0, 95.0)
+                    "aws_rds_transaction_logs_disk_usage",
+                    92.3076923076923,
+                    levels=(90.0, 95.0),
                 ),
             ],
             id="If the TransactionLogsDiskUsage levels are above the warn levels, the check state will be WARN with a appropriate description.",
@@ -3685,8 +3701,8 @@ def test_check_aws_rds_transaction_logs_usage(
             section=section,
         )
     )
-    assert check_result[0] == Result(
-        state=State.OK, summary="60 B"
+    assert (
+        check_result[0] == Result(state=State.OK, summary="60 B")
     )  # The first result is always OK and shows the information about the TransactionLogsDiskUsage in Bytes
     assert check_result == expected_check_result
 
@@ -3782,7 +3798,9 @@ def test_check_aws_rds_replication_slot_usage_allocated_storage_is_zero() -> Non
                 Result(state=State.OK, summary="60 B"),
                 Result(state=State.WARN, summary="92.31% (warn/crit at 90.00%/95.00%)"),
                 Metric(
-                    "aws_rds_replication_slot_disk_usage", 92.3076923076923, levels=(90.0, 95.0)
+                    "aws_rds_replication_slot_disk_usage",
+                    92.3076923076923,
+                    levels=(90.0, 95.0),
                 ),
             ],
             id="If the ReplicationSlotDiskUsage levels are above the warn levels, the check state will be WARN with a appropriate description.",
@@ -3811,8 +3829,8 @@ def test_check_aws_rds_replication_slot_usage(
             section=section,
         )
     )
-    assert check_result[0] == Result(
-        state=State.OK, summary="60 B"
+    assert (
+        check_result[0] == Result(state=State.OK, summary="60 B")
     )  # The first result is always OK and shows the information about the ReplicationSlotDiskUsage in Bytes
     assert check_result == expected_check_result
 

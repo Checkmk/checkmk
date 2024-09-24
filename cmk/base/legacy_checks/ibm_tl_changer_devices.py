@@ -5,7 +5,9 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.ibm_tape_library import ibm_tape_library_get_device_state
+from cmk.base.check_legacy_includes.ibm_tape_library import (
+    ibm_tape_library_get_device_state,
+)
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import SNMPTree, startswith, StringTable

@@ -138,7 +138,11 @@ def _create_filled_imm_tree() -> ImmutableTree:
 
 
 def test_serialize_empty_mut_tree() -> None:
-    assert _create_empty_mut_tree().serialize() == {"Attributes": {}, "Table": {}, "Nodes": {}}
+    assert _create_empty_mut_tree().serialize() == {
+        "Attributes": {},
+        "Table": {},
+        "Nodes": {},
+    }
 
 
 def test_serialize_filled_mut_tree() -> None:
@@ -622,14 +626,30 @@ def test_difference_pairs(
         ([{"id": "1", "val": 0}], [], (0, 0, 2)),
         ([], [{"id": "1", "val": 0}], (2, 0, 0)),
         ([{"id": "1", "val": 0}], [{"id": "1", "val": 0}], (0, 0, 0)),
-        ([{"id": "1", "val": 0}, {"id": "2", "val": 1}], [{"id": "1", "val": 0}], (0, 0, 2)),
-        ([{"id": "1", "val": 0}], [{"id": "1", "val": 0}, {"id": "2", "val": 1}], (2, 0, 0)),
+        (
+            [{"id": "1", "val": 0}, {"id": "2", "val": 1}],
+            [{"id": "1", "val": 0}],
+            (0, 0, 2),
+        ),
+        (
+            [{"id": "1", "val": 0}],
+            [{"id": "1", "val": 0}, {"id": "2", "val": 1}],
+            (2, 0, 0),
+        ),
         ([{"id": "1", "val1": 1}], [{"id": "1", "val1": 1, "val2": 1}], (1, 0, 0)),
         ([{"id": "1", "val": 0}], [{"id": "1", "val": 1}], (0, 1, 0)),
         ([{"id": "1", "val1": 1, "val2": -1}], [{"id": "1", "val1": 1}], (0, 0, 1)),
         (
-            [{"id": "1", "val1": 0}, {"id": "2", "val1": 0, "val2": 0}, {"id": "3", "val1": 0}],
-            [{"id": "1", "val1": 1}, {"id": "2", "val1": 0}, {"id": "3", "val1": 0, "val2": 1}],
+            [
+                {"id": "1", "val1": 0},
+                {"id": "2", "val1": 0, "val2": 0},
+                {"id": "3", "val1": 0},
+            ],
+            [
+                {"id": "1", "val1": 1},
+                {"id": "2", "val1": 0},
+                {"id": "3", "val1": 0, "val2": 1},
+            ],
             (1, 1, 1),
         ),
         (
@@ -1157,7 +1177,9 @@ def test_amount_of_nodes(tree_name: HostName, amount_of_nodes: int) -> None:
     ],
 )
 def test_merge_trees_1(
-    tree_name: HostName, edges: Sequence[str], sub_children: Sequence[tuple[str, Sequence[str]]]
+    tree_name: HostName,
+    edges: Sequence[str],
+    sub_children: Sequence[tuple[str, Sequence[str]]],
 ) -> None:
     tree_store = _get_tree_store()
     tree = tree_store.load(host_name=HostName("tree_old_addresses")).merge(
@@ -1279,10 +1301,18 @@ def test_filter_real_tree(
                 SDFilterChoice(
                     path=("networking",),
                     pairs=(
-                        ["total_interfaces", "total_ethernet_ports", "available_ethernet_ports"]
+                        [
+                            "total_interfaces",
+                            "total_ethernet_ports",
+                            "available_ethernet_ports",
+                        ]
                     ),
                     columns=(
-                        ["total_interfaces", "total_ethernet_ports", "available_ethernet_ports"]
+                        [
+                            "total_interfaces",
+                            "total_ethernet_ports",
+                            "available_ethernet_ports",
+                        ]
                     ),
                     nodes="nothing",
                 ),
@@ -1451,7 +1481,10 @@ def test_legacy_tree() -> None:
 
     idx_node_attr = tree.get_tree(("path-to", "idx-node", "0"))
     assert len(idx_node_attr) > 0
-    assert idx_node_attr.attributes.pairs == {"idx-attr": "value", "idx-enum": "v1, 1.0, 2"}
+    assert idx_node_attr.attributes.pairs == {
+        "idx-attr": "value",
+        "idx-enum": "v1, 1.0, 2",
+    }
     assert not idx_node_attr.table.rows_by_ident
     assert not idx_node_attr.table.rows
 

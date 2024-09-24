@@ -34,7 +34,12 @@ from pydantic import TypeAdapter
 import cmk.utils.password_store
 import cmk.utils.profile
 
-from cmk.special_agents.utils_kubernetes import common, performance, prometheus_section, query
+from cmk.special_agents.utils_kubernetes import (
+    common,
+    performance,
+    prometheus_section,
+    query,
+)
 from cmk.special_agents.utils_kubernetes.agent_handlers import (
     cluster_handler,
     cronjob_handler,
@@ -80,7 +85,10 @@ from cmk.special_agents.utils_kubernetes.common import (
     RawMetrics,
 )
 from cmk.special_agents.utils_kubernetes.schemata import api, section
-from cmk.special_agents.v0_unstable.agent_common import ConditionalPiggybackSection, SectionWriter
+from cmk.special_agents.v0_unstable.agent_common import (
+    ConditionalPiggybackSection,
+    SectionWriter,
+)
 from cmk.special_agents.v0_unstable.misc import vcrtrace
 
 
@@ -140,7 +148,9 @@ def parse_arguments(args: list[str]) -> argparse.Namespace:
         "deployments, nodes, pods, daemonsets, statefulsets, cronjobs_pods",
     )
     p.add_argument(
-        "--api-server-endpoint", required=True, help="API server endpoint for Kubernetes API calls"
+        "--api-server-endpoint",
+        required=True,
+        help="API server endpoint for Kubernetes API calls",
     )
     p.add_argument(
         "--api-server-proxy",
@@ -395,7 +405,9 @@ def filter_pods_by_phase(pods: Iterable[api.Pod], phase: api.Phase) -> Sequence[
     return [pod for pod in pods if pod.status.phase == phase]
 
 
-def _write_sections(sections: Mapping[str, Callable[[], section.Section | None]]) -> None:
+def _write_sections(
+    sections: Mapping[str, Callable[[], section.Section | None]],
+) -> None:
     for section_name, section_call in sections.items():
         if section_output := section_call():
             with SectionWriter(section_name) as writer:
@@ -957,14 +969,16 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                         piggyback_name=namespace_piggyback_name,
                     )
                     if (
-                        api_resource_quota := namespace_handler.filter_matching_namespace_resource_quota(
+                        api_resource_quota
+                        := namespace_handler.filter_matching_namespace_resource_quota(
                             namespace_name(api_namespace), resource_quotas
                         )
                     ) is not None:
                         namespace_sections = chain(
                             namespace_sections,
                             namespace_handler.create_resource_quota_api_sections(
-                                api_resource_quota, piggyback_name=namespace_piggyback_name
+                                api_resource_quota,
+                                piggyback_name=namespace_piggyback_name,
                             ),
                         )
                     common.write_sections(namespace_sections)

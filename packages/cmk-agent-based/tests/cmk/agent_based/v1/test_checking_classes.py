@@ -9,7 +9,14 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v1 import IgnoreResults, Metric, Result, Service, ServiceLabel, State
+from cmk.agent_based.v1 import (
+    IgnoreResults,
+    Metric,
+    Result,
+    Service,
+    ServiceLabel,
+    State,
+)
 from cmk.agent_based.v1._checking_classes import _EvalableFloat
 
 
@@ -161,7 +168,12 @@ def test_metric() -> None:
         (State.OK, "", "", "details"),  # either is required
         (State.OK, None, None, "details"),  # either is required
         (State.OK, "these are", "mutually exclusive", None),
-        (State.OK, "summary", None, {"at the moment": "impossible", "someday": "maybe"}),
+        (
+            State.OK,
+            "summary",
+            None,
+            {"at the moment": "impossible", "someday": "maybe"},
+        ),
     ],
 )
 def test_result_invalid(state_: object, summary: object, notice: object, details: object) -> None:

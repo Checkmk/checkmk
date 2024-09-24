@@ -32,7 +32,9 @@ def test_parse_arguments_defaults() -> None:
     }
 
 
-def test_parse_arguments_missing_old_site_id(capsys: pytest.CaptureFixture[str]) -> None:
+def test_parse_arguments_missing_old_site_id(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     with pytest.raises(SystemExit, match="2"):
         main.parse_arguments([])
     assert "required: OLD_SITE_ID" in capsys.readouterr().err
@@ -68,7 +70,9 @@ def fixture_test_registry(monkeypatch):
 
 
 def test_run_executes_plugins(
-    capsys: pytest.CaptureFixture[str], test_registry: RenameActionRegistry, mocker: MockerFixture
+    capsys: pytest.CaptureFixture[str],
+    test_registry: RenameActionRegistry,
+    mocker: MockerFixture,
 ) -> None:
     handler_mock = mocker.MagicMock()
     test_registry.register(

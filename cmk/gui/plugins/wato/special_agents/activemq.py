@@ -7,8 +7,18 @@
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import Checkbox, Dictionary, DropdownChoice, NetworkPort, TextInput, Tuple
-from cmk.gui.wato import MigrateToIndividualOrStoredPassword, RulespecGroupDatasourceProgramsApps
+from cmk.gui.valuespec import (
+    Checkbox,
+    Dictionary,
+    DropdownChoice,
+    NetworkPort,
+    TextInput,
+    Tuple,
+)
+from cmk.gui.wato import (
+    MigrateToIndividualOrStoredPassword,
+    RulespecGroupDatasourceProgramsApps,
+)
 from cmk.gui.watolib.rulespecs import HostRulespec, Rulespec, rulespec_registry
 
 

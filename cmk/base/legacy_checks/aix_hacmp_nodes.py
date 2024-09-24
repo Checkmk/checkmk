@@ -60,7 +60,11 @@ def parse_aix_hacmp_nodes(string_table):
 
         elif "Communication" in line[0] and get_details:
             parsed[node_name][network_name].append(
-                (line[3].replace(",", ""), line[5].replace(",", ""), line[8].replace(",", ""))
+                (
+                    line[3].replace(",", ""),
+                    line[5].replace(",", ""),
+                    line[8].replace(",", ""),
+                )
             )
 
     return parsed

@@ -64,7 +64,11 @@ def check_elasticsearch_nodes(item, params, parsed):
         value, infotext = item_data[data_key]
 
         yield check_levels(
-            value, data_key, params.get(params_key), human_readable_func=hr_func, infoname=infotext
+            value,
+            data_key,
+            params.get(params_key),
+            human_readable_func=hr_func,
+            infoname=infotext,
         )
 
 

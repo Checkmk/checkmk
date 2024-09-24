@@ -64,8 +64,16 @@ def fixture_userdb(with_user: tuple[UserId, str]) -> Users:
             True,
         ),
         # bcrypt (both possible identifiers) is fine:
-        ("bcrypt_2b", "$2b$04$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2lypa", False),
-        ("bcrypt_2y", "$2y$04$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2lypa", False),
+        (
+            "bcrypt_2b",
+            "$2b$04$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2lypa",
+            False,
+        ),
+        (
+            "bcrypt_2y",
+            "$2y$04$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2lypa",
+            False,
+        ),
         # locking does not change the result:
         (
             "sha256crypt_locked",
@@ -90,7 +98,11 @@ def test_check_password_hashes(
 ) -> None:
     test_user = {
         UserId(username): UserSpec(
-            {"connector": "htpasswd", "locked": False, "password": PasswordHash(pw_hash)}
+            {
+                "connector": "htpasswd",
+                "locked": False,
+                "password": PasswordHash(pw_hash),
+            }
         )
     }
 

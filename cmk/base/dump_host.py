@@ -15,7 +15,13 @@ from cmk.utils.timeperiod import timeperiod_active
 
 from cmk.snmplib import SNMPBackendEnum, SNMPVersion
 
-from cmk.fetchers import IPMIFetcher, PiggybackFetcher, ProgramFetcher, SNMPFetcher, TCPFetcher
+from cmk.fetchers import (
+    IPMIFetcher,
+    PiggybackFetcher,
+    ProgramFetcher,
+    SNMPFetcher,
+    TCPFetcher,
+)
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
 from cmk.checkengine.fetcher import SourceType
@@ -114,7 +120,10 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
     out.output("%s%s%s%-78s %s\n" % (color, tty.bold, tty.white, hostname + add_txt, tty.normal))
 
     ipaddress = _ip_address_for_dump_host(
-        config_cache, hosts_config, hostname, family=config_cache.default_address_family(hostname)
+        config_cache,
+        hosts_config,
+        hostname,
+        family=config_cache.default_address_family(hostname),
     )
 
     addresses: str | None = ""

@@ -39,10 +39,18 @@ def check_wmic_process(item, params, info):
     mem_mb = mem / 1048576.0
     page_mb = page / 1048576.0
     user_per_sec = get_rate(
-        value_store, "wmic_process.user.%s.%d" % (name, count), now, userc, raise_overflow=True
+        value_store,
+        "wmic_process.user.%s.%d" % (name, count),
+        now,
+        userc,
+        raise_overflow=True,
     )
     kernel_per_sec = get_rate(
-        value_store, "wmic_process.kernel.%s.%d" % (name, count), now, kernelc, raise_overflow=True
+        value_store,
+        "wmic_process.kernel.%s.%d" % (name, count),
+        now,
+        kernelc,
+        raise_overflow=True,
     )
     user_perc = (user_per_sec / 100000.0) / cpucores
     kernel_perc = (kernel_per_sec / 100000.0) / cpucores

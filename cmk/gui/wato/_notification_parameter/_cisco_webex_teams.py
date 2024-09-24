@@ -4,7 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import CascadingDropdown, Dictionary, DropdownChoice, FixedValue, HTTPUrl
+from cmk.gui.valuespec import (
+    CascadingDropdown,
+    Dictionary,
+    DropdownChoice,
+    FixedValue,
+    HTTPUrl,
+)
 from cmk.gui.wato import HTTPProxyReference
 from cmk.gui.watolib.password_store import passwordstore_choices
 
@@ -33,7 +39,11 @@ class NotificationParameterCiscoWebexTeams(NotificationParameter):
                             "<br />This URL can also be collected from the password store of Checkmk."
                         ),
                         choices=[
-                            ("webhook_url", _("Webhook URL"), HTTPUrl(size=80, allow_empty=False)),
+                            (
+                                "webhook_url",
+                                _("Webhook URL"),
+                                HTTPUrl(size=80, allow_empty=False),
+                            ),
                             (
                                 "store",
                                 _("URL from password store"),

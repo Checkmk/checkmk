@@ -37,7 +37,11 @@ def _parameter_valuespec_pfsense_counter():
                     title=_("Levels for rate of fragmented packets"),
                     elements=[
                         Float(title=_("Warning at"), unit=_("pkts/s"), default_value=100.0),
-                        Float(title=_("Critical at"), unit=_("pkts/s"), default_value=10000.0),
+                        Float(
+                            title=_("Critical at"),
+                            unit=_("pkts/s"),
+                            default_value=10000.0,
+                        ),
                     ],
                 ),
             ),
@@ -47,7 +51,11 @@ def _parameter_valuespec_pfsense_counter():
                     title=_("Levels for rate of normalized packets"),
                     elements=[
                         Float(title=_("Warning at"), unit=_("pkts/s"), default_value=100.0),
-                        Float(title=_("Critical at"), unit=_("pkts/s"), default_value=10000.0),
+                        Float(
+                            title=_("Critical at"),
+                            unit=_("pkts/s"),
+                            default_value=10000.0,
+                        ),
                     ],
                 ),
             ),
@@ -57,7 +65,11 @@ def _parameter_valuespec_pfsense_counter():
                     title=_("Levels for rate of packets with bad offset"),
                     elements=[
                         Float(title=_("Warning at"), unit=_("pkts/s"), default_value=100.0),
-                        Float(title=_("Critical at"), unit=_("pkts/s"), default_value=10000.0),
+                        Float(
+                            title=_("Critical at"),
+                            unit=_("pkts/s"),
+                            default_value=10000.0,
+                        ),
                     ],
                 ),
             ),
@@ -67,7 +79,11 @@ def _parameter_valuespec_pfsense_counter():
                     title=_("Levels for rate of short packets"),
                     elements=[
                         Float(title=_("Warning at"), unit=_("pkts/s"), default_value=100.0),
-                        Float(title=_("Critical at"), unit=_("pkts/s"), default_value=10000.0),
+                        Float(
+                            title=_("Critical at"),
+                            unit=_("pkts/s"),
+                            default_value=10000.0,
+                        ),
                     ],
                 ),
             ),
@@ -77,7 +93,11 @@ def _parameter_valuespec_pfsense_counter():
                     title=_("Levels for rate of packets dropped due to memory limitations"),
                     elements=[
                         Float(title=_("Warning at"), unit=_("pkts/s"), default_value=100.0),
-                        Float(title=_("Critical at"), unit=_("pkts/s"), default_value=10000.0),
+                        Float(
+                            title=_("Critical at"),
+                            unit=_("pkts/s"),
+                            default_value=10000.0,
+                        ),
                     ],
                 ),
             ),

@@ -229,7 +229,9 @@ def _livestatus_cmd(command: str) -> None:
         logger.info("Command was: %s", command)
 
 
-def transform_flexible_and_plain_context(context: NotificationContext) -> NotificationContext:
+def transform_flexible_and_plain_context(
+    context: NotificationContext,
+) -> NotificationContext:
     if "CONTACTS" not in context:
         context["CONTACTS"] = context.get("CONTACTNAME", "?")
         context["PARAMETER_GRAPHS_PER_NOTIFICATION"] = "5"

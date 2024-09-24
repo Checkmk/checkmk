@@ -28,7 +28,8 @@ HOST_CONFIG = HostConfig(
             {"port": 21},
             [
                 ActiveCheckCommand(
-                    service_description="FTP", command_arguments=["-H", "0.0.0.1", "-p", "21"]
+                    service_description="FTP",
+                    command_arguments=["-H", "0.0.0.1", "-p", "21"],
                 )
             ],
             id="some params present",

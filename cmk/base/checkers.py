@@ -60,8 +60,18 @@ from cmk.checkengine.fetcher import HostKey, SourceInfo, SourceType
 from cmk.checkengine.inventory import InventoryPlugin, InventoryPluginName
 from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import Parameters, TimespecificParameters
-from cmk.checkengine.parser import HostSections, NO_SELECTION, parse_raw_data, SectionNameCollection
-from cmk.checkengine.sectionparser import ParsedSectionName, Provider, ResolvedResult, SectionPlugin
+from cmk.checkengine.parser import (
+    HostSections,
+    NO_SELECTION,
+    parse_raw_data,
+    SectionNameCollection,
+)
+from cmk.checkengine.sectionparser import (
+    ParsedSectionName,
+    Provider,
+    ResolvedResult,
+    SectionPlugin,
+)
 from cmk.checkengine.sectionparserutils import (
     get_cache_info,
     get_section_cluster_kwargs,
@@ -86,9 +96,8 @@ from cmk.agent_based.prediction_backend import (
     lookup_predictive_levels,
     PredictionParameters,
 )
-from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError, Metric
+from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError, Metric, State
 from cmk.agent_based.v1 import Result as CheckFunctionResult
-from cmk.agent_based.v1 import State
 
 __all__ = [
     "CheckPluginMapper",
@@ -104,7 +113,11 @@ __all__ = [
 
 
 def _fetch_all(
-    sources: Iterable[Source], *, simulation: bool, file_cache_options: FileCacheOptions, mode: Mode
+    sources: Iterable[Source],
+    *,
+    simulation: bool,
+    file_cache_options: FileCacheOptions,
+    mode: Mode,
 ) -> Sequence[
     tuple[
         SourceInfo,
@@ -281,7 +294,9 @@ class CMKFetcher:
         self.max_cachefile_age: Final = max_cachefile_age
         self.snmp_backend_override: Final = snmp_backend_override
 
-    def __call__(self, host_name: HostName, *, ip_address: HostAddress | None) -> Sequence[
+    def __call__(
+        self, host_name: HostName, *, ip_address: HostAddress | None
+    ) -> Sequence[
         tuple[
             SourceInfo,
             result.Result[AgentRawData | SNMPRawData, Exception],
@@ -295,7 +310,10 @@ class CMKFetcher:
             # address is unknown). When called as non keepalive ipaddress may be None or
             # is already an address (2nd argument)
             hosts = [
-                (host_name, ip_address or config.lookup_ip_address(self.config_cache, host_name))
+                (
+                    host_name,
+                    ip_address or config.lookup_ip_address(self.config_cache, host_name),
+                )
             ]
         else:
             hosts = [(node, config.lookup_ip_address(self.config_cache, node)) for node in nodes]
@@ -499,7 +517,7 @@ def _get_check_function(
 
 
 def _aggregate_results(
-    subresults: tuple[Sequence[MetricTuple], Sequence[CheckFunctionResult]]
+    subresults: tuple[Sequence[MetricTuple], Sequence[CheckFunctionResult]],
 ) -> ServiceCheckResult:
     # Impedance matching part of `get_check_function()`.
     perfdata, results = subresults
@@ -846,7 +864,10 @@ def inject_prediction_params_recursively(
 
 
 def _get_prediction_and_levels(
-    params: dict, injected_p: InjectedParameters, metric: str, direction: Literal["upper", "lower"]
+    params: dict,
+    injected_p: InjectedParameters,
+    metric: str,
+    direction: Literal["upper", "lower"],
 ) -> tuple[Literal["predictive"], tuple[str, float | None, tuple[float, float] | None]]:
     return (
         "predictive",

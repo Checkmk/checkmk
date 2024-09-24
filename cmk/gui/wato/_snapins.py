@@ -443,6 +443,8 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         # Now render the whole tree
         if user_folders:
             render_tree_folder(
-                "wato-hosts", list(user_folders.values())[0], "cmk.sidebar.wato_tree_click"
+                "wato-hosts",
+                list(user_folders.values())[0],
+                "cmk.sidebar.wato_tree_click",
             )
         return None

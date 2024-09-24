@@ -19,7 +19,11 @@ from pytest_mock import MockerFixture
 
 from cmk.agent_receiver import site_context
 from cmk.agent_receiver.certs import serialize_to_pem
-from cmk.agent_receiver.checkmk_rest_api import CMKEdition, HostConfiguration, RegisterResponse
+from cmk.agent_receiver.checkmk_rest_api import (
+    CMKEdition,
+    HostConfiguration,
+    RegisterResponse,
+)
 from cmk.agent_receiver.models import ConnectionMode, R4RStatus, RequestForRegistration
 from cmk.agent_receiver.utils import R4R
 
@@ -57,7 +61,8 @@ def test_register_existing_ok(
     serialized_csr: str,
 ) -> None:
     def rest_api_register_mock(
-        *args: object, **kwargs: object  # pylint: disable=unused-argument
+        *args: object,  # pylint: disable=unused-argument
+        **kwargs: object,  # pylint: disable=unused-argument
     ) -> RegisterResponse:
         _symlink_push_host(tmp_path, uuid)
         return RegisterResponse(connection_mode=ConnectionMode.PULL)
@@ -534,7 +539,10 @@ def test_register_new_ongoing_in_declined(
     ).write()
     response = _call_register_new_ongoing_cce(mocker, client, uuid)
     assert response.status_code == 200
-    assert response.json() == {"status": "Declined", "reason": "Registration request declined"}
+    assert response.json() == {
+        "status": "Declined",
+        "reason": "Registration request declined",
+    }
 
 
 @pytest.mark.usefixtures("symlink_push_host")

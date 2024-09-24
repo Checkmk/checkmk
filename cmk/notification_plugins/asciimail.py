@@ -10,7 +10,12 @@ import sys
 from email.mime.text import MIMEText
 from typing import NoReturn
 
-from cmk.utils.mail import default_from_address, MailString, send_mail_sendmail, set_mail_headers
+from cmk.utils.mail import (
+    default_from_address,
+    MailString,
+    send_mail_sendmail,
+    set_mail_headers,
+)
 
 from cmk.notification_plugins import utils
 

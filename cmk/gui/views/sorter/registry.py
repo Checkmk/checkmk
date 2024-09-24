@@ -43,12 +43,19 @@ def register_sorter(ident: str, spec: dict[str, Any]) -> None:
 def declare_simple_sorter(name: str, title: str, column: ColumnName, func: SorterFunction) -> None:
     register_sorter(
         name,
-        {"title": title, "columns": [column], "cmp": lambda r1, r2: func(column, r1, r2)},
+        {
+            "title": title,
+            "columns": [column],
+            "cmp": lambda r1, r2: func(column, r1, r2),
+        },
     )
 
 
 def declare_1to1_sorter(
-    painter_name: PainterName, func: SorterFunction, col_num: int = 0, reverse: bool = False
+    painter_name: PainterName,
+    func: SorterFunction,
+    col_num: int = 0,
+    reverse: bool = False,
 ) -> PainterName:
     painter = painter_registry[painter_name]()
 

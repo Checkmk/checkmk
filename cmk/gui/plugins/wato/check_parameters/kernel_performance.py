@@ -51,8 +51,14 @@ def _parameter_valuespec_kernel_performance():
                 Tuple(
                     title=_("Swap In Lower"),
                     elements=[
-                        Float(title=_("Swap In warning below"), unit=_("events per second")),
-                        Float(title=_("Swap In critical below"), unit=_("events per second")),
+                        Float(
+                            title=_("Swap In warning below"),
+                            unit=_("events per second"),
+                        ),
+                        Float(
+                            title=_("Swap In critical below"),
+                            unit=_("events per second"),
+                        ),
                     ],
                 ),
             ),
@@ -71,8 +77,14 @@ def _parameter_valuespec_kernel_performance():
                 Tuple(
                     title=_("Swap Out Lower"),
                     elements=[
-                        Float(title=_("Swap Out warning below"), unit=_("events per second")),
-                        Float(title=_("Swap Out critical below"), unit=_("events per second")),
+                        Float(
+                            title=_("Swap Out warning below"),
+                            unit=_("events per second"),
+                        ),
+                        Float(
+                            title=_("Swap Out critical below"),
+                            unit=_("events per second"),
+                        ),
                     ],
                 ),
             ),

@@ -20,6 +20,7 @@ It does the following things:
 By this, we can make sure we always some understanding of the permissions required and used.
 
 """
+
 from __future__ import annotations
 
 import abc

@@ -60,7 +60,11 @@ def check_dell_powerconnect_temp(_no_item, params, parsed):
     if temp is None:
         return state, "Status: %s" % dev_state_readable
     return check_temperature(
-        temp, params, "dell_powerconnect", dev_status=state, dev_status_name=dev_state_readable
+        temp,
+        params,
+        "dell_powerconnect",
+        dev_status=state,
+        dev_status_name=dev_state_readable,
     )
 
 

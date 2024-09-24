@@ -8,7 +8,12 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.base.plugins.agent_based import winperf_msx_queues
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -40,7 +45,14 @@ SECTION: winperf_msx_queues.ParsedSection = {
 
 EXCHANGE_2013_SERVER_INFO = [
     ["1385554029.05", "12048"],
-    ["4", "instances:", "niedrige_priorität", "normale_priorität", "hohe_priorität", "total"],
+    [
+        "4",
+        "instances:",
+        "niedrige_priorität",
+        "normale_priorität",
+        "hohe_priorität",
+        "total",
+    ],
     ["2", "0", "0", "0", "2100", "rawcount"],
     ["4", "0", "0", "0", "0", "rawcount"],
     ["6", "0", "0", "0", "0", "rawcount"],

@@ -148,7 +148,9 @@ def _decompress(compression_type: CompressionType, data: Buffer) -> Buffer:
 
 
 def validate_agent_protocol(
-    protocol: TransportProtocol, encryption_handling: TCPEncryptionHandling, is_registered: bool
+    protocol: TransportProtocol,
+    encryption_handling: TCPEncryptionHandling,
+    is_registered: bool,
 ) -> None:
     if protocol is TransportProtocol.TLS:
         return

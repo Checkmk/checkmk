@@ -11,6 +11,7 @@ The format contains an identifier for the hash algorithm that was used, the numb
 a salt, and the actual checksum -- which is all the information needed to verify the hash with a
 given password (see `verify`).
 """
+
 import logging
 import re
 

@@ -120,10 +120,14 @@ def _valuespec_active_checks_disk_smb() -> Migrate:
                         title=_("Levels for used disk space"),
                         elements=[
                             Percentage(
-                                title=_("Warning if above"), default_value=85, allow_int=True
+                                title=_("Warning if above"),
+                                default_value=85,
+                                allow_int=True,
                             ),
                             Percentage(
-                                title=_("Critical if above"), default_value=95, allow_int=True
+                                title=_("Critical if above"),
+                                default_value=95,
+                                allow_int=True,
                             ),
                         ],
                     ),

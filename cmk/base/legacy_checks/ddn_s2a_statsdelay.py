@@ -125,7 +125,10 @@ def check_ddn_s2a_statsdelay(item, params, parsed):
         read_min, read_max, read_avg = 0, 0, 0
 
     yield _check_levels(
-        "Average read wait: %.2f s", read_avg, params.get("read_avg"), "disk_average_read_wait"
+        "Average read wait: %.2f s",
+        read_avg,
+        params.get("read_avg"),
+        "disk_average_read_wait",
     )
     yield _check_levels(
         "Min. read wait: %.2f s", read_min, params.get("read_min"), "disk_min_read_wait"
@@ -142,13 +145,22 @@ def check_ddn_s2a_statsdelay(item, params, parsed):
         write_min, write_max, write_avg = 0, 0, 0
 
     yield _check_levels(
-        "Average write wait: %.2f s", write_avg, params.get("write_avg"), "disk_average_write_wait"
+        "Average write wait: %.2f s",
+        write_avg,
+        params.get("write_avg"),
+        "disk_average_write_wait",
     )
     yield _check_levels(
-        "Min. write wait: %.2f s", write_min, params.get("write_min"), "disk_min_write_wait"
+        "Min. write wait: %.2f s",
+        write_min,
+        params.get("write_min"),
+        "disk_min_write_wait",
     )
     yield _check_levels(
-        "Max. write wait: %.2f s", write_max, params.get("write_max"), "disk_max_write_wait"
+        "Max. write wait: %.2f s",
+        write_max,
+        params.get("write_max"),
+        "disk_max_write_wait",
     )
 
 

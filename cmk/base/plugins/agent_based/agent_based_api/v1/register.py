@@ -6,6 +6,7 @@
 The "register" namespace contains functions to inform Checkmk about plugins.
 
 """
+
 from cmk.base.api.agent_based.register.export import (
     agent_section,
     check_plugin,

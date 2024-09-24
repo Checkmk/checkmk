@@ -64,7 +64,9 @@ def _all_connections() -> list[tuple[str, UserConnector]]:
     return _get_connections_for(_get_connection_configs())
 
 
-def _get_connections_for(configs: list[dict[str, Any]]) -> list[tuple[str, UserConnector]]:
+def _get_connections_for(
+    configs: list[dict[str, Any]],
+) -> list[tuple[str, UserConnector]]:
     return [(cfg["id"], user_connector_registry[cfg["type"]](cfg)) for cfg in configs]
 
 

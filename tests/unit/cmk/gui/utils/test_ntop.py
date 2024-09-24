@@ -41,7 +41,10 @@ def test_is_ntop_available() -> None:
             "",
         ),
         (
-            {"is_activated": True, "use_custom_attribute_as_ntop_username": "ntop_alias"},
+            {
+                "is_activated": True,
+                "use_custom_attribute_as_ntop_username": "ntop_alias",
+            },
             "",
             False,
             (
@@ -51,7 +54,10 @@ def test_is_ntop_available() -> None:
             ),
         ),
         (
-            {"is_activated": True, "use_custom_attribute_as_ntop_username": "ntop_alias"},
+            {
+                "is_activated": True,
+                "use_custom_attribute_as_ntop_username": "ntop_alias",
+            },
             "a_ntop_user",
             True,
             "",

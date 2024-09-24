@@ -5,7 +5,7 @@
 
 
 from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.version import edition, Edition
+from cmk.utils.version import Edition, edition
 
 from cmk.gui.i18n import _
 from cmk.gui.mkeventd import service_levels, syslog_facilities, syslog_priorities

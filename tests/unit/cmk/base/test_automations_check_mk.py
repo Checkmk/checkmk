@@ -78,7 +78,10 @@ def mock_service_description(params: Mapping[str, str]) -> str:
     [
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "param1": "param1"}],
+                ),
             ],
             {
                 "my_active_check": {
@@ -103,7 +106,10 @@ def mock_service_description(params: Mapping[str, str]) -> str:
         ),
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "param1": "param1"}],
+                ),
             ],
             {
                 "my_active_check": {
@@ -128,7 +134,10 @@ def mock_service_description(params: Mapping[str, str]) -> str:
         ),
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "param1": "param1"}],
+                ),
             ],
             {
                 "my_active_check": {
@@ -193,7 +202,10 @@ def mock_service_description(params: Mapping[str, str]) -> str:
         ),
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "param1": "param1"}],
+                ),
             ],
             {
                 "my_active_check": {
@@ -242,7 +254,10 @@ def test_automation_active_check(
     [
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "param1": "param1"}],
+                ),
             ],
             {
                 "my_active_check": {

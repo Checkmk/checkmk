@@ -84,7 +84,18 @@ def parse_ipmi_sensors(string_table: StringTable) -> ipmi_utils.Section:
                 sensor.unit = _na_str(unit)
                 sensor.type_ = type_
 
-            case [type_, status, value, unit, _, lower_c, lower_nc, upper_nc, upper_c, _]:
+            case [
+                type_,
+                status,
+                value,
+                unit,
+                _,
+                lower_c,
+                lower_nc,
+                upper_nc,
+                upper_c,
+                _,
+            ]:
                 sensor.value = _na_float(value)
                 sensor.unit = _na_str(unit)
                 sensor.state = ipmi_utils.Sensor.parse_state(status)

@@ -8,7 +8,10 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.wut_webio import (
     AS_DISCOVERED,
     check_wut_webio,
@@ -44,7 +47,10 @@ def test_discovery() -> None:
     assert list(discover_wut_webio(_parse_mandatory(STRING_TABLE))) == [
         Service(item=ITEM, parameters={"states_during_discovery": "On"}),
         Service(item="WEBIO-094849 Input 1", parameters={"states_during_discovery": "Off"}),
-        Service(item="WEBIO-094849 Input 2", parameters={"states_during_discovery": "Unknown"}),
+        Service(
+            item="WEBIO-094849 Input 2",
+            parameters={"states_during_discovery": "Unknown"},
+        ),
     ]
 
 
@@ -69,7 +75,10 @@ def test_check_unknown() -> None:
     assert list(
         check_wut_webio(
             "WEBIO-094849 Input 2",
-            params={STATE_EVAL_KEY: DEFAULT_STATE_EVALUATION, STATES_DURING_DISC_KEY: "Unknown"},
+            params={
+                STATE_EVAL_KEY: DEFAULT_STATE_EVALUATION,
+                STATES_DURING_DISC_KEY: "Unknown",
+            },
             section=_parse_mandatory(STRING_TABLE),
         )
     ) == [Result(state=State.UNKNOWN, summary="Input (Index: 2) is in state: Unknown")]

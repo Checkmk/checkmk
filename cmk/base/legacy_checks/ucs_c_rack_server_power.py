@@ -40,7 +40,11 @@ def parse_ucs_c_rack_server_power(string_table):
         )
         parsed.setdefault(motherboard, {})
         for ds_key, ds, cast_function in (
-            ("consumedPower", power, float),  # consumedPower is no longer int but float instead!!
+            (
+                "consumedPower",
+                power,
+                float,
+            ),  # consumedPower is no longer int but float instead!!
             ("inputCurrent", current, float),
             ("inputVoltage", voltage, float),
         ):
@@ -59,7 +63,11 @@ def check_ucs_c_rack_server_power(item, params, parsed):
     if not (data := parsed.get(item)):
         return
     yield check_levels(
-        data["consumedPower"], "power", params["power_upper_levels"], unit="W", infoname="Power"
+        data["consumedPower"],
+        "power",
+        params["power_upper_levels"],
+        unit="W",
+        infoname="Power",
     )
     yield 0, "Current: %s A" % data["inputCurrent"]
     yield 0, "Voltage: %s V" % data["inputVoltage"]

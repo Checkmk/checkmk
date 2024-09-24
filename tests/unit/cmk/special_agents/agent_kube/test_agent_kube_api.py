@@ -25,7 +25,9 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
 
 import cmk.special_agents.utils_kubernetes.agent_handlers.common
 from cmk.special_agents import agent_kube as agent
-from cmk.special_agents.utils_kubernetes.agent_handlers.common import aggregate_resources
+from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
+    aggregate_resources,
+)
 from cmk.special_agents.utils_kubernetes.api_server import SUPPORTED_VERSIONS
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 

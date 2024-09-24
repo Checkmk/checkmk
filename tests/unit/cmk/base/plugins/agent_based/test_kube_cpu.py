@@ -55,7 +55,9 @@ ALLOCATABLE_RESOURCE_SECTION = kube_resources.AllocatableResource(context="node"
 
 def test_discovery() -> None:
     for s1, s2, s3 in itertools.product(
-        (USAGE_SECTION, None), (RESOURCES_SECTION, None), (ALLOCATABLE_RESOURCE_SECTION, None)
+        (USAGE_SECTION, None),
+        (RESOURCES_SECTION, None),
+        (ALLOCATABLE_RESOURCE_SECTION, None),
     ):
         assert len(list(kube_cpu.discovery_kube_cpu(s1, s2, s3))) == 1
 
@@ -73,7 +75,12 @@ def test_check_if_no_resources() -> None:
 def test_performance_cpu() -> None:
     check_result = list(
         kube_cpu._check_kube_cpu(
-            PARAMS, USAGE_SECTION, RESOURCES_SECTION, ALLOCATABLE_RESOURCE_SECTION, 1.0, {}
+            PARAMS,
+            USAGE_SECTION,
+            RESOURCES_SECTION,
+            ALLOCATABLE_RESOURCE_SECTION,
+            1.0,
+            {},
         )
     )
     assert check_result == [
@@ -84,13 +91,23 @@ def test_performance_cpu() -> None:
             state=State.OK,
             summary="Requests utilization: 50.00% - 0.090 of 0.180 (2/2 containers with requests)",
         ),
-        Metric("kube_cpu_request_utilization", 50.0, levels=(60.0, 90.0), boundaries=(0.0, None)),
+        Metric(
+            "kube_cpu_request_utilization",
+            50.0,
+            levels=(60.0, 90.0),
+            boundaries=(0.0, None),
+        ),
         Metric("kube_cpu_limit", 0.36),
         Result(
             state=State.OK,
             summary="Limits utilization: 25.00% - 0.090 of 0.360 (2/2 containers with limits)",
         ),
-        Metric("kube_cpu_limit_utilization", 25.0, levels=(30.0, 45.0), boundaries=(0.0, None)),
+        Metric(
+            "kube_cpu_limit_utilization",
+            25.0,
+            levels=(30.0, 45.0),
+            boundaries=(0.0, None),
+        ),
         Metric("kube_cpu_allocatable", 5.0),
         Result(state=State.OK, summary="Node utilization: 1.80% - 0.090 of 5.000"),
         Metric(

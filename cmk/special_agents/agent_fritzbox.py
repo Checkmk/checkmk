@@ -58,7 +58,11 @@ _QUERIES: Final = (
         "urn:schemas-upnp-org:service:WANCommonInterfaceConfig:1",
         "GetCommonLinkProperties",
     ),
-    ("WANDSLLinkC1", "urn:schemas-upnp-org:service:WANDSLLinkConfig:1", "GetDSLLinkInfo"),
+    (
+        "WANDSLLinkC1",
+        "urn:schemas-upnp-org:service:WANDSLLinkConfig:1",
+        "GetDSLLinkInfo",
+    ),
 )
 
 _SOAP_TEMPLATE = """
@@ -168,7 +172,9 @@ def get_upnp_info(
     # parse the response body
     if (
         match := re.search(
-            f"<u:{action}Response[^>]+>(.*)</u:{action}Response>", response.text, re.M | re.S
+            f"<u:{action}Response[^>]+>(.*)</u:{action}Response>",
+            response.text,
+            re.M | re.S,
         )
     ) is None:
         raise ValueError("Response not parsable")

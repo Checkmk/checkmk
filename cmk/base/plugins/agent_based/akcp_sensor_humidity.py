@@ -23,7 +23,8 @@ register.snmp_section(
     name="akcp_sensor_humidity",
     parse_function=parse_akcp_sensor,
     detect=all_of(
-        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3854.1"), not_exists(".1.3.6.1.4.1.3854.2.*")
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3854.1"),
+        not_exists(".1.3.6.1.4.1.3854.2.*"),
     ),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3854.1.2.2.1.17.1",

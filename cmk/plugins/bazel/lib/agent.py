@@ -16,8 +16,14 @@ from typing import NamedTuple
 import requests
 import urllib3
 
-from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
-from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.agent_common import (
+    SectionWriter,
+    special_agent_main,
+)
+from cmk.special_agents.v0_unstable.argument_parsing import (
+    Args,
+    create_default_argument_parser,
+)
 
 CAMEL_PATTERN = re.compile(r"(?<!^)(?=[A-Z])")
 

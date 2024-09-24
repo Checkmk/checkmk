@@ -72,7 +72,11 @@ discovery = {
         ("MDisks BLUBBSVC01", None),
         ("VDisks BLUBBSVC01", None),
     ],
-    "iops": [("Drives BLUBBSVC01", None), ("MDisks BLUBBSVC01", None), ("VDisks BLUBBSVC01", None)],
+    "iops": [
+        ("Drives BLUBBSVC01", None),
+        ("MDisks BLUBBSVC01", None),
+        ("VDisks BLUBBSVC01", None),
+    ],
 }
 
 

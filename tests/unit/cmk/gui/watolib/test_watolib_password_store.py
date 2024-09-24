@@ -11,11 +11,17 @@ from cmk.utils.password_store import Password
 
 import cmk.gui.watolib.password_store
 from cmk.gui import userdb
-from cmk.gui.watolib.password_store import join_password_specs, PasswordStore, split_password_specs
+from cmk.gui.watolib.password_store import (
+    join_password_specs,
+    PasswordStore,
+    split_password_specs,
+)
 
 
 @pytest.fixture
-def mock_update_passwords_merged_file(monkeypatch: pytest.MonkeyPatch) -> Iterable[None]:
+def mock_update_passwords_merged_file(
+    monkeypatch: pytest.MonkeyPatch,
+) -> Iterable[None]:
     monkeypatch.setattr(
         cmk.gui.watolib.password_store,
         cmk.gui.watolib.password_store.update_passwords_merged_file.__name__,

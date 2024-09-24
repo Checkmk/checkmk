@@ -77,7 +77,10 @@ class BaseRequestSchema(BaseSchema):
     time_range = Nested(
         TimeRange,
         description="The time range from which to source the metrics.",
-        example={"start": str(datetime.now() - timedelta(minutes=15)), "end": str(datetime.now())},
+        example={
+            "start": str(datetime.now() - timedelta(minutes=15)),
+            "end": str(datetime.now()),
+        },
         required=True,
     )
 

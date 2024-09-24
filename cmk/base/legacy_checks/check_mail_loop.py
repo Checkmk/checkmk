@@ -5,7 +5,9 @@
 
 
 from cmk.base.check_api import host_name, passwordstore_get_cmdline
-from cmk.base.check_legacy_includes.check_mail import general_check_mail_args_from_params
+from cmk.base.check_legacy_includes.check_mail import (
+    general_check_mail_args_from_params,
+)
 from cmk.base.config import active_check_info
 
 CHECK_IDENT = "check_mail_loop"

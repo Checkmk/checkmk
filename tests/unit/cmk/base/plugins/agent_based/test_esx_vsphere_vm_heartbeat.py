@@ -27,7 +27,8 @@ class HeartBeatFactory(ModelFactory):
 
 
 @pytest.mark.parametrize(
-    "vm_status, check_state", [("green", State.OK), ("red", State.CRIT), ("yellow", State.WARN)]
+    "vm_status, check_state",
+    [("green", State.OK), ("red", State.CRIT), ("yellow", State.WARN)],
 )
 def testcheck_heartbeat(vm_status: str, check_state: State) -> None:
     heartbeat = HeartBeatFactory.build(status=HeartBeatStatus(vm_status.upper()), value=vm_status)

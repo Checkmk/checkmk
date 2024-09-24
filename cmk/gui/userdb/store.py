@@ -362,7 +362,9 @@ def _add_custom_macro_attributes(profiles: Users) -> Users:
 
     # Add custom macros
     core_custom_macros = {
-        name for name, attr in get_user_attributes() if attr.add_custom_macro()  #
+        name
+        for name, attr in get_user_attributes()
+        if attr.add_custom_macro()  #
     }
     for user in updated_profiles.keys():
         for macro in core_custom_macros:
@@ -401,7 +403,9 @@ def _save_user_profiles(  # pylint: disable=too-many-branches
             user_id, "enforce_pw_change", str(int(bool(user.get("enforce_pw_change"))))
         )
         save_custom_attr(
-            user_id, "last_pw_change", str(user.get("last_pw_change", int(now.timestamp())))
+            user_id,
+            "last_pw_change",
+            str(user.get("last_pw_change", int(now.timestamp()))),
         )
 
         if "idle_timeout" in user:
@@ -581,7 +585,12 @@ def _multisite_keys() -> list[str]:
         var
         for var in _get_multisite_custom_variable_names()
         if var
-        not in ("start_url", "ui_theme", "ui_sidebar_position", "ui_saas_onboarding_button_toggle")
+        not in (
+            "start_url",
+            "ui_theme",
+            "ui_sidebar_position",
+            "ui_saas_onboarding_button_toggle",
+        )
     ]
     return [
         "roles",
@@ -627,7 +636,10 @@ def create_cmk_automation_user(now: datetime, name: str, alias: str, role: str) 
 
 
 def _save_cached_profile(
-    user_id: UserId, user: UserSpec, multisite_keys: list[str], non_contact_keys: list[str]
+    user_id: UserId,
+    user: UserSpec,
+    multisite_keys: list[str],
+    non_contact_keys: list[str],
 ) -> None:
     # Only save contact AND multisite attributes to the profile. Not the
     # infos that are stored in the custom attribute files.

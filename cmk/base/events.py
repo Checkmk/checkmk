@@ -637,7 +637,8 @@ def _event_match_servicegroups(  # pylint: disable=too-many-branches
 
             return (
                 "The service is only in the groups {}. None of these patterns match: {}".format(
-                    '"' + '", "'.join(servicegroups) + '"', '"' + '" or "'.join(required_groups)
+                    '"' + '", "'.join(servicegroups) + '"',
+                    '"' + '" or "'.join(required_groups),
                 )
                 + '"'
             )
@@ -914,7 +915,11 @@ def event_match_servicelevel(
             sl = saveint(context.get("HOST_SL"))
 
         if sl < from_sl or sl > to_sl:
-            return "The service level %d is not between %d and %d." % (sl, from_sl, to_sl)
+            return "The service level %d is not between %d and %d." % (
+                sl,
+                from_sl,
+                to_sl,
+            )
     return None
 
 

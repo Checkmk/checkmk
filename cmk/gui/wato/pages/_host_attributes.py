@@ -27,7 +27,12 @@ from cmk.gui.watolib.host_attributes import (
     get_sorted_host_attribute_topics,
     get_sorted_host_attributes_by_topic,
 )
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_from_request, Host, SearchFolder
+from cmk.gui.watolib.hosts_and_folders import (
+    Folder,
+    folder_from_request,
+    Host,
+    SearchFolder,
+)
 
 #   "host"        -> normal host edit dialog
 #   "cluster"     -> normal host edit dialog
@@ -303,7 +308,8 @@ def configure_attributes(  # pylint: disable=too-many-branches
 
                 # DIV with the input elements
                 html.open_div(
-                    id_="attr_entry_%s" % attrname, style="display: none;" if not active else None
+                    id_="attr_entry_%s" % attrname,
+                    style="display: none;" if not active else None,
                 )
                 attr.render_input(varprefix, defvalue)
                 html.close_div()

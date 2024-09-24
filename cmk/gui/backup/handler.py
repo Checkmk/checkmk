@@ -297,7 +297,9 @@ class MKBackupJob(abc.ABC):
             return False
 
         state = self.state()
-        return state.state in ["started", "running"] and os.path.exists("/proc/%d" % state.pid)  # type: ignore[str-format]
+        return state.state in ["started", "running"] and os.path.exists(
+            "/proc/%d" % state.pid  # type: ignore[str-format]
+        )
 
     def start(self, **env_updates: str) -> None:
         completed_process = subprocess.run(
@@ -547,7 +549,11 @@ class PageBackup:
                     url=makeactionuri_contextless(
                         request,
                         transactions,
-                        [("mode", "backup"), ("_action", "delete"), ("_job", job.ident)],
+                        [
+                            ("mode", "backup"),
+                            ("_action", "delete"),
+                            ("_job", job.ident),
+                        ],
                     ),
                     title=_("Delete job #%d") % nr,
                     suffix=job.title,
@@ -568,7 +574,9 @@ class PageBackup:
 
                 if job_state is not None:
                     html.icon_button(
-                        state_url, _("Show current / last state of this backup job"), "backup_state"
+                        state_url,
+                        _("Show current / last state of this backup job"),
+                        "backup_state",
                     )
 
                 if not job.is_running():
@@ -1240,7 +1248,9 @@ class BackupTargetAzureBlobStorage(ABCBackupTargetRemote[BlobStorageParams, Blob
         return _("Azure Blob Storage")
 
     @staticmethod
-    def _instantiate_target(params: RemoteTargetParams[BlobStorageParams]) -> BlobStorageTarget:
+    def _instantiate_target(
+        params: RemoteTargetParams[BlobStorageParams],
+    ) -> BlobStorageTarget:
         return BlobStorageTarget(TargetId(""), params)
 
     @classmethod
@@ -1315,7 +1325,9 @@ class BackupTargetAzureBlobStorage(ABCBackupTargetRemote[BlobStorageParams, Blob
         )
 
 
-def _local_directory_configuration_elements(directory_field_size: int) -> DictionaryElements:
+def _local_directory_configuration_elements(
+    directory_field_size: int,
+) -> DictionaryElements:
     yield (
         "path",
         AbsoluteDirname(
@@ -1470,7 +1482,9 @@ class Target:
                 from_info = f"{info.hostname} (Site: {info.site_id}, Version: {info.site_version})"
                 delete_url = make_confirm_delete_link(
                     url=makeactionuri(
-                        request, transactions, [("_action", "delete"), ("_backup", backup_ident)]
+                        request,
+                        transactions,
+                        [("_action", "delete"), ("_backup", backup_ident)],
                     ),
                     title=_("Delete backup"),
                     message=_("From: %s") % from_info,
@@ -1481,7 +1495,9 @@ class Target:
 
                 start_url = make_confirm_link(
                     url=makeactionuri(
-                        request, transactions, [("_action", "start"), ("_backup", backup_ident)]
+                        request,
+                        transactions,
+                        [("_action", "start"), ("_backup", backup_ident)],
                     ),
                     title=_("Start restore of backup"),
                     suffix=backup_ident,
@@ -1953,7 +1969,13 @@ class RestoreJob(MKBackupJob):
     def _start_command(self) -> Sequence[str | Path]:
         assert self._target_ident is not None
         assert self._backup_ident is not None
-        return [mkbackup_path(), "restore", "--background", self._target_ident, self._backup_ident]
+        return [
+            mkbackup_path(),
+            "restore",
+            "--background",
+            self._target_ident,
+            self._backup_ident,
+        ]
 
     def start(self, **env_updates: str) -> None:
         if self._passphrase:
@@ -2005,7 +2027,9 @@ class PageBackupRestore:
                                     item=make_simple_link(
                                         make_confirm_delete_link(
                                             url=makeactionuri(
-                                                request, transactions, [("_action", "stop")]
+                                                request,
+                                                transactions,
+                                                [("_action", "stop")],
                                             ),
                                             title=_("Stop restore of backup"),
                                             message=_(
@@ -2024,7 +2048,9 @@ class PageBackupRestore:
                                     icon_name="save",
                                     item=make_simple_link(
                                         makeactionuri(
-                                            request, transactions, [("_action", "complete")]
+                                            request,
+                                            transactions,
+                                            [("_action", "complete")],
                                         )
                                     ),
                                     is_shortcut=True,

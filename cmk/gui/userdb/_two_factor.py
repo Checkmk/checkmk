@@ -31,7 +31,10 @@ def disable_two_factor_authentication(user_id: UserId) -> None:
 
 def load_two_factor_credentials(user_id: UserId, lock: bool = False) -> TwoFactorCredentials:
     cred = load_custom_attr(
-        user_id=user_id, key="two_factor_credentials", parser=ast.literal_eval, lock=lock
+        user_id=user_id,
+        key="two_factor_credentials",
+        parser=ast.literal_eval,
+        lock=lock,
     )
     return (
         TwoFactorCredentials(webauthn_credentials={}, backup_codes=[], totp_credentials={})

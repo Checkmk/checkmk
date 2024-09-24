@@ -112,10 +112,16 @@ class NotificationParameterPushover(NotificationParameter):
                                         ]
                                     ),
                                 ),
-                                ("1", _("High: Push notification alerts bypass quiet hours")),
+                                (
+                                    "1",
+                                    _("High: Push notification alerts bypass quiet hours"),
+                                ),
                                 ("0", _("Normal: Regular push notification (default)")),
                                 ("-1", _("Low: No sound/vibration but show popup")),
-                                ("-2", _("Lowest: No notification, update badge number")),
+                                (
+                                    "-2",
+                                    _("Lowest: No notification, update badge number"),
+                                ),
                             ],
                             default_value="0",
                         ),
@@ -176,5 +182,8 @@ class NotificationParameterPushover(NotificationParameter):
 
     def _transform_to_pushover_priority(self, params):
         if isinstance(params, dict):
-            return (params["priority"], (params["retry"], params["expire"], params["receipts"]))
+            return (
+                params["priority"],
+                (params["retry"], params["expire"], params["receipts"]),
+            )
         return params

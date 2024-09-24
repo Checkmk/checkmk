@@ -5,6 +5,10 @@
 
 from ._base import NotificationParameter as NotificationParameter
 from ._mail import NotificationParameterMail as NotificationParameterMail
-from ._registry import notification_parameter_registry as notification_parameter_registry
+from ._registry import (
+    notification_parameter_registry as notification_parameter_registry,
+)
 from ._registry import NotificationParameterRegistry as NotificationParameterRegistry
-from ._registry import register_notification_parameters as register_notification_parameters
+from ._registry import (
+    register_notification_parameters as register_notification_parameters,
+)

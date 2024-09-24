@@ -150,7 +150,13 @@ def test_create_sections(
             [CheckPluginName("jill"), CheckPluginName("jim")],
             TypeError,
         ),
-        (dummy_function_jj, False, False, [CheckPluginName("jim"), CheckPluginName("jill")], None),
+        (
+            dummy_function_jj,
+            False,
+            False,
+            [CheckPluginName("jim"), CheckPluginName("jill")],
+            None,
+        ),
     ],
 )
 def test_validate_function_args(

@@ -89,15 +89,19 @@ def check_emcvnx_storage_pools(item, params, parsed):
         over_subscribed = float(data["Oversubscribed by (GBs)"]) * 1024**3
         total_subscribed_capacity = float(data["Total Subscribed Capacity (GBs)"]) * 1024**3
 
-        yield 0, (
-            "State: %s, Status: %s, [Phys. capacity] User capacity: %s, "
-            + "Consumed capacity: %s, Available capacity: %s"
-        ) % (
-            state,
-            status,
-            render.bytes(user_capacity),
-            render.bytes(consumed_capacity),
-            render.bytes(avail_capacity),
+        yield (
+            0,
+            (
+                "State: %s, Status: %s, [Phys. capacity] User capacity: %s, "
+                + "Consumed capacity: %s, Available capacity: %s"
+            )
+            % (
+                state,
+                status,
+                render.bytes(user_capacity),
+                render.bytes(consumed_capacity),
+                render.bytes(avail_capacity),
+            ),
         )
 
         state = 0
@@ -115,21 +119,26 @@ def check_emcvnx_storage_pools(item, params, parsed):
                 )
 
         yield state, infotext
-        yield 0, (
-            "[Virt. capacity] Percent subscribed: %s, Oversubscribed by: %s, "
-            + "Total subscribed capacity: %s"
-        ) % (
-            render.percent(percent_subscribed),
-            render.bytes(over_subscribed),
-            render.bytes(total_subscribed_capacity),
-        ), [
-            ("emcvnx_consumed_capacity", consumed_capacity),
-            ("emcvnx_avail_capacity", avail_capacity),
-            ("emcvnx_perc_full", percent_full),
-            ("emcvnx_perc_subscribed", percent_subscribed),
-            ("emcvnx_over_subscribed", over_subscribed),
-            ("emcvnx_total_subscribed_capacity", total_subscribed_capacity),
-        ]
+        yield (
+            0,
+            (
+                "[Virt. capacity] Percent subscribed: %s, Oversubscribed by: %s, "
+                + "Total subscribed capacity: %s"
+            )
+            % (
+                render.percent(percent_subscribed),
+                render.bytes(over_subscribed),
+                render.bytes(total_subscribed_capacity),
+            ),
+            [
+                ("emcvnx_consumed_capacity", consumed_capacity),
+                ("emcvnx_avail_capacity", avail_capacity),
+                ("emcvnx_perc_full", percent_full),
+                ("emcvnx_perc_subscribed", percent_subscribed),
+                ("emcvnx_over_subscribed", over_subscribed),
+                ("emcvnx_total_subscribed_capacity", total_subscribed_capacity),
+            ],
+        )
 
 
 check_info["emcvnx_storage_pools"] = LegacyCheckDefinition(

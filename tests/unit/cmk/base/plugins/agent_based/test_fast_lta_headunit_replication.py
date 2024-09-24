@@ -10,7 +10,11 @@ from tests.unit.conftest import FixRegister
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.api.agent_based.plugin_classes import CheckFunction, CheckPlugin, DiscoveryFunction
+from cmk.base.api.agent_based.plugin_classes import (
+    CheckFunction,
+    CheckPlugin,
+    DiscoveryFunction,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
@@ -53,7 +57,12 @@ def test_discovery_fast_lta_headunit_replication(
     [
         (
             [[["60", "1", "1"]]],
-            [Result(state=State.OK, summary="Replication is running. This node is Master.")],
+            [
+                Result(
+                    state=State.OK,
+                    summary="Replication is running. This node is Master.",
+                )
+            ],
         ),
         (
             [[["60", "1", "99"]]],

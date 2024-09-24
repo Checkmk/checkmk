@@ -7,7 +7,12 @@ from typing import Any
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.prism_storage_pools import (
     check_prism_storage_pools,
     discovery_prism_storage_pools,

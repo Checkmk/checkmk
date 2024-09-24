@@ -12,7 +12,9 @@ from tests.testlib.rest_api_client import ClientRegistry
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 
-def add_event_console_events_to_live_status_table(live: MockLiveStatusConnection) -> None:
+def add_event_console_events_to_live_status_table(
+    live: MockLiveStatusConnection,
+) -> None:
     def create_ec_event(
         event_id: int, state: int = 0, phase: str = "open", host: str = "heute"
     ) -> dict[str, Any]:
@@ -58,7 +60,14 @@ def test_get_all_ec_events(
     )
     with mock_livestatus:
         resp = clients.EventConsole.get_all()
-        assert {event["id"] for event in resp.json["value"]} == {"1", "2", "3", "4", "5", "6"}
+        assert {event["id"] for event in resp.json["value"]} == {
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+        }
         assert {event["extensions"]["host"] for event in resp.json["value"]} == {
             "heute",
             "test_host",
@@ -72,7 +81,10 @@ def test_get_all_ec_events(
             "App5",
             "App6",
         }
-        assert {event["extensions"]["phase"] for event in resp.json["value"]} == {"open", "ack"}
+        assert {event["extensions"]["phase"] for event in resp.json["value"]} == {
+            "open",
+            "ack",
+        }
         assert {event["extensions"]["state"] for event in resp.json["value"]} == {
             "critical",
             "warning",
@@ -382,7 +394,8 @@ def test_update_and_acknowledge_by_id(
         sites=["NO_SITE"],
     )
     mock_livestatus.expect_query(
-        "COMMAND [...] EC_UPDATE;1;test123-...;1;comment_changed;Checkmk", match_type="ellipsis"
+        "COMMAND [...] EC_UPDATE;1;test123-...;1;comment_changed;Checkmk",
+        match_type="ellipsis",
     )
 
     with mock_livestatus:
@@ -404,7 +417,8 @@ def test_update_and_acknowledge_withdrawal_by_id(
         sites=["NO_SITE"],
     )
     mock_livestatus.expect_query(
-        "COMMAND [...] EC_UPDATE;4;test123-...;0;comment_changed;Checkmk", match_type="ellipsis"
+        "COMMAND [...] EC_UPDATE;4;test123-...;0;comment_changed;Checkmk",
+        match_type="ellipsis",
     )
 
     with mock_livestatus:
@@ -447,7 +461,8 @@ def test_update_and_acknowledge_query_filter(
         sites=["NO_SITE"],
     )
     mock_livestatus.expect_query(
-        "COMMAND [...] EC_UPDATE;1;test123-...;1;testcomment;testcontact", match_type="ellipsis"
+        "COMMAND [...] EC_UPDATE;1;test123-...;1;testcomment;testcontact",
+        match_type="ellipsis",
     )
 
     with mock_livestatus:
@@ -470,7 +485,8 @@ def test_update_and_acknowledge_params_filter(
         sites=["NO_SITE"],
     )
     mock_livestatus.expect_query(
-        "COMMAND [...] EC_UPDATE;5;test123-...;1;testcomment;testcontact", match_type="ellipsis"
+        "COMMAND [...] EC_UPDATE;5;test123-...;1;testcomment;testcontact",
+        match_type="ellipsis",
     )
 
     with mock_livestatus:
@@ -495,7 +511,8 @@ def test_update_and_acknowledge_all_filter(
         sites=["NO_SITE"],
     )
     mock_livestatus.expect_query(
-        "COMMAND [...] EC_UPDATE;1,3,5;test123-...;1;testcomment;testcontact", match_type="ellipsis"
+        "COMMAND [...] EC_UPDATE;1,3,5;test123-...;1;testcomment;testcontact",
+        match_type="ellipsis",
     )
 
     with mock_livestatus:
@@ -548,7 +565,8 @@ def test_update_and_acknowledge_all_filter_no_site_id(
         "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_phase = open",
     )
     mock_livestatus.expect_query(
-        "COMMAND [...] EC_UPDATE;1,3,5;test123-...;1;testcomment;testcontact", match_type="ellipsis"
+        "COMMAND [...] EC_UPDATE;1,3,5;test123-...;1;testcomment;testcontact",
+        match_type="ellipsis",
     )
 
     with mock_livestatus:

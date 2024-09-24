@@ -7,7 +7,14 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import any_of, contains, render, SNMPTree, startswith, StringTable
+from cmk.agent_based.v2 import (
+    any_of,
+    contains,
+    render,
+    SNMPTree,
+    startswith,
+    StringTable,
+)
 
 
 def inventory_dell_eql_storage(info):
@@ -75,12 +82,16 @@ def check_dell_eql_storage(item, _no_params, info):
                 ("fs_size", total_bytes),
                 ("fs_free", total_bytes - used_bytes),
             ]
-            yield 0, "Used: {}/{} (Snapshots: {}, Replication: {})".format(
-                render.disksize(used_bytes),
-                render.disksize(total_bytes),
-                render.disksize(snap_bytes),
-                render.disksize(repl_bytes),
-            ), perfdata
+            yield (
+                0,
+                "Used: {}/{} (Snapshots: {}, Replication: {})".format(
+                    render.disksize(used_bytes),
+                    render.disksize(total_bytes),
+                    render.disksize(snap_bytes),
+                    render.disksize(repl_bytes),
+                ),
+                perfdata,
+            )
 
 
 def parse_dell_eql_storage(string_table: StringTable) -> StringTable:

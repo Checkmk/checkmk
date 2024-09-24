@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-""" JSON parsing for Kubernetes API objects.
+"""JSON parsing for Kubernetes API objects.
 
 This file contains helper functions to parse JSON received from the Kubernetes
 API into version independent data structures defined in `schemata.api`. This
@@ -176,7 +176,8 @@ def statefulset_list_from_json(
 ) -> Sequence[api.StatefulSet]:
     return [
         _statefulset_from_json(
-            statefulset, controller_to_pods.get(dependent_object_uid_from_json(statefulset), [])
+            statefulset,
+            controller_to_pods.get(dependent_object_uid_from_json(statefulset), []),
         )
         for statefulset in statefulset_list["items"]
     ]

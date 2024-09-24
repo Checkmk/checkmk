@@ -41,10 +41,18 @@ def check_emcvnx_sp_util(item, params, parsed):
 
     now = time.time()
     busy_ticks_rate = get_rate(
-        get_value_store(), "emcvnx_sp_util.busy_ticks", now, parsed["busy"], raise_overflow=True
+        get_value_store(),
+        "emcvnx_sp_util.busy_ticks",
+        now,
+        parsed["busy"],
+        raise_overflow=True,
     )
     idle_ticks_rate = get_rate(
-        get_value_store(), "emcvnx_sp_util.idle_ticks", now, parsed["idle"], raise_overflow=True
+        get_value_store(),
+        "emcvnx_sp_util.idle_ticks",
+        now,
+        parsed["idle"],
+        raise_overflow=True,
     )
     if busy_ticks_rate + idle_ticks_rate == 0:
         sp_util = 0.0

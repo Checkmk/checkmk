@@ -46,7 +46,11 @@ def check_jolokia_jvm_threading(item, params, parsed):
     if count is not None:
         levels = params.get("threadcount_levels")
         yield check_levels(
-            count, "ThreadCount", levels, infoname="Count", human_readable_func=lambda i: "%.f" % i
+            count,
+            "ThreadCount",
+            levels,
+            infoname="Count",
+            human_readable_func=lambda i: "%.f" % i,
         )
 
         counter = "jolokia_jvm_threading.count.%s" % item

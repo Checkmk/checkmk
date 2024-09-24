@@ -112,7 +112,8 @@ class VirtualHostTree(SidebarSnapin):
 
     def _tree_choices(self):
         return sorted(
-            [(tree["id"], tree["title"]) for tree in self._trees.values()], key=lambda x: x[1]
+            [(tree["id"], tree["title"]) for tree in self._trees.values()],
+            key=lambda x: x[1],
         )
 
     def _render_tag_tree_level(  # type: ignore[no-untyped-def]
@@ -382,7 +383,10 @@ function virtual_host_tree_enter(path)
 
                     if level <= len(folder_titles):
                         node_title = folder_titles[level - 1]
-                        node_value = "folder:%d:%s" % (level, folder_path_components[level - 1])
+                        node_value = "folder:%d:%s" % (
+                            level,
+                            folder_path_components[level - 1],
+                        )
                     else:
                         node_title = _("Hosts in this folder")
                         node_value = "folder:%d:" % level
@@ -402,7 +406,10 @@ function virtual_host_tree_enter(path)
                         level = len(path_components)
                         if level <= len(folder_titles):
                             node_title = folder_titles[level - 1]
-                            node_value = "foldertree:%d:%s" % (level, path_components[level - 1])
+                            node_value = "foldertree:%d:%s" % (
+                                level,
+                                path_components[level - 1],
+                            )
                         else:
                             node_title = _("Main folder")
                             node_value = "foldertree:%d:" % level

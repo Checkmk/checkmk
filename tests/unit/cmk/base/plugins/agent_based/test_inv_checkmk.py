@@ -237,7 +237,11 @@ SECTION_OMD_INFO = {
     "sites": {
         "cisco": {"site": "cisco", "used_version": "1.6.0p13.cee", "autostart": "0"},
         "heute": {"site": "heute", "used_version": "2020.08.20.cee", "autostart": "0"},
-        "stable": {"site": "stable", "used_version": "1.6.0-2020.08.18.cee", "autostart": "0"},
+        "stable": {
+            "site": "stable",
+            "used_version": "1.6.0-2020.08.18.cee",
+            "autostart": "0",
+        },
     },
 }
 
@@ -281,7 +285,10 @@ MERGED_SECTION_ENTERPRISE = {
             },
         },
         "stable": {
-            "inventory_columns": {"autostart": False, "used_version": "1.6.0-2020.08.18.cee"},
+            "inventory_columns": {
+                "autostart": False,
+                "used_version": "1.6.0-2020.08.18.cee",
+            },
             "status_columns": {
                 "apache": "running",
                 "check_helper_usage": 3.46e-321,
@@ -309,10 +316,30 @@ MERGED_SECTION_ENTERPRISE = {
             "num_sites": 1,
             "number": "1.6.0-2020.08.18",
         },
-        "1.6.0p12.cee": {"demo": False, "edition": "cee", "num_sites": 0, "number": "1.6.0p12"},
-        "1.6.0p13.cee": {"demo": False, "edition": "cee", "num_sites": 1, "number": "1.6.0p13"},
-        "2020.08.13.cee": {"demo": False, "edition": "cee", "num_sites": 0, "number": "2020.08.13"},
-        "2020.08.20.cee": {"demo": False, "edition": "cee", "num_sites": 1, "number": "2020.08.20"},
+        "1.6.0p12.cee": {
+            "demo": False,
+            "edition": "cee",
+            "num_sites": 0,
+            "number": "1.6.0p12",
+        },
+        "1.6.0p13.cee": {
+            "demo": False,
+            "edition": "cee",
+            "num_sites": 1,
+            "number": "1.6.0p13",
+        },
+        "2020.08.13.cee": {
+            "demo": False,
+            "edition": "cee",
+            "num_sites": 0,
+            "number": "2020.08.13",
+        },
+        "2020.08.20.cee": {
+            "demo": False,
+            "edition": "cee",
+            "num_sites": 1,
+            "number": "2020.08.20",
+        },
     },
 }
 
@@ -352,7 +379,10 @@ MERGED_SECTION_RAWEDITION = {
             },
         },
         "stable": {
-            "inventory_columns": {"autostart": False, "used_version": "1.6.0-2020.08.18.cee"},
+            "inventory_columns": {
+                "autostart": False,
+                "used_version": "1.6.0-2020.08.18.cee",
+            },
             "status_columns": {
                 "apache": "running",
                 "check_helper_usage": 3.46e-321,
@@ -378,10 +408,30 @@ MERGED_SECTION_RAWEDITION = {
             "num_sites": 1,
             "number": "1.6.0-2020.08.18",
         },
-        "1.6.0p12.cee": {"demo": False, "edition": "cee", "num_sites": 0, "number": "1.6.0p12"},
-        "1.6.0p13.cee": {"demo": False, "edition": "cee", "num_sites": 1, "number": "1.6.0p13"},
-        "2020.08.13.cee": {"demo": False, "edition": "cee", "num_sites": 0, "number": "2020.08.13"},
-        "2020.08.20.cee": {"demo": False, "edition": "cee", "num_sites": 1, "number": "2020.08.20"},
+        "1.6.0p12.cee": {
+            "demo": False,
+            "edition": "cee",
+            "num_sites": 0,
+            "number": "1.6.0p12",
+        },
+        "1.6.0p13.cee": {
+            "demo": False,
+            "edition": "cee",
+            "num_sites": 1,
+            "number": "1.6.0p13",
+        },
+        "2020.08.13.cee": {
+            "demo": False,
+            "edition": "cee",
+            "num_sites": 0,
+            "number": "2020.08.13",
+        },
+        "2020.08.20.cee": {
+            "demo": False,
+            "edition": "cee",
+            "num_sites": 1,
+            "number": "2020.08.20",
+        },
     },
 }
 
@@ -429,7 +479,10 @@ def test_inventory_checkmk() -> None:
             TableRow(
                 path=["software", "applications", "check_mk", "sites"],
                 key_columns={"site": "heute"},
-                inventory_columns={"autostart": False, "used_version": "2020.08.20.cee"},
+                inventory_columns={
+                    "autostart": False,
+                    "used_version": "2020.08.20.cee",
+                },
                 status_columns={
                     "apache": "running",
                     "check_helper_usage": 6.34573e-12,
@@ -452,7 +505,10 @@ def test_inventory_checkmk() -> None:
             TableRow(
                 path=["software", "applications", "check_mk", "sites"],
                 key_columns={"site": "stable"},
-                inventory_columns={"autostart": False, "used_version": "1.6.0-2020.08.18.cee"},
+                inventory_columns={
+                    "autostart": False,
+                    "used_version": "1.6.0-2020.08.18.cee",
+                },
                 status_columns={
                     "apache": "running",
                     "check_helper_usage": 3.46e-321,

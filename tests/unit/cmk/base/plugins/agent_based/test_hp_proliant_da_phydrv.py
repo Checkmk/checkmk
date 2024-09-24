@@ -5,7 +5,12 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State, TableRow
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Result,
+    Service,
+    State,
+    TableRow,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -37,7 +42,21 @@ _AGENT_OUTPUT = [
         "4",
         "HPD5",
     ],
-    ["3", "9", "2", "2", "9050", "5723166", "2", "0", "2", "MB6000FEDAU", "1EJHTY4H", "4", "HPD1"],
+    [
+        "3",
+        "9",
+        "2",
+        "2",
+        "9050",
+        "5723166",
+        "2",
+        "0",
+        "2",
+        "MB6000FEDAU",
+        "1EJHTY4H",
+        "4",
+        "HPD1",
+    ],
     [
         "3",
         "10",

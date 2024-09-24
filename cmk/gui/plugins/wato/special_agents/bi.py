@@ -21,7 +21,10 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
-from cmk.gui.wato import MigrateToIndividualOrStoredPassword, RulespecGroupDatasourceProgramsApps
+from cmk.gui.wato import (
+    MigrateToIndividualOrStoredPassword,
+    RulespecGroupDatasourceProgramsApps,
+)
 from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 
@@ -58,7 +61,10 @@ class MultisiteBiDatasource:
                 "credentials",
                 CascadingDropdown(
                     choices=[
-                        ("automation", _("Use the credentials of the 'automation' user")),
+                        (
+                            "automation",
+                            _("Use the credentials of the 'automation' user"),
+                        ),
                         (
                             "configured",
                             _("Use the following credentials"),
@@ -96,13 +102,17 @@ class MultisiteBiDatasource:
                 (
                     "querying_host",
                     FixedValue(
-                        value="querying_host", totext="", title=_("Assign to the querying host")
+                        value="querying_host",
+                        totext="",
+                        title=_("Assign to the querying host"),
                     ),
                 ),
                 (
                     "affected_hosts",
                     FixedValue(
-                        value="affected_hosts", totext="", title=_("Assign to the affected hosts")
+                        value="affected_hosts",
+                        totext="",
+                        title=_("Assign to the affected hosts"),
                     ),
                 ),
                 (
@@ -192,7 +202,9 @@ class MultisiteBiDatasource:
 def _valuespec_special_agents_bi():
     _AgentBIOptions = dict[Literal["options"], Sequence[Mapping[str, object]]]
 
-    def to_valuespec(x: Sequence[Mapping[str, object]] | _AgentBIOptions) -> _AgentBIOptions:
+    def to_valuespec(
+        x: Sequence[Mapping[str, object]] | _AgentBIOptions,
+    ) -> _AgentBIOptions:
         return {"options": x} if isinstance(x, Sequence) else x
 
     return Migrate(

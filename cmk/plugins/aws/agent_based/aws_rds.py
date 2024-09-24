@@ -437,7 +437,9 @@ check_plugin_aws_rds_bin_log_usage = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_aws_rds_transaction_logs_usage(section: AWSSectionMetrics) -> DiscoveryResult:
+def discover_aws_rds_transaction_logs_usage(
+    section: AWSSectionMetrics,
+) -> DiscoveryResult:
     yield from discover_aws_generic(
         section,
         ["TransactionLogsDiskUsage"],
@@ -507,7 +509,9 @@ check_plugin_aws_rds_transaction_logs_usage = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_aws_rds_replication_slot_usage(section: AWSSectionMetrics) -> DiscoveryResult:
+def discover_aws_rds_replication_slot_usage(
+    section: AWSSectionMetrics,
+) -> DiscoveryResult:
     yield from discover_aws_generic(
         section,
         ["ReplicationSlotDiskUsage"],

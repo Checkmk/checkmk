@@ -18,7 +18,15 @@ from cmk.base.check_api import check_levels
 
 def check_netstat_generic(item, params, connections):
     found = 0
-    for proto, (local_ip, local_port), (remote_ip, remote_port), connstate in connections:
+    for (
+        proto,
+        (local_ip, local_port),
+        (
+            remote_ip,
+            remote_port,
+        ),
+        connstate,
+    ) in connections:
         # Beware: port numbers are strings here.
         match = True
         for k, v in [

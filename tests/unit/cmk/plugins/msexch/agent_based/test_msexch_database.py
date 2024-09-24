@@ -350,7 +350,10 @@ def test_parse_msexch_database(string_table: StringTable, expected_result: Disco
                 Metric("db_read_latency_s", 0.0),
                 Result(state=State.OK, summary="DB read (recovery) latency: 0 seconds"),
                 Metric("db_read_recovery_latency_s", 0.0),
-                Result(state=State.OK, summary="DB write (attached) latency: 500 microseconds"),
+                Result(
+                    state=State.OK,
+                    summary="DB write (attached) latency: 500 microseconds",
+                ),
                 Metric("db_write_latency_s", 0.0005),
                 Result(state=State.OK, summary="Log latency: 0 seconds"),
                 Metric("db_log_latency_s", 0.0),

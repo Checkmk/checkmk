@@ -7,7 +7,15 @@
 from collections.abc import Iterable, Mapping
 from typing import Any, Final, Literal
 
-from .agent_based_api.v1 import check_levels, equals, register, Result, Service, SNMPTree, State
+from .agent_based_api.v1 import (
+    check_levels,
+    equals,
+    register,
+    Result,
+    Service,
+    SNMPTree,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 Section = Mapping[str, Mapping[int, float]]

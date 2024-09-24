@@ -34,7 +34,13 @@ def parse_dell_compellent_disks(string_table):
     disk_serials = dict(string_table[1])
 
     return {
-        disk_name_position: [status, health, health_message, enclosure, disk_serials.get(number)]
+        disk_name_position: [
+            status,
+            health,
+            health_message,
+            enclosure,
+            disk_serials.get(number),
+        ]
         for number, status, disk_name_position, health, health_message, enclosure in disk_info
     }
 

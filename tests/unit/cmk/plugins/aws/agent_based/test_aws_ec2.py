@@ -205,7 +205,10 @@ def test_aws_ec2_cpu_util_discovery(
             {"CPUUtilization": 91},
             {"util": (90.0, 95.0)},
             [
-                Result(state=State.WARN, summary="Total CPU: 91.00% (warn/crit at 90.00%/95.00%)"),
+                Result(
+                    state=State.WARN,
+                    summary="Total CPU: 91.00% (warn/crit at 90.00%/95.00%)",
+                ),
                 Metric("util", 91.0, levels=(90.0, 95.0), boundaries=(0.0, None)),
             ],
             id="If the CPU Utilization is above the set warning level, the result is WARN and the appropriate description is displayed.",
@@ -214,7 +217,10 @@ def test_aws_ec2_cpu_util_discovery(
             {"CPUUtilization": 99},
             {"util": (90.0, 95.0)},
             [
-                Result(state=State.CRIT, summary="Total CPU: 99.00% (warn/crit at 90.00%/95.00%)"),
+                Result(
+                    state=State.CRIT,
+                    summary="Total CPU: 99.00% (warn/crit at 90.00%/95.00%)",
+                ),
                 Metric("util", 99.0, levels=(90.0, 95.0), boundaries=(0.0, None)),
             ],
             id="If the CPU Utilization is above the set critical level, the result is CRIT and the appropriate description is displayed.",
@@ -300,7 +306,10 @@ def test_check_aws_ec2_cpu_credits_raises_error() -> None:
             },
             [
                 Result(state=State.OK, summary="Usage: 0.50"),
-                Result(state=State.WARN, summary="Balance: 8.00 (warn/crit below 10.00/5.00)"),
+                Result(
+                    state=State.WARN,
+                    summary="Balance: 8.00 (warn/crit below 10.00/5.00)",
+                ),
                 Metric("aws_cpu_credit_balance", 8.0),
             ],
             id="If the CPUCreditBalance is below the warn level the check state is WARN.",
@@ -312,7 +321,10 @@ def test_check_aws_ec2_cpu_credits_raises_error() -> None:
             },
             [
                 Result(state=State.OK, summary="Usage: 0.50"),
-                Result(state=State.CRIT, summary="Balance: 4.00 (warn/crit below 10.00/5.00)"),
+                Result(
+                    state=State.CRIT,
+                    summary="Balance: 4.00 (warn/crit below 10.00/5.00)",
+                ),
                 Metric("aws_cpu_credit_balance", 4.0),
             ],
             id="If the CPUCreditBalance is below the crit level the check state is CRIT.",

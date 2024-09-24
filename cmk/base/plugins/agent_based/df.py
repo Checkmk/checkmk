@@ -239,7 +239,11 @@ def check_df(item: str, params: Mapping[str, Any], section: DfSection) -> CheckR
         for df_block in df_blocks
     ]
     raw_df_inodes = [
-        (_prepare_item_name(df_inode, item_and_grouping.for_all), df_inode.total, df_inode.avail)
+        (
+            _prepare_item_name(df_inode, item_and_grouping.for_all),
+            df_inode.total,
+            df_inode.avail,
+        )
         for df_inode in df_inodes
     ]
 

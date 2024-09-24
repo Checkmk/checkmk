@@ -6,8 +6,16 @@
 import pytest
 
 from cmk.base.plugins.agent_based import alertmanager
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State, type_defs
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Result,
+    Service,
+    State,
+    type_defs,
+)
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+)
 
 DATA = [
     [
@@ -56,7 +64,13 @@ custom_remapping_check_params = alertmanager.CheckParams(
     alert_remapping=[
         alertmanager.AlertRemapping(
             rule_names=["foo"],
-            map={"inactive": 0, "pending": 2, "firing": 1, "none": 1, "not_applicable": 3},
+            map={
+                "inactive": 0,
+                "pending": 2,
+                "firing": 1,
+                "none": 1,
+                "not_applicable": 3,
+            },
         ),
     ],
 )
@@ -271,7 +285,11 @@ def test_alertmanager_discover_summary(
                     summary="Active alert: test_rule_3",
                     details="test_rule_3: foobar",
                 ),
-                Result(state=State.CRIT, summary="Active alert: foo", details="foo: testmessage"),
+                Result(
+                    state=State.CRIT,
+                    summary="Active alert: foo",
+                    details="foo: testmessage",
+                ),
             ],
         )
     ],

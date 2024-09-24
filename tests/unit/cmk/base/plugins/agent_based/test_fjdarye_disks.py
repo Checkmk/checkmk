@@ -43,16 +43,28 @@ from cmk.base.plugins.agent_based.fjdarye_disks import (
             ],
             {
                 "0": FjdaryeDisk(
-                    disk_index="0", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="0",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "1": FjdaryeDisk(
-                    disk_index="1", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="1",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "2": FjdaryeDisk(
-                    disk_index="2", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="2",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "3": FjdaryeDisk(
-                    disk_index="3", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="3",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "4": FjdaryeDisk(
                     disk_index="4",
@@ -75,7 +87,10 @@ from cmk.base.plugins.agent_based.fjdarye_disks import (
             ],
             {
                 "0": FjdaryeDisk(
-                    disk_index="0", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="0",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "4": FjdaryeDisk(
                     disk_index="4",
@@ -110,7 +125,10 @@ from cmk.base.plugins.agent_based.fjdarye_disks import (
             ],
             {
                 "0": FjdaryeDisk(
-                    disk_index="0", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="0",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "4": FjdaryeDisk(
                     disk_index="4",
@@ -185,16 +203,28 @@ def test_parse_fjdarye_disks_with_error_input(
         pytest.param(
             {
                 "0": FjdaryeDisk(
-                    disk_index="0", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="0",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "1": FjdaryeDisk(
-                    disk_index="1", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="1",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "2": FjdaryeDisk(
-                    disk_index="2", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="2",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "3": FjdaryeDisk(
-                    disk_index="3", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="3",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "4": FjdaryeDisk(
                     disk_index="4",
@@ -231,16 +261,28 @@ def test_discover_fjdarye_disks(
         pytest.param(
             {
                 "0": FjdaryeDisk(
-                    disk_index="0", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="0",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "1": FjdaryeDisk(
-                    disk_index="1", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="1",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "2": FjdaryeDisk(
-                    disk_index="2", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="2",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "3": FjdaryeDisk(
-                    disk_index="3", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="3",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "4": FjdaryeDisk(
                     disk_index="4",
@@ -257,16 +299,28 @@ def test_discover_fjdarye_disks(
         pytest.param(
             {
                 "0": FjdaryeDisk(
-                    disk_index="0", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="0",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "1": FjdaryeDisk(
-                    disk_index="1", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="1",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "2": FjdaryeDisk(
-                    disk_index="2", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="2",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "3": FjdaryeDisk(
-                    disk_index="3", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="3",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "4": FjdaryeDisk(
                     disk_index="4",
@@ -283,16 +337,28 @@ def test_discover_fjdarye_disks(
         pytest.param(
             {
                 "0": FjdaryeDisk(
-                    disk_index="0", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="0",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "1": FjdaryeDisk(
-                    disk_index="1", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="1",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "2": FjdaryeDisk(
-                    disk_index="2", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="2",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "3": FjdaryeDisk(
-                    disk_index="3", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="3",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "4": FjdaryeDisk(
                     disk_index="4",
@@ -309,16 +375,28 @@ def test_discover_fjdarye_disks(
         pytest.param(
             {
                 "0": FjdaryeDisk(
-                    disk_index="0", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="0",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "1": FjdaryeDisk(
-                    disk_index="1", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="1",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "2": FjdaryeDisk(
-                    disk_index="2", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="2",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "3": FjdaryeDisk(
-                    disk_index="3", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="3",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "4": FjdaryeDisk(
                     disk_index="4",
@@ -329,22 +407,39 @@ def test_discover_fjdarye_disks(
             },
             "4",
             {"expected_state": "available"},
-            [Result(state=State.CRIT, summary="Status: notavailable (expected: available)")],
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="Status: notavailable (expected: available)",
+                )
+            ],
             id="If only the expected_state parameter is configured in the ruleset and it doesn't match the current state of the disk, the result is a state of CRIT with a description indicating the difference between states.",
         ),
         pytest.param(
             {
                 "0": FjdaryeDisk(
-                    disk_index="0", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="0",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "1": FjdaryeDisk(
-                    disk_index="1", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="1",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "2": FjdaryeDisk(
-                    disk_index="2", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="2",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "3": FjdaryeDisk(
-                    disk_index="3", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="3",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "4": FjdaryeDisk(
                     disk_index="4",
@@ -361,16 +456,28 @@ def test_discover_fjdarye_disks(
         pytest.param(
             {
                 "0": FjdaryeDisk(
-                    disk_index="0", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="0",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "1": FjdaryeDisk(
-                    disk_index="1", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="1",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "2": FjdaryeDisk(
-                    disk_index="2", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="2",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "3": FjdaryeDisk(
-                    disk_index="3", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="3",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "4": FjdaryeDisk(
                     disk_index="4",
@@ -381,22 +488,39 @@ def test_discover_fjdarye_disks(
             },
             "4",
             {"use_device_states": True},
-            [Result(state=State.WARN, summary="Status: notavailable (using device states)")],
+            [
+                Result(
+                    state=State.WARN,
+                    summary="Status: notavailable (using device states)",
+                )
+            ],
             id="If the use_device_states parameter is configures to True in the ruleset, the function uses the current device state as the result. It also provides a note in the result that it's using it.",
         ),
         pytest.param(
             {
                 "0": FjdaryeDisk(
-                    disk_index="0", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="0",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "1": FjdaryeDisk(
-                    disk_index="1", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="1",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "2": FjdaryeDisk(
-                    disk_index="2", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="2",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "3": FjdaryeDisk(
-                    disk_index="3", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="3",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "4": FjdaryeDisk(
                     disk_index="4",
@@ -413,16 +537,28 @@ def test_discover_fjdarye_disks(
         pytest.param(
             {
                 "0": FjdaryeDisk(
-                    disk_index="0", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="0",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "1": FjdaryeDisk(
-                    disk_index="1", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="1",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "2": FjdaryeDisk(
-                    disk_index="2", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="2",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "3": FjdaryeDisk(
-                    disk_index="3", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="3",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "4": FjdaryeDisk(
                     disk_index="4",
@@ -433,22 +569,39 @@ def test_discover_fjdarye_disks(
             },
             "4",
             {"expected_state": "available", "use_device_states": True},
-            [Result(state=State.WARN, summary="Status: notavailable (using device states)")],
+            [
+                Result(
+                    state=State.WARN,
+                    summary="Status: notavailable (using device states)",
+                )
+            ],
             id="If both the use_device_states and expected_state are configured in the ruleset, the function uses the current device state as the result. Same behaviour as if the expected_state parameter was not configured.",
         ),
         pytest.param(
             {
                 "0": FjdaryeDisk(
-                    disk_index="0", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="0",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "1": FjdaryeDisk(
-                    disk_index="1", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="1",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "2": FjdaryeDisk(
-                    disk_index="2", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="2",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "3": FjdaryeDisk(
-                    disk_index="3", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="3",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "4": FjdaryeDisk(
                     disk_index="4",
@@ -459,7 +612,12 @@ def test_discover_fjdarye_disks(
             },
             "4",
             {"expected_state": "available", "use_device_states": False},
-            [Result(state=State.CRIT, summary="Status: notavailable (expected: available)")],
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="Status: notavailable (expected: available)",
+                )
+            ],
             id="If use_device_states is configured to False and expected_state is configured in the ruleset, the behaviour is as if only the expected_state was configured.",
         ),
     ],
@@ -487,16 +645,28 @@ def test_check_fjdarye_disks(
         pytest.param(
             {
                 "0": FjdaryeDisk(
-                    disk_index="0", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="0",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "1": FjdaryeDisk(
-                    disk_index="1", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="1",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "2": FjdaryeDisk(
-                    disk_index="2", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="2",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "3": FjdaryeDisk(
-                    disk_index="3", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="3",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "4": FjdaryeDisk(
                     disk_index="4",
@@ -511,10 +681,16 @@ def test_check_fjdarye_disks(
         pytest.param(
             {
                 "0": FjdaryeDisk(
-                    disk_index="0", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="0",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "1": FjdaryeDisk(
-                    disk_index="1", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="1",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "4": FjdaryeDisk(
                     disk_index="4",
@@ -545,10 +721,16 @@ def test_discover_fjdarye_disks_summary(
         pytest.param(
             {
                 "0": FjdaryeDisk(
-                    disk_index="0", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="0",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "3": FjdaryeDisk(
-                    disk_index="1", state=State.CRIT, state_description="broken", state_disk="2"
+                    disk_index="1",
+                    state=State.CRIT,
+                    state_description="broken",
+                    state_disk="2",
                 ),
                 "4": FjdaryeDisk(
                     disk_index="4",
@@ -564,10 +746,16 @@ def test_discover_fjdarye_disks_summary(
         pytest.param(
             {
                 "0": FjdaryeDisk(
-                    disk_index="0", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="0",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "3": FjdaryeDisk(
-                    disk_index="1", state=State.CRIT, state_description="broken", state_disk="2"
+                    disk_index="1",
+                    state=State.CRIT,
+                    state_description="broken",
+                    state_disk="2",
                 ),
                 "4": FjdaryeDisk(
                     disk_index="4",
@@ -576,7 +764,12 @@ def test_discover_fjdarye_disks_summary(
                     state_disk="4",
                 ),
             },
-            {"available": 2, "broken": 1, "notsupported": 1, "use_device_states": False},
+            {
+                "available": 2,
+                "broken": 1,
+                "notsupported": 1,
+                "use_device_states": False,
+            },
             [
                 Result(
                     state=State.CRIT,
@@ -588,13 +781,22 @@ def test_discover_fjdarye_disks_summary(
         pytest.param(
             {
                 "0": FjdaryeDisk(
-                    disk_index="0", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="0",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "1": FjdaryeDisk(
-                    disk_index="1", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="1",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "3": FjdaryeDisk(
-                    disk_index="1", state=State.CRIT, state_description="broken", state_disk="2"
+                    disk_index="1",
+                    state=State.CRIT,
+                    state_description="broken",
+                    state_disk="2",
                 ),
                 "4": FjdaryeDisk(
                     disk_index="4",
@@ -603,7 +805,12 @@ def test_discover_fjdarye_disks_summary(
                     state_disk="4",
                 ),
             },
-            {"available": 1, "broken": 1, "notsupported": 1, "use_device_states": False},
+            {
+                "available": 1,
+                "broken": 1,
+                "notsupported": 1,
+                "use_device_states": False,
+            },
             [
                 Result(
                     state=State.WARN,
@@ -617,10 +824,16 @@ def test_discover_fjdarye_disks_summary(
             # OK < WARN < UNKNOWN < CRIT
             {
                 "0": FjdaryeDisk(
-                    disk_index="0", state=State.OK, state_description="available", state_disk="1"
+                    disk_index="0",
+                    state=State.OK,
+                    state_description="available",
+                    state_disk="1",
                 ),
                 "3": FjdaryeDisk(
-                    disk_index="1", state=State.CRIT, state_description="broken", state_disk="2"
+                    disk_index="1",
+                    state=State.CRIT,
+                    state_description="broken",
+                    state_disk="2",
                 ),
                 "4": FjdaryeDisk(
                     disk_index="4",

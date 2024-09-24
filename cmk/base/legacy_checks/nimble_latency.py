@@ -55,7 +55,10 @@ def parse_nimble_read_latency(string_table):
                     latencies[key] = value
                     continue
                 # maintain the key order so that long output is sorted later
-                latencies.setdefault("ranges", collections.OrderedDict())[key] = title, value
+                latencies.setdefault("ranges", collections.OrderedDict())[key] = (
+                    title,
+                    value,
+                )
             parsed.setdefault(vol_name, {}).setdefault(ty, latencies)
 
     return parsed

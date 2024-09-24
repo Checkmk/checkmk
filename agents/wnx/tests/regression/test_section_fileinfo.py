@@ -91,7 +91,8 @@ def testconfig_engine(request, testconfig_drive):
         path_array.append(Globals.paths.tempfile1())
         path_array.append(
             os.path.join(
-                Globals.paths.tempdir1(), "?" + os.path.basename(Globals.paths.tempfile2())[1:]
+                Globals.paths.tempdir1(),
+                "?" + os.path.basename(Globals.paths.tempfile2())[1:],
             )
         )
 
@@ -136,7 +137,11 @@ def use_testfiles():
     if platform.system() == "Windows":
         for d in [Globals.paths.tempdir1(), Globals.paths.tempdir2()]:
             os.mkdir(d)
-        for f in [Globals.paths.tempfile1(), Globals.paths.tempfile2(), Globals.paths.tempfile3()]:
+        for f in [
+            Globals.paths.tempfile1(),
+            Globals.paths.tempfile2(),
+            Globals.paths.tempfile3(),
+        ]:
             with open(f, "w") as handle:
                 handle.write(f)
 

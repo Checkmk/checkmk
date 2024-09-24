@@ -13,7 +13,9 @@ from cmk.base.config import check_info
 from cmk.plugins.aws.lib import GenericAWSSection, parse_aws
 
 
-def discover_aws_wafv2_summary(section: GenericAWSSection) -> Iterable[tuple[None, dict]]:
+def discover_aws_wafv2_summary(
+    section: GenericAWSSection,
+) -> Iterable[tuple[None, dict]]:
     if section:
         yield None, {}
 

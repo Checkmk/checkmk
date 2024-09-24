@@ -18,7 +18,11 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.utils.user_errors import user_errors
-from cmk.gui.validation.visitors.vue_lib import ValidationError, VueAppConfig, VueFormSpecComponent
+from cmk.gui.validation.visitors.vue_lib import (
+    ValidationError,
+    VueAppConfig,
+    VueFormSpecComponent,
+)
 
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
@@ -282,7 +286,8 @@ class VueFormSpecVisitor:
 
     def _visit_list(self, form_spec: List, value: list) -> VueVisitorMethodResult:
         template, _ = self._visit(
-            form_spec.element_template, compute_default_value(form_spec.element_template)
+            form_spec.element_template,
+            compute_default_value(form_spec.element_template),
         )
 
         elements = []

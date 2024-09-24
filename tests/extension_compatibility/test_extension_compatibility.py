@@ -348,7 +348,9 @@ def test_package_list_up_to_date() -> None:
     assert not missing_test_cases
 
 
-def _compatible_extensions_sorted_by_n_downloads(parsed_version: int) -> list[_Extension]:
+def _compatible_extensions_sorted_by_n_downloads(
+    parsed_version: int,
+) -> list[_Extension]:
     return sorted(
         _compatible_extensions(parsed_version),
         key=lambda extension: extension.downloads,

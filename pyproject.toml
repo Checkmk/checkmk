@@ -1,6 +1,16 @@
 [tool.ruff]
-src = ["cmk", "tests"]
+extend-exclude = ["agents/plugins/mk_sap_2.py", "doc/**/*.py"]
 target-version = "py311"
+line-length = 100
+[per-file-ignores]
+"cmk/gui/config.py" = ["F403", "F405"]
+[flake8-annotations]
+suppress-dummy-args = true
+[mccabe]
+max-complexity = 15
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "C90", "PL"]
 ignore = [
     "E402", # module level import not on top of the file
     "E501", # line too long, 100s of fails. Fixable.
@@ -15,76 +25,59 @@ ignore = [
     # F403 undefined imports, all are fixed now, but we shouldn't add new ones.
     # F405 are * imports. We shouldn't do those.
 ]
-select = ["E", "F", "YTT"]
-# Interesting to enable:
-#   "RUF" - Remove unused "noqa" directives from the code, etc.
-#   "TRY" - remove those "raise Exception" calls. 1688 failures.
-#   "G"  - wrong logging.log formattion! 107 failures
-#   "S" - emulate bandit. 12993 errors detected. Ignoring complaints about asserts, 335 failures remain.
-#   "PGH" - complain about blanket "type: ignore" without specifics.
-#   "T20" - complain about print found. 217 "failures" found. Needs some rework first!
-#   "DTZ" - disallows datetime objects without timezone, 254 failures.
-#   "UP" - emulate pyupgrade. 3024 failures, 3005 fixable automatically.
-
-#   "C4" - simplify comprehensions, 164 failures, 138 auto fixable
-#   "B" - bugbear, 756 failures, 71 auto fixable
-#   "ERA" - commented out code, 1717 failures, 1717 auto fixable
-#   "PL" - impersonate PyLint. 2819 failures, 1 auto fixable.
-#   "ARG" - unused arguments, 3358 failures
-#   "I" - replaces isort, but doesn't honor isort disable annotation yet, only "noqa: I001"
-#   "D" - enforces docstring writing style. Ignore "D10,D4" for now.
-#   "COM" - enforce trailing comma. Lots of matches.
 unfixable = [
     "F401", # pylint: disable=unused-import. Clean up by hand.
 ]
-[per-file-ignores]
-"cmk/gui/config.py" = ["F403", "F405"]
-[flake8-annotations]
-suppress-dummy-args = true
-[mccabe]
-max-complexity = 15
 
+[tool.ruff.lint.isort]
+# combine-as-imports = true # This would arguably be nicer.
+known-first-party = ["cmk"]
+order-by-type = false # TODO: Why do we actually want this?
+section-order = [
+    "future",
+    "standard-library",
+    "third-party",
+    "werks",
+    "cmc_proto",
+    "testlib",
+    "integrationtests",
+    "compositiontests",
+    "unittests",
+    "livestatus",
+    "omd",
+    "cmk_utils",
+    "cmk_automations",
+    "cmk_snmplib",
+    "cmk_fetchers",
+    "cmk_checkengine",
+    "cmk_base",
+    "cmk_ec",
+    "cmk_gui",
+    "cmk_cee",
+    "cmk_notification_plugins",
+    "first-party",
+    "local-folder",
+]
 
-[tool.isort]
-known_testlib = "tests.testlib"
-known_compositiontests = "tests.composition"
-known_unittests = "tests.unit,tests.plugins_integration,tests.update"
-known_livestatus = "livestatus"
-known_omd = "omdlib"
-known_cmk_utils = "cmk.utils"
-known_cmk_automations = "cmk.automations"
-known_cmk_base = "cmk.base"
-known_cmc_proto = "cmc_proto"
-known_cmk_ec = "cmk.ec"
-known_cmk_gui = "cmk.gui"
-known_cmk_cee = "cmk.cee.dcd,cmk.cee.liveproxy,cmk.cee.mknotifyd"
-known_cmk_notification_plugins = "cmk.notification_plugins"
-known_cmk_snmplib = "cmk.snmplib"
-known_cmk_fetchers = "cmk.fetchers"
-known_cmk_checkengine = "cmk.checkengine"
-known_werks = "werks"
-known_first_party = "cmk"
-
-# Order sections according to our layering.
-sections = """FUTURE,STDLIB,THIRDPARTY,WERKS,CMC_PROTO,TESTLIB,COMPOSITIONTESTS,UNITTESTS,LIVESTATUS,OMD,
-CMK_UTILS,CMK_AUTOMATIONS,CMK_SNMPLIB,CMK_FETCHERS,CMK_CHECKENGINE,CMK_BASE,CMK_EC,CMK_GUI,CMK_CEE,
-CMK_NOTIFICATION_PLUGINS,FIRSTPARTY,LOCALFOLDER"""
-
-# configuration options compatible with black
-multi_line_output = 3
-include_trailing_comma = "True"
-force_grid_wrap = 0
-use_parentheses = "True"
-ensure_newline_before_comments = "True"
-order_by_type = "False"
-line_length = 100
-py_version = "311"
-
-
-[tool.black]
-line-length = 100
-target-version = ['py311']
-
+[tool.ruff.lint.isort.sections]
+werks = ["werks"]
+cmc_proto = ["cmc_proto"]
+testlib = ["tests.testlib"]
+integrationtests = ["tests.integration"]
+compositiontests = ["tests.composition"]
+unittests = ["tests.unit", "tests.plugins_integration", "tests.update"]
+livestatus = ["livestatus"]
+omd = ["omdlib"]
+cmk_utils = ["cmk.utils"]
+cmk_automations = ["cmk.automations"]
+cmk_snmplib = ["cmk.snmplib"]
+cmk_fetchers = ["cmk.fetchers"]
+cmk_checkengine = ["cmk.checkengine"]
+cmk_base = ["cmk.base"]
+cmk_ec = ["cmk.ec"]
+cmk_gui = ["cmk.gui"]
+cmk_cee = ["cmk.cee.dcd", "cmk.cee.liveproxy", "cmk.cee.mknotifyd"]
+cmk_notification_plugins = ["cmk.notification_plugins"]
 
 # NOTE: Keep this is sync with mypy-raw.ini!
 # The number of errors/files below are just a snapshot to give a rough idea. In

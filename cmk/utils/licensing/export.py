@@ -679,7 +679,7 @@ class MonthlyServiceAverages:
 
     @staticmethod
     def _calculate_daily_services(
-        short_samples: Sequence[tuple[int, int]]
+        short_samples: Sequence[tuple[int, int]],
     ) -> Sequence[MonthlyServiceAverage]:
         daily_services: dict[datetime, Counter[str]] = {}
         for sample_time, num_services in short_samples:

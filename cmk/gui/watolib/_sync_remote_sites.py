@@ -28,7 +28,10 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, wato_slave_sites
 from cmk.gui.watolib.audit_log import AuditLogStore
-from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
+from cmk.gui.watolib.automation_commands import (
+    AutomationCommand,
+    AutomationCommandRegistry,
+)
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.paths import wato_var_dir
 from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
@@ -40,7 +43,8 @@ LastSiteChanges = Mapping[SiteId, SiteChangeSequence]
 
 
 def register(
-    automation_command_registry: AutomationCommandRegistry, job_registry: BackgroundJobRegistry
+    automation_command_registry: AutomationCommandRegistry,
+    job_registry: BackgroundJobRegistry,
 ) -> None:
     register_job(execute_sync_remote_sites)
     job_registry.register(SyncRemoteSitesBackgroundJob)
@@ -169,7 +173,8 @@ class SyncRemoteSitesBackgroundJob(BackgroundJob):
 
         if site_changes_synced_sites:
             logger.debug(
-                "Removing site changes from sites: %s.", ", ".join(site_changes_synced_sites)
+                "Removing site changes from sites: %s.",
+                ", ".join(site_changes_synced_sites),
             )
             self._clear_site_changes_from_remote_sites(site_changes_synced_sites)
 
@@ -210,7 +215,9 @@ class SyncRemoteSitesBackgroundJob(BackgroundJob):
             except Exception as e:
                 failed_sites.add(site_id)
                 logger.error(
-                    "Failed to get audit logs and site changes from site %s: %s", site_id, e
+                    "Failed to get audit logs and site changes from site %s: %s",
+                    site_id,
+                    e,
                 )
                 continue
 

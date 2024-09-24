@@ -195,11 +195,17 @@ def check_apache_status(item: str, params: Mapping[str, Any], section: Section) 
 
     if "Total Accesses" in data:
         data["ReqPerSec"] = get_rate(
-            value_store, "apache_status_%s_accesses" % item, this_time, data.pop("Total Accesses")
+            value_store,
+            "apache_status_%s_accesses" % item,
+            this_time,
+            data.pop("Total Accesses"),
         )
     if "Total kBytes" in data:
         data["BytesPerSec"] = get_rate(
-            value_store, "apache_status_%s_bytes" % item, this_time, data.pop("Total kBytes") * 1024
+            value_store,
+            "apache_status_%s_bytes" % item,
+            this_time,
+            data.pop("Total kBytes") * 1024,
         )
 
     for key, label in ((k, l) for k, l in _CHECK_LEVEL_ENTRIES if k in data):

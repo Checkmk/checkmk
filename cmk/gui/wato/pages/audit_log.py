@@ -46,7 +46,11 @@ from cmk.gui.valuespec import (
     TextInput,
 )
 from cmk.gui.wato.pages.activate_changes import render_object_ref
-from cmk.gui.watolib.audit_log import AuditLogFilterRaw, AuditLogStore, build_audit_log_filter
+from cmk.gui.watolib.audit_log import (
+    AuditLogFilterRaw,
+    AuditLogStore,
+    build_audit_log_filter,
+)
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.objref import ObjectRefType
@@ -215,7 +219,10 @@ class ModeAuditLog(WatoMode):
                                 request,
                                 transactions,
                                 [
-                                    ("show_details", "0" if self._show_details else "1"),
+                                    (
+                                        "show_details",
+                                        "0" if self._show_details else "1",
+                                    ),
                                 ],
                             )
                         ),
@@ -230,7 +237,10 @@ class ModeAuditLog(WatoMode):
                                 request,
                                 transactions,
                                 [
-                                    ("show_object_type", "0" if self._show_object_type else "1"),
+                                    (
+                                        "show_object_type",
+                                        "0" if self._show_object_type else "1",
+                                    ),
                                 ],
                             )
                         ),
@@ -394,7 +404,9 @@ class ModeAuditLog(WatoMode):
                     )
                 if self._show_object:
                     table.cell(
-                        _("Object"), render_object_ref(entry.object_ref) or "", css=["narrow"]
+                        _("Object"),
+                        render_object_ref(entry.object_ref) or "",
+                        css=["narrow"],
                     )
 
                 text = HTML(escaping.escape_text(entry.text).replace("\n", "<br>\n"))

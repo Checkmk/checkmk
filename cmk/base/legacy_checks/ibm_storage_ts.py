@@ -21,7 +21,9 @@ def check_ibm_storage_ts(_no_item, _no_params, info):
     return 0, f"{vendor} {product}, Version {version}"
 
 
-def parse_ibm_storage_ts(string_table: Sequence[StringTable]) -> Sequence[StringTable] | None:
+def parse_ibm_storage_ts(
+    string_table: Sequence[StringTable],
+) -> Sequence[StringTable] | None:
     return string_table if any(string_table) else None
 
 

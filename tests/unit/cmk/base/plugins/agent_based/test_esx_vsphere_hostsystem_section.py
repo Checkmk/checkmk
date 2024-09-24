@@ -7,7 +7,9 @@ from collections import OrderedDict
 
 import pytest
 
-from cmk.base.plugins.agent_based.esx_vsphere_hostsystem_section import parse_esx_vsphere_hostsystem
+from cmk.base.plugins.agent_based.esx_vsphere_hostsystem_section import (
+    parse_esx_vsphere_hostsystem,
+)
 
 from cmk.agent_based.v1.type_defs import StringTable
 from cmk.plugins.lib.esx_vsphere import Section

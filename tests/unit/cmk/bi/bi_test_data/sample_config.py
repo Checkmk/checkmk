@@ -689,7 +689,11 @@ bi_packs_config = {
             "public": True,
             "rules": [
                 {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                    "aggregation_function": {
+                        "count": 1,
+                        "restrict_state": 2,
+                        "type": "worst",
+                    },
                     "computation_options": {"disabled": False},
                     "id": "applications",
                     "node_visualization": {"style_config": {}, "type": "none"},
@@ -713,7 +717,11 @@ bi_packs_config = {
                     },
                 },
                 {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                    "aggregation_function": {
+                        "count": 1,
+                        "restrict_state": 2,
+                        "type": "worst",
+                    },
                     "computation_options": {"disabled": False},
                     "id": "checkmk",
                     "node_visualization": {"style_config": {}, "type": "none"},
@@ -737,7 +745,11 @@ bi_packs_config = {
                     },
                 },
                 {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                    "aggregation_function": {
+                        "count": 1,
+                        "restrict_state": 2,
+                        "type": "worst",
+                    },
                     "computation_options": {"disabled": False},
                     "id": "filesystem",
                     "node_visualization": {"style_config": {}, "type": "none"},
@@ -777,7 +789,11 @@ bi_packs_config = {
                     },
                 },
                 {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                    "aggregation_function": {
+                        "count": 1,
+                        "restrict_state": 2,
+                        "type": "worst",
+                    },
                     "computation_options": {"disabled": False},
                     "id": "filesystems",
                     "node_visualization": {"style_config": {}, "type": "none"},
@@ -851,13 +867,20 @@ bi_packs_config = {
                     },
                 },
                 {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                    "aggregation_function": {
+                        "count": 1,
+                        "restrict_state": 2,
+                        "type": "worst",
+                    },
                     "computation_options": {"disabled": False},
                     "id": "general",
                     "node_visualization": {"style_config": {}, "type": "none"},
                     "nodes": [
                         {
-                            "action": {"host_regex": "$HOSTNAME$", "type": "state_of_host"},
+                            "action": {
+                                "host_regex": "$HOSTNAME$",
+                                "type": "state_of_host",
+                            },
                             "search": {"type": "empty"},
                         },
                         {
@@ -887,7 +910,11 @@ bi_packs_config = {
                     },
                 },
                 {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                    "aggregation_function": {
+                        "count": 1,
+                        "restrict_state": 2,
+                        "type": "worst",
+                    },
                     "computation_options": {"disabled": False},
                     "id": "hardware",
                     "node_visualization": {"style_config": {}, "type": "none"},
@@ -911,7 +938,11 @@ bi_packs_config = {
                     },
                 },
                 {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                    "aggregation_function": {
+                        "count": 1,
+                        "restrict_state": 2,
+                        "type": "worst",
+                    },
                     "computation_options": {"disabled": False},
                     "id": "host",
                     "node_visualization": {"style_config": {}, "type": "none"},
@@ -991,7 +1022,11 @@ bi_packs_config = {
                     },
                 },
                 {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                    "aggregation_function": {
+                        "count": 1,
+                        "restrict_state": 2,
+                        "type": "worst",
+                    },
                     "computation_options": {"disabled": False},
                     "id": "logfiles",
                     "node_visualization": {"style_config": {}, "type": "none"},
@@ -1015,7 +1050,11 @@ bi_packs_config = {
                     },
                 },
                 {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                    "aggregation_function": {
+                        "count": 1,
+                        "restrict_state": 2,
+                        "type": "worst",
+                    },
                     "computation_options": {"disabled": False},
                     "id": "multipathing",
                     "node_visualization": {"style_config": {}, "type": "none"},
@@ -1039,7 +1078,11 @@ bi_packs_config = {
                     },
                 },
                 {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                    "aggregation_function": {
+                        "count": 1,
+                        "restrict_state": 2,
+                        "type": "worst",
+                    },
                     "computation_options": {"disabled": False},
                     "id": "networking",
                     "node_visualization": {"style_config": {}, "type": "none"},
@@ -1063,7 +1106,11 @@ bi_packs_config = {
                     },
                 },
                 {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                    "aggregation_function": {
+                        "count": 1,
+                        "restrict_state": 2,
+                        "type": "worst",
+                    },
                     "computation_options": {"disabled": False},
                     "id": "other",
                     "node_visualization": {"style_config": {}, "type": "none"},
@@ -1086,7 +1133,11 @@ bi_packs_config = {
                     },
                 },
                 {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                    "aggregation_function": {
+                        "count": 1,
+                        "restrict_state": 2,
+                        "type": "worst",
+                    },
                     "computation_options": {"disabled": False},
                     "id": "performance",
                     "node_visualization": {"style_config": {}, "type": "none"},

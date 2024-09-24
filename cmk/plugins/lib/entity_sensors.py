@@ -97,7 +97,14 @@ def parse_entity_sensors(
 ) -> EntitySensorSection:
     section: EntitySensorSection = {}
     sensor_names = {i[0]: i[1] for i in string_table[0]}
-    for oid_end, sensor_type_nr, scaling_nr, reading, status_nr, device_unit in string_table[1]:
+    for (
+        oid_end,
+        sensor_type_nr,
+        scaling_nr,
+        reading,
+        status_nr,
+        device_unit,
+    ) in string_table[1]:
         if sensor_type_nr in sensor_types_ignore:
             continue
         # Some devices such as Palo Alto Network series 3000 support

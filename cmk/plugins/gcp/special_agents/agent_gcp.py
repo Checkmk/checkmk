@@ -32,7 +32,10 @@ from cmk.special_agents.v0_unstable.agent_common import (
     SectionWriter,
     special_agent_main,
 )
-from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.argument_parsing import (
+    Args,
+    create_default_argument_parser,
+)
 
 ####################
 # Type Definitions #
@@ -391,7 +394,6 @@ def _filter_result_sections(
     sections: Iterable[ResultSection],
     filter_by: ResourceFilter,
 ) -> Iterator[ResultSection]:
-
     yield from (
         ResultSection(
             name=result.name,
@@ -439,7 +441,10 @@ def time_series(client: ClientProtocol, service: Service) -> Sequence[Result]:
                 gcp_serializer(
                     [
                         ExceptionSection(
-                            exc_type, exception, traceback, source=f"Metric: {metric.name}"
+                            exc_type,
+                            exception,
+                            traceback,
+                            source=f"Metric: {metric.name}",
                         )
                     ]
                 )
@@ -491,7 +496,6 @@ def piggy_back(
     assets: Sequence[Asset],
     prefix: str,
 ) -> Iterable[PiggyBackSection]:
-
     sections = list(run_metrics(client, services=service.services))
 
     for host in [a for a in assets if a.asset.asset_type == service.asset_type]:
@@ -1177,7 +1181,16 @@ GCE = PiggyBackService(
 
 SERVICES = {
     s.name: s
-    for s in [GCS, FUNCTIONS, RUN, CLOUDSQL, FILESTORE, REDIS, GCE_STORAGE, HTTP_LOADBALANCER]
+    for s in [
+        GCS,
+        FUNCTIONS,
+        RUN,
+        CLOUDSQL,
+        FILESTORE,
+        REDIS,
+        GCE_STORAGE,
+        HTTP_LOADBALANCER,
+    ]
 }
 PIGGY_BACK_SERVICES = {s.name: s for s in [GCE]}
 
@@ -1186,7 +1199,10 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser = create_default_argument_parser(description=__doc__)
     parser.add_argument("--project", type=str, help="Global ID of Project", required=True)
     parser.add_argument(
-        "--credentials", type=str, help="JSON credentials for service account", required=True
+        "--credentials",
+        type=str,
+        help="JSON credentials for service account",
+        required=True,
     )
     parser.add_argument(
         "--cost_table",

@@ -72,7 +72,11 @@ def check_netctr_combined(nic, params, info):
             index = netctr_counter_indices[countername]
             value = int(nicline[index + 1])
             items_per_sec = get_rate(
-                value_store, f"netctr.{nic}.{countername}", this_time, value, raise_overflow=True
+                value_store,
+                f"netctr.{nic}.{countername}",
+                this_time,
+                value,
+                raise_overflow=True,
             )
             perfdata.append((countername, "%dc" % value))
 

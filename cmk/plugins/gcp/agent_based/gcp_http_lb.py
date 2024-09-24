@@ -54,7 +54,12 @@ def check_requests(
         ),
     }
     yield from gcp.check(
-        metrics, item, params, section_gcp_service_http_lb, ASSET_TYPE, section_gcp_assets
+        metrics,
+        item,
+        params,
+        section_gcp_service_http_lb,
+        ASSET_TYPE,
+        section_gcp_assets,
     )
 
 
@@ -83,7 +88,12 @@ def check_latencies(
         scale=1e-3,
     )
     yield from gcp.check(
-        metrics, item, params, section_gcp_service_http_lb, ASSET_TYPE, section_gcp_assets
+        metrics,
+        item,
+        params,
+        section_gcp_service_http_lb,
+        ASSET_TYPE,
+        section_gcp_assets,
     )
 
 

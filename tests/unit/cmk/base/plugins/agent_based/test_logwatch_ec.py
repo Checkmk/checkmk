@@ -14,7 +14,12 @@ import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 
 from cmk.base.plugins.agent_based import logwatch_ec
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -570,7 +575,10 @@ class FakeTcpErrorRaised(Exception):
 
 def _forward_message(
     tcp_result: Literal["ok", "raise exception", "set exception"],
-    method: tuple[str, dict[str, object]] = ("tcp", {"address": "127.0.0.1", "port": 127001}),
+    method: tuple[str, dict[str, object]] = (
+        "tcp",
+        {"address": "127.0.0.1", "port": 127001},
+    ),
     text: str = "some_text",
     item: str | None = None,
     application: str = "-",
@@ -598,7 +606,13 @@ def _forward_message(
     result = TestForwardTcpMessageForwarder(item=item, hostname=HostName("some_host_name"))(
         method=method,
         messages=[
-            SyslogMessage(facility=1, severity=1, timestamp=0.0, text=text, application=application)
+            SyslogMessage(
+                facility=1,
+                severity=1,
+                timestamp=0.0,
+                text=text,
+                application=application,
+            )
         ],
     )
 
@@ -828,4 +842,7 @@ def test_check_logwatch_ec_common_batch_stored() -> None:
     )
 
     # the value store now needs to report both batches as seen:
-    assert value_store["seen_batches"] == ("batch_id_occuring_in_bar", "batch_id_occuring_in_foo")
+    assert value_store["seen_batches"] == (
+        "batch_id_occuring_in_bar",
+        "batch_id_occuring_in_foo",
+    )

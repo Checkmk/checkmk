@@ -36,12 +36,16 @@ REGISTRATION_REGEXES = (
     (
         "snmp_section",
         "SimpleSNMPSection",
-        re.compile(r'register\.snmp_section(.*?name="([^"]*).*?fetch=SNMP.*?\))$', re.DOTALL),
+        re.compile(
+            r'register\.snmp_section(.*?name="([^"]*).*?fetch=SNMP.*?\))$', re.DOTALL
+        ),
     ),
     (
         "snmp_section",
         "SNMPSection",
-        re.compile(r'register\.snmp_section(.*?name="([^"]*).*?fetch=\[.*?\))$', re.DOTALL),
+        re.compile(
+            r'register\.snmp_section(.*?name="([^"]*).*?fetch=\[.*?\))$', re.DOTALL
+        ),
     ),
     (
         "check_plugin",
@@ -131,12 +135,16 @@ def _transform_imports(imports: str) -> str:
 def _transform_body(body: str) -> str:
     for prefix, plugin, regex in REGISTRATION_REGEXES:
         while (m := next(regex.finditer(body), None)) is not None:
-            body = body.replace(m.group(0), f"{prefix}_{m.group(2)} = {plugin}{m.group(1)}")
+            body = body.replace(
+                m.group(0), f"{prefix}_{m.group(2)} = {plugin}{m.group(1)}"
+            )
     return body
 
 
 def _autoflake(file_names: Sequence[str]) -> None:
-    subprocess.check_call(["autoflake", "-i", "--remove-all-unused-imports", *file_names])
+    subprocess.check_call(
+        ["autoflake", "-i", "--remove-all-unused-imports", *file_names]
+    )
 
 
 def main(argv: list[str]) -> int:

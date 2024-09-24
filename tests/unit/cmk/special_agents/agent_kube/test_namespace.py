@@ -91,7 +91,8 @@ def test_filter_matching_namespace_resource_quota() -> None:
         ),
         APIResourceQuotaFactory.build(
             metadata=MetaDataFactory.build(
-                namespace=api.NamespaceName("non-matching-namespace"), factory_use_construct=True
+                namespace=api.NamespaceName("non-matching-namespace"),
+                factory_use_construct=True,
             )
         ),
     ]
@@ -313,7 +314,10 @@ def test_filter_pods_with_priority_class_from_scope_selector_match_expression() 
     )
 
     assert [p.metadata.name for p in high_medium_pods] == ["pod-1", "pod-2"]
-    assert [p.metadata.name for p in high_medium_pods_from_not_in_operator] == ["pod-1", "pod-2"]
+    assert [p.metadata.name for p in high_medium_pods_from_not_in_operator] == [
+        "pod-1",
+        "pod-2",
+    ]
 
 
 def _pod_with_scopes_factory(

@@ -98,7 +98,9 @@ class Parameter(Linkable):
         example="folder-move",
     )
     number = fields.Integer(
-        description="the number of the parameter (starting from 0)", required=True, example=0
+        description="the number of the parameter (starting from 0)",
+        required=True,
+        example=0,
     )
     name = fields.String(
         description="the name of the parameter", required=True, example="destination"

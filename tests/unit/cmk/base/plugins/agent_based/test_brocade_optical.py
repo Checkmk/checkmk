@@ -8,7 +8,12 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.base.plugins.agent_based import brocade_optical
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
 from cmk.plugins.lib import interfaces
@@ -176,7 +181,10 @@ def test_discover_brocade_optical(
     ],
 )
 def test_check_brocade_optical(
-    item: str, params: Mapping[str, object], section: brocade_optical.Section, expected: CheckResult
+    item: str,
+    params: Mapping[str, object],
+    section: brocade_optical.Section,
+    expected: CheckResult,
 ) -> None:
     assert list(brocade_optical.check_brocade_optical(item, params, section)) == expected
 

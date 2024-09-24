@@ -93,7 +93,14 @@ def available_files(pkg_dir: Path, needles) -> list[Path]:
 def detect_license(pkg_dir: Path) -> str:
     """Return the license for a given package directory pkg_dir if it can be
     obtained from available license files"""
-    license_needles = ["LICENSE", "LICENCE", "COPYING", "PKG-INFO", "README", "METADATA"]
+    license_needles = [
+        "LICENSE",
+        "LICENCE",
+        "COPYING",
+        "PKG-INFO",
+        "README",
+        "METADATA",
+    ]
     license_files = available_files(pkg_dir, license_needles)
     for lf in license_files:
         if lf.is_dir():
@@ -428,7 +435,9 @@ def update_py_packages(
                 if not pywinag_match:
                     name = "Python for Windows agent (PyWinAg)"
                     version = re.sub(
-                        r"python-|%s" % "|".join(ZIP_ENDINGS), "", os.path.basename(path)
+                        r"python-|%s" % "|".join(ZIP_ENDINGS),
+                        "",
+                        os.path.basename(path),
                     )
                     license_ = "Python-2.0"
                     license_link = license_links[license_] if license_ in license_links else ""

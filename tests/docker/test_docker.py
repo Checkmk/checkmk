@@ -108,7 +108,9 @@ def test_start_enable_livestatus(client: docker.DockerClient) -> None:
         assert output_bytes.decode("utf-8") == "on\n"
 
 
-def test_start_execute_custom_command(checkmk: docker.models.containers.Container) -> None:
+def test_start_execute_custom_command(
+    checkmk: docker.models.containers.Container,
+) -> None:
     exit_code, output_bytes = checkmk.exec_run(["echo", "1"], user="cmk")
     assert exit_code == 0
     assert output_bytes.decode("utf-8") == "1\n"
@@ -231,7 +233,9 @@ def test_http_access_base_redirects_work(
 
 # Would like to test this from the outside of the container, but this is not possible
 # because most of our systems already have something listening on port 80
-def test_redirects_work_with_standard_port(checkmk: docker.models.containers.Container) -> None:
+def test_redirects_work_with_standard_port(
+    checkmk: docker.models.containers.Container,
+) -> None:
     # Use no explicit port
     assert "Location: http://127.0.0.1/cmk/\r\n" in checkmk.exec_run(
         [
@@ -316,7 +320,8 @@ def test_redirects_work_with_custom_port(client: docker.DockerClient) -> None:
 
 
 @pytest.mark.skipif(
-    version_from_env().is_saas_edition(), reason="Saas edition replaced the login screen"
+    version_from_env().is_saas_edition(),
+    reason="Saas edition replaced the login screen",
 )
 def test_http_access_login_screen(checkmk: docker.models.containers.Container) -> None:
     ip = get_container_ip(checkmk)
@@ -333,7 +338,9 @@ def test_http_access_login_screen(checkmk: docker.models.containers.Container) -
 
 @pytest.mark.skip(reason="Saas edition requires cognito config")
 # @pytest.mark.skipif(not version_from_env().is_saas_edition(), reason="Saas check saas login")
-def test_http_access_login_screen_saas(checkmk: docker.models.containers.Container) -> None:
+def test_http_access_login_screen_saas(
+    checkmk: docker.models.containers.Container,
+) -> None:
     ip = get_container_ip(checkmk)
 
     response = requests.get(
@@ -393,7 +400,9 @@ def test_update(client: docker.DockerClient, version: CMKVersion) -> None:
             )
             assert (
                 c_new.exec_run(
-                    ["test", "-f", "pre-update-marker"], user="cmk", workdir="/omd/sites/cmk"
+                    ["test", "-f", "pre-update-marker"],
+                    user="cmk",
+                    workdir="/omd/sites/cmk",
                 )[0]
                 == 0
             )

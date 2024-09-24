@@ -10,7 +10,14 @@ from enum import IntEnum, unique
 from typing import Any, NewType
 
 from cmk.agent_based.v1 import check_levels, check_levels_predictive
-from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable
+from cmk.agent_based.v2 import (
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 Project = str
 
@@ -141,7 +148,9 @@ class AssetSection:
 
 
 def parse_gcp(
-    string_table: StringTable, label_key: LabelKey, extract: Callable[[str], str] = lambda x: x
+    string_table: StringTable,
+    label_key: LabelKey,
+    extract: Callable[[str], str] = lambda x: x,
 ) -> Section:
     rows = [GCPResult.deserialize(row[0]) for row in string_table]
     items = {row.labels[label_key] for row in rows}
@@ -278,7 +287,9 @@ def get_boolean_value(results: Sequence[GCPResult], spec: MetricExtractionSpec) 
 
 
 def generic_check(
-    metrics: Mapping[str, MetricSpec], timeseries: Sequence[GCPResult], params: Mapping[str, Any]
+    metrics: Mapping[str, MetricSpec],
+    timeseries: Sequence[GCPResult],
+    params: Mapping[str, Any],
 ) -> CheckResult:
     for metric_name, metric_spec in metrics.items():
         value = get_value(timeseries, metric_spec.extraction)
@@ -391,7 +402,10 @@ def get_percentile_metric_specs(
 
     def _get_spec(gcp_aligner_map: GCPAlignerMap) -> MetricSpec:
         filters = [
-            Filter(key=AggregationKey(key="per_series_aligner"), value=gcp_aligner_map.gcp_aligner)
+            Filter(
+                key=AggregationKey(key="per_series_aligner"),
+                value=gcp_aligner_map.gcp_aligner,
+            )
         ]
         if additional_filter_by:
             filters.extend(additional_filter_by)

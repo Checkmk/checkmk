@@ -46,7 +46,9 @@ MAP_STATES = {
 }
 
 
-def parse_fjdarye_pcie_flash_modules(string_table: list[StringTable]) -> PCIeFlashModuleSection:
+def parse_fjdarye_pcie_flash_modules(
+    string_table: list[StringTable],
+) -> PCIeFlashModuleSection:
     if not string_table:
         return {}
 
@@ -73,7 +75,9 @@ register.snmp_section(
 )
 
 
-def discover_fjdarye_pcie_flash_modules(section: PCIeFlashModuleSection) -> DiscoveryResult:
+def discover_fjdarye_pcie_flash_modules(
+    section: PCIeFlashModuleSection,
+) -> DiscoveryResult:
     for module in section.values():
         if module.status != "4":
             yield Service(item=module.module_id)

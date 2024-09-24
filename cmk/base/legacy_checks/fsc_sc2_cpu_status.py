@@ -49,7 +49,10 @@ def check_fsc_sc2_cpu_status(item, _no_params, info):
     for designation, status, model, speed, cores in info:
         if designation == item:
             status_state, status_txt = get_cpu_status(status)
-            return status_state, f"Status is {status_txt}, {model}, {cores} cores @ {speed} MHz"
+            return (
+                status_state,
+                f"Status is {status_txt}, {model}, {cores} cores @ {speed} MHz",
+            )
 
 
 check_info["fsc_sc2_cpu_status"] = LegacyCheckDefinition(

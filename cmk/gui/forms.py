@@ -183,12 +183,15 @@ def section(
             else:
                 name, active, attrname = checkbox
                 html.checkbox(
-                    name, active, onclick="cmk.wato.toggle_attribute(this, '%s')" % attrname
+                    name,
+                    active,
+                    onclick="cmk.wato.toggle_attribute(this, '%s')" % attrname,
                 )
             html.close_div()
         html.close_td()
     html.open_td(
-        class_=["content"] + (["simple"] if simple else []), colspan=2 if not legend else None
+        class_=["content"] + (["simple"] if simple else []),
+        colspan=2 if not legend else None,
     )
     g_section_open = True
 

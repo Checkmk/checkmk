@@ -305,7 +305,11 @@ def fmt_nic_speed(speed: str | int) -> str:
         return str(speed)
 
     return fmt_number_with_precision(
-        speedi, unit_prefix_type=SIUnitPrefixes, precision=2, unit="bit/s", drop_zeroes=True
+        speedi,
+        unit_prefix_type=SIUnitPrefixes,
+        precision=2,
+        unit="bit/s",
+        drop_zeroes=True,
     )
 
 

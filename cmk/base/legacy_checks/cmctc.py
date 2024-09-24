@@ -11,7 +11,11 @@ from cmk.base.check_legacy_includes.temperature import check_temperature, TempPa
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.plugins.lib.cmctc import cmctc_translate_status, cmctc_translate_status_text, DETECT_CMCTC
+from cmk.plugins.lib.cmctc import (
+    cmctc_translate_status,
+    cmctc_translate_status_text,
+    DETECT_CMCTC,
+)
 
 # Table columns:
 # 0: index

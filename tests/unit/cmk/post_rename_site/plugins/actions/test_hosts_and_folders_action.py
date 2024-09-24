@@ -18,7 +18,9 @@ from cmk.gui.watolib.builtin_attributes import HostAttributeSite
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 
 from cmk.post_rename_site.logger import logger
-from cmk.post_rename_site.plugins.actions.hosts_and_folders import update_hosts_and_folders
+from cmk.post_rename_site.plugins.actions.hosts_and_folders import (
+    update_hosts_and_folders,
+)
 
 
 def _write_folder_attributes(folder_attributes: dict) -> Path:

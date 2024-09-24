@@ -209,7 +209,10 @@ def test_patch_package_code_by_marker_with_state_file(conf_dir: Path, work_file:
     uuid = msi_patch.generate_uuid()
     st_f = conf_dir / "state_file_2.yml"
     assert msi_patch.patch_package_code_by_marker(work_file, new_uuid=uuid, state_file=st_f)
-    assert (_marker_loc(work_file, uuid.encode("ascii")), uuid) == msi_patch.load_state_file(st_f)
+    assert (
+        _marker_loc(work_file, uuid.encode("ascii")),
+        uuid,
+    ) == msi_patch.load_state_file(st_f)
 
 
 @pytest.mark.parametrize("old_code", ["", msi_patch.TRADITIONAL_UUID])

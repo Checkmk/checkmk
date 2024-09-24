@@ -17,7 +17,12 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.gcp.agent_based.gcp_assets import parse_assets
-from cmk.plugins.gcp.agent_based.gcp_filestore import check, check_summary, discover, parse
+from cmk.plugins.gcp.agent_based.gcp_filestore import (
+    check,
+    check_summary,
+    discover,
+    parse,
+)
 from cmk.plugins.gcp.lib import gcp
 from cmk.plugins.gcp.special_agents.agent_gcp import FILESTORE
 

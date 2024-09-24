@@ -34,15 +34,13 @@ from cmk.gui.watolib.search import (
     IndexNotFoundException,
     IndexSearcher,
     is_url_permitted,
-)
-from cmk.gui.watolib.search import (
-    match_item_generator_registry as real_match_item_generator_registry,
-)
-from cmk.gui.watolib.search import (
     MatchItem,
     MatchItemGeneratorRegistry,
     MatchItems,
     PermissionsHandler,
+)
+from cmk.gui.watolib.search import (
+    match_item_generator_registry as real_match_item_generator_registry,
 )
 
 
@@ -254,7 +252,10 @@ class TestIndexBuilderAndSearcher:
         index_builder.build_full_index()
         assert self._evaluate_search_results_by_topic(index_searcher.search("**")) == [
             ("Change-dependent", [SearchResult(title="change_dependent", url="")]),
-            ("Localization-dependent", [SearchResult(title="localization_dependent", url="")]),
+            (
+                "Localization-dependent",
+                [SearchResult(title="localization_dependent", url="")],
+            ),
         ]
 
     @pytest.mark.usefixtures("with_admin_login")
@@ -304,7 +305,10 @@ class TestIndexBuilderAndSearcher:
 
         index_builder.build_changed_sub_indices(["some_change_dependent_whatever"])
         assert self._evaluate_search_results_by_topic(index_searcher.search("**")) == [
-            ("Localization-dependent", [SearchResult(title="localization_dependent", url="")]),
+            (
+                "Localization-dependent",
+                [SearchResult(title="localization_dependent", url="")],
+            ),
         ]
 
     @staticmethod

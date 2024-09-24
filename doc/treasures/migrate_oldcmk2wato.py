@@ -11,9 +11,15 @@ import sys
 
 def usage():
     print("Usage: ./migrate_oldcmk2wato start\n")
-    print("  This script tries to convert a WATO-less Check_MK configuration into WATO.")
-    print("  It scans for *.mk files in the current folder and creates a respective WATO folder")
-    print("  for each file found. The content of the file is splitted into a hosts.mk and rules.mk")
+    print(
+        "  This script tries to convert a WATO-less Check_MK configuration into WATO."
+    )
+    print(
+        "  It scans for *.mk files in the current folder and creates a respective WATO folder"
+    )
+    print(
+        "  for each file found. The content of the file is splitted into a hosts.mk and rules.mk"
+    )
     print(
         "  As an alternative, you can configure where to put the content of the source *.mk files"
     )
@@ -238,7 +244,9 @@ def get_hosts_mk(file_vars):
             if tag in map_tag_to_taggroup:
                 add_wato_parameter(hostname, map_tag_to_taggroup[tag], tag)
             else:
-                add_wato_parameter(hostname, "tag_{}_{}".format(taggroup_prefix, tag), tag)
+                add_wato_parameter(
+                    hostname, "tag_{}_{}".format(taggroup_prefix, tag), tag
+                )
                 new_host_tags.add(tag)
 
     content = hosts_mk_template % {
@@ -264,7 +272,9 @@ def create_wato_folder(filename, file_vars):
 
     # hosts.mk
     ###########
-    add_to_folder(get_hosts_mk(file_vars), "hosts.mk", get_target_folder(filename, "hosts.mk"))
+    add_to_folder(
+        get_hosts_mk(file_vars), "hosts.mk", get_target_folder(filename, "hosts.mk")
+    )
 
     # rules.mk
     ###########
@@ -278,10 +288,14 @@ def create_wato_folder(filename, file_vars):
                 tags = []
             elif len(entry) == 3:
                 tags, hosts, values = entry
-            content += "  ( {{'services': {!r}}}, {!r}, {}),\n".format(values, tags, hosts)
+            content += "  ( {{'services': {!r}}}, {!r}, {}),\n".format(
+                values, tags, hosts
+            )
         content += "] + inventory_services_rules"
 
-        add_to_folder(content, "rules.mk", get_target_folder(filename, "inventory_services"))
+        add_to_folder(
+            content, "rules.mk", get_target_folder(filename, "inventory_services")
+        )
 
         del file_vars["inventory_services"]
 
@@ -292,7 +306,9 @@ def create_wato_folder(filename, file_vars):
         content += pprint.pformat(file_vars.get("ignored_services"))
         content += " + ignored_services"
 
-        add_to_folder(content, "rules.mk", get_target_folder(filename, "ignored_services"))
+        add_to_folder(
+            content, "rules.mk", get_target_folder(filename, "ignored_services")
+        )
 
         del file_vars["ignored_services"]
 
@@ -309,7 +325,9 @@ def create_wato_folder(filename, file_vars):
             content += "  ( {!r}, {!r}, {!r}),\n".format(values, tags, hosts)
         content += "] + fileinfo_groups"
 
-        add_to_folder(content, "rules.mk", get_target_folder(filename, "fileinfo_groups"))
+        add_to_folder(
+            content, "rules.mk", get_target_folder(filename, "fileinfo_groups")
+        )
 
         del file_vars["fileinfo_groups"]
 
@@ -327,17 +345,26 @@ def create_wato_folder(filename, file_vars):
                 hosts, name, match, user = rest
             else:
                 global partial_unconverted_data
-                partial_unconverted_data += "{}: Unable to convert process rule {!r}".format(
-                    filename, entry
+                partial_unconverted_data += (
+                    "{}: Unable to convert process rule {!r}".format(filename, entry)
                 )
 
             content += (
                 "( {'default_params': {'levels': %r}, 'descr': %r, 'match': %r, 'user': %r}, %r, %r),\n"
-                % (levels, name, match, user != "$ANY_USER$" and user or None, tags, hosts)
+                % (
+                    levels,
+                    name,
+                    match,
+                    user != "$ANY_USER$" and user or None,
+                    tags,
+                    hosts,
+                )
             )
 
         content += "] + inventory_processes_rules"
-        add_to_folder(content, "rules.mk", get_target_folder(filename, "inventory_processes"))
+        add_to_folder(
+            content, "rules.mk", get_target_folder(filename, "inventory_processes")
+        )
 
         del file_vars["inventory_processes"]
 
@@ -362,7 +389,9 @@ def create_wato_folder(filename, file_vars):
 
                 pattern_info = []
                 for value in values:
-                    pattern_info.append('({!r}, {!r}, "(auto generated)")'.format(state, value[3]))
+                    pattern_info.append(
+                        '({!r}, {!r}, "(auto generated)")'.format(state, value[3])
+                    )
 
                 content += '( [{}], {}, {}, ["{}"]),\n'.format(
                     ", ".join(pattern_info), tags, hosts, logfile
@@ -372,14 +401,24 @@ def create_wato_folder(filename, file_vars):
 
         del file_vars["logwatch_patterns"]
 
-        add_to_folder(content, "rules.mk", get_target_folder(filename, "logwatch_patterns"))
+        add_to_folder(
+            content, "rules.mk", get_target_folder(filename, "logwatch_patterns")
+        )
 
     # Log unconverted
-    unconverted_data += "##########################\n" "## Unconverted data of file %s\n" % filename
+    unconverted_data += (
+        "##########################\n" "## Unconverted data of file %s\n" % filename
+    )
     for key, value in file_vars.items():
-        if value == [] or value == {} or key in ["ALL_HOSTS", "ALL_SERVICES", "ANY_USER"]:
+        if (
+            value == []
+            or value == {}
+            or key in ["ALL_HOSTS", "ALL_SERVICES", "ANY_USER"]
+        ):
             continue
-        unconverted_data += "Parameter: {}\nValue:\n{}\n\n\n".format(key, pprint.pformat(value))
+        unconverted_data += "Parameter: {}\nValue:\n{}\n\n\n".format(
+            key, pprint.pformat(value)
+        )
 
 
 #   .--Main----------------------------------------------------------------.
@@ -437,8 +476,10 @@ for filename, file_vars in all_file_vars.items():
     for entry in file_vars.get("parents", []):
         if len(entry) == 3:
             parents, tags, hosts = entry
-            partial_unconverted_data += "{}: Unable to convert parent configuration: {}".format(
-                filename, pprint.pformat(entry)
+            partial_unconverted_data += (
+                "{}: Unable to convert parent configuration: {}".format(
+                    filename, pprint.pformat(entry)
+                )
             )
         elif len(entry) == 2:
             parents, hosts = entry
@@ -468,12 +509,12 @@ print(
     "Creating hosttags.mk in %s (inspect and copy this to ~/etc/check_mk/multisite.d/wato)"
     % os.path.expanduser("~")
 )
-tag_template = (
-    "('%(taggroup_prefix)s_%(tag)s', u'%(tag)s', [('%(tag)s', u'%(tag)s (auto generated)', [])]),"
-)
+tag_template = "('%(taggroup_prefix)s_%(tag)s', u'%(tag)s', [('%(tag)s', u'%(tag)s (auto generated)', [])]),"
 extra_host_tags = []
 for tag in new_host_tags:
-    extra_host_tags.append(tag_template % {"tag": tag, "taggroup_prefix": taggroup_prefix})
+    extra_host_tags.append(
+        tag_template % {"tag": tag, "taggroup_prefix": taggroup_prefix}
+    )
 
 hosttags_content = """# Created by converter script
 # encoding: utf-8

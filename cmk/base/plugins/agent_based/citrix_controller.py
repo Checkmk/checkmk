@@ -35,7 +35,9 @@ v1.register.check_plugin(
 )
 
 
-def discovery_citrix_controller_licensing(section: Section) -> v1.type_defs.DiscoveryResult:
+def discovery_citrix_controller_licensing(
+    section: Section,
+) -> v1.type_defs.DiscoveryResult:
     yield v1.Service()
 
 
@@ -84,7 +86,9 @@ class SessionParams(typing.TypedDict, total=False):
     inactive: tuple[int, int]
 
 
-def discovery_citrix_controller_sessions(section: Section) -> v1.type_defs.DiscoveryResult:
+def discovery_citrix_controller_sessions(
+    section: Section,
+) -> v1.type_defs.DiscoveryResult:
     if section.session is not None:
         yield v1.Service()
 
@@ -132,7 +136,9 @@ class DesktopParams(typing.TypedDict, total=False):
     levels_lower: tuple[int, int]
 
 
-def discovery_citrix_controller_registered(section: Section) -> v1.type_defs.DiscoveryResult:
+def discovery_citrix_controller_registered(
+    section: Section,
+) -> v1.type_defs.DiscoveryResult:
     if section.desktop_count is not None:
         yield v1.Service()
 
@@ -163,7 +169,9 @@ v1.register.check_plugin(
 )
 
 
-def discovery_citrix_controller_services(section: Section) -> v1.type_defs.DiscoveryResult:
+def discovery_citrix_controller_services(
+    section: Section,
+) -> v1.type_defs.DiscoveryResult:
     if section.active_site_services is not None:
         yield v1.Service()
 

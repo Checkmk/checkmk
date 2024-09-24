@@ -32,6 +32,7 @@ A folder_config object can have the following relations present in `links`:
 
 
 """
+
 from collections.abc import Mapping
 from typing import Any
 
@@ -59,7 +60,11 @@ from cmk.gui.openapi.endpoints.utils import folder_slug
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import problem, ProblemException, serve_json
-from cmk.gui.watolib.hosts_and_folders import find_available_folder_name, Folder, folder_tree
+from cmk.gui.watolib.hosts_and_folders import (
+    find_available_folder_name,
+    Folder,
+    folder_tree,
+)
 
 from cmk import fields
 

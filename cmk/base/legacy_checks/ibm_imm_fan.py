@@ -39,7 +39,10 @@ def check_ibm_imm_fan(item, params, info):  # pylint: disable=too-many-branches
                 else:
                     state = 0
                 if state > 0:
-                    yield state, "too low (warn/crit below %d%%/%d%%)" % (warn_lower, crit_lower)
+                    yield (
+                        state,
+                        "too low (warn/crit below %d%%/%d%%)" % (warn_lower, crit_lower),
+                    )
 
             if warn:
                 if rpm_perc >= crit:

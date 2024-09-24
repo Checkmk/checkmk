@@ -84,7 +84,9 @@ def _sorted_unique_lq(query: str, limit: int, value: str, params: dict) -> Choic
     """Livestatus query of single column of unique elements.
     Prepare dropdown choices"""
 
-    def _query_callback(sites_live: MultiSiteConnection) -> Collection[LivestatusColumn]:
+    def _query_callback(
+        sites_live: MultiSiteConnection,
+    ) -> Collection[LivestatusColumn]:
         return sites_live.query_column_unique(query)
 
     return __live_query_to_choices(_query_callback, limit, value, params)
@@ -185,7 +187,9 @@ def kubernetes_labels_autocompleter(value: str, params: dict) -> Choices:
     object_type = filter_id.removeprefix("kubernetes_")
     label_name = f"cmk/kubernetes/{object_type}"
 
-    def _query_callback(sites_live: MultiSiteConnection) -> Collection[LivestatusColumn]:
+    def _query_callback(
+        sites_live: MultiSiteConnection,
+    ) -> Collection[LivestatusColumn]:
         """
         we search for hosts having a certain label
         ('cmk/kubernets/object:{object_type}') and want a list of unique labels
@@ -295,7 +299,8 @@ def graph_templates_autocompleter(value: str, params: dict) -> Choices:
         )
 
     return sorted(
-        (v for v in choices if _matches_id_or_title(value, v)), key=lambda a: a[1].lower()
+        (v for v in choices if _matches_id_or_title(value, v)),
+        key=lambda a: a[1].lower(),
     )
 
 

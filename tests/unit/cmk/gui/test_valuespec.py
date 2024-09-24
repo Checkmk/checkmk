@@ -119,8 +119,14 @@ def test_dropdownchoice_validate_datatype(
 @pytest.mark.parametrize(
     "value, result_title",
     [
-        (("age", 4 * 60 * 60), "The last 4 fun hours"),  # Werk 4477, deprecated input on cmk2.0
-        (("age", 25 * 60 * 60), "The last 25 hard hours"),  # Werk 4477, deprecated input on cmk2.0
+        (
+            ("age", 4 * 60 * 60),
+            "The last 4 fun hours",
+        ),  # Werk 4477, deprecated input on cmk2.0
+        (
+            ("age", 25 * 60 * 60),
+            "The last 25 hard hours",
+        ),  # Werk 4477, deprecated input on cmk2.0
         (4 * 60 * 60, "The last 4 fun hours"),  # defaults are idents
         (25 * 60 * 60, "The last 25 hard hours"),  # defaults are idents
         (3600 * 24 * 7 * 1.5, "Since a sesquiweek"),  # defaults are idents

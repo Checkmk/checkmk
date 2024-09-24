@@ -5,7 +5,9 @@
 
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.check_legacy_includes.huawei_switch import parse_huawei_physical_entity_values
+from cmk.base.check_legacy_includes.huawei_switch import (
+    parse_huawei_physical_entity_values,
+)
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import OIDEnd, render, SNMPTree

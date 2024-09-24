@@ -45,7 +45,11 @@ from .snmp_helpers import default_config, get_single_oid, get_snmp_table
 )
 @pytest.mark.usefixtures("snmpsim")
 def test_get_data_types(
-    site: Site, backend_type: SNMPBackendEnum, type_name: str, oid: str, expected_response: str
+    site: Site,
+    backend_type: SNMPBackendEnum,
+    type_name: str,
+    oid: str,
+    expected_response: str,
 ) -> None:
     response = get_single_oid(site, oid, backend_type, default_config(backend_type))[0]
     assert response == expected_response

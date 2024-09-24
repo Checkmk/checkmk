@@ -7,7 +7,12 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.ups_modulys_battery import (
     check_ups_modulys_battery,
     check_ups_modulys_battery_temp,
@@ -144,7 +149,8 @@ def test_discover_ups_modulys_battery() -> None:
             [
                 Result(state=State.OK, summary="Discharging for 0 minutes"),
                 Result(
-                    state=State.WARN, summary="Minutes remaining: 8.00 (warn/crit below 9.00/7.00)"
+                    state=State.WARN,
+                    summary="Minutes remaining: 8.00 (warn/crit below 9.00/7.00)",
                 ),
                 Result(state=State.OK, summary="Battery capacity at: 100.00%"),
             ],
@@ -161,7 +167,8 @@ def test_discover_ups_modulys_battery() -> None:
             [
                 Result(state=State.OK, summary="Discharging for 0 minutes"),
                 Result(
-                    state=State.CRIT, summary="Minutes remaining: 5.00 (warn/crit below 9.00/7.00)"
+                    state=State.CRIT,
+                    summary="Minutes remaining: 5.00 (warn/crit below 9.00/7.00)",
                 ),
                 Result(state=State.OK, summary="Battery capacity at: 100.00%"),
             ],

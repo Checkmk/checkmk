@@ -41,7 +41,8 @@ def test_lazy_file() -> None:
 
 
 @pytest.mark.parametrize(
-    "config", [({}), ({"input_unknown": None}), ({"input_one": None, "input_two": None})]
+    "config",
+    [({}), ({"input_unknown": None}), ({"input_one": None, "input_two": None})],
 )
 def test_get_file_iterator_invalid(config: Mapping[str, Optional[str]]) -> None:
     with pytest.raises(ValueError):

@@ -260,12 +260,16 @@ def tid(node):
 
 def mon_perfdata(conn, cfg_entry, node):
     f = conn.call(
-        "BAPI_SYSTEM_MTE_GETPERFCURVAL", EXTERNAL_USER_NAME=cfg_entry["user"], TID=tid(node)
+        "BAPI_SYSTEM_MTE_GETPERFCURVAL",
+        EXTERNAL_USER_NAME=cfg_entry["user"],
+        TID=tid(node),
     )
     value = f["CURRENT_VALUE"]["LASTPERVAL"]
 
     f = conn.call(
-        "BAPI_SYSTEM_MTE_GETPERFPROP", EXTERNAL_USER_NAME=cfg_entry["user"], TID=tid(node)
+        "BAPI_SYSTEM_MTE_GETPERFPROP",
+        EXTERNAL_USER_NAME=cfg_entry["user"],
+        TID=tid(node),
     )
     if f["PROPERTIES"]["DECIMALS"] != 0:
         value = (value + 0.0) / 10 ** f["PROPERTIES"]["DECIMALS"]
@@ -275,7 +279,11 @@ def mon_perfdata(conn, cfg_entry, node):
 
 
 def mon_msg(conn, cfg_entry, node):
-    f = conn.call("BAPI_SYSTEM_MTE_GETSMVALUE", EXTERNAL_USER_NAME=cfg_entry["user"], TID=tid(node))
+    f = conn.call(
+        "BAPI_SYSTEM_MTE_GETSMVALUE",
+        EXTERNAL_USER_NAME=cfg_entry["user"],
+        TID=tid(node),
+    )
     data = f["VALUE"]
     dt = parse_dt(data["SMSGDATE"], data["SMSGTIME"])
     return (dt, data["MSG"].strip())
@@ -307,7 +315,9 @@ def aid(alert):
 
 def alert_details(conn, cfg_entry, alert):
     f = conn.call(
-        "BAPI_SYSTEM_ALERT_GETDETAILS", EXTERNAL_USER_NAME=cfg_entry["user"], AID=aid(alert)
+        "BAPI_SYSTEM_ALERT_GETDETAILS",
+        EXTERNAL_USER_NAME=cfg_entry["user"],
+        AID=aid(alert),
     )
     # prop  = f["PROPERTIES"]
     state = f["VALUE"]

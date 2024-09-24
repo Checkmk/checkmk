@@ -19,7 +19,7 @@ from cmk.utils.labels import Labels
 from cmk.utils.notify import NotificationContext
 from cmk.utils.notify_types import EventRule, is_always_bulk, NotifyAnalysisInfo
 from cmk.utils.statename import host_state_name, service_state_name
-from cmk.utils.version import edition, Edition
+from cmk.utils.version import Edition, edition
 
 import cmk.gui.forms as forms
 import cmk.gui.permissions as permissions
@@ -60,7 +60,12 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.time import timezone_utc_offset_str
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import DocReference, make_confirm_delete_link, makeactionuri, makeuri
+from cmk.gui.utils.urls import (
+    DocReference,
+    make_confirm_delete_link,
+    makeactionuri,
+    makeuri,
+)
 from cmk.gui.valuespec import (
     Age,
     Alternative,
@@ -92,7 +97,9 @@ from cmk.gui.valuespec import (
     UUID,
 )
 from cmk.gui.wato.pages.events import ABCEventsMode
-from cmk.gui.wato.pages.user_profile.async_replication import user_profile_async_replication_dialog
+from cmk.gui.wato.pages.user_profile.async_replication import (
+    user_profile_async_replication_dialog,
+)
 from cmk.gui.wato.pages.user_profile.page_menu import page_menu_dropdown_user_related
 from cmk.gui.wato.pages.users import ModeEditUser
 from cmk.gui.watolib.check_mk_automations import (
@@ -109,7 +116,10 @@ from cmk.gui.watolib.notifications import (
     load_user_notification_rules,
     save_notification_rules,
 )
-from cmk.gui.watolib.sample_config import get_default_notification_rule, new_notification_rule_id
+from cmk.gui.watolib.sample_config import (
+    get_default_notification_rule,
+    new_notification_rule_id,
+)
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.users import notification_script_choices
@@ -238,7 +248,9 @@ class ABCNotificationsMode(ABCEventsMode):
                     ),
                     elements=[
                         FixedValue(
-                            value=False, title=_("Do not match Event Console alerts"), totext=""
+                            value=False,
+                            title=_("Do not match Event Console alerts"),
+                            totext="",
                         ),
                         Dictionary(
                             title=_("Match only Event Console alerts"),
@@ -352,7 +364,9 @@ class ABCNotificationsMode(ABCEventsMode):
                     links = self._rule_links(rule, nr, profilemode, userid)
                     html.icon_button(links.edit, _("Edit this notification rule"), "edit")
                     html.icon_button(
-                        links.clone, _("Create a copy of this notification rule"), "clone"
+                        links.clone,
+                        _("Create a copy of this notification rule"),
+                        "clone",
                     )
                     html.element_dragger_url("tr", base_url=links.drag)
                     html.icon_button(links.delete, _("Delete this notification rule"), "delete")
@@ -363,7 +377,10 @@ class ABCNotificationsMode(ABCEventsMode):
 
                 table.cell("", css=["narrow"])
                 if rule.get("disabled"):
-                    html.icon("cross", _("This rule is currently disabled and will not be applied"))
+                    html.icon(
+                        "cross",
+                        _("This rule is currently disabled and will not be applied"),
+                    )
                 else:
                     html.empty_icon_button()
 
@@ -376,11 +393,18 @@ class ABCNotificationsMode(ABCEventsMode):
 
                 table.cell(_("Type"), css=["narrow"])
                 if notify_method[1] is None:
-                    html.icon("cross_bg_white", _("Cancel notifications for this plug-in type"))
+                    html.icon(
+                        "cross_bg_white",
+                        _("Cancel notifications for this plug-in type"),
+                    )
                 else:
                     html.icon("checkmark", _("Create a notification"))
 
-                table.cell(_("Plug-in"), notify_plugin or _("Plain email"), css=["narrow nowrap"])
+                table.cell(
+                    _("Plug-in"),
+                    notify_plugin or _("Plain email"),
+                    css=["narrow nowrap"],
+                )
 
                 table.cell(_("Bulk"), css=["narrow"])
                 if "bulk" in rule or "bulk_period" in rule:
@@ -390,7 +414,10 @@ class ABCNotificationsMode(ABCEventsMode):
                 url = rule.get("docu_url")
                 if url:
                     html.icon_button(
-                        url, _("Context information about this rule"), "url", target="_blank"
+                        url,
+                        _("Context information about this rule"),
+                        "url",
+                        target="_blank",
                     )
                     html.write_text("&nbsp;")
                 html.write_text(rule["description"])
@@ -623,7 +650,10 @@ class ModeNotifications(ABCNotificationsMode):
                                 request,
                                 transactions,
                                 [
-                                    ("_show_user", "" if self._show_user_rules else "1"),
+                                    (
+                                        "_show_user",
+                                        "" if self._show_user_rules else "1",
+                                    ),
                                 ],
                             )
                         ),
@@ -643,7 +673,10 @@ class ModeNotifications(ABCNotificationsMode):
                                 request,
                                 transactions,
                                 addvars=[
-                                    ("_show_backlog", "" if self._show_backlog else "1"),
+                                    (
+                                        "_show_backlog",
+                                        "" if self._show_backlog else "1",
+                                    ),
                                 ],
                                 delvars=("test_context", "test_notification"),
                             )
@@ -971,7 +1004,8 @@ class ModeNotifications(ABCNotificationsMode):
                 table.cell(_("Count"), str(len(uuids)), css=["number"])
                 if len(uuids) >= maxcount:
                     html.icon(
-                        "warning", _("Number of notifications exceeds maximum allowed number")
+                        "warning",
+                        _("Number of notifications exceeds maximum allowed number"),
                     )
         return True
 
@@ -1025,7 +1059,9 @@ class ModeNotifications(ABCNotificationsMode):
             return
 
         with table_element(
-            table_id="notification_test", title=_("Analysis: Test notifications"), sortable=False
+            table_id="notification_test",
+            title=_("Analysis: Test notifications"),
+            sortable=False,
         ) as table:
             table.row()
             table.cell("&nbsp;", css=["buttons"])
@@ -1058,9 +1094,12 @@ class ModeNotifications(ABCNotificationsMode):
                 if context.get("SERVICESTATE"):
                     css = "state svcstate state"
                     last_state_name = context["PREVIOUSSERVICEHARDSTATE"]
-                    last_state = {"OK": "0", "WARNING": "1", "CRITICAL": "2", "UNKNOWN": "3"}[
-                        last_state_name
-                    ]
+                    last_state = {
+                        "OK": "0",
+                        "WARNING": "1",
+                        "CRITICAL": "2",
+                        "UNKNOWN": "3",
+                    }[last_state_name]
                     state = context["SERVICESTATEID"]
                     state_name = context["SERVICESTATE"]
                 else:
@@ -1113,7 +1152,9 @@ class ModeNotifications(ABCNotificationsMode):
             return
 
         with table_element(
-            table_id="backlog", title=_("Analysis: Recent notifications"), sortable=False
+            table_id="backlog",
+            title=_("Analysis: Recent notifications"),
+            sortable=False,
         ) as table:
             for nr, context in enumerate(backlog):
                 table.row()
@@ -1133,7 +1174,9 @@ class ModeNotifications(ABCNotificationsMode):
 
                 replay_url = makeactionuri(request, transactions, [("_replay", str(nr))])
                 html.icon_button(
-                    replay_url, _("Replay this notification, send it again!"), "reload_cmk"
+                    replay_url,
+                    _("Replay this notification, send it again!"),
+                    "reload_cmk",
                 )
 
                 if request.var("analyse") and nr == request.get_integer_input_mandatory("analyse"):
@@ -1180,7 +1223,8 @@ class ModeNotifications(ABCNotificationsMode):
     def _get_date(self, context: NotificationContext) -> str:
         if "MICROTIME" in context:
             return time.strftime(
-                "%Y-%m-%d %H:%M:%S", time.localtime(float(context["MICROTIME"]) / 1000000.0)
+                "%Y-%m-%d %H:%M:%S",
+                time.localtime(float(context["MICROTIME"]) / 1000000.0),
             )
         return (
             context.get("SHORTDATETIME")
@@ -1496,7 +1540,8 @@ class ModeNotifications(ABCNotificationsMode):
 def _validate_general_opts(value, varprefix):
     if not value["on_hostname_hint"]:
         raise MKUserError(
-            f"{varprefix}_p_on_hostname_hint", _("Please provide a hostname to test with.")
+            f"{varprefix}_p_on_hostname_hint",
+            _("Please provide a hostname to test with."),
         )
 
     if request.has_var("_test_service_notifications") and not value["on_service_hint"]:
@@ -2228,7 +2273,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
 
     @staticmethod
     def _migrate_bulk(
-        v: CascadingDropdownChoiceValue | Mapping[str, Any]
+        v: CascadingDropdownChoiceValue | Mapping[str, Any],
     ) -> CascadingDropdownChoiceValue:
         return v if isinstance(v, tuple) else ("always", v)
 
@@ -2320,7 +2365,8 @@ class ABCEditUserNotificationRuleMode(ABCEditNotificationRuleMode):
         self._users = userdb.load_users(lock=transactions.is_transaction())
         if self._user_id() not in self._users:
             raise MKUserError(
-                None, _("The user you are trying to edit notification rules for does not exist.")
+                None,
+                _("The user you are trying to edit notification rules for does not exist."),
             )
         user_spec = self._users[self._user_id()]
         return user_spec.setdefault("notification_rules", [])
@@ -2366,7 +2412,10 @@ class ModeEditUserNotificationRule(ABCEditUserNotificationRuleMode):
     def title(self) -> str:
         if self._new:
             return _("Add notification rule for user %s") % self._user_id()
-        return _("Edit notification rule %d of user %s") % (self._edit_nr, self._user_id())
+        return _("Edit notification rule %d of user %s") % (
+            self._edit_nr,
+            self._user_id(),
+        )
 
 
 class ModeEditPersonalNotificationRule(ABCEditUserNotificationRuleMode):

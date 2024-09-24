@@ -23,7 +23,13 @@ from git.exc import (  # type: ignore[attr-defined] # BadName is defined in gitd
 from git.objects.blob import Blob
 from git.objects.commit import Commit
 from git.repo import Repo
-from jinja2 import Environment, PackageLoader, select_autoescape, StrictUndefined, Template
+from jinja2 import (
+    Environment,
+    PackageLoader,
+    select_autoescape,
+    StrictUndefined,
+    Template,
+)
 
 from cmk.utils.mail import MailString, send_mail_sendmail, set_mail_headers
 from cmk.utils.version import Version

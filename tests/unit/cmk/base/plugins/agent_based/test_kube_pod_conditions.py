@@ -224,7 +224,16 @@ def test_parse(string_table: StringTable) -> None:
         (True, True, False, False, ready(), ready(), not_ready(), not_ready()),
         (None, False, None, None, None, not_ready(), None, None),
         (False, False, None, None, not_ready(), not_ready(), None, None),
-        (False, False, False, False, not_ready(), not_ready(), not_ready(), not_ready()),
+        (
+            False,
+            False,
+            False,
+            False,
+            not_ready(),
+            not_ready(),
+            not_ready(),
+            not_ready(),
+        ),
     ],
     ids=[
         "all_ok",
@@ -235,7 +244,11 @@ def test_parse(string_table: StringTable) -> None:
     ],
 )
 def test_parse_multi(
-    expected_initialized, expected_scheduled, expected_containersready, expected_ready, string_table
+    expected_initialized,
+    expected_scheduled,
+    expected_containersready,
+    expected_ready,
+    string_table,
 ):
     expected_initialized = (
         PodCondition(**expected_initialized) if expected_initialized is not None else None
@@ -394,7 +407,9 @@ def test_check_disruption_target_condition():
         containersready=PodConditionFactory.build(status=condition_status),
         ready=PodConditionFactory.build(status=condition_status),
         disruptiontarget=PodConditionFactory.build(
-            status=condition_status, reason="EvictionByEvictionAPI", detail="EvictionAPI: evicting"
+            status=condition_status,
+            reason="EvictionByEvictionAPI",
+            detail="EvictionAPI: evicting",
         ),
     )
     check_result = kube_pod_conditions._check(TIMESTAMP, {}, section)

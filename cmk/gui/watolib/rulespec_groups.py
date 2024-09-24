@@ -5,7 +5,6 @@
 
 """Defining built-in rule spec groups"""
 
-
 from cmk.gui.i18n import _
 
 from .rulespecs import (

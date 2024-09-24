@@ -6,8 +6,14 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
-from cmk.base.plugins.agent_based.inventory_lnx_ip_r import inventory_lnx_ip_r, parse_lnx_ip_r
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    InventoryResult,
+    StringTable,
+)
+from cmk.base.plugins.agent_based.inventory_lnx_ip_r import (
+    inventory_lnx_ip_r,
+    parse_lnx_ip_r,
+)
 
 
 @pytest.mark.parametrize(

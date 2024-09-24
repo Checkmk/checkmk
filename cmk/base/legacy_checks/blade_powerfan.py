@@ -28,7 +28,11 @@ def check_blade_powerfan(item, _no_params, info):
         if ctrlstate != "0":
             return (2, "Controller state not OK", perfdata)
         if speedperc_int <= crit_perc:
-            return (2, "Speed at %d%% of max (crit at %d%%)" % (speedperc_int, crit_perc), perfdata)
+            return (
+                2,
+                "Speed at %d%% of max (crit at %d%%)" % (speedperc_int, crit_perc),
+                perfdata,
+            )
         if speedperc_int <= warn_perc:
             return (
                 1,

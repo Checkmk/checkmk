@@ -8,8 +8,16 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.base.plugins.agent_based import fortigate_node_memory as fortigate_memory
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    StringTable,
+)
 
 
 @pytest.mark.parametrize(
@@ -45,7 +53,12 @@ def test_fortigate_node_memory_discover(
             [[["ebnfwa02-1", "21", "1"], ["ebnfwa02-2", "11", "2"]]],
             [
                 Result(state=State.OK, summary="Usage: 21.00%"),
-                Metric("mem_used_percent", 21, levels=(70.00, 80.00), boundaries=(0.00, 100.00)),
+                Metric(
+                    "mem_used_percent",
+                    21,
+                    levels=(70.00, 80.00),
+                    boundaries=(0.00, 100.00),
+                ),
             ],
         ),
         (
@@ -53,14 +66,20 @@ def test_fortigate_node_memory_discover(
             {"levels": (70.0, 80.0)},
             [[["ebnfwa02-1", "21", "1"], ["ebnfwa02-2", "99", "2"]]],
             [
-                Result(state=State.CRIT, summary="Usage: 99.00% (warn/crit at 70.00%/80.00%)"),
+                Result(
+                    state=State.CRIT,
+                    summary="Usage: 99.00% (warn/crit at 70.00%/80.00%)",
+                ),
                 Metric("mem_used_percent", 99, levels=(70.0, 80.0), boundaries=(0.0, 100.0)),
             ],
         ),
     ],
 )
 def test_fortigate_node_memory_check(
-    item: str, params: Mapping[str, object], data: list[StringTable], expected: CheckResult
+    item: str,
+    params: Mapping[str, object],
+    data: list[StringTable],
+    expected: CheckResult,
 ) -> None:
     section = fortigate_memory.parse_fortigate_node_memory(data)
     result = fortigate_memory.check_fortigate_node_memory(item, params, section)

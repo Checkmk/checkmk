@@ -189,10 +189,14 @@ def check_cmctc_output(item, params, parsed):
     else:
         yield state, infotext, [(sensor["perfkey"], sensor["value"])]
 
-    yield 0, (
-        "Command: %(command)s, Config: %(config)s, "
-        "Delay: %(delay)d, Timeout action: %(timeout_action)s"
-    ) % sensor
+    yield (
+        0,
+        (
+            "Command: %(command)s, Config: %(config)s, "
+            "Delay: %(delay)d, Timeout action: %(timeout_action)s"
+        )
+        % sensor,
+    )
 
 
 check_info["cmctc_output"] = LegacyCheckDefinition(

@@ -150,8 +150,16 @@ def _valuespec_active_checks_ldap():
                     Tuple(
                         title=_("Expected response time"),
                         elements=[
-                            Float(title=_("Warning if above"), unit="ms", default_value=1000.0),
-                            Float(title=_("Critical if above"), unit="ms", default_value=2000.0),
+                            Float(
+                                title=_("Warning if above"),
+                                unit="ms",
+                                default_value=1000.0,
+                            ),
+                            Float(
+                                title=_("Critical if above"),
+                                unit="ms",
+                                default_value=2000.0,
+                            ),
                         ],
                     ),
                 ),

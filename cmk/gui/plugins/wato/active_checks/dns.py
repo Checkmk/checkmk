@@ -25,7 +25,9 @@ from cmk.gui.valuespec import (
 from cmk.gui.wato import RulespecGroupActiveChecks
 
 
-def _migrate(params: Mapping[str, Any] | tuple[str, Mapping[str, Any]]) -> Mapping[str, Any]:
+def _migrate(
+    params: Mapping[str, Any] | tuple[str, Mapping[str, Any]],
+) -> Mapping[str, Any]:
     if isinstance(params, Mapping):
         return params
 
@@ -42,7 +44,9 @@ def _migrate(params: Mapping[str, Any] | tuple[str, Mapping[str, Any]]) -> Mappi
     }
 
 
-def _migrate_legacy_optional_params(optional_params: Mapping[str, Any]) -> Mapping[str, Any]:
+def _migrate_legacy_optional_params(
+    optional_params: Mapping[str, Any],
+) -> Mapping[str, Any]:
     """
     >>> _migrate_legacy_optional_params({'expected_address': '1.2.3.4,C0FE::FE11'})
     {'expect_all_addresses': True, 'expected_addresses_list': ['1.2.3.4', 'C0FE::FE11']}
@@ -152,8 +156,16 @@ def _valuespec_active_checks_dns():
                     Tuple(
                         title=_("Expected response time"),
                         elements=[
-                            Float(title=_("Warning if above"), unit=_("sec"), default_value=1),
-                            Float(title=_("Critical if above"), unit=_("sec"), default_value=2),
+                            Float(
+                                title=_("Warning if above"),
+                                unit=_("sec"),
+                                default_value=1,
+                            ),
+                            Float(
+                                title=_("Critical if above"),
+                                unit=_("sec"),
+                                default_value=2,
+                            ),
                         ],
                     ),
                 ),

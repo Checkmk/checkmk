@@ -115,7 +115,11 @@ def test_plug() -> None:
             html.write_text("c")
 
         written_text = "".join(output_funnel.drain())
-    assert read_out_simple_table(written_text) == [["A", "B"], ["1a", "2b"], ["1a", "4c"]]
+    assert read_out_simple_table(written_text) == [
+        ["A", "B"],
+        ["1a", "2b"],
+        ["1a", "4c"],
+    ]
 
 
 @pytest.mark.usefixtures("request_context")

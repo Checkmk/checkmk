@@ -70,7 +70,8 @@ def check_oracle_instance(item: str, params: _Params, section: Section) -> Check
         return
     if instance is None:
         yield Result(
-            state=State.CRIT, summary="Database or necessary processes not running or login failed"
+            state=State.CRIT,
+            summary="Database or necessary processes not running or login failed",
         )
         return
 
@@ -193,7 +194,8 @@ def check_oracle_instance_uptime(
         return
 
     yield Result(
-        state=State.OK, summary=f"Up since {render.datetime(time.time() - data.up_seconds)}"
+        state=State.OK,
+        summary=f"Up since {render.datetime(time.time() - data.up_seconds)}",
     )
 
     yield from check_levels(

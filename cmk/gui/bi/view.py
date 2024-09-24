@@ -418,7 +418,12 @@ class PainterAggrIcons(Painter):
 
     @property
     def columns(self) -> Sequence[ColumnName]:
-        return ["aggr_group", "aggr_name", "aggr_effective_state", "aggr_compiled_aggregation"]
+        return [
+            "aggr_group",
+            "aggr_name",
+            "aggr_effective_state",
+            "aggr_compiled_aggregation",
+        ]
 
     @property
     def printable(self):
@@ -444,7 +449,8 @@ class PainterAggrIcons(Painter):
         with output_funnel.plugged():
             if frozen_info is not None:
                 compiled_branch = load_compiled_branch(
-                    frozen_info.based_on_aggregation_id, frozen_info.based_on_branch_title
+                    frozen_info.based_on_aggregation_id,
+                    frozen_info.based_on_branch_title,
                 )
                 frozen_elements = row["aggr_compiled_aggregation"].branches[0].required_elements()
                 live_elements = compiled_branch.required_elements()
@@ -464,7 +470,10 @@ class PainterAggrIcons(Painter):
                 avail_url, _("Analyse availability of this aggregation"), "availability"
             )
             if row["aggr_effective_state"]["in_downtime"] != 0:
-                html.icon("downtime", _("A service or host in this aggregation is in downtime."))
+                html.icon(
+                    "downtime",
+                    _("A service or host in this aggregation is in downtime."),
+                )
             if row["aggr_effective_state"]["acknowledged"]:
                 html.icon(
                     "ack",
@@ -540,7 +549,8 @@ class PainterAggrState(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_aggr_state_short(
-            row["aggr_effective_state"], row["aggr_effective_state"] != row["aggr_state"]
+            row["aggr_effective_state"],
+            row["aggr_effective_state"] != row["aggr_state"],
         )
 
 
@@ -1174,7 +1184,12 @@ class CommandFreezeAggregation(Command):
         return "_freeze_aggregations"
 
     def _action(
-        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        spec: str,
+        row: Row,
+        row_index: int,
+        action_rows: Rows,
     ) -> CommandActionResult:
         if not request.has_var(self._button_name):
             return None

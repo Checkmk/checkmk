@@ -27,7 +27,16 @@ def test_get_section_single_instance() -> None:
     result = _get_section_single_instance(section)
 
     assert result == {
-        "10/0": {"power-supply-is-error": "false", "power-supply-element-number": "10/0"},
-        "10/1": {"power-supply-is-error": "true", "power-supply-element-number": "10/1"},
-        "20/2": {"power-supply-is-error": "false", "power-supply-element-number": "20/2"},
+        "10/0": {
+            "power-supply-is-error": "false",
+            "power-supply-element-number": "10/0",
+        },
+        "10/1": {
+            "power-supply-is-error": "true",
+            "power-supply-element-number": "10/1",
+        },
+        "20/2": {
+            "power-supply-is-error": "false",
+            "power-supply-element-number": "20/2",
+        },
     }

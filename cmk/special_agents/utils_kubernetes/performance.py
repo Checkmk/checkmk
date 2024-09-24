@@ -6,6 +6,7 @@
 Module which contains functions to parse and write out the performance data collected from the
 Cluster Collector for the Kubernetes Monitoring solution
 """
+
 from __future__ import annotations
 
 import enum
@@ -94,7 +95,9 @@ class Samples:
 _AllSamples = MemorySample | CPUSample | UnusedSample
 
 
-def parse_performance_metrics(cluster_collector_metrics: bytes) -> Sequence[_AllSamples]:
+def parse_performance_metrics(
+    cluster_collector_metrics: bytes,
+) -> Sequence[_AllSamples]:
     adapter = TypeAdapter(list[_AllSamples])
     return adapter.validate_json(cluster_collector_metrics)
 
@@ -116,13 +119,17 @@ def create_selectors(
 T = TypeVar("T", bound=common.IdentifiableSample)
 
 
-def _aggregate_memory_metrics(metrics: Iterable[MemorySample]) -> section.PerformanceUsage:
+def _aggregate_memory_metrics(
+    metrics: Iterable[MemorySample],
+) -> section.PerformanceUsage:
     return section.PerformanceUsage(
         resource=section.Memory(usage=sum((m.value() for m in metrics), start=0.0))
     )
 
 
-def _aggregate_cpu_metrics(metrics: Iterable[CPURateSample]) -> section.PerformanceUsage:
+def _aggregate_cpu_metrics(
+    metrics: Iterable[CPURateSample],
+) -> section.PerformanceUsage:
     return section.PerformanceUsage(
         resource=section.Cpu(usage=sum((m.rate for m in metrics), start=0.0))
     )

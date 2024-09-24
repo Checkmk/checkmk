@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 from cmk.utils.paths import cse_config_dir
 from cmk.utils.rulesets.definition import RuleGroupType
-from cmk.utils.version import edition, Edition
+from cmk.utils.version import Edition, edition
 
 from cmk.gui.log import logger
 

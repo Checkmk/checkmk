@@ -55,4 +55,8 @@ def check_mbg_lantime_state_common(states, _no_item, params, info):
     if state != 0:
         levels_text = f" (warn/crit at {warn}/{crit} µs)"
     perfdata = [("offset", refclock_offset, warn, crit)]  # all in us
-    yield state, f"Reference clock offset: {refclock_offset:g} µs{levels_text}", perfdata
+    yield (
+        state,
+        f"Reference clock offset: {refclock_offset:g} µs{levels_text}",
+        perfdata,
+    )

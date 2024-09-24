@@ -159,7 +159,10 @@ def make_linked_visual_url(
         # Keeping the _active flag is a long distance hack to be able to rebuild the
         # filters on the linked view using the visuals.VisualFilterListWithAddPopup.from_html_vars
         return makeuri(
-            request, required_vars, filename=filename, delvars=["show_checkboxes", "selection"]
+            request,
+            required_vars,
+            filename=filename,
+            delvars=["show_checkboxes", "selection"],
         )
 
     vars_values = get_linked_visual_request_vars(visual, singlecontext_request_vars)

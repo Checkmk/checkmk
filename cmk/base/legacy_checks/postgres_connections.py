@@ -76,9 +76,13 @@ def check_postgres_connections(item, params, parsed):
     if len(database) == 0:
         for connection_type in ("active", "idle"):
             warn, crit = transformed_params.get("levels_abs_%s" % connection_type, (0, 0))
-            yield 0, "No %s connections" % connection_type, [
-                ("%s_connections" % connection_type, 0, warn, crit, 0, 0),
-            ]
+            yield (
+                0,
+                "No %s connections" % connection_type,
+                [
+                    ("%s_connections" % connection_type, 0, warn, crit, 0, 0),
+                ],
+            )
         return
 
     database_connections = database[0]

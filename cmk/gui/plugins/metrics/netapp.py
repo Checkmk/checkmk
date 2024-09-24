@@ -39,7 +39,11 @@ def register_netapp_api_vs_traffic_metrics():
         "color": "44/a",
     }
 
-    metric_info["space_savings"] = {"title": _("Saved space"), "unit": "bytes", "color": "45/a"}
+    metric_info["space_savings"] = {
+        "title": _("Saved space"),
+        "unit": "bytes",
+        "color": "45/a",
+    }
 
     metric_info["logical_used"] = {
         "title": _("Used logical space"),

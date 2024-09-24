@@ -15,7 +15,12 @@ Capsys = pytest.CaptureFixture[str]
 
 from cmk.utils.crypto.password import Password
 
-from cmk.cmkpasswd import _run_cmkpasswd, InvalidPasswordError, InvalidUsernameError, main
+from cmk.cmkpasswd import (
+    _run_cmkpasswd,
+    InvalidPasswordError,
+    InvalidUsernameError,
+    main,
+)
 
 
 def _get_pw(pw: str = "hunter2") -> Callable[[], Password]:

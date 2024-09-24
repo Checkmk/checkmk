@@ -25,7 +25,15 @@ class _Section:
 def parse_perle_chassis(string_table: StringTable) -> _Section | None:
     if not string_table:
         return None
-    model, serial, bootloader, firmware, alarms, diagnosis_state, temp_str = string_table[0]
+    (
+        model,
+        serial,
+        bootloader,
+        firmware,
+        alarms,
+        diagnosis_state,
+        temp_str,
+    ) = string_table[0]
     return _Section(
         model=model,
         serial=serial,

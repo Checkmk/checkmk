@@ -99,7 +99,10 @@ def test_ac_check_mail_main_failed_connect(check_mail: ModuleType) -> None:
                 "1": create_test_email("Foobar"),
             },
             [
-                ("<21>", "None Foobar: Foobar | The email content\x00is very important!\x00"),
+                (
+                    "<21>",
+                    "None Foobar: Foobar | The email content\x00is very important!\x00",
+                ),
             ],
             "IMAP",
         ),
@@ -119,7 +122,10 @@ def test_ac_check_mail_main_failed_connect(check_mail: ModuleType) -> None:
                 "1": create_test_email_ews("Foobar"),
             },
             [
-                ("<21>", "None Foobar: Foobar | The email content\x00is very important!\x00"),
+                (
+                    "<21>",
+                    "None Foobar: Foobar | The email content\x00is very important!\x00",
+                ),
             ],
             "EWS",
         ),

@@ -26,7 +26,16 @@ import traceback
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from enum import auto, Enum
 from pathlib import Path
-from typing import assert_never, BinaryIO, cast, Final, IO, Literal, NamedTuple, NoReturn
+from typing import (
+    assert_never,
+    BinaryIO,
+    cast,
+    Final,
+    IO,
+    Literal,
+    NamedTuple,
+    NoReturn,
+)
 from uuid import uuid4
 
 import psutil
@@ -313,7 +322,10 @@ def save_version_meta_data(site: SiteContext, version: str) -> None:
     skelroot = "/omd/versions/%s/skel" % version
     shutil.copytree(skelroot, "%s/skel" % site.version_meta_dir, symlinks=True)
 
-    shutil.copy(skel_permissions_file_path(version), "%s/skel.permissions" % site.version_meta_dir)
+    shutil.copy(
+        skel_permissions_file_path(version),
+        "%s/skel.permissions" % site.version_meta_dir,
+    )
 
     with open("%s/version" % site.version_meta_dir, "w") as f:
         f.write("%s\n" % version)
@@ -514,9 +526,7 @@ def _patch_template_file(  # pylint: disable=too-many-branches
                 ):
                     pass
             elif choice == "diff":
-                os.system(
-                    f"diff -u {old_orig_path} {new_orig_path}{pipe_pager()}"
-                )  # nosec B605 # BNS:2b5952
+                os.system(f"diff -u {old_orig_path} {new_orig_path}{pipe_pager()}")  # nosec B605 # BNS:2b5952
             elif choice == "brute":
                 os.system(  # nosec B605 # BNS:2b5952
                     f"sed 's@/{old_site_name}/@/{new_site.name}/@g' {dst}.orig > {dst}"
@@ -524,9 +534,7 @@ def _patch_template_file(  # pylint: disable=too-many-branches
                 changed = len(
                     [
                         l
-                        for l in os.popen(
-                            f"diff {dst}.orig {dst}"
-                        ).readlines()  # nosec B605 # BNS:2b5952
+                        for l in os.popen(f"diff {dst}.orig {dst}").readlines()  # nosec B605 # BNS:2b5952
                         if l.startswith(">")
                     ]
                 )
@@ -541,9 +549,7 @@ def _patch_template_file(  # pylint: disable=too-many-branches
                         pass
                     break
             elif choice == "you":
-                os.system(
-                    f"pwd ; diff -u {old_orig_path} {dst}.orig{pipe_pager()}"
-                )  # nosec B605 # BNS:2b5952
+                os.system(f"pwd ; diff -u {old_orig_path} {dst}.orig{pipe_pager()}")  # nosec B605 # BNS:2b5952
             elif choice == "restore":
                 os.rename(dst + ".orig", dst)
                 sys.stdout.write("Restored your version.\n")
@@ -568,9 +574,7 @@ def _patch_template_file(  # pylint: disable=too-many-branches
 
                 sys.stdout.write("\n Starting BASH. Type CTRL-D to continue.\n\n")
                 thedir = "/".join(dst.split("/")[:-1])
-                os.system(
-                    f"su - {new_site.name} -c 'cd {thedir} ; bash -i'"
-                )  # nosec B605 # BNS:2b5952
+                os.system(f"su - {new_site.name} -c 'cd {thedir} ; bash -i'")  # nosec B605 # BNS:2b5952
     # remove unnecessary files
     try:
         os.remove(dst + ".skel." + old_site_name)
@@ -659,13 +663,9 @@ def merge_update_file(  # pylint: disable=too-many-branches
             with subprocess.Popen([editor, user_path]):
                 pass
         elif choice == "diff":
-            os.system(
-                f"diff -u {user_path}.orig {user_path}-{new_version}{pipe_pager()}"
-            )  # nosec B605 # BNS:2b5952
+            os.system(f"diff -u {user_path}.orig {user_path}-{new_version}{pipe_pager()}")  # nosec B605 # BNS:2b5952
         elif choice == "you":
-            os.system(
-                f"diff -u {user_path}-{old_version} {user_path}.orig{pipe_pager()}"
-            )  # nosec B605 # BNS:2b5952
+            os.system(f"diff -u {user_path}-{old_version} {user_path}.orig{pipe_pager()}")  # nosec B605 # BNS:2b5952
         elif choice == "new":
             os.system(  # nosec B605 # BNS:2b5952
                 f"diff -u {user_path}-{old_version} {user_path}-{new_version}{pipe_pager()}"
@@ -1122,7 +1122,12 @@ def update_file(  # pylint: disable=too-many-branches
             "changed to link target to %s. "
             "Shall I keep your link or replace it with "
             "the new default target?"
-            % (relpath, os.readlink(old_path), os.readlink(new_path), os.readlink(user_path)),
+            % (
+                relpath,
+                os.readlink(old_path),
+                os.readlink(new_path),
+                os.readlink(user_path),
+            ),
             relpath,
             "keep",
             "Keep your symbolic link pointing to %s" % os.readlink(user_path),
@@ -1155,7 +1160,13 @@ def update_file(  # pylint: disable=too-many-branches
             "the %s of your copy of that %s. "
             "Do you want to keep your version or replace "
             "it with the new default? "
-            % (old_type, relpath, new_type, user_changed_type and "type" or "content", old_type),
+            % (
+                old_type,
+                relpath,
+                new_type,
+                user_changed_type and "type" or "content",
+                old_type,
+            ),
             relpath,
             "keep",
             "Keep your %s" % user_type,
@@ -1656,7 +1667,12 @@ def config_configure(
 
         else:
             change, current_hook_name = dialog_menu(
-                current_menu, "", menu[current_menu], current_hook_name, "Change", "Main menu"
+                current_menu,
+                "",
+                menu[current_menu],
+                current_hook_name,
+                "Change",
+                "Main menu",
             )
             if change:
                 try:
@@ -1672,7 +1688,10 @@ def config_configure(
 
 
 def config_configure_hook(
-    site: SiteContext, global_opts: GlobalOptions, config_hooks: ConfigHooks, hook_name: str
+    site: SiteContext,
+    global_opts: GlobalOptions,
+    config_hooks: ConfigHooks,
+    hook_name: str,
 ) -> Iterator[str]:
     if not site.is_stopped():
         if not dialog_yesno(
@@ -1863,7 +1882,10 @@ def pipe_pager() -> str:
 
 
 def call_scripts(
-    site: SiteContext, phase: str, open_pty: bool, add_env: Mapping[str, str] | None = None
+    site: SiteContext,
+    phase: str,
+    open_pty: bool,
+    add_env: Mapping[str, str] | None = None,
 ) -> None:
     """Calls hook scripts in defined directories."""
     path = Path(site.dir, "lib", "omd", "scripts", phase)
@@ -2396,7 +2418,11 @@ def finalize_site_as_user(
     initialize_agent_ca(site)
     save_site_conf(site)
 
-    if command_type in [CommandType.create, CommandType.copy, CommandType.restore_as_new_site]:
+    if command_type in [
+        CommandType.create,
+        CommandType.copy,
+        CommandType.restore_as_new_site,
+    ]:
         save_instance_id(file_path=get_instance_id_file_path(Path(site.dir)), instance_id=uuid4())
 
     call_scripts(site, "post-" + command_type.short, open_pty=sys.stdout.isatty())
@@ -2433,7 +2459,10 @@ def main_rm(
     # parallel restart / reload of the apache may fail, because the apache hook
     # refers to a not existing site apache config.
     unregister_from_system_apache(
-        version_info, site, apache_reload="apache-reload" in options, verbose=global_opts.verbose
+        version_info,
+        site,
+        apache_reload="apache-reload" in options,
+        verbose=global_opts.verbose,
     )
 
     if not reuse:
@@ -2572,7 +2601,9 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
 
     sys.stdout.write(
         "{}ing site {} to {}...".format(
-            command_type is CommandType.move and "Mov" or "Copy", old_site.name, new_site.name
+            command_type is CommandType.move and "Mov" or "Copy",
+            old_site.name,
+            new_site.name,
         )
     )
     sys.stdout.flush()
@@ -2622,7 +2653,11 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
 
     # Change config files from old to new site (see rename_site())
     patch_skeleton_files(
-        conflict_mode, old_site.name, new_site, old_replacements, new_site.replacements()
+        conflict_mode,
+        old_site.name,
+        new_site,
+        old_replacements,
+        new_site.replacements(),
     )
 
     # In case of mv now delete old user
@@ -2647,7 +2682,11 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
     putenv("OLD_OMD_SITE", old_site.name)
 
     finalize_site(
-        version_info, new_site, command_type, "apache-reload" in options, global_opts.verbose
+        version_info,
+        new_site,
+        command_type,
+        "apache-reload" in options,
+        global_opts.verbose,
     )
 
 
@@ -2728,7 +2767,14 @@ def diff_list(
 
     if not os.path.isdir(abs_path):
         print_diff(
-            rel_path, global_opts, options, site, from_skelroot, site.dir, from_version, old_perms
+            rel_path,
+            global_opts,
+            options,
+            site,
+            from_skelroot,
+            site.dir,
+            from_version,
+            old_perms,
         )
     else:
         if not rel_path:
@@ -3719,7 +3765,9 @@ def terminate_site_user_processes(site: SiteContext, global_opts: GlobalOptions)
 
 
 def kill_site_user_processes(
-    site: SiteContext, global_opts: GlobalOptions, exclude_current_and_parents: bool = False
+    site: SiteContext,
+    global_opts: GlobalOptions,
+    exclude_current_and_parents: bool = False,
 ) -> None:
     pids = site_user_processes(site, exclude_current_and_parents)
     tries = 5
@@ -3789,7 +3837,10 @@ def postprocess_restore_as_root(
 
 
 def postprocess_restore_as_site_user(
-    version_info: VersionInfo, site: SiteContext, options: CommandOptions, orig_apache_port: str
+    version_info: VersionInfo,
+    site: SiteContext,
+    options: CommandOptions,
+    orig_apache_port: str,
 ) -> None:
     # Keep the apache port the site currently being replaced had before
     # (we can not restart the system apache as site user)
@@ -3985,7 +4036,12 @@ class Option(NamedTuple):
 exclude_options = [
     Option("no-rrds", None, False, "do not copy RRD files (performance data)"),
     Option("no-logs", None, False, "do not copy the monitoring history and log files"),
-    Option("no-past", "N", False, "do not copy RRD files, the monitoring history and log files"),
+    Option(
+        "no-past",
+        "N",
+        False,
+        "do not copy RRD files, the monitoring history and log files",
+    ),
 ]
 
 
@@ -4103,12 +4159,25 @@ COMMANDS: Final = [
         options=[
             Option("uid", "u", True, "create site user with UID ARG"),
             Option("gid", "g", True, "create site group with GID ARG"),
-            Option("admin-password", None, True, "set initial password instead of generating one"),
+            Option(
+                "admin-password",
+                None,
+                True,
+                "set initial password instead of generating one",
+            ),
             Option("reuse", None, False, "do not create a site user, reuse existing one"),
             Option(
-                "no-init", "n", False, "leave new site directory empty (a later omd init does this"
+                "no-init",
+                "n",
+                False,
+                "leave new site directory empty (a later omd init does this",
             ),
-            Option("no-autostart", "A", False, "set AUTOSTART to off (useful for test sites)"),
+            Option(
+                "no-autostart",
+                "A",
+                False,
+                "set AUTOSTART to off (useful for test sites)",
+            ),
             Option(
                 "apache-reload",
                 None,
@@ -4161,7 +4230,12 @@ COMMANDS: Final = [
         args_text="",
         handler=main_rm,
         options=[
-            Option("reuse", None, False, "assume --reuse on create, do not delete site user/group"),
+            Option(
+                "reuse",
+                None,
+                False,
+                "assume --reuse on create, do not delete site user/group",
+            ),
             Option("kill", None, False, "kill processes of the site before deleting it"),
             Option(
                 "apache-reload",
@@ -4466,7 +4540,12 @@ Usage:\n\
         handler=main_umount,
         options=[
             Option("version", "V", True, "unmount only sites with version ARG"),
-            Option("kill", None, False, "kill processes using the tmpfs before unmounting it"),
+            Option(
+                "kill",
+                None,
+                False,
+                "kill processes using the tmpfs before unmounting it",
+            ),
         ],
         description="Umount ramdisk volumes of site(s)",
         confirm_text="",

@@ -11,7 +11,12 @@ from dataclasses import dataclass
 import pytest
 
 from cmk.agent_based.v2 import Result, State, StringTable
-from cmk.plugins.gcp.agent_based.gcp_exceptions import _ExceptionSection, check, discover, parse
+from cmk.plugins.gcp.agent_based.gcp_exceptions import (
+    _ExceptionSection,
+    check,
+    discover,
+    parse,
+)
 
 
 @dataclass(frozen=True)
@@ -158,7 +163,9 @@ EXCEPTIONS = [
             id="exception message with split char",
         ),
         pytest.param(
-            [], _ExceptionSection(type=None, message=None, gcp_source=None), id="no exceptions"
+            [],
+            _ExceptionSection(type=None, message=None, gcp_source=None),
+            id="no exceptions",
         ),
     ],
 )

@@ -144,7 +144,9 @@ def test_daemon_sets_returns_daemon_sets_of_cluster(cluster_daemon_sets: int) ->
 
 
 @pytest.mark.parametrize("cluster_statefulsets", [0, 10, 20])
-def test_statefulsets_returns_statefulsets_of_cluster(cluster_statefulsets: int) -> None:
+def test_statefulsets_returns_statefulsets_of_cluster(
+    cluster_statefulsets: int,
+) -> None:
     composed_entities = composed_entities_builder(
         statefulsets=APIStatefulSetFactory.batch(size=cluster_statefulsets)
     )
@@ -169,7 +171,11 @@ def test_statefulsets_returns_statefulsets_of_cluster(cluster_statefulsets: int)
             2,
         ),
         (
-            [["control-plane, blue"], ["vegis", "control-plane, fish"], ["control-plane"]],
+            [
+                ["control-plane, blue"],
+                ["vegis", "control-plane, fish"],
+                ["control-plane"],
+            ],
             3,
             3,
         ),
@@ -194,7 +200,8 @@ def test_cluster_allocatable_memory_resource_exclude_roles(
             nodes=[
                 APINodeFactory.build(
                     metadata=NodeMetaDataFactory.build(
-                        labels=_create_labels_from_roles(roles), factory_use_construct=True
+                        labels=_create_labels_from_roles(roles),
+                        factory_use_construct=True,
                     ),
                     status=NodeStatusFactory.build(
                         allocatable=NodeResourcesFactory.build(
@@ -225,7 +232,11 @@ def test_cluster_allocatable_memory_resource_exclude_roles(
             2,
         ),
         (
-            [["control-plane, blue"], ["vegis", "control-plane, fish"], ["control-plane"]],
+            [
+                ["control-plane, blue"],
+                ["vegis", "control-plane, fish"],
+                ["control-plane"],
+            ],
             3,
             3,
         ),
@@ -249,7 +260,8 @@ def test_cluster_allocatable_cpu_resource_cluster(
             nodes=[
                 APINodeFactory.build(
                     metadata=NodeMetaDataFactory.build(
-                        labels=_create_labels_from_roles(roles), factory_use_construct=True
+                        labels=_create_labels_from_roles(roles),
+                        factory_use_construct=True,
                     ),
                     status=NodeStatusFactory.build(
                         allocatable=NodeResourcesFactory.build(cpu=6.0, factory_use_construct=True)
@@ -295,7 +307,9 @@ def test_cluster_usage_resources(
     nodes = [
         APINodeFactory.build(
             metadata=NodeMetaDataFactory.build(
-                name=node, labels=_create_labels_from_roles(roles), factory_use_construct=True
+                name=node,
+                labels=_create_labels_from_roles(roles),
+                factory_use_construct=True,
             )
         )
         for node, _, roles in node_podcount_roles
@@ -344,7 +358,9 @@ def test_cluster_allocatable_pods(
     nodes = [
         APINodeFactory.build(
             metadata=NodeMetaDataFactory.build(
-                name=node, labels=_create_labels_from_roles(roles), factory_use_construct=True
+                name=node,
+                labels=_create_labels_from_roles(roles),
+                factory_use_construct=True,
             ),
             status=NodeStatusFactory.build(
                 allocatable=NodeResourcesFactory.build(
@@ -402,7 +418,9 @@ def test_create_correct_number_pod_names_for_cluster_host(
     nodes = [
         APINodeFactory.build(
             metadata=NodeMetaDataFactory.build(
-                name=node, labels=_create_labels_from_roles(roles), factory_use_construct=True
+                name=node,
+                labels=_create_labels_from_roles(roles),
+                factory_use_construct=True,
             ),
         )
         for node, _, roles in node_podcount_roles
@@ -559,11 +577,19 @@ DAEMONSET_NOT_A_COLLECTOR = APIDaemonSetFactory.build(
     "daemonsets",
     [
         pytest.param(
-            [DAEMONSET_NOT_A_COLLECTOR, DAEMONSET_MACHINE_SECTIONS, DAEMONSET_CONTAINER_METRICS],
+            [
+                DAEMONSET_NOT_A_COLLECTOR,
+                DAEMONSET_MACHINE_SECTIONS,
+                DAEMONSET_CONTAINER_METRICS,
+            ],
             id="container-metrics node collector in last position.",
         ),
         pytest.param(
-            [DAEMONSET_CONTAINER_METRICS, DAEMONSET_MACHINE_SECTIONS, DAEMONSET_NOT_A_COLLECTOR],
+            [
+                DAEMONSET_CONTAINER_METRICS,
+                DAEMONSET_MACHINE_SECTIONS,
+                DAEMONSET_NOT_A_COLLECTOR,
+            ],
             id="container-metrics node collector in first position.",
         ),
     ],
@@ -592,11 +618,19 @@ def test__node_collector_daemons_identify_container_collector(
     "daemonsets",
     [
         pytest.param(
-            [DAEMONSET_NOT_A_COLLECTOR, DAEMONSET_CONTAINER_METRICS, DAEMONSET_MACHINE_SECTIONS],
+            [
+                DAEMONSET_NOT_A_COLLECTOR,
+                DAEMONSET_CONTAINER_METRICS,
+                DAEMONSET_MACHINE_SECTIONS,
+            ],
             id="machine-metrics node collector in last position.",
         ),
         pytest.param(
-            [DAEMONSET_MACHINE_SECTIONS, DAEMONSET_NOT_A_COLLECTOR, DAEMONSET_CONTAINER_METRICS],
+            [
+                DAEMONSET_MACHINE_SECTIONS,
+                DAEMONSET_NOT_A_COLLECTOR,
+                DAEMONSET_CONTAINER_METRICS,
+            ],
             id="machine-metrics node collector in first position.",
         ),
     ],

@@ -27,7 +27,9 @@ class _BaseGetSchema(BaseRequestSchema):
         should_exist=None,
     )
     service_description = String(
-        description="The service, whose data to request.", example="Check_MK", required=True
+        description="The service, whose data to request.",
+        example="Check_MK",
+        required=True,
     )
 
 

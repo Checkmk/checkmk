@@ -281,9 +281,15 @@ class NodeExporter:
                 ("Active", NodeExporterQuery.node_memory_Active_kibibytes),
                 ("Inactive", NodeExporterQuery.node_memory_Inactive_kibibytes),
                 ("Active(anon)", NodeExporterQuery.node_memory_Active_anon_kibibytes),
-                ("Inactive(anon)", NodeExporterQuery.node_memory_Inactive_anon_kibibytes),
+                (
+                    "Inactive(anon)",
+                    NodeExporterQuery.node_memory_Inactive_anon_kibibytes,
+                ),
                 ("Active(file)", NodeExporterQuery.node_memory_Active_file_kibibytes),
-                ("Inactive(file)", NodeExporterQuery.node_memory_Inactive_file_kibibytes),
+                (
+                    "Inactive(file)",
+                    NodeExporterQuery.node_memory_Inactive_file_kibibytes,
+                ),
                 ("Unevictable", NodeExporterQuery.node_memory_Unevictable_kibibytes),
                 ("Mlocked", NodeExporterQuery.node_memory_Mlocked_kibibytes),
                 ("SwapTotal", NodeExporterQuery.node_memory_SwapTotal_kibibytes),
@@ -308,10 +314,22 @@ class NodeExporter:
                 ("VmallocUsed", NodeExporterQuery.node_memory_VmallocUsed_kibibytes),
                 ("VmallocChunk", NodeExporterQuery.node_memory_VmallocChunk_kibibytes),
                 ("Percpu", NodeExporterQuery.node_memory_Percpu_kibibytes),
-                ("HardwareCorrupted", NodeExporterQuery.node_memory_HardwareCorrupted_kibibytes),
-                ("AnonHugePages", NodeExporterQuery.node_memory_AnonHugePages_kibibytes),
-                ("ShmemHugePages", NodeExporterQuery.node_memory_ShmemHugePages_kibibytes),
-                ("ShmemPmdMapped", NodeExporterQuery.node_memory_ShmemPmdMapped_kibibytes),
+                (
+                    "HardwareCorrupted",
+                    NodeExporterQuery.node_memory_HardwareCorrupted_kibibytes,
+                ),
+                (
+                    "AnonHugePages",
+                    NodeExporterQuery.node_memory_AnonHugePages_kibibytes,
+                ),
+                (
+                    "ShmemHugePages",
+                    NodeExporterQuery.node_memory_ShmemHugePages_kibibytes,
+                ),
+                (
+                    "ShmemPmdMapped",
+                    NodeExporterQuery.node_memory_ShmemPmdMapped_kibibytes,
+                ),
                 ("CmaTotal", NodeExporterQuery.node_memory_CmaTotal_kibibytes),
                 ("CmaFree", NodeExporterQuery.node_memory_CmaFree_kibibytes),
                 ("HugePages_Total", NodeExporterQuery.node_memory_HugePages_Total),
@@ -341,7 +359,7 @@ class NodeExporter:
 
     @staticmethod
     def _process_kernel_info(
-        temp_result: dict[str, dict[str, dict[str, int]]]
+        temp_result: dict[str, dict[str, dict[str, int]]],
     ) -> dict[str, SectionStr]:
         result: dict[str, SectionStr] = {}
         for node_name, cpu_result in temp_result.items():
@@ -405,7 +423,8 @@ class NodeExporter:
                 raw[key] = sample["value"]
         return {
             node: _create_section(
-                "prometheus_cpu_v1:sep(0)", [CPULoad.model_validate(raw).model_dump_json()]
+                "prometheus_cpu_v1:sep(0)",
+                [CPULoad.model_validate(raw).model_dump_json()],
             )
             for node, raw in node_to_raw.items()
         }

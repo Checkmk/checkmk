@@ -172,7 +172,10 @@ PAGINATOR_RESULT = {
 TAGGING_PAGINATOR_RESULT = {
     "PaginationToken": "",
     "ResourceTagMappingList": [
-        {"ResourceARN": "arn:aws:cloudfront::710145618630:distribution/E2RAYOVSSL6ZM3", "Tags": []},
+        {
+            "ResourceARN": "arn:aws:cloudfront::710145618630:distribution/E2RAYOVSSL6ZM3",
+            "Tags": [],
+        },
         {
             "ResourceARN": "arn:aws:cloudfront::710145618630:distribution/EWN6C0UT7HBX0",
             "Tags": [
@@ -220,10 +223,12 @@ class FakeTaggingClient:
 
 
 @pytest.fixture()
-def get_cloudfront_sections() -> Callable[
-    [object | None, OverallTags, bool],
-    tuple[CloudFrontSummary, CloudFront],
-]:
+def get_cloudfront_sections() -> (
+    Callable[
+        [object | None, OverallTags, bool],
+        tuple[CloudFrontSummary, CloudFront],
+    ]
+):
     def _create_cloudfront_sections(
         names: object | None, tags: OverallTags, assign_to_domain_host: bool
     ) -> tuple[CloudFrontSummary, CloudFront]:
@@ -267,7 +272,12 @@ cloudfront_params = [
     (None, ([["test-tag-key"]], [["wrong-tag-value"]]), False, []),
     (None, ([["wrong-tag-key"]], [["test-tag-value"]]), False, []),
     (["NONEXISTINGID"], (None, None), False, []),
-    (["E2RAYOVSSL6ZM3", "EWN6C0UT7HBX0"], (None, None), False, ["E2RAYOVSSL6ZM3", "EWN6C0UT7HBX0"]),
+    (
+        ["E2RAYOVSSL6ZM3", "EWN6C0UT7HBX0"],
+        (None, None),
+        False,
+        ["E2RAYOVSSL6ZM3", "EWN6C0UT7HBX0"],
+    ),
 ]
 
 

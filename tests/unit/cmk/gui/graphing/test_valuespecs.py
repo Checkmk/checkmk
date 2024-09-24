@@ -18,7 +18,9 @@ from cmk.gui.graphing._valuespecs import (
     "entry, result",
     [
         pytest.param(
-            "add_host_name", ["plain", "add_host_name"], id="->1.5.0i2->2.0.0i1 pnp_graph reportlet"
+            "add_host_name",
+            ["plain", "add_host_name"],
+            id="->1.5.0i2->2.0.0i1 pnp_graph reportlet",
         ),
         pytest.param("plain", ["plain"], id="1.5.0i2->2.0.0i1 direct plain title"),
         pytest.param(
@@ -69,7 +71,9 @@ def test_migrate_graph_render_options_title_format(
             id="1.5.0i2->2.0.0i1 title format DropdownChoice to ListChoice",
         ),
         pytest.param(
-            {"title_format": ["plain"]}, {"title_format": ["plain"]}, id="2.0.0i1 fixpoint"
+            {"title_format": ["plain"]},
+            {"title_format": ["plain"]},
+            id="2.0.0i1 fixpoint",
         ),
     ],
 )

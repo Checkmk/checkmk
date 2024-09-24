@@ -235,7 +235,9 @@ def check_oracle_rman(
 
 
 def cluster_check_oracle_rman(
-    item: str, params: Mapping[str, Any], section: Mapping[str, SectionOracleRman | None]
+    item: str,
+    params: Mapping[str, Any],
+    section: Mapping[str, SectionOracleRman | None],
 ) -> CheckResult:
     youngest_backup_age: int | None = None
     # take the most current backupage in clustered environments

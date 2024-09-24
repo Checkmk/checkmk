@@ -86,10 +86,14 @@ def _valuespec_active_checks_by_ssh():
                                             title=_("IP-Version"),
                                             elements=[
                                                 FixedValue(
-                                                    value="ipv4", totext="", title=_("IPv4")
+                                                    value="ipv4",
+                                                    totext="",
+                                                    title=_("IPv4"),
                                                 ),
                                                 FixedValue(
-                                                    value="ipv6", totext="", title=_("IPv6")
+                                                    value="ipv6",
+                                                    totext="",
+                                                    title=_("IPv6"),
                                                 ),
                                             ],
                                         ),

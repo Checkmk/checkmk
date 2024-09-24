@@ -328,7 +328,10 @@ def add_once(coll: list[dict[str, Any]], to_add: dict[str, Any]) -> None:
 
 class ServeSpec(AbstractWSGIApp):
     def __init__(
-        self, target: EndpointTarget, extension: Literal["yaml", "json"], debug: bool = False
+        self,
+        target: EndpointTarget,
+        extension: Literal["yaml", "json"],
+        debug: bool = False,
     ) -> None:
         super().__init__(debug)
         self.target = target

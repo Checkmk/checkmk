@@ -47,7 +47,10 @@ def check_lgp_info(item, params, info):
                 )
             device_output = "\n".join(devices)
 
-        return (0, "Model: %s, Firmware: %s, S/N: %s\n%s" % tuple(agent_info + [device_output]))
+        return (
+            0,
+            "Model: %s, Firmware: %s, S/N: %s\n%s" % tuple(agent_info + [device_output]),
+        )
     return None
 
 

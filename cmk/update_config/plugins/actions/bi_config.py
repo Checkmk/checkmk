@@ -9,7 +9,9 @@ from cmk.gui.bi._packs import get_cached_bi_packs
 
 from cmk.bi.packs import BIAggregationPacks
 from cmk.bi.search import BIHostSearch, BIServiceSearch
-from cmk.update_config.plugins.actions.rulesets import transform_condition_labels_to_label_groups
+from cmk.update_config.plugins.actions.rulesets import (
+    transform_condition_labels_to_label_groups,
+)
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.update_config.update_state import UpdateActionState
 

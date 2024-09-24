@@ -117,7 +117,11 @@ def check_esx_vsphere_objects_count(_no_item, params, parsed):
         params = {}
 
     virtualmachines = [o for o in parsed.values() if o.name.startswith("VM ")]
-    yield 0, "Virtualmachines: %d" % len(virtualmachines), [("vms", len(virtualmachines))]
+    yield (
+        0,
+        "Virtualmachines: %d" % len(virtualmachines),
+        [("vms", len(virtualmachines))],
+    )
 
     hostsystems = [o for o in parsed.values() if o.name.startswith("HostSystem")]
     if not hostsystems:
@@ -130,9 +134,17 @@ def check_esx_vsphere_objects_count(_no_item, params, parsed):
         hosts = sorted({vm.hostsystem for vm in virtualmachines if vm.name[3:] in ruled_vms})
         count = len(hosts)
         if count < distribution["hosts_count"]:
-            yield distribution.get("state", 2), (
-                "VMs %s are running on %d host%s: %s"
-                % (", ".join(ruled_vms), count, "" if count == 1 else "s", ", ".join(hosts))
+            yield (
+                distribution.get("state", 2),
+                (
+                    "VMs %s are running on %d host%s: %s"
+                    % (
+                        ", ".join(ruled_vms),
+                        count,
+                        "" if count == 1 else "s",
+                        ", ".join(hosts),
+                    )
+                ),
             )
 
 

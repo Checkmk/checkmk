@@ -9,7 +9,9 @@ from collections.abc import Iterable, Mapping, Sequence
 from datetime import datetime, timezone
 from typing import Any
 
-from cmk.utils.exceptions import MKGeneralException  # pylint: disable=cmk-module-layer-violation
+from cmk.utils.exceptions import (  # pylint: disable=cmk-module-layer-violation
+    MKGeneralException,
+)
 from cmk.utils.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
 
 # The only reasonable thing to do here is use our own version parsing. It's to big to duplicate.
@@ -18,13 +20,17 @@ from cmk.utils.version import (  # pylint: disable=cmk-module-layer-violation
     parse_check_mk_version,
 )
 
-from cmk.base.config import get_config_cache  # pylint: disable=cmk-module-layer-violation
+from cmk.base.config import (  # pylint: disable=cmk-module-layer-violation
+    get_config_cache,
+)
 
 # We need config and host_name() because the "only_from" configuration is not a check parameter.
 # It is configured as an agent bakery rule, and controls the *deployment* of the only_from setting.
 # We want to use that very setting to check whether it is deployed correctly.
 # I currently see no better soluton than this API violation.
-from cmk.base.plugin_contexts import host_name  # pylint: disable=cmk-module-layer-violation
+from cmk.base.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
+    host_name,
+)
 
 from cmk.plugins.lib.checkmk import (
     CachedPlugin,
@@ -37,7 +43,15 @@ from cmk.plugins.lib.checkmk import (
     render_plugin_type,
 )
 
-from .agent_based_api.v1 import check_levels, regex, register, render, Result, Service, State
+from .agent_based_api.v1 import (
+    check_levels,
+    regex,
+    register,
+    render,
+    Result,
+    Service,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 
@@ -473,7 +487,10 @@ def _check_min_version(
     mon_state_unparsable: State,
     type_: str,
 ) -> CheckResult:
-    levels = (parse_check_mk_version(levels_str[0]), parse_check_mk_version(levels_str[1]))
+    levels = (
+        parse_check_mk_version(levels_str[0]),
+        parse_check_mk_version(levels_str[1]),
+    )
 
     render_info = {p.version_int: p.version for p in plugins}
     render_info.update(zip(levels, levels_str))
@@ -552,7 +569,9 @@ def _plugin_strings(plugins: Sequence[CachedPlugin]) -> tuple[str, str]:
     )
 
 
-def _check_cached_plugins(section_checkmk_cached_plugins: CachedPluginsSection) -> CheckResult:
+def _check_cached_plugins(
+    section_checkmk_cached_plugins: CachedPluginsSection,
+) -> CheckResult:
     if section_checkmk_cached_plugins.timeout is not None:
         timeout_plugins_long, timeout_plugins_short = _plugin_strings(
             section_checkmk_cached_plugins.timeout

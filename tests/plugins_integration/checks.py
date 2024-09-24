@@ -118,7 +118,10 @@ def _apply_regexps(identifier: str, canon: dict, result: dict) -> None:
     patterns = all_patterns.get("*", {})
     # pattern matches
     patterns.update(
-        next((item for name, item in all_patterns.items() if re.match(name, identifier)), {})
+        next(
+            (item for name, item in all_patterns.items() if re.match(name, identifier)),
+            {},
+        )
     )
     # exact matches
     patterns.update(all_patterns.get(identifier, {}))
@@ -133,12 +136,16 @@ def _apply_regexps(identifier: str, canon: dict, result: dict) -> None:
             logger.debug("> Applying regexp: %s", pattern)
             if not canon.get(field_name):
                 logger.debug(
-                    '> Field "%s" not found in canon "%s", skipping...', field_name, identifier
+                    '> Field "%s" not found in canon "%s", skipping...',
+                    field_name,
+                    identifier,
                 )
                 continue
             if not result.get(field_name):
                 logger.debug(
-                    '> Field "%s" not found in result "%s", skipping...', field_name, identifier
+                    '> Field "%s" not found in result "%s", skipping...',
+                    field_name,
+                    identifier,
                 )
                 continue
             if match := re.search(pattern, result[field_name]):
@@ -181,7 +188,10 @@ def get_host_names(site: Site | None = None) -> list[str]:
         snmp_host_names = []
         if not (config.dump_dir and os.path.exists(config.dump_dir)):
             # need to skip here to abort the collection and return RC=5: "no tests collected"
-            pytest.skip(f'Folder "{config.dump_dir}" not found; exiting!', allow_module_level=True)
+            pytest.skip(
+                f'Folder "{config.dump_dir}" not found; exiting!',
+                allow_module_level=True,
+            )
         for dump_file_name in [
             _
             for _ in os.listdir(config.dump_dir)
@@ -263,7 +273,11 @@ def _verify_check_result(
 
     if mode != CheckModes.UPDATE:
         # ignore columns in the canon that are not supposed to be returned
-        canon_data = {_: canon_data[_] for _ in canon_data if _ in config.api_services_cols}  # type: ignore
+        canon_data = {
+            _: canon_data[_]
+            for _ in canon_data
+            if _ in config.api_services_cols  # type: ignore
+        }
 
     if not config.skip_masking:
         _apply_regexps(check_id, canon_data, result_data)

@@ -22,7 +22,11 @@ def _parameter_valuespec_postgres_instance_sessions():
                     title=_("Number of current sessions"),
                     elements=[
                         Integer(title=_("Warning at"), unit=_("sessions"), default_value=100),
-                        Integer(title=_("Critical at"), unit=_("sessions"), default_value=200),
+                        Integer(
+                            title=_("Critical at"),
+                            unit=_("sessions"),
+                            default_value=200,
+                        ),
                     ],
                 ),
             ),

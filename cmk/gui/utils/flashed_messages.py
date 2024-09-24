@@ -9,7 +9,6 @@ Flask uses a generic session cookie store which we don't want to implement here 
 simplicity. In case we have such a generic thing, it will be easy to switch to it.
 """
 
-
 from typing import get_args, Literal, NamedTuple, TypeGuard
 
 import flask

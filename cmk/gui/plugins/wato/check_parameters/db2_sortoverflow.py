@@ -14,7 +14,8 @@ from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Tuple
 
 def _item_spec_db2_sortoverflow():
     return TextInput(
-        title=_("Instance"), help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1")
+        title=_("Instance"),
+        help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1"),
     )
 
 

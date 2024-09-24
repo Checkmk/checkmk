@@ -53,7 +53,12 @@ from cmk.utils.crypto.keys import (
     PublicKey,
 )
 from cmk.utils.crypto.password import Password
-from cmk.utils.crypto.types import HashAlgorithm, InvalidPEMError, MKCryptoException, SerializedPEM
+from cmk.utils.crypto.types import (
+    HashAlgorithm,
+    InvalidPEMError,
+    MKCryptoException,
+    SerializedPEM,
+)
 
 
 class CertificatePEM(SerializedPEM):
@@ -121,7 +126,8 @@ class CertificateWithPrivateKey(NamedTuple):
         containing cert and private key"""
         if (
             cert_match := re.search(
-                r"-----BEGIN CERTIFICATE-----[\s\w+/=]+-----END CERTIFICATE-----", content
+                r"-----BEGIN CERTIFICATE-----[\s\w+/=]+-----END CERTIFICATE-----",
+                content,
             )
         ) is None:
             raise InvalidPEMError("Could not find certificate")
@@ -139,7 +145,8 @@ class CertificateWithPrivateKey(NamedTuple):
         else:
             if (
                 key_match := re.search(
-                    r"-----BEGIN PRIVATE KEY-----[\s\w+/=]+-----END PRIVATE KEY-----", content
+                    r"-----BEGIN PRIVATE KEY-----[\s\w+/=]+-----END PRIVATE KEY-----",
+                    content,
                 )
             ) is None:
                 raise InvalidPEMError("Could not find private key")
@@ -313,7 +320,8 @@ class Certificate:
         #     ...
         #     this extension SHOULD be included in all end entity certificates
         builder = builder.add_extension(
-            x509.SubjectKeyIdentifier.from_public_key(subject_public_key._key), critical=False
+            x509.SubjectKeyIdentifier.from_public_key(subject_public_key._key),
+            critical=False,
         )
 
         # RFC 5280 4.2.1.9.  Key Usage

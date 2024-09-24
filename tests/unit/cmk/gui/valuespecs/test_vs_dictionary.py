@@ -34,7 +34,8 @@ class TestValueSpecDictionary:
         get_dictionary_vs(optional_keys=True)
 
         with pytest.raises(
-            TypeError, match="optional_keys and required_keys can not be set at the same time."
+            TypeError,
+            match="optional_keys and required_keys can not be set at the same time.",
         ):
             get_dictionary_vs(optional_keys={"a"}, required_keys=["b"])
 
@@ -70,8 +71,14 @@ class TestValueSpecDictionary:
 
     def test_default_value(self) -> None:
         assert get_dictionary_vs().default_value() == {}
-        assert get_dictionary_vs(required_keys=["a", "c"]).default_value() == {"a": "", "c": "z"}
-        assert get_dictionary_vs(default_keys=["b", "d"]).default_value() == {"b": 0, "d": 1}
+        assert get_dictionary_vs(required_keys=["a", "c"]).default_value() == {
+            "a": "",
+            "c": "z",
+        }
+        assert get_dictionary_vs(default_keys=["b", "d"]).default_value() == {
+            "b": 0,
+            "d": 1,
+        }
         assert get_dictionary_vs(optional_keys=["a", "b", "c"]).default_value() == {"d": 1}
         assert get_dictionary_vs(optional_keys=False).default_value() == {
             "a": "",
@@ -87,7 +94,10 @@ class TestValueSpecDictionary:
 
     def test_canonical_value(self) -> None:
         assert get_dictionary_vs().canonical_value() == {}
-        assert get_dictionary_vs(required_keys=["a", "c"]).canonical_value() == {"a": "", "c": ""}
+        assert get_dictionary_vs(required_keys=["a", "c"]).canonical_value() == {
+            "a": "",
+            "c": "",
+        }
         assert get_dictionary_vs(default_keys=["b", "d"]).canonical_value() == {}
         assert get_dictionary_vs(optional_keys=["a", "b", "c"]).canonical_value() == {"d": 1}
         assert get_dictionary_vs(optional_keys=False).canonical_value() == {
@@ -162,6 +172,4 @@ class TestValueSpecDictionary:
             elements=[
                 ("a", vs.TextInput()),
             ]
-        ).transform_value(
-            {"a": "lala"}
-        ) == {"a": "lala"}
+        ).transform_value({"a": "lala"}) == {"a": "lala"}

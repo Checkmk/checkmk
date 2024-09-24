@@ -15,7 +15,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     register,
     Service,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+)
 
 from cmk.plugins.lib.kube import PodContainers
 

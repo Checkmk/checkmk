@@ -22,7 +22,11 @@ from cmk.special_agents.agent_aws import (
     SNSTopicsFetcher,
 )
 
-from .agent_aws_fake_clients import FakeCloudwatchClient, SNSListSubscriptionsIB, SNSListTopicsIB
+from .agent_aws_fake_clients import (
+    FakeCloudwatchClient,
+    SNSListSubscriptionsIB,
+    SNSListTopicsIB,
+)
 
 SNSSectionsGetter = Callable[[list[str] | None, OverallTags], tuple[SNSSMS, SNS]]
 
@@ -120,7 +124,10 @@ def _create_sns_limits(n_std_topics: int, n_fifo_topics: int, n_subs: int) -> SN
 
 @pytest.mark.parametrize(
     ["n_std_topics", "n_fifo_topics", "n_subs"],
-    [pytest.param(0, 0, 0, id="no sns services"), pytest.param(3, 3, 3, id="some sns data")],
+    [
+        pytest.param(0, 0, 0, id="no sns services"),
+        pytest.param(3, 3, 3, id="some sns data"),
+    ],
 )
 def test_agent_aws_sns_limits(n_std_topics: int, n_fifo_topics: int, n_subs: int) -> None:
     sns_limits = _create_sns_limits(n_std_topics, n_fifo_topics, n_subs)
@@ -148,7 +155,12 @@ def get_sns_sections() -> SNSSectionsGetter:
         fake_tagging_client = FakeTaggingClient()
 
         # TODO: FakeSNSClient shoud actually subclass SNSClient, FakeCloudwatchClient should subclass CloudWatchClient, etc.
-        sns_topics_fetcher = SNSTopicsFetcher(fake_sns_client, fake_tagging_client, region, config)  # type: ignore[arg-type]
+        sns_topics_fetcher = SNSTopicsFetcher(
+            fake_sns_client,  # type: ignore[arg-type]
+            fake_tagging_client,  # type: ignore[arg-type]
+            region,
+            config,
+        )
         sns_sms = SNSSMS(fake_cloudwatch_client, region, config)  # type: ignore[arg-type]
         sns = SNS(fake_cloudwatch_client, region, config, sns_topics_fetcher)  # type: ignore[arg-type]
         return sns_sms, sns
@@ -163,7 +175,11 @@ sns_params = [
         (None, None),
         ["TopicName-1 [eu-west-1]", "TopicName-4.fifo [eu-west-1]"],
     ),
-    (None, ([["test-tag-key"]], [["test-tag-value"]]), ["TopicName-3.fifo [eu-west-1]"]),
+    (
+        None,
+        ([["test-tag-key"]], [["test-tag-value"]]),
+        ["TopicName-3.fifo [eu-west-1]"],
+    ),
     (None, ([["test-tag-key"]], [["wrong-tag-value"]]), []),
     (None, ([["wrong-tag-key"]], [["test-tag-value"]]), []),
     (["NONEXISTINGID"], (None, None), []),

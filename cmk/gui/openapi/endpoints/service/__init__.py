@@ -19,6 +19,7 @@ which you can look up in the Checkmk documentation.
 
 For a detailed list of columns, have a look at the [services table](#section/Table-definitions/Services-Table) definition.
 """
+
 from collections.abc import Mapping
 from typing import Any
 
@@ -30,7 +31,12 @@ from cmk.gui import fields as gui_fields
 from cmk.gui import sites
 from cmk.gui.fields import HostField
 from cmk.gui.http import Response
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions, response_schemas
+from cmk.gui.openapi.restful_objects import (
+    constructors,
+    Endpoint,
+    permissions,
+    response_schemas,
+)
 from cmk.gui.openapi.restful_objects.constructors import object_action_href
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import problem, serve_json

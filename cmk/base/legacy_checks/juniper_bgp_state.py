@@ -62,9 +62,12 @@ def check_juniper_bgp_state(item, _no_params, parsed):
         "undefined": 3,
     }.get(state, 2)
     # if we're halted, being un-established is fine
-    yield status if operational_state == "running" else 0, "Status with peer {} is {}".format(
-        item,
-        state,
+    yield (
+        status if operational_state == "running" else 0,
+        "Status with peer {} is {}".format(
+            item,
+            state,
+        ),
     )
 
     op_status = {

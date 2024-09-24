@@ -35,7 +35,8 @@ def parse_fsc_sc2_power_consumption(info):
         # sometimes the device does not return a value
         if not value:
             parsed.setdefault(
-                designation, {"device_state": (3, "Error on device while reading value")}
+                designation,
+                {"device_state": (3, "Error on device while reading value")},
             )
         else:
             parsed.setdefault(designation, {"power": int(value)})

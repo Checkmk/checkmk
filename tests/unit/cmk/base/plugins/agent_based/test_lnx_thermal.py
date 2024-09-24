@@ -8,8 +8,16 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.base.plugins.agent_based import lnx_thermal
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    StringTable,
+)
 
 
 def splitter(text: str, split_symbol: str | None = None) -> Sequence[Sequence[str]]:
@@ -136,7 +144,8 @@ RESULT_CHECK = [
 
 @pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
-    "string_table, discovered, results", list(zip(AGENT_INFO, RESULT_DISCOVERY, RESULT_CHECK))
+    "string_table, discovered, results",
+    list(zip(AGENT_INFO, RESULT_DISCOVERY, RESULT_CHECK)),
 )
 def test_check_functions_perfdata(
     string_table: StringTable, discovered: Sequence[Service], results: CheckResult

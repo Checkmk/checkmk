@@ -35,7 +35,9 @@ _bi_criticality_level = {
 _reversed_bi_criticality_level = {v: k for k, v in _bi_criticality_level.items()}
 
 
-def mapped_states(f: Callable[[Any, list[int]], int]) -> Callable[[Any, list[int]], int]:
+def mapped_states(
+    f: Callable[[Any, list[int]], int],
+) -> Callable[[Any, list[int]], int]:
     def wrapped_f(self: ABCBIAggregationFunction, states: list[int]) -> int:
         new_states = sorted(_bi_criticality_level[state] for state in states)
         return _reversed_bi_criticality_level.get(f(self, new_states), BIStates.UNKNOWN)
@@ -83,7 +85,8 @@ class BIAggregationFunctionBest(ABCBIAggregationFunction):
 
 class BIAggregationFunctionBestSchema(Schema):
     type = ReqConstant(
-        BIAggregationFunctionBest.kind(), description="Take the best state from all child nodes."
+        BIAggregationFunctionBest.kind(),
+        description="Take the best state from all child nodes.",
     )
     count = ReqInteger(dump_default=1, description="Take the nth best state.")
     restrict_state = ReqInteger(
@@ -139,7 +142,8 @@ class BIAggregationFunctionWorst(ABCBIAggregationFunction):
 
 class BIAggregationFunctionWorstSchema(Schema):
     type = ReqConstant(
-        BIAggregationFunctionWorst.kind(), description="Take the worst state from all child nodes."
+        BIAggregationFunctionWorst.kind(),
+        description="Take the worst state from all child nodes.",
     )
     count = ReqInteger(dump_default=1, example=2, description="Take the nth worst state.")
     restrict_state = ReqInteger(

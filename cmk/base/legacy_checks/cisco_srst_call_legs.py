@@ -16,9 +16,11 @@ def inventory_cisco_srst_call_legs(info):
 
 def check_cisco_srst_call_legs(_no_item, _no_params, info):
     call_legs = int(info[0][0])
-    yield 0, "%d call legs routed through the Cisco device since going active" % call_legs, [
-        ("call_legs", call_legs)
-    ]
+    yield (
+        0,
+        "%d call legs routed through the Cisco device since going active" % call_legs,
+        [("call_legs", call_legs)],
+    )
 
 
 def parse_cisco_srst_call_legs(string_table: StringTable) -> StringTable | None:
@@ -28,7 +30,8 @@ def parse_cisco_srst_call_legs(string_table: StringTable) -> StringTable | None:
 check_info["cisco_srst_call_legs"] = LegacyCheckDefinition(
     parse_function=parse_cisco_srst_call_legs,
     detect=all_of(
-        contains(".1.3.6.1.2.1.1.1.0", "cisco"), equals(".1.3.6.1.4.1.9.9.441.1.2.1.0", "1")
+        contains(".1.3.6.1.2.1.1.1.0", "cisco"),
+        equals(".1.3.6.1.4.1.9.9.441.1.2.1.0", "1"),
     ),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.441.1.3",

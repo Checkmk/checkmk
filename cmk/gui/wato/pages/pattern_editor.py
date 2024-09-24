@@ -39,7 +39,10 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.wato.pages.rulesets import ModeEditRuleset
 from cmk.gui.watolib.check_mk_automations import analyse_service
 from cmk.gui.watolib.config_hostname import ConfigHostname
-from cmk.gui.watolib.hosts_and_folders import folder_from_request, folder_preserving_link
+from cmk.gui.watolib.hosts_and_folders import (
+    folder_from_request,
+    folder_preserving_link,
+)
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.rulesets import rules_grouped_by_folder, SingleRulesetRecursively
 from cmk.gui.watolib.search import (
@@ -107,7 +110,10 @@ class ModePatternEditor(WatoMode):
             return _("Logfile patterns of logfile %s on all hosts") % (self._item)
         if not self._item:
             return _("Logfile patterns of Host %s") % (self._hostname)
-        return _("Logfile patterns of logfile %s on host %s") % (self._item, self._hostname)
+        return _("Logfile patterns of logfile %s on host %s") % (
+            self._item,
+            self._hostname,
+        )
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
@@ -283,7 +289,8 @@ class ModePatternEditor(WatoMode):
                                 disp_match_txt = (
                                     escape_to_html(self._match_txt[:match_start])
                                     + HTMLWriter.render_span(
-                                        self._match_txt[match_start:match_end], class_="match"
+                                        self._match_txt[match_start:match_end],
+                                        class_="match",
                                     )
                                     + escape_to_html(self._match_txt[match_end:])
                                 )

@@ -12,7 +12,7 @@ from pytest_mock import MockerFixture
 
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
-from cmk.utils.version import edition, Edition
+from cmk.utils.version import Edition, edition
 
 from cmk.gui.valuespec import Dictionary, Float, Migrate
 from cmk.gui.watolib.hosts_and_folders import folder_tree

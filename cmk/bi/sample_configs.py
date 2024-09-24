@@ -46,7 +46,11 @@ bi_sample_config = {
             "public": True,
             "rules": [
                 {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                    "aggregation_function": {
+                        "count": 1,
+                        "restrict_state": 2,
+                        "type": "worst",
+                    },
                     "computation_options": {"disabled": False},
                     "id": "applications",
                     "comment": "",
@@ -71,7 +75,11 @@ bi_sample_config = {
                     },
                 },
                 {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                    "aggregation_function": {
+                        "count": 1,
+                        "restrict_state": 2,
+                        "type": "worst",
+                    },
                     "computation_options": {"disabled": False},
                     "id": "checkmk",
                     "comment": "",
@@ -96,7 +104,11 @@ bi_sample_config = {
                     },
                 },
                 {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                    "aggregation_function": {
+                        "count": 1,
+                        "restrict_state": 2,
+                        "type": "worst",
+                    },
                     "computation_options": {"disabled": False},
                     "id": "filesystem",
                     "node_visualization": {"style_config": {}, "type": "none"},
@@ -136,7 +148,11 @@ bi_sample_config = {
                     },
                 },
                 {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                    "aggregation_function": {
+                        "count": 1,
+                        "restrict_state": 2,
+                        "type": "worst",
+                    },
                     "computation_options": {"disabled": False},
                     "id": "filesystems",
                     "comment": "",
@@ -211,14 +227,21 @@ bi_sample_config = {
                     },
                 },
                 {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                    "aggregation_function": {
+                        "count": 1,
+                        "restrict_state": 2,
+                        "type": "worst",
+                    },
                     "computation_options": {"disabled": False},
                     "id": "general",
                     "comment": "",
                     "node_visualization": {"style_config": {}, "type": "none"},
                     "nodes": [
                         {
-                            "action": {"host_regex": "$HOSTNAME$", "type": "state_of_host"},
+                            "action": {
+                                "host_regex": "$HOSTNAME$",
+                                "type": "state_of_host",
+                            },
                             "search": {"type": "empty"},
                         },
                         {
@@ -248,7 +271,11 @@ bi_sample_config = {
                     },
                 },
                 {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                    "aggregation_function": {
+                        "count": 1,
+                        "restrict_state": 2,
+                        "type": "worst",
+                    },
                     "computation_options": {"disabled": False},
                     "id": "hardware",
                     "comment": "",
@@ -273,7 +300,11 @@ bi_sample_config = {
                     },
                 },
                 {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                    "aggregation_function": {
+                        "count": 1,
+                        "restrict_state": 2,
+                        "type": "worst",
+                    },
                     "computation_options": {"disabled": False},
                     "id": "host",
                     "comment": "",
@@ -354,7 +385,11 @@ bi_sample_config = {
                     },
                 },
                 {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                    "aggregation_function": {
+                        "count": 1,
+                        "restrict_state": 2,
+                        "type": "worst",
+                    },
                     "computation_options": {"disabled": False},
                     "id": "logfiles",
                     "comment": "",
@@ -379,7 +414,11 @@ bi_sample_config = {
                     },
                 },
                 {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                    "aggregation_function": {
+                        "count": 1,
+                        "restrict_state": 2,
+                        "type": "worst",
+                    },
                     "computation_options": {"disabled": False},
                     "id": "multipathing",
                     "comment": "",
@@ -404,7 +443,11 @@ bi_sample_config = {
                     },
                 },
                 {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                    "aggregation_function": {
+                        "count": 1,
+                        "restrict_state": 2,
+                        "type": "worst",
+                    },
                     "computation_options": {"disabled": False},
                     "id": "networking",
                     "comment": "",
@@ -429,7 +472,11 @@ bi_sample_config = {
                     },
                 },
                 {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                    "aggregation_function": {
+                        "count": 1,
+                        "restrict_state": 2,
+                        "type": "worst",
+                    },
                     "computation_options": {"disabled": False},
                     "id": "other",
                     "comment": "",
@@ -453,7 +500,11 @@ bi_sample_config = {
                     },
                 },
                 {
-                    "aggregation_function": {"count": 1, "restrict_state": 2, "type": "worst"},
+                    "aggregation_function": {
+                        "count": 1,
+                        "restrict_state": 2,
+                        "type": "worst",
+                    },
                     "computation_options": {"disabled": False},
                     "id": "performance",
                     "comment": "",

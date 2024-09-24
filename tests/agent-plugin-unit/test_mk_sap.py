@@ -105,7 +105,10 @@ def test_recursion_simple(monkeypatch):
     else:
         with pytest.raises(mk_sap.SapError):
             mk_sap.mon_tree(
-                fake_connection_tree, {"user": "apu_user"}, "apu_ms_name", "apu_mon_name"
+                fake_connection_tree,
+                {"user": "apu_user"},
+                "apu_ms_name",
+                "apu_mon_name",
             )
 
 

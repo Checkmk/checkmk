@@ -57,7 +57,13 @@ def _parameter_valuespec_elasticsearch_cluster_health():
                 ),
             ),
         ],
-        optional_keys=["number_of_nodes", "number_of_data_nodes", "green", "yellow", "red"],
+        optional_keys=[
+            "number_of_nodes",
+            "number_of_data_nodes",
+            "green",
+            "yellow",
+            "red",
+        ],
     )
 
 

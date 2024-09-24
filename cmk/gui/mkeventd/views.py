@@ -16,7 +16,12 @@ from cmk.utils.user import UserId
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config, default_authorized_builtin_role_ids
 from cmk.gui.dashboard import DashletConfig, LinkedViewDashletConfig, ViewDashletConfig
-from cmk.gui.data_source import ABCDataSource, DataSourceRegistry, row_id, RowTableLivestatus
+from cmk.gui.data_source import (
+    ABCDataSource,
+    DataSourceRegistry,
+    row_id,
+    RowTableLivestatus,
+)
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -46,7 +51,12 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless, urlencode_vars
 from cmk.gui.valuespec import MonitoringState
 from cmk.gui.view_utils import CellSpec
-from cmk.gui.views.command import Command, CommandActionResult, CommandRegistry, CommandSpec
+from cmk.gui.views.command import (
+    Command,
+    CommandActionResult,
+    CommandRegistry,
+    CommandSpec,
+)
 from cmk.gui.views.sorter import (
     cmp_custom_variable,
     cmp_num_split,
@@ -193,7 +203,14 @@ class RowTableEC(RowTableLivestatus):
                 columns.append(c)
 
         row_data = super().query(
-            datasource, cells, columns, context, headers, only_sites, limit, all_active_filters
+            datasource,
+            cells,
+            columns,
+            context,
+            headers,
+            only_sites,
+            limit,
+            all_active_filters,
         )
 
         if isinstance(row_data, tuple):
@@ -945,7 +962,11 @@ def render_delete_event_icons(row: Row) -> str | HTML:
         ("_show_result", "0"),
     ]
     url = makeactionuri(
-        request, transactions, urlvars, filename=filename, delvars=["selection", "show_checkboxes"]
+        request,
+        transactions,
+        urlvars,
+        filename=filename,
+        delvars=["selection", "show_checkboxes"],
     )
     return html.render_icon_button(url, _("Archive this event"), "archive_event")
 
@@ -958,7 +979,9 @@ def _is_view_dashlet(dashlet_config: DashletConfig) -> TypeGuard[ViewDashletConf
     return dashlet_config["type"] == "view"
 
 
-def _is_linked_view_dashlet(dashlet_config: DashletConfig) -> TypeGuard[LinkedViewDashletConfig]:
+def _is_linked_view_dashlet(
+    dashlet_config: DashletConfig,
+) -> TypeGuard[LinkedViewDashletConfig]:
     return dashlet_config["type"] == "linked_view"
 
 
@@ -1299,7 +1322,12 @@ class CommandECUpdateEvent(ECCommand):
         html.close_div()
 
     def _action(
-        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        spec: str,
+        row: Row,
+        row_index: int,
+        action_rows: Rows,
     ) -> CommandActionResult:
         if request.var("_mkeventd_update"):
             if user.may("mkeventd.update_comment"):
@@ -1383,7 +1411,12 @@ class CommandECChangeState(ECCommand):
         html.close_div()
 
     def _action(
-        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        spec: str,
+        row: Row,
+        row_index: int,
+        action_rows: Rows,
     ) -> CommandActionResult:
         if request.var("_mkeventd_changestate"):
             events = ",".join([str(entry["event_id"]) for entry in action_rows])
@@ -1438,7 +1471,12 @@ class CommandECCustomAction(ECCommand):
         html.close_div()
 
     def _action(
-        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        spec: str,
+        row: Row,
+        row_index: int,
+        action_rows: Rows,
     ) -> CommandActionResult:
         for action_id, _title in action_choices(omit_hidden=True):
             if request.var("_action_" + action_id):
@@ -1486,7 +1524,12 @@ class CommandECArchiveEvent(ECCommand):
         html.close_div()
 
     def _action(
-        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        spec: str,
+        row: Row,
+        row_index: int,
+        action_rows: Rows,
     ) -> CommandActionResult:
         if request.var("_delete_event"):
             events = ",".join([str(entry["event_id"]) for entry in action_rows])
@@ -1559,7 +1602,12 @@ class CommandECArchiveEventsOfHost(ECCommand):
         html.close_div()
 
     def _action(
-        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        spec: str,
+        row: Row,
+        row_index: int,
+        action_rows: Rows,
     ) -> CommandActionResult:
         if request.var("_archive_events_of_hosts"):
             commands = [f"DELETE_EVENTS_OF_HOST;{row['host_name']};{user.id}"]
@@ -1921,7 +1969,10 @@ EC_HISTORY_RECENT = mkeventd_view(
             "event_sl": {},
             "event_sl_max": {},
             "event_host_in_downtime": {},
-            "history_time": {"history_time_from": "1", "history_time_from_range": "86400"},
+            "history_time": {
+                "history_time_from": "1",
+                "history_time_from_range": "86400",
+            },
             "history_who": {},
             "history_what": {},
             "host_state_type": {},

@@ -6,7 +6,15 @@
 from collections.abc import Mapping
 from typing import Any
 
-from .agent_based_api.v1 import check_levels, Metric, register, Result, Service, State, type_defs
+from .agent_based_api.v1 import (
+    check_levels,
+    Metric,
+    register,
+    Result,
+    Service,
+    State,
+    type_defs,
+)
 
 # <<<tsm_stagingpools>>>
 # tsmfarm2       SL8500_STGPOOL_05       99.9

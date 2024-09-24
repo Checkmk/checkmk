@@ -137,7 +137,10 @@ def _parameter_valuespec_f5_bigip_vserver():
                 Dictionary(
                     title=_("Map states"),
                     elements=[
-                        ("is_disabled", MonitoringState(title=_("Is disabled"), default_value=1)),
+                        (
+                            "is_disabled",
+                            MonitoringState(title=_("Is disabled"), default_value=1),
+                        ),
                         (
                             "is_up_and_available",
                             MonitoringState(title=_("Is up and available"), default_value=0),

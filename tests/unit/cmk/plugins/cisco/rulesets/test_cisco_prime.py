@@ -49,7 +49,11 @@ from cmk.plugins.cisco.rulesets.cisco_prime import _migrate, rule_spec_cisco_pri
             {
                 "basicauth": {
                     "username": "test_username",
-                    "password": ("cmk_postprocessed", "stored_password", ("password_1", "")),
+                    "password": (
+                        "cmk_postprocessed",
+                        "stored_password",
+                        ("password_1", ""),
+                    ),
                 }
             },
             id="stored password",

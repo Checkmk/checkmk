@@ -9,9 +9,8 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, Integer, TextInput
+from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 from cmk.gui.valuespec import TimeSpan as Age
-from cmk.gui.valuespec import Tuple
 
 
 def _parameter_valuespec_graylog_sources():

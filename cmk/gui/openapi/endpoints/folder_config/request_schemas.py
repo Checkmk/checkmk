@@ -11,7 +11,10 @@ from cmk.utils.regex import WATO_FOLDER_PATH_NAME_REGEX
 
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
-from cmk.gui.openapi.endpoints.common_fields import EXISTING_FOLDER, EXISTING_FOLDER_PATTERN
+from cmk.gui.openapi.endpoints.common_fields import (
+    EXISTING_FOLDER,
+    EXISTING_FOLDER_PATTERN,
+)
 
 from cmk import fields
 
@@ -85,7 +88,10 @@ class BulkCreateFolder(BaseSchema):
 class UpdateFolder(BaseSchema):
     """Updating a folder"""
 
-    schema_example = {"title": "Virtual Servers", "attributes": {"tag_networking": "wan"}}
+    schema_example = {
+        "title": "Virtual Servers",
+        "attributes": {"tag_networking": "wan"},
+    }
 
     title = fields.String(
         example="Virtual Servers.",

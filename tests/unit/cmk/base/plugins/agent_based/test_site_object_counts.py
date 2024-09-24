@@ -7,7 +7,10 @@ from cmk.base.plugins.agent_based import site_object_counts
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 
 SECTION: site_object_counts.Section = {
-    "heute": {"Service check commands": {"lnx_if": 3, "omd_apache": 2}, "Tags": {"snmp": 1}},
+    "heute": {
+        "Service check commands": {"lnx_if": 3, "omd_apache": 2},
+        "Tags": {"snmp": 1},
+    },
     "stable": {
         "Service check commands": {"hr_cpu": 1, "omd_apache": 2},
         "Tags": {"prod": 2, "snmp": 2},
@@ -44,7 +47,10 @@ def test_check_site_object_counts() -> None:
         ),
         Metric("service_check_commands_lnx_if", 3.0),
         Metric(
-            "service_check_commands_omd_apache", 4.0, levels=(None, None), boundaries=(None, None)
+            "service_check_commands_omd_apache",
+            4.0,
+            levels=(None, None),
+            boundaries=(None, None),
         ),
         Metric("service_check_commands_hr_cpu", 1.0),
         Metric("tags_snmp", 3.0),
@@ -88,7 +94,10 @@ def test_cluster_check_site_object_counts() -> None:
         ),
         Metric("service_check_commands_lnx_if", 5.0),
         Metric(
-            "service_check_commands_omd_apache", 4.0, levels=(None, None), boundaries=(None, None)
+            "service_check_commands_omd_apache",
+            4.0,
+            levels=(None, None),
+            boundaries=(None, None),
         ),
         Metric("service_check_commands_hr_cpu", 4.0),
         Metric("tags_snmp", 3.0),

@@ -72,10 +72,12 @@ def _parameter_valuespec_memory_simple() -> Dictionary:
                             Tuple(
                                 elements=[
                                     Percentage(
-                                        title=_("Warning at a swap usage of"), maxvalue=None
+                                        title=_("Warning at a swap usage of"),
+                                        maxvalue=None,
                                     ),
                                     Percentage(
-                                        title=_("Critical at a swap usage of"), maxvalue=None
+                                        title=_("Critical at a swap usage of"),
+                                        maxvalue=None,
                                     ),
                                 ],
                             ),

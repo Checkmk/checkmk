@@ -12,7 +12,12 @@ from freezegun import freeze_time
 from tests.testlib import set_timezone
 
 from cmk.base.plugins.agent_based import fileinfo as fileinfo_plugin
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -73,7 +78,10 @@ def test_fileinfo_min_max_age_levels() -> None:
     # generic check_levels function.
 
     assert list(output_minage) == size_result + [
-        Result(state=State.WARN, summary="Age: 3 seconds (warn/crit below 5 seconds/1 second)"),
+        Result(
+            state=State.WARN,
+            summary="Age: 3 seconds (warn/crit below 5 seconds/1 second)",
+        ),
         Metric("age", 3.0),
     ]
 
@@ -196,10 +204,18 @@ def test_check_fileinfo_group_no_files(
                 reftime=1563288717,
                 files={
                     "/bar/foo": FileinfoItem(
-                        name="/bar/foo", missing=False, failed=False, size=348, time=1465079135
+                        name="/bar/foo",
+                        missing=False,
+                        failed=False,
+                        size=348,
+                        time=1465079135,
                     ),
                     "/foo/bar": FileinfoItem(
-                        name="/foo/bar", missing=False, failed=False, size=348, time=1465079135
+                        name="/foo/bar",
+                        missing=False,
+                        failed=False,
+                        size=348,
+                        time=1465079135,
                     ),
                 },
             ),
@@ -221,10 +237,18 @@ def test_check_fileinfo_group_no_files(
                 reftime=1563288717,
                 files={
                     "/bar/foo": FileinfoItem(
-                        name="/bar/foo", missing=False, failed=False, size=348, time=1465079135
+                        name="/bar/foo",
+                        missing=False,
+                        failed=False,
+                        size=348,
+                        time=1465079135,
                     ),
                     "/foo/bar": FileinfoItem(
-                        name="/foo/bar", missing=False, failed=False, size=348, time=1465079135
+                        name="/foo/bar",
+                        missing=False,
+                        failed=False,
+                        size=348,
+                        time=1465079135,
                     ),
                 },
             ),
@@ -273,10 +297,12 @@ def test_check_fileinfo_group_no_matching_files(
             [
                 Result(state=State.OK, notice="Include patterns: /var/log/sys*"),
                 Result(
-                    state=State.OK, notice="[/var/log/syslog] Age: 3 years 41 days, Size: 384 B"
+                    state=State.OK,
+                    notice="[/var/log/syslog] Age: 3 years 41 days, Size: 384 B",
                 ),
                 Result(
-                    state=State.OK, notice="[/var/log/syslog1] Age: 3 years 41 days, Size: 384 B"
+                    state=State.OK,
+                    notice="[/var/log/syslog1] Age: 3 years 41 days, Size: 384 B",
                 ),
                 Result(state=State.OK, summary="Count: 2"),
                 Metric("count", 2),
@@ -305,10 +331,12 @@ def test_check_fileinfo_group_no_matching_files(
             [
                 Result(state=State.OK, notice="Include patterns: /var/log/sys*"),
                 Result(
-                    state=State.OK, notice="[/var/log/syslog] Age: 3 years 41 days, Size: 384 B"
+                    state=State.OK,
+                    notice="[/var/log/syslog] Age: 3 years 41 days, Size: 384 B",
                 ),
                 Result(
-                    state=State.OK, notice="[/var/log/syslog1] Age: 3 years 41 days, Size: 384 B"
+                    state=State.OK,
+                    notice="[/var/log/syslog1] Age: 3 years 41 days, Size: 384 B",
                 ),
                 Result(state=State.OK, summary="Count: 2"),
                 Metric("count", 2),
@@ -358,7 +386,8 @@ def test_check_fileinfo_group_no_matching_files(
                 Result(state=State.OK, notice="Include patterns: /var/log/sys*"),
                 Result(state=State.OK, notice="Exclude patterns: /var/log/syslog1"),
                 Result(
-                    state=State.OK, notice="[/var/log/syslog] Age: 3 years 41 days, Size: 384 B"
+                    state=State.OK,
+                    notice="[/var/log/syslog] Age: 3 years 41 days, Size: 384 B",
                 ),
                 Result(state=State.OK, summary="Count: 1"),
                 Metric("count", 1),
@@ -635,7 +664,10 @@ def test_fileinfo_discovery(
                 "maxage": (3600, 10800),
             },
             [
-                Result(state=State.WARN, summary="Size: 3.16 KiB (warn/crit below 5.00 KiB/10 B)"),
+                Result(
+                    state=State.WARN,
+                    summary="Size: 3.16 KiB (warn/crit below 5.00 KiB/10 B)",
+                ),
                 Metric("size", 3234, levels=(5242880.0, 9663676416.0)),
                 Result(
                     state=State.CRIT,
@@ -804,7 +836,8 @@ def test_fileinfo_check(
                 Service(item="log", parameters={"group_patterns": [("*syslog*", "")]}),
                 Service(item="log", parameters={"group_patterns": [("*syslog*", "")]}),
                 Service(
-                    item="today", parameters={"group_patterns": [("/tmp/$DATE:%Y%m%d$.txt", "")]}
+                    item="today",
+                    parameters={"group_patterns": [("/tmp/$DATE:%Y%m%d$.txt", "")]},
                 ),
             ],
         ),
@@ -826,7 +859,8 @@ def test_fileinfo_check(
                 Service(item="log", parameters={"group_patterns": [("*syslog*", "")]}),
                 Service(item="log", parameters={"group_patterns": [("*syslog*", "")]}),
                 Service(
-                    item="today", parameters={"group_patterns": [("/tmp/$DATE:%Y%m%d$.txt", "")]}
+                    item="today",
+                    parameters={"group_patterns": [("/tmp/$DATE:%Y%m%d$.txt", "")]},
                 ),
             ],
         ),
@@ -856,14 +890,20 @@ def test_fileinfo_group_discovery(
             },
             [
                 Result(state=State.OK, notice="Include patterns: *syslog*"),
-                Result(state=State.OK, notice="[/var/log/syslog] Age: 4 seconds, Size: 1.25 MiB"),
+                Result(
+                    state=State.OK,
+                    notice="[/var/log/syslog] Age: 4 seconds, Size: 1.25 MiB",
+                ),
                 Result(
                     state=State.OK,
                     notice="[/var/log/syslog.1] Age: 7 hours 59 minutes, Size: 1.18 MiB",
                 ),
                 Result(state=State.OK, summary="Count: 2"),
                 Metric("count", 2),
-                Result(state=State.CRIT, summary="Size: 2.42 MiB (warn/crit at 2 B/2.00 MiB)"),
+                Result(
+                    state=State.CRIT,
+                    summary="Size: 2.42 MiB (warn/crit at 2 B/2.00 MiB)",
+                ),
                 Metric("size", 2542789, levels=(2.0, 2097152.0)),
                 Result(state=State.OK, summary="Largest size: 1.25 MiB"),
                 Metric("size_largest", 1307632),
@@ -922,7 +962,10 @@ def test_fileinfo_group_discovery(
                 Result(state=State.OK, notice="Include patterns: *syslog*"),
                 Result(state=State.OK, summary="Count: 2"),
                 Metric("count", 2),
-                Result(state=State.CRIT, summary="Size: 2.42 MiB (warn/crit at 2 B/2.00 MiB)"),
+                Result(
+                    state=State.CRIT,
+                    summary="Size: 2.42 MiB (warn/crit at 2 B/2.00 MiB)",
+                ),
                 Metric("size", 2542789, levels=(2.0, 2097152.0)),
                 Result(state=State.OK, summary="Largest size: 1.25 MiB"),
                 Metric("size_largest", 1307632),

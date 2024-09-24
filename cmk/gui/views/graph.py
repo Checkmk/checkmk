@@ -12,7 +12,10 @@ from uuid import uuid4
 from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
-from cmk.gui.graphing._graph_render_config import graph_grender_options_from_vs, GraphRenderConfig
+from cmk.gui.graphing._graph_render_config import (
+    graph_grender_options_from_vs,
+    GraphRenderConfig,
+)
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing._html_render import (
     make_graph_data_range,
@@ -50,7 +53,12 @@ from cmk.gui.valuespec import (
     Transform,
     ValueSpec,
 )
-from cmk.gui.view_utils import CellSpec, CSVExportError, JSONExportError, PythonExportError
+from cmk.gui.view_utils import (
+    CellSpec,
+    CSVExportError,
+    JSONExportError,
+    PythonExportError,
+)
 
 
 def register(
@@ -285,7 +293,9 @@ def cmk_time_graph_params():
     )
 
 
-def _migrate_old_graph_render_options(value: PainterParameters | None) -> PainterParameters:
+def _migrate_old_graph_render_options(
+    value: PainterParameters | None,
+) -> PainterParameters:
     if value is None:
         value = {}
 

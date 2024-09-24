@@ -712,7 +712,8 @@ def bandwidth_levels(
                 upper_or_lower, thresholds = levels_spec
 
                 if isinstance(
-                    levels_direction := merged_levels.get(direction, {}), PredictiveLevels
+                    levels_direction := merged_levels.get(direction, {}),
+                    PredictiveLevels,
                 ):
                     levels_direction = {}
 
@@ -755,7 +756,7 @@ def _scaled_bandwidth_thresholds(
 
 
 def _finalize_bandwidth_levels(
-    merged_direction_levels: PredictiveLevels | Mapping[str, tuple[float, float] | None]
+    merged_direction_levels: PredictiveLevels | Mapping[str, tuple[float, float] | None],
 ) -> FixedLevels | PredictiveLevels:
     return (
         merged_direction_levels
@@ -771,7 +772,7 @@ GeneralPacketLevels = dict[str, dict[str, tuple[float, float] | None]]
 
 
 def _get_packet_levels(
-    params: Mapping[str, Any]
+    params: Mapping[str, Any],
 ) -> tuple[GeneralPacketLevels, GeneralPacketLevels]:
     DIRECTIONS = ("in", "out")
     PACKET_TYPES = ("errors", "multicast", "broadcast", "unicast", "discards")
@@ -1356,7 +1357,9 @@ def check_multiple_interfaces(
         )
 
 
-def _get_map_states(defined_mapping: Iterable[tuple[Iterable[str], int]]) -> Mapping[str, State]:
+def _get_map_states(
+    defined_mapping: Iterable[tuple[Iterable[str], int]],
+) -> Mapping[str, State]:
     map_states = {}
     for states, mon_state in defined_mapping:
         for st in states:
@@ -1428,7 +1431,7 @@ _METRICS_TO_LEGACY_MAP = {
 # corresponding translation. This issue will hopefully be eliminated in the 2.3. Once this is the
 # case, we can remove _rename_metrics_to_legacy.
 def _rename_metrics_to_legacy(
-    check_interfaces: Callable[_TCheckInterfaceParams, CheckResult]
+    check_interfaces: Callable[_TCheckInterfaceParams, CheckResult],
 ) -> Callable[_TCheckInterfaceParams, CheckResult]:
     def rename_metrics_to_legacy(
         *args: _TCheckInterfaceParams.args,
@@ -1640,7 +1643,7 @@ def _interface_mac(attributes: Attributes) -> Iterable[Result]:
 
 
 def _parse_params(
-    state_mappings: tuple[Literal["independent_mappings", "combined_mappings"], Any]
+    state_mappings: tuple[Literal["independent_mappings", "combined_mappings"], Any],
 ) -> StateMappings:
     match state_mappings:
         case "independent_mappings", mapping:
@@ -1966,7 +1969,14 @@ def _output_packet_rates(
             urate.rate if urate else None,
             nurate.rate if nurate else None,
         )
-        for rate, abs_levels, perc_levels, display_name, metric_name, reference_rate in [
+        for (
+            rate,
+            abs_levels,
+            perc_levels,
+            display_name,
+            metric_name,
+            reference_rate,
+        ) in [
             (
                 errorrate,
                 abs_packet_levels["errors"][direction],

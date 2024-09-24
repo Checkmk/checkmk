@@ -40,7 +40,13 @@ from cmk.utils.config_path import LATEST_CONFIG
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.everythingtype import EVERYTHING
-from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKSNMPError, MKTimeout, OnError
+from cmk.utils.exceptions import (
+    MKBailOut,
+    MKGeneralException,
+    MKSNMPError,
+    MKTimeout,
+    OnError,
+)
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console
@@ -365,7 +371,9 @@ class AutomationDiscoveryPreview(Automation):
         config_cache = config.get_config_cache()
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
         return _get_discovery_preview(
-            host_name, not prevent_fetching, OnError.RAISE if raise_errors else OnError.WARN
+            host_name,
+            not prevent_fetching,
+            OnError.RAISE if raise_errors else OnError.WARN,
         )
 
 
@@ -388,7 +396,9 @@ class AutomationTryDiscovery(Automation):
         )  # ... or are you *absolutely* sure we always use *exactly* one of the directives :-)
 
         return _get_discovery_preview(
-            HostName(args[0]), perform_scan, OnError.RAISE if raise_errors else OnError.WARN
+            HostName(args[0]),
+            perform_scan,
+            OnError.RAISE if raise_errors else OnError.WARN,
         )
 
 
@@ -828,7 +838,10 @@ class AutomationSetAutochecks(DiscoveryAutomation):
             AutocheckServiceWithNodes(
                 DiscoveredItem[AutocheckEntry](
                     previous=AutocheckEntry(
-                        CheckPluginName(raw_check_plugin_name), item, params, raw_service_labels
+                        CheckPluginName(raw_check_plugin_name),
+                        item,
+                        params,
+                        raw_service_labels,
                     ),
                     new=None,
                 ),
@@ -1699,7 +1712,8 @@ class AutomationGetCheckInformation(Automation):
 
     def execute(self, args: list[str]) -> GetCheckInformationResult:
         man_page_path_map = man_pages.make_man_page_path_map(
-            discover_families(raise_errors=cmk.utils.debug.enabled()), PluginGroup.CHECKMAN.value
+            discover_families(raise_errors=cmk.utils.debug.enabled()),
+            PluginGroup.CHECKMAN.value,
         )
 
         plugin_infos: dict[CheckPluginNameStr, dict[str, Any]] = {}
@@ -1844,7 +1858,11 @@ class AutomationDiagHost(Automation):
         if len(args) > 9:
             snmpv3_use = args[9]
             if snmpv3_use in ["authNoPriv", "authPriv"]:
-                snmpv3_auth_proto, snmpv3_security_name, snmpv3_security_password = args[10:13]
+                (
+                    snmpv3_auth_proto,
+                    snmpv3_security_name,
+                    snmpv3_security_password,
+                ) = args[10:13]
             else:
                 snmpv3_security_name = args[11]
             if snmpv3_use == "authPriv":
@@ -2072,7 +2090,11 @@ class AutomationDiagHost(Automation):
                     ):
                         raise TypeError()
                     snmpv3_credentials.extend(
-                        [snmpv3_auth_proto, snmpv3_security_name, snmpv3_security_password]
+                        [
+                            snmpv3_auth_proto,
+                            snmpv3_security_name,
+                            snmpv3_security_password,
+                        ]
                     )
                 else:
                     if not isinstance(snmpv3_security_name, str):
@@ -2154,8 +2176,9 @@ class AutomationDiagHost(Automation):
         )
 
         if data:
-            return 0, "sysDescr:\t%s\nsysContact:\t%s\nsysName:\t%s\nsysLocation:\t%s\n" % tuple(
-                data[0]
+            return (
+                0,
+                "sysDescr:\t%s\nsysContact:\t%s\nsysName:\t%s\nsysLocation:\t%s\n" % tuple(data[0]),
             )
 
         return 1, "Got empty SNMP response"
@@ -2184,7 +2207,9 @@ class AutomationActiveCheck(Automation):
                     continue
 
                 command_line = self._replace_macros(
-                    host_name, entry["service_description"], entry.get("command_line", "")
+                    host_name,
+                    entry["service_description"],
+                    entry.get("command_line", ""),
                 )
                 if command_line:
                     cmd = core_config.autodetect_plugin(command_line)
@@ -2368,7 +2393,8 @@ class AutomationGetAgentOutput(Automation):
 
                     raw_data = get_raw_data(
                         source.file_cache(
-                            simulation=config.simulation_mode, file_cache_options=file_cache_options
+                            simulation=config.simulation_mode,
+                            file_cache_options=file_cache_options,
                         ),
                         source.fetcher(),
                         Mode.CHECKING,

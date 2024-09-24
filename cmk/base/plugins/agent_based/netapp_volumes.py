@@ -63,7 +63,15 @@
 import dataclasses
 from collections.abc import Mapping
 
-from .agent_based_api.v1 import all_of, register, Result, Service, SNMPTree, startswith, State
+from .agent_based_api.v1 import (
+    all_of,
+    register,
+    Result,
+    Service,
+    SNMPTree,
+    startswith,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 

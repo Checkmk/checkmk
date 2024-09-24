@@ -96,6 +96,10 @@ register.check_plugin(
     service_name="VSP Switch Fan %s",
     discovery_function=discover_vsp_switches_fan,
     check_function=check_vsp_switches_fan,
-    check_default_parameters={"lower": (2000, 1000), "upper": (8000, 8400), "output_metrics": True},
+    check_default_parameters={
+        "lower": (2000, 1000),
+        "upper": (8000, 8400),
+        "output_metrics": True,
+    },
     check_ruleset_name="hw_fans",
 )

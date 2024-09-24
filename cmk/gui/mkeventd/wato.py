@@ -40,7 +40,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.site import omd_site
-from cmk.utils.version import edition, Edition
+from cmk.utils.version import Edition, edition
 
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
@@ -151,7 +151,10 @@ from cmk.gui.watolib.config_variable_groups import (
     ConfigVariableGroupUserInterface,
     ConfigVariableGroupWATO,
 )
-from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
+from cmk.gui.watolib.global_settings import (
+    load_configuration_settings,
+    save_global_settings,
+)
 from cmk.gui.watolib.hosts_and_folders import CollectedHostAttributes, make_action_link
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
 from cmk.gui.watolib.mkeventd import (
@@ -330,7 +333,10 @@ MACROS_AND_VARS = [
     ("COMMENT", _l("Event comment")),
     ("SL", _l("Service level")),
     ("HOST", _l("Host name (as sent by syslog)")),
-    ("ORIG_HOST", _l("Original host name when host name has been rewritten, empty otherwise")),
+    (
+        "ORIG_HOST",
+        _l("Original host name when host name has been rewritten, empty otherwise"),
+    ),
     ("CONTACT", _l("Contact information")),
     ("APPLICATION", _l("Syslog tag / Application")),
     ("PID", _l("Process ID of the origin process")),
@@ -338,9 +344,15 @@ MACROS_AND_VARS = [
     ("FACILITY", _l("Syslog Facility")),
     ("RULE_ID", _l("ID of the rule")),
     ("STATE", _l("State of the event (0/1/2/3)")),
-    ("PHASE", _l("Phase of the event (open in normal situations, closed when cancelling)")),
+    (
+        "PHASE",
+        _l("Phase of the event (open in normal situations, closed when cancelling)"),
+    ),
     ("OWNER", _l("Owner of the event")),
-    ("MATCH_GROUPS", _l("Text groups from regular expression match, separated by spaces")),
+    (
+        "MATCH_GROUPS",
+        _l("Text groups from regular expression match, separated by spaces"),
+    ),
     ("MATCH_GROUP_1", _l("Text of the first match group from expression match")),
     ("MATCH_GROUP_2", _l("Text of the second match group from expression match")),
     (
@@ -573,7 +585,8 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                         value=customer,
                         title=_("Customer"),
                         totext="{} ({})".format(
-                            customer_api().get_customer_name_by_id(customer), _("Set by rule pack")
+                            customer_api().get_customer_name_by_id(customer),
+                            _("Set by rule pack"),
                         ),
                     ),
                 ),
@@ -587,8 +600,14 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
             DropdownChoice(
                 title=_("Rule type"),
                 choices=[
-                    (False, _("Normal operation - process message according to action settings")),
-                    (True, _("Do not perform any action, drop this message, stop processing")),
+                    (
+                        False,
+                        _("Normal operation - process message according to action settings"),
+                    ),
+                    (
+                        True,
+                        _("Do not perform any action, drop this message, stop processing"),
+                    ),
                     (
                         "skip_pack",
                         _("Skip this rule pack, continue rule execution with next rule pack"),
@@ -629,7 +648,10 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                         DropdownChoice(
                             title=_("Precedence"),
                             choices=[
-                                ("message", _("Keep service level from message (if available)")),
+                                (
+                                    "message",
+                                    _("Keep service level from message (if available)"),
+                                ),
                                 ("rule", _("Always use service level from rule")),
                             ],
                             help=_(
@@ -1008,7 +1030,10 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                                     "event for each interval with absent messages."
                                 ),
                                 choices=[
-                                    ("open", _("Merge if there is an open un-acknowledged event")),
+                                    (
+                                        "open",
+                                        _("Merge if there is an open un-acknowledged event"),
+                                    ),
                                     (
                                         "acked",
                                         _("Merge even if there is an acknowledged event"),
@@ -1068,8 +1093,14 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                     Age(),
                     ListChoice(
                         choices=[
-                            ("open", _("Expire events that are in the state <i>open</i>")),
-                            ("ack", _("Expire events that are in the state <i>acknowledged</i>")),
+                            (
+                                "open",
+                                _("Expire events that are in the state <i>open</i>"),
+                            ),
+                            (
+                                "ack",
+                                _("Expire events that are in the state <i>acknowledged</i>"),
+                            ),
                         ],
                         default_value=["open"],
                     ),
@@ -1449,7 +1480,13 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
             (_("Counting & Timing"), ["count", "expect", "delay", "livetime"]),
             (
                 _("Rewriting"),
-                ["set_text", "set_host", "set_application", "set_comment", "set_contact"],
+                [
+                    "set_text",
+                    "set_host",
+                    "set_application",
+                    "set_comment",
+                    "set_contact",
+                ],
             ),
         ],
         render="form",
@@ -1561,7 +1598,10 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
 
     def _add_change(self, what: str, message: str) -> None:
         _changes.add_change(
-            what, message, domains=[ConfigDomainEventConsole], sites=_get_event_console_sync_sites()
+            what,
+            message,
+            domains=[ConfigDomainEventConsole],
+            sites=_get_event_console_sync_sites(),
         )
 
     def _get_rule_pack_to_mkp_map(self) -> dict[str, Any]:
@@ -1730,7 +1770,10 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                     item=make_simple_link(
                         make_confirm_delete_link(
                             url=make_action_link(
-                                [("mode", "mkeventd_rule_packs"), ("_reset_counters", "1")]
+                                [
+                                    ("mode", "mkeventd_rule_packs"),
+                                    ("_reset_counters", "1"),
+                                ]
                             ),
                             title=_("Reset all rule hit counters to zero"),
                             message=_("This affects all rule packs."),
@@ -1791,7 +1834,8 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             self._rule_packs[to_pos:to_pos] = [rule_pack]
             save_mkeventd_rules(self._rule_packs)
             self._add_change(
-                "move-rule-pack", _("Changed position of rule pack %s") % rule_pack["id"]
+                "move-rule-pack",
+                _("Changed position of rule pack %s") % rule_pack["id"],
             )
 
         # Export rule pack
@@ -2029,7 +2073,8 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                         )
                     elif type_ == ec.RulePackType.unmodified_mkp:
                         html.icon(
-                            "mkps", _("This rule pack is provided via the MKP %s.") % id_to_mkp[id_]
+                            "mkps",
+                            _("This rule pack is provided via the MKP %s.") % id_to_mkp[id_],
                         )
                     elif type_ == ec.RulePackType.modified_mkp:
                         html.icon(
@@ -2130,7 +2175,11 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                     raise ValueError(f"attribute match of rule {rule['id']} already compiled")
                 if any(
                     search_expression in searchable_rule_item.lower()
-                    for searchable_rule_item in (rule["id"], rule.get("description", ""), match)
+                    for searchable_rule_item in (
+                        rule["id"],
+                        rule.get("description", ""),
+                        match,
+                    )
                 ):
                     found_rules = found_packs.setdefault(rule_pack["id"], [])
                     found_rules.append(rule)
@@ -2220,7 +2269,10 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     item=make_simple_link(
                         makeuri_contextless(
                             request,
-                            [("mode", "mkeventd_edit_rule"), ("rule_pack", self._rule_pack_id)],
+                            [
+                                ("mode", "mkeventd_edit_rule"),
+                                ("rule_pack", self._rule_pack_id),
+                            ],
                         )
                     ),
                     is_shortcut=True,
@@ -2238,7 +2290,10 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     item=make_simple_link(
                         makeuri_contextless(
                             request,
-                            [("mode", "mkeventd_edit_rule_pack"), ("edit", self._rule_pack_nr)],
+                            [
+                                ("mode", "mkeventd_edit_rule_pack"),
+                                ("edit", self._rule_pack_nr),
+                            ],
                         )
                     ),
                 ),
@@ -2375,7 +2430,11 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     suffix=rule.get("description", ""),
                 )
                 drag_url = make_action_link(
-                    [("mode", "mkeventd_rules"), ("rule_pack", self._rule_pack_id), ("_move", nr)]
+                    [
+                        ("mode", "mkeventd_rules"),
+                        ("rule_pack", self._rule_pack_id),
+                        ("_move", nr),
+                    ]
                 )
                 edit_url = _rule_edit_url(self._rule_pack_id, nr)
                 clone_url = makeuri_contextless(
@@ -2398,7 +2457,8 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 table.cell("", css=["buttons"])
                 if rule.get("disabled"):
                     html.icon(
-                        "disabled", _("This rule is currently disabled and will not be applied")
+                        "disabled",
+                        _("This rule is currently disabled and will not be applied"),
                     )
                 elif event:
                     event["host"] = cmk.utils.translations.translate_hostname(
@@ -2507,7 +2567,10 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 url = rule.get("docu_url")
                 if url:
                     html.icon_button(
-                        url, _("Context information about this rule"), "url", target="_blank"
+                        url,
+                        _("Context information about this rule"),
+                        "url",
+                        target="_blank",
                     )
                     html.nbsp()
                 html.write_text(rule.get("description", ""))
@@ -2521,7 +2584,11 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                         for pack in self._rule_packs
                         if pack is not self._rule_pack
                     ]
-                    html.dropdown("_move_to_%s" % rule["id"], choices, onchange="move_to.submit();")
+                    html.dropdown(
+                        "_move_to_%s" % rule["id"],
+                        choices,
+                        onchange="move_to.submit();",
+                    )
 
     def _filter_mkeventd_rules(
         self, search_expression: str, rule_pack: ec.ECRulePackSpec
@@ -2780,7 +2847,8 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         vs.validate_value(self._rule, "rule")
         if not self._new and old_id != self._rule["id"]:
             raise MKUserError(
-                "rule_p_id", _("It is not allowed to change the ID of an existing rule.")
+                "rule_p_id",
+                _("It is not allowed to change the ID of an existing rule."),
             )
         if self._new:
             for pack in self._rule_packs:
@@ -4305,7 +4373,10 @@ def vs_ec_rule_limit() -> Dictionary:
                     unit=_("current events"),
                 ),
             ),
-            ("action", vs_ec_event_limit_actions("notify contacts in rule or fallback contacts")),
+            (
+                "action",
+                vs_ec_event_limit_actions("notify contacts in rule or fallback contacts"),
+            ),
         ],
         optional_keys=[],
     )
@@ -4385,7 +4456,10 @@ class ConfigVariableEventConsoleEventLimit(ConfigVariable):
                                     unit=_("current events"),
                                 ),
                             ),
-                            ("action", vs_ec_event_limit_actions("notify all fallback contacts")),
+                            (
+                                "action",
+                                vs_ec_event_limit_actions("notify all fallback contacts"),
+                            ),
                         ],
                         optional_keys=[],
                     ),
@@ -5232,7 +5306,7 @@ ExtraServiceConfECContact = ServiceRulespec(
 #   | Stuff for sending monitoring notifications into the event console.   |
 #   '----------------------------------------------------------------------'
 def mkeventd_update_notification_configuration(
-    hosts: Mapping[HostName, CollectedHostAttributes]
+    hosts: Mapping[HostName, CollectedHostAttributes],
 ) -> None:
     contactgroup = active_config.mkeventd_notify_contactgroup
     remote_console = active_config.mkeventd_notify_remotehost

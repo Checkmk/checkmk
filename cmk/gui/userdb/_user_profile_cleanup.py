@@ -12,7 +12,11 @@ from pathlib import Path
 
 import cmk.utils.paths
 
-from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
+from cmk.gui.background_job import (
+    BackgroundJob,
+    BackgroundProcessInterface,
+    InitialStatusArgs,
+)
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
 

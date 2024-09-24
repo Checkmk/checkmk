@@ -9,7 +9,14 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, ListOf, Migrate, MonitoringState, TextInput, Tuple
+from cmk.gui.valuespec import (
+    Dictionary,
+    ListOf,
+    Migrate,
+    MonitoringState,
+    TextInput,
+    Tuple,
+)
 
 
 def __elements() -> Tuple:
@@ -59,7 +66,7 @@ def _parameter_valuespec():
 
 
 def migrate(
-    value: dict[str, int] | dict[str, list[tuple[str, int, int, int]]]
+    value: dict[str, int] | dict[str, list[tuple[str, int, int, int]]],
 ) -> dict[str, list[tuple[str, int, int, int]]]:
     if "conditions" in value:
         return value  # type: ignore[return-value]

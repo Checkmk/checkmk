@@ -5,6 +5,7 @@
 """
 Special agent for monitoring Prometheus with Checkmk.
 """
+
 import argparse
 import ast
 import json
@@ -17,8 +18,15 @@ from typing import Any
 
 import requests
 
-from cmk.special_agents.utils.node_exporter import NodeExporter, PromQLMetric, SectionStr
-from cmk.special_agents.utils.prometheus import extract_connection_args, generate_api_session
+from cmk.special_agents.utils.node_exporter import (
+    NodeExporter,
+    PromQLMetric,
+    SectionStr,
+)
+from cmk.special_agents.utils.prometheus import (
+    extract_connection_args,
+    generate_api_session,
+)
 
 LOGGER = logging.getLogger()  # root logger for now
 
@@ -327,7 +335,9 @@ class CAdvisorExporter:
                     piggybacked_services = self._apply_container_name_option(piggybacked_services)
             else:
                 piggybacked_services = parse_piggybacked_services(
-                    promql_result, metric_description=entity_name, piggyback_parser=self._pod_name
+                    promql_result,
+                    metric_description=entity_name,
+                    piggyback_parser=self._pod_name,
                 )
 
             result.append(piggybacked_services)
@@ -753,7 +763,8 @@ class ApiData:
         logging.info("Prometheus PromQl queries")
         e = PiggybackGroup()
         e.join(
-            "prometheus_custom", self.api_client.perform_specified_promql_queries(custom_services)
+            "prometheus_custom",
+            self.api_client.perform_specified_promql_queries(custom_services),
         )
         return "\n".join(e.output())
 
@@ -764,7 +775,11 @@ class ApiData:
         return "\n".join(g.output())
 
     def cadvisor_section(self, cadvisor_options: dict[str, Any]) -> Iterator[str]:
-        grouping_option = {"both": ["container", "pod"], "container": ["container"], "pod": ["pod"]}
+        grouping_option = {
+            "both": ["container", "pod"],
+            "container": ["container"],
+            "pod": ["pod"],
+        }
 
         self.cadvisor_exporter.update_pod_containers()
 
@@ -789,15 +804,21 @@ class ApiData:
 
         if "cpu" in entities:
             yield from self._output_cadvisor_summary(
-                "cadvisor_cpu", cadvisor_summaries["cpu"], grouping_option[cadvisor_grouping]
+                "cadvisor_cpu",
+                cadvisor_summaries["cpu"],
+                grouping_option[cadvisor_grouping],
             )
         if "df" in entities:
             yield from self._output_cadvisor_summary(
-                "cadvisor_df", cadvisor_summaries["df"], grouping_option[cadvisor_grouping]
+                "cadvisor_df",
+                cadvisor_summaries["df"],
+                grouping_option[cadvisor_grouping],
             )
         if "if" in entities:
             yield from self._output_cadvisor_summary(
-                "cadvisor_if", cadvisor_summaries["if"], grouping_option[cadvisor_grouping]
+                "cadvisor_if",
+                cadvisor_summaries["if"],
+                grouping_option[cadvisor_grouping],
             )
 
         if "memory" in entities:
@@ -808,7 +829,9 @@ class ApiData:
 
             if "container" in grouping_option[cadvisor_grouping]:
                 yield from self._output_cadvisor_summary(
-                    "cadvisor_memory", cadvisor_summaries["memory_container"], ["container"]
+                    "cadvisor_memory",
+                    cadvisor_summaries["memory_container"],
+                    ["container"],
                 )
 
     @staticmethod
@@ -833,7 +856,11 @@ class ApiData:
         if "host_mapping" in node_options:
             host_mapping = [node_options["host_mapping"]]
         else:
-            host_mapping = ["localhost", node_options["host_address"], node_options["host_name"]]
+            host_mapping = [
+                "localhost",
+                node_options["host_address"],
+                node_options["host_name"],
+            ]
 
         if "df" in node_entities:
             df_result = self.node_exporter.df_summary()
@@ -852,7 +879,9 @@ class ApiData:
             yield from self._output_node_section(kernel_result, host_mapping)
 
     def _output_node_section(
-        self, node_to_section_str: dict[str, SectionStr], host_mapping: list[list[str] | str]
+        self,
+        node_to_section_str: dict[str, SectionStr],
+        host_mapping: list[list[str] | str],
     ) -> Iterator[str]:
         for node, section_str in node_to_section_str.items():
             if section_str:
@@ -892,7 +921,10 @@ def _extract_config_args(config: dict[str, Any]) -> dict[str, Any]:
                 )
         elif exporter_name == "node_exporter":
             exporter_info.update(
-                {"host_address": config["host_address"], "host_name": config["host_name"]}
+                {
+                    "host_address": config["host_address"],
+                    "host_name": config["host_name"],
+                }
             )
             exporter_options[exporter_name] = exporter_info
         else:
@@ -926,7 +958,8 @@ def main(argv=None):
             print(*list(api_data.cadvisor_section(exporter_options["cadvisor"])), sep="\n")
         if "node_exporter" in exporter_options:
             print(
-                *list(api_data.node_exporter_section(exporter_options["node_exporter"])), sep="\n"
+                *list(api_data.node_exporter_section(exporter_options["node_exporter"])),
+                sep="\n",
             )
 
     except Exception as e:

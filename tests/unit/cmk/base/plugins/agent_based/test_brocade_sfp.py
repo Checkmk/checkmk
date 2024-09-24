@@ -39,7 +39,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Stat
                 Metric("output_signal_power_dbm", 0.5),
                 Result(state=State.OK, summary="Current: 0.05 A"),
                 Metric("current", 0.045380000000000004),
-                Result(state=State.WARN, summary="Voltage: 3.31 V (warn/crit at 3.30 V/3.50 V)"),
+                Result(
+                    state=State.WARN,
+                    summary="Voltage: 3.31 V (warn/crit at 3.30 V/3.50 V)",
+                ),
                 Metric("voltage", 3.3075, levels=(3.3, 3.5)),
             ],
         )

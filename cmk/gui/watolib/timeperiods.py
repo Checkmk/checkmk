@@ -171,7 +171,9 @@ def _find_usages_in_other_timeperiods(time_period_name: str) -> list[TimeperiodU
                         _("Time period"), timeperiod_spec_alias(tp, tpn), _("excluded")
                     ),
                     makeuri_contextless(
-                        request, [("mode", "edit_timeperiod"), ("edit", tpn)], filename="wato.py"
+                        request,
+                        [("mode", "edit_timeperiod"), ("edit", tpn)],
+                        filename="wato.py",
                     ),
                 )
             )

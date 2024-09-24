@@ -7,7 +7,15 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.agent_based.v2 import CheckResult, get_value_store, LevelsT, Metric, Result, Service, State
+from cmk.agent_based.v2 import (
+    CheckResult,
+    get_value_store,
+    LevelsT,
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.plugins.mongodb.agent_based.asserts import (
     _check_mongodb_asserts,
     discover_mongodb_asserts,
@@ -54,7 +62,8 @@ def test_discover_mongodb_asserts() -> None:
             },
             [
                 Result(
-                    state=State.WARN, summary="Msg asserts per sec: 1.21 (warn/crit at 1.00/2.00)"
+                    state=State.WARN,
+                    summary="Msg asserts per sec: 1.21 (warn/crit at 1.00/2.00)",
                 ),
                 Metric("assert_msg", 1.2051717419264805, levels=(1.0, 2.0)),
                 Result(state=State.OK, summary="Rollovers asserts per sec: 1.21"),

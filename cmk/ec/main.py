@@ -70,7 +70,14 @@ from .query import (
     QueryREPLICATE,
     StatusTable,
 )
-from .rule_matcher import compile_rule, match, MatchFailure, MatchResult, MatchSuccess, RuleMatcher
+from .rule_matcher import (
+    compile_rule,
+    match,
+    MatchFailure,
+    MatchResult,
+    MatchSuccess,
+    RuleMatcher,
+)
 from .rule_packs import load_active_config
 from .settings import FileDescriptor, PortNumber, Settings
 from .settings import settings as create_settings
@@ -143,7 +150,8 @@ class ECServerThread(threading.Thread):
         while not self._terminate_event.is_set():
             try:
                 with cmk.utils.profile.Profile(
-                    enabled=self._profiling_enabled, profile_file=str(self._profile_file)
+                    enabled=self._profiling_enabled,
+                    profile_file=str(self._profile_file),
                 ):
                     self.serve()
             except Exception:
@@ -497,7 +505,8 @@ class EventServer(ECServerThread):
                     )
                 os.close(endpoint.value)
                 self._logger.info(
-                    "Opened builtin syslog server on inherited filedescriptor %d", endpoint.value
+                    "Opened builtin syslog server on inherited filedescriptor %d",
+                    endpoint.value,
                 )
             if isinstance(endpoint, PortNumber):
                 try:
@@ -580,7 +589,8 @@ class EventServer(ECServerThread):
                     )
                 os.close(endpoint.value)
                 self._logger.info(
-                    "Opened builtin snmptrap server on inherited filedescriptor %d", endpoint.value
+                    "Opened builtin snmptrap server on inherited filedescriptor %d",
+                    endpoint.value,
                 )
             if isinstance(endpoint, PortNumber):
                 try:
@@ -718,7 +728,8 @@ class EventServer(ECServerThread):
                 )
 
             if spool_files := sorted(
-                self.settings.paths.spool_dir.value.glob("[!.]*"), key=lambda x: x.stat().st_mtime
+                self.settings.paths.spool_dir.value.glob("[!.]*"),
+                key=lambda x: x.stat().st_mtime,
             ):
                 self.process_syslog_messages(spool_files[0].read_bytes().splitlines(), None)
                 spool_files[0].unlink()
@@ -787,7 +798,9 @@ class EventServer(ECServerThread):
             if in_downtime:
                 continue  # (still) in downtime, don't delete any event
             self._logger.log(
-                VERBOSE, "Remove event %d (created in downtime, host left downtime)", event["id"]
+                VERBOSE,
+                "Remove event %d (created in downtime, host left downtime)",
+                event["id"],
             )
             self._event_status.remove_event(event, "AUTODELETE")
 
@@ -905,7 +918,8 @@ class EventServer(ECServerThread):
 
                     else:
                         self._logger.info(
-                            "Cannot do rule action: rule %s not present anymore.", event["rule_id"]
+                            "Cannot do rule action: rule %s not present anymore.",
+                            event["rule_id"],
                         )
 
             # Handle events with a limited lifetime
@@ -941,7 +955,8 @@ class EventServer(ECServerThread):
         for rule in self._rules:
             if "expect" in rule:
                 if isinstance(
-                    self._rule_matcher.event_rule_matches_site(rule, event=Event()), MatchFailure
+                    self._rule_matcher.event_rule_matches_site(rule, event=Event()),
+                    MatchFailure,
                 ):
                     continue
 
@@ -1154,7 +1169,9 @@ class EventServer(ECServerThread):
                             count_unspecific += 1
 
         self._logger.info(
-            "Compiled %d active rules (ignoring %d disabled rules)", count_rules, count_disabled
+            "Compiled %d active rules (ignoring %d disabled rules)",
+            count_rules,
+            count_disabled,
         )
         if self._config["rule_optimizer"]:
             self._logger.info(
@@ -1327,7 +1344,8 @@ class EventServer(ECServerThread):
                         if "delay" in rule:
                             if self._config["debug_rules"]:
                                 self._logger.info(
-                                    "Event opening will be delayed for %d seconds", rule["delay"]
+                                    "Event opening will be delayed for %d seconds",
+                                    rule["delay"],
                                 )
                             existing_event["delay_until"] = time.time() + rule["delay"]
                             existing_event["phase"] = "delayed"
@@ -1355,7 +1373,8 @@ class EventServer(ECServerThread):
                     if "delay" in rule:
                         if self._config["debug_rules"]:
                             self._logger.info(
-                                "Event opening will be delayed for %d seconds", rule["delay"]
+                                "Event opening will be delayed for %d seconds",
+                                rule["delay"],
                             )
                         event["delay_until"] = time.time() + rule["delay"]
                         event["phase"] = "delayed"
@@ -1434,7 +1453,11 @@ class EventServer(ECServerThread):
             return self._rule_matcher.event_rule_matches(rule, event)
 
     def rewrite_event(  # pylint: disable=too-many-branches
-        self, rule: Rule, event: Event, match_groups: MatchGroups, set_first: bool = True
+        self,
+        rule: Rule,
+        event: Event,
+        match_groups: MatchGroups,
+        set_first: bool = True,
     ) -> None:
         """Rewrite texts and compute other fields in the event."""
         if rule["state"] == -1:
@@ -1491,7 +1514,9 @@ class EventServer(ECServerThread):
     def log_message(self, event: Event) -> None:
         try:
             with get_logfile(
-                self._config, self.settings.paths.messages_dir.value, self._message_period
+                self._config,
+                self.settings.paths.messages_dir.value,
+                self._message_period,
             ).open(mode="ab") as f:
                 f.write(
                     (
@@ -1514,7 +1539,10 @@ class EventServer(ECServerThread):
 
     def get_hosts_with_active_event_limit(self) -> list[str]:
         hosts = []
-        for (hostname, core_host), count in self._event_status.num_existing_events_by_host.items():
+        for (
+            hostname,
+            core_host,
+        ), count in self._event_status.num_existing_events_by_host.items():
             host_config = self.host_config.get_config_for_host(core_host) if core_host else None
             if count >= self._get_host_event_limit(host_config)[0]:
                 hosts.append(hostname)
@@ -1522,7 +1550,10 @@ class EventServer(ECServerThread):
 
     def get_rules_with_active_event_limit(self) -> list[str]:
         rule_ids = []
-        for rule_id, num_events in self._event_status.num_existing_events_by_rule.items():
+        for (
+            rule_id,
+            num_events,
+        ) in self._event_status.num_existing_events_by_rule.items():
             if rule_id is None:
                 continue  # Ignore rule unrelated overflow events. They have no rule id associated.
             if num_events >= self._get_rule_event_limit(rule_id)[0]:
@@ -1575,7 +1606,11 @@ class EventServer(ECServerThread):
 
         limit, action = self._get_event_limit(ty, event, host_config)
         self._logger.log(
-            VERBOSE, "  Type: %s, already open events: %d, Limit: %d", ty, num_already_open, limit
+            VERBOSE,
+            "  Type: %s, already open events: %d, Limit: %d",
+            ty,
+            num_already_open,
+            limit,
         )
 
         # Limit not reached: add new event
@@ -1737,7 +1772,8 @@ class EventServer(ECServerThread):
 def create_event_from_trap(trap: Iterable[tuple[str, str]], ipaddress_: str) -> Event:
     """New event with the trap OID as the application."""
     trapOIDs, other = partition(
-        lambda binding: binding[0] in ("1.3.6.1.6.3.1.1.4.1.0", "SNMPv2-MIB::snmpTrapOID.0"), trap
+        lambda binding: binding[0] in ("1.3.6.1.6.3.1.1.4.1.0", "SNMPv2-MIB::snmpTrapOID.0"),
+        trap,
     )
     return Event(
         time=time.time(),
@@ -2091,7 +2127,9 @@ class StatusServer(ECServerThread):
                         allow_commands = self._tcp_allow_commands
                         if self.settings.options.debug:
                             self._logger.info(
-                                "Handle status connection from %s:%d", addr_info[0], addr_info[1]
+                                "Handle status connection from %s:%d",
+                                addr_info[0],
+                                addr_info[1],
                             )
                         if self._tcp_access_list is not None and not allowed_ip(
                             ipaddress.ip_address(addr_info[0]), self._tcp_access_list
@@ -2324,7 +2362,11 @@ class StatusServer(ECServerThread):
         # TODO: De-duplicate code from do_event_actions()
         if action_id == "@NOTIFY" and event is not None:
             do_notify(
-                self._event_server.host_config, self._logger, event, user, is_cancelling=False
+                self._event_server.host_config,
+                self._logger,
+                event,
+                user,
+                is_cancelling=False,
             )
         else:
             # TODO: This locking doesn't make sense: We use the config outside of the lock below, too.
@@ -3053,7 +3095,10 @@ def replication_allow_command(config: Config, command: str, slave_status: SlaveS
 
 
 def replication_send(
-    config: Config, lock_configuration: ECLock, event_status: EventStatus, last_update: int
+    config: Config,
+    lock_configuration: ECLock,
+    event_status: EventStatus,
+    last_update: int,
 ) -> Mapping[str, object]:
     response: dict[str, object] = {}
     with lock_configuration:
@@ -3339,7 +3384,11 @@ def reload_configuration(
     with lock_configuration:
         config = load_configuration(settings, logger, slave_status)
         history = create_history(
-            settings, config, logger, StatusTableEvents.columns, StatusTableHistory.columns
+            settings,
+            config,
+            logger,
+            StatusTableEvents.columns,
+            StatusTableHistory.columns,
         )
         event_server.reload_configuration(config, history)
 
@@ -3387,7 +3436,11 @@ def main() -> None:
         slave_status = default_slave_status_master()
         config = load_configuration(settings, logger, slave_status)
         history = create_history(
-            settings, config, logger, StatusTableEvents.columns, StatusTableHistory.columns
+            settings,
+            config,
+            logger,
+            StatusTableEvents.columns,
+            StatusTableHistory.columns,
         )
 
         pid_path = settings.paths.pid_file.value
@@ -3401,7 +3454,9 @@ def main() -> None:
                 )
             pid_path.unlink()
             logger.info(
-                "Removed orphaned PID file %s (process %d not running anymore).", pid_path, old_pid
+                "Removed orphaned PID file %s (process %d not running anymore).",
+                pid_path,
+                old_pid,
             )
 
         # Make sure paths exist

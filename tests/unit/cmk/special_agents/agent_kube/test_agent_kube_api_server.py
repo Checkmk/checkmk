@@ -81,7 +81,10 @@ def test_controller_not_added_if_not_a_controller_object_mapping() -> None:
 
 
 def test_controller_not_in_object_to_owners() -> None:
-    object_to_owners: Mapping[str, api.OwnerReferences] = {"somethingelse": [], POD_UID: []}
+    object_to_owners: Mapping[str, api.OwnerReferences] = {
+        "somethingelse": [],
+        POD_UID: [],
+    }
     assert _find_controllers(POD_UID, object_to_owners) == CompleteControlChain(chain=[])
 
 

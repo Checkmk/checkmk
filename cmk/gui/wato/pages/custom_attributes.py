@@ -29,7 +29,11 @@ from cmk.gui.page_menu import (
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices, PermissionName
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri_contextless
+from cmk.gui.utils.urls import (
+    make_confirm_delete_link,
+    makeactionuri,
+    makeuri_contextless,
+)
 from cmk.gui.watolib.custom_attributes import (
     load_custom_attrs_from_mk_file,
     save_custom_attrs_to_mk_file,
@@ -188,7 +192,8 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
             )
         else:
             _changes.add_change(
-                "edit-%sattr" % self._type, _("Modified %s attribute %s") % (self._type, self._name)
+                "edit-%sattr" % self._type,
+                _("Modified %s attribute %s") % (self._type, self._name),
             )
         self._attr.update(
             {
@@ -231,7 +236,11 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
 
             forms.section(_("Topic"))
             html.help(_("The attribute is added to this section in the edit dialog."))
-            html.dropdown("topic", self._topics, deflt=self._attr.get("topic", self._default_topic))
+            html.dropdown(
+                "topic",
+                self._topics,
+                deflt=self._attr.get("topic", self._default_topic),
+            )
 
             forms.section(_("Help text") + "<sup>*</sup>")
             html.help(_("You might want to add some helpful description for the attribute."))
@@ -491,7 +500,10 @@ class ModeCustomAttrs(WatoMode, abc.ABC):
 
                 table.cell(_("Actions"), css=["buttons"])
                 edit_url = folder_preserving_link(
-                    [("mode", "edit_%s_attr" % self._type), ("edit", custom_attr["name"])]
+                    [
+                        ("mode", "edit_%s_attr" % self._type),
+                        ("edit", custom_attr["name"]),
+                    ]
                 )
                 delete_url = make_confirm_delete_link(
                     url=makeactionuri(request, transactions, [("_delete", custom_attr["name"])]),

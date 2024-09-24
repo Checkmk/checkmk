@@ -15,7 +15,10 @@ from cmk.gui.valuespec import Age, Dictionary, MonitoringState, TextInput, Tuple
 def _parameter_valuespec_splunk_license_state():
     return Dictionary(
         elements=[
-            ("state", MonitoringState(title=_("State if license is expired"), default_value=2)),
+            (
+                "state",
+                MonitoringState(title=_("State if license is expired"), default_value=2),
+            ),
             (
                 "expiration_time",
                 Tuple(

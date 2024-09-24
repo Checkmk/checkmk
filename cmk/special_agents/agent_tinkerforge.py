@@ -94,7 +94,12 @@ def print_temperature(conn, settings, uid):
 
     br = BrickletTemperature(uid, conn)
     print_generic(
-        settings, "temperature", br.get_identity(), 0.01, "\N{DEGREE SIGN}C", br.get_temperature()
+        settings,
+        "temperature",
+        br.get_identity(),
+        0.01,
+        "\N{DEGREE SIGN}C",
+        br.get_temperature(),
     )
 
 
@@ -206,11 +211,21 @@ def init_device_handlers():
     for dev_id, module_name, clazz, handler in [
         (13, "brick_master", "BrickMaster", print_master),
         (21, "bricklet_ambient_light", "BrickletAmbientLight", print_ambient_light),
-        (259, "bricklet_ambient_light_v2", "BrickletAmbientLightV2", print_ambient_light_v2),
+        (
+            259,
+            "bricklet_ambient_light_v2",
+            "BrickletAmbientLightV2",
+            print_ambient_light_v2,
+        ),
         (216, "bricklet_temperature", "BrickletTemperature", print_temperature),
         (226, "bricklet_ptc", "BrickletPTC", print_temperature_ext),
         (27, "bricklet_humidity", "BrickletHumidity", print_humidity),
-        (233, "bricklet_motion_detector", "BrickletMotionDetector", print_motion_detector),
+        (
+            233,
+            "bricklet_motion_detector",
+            "BrickletMotionDetector",
+            print_motion_detector,
+        ),
     ]:
         if dev_id is not None:
             device_handlers[dev_id] = handler
@@ -348,7 +363,9 @@ def main():
         if segment_display is not None:
             if segment_display_value is not None:
                 display_on_segment(
-                    conn, settings, "%d%s" % (segment_display_value, segment_display_unit)
+                    conn,
+                    settings,
+                    "%d%s" % (segment_display_value, segment_display_unit),
                 )
             else:
                 display_on_segment(conn, settings, "")

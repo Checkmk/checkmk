@@ -23,10 +23,14 @@ class ValueType(StrEnum):
     "allow_host_name", (True, False), ids=["allow_host_name", "not allow_host_name"]
 )
 @pytest.mark.parametrize(
-    "allow_ipv4_address", (True, False), ids=["allow_ipv4_address", "not allow_ipv4_address"]
+    "allow_ipv4_address",
+    (True, False),
+    ids=["allow_ipv4_address", "not allow_ipv4_address"],
 )
 @pytest.mark.parametrize(
-    "allow_ipv6_address", (True, False), ids=["allow_ipv6_address", "not allow_ipv6_address"]
+    "allow_ipv6_address",
+    (True, False),
+    ids=["allow_ipv6_address", "not allow_ipv6_address"],
 )
 @pytest.mark.parametrize(
     "value_type,value",

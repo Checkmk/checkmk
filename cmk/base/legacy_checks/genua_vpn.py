@@ -40,7 +40,14 @@ def inventory_genua_vpn(info):
 
 
 def check_genua_vpn(item, params, info):
-    for vpn_id, hostname_opposite, ip_opposite, vpn_private, vpn_remote, vpn_state in info:
+    for (
+        vpn_id,
+        hostname_opposite,
+        ip_opposite,
+        vpn_private,
+        vpn_remote,
+        vpn_state,
+    ) in info:
         if vpn_id == item:
             ip_info = ""
             if ip_opposite:

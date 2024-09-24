@@ -82,7 +82,13 @@ def _format_expected(lines):
             STATE_FILE_NAME,
             ERRPT_OUTPUT,
             [None, "", ERRPT_OUTPUT[3], ERRPT_OUTPUT[1], "something else entirely"],
-            [ERRPT_OUTPUT[1:], ERRPT_OUTPUT[1:], ERRPT_OUTPUT[1:3], [], ERRPT_OUTPUT[1:]],
+            [
+                ERRPT_OUTPUT[1:],
+                ERRPT_OUTPUT[1:],
+                ERRPT_OUTPUT[1:3],
+                [],
+                ERRPT_OUTPUT[1:],
+            ],
         ),
         (
             STATE_FILE_NAME,
@@ -94,7 +100,13 @@ def _format_expected(lines):
             "mk_logwatch_aix.last_reported",
             ERRPT_OUTPUT,
             [None, "", ERRPT_OUTPUT[3], ERRPT_OUTPUT[1], "something else entirely"],
-            [ERRPT_OUTPUT[1:], ERRPT_OUTPUT[1:], ERRPT_OUTPUT[1:3], [], ERRPT_OUTPUT[1:]],
+            [
+                ERRPT_OUTPUT[1:],
+                ERRPT_OUTPUT[1:],
+                ERRPT_OUTPUT[1:3],
+                [],
+                ERRPT_OUTPUT[1:],
+            ],
         ),
     ],
 )

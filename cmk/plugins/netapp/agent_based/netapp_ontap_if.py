@@ -223,7 +223,10 @@ def check_netapp_ontap_if(
     if not section_netapp_ontap_if or not section_netapp_ontap_ports:
         return
 
-    (interfaces_section, extra_info), failover_policy_alert = _merge_if_counters_sections(
+    (
+        (interfaces_section, extra_info),
+        failover_policy_alert,
+    ) = _merge_if_counters_sections(
         section_netapp_ontap_if,
         section_netapp_ontap_ports,
         section_netapp_ontap_if_counters,

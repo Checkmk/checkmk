@@ -31,8 +31,16 @@ def test_get_updated_host_label_files(discovered_host_labels_dir: Path) -> None:
 
     save_updated_host_label_files(
         [
-            ("host1.mk", time_1, "{'äbc': {'value': '123', 'plugin_name': 'plugin_1'}}\n"),
-            ("host2.mk", time_2, "{'äbc': {'value': 'xyz', 'plugin_name': 'plugin_1'}}\n"),
+            (
+                "host1.mk",
+                time_1,
+                "{'äbc': {'value': '123', 'plugin_name': 'plugin_1'}}\n",
+            ),
+            (
+                "host2.mk",
+                time_2,
+                "{'äbc': {'value': 'xyz', 'plugin_name': 'plugin_1'}}\n",
+            ),
         ]
     )
 

@@ -119,7 +119,9 @@ def _init_container_specs(pod_spec: api.PodSpec) -> section.ContainerSpecs:
     return _pod_container_specs(pod_spec.init_containers)
 
 
-def _pod_container_specs(container_specs: Sequence[api.ContainerSpec]) -> section.ContainerSpecs:
+def _pod_container_specs(
+    container_specs: Sequence[api.ContainerSpec],
+) -> section.ContainerSpecs:
     return section.ContainerSpecs(
         containers={
             spec.name: section.ContainerSpec(image_pull_policy=spec.image_pull_policy)

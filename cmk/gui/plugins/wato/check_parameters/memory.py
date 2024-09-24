@@ -52,9 +52,13 @@ def _parameter_valuespec_memory() -> Dictionary:
                                 Tuple(
                                     title=_("Specify levels in percentage of total RAM"),
                                     elements=[
-                                        Percentage(title=_("Warning at a usage of"), maxvalue=None),
                                         Percentage(
-                                            title=_("Critical at a usage of"), maxvalue=None
+                                            title=_("Warning at a usage of"),
+                                            maxvalue=None,
+                                        ),
+                                        Percentage(
+                                            title=_("Critical at a usage of"),
+                                            maxvalue=None,
                                         ),
                                     ],
                                 ),
@@ -86,8 +90,14 @@ def _parameter_valuespec_memory() -> Dictionary:
                                     Tuple(
                                         title=_("Specify levels in absolute values"),
                                         elements=[
-                                            Integer(title=_("Warning if below"), unit=_("MiB")),
-                                            Integer(title=_("Critical if below"), unit=_("MiB")),
+                                            Integer(
+                                                title=_("Warning if below"),
+                                                unit=_("MiB"),
+                                            ),
+                                            Integer(
+                                                title=_("Critical if below"),
+                                                unit=_("MiB"),
+                                            ),
                                         ],
                                     ),
                                 ],

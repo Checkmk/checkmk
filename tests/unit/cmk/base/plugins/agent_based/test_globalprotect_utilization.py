@@ -8,7 +8,12 @@ from typing import Any
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.globalprotect_utilization import (
     check_globalprotect_utilization,
@@ -20,7 +25,10 @@ from cmk.base.plugins.agent_based.globalprotect_utilization import (
 
 @pytest.mark.parametrize(
     "string_table, expected_result",
-    [([[3, 250, 8]], Section(utilization=3, max_tunnels=250, active_tunnels=8)), ([[]], None)],
+    [
+        ([[3, 250, 8]], Section(utilization=3, max_tunnels=250, active_tunnels=8)),
+        ([[]], None),
+    ],
 )
 def test_parse_globalprotect_utilization(
     string_table: StringTable, expected_result: Section | None
@@ -47,8 +55,16 @@ def test_discover_globalprotect_utilization(
             {"utilization": (1, 5)},
             Section(utilization=3, max_tunnels=250, active_tunnels=8),
             [
-                Result(state=State.WARN, summary="Utilization: 3.00% (warn/crit at 1.00%/5.00%)"),
-                Metric("channel_utilization", 3.0, levels=(1.0, 5.0), boundaries=(0.0, 100.0)),
+                Result(
+                    state=State.WARN,
+                    summary="Utilization: 3.00% (warn/crit at 1.00%/5.00%)",
+                ),
+                Metric(
+                    "channel_utilization",
+                    3.0,
+                    levels=(1.0, 5.0),
+                    boundaries=(0.0, 100.0),
+                ),
                 Result(state=State.OK, summary="Active sessions: 8.00"),
                 Metric("active_sessions", 8.0, boundaries=(0.0, 250.0)),
                 Result(state=State.OK, summary="Max sessions: 250"),

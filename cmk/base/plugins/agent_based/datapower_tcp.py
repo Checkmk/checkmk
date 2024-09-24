@@ -21,7 +21,9 @@ from .agent_based_api.v1 import OIDEnd, register, SNMPTree
 from .agent_based_api.v1.type_defs import StringTable
 
 
-def parse_datapower_tcp(string_table: list[StringTable]) -> tcp_connections.TCPConnections:
+def parse_datapower_tcp(
+    string_table: list[StringTable],
+) -> tcp_connections.TCPConnections:
     """
     >>> from pprint import pprint
     >>> pprint(parse_datapower_tcp([[

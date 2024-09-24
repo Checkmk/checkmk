@@ -144,7 +144,8 @@ def _perfometer_has_required_metrics_or_scalars(
 
     if perfometer["type"] == "logarithmic":
         return has_required_metrics_or_scalars(
-            [parse_expression(perfometer["metric"], translated_metrics)], translated_metrics
+            [parse_expression(perfometer["metric"], translated_metrics)],
+            translated_metrics,
         )
 
     if perfometer["type"] in ("dual", "stacked"):
@@ -178,7 +179,7 @@ def _perfometer_possible(
 
 
 def get_first_matching_perfometer(
-    translated_metrics: Mapping[str, TranslatedMetric]
+    translated_metrics: Mapping[str, TranslatedMetric],
 ) -> (
     perfometers.Perfometer | perfometers.Bidirectional | perfometers.Stacked | PerfometerSpec | None
 ):

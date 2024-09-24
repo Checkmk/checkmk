@@ -233,7 +233,10 @@ def page_list(  # pylint: disable=too-many-branches
                 if _visual_can_be_linked(what, visual_name, available_visuals, visual, owner):
                     show_url = makeuri_contextless(
                         request,
-                        [(visual_type_registry[what]().ident_attr, visual_name), ("owner", owner)],
+                        [
+                            (visual_type_registry[what]().ident_attr, visual_name),
+                            ("owner", owner),
+                        ],
                         filename="%s.py" % what_s,
                     )
                     html.a(

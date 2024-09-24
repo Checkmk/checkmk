@@ -108,7 +108,8 @@ agent_section_azure_virtualnetworkgateways = AgentSection(
 def discover_virtual_network_gateway(section: Section) -> DiscoveryResult:
     for item, vnet_gateway in section.items():
         yield Service(
-            item=item, labels=get_service_labels_from_resource_tags(vnet_gateway.resource.tags)
+            item=item,
+            labels=get_service_labels_from_resource_tags(vnet_gateway.resource.tags),
         )
 
 

@@ -245,7 +245,8 @@ class BICompiler:
         self._cleanup_vanished_aggregations()
         self._bi_structure_fetcher.cleanup_orphaned_files(known_sites)
         store.save_text_to_file(
-            str(self._path_compilation_timestamp), str(current_configstatus["configfile_timestamp"])
+            str(self._path_compilation_timestamp),
+            str(current_configstatus["configfile_timestamp"]),
         )
 
     def _cleanup_vanished_aggregations(self) -> None:
@@ -329,7 +330,10 @@ class BICompiler:
         result = self._sites_callback.query("GET status\nColumns: program_start\nCache: reload")
         program_start_times = {row[0]: int(row[1]) for row in result}
 
-        for site_id, site_is_online in self._sites_callback.all_sites_with_id_and_online():
+        for (
+            site_id,
+            site_is_online,
+        ) in self._sites_callback.all_sites_with_id_and_online():
             start_time = program_start_times.get(site_id, 0)
             current_configstatus["known_sites"].add((site_id, start_time))
             if site_is_online:

@@ -12,7 +12,10 @@ from cmk.base.config import load_checks, plugin_pathnames_in_directory
 
 from cmk.gui.exceptions import MKUserError
 
-from cmk.update_config.plugins.pre_actions.utils import ConflictMode, continue_per_users_choice
+from cmk.update_config.plugins.pre_actions.utils import (
+    ConflictMode,
+    continue_per_users_choice,
+)
 from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
 
 
@@ -21,7 +24,10 @@ class PreUpdateLegacyCheckPlugins(PreUpdateAction):
 
     def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
         errors = "".join(
-            load_checks(get_check_api_context, plugin_pathnames_in_directory(str(local_checks_dir)))
+            load_checks(
+                get_check_api_context,
+                plugin_pathnames_in_directory(str(local_checks_dir)),
+            )
         )
         if errors:
             logger.error(errors)

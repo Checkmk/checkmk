@@ -71,9 +71,14 @@ def parse_printer_supply(string_table: list[StringTable]) -> Section:
 
     color_mapping = {_get_oid_end_last_index(oid_end): value for oid_end, value in string_table[0]}
 
-    for index, (name, unit_info, raw_max_capacity, raw_level, supply_class, color_id) in enumerate(
-        string_table[1]
-    ):
+    for index, (
+        name,
+        unit_info,
+        raw_max_capacity,
+        raw_level,
+        supply_class,
+        color_id,
+    ) in enumerate(string_table[1]):
         try:
             max_capacity = int(raw_max_capacity)
             level = int(raw_level)
@@ -152,20 +157,29 @@ def check_printer_supply(item: str, params: Mapping[str, Any], section: Section)
     warn, crit = params["levels"]
 
     # handle cases with partial data
-    if supply.max_capacity == -2 or supply.level in [-3, -2, -1]:  # no percentage possible
+    if supply.max_capacity == -2 or supply.level in [
+        -3,
+        -2,
+        -1,
+    ]:  # no percentage possible
         if supply.level == -1 or supply.max_capacity == -1:
             yield Result(
-                state=State.OK, summary="%sThere are no restrictions on this supply" % color_info
+                state=State.OK,
+                summary="%sThere are no restrictions on this supply" % color_info,
             )
             return
         if supply.level == -3:
             yield Result(
-                state=State(params["some_remaining"]), summary="%sSome remaining" % color_info
+                state=State(params["some_remaining"]),
+                summary="%sSome remaining" % color_info,
             )
             yield Metric(
                 "pages",
                 supply.level,
-                levels=(0.01 * warn * supply.max_capacity, 0.01 * crit * supply.max_capacity),
+                levels=(
+                    0.01 * warn * supply.max_capacity,
+                    0.01 * crit * supply.max_capacity,
+                ),
                 boundaries=(0, supply.max_capacity),
             )
             return
@@ -218,5 +232,9 @@ register.check_plugin(
     discovery_function=discovery_printer_supply,
     check_function=check_printer_supply,
     check_ruleset_name="printer_supply",
-    check_default_parameters={"levels": (20.0, 10.0), "upturn_toner": False, "some_remaining": 1},
+    check_default_parameters={
+        "levels": (20.0, 10.0),
+        "upturn_toner": False,
+        "some_remaining": 1,
+    },
 )

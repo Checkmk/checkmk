@@ -408,7 +408,9 @@ def remove_leading_bom(message: str) -> str:
     return message[1:] if message.startswith("\ufeff") else message
 
 
-def split_syslog_structured_data_and_message(sd_and_message: str) -> tuple[str | None, str]:
+def split_syslog_structured_data_and_message(
+    sd_and_message: str,
+) -> tuple[str | None, str]:
     """Split a string containing structured data and the message into the two parts"""
     if sd_and_message.startswith("["):
         return _split_syslog_nonnil_sd_and_message(sd_and_message)
@@ -433,7 +435,9 @@ def _split_syslog_nonnil_sd_and_message(sd_and_message: str) -> tuple[str, str]:
     raise ValueError("Invalid RFC 5424 syslog message: structured data has the wrong format")
 
 
-def parse_syslog_message_structured_data(structured_data: str) -> tuple[dict[str, str], str]:
+def parse_syslog_message_structured_data(
+    structured_data: str,
+) -> tuple[dict[str, str], str]:
     """Checks if the structured data contains Checkmk-specific data and extracts it if found"""
     checkmk_id = "Checkmk@18662"
     if not (checkmk_elements := findall(rf"\[{checkmk_id}.*?(?<!\\)\]", structured_data)):
@@ -474,4 +478,10 @@ def scrub_string(s: str) -> str:
     return s.translate(_scrub_string_unicode_table)
 
 
-_scrub_string_unicode_table = {0: None, 1: None, 2: None, ord("\n"): None, ord("\t"): ord(" ")}
+_scrub_string_unicode_table = {
+    0: None,
+    1: None,
+    2: None,
+    ord("\n"): None,
+    ord("\t"): ord(" "),
+}

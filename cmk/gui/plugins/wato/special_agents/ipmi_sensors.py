@@ -15,7 +15,10 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     TextInput,
 )
-from cmk.gui.wato import MigrateToIndividualOrStoredPassword, RulespecGroupDatasourceProgramsOS
+from cmk.gui.wato import (
+    MigrateToIndividualOrStoredPassword,
+    RulespecGroupDatasourceProgramsOS,
+)
 from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 

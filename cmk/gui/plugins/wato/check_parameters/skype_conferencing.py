@@ -51,7 +51,9 @@ def _parameter_valuespec_skype_conferencing():
                             Tuple(
                                 elements=[
                                     Float(
-                                        title=_("Warning at"), unit=_("seconds"), default_value=5.0
+                                        title=_("Warning at"),
+                                        unit=_("seconds"),
+                                        default_value=5.0,
                                     ),
                                     Float(
                                         title=_("Critical at"),
@@ -75,7 +77,9 @@ def _parameter_valuespec_skype_conferencing():
                             Tuple(
                                 elements=[
                                     Float(
-                                        title=_("Warning at"), unit=_("seconds"), default_value=5.0
+                                        title=_("Warning at"),
+                                        unit=_("seconds"),
+                                        default_value=5.0,
                                     ),
                                     Float(
                                         title=_("Critical at"),

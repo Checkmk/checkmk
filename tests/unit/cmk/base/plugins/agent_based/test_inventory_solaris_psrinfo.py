@@ -9,7 +9,10 @@ from typing import NamedTuple, TypeVar
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    InventoryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.inventory_solaris_psrinfo import (
     inventory_solaris_cpus,
     parse_solaris_psrinfo_physical,

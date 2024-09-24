@@ -16,7 +16,10 @@ from cmk.update_config.plugins.actions.user_attributes import (
 @pytest.mark.parametrize(
     ["old", "expected_new"],
     [
-        pytest.param({"disable_notifications": True}, {"disable_notifications": {"disable": True}}),
+        pytest.param(
+            {"disable_notifications": True},
+            {"disable_notifications": {"disable": True}},
+        ),
         pytest.param({"disable_notifications": False}, {"disable_notifications": {}}),
         pytest.param({"disable_notifications": {}}, {"disable_notifications": {}}),
         pytest.param({}, {}),

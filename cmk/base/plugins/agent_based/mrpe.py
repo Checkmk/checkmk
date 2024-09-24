@@ -170,7 +170,10 @@ def check_mrpe(item: str, section: MRPESection) -> CheckResult:
 
     # name of check command needed for PNP to choose the correct template
     if dataset.name:
-        yield Result(state=State.OK, notice=f"Check command used in metric system: {dataset.name}")
+        yield Result(
+            state=State.OK,
+            notice=f"Check command used in metric system: {dataset.name}",
+        )
 
 
 register.check_plugin(

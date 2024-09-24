@@ -131,7 +131,11 @@ checks = {
                     ],
                 ),
                 (0, "Cleared: 3", [("ap_devices_cleared", 3, None, None, None, None)]),
-                (0, "Critical: 1", [("ap_devices_critical", 1, None, None, None, None)]),
+                (
+                    0,
+                    "Critical: 1",
+                    [("ap_devices_critical", 1, None, None, None, None)],
+                ),
             ],
         ),
         (
@@ -144,7 +148,11 @@ checks = {
                     [("ap_devices_percent_unhealthy", 25.0, 20.0, 40.0, None, None)],
                 ),
                 (0, "Cleared: 3", [("ap_devices_cleared", 3, None, None, None, None)]),
-                (0, "Critical: 1", [("ap_devices_critical", 1, None, None, None, None)]),
+                (
+                    0,
+                    "Critical: 1",
+                    [("ap_devices_critical", 1, None, None, None, None)],
+                ),
             ],
         ),
     ],

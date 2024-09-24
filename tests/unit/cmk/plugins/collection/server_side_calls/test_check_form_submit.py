@@ -7,7 +7,9 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.plugins.collection.server_side_calls.check_form_submit import active_check_config as config
+from cmk.plugins.collection.server_side_calls.check_form_submit import (
+    active_check_config as config,
+)
 from cmk.plugins.collection.server_side_calls.check_form_submit import UrlParams
 from cmk.server_side_calls.v1 import HostConfig, IPv4Config
 

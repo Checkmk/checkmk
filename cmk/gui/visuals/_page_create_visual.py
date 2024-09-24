@@ -16,7 +16,13 @@ from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_simple_form_page_menu
 from cmk.gui.type_defs import SingleInfos, VisualTypeName
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.valuespec import CascadingDropdown, DualListChoice, FixedValue, Transform, ValueSpec
+from cmk.gui.valuespec import (
+    CascadingDropdown,
+    DualListChoice,
+    FixedValue,
+    Transform,
+    ValueSpec,
+)
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
 
@@ -142,7 +148,9 @@ def SingleInfoSelection(info_keys: SingleInfos) -> Transform:
     )
 
 
-def _single_info_selection_to_valuespec(restrictions: Sequence[str]) -> tuple[str, Sequence[str]]:
+def _single_info_selection_to_valuespec(
+    restrictions: Sequence[str],
+) -> tuple[str, Sequence[str]]:
     if not restrictions:
         choice_name = "no_restriction"
     elif restrictions == ["host"]:
@@ -153,6 +161,6 @@ def _single_info_selection_to_valuespec(restrictions: Sequence[str]) -> tuple[st
 
 
 def _single_info_selection_from_valuespec(
-    name_and_restrictions: tuple[str, Sequence[str]]
+    name_and_restrictions: tuple[str, Sequence[str]],
 ) -> Sequence[str]:
     return name_and_restrictions[1]

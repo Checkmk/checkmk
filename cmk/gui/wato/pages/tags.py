@@ -49,7 +49,12 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.wato.pages._html_elements import wato_html_head
 from cmk.gui.watolib.host_attributes import host_attribute, undeclare_host_tag_attribute
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, Host, make_action_link
+from cmk.gui.watolib.hosts_and_folders import (
+    Folder,
+    folder_preserving_link,
+    Host,
+    make_action_link,
+)
 from cmk.gui.watolib.main_menu import MenuItem
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.rulesets import Ruleset
@@ -542,7 +547,10 @@ class ModeTagUsage(ABCTagMode):
                     self._show_tag_row(table, tag_group, tag)
 
     def _show_tag_row(
-        self, table: Table, tag_group: cmk.utils.tags.TagGroup, tag: cmk.utils.tags.GroupedTag
+        self,
+        table: Table,
+        tag_group: cmk.utils.tags.TagGroup,
+        tag: cmk.utils.tags.GroupedTag,
     ) -> None:
         table.row()
 
@@ -780,7 +788,8 @@ class ModeEditTagGroup(ABCEditTagMode):
                 raise MKUserError(None, "%s" % e)
             update_tag_config(changed_hosttags_config)
             _changes.add_change(
-                "edit-hosttags", _("Created new host tag group '%s'") % changed_tag_group.id
+                "edit-hosttags",
+                _("Created new host tag group '%s'") % changed_tag_group.id,
             )
             flash(_("Created new host tag group '%s'") % changed_tag_group.title)
             return redirect(mode_url("tags"))
@@ -901,7 +910,8 @@ class ModeEditTagGroup(ABCEditTagMode):
 
 
 def _rename_tags_after_confirmation(
-    breadcrumb: Breadcrumb, operation: ABCTagGroupOperation | OperationReplaceGroupedTags
+    breadcrumb: Breadcrumb,
+    operation: ABCTagGroupOperation | OperationReplaceGroupedTags,
 ) -> bool | str:
     """Handle renaming and deletion of tags
 
@@ -997,7 +1007,10 @@ def _rename_tags_after_confirmation(
                 )
                 html.open_ul()
                 html.radiobutton(
-                    "_repair", "remove", True, _("Just remove the affected tags from the rules.")
+                    "_repair",
+                    "remove",
+                    True,
+                    _("Just remove the affected tags from the rules."),
                 )
                 html.br()
                 html.radiobutton(
@@ -1011,7 +1024,10 @@ def _rename_tags_after_confirmation(
             else:
                 html.open_ul()
                 html.radiobutton(
-                    "_repair", "repair", True, _("Fix affected folders, hosts and rules.")
+                    "_repair",
+                    "repair",
+                    True,
+                    _("Fix affected folders, hosts and rules."),
                 )
 
             html.br()

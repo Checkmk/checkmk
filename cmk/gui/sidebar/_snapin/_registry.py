@@ -43,7 +43,9 @@ class SnapinRegistry(Registry[type[SidebarSnapin]]):
         for path, page_func in instance().page_handlers().items():
             page_registry.register_page_handler(path, page_func)
 
-    def get_customizable_snapin_types(self) -> list[tuple[str, type[CustomizableSidebarSnapin]]]:
+    def get_customizable_snapin_types(
+        self,
+    ) -> list[tuple[str, type[CustomizableSidebarSnapin]]]:
         return [
             (snapin_type_id, snapin_type)
             for snapin_type_id, snapin_type in self.items()

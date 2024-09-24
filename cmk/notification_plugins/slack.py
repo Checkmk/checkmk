@@ -8,6 +8,7 @@ Send notification messages to Slack
 
 Use a slack webhook to send notification messages
 """
+
 from cmk.notification_plugins.utils import (
     format_link,
     host_url_from_context,

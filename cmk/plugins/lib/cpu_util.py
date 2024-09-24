@@ -7,7 +7,13 @@ from collections.abc import Mapping, MutableMapping, Sequence
 from typing import Any, NamedTuple
 
 from cmk.agent_based.v1 import check_levels, check_levels_predictive
-from cmk.agent_based.v2 import CheckResult, get_average, IgnoreResultsError, Metric, render
+from cmk.agent_based.v2 import (
+    CheckResult,
+    get_average,
+    IgnoreResultsError,
+    Metric,
+    render,
+)
 
 
 class CPUInfo(
@@ -48,7 +54,10 @@ class CPUInfo(
         caster = int if values and isinstance(values[0], int) else float
         fillup = (caster(0) for _ in range(10 - len(values)))
         return super().__new__(
-            cls, name, *(caster(v) if v is not None else caster(0) for v in values), *fillup
+            cls,
+            name,
+            *(caster(v) if v is not None else caster(0) for v in values),
+            *fillup,
         )
 
     @property

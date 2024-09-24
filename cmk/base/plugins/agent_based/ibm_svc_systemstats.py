@@ -25,9 +25,30 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 Item = str
 StatName = str
 
-VDISK_STATS = ["vdisk_r_mb", "vdisk_w_mb", "vdisk_r_io", "vdisk_w_io", "vdisk_r_ms", "vdisk_w_ms"]
-MDISK_STATS = ["mdisk_r_mb", "mdisk_w_mb", "mdisk_r_io", "mdisk_w_io", "mdisk_r_ms", "mdisk_w_ms"]
-DRIVE_STATS = ["drive_r_mb", "drive_w_mb", "drive_r_io", "drive_w_io", "drive_r_ms", "drive_w_ms"]
+VDISK_STATS = [
+    "vdisk_r_mb",
+    "vdisk_w_mb",
+    "vdisk_r_io",
+    "vdisk_w_io",
+    "vdisk_r_ms",
+    "vdisk_w_ms",
+]
+MDISK_STATS = [
+    "mdisk_r_mb",
+    "mdisk_w_mb",
+    "mdisk_r_io",
+    "mdisk_w_io",
+    "mdisk_r_ms",
+    "mdisk_w_ms",
+]
+DRIVE_STATS = [
+    "drive_r_mb",
+    "drive_w_mb",
+    "drive_r_io",
+    "drive_w_io",
+    "drive_r_ms",
+    "drive_w_ms",
+]
 
 
 class IBMSystemStats(NamedTuple):
@@ -66,7 +87,10 @@ def ibm_svc_systemstats_parse(string_table: StringTable) -> IBMSystemStats:
             disks["Drives"][short_stat_name] = float(stat_current)
 
     return IBMSystemStats(
-        cpu_pc=cpu_pc, total_cache_pc=total_cache_pc, write_cache_pc=write_cache_pc, disks=disks
+        cpu_pc=cpu_pc,
+        total_cache_pc=total_cache_pc,
+        write_cache_pc=write_cache_pc,
+        disks=disks,
     )
 
 
@@ -251,10 +275,16 @@ def check_ibm_svc_systemstats_cache(section: IBMSystemStats) -> CheckResult:
     total_cache_pc = section.total_cache_pc
 
     if total_cache_pc is None:
-        yield Result(state=State.UNKNOWN, summary="value total_cache_pc not found in agent output")
+        yield Result(
+            state=State.UNKNOWN,
+            summary="value total_cache_pc not found in agent output",
+        )
         return
     if write_cache_pc is None:
-        yield Result(state=State.UNKNOWN, summary="value write_cache_pc not found in agent output")
+        yield Result(
+            state=State.UNKNOWN,
+            summary="value write_cache_pc not found in agent output",
+        )
         return
 
     yield Result(

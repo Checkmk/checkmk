@@ -23,8 +23,20 @@ def _bin_to_64(bin_: str | Sequence[int]) -> int:
     return sum(b * 265**i for i, b in enumerate(bin_[::-1]))
 
 
-def _line_to_interface(line: Iterable[str | Sequence[int]]) -> interfaces.InterfaceWithCounters:
-    index, opStatus, speed, txWords64, rxWords64, txFrames64, rxFrames64, c3Discards64, crcs = line
+def _line_to_interface(
+    line: Iterable[str | Sequence[int]],
+) -> interfaces.InterfaceWithCounters:
+    (
+        index,
+        opStatus,
+        speed,
+        txWords64,
+        rxWords64,
+        txFrames64,
+        rxFrames64,
+        c3Discards64,
+        crcs,
+    ) = line
     index = "%02d" % int(str(index))
     return interfaces.InterfaceWithCounters(
         interfaces.Attributes(

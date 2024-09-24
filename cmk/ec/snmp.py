@@ -38,7 +38,10 @@ VarBinds = Iterable[VarBind]
 class SNMPTrapParser:
     # Disable receiving of SNMPv3 INFORM messages. We do not support them (yet)
     class _ECNotificationReceiver(pysnmp.entity.rfc3413.ntfrcv.NotificationReceiver):
-        pduTypes = (pysnmp.proto.api.v1.TrapPDU.tagSet, pysnmp.proto.api.v2c.SNMPv2TrapPDU.tagSet)
+        pduTypes = (
+            pysnmp.proto.api.v1.TrapPDU.tagSet,
+            pysnmp.proto.api.v2c.SNMPv2TrapPDU.tagSet,
+        )
 
     def __init__(self, settings: Settings, config: Config, logger: Logger) -> None:
         self._logger = logger
@@ -156,7 +159,9 @@ class SNMPTrapParser:
     ) -> tuple[Iterable[tuple[str, str]], str] | None:
         """Let PySNMP parse the given trap data. The _handle_snmptrap() callback below collects the result."""
         self._logger.log(
-            VERBOSE, "Trap received from %s:%d. Checking for acceptance now.", sender_address
+            VERBOSE,
+            "Trap received from %s:%d. Checking for acceptance now.",
+            sender_address,
         )
         self._varbinds_and_ipaddress = None
         self.snmp_engine.setUserContext(sender_address=sender_address)
@@ -243,12 +248,16 @@ class SNMPTrapTranslator:
                 self.translate = self._translate_simple
             case (True, {**extra}) if not extra:  # matches empty dict
                 self._mib_resolver = self._construct_resolver(
-                    self._logger, settings.paths.compiled_mibs_dir.value, load_texts=False
+                    self._logger,
+                    settings.paths.compiled_mibs_dir.value,
+                    load_texts=False,
                 )
                 self.translate = self._translate_via_mibs
             case (True, {"add_description": True}):
                 self._mib_resolver = self._construct_resolver(
-                    self._logger, settings.paths.compiled_mibs_dir.value, load_texts=True
+                    self._logger,
+                    settings.paths.compiled_mibs_dir.value,
+                    load_texts=True,
                 )
                 self.translate = self._translate_via_mibs
             case _:
@@ -284,7 +293,8 @@ class SNMPTrapTranslator:
             return pysnmp.smi.view.MibViewController(builder)
         except pysnmp.smi.error.SmiError:
             logger.info(
-                "Exception while loading MIB modules. Proceeding without modules!", exc_info=True
+                "Exception while loading MIB modules. Proceeding without modules!",
+                exc_info=True,
             )
             return None
 

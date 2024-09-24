@@ -10,7 +10,10 @@ from polyfactory.factories.pydantic_factory import ModelFactory
 from pytest_mock import MockerFixture
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
-from cmk.base.plugins.agent_based.inventory_kube_pod import _containers_to_table, inventory_kube_pod
+from cmk.base.plugins.agent_based.inventory_kube_pod import (
+    _containers_to_table,
+    inventory_kube_pod,
+)
 
 from cmk.plugins.lib.kube import (
     ContainerName,
@@ -62,7 +65,9 @@ from cmk.plugins.lib.kube import (
                         image="busybox",
                         ready=False,
                         state=ContainerWaitingState(
-                            type=ContainerStateType.waiting, reason="PodInitializing", detail=None
+                            type=ContainerStateType.waiting,
+                            reason="PodInitializing",
+                            detail=None,
                         ),
                         restart_count=0,
                     )
@@ -206,7 +211,9 @@ def test_inventory_kube_pod(
                         image="busybox",
                         ready=False,
                         state=ContainerWaitingState(
-                            type=ContainerStateType.waiting, reason="PodInitializing", detail=None
+                            type=ContainerStateType.waiting,
+                            reason="PodInitializing",
+                            detail=None,
                         ),
                         restart_count=0,
                     )

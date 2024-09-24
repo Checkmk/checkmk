@@ -20,8 +20,16 @@ def _parameter_valuespec_docsis_channels_upstream():
                 Tuple(
                     title=_("Levels for signal/noise ratio"),
                     elements=[
-                        Float(title=_("Warning at or below"), unit="dB", default_value=10.0),
-                        Float(title=_("Critical at or below"), unit="dB", default_value=5.0),
+                        Float(
+                            title=_("Warning at or below"),
+                            unit="dB",
+                            default_value=10.0,
+                        ),
+                        Float(
+                            title=_("Critical at or below"),
+                            unit="dB",
+                            default_value=5.0,
+                        ),
                     ],
                 ),
             ),

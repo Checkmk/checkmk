@@ -79,9 +79,12 @@ def check_dell_idrac_disks(item, _no_params, info):
         display_name,
     ) in info:
         if disk_name == item:
-            yield 0, "[{}] Size: {}".format(
-                display_name,
-                render.disksize(int(capacity_MB) * 1024 * 1024),
+            yield (
+                0,
+                "[{}] Size: {}".format(
+                    display_name,
+                    render.disksize(int(capacity_MB) * 1024 * 1024),
+                ),
             )
 
             for what, what_key, what_text in [

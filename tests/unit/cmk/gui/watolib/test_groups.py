@@ -28,7 +28,9 @@ def patch_config_paths(monkeypatch, tmp_path):
 
 
 @pytest.mark.usefixtures("tmp_path")
-def test_load_group_information_empty(run_as_superuser: Callable[[], ContextManager[None]]) -> None:
+def test_load_group_information_empty(
+    run_as_superuser: Callable[[], ContextManager[None]],
+) -> None:
     with application_and_request_context(), run_as_superuser():
         assert gui_groups.load_contact_group_information() == {}
         assert gui_groups.load_host_group_information() == {}
@@ -36,7 +38,9 @@ def test_load_group_information_empty(run_as_superuser: Callable[[], ContextMana
 
 
 @pytest.mark.usefixtures("tmp_path")
-def test_load_group_information(run_as_superuser: Callable[[], ContextManager[None]]) -> None:
+def test_load_group_information(
+    run_as_superuser: Callable[[], ContextManager[None]],
+) -> None:
     with open(cmk.utils.paths.check_mk_config_dir + "/wato/groups.mk", "w") as f:
         f.write(
             """# encoding: utf-8

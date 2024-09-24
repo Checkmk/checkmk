@@ -25,7 +25,12 @@ import cmk.gui.userdb as userdb
 from cmk.gui.auth import is_site_login
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKAuthException, MKUserError
+from cmk.gui.exceptions import (
+    FinalizeRequest,
+    HTTPRedirect,
+    MKAuthException,
+    MKUserError,
+)
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -179,13 +184,15 @@ class LoginPage(Page):
             username_var = request.get_str_input(self._username_varname, "")
             if not username_var:
                 raise MKUserError(
-                    self._username_varname, _("No username entered. Please enter a username.")
+                    self._username_varname,
+                    _("No username entered. Please enter a username."),
                 )
 
             password_var = request.get_str_input(self._password_varname, "")
             if not password_var:
                 raise MKUserError(
-                    self._password_varname, _("No password entered. Please enter a password.")
+                    self._password_varname,
+                    _("No password entered. Please enter a password."),
                 )
 
             try:
@@ -226,7 +233,9 @@ class LoginPage(Page):
 
                 log_security_event(
                     AuthenticationSuccessEvent(
-                        auth_method="login_form", username=username, remote_ip=request.remote_ip
+                        auth_method="login_form",
+                        username=username,
+                        remote_ip=request.remote_ip,
                     )
                 )
 

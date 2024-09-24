@@ -48,7 +48,11 @@ from ._artwork import (
     save_graph_pin,
 )
 from ._color import render_color_icon
-from ._graph_render_config import GraphRenderConfig, GraphRenderConfigBase, GraphTitleFormat
+from ._graph_render_config import (
+    GraphRenderConfig,
+    GraphRenderConfigBase,
+    GraphTitleFormat,
+)
 from ._graph_specification import GraphDataRange, GraphRecipe, GraphSpecification
 from ._utils import SizeEx
 
@@ -611,7 +615,10 @@ def _render_ajax_graph(context: Mapping[str, Any]) -> dict[str, Any]:
     range_from_var = request.var("range_from")
     range_to_var = request.var("range_to")
     if range_from_var is not None and range_to_var is not None:
-        vertical_range: tuple[float, float] | None = (float(range_from_var), float(range_to_var))
+        vertical_range: tuple[float, float] | None = (
+            float(range_from_var),
+            float(range_to_var),
+        )
     else:
         vertical_range = None
 
@@ -780,7 +787,9 @@ def _render_graph_container_html(
     graph_height = graph_render_config.size[1] * html_size_per_ex
 
     content = HTMLWriter.render_div("", class_="title") + HTMLWriter.render_div(
-        "", class_="content", style="width:%dpx;height:%dpx" % (graph_width, graph_height)
+        "",
+        class_="content",
+        style="width:%dpx;height:%dpx" % (graph_width, graph_height),
     )
 
     output = HTMLWriter.render_div(
@@ -918,7 +927,8 @@ def _render_time_range_selection(
             )
         )
     return HTMLWriter.render_table(
-        HTML().join(HTMLWriter.render_tr(content) for content in rows), class_="timeranges"
+        HTML().join(HTMLWriter.render_tr(content) for content in rows),
+        class_="timeranges",
     )
 
 

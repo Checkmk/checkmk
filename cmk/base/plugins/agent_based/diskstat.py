@@ -73,7 +73,13 @@ from typing import Any, TypeVar
 
 from cmk.plugins.lib import diskstat, multipath
 
-from .agent_based_api.v1 import get_rate, get_value_store, IgnoreResultsError, register, type_defs
+from .agent_based_api.v1 import (
+    get_rate,
+    get_value_store,
+    IgnoreResultsError,
+    register,
+    type_defs,
+)
 
 
 def parse_diskstat(string_table: type_defs.StringTable) -> diskstat.Section:
@@ -438,7 +444,7 @@ _ItemData = TypeVar("_ItemData")
 
 
 def _merge_cluster_sections(
-    cluster_section: Mapping[str, Mapping[str, _ItemData] | None]
+    cluster_section: Mapping[str, Mapping[str, _ItemData] | None],
 ) -> Mapping[str, _ItemData] | None:
     return {
         k: v

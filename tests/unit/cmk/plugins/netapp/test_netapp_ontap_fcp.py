@@ -106,7 +106,9 @@ def test_latency_results_warn(value_store_patch: None) -> None:
 
     result = list(
         _latency_results(
-            item="test_latency", params={"avg_read_latency": (0.1, 0.3)}, fcp_if=fcp_if_counters
+            item="test_latency",
+            params={"avg_read_latency": (0.1, 0.3)},
+            fcp_if=fcp_if_counters,
         )
     )
     assert isinstance(result[0], Result)

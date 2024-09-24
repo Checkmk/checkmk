@@ -28,7 +28,9 @@ def test_get_registered_check_plugins(monkeypatch: MonkeyPatch) -> None:
     )
 
     monkeypatch.setattr(
-        agent_based_register._config, "registered_check_plugins", {test_plugin.name: test_plugin}
+        agent_based_register._config,
+        "registered_check_plugins",
+        {test_plugin.name: test_plugin},
     )
 
     assert agent_based_register.is_registered_check_plugin(test_plugin.name)

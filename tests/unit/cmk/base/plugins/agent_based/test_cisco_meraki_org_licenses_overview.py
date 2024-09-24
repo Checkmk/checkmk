@@ -221,7 +221,10 @@ def test_check_licenses_overview_already_expired(
     ],
 )
 def test_check_licenses_overview_remaining_expiration_time(
-    string_table: StringTable, item: str, params: Mapping, expected_results: Sequence[Result]
+    string_table: StringTable,
+    item: str,
+    params: Mapping,
+    expected_results: Sequence[Result],
 ) -> None:
     section = cisco_meraki_org_licenses_overview.parse_licenses_overview(string_table)
     with on_time("2000-01-29 00:00:00", "UTC"):

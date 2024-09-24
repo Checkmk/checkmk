@@ -190,7 +190,11 @@ def check_ddn_s2a_stats(item, params, parsed):
         read, read_mb_s, params.get("read"), "Read: %.2f MB/s", "disk_read_throughput"
     )
     yield check_datarate_levels(
-        write, write_mb_s, params.get("write"), "Write: %.2f MB/s", "disk_write_throughput"
+        write,
+        write_mb_s,
+        params.get("write"),
+        "Write: %.2f MB/s",
+        "disk_write_throughput",
     )
     yield check_datarate_levels(total, total_mb_s, params.get("total"), "Total: %.2f MB/s")
 

@@ -6,7 +6,11 @@
 from collections.abc import Mapping
 
 from .agent_based_api.v1 import Attributes, HostLabel, register
-from .agent_based_api.v1.type_defs import HostLabelGenerator, InventoryResult, StringTable
+from .agent_based_api.v1.type_defs import (
+    HostLabelGenerator,
+    InventoryResult,
+    StringTable,
+)
 
 Section = Mapping[str, str]
 

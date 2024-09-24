@@ -7,7 +7,10 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult
-from cmk.base.plugins.agent_based.perle_chassis_slots import inventory_perle_chassis_slots, Section
+from cmk.base.plugins.agent_based.perle_chassis_slots import (
+    inventory_perle_chassis_slots,
+    Section,
+)
 
 from .utils_inventory import sort_inventory_result
 

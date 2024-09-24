@@ -226,7 +226,9 @@ def parse_arguments(argv: Sequence[str]) -> Args:
         action=vcrtrace(filter_post_data_parameters=[("client_secret", "****")]),
     )
     parser.add_argument(
-        "--dump-config", action="store_true", help="""Dump parsed configuration and exit"""
+        "--dump-config",
+        action="store_true",
+        help="""Dump parsed configuration and exit""",
     )
     parser.add_argument(
         "--timeout",
@@ -484,7 +486,6 @@ class BaseApiClient(abc.ABC):
         self._ratelimit = min(self._ratelimit, new_value)
 
     def _handle_ratelimit(self, get_response: Callable[[], requests.Response]) -> requests.Response:
-
         response = get_response()
         self._update_ratelimit(response)
 
@@ -653,7 +654,9 @@ class GraphApiClient(BaseApiClient):
         return self._filter_out_applications(applications)
 
     @staticmethod
-    def _filter_out_applications(applications: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def _filter_out_applications(
+        applications: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
         key_subset = {"id", "appId", "displayName", "passwordCredentials"}
         return [
             {k: app[k] for k in key_subset} for app in applications if app["passwordCredentials"]
@@ -713,7 +716,8 @@ class MgmtApiClient(BaseApiClient):
             "resourceGroups/{}/providers/Microsoft.Network/networkInterfaces/{}/ipConfigurations/{}"
         )
         return self._get(
-            url.format(group, nic_name, ip_conf_name), params={"api-version": "2022-01-01"}
+            url.format(group, nic_name, ip_conf_name),
+            params={"api-version": "2022-01-01"},
         )
 
     def public_ip_view(self, group, name):
@@ -985,7 +989,6 @@ class IssueCollector:
 
 
 def create_metric_dict(metric, aggregation, interval_id):
-
     name = metric["name"]["value"]
     metric_dict = {
         "name": name,
@@ -1107,7 +1110,8 @@ def get_frontend_ip_configs(
         ip_config_data = {
             **filter_keys(ip_config, ("id", "name")),
             **filter_keys(
-                ip_config["properties"], ("privateIPAllocationMethod", "privateIPAddress")
+                ip_config["properties"],
+                ("privateIPAllocationMethod", "privateIPAddress"),
             ),
         }
         if "publicIPAddress" in ip_config.get("properties"):
@@ -1143,7 +1147,13 @@ def get_routing_rules(app_gateway: Mapping) -> list[Mapping]:
 
 
 def get_http_listeners(app_gateway: Mapping) -> Mapping[str, Mapping]:
-    listener_keys = ("port", "protocol", "hostNames", "frontendIPConfiguration", "frontendPort")
+    listener_keys = (
+        "port",
+        "protocol",
+        "hostNames",
+        "frontendIPConfiguration",
+        "frontendPort",
+    )
     return {
         l["id"]: {
             "id": l["id"],
@@ -1176,7 +1186,10 @@ def process_app_gateway(mgmt_client: MgmtApiClient, resource: AzureResource) -> 
     resource.info["properties"]["frontend_ports"] = frontend_ports
 
     backend_settings = {
-        c["id"]: {"name": c["name"], **filter_keys(c["properties"], ("port", "protocol"))}
+        c["id"]: {
+            "name": c["name"],
+            **filter_keys(c["properties"], ("port", "protocol")),
+        }
         for c in app_gateway["properties"]["backendHttpSettingsCollection"]
     }
     resource.info["properties"]["backend_settings"] = backend_settings
@@ -1243,7 +1256,11 @@ def get_backend_address_pools(
                     backend_addresses.append(backend_address_data)
 
         backend_pools.append(
-            {"id": backend_pool["id"], "name": backend_pool["name"], "addresses": backend_addresses}
+            {
+                "id": backend_pool["id"],
+                "name": backend_pool["name"],
+                "addresses": backend_addresses,
+            }
         )
 
     return backend_pools
@@ -1276,7 +1293,13 @@ def get_remote_peerings(
     vnet_peerings = []
     for vnet_peering in resource["properties"].get("remoteVirtualNetworkPeerings", []):
         vnet_peering_id = vnet_peering["id"]
-        subscription, group, providers, vnet_id, vnet_peering_id = get_params_from_azure_id(
+        (
+            subscription,
+            group,
+            providers,
+            vnet_id,
+            vnet_peering_id,
+        ) = get_params_from_azure_id(
             vnet_peering_id,
             resource_types=["providers", "virtualNetworks", "virtualNetworkPeerings"],
         )
@@ -1481,7 +1504,6 @@ def gather_metrics(
 
         metric_definitions = ALL_METRICS.get(resource_type, [])
         for metric_definition in metric_definitions:
-
             cache = MetricCache(
                 metric_definition, resource_type, resource_region, NOW, debug=args.debug
             )
@@ -1500,7 +1522,8 @@ def gather_metrics(
                         metric_resource.metrics += resource_metrics
                     else:
                         LOGGER.info(
-                            "Resource %s found in metrics cache no longer monitored", resource_id
+                            "Resource %s found in metrics cache no longer monitored",
+                            resource_id,
                         )
 
             except ApiError as exc:
@@ -1527,7 +1550,10 @@ def get_vm_labels_section(vm: AzureResource, group_labels: GroupLabels) -> Label
 
 
 def process_resource(
-    mgmt_client: MgmtApiClient, resource: AzureResource, group_labels: GroupLabels, args: Args
+    mgmt_client: MgmtApiClient,
+    resource: AzureResource,
+    group_labels: GroupLabels,
+    args: Args,
 ) -> Sequence[Section]:
     sections: list[Section] = []
     enabled_services = set(args.services)
@@ -1612,7 +1638,12 @@ def write_group_info(
 
     section = AzureSection("agent_info")
     section.add(("monitored-groups", json.dumps(monitored_groups)))
-    section.add(("monitored-resources", json.dumps([r.info["name"] for r in monitored_resources])))
+    section.add(
+        (
+            "monitored-resources",
+            json.dumps([r.info["name"] for r in monitored_resources]),
+        )
+    )
     section.write()
     # write empty agent_info section for all groups, otherwise
     # the service will only be discovered if something goes wrong
@@ -1773,7 +1804,8 @@ def process_resource_health(
             "id": health_id,
             "name": "/".join(health_id.split("/")[-6:-4]),
             **filter_keys(
-                health["properties"], ("availabilityState", "summary", "reasonType", "occuredTime")
+                health["properties"],
+                ("availabilityState", "summary", "reasonType", "occuredTime"),
             ),
             "tags": resource.tags,
         }

@@ -15,7 +15,10 @@ from cmk.gui.valuespec import Age, Dictionary, Float, Integer, Tuple
 def _parameter_valuespec_timesyncd_time():
     return Dictionary(
         elements=[
-            ("stratum_level", Integer(title=_("Critical at stratum"), default_value=10)),
+            (
+                "stratum_level",
+                Integer(title=_("Critical at stratum"), default_value=10),
+            ),
             (
                 "quality_levels",
                 Tuple(

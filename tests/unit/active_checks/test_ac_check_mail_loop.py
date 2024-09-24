@@ -20,7 +20,9 @@ def fixture_check_mail_loop() -> ModuleType:
     return import_module_hack("active_checks/check_mail_loop")
 
 
-def test_ac_check_mail_main_loop_failed_to_send_mail(check_mail_loop: ModuleType) -> None:
+def test_ac_check_mail_main_loop_failed_to_send_mail(
+    check_mail_loop: ModuleType,
+) -> None:
     state, info, perf = _active_check_main_core(
         check_mail_loop.create_argument_parser(),
         check_mail_loop.check_mail_roundtrip,

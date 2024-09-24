@@ -26,12 +26,16 @@ def fixture_disable_checks(site: Site) -> Iterator[None]:
 def fixture_disable_flap_detection(site: Site) -> Iterator[None]:
     site.live.command("DISABLE_FLAP_DETECTION")
     wait_until(
-        lambda: site.is_global_flag_disabled("enable_flap_detection"), timeout=60, interval=1
+        lambda: site.is_global_flag_disabled("enable_flap_detection"),
+        timeout=60,
+        interval=1,
     )
     try:
         yield
     finally:
         site.live.command("ENABLE_FLAP_DETECTION")
         wait_until(
-            lambda: site.is_global_flag_enabled("enable_flap_detection"), timeout=60, interval=1
+            lambda: site.is_global_flag_enabled("enable_flap_detection"),
+            timeout=60,
+            interval=1,
         )

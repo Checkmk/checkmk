@@ -114,7 +114,11 @@ def create_skeleton_files(
                     if dirpath == "tmp" or dirpath.startswith("tmp/"):
                         continue
                 create_skeleton_file(
-                    skelroot, site_dir, dirpath + "/" + entry, replacements, skel_permissions
+                    skelroot,
+                    site_dir,
+                    dirpath + "/" + entry,
+                    replacements,
+                    skel_permissions,
                 )
 
 

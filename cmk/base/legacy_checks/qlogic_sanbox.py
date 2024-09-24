@@ -166,7 +166,10 @@ def check_qlogic_sanbox_psu(item, _no_params, info):
             else:
                 status = 3
 
-            return status, f"Power Supply {sensor_id} reports status {sensor_status_descr}"
+            return (
+                status,
+                f"Power Supply {sensor_id} reports status {sensor_status_descr}",
+            )
     return 3, "No sensor %s found" % item
 
 

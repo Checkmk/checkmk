@@ -29,7 +29,12 @@ from cmk.gui.type_defs import (
     ViewSpec,
     VisualContext,
 )
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
+from cmk.gui.utils.urls import (
+    makeuri,
+    makeuri_contextless,
+    requested_file_name,
+    urlencode,
+)
 from cmk.gui.valuespec import DictionaryEntry, DropdownChoice
 from cmk.gui.view import View
 from cmk.gui.view_renderer import GUIViewRenderer

@@ -7,7 +7,13 @@
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import get_rate, get_value_store, IgnoreResultsError, render, StringTable
+from cmk.agent_based.v2 import (
+    get_rate,
+    get_value_store,
+    IgnoreResultsError,
+    render,
+    StringTable,
+)
 
 
 def inventory_win_cpuusage(info):
@@ -38,7 +44,11 @@ def check_win_cpuusage(item, params, info):
             for cpu in range(0, num_cpus):
                 ticks = int(line[2 + cpu])
                 ticks_per_sec = get_rate(
-                    get_value_store(), "cpuusage.%d" % cpu, this_time, ticks, raise_overflow=True
+                    get_value_store(),
+                    "cpuusage.%d" % cpu,
+                    this_time,
+                    ticks,
+                    raise_overflow=True,
                 )
                 secs_per_sec = ticks_per_sec / 10000000.0
                 used_perc = 100 * (1 - secs_per_sec)
@@ -94,16 +104,28 @@ def check_win_diskstat(item, params, info):
 
     try:
         read_per_sec = get_rate(
-            get_value_store(), "diskstat.read", this_time, read_bytes_ctr, raise_overflow=True
+            get_value_store(),
+            "diskstat.read",
+            this_time,
+            read_bytes_ctr,
+            raise_overflow=True,
         )
         write_per_sec = get_rate(
-            get_value_store(), "diskstat.write", this_time, write_bytes_ctr, raise_overflow=True
+            get_value_store(),
+            "diskstat.write",
+            this_time,
+            write_bytes_ctr,
+            raise_overflow=True,
         )
     except IgnoreResultsError as e:
         # make sure that inital check does not need three cycles for all counters
         # to be initialized
         get_rate(
-            get_value_store(), "diskstat.write", this_time, write_bytes_ctr, raise_overflow=True
+            get_value_store(),
+            "diskstat.write",
+            this_time,
+            write_bytes_ctr,
+            raise_overflow=True,
         )
         raise e
 

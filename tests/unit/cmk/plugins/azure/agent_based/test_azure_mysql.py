@@ -115,7 +115,10 @@ def test_check_replication(
             "checkmk-mysql-single-server",
             {"active_connections": (5, 10), "failed_connections": (1, 2)},
             [
-                Result(state=State.WARN, summary="Active connections: 6 (warn/crit at 5/10)"),
+                Result(
+                    state=State.WARN,
+                    summary="Active connections: 6 (warn/crit at 5/10)",
+                ),
                 Metric("active_connections", 6.0, levels=(5.0, 10.0)),
                 Result(state=State.CRIT, summary="Failed connections: 2 (warn/crit at 1/2)"),
                 Metric("failed_connections", 2.0, levels=(1.0, 2.0)),

@@ -60,7 +60,8 @@ def check_kaspersky_av_kesl_updates(section: Section) -> CheckResult:
     )
     yield Result(state=State.OK, summary=f"Database date: {render.datetime(db_release_date)}")
     yield Result(
-        state=State.OK, summary=f"Database records: {section['Anti-virus database records']}"
+        state=State.OK,
+        summary=f"Database records: {section['Anti-virus database records']}",
     )
 
 

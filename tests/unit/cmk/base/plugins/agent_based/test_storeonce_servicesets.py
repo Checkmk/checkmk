@@ -8,7 +8,12 @@ import pytest
 
 from tests.testlib import on_time
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.storeonce_servicesets import (
     check_storeonce_servicesets,
     check_storeonce_servicesets_capacity,

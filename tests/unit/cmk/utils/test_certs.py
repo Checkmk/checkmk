@@ -15,7 +15,11 @@ from tests.testlib.certs import rsa_private_keys_equal
 from livestatus import SiteId
 
 from cmk.utils.certs import CN_TEMPLATE, RootCA
-from cmk.utils.crypto.certificate import Certificate, CertificateWithPrivateKey, X509Name
+from cmk.utils.crypto.certificate import (
+    Certificate,
+    CertificateWithPrivateKey,
+    X509Name,
+)
 from cmk.utils.crypto.keys import PlaintextPrivateKeyPEM, PrivateKey
 
 _CA = b"""-----BEGIN PRIVATE KEY-----

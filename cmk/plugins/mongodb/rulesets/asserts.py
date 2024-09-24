@@ -20,8 +20,7 @@ from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
 def _parameter_valuespec_mongodb_asserts() -> Dictionary:
     return Dictionary(
         elements={
-            "%s_assert_rate"
-            % what: DictElement[SimpleLevelsConfigModel[float]](
+            "%s_assert_rate" % what: DictElement[SimpleLevelsConfigModel[float]](
                 parameter_form=SimpleLevels[float](
                     title=Title("%s rate") % what.title(),
                     level_direction=LevelDirection.UPPER,

@@ -114,7 +114,8 @@ PiggybackFormatter = Callable[[PB_KUBE_OBJECT], str]
 
 
 KubeNamespacedObj = TypeVar(
-    "KubeNamespacedObj", bound=DaemonSet | Deployment | StatefulSet | api.CronJob | api.Pod
+    "KubeNamespacedObj",
+    bound=DaemonSet | Deployment | StatefulSet | api.CronJob | api.Pod,
 )
 
 
@@ -160,7 +161,9 @@ def thin_containers(pods: Collection[api.Pod]) -> section.ThinContainers:
     )
 
 
-def collect_memory_resources_from_api_pods(pods: Sequence[api.Pod]) -> section.Resources:
+def collect_memory_resources_from_api_pods(
+    pods: Sequence[api.Pod],
+) -> section.Resources:
     return aggregate_resources("memory", [c for pod in pods for c in pod.spec.containers])
 
 
@@ -281,9 +284,13 @@ class CheckmkHostSettings(NamedTuple):
     annotation_key_pattern: AnnotationOption
 
 
-def controller_strategy(controller: Deployment | DaemonSet | StatefulSet) -> section.UpdateStrategy:
+def controller_strategy(
+    controller: Deployment | DaemonSet | StatefulSet,
+) -> section.UpdateStrategy:
     return section.UpdateStrategy.model_validate(controller.spec.model_dump())
 
 
-def controller_spec(controller: Deployment | DaemonSet | StatefulSet) -> section.ControllerSpec:
+def controller_spec(
+    controller: Deployment | DaemonSet | StatefulSet,
+) -> section.ControllerSpec:
     return section.ControllerSpec(min_ready_seconds=controller.spec.min_ready_seconds)

@@ -59,7 +59,9 @@ def test_rulespec_registry_match_type(rulespec: ManualCheckParameterRulespec) ->
     assert rulespec.match_type == "dict"
 
 
-def test_rulespec_registry_parameter_valuespec(rulespec: ManualCheckParameterRulespec) -> None:
+def test_rulespec_registry_parameter_valuespec(
+    rulespec: ManualCheckParameterRulespec,
+) -> None:
     assert rulespec._parameter_valuespec == kube_node_container_count._parameter_valuespec
 
 

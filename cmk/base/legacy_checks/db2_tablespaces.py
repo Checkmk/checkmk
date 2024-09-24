@@ -74,7 +74,12 @@ def check_db2_tablespaces(item, params, parsed):
 
     infotext = f"{render.disksize(used)} of {render.disksize(usable)} used"
     perfdata = [
-        ("tablespace_size", usable, max(0, total - (warn or 0)), max(0, total - (crit or 0))),
+        (
+            "tablespace_size",
+            usable,
+            max(0, total - (warn or 0)),
+            max(0, total - (crit or 0)),
+        ),
         ("tablespace_used", used),
         ("tablespace_max_size", total),
     ]

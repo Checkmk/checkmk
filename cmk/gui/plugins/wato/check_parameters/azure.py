@@ -345,14 +345,26 @@ def _parameter_valuespec_azure_vms() -> Migrate:
             title=_("Map provisioning and power states"),
             elements=[
                 ("succeeded", MonitoringState(title="Provisioning state succeeded")),
-                ("failed", MonitoringState(title="Provisioning state failed", default_value=2)),
+                (
+                    "failed",
+                    MonitoringState(title="Provisioning state failed", default_value=2),
+                ),
                 ("starting", MonitoringState(title="Power state starting")),
                 ("running", MonitoringState(title="Power state running")),
-                ("stopping", MonitoringState(title="Power state stopping", default_value=1)),
-                ("stopped", MonitoringState(title="Power state stopped", default_value=1)),
+                (
+                    "stopping",
+                    MonitoringState(title="Power state stopping", default_value=1),
+                ),
+                (
+                    "stopped",
+                    MonitoringState(title="Power state stopped", default_value=1),
+                ),
                 ("deallocating", MonitoringState(title="Power state deallocating")),
                 ("deallocated", MonitoringState(title="Power state deallocated")),
-                ("unknown", MonitoringState(title=_("Power state unknown"), default_value=3)),
+                (
+                    "unknown",
+                    MonitoringState(title=_("Power state unknown"), default_value=3),
+                ),
             ],
         ),
         migrate=migrate_map_states,
@@ -451,8 +463,14 @@ def _parameter_valuespec_azure_vms_summary() -> Dictionary:
                         ("running", _azure_vms_summary_levels(_("Running VMs"))),
                         ("stopping", _azure_vms_summary_levels(_("Stopping VMs"))),
                         ("stopped", _azure_vms_summary_levels(_("Stopped VMs"))),
-                        ("deallocating", _azure_vms_summary_levels(_("Deallocating VMs"))),
-                        ("deallocated", _azure_vms_summary_levels(_("Deallocated VMs"))),
+                        (
+                            "deallocating",
+                            _azure_vms_summary_levels(_("Deallocating VMs")),
+                        ),
+                        (
+                            "deallocated",
+                            _azure_vms_summary_levels(_("Deallocated VMs")),
+                        ),
                         (
                             "unknown",
                             _azure_vms_summary_levels(_("VMs in unknown state"), upper=(1, 1)),

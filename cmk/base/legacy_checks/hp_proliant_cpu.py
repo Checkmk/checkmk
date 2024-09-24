@@ -15,7 +15,13 @@ def parse_hp_proliant_cpu(string_table: StringTable) -> StringTable:
     return string_table
 
 
-hp_proliant_cpu_status_map = {1: "unknown", 2: "ok", 3: "degraded", 4: "failed", 5: "disabled"}
+hp_proliant_cpu_status_map = {
+    1: "unknown",
+    2: "ok",
+    3: "degraded",
+    4: "failed",
+    5: "disabled",
+}
 hp_proliant_cpu_status2nagios_map = {
     "unknown": 3,
     "ok": 0,

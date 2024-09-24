@@ -10,7 +10,12 @@ import pytest
 
 from tests.unit.checks.checktestlib import mock_item_state
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.threepar_volumes import (
     check_threepar_volumes,
     discover_threepar_volumes,
@@ -85,7 +90,10 @@ def test_discover_3par_volumes(
                 Metric("trend", 0.0),
                 Result(state=State.OK, summary="Dedup: 1.65"),
                 Result(state=State.OK, summary="Compact: 19.54"),
-                Result(state=State.OK, summary="Type: FULL, WWN: 60002AC0000000000000003F000292E7"),
+                Result(
+                    state=State.OK,
+                    summary="Type: FULL, WWN: 60002AC0000000000000003F000292E7",
+                ),
                 Metric("fs_provisioning", 32212254720.0),
             ],
             id="Everything is OK.",
@@ -95,9 +103,19 @@ def test_discover_3par_volumes(
             "admin",
             FILESYSTEM_DEFAULT_PARAMS,
             [
-                Metric("fs_used", 10240.0, levels=(8192.0, 9216.0), boundaries=(0.0, 10240.0)),
+                Metric(
+                    "fs_used",
+                    10240.0,
+                    levels=(8192.0, 9216.0),
+                    boundaries=(0.0, 10240.0),
+                ),
                 Metric("fs_free", 0.0, boundaries=(0.0, None)),
-                Metric("fs_used_percent", 100.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+                Metric(
+                    "fs_used_percent",
+                    100.0,
+                    levels=(80.0, 90.0),
+                    boundaries=(0.0, 100.0),
+                ),
                 Result(
                     state=State.CRIT,
                     summary="Used: 100.00% - 10.0 GiB of 10.0 GiB (warn/crit at 80.00%/90.00% used)",
@@ -108,7 +126,10 @@ def test_discover_3par_volumes(
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +<0.01%"),
                 Metric("trend", 0.5917133490073674),
                 Result(state=State.OK, summary="Time left until disk full: 0 seconds"),
-                Result(state=State.OK, summary="Type: FULL, WWN: 60002AC000000000000000000002ACF2"),
+                Result(
+                    state=State.OK,
+                    summary="Type: FULL, WWN: 60002AC000000000000000000002ACF2",
+                ),
                 Metric("fs_provisioning", 10737418240.0),
             ],
             id="StringTable without userSpace key.",
@@ -122,9 +143,19 @@ def test_discover_3par_volumes(
             "admin",
             FILESYSTEM_DEFAULT_PARAMS,
             [
-                Metric("fs_used", 8240.0, levels=(8192.0, 9216.0), boundaries=(0.0, 10240.00)),
+                Metric(
+                    "fs_used",
+                    8240.0,
+                    levels=(8192.0, 9216.0),
+                    boundaries=(0.0, 10240.00),
+                ),
                 Metric("fs_free", 2000.0, boundaries=(0.0, None)),
-                Metric("fs_used_percent", 80.46875, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+                Metric(
+                    "fs_used_percent",
+                    80.46875,
+                    levels=(80.0, 90.0),
+                    boundaries=(0.0, 100.0),
+                ),
                 Result(
                     state=State.WARN,
                     summary="Used: 80.47% - 8.05 GiB of 10.0 GiB (warn/crit at 80.00%/90.00% used)",
@@ -134,10 +165,16 @@ def test_discover_3par_volumes(
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +488 KiB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +<0.01%"),
                 Metric("trend", 0.47614433552936597),
-                Result(state=State.OK, summary="Time left until disk full: 11 years 185 days"),
+                Result(
+                    state=State.OK,
+                    summary="Time left until disk full: 11 years 185 days",
+                ),
                 Result(state=State.OK, summary="Dedup: 1.65"),
                 Result(state=State.OK, summary="Compact: 19.54"),
-                Result(state=State.OK, summary="Type: FULL, WWN: 60002AC0000000000000003F000292E7"),
+                Result(
+                    state=State.OK,
+                    summary="Type: FULL, WWN: 60002AC0000000000000003F000292E7",
+                ),
                 Metric("fs_provisioning", 32212254720.0),
             ],
             id="If the used space is above the WARN level, the check result is WARN.",
@@ -151,9 +188,19 @@ def test_discover_3par_volumes(
             "admin",
             FILESYSTEM_DEFAULT_PARAMS,
             [
-                Metric("fs_used", 10000.0, levels=(8192.0, 9216.0), boundaries=(0.0, 10240.00)),
+                Metric(
+                    "fs_used",
+                    10000.0,
+                    levels=(8192.0, 9216.0),
+                    boundaries=(0.0, 10240.00),
+                ),
                 Metric("fs_free", 240.0, boundaries=(0.0, None)),
-                Metric("fs_used_percent", 97.65625, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+                Metric(
+                    "fs_used_percent",
+                    97.65625,
+                    levels=(80.0, 90.0),
+                    boundaries=(0.0, 100.0),
+                ),
                 Result(
                     state=State.CRIT,
                     summary="Used: 97.66% - 9.77 GiB of 10.0 GiB (warn/crit at 80.00%/90.00% used)",
@@ -166,7 +213,10 @@ def test_discover_3par_volumes(
                 Result(state=State.OK, summary="Time left until disk full: 1 year 50 days"),
                 Result(state=State.OK, summary="Dedup: 1.65"),
                 Result(state=State.OK, summary="Compact: 19.54"),
-                Result(state=State.OK, summary="Type: FULL, WWN: 60002AC0000000000000003F000292E7"),
+                Result(
+                    state=State.OK,
+                    summary="Type: FULL, WWN: 60002AC0000000000000003F000292E7",
+                ),
                 Metric("fs_provisioning", 32212254720.0),
             ],
             id="If the used space is above the CRIT level, the check result is CRIT.",
@@ -192,7 +242,8 @@ def test_discover_3par_volumes(
                 Result(state=State.OK, summary="Dedup: 1.65"),
                 Result(state=State.OK, summary="Compact: 19.54"),
                 Result(
-                    state=State.WARN, summary="Type: FULL, WWN: 60002AC0000000000000003F000292E7"
+                    state=State.WARN,
+                    summary="Type: FULL, WWN: 60002AC0000000000000003F000292E7",
                 ),
                 Metric("fs_provisioning", 32212254720.0),
             ],
@@ -219,7 +270,8 @@ def test_discover_3par_volumes(
                 Result(state=State.OK, summary="Dedup: 1.65"),
                 Result(state=State.OK, summary="Compact: 19.54"),
                 Result(
-                    state=State.CRIT, summary="Type: FULL, WWN: 60002AC0000000000000003F000292E7"
+                    state=State.CRIT,
+                    summary="Type: FULL, WWN: 60002AC0000000000000003F000292E7",
                 ),
                 Metric("fs_provisioning", 32212254720.0),
             ],
@@ -243,7 +295,10 @@ def test_discover_3par_volumes(
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
                 Metric("trend", 0.0),
-                Result(state=State.OK, summary="Type: FULL, WWN: 60002AC0000000000000003F000292E7"),
+                Result(
+                    state=State.OK,
+                    summary="Type: FULL, WWN: 60002AC0000000000000003F000292E7",
+                ),
                 Metric("fs_provisioning", 32212254720.0),
             ],
             id="If information about the capacity efficiency of the volume is not present, no results for it are created.",

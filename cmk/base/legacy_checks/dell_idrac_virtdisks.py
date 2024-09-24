@@ -61,7 +61,10 @@ def check_dell_idrac_virtdisks(item, _no_params, info):
         if item == name:
             yield 0, "Raid level: %s" % map_states["raidlevel"][raid_level]
 
-            for what, what_key in [(disk_state, "Disk"), (component_state, "Component")]:
+            for what, what_key in [
+                (disk_state, "Disk"),
+                (component_state, "Component"),
+            ]:
                 state, state_readable = map_states[what_key.lower()][what]
                 yield state, f"{what_key} status: {state_readable}"
 

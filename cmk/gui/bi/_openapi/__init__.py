@@ -22,7 +22,12 @@ from cmk.gui import fields as gui_fields
 from cmk.gui.bi import BIManager, get_cached_bi_packs
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions, response_schemas
+from cmk.gui.openapi.restful_objects import (
+    constructors,
+    Endpoint,
+    permissions,
+    response_schemas,
+)
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
 
@@ -345,7 +350,10 @@ def _aggregation_state(
                     line_tokens.append("/".join(node_info))
             if actual_result.output:
                 line_tokens.append(actual_result.output)
-            own_infos["error"] = {"state": actual_result.state, "output": ", ".join(line_tokens)}
+            own_infos["error"] = {
+                "state": actual_result.state,
+                "output": ", ".join(line_tokens),
+            }
 
         nested_infos = [
             x
@@ -575,7 +583,8 @@ def get_bi_pack(params: Mapping[str, Any]) -> Response:
                     rel=".../value",
                     parameters={"collection": "items"},
                     href=constructors.object_href(
-                        "bi_" + name, element.id  # type: ignore[arg-type]
+                        "bi_" + name,  # type: ignore[arg-type]
+                        element.id,
                     ),
                 )
                 for element in elements

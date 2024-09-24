@@ -7,7 +7,14 @@ from collections.abc import Mapping
 from typing import Any, NamedTuple
 
 from cmk.agent_based.v1 import check_levels
-from cmk.agent_based.v2 import CheckResult, DiscoveryResult, render, Result, Service, State
+from cmk.agent_based.v2 import (
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Result,
+    Service,
+    State,
+)
 
 
 class Section(NamedTuple):

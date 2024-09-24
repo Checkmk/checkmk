@@ -31,7 +31,11 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.redis import get_redis_client, redis_enabled, redis_server_reachable
-from cmk.utils.regex import regex, WATO_FOLDER_PATH_NAME_CHARS, WATO_FOLDER_PATH_NAME_REGEX
+from cmk.utils.regex import (
+    regex,
+    WATO_FOLDER_PATH_NAME_CHARS,
+    WATO_FOLDER_PATH_NAME_REGEX,
+)
 from cmk.utils.site import omd_site
 from cmk.utils.store.host_storage import (
     ABCHostsStorage,
@@ -218,7 +222,7 @@ PermittedGroupsOfFolder = Mapping[PathWithoutSlash, _ContactGroupsInfo]
 
 
 def _get_permitted_groups_of_all_folders(
-    all_folders: Mapping[PathWithoutSlash, Folder]
+    all_folders: Mapping[PathWithoutSlash, Folder],
 ) -> PermittedGroupsOfFolder:
     def _compute_tokens(folder_path: PathWithoutSlash) -> tuple[PathWithoutSlash, ...]:
         """Create tokens for each folder. The main folder requires some special treatment
@@ -414,9 +418,12 @@ class _RedisHelper:
             return zip(a, a, a, a)
 
         results = pipeline.execute()
-        for folder_path, title, title_path_without_root, permitted_contact_groups in pairwise(
-            results[0]
-        ):
+        for (
+            folder_path,
+            title,
+            title_path_without_root,
+            permitted_contact_groups,
+        ) in pairwise(results[0]):
             self._folder_metadata[folder_path] = FolderMetaData(
                 self.tree,
                 folder_path,
@@ -668,7 +675,9 @@ class _RedisHelper:
         return self._timestamp_to_fixed_precision_str(0.0)
 
 
-def _get_fully_loaded_wato_folders(tree: FolderTree) -> Mapping[PathWithoutSlash, Folder]:
+def _get_fully_loaded_wato_folders(
+    tree: FolderTree,
+) -> Mapping[PathWithoutSlash, Folder]:
     wato_folders: dict[PathWithoutSlash, Folder] = {}
     Folder.load(tree=tree, name="", parent_folder=None).add_to_dictionary(wato_folders)
     return wato_folders
@@ -709,7 +718,8 @@ class _PickleWATOInfoStorage(_ABCWATOInfoStorage):
 
     def write(self, file_path: Path, data: WATOFolderInfo) -> None:
         pickle_store = store.ObjectStore(
-            self._add_suffix(file_path), serializer=store.PickleSerializer[WATOFolderInfo]()
+            self._add_suffix(file_path),
+            serializer=store.PickleSerializer[WATOFolderInfo](),
         )
         with pickle_store.locked():
             pickle_store.write_obj(data)
@@ -1118,7 +1128,8 @@ class Folder(FolderProtocol):
 
     validate_edit_host: Callable[[SiteId, HostName, HostAttributes], None]
     validate_create_hosts: Callable[
-        [Iterable[tuple[HostName, HostAttributes, Sequence[HostName] | None]], SiteId], None
+        [Iterable[tuple[HostName, HostAttributes, Sequence[HostName] | None]], SiteId],
+        None,
     ]
     validate_create_subfolder: Callable[[Folder, HostAttributes], None]
     validate_edit_folder: Callable[[Folder, HostAttributes], None]
@@ -1930,7 +1941,11 @@ class Folder(FolderProtocol):
 
             parent = parent.parent()
 
-        return permitted_groups, host_contact_groups, cgconf.get("use_for_services", False)
+        return (
+            permitted_groups,
+            host_contact_groups,
+            cgconf.get("use_for_services", False),
+        )
 
     def find_host_recursively(self, host_name: HostName) -> Host | None:
         host: Host | None = self.host(host_name)
@@ -2155,7 +2170,11 @@ class Folder(FolderProtocol):
 
         # 2. Actual modification
         new_subfolder = Folder.new(
-            tree=self.tree, name=name, parent_folder=self, title=title, attributes=attributes
+            tree=self.tree,
+            name=name,
+            parent_folder=self,
+            title=title,
+            attributes=attributes,
         )
         self._subfolders[name] = new_subfolder
         new_subfolder.save()

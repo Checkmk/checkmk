@@ -42,7 +42,10 @@ def _parameter_valuespec_fortinet_signatures():
                 "av_ext_age",
                 _vs_fortinet_signatures(_("Age of Anti-Virus signature extended database")),
             ),
-            ("ips_age", _vs_fortinet_signatures(_("Age of Intrusion Prevention signature"))),
+            (
+                "ips_age",
+                _vs_fortinet_signatures(_("Age of Intrusion Prevention signature")),
+            ),
             (
                 "ips_ext_age",
                 _vs_fortinet_signatures(

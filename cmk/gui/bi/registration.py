@@ -12,7 +12,11 @@ from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.sidebar import SnapinRegistry
 from cmk.gui.views.icon import IconRegistry
 from cmk.gui.visuals.filter import FilterRegistry
-from cmk.gui.watolib.host_rename import RenameHostHook, RenameHostHookRegistry, RenamePhase
+from cmk.gui.watolib.host_rename import (
+    RenameHostHook,
+    RenameHostHookRegistry,
+    RenamePhase,
+)
 from cmk.gui.watolib.main_menu import MainModuleRegistry, MainModuleTopicRegistry
 from cmk.gui.watolib.mode import ModeRegistry
 

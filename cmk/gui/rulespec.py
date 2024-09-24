@@ -41,7 +41,8 @@ def register_plugins(loaded_rule_specs: Sequence[LoadedRuleSpec]) -> None:
             )
             if legacy_rulespec.name in rulespec_registry.keys():
                 logger.debug(
-                    "Duplicate rule_spec '%s', keeping legacy rulespec", legacy_rulespec.name
+                    "Duplicate rule_spec '%s', keeping legacy rulespec",
+                    legacy_rulespec.name,
                 )
                 continue
             # This isn't actually a "real" registry
@@ -53,7 +54,9 @@ def register_plugins(loaded_rule_specs: Sequence[LoadedRuleSpec]) -> None:
             if debug_enabled():
                 raise e
             logger.error(
-                "Error converting to legacy rulespec '%s' : %s", loaded_rule_spec.rule_spec.name, e
+                "Error converting to legacy rulespec '%s' : %s",
+                loaded_rule_spec.rule_spec.name,
+                e,
             )
             add_failed_plugin(
                 Path(traceback.extract_tb(e.__traceback__)[-1].filename),

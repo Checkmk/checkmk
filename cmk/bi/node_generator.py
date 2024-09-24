@@ -50,7 +50,9 @@ class BINodeGenerator(ABCBINodeGenerator):
 
 class BINodeGeneratorSchema(Schema):
     search = create_nested_schema(
-        BISearchSchema, default_schema=BIEmptySearchSchema, description="Search criteria."
+        BISearchSchema,
+        default_schema=BIEmptySearchSchema,
+        description="Search criteria.",
     )
     action = create_nested_schema(
         BIActionSchema,

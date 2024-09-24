@@ -23,7 +23,9 @@ from cmk.base.api.agent_based import register
 
 from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
 
-from cmk.update_config.plugins.actions.replaced_check_plugins import REPLACED_CHECK_PLUGINS
+from cmk.update_config.plugins.actions.replaced_check_plugins import (
+    REPLACED_CHECK_PLUGINS,
+)
 
 _ALL_REPLACED_CHECK_PLUGINS: Mapping[CheckPluginName, CheckPluginName] = {
     **REPLACED_CHECK_PLUGINS,

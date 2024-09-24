@@ -11,7 +11,15 @@
 from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import all_of, any_of, equals, exists, SNMPTree, startswith, StringTable
+from cmk.agent_based.v2 import (
+    all_of,
+    any_of,
+    equals,
+    exists,
+    SNMPTree,
+    startswith,
+    StringTable,
+)
 
 
 def inventory_brocade_vdx_status(info):

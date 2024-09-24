@@ -7,7 +7,13 @@ from typing import Literal
 
 from typing_extensions import TypedDict
 
-from cmk.gui.type_defs import FilterName, GraphRenderOptionsVS, SingleInfos, Visual, VisualContext
+from cmk.gui.type_defs import (
+    FilterName,
+    GraphRenderOptionsVS,
+    SingleInfos,
+    Visual,
+    VisualContext,
+)
 from cmk.gui.valuespec import TimerangeValue
 
 DashboardName = str

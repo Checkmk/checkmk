@@ -14,7 +14,8 @@ from tests.testlib import Check
     "info, expected_result", [([["", "", ""], ["2", "237273", "130456"]], [("2", {})])]
 )
 def test_inventory_dell_compellent_folder(
-    info: Sequence[Sequence[str]], expected_result: Sequence[tuple[str, Mapping[object, object]]]
+    info: Sequence[Sequence[str]],
+    expected_result: Sequence[tuple[str, Mapping[object, object]]],
 ) -> None:
     result = Check("dell_compellent_folder").run_discovery(info)
     assert list(result) == expected_result

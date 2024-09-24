@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """EC UPDATE methods with one or more event IDs"""
+
 import pytest
 
 from tests.testlib import CMKEventConsole
@@ -17,7 +18,8 @@ from cmk.ec.query import MKClientError
 
 
 @pytest.mark.parametrize(
-    "start_phase,set_phase_to", [("open", "0"), ("open", "1"), ("ack", "0"), ("ack", "1")]
+    "start_phase,set_phase_to",
+    [("open", "0"), ("open", "1"), ("ack", "0"), ("ack", "1")],
 )
 def test_update_event(
     event_status: EventStatus,
@@ -33,7 +35,10 @@ def test_update_event(
     }
     event_status.new_event(CMKEventConsole.new_event(event))
     s = FakeStatusSocket(
-        bytes(f"COMMAND UPDATE;1;testuser;{set_phase_to};test_comment;test_contact_name", "utf-8")
+        bytes(
+            f"COMMAND UPDATE;1;testuser;{set_phase_to};test_comment;test_contact_name",
+            "utf-8",
+        )
     )
     status_server.handle_client(s, True, "127.0.0.1")
 
@@ -78,7 +83,10 @@ def test_update_multiple_evens(event_status: EventStatus, status_server: StatusS
 
     event_ids = ",".join([str(n + 1) for n, _ in enumerate(event_status.events())])
     s = FakeStatusSocket(
-        bytes(f"COMMAND UPDATE;{event_ids};testuser;1;test_comment;test_contact_name", "utf-8")
+        bytes(
+            f"COMMAND UPDATE;{event_ids};testuser;1;test_comment;test_contact_name",
+            "utf-8",
+        )
     )
     status_server.handle_client(s, True, "127.0.0.1")
 

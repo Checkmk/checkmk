@@ -8,7 +8,9 @@ from collections import OrderedDict
 from tests.testlib import set_timezone
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
-from cmk.base.plugins.agent_based.inv_esx_vsphere_hostsystem import inv_esx_vsphere_hostsystem
+from cmk.base.plugins.agent_based.inv_esx_vsphere_hostsystem import (
+    inv_esx_vsphere_hostsystem,
+)
 
 from .utils_inventory import sort_inventory_result
 
@@ -26,7 +28,10 @@ section = OrderedDict(
         ("hardware.cpuInfo.numCpuPackages", ["2"]),
         ("hardware.cpuInfo.numCpuThreads", ["24"]),
         ("hardware.cpuPkg.busHz.0", ["133338039"]),
-        ("hardware.cpuPkg.description.1", ["Intel(R)", "Xeon(R)", "CPU", "X5670", "@", "2.93GHz"]),
+        (
+            "hardware.cpuPkg.description.1",
+            ["Intel(R)", "Xeon(R)", "CPU", "X5670", "@", "2.93GHz"],
+        ),
         ("hardware.cpuPkg.hz.0", ["2933437105"]),
         ("hardware.cpuPkg.hz.1", ["2933437088"]),
         ("hardware.cpuPkg.index.1", ["1"]),
@@ -34,13 +39,19 @@ section = OrderedDict(
         ("hardware.memorySize", ["146016378880"]),
         ("hardware.systemInfo.model", ["System", "x1111", "M3", "-[foo-bar]-"]),
         ("hardware.systemInfo.otherIdentifyingInfo.AssetTag.0", ["none"]),
-        ("hardware.systemInfo.otherIdentifyingInfo.OemSpecificString.0", ["IBM", "SystemX"]),
+        (
+            "hardware.systemInfo.otherIdentifyingInfo.OemSpecificString.0",
+            ["IBM", "SystemX"],
+        ),
         ("hardware.systemInfo.otherIdentifyingInfo.ServiceTag.0", ["none"]),
         ("hardware.systemInfo.uuid", ["foo-bar"]),
         ("hardware.systemInfo.vendor", ["IBM"]),
         ("hardware.systemInfo.model", ["System", "x1", "M3", "-[123456]-"]),
         ("hardware.systemInfo.otherIdentifyingInfo.AssetTag.0", ["none"]),
-        ("hardware.systemInfo.otherIdentifyingInfo.OemSpecificString.0", ["IBM", "SystemX"]),
+        (
+            "hardware.systemInfo.otherIdentifyingInfo.OemSpecificString.0",
+            ["IBM", "SystemX"],
+        ),
         ("hardware.systemInfo.otherIdentifyingInfo.ServiceTag.0", ["none"]),
         ("hardware.systemInfo.uuid", ["bar-foo"]),
     )
@@ -71,7 +82,10 @@ def test_inventory() -> None:
             ),
             Attributes(
                 path=["software", "bios"],
-                inventory_attributes={"version": "-[ABIOSVERSION-1.0]-", "date": "2000-01-26"},
+                inventory_attributes={
+                    "version": "-[ABIOSVERSION-1.0]-",
+                    "date": "2000-01-26",
+                },
                 status_attributes={},
             ),
             Attributes(

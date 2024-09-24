@@ -11,7 +11,10 @@ from cmk.utils.dateutils import weekday_ids
 
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.watolib.groups import is_alias_used
-from cmk.gui.watolib.timeperiods import TIMEPERIOD_ID_PATTERN, verify_timeperiod_name_exists
+from cmk.gui.watolib.timeperiods import (
+    TIMEPERIOD_ID_PATTERN,
+    verify_timeperiod_name_exists,
+)
 
 from cmk import fields
 
@@ -223,7 +226,12 @@ class CreateTimePeriod(BaseSchema):
     exceptions = fields.List(
         fields.Nested(TimePeriodException),
         required=False,
-        example=[{"date": "2020-01-01", "time_ranges": [{"start": "14:00:00", "end": "18:00:00"}]}],
+        example=[
+            {
+                "date": "2020-01-01",
+                "time_ranges": [{"start": "14:00:00", "end": "18:00:00"}],
+            }
+        ],
         description="A list of additional time ranges to be added.",
     )
     exclude = fields.List(  # type: ignore[assignment]
@@ -259,7 +267,12 @@ class UpdateTimePeriod(BaseSchema):
     exceptions = fields.List(
         fields.Nested(TimePeriodException),
         required=False,
-        example=[{"date": "2020-01-01", "time_ranges": [{"start": "14:00:00", "end": "18:00:00"}]}],
+        example=[
+            {
+                "date": "2020-01-01",
+                "time_ranges": [{"start": "14:00:00", "end": "18:00:00"}],
+            }
+        ],
         description="A list of additional time ranges to be added.",
     )
 

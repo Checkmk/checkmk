@@ -175,7 +175,8 @@ class MainMenu(LocatorHelper):
     def setup_searchbar(self) -> Locator:
         """Main menu -> Open setup -> searchbar"""
         return self._searchbar(
-            menu="Setup", searchbar_name="Search for menu entries, settings, hosts and rulesets"
+            menu="Setup",
+            searchbar_name="Search for menu entries, settings, hosts and rulesets",
         )
 
     @property

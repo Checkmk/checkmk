@@ -12,7 +12,7 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.tags import TagGroup, TagGroupID, TagID
-from cmk.utils.version import edition, Edition
+from cmk.utils.version import Edition, edition
 
 from cmk.snmplib import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
 
@@ -110,12 +110,19 @@ from cmk.gui.watolib.rulespecs import (
     ServiceRulespec,
 )
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
-from cmk.gui.watolib.translation import HostnameTranslation, ServiceDescriptionTranslation
+from cmk.gui.watolib.translation import (
+    HostnameTranslation,
+    ServiceDescriptionTranslation,
+)
 from cmk.gui.watolib.users import vs_idle_timeout_duration
 from cmk.gui.watolib.utils import site_neutral_path
 
 from ._check_plugin_selection import CheckPluginSelection
-from ._group_selection import ContactGroupSelection, HostGroupSelection, ServiceGroupSelection
+from ._group_selection import (
+    ContactGroupSelection,
+    HostGroupSelection,
+    ServiceGroupSelection,
+)
 from ._http_proxy import HTTPProxyInput
 from ._rulespec_groups import RulespecGroupDiscoveryCheckParameters
 
@@ -473,7 +480,11 @@ class ConfigVariableLogLevels(ConfigVariable):
                 _("Authentication"),
                 _("The log level for user authentication related log entries."),
             ),
-            ("cmk.web.ldap", _("LDAP"), _("The log level for LDAP related log entries.")),
+            (
+                "cmk.web.ldap",
+                _("LDAP"),
+                _("The log level for LDAP related log entries."),
+            ),
             (
                 "cmk.web.bi.compilation",
                 _("BI compilation"),
@@ -941,7 +952,11 @@ class ConfigVariableBIDefaultLayout(ConfigVariable):
 
     @classmethod
     def get_line_style_choices(cls):
-        return [("round", _("Round")), ("straight", _("Straight")), ("elbow", _("Elbow"))]
+        return [
+            ("round", _("Round")),
+            ("straight", _("Straight")),
+            ("elbow", _("Elbow")),
+        ]
 
 
 class ConfigVariablePagetitleDateFormat(ConfigVariable):
@@ -1542,7 +1557,10 @@ class ConfigVariableUserIconsAndActions(ConfigVariable):
                                             DropdownChoice(
                                                 title=_("Open in"),
                                                 choices=[
-                                                    ("_blank", _("Load in a new window / tab")),
+                                                    (
+                                                        "_blank",
+                                                        _("Load in a new window / tab"),
+                                                    ),
                                                     (
                                                         "_self",
                                                         _(
@@ -1694,7 +1712,8 @@ class ConfigVariableCustomServiceAttributes(ConfigVariable):
         for entry in value:
             if entry["title"] in seen_titles:
                 raise MKUserError(
-                    varprefix, _("Found multiple entries using the title '%s'") % entry["title"]
+                    varprefix,
+                    _("Found multiple entries using the title '%s'") % entry["title"],
                 )
             seen_titles.append(entry["title"])
 
@@ -2587,7 +2606,8 @@ class ConfigVariableSessionManagement(ConfigVariable):
             if d["enforce_reauth"] > d["enforce_reauth_warning_threshold"]:
                 return
             raise MKUserError(
-                varprefix, _("Warning threshold must be smaller than maximum session duration")
+                varprefix,
+                _("Warning threshold must be smaller than maximum session duration"),
             )
 
         return Dictionary(
@@ -2804,7 +2824,10 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
             choices=[
                 ("aix_memory", _("Memory usage for %s hosts") % "AIX"),
                 ("barracuda_mailqueues", _("Barracuda: Mail Queue")),
-                ("brocade_sys_mem", _("Main memory usage for Brocade fibre channel switches")),
+                (
+                    "brocade_sys_mem",
+                    _("Main memory usage for Brocade fibre channel switches"),
+                ),
                 ("casa_cpu_temp", _("Casa module: CPU temperature")),
                 ("cisco_mem", _("Cisco memory usage (%s)") % "cisco_mem"),
                 ("cisco_mem_asa", _("Cisco memory usage (%s)") % "cisco_mem_asa"),
@@ -2828,10 +2851,19 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
                 ("docker_container_mem", _("Memory usage of Docker containers")),
                 ("enterasys_temp", _("Enterasys Switch: Temperature")),
                 ("esx_vsphere_datastores", _("VMware ESX host systems: Used space")),
-                ("esx_vsphere_hostsystem_mem_usage", _("Main memory usage of ESX host system")),
-                ("esx_vsphere_hostsystem_mem_usage_cluster", _("Memory usage of ESX Clusters")),
+                (
+                    "esx_vsphere_hostsystem_mem_usage",
+                    _("Main memory usage of ESX host system"),
+                ),
+                (
+                    "esx_vsphere_hostsystem_mem_usage_cluster",
+                    _("Memory usage of ESX Clusters"),
+                ),
                 ("etherbox_temp", _("Etherbox / MessPC: Sensor Temperature")),
-                ("fortigate_memory", _("Memory usage of Fortigate devices (fortigate_memory)")),
+                (
+                    "fortigate_memory",
+                    _("Memory usage of Fortigate devices (fortigate_memory)"),
+                ),
                 (
                     "fortigate_memory_base",
                     _("Memory usage of Fortigate devices (fortigate_memory_base)"),
@@ -2839,7 +2871,10 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
                 ("fortigate_node_memory", _("Fortigate node memory")),
                 ("hr_fs", _("Used space in filesystems via SNMP")),
                 ("hr_mem", _("HR: Used memory via SNMP")),
-                ("http", _("Check HTTP: Use HTTPS instead of HTTP for SSL/TLS connections")),
+                (
+                    "http",
+                    _("Check HTTP: Use HTTPS instead of HTTP for SSL/TLS connections"),
+                ),
                 (
                     "huawei_switch_mem",
                     _("Memory percentage used of devices with modules (Huawei)"),
@@ -2850,7 +2885,10 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
                     _("IBM SVC / Storwize V3700 / V7000: Status and Usage of MDisksGrps"),
                 ),
                 ("ibm_svc_system", _("IBM SVC / V7000: System Info")),
-                ("ibm_svc_systemstats_cache", _("IBM SVC / V7000: Cache Usage in Total")),
+                (
+                    "ibm_svc_systemstats_cache",
+                    _("IBM SVC / V7000: Cache Usage in Total"),
+                ),
                 (
                     "ibm_svc_systemstats_disk_latency",
                     _("IBM SVC / V7000: Latency for Drives/MDisks/VDisks in Total"),
@@ -2870,7 +2908,10 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
                     "juniper_screenos_mem",
                     _("Juniper memory usage (%s)") % "juniper_screenos_mem",
                 ),
-                ("juniper_trpz_mem", _("Juniper memory usage (%s)") % "juniper_trpz_mem"),
+                (
+                    "juniper_trpz_mem",
+                    _("Juniper memory usage (%s)") % "juniper_trpz_mem",
+                ),
                 ("liebert_bat_temp", _("Liebert UPS Device: Temperature sensor")),
                 ("logwatch", _("Check logfiles for relevant new messages")),
                 ("logwatch_groups", _("Check logfile groups")),
@@ -3138,7 +3179,7 @@ class ConfigVariableUseDNSCache(ConfigVariable):
 
 
 def transform_snmp_backend_default_to_valuespec(
-    backend: Literal["classic", "inline"]
+    backend: Literal["classic", "inline"],
 ) -> SNMPBackendEnum:
     return {
         "classic": SNMPBackendEnum.CLASSIC,
@@ -3146,7 +3187,9 @@ def transform_snmp_backend_default_to_valuespec(
     }[backend]
 
 
-def transform_snmp_backend_from_valuespec(backend: SNMPBackendEnum) -> Literal["classic", "inline"]:
+def transform_snmp_backend_from_valuespec(
+    backend: SNMPBackendEnum,
+) -> Literal["classic", "inline"]:
     match backend:
         case SNMPBackendEnum.CLASSIC:
             return "classic"
@@ -3170,7 +3213,8 @@ class ConfigVariableChooseSNMPBackend(ConfigVariable):
         return Transform(
             valuespec=DropdownChoice(
                 title=cmk_version.mark_edition_only(
-                    _("Choose SNMP backend"), [cmk_version.Edition.CME, cmk_version.Edition.CEE]
+                    _("Choose SNMP backend"),
+                    [cmk_version.Edition.CME, cmk_version.Edition.CEE],
                 ),
                 choices=[
                     (SNMPBackendEnum.CLASSIC, _("Use Classic SNMP Backend")),
@@ -3218,7 +3262,8 @@ class ConfigVariableUseInlineSNMP(ConfigVariable):
                 "Checkmk"
             )
             % cmk_version.mark_edition_only(
-                _("Choose SNMP backend"), [cmk_version.Edition.CME, cmk_version.Edition.CEE]
+                _("Choose SNMP backend"),
+                [cmk_version.Edition.CME, cmk_version.Edition.CEE],
             ),
         )
 
@@ -3283,7 +3328,8 @@ class ConfigVariableHTTPProxies(ConfigVariable):
         for http_proxy in value:
             if http_proxy["ident"] in seen_idents:
                 raise MKUserError(
-                    varprefix, _("Found multiple proxies using the ID '%s'") % http_proxy["ident"]
+                    varprefix,
+                    _("Found multiple proxies using the ID '%s'") % http_proxy["ident"],
                 )
             seen_idents.append(http_proxy["ident"])
 
@@ -3749,7 +3795,8 @@ def PluginCommandLine() -> ValueSpec:
     def _validate_custom_check_command_line(value, varprefix):
         if "--pwstore=" in value:
             raise MKUserError(
-                varprefix, _("You are not allowed to use passwords from the password store here.")
+                varprefix,
+                _("You are not allowed to use passwords from the password store here."),
             )
 
     return TextInput(
@@ -4421,7 +4468,10 @@ def _valuespec_automatic_rediscover_parameters() -> Dictionary:
                     ),
                     choices=[
                         (True, _("Always keep vanished clustered services")),
-                        (False, _("Include vanished clustered services during removal")),
+                        (
+                            False,
+                            _("Include vanished clustered services during removal"),
+                        ),
                     ],
                     default_value=True,
                 ),
@@ -4577,7 +4627,7 @@ def _valuespec_automatic_rediscover_parameters() -> Dictionary:
 
 
 def _migrate_automatic_rediscover_parameters(
-    param: int | tuple[str, dict[str, bool]]
+    param: int | tuple[str, dict[str, bool]],
 ) -> tuple[str, dict[str, bool] | None]:
     # already migrated
     if isinstance(param, tuple):
@@ -5593,7 +5643,8 @@ SnmpBackendHosts = HostRulespec(
     help_func=_help_snmp_backend,
     name="snmp_backend_hosts",
     title=lambda: cmk_version.mark_edition_only(
-        _("Hosts using a specific SNMP Backend"), [cmk_version.Edition.CME, cmk_version.Edition.CEE]
+        _("Hosts using a specific SNMP Backend"),
+        [cmk_version.Edition.CME, cmk_version.Edition.CEE],
     ),
 )
 
@@ -5708,7 +5759,10 @@ def _valuespec_encryption_handling() -> Dictionary:
                     ),
                     default_value="any_and_plain",
                     choices=[
-                        ("tls_encrypted_only", _("Accept TLS encrypted connections only")),
+                        (
+                            "tls_encrypted_only",
+                            _("Accept TLS encrypted connections only"),
+                        ),
                         ("any_encrypted", _("Accept all types of encryption")),
                         (
                             "any_and_plain",
@@ -6187,7 +6241,9 @@ new_snmpv3_values = tuple[
 ]
 
 
-def add_error_handling_option(values: prev_snmpv3_values | new_snmpv3_values) -> new_snmpv3_values:
+def add_error_handling_option(
+    values: prev_snmpv3_values | new_snmpv3_values,
+) -> new_snmpv3_values:
     """Update from 2.2 -> 2.3"""
     return values + ("stop_on_timeout",) if len(values) == 2 else values
 
@@ -6216,7 +6272,10 @@ def _valuespec_snmpv3_contexts():
                     title=_("Error Handling"),
                     choices=lambda: [
                         ("stop_on_timeout", _("Stop SNMP processing on timeout")),
-                        ("continue_on_timeout", _("Continue with other SNMP contexts on timeout")),
+                        (
+                            "continue_on_timeout",
+                            _("Continue with other SNMP contexts on timeout"),
+                        ),
                     ],
                     help="You should not configure an unnecessarily large number of SNMP contexts, "
                     "as this can lead to unnecessarily long runtimes due to accumulated timeouts.",

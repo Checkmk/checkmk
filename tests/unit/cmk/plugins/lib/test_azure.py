@@ -89,28 +89,49 @@ PARSED_RESOURCES = {
                 name="cpu_percent", aggregation="average", value=0.0, unit="percent"
             ),
             "average_memory_percent": AzureMetric(
-                name="memory_percent", aggregation="average", value=24.36, unit="percent"
+                name="memory_percent",
+                aggregation="average",
+                value=24.36,
+                unit="percent",
             ),
             "average_serverlog_storage_percent": AzureMetric(
-                name="serverlog_storage_percent", aggregation="average", value=0.0, unit="percent"
+                name="serverlog_storage_percent",
+                aggregation="average",
+                value=0.0,
+                unit="percent",
             ),
             "average_storage_percent": AzureMetric(
-                name="storage_percent", aggregation="average", value=2.95, unit="percent"
+                name="storage_percent",
+                aggregation="average",
+                value=2.95,
+                unit="percent",
             ),
             "average_io_consumption_percent": AzureMetric(
-                name="io_consumption_percent", aggregation="average", value=88.5, unit="percent"
+                name="io_consumption_percent",
+                aggregation="average",
+                value=88.5,
+                unit="percent",
             ),
             "average_active_connections": AzureMetric(
-                name="active_connections", aggregation="average", value=6.0, unit="count"
+                name="active_connections",
+                aggregation="average",
+                value=6.0,
+                unit="count",
             ),
             "total_connections_failed": AzureMetric(
                 name="connections_failed", aggregation="total", value=2.0, unit="count"
             ),
             "total_network_bytes_ingress": AzureMetric(
-                name="network_bytes_ingress", aggregation="total", value=1000.0, unit="bytes"
+                name="network_bytes_ingress",
+                aggregation="total",
+                value=1000.0,
+                unit="bytes",
             ),
             "total_network_bytes_egress": AzureMetric(
-                name="network_bytes_egress", aggregation="total", value=1500.0, unit="bytes"
+                name="network_bytes_egress",
+                aggregation="total",
+                value=1500.0,
+                unit="bytes",
             ),
         },
         subscription="2fac104f-cb9c-461d-be57-037039662426",
@@ -130,7 +151,10 @@ MULTIPLE_RESOURCE_SECTION = {
         specific_info={},
         metrics={
             "average_storage_percent": AzureMetric(
-                name="storage_percent", aggregation="average", value=2.95, unit="percent"
+                name="storage_percent",
+                aggregation="average",
+                value=2.95,
+                unit="percent",
             ),
         },
         subscription="2fac104f-cb9c-461d-be57-037039662426",
@@ -147,7 +171,10 @@ MULTIPLE_RESOURCE_SECTION = {
         specific_info={},
         metrics={
             "average_storage_percent": AzureMetric(
-                name="storage_percent", aggregation="average", value=2.95, unit="percent"
+                name="storage_percent",
+                aggregation="average",
+                value=2.95,
+                unit="percent",
             ),
         },
         subscription="2fac104f-cb9c-461d-be57-037039662426",
@@ -199,7 +226,10 @@ def test__get_metrics() -> None:
                 group="BurningMan",
                 metrics={
                     "average_cpu_percent": AzureMetric(
-                        name="cpu_percent", aggregation="average", value=0.0, unit="percent"
+                        name="cpu_percent",
+                        aggregation="average",
+                        value=0.0,
+                        unit="percent",
                     )
                 },
             ),
@@ -357,7 +387,9 @@ def test_parse_resources() -> None:
     ],
 )
 def test_create_discover_by_metrics_function(
-    resource_types: Sequence[str] | None, section: Section, expected_discovery: DiscoveryResult
+    resource_types: Sequence[str] | None,
+    section: Section,
+    expected_discovery: DiscoveryResult,
 ) -> None:
     discovery_func = create_discover_by_metrics_function(
         "average_storage_percent",
@@ -411,7 +443,9 @@ def test_create_discover_by_metrics_function(
     ],
 )
 def test_create_discover_by_metrics_function_single(
-    resource_types: Sequence[str] | None, section: Section, expected_discovery: DiscoveryResult
+    resource_types: Sequence[str] | None,
+    section: Section,
+    expected_discovery: DiscoveryResult,
 ) -> None:
     discovery_func = create_discover_by_metrics_function_single(
         "average_storage_percent",
@@ -437,7 +471,9 @@ def test_create_discover_by_metrics_function_single(
     ],
 )
 def test_iter_resource_attributes(
-    resource: Resource, include_keys: tuple[str], expected_result: list[tuple[str, str | None]]
+    resource: Resource,
+    include_keys: tuple[str],
+    expected_result: list[tuple[str, str | None]],
 ) -> None:
     assert list(iter_resource_attributes(resource, include_keys=include_keys)) == expected_result
 
@@ -496,7 +532,10 @@ def test_check_memory(
                     group="westeurope",
                     metrics={
                         "average_cpu_percent": AzureMetric(
-                            name="cpu_percent", aggregation="average", value=0.0, unit="percent"
+                            name="cpu_percent",
+                            aggregation="average",
+                            value=0.0,
+                            unit="percent",
                         )
                     },
                 )
@@ -543,7 +582,10 @@ def test_check_cpu(
             "checkmk-mysql-server",
             {"active_connections": (5, 10), "failed_connections": (1, 2)},
             [
-                Result(state=State.WARN, summary="Active connections: 6 (warn/crit at 5/10)"),
+                Result(
+                    state=State.WARN,
+                    summary="Active connections: 6 (warn/crit at 5/10)",
+                ),
                 Metric("active_connections", 6.0, levels=(5.0, 10.0)),
                 Result(state=State.CRIT, summary="Failed connections: 2 (warn/crit at 1/2)"),
                 Metric("failed_connections", 2.0, levels=(1.0, 2.0)),
@@ -571,7 +613,8 @@ def test_check_connections(
                 Result(state=State.OK, summary="Network in: 1000 B"),
                 Metric("ingress", 1000.0, levels=(5000.0, 10000.0)),
                 Result(
-                    state=State.WARN, summary="Network out: 1.46 KiB (warn/crit at 1000 B/1.95 KiB)"
+                    state=State.WARN,
+                    summary="Network out: 1.46 KiB (warn/crit at 1000 B/1.95 KiB)",
                 ),
                 Metric("egress", 1500.0, levels=(1000.0, 2000.0)),
             ],

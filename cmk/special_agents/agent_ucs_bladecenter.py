@@ -90,7 +90,10 @@ B_SERIES_ENTITIES: Entities = [
         B_SERIES_REGEX,
         [
             ("equipmentPsuInputStats", ["Dn", "Current", "PowerAvg", "Voltage"]),
-            ("equipmentPsuStats", ["Dn", "AmbientTemp", "Output12vAvg", "Output3v3Avg"]),
+            (
+                "equipmentPsuStats",
+                ["Dn", "AmbientTemp", "Output12vAvg", "Output3v3Avg"],
+            ),
         ],
     ),
     # NETWORK
@@ -99,25 +102,56 @@ B_SERIES_ENTITIES: Entities = [
         B_SERIES_REGEX,
         [
             # Fibrechannel
-            ("fcStats", ["Dn", "BytesRx", "BytesTx", "PacketsRx", "PacketsTx", "Suspect"]),
+            (
+                "fcStats",
+                ["Dn", "BytesRx", "BytesTx", "PacketsRx", "PacketsTx", "Suspect"],
+            ),
             ("fcErrStats", ["Dn", "Rx", "Tx", "CrcRx", "DiscardRx", "DiscardTx"]),
             (
                 "fabricFcSanEp",
-                ["Dn", "EpDn", "AdminState", "OperState", "PortId", "SwitchId", "SlotId"],
+                [
+                    "Dn",
+                    "EpDn",
+                    "AdminState",
+                    "OperState",
+                    "PortId",
+                    "SwitchId",
+                    "SlotId",
+                ],
             ),
             ("fabricFcSanPc", ["Dn", "AdminState", "OperState", "OperSpeed"]),
             (
                 "fabricFcSanPcEp",
-                ["Dn", "EpDn", "AdminState", "OperState", "PortId", "SwitchId", "SlotId"],
+                [
+                    "Dn",
+                    "EpDn",
+                    "AdminState",
+                    "OperState",
+                    "PortId",
+                    "SwitchId",
+                    "SlotId",
+                ],
             ),
             # Errors stats. These are also used by interconnects
             (
                 "etherTxStats",
-                ["Dn", "TotalBytes", "UnicastPackets", "MulticastPackets", "BroadcastPackets"],
+                [
+                    "Dn",
+                    "TotalBytes",
+                    "UnicastPackets",
+                    "MulticastPackets",
+                    "BroadcastPackets",
+                ],
             ),
             (
                 "etherRxStats",
-                ["Dn", "TotalBytes", "UnicastPackets", "MulticastPackets", "BroadcastPackets"],
+                [
+                    "Dn",
+                    "TotalBytes",
+                    "UnicastPackets",
+                    "MulticastPackets",
+                    "BroadcastPackets",
+                ],
             ),
             ("etherErrStats", ["Dn", "OutDiscard", "Rcv"]),
             # Ethernet
@@ -136,21 +170,56 @@ B_SERIES_ENTITIES: Entities = [
             ),
             (
                 "fabricEthLanPc",
-                ["Dn", "AdminState", "OperState", "AdminSpeed", "OperSpeed", "Name", "PortId"],
+                [
+                    "Dn",
+                    "AdminState",
+                    "OperState",
+                    "AdminSpeed",
+                    "OperSpeed",
+                    "Name",
+                    "PortId",
+                ],
             ),
             (
                 "fabricEthLanPcEp",
-                ["Dn", "EpDn", "AdminState", "OperState", "PortId", "SwitchId", "SlotId"],
+                [
+                    "Dn",
+                    "EpDn",
+                    "AdminState",
+                    "OperState",
+                    "PortId",
+                    "SwitchId",
+                    "SlotId",
+                ],
             ),
             # Interconnects
             (
                 "fabricDceSwSrvEp",
-                ["Dn", "EpDn", "AdminState", "OperState", "PortId", "SwitchId", "SlotId"],
+                [
+                    "Dn",
+                    "EpDn",
+                    "AdminState",
+                    "OperState",
+                    "PortId",
+                    "SwitchId",
+                    "SlotId",
+                ],
             ),
-            ("fabricDceSwSrvPc", ["Dn", "AdminState", "OperState", "OperSpeed", "Name", "PortId"]),
+            (
+                "fabricDceSwSrvPc",
+                ["Dn", "AdminState", "OperState", "OperSpeed", "Name", "PortId"],
+            ),
             (
                 "fabricDceSwSrvPcEp",
-                ["Dn", "EpDn", "AdminState", "OperState", "PortId", "SwitchId", "SlotId"],
+                [
+                    "Dn",
+                    "EpDn",
+                    "AdminState",
+                    "OperState",
+                    "PortId",
+                    "SwitchId",
+                    "SlotId",
+                ],
             ),
         ],
     ),
@@ -167,7 +236,10 @@ B_SERIES_ENTITIES: Entities = [
         "ucs_bladecenter_topsystem",
         B_SERIES_REGEX,
         [
-            ("topSystem", ["Address", "CurrentTime", "Ipv6Addr", "Mode", "Name", "SystemUpTime"]),
+            (
+                "topSystem",
+                ["Address", "CurrentTime", "Ipv6Addr", "Mode", "Name", "SystemUpTime"],
+            ),
         ],
     ),
 ]
@@ -472,7 +544,8 @@ class Server:
         # 'AmbientTemp' -> 'ambientTemp'
         attribute_lower = attribute[0].lower() + attribute[1:]
         logging.debug(
-            "Server._get_attribute_data: Try getting attribute '%s' (lower)", attribute_lower
+            "Server._get_attribute_data: Try getting attribute '%s' (lower)",
+            attribute_lower,
         )
         attribute_data = xml_object.attrib.get(attribute_lower)
         if attribute_data:
@@ -528,7 +601,9 @@ class Server:
 
         content = response.content
         logging.debug(
-            "Server._communicate: Got response content: '%s' (%s)", content, response.status_code
+            "Server._communicate: Got response content: '%s' (%s)",
+            content,
+            response.status_code,
         )
 
         try:

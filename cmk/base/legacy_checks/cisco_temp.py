@@ -41,7 +41,8 @@ def parse_cisco_temp(string_table: StringTable) -> StringTable:
 check_info["cisco_temp"] = LegacyCheckDefinition(
     parse_function=parse_cisco_temp,
     detect=all_of(
-        contains(".1.3.6.1.2.1.1.1.0", "cisco"), not_exists(".1.3.6.1.4.1.9.9.13.1.3.1.3.*")
+        contains(".1.3.6.1.2.1.1.1.0", "cisco"),
+        not_exists(".1.3.6.1.4.1.9.9.13.1.3.1.3.*"),
     ),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.13.1.3.1",

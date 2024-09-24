@@ -14,7 +14,11 @@ from icalendar import Calendar, Event  # type: ignore[import]
 from icalendar.prop import vDDDTypes  # type: ignore[import]
 
 import cmk.utils.dateutils as dateutils
-from cmk.utils.timeperiod import builtin_timeperiods, load_timeperiods, timeperiod_spec_alias
+from cmk.utils.timeperiod import (
+    builtin_timeperiods,
+    load_timeperiods,
+    timeperiod_spec_alias,
+)
 
 import cmk.gui.forms as forms
 import cmk.gui.watolib as watolib
@@ -671,7 +675,8 @@ class ModeEditTimeperiod(WatoMode):
                 time.strptime(value, "%Y-%m-%d")
             except ValueError:
                 raise MKUserError(
-                    varprefix, _("You need to provide time period exceptions in YYYY-MM-DD format")
+                    varprefix,
+                    _("You need to provide time period exceptions in YYYY-MM-DD format"),
                 )
 
     def _vs_exclude(self):
@@ -785,7 +790,10 @@ class ModeEditTimeperiod(WatoMode):
 
     def _weekdays_to_valuespec(self, tp_spec):
         if self._has_same_time_specs_during_whole_week(tp_spec):
-            return ("whole_week", self._time_ranges_to_valuespec(tp_spec.get("monday", [])))
+            return (
+                "whole_week",
+                self._time_ranges_to_valuespec(tp_spec.get("monday", [])),
+            )
 
         return (
             "day_specific",

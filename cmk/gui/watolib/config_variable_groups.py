@@ -6,7 +6,10 @@
 """Register the built-in global setting configuration variable groups"""
 
 from cmk.gui.i18n import _
-from cmk.gui.watolib.config_domain_name import ConfigVariableGroup, ConfigVariableGroupRegistry
+from cmk.gui.watolib.config_domain_name import (
+    ConfigVariableGroup,
+    ConfigVariableGroupRegistry,
+)
 
 
 def register(config_variable_group_registry: ConfigVariableGroupRegistry) -> None:

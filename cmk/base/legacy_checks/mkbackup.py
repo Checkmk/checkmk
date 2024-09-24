@@ -81,7 +81,10 @@ def check_mkbackup(job_state):
                 render.timespan(duration),
                 render.datetime(job_state["started"]),
             ),
-            [("backup_duration", duration), ("backup_avgspeed", job_state["bytes_per_second"])],
+            [
+                ("backup_duration", duration),
+                ("backup_avgspeed", job_state["bytes_per_second"]),
+            ],
         )
 
     elif job_state["state"] == "finished":
@@ -99,7 +102,10 @@ def check_mkbackup(job_state):
                 render.datetime(job_state["started"]),
                 render.datetime(job_state["finished"]),
             ),
-            [("backup_duration", duration), ("backup_avgspeed", job_state["bytes_per_second"])],
+            [
+                ("backup_duration", duration),
+                ("backup_avgspeed", job_state["bytes_per_second"]),
+            ],
         )
 
         if "size" in job_state:

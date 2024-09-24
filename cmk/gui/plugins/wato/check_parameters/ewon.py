@@ -11,7 +11,14 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Dictionary, DropdownChoice, Migrate, Percentage, TextInput, Tuple
+from cmk.gui.valuespec import (
+    Dictionary,
+    DropdownChoice,
+    Migrate,
+    Percentage,
+    TextInput,
+    Tuple,
+)
 
 
 def _valuespec_ewon_discovery_rules():

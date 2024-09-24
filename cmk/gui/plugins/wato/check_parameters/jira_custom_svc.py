@@ -115,14 +115,20 @@ def _parameter_valuespec_jira_custom_svc():
                 "custom_svc_avg_lower",
                 Tuple(
                     title=_("Averaged values lower level"),
-                    elements=[Float(title=_("Warning below")), Float(title=_("Critical below"))],
+                    elements=[
+                        Float(title=_("Warning below")),
+                        Float(title=_("Critical below")),
+                    ],
                 ),
             ),
             (
                 "custom_svc_avg_upper",
                 Tuple(
                     title=_("Averaged values upper level"),
-                    elements=[Float(title=_("Warning at")), Float(title=_("Critical at"))],
+                    elements=[
+                        Float(title=_("Warning at")),
+                        Float(title=_("Critical at")),
+                    ],
                 ),
             ),
         ],

@@ -54,13 +54,16 @@ def _empty() -> dict[ip_lookup.IPLookupCacheId, str | None]:  # just centralize 
 
 def test_cached_dns_lookup_is_config_cached_ok(monkeypatch: MonkeyPatch) -> None:
     patch_config_cache(
-        monkeypatch, {(HostName("config_cached_host"), socket.AF_INET): HostAddress("1.2.3.4")}
+        monkeypatch,
+        {(HostName("config_cached_host"), socket.AF_INET): HostAddress("1.2.3.4")},
     )
     patch_persisted_cache(
-        monkeypatch, {(HostName("config_cached_host"), socket.AF_INET): HostAddress("6.6.6.6")}
+        monkeypatch,
+        {(HostName("config_cached_host"), socket.AF_INET): HostAddress("6.6.6.6")},
     )
     patch_actual_lookup(
-        monkeypatch, {(HostName("config_cached_host"), socket.AF_INET): HostAddress("7.7.7.7")}
+        monkeypatch,
+        {(HostName("config_cached_host"), socket.AF_INET): HostAddress("7.7.7.7")},
     )
 
     assert ip_lookup.cached_dns_lookup(
@@ -107,7 +110,8 @@ def test_cached_dns_lookup_is_persisted_cached_ok(monkeypatch: MonkeyPatch) -> N
     patch_config_cache(monkeypatch, config_ipcache)
     patch_persisted_cache(monkeypatch, persisted_cache)
     patch_actual_lookup(
-        monkeypatch, {(HostName("persisted_cached_host"), socket.AF_INET): HostAddress("6.6.6.6")}
+        monkeypatch,
+        {(HostName("persisted_cached_host"), socket.AF_INET): HostAddress("6.6.6.6")},
     )
 
     assert ip_lookup.cached_dns_lookup(
@@ -135,7 +139,9 @@ def test_cached_dns_lookup_is_persisted_cached_ok(monkeypatch: MonkeyPatch) -> N
     )
 
 
-def test_cached_dns_lookup_is_persisted_cached_ok_unchanged(monkeypatch: MonkeyPatch) -> None:
+def test_cached_dns_lookup_is_persisted_cached_ok_unchanged(
+    monkeypatch: MonkeyPatch,
+) -> None:
     config_ipcache = _empty()
     persisted_cache: _PersistedCache = {
         (HostName("persisted_cached_host"), socket.AF_INET): HostAddress("1.2.3.4")
@@ -144,7 +150,8 @@ def test_cached_dns_lookup_is_persisted_cached_ok_unchanged(monkeypatch: MonkeyP
     patch_config_cache(monkeypatch, config_ipcache)
     patch_persisted_cache(monkeypatch, persisted_cache)
     patch_actual_lookup(
-        monkeypatch, {(HostName("persisted_cached_host"), socket.AF_INET): HostAddress("1.2.3.4")}
+        monkeypatch,
+        {(HostName("persisted_cached_host"), socket.AF_INET): HostAddress("1.2.3.4")},
     )
 
     assert ip_lookup.cached_dns_lookup(
@@ -451,7 +458,10 @@ def test_update_dns_cache(monkeypatch: MonkeyPatch) -> None:
     ],
 )
 def test_lookup_mgmt_board_ip_address_ipv4_host(
-    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[TagGroupID, TagID], result_address: str
+    monkeypatch: MonkeyPatch,
+    hostname_str: str,
+    tags: dict[TagGroupID, TagID],
+    result_address: str,
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()

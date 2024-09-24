@@ -19,15 +19,20 @@ from cmk.plugins.lib.sap_hana import ParsedSection
 ITEM = "H90 33"
 SECTION = {
     "Status %s" % ITEM: {"instance": ITEM, "message": "Yes", "state_name": "OK"},
-    "Version %s" % ITEM: {"instance": ITEM, "version": "1.00.122.22.1543461992 (fa/hana1sp12)"},
+    "Version %s" % ITEM: {
+        "instance": ITEM,
+        "version": "1.00.122.22.1543461992 (fa/hana1sp12)",
+    },
 }
 SECTION_WARNING = {
     "Status %s" % ITEM: {"instance": ITEM, "message": "Yes", "state_name": "WARNING"},
-    "Version %s" % ITEM: {"instance": ITEM, "version": "1.00.122.22.1543461992 (fa/hana1sp12)"},
+    "Version %s" % ITEM: {
+        "instance": ITEM,
+        "version": "1.00.122.22.1543461992 (fa/hana1sp12)",
+    },
 }
 SECTION_ERROR = {
-    "Status %s"
-    % ITEM: {
+    "Status %s" % ITEM: {
         "instance": ITEM,
         "message": "hdbsql ERROR: There was an error",
         "state_name": "error",
@@ -48,12 +53,20 @@ SECTION_ERROR = {
                 ["All Started", "OK", "Yes"],
             ],
             {
-                "Status H62 10": {"instance": "H62 10", "message": "Yes", "state_name": "OK"},
+                "Status H62 10": {
+                    "instance": "H62 10",
+                    "message": "Yes",
+                    "state_name": "OK",
+                },
                 "Version H62 10": {
                     "instance": "H62 10",
                     "version": "1.00.122.22.1543461992 (fa/hana1sp12)",
                 },
-                "Status H90 33": {"instance": "H90 33", "message": "Yes", "state_name": "OK"},
+                "Status H90 33": {
+                    "instance": "H90 33",
+                    "message": "Yes",
+                    "state_name": "OK",
+                },
                 "Version H90 33": {
                     "instance": "H90 33",
                     "version": "1.00.122.22.1543461992 (fa/hana1sp12)",
@@ -116,7 +129,8 @@ def test_sap_hana_status_discovery() -> None:
             SECTION_ERROR,
             "Status",
             Result(
-                state=State.CRIT, summary="Status: error, Details: hdbsql ERROR: There was an error"
+                state=State.CRIT,
+                summary="Status: error, Details: hdbsql ERROR: There was an error",
             ),
         ),
     ],

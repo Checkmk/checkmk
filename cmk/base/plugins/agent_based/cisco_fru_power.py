@@ -146,7 +146,8 @@ def check_cisco_fru_power(item: str, section: Section) -> CheckResult:
 register.snmp_section(
     name="cisco_fru_power",
     detect=all_of(
-        contains(".1.3.6.1.2.1.1.1.0", "cisco"), not_exists(".1.3.6.1.4.1.9.9.13.1.5.1.*")
+        contains(".1.3.6.1.2.1.1.1.0", "cisco"),
+        not_exists(".1.3.6.1.4.1.9.9.13.1.5.1.*"),
     ),
     fetch=[
         SNMPTree(

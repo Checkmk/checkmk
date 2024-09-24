@@ -81,7 +81,15 @@ def test_parse_openbsd_mem(
 
 @pytest.mark.parametrize(
     "string_table",
-    [([["MemTotal:", "23", "B"], ["MemFree:", "744076", "kB"], ["SwapFree:", "186505", "kB"]])],
+    [
+        (
+            [
+                ["MemTotal:", "23", "B"],
+                ["MemFree:", "744076", "kB"],
+                ["SwapFree:", "186505", "kB"],
+            ]
+        )
+    ],
 )
 def test_parse_openbsd_mem_error(string_table: StringTable) -> None:
     with pytest.raises(KeyError):

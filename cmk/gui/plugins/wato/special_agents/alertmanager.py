@@ -10,9 +10,17 @@ from cmk.gui.plugins.wato.special_agents.common import (
     api_request_authentication,
     prometheus_connection,
 )
-from cmk.gui.plugins.wato.special_agents.common_tls_verification import tls_verify_flag_default_no
+from cmk.gui.plugins.wato.special_agents.common_tls_verification import (
+    tls_verify_flag_default_no,
+)
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import Dictionary, DropdownChoice, FixedValue, ListOfStrings, TextInput
+from cmk.gui.valuespec import (
+    Dictionary,
+    DropdownChoice,
+    FixedValue,
+    ListOfStrings,
+    TextInput,
+)
 from cmk.gui.wato import RulespecGroupVMCloudContainer
 
 

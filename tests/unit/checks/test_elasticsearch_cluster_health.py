@@ -84,14 +84,22 @@ def test_check_function(parameters, item, info, expected_result):
                 ["active_shards_percent_as_number", "100.0"],
             ],
             [
-                (0, "Active primary: 747", [("active_primary_shards", 747, None, None)]),
+                (
+                    0,
+                    "Active primary: 747",
+                    [("active_primary_shards", 747, None, None)],
+                ),
                 (0, "Active: 1613", [("active_shards", 1613, None, None)]),
                 (
                     0,
                     "Active in percent: 100.00%",
                     [("active_shards_percent_as_number", 100.0, None, None)],
                 ),
-                (0, "Delayed unassigned: 0", [("delayed_unassigned_shards", 0, None, None)]),
+                (
+                    0,
+                    "Delayed unassigned: 0",
+                    [("delayed_unassigned_shards", 0, None, None)],
+                ),
                 (0, "Initializing: 0", [("initializing_shards", 0, None, None)]),
                 (
                     0,
@@ -149,7 +157,11 @@ def test_shards_check_function(parameters, item, info, expected_result):
                 ["active_shards_percent_as_number", "100.0"],
             ],
             [
-                (0, "Pending tasks: 0.00", [("number_of_pending_tasks", 0, None, None)]),
+                (
+                    0,
+                    "Pending tasks: 0.00",
+                    [("number_of_pending_tasks", 0, None, None)],
+                ),
                 (
                     0,
                     "Task max waiting: 0.00",

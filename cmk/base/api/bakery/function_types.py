@@ -57,7 +57,9 @@ class BakeryPlugin(NamedTuple):
 
 
 def _validate_function(
-    function: _PossibleFunctionType | None, function_name: str, allowed_args: Sequence[str]
+    function: _PossibleFunctionType | None,
+    function_name: str,
+    allowed_args: Sequence[str],
 ) -> None:
     if function is None:
         return
@@ -117,7 +119,9 @@ def _filter_files_function(function: FilesFunction | None) -> FilesFunction:
     return functools.wraps(function)(filtered_function)
 
 
-def _filter_scriptlets_function(function: ScriptletsFunction | None) -> ScriptletsFunction:
+def _filter_scriptlets_function(
+    function: ScriptletsFunction | None,
+) -> ScriptletsFunction:
     if function is None:
         return _noop_scriptlets_function
     filtered_function = _get_function_filter(function, "scriptlets_function", [Scriptlet])

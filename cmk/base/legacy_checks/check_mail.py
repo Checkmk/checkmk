@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_legacy_includes.check_mail import general_check_mail_args_from_params
+from cmk.base.check_legacy_includes.check_mail import (
+    general_check_mail_args_from_params,
+)
 from cmk.base.config import active_check_info
 
 CHECK_IDENT = "check_mail"

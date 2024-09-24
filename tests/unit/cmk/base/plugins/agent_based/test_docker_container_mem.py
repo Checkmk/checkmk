@@ -12,7 +12,10 @@ from cmk.utils.sectionname import SectionName
 from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.docker_container_mem import parse_docker_container_mem
 
 # docker stats: 1007MiB / 4.347GiB

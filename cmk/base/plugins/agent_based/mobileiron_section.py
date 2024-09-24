@@ -39,7 +39,9 @@ def parse_mobileiron_statistics(string_table: StringTable) -> SourceHostSection:
     )
 
 
-def parse_mobileiron_df(string_table: StringTable) -> tuple[BlocksSubsection, InodesSubsection]:
+def parse_mobileiron_df(
+    string_table: StringTable,
+) -> tuple[BlocksSubsection, InodesSubsection]:
     json_raw = json.loads(string_table[0][0])
     total = json_raw.get("totalCapacity") * 1024
     available = json_raw.get("availableCapacity") * 1024

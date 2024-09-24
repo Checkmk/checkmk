@@ -8,7 +8,15 @@ from __future__ import annotations
 import contextlib
 import itertools
 import time
-from collections.abc import Callable, Collection, Container, Iterable, Iterator, Mapping, Sequence
+from collections.abc import (
+    Callable,
+    Collection,
+    Container,
+    Iterable,
+    Iterator,
+    Mapping,
+    Sequence,
+)
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, assert_never, TypeVar
@@ -308,7 +316,9 @@ def _collect_inventory_plugin_items(
         for source_type in (SourceType.HOST, SourceType.MANAGEMENT):
             if not (
                 kwargs := get_section_kwargs(
-                    providers, HostKey(host_name, source_type), inventory_plugin.sections
+                    providers,
+                    HostKey(host_name, source_type),
+                    inventory_plugin.sections,
                 )
             ):
                 console.vverbose(
@@ -343,7 +353,8 @@ def _collect_inventory_plugin_items(
                 continue
 
             def __iter(
-                section_names: Iterable[ParsedSectionName], providers: Iterable[Provider]
+                section_names: Iterable[ParsedSectionName],
+                providers: Iterable[Provider],
             ) -> Iterable[ResolvedResult]:
                 for provider in providers:
                     yield from (
@@ -401,7 +412,8 @@ def _create_trees_from_inventory_plugin_items(
     for items_of_inventory_plugin in items_of_inventory_plugins:
         for item in items_of_inventory_plugin.items:
             _collect_item(
-                item, collection_by_path.setdefault(tuple(item.path), ItemDataCollection())
+                item,
+                collection_by_path.setdefault(tuple(item.path), ItemDataCollection()),
             )
 
     inventory_tree = MutableTree()
@@ -485,7 +497,10 @@ def _may_update(
 
     # TODO do we need class name?
     cache_info_by_path_and_type = {
-        (tuple(item.path), item.__class__.__name__): items_of_inventory_plugin.raw_cache_info
+        (
+            tuple(item.path),
+            item.__class__.__name__,
+        ): items_of_inventory_plugin.raw_cache_info
         for items_of_inventory_plugin in items_of_inventory_plugins
         for item in items_of_inventory_plugin.items
     }

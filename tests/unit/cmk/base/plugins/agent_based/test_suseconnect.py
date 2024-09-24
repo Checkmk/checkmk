@@ -12,8 +12,16 @@ from tests.testlib import on_time
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Attributes,
+    Result,
+    Service,
+    State,
+)
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+)
 from cmk.base.plugins.agent_based.suseconnect import (
     inventory_suseconnect,
     parse_suseconnect,
@@ -66,7 +74,11 @@ def test_check(
     with on_time("2020-07-15 00:00:00", "UTC"):
         assert list(
             check_suseconnect(
-                {"status": "Registered", "subscription_status": "ACTIVE", "days_left": (14, 7)},
+                {
+                    "status": "Registered",
+                    "subscription_status": "ACTIVE",
+                    "days_left": (14, 7),
+                },
                 section_1,
             )
         ) == [
@@ -85,12 +97,16 @@ def test_check(
 
 
 def test_agent_output_parsable(
-    check_suseconnect: Callable[[object, Section], DiscoveryResult]
+    check_suseconnect: Callable[[object, Section], DiscoveryResult],
 ) -> None:
     with on_time("2020-07-15 00:00:00", "UTC"):
         assert list(
             check_suseconnect(
-                {"status": "Registered", "subscription_status": "ACTIVE", "days_left": (14, 7)},
+                {
+                    "status": "Registered",
+                    "subscription_status": "ACTIVE",
+                    "days_left": (14, 7),
+                },
                 parse_suseconnect(
                     [
                         ["Installed Products", ""],

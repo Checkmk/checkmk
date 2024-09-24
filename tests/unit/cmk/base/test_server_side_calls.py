@@ -30,7 +30,11 @@ from cmk.base.server_side_calls._active_checks import (
     ActiveServiceDescription,
     HostAddressConfiguration,
 )
-from cmk.base.server_side_calls._commons import ActiveCheckError, commandline_arguments, InfoFunc
+from cmk.base.server_side_calls._commons import (
+    ActiveCheckError,
+    commandline_arguments,
+    InfoFunc,
+)
 from cmk.base.server_side_calls._special_agents import SpecialAgentCommandLine
 
 from cmk.discover_plugins import PluginLocation
@@ -118,7 +122,9 @@ def make_config_cache_mock(
             return family
 
         @staticmethod
-        def additional_ipaddresses(host_name: str) -> tuple[Sequence[str], Sequence[str]]:
+        def additional_ipaddresses(
+            host_name: str,
+        ) -> tuple[Sequence[str], Sequence[str]]:
             return additional_ipaddresses
 
         @staticmethod
@@ -142,7 +148,10 @@ def argument_function_with_exception(*args, **kwargs):
     [
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "param1": "param1"}],
+                ),
             ],
             {
                 "my_active_check": {
@@ -172,7 +181,10 @@ def argument_function_with_exception(*args, **kwargs):
         ),
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "param1": "param1"}],
+                ),
             ],
             {
                 "my_active_check": {
@@ -208,7 +220,10 @@ def argument_function_with_exception(*args, **kwargs):
         ),
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "param1": "param1"}],
+                ),
             ],
             {
                 "my_active_check": {
@@ -274,7 +289,10 @@ def argument_function_with_exception(*args, **kwargs):
         ),
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "param1": "param1"}],
+                ),
             ],
             {
                 "my_active_check": {
@@ -318,7 +336,10 @@ def argument_function_with_exception(*args, **kwargs):
         ),
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "param1": "param1"}],
+                ),
             ],
             {
                 "my_active_check": {
@@ -352,7 +373,10 @@ def argument_function_with_exception(*args, **kwargs):
         ),
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "param1": "param1"}],
+                ),
             ],
             {},
             {
@@ -407,7 +431,10 @@ def argument_function_with_exception(*args, **kwargs):
         ),
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "param1": "param1"}],
+                ),
             ],
             {},
             {},
@@ -584,7 +611,11 @@ def test_get_active_service_data_password_with_hack(
             command_line="check_test_check --pwstore=4@1@/pw/store@uuid1234 --password-id uuid1234:/pw/store --password-plain-in-curly '{*********}'",
             params={
                 "description": "My active check",
-                "password": ("cmk_postprocessed", "explicit_password", ("uuid1234", "p4ssw0rd!")),
+                "password": (
+                    "cmk_postprocessed",
+                    "explicit_password",
+                    ("uuid1234", "p4ssw0rd!"),
+                ),
             },
             expanded_args="--pwstore=4@1@/pw/store@uuid1234 --password-id uuid1234:/pw/store --password-plain-in-curly '{*********}'",
             detected_executable="/path/to/check_test_check",
@@ -640,7 +671,11 @@ def test_get_active_service_data_password_without_hack(
             command_line="check_test_check --password-id uuid1234:/pw/store --password-plain-in-curly '{p4ssw0rd!}'",
             params={
                 "description": "My active check",
-                "password": ("cmk_postprocessed", "explicit_password", ("uuid1234", "p4ssw0rd!")),
+                "password": (
+                    "cmk_postprocessed",
+                    "explicit_password",
+                    ("uuid1234", "p4ssw0rd!"),
+                ),
             },
             expanded_args="--password-id uuid1234:/pw/store --password-plain-in-curly '{p4ssw0rd\\!}'",
             detected_executable="/path/to/check_test_check",
@@ -653,12 +688,16 @@ def test_get_active_service_data_password_without_hack(
     [
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "param1": "param1"}],
+                ),
             ],
             {},
             {
                 PluginLocation(
-                    "cmk.plugins.my_stuff.server_side_calls", "active_check_my_active_check"
+                    "cmk.plugins.my_stuff.server_side_calls",
+                    "active_check_my_active_check",
                 ): ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda p: p,
@@ -669,7 +708,10 @@ def test_get_active_service_data_password_without_hack(
         ),
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "param1": "param1"}],
+                ),
             ],
             {
                 "my_active_check": {
@@ -722,12 +764,16 @@ def test_test_get_active_service_data_crash(
     [
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "param1": "param1"}],
+                ),
             ],
             {},
             {
                 PluginLocation(
-                    "cmk.plugins.my_stuff.server_side_calls", "active_check_my_active_check"
+                    "cmk.plugins.my_stuff.server_side_calls",
+                    "active_check_my_active_check",
                 ): ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda p: p,
@@ -738,7 +784,10 @@ def test_test_get_active_service_data_crash(
         ),
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "param1": "param1"}],
+                ),
             ],
             {
                 "my_active_check": {
@@ -933,7 +982,10 @@ def test_get_active_service_data_warnings(
     [
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "param1": "param1"}],
+                ),
             ],
             {
                 "my_active_check": {
@@ -956,7 +1008,10 @@ def test_get_active_service_data_warnings(
         ),
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "param1": "param1"}],
+                ),
             ],
             {
                 "my_active_check": {
@@ -988,7 +1043,10 @@ def test_get_active_service_data_warnings(
         ),
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "param1": "param1"}],
+                ),
             ],
             {
                 "my_active_check": {
@@ -1081,7 +1139,10 @@ def test_get_active_service_data_warnings(
         ),
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "param1": "param1"}],
+                ),
             ],
             {},
             {},
@@ -1132,7 +1193,10 @@ def test_get_active_service_descriptions(
     [
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "param1": "param1"}],
+                ),
             ],
             {
                 "my_active_check": {
@@ -1247,7 +1311,10 @@ def test_get_host_config_macros_stringified() -> None:
 
 def test_get_host_config_no_ip() -> None:
     config_cache = make_config_cache_mock(
-        additional_ipaddresses=([HostAddress("ignore.v4.noip")], [HostAddress("ignore.v6.noip")]),
+        additional_ipaddresses=(
+            [HostAddress("ignore.v4.noip")],
+            [HostAddress("ignore.v6.noip")],
+        ),
         ip_stack=ip_lookup.AddressFamily.NO_IP,
         family=socket.AddressFamily.AF_INET6,
     )
@@ -1268,7 +1335,10 @@ def test_get_host_config_no_ip() -> None:
 
 def test_get_host_config_ipv4(monkeypatch: pytest.MonkeyPatch) -> None:
     config_cache = make_config_cache_mock(
-        additional_ipaddresses=([HostAddress("1.2.3.4")], [HostAddress("ignore.v6.noip")]),
+        additional_ipaddresses=(
+            [HostAddress("1.2.3.4")],
+            [HostAddress("ignore.v6.noip")],
+        ),
         ip_stack=ip_lookup.AddressFamily.IPv4,
         family=socket.AddressFamily.AF_INET,
     )
@@ -1461,7 +1531,8 @@ def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
         pytest.param(
             {
                 PluginLocation(
-                    "cmk.plugins.test.server_side_calls.test_agent", "special_agent_text"
+                    "cmk.plugins.test.server_side_calls.test_agent",
+                    "special_agent_text",
                 ): SpecialAgentConfig(
                     name="test_agent",
                     parameter_parser=lambda e: e,
@@ -1485,7 +1556,8 @@ def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
         pytest.param(
             {
                 PluginLocation(
-                    "cmk.plugins.test.server_side_calls.test_agent", "special_agent_text"
+                    "cmk.plugins.test.server_side_calls.test_agent",
+                    "special_agent_text",
                 ): SpecialAgentConfig(
                     name="test_agent",
                     parameter_parser=lambda e: e,
@@ -1511,14 +1583,20 @@ def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
         pytest.param(
             {
                 PluginLocation(
-                    "cmk.plugins.test.server_side_calls.test_agent", "special_agent_text"
+                    "cmk.plugins.test.server_side_calls.test_agent",
+                    "special_agent_text",
                 ): SpecialAgentConfig(
                     name="test_agent",
                     parameter_parser=lambda e: e,
                     commands_function=lambda *_: (
                         [
                             SpecialAgentCommand(
-                                command_arguments=["-h", "<HOST>", "-a", "$HOSTADDRESS$"],
+                                command_arguments=[
+                                    "-h",
+                                    "<HOST>",
+                                    "-a",
+                                    "$HOSTADDRESS$",
+                                ],
                             ),
                         ]
                     ),
@@ -1604,7 +1682,13 @@ def test_iter_special_agent_commands_stored_password_with_hack(
     assert list(
         special_agent.iter_special_agent_commands(
             "test_agent",
-            {"password": ("cmk_postprocessed", "explicit_password", ("1234", "p4ssw0rd!"))},
+            {
+                "password": (
+                    "cmk_postprocessed",
+                    "explicit_password",
+                    ("1234", "p4ssw0rd!"),
+                )
+            },
         )
     ) == [
         SpecialAgentCommandLine(
@@ -1633,7 +1717,13 @@ def test_iter_special_agent_commands_stored_password_without_hack(
     assert list(
         special_agent.iter_special_agent_commands(
             "test_agent",
-            {"password": ("cmk_postprocessed", "explicit_password", ("uuid1234", "p4ssw0rd!"))},
+            {
+                "password": (
+                    "cmk_postprocessed",
+                    "explicit_password",
+                    ("uuid1234", "p4ssw0rd!"),
+                )
+            },
         )
     ) == [
         SpecialAgentCommandLine(
@@ -1649,7 +1739,8 @@ def test_iter_special_agent_commands_stored_password_without_hack(
         pytest.param(
             {
                 PluginLocation(
-                    "cmk.plugins.test.server_side_calls.test_agent", "special_agent_text"
+                    "cmk.plugins.test.server_side_calls.test_agent",
+                    "special_agent_text",
                 ): SpecialAgentConfig(
                     name="test_agent",
                     parameter_parser=lambda e: e,
@@ -1660,7 +1751,9 @@ def test_iter_special_agent_commands_stored_password_without_hack(
             id="special agent",
         ),
         pytest.param(
-            {}, {"test_agent": argument_function_with_exception}, id="legacy special agent"
+            {},
+            {"test_agent": argument_function_with_exception},
+            id="legacy special agent",
         ),
     ],
 )
@@ -1703,7 +1796,8 @@ def test_iter_special_agent_commands_crash(
         pytest.param(
             {
                 PluginLocation(
-                    "cmk.plugins.test.server_side_calls.test_agent", "special_agent_text"
+                    "cmk.plugins.test.server_side_calls.test_agent",
+                    "special_agent_text",
                 ): SpecialAgentConfig(
                     name="test_agent",
                     parameter_parser=lambda e: e,
@@ -1714,7 +1808,9 @@ def test_iter_special_agent_commands_crash(
             id="special agent",
         ),
         pytest.param(
-            {}, {"test_agent": argument_function_with_exception}, id="legacy special agent"
+            {},
+            {"test_agent": argument_function_with_exception},
+            id="legacy special agent",
         ),
     ],
 )
@@ -1881,7 +1977,9 @@ def test_commandline_arguments_nonexisting_password(
         pytest.param((1, 2), id="integer tuple"),
     ],
 )
-def test_commandline_arguments_invalid_arguments_type(args: int | tuple[int, int] | None) -> None:
+def test_commandline_arguments_invalid_arguments_type(
+    args: int | tuple[int, int] | None,
+) -> None:
     with pytest.raises(
         ActiveCheckError,
         match=r"The check argument function needs to return either a list of arguments or a string of the concatenated arguments \(Service: test service\).",

@@ -49,7 +49,9 @@ class DashboardStore:
         return visuals.available("dashboards", all_dashboards)
 
 
-def _internal_dashboard_to_runtime_dashboard(raw_dashboard: dict[str, Any]) -> DashboardConfig:
+def _internal_dashboard_to_runtime_dashboard(
+    raw_dashboard: dict[str, Any],
+) -> DashboardConfig:
     raw_dashboard["packaged"] = False
     raw_dashboard.setdefault("megamenu_search_terms", [])
     return {

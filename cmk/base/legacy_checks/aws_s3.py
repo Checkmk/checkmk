@@ -69,7 +69,11 @@ def check_aws_s3_objects(item, params, parsed):
         yield 0, ", ".join(storage_infos)
 
     num_objects = sum(metrics["NumberOfObjects"].values())
-    yield 0, "Number of objects: %s" % int(num_objects), [("aws_num_objects", num_objects)]
+    yield (
+        0,
+        "Number of objects: %s" % int(num_objects),
+        [("aws_num_objects", num_objects)],
+    )
 
     location = metrics.get("LocationConstraint")
     if location:
@@ -129,10 +133,14 @@ def check_aws_s3_summary(item, params, parsed):
     )
 
     if largest_bucket:
-        yield 0, "Largest bucket: {} ({})".format(
-            largest_bucket,
-            render.bytes(largest_bucket_size),
-        ), [("aws_largest_bucket_size", largest_bucket_size)]
+        yield (
+            0,
+            "Largest bucket: {} ({})".format(
+                largest_bucket,
+                render.bytes(largest_bucket_size),
+            ),
+            [("aws_largest_bucket_size", largest_bucket_size)],
+        )
 
 
 check_info["aws_s3.summary"] = LegacyCheckDefinition(

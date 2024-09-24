@@ -13,7 +13,9 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 Section = Mapping[str, int]
 
 
-def parse_fortiauthenticator_auth_fail(string_table: list[StringTable]) -> Section | None:
+def parse_fortiauthenticator_auth_fail(
+    string_table: list[StringTable],
+) -> Section | None:
     """
     >>> parse_fortiauthenticator_auth_fail([[['3']]])
     {'auth_fails': 3}

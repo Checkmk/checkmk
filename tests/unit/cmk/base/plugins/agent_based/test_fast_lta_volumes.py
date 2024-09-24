@@ -13,7 +13,12 @@ from cmk.base.api.agent_based.plugin_classes import (
     DiscoveryFunction,
     SNMPParseFunction,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
@@ -48,7 +53,12 @@ def _get_check_function(plugin):
 def test_parse_fast_lta_volumes(parse_fast_lta_volumes: SNMPParseFunction) -> None:
     assert (
         parse_fast_lta_volumes(
-            [[["Archiv_Test", "1000000000000", "10000000000"], ["Archiv_Test_1", "", ""]]]
+            [
+                [
+                    ["Archiv_Test", "1000000000000", "10000000000"],
+                    ["Archiv_Test_1", "", ""],
+                ]
+            ]
         )
         == parsed
     )

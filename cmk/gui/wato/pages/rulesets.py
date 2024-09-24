@@ -223,7 +223,8 @@ class ABCRulesetMode(WatoMode):
         # Transform the folder argumen (from URL or bradcrumb) to the "rule search arguments
         if request.var("folder"):
             request.set_var(
-                "search_p_rule_folder_0", DropdownChoice.option_id(request.var("folder"))
+                "search_p_rule_folder_0",
+                DropdownChoice.option_id(request.var("folder")),
             )
             request.set_var("search_p_rule_folder_1", DropdownChoice.option_id(True))
             request.set_var("search_p_rule_folder_USE", "on")
@@ -307,7 +308,8 @@ class ABCRulesetMode(WatoMode):
                         else ["nofloat" if user.show_help else "float"]
                     )
                     html.open_div(
-                        class_=["ruleset"] + float_cls, title=strip_tags(ruleset.help() or "")
+                        class_=["ruleset"] + float_cls,
+                        title=strip_tags(ruleset.help() or ""),
                     )
                     html.open_div(class_="text")
 
@@ -328,13 +330,19 @@ class ABCRulesetMode(WatoMode):
 
                     num_rules = ruleset.num_rules()
                     if ruleset.search_matching_rules:
-                        num_rules_txt = "%d/%d" % (len(ruleset.search_matching_rules), num_rules)
+                        num_rules_txt = "%d/%d" % (
+                            len(ruleset.search_matching_rules),
+                            num_rules,
+                        )
                     else:
                         num_rules_txt = "%d" % num_rules
 
                     html.div(
                         num_rules_txt,
-                        class_=["rulecount", "nonzero" if ruleset.is_empty() else "zero"],
+                        class_=[
+                            "rulecount",
+                            "nonzero" if ruleset.is_empty() else "zero",
+                        ],
                     )
                     if not active_config.wato_hide_help_in_lists and ruleset.help():
                         html.help(ruleset.help())
@@ -536,7 +544,9 @@ def _is_var_to_delete(form_prefix: str, varname: str, value: str) -> bool:
     return True
 
 
-def _page_menu_entries_predefined_searches(group: str | None) -> Iterable[PageMenuEntry]:
+def _page_menu_entries_predefined_searches(
+    group: str | None,
+) -> Iterable[PageMenuEntry]:
     for search_title, search_emblem, search_term in [
         ("Used rulesets", "enable", "ruleset_used"),
         ("Ineffective rules", "disable", "rule_ineffective"),
@@ -818,7 +828,8 @@ class ModeEditRuleset(WatoMode):
 
         self._name = request.get_ascii_input_mandatory("varname")
         self._back_mode = request.get_ascii_input_mandatory(
-            "back_mode", request.get_ascii_input_mandatory("ruleset_back_mode", "rulesets")
+            "back_mode",
+            request.get_ascii_input_mandatory("ruleset_back_mode", "rulesets"),
         )
         self._item: ServiceName | None = None
         self._service: ServiceName | None = None
@@ -834,7 +845,8 @@ class ModeEditRuleset(WatoMode):
                 self._name = RuleGroup.CheckgroupParameters(checks[check_command].get("group", ""))
                 descr_pattern = checks[check_command]["service_description"].replace("%s", "(.*)")
                 matcher = re.search(
-                    descr_pattern, request.get_str_input_mandatory("service_description")
+                    descr_pattern,
+                    request.get_str_input_mandatory("service_description"),
                 )
                 if matcher:
                     try:
@@ -887,7 +899,8 @@ class ModeEditRuleset(WatoMode):
 
         if self._hostname and self._rulespec.item_type == "item" and not self._service:
             raise MKUserError(
-                "service", _('Unable to analyze matching, because "service" parameter is missing')
+                "service",
+                _('Unable to analyze matching, because "service" parameter is missing'),
             )
 
         self._just_edited_rule_from_vars()
@@ -927,7 +940,10 @@ class ModeEditRuleset(WatoMode):
             title += _(" for host %s") % self._hostname
             if request.has_var("item") and self._rulespec.item_type:
                 assert self._rulespec.item_name is not None
-                title += _(" and %s '%s'") % (self._rulespec.item_name.lower(), self._item)
+                title += _(" and %s '%s'") % (
+                    self._rulespec.item_name.lower(),
+                    self._item,
+                )
 
         return title
 
@@ -1075,7 +1091,8 @@ class ModeEditRuleset(WatoMode):
             rule = ruleset.get_rule_by_id(rule_id)
         except (IndexError, TypeError, ValueError, KeyError):
             raise MKUserError(
-                "_rule_id", _("You are trying to edit a rule which does not exist anymore.")
+                "_rule_id",
+                _("You are trying to edit a rule which does not exist anymore."),
             )
 
         action = request.get_ascii_input_mandatory("_action")
@@ -1621,7 +1638,10 @@ class ModeRuleSearchForm(WatoMode):
                         title=_("Used"),
                         choices=[
                             (True, _("Search for rulesets that have rules configured")),
-                            (False, _("Search for rulesets that don't have rules configured")),
+                            (
+                                False,
+                                _("Search for rulesets that don't have rules configured"),
+                            ),
                         ],
                     ),
                 ),
@@ -1795,7 +1815,8 @@ class ABCEditRuleMode(WatoMode):
                 self._folder = ruleset.get_rule_by_id(rule_id).folder
             except KeyError:
                 raise MKUserError(
-                    "rule_id", _("You are trying to edit a rule which does not exist anymore.")
+                    "rule_id",
+                    _("You are trying to edit a rule which does not exist anymore."),
                 )
 
     def _set_rule(self) -> None:
@@ -1805,7 +1826,8 @@ class ABCEditRuleMode(WatoMode):
                 self._rule = self._ruleset.get_rule_by_id(rule_id)
             except (KeyError, TypeError, ValueError, IndexError):
                 raise MKUserError(
-                    "rule_id", _("You are trying to edit a rule which does not exist anymore.")
+                    "rule_id",
+                    _("You are trying to edit a rule which does not exist anymore."),
                 )
         else:
             raise NotImplementedError()
@@ -1883,7 +1905,10 @@ class ABCEditRuleMode(WatoMode):
             return folder_preserving_link(var_list)
 
         return folder_preserving_link(
-            [("mode", self._back_mode), ("host", request.get_ascii_input_mandatory("host", ""))]
+            [
+                ("mode", self._back_mode),
+                ("host", request.get_ascii_input_mandatory("host", "")),
+            ]
         )
 
     def action(self) -> ActionResult:
@@ -1920,7 +1945,11 @@ class ABCEditRuleMode(WatoMode):
             _changes.add_change(
                 "edit-rule",
                 _('Changed properties of rule "%s", moved rule from folder "%s" to "%s"')
-                % (self._ruleset.title(), self._folder.alias_path(), new_rule_folder.alias_path()),
+                % (
+                    self._ruleset.title(),
+                    self._folder.alias_path(),
+                    new_rule_folder.alias_path(),
+                ),
                 sites=affected_sites,
                 diff_text=self._ruleset.diff_rules(self._orig_rule, self._rule),
                 object_ref=self._rule.object_ref(),
@@ -2259,7 +2288,11 @@ class VSExplicitConditions(Transform):
                         "condition explicit",
                         ["explicit_services"],
                     ),
-                    (_("Service labels"), "condition explicit", ["service_label_groups"]),
+                    (
+                        _("Service labels"),
+                        "condition explicit",
+                        ["service_label_groups"],
+                    ),
                 ],
                 optional_keys=["explicit_hosts", "explicit_services"],
                 **kwargs,
@@ -2386,7 +2419,8 @@ class VSExplicitConditions(Transform):
 
         if not sub_conditions:
             raise MKUserError(
-                None, _("Please specify at least one condition or this rule will never match.")
+                None,
+                _("Please specify at least one condition or this rule will never match."),
             )
 
         if negate:
@@ -2972,7 +3006,10 @@ class ModeExportRule(ABCEditRuleMode):
             forms.header(_("Rule value representation for REST API"))
             forms.section("Rule value representation")
             html.text_area(
-                content_id, deflt=repr(repr(rule_config)), id_=content_id, readonly="true"
+                content_id,
+                deflt=repr(repr(rule_config)),
+                id_=content_id,
+                readonly="true",
             )
             html.icon_button(
                 url=None,

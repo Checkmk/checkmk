@@ -67,7 +67,12 @@ from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.user_sites import get_activation_site_choices
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri, makeuri_contextless
+from cmk.gui.utils.urls import (
+    doc_reference_url,
+    DocReference,
+    makeuri,
+    makeuri_contextless,
+)
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
@@ -77,7 +82,10 @@ from cmk.gui.valuespec import (
     Integer,
     ValueSpec,
 )
-from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
+from cmk.gui.watolib.automation_commands import (
+    AutomationCommand,
+    AutomationCommandRegistry,
+)
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import create_diagnostics_dump
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
@@ -573,7 +581,8 @@ class ModeDiagnostics(WatoMode):
                 insensitive_files.append((rel_filepath, file_info))
 
         sorted_files = sorted(
-            high_sensitive_files + sensitive_files + insensitive_files, key=lambda t: t[0]
+            high_sensitive_files + sensitive_files + insensitive_files,
+            key=lambda t: t[0],
         )
         sorted_non_high_sensitive_files = sorted(
             sensitive_files + insensitive_files, key=lambda t: t[0]
@@ -634,7 +643,10 @@ class ModeDiagnostics(WatoMode):
         files: list[tuple[str, CheckmkFileInfo]],
     ) -> list[tuple[str, str]]:
         return [
-            (rel_filepath, get_checkmk_file_sensitivity_for_humans(rel_filepath, file_info))
+            (
+                rel_filepath,
+                get_checkmk_file_sensitivity_for_humans(rel_filepath, file_info),
+            )
             for rel_filepath, file_info in files
         ]
 

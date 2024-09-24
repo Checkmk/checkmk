@@ -8,6 +8,7 @@ Currently the helper below is just used to facilitate the testing.
 Someday it may be used to automatically extract the doc for all
 builtin host labels.
 """
+
 import itertools
 from collections import defaultdict
 from collections.abc import Sequence

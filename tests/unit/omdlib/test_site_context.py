@@ -63,7 +63,9 @@ def test_site_context_exists(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_site_context_is_empty(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        os, "listdir", lambda p: [] if p == "/omd/sites/dingeling" else ["abc", "version"]
+        os,
+        "listdir",
+        lambda p: [] if p == "/omd/sites/dingeling" else ["abc", "version"],
     )
 
     site = SiteContext("dingeling")

@@ -36,6 +36,9 @@ check_info["ipr400_temp"] = LegacyCheckDefinition(
     check_function=check_ipr400_temp,
     check_ruleset_name="temperature",
     check_default_parameters={
-        "levels": (30.0, 40.0),  # reported temperature seems to be near room temperature usually
+        "levels": (
+            30.0,
+            40.0,
+        ),  # reported temperature seems to be near room temperature usually
     },
 )

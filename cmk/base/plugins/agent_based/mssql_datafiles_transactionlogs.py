@@ -44,10 +44,25 @@ def parse_mssql_datafiles(string_table: StringTable) -> SectionDatafiles:
             continue
         if len(line) == 6:
             inst = None
-            database, file_name, physical_name, max_size, allocated_size, used_size = line
+            (
+                database,
+                file_name,
+                physical_name,
+                max_size,
+                allocated_size,
+                used_size,
+            ) = line
             unlimited = False
         elif len(line) == 8:
-            inst, database, file_name, physical_name, max_size, allocated_size, used_size = line[:7]
+            (
+                inst,
+                database,
+                file_name,
+                physical_name,
+                max_size,
+                allocated_size,
+                used_size,
+            ) = line[:7]
             unlimited = line[7] == "1"
         else:
             continue

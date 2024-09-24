@@ -9,7 +9,13 @@ import functools
 from collections.abc import Callable, Sequence
 from typing import cast
 
-from livestatus import LivestatusColumn, LivestatusRow, OnlySites, Query, QuerySpecification
+from livestatus import (
+    LivestatusColumn,
+    LivestatusRow,
+    OnlySites,
+    Query,
+    QuerySpecification,
+)
 
 from cmk.utils.check_utils import worst_service_state
 
@@ -186,7 +192,8 @@ def _merge_data(
         mergekey = row[merge_column_index]
         if mergekey in merged:
             merged[mergekey] = cast(
-                LivestatusRow, [f(a, b) for f, a, b in zip(mergefuncs, merged[mergekey], row)]
+                LivestatusRow,
+                [f(a, b) for f, a, b in zip(mergefuncs, merged[mergekey], row)],
             )
         else:
             merged[mergekey] = row

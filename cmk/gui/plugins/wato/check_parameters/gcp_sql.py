@@ -16,7 +16,13 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersApplications,
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import Dictionary, MonitoringState, Percentage, TextInput, ValueSpec
+from cmk.gui.valuespec import (
+    Dictionary,
+    MonitoringState,
+    Percentage,
+    TextInput,
+    ValueSpec,
+)
 
 # A notes about the names of the Dictionary elements. They correspond to the names of the metrics in
 # the check plug-in. Please do not change them.
@@ -29,7 +35,10 @@ def _vs_sql_status() -> ValueSpec:
             ("RUNNING", MonitoringState(title=_("Running"), default_value=0)),
             ("SUSPEND", MonitoringState(title=_("Suspend"), default_value=1)),
             ("RUNNABLE", MonitoringState(title=_("Runnable"), default_value=0)),
-            ("PENDING_CREATE", MonitoringState(title=_("Pending create"), default_value=3)),
+            (
+                "PENDING_CREATE",
+                MonitoringState(title=_("Pending create"), default_value=3),
+            ),
             ("MAINTENANCE", MonitoringState(title=_("Maintenance"), default_value=3)),
             ("FAILED", MonitoringState(title=_("Failed"), default_value=2)),
             ("UNKNOWN_STATE", MonitoringState(title=_("Unknown"), default_value=3)),

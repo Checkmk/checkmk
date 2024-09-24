@@ -18,7 +18,10 @@ from typing import Any
 from cmk.utils.macros import MacroMapping
 
 from cmk import fields
-from cmk.bi.aggregation_functions import BIAggregationFunctionBest, BIAggregationFunctionSchema
+from cmk.bi.aggregation_functions import (
+    BIAggregationFunctionBest,
+    BIAggregationFunctionSchema,
+)
 from cmk.bi.lib import (
     ABCBICompiledNode,
     ABCBISearcher,

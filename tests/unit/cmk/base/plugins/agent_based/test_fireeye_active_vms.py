@@ -9,8 +9,17 @@ from tests.unit.conftest import FixRegister
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.api.agent_based.plugin_classes import CheckFunction, CheckPlugin, DiscoveryFunction
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.api.agent_based.plugin_classes import (
+    CheckFunction,
+    CheckPlugin,
+    DiscoveryFunction,
+)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 _PLUGIN = CheckPluginName("fireeye_active_vms")

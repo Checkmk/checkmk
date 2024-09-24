@@ -33,7 +33,9 @@ from cmk.agent_receiver.certs import (  # pylint: disable=cmk-module-layer-viola
 
 
 # Copied from tests/unit/agent_receiver/certs.py to make cmk-agent-receiver/tests self contained
-def generate_csr_pair(cn: str) -> tuple[asymmetric.rsa.RSAPrivateKey, CertificateSigningRequest]:
+def generate_csr_pair(
+    cn: str,
+) -> tuple[asymmetric.rsa.RSAPrivateKey, CertificateSigningRequest]:
     private_key = asymmetric.rsa.generate_private_key(
         public_exponent=65537,
         key_size=2048,

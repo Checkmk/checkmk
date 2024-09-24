@@ -16,7 +16,9 @@ from ._add_to_visual import (
     ajax_add_visual,
     ajax_popup_add,
 )
-from ._add_to_visual import page_menu_dropdown_add_to_visual as page_menu_dropdown_add_to_visual
+from ._add_to_visual import (
+    page_menu_dropdown_add_to_visual as page_menu_dropdown_add_to_visual,
+)
 from ._add_to_visual import page_menu_topic_add_to as page_menu_topic_add_to
 from ._add_to_visual import set_page_context as set_page_context
 from ._breadcrumb import visual_page_breadcrumb as visual_page_breadcrumb
@@ -45,7 +47,9 @@ from ._filter_valuespecs import filters_allowed_for_infos as filters_allowed_for
 from ._filter_valuespecs import filters_exist_for_infos as filters_exist_for_infos
 from ._filter_valuespecs import PageAjaxVisualFilterListGetChoice
 from ._filter_valuespecs import VisualFilterList as VisualFilterList
-from ._filter_valuespecs import VisualFilterListWithAddPopup as VisualFilterListWithAddPopup
+from ._filter_valuespecs import (
+    VisualFilterListWithAddPopup as VisualFilterListWithAddPopup,
+)
 from ._filters import cre_site_filter_heading_info as cre_site_filter_heading_info
 from ._filters import MultipleSitesFilter as MultipleSitesFilter
 from ._filters import SiteFilter as SiteFilter
@@ -65,12 +69,18 @@ from ._page_list import page_list as page_list
 from ._permissions import declare_visual_permissions as declare_visual_permissions
 from ._store import available as available
 from ._store import declare_custom_permissions as declare_custom_permissions
-from ._store import declare_packaged_visuals_permissions as declare_packaged_visuals_permissions
-from ._store import delete_local_file, get_installed_packages
+from ._store import (
+    declare_packaged_visuals_permissions as declare_packaged_visuals_permissions,
+)
+from ._store import (  # type: ignore[attr-defined]
+    delete_local_file,
+    get_installed_packages,
+    local_file_exists,
+    move_visual_to_local,
+)
 from ._store import get_permissioned_visual as get_permissioned_visual
 from ._store import load as load
 from ._store import load_visuals_of_a_user as load_visuals_of_a_user
-from ._store import local_file_exists, move_visual_to_local
 from ._store import save as save
 from ._store import TVisual as TVisual
 from ._title import view_title as view_title

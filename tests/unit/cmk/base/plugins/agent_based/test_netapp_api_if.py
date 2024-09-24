@@ -118,7 +118,11 @@ from cmk.plugins.lib.netapp_api import check_netapp_interfaces
                     },
                     [
                         Result(state=State.OK, summary="[GTB1020-2-CL_mgmt]"),
-                        Result(state=State.OK, summary="(up)", details="Operational state: up"),
+                        Result(
+                            state=State.OK,
+                            summary="(up)",
+                            details="Operational state: up",
+                        ),
                         Result(state=State.OK, summary="Speed: 1 GBit/s"),
                         Result(
                             state=State.OK,
@@ -128,7 +132,10 @@ from cmk.plugins.lib.netapp_api import check_netapp_interfaces
                             "out_ucast: Initialized: 'out_ucast.1.GTB1020-2-CL_mgmt..None', out_mcast: Initialized: 'out_mcast.1.GTB1020-2-CL_mgmt..None', "
                             "out_err: Initialized: 'out_err.1.GTB1020-2-CL_mgmt..None'",
                         ),
-                        Result(state=State.OK, summary="Current Port: e0f-112 (is home port)"),
+                        Result(
+                            state=State.OK,
+                            summary="Current Port: e0f-112 (is home port)",
+                        ),
                     ],
                 ),
                 (
@@ -140,7 +147,11 @@ from cmk.plugins.lib.netapp_api import check_netapp_interfaces
                     },
                     [
                         Result(state=State.OK, summary="[GTB1020-2_ic1]"),
-                        Result(state=State.OK, summary="(up)", details="Operational state: up"),
+                        Result(
+                            state=State.OK,
+                            summary="(up)",
+                            details="Operational state: up",
+                        ),
                         Result(state=State.OK, summary="Speed: 1 GBit/s"),
                         Result(
                             state=State.OK,
@@ -150,7 +161,10 @@ from cmk.plugins.lib.netapp_api import check_netapp_interfaces
                             "out_ucast: Initialized: 'out_ucast.2.GTB1020-2_ic1..None', out_mcast: Initialized: 'out_mcast.2.GTB1020-2_ic1..None', "
                             "out_err: Initialized: 'out_err.2.GTB1020-2_ic1..None'",
                         ),
-                        Result(state=State.OK, summary="Current Port: e0f-2231 (is home port)"),
+                        Result(
+                            state=State.OK,
+                            summary="Current Port: e0f-2231 (is home port)",
+                        ),
                     ],
                 ),
             ],
@@ -266,7 +280,11 @@ from cmk.plugins.lib.netapp_api import check_netapp_interfaces
                     },
                     [
                         Result(state=State.OK, summary="[ifgrp_sto]"),
-                        Result(state=State.OK, summary="(up)", details="Operational state: up"),
+                        Result(
+                            state=State.OK,
+                            summary="(up)",
+                            details="Operational state: up",
+                        ),
                         Result(state=State.OK, summary="MAC: 01:B0:89:22:DF:02"),
                         Result(state=State.OK, summary="Speed: 1 GBit/s"),
                         Result(
@@ -344,7 +362,11 @@ from cmk.plugins.lib.netapp_api import check_netapp_interfaces
                     },
                     [
                         Result(state=State.OK, summary="[cluster_mgmt]"),
-                        Result(state=State.OK, summary="(up)", details="Operational state: up"),
+                        Result(
+                            state=State.OK,
+                            summary="(up)",
+                            details="Operational state: up",
+                        ),
                         Result(state=State.OK, summary="Speed: auto"),
                         Result(
                             state=State.OK,
@@ -419,7 +441,11 @@ from cmk.plugins.lib.netapp_api import check_netapp_interfaces
                     },
                     [
                         Result(state=State.OK, summary="[some-if-name]"),
-                        Result(state=State.OK, summary="(up)", details="Operational state: up"),
+                        Result(
+                            state=State.OK,
+                            summary="(up)",
+                            details="Operational state: up",
+                        ),
                         Result(state=State.OK, summary="Speed: 10 GBit/s"),
                         Result(
                             state=State.OK,

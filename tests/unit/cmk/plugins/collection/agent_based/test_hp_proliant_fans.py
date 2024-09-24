@@ -32,7 +32,11 @@ def test_discovery() -> None:
 def test_check_speed_state() -> None:
     assert list(check_plugin_hp_proliant_fans.check_function("1 (system)", _section())) == [
         Result(state=State.OK, summary="Status: ok"),
-        Result(state=State.OK, summary="Speed: normal", details=f"Speed: normal\n{DISCLAIMER}"),
+        Result(
+            state=State.OK,
+            summary="Speed: normal",
+            details=f"Speed: normal\n{DISCLAIMER}",
+        ),
     ]
 
 

@@ -9,7 +9,10 @@ import pytest
 
 import cmk.base.plugins.agent_based.services as services
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+)
 
 STRING_TABLE = [
     ["wscsvc", "running/auto", "Security", "Center"],
@@ -101,37 +104,53 @@ def test_discovery_windows_services(
             "WSearch",
             services.WINDOWS_SERVICES_CHECK_DEFAULT_PARAMETERS,
             [
-                Result(state=State.CRIT, summary="Windows Search: stopped (start type is demand)"),
+                Result(
+                    state=State.CRIT,
+                    summary="Windows Search: stopped (start type is demand)",
+                ),
             ],
         ),
         (
             "WSearch",
             {"else": 1},
             [
-                Result(state=State.WARN, summary="Windows Search: stopped (start type is demand)"),
+                Result(
+                    state=State.WARN,
+                    summary="Windows Search: stopped (start type is demand)",
+                ),
             ],
         ),
         (
             "WSearch",
             {"states": [("stopped", None, 0)]},
             [
-                Result(state=State.OK, summary="Windows Search: stopped (start type is demand)"),
+                Result(
+                    state=State.OK,
+                    summary="Windows Search: stopped (start type is demand)",
+                ),
             ],
         ),
         (
             "WSearch",
             {"states": [(None, "demand", 1)]},
             [
-                Result(state=State.WARN, summary="Windows Search: stopped (start type is demand)"),
+                Result(
+                    state=State.WARN,
+                    summary="Windows Search: stopped (start type is demand)",
+                ),
             ],
         ),
         (
             "WSearch",
             {"additional_servicenames": ["wuauserv"]},
             [
-                Result(state=State.CRIT, summary="Windows Search: stopped (start type is demand)"),
                 Result(
-                    state=State.CRIT, summary="Windows Update: stopped (start type is disabled)"
+                    state=State.CRIT,
+                    summary="Windows Search: stopped (start type is demand)",
+                ),
+                Result(
+                    state=State.CRIT,
+                    summary="Windows Update: stopped (start type is disabled)",
                 ),
             ],
         ),
@@ -142,7 +161,10 @@ def test_discovery_windows_services(
                 "states": [],
             },
             [
-                Result(state=State.OK, summary="Windows Search: stopped (start type is demand)"),
+                Result(
+                    state=State.OK,
+                    summary="Windows Search: stopped (start type is demand)",
+                ),
             ],
         ),
         (
@@ -180,7 +202,8 @@ def test_check_windows_services(
             services.WINDOWS_SERVICES_CHECK_DEFAULT_PARAMETERS,
             [
                 Result(
-                    state=State.OK, summary="Windows App Update: running (start type is unknown)"
+                    state=State.OK,
+                    summary="Windows App Update: running (start type is unknown)",
                 ),
                 Result(state=State.OK, summary="Running on: node2"),
             ],
@@ -190,7 +213,8 @@ def test_check_windows_services(
             {"states": [("running", None, 2)]},
             [
                 Result(
-                    state=State.CRIT, summary="Windows App Update: running (start type is unknown)"
+                    state=State.CRIT,
+                    summary="Windows App Update: running (start type is unknown)",
                 ),
             ],
         ),

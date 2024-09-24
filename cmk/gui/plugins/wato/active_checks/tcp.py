@@ -83,8 +83,16 @@ def _valuespec_active_checks_tcp() -> Migrate:
                     Tuple(
                         title=_("Expected response time"),
                         elements=[
-                            Float(title=_("Warning if above"), unit="ms", default_value=100.0),
-                            Float(title=_("Critical if above"), unit="ms", default_value=200.0),
+                            Float(
+                                title=_("Warning if above"),
+                                unit="ms",
+                                default_value=100.0,
+                            ),
+                            Float(
+                                title=_("Critical if above"),
+                                unit="ms",
+                                default_value=200.0,
+                            ),
                         ],
                     ),
                 ),
@@ -183,7 +191,9 @@ def _valuespec_active_checks_tcp() -> Migrate:
                 (
                     "ssl",
                     FixedValue(
-                        value=True, totext=_("use SSL"), title=_("Use SSL for the connection.")
+                        value=True,
+                        totext=_("use SSL"),
+                        title=_("Use SSL for the connection."),
                     ),
                 ),
                 (
@@ -192,8 +202,16 @@ def _valuespec_active_checks_tcp() -> Migrate:
                         title=_("SSL certificate validation"),
                         help=_("Minimum number of days a certificate has to be valid"),
                         elements=[
-                            Integer(title=_("Warning at or below"), minvalue=0, unit=_("days")),
-                            Integer(title=_("Critical at or below"), minvalue=0, unit=_("days")),
+                            Integer(
+                                title=_("Warning at or below"),
+                                minvalue=0,
+                                unit=_("days"),
+                            ),
+                            Integer(
+                                title=_("Critical at or below"),
+                                minvalue=0,
+                                unit=_("days"),
+                            ),
                         ],
                     ),
                 ),

@@ -38,8 +38,12 @@ relations: dict[str, dict[str, Any]] = {
         ),
         "filter": {},
         "converter": {
-            "software.os.install_date": lambda val: time.strftime("%Y-%m-%d", time.localtime(val)),
-            "@inventory_date": lambda val: time.strftime("%Y-%m-%d", time.localtime(val)),
+            "software.os.install_date": lambda val: time.strftime(
+                "%Y-%m-%d", time.localtime(val)
+            ),
+            "@inventory_date": lambda val: time.strftime(
+                "%Y-%m-%d", time.localtime(val)
+            ),
             "hardware.cpu.max_speed": lambda val: val / 1000000.0,  # hz in mhz
         },
     },
@@ -265,7 +269,9 @@ for ofs in relations:
                             field = re.sub(list_start + ":\\*.", "", field)
                             concat = ""
                             for item in field.split("."):
-                                if item.startswith("@"):  # take subtree vom special_value
+                                if item.startswith(
+                                    "@"
+                                ):  # take subtree vom special_value
                                     value = special_value(item, hostname)
                                 elif item.startswith("+"):
                                     for item2 in item.split("+"):
@@ -279,7 +285,9 @@ for ofs in relations:
                                                     concat += package[item2]
                                                 except Exception:
                                                     continue
-                                    value = hashlib.md5(concat.encode("utf-8")).hexdigest()
+                                    value = hashlib.md5(
+                                        concat.encode("utf-8")
+                                    ).hexdigest()
                                 else:
                                     try:
                                         value = package[item]

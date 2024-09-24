@@ -7,8 +7,14 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
-from cmk.base.plugins.agent_based.inventory_win_ip_r import inventory_win_ip_r, parse_win_ip_r
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    InventoryResult,
+    StringTable,
+)
+from cmk.base.plugins.agent_based.inventory_win_ip_r import (
+    inventory_win_ip_r,
+    parse_win_ip_r,
+)
 
 from .utils_inventory import sort_inventory_result
 
@@ -19,7 +25,13 @@ from .utils_inventory import sort_inventory_result
         ([], []),
         (
             [
-                ["indirect", "0.0.0.0", "0.0.0.0", "11.112.81.1", "vmxnet3 Ethernet Adapter #2"],
+                [
+                    "indirect",
+                    "0.0.0.0",
+                    "0.0.0.0",
+                    "11.112.81.1",
+                    "vmxnet3 Ethernet Adapter #2",
+                ],
                 [
                     "direct",
                     "11.112.81.0",
@@ -90,7 +102,13 @@ from .utils_inventory import sort_inventory_result
                     "0.0.0.0",
                     "vmxnet3 Ethernet Adapter #2",
                 ],
-                ["direct", "11.112.136.0", "255.255.252.0", "0.0.0.0", "vmxnet3 Ethernet Adapter"],
+                [
+                    "direct",
+                    "11.112.136.0",
+                    "255.255.252.0",
+                    "0.0.0.0",
+                    "vmxnet3 Ethernet Adapter",
+                ],
                 [
                     "direct",
                     "11.112.136.112",
@@ -126,8 +144,20 @@ from .utils_inventory import sort_inventory_result
                     "0.0.0.0",
                     "Microsoft Failover Cluster Virtual Adapter",
                 ],
-                ["direct", "224.0.0.0", "240.0.0.0", "0.0.0.0", "vmxnet3 Ethernet Adapter #2"],
-                ["direct", "224.0.0.0", "240.0.0.0", "0.0.0.0", "vmxnet3 Ethernet Adapter"],
+                [
+                    "direct",
+                    "224.0.0.0",
+                    "240.0.0.0",
+                    "0.0.0.0",
+                    "vmxnet3 Ethernet Adapter #2",
+                ],
+                [
+                    "direct",
+                    "224.0.0.0",
+                    "240.0.0.0",
+                    "0.0.0.0",
+                    "vmxnet3 Ethernet Adapter",
+                ],
                 [
                     "direct",
                     "224.0.0.0",

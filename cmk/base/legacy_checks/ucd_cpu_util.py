@@ -84,8 +84,18 @@ def check_ucd_cpu_util(item, params, parsed):
         return
 
     perfdata = [
-        ("read_blocks", get_rate(value_store, "io_received", now, raw_io_received), None, None),
-        ("write_blocks", get_rate(value_store, "io_send", now, raw_io_send), None, None),
+        (
+            "read_blocks",
+            get_rate(value_store, "io_received", now, raw_io_received),
+            None,
+            None,
+        ),
+        (
+            "write_blocks",
+            get_rate(value_store, "io_send", now, raw_io_send),
+            None,
+            None,
+        ),
     ]
     yield 0, "", perfdata
 

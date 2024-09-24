@@ -42,10 +42,19 @@ def _parameter_valuespec_drbd():
                                         title=_("DRBD shows up as"),
                                         default_value="running",
                                         choices=[
-                                            ("primary_secondary", _("Primary / Secondary")),
+                                            (
+                                                "primary_secondary",
+                                                _("Primary / Secondary"),
+                                            ),
                                             ("primary_primary", _("Primary / Primary")),
-                                            ("secondary_primary", _("Secondary / Primary")),
-                                            ("secondary_secondary", _("Secondary / Secondary")),
+                                            (
+                                                "secondary_primary",
+                                                _("Secondary / Primary"),
+                                            ),
+                                            (
+                                                "secondary_secondary",
+                                                _("Secondary / Secondary"),
+                                            ),
                                         ],
                                     ),
                                     MonitoringState(
@@ -72,28 +81,79 @@ def _parameter_valuespec_drbd():
                                     DropdownChoice(
                                         title=_("Diskstate"),
                                         choices=[
-                                            ("primary_Diskless", _("Primary - Diskless")),
-                                            ("primary_Attaching", _("Primary - Attaching")),
+                                            (
+                                                "primary_Diskless",
+                                                _("Primary - Diskless"),
+                                            ),
+                                            (
+                                                "primary_Attaching",
+                                                _("Primary - Attaching"),
+                                            ),
                                             ("primary_Failed", _("Primary - Failed")),
-                                            ("primary_Negotiating", _("Primary - Negotiating")),
-                                            ("primary_Inconsistent", _("Primary - Inconsistent")),
-                                            ("primary_Outdated", _("Primary - Outdated")),
-                                            ("primary_DUnknown", _("Primary - DUnknown")),
-                                            ("primary_Consistent", _("Primary - Consistent")),
-                                            ("primary_UpToDate", _("Primary - UpToDate")),
-                                            ("secondary_Diskless", _("Secondary - Diskless")),
-                                            ("secondary_Attaching", _("Secondary - Attaching")),
-                                            ("secondary_Failed", _("Secondary - Failed")),
-                                            ("secondary_Negotiating", _("Secondary - Negotiating")),
+                                            (
+                                                "primary_Negotiating",
+                                                _("Primary - Negotiating"),
+                                            ),
+                                            (
+                                                "primary_Inconsistent",
+                                                _("Primary - Inconsistent"),
+                                            ),
+                                            (
+                                                "primary_Outdated",
+                                                _("Primary - Outdated"),
+                                            ),
+                                            (
+                                                "primary_DUnknown",
+                                                _("Primary - DUnknown"),
+                                            ),
+                                            (
+                                                "primary_Consistent",
+                                                _("Primary - Consistent"),
+                                            ),
+                                            (
+                                                "primary_UpToDate",
+                                                _("Primary - UpToDate"),
+                                            ),
+                                            (
+                                                "secondary_Diskless",
+                                                _("Secondary - Diskless"),
+                                            ),
+                                            (
+                                                "secondary_Attaching",
+                                                _("Secondary - Attaching"),
+                                            ),
+                                            (
+                                                "secondary_Failed",
+                                                _("Secondary - Failed"),
+                                            ),
+                                            (
+                                                "secondary_Negotiating",
+                                                _("Secondary - Negotiating"),
+                                            ),
                                             (
                                                 "secondary_Inconsistent",
                                                 _("Secondary - Inconsistent"),
                                             ),
-                                            ("secondary_Outdated", _("Secondary - Outdated")),
-                                            ("secondary_DUnknown", _("Secondary - DUnknown")),
-                                            ("secondary_Consistent", _("Secondary - Consistent")),
-                                            ("secondary_UpToDate", _("Secondary - UpToDate")),
-                                            ("unknown_DUnknown", _("Unknown - DUnknown")),
+                                            (
+                                                "secondary_Outdated",
+                                                _("Secondary - Outdated"),
+                                            ),
+                                            (
+                                                "secondary_DUnknown",
+                                                _("Secondary - DUnknown"),
+                                            ),
+                                            (
+                                                "secondary_Consistent",
+                                                _("Secondary - Consistent"),
+                                            ),
+                                            (
+                                                "secondary_UpToDate",
+                                                _("Secondary - UpToDate"),
+                                            ),
+                                            (
+                                                "unknown_DUnknown",
+                                                _("Unknown - DUnknown"),
+                                            ),
                                         ],
                                     ),
                                     MonitoringState(title=_("Resulting state")),

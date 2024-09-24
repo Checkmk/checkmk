@@ -1788,7 +1788,10 @@ graph_info["packets_dropped"] = {
 
 graph_info["streams"] = {
     "title": _("Streams"),
-    "metrics": [("failed_inbound_streams", "area"), ("failed_outbound_streams", "-area")],
+    "metrics": [
+        ("failed_inbound_streams", "area"),
+        ("failed_outbound_streams", "-area"),
+    ],
 }
 
 graph_info["dhcp_statistics_received"] = {

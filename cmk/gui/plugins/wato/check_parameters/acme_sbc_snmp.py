@@ -20,8 +20,16 @@ def _parameter_valuespec_acme_sbc_snmp():
                 Tuple(
                     title=_("Levels on health status score in percent"),
                     elements=[
-                        Integer(title=_("Warning below"), unit=_("percent"), default_value=99),
-                        Integer(title=_("Critical below"), unit=_("percent"), default_value=75),
+                        Integer(
+                            title=_("Warning below"),
+                            unit=_("percent"),
+                            default_value=99,
+                        ),
+                        Integer(
+                            title=_("Critical below"),
+                            unit=_("percent"),
+                            default_value=75,
+                        ),
                     ],
                 ),
             ),

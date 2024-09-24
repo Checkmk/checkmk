@@ -94,7 +94,9 @@ runmqsc: Not executable
     ],
 )
 def test_check(
-    params: Mapping[str, object], parsed: Mapping[str, str], expected: list[tuple[int, str]]
+    params: Mapping[str, object],
+    parsed: Mapping[str, str],
+    expected: list[tuple[int, str]],
 ) -> None:
     check = Check(CHECK_NAME)
     actual = list(check.run_check(None, params, parsed))

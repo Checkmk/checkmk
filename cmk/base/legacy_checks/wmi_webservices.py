@@ -15,7 +15,11 @@ from cmk.base.config import check_info
 
 def check_wmi_webservices(item, params, parsed):
     yield from wmi_yield_raw_counter(
-        parsed[""], item, "CurrentConnections", infoname="Connections", perfvar="connections"
+        parsed[""],
+        item,
+        "CurrentConnections",
+        infoname="Connections",
+        perfvar="connections",
     )
 
 

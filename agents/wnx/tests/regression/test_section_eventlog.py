@@ -35,7 +35,8 @@ class Globals:
 def generate_logs():
     if platform.system() == "Windows":
         with winreg.OpenKey(  # type: ignore[attr-defined]
-            winreg.HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\Eventlog"  # type: ignore[attr-defined]
+            winreg.HKEY_LOCAL_MACHINE,  # type: ignore[attr-defined]
+            "SYSTEM\\CurrentControlSet\\Services\\Eventlog",
         ) as key:
             index = 0
             while True:
@@ -65,12 +66,8 @@ def eventlog(logtype):
 def get_last_record(logtype):
     try:
         with eventlog(logtype) as log_handle:
-            oldest = win32evtlog.GetOldestEventLogRecord(
-                log_handle
-            )  # pylint: disable=c-extension-no-member
-            total = win32evtlog.GetNumberOfEventLogRecords(
-                log_handle
-            )  # pylint: disable=c-extension-no-member
+            oldest = win32evtlog.GetOldestEventLogRecord(log_handle)  # pylint: disable=c-extension-no-member
+            total = win32evtlog.GetNumberOfEventLogRecords(log_handle)  # pylint: disable=c-extension-no-member
             result = oldest + total - 1
             return result if result >= 0 else 0
     except Exception:
@@ -130,8 +127,16 @@ def testconfig_sections_engine(request, make_yaml_config):
 
 @pytest.fixture(name="testconfig", params=["yes", "no"], ids=["vista_api=yes", "vista_api=no"])
 def testconfig_engine(request, testconfig_sections):
-    log_files = [{Globals.testlog: "warn"}, {"Security": "off"}, {"System": "off"}, {"*": "off"}]
-    testconfig_sections[Globals.section] = {"vista_api": request.param, "logfile": log_files}
+    log_files = [
+        {Globals.testlog: "warn"},
+        {"Security": "off"},
+        {"System": "off"},
+        {"*": "off"},
+    ]
+    testconfig_sections[Globals.section] = {
+        "vista_api": request.param,
+        "logfile": log_files,
+    }
 
     return testconfig_sections
 
@@ -141,7 +146,10 @@ def expected_output_no_events_engine():
     if platform.system() != "Windows":
         return None
 
-    expected = [re.escape(r"<<<%s>>>" % Globals.section), re.escape(r"[[[Application]]]")]
+    expected = [
+        re.escape(r"<<<%s>>>" % Globals.section),
+        re.escape(r"[[[Application]]]"),
+    ]
     if not Globals.alone:
         expected += [re.escape(r"<<<systemtime>>>"), r"\d+"]
     return expected
@@ -214,13 +222,15 @@ def verify_eventstate():
         ):
             assert expected_log == actual_log
             state_tolerance = 0 if expected_log == Globals.testlog else Globals.tolerance
-            assert (
-                math.fabs(expected_state - actual_state) <= state_tolerance
-            ), "expected state for log '%s' is %d, actual state %d, " "state_tolerance %d" % (
-                expected_log,
-                expected_state,
-                actual_state,
-                state_tolerance,
+            assert math.fabs(expected_state - actual_state) <= state_tolerance, (
+                "expected state for log '%s' is %d, actual state %d, "
+                "state_tolerance %d"
+                % (
+                    expected_log,
+                    expected_state,
+                    actual_state,
+                    state_tolerance,
+                )
             )
 
 

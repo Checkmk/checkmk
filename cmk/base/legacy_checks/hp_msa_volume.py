@@ -7,8 +7,14 @@
 # mypy: disable-error-code="var-annotated"
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
-from cmk.base.check_legacy_includes.hp_msa import check_hp_msa_health, inventory_hp_msa_health
+from cmk.base.check_legacy_includes.df import (
+    df_check_filesystem_single,
+    FILESYSTEM_DEFAULT_PARAMS,
+)
+from cmk.base.check_legacy_includes.hp_msa import (
+    check_hp_msa_health,
+    inventory_hp_msa_health,
+)
 from cmk.base.config import check_info
 
 # <<<hp_msa_volume>>>
@@ -194,7 +200,10 @@ def inventory_hp_msa_volume_df(parsed):
 def check_hp_msa_volume_df(item, params, parsed):
     parsed = _get_item_data(item, parsed)
     if item in parsed:
-        yield 0, "{} ({})".format(parsed[item]["virtual-disk-name"], parsed[item]["raidtype"])
+        yield (
+            0,
+            "{} ({})".format(parsed[item]["virtual-disk-name"], parsed[item]["raidtype"]),
+        )
 
         size_mb = (int(parsed[item]["total-size-numeric"]) * 512) // 1024**2
         alloc_mb = (int(parsed[item]["allocated-size-numeric"]) * 512) // 1024**2

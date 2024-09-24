@@ -71,13 +71,21 @@ def check_pfsense_counter(params: Mapping[str, Any], section: Section) -> CheckR
     for what in section:
         levels = params.get(what)
         rate = get_rate(
-            value_store, "pfsense_counter-%s" % what, this_time, section[what], raise_overflow=True
+            value_store,
+            "pfsense_counter-%s" % what,
+            this_time,
+            section[what],
+            raise_overflow=True,
         )
 
         if backlog_minutes:
             yield Metric("fw_packets_" + what, rate, levels=levels)
             rate = get_average(
-                value_store, "pfsense_counter-%srate" % what, this_time, rate, backlog_minutes
+                value_store,
+                "pfsense_counter-%srate" % what,
+                this_time,
+                rate,
+                backlog_minutes,
             )
 
         yield from check_levels(

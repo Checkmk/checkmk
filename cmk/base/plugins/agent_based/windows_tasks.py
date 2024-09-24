@@ -74,7 +74,10 @@ _MAP_EXIT_CODES = {
     "0x00000000": (0, "The task exited successfully"),
     "0x00041300": (0, "The task is ready to run at its next scheduled time."),
     "0x00041301": (0, "The task is currently running."),
-    "0x00041302": (0, "The task will not run at the scheduled times because it has been disabled."),
+    "0x00041302": (
+        0,
+        "The task will not run at the scheduled times because it has been disabled.",
+    ),
     "0x00041303": (0, "The task has not yet run."),
     "0x00041304": (0, "There are no more runs scheduled for this task."),
     "0x00041305": (
@@ -88,11 +91,17 @@ _MAP_EXIT_CODES = {
     ),
     "0x00041308": (1, "Event triggers do not have set run times."),
     "0x80041309": (1, "A task's trigger is not found."),
-    "0x8004130a": (1, "One or more of the properties required to run this task have not been set."),
+    "0x8004130a": (
+        1,
+        "One or more of the properties required to run this task have not been set.",
+    ),
     "0x8004130b": (0, "There is no running instance of the task."),
     "0x8004130c": (2, "The Task Scheduler service is not installed on this computer."),
     "0x8004130d": (1, "The task object could not be opened."),
-    "0x8004130e": (1, "The object is either an invalid task object or is not a task object."),
+    "0x8004130e": (
+        1,
+        "The object is either an invalid task object or is not a task object.",
+    ),
     "0x8004130f": (
         1,
         "No account information could be found in the Task Scheduler security database for the task indicated.",
@@ -102,7 +111,10 @@ _MAP_EXIT_CODES = {
         2,
         "Corruption was detected in the Task Scheduler security database; the database has been reset.",
     ),
-    "0x80041312": (1, "Task Scheduler security services are available only on Windows NT."),
+    "0x80041312": (
+        1,
+        "Task Scheduler security services are available only on Windows NT.",
+    ),
     "0x80041313": (1, "The task object version is either unsupported or invalid."),
     "0x80041314": (
         1,

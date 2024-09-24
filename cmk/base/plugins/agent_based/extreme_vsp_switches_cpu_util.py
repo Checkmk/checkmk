@@ -19,7 +19,9 @@ class VSPSwitchCPUUtilInfo:
     cpu_util: float
 
 
-def parse_vsp_switches_cpu_util(string_table: StringTable) -> VSPSwitchCPUUtilInfo | None:
+def parse_vsp_switches_cpu_util(
+    string_table: StringTable,
+) -> VSPSwitchCPUUtilInfo | None:
     try:
         return VSPSwitchCPUUtilInfo(
             cpu_util=float(string_table[0][0]),
@@ -41,7 +43,9 @@ register.snmp_section(
 )
 
 
-def discover_vsp_switches_cpu_util(section: VSPSwitchCPUUtilInfo | None) -> DiscoveryResult:
+def discover_vsp_switches_cpu_util(
+    section: VSPSwitchCPUUtilInfo | None,
+) -> DiscoveryResult:
     if section:
         yield Service(item=None)
 

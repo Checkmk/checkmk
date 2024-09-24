@@ -54,11 +54,26 @@ DATA = {
 }
 RESULT = {
     "test-group-1": [
-        {"name": "test-rule-1", "state": "inactive", "severity": "info", "message": "foo"},
-        {"name": "test-rule-2", "state": "firing", "severity": "warning", "message": "bar"},
+        {
+            "name": "test-rule-1",
+            "state": "inactive",
+            "severity": "info",
+            "message": "foo",
+        },
+        {
+            "name": "test-rule-2",
+            "state": "firing",
+            "severity": "warning",
+            "message": "bar",
+        },
     ],
     "test-group-2": [
-        {"name": "test-rule-b", "state": "firing", "severity": "warning", "message": "bar"}
+        {
+            "name": "test-rule-b",
+            "state": "firing",
+            "severity": "warning",
+            "message": "bar",
+        }
     ],
 }
 
@@ -85,7 +100,16 @@ def test_agent_alertmanager_parse(
             "bar",
             "inactive",
             ignore_params,
-            {"bar": [{"name": "foo", "state": "inactive", "severity": "info", "message": "foo"}]},
+            {
+                "bar": [
+                    {
+                        "name": "foo",
+                        "state": "inactive",
+                        "severity": "info",
+                        "message": "foo",
+                    }
+                ]
+            },
         ),
         ("foobar", "bar", "inactive", ignore_params, {"bar": []}),
         ("test123", "bar", "inactive", ignore_params, {"bar": []}),

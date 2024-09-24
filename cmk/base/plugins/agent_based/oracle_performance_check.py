@@ -157,7 +157,10 @@ def check_oracle_performance(  # pylint: disable=too-many-branches
             pins_sum += pins
             pin_hits_sum += pin_hits
 
-        for what, val in [("oracle_pins_sum", pins_sum), ("oracle_pin_hits_sum", pin_hits_sum)]:
+        for what, val in [
+            ("oracle_pins_sum", pins_sum),
+            ("oracle_pin_hits_sum", pin_hits_sum),
+        ]:
             rate = get_rate(value_store, f"{item}.librarycache.{what}", now, val)
             perfdata.append(Metric(what, rate))
 

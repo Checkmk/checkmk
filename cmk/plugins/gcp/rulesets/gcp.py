@@ -6,7 +6,7 @@
 from collections.abc import Callable, Iterable, Sequence
 from typing import Final
 
-from cmk.utils.version import edition, Edition
+from cmk.utils.version import Edition, edition
 
 from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (

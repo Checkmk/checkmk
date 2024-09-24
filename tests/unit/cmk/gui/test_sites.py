@@ -48,7 +48,10 @@ def test_encode_socket_for_livestatus_unix_liveproxy() -> None:
     assert (
         sites.encode_socket_for_livestatus(
             SiteId("mysite"),
-            {"socket": ("unix", UnixSocketDetails(path="/a/b/c")), "proxy": {"params": None}},
+            {
+                "socket": ("unix", UnixSocketDetails(path="/a/b/c")),
+                "proxy": {"params": None},
+            },
         )
         == f"unix:{cmk.utils.paths.omd_root}/tmp/run/liveproxy/mysite"
     )

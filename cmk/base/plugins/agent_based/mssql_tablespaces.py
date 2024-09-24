@@ -173,7 +173,12 @@ def check(item: str, params: Mapping[str, Any], section: SectionTableSpaces) -> 
         )
 
     for metric_name, value_bytes, label, check_levels_space in [
-        ("unallocated", tablespace.unallocated, "Unallocated space", _check_levels_space_lower),
+        (
+            "unallocated",
+            tablespace.unallocated,
+            "Unallocated space",
+            _check_levels_space_lower,
+        ),
         ("reserved", tablespace.reserved, "Reserved space", _check_levels_space_upper),
         ("data", tablespace.data, "Data", _check_levels_space_upper),
         ("indexes", tablespace.indexes, "Indexes", _check_levels_space_upper),

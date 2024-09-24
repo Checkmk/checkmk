@@ -387,7 +387,10 @@ def test_create_rule_old_and_new_label_formats(
         ],
         "host_labels": [{"key": "os", "operator": "is", "value": "windows"}],
         "host_label_groups": [
-            {"operator": "and", "label_group": [{"operator": "and", "label": "os:windows"}]}
+            {
+                "operator": "and",
+                "label_group": [{"operator": "and", "label": "os:windows"}],
+            }
         ],
     }
 
@@ -485,7 +488,9 @@ def test_create_rule_no_properties(clients: ClientRegistry) -> None:
     clients.Rule.get(rule_id=resp.json["id"])
 
 
-def test_openapi_create_rule_reject_incompatible_value_raw(clients: ClientRegistry) -> None:
+def test_openapi_create_rule_reject_incompatible_value_raw(
+    clients: ClientRegistry,
+) -> None:
     clients.Rule.create(
         ruleset="checkgroup_parameters:memory_linux",
         folder="/",
@@ -495,7 +500,9 @@ def test_openapi_create_rule_reject_incompatible_value_raw(clients: ClientRegist
     )
 
 
-def test_openapi_edit_rule_reject_incompatible_value_raw(clients: ClientRegistry) -> None:
+def test_openapi_edit_rule_reject_incompatible_value_raw(
+    clients: ClientRegistry,
+) -> None:
     resp = clients.Rule.create(
         ruleset="active_checks:http",
         folder="/",

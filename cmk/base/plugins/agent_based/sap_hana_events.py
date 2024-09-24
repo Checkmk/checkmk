@@ -7,7 +7,14 @@ from typing import Final
 
 from cmk.plugins.lib import sap_hana
 
-from .agent_based_api.v1 import IgnoreResultsError, Metric, register, Result, Service, State
+from .agent_based_api.v1 import (
+    IgnoreResultsError,
+    Metric,
+    register,
+    Result,
+    Service,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 SAP_HANA_EVENTS_MAP: Final = {

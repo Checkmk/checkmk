@@ -8,6 +8,7 @@
 This file contains helper functions for transform and transform_json. Each
 function is required to handle data from the client or from JSON.
 """
+
 import json
 import re
 from collections.abc import Iterator, Mapping
@@ -15,7 +16,9 @@ from collections.abc import Iterator, Mapping
 from .schemata import api
 
 
-def parse_match_labels(labels: Mapping[str, str]) -> Mapping[api.LabelName, api.LabelValue]:
+def parse_match_labels(
+    labels: Mapping[str, str],
+) -> Mapping[api.LabelName, api.LabelValue]:
     return {api.LabelName(k): api.LabelValue(v) for k, v in labels.items()}
 
 

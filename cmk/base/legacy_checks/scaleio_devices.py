@@ -68,7 +68,10 @@ def check_scaleio_devices(item, params, parsed):
 
     if error_devices:
         num_errors = len(error_devices)
-        yield 2, "%d devices, %d errors (%s)" % (num_devices, num_errors, ", ".join(error_devices))
+        yield (
+            2,
+            "%d devices, %d errors (%s)" % (num_devices, num_errors, ", ".join(error_devices)),
+        )
     else:
         yield 0, "%d devices, no errors" % num_devices
 

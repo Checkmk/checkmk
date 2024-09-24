@@ -122,11 +122,15 @@ def test_check_netapp_api_vf_stats_traffic() -> None:
         )
     ) == [
         Result(
-            state=State.OK, summary="Read operations: 0.00/s", details="Read operations: 0.00/s"
+            state=State.OK,
+            summary="Read operations: 0.00/s",
+            details="Read operations: 0.00/s",
         ),
         Metric("read_ops", 0.0),
         Result(
-            state=State.OK, summary="Write operations: 0.00/s", details="Write operations: 0.00/s"
+            state=State.OK,
+            summary="Write operations: 0.00/s",
+            details="Write operations: 0.00/s",
         ),
         Metric("write_ops", 0.0),
         Result(
@@ -142,7 +146,9 @@ def test_check_netapp_api_vf_stats_traffic() -> None:
         ),
         Metric("net_data_sent", 0.0),
         Result(
-            state=State.OK, summary="Read throughput: 0.00 B/s", details="Read throughput: 0.00 B/s"
+            state=State.OK,
+            summary="Read throughput: 0.00 B/s",
+            details="Read throughput: 0.00 B/s",
         ),
         Metric("read_bytes", 0.0),
         Result(

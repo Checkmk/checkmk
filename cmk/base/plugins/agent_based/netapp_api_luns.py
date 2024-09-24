@@ -31,7 +31,9 @@ def _netapp_api_luns_item(name: str, _values: object) -> str:
     return name.rsplit("/", 1)[-1]
 
 
-def parse_netapp_api_luns(string_table: StringTable) -> netapp_api.SectionSingleInstance:
+def parse_netapp_api_luns(
+    string_table: StringTable,
+) -> netapp_api.SectionSingleInstance:
     return netapp_api.parse_netapp_api_single_instance(
         string_table, item_func=_netapp_api_luns_item
     )
@@ -43,7 +45,9 @@ register.agent_section(
 )
 
 
-def discover_netapp_api_luns(section: netapp_api.SectionSingleInstance) -> DiscoveryResult:
+def discover_netapp_api_luns(
+    section: netapp_api.SectionSingleInstance,
+) -> DiscoveryResult:
     yield from (Service(item=lun) for lun in section)
 
 

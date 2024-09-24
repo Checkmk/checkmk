@@ -9,7 +9,14 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Alternative, Dictionary, Integer, Percentage, TextInput, Tuple
+from cmk.gui.valuespec import (
+    Alternative,
+    Dictionary,
+    Integer,
+    Percentage,
+    TextInput,
+    Tuple,
+)
 
 
 def _item_spec_msoffice_licenses():

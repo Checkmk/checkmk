@@ -48,7 +48,13 @@ def check_hp_msa_health(item, _no_params, parsed):
 
         # extra info of disks
         elif parsed[item]["item_type"] == "drives":
-            for disk_info in ["serial-number", "vendor", "model", "description", "size"]:
+            for disk_info in [
+                "serial-number",
+                "vendor",
+                "model",
+                "description",
+                "size",
+            ]:
                 if parsed[item].get(disk_info, ""):
                     infotexts.append(
                         "%s: %s"

@@ -18,7 +18,10 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.nodevis.filters import FilterTopologyMaxNodes, FilterTopologyMeshDepth
-from cmk.gui.nodevis.utils import BILayoutManagement, get_toggle_layout_designer_page_menu_entry
+from cmk.gui.nodevis.utils import (
+    BILayoutManagement,
+    get_toggle_layout_designer_page_menu_entry,
+)
 from cmk.gui.page_menu import make_display_options_dropdown, PageMenu, PageMenuTopic
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.type_defs import ColumnSpec, PainterParameters, VisualLinkSpec
@@ -208,7 +211,10 @@ class NodeVisualizationBIDataMapper:
             rule_name_idx = self._get_sibling_index("rule_name", parent_id + rule_name)
             own_id = f"#{rule_name}#{rule_name_idx}"
             aggr_path_id.append(
-                [rule_id["rule"], self._get_sibling_index("rule_id", parent_id + rule_id["rule"])]
+                [
+                    rule_id["rule"],
+                    self._get_sibling_index("rule_id", parent_id + rule_id["rule"]),
+                ]
             )
             aggr_path_name.append([rule_name, rule_name_idx])
         else:

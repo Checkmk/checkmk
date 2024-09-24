@@ -13,7 +13,13 @@ from cmk.gui.log import logger
 from cmk.gui.valuespec import Age, Filesize, Float, Integer, Percentage
 
 from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup
-from cmk.graphing.v1 import entry_point_prefixes, graphs, metrics, perfometers, translations
+from cmk.graphing.v1 import (
+    entry_point_prefixes,
+    graphs,
+    metrics,
+    perfometers,
+    translations,
+)
 
 from ._type_defs import UnitInfo
 from ._unit_info import unit_info
@@ -103,7 +109,8 @@ class PerfometersFromAPI(
     Registry[perfometers.Perfometer | perfometers.Bidirectional | perfometers.Stacked]
 ):
     def plugin_name(
-        self, instance: perfometers.Perfometer | perfometers.Bidirectional | perfometers.Stacked
+        self,
+        instance: perfometers.Perfometer | perfometers.Bidirectional | perfometers.Stacked,
     ) -> str:
         return instance.name
 

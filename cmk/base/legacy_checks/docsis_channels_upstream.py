@@ -9,7 +9,15 @@ import time
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import any_of, equals, get_rate, get_value_store, OIDEnd, render, SNMPTree
+from cmk.agent_based.v2 import (
+    any_of,
+    equals,
+    get_rate,
+    get_value_store,
+    OIDEnd,
+    render,
+    SNMPTree,
+)
 
 # Old comments:
 # Strange: Channel IDs seem to be not unique. But the second
@@ -157,7 +165,11 @@ def check_docsis_channels_upstream(item, params, parsed):
                 if state:
                     infotext += f" (warn/crit at {warn:.1f}/{crit:.1f}%)"
 
-                yield state, infotext, [("codewords_" + what, ratio, warn / 100.0, crit / 100.0)]
+                yield (
+                    state,
+                    infotext,
+                    [("codewords_" + what, ratio, warn / 100.0, crit / 100.0)],
+                )
 
 
 check_info["docsis_channels_upstream"] = LegacyCheckDefinition(

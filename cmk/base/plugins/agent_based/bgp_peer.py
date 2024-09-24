@@ -201,11 +201,12 @@ def _create_item_data(entry: list[str | list[int]]) -> BGPData:
 
 
 def _check_string_table(string_table: list[StringByteTable]) -> None:
-    assert all(
-        len(entry) >= len(BGPData.__annotations__) - 1 for entry in string_table[0]
-    ), "Not all info elements have the size guessed from known names %d: %r" % (
-        len(BGPData.__annotations__),
-        [len(entry) for entry in string_table[0]],
+    assert all(len(entry) >= len(BGPData.__annotations__) - 1 for entry in string_table[0]), (
+        "Not all info elements have the size guessed from known names %d: %r"
+        % (
+            len(BGPData.__annotations__),
+            [len(entry) for entry in string_table[0]],
+        )
     )
 
 
@@ -291,7 +292,8 @@ def check_bgp_peer(
         summary=f"Peer state: {peer.peer_state!r}",
     )
     yield Result(
-        state=State.OK, summary=f"Established time: {render.timespan(peer.established_time)}"
+        state=State.OK,
+        summary=f"Established time: {render.timespan(peer.established_time)}",
     )
     yield Result(state=State.OK, notice=f"Local identifier: {peer.local_identifier!r}")
     yield Result(state=State.OK, notice=f"Remote identifier: {peer.remote_identifier!r}")

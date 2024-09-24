@@ -103,7 +103,8 @@ class TOTP:
         time (T), T - step_time   seconds before and T + step_time seconds after.
         """
         for generation in range(
-            generation_time - self.allowed_drift, generation_time + 1 + self.allowed_drift
+            generation_time - self.allowed_drift,
+            generation_time + 1 + self.allowed_drift,
         ):
             if totp == self.generate_totp_by_generation(generation):
                 return True

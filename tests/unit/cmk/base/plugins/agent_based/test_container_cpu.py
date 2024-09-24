@@ -11,7 +11,12 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import GetRateError, Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    GetRateError,
+    Metric,
+    Result,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 # the following string tables should display 150% cpu usage

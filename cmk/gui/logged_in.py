@@ -19,7 +19,7 @@ import cmk.utils.store as store
 from cmk.utils.crypto.secrets import AutomationUserSecret
 from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.user import UserId
-from cmk.utils.version import __version__, edition, Edition, Version
+from cmk.utils.version import __version__, Edition, edition, Version
 
 import cmk.gui.permissions as permissions
 import cmk.gui.site_config as site_config

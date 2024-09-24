@@ -166,7 +166,10 @@ def test_check_liebert_temp_air_trend() -> None:
 
     assert result == [
         Metric("temp", 4.444444444444445, levels=(50.0, 55.0)),
-        Result(state=State.CRIT, summary="Temperature: 4.4 °C (warn/crit below 10 °C/15 °C)"),
+        Result(
+            state=State.CRIT,
+            summary="Temperature: 4.4 °C (warn/crit below 10 °C/15 °C)",
+        ),
         Result(state=State.OK, summary="Temperature trend: +5.6 °C per 60 min"),
         Result(
             state=State.OK,

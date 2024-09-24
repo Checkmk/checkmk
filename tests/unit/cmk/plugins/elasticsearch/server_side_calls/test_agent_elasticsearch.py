@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.plugins.elasticsearch.server_side_calls.special_agent import special_agent_elasticsearch
+from cmk.plugins.elasticsearch.server_side_calls.special_agent import (
+    special_agent_elasticsearch,
+)
 from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
 
 TEST_HOST_CONFIG = HostConfig(

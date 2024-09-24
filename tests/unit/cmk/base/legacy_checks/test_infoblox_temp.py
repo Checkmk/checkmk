@@ -11,7 +11,10 @@ from tests.testlib.snmp import get_parsed_snmp_section
 
 from cmk.utils.sectionname import SectionName
 
-from cmk.base.legacy_checks.infoblox_temp import check_infoblox_temp, inventory_infoblox_temp
+from cmk.base.legacy_checks.infoblox_temp import (
+    check_infoblox_temp,
+    inventory_infoblox_temp,
+)
 
 WALK_NIOS_7_2_7 = """
 .1.3.6.1.4.1.7779.3.1.1.2.1.7.0 7.2.7
@@ -70,7 +73,10 @@ def test_parse_infoblox_temp(input_walk: str, as_path: Callable[[str], Path]) ->
 def test_inventory_infoblox_temp(input_walk: str, as_path: Callable[[str], Path]) -> None:
     section = get_parsed_snmp_section(SectionName("infoblox_temp"), as_path(input_walk))
     assert section is not None
-    assert list(inventory_infoblox_temp(section)) == [("CPU_TEMP 1", {}), ("SYS_TEMP", {})]
+    assert list(inventory_infoblox_temp(section)) == [
+        ("CPU_TEMP 1", {}),
+        ("SYS_TEMP", {}),
+    ]
 
 
 @pytest.mark.usefixtures("fix_register")

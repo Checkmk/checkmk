@@ -28,7 +28,10 @@ def _parameter_valuespec():
         elements=[
             ("update_duration", age_levels_dropdown(_("Update duration"))),
             ("not_ready_duration", age_levels_dropdown(_("Not ready duration"))),
-            ("not_available_duration", age_levels_dropdown(_("Not available duration"))),
+            (
+                "not_available_duration",
+                age_levels_dropdown(_("Not available duration")),
+            ),
             (
                 "misscheduled_duration",
                 age_levels_dropdown(_("Misscheduled duration (DaemonSet only)")),

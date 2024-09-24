@@ -30,9 +30,10 @@ class IisAppPoolStateCheckParams(TypedDict):
 
 DefaultCheckParameters: IisAppPoolStateCheckParams = {
     "state_mapping": {
-        app_state.name: {IisAppPoolState.Running: State.OK, IisAppPoolState.Initialized: State.WARN}
-        .get(app_state, State.CRIT)
-        .value
+        app_state.name: {
+            IisAppPoolState.Running: State.OK,
+            IisAppPoolState.Initialized: State.WARN,
+        }.get(app_state, State.CRIT).value
         for app_state in IisAppPoolState
     }
 }

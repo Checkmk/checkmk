@@ -24,7 +24,10 @@ from cmk.special_agents.v0_unstable.agent_common import (
     SectionWriter,
     special_agent_main,
 )
-from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.argument_parsing import (
+    Args,
+    create_default_argument_parser,
+)
 from cmk.special_agents.v0_unstable.misc import DataCache
 
 _LOGGER = logging.getLogger("agent_cisco_meraki")
@@ -209,7 +212,9 @@ class MerakiOrganisation:
                 device_piggyback = str(device[_API_NAME_DEVICE_NAME])
             except KeyError as e:
                 _LOGGER.debug(
-                    "Organisation ID: %r: Get device piggyback: %r", self.organisation_id, e
+                    "Organisation ID: %r: Get device piggyback: %r",
+                    self.organisation_id,
+                    e,
                 )
                 continue
 
@@ -247,7 +252,7 @@ class MerakiOrganisation:
 
     def _get_licenses_overview(self) -> MerakiAPIData | None:
         def _update_licenses_overview(
-            licenses_overview: dict[str, object] | None
+            licenses_overview: dict[str, object] | None,
         ) -> MerakiAPIData | None:
             if not licenses_overview:
                 return None

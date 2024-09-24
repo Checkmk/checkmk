@@ -15,14 +15,23 @@
 
 import re
 from collections import Counter
-from collections.abc import Callable, Container, Iterable, Mapping, MutableMapping, Sequence
+from collections.abc import (
+    Callable,
+    Container,
+    Iterable,
+    Mapping,
+    MutableMapping,
+    Sequence,
+)
 from typing import Any, Literal, NamedTuple, Pattern, TypedDict
 
 from cmk.utils.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
 
 # from cmk.base.config import logwatch_rule will NOT work!
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
-from cmk.base.plugin_contexts import host_name  # pylint: disable=cmk-module-layer-violation
+from cmk.base.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
+    host_name,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1 import regex, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 

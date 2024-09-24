@@ -22,7 +22,9 @@ try:
         )
     )
 except ImportError:
-    from cmk.base.config import load_all_agent_based_plugins  # type: ignore[attr-defined]
+    from cmk.base.config import (  # type: ignore[attr-defined]
+        load_all_agent_based_plugins,
+    )
 
     print(
         json.dumps(

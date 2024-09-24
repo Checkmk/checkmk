@@ -4,7 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import dataclass
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    InventoryResult,
+    StringTable,
+)
 
 from cmk.plugins.lib.enviromux import DETECT_ENVIROMUX_MICRO
 

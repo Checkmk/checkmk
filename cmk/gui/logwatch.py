@@ -43,7 +43,12 @@ from cmk.gui.table import table_element
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, makeuri_contextless
+from cmk.gui.utils.urls import (
+    make_confirm_delete_link,
+    makeactionuri,
+    makeuri,
+    makeuri_contextless,
+)
 from cmk.gui.view_breadcrumbs import make_host_breadcrumb
 
 #   .--HTML Output---------------------------------------------------------.
@@ -303,7 +308,10 @@ def show_file(site, host_name, file_name):
     title = _("Logfiles of Host %s: %s") % (host_name, int_filename)
     breadcrumb = _show_file_breadcrumb(host_name, title)
     make_header(
-        html, title, breadcrumb, _show_file_page_menu(breadcrumb, site, host_name, int_filename)
+        html,
+        title,
+        breadcrumb,
+        _show_file_page_menu(breadcrumb, site, host_name, int_filename),
     )
 
     if request.has_var("_ack") and not request.var("_do_actions") == _("No"):
@@ -312,7 +320,10 @@ def show_file(site, host_name, file_name):
 
     try:
         log_chunks = parse_file(
-            site, host_name, int_filename, hidecontext=request.var("_hidecontext", "no") == "yes"
+            site,
+            host_name,
+            int_filename,
+            hidecontext=request.var("_hidecontext", "no") == "yes",
         )
     except Exception as e:
         if active_config.debug:
@@ -398,7 +409,10 @@ def _show_file_page_menu(
                                 title=_("All log files"),
                                 icon_name="logwatch",
                                 item=make_simple_link(
-                                    makeuri(request, [("site", ""), ("host", ""), ("file", "")])
+                                    makeuri(
+                                        request,
+                                        [("site", ""), ("host", ""), ("file", "")],
+                                    )
                                 ),
                             ),
                         ],
@@ -567,7 +581,8 @@ def do_log_ack(site, host_name, file_name):  # pylint: disable=too-many-branches
 
     html.show_message(
         "<b>{}</b><p>{}</p>".format(
-            _("Acknowledged %s") % ack_msg, _("Acknowledged all messages in %s.") % ack_msg
+            _("Acknowledged %s") % ack_msg,
+            _("Acknowledged all messages in %s.") % ack_msg,
         )
     )
     html.footer()
@@ -816,7 +831,10 @@ def logfiles_of_host(site, host_name):
                 "does not support fetching logfile information. Please upgrade "
                 "to a newer version."
             )
-            % (site, sites.states().get(site, sites.SiteStatus({})).get("program_version", "???"))
+            % (
+                site,
+                sites.states().get(site, sites.SiteStatus({})).get("program_version", "???"),
+            )
         )
     return file_names
 
@@ -824,15 +842,10 @@ def logfiles_of_host(site, host_name):
 def get_logfile_lines(site, host_name, file_name):
     if site:  # Honor site hint if available
         sites.live().set_only_sites([site])
-    query = (
-        "GET hosts\n"
-        "Columns: mk_logwatch_file:file:%s/%s\n"
-        "Filter: name = %s\n"
-        % (
-            livestatus.lqencode(host_name),
-            livestatus.lqencode(file_name.replace("\\", "\\\\").replace(" ", "\\s")),
-            livestatus.lqencode(host_name),
-        )
+    query = "GET hosts\n" "Columns: mk_logwatch_file:file:%s/%s\n" "Filter: name = %s\n" % (
+        livestatus.lqencode(host_name),
+        livestatus.lqencode(file_name.replace("\\", "\\\\").replace(" ", "\\s")),
+        livestatus.lqencode(host_name),
     )
     file_content = sites.live().query_value(query)
     if site:  # Honor site hint if available

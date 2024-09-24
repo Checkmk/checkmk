@@ -149,7 +149,9 @@ def to_openapi(
     return result
 
 
-def to_schema(params: Sequence[RawParameter] | RawParameter | None) -> type[Schema] | None:
+def to_schema(
+    params: Sequence[RawParameter] | RawParameter | None,
+) -> type[Schema] | None:
     """
     Examples:
 

@@ -104,7 +104,8 @@ table
 body
 """
     with pytest.raises(
-        WerkError, match="First element after the header needs to be the title as a h1 headline."
+        WerkError,
+        match="First element after the header needs to be the title as a h1 headline.",
     ):
         _markdown_string_to_werk(md)
 

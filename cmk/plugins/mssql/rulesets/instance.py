@@ -4,7 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import DefaultValue, DictElement, Dictionary, ServiceState
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    ServiceState,
+)
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 
@@ -13,7 +18,8 @@ def _parameter_form_mssql_instance() -> Dictionary:
         elements={
             "map_connection_state": DictElement(
                 parameter_form=ServiceState(
-                    title=Title("Connection status"), prefill=DefaultValue(ServiceState.CRIT)
+                    title=Title("Connection status"),
+                    prefill=DefaultValue(ServiceState.CRIT),
                 )
             ),
         }

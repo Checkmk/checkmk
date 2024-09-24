@@ -8,8 +8,16 @@ import pytest
 from tests.testlib import on_time
 
 from cmk.base.plugins.agent_based import veeam_cdp_jobs
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State, type_defs
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Result,
+    Service,
+    State,
+    type_defs,
+)
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+)
 
 DATA = [
     ["Test 1", "1632216559.73749", "Running"],
@@ -54,7 +62,10 @@ def test_veeam_cdp_jobs_discovery(
             DATA,
             [
                 Result(state=State.OK, summary="State: Running"),
-                Result(state=State.OK, summary="Time since last CDP Run: 1 minute 40 seconds"),
+                Result(
+                    state=State.OK,
+                    summary="Time since last CDP Run: 1 minute 40 seconds",
+                ),
             ],
         ),
         (
@@ -95,7 +106,10 @@ def test_veeam_cdp_jobs_discovery(
             DATA,
             [
                 Result(state=State.OK, summary="State: Running"),
-                Result(state=State.OK, summary="Time since last CDP Run: 1 minute 40 seconds"),
+                Result(
+                    state=State.OK,
+                    summary="Time since last CDP Run: 1 minute 40 seconds",
+                ),
             ],
         ),
         pytest.param(

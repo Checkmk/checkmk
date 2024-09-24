@@ -14,7 +14,13 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.ifaceoper import interface_oper_states, interface_port_types
 from cmk.gui.num_split import cmp_version
-from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
+from cmk.gui.type_defs import (
+    FilterHeader,
+    FilterHTTPVariables,
+    Row,
+    Rows,
+    VisualContext,
+)
 from cmk.gui.visuals.filter import (
     CheckboxRowFilter,
     display_filter_radiobuttons,

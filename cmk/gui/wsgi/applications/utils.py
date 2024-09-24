@@ -22,13 +22,18 @@ from cmk.gui import login, pages, userdb
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUnauthenticatedException
-from cmk.gui.http import request, response, Response
+from cmk.gui.http import request, Response, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInSuperUser, user
 from cmk.gui.session import session
 from cmk.gui.utils.language_cookie import set_language_cookie
 from cmk.gui.utils.theme import theme
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
+from cmk.gui.utils.urls import (
+    makeuri,
+    makeuri_contextless,
+    requested_file_name,
+    urlencode,
+)
 from cmk.gui.wsgi.type_defs import WSGIResponse
 
 if TYPE_CHECKING:

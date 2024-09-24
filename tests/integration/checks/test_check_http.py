@@ -36,7 +36,10 @@ def _check_http(site: Site) -> Iterator[tuple[str, dict[str, ServiceInfo]]]:
             ruleset_name="active_checks:http",
             value={
                 "name": "check_http",
-                "host": {"address": ("direct", site.http_address), "port": site.apache_port},
+                "host": {
+                    "address": ("direct", site.http_address),
+                    "port": site.apache_port,
+                },
                 "mode": ("url", {}),
             },
             folder="/",

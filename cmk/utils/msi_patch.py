@@ -22,7 +22,10 @@ _UUID_REGEX: Final = re.compile(
 )
 
 # TODO(sk): remove 600 after all builds will be green, we need 600 temporary
-_EXPECTED_WIN_VERSIONS: Final = ["600", "601"]  # Vist & 7: must be in sync with product.wxs
+_EXPECTED_WIN_VERSIONS: Final = [
+    "600",
+    "601",
+]  # Vist & 7: must be in sync with product.wxs
 _MSI_WIN_VERSION_TEMPLATE: Final = "( VersionNT >= {} )"  # must be in sync with product.wxs
 
 
@@ -231,7 +234,10 @@ if __name__ == "__main__":
 
         case "code":
             success = patch_package_code(
-                params.file_name, old_code=params.mode_parameter, new_code=None, state_file=None
+                params.file_name,
+                old_code=params.mode_parameter,
+                new_code=None,
+                state_file=None,
             )
             sys.exit(0 if success else 1)
 

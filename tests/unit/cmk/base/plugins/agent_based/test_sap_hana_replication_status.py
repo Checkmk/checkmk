@@ -13,7 +13,10 @@ from cmk.utils.sectionname import SectionName
 from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+)
 
 from cmk.agent_based.v1.type_defs import StringTable
 from cmk.plugins.lib.sap_hana import ParsedSection
@@ -125,7 +128,10 @@ def test_discovery_sap_hana_replication_status(
     ],
 )
 def test_check_sap_hana_replication_status(
-    fix_register: FixRegister, item: str, info: StringTable, expected_result: CheckResult
+    fix_register: FixRegister,
+    item: str,
+    info: StringTable,
+    expected_result: CheckResult,
 ) -> None:
     section = fix_register.agent_sections[
         SectionName("sap_hana_replication_status")

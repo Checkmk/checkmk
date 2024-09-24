@@ -58,7 +58,12 @@ from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, urlencode_vars
+from cmk.gui.utils.urls import (
+    make_confirm_delete_link,
+    makeactionuri,
+    makeuri,
+    urlencode_vars,
+)
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import (
     AbsoluteDate,
@@ -107,7 +112,10 @@ def _handle_availability_option_reset() -> None:
 
 
 def _show_availability_options(
-    option_type: str, what: AVObjectType, avoptions: AVOptions, valuespecs: AVOptionValueSpecs
+    option_type: str,
+    what: AVObjectType,
+    avoptions: AVOptions,
+    valuespecs: AVOptionValueSpecs,
 ) -> None:
     form_name = "avoptions_%s" % option_type
     with html.form_context(form_name):
@@ -405,7 +413,9 @@ def _page_menu_availability(  # type: ignore[no-untyped-def]
                 name="export",
                 title=_("Export"),
                 topics=page_menu_topic_add_to(
-                    visual_type="availability", name=view.name, source_type="availability"
+                    visual_type="availability",
+                    name=view.name,
+                    source_type="availability",
                 )
                 + [
                     PageMenuTopic(
@@ -426,7 +436,10 @@ def _page_menu_availability(  # type: ignore[no-untyped-def]
 
 
 def _render_avoptions_form(
-    option_type: str, what: AVObjectType, avoptions: AVOptions, valuespecs: AVOptionValueSpecs
+    option_type: str,
+    what: AVObjectType,
+    avoptions: AVOptions,
+    valuespecs: AVOptionValueSpecs,
 ) -> HTML:
     with output_funnel.plugged():
         _show_availability_options(option_type, what, avoptions, valuespecs)
@@ -434,14 +447,21 @@ def _render_avoptions_form(
 
 
 def _page_menu_entries_av_mode(
-    what: AVObjectType, av_mode: AVMode, av_object: AVObjectSpec, time_range: AVTimeRange
+    what: AVObjectType,
+    av_mode: AVMode,
+    av_object: AVObjectSpec,
+    time_range: AVTimeRange,
 ) -> Iterator[PageMenuEntry]:
     if av_mode == "timeline" or av_object:
         yield PageMenuEntry(
             title=_("Table"),
             icon_name="availability",
             item=make_simple_link(
-                makeuri(request, [("av_mode", "availability")], delvars=["av_host", "av_aggr"])
+                makeuri(
+                    request,
+                    [("av_mode", "availability")],
+                    delvars=["av_host", "av_aggr"],
+                )
             ),
             is_shortcut=True,
             shortcut_title=_("View table"),
@@ -581,7 +601,9 @@ def _render_availability_timeline(
                     html.disabled_icon_button("timewarp_off")
                 else:
                     html.icon_button(
-                        url, _("Time warp - show BI aggregate during this time period"), "timewarp"
+                        url,
+                        _("Time warp - show BI aggregate during this time period"),
+                        "timewarp",
                     )
             else:
                 url = makeuri(
@@ -626,13 +648,17 @@ def render_timeline_legend(what: AVObjectType) -> None:
     html.open_div(class_="avlegend timeline")
 
     html.h3(_("Timeline colors"))
-    html.div(HTMLWriter.render_span(_("UP") if what == "host" else _("OK")), class_="state state0")
+    html.div(
+        HTMLWriter.render_span(_("UP") if what == "host" else _("OK")),
+        class_="state state0",
+    )
 
     if what != "host":
         html.div(HTMLWriter.render_span(_("WARN")), class_="state state1")
 
     html.div(
-        HTMLWriter.render_span(_("DOWN") if what == "host" else _("CRIT")), class_="state state2"
+        HTMLWriter.render_span(_("DOWN") if what == "host" else _("CRIT")),
+        class_="state state2",
     )
     html.div(
         HTMLWriter.render_span(_("UNREACH") if what == "host" else _("UNKNOWN")),
@@ -710,7 +736,10 @@ def render_availability_table(  # type: ignore[no-untyped-def]
 
             for (title, help_txt), (text, css) in zip(av_table["cell_titles"], av_table["summary"]):
                 table.cell(
-                    title, HTMLWriter.render_span(text), css="heading " + css, help_txt=help_txt
+                    title,
+                    HTMLWriter.render_span(text),
+                    css="heading " + css,
+                    help_txt=help_txt,
                 )
 
 
@@ -934,7 +963,10 @@ def show_bi_availability(  # pylint: disable=too-many-branches
                             and previous_span is not None
                         ):
                             html.icon_button(
-                                makeuri(request, [("timewarp", str(int(previous_span["from"])))]),
+                                makeuri(
+                                    request,
+                                    [("timewarp", str(int(previous_span["from"])))],
+                                ),
                                 _("Jump one phase back"),
                                 "back",
                             )
@@ -999,7 +1031,8 @@ def show_bi_availability(  # pylint: disable=too-many-branches
                 % avoptions["logrow_limit"]
             )
             text += HTMLWriter.render_a(
-                _("Repeat query without limit."), makeuri(request, [("_unset_logrow_limit", "1")])
+                _("Repeat query without limit."),
+                makeuri(request, [("_unset_logrow_limit", "1")]),
             )
             html.show_warning(text)
 
@@ -1085,7 +1118,8 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
             table.cell("", css=["buttons"])
             if annotation.get("downtime") is True:
                 html.icon(
-                    "downtime", _("This period has been reclassified as a scheduled downtime")
+                    "downtime",
+                    _("This period has been reclassified as a scheduled downtime"),
                 )
             elif annotation.get("downtime") is False:
                 html.icon(
@@ -1108,13 +1142,15 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
                 )
 
             table.cell(
-                _("Annotation"), escape_to_html_permissive(annotation["text"], escape_links=False)
+                _("Annotation"),
+                escape_to_html_permissive(annotation["text"], escape_links=False),
             )
             table.cell(_("Author"), annotation["author"])
             table.cell(_("Entry"), render_date(annotation["date"]), css=["nobr narrow"])
             if cmk_version.edition() is not cmk_version.Edition.CRE:
                 table.cell(
-                    _("Hide in report"), _("Yes") if annotation.get("hide_from_report") else _("No")
+                    _("Hide in report"),
+                    _("Yes") if annotation.get("hide_from_report") else _("No"),
                 )
 
 
@@ -1215,7 +1251,8 @@ def _validate_reclassify_of_states(value, varprefix):
     if host_state is not None:
         if not value.get("host"):
             raise MKUserError(
-                "_editanno_p_host", _("Please set a host name for host state reclassification")
+                "_editanno_p_host",
+                _("Please set a host name for host state reclassification"),
             )
 
     service_state = value.get("service_state")
@@ -1338,7 +1375,16 @@ def _handle_anno_request_vars():
 
     site_host_svc = (site_id, hostname, service)
 
-    return site_id, hostname, host_state, service, service_state, fromtime, untiltime, site_host_svc
+    return (
+        site_id,
+        hostname,
+        host_state,
+        service,
+        service_state,
+        fromtime,
+        untiltime,
+        site_host_svc,
+    )
 
 
 # .

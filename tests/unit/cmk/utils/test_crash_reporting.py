@@ -147,7 +147,9 @@ def cache_general_version_infos(monkeypatch):
     """Cache the computation to save time for repeated crash report creation"""
 
     monkeypatch.setattr(
-        cmk_version, "get_general_version_infos", lru_cache(cmk_version.get_general_version_infos)
+        cmk_version,
+        "get_general_version_infos",
+        lru_cache(cmk_version.get_general_version_infos),
     )
 
 

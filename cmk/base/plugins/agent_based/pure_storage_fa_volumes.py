@@ -14,7 +14,15 @@ from cmk.plugins.lib.df import (
     MAGIC_FACTOR_DEFAULT_PARAMS,
 )
 
-from .agent_based_api.v1 import check_levels, Metric, register, render, Result, Service, State
+from .agent_based_api.v1 import (
+    check_levels,
+    Metric,
+    register,
+    render,
+    Result,
+    Service,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
@@ -80,7 +88,8 @@ def check_volume_capacity(
     yield Metric("fs_size", volume.total_provisioned, boundaries=(0, None))
 
     yield Result(
-        state=State.OK, notice=f"Physical capacity used - volume: {render.bytes(volume.unique)}"
+        state=State.OK,
+        notice=f"Physical capacity used - volume: {render.bytes(volume.unique)}",
     )
     yield Metric("unique_size", volume.unique)
 
@@ -91,7 +100,8 @@ def check_volume_capacity(
     yield Metric("snapshots_size", volume.snapshots)
 
     yield Result(
-        state=State.OK, notice=f"Virtual capacity used - volume: {render.bytes(volume.virtual)}"
+        state=State.OK,
+        notice=f"Virtual capacity used - volume: {render.bytes(volume.virtual)}",
     )
     yield Metric("virtual_size", volume.virtual)
 

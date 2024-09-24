@@ -4,7 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.check_parameters.gcp import _vs_network_elements, _vs_percentile_choice
+from cmk.gui.plugins.wato.check_parameters.gcp import (
+    _vs_network_elements,
+    _vs_percentile_choice,
+)
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     Levels,
@@ -22,7 +25,10 @@ def _vs_gcs_bucket_requests() -> ValueSpec:
     return Dictionary(
         title=_("Parameters for the bucket requests"),
         elements=[
-            ("requests", Levels(title=_("Parameters for the bucket requests"), unit="1/second"))
+            (
+                "requests",
+                Levels(title=_("Parameters for the bucket requests"), unit="1/second"),
+            )
         ],
     )
 
@@ -93,7 +99,12 @@ def _item_spec_http_lb() -> ValueSpec:
 def _vs_gcs_http_lb_requests() -> ValueSpec:
     return Dictionary(
         title=_("Parameters for the  requests"),
-        elements=[("requests", Levels(title=_("Parameters for the requests"), unit="1/second"))],
+        elements=[
+            (
+                "requests",
+                Levels(title=_("Parameters for the requests"), unit="1/second"),
+            )
+        ],
     )
 
 

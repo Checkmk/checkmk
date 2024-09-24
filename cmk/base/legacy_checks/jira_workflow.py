@@ -49,7 +49,10 @@ def check_jira_workflow(item, params, parsed):
 
     msg_error = item_data.get("error")
     if msg_error is not None:
-        yield 2, "Jira error while searching (see long output for details)\n%s" % msg_error
+        yield (
+            2,
+            "Jira error while searching (see long output for details)\n%s" % msg_error,
+        )
         return
 
     for _workflow, issue_count in item_data.items():

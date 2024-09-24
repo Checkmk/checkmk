@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """The rulespecs are the ruleset specifications registered to Setup."""
+
 import abc
 import re
 from collections.abc import Callable
@@ -11,7 +12,11 @@ from typing import Any, Literal
 
 import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.rulesets.definition import is_from_ruleset_group, RuleGroup, RuleGroupType
+from cmk.utils.rulesets.definition import (
+    is_from_ruleset_group,
+    RuleGroup,
+    RuleGroupType,
+)
 from cmk.utils.version import Edition, edition, mark_edition_only
 
 from cmk.gui.global_config import get_global_config
@@ -48,7 +53,12 @@ from cmk.gui.valuespec import (
 
 from .check_mk_automations import get_check_information_cached
 from .main_menu import ABCMainModule, MainModuleRegistry
-from .search import ABCMatchItemGenerator, match_item_generator_registry, MatchItem, MatchItems
+from .search import (
+    ABCMatchItemGenerator,
+    match_item_generator_registry,
+    MatchItem,
+    MatchItems,
+)
 from .timeperiods import TimeperiodSelection
 
 
@@ -1115,7 +1125,8 @@ class RulespecRegistry(cmk.utils.plugin_registry.Registry[Rulespec]):
             raise MKGeneralException(_("Tried to register incompatible rulespec: %r") % instance)
 
         if isinstance(
-            instance, (CheckParameterRulespecWithItem, CheckParameterRulespecWithoutItem)
+            instance,
+            (CheckParameterRulespecWithItem, CheckParameterRulespecWithoutItem),
         ):
             manual_instance: Any = instance.manual_check_parameter_rulespec_instance
             if manual_instance:

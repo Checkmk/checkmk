@@ -71,7 +71,18 @@ _MAP_TYPES = {
 
 
 def inventory_perle_chassis_slots(section: Section) -> InventoryResult:
-    for index, name, modelname, serial, bootloader, fw, _alarms, _diagstate, ty, descr in section:
+    for (
+        index,
+        name,
+        modelname,
+        serial,
+        bootloader,
+        fw,
+        _alarms,
+        _diagstate,
+        ty,
+        descr,
+    ) in section:
         if ty != "0":
             yield TableRow(
                 path=["hardware", "components", "modules"],

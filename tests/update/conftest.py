@@ -75,13 +75,15 @@ class BaseVersions:
 
     previous_branch_versions_file = MODULE_DIR / "base_versions_previous_branch.json"
     BASE_VERSIONS_PB = _limit_versions(
-        json.loads(previous_branch_versions_file.read_text(encoding="utf-8")), MIN_VERSION
+        json.loads(previous_branch_versions_file.read_text(encoding="utf-8")),
+        MIN_VERSION,
     )
 
     current_branch_versions_file = MODULE_DIR / "base_versions_current_branch.json"
     try:
         BASE_VERSIONS_CB = _limit_versions(
-            json.loads(current_branch_versions_file.read_text(encoding="utf-8")), MIN_VERSION
+            json.loads(current_branch_versions_file.read_text(encoding="utf-8")),
+            MIN_VERSION,
         )
     except FileNotFoundError:
         BASE_VERSIONS_CB = []

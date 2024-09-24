@@ -192,7 +192,22 @@ def value_store_fixture(monkeypatch):
             SECTION_OLD_MOUNTED,
         ),
         (
-            [["DISMOUNTED", "N", "0", "4096", "0", "0", "0", "0", "0", "0", "N", "%s/" % ITEM]],
+            [
+                [
+                    "DISMOUNTED",
+                    "N",
+                    "0",
+                    "4096",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "N",
+                    "%s/" % ITEM,
+                ]
+            ],
             SECTION_OLD_DISMOUNTED,
         ),
         (
@@ -217,7 +232,24 @@ def value_store_fixture(monkeypatch):
             SECTION_WITH_FG,
         ),
         (
-            [["DISMOUNTED", "", "%s/" % ITEM, "0", "0", "0", "", "", "", "", "", "0", "", "1"]],
+            [
+                [
+                    "DISMOUNTED",
+                    "",
+                    "%s/" % ITEM,
+                    "0",
+                    "0",
+                    "0",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "0",
+                    "",
+                    "1",
+                ]
+            ],
             SECTION_DISMOUNTED,
         ),
         (
@@ -422,7 +454,10 @@ def test_discovery(section: asm.Section, expected: Sequence[Service]) -> None:
             },
             [
                 Metric(
-                    "fs_used", 125252.0, levels=(491520.0, 552960.0), boundaries=(0.0, 614400.0)
+                    "fs_used",
+                    125252.0,
+                    levels=(491520.0, 552960.0),
+                    boundaries=(0.0, 614400.0),
                 ),
                 Metric("fs_free", 489148.0, boundaries=(0.0, None)),
                 Metric(
@@ -490,7 +525,9 @@ def test_check(section: asm.Section, params: Mapping[str, object], expected: Che
     ],
 )
 def test_cluster(
-    section: Mapping[str, asm.Section], params: Mapping[str, object], expected: CheckResult
+    section: Mapping[str, asm.Section],
+    params: Mapping[str, object],
+    expected: CheckResult,
 ) -> None:
     with on_time(*NOW_SIMULATED):
         yielded_results = list(asm.cluster_check_oracle_asm_diskgroup(ITEM, params, section))

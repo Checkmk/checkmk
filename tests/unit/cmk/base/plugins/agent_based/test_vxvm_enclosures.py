@@ -18,13 +18,29 @@ from cmk.agent_based.v1.type_defs import StringTable
 
 STRING_TABLE = [
     ["san_vc0", "SAN_VC", "02006021c03c", "CONNECTED", "IBMSVC-ALUA", "8", "0000"],
-    ["md36xxf0", "MD36xxf", "6C81F66000C458900000000054331291", "CONNECTED", "A/P", "5", "0820"],
+    [
+        "md36xxf0",
+        "MD36xxf",
+        "6C81F66000C458900000000054331291",
+        "CONNECTED",
+        "A/P",
+        "5",
+        "0820",
+    ],
 ]
 
 STRING_TABLE_WITH_ERROR = [
     ["============"],
     ["san_vc0", "SAN_VC", "02006021c03c", "CONNECTED", "IBMSVC-ALUA", "8", "0000"],
-    ["md36xxf0", "MD36xxf", "6C81F66000C458900000000054331291", "CONNECTED", "A/P", "5", "0820"],
+    [
+        "md36xxf0",
+        "MD36xxf",
+        "6C81F66000C458900000000054331291",
+        "CONNECTED",
+        "A/P",
+        "5",
+        "0820",
+    ],
 ]
 
 
@@ -74,7 +90,17 @@ def test_discover_vxvm_multipath(
         ),
         pytest.param(
             "san_vc0",
-            [["san_vc0", "SAN_VC", "02006021c03c", "DISCONNECTED", "IBMSVC-ALUA", "8", "0000"]],
+            [
+                [
+                    "san_vc0",
+                    "SAN_VC",
+                    "02006021c03c",
+                    "DISCONNECTED",
+                    "IBMSVC-ALUA",
+                    "8",
+                    "0000",
+                ]
+            ],
             [
                 Result(
                     state=State.CRIT,
@@ -85,7 +111,17 @@ def test_discover_vxvm_multipath(
         ),
         pytest.param(
             "not_found",
-            [["san_vc0", "SAN_VC", "02006021c03c", "CONNECTED", "IBMSVC-ALUA", "8", "0000"]],
+            [
+                [
+                    "san_vc0",
+                    "SAN_VC",
+                    "02006021c03c",
+                    "CONNECTED",
+                    "IBMSVC-ALUA",
+                    "8",
+                    "0000",
+                ]
+            ],
             [],
             id="The item was not found, so the state is UNKNOWN.",
         ),

@@ -111,9 +111,10 @@ class Incident:
         res.__message = env["EC_TEXT"]
         res.__state = env["EC_STATE"]
         res.__service_level = int(env.get("EC_SL", 0))
-        res.__type = {"open": Incident.Type.Problem, "closed": Incident.Type.Recovery}.get(
-            env["EC_PHASE"]
-        )
+        res.__type = {
+            "open": Incident.Type.Problem,
+            "closed": Incident.Type.Recovery,
+        }.get(env["EC_PHASE"])
 
         res.__id = res.__retrieve_incident_id_ec(env["EC_COMMENT"])
 
@@ -263,9 +264,13 @@ class Renderer:
 
     @staticmethod
     def __render_state(state):
-        return {"ok": "OK", "crit": "Critical", "warn": "Warning", "up": "Up", "down": "Down"}.get(
-            state.lower(), state
-        )
+        return {
+            "ok": "OK",
+            "crit": "Critical",
+            "warn": "Warning",
+            "up": "Up",
+            "down": "Down",
+        }.get(state.lower(), state)
 
     def __render_time(self, event_time):
         return time.strftime("%Y-%m-%d %H:%M:%S", event_time)
@@ -302,7 +307,10 @@ class Renderer:
         info_width = max([len(key) for key, value in info])
 
         return "{}\n\n{}".format(
-            topic, "\n".join(["{}: {}".format(key.ljust(info_width), value) for key, value in info])
+            topic,
+            "\n".join(
+                ["{}: {}".format(key.ljust(info_width), value) for key, value in info]
+            ),
         )
 
 
@@ -418,7 +426,13 @@ class TicketInterface:
 
 
 class InterfaceGLPI(TicketInterface):
-    from xmlrpc.client import Error, Fault, ProtocolError, ResponseError, ServerProxy  # nosec
+    from xmlrpc.client import (  # nosec
+        Error,
+        Fault,
+        ProtocolError,
+        ResponseError,
+        ServerProxy,
+    )
 
     urgency_map = {
         TicketInterface.Urgency.Low: 1,
@@ -431,7 +445,9 @@ class InterfaceGLPI(TicketInterface):
         super().__init__(settings)
         self.__username = settings["username"]
         self.__password = settings["password"]
-        self.__server = InterfaceGLPI.ServerProxy("http://%(host)s:%(port)s/%(url)s" % settings)
+        self.__server = InterfaceGLPI.ServerProxy(
+            "http://%(host)s:%(port)s/%(url)s" % settings
+        )
         self.__session = None
         # is the name returned by doLogin the same as the login_name? I presume not,
         # otherwise what would be the point of returning it?
@@ -447,7 +463,9 @@ class InterfaceGLPI(TicketInterface):
             raise
         except InterfaceGLPI.ResponseError:
             # response error seems to hold no data?
-            log.exception("response error on login. Is host and port configured correctly?")
+            log.exception(
+                "response error on login. Is host and port configured correctly?"
+            )
             raise
         except InterfaceGLPI.ProtocolError as e:
             log.error("protocol error %s on login. Headers: %s", e.errcode, e.headers)
@@ -496,7 +514,12 @@ class InterfaceGLPI(TicketInterface):
 
     def close_ticket(self, ticket_id, message):
         response = self.__server.glpi.setTicketSolution(
-            {"session": self.__session, "ticket": ticket_id, "type": 1, "solution": message}
+            {
+                "session": self.__session,
+                "ticket": ticket_id,
+                "type": 1,
+                "solution": message,
+            }
         )
         log.debug("set solution response: %s", response)
 
@@ -533,7 +556,11 @@ def import_settings(base_dir):
 
     # execfile put all tho globals into settings, including modules.
     # This doesn't acually hurt but let's clean up a bit anyway
-    return {key: value for key, value in settings.items() if isinstance(value, (bool, int, str))}  #
+    return {
+        key: value
+        for key, value in settings.items()
+        if isinstance(value, (bool, int, str))
+    }  #
 
 
 def init_logging(base_dir, settings):

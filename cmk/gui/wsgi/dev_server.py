@@ -121,16 +121,28 @@ def parse_arguments() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
-        "--host", nargs=1, type=str, help="The host name to listen on. Defaults to %(default)r"
+        "--host",
+        nargs=1,
+        type=str,
+        help="The host name to listen on. Defaults to %(default)r",
     )
     parser.add_argument(
-        "--port", nargs=1, type=int, help="The port to listen on. Defaults to %(default)s"
+        "--port",
+        nargs=1,
+        type=int,
+        help="The port to listen on. Defaults to %(default)s",
     )
     parser.add_argument(
-        "--debug", nargs="+", type=str, help="Comma separated logger-names to be set to DEBUG."
+        "--debug",
+        nargs="+",
+        type=str,
+        help="Comma separated logger-names to be set to DEBUG.",
     )
     parser.add_argument(
-        "--info", nargs="+", type=str, help="Comma separated logger-names to be set to INFO."
+        "--info",
+        nargs="+",
+        type=str,
+        help="Comma separated logger-names to be set to INFO.",
     )
     _args = parser.parse_args()
     set_levels("DEBUG", _args.debug)

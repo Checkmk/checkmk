@@ -19,7 +19,8 @@ from cmk.agent_based.v2 import (
 )
 
 _NO_ISSUES = Result(
-    state=State.OK, summary="No known issues. Details: https://azure.status.microsoft/en-us/status"
+    state=State.OK,
+    summary="No known issues. Details: https://azure.status.microsoft/en-us/status",
 )
 
 

@@ -125,7 +125,9 @@ check_info["azure_storageaccounts.performance"] = LegacyCheckDefinition(
     service_name="Storage %s performance",
     sections=["azure_storageaccounts"],
     discovery_function=discover_azure_by_metrics(
-        "average_SuccessServerLatency", "average_SuccessE2ELatency", "average_Availability"
+        "average_SuccessServerLatency",
+        "average_SuccessE2ELatency",
+        "average_Availability",
     ),
     check_function=check_azure_storageaccounts_performance,
     check_ruleset_name="azure_storageaccounts",

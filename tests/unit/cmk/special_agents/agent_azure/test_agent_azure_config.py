@@ -94,7 +94,10 @@ ARGS = Args(
     ],
 )
 def test_parse_arguments(
-    argv: Sequence[str], args: Args, expected_log: Sequence[str], caplog: pytest.LogCaptureFixture
+    argv: Sequence[str],
+    args: Args,
+    expected_log: Sequence[str],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     caplog.set_level(logging.DEBUG)
     assert parse_arguments(argv) == args

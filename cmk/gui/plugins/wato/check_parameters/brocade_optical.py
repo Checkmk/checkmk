@@ -18,11 +18,19 @@ def _parameter_valuespec_brocade_optical():
             ("temp", Checkbox(title=_("Temperature Alert"), default_value=True)),
             (
                 "tx_light",
-                Checkbox(title=_("TX Light alert"), label=_("TX Light alert"), default_value=False),
+                Checkbox(
+                    title=_("TX Light alert"),
+                    label=_("TX Light alert"),
+                    default_value=False,
+                ),
             ),
             (
                 "rx_light",
-                Checkbox(title=_("RX Light alert"), label=_("TX Light alert"), default_value=False),
+                Checkbox(
+                    title=_("RX Light alert"),
+                    label=_("TX Light alert"),
+                    default_value=False,
+                ),
             ),
             (
                 "lanes",

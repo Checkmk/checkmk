@@ -24,7 +24,11 @@ from cmk.gui.watolib.git import do_git_commit
 from cmk.gui.watolib.mode import mode_registry, WatoMode
 from cmk.gui.watolib.sidebar_reload import is_sidebar_reload_needed
 
-from .pages._html_elements import initialize_wato_html_head, wato_html_footer, wato_html_head
+from .pages._html_elements import (
+    initialize_wato_html_head,
+    wato_html_footer,
+    wato_html_head,
+)
 from .pages.not_implemented import ModeNotImplemented
 
 # .

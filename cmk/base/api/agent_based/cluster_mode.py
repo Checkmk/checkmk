@@ -288,7 +288,10 @@ class NodeCheckExecutor:
         cluster_kwargs: _Kwargs,
     ) -> Iterable[tuple[HostName, _Kwargs]]:
         yield from (
-            (n, {k: v if k in _NON_SECTION_KEYS else v.get(n) for k, v in cluster_kwargs.items()})
+            (
+                n,
+                {k: v if k in _NON_SECTION_KEYS else v.get(n) for k, v in cluster_kwargs.items()},
+            )
             for n in nodes
         )
 

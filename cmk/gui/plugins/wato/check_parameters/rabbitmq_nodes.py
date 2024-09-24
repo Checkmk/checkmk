@@ -22,7 +22,8 @@ def _parameter_valuespec_rabbitmq_nodes():
             (
                 "disk_free_alarm",
                 MonitoringState(
-                    title=_("State if node has disk free alarm in effect"), default_value=2
+                    title=_("State if node has disk free alarm in effect"),
+                    default_value=2,
                 ),
             ),
             (

@@ -9,7 +9,13 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import CascadingDropdown, Dictionary, DropdownChoice, TextInput, Tuple
+from cmk.gui.valuespec import (
+    CascadingDropdown,
+    Dictionary,
+    DropdownChoice,
+    TextInput,
+    Tuple,
+)
 
 
 # Also used in ibm_mq_managers

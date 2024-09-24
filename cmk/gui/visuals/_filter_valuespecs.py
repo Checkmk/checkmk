@@ -95,7 +95,8 @@ class VisualFilter(ValueSpec[FilterHTTPVariables]):
     def validate_datatype(self, value: FilterHTTPVariables, varprefix: str) -> None:
         if not isinstance(value, dict):
             raise MKUserError(
-                varprefix, _("The value must be of type dict, but it has type %s") % type(value)
+                varprefix,
+                _("The value must be of type dict, but it has type %s") % type(value),
             )
 
     def validate_value(self, value: FilterHTTPVariables, varprefix: str) -> None:
@@ -134,7 +135,8 @@ def show_filter(f: Filter, value: FilterHTTPVariables) -> None:
         tbs = ["Traceback (most recent call last):\n"]
         tbs += traceback.format_tb(tb)
         html.icon(
-            "alert", _("This filter cannot be displayed") + " ({})\n{}".format(e, "".join(tbs))
+            "alert",
+            _("This filter cannot be displayed") + " ({})\n{}".format(e, "".join(tbs)),
         )
         html.write_text(_("This filter cannot be displayed"))
     html.close_div()
@@ -164,7 +166,12 @@ class VisualFilterList(ListOfMultiple):
             if fname not in ignored_context_choices:
                 yield fname, VisualFilter(name=fname, title=filter_.title)
 
-    def __init__(self, info_list: SingleInfos, ignored_context_choices: Sequence[str] = (), **kwargs) -> None:  # type: ignore[no-untyped-def]
+    def __init__(  # type: ignore[no-untyped-def]
+        self,
+        info_list: SingleInfos,
+        ignored_context_choices: Sequence[str] = (),
+        **kwargs,
+    ) -> None:
         self._filters = filters_allowed_for_infos(info_list)
 
         kwargs.setdefault("title", _("Filters"))
@@ -242,7 +249,8 @@ class VisualFilterListWithAddPopup(VisualFilterList):
             user.get_tree_state("more_buttons", filter_list_id, isopen=False) or user.show_more_mode
         )
         html.open_div(
-            id_=filter_list_id, class_=["popup_filter_list", ("more" if show_more else "less")]
+            id_=filter_list_id,
+            class_=["popup_filter_list", ("more" if show_more else "less")],
         )
         html.more_button(filter_list_id, 1)
         for group in self._grouped_choices:
@@ -299,7 +307,8 @@ class PageAjaxVisualFilterListGetChoice(ABCPageListOfMultipleGetChoice):
         infos = api_request["infos"]
         return [
             ListOfMultipleChoiceGroup(
-                title=visual_info_registry[info]().title, choices=VisualFilterList.get_choices(info)
+                title=visual_info_registry[info]().title,
+                choices=VisualFilterList.get_choices(info),
             )
             for info in infos
         ]

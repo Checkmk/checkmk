@@ -72,7 +72,20 @@ def inventorize_interfaces(
 
     usage_port_types = params.get(
         "usage_port_types",
-        ["6", "32", "62", "117", "127", "128", "129", "180", "181", "182", "205", "229"],
+        [
+            "6",
+            "32",
+            "62",
+            "117",
+            "127",
+            "128",
+            "129",
+            "180",
+            "181",
+            "182",
+            "205",
+            "229",
+        ],
     )
     unused_duration = params.get("unused_duration", 30 * 86400)
 

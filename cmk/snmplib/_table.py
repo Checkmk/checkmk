@@ -2,8 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Provide methods to get an snmp table with or without caching
-"""
+"""Provide methods to get an snmp table with or without caching"""
 
 import contextlib
 import hashlib
@@ -111,7 +110,9 @@ def get_snmp_table(
     # Convert them by using the standard Checkmk approach for incoming data
     decoded_columns = [
         _decode_column(
-            column, value_encoding, partial(ensure_str, encoding=backend.config.character_encoding)
+            column,
+            value_encoding,
+            partial(ensure_str, encoding=backend.config.character_encoding),
         )
         for column, value_encoding in sanitized_columns
     ]
@@ -259,7 +260,9 @@ def _decode_column(
     return [decode(v) for v in column]
 
 
-def _sanitize_snmp_table_columns(columns: _ResultColumnsUnsanitized) -> _ResultColumnsSanitized:
+def _sanitize_snmp_table_columns(
+    columns: _ResultColumnsUnsanitized,
+) -> _ResultColumnsSanitized:
     # First compute the complete list of end-oids appearing in the output
     # by looping all results and putting the endoids to a flat list
     endoids: list[OID] = []

@@ -2,8 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Check_MK Special agent to monitor JMX using Mbeans exposed by jolokia
-"""
+"""Check_MK Special agent to monitor JMX using Mbeans exposed by jolokia"""
 
 __version__ = "2.3.0p18"
 
@@ -29,7 +28,9 @@ def parse_arguments(argv):
 
     parser.add_argument("-v", "--verbose", action="count", help="""Verbose mode""")
     parser.add_argument(
-        "--debug", action="store_true", help="Debug mode: let python exceptions come through"
+        "--debug",
+        action="store_true",
+        help="Debug mode: let python exceptions come through",
     )
     parser.add_argument(
         "--vcrtrace", action=vcrtrace(**mk_jolokia.JolokiaInstance.FILTER_SENSITIVE)

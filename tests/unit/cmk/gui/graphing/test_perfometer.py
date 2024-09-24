@@ -61,7 +61,12 @@ from cmk.graphing.v1 import metrics, perfometers
                 "m2": {"value": 2, "unit": "", "color": "#222222"},
                 "m3": {"value": 3, "unit": "", "color": "#333333"},
                 "m4": {"value": 4, "unit": "", "color": "#444444"},
-                "m5": {"value": 5, "unit": "", "color": "#555555", "scalar": {"max": 5}},
+                "m5": {
+                    "value": 5,
+                    "unit": "",
+                    "color": "#555555",
+                    "scalar": {"max": 5},
+                },
             },
             id="linear with total RPN expression",
         ),
@@ -176,7 +181,12 @@ def test_get_first_matching_perfometer(
         ),
         pytest.param(
             {
-                "fs_used": {"value": 10, "scalar": {"max": 30}, "unit": "", "color": "#123456"},
+                "fs_used": {
+                    "value": 10,
+                    "scalar": {"max": 30},
+                    "unit": "",
+                    "color": "#123456",
+                },
                 "uncommitted": {"value": 4, "unit": "", "color": "#123456"},
                 "fs_size": {"value": 15, "unit": "", "color": "#123456"},
             },
@@ -196,7 +206,12 @@ def test_get_first_matching_perfometer(
         ),
         pytest.param(
             {
-                "fs_used": {"value": 10, "scalar": {"max": 100}, "unit": "", "color": "#123456"},
+                "fs_used": {
+                    "value": 10,
+                    "scalar": {"max": 100},
+                    "unit": "",
+                    "color": "#123456",
+                },
                 "uncommitted": {"value": 4, "unit": "", "color": "#123456"},
                 "fs_size": {"value": 15, "unit": "", "color": "#123456"},
                 "overprovisioned": {"value": 7, "unit": "", "color": "#123456"},
@@ -217,7 +232,12 @@ def test_get_first_matching_perfometer(
         ),
         pytest.param(
             {
-                "fs_used": {"value": 10, "scalar": {"max": 100}, "unit": "", "color": "#123456"},
+                "fs_used": {
+                    "value": 10,
+                    "scalar": {"max": 100},
+                    "unit": "",
+                    "color": "#123456",
+                },
                 "uncommitted": {"value": 5, "unit": "", "color": "#123456"},
                 "fs_size": {"value": 15, "unit": "", "color": "#123456"},
                 "overprovisioned": {"value": 7, "unit": "", "color": "#123456"},
@@ -894,23 +914,49 @@ def test_perfometer_renderer_exceeds_limit(
             id="linear",
         ),
         pytest.param(
-            ("dual", [("linear", ([], 100, "Label 2")), ("linear", ([], 100, "Label 3"))]),
+            (
+                "dual",
+                [("linear", ([], 100, "Label 2")), ("linear", ([], 100, "Label 3"))],
+            ),
             {
                 "type": "dual",
                 "perfometers": [
-                    {"type": "linear", "segments": [], "total": 100, "label": "Label 2"},
-                    {"type": "linear", "segments": [], "total": 100, "label": "Label 3"},
+                    {
+                        "type": "linear",
+                        "segments": [],
+                        "total": 100,
+                        "label": "Label 2",
+                    },
+                    {
+                        "type": "linear",
+                        "segments": [],
+                        "total": 100,
+                        "label": "Label 3",
+                    },
                 ],
             },
             id="dual",
         ),
         pytest.param(
-            ("stacked", [("linear", ([], 100, "Label 4")), ("linear", ([], 100, "Label 5"))]),
+            (
+                "stacked",
+                [("linear", ([], 100, "Label 4")), ("linear", ([], 100, "Label 5"))],
+            ),
             {
                 "type": "stacked",
                 "perfometers": [
-                    {"type": "linear", "segments": [], "total": 100, "label": "Label 4"},
-                    {"type": "linear", "segments": [], "total": 100, "label": "Label 5"},
+                    {
+                        "type": "linear",
+                        "segments": [],
+                        "total": 100,
+                        "label": "Label 4",
+                    },
+                    {
+                        "type": "linear",
+                        "segments": [],
+                        "total": 100,
+                        "label": "Label 5",
+                    },
                 ],
             },
             id="stacked",
@@ -1003,6 +1049,8 @@ def test_parse_perfometer(
         ),
     ],
 )
-def test_parse_dual_or_stacked_perfometer_errors(legacy_perfometer: LegacyPerfometer) -> None:
+def test_parse_dual_or_stacked_perfometer_errors(
+    legacy_perfometer: LegacyPerfometer,
+) -> None:
     with pytest.raises(MKGeneralException):
         parse_perfometer(legacy_perfometer)

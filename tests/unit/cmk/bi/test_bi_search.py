@@ -5,7 +5,12 @@
 
 import pytest
 
-from cmk.bi.search import BIEmptySearch, BIFixedArgumentsSearch, BIHostSearch, BIServiceSearch
+from cmk.bi.search import (
+    BIEmptySearch,
+    BIFixedArgumentsSearch,
+    BIHostSearch,
+    BIServiceSearch,
+)
 from cmk.bi.searcher import BISearcher
 
 

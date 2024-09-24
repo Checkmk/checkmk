@@ -109,7 +109,6 @@ class SpecialAgent:
     def _iter_commands(
         self, special_agent: SpecialAgentConfig, conf_dict: Mapping[str, object]
     ) -> Iterator[SpecialAgentCommandLine]:
-
         proxy_config = ProxyConfig(self.host_name, self._http_proxies)
         processed = process_configuration_to_parameters(conf_dict, proxy_config)
 

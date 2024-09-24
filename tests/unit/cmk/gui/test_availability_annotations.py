@@ -417,7 +417,11 @@ def test_get_annotation_date_render_function(
                 "downtimes": {"include": "honor", "exclude_ok": False},
                 "consider": {"flapping": True, "host_down": True, "unmonitored": True},
                 "host_state_grouping": {"unreach": "unreach"},
-                "state_grouping": {"warn": "warn", "unknown": "unknown", "host_down": "host_down"},
+                "state_grouping": {
+                    "warn": "warn",
+                    "unknown": "unknown",
+                    "host_down": "host_down",
+                },
             },
             [
                 (

@@ -8,7 +8,12 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.base.plugins.agent_based import graylog_failures
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -148,7 +153,10 @@ def test_discover(
             [
                 Result(state=State.OK, summary="Total number of failures: 131346"),
                 Metric("failures", 131346.0),
-                Result(state=State.OK, summary="Failures in last 30 minutes 0 seconds: 5963"),
+                Result(
+                    state=State.OK,
+                    summary="Failures in last 30 minutes 0 seconds: 5963",
+                ),
                 Result(
                     state=State.OK,
                     summary="Affected indices: 1, see service details for further information",

@@ -298,7 +298,8 @@ def do_notify(
     """
     if not _core_has_notifications_enabled(logger):
         logger.info(
-            "Notifications are currently disabled. Skipped notification for event %d", event["id"]
+            "Notifications are currently disabled. Skipped notification for event %d",
+            event["id"],
         )
         return
 

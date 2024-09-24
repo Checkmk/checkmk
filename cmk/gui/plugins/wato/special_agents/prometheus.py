@@ -13,7 +13,9 @@ from cmk.gui.plugins.wato.special_agents.common import (
     filter_kubernetes_namespace_element,
     prometheus_connection,
 )
-from cmk.gui.plugins.wato.special_agents.common_tls_verification import tls_verify_flag_default_no
+from cmk.gui.plugins.wato.special_agents.common_tls_verification import (
+    tls_verify_flag_default_no,
+)
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (

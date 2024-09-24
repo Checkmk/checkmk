@@ -10,7 +10,7 @@ from pathlib import Path
 from flask import current_app
 
 import cmk.utils.paths
-from cmk.utils.version import edition, Edition
+from cmk.utils.version import Edition, edition
 
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKInternalError

@@ -21,8 +21,16 @@ def _parameter_valuespec_ucs_bladecenter_chassis_voltage():
                 Tuple(
                     title=_("3.3 Volt output lower levels"),
                     elements=[
-                        Float(title=_("warning if below or equal"), unit="V", default_value=3.25),
-                        Float(title=_("critical if below or equal"), unit="V", default_value=3.20),
+                        Float(
+                            title=_("warning if below or equal"),
+                            unit="V",
+                            default_value=3.25,
+                        ),
+                        Float(
+                            title=_("critical if below or equal"),
+                            unit="V",
+                            default_value=3.20,
+                        ),
                     ],
                 ),
             ),
@@ -31,8 +39,16 @@ def _parameter_valuespec_ucs_bladecenter_chassis_voltage():
                 Tuple(
                     title=_("3.3 Volt output upper levels"),
                     elements=[
-                        Float(title=_("warning if above or equal"), unit="V", default_value=3.4),
-                        Float(title=_("critical if above or equal"), unit="V", default_value=3.45),
+                        Float(
+                            title=_("warning if above or equal"),
+                            unit="V",
+                            default_value=3.4,
+                        ),
+                        Float(
+                            title=_("critical if above or equal"),
+                            unit="V",
+                            default_value=3.45,
+                        ),
                     ],
                 ),
             ),
@@ -41,8 +57,16 @@ def _parameter_valuespec_ucs_bladecenter_chassis_voltage():
                 Tuple(
                     title=_("12 Volt output lower levels"),
                     elements=[
-                        Float(title=_("warning if below or equal"), unit="V", default_value=11.9),
-                        Float(title=_("critical if below or equal"), unit="V", default_value=11.8),
+                        Float(
+                            title=_("warning if below or equal"),
+                            unit="V",
+                            default_value=11.9,
+                        ),
+                        Float(
+                            title=_("critical if below or equal"),
+                            unit="V",
+                            default_value=11.8,
+                        ),
                     ],
                 ),
             ),
@@ -51,8 +75,16 @@ def _parameter_valuespec_ucs_bladecenter_chassis_voltage():
                 Tuple(
                     title=_("12 Volt output upper levels"),
                     elements=[
-                        Float(title=_("warning if above or equal"), unit="V", default_value=12.1),
-                        Float(title=_("critical if above or equal"), unit="V", default_value=12.2),
+                        Float(
+                            title=_("warning if above or equal"),
+                            unit="V",
+                            default_value=12.1,
+                        ),
+                        Float(
+                            title=_("critical if above or equal"),
+                            unit="V",
+                            default_value=12.2,
+                        ),
                     ],
                 ),
             ),

@@ -69,7 +69,10 @@ def test_size_trend(args: ArgsDict) -> None:
         Result(state=State.OK, summary="trend per 1 hour 0 minutes: +200 MiB"),
         Result(state=State.OK, summary="trend per 1 hour 0 minutes: +10.00%"),
         Metric("trend", 4800.0),
-        Result(state=State.OK, summary="Time left until resource_name full: 9 hours 0 minutes"),
+        Result(
+            state=State.OK,
+            summary="Time left until resource_name full: 9 hours 0 minutes",
+        ),
     ]
 
 
@@ -95,7 +98,10 @@ def test_size_trend_growing(args: ArgsDict) -> None:
             summary="trend per 1 hour 0 minutes: +10.00% (warn/crit at +5.00%/+15.00%)",
         ),
         Metric("trend", 4800.0, levels=(100.0, 250.0)),
-        Result(state=State.OK, summary="Time left until resource_name full: 9 hours 0 minutes"),
+        Result(
+            state=State.OK,
+            summary="Time left until resource_name full: 9 hours 0 minutes",
+        ),
     ]
 
 

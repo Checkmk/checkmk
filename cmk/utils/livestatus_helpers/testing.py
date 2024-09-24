@@ -8,6 +8,7 @@ For code to be admitted to this module, it should itself be tested thoroughly, s
 have any friction during testing with these helpers themselves.
 
 """
+
 from __future__ import annotations
 
 import collections
@@ -26,7 +27,12 @@ from types import TracebackType
 from typing import Any, Literal
 from unittest import mock
 
-from livestatus import LivestatusTestingError, MultiSiteConnection, SiteConfigurations, SiteId
+from livestatus import (
+    LivestatusTestingError,
+    MultiSiteConnection,
+    SiteConfigurations,
+    SiteId,
+)
 
 # TODO: Make livestatus.py a well tested package on pypi
 # TODO: Move this code to the livestatus package
@@ -1432,7 +1438,9 @@ def mock_livestatus_communication() -> Iterator[MockLiveStatusConnection]:
     live = MockLiveStatusConnection()
     with (
         mock.patch(
-            "livestatus.MultiSiteConnection.expect_query", new=live.expect_query, create=True
+            "livestatus.MultiSiteConnection.expect_query",
+            new=live.expect_query,
+            create=True,
         ),
         mock.patch("livestatus.SingleSiteConnection._create_socket", new=live.create_socket),
     ):

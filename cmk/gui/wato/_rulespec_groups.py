@@ -6,7 +6,11 @@
 from cmk.gui.i18n import _
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfiguration
-from cmk.gui.watolib.rulespecs import RulespecGroup, RulespecGroupRegistry, RulespecSubGroup
+from cmk.gui.watolib.rulespecs import (
+    RulespecGroup,
+    RulespecGroupRegistry,
+    RulespecSubGroup,
+)
 
 
 def register(rulespec_group_registry: RulespecGroupRegistry) -> None:

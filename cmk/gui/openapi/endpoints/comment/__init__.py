@@ -47,7 +47,10 @@ from cmk.gui.openapi.endpoints.comment.request_schemas import (
     CreateServiceRelatedComment,
     DeleteComments,
 )
-from cmk.gui.openapi.endpoints.comment.response_schemas import CommentCollection, CommentObject
+from cmk.gui.openapi.endpoints.comment.response_schemas import (
+    CommentCollection,
+    CommentObject,
+)
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
@@ -179,7 +182,12 @@ def show_comment(params: Mapping[str, Any]) -> Response:
     response_schema=CommentCollection,
     update_config_generation=False,
     path_params=[COLLECTION_NAME],
-    query_params=[GetCommentsByQuery, HOST_NAME_SHOW, SERVICE_DESCRIPTION_SHOW, OPTIONAL_SITE_ID],
+    query_params=[
+        GetCommentsByQuery,
+        HOST_NAME_SHOW,
+        SERVICE_DESCRIPTION_SHOW,
+        OPTIONAL_SITE_ID,
+    ],
 )
 def show_comments(params: Mapping[str, Any]) -> Response:
     """Show comments"""

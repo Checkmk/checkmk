@@ -10,13 +10,21 @@ This registry has multiple jobs:
  2. interlinking between endpoints without having to know the specific URL.
 
 """
+
 from collections.abc import Iterator
 from typing import TypedDict
 
 from cmk.gui.http import HTTPMethod
 from cmk.gui.openapi.restful_objects.decorators import Endpoint, WrappedEndpoint
-from cmk.gui.openapi.restful_objects.params import fill_out_path_template, path_parameters
-from cmk.gui.openapi.restful_objects.type_defs import LinkRelation, OpenAPIParameter, ParameterKey
+from cmk.gui.openapi.restful_objects.params import (
+    fill_out_path_template,
+    path_parameters,
+)
+from cmk.gui.openapi.restful_objects.type_defs import (
+    LinkRelation,
+    OpenAPIParameter,
+    ParameterKey,
+)
 
 
 class EndpointEntry(TypedDict, total=True):

@@ -298,7 +298,10 @@ def test__make_filter_choices_from_api_request_paths(
     ],
 )
 def test_load_filtered_and_merged_tree(
-    monkeypatch: MonkeyPatch, hostname: HostName | None, row: Row, expected_tree: ImmutableTree
+    monkeypatch: MonkeyPatch,
+    hostname: HostName | None,
+    row: Row,
+    expected_tree: ImmutableTree,
 ) -> None:
     monkeypatch.setattr(
         cmk.gui.inventory,

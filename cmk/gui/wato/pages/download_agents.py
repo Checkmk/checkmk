@@ -176,7 +176,11 @@ class ABCModeDownloadAgents(WatoMode):
             html.a(filename, href="agents/%s" % relpath, download=filename)
             html.span("." * 200, class_="dots")
             html.close_div()
-            html.div(cmk.utils.render.fmt_bytes(file_size), style="width:60px;", class_="rulecount")
+            html.div(
+                cmk.utils.render.fmt_bytes(file_size),
+                style="width:60px;",
+                class_="rulecount",
+            )
             html.close_div()
             html.close_div()
         forms.end()
@@ -244,7 +248,10 @@ class ModeDownloadAgentsLinux(ABCModeDownloadAgents):
         return _("Linux, Solaris, AIX files")
 
     def _packed_agents(self) -> list[str]:
-        return [str(agent.packed_agent_path_linux_deb()), str(agent.packed_agent_path_linux_rpm())]
+        return [
+            str(agent.packed_agent_path_linux_deb()),
+            str(agent.packed_agent_path_linux_rpm()),
+        ]
 
     def _walk_base_dir(self):
         return cmk.utils.paths.agents_dir

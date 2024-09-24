@@ -48,7 +48,9 @@ class DBInstance(NamedTuple):
     wait_duration: float
 
 
-def parse_mssql_blocked_sessions(string_table: StringTable) -> dict[str, list[DBInstance]]:
+def parse_mssql_blocked_sessions(
+    string_table: StringTable,
+) -> dict[str, list[DBInstance]]:
     parsed: dict[str, list[DBInstance]] = {}
     for line in string_table:
         if line[-1].startswith("ERROR:"):
@@ -142,11 +144,14 @@ def check_mssql_blocked_sessions(
 
     if ignored_waittypes:
         yield Result(
-            state=State.OK, summary="Ignored wait types: %s" % ", ".join(ignored_waittypes)
+            state=State.OK,
+            summary="Ignored wait types: %s" % ", ".join(ignored_waittypes),
         )
 
 
-def discovery_mssql_blocked_sessions(section: dict[str, list[DBInstance]]) -> DiscoveryResult:
+def discovery_mssql_blocked_sessions(
+    section: dict[str, list[DBInstance]],
+) -> DiscoveryResult:
     for item in section:
         yield Service(item=item)
 

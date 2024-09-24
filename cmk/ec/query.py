@@ -164,7 +164,10 @@ def operator_for(name: str) -> tuple[OperatorName, Callable[[Any, Any], bool]]:
 
 class QueryGET(Query):
     def __init__(
-        self, get_table: Callable[[str], StatusTable], raw_query: list[str], logger: Logger
+        self,
+        get_table: Callable[[str], StatusTable],
+        raw_query: list[str],
+        logger: Logger,
     ) -> None:
         super().__init__(raw_query, logger)
         self.table = get_table(self.method_arg)

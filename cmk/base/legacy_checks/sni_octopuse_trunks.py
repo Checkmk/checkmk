@@ -49,7 +49,9 @@ def check_octopus_trunks(item, _no_params, info):
     return (3, "UNKW - unknown data received from agent")
 
 
-def parse_sni_octopuse_trunks(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+def parse_sni_octopuse_trunks(
+    string_table: Sequence[StringTable],
+) -> Sequence[StringTable]:
     return string_table
 
 

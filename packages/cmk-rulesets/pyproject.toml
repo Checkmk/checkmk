@@ -12,16 +12,6 @@ build-backend = "setuptools.build_meta"
 
 [tool.bandit]
 
-[tool.black]
-line_length = 100
-quiet = true
-
-[tool.isort]
-profile = "black"
-order_by_type = false
-line_length = 100
-py_version = 311
-
 [tool.mypy]
 explicit_package_bases = true
 packages = ["cmk", "tests"]

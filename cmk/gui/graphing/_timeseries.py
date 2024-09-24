@@ -64,7 +64,8 @@ def time_series_math(
     twindow = operands_evaluated[0].twindow
 
     return TimeSeries(
-        [op_func_wrapper(op_func, list(tsp)) for tsp in zip(*operands_evaluated)], twindow
+        [op_func_wrapper(op_func, list(tsp)) for tsp in zip(*operands_evaluated)],
+        twindow,
     )
 
 
@@ -98,7 +99,9 @@ def _time_series_operator_product(tsp: TimeSeries | TimeSeriesValues) -> float |
     return functools.reduce(operator.mul, tsp, 1)
 
 
-def _time_series_operator_difference(tsp: TimeSeries | TimeSeriesValues) -> float | None:
+def _time_series_operator_difference(
+    tsp: TimeSeries | TimeSeriesValues,
+) -> float | None:
     if None in tsp:
         return None
     assert tsp[0] is not None
@@ -127,13 +130,15 @@ def _time_series_operator_average(tsp: TimeSeries | TimeSeriesValues) -> float:
     return sum(tsp_clean) / len(tsp_clean)
 
 
-def time_series_operators() -> dict[
-    Operators,
-    tuple[
-        str,
-        Callable[[TimeSeries | TimeSeriesValues], float | None],
-    ],
-]:
+def time_series_operators() -> (
+    dict[
+        Operators,
+        tuple[
+            str,
+            Callable[[TimeSeries | TimeSeriesValues], float | None],
+        ],
+    ]
+):
     return {
         "+": (_("Sum"), _time_series_operator_sum),
         "*": (_("Product"), _time_series_operator_product),

@@ -9,8 +9,14 @@ from collections.abc import Mapping, Sequence
 import pydantic
 import requests
 
-from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
-from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.agent_common import (
+    SectionWriter,
+    special_agent_main,
+)
+from cmk.special_agents.v0_unstable.argument_parsing import (
+    Args,
+    create_default_argument_parser,
+)
 
 
 def agent_elasticsearch_main(args: Args) -> int:
@@ -63,7 +69,11 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
         help="Use 'http' or 'https' for connection to elasticsearch (default=https)",
     )
     parser.add_argument(
-        "-p", "--port", default=9200, type=int, help="Use alternative port (default: 9200)"
+        "-p",
+        "--port",
+        default=9200,
+        type=int,
+        help="Use alternative port (default: 9200)",
     )
     parser.add_argument(
         "-m",

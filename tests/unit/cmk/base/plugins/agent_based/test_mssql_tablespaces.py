@@ -7,7 +7,12 @@ from typing import Any
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -88,7 +93,9 @@ def test_parse(string_table: StringTable, expected_section: SectionTableSpaces) 
     "string_table, expected_services",
     [
         pytest.param(
-            WORKING_STRING_TABLE, [Service(item="MSSQL_SQLEXPRESS master")], id="working table"
+            WORKING_STRING_TABLE,
+            [Service(item="MSSQL_SQLEXPRESS master")],
+            id="working table",
         ),
         pytest.param(ERROR_STRING_TABLE, [], id="error"),
     ],
@@ -129,7 +136,10 @@ def test_discover(string_table: StringTable, expected_services: DiscoveryResult)
             },
             WORKING_STRING_TABLE,
             [
-                Result(state=State.WARN, summary="Size: 5.25 MiB (warn/crit at 3.00 MiB/6.00 MiB)"),
+                Result(
+                    state=State.WARN,
+                    summary="Size: 5.25 MiB (warn/crit at 3.00 MiB/6.00 MiB)",
+                ),
                 Metric("size", 5505024.0, levels=(3145728.0, 6291456.0)),
                 Result(
                     state=State.CRIT,
@@ -162,6 +172,9 @@ def test_discover(string_table: StringTable, expected_services: DiscoveryResult)
     ],
 )
 def test_check(
-    item: str, params: Mapping[str, Any], string_table: StringTable, expected_result: CheckResult
+    item: str,
+    params: Mapping[str, Any],
+    string_table: StringTable,
+    expected_result: CheckResult,
 ) -> None:
     assert list(check(item, params, parse(string_table))) == expected_result

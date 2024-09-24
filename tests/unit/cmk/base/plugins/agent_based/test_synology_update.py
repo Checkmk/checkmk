@@ -35,7 +35,11 @@ def test_discovery() -> None:
 @pytest.mark.parametrize("cmk_state", [State.OK, State.WARN, State.CRIT])
 @pytest.mark.parametrize("observed_state", range(1, 6))
 def test_result_state(cmk_state: State, observed_state: int) -> None:
-    state_names = {State.OK: "ok_states", State.WARN: "warn_states", State.CRIT: "crit_states"}
+    state_names = {
+        State.OK: "ok_states",
+        State.WARN: "warn_states",
+        State.CRIT: "crit_states",
+    }
     params: dict[str, Any] = {name: [] for name in ["ok_states", "warn_states", "crit_states"]}
     params[state_names[cmk_state]] = [1, 2, 3, 4, 5]
     section = synology_update.Section(version="robin", status=observed_state)

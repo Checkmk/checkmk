@@ -91,7 +91,8 @@ def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:
             # 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default ...
             # 5: veth6a06585@if4: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue ...
             iface = ip_stats.setdefault(
-                line[1][:-1].split("@")[0], IPLinkInterface(state_infos=line[2][1:-1].split(","))
+                line[1][:-1].split("@")[0],
+                IPLinkInterface(state_infos=line[2][1:-1].split(",")),
             )
             # The interface flags are summarized in the angle brackets.
             continue
@@ -350,7 +351,10 @@ def _make_inventory_interface(
     # Always exclude dockers veth* interfaces on docker nodes.
     # Useless entries for "TenGigabitEthernet2/1/21--Uncontrolled".
     # Ignore useless half-empty tables (e.g. Viprinet-Router).
-    if interface.attributes.descr.startswith("veth") or interface.attributes.type in ("231", "232"):
+    if interface.attributes.descr.startswith("veth") or interface.attributes.type in (
+        "231",
+        "232",
+    ):
         return None
 
     mac = (

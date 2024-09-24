@@ -5,7 +5,10 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+)
 from cmk.base.plugins.agent_based.apc_netbotz_fluid import (
     check_apc_netbotz_fluid,
     discover_apc_netbotz_fluid,

@@ -7,7 +7,12 @@
 import pytest
 
 from cmk.base.plugins.agent_based import emc_isilon_quota as eiq
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 
 from cmk.plugins.lib import df
 
@@ -44,7 +49,12 @@ def test_check(section: eiq.Section, monkeypatch: pytest.MonkeyPatch) -> None:
             boundaries=(0.0, 209715200.0),
         ),
         Metric("fs_free", 206048695.57109737, boundaries=(0, None)),
-        Metric("fs_used_percent", 1.7483255524171002, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+        Metric(
+            "fs_used_percent",
+            1.7483255524171002,
+            levels=(80.0, 90.0),
+            boundaries=(0.0, 100.0),
+        ),
         Result(state=State.OK, summary="Used: 1.75% - 3.50 TiB of 200 TiB"),
         Metric("fs_size", 209715200.0, boundaries=(0, None)),
         Metric("growth", 0.0),

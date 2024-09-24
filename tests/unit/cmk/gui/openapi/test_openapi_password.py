@@ -208,7 +208,10 @@ def test_openapi_password_delete(aut_user_auth_wsgi_app: WebTestAppForCMK) -> No
     )
 
     _resp = aut_user_auth_wsgi_app.call_method(
-        "get", base + "/objects/password/foo", headers={"Accept": "application/json"}, status=404
+        "get",
+        base + "/objects/password/foo",
+        headers={"Accept": "application/json"},
+        status=404,
     )
 
     resp = aut_user_auth_wsgi_app.call_method(

@@ -11,7 +11,10 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import PageMenu
 from cmk.gui.page_state import PageState
-from cmk.gui.watolib.activate_changes import ActivateChanges, get_pending_changes_tooltip
+from cmk.gui.watolib.activate_changes import (
+    ActivateChanges,
+    get_pending_changes_tooltip,
+)
 
 # TODO: Refactor to context handler or similar?
 _html_head_open = False

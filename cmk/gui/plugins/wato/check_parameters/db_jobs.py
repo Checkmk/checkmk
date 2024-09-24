@@ -24,7 +24,7 @@ def get_default_consider_job_status_choices() -> tuple[tuple[str, str], tuple[st
 
 
 def get_consider_job_status_valuespec(
-    choices: tuple[tuple[str, str], ...] = get_default_consider_job_status_choices()
+    choices: tuple[tuple[str, str], ...] = get_default_consider_job_status_choices(),
 ) -> DropdownChoice:
     return DropdownChoice(
         title=_("Job State"),

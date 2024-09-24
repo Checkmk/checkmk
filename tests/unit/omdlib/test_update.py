@@ -46,7 +46,11 @@ Entry = File | Dir | Symlink | None
 def read_all(path: Path) -> Entry:
     match file_type(path):
         case ManagedTypes.file:
-            return File(path=path, permission=oct(os.stat(path).st_mode), content=path.read_bytes())
+            return File(
+                path=path,
+                permission=oct(os.stat(path).st_mode),
+                content=path.read_bytes(),
+            )
         case ManagedTypes.directory:
             return Dir(path=path, permission=oct(os.stat(path).st_mode))
         case ManagedTypes.symlink:

@@ -50,8 +50,15 @@ from .config_domain_name import (
 )
 from .config_hostname import config_hostname_autocompleter
 from .groups import ContactGroupUsageFinderRegistry as ContactGroupUsageFinderRegistry
-from .host_attributes import ABCHostAttribute, HostAttributeRegistry, HostAttributeTopicRegistry
-from .host_label_sync import AutomationDiscoveredHostLabelSync, DiscoveredHostLabelSyncJob
+from .host_attributes import (
+    ABCHostAttribute,
+    HostAttributeRegistry,
+    HostAttributeTopicRegistry,
+)
+from .host_label_sync import (
+    AutomationDiscoveredHostLabelSync,
+    DiscoveredHostLabelSyncJob,
+)
 from .host_rename import (
     AutomationRenameHostsUUIDLink,
     RenameHostBackgroundJob,
@@ -134,7 +141,9 @@ def register(
     autocompleter_registry.register_autocompleter("config_hostname", config_hostname_autocompleter)
 
 
-def _register_automation_commands(automation_command_registry: AutomationCommandRegistry) -> None:
+def _register_automation_commands(
+    automation_command_registry: AutomationCommandRegistry,
+) -> None:
     clss: Sequence[type[automation_commands.AutomationCommand]] = (
         automation_commands.AutomationPing,
         automatic_host_removal.AutomationHostsForAutoRemoval,
@@ -204,7 +213,10 @@ def _register_nagvis_hooks() -> None:
         ("userdb-job", auth_php._on_userdb_job),
         ("users-saved", lambda users: auth_php._create_auth_file("users-saved", users)),
         ("roles-saved", lambda x: auth_php._create_auth_file("roles-saved")),
-        ("contactgroups-saved", lambda x: auth_php._create_auth_file("contactgroups-saved")),
+        (
+            "contactgroups-saved",
+            lambda x: auth_php._create_auth_file("contactgroups-saved"),
+        ),
         ("activate-changes", lambda x: auth_php._create_auth_file("activate-changes")),
     )
     for name, func in args:

@@ -76,13 +76,19 @@ class ABCFoldableTreeRenderer(abc.ABC):
         url_id = urlencode_vars(
             [
                 ("aggregation_id", self._row["aggr_tree"]["aggregation_id"]),
-                ("show_frozen_difference", "yes" if self._show_frozen_difference else ""),
+                (
+                    "show_frozen_difference",
+                    "yes" if self._show_frozen_difference else "",
+                ),
                 ("group", group),
                 ("title", title),
                 ("omit_root", "yes" if self._omit_root else ""),
                 ("renderer", self.__class__.__name__),
                 ("only_problems", "yes" if self._only_problems else ""),
-                ("reqhosts", ",".join("%s#%s" % sitehost for sitehost in affected_hosts)),
+                (
+                    "reqhosts",
+                    ",".join("%s#%s" % sitehost for sitehost in affected_hosts),
+                ),
             ]
         )
 
@@ -166,7 +172,12 @@ class ABCFoldableTreeRenderer(abc.ABC):
         if service:
             service_url = makeuri_contextless(
                 request,
-                [("view_name", "service"), ("site", site), ("host", host), ("service", service)],
+                [
+                    ("view_name", "service"),
+                    ("site", site),
+                    ("host", host),
+                    ("service", service),
+                ],
                 filename="view.py",
             )
 
@@ -219,9 +230,7 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
     def _toggle_js_function(self):
         return "cmk.bi.toggle_subtree"
 
-    def _show_subtree(
-        self, tree, path, show_host, frozen_marker_set=False
-    ):  # pylint: disable=too-many-branches
+    def _show_subtree(self, tree, path, show_host, frozen_marker_set=False):  # pylint: disable=too-many-branches
         if self._is_leaf(tree):
             self._show_leaf(tree, show_host)
             return
@@ -374,7 +383,8 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
                 html.close_span()
 
             output: HTML = cmk.gui.view_utils.format_plugin_output(
-                effective_state["output"], shall_escape=active_config.escape_plugin_output
+                effective_state["output"],
+                shall_escape=active_config.escape_plugin_output,
             )
 
             if output:

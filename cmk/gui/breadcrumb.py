@@ -6,6 +6,7 @@
 
 Cares about rendering the breadcrumb which is shown at the top of all pages
 """
+
 from __future__ import annotations
 
 from collections.abc import Iterable, MutableSequence

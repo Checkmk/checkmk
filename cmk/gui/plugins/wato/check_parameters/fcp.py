@@ -42,7 +42,8 @@ def _parameter_valuespec_fcp():
                     ],
                     otherlabel=_("specify manually ->"),
                     explicit=Integer(
-                        title=_("Other speed in bits per second"), label=_("Bits per second")
+                        title=_("Other speed in bits per second"),
+                        label=_("Bits per second"),
                     ),
                 ),
             ),

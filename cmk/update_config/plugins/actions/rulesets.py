@@ -131,7 +131,9 @@ def _transform_label_conditions(rule_config: RuleSpec[object]) -> None:
         )
 
 
-def transform_condition_labels_to_label_groups(conditions: dict[str, Any]) -> dict[str, Any]:
+def transform_condition_labels_to_label_groups(
+    conditions: dict[str, Any],
+) -> dict[str, Any]:
     for what in ["host", "service"]:
         old_key = f"{what}_labels"
         new_key = f"{what}_label_groups"

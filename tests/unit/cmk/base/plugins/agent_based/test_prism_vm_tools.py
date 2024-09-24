@@ -74,7 +74,8 @@ def test_discovery_prism_vm_tools(
             SECTION,
             [
                 Result(
-                    state=State.WARN, summary="Tools with version 2.1.5 installed but should not be"
+                    state=State.WARN,
+                    summary="Tools with version 2.1.5 installed but should not be",
                 ),
                 Result(state=State.WARN, summary="Tools enabled, but should be disabled"),
             ],

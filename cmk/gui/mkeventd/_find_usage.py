@@ -28,7 +28,10 @@ def find_usages_of_contact_group_in_mkeventd_notify_contactgroup(
                 (
                     "%s" % (config_variable.valuespec().title()),
                     folder_preserving_link(
-                        [("mode", "edit_configvar"), ("varname", "mkeventd_notify_contactgroup")]
+                        [
+                            ("mode", "edit_configvar"),
+                            ("varname", "mkeventd_notify_contactgroup"),
+                        ]
                     ),
                 )
             )

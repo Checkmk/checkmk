@@ -37,7 +37,10 @@ from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.openapi.endpoints.notification_rules.request_example import (
     notification_rule_request_example,
 )
-from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, DomainObjectCollection
+from cmk.gui.openapi.restful_objects.response_schemas import (
+    DomainObject,
+    DomainObjectCollection,
+)
 from cmk.gui.rest_api_types.notifications_rule_types import PluginType
 from cmk.gui.watolib.tags import load_all_tag_config_read_only
 

@@ -32,7 +32,8 @@ class PageRescheduleCheck(AjaxPage):
     @staticmethod
     def _force_check(now: int, cmd: str, spec: str, site: SiteId) -> None:
         sites.live().command(
-            "[%d] SCHEDULE_FORCED_%s_CHECK;%s;%d" % (now, cmd, livestatus.lqencode(spec), now), site
+            "[%d] SCHEDULE_FORCED_%s_CHECK;%s;%d" % (now, cmd, livestatus.lqencode(spec), now),
+            site,
         )
 
     @staticmethod

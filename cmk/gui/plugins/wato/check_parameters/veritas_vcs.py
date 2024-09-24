@@ -21,13 +21,28 @@ def _parameter_valuespec_veritas_vcs():
                     title=_("Map Attribute 'State'"),
                     elements=[
                         ("ONLINE", MonitoringState(title=_("ONLINE"), default_value=0)),
-                        ("RUNNING", MonitoringState(title=_("RUNNING"), default_value=0)),
+                        (
+                            "RUNNING",
+                            MonitoringState(title=_("RUNNING"), default_value=0),
+                        ),
                         ("OK", MonitoringState(title=_("OK"), default_value=0)),
-                        ("OFFLINE", MonitoringState(title=_("OFFLINE"), default_value=1)),
+                        (
+                            "OFFLINE",
+                            MonitoringState(title=_("OFFLINE"), default_value=1),
+                        ),
                         ("EXITED", MonitoringState(title=_("EXITED"), default_value=1)),
-                        ("PARTIAL", MonitoringState(title=_("PARTIAL"), default_value=1)),
-                        ("FAULTED", MonitoringState(title=_("FAULTED"), default_value=2)),
-                        ("UNKNOWN", MonitoringState(title=_("UNKNOWN"), default_value=3)),
+                        (
+                            "PARTIAL",
+                            MonitoringState(title=_("PARTIAL"), default_value=1),
+                        ),
+                        (
+                            "FAULTED",
+                            MonitoringState(title=_("FAULTED"), default_value=2),
+                        ),
+                        (
+                            "UNKNOWN",
+                            MonitoringState(title=_("UNKNOWN"), default_value=3),
+                        ),
                         (
                             "default",
                             MonitoringState(

@@ -136,7 +136,10 @@ class PredictionStore:
             data_path = info_path.with_suffix(self.DATA_FILE_SUFFIX)
             try:
                 if info_path.stat().st_mtime >= data_path.stat().st_mtime:
-                    yield meta, PredictionData.model_validate_json(data_path.read_text())
+                    yield (
+                        meta,
+                        PredictionData.model_validate_json(data_path.read_text()),
+                    )
             except FileNotFoundError:
                 pass
 
@@ -175,7 +178,11 @@ def _calculate_data_for_prediction(
         _forward_fill_resample(
             current_range,
             values,
-            range(youngest_range.start - shift, youngest_range.stop - shift, youngest_range.step),
+            range(
+                youngest_range.start - shift,
+                youngest_range.stop - shift,
+                youngest_range.step,
+            ),
         )
         for current_range, values, shift in raw_slices
     ]

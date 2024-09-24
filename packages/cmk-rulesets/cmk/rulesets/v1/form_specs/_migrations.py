@@ -5,7 +5,12 @@
 
 from typing import Literal, TypeVar
 
-from ._levels import _PredictiveLevelsT, LevelDirection, LevelsConfigModel, SimpleLevelsConfigModel
+from ._levels import (
+    _PredictiveLevelsT,
+    LevelDirection,
+    LevelsConfigModel,
+    SimpleLevelsConfigModel,
+)
 
 _NumberT = TypeVar("_NumberT", int, float)
 
@@ -87,10 +92,12 @@ def _parse_to_predictive_levels(
                 bound=_extract_bound(model, scale, ntype, level_dir),
             )
         # migrate not configured predictive levels
-        case {
-            "period": "wday" | "day" | "hour" | "minute",
-            "horizon": int(),
-        } as val if "levels" not in val and "bound" not in val:  # type: ignore[operator]
+        case (
+            {
+                "period": "wday" | "day" | "hour" | "minute",
+                "horizon": int(),
+            } as val
+        ) if "levels" not in val and "bound" not in val:  # type: ignore[operator]
             return None
         case _:
             raise TypeError(
@@ -262,7 +269,9 @@ def migrate_to_float_simple_levels(
 def migrate_to_password(
     model: object,
 ) -> tuple[
-    Literal["cmk_postprocessed"], Literal["explicit_password", "stored_password"], tuple[str, str]
+    Literal["cmk_postprocessed"],
+    Literal["explicit_password", "stored_password"],
+    tuple[str, str],
 ]:
     """
     Transform a previous password configuration represented by ("password", <password>) or
@@ -287,9 +296,23 @@ def migrate_to_password(
             return "cmk_postprocessed", "stored_password", (password_store_id, password)
 
         # already migrated passwords
-        case "cmk_postprocessed", "explicit_password", (str(password_id), str(password)):
+        case (
+            "cmk_postprocessed",
+            "explicit_password",
+            (
+                str(password_id),
+                str(password),
+            ),
+        ):
             return "cmk_postprocessed", "explicit_password", (password_id, password)
-        case "cmk_postprocessed", "stored_password", (str(password_store_id), str(password)):
+        case (
+            "cmk_postprocessed",
+            "stored_password",
+            (
+                str(password_store_id),
+                str(password),
+            ),
+        ):
             return "cmk_postprocessed", "stored_password", (password_store_id, password)
 
     raise TypeError(f"Could not migrate {model!r} to Password.")

@@ -51,11 +51,22 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import all_of, any_of, contains, equals, exists, SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    all_of,
+    any_of,
+    contains,
+    equals,
+    exists,
+    SNMPTree,
+    StringTable,
+)
 
 DETECT_SUPERMICRO = any_of(
     equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.311.1.1.3.1.2"),
-    all_of(contains(".1.3.6.1.2.1.1.1.0", "linux"), exists(".1.3.6.1.4.1.10876.2.1.1.1.1.2.1")),
+    all_of(
+        contains(".1.3.6.1.2.1.1.1.0", "linux"),
+        exists(".1.3.6.1.4.1.10876.2.1.1.1.1.2.1"),
+    ),
 )
 
 

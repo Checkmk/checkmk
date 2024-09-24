@@ -20,7 +20,9 @@ def inventory_dell_poweredge_cpu(info):
             yield LocationName, None
 
 
-def parse_dell_poweredge_cpu(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+def parse_dell_poweredge_cpu(
+    string_table: Sequence[StringTable],
+) -> Sequence[StringTable]:
     return string_table
 
 

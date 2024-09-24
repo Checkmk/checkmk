@@ -7,8 +7,15 @@ from collections.abc import Iterable
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, HostLabel, TableRow
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Attributes,
+    HostLabel,
+    TableRow,
+)
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    InventoryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.inventory_snmp_extended_info import (
     inventory_snmp_extended_info,
     parse_snmp_extended_info,

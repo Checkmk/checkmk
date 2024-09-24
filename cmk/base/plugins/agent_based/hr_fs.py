@@ -110,7 +110,10 @@ def check_hr_fs(item: str, params: Mapping[str, Any], section: Section) -> Check
 
 
 def check_hr_fs_testable(
-    item: str, params: Mapping[str, Any], section: Section, value_store: MutableMapping[str, object]
+    item: str,
+    params: Mapping[str, Any],
+    section: Section,
+    value_store: MutableMapping[str, object],
 ) -> CheckResult:
     yield from df_check_filesystem_list(
         value_store=value_store,

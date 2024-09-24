@@ -30,7 +30,15 @@ def parse_framework_mib_inet_address(ip_address_type, ip_address):
 
 
 def inventory_cisco_ace_rserver(info):
-    for name, ip_address_type, ip_address, descr, _admin_status, _oper_status, _conns in info:
+    for (
+        name,
+        ip_address_type,
+        ip_address,
+        descr,
+        _admin_status,
+        _oper_status,
+        _conns,
+    ) in info:
         ip = parse_framework_mib_inet_address(int(ip_address_type), ip_address)
         if name != "":
             item = name
@@ -68,7 +76,15 @@ def check_cisco_ace_rserver(item, _no_params, info):
         "18": (2, "max load reached"),
     }
 
-    for name, ip_address_type, ip_address, descr, admin_status, oper_status, conns in info:
+    for (
+        name,
+        ip_address_type,
+        ip_address,
+        descr,
+        admin_status,
+        oper_status,
+        conns,
+    ) in info:
         ip_addr = parse_framework_mib_inet_address(ip_address_type, ip_address)
         if item in {name, ip_addr, descr}:
             admin_state = admin_stati[admin_status]

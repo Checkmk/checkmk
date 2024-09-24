@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module contains commands for managing downtimes through LiveStatus."""
+
 import datetime as dt
 from typing import Literal
 
@@ -525,7 +526,8 @@ def schedule_hostgroup_host_downtime(
     with detailed_connection(connection) as conn:
         result = list(
             Query(
-                [tables.Hostgroups.members], tables.Hostgroups.name.equals(hostgroup_name)
+                [tables.Hostgroups.members],
+                tables.Hostgroups.name.equals(hostgroup_name),
             ).fetchall(conn)
         )
 

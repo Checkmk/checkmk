@@ -33,7 +33,9 @@ def make_updated_predictions(
     store.remove_outdated_predictions(now)
     return {
         hash(meta): _make_reference_and_prediction(
-            meta, valid_prediction or _update_prediction(store, meta, get_recorded_data), now
+            meta,
+            valid_prediction or _update_prediction(store, meta, get_recorded_data),
+            now,
         )
         for meta, valid_prediction in store.iter_all_valid_predictions(now)
     }

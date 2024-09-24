@@ -16,7 +16,8 @@ import cmk.utils.version as cmk_version
 
 
 @pytest.mark.skipif(
-    cmk_version.edition() is cmk_version.Edition.CRE, reason="No agent deployment in raw edition"
+    cmk_version.edition() is cmk_version.Edition.CRE,
+    reason="No agent deployment in raw edition",
 )
 def test_deploy_agent(wsgi_app: WebTestAppForCMK) -> None:
     response = wsgi_app.get("/NO_SITE/check_mk/deploy_agent.py")
@@ -54,7 +55,8 @@ def test_download_agent_shipped_with_checkmk(
 
 
 @pytest.mark.skipif(
-    cmk_version.edition() is cmk_version.Edition.CRE, reason="endpoint not available in raw edition"
+    cmk_version.edition() is cmk_version.Edition.CRE,
+    reason="endpoint not available in raw edition",
 )
 def test_openapi_agent_key_id_above_zero_regression(clients: ClientRegistry) -> None:
     # make sure this doesn't crash

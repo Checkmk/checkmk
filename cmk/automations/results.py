@@ -80,7 +80,7 @@ class ServiceDiscoveryResult(ABCAutomationResult):
 
     @staticmethod
     def _from_dict(
-        serialized: Mapping[HostName, Mapping[str, Any]]
+        serialized: Mapping[HostName, Mapping[str, Any]],
     ) -> Mapping[HostName, SingleHostDiscoveryResult]:
         return {k: SingleHostDiscoveryResult(**v) for k, v in serialized.items()}
 
@@ -204,7 +204,7 @@ class AutodiscoveryResult(ABCAutomationResult):
 
     @staticmethod
     def _hosts_from_dict(
-        serialized: Mapping[HostName, Mapping[str, Any]]
+        serialized: Mapping[HostName, Mapping[str, Any]],
     ) -> Mapping[HostName, SingleHostDiscoveryResult]:
         return {k: SingleHostDiscoveryResult(**v) for k, v in serialized.items()}
 
@@ -481,7 +481,6 @@ result_type_registry.register(UpdateDNSCacheResult)
 
 @dataclass
 class UpdatePasswordsMergedFileResult(ABCAutomationResult):
-
     @staticmethod
     def automation_call() -> str:
         return "update-passwords-merged-file"

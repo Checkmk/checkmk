@@ -27,7 +27,10 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.inventory import vs_element_inventory_visible_raw_path, vs_inventory_path_or_keys_help
+from cmk.gui.inventory import (
+    vs_element_inventory_visible_raw_path,
+    vs_inventory_path_or_keys_help,
+)
 from cmk.gui.page_menu import (
     make_simple_form_page_menu,
     make_simple_link,
@@ -396,7 +399,11 @@ class ModeContactgroups(ModeGroups):
 
     def _rules_url(self) -> str:
         return folder_preserving_link(
-            [("mode", "rule_search"), ("filled_in", "search"), ("search", "contactgroups")]
+            [
+                ("mode", "rule_search"),
+                ("filled_in", "search"),
+                ("search", "contactgroups"),
+            ]
         )
 
     def _collect_additional_data(self) -> None:

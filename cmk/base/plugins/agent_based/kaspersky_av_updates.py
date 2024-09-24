@@ -44,7 +44,10 @@ def check_kaspersky_av_updates(section: Section) -> CheckResult:
         summary=f"Database State: {section['Current AV databases state']}",
     )
     yield Result(state=State.OK, summary=f"Database Date: {section['Current AV databases date']}")
-    yield Result(state=State.OK, summary=f"Last Update: {section['Last AV databases update date']}")
+    yield Result(
+        state=State.OK,
+        summary=f"Last Update: {section['Last AV databases update date']}",
+    )
 
 
 register.check_plugin(

@@ -538,7 +538,8 @@ def test_content_disposition_invalid_extension(
 ) -> None:
     response.set_content_type(content_type)
     with pytest.raises(
-        ValueError, match="Invalid file extension: Have you set the Content-Type header?"
+        ValueError,
+        match="Invalid file extension: Have you set the Content-Type header?",
     ):
         response.set_content_disposition(disposition_type, file_name)
 

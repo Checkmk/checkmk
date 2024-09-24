@@ -45,7 +45,14 @@ def compress_history_file(  # pylint: disable=too-many-branches
                 timestamp = int(line[1:11])
                 line_type, host, service = parse_history_line(line)
 
-                logger.debug("%s  (%s) %s / %s / %s", line, machine_state, line_type, host, service)
+                logger.debug(
+                    "%s  (%s) %s / %s / %s",
+                    line,
+                    machine_state,
+                    line_type,
+                    host,
+                    service,
+                )
 
                 if line_type in ("RESTART", "LOGGING_INITIAL"):
                     if machine_state != "START":

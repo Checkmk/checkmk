@@ -6,7 +6,10 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.kaspersky_av_updates import (
     check_kaspersky_av_updates,
     parse_kaspersky_av_updates,
@@ -18,7 +21,10 @@ from cmk.base.plugins.agent_based.kaspersky_av_updates import (
     "string_table,expected_section",
     [
         ([["single_field", "value"]], {"single_field": "value"}),
-        ([["joined_field", "1970-01-01 00", "00", "00"]], {"joined_field": "1970-01-01 00:00:00"}),
+        (
+            [["joined_field", "1970-01-01 00", "00", "00"]],
+            {"joined_field": "1970-01-01 00:00:00"},
+        ),
         ([["stripped_field", "  stripped   "]], {"stripped_field": "stripped"}),
     ],
 )

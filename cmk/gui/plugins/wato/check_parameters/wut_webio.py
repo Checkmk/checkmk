@@ -9,7 +9,13 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, MonitoringState, TextInput
+from cmk.gui.valuespec import (
+    Alternative,
+    Dictionary,
+    FixedValue,
+    MonitoringState,
+    TextInput,
+)
 
 # Duplicated code from checkplugin... one bright day we may import from there?
 STATE_EVAL_KEY = "evaluation_mode"
@@ -70,7 +76,8 @@ def _valuespec_wut_webio_check():
                                 (
                                     "Unknown",
                                     MonitoringState(
-                                        title=_("State if input is Unknown"), default_value=3
+                                        title=_("State if input is Unknown"),
+                                        default_value=3,
                                     ),
                                 ),
                             ],

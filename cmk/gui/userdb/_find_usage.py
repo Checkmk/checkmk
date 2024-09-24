@@ -28,7 +28,9 @@ def find_usages_of_contact_group_in_users(
                 (
                     "{}: {}".format(_("User"), user_spec.get("alias", userid)),
                     makeuri_contextless(
-                        request, [("mode", "edit_user"), ("edit", userid)], filename="wato.py"
+                        request,
+                        [("mode", "edit_user"), ("edit", userid)],
+                        filename="wato.py",
                     ),
                 )
             )
@@ -44,7 +46,9 @@ def find_timeperiod_usage_in_users(time_period_name: str) -> list[tuple[str, str
                 (
                     "{}: {}".format(_("User"), userid),
                     makeuri_contextless(
-                        request, [("mode", "edit_user"), ("edit", userid)], filename="wato.py"
+                        request,
+                        [("mode", "edit_user"), ("edit", userid)],
+                        filename="wato.py",
                     ),
                 )
             )

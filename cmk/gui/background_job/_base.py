@@ -28,7 +28,12 @@ from cmk.gui.utils.urls import makeuri_contextless
 
 from ._defines import BackgroundJobDefines
 from ._process import BackgroundProcess, BackgroundProcessInterface
-from ._status import BackgroundStatusSnapshot, InitialStatusArgs, JobStatusSpec, JobStatusStates
+from ._status import (
+    BackgroundStatusSnapshot,
+    InitialStatusArgs,
+    JobStatusSpec,
+    JobStatusStates,
+)
 from ._store import JobStatusStore
 
 

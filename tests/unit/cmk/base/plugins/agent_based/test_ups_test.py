@@ -9,7 +9,10 @@ import pytest
 from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+)
 
 check_name = "ups_test"
 
@@ -57,7 +60,10 @@ def test_discover(discover_ups_test: Callable[..., DiscoveryResult]) -> None:
     ],
 )
 def test_check_ups_test_result_details(
-    raw_state: str, state: State, summary: str, check_ups_test: Callable[..., CheckResult]
+    raw_state: str,
+    state: State,
+    summary: str,
+    check_ups_test: Callable[..., CheckResult],
 ) -> None:
     result, *_ = check_ups_test(DEFAULT_PARAMS, [[["3600"]], [[raw_state, "0", "details"]]])
     assert result == Result(state=state, summary=summary)
@@ -90,7 +96,9 @@ def test_check_ups_test_time_check_negative_elapsed_time(
     assert result.summary.startswith("Could not determine time since start of last test")
 
 
-def test_ups_test_unknown_test_result(check_ups_test: Callable[..., CheckResult]) -> None:
+def test_ups_test_unknown_test_result(
+    check_ups_test: Callable[..., CheckResult],
+) -> None:
     check_results = list(
         check_ups_test(DEFAULT_PARAMS, [[["2400776998"]], [["0", "0", "aardvark"]]])
     )

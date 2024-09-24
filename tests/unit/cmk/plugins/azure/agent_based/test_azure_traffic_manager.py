@@ -9,7 +9,10 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, State
-from cmk.plugins.azure.agent_based.azure_traffic_manager import check_probe_state, check_qps
+from cmk.plugins.azure.agent_based.azure_traffic_manager import (
+    check_probe_state,
+    check_qps,
+)
 from cmk.plugins.lib.azure import AzureMetric, Resource, Section
 
 
@@ -37,7 +40,10 @@ from cmk.plugins.lib.azure import AzureMetric, Resource, Section
             "traffic-manager-1",
             {"levels": (10, 50)},
             [
-                Result(state=State.CRIT, summary="Queries per second: 100 (warn/crit at 10/50)"),
+                Result(
+                    state=State.CRIT,
+                    summary="Queries per second: 100 (warn/crit at 10/50)",
+                ),
                 Metric("queries_per_sec", 100.0, levels=(10.0, 50.0)),
             ],
         ),

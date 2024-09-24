@@ -236,7 +236,9 @@ def _make_prediction_title(meta: PredictionInfo) -> str:
             return "%s (%s)" % (date_str, _("minute of the hour"))
 
 
-def _make_legend(current_measurement: tuple[float, float] | None) -> Sequence[tuple[Color, str]]:
+def _make_legend(
+    current_measurement: tuple[float, float] | None,
+) -> Sequence[tuple[Color, str]]:
     return [
         (Color.PREDICTION, _("Prediction")),
         (Color.OK_AREA, _("OK area")),
@@ -386,7 +388,11 @@ def _make_prediction_curves(
     for levels in (
         (
             estimate_levels(
-                p.average, p.stdev, meta.direction, meta.params.levels, meta.params.bound
+                p.average,
+                p.stdev,
+                meta.direction,
+                meta.params.levels,
+                meta.params.bound,
             )
             if p
             else None

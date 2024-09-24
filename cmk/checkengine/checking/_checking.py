@@ -44,7 +44,11 @@ from cmk.checkengine.summarize import SummarizerFunction
 
 from ._plugin import AggregatedResult, CheckPlugin, CheckPluginName, ConfiguredService
 
-__all__ = ["execute_checkmk_checks", "check_host_services", "check_plugins_missing_data"]
+__all__ = [
+    "execute_checkmk_checks",
+    "check_host_services",
+    "check_plugins_missing_data",
+]
 
 
 def execute_checkmk_checks(

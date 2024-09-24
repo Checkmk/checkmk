@@ -99,7 +99,9 @@ class ActiveServiceDescription:
     params: Mapping[str, object] | object
 
 
-def _ensure_mapping_str_object(values: Sequence[object]) -> Sequence[Mapping[str, object]]:
+def _ensure_mapping_str_object(
+    values: Sequence[object],
+) -> Sequence[Mapping[str, object]]:
     # for the new API, we can be sure that there are only Mappings.
     for value in values:
         if not isinstance(value, dict):
@@ -137,7 +139,8 @@ class ActiveCheck:
         self._use_new_descriptions_for = use_new_descriptions_for
 
     def get_active_service_data(
-        self, active_checks_rules: Sequence[tuple[str, Sequence[Mapping[str, object] | object]]]
+        self,
+        active_checks_rules: Sequence[tuple[str, Sequence[Mapping[str, object] | object]]],
     ) -> Iterator[ActiveServiceData]:
         # remove setting the host context when deleting the old API
         # the host name is passed as an argument in the new API
@@ -183,7 +186,9 @@ class ActiveCheck:
         return None
 
     def _iterate_services(
-        self, active_check: ActiveCheckConfig, plugin_params: Sequence[Mapping[str, object]]
+        self,
+        active_check: ActiveCheckConfig,
+        plugin_params: Sequence[Mapping[str, object]],
     ) -> Iterator[tuple[str, str, str, Mapping[str, object]]]:
         for conf_dict in plugin_params:
             # actually these ^- are configuration sets.
@@ -331,7 +336,8 @@ class ActiveCheck:
         yield description, arguments
 
     def get_active_service_descriptions(
-        self, active_checks_rules: Sequence[tuple[str, Sequence[Mapping[str, object] | object]]]
+        self,
+        active_checks_rules: Sequence[tuple[str, Sequence[Mapping[str, object] | object]]],
     ) -> Iterator[ActiveServiceDescription]:
         # remove setting the host context when deleting the old API
         # the host name is passed as an argument in the new API
@@ -399,7 +405,9 @@ class ActiveCheck:
             yield ActiveServiceDescription(plugin_name, str(description), params)
 
     def _iterate_service_descriptions(
-        self, active_check: ActiveCheckConfig, plugin_params: Sequence[Mapping[str, object]]
+        self,
+        active_check: ActiveCheckConfig,
+        plugin_params: Sequence[Mapping[str, object]],
     ) -> Iterator[ActiveServiceDescription]:
         for desc, _args, _command_line, params in self._iterate_services(
             active_check, plugin_params

@@ -94,7 +94,15 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
         sys_argv = sys.argv[1:]
 
     short_options = "hu:p:t:m:i:"
-    long_options = ["help", "user=", "password=", "debug", "timeout=", "profile", "modules="]
+    long_options = [
+        "help",
+        "user=",
+        "password=",
+        "debug",
+        "timeout=",
+        "profile",
+        "modules=",
+    ]
 
     try:
         opts, args = getopt.getopt(sys_argv, short_options, long_options)
@@ -114,14 +122,38 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
     fetch_agent_info = False
 
     naviseccli_options: dict[str, dict[str, Any]] = {
-        "disks": {"cmd_options": [(None, "getall -disk")], "active": False, "sep": None},
+        "disks": {
+            "cmd_options": [(None, "getall -disk")],
+            "active": False,
+            "sep": None,
+        },
         "hba": {"cmd_options": [(None, "getall -hba")], "active": False, "sep": None},
-        "hwstatus": {"cmd_options": [(None, "getall -array")], "active": False, "sep": None},
-        "raidgroups": {"cmd_options": [(None, "getall -rg")], "active": False, "sep": None},
+        "hwstatus": {
+            "cmd_options": [(None, "getall -array")],
+            "active": False,
+            "sep": None,
+        },
+        "raidgroups": {
+            "cmd_options": [(None, "getall -rg")],
+            "active": False,
+            "sep": None,
+        },
         #   "agent-info"    : {"cmd_options" : [(None, "-sp")],               "active" : False, "sep" : None},
-        "sp_util": {"cmd_options": [(None, "getcontrol -cbt")], "active": False, "sep": 58},
-        "writecache": {"cmd_options": [(None, "getcache -wst")], "active": False, "sep": None},
-        "mirrorview": {"cmd_options": [(None, "mirrorview -list")], "active": False, "sep": 58},
+        "sp_util": {
+            "cmd_options": [(None, "getcontrol -cbt")],
+            "active": False,
+            "sep": 58,
+        },
+        "writecache": {
+            "cmd_options": [(None, "getcache -wst")],
+            "active": False,
+            "sep": None,
+        },
+        "mirrorview": {
+            "cmd_options": [(None, "mirrorview -list")],
+            "active": False,
+            "sep": 58,
+        },
         "storage_pools": {
             "cmd_options": [
                 ("storage_pools", "storagepool -list -all"),

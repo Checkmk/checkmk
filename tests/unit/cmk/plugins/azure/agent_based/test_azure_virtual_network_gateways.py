@@ -7,7 +7,12 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 from cmk.plugins.azure.agent_based.azure_virtual_network_gateways import (
@@ -88,16 +93,28 @@ SECTION: Section = {
                     unit="bytes_per_second",
                 ),
                 "average_P2SBandwidth": AzureMetric(
-                    name="P2SBandwidth", aggregation="average", value=0.0, unit="bytes_per_second"
+                    name="P2SBandwidth",
+                    aggregation="average",
+                    value=0.0,
+                    unit="bytes_per_second",
                 ),
                 "maximum_P2SConnectionCount": AzureMetric(
-                    name="P2SConnectionCount", aggregation="maximum", value=1.0, unit="count"
+                    name="P2SConnectionCount",
+                    aggregation="maximum",
+                    value=1.0,
+                    unit="count",
                 ),
                 "count_TunnelIngressBytes": AzureMetric(
-                    name="TunnelIngressBytes", aggregation="count", value=4.0, unit="bytes"
+                    name="TunnelIngressBytes",
+                    aggregation="count",
+                    value=4.0,
+                    unit="bytes",
                 ),
                 "count_TunnelEgressBytes": AzureMetric(
-                    name="TunnelEgressBytes", aggregation="count", value=4.0, unit="bytes"
+                    name="TunnelEgressBytes",
+                    aggregation="count",
+                    value=4.0,
+                    unit="bytes",
                 ),
                 "count_TunnelIngressPacketDropCount": AzureMetric(
                     name="TunnelIngressPacketDropCount",
@@ -106,14 +123,19 @@ SECTION: Section = {
                     unit="count",
                 ),
                 "count_TunnelEgressPacketDropCount": AzureMetric(
-                    name="TunnelEgressPacketDropCount", aggregation="count", value=4.0, unit="count"
+                    name="TunnelEgressPacketDropCount",
+                    aggregation="count",
+                    value=4.0,
+                    unit="count",
                 ),
             },
             subscription="xyz",
         ),
         remote_vnet_peerings=[
             RemoteVnetPeering(
-                name="vnet-peering-1", peeringState="Connected", peeringSyncLevel="FullyInSync"
+                name="vnet-peering-1",
+                peeringState="Connected",
+                peeringSyncLevel="FullyInSync",
             )
         ],
         health=VNetGWHealth(
@@ -165,7 +187,9 @@ SECTION_HEALTH_NOT_AVAILABLE = {
         ),
         remote_vnet_peerings=[
             RemoteVnetPeering(
-                name="vnet-peering-1", peeringState="Connected", peeringSyncLevel="FullyInSync"
+                name="vnet-peering-1",
+                peeringState="Connected",
+                peeringSyncLevel="FullyInSync",
             )
         ],
         health=VNetGWHealth(
@@ -212,7 +236,9 @@ SECTION_BGP_DISABLED = {
         ),
         remote_vnet_peerings=[
             RemoteVnetPeering(
-                name="vnet-peering-1", peeringState="Connected", peeringSyncLevel="FullyInSync"
+                name="vnet-peering-1",
+                peeringState="Connected",
+                peeringSyncLevel="FullyInSync",
             )
         ],
         health=VNetGWHealth(
@@ -248,7 +274,9 @@ SECTION_PEERING_DISCONNECTED = {
         ),
         remote_vnet_peerings=[
             RemoteVnetPeering(
-                name="vnet-peering-1", peeringState="Disconnected", peeringSyncLevel="FullyInSync"
+                name="vnet-peering-1",
+                peeringState="Disconnected",
+                peeringSyncLevel="FullyInSync",
             )
         ],
         health=VNetGWHealth(
@@ -320,7 +348,9 @@ SECTION_WITH_MISSING_PEER_ADDRESSES = {
         ),
         remote_vnet_peerings=[
             RemoteVnetPeering(
-                name="vnet-peering-1", peeringState="Connected", peeringSyncLevel="FullyInSync"
+                name="vnet-peering-1",
+                peeringState="Connected",
+                peeringSyncLevel="FullyInSync",
             )
         ],
         health=VNetGWHealth(
@@ -397,7 +427,9 @@ SECTION_WITHOUT_PEER_ADDRESSES = {
         ),
         remote_vnet_peerings=[
             RemoteVnetPeering(
-                name="vnet-peering-1", peeringState="Connected", peeringSyncLevel="FullyInSync"
+                name="vnet-peering-1",
+                peeringState="Connected",
+                peeringSyncLevel="FullyInSync",
             )
         ],
         health=VNetGWHealth(
@@ -518,7 +550,12 @@ def test_discovery_virtual_network_gateways(
                     state=State.WARN,
                     summary="Site-to-site bandwidth: 13.7 kB/s (warn/crit at 12.0 kB/s/14.0 kB/s)",
                 ),
-                Metric("s2s_bandwidth", 13729.0, levels=(12000.0, 14000.0), boundaries=(0.0, None)),
+                Metric(
+                    "s2s_bandwidth",
+                    13729.0,
+                    levels=(12000.0, 14000.0),
+                    boundaries=(0.0, None),
+                ),
                 Result(state=State.OK, summary="Tunnel Ingress Bytes: 4 B"),
                 Metric("ingress", 4.0, boundaries=(0.0, None)),
                 Result(state=State.OK, summary="Tunnel Egress Bytes: 4 B"),
@@ -551,7 +588,10 @@ def test_check_virtual_network_gateways(
             "vpn-001",
             [
                 Result(state=State.OK, summary="IPsec replay protection: on"),
-                Result(state=State.OK, summary="VPN type: RouteBased, VPN gateway type: Vpn"),
+                Result(
+                    state=State.OK,
+                    summary="VPN type: RouteBased, VPN gateway type: Vpn",
+                ),
                 Result(state=State.OK, summary="active/active: True"),
             ],
             id="item_present",
@@ -670,10 +710,16 @@ def test_discover_virtual_network_gateway_peering(section, expected_discovery):
             id="peering_disconnected",
         ),
         pytest.param(
-            SECTION, "unexpected-gw Remote Peering vnet-peering-1", [], id="gateway_not_found"
+            SECTION,
+            "unexpected-gw Remote Peering vnet-peering-1",
+            [],
+            id="gateway_not_found",
         ),
         pytest.param(
-            SECTION, "vpn-001 Remote Peering unexpected-peering", [], id="peering_not_found"
+            SECTION,
+            "vpn-001 Remote Peering unexpected-peering",
+            [],
+            id="peering_not_found",
         ),
     ],
 )

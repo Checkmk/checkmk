@@ -12,7 +12,17 @@ from cmk.plugins.lib.datapower import DETECT
 
 
 def inventory_datapower_pdrive(info):
-    for controller, device, _ldrive, _position, status, _progress, _vendor, _product, _fail in info:
+    for (
+        controller,
+        device,
+        _ldrive,
+        _position,
+        status,
+        _progress,
+        _vendor,
+        _product,
+        _fail,
+    ) in info:
         if status != "12":
             item = f"{controller}-{device}"
             yield item, None
@@ -44,7 +54,17 @@ def check_datapower_pdrive(item, _no_params, info):
         "4": "HDD 3",
         "5": "undefined",
     }
-    for controller, device, ldrive, position, status, progress, vendor, product, fail in info:
+    for (
+        controller,
+        device,
+        ldrive,
+        position,
+        status,
+        progress,
+        vendor,
+        product,
+        fail,
+    ) in info:
         if item == f"{controller}-{device}":
             member_of_ldrive = f"{controller}-{ldrive}"
             state, state_txt = datapower_pdrive_status[status]

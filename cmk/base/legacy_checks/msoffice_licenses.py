@@ -36,7 +36,11 @@ def parse_msoffice_licenses(string_table):
         try:
             parsed.setdefault(
                 line[0],
-                {"active": int(line[1]), "warning_units": int(line[2]), "consumed": int(line[3])},
+                {
+                    "active": int(line[1]),
+                    "warning_units": int(line[2]),
+                    "consumed": int(line[3]),
+                },
             )
         except ValueError:
             pass

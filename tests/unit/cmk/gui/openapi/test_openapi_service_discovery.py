@@ -191,10 +191,24 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             0,
             "25.24% used (117.68 of 466.31 GB)",
             [
-                ("fs_used", 120506.43359375, 382000.025, 429750.028125, 0, 477500.03125),
+                (
+                    "fs_used",
+                    120506.43359375,
+                    382000.025,
+                    429750.028125,
+                    0,
+                    477500.03125,
+                ),
                 ("fs_size", 477500.03125, None, None, None, None),
                 ("fs_used_percent", 25.236947792084568, None, None, None, None),
-                ("inodes_used", 1131429, 28009267.2, 29565337.599999998, 0.0, 31121408.0),
+                (
+                    "inodes_used",
+                    1131429,
+                    28009267.2,
+                    29565337.599999998,
+                    0.0,
+                    31121408.0,
+                ),
             ],
             {},
             {},
@@ -557,7 +571,14 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
                 ("average_drop_rate", 0.0, None, None, None, None),
                 ("average_event_rate", 0.0, None, None, None, None),
                 ("average_connect_rate", 0.0, None, None, None, None),
-                ("average_request_time", 0.00027762370400620984, None, None, None, None),
+                (
+                    "average_request_time",
+                    0.00027762370400620984,
+                    None,
+                    None,
+                    None,
+                    None,
+                ),
             ],
             {},
             {},
@@ -584,7 +605,14 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
                 ("average_drop_rate", 0.0, None, None, None, None),
                 ("average_event_rate", 0.0, None, None, None, None),
                 ("average_connect_rate", 0.0, None, None, None, None),
-                ("average_request_time", 0.00039733688471126213, None, None, None, None),
+                (
+                    "average_request_time",
+                    0.00039733688471126213,
+                    None,
+                    None,
+                    None,
+                    None,
+                ),
             ],
             {},
             {},
@@ -924,7 +952,8 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
 @pytest.fixture(name="mock_discovery_preview")
 def fixture_mock_discovery_preview(mocker: MockerFixture) -> MagicMock:
     return mocker.patch(
-        "cmk.gui.watolib.services.local_discovery_preview", return_value=mock_discovery_result
+        "cmk.gui.watolib.services.local_discovery_preview",
+        return_value=mock_discovery_result,
     )
 
 
@@ -1097,10 +1126,30 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
             ("lnx_thermal", "Zone 6"): ("Temperature Zone 6", {}, {}, ["heute"]),
             ("lnx_thermal", "Zone 7"): ("Temperature Zone 7", {}, {}, ["heute"]),
             ("lnx_thermal", "Zone 8"): ("Temperature Zone 8", {}, {}, ["heute"]),
-            ("mkeventd_status", "heute"): ("OMD heute Event Console", {}, {}, ["heute"]),
-            ("mkeventd_status", "stable"): ("OMD stable Event Console", {}, {}, ["heute"]),
-            ("mknotifyd", "heute"): ("OMD heute Notification Spooler", {}, {}, ["heute"]),
-            ("mknotifyd", "stable"): ("OMD stable Notification Spooler", {}, {}, ["heute"]),
+            ("mkeventd_status", "heute"): (
+                "OMD heute Event Console",
+                {},
+                {},
+                ["heute"],
+            ),
+            ("mkeventd_status", "stable"): (
+                "OMD stable Event Console",
+                {},
+                {},
+                ["heute"],
+            ),
+            ("mknotifyd", "heute"): (
+                "OMD heute Notification Spooler",
+                {},
+                {},
+                ["heute"],
+            ),
+            ("mknotifyd", "stable"): (
+                "OMD stable Notification Spooler",
+                {},
+                {},
+                ["heute"],
+            ),
             ("mounts", "/"): (
                 "Mount options of /",
                 {"mount_options": ["errors=remount-ro", "relatime", "rw"]},
@@ -1187,14 +1236,24 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
             ("lnx_thermal", "Zone 6"): ("Temperature Zone 6", {}, {}, ["heute"]),
             ("lnx_thermal", "Zone 7"): ("Temperature Zone 7", {}, {}, ["heute"]),
             ("lnx_thermal", "Zone 8"): ("Temperature Zone 8", {}, {}, ["heute"]),
-            ("mkeventd_status", "heute"): ("OMD heute Event Console", {}, {}, ["heute"]),
+            ("mkeventd_status", "heute"): (
+                "OMD heute Event Console",
+                {},
+                {},
+                ["heute"],
+            ),
             ("mkeventd_status", "stable"): (
                 "OMD stable Event Console",
                 {},
                 {},
                 ["heute"],
             ),
-            ("mknotifyd", "heute"): ("OMD heute Notification Spooler", {}, {}, ["heute"]),
+            ("mknotifyd", "heute"): (
+                "OMD heute Notification Spooler",
+                {},
+                {},
+                ["heute"],
+            ),
             ("mknotifyd", "stable"): (
                 "OMD stable Notification Spooler",
                 {},

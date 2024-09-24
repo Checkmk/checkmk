@@ -34,7 +34,11 @@ def check_fortigate_sslvpn(item, params, parsed):
     yield 0, "%s" % fn_bool_state[data["state"]]
 
     yield check_levels(
-        data["users"], "active_vpn_users", None, infoname="Users", human_readable_func=str
+        data["users"],
+        "active_vpn_users",
+        None,
+        infoname="Users",
+        human_readable_func=str,
     )
 
     yield check_levels(

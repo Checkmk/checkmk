@@ -274,7 +274,11 @@ def test_job_parse_real_time(timestr: str, expected_result: float) -> None:
             {
                 "bla": {
                     "running": False,
-                    "metrics": {"real_time": 5564.0, "user_time": 2249.08, "system_time": 334.76},
+                    "metrics": {
+                        "real_time": 5564.0,
+                        "user_time": 2249.08,
+                        "system_time": 334.76,
+                    },
                 }
             },
             id="unformatted /usr/bin/time output",
@@ -401,7 +405,14 @@ def test_parse(string_table: StringTable, expected_parsed_data: job.Section) -> 
         (
             _modify_start_time(
                 SECTION_1["SHREK"],
-                [1557301261, 1557301321, 1557301381, 1557301441, 1537301501, 1557301561],
+                [
+                    1557301261,
+                    1557301321,
+                    1557301381,
+                    1557301441,
+                    1537301501,
+                    1557301561,
+                ],
             ),
             (1, 2),
             {0: State.OK},
@@ -499,7 +510,12 @@ def test_process_job_stats(
             "item",
             {"age": (0, 0)},
             {"item": {}},
-            [Result(state=State.UNKNOWN, summary="Got incomplete information for this job")],
+            [
+                Result(
+                    state=State.UNKNOWN,
+                    summary="Got incomplete information for this job",
+                )
+            ],
         ),
         (
             "cleanup_remote_logs",

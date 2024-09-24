@@ -154,7 +154,9 @@ def test_parse_scaleio_section_not_found() -> None:
                     pool_id="4e9a44c700000000",
                     name="pool01",
                     filesystem_storage_pool=FilesystemStoragePool(
-                        total_capacity=29255270.4, free_capacity=16462643.2, failed_capacity=0.0
+                        total_capacity=29255270.4,
+                        free_capacity=16462643.2,
+                        failed_capacity=0.0,
                     ),
                     total_io=DiskReadWrite(
                         read_throughput=33996.8,

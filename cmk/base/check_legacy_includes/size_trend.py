@@ -27,7 +27,10 @@ Levels = tuple[float, float]
 
 
 def _check_shrinking(
-    trend: float, levels: Levels | None, range_hours: float, renderer: Callable[..., str]
+    trend: float,
+    levels: Levels | None,
+    range_hours: float,
+    renderer: Callable[..., str],
 ) -> tuple[int, str]:
     """test for negative trend
     >>> _check_shrinking(5, (1, 2), 7, lambda _: "foo")

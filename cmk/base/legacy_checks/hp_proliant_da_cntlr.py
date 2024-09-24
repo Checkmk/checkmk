@@ -81,7 +81,10 @@ def check_hp_proliant_da_cntlr(item, params, info):
 
             output.append(
                 "(Role: {}, Model: {}, Slot: {}, Serial: {})".format(
-                    hp_proliant_da_cntlr_role_map.get(role, "unknown"), model, slot, serial
+                    hp_proliant_da_cntlr_role_map.get(role, "unknown"),
+                    model,
+                    slot,
+                    serial,
                 )
             )
 

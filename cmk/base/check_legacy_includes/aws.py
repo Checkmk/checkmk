@@ -74,7 +74,13 @@ def check_aws_limits(aws_service, params, parsed_region_data):
     levels_reached = set()
     max_state = 0
     perfdata = []
-    for resource_key, resource_title, limit, amount, human_readable_func in parsed_region_data:
+    for (
+        resource_key,
+        resource_title,
+        limit,
+        amount,
+        human_readable_func,
+    ) in parsed_region_data:
         try:
             p_limit, warn, crit = params[resource_key]
         except KeyError:
@@ -113,7 +119,11 @@ def check_aws_limits(aws_service, params, parsed_region_data):
         long_output.append((state, infotext))
 
     if levels_reached:
-        yield max_state, "Levels reached: %s" % ", ".join(sorted(levels_reached)), perfdata
+        yield (
+            max_state,
+            "Levels reached: %s" % ", ".join(sorted(levels_reached)),
+            perfdata,
+        )
     else:
         yield 0, "No levels reached", perfdata
 
@@ -167,7 +177,11 @@ def check_aws_error_rate(
 
 
 def check_aws_http_errors(
-    params, parsed, http_err_codes, cloudwatch_metrics_format, key_all_requests="RequestCount"
+    params,
+    parsed,
+    http_err_codes,
+    cloudwatch_metrics_format,
+    key_all_requests="RequestCount",
 ):
     request_rate = parsed.get(key_all_requests)
     if request_rate is None:
@@ -188,7 +202,7 @@ def check_aws_http_errors(
 
 
 def check_aws_metrics(
-    metric_infos: list[dict[str, float | str | None | tuple | None | Callable | None]]
+    metric_infos: list[dict[str, float | str | None | tuple | None | Callable | None]],
 ) -> CheckResult:
     go_stale = True
 

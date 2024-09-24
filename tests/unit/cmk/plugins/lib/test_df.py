@@ -18,7 +18,11 @@ from cmk.plugins.lib import df
     [
         (
             [],
-            [Service(item="SUMMARY"), Service(item="ceph_bar"), Service(item="ceph_foo")],
+            [
+                Service(item="SUMMARY"),
+                Service(item="ceph_bar"),
+                Service(item="ceph_foo"),
+            ],
         ),
         (
             [

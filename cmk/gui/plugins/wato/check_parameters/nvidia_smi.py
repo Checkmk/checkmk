@@ -44,13 +44,17 @@ def _parameter_valuespec_nvidia_smi_en_de_coder_util() -> Dictionary:
             (
                 "encoder_levels",
                 SimpleLevels(
-                    Percentage, title=_("Encoder utilization"), default_levels=(80.0, 90.0)
+                    Percentage,
+                    title=_("Encoder utilization"),
+                    default_levels=(80.0, 90.0),
                 ),
             ),
             (
                 "decoder_levels",
                 SimpleLevels(
-                    Percentage, title=_("Decoder utilization"), default_levels=(80.0, 90.0)
+                    Percentage,
+                    title=_("Decoder utilization"),
+                    default_levels=(80.0, 90.0),
                 ),
             ),
         ],
@@ -76,7 +80,10 @@ def _parameter_valuespec_nvidia_smi_power() -> Dictionary:
             (
                 "levels",
                 SimpleLevels(
-                    Float, title=_("Power consumption draw"), default_levels=(50.0, 60.0), unit="W"
+                    Float,
+                    title=_("Power consumption draw"),
+                    default_levels=(50.0, 60.0),
+                    unit="W",
                 ),
             ),
         ],
@@ -102,19 +109,25 @@ def _parameter_valuespec_nvidia_smi_memory_util() -> Dictionary:
             (
                 "levels_total",
                 SimpleLevels(
-                    Percentage, title=_("Total memory utilization"), default_levels=(80.0, 90.0)
+                    Percentage,
+                    title=_("Total memory utilization"),
+                    default_levels=(80.0, 90.0),
                 ),
             ),
             (
                 "levels_bar1",
                 SimpleLevels(
-                    Percentage, title=_("BAR1 memory utilization"), default_levels=(80.0, 90.0)
+                    Percentage,
+                    title=_("BAR1 memory utilization"),
+                    default_levels=(80.0, 90.0),
                 ),
             ),
             (
                 "levels_fb",
                 SimpleLevels(
-                    Percentage, title=_("FB memory utilization"), default_levels=(80.0, 90.0)
+                    Percentage,
+                    title=_("FB memory utilization"),
+                    default_levels=(80.0, 90.0),
                 ),
             ),
         ],

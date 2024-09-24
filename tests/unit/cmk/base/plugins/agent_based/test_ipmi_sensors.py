@@ -9,7 +9,12 @@ from typing import Any
 import pytest
 
 from cmk.base.plugins.agent_based import ipmi_sensors
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -550,7 +555,8 @@ def test_discover_ipmi_sensors(
                 ),
                 Result(state=State.OK, summary="3.37 V"),
                 Result(
-                    state=State.CRIT, summary="Voltage_AVCC: 3.37 V (warn/crit at 1.00 V/2.00 V)"
+                    state=State.CRIT,
+                    summary="Voltage_AVCC: 3.37 V (warn/crit at 1.00 V/2.00 V)",
                 ),
             ],
         ),

@@ -146,7 +146,12 @@ def _is_optional(annotation: object) -> bool:
 # Check if the given parameter has a type of the form 'Mapping[str, T | None]' for any T.
 def _is_valid_cluster_section_parameter(p: inspect.Parameter) -> bool:
     return (
-        any(map(str(p.annotation).startswith, ("collections.abc.Mapping[", "typing.Mapping[")))
+        any(
+            map(
+                str(p.annotation).startswith,
+                ("collections.abc.Mapping[", "typing.Mapping["),
+            )
+        )
         and (len(args := get_args(p.annotation)) == 2)
         and issubclass(args[0], str)
         and _is_optional(args[1])

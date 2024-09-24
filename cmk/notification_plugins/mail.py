@@ -27,7 +27,12 @@ from urllib.request import urlopen
 
 import cmk.utils.site as site
 from cmk.utils.exceptions import MKException
-from cmk.utils.mail import default_from_address, MailString, send_mail_sendmail, set_mail_headers
+from cmk.utils.mail import (
+    default_from_address,
+    MailString,
+    send_mail_sendmail,
+    set_mail_headers,
+)
 
 from cmk.notification_plugins import utils
 
@@ -275,7 +280,15 @@ BODY_ELEMENTS = [
         "$HOSTNAME_AND_ALIAS_TXT$",
         "$HOSTNAME_AND_ALIAS_HTML$",
     ),
-    ("servicedesc", "service", True, "all", "Service", "$SERVICEDESC$", "$LINKEDSERVICEDESC$"),
+    (
+        "servicedesc",
+        "service",
+        True,
+        "all",
+        "Service",
+        "$SERVICEDESC$",
+        "$LINKEDSERVICEDESC$",
+    ),
     (
         "event",
         "both",
@@ -547,12 +560,19 @@ def multipart_mail(
         m.attach(part)
 
     return set_mail_headers(
-        MailString(target), MailString(subject), MailString(from_address), MailString(reply_to), m
+        MailString(target),
+        MailString(subject),
+        MailString(from_address),
+        MailString(reply_to),
+        m,
     )
 
 
 def send_mail_smtp(  # pylint: disable=too-many-branches
-    message: Message, target: MailString, from_address: MailString, context: dict[str, str]
+    message: Message,
+    target: MailString,
+    from_address: MailString,
+    context: dict[str, str],
 ) -> int:
     import smtplib  # pylint: disable=import-outside-toplevel
 
@@ -978,7 +998,8 @@ class EmailContent:
 
 class BulkEmailContent(EmailContent):
     def __init__(
-        self, context_function: Callable[[], tuple[dict[str, str], list[dict[str, str]]]]
+        self,
+        context_function: Callable[[], tuple[dict[str, str], list[dict[str, str]]]],
     ) -> None:
         attachments = []
         content_txt = ""

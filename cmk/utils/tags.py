@@ -211,7 +211,11 @@ class GroupedTag:
         )
 
     def __init__(
-        self, group: TagGroup, tag_id: TagID | None, title: str, aux_tag_ids: list[TagID]
+        self,
+        group: TagGroup,
+        tag_id: TagID | None,
+        title: str,
+        aux_tag_ids: list[TagID],
     ) -> None:
         self.id = tag_id
         self.title = title
@@ -317,7 +321,9 @@ class TagConfig:
         )
 
     def __init__(
-        self, tag_groups: list[TagGroup] | None = None, aux_tags: AuxTagList | None = None
+        self,
+        tag_groups: list[TagGroup] | None = None,
+        aux_tags: AuxTagList | None = None,
     ) -> None:
         self.tag_groups = tag_groups or []
         self.aux_tag_list = aux_tags or AuxTagList([])
@@ -728,16 +734,28 @@ def sample_tag_config() -> TagConfigSpec:
                 "id": TagGroupID("criticality"),
                 "tags": [
                     {"aux_tags": [], "id": TagID("prod"), "title": "Productive system"},
-                    {"aux_tags": [], "id": TagID("critical"), "title": "Business critical"},
+                    {
+                        "aux_tags": [],
+                        "id": TagID("critical"),
+                        "title": "Business critical",
+                    },
                     {"aux_tags": [], "id": TagID("test"), "title": "Test system"},
-                    {"aux_tags": [], "id": TagID("offline"), "title": "Do not monitor this host"},
+                    {
+                        "aux_tags": [],
+                        "id": TagID("offline"),
+                        "title": "Do not monitor this host",
+                    },
                 ],
                 "title": "Criticality",
             },
             {
                 "id": TagGroupID("networking"),
                 "tags": [
-                    {"aux_tags": [], "id": TagID("lan"), "title": "Local network (low latency)"},
+                    {
+                        "aux_tags": [],
+                        "id": TagID("lan"),
+                        "title": "Local network (low latency)",
+                    },
                     {"aux_tags": [], "id": TagID("wan"), "title": "WAN (high latency)"},
                     {
                         "aux_tags": [],

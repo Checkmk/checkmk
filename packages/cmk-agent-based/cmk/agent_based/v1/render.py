@@ -8,6 +8,7 @@ The "render" namespace adds functions to render values in a human readable way.
 All of the render functions take a single numerical value as an argument, and return
 a string.
 """
+
 import math as _math
 import time as _time
 from collections.abc import Iterable as _Iterable

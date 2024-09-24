@@ -35,7 +35,8 @@ def parse_sap_hana_data_volume(string_table: StringTable) -> sap_hana.ParsedSect
                 ("%s - %s %s Disk Net Data", {}, (5, 6)),
             ):
                 inst = section.setdefault(
-                    key_name % (sid_instance, line[0], line[2]), custom_dict  # type: ignore[arg-type]
+                    key_name % (sid_instance, line[0], line[2]),
+                    custom_dict,  # type: ignore[arg-type]
                 )
                 for key, index in [
                     ("size", indexes[0]),

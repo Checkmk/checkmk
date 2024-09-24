@@ -30,7 +30,11 @@ RESULT_0 = {
         "maximum_sessions": 2500,
         "peak_sessions": 0,
     },
-    "Summary": {"active_sessions": 71, "cumulative_sessions": 10685, "maximum_sessions": 2500},
+    "Summary": {
+        "active_sessions": 71,
+        "cumulative_sessions": 10685,
+        "maximum_sessions": 2500,
+    },
     "WebVPN": {
         "active_sessions": 0,
         "cumulative_sessions": 0,

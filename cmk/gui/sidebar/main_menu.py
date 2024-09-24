@@ -6,6 +6,7 @@
 
 Cares about the main navigation of our GUI. This is a) the small sidebar and b) the mega menu
 """
+
 from typing import NamedTuple
 
 import cmk.gui.message as message
@@ -187,7 +188,10 @@ class MegaMenuRenderer:
         if any_show_more_items(topics):
             html.open_div()
             html.more_button(
-                id_=more_id, dom_levels_up=3, additional_js=hide_entries_js, with_text=True
+                id_=more_id,
+                dom_levels_up=3,
+                additional_js=hide_entries_js,
+                with_text=True,
             )
             html.close_div()
         html.close_div()
@@ -206,7 +210,11 @@ class MegaMenuRenderer:
     def _show_topic(self, topic: TopicMenuTopic, menu_id: str) -> None:
         show_more = all(i.is_show_more for i in topic.items)
         topic_id = "_".join(
-            [menu_id, "topic", "".join(c.lower() for c in topic.title if not c.isspace())]
+            [
+                menu_id,
+                "topic",
+                "".join(c.lower() for c in topic.title if not c.isspace()),
+            ]
         )
 
         html.open_div(

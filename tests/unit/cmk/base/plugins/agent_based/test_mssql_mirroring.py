@@ -8,7 +8,10 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+)
 from cmk.base.plugins.agent_based.mssql_mirroring import (
     check_mssql_mirroring,
     cluster_check_mssql_mirroring,
@@ -244,10 +247,12 @@ def test_discover_mssql_mirroring(
                 Result(state=State.OK, notice="Mirroring witness state: CONNECTED"),
                 Result(state=State.OK, notice="Mirroring safety level: FULL"),
                 Result(
-                    state=State.OK, notice="Mirroring partner name: TCP://server-guatemala.net:22"
+                    state=State.OK,
+                    notice="Mirroring partner name: TCP://server-guatemala.net:22",
                 ),
                 Result(
-                    state=State.OK, notice="Mirroring witness name: TCP://server-vientam.net:22"
+                    state=State.OK,
+                    notice="Mirroring witness name: TCP://server-vientam.net:22",
                 ),
             ],
         ),
@@ -281,17 +286,22 @@ def test_discover_mssql_mirroring(
                 Result(state=State.CRIT, notice="Mirroring witness state: DISCONNECTED"),
                 Result(state=State.OK, notice="Mirroring safety level: FULL"),
                 Result(
-                    state=State.OK, notice="Mirroring partner name: TCP://server-guatemala.net:22"
+                    state=State.OK,
+                    notice="Mirroring partner name: TCP://server-guatemala.net:22",
                 ),
                 Result(
-                    state=State.OK, notice="Mirroring witness name: TCP://server-vientam.net:22"
+                    state=State.OK,
+                    notice="Mirroring witness name: TCP://server-vientam.net:22",
                 ),
             ],
         ),
     ],
 )
 def test_check_mssql_mirroring(
-    item: str, params: Mapping[str, int], section: MirroringSection, check_result: CheckResult
+    item: str,
+    params: Mapping[str, int],
+    section: MirroringSection,
+    check_result: CheckResult,
 ) -> None:
     assert list(check_mssql_mirroring(item, params, section)) == check_result
 
@@ -348,10 +358,12 @@ def test_check_mssql_mirroring(
                 Result(state=State.OK, notice="Mirroring witness state: CONNECTED"),
                 Result(state=State.OK, notice="Mirroring safety level: FULL"),
                 Result(
-                    state=State.OK, notice="Mirroring partner name: TCP://server-guatemala.net:22"
+                    state=State.OK,
+                    notice="Mirroring partner name: TCP://server-guatemala.net:22",
                 ),
                 Result(
-                    state=State.OK, notice="Mirroring witness name: TCP://server-vientam.net:22"
+                    state=State.OK,
+                    notice="Mirroring witness name: TCP://server-vientam.net:22",
                 ),
             ],
         ),

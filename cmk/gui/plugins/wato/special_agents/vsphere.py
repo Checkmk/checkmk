@@ -7,7 +7,9 @@
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.special_agents.common_tls_verification import tls_verify_options
+from cmk.gui.plugins.wato.special_agents.common_tls_verification import (
+    tls_verify_options,
+)
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
     Checkbox,
@@ -18,7 +20,10 @@ from cmk.gui.valuespec import (
     NetworkPort,
     TextInput,
 )
-from cmk.gui.wato import MigrateToIndividualOrStoredPassword, RulespecGroupVMCloudContainer
+from cmk.gui.wato import (
+    MigrateToIndividualOrStoredPassword,
+    RulespecGroupVMCloudContainer,
+)
 from cmk.gui.watolib.rulespecs import HostRulespec, Rulespec, rulespec_registry
 
 
@@ -95,7 +100,12 @@ def _valuespec_special_agents_vsphere() -> Dictionary:
                         ("counters", _("Performance counters")),
                         ("licenses", _("License Usage")),
                     ],
-                    default_value=["hostsystem", "virtualmachine", "datastore", "counters"],
+                    default_value=[
+                        "hostsystem",
+                        "virtualmachine",
+                        "datastore",
+                        "counters",
+                    ],
                     allow_empty=False,
                 ),
             ),

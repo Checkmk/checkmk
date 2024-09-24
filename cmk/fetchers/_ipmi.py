@@ -240,7 +240,10 @@ class IPMIFetcher(Fetcher[AgentRawData]):
         for ident in sdr.get_sensor_numbers():
             sensor = sdr.sensors[ident]
             rsp = self._command.raw_command(
-                command=0x2D, netfn=4, rslun=sensor.sensor_lun, data=(sensor.sensor_number,)
+                command=0x2D,
+                netfn=4,
+                rslun=sensor.sensor_lun,
+                data=(sensor.sensor_number,),
             )
             if "error" in rsp:
                 continue

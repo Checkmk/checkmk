@@ -104,7 +104,10 @@ def test_registered_visual_type_attributes() -> None:
         # Single host context
         ({"host": {"host": "abc"}}, [("host", "abc")]),
         # Single host context, and other filters
-        ({"host": {"host": "abc"}, "bla": {"blub": "ble"}}, [("blub", "ble"), ("host", "abc")]),
+        (
+            {"host": {"host": "abc"}, "bla": {"blub": "ble"}},
+            [("blub", "ble"), ("host", "abc")],
+        ),
         # Single host context, missing filter -> no failure
         ({}, []),
         # Single host + service context
@@ -133,7 +136,11 @@ def test_context_to_uri_vars(
         (
             ["host"],
             [("host", "aaa"), ("site", "abc")],
-            {"host": {"host": "aaa"}, "site": {"site": "abc"}, "siteopt": {"site": "abc"}},
+            {
+                "host": {"host": "aaa"},
+                "site": {"site": "abc"},
+                "siteopt": {"site": "abc"},
+            },
         ),
         # Single host context -> not set
         (["host"], [], {}),

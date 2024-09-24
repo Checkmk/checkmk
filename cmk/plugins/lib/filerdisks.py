@@ -69,7 +69,8 @@ def _check_parity_disks(disks: Sequence[FilerDisk]) -> CheckResult:
                 info_texts.append(disk.identifier)
             if len(info_texts) > 0:
                 yield Result(
-                    state=State.OK, summary=f"{name} Disk Details: {' / '.join(info_texts)}"
+                    state=State.OK,
+                    summary=f"{name} Disk Details: {' / '.join(info_texts)}",
                 )
 
 

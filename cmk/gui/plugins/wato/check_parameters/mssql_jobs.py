@@ -32,7 +32,10 @@ def _item_spec_mssql_jobs():
 
 def get_consider_job_status_choices() -> tuple[tuple[str, str], tuple[str, str], tuple[str, str]]:
     return get_default_consider_job_status_choices() + (
-        ("consider_if_enabled", _("Consider the state of the job only if the job is enabled")),
+        (
+            "consider_if_enabled",
+            _("Consider the state of the job only if the job is enabled"),
+        ),
     )
 
 

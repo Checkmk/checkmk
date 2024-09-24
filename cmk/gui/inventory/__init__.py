@@ -63,7 +63,9 @@ from ._store import has_inventory as has_inventory
 from ._valuespecs import (
     vs_element_inventory_visible_raw_path as vs_element_inventory_visible_raw_path,
 )
-from ._valuespecs import vs_inventory_path_or_keys_help as vs_inventory_path_or_keys_help
+from ._valuespecs import (
+    vs_inventory_path_or_keys_help as vs_inventory_path_or_keys_help,
+)
 from .filters import FilterHasInv, FilterInvHasSoftwarePackage
 
 

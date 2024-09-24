@@ -8,8 +8,16 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.base.plugins.agent_based import df
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.df_section import parse_df
 
 #   .--Test info sections--------------------------------------------------.
@@ -1017,7 +1025,10 @@ info_df_groups = [
                     {
                         "item_appearance": "volume_name_and_mountpoint",
                         "grouping_behaviour": "volume_name_and_mountpoint",
-                        "patterns": (["/dev/sda1 /", "/dev/sda2 /foo"], ["/dev/sda3 /bar"]),
+                        "patterns": (
+                            ["/dev/sda1 /", "/dev/sda2 /foo"],
+                            ["/dev/sda3 /bar"],
+                        ),
                         "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
@@ -1108,7 +1119,12 @@ def test_df_discovery_groups_with_parse(
                     boundaries=(0.0, 0.205078125),
                 ),
                 Metric("fs_free", 0.0205078125, boundaries=(0.0, None)),
-                Metric("fs_used_percent", 90.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+                Metric(
+                    "fs_used_percent",
+                    90.0,
+                    levels=(80.0, 90.0),
+                    boundaries=(0.0, 100.0),
+                ),
                 Result(
                     state=State.CRIT,
                     summary="Used: 90.00% - 189 KiB of 210 KiB (warn/crit at 80.00%/90.00% used)",
@@ -1135,7 +1151,12 @@ def test_df_discovery_groups_with_parse(
                     boundaries=(0.0, 0.205078125),
                 ),
                 Metric("fs_free", 0.0205078125, boundaries=(0.0, None)),
-                Metric("fs_used_percent", 90.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+                Metric(
+                    "fs_used_percent",
+                    90.0,
+                    levels=(80.0, 90.0),
+                    boundaries=(0.0, 100.0),
+                ),
                 Result(
                     state=State.CRIT,
                     summary="Used: 90.00% - 189 KiB of 210 KiB (warn/crit at 80.00%/90.00% used)",
@@ -1162,7 +1183,12 @@ def test_df_discovery_groups_with_parse(
                     boundaries=(0.0, 0.205078125),
                 ),
                 Metric("fs_free", 0.0205078125, boundaries=(0.0, None)),
-                Metric("fs_used_percent", 90.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+                Metric(
+                    "fs_used_percent",
+                    90.0,
+                    levels=(80.0, 90.0),
+                    boundaries=(0.0, 100.0),
+                ),
                 Result(
                     state=State.CRIT,
                     summary="Used: 90.00% - 189 KiB of 210 KiB (warn/crit at 80.00%/90.00% used)",
@@ -1211,7 +1237,12 @@ def test_df_discovery_groups_with_parse(
                     boundaries=(0.0, 0.224609375),
                 ),
                 Metric("fs_free", 0.0224609375, boundaries=(0.0, None)),
-                Metric("fs_used_percent", 90.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+                Metric(
+                    "fs_used_percent",
+                    90.0,
+                    levels=(80.0, 90.0),
+                    boundaries=(0.0, 100.0),
+                ),
                 Result(
                     state=State.CRIT,
                     summary="Used: 90.00% - 207 KiB of 230 KiB (warn/crit at 80.00%/90.00% used)",
@@ -1241,7 +1272,12 @@ def test_df_discovery_groups_with_parse(
                     boundaries=(0.0, 0.224609375),
                 ),
                 Metric("fs_free", 0.0224609375, boundaries=(0, None)),
-                Metric("fs_used_percent", 90.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+                Metric(
+                    "fs_used_percent",
+                    90.0,
+                    levels=(80.0, 90.0),
+                    boundaries=(0.0, 100.0),
+                ),
                 Result(
                     state=State.CRIT,
                     summary="Used: 90.00% - 207 KiB of 230 KiB (warn/crit at 80.00%/90.00% used)",
@@ -1286,12 +1322,19 @@ def test_df_check_groups_with_parse(
     monkeypatch.setattr(
         df,
         "get_value_store",
-        lambda: {"my-group.delta": (0, _extract_value_to_mock_for_zero_growth(expected_result))},
+        lambda: {
+            "my-group.delta": (
+                0,
+                _extract_value_to_mock_for_zero_growth(expected_result),
+            )
+        },
     )
     assert (
         list(
             df.check_df(
-                "my-group", {**make_test_df_params(), **add_params}, parse_df(info_df_groups)
+                "my-group",
+                {**make_test_df_params(), **add_params},
+                parse_df(info_df_groups),
             )
         )
         == expected_result

@@ -6,7 +6,7 @@
 from typing import Final
 
 from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.version import edition, Edition
+from cmk.utils.version import Edition, edition
 
 from cmk.gui.i18n import _
 from cmk.gui.utils.urls import DocReference

@@ -58,7 +58,10 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
     )
     site.openapi.create_host(
         "host_with_secondary_ip",
-        attributes={"ipaddress": "127.0.0.1", "additional_ipv4addresses": ["127.0.0.1"]},
+        attributes={
+            "ipaddress": "127.0.0.1",
+            "additional_ipv4addresses": ["127.0.0.1"],
+        },
     )
 
     site.write_text_file(

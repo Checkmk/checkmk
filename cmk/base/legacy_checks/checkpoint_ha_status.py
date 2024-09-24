@@ -23,7 +23,16 @@ from cmk.plugins.lib.checkpoint import DETECT
 def discover_checkpoint_ha_status(section: StringTable) -> DiscoveryResult:
     if not section:
         return
-    installed, _major, _minor, _started, _state, _block_state, _stat_code, _stat_long = section[0]
+    (
+        installed,
+        _major,
+        _minor,
+        _started,
+        _state,
+        _block_state,
+        _stat_code,
+        _stat_long,
+    ) = section[0]
     if installed != "0":
         yield Service()
 

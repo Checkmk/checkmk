@@ -27,7 +27,9 @@ class BIRulePropertiesSchema(Schema):
     title = ReqString(dump_default="", example="Rule title", description="Title of the rule.")
     comment = ReqString(dump_default="", example="Rule comment", description="Rule comment.")
     docu_url = ReqString(
-        dump_default="", example="Rule documentation", description="URL to more documentation."
+        dump_default="",
+        example="Rule documentation",
+        description="URL to more documentation.",
     )
     icon = ReqString(dump_default="", example="icon1.png", description="Icon name for the rule.")
     state_messages = ReqDict(dump_default={}, example={}, description="State messages.")
@@ -58,7 +60,9 @@ class BIRuleProperties(ABCWithSchema):
 
 class BIRuleComputationOptionsSchema(Schema):
     disabled = ReqBoolean(
-        dump_default=False, example=False, description="Enable or disable this computation option."
+        dump_default=False,
+        example=False,
+        description="Enable or disable this computation option.",
     )
 
 

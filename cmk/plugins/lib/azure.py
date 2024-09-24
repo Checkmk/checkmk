@@ -99,16 +99,21 @@ def _get_metrics_number(row: Sequence[str]) -> int:
         return 0
 
 
-def _get_metrics(metrics_data: Sequence[Sequence[str]]) -> Iterable[tuple[str, AzureMetric]]:
+def _get_metrics(
+    metrics_data: Sequence[Sequence[str]],
+) -> Iterable[tuple[str, AzureMetric]]:
     for metric_line in metrics_data:
         metric_dict = json.loads(AZURE_AGENT_SEPARATOR.join(metric_line))
 
         key = f"{metric_dict['aggregation']}_{metric_dict['name'].replace(' ', '_')}"
-        yield key, AzureMetric(
-            metric_dict["name"],
-            metric_dict["aggregation"],
-            metric_dict["value"],
-            metric_dict["unit"],
+        yield (
+            key,
+            AzureMetric(
+                metric_dict["name"],
+                metric_dict["aggregation"],
+                metric_dict["value"],
+                metric_dict["unit"],
+            ),
         )
 
 
@@ -179,7 +184,9 @@ def parse_resources(string_table: StringTable) -> Mapping[str, Resource]:
 #   +----------------------------------------------------------------------+
 
 
-def get_service_labels_from_resource_tags(tags: Mapping[str, str]) -> Sequence[ServiceLabel]:
+def get_service_labels_from_resource_tags(
+    tags: Mapping[str, str],
+) -> Sequence[ServiceLabel]:
     labels = custom_tags_to_valid_labels(tags)
     return [ServiceLabel(f"cmk/azure/tag/{key}", value) for key, value in labels.items()]
 
@@ -196,7 +203,8 @@ def create_discover_by_metrics_function(
                 resource_types is None or any(rtype == resource.type for rtype in resource_types)
             ) and (set(desired_metrics) & set(resource.metrics)):
                 yield Service(
-                    item=item, labels=get_service_labels_from_resource_tags(resource.tags)
+                    item=item,
+                    labels=get_service_labels_from_resource_tags(resource.tags),
                 )
 
     return discovery_function

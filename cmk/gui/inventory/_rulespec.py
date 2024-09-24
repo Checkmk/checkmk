@@ -28,7 +28,10 @@ from cmk.gui.watolib.rulespecs import (
     RulespecRegistry,
 )
 
-from ._valuespecs import vs_element_inventory_visible_raw_path, vs_inventory_path_or_keys_help
+from ._valuespecs import (
+    vs_element_inventory_visible_raw_path,
+    vs_inventory_path_or_keys_help,
+)
 
 
 def register(
@@ -172,8 +175,14 @@ def _valuespec_inv_exports_software_csv() -> Dictionary:
                     title=_("Quoting"),
                     choices=[
                         (None, _("Don't use quotes")),
-                        ("single", _("Use single quotes, escape contained quotes with backslash")),
-                        ("double", _("Use double quotes, escape contained quotes with backslash")),
+                        (
+                            "single",
+                            _("Use single quotes, escape contained quotes with backslash"),
+                        ),
+                        (
+                            "double",
+                            _("Use double quotes, escape contained quotes with backslash"),
+                        ),
                     ],
                     default_value=None,
                 ),

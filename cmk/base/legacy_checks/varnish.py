@@ -350,7 +350,11 @@ def check_varnish_stats(_no_item, params, parsed, expected_keys):
         descr_per_sec = "%s/s" % data["descr"]
         yield check_levels(
             get_rate(
-                get_value_store(), "varnish.%s" % key, this_time, data["value"], raise_overflow=True
+                get_value_store(),
+                "varnish.%s" % key,
+                this_time,
+                data["value"],
+                raise_overflow=True,
             ),
             data["perf_var_name"],
             params.get(data["params_var_name"], (None, None)),
@@ -718,7 +722,10 @@ def discover_varnish_backend_success_ratio(parsed):
 
 def check_varnish_backend_success_ratio(item, params, parsed):
     return check_varnish_ratio(
-        item, params, parsed, ("backend_conn", "backend_fail", "varnish_backend_success_ratio")
+        item,
+        params,
+        parsed,
+        ("backend_conn", "backend_fail", "varnish_backend_success_ratio"),
     )
 
 

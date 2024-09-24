@@ -48,7 +48,9 @@ def test_discovery_mbg_lantime_ng_refclock(info: StringTable, expected: Discover
             CheckResult(
                 [
                     BasicCheckResult(
-                        0, "Type: pzf600, Usage: primary, State: synchronized (LW sync)", None
+                        0,
+                        "Type: pzf600, Usage: primary, State: synchronized (LW sync)",
+                        None,
                     ),
                     BasicCheckResult(0, "Field strength: 80%", [("field_strength", 80.0)]),
                     BasicCheckResult(0, "Correlation: 62%", [("correlation", 62.0)]),
@@ -108,7 +110,9 @@ def test_discovery_mbg_lantime_ng_refclock_gps(
             CheckResult(
                 [
                     BasicCheckResult(
-                        0, "Type: gps170, Usage: primary, State: synchronized (MRS GPS sync)", None
+                        0,
+                        "Type: gps170, Usage: primary, State: synchronized (MRS GPS sync)",
+                        None,
                     ),
                     BasicCheckResult(0, "Next leap second: not announced", None),
                     BasicCheckResult(0, "Satellites: 6/8", None),
@@ -122,7 +126,9 @@ def test_discovery_mbg_lantime_ng_refclock_gps(
             CheckResult(
                 [
                     BasicCheckResult(
-                        0, "Type: gps180, Usage: primary, State: synchronized (MRS NTP sync)", None
+                        0,
+                        "Type: gps180, Usage: primary, State: synchronized (MRS NTP sync)",
+                        None,
                     ),
                     BasicCheckResult(0, "Next leap second: 2016-12-31", None),
                     # satellites are not checked here

@@ -10,7 +10,6 @@ output the sums of all individual connection types
 see: https://d1nmyq4gcgsfi5.cloudfront.net/media/pi_3_3_devnet/api/v2/data/ClientCounts@_docs.html
 """
 
-
 from collections.abc import Iterable, Mapping
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
@@ -26,7 +25,9 @@ def parse_cisco_prime_wifi_connections(string_table: StringTable) -> Section:
     return parse_cisco_prime("clientCountsDTO", string_table)
 
 
-def discover_cisco_prime_wifi_connections(section: Section) -> Iterable[tuple[None, dict]]:
+def discover_cisco_prime_wifi_connections(
+    section: Section,
+) -> Iterable[tuple[None, dict]]:
     if section:
         yield None, {}
 

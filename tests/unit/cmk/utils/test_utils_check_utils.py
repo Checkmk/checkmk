@@ -16,7 +16,9 @@ from cmk.utils.check_utils import unwrap_parameters, wrap_parameters
         {"levels": (1, 2)},
     ],
 )
-def test_un_wrap_parameters(params: str | tuple[int, int] | dict[str, tuple[str, str]]) -> None:
+def test_un_wrap_parameters(
+    params: str | tuple[int, int] | dict[str, tuple[str, str]],
+) -> None:
     wrapped = wrap_parameters(params)
     assert isinstance(wrapped, dict)
     assert unwrap_parameters(wrapped) == params

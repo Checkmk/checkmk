@@ -8,7 +8,12 @@ import re
 import time
 from typing import Any, cast, NamedTuple
 
-from livestatus import NetworkSocketDetails, SiteConfiguration, SiteConfigurations, SiteId
+from livestatus import (
+    NetworkSocketDetails,
+    SiteConfiguration,
+    SiteConfigurations,
+    SiteId,
+)
 
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
@@ -199,7 +204,10 @@ class SiteManagement:
             title=_("Sync with LDAP connections"),
             orientation="horizontal",
             choices=[
-                (None, _("Disable automatic user synchronization (use central site users)")),
+                (
+                    None,
+                    _("Disable automatic user synchronization (use central site users)"),
+                ),
                 ("all", _("Sync users with all connections")),
                 (
                     "list",
@@ -234,12 +242,14 @@ class SiteManagement:
     ):
         if not re.match("^[-a-z0-9A-Z_]+$", site_id):
             raise MKUserError(
-                "id", _("The site id must consist only of letters, digit and the underscore.")
+                "id",
+                _("The site id must consist only of letters, digit and the underscore."),
             )
 
         if not site_configuration.get("alias"):
             raise MKUserError(
-                "alias", _("Please enter an alias name or description for the site %s.") % site_id
+                "alias",
+                _("Please enter an alias name or description for the site %s.") % site_id,
             )
 
         if site_configuration.get("url_prefix") and site_configuration.get("url_prefix")[-1] != "/":
@@ -264,7 +274,8 @@ class SiteManagement:
                 int(timeout)
             except ValueError:
                 raise MKUserError(
-                    "timeout", _("The timeout %s is not a valid integer number.") % timeout
+                    "timeout",
+                    _("The timeout %s is not a valid integer number.") % timeout,
                 )
 
         # Status host
@@ -275,7 +286,8 @@ class SiteManagement:
                 raise MKUserError("sh_site", _("The site of the status host does not exist."))
             if status_host_site == site_id:
                 raise MKUserError(
-                    "sh_site", _("You cannot use the site itself as site of the status host.")
+                    "sh_site",
+                    _("You cannot use the site itself as site of the status host."),
                 )
             if not status_host_name:
                 raise MKUserError("sh_host", _("Please specify the name of the status host."))
@@ -284,7 +296,8 @@ class SiteManagement:
             multisiteurl = site_configuration.get("multisiteurl")
             if not site_configuration.get("multisiteurl"):
                 raise MKUserError(
-                    "multisiteurl", _("Please enter the Multisite URL of the slave site.")
+                    "multisiteurl",
+                    _("Please enter the Multisite URL of the slave site."),
                 )
 
             if not multisiteurl.endswith("/check_mk/"):
@@ -387,7 +400,10 @@ class SiteManagement:
         cls.save_sites(all_sites)
         cmk.gui.watolib.activate_changes.clear_site_replication_status(site_id)
         cmk.gui.watolib.changes.add_change(
-            "edit-sites", _("Deleted site %s") % site_id, domains=domains, sites=[omd_site()]
+            "edit-sites",
+            _("Deleted site %s") % site_id,
+            domains=domains,
+            sites=[omd_site()],
         )
 
     @classmethod
@@ -752,13 +768,17 @@ def _create_nagvis_backends(sites_config):
             cfg.append("verify_tls_ca_path=%s" % ConfigDomainCACertificates.trusted_cas_file)
 
     store.save_text_to_file(
-        "%s/etc/nagvis/conf.d/cmk_backends.ini.php" % cmk.utils.paths.omd_root, "\n".join(cfg)
+        "%s/etc/nagvis/conf.d/cmk_backends.ini.php" % cmk.utils.paths.omd_root,
+        "\n".join(cfg),
     )
 
 
 def _encode_socket_for_nagvis(site_id: SiteId, site: SiteConfiguration) -> str:
     if site["proxy"] is None and is_livestatus_encrypted(site):
-        assert isinstance(site["socket"], tuple) and site["socket"][0] in ["tcp", "tcp6"]
+        assert isinstance(site["socket"], tuple) and site["socket"][0] in [
+            "tcp",
+            "tcp6",
+        ]
         return "tcp-tls:%s:%d" % cast(NetworkSocketDetails, site["socket"][1])["address"]
     return cmk.gui.sites.encode_socket_for_livestatus(site_id, site)
 

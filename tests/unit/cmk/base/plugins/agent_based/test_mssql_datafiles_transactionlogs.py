@@ -9,7 +9,12 @@ from functools import lru_cache
 import pytest
 
 import cmk.base.plugins.agent_based.mssql_datafiles_transactionlogs as msdt
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.df_section import parse_df
 
 from cmk.plugins.lib.df import BlocksSubsection, DfBlock, InodesSubsection
@@ -39,9 +44,36 @@ def section_mssql() -> msdt.SectionDatafiles:
                 "1",
                 "0",
             ],
-            ["MSSQL46", "master", "mastlog", "Z:\\mypath\\mastlog.ldf", "0", "1", "0", "1"],
-            ["MSSQL46", "model", "modellog", "Z:\\mypath\\modellog.ldf", "0", "34", "32", "1"],
-            ["MSSQL46", "msdb", "MSDBLog", "Z:\\mypath\\MSDBLog.ldf", "2097152", "17", "3", "0"],
+            [
+                "MSSQL46",
+                "master",
+                "mastlog",
+                "Z:\\mypath\\mastlog.ldf",
+                "0",
+                "1",
+                "0",
+                "1",
+            ],
+            [
+                "MSSQL46",
+                "model",
+                "modellog",
+                "Z:\\mypath\\modellog.ldf",
+                "0",
+                "34",
+                "32",
+                "1",
+            ],
+            [
+                "MSSQL46",
+                "msdb",
+                "MSDBLog",
+                "Z:\\mypath\\MSDBLog.ldf",
+                "2097152",
+                "17",
+                "3",
+                "0",
+            ],
             [
                 "MSSQL46",
                 "NOC_ALARM_T",
@@ -62,7 +94,16 @@ def section_mssql() -> msdt.SectionDatafiles:
                 "31",
                 "0",
             ],
-            ["MSSQL46", "tempdb", "templog", "Z:\\mypath\\templog.ldf", "0", "160", "55", "1"],
+            [
+                "MSSQL46",
+                "tempdb",
+                "templog",
+                "Z:\\mypath\\templog.ldf",
+                "0",
+                "160",
+                "55",
+                "1",
+            ],
             [
                 "MSSQL46",
                 "test_autoclose",
@@ -140,7 +181,15 @@ def test_discovery_mssql_transactionlogs(
             "MSSQL46.CorreLog_Report_T.CorreLog_Report_T_log",
             parse_df(
                 [
-                    ["Z:\\", "NTFS", "31463268", "16510812", "14952456000000", "53%", "Z:\\"],
+                    [
+                        "Z:\\",
+                        "NTFS",
+                        "31463268",
+                        "16510812",
+                        "14952456000000",
+                        "53%",
+                        "Z:\\",
+                    ],
                 ]
             ),
             [
@@ -168,7 +217,15 @@ def test_discovery_mssql_transactionlogs(
             "MSSQL46.master.mastlog",
             parse_df(
                 [
-                    ["Z:\\", "NTFS", "31463268", "16510812", "14952456000000", "53%", "Z:\\"],
+                    [
+                        "Z:\\",
+                        "NTFS",
+                        "31463268",
+                        "16510812",
+                        "14952456000000",
+                        "53%",
+                        "Z:\\",
+                    ],
                 ]
             ),
             [
@@ -287,14 +344,40 @@ def test_check_mssql_common_unlimited() -> None:
 DF_SECTION_WITH_MULTIPLE_MPS = [
     ["System", "NTFS", "125247484", "83827900", "41419584", "67%", "C:\\"],
     ["SQL_root", "NTFS", "104724416", "31955520", "72768896", "31%", "D:\\"],
-    ["NAME_data", "NTFS", "1047233920", "457569280", "589664640", "44%", "D:\\MyData\\"],
+    [
+        "NAME_data",
+        "NTFS",
+        "1047233920",
+        "457569280",
+        "589664640",
+        "44%",
+        "D:\\MyData\\",
+    ],
     ["NAME_logs", "NTFS", "83751872", "36375296", "47376576", "44%", "D:\\MyLogs\\"],
     ["temp", "NTFS", "10485760", "375296", "10110464", "3%", "D:\\temp\\"],
 ]
 
 DATAFILE_SECTION = [
-    ["NAME", "master", "master1", "D:\\MyData\\master1.mdf", "0", "124890", "124172", "1"],
-    ["NAME", "master", "master2", "D:\\MyData\\master2.mdf", "0", "128890", "128172", "1"],
+    [
+        "NAME",
+        "master",
+        "master1",
+        "D:\\MyData\\master1.mdf",
+        "0",
+        "124890",
+        "124172",
+        "1",
+    ],
+    [
+        "NAME",
+        "master",
+        "master2",
+        "D:\\MyData\\master2.mdf",
+        "0",
+        "128890",
+        "128172",
+        "1",
+    ],
 ]
 
 

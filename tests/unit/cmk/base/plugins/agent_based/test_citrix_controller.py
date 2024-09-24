@@ -186,7 +186,10 @@ def test_check_controller_licensing(
     [
         (
             STRING_TABLE,
-            [v1.Result(state=v1.State.OK, summary="29"), v1.Metric("registered_desktops", 29.0)],
+            [
+                v1.Result(state=v1.State.OK, summary="29"),
+                v1.Metric("registered_desktops", 29.0),
+            ],
         ),
         (
             STRING_TABLE_2,
@@ -205,7 +208,10 @@ def test_check_controller_registered(
 @pytest.mark.parametrize(
     "string_table, expected",
     [
-        (STRING_TABLE, [v1.Result(state=v1.State.OK, summary="XenPool01 - Cisco UCS VMware")]),
+        (
+            STRING_TABLE,
+            [v1.Result(state=v1.State.OK, summary="XenPool01 - Cisco UCS VMware")],
+        ),
         (STRING_TABLE_2, [v1.Result(state=v1.State.OK, summary="No services")]),
         (
             STRING_TABLE_3,

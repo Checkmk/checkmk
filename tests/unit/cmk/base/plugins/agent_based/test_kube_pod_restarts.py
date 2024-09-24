@@ -98,18 +98,27 @@ RestartCount = Mapping[str, Sequence[tuple[float, float]]]
 
 @pytest.fixture
 def value_store(
-    expired_values: int, current_values: int, restart_count: float, is_empty_value_store: bool
+    expired_values: int,
+    current_values: int,
+    restart_count: float,
+    is_empty_value_store: bool,
 ) -> RestartCount:
     if is_empty_value_store:
         return {}
     n = ONE_HOUR // ONE_MINUTE + expired_values
     restart_count_list = [
-        (TIMESTAMP - (n - i) * ONE_MINUTE, restart_count * (-n + i) * NUMBER_OF_CONTAINERS)
+        (
+            TIMESTAMP - (n - i) * ONE_MINUTE,
+            restart_count * (-n + i) * NUMBER_OF_CONTAINERS,
+        )
         for i in range(expired_values)
     ]
     n = current_values
     restart_count_list += [
-        (TIMESTAMP - (n - i) * ONE_MINUTE, restart_count * (-n + i) * NUMBER_OF_CONTAINERS)
+        (
+            TIMESTAMP - (n - i) * ONE_MINUTE,
+            restart_count * (-n + i) * NUMBER_OF_CONTAINERS,
+        )
         for i in range(current_values)
     ]
     return {"restart_count_list": restart_count_list}
@@ -155,7 +164,10 @@ def test_check_yields_two_metrics(check_result: CheckResult) -> None:
 
 
 def test_check_metric_value(check_result: CheckResult) -> None:
-    expected = [OK * NUMBER_OF_CONTAINERS, OK * NUMBER_OF_CONTAINERS * ONE_HOUR // ONE_MINUTE]
+    expected = [
+        OK * NUMBER_OF_CONTAINERS,
+        OK * NUMBER_OF_CONTAINERS * ONE_HOUR // ONE_MINUTE,
+    ]
     actual = [int(m.value) for m in check_result if isinstance(m, Metric)]
     assert actual == expected
 
@@ -179,7 +191,10 @@ def test_check_result_state_mixed(
 def test_check_results_considers_only_current_values(
     current_values: int, check_result: CheckResult
 ) -> None:
-    expected = [OK * NUMBER_OF_CONTAINERS, OK * NUMBER_OF_CONTAINERS * (current_values + 1)]
+    expected = [
+        OK * NUMBER_OF_CONTAINERS,
+        OK * NUMBER_OF_CONTAINERS * (current_values + 1),
+    ]
     actual = [int(m.value) for m in check_result if isinstance(m, Metric)]
     assert actual == expected
 
@@ -202,7 +217,10 @@ def test_check_results_creates_restart_count_list(
     assert len(value_store) == 1
     assert "restart_count_list" in value_store
     assert len(value_store["restart_count_list"]) == 1
-    assert value_store["restart_count_list"][0] == (TIMESTAMP, OK * NUMBER_OF_CONTAINERS)
+    assert value_store["restart_count_list"][0] == (
+        TIMESTAMP,
+        OK * NUMBER_OF_CONTAINERS,
+    )
 
 
 def test_check_results_updates_restart_count_list(
@@ -210,7 +228,10 @@ def test_check_results_updates_restart_count_list(
 ) -> None:
     list(check_result)
     assert len(value_store["restart_count_list"]) == ONE_HOUR // ONE_MINUTE
-    assert value_store["restart_count_list"][-1] == (TIMESTAMP, OK * NUMBER_OF_CONTAINERS)
+    assert value_store["restart_count_list"][-1] == (
+        TIMESTAMP,
+        OK * NUMBER_OF_CONTAINERS,
+    )
 
 
 @pytest.mark.parametrize("expired_values", [0, 10, 100])

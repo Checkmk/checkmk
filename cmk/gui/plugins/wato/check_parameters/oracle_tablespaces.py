@@ -10,7 +10,14 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, DropdownChoice, ListOf, MonitoringState, TextInput, Tuple
+from cmk.gui.valuespec import (
+    Dictionary,
+    DropdownChoice,
+    ListOf,
+    MonitoringState,
+    TextInput,
+    Tuple,
+)
 
 
 def _item_spec_oracle_tablespaces():
@@ -58,7 +65,10 @@ def _parameter_valuespec_oracle_tablespaces():
                 DropdownChoice(
                     title=_("Default increment"),
                     choices=[
-                        (True, _("State is WARNING in case the next extent has the default size.")),
+                        (
+                            True,
+                            _("State is WARNING in case the next extent has the default size."),
+                        ),
                         (False, _("Ignore default increment")),
                     ],
                 ),

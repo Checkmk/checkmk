@@ -14,8 +14,14 @@ from netapp_ontap.host_connection import HostConnection
 from requests.adapters import HTTPAdapter
 
 from cmk.plugins.netapp import models  # pylint: disable=cmk-module-layer-violation
-from cmk.special_agents.v0_unstable.agent_common import CannotRecover, special_agent_main
-from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.agent_common import (
+    CannotRecover,
+    special_agent_main,
+)
+from cmk.special_agents.v0_unstable.argument_parsing import (
+    Args,
+    create_default_argument_parser,
+)
 
 __version__ = "2.3.0b1"
 
@@ -38,7 +44,8 @@ def write_section(section_name: str, generator: Iterable, logger: logging.Logger
     sys.stdout.write("\n")
     for element in generator:
         logger.debug(
-            "Element data: %r", element.model_dump_json(exclude_unset=True, exclude_none=False)
+            "Element data: %r",
+            element.model_dump_json(exclude_unset=True, exclude_none=False),
         )
         sys.stdout.write(element.model_dump_json(exclude_unset=True, exclude_none=False))
         sys.stdout.write("\n")
@@ -46,7 +53,6 @@ def write_section(section_name: str, generator: Iterable, logger: logging.Logger
 
 
 def _collect_netapp_resource_volume(connection: HostConnection, is_constituent: bool) -> Iterable:
-
     field_query = (
         "uuid",
         "state",
@@ -66,12 +72,13 @@ def _collect_netapp_resource_volume(connection: HostConnection, is_constituent: 
     )
 
     yield from NetAppResource.Volume.get_collection(
-        connection=connection, is_constituent=is_constituent, fields=",".join(field_query)
+        connection=connection,
+        is_constituent=is_constituent,
+        fields=",".join(field_query),
     )
 
 
 def _collect_volume_models(netapp_volumes: Iterable) -> Iterable[models.VolumeModel]:
-
     for netapp_resources in netapp_volumes:
         element_data = netapp_resources.to_dict()
 
@@ -101,7 +108,6 @@ def _collect_volume_models(netapp_volumes: Iterable) -> Iterable[models.VolumeMo
 
 
 def fetch_volumes(connection: HostConnection) -> Iterable[models.VolumeModel]:
-
     yield from _collect_volume_models(
         _collect_netapp_resource_volume(connection, is_constituent=True)
     )
@@ -595,7 +601,13 @@ def fetch_vs_traffic_counters(
             "iscsi_read_ops",
             "iscsi_write_ops",
         ),
-        "svm_nfs_v3": ("read_throughput", "write_throughput", "read_ops", "write_ops", "ops"),
+        "svm_nfs_v3": (
+            "read_throughput",
+            "write_throughput",
+            "read_ops",
+            "write_ops",
+            "ops",
+        ),
         "svm_nfs_v4": (
             "total.read_throughput",
             "total.write_throughput",
@@ -696,7 +708,9 @@ def fetch_environment(connection):
     )
 
     for element in NetAppResource.Sensors.get_collection(
-        connection=connection, fields=",".join(field_query), type="thermal|fan|voltage|current"
+        connection=connection,
+        fields=",".join(field_query),
+        type="thermal|fan|voltage|current",
     ):
         element_data = element.to_dict()
         yield models.EnvironmentThresholdSensorModel(
@@ -894,7 +908,6 @@ def agent_netapp_main(args: Args) -> int:
         verify=False if args.no_cert_check else True,  # pylint: disable=simplifiable-if-expression
         headers={"User-Agent": USER_AGENT},
     ) as connection:
-
         if isinstance(args.cert_server_name, str):
             connection.session.mount(
                 connection.origin, HostNameValidationAdapter(args.cert_server_name)

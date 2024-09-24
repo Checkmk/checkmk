@@ -8,7 +8,10 @@ from typing import Any
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.prism_info import check_prism_info, discovery_prism_info
+from cmk.base.plugins.agent_based.prism_info import (
+    check_prism_info,
+    discovery_prism_info,
+)
 
 SECTION = {
     "block_serials": ["21FM5B310065", "21FM5B310063", "21FM5B310061"],

@@ -91,7 +91,12 @@ perfometer_info.append(
 )
 
 perfometer_info.append(
-    {"type": "logarithmic", "metric": "wifi_connection_total", "half_value": 5000, "exponent": 2.0}
+    {
+        "type": "logarithmic",
+        "metric": "wifi_connection_total",
+        "half_value": 5000,
+        "exponent": 2.0,
+    }
 )
 
 perfometer_info.append(
@@ -980,7 +985,12 @@ perfometer_info.append(
 )
 
 perfometer_info.append(
-    {"type": "logarithmic", "metric": "signal_noise", "half_value": 50.0, "exponent": 2.0}
+    {
+        "type": "logarithmic",
+        "metric": "signal_noise",
+        "half_value": 50.0,
+        "exponent": 2.0,
+    }
 )  # Fallback if no codewords are available
 
 perfometer_info.append(
@@ -1330,7 +1340,11 @@ perfometer_info.append(
 )
 
 perfometer_info.append(
-    {"type": "linear", "segments": ["active_vpn_tunnels"], "total": "active_vpn_tunnels:max"}
+    {
+        "type": "linear",
+        "segments": ["active_vpn_tunnels"],
+        "total": "active_vpn_tunnels:max",
+    }
 )
 
 
@@ -1851,7 +1865,12 @@ perfometer_info.append(
 )
 
 perfometer_info.append(
-    {"type": "logarithmic", "metric": "mobileiron_last_patched", "half_value": 45.0, "exponent": 2}
+    {
+        "type": "logarithmic",
+        "metric": "mobileiron_last_patched",
+        "half_value": 45.0,
+        "exponent": 2,
+    }
 )
 
 perfometer_info.append(

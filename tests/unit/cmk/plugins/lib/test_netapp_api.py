@@ -160,9 +160,15 @@ _FANS_SECTION = {
     "item_name, expected_result",
     [
         pytest.param(
-            "fan1", [Result(state=State.CRIT, summary="Error in fan 3")], id="fan in error"
+            "fan1",
+            [Result(state=State.CRIT, summary="Error in fan 3")],
+            id="fan in error",
         ),
-        pytest.param("fan2", [Result(state=State.OK, summary="Operational state OK")], id="fan ok"),
+        pytest.param(
+            "fan2",
+            [Result(state=State.OK, summary="Operational state OK")],
+            id="fan ok",
+        ),
     ],
 )
 def test_get_single_check_fan(item_name: str, expected_result: CheckResult) -> None:
@@ -194,7 +200,11 @@ _PSU_SECTION = {
             [Result(state=State.CRIT, summary="Error in power supply unit 3")],
             id="psu in error",
         ),
-        pytest.param("psu2", [Result(state=State.OK, summary="Operational state OK")], id="psu ok"),
+        pytest.param(
+            "psu2",
+            [Result(state=State.OK, summary="Operational state OK")],
+            id="psu ok",
+        ),
     ],
 )
 def test_get_single_check_psu(item_name: str, expected_result: CheckResult) -> None:
@@ -371,7 +381,12 @@ def test_check_netapp_vs_traffic():
     with time_machine.travel(datetime.fromtimestamp(NOW_SIMULATED_SECONDS, tz=ZoneInfo("UTC"))):
         result = list(
             check_netapp_vs_traffic(
-                item_counters, "iscsi_lif", protocol_map, latency_calc_ref, time.time(), value_store
+                item_counters,
+                "iscsi_lif",
+                protocol_map,
+                latency_calc_ref,
+                time.time(),
+                value_store,
             )
         )
 

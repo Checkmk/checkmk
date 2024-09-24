@@ -37,6 +37,7 @@ A host_config object can have the following relations present in `links`:
  * `urn:org.restfulobjects:rels/delete` - The endpoint to delete this host.
 
 """
+
 import itertools
 import operator
 from collections.abc import Iterable, Mapping, Sequence
@@ -69,7 +70,12 @@ from cmk.gui.openapi.endpoints.host_config.response_schemas import (
     HostConfigSchema,
 )
 from cmk.gui.openapi.endpoints.utils import folder_slug
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions, response_schemas
+from cmk.gui.openapi.restful_objects import (
+    constructors,
+    Endpoint,
+    permissions,
+    response_schemas,
+)
 from cmk.gui.openapi.restful_objects.api_error import ApiError
 from cmk.gui.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
@@ -78,7 +84,10 @@ from cmk.gui.openapi.utils import EXT, problem, serve_json
 from cmk.gui.wato.pages.host_rename import rename_hosts_background_job
 from cmk.gui.watolib.activate_changes import has_pending_changes
 from cmk.gui.watolib.check_mk_automations import delete_hosts
-from cmk.gui.watolib.host_rename import RenameHostBackgroundJob, RenameHostsBackgroundJob
+from cmk.gui.watolib.host_rename import (
+    RenameHostBackgroundJob,
+    RenameHostsBackgroundJob,
+)
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 
 from cmk import fields
@@ -375,7 +384,9 @@ def list_hosts(param) -> Response:  # type: ignore[no-untyped-def]
 
 
 def serve_host_collection(
-    hosts: Iterable[Host], effective_attributes: bool = False, include_links: bool = False
+    hosts: Iterable[Host],
+    effective_attributes: bool = False,
+    include_links: bool = False,
 ) -> Response:
     return serve_json(
         _host_collection(
@@ -387,14 +398,18 @@ def serve_host_collection(
 
 
 def _host_collection(
-    hosts: Iterable[Host], effective_attributes: bool = False, include_links: bool = False
+    hosts: Iterable[Host],
+    effective_attributes: bool = False,
+    include_links: bool = False,
 ) -> dict[str, Any]:
     return {
         "id": "host",
         "domainType": "host_config",
         "value": [
             serialize_host(
-                host, effective_attributes=effective_attributes, include_links=include_links
+                host,
+                effective_attributes=effective_attributes,
+                include_links=include_links,
             )
             for host in hosts
         ],

@@ -135,7 +135,12 @@ def parse_ucs_bladecenter_if(
             _parse_fc_interfaces(data),
             "Slot %s FC-Switch %s Port %s",
         ),
-        ("ethernet", "Ethernet-Group", _parse_eth_interfaces(data), "Slot %s Switch %s Port %s"),
+        (
+            "ethernet",
+            "Ethernet-Group",
+            _parse_eth_interfaces(data),
+            "Slot %s Switch %s Port %s",
+        ),
         (
             "interconnect",
             "Interconnect-Group",

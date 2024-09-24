@@ -7,7 +7,10 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    InventoryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.inventory_lnx_packages import (
     inventory_lnx_packages,
     parse_lnx_packages,
@@ -22,7 +25,15 @@ from .utils_inventory import sort_inventory_result
         ([], []),
         (
             [
-                ["pacname4", "1.2.3", "amd64", "deb", "v5", "summary", "not-in-stalled"],
+                [
+                    "pacname4",
+                    "1.2.3",
+                    "amd64",
+                    "deb",
+                    "v5",
+                    "summary",
+                    "not-in-stalled",
+                ],
                 ["pacname5", "1.2.3", "amd64", "deb", "v5", "summary", "installed"],
                 ["pacname6", "1.2.3-4", "amd64", "deb", "v5", "summary", "installed"],
                 ["pacname1", "1.2.3", "amd64", "deb", "summary", "not-in-stalled"],

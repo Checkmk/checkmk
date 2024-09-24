@@ -18,7 +18,9 @@ DOMAIN_TYPE = "comment"
 SITE_ID = "NO_SITE"
 
 
-def add_service_and_host_comments_to_live_status_table(live: MockLiveStatusConnection) -> None:
+def add_service_and_host_comments_to_live_status_table(
+    live: MockLiveStatusConnection,
+) -> None:
     f = Faker()
 
     def create_comment(comment_id: int, service_comment: bool) -> dict[str, Any]:
@@ -35,7 +37,10 @@ def add_service_and_host_comments_to_live_status_table(live: MockLiveStatusConne
 
     live.add_table(
         "comments",
-        [create_comment(1, service_comment=False), create_comment(2, service_comment=True)],
+        [
+            create_comment(1, service_comment=False),
+            create_comment(2, service_comment=True),
+        ],
     )
     live.add_table("hosts", [{"name": "heute"}])
     live.add_table("services", [{"description": "service1", "host_name": "heute"}])
@@ -283,7 +288,9 @@ def test_post_host_comment(
     )
     with mock_livestatus:
         clients.Comment.create_for_host(
-            comment=post_params["comment"], comment_type="host", host_name=post_params["host_name"]
+            comment=post_params["comment"],
+            comment_type="host",
+            host_name=post_params["host_name"],
         )
 
 

@@ -123,7 +123,10 @@ class FakeClient:
     date: datetime.date = datetime.date(year=2022, month=7, day=16)
 
     def __init__(
-        self, project: str, monitoring_client: FakeMonitoringClient, asset_client: FakeAssetClient
+        self,
+        project: str,
+        monitoring_client: FakeMonitoringClient,
+        asset_client: FakeAssetClient,
     ):
         self.project = project
         self.monitoring_client = monitoring_client
@@ -218,12 +221,16 @@ def test_host_labels(agent_output: Sequence[agent_gcp.Section]) -> None:
     assert label_section[0] == agent_gcp.HostLabelSection(labels={"cmk/gcp/projectId": "test"})
 
 
-def test_output_contains_defined_metric_sections(agent_output: Sequence[agent_gcp.Section]) -> None:
+def test_output_contains_defined_metric_sections(
+    agent_output: Sequence[agent_gcp.Section],
+) -> None:
     names = {s.name for s in agent_output}
     assert names.issuperset({s.name for s in agent_gcp.SERVICES.values()})
 
 
-def test_output_contains_one_asset_section(agent_output: Sequence[agent_gcp.Section]) -> None:
+def test_output_contains_one_asset_section(
+    agent_output: Sequence[agent_gcp.Section],
+) -> None:
     assert "asset" in {s.name for s in agent_output}
     asset_sections = list(s for s in agent_output if isinstance(s, agent_gcp.AssetSection))
     assert len(asset_sections) == 1
@@ -360,7 +367,8 @@ def test_piggyback_identify_hosts(
 
 
 def test_serialize_piggy_back_section(
-    piggy_back_sections: Sequence[agent_gcp.PiggyBackSection], capsys: pytest.CaptureFixture[str]
+    piggy_back_sections: Sequence[agent_gcp.PiggyBackSection],
+    capsys: pytest.CaptureFixture[str],
 ) -> None:
     section = piggy_back_sections[1]
     agent_gcp.gcp_serializer([section])
@@ -392,7 +400,9 @@ def test_piggy_back_sort_values_to_host(
     assert next(host_b.sections).results[0].ts.points[0].value.double_value == pytest.approx(42)
 
 
-def test_piggy_back_host_labels(piggy_back_sections: Sequence[agent_gcp.PiggyBackSection]) -> None:
+def test_piggy_back_host_labels(
+    piggy_back_sections: Sequence[agent_gcp.PiggyBackSection],
+) -> None:
     assert piggy_back_sections[0].labels == agent_gcp.HostLabelSection(
         labels={
             "cmk/gcp/labels/van": "halen",
@@ -439,11 +449,15 @@ def test_gce_host_labels(gce_sections: Sequence[agent_gcp.PiggyBackSection]) -> 
     )
 
 
-def test_gce_host_name_mangling(gce_sections: Sequence[agent_gcp.PiggyBackSection]) -> None:
+def test_gce_host_name_mangling(
+    gce_sections: Sequence[agent_gcp.PiggyBackSection],
+) -> None:
     assert gce_sections[0].name == "custom-prefix_instance-1"
 
 
-def test_gce_metric_filtering(gce_sections: Sequence[agent_gcp.PiggyBackSection]) -> None:
+def test_gce_metric_filtering(
+    gce_sections: Sequence[agent_gcp.PiggyBackSection],
+) -> None:
     assert 1 == len(list(list(gce_sections[0].sections)[0].results))
 
 
@@ -461,7 +475,8 @@ def test_metric_requests(interval: monitoring_v3.TimeInterval) -> None:
     metric = agent_gcp.Metric(
         name="compute.googleapis.com/instance/uptime",
         aggregation=agent_gcp.Aggregation(
-            per_series_aligner=Aligner.ALIGN_MAX, cross_series_reducer=Reducer.REDUCE_NONE
+            per_series_aligner=Aligner.ALIGN_MAX,
+            cross_series_reducer=Reducer.REDUCE_NONE,
         ),
     )
     request = metric.request(interval=interval, groupby="resource.thisone", project="fun")
@@ -482,7 +497,9 @@ def test_metric_requests(interval: monitoring_v3.TimeInterval) -> None:
     assert request == expected
 
 
-def test_metric_requests_additional_groupby_fields(interval: monitoring_v3.TimeInterval) -> None:
+def test_metric_requests_additional_groupby_fields(
+    interval: monitoring_v3.TimeInterval,
+) -> None:
     metric = agent_gcp.Metric(
         name="compute.googleapis.com/instance/uptime",
         aggregation=agent_gcp.Aggregation(

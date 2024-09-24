@@ -13,7 +13,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
     State,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    StringTable,
+)
 
 from cmk.plugins.lib.sap_hana import ParsedSection
 
@@ -85,7 +88,15 @@ SECTION = {
         (
             [
                 ["[[X04 55]]"],
-                ["TRUE", "FALSE", "FALSE", "5", "10", "TRUE", "2020-08-02 23:59:59.999999000"],
+                [
+                    "TRUE",
+                    "FALSE",
+                    "FALSE",
+                    "5",
+                    "10",
+                    "TRUE",
+                    "2020-08-02 23:59:59.999999000",
+                ],
             ],
             {"X04 55": SECTION["X04 55"]},
         ),

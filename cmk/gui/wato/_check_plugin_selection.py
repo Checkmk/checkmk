@@ -19,7 +19,10 @@ def CheckPluginSelection(
             help=help_,
             elements=[
                 ("host", _CheckTypeHostSelection(title=_("Checks on regular hosts"))),
-                ("mgmt", _CheckTypeMgmtSelection(title=_("Checks on management boards"))),
+                (
+                    "mgmt",
+                    _CheckTypeMgmtSelection(title=_("Checks on management boards")),
+                ),
             ],
             optional_keys=["mgmt"],
         ),

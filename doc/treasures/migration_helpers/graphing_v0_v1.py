@@ -30,15 +30,17 @@ from datetime import datetime
 from pathlib import Path
 from typing import Final, Literal, NamedTuple, TextIO
 
-from cmk.utils.metrics import MetricName
-
-from cmk.gui.graphing._parser import color_to_rgb, RGB  # pylint: disable=cmk-module-layer-violation
+from cmk.graphing.v1 import Title, graphs, metrics, perfometers, translations
+from cmk.gui.graphing._parser import (  # pylint: disable=cmk-module-layer-violation
+    RGB,
+    color_to_rgb,
+)
 from cmk.gui.graphing._perfometer import (  # pylint: disable=cmk-module-layer-violation
+    LogarithmicPerfometerSpec,
+    PerfometerSpec,
     _DualPerfometerSpec,
     _LinearPerfometerSpec,
     _StackedPerfometerSpec,
-    LogarithmicPerfometerSpec,
-    PerfometerSpec,
 )
 from cmk.gui.graphing._utils import (  # pylint: disable=cmk-module-layer-violation
     AutomaticDict,
@@ -46,9 +48,10 @@ from cmk.gui.graphing._utils import (  # pylint: disable=cmk-module-layer-violat
     MetricInfo,
     RawGraphTemplate,
 )
-from cmk.gui.utils.speaklater import LazyString  # pylint: disable=cmk-module-layer-violation
-
-from cmk.graphing.v1 import graphs, metrics, perfometers, Title, translations
+from cmk.gui.utils.speaklater import (
+    LazyString,  # pylint: disable=cmk-module-layer-violation
+)
+from cmk.utils.metrics import MetricName
 
 _LOGGER = logging.getLogger(__file__)
 
@@ -117,9 +120,9 @@ def _setup_logger(debug: bool) -> None:
 @dataclass(frozen=True)
 class MigrationErrors:
     _metrics_without_def: set[str] = field(default_factory=set)
-    _objects: dict[Literal["metrics", "translations", "perfometers", "graphs"], set[str]] = field(
-        default_factory=dict
-    )
+    _objects: dict[
+        Literal["metrics", "translations", "perfometers", "graphs"], set[str]
+    ] = field(default_factory=dict)
 
     def add_metric_without_def(self, name: str) -> None:
         self._metrics_without_def.add(name)
@@ -148,7 +151,9 @@ class MigrationErrors:
 
 
 def _load_module(filepath: Path) -> types.ModuleType:
-    if (spec := importlib.util.spec_from_file_location(f"{filepath.name}", filepath)) is None:
+    if (
+        spec := importlib.util.spec_from_file_location(f"{filepath.name}", filepath)
+    ) is None:
         raise TypeError(spec)
     if (mod := importlib.util.module_from_spec(spec)) is None:
         raise TypeError(mod)
@@ -158,7 +163,9 @@ def _load_module(filepath: Path) -> types.ModuleType:
     return mod
 
 
-def _load_file_content(path: Path) -> tuple[
+def _load_file_content(
+    path: Path,
+) -> tuple[
     Mapping[str, MetricInfo],
     Mapping[str, Mapping[MetricName, CheckMetricEntry]],
     Sequence[PerfometerSpec],
@@ -184,7 +191,9 @@ def _load_file_content(path: Path) -> tuple[
     return metric_info, check_metrics, perfometer_info, graph_info
 
 
-def _load(debug: bool, folders: Sequence[str], load_translations: bool) -> tuple[
+def _load(
+    debug: bool, folders: Sequence[str], load_translations: bool
+) -> tuple[
     Mapping[str, MetricInfo],
     Mapping[str, Mapping[MetricName, CheckMetricEntry]],
     Sequence[PerfometerSpec],
@@ -214,7 +223,12 @@ def _load(debug: bool, folders: Sequence[str], load_translations: bool) -> tuple
                 legacy_check_metrics.update(loaded_check_metrics)
             legacy_perfometer_info.extend(loaded_perfometer_info)
             legacy_graph_info.update(loaded_graph_info)
-    return legacy_metric_info, legacy_check_metrics, legacy_perfometer_info, legacy_graph_info
+    return (
+        legacy_metric_info,
+        legacy_check_metrics,
+        legacy_perfometer_info,
+        legacy_graph_info,
+    )
 
 
 def _show_exception(e: Exception) -> None:
@@ -342,7 +356,9 @@ def _collect_metric_names_from_legacy_perfometer(
 ) -> CheckedExpression:
     checked_expression = CheckedExpression()
     if legacy_perfometer["type"] == "linear":
-        for pe in _collect_metric_names_from_legacy_linear_perfometer(legacy_perfometer):
+        for pe in _collect_metric_names_from_legacy_linear_perfometer(
+            legacy_perfometer
+        ):
             checked_expression.update(pe)
     elif legacy_perfometer["type"] == "logarithmic":
         checked_expression.update(
@@ -522,20 +538,22 @@ def _compute_connected_objects(
     used_metrics: dict[str, GraphingObjectReferences] = {}
 
     for idx, legacy_perfometer in enumerate(legacy_perfometer_info):
-        checked_expression = _collect_metric_names_from_legacy_perfometer(legacy_perfometer)
+        checked_expression = _collect_metric_names_from_legacy_perfometer(
+            legacy_perfometer
+        )
         checked_perfometers.setdefault(idx, checked_expression)
         for metric_name in checked_expression.metric_names:
-            used_metrics.setdefault(metric_name, GraphingObjectReferences()).perfometer_indices.add(
-                idx
-            )
+            used_metrics.setdefault(
+                metric_name, GraphingObjectReferences()
+            ).perfometer_indices.add(idx)
 
     for ident, template in legacy_graph_info.items():
         checked_expression = _collect_metric_names_from_legacy_graph(template)
         checked_graph_templates.setdefault(ident, checked_expression)
         for metric_name in checked_expression.metric_names:
-            used_metrics.setdefault(metric_name, GraphingObjectReferences()).graph_template_ids.add(
-                ident
-            )
+            used_metrics.setdefault(
+                metric_name, GraphingObjectReferences()
+            ).graph_template_ids.add(ident)
 
     return list(
         _make_connected_objects(
@@ -835,7 +853,9 @@ def _parse_legacy_check_metrics(
         tuple[
             tuple[
                 str,
-                translations.RenameTo | translations.ScaleBy | translations.RenameToAndScaleBy,
+                translations.RenameTo
+                | translations.ScaleBy
+                | translations.RenameToAndScaleBy,
             ],
             ...,
         ],
@@ -868,7 +888,9 @@ def _parse_legacy_check_metrics(
         translations_: list[
             tuple[
                 str,
-                translations.RenameTo | translations.ScaleBy | translations.RenameToAndScaleBy,
+                translations.RenameTo
+                | translations.ScaleBy
+                | translations.RenameToAndScaleBy,
             ]
         ] = []
         for legacy_name, attrs in info.items():
@@ -877,19 +899,25 @@ def _parse_legacy_check_metrics(
                     translations_.append(
                         (
                             legacy_name,
-                            translations.RenameToAndScaleBy(attrs["name"], attrs["scale"]),
+                            translations.RenameToAndScaleBy(
+                                attrs["name"], attrs["scale"]
+                            ),
                         )
                     )
                 case True, False:
-                    translations_.append((legacy_name, translations.RenameTo(attrs["name"])))
+                    translations_.append(
+                        (legacy_name, translations.RenameTo(attrs["name"]))
+                    )
                 case False, True:
-                    translations_.append((legacy_name, translations.ScaleBy(attrs["scale"])))
+                    translations_.append(
+                        (legacy_name, translations.ScaleBy(attrs["scale"]))
+                    )
                 case _:
                     continue
 
-        by_translations.setdefault(tuple(sorted(translations_, key=lambda t: t[0])), []).append(
-            check_command
-        )
+        by_translations.setdefault(
+            tuple(sorted(translations_, key=lambda t: t[0])), []
+        ).append(check_command)
 
     for sorted_translations, check_commands in by_translations.items():
         name = "_".join([c.name for c in check_commands])
@@ -927,7 +955,11 @@ def _parse_scalar_name(
 def _make_percent(
     unit_parser: UnitParser,
     percent_value: (
-        str | metrics.WarningOf | metrics.CriticalOf | metrics.MinimumOf | metrics.MaximumOf
+        str
+        | metrics.WarningOf
+        | metrics.CriticalOf
+        | metrics.MinimumOf
+        | metrics.MaximumOf
     ),
     metric_name: str,
     explicit_title: str,
@@ -974,7 +1006,10 @@ def _parse_constant_or_metric_name(expression: str) -> str | metrics.Constant:
 
 
 def _parse_single_expression(
-    unit_parser: UnitParser, expression: str, explicit_title: str, explicit_color: metrics.Color
+    unit_parser: UnitParser,
+    expression: str,
+    explicit_title: str,
+    explicit_color: metrics.Color,
 ) -> (
     str
     | metrics.Constant
@@ -992,13 +1027,17 @@ def _parse_single_expression(
         metric_name, scalar_name = expression.split(":")
         scalar = _parse_scalar_name(scalar_name, metric_name)
         return (
-            _make_percent(unit_parser, scalar, metric_name, explicit_title, explicit_color)
+            _make_percent(
+                unit_parser, scalar, metric_name, explicit_title, explicit_color
+            )
             if percent
             else scalar
         )
 
     return (
-        _make_percent(unit_parser, expression, expression, explicit_title, explicit_color)
+        _make_percent(
+            unit_parser, expression, expression, explicit_title, explicit_color
+        )
         if percent
         else _parse_constant_or_metric_name(expression)
     )
@@ -1047,7 +1086,9 @@ def _resolve_stack(
         | metrics.Fraction
     ] = []
     for element in stack:
-        if (isinstance(element, str) and element not in ("+", "*", "-", "/")) or isinstance(
+        if (
+            isinstance(element, str) and element not in ("+", "*", "-", "/")
+        ) or isinstance(
             element,
             (
                 metrics.Constant,
@@ -1213,7 +1254,9 @@ def _parse_expression(
                 raise ValueError(word)
             case _:
                 stack.append(
-                    _parse_single_expression(unit_parser, word, explicit_title, explicit_color)
+                    _parse_single_expression(
+                        unit_parser, word, explicit_title, explicit_color
+                    )
                 )
 
     resolved = _resolve_stack(
@@ -1248,7 +1291,12 @@ def _raw_metric_names(
     match quantity:
         case str():
             yield quantity
-        case metrics.WarningOf() | metrics.CriticalOf() | metrics.MinimumOf() | metrics.MaximumOf():
+        case (
+            metrics.WarningOf()
+            | metrics.CriticalOf()
+            | metrics.MinimumOf()
+            | metrics.MaximumOf()
+        ):
             yield quantity.metric_name
         case metrics.Sum():
             for s in quantity.summands:
@@ -1294,7 +1342,10 @@ def _parse_legacy_linear_perfometer(
         _LOGGER.info("Perfometer field 'label' will not be migrated")
 
     legacy_total = legacy_linear_perfometer["total"]
-    segments = [_parse_expression(unit_parser, s, "") for s in legacy_linear_perfometer["segments"]]
+    segments = [
+        _parse_expression(unit_parser, s, "")
+        for s in legacy_linear_perfometer["segments"]
+    ]
     return perfometers.Perfometer(
         name=_perfometer_name(segments),
         focus_range=perfometers.FocusRange(
@@ -1319,12 +1370,16 @@ def _parse_legacy_logarithmic_perfometer(
     unit_parser: UnitParser,
     legacy_logarithmic_perfometer: LogarithmicPerfometerSpec,
 ) -> perfometers.Perfometer:
-    segments = [_parse_expression(unit_parser, legacy_logarithmic_perfometer["metric"], "")]
+    segments = [
+        _parse_expression(unit_parser, legacy_logarithmic_perfometer["metric"], "")
+    ]
     return perfometers.Perfometer(
         name=_perfometer_name(segments),
         focus_range=perfometers.FocusRange(
             perfometers.Closed(0),
-            perfometers.Open(_compute_border85(legacy_logarithmic_perfometer["half_value"])),
+            perfometers.Open(
+                _compute_border85(legacy_logarithmic_perfometer["half_value"])
+            ),
         ),
         segments=segments,
     )
@@ -1450,7 +1505,12 @@ def _parse_legacy_metrics(
             case _:
                 raise ValueError(legacy_metric)
 
-    return lower_compound_lines, lower_simple_lines, upper_compound_lines, upper_simple_lines
+    return (
+        lower_compound_lines,
+        lower_simple_lines,
+        upper_compound_lines,
+        upper_simple_lines,
+    )
 
 
 def _parse_legacy_scalars(
@@ -1472,7 +1532,9 @@ def _parse_legacy_scalars(
         if isinstance(legacy_scalar, str):
             yield _parse_expression(unit_parser, legacy_scalar, "")
         elif isinstance(legacy_scalar, tuple):
-            yield _parse_expression(unit_parser, legacy_scalar[0], str(legacy_scalar[1]))
+            yield _parse_expression(
+                unit_parser, legacy_scalar[0], str(legacy_scalar[1])
+            )
         else:
             raise ValueError(legacy_scalar)
 
@@ -1522,7 +1584,9 @@ def _parse_lower_or_upper_scalars(
         if (
             isinstance(s, metrics.Product)
             and len(s.factors) == 2
-            and any(isinstance(f, metrics.Constant) and f.value == -1 for f in s.factors)
+            and any(
+                isinstance(f, metrics.Constant) and f.value == -1 for f in s.factors
+            )
         ):
             for f in s.factors:
                 if not isinstance(f, metrics.Constant):
@@ -1652,7 +1716,9 @@ def _parse_legacy_graph_infos(
 class MigratedObjects:
     metrics: Sequence[metrics.Metric]
     translations: Sequence[translations.Translation]
-    perfometers: Sequence[perfometers.Perfometer | perfometers.Bidirectional | perfometers.Stacked]
+    perfometers: Sequence[
+        perfometers.Perfometer | perfometers.Bidirectional | perfometers.Stacked
+    ]
     graph_templates: Sequence[graphs.Graph | graphs.Bidirectional]
 
     def __iter__(self):
@@ -1672,14 +1738,24 @@ def _migrate(
     legacy_graph_info: Mapping[str, RawGraphTemplate],
 ) -> MigratedObjects:
     return MigratedObjects(
-        list(_parse_legacy_metric_infos(debug, migration_errors, unit_parser, legacy_metric_info)),
-        list(_parse_legacy_check_metrics(debug, migration_errors, legacy_check_metrics)),
+        list(
+            _parse_legacy_metric_infos(
+                debug, migration_errors, unit_parser, legacy_metric_info
+            )
+        ),
+        list(
+            _parse_legacy_check_metrics(debug, migration_errors, legacy_check_metrics)
+        ),
         list(
             _parse_legacy_perfometer_infos(
                 debug, migration_errors, unit_parser, legacy_perfometer_info
             )
         ),
-        list(_parse_legacy_graph_infos(debug, migration_errors, unit_parser, legacy_graph_info)),
+        list(
+            _parse_legacy_graph_infos(
+                debug, migration_errors, unit_parser, legacy_graph_info
+            )
+        ),
     )
 
 
@@ -1744,7 +1820,12 @@ def _collect_metric_names_from_quantity(
     match quantity:
         case str():
             yield quantity
-        case metrics.WarningOf() | metrics.CriticalOf() | metrics.MinimumOf() | metrics.MaximumOf():
+        case (
+            metrics.WarningOf()
+            | metrics.CriticalOf()
+            | metrics.MinimumOf()
+            | metrics.MaximumOf()
+        ):
             yield quantity.metric_name
         case metrics.Sum():
             for summand in quantity.summands:
@@ -1764,19 +1845,27 @@ def _collect_metric_names_from_perfometer(
     migrated_perfometer: perfometers.Perfometer,
 ) -> Iterator[str]:
     if not isinstance(migrated_perfometer.focus_range.lower.value, (int, float)):
-        yield from _collect_metric_names_from_quantity(migrated_perfometer.focus_range.lower.value)
+        yield from _collect_metric_names_from_quantity(
+            migrated_perfometer.focus_range.lower.value
+        )
     if not isinstance(migrated_perfometer.focus_range.upper.value, (int, float)):
-        yield from _collect_metric_names_from_quantity(migrated_perfometer.focus_range.upper.value)
+        yield from _collect_metric_names_from_quantity(
+            migrated_perfometer.focus_range.upper.value
+        )
     for segment in migrated_perfometer.segments:
         yield from _collect_metric_names_from_quantity(segment)
 
 
 def _balance_colors_from_perfometer(
-    migrated_perfometer: perfometers.Perfometer | perfometers.Bidirectional | perfometers.Stacked,
+    migrated_perfometer: perfometers.Perfometer
+    | perfometers.Bidirectional
+    | perfometers.Stacked,
 ) -> Mapping[str, metrics.Color]:
     match migrated_perfometer:
         case perfometers.Perfometer():
-            metric_names = set(_collect_metric_names_from_perfometer(migrated_perfometer))
+            metric_names = set(
+                _collect_metric_names_from_perfometer(migrated_perfometer)
+            )
         case perfometers.Bidirectional():
             metric_names = set(
                 _collect_metric_names_from_perfometer(migrated_perfometer.left)
@@ -1792,7 +1881,9 @@ def _balance_colors_from_perfometer(
     )
 
 
-def _collect_metric_names_from_graph(migrated_graph_template: graphs.Graph) -> Iterator[str]:
+def _collect_metric_names_from_graph(
+    migrated_graph_template: graphs.Graph,
+) -> Iterator[str]:
     if migrated_graph_template.minimal_range:
         if not isinstance(migrated_graph_template.minimal_range.lower, (int, float)):
             yield from _collect_metric_names_from_quantity(
@@ -1815,7 +1906,9 @@ def _balance_colors_from_graph(
 ) -> Mapping[str, metrics.Color]:
     match migrated_graph_template:
         case graphs.Graph():
-            metric_names = set(_collect_metric_names_from_graph(migrated_graph_template))
+            metric_names = set(
+                _collect_metric_names_from_graph(migrated_graph_template)
+            )
         case graphs.Bidirectional():
             if (
                 len(
@@ -1855,10 +1948,14 @@ def _balance_metric_colors(
 ) -> Sequence[metrics.Metric]:
     colors_by_metric_name: dict[str, metrics.Color] = {}
     for migrated_perfometer in migrated_perfometers:
-        colors_by_metric_name.update(_balance_colors_from_perfometer(migrated_perfometer))
+        colors_by_metric_name.update(
+            _balance_colors_from_perfometer(migrated_perfometer)
+        )
 
     for migrated_graph_template in migrated_graph_templates:
-        colors_by_metric_name.update(_balance_colors_from_graph(migrated_graph_template))
+        colors_by_metric_name.update(
+            _balance_colors_from_graph(migrated_graph_template)
+        )
 
     balanced_metrics: list[metrics.Metric] = []
     for migrated_metric in migrated_metrics:
@@ -2022,7 +2119,9 @@ def _quantity_repr(
                 _title_repr(quantity.title),
                 _color_repr(quantity.color),
                 _kwarg_repr("minuend", _quantity_repr(unit_parser, quantity.minuend)),
-                _kwarg_repr("subtrahend", _quantity_repr(unit_parser, quantity.subtrahend)),
+                _kwarg_repr(
+                    "subtrahend", _quantity_repr(unit_parser, quantity.subtrahend)
+                ),
             ]
         case metrics.Fraction():
             args = [
@@ -2053,7 +2152,9 @@ def _check_command_repr(
 
 
 def _translation_ty_repr(
-    translation_ty: translations.RenameTo | translations.ScaleBy | translations.RenameToAndScaleBy,
+    translation_ty: translations.RenameTo
+    | translations.ScaleBy
+    | translations.RenameToAndScaleBy,
 ) -> str:
     match translation_ty:
         case translations.RenameTo():
@@ -2076,7 +2177,9 @@ def translation_repr(translation_: translations.Translation) -> str:
             _kwarg_repr("name", _name_repr(translation_.name)),
             _kwarg_repr(
                 "check_commands",
-                _list_repr([_check_command_repr(c) for c in translation_.check_commands]),
+                _list_repr(
+                    [_check_command_repr(c) for c in translation_.check_commands]
+                ),
             ),
             _kwarg_repr(
                 "translations",
@@ -2113,7 +2216,9 @@ def _bound_value_repr(
     return _quantity_repr(unit_parser, bound_value)
 
 
-def _bound_repr(unit_parser: UnitParser, bound: perfometers.Closed | perfometers.Open) -> str:
+def _bound_repr(
+    unit_parser: UnitParser, bound: perfometers.Closed | perfometers.Open
+) -> str:
     return _inst_repr(
         "perfometers",
         bound,
@@ -2123,7 +2228,9 @@ def _bound_repr(unit_parser: UnitParser, bound: perfometers.Closed | perfometers
     )
 
 
-def _focus_range_repr(unit_parser: UnitParser, focus_range: perfometers.FocusRange) -> str:
+def _focus_range_repr(
+    unit_parser: UnitParser, focus_range: perfometers.FocusRange
+) -> str:
     return _inst_repr(
         "perfometers",
         focus_range,
@@ -2134,22 +2241,30 @@ def _focus_range_repr(unit_parser: UnitParser, focus_range: perfometers.FocusRan
     )
 
 
-def _perfometer_repr(unit_parser: UnitParser, perfometer: perfometers.Perfometer) -> str:
+def _perfometer_repr(
+    unit_parser: UnitParser, perfometer: perfometers.Perfometer
+) -> str:
     return _inst_repr(
         "perfometers",
         perfometer,
         [
             _kwarg_repr("name", _name_repr(perfometer.name)),
-            _kwarg_repr("focus_range", _focus_range_repr(unit_parser, perfometer.focus_range)),
+            _kwarg_repr(
+                "focus_range", _focus_range_repr(unit_parser, perfometer.focus_range)
+            ),
             _kwarg_repr(
                 "segments",
-                _list_repr([_quantity_repr(unit_parser, s) for s in perfometer.segments]),
+                _list_repr(
+                    [_quantity_repr(unit_parser, s) for s in perfometer.segments]
+                ),
             ),
         ],
     )
 
 
-def _p_bidirectional_repr(unit_parser: UnitParser, perfometer: perfometers.Bidirectional) -> str:
+def _p_bidirectional_repr(
+    unit_parser: UnitParser, perfometer: perfometers.Bidirectional
+) -> str:
     return _inst_repr(
         "perfometers",
         perfometer,
@@ -2175,7 +2290,9 @@ def _p_stacked_repr(unit_parser: UnitParser, perfometer: perfometers.Stacked) ->
 
 def perfometer_repr(
     unit_parser: UnitParser,
-    perfometer: perfometers.Perfometer | perfometers.Bidirectional | perfometers.Stacked,
+    perfometer: perfometers.Perfometer
+    | perfometers.Bidirectional
+    | perfometers.Stacked,
 ) -> str:
     match perfometer:
         case perfometers.Perfometer():
@@ -2186,7 +2303,9 @@ def perfometer_repr(
             return _p_stacked_repr(unit_parser, perfometer)
 
 
-def _minimal_range_repr(unit_parser: UnitParser, minimal_range: graphs.MinimalRange) -> str:
+def _minimal_range_repr(
+    unit_parser: UnitParser, minimal_range: graphs.MinimalRange
+) -> str:
     return _inst_repr(
         "graphs",
         minimal_range,
@@ -2204,27 +2323,37 @@ def _g_graph_repr(unit_parser: UnitParser, graph: graphs.Graph) -> str:
     ]
     if graph.minimal_range:
         args.append(
-            _kwarg_repr("minimal_range", _minimal_range_repr(unit_parser, graph.minimal_range))
+            _kwarg_repr(
+                "minimal_range", _minimal_range_repr(unit_parser, graph.minimal_range)
+            )
         )
     if graph.compound_lines:
         args.append(
             _kwarg_repr(
                 "compound_lines",
-                _list_repr([_quantity_repr(unit_parser, l) for l in graph.compound_lines]),
+                _list_repr(
+                    [_quantity_repr(unit_parser, l) for l in graph.compound_lines]
+                ),
             )
         )
     if graph.simple_lines:
         args.append(
             _kwarg_repr(
                 "simple_lines",
-                _list_repr([_quantity_repr(unit_parser, l) for l in graph.simple_lines]),
+                _list_repr(
+                    [_quantity_repr(unit_parser, l) for l in graph.simple_lines]
+                ),
             )
         )
     if graph.optional:
-        args.append(_kwarg_repr("optional", _list_repr([_name_repr(o) for o in graph.optional])))
+        args.append(
+            _kwarg_repr("optional", _list_repr([_name_repr(o) for o in graph.optional]))
+        )
     if graph.conflicting:
         args.append(
-            _kwarg_repr("conflicting", _list_repr([_name_repr(o) for o in graph.conflicting]))
+            _kwarg_repr(
+                "conflicting", _list_repr([_name_repr(o) for o in graph.conflicting])
+            )
         )
     return _inst_repr("graphs", graph, args)
 
@@ -2242,7 +2371,9 @@ def _g_bidirectional_repr(unit_parser: UnitParser, graph: graphs.Bidirectional) 
     )
 
 
-def _graph_repr(unit_parser: UnitParser, graph: graphs.Graph | graphs.Bidirectional) -> str:
+def _graph_repr(
+    unit_parser: UnitParser, graph: graphs.Graph | graphs.Bidirectional
+) -> str:
     match graph:
         case graphs.Graph():
             return _g_graph_repr(unit_parser, graph)
@@ -2270,7 +2401,11 @@ def _obj_repr(
             return f"metric_{_obj_var_name()} = {_metric_repr(unit_parser, obj)}"
         case translations.Translation():
             return f"translation_{_obj_var_name()} = {translation_repr(obj)}"
-        case perfometers.Perfometer() | perfometers.Bidirectional() | perfometers.Stacked():
+        case (
+            perfometers.Perfometer()
+            | perfometers.Bidirectional()
+            | perfometers.Stacked()
+        ):
             return f"perfometer_{_obj_var_name()} = {perfometer_repr(unit_parser, obj)}"
         case graphs.Graph() | graphs.Bidirectional():
             return f"graph_{_obj_var_name()} = {_graph_repr(unit_parser, obj)}"
@@ -2325,7 +2460,9 @@ def main() -> None:
     )
 
     unit_parser = UnitParser()
-    connected_legacy_metric_names = {n for c in all_connected_objects for n in c.metrics}
+    connected_legacy_metric_names = {
+        n for c in all_connected_objects for n in c.metrics
+    }
     standalone_legacy_metrics = {
         n: m
         for n, m in legacy_metric_info.items()
@@ -2351,7 +2488,11 @@ def main() -> None:
             metrics_,
             legacy_check_metrics,
             [p.spec for c in all_connected_objects for p in c.perfometers],
-            {g.ident: g.template for c in all_connected_objects for g in c.graph_templates},
+            {
+                g.ident: g.template
+                for c in all_connected_objects
+                for g in c.graph_templates
+            },
         )
 
     if args.balance_colors:
@@ -2378,12 +2519,18 @@ def main() -> None:
         print(f"{imports_repr}\n")
     if migrated_objects:
         print(
-            "\n".join(sorted([f"{u.name} = {_unit_repr(u.unit)}" for u in unit_parser.units]))
+            "\n".join(
+                sorted([f"{u.name} = {_unit_repr(u.unit)}" for u in unit_parser.units])
+            )
             + "\n"
         )
-    if migrated_metrics := sorted([_obj_repr(unit_parser, o) for o in migrated_objects.metrics]):
+    if migrated_metrics := sorted(
+        [_obj_repr(unit_parser, o) for o in migrated_objects.metrics]
+    ):
         print("\n".join(migrated_metrics) + "\n")
-    if migrated_perfometers := [_obj_repr(unit_parser, o) for o in migrated_objects.perfometers]:
+    if migrated_perfometers := [
+        _obj_repr(unit_parser, o) for o in migrated_objects.perfometers
+    ]:
         print("\n".join(migrated_perfometers) + "\n")
     if migrated_graph_templates := sorted(
         [_obj_repr(unit_parser, o) for o in migrated_objects.graph_templates]

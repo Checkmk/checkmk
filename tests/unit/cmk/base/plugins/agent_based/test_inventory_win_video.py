@@ -8,8 +8,14 @@ import time
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
-from cmk.base.plugins.agent_based.inventory_win_video import inventory_win_video, parse_win_video
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    InventoryResult,
+    StringTable,
+)
+from cmk.base.plugins.agent_based.inventory_win_video import (
+    inventory_win_video,
+    parse_win_video,
+)
 
 from .utils_inventory import sort_inventory_result
 

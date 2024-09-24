@@ -27,7 +27,12 @@ from cmk.gui.graphing._expression import (
     WarningOf,
 )
 from cmk.gui.graphing._unit_info import unit_info
-from cmk.gui.graphing._utils import graph_info, metric_info, parse_perf_data, translate_metrics
+from cmk.gui.graphing._utils import (
+    graph_info,
+    metric_info,
+    parse_perf_data,
+    translate_metrics,
+)
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 
 
@@ -413,7 +418,14 @@ def test_parse_and_evaluate(
         pytest.param(
             [
                 PerfDataTuple(
-                    "delivered_notifications", "delivered_notifications", 0, "", 0, 0, 0, 0
+                    "delivered_notifications",
+                    "delivered_notifications",
+                    0,
+                    "",
+                    0,
+                    0,
+                    0,
+                    0,
                 ),
                 PerfDataTuple("failed_notifications", "failed_notifications", 0, "", 0, 0, 0, 0),
             ],
@@ -444,7 +456,14 @@ def test_parse_and_evaluate(
         pytest.param(
             [
                 PerfDataTuple(
-                    "delivered_notifications", "delivered_notifications", 1, "", 0, 0, 0, 0
+                    "delivered_notifications",
+                    "delivered_notifications",
+                    1,
+                    "",
+                    0,
+                    0,
+                    0,
+                    0,
                 ),
                 PerfDataTuple("failed_notifications", "failed_notifications", 0, "", 0, 0, 0, 0),
             ],
@@ -475,7 +494,14 @@ def test_parse_and_evaluate(
         pytest.param(
             [
                 PerfDataTuple(
-                    "delivered_notifications", "delivered_notifications", 0, "", 0, 0, 0, 0
+                    "delivered_notifications",
+                    "delivered_notifications",
+                    0,
+                    "",
+                    0,
+                    0,
+                    0,
+                    0,
                 ),
                 PerfDataTuple("failed_notifications", "failed_notifications", 1, "", 0, 0, 0, 0),
             ],

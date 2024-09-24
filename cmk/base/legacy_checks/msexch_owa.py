@@ -23,10 +23,18 @@ def discover_msexch_owa(parsed):
 def check_msexch_owa(_no_item, params, parsed):
     table = parsed[""]
     yield from wmi_yield_raw_persec(
-        table, None, "RequestsPersec", infoname="Requests/sec", perfvar="requests_per_sec"
+        table,
+        None,
+        "RequestsPersec",
+        infoname="Requests/sec",
+        perfvar="requests_per_sec",
     )
     yield from wmi_yield_raw_counter(
-        table, None, "CurrentUniqueUsers", infoname="Unique users", perfvar="current_users"
+        table,
+        None,
+        "CurrentUniqueUsers",
+        infoname="Unique users",
+        perfvar="current_users",
     )
 
 

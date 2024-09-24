@@ -33,7 +33,10 @@ def inventory_lgp_pdu_info(info):
 def check_lgp_pdu_info(item, params, info):
     for pdu in info:
         if pdu[2] == item:
-            return (0, "Entry-ID: %s, Label: %s (%s), S/N: %s, Num. RCs: %s" % tuple(pdu))
+            return (
+                0,
+                "Entry-ID: %s, Label: %s (%s), S/N: %s, Num. RCs: %s" % tuple(pdu),
+            )
 
     return (3, "Device can not be found in SNMP output.")
 

@@ -20,7 +20,10 @@ def _parameter_valuespec_heartbeat_rscstatus():
                 DropdownChoice(
                     title=_("Expected state"),
                     choices=[
-                        ("none", _("All resource groups are running on a different node (none)")),
+                        (
+                            "none",
+                            _("All resource groups are running on a different node (none)"),
+                        ),
                         ("all", _("All resource groups run on this node (all)")),
                         (
                             "local",

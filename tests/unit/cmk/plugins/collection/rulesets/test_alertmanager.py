@@ -18,7 +18,10 @@ from cmk.plugins.collection.rulesets.alertmanager import (
     [
         pytest.param(
             (True, {"min_amount_rules": 3, "no_group_services": ["service_name"]}),
-            ("multiple_services", {"min_amount_rules": 3, "no_group_services": ["service_name"]}),
+            (
+                "multiple_services",
+                {"min_amount_rules": 3, "no_group_services": ["service_name"]},
+            ),
             id="legacy multiple services",
         ),
         pytest.param(
@@ -27,8 +30,14 @@ from cmk.plugins.collection.rulesets.alertmanager import (
             id="legacy one service",
         ),
         pytest.param(
-            ("multiple_services", {"min_amount_rules": 3, "no_group_services": ["service_name"]}),
-            ("multiple_services", {"min_amount_rules": 3, "no_group_services": ["service_name"]}),
+            (
+                "multiple_services",
+                {"min_amount_rules": 3, "no_group_services": ["service_name"]},
+            ),
+            (
+                "multiple_services",
+                {"min_amount_rules": 3, "no_group_services": ["service_name"]},
+            ),
             id="multiple services",
         ),
         pytest.param(

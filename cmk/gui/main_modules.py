@@ -112,7 +112,10 @@ def _import_main_module_plugins(main_modules: list[ModuleType]) -> None:
             logger.debug("  Importing plug-ins from %s", plugin_package_name)
             for plugin_name, exc in load_plugins_with_exceptions(plugin_package_name):
                 logger.error(
-                    "  Error in %s plug-in '%s'\n", main_module_name, plugin_name, exc_info=exc
+                    "  Error in %s plug-in '%s'\n",
+                    main_module_name,
+                    plugin_name,
+                    exc_info=exc,
                 )
                 utils.add_failed_plugin(
                     Path(traceback.extract_tb(exc.__traceback__)[-1].filename),

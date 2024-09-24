@@ -111,7 +111,11 @@ class SectionStore(Generic[_T]):
         cache_info.update(
             {
                 section_name: (created_at, valid_until - created_at)
-                for section_name, (created_at, valid_until, *_rest) in persisted_sections.items()
+                for section_name, (
+                    created_at,
+                    valid_until,
+                    *_rest,
+                ) in persisted_sections.items()
                 if section_name not in sections
             }
         )

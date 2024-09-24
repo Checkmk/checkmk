@@ -27,6 +27,7 @@ Downtime object can have the following relations:
  * `urn:org.restfulobjects/delete` - The endpoint to delete downtimes.
 
 """
+
 import datetime as dt
 import json
 from collections.abc import Callable, Mapping
@@ -53,7 +54,10 @@ from cmk.gui.openapi.endpoints.downtime.request_schemas import (
     DOWNTIME_ID,
     ModifyDowntime,
 )
-from cmk.gui.openapi.endpoints.downtime.response_schemas import DowntimeCollection, DowntimeObject
+from cmk.gui.openapi.endpoints.downtime.response_schemas import (
+    DowntimeCollection,
+    DowntimeObject,
+)
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.specification import LIVESTATUS_GENERIC_EXPLANATION

@@ -286,7 +286,8 @@ async def run_cmd(
 
     assert process.stdout and process.stderr
     await asyncio.gather(
-        process_lines(process.stdout, stdout_fn), process_lines(process.stderr, stderr_fn)
+        process_lines(process.stdout, stdout_fn),
+        process_lines(process.stderr, stderr_fn),
     )
     await process.wait()
 

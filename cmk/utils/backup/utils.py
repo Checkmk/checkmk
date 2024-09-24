@@ -37,7 +37,10 @@ def log(s: str) -> None:
 
 
 def makedirs(
-    path: Path, user: str | None = None, group: str | None = None, mode: int | None = None
+    path: Path,
+    user: str | None = None,
+    group: str | None = None,
+    mode: int | None = None,
 ) -> None:
     head, tail = os.path.split(path)
     if not tail:
@@ -56,7 +59,10 @@ def makedirs(
 
 
 def makedir(
-    path: Path, user: str | None = None, group: str | None = None, mode: int | None = None
+    path: Path,
+    user: str | None = None,
+    group: str | None = None,
+    mode: int | None = None,
 ) -> None:
     if os.path.exists(path):
         return
@@ -67,7 +73,11 @@ def makedir(
 
 
 def set_permissions(
-    *, path: Path, uid: int | None = None, gid: int | None = None, mode: int | None = None
+    *,
+    path: Path,
+    uid: int | None = None,
+    gid: int | None = None,
+    mode: int | None = None,
 ) -> None:
     try:
         os.chown(path, uid if uid is not None else -1, gid if gid is not None else -1)

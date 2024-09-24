@@ -38,7 +38,10 @@ def oids_to_walk(options: SNMPWalkOptions | None = None) -> list[OID]:
     if options is None:
         options = {}
 
-    oids = [".1.3.6.1.2.1", ".1.3.6.1.4.1"]  # SNMPv2-SMI::mib-2  # SNMPv2-SMI::enterprises
+    oids = [
+        ".1.3.6.1.2.1",
+        ".1.3.6.1.4.1",
+    ]  # SNMPv2-SMI::mib-2  # SNMPv2-SMI::enterprises
 
     if "oids" in options:
         oids = options["oids"]

@@ -26,7 +26,11 @@ from cmk.gui.http import request
 from cmk.gui.logged_in import LoggedInNobody, LoggedInUser, user
 from cmk.gui.session import session
 from cmk.gui.type_defs import UserSpec, WebAuthnCredential
-from cmk.gui.userdb.session import auth_cookie_name, auth_cookie_value, generate_auth_hash
+from cmk.gui.userdb.session import (
+    auth_cookie_name,
+    auth_cookie_value,
+    generate_auth_hash,
+)
 from cmk.gui.utils.script_helpers import application_and_request_context
 from cmk.gui.utils.transaction_manager import transactions
 
@@ -66,7 +70,9 @@ def test_login_forced_password_change(wsgi_app: WebTestAppForCMK) -> None:
         assert resp.location.startswith("user_change_pw.py")
 
 
-def test_login_two_factor_has_precedence_over_password_change(wsgi_app: WebTestAppForCMK) -> None:
+def test_login_two_factor_has_precedence_over_password_change(
+    wsgi_app: WebTestAppForCMK,
+) -> None:
     auth_struct: WebAuthnCredential = {
         "credential_id": "Yaddayadda!",
         "registered_at": 0,
@@ -106,7 +112,11 @@ def test_login_with_cookies(
         # We try to log in
         response = client.post(
             login_page_url,
-            data={"_username": with_user[0], "_password": with_user[1], "_login": "Login"},
+            data={
+                "_username": with_user[0],
+                "_password": with_user[1],
+                "_login": "Login",
+            },
         )
         index_page = response.location
         assert index_page.endswith("index.py")  # Relative redirect to "index.py" :-( !!!
@@ -129,7 +139,9 @@ def test_login_with_cookies(
 # TODO: to be moved out of REST API blueprint to global in a later commit.
 def test_login_with_bearer_token(with_user: tuple[UserId, str], flask_app: flask.Flask) -> None:
     with flask_app.test_request_context(
-        "/", method="GET", headers={"Authorization": f"Bearer {with_user[0]} {with_user[1]}"}
+        "/",
+        method="GET",
+        headers={"Authorization": f"Bearer {with_user[0]} {with_user[1]}"},
     ):
         assert type(session.user) == LoggedInUser  # pylint: disable=unidiomatic-typecheck
         assert session.user.id == with_user[0]

@@ -16,7 +16,11 @@ from cmk.gui.i18n import _, _u, localize
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageRegistry
 from cmk.gui.type_defs import UserSpec
-from cmk.gui.userdb import get_user_attributes, get_user_attributes_by_topic, UserAttribute
+from cmk.gui.userdb import (
+    get_user_attributes,
+    get_user_attributes_by_topic,
+    UserAttribute,
+)
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.language_cookie import set_language_cookie
 from cmk.gui.valuespec import ValueSpec

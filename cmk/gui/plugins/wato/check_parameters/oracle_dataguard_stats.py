@@ -9,7 +9,15 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Age, Checkbox, Dictionary, Migrate, MonitoringState, TextInput, Tuple
+from cmk.gui.valuespec import (
+    Age,
+    Checkbox,
+    Dictionary,
+    Migrate,
+    MonitoringState,
+    TextInput,
+    Tuple,
+)
 
 
 def _migrate(params: dict) -> dict:

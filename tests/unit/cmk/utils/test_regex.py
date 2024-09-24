@@ -25,14 +25,23 @@ from cmk.utils.regex import combine_patterns
         ([(True, r"(?i)cpu")], r"(?i:(?!cpu))"),
         # Multiple modifier
         ([r"(?i)cpu", r"memory"], r"(?:(?i:(?:cpu))|(?:memory))"),
-        ([r"(?i)cpu", r"(?s)memory", r"disk"], r"(?:(?i:(?:cpu))|(?s:(?:memory))|(?:disk))"),
-        ([(True, r"cpu"), r"(?s)memory", r"disk"], r"(?:(?!cpu)|(?s:(?:memory))|(?:disk))"),
+        (
+            [r"(?i)cpu", r"(?s)memory", r"disk"],
+            r"(?:(?i:(?:cpu))|(?s:(?:memory))|(?:disk))",
+        ),
+        (
+            [(True, r"cpu"), r"(?s)memory", r"disk"],
+            r"(?:(?!cpu)|(?s:(?:memory))|(?:disk))",
+        ),
         # Local and global modifier
         ([r"(?i)(?u-i:cpu)"], r"(?i:(?:(?u-i:cpu)))"),
         # Multiple patterns
         ([r"(?i)(?u-i:cpu)(.*)"], r"(?i:(?:(?u-i:cpu)(.*)))"),
         # Customer example that broke previous implementation
-        ([r"(?i)(.\\\[NM])", r"(?i)(._NM$)"], r"(?:(?i:(?:(.\\\[NM])))|(?i:(?:(._NM$))))"),
+        (
+            [r"(?i)(.\\\[NM])", r"(?i)(._NM$)"],
+            r"(?:(?i:(?:(.\\\[NM])))|(?i:(?:(._NM$))))",
+        ),
     ],
 )
 def test_combine_patterns(patterns: list[tuple[bool, str]] | list[str], expected: str) -> None:

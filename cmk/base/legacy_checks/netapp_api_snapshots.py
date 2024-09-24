@@ -34,7 +34,10 @@ def check_netapp_api_snapshots(item, params, parsed):
         return
 
     if data[0].get("state") != "online":
-        yield 3, "No snapshot information available. Volume is %s" % data[0].get("state")
+        yield (
+            3,
+            "No snapshot information available. Volume is %s" % data[0].get("state"),
+        )
         return
 
     snapshot_total = int(data[0]["reserve-used-actual"]) * 1024.0
@@ -42,9 +45,11 @@ def check_netapp_api_snapshots(item, params, parsed):
     reserved_bytes = int(data[0]["snapshot-blocks-reserved"]) * 1024.0
 
     if not reserved_bytes:
-        yield 0, "Used snapshot space: %s" % render.bytes(snapshot_total), [
-            ("bytes", snapshot_total)
-        ]
+        yield (
+            0,
+            "Used snapshot space: %s" % render.bytes(snapshot_total),
+            [("bytes", snapshot_total)],
+        )
         yield params.get("state_noreserve", 1), "No snapshot reserve configured"
         return
 
@@ -61,17 +66,24 @@ def check_netapp_api_snapshots(item, params, parsed):
 
     extra_info = ("(Levels at %d%%/%d%%)" % (warn, crit)) if state else ""
 
-    yield state, "Reserve used: {:.1f}% ({}){}".format(
-        used_percent,
-        render.bytes(snapshot_total),
-        extra_info,
+    yield (
+        state,
+        "Reserve used: {:.1f}% ({}){}".format(
+            used_percent,
+            render.bytes(snapshot_total),
+            extra_info,
+        ),
     )
 
-    yield 0, "Total Reserve: {}% ({}) of {}".format(
-        data[0]["snapshot-percent-reserved"],
-        render.bytes(reserved_bytes),
-        render.bytes(volume_total),
-    ), [("bytes", snapshot_total, 0, 0, 0, reserved_bytes)]
+    yield (
+        0,
+        "Total Reserve: {}% ({}) of {}".format(
+            data[0]["snapshot-percent-reserved"],
+            render.bytes(reserved_bytes),
+            render.bytes(volume_total),
+        ),
+        [("bytes", snapshot_total, 0, 0, 0, reserved_bytes)],
+    )
 
 
 check_info["netapp_api_snapshots"] = LegacyCheckDefinition(

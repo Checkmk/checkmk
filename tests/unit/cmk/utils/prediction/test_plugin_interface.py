@@ -35,7 +35,10 @@ def test_estimate_levels_upper_lbound() -> None:
         45.2,
     )
 
-    assert estimate_levels(42.0, 1.0, "upper", ("stdev", (2.3, 3.2)), (45.0, 45.0)) == (45.0, 45.2)
+    assert estimate_levels(42.0, 1.0, "upper", ("stdev", (2.3, 3.2)), (45.0, 45.0)) == (
+        45.0,
+        45.2,
+    )
 
 
 def test_estimate_levels_lower_ubound() -> None:
@@ -44,4 +47,7 @@ def test_estimate_levels_lower_ubound() -> None:
         38.8,
     )
 
-    assert estimate_levels(42.0, 1.0, "lower", ("stdev", (2.3, 3.2)), (38.5, 50.0)) == (38.5, 38.8)
+    assert estimate_levels(42.0, 1.0, "lower", ("stdev", (2.3, 3.2)), (38.5, 50.0)) == (
+        38.5,
+        38.8,
+    )

@@ -54,7 +54,9 @@ from cmk.plugins.lib.graylog import deserialize_and_merge_json, GraylogSection
 # "alarmcallback_count_by_type": {}}}']]
 
 
-def discover_graylog_cluster_stats(section: GraylogSection) -> Iterable[tuple[None, dict]]:
+def discover_graylog_cluster_stats(
+    section: GraylogSection,
+) -> Iterable[tuple[None, dict]]:
     if section:
         yield None, {}
 
@@ -76,7 +78,11 @@ def check_graylog_cluster_stats(_no_item, params, parsed):
             levels = params.get("%s_upper" % key, (None, None))
             levels_lower = params.get("%s_lower" % key, (None, None))
             yield check_levels(
-                data, m_name, levels + levels_lower, human_readable_func=int, infoname=infotext
+                data,
+                m_name,
+                levels + levels_lower,
+                human_readable_func=int,
+                infoname=infotext,
             )
 
 

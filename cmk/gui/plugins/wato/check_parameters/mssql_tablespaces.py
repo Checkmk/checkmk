@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.check_parameters.mssql_utils import mssql_item_spec_instance_tablespace
+from cmk.gui.plugins.wato.check_parameters.mssql_utils import (
+    mssql_item_spec_instance_tablespace,
+)
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
@@ -20,7 +22,10 @@ def _parameter_valuespec_mssql_tablespaces():
                 "size",
                 Tuple(
                     title=_("Upper levels for size"),
-                    elements=[Filesize(title=_("Warning at")), Filesize(title=_("Critical at"))],
+                    elements=[
+                        Filesize(title=_("Warning at")),
+                        Filesize(title=_("Critical at")),
+                    ],
                 ),
             ),
             (

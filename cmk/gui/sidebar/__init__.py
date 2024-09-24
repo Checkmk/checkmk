@@ -42,7 +42,12 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.valuespec import CascadingDropdown, CascadingDropdownChoice, Dictionary, ValueSpec
+from cmk.gui.valuespec import (
+    CascadingDropdown,
+    CascadingDropdownChoice,
+    Dictionary,
+    ValueSpec,
+)
 from cmk.gui.werks import may_acknowledge
 
 from . import _snapin
@@ -419,7 +424,8 @@ class SidebarRenderer:
             parser=lambda x: None if x == "None" else "left",
         )
         html.open_div(
-            id_="check_mk_sidebar", class_=[] if sidebar_position is None else [sidebar_position]
+            id_="check_mk_sidebar",
+            class_=[] if sidebar_position is None else [sidebar_position],
         )
 
         self._show_snapin_bar(user_config)
@@ -431,7 +437,8 @@ class SidebarRenderer:
 
     def _show_snapin_bar(self, user_config: UserSidebarConfig) -> None:
         html.open_div(
-            class_="scroll" if active_config.sidebar_show_scrollbar else None, id_="side_content"
+            class_="scroll" if active_config.sidebar_show_scrollbar else None,
+            id_="side_content",
         )
 
         refresh_snapins, restart_snapins, static_snapins = self._show_snapins(user_config)
@@ -474,7 +481,8 @@ class SidebarRenderer:
     def _show_add_snapin_button(self) -> None:
         html.open_div(id_="add_snapin")
         html.open_a(
-            href=makeuri_contextless(request, [], filename="sidebar_add_snapin.py"), target="main"
+            href=makeuri_contextless(request, [], filename="sidebar_add_snapin.py"),
+            target="main",
         )
         html.icon("add", title=_("Add elements to your sidebar"))
         html.close_a()
@@ -489,7 +497,8 @@ class SidebarRenderer:
 
         show_more = user.get_show_more_setting(more_id)
         html.open_div(
-            id_="snapin_container_%s" % name, class_=["snapin", ("more" if show_more else "less")]
+            id_="snapin_container_%s" % name,
+            class_=["snapin", ("more" if show_more else "less")],
         )
 
         self._render_snapin_styles(snapin_instance)
@@ -620,7 +629,9 @@ class SidebarRenderer:
         hooks.call("show-main-menu-bottom")
 
         html.open_div(
-            id_="side_fold", title=_("Toggle the sidebar"), onclick="cmk.sidebar.toggle_sidebar()"
+            id_="side_fold",
+            title=_("Toggle the sidebar"),
+            onclick="cmk.sidebar.toggle_sidebar()",
         )
         html.icon("sidebar_folded", class_=["folded"])
         html.icon("sidebar")
@@ -684,7 +695,12 @@ def ajax_snapin():
                     _("Exception during element refresh (element '%s')")
                     % snapin_instance.type_name()
                 )
-                logger.error("%s %s: %s", request.requested_url, e_message, traceback.format_exc())
+                logger.error(
+                    "%s %s: %s",
+                    request.requested_url,
+                    e_message,
+                    traceback.format_exc(),
+                )
             finally:
                 snapin_code.append(output_funnel.drain())
 
@@ -713,7 +729,11 @@ class AjaxOpenCloseSnapin(AjaxPage):
             return None
 
         state = request.var("state")
-        if state not in [SnapinVisibility.OPEN.value, SnapinVisibility.CLOSED.value, "off"]:
+        if state not in [
+            SnapinVisibility.OPEN.value,
+            SnapinVisibility.CLOSED.value,
+            "off",
+        ]:
             raise MKUserError("state", "Invalid state: %s" % state)
 
         user_config = UserSidebarConfig(user, active_config.sidebar)

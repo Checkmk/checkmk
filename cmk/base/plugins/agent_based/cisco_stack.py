@@ -12,7 +12,15 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 
-from .agent_based_api.v1 import any_of, register, Result, Service, SNMPTree, startswith, State
+from .agent_based_api.v1 import (
+    any_of,
+    register,
+    Result,
+    Service,
+    SNMPTree,
+    startswith,
+    State,
+)
 
 
 @dataclass(frozen=True)

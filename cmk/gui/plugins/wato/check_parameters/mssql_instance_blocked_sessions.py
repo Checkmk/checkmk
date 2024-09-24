@@ -10,7 +10,14 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, DualListChoice, Float, MonitoringState, TextInput, Tuple
+from cmk.gui.valuespec import (
+    Dictionary,
+    DualListChoice,
+    Float,
+    MonitoringState,
+    TextInput,
+    Tuple,
+)
 
 
 def _parameter_valuespec_mssql_instance_blocked_sessions():

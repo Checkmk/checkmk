@@ -18,7 +18,11 @@ from cmk.plugins.lib.fireeye import DETECT
 
 def check_fireeye_lic_active(_no_item, _no_params, info):
     product, content, support = info[0]
-    for feature, value in [("Product", product), ("Content", content), ("Support", support)]:
+    for feature, value in [
+        ("Product", product),
+        ("Content", content),
+        ("Support", support),
+    ]:
         if value == "1":
             yield 0, "%s license active" % feature
         else:

@@ -21,7 +21,11 @@ from cmk.agent_based.v1 import get_average, get_rate, GetRateError
     ],
 )
 def test_get_rate_raises(
-    pre_state: None | tuple[int, int], time: int, value: int, raise_of: bool, errmsg: str
+    pre_state: None | tuple[int, int],
+    time: int,
+    value: int,
+    raise_of: bool,
+    errmsg: str,
 ) -> None:
     store = {"foo": pre_state}
     with pytest.raises(GetRateError, match=errmsg):

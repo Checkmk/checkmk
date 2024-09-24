@@ -17,7 +17,9 @@ from cmk.utils.site import omd_site
 # level and one site per customer with exactly the same name
 def pre_activate_changes_cleanup(_unused):
     log = open("%s/tmp/hook.log" % cmk.utils.paths.omd_root, "w")
-    log.write("omd_site: {}, omd_root: {}\n".format(omd_site(), cmk.utils.paths.omd_root))
+    log.write(
+        "omd_site: {}, omd_root: {}\n".format(omd_site(), cmk.utils.paths.omd_root)
+    )
     confd = "%s/etc/check_mk/conf.d/wato/" % cmk.utils.paths.omd_root
     for _dirname, dirnames, _filenames in os.walk(confd):
         for subdirname in dirnames:

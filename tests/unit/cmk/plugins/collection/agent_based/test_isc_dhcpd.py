@@ -67,7 +67,12 @@ def test_discovery_cisco_ucs_mem(section: DhcpdSection) -> None:
             [
                 Result(state=State.OK, summary="Free leases: 155"),
                 Result(state=State.OK, summary="95.68%"),
-                Metric("free_dhcp_leases", 155.0, levels=(24.3, 8.1), boundaries=(0.0, 162.0)),
+                Metric(
+                    "free_dhcp_leases",
+                    155.0,
+                    levels=(24.3, 8.1),
+                    boundaries=(0.0, 162.0),
+                ),
                 Result(state=State.OK, summary="Used leases: 7"),
                 Result(state=State.OK, summary="4.32%"),
                 Metric("used_dhcp_leases", 7.0, boundaries=(0.0, 162.0)),
@@ -80,7 +85,12 @@ def test_discovery_cisco_ucs_mem(section: DhcpdSection) -> None:
             [
                 Result(state=State.OK, summary="Free leases: 162"),
                 Result(state=State.OK, summary="100.00%"),
-                Metric("free_dhcp_leases", 162.0, levels=(24.3, 8.1), boundaries=(0.0, 162.0)),
+                Metric(
+                    "free_dhcp_leases",
+                    162.0,
+                    levels=(24.3, 8.1),
+                    boundaries=(0.0, 162.0),
+                ),
                 Result(state=State.OK, summary="Used leases: 0"),
                 Result(state=State.OK, summary="0%"),
                 Metric("used_dhcp_leases", 0.0, boundaries=(0.0, 162.0)),

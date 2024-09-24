@@ -6,7 +6,12 @@
 import pytest
 
 from cmk.base.plugins.agent_based import aruba_chassis
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -77,7 +82,8 @@ def test_discover_aruba_chassis_temp(
             [
                 Metric("temp", 56.0, levels=(55.0, 55.0)),
                 Result(
-                    state=State.CRIT, summary="Temperature: 56.0 °C (warn/crit at 55.0 °C/55.0 °C)"
+                    state=State.CRIT,
+                    summary="Temperature: 56.0 °C (warn/crit at 55.0 °C/55.0 °C)",
                 ),
                 Result(state=State.OK, notice="Configuration: show most critical state"),
                 Result(state=State.OK, summary="Min temperature: 30.0 °C"),
@@ -90,7 +96,8 @@ def test_discover_aruba_chassis_temp(
             [
                 Metric("temp", 52.0, levels=(50.0, 60.0)),
                 Result(
-                    state=State.WARN, summary="Temperature: 52.0 °C (warn/crit at 50.0 °C/60.0 °C)"
+                    state=State.WARN,
+                    summary="Temperature: 52.0 °C (warn/crit at 50.0 °C/60.0 °C)",
                 ),
                 Result(state=State.OK, notice="Configuration: show most critical state"),
                 Result(state=State.OK, summary="Min temperature: 25.0 °C"),
@@ -103,7 +110,8 @@ def test_discover_aruba_chassis_temp(
             [
                 Metric("temp", 70.0, levels=(50.0, 60.0)),
                 Result(
-                    state=State.CRIT, summary="Temperature: 70.0 °C (warn/crit at 50.0 °C/60.0 °C)"
+                    state=State.CRIT,
+                    summary="Temperature: 70.0 °C (warn/crit at 50.0 °C/60.0 °C)",
                 ),
                 Result(state=State.OK, notice="Configuration: show most critical state"),
                 Result(state=State.OK, summary="Min temperature: 40.0 °C"),

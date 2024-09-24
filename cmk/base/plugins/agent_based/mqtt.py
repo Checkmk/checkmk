@@ -165,7 +165,11 @@ def parse_mqtt(string_table: type_defs.StringTable) -> Mapping[str, Statistics]:
                 ),
                 counters=MessageCounters(
                     bytes_received_total=parse_int(
-                        raw, ["$SYS/broker/bytes/received", "$SYS/broker/load/bytes/received"]
+                        raw,
+                        [
+                            "$SYS/broker/bytes/received",
+                            "$SYS/broker/load/bytes/received",
+                        ],
                     ),
                     bytes_sent_total=parse_int(
                         raw, ["$SYS/broker/bytes/sent", "$SYS/broker/load/bytes/sent"]
@@ -185,7 +189,10 @@ def parse_mqtt(string_table: type_defs.StringTable) -> Mapping[str, Statistics]:
                     ),
                     publish_messages_sent_total=parse_int(
                         raw,
-                        ["$SYS/broker/publish/messages/sent", "$SYS/broker/messages/publish/sent"],
+                        [
+                            "$SYS/broker/publish/messages/sent",
+                            "$SYS/broker/messages/publish/sent",
+                        ],
                     ),
                 ),
                 retained_messages_count=parse_int(raw, ["$SYS/broker/retained messages/count"]),
@@ -204,7 +211,9 @@ register.agent_section(
 )
 
 
-def discovery_mqtt_broker(section: Mapping[str, Statistics]) -> type_defs.DiscoveryResult:
+def discovery_mqtt_broker(
+    section: Mapping[str, Statistics],
+) -> type_defs.DiscoveryResult:
     """Discover instances which report at least one of the supported values"""
     yield from (
         Service(item=instance_id)
@@ -220,7 +229,10 @@ def check_mqtt_broker(item: str, section: Mapping[str, Statistics]) -> CheckResu
 
     if stats.subscriptions:
         yield from check_levels(
-            stats.subscriptions, metric_name="subscriptions", label="Subscriptions", render_func=str
+            stats.subscriptions,
+            metric_name="subscriptions",
+            label="Subscriptions",
+            render_func=str,
         )
 
     if connections_opened_rate := stats.socket_connections_opened_rate:
@@ -239,7 +251,9 @@ register.check_plugin(
 )
 
 
-def discovery_mqtt_uptime(section: Mapping[str, Statistics]) -> type_defs.DiscoveryResult:
+def discovery_mqtt_uptime(
+    section: Mapping[str, Statistics],
+) -> type_defs.DiscoveryResult:
     yield from (Service(item=instance_id) for instance_id, stats in section.items() if stats.uptime)
 
 
@@ -261,7 +275,9 @@ register.check_plugin(
 )
 
 
-def discovery_mqtt_messages(section: Mapping[str, Statistics]) -> type_defs.DiscoveryResult:
+def discovery_mqtt_messages(
+    section: Mapping[str, Statistics],
+) -> type_defs.DiscoveryResult:
     """Discover instances which report at least one of the supported values. We only look at the
     "received". Assuming the "sent" are also there or not there."""
     yield from (
@@ -351,7 +367,9 @@ register.check_plugin(
 )
 
 
-def discovery_mqtt_clients(section: Mapping[str, Statistics]) -> type_defs.DiscoveryResult:
+def discovery_mqtt_clients(
+    section: Mapping[str, Statistics],
+) -> type_defs.DiscoveryResult:
     """Discover instances which report at least one of the supported values"""
     yield from (
         Service(item=instance_id) for instance_id, stats in section.items() if any(stats.clients)
@@ -382,7 +400,10 @@ def check_mqtt_clients(item: str, section: Mapping[str, Statistics]) -> CheckRes
 
     if clients.total:
         yield from check_levels(
-            clients.total, metric_name="clients_total", label="Total connected", render_func=str
+            clients.total,
+            metric_name="clients_total",
+            label="Total connected",
+            render_func=str,
         )
 
 

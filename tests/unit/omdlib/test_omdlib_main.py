@@ -67,7 +67,9 @@ def test_hostname() -> None:
 
 
 def test_main_help(
-    site_context: SiteContext, capsys: pytest.CaptureFixture[str], version_info: VersionInfo
+    site_context: SiteContext,
+    capsys: pytest.CaptureFixture[str],
+    version_info: VersionInfo,
 ) -> None:
     omdlib.main.main_help(version_info, site_context)
     stdout = capsys.readouterr()[0]
@@ -91,7 +93,9 @@ def test_main_version_of_current_site(
 
 
 def test_main_version_root(
-    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch, version_info: VersionInfo
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+    version_info: VersionInfo,
 ) -> None:
     monkeypatch.setattr(omdlib, "__version__", "1.2.3p4")
     global_opts = omdlib.main.default_global_options()
@@ -553,7 +557,9 @@ def test_permission_action_old_and_new_changed_set_to_new() -> None:
     )
 
 
-def test_permission_action_all_changed_incl_type_ask(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_permission_action_all_changed_incl_type_ask(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setattr(omdlib.main, "user_confirms", lambda *a: True)
     assert (
         omdlib.main.permission_action(
@@ -640,7 +646,9 @@ def test_permission_action_directory_was_removed_in_both() -> None:
         "etc/ssl/certs",
     ],
 )
-def test_permission_action_all_changed_streamline_standard_directories(relpath: str) -> None:
+def test_permission_action_all_changed_streamline_standard_directories(
+    relpath: str,
+) -> None:
     assert (
         omdlib.main.permission_action(
             site=SiteContext("bye"),

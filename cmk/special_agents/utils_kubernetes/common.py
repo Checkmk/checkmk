@@ -6,6 +6,7 @@
 Module for definitions and functions which are used by both the special_agent/agent_kube and
 the utils_kubernetes/performance
 """
+
 import itertools
 import logging
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
@@ -15,7 +16,10 @@ from typing import Generic, NewType, TypeVar
 from pydantic import BaseModel
 
 from cmk.special_agents.utils_kubernetes.schemata import section
-from cmk.special_agents.v0_unstable.agent_common import ConditionalPiggybackSection, SectionWriter
+from cmk.special_agents.v0_unstable.agent_common import (
+    ConditionalPiggybackSection,
+    SectionWriter,
+)
 
 LOGGER = logging.getLogger()
 RawMetrics = Mapping[str, str]
@@ -82,7 +86,9 @@ T_co = TypeVar("T_co", covariant=True, bound=IdentifiableSample)
 
 class Selector(Generic[T_co]):
     def __init__(
-        self, metrics: Sequence[T_co], aggregator: Callable[[Sequence[T_co]], section.Section]
+        self,
+        metrics: Sequence[T_co],
+        aggregator: Callable[[Sequence[T_co]], section.Section],
     ):
         self.aggregator = aggregator
         self.metrics_map: dict[PodLookupName, list[T_co]] = {}

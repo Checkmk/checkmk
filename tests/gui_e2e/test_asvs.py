@@ -10,6 +10,7 @@ Currently we aim for V4.0.3 L1
 
 See:
 - https://owasp.org/www-project-application-security-verification-standard/"""
+
 import pytest
 from playwright.sync_api import BrowserContext
 from playwright.sync_api import TimeoutError as PWTimeoutError
@@ -61,7 +62,10 @@ def test_password_truncation_error(logged_in_page: LoginPage) -> None:
 
 
 def test_cookie_flags(
-    context: BrowserContext, test_site: Site, is_chromium: bool, credentials: CmkCredentials
+    context: BrowserContext,
+    test_site: Site,
+    is_chromium: bool,
+    credentials: CmkCredentials,
 ) -> None:
     """tests for 3.4.X"""
     page = context.new_page()

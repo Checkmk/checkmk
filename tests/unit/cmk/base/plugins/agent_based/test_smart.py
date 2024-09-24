@@ -494,7 +494,8 @@ SECTION_WITH_TEMPERATURE_ONLY = {
 
 
 @pytest.mark.parametrize(
-    "string_table, section", [(STRING_TABLE_SD, SECTION_SD), (STRING_TABLE_NVME, SECTION_NVME)]
+    "string_table, section",
+    [(STRING_TABLE_SD, SECTION_SD), (STRING_TABLE_NVME, SECTION_NVME)],
 )
 def test_parse_smart(string_table: StringTable, section: smart.Section) -> None:
     assert smart.parse_raw_values(string_table) == section

@@ -7,7 +7,11 @@ import pytest
 
 from cmk.utils.exceptions import MKGeneralException
 
-from cmk.gui.graphing._color import _COLOR_WHEEL_SIZE, _hex_color_to_rgb_color, indexed_color
+from cmk.gui.graphing._color import (
+    _COLOR_WHEEL_SIZE,
+    _hex_color_to_rgb_color,
+    indexed_color,
+)
 
 
 @pytest.mark.parametrize(

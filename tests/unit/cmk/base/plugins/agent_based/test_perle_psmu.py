@@ -6,8 +6,14 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
-from cmk.base.plugins.agent_based.perle_psmu import inventory_perle_psmu, parse_perle_psmu
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    InventoryResult,
+    StringTable,
+)
+from cmk.base.plugins.agent_based.perle_psmu import (
+    inventory_perle_psmu,
+    parse_perle_psmu,
+)
 
 from .utils_inventory import sort_inventory_result
 
@@ -18,8 +24,26 @@ from .utils_inventory import sort_inventory_result
         ([], []),
         (
             [
-                ["1", "MCR-ACPWR", "Foo", "104-101015T10175", "1", "12.05", "6.75", "1"],
-                ["2", "MCR-ACPWR", "Bar", "104-101015T10177", "1", "12.05", "6.75", "1"],
+                [
+                    "1",
+                    "MCR-ACPWR",
+                    "Foo",
+                    "104-101015T10175",
+                    "1",
+                    "12.05",
+                    "6.75",
+                    "1",
+                ],
+                [
+                    "2",
+                    "MCR-ACPWR",
+                    "Bar",
+                    "104-101015T10177",
+                    "1",
+                    "12.05",
+                    "6.75",
+                    "1",
+                ],
             ],
             [
                 TableRow(

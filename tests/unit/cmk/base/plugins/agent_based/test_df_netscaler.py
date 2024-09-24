@@ -6,7 +6,12 @@
 import pytest
 
 import cmk.base.plugins.agent_based.df_netscaler as dfn
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS, FSBlocks
 
@@ -67,7 +72,10 @@ def test_check_single_item(section: FSBlocks, monkeypatch: pytest.MonkeyPatch) -
     monkeypatch.setattr(dfn, "get_value_store", lambda: {"/flash.delta": (0, 720)})
     assert list(dfn.check_df_netscaler("/flash", FILESYSTEM_DEFAULT_PARAMS, section)) == [
         Metric(
-            "fs_used", 720.0, levels=(6380.799999237061, 7178.39999961853), boundaries=(0.0, 7976.0)
+            "fs_used",
+            720.0,
+            levels=(6380.799999237061, 7178.39999961853),
+            boundaries=(0.0, 7976.0),
         ),
         Metric("fs_free", 7256.0, boundaries=(0.0, None)),
         Metric(

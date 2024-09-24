@@ -55,7 +55,11 @@ def get_context_page_menu_dropdowns(view: View, rows: Rows, mobile: bool) -> lis
     # Reports are displayed by separate dropdown (Export > Report)
     linked_visuals = list(
         _collect_linked_visuals(
-            view, rows, singlecontext_request_vars, mobile, visual_types=["views", "dashboards"]
+            view,
+            rows,
+            singlecontext_request_vars,
+            mobile,
+            visual_types=["views", "dashboards"],
         )
     )
 
@@ -151,7 +155,9 @@ def _get_context_page_menu_topics(
 
 
 def _get_visuals_for_page_menu_dropdown(
-    linked_visuals: list[tuple[VisualType, Visual]], info: VisualInfo, is_single_info: bool
+    linked_visuals: list[tuple[VisualType, Visual]],
+    info: VisualInfo,
+    is_single_info: bool,
 ) -> Iterator[tuple[VisualType, Visual]]:
     """Extract the visuals for the given dropdown from the flat linked visuals list"""
     for visual_type, visual in linked_visuals:
@@ -204,7 +210,11 @@ def _collect_linked_visuals(
 
 
 def _collect_linked_visuals_of_type(
-    type_name: str, view: View, rows: Rows, singlecontext_request_vars: dict[str, str], mobile: bool
+    type_name: str,
+    view: View,
+    rows: Rows,
+    singlecontext_request_vars: dict[str, str],
+    mobile: bool,
 ) -> Iterator[tuple[VisualType, Visual]]:
     visual_type = visual_type_registry[type_name]()
     visual_type.load_handler()
@@ -292,7 +302,11 @@ def _get_availability_entry(
         title=_("Availability"),
         icon_name="availability",
         item=make_simple_link(
-            makeuri(request, [("mode", "availability")], delvars=["show_checkboxes", "selection"])
+            makeuri(
+                request,
+                [("mode", "availability")],
+                delvars=["show_checkboxes", "selection"],
+            )
         ),
         is_enabled=not view.missing_single_infos,
         disabled_tooltip=(
@@ -355,7 +369,12 @@ def _show_combined_graphs_context_button(view: View) -> bool:
     if view.name == "service":
         return False
 
-    return view.datasource.ident in ["hosts", "services", "hostsbygroup", "servicesbygroup"]
+    return view.datasource.ident in [
+        "hosts",
+        "services",
+        "hostsbygroup",
+        "servicesbygroup",
+    ]
 
 
 def _show_in_current_dropdown(view: View, info_name: InfoName, is_single_info: bool) -> bool:

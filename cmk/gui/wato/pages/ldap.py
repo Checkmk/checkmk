@@ -23,7 +23,11 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
-from cmk.gui.userdb import get_connection, load_connection_config, save_connection_config
+from cmk.gui.userdb import (
+    get_connection,
+    load_connection_config,
+    save_connection_config,
+)
 from cmk.gui.userdb.ldap_connector import (
     ldap_attr_of_connection,
     ldap_attribute_plugins_elements,
@@ -180,7 +184,11 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
                     ),
                     choices=[
                         ("ad", _("Active Directory"), self._vs_directory_options("ad")),
-                        ("openldap", _("OpenLDAP"), self._vs_directory_options("openldap")),
+                        (
+                            "openldap",
+                            _("OpenLDAP"),
+                            self._vs_directory_options("openldap"),
+                        ),
                         (
                             "389directoryserver",
                             _("389 Directory Server"),
@@ -655,7 +663,8 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
                         index,
                     )
                     raise MKUserError(
-                        varname, _("The configured DN does not match the group base DN.")
+                        varname,
+                        _("The configured DN does not match the group base DN."),
                     )
 
     def _validate_ldap_connection_suffix(self, value, varprefix):
@@ -699,7 +708,9 @@ class ModeLDAPConfig(WatoMode):
 
     def action(self) -> ActionResult:
         return connection_actions(
-            config_mode_url=self.mode_url(), connection_type=self.type, custom_config_dirs=()
+            config_mode_url=self.mode_url(),
+            connection_type=self.type,
+            custom_config_dirs=(),
         )
 
     def page(self) -> None:
@@ -896,7 +907,10 @@ class ModeEditLDAPConnection(WatoMode):
     def _test_connect(self, connection, address):
         conn, msg = connection.connect_server(address)
         if conn:
-            return (True, _("Connection established. The connection settings seem to be ok."))
+            return (
+                True,
+                _("Connection established. The connection settings seem to be ok."),
+            )
         return (False, msg)
 
     def _test_user_base_dn(self, connection, address):
@@ -949,7 +963,10 @@ class ModeEditLDAPConnection(WatoMode):
 
     def _test_group_base_dn(self, connection, address):
         if not connection.has_group_base_dn_configured():
-            return (False, _("The Group Base DN is not configured, not fetching any groups."))
+            return (
+                False,
+                _("The Group Base DN is not configured, not fetching any groups."),
+            )
         connection.connect(enforce_new=True, enforce_server=address)
         if connection.group_base_dn_exists():
             return (True, _("The Group Base DN could be found."))
@@ -957,7 +974,10 @@ class ModeEditLDAPConnection(WatoMode):
 
     def _test_group_count(self, connection, address):
         if not connection.has_group_base_dn_configured():
-            return (False, _("The Group Base DN is not configured, not fetching any groups."))
+            return (
+                False,
+                _("The Group Base DN is not configured, not fetching any groups."),
+            )
         connection.connect(enforce_new=True, enforce_server=address)
         try:
             ldap_groups = connection.get_groups()

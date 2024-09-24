@@ -26,7 +26,8 @@ def wrap_with_no_levels_dropdown(
 
 
 def age_levels_dropdown(
-    title: str | None = None, default_choice: Literal["levels", "no_levels"] = "no_levels"
+    title: str | None = None,
+    default_choice: Literal["levels", "no_levels"] = "no_levels",
 ) -> CascadingDropdown:
     return wrap_with_no_levels_dropdown(
         title=title,

@@ -44,7 +44,11 @@ for line in csv_file:
 csv_file.close()
 
 host_tags_info: dict[str, Any] = {"wato_aux_tags": [], "wato_host_tags": []}
-exec(open("%s/../../multisite.d/wato/hosttags.mk" % pathlokal).read(), globals(), host_tags_info)
+exec(
+    open("%s/../../multisite.d/wato/hosttags.mk" % pathlokal).read(),
+    globals(),
+    host_tags_info,
+)
 
 host_tag_mapping = {}
 aux_tag_mapping = {}
@@ -70,7 +74,9 @@ for folder in folders:
                 if tag not in host_tag_mapping:
                     print("Unknown host tag: %s" % tag)
                 else:
-                    extra_infos.append("'tag_{}': '{}'".format(host_tag_mapping[tag], tag))
+                    extra_infos.append(
+                        "'tag_{}': '{}'".format(host_tag_mapping[tag], tag)
+                    )
 
         extra_aux_tags = ""
         if host_aux_tags:
@@ -92,7 +98,9 @@ for folder in folders:
             )
             ips += "'{}' : '{}',\n".format(real_name, ipaddress)
         else:
-            host_attributes += "'{}' : {{{}}},\n".format(real_name, ", ".join(extra_infos))
+            host_attributes += "'{}' : {{{}}},\n".format(
+                real_name, ", ".join(extra_infos)
+            )
 
     hosts_mk_file = open(pathlokal + folder + "/hosts.mk", "w")
     hosts_mk_file.write("all_hosts += [\n")
@@ -111,6 +119,7 @@ for folder in folders:
 
     wato_file = open(pathlokal + folder + "/.wato", "w")
     wato_file.write(
-        "{'attributes': {}, 'num_hosts': %d, 'title': '%s'}\n" % (len(folders[folder]), folder)
+        "{'attributes': {}, 'num_hosts': %d, 'title': '%s'}\n"
+        % (len(folders[folder]), folder)
     )
     wato_file.close()

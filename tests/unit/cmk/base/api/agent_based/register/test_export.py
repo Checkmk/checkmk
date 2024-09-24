@@ -27,7 +27,11 @@ from cmk.base.api.agent_based.register import (
 )
 
 from cmk.agent_based.v1 import SNMPTree, startswith
-from cmk.agent_based.v1.type_defs import DiscoveryResult, HostLabelGenerator, InventoryResult
+from cmk.agent_based.v1.type_defs import (
+    DiscoveryResult,
+    HostLabelGenerator,
+    InventoryResult,
+)
 
 from .test_check_plugins import dummy_function_ips
 from .test_section_plugins import parse_dummy

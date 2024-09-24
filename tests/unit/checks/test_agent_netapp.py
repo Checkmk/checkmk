@@ -17,7 +17,11 @@ pytestmark = pytest.mark.checks
     ["params", "expected_args"],
     [
         pytest.param(
-            {"username": "user", "password": ("password", "password"), "skip_elements": []},
+            {
+                "username": "user",
+                "password": ("password", "password"),
+                "skip_elements": [],
+            },
             [
                 "address",
                 "user",
@@ -42,7 +46,11 @@ pytestmark = pytest.mark.checks
             id="skip volumes and explicit password",
         ),
         pytest.param(
-            {"username": "user", "password": ("store", "netapp"), "skip_elements": ["ctr_volumes"]},
+            {
+                "username": "user",
+                "password": ("store", "netapp"),
+                "skip_elements": ["ctr_volumes"],
+            },
             [
                 "address",
                 "user",

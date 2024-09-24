@@ -42,7 +42,13 @@ def find_debugs(line: str) -> re.Match[str] | None:
 
 
 @pytest.mark.parametrize(
-    "line", ['  print "hello Word"', 'print("variable")', "  pprint(dict)", "  pprint.pprint(list)"]
+    "line",
+    [
+        '  print "hello Word"',
+        'print("variable")',
+        "  pprint(dict)",
+        "  pprint.pprint(list)",
+    ],
 )
 def test_find_debugs(changed_files: ChangedFiles, line: str) -> None:
     assert find_debugs(line)

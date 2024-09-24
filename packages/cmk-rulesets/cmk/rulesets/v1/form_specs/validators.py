@@ -251,7 +251,8 @@ class EmailAddress:  # pylint: disable=too-few-public-methods
         # not allowed by RFC5322.
 
         email_regex = re.compile(
-            r"^[\w.!#$%&'*+-=?^`{|}~]+@(localhost|[\w.-]+\.[\w]{2,24})$", re.I | re.UNICODE
+            r"^[\w.!#$%&'*+-=?^`{|}~]+@(localhost|[\w.-]+\.[\w]{2,24})$",
+            re.I | re.UNICODE,
         )
         if not email_regex.match(value):
             raise ValidationError(self.error_msg)

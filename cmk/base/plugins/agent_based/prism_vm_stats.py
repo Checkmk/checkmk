@@ -8,7 +8,15 @@ from typing import Any
 
 from cmk.plugins.lib.memory import check_element
 
-from .agent_based_api.v1 import check_levels, Metric, register, render, Result, Service, State
+from .agent_based_api.v1 import (
+    check_levels,
+    Metric,
+    register,
+    render,
+    Result,
+    Service,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 Section = Mapping[str, Any]

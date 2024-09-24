@@ -46,7 +46,8 @@ def test_check_guest_tools_with_unknonw() -> None:
 def test_check_guest_tools_with_params() -> None:
     check_result = list(
         esx_vsphere_vm_guest_tools.check_guest_tools(
-            {"guestToolsNeedUpgrade": 0}, _esx_vm_section(ESXStatus.guestToolsNeedUpgrade)
+            {"guestToolsNeedUpgrade": 0},
+            _esx_vm_section(ESXStatus.guestToolsNeedUpgrade),
         )
     )
     results = [r for r in check_result if isinstance(r, Result)]

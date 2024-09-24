@@ -37,7 +37,13 @@ check_info["raritan_pdu_inlet_summary"] = LegacyCheckDefinition(
     detect=DETECT_RARITAN,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.13742.6",
-        oids=[OIDEnd(), "3.3.4.1.7.1.1", "5.2.3.1.2.1.1", "5.2.3.1.3.1.1", "5.2.3.1.4.1.1"],
+        oids=[
+            OIDEnd(),
+            "3.3.4.1.7.1.1",
+            "5.2.3.1.2.1.1",
+            "5.2.3.1.3.1.1",
+            "5.2.3.1.4.1.1",
+        ],
     ),
     parse_function=parse_raritan_pdu_inlet_summary,
     service_name="Input %s",

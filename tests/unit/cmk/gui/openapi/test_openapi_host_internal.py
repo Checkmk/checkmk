@@ -165,7 +165,9 @@ def test_openapi_host_register_ok(aut_user_auth_wsgi_app: WebTestAppForCMK) -> N
 
 
 @pytest.mark.usefixtures("with_host")
-def test_openapi_host_register_missing(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+def test_openapi_host_register_missing(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+) -> None:
     aut_user_auth_wsgi_app.put(
         urljoin(_HOST_CONFIG_INTERNAL_BASE, "not-existant/actions/register/invoke"),
         params=json.dumps({"uuid": "1409ac78-6548-4138-9285-12484409ddf2"}),
@@ -176,7 +178,9 @@ def test_openapi_host_register_missing(aut_user_auth_wsgi_app: WebTestAppForCMK)
 
 
 @pytest.mark.usefixtures("with_host")
-def test_openapi_host_register_bad_uuid(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+def test_openapi_host_register_bad_uuid(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+) -> None:
     aut_user_auth_wsgi_app.put(
         _URL_REGISTER,
         params=json.dumps({"uuid": "abc-123"}),
@@ -187,7 +191,9 @@ def test_openapi_host_register_bad_uuid(aut_user_auth_wsgi_app: WebTestAppForCMK
 
 
 @pytest.mark.usefixtures("with_host")
-def test_openapi_host_register_cluster(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+def test_openapi_host_register_cluster(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+) -> None:
     aut_user_auth_wsgi_app.call_method(
         "post",
         urljoin(_API_BASE, "domain-types/host_config/collections/clusters"),
@@ -208,7 +214,9 @@ def test_openapi_host_register_cluster(aut_user_auth_wsgi_app: WebTestAppForCMK)
 
 
 @pytest.mark.usefixtures("with_host")
-def test_openapi_host_register_wrong_site(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+def test_openapi_host_register_wrong_site(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+) -> None:
     resp = aut_user_auth_wsgi_app.call_method(
         "post",
         urljoin(_API_BASE, "domain-types/host_config/collections/all"),

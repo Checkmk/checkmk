@@ -8,7 +8,14 @@ from typing import NamedTuple
 
 from cmk.plugins.lib.ciena_ces import DETECT_CIENA_5171
 
-from .agent_based_api.v1 import check_levels, OIDEnd, register, render, Service, SNMPTree
+from .agent_based_api.v1 import (
+    check_levels,
+    OIDEnd,
+    register,
+    render,
+    Service,
+    SNMPTree,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 

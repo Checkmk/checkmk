@@ -24,7 +24,11 @@ def check_huawei_osn_power(item, params, info):
             reading = int(line[1])
             warn, crit = params["levels"]
 
-            yield 0, "Current reading: %s W" % reading, [("power", reading, warn, crit, 0)]
+            yield (
+                0,
+                "Current reading: %s W" % reading,
+                [("power", reading, warn, crit, 0)],
+            )
 
             if reading >= crit:
                 state = 2

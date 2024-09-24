@@ -152,7 +152,10 @@ def get_source_and_piggyback_hosts(
         ):
             if not file_info.successfully_processed:
                 continue
-            yield HostName(file_info.source_hostname), HostName(piggybacked_host_folder.name)
+            yield (
+                HostName(file_info.source_hostname),
+                HostName(piggybacked_host_folder.name),
+            )
 
 
 def has_piggyback_raw_data(
@@ -189,7 +192,10 @@ class _TimeSettingsMap:
         self._expanded_settings: Final = matching_time_settings
 
     def _match(
-        self, key: str, source_hostname: HostName, piggybacked_hostname: HostName | HostAddress
+        self,
+        key: str,
+        source_hostname: HostName,
+        piggybacked_hostname: HostName | HostAddress,
     ) -> int:
         with suppress(KeyError):
             return self._expanded_settings[(piggybacked_hostname, key)]
@@ -395,7 +401,10 @@ def _store_status_file_of(
     # - status file is newer (before utime of piggybacked host files is set)
     # => piggybacked host file is outdated
     with tempfile.NamedTemporaryFile(
-        "wb", dir=str(status_file_path.parent), prefix=f".{status_file_path.name}.new", delete=False
+        "wb",
+        dir=str(status_file_path.parent),
+        prefix=f".{status_file_path.name}.new",
+        delete=False,
     ) as tmp:
         tmp_path = tmp.name
         tmp.write(b"")
@@ -513,14 +522,18 @@ def _get_piggybacked_hosts_settings(
 
 
 def _cleanup_old_source_status_files(
-    piggybacked_hosts_settings: Iterable[tuple[Path, Iterable[Path], _TimeSettingsMap]]
+    piggybacked_hosts_settings: Iterable[tuple[Path, Iterable[Path], _TimeSettingsMap]],
 ) -> None:
     """Remove source status files which exceed configured maximum cache age.
     There may be several 'Piggybacked Host Files' rules where the max age is configured.
     We simply use the greatest one per source."""
 
     max_cache_age_by_sources: dict[str, int] = {}
-    for piggybacked_host_folder, source_hosts, time_settings in piggybacked_hosts_settings:
+    for (
+        piggybacked_host_folder,
+        source_hosts,
+        time_settings,
+    ) in piggybacked_hosts_settings:
         for source_host in source_hosts:
             max_cache_age = time_settings.max_cache_age(
                 HostName(source_host.name),
@@ -558,11 +571,15 @@ def _cleanup_old_source_status_files(
 
 
 def _cleanup_old_piggybacked_files(
-    piggybacked_hosts_settings: Iterable[tuple[Path, Iterable[Path], _TimeSettingsMap]]
+    piggybacked_hosts_settings: Iterable[tuple[Path, Iterable[Path], _TimeSettingsMap]],
 ) -> None:
     """Remove piggybacked data files which exceed configured maximum cache age."""
 
-    for piggybacked_host_folder, source_hosts, time_settings in piggybacked_hosts_settings:
+    for (
+        piggybacked_host_folder,
+        source_hosts,
+        time_settings,
+    ) in piggybacked_hosts_settings:
         for piggybacked_host_source in source_hosts:
             src = HostName(piggybacked_host_source.name)
             dst = HostName(piggybacked_host_folder.name)
@@ -580,7 +597,9 @@ def _cleanup_old_piggybacked_files(
                 continue
 
             logger.log(
-                VERBOSE, "Piggyback file '%s' is outdated. Remove it.", piggybacked_host_source
+                VERBOSE,
+                "Piggyback file '%s' is outdated. Remove it.",
+                piggybacked_host_source,
             )
             _remove_piggyback_file(piggybacked_host_source)
 

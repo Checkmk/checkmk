@@ -292,7 +292,9 @@ def _get_sensitivity_suffix(sensitivity: CheckmkFileSensitivity) -> str:
             return "(L)"
 
 
-def get_checkmk_file_description(rel_filepath: str | None = None) -> Sequence[tuple[str, str]]:
+def get_checkmk_file_description(
+    rel_filepath: str | None = None,
+) -> Sequence[tuple[str, str]]:
     cmk_file_info = {**CheckmkFileInfoByNameMap, **CheckmkFileInfoByRelFilePathMap}
     if rel_filepath is not None:
         return [(rel_filepath, cmk_file_info[rel_filepath].description)]

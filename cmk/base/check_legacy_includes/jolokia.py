@@ -4,7 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import Callable, Iterable, Mapping, MutableMapping, MutableSequence, Sequence
+from collections.abc import (
+    Callable,
+    Iterable,
+    Mapping,
+    MutableMapping,
+    MutableSequence,
+    Sequence,
+)
 from typing import Any
 
 #   .--Parse---------------------------------------------------------------.
@@ -17,7 +24,9 @@ from typing import Any
 #   '----------------------------------------------------------------------'
 
 
-def parse_jolokia_json_output(info: Sequence[Sequence[str]]) -> Iterable[tuple[str, str, Any]]:
+def parse_jolokia_json_output(
+    info: Sequence[Sequence[str]],
+) -> Iterable[tuple[str, str, Any]]:
     for line in info:
         try:
             instance, mbean, raw_json_data = line
@@ -50,7 +59,9 @@ def jolokia_basic_split(line: MutableSequence[str], expected_length: int) -> Mut
     return tokens
 
 
-def jolokoia_extract_opt(instance_raw: str) -> tuple[str, MutableMapping[str, str], Sequence[str]]:
+def jolokoia_extract_opt(
+    instance_raw: str,
+) -> tuple[str, MutableMapping[str, str], Sequence[str]]:
     if "," not in instance_raw:
         return instance_raw, {}, []
 
@@ -80,7 +91,9 @@ def jolokoia_extract_opt(instance_raw: str) -> tuple[str, MutableMapping[str, st
 #   '----------------------------------------------------------------------'
 
 
-def jolokia_metrics_parse(info: Sequence[MutableSequence[str]]) -> Mapping[str, Mapping[str, Any]]:
+def jolokia_metrics_parse(
+    info: Sequence[MutableSequence[str]],
+) -> Mapping[str, Mapping[str, Any]]:
     parsed: dict[str, dict[str, Any]] = {}
     for line in info:
         if len(line) > 1 and line[1] == "ERROR":
@@ -150,7 +163,9 @@ def get_inventory_jolokia_metrics_apps(  # pylint: disable=too-many-branches
     *,
     needed_keys: set[str],
 ) -> Callable[[list[list[str]]], Sequence[tuple[str, Mapping[str, object]]]]:
-    def inventory_function(info: list[list[str]]) -> Sequence[tuple[str, Mapping[str, object]]]:
+    def inventory_function(
+        info: list[list[str]],
+    ) -> Sequence[tuple[str, Mapping[str, object]]]:
         inv: list[tuple[str, Mapping[str, object]]] = []
         parsed = jolokia_metrics_parse(info)
 

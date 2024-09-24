@@ -19,7 +19,14 @@ from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.plugins.agent_based import brocade_fcport as bf
 
-from cmk.agent_based.v1 import GetRateError, IgnoreResults, Metric, Result, Service, State
+from cmk.agent_based.v1 import (
+    GetRateError,
+    IgnoreResults,
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.plugins.lib.brocade import DISCOVERY_DEFAULT_PARAMETERS
 
 STRING_TABLE_INDEX_1_MISSING = [
@@ -293,16 +300,20 @@ def test_discovery_idx(section_idx: bf.Section) -> None:
     ) == sorted(
         [
             Service(
-                item="44 ISL port44", parameters={"phystate": [6], "opstate": [1], "admstate": [1]}
+                item="44 ISL port44",
+                parameters={"phystate": [6], "opstate": [1], "admstate": [1]},
             ),
             Service(
-                item="45 ISL port45", parameters={"phystate": [6], "opstate": [1], "admstate": [1]}
+                item="45 ISL port45",
+                parameters={"phystate": [6], "opstate": [1], "admstate": [1]},
             ),
             Service(
-                item="46 ISL port46", parameters={"phystate": [6], "opstate": [1], "admstate": [1]}
+                item="46 ISL port46",
+                parameters={"phystate": [6], "opstate": [1], "admstate": [1]},
             ),
             Service(
-                item="47 ISL port47", parameters={"phystate": [6], "opstate": [1], "admstate": [1]}
+                item="47 ISL port47",
+                parameters={"phystate": [6], "opstate": [1], "admstate": [1]},
             ),
         ]
     )
@@ -466,9 +477,18 @@ def test_interface_speed(fix_register: FixRegister, as_path: Callable[[str], Pat
             parsed,
         )
     ) == [
-        Service(item="2 port2", parameters={"phystate": [6], "opstate": [1], "admstate": [1]}),
-        Service(item="3 port3", parameters={"phystate": [6], "opstate": [1], "admstate": [1]}),
-        Service(item="4 ISL port4", parameters={"phystate": [6], "opstate": [1], "admstate": [1]}),
+        Service(
+            item="2 port2",
+            parameters={"phystate": [6], "opstate": [1], "admstate": [1]},
+        ),
+        Service(
+            item="3 port3",
+            parameters={"phystate": [6], "opstate": [1], "admstate": [1]},
+        ),
+        Service(
+            item="4 ISL port4",
+            parameters={"phystate": [6], "opstate": [1], "admstate": [1]},
+        ),
     ]
 
     assert _get_check_result(parsed, "003 port3") == [

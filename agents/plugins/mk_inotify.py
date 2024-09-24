@@ -291,7 +291,12 @@ def main():  # pylint: disable=too-many-branches
         folder = section_tokens[0]
         folder_configs.setdefault(
             folder,
-            {"add_modes": {}, "del_modes": {}, "all_add_modes": set([]), "all_del_modes": set([])},
+            {
+                "add_modes": {},
+                "del_modes": {},
+                "all_add_modes": set([]),
+                "all_del_modes": set([]),
+            },
         )
 
         files = None

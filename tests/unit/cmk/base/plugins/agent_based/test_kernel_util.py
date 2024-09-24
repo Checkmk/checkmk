@@ -9,7 +9,12 @@ import freezegun
 import pytest
 
 from cmk.base.plugins.agent_based import kernel
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
 SECTION: kernel.Section = (
@@ -109,8 +114,14 @@ def test_discovery() -> None:
         (
             {"levels_single": (1, 5)},
             [
-                Result(state=State.WARN, notice="Core cpu0: 2.54% (warn/crit at 1.00%/5.00%)"),
-                Result(state=State.WARN, notice="Core cpu1: 2.16% (warn/crit at 1.00%/5.00%)"),
+                Result(
+                    state=State.WARN,
+                    notice="Core cpu0: 2.54% (warn/crit at 1.00%/5.00%)",
+                ),
+                Result(
+                    state=State.WARN,
+                    notice="Core cpu1: 2.16% (warn/crit at 1.00%/5.00%)",
+                ),
             ],
         ),
         (
@@ -155,9 +166,15 @@ def test_discovery() -> None:
         (
             {"levels_single": (1, 5), "core_util_graph": True},
             [
-                Result(state=State.WARN, summary="Core cpu0: 2.54% (warn/crit at 1.00%/5.00%)"),
+                Result(
+                    state=State.WARN,
+                    summary="Core cpu0: 2.54% (warn/crit at 1.00%/5.00%)",
+                ),
                 Metric("cpu_core_util_0", 2.544477089431855, levels=(1.0, 5.0)),
-                Result(state=State.WARN, summary="Core cpu1: 2.16% (warn/crit at 1.00%/5.00%)"),
+                Result(
+                    state=State.WARN,
+                    summary="Core cpu1: 2.16% (warn/crit at 1.00%/5.00%)",
+                ),
                 Metric("cpu_core_util_1", 2.158715165178048, levels=(1.0, 5.0)),
             ],
         ),
@@ -192,7 +209,10 @@ def test_discovery() -> None:
                         " (warn/crit at 1 second/2 seconds)"
                     ),
                 ),
-                Result(state=State.WARN, summary="Core cpu0: 2.54% (warn/crit at 1.00%/5.00%)"),
+                Result(
+                    state=State.WARN,
+                    summary="Core cpu0: 2.54% (warn/crit at 1.00%/5.00%)",
+                ),
                 Result(
                     state=State.CRIT,
                     summary=(
@@ -200,11 +220,18 @@ def test_discovery() -> None:
                         " (warn/crit at 1 second/2 seconds)"
                     ),
                 ),
-                Result(state=State.WARN, summary="Core cpu1: 2.16% (warn/crit at 1.00%/5.00%)"),
+                Result(
+                    state=State.WARN,
+                    summary="Core cpu1: 2.16% (warn/crit at 1.00%/5.00%)",
+                ),
             ],
         ),
         (
-            {"levels_single": (80, 90), "core_util_graph": True, "core_util_time": (1, 1, 2)},
+            {
+                "levels_single": (80, 90),
+                "core_util_graph": True,
+                "core_util_time": (1, 1, 2),
+            },
             [
                 Result(
                     state=State.CRIT,
@@ -227,7 +254,11 @@ def test_discovery() -> None:
             ],
         ),
         (
-            {"levels_single": (1, 5), "core_util_graph": True, "core_util_time": (1, 1, 2)},
+            {
+                "levels_single": (1, 5),
+                "core_util_graph": True,
+                "core_util_time": (1, 1, 2),
+            },
             [
                 Result(
                     state=State.CRIT,
@@ -236,7 +267,10 @@ def test_discovery() -> None:
                         " (warn/crit at 1 second/2 seconds)"
                     ),
                 ),
-                Result(state=State.WARN, summary="Core cpu0: 2.54% (warn/crit at 1.00%/5.00%)"),
+                Result(
+                    state=State.WARN,
+                    summary="Core cpu0: 2.54% (warn/crit at 1.00%/5.00%)",
+                ),
                 Metric("cpu_core_util_0", 2.544477089431855, levels=(1.0, 5.0)),
                 Result(
                     state=State.CRIT,
@@ -245,44 +279,75 @@ def test_discovery() -> None:
                         " (warn/crit at 1 second/2 seconds)"
                     ),
                 ),
-                Result(state=State.WARN, summary="Core cpu1: 2.16% (warn/crit at 1.00%/5.00%)"),
+                Result(
+                    state=State.WARN,
+                    summary="Core cpu1: 2.16% (warn/crit at 1.00%/5.00%)",
+                ),
                 Metric("cpu_core_util_1", 2.158715165178048, levels=(1.0, 5.0)),
             ],
         ),
         (
-            {"average_single": {"time_average": 2, "apply_levels": False, "show_graph": False}},
+            {
+                "average_single": {
+                    "time_average": 2,
+                    "apply_levels": False,
+                    "show_graph": False,
+                }
+            },
             CORE_RESULT,
         ),
         (
             {
                 "levels_single": (80, 90),
-                "average_single": {"time_average": 2, "apply_levels": False, "show_graph": False},
+                "average_single": {
+                    "time_average": 2,
+                    "apply_levels": False,
+                    "show_graph": False,
+                },
             },
             CORE_RESULT,
         ),
         (
             {
                 "levels_single": (1, 5),
-                "average_single": {"time_average": 2, "apply_levels": False, "show_graph": False},
+                "average_single": {
+                    "time_average": 2,
+                    "apply_levels": False,
+                    "show_graph": False,
+                },
             },
             [
-                Result(state=State.WARN, summary="Core cpu0: 2.54% (warn/crit at 1.00%/5.00%)"),
+                Result(
+                    state=State.WARN,
+                    summary="Core cpu0: 2.54% (warn/crit at 1.00%/5.00%)",
+                ),
                 Result(state=State.OK, notice="Core cpu0 (2-min average): 2.54%"),
-                Result(state=State.WARN, summary="Core cpu1: 2.16% (warn/crit at 1.00%/5.00%)"),
+                Result(
+                    state=State.WARN,
+                    summary="Core cpu1: 2.16% (warn/crit at 1.00%/5.00%)",
+                ),
                 Result(state=State.OK, notice="Core cpu1 (2-min average): 2.16%"),
             ],
         ),
         (
             {
                 "levels_single": (80, 90),
-                "average_single": {"time_average": 2, "apply_levels": True, "show_graph": False},
+                "average_single": {
+                    "time_average": 2,
+                    "apply_levels": True,
+                    "show_graph": False,
+                },
             },
             CORE_RESULT,
         ),
         (
             {
                 "levels_single": (1, 5),
-                "average_single": {"time_average": 2, "apply_levels": True, "show_graph": False},
+                "average_single": {
+                    "time_average": 2,
+                    "apply_levels": True,
+                    "show_graph": False,
+                },
             },
             [
                 Result(state=State.OK, notice="Core cpu0: 2.54%"),
@@ -300,7 +365,11 @@ def test_discovery() -> None:
         (
             {
                 "levels_single": (0, 1),
-                "average_single": {"time_average": 2, "apply_levels": True, "show_graph": False},
+                "average_single": {
+                    "time_average": 2,
+                    "apply_levels": True,
+                    "show_graph": False,
+                },
             },
             [
                 Result(state=State.OK, notice="Core cpu0: 2.54%"),
@@ -316,7 +385,13 @@ def test_discovery() -> None:
             ],
         ),
         (
-            {"average_single": {"time_average": 2, "apply_levels": False, "show_graph": True}},
+            {
+                "average_single": {
+                    "time_average": 2,
+                    "apply_levels": False,
+                    "show_graph": True,
+                }
+            },
             [
                 Result(state=State.OK, notice="Core cpu0: 2.54%"),
                 Result(state=State.OK, notice="Core cpu0 (2-min average): 2.54%"),
@@ -329,7 +404,11 @@ def test_discovery() -> None:
         (
             {
                 "core_util_graph": True,
-                "average_single": {"time_average": 2, "apply_levels": False, "show_graph": False},
+                "average_single": {
+                    "time_average": 2,
+                    "apply_levels": False,
+                    "show_graph": False,
+                },
             },
             [
                 Result(state=State.OK, notice="Core cpu0: 2.54%"),
@@ -343,7 +422,11 @@ def test_discovery() -> None:
         (
             {  # 19
                 "core_util_graph": True,
-                "average_single": {"time_average": 2, "apply_levels": False, "show_graph": True},
+                "average_single": {
+                    "time_average": 2,
+                    "apply_levels": False,
+                    "show_graph": True,
+                },
             },
             [
                 Result(state=State.OK, notice="Core cpu0: 2.54%"),
@@ -360,14 +443,24 @@ def test_discovery() -> None:
             {  # 20
                 "levels_single": (1, 5),
                 "core_util_graph": True,
-                "average_single": {"time_average": 2, "apply_levels": False, "show_graph": True},
+                "average_single": {
+                    "time_average": 2,
+                    "apply_levels": False,
+                    "show_graph": True,
+                },
             },
             [
-                Result(state=State.WARN, summary="Core cpu0: 2.54% (warn/crit at 1.00%/5.00%)"),
+                Result(
+                    state=State.WARN,
+                    summary="Core cpu0: 2.54% (warn/crit at 1.00%/5.00%)",
+                ),
                 Metric("cpu_core_util_0", 2.544477089431855, levels=(1.0, 5.0)),
                 Result(state=State.OK, notice="Core cpu0 (2-min average): 2.54%"),
                 Metric("cpu_core_util_average_0", 2.544477089431855),
-                Result(state=State.WARN, summary="Core cpu1: 2.16% (warn/crit at 1.00%/5.00%)"),
+                Result(
+                    state=State.WARN,
+                    summary="Core cpu1: 2.16% (warn/crit at 1.00%/5.00%)",
+                ),
                 Metric("cpu_core_util_1", 2.158715165178048, levels=(1.0, 5.0)),
                 Result(state=State.OK, notice="Core cpu1 (2-min average): 2.16%"),
                 Metric("cpu_core_util_average_1", 2.158715165178048),
@@ -377,7 +470,11 @@ def test_discovery() -> None:
             {  # 21
                 "levels_single": (0, 1),
                 "core_util_graph": True,
-                "average_single": {"time_average": 2, "apply_levels": False, "show_graph": True},
+                "average_single": {
+                    "time_average": 2,
+                    "apply_levels": False,
+                    "show_graph": True,
+                },
             },
             [
                 Result(state=State.CRIT, summary="Core cpu0: 2.54% (warn/crit at 0%/1.00%)"),

@@ -36,7 +36,7 @@ from email.message import Message as POPIMAPMessage
 from typing import Any, Literal
 
 import urllib3
-from exchangelib import (  # type: ignore[import]
+from exchangelib import (  # type: ignore[import]  # type: ignore[import]  # type: ignore[import]  # type: ignore[import]
     Account,
     Configuration,
     Credentials,
@@ -46,9 +46,10 @@ from exchangelib import (  # type: ignore[import]
     Folder,
     Identity,
     IMPERSONATION,
+    OAUTH2,
+    OAuth2Credentials,
 )
 from exchangelib import Message as EWSMessage
-from exchangelib import OAUTH2, OAuth2Credentials  # type: ignore[import]
 from exchangelib import protocol as ews_protocol
 
 import cmk.utils.password_store
@@ -248,7 +249,9 @@ def extract_folder_names(folder_list: Iterable[bytes]) -> Iterable[str]:
     ]  #  #  #
 
 
-def verified_result(data: tuple[bytes | str, list[bytes | str]] | bytes) -> list[bytes | str]:
+def verified_result(
+    data: tuple[bytes | str, list[bytes | str]] | bytes,
+) -> list[bytes | str]:
     """Return the payload part of the (badly typed) result of IMAP/POP functions or eventually
     raise an exception if the result is not "OK"
     """

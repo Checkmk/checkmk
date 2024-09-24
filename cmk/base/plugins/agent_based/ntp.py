@@ -182,7 +182,8 @@ def check_ntp(
 
     if peer.when > 0:
         yield Result(
-            state=State.OK, summary="Time since last sync: %s" % render.timespan(peer.when)
+            state=State.OK,
+            summary="Time since last sync: %s" % render.timespan(peer.when),
         )
 
     state = NTP_STATE_CODES.get(peer.statecode, "unknown")
@@ -202,7 +203,8 @@ def check_ntp_summary(
     if peer is None:
         if section:
             yield Result(
-                state=State.OK, summary=f"Found {len(section)} peers, but none is suitable"
+                state=State.OK,
+                summary=f"Found {len(section)} peers, but none is suitable",
             )
         yield from tolerance_check(
             sync_time=None,

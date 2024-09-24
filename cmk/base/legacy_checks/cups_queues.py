@@ -54,7 +54,10 @@ def parse_cups_queues(string_table: list[list[str]]) -> Section:
                 "output": " ".join(line[2:]),
                 "jobs": [],
             }
-            if len(string_table) > num + 1 and not string_table[num + 1][0] in ["printer", "---"]:
+            if len(string_table) > num + 1 and not string_table[num + 1][0] in [
+                "printer",
+                "---",
+            ]:
                 parsed[line[1]]["output"] += " (%s)" % " ".join(string_table[num + 1])
         elif line[0] == "---":
             break
@@ -106,7 +109,11 @@ def check_cups_queues(item, params, parsed):
         jobs_count = len(data["jobs"])
         if jobs_count > 0:
             warn_num, crit_num = params["job_count"]
-            yield 0, "Jobs: %d" % jobs_count, [("jobs", jobs_count, warn_num, crit_num, 0)]
+            yield (
+                0,
+                "Jobs: %d" % jobs_count,
+                [("jobs", jobs_count, warn_num, crit_num, 0)],
+            )
 
             warn_age, crit_age = params["job_age"]
             now = time.time()

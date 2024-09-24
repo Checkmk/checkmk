@@ -52,7 +52,16 @@ def install_agent_package(package_path: Path) -> Path:
             raise RuntimeError(f"dpkg failed. Process table:\n{process_table}") from e
         return installed_ctl_path
     if package_type == "linux_rpm":
-        run(["sudo", "rpm", "-vU", "--oldpackage", "--replacepkgs", package_path.as_posix()])
+        run(
+            [
+                "sudo",
+                "rpm",
+                "-vU",
+                "--oldpackage",
+                "--replacepkgs",
+                package_path.as_posix(),
+            ]
+        )
         return installed_ctl_path
     raise NotImplementedError(
         f"Installation of package type {package_type} is not supported yet, please implement it"
@@ -174,7 +183,10 @@ def clean_agent_controller(ctl_path: Path) -> Iterator[None]:
 
 
 def register_controller(
-    contoller_path: Path, site: Site, hostname: HostName, site_address: str | None = None
+    contoller_path: Path,
+    site: Site,
+    hostname: HostName,
+    site_address: str | None = None,
 ) -> None:
     run(
         [

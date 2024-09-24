@@ -5,7 +5,7 @@
 
 from collections.abc import Sequence
 
-from cmk.utils.version import edition, Edition
+from cmk.utils.version import Edition, edition
 
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -193,7 +193,9 @@ $LONGSERVICEOUTPUT$
         )
 
 
-def _vs_add_common_mail_elements(elements: Sequence[DictionaryEntry]) -> list[DictionaryEntry]:
+def _vs_add_common_mail_elements(
+    elements: Sequence[DictionaryEntry],
+) -> list[DictionaryEntry]:
     header: list[DictionaryEntry] = [
         (
             "from",

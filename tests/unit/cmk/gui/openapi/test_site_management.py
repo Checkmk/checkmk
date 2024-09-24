@@ -270,7 +270,11 @@ connection_test_data_400: list[Connection] = [
     {"socket_type": "tcp"},
     {"socket_type": "tcp6"},
     {"socket_type": "tcp6", "host": "5402:1db8:95a3:NOPE:9a2e:0480:8334"},
-    {"socket_type": "tcp6", "host": "5402:1db8:95a3:0000:0000:9a2e:0480:8334", "port": 123456},
+    {
+        "socket_type": "tcp6",
+        "host": "5402:1db8:95a3:0000:0000:9a2e:0480:8334",
+        "port": 123456,
+    },
     {"host": "192.168.1.200", "port": 1234512345, "encrypted": False, "verify": False},
 ]
 
@@ -367,7 +371,11 @@ proxy_test_data_200: list[Proxy] = [
     {
         "use_livestatus_daemon": "with_proxy",
         "global_settings": True,
-        "tcp": {"port": 6565, "only_from": ["192.168.1.1", "192.168.1.2"], "tls": False},
+        "tcp": {
+            "port": 6565,
+            "only_from": ["192.168.1.1", "192.168.1.2"],
+            "tls": False,
+        },
     },
 ]
 
@@ -614,7 +622,11 @@ def test_update_status_host_200(
 
     config, site_id = _default_config_with_site_id()
     clients.SiteManagement.create(site_config=config)
-    data: StatusHost = {"status_host_set": "enabled", "site": "NO_SITE", "host": "host1"}
+    data: StatusHost = {
+        "status_host_set": "enabled",
+        "site": "NO_SITE",
+        "host": "host1",
+    }
     config["status_connection"]["status_host"] = data
     resp = clients.SiteManagement.update(site_id=site_id, site_config=config)
     assert resp.json["extensions"] == config

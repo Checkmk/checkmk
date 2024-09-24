@@ -80,7 +80,10 @@ NODE_DATA = parse_proxmox_ve_node_info(
             NODE_DATA,
             (
                 Result(state=State.WARN, summary="Status: online (required: offline)"),
-                Result(state=State.WARN, summary="Subscription: active (required: inactive)"),
+                Result(
+                    state=State.WARN,
+                    summary="Subscription: active (required: inactive)",
+                ),
                 Result(state=State.OK, summary="Version: 6.2-15"),
                 Result(state=State.OK, summary="Hosted VMs: 5x LXC, 4x Qemu"),
             ),

@@ -160,7 +160,9 @@ def test_init_language_with_local_modification(local_translation: None) -> None:
     assert translated == "blub"
 
 
-def test_init_language_with_local_modification_fallback(local_translation: None) -> None:
+def test_init_language_with_local_modification_fallback(
+    local_translation: None,
+) -> None:
     trans = i18n._init_language("de")
     assert isinstance(trans, gettext.GNUTranslations)
     assert trans.info()["language"] == "de"

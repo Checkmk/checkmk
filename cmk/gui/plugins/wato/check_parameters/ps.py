@@ -512,7 +512,9 @@ def user_match_options(extra_elements=None):
         title=_("Name of operating system user"),
         elements=[
             TextInput(
-                title=_("Exact name of the operating system user"), label=_("User:"), size=50
+                title=_("Exact name of the operating system user"),
+                label=_("User:"),
+                size=50,
             ),
             Transform(
                 valuespec=RegExp(
@@ -842,8 +844,16 @@ def hr_process_match_elements():
             CascadingDropdown(
                 title=_("Process match textual description or path of process"),
                 choices=[
-                    ("match_name", _("Match textual description"), hr_process_match_name_option()),
-                    ("match_path", _("Match process path"), hr_process_match_path_option()),
+                    (
+                        "match_name",
+                        _("Match textual description"),
+                        hr_process_match_name_option(),
+                    ),
+                    (
+                        "match_path",
+                        _("Match process path"),
+                        hr_process_match_path_option(),
+                    ),
                     ("match_all", _("Match all processes")),
                 ],
             ),
@@ -909,7 +919,10 @@ def hr_process_parameter_elements():
                             choices=[
                                 ("running", _("Running")),
                                 ("runnable", _("Runnable (Waiting for resource)")),
-                                ("not_runnable", _("Not runnable (Loaded but waiting for event)")),
+                                (
+                                    "not_runnable",
+                                    _("Not runnable (Loaded but waiting for event)"),
+                                ),
                                 ("invalid", _("Invalid (Not loaded)")),
                             ]
                         ),

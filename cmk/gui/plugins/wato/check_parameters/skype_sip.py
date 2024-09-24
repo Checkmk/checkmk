@@ -25,10 +25,14 @@ def _parameter_valuespec_skype_sip():
                             Tuple(
                                 elements=[
                                     Float(
-                                        title=_("Warning at"), unit=_("seconds"), default_value=1.0
+                                        title=_("Warning at"),
+                                        unit=_("seconds"),
+                                        default_value=1.0,
                                     ),
                                     Float(
-                                        title=_("Critical at"), unit=_("seconds"), default_value=2.0
+                                        title=_("Critical at"),
+                                        unit=_("seconds"),
+                                        default_value=2.0,
                                     ),
                                 ],
                             ),
@@ -99,10 +103,14 @@ def _parameter_valuespec_skype_sip():
                             Tuple(
                                 elements=[
                                     Float(
-                                        title=_("Warning at"), unit=_("seconds"), default_value=0.1
+                                        title=_("Warning at"),
+                                        unit=_("seconds"),
+                                        default_value=0.1,
                                     ),
                                     Float(
-                                        title=_("Critical at"), unit=_("seconds"), default_value=0.2
+                                        title=_("Critical at"),
+                                        unit=_("seconds"),
+                                        default_value=0.2,
                                     ),
                                 ],
                             ),
@@ -121,10 +129,14 @@ def _parameter_valuespec_skype_sip():
                             Tuple(
                                 elements=[
                                     Float(
-                                        title=_("Warning at"), unit=_("seconds"), default_value=0.1
+                                        title=_("Warning at"),
+                                        unit=_("seconds"),
+                                        default_value=0.1,
                                     ),
                                     Float(
-                                        title=_("Critical at"), unit=_("seconds"), default_value=0.2
+                                        title=_("Critical at"),
+                                        unit=_("seconds"),
+                                        default_value=0.2,
                                     ),
                                 ],
                             ),
@@ -213,10 +225,14 @@ def _parameter_valuespec_skype_sip():
                             Tuple(
                                 elements=[
                                     Float(
-                                        title=_("Warning at"), unit=_("seconds"), default_value=1.0
+                                        title=_("Warning at"),
+                                        unit=_("seconds"),
+                                        default_value=1.0,
                                     ),
                                     Float(
-                                        title=_("Critical at"), unit=_("seconds"), default_value=2.0
+                                        title=_("Critical at"),
+                                        unit=_("seconds"),
+                                        default_value=2.0,
                                     ),
                                 ],
                             ),
@@ -253,10 +269,14 @@ def _parameter_valuespec_skype_sip():
                             Tuple(
                                 elements=[
                                     Float(
-                                        title=_("Warning at"), unit=_("seconds"), default_value=2.0
+                                        title=_("Warning at"),
+                                        unit=_("seconds"),
+                                        default_value=2.0,
                                     ),
                                     Float(
-                                        title=_("Critical at"), unit=_("seconds"), default_value=4.0
+                                        title=_("Critical at"),
+                                        unit=_("seconds"),
+                                        default_value=4.0,
                                     ),
                                 ],
                             ),

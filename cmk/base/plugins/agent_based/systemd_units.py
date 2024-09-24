@@ -9,7 +9,15 @@ from datetime import timedelta
 from enum import Enum
 from typing import Any, NamedTuple
 
-from .agent_based_api.v1 import check_levels, regex, register, render, Result, Service, State
+from .agent_based_api.v1 import (
+    check_levels,
+    regex,
+    register,
+    render,
+    Result,
+    Service,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 # <<<systemd_units>>>
@@ -550,7 +558,8 @@ def check_systemd_units_summary(
     yield Result(state=State.OK, summary=f"Disabled: {len(services_organised['disabled']):d}")
     # some of the failed ones might be ignored, so this is OK:
     yield Result(
-        state=State.OK, summary=f"Failed: {sum(s.active_status == 'failed' for s in units):d}"
+        state=State.OK,
+        summary=f"Failed: {sum(s.active_status == 'failed' for s in units):d}",
     )
     included_template = "{count:d} {unit_type} {status} ({service_text})"
     yield from _check_non_ok_services(
@@ -564,7 +573,10 @@ def check_systemd_units_summary(
 
     for temporary_type in ("activating", "reloading", "deactivating"):
         yield from _check_temporary_state(
-            services_organised[temporary_type], params, temporary_type, UnitTypes.service
+            services_organised[temporary_type],
+            params,
+            temporary_type,
+            UnitTypes.service,
         )
     if services_organised["excluded"]:
         yield Result(state=State.OK, notice=f"Ignored: {len(services_organised['excluded']):d}")

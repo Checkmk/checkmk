@@ -96,7 +96,9 @@ def check_dell_powerconnect_psu(item, _not_used, info):
     return (3, "item not found in snmp data")
 
 
-def parse_dell_powerconnect_psu(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+def parse_dell_powerconnect_psu(
+    string_table: Sequence[StringTable],
+) -> Sequence[StringTable]:
     return string_table
 
 

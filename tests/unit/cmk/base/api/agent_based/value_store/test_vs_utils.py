@@ -206,7 +206,11 @@ class Test_DiskSyncedMapping:
         ]
 
         dsm.pop(("stat", "key", "1"))
-        assert sorted(dsm) == [("dyn", "key", "1"), ("dyn", "key", "2"), ("stat", "key", "2")]
+        assert sorted(dsm) == [
+            ("dyn", "key", "1"),
+            ("dyn", "key", "2"),
+            ("stat", "key", "2"),
+        ]
 
         dsm.pop(("dyn", "key", "2"))
         assert sorted(dsm) == [("dyn", "key", "1"), ("stat", "key", "2")]

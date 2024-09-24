@@ -32,7 +32,9 @@ if os.getenv("_PYTEST_RAISE", "0") != "0":
 
 # TODO: Can we somehow push some of the registrations below to the subdirectories?
 pytest.register_assert_rewrite(
-    "tests.testlib", "tests.unit.checks.checktestlib", "tests.unit.checks.generictests.run"
+    "tests.testlib",
+    "tests.unit.checks.checktestlib",
+    "tests.unit.checks.generictests.run",
 )
 
 pytest_plugins = ("tests.testlib.playwright.plugin",)
@@ -103,7 +105,8 @@ def pytest_configure(config):
     )
 
     config.addinivalue_line(
-        "markers", "type(TYPE): Mark TYPE of test. Available: %s" % ", ".join(test_types)
+        "markers",
+        "type(TYPE): Mark TYPE of test. Available: %s" % ", ".join(test_types),
     )
 
     if not config.getoption("-T") == "schemathesis_openapi":

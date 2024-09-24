@@ -17,7 +17,9 @@ from typing import Any, assert_never, Mapping
 from cmk.gui.background_job import BackgroundJob
 from cmk.gui.http import Response
 from cmk.gui.openapi.endpoints.parent_scan.request_schemas import ParentScan
-from cmk.gui.openapi.endpoints.parent_scan.response_schemas import BackgroundJobStatusObject
+from cmk.gui.openapi.endpoints.parent_scan.response_schemas import (
+    BackgroundJobStatusObject,
+)
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.response_schemas import BackgroundJobStatus

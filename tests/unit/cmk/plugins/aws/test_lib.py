@@ -394,7 +394,10 @@ from cmk.plugins.aws.lib import (
                             "PrefixListIds": [],
                             "ToPort": 80,
                             "UserIdGroupPairs": [
-                                {"GroupId": "sg-06368b02de2a8b850", "UserId": "710145618630"}
+                                {
+                                    "GroupId": "sg-06368b02de2a8b850",
+                                    "UserId": "710145618630",
+                                }
                             ],
                         },
                         {
@@ -421,7 +424,10 @@ from cmk.plugins.aws.lib import (
                             "Ipv6Ranges": [],
                             "PrefixListIds": [],
                             "UserIdGroupPairs": [
-                                {"GroupId": "sg-06368b02de2a8b850", "UserId": "710145618630"}
+                                {
+                                    "GroupId": "sg-06368b02de2a8b850",
+                                    "UserId": "710145618630",
+                                }
                             ],
                         },
                         {
@@ -558,7 +564,10 @@ def test_parse_aws_limits_generic() -> None:
             ],
             [
                 Metric("aws_sns_topics_standard", 2),
-                Result(state=State.OK, notice="Standard Topics Limit: 2 (of max. 100000), <0.01%"),
+                Result(
+                    state=State.OK,
+                    notice="Standard Topics Limit: 2 (of max. 100000), <0.01%",
+                ),
                 Metric("aws_sns_topics_fifo", 1),
                 Result(state=State.OK, notice="FIFO Topics Limit: 1 (of max. 1000), 0.10%"),
             ],
@@ -585,7 +594,10 @@ def test_parse_aws_limits_generic() -> None:
             ],
             [
                 Metric("aws_sns_topics_standard", 2),
-                Result(state=State.OK, notice="Standard Topics Limit: 2 (of max. 100000), <0.01%"),
+                Result(
+                    state=State.OK,
+                    notice="Standard Topics Limit: 2 (of max. 100000), <0.01%",
+                ),
                 Metric("aws_sns_topics_fifo", 1001),
                 Result(
                     state=State.CRIT,

@@ -112,7 +112,10 @@ def scale_predictive(p: dict, factor: float) -> dict:
 def _scale_predictive_element(k: str, v: object, factor: float) -> object:
     match k, v:
         case "levels_upper" | "levels_lower", (type_, (float(warn), float(crit))):
-            return (type_, (warn * factor, crit * factor) if type_ == "absolute" else (warn, crit))
+            return (
+                type_,
+                (warn * factor, crit * factor) if type_ == "absolute" else (warn, crit),
+            )
         case "levels_upper_min", (float(warn), float(crit)):
             return warn * factor, crit * factor
     return v

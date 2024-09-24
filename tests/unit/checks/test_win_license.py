@@ -189,7 +189,10 @@ class check_ref(NamedTuple):
                     },
                     CheckResult(
                         [
-                            (2, "Software is Initial grace period Required: Registered"),
+                            (
+                                2,
+                                "Software is Initial grace period Required: Registered",
+                            ),
                             (0, "Time until license expires: 9 days 0 hours"),
                         ]
                     ),
@@ -211,7 +214,9 @@ class check_ref(NamedTuple):
 def test_check_win_license(capture: str, result: check_ref) -> None:
     check = Check("win_license")
     output = check.run_check(
-        None, result.parameters or check.default_parameters(), check.run_parse(splitter(capture))
+        None,
+        result.parameters or check.default_parameters(),
+        check.run_parse(splitter(capture)),
     )
 
     assertCheckResultsEqual(CheckResult(output), result.check_output)

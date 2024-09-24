@@ -35,7 +35,11 @@ from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.agent_registration import remove_tls_registration_help
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri_contextless
+from cmk.gui.utils.urls import (
+    make_confirm_delete_link,
+    makeactionuri,
+    makeuri_contextless,
+)
 from cmk.gui.valuespec import FixedValue, Hostname, ListOfStrings, ValueSpec
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.agent_registration import remove_tls_registration
@@ -407,7 +411,10 @@ class ModeEditHost(ABCHostMode):
         if request.var("diag_host"):
             return redirect(
                 mode_url(
-                    "diag_host", folder=folder.path(), host=self._host.name(), _start_on_load="1"
+                    "diag_host",
+                    folder=folder.path(),
+                    host=self._host.name(),
+                    _start_on_load="1",
                 )
             )
         return redirect(mode_url("folder", folder=folder.path()))

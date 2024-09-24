@@ -11,7 +11,10 @@ from tests.testlib.agent import (
     wait_until_host_has_services,
     wait_until_host_receives_data,
 )
-from tests.testlib.pytest_helpers.marks import skip_if_not_cloud_edition, skip_if_not_containerized
+from tests.testlib.pytest_helpers.marks import (
+    skip_if_not_cloud_edition,
+    skip_if_not_containerized,
+)
 from tests.testlib.site import Site
 
 from cmk.utils.agent_registration import HostAgentConnectionMode

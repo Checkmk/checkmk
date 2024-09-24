@@ -70,7 +70,15 @@ def test_uptime_check_zero() -> None:
             [
                 ["22731"],
                 ["[uptime_solaris_start]"],
-                ["SunOS", "unknown", "5.10", "Generic_147148-26", "i86pc", "i386", "i86pc"],
+                [
+                    "SunOS",
+                    "unknown",
+                    "5.10",
+                    "Generic_147148-26",
+                    "i86pc",
+                    "i386",
+                    "i86pc",
+                ],
                 ["global"],
                 [
                     "4:58pm",
@@ -97,7 +105,15 @@ def test_uptime_check_zero() -> None:
             [
                 ["1122"],
                 ["[uptime_solaris_start]"],
-                ["SunOS", "unknown", "5.10", "Generic_147148-26", "i86pc", "i386", "i86pc"],
+                [
+                    "SunOS",
+                    "unknown",
+                    "5.10",
+                    "Generic_147148-26",
+                    "i86pc",
+                    "i386",
+                    "i86pc",
+                ],
                 ["global"],
                 [
                     "4:23pm",
@@ -154,7 +170,15 @@ def test_uptime_check_zero() -> None:
             [
                 ["54043590"],
                 ["[uptime_solaris_start]"],
-                ["SunOS", "sveqdcmk01", "5.10", "Generic_150401-49", "i86pc", "i386", "i86pc"],
+                [
+                    "SunOS",
+                    "sveqdcmk01",
+                    "5.10",
+                    "Generic_150401-49",
+                    "i86pc",
+                    "i386",
+                    "i86pc",
+                ],
                 ["sveqdcmk01"],
                 [
                     "1:50pm",
@@ -188,7 +212,15 @@ def test_uptime_check_zero() -> None:
             [
                 ["1529194584"],
                 ["[uptime_solaris_start]"],
-                ["SunOS", "sc000338", "5.10", "Generic_150400-61", "sun4v", "sparc", "SUNW"],
+                [
+                    "SunOS",
+                    "sc000338",
+                    "5.10",
+                    "Generic_150400-61",
+                    "sun4v",
+                    "sparc",
+                    "SUNW",
+                ],
                 ["sc000338"],
                 [
                     "1:50pm",

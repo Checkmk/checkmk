@@ -10,6 +10,7 @@ a host.
 You can find an introduction to services including service discovery in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_services.html).
 """
+
 import enum
 from collections.abc import Mapping, Sequence
 from typing import Any, assert_never
@@ -17,7 +18,11 @@ from urllib.parse import urlparse
 
 from cmk.utils.everythingtype import EVERYTHING
 
-from cmk.checkengine.discovery import CheckPreviewEntry, DiscoveryMode, DiscoverySettings
+from cmk.checkengine.discovery import (
+    CheckPreviewEntry,
+    DiscoveryMode,
+    DiscoverySettings,
+)
 
 from cmk.gui import fields as gui_fields
 from cmk.gui.background_job import BackgroundStatusSnapshot
@@ -28,8 +33,17 @@ from cmk.gui.openapi.endpoints.host_config.request_schemas import EXISTING_HOST_
 from cmk.gui.openapi.endpoints.service_discovery.response_schemas import (
     DiscoveryBackgroundJobStatusObject,
 )
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions, response_schemas
-from cmk.gui.openapi.restful_objects.constructors import domain_object, link_rel, object_property
+from cmk.gui.openapi.restful_objects import (
+    constructors,
+    Endpoint,
+    permissions,
+    response_schemas,
+)
+from cmk.gui.openapi.restful_objects.constructors import (
+    domain_object,
+    link_rel,
+    object_property,
+)
 from cmk.gui.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import LinkType
@@ -602,7 +616,11 @@ class BulkDiscovery(BaseSchema):
         description="The discovery options for the bulk discovery. The options if specified take "
         "precedence over the mode.",
         required=False,
-        example={"monitor_undecided": True, "remove_vanished": True, "update_service_labels": True},
+        example={
+            "monitor_undecided": True,
+            "remove_vanished": True,
+            "update_service_labels": True,
+        },
     )
     do_full_scan = fields.Boolean(
         required=False,

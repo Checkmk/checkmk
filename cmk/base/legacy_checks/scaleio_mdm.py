@@ -105,12 +105,18 @@ def check_scaleio_mdm(_no_item, _no_params, parsed):
         active = data["Active"].split("/")
         replicas = data["Replicas"].split("/")
 
-        yield translate_status[status], "Mode: {}, State: {}".format(data["Mode"], status)
+        yield (
+            translate_status[status],
+            "Mode: {}, State: {}".format(data["Mode"], status),
+        )
 
         if not active[0] == active[1] or not replicas[0] == replicas[1]:
             state = 2
 
-        yield state, "Active: {}, Replicas: {}".format("/".join(active), "/".join(replicas))
+        yield (
+            state,
+            "Active: {}, Replicas: {}".format("/".join(active), "/".join(replicas)),
+        )
 
     for role in ["Master MDM", "Slave MDMs", "Tie-Breakers", "Standby MDMs"]:
         state, nodes = 0, []

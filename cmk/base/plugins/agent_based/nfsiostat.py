@@ -21,7 +21,12 @@ from dataclasses import dataclass
 # ...
 from typing import Any
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import check_levels, register, render, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    check_levels,
+    register,
+    render,
+    Service,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,

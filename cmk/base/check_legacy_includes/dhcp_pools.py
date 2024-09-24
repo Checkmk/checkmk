@@ -27,11 +27,15 @@ def check_dhcp_pools_levels(
         if isinstance(new_api_object, Result):
             yield int(new_api_object.state), new_api_object.summary, []
         if isinstance(new_api_object, Metric):
-            yield 0, "", [
-                (
-                    new_api_object.name,
-                    new_api_object.value,
-                    *new_api_object.levels,
-                    *new_api_object.boundaries,
-                )
-            ]
+            yield (
+                0,
+                "",
+                [
+                    (
+                        new_api_object.name,
+                        new_api_object.value,
+                        *new_api_object.levels,
+                        *new_api_object.boundaries,
+                    )
+                ],
+            )

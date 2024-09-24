@@ -119,6 +119,7 @@ class DiscoveryAction(enum.StrEnum):
 
 class UpdateType(enum.Enum):
     "States that an individual service can be changed to by clicking a button"
+
     UNDECIDED = "new"
     MONITORED = "unchanged"
     IGNORED = "ignored"
@@ -339,7 +340,10 @@ class Discovery:
             )
 
     def _save_services(
-        self, old_autochecks: SetAutochecksTable, checks: SetAutochecksTable, need_sync: bool
+        self,
+        old_autochecks: SetAutochecksTable,
+        checks: SetAutochecksTable,
+        need_sync: bool,
     ) -> None:
         message = _("Saved check configuration of host '%s' with %d services") % (
             self._host.name(),
@@ -352,7 +356,8 @@ class Discovery:
             site_id=self._host.site_id(),
             need_sync=need_sync,
             diff_text=make_diff_text(
-                _make_host_audit_log_object(old_autochecks), _make_host_audit_log_object(checks)
+                _make_host_audit_log_object(old_autochecks),
+                _make_host_audit_log_object(checks),
             ),
         )
 
@@ -544,7 +549,9 @@ def initial_discovery_result(
     )
 
 
-def _perform_update_host_labels(labels_by_nodes: Mapping[HostName, Sequence[HostLabel]]) -> None:
+def _perform_update_host_labels(
+    labels_by_nodes: Mapping[HostName, Sequence[HostLabel]],
+) -> None:
     for host_name, host_labels in labels_by_nodes.items():
         if (host := Host.host(host_name)) is None:
             raise ValueError(f"no such host: {host_name!r}")
@@ -857,7 +864,10 @@ def get_check_table(host: Host, action: DiscoveryAction, *, raise_errors: bool) 
                 "service-discovery-job",
                 [
                     ("host_name", host.name()),
-                    ("options", json.dumps({"ignore_errors": not raise_errors, "action": action})),
+                    (
+                        "options",
+                        json.dumps({"ignore_errors": not raise_errors, "action": action}),
+                    ),
                 ],
             )
         )

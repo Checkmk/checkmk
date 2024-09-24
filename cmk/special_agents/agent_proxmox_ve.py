@@ -41,7 +41,10 @@ from cmk.special_agents.v0_unstable.agent_common import (
     SectionWriter,
     special_agent_main,
 )
-from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.argument_parsing import (
+    Args,
+    create_default_argument_parser,
+)
 from cmk.special_agents.v0_unstable.misc import JsonCachedData, to_bytes
 
 LOGGER = logging.getLogger("agent_proxmox_ve")
@@ -84,7 +87,11 @@ class BackupTask:
             self.line = line
 
         def __repr__(self) -> str:
-            return "%s(%d, %r)" % (self.__class__.__name__, self.line, super().__str__())
+            return "%s(%d, %r)" % (
+                self.__class__.__name__,
+                self.line,
+                super().__str__(),
+            )
 
     class LogParseWarning(LogParseError):
         """Less critical version of LogParseError"""
@@ -216,10 +223,27 @@ class BackupTask:
             )
         }
         required_keys = (
-            {"started_time", "total_duration", "bytes_written_bandwidth", "bytes_written_size"},
+            {
+                "started_time",
+                "total_duration",
+                "bytes_written_bandwidth",
+                "bytes_written_size",
+            },
             {"started_time", "total_duration", "transfer_size", "transfer_time"},
-            {"started_time", "total_duration", "upload_amount", "upload_time", "upload_total"},
-            {"started_time", "total_duration", "backup_amount", "backup_time", "backup_total"},
+            {
+                "started_time",
+                "total_duration",
+                "upload_amount",
+                "upload_time",
+                "upload_total",
+            },
+            {
+                "started_time",
+                "total_duration",
+                "backup_amount",
+                "backup_time",
+                "backup_total",
+            },
             {"started_time", "total_duration", "archive_name", "archive_size"},
         )
 
@@ -370,7 +394,9 @@ class BackupTask:
         return result, errors
 
 
-def collect_vm_backup_info(backup_tasks: Iterable[BackupTask]) -> Mapping[str, BackupInfo]:
+def collect_vm_backup_info(
+    backup_tasks: Iterable[BackupTask],
+) -> Mapping[str, BackupInfo]:
     backup_data: dict[str, BackupInfo] = {}
     for task in backup_tasks:
         LOGGER.info("%s", task)
@@ -806,12 +832,16 @@ class ProxmoxVeAPI:
                     for elem in data
                 )
 
-            def extract_request_subtree(request_tree: RequestStructure) -> RequestStructure:
+            def extract_request_subtree(
+                request_tree: RequestStructure,
+            ) -> RequestStructure:
                 """If list if given return first (and only) element return the provided data tree"""
                 return (
                     request_tree
                     if isinstance(request_tree, Mapping)
-                    else next(iter(request_tree)) if len(request_tree) > 0 else {}
+                    else next(iter(request_tree))
+                    if len(request_tree) > 0
+                    else {}
                 )  #  #
 
             def extract_variable(st: RequestStructure) -> Mapping[str, Any] | None:

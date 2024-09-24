@@ -163,12 +163,18 @@ def local_test(
         assert len(actual_output_from_agent) >= len(expected_output_from_agent), (
             "actual output is shorter than expected:\n"
             "expected output:\n%s\nactual output:\n%s"
-            % ("\n".join(expected_output_from_agent), "\n".join(actual_output_from_agent))
+            % (
+                "\n".join(expected_output_from_agent),
+                "\n".join(actual_output_from_agent),
+            )
         )
         assert len(actual_output_from_agent) <= len(expected_output_from_agent), (
             "actual output is longer than expected:\n"
             "expected output:\n%s\nactual output:\n%s"
-            % ("\n".join(expected_output_from_agent), "\n".join(actual_output_from_agent))
+            % (
+                "\n".join(expected_output_from_agent),
+                "\n".join(actual_output_from_agent),
+            )
         )
     except TypeError:
         # expected_output may be an iterator without len

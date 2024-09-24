@@ -6,8 +6,21 @@ from typing import Final, NamedTuple
 
 from cmk.plugins.lib.hp_proliant import DETECT, MAP_TYPES_MEMORY
 
-from .agent_based_api.v1 import register, render, Result, Service, SNMPTree, State, TableRow
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
+from .agent_based_api.v1 import (
+    register,
+    render,
+    Result,
+    Service,
+    SNMPTree,
+    State,
+    TableRow,
+)
+from .agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    InventoryResult,
+    StringTable,
+)
 
 _STATUS_MAP: Final = {
     "1": "other",
@@ -63,7 +76,16 @@ def parse_hp_proliant_mem(string_table: StringTable) -> Section:
 
     """
     section = {}
-    for mod_num, board_num, cpu_num, size, typ, serial, status, condition in string_table:
+    for (
+        mod_num,
+        board_num,
+        cpu_num,
+        size,
+        typ,
+        serial,
+        status,
+        condition,
+    ) in string_table:
         try:
             size_bytes = int(size) * 1024
         except ValueError:

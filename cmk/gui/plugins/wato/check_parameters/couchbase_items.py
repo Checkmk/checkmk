@@ -47,9 +47,18 @@ def _parameter_valuespec_couchbase_operations():
                 "fetched_items",
                 _int_tuple(_("Buckets only: Levels for number of items fetched from disk")),
             ),
-            ("disk_write_ql", _int_tuple(_("Buckets only: Levels for length of disk write queue"))),
-            ("disk_fill_rate", _float_tuple(_("Buckets only: Levels for disk queue fill rate"))),
-            ("disk_drain_rate", _float_tuple(_("Buckets only: Levels for disk queue drain rate"))),
+            (
+                "disk_write_ql",
+                _int_tuple(_("Buckets only: Levels for length of disk write queue")),
+            ),
+            (
+                "disk_fill_rate",
+                _float_tuple(_("Buckets only: Levels for disk queue fill rate")),
+            ),
+            (
+                "disk_drain_rate",
+                _float_tuple(_("Buckets only: Levels for disk queue drain rate")),
+            ),
         ],
     )
 

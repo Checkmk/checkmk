@@ -166,18 +166,47 @@ def _generate_livestatus_results(  # pylint: disable=too-many-branches
     if status["program_version"].startswith("Check_MK"):
         # We have a CMC here.
         metrics = [
-            (1, lambda x: "%.3fs" % x, "average_latency_generic", "Average active check latency"),
-            (1, lambda x: "%.3fs" % x, "average_latency_checker", "Average checker latency"),
-            (1, lambda x: "%.3fs" % x, "average_latency_fetcher", "Average fetcher latency"),
+            (
+                1,
+                lambda x: "%.3fs" % x,
+                "average_latency_generic",
+                "Average active check latency",
+            ),
+            (
+                1,
+                lambda x: "%.3fs" % x,
+                "average_latency_checker",
+                "Average checker latency",
+            ),
+            (
+                1,
+                lambda x: "%.3fs" % x,
+                "average_latency_fetcher",
+                "Average fetcher latency",
+            ),
             (100, render.percent, "helper_usage_generic", "Active check helper usage"),
             (100, render.percent, "helper_usage_fetcher", "Fetcher helper usage"),
             (100, render.percent, "helper_usage_checker", "Checker helper usage"),
             (100, render.percent, "livestatus_usage", "Livestatus usage"),
-            (1, lambda x: "%.2f/s" % x, "livestatus_overflows_rate", "Livestatus overflow rate"),
-            (1, lambda x: "%d/s" % x, "perf_data_count_rate", "Rate of performance data received"),
+            (
+                1,
+                lambda x: "%.2f/s" % x,
+                "livestatus_overflows_rate",
+                "Livestatus overflow rate",
+            ),
+            (
+                1,
+                lambda x: "%d/s" % x,
+                "perf_data_count_rate",
+                "Rate of performance data received",
+            ),
             (1, lambda x: "%d/s" % x, "metrics_count_rate", "Rate of metrics received"),
         ]
-        for conn, name in (("carbon", "Carbon"), ("influxdb", "InfluxDB"), ("rrdcached", "RRD")):
+        for conn, name in (
+            ("carbon", "Carbon"),
+            ("influxdb", "InfluxDB"),
+            ("rrdcached", "RRD"),
+        ):
             metrics.extend(
                 (
                     (100, render.percent, f"{conn}_queue_usage", f"{name} queue usage"),

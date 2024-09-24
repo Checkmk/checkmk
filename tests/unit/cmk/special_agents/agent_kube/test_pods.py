@@ -10,7 +10,9 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
     PodStatusFactory,
 )
 
-from cmk.special_agents.utils_kubernetes.agent_handlers.common import pod_lifecycle_phase
+from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
+    pod_lifecycle_phase,
+)
 from cmk.special_agents.utils_kubernetes.agent_handlers.pod_handler import (
     _conditions,
     _container_specs,

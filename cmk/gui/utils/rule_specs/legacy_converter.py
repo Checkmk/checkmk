@@ -122,7 +122,9 @@ def convert_to_legacy_rulespec(
             )
         case ruleset_api_v1.rule_specs.AgentConfig():
             return _convert_to_legacy_agent_config_rule_spec(
-                to_convert, legacy_rulespec_groups.RulespecGroupMonitoringAgents, localizer
+                to_convert,
+                legacy_rulespec_groups.RulespecGroupMonitoringAgents,
+                localizer,
             )
         case ruleset_api_v1.rule_specs.CheckParameters():
             return _convert_to_legacy_check_parameter_rulespec(to_convert, edition_only, localizer)
@@ -219,7 +221,9 @@ def _convert_to_legacy_check_parameter_rulespec(
         check_group_name=to_convert.name,
         title=partial(to_convert.title.localize, localizer),
         group=_convert_to_legacy_rulespec_group(
-            legacy_rulespec_groups.RulespecGroupMonitoringConfiguration, to_convert.topic, localizer
+            legacy_rulespec_groups.RulespecGroupMonitoringConfiguration,
+            to_convert.topic,
+            localizer,
         ),
         match_type="dict",
         parameter_valuespec=partial(
@@ -342,7 +346,9 @@ def _convert_to_legacy_agent_config_rule_spec(
         group=_convert_to_legacy_rulespec_group(legacy_main_group, to_convert.topic, localizer),
         name=RuleGroup.AgentConfig(to_convert.name),
         valuespec=partial(
-            _transform_agent_config_rule_spec_match_type, to_convert.parameter_form(), localizer
+            _transform_agent_config_rule_spec_match_type,
+            to_convert.parameter_form(),
+            localizer,
         ),
         title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
         is_deprecated=to_convert.is_deprecated,
@@ -368,7 +374,8 @@ def _remove_agent_config_match_type_key(value: object) -> object:
 
 
 def _transform_agent_config_rule_spec_match_type(
-    parameter_form: ruleset_api_v1.form_specs.Dictionary, localizer: Callable[[str], str]
+    parameter_form: ruleset_api_v1.form_specs.Dictionary,
+    localizer: Callable[[str], str],
 ) -> legacy_valuespecs.ValueSpec:
     return Transform(
         _convert_to_legacy_valuespec(parameter_form, localizer),
@@ -384,7 +391,9 @@ def _convert_to_legacy_service_rule_spec_rulespec(
 ) -> legacy_rulespecs.ServiceRulespec:
     return legacy_rulespecs.ServiceRulespec(
         group=_convert_to_legacy_rulespec_group(
-            legacy_rulespec_groups.RulespecGroupMonitoringConfiguration, to_convert.topic, localizer
+            legacy_rulespec_groups.RulespecGroupMonitoringConfiguration,
+            to_convert.topic,
+            localizer,
         ),
         item_type="service",
         name=config_scope_prefix(to_convert.name),
@@ -726,7 +735,7 @@ def _convert_to_legacy_valuespec(
     to_convert: ruleset_api_v1.form_specs.FormSpec, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.ValueSpec:
     def allow_empty_value_wrapper(
-        update_func: Callable[[object], object]
+        update_func: Callable[[object], object],
     ) -> Callable[[object], object]:
         def wrapper(v: object) -> object:
             try:
@@ -767,7 +776,10 @@ def _get_allow_empty_conf(
         )
 
     if isinstance(min_len_validator, ruleset_api_v1.form_specs.validators.LengthInRange):
-        return {"allow_empty": False, "empty_text": min_len_validator.error_msg.localize(localizer)}
+        return {
+            "allow_empty": False,
+            "empty_text": min_len_validator.error_msg.localize(localizer),
+        }
     return {"allow_empty": True}
 
 
@@ -959,7 +971,8 @@ def _convert_to_legacy_text_input(
 
 
 def _convert_to_legacy_regular_expression(
-    to_convert: ruleset_api_v1.form_specs.RegularExpression, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.RegularExpression,
+    localizer: Callable[[str], str],
 ) -> legacy_valuespecs.RegExp:
     converted_kwargs: dict[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
@@ -997,7 +1010,7 @@ def _get_dict_group_key(dict_group: ruleset_api_v1.form_specs.DictGroup) -> str:
 
 
 def _get_group_keys(
-    dict_elements: Mapping[str, ruleset_api_v1.form_specs.DictElement]
+    dict_elements: Mapping[str, ruleset_api_v1.form_specs.DictElement],
 ) -> Sequence[str]:
     return [
         _get_dict_group_key(elem.group)
@@ -1007,7 +1020,7 @@ def _get_group_keys(
 
 
 def _make_group_keys_dict(
-    dict_elements: Mapping[str, ruleset_api_v1.form_specs.DictElement]
+    dict_elements: Mapping[str, ruleset_api_v1.form_specs.DictElement],
 ) -> dict:
     # to render the groups in a nicer way the group names are required keys, so have to exist per
     # default
@@ -1020,9 +1033,15 @@ def _get_packed_value(
     packed_dict: dict,
 ) -> object:
     match nested_form, value_to_pack:
-        case ruleset_api_v1.form_specs.Dictionary() as dict_form, dict() as dict_to_pack:
+        case (
+            ruleset_api_v1.form_specs.Dictionary() as dict_form,
+            dict() as dict_to_pack,
+        ):
             return _pack_dict_groups(
-                dict_form.elements, dict_form.ignored_elements, dict_to_pack, packed_dict
+                dict_form.elements,
+                dict_form.ignored_elements,
+                dict_to_pack,
+                packed_dict,
             )
         case _:
             return value_to_pack
@@ -1055,7 +1074,8 @@ def _pack_dict_groups(
             nested_packed_dict = _make_group_keys_dict(nested_form.elements)
 
         if isinstance(
-            (group := dict_elements[key_to_pack].group), ruleset_api_v1.form_specs.NoGroup
+            (group := dict_elements[key_to_pack].group),
+            ruleset_api_v1.form_specs.NoGroup,
         ):
             packed_dict[key_to_pack] = _get_packed_value(
                 nested_form, value_to_pack, nested_packed_dict
@@ -1086,7 +1106,10 @@ def _get_unpacked_value(
     nested_form: ruleset_api_v1.form_specs.FormSpec, value_to_unpack: object
 ) -> object:
     match nested_form, value_to_unpack:
-        case ruleset_api_v1.form_specs.Dictionary() as dict_form, dict() as dict_to_unpack:
+        case (
+            ruleset_api_v1.form_specs.Dictionary() as dict_form,
+            dict() as dict_to_unpack,
+        ):
             return _unpack_dict_group(
                 dict_form.elements, dict_form.ignored_elements, dict_to_unpack
             )
@@ -1109,9 +1132,13 @@ def _unpack_dict_group(
             continue
 
         if key_to_unpack in _get_group_keys(dict_elements):
-            for grouped_key_to_unpack, grouped_value_to_unpack in value_to_unpack.items():
+            for (
+                grouped_key_to_unpack,
+                grouped_value_to_unpack,
+            ) in value_to_unpack.items():
                 unpacked_dict[grouped_key_to_unpack] = _get_unpacked_value(
-                    dict_elements[grouped_key_to_unpack].parameter_form, grouped_value_to_unpack
+                    dict_elements[grouped_key_to_unpack].parameter_form,
+                    grouped_value_to_unpack,
                 )
         else:
             unpacked_dict[key_to_unpack] = _get_unpacked_value(
@@ -1202,7 +1229,8 @@ def _get_ungrouped_elements(
 
 
 def _get_grouped_dict_orientation(
-    elements: Sequence[tuple[str, legacy_valuespecs.ValueSpec]], key_props: _LegacyDictKeyProps
+    elements: Sequence[tuple[str, legacy_valuespecs.ValueSpec]],
+    key_props: _LegacyDictKeyProps,
 ) -> bool:
     return set(key_props.required) == {elem[0] for elem in elements} and not any(
         isinstance(elem[1], legacy_valuespecs.Dictionary) for elem in elements
@@ -1517,7 +1545,8 @@ def _get_legacy_level_spec(
     # we someday invent one that does not have this attribute.
     if hasattr(form_spec_template, "prefill"):
         form_spec_template = dataclasses.replace(
-            form_spec_template, prefill=prefill_type(prefill_value)  # type: ignore[call-arg]
+            form_spec_template,
+            prefill=prefill_type(prefill_value),  # type: ignore[call-arg]
         )
     return _convert_to_legacy_valuespec(
         dataclasses.replace(form_spec_template, title=title), localizer
@@ -1713,9 +1742,18 @@ def _get_predictive_levels_choice_element(
             "period",
             legacy_valuespecs.DropdownChoice(
                 choices=[
-                    ("wday", ruleset_api_v1.Title("Day of the week").localize(localizer)),
-                    ("day", ruleset_api_v1.Title("Day of the month").localize(localizer)),
-                    ("hour", ruleset_api_v1.Title("Hour of the day").localize(localizer)),
+                    (
+                        "wday",
+                        ruleset_api_v1.Title("Day of the week").localize(localizer),
+                    ),
+                    (
+                        "day",
+                        ruleset_api_v1.Title("Day of the month").localize(localizer),
+                    ),
+                    (
+                        "hour",
+                        ruleset_api_v1.Title("Hour of the day").localize(localizer),
+                    ),
                     (
                         "minute",
                         ruleset_api_v1.Title("Minute of the hour").localize(localizer),
@@ -1959,7 +1997,9 @@ def _transform_proxy_forth(value: object) -> tuple[str, str | None]:
     raise ValueError(value)
 
 
-def _transform_proxy_back(value: tuple[str, str]) -> tuple[
+def _transform_proxy_back(
+    value: tuple[str, str],
+) -> tuple[
     Literal["cmk_postprocessed"],
     Literal["environment_proxy", "no_proxy", "stored_proxy", "explicit_proxy"],
     str,
@@ -2150,13 +2190,19 @@ def _transform_password_forth(value: object) -> tuple[str, str]:
 
 
 def _transform_password_back(
-    value: tuple[str, str]
+    value: tuple[str, str],
 ) -> tuple[
-    Literal["cmk_postprocessed"], Literal["explicit_password", "stored_password"], tuple[str, str]
+    Literal["cmk_postprocessed"],
+    Literal["explicit_password", "stored_password"],
+    tuple[str, str],
 ]:
     match value:
         case "password", str(password):
-            return "cmk_postprocessed", "explicit_password", (ad_hoc_password_id(), password)
+            return (
+                "cmk_postprocessed",
+                "explicit_password",
+                (ad_hoc_password_id(), password),
+            )
         case "store", str(password_store_id):
             return "cmk_postprocessed", "stored_password", (password_store_id, "")
 
@@ -2178,11 +2224,10 @@ def _convert_to_legacy_individual_or_stored_password(
 
 
 def _convert_to_legacy_list_choice_match_type(
-    to_convert: ruleset_api_v1.form_specs.MultipleChoice, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.MultipleChoice,
+    localizer: Callable[[str], str],
 ) -> legacy_valuespecs.ValueSpec:
-
     def _ensure_sequence_str(value: object) -> Sequence | object:
-
         if not isinstance(value, Sequence):
             return value
         return list(value)
@@ -2194,7 +2239,8 @@ def _convert_to_legacy_list_choice_match_type(
 
 
 def _convert_to_legacy_list_choice(
-    to_convert: ruleset_api_v1.form_specs.MultipleChoice, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.MultipleChoice,
+    localizer: Callable[[str], str],
 ) -> legacy_valuespecs.ListChoice | legacy_valuespecs.DualListChoice:
     # arbitrarily chosen maximal size of created ListChoice
     # if number of choices if bigger, MultipleChoice is converted to DualListChoice

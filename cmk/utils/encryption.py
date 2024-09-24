@@ -24,7 +24,11 @@ from OpenSSL import crypto, SSL
 
 from cmk.utils.crypto.certificate import Certificate
 from cmk.utils.crypto.secrets import EncrypterSecret
-from cmk.utils.crypto.symmetric import aes_gcm_decrypt, aes_gcm_encrypt, TaggedCiphertext
+from cmk.utils.crypto.symmetric import (
+    aes_gcm_decrypt,
+    aes_gcm_encrypt,
+    TaggedCiphertext,
+)
 from cmk.utils.exceptions import MKGeneralException
 
 _PEM_RE = re.compile(
@@ -71,7 +75,9 @@ class ChainVerifyResult(NamedTuple):
 
 # NOTE: Use this function only in conjunction with the permission server_side_requests
 def fetch_certificate_details(
-    trusted_ca_file: Path, address_family: socket.AddressFamily, address: tuple[str, int]
+    trusted_ca_file: Path,
+    address_family: socket.AddressFamily,
+    address: tuple[str, int],
 ) -> Iterable[CertificateDetails]:
     """Creates a list of certificate details for the chain certs"""
     verify_chain_results = _fetch_certificate_chain_verify_results(
@@ -180,6 +186,9 @@ class Encrypter:
     def decrypt(raw: bytes) -> str:
         salt, rest = raw[: Encrypter.SALT_LENGTH], raw[Encrypter.SALT_LENGTH :]
         nonce, rest = rest[: Encrypter.NONCE_LENGTH], rest[Encrypter.NONCE_LENGTH :]
-        tag, encrypted = rest[: TaggedCiphertext.TAG_LENGTH], rest[TaggedCiphertext.TAG_LENGTH :]
+        tag, encrypted = (
+            rest[: TaggedCiphertext.TAG_LENGTH],
+            rest[TaggedCiphertext.TAG_LENGTH :],
+        )
         key = EncrypterSecret().derive_secret_key(salt)
         return aes_gcm_decrypt(key, nonce, TaggedCiphertext(ciphertext=encrypted, tag=tag))

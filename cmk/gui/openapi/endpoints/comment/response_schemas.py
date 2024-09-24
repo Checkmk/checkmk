@@ -4,7 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.fields.utils import BaseSchema
-from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, DomainObjectCollection
+from cmk.gui.openapi.restful_objects.response_schemas import (
+    DomainObject,
+    DomainObjectCollection,
+)
 
 from cmk import fields
 
@@ -31,7 +34,8 @@ class CommentAttributes(BaseSchema):
         required=False, description="The service description the comment belongs to."
     )
     is_service = fields.Boolean(
-        required=True, description="True if the comment is from a service or else it's False."
+        required=True,
+        description="True if the comment is from a service or else it's False.",
     )
 
     site_id = fields.String(

@@ -9,7 +9,10 @@ from tests.unit.conftest import FixRegister
 
 from cmk.utils.sectionname import SectionMap, SectionName
 
-from cmk.base.api.agent_based.plugin_classes import AgentParseFunction, AgentSectionPlugin
+from cmk.base.api.agent_based.plugin_classes import (
+    AgentParseFunction,
+    AgentSectionPlugin,
+)
 
 from cmk.plugins.lib import kube as check
 from cmk.special_agents.utils_kubernetes.schemata import section as agent
@@ -37,7 +40,9 @@ def get_kube_agent_section_models() -> frozenset[type[agent.Section]]:
 
 
 @pytest.fixture(scope="module", name="kube_agent_sections")
-def get_kube_agent_sections(fix_register: FixRegister) -> SectionMap[AgentSectionPlugin]:
+def get_kube_agent_sections(
+    fix_register: FixRegister,
+) -> SectionMap[AgentSectionPlugin]:
     return {
         name: section
         for name, section in fix_register.agent_sections.items()
@@ -83,7 +88,9 @@ def get_kube_check_section_models(
     return result
 
 
-def test_keep_known_exceptions_up_to_date(kube_parsed_section_types: SectionMap[type]) -> None:
+def test_keep_known_exceptions_up_to_date(
+    kube_parsed_section_types: SectionMap[type],
+) -> None:
     assert all(
         kube_parsed_section_types[name] != section for name, section in _KNOWN_EXCEPTIONS.items()
     )

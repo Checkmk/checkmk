@@ -70,7 +70,11 @@ def test_parse_kaspersky_av_client(
             ],
         ),
         (
-            {"fullscan_failed": True, "fullscan_age": 1.3549888134, "signature_age": 1.3549888134},
+            {
+                "fullscan_failed": True,
+                "fullscan_age": 1.3549888134,
+                "signature_age": 1.3549888134,
+            },
             [
                 Result(state=State.OK, summary="Last update of signatures: 1 second ago"),
                 Result(state=State.OK, summary="Last fullscan: 1 second ago"),

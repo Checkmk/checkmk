@@ -15,7 +15,10 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
 )
 
 from cmk.special_agents import agent_kube as agent
-from cmk.special_agents.utils_kubernetes.agent_handlers import deployment_handler, pod_handler
+from cmk.special_agents.utils_kubernetes.agent_handlers import (
+    deployment_handler,
+    pod_handler,
+)
 from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
     AnnotationNonPatternOption,
     CheckmkHostSettings,

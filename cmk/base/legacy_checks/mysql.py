@@ -111,7 +111,11 @@ def check_mysql_sessions(item, params, parsed):
     total_sessions = data["Threads_connected"]
     running_sessions = data["Threads_running"]
     connects = get_rate(
-        get_value_store(), "mysql.sessions", time.time(), data["Connections"], raise_overflow=True
+        get_value_store(),
+        "mysql.sessions",
+        time.time(),
+        data["Connections"],
+        raise_overflow=True,
     )
 
     for value, perfvar, what, format_str, unit in [
@@ -201,7 +205,11 @@ def check_diskstat_line(
         if average_range is not None:
             perfdata.append((metric_name, bytes_per_sec, warn, crit))
             bytes_per_sec = get_average(
-                value_store, f"{metric_name}.avg", this_time, bytes_per_sec, average_range
+                value_store,
+                f"{metric_name}.avg",
+                this_time,
+                bytes_per_sec,
+                average_range,
             )
             metric_name_suffix = ".avg"
         else:

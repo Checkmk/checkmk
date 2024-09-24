@@ -16,7 +16,12 @@ from cmk.plugins.azure.agent_based.azure_load_balancer import (
     check_snat,
     parse_load_balancer,
 )
-from cmk.plugins.lib.azure import AzureMetric, FrontendIpConfiguration, PublicIP, Resource
+from cmk.plugins.lib.azure import (
+    AzureMetric,
+    FrontendIpConfiguration,
+    PublicIP,
+    Resource,
+)
 from cmk.plugins.lib.azure_load_balancer import (
     BackendIpConfiguration,
     InboundNatRule,
@@ -125,16 +130,25 @@ SECTION = {
                     name="ByteCount", aggregation="total", value=15000.0, unit="bytes"
                 ),
                 "average_AllocatedSnatPorts": AzureMetric(
-                    name="AllocatedSnatPorts", aggregation="average", value=15.5, unit="count"
+                    name="AllocatedSnatPorts",
+                    aggregation="average",
+                    value=15.5,
+                    unit="count",
                 ),
                 "average_UsedSnatPorts": AzureMetric(
                     name="UsedSnatPorts", aggregation="average", value=2.8, unit="count"
                 ),
                 "average_VipAvailability": AzureMetric(
-                    name="VipAvailability", aggregation="average", value=100.0, unit="count"
+                    name="VipAvailability",
+                    aggregation="average",
+                    value=100.0,
+                    unit="count",
                 ),
                 "average_DipAvailability": AzureMetric(
-                    name="DipAvailability", aggregation="average", value=50.0, unit="count"
+                    name="DipAvailability",
+                    aggregation="average",
+                    value=50.0,
+                    unit="count",
                 ),
             },
             subscription="f00",
@@ -332,7 +346,10 @@ def test_check_byte_count_stale(section: Section, item: str) -> None:
             "az-lbe-001",
             {"upper_levels": (10, 20)},
             [
-                Result(state=State.WARN, summary="SNAT usage: 18.75% (warn/crit at 10.00%/20.00%)"),
+                Result(
+                    state=State.WARN,
+                    summary="SNAT usage: 18.75% (warn/crit at 10.00%/20.00%)",
+                ),
                 Metric("snat_usage", 18.75, levels=(10.0, 20.0)),
                 Result(state=State.OK, summary="Allocated SNAT ports: 16"),
                 Metric("allocated_snat_ports", 16.0),
@@ -363,7 +380,10 @@ def test_check_byte_count_stale(section: Section, item: str) -> None:
                                 unit="count",
                             ),
                             "average_UsedSnatPorts": AzureMetric(
-                                name="UsedSnatPorts", aggregation="average", value=3.0, unit="count"
+                                name="UsedSnatPorts",
+                                aggregation="average",
+                                value=3.0,
+                                unit="count",
                             ),
                         },
                         subscription="c17d121d-dd5c-4156-875f-1df9862eef93",

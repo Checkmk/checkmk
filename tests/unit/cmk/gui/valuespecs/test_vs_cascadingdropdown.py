@@ -32,7 +32,10 @@ class TestCascadingDropDown:
         assert get_cascading_dropdown().default_value() == ("long", "")
         assert vs.CascadingDropdown([]).default_value() is None
         assert vs.CascadingDropdown([("none1", "none1 title", None)]).default_value() == "none1"
-        assert get_cascading_dropdown(default_value=(20, "smth")).default_value() == (20, "smth")
+        assert get_cascading_dropdown(default_value=(20, "smth")).default_value() == (
+            20,
+            "smth",
+        )
 
     def test_canonical_value(self) -> None:
         assert get_cascading_dropdown().canonical_value() == ("long", "")
@@ -108,7 +111,10 @@ class TestCascadingDropDown:
             vs.CascadingDropdown([]).value_to_json(("some", "ignored value"))
 
         assert get_cascading_dropdown().value_to_json("none1") == "none1"
-        assert get_cascading_dropdown().value_to_json(("long", "smth")) == ["long", "smth"]
+        assert get_cascading_dropdown().value_to_json(("long", "smth")) == [
+            "long",
+            "smth",
+        ]
         # in a previous implementation this would return None, as it was
         # calling validate_datatype to make sure the choice exists. as there
         # are many examples of Valuepsecs that do not validate the data in
@@ -123,6 +129,12 @@ class TestCascadingDropDown:
             "ignored value",
         )
         assert get_cascading_dropdown().value_from_json("none1") == "none1"
-        assert get_cascading_dropdown().value_from_json(["long", "smth"]) == ("long", "smth")
+        assert get_cascading_dropdown().value_from_json(["long", "smth"]) == (
+            "long",
+            "smth",
+        )
         # see long comment on (long, 2222) test case in test_value_to_json
-        assert get_cascading_dropdown().value_from_json(["long", 2222]) == ("long", 2222)
+        assert get_cascading_dropdown().value_from_json(["long", 2222]) == (
+            "long",
+            2222,
+        )

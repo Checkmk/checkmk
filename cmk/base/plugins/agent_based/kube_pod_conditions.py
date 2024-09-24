@@ -41,7 +41,10 @@ def discovery(section: PodConditions) -> DiscoveryResult:
 
 
 def _check_condition(
-    now: float, name: str, cond: PodCondition | None, levels_upper: tuple[int, int] | None
+    now: float,
+    name: str,
+    cond: PodCondition | None,
+    levels_upper: tuple[int, int] | None,
 ) -> CheckResult:
     if cond is not None:
         # keep the last-seen one

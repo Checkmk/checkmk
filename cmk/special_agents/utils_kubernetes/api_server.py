@@ -104,7 +104,9 @@ class ClientCoreAPI(ClientAPI):
         response = send_request(self._config, self._client, request)
         return self._deserializer.run("V1NamespaceList", response).items
 
-    def query_persistent_volume_claims(self) -> Sequence[client.V1PersistentVolumeClaim]:
+    def query_persistent_volume_claims(
+        self,
+    ) -> Sequence[client.V1PersistentVolumeClaim]:
         request = requests.Request("GET", self._config.url("/api/v1/persistentvolumeclaims"))
         response = send_request(self._config, self._client, request)
         return self._deserializer.run("V1PersistentVolumeClaimList", response).items
@@ -310,7 +312,9 @@ def version_from_json(
     return decompose_git_version(version_json["gitVersion"])
 
 
-def _verify_version_support(version: api.KubernetesVersion | api.UnknownKubernetesVersion) -> None:
+def _verify_version_support(
+    version: api.KubernetesVersion | api.UnknownKubernetesVersion,
+) -> None:
     if (
         isinstance(version, api.KubernetesVersion)
         and (version.major, version.minor) in SUPPORTED_VERSIONS

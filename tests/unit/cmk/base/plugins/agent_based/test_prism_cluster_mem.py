@@ -7,7 +7,12 @@ from typing import Any
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.prism_cluster_mem import (
     check_prism_cluster_mem,
     discovery_prism_cluster_mem,
@@ -84,7 +89,10 @@ def test_discovery_prism_host_stats(
                     summary="Total Memory Usage: 73.74% (warn/crit at 70.00%/80.00%)",
                 ),
                 Metric(
-                    "prism_cluster_mem_used", 73.7407, levels=(70.0, 80.0), boundaries=(0.0, 100.0)
+                    "prism_cluster_mem_used",
+                    73.7407,
+                    levels=(70.0, 80.0),
+                    boundaries=(0.0, 100.0),
                 ),
             ],
             id="If the cluster memory usage is outside the warning threshold, the check result is WARN.",

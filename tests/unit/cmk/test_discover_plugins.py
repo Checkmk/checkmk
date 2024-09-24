@@ -9,7 +9,12 @@ from types import ModuleType, UnionType
 
 import pytest
 
-from cmk.discover_plugins import Collector, discover_modules, PluginGroup, PluginLocation
+from cmk.discover_plugins import (
+    Collector,
+    discover_modules,
+    PluginGroup,
+    PluginLocation,
+)
 
 
 class AssumeDirs:

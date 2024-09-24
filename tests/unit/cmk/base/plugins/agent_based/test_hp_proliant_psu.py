@@ -19,7 +19,11 @@ def fixure_section() -> hp_proliant_psu.Section:
 
 def test_discovery(section: hp_proliant_psu.Section) -> None:
     services = list(hp_proliant_psu.discover_hp_proliant_psu(section))
-    assert services == [v1.Service(item="0/1"), v1.Service(item="0/2"), v1.Service(item="Total")]
+    assert services == [
+        v1.Service(item="0/1"),
+        v1.Service(item="0/2"),
+        v1.Service(item="Total"),
+    ]
 
 
 def test_check_psu(section: hp_proliant_psu.Section) -> None:
@@ -41,7 +45,10 @@ def test_check_psu_crit(section: hp_proliant_psu.Section) -> None:
         v1.Result(state=v1.State.OK, summary='State: "ok"'),
         v1.Result(state=v1.State.OK, summary="Usage: 450/460 Watts"),
         v1.Metric("power_usage", 450.0),
-        v1.Result(state=v1.State.CRIT, summary="Percentage: 97.83% (warn/crit at 80.00%/90.00%)"),
+        v1.Result(
+            state=v1.State.CRIT,
+            summary="Percentage: 97.83% (warn/crit at 80.00%/90.00%)",
+        ),
         v1.Metric("power_usage_percentage", 97.82608695652173, levels=(80.0, 90.0)),
     ]
 

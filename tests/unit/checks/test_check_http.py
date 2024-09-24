@@ -284,7 +284,10 @@ from tests.testlib import ActiveCheck
             {
                 "name": "irrelevant",
                 "mode": ("url", {}),
-                "host": {"virthost": "virtual.host", "address": ("direct", "virtual.host")},
+                "host": {
+                    "virthost": "virtual.host",
+                    "address": ("direct", "virtual.host"),
+                },
             },
             [
                 "--sni",

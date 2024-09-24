@@ -106,7 +106,11 @@ class CrashReportStore:
                 yield p
 
         for crash_dir in islice(
-            sorted(uuid_paths(base_dir), key=lambda p: uuid.UUID(str(p.name)).time, reverse=True),
+            sorted(
+                uuid_paths(base_dir),
+                key=lambda p: uuid.UUID(str(p.name)).time,
+                reverse=True,
+            ),
             self._keep_num_crashes,
             None,
         ):

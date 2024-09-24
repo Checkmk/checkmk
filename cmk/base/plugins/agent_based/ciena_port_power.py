@@ -9,7 +9,15 @@ from typing import NamedTuple
 
 from cmk.plugins.lib.ciena_ces import DETECT_CIENA_5142, DETECT_CIENA_5171
 
-from .agent_based_api.v1 import check_levels, OIDEnd, register, Result, Service, SNMPTree, State
+from .agent_based_api.v1 import (
+    check_levels,
+    OIDEnd,
+    register,
+    Result,
+    Service,
+    SNMPTree,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 inf = float("inf")
@@ -92,8 +100,14 @@ def check_ciena_port_power(item: str, section: Section) -> CheckResult:
         yield from check_levels(
             value=transmitted_power.power,
             metric_name="output_signal_power_dbm",
-            levels_upper=(transmitted_power.treshold_upper, transmitted_power.treshold_upper),
-            levels_lower=(transmitted_power.treshold_lower, transmitted_power.treshold_lower),
+            levels_upper=(
+                transmitted_power.treshold_upper,
+                transmitted_power.treshold_upper,
+            ),
+            levels_lower=(
+                transmitted_power.treshold_lower,
+                transmitted_power.treshold_lower,
+            ),
             render_func=render_func,
             label="Transmit",
         )

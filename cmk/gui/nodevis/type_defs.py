@@ -187,7 +187,9 @@ class TopologyQueryIdentifier:
     """Describes the query parameters which were used to generate the result"""
 
     def __init__(
-        self, topology_type: str, topology_filter_configuration: TopologyFilterConfiguration
+        self,
+        topology_type: str,
+        topology_filter_configuration: TopologyFilterConfiguration,
     ):
         self._identifier: tuple[str, ...] = (
             topology_type,
@@ -213,7 +215,9 @@ class TopologyConfiguration:
 
     @classmethod
     def parse(
-        cls, serialized_config: dict[str, Any], query_identifier: TopologyQueryIdentifier
+        cls,
+        serialized_config: dict[str, Any],
+        query_identifier: TopologyQueryIdentifier,
     ) -> "TopologyConfiguration":
         if serialized_config.get("version") is None:
             serialized_config = cls._migrate_legacy_data(serialized_config, query_identifier)

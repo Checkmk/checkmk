@@ -55,7 +55,10 @@ from cmk.gui.plugins.wato.active_checks.mailbox import migrate_check_mail_loop_p
                     "IMAP",
                     {
                         "auth": ("basic", ("usr_imap", ("password", "pw_imap"))),
-                        "connection": {"disable_tls": False, "port": 143},  # new param name "port"
+                        "connection": {
+                            "disable_tls": False,
+                            "port": 143,
+                        },  # new param name "port"
                     },
                 ),
                 "send": ("SMTP", {"connection": {}}),

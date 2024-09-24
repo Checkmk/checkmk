@@ -20,7 +20,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
     State,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+)
 
 from cmk.agent_based.v1.type_defs import StringTable
 
@@ -128,7 +131,10 @@ def test_inventory_sap_hana_ess(
     ],
 )
 def test_check_sap_hana_ess(
-    fix_register: FixRegister, item: str, info: StringTable, expected_result: CheckResult
+    fix_register: FixRegister,
+    item: str,
+    info: StringTable,
+    expected_result: CheckResult,
 ) -> None:
     section = fix_register.agent_sections[SectionName("sap_hana_ess")].parse_function(info)
     plugin = fix_register.check_plugins[CheckPluginName("sap_hana_ess")]

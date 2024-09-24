@@ -38,7 +38,8 @@ def check_fireeye_states(states):
     states_evaluated: dict = {}
     for what, text in states:
         states_evaluated.setdefault(
-            text, map_states[text.lower()].get(what.lower(), (2, "not %s" % what.lower()))
+            text,
+            map_states[text.lower()].get(what.lower(), (2, "not %s" % what.lower())),
         )
 
     return states_evaluated

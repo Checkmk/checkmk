@@ -523,7 +523,9 @@ class TimeFormatter(NotationFormatter):
         return _BASIC_DECIMAL_ATOMS[:6]
 
 
-def _vs_type(unit: metrics.Unit) -> type[Age] | type[Float] | type[Integer] | type[Percentage]:
+def _vs_type(
+    unit: metrics.Unit,
+) -> type[Age] | type[Float] | type[Integer] | type[Percentage]:
     if isinstance(unit.notation, metrics.TimeNotation):
         return Age
     if unit.notation.symbol.startswith("%"):

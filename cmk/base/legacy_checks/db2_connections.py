@@ -36,7 +36,11 @@ def check_db2_connections(item, params, parsed):
         state = 2
     elif connections >= warn:
         state = 1
-    yield state, "Connections: %s" % connections, [("connections", connections, warn, crit)]
+    yield (
+        state,
+        "Connections: %s" % connections,
+        [("connections", connections, warn, crit)],
+    )
 
     yield 0, "Port: %s" % data["port"]
 

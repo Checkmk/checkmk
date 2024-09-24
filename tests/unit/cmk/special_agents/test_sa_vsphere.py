@@ -52,7 +52,10 @@ DEFAULT_AGRS = {
         (["--spaces", "underscore"], {"spaces": "underscore"}),
         (["-S", "cut"], {"spaces": "cut"}),
         (["--no-cert-check"], {"no_cert_check": True}),
-        (["--modules", "are,not,vectorspaces"], {"modules": ["are", "not", "vectorspaces"]}),
+        (
+            ["--modules", "are,not,vectorspaces"],
+            {"modules": ["are", "not", "vectorspaces"]},
+        ),
         (["-i", "are,not,vectorspaces"], {"modules": ["are", "not", "vectorspaces"]}),
         (["--user", "hi-its-me"], {"user": "hi-its-me"}),
         (["-u", "hi-its-me"], {"user": "hi-its-me"}),
@@ -60,7 +63,10 @@ DEFAULT_AGRS = {
             ["--secret", "I like listening to Folk music"],
             {"secret": "I like listening to Folk music"},
         ),
-        (["-s", "I like listening to Folk music"], {"secret": "I like listening to Folk music"}),
+        (
+            ["-s", "I like listening to Folk music"],
+            {"secret": "I like listening to Folk music"},
+        ),
     ],
 )
 def test_parse_arguments(

@@ -7,7 +7,11 @@
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import Age, Dictionary, ListOf, TextInput, ValueSpec
-from cmk.gui.watolib.config_domain_name import ABCConfigDomain, ConfigVariable, ConfigVariableGroup
+from cmk.gui.watolib.config_domain_name import (
+    ABCConfigDomain,
+    ConfigVariable,
+    ConfigVariableGroup,
+)
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupUserInterface
 

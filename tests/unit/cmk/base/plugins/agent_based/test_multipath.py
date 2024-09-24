@@ -17,7 +17,13 @@ from cmk.base.plugins.agent_based.multipath import (
 from cmk.plugins.lib.multipath import Section
 
 STRING_TABLE: Final = [
-    ["ORA_ZAPPL2T_DATA_3", "(3600601604d40310047cf93ce66f7e111)", "dm-67", "DGC,RAID", "5"],
+    [
+        "ORA_ZAPPL2T_DATA_3",
+        "(3600601604d40310047cf93ce66f7e111)",
+        "dm-67",
+        "DGC,RAID",
+        "5",
+    ],
     ["size=17G", "features='1", "queue_if_no_path'", "hwhandler='1", "alua'", "wp=rw"],
     ["|-+-", "policy='round-robin", "0'", "prio=0", "status=active"],
     ["| |-", "3:0:1:54", "sddz", "128:16 ", "active", "undef", "running"],
@@ -25,7 +31,13 @@ STRING_TABLE: Final = [
     ["`-+-", "policy='round-robin", "0'", "prio=0", "status=enabled"],
     ["|-", "5:0:0:54", "sdbd", "67:112", "active", "undef", "running"],
     ["`-", "3:0:0:54", "sdhf", "133:80", "active", "undef", "running"],
-    ["ORA_UC41T_OLOG_1", "(prefix.3600601604d403100912ab0b365f7e111)", "dm-112", "DGC,RAID", "5"],
+    [
+        "ORA_UC41T_OLOG_1",
+        "(prefix.3600601604d403100912ab0b365f7e111)",
+        "dm-112",
+        "DGC,RAID",
+        "5",
+    ],
     ["size=17G features='1 queue_if_no_path' hwhandler='1 alua' wp=rw"],
     ["|-+-", "policy='round-robin", "0'", "prio=0", "status=active"],
     ["|", "|-", "5:0:0:77", "sdew", "129:128", "active", "undef", "running"],

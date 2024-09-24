@@ -17,7 +17,13 @@ from cmk.utils.paths import default_config_dir
 
 from cmk.gui.watolib import automatic_host_removal
 from cmk.gui.watolib.hosts_and_folders import folder_tree
-from cmk.gui.watolib.rulesets import FolderRulesets, Rule, RuleConditions, RuleOptions, Ruleset
+from cmk.gui.watolib.rulesets import (
+    FolderRulesets,
+    Rule,
+    RuleConditions,
+    RuleOptions,
+    Ruleset,
+)
 
 
 @pytest.fixture(scope="function", autouse=True)

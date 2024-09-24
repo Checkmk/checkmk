@@ -23,7 +23,11 @@ def check_bluecat_dns_queries(item, _no_params, info):
     now = time.time()
     for value, name in zip(info[0], value_names):
         rate = get_rate(
-            value_store, f"bluecat_dns_queries.{name}", now, int(value), raise_overflow=True
+            value_store,
+            f"bluecat_dns_queries.{name}",
+            now,
+            int(value),
+            raise_overflow=True,
         )
         yield 0, f"{name}: {rate}", [(name, rate)]
 

@@ -164,7 +164,9 @@ def parse_arguments(sys_argv):
     )
     parser.add_argument("--verbose", "-v", action="count", default=0)
     parser.add_argument(
-        "--debug", action="store_true", help="Debug mode: let Python exceptions raise through"
+        "--debug",
+        action="store_true",
+        help="Debug mode: let Python exceptions raise through",
     )
 
     return parser.parse_args(sys_argv)
@@ -300,7 +302,10 @@ def main(sys_argv=None):
             cpu_state = client.get_cpu_state()
         except Snap7Exception as e:
             cpu_state = None
-            print(_snap7error(hostname, "Error reading device CPU state", e), file=sys.stderr)
+            print(
+                _snap7error(hostname, "Error reading device CPU state", e),
+                file=sys.stderr,
+            )
 
         parsed_area_values = []
         for (area_name, db_number), iter_values in _group_device_values(device):

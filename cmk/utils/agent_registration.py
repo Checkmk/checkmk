@@ -32,7 +32,9 @@ def get_uuid_link_manager() -> UUIDLinkManager:
     )
 
 
-def connection_mode_from_host_config(host_config: Mapping[str, object]) -> HostAgentConnectionMode:
+def connection_mode_from_host_config(
+    host_config: Mapping[str, object],
+) -> HostAgentConnectionMode:
     return HostAgentConnectionMode(
         host_config.get(
             "cmk_agent_connection",
@@ -147,7 +149,9 @@ class UUIDLinkManager:
 
             link.unlink()
             self.create_link(
-                new_name, link.uuid, push_configured=link.target.parent == self._data_source_dir
+                new_name,
+                link.uuid,
+                push_configured=link.target.parent == self._data_source_dir,
             )
             renamed.append((old_name, new_name))
 

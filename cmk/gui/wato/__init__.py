@@ -73,22 +73,38 @@ from cmk.gui.valuespec import TextUnicode as TextUnicode
 from cmk.gui.valuespec import Transform as Transform
 from cmk.gui.valuespec import Tuple as Tuple
 from cmk.gui.visuals.filter import FilterRegistry
-from cmk.gui.wato._main_module_topics import MainModuleTopicAgents as MainModuleTopicAgents
-from cmk.gui.wato._main_module_topics import MainModuleTopicEvents as MainModuleTopicEvents
-from cmk.gui.wato._main_module_topics import MainModuleTopicExporter as MainModuleTopicExporter
-from cmk.gui.wato._main_module_topics import MainModuleTopicGeneral as MainModuleTopicGeneral
-from cmk.gui.wato._main_module_topics import MainModuleTopicHosts as MainModuleTopicHosts
+from cmk.gui.wato._main_module_topics import (
+    MainModuleTopicAgents as MainModuleTopicAgents,
+)
+from cmk.gui.wato._main_module_topics import (
+    MainModuleTopicEvents as MainModuleTopicEvents,
+)
+from cmk.gui.wato._main_module_topics import (
+    MainModuleTopicExporter as MainModuleTopicExporter,
+)
+from cmk.gui.wato._main_module_topics import (
+    MainModuleTopicGeneral as MainModuleTopicGeneral,
+)
+from cmk.gui.wato._main_module_topics import (
+    MainModuleTopicHosts as MainModuleTopicHosts,
+)
 from cmk.gui.wato._main_module_topics import (
     MainModuleTopicMaintenance as MainModuleTopicMaintenance,
 )
-from cmk.gui.wato._main_module_topics import MainModuleTopicServices as MainModuleTopicServices
-from cmk.gui.wato._main_module_topics import MainModuleTopicUsers as MainModuleTopicUsers
+from cmk.gui.wato._main_module_topics import (
+    MainModuleTopicServices as MainModuleTopicServices,
+)
+from cmk.gui.wato._main_module_topics import (
+    MainModuleTopicUsers as MainModuleTopicUsers,
+)
 from cmk.gui.wato.page_handler import page_handler
 from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.watolib.hosts_and_folders import ajax_popup_host_action_menu
 from cmk.gui.watolib.main_menu import MenuItem, register_modules, WatoModule
 from cmk.gui.watolib.mode import mode_registry, mode_url, redirect, WatoMode
-from cmk.gui.watolib.rulespecs import register_check_parameters as register_check_parameters
+from cmk.gui.watolib.rulespecs import (
+    register_check_parameters as register_check_parameters,
+)
 from cmk.gui.watolib.rulespecs import register_rule as register_rule
 from cmk.gui.watolib.sites import LivestatusViaTCP
 from cmk.gui.watolib.translation import HostnameTranslation
@@ -107,8 +123,12 @@ from ._notification_parameter import (
     notification_parameter_registry as notification_parameter_registry,
 )
 from ._notification_parameter import NotificationParameter as NotificationParameter
-from ._notification_parameter import NotificationParameterMail as NotificationParameterMail
-from ._notification_parameter import NotificationParameterRegistry as NotificationParameterRegistry
+from ._notification_parameter import (
+    NotificationParameterMail as NotificationParameterMail,
+)
+from ._notification_parameter import (
+    NotificationParameterRegistry as NotificationParameterRegistry,
+)
 from ._notification_parameter import register_notification_parameters
 from ._permissions import PermissionSectionWATO as PermissionSectionWATO
 from ._rulespec_groups import RulespecGroupActiveChecks as RulespecGroupActiveChecks
@@ -139,7 +159,9 @@ from ._rulespec_groups import (
 from ._rulespec_groups import (
     RulespecGroupCheckParametersVirtualization as RulespecGroupCheckParametersVirtualization,
 )
-from ._rulespec_groups import RulespecGroupDatasourcePrograms as RulespecGroupDatasourcePrograms
+from ._rulespec_groups import (
+    RulespecGroupDatasourcePrograms as RulespecGroupDatasourcePrograms,
+)
 from ._rulespec_groups import (
     RulespecGroupDatasourceProgramsApps as RulespecGroupDatasourceProgramsApps,
 )
@@ -152,7 +174,9 @@ from ._rulespec_groups import (
 from ._rulespec_groups import (
     RulespecGroupDatasourceProgramsHardware as RulespecGroupDatasourceProgramsHardware,
 )
-from ._rulespec_groups import RulespecGroupDatasourceProgramsOS as RulespecGroupDatasourceProgramsOS
+from ._rulespec_groups import (
+    RulespecGroupDatasourceProgramsOS as RulespecGroupDatasourceProgramsOS,
+)
 from ._rulespec_groups import (
     RulespecGroupDatasourceProgramsTesting as RulespecGroupDatasourceProgramsTesting,
 )
@@ -162,12 +186,16 @@ from ._rulespec_groups import (
 from ._rulespec_groups import (
     RulespecGroupIntegrateOtherServices as RulespecGroupIntegrateOtherServices,
 )
-from ._rulespec_groups import RulespecGroupVMCloudContainer as RulespecGroupVMCloudContainer
+from ._rulespec_groups import (
+    RulespecGroupVMCloudContainer as RulespecGroupVMCloudContainer,
+)
 from .pages import IndividualOrStoredPassword as IndividualOrStoredPassword
 from .pages import (
     MigrateNotUpdatedToIndividualOrStoredPassword as MigrateNotUpdatedToIndividualOrStoredPassword,
 )
-from .pages import MigrateToIndividualOrStoredPassword as MigrateToIndividualOrStoredPassword
+from .pages import (
+    MigrateToIndividualOrStoredPassword as MigrateToIndividualOrStoredPassword,
+)
 from .pages._match_conditions import FullPathFolderChoice as FullPathFolderChoice
 from .pages._match_conditions import HostTagCondition as HostTagCondition
 from .pages._match_conditions import (

@@ -2,9 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Tries to connect to an IMAP or POP3 server and returns OK if successfull.
-
-"""
+"""Tries to connect to an IMAP or POP3 server and returns OK if successfull."""
 
 import argparse
 import base64
@@ -32,7 +30,9 @@ from cmk.utils.mailbox import (
 def create_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--forward-ec", action="store_true", help="Forward matched mails to the event console (EC)"
+        "--forward-ec",
+        action="store_true",
+        help="Forward matched mails to the event console (EC)",
     )
     parser.add_argument(
         "--forward-method",
@@ -69,7 +69,10 @@ def create_argument_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
-        "--forward-host", type=str, metavar="HOST", help="Hostname to use for the generated events"
+        "--forward-host",
+        type=str,
+        metavar="HOST",
+        help="Hostname to use for the generated events",
     )
     parser.add_argument(
         "--body-limit",

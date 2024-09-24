@@ -25,7 +25,8 @@ def check_netapp_api_disk_summary(_no_item, params, section):
         params = {"failed_spare_ratio": params["broken_spare_ratio"]}
 
     return check_filer_disks(
-        [disk for disk in section if disk.get("raid-state") not in ["remote", "partner"]], params
+        [disk for disk in section if disk.get("raid-state") not in ["remote", "partner"]],
+        params,
     )
 
 

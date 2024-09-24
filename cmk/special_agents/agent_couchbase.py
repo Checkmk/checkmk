@@ -12,8 +12,14 @@ from typing import Any, TypeVar
 
 import requests
 
-from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
-from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.agent_common import (
+    SectionWriter,
+    special_agent_main,
+)
+from cmk.special_agents.v0_unstable.argument_parsing import (
+    Args,
+    create_default_argument_parser,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -140,13 +146,23 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
         help="Gives a bucket to monitor. Can be used multiple times.",
     )
     parser.add_argument(
-        "-P", "--port", type=int, default=8091, help="Gives the port for API-calls. Default: 8091"
+        "-P",
+        "--port",
+        type=int,
+        default=8091,
+        help="Gives the port for API-calls. Default: 8091",
     )
     parser.add_argument(
-        "-u", "--username", default=None, help="The username for authentication at the API."
+        "-u",
+        "--username",
+        default=None,
+        help="The username for authentication at the API.",
     )
     parser.add_argument(
-        "-p", "--password", default=None, help="The password for authentication at the API."
+        "-p",
+        "--password",
+        default=None,
+        help="The password for authentication at the API.",
     )
     parser.add_argument("hostname", help="Host or ip address to contact.")
 
@@ -314,7 +330,9 @@ def _average(value_list: Sequence[float]) -> float | None:
     return None
 
 
-def sections_buckets(bucket_list: Sequence[tuple[str, Mapping[str, Sequence[float]]]]) -> None:
+def sections_buckets(
+    bucket_list: Sequence[tuple[str, Mapping[str, Sequence[float]]]],
+) -> None:
     for section_name, filter_keys in [
         (
             "couchbase_buckets_mem",

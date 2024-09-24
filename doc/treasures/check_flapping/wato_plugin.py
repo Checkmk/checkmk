@@ -41,7 +41,11 @@ register_rule(
                     ),
                     (
                         "timerange",
-                        Integer(title=_("Timerange to check"), unit=_("Minutes"), default_value=60),
+                        Integer(
+                            title=_("Timerange to check"),
+                            unit=_("Minutes"),
+                            default_value=60,
+                        ),
                     ),
                 ],
             ),

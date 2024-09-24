@@ -18,7 +18,8 @@ def test_load_metrics_plugin(site: Site) -> None:
 
 def test_load_legacy_metrics_plugin(site: Site) -> None:
     with site.copy_file(
-        "metric_info_plugin.py", "local/share/check_mk/web/plugins/metrics/test_plugin.py"
+        "metric_info_plugin.py",
+        "local/share/check_mk/web/plugins/metrics/test_plugin.py",
     ):
         assert (
             site.python_helper("helper_test_load_metrics_plugin.py").check_output().rstrip()

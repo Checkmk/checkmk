@@ -4,12 +4,27 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import fnmatch
-from collections.abc import Callable, Generator, Iterable, Mapping, MutableMapping, Sequence
+from collections.abc import (
+    Callable,
+    Generator,
+    Iterable,
+    Mapping,
+    MutableMapping,
+    Sequence,
+)
 from enum import Enum
 from typing import Any, Literal, NamedTuple, NewType
 
 from cmk.agent_based.v1 import check_levels
-from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Metric, render, Result, Service, State
+from cmk.agent_based.v2 import (
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    render,
+    Result,
+    Service,
+    State,
+)
 
 from .size_trend import size_trend
 
@@ -520,7 +535,12 @@ def check_filesystem_levels(
     status = (
         State.CRIT if used_space >= crit_mb else State.WARN if used_space >= warn_mb else State.OK
     )
-    yield Metric("fs_used", used_space, levels=(warn_mb, crit_mb), boundaries=(0, filesystem_size))
+    yield Metric(
+        "fs_used",
+        used_space,
+        levels=(warn_mb, crit_mb),
+        boundaries=(0, filesystem_size),
+    )
     yield Metric("fs_free", free_space, boundaries=(0, None))
 
     used_space_percent = (used_space / allocatable_filesystem_size) * 100.0
@@ -584,7 +604,12 @@ def df_check_filesystem_single(  # type: ignore[no-untyped-def]
     used_space = allocatable_filesystem_size - free_space
 
     yield from check_filesystem_levels(
-        filesystem_size, allocatable_filesystem_size, free_space, used_space, params, show_levels
+        filesystem_size,
+        allocatable_filesystem_size,
+        free_space,
+        used_space,
+        params,
+        show_levels,
     )
 
     # This is used to draw some pretty perfometers
@@ -630,7 +655,9 @@ def df_check_filesystem_list(  # type: ignore[no-untyped-def]
     """Wrapper for `df_check_filesystem_single` supporting groups"""
 
     def group_sum(
-        metric_name: str, info: dict[str, dict[str, float | None]], mountpoints_group: list[str]
+        metric_name: str,
+        info: dict[str, dict[str, float | None]],
+        mountpoints_group: list[str],
     ) -> float | None:
         """Calculate sum of named values for matching mount points"""
         try:

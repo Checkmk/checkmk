@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-""" Edit global settings of the visual """
+"""Edit global settings of the visual"""
 
 import copy
 from collections.abc import Sequence
@@ -295,7 +295,10 @@ def page_edit_visual(  # type: ignore[no-untyped-def] # pylint: disable=too-many
                             back_url_from_vars
                         )
                         back_vars = [(varname, value[0]) for varname, value in query_vars.items()]
-                    visual_name_var: tuple[str, str] = (visual_type.ident_attr, visual["name"])
+                    visual_name_var: tuple[str, str] = (
+                        visual_type.ident_attr,
+                        visual["name"],
+                    )
                     if visual_name_var not in back_vars:
                         back_vars.append(visual_name_var)
 
@@ -387,7 +390,9 @@ def get_context_specs(
     single_info_keys = [key for key in info_keys if key in single_infos]
     multi_info_keys = [key for key in info_keys if key not in single_info_keys]
 
-    def host_service_lead(val: tuple[InfoName, Transform[dict] | VisualFilterList]) -> int:
+    def host_service_lead(
+        val: tuple[InfoName, Transform[dict] | VisualFilterList],
+    ) -> int:
         # Sort is stable in python, thus only prioritize host>service>rest
         if val[0] == "host":
             return 0
@@ -469,7 +474,7 @@ def _visual_spec_multi(
 
 
 def process_context_specs(
-    context_specs: list[tuple[InfoName, Transform[dict] | VisualFilterList]]
+    context_specs: list[tuple[InfoName, Transform[dict] | VisualFilterList]],
 ) -> VisualContext:
     context: dict[str, Any] = {}
     for info_key, spec in context_specs:
@@ -525,7 +530,12 @@ def _vs_general(
         title=_("General properties"),
         render="form",
         optional_keys=False,
-        show_more_keys=["description", "add_context_to_title", "sort_index", "is_show_more"],
+        show_more_keys=[
+            "description",
+            "add_context_to_title",
+            "sort_index",
+            "is_show_more",
+        ],
         elements=[
             single_infos_spec(single_infos),
             (
@@ -549,7 +559,10 @@ def _vs_general(
                     default_value=default_id,
                 ),
             ),
-            ("title", TextInput(title=_("Title") + "<sup>*</sup>", size=50, allow_empty=False)),
+            (
+                "title",
+                TextInput(title=_("Title") + "<sup>*</sup>", size=50, allow_empty=False),
+            ),
             (
                 "description",
                 TextAreaUnicode(

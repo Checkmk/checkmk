@@ -90,7 +90,10 @@ def check_storeonce_stores(item: str, section: Section) -> CheckResult:
     )
 
     yield from check_levels(
-        float(values["diskBytes"]), metric_name="data_size", label="Size", render_func=render.bytes
+        float(values["diskBytes"]),
+        metric_name="data_size",
+        label="Size",
+        render_func=render.bytes,
     )
 
     if "Dedupe Ratio" in values:

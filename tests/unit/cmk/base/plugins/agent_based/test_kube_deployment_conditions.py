@@ -13,7 +13,10 @@ import pytest
 
 from cmk.base.plugins.agent_based import kube_deployment_conditions
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    StringTable,
+)
 
 from cmk.plugins.lib.kube import DeploymentConditions, VSResultAge
 
@@ -165,7 +168,9 @@ def test_all_ok_check_result(check_result: CheckResult) -> None:
 
 
 @pytest.mark.parametrize("status_replicafailure", [None])
-def test_no_replicafailure_and_others_ok_check_result(check_result: CheckResult) -> None:
+def test_no_replicafailure_and_others_ok_check_result(
+    check_result: CheckResult,
+) -> None:
     results = list(check_result)
     assert len(results) == 1
     assert isinstance(results[0], Result)
@@ -175,7 +180,9 @@ def test_no_replicafailure_and_others_ok_check_result(check_result: CheckResult)
 @pytest.mark.parametrize("status_replicafailure", [None])
 @pytest.mark.parametrize("state", [WARN])
 @pytest.mark.parametrize("status_progressing, status_available", [(True, False), (False, True)])
-def test_no_replicafailure_and_one_false_condition_check_result(check_result: CheckResult) -> None:
+def test_no_replicafailure_and_one_false_condition_check_result(
+    check_result: CheckResult,
+) -> None:
     results = list(check_result)
     assert len(results) == 2
     assert (
@@ -203,14 +210,17 @@ def test_no_replicafailure_and_one_false_condition_check_result(check_result: Ch
 @pytest.mark.parametrize(
     "status_replicafailure, status_progressing, state_available", [(True, False, False)]
 )
-def test_all_failing_status_but_within_valid_time_range(check_result: CheckResult) -> None:
+def test_all_failing_status_but_within_valid_time_range(
+    check_result: CheckResult,
+) -> None:
     results = list(check_result)
     assert len(results) == 3
     assert all(result.state == State.OK for result in results if isinstance(result, Result))
 
 
 @pytest.mark.parametrize(
-    "status_replicafailure, status_progressing, status_available", [(True, False, False)]
+    "status_replicafailure, status_progressing, status_available",
+    [(True, False, False)],
 )
 @pytest.mark.parametrize("params", [{}])
 @pytest.mark.parametrize("state", [OK, WARN, CRIT])

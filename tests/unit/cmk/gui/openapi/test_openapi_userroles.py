@@ -22,7 +22,12 @@ def test_get_userroles_endpoint(clients: ClientRegistry) -> None:
 def test_post_userrole_endpoint(clients: ClientRegistry) -> None:
     clients.UserRole.clone(body={"role_id": "admin"})
     resp = clients.UserRole.get(role_id="adminx")
-    assert resp.json["extensions"].keys() == {"alias", "permissions", "builtin", "basedon"}
+    assert resp.json["extensions"].keys() == {
+        "alias",
+        "permissions",
+        "builtin",
+        "basedon",
+    }
     assert resp.json["id"] == "adminx"
     assert {link["method"] for link in resp.json["links"]} == {"GET", "PUT", "DELETE"}
 
@@ -81,7 +86,12 @@ def test_edit_cloned_userrole_permissions(clients: ClientRegistry) -> None:
     clients.UserRole.clone(body={"role_id": "admin"})
     resp = clients.UserRole.edit(
         role_id="adminx",
-        body={"new_permissions": {"general.server_side_requests": "no", "general.use": "no"}},
+        body={
+            "new_permissions": {
+                "general.server_side_requests": "no",
+                "general.use": "no",
+            }
+        },
     )
 
     assert "general.server_side_requests" not in resp.json["extensions"]["permissions"]
@@ -90,7 +100,10 @@ def test_edit_cloned_userrole_permissions(clients: ClientRegistry) -> None:
     resp = clients.UserRole.edit(
         role_id="adminx",
         body={
-            "new_permissions": {"general.server_side_requests": "default", "general.use": "default"}
+            "new_permissions": {
+                "general.server_side_requests": "default",
+                "general.use": "default",
+            }
         },
     )
 

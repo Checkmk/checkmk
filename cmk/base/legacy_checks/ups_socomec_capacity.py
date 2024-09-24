@@ -49,9 +49,11 @@ def check_ups_socomec_capacity(item, params, info):
             levelsinfo = " (warn at %d min)" % cap_warn
         else:
             state = 0
-        yield state, "%d min left on battery" % minutes_left + levelsinfo, [
-            ("capacity", minutes_left, warn, crit)
-        ]
+        yield (
+            state,
+            "%d min left on battery" % minutes_left + levelsinfo,
+            [("capacity", minutes_left, warn, crit)],
+        )
 
     # Check percentual capacity
     levelsinfo = ""
@@ -63,9 +65,11 @@ def check_ups_socomec_capacity(item, params, info):
         levelsinfo = " (warn at %d%%)" % cap_warn
     else:
         state = 0
-    yield state, "capacity: %d%%" % percent_fuel + levelsinfo, [
-        ("percent", percent_fuel, cap_warn, cap_crit)
-    ]
+    yield (
+        state,
+        "capacity: %d%%" % percent_fuel + levelsinfo,
+        [("percent", percent_fuel, cap_warn, cap_crit)],
+    )
 
     # Output time on battery
     if time_on_bat > 0:

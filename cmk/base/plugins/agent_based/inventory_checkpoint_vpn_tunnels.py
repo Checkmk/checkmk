@@ -39,9 +39,13 @@ def parse_checkpoint_vpn_tunnels(string_table: StringTable) -> Section:
             tunnel_interface=tunnel_interface,
             link_priority=link_priorities[link_priority],
         )
-        for index, (peer_ip, source_ip, peer_name, tunnel_interface, link_priority) in enumerate(
-            string_table
-        )
+        for index, (
+            peer_ip,
+            source_ip,
+            peer_name,
+            tunnel_interface,
+            link_priority,
+        ) in enumerate(string_table)
     ]
 
 

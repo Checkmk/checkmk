@@ -82,7 +82,10 @@ except ImportError:
 # If you want to use the old behaviour just use old_stdout.
 if sys.version_info[0] >= 3:
     new_stdout = io.TextIOWrapper(
-        sys.stdout.buffer, newline="\n", encoding=sys.stdout.encoding, errors=sys.stdout.errors
+        sys.stdout.buffer,
+        newline="\n",
+        encoding=sys.stdout.encoding,
+        errors=sys.stdout.errors,
     )
     old_stdout, sys.stdout = sys.stdout, new_stdout
 
@@ -186,7 +189,13 @@ class PostgresBase:
 
     @abc.abstractmethod
     def run_sql_as_db_user(
-        self, sql_cmd, extra_args="", field_sep=";", quiet=True, rows_only=True, mixed_cmd=False
+        self,
+        sql_cmd,
+        extra_args="",
+        field_sep=";",
+        quiet=True,
+        rows_only=True,
+        mixed_cmd=False,
     ):
         # type: (str, str, str, bool, bool, bool) -> str
         """This method implements the system specific way to call the psql interface"""
@@ -456,7 +465,13 @@ def _sanitize_sql_query(out):
 
 class PostgresWin(PostgresBase):
     def run_sql_as_db_user(
-        self, sql_cmd, extra_args="", field_sep=";", quiet=True, rows_only=True, mixed_cmd=False
+        self,
+        sql_cmd,
+        extra_args="",
+        field_sep=";",
+        quiet=True,
+        rows_only=True,
+        mixed_cmd=False,
     ):
         # type: (str, str, str, bool | None, bool | None,bool | None) -> str
         """This method implements the system specific way to call the psql interface"""
@@ -780,10 +795,22 @@ class PostgresWin(PostgresBase):
 
 class PostgresLinux(PostgresBase):
     def run_sql_as_db_user(
-        self, sql_cmd, extra_args="", field_sep=";", quiet=True, rows_only=True, mixed_cmd=False
+        self,
+        sql_cmd,
+        extra_args="",
+        field_sep=";",
+        quiet=True,
+        rows_only=True,
+        mixed_cmd=False,
     ):
         # type: (str, str, str, bool, bool, bool) -> str
-        base_cmd_list = ["su", "-", self.db_user, "-c", r"""PGPASSFILE=%s %s -X %s -A0 -F'%s'%s"""]
+        base_cmd_list = [
+            "su",
+            "-",
+            self.db_user,
+            "-c",
+            r"""PGPASSFILE=%s %s -X %s -A0 -F'%s'%s""",
+        ]
         extra_args += " -U %s" % self.pg_user
         extra_args += " -d %s" % self.pg_database
         extra_args += " -p %s" % self.pg_port
@@ -809,7 +836,10 @@ class PostgresLinux(PostgresBase):
             )
 
             receiving_pipe = subprocess.Popen(  # pylint: disable=consider-using-with
-                base_cmd_list, stdin=cmd_to_pipe.stdout, stdout=subprocess.PIPE, env=self.my_env
+                base_cmd_list,
+                stdin=cmd_to_pipe.stdout,
+                stdout=subprocess.PIPE,
+                env=self.my_env,
             )
             out = receiving_pipe.communicate()[0]
 
@@ -892,7 +922,8 @@ class PostgresLinux(PostgresBase):
         procs = self._filter_instances(procs_list, proc_sensitive_filter=lambda p: self.name in p)
         if not procs:
             procs = self._filter_instances(
-                procs_list, proc_sensitive_filter=lambda p: self.name.lower() in p.lower()
+                procs_list,
+                proc_sensitive_filter=lambda p: self.name.lower() in p.lower(),
             )
         out = "\n".join(procs)
         return out.rstrip()
@@ -1238,7 +1269,12 @@ def _parse_INSTANCE_value(value, config_separator):
         keys = keys + [""]
     env_file, pg_user, pg_passfile, instance_name = keys
     env_file = env_file.strip()
-    return env_file, pg_user, pg_passfile, instance_name or env_file.split(os.sep)[-1].split(".")[0]
+    return (
+        env_file,
+        pg_user,
+        pg_passfile,
+        instance_name or env_file.split(os.sep)[-1].split(".")[0],
+    )
 
 
 def parse_postgres_cfg(postgres_cfg, config_separator):

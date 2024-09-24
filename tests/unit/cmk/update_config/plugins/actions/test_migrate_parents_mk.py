@@ -83,7 +83,9 @@ def _conf_root(with_admin_login: UserId, load_config: None) -> Iterator[Folder]:
 
 def run_migrate() -> None:
     return MigrateParentsMK(
-        name="migrate_parent_scan_config", title="Migrate CLI parent scan config", sort_index=40
+        name="migrate_parent_scan_config",
+        title="Migrate CLI parent scan config",
+        sort_index=40,
     )(logging.getLogger(), {})
 
 

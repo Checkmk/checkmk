@@ -77,7 +77,9 @@ def test_consume_result_invalid() -> None:
         assert checkers.consume_check_results(offending_check_function())
 
 
-def test_config_cache_get_clustered_service_node_keys_no_cluster(monkeypatch: MonkeyPatch) -> None:
+def test_config_cache_get_clustered_service_node_keys_no_cluster(
+    monkeypatch: MonkeyPatch,
+) -> None:
     monkeypatch.setattr(
         config,
         "lookup_ip_address",
@@ -127,7 +129,9 @@ def test_config_cache_get_clustered_service_node_keys_cluster_no_service(
     )
 
 
-def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: MonkeyPatch) -> None:
+def test_config_cache_get_clustered_service_node_keys_clustered(
+    monkeypatch: MonkeyPatch,
+) -> None:
     node1 = HostName("node1.test")
     node2 = HostName("node2.test")
     cluster = HostName("cluster.test")
@@ -217,7 +221,8 @@ def test_prediction_injection() -> None:
     prediction = (42.0, (50.0, 60.0))
 
     inject = InjectedParameters(
-        meta_file_path_template="", predictions={_make_hash(params, "upper", metric): prediction}
+        meta_file_path_template="",
+        predictions={_make_hash(params, "upper", metric): prediction},
     )
     p: dict[str, object] = {
         "levels_upper": (

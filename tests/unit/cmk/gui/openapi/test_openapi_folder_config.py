@@ -228,7 +228,9 @@ def test_openapi_folder_non_existent_site(clients: ClientRegistry) -> None:
     assert "site" in resp.json["fields"]["update_attributes"]
 
 
-def test_openapi_folder_config_collections(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+def test_openapi_folder_config_collections(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+) -> None:
     aut_user_auth_wsgi_app.call_method(
         "post",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
@@ -266,7 +268,9 @@ def test_openapi_folder_config_collections(aut_user_auth_wsgi_app: WebTestAppFor
 
 
 @pytest.mark.usefixtures("with_host")
-def test_openapi_folder_hosts_sub_resource(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+def test_openapi_folder_hosts_sub_resource(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+) -> None:
     aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/objects/folder_config/~/collections/hosts",
@@ -275,7 +279,9 @@ def test_openapi_folder_hosts_sub_resource(aut_user_auth_wsgi_app: WebTestAppFor
     )
 
 
-def test_openapi_hosts_in_folder_collection(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+def test_openapi_hosts_in_folder_collection(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+) -> None:
     aut_user_auth_wsgi_app.call_method(
         "post",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
@@ -376,14 +382,20 @@ def test_openapi_create_folder_with_network_scan(
                             },
                         ],
                         "exclude_addresses": [
-                            {"regexp_list": ["some_pattern"], "type": "exclude_by_regexp"}
+                            {
+                                "regexp_list": ["some_pattern"],
+                                "type": "exclude_by_regexp",
+                            }
                         ],
                         "scan_interval": 86400,
                         "time_allowed": [{"start": "00:00:00", "end": "23:00:00"}],
                         "set_ip_address": True,
                         "tag_criticality": "discovered",
                         "run_as": user,
-                        "translate_names": {"drop_domain": True, "convert_case": "lower"},
+                        "translate_names": {
+                            "drop_domain": True,
+                            "convert_case": "lower",
+                        },
                     }
                 },
             }
@@ -950,13 +962,17 @@ def test_openapi_folder_name_with_extended_characters(clients: ClientRegistry) -
     assert created_folder["extensions"]["path"] == fetched_folder["extensions"]["path"]
 
 
-def test_openapi_folder_with_extended_characters_parent(clients: ClientRegistry) -> None:
+def test_openapi_folder_with_extended_characters_parent(
+    clients: ClientRegistry,
+) -> None:
     extended_characters = "û亿Ï8Ĺ"
 
     clients.Folder.create(parent="/", title="First level", folder_name=extended_characters)
 
     res = clients.Folder.create(
-        parent=f"/{extended_characters}", title="Second level", folder_name="second_level_folder"
+        parent=f"/{extended_characters}",
+        title="Second level",
+        folder_name="second_level_folder",
     )
 
     assert res.json["id"] == f"~{extended_characters}~second_level_folder"
@@ -1025,7 +1041,9 @@ def test_openapi_delete_folder_with_rules(clients: ClientRegistry) -> None:
     assert no_force_delete_result.status_code == 409
 
 
-def test_openapi_delete_folder_with_predefined_conditions(clients: ClientRegistry) -> None:
+def test_openapi_delete_folder_with_predefined_conditions(
+    clients: ClientRegistry,
+) -> None:
     clients.Folder.create(
         parent="/",
         folder_name="new_folder",

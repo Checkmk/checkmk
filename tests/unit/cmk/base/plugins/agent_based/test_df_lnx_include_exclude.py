@@ -10,7 +10,15 @@ from cmk.base.plugins.agent_based.df_section import parse_df
 
 STRING_TABLE = [
     ["tmpfs", "tmpfs", "1620324", "2320", "1618004", "1%", "/run"],
-    ["/dev/mapper/ubuntu--vg-root", "ext4", "242791844", "59957024", "170431928", "27%", "/"],
+    [
+        "/dev/mapper/ubuntu--vg-root",
+        "ext4",
+        "242791844",
+        "59957024",
+        "170431928",
+        "27%",
+        "/",
+    ],
     ["tmpfs", "tmpfs", "8101604", "226244", "7875360", "3%", "/dev/shm"],
     ["tmpfs", "tmpfs", "5120", "4", "5116", "1%", "/run/lock"],
     ["tmpfs", "tmpfs", "8101604", "0", "8101604", "0%", "/sys/fs/cgroup"],
@@ -27,7 +35,15 @@ STRING_TABLE = [
     ["tmpfs", "tmpfs", "8101604", "6388", "8095216", "1%", "/opt/omd/sites/site10/tmp"],
     ["[df_inodes_start]"],
     ["tmpfs", "tmpfs", "2025401", "1287", "2024114", "1%", "/run"],
-    ["/dev/mapper/ubuntu--vg-root", "ext4", "15491072", "1266406", "14224666", "9%", "/"],
+    [
+        "/dev/mapper/ubuntu--vg-root",
+        "ext4",
+        "15491072",
+        "1266406",
+        "14224666",
+        "9%",
+        "/",
+    ],
     ["tmpfs", "tmpfs", "2025401", "120", "2025281", "1%", "/dev/shm"],
     ["tmpfs", "tmpfs", "2025401", "7", "2025394", "1%", "/run/lock"],
     ["tmpfs", "tmpfs", "2025401", "18", "2025383", "1%", "/sys/fs/cgroup"],
@@ -50,7 +66,11 @@ DISCOVERY_RULE = {
     "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
     "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
     "groups": [
-        {"group_name": "group1", "patterns_include": ["/opt/omd/sites/*"], "patterns_exclude": []},
+        {
+            "group_name": "group1",
+            "patterns_include": ["/opt/omd/sites/*"],
+            "patterns_exclude": [],
+        },
         {
             "group_name": "group2",
             "patterns_include": ["/opt/omd/sites/site[12]/*"],
@@ -73,11 +93,31 @@ DISCOVERY_RULE = {
             "patterns_exclude": ["/opt/omd/sites/site10/*"],
         },
         {"group_name": "group5", "patterns_include": [""], "patterns_exclude": [""]},
-        {"group_name": "group_empty_1", "patterns_include": [""], "patterns_exclude": []},
-        {"group_name": "group_empty_2", "patterns_include": ["/notfound"], "patterns_exclude": []},
-        {"group_name": "group_empty_3", "patterns_include": [], "patterns_exclude": ["*"]},
-        {"group_name": "group_empty_4", "patterns_include": ["*"], "patterns_exclude": []},
-        {"group_name": "group_empty_4", "patterns_include": [], "patterns_exclude": ["*"]},
+        {
+            "group_name": "group_empty_1",
+            "patterns_include": [""],
+            "patterns_exclude": [],
+        },
+        {
+            "group_name": "group_empty_2",
+            "patterns_include": ["/notfound"],
+            "patterns_exclude": [],
+        },
+        {
+            "group_name": "group_empty_3",
+            "patterns_include": [],
+            "patterns_exclude": ["*"],
+        },
+        {
+            "group_name": "group_empty_4",
+            "patterns_include": ["*"],
+            "patterns_exclude": [],
+        },
+        {
+            "group_name": "group_empty_4",
+            "patterns_include": [],
+            "patterns_exclude": ["*"],
+        },
         {"group_name": "group_empty_5", "patterns_include": [], "patterns_exclude": []},
     ],
 }

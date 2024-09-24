@@ -513,7 +513,11 @@ def test_openapi_create_service_downtime_with_non_matching_query(
     )
 
     mock_livestatus.expect_query(
-        ["GET services", "Columns: description host_name", "Filter: host_name ~ example"],
+        [
+            "GET services",
+            "Columns: description host_name",
+            "Filter: host_name ~ example",
+        ],
     )
 
     with mock_livestatus:
@@ -850,7 +854,8 @@ def test_openapi_user_in_service_but_not_in_host_contact_group_regression(
 
     clients.User.edit(username, contactgroups=["service_contact_group"])
     clients.HostConfig.edit(
-        host_name="heute", attributes={"contactgroups": {"groups": ["host_contact_group"]}}
+        host_name="heute",
+        attributes={"contactgroups": {"groups": ["host_contact_group"]}},
     )
 
     mock_livestatus.add_table(
@@ -902,7 +907,8 @@ def test_with_defaulted_timezone() -> None:
         datetime.datetime(year=1666, month=9, day=2), _get_local_timezone
     ) == datetime.datetime(1666, 9, 2, 0, 0, tzinfo=datetime.UTC)
     assert _with_defaulted_timezone(
-        datetime.datetime(year=1, month=1, day=1, tzinfo=datetime.timezone.min), _get_local_timezone
+        datetime.datetime(year=1, month=1, day=1, tzinfo=datetime.timezone.min),
+        _get_local_timezone,
     ) == datetime.datetime(1, 1, 1, 0, 0, tzinfo=datetime.timezone.min)
 
 
@@ -1144,7 +1150,10 @@ def test_openapi_modify_downtime_comment(
 
     with mock_livestatus:
         clients.Downtime.modify(
-            modify_type="by_id", site_id="NO_SITE", downtime_id="123", comment="From API with love"
+            modify_type="by_id",
+            site_id="NO_SITE",
+            downtime_id="123",
+            comment="From API with love",
         )
 
 

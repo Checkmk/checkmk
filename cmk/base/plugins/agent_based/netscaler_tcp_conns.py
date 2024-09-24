@@ -23,6 +23,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
+
 from cmk.plugins.lib.netscaler import SNMP_DETECT
 
 
@@ -79,5 +80,8 @@ register.check_plugin(
     discovery_function=discover,
     check_function=check,
     check_ruleset_name="netscaler_tcp_conns",
-    check_default_parameters={"server_conns": (25000, 30000), "client_conns": (25000, 30000)},
+    check_default_parameters={
+        "server_conns": (25000, 30000),
+        "client_conns": (25000, 30000),
+    },
 )

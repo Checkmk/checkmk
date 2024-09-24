@@ -82,7 +82,9 @@ def discover_oracle_processes(section: SectionOracleProcesses) -> DiscoveryResul
 
 
 def check_oracle_processes(
-    item: str, params: Mapping[str, tuple[float, float]], section: SectionOracleProcesses
+    item: str,
+    params: Mapping[str, tuple[float, float]],
+    section: SectionOracleProcesses,
 ) -> CheckResult:
     if ora_error := section.error_processes.get(item):
         yield Result(state=ora_error.error_severity, summary=ora_error.error_text)
@@ -107,7 +109,10 @@ def check_oracle_processes(
     yield Metric(
         name="processes",
         value=process.processes_count,
-        levels=(process.processes_limit * (warn / 100), process.processes_limit * (crit / 100)),
+        levels=(
+            process.processes_limit * (warn / 100),
+            process.processes_limit * (crit / 100),
+        ),
     )
 
 

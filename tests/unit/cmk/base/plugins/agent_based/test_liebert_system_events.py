@@ -89,7 +89,12 @@ def test_discover_liebert_system_events(
                     "Supply Fluid Under Temp": "Inactive Event",
                 },
             },
-            [Result(state=State.CRIT, summary="Supply Fluid Temp Sensor Issue: Active Warning")],
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="Supply Fluid Temp Sensor Issue: Active Warning",
+                )
+            ],
             id="State is WARN when there is at least one event with an active warning",
         ),
         pytest.param(

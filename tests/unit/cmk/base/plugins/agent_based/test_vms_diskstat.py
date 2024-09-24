@@ -37,6 +37,8 @@ def test_discovery(section: vms_diskstat.Section) -> None:
 
 def test_check(section: vms_diskstat.Section, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        vms_diskstat, "get_value_store", lambda: {"TEST_WORK.delta": (0, 33844.068359375)}
+        vms_diskstat,
+        "get_value_store",
+        lambda: {"TEST_WORK.delta": (0, 33844.068359375)},
     )
     assert list(vms_diskstat.check_vms_diskstat_df("TEST_WORK", FILESYSTEM_DEFAULT_PARAMS, section))

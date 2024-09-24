@@ -64,7 +64,11 @@ def check_postgres_locks(item, params, parsed):
             yield 1, "too high (Levels at %d/%d)" % (warn, crit)
 
     exclusive_locks = locks.get("ExclusiveLock", 0)
-    yield 0, "Exclusive Locks %d" % exclusive_locks, [("exclusive_locks", exclusive_locks)]
+    yield (
+        0,
+        "Exclusive Locks %d" % exclusive_locks,
+        [("exclusive_locks", exclusive_locks)],
+    )
     if "levels_exclusive" in params:
         warn, crit = params["levels_exclusive"]
         if exclusive_locks >= crit:

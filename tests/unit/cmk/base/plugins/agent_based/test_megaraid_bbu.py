@@ -11,7 +11,11 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.api.agent_based.plugin_classes import CheckFunction, CheckPlugin, DiscoveryFunction
+from cmk.base.api.agent_based.plugin_classes import (
+    CheckFunction,
+    CheckPlugin,
+    DiscoveryFunction,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 
 check_name = "megaraid_bbu"
@@ -76,9 +80,7 @@ BBU GasGauge Status: 0x6ef7
 Pack energy : 247 J
 Capacitance : 110
 Remaining reserve space : 0
-""".split(
-                "\n"
-            )
+""".split("\n")
             if line
         ]
     )

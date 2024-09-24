@@ -118,13 +118,17 @@ class ModeParentScan(WatoMode):
             select=cast(
                 SelectChoices,
                 request.get_ascii_input_mandatory(
-                    "select", "noexplicit", allowed_values={"noexplicit", "no", "ignore"}
+                    "select",
+                    "noexplicit",
+                    allowed_values={"noexplicit", "no", "ignore"},
                 ),
             ),
             where=cast(
                 WhereChoices,
                 request.get_ascii_input_mandatory(
-                    "where", "subfolder", allowed_values={"nowhere", "here", "subfolder", "there"}
+                    "where",
+                    "subfolder",
+                    allowed_values={"nowhere", "here", "subfolder", "there"},
                 ),
             ),
             alias=request.get_str_input_mandatory("alias", "").strip(),
@@ -154,7 +158,8 @@ class ModeParentScan(WatoMode):
                 raise
             logger.exception("Failed to start parent scan")
             raise MKUserError(
-                None, _("Failed to start parent scan: %s") % ("%s" % e).replace("\n", "\n<br>")
+                None,
+                _("Failed to start parent scan: %s") % ("%s" % e).replace("\n", "\n<br>"),
             )
 
         raise HTTPRedirect(self._job.detail_url())
@@ -268,7 +273,10 @@ class ModeParentScan(WatoMode):
             _("Skip hosts hosts with non-empty parents (also if inherited)") + "<br>",
         )
         html.radiobutton(
-            "select", "ignore", self._settings.select == "ignore", _("Scan all hosts") + "<br>"
+            "select",
+            "ignore",
+            self._settings.select == "ignore",
+            _("Scan all hosts") + "<br>",
         )
 
         # Performance
@@ -354,11 +362,17 @@ class ModeParentScan(WatoMode):
         )
         html.br()
         html.radiobutton(
-            "where", "there", self._settings.where == "there", _("in the same folder as the host")
+            "where",
+            "there",
+            self._settings.where == "there",
+            _("in the same folder as the host"),
         )
         html.br()
         html.radiobutton(
-            "where", "nowhere", self._settings.where == "nowhere", _("do not create gateway hosts")
+            "where",
+            "nowhere",
+            self._settings.where == "nowhere",
+            _("do not create gateway hosts"),
         )
         html.close_ul()
         html.write_text(_("Alias for created gateway hosts") + ": ")

@@ -27,7 +27,12 @@ def discovery_mssql_counters_locks(section: Section) -> DiscoveryResult:
     """
     yield from discovery_mssql_counters_generic(
         section,
-        {"number_of_deadlocks/sec", "lock_requests/sec", "lock_timeouts/sec", "lock_waits/sec"},
+        {
+            "number_of_deadlocks/sec",
+            "lock_requests/sec",
+            "lock_timeouts/sec",
+            "lock_waits/sec",
+        },
         dflt={},
     )
 

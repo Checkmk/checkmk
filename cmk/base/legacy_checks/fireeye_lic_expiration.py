@@ -27,9 +27,17 @@ def check_fireeye_lic_expiration(item, params, info):
             if int(days) > warn:
                 yield 0, infotext, perfdata
             elif int(days) > crit:
-                yield 1, infotext + " (warn/crit at %d/%d days)" % (warn, crit), perfdata
+                yield (
+                    1,
+                    infotext + " (warn/crit at %d/%d days)" % (warn, crit),
+                    perfdata,
+                )
             else:
-                yield 2, infotext + " (warn/crit at %d/%d days)" % (warn, crit), perfdata
+                yield (
+                    2,
+                    infotext + " (warn/crit at %d/%d days)" % (warn, crit),
+                    perfdata,
+                )
 
 
 def parse_fireeye_lic_expiration(string_table: StringTable) -> StringTable:

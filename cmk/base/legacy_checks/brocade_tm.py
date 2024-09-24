@@ -47,7 +47,11 @@ def check_brocade_tm(item, params, info):
             value_store = get_value_store()
             for name, counter in tm.items():
                 rate = get_rate(
-                    value_store, f"{name}.{item}", now, int(counter), raise_overflow=True
+                    value_store,
+                    f"{name}.{item}",
+                    now,
+                    int(counter),
+                    raise_overflow=True,
                 )
 
                 warn, crit = params["brcdTMStats" + name]

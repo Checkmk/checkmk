@@ -14,7 +14,11 @@
 # <oid>.3: Status
 # the latter can be one of the following:
 
-from cmk.plugins.lib.fjdarye import check_fjdarye_item, discover_fjdarye_item, parse_fjdarye_item
+from cmk.plugins.lib.fjdarye import (
+    check_fjdarye_item,
+    discover_fjdarye_item,
+    parse_fjdarye_item,
+)
 
 from .agent_based_api.v1 import any_of, equals, register, SNMPTree
 

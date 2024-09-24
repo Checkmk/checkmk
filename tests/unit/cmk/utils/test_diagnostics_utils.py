@@ -87,7 +87,10 @@ def test_diagnostics_serialize_wato_parameters_boolean() -> None:
         (
             {
                 "opt_info": {
-                    diagnostics.OPT_CHECKMK_CONFIG_FILES: ("_ty", ["a1", "a2", "a3", "a4", "a5"]),
+                    diagnostics.OPT_CHECKMK_CONFIG_FILES: (
+                        "_ty",
+                        ["a1", "a2", "a3", "a4", "a5"],
+                    ),
                 },
                 "comp_specific": {
                     diagnostics.OPT_COMP_NOTIFICATIONS: {
@@ -248,12 +251,18 @@ def test_diagnostics_get_checkmk_file_info_by_name(
         ("conf.d/mkeventd.mk", diagnostics.CheckmkFileSensitivity.unknown),
         ("conf.d/pnp4nagios.mk", diagnostics.CheckmkFileSensitivity.unknown),
         ("conf.d/wato/.wato", diagnostics.CheckmkFileSensitivity.insensitive),
-        ("conf.d/wato/alert_handlers.mk", diagnostics.CheckmkFileSensitivity.high_sensitive),
+        (
+            "conf.d/wato/alert_handlers.mk",
+            diagnostics.CheckmkFileSensitivity.high_sensitive,
+        ),
         ("conf.d/wato/contacts.mk", diagnostics.CheckmkFileSensitivity.high_sensitive),
         ("conf.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.sensitive),
         ("conf.d/wato/groups.mk", diagnostics.CheckmkFileSensitivity.insensitive),
         ("conf.d/wato/hosts.mk", diagnostics.CheckmkFileSensitivity.high_sensitive),
-        ("conf.d/wato/notifications.mk", diagnostics.CheckmkFileSensitivity.high_sensitive),
+        (
+            "conf.d/wato/notifications.mk",
+            diagnostics.CheckmkFileSensitivity.high_sensitive,
+        ),
         ("conf.d/wato/rules.mk", diagnostics.CheckmkFileSensitivity.high_sensitive),
         ("conf.d/wato/tags.mk", diagnostics.CheckmkFileSensitivity.sensitive),
         ("dcd.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.unknown),
@@ -269,7 +278,10 @@ def test_diagnostics_get_checkmk_file_info_by_name(
         ("multisite.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.sensitive),
         ("multisite.d/wato/groups.mk", diagnostics.CheckmkFileSensitivity.insensitive),
         ("multisite.d/wato/tags.mk", diagnostics.CheckmkFileSensitivity.sensitive),
-        ("multisite.d/wato/users.mk", diagnostics.CheckmkFileSensitivity.high_sensitive),
+        (
+            "multisite.d/wato/users.mk",
+            diagnostics.CheckmkFileSensitivity.high_sensitive,
+        ),
         ("multisite.mk", diagnostics.CheckmkFileSensitivity.unknown),
         ("rrdcached.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.unknown),
         ("alerts.log", diagnostics.CheckmkFileSensitivity.unknown),

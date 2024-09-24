@@ -16,7 +16,12 @@ from .helpers import (
     render_str_with_staleness,
     StrWithStaleness,
 )
-from .painter_lib import experimental_painter_registry, Formatters, Painter, PainterConfiguration
+from .painter_lib import (
+    experimental_painter_registry,
+    Formatters,
+    Painter,
+    PainterConfiguration,
+)
 
 experimental_painter_registry.register(
     Painter[str](

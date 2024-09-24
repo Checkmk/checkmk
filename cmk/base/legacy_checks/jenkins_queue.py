@@ -61,7 +61,9 @@ def check_jenkins_queue(_no_item, params, parsed):
     pending_tasks = 0
 
     for task in sorted(
-        parsed, key=lambda k: (k["stuck"], k["blocked"], -k["inQueueSince"]), reverse=True
+        parsed,
+        key=lambda k: (k["stuck"], k["blocked"], -k["inQueueSince"]),
+        reverse=True,
     ):
         now = time.time()
         len_state = 0

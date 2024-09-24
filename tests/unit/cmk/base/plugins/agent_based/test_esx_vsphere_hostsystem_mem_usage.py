@@ -8,8 +8,16 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+)
 from cmk.base.plugins.agent_based.esx_vsphere_hostsystem_mem_usage import (
     check_esx_vsphere_hostsystem_mem_usage,
     cluster_check_esx_vsphere_hostsystem_mem_usage,
@@ -331,7 +339,9 @@ def test_check_esx_vsphere_hostsystem_mem_usage(
     ],
 )
 def test_cluster_check_esx_vsphere_hostsystem_mem_usage(
-    section: Mapping[str, Section | None], params: Mapping[str, object], check_results: CheckResult
+    section: Mapping[str, Section | None],
+    params: Mapping[str, object],
+    check_results: CheckResult,
 ) -> None:
     assert (
         list(

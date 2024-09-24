@@ -34,7 +34,10 @@ from cmk.gui.utils.escaping import escape_attribute
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.view_breadcrumbs import make_host_breadcrumb
-from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
+from cmk.gui.watolib.automation_commands import (
+    AutomationCommand,
+    AutomationCommandRegistry,
+)
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import get_agent_output
 from cmk.gui.watolib.hosts_and_folders import folder_from_request, Host
@@ -289,7 +292,8 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
             host.name(),
         )
         super().__init__(
-            job_id, InitialStatusArgs(title=title, user=str(user.id) if user.id else None)
+            job_id,
+            InitialStatusArgs(title=title, user=str(user.id) if user.id else None),
         )
 
     def fetch_agent_output(self, job_interface):

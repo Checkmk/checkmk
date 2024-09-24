@@ -6,7 +6,9 @@
 from collections.abc import Callable
 
 # The only reasonable thing to do here is use our own version parsing. It's to big to duplicate.
-from cmk.utils.version import parse_check_mk_version  # pylint: disable=cmk-module-layer-violation
+from cmk.utils.version import (  # pylint: disable=cmk-module-layer-violation
+    parse_check_mk_version,
+)
 
 from cmk.plugins.lib.checkmk import Plugin, PluginSection
 
@@ -102,11 +104,13 @@ def _parse_checkmk_agent_plugins_core(
     return PluginSection(
         plugins=[
             plugin
-            for line, in string_table[2:]
+            for (line,) in string_table[2:]
             if (plugin := parser(line, plugins_dir)) is not None
         ],
         local_checks=[
-            lcheck for line, in string_table[2:] if (lcheck := parser(line, local_dir)) is not None
+            lcheck
+            for (line,) in string_table[2:]
+            if (lcheck := parser(line, local_dir)) is not None
         ],
     )
 

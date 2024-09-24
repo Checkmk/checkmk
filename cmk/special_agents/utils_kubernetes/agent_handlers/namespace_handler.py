@@ -151,7 +151,10 @@ def _matches_scope_selector_match_expression(
     # XNOR case for priority class
     # if the pod has a priority class and the operator is Exists then the pod is included
     # if the pod has no priority class and the operator is DoesNotExist then the pod is included
-    if match_expression.operator in (api.ScopeOperator.Exists, api.ScopeOperator.DoesNotExist):
+    if match_expression.operator in (
+        api.ScopeOperator.Exists,
+        api.ScopeOperator.DoesNotExist,
+    ):
         return not (
             (pod.spec.priority_class_name is not None)
             ^ (match_expression.operator == api.ScopeOperator.Exists)

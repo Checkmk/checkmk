@@ -60,7 +60,8 @@ def _default_paths(omd_root: Path, default_config_dir: Path) -> Paths:
             "rule pack directory", default_config_dir / "mkeventd.d" / "wato"
         ),
         mkp_rule_pack_dir=AnnotatedPath(
-            "rule pack export directory", default_config_dir / "mkeventd.d" / "mkp" / "rule_packs"
+            "rule pack export directory",
+            default_config_dir / "mkeventd.d" / "mkp" / "rule_packs",
         ),
         unix_socket=AnnotatedPath("Unix socket", run_dir / "status"),
         event_socket=AnnotatedPath("event socket", run_dir / "eventsocket"),
@@ -103,7 +104,9 @@ class PortNumbers(NamedTuple):
 def _default_port_numbers() -> PortNumbers:
     """Returns all port numbers related to the event console"""
     return PortNumbers(
-        syslog_udp=PortNumber(514), syslog_tcp=PortNumber(514), snmptrap_udp=PortNumber(162)
+        syslog_udp=PortNumber(514),
+        syslog_tcp=PortNumber(514),
+        snmptrap_udp=PortNumber(162),
     )
 
 
@@ -148,7 +151,9 @@ class ECArgumentParser(ArgumentParser):
             ),
         )
         self.add_argument(
-            "--syslog-tcp", action="store_true", help="enable built-in TCP syslog server"
+            "--syslog-tcp",
+            action="store_true",
+            help="enable built-in TCP syslog server",
         )
         self.add_argument(
             "--syslog-tcp-fd",

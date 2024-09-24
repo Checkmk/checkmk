@@ -98,9 +98,13 @@ def test_discover_azure_status(
             "North Central US",
             AZURE_STATUS,
             [
-                Result(state=State.WARN, summary="1 issue: https://status.azure.com/en-us/status/"),
                 Result(
-                    state=State.OK, summary="Azure Databricks - North Central US - Investigating"
+                    state=State.WARN,
+                    summary="1 issue: https://status.azure.com/en-us/status/",
+                ),
+                Result(
+                    state=State.OK,
+                    summary="Azure Databricks - North Central US - Investigating",
                 ),
                 Result(state=State.OK, notice="Some description"),
             ],
@@ -111,9 +115,13 @@ def test_discover_azure_status(
             AZURE_STATUS,
             [
                 Result(
-                    state=State.WARN, summary="2 issues: https://status.azure.com/en-us/status/"
+                    state=State.WARN,
+                    summary="2 issues: https://status.azure.com/en-us/status/",
                 ),
-                Result(state=State.OK, summary="Azure Key Vault issue affecting Azure China"),
+                Result(
+                    state=State.OK,
+                    summary="Azure Key Vault issue affecting Azure China",
+                ),
                 Result(
                     state=State.OK,
                     notice="See details below for status of Azure Key Vault in Azure China regions.",

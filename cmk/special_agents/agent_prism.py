@@ -16,7 +16,10 @@ from cmk.special_agents.v0_unstable.agent_common import (
     SectionWriter,
     special_agent_main,
 )
-from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.argument_parsing import (
+    Args,
+    create_default_argument_parser,
+)
 
 LOGGING = logging.getLogger("agent_prism")
 
@@ -47,7 +50,12 @@ class GatewayData(TypedDict):
 
 class SessionManager:
     def __init__(
-        self, username: str, password: str, timeout: int, cert_check: bool | str, base_url: str
+        self,
+        username: str,
+        password: str,
+        timeout: int,
+        cert_check: bool | str,
+        base_url: str,
     ) -> None:
         self._session = requests.Session()
         auth_encoded = base64.b64encode(f"{username}:{password}".encode()).decode()
@@ -84,14 +92,26 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
         help="Timeout in seconds for network connects (default=10)",
     )
     parser.add_argument(
-        "--server", type=str, required=True, metavar="ADDRESS", help="host to connect to"
+        "--server",
+        type=str,
+        required=True,
+        metavar="ADDRESS",
+        help="host to connect to",
     )
     parser.add_argument("--port", type=int, metavar="PORT", default=9440)
     parser.add_argument(
-        "--username", type=str, required=True, metavar="USER", help="user account on prism"
+        "--username",
+        type=str,
+        required=True,
+        metavar="USER",
+        help="user account on prism",
     )
     parser.add_argument(
-        "--password", type=str, required=True, metavar="PASSWORD", help="password for that account"
+        "--password",
+        type=str,
+        required=True,
+        metavar="PASSWORD",
+        help="password for that account",
     )
     cert_args = parser.add_mutually_exclusive_group()
     cert_args.add_argument(
@@ -106,7 +126,12 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
 
 
 def fetch_from_gateway(
-    server: str, port: int, username: str, password: str, timeout: int, cert_check: bool | str
+    server: str,
+    port: int,
+    username: str,
+    password: str,
+    timeout: int,
+    cert_check: bool | str,
 ) -> GatewayData:
     LOGGING.info("setup HTTPS connection..")
     base_url = f"https://{server}:{port}"
@@ -130,7 +155,8 @@ def fetch_from_gateway(
     prism_objects: GatewayData = {
         "containers": session_manager.get(f"{base_url_v1}/containers"),
         "alerts": session_manager.get(
-            f"{base_url_v2}/alerts", params={"resolved": "false", "acknowledged": "false"}
+            f"{base_url_v2}/alerts",
+            params={"resolved": "false", "acknowledged": "false"},
         ),
         "cluster": session_manager.get(f"{base_url_v2}/cluster"),
         "storage_pools": session_manager.get(f"{base_url_v1}/storage_pools"),

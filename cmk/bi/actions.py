@@ -144,7 +144,8 @@ class BIStateOfHostAction(ABCBIAction, ABCWithSchema):
 
 class BIStateOfHostActionSchema(Schema):
     type = ReqConstant(
-        BIStateOfHostAction.kind(), description="Create nodes representing the state of hosts."
+        BIStateOfHostAction.kind(),
+        description="Create nodes representing the state of hosts.",
     )
     host_regex = ReqString(dump_default="", example="testhost", description="Host name regex.")
 

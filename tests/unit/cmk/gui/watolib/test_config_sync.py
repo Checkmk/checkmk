@@ -514,7 +514,11 @@ def _synchronize_site(
 ) -> None:
     assert activation_manager._activation_id is not None
     site_activation_state = activate_changes._initialize_site_activation_state(
-        site_id, activation_manager._activation_id, activation_manager, time.time(), "GUI"
+        site_id,
+        activation_manager._activation_id,
+        activation_manager,
+        time.time(),
+        "GUI",
     )
 
     fetch_state_result = activate_changes.fetch_sync_state(

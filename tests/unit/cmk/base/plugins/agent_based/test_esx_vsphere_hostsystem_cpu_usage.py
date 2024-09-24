@@ -8,8 +8,16 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+)
 from cmk.base.plugins.agent_based.esx_vsphere_hostsystem_cpu_usage import (
     check_esx_vsphere_hostsystem_cpu_usage,
     cluster_check_esx_vsphere_hostsystem_cpu_usage,
@@ -225,7 +233,10 @@ def test_check_esx_vsphere_hostsystem_cpu(
             },
             [
                 Result(state=State.OK, summary="2 nodes"),
-                Result(state=State.CRIT, summary="Total CPU: 5.12% (warn/crit at 3.00%/5.00%)"),
+                Result(
+                    state=State.CRIT,
+                    summary="Total CPU: 5.12% (warn/crit at 3.00%/5.00%)",
+                ),
                 Metric("util", 5.122727727951486, levels=(3.0, 5.0), boundaries=(0.0, None)),
                 Result(state=State.OK, notice="4.51 GHz/88.0 GHz"),
                 Result(state=State.OK, notice="Sockets: 4"),
@@ -257,7 +268,10 @@ def test_check_esx_vsphere_hostsystem_cpu(
             {"util": (3.0, 5.0)},
             [
                 Result(state=State.OK, summary="2 nodes"),
-                Result(state=State.CRIT, summary="Total CPU: 5.12% (warn/crit at 3.00%/5.00%)"),
+                Result(
+                    state=State.CRIT,
+                    summary="Total CPU: 5.12% (warn/crit at 3.00%/5.00%)",
+                ),
                 Metric("util", 5.122727727951486, levels=(3.0, 5.0), boundaries=(0.0, None)),
                 Result(state=State.OK, notice="4.51 GHz/88.0 GHz"),
                 Result(state=State.OK, notice="Sockets: 4"),
@@ -300,7 +314,9 @@ def test_check_esx_vsphere_hostsystem_cpu(
     ],
 )
 def test_cluster_check_esx_vsphere_hostsystem_cpu(
-    section: Mapping[str, Section | None], params: Mapping[str, object], check_results: CheckResult
+    section: Mapping[str, Section | None],
+    params: Mapping[str, object],
+    check_results: CheckResult,
 ) -> None:
     assert (
         list(

@@ -10,7 +10,7 @@ from typing import Any, Literal
 from livestatus import SiteConfigurations
 
 from cmk.utils.tags import TagConfigSpec
-from cmk.utils.version import edition, Edition
+from cmk.utils.version import Edition, edition
 
 from cmk.gui.type_defs import GroupSpec, UserSpec
 from cmk.gui.utils.temperate_unit import TemperatureUnit
@@ -50,8 +50,18 @@ custom_links_admin: list[CustomLinkSpec] = [
         False,
         [
             ("CheckMK", "https://checkmk.com/", None, "_blank"),
-            ("CheckMK Mailinglists", "https://checkmk.com/community.php", None, "_blank"),
-            ("CheckMK Exchange", "https://checkmk.com/check_mk-exchange.php", None, "_blank"),
+            (
+                "CheckMK Mailinglists",
+                "https://checkmk.com/community.php",
+                None,
+                "_blank",
+            ),
+            (
+                "CheckMK Exchange",
+                "https://checkmk.com/check_mk-exchange.php",
+                None,
+                "_blank",
+            ),
         ],
     )
 ]
@@ -380,7 +390,10 @@ class CREConfig:
     default_dynamic_visual_permission: Literal["yes", "no"] = "yes"
     session_mgmt: dict[str, Any] = field(
         default_factory=lambda: {
-            "max_duration": {"enforce_reauth": 86400, "enforce_reauth_warning_threshold": 900},
+            "max_duration": {
+                "enforce_reauth": 86400,
+                "enforce_reauth_warning_threshold": 900,
+            },
             "user_idle_timeout": 5400,
         }
     )

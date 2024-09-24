@@ -2,8 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Background tools required to register a section plug-in
-"""
+"""Background tools required to register a section plug-in"""
+
 import functools
 import inspect
 import itertools
@@ -318,7 +318,9 @@ def create_snmp_section_plugin(
     )
 
 
-def validate_section_supersedes(all_supersedes: dict[SectionName, set[SectionName]]) -> None:
+def validate_section_supersedes(
+    all_supersedes: dict[SectionName, set[SectionName]],
+) -> None:
     """Make sure that no sections are superseded implicitly.
 
     This validation makes a little extra work required for complex sepersedes,

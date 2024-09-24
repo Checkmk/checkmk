@@ -40,11 +40,18 @@ class GraphCollectionSchema(BaseSchema):
         TimeRange,
         description="The time range within the samples of the response lie.",
         required=True,
-        example={"time_range": {"start": "1970-01-01T00:00:00Z", "end": "1970-01-01T00:00:30Z"}},
+        example={
+            "time_range": {
+                "start": "1970-01-01T00:00:00Z",
+                "end": "1970-01-01T00:00:30Z",
+            }
+        },
     )
     # Not sure about the unit here
     step = Integer(
-        description="The interval between two samples in seconds.", example=60, required=True
+        description="The interval between two samples in seconds.",
+        example=60,
+        required=True,
     )
     metrics = Nested(
         MetricSchema,

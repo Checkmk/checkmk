@@ -1034,7 +1034,10 @@ filter_table_tests = [
     # FilterECServiceLevelRange
     FilterTableTest(
         ident="svc_service_level",
-        request_vars=[("svc_service_level_lower", "1"), ("svc_service_level_upper", "3")],
+        request_vars=[
+            ("svc_service_level_lower", "1"),
+            ("svc_service_level_upper", "3"),
+        ],
         rows=[
             {
                 "service_custom_variables": {"EC_SL": "0"},

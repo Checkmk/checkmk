@@ -49,5 +49,8 @@ def check_dhcp_pools_levels(
             render_func=render.percent,
         )
         yield Metric(
-            f"{category}_dhcp_leases", value_abs, levels=metric_levels, boundaries=(0, size)
+            f"{category}_dhcp_leases",
+            value_abs,
+            levels=metric_levels,
+            boundaries=(0, size),
         )

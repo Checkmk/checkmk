@@ -158,7 +158,13 @@ def get_ecs_sections() -> GetSectionsCallable:
         distributor = ResultDistributor()
 
         # TODO: FakeECSClient shoud actually subclass ECSClient, etc.
-        ecs_limits = ECSLimits(fake_ecs_client2, region, config, distributor, fake_quota_client)  # type: ignore[arg-type]
+        ecs_limits = ECSLimits(
+            fake_ecs_client2,  # type: ignore[arg-type]
+            region,
+            config,
+            distributor,
+            fake_quota_client,  # type: ignore[arg-type]
+        )
         ecs_summary = ECSSummary(fake_ecs_client1, region, config, distributor)  # type: ignore[arg-type]
         ecs = ECS(fake_cloudwatch_client, region, config)  # type: ignore[arg-type]
 
@@ -438,7 +444,9 @@ def test_agent_aws_ecs(
     assert result.content == expected_content
 
 
-def test_agent_aws_ecs_without_colleague_content(get_ecs_sections: GetSectionsCallable) -> None:
+def test_agent_aws_ecs_without_colleague_content(
+    get_ecs_sections: GetSectionsCallable,
+) -> None:
     _ecs_limits, _ecs_summary, ecs = get_ecs_sections(None, (None, None))
 
     results = ecs.run()

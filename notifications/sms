@@ -62,7 +62,8 @@ elif spool_dir:
     # script. On this distro, simply drop the SMS in the outgoing spool directory.
     fd, path = tempfile.mkstemp(prefix="cmk_sms_")
     os.write(
-        fd, b"To: %s\n\n%s" % (recipient.encode("utf-8"), quote_message(message).encode("utf-8"))
+        fd,
+        b"To: %s\n\n%s" % (recipient.encode("utf-8"), quote_message(message).encode("utf-8")),
     )
     os.close(fd)
     os.chmod(path, 0o660)  # nosec B103 # BNS:ce45cd

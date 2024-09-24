@@ -2,8 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Helper to register a new-style section based on config.check_info
-"""
+"""Helper to register a new-style section based on config.check_info"""
+
 import copy
 import functools
 import itertools
@@ -207,7 +207,9 @@ def _create_new_result(
     yield from _create_new_metric(legacy_metrics)
 
 
-def _create_new_metric(legacy_metrics: tuple | list = ()) -> Generator[Metric, None, None]:
+def _create_new_metric(
+    legacy_metrics: tuple | list = (),
+) -> Generator[Metric, None, None]:
     for metric in legacy_metrics:
         if len(metric) < 2:
             continue

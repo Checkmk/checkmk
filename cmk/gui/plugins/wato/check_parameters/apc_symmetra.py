@@ -9,7 +9,14 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Age, Dictionary, Integer, MonitoringState, Percentage, Tuple
+from cmk.gui.valuespec import (
+    Age,
+    Dictionary,
+    Integer,
+    MonitoringState,
+    Percentage,
+    Tuple,
+)
 
 
 def _parameter_valuespec_apc_symentra() -> Dictionary:

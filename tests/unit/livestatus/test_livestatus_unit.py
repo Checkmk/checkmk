@@ -90,7 +90,8 @@ def test_livestatus_local_connection_omd_root_not_set(
 def test_livestatus_local_connection_no_socket(sock_path: Path) -> None:
     live = livestatus.LocalConnection()
     with pytest.raises(
-        livestatus.MKLivestatusSocketError, match="Cannot connect to 'unix:%s'" % sock_path
+        livestatus.MKLivestatusSocketError,
+        match="Cannot connect to 'unix:%s'" % sock_path,
     ):
         live.connect()
 
@@ -101,7 +102,8 @@ def test_livestatus_local_connection_not_listening(sock_path: Path) -> None:
 
     live = livestatus.LocalConnection()
     with pytest.raises(
-        livestatus.MKLivestatusSocketError, match="Cannot connect to 'unix:%s'" % sock_path
+        livestatus.MKLivestatusSocketError,
+        match="Cannot connect to 'unix:%s'" % sock_path,
     ):
         live.connect()
 
@@ -153,8 +155,14 @@ def test_livestatus_ipv6_connection() -> None:
 @pytest.mark.parametrize(
     "socket_url,result",
     [
-        ("unix:/omd/sites/heute/tmp/run/live", (socket.AF_UNIX, "/omd/sites/heute/tmp/run/live")),
-        ("unix:/omd/sites/heute/tmp/run/li:ve", (socket.AF_UNIX, "/omd/sites/heute/tmp/run/li:ve")),
+        (
+            "unix:/omd/sites/heute/tmp/run/live",
+            (socket.AF_UNIX, "/omd/sites/heute/tmp/run/live"),
+        ),
+        (
+            "unix:/omd/sites/heute/tmp/run/li:ve",
+            (socket.AF_UNIX, "/omd/sites/heute/tmp/run/li:ve"),
+        ),
         ("tcp:127.0.0.1:1234", (socket.AF_INET, ("127.0.0.1", 1234))),
         ("tcp:126.0.0.1:abc", None),
         ("tcp6:::1:1234", (socket.AF_INET6, ("::1", 1234))),
@@ -238,7 +246,8 @@ def test_create_socket_no_cert(tmp_path: Path) -> None:
             "unix:/tmp/xyz", tls=True, verify=True, ca_file_path=str(tmp_path / "z.pem")
         )
         with pytest.raises(
-            livestatus.MKLivestatusConfigError, match="(unknown error|no certificate or crl found)"
+            livestatus.MKLivestatusConfigError,
+            match="(unknown error|no certificate or crl found)",
         ):
             live._create_socket(socket.AF_INET)
 
@@ -267,7 +276,10 @@ def test_local_connection(mock_livestatus: MockLiveStatusConnection) -> None:
         ("1234", True),
         ("cmkadmin", True),
         ("ädmin", True),
-        ("$pecial-chars_$", True),  # cannot be configured via Wato, but allowed in LDAP users
+        (
+            "$pecial-chars_$",
+            True,
+        ),  # cannot be configured via Wato, but allowed in LDAP users
         ("12 34", False),
         ("🙈🙉🙊", False),
         ("12\n34", False),
@@ -288,7 +300,12 @@ def test_set_auth_user(user_id: livestatus.UserId, allowed: bool) -> None:
     "filter_condition, values, join, result",
     [
         ("Filter: metrics =", [], "And", ""),
-        ("Filter: description =", ["CPU load"], "And", "Filter: description = CPU load\n"),
+        (
+            "Filter: description =",
+            ["CPU load"],
+            "And",
+            "Filter: description = CPU load\n",
+        ),
         (
             "Filter: host_name =",
             ["heute", "beta"],

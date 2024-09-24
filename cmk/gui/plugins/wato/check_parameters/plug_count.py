@@ -12,7 +12,9 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, Integer, Migrate, Tuple
 
 
-def _migrate_plug_count(params: tuple[int, int, int, int] | dict[str, object]) -> dict[str, object]:
+def _migrate_plug_count(
+    params: tuple[int, int, int, int] | dict[str, object],
+) -> dict[str, object]:
     if isinstance(params, dict):
         return params
     cl, wl, wu, cu = params

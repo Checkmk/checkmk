@@ -108,7 +108,11 @@ def test_parse_arguments() -> None:
                         "value": "The problem is affecting Azure Synapse Analytics",
                     },
                     "tags": [
-                        {"label": None, "scheme": None, "term": "Azure Synapse Analytics"},
+                        {
+                            "label": None,
+                            "scheme": None,
+                            "term": "Azure Synapse Analytics",
+                        },
                         {"label": None, "scheme": None, "term": "West Europe"},
                     ],
                 }
@@ -123,7 +127,8 @@ def test_get_affected_regions(entry: FeedParserDict, expected_result: set[str]) 
 
 
 @mock.patch(
-    "cmk.special_agents.agent_azure_status.requests.get", mock.Mock(return_value=MockResponse)
+    "cmk.special_agents.agent_azure_status.requests.get",
+    mock.Mock(return_value=MockResponse),
 )
 def test_write_section(capsys: pytest.CaptureFixture[str]) -> None:
     arg_list = ["eastus", "centralus", "northcentralus", "westeurope"]

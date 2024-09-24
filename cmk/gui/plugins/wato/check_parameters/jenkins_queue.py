@@ -69,7 +69,10 @@ def _parameter_valuespec_jenkins_queue():
                     ],
                 ),
             ),
-            ("pending", MonitoringState(title=_("Task state: Pending"), default_value=0)),
+            (
+                "pending",
+                MonitoringState(title=_("Task state: Pending"), default_value=0),
+            ),
             (
                 "jenkins_pending_tasks",
                 Tuple(

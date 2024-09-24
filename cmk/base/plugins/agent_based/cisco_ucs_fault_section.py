@@ -15,7 +15,13 @@ from .agent_based_api.v1.type_defs import StringTable
 
 def parse_cisco_ucs_fault(string_table: StringTable) -> dict[str, list[Fault]]:
     faults = defaultdict(list)
-    for fault_object_id, fault_ack, fault_code, fault_description, fault_severity in string_table:
+    for (
+        fault_object_id,
+        fault_ack,
+        fault_code,
+        fault_description,
+        fault_severity,
+    ) in string_table:
         faults[fault_object_id].append(
             Fault(
                 acknowledge=(int(fault_ack) == 1),

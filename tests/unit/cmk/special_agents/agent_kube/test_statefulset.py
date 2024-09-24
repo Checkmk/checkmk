@@ -58,7 +58,9 @@ def test_write_statefulsets_api_sections_registers_sections_to_be_written(
 @pytest.mark.parametrize(
     "phases", [["running"], ["pending"], ["succeeded"], ["failed"], ["unknown"]]
 )
-def test_statefulset_pod_resources_pods_in_phase_no_phase_param(phases: list[str]) -> None:
+def test_statefulset_pod_resources_pods_in_phase_no_phase_param(
+    phases: list[str],
+) -> None:
     statefulset = api_to_agent_statefulset(
         APIStatefulSetFactory.build(),
         pods=[APIPodFactory.build(status=PodStatusFactory.build(phase=phase)) for phase in phases],

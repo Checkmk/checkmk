@@ -136,7 +136,11 @@ def get_ec2_sections() -> EC2Sections:
 
         # TODO: FakeEC2Client shoud actually subclass EC2Client, etc.
         ec2_limits = EC2Limits(
-            fake_ec2_client, region, config, distributor, fake_service_quotas_client  # type: ignore[arg-type]
+            fake_ec2_client,  # type: ignore[arg-type]
+            region,
+            config,
+            distributor,
+            fake_service_quotas_client,  # type: ignore[arg-type]
         )
         ec2_summary = EC2Summary(fake_ec2_client, region, config, distributor)  # type: ignore[arg-type]
         ec2_labels = EC2Labels(fake_ec2_client, region, config)  # type: ignore[arg-type]
@@ -165,7 +169,12 @@ ec2_params = [
     (["InstanceId-0", "InstanceId-1"], (None, None), 2, 1),
     (["InstanceId-0", "InstanceId-1", "Foo", "Bar"], (None, None), 2, 1),
     (["InstanceId-0", "InstanceId-1", "InstanceId-2"], (None, None), 3, 1),
-    (["InstanceId-0", "InstanceId-1", "InstanceId-2", "Foo", "Bar"], (None, None), 3, 1),
+    (
+        ["InstanceId-0", "InstanceId-1", "InstanceId-2", "Foo", "Bar"],
+        (None, None),
+        3,
+        1,
+    ),
     (["Foo", "Bar"], (None, None), 0, 0),
 ]
 
@@ -178,9 +187,13 @@ def test_agent_aws_ec2_limits(
     found_ec2: int,
     found_ec2_with_labels: int,
 ) -> None:
-    ec2_limits, _ec2_summary, _ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections(
-        names, tags, [], None
-    )
+    (
+        ec2_limits,
+        _ec2_summary,
+        _ec2_labels,
+        _ec2_security_groups,
+        _ec2,
+    ) = get_ec2_sections(names, tags, [], None)
     ec2_limits_results = ec2_limits.run().results
 
     assert ec2_limits.cache_interval == 300
@@ -310,9 +323,13 @@ def test_agent_aws_ec2(
 def test_agent_aws_ec2_summary_without_limits(
     get_ec2_sections: EC2Sections,
 ) -> None:
-    _ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections(
-        None, (None, None), [], None
-    )
+    (
+        _ec2_limits,
+        ec2_summary,
+        _ec2_labels,
+        _ec2_security_groups,
+        _ec2,
+    ) = get_ec2_sections(None, (None, None), [], None)
     ec2_summary_results = ec2_summary.run().results
 
     assert ec2_summary.cache_interval == 300

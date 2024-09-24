@@ -72,8 +72,26 @@ pytestmark = pytest.mark.checks
             "",
             -1.0,
         ),
-        ([("last_ms", "120")], 3, "missing data: average_ms and flushed", [], -1, "", "", -1.0),
-        ([], 3, "missing data: average_ms and flushed and last_ms", [], -1, "", "", -1.0),
+        (
+            [("last_ms", "120")],
+            3,
+            "missing data: average_ms and flushed",
+            [],
+            -1,
+            "",
+            "",
+            -1.0,
+        ),
+        (
+            [],
+            3,
+            "missing data: average_ms and flushed and last_ms",
+            [],
+            -1,
+            "",
+            "",
+            -1.0,
+        ),
     ],
 )
 def test_check_function(

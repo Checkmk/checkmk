@@ -5,7 +5,12 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.esx_vsphere_counters import parse_esx_vsphere_counters
 from cmk.base.plugins.agent_based.esx_vsphere_datastore_io import (
     _check_esx_vsphere_datastore_io,
@@ -16,15 +21,45 @@ from cmk.plugins.lib.esx_vsphere import SectionCounter
 
 STRING_TABLE = [  # only a snippet!
     ["datastore.datastoreReadIops", "56490e2e-692ac36c", "0#0", "number"],
-    ["datastore.datastoreReadIops", "576b8c5e-3d1e6844-ed6c-645106f0c5d0", "0#0", "number"],
-    ["datastore.datastoreReadIops", "57e121ef-2bb2dbaa-ad99-645106f0c5d0", "0#0", "number"],
-    ["datastore.datastoreReadIops", "5847d774-2bdca236-23df-645106f0c5d0", "0#0", "number"],
+    [
+        "datastore.datastoreReadIops",
+        "576b8c5e-3d1e6844-ed6c-645106f0c5d0",
+        "0#0",
+        "number",
+    ],
+    [
+        "datastore.datastoreReadIops",
+        "57e121ef-2bb2dbaa-ad99-645106f0c5d0",
+        "0#0",
+        "number",
+    ],
+    [
+        "datastore.datastoreReadIops",
+        "5847d774-2bdca236-23df-645106f0c5d0",
+        "0#0",
+        "number",
+    ],
     ["datastore.datastoreReadIops", "79d8b527-45291f84", "0#0", "number"],
     ["datastore.datastoreReadIops", "fce701f6-867094ae", "0#0", "number"],
     ["datastore.datastoreWriteIops", "56490e2e-692ac36c", "0#0", "number"],
-    ["datastore.datastoreWriteIops", "576b8c5e-3d1e6844-ed6c-645106f0c5d0", "0#0", "number"],
-    ["datastore.datastoreWriteIops", "57e121ef-2bb2dbaa-ad99-645106f0c5d0", "0#0", "number"],
-    ["datastore.datastoreWriteIops", "5847d774-2bdca236-23df-645106f0c5d0", "0#0", "number"],
+    [
+        "datastore.datastoreWriteIops",
+        "576b8c5e-3d1e6844-ed6c-645106f0c5d0",
+        "0#0",
+        "number",
+    ],
+    [
+        "datastore.datastoreWriteIops",
+        "57e121ef-2bb2dbaa-ad99-645106f0c5d0",
+        "0#0",
+        "number",
+    ],
+    [
+        "datastore.datastoreWriteIops",
+        "5847d774-2bdca236-23df-645106f0c5d0",
+        "0#0",
+        "number",
+    ],
     ["datastore.datastoreWriteIops", "79d8b527-45291f84", "0#0", "number"],
     ["datastore.datastoreWriteIops", "fce701f6-867094ae", "0#0", "number"],
     ["datastore.name", "192.168.99.100:/vmtestnfs1", "NFS_sgrznac1_Test", "string"],
@@ -35,17 +70,47 @@ STRING_TABLE = [  # only a snippet!
         "VeeamBackup_SGRZVeeam.acp.local",
         "string",
     ],
-    ["datastore.name", "576b8c5e-3d1e6844-ed6c-645106f0c5d0", "SSD_sgrz3par_vmstore1", "string"],
+    [
+        "datastore.name",
+        "576b8c5e-3d1e6844-ed6c-645106f0c5d0",
+        "SSD_sgrz3par_vmstore1",
+        "string",
+    ],
     ["datastore.name", "57e121ef-2bb2dbaa-ad99-645106f0c5d0", "vsa_vol1", "string"],
-    ["datastore.name", "5847d774-2bdca236-23df-645106f0c5d0", "SSD_sgrz3par_vmstore2", "string"],
+    [
+        "datastore.name",
+        "5847d774-2bdca236-23df-645106f0c5d0",
+        "SSD_sgrz3par_vmstore2",
+        "string",
+    ],
     ["datastore.name", "vvol:bf19e892e24d4f74-9246b507ebac9dec", "3par VVOL", "string"],
     ["datastore.read", "56490e2e-692ac36c", "0#0", "kiloBytesPerSecond"],
-    ["datastore.read", "576b8c5e-3d1e6844-ed6c-645106f0c5d0", "0#0", "kiloBytesPerSecond"],
-    ["datastore.read", "57e121ef-2bb2dbaa-ad99-645106f0c5d0", "0#0", "kiloBytesPerSecond"],
-    ["datastore.read", "5847d774-2bdca236-23df-645106f0c5d0", "0#0", "kiloBytesPerSecond"],
+    [
+        "datastore.read",
+        "576b8c5e-3d1e6844-ed6c-645106f0c5d0",
+        "0#0",
+        "kiloBytesPerSecond",
+    ],
+    [
+        "datastore.read",
+        "57e121ef-2bb2dbaa-ad99-645106f0c5d0",
+        "0#0",
+        "kiloBytesPerSecond",
+    ],
+    [
+        "datastore.read",
+        "5847d774-2bdca236-23df-645106f0c5d0",
+        "0#0",
+        "kiloBytesPerSecond",
+    ],
     ["datastore.read", "79d8b527-45291f84", "13#26", "kiloBytesPerSecond"],
     ["datastore.read", "fce701f6-867094ae", "0#0", "kiloBytesPerSecond"],
-    ["datastore.sizeNormalizedDatastoreLatency", "56490e2e-692ac36c", "0#0", "microsecond"],
+    [
+        "datastore.sizeNormalizedDatastoreLatency",
+        "56490e2e-692ac36c",
+        "0#0",
+        "microsecond",
+    ],
     [
         "datastore.sizeNormalizedDatastoreLatency",
         "576b8c5e-3d1e6844-ed6c-645106f0c5d0",
@@ -64,12 +129,37 @@ STRING_TABLE = [  # only a snippet!
         "0#0",
         "microsecond",
     ],
-    ["datastore.sizeNormalizedDatastoreLatency", "79d8b527-45291f84", "0#0", "microsecond"],
-    ["datastore.sizeNormalizedDatastoreLatency", "fce701f6-867094ae", "0#0", "microsecond"],
+    [
+        "datastore.sizeNormalizedDatastoreLatency",
+        "79d8b527-45291f84",
+        "0#0",
+        "microsecond",
+    ],
+    [
+        "datastore.sizeNormalizedDatastoreLatency",
+        "fce701f6-867094ae",
+        "0#0",
+        "microsecond",
+    ],
     ["datastore.write", "56490e2e-692ac36c", "0#0", "kiloBytesPerSecond"],
-    ["datastore.write", "576b8c5e-3d1e6844-ed6c-645106f0c5d0", "0#5", "kiloBytesPerSecond"],
-    ["datastore.write", "57e121ef-2bb2dbaa-ad99-645106f0c5d0", "0#0", "kiloBytesPerSecond"],
-    ["datastore.write", "5847d774-2bdca236-23df-645106f0c5d0", "0#0", "kiloBytesPerSecond"],
+    [
+        "datastore.write",
+        "576b8c5e-3d1e6844-ed6c-645106f0c5d0",
+        "0#5",
+        "kiloBytesPerSecond",
+    ],
+    [
+        "datastore.write",
+        "57e121ef-2bb2dbaa-ad99-645106f0c5d0",
+        "0#0",
+        "kiloBytesPerSecond",
+    ],
+    [
+        "datastore.write",
+        "5847d774-2bdca236-23df-645106f0c5d0",
+        "0#0",
+        "kiloBytesPerSecond",
+    ],
     ["datastore.write", "79d8b527-45291f84", "891#543", "kiloBytesPerSecond"],
     ["datastore.write", "fce701f6-867094ae", "0#0", "kiloBytesPerSecond"],
 ]

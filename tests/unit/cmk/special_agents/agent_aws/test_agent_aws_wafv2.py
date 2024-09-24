@@ -71,16 +71,26 @@ def test_search_string_bytes_handling_in_get_wafv2_web_acls() -> None:
             return response[key]
         return dflt
 
-    res = _get_wafv2_web_acls(fake_wafv2_client, "us-east-1", get_response_content, None, None)  # type: ignore[arg-type]
+    res = _get_wafv2_web_acls(
+        fake_wafv2_client,  # type: ignore[arg-type]
+        "us-east-1",
+        get_response_content,
+        None,
+        None,
+    )
     search_string = res[0]["Rules"][0]["Statement"]["ByteMatchStatement"]["SearchString"]  # type: ignore[index]
     assert isinstance(search_string, str)
 
     for rule in res[0]["Rules"]:  # type: ignore[attr-defined]
         if "RateBasedStatement" in rule["Statement"]:
-            search_string = rule["Statement"]["RateBasedStatement"]["ScopeDownStatement"]["ByteMatchStatement"]["SearchString"]  # type: ignore[index]
+            search_string = rule["Statement"]["RateBasedStatement"]["ScopeDownStatement"][
+                "ByteMatchStatement"
+            ]["SearchString"]  # type: ignore[index]
             assert isinstance(search_string, str)
         if "NotStatement" in rule["Statement"]:
-            search_string = rule["Statement"]["NotStatement"]["ScopeDownStatement"]["ByteMatchStatement"]["SearchString"]  # type: ignore[index]
+            search_string = rule["Statement"]["NotStatement"]["ScopeDownStatement"][
+                "ByteMatchStatement"
+            ]["SearchString"]  # type: ignore[index]
             assert isinstance(search_string, str)
         if "AndStatement" in rule["Statement"]:
             search_string = rule["Statement"]["AndStatement"]["Statements"][0][
@@ -103,8 +113,20 @@ def create_sections(names: object | None, tags: OverallTags, is_regional: bool) 
     distributor = ResultDistributor()
 
     # TODO: FakeWAFV2Client shoud actually subclass WAFV2Client.
-    wafv2_limits = WAFV2Limits(fake_wafv2_client, region, config, scope, distributor=distributor)  # type: ignore[arg-type]
-    wafv2_summary = WAFV2Summary(fake_wafv2_client, region, config, scope, distributor=distributor)  # type: ignore[arg-type]
+    wafv2_limits = WAFV2Limits(
+        fake_wafv2_client,  # type: ignore[arg-type]
+        region,
+        config,
+        scope,
+        distributor=distributor,
+    )
+    wafv2_summary = WAFV2Summary(
+        fake_wafv2_client,  # type: ignore[arg-type]
+        region,
+        config,
+        scope,
+        distributor=distributor,
+    )
     wafv2_web_acl = WAFV2WebACL(fake_cloudwatch_client, region, config, is_regional)  # type: ignore[arg-type]
 
     distributor.add(wafv2_limits.name, wafv2_summary)

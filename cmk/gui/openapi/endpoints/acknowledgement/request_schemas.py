@@ -15,7 +15,9 @@ from cmk.gui.livestatus_utils.commands.acknowledgments import (
     acknowledge_hostgroup_problem,
     acknowledge_service_problem,
 )
-from cmk.gui.livestatus_utils.commands.downtimes import schedule_servicegroup_service_downtime
+from cmk.gui.livestatus_utils.commands.downtimes import (
+    schedule_servicegroup_service_downtime,
+)
 from cmk.gui.openapi.utils import param_description
 
 from cmk import fields

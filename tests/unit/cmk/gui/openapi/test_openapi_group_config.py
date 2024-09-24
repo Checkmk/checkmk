@@ -134,7 +134,11 @@ def test_openapi_bulk_groups(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     groups = [
-        {"name": _random_string(10), "alias": _random_string(10), "customer": "provider"}
+        {
+            "name": _random_string(10),
+            "alias": _random_string(10),
+            "customer": "provider",
+        }
         for _i in range(2)
     ]
 
@@ -295,7 +299,10 @@ def test_openapi_groups_with_customer(
 @managedtest
 @pytest.mark.parametrize("group_type", ["host", "contact", "service"])
 def test_openapi_group_values_are_links(
-    group_type: str, wsgi_app: WebTestAppForCMK, with_automation_user: tuple[UserId, str], base: str
+    group_type: str,
+    wsgi_app: WebTestAppForCMK,
+    with_automation_user: tuple[UserId, str],
+    base: str,
 ) -> None:
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
@@ -387,7 +394,11 @@ def test_openapi_bulk_group_schema(
     base: str,
 ) -> None:
     groups = [
-        {"name": _random_string(10), "alias": _random_string(10), "customer": "provider"}
+        {
+            "name": _random_string(10),
+            "alias": _random_string(10),
+            "customer": "provider",
+        }
         for _i in range(2)
     ]
 

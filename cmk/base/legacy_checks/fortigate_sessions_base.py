@@ -17,7 +17,11 @@ def inventory_fortigate_sessions_base(info):
 def check_fortigate_sessions_base(item, params, info):
     sessions = int(info[0][0])
     yield check_levels(
-        sessions, "session", params["levels"], human_readable_func=str, infoname="Sessions"
+        sessions,
+        "session",
+        params["levels"],
+        human_readable_func=str,
+        infoname="Sessions",
     )
 
 

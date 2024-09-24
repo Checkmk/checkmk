@@ -30,25 +30,39 @@ from cmk.base.plugins.agent_based.mssql_availability_groups import (
             ],
             {
                 "Some-name": AGAttributes(
-                    primary_replica="SQL\\\\SOME-INSTANCE-001", sync_state=SyncState.HEALTHY
+                    primary_replica="SQL\\\\SOME-INSTANCE-001",
+                    sync_state=SyncState.HEALTHY,
                 )
             },
             id="Healthy sync state",
         ),
         pytest.param(
             [
-                ["Some-name", "SQL\\\\SOME-INSTANCE-001", "0", "NOT_HEALTHY", "ONLINE_IN_PROGRESS"],
+                [
+                    "Some-name",
+                    "SQL\\\\SOME-INSTANCE-001",
+                    "0",
+                    "NOT_HEALTHY",
+                    "ONLINE_IN_PROGRESS",
+                ],
             ],
             {
                 "Some-name": AGAttributes(
-                    primary_replica="SQL\\\\SOME-INSTANCE-001", sync_state=SyncState.NOT_HEALTHY
+                    primary_replica="SQL\\\\SOME-INSTANCE-001",
+                    sync_state=SyncState.NOT_HEALTHY,
                 )
             },
             id="Unhealthy sync state",
         ),
         pytest.param(
             [
-                ["Some-name", "SQL\\\\SOME-INSTANCE-001", "1", "PARTIALLY_HEALTHY", "ONLINE"],
+                [
+                    "Some-name",
+                    "SQL\\\\SOME-INSTANCE-001",
+                    "1",
+                    "PARTIALLY_HEALTHY",
+                    "ONLINE",
+                ],
             ],
             {
                 "Some-name": AGAttributes(
@@ -79,7 +93,8 @@ def test_parse_mssql_availability_groups(
         pytest.param(
             {
                 "Some-name": AGAttributes(
-                    primary_replica="SQL\\\\SOME-INSTANCE-001", sync_state=SyncState.HEALTHY
+                    primary_replica="SQL\\\\SOME-INSTANCE-001",
+                    sync_state=SyncState.HEALTHY,
                 )
             },
             [Service(item="Some-name")],
@@ -104,7 +119,8 @@ def test_discover_mssql_availability_groups(
         pytest.param(
             {
                 "Some-name": AGAttributes(
-                    primary_replica="SQL\\\\SOME-INSTANCE-001", sync_state=SyncState.HEALTHY
+                    primary_replica="SQL\\\\SOME-INSTANCE-001",
+                    sync_state=SyncState.HEALTHY,
                 )
             },
             [
@@ -119,7 +135,8 @@ def test_discover_mssql_availability_groups(
         pytest.param(
             {
                 "Some-name": AGAttributes(
-                    primary_replica="SQL\\\\SOME-INSTANCE-001", sync_state=SyncState.NOT_HEALTHY
+                    primary_replica="SQL\\\\SOME-INSTANCE-001",
+                    sync_state=SyncState.NOT_HEALTHY,
                 )
             },
             [

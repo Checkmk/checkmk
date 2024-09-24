@@ -17,8 +17,19 @@ pytestmark = pytest.mark.checks
     ["params", "expected_args"],
     [
         pytest.param(
-            {"username": "testID", "application": "appName", "password": ("store", "appdynamics")},
-            ["-u", "testID", "-p", ("store", "appdynamics", "%s"), "address", "appName"],
+            {
+                "username": "testID",
+                "application": "appName",
+                "password": ("store", "appdynamics"),
+            },
+            [
+                "-u",
+                "testID",
+                "-p",
+                ("store", "appdynamics", "%s"),
+                "address",
+                "appName",
+            ],
             id="passwords_from_store",
         ),
         pytest.param(
@@ -29,7 +40,18 @@ pytestmark = pytest.mark.checks
                 "port": 8090,
                 "timeout": 30,
             },
-            ["-u", "testID", "-p", "password", "-P", "8090", "-t", "30", "address", "appName"],
+            [
+                "-u",
+                "testID",
+                "-p",
+                "password",
+                "-P",
+                "8090",
+                "-t",
+                "30",
+                "address",
+                "appName",
+            ],
             id="explicit_passwords",
         ),
     ],

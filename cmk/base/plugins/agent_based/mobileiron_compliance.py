@@ -44,5 +44,8 @@ register.check_plugin(
     discovery_function=discover_single,
     check_function=check_mobileiron_compliance,
     check_ruleset_name="mobileiron_compliance",
-    check_default_parameters={"policy_violation_levels": (2, 3), "ignore_compliance": False},
+    check_default_parameters={
+        "policy_violation_levels": (2, 3),
+        "ignore_compliance": False,
+    },
 )

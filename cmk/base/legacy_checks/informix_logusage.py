@@ -72,11 +72,15 @@ def check_informix_logusage(item, params, parsed):
                     render.bytes(crit),
                 )
 
-        yield state, infotext, [
-            ("file_count", logfiles),
-            ("log_files_total", size),
-            ("log_files_used", used),
-        ]
+        yield (
+            state,
+            infotext,
+            [
+                ("file_count", logfiles),
+                ("log_files_total", size),
+                ("log_files_used", used),
+            ],
+        )
 
         if size:
             used_perc = used * 100.0 / size

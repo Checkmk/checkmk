@@ -427,7 +427,11 @@ graph_info["cmk_cpu_time_by_phase"] = {
     "title": _l("Time usage by phase"),
     "metrics": [
         ("user_time,children_user_time,+", "stack", _l("CPU time in user space")),
-        ("system_time,children_system_time,+", "stack", _l("CPU time in operating system")),
+        (
+            "system_time,children_system_time,+",
+            "stack",
+            _l("CPU time in operating system"),
+        ),
         ("cmk_time_agent", "stack"),
         ("cmk_time_snmp", "stack"),
         ("cmk_time_ds", "stack"),
@@ -710,7 +714,11 @@ graph_info["cpu_utilization_7"] = {
         ("cpu_util_guest", "stack"),
         ("cpu_util_steal", "stack"),
         ("util_average", "line"),
-        ("user,system,io_wait,cpu_util_guest,cpu_util_steal,+,+,+,+#7fff00", "line", _l("Total")),
+        (
+            "user,system,io_wait,cpu_util_guest,cpu_util_steal,+,+,+,+#7fff00",
+            "line",
+            _l("Total"),
+        ),
     ],
     "conflicting_metrics": [
         "util",

@@ -20,14 +20,18 @@ def fixture_discovered_host_labels_dir(tmp_path: Path, monkeypatch: MonkeyPatch)
     return path
 
 
-def test_discovered_host_labels_store_file_path(discovered_host_labels_dir: Path) -> None:
+def test_discovered_host_labels_store_file_path(
+    discovered_host_labels_dir: Path,
+) -> None:
     assert (
         DiscoveredHostLabelsStore(HostName("host")).file_path
         == discovered_host_labels_dir / "host.mk"
     )
 
 
-def test_discovered_host_labels_store_load_default(discovered_host_labels_dir: Path) -> None:
+def test_discovered_host_labels_store_load_default(
+    discovered_host_labels_dir: Path,
+) -> None:
     store = DiscoveredHostLabelsStore(HostName("host"))
     assert not store.file_path.exists()
     assert not store.load()

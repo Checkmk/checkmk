@@ -33,12 +33,18 @@ def check_filer_disks(disks, params):  # pylint: disable=too-many-branches
             if disk["state"] == what:
                 state[what].append(disk)
 
-    yield 0, "Total raw capacity: %s" % render.disksize(total_capacity), [
-        ("total_disk_capacity", total_capacity)
-    ]
+    yield (
+        0,
+        "Total raw capacity: %s" % render.disksize(total_capacity),
+        [("total_disk_capacity", total_capacity)],
+    )
     # TODO: Is a prefailed disk unavailable?
     unavail_disks = len(state["prefailed"]) + len(state["failed"]) + len(state["offline"])
-    yield 0, "Total disks: %d" % (len(disks) - unavail_disks), [("total_disks", len(disks))]
+    yield (
+        0,
+        "Total disks: %d" % (len(disks) - unavail_disks),
+        [("total_disks", len(disks))],
+    )
 
     spare_disks = len(state["spare"])
     spare_state, spare_infotext = 0, "Spare disks: %d" % spare_disks
@@ -57,7 +63,10 @@ def check_filer_disks(disks, params):  # pylint: disable=too-many-branches
     parity_disks = [disk for disk in disks if disk["type"] == "parity"]
     prefailed_parity = [disk for disk in parity_disks if disk["state"] == "prefailed"]
     if len(parity_disks) > 0:
-        yield 0, "Parity disks: %d (%d prefailed)" % (len(parity_disks), len(prefailed_parity))
+        yield (
+            0,
+            "Parity disks: %d (%d prefailed)" % (len(parity_disks), len(prefailed_parity)),
+        )
 
     yield 0, "Failed disks: %d" % unavail_disks, [("failed_disks", unavail_disks)]
 
@@ -91,8 +100,11 @@ def check_filer_disks(disks, params):  # pylint: disable=too-many-branches
             elif ratio >= warn:
                 return_state = 1
             if return_state:
-                yield return_state, "Too many {} disks (warn/crit at {:.1f}%/{:.1f}%)".format(
-                    disk_state,
-                    warn,
-                    crit,
+                yield (
+                    return_state,
+                    "Too many {} disks (warn/crit at {:.1f}%/{:.1f}%)".format(
+                        disk_state,
+                        warn,
+                        crit,
+                    ),
                 )

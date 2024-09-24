@@ -34,7 +34,10 @@ def check_citrix_sessions(_no_item, params, info):
             session.setdefault(line[0], int(line[1]))
 
     if not session:
-        yield 3, "Could not collect session information. Please check the agent configuration."
+        yield (
+            3,
+            "Could not collect session information. Please check the agent configuration.",
+        )
         return
 
     for key, what in [

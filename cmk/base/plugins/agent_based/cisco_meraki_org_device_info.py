@@ -8,7 +8,11 @@ from dataclasses import dataclass
 from cmk.plugins.lib.cisco_meraki import load_json, MerakiAPIData
 
 from .agent_based_api.v1 import Attributes, HostLabel, register
-from .agent_based_api.v1.type_defs import HostLabelGenerator, InventoryResult, StringTable
+from .agent_based_api.v1.type_defs import (
+    HostLabelGenerator,
+    InventoryResult,
+    StringTable,
+)
 
 
 @dataclass(frozen=True)

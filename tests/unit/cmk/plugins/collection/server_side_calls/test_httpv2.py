@@ -74,7 +74,10 @@ def test_active_check_httpv2_cert_validity_globally() -> None:
                         "individual_settings": {"cert": ("fixed", (345600.0, 172800.0))},
                     },
                     {
-                        "service_name": {"prefix": "auto", "name": "My other service name"},
+                        "service_name": {
+                            "prefix": "auto",
+                            "name": "My other service name",
+                        },
                         "url": "https://subomain.domain.tld:123",
                     },
                 ],

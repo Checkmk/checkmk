@@ -152,7 +152,12 @@ def _do_create_snapshot(data: SnapshotData) -> None:
             if completed_process.returncode not in [0, 1]:
                 raise MKGeneralException(
                     "Error while creating backup of %s (Exit Code %d) - %s.\n%s"
-                    % (name, completed_process.returncode, completed_process.stderr, command)
+                    % (
+                        name,
+                        completed_process.returncode,
+                        completed_process.stderr,
+                        command,
+                    )
                 )
 
             with open(path_subtar, "rb") as subtar:
@@ -567,7 +572,13 @@ def extract_snapshot(  # pylint: disable=too-many-branches
             # The complete tar.gz file never fits in stringIO buffer..
             tar.extract(tar_member, restore_dir)
 
-            command = ["tar", "xzf", f"{restore_dir}/{tar_member.name}", "-C", target_dir]
+            command = [
+                "tar",
+                "xzf",
+                f"{restore_dir}/{tar_member.name}",
+                "-C",
+                target_dir,
+            ]
             completed_process = subprocess.run(
                 command,
                 capture_output=True,

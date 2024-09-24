@@ -36,9 +36,17 @@ def check_barracuda_mailqueues(_no_item, params, info):
         elif queue >= warn:
             state = 1
         if state:
-            infotext += " (warn/crit at %d/%d %s mails)" % (warn, crit, queue_type.lower())
+            infotext += " (warn/crit at %d/%d %s mails)" % (
+                warn,
+                crit,
+                queue_type.lower(),
+            )
 
-        yield state, infotext, [("mail_queue_%s_length" % queue_type.lower(), queue, warn, crit)]
+        yield (
+            state,
+            infotext,
+            [("mail_queue_%s_length" % queue_type.lower(), queue, warn, crit)],
+        )
 
     yield 0, "Incoming: %s" % in_queue_str
     if daily_sent:

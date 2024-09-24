@@ -126,7 +126,11 @@ def fixture_event_status(
     settings: Settings, config: Config, perfcounters: Perfcounters, history: FileHistory
 ) -> EventStatus:
     return EventStatus(
-        settings, config, perfcounters, history, logging.getLogger("cmk.mkeventd.EventStatus")
+        settings,
+        config,
+        perfcounters,
+        history,
+        logging.getLogger("cmk.mkeventd.EventStatus"),
     )
 
 

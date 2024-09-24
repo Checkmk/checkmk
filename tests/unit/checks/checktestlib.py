@@ -132,7 +132,10 @@ class BasicCheckResult(Tuploid):
     """
 
     def __init__(
-        self, status: int, infotext: str, perfdata: None | Sequence[tuple | PerfValue] = None
+        self,
+        status: int,
+        infotext: str,
+        perfdata: None | Sequence[tuple | PerfValue] = None,
     ) -> None:
         """We perform some basic consistency checks during initialization"""
         # assign first, so __repr__ won't crash
@@ -299,7 +302,10 @@ def assertCheckResultsEqual(actual, expected):
         for suba, sube in zip(actual.subresults, expected.subresults):
             assertBasicCheckResultsEqual(suba, sube)
         len_ac, len_ex = len(actual.subresults), len(expected.subresults)
-        assert len_ac == len_ex, "expected %d subresults, but got %d instead" % (len_ex, len_ac)
+        assert len_ac == len_ex, "expected %d subresults, but got %d instead" % (
+            len_ex,
+            len_ac,
+        )
 
 
 class DiscoveryEntry(Tuploid):

@@ -449,7 +449,10 @@ def _valuespec_connection() -> Dictionary:
             "timeout": DictElement(
                 parameter_form=TimeSpan(
                     title=Title("Connection timeout"),
-                    displayed_magnitudes=[TimeMagnitude.SECOND, TimeMagnitude.MILLISECOND],
+                    displayed_magnitudes=[
+                        TimeMagnitude.SECOND,
+                        TimeMagnitude.MILLISECOND,
+                    ],
                     help_text=Help(
                         "The result will be treated as connection failure if the threshold gets "
                         "reached and leads to a CRIT on the service."
@@ -624,7 +627,10 @@ def _valuespec_settings(is_standard: bool = True) -> Dictionary:
                 parameter_form=SimpleLevels[float](
                     title=Title("Response time"),
                     form_spec_template=TimeSpan(
-                        displayed_magnitudes=[TimeMagnitude.SECOND, TimeMagnitude.MILLISECOND],
+                        displayed_magnitudes=[
+                            TimeMagnitude.SECOND,
+                            TimeMagnitude.MILLISECOND,
+                        ],
                     ),
                     level_direction=LevelDirection.UPPER,
                     help_text=Help(
@@ -721,7 +727,10 @@ def _valuespec_endpoints() -> List:
                         ),
                         custom_validate=(
                             validators.Url(
-                                [validators.UrlProtocol.HTTP, validators.UrlProtocol.HTTPS],
+                                [
+                                    validators.UrlProtocol.HTTP,
+                                    validators.UrlProtocol.HTTPS,
+                                ],
                             ),
                         ),
                     ),

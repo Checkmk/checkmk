@@ -14,7 +14,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
     State,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+)
 
 from cmk.plugins.azure.agent_based.azure_virtual_machine import (
     _MAP_STATES,
@@ -52,21 +55,37 @@ SECTION = {
                     "displayStatus": "Provisioning succeeded",
                     "time": "2023-02-09T16:19:16.9149346+00:00",
                 },
-                {"code": "PowerState/running", "level": "Info", "displayStatus": "VM running"},
+                {
+                    "code": "PowerState/running",
+                    "level": "Info",
+                    "displayStatus": "VM running",
+                },
             ]
         },
         metrics={
             "average_Percentage_CPU": AzureMetric(
-                name="Percentage CPU", aggregation="average", value=0.275, unit="percent"
+                name="Percentage CPU",
+                aggregation="average",
+                value=0.275,
+                unit="percent",
             ),
             "average_CPU_Credits_Consumed": AzureMetric(
-                name="CPU Credits Consumed", aggregation="average", value=0, unit="count"
+                name="CPU Credits Consumed",
+                aggregation="average",
+                value=0,
+                unit="count",
             ),
             "average_CPU_Credits_Remaining": AzureMetric(
-                name="CPU Credits Remaining", aggregation="average", value=101.21, unit="count"
+                name="CPU Credits Remaining",
+                aggregation="average",
+                value=101.21,
+                unit="count",
             ),
             "average_Available_Memory_Bytes": AzureMetric(
-                name="Available Memory Bytes", aggregation="average", value=206569472, unit="bytes"
+                name="Available Memory Bytes",
+                aggregation="average",
+                value=206569472,
+                unit="bytes",
             ),
             "average_Disk_Read_Operations/Sec": AzureMetric(
                 name="Disk Read Operations/Sec",
@@ -84,7 +103,10 @@ SECTION = {
                 name="Disk Read Bytes", aggregation="total", value=0, unit="bytes"
             ),
             "total_Disk_Write_Bytes": AzureMetric(
-                name="Disk Write Bytes", aggregation="total", value=286887.79, unit="bytes"
+                name="Disk Write Bytes",
+                aggregation="total",
+                value=286887.79,
+                unit="bytes",
             ),
             "total_Network_In_Total": AzureMetric(
                 name="Network In Total", aggregation="total", value=38778, unit="bytes"
@@ -247,7 +269,10 @@ def test_discover_azure_virtual_machine(
                 ),
             },
             [
-                Result(state=State.WARN, summary="Provisioning unknown (Unknown provisioning)"),
+                Result(
+                    state=State.WARN,
+                    summary="Provisioning unknown (Unknown provisioning)",
+                ),
                 Result(state=State.UNKNOWN, summary="VM unknown (Error happened)"),
                 Result(state=State.OK, summary="Location: uksouth"),
             ],
@@ -335,8 +360,14 @@ def test_discover_azure_virtual_machines_summary(
             },
             MULTIPLE_VMS_SECTION,
             [
-                Result(state=State.WARN, summary="Provisioning: 2 succeeded (warn/crit at 2/3)"),
-                Result(state=State.CRIT, summary="Power states: 2 running (warn/crit at 1/2)"),
+                Result(
+                    state=State.WARN,
+                    summary="Provisioning: 2 succeeded (warn/crit at 2/3)",
+                ),
+                Result(
+                    state=State.CRIT,
+                    summary="Power states: 2 running (warn/crit at 1/2)",
+                ),
                 Result(
                     state=State.OK,
                     notice="VM-test-1: Provisioning succeeded, VM running",
@@ -408,7 +439,8 @@ def test_discover_azure_vm_cpu_utilization(
             SECTION,
             [
                 Result(
-                    state=State.WARN, summary="CPU utilization: 0.28% (warn/crit at 0.20%/0.50%)"
+                    state=State.WARN,
+                    summary="CPU utilization: 0.28% (warn/crit at 0.20%/0.50%)",
                 ),
                 Metric("util", 0.275, levels=(0.2, 0.5)),
             ],
@@ -416,7 +448,9 @@ def test_discover_azure_vm_cpu_utilization(
     ],
 )
 def test_check_azure_vm_cpu_utilization(
-    params: Mapping[str, tuple[float, float]], section: Section, expected_result: CheckResult
+    params: Mapping[str, tuple[float, float]],
+    section: Section,
+    expected_result: CheckResult,
 ) -> None:
     assert (
         list(check_azure_vm_cpu_utilization("CPU Utilization", params, section)) == expected_result
@@ -432,14 +466,19 @@ def test_check_azure_vm_cpu_utilization(
             [
                 Result(state=State.OK, summary="Consumed: 0"),
                 Metric("cpu_credits_consumed", 0.0),
-                Result(state=State.CRIT, summary="Remaining: 101.21 (warn/crit below 200.0/150.0)"),
+                Result(
+                    state=State.CRIT,
+                    summary="Remaining: 101.21 (warn/crit below 200.0/150.0)",
+                ),
                 Metric("cpu_credits_remaining", 101.21),
             ],
         ),
     ],
 )
 def test_check_azure_vm_burst_cpu_credits(
-    params: Mapping[str, tuple[float, float]], section: Section, expected_result: CheckResult
+    params: Mapping[str, tuple[float, float]],
+    section: Section,
+    expected_result: CheckResult,
 ) -> None:
     assert list(check_azure_vm_burst_cpu_credits(params, section)) == expected_result
 
@@ -461,7 +500,9 @@ def test_check_azure_vm_burst_cpu_credits(
     ],
 )
 def test_check_azure_vm_memory(
-    params: Mapping[str, tuple[float, float]], section: Section, expected_result: CheckResult
+    params: Mapping[str, tuple[float, float]],
+    section: Section,
+    expected_result: CheckResult,
 ) -> None:
     assert list(check_azure_vm_memory(params, section)) == expected_result
 
@@ -489,7 +530,9 @@ def test_check_azure_vm_memory(
     ],
 )
 def test_check_azure_vm_disk(
-    params: Mapping[str, tuple[float, float]], section: Section, expected_result: CheckResult
+    params: Mapping[str, tuple[float, float]],
+    section: Section,
+    expected_result: CheckResult,
 ) -> None:
     assert list(check_azure_vm_disk(params, section)) == expected_result
 
@@ -537,7 +580,12 @@ def test_discover_azure_vm_network_io(
                     "westeurope",
                     {},
                     {},
-                    {"statuses": ["Max recursion depth reached", "Max recursion depth reached"]},
+                    {
+                        "statuses": [
+                            "Max recursion depth reached",
+                            "Max recursion depth reached",
+                        ]
+                    },
                     {},
                     "some_hash",
                 ),
@@ -552,7 +600,9 @@ def test_discover_azure_vm_network_io(
     ],
 )
 def test_check_azure_vm_network_io(
-    params: Mapping[str, tuple[float, float]], section: Section, expected_result: CheckResult
+    params: Mapping[str, tuple[float, float]],
+    section: Section,
+    expected_result: CheckResult,
 ) -> None:
     assert list(check_azure_vm_network_io("Network IO", params, section)) == expected_result
 

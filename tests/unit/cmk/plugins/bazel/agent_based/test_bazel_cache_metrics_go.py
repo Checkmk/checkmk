@@ -9,7 +9,12 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 
 import cmk.plugins.bazel.agent_based.bazel_cache_metrics_go as bcmg
 
@@ -46,7 +51,10 @@ def test_check_bazel_cache_go(section: bcmg.Section) -> None:
             Metric("bazel_cache_go_go_goroutines", 13.0),
             Result(state=State.OK, summary="Bytes allocated and in use: 5.60 GiB"),
             Metric("bazel_cache_go_go_memstats_alloc_bytes", 6017385136.0),
-            Result(state=State.OK, summary="Bytes used by profiling bucket hash table: 2.06 MiB"),
+            Result(
+                state=State.OK,
+                summary="Bytes used by profiling bucket hash table: 2.06 MiB",
+            ),
             Metric("bazel_cache_go_go_memstats_buck_hash_sys_bytes", 2157607.0),
             Result(
                 state=State.OK,
@@ -59,19 +67,26 @@ def test_check_bazel_cache_go(section: bcmg.Section) -> None:
             Metric("bazel_cache_go_go_memstats_heap_idle_bytes", 45727956992.0),
             Result(state=State.OK, summary="Heap bytes released to OS: 42.4 GiB"),
             Metric("bazel_cache_go_go_memstats_heap_released_bytes", 45536632832.0),
-            Result(state=State.OK, summary="Time since last garbage collection: 4 days 18 hours"),
+            Result(
+                state=State.OK,
+                summary="Time since last garbage collection: 4 days 18 hours",
+            ),
             Metric("bazel_cache_go_go_memstats_last_gc_time_seconds", 412668.0),
             Result(
                 state=State.OK,
                 summary="Heap bytes when next garbage collection will take place: 10.4 GiB",
             ),
             Metric("bazel_cache_go_go_memstats_next_gc_bytes", 11127494592.0),
-            Result(state=State.OK, summary="Bytes used for other system allocations: 19.4 MiB"),
+            Result(
+                state=State.OK,
+                summary="Bytes used for other system allocations: 19.4 MiB",
+            ),
             Metric("bazel_cache_go_go_memstats_other_sys_bytes", 20319041.0),
             Result(state=State.OK, summary="Bytes in use by stack allocator: 6.88 MiB"),
             Metric("bazel_cache_go_go_memstats_stack_inuse_bytes", 7208960.0),
             Result(
-                state=State.OK, summary="Bytes obtained from system for stack allocator: 6.88 MiB"
+                state=State.OK,
+                summary="Bytes obtained from system for stack allocator: 6.88 MiB",
             ),
             Metric("bazel_cache_go_go_memstats_stack_sys_bytes", 7208960.0),
             Result(state=State.OK, summary="Bytes obtained from system: 49.9 GiB"),

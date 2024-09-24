@@ -73,9 +73,12 @@ def check_hp_msa_fan(item, params, parsed):
         yield fan_state, f"Status: {fan_state_readable}, speed: {fan_speed} RPM"
 
         if fan_health_state and fan_health_reason:
-            yield fan_health_state, "health: {} ({})".format(
-                fan_health_state_readable,
-                fan_health_reason,
+            yield (
+                fan_health_state,
+                "health: {} ({})".format(
+                    fan_health_state_readable,
+                    fan_health_reason,
+                ),
             )
 
 

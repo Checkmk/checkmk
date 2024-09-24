@@ -5,7 +5,10 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.graylog import handle_graylog_messages, parse_graylog_agent_data
+from cmk.base.check_legacy_includes.graylog import (
+    handle_graylog_messages,
+    parse_graylog_agent_data,
+)
 from cmk.base.config import check_info
 
 # <<<graylog_messages>>>

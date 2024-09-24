@@ -9,7 +9,11 @@ import pytest
 from dateutil.relativedelta import relativedelta
 from freezegun import freeze_time
 
-from cmk.utils.crypto.certificate import Certificate, CertificatePEM, CertificateWithPrivateKey
+from cmk.utils.crypto.certificate import (
+    Certificate,
+    CertificatePEM,
+    CertificateWithPrivateKey,
+)
 from cmk.utils.crypto.keys import PlaintextPrivateKeyPEM, PrivateKey
 
 

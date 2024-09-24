@@ -32,9 +32,17 @@ def _parameter_valuespec_mtr() -> Dictionary:
                 Tuple(
                     title=_("Average roundtrip time in ms"),
                     elements=[
-                        Integer(title=_("Warning at"), default_value=150, unit=_("ms"), minvalue=0),
                         Integer(
-                            title=_("Critical at"), default_value=250, unit=_("ms"), minvalue=0
+                            title=_("Warning at"),
+                            default_value=150,
+                            unit=_("ms"),
+                            minvalue=0,
+                        ),
+                        Integer(
+                            title=_("Critical at"),
+                            default_value=250,
+                            unit=_("ms"),
+                            minvalue=0,
                         ),
                     ],
                     help=_(
@@ -48,9 +56,17 @@ def _parameter_valuespec_mtr() -> Dictionary:
                 Tuple(
                     title=_("Standard deviation of roundtrip times in ms"),
                     elements=[
-                        Integer(title=_("Warning at"), default_value=150, unit=_("ms"), minvalue=0),
                         Integer(
-                            title=_("Critical at"), default_value=250, unit=_("ms"), minvalue=0
+                            title=_("Warning at"),
+                            default_value=150,
+                            unit=_("ms"),
+                            minvalue=0,
+                        ),
+                        Integer(
+                            title=_("Critical at"),
+                            default_value=250,
+                            unit=_("ms"),
+                            minvalue=0,
                         ),
                     ],
                     help=_(
@@ -64,8 +80,18 @@ def _parameter_valuespec_mtr() -> Dictionary:
                 Tuple(
                     title=_("Packet loss in percentage"),
                     elements=[
-                        Integer(title=_("Warning at"), default_value=10, unit=_("%"), minvalue=0),
-                        Integer(title=_("Critical at"), default_value=25, unit=_("%"), minvalue=0),
+                        Integer(
+                            title=_("Warning at"),
+                            default_value=10,
+                            unit=_("%"),
+                            minvalue=0,
+                        ),
+                        Integer(
+                            title=_("Critical at"),
+                            default_value=25,
+                            unit=_("%"),
+                            minvalue=0,
+                        ),
                     ],
                     help=_(
                         "The maximum allowed percentage of packet loss to the destination before this service "

@@ -12,7 +12,10 @@ def test_check_prometheus_build() -> None:
         prometheus_build.check_prometheus_build(
             {
                 "version": ["2.0.0"],
-                "scrape_target": {"targets_number": 8, "down_targets": ["minikube", "node"]},
+                "scrape_target": {
+                    "targets_number": 8,
+                    "down_targets": ["minikube", "node"],
+                },
                 "reload_config_status": True,
             }
         )

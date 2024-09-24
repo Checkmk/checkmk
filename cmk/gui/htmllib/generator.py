@@ -301,11 +301,17 @@ class HTMLWriter:
         self.write_html(render_element("th", content, **kwargs))
 
     def td(
-        self, content: HTMLContent, colspan: int | None = None, **kwargs: HTMLTagAttributeValue
+        self,
+        content: HTMLContent,
+        colspan: int | None = None,
+        **kwargs: HTMLTagAttributeValue,
     ) -> None:
         self.write_html(
             render_element(
-                "td", content, colspan=str(colspan) if colspan is not None else None, **kwargs
+                "td",
+                content,
+                colspan=str(colspan) if colspan is not None else None,
+                **kwargs,
             )
         )
 
@@ -485,10 +491,15 @@ class HTMLWriter:
 
     @staticmethod
     def render_td(
-        content: HTMLContent, colspan: int | None = None, **kwargs: HTMLTagAttributeValue
+        content: HTMLContent,
+        colspan: int | None = None,
+        **kwargs: HTMLTagAttributeValue,
     ) -> HTML:
         return render_element(
-            "td", content, colspan=str(colspan) if colspan is not None else None, **kwargs
+            "td",
+            content,
+            colspan=str(colspan) if colspan is not None else None,
+            **kwargs,
         )
 
     def open_thead(self, **kwargs: HTMLTagAttributeValue) -> None:

@@ -69,8 +69,16 @@ from cmk.gui.wato._main_module_topics import (
     MainModuleTopicUsers,
 )
 
-from ._check_mk_configuration import monitoring_macro_help, PluginCommandLine, UserIconOrAction
-from ._group_selection import ContactGroupSelection, HostGroupSelection, ServiceGroupSelection
+from ._check_mk_configuration import (
+    monitoring_macro_help,
+    PluginCommandLine,
+    UserIconOrAction,
+)
+from ._group_selection import (
+    ContactGroupSelection,
+    HostGroupSelection,
+    ServiceGroupSelection,
+)
 from ._http_proxy import HTTPProxyInput, HTTPProxyReference
 from ._notification_parameter import (
     notification_parameter_registry,
@@ -272,9 +280,18 @@ def register() -> None:  # pylint: disable=too-many-branches
         ("RulespecGroupDatasourceProgramsOS", RulespecGroupDatasourceProgramsOS),
         ("RulespecGroupDatasourceProgramsApps", RulespecGroupDatasourceProgramsApps),
         ("RulespecGroupDatasourceProgramsCloud", RulespecGroupDatasourceProgramsCloud),
-        ("RulespecGroupDatasourceProgramsCustom", RulespecGroupDatasourceProgramsCustom),
-        ("RulespecGroupDatasourceProgramsHardware", RulespecGroupDatasourceProgramsHardware),
-        ("RulespecGroupDatasourceProgramsTesting", RulespecGroupDatasourceProgramsTesting),
+        (
+            "RulespecGroupDatasourceProgramsCustom",
+            RulespecGroupDatasourceProgramsCustom,
+        ),
+        (
+            "RulespecGroupDatasourceProgramsHardware",
+            RulespecGroupDatasourceProgramsHardware,
+        ),
+        (
+            "RulespecGroupDatasourceProgramsTesting",
+            RulespecGroupDatasourceProgramsTesting,
+        ),
         ("RulespecGroupIntegrateOtherServices", RulespecGroupIntegrateOtherServices),
         ("RulespecGroupActiveChecks", RulespecGroupActiveChecks),
         ("MigrateToIndividualOrStoredPassword", MigrateToIndividualOrStoredPassword),

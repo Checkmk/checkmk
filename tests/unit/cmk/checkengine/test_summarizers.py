@@ -10,7 +10,11 @@ from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.exitspec import ExitSpec
-from cmk.checkengine.summarize import summarize_failure, summarize_piggyback, summarize_success
+from cmk.checkengine.summarize import (
+    summarize_failure,
+    summarize_piggyback,
+    summarize_success,
+)
 
 
 class TestAgentSummarizer:

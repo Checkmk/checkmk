@@ -4,7 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.check_parameters.filesystem_utils import FilesystemElements, vs_filesystem
+from cmk.gui.plugins.wato.check_parameters.filesystem_utils import (
+    FilesystemElements,
+    vs_filesystem,
+)
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
@@ -15,7 +18,8 @@ from cmk.gui.valuespec import TextInput
 
 def _item_spec_db2_logsize():
     return TextInput(
-        title=_("Instance"), help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1")
+        title=_("Instance"),
+        help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1"),
     )
 
 

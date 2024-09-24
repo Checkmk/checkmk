@@ -35,7 +35,9 @@ from cmk import fields
 TEST_TARGZ_FILE = "H4sIAAAAAAAAA+3OQQrCMBCF4aw9RbyAJDVNzxNooIXgyBjR4xvppuBCN0UK/7eYxzCzeNN8qs9qNuWaGMM7/dC7dS58b3yI3RDbDJ1pe/BnY922tRb3W01qrSlZLklHueaqounj79t9p6ZcitiHaBmPh3+XAQAAAAAAAAAAAAAAAAD87AUCVDjzACgAAA=="
 
 
-def test_openapi_accept_header_missing(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+def test_openapi_accept_header_missing(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+) -> None:
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
@@ -48,7 +50,9 @@ def test_openapi_accept_header_missing(aut_user_auth_wsgi_app: WebTestAppForCMK)
     }
 
 
-def test_openapi_accept_header_matches(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+def test_openapi_accept_header_matches(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+) -> None:
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
@@ -59,7 +63,9 @@ def test_openapi_accept_header_matches(aut_user_auth_wsgi_app: WebTestAppForCMK)
     assert resp.json["value"] == []
 
 
-def test_openapi_accept_header_invalid(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+def test_openapi_accept_header_invalid(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+) -> None:
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
@@ -240,7 +246,8 @@ def accept_parameter_endpoint(fresh_app_instance):
 
 
 def test_openapi_endpoint_decorator_catches_status_code_exceptions(
-    test_endpoint_raise_status_code: WrappedEndpoint, aut_user_auth_wsgi_app: WebTestAppForCMK
+    test_endpoint_raise_status_code: WrappedEndpoint,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     """
     before this test, the Endpoint did not check for exceptions that change the
@@ -446,7 +453,10 @@ def test_invalid_content_type(
         "post",
         "/NO_SITE/check_mk/api/1.0/test_accept_parameter",
         "",
-        {"Accept": "application/json", "content-type": "application/i-do-not-exist"},  # headers
+        {
+            "Accept": "application/json",
+            "content-type": "application/i-do-not-exist",
+        },  # headers
         status=415,
     )
 
@@ -469,7 +479,6 @@ def test_invalid_payload(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     payload: str,
 ) -> None:
-
     response = aut_user_auth_wsgi_app.call_method(
         "post",
         "/NO_SITE/check_mk/api/1.0/test_accept_parameter",
@@ -509,7 +518,6 @@ def test_endpoint_accept_multiple_types(
     content_type: str,
     payload: str,
 ) -> None:
-
     res = aut_user_auth_wsgi_app.call_method(
         "post",
         "/NO_SITE/check_mk/api/1.0/test_multiple_content_types",

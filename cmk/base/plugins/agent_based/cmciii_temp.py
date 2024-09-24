@@ -14,7 +14,14 @@ from cmk.plugins.lib.cmciii import (
 )
 from cmk.plugins.lib.temperature import check_temperature, TempParamDict
 
-from .agent_based_api.v1 import get_value_store, register, Result, Service, State, type_defs
+from .agent_based_api.v1 import (
+    get_value_store,
+    register,
+    Result,
+    Service,
+    State,
+    type_defs,
+)
 
 
 def discover_cmciii_temp(params: DiscoveryParams, section: Section) -> type_defs.DiscoveryResult:

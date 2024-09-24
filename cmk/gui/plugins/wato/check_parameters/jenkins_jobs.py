@@ -9,7 +9,14 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Age, Dictionary, Integer, MonitoringState, TextInput, Tuple
+from cmk.gui.valuespec import (
+    Age,
+    Dictionary,
+    Integer,
+    MonitoringState,
+    TextInput,
+    Tuple,
+)
 
 
 def _parameter_valuespec_jenkins_jobs():
@@ -63,37 +70,43 @@ def _parameter_valuespec_jenkins_jobs():
                         (
                             "aborted",
                             MonitoringState(
-                                title=_("State when job is in state aborted"), default_value=0
+                                title=_("State when job is in state aborted"),
+                                default_value=0,
                             ),
                         ),
                         (
                             "blue",
                             MonitoringState(
-                                title=_("State when job is in state success"), default_value=0
+                                title=_("State when job is in state success"),
+                                default_value=0,
                             ),
                         ),
                         (
                             "disabled",
                             MonitoringState(
-                                title=_("State when job is in state disabled"), default_value=0
+                                title=_("State when job is in state disabled"),
+                                default_value=0,
                             ),
                         ),
                         (
                             "notbuilt",
                             MonitoringState(
-                                title=_("State when job is in state not built"), default_value=0
+                                title=_("State when job is in state not built"),
+                                default_value=0,
                             ),
                         ),
                         (
                             "red",
                             MonitoringState(
-                                title=_("State when job is in state failed"), default_value=2
+                                title=_("State when job is in state failed"),
+                                default_value=2,
                             ),
                         ),
                         (
                             "yellow",
                             MonitoringState(
-                                title=_("State when job is in state unstable"), default_value=1
+                                title=_("State when job is in state unstable"),
+                                default_value=1,
                             ),
                         ),
                     ],
@@ -107,7 +120,8 @@ def _parameter_valuespec_jenkins_jobs():
                         (
                             "success",
                             MonitoringState(
-                                title=_("State when last build result is: success"), default_value=0
+                                title=_("State when last build result is: success"),
+                                default_value=0,
                             ),
                         ),
                         (
@@ -120,13 +134,15 @@ def _parameter_valuespec_jenkins_jobs():
                         (
                             "failure",
                             MonitoringState(
-                                title=_("State when last build result is: failed"), default_value=2
+                                title=_("State when last build result is: failed"),
+                                default_value=2,
                             ),
                         ),
                         (
                             "aborted",
                             MonitoringState(
-                                title=_("State when last build result is: aborted"), default_value=0
+                                title=_("State when last build result is: aborted"),
+                                default_value=0,
                             ),
                         ),
                         (
@@ -139,7 +155,8 @@ def _parameter_valuespec_jenkins_jobs():
                         (
                             "none",
                             MonitoringState(
-                                title=_("State when build result is: running"), default_value=0
+                                title=_("State when build result is: running"),
+                                default_value=0,
                             ),
                         ),
                     ],

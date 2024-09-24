@@ -73,7 +73,12 @@ def main(sys_argv=None):
             new_state = last_state
         print(
             "%d %s - %s - %s"
-            % (new_state, service.replace(" ", "_"), state_names[new_state], state_texts[new_state])
+            % (
+                new_state,
+                service.replace(" ", "_"),
+                state_names[new_state],
+                state_texts[new_state],
+            )
         )
 
     state_file.write_text("%r\n" % history)

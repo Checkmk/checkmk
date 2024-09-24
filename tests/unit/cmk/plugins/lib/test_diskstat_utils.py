@@ -385,9 +385,15 @@ def test_summarize_disks(
             ),
             DISK,
             [
-                Result(state=State.CRIT, notice="Utilization: 53.24% (warn/crit at 10.00%/20.00%)"),
+                Result(
+                    state=State.CRIT,
+                    notice="Utilization: 53.24% (warn/crit at 10.00%/20.00%)",
+                ),
                 Metric("disk_utilization", 0.53242, levels=(0.1, 0.2)),
-                Result(state=State.CRIT, summary="Read: 12.3 kB/s (warn/crit at 10.0 B/s/100 B/s)"),
+                Result(
+                    state=State.CRIT,
+                    summary="Read: 12.3 kB/s (warn/crit at 10.0 B/s/100 B/s)",
+                ),
                 Metric("disk_read_throughput", 12312.4324, levels=(10.0, 100.0)),
                 Result(
                     state=State.CRIT,
@@ -473,7 +479,12 @@ def test_check_diskstat_dict(
         ),
     ) == [
         *(
-            [Result(state=State.OK, notice="All values averaged over 5 minutes 0 seconds")]
+            [
+                Result(
+                    state=State.OK,
+                    notice="All values averaged over 5 minutes 0 seconds",
+                )
+            ]
             if exp_res
             else []
         ),

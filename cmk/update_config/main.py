@@ -24,7 +24,7 @@ from cmk.utils.log import VERBOSE
 from cmk.utils.paths import check_mk_config_dir
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 from cmk.utils.redis import disable_redis
-from cmk.utils.version import edition, Edition
+from cmk.utils.version import Edition, edition
 
 # This special script needs persistence and conversion code from different
 # places of Checkmk. We may centralize the conversion and move the persistance
@@ -50,7 +50,8 @@ from .update_state import UpdateState
 
 
 def main(
-    args: Sequence[str], ensure_site_is_stopped_callback: Callable[[logging.Logger], None]
+    args: Sequence[str],
+    ensure_site_is_stopped_callback: Callable[[logging.Logger], None],
 ) -> int:
     arguments = _parse_arguments(args)
 

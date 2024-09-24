@@ -11,7 +11,11 @@ import pytest
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 
-from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry, SerializedResult
+from cmk.automations.results import (
+    ABCAutomationResult,
+    ResultTypeRegistry,
+    SerializedResult,
+)
 
 from cmk.gui.http import request, response
 from cmk.gui.wato.pages import automation
@@ -89,7 +93,10 @@ class TestPageAutomation:
             m.setattr(
                 request,
                 "headers",
-                {"x-checkmk-version": cmk_version.__version__, "x-checkmk-edition": "cee"},
+                {
+                    "x-checkmk-version": cmk_version.__version__,
+                    "x-checkmk-edition": "cee",
+                },
             )
             automation.PageAutomation()._execute_cmk_automation()
             assert response.get_data() == b"((1, 2), 'this field was not sent by version N-1')"

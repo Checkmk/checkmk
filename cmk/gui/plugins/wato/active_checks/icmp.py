@@ -8,7 +8,11 @@ from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import check_icmp_params, HostRulespec, rulespec_registry
+from cmk.gui.plugins.wato.utils import (
+    check_icmp_params,
+    HostRulespec,
+    rulespec_registry,
+)
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Checkbox,

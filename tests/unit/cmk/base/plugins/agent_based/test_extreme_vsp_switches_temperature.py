@@ -7,7 +7,12 @@ from collections.abc import Sequence
 import pytest
 
 import cmk.base.plugins.agent_based.extreme_vsp_switches_temperature as extreme_vsp_switches_temperature
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.extreme_vsp_switches_temperature import (
     check_vsp_switches_temperature,
@@ -91,7 +96,8 @@ def value_store_fixture(monkeypatch):
             [
                 Metric("temp", 52.0, levels=(50.0, 60.0)),
                 Result(
-                    state=State.WARN, summary="Temperature: 52.0 °C (warn/crit at 50.0 °C/60.0 °C)"
+                    state=State.WARN,
+                    summary="Temperature: 52.0 °C (warn/crit at 50.0 °C/60.0 °C)",
                 ),
                 Result(
                     state=State.OK,
@@ -107,7 +113,8 @@ def value_store_fixture(monkeypatch):
             [
                 Metric("temp", 65.0, levels=(50.0, 60.0)),
                 Result(
-                    state=State.CRIT, summary="Temperature: 65.0 °C (warn/crit at 50.0 °C/60.0 °C)"
+                    state=State.CRIT,
+                    summary="Temperature: 65.0 °C (warn/crit at 50.0 °C/60.0 °C)",
                 ),
                 Result(
                     state=State.OK,

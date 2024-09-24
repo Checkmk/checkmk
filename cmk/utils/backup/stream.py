@@ -31,7 +31,11 @@ from cmk.utils.exceptions import MKException, MKGeneralException
 # c) the unencrypted random key is used as AES key for encrypting the backup stream
 class MKBackupStream:
     def __init__(
-        self, stream: IO[bytes], is_alive: Callable[[], bool], key_ident: str | None, debug: bool
+        self,
+        stream: IO[bytes],
+        is_alive: Callable[[], bool],
+        key_ident: str | None,
+        debug: bool,
     ) -> None:
         self._stream = stream
         self._is_alive = is_alive
@@ -143,7 +147,11 @@ class BackupStream(MKBackupStream):
 
 class RestoreStream(MKBackupStream):
     def __init__(
-        self, stream: IO[bytes], is_alive: Callable[[], bool], key_ident: str | None, debug: bool
+        self,
+        stream: IO[bytes],
+        is_alive: Callable[[], bool],
+        key_ident: str | None,
+        debug: bool,
     ) -> None:
         super().__init__(stream, is_alive, key_ident, debug)
 

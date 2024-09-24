@@ -22,7 +22,9 @@ from cmk.utils.store.host_storage import ContactgroupName
 from cmk.base import notify
 
 
-def test_os_environment_does_not_override_notification_script_env(monkeypatch: MonkeyPatch) -> None:
+def test_os_environment_does_not_override_notification_script_env(
+    monkeypatch: MonkeyPatch,
+) -> None:
     """Regression test for Werk #7339"""
     monkeypatch.setattr(os, "environ", {"NOTIFY_CONTACTEMAIL": ""})
     notification_context = NotificationContext({"CONTACTEMAIL": "ab@test.de"})
@@ -64,8 +66,14 @@ def test_raw_context_from_env_pipe_decoding(
         (
             {},
             {
-                "from": {"address": "from@lala.com", "display_name": "from_display_name"},
-                "reply_to": {"address": "reply@lala.com", "display_name": "reply_display_name"},
+                "from": {
+                    "address": "from@lala.com",
+                    "display_name": "from_display_name",
+                },
+                "reply_to": {
+                    "address": "reply@lala.com",
+                    "display_name": "reply_display_name",
+                },
                 "host_subject": "Check_MK: $HOSTNAME$ - $EVENT_TXT$",
                 "service_subject": "Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$",
             },
@@ -102,7 +110,8 @@ def test_rbn_groups_contacts(
 ) -> None:
     ts = Scenario()
     ts.set_option(
-        "contacts", {name: {"contactgroups": groups} for name, groups in user_groups.items()}
+        "contacts",
+        {name: {"contactgroups": groups} for name, groups in user_groups.items()},
     )
     ts.apply(monkeypatch)
     assert notify.rbn_groups_contacts([]) == set()

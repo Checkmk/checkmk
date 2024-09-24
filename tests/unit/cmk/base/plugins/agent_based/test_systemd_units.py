@@ -502,7 +502,10 @@ SEC_PER_YEAR = 31557600
         ("2 months 2 days ago", timedelta(days=2, seconds=SEC_PER_MONTH * 2)),
         ("1 year 1 month ago", timedelta(seconds=SEC_PER_MONTH + SEC_PER_YEAR)),
         ("1 year 0 month ago", timedelta(seconds=SEC_PER_YEAR)),
-        ("2 years 2 months ago", timedelta(seconds=SEC_PER_MONTH * 2 + SEC_PER_YEAR * 2)),
+        (
+            "2 years 2 months ago",
+            timedelta(seconds=SEC_PER_MONTH * 2 + SEC_PER_YEAR * 2),
+        ),
         ("0 years 12 months ago", timedelta(seconds=SEC_PER_MONTH * 12)),
     ],
 )
@@ -817,7 +820,10 @@ def test_discover_systemd_units_services_summary(
     ],
 )
 def test_check_systemd_units_services(
-    item: str, params: ParametersTypeAlias, section: Section, check_results: Sequence[Result]
+    item: str,
+    params: ParametersTypeAlias,
+    section: Section,
+    check_results: Sequence[Result],
 ) -> None:
     assert list(check_systemd_services(item, params, section)) == check_results
 
@@ -854,7 +860,10 @@ def test_check_systemd_units_services(
     ],
 )
 def test_check_systemd_units_sockets(
-    item: str, params: ParametersTypeAlias, section: Section, check_results: Sequence[Result]
+    item: str,
+    params: ParametersTypeAlias,
+    section: Section,
+    check_results: Sequence[Result],
 ) -> None:
     assert list(check_systemd_sockets(item, params, section)) == check_results
 
@@ -944,8 +953,14 @@ def test_check_systemd_units_sockets(
                 Result(state=State.OK, summary="Total: 2"),
                 Result(state=State.OK, summary="Disabled: 0"),
                 Result(state=State.OK, summary="Failed: 0"),
-                Result(state=State.OK, notice="Service 'virtualbox' activating for: 2 seconds"),
-                Result(state=State.OK, notice="Service 'actualbox' deactivating for: 4 seconds"),
+                Result(
+                    state=State.OK,
+                    notice="Service 'virtualbox' activating for: 2 seconds",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Service 'actualbox' deactivating for: 4 seconds",
+                ),
             ],
         ),
         # Activating + reloading
@@ -974,7 +989,10 @@ def test_check_systemd_units_sockets(
                 Result(state=State.OK, summary="Total: 1"),
                 Result(state=State.OK, summary="Disabled: 0"),
                 Result(state=State.OK, summary="Failed: 0"),
-                Result(state=State.OK, notice="Service 'virtualbox' activating for: 2 seconds"),
+                Result(
+                    state=State.OK,
+                    notice="Service 'virtualbox' activating for: 2 seconds",
+                ),
             ],
         ),
         # Reloading
@@ -1003,7 +1021,10 @@ def test_check_systemd_units_sockets(
                 Result(state=State.OK, summary="Total: 1"),
                 Result(state=State.OK, summary="Disabled: 0"),
                 Result(state=State.OK, summary="Failed: 0"),
-                Result(state=State.OK, notice="Service 'virtualbox' reloading for: 2 seconds"),
+                Result(
+                    state=State.OK,
+                    notice="Service 'virtualbox' reloading for: 2 seconds",
+                ),
             ],
         ),
         # Indirect

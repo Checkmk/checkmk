@@ -33,7 +33,12 @@ def check_bluecat_ntp(item, params, info):
         state = 2
     yield state, "Process is %s" % oper_states[oper_state]
 
-    sys_leap_states = {0: "no Warning", 1: "add second", 10: "subtract second", 11: "Alarm"}
+    sys_leap_states = {
+        0: "no Warning",
+        1: "add second",
+        10: "subtract second",
+        11: "Alarm",
+    }
     state = 0
     if sys_leap == 11:
         state = 2

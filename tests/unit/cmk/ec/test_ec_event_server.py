@@ -12,7 +12,12 @@ from cmk.utils.hostaddress import HostName
 from cmk.ec.config import Config, Rule, ServiceLevel
 from cmk.ec.defaults import default_rule_pack
 from cmk.ec.event import Event
-from cmk.ec.main import create_history, EventServer, StatusTableEvents, StatusTableHistory
+from cmk.ec.main import (
+    create_history,
+    EventServer,
+    StatusTableEvents,
+    StatusTableHistory,
+)
 from cmk.ec.settings import Settings
 
 RULE = Rule(

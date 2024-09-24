@@ -316,13 +316,25 @@ def test_license_compatibility_distributed_setup(
     "central_edition, central_license_state, remote_edition, expected_compatibility",
     [
         pytest.param(
-            Edition.CRE, LicenseState.LICENSED, Edition.CRE, LicensingCompatible(), id="CRE-CRE"
+            Edition.CRE,
+            LicenseState.LICENSED,
+            Edition.CRE,
+            LicensingCompatible(),
+            id="CRE-CRE",
         ),
         pytest.param(
-            Edition.CRE, LicenseState.LICENSED, Edition.CEE, LicensingCompatible(), id="CRE-CEE"
+            Edition.CRE,
+            LicenseState.LICENSED,
+            Edition.CEE,
+            LicensingCompatible(),
+            id="CRE-CEE",
         ),
         pytest.param(
-            Edition.CRE, LicenseState.LICENSED, Edition.CCE, LicensingCompatible(), id="CRE-CCE"
+            Edition.CRE,
+            LicenseState.LICENSED,
+            Edition.CCE,
+            LicensingCompatible(),
+            id="CRE-CCE",
         ),
         pytest.param(
             Edition.CRE,
@@ -332,13 +344,25 @@ def test_license_compatibility_distributed_setup(
             id="CRE-CME",
         ),
         pytest.param(
-            Edition.CEE, LicenseState.LICENSED, Edition.CRE, LicensingCompatible(), id="CEE-CRE"
+            Edition.CEE,
+            LicenseState.LICENSED,
+            Edition.CRE,
+            LicensingCompatible(),
+            id="CEE-CRE",
         ),
         pytest.param(
-            Edition.CEE, LicenseState.LICENSED, Edition.CEE, LicensingCompatible(), id="CEE-CEE"
+            Edition.CEE,
+            LicenseState.LICENSED,
+            Edition.CEE,
+            LicensingCompatible(),
+            id="CEE-CEE",
         ),
         pytest.param(
-            Edition.CEE, LicenseState.LICENSED, Edition.CCE, LicensingCompatible(), id="CEE-CCE"
+            Edition.CEE,
+            LicenseState.LICENSED,
+            Edition.CCE,
+            LicensingCompatible(),
+            id="CEE-CCE",
         ),
         pytest.param(
             Edition.CEE,

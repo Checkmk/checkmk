@@ -9,7 +9,10 @@ from collections.abc import Iterable, Mapping
 from typing import Any
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
+from cmk.base.check_legacy_includes.df import (
+    df_check_filesystem_single,
+    FILESYSTEM_DEFAULT_PARAMS,
+)
 from cmk.base.config import check_info
 
 Section = Mapping[str, Any]
@@ -40,7 +43,13 @@ def check_cadvisor_df(item, _params, parsed):
     inodes_total = parsed["inodes_total"]
     inodes_free = parsed["inodes_free"]
     return df_check_filesystem_single(
-        item, size_mb, avail_mb, reserved_mb, inodes_total, inodes_free, FILESYSTEM_DEFAULT_PARAMS
+        item,
+        size_mb,
+        avail_mb,
+        reserved_mb,
+        inodes_total,
+        inodes_free,
+        FILESYSTEM_DEFAULT_PARAMS,
     )
 
 

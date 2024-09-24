@@ -11,7 +11,7 @@ from typing import Any
 
 import cmk.utils.paths
 from cmk.utils.sectionname import SectionName
-from cmk.utils.version import edition, Edition
+from cmk.utils.version import Edition, edition
 
 from cmk.snmplib import (
     BackendSNMPTree,

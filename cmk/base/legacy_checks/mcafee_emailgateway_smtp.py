@@ -21,11 +21,14 @@ def inventory_mcafee_gateway_generic(info):
 
 def check_mcafee_emailgateway_smtp(item, params, info):
     total_connections, total_bytes, kernel_mode_blocked, kernel_mode_active = map(int, info[0])
-    return 0, "Total connections: {} ({}), Kernel blocked: {}, Kernel active: {}".format(
-        total_connections,
-        render.bytes(total_bytes),
-        kernel_mode_blocked,
-        kernel_mode_active,
+    return (
+        0,
+        "Total connections: {} ({}), Kernel blocked: {}, Kernel active: {}".format(
+            total_connections,
+            render.bytes(total_bytes),
+            kernel_mode_blocked,
+            kernel_mode_active,
+        ),
     )
 
 

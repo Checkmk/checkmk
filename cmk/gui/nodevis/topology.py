@@ -129,12 +129,16 @@ class NetworkTopology(Icon):
             return None
 
         url = makeuri_contextless(
-            request, [("host_regex", f"{row['host_name']}$")], filename="network_topology.py"
+            request,
+            [("host_regex", f"{row['host_name']}$")],
+            filename="network_topology.py",
         )
         return "aggr", _("Network topology"), url
 
 
-def _delete_topology_configuration(topology_configuration: TopologyConfiguration) -> None:
+def _delete_topology_configuration(
+    topology_configuration: TopologyConfiguration,
+) -> None:
     query_identifier = TopologyQueryIdentifier(
         topology_configuration.type, topology_configuration.filter
     )
@@ -498,7 +502,10 @@ class ABCTopologyNodeDataGenerator:
         if total_nodes > self._topology_configuration.filter.growth_auto_max_nodes:
             raise MKGrowthInterruption(
                 _("Growth interrupted %d/%d")
-                % (total_nodes, self._topology_configuration.filter.growth_auto_max_nodes)
+                % (
+                    total_nodes,
+                    self._topology_configuration.filter.growth_auto_max_nodes,
+                )
             )
 
     @abc.abstractmethod
@@ -750,7 +757,13 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
         result: dict[str, Any] = {}
         if extra_info:
             core_values = {}
-            for what in ("service", "hostname", "state", "num_services_warn", "num_services_crit"):
+            for what in (
+                "service",
+                "hostname",
+                "state",
+                "num_services_warn",
+                "num_services_crit",
+            ):
                 if (value := extra_info.get(what)) is not None:
                     core_values[what] = value
             if "state" in core_values and "service" not in core_values:
@@ -799,9 +812,10 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
                     name=network_object.get("name", node_id),
                     metadata=network_object.get("metadata", {}),
                 )
-                for (source, target), metadata in self._network_data.connections_by_id.get(
-                    node_id, []
-                ):
+                for (
+                    source,
+                    target,
+                ), metadata in self._network_data.connections_by_id.get(node_id, []):
                     if source == node_id:
                         topology_node.outgoing.add(target)
                     else:
@@ -865,7 +879,10 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
 
         # Depending on the configuration, remove service nodes and link hosts directly
         for node_id, node in list(self._topology_nodes.items()):
-            if node.type not in (NodeType.TOPOLOGY_SERVICE, NodeType.TOPOLOGY_UNKNOWN_SERVICE):
+            if node.type not in (
+                NodeType.TOPOLOGY_SERVICE,
+                NodeType.TOPOLOGY_UNKNOWN_SERVICE,
+            ):
                 continue
 
             visibility = general_service_visibility
@@ -876,9 +893,8 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
             if core_entity is not None:
                 host_id = self._network_data.hostname.get(core_entity[0])
                 if host_id and (
-                    custom_settings := self._topology_configuration.frontend.custom_node_settings.get(
-                        host_id
-                    )
+                    custom_settings
+                    := self._topology_configuration.frontend.custom_node_settings.get(host_id)
                 ):
                     visibility = custom_settings.get("show_services", general_service_visibility)
             if visibility == "all":
@@ -1059,7 +1075,9 @@ class Topology:
         return computed_layers
 
     def _combine_results(
-        self, computed_layers: dict[str, ABCTopologyNodeDataGenerator], merge_nodes: bool
+        self,
+        computed_layers: dict[str, ABCTopologyNodeDataGenerator],
+        merge_nodes: bool,
     ) -> tuple[TopologyNodes, dict[str, Any]]:
         node_specific_infos: dict[str, Any] = {}
 
@@ -1553,7 +1571,9 @@ def cleanup_topology_layouts() -> None:
     last_run.touch(exist_ok=True)
 
 
-def _create_filter_configuration_from_hash(hash_value: str) -> TopologyFilterConfiguration | None:
+def _create_filter_configuration_from_hash(
+    hash_value: str,
+) -> TopologyFilterConfiguration | None:
     # Try to create filter- and frontend configuration from this hash
     # This is quite ugly and will vanish once we have a better mechanism to save layouts
     all_query_ids_by_hash = {y: x for x, y in _all_settings().items()}
@@ -1739,7 +1759,9 @@ def _get_dynamic_layer_ids(
     return list(dynamic_layer_ids)
 
 
-def _get_hostnames_from_core(topology_configuration: TopologyConfiguration) -> set[HostName]:
+def _get_hostnames_from_core(
+    topology_configuration: TopologyConfiguration,
+) -> set[HostName]:
     site_id = (
         livestatus.SiteId(request.get_str_input_mandatory("site"))
         if request.get_str_input("site")
@@ -1749,7 +1771,9 @@ def _get_hostnames_from_core(topology_configuration: TopologyConfiguration) -> s
         return {x[0] for x in sites.live().query(topology_configuration.filter.query)}
 
 
-def _compute_topology_response(topology_configuration: TopologyConfiguration) -> dict[str, Any]:
+def _compute_topology_response(
+    topology_configuration: TopologyConfiguration,
+) -> dict[str, Any]:
     # logger.warning(f"Initial topology {pprint.pformat(topology_configuration.frontend)}")
     ds_config = topology_configuration.frontend.datasource_configuration
     reference = Topology(topology_configuration, ds_config.reference)
@@ -1767,7 +1791,10 @@ def _compute_topology_response(topology_configuration: TopologyConfiguration) ->
     else:
         # Always reset classes used in frontend
         for node in reference.node_specific_infos.values():
-            node["topology_classes"] = [["only_in_ref", False], ["missing_in_ref", False]]
+            node["topology_classes"] = [
+                ["only_in_ref", False],
+                ["missing_in_ref", False],
+            ]
 
     result = _compute_topology_result(
         topology_configuration,

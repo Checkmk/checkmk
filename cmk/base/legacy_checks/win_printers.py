@@ -60,7 +60,8 @@ def parse_win_printers(string_table: StringTable) -> Section:
             continue
         try:
             parsed.setdefault(
-                " ".join(line[:-3]), PrinterQueue(int(line[-3]), int(line[-2]), int(line[-1]))
+                " ".join(line[:-3]),
+                PrinterQueue(int(line[-3]), int(line[-2]), int(line[-1])),
             )
         except ValueError:
             pass

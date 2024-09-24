@@ -189,7 +189,9 @@ class ConfigDomainRegistry(cmk.utils.plugin_registry.Registry[type[ABCConfigDoma
 config_domain_registry = ConfigDomainRegistry()
 
 
-def generate_hosts_to_update_settings(hostnames: Iterable[HostName]) -> SerializedSettings:
+def generate_hosts_to_update_settings(
+    hostnames: Iterable[HostName],
+) -> SerializedSettings:
     return {"hosts_to_update": hostnames}
 
 

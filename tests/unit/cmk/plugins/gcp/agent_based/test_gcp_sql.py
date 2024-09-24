@@ -76,7 +76,8 @@ class TestDiscoverReplication(TestDiscover):
         cloud_sql_stringtable.extend(generate_stringtable("follower", 0.42, CLOUDSQL))
 
         yield from discover_gcp_sql_replication(
-            section_gcp_service_cloud_sql=parse(cloud_sql_stringtable), section_gcp_assets=assets
+            section_gcp_service_cloud_sql=parse(cloud_sql_stringtable),
+            section_gcp_assets=assets,
         )
 
 

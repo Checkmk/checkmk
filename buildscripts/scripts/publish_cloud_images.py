@@ -204,7 +204,8 @@ class AWSPublisher(CloudPublisher):
             ChangeSetName=f"Add new version {self.version} by {self.build_tag}",
         )
         await asyncio.wait_for(
-            self.update_successful(response["ChangeSetId"]), self.SECONDS_TO_TIMEOUT_PUBLISH_PROCESS
+            self.update_successful(response["ChangeSetId"]),
+            self.SECONDS_TO_TIMEOUT_PUBLISH_PROCESS,
         )
 
     def get_ami_image_id(self) -> str:

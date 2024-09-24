@@ -10,7 +10,12 @@ import pytest
 
 from tests.unit.checks.checktestlib import mock_item_state
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.threepar_cpgs import (
     check_threepar_cpgs,
     check_threepar_cpgs_usage,
@@ -180,7 +185,12 @@ def test_discover_threepar_cpgs_usage(
             ],
             "SSD_R6 SDUsage",
             [
-                Metric("fs_used", 37890.0, levels=(35840.0, 40320.0), boundaries=(0.0, 44800.0)),
+                Metric(
+                    "fs_used",
+                    37890.0,
+                    levels=(35840.0, 40320.0),
+                    boundaries=(0.0, 44800.0),
+                ),
                 Metric("fs_free", 6910.0, boundaries=(0.0, None)),
                 Metric(
                     "fs_used_percent",
@@ -197,7 +207,10 @@ def test_discover_threepar_cpgs_usage(
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +2.19 MiB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +<0.01%"),
                 Metric("trend", 2.1894549603407376),
-                Result(state=State.OK, summary="Time left until disk full: 8 years 236 days"),
+                Result(
+                    state=State.OK,
+                    summary="Time left until disk full: 8 years 236 days",
+                ),
             ],
             id="If the used space is above the WARN levels, the result is WARN.",
         ),
@@ -231,7 +244,10 @@ def test_discover_threepar_cpgs_usage(
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +1.14 GiB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +<0.01%"),
                 Metric("trend", 1165.0003745058023),
-                Result(state=State.OK, summary="Time left until disk full: 85 days 20 hours"),
+                Result(
+                    state=State.OK,
+                    summary="Time left until disk full: 85 days 20 hours",
+                ),
             ],
             id="If the used space is above the CRIT levels, the result is CRIT.",
         ),

@@ -9,7 +9,14 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Age, Dictionary, Integer, MonitoringState, TextInput, Tuple
+from cmk.gui.valuespec import (
+    Age,
+    Dictionary,
+    Integer,
+    MonitoringState,
+    TextInput,
+    Tuple,
+)
 
 
 def _parameter_valuespec_graylog_sidecars():
@@ -32,10 +39,14 @@ def _parameter_valuespec_graylog_sidecars():
                     title=_("Total number of collectors in state running lower level"),
                     elements=[
                         Integer(
-                            title=_("Warning if less then"), unit="collectors", default_value=1
+                            title=_("Warning if less then"),
+                            unit="collectors",
+                            default_value=1,
                         ),
                         Integer(
-                            title=_("Critical if less then"), unit="collectors", default_value=0
+                            title=_("Critical if less then"),
+                            unit="collectors",
+                            default_value=0,
                         ),
                     ],
                 ),

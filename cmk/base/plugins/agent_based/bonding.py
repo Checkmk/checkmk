@@ -171,7 +171,8 @@ def check_bonding(  # pylint: disable=too-many-branches
         yield Result(state=State.OK, summary=f"Active: {active_if}")
     else:
         yield Result(
-            state=State.WARN, summary=f"Active: {active_if} (expected is {expected_active})"
+            state=State.WARN,
+            summary=f"Active: {active_if} (expected is {expected_active})",
         )
 
 

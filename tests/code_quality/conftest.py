@@ -38,5 +38,6 @@ def changed_files(request: pytest.FixtureRequest) -> ChangedFiles:
     if not test_all_files and not files:
         pytest.skip()
     return ChangedFiles(
-        test_all_files=test_all_files, file_paths={Path("../" + f).resolve() for f in files}
+        test_all_files=test_all_files,
+        file_paths={Path("../" + f).resolve() for f in files},
     )

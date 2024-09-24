@@ -127,10 +127,13 @@ def check_emcvnx_info(item, _no_params, parsed):
     output, errors = parsed
 
     if errors:
-        yield 2, (
-            "Error(s) while parsing the output. This may effect the "
-            "discovery of other emcvnx services. Please check your naviseccli "
-            "configuration. Errors are: %s" % (" ".join(errors))
+        yield (
+            2,
+            (
+                "Error(s) while parsing the output. This may effect the "
+                "discovery of other emcvnx services. Please check your naviseccli "
+                "configuration. Errors are: %s" % (" ".join(errors))
+            ),
         )
 
     for key, value in output["info"]:

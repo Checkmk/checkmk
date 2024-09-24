@@ -197,7 +197,12 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
                                     item=make_simple_link(
                                         makeuri_contextless(
                                             request,
-                                            [("mode", self._mode_type.edit_mode_name())],
+                                            [
+                                                (
+                                                    "mode",
+                                                    self._mode_type.edit_mode_name(),
+                                                )
+                                            ],
                                         )
                                     ),
                                     is_shortcut=True,
@@ -234,7 +239,8 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
         ident = request.get_ascii_input("_delete")
         if ident not in entries:
             raise MKUserError(
-                "_delete", _("This %s does not exist.") % self._mode_type.name_singular()
+                "_delete",
+                _("This %s does not exist.") % self._mode_type.name_singular(),
             )
 
         if ident not in self._store.filter_editable_entries(entries):
@@ -338,7 +344,8 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
                 entry = self._store.filter_editable_entries(self._store.load_for_reading())[ident]
             except KeyError:
                 raise MKUserError(
-                    "ident", _("This %s does not exist.") % self._mode_type.name_singular()
+                    "ident",
+                    _("This %s does not exist.") % self._mode_type.name_singular(),
                 )
 
             self._new = False
@@ -352,7 +359,8 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
                 entry = self._store.filter_editable_entries(self._store.load_for_reading())[clone]
             except KeyError:
                 raise MKUserError(
-                    "clone", _("This %s does not exist.") % self._mode_type.name_singular()
+                    "clone",
+                    _("This %s does not exist.") % self._mode_type.name_singular(),
                 )
 
             self._new = True
@@ -367,7 +375,10 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
     def title(self) -> str:
         if self._new:
             return _("Add %s") % self._mode_type.name_singular()
-        return _("Edit %s: %s") % (self._mode_type.name_singular(), self._entry["title"])
+        return _("Edit %s: %s") % (
+            self._mode_type.name_singular(),
+            self._entry["title"],
+        )
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
@@ -388,7 +399,10 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
             show_more_keys=["docu_url"],
             headers=[
                 (_("General properties"), general_keys),
-                (_("%s properties") % self._mode_type.name_singular().title(), individual_keys),
+                (
+                    _("%s properties") % self._mode_type.name_singular().title(),
+                    individual_keys,
+                ),
             ],
             render="form",
         )
@@ -501,7 +515,8 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
 
         if not self._new and self._ident not in self._store.filter_editable_entries(entries):
             raise MKUserError(
-                "ident", _("You are not allowed to edit this %s.") % self._mode_type.name_singular()
+                "ident",
+                _("You are not allowed to edit this %s.") % self._mode_type.name_singular(),
             )
 
         if self._new:

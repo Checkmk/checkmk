@@ -119,7 +119,11 @@ def inventory_safenet_ntls_links(parsed):
 def check_safenet_ntls_links(_no_item, params, parsed):
     # NOTE: these can be predictive levels!
     return check_levels(
-        parsed["links"], "connections", params["levels"], unit="links", infoname="Connections"
+        parsed["links"],
+        "connections",
+        params["levels"],
+        unit="links",
+        infoname="Connections",
     )
 
 

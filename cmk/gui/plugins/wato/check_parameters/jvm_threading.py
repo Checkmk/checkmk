@@ -38,7 +38,10 @@ def _parameter_valuespec_jvm_threading():
                     default_value=None,
                 ),
             ),
-            ("daemonthreadcount_levels", Levels(title=_("Maximal number of daemon threads"))),
+            (
+                "daemonthreadcount_levels",
+                Levels(title=_("Maximal number of daemon threads")),
+            ),
         ],
     )
 

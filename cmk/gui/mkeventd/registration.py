@@ -35,7 +35,10 @@ from ._find_usage import (
 )
 from ._openapi import register as openapi_register
 from ._sidebar_snapin import SidebarSnapinEventConsole
-from .autocompleters import service_levels_autocompleter, syslog_facilities_autocompleter
+from .autocompleters import (
+    service_levels_autocompleter,
+    syslog_facilities_autocompleter,
+)
 from .config_domain import ConfigDomainEventConsole
 from .icon import MkeventdIcon
 from .permission_section import PermissionSectionEventConsole

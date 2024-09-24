@@ -10,7 +10,10 @@
 
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register, TableRow
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    InventoryResult,
+    StringTable,
+)
 
 Section = dict[str, dict[str, str]]
 

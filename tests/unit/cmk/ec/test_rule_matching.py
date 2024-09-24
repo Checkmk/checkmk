@@ -275,7 +275,10 @@ def test_match_outcome(
     [
         (MatchSuccess(cancelling=False, match_groups=MatchGroups()), {}),
         (MatchFailure(reason="The site does not match."), {"match_site": []}),
-        (MatchSuccess(cancelling=False, match_groups=MatchGroups()), {"match_site": ["NO_SITE"]}),
+        (
+            MatchSuccess(cancelling=False, match_groups=MatchGroups()),
+            {"match_site": ["NO_SITE"]},
+        ),
         (MatchFailure(reason="The site does not match."), {"match_site": ["dong"]}),
     ],
 )
@@ -288,7 +291,11 @@ def test_match_site(rule: Rule, result: MatchResult) -> None:
 @pytest.mark.parametrize(
     "result,rule,event",
     [
-        (MatchSuccess(cancelling=False, match_groups=MatchGroups()), {}, {"host": "abc"}),
+        (
+            MatchSuccess(cancelling=False, match_groups=MatchGroups()),
+            {},
+            {"host": "abc"},
+        ),
         # TODO weird the empty string in the rule seems to be interpreted as 'no match_host specified', which is clearly incorrect.
         (
             MatchSuccess(cancelling=False, match_groups=MatchGroups()),
@@ -347,7 +354,11 @@ def test_match_host(result: MatchResult, rule: Rule, event: Event) -> None:
 @pytest.mark.parametrize(
     "result,rule,event",
     [
-        (MatchSuccess(cancelling=False, match_groups=MatchGroups()), {}, {"ipaddress": "10.3.3.4"}),
+        (
+            MatchSuccess(cancelling=False, match_groups=MatchGroups()),
+            {},
+            {"ipaddress": "10.3.3.4"},
+        ),
         (
             MatchSuccess(cancelling=False, match_groups=MatchGroups()),
             {"match_ipaddress": "10.3.3.4"},
@@ -406,7 +417,11 @@ def test_match_ipaddress(result: MatchResult, rule: Rule, event: Event) -> None:
 @pytest.mark.parametrize(
     "result,rule,event",
     [
-        (MatchSuccess(cancelling=False, match_groups=MatchGroups()), {}, {"facility": 1}),
+        (
+            MatchSuccess(cancelling=False, match_groups=MatchGroups()),
+            {},
+            {"facility": 1},
+        ),
         (
             MatchSuccess(cancelling=False, match_groups=MatchGroups()),
             {"match_facility": 1},

@@ -22,7 +22,12 @@ def check_infoblox_dns_stats(_no_item, _no_params, info):
     return check_infoblox_statistics(
         "dns",
         [
-            ("successes", successes, "Since DNS process started", "successful responses"),
+            (
+                "successes",
+                successes,
+                "Since DNS process started",
+                "successful responses",
+            ),
             ("referrals", referrals, "Since DNS process started", "referrals"),
             (
                 "recursion",

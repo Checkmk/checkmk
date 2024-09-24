@@ -11,8 +11,17 @@ from cmk.gui.config import active_config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _l
-from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
-from cmk.gui.utils.autocompleter_config import AutocompleterConfig, GroupAutocompleterConfig
+from cmk.gui.type_defs import (
+    FilterHeader,
+    FilterHTTPVariables,
+    Row,
+    Rows,
+    VisualContext,
+)
+from cmk.gui.utils.autocompleter_config import (
+    AutocompleterConfig,
+    GroupAutocompleterConfig,
+)
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.visuals.filter import (
     AjaxDropdownFilter,
@@ -326,13 +335,17 @@ class FilterECServiceLevelRange(Filter):
         html.open_div(class_="service_level min")
         html.write_text("From")
         html.dropdown(
-            self.lower_bound_varname, selection, deflt=value.get(self.lower_bound_varname, "")
+            self.lower_bound_varname,
+            selection,
+            deflt=value.get(self.lower_bound_varname, ""),
         )
         html.close_div()
         html.open_div(class_="service_level max")
         html.write_text("To")
         html.dropdown(
-            self.upper_bound_varname, selection, deflt=value.get(self.upper_bound_varname, "")
+            self.upper_bound_varname,
+            selection,
+            deflt=value.get(self.upper_bound_varname, ""),
         )
         html.close_div()
 

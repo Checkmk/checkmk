@@ -25,7 +25,14 @@ pytestmark = pytest.mark.checks
                 "api_token": "token",
                 "client_secret": "clientsecret",
             },
-            ["http://cloud.com", "102", "token", "clientID", "clientsecret", "http://redirect.com"],
+            [
+                "http://cloud.com",
+                "102",
+                "token",
+                "clientID",
+                "clientsecret",
+                "http://redirect.com",
+            ],
             id="with explicit password",
         ),
         pytest.param(

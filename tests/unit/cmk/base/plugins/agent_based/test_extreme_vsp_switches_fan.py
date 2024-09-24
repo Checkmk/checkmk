@@ -6,7 +6,12 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.extreme_vsp_switches_fan import (
     check_vsp_switches_fan,
@@ -101,7 +106,11 @@ def test_check_vsp_switches_fan(
         list(
             check_vsp_switches_fan(
                 item=item,
-                params={"lower": (2000, 1000), "upper": (8000, 8400), "output_metrics": True},
+                params={
+                    "lower": (2000, 1000),
+                    "upper": (8000, 8400),
+                    "output_metrics": True,
+                },
                 section=parse_vsp_switches_fan(string_table),
             )
         )

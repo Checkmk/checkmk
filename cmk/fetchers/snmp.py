@@ -41,7 +41,10 @@ def get_force_stored_walks() -> bool:
 
 
 def make_backend(
-    snmp_config: SNMPHostConfig, logger: logging.Logger, *, use_cache: bool | None = None
+    snmp_config: SNMPHostConfig,
+    logger: logging.Logger,
+    *,
+    use_cache: bool | None = None,
 ) -> SNMPBackend:
     if use_cache is None:
         use_cache = get_force_stored_walks()

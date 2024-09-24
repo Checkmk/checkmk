@@ -40,7 +40,9 @@ def eventd_configuration() -> ec.ConfigFromWATO:
     return ec.load_config(load_ec_settings())
 
 
-def dissolve_mkp_proxies(rule_packs: Sequence[ec.ECRulePack]) -> Iterator[ec.ECRulePackSpec]:
+def dissolve_mkp_proxies(
+    rule_packs: Sequence[ec.ECRulePack],
+) -> Iterator[ec.ECRulePackSpec]:
     for rule_pack in rule_packs:
         if isinstance(rule_pack, ec.MkpRulePackProxy):
             yield rule_pack.get_rule_pack_spec()

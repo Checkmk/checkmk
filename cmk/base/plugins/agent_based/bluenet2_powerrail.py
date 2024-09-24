@@ -9,7 +9,15 @@ from cmk.plugins.lib.elphase import check_elphase
 from cmk.plugins.lib.humidity import check_humidity
 from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
-from .agent_based_api.v1 import contains, OIDEnd, register, Result, Service, SNMPTree, State
+from .agent_based_api.v1 import (
+    contains,
+    OIDEnd,
+    register,
+    Result,
+    Service,
+    SNMPTree,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 #   .--output--------------------------------------------------------------.
@@ -184,7 +192,13 @@ def parse_bluenet2_powerrail(  # pylint: disable=too-many-branches
             return "Master"
         return "PDU %s" % pdu_info
 
-    oid_sections = [(0, "inlet"), (1, "phases"), (2, "rcm_phases"), (4, "sockets"), (5, "fuses")]
+    oid_sections = [
+        (0, "inlet"),
+        (1, "phases"),
+        (2, "rcm_phases"),
+        (4, "sockets"),
+        (5, "fuses"),
+    ]
 
     pre_parsed: dict[str, dict[str, dict[str, dict[str, str]]]] = {}
     for oidend, _guid, _name, _friendly_name in string_table[0]:

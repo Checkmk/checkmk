@@ -11,7 +11,15 @@ import os
 import pprint
 import re
 import subprocess
-from collections.abc import Callable, Container, Generator, Iterable, Iterator, Mapping, Sequence
+from collections.abc import (
+    Callable,
+    Container,
+    Generator,
+    Iterable,
+    Iterator,
+    Mapping,
+    Sequence,
+)
 from enum import auto, Enum
 from pathlib import Path
 from typing import Any, assert_never, cast, Final
@@ -22,7 +30,10 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import LabelGroups, Labels
 from cmk.utils.object_diff import make_diff, make_diff_text
 from cmk.utils.regex import escape_regex_chars
-from cmk.utils.rulesets.conditions import HostOrServiceConditionRegex, HostOrServiceConditions
+from cmk.utils.rulesets.conditions import (
+    HostOrServiceConditionRegex,
+    HostOrServiceConditions,
+)
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import (
     RuleConditionsSpec,
@@ -33,7 +44,7 @@ from cmk.utils.rulesets.ruleset_matcher import (
     TagConditionNE,
 )
 from cmk.utils.tags import TagGroupID, TagID
-from cmk.utils.version import edition, Edition
+from cmk.utils.version import Edition, edition
 
 # Tolerate this for 1.6. Should be cleaned up in future versions,
 # e.g. by trying to move the common code to a common place
@@ -50,7 +61,9 @@ from cmk.gui.log import logger
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import DropdownChoiceEntries, ValueSpec
 
-from cmk.server_side_calls_backend.config_processing import process_configuration_to_parameters
+from cmk.server_side_calls_backend.config_processing import (
+    process_configuration_to_parameters,
+)
 
 from .changes import add_change
 from .check_mk_automations import get_services_labels
@@ -285,7 +298,9 @@ class RuleConditions:
                     self.host_name,
                     dict,
                 )
-                else [*self.host_name] if self.host_name is not None else None
+                else [*self.host_name]
+                if self.host_name is not None
+                else None
             ),
             service_description=(
                 self.service_description.copy()
@@ -293,7 +308,9 @@ class RuleConditions:
                     self.service_description,
                     dict,
                 )
-                else [*self.service_description] if self.service_description is not None else None
+                else [*self.service_description]
+                if self.service_description is not None
+                else None
             ),
             service_label_groups=self.service_label_groups,
         )
@@ -395,7 +412,10 @@ class RulesetCollection:
                 yield varname, loaded_file_config.get(varname, [])
 
     def replace_folder_ruleset_config(
-        self, folder: Folder, ruleset_config: Sequence[RuleSpec[object]], varname: RulesetName
+        self,
+        folder: Folder,
+        ruleset_config: Sequence[RuleSpec[object]],
+        varname: RulesetName,
     ) -> None:
         if varname in self._rulesets:
             self._rulesets[varname].replace_folder_config(folder, ruleset_config)
@@ -468,7 +488,8 @@ class RulesetCollection:
             if isinstance(rule.value, dict)  # this is true for all _FormSpec_ SSC rules.
         ):
             subprocess.check_call(
-                ["cmk", "--automation", "update-passwords-merged-file"], stdout=subprocess.DEVNULL
+                ["cmk", "--automation", "update-passwords-merged-file"],
+                stdout=subprocess.DEVNULL,
             )
 
     def exists(self, name: RulesetName) -> bool:
@@ -548,7 +569,9 @@ class AllRulesets(RulesetCollection):
         self._save_folder(folder, self._rulesets, self._unknown_rulesets)
 
 
-def visible_rulesets(rulesets: Mapping[RulesetName, Ruleset]) -> Mapping[RulesetName, Ruleset]:
+def visible_rulesets(
+    rulesets: Mapping[RulesetName, Ruleset],
+) -> Mapping[RulesetName, Ruleset]:
     if edition() is not Edition.CSE:
         return rulesets
 
@@ -683,7 +706,9 @@ class Ruleset:
             for rule_index, rule in enumerate(folder_rules):
                 rules.append((rule.folder, rule_index, rule))
         return sorted(
-            rules, key=lambda x: (x[0].path().split("/"), len(rules) - x[1]), reverse=True
+            rules,
+            key=lambda x: (x[0].path().split("/"), len(rules) - x[1]),
+            reverse=True,
         )
 
     def get_folder_rules(self, folder: Folder) -> list[Rule]:
@@ -1517,7 +1542,9 @@ def _match_one_of_search_expression(
     return False
 
 
-def service_description_to_condition(service_description: str) -> HostOrServiceConditionRegex:
+def service_description_to_condition(
+    service_description: str,
+) -> HostOrServiceConditionRegex:
     r"""Packs a service description to be used as explicit match condition
 
     >>> service_description_to_condition("abc")
@@ -1575,7 +1602,8 @@ class EnabledDisabledServicesEditor:
             ruleset = rulesets.get("ignored_services")
         except KeyError:
             ruleset = Ruleset(
-                "ignored_services", ruleset_matcher.get_tag_to_group_map(active_config.tags)
+                "ignored_services",
+                ruleset_matcher.get_tag_to_group_map(active_config.tags),
             )
 
         modified_folders = []
@@ -1664,7 +1692,9 @@ class EnabledDisabledServicesEditor:
         return None
 
 
-def find_timeperiod_usage_in_host_and_service_rules(time_period_name: str) -> list[TimeperiodUsage]:
+def find_timeperiod_usage_in_host_and_service_rules(
+    time_period_name: str,
+) -> list[TimeperiodUsage]:
     used_in: list[TimeperiodUsage] = []
     rulesets = AllRulesets.load_all_rulesets()
     for varname, ruleset in rulesets.get_rulesets().items():

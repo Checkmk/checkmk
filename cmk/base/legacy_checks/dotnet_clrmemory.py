@@ -22,7 +22,12 @@ dotnet_clrmemory_defaultlevels = {
 
 def check_dotnet_clrmemory(item, params, parsed):
     yield from wmi_yield_raw_fraction(
-        parsed[""], item, "PercentTimeinGC", infoname="Time in GC", perfvar="percent", levels=params
+        parsed[""],
+        item,
+        "PercentTimeinGC",
+        infoname="Time in GC",
+        perfvar="percent",
+        levels=params,
     )
 
 

@@ -42,7 +42,11 @@ def show_filter_form(
         filter_list_id = VisualFilterListWithAddPopup.filter_list_id(varprefix)
         filter_list_selected_id = filter_list_id + "_selected"
         _show_filter_form_buttons(
-            varprefix, filter_list_id, vs_filters._page_request_vars, page_name, reset_ajax_page
+            varprefix,
+            filter_list_id,
+            vs_filters._page_request_vars,
+            page_name,
+            reset_ajax_page,
         )
 
         html.open_div(id_=filter_list_selected_id, class_=["side_popup_content"])

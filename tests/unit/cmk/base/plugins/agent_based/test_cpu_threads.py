@@ -7,10 +7,21 @@ from typing import Any
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.cpu import parse_cpu
-from cmk.base.plugins.agent_based.cpu_threads import check_cpu_threads, discover_cpu_threads
+from cmk.base.plugins.agent_based.cpu_threads import (
+    check_cpu_threads,
+    discover_cpu_threads,
+)
 
 from cmk.plugins.lib.cpu import Load, ProcessorType, Section, Threads
 

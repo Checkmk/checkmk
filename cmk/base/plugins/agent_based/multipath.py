@@ -11,7 +11,15 @@ from typing_extensions import TypedDict
 
 from cmk.plugins.lib import multipath
 
-from .agent_based_api.v1 import check_levels, regex, register, render, Result, Service, State
+from .agent_based_api.v1 import (
+    check_levels,
+    regex,
+    register,
+    render,
+    Result,
+    Service,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
@@ -42,7 +50,12 @@ def parse_multipath(  # pylint: disable=too-many-branches
         (regex(r"^([^\s]+)\s\(([^)]+)\)"), 2, 1, None),  # 2.
         (regex(r"^[a-zA-Z0-9_]+$"), 0, None, None),  # 3.
         (regex(r"^([0-9a-z]{33}|[0-9a-z]{49})\s?(dm.[0-9]+).*$"), 1, None, 2),  # 4.
-        (regex(r"^[a-zA-Z0-9_]+(dm-[0-9]+).*$"), 0, None, 1),  # 5. Remove this line in 1.2.0
+        (
+            regex(r"^[a-zA-Z0-9_]+(dm-[0-9]+).*$"),
+            0,
+            None,
+            1,
+        ),  # 5. Remove this line in 1.2.0
         (regex(r"^([-.a-zA-Z0-9_ :]+)\s?(dm-[0-9]+).*$"), 1, None, 2),  # 6. and 7.
     ]
 

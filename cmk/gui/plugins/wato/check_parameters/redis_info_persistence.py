@@ -18,13 +18,15 @@ def _parameter_valuespec_redis_info_persistence():
             (
                 "rdb_last_bgsave_state",
                 MonitoringState(
-                    title=_("State when last RDB save operation was faulty"), default_value=1
+                    title=_("State when last RDB save operation was faulty"),
+                    default_value=1,
                 ),
             ),
             (
                 "aof_last_rewrite_state",
                 MonitoringState(
-                    title=_("State when Last AOF rewrite operation was faulty"), default_value=1
+                    title=_("State when Last AOF rewrite operation was faulty"),
+                    default_value=1,
                 ),
             ),
             (

@@ -37,7 +37,13 @@ from cmk.gui.painter_options import (
     PainterOptions,
 )
 from cmk.gui.site_config import get_site_config
-from cmk.gui.type_defs import ColumnName, PainterParameters, Row, SorterName, VisualLinkSpec
+from cmk.gui.type_defs import (
+    ColumnName,
+    PainterParameters,
+    Row,
+    SorterName,
+    VisualLinkSpec,
+)
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.output_funnel import output_funnel
@@ -578,7 +584,11 @@ class PainterSvcPluginOutput(Painter):
 
     @property
     def columns(self) -> Sequence[ColumnName]:
-        return ["service_plugin_output", "service_custom_variables", "service_check_command"]
+        return [
+            "service_plugin_output",
+            "service_custom_variables",
+            "service_check_command",
+        ]
 
     @property
     def sorter(self) -> SorterName:
@@ -997,7 +1007,9 @@ class PainterSvcStateAge(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_age(
-            row["service_last_state_change"], row["service_has_been_checked"] == 1, 60 * 10
+            row["service_last_state_change"],
+            row["service_has_been_checked"] == 1,
+            60 * 10,
         )
 
 
@@ -1272,7 +1284,10 @@ class PainterSvcAttempt(Painter):
         return ["service_current_attempt", "service_max_check_attempts"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, "%d/%d" % (row["service_current_attempt"], row["service_max_check_attempts"]))
+        return (
+            None,
+            "%d/%d" % (row["service_current_attempt"], row["service_max_check_attempts"]),
+        )
 
 
 class PainterSvcNormalInterval(Painter):
@@ -1676,7 +1691,12 @@ class PainterSvcCustomNotes(Painter):
 
     @property
     def columns(self) -> Sequence[ColumnName]:
-        return ["host_name", "host_address", "service_description", "service_plugin_output"]
+        return [
+            "host_name",
+            "host_address",
+            "service_description",
+            "service_plugin_output",
+        ]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_custom_notes("service", row)
@@ -2228,7 +2248,10 @@ class PainterHostAttempt(Painter):
         return ["host_current_attempt", "host_max_check_attempts"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, "%d/%d" % (row["host_current_attempt"], row["host_max_check_attempts"]))
+        return (
+            None,
+            "%d/%d" % (row["host_current_attempt"], row["host_max_check_attempts"]),
+        )
 
 
 class PainterHostNormalInterval(Painter):
@@ -2496,7 +2519,12 @@ class PainterHost(Painter):
 
     @property
     def columns(self) -> Sequence[ColumnName]:
-        return ["host_name", "host_state", "host_has_been_checked", "host_scheduled_downtime_depth"]
+        return [
+            "host_name",
+            "host_state",
+            "host_has_been_checked",
+            "host_scheduled_downtime_depth",
+        ]
 
     @property
     def sorter(self) -> SorterName:
@@ -2511,9 +2539,18 @@ class PainterHost(Painter):
                     choices=[
                         ("colorize_up", _("Colorize background if host is up")),
                         ("colorize_down", _("Colorize background if host is down")),
-                        ("colorize_unreachable", _("Colorize background if host unreachable")),
-                        ("colorize_pending", _("Colorize background if host is pending")),
-                        ("colorize_downtime", _("Colorize background if host is downtime")),
+                        (
+                            "colorize_unreachable",
+                            _("Colorize background if host unreachable"),
+                        ),
+                        (
+                            "colorize_pending",
+                            _("Colorize background if host is pending"),
+                        ),
+                        (
+                            "colorize_downtime",
+                            _("Colorize background if host is downtime"),
+                        ),
                     ],
                     title=_("Coloring"),
                     help=_(
@@ -2648,7 +2685,11 @@ class PainterHostAddresses(Painter):
 
     @property
     def columns(self) -> Sequence[ColumnName]:
-        return ["host_address", "host_custom_variable_names", "host_custom_variable_values"]
+        return [
+            "host_address",
+            "host_custom_variable_names",
+            "host_custom_variable_values",
+        ]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         custom_vars = dict(
@@ -2824,7 +2865,11 @@ class PainterNumProblems(Painter):
 
     @property
     def columns(self) -> Sequence[ColumnName]:
-        return ["host_num_services", "host_num_services_ok", "host_num_services_pending"]
+        return [
+            "host_num_services",
+            "host_num_services_ok",
+            "host_num_services_pending",
+        ]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_svc_count(
@@ -3298,7 +3343,9 @@ def _paint_discovery_output(field: str, row: Row) -> CellSpec:
                 )
                 + escaping.escape_to_html(_("Disabled (configured away by admin)")),
                 "vanished": html.render_icon_button(
-                    discovery_url, _("Vanished (checked, but no longer exist)"), "services"
+                    discovery_url,
+                    _("Vanished (checked, but no longer exist)"),
+                    "services",
                 )
                 + escaping.escape_to_html(_("Vanished (checked, but no longer exist)")),
                 "unmonitored": html.render_icon_button(
@@ -3970,7 +4017,10 @@ class PainterCommentExpires(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_age(
-            row["comment_expire_time"], row["comment_expire_time"] != 0, 3600, what="future"
+            row["comment_expire_time"],
+            row["comment_expire_time"] != 0,
+            3600,
+            what="future",
         )
 
 
@@ -4117,7 +4167,10 @@ class PainterDowntimeOrigin(Painter):
         return ["downtime_origin"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, row["downtime_origin"] == 1 and _("configuration") or _("command"))
+        return (
+            None,
+            row["downtime_origin"] == 1 and _("configuration") or _("command"),
+        )
 
 
 class PainterDowntimeRecurring(Painter):
@@ -4993,7 +5046,10 @@ class ABCPainterTagsWithTitles(Painter, abc.ABC):
             tag_group = active_config.tags.get_tag_group(tag_group_id)
             if tag_group:
                 entries.append(
-                    (tag_group.title, dict(tag_group.get_tag_choices()).get(tag_id, tag_id))
+                    (
+                        tag_group.title,
+                        dict(tag_group.get_tag_choices()).get(tag_id, tag_id),
+                    )
                 )
                 continue
 

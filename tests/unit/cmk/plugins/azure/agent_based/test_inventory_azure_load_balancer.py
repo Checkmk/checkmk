@@ -5,7 +5,9 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.inventory_azure_load_balancer import inventory_load_balancer
+from cmk.base.plugins.agent_based.inventory_azure_load_balancer import (
+    inventory_load_balancer,
+)
 
 from cmk.agent_based.v2 import InventoryResult, TableRow
 from cmk.plugins.azure.agent_based.azure_load_balancer import parse_load_balancer
@@ -164,8 +166,17 @@ SECTION = parse_load_balancer(
                     status_columns={},
                 ),
                 TableRow(
-                    path=["software", "applications", "azure", "load_balancers", "outbound_rules"],
-                    key_columns={"load_balancer": "az-lbe-001", "outbound_rule": "az-out-all-001"},
+                    path=[
+                        "software",
+                        "applications",
+                        "azure",
+                        "load_balancers",
+                        "outbound_rules",
+                    ],
+                    key_columns={
+                        "load_balancer": "az-lbe-001",
+                        "outbound_rule": "az-out-all-001",
+                    },
                     inventory_columns={"protocol": "All", "idle_timeout": 4},
                     status_columns={},
                 ),

@@ -310,7 +310,8 @@ def test_check_memory_fails(
             MEMINFO_SWAP_ZERO,
             [
                 Result(
-                    state=State.OK, summary="Total (RAM + Swap): 50.00% - 21.0 MiB of 42.0 MiB RAM"
+                    state=State.OK,
+                    summary="Total (RAM + Swap): 50.00% - 21.0 MiB of 42.0 MiB RAM",
                 ),
                 Metric("swap_used", 0, boundaries=(0, 0)),
                 Metric("mem_used", 22020096, boundaries=(0, 44040192)),
@@ -370,7 +371,8 @@ def test_check_memory_fails(
             MEMINFO_SWAP_ZERO,
             [
                 Result(
-                    state=State.OK, summary="Total (RAM + Swap): 50.00% - 21.0 MiB of 42.0 MiB RAM"
+                    state=State.OK,
+                    summary="Total (RAM + Swap): 50.00% - 21.0 MiB of 42.0 MiB RAM",
                 ),
                 Metric("swap_used", 0, boundaries=(0, 0)),
                 Metric("mem_used", 22020096, boundaries=(0, 44040192)),
@@ -436,7 +438,8 @@ def test_check_memory_fails(
             MEMINFO_SWAP_ZERO,
             [
                 Result(
-                    state=State.OK, summary="Total (RAM + Swap): 50.00% - 21.0 MiB of 42.0 MiB RAM"
+                    state=State.OK,
+                    summary="Total (RAM + Swap): 50.00% - 21.0 MiB of 42.0 MiB RAM",
                 ),
                 Metric("swap_used", 0, boundaries=(0, 0)),
                 Metric("mem_used", 22020096, boundaries=(0, 44040192)),
@@ -502,7 +505,8 @@ def test_check_memory_fails(
             MEMINFO_SWAP_ZERO,
             [
                 Result(
-                    state=State.OK, summary="Total (RAM + Swap): 50.00% - 21.0 MiB of 42.0 MiB RAM"
+                    state=State.OK,
+                    summary="Total (RAM + Swap): 50.00% - 21.0 MiB of 42.0 MiB RAM",
                 ),
                 Metric("swap_used", 0, boundaries=(0, 0)),
                 Metric("mem_used", 22020096, boundaries=(0, 44040192)),
@@ -568,7 +572,8 @@ def test_check_memory_fails(
             MEMINFO_SWAP,
             [
                 Result(
-                    state=State.OK, summary="Total (RAM + Swap): 100.00% - 42.0 MiB of 42.0 MiB RAM"
+                    state=State.OK,
+                    summary="Total (RAM + Swap): 100.00% - 42.0 MiB of 42.0 MiB RAM",
                 ),
                 Metric("swap_used", 22020096, boundaries=(0, 44040192)),
                 Metric("mem_used", 22020096, boundaries=(0, 44040192)),
@@ -637,7 +642,8 @@ def test_check_memory_fails(
             MEMINFO_SWAP_BUFFERS,
             [
                 Result(
-                    state=State.OK, summary="Total (RAM + Swap): 100.00% - 42.0 MiB of 42.0 MiB RAM"
+                    state=State.OK,
+                    summary="Total (RAM + Swap): 100.00% - 42.0 MiB of 42.0 MiB RAM",
                 ),
                 Metric("swap_used", 22020096, boundaries=(0, 44040192)),
                 Metric("mem_used", 22020096, boundaries=(0, 44040192)),
@@ -657,7 +663,8 @@ def test_check_memory_fails(
             MEMINFO_SWAP_CACHED,
             [
                 Result(
-                    state=State.OK, summary="Total (RAM + Swap): 100.00% - 42.0 MiB of 42.0 MiB RAM"
+                    state=State.OK,
+                    summary="Total (RAM + Swap): 100.00% - 42.0 MiB of 42.0 MiB RAM",
                 ),
                 Metric("swap_used", 22020096, boundaries=(0, 44040192)),
                 Metric("mem_used", 22020096, boundaries=(0, 44040192)),

@@ -9,7 +9,13 @@ from tests.unit.conftest import FixRegister
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State, TableRow
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+    TableRow,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -63,7 +69,9 @@ _AGENT_OUTPUT = [
     ],
 )
 def test_discover_netapp_api_disk(
-    fix_register: FixRegister, string_table: StringTable, expected_result: DiscoveryResult
+    fix_register: FixRegister,
+    string_table: StringTable,
+    expected_result: DiscoveryResult,
 ) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("netapp_api_disk_summary")]
     assert (

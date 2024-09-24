@@ -70,8 +70,16 @@ def _parameter_valuespec_db_connections() -> Dictionary:
                 Tuple(
                     title=_("Absolute number of idle connections"),
                     elements=[
-                        Integer(title=_("Warning at"), minvalue=0, unit=_("idle connections")),
-                        Integer(title=_("Critical at"), minvalue=0, unit=_("idle connections")),
+                        Integer(
+                            title=_("Warning at"),
+                            minvalue=0,
+                            unit=_("idle connections"),
+                        ),
+                        Integer(
+                            title=_("Critical at"),
+                            minvalue=0,
+                            unit=_("idle connections"),
+                        ),
                     ],
                 ),
             ),

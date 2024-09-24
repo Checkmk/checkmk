@@ -61,8 +61,9 @@ def check_netapp_api_cluster(item, params, info):
         yield 1, "Cluster takeover"
     elif state == "takeover_failed":
         had_errors = True
-        yield 2, "Takeover failed. Reason: %s" % data.get(
-            "takeover-failure-reason", "None available"
+        yield (
+            2,
+            "Takeover failed. Reason: %s" % data.get("takeover-failure-reason", "None available"),
         )
     elif state != params["state"]:
         had_errors = True
@@ -78,7 +79,10 @@ def check_netapp_api_cluster(item, params, info):
 
     if data.get("partner") != item:
         had_errors = True
-        yield 1, "Partner name changed: {} instead of {}".format(data.get("partner", "None"), item)
+        yield (
+            1,
+            "Partner name changed: {} instead of {}".format(data.get("partner", "None"), item),
+        )
 
     if not had_errors:
         yield 0, "Cluster Status OK"

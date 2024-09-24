@@ -320,7 +320,9 @@ def test_check_heartbeat_crm_no_cluster_crit(section_no_cluster: Section) -> Non
     ]
 
 
-def test_check_heartbeat_crm_failed_connection_crit(section_connection_refused: Section) -> None:
+def test_check_heartbeat_crm_failed_connection_crit(
+    section_connection_refused: Section,
+) -> None:
     assert list(
         _check_heartbeat_crm(
             {"dc": "hasi", "max_age": 60, "num_nodes": 1, "num_resources": 4},
@@ -353,7 +355,10 @@ def test_check_heartbeat_crm_resources_simple(section_3: Section) -> None:
             section_3,
         )
     ) == [
-        Result(state=State.OK, summary="pri_fs_omd (ocf::heartbeat:Filesystem): Started ha_b"),
+        Result(
+            state=State.OK,
+            summary="pri_fs_omd (ocf::heartbeat:Filesystem): Started ha_b",
+        ),
         Result(state=State.OK, summary="pri_ip_omd (ocf::heartbeat:IPaddr2): Started ha_b"),
         Result(state=State.OK, summary="pri_proc_omd (ocf::mk:omd): Stopped"),
         Result(state=State.CRIT, summary='Resource is in state "Stopped"'),

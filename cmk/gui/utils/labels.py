@@ -12,7 +12,11 @@ from typing import Literal, NamedTuple
 
 from livestatus import LivestatusResponse, lqencode, quote_dict, SiteId
 
-from cmk.utils.labels import AndOrNotLiteral, LabelGroups, single_label_group_from_labels
+from cmk.utils.labels import (
+    AndOrNotLiteral,
+    LabelGroups,
+    single_label_group_from_labels,
+)
 
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKUserError
@@ -165,7 +169,7 @@ def _operator_filter_str(operator: AndOrNotLiteral, is_first: bool) -> str:
 
 
 def encode_labels_for_tagify(
-    labels: Labels | Iterable[tuple[str, str]]
+    labels: Labels | Iterable[tuple[str, str]],
 ) -> Iterable[Mapping[str, str]]:
     """
     >>> encode_labels_for_tagify({"key": "value", "x": "y"}.items()) ==  encode_labels_for_tagify([Label("key", "value", False), Label("x", "y", False)])

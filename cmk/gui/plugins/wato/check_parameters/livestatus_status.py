@@ -44,13 +44,15 @@ def _parameter_valuespec_livestatus_status():
             (
                 "accept_passive_host_checks",
                 MonitoringState(
-                    title="State when not accepting passive host checks", default_value=2
+                    title="State when not accepting passive host checks",
+                    default_value=2,
                 ),
             ),
             (
                 "accept_passive_service_checks",
                 MonitoringState(
-                    title="State when not accepting passive service checks", default_value=2
+                    title="State when not accepting passive service checks",
+                    default_value=2,
                 ),
             ),
             (

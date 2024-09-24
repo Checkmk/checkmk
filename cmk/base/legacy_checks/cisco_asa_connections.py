@@ -39,7 +39,11 @@ def check_cisco_asa_connections(_no_item, params, info):
     else:
         perfdata = [("fw_connections_active", used_conns)]
 
-    return state, f"{infotext}, Max. since system startup: {overall_used_conns}", perfdata
+    return (
+        state,
+        f"{infotext}, Max. since system startup: {overall_used_conns}",
+        perfdata,
+    )
 
 
 def parse_cisco_asa_connections(string_table: StringTable) -> StringTable | None:

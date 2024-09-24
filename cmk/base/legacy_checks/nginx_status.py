@@ -62,7 +62,11 @@ def check_nginx_status(item, params, parsed):
 
     for key in ["accepted", "handled", "requests"]:
         per_sec = get_rate(
-            value_store, f"nginx_status.{key}", this_time, data[key], raise_overflow=True
+            value_store,
+            f"nginx_status.{key}",
+            this_time,
+            data[key],
+            raise_overflow=True,
         )
         computed_values["%s_per_sec" % key] = per_sec
 
@@ -86,10 +90,16 @@ def check_nginx_status(item, params, parsed):
     txt += " (%0.2f/Connection)" % computed_values["requests_per_conn"]
     yield state, txt, perf
 
-    yield 0, "Accepted: %0.2f/s" % computed_values["accepted_per_sec"], [
-        ("accepted", data["accepted"])
-    ]
-    yield 0, "Handled: %0.2f/s" % computed_values["handled_per_sec"], [("handled", data["handled"])]
+    yield (
+        0,
+        "Accepted: %0.2f/s" % computed_values["accepted_per_sec"],
+        [("accepted", data["accepted"])],
+    )
+    yield (
+        0,
+        "Handled: %0.2f/s" % computed_values["handled_per_sec"],
+        [("handled", data["handled"])],
+    )
 
 
 def discover_nginx_status(section):

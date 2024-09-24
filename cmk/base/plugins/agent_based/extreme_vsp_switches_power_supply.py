@@ -46,7 +46,9 @@ _MAP_INPUT_VOLTAGE = {
 }
 
 
-def parse_vsp_switches_power_supply(string_table: list[StringTable]) -> VSPSwitchesSection:
+def parse_vsp_switches_power_supply(
+    string_table: list[StringTable],
+) -> VSPSwitchesSection:
     power_supplies = {
         line[0]: VSPSwitchPowerSupply(
             id=line[0],
@@ -118,16 +120,21 @@ def check_vsp_switches_power_supply(
         )
     else:
         yield Result(
-            state=State.OK, summary="No power information available for this power supply."
+            state=State.OK,
+            summary="No power information available for this power supply.",
         )
 
     if vsp_switch.power_information and vsp_switch.power_information.output_watts:
         yield Result(
-            state=State.OK, summary=f"Output Watts: {vsp_switch.power_information.output_watts}"
+            state=State.OK,
+            summary=f"Output Watts: {vsp_switch.power_information.output_watts}",
         )
 
     if vsp_switch.power_information and vsp_switch.power_information.pse_power:
-        yield Result(state=State.OK, summary=f"PSE Power: {vsp_switch.power_information.pse_power}")
+        yield Result(
+            state=State.OK,
+            summary=f"PSE Power: {vsp_switch.power_information.pse_power}",
+        )
 
 
 register.check_plugin(

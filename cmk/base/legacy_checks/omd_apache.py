@@ -33,7 +33,10 @@ omd_apache_patterns = [
     ("cmk_snapins", r"^check_mk/sidebar_snapin\.py"),
     ("cmk_dashboards", r"^check_mk/dashboard\.py"),
     ("cmk_other", r"^check_mk/.*\.py"),
-    ("nagvis_snapin", r"^nagvis/server/core/ajax_handler\.php?mod=Multisite&act=getMaps"),
+    (
+        "nagvis_snapin",
+        r"^nagvis/server/core/ajax_handler\.php?mod=Multisite&act=getMaps",
+    ),
     ("nagvis_ajax", r"^nagvis/server/core/ajax_handler\.php"),
     ("nagvis_other", r"^nagvis/.*\.php"),
     ("images", r"\.(jpg|png|gif)$"),

@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
-from cmk.base.plugins.agent_based.inventory_fortimail_system import inventory_fortimail_system
+from cmk.base.plugins.agent_based.inventory_fortimail_system import (
+    inventory_fortimail_system,
+)
 
 
 def test_fortimail_serial_inventory() -> None:

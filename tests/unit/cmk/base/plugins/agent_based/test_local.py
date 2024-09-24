@@ -41,7 +41,10 @@ def test_invalid_metric_name_does_not_crash() -> None:
         ("0 name -", ("0", "name", "-", None)),
         ('0 "name with space" -', ("0", "name with space", "-", None)),
         ("0 name - info text", ("0", "name", "-", "info text")),
-        ("0 name - results' text has a quote", ("0", "name", "-", "results' text has a quote")),
+        (
+            "0 name - results' text has a quote",
+            ("0", "name", "-", "results' text has a quote"),
+        ),
         ("0 name - has a backslash\\", ("0", "name", "-", "has a backslash\\")),
     ],
 )
@@ -105,7 +108,18 @@ def test_regex_parser(
             id="state OK, input with quotes",
         ),
         pytest.param(
-            ["1", "Bar_Service", "-", "This", "is", "WARNING", "and", "has", "no", "metrics"],
+            [
+                "1",
+                "Bar_Service",
+                "-",
+                "This",
+                "is",
+                "WARNING",
+                "and",
+                "has",
+                "no",
+                "metrics",
+            ],
             local.LocalSection(
                 errors={},
                 data={
@@ -214,7 +228,14 @@ def test_regex_parser(
             id="no text",
         ),
         pytest.param(
-            ["P", "D’oh!", "this_is_an_invalid_metric|isotopes=0", "I", "messed", "up!"],
+            [
+                "P",
+                "D’oh!",
+                "this_is_an_invalid_metric|isotopes=0",
+                "I",
+                "messed",
+                "up!",
+            ],
             local.LocalSection(
                 errors={
                     "D’oh!": local.LocalError(
@@ -366,6 +387,9 @@ if __name__ == "__main__":
     from tests.testlib.repo import repo_path
 
     assert not pytest.main(
-        ["--doctest-modules", os.path.join(repo_path(), "cmk/base/plugins/agent_based/local.py")]
+        [
+            "--doctest-modules",
+            os.path.join(repo_path(), "cmk/base/plugins/agent_based/local.py"),
+        ]
     )
     pytest.main(["-T=unit", "-vvsx", __file__])

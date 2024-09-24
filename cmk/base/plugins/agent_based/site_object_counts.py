@@ -85,7 +85,7 @@ def check_site_object_counts(section: Section) -> type_defs.CheckResult:
 
 
 def cluster_check_site_object_counts(
-    section: Mapping[str, Section | None]
+    section: Mapping[str, Section | None],
 ) -> type_defs.CheckResult:
     yield from check_site_object_counts(
         {

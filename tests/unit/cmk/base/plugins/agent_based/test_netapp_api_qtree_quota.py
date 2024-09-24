@@ -14,7 +14,12 @@ from cmk.utils.sectionname import SectionName
 from cmk.checkengine.checking import CheckPluginName
 
 import cmk.base.plugins.agent_based.netapp_api_qtree_quota as qtree_quota
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.netapp_api_qtree_quota import get_item_names
 
@@ -386,7 +391,9 @@ def test_check_netapp_api_qtree_quota(
             assert actual_metric.levels[1] == pytest.approx(expected_metric.levels[1], 0.01)
 
 
-def test_discover_netapp_api_qtree_quota_duplicate_item_names(fix_register: FixRegister) -> None:
+def test_discover_netapp_api_qtree_quota_duplicate_item_names(
+    fix_register: FixRegister,
+) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("netapp_api_qtree_quota")]
     section_plugin = fix_register.agent_sections[SectionName("netapp_api_qtree_quota")]
 

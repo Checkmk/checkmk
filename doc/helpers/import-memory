@@ -289,7 +289,8 @@ def _get_mem(pid: int) -> Memory:
             val *= MiB
         else:
             raise RuntimeError(
-                "Unsupported memory unit for Private_* memory info from /proc/%d/smaps", pid
+                "Unsupported memory unit for Private_* memory info from /proc/%d/smaps",
+                pid,
             )
         # pylint: enable=raising-format-tuple
         return val
@@ -509,7 +510,9 @@ def remove_zeros(param: dict) -> dict:
     return param
 
 
-def remove_importlib(val: dict[Any, Any] | list[Any] | str) -> dict[Any, Any] | list[Any] | str:
+def remove_importlib(
+    val: dict[Any, Any] | list[Any] | str,
+) -> dict[Any, Any] | list[Any] | str:
     if isinstance(val, list):
         ret: list = []
         for entry in val:
@@ -581,7 +584,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Track import memory", epilog=__doc__)
     parser.add_argument("modules", metavar="MODULE", type=str, nargs="+")
     parser.add_argument(
-        "-o", "--open", action="store_true", help="Direcly show the resulting file (if possible)"
+        "-o",
+        "--open",
+        action="store_true",
+        help="Direcly show the resulting file (if possible)",
     )
     parser.add_argument(
         "-f",

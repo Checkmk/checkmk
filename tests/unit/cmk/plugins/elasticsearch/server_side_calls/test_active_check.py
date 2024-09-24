@@ -7,7 +7,9 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.plugins.elasticsearch.server_side_calls.active_check import active_check_config as config
+from cmk.plugins.elasticsearch.server_side_calls.active_check import (
+    active_check_config as config,
+)
 from cmk.server_side_calls.v1 import HostConfig, IPv4Config
 
 
@@ -35,7 +37,18 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config
                 "count": ("fixed", (1, 5)),
             },
             HostConfig(name="test", ipv4_config=IPv4Config(address="test")),
-            ["-q", "bar", "-t", "1", "-i", "f o o", "--warn=1", "--crit=5", "-H", "test"],
+            [
+                "-q",
+                "bar",
+                "-t",
+                "1",
+                "-i",
+                "f o o",
+                "--warn=1",
+                "--crit=5",
+                "-H",
+                "test",
+            ],
             "Elasticsearch Query stuff",
             id="config with count",
         ),

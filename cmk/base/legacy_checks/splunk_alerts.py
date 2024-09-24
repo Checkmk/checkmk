@@ -26,7 +26,11 @@ def check_splunk_alerts(_no_item, params, info):
     infotext = "Number of fired alerts"
 
     yield check_levels(
-        value, "fired_alerts", params.get("alerts"), human_readable_func=int, infoname=infotext
+        value,
+        "fired_alerts",
+        params.get("alerts"),
+        human_readable_func=int,
+        infoname=infotext,
     )
 
 

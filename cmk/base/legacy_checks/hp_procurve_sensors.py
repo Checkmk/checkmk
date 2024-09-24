@@ -57,7 +57,13 @@ hp_procurve_status_map = {
     "4": "good",
     "5": "notPresent",
 }
-hp_procurve_status2nagios_map = {"unknown": 3, "bad": 2, "warning": 1, "good": 0, "notPresent": 1}
+hp_procurve_status2nagios_map = {
+    "unknown": 3,
+    "bad": 2,
+    "warning": 1,
+    "good": 0,
+    "notPresent": 1,
+}
 
 
 def get_hp_procurve_sensor_type(type_input):

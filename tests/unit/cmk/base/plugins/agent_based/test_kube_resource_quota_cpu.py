@@ -180,7 +180,12 @@ def test_stored_usage_value() -> None:
     performance_cpu_usage = performance_cpu(
         None,
         TIMESTAMP,
-        {"resource_quota_cpu_usage": (TIMESTAMP - 59, PerformanceUsageFactory.build().json())},
+        {
+            "resource_quota_cpu_usage": (
+                TIMESTAMP - 59,
+                PerformanceUsageFactory.build().json(),
+            )
+        },
         "resource_quota_cpu_usage",
     )
     assert performance_cpu_usage is not None

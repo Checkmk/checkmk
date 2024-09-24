@@ -11,7 +11,9 @@ from polyfactory.factories.pydantic_factory import ModelFactory
 from pytest_mock import MockerFixture
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
-from cmk.base.plugins.agent_based.inventory_kube_daemonset import inventory_kube_daemonset
+from cmk.base.plugins.agent_based.inventory_kube_daemonset import (
+    inventory_kube_daemonset,
+)
 
 from cmk.plugins.lib.kube import (
     DaemonSetInfo,

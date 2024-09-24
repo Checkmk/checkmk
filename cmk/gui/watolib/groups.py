@@ -79,7 +79,9 @@ def add_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) -> 
 
     _set_group(all_groups, group_type, name, extra_info)
     _add_group_change(
-        extra_info, "edit-%sgroups" % group_type, _l("Create new %s group %s") % (group_type, name)
+        extra_info,
+        "edit-%sgroups" % group_type,
+        _l("Create new %s group %s") % (group_type, name),
     )
 
 
@@ -155,7 +157,9 @@ def delete_group(name: GroupName, group_type: GroupType) -> None:
     group = groups.pop(name)
     save_group_information(all_groups)
     _add_group_change(
-        group, "edit-%sgroups" % group_type, _l("Deleted %s group %s") % (group_type, name)
+        group,
+        "edit-%sgroups" % group_type,
+        _l("Deleted %s group %s") % (group_type, name),
     )
 
 
@@ -256,14 +260,19 @@ def _find_usages_of_group_in_rules(name: GroupName, varnames: list[str]) -> list
 
 
 def is_alias_used(
-    my_what: GroupType | Literal["roles", "timeperiods"], my_name: GroupName, my_alias: str
+    my_what: GroupType | Literal["roles", "timeperiods"],
+    my_name: GroupName,
+    my_alias: str,
 ) -> tuple[bool, str | None]:
     # Host / Service / Contact groups
     all_groups = load_group_information()
     for what, groups in all_groups.items():
         for gid, group in groups.items():
             if group["alias"] == my_alias and (my_what != what or my_name != gid):
-                return False, _("This alias is already used in the %s group %s.") % (what, gid)
+                return False, _("This alias is already used in the %s group %s.") % (
+                    what,
+                    gid,
+                )
 
     # Timeperiods
     timeperiods = load_timeperiods()

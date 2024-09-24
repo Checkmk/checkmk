@@ -127,7 +127,11 @@ def test_format_link(template: str, url: str, text: str, expected_link: str) -> 
     [
         ("Harri Hirsch", "", ""),
         ("", "harri.hirsch@test.com", "harri.hirsch@test.com"),
-        ("Harri Hirsch", "harri.hirsch@test.com", "Harri Hirsch <harri.hirsch@test.com>"),
+        (
+            "Harri Hirsch",
+            "harri.hirsch@test.com",
+            "Harri Hirsch <harri.hirsch@test.com>",
+        ),
         # encoded words if non ASCII characters are present:
         (
             "Härri Hürsch",

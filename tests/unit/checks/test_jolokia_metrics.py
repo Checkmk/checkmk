@@ -39,7 +39,6 @@ def test_check_request_count(
     item: str,
     expected_result: list,
 ) -> None:
-
     value_store = {"j4p.bea.requests.myinstance /weblogic": (0, 0)}
 
     with time_machine.travel(10, tick=False):

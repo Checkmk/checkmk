@@ -69,7 +69,9 @@ def subber(value: list[str] | str) -> list[str] | str:
             "<",
             " ",
             re.sub(
-                "\\\\", "", re.sub("'", "&quot;", re.sub('"', "&quot;", re.sub("\n", "", value)))
+                "\\\\",
+                "",
+                re.sub("'", "&quot;", re.sub('"', "&quot;", re.sub("\n", "", value))),
             ),
         ),
     )

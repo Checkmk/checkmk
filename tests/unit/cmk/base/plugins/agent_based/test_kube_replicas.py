@@ -11,7 +11,12 @@ from typing import Any
 import pytest
 
 import cmk.base.plugins.agent_based.kube_replicas as kube_replicas
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.kube_replicas import (
     _check_kube_replicas,
     check_kube_replicas,
@@ -698,7 +703,10 @@ def test_check_kube_replicas_statefulset_available() -> None:
             None,
             ControllerSpec(min_ready_seconds=10),
             now=800.0,
-            value_store={"not_ready_started_timestamp": None, "update_started_timestamp": None},
+            value_store={
+                "not_ready_started_timestamp": None,
+                "update_started_timestamp": None,
+            },
         )
     )
 

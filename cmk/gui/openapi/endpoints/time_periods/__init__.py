@@ -96,7 +96,10 @@ def create_timeperiod(params: Mapping[str, Any]) -> Response:
     exceptions = _format_exceptions(body.get("exceptions", []))
     periods = _daily_time_ranges(body["active_time_ranges"])
     time_period = _to_checkmk_format(
-        alias=body["alias"], periods=periods, exceptions=exceptions, exclude=body.get("exclude", [])
+        alias=body["alias"],
+        periods=periods,
+        exceptions=exceptions,
+        exclude=body.get("exclude", []),
     )
     _create_timeperiod(name, time_period)
     return _serve_time_period(_get_time_period_domain_object(name, _to_api_format(time_period)))
@@ -121,7 +124,9 @@ def update_timeperiod(params: Mapping[str, Any]) -> Response:
     name = params["name"]
     if name == "24X7":
         raise ProblemException(
-            405, http.client.responses[405], "You cannot change the built-in time period"
+            405,
+            http.client.responses[405],
+            "You cannot change the built-in time period",
         )
 
     if _is_alias_in_use(body.get("alias"), name):
@@ -276,7 +281,9 @@ def _to_api_format(  # type: ignore[no-untyped-def]
     return time_period_readable
 
 
-def _daily_time_ranges(active_time_ranges: list[dict[str, Any]]) -> dict[str, list[TIME_RANGE]]:
+def _daily_time_ranges(
+    active_time_ranges: list[dict[str, Any]],
+) -> dict[str, list[TIME_RANGE]]:
     """Convert the user provided time ranges to the Checkmk format
 
     Args:
@@ -418,7 +425,10 @@ def _to_checkmk_format(
     exceptions: dict[str, Any],
     exclude: list[str] | None = None,
 ) -> TimeperiodSpec:
-    time_period: dict[str, Any] = {"alias": alias, "exclude": [] if exclude is None else exclude}
+    time_period: dict[str, Any] = {
+        "alias": alias,
+        "exclude": [] if exclude is None else exclude,
+    }
     time_period.update(exceptions)
     time_period.update(periods)
 

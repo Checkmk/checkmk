@@ -25,7 +25,22 @@ from cmk.plugins.lib.df import (
 
 def _sanitize_line(line: list[str]) -> list[str]:
     """Merges units to values in case values and units are contained in separate line elements."""
-    units = ("k", "K", "B", "M", "G", "T", "P", "E", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB")
+    units = (
+        "k",
+        "K",
+        "B",
+        "M",
+        "G",
+        "T",
+        "P",
+        "E",
+        "KiB",
+        "MiB",
+        "GiB",
+        "TiB",
+        "PiB",
+        "EiB",
+    )
     sanitized_line: list[str] = []
     for word in line:
         if word in units and sanitized_line:
@@ -77,9 +92,22 @@ def parse_ceph_df(string_table: StringTable) -> FSBlocks:
         if section == "global":
             match line:
                 case ["SIZE", "AVAIL", "RAW", "USED", "%RAW", "USED", "OBJECTS"]:
-                    global_headers = ["SIZE", "AVAIL", "RAW USED", "%RAW USED", "OBJECTS"]
+                    global_headers = [
+                        "SIZE",
+                        "AVAIL",
+                        "RAW USED",
+                        "%RAW USED",
+                        "OBJECTS",
+                    ]
                 case ["CLASS", "SIZE", "AVAIL", "USED", "RAW", "USED", "%RAW", "USED"]:
-                    global_headers = ["CLASS", "SIZE", "AVAIL", "USED", "RAW USED", "%RAW USED"]
+                    global_headers = [
+                        "CLASS",
+                        "SIZE",
+                        "AVAIL",
+                        "USED",
+                        "RAW USED",
+                        "%RAW USED",
+                    ]
                 case values:
                     if global_headers is not None:
                         parsed.setdefault("SUMMARY", dict(zip(global_headers, values)))

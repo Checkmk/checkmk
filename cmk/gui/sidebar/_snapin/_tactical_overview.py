@@ -483,7 +483,11 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             filename="view.py",
         )
 
-        html.a(_("%d failed notifications") % failed_notifications, target="main", href=view_url)
+        html.a(
+            _("%d failed notifications") % failed_notifications,
+            target="main",
+            href=view_url,
+        )
         html.close_div()
         html.close_div()
 

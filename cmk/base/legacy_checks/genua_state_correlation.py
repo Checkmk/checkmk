@@ -77,7 +77,9 @@ def check_genua_state(item, _no_params, info):
     return (state, output)
 
 
-def parse_genua_state_correlation(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+def parse_genua_state_correlation(
+    string_table: Sequence[StringTable],
+) -> Sequence[StringTable]:
     return string_table
 
 

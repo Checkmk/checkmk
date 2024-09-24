@@ -115,7 +115,13 @@ def main():
             spaceBefore=5,
             leading=16,
         ),
-        PS(fontSize=12, name="TOCHeading2", leftIndent=40, firstLineIndent=-20, leading=12),
+        PS(
+            fontSize=12,
+            name="TOCHeading2",
+            leftIndent=40,
+            firstLineIndent=-20,
+            leading=12,
+        ),
     ]
     cover = PS(name="Cover", fontSize=16, leading=22, alignment=1)
     title = PS(name="Title", fontSize=24, leading=16)

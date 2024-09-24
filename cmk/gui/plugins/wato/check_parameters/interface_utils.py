@@ -6,7 +6,14 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import PredictiveLevels
-from cmk.gui.valuespec import CascadingDropdown, Integer, Migrate, Percentage, Tuple, ValueSpec
+from cmk.gui.valuespec import (
+    CascadingDropdown,
+    Integer,
+    Migrate,
+    Percentage,
+    Tuple,
+    ValueSpec,
+)
 
 
 def _perc_levels() -> Tuple:

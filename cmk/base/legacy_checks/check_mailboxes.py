@@ -10,7 +10,9 @@ It defines active_check_info["mailboxes"]
 
 CHECK_IDENT = "check_mailboxes"
 
-from cmk.base.check_legacy_includes.check_mail import general_check_mail_args_from_params
+from cmk.base.check_legacy_includes.check_mail import (
+    general_check_mail_args_from_params,
+)
 from cmk.base.config import active_check_info
 
 

@@ -17,7 +17,11 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib.arbor import DETECT_PEAKFLOW_SP, DETECT_PEAKFLOW_TMS, DETECT_PRAVAIL
+from cmk.plugins.lib.arbor import (
+    DETECT_PEAKFLOW_SP,
+    DETECT_PEAKFLOW_TMS,
+    DETECT_PRAVAIL,
+)
 
 
 @dataclass(frozen=True)

@@ -75,7 +75,10 @@ def test_do_create_config_nagios(
 ) -> None:
     monkeypatch.setattr(config, "get_resource_macros", lambda *_: {})
     core_config.do_create_config(
-        create_core("nagios"), core_scenario, all_hosts=[HostName("test-host")], duplicates=()
+        create_core("nagios"),
+        core_scenario,
+        all_hosts=[HostName("test-host")],
+        duplicates=(),
     )
 
     assert Path(cmk.utils.paths.nagios_objects_file).exists()
@@ -93,7 +96,10 @@ def test_do_create_config_nagios_collects_passwords(
     assert not password_store.load(core_store)
 
     core_config.do_create_config(
-        create_core("nagios"), core_scenario, all_hosts=[HostName("test-host")], duplicates=()
+        create_core("nagios"),
+        core_scenario,
+        all_hosts=[HostName("test-host")],
+        duplicates=(),
     )
 
     assert password_store.load(core_store) == passwords
@@ -244,7 +250,8 @@ def test_get_cmk_passive_service_attributes(
     ],
 )
 def test_get_tag_attributes(
-    tag_groups: Mapping[TagGroupID, TagID] | Labels | LabelSources, result: ObjectAttributes
+    tag_groups: Mapping[TagGroupID, TagID] | Labels | LabelSources,
+    result: ObjectAttributes,
 ) -> None:
     attributes = ConfigCache._get_tag_attributes(tag_groups, "TAG")
     assert attributes == result

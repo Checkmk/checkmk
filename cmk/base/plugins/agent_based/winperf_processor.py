@@ -138,7 +138,10 @@ def _encode_cpu_count_in_boundary(generator: CheckResult, num_cpus: int) -> Chec
     for res in generator:
         if isinstance(res, Metric) and res.name == "util":
             yield Metric(
-                res.name, res.value, levels=res.levels, boundaries=(res.boundaries[0], num_cpus)
+                res.name,
+                res.value,
+                levels=res.levels,
+                boundaries=(res.boundaries[0], num_cpus),
             )
             break
         yield res

@@ -6,7 +6,12 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.cisco_ucs_temp_cpu import (
     _check_cisco_ucs_temp_cpu,
@@ -56,7 +61,8 @@ def test_discover_cisco_ucs_temp_cpu(section: Mapping[str, int]) -> None:
             [
                 Metric("temp", 57.0, levels=(20.0, 55.0)),
                 Result(
-                    state=State.CRIT, summary="Temperature: 57 °C (warn/crit at 20.0 °C/55.0 °C)"
+                    state=State.CRIT,
+                    summary="Temperature: 57 °C (warn/crit at 20.0 °C/55.0 °C)",
                 ),
                 Result(
                     state=State.OK,

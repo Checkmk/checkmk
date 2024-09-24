@@ -100,7 +100,11 @@ def parse_haproxy(string_table: StringTable) -> Section:
             backup = parse_int(line[20])
 
             servers[name] = Server(
-                status=status, layer_check=layer_check, uptime=uptime, active=active, backup=backup
+                status=status,
+                layer_check=layer_check,
+                uptime=uptime,
+                active=active,
+                backup=backup,
             )
 
     return Section(frontends=frontends, servers=servers)

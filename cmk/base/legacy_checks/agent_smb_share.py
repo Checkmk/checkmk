@@ -15,7 +15,10 @@ def agent_smb_share_arguments(
     params: Mapping[str, Any], hostname: str, ipaddress: str | None
 ) -> Sequence[str]:
     default_ipaddress = ipaddress if ipaddress else ""
-    args = [params.get("hostname", hostname), params.get("ip_address", default_ipaddress)]
+    args = [
+        params.get("hostname", hostname),
+        params.get("ip_address", default_ipaddress),
+    ]
 
     if authentication := params.get("authentication"):
         args.append("--username")

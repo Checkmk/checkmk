@@ -105,7 +105,8 @@ register.agent_section(
 
 
 def discovery_prism_host_networks(
-    params: Sequence[Mapping[str, Any]], section: interfaces.Section[interfaces.InterfaceWithRates]
+    params: Sequence[Mapping[str, Any]],
+    section: interfaces.Section[interfaces.InterfaceWithRates],
 ) -> DiscoveryResult:
     yield from interfaces.discover_interfaces(params, section)
 
@@ -120,7 +121,9 @@ def _check_prism_host_network(
 
 
 def check_prism_host_networks(
-    item: str, params: Mapping[str, Any], section: interfaces.Section[interfaces.InterfaceWithRates]
+    item: str,
+    params: Mapping[str, Any],
+    section: interfaces.Section[interfaces.InterfaceWithRates],
 ) -> CheckResult:
     yield from _check_prism_host_network(item, params, section, get_value_store())
 

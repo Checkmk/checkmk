@@ -277,7 +277,13 @@ def test_mgmt_config_ruleset_overidden_by_explicit_setting(
             "127.0.0.1",
         ),
         # Explicit management_address + ipaddresses
-        ({}, {"management_address": "127.0.0.1"}, {"mgmt-host": "127.0.0.2"}, {}, "127.0.0.1"),
+        (
+            {},
+            {"management_address": "127.0.0.1"},
+            {"mgmt-host": "127.0.0.2"},
+            {},
+            "127.0.0.1",
+        ),
         (
             {
                 "address_family": "ip-v4-only",
@@ -306,7 +312,13 @@ def test_mgmt_config_ruleset_overidden_by_explicit_setting(
             "127.0.0.1",
         ),
         # Explicit management_address + ipv6addresses
-        ({}, {"management_address": "127.0.0.1"}, {}, {"mgmt-host": "::2"}, "127.0.0.1"),
+        (
+            {},
+            {"management_address": "127.0.0.1"},
+            {},
+            {"mgmt-host": "::2"},
+            "127.0.0.1",
+        ),
         (
             {
                 "address_family": "ip-v4-only",

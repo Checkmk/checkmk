@@ -40,7 +40,9 @@ def _save_user_visuals(
             visuals.save(visual_type, all_visuals, user_id)
 
 
-def _set_key_megamenu_search_terms(all_visuals: dict[tuple[UserId, str], visuals.TVisual]) -> None:
+def _set_key_megamenu_search_terms(
+    all_visuals: dict[tuple[UserId, str], visuals.TVisual],
+) -> None:
     """2.3 introduced the mandatory key "megamenu_search_terms". Update old visuals"""
     for (owner, _name), config in all_visuals.items():
         if not owner:

@@ -312,7 +312,12 @@ def grouped_row_title(
 ) -> bool:
     is_open = user.get_tree_state("grouped_rows", index, False)
     html.open_tr(
-        class_=["data", "grouped_row_header", "closed" if not is_open else "", "%s0" % trclass]
+        class_=[
+            "data",
+            "grouped_row_header",
+            "closed" if not is_open else "",
+            "%s0" % trclass,
+        ]
     )
     html.open_td(
         colspan=num_cells,
@@ -673,7 +678,10 @@ class LayoutTable(Layout):
                             colspan=(num_cells * (num_columns + 2) + (num_columns - 1)),
                         )
                         html.open_table(
-                            class_="groupheader", cellspacing="0", cellpadding="0", border="0"
+                            class_="groupheader",
+                            cellspacing="0",
+                            cellpadding="0",
+                            border="0",
                         )
                         html.open_tr()
                         painted = False
@@ -817,7 +825,11 @@ class LayoutMatrix(Layout):
         return True
 
     def csv_export(
-        self, rows: Rows, view: ViewSpec, group_cells: Sequence[Cell], cells: Sequence[Cell]
+        self,
+        rows: Rows,
+        view: ViewSpec,
+        group_cells: Sequence[Cell],
+        cells: Sequence[Cell],
     ) -> None:
         output_csv_headers(view)
 
@@ -1004,7 +1016,10 @@ class LayoutMatrix(Layout):
 
 
 def create_matrices(
-    rows: Rows, group_cells: Sequence[Cell], cells: Sequence[Cell], num_columns: int | None
+    rows: Rows,
+    group_cells: Sequence[Cell],
+    cells: Sequence[Cell],
+    num_columns: int | None,
 ) -> Iterator[tuple[list[tuple[Any, Any]], list[Any], dict[Any, dict[Any, Any]]]]:
     """Create list of matrices to render for the view layout and for reports"""
     if len(cells) < 2:

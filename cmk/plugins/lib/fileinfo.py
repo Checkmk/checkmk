@@ -13,7 +13,15 @@ from typing import Any, NamedTuple
 
 from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v1.type_defs import StringTable
-from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Metric, render, Result, Service, State
+from cmk.agent_based.v2 import (
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    render,
+    Result,
+    Service,
+    State,
+)
 
 from . import eval_regex
 from .interfaces import saveint
@@ -344,7 +352,8 @@ def check_fileinfo_data(
 
     else:
         yield Result(
-            state=State(value=params.get("state_missing", State.UNKNOWN)), summary="File not found"
+            state=State(value=params.get("state_missing", State.UNKNOWN)),
+            summary="File not found",
         )
 
 
@@ -441,7 +450,8 @@ def _check_individual_files(
     if adjusted_file_age < 0:
         message = "The timestamp of the file is in the future. Please investigate your host times"
         yield Result(
-            state=State.UNKNOWN, summary=f"[{file_name}] Age: -{age}, Size: {size}, {message}"
+            state=State.UNKNOWN,
+            summary=f"[{file_name}] Age: -{age}, Size: {size}, {message}",
         )
         return
 
@@ -568,7 +578,8 @@ def check_fileinfo_groups_data(
 
     if files_stat_failed:
         yield Result(
-            state=State.WARN, summary="Files with unknown stat: %s" % ", ".join(files_stat_failed)
+            state=State.WARN,
+            summary="Files with unknown stat: %s" % ", ".join(files_stat_failed),
         )
 
     yield from _fileinfo_check_function(check_definition, params)

@@ -63,7 +63,8 @@ def test_discover_vsp_switches_power_supply(
             "1",
             [
                 Result(
-                    state=State.OK, summary="Operational status: up - present and supplying power"
+                    state=State.OK,
+                    summary="Operational status: up - present and supplying power",
                 ),
                 Result(state=State.OK, summary="Input Line Voltage high220v"),
                 Result(state=State.OK, summary="Output Watts: 715"),

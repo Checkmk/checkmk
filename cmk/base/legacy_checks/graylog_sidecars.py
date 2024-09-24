@@ -9,7 +9,10 @@
 import time
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.check_legacy_includes.graylog import handle_iso_utc_to_localtimestamp, json
+from cmk.base.check_legacy_includes.graylog import (
+    handle_iso_utc_to_localtimestamp,
+    json,
+)
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import render

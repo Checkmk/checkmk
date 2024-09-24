@@ -125,7 +125,8 @@ def _check_omd_status(
     elif site_services["overall"] == "stopped":
         # stopped sites are only CRIT when all are stopped
         yield Result(
-            state=(State.OK if others_running else State.CRIT), summary="stopped%s" % extra_text
+            state=(State.OK if others_running else State.CRIT),
+            summary="stopped%s" % extra_text,
         )
     else:
         # partially running sites are always CRIT

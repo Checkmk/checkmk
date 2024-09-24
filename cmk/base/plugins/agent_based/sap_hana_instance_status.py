@@ -44,7 +44,9 @@ def _parse_elapsed_time(time_string):
     return elapsed_time.total_seconds()
 
 
-def parse_sap_hana_instance_status(string_table: StringTable) -> dict[str, InstanceStatus]:
+def parse_sap_hana_instance_status(
+    string_table: StringTable,
+) -> dict[str, InstanceStatus]:
     section: dict[str, InstanceStatus] = {}
 
     for sid_instance, lines in sap_hana.parse_sap_hana(string_table).items():
@@ -76,7 +78,9 @@ register.agent_section(
 )
 
 
-def discovery_sap_hana_instance_status(section: dict[str, InstanceStatus]) -> DiscoveryResult:
+def discovery_sap_hana_instance_status(
+    section: dict[str, InstanceStatus],
+) -> DiscoveryResult:
     for item in section:
         yield Service(item=item)
 

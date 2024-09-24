@@ -82,7 +82,12 @@ from cmk.gui.valuespec import (
 )
 
 from ._connections import active_connections, connections_by_type, get_connection
-from ._connector import CheckCredentialsResult, ConnectorType, UserConnector, UserConnectorRegistry
+from ._connector import (
+    CheckCredentialsResult,
+    ConnectorType,
+    UserConnector,
+    UserConnectorRegistry,
+)
 from ._roles import load_roles
 from ._user_attribute import get_user_attributes
 from ._user_spec import add_internal_attributes, new_user_template
@@ -172,7 +177,9 @@ GroupMemberships = dict[DistinguishedName, dict[str, str | list[str]]]
 def _get_ad_locator():
     import activedirectory  # type: ignore[import] # pylint: disable=import-error
     import six
-    from activedirectory.protocol.netlogon import Client as NetlogonClient  # type: ignore[import]
+    from activedirectory.protocol.netlogon import (  # type: ignore[import]
+        Client as NetlogonClient,
+    )
 
     class FasterDetectLocator(activedirectory.Locator):
         def _detect_site(self, domain):
@@ -667,7 +674,12 @@ class LDAPUserConnector(UserConnector):
         return results
 
     def _ldap_search(  # pylint: disable=too-many-branches
-        self, base, filt="(objectclass=*)", columns=None, scope="sub", implicit_connect=True
+        self,
+        base,
+        filt="(objectclass=*)",
+        columns=None,
+        scope="sub",
+        implicit_connect=True,
     ):
         if columns is None:
             columns = []
@@ -1022,7 +1034,10 @@ class LDAPUserConnector(UserConnector):
                 filt = f"(&{filt}{add_filt})"
 
             for dn, obj in self._ldap_search(
-                self.get_group_dn(), filt, ["cn", member_attr], self._config["group_scope"]
+                self.get_group_dn(),
+                filt,
+                ["cn", member_attr],
+                self._config["group_scope"],
             ):
                 groups[_unescape_dn(dn)] = {
                     "cn": obj["cn"][0],
@@ -1233,7 +1248,9 @@ class LDAPUserConnector(UserConnector):
             )
         except (ldap.INVALID_CREDENTIALS, ldap.INAPPROPRIATE_AUTH) as e:
             self._logger.warning(
-                "Unable to authenticate user %s. Reason: %s", user_id, e.args[0].get("desc", e)
+                "Unable to authenticate user %s. Reason: %s",
+                user_id,
+                e.args[0].get("desc", e),
             )
             result = False
         except Exception:
@@ -1254,7 +1271,10 @@ class LDAPUserConnector(UserConnector):
 
     def _user_enforces_this_connection(self, username: UserId) -> bool | None:
         matched_connection_ids = []
-        for suffix, connection_id in LDAPUserConnector.get_connection_suffixes().items():
+        for (
+            suffix,
+            connection_id,
+        ) in LDAPUserConnector.get_connection_suffixes().items():
             if self._username_matches_suffix(username, suffix):
                 matched_connection_ids.append(connection_id)
 
@@ -1468,7 +1488,9 @@ class LDAPUserConnector(UserConnector):
         for key, params, plugin in self._active_sync_plugins():
             # sync_func doesn't expect UserSpec yet. In fact, it will access some LDAP-specific
             # attributes that aren't defined by UserSpec.
-            user.update(plugin.sync_func(self, key, params or {}, user_id, ldap_user, user))  # type: ignore
+            user.update(
+                plugin.sync_func(self, key, params or {}, user_id, ldap_user, user)  # type: ignore
+            )
 
     def _flush_caches(self):
         self._num_queries = 0
@@ -1712,8 +1734,18 @@ def register_user_attribute_sync_plugins() -> None:
                         ),
                     ],
                 ),
-                "sync_func": lambda self, connection, plugin, params, user_id, ldap_user, user: _ldap_sync_simple(
-                    user_id, ldap_user, user, plugin, self.needed_attributes(connection, params)[0]
+                "sync_func": lambda self,
+                connection,
+                plugin,
+                params,
+                user_id,
+                ldap_user,
+                user: _ldap_sync_simple(
+                    user_id,
+                    ldap_user,
+                    user,
+                    plugin,
+                    self.needed_attributes(connection, params)[0],
                 ),
             },
         )
@@ -2440,7 +2472,9 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
             ldap_groups.update(
                 dict(
                     conn._get_group_memberships(
-                        group_dns, filt_attr="distinguishedname", nested=params.get("nested", False)
+                        group_dns,
+                        filt_attr="distinguishedname",
+                        nested=params.get("nested", False),
                     )
                 )
             )

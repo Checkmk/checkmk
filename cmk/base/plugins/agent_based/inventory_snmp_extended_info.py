@@ -70,11 +70,21 @@ def parse_snmp_extended_info(string_table: StringTable) -> Section:
         if child_type in _MAP_TYPE:
             parsed.setdefault(
                 child,
-                (parent, description, child_type, name, software, serial, manufacturer, model),
+                (
+                    parent,
+                    description,
+                    child_type,
+                    name,
+                    software,
+                    serial,
+                    manufacturer,
+                    model,
+                ),
             )
         else:
             parsed.setdefault(
-                child, (parent, description, "2", name, software, serial, manufacturer, model)
+                child,
+                (parent, description, "2", name, software, serial, manufacturer, model),
             )
 
     parent_info_serial = None

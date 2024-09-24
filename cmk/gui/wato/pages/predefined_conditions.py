@@ -29,7 +29,12 @@ from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
-from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, RuleConditions, UseHostFolder
+from cmk.gui.watolib.rulesets import (
+    AllRulesets,
+    FolderRulesets,
+    RuleConditions,
+    UseHostFolder,
+)
 from cmk.gui.watolib.rulespecs import RulespecGroup, ServiceRulespec
 
 from ._simple_modes import SimpleEditMode, SimpleListMode, SimpleModeType
@@ -167,7 +172,8 @@ class ModePredefinedConditions(SimpleListMode):
         html.open_li()
         html.write_text(
             "{}: {}".format(
-                _("Folder"), folder_tree().folder(entry["conditions"]["host_folder"]).alias_path()
+                _("Folder"),
+                folder_tree().folder(entry["conditions"]["host_folder"]).alias_path(),
             )
         )
         html.close_li()

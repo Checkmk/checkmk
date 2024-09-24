@@ -96,7 +96,8 @@ from cmk.special_agents.agent_siemens_plc import (
     ],
 )
 def test_parse_spec(
-    hostspec: str, expected_parsed_device: dict[str, str | int | list[dict[str, str | None | int]]]
+    hostspec: str,
+    expected_parsed_device: dict[str, str | int | list[dict[str, str | None | int]]],
 ) -> None:
     assert parse_spec(hostspec) == expected_parsed_device
 

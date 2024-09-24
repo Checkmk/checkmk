@@ -24,7 +24,11 @@ def check_mikrotik_signal(item, params, info):
                 quality = 2 * (strength + 100)
             quality = min(quality, 100)
 
-            infotext = "Signal quality %d%% (%ddBm). Mode is: %s" % (quality, strength, mode)
+            infotext = "Signal quality %d%% (%ddBm). Mode is: %s" % (
+                quality,
+                strength,
+                mode,
+            )
             perf = [("quality", quality, warn, crit)]
             if quality <= crit:
                 return 2, infotext, perf

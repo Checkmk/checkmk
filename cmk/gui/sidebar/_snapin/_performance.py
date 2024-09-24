@@ -78,7 +78,11 @@ class Performance(SidebarSnapin):
             ("RRD queue usage", True, 14, "%.2f %%"),
             ("RRD I/O", True, 15, "%d bytes/s"),
         ]:
-            write_line(what + ":", format_str % sum(row[col] for row in data), show_more=show_more)
+            write_line(
+                what + ":",
+                format_str % sum(row[col] for row in data),
+                show_more=show_more,
+            )
 
         if only_sites is None and len(site_config.enabled_sites()) == 1:
             try:

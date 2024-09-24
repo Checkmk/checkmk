@@ -22,9 +22,17 @@ class Section:
 
 
 def parse_win_os(string_table: StringTable) -> Section:
-    ((_cryptic_name, name, kernel_version, arch, service_pack_maj, service_pack_min, date_str),) = (
-        string_table
-    )
+    (
+        (
+            _cryptic_name,
+            name,
+            kernel_version,
+            arch,
+            service_pack_maj,
+            service_pack_min,
+            date_str,
+        ),
+    ) = string_table
 
     if "+" in date_str:
         (datestr, tz), sign = date_str.split("+", 1), 1

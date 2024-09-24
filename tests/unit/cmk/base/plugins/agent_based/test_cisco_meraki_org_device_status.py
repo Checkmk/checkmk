@@ -10,7 +10,12 @@ import pytest
 from tests.testlib import on_time
 
 from cmk.base.plugins.agent_based import cisco_meraki_org_device_status
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 _STRING_TABLE = [
@@ -80,7 +85,10 @@ def test_discover_device_status(
             _STRING_TABLE,
             [
                 Result(state=State.OK, summary="Status: online"),
-                Result(state=State.OK, summary="Time since last report: 23 hours 59 minutes"),
+                Result(
+                    state=State.OK,
+                    summary="Time since last report: 23 hours 59 minutes",
+                ),
                 Metric("last_reported", 86399.90979003906),
             ],
         ),

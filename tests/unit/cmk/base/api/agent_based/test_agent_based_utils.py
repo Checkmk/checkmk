@@ -36,7 +36,10 @@ def _make_oid_getter(return_value: str) -> Callable[[str], str]:
 
 
 def _test_atomic_relation(
-    relation: _SpecCreator, inverse: _SpecCreator, value: str, testcases: Iterable[tuple[str, bool]]
+    relation: _SpecCreator,
+    inverse: _SpecCreator,
+    value: str,
+    testcases: Iterable[tuple[str, bool]],
 ) -> None:
     spec = relation(".1.2.3", value)
     inv_spec = inverse(".1.2.3", value)

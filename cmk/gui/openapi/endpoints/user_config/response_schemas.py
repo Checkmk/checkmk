@@ -14,7 +14,10 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields.base import MultiNested, ValueTypedDictSchema
 from cmk.gui.fields.definitions import ensure_string
 from cmk.gui.fields.utils import BaseSchema
-from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, DomainObjectCollection
+from cmk.gui.openapi.restful_objects.response_schemas import (
+    DomainObject,
+    DomainObjectCollection,
+)
 from cmk.gui.userdb import get_user_attributes
 
 from cmk import fields
@@ -115,7 +118,9 @@ class ConcreteUserContactOption(BaseSchema):
 
 class AuthOptionOutput(BaseSchema):
     auth_type = fields.String(
-        required=False, example="password", enum=["password", "automation", "saml2", "ldap"]
+        required=False,
+        example="password",
+        enum=["password", "automation", "saml2", "ldap"],
     )
     enforce_password_change = fields.Boolean(
         required=False,
@@ -190,7 +195,10 @@ class BaseUserAttributes(BaseSchema):
 
 class CustomUserAttributes(ValueTypedDictSchema):
     value_type = ValueTypedDictSchema.field(
-        base.String(description="Each tag is a mapping of string to string", validate=ensure_string)
+        base.String(
+            description="Each tag is a mapping of string to string",
+            validate=ensure_string,
+        )
     )
 
     @post_load

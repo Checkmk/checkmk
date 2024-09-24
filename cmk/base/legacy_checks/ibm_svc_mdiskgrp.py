@@ -7,7 +7,10 @@
 # mypy: disable-error-code="var-annotated"
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
+from cmk.base.check_legacy_includes.df import (
+    df_check_filesystem_list,
+    FILESYSTEM_DEFAULT_PARAMS,
+)
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
 from cmk.base.config import check_info
 
@@ -150,9 +153,20 @@ def check_ibm_svc_mdiskgrp(item, params, parsed):
 
     # Note: Performance data is now (with new metric system) normed to
     # canonical units - i.e. 1 byte in this case.
-    yield state, infotext, [
-        ("fs_provisioning", virtual_capacity * mb, warn_mb, crit_mb, 0, capacity * mb)
-    ]
+    yield (
+        state,
+        infotext,
+        [
+            (
+                "fs_provisioning",
+                virtual_capacity * mb,
+                warn_mb,
+                crit_mb,
+                0,
+                capacity * mb,
+            )
+        ],
+    )
 
 
 check_info["ibm_svc_mdiskgrp"] = LegacyCheckDefinition(

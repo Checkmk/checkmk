@@ -41,7 +41,6 @@ the check function is called.
 
 """
 
-
 from collections.abc import Iterator, MutableMapping
 from contextlib import contextmanager
 from typing import Any, Protocol, TypeVar

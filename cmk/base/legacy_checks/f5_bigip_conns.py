@@ -46,7 +46,11 @@ def check_f5_bigip_conns(item, params, info):  # pylint: disable=too-many-branch
 
         if line[4] != "":
             stat_http_req_rate = get_rate(
-                get_value_store(), "stathttpreqs", now, int(line[4]), raise_overflow=True
+                get_value_store(),
+                "stathttpreqs",
+                now,
+                int(line[4]),
+                raise_overflow=True,
             )
         else:
             stat_http_req_rate = None
@@ -74,8 +78,18 @@ def check_f5_bigip_conns(item, params, info):  # pylint: disable=too-many-branch
             "connections_ssl",
             "SSL connections",
         ),
-        (total_native_compat_rate, conn_rate_params, "connections_rate", "Connections/s"),
-        (stat_http_req_rate, params.get("http_req_rate"), "requests_per_second", "HTTP requests/s"),
+        (
+            total_native_compat_rate,
+            conn_rate_params,
+            "connections_rate",
+            "Connections/s",
+        ),
+        (
+            stat_http_req_rate,
+            params.get("http_req_rate"),
+            "requests_per_second",
+            "HTTP requests/s",
+        ),
     ]:
         # SSL may not be configured, eg. on test servers
         if val is None:

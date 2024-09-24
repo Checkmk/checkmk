@@ -267,7 +267,10 @@ result_parse = [
     (
         2,
         [
-            [("SYSTEM", 0, 0, "0", "0", "0", "0", "0", "0", "2"), "System Idle Process"],
+            [
+                ("SYSTEM", 0, 0, "0", "0", "0", "0", "0", "0", "2"),
+                "System Idle Process",
+            ],
             [
                 (
                     "\\KLAPPRECHNER\\ab",
@@ -291,19 +294,67 @@ result_parse = [
         [
             [(None,), "[System Process]"],
             [
-                ("unknown", 14484, 10608, "0", "4", "0", "0", "368895625000", "1227", "273", ""),
+                (
+                    "unknown",
+                    14484,
+                    10608,
+                    "0",
+                    "4",
+                    "0",
+                    "0",
+                    "368895625000",
+                    "1227",
+                    "273",
+                    "",
+                ),
                 "System",
             ],
             [
-                ("unknown", 64, 24, "0", "0", "0", "0", "388621186093750", "0", "24", ""),
+                (
+                    "unknown",
+                    64,
+                    24,
+                    "0",
+                    "0",
+                    "0",
+                    "0",
+                    "388621186093750",
+                    "0",
+                    "24",
+                    "",
+                ),
                 "System Idle Process",
             ],
             [
-                ("unknown", 4576, 316, "0", "520", "0", "156250", "2031250", "53", "2", ""),
+                (
+                    "unknown",
+                    4576,
+                    316,
+                    "0",
+                    "520",
+                    "0",
+                    "156250",
+                    "2031250",
+                    "53",
+                    "2",
+                    "",
+                ),
                 "smss.exe",
             ],
             [
-                ("unknown", 43444, 556, "0", "744", "1", "468750", "126562500", "85", "8", ""),
+                (
+                    "unknown",
+                    43444,
+                    556,
+                    "0",
+                    "744",
+                    "1",
+                    "468750",
+                    "126562500",
+                    "85",
+                    "8",
+                    "",
+                ),
                 "csrss.exe",
             ],
             [
@@ -468,7 +519,8 @@ input_ids = [
     ids=input_ids,
 )
 def test_parse_ps(
-    capture: StringTable, result: tuple[int, Sequence[Sequence[Sequence[object] | str]], int]
+    capture: StringTable,
+    result: tuple[int, Sequence[Sequence[Sequence[object] | str]], int],
 ) -> None:
     now = 1540375342
     cpu_core, lines, ps_time = ps_section._parse_ps(now, copy.deepcopy(capture))
@@ -492,7 +544,17 @@ def test_parse_ps(
                 ["[time]"],
                 [1540375341],
                 ["[processes]"],
-                ["[header]", "CGROUP", "USER", "VSZ", "RSS", "TIME", "ELAPSED", "PID", "COMMAND"],
+                [
+                    "[header]",
+                    "CGROUP",
+                    "USER",
+                    "VSZ",
+                    "RSS",
+                    "TIME",
+                    "ELAPSED",
+                    "PID",
+                    "COMMAND",
+                ],
                 [
                     "1:name=systemd:/init.scope,",
                     "root",
@@ -535,7 +597,17 @@ def test_parse_ps(
                 ["[time]"],
                 [1540375341],
                 ["[processes]"],
-                ["[header]", "CGROUP", "USER", "VSZ", "RSS", "TIME", "ELAPSED", "PID", "COMMAND"],
+                [
+                    "[header]",
+                    "CGROUP",
+                    "USER",
+                    "VSZ",
+                    "RSS",
+                    "TIME",
+                    "ELAPSED",
+                    "PID",
+                    "COMMAND",
+                ],
                 [
                     "9:pids:/system.slice/check-mk-agent-async.service,8:memory:/system.slice/check-mk-agent-async.service,7:devices:/system.slice/check-mk-agent-async.service,6:blkio:/system.slice/check-mk-agent-async.service,5:cpu,cpuacct:/system.slice/check-mk-agent-async.service,1:name=systemd:/system.slice/check-mk-agent-async.service,0::/system.slice/check-mk-agent-async.service",
                     "root",
@@ -607,7 +679,17 @@ def test_parse_ps(
                 ["[time]"],
                 [1540375341],
                 ["[processes]"],
-                ["[header]", "CGROUP", "USER", "VSZ", "RSS", "TIME", "ELAPSED", "PID", "COMMAND"],
+                [
+                    "[header]",
+                    "CGROUP",
+                    "USER",
+                    "VSZ",
+                    "RSS",
+                    "TIME",
+                    "ELAPSED",
+                    "PID",
+                    "COMMAND",
+                ],
                 [
                     "12:pids:/system.slice/srcmstr.service,5:devices:/system.slice/srcmstr.service,1:name=systemd:/system.slice/srcmstr.service",
                     "root",
@@ -645,7 +727,17 @@ def test_parse_ps(
         ),
         pytest.param(
             [
-                ["[header]", "CGROUP", "USER", "VSZ", "RSS", "TIME", "ELAPSED", "PID", "COMMAND"],
+                [
+                    "[header]",
+                    "CGROUP",
+                    "USER",
+                    "VSZ",
+                    "RSS",
+                    "TIME",
+                    "ELAPSED",
+                    "PID",
+                    "COMMAND",
+                ],
                 [
                     "12:pids:/system.slice/srcmstr.service,5:devices:/system.slice/srcmstr.service,1:name=systemd:/system.slice/srcmstr.service",
                     "root",

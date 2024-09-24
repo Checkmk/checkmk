@@ -337,7 +337,12 @@ TEST_DATA = [
             "1IET 00010001": multipath_utils.Group(
                 paths=["sdk", "sdj", "sdg", "sdi"],
                 broken_paths=[],
-                luns=["23:0:0:1(sdk)", "21:0:0:1(sdj)", "22:0:0:1(sdg)", "20:0:0:1(sdi)"],
+                luns=[
+                    "23:0:0:1(sdk)",
+                    "21:0:0:1(sdj)",
+                    "22:0:0:1(sdg)",
+                    "20:0:0:1(sdi)",
+                ],
                 uuid="1IET 00010001",
                 state="prio=0status=enabled",
                 numpaths=4,
@@ -400,7 +405,11 @@ def test_parse_multipath(test_data: TupleTestData) -> None:
     "group,result",
     [
         (
-            ["iqn.2015-05.com.oracle:QD_DG_VOTE101_EXAO2ADM1VM101", "dm-7", "IET,VIRTUAL-DISK"],
+            [
+                "iqn.2015-05.com.oracle:QD_DG_VOTE101_EXAO2ADM1VM101",
+                "dm-7",
+                "IET,VIRTUAL-DISK",
+            ],
             "iqn.2015-05.com.oracle:QD_DG_VOTE101_EXAO2ADM1VM101",
         ),
         (["1IET", "00010001", "dm-4", "IET,VIRTUAL-DISK"], "1IET 00010001"),
@@ -420,7 +429,10 @@ def test_parse_multipath(test_data: TupleTestData) -> None:
             ],
             "HP_iLO_Internal_SD-CARD_000002660A01-0:0",
         ),
-        (["SDDN_S2A_9900_1308xxxxxxxx", "dm-13", "DDN,S2A", "9900"], "SDDN_S2A_9900_1308xxxxxxxx"),
+        (
+            ["SDDN_S2A_9900_1308xxxxxxxx", "dm-13", "DDN,S2A", "9900"],
+            "SDDN_S2A_9900_1308xxxxxxxx",
+        ),
         (
             ["3600508b40006d7da0001a00004740000", "dm-0", "HP,HSV210"],
             "3600508b40006d7da0001a00004740000",
@@ -429,13 +441,20 @@ def test_parse_multipath(test_data: TupleTestData) -> None:
             ["360080e500017bd72000002eb4c1b1ae8", "dm-1", "IBM,1814", "FAStT"],
             "360080e500017bd72000002eb4c1b1ae8",
         ),
-        (["mpath1", "(SIBM_____SwapA__________DA02BF71)"], "SIBM_____SwapA__________DA02BF71"),
+        (
+            ["mpath1", "(SIBM_____SwapA__________DA02BF71)"],
+            "SIBM_____SwapA__________DA02BF71",
+        ),
         (
             ["anzvol1", "(36005076306ffc6480000000000005005)", "dm-16", "IBM,2107900"],
             "36005076306ffc6480000000000005005",
         ),
         (
-            ["1494554000000000052303250303700000000000000000000", "dm-0", "IET,VIRTUAL-DISK"],
+            [
+                "1494554000000000052303250303700000000000000000000",
+                "dm-0",
+                "IET,VIRTUAL-DISK",
+            ],
             "1494554000000000052303250303700000000000000000000",
         ),
         (
@@ -445,7 +464,12 @@ def test_parse_multipath(test_data: TupleTestData) -> None:
         (["SFUJITSU_MAW3073NC_DBL2P62003VT"], "SFUJITSU_MAW3073NC_DBL2P62003VT"),
         (["360a980004334644d654a364469555a76"], "360a980004334644d654a364469555a76"),
         (
-            ["orabase.lun50", "(360a9800043346937686f456f59386741)", "dm-15", "NETAPP,LUN"],
+            [
+                "orabase.lun50",
+                "(360a9800043346937686f456f59386741)",
+                "dm-15",
+                "NETAPP,LUN",
+            ],
             "360a9800043346937686f456f59386741",
         ),
     ],

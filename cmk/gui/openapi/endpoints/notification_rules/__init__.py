@@ -23,7 +23,9 @@ from cmk.utils.notify_types import NotificationRuleID
 from cmk.gui.http import Response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.endpoints.notification_rules.request_schemas import NotificationRuleRequest
+from cmk.gui.openapi.endpoints.notification_rules.request_schemas import (
+    NotificationRuleRequest,
+)
 from cmk.gui.openapi.endpoints.notification_rules.response_schemas import (
     NotificationRuleResponse,
     NotificationRuleResponseCollection,

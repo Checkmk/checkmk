@@ -8,8 +8,26 @@ from cmk.gui.utils.sort import natural_sort
 
 def test_natural_sort() -> None:
     # Test if natural sort function complies with criteria requested (https://jira.lan.tribe29.com/browse/CMK-13531)
-    items = ["_2host", "Host3", "Host1", "host2", "_1host", "2host", "123host", "124Host"]
-    correct_order = ["_1host", "_2host", "2host", "123host", "124Host", "Host1", "host2", "Host3"]
+    items = [
+        "_2host",
+        "Host3",
+        "Host1",
+        "host2",
+        "_1host",
+        "2host",
+        "123host",
+        "124Host",
+    ]
+    correct_order = [
+        "_1host",
+        "_2host",
+        "2host",
+        "123host",
+        "124Host",
+        "Host1",
+        "host2",
+        "Host3",
+    ]
 
     sorted_items = natural_sort(items)
 
@@ -28,7 +46,17 @@ def test_natural_sort_dict() -> None:
         "key8": "124Host",
         "key9": "host2",
     }
-    correct_order = ["key5", "key1", "key6", "key7", "key8", "key3", "key4", "key9", "key2"]
+    correct_order = [
+        "key5",
+        "key1",
+        "key6",
+        "key7",
+        "key8",
+        "key3",
+        "key4",
+        "key9",
+        "key2",
+    ]
 
     sorted_items = natural_sort(items)
 

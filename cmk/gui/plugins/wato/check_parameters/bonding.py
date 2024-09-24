@@ -47,13 +47,34 @@ def _parameter_valuespec_lnx_bonding():
                     title=_("State for specific bonding modes"),
                     optional_keys=[],
                     elements=[
-                        ("mode_0", MonitoringState(title=_("balance-rr"), default_value=0)),
-                        ("mode_1", MonitoringState(title=_("active-backup"), default_value=0)),
-                        ("mode_2", MonitoringState(title=_("balance-xor"), default_value=0)),
-                        ("mode_3", MonitoringState(title=_("broadcast"), default_value=0)),
-                        ("mode_4", MonitoringState(title=_("802.3ad"), default_value=0)),
-                        ("mode_5", MonitoringState(title=_("balance-tlb"), default_value=0)),
-                        ("mode_6", MonitoringState(title=_("balance-alb"), default_value=0)),
+                        (
+                            "mode_0",
+                            MonitoringState(title=_("balance-rr"), default_value=0),
+                        ),
+                        (
+                            "mode_1",
+                            MonitoringState(title=_("active-backup"), default_value=0),
+                        ),
+                        (
+                            "mode_2",
+                            MonitoringState(title=_("balance-xor"), default_value=0),
+                        ),
+                        (
+                            "mode_3",
+                            MonitoringState(title=_("broadcast"), default_value=0),
+                        ),
+                        (
+                            "mode_4",
+                            MonitoringState(title=_("802.3ad"), default_value=0),
+                        ),
+                        (
+                            "mode_5",
+                            MonitoringState(title=_("balance-tlb"), default_value=0),
+                        ),
+                        (
+                            "mode_6",
+                            MonitoringState(title=_("balance-alb"), default_value=0),
+                        ),
                     ],
                     help=_(
                         "Specify the monitoring state when the bonding mode is not as expected."

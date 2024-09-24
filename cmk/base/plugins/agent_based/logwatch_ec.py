@@ -17,7 +17,14 @@ import ast
 import socket
 import time
 from collections import Counter, defaultdict
-from collections.abc import Container, Generator, Iterable, Mapping, MutableMapping, Sequence
+from collections.abc import (
+    Container,
+    Generator,
+    Iterable,
+    Mapping,
+    MutableMapping,
+    Sequence,
+)
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal, Protocol
@@ -27,11 +34,15 @@ import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
 from cmk.utils.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
 
-from cmk.checkengine.checking import CheckPluginName  # pylint: disable=cmk-module-layer-violation
+from cmk.checkengine.checking import (  # pylint: disable=cmk-module-layer-violation
+    CheckPluginName,
+)
 
 # from cmk.base.config import logwatch_rules will NOT work!
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
-from cmk.base.plugin_contexts import host_name  # pylint: disable=cmk-module-layer-violation
+from cmk.base.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
+    host_name,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_value_store,
     Metric,
@@ -40,7 +51,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
     State,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+)
 
 from cmk.ec.event import (  # pylint: disable=cmk-module-layer-violation
     create_event_from_syslog_message,
@@ -565,7 +579,9 @@ class MessageForwarder:
         return LogwatchForwardedResult(num_forwarded=len(syslog_messages))
 
     @staticmethod
-    def _split_file_messages(file_messages: Generator[str, None, None]) -> list[list[str]]:
+    def _split_file_messages(
+        file_messages: Generator[str, None, None],
+    ) -> list[list[str]]:
         result: list[list[str]] = [[]]
         curr_file_index = 0
         curr_character_count = 0

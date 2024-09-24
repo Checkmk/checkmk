@@ -7,7 +7,12 @@ from collections.abc import Iterator
 
 from pydantic import BaseModel, Field
 
-from cmk.server_side_calls.v1 import HostConfig, Secret, SpecialAgentCommand, SpecialAgentConfig
+from cmk.server_side_calls.v1 import (
+    HostConfig,
+    Secret,
+    SpecialAgentCommand,
+    SpecialAgentConfig,
+)
 
 
 class Params(BaseModel):

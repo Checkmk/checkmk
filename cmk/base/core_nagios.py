@@ -42,7 +42,12 @@ import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
 import cmk.base.server_side_calls as server_side_calls
 import cmk.base.utils
-from cmk.base.config import ConfigCache, HostgroupName, ObjectAttributes, ServicegroupName
+from cmk.base.config import (
+    ConfigCache,
+    HostgroupName,
+    ObjectAttributes,
+    ServicegroupName,
+)
 from cmk.base.core_config import (
     AbstractServiceID,
     CollectedHostLabels,
@@ -252,7 +257,10 @@ def _create_nagios_config_host(
 
 
 def _create_nagios_host_spec(  # pylint: disable=too-many-branches
-    cfg: NagiosConfig, config_cache: ConfigCache, hostname: HostName, attrs: ObjectAttributes
+    cfg: NagiosConfig,
+    config_cache: ConfigCache,
+    hostname: HostName,
+    attrs: ObjectAttributes,
 ) -> ObjectSpec:
     ip = attrs["address"]
 
@@ -987,8 +995,9 @@ def _create_nagios_config_contacts(cfg: NagiosConfig, hostnames: list[HostName])
                     {
                         "%s_notification_options" % what: ",".join(no),
                         "%s_notification_period" % what: contact.get("notification_period", "24X7"),
-                        "%s_notification_commands"
-                        % what: contact.get("%s_notification_commands" % what, "check-mk-notify"),
+                        "%s_notification_commands" % what: contact.get(
+                            "%s_notification_commands" % what, "check-mk-notify"
+                        ),
                     }
                 )
 
@@ -1026,7 +1035,10 @@ def _quote_nagios_string(s: str) -> str:
 
 
 def _extra_service_conf_of(
-    cfg: NagiosConfig, config_cache: ConfigCache, hostname: HostName, description: ServiceName
+    cfg: NagiosConfig,
+    config_cache: ConfigCache,
+    hostname: HostName,
+    description: ServiceName,
 ) -> ObjectSpec:
     """Collect all extra configuration data for a service"""
     service_spec: ObjectSpec = {}
@@ -1434,7 +1446,9 @@ def _get_needed_plugin_names(
     )
 
 
-def _resolve_legacy_plugin_name(check_plugin_name: CheckPluginName) -> CheckPluginNameStr | None:
+def _resolve_legacy_plugin_name(
+    check_plugin_name: CheckPluginName,
+) -> CheckPluginNameStr | None:
     legacy_name = config.legacy_check_plugin_names.get(check_plugin_name)
     if legacy_name:
         return legacy_name

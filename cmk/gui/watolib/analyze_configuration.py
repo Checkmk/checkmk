@@ -186,7 +186,10 @@ class ACTest:
                 state=ACResultState.CRIT,
                 text="<pre>%s</pre>"
                 % _("Failed to execute the test %s: %s")
-                % (escaping.escape_attribute(self.__class__.__name__), traceback.format_exc()),
+                % (
+                    escaping.escape_attribute(self.__class__.__name__),
+                    traceback.format_exc(),
+                ),
                 test_id=self.id(),
                 category=self.category(),
                 title=self.title(),

@@ -45,7 +45,10 @@ def check_ucs_bladecenter_faultinst(_item, params, parsed):
         else:
             extra_info_str = ""
 
-        yield sev_state, "%d %s Instances%s" % (len(instances), sev.upper(), extra_info_str)
+        yield (
+            sev_state,
+            "%d %s Instances%s" % (len(instances), sev.upper(), extra_info_str),
+        )
 
 
 check_info["ucs_bladecenter_faultinst"] = LegacyCheckDefinition(

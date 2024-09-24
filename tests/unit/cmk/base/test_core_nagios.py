@@ -260,11 +260,23 @@ def test_create_nagios_host_spec(
         "extra_host_conf",
         {
             "alias": [
-                {"id": "01", "condition": {"host_name": ["host2"]}, "value": "lOCALhost"},
-                {"id": "02", "condition": {"host_name": ["cluster2"]}, "value": "CLUSTer"},
+                {
+                    "id": "01",
+                    "condition": {"host_name": ["host2"]},
+                    "value": "lOCALhost",
+                },
+                {
+                    "id": "02",
+                    "condition": {"host_name": ["cluster2"]},
+                    "value": "CLUSTer",
+                },
             ],
             "parents": [
-                {"id": "03", "condition": {"host_name": ["node1", "node2"]}, "value": "switch"},
+                {
+                    "id": "03",
+                    "condition": {"host_name": ["node1", "node2"]},
+                    "value": "switch",
+                },
             ],
         },
     )
@@ -449,7 +461,10 @@ def mock_service_description(params: Mapping[str, str]) -> str:
     [
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "param1": "param1"}],
+                ),
             ],
             {
                 "my_active_check": {
@@ -481,7 +496,10 @@ def mock_service_description(params: Mapping[str, str]) -> str:
         ),
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "param1": "param1"}],
+                ),
             ],
             {
                 "my_active_check": {
@@ -513,7 +531,10 @@ def mock_service_description(params: Mapping[str, str]) -> str:
         ),
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "param1": "param1"}],
+                ),
             ],
             {
                 "my_active_check": {
@@ -550,8 +571,14 @@ def mock_service_description(params: Mapping[str, str]) -> str:
         ),
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "param1": "param1"}],
+                ),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "param1": "param1"}],
+                ),
             ],
             {
                 "my_active_check": {
@@ -654,8 +681,14 @@ def test_create_nagios_servicedefs_active_check(
     [
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
-                ("my_active_check2", [{"description": "My active check", "param2": "param2"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "param1": "param1"}],
+                ),
+                (
+                    "my_active_check2",
+                    [{"description": "My active check", "param2": "param2"}],
+                ),
             ],
             {
                 "my_active_check": {
@@ -697,7 +730,10 @@ def test_create_nagios_servicedefs_active_check(
         ),
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "param1": "param1"}],
+                ),
             ],
             {
                 "my_active_check": {
@@ -755,7 +791,10 @@ def test_create_nagios_servicedefs_with_warnings(
     [
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "param1": "param1"}],
+                ),
             ],
             {
                 "my_active_check": {
@@ -807,7 +846,10 @@ def test_create_nagios_servicedefs_omit_service(
     [
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "param1": "param1"}],
+                ),
             ],
             {
                 "my_active_check": {
@@ -868,7 +910,10 @@ def test_create_nagios_servicedefs_invalid_args(
     [
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "param1": "param1"}],
+                ),
             ],
             {
                 "my_active_check": {

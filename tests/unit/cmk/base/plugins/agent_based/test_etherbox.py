@@ -6,7 +6,12 @@
 import pytest
 
 from cmk.base.plugins.agent_based import etherbox
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
 
@@ -124,7 +129,10 @@ def test_check_smoke_sensor_not_found() -> None:
             ),
             {"smoke_handling": ("levels", (0, 0))},
             [
-                Result(state=State.CRIT, summary="Smoke level: 42.00 (warn/crit at 0.00/0.00)"),
+                Result(
+                    state=State.CRIT,
+                    summary="Smoke level: 42.00 (warn/crit at 0.00/0.00)",
+                ),
                 Metric("smoke", 42.0, levels=(0, 0)),
             ],
             id="levels",

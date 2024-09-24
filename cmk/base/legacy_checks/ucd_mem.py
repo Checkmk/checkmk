@@ -51,7 +51,10 @@ def check_ucd_mem(_no_item, params, parsed):
     # swap errors
     if "error_swap" in parsed:
         if parsed["error_swap"] != 0 and parsed["error_swap_msg"]:
-            yield params.get("swap_errors", 0), "Swap error: %s" % parsed["error_swap_msg"]
+            yield (
+                params.get("swap_errors", 0),
+                "Swap error: %s" % parsed["error_swap_msg"],
+            )
 
 
 # This check plug-in uses the migrated section in cmk/base/plugins/agent_based/ucd_mem.py!

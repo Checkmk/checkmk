@@ -23,7 +23,11 @@ def check_domino_users(_no_item, params, info):
         return
 
     yield check_levels(
-        users, "users", params["levels"], human_readable_func=str, infoname="Domino users on server"
+        users,
+        "users",
+        params["levels"],
+        human_readable_func=str,
+        infoname="Domino users on server",
     )
 
 

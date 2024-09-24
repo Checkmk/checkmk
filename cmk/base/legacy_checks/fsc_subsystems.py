@@ -31,9 +31,13 @@ def check_fsc_subsystems(item, _no_params, info):
         if line[1] == "":
             return 3, "Status not found in SNMP data"
         status = int(line[1])
-        statusname = {1: "ok", 2: "degraded", 3: "error", 4: "failed", 5: "unknown-init"}.get(
-            status, "invalid"
-        )
+        statusname = {
+            1: "ok",
+            2: "degraded",
+            3: "error",
+            4: "failed",
+            5: "unknown-init",
+        }.get(status, "invalid")
         if status in {1, 5}:
             return (0, "%s - no problems" % statusname)
         if 2 <= status <= 4:

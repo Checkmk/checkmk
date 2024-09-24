@@ -32,7 +32,11 @@ EXPECTED_P_NO_HASH: Final = msi_engine._Parameters(
     "cmd_line, parameters, opt_verbose",
     [
         (["stub", "msi", "dir", "rev", "vers"], EXPECTED_P_NO_HASH, False),
-        (["stub", "-v", "msi", "dir", "rev", "vers", "hash"], EXPECTED_P_WITH_HASH, True),
+        (
+            ["stub", "-v", "msi", "dir", "rev", "vers", "hash"],
+            EXPECTED_P_WITH_HASH,
+            True,
+        ),
         (["stub", "-v", "msi", "dir", "rev", "vers"], EXPECTED_P_NO_HASH, True),
     ],
 )

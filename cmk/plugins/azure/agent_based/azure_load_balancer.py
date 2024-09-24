@@ -206,5 +206,8 @@ check_plugin_azure_load_balancer_health = CheckPlugin(
     ),
     check_function=check_health,
     check_ruleset_name="azure_load_balancer_health",
-    check_default_parameters={"vip_availability": (90.0, 25.0), "health_probe": (90.0, 25.0)},
+    check_default_parameters={
+        "vip_availability": (90.0, 25.0),
+        "health_probe": (90.0, 25.0),
+    },
 )

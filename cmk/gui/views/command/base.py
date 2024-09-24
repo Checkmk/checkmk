@@ -156,7 +156,12 @@ class Command(abc.ABC):
         raise NotImplementedError()
 
     def action(
-        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        spec: str,
+        row: Row,
+        row_index: int,
+        action_rows: Rows,
     ) -> CommandActionResult:
         result = self._action(cmdtag, spec, row, row_index, action_rows)
         if result:
@@ -166,7 +171,12 @@ class Command(abc.ABC):
 
     @abc.abstractmethod
     def _action(
-        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        spec: str,
+        row: Row,
+        row_index: int,
+        action_rows: Rows,
     ) -> CommandActionResult:
         raise NotImplementedError()
 

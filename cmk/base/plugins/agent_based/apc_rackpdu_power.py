@@ -30,7 +30,14 @@
 #                           3/0     => parsed = device phase + 3 phases
 
 
-from .agent_based_api.v1 import all_of, exists, register, SNMPTree, startswith, type_defs
+from .agent_based_api.v1 import (
+    all_of,
+    exists,
+    register,
+    SNMPTree,
+    startswith,
+    type_defs,
+)
 
 StatusInfo = tuple[float, tuple[int, str]]
 Parsed = dict[str, dict[str, float | StatusInfo]]
@@ -73,7 +80,8 @@ def parse_apc_rackpdu_power(string_table: list[type_defs.StringTable]) -> Parsed
             continue
 
         parsed.setdefault(
-            f"{name_part} {num}", {"current": get_status_info(amperage_str, device_state)}
+            f"{name_part} {num}",
+            {"current": get_status_info(amperage_str, device_state)},
         )
     return parsed
 

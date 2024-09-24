@@ -119,7 +119,9 @@ def do_localize(args: list[str]) -> None:
         allc = sorted(commands.keys())
         allc = [tty.bold + c + tty.normal for c in allc]
         logger.error(
-            "Invalid localize command. Allowed are: %s and %s.", ", ".join(allc[:-1]), allc[-1]
+            "Invalid localize command. Allowed are: %s and %s.",
+            ", ".join(allc[:-1]),
+            allc[-1],
         )
         sys.exit(1)
 
@@ -172,7 +174,16 @@ def _localize_update_po(lang: LanguageName) -> None:
 def _localize_init_po(lang: LanguageName) -> None:
     if (
         subprocess.call(
-            ["msginit", "-i", _pot_file(), "--no-translator", "-l", lang, "-o", _po_file(lang)],
+            [
+                "msginit",
+                "-i",
+                _pot_file(),
+                "--no-translator",
+                "-l",
+                lang,
+                "-o",
+                _po_file(lang),
+            ],
             stdout=subprocess.DEVNULL,
         )
         != 0

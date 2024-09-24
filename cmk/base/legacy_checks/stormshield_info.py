@@ -17,13 +17,16 @@ def inventory_stormshield_info(info):
 
 def check_stormshield_info(item, params, info):
     for model, version, serial, sysname, syslanguage in info:
-        yield 0, "Model: {}, Version: {}, Serial: {}, SysName: {}, \
+        yield (
+            0,
+            "Model: {}, Version: {}, Serial: {}, SysName: {}, \
             SysLanguage: {}".format(
-            model,
-            version,
-            serial,
-            sysname,
-            syslanguage,
+                model,
+                version,
+                serial,
+                sysname,
+                syslanguage,
+            ),
         )
 
 

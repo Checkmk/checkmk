@@ -93,7 +93,10 @@ class ContextAutocompleterConfig(AutocompleterConfig):
 
     @property
     def params(self) -> AutocompleterParams:
-        return {"show_independent_of_context": self._show_independent_of_context, **super().params}
+        return {
+            "show_independent_of_context": self._show_independent_of_context,
+            **super().params,
+        }
 
 
 class GroupAutocompleterConfig(AutocompleterConfig):
@@ -117,7 +120,9 @@ class GroupAutocompleterConfig(AutocompleterConfig):
         dynamic_params_callback_name: DynamicParamsCallbackName | None = None,
     ) -> None:
         super().__init__(
-            ident=ident, strict=strict, dynamic_params_callback_name=dynamic_params_callback_name
+            ident=ident,
+            strict=strict,
+            dynamic_params_callback_name=dynamic_params_callback_name,
         )
         self._group_type = group_type
 

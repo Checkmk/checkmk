@@ -136,7 +136,12 @@ def check_gcp_sql_memory(
         )
     }
     yield from gcp.check(
-        metrics, item, params, section_gcp_service_cloud_sql, ASSET_TYPE, section_gcp_assets
+        metrics,
+        item,
+        params,
+        section_gcp_service_cloud_sql,
+        ASSET_TYPE,
+        section_gcp_assets,
     )
 
 
@@ -160,13 +165,19 @@ def check_gcp_sql_cpu(
     metrics = {
         "util": gcp.MetricSpec(
             gcp.MetricExtractionSpec(
-                metric_type="cloudsql.googleapis.com/database/cpu/utilization", scale=1e2
+                metric_type="cloudsql.googleapis.com/database/cpu/utilization",
+                scale=1e2,
             ),
             gcp.MetricDisplaySpec(label="CPU", render_func=render.percent),
         )
     }
     yield from gcp.check(
-        metrics, item, params, section_gcp_service_cloud_sql, ASSET_TYPE, section_gcp_assets
+        metrics,
+        item,
+        params,
+        section_gcp_service_cloud_sql,
+        ASSET_TYPE,
+        section_gcp_assets,
     )
 
 
@@ -208,7 +219,12 @@ def check_gcp_sql_network(
         ),
     }
     yield from gcp.check(
-        metrics, item, params, section_gcp_service_cloud_sql, ASSET_TYPE, section_gcp_assets
+        metrics,
+        item,
+        params,
+        section_gcp_service_cloud_sql,
+        ASSET_TYPE,
+        section_gcp_assets,
     )
 
 
@@ -219,7 +235,11 @@ check_plugin_gcp_sql_network = CheckPlugin(
     check_ruleset_name="gcp_sql_network",
     discovery_function=discover,
     check_function=check_gcp_sql_network,
-    check_default_parameters={"net_data_sent": None, "net_data_recv": None, "connections": None},
+    check_default_parameters={
+        "net_data_sent": None,
+        "net_data_recv": None,
+        "connections": None,
+    },
 )
 
 
@@ -345,7 +365,12 @@ def check_gcp_sql_replication(
         )
     }
     yield from gcp.check(
-        metrics, item, params, section_gcp_service_cloud_sql, ASSET_TYPE, section_gcp_assets
+        metrics,
+        item,
+        params,
+        section_gcp_service_cloud_sql,
+        ASSET_TYPE,
+        section_gcp_assets,
     )
 
 

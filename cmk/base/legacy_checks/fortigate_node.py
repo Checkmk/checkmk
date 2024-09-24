@@ -161,7 +161,11 @@ def check_fortigate_node_ses(item, params, parsed):
         return
 
     yield check_levels(
-        data["sessions"], "session", params["levels"], human_readable_func=str, infoname="Sessions"
+        data["sessions"],
+        "session",
+        params["levels"],
+        human_readable_func=str,
+        infoname="Sessions",
     )
 
 

@@ -830,7 +830,9 @@ SECTION = {
     ],
 )
 def test_check_ipmi_summarized(
-    params: Mapping[str, object], status_txt_mapping: ipmi.StatusTxtMapping, exp_result: CheckResult
+    params: Mapping[str, object],
+    status_txt_mapping: ipmi.StatusTxtMapping,
+    exp_result: CheckResult,
 ) -> None:
     assert (
         list(

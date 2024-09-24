@@ -48,7 +48,9 @@ INFO_1 = [
 
 
 def default_parameters(
-    *, ignore_waittypes: list[str] | None = None, waittime: tuple[float, float] | None = None
+    *,
+    ignore_waittypes: list[str] | None = None,
+    waittime: tuple[float, float] | None = None,
 ) -> Params:
     params = DEFAULT_PARAMETERS.copy()
     if ignore_waittypes is not None:
@@ -73,7 +75,10 @@ def test_mssql_blocked_sessions_default(
             section=parse_function(INFO_0),
         )
     ) == [
-        Result(state=State.CRIT, summary="Summary: 119 blocked by 1 ID(s), 76 blocked by 1 ID(s)"),
+        Result(
+            state=State.CRIT,
+            summary="Summary: 119 blocked by 1 ID(s), 76 blocked by 1 ID(s)",
+        ),
         Result(
             state=State.OK,
             summary="Session 119 blocked by 75, Type: LCK_M_U, Wait: 2 days 16 hours",
@@ -319,7 +324,9 @@ def test_mssql_blocked_sessions_generic(
     assert (
         list(
             check_mssql_blocked_sessions(
-                item=item, params=params, section=parse_mssql_blocked_sessions(string_table)
+                item=item,
+                params=params,
+                section=parse_mssql_blocked_sessions(string_table),
             )
         )
         == check_result
@@ -341,7 +348,9 @@ def test_mssql_blocked_sessions_generic(
     ],
 )
 def test_mssql_blocked_sessions_generic_discover(
-    fix_register: FixRegister, string_table: StringTable, discovery_result: list[Service]
+    fix_register: FixRegister,
+    string_table: StringTable,
+    discovery_result: list[Service],
 ) -> None:
     assert (
         list(discovery_mssql_blocked_sessions(parse_mssql_blocked_sessions(string_table)))

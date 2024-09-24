@@ -38,7 +38,12 @@ def test_check_postgres_query_duration_basic() -> None:
     section = {
         "item": [
             Query(seconds="2"),  # not used
-            Query(seconds="23", pid="4242", current_query="Where is Waldo", state="anxious"),
+            Query(
+                seconds="23",
+                pid="4242",
+                current_query="Where is Waldo",
+                state="anxious",
+            ),
         ]
     }
     assert list(check_postgres_query_duration("item", section)) == [
@@ -57,7 +62,12 @@ def test_cluster_check_postgres_query_duration_basic() -> None:
     }
     node2_section = {
         "item": [
-            Query(seconds="22", pid="4242", current_query="Where is Waldo", state="anxious"),
+            Query(
+                seconds="22",
+                pid="4242",
+                current_query="Where is Waldo",
+                state="anxious",
+            ),
         ]
     }
 

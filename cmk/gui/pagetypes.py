@@ -36,7 +36,7 @@ import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.user import UserId
-from cmk.utils.version import edition, Edition
+from cmk.utils.version import Edition, edition
 
 import cmk.gui.pages
 import cmk.gui.sites as sites
@@ -93,7 +93,12 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.roles import is_user_with_publish_permissions, user_may
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, makeuri_contextless
+from cmk.gui.utils.urls import (
+    make_confirm_delete_link,
+    makeactionuri,
+    makeuri,
+    makeuri_contextless,
+)
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.validate import validate_id
 from cmk.gui.valuespec import (
@@ -216,7 +221,9 @@ def deserialize_page_renderer_spec(page_dict: Mapping[str, object]) -> PageRende
     return page_renderer_spec
 
 
-def serialize_page_renderer_spec(page_renderer_spec: PageRendererSpec) -> Mapping[str, object]:
+def serialize_page_renderer_spec(
+    page_renderer_spec: PageRendererSpec,
+) -> Mapping[str, object]:
     raw_page_renderer_spec = {
         "name": page_renderer_spec["name"],
         "title": page_renderer_spec["title"],
@@ -1275,7 +1282,8 @@ class EditPage(Page, Generic[_T_OverridableSpec, _T]):
                 page = instances.instance((owner_id, page_name))
             except KeyError:
                 raise MKUserError(
-                    None, _("The requested %s does not exist") % self._type.phrase("title")
+                    None,
+                    _("The requested %s does not exist") % self._type.phrase("title"),
                 )
 
             page_dict = page.internal_representation()
@@ -2416,7 +2424,11 @@ def _customize_menu_topics() -> list[TopicMenuTopic]:
             icon=page_type_.type_icon(),
         )
 
-        if page_type_.type_name() in ("pagetype_topic", "bookmark_list", "custom_snapin"):
+        if page_type_.type_name() in (
+            "pagetype_topic",
+            "bookmark_list",
+            "custom_snapin",
+        ):
             general_items.append(item)
         elif page_type_.type_name() == "sla_configuration":
             business_reporting_items.append(item)

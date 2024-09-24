@@ -9,7 +9,15 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Dictionary, Float, Integer, ListOf, MonitoringState, TextInput, Tuple
+from cmk.gui.valuespec import (
+    Dictionary,
+    Float,
+    Integer,
+    ListOf,
+    MonitoringState,
+    TextInput,
+    Tuple,
+)
 
 
 def _phase_elements():

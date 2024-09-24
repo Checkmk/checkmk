@@ -18,7 +18,11 @@ from typing_extensions import TypedDict
 from livestatus import SiteId
 
 from cmk.utils.cpu_tracking import Snapshot
-from cmk.utils.crypto.certificate import Certificate, CertificatePEM, CertificateWithPrivateKey
+from cmk.utils.crypto.certificate import (
+    Certificate,
+    CertificatePEM,
+    CertificateWithPrivateKey,
+)
 from cmk.utils.crypto.keys import EncryptedPrivateKeyPEM, PrivateKey
 from cmk.utils.crypto.password import Password, PasswordHash
 from cmk.utils.crypto.types import HashAlgorithm
@@ -374,7 +378,9 @@ class ColumnSpec:
 
         if isinstance(value, dict):
 
-            def _get_join_value(value: _RawColumnSpec | _RawLegacyColumnSpec) -> ColumnName | None:
+            def _get_join_value(
+                value: _RawColumnSpec | _RawLegacyColumnSpec,
+            ) -> ColumnName | None:
                 if isinstance(join_value := value.get("join_value"), str):
                     return join_value
                 if isinstance(join_value := value.get("join_index"), str):

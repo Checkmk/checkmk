@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Submodule providing the `run` function of generictests package"""
+
 from contextlib import contextmanager
 
 import freezegun
@@ -76,7 +77,11 @@ def get_mock_values(dataset, subcheck):
     mock_is_d = getattr(dataset, "mock_item_state", {})
     mock_hc_d = getattr(dataset, "mock_host_conf", {})
     mock_hc_m = getattr(dataset, "mock_host_conf_merged", {})
-    return mock_is_d.get(subcheck, {}), mock_hc_d.get(subcheck, []), mock_hc_m.get(subcheck, {})
+    return (
+        mock_is_d.get(subcheck, {}),
+        mock_hc_d.get(subcheck, []),
+        mock_hc_m.get(subcheck, {}),
+    )
 
 
 def get_discovery_expected(subcheck, dataset):

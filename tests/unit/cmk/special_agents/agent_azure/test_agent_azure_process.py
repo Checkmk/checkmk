@@ -246,7 +246,9 @@ def test_process_vm(
     ],
 )
 def test_get_vm_labels_section(
-    vm: AzureResource, group_tags: GroupLabels, expected_result: tuple[Sequence[str], Sequence[str]]
+    vm: AzureResource,
+    group_tags: GroupLabels,
+    expected_result: tuple[Sequence[str], Sequence[str]],
 ) -> None:
     labels_section = get_vm_labels_section(vm, group_tags)
 
@@ -434,7 +436,14 @@ def test_process_resource(
     [
         (
             MockMgmtApiClient(
-                [{"name": "BurningMan", "tags": {"my-resource-tag": "my-resource-value"}}], {}, 2.0
+                [
+                    {
+                        "name": "BurningMan",
+                        "tags": {"my-resource-tag": "my-resource-value"},
+                    }
+                ],
+                {},
+                2.0,
             ),
             ["burningman"],
             {"burningman": {"my-resource-tag": "my-resource-value"}},
@@ -442,7 +451,9 @@ def test_process_resource(
     ],
 )
 def test_get_group_labels(
-    mgmt_client: MgmtApiClient, monitored_groups: Sequence[str], expected_result: GroupLabels
+    mgmt_client: MgmtApiClient,
+    monitored_groups: Sequence[str],
+    expected_result: GroupLabels,
 ) -> None:
     group_tags = get_group_labels(mgmt_client, monitored_groups, TagsImportPatternOption.import_all)
     assert group_tags == expected_result
@@ -527,7 +538,11 @@ def test_write_section_ad(enabled_services: list[str]) -> None:
     "args, usage_data, exception, expected_result",
     [
         pytest.param(
-            Args(debug=False, services=[], tag_key_pattern=TagsImportPatternOption.import_all),
+            Args(
+                debug=False,
+                services=[],
+                tag_key_pattern=TagsImportPatternOption.import_all,
+            ),
             None,
             None,
             "",
@@ -857,7 +872,9 @@ def test_process_resource_health(
     assert captured.out == expected_output
 
 
-def test_process_resource_health_request_error(capsys: pytest.CaptureFixture[str]) -> None:
+def test_process_resource_health_request_error(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     mgmt_client = MockMgmtApiClient(
         [], {}, 0, resource_health_exception=Exception("Request failed")
     )
@@ -873,7 +890,9 @@ def test_process_resource_health_request_error(capsys: pytest.CaptureFixture[str
     )
 
 
-def test_process_resource_health_request_error_debug(capsys: pytest.CaptureFixture[str]) -> None:
+def test_process_resource_health_request_error_debug(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     mgmt_client = MockMgmtApiClient(
         [], {}, 0, resource_health_exception=Exception("Request failed")
     )

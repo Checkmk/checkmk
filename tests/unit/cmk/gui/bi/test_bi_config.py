@@ -48,7 +48,10 @@ from cmk.gui.bi._valuespecs import _convert_bi_rule_from_vs, _convert_bi_rule_to
         ),
         param(
             {
-                "action": {"host_regex": "testhost", "type": "state_of_remaining_services"},
+                "action": {
+                    "host_regex": "testhost",
+                    "type": "state_of_remaining_services",
+                },
                 "search": {"type": "empty"},
             },
             id="state_of_remaining_services",
@@ -96,7 +99,9 @@ from cmk.gui.bi._valuespecs import _convert_bi_rule_from_vs, _convert_bi_rule_to
         ),
     ],
 )
-def test_bi_rule_outermost_transform_to_vs(rest_config: None | Mapping[str, object]) -> None:
+def test_bi_rule_outermost_transform_to_vs(
+    rest_config: None | Mapping[str, object],
+) -> None:
     if rest_config is None:
         # Error page special handling
         # This handles html.var voodoo, never results in a rest config

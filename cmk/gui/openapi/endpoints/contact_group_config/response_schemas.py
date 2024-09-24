@@ -4,7 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.gui.fields.base import BaseSchema
 from cmk.gui.fields.definitions import customer_field_response
-from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, DomainObjectCollection
+from cmk.gui.openapi.restful_objects.response_schemas import (
+    DomainObject,
+    DomainObjectCollection,
+)
 
 from cmk import fields
 

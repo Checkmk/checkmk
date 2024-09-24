@@ -108,9 +108,15 @@ def _parameter_valuespec_elasticsearch_indices():
                     ),
                     elements=[
                         Percentage(title=_("Warning at"), unit=_("percent higher than average")),
-                        Percentage(title=_("Critical at"), unit=_("percent higher than average")),
+                        Percentage(
+                            title=_("Critical at"),
+                            unit=_("percent higher than average"),
+                        ),
                         Integer(
-                            title=_("Averaging"), unit=_("minutes"), minvalue=1, default_value=30
+                            title=_("Averaging"),
+                            unit=_("minutes"),
+                            minvalue=1,
+                            default_value=30,
                         ),
                     ],
                 ),
@@ -127,9 +133,15 @@ def _parameter_valuespec_elasticsearch_indices():
                     ),
                     elements=[
                         Percentage(title=_("Warning at"), unit=_("percent higher than average")),
-                        Percentage(title=_("Critical at"), unit=_("percent higher than average")),
+                        Percentage(
+                            title=_("Critical at"),
+                            unit=_("percent higher than average"),
+                        ),
                         Integer(
-                            title=_("Averaging"), unit=_("minutes"), minvalue=1, default_value=30
+                            title=_("Averaging"),
+                            unit=_("minutes"),
+                            minvalue=1,
+                            default_value=30,
                         ),
                     ],
                 ),

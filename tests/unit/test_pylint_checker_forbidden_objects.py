@@ -41,7 +41,13 @@ class _TestChecker(ForbiddenFunctionChecker):
     name = "test_checker"
     target_lib = "testlib"
     target_objects = frozenset(["test1", "test2"])
-    mgs = {"E9210": ("Checker for test purposes", "test_checker", "Checker only for test purposes")}
+    mgs = {
+        "E9210": (
+            "Checker for test purposes",
+            "test_checker",
+            "Checker only for test purposes",
+        )
+    }
 
 
 @pytest.fixture(name="test_checker")
@@ -66,13 +72,28 @@ def six_checker_fixture() -> SixEnsureStrBinChecker:
             """ class Employee(NamedTuple): i:int #@ """,
             False,
         ),
-        ("from somelib.typing import NamedTuple #@", """ NamedTuple("s", []) #@ """, True),
-        ("from something import somefct as NamedTuple #@", """NamedTuple("s", []) #@""", False),
-        ("from typing import NamedTuple as nt #@", """ class Employee(nt): i:int #@ """, False),
+        (
+            "from somelib.typing import NamedTuple #@",
+            """ NamedTuple("s", []) #@ """,
+            True,
+        ),
+        (
+            "from something import somefct as NamedTuple #@",
+            """NamedTuple("s", []) #@""",
+            False,
+        ),
+        (
+            "from typing import NamedTuple as nt #@",
+            """ class Employee(nt): i:int #@ """,
+            False,
+        ),
     ],
 )
 def test_import_from_typing(
-    import_code: str, call_code: str, ref_value: bool, namedtuple_checker: TypingNamedTupleChecker
+    import_code: str,
+    call_code: str,
+    ref_value: bool,
+    namedtuple_checker: TypingNamedTupleChecker,
 ) -> None:
     node = astroid.extract_node(import_code)
     namedtuple_checker.visit_importfrom(node)
@@ -93,8 +114,16 @@ def test_import_from_typing(
         ("import something #@", """ s=something.NamedTuple("s", []) #@""", False),
         ("import typing #@", """ typing.NamedTuple("s", []) #@""", True),
         ("import something #@", """ something.NamedTuple("s", []) #@""", False),
-        ("import typing #@", """ class Employee(typing.NamedTuple): i:int #@ """, False),
-        ("import something #@", """ class Employee(something.NamedTuple): i:int #@ """, False),
+        (
+            "import typing #@",
+            """ class Employee(typing.NamedTuple): i:int #@ """,
+            False,
+        ),
+        (
+            "import something #@",
+            """ class Employee(something.NamedTuple): i:int #@ """,
+            False,
+        ),
         (
             "import something.typing #@",
             """ class Employee(something.typing.NamedTuple): i:int #@ """,
@@ -108,7 +137,10 @@ def test_import_from_typing(
     ],
 )
 def test_import_typing(
-    import_code: str, call_code: str, ref_value: bool, namedtuple_checker: TypingNamedTupleChecker
+    import_code: str,
+    call_code: str,
+    ref_value: bool,
+    namedtuple_checker: TypingNamedTupleChecker,
 ) -> None:
     node = astroid.extract_node(import_code)
     namedtuple_checker.visit_import(node)
@@ -130,8 +162,16 @@ def test_import_typing(
             ("import something #@", """ s=something.NamedTuple("s", []) #@""", False),
             ("import typing #@", """ typing.NamedTuple("s", []) #@""", True),
             ("import something #@", """ something.NamedTuple("s", []) #@""", False),
-            ("import typing #@", """ class Employee(typing.NamedTuple): i:int #@ """, False),
-            ("import something #@", """ class Employee(something.NamedTuple): i:int #@ """, False),
+            (
+                "import typing #@",
+                """ class Employee(typing.NamedTuple): i:int #@ """,
+                False,
+            ),
+            (
+                "import something #@",
+                """ class Employee(something.NamedTuple): i:int #@ """,
+                False,
+            ),
             (
                 "import something.typing #@",
                 """ class Employee(something.typing.NamedTuple): i:int #@ """,
@@ -146,7 +186,8 @@ def test_import_typing(
     ],
 )
 def test_multiple_modules_typing(
-    namedtuple_checker: TypingNamedTupleChecker, modules: Iterable[tuple[str, str, bool]]
+    namedtuple_checker: TypingNamedTupleChecker,
+    modules: Iterable[tuple[str, str, bool]],
 ) -> None:
     for import_code, call_code, ref_value in modules:
         node = astroid.extract_node(import_code)
@@ -193,7 +234,10 @@ def test_multiple_fcts(
     ],
 )
 def test_function_as_argument_attribute(
-    import_code: str, call_code: str, ref_value: bool, namedtuple_checker: TypingNamedTupleChecker
+    import_code: str,
+    call_code: str,
+    ref_value: bool,
+    namedtuple_checker: TypingNamedTupleChecker,
 ) -> None:
     node = astroid.extract_node(import_code)
     namedtuple_checker.visit_import(node)
@@ -208,12 +252,19 @@ def test_function_as_argument_attribute(
 @pytest.mark.parametrize(
     ["import_code", "call_code", "ref_value"],
     [
-        ("from typing import NamedTuple #@", """ map(NamedTuple, something) #@ """, True),
+        (
+            "from typing import NamedTuple #@",
+            """ map(NamedTuple, something) #@ """,
+            True,
+        ),
         ("from something import NamedTuple #@", "map(NamedTuple, smth) #@", False),
     ],
 )
 def test_function_as_argument_name(
-    import_code: str, call_code: str, ref_value: bool, namedtuple_checker: TypingNamedTupleChecker
+    import_code: str,
+    call_code: str,
+    ref_value: bool,
+    namedtuple_checker: TypingNamedTupleChecker,
 ) -> None:
     node = astroid.extract_node(import_code)
     namedtuple_checker.visit_importfrom(node)
@@ -233,7 +284,11 @@ def test_function_as_argument_name(
             ("from six import ensure_str #@", """s =ensure_str("s") #@ """, True),
             ("from six import ensure_binary  #@", """ s=ensure_binary("s") #@""", True),
             ("from six import ensure_str #@", """ ensure_binary("s") #@""", False),
-            ("from six import ensure_str, ensure_binary #@", "ensure_binary(1) #@", True),
+            (
+                "from six import ensure_str, ensure_binary #@",
+                "ensure_binary(1) #@",
+                True,
+            ),
             ("from six import ensure_str, ensure_binary #@", "ensure_str(1) #@", True),
         ]
     ],

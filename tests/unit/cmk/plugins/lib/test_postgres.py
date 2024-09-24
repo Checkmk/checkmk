@@ -30,12 +30,32 @@ def test_parse_function_for_stats_section() -> None:
                 "tname": "serveraktion",
                 "vtime": "1488881726",
             },
-            {"atime": "-1", "sname": "pg_catalog", "tname": "pg_statistic", "vtime": "1488882719"},
-            {"atime": "1489001316", "sname": "public", "tname": "auftrag", "vtime": "1489001316"},
+            {
+                "atime": "-1",
+                "sname": "pg_catalog",
+                "tname": "pg_statistic",
+                "vtime": "1488882719",
+            },
+            {
+                "atime": "1489001316",
+                "sname": "public",
+                "tname": "auftrag",
+                "vtime": "1489001316",
+            },
             {"atime": "-1", "sname": "public", "tname": "anrede", "vtime": "-1"},
-            {"atime": "", "sname": "public", "tname": "auftrag_mediadaten", "vtime": "-1"},
+            {
+                "atime": "",
+                "sname": "public",
+                "tname": "auftrag_mediadaten",
+                "vtime": "-1",
+            },
         ],
         "postgres": [
-            {"atime": "-1", "sname": "pg_catalog", "tname": "pg_statistic", "vtime": "-1"},
+            {
+                "atime": "-1",
+                "sname": "pg_catalog",
+                "tname": "pg_statistic",
+                "vtime": "-1",
+            },
         ],
     }

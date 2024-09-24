@@ -718,9 +718,12 @@ def test_split_syslog_nonnil_sd_and_message(
         ),
     ],
 )
-def test_split_syslog_structured_data_and_message_exception(sd_and_message: str) -> None:
+def test_split_syslog_structured_data_and_message_exception(
+    sd_and_message: str,
+) -> None:
     with pytest.raises(
-        ValueError, match="Invalid RFC 5424 syslog message: structured data has the wrong format"
+        ValueError,
+        match="Invalid RFC 5424 syslog message: structured data has the wrong format",
     ):
         split_syslog_structured_data_and_message(sd_and_message)
 

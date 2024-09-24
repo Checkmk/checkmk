@@ -57,7 +57,14 @@ class TestGCSDiscover(DiscoverTester):
 
     @property
     def expected_items(self) -> set[str]:
-        return {"with-labels", "allin", "disk-1", "instance-1", "instance-2", "instance-3"}
+        return {
+            "with-labels",
+            "allin",
+            "disk-1",
+            "instance-1",
+            "instance-2",
+            "instance-3",
+        }
 
     @property
     def expected_labels(self) -> set[ServiceLabel]:

@@ -54,7 +54,8 @@ def check_lsi_array(item: str, params: Mapping[str, Any], section: Section) -> C
         yield Result(state=State.CRIT, summary="RAID volume %s not existing" % item)
     else:
         yield Result(
-            state=State.OK if state == "Okay(OKY)" else State.CRIT, summary=f"Status is '{state}'"
+            state=State.OK if state == "Okay(OKY)" else State.CRIT,
+            summary=f"Status is '{state}'",
         )
 
 
@@ -67,7 +68,8 @@ def check_lsi_disk(item: str, params: Mapping[str, Any], section: Section) -> Ch
         yield Result(state=State.OK, summary=f"Disk has state '{state}'")
     else:
         yield Result(
-            state=State.CRIT, summary=f"Disk has state '{state}' (should be '{expected_state}')"
+            state=State.CRIT,
+            summary=f"Disk has state '{state}' (should be '{expected_state}')",
         )
 
 

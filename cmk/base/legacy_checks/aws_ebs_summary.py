@@ -60,7 +60,11 @@ def check_aws_ebs_summary(item, params, parsed):
         stores_by_type.setdefault(row["VolumeType"], []).append(volume_id)
         long_output.append(
             "Volume: {}, Status: {}, Type: {}, Encrypted: {}, Creation time: {}".format(
-                volume_id, row["State"], row["VolumeType"], row["Encrypted"], row["CreateTime"]
+                volume_id,
+                row["State"],
+                row["VolumeType"],
+                row["Encrypted"],
+                row["CreateTime"],
             )
         )
 
@@ -68,7 +72,10 @@ def check_aws_ebs_summary(item, params, parsed):
     for state, stores in stores_by_state.items():
         yield 0, f"{state}: {len(stores)}"
     for type_, stores in stores_by_type.items():
-        yield 0, "{}: {}".format(AWSEBSStorageTypes.get(type_, "unknown[%s]" % type_), len(stores))
+        yield (
+            0,
+            "{}: {}".format(AWSEBSStorageTypes.get(type_, "unknown[%s]" % type_), len(stores)),
+        )
     if long_output:
         yield 0, "\n%s" % "\n".join(long_output)
 

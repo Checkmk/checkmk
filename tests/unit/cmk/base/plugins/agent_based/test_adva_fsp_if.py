@@ -8,7 +8,12 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.base.plugins.agent_based import adva_fsp_if
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
 SECTION = {
@@ -81,7 +86,9 @@ def test_discover_adva_fsp_if() -> None:
                 Result(state=State.OK, summary="Output power: -3.1 dBm"),
                 Metric("output_power", -3.1, boundaries=(0.0, None)),
                 Result(
-                    state=State.OK, summary="Input power: -2.7 dBm", details="Input power: -2.7 dBm"
+                    state=State.OK,
+                    summary="Input power: -2.7 dBm",
+                    details="Input power: -2.7 dBm",
                 ),
                 Metric("input_power", -2.7, boundaries=(0.0, None)),
             ],

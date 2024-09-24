@@ -7,6 +7,7 @@ password store compatible.
 
 We are working towards a more staight forward solution.
 """
+
 import shlex
 import sys
 from collections.abc import Callable, Iterable, Mapping

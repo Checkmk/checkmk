@@ -760,7 +760,14 @@ def test_merge() -> None:
     result = merge([1, 3, 5], [2, 3, 4])
     assert list(result) == [(1, None), (None, 2), (3, 3), (None, 4), (5, None)]
     result = merge([1, 1, 5], [2, 3, 4])
-    assert list(result) == [(1, None), (1, None), (None, 2), (None, 3), (None, 4), (5, None)]
+    assert list(result) == [
+        (1, None),
+        (1, None),
+        (None, 2),
+        (None, 3),
+        (None, 4),
+        (5, None),
+    ]
     result = merge([1], [2, 3, 4])
     assert list(result) == [(1, None), (None, 2), (None, 3), (None, 4)]
     result = merge([1, 1, 1, 4], [1, 2, 3, 4])

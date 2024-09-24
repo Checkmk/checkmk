@@ -9,7 +9,15 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersNetworking,
 )
-from cmk.gui.valuespec import Age, Dictionary, FixedValue, Integer, ListChoice, TextInput, Tuple
+from cmk.gui.valuespec import (
+    Age,
+    Dictionary,
+    FixedValue,
+    Integer,
+    ListChoice,
+    TextInput,
+    Tuple,
+)
 
 hivemanger_states = [
     ("Critical", "Critical"),

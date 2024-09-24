@@ -82,7 +82,13 @@ def test_activate_changes(
 def test_list_pending_changes(clients: ClientRegistry) -> None:
     clients.HostConfig.create(host_name="foobar", folder="/")
     resp = clients.ActivateChanges.list_pending_changes()
-    assert set(resp.json["value"][0]) == {"id", "user_id", "action_name", "text", "time"}
+    assert set(resp.json["value"][0]) == {
+        "id",
+        "user_id",
+        "action_name",
+        "text",
+        "time",
+    }
     assert "actions/activate-changes/invoke" in resp.json["links"][0]["href"]
 
 

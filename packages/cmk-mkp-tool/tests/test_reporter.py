@@ -29,7 +29,10 @@ def test_get_local_files_by_part(path_config: PathConfig) -> None:
     _setup_local_files_structure(path_config)
     expected: dict[PackagePart | None, set[Path]] = {
         **{
-            p: {Path(f"regular_file_of_{p.ident}.py"), Path(f"subdir/subdir_file_of_{p.ident}.py")}
+            p: {
+                Path(f"regular_file_of_{p.ident}.py"),
+                Path(f"subdir/subdir_file_of_{p.ident}.py"),
+            }
             for p in PackagePart
             if p is not PackagePart.EC_RULE_PACKS
         },
@@ -45,7 +48,10 @@ def test_get_packable_files_by_part(path_config: PathConfig) -> None:
 
     expected: dict[PackagePart, set[Path]] = {
         **{
-            p: {Path(f"regular_file_of_{p.ident}.py"), Path(f"subdir/subdir_file_of_{p.ident}.py")}
+            p: {
+                Path(f"regular_file_of_{p.ident}.py"),
+                Path(f"subdir/subdir_file_of_{p.ident}.py"),
+            }
             for p in PackagePart
             if p is not PackagePart.EC_RULE_PACKS
         },

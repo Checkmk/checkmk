@@ -133,7 +133,13 @@ def check_jolokia_jvm_memory_pools(item, params, parsed):
         return
 
     if isinstance(usage, str) and usage.startswith("ERROR"):
-        yield 3, f"Check received invalid data. See long output for details. \n" f'Error was: "{usage}". ' f"This could be a support case for the Jolokia API maintainers: " f"https://github.com/rhuss/jolokia"
+        yield (
+            3,
+            f"Check received invalid data. See long output for details. \n"
+            f'Error was: "{usage}". '
+            f"This could be a support case for the Jolokia API maintainers: "
+            f"https://github.com/rhuss/jolokia",
+        )
         return
 
     value_max = usage.get("max", -1)

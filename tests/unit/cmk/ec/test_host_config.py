@@ -62,7 +62,9 @@ def _test_table() -> list[dict[str, Any]]:
 
 
 @pytest.fixture(name="live")
-def fixture_livestatus(mock_livestatus: MockLiveStatusConnection) -> MockLiveStatusConnection:
+def fixture_livestatus(
+    mock_livestatus: MockLiveStatusConnection,
+) -> MockLiveStatusConnection:
     mock_livestatus.set_sites(["local"])
     mock_livestatus.add_table("hosts", _test_table())
     return mock_livestatus

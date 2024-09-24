@@ -23,7 +23,11 @@ pytestmark = pytest.mark.checks
         ),
         pytest.param(
             {"password": ("store", "storeonce"), "user": "username"},
-            ["--address=host", "--user=username", "--password=('store', 'storeonce', '%s')"],
+            [
+                "--address=host",
+                "--user=username",
+                "--password=('store', 'storeonce', '%s')",
+            ],
             id="with password from store",
         ),
         pytest.param(
@@ -33,7 +37,12 @@ pytestmark = pytest.mark.checks
         ),
         pytest.param(
             {"cert": False, "password": ("password", "password"), "user": "username"},
-            ["--address=host", "--user=username", "--password=password", "--no-cert-check"],
+            [
+                "--address=host",
+                "--user=username",
+                "--password=password",
+                "--no-cert-check",
+            ],
             id="with explicit password and cert=False",
         ),
     ],

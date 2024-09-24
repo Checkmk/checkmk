@@ -227,14 +227,16 @@ def test_text_input() -> None:
         html.text_input("tralala")
         written_text = "".join(output_funnel.drain())
         assert compare_html(
-            written_text, '<input style="" name="tralala" type="text" class="text" value=\'\' />'
+            written_text,
+            '<input style="" name="tralala" type="text" class="text" value=\'\' />',
         )
 
     with output_funnel.plugged():
         html.text_input("blabla", cssclass="blubb")
         written_text = "".join(output_funnel.drain())
         assert compare_html(
-            written_text, '<input style="" name="tralala" type="text" class="blubb" value=\'\' />'
+            written_text,
+            '<input style="" name="tralala" type="text" class="blubb" value=\'\' />',
         )
 
     with output_funnel.plugged():
@@ -249,7 +251,8 @@ def test_text_input() -> None:
         html.text_input("blabla", placeholder="placido", data_world="welt", data_max_labels=42)
         written_text = "".join(output_funnel.drain())
         assert compare_html(
-            written_text, '<input style="" name="tralala" type="text" class="text" value=\'\' />'
+            written_text,
+            '<input style="" name="tralala" type="text" class="text" value=\'\' />',
         )
 
 

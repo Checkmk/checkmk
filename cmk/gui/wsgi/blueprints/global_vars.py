@@ -18,7 +18,10 @@ from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.theme import Theme
 from cmk.gui.utils.timeout_manager import TimeoutManager
 from cmk.gui.utils.user_errors import UserErrors
-from cmk.gui.wsgi.applications.checkmk import get_mime_type_from_output_format, get_output_format
+from cmk.gui.wsgi.applications.checkmk import (
+    get_mime_type_from_output_format,
+    get_output_format,
+)
 
 
 def set_global_vars() -> None:

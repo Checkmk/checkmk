@@ -180,7 +180,10 @@ def test_get_controllers(
     "last_backup, expected_result",
     [
         (None, None),
-        ("2020-07-27T17:27:39.000Z", datetime(2020, 7, 27, 17, 27, 39, tzinfo=timezone.utc)),
+        (
+            "2020-07-27T17:27:39.000Z",
+            datetime(2020, 7, 27, 17, 27, 39, tzinfo=timezone.utc),
+        ),
     ],
 )
 def test_get_last_backup(last_backup: str | None, expected_result: datetime | None) -> None:

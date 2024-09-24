@@ -5,7 +5,15 @@
 from typing import Literal
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import Age, Alternative, FixedValue, Float, Integer, Percentage, Tuple
+from cmk.gui.valuespec import (
+    Age,
+    Alternative,
+    FixedValue,
+    Float,
+    Integer,
+    Percentage,
+    Tuple,
+)
 
 
 def _NoLevels() -> FixedValue:

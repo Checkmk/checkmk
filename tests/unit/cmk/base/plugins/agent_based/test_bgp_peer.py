@@ -152,13 +152,19 @@ def test_bgp_peer_parse_cisco_2(data: StringByteTable, result: bgp_peer.Section)
         (
             DATA_SIMPLE,
             [
-                Service(item="192.168.1.2", labels=[ServiceLabel("cmk/bgp/description", "Foo")]),
+                Service(
+                    item="192.168.1.2",
+                    labels=[ServiceLabel("cmk/bgp/description", "Foo")],
+                ),
             ],
         ),
         (
             DATA_NO_DESCRIPTION,
             [
-                Service(item="192.168.1.2", labels=[ServiceLabel("cmk/bgp/description", "n/a")]),
+                Service(
+                    item="192.168.1.2",
+                    labels=[ServiceLabel("cmk/bgp/description", "n/a")],
+                ),
             ],
         ),
     ],
@@ -183,7 +189,8 @@ def test_bgp_peer_discover(data: StringByteTable, result: DiscoveryResult) -> No
                 Result(state=State.OK, notice="Remote identifier: '192.168.2.0'"),
                 Result(state=State.OK, notice="Remote AS number: 65000"),
                 Result(
-                    state=State.OK, notice="Last received error: 'Cease/other configuration change'"
+                    state=State.OK,
+                    notice="Last received error: 'Cease/other configuration change'",
                 ),
                 Result(state=State.OK, notice="BGP version: 4"),
                 Result(state=State.OK, notice="Remote address: '192.168.1.2'"),
@@ -203,7 +210,8 @@ def test_bgp_peer_discover(data: StringByteTable, result: DiscoveryResult) -> No
                 Result(state=State.OK, notice="Remote identifier: '10.30.253.243'"),
                 Result(state=State.OK, notice="Remote AS number: 65030"),
                 Result(
-                    state=State.OK, notice="Last received error: 'Connection Collision Resolution'"
+                    state=State.OK,
+                    notice="Last received error: 'Connection Collision Resolution'",
                 ),
                 Result(state=State.OK, notice="BGP version: 4"),
                 Result(state=State.OK, notice="Remote address: '10.255.0.1'"),

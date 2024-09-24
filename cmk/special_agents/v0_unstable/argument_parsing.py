@@ -29,7 +29,9 @@ def create_default_argument_parser(description: str | None) -> argparse.Argument
     )
     parser.add_argument("--verbose", "-v", action="count", default=0)
     parser.add_argument(
-        "--vcrtrace", "--tracefile", action=vcrtrace(filter_headers=[("authorization", "****")])
+        "--vcrtrace",
+        "--tracefile",
+        action=vcrtrace(filter_headers=[("authorization", "****")]),
     )
     return parser
 
@@ -44,13 +46,22 @@ def parse_connection_args(parser: argparse.ArgumentParser) -> argparse.ArgumentP
     )
     parser.add_argument("--protocol", dest="protocol", help="the protocol type", metavar="PROTOCOL")
     parser.add_argument(
-        "--username", dest="username", help="the username for authentication", metavar="USERNAME"
+        "--username",
+        dest="username",
+        help="the username for authentication",
+        metavar="USERNAME",
     )
     parser.add_argument(
-        "--password", dest="password", help="the password for authentication", metavar="PASSWORD"
+        "--password",
+        dest="password",
+        help="the password for authentication",
+        metavar="PASSWORD",
     )
     parser.add_argument(
-        "--token", dest="token", help="the API token for authentication", metavar="TOKEN"
+        "--token",
+        dest="token",
+        help="the API token for authentication",
+        metavar="TOKEN",
     )
     parser.add_argument(
         "--no-cert-check",

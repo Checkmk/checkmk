@@ -15,7 +15,14 @@ from cmk.plugins.lib.df import (
     TREND_DEFAULT_PARAMS,
 )
 
-from .agent_based_api.v1 import get_value_store, Metric, register, Result, Service, State
+from .agent_based_api.v1 import (
+    get_value_store,
+    Metric,
+    register,
+    Result,
+    Service,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 DEFAULT_NETWORK_FS_MOUNT_PARAMETERS: Final = {
@@ -174,7 +181,8 @@ def check_network_fs_mount(
     state = NetworkFSState(mount.state)
     if state is not NetworkFSState.OK:
         yield Result(
-            state=NetworkFSStateMapping[state], summary=f"State: {state.value.capitalize()}"
+            state=NetworkFSStateMapping[state],
+            summary=f"State: {state.value.capitalize()}",
         )
         return
 

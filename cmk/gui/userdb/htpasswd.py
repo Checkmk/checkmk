@@ -42,7 +42,8 @@ def hash_password(password: Password) -> PasswordHash:
 
     except password_hashing.PasswordTooLongError:
         raise MKUserError(
-            None, "Passwords over 72 bytes would be truncated and are therefore not allowed!"
+            None,
+            "Passwords over 72 bytes would be truncated and are therefore not allowed!",
         )
     except ValueError:
         raise MKUserError(None, "Password could not be hashed.")

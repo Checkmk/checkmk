@@ -37,7 +37,14 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.time import timezone_utc_offset_str
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
-from cmk.gui.valuespec import AbsoluteDate, Age, Checkbox, DatePicker, Dictionary, TimePicker
+from cmk.gui.valuespec import (
+    AbsoluteDate,
+    Age,
+    Checkbox,
+    DatePicker,
+    Dictionary,
+    TimePicker,
+)
 from cmk.gui.view_utils import render_cre_upgrade_button
 from cmk.gui.watolib.downtime import determine_downtime_mode, DowntimeSchedule
 
@@ -169,7 +176,11 @@ class CommandReschedule(Command):
         html.open_div(class_="group")
         html.write_text(_("Spread over") + " ")
         html.text_input(
-            "_resched_spread", default_value="5", size=3, cssclass="number", required=True
+            "_resched_spread",
+            default_value="5",
+            size=3,
+            cssclass="number",
+            required=True,
         )
         html.write_text(" " + _("minutes"))
         html.help(
@@ -187,13 +198,19 @@ class CommandReschedule(Command):
         html.close_div()
 
     def _action(
-        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        spec: str,
+        row: Row,
+        row_index: int,
+        action_rows: Rows,
     ) -> CommandActionResult:
         if request.var("_resched_checks"):
             spread = request.get_validated_type_input_mandatory(int, "_resched_spread")
             if spread < 0:
                 raise MKUserError(
-                    "_resched_spread", _("Spread should be a positive number: %s") % spread
+                    "_resched_spread",
+                    _("Spread should be a positive number: %s") % spread,
                 )
 
             t = time.time()
@@ -291,7 +308,12 @@ class CommandNotifications(Command):
         html.close_div()
 
     def _action(
-        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        spec: str,
+        row: Row,
+        row_index: int,
+        action_rows: Rows,
     ) -> CommandActionResult:
         if request.var("_enable_notifications"):
             return (
@@ -379,7 +401,12 @@ class CommandToggleActiveChecks(Command):
         html.close_div()
 
     def _action(
-        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        spec: str,
+        row: Row,
+        row_index: int,
+        action_rows: Rows,
     ) -> CommandActionResult:
         if request.var("_enable_checks"):
             return (
@@ -459,7 +486,12 @@ class CommandTogglePassiveChecks(Command):
         html.close_div()
 
     def _action(
-        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        spec: str,
+        row: Row,
+        row_index: int,
+        action_rows: Rows,
     ) -> CommandActionResult:
         if request.var("_enable_passive_checks"):
             return (
@@ -554,7 +586,12 @@ class CommandClearModifiedAttributes(Command):
         )
 
     def _action(
-        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        spec: str,
+        row: Row,
+        row_index: int,
+        action_rows: Rows,
     ) -> CommandActionResult:
         if request.var("_clear_modattr"):
             return (
@@ -719,7 +756,12 @@ class CommandFakeCheckResult(Command):
         html.close_div()
 
     def _action(
-        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        spec: str,
+        row: Row,
+        row_index: int,
+        action_rows: Rows,
     ) -> CommandActionResult:
         if request.var("_fake_check_result"):
             state = request.var("_state")
@@ -848,7 +890,12 @@ class CommandCustomNotification(Command):
         html.close_div()
 
     def _action(
-        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        spec: str,
+        row: Row,
+        row_index: int,
+        action_rows: Rows,
     ) -> CommandActionResult:
         if request.var("_customnotification"):
             comment = request.get_str_input_mandatory("_cusnot_comment")
@@ -1117,7 +1164,12 @@ class CommandAcknowledge(Command):
         return time.strftime("%Y-%m-%d", exp_time), time.strftime("%H:%M", exp_time)
 
     def _action(  # pylint: disable=too-many-branches
-        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        spec: str,
+        row: Row,
+        row_index: int,
+        action_rows: Rows,
     ) -> CommandActionResult:
         if "aggr_tree" in row:  # BI mode
             specs = []
@@ -1248,7 +1300,12 @@ class CommandRemoveAcknowledgments(Command):
         )
 
     def _action(
-        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        spec: str,
+        row: Row,
+        row_index: int,
+        action_rows: Rows,
     ) -> CommandActionResult:
         if not request.var("_remove_acknowledgments"):
             return None
@@ -1354,7 +1411,12 @@ class CommandAddComment(Command):
         html.close_div()
 
     def _action(
-        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        spec: str,
+        row: Row,
+        row_index: int,
+        action_rows: Rows,
     ) -> CommandActionResult:
         if request.var("_add_comment"):
             comment = request.get_str_input("_comment")
@@ -1908,7 +1970,8 @@ class CommandScheduleDowntimes(Command):
         vs_flexible_options.validate_value(duration_from_html, "_down_duration")
         if duration_from_html:
             self._vs_duration().validate_value(
-                duration := duration_from_html.get("_down_duration", 0), "_down_duration"
+                duration := duration_from_html.get("_down_duration", 0),
+                "_down_duration",
             )
             delayed_duration = duration
         else:
@@ -2068,7 +2131,8 @@ def _find_all_leaves(  # type: ignore[no-untyped-def]
 
 
 def time_interval_end(
-    time_value: int | Literal["next_day", "next_week", "next_month", "next_year"], start_time: float
+    time_value: int | Literal["next_day", "next_week", "next_month", "next_year"],
+    start_time: float,
 ) -> float | None:
     now = time.localtime(start_time)
     if isinstance(time_value, int):
@@ -2196,7 +2260,12 @@ class CommandRemoveDowntime(Command):
         html.button("_remove_downtimes", _("Remove"))
 
     def _action(  # pylint: disable=too-many-arguments
-        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        spec: str,
+        row: Row,
+        row_index: int,
+        action_rows: Rows,
     ) -> CommandActionResult:
         if request.has_var("_remove_downtimes"):
             if "downtime_id" in row:
@@ -2333,7 +2402,12 @@ class CommandRemoveComments(Command):
         html.close_div()
 
     def _action(
-        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        spec: str,
+        row: Row,
+        row_index: int,
+        action_rows: Rows,
     ) -> CommandActionResult:
         if not request.has_var("_delete_comments"):
             return None

@@ -39,7 +39,7 @@ class TestIPConfig:
 
 class TestHostConfig:
     def test_alias(self) -> None:
-        assert HostConfig(name="my_name").alias is "my_name"
+        assert HostConfig(name="my_name").alias == "my_name"
 
     def test_primary_raises(self) -> None:
         with pytest.raises(ValueError):

@@ -27,7 +27,11 @@ def _rule_packs() -> list[ECRulePack]:
                 },
                 {
                     "id": "test4",
-                    "contact_groups": {"groups": ["all"], "notify": True, "precedence": "host"},
+                    "contact_groups": {
+                        "groups": ["all"],
+                        "notify": True,
+                        "precedence": "host",
+                    },
                 },
                 {
                     "id": "test1",

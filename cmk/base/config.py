@@ -25,7 +25,16 @@ from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Se
 from enum import Enum
 from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER
 from pathlib import Path
-from typing import Any, AnyStr, assert_never, Final, Literal, NamedTuple, overload, TypedDict
+from typing import (
+    Any,
+    AnyStr,
+    assert_never,
+    Final,
+    Literal,
+    NamedTuple,
+    overload,
+    TypedDict,
+)
 
 import cmk.utils
 import cmk.utils.check_utils
@@ -43,7 +52,10 @@ import cmk.utils.store.host_storage
 import cmk.utils.tags
 import cmk.utils.translations
 import cmk.utils.version as cmk_version
-from cmk.utils.agent_registration import connection_mode_from_host_config, HostAgentConnectionMode
+from cmk.utils.agent_registration import (
+    connection_mode_from_host_config,
+    HostAgentConnectionMode,
+)
 from cmk.utils.caching import cache_manager
 from cmk.utils.check_utils import (
     maincheckify,
@@ -52,9 +64,17 @@ from cmk.utils.check_utils import (
     unwrap_parameters,
 )
 from cmk.utils.config_path import ConfigPath
-from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate, OnError
+from cmk.utils.exceptions import (
+    MKGeneralException,
+    MKIPAddressLookupError,
+    MKTerminate,
+    OnError,
+)
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
-from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
+from cmk.utils.http_proxy_config import (
+    http_proxy_config_from_user_setting,
+    HTTPProxyConfig,
+)
 from cmk.utils.labels import Labels
 from cmk.utils.legacy_check_api import LegacyCheckDefinition
 from cmk.utils.log import console
@@ -118,7 +138,11 @@ from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.fetcher import FetcherType, SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin
 from cmk.checkengine.legacy import LegacyCheckParameters
-from cmk.checkengine.parameters import Parameters, TimespecificParameters, TimespecificParameterSet
+from cmk.checkengine.parameters import (
+    Parameters,
+    TimespecificParameters,
+    TimespecificParameterSet,
+)
 from cmk.checkengine.parser import (
     AgentParser,
     AgentRawDataSectionElem,
@@ -132,7 +156,9 @@ import cmk.base.default_config as default_config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.api.agent_based.cluster_mode import ClusterMode
 from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin
-from cmk.base.api.agent_based.register.check_plugins_legacy import create_check_plugin_from_legacy
+from cmk.base.api.agent_based.register.check_plugins_legacy import (
+    create_check_plugin_from_legacy,
+)
 from cmk.base.api.agent_based.register.section_plugins_legacy import (
     create_section_plugin_from_legacy,
 )
@@ -397,7 +423,9 @@ _failed_ip_lookups: list[HostName] = []
 
 
 def ip_address_of(
-    config_cache: ConfigCache, host_name: HostName, family: socket.AddressFamily | AddressFamily
+    config_cache: ConfigCache,
+    host_name: HostName,
+    family: socket.AddressFamily | AddressFamily,
 ) -> HostAddress | None:
     try:
         return lookup_ip_address(config_cache, host_name, family=family)
@@ -580,9 +608,7 @@ class SetFolderPathDict(SetFolderPathAbstract, dict):
 
 
 def _load_config_file(file_to_load: Path, into_dict: dict[str, Any]) -> None:
-    exec(
-        compile(file_to_load.read_text(), file_to_load, "exec"), into_dict, into_dict
-    )  # nosec B102 # BNS:aee528
+    exec(compile(file_to_load.read_text(), file_to_load, "exec"), into_dict, into_dict)  # nosec B102 # BNS:aee528
 
 
 def _load_config(with_conf_d: bool) -> set[str]:
@@ -694,9 +720,13 @@ def get_config_file_paths(with_conf_d: bool) -> list[Path]:
     if with_conf_d:
         all_files = Path(cmk.utils.paths.check_mk_config_dir).rglob("*")
         list_of_files += sorted(
-            [p for p in all_files if p.suffix in {".mk"}], key=cmk.utils.key_config_paths
+            [p for p in all_files if p.suffix in {".mk"}],
+            key=cmk.utils.key_config_paths,
         )
-    for path in [Path(cmk.utils.paths.final_config_file), Path(cmk.utils.paths.local_config_file)]:
+    for path in [
+        Path(cmk.utils.paths.final_config_file),
+        Path(cmk.utils.paths.local_config_file),
+    ]:
         if path.exists():
             list_of_files.append(path)
     return list_of_files
@@ -772,7 +802,7 @@ class PackedConfigGenerator:
             return all_hosts_red
 
         def filter_clusters(
-            clusters_orig: dict[HostName, list[HostName]]
+            clusters_orig: dict[HostName, list[HostName]],
         ) -> dict[HostName, list[HostName]]:
             clusters_red = {}
             for cluster_entry, cluster_nodes in clusters_orig.items():
@@ -786,7 +816,7 @@ class PackedConfigGenerator:
             return clusters_red
 
         def filter_hostname_in_dict(
-            values: dict[HostName, dict[str, str]]
+            values: dict[HostName, dict[str, str]],
         ) -> dict[HostName, dict[str, str]]:
             values_red = {}
             for hostname, attributes in values.items():
@@ -795,7 +825,7 @@ class PackedConfigGenerator:
             return values_red
 
         def filter_extra_service_conf(
-            values: dict[str, list[dict[str, str]]]
+            values: dict[str, list[dict[str, str]]],
         ) -> dict[str, list[dict[str, str]]]:
             return {"check_interval": values.get("check_interval", [])}
 
@@ -1196,7 +1226,8 @@ def get_final_service_description(
     illegal_chars = cmc_illegal_chars if is_cmc() else nagios_illegal_chars
 
     return cache.setdefault(
-        description, "".join(c for c in description if c not in illegal_chars).rstrip("\\")
+        description,
+        "".join(c for c in description if c not in illegal_chars).rstrip("\\"),
     )
 
 
@@ -1351,9 +1382,9 @@ NEGATE = tuple_rulesets.NEGATE
 #           _initialize_data_structures()
 # The following data structures will be filled by the checks
 # all known checks
-check_info: dict[object, object] = (
-    {}
-)  # want: dict[str, LegacyCheckDefinition], but don't trust the plugins!
+check_info: dict[
+    object, object
+] = {}  # want: dict[str, LegacyCheckDefinition], but don't trust the plugins!
 # for nagios config: keep track which plugin lives where
 legacy_check_plugin_files: dict[CheckPluginNameStr, str] = {}
 # Lookup for legacy names
@@ -1557,7 +1588,8 @@ def load_precompiled_plugin(path: str, check_context: CheckContext) -> bool:
         os.chmod(precompiled_path, 0o640)
 
     exec(
-        marshal.loads(Path(precompiled_path).read_bytes()[_PYCHeader.SIZE :]), check_context
+        marshal.loads(Path(precompiled_path).read_bytes()[_PYCHeader.SIZE :]),
+        check_context,
     )  # nosec B102 # BNS:aee528
 
     return do_compile
@@ -1596,7 +1628,7 @@ AUTO_MIGRATION_ERR_MSG = (
 
 
 def _extract_agent_and_snmp_sections(
-    legacy_checks: Mapping[str, LegacyCheckDefinition]
+    legacy_checks: Mapping[str, LegacyCheckDefinition],
 ) -> list[str]:
     """Here comes the next layer of converting-to-"new"-api.
 
@@ -1640,7 +1672,9 @@ def _extract_agent_and_snmp_sections(
 
 
 def _extract_check_plugins(
-    legacy_checks: Mapping[str, LegacyCheckDefinition], *, validate_creation_kwargs: bool
+    legacy_checks: Mapping[str, LegacyCheckDefinition],
+    *,
+    validate_creation_kwargs: bool,
 ) -> list[str]:
     """Here comes the next layer of converting-to-"new"-api.
 
@@ -1838,7 +1872,7 @@ def lookup_ip_address(
 
 
 def _get_ssc_ip_family(
-    ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+    ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
 ) -> server_side_calls_api.IPAddressFamily:
     match ip_family:
         case socket.AddressFamily.AF_INET:
@@ -1870,9 +1904,10 @@ def get_ssc_host_config(
     """Translates our internal config into the HostConfig exposed to and expected by server_side_calls plugins."""
     primary_family = config_cache.default_address_family(host_name)
     hosts_ip_stack = config_cache.address_family(host_name)
-    additional_addresses_ipv4, additional_addresses_ipv6 = config_cache.additional_ipaddresses(
-        host_name
-    )
+    (
+        additional_addresses_ipv4,
+        additional_addresses_ipv6,
+    ) = config_cache.additional_ipaddresses(host_name)
 
     return server_side_calls_api.HostConfig(
         name=host_name,
@@ -2128,7 +2163,7 @@ class ConfigCache:
             return self.__snmp_config[(host_name, ip_address, source_type)]
 
         def _timeout_policy(
-            policy: Literal["stop_on_timeout", "continue_on_timeout"]
+            policy: Literal["stop_on_timeout", "continue_on_timeout"],
         ) -> Literal["stop", "continue"]:
             match policy:
                 case "stop_on_timeout":
@@ -2321,7 +2356,9 @@ class ConfigCache:
 
         return resolved
 
-    def enforced_services_table(self, hostname: HostName) -> Mapping[
+    def enforced_services_table(
+        self, hostname: HostName
+    ) -> Mapping[
         ServiceID,
         tuple[RulesetName, ConfiguredService],
     ]:
@@ -2773,7 +2810,7 @@ class ConfigCache:
         }
 
         def _filter_newstyle_ssc_rule(
-            unfiltered: Sequence[Mapping[str, object] | LegacySSCConfigModel]
+            unfiltered: Sequence[Mapping[str, object] | LegacySSCConfigModel],
         ) -> Sequence[Mapping[str, object]]:
             return [
                 r for r in unfiltered if isinstance(r, dict) and all(isinstance(k, str) for k in r)
@@ -2785,7 +2822,7 @@ class ConfigCache:
             return [(name, _filter_newstyle_ssc_rule(unfiltered)) for name, unfiltered in rules]
 
         def _gather_secrets_from(
-            rules_function: Callable[[HostName], SSCRules]
+            rules_function: Callable[[HostName], SSCRules],
         ) -> Mapping[str, str]:
             return {
                 id_: secret
@@ -3237,7 +3274,9 @@ class ConfigCache:
         return entries[0] if entries else None
 
     @staticmethod
-    def additional_ipaddresses(hostname: HostName) -> tuple[list[HostAddress], list[HostAddress]]:
+    def additional_ipaddresses(
+        hostname: HostName,
+    ) -> tuple[list[HostAddress], list[HostAddress]]:
         # TODO Regarding the following configuration variables from WATO
         # there's no inheritance, thus we use 'host_attributes'.
         # Better would be to use cmk.base configuration variables,
@@ -3607,9 +3646,7 @@ class ConfigCache:
             attrs["_ACTIONS"] = ",".join(actions)
 
         if cmk_version.edition() is cmk_version.Edition.CME:
-            attrs[
-                "_CUSTOMER"
-            ] = current_customer  # type: ignore[name-defined] # pylint: disable=undefined-variable
+            attrs["_CUSTOMER"] = current_customer  # type: ignore[name-defined] # pylint: disable=undefined-variable
 
         return attrs
 
@@ -3854,7 +3891,11 @@ class ConfigCache:
         If yes, return the cluster host of the service.
         If no, return the host name of the node.
         """
-        key = (node_name, servicedesc, tuple(part_of_clusters) if part_of_clusters else None)
+        key = (
+            node_name,
+            servicedesc,
+            tuple(part_of_clusters) if part_of_clusters else None,
+        )
         if (actual_hostname := self._effective_host_cache.get(key)) is not None:
             return actual_hostname
 

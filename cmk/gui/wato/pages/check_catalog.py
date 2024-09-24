@@ -340,11 +340,15 @@ def _render_manpage_list(  # type: ignore[no-untyped-def]
                 ],
             )
             table.cell(
-                _("Type of Check"), HTMLWriter.render_a(entry["title"], href=url), css=["title"]
+                _("Type of Check"),
+                HTMLWriter.render_a(entry["title"], href=url),
+                css=["title"],
             )
             table.cell(_("Plug-in name"), HTMLWriter.render_tt(entry["name"]), css=["name"])
             table.cell(
-                _("Agents"), ", ".join(map(translate, sorted(entry["agents"]))), css=["agents"]
+                _("Agents"),
+                ", ".join(map(translate, sorted(entry["agents"]))),
+                css=["agents"],
             )
 
 
@@ -525,7 +529,11 @@ class ModeCheckManPage(WatoMode):
             command = "check_mk-" + self._check_plugin_name
         url = makeuri_contextless(
             request,
-            [("view_name", "searchsvc"), ("check_command", command), ("filled_in", "filter")],
+            [
+                ("view_name", "searchsvc"),
+                ("check_command", command),
+                ("filled_in", "filter"),
+            ],
             filename="view.py",
         )
 

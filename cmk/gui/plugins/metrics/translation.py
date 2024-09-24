@@ -176,7 +176,11 @@ ram_used_swap_translation: dict[str, CheckMetricEntry] = {
     "shared": {"name": "mem_lnx_shmem", "deprecated": "2.0.0i1", "scale": MB},
     "pagetables": {"name": "mem_lnx_page_tables", "deprecated": "2.0.0i1", "scale": MB},
     "mapped": {"name": "mem_lnx_mapped", "deprecated": "2.0.0i1", "scale": MB},
-    "committed_as": {"name": "mem_lnx_committed_as", "deprecated": "2.0.0i1", "scale": MB},
+    "committed_as": {
+        "name": "mem_lnx_committed_as",
+        "deprecated": "2.0.0i1",
+        "scale": MB,
+    },
 }
 check_metrics["check_mk-statgrab_mem"] = ram_used_swap_translation
 check_metrics["check_mk-hr_mem"] = ram_used_swap_translation
@@ -374,8 +378,11 @@ df_basic_perfvarnames = [
     "file_count",
 ]
 df_translation: dict[str, CheckMetricEntry] = {
-    "~(?!%s).*$"
-    % "|".join(df_basic_perfvarnames): {"name": "fs_used", "scale": MB, "deprecated": "2.0.0i1"},
+    "~(?!%s).*$" % "|".join(df_basic_perfvarnames): {
+        "name": "fs_used",
+        "scale": MB,
+        "deprecated": "2.0.0i1",
+    },
     "fs_used": {"scale": MB},
     "fs_used_percent": {
         "auto_graph": False,
@@ -1106,7 +1113,11 @@ check_metrics["check_mk-cisco_asa_svcsessions"] = {
     "active": {"name": "active_sessions"},
 }
 
-for check_name in ["aws_elb_http_elb", "aws_elb_http_backend", "aws_elbv2_application_http_elb"]:
+for check_name in [
+    "aws_elb_http_elb",
+    "aws_elb_http_backend",
+    "aws_elbv2_application_http_elb",
+]:
     check_metrics["check_mk-%s" % check_name] = {
         "http_4xx_rate": {"name": "aws_http_4xx_rate"},
         "http_5xx_rate": {"name": "aws_http_5xx_rate"},

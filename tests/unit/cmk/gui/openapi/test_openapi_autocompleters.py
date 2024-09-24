@@ -31,7 +31,9 @@ def fixture_expected_autocompleters() -> list[str]:
     return autocompleters
 
 
-def test_openapi_autocompleter_functions_exist(expected_autocompleters: list[str]) -> None:
+def test_openapi_autocompleter_functions_exist(
+    expected_autocompleters: list[str],
+) -> None:
     registered_autocompleters = autocompleter_registry.keys()
     for autocomplete_name in expected_autocompleters:
         assert autocomplete_name in registered_autocompleters

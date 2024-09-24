@@ -66,7 +66,11 @@ def test_create_check_function() -> None:
         assert _no_params == {}
         assert info == ["info"]
         yield 0, "Main info", [("metric1", 23, 2, 3)]
-        yield 1, "still main, but very long\nadditional1", [("metric2", 23, None, None, "0", None)]
+        yield (
+            1,
+            "still main, but very long\nadditional1",
+            [("metric2", 23, None, None, "0", None)],
+        )
         yield 2, "additional2\nadditional3", [("metric3", 23, "wtf is this")]
         yield 0, "additional4"
         yield 2, "additional5"

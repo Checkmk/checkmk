@@ -69,7 +69,15 @@ def fixture_section_ucs_mem() -> dict[str, MemoryModule]:
                 "10",
                 "sys/rack-unit-1/board/memarray-1/mem-5",
             ],
-            ["mem-6", "NA", "0", "0", "0", "11", "sys/rack-unit-1/board/memarray-1/mem-6"],
+            [
+                "mem-6",
+                "NA",
+                "0",
+                "0",
+                "0",
+                "11",
+                "sys/rack-unit-1/board/memarray-1/mem-6",
+            ],
             [
                 "mem-7",
                 "0357CE24",
@@ -115,9 +123,33 @@ def fixture_section_ucs_mem() -> dict[str, MemoryModule]:
                 "10",
                 "sys/rack-unit-1/board/memarray-1/mem-11",
             ],
-            ["mem-12", "NA", "0", "0", "0", "11", "sys/rack-unit-1/board/memarray-1/mem-12"],
-            ["mem-13", "NA", "0", "0", "0", "11", "sys/rack-unit-1/board/memarray-1/mem-13"],
-            ["mem-14", "NA", "0", "0", "0", "11", "sys/rack-unit-1/board/memarray-1/mem-14"],
+            [
+                "mem-12",
+                "NA",
+                "0",
+                "0",
+                "0",
+                "11",
+                "sys/rack-unit-1/board/memarray-1/mem-12",
+            ],
+            [
+                "mem-13",
+                "NA",
+                "0",
+                "0",
+                "0",
+                "11",
+                "sys/rack-unit-1/board/memarray-1/mem-13",
+            ],
+            [
+                "mem-14",
+                "NA",
+                "0",
+                "0",
+                "0",
+                "11",
+                "sys/rack-unit-1/board/memarray-1/mem-14",
+            ],
             [
                 "mem-15",
                 "0357CDF9",
@@ -145,7 +177,15 @@ def fixture_section_ucs_mem() -> dict[str, MemoryModule]:
                 "10",
                 "sys/rack-unit-1/board/memarray-1/mem-17",
             ],
-            ["mem-18", "NA", "0", "0", "0", "11", "sys/rack-unit-1/board/memarray-1/mem-18"],
+            [
+                "mem-18",
+                "NA",
+                "0",
+                "0",
+                "0",
+                "11",
+                "sys/rack-unit-1/board/memarray-1/mem-18",
+            ],
             [
                 "mem-19",
                 "03584CA9",
@@ -191,7 +231,15 @@ def fixture_section_ucs_mem() -> dict[str, MemoryModule]:
                 "10",
                 "sys/rack-unit-1/board/memarray-1/mem-23",
             ],
-            ["mem-24", "NA", "0", "0", "0", "11", "sys/rack-unit-1/board/memarray-1/mem-24"],
+            [
+                "mem-24",
+                "NA",
+                "0",
+                "0",
+                "0",
+                "11",
+                "sys/rack-unit-1/board/memarray-1/mem-24",
+            ],
         ]
     )
 
@@ -211,7 +259,9 @@ def fixture_section_ucs_fault() -> dict[str, list[Fault]]:
     )
 
 
-def test_discover_cisco_ucs_mem(section_cisco_ucs_mem: Mapping[str, MemoryModule]) -> None:
+def test_discover_cisco_ucs_mem(
+    section_cisco_ucs_mem: Mapping[str, MemoryModule],
+) -> None:
     assert list(discover_cisco_ucs_mem(section_cisco_ucs_mem, None)) == [
         Service(item="mem-1"),
         Service(item="mem-2"),

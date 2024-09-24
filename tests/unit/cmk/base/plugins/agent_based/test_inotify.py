@@ -9,7 +9,11 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.inotify import _check_inotify as check_inotify
-from cmk.base.plugins.agent_based.inotify import discover_inotify, parse_inotify, Section
+from cmk.base.plugins.agent_based.inotify import (
+    discover_inotify,
+    parse_inotify,
+    Section,
+)
 
 pytestmark = pytest.mark.checks
 
@@ -84,9 +88,15 @@ def test_updated_data() -> None:
             state=State.CRIT,
             summary="Time since last open: 1 minute 40 seconds (warn/crit at 1 minute 20 seconds/1 minute 30 seconds)",
         ),
-        Result(state=State.UNKNOWN, summary="Time since last just_for_test_coverage: unknown"),
+        Result(
+            state=State.UNKNOWN,
+            summary="Time since last just_for_test_coverage: unknown",
+        ),
         Result(state=State.WARN, summary="Incomplete data!"),
-        Result(state=State.WARN, summary="1 warning(s): I assume a warning looks like this!"),
+        Result(
+            state=State.WARN,
+            summary="1 warning(s): I assume a warning looks like this!",
+        ),
     ]
     assert last_status == {
         "delete": 1465470058,

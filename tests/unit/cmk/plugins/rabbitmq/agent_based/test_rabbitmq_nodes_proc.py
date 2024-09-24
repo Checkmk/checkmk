@@ -40,7 +40,10 @@ from cmk.plugins.rabbitmq.agent_based.nodes_proc import check_rabbitmq_nodes_pro
                 }
             },
             [
-                Result(state=State.OK, summary="Erlang processes used: 431 of 1048576, 0.04%"),
+                Result(
+                    state=State.OK,
+                    summary="Erlang processes used: 431 of 1048576, 0.04%",
+                ),
                 Metric(name="processes", value=431, boundaries=(0, 1048576)),
             ],
             id="no levels",
@@ -54,7 +57,10 @@ from cmk.plugins.rabbitmq.agent_based.nodes_proc import check_rabbitmq_nodes_pro
                 }
             },
             [
-                Result(state=State.OK, summary="Erlang processes used: 431 of 1048576, 0.04%"),
+                Result(
+                    state=State.OK,
+                    summary="Erlang processes used: 431 of 1048576, 0.04%",
+                ),
                 Metric(name="processes", value=431, boundaries=(0, 1048576)),
             ],
             id="(no_levels, None)",
@@ -72,7 +78,12 @@ from cmk.plugins.rabbitmq.agent_based.nodes_proc import check_rabbitmq_nodes_pro
                     state=State.WARN,
                     summary="Erlang processes used: 431 of 1048576, 0.04% (warn/crit at 400/500)",
                 ),
-                Metric(name="processes", value=431, levels=(400, 500), boundaries=(0, 1048576)),
+                Metric(
+                    name="processes",
+                    value=431,
+                    levels=(400, 500),
+                    boundaries=(0, 1048576),
+                ),
             ],
             id="absolute levels",
         ),
@@ -90,7 +101,10 @@ from cmk.plugins.rabbitmq.agent_based.nodes_proc import check_rabbitmq_nodes_pro
                     summary="Erlang processes used: 996148 of 1048576, 95.00% (warn/crit at 50.00%/90.00%)",
                 ),
                 Metric(
-                    name="processes", value=996148, levels=(524288, 943718), boundaries=(0, 1048576)
+                    name="processes",
+                    value=996148,
+                    levels=(524288, 943718),
+                    boundaries=(0, 1048576),
                 ),
             ],
             id="percentage levels",

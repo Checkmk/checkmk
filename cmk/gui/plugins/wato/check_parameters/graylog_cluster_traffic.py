@@ -19,21 +19,30 @@ def _parameter_valuespec_graylog_cluster_traffic():
                 "input",
                 Tuple(
                     title=_("Absolute levels for input traffic"),
-                    elements=[Filesize(title=_("Warning at")), Filesize(title=_("Critical at"))],
+                    elements=[
+                        Filesize(title=_("Warning at")),
+                        Filesize(title=_("Critical at")),
+                    ],
                 ),
             ),
             (
                 "output",
                 Tuple(
                     title=_("Absolute levels for output traffic"),
-                    elements=[Filesize(title=_("Warning at")), Filesize(title=_("Critical at"))],
+                    elements=[
+                        Filesize(title=_("Warning at")),
+                        Filesize(title=_("Critical at")),
+                    ],
                 ),
             ),
             (
                 "decoded",
                 Tuple(
                     title=_("Absolute levels for decoded traffic"),
-                    elements=[Filesize(title=_("Warning at")), Filesize(title=_("Critical at"))],
+                    elements=[
+                        Filesize(title=_("Warning at")),
+                        Filesize(title=_("Critical at")),
+                    ],
                 ),
             ),
         ],

@@ -84,9 +84,12 @@ class ModeBulkDiscovery(WatoMode):
             self._bulk_discovery_params.update(bulk_discover_params)
 
         # The cast is needed for the moment, because mypy does not understand our data structure here
-        (self._recurse, self._only_failed, self._only_failed_invcheck, self._only_ok_agent) = cast(
-            tuple[bool, bool, bool, bool], self._bulk_discovery_params["selection"]
-        )
+        (
+            self._recurse,
+            self._only_failed,
+            self._only_failed_invcheck,
+            self._only_ok_agent,
+        ) = cast(tuple[bool, bool, bool, bool], self._bulk_discovery_params["selection"])
 
         self._do_full_scan, self._bulk_size = self._get_performance_params()
         self._mode = DiscoverySettings.from_vs(self._bulk_discovery_params.get("mode"))
@@ -140,7 +143,8 @@ class ModeBulkDiscovery(WatoMode):
                 raise
             logger.exception("Failed to start bulk discovery")
             raise MKUserError(
-                None, _("Failed to start discovery: %s") % ("%s" % e).replace("\n", "\n<br>")
+                None,
+                _("Failed to start discovery: %s") % ("%s" % e).replace("\n", "\n<br>"),
             )
 
         raise HTTPRedirect(self._job.detail_url())
@@ -175,7 +179,8 @@ class ModeBulkDiscovery(WatoMode):
                 )
                 # The cast is needed for the moment, because mypy does not understand our data structure here
                 selection = cast(
-                    tuple[bool, bool, bool, bool], self._bulk_discovery_params["selection"]
+                    tuple[bool, bool, bool, bool],
+                    self._bulk_discovery_params["selection"],
                 )
                 self._bulk_discovery_params["selection"] = [False] + list(selection[1:])
 
@@ -208,7 +213,8 @@ class ModeBulkDiscovery(WatoMode):
 
         if not self._all:
             for host_name in get_hostnames_from_checkboxes(
-                self._folder, (lambda host: host.discovery_failed()) if self._only_failed else None
+                self._folder,
+                (lambda host: host.discovery_failed()) if self._only_failed else None,
             ):
                 if restrict_to_hosts and host_name not in restrict_to_hosts:
                     continue

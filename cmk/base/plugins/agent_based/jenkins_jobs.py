@@ -99,7 +99,8 @@ def check_jenkins_jobs(item: str, params: Mapping[str, Any], section: Section) -
                 infotext += " (in progress)"
 
             yield Result(
-                state=State(params.get("job_state", {}).get(job_cleanup, state)), summary=infotext
+                state=State(params.get("job_state", {}).get(job_cleanup, state)),
+                summary=infotext,
             )
 
         if job.score is not None:

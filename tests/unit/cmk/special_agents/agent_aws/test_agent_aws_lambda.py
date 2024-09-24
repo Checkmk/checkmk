@@ -88,7 +88,9 @@ def create_config(names: Sequence[str], tags: OverallTags) -> AWSConfig:
     return config
 
 
-def get_lambda_sections(names: Sequence[str], tags: OverallTags) -> tuple[
+def get_lambda_sections(
+    names: Sequence[str], tags: OverallTags
+) -> tuple[
     LambdaRegionLimits,
     LambdaSummary,
     LambdaProvisionedConcurrency,
@@ -262,10 +264,13 @@ def test_agent_aws_lambda_cloudwatch_insights(names: Sequence[str], tags: Overal
     for result in lambda_cloudwatch_logs_results:
         for function_arn, metrics in result.content.items():
             function_name = function_arn.split(":")[-1]
-            assert function_name not in {
-                "FunctionName-1",  # In the simulation data, the FunctionName-1 log group doesn't exist so we shouldn't have metrics for it
-                "deleted-function",  # In the simulation data, deleted-function is a non-existing function with an existing log group
-            }
+            assert (
+                function_name
+                not in {
+                    "FunctionName-1",  # In the simulation data, the FunctionName-1 log group doesn't exist so we shouldn't have metrics for it
+                    "deleted-function",  # In the simulation data, deleted-function is a non-existing function with an existing log group
+                }
+            )
             assert len(metrics) == 4  # all metrics
 
 
@@ -277,7 +282,11 @@ def test_lambda_cloudwatch_insights_query_results_timeout() -> None:
         def get_query_results(self, *, queryId: str) -> GetQueryResultsResponseTypeDef:
             return {
                 "results": [[]],
-                "statistics": {"recordsMatched": 2.0, "recordsScanned": 6.0, "bytesScanned": 710.0},
+                "statistics": {
+                    "recordsMatched": 2.0,
+                    "recordsScanned": 6.0,
+                    "bytesScanned": 710.0,
+                },
                 "status": "Running",
                 "encryptionKey": "I made this up to make mypy happy",
                 "ResponseMetadata": {

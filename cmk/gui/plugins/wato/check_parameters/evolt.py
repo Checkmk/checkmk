@@ -31,7 +31,11 @@ def _parameter_valuespec_evolt():
                         ),
                         elements=[
                             Float(title=_("Warning at/below"), unit="V", default_value=210),
-                            Float(title=_("Critical at/below"), unit="V", default_value=180),
+                            Float(
+                                title=_("Critical at/below"),
+                                unit="V",
+                                default_value=180,
+                            ),
                         ],
                     ),
                 ),

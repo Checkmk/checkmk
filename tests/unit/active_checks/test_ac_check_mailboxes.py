@@ -59,7 +59,15 @@ def test_parse_arguments_empty_mailbox_arg(
             id="One mailbox",
         ),
         pytest.param(
-            ["--warn-age-oldest", "5", "--crit-age-oldest", "10", "--mailbox", "inbox", "sent"],
+            [
+                "--warn-age-oldest",
+                "5",
+                "--crit-age-oldest",
+                "10",
+                "--mailbox",
+                "inbox",
+                "sent",
+            ],
             Namespace(
                 warn_age_oldest=5,
                 crit_age_oldest=10,

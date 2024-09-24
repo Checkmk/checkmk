@@ -4630,7 +4630,14 @@ def main(sys_argv=None):
         sys_argv = sys.argv[1:]
 
     short_options = "h"
-    long_options = ["help", "username=", "password=", "address=", "demo", "no-cert-check"]
+    long_options = [
+        "help",
+        "username=",
+        "password=",
+        "address=",
+        "demo",
+        "no-cert-check",
+    ]
 
     try:
         opts, _args = getopt.getopt(sys_argv, short_options, long_options)

@@ -219,7 +219,10 @@ def check_jolokia_metrics_app_sess(item, params, info):
 
     sess = saveint(sessions)
     maxActive = saveint(
-        app.get("Sessions", app.get("maxActiveSessions", app.get("OpenSessionsCurrentCount")))
+        app.get(
+            "Sessions",
+            app.get("maxActiveSessions", app.get("OpenSessionsCurrentCount")),
+        )
     )
 
     yield check_levels(
@@ -278,7 +281,11 @@ def check_request_count(item, info, value_store):
         yield 0, "%.2f requests/sec" % rate, [("rate", rate)]
 
     elif (request_count := app.get("requestCount")) is not None:
-        yield 0, "%.2f requests/sec" % int(request_count), [("rate", int(request_count))]
+        yield (
+            0,
+            "%.2f requests/sec" % int(request_count),
+            [("rate", int(request_count))],
+        )
 
 
 def check_jolokia_metrics_bea_requests(item, _no_params, info):
@@ -427,7 +434,10 @@ def discover_jolokia_metrics_cache_hits(info):
 
 def check_jolokia_metrics_cache_hits(item, _no_params, parsed):
     return check_jolokia_metrics_cache(
-        ["CacheHitPercentage", "ObjectCount"], ["CacheHits", "CacheMisses"], item, parsed
+        ["CacheHitPercentage", "ObjectCount"],
+        ["CacheHits", "CacheMisses"],
+        item,
+        parsed,
     )
 
 
@@ -441,7 +451,12 @@ check_info["jolokia_metrics.cache_hits"] = LegacyCheckDefinition(
 
 def discover_jolokia_metrics_in_memory(info):
     return inventory_jolokia_metrics_cache(
-        ["InMemoryHitPercentage", "MemoryStoreObjectCount", "InMemoryHits", "InMemoryMisses"],
+        [
+            "InMemoryHitPercentage",
+            "MemoryStoreObjectCount",
+            "InMemoryHits",
+            "InMemoryMisses",
+        ],
         info,
     )
 
@@ -489,7 +504,12 @@ check_info["jolokia_metrics.on_disk"] = LegacyCheckDefinition(
 
 def discover_jolokia_metrics_off_heap(info):
     return inventory_jolokia_metrics_cache(
-        ["OffHeapHitPercentage", "OffHeapStoreObjectCount", "OffHeapHits", "OffHeapMisses"],
+        [
+            "OffHeapHitPercentage",
+            "OffHeapStoreObjectCount",
+            "OffHeapHits",
+            "OffHeapMisses",
+        ],
         info,
     )
 

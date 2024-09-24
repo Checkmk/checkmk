@@ -7,8 +7,14 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
-from cmk.base.plugins.agent_based.aruba_wlc_aps import inventory_aruba_wlc_aps, parse_aruba_wlc_aps
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    InventoryResult,
+    StringTable,
+)
+from cmk.base.plugins.agent_based.aruba_wlc_aps import (
+    inventory_aruba_wlc_aps,
+    parse_aruba_wlc_aps,
+)
 
 from .utils_inventory import sort_inventory_result
 
@@ -19,8 +25,26 @@ from .utils_inventory import sort_inventory_result
         ([], []),
         (
             [
-                ["name 1", "1", "1", "1.2.3.4", "group 1", "1", "serial 1", "sys location 1"],
-                ["name 2", "2", "2", "5.6.7.8", "group 2", "foo", "serial 2", "sys location 2"],
+                [
+                    "name 1",
+                    "1",
+                    "1",
+                    "1.2.3.4",
+                    "group 1",
+                    "1",
+                    "serial 1",
+                    "sys location 1",
+                ],
+                [
+                    "name 2",
+                    "2",
+                    "2",
+                    "5.6.7.8",
+                    "group 2",
+                    "foo",
+                    "serial 2",
+                    "sys location 2",
+                ],
             ],
             [
                 TableRow(

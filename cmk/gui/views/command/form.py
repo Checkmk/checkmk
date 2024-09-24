@@ -28,7 +28,10 @@ from .registry import command_registry
 def core_command(
     what: str, row: Row, row_nr: int, action_rows: Rows
 ) -> tuple[
-    Sequence[CommandSpec], list[tuple[str, str]], CommandConfirmDialogOptions, CommandExecutor
+    Sequence[CommandSpec],
+    list[tuple[str, str]],
+    CommandConfirmDialogOptions,
+    CommandExecutor,
 ]:
     """Examine the current HTML variables in order determine, which command the user has selected.
     The fetch ids from a data row (host name, service description, downtime/commands id) and
@@ -176,7 +179,12 @@ def do_actions(  # pylint: disable=too-many-branches
     count = 0
     already_executed = set()
     for nr, row in enumerate(action_rows):
-        core_commands, _confirm_options, _confirm_dialog_options, executor = core_command(
+        (
+            core_commands,
+            _confirm_options,
+            _confirm_dialog_options,
+            executor,
+        ) = core_command(
             what,
             row,
             nr,

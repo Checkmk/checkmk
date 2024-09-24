@@ -45,7 +45,10 @@ from cmk.plugins.collection.rulesets.cert import (
             (
                 {
                     "connections": [
-                        {"address": "host", "service_name": {"name": "host:50", "prefix": "auto"}}
+                        {
+                            "address": "host",
+                            "service_name": {"name": "host:50", "prefix": "auto"},
+                        }
                     ],
                     "standard_settings": {"port": 50},
                 }

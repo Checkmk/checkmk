@@ -26,7 +26,8 @@ def discovery_mssql_counters_transactions(section: Section) -> DiscoveryResult:
     Service(item='MSSQL_VEEAMSQL2012 tempdb')
     """
     yield from discovery_mssql_counters_generic(
-        section, {"transactions/sec", "write_transactions/sec", "tracked_transactions/sec"}
+        section,
+        {"transactions/sec", "write_transactions/sec", "tracked_transactions/sec"},
     )
 
 

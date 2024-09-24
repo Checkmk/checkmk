@@ -79,7 +79,9 @@ class TestAgentParser:
         )
 
     def test_missing_host_header(
-        self, parser: AgentParser, store: SectionStore[Sequence[AgentRawDataSectionElem]]
+        self,
+        parser: AgentParser,
+        store: SectionStore[Sequence[AgentRawDataSectionElem]],
     ) -> None:
         raw_data = AgentRawData(
             b"\n".join(
@@ -122,7 +124,9 @@ class TestAgentParser:
         assert not store.load()
 
     def test_no_section_header_after_piggyback(
-        self, parser: AgentParser, store: SectionStore[Sequence[AgentRawDataSectionElem]]
+        self,
+        parser: AgentParser,
+        store: SectionStore[Sequence[AgentRawDataSectionElem]],
     ) -> None:
         raw_data = AgentRawData(
             b"\n".join(
@@ -142,7 +146,9 @@ class TestAgentParser:
         assert not store.load()
 
     def test_raw_section_populates_sections(
-        self, parser: AgentParser, store: SectionStore[Sequence[AgentRawDataSectionElem]]
+        self,
+        parser: AgentParser,
+        store: SectionStore[Sequence[AgentRawDataSectionElem]],
     ) -> None:
         raw_data = AgentRawData(
             b"\n".join(
@@ -169,7 +175,9 @@ class TestAgentParser:
         assert not store.load()
 
     def test_partial_header_is_not_a_header(
-        self, parser: AgentParser, store: SectionStore[Sequence[AgentRawDataSectionElem]]
+        self,
+        parser: AgentParser,
+        store: SectionStore[Sequence[AgentRawDataSectionElem]],
     ) -> None:
         raw_data = AgentRawData(
             b"\n".join(
@@ -197,7 +205,9 @@ class TestAgentParser:
         assert not store.load()
 
     def test_merge_split_raw_sections(
-        self, parser: AgentParser, store: SectionStore[Sequence[AgentRawDataSectionElem]]
+        self,
+        parser: AgentParser,
+        store: SectionStore[Sequence[AgentRawDataSectionElem]],
     ) -> None:
         raw_data = AgentRawData(
             b"\n".join(
@@ -243,7 +253,9 @@ class TestAgentParser:
         assert not store.load()
 
     def test_nameless_sections_are_skipped(
-        self, parser: AgentParser, store: SectionStore[Sequence[AgentRawDataSectionElem]]
+        self,
+        parser: AgentParser,
+        store: SectionStore[Sequence[AgentRawDataSectionElem]],
     ) -> None:
         raw_data = AgentRawData(
             b"\n".join(
@@ -372,7 +384,9 @@ class TestAgentParser:
         }
 
     def test_closing_piggyback_out_of_piggyback_section_closes_section(
-        self, parser: AgentParser, store: SectionStore[Sequence[AgentRawDataSectionElem]]
+        self,
+        parser: AgentParser,
+        store: SectionStore[Sequence[AgentRawDataSectionElem]],
     ) -> None:
         raw_data = AgentRawData(
             b"\n".join(
@@ -538,7 +552,11 @@ class TestAgentParser:
         assert ahs.cache_info == {SectionName("section"): (1000, 50)}
         assert ahs.piggybacked_raw_data == {}
         assert store.load() == {
-            SectionName("section"): (1000, 1050, [["first", "line"], ["second", "line"]]),
+            SectionName("section"): (
+                1000,
+                1050,
+                [["first", "line"], ["second", "line"]],
+            ),
         }
 
     def test_persist_option_and_persisted_sections(
@@ -678,7 +696,9 @@ class TestAgentParser:
         assert not store.load()
 
     def test_section_lines_are_correctly_ordered_with_different_separators(
-        self, parser: AgentParser, store: SectionStore[Sequence[AgentRawDataSectionElem]]
+        self,
+        parser: AgentParser,
+        store: SectionStore[Sequence[AgentRawDataSectionElem]],
     ) -> None:
         raw_data = AgentRawData(
             b"\n".join(
@@ -786,9 +806,7 @@ class TestSectionMarker:
         section_options: Mapping[str, object],
     ) -> None:
         try:
-            SectionMarker.from_headerline(
-                f"<<<{headerline}>>>".encode("ascii")
-            ) == (  # type: ignore[comparison-overlap]
+            SectionMarker.from_headerline(f"<<<{headerline}>>>".encode("ascii")) == (  # type: ignore[comparison-overlap]
                 section_name,
                 section_options,
             )

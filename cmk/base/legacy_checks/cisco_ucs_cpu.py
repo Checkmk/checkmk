@@ -5,7 +5,11 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.cisco_ucs import DETECT, map_operability, map_presence
+from cmk.base.check_legacy_includes.cisco_ucs import (
+    DETECT,
+    map_operability,
+    map_presence,
+)
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import SNMPTree, StringTable

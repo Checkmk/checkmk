@@ -8,6 +8,7 @@
 """
 Special Agent for Allnet IP-Sensoric monitoring
 """
+
 import argparse
 import re
 import sys
@@ -16,7 +17,10 @@ from collections.abc import Mapping, Sequence
 import requests
 
 from cmk.special_agents.v0_unstable.agent_common import special_agent_main
-from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.argument_parsing import (
+    Args,
+    create_default_argument_parser,
+)
 
 _DEFAULT_TIMEOUT = 10
 

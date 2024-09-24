@@ -79,7 +79,15 @@ def _parameter_valuespec_ucs_bladecenter_faultinst():
             ),
         ],
         title=_("Translate UCS Bladecenter state to monitoring state"),
-        optional_keys=["critical", "major", "warning", "minor", "info", "condition", "cleared"],
+        optional_keys=[
+            "critical",
+            "major",
+            "warning",
+            "minor",
+            "info",
+            "condition",
+            "cleared",
+        ],
     )
 
 

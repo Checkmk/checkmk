@@ -64,7 +64,11 @@ def check_mq_queues(item, params, info):
                 msg += f"(Levels Warn/Crit at {warn}/{crit}){label}"
             msg += f", Enqueue Count: {enqueueCount}, Dequeue Count: {dequeueCount}"
 
-            perf = [("queue", size, warn, crit), ("enque", enqueueCount), ("deque", dequeueCount)]
+            perf = [
+                ("queue", size, warn, crit),
+                ("enque", enqueueCount),
+                ("deque", dequeueCount),
+            ]
             return state, msg, perf
         if line[0].startswith("[[") and line[0][2:-2] == item:
             found = True

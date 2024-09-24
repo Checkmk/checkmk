@@ -118,7 +118,8 @@ def test_discover_enviromux_voltage(
             [
                 Metric("temp", 40.2, levels=(35.0, 45.0)),
                 Result(
-                    state=State.WARN, summary="Temperature: 40.2 °C (warn/crit at 35.0 °C/45.0 °C)"
+                    state=State.WARN,
+                    summary="Temperature: 40.2 °C (warn/crit at 35.0 °C/45.0 °C)",
                 ),
                 Result(
                     state=State.OK,
@@ -135,7 +136,8 @@ def test_discover_enviromux_voltage(
             [
                 Metric("temp", 46.2, levels=(35.0, 45.0)),
                 Result(
-                    state=State.CRIT, summary="Temperature: 46.2 °C (warn/crit at 35.0 °C/45.0 °C)"
+                    state=State.CRIT,
+                    summary="Temperature: 46.2 °C (warn/crit at 35.0 °C/45.0 °C)",
                 ),
                 Result(
                     state=State.OK,
@@ -218,7 +220,8 @@ def test_check_enviromux_temperature(
             {"levels": (20.0, 25.0), "levels_lower": (5.0, 3.0)},
             [
                 Result(
-                    state=State.WARN, summary="Input Voltage is V: 22.00 (warn/crit at 20.00/25.00)"
+                    state=State.WARN,
+                    summary="Input Voltage is V: 22.00 (warn/crit at 20.00/25.00)",
                 ),
                 Metric("voltage", 22.0, levels=(20.0, 25.0)),
             ],
@@ -231,7 +234,8 @@ def test_check_enviromux_temperature(
             {"levels": (20.0, 25.0), "levels_lower": (5.0, 3.0)},
             [
                 Result(
-                    state=State.CRIT, summary="Input Voltage is V: 26.00 (warn/crit at 20.00/25.00)"
+                    state=State.CRIT,
+                    summary="Input Voltage is V: 26.00 (warn/crit at 20.00/25.00)",
                 ),
                 Metric("voltage", 26.0, levels=(20.0, 25.0)),
             ],
@@ -244,7 +248,8 @@ def test_check_enviromux_temperature(
             {"levels": (20.0, 25.0), "levels_lower": (5.0, 3.0)},
             [
                 Result(
-                    state=State.WARN, summary="Input Voltage is V: 4.00 (warn/crit below 5.00/3.00)"
+                    state=State.WARN,
+                    summary="Input Voltage is V: 4.00 (warn/crit below 5.00/3.00)",
                 ),
                 Metric("voltage", 4.0, levels=(20.0, 25.0)),
             ],
@@ -257,7 +262,8 @@ def test_check_enviromux_temperature(
             {"levels": (20.0, 25.0), "levels_lower": (5.0, 3.0)},
             [
                 Result(
-                    state=State.CRIT, summary="Input Voltage is V: 2.00 (warn/crit below 5.00/3.00)"
+                    state=State.CRIT,
+                    summary="Input Voltage is V: 2.00 (warn/crit below 5.00/3.00)",
                 ),
                 Metric("voltage", 2.0, levels=(20.0, 25.0)),
             ],

@@ -77,9 +77,17 @@ def check_kentix_motion(
 
     if sensor.value >= sensor.maximum:
         status = 1 if test_in_period((today.tm_hour, today.tm_min), periods) else 0
-        yield status, "Motion detected", [("motion", sensor.value, sensor.maximum, None, 0, 100)]
+        yield (
+            status,
+            "Motion detected",
+            [("motion", sensor.value, sensor.maximum, None, 0, 100)],
+        )
     else:
-        yield 0, "No motion detected", [("motion", sensor.value, sensor.maximum, None, 0, 100)]
+        yield (
+            0,
+            "No motion detected",
+            [("motion", sensor.value, sensor.maximum, None, 0, 100)],
+        )
 
 
 check_info["kentix_motion"] = LegacyCheckDefinition(

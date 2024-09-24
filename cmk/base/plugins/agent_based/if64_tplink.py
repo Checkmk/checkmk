@@ -5,7 +5,14 @@
 
 from cmk.plugins.lib import if64, interfaces
 
-from .agent_based_api.v1 import all_of, contains, OIDBytes, register, SNMPTree, type_defs
+from .agent_based_api.v1 import (
+    all_of,
+    contains,
+    OIDBytes,
+    register,
+    SNMPTree,
+    type_defs,
+)
 
 
 def parse_if64_tplink(

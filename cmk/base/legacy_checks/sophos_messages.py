@@ -38,7 +38,11 @@ def check_sophos_messages(item, params, info):
                 get_value_store(), "inbound", now, int(inbound_str), raise_overflow=True
             )
             outbound = get_rate(
-                get_value_store(), "outbound", now, int(outbound_str), raise_overflow=True
+                get_value_store(),
+                "outbound",
+                now,
+                int(outbound_str),
+                raise_overflow=True,
             )
             infotext = (
                 "{:.1f} Inbounds and Outbounds/s, {:.1f} Inbounds/s, {:.1f} Outbounds/s".format(
@@ -47,7 +51,11 @@ def check_sophos_messages(item, params, info):
                     outbound,
                 )
             )
-            return 0, infotext, [("messages_inbound", inbound), ("messages_outbound", outbound)]
+            return (
+                0,
+                infotext,
+                [("messages_inbound", inbound), ("messages_outbound", outbound)],
+            )
     return None
 
 

@@ -41,7 +41,8 @@ def _check(now: datetime.datetime, params: Mapping[str, Any], section: str) -> C
     # We expect at least one line
     if not section.startswith("/Volumes/"):
         yield Result(
-            state=State.CRIT, summary=f"Backup seems to have failed, message was: {section}"
+            state=State.CRIT,
+            summary=f"Backup seems to have failed, message was: {section}",
         )
         return
 

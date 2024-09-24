@@ -3,7 +3,6 @@ from typing import Any, Type
 
 from marshmallow import Schema
 
-
 class OneOfSchema(Schema):
     type_field: str
     type_field_remove: bool

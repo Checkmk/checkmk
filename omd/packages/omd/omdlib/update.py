@@ -153,7 +153,12 @@ HOOK_RELPATHS = [
 
 class ManageUpdate:
     def __init__(
-        self, site_name: str, tmp_dir: str, site_dir: Path, old_skel: Path, new_skel: Path
+        self,
+        site_name: str,
+        tmp_dir: str,
+        site_dir: Path,
+        old_skel: Path,
+        new_skel: Path,
     ) -> None:
         self.backup_dir = site_dir / ".update_backup"
         self.old_skel = old_skel

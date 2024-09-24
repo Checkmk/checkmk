@@ -6,10 +6,18 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.kube_memory import check_kube_memory, discovery_kube_memory
+from cmk.base.plugins.agent_based.kube_memory import (
+    check_kube_memory,
+    discovery_kube_memory,
+)
 
 from cmk.plugins.lib.kube import Memory, PerformanceUsage
-from cmk.plugins.lib.kube_resources import AllocatableResource, DEFAULT_PARAMS, Params, Resources
+from cmk.plugins.lib.kube_resources import (
+    AllocatableResource,
+    DEFAULT_PARAMS,
+    Params,
+    Resources,
+)
 
 
 def test_discovery() -> None:
@@ -38,9 +46,15 @@ def test_discovery() -> None:
             ),
             None,
             (
-                Result(state=State.OK, summary="Requests: 0 B (2/2 containers with requests)"),
+                Result(
+                    state=State.OK,
+                    summary="Requests: 0 B (2/2 containers with requests)",
+                ),
                 Metric("kube_memory_request", 0.0, boundaries=(0.0, None)),
-                Result(state=State.OK, summary="Limits: 26.8 MiB (2/2 containers with limits)"),
+                Result(
+                    state=State.OK,
+                    summary="Limits: 26.8 MiB (2/2 containers with limits)",
+                ),
                 Metric("kube_memory_limit", 28120704.0, boundaries=(0.0, None)),
                 Result(state=State.OK, summary="Allocatable: 34.3 MiB"),
                 Metric("kube_memory_allocatable", 35917989.0, boundaries=(0.0, None)),
@@ -60,12 +74,18 @@ def test_discovery() -> None:
             (
                 Result(state=State.OK, summary="Usage: 17.3 MiB"),
                 Metric("kube_memory_usage", 18120704.0, boundaries=(0.0, None)),
-                Result(state=State.OK, summary="Requests: 0 B (2/2 containers with requests)"),
+                Result(
+                    state=State.OK,
+                    summary="Requests: 0 B (2/2 containers with requests)",
+                ),
                 Metric("kube_memory_request", 0.0, boundaries=(0.0, None)),
                 Result(state=State.OK, summary="Limits: 0 B (0/2 containers with limits)"),
                 Metric("kube_memory_limit", 0.0, boundaries=(0.0, None)),
                 Metric("kube_memory_allocatable", 35917989.0),
-                Result(state=State.OK, summary="Node utilization: 50.45% - 17.3 MiB of 34.3 MiB"),
+                Result(
+                    state=State.OK,
+                    summary="Node utilization: 50.45% - 17.3 MiB of 34.3 MiB",
+                ),
                 Metric(
                     "kube_memory_node_allocatable_utilization",
                     50.45021869125245,
@@ -88,7 +108,10 @@ def test_discovery() -> None:
             (
                 Result(state=State.OK, summary="Usage: 17.3 MiB"),
                 Metric("kube_memory_usage", 18120704.0, boundaries=(0.0, None)),
-                Result(state=State.OK, summary="Requests: 0 B (1/2 containers with requests)"),
+                Result(
+                    state=State.OK,
+                    summary="Requests: 0 B (1/2 containers with requests)",
+                ),
                 Metric("kube_memory_request", 0.0, boundaries=(0.0, None)),
                 Metric("kube_memory_limit", 28120704.0),
                 Result(
@@ -102,7 +125,10 @@ def test_discovery() -> None:
                     boundaries=(0.0, None),
                 ),
                 Metric("kube_memory_allocatable", 35917989.0),
-                Result(state=State.OK, summary="Node utilization: 50.45% - 17.3 MiB of 34.3 MiB"),
+                Result(
+                    state=State.OK,
+                    summary="Node utilization: 50.45% - 17.3 MiB of 34.3 MiB",
+                ),
                 Metric(
                     "kube_memory_node_allocatable_utilization",
                     50.45021869125245,
@@ -142,7 +168,10 @@ def test_discovery() -> None:
                     boundaries=(0.0, None),
                 ),
                 Metric("kube_memory_allocatable", 35917989.0),
-                Result(state=State.OK, summary="Node utilization: 50.45% - 17.3 MiB of 34.3 MiB"),
+                Result(
+                    state=State.OK,
+                    summary="Node utilization: 50.45% - 17.3 MiB of 34.3 MiB",
+                ),
                 Metric(
                     "kube_memory_node_allocatable_utilization",
                     50.45021869125245,
@@ -171,7 +200,9 @@ def test_discovery() -> None:
                     summary="Requests utilization: 138.11% - 17.3 MiB of 12.5 MiB (2/2 containers with requests)",
                 ),
                 Metric(
-                    "kube_memory_request_utilization", 138.10771129354035, boundaries=(0.0, None)
+                    "kube_memory_request_utilization",
+                    138.10771129354035,
+                    boundaries=(0.0, None),
                 ),
                 Metric("kube_memory_limit", 28120704.0),
                 Result(
@@ -185,7 +216,10 @@ def test_discovery() -> None:
                     boundaries=(0.0, None),
                 ),
                 Metric("kube_memory_allocatable", 35917989.0),
-                Result(state=State.OK, summary="Node utilization: 50.45% - 17.3 MiB of 34.3 MiB"),
+                Result(
+                    state=State.OK,
+                    summary="Node utilization: 50.45% - 17.3 MiB of 34.3 MiB",
+                ),
                 Metric(
                     "kube_memory_node_allocatable_utilization",
                     50.45021869125245,
@@ -214,7 +248,9 @@ def test_discovery() -> None:
                     summary="Requests utilization: 206.70% - 25.9 MiB of 12.5 MiB (2/2 containers with requests)",
                 ),
                 Metric(
-                    "kube_memory_request_utilization", 206.70159162191297, boundaries=(0.0, None)
+                    "kube_memory_request_utilization",
+                    206.70159162191297,
+                    boundaries=(0.0, None),
                 ),
                 Metric("kube_memory_limit", 28120704.0),
                 Result(
@@ -228,7 +264,10 @@ def test_discovery() -> None:
                     boundaries=(0.0, None),
                 ),
                 Metric("kube_memory_allocatable", 35917989.0),
-                Result(state=State.OK, summary="Node utilization: 75.51% - 25.9 MiB of 34.3 MiB"),
+                Result(
+                    state=State.OK,
+                    summary="Node utilization: 75.51% - 25.9 MiB of 34.3 MiB",
+                ),
                 Metric(
                     "kube_memory_node_allocatable_utilization",
                     75.50730081241464,

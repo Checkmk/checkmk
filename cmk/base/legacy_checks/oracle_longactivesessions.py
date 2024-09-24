@@ -36,7 +36,17 @@ def check_oracle_longactivesessions(item, params, info):
 
         if line[0] == item and line[1] != "":
             sessioncount += 1
-            _sid, sidnr, serial, machine, process, osuser, program, last_call_el, sql_id = line
+            (
+                _sid,
+                sidnr,
+                serial,
+                machine,
+                process,
+                osuser,
+                program,
+                last_call_el,
+                sql_id,
+            ) = line
 
             longoutput = "Session (sid,serial,proc) {} {} {} active for {} from {} osuser {} program {} sql_id {} ".format(
                 sidnr,

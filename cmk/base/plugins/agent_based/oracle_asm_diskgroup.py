@@ -245,7 +245,8 @@ def parse_oracle_asm_diskgroup(  # pylint: disable=too-many-branches
                 ),
             )
     return Section(
-        found_deprecated_agent_output=found_deprecated_agent_output, diskgroups={**tmp_section}
+        found_deprecated_agent_output=found_deprecated_agent_output,
+        diskgroups={**tmp_section},
     )
 
 

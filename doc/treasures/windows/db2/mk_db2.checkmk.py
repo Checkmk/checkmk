@@ -29,7 +29,9 @@ class Database:
 
     def _parse_arguments(self) -> argparse.Namespace:
         parser = argparse.ArgumentParser(description="DB2 information")
-        parser.add_argument("-v", "--verbose", action="store_true", help="verbose output")
+        parser.add_argument(
+            "-v", "--verbose", action="store_true", help="verbose output"
+        )
         return parser.parse_args()
 
     def is_verbose(self) -> bool:
@@ -47,7 +49,9 @@ class Database:
 
     @staticmethod
     def cleanup_input(data: str) -> list[str]:
-        return [_line.replace("\r", "") for _line in data.split(sep="\n") if len(_line)]  #
+        return [
+            _line.replace("\r", "") for _line in data.split(sep="\n") if len(_line)
+        ]  #
 
     @staticmethod
     def run_db2(args: list[str], instance: str) -> Popen:
@@ -99,7 +103,9 @@ class Database:
 
     def get_list_databases(self, instance: str) -> list[str]:
         try:
-            process = Database.run_db2(args=["list", "db", "directory"], instance=instance)
+            process = Database.run_db2(
+                args=["list", "db", "directory"], instance=instance
+            )
             stdout = process.communicate()[0]
             return Database.cleanup_input(stdout)
         except (OSError, ValueError) as e:
@@ -112,7 +118,9 @@ class Database:
 
     def snapshot_databases(self, instance: str) -> list[str]:
         try:
-            process = Database.run_db2(args=["get", "snapshot", "for", "dbm"], instance=instance)
+            process = Database.run_db2(
+                args=["get", "snapshot", "for", "dbm"], instance=instance
+            )
             stdout = process.communicate()[0]
             return Database.cleanup_input(stdout)
         except (OSError, ValueError) as e:
@@ -136,7 +144,9 @@ class Database:
     def is_database_presented(db_list: list[str]) -> bool:
         return len(db_list) > 3
 
-    def process_databases(self, database: str, port: int, now: int, instance: str) -> None:
+    def process_databases(
+        self, database: str, port: int, now: int, instance: str
+    ) -> None:
         # before = time.time()
         # process = Database.run_db2(args=["connect", "to", database], instance=instance )
         # stdout = process.communicate()[0]

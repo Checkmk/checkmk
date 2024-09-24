@@ -19,7 +19,10 @@ def check_raritan_pdu_outletcount(item, params, info):
     levels = params.get("levels_upper", (None, None)) + params.get("levels_lower", (None, None))
     try:
         yield check_levels(
-            int(info[0][0]), "outletcount", levels, human_readable_func=lambda f: "%.f" % f
+            int(info[0][0]),
+            "outletcount",
+            levels,
+            human_readable_func=lambda f: "%.f" % f,
         )
     except IndexError:
         pass

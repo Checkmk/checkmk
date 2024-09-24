@@ -8,8 +8,16 @@ from typing import Any
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.ibm_svc_systemstats import (
     check_ibm_svc_systemstats_cache,
     check_ibm_svc_systemstats_cpu,
@@ -297,7 +305,10 @@ def test_discovery_ibm_svc_systemstats_cpu(
             TEST_SECTION,
             {"util": (10.0, 25.0)},
             [
-                Result(state=State.CRIT, summary="Total CPU: 91.00% (warn/crit at 10.00%/25.00%)"),
+                Result(
+                    state=State.CRIT,
+                    summary="Total CPU: 91.00% (warn/crit at 10.00%/25.00%)",
+                ),
                 Metric("util", 91.0, levels=(10.0, 25.0), boundaries=(0.0, None)),
             ],
             id="cpu",
@@ -306,7 +317,10 @@ def test_discovery_ibm_svc_systemstats_cpu(
             TEST_SECTION,
             {"util": (90.0, 95.0)},
             [
-                Result(state=State.WARN, summary="Total CPU: 91.00% (warn/crit at 90.00%/95.00%)"),
+                Result(
+                    state=State.WARN,
+                    summary="Total CPU: 91.00% (warn/crit at 90.00%/95.00%)",
+                ),
                 Metric("util", 91.0, levels=(90.0, 95.0), boundaries=(0.0, None)),
             ],
             id="cpu_default_params",
@@ -363,7 +377,8 @@ def test_discovery_ibm_svc_systemstats_cache(
             TEST_SECTION,
             [
                 Result(
-                    state=State.OK, summary="Write cache usage is 0 %, total cache usage is 2 %"
+                    state=State.OK,
+                    summary="Write cache usage is 0 %, total cache usage is 2 %",
                 ),
                 Metric("write_cache_pc", 0.0, boundaries=(0.0, 100.0)),
                 Metric("total_cache_pc", 2.0, boundaries=(0.0, 100.0)),
@@ -377,7 +392,12 @@ def test_discovery_ibm_svc_systemstats_cache(
                 write_cache_pc=None,
                 disks={},
             ),
-            [Result(state=State.UNKNOWN, summary="value total_cache_pc not found in agent output")],
+            [
+                Result(
+                    state=State.UNKNOWN,
+                    summary="value total_cache_pc not found in agent output",
+                )
+            ],
             id="cpu_no_total_cache_pc",
         ),
         pytest.param(
@@ -387,7 +407,12 @@ def test_discovery_ibm_svc_systemstats_cache(
                 write_cache_pc=None,
                 disks={},
             ),
-            [Result(state=State.UNKNOWN, summary="value write_cache_pc not found in agent output")],
+            [
+                Result(
+                    state=State.UNKNOWN,
+                    summary="value write_cache_pc not found in agent output",
+                )
+            ],
             id="cpu_no_write_cache_pc",
         ),
     ],

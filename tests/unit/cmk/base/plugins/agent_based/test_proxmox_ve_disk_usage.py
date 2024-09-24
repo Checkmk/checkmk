@@ -9,7 +9,10 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
-from cmk.base.plugins.agent_based.proxmox_ve_disk_usage import check_proxmox_ve_disk_usage, Section
+from cmk.base.plugins.agent_based.proxmox_ve_disk_usage import (
+    check_proxmox_ve_disk_usage,
+    Section,
+)
 
 DISK_DATA = {"disk": 1024**4, "max_disk": 2 * 1024**4}
 
@@ -68,7 +71,10 @@ DISK_DATA = {"disk": 1024**4, "max_disk": 2 * 1024**4}
                     1099511627776.0,
                     boundaries=(0.0, None),
                 ),
-                Result(state=State.WARN, summary="Used: 50.00% (warn/crit at 40.00%/90.00%)"),
+                Result(
+                    state=State.WARN,
+                    summary="Used: 50.00% (warn/crit at 40.00%/90.00%)",
+                ),
                 Metric(
                     "fs_used_percent",
                     50.0,

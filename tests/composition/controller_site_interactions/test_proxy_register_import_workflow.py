@@ -6,7 +6,10 @@
 import subprocess
 from pathlib import Path
 
-from tests.testlib.agent import wait_until_host_has_services, wait_until_host_receives_data
+from tests.testlib.agent import (
+    wait_until_host_has_services,
+    wait_until_host_receives_data,
+)
 from tests.testlib.pytest_helpers.marks import skip_if_not_containerized
 from tests.testlib.site import Site
 from tests.testlib.utils import run

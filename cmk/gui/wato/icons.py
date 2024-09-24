@@ -79,9 +79,7 @@ class DownloadAgentOutputIcon(Icon):
         return ["filename", "check_type"]
 
     def render(self, what, row, tags, custom_vars) -> None:  # type: ignore[no-untyped-def]
-        return _paint_download_host_info(
-            what, row, tags, custom_vars, ty="agent"
-        )  # pylint: disable=no-value-for-parameter
+        return _paint_download_host_info(what, row, tags, custom_vars, ty="agent")  # pylint: disable=no-value-for-parameter
 
 
 class DownloadSnmpWalkIcon(Icon):
@@ -102,9 +100,7 @@ class DownloadSnmpWalkIcon(Icon):
         return 50
 
     def render(self, what, row, tags, custom_vars) -> None:  # type: ignore[no-untyped-def]
-        return _paint_download_host_info(
-            what, row, tags, custom_vars, ty="walk"
-        )  # pylint: disable=no-value-for-parameter
+        return _paint_download_host_info(what, row, tags, custom_vars, ty="walk")  # pylint: disable=no-value-for-parameter
 
 
 def _paint_download_host_info(what, row, tags, host_custom_vars, ty):

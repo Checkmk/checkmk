@@ -24,7 +24,11 @@ from cmk.special_agents.agent_aws import (
     S3Summary,
 )
 
-from .agent_aws_fake_clients import FakeCloudwatchClient, S3BucketTaggingIB, S3ListBucketsIB
+from .agent_aws_fake_clients import (
+    FakeCloudwatchClient,
+    S3BucketTaggingIB,
+    S3ListBucketsIB,
+)
 
 
 class FakeS3Client:
@@ -99,7 +103,11 @@ s3_params = [
     (["Name-0", "Name-1", "Name-2"], (None, None), 3),
     (["Name-0", "Name-1", "Name-2", "string4"], (None, None), 3),
     (["Name-0", "Name-1", "Name-2", "FOOBAR"], (None, None), 3),
-    (["Name-0"], ([["Key-0", "unknown-tag"]], [["Value-0", "Value-1"], ["unknown-val"]]), 1),
+    (
+        ["Name-0"],
+        ([["Key-0", "unknown-tag"]], [["Value-0", "Value-1"], ["unknown-val"]]),
+        1,
+    ),
     (
         ["Name-0", "Name-1"],
         ([["Key-0", "unknown-tag"]], [["Value-0", "Value-1"], ["unknown-val"]]),

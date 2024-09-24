@@ -9,13 +9,21 @@ from tests.unit.conftest import FixRegister
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State, TableRow
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+    TableRow,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     InventoryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.oracle_recovery_area import inventory_oracle_recovery_area
+from cmk.base.plugins.agent_based.oracle_recovery_area import (
+    inventory_oracle_recovery_area,
+)
 
 from .utils_inventory import sort_inventory_result
 
@@ -53,14 +61,22 @@ def test_discover_oracle_recovery_area(
                     state=State.CRIT,
                     summary="47.9 GiB out of 50.0 GiB used (95.1%, warn/crit at 70.0%/90.0%), 300 MiB reclaimable",
                 ),
-                Metric("used", 49000.0, levels=(35864.5, 46111.5), boundaries=(0.0, 51235.0)),
+                Metric(
+                    "used",
+                    49000.0,
+                    levels=(35864.5, 46111.5),
+                    boundaries=(0.0, 51235.0),
+                ),
                 Metric("reclaimable", 300.0),
             ],
         ),
     ],
 )
 def test_check_oracle_recovery_area(
-    fix_register: FixRegister, string_table: StringTable, item: str, expected_result: CheckResult
+    fix_register: FixRegister,
+    string_table: StringTable,
+    item: str,
+    expected_result: CheckResult,
 ) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("oracle_recovery_area")]
     assert (

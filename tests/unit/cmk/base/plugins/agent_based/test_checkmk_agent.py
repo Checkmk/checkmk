@@ -22,12 +22,15 @@ from cmk.base.plugins.agent_based.checkmk_agent import (
     _check_python_plugins,
     _check_transport,
     _check_version,
+    check_checkmk_agent,
+    discover_checkmk_agent,
 )
 from cmk.base.plugins.agent_based.checkmk_agent import (
     _expand_curly_address_notation as expand_curly_address_notation,
 )
-from cmk.base.plugins.agent_based.checkmk_agent import check_checkmk_agent, discover_checkmk_agent
-from cmk.base.plugins.agent_based.cmk_update_agent_status import _parse_cmk_update_agent_status
+from cmk.base.plugins.agent_based.cmk_update_agent_status import (
+    _parse_cmk_update_agent_status,
+)
 
 from cmk.plugins.lib.checkmk import (
     CachedPlugin,
@@ -177,7 +180,12 @@ def test_check_only_from(fail_state: State) -> None:
             "1.2.3.4",
             fail_state,
         )
-    ] == [Result(state=fail_state, summary="Unexpected allowed IP ranges (exceeding: 5.6.7.8)")]
+    ] == [
+        Result(
+            state=fail_state,
+            summary="Unexpected allowed IP ranges (exceeding: 5.6.7.8)",
+        )
+    ]
 
 
 def test_check_agent_update_failed_not() -> None:
@@ -460,7 +468,8 @@ def test_check_no_check_yet_pydantic() -> None:
     ),
 )
 def test_certificate_results(
-    trusted_certs: dict[int, dict[str, bool | str]] | None, results: Iterable[CheckResult]
+    trusted_certs: dict[int, dict[str, bool | str]] | None,
+    results: Iterable[CheckResult],
 ) -> None:
     # no cert details
     section = _parse_cmk_update_agent_status(
@@ -1285,6 +1294,16 @@ def test_cached_plugins(
 
 
 def test_expand_curly_address_notation() -> None:
-    assert expand_curly_address_notation("1.2.{3,4,5}.6") == ["1.2.3.6", "1.2.4.6", "1.2.5.6"]
-    assert expand_curly_address_notation(["0.0.0.0", "1.1.1.1/32"]) == ["0.0.0.0", "1.1.1.1/32"]
-    assert expand_curly_address_notation("0.0.0.0 1.1.1.1/32") == ["0.0.0.0", "1.1.1.1/32"]
+    assert expand_curly_address_notation("1.2.{3,4,5}.6") == [
+        "1.2.3.6",
+        "1.2.4.6",
+        "1.2.5.6",
+    ]
+    assert expand_curly_address_notation(["0.0.0.0", "1.1.1.1/32"]) == [
+        "0.0.0.0",
+        "1.1.1.1/32",
+    ]
+    assert expand_curly_address_notation("0.0.0.0 1.1.1.1/32") == [
+        "0.0.0.0",
+        "1.1.1.1/32",
+    ]

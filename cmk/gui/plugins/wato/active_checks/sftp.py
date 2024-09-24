@@ -7,7 +7,14 @@
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import Checkbox, Dictionary, Integer, NetworkPort, TextInput, Tuple
+from cmk.gui.valuespec import (
+    Checkbox,
+    Dictionary,
+    Integer,
+    NetworkPort,
+    TextInput,
+    Tuple,
+)
 from cmk.gui.wato import MigrateToIndividualOrStoredPassword, RulespecGroupActiveChecks
 from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
@@ -29,7 +36,11 @@ def _valuespec_active_checks_sftp():
                 elements=[
                     (
                         "description",
-                        TextInput(title=_("Service description"), default_value="SFTP", size=30),
+                        TextInput(
+                            title=_("Service description"),
+                            default_value="SFTP",
+                            size=30,
+                        ),
                     ),
                     ("port", NetworkPort(title=_("Port"), default_value=22)),
                     (

@@ -64,7 +64,10 @@ def _valuespec_inventory_df_rules() -> Dictionary:
                 DropdownChoice(
                     title=_("Mountpoint for block devices (brtfs)"),
                     choices=[
-                        ("volume_name_as_mountpoint", _("Use volume name as mountpoint")),
+                        (
+                            "volume_name_as_mountpoint",
+                            _("Use volume name as mountpoint"),
+                        ),
                         ("uuid_as_mountpoint", _("Use UUID as mountpoint")),
                     ],
                     default_value="volume_name_as_mountpoint",
@@ -76,7 +79,10 @@ def _valuespec_inventory_df_rules() -> Dictionary:
                     title=_("Item appearance"),
                     choices=[
                         ("mountpoint", _("Use mountpoint")),
-                        ("volume_name_and_mountpoint", _("Use volume name and mountpoint")),
+                        (
+                            "volume_name_and_mountpoint",
+                            _("Use volume name and mountpoint"),
+                        ),
                         ("uuid_and_mountpoint", _("Use UUID and mountpoint")),
                     ],
                     default_value="mountpoint",

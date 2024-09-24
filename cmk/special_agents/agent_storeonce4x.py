@@ -19,8 +19,14 @@ from requests_oauthlib import OAuth2Session  # type: ignore[import]
 
 import cmk.utils.paths
 
-from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
-from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.agent_common import (
+    SectionWriter,
+    special_agent_main,
+)
+from cmk.special_agents.v0_unstable.argument_parsing import (
+    Args,
+    create_default_argument_parser,
+)
 from cmk.special_agents.v0_unstable.request_helper import (
     Requester,
     StringMap,
@@ -202,7 +208,11 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser.add_argument("user", metavar="USER", help="""Username for Observer Role""")
     parser.add_argument("password", metavar="PASSWORD", help="""Password for Observer Role""")
     parser.add_argument(
-        "-p", "--port", default=443, type=int, help="Use alternative port (default: 443)"
+        "-p",
+        "--port",
+        default=443,
+        type=int,
+        help="Use alternative port (default: 443)",
     )
 
     parser.add_argument("--verify_ssl", action="store_true", default=False)

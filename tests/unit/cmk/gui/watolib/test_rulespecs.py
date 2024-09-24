@@ -119,7 +119,10 @@ def _expected_rulespec_group_choices():
         ("agents", "Agent rules"),
         ("agents/generic_options", "&nbsp;&nbsp;\u2319 Generic Options"),
         ("checkparams", "Service discovery rules"),
-        ("checkparams/discovery", "&nbsp;&nbsp;\u2319 Discovery of individual services"),
+        (
+            "checkparams/discovery",
+            "&nbsp;&nbsp;\u2319 Discovery of individual services",
+        ),
         (
             "checkparams/inventory_and_check_mk_settings",
             "&nbsp;&nbsp;\u2319 Discovery and Checkmk settings",
@@ -132,7 +135,10 @@ def _expected_rulespec_group_choices():
         ("host_monconf/host_notifications", "&nbsp;&nbsp;\u2319 Notifications"),
         ("host_monconf/host_various", "&nbsp;&nbsp;\u2319 Various"),
         ("monconf", "Service monitoring rules"),
-        ("monconf/applications", "&nbsp;&nbsp;\u2319 Applications, Processes & Services"),
+        (
+            "monconf/applications",
+            "&nbsp;&nbsp;\u2319 Applications, Processes & Services",
+        ),
         ("monconf/networking", "&nbsp;&nbsp;\u2319 Networking"),
         ("monconf/os", "&nbsp;&nbsp;\u2319 Operating System Resources"),
         ("monconf/printers", "&nbsp;&nbsp;\u2319 Printers"),
@@ -156,7 +162,10 @@ def _expected_rulespec_group_choices():
         ("snmp", "SNMP rules"),
         ("static", "Enforced services"),
         ("static/applications", "&nbsp;&nbsp;⌙ Applications, Processes & Services"),
-        ("static/environment", "&nbsp;&nbsp;⌙ Temperature, Humidity, Electrical Parameters, etc."),
+        (
+            "static/environment",
+            "&nbsp;&nbsp;⌙ Temperature, Humidity, Electrical Parameters, etc.",
+        ),
         ("static/hardware", "&nbsp;&nbsp;⌙ Hardware, BIOS"),
         ("static/networking", "&nbsp;&nbsp;⌙ Networking"),
         ("static/os", "&nbsp;&nbsp;⌙ Operating System Resources"),
@@ -628,7 +637,11 @@ def test_rulespecs_get_by_group() -> None:
     assert len(result) == 0
 
     registry.register(
-        HostRulespec(name="dummy_name", group=DummyGroup, valuespec=lambda: FixedValue(value=None))
+        HostRulespec(
+            name="dummy_name",
+            group=DummyGroup,
+            valuespec=lambda: FixedValue(value=None),
+        )
     )
     result = registry.get_by_group("group")
     assert len(result) == 1

@@ -21,7 +21,15 @@ from tests.testlib import SpecialAgent
         ),
         pytest.param(
             {"username": "usr", "password": ("store", "zerto")},
-            ["--authentication", "windows", "-u", "usr", "-p", ("store", "zerto", "%s"), "address"],
+            [
+                "--authentication",
+                "windows",
+                "-u",
+                "usr",
+                "-p",
+                ("store", "zerto", "%s"),
+                "address",
+            ],
             id="with password from store",
         ),
     ],

@@ -9,7 +9,10 @@ from kubernetes import client  # type: ignore[import]
 from tests.unit.cmk.special_agents.agent_kubernetes.utils import FakeResponse
 
 from cmk.special_agents.utils_kubernetes.schemata import api
-from cmk.special_agents.utils_kubernetes.transform import deployment_conditions, parse_metadata
+from cmk.special_agents.utils_kubernetes.transform import (
+    deployment_conditions,
+    parse_metadata,
+)
 
 
 class TestAPIDeployments:

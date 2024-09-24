@@ -20,7 +20,7 @@ __all__ = ["group_by_host"]
 
 
 def group_by_host(
-    host_sections: Iterable[tuple[HostKey, HostSections]]
+    host_sections: Iterable[tuple[HostKey, HostSections]],
 ) -> Mapping[HostKey, HostSections]:
     out_sections: dict[HostKey, MutableSectionMap[list]] = defaultdict(dict)
     out_cache_info: dict[HostKey, MutableSectionMap[tuple[int, int]]] = defaultdict(dict)

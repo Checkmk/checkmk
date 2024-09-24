@@ -7,7 +7,9 @@ import pytest
 
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 from cmk.gui.utils.html import HTML
-from cmk.gui.views.perfometer.legacy_perfometers.check_mk import perfometer_fileinfo_groups
+from cmk.gui.views.perfometer.legacy_perfometers.check_mk import (
+    perfometer_fileinfo_groups,
+)
 from cmk.gui.views.perfometer.legacy_perfometers.utils import LegacyPerfometerResult
 
 

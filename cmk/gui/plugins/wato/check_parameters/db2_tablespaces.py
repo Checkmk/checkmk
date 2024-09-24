@@ -48,8 +48,16 @@ def db_levels_common():
                     Tuple(
                         title=_("Absolute free space"),
                         elements=[
-                            Integer(title=_("Warning if below"), unit=_("MB"), default_value=1000),
-                            Integer(title=_("Critical if below"), unit=_("MB"), default_value=500),
+                            Integer(
+                                title=_("Warning if below"),
+                                unit=_("MB"),
+                                default_value=1000,
+                            ),
+                            Integer(
+                                title=_("Critical if below"),
+                                unit=_("MB"),
+                                default_value=500,
+                            ),
                         ],
                     ),
                     ListOf(
@@ -78,8 +86,14 @@ def db_levels_common():
                                         Tuple(
                                             title=_("Absolute free space"),
                                             elements=[
-                                                Integer(title=_("Warning if below"), unit=_("MB")),
-                                                Integer(title=_("Critical if below"), unit=_("MB")),
+                                                Integer(
+                                                    title=_("Warning if below"),
+                                                    unit=_("MB"),
+                                                ),
+                                                Integer(
+                                                    title=_("Critical if below"),
+                                                    unit=_("MB"),
+                                                ),
                                             ],
                                         ),
                                     ],

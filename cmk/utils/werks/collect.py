@@ -183,7 +183,13 @@ def main(
             try:
                 werk_id = int(werk_id_str)
             except ValueError:
-                if werk_file.name in {"config", "config.json", "first_free", ".f12", ".gitignore"}:
+                if werk_file.name in {
+                    "config",
+                    "config.json",
+                    "first_free",
+                    ".f12",
+                    ".gitignore",
+                }:
                     continue
                 raise RuntimeError(
                     f"Found unexpected file {werk_file.name!r} in branch {branch_name!r}"

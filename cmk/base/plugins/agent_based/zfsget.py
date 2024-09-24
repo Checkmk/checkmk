@@ -85,7 +85,14 @@ def _parse_zfs(lines: StringTable) -> Mapping[str, Mapping[str, str | float]]:
     for line in lines:
         # last item is always the source element, we do not care about that one
         joined_line = " ".join(line[:-1])
-        for prop in (" name ", " quota ", " used ", " available ", " mountpoint ", " type "):
+        for prop in (
+            " name ",
+            " quota ",
+            " used ",
+            " available ",
+            " mountpoint ",
+            " type ",
+        ):
             if prop not in joined_line:
                 continue
             name, raw_value = joined_line.split(prop)
@@ -168,7 +175,11 @@ def _parse_df(
         t_u_a = (root_entry["total"], root_entry["used"], root_entry["available"])
         drop = []
         for mountpoint, entry in parsed.items():
-            if mountpoint != "/" and t_u_a == (entry["total"], entry["used"], entry["available"]):
+            if mountpoint != "/" and t_u_a == (
+                entry["total"],
+                entry["used"],
+                entry["available"],
+            ):
                 drop.append(mountpoint)
         for mp in drop:
             del parsed[mp]

@@ -6,7 +6,12 @@
 import pytest
 
 from cmk.base.plugins.agent_based import aruba_psu
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -119,7 +124,8 @@ def test_check_aruba_psu_status(
             [
                 Metric("temp", 51.0, levels=(50.0, 60.0)),
                 Result(
-                    state=State.WARN, summary="Temperature: 51.0 °C (warn/crit at 50.0 °C/60.0 °C)"
+                    state=State.WARN,
+                    summary="Temperature: 51.0 °C (warn/crit at 50.0 °C/60.0 °C)",
                 ),
                 Result(state=State.OK, notice="Configuration: only use user levels"),
             ],
@@ -130,7 +136,8 @@ def test_check_aruba_psu_status(
             [
                 Metric("temp", 61.0, levels=(50.0, 60.0)),
                 Result(
-                    state=State.CRIT, summary="Temperature: 61.0 °C (warn/crit at 50.0 °C/60.0 °C)"
+                    state=State.CRIT,
+                    summary="Temperature: 61.0 °C (warn/crit at 50.0 °C/60.0 °C)",
                 ),
                 Result(state=State.OK, notice="Configuration: only use user levels"),
             ],
@@ -184,9 +191,15 @@ def test_check_aruba_psu_temp(
             DATA,
             "JL086A 3",
             [
-                Result(state=State.WARN, summary="Wattage: 570.00W (warn/crit at 500.00W/600.00W)"),
+                Result(
+                    state=State.WARN,
+                    summary="Wattage: 570.00W (warn/crit at 500.00W/600.00W)",
+                ),
                 Metric("power", 570.0, levels=(500.0, 600.0)),
-                Result(state=State.WARN, summary="Wattage: 83.82% (warn/crit at 80.00%/90.00%)"),
+                Result(
+                    state=State.WARN,
+                    summary="Wattage: 83.82% (warn/crit at 80.00%/90.00%)",
+                ),
                 Result(state=State.OK, summary="Maximum Wattage: 680.00W"),
                 Result(state=State.OK, notice="Voltage Info: AC 120V/240V"),
             ],
@@ -195,9 +208,15 @@ def test_check_aruba_psu_temp(
             DATA,
             "JL086A 4",
             [
-                Result(state=State.CRIT, summary="Wattage: 620.00W (warn/crit at 500.00W/600.00W)"),
+                Result(
+                    state=State.CRIT,
+                    summary="Wattage: 620.00W (warn/crit at 500.00W/600.00W)",
+                ),
                 Metric("power", 620.0, levels=(500.0, 600.0)),
-                Result(state=State.CRIT, summary="Wattage: 91.18% (warn/crit at 80.00%/90.00%)"),
+                Result(
+                    state=State.CRIT,
+                    summary="Wattage: 91.18% (warn/crit at 80.00%/90.00%)",
+                ),
                 Result(state=State.OK, summary="Maximum Wattage: 680.00W"),
                 Result(state=State.OK, notice="Voltage Info: AC 120V/240V"),
             ],

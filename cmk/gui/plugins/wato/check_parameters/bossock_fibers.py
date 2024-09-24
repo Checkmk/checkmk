@@ -17,7 +17,10 @@ def _parameter_valuespec_bossock_fibers():
     return Migrate(
         valuespec=Dictionary(
             elements=[
-                ("levels", SimpleLevels(spec=Integer, unit="fibers", title=_("Number of fibers")))
+                (
+                    "levels",
+                    SimpleLevels(spec=Integer, unit="fibers", title=_("Number of fibers")),
+                )
             ],
             optional_keys=[],
         ),

@@ -99,7 +99,10 @@ def test_reload_gui_on_unrelated_change() -> None:
 
 
 def _create_simple_test_package(
-    installer: Installer, pacname: PackageName, path_config: PathConfig, package_store: PackageStore
+    installer: Installer,
+    pacname: PackageName,
+    path_config: PathConfig,
+    package_store: PackageStore,
 ) -> Manifest:
     _create_test_file(str(pacname), path_config)
 

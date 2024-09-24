@@ -19,7 +19,10 @@ from cmk.plugins.lib.azure import (
     Section,
 )
 
-DB_MYSQL_RESOURCE_TYPES = ["Microsoft.DBforMySQL/servers", "Microsoft.DBforMySQL/flexibleServers"]
+DB_MYSQL_RESOURCE_TYPES = [
+    "Microsoft.DBforMySQL/servers",
+    "Microsoft.DBforMySQL/flexibleServers",
+]
 
 
 check_plugin_azure_mysql_memory = CheckPlugin(

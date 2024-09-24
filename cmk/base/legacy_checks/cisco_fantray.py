@@ -101,7 +101,8 @@ def check_cisco_fantray(item, _no_params, parsed):
 
 check_info["cisco_fantray"] = LegacyCheckDefinition(
     detect=all_of(
-        contains(".1.3.6.1.2.1.1.1.0", "cisco"), not_exists(".1.3.6.1.4.1.9.9.13.1.4.1.2.*")
+        contains(".1.3.6.1.2.1.1.1.0", "cisco"),
+        not_exists(".1.3.6.1.4.1.9.9.13.1.4.1.2.*"),
     ),
     fetch=[
         SNMPTree(

@@ -54,7 +54,10 @@ def check_oracle_recovery_area(item, params, info):
                     crit,
                     render.bytes(reclaimable_mb * mb),
                 ),
-                [("used", used_mb, warn_mb, crit_mb, 0, size_mb), ("reclaimable", reclaimable_mb)],
+                [
+                    ("used", used_mb, warn_mb, crit_mb, 0, size_mb),
+                    ("reclaimable", reclaimable_mb),
+                ],
             )
 
     # In case of missing information we assume that the login into

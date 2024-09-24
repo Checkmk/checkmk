@@ -17,6 +17,7 @@ But all this should be implementation details, because downstream tools should
 only handle the WerkV2 model. Old style werks are converted to markdown Werks,
 so both can be handled with a common interface.
 """
+
 import itertools
 from collections.abc import Iterator
 from pathlib import Path

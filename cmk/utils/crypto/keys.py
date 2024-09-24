@@ -50,7 +50,9 @@ PublicKeyType: TypeAlias = (
 )
 
 
-def is_supported_public_key_type(key: asym.types.PublicKeyTypes) -> TypeGuard[PublicKeyType]:
+def is_supported_public_key_type(
+    key: asym.types.PublicKeyTypes,
+) -> TypeGuard[PublicKeyType]:
     # get_args is a workaround for mypy bug https://github.com/python/mypy/issues/12155
     return isinstance(key, get_args(PublicKeyType))
 
@@ -63,7 +65,9 @@ PrivateKeyType: TypeAlias = (
 )
 
 
-def is_supported_private_key_type(key: asym.types.PrivateKeyTypes) -> TypeGuard[PrivateKeyType]:
+def is_supported_private_key_type(
+    key: asym.types.PrivateKeyTypes,
+) -> TypeGuard[PrivateKeyType]:
     # get_args is a workaround for mypy bug https://github.com/python/mypy/issues/12155
     return isinstance(key, get_args(PrivateKeyType))
 

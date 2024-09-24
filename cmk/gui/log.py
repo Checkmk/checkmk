@@ -52,7 +52,12 @@ class AuthenticationFailureEvent(SecurityEvent):
     """Indicates a failed authentication attempt"""
 
     def __init__(
-        self, *, user_error: str, auth_method: str, username: UserId | None, remote_ip: str | None
+        self,
+        *,
+        user_error: str,
+        auth_method: str,
+        username: UserId | None,
+        remote_ip: str | None,
     ) -> None:
         super().__init__(
             "authentication failed",

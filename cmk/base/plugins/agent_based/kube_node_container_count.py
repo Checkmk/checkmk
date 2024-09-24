@@ -7,7 +7,11 @@ import json
 from collections.abc import Mapping
 from typing import cast, Literal
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import check_levels, register, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    check_levels,
+    register,
+    Service,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,

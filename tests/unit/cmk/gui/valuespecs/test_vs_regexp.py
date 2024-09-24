@@ -14,7 +14,9 @@ class TestRegexp:
         expect_validate_success(vs.RegExp("infix"), "^$")
         expect_validate_failure(vs.RegExp("infix"), "(", match="Invalid regular expression:")
         expect_validate_failure(
-            vs.RegExp("infix", mingroups=1), "^$", match="You need at least <b>1</b> groups."
+            vs.RegExp("infix", mingroups=1),
+            "^$",
+            match="You need at least <b>1</b> groups.",
         )
         expect_validate_success(vs.RegExp("infix", mingroups=1), "^(.+)$")
         expect_validate_failure(

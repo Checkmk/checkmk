@@ -6,7 +6,14 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v2 import check_levels, CheckPlugin, CheckResult, Metric, render, Result
+from cmk.agent_based.v2 import (
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    Metric,
+    render,
+    Result,
+)
 from cmk.plugins.lib.rabbitmq import discover_key, Section
 
 

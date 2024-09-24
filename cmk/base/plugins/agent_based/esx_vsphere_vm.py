@@ -62,7 +62,9 @@ def _parse_esx_systime(vm_values: Mapping[str, Sequence]) -> str | None:
     return vm_values["systime"][0]
 
 
-def _parse_esx_vm_heartbeat_status(vm_values: Mapping[str, Sequence[str]]) -> HeartBeat | None:
+def _parse_esx_vm_heartbeat_status(
+    vm_values: Mapping[str, Sequence[str]],
+) -> HeartBeat | None:
     if "guestHeartbeatStatus" not in vm_values:
         return None
 
@@ -88,7 +90,9 @@ def _parse_esx_power_state(vm_values: Mapping[str, Sequence[str]]) -> str | None
     return vm_values["runtime.powerState"][0]
 
 
-def _parse_esx_memory_section(vm_values: Mapping[str, Sequence[str]]) -> ESXMemory | None:
+def _parse_esx_memory_section(
+    vm_values: Mapping[str, Sequence[str]],
+) -> ESXMemory | None:
     """Parse memory specific values from ESX VSphere VM agent output"""
     entries_mandatory = {
         "hostMemoryUsage": "host_usage",
@@ -133,7 +137,7 @@ def _parse_esx_cpu_section(vm_values: Mapping[str, Sequence[str]]) -> ESXCpu | N
 
 
 def _parse_esx_datastore_section(
-    vm_values: Mapping[str, Sequence[str]]
+    vm_values: Mapping[str, Sequence[str]],
 ) -> list[ESXDataStore] | None:
     """Parse datastores specific values
 

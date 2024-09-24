@@ -190,7 +190,9 @@ def _make_inventory_chassis(lines: list[list[str]]) -> Attributes:
 
 
 # Note: This node is also being filled by lnx_cpuinfo
-def _make_inventory_processor(lines: list[list[str]]) -> Generator[Attributes, None, None]:
+def _make_inventory_processor(
+    lines: list[list[str]],
+) -> Generator[Attributes, None, None]:
     vendor_map = {
         "GenuineIntel": "intel",
         "Intel(R) Corporation": "intel",

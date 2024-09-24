@@ -130,7 +130,12 @@ check_info["azure_databases.dtu"] = LegacyCheckDefinition(
 _AZURE_CONNECTIONS_METRICS = (
     # metric key                      cmk key,                   display                       use_rate
     ("average_connection_successful", "connections", "Successful connections", False),
-    ("average_connection_failed", "connections_failed_rate", "Rate of failed connections", True),
+    (
+        "average_connection_failed",
+        "connections_failed_rate",
+        "Rate of failed connections",
+        True,
+    ),
 )
 
 

@@ -10,7 +10,13 @@ from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fireeye import inventory_fireeye_generic
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import get_average, get_rate, get_value_store, SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    get_average,
+    get_rate,
+    get_value_store,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.lib.fireeye import DETECT
 
 
@@ -30,7 +36,11 @@ def fireeye_counter_generic(value, what, average):
     perfdata = [("%s_rate" % what.split(" ")[0].lower(), rate)]
     if average:
         avg = get_average(get_value_store(), " %s avg" % counter, this_time, rate, average)
-        return (state, "%s: %.2f mails/%d seconds" % (what, avg * average, average), perfdata)
+        return (
+            state,
+            "%s: %.2f mails/%d seconds" % (what, avg * average, average),
+            perfdata,
+        )
     return (state, f"{what}: {rate:.2f} mails/s", perfdata)
 
 
@@ -223,16 +233,25 @@ def check_fireeye_mail_statistics(_no_item, params, info):
         this_time = time.time()
         counter = "fireeye.stat.%s" % "".join(mail_containing.split(" ")[2:]).lower()
         rate = get_rate(
-            get_value_store(), counter, this_time, int(statistics_info[index]), raise_overflow=True
+            get_value_store(),
+            counter,
+            this_time,
+            int(statistics_info[index]),
+            raise_overflow=True,
         )
         perfdata = [(counter.replace(".", "_"), rate * 60)]
         if average:
             avg = get_average(value_store, f"{counter}.avg", this_time, rate, average)
-            yield 0, "%s: %.2f per %d minutes" % (
-                mail_containing,
-                avg * 60 * average,
-                average,
-            ), perfdata
+            yield (
+                0,
+                "%s: %.2f per %d minutes"
+                % (
+                    mail_containing,
+                    avg * 60 * average,
+                    average,
+                ),
+                perfdata,
+            )
         else:
             yield 0, f"{mail_containing}: {rate * 60:.2f} per minute", perfdata
 

@@ -1829,7 +1829,10 @@ class CustomPluginAdapter:
         if isinstance(self.plugin_options, list):
             return {
                 "option": self.option,
-                "plugin_params": {"plugin_name": self.plugin_name, "params": self.plugin_options},
+                "plugin_params": {
+                    "plugin_name": self.plugin_name,
+                    "params": self.plugin_options,
+                },
             }
 
         plugin_params = cast(APIPluginDict, self.plugin_options.copy())
@@ -1846,7 +1849,6 @@ class CustomPluginAdapter:
 def get_plugin_from_mk_file(  # pylint: disable=too-many-branches
     notify_plugin: NotifyPlugin,
 ) -> PluginAdapter | CustomPluginAdapter:
-
     # TODO use match case once mypy has support for it
     if is_known_plugin(notify_plugin):
         if notify_plugin[0] == "sms":
@@ -1904,7 +1906,9 @@ def get_plugin_from_mk_file(  # pylint: disable=too-many-branches
     return CustomPluginAdapter.from_mk_file_format(custom_plugin[0], custom_plugin[1])
 
 
-def get_plugin_from_api_request(incoming: APINotifyPlugin) -> PluginAdapter | CustomPluginAdapter:
+def get_plugin_from_api_request(
+    incoming: APINotifyPlugin,
+) -> PluginAdapter | CustomPluginAdapter:
     match incoming["plugin_params"]["plugin_name"]:
         case "cisco_webex_teams":
             return CiscoWebexPlugin.from_api_request(incoming)

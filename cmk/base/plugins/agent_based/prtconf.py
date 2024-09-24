@@ -138,7 +138,11 @@ def parse_prtconf(string_table):
     parsed_tuples, info_remaining = get_tuples_section(iter(string_table))
     parsed_inactive, info_remaining = get_inactive_volume_groups(info_remaining)
     parsed_active = get_active_volume_groups(info_remaining)
-    return {"tuples": parsed_tuples, "inactive": parsed_inactive, "active": parsed_active}
+    return {
+        "tuples": parsed_tuples,
+        "inactive": parsed_inactive,
+        "active": parsed_active,
+    }
 
 
 register.agent_section(
@@ -291,7 +295,14 @@ def _get_os_infos(parsed_tuples):
 
 def get_volume_groups(parsed):
     for item in parsed["active"]:
-        vg_name, pv_name, pv_status, pv_total_partitions, pv_free_partitions, _pv_distr = item
+        (
+            vg_name,
+            pv_name,
+            pv_status,
+            pv_total_partitions,
+            pv_free_partitions,
+            _pv_distr,
+        ) = item
         yield (
             {
                 "volume_group_name": vg_name,

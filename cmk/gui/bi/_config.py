@@ -529,7 +529,10 @@ class ModeBIPacks(ABCBIMode):
                                             request,
                                             [
                                                 ("mode", "edit_ruleset"),
-                                                ("varname", RuleGroup.SpecialAgents("bi")),
+                                                (
+                                                    "varname",
+                                                    RuleGroup.SpecialAgents("bi"),
+                                                ),
                                             ],
                                         )
                                     ),
@@ -542,7 +545,10 @@ class ModeBIPacks(ABCBIMode):
                                             request,
                                             [
                                                 ("mode", "edit_ruleset"),
-                                                ("varname", RuleGroup.ActiveChecks("bi_aggr")),
+                                                (
+                                                    "varname",
+                                                    RuleGroup.ActiveChecks("bi_aggr"),
+                                                ),
                                             ],
                                         )
                                     ),
@@ -795,7 +801,10 @@ class ModeBIRules(ABCBIMode):
                             entries=[
                                 PageMenuEntry(
                                     title=unused_rules_title,
-                                    icon_name={"icon": "rules", "emblem": unused_rules_emblem},
+                                    icon_name={
+                                        "icon": "rules",
+                                        "emblem": unused_rules_emblem,
+                                    },
                                     item=make_simple_link(unused_rules_url),
                                 ),
                             ],
@@ -851,7 +860,8 @@ class ModeBIRules(ABCBIMode):
         aggr_refs, rule_refs, _level = self._bi_packs.count_rule_references(rule_id)
         if aggr_refs:
             raise MKUserError(
-                None, _("You cannot delete this rule: it is still used by aggregations.")
+                None,
+                _("You cannot delete this rule: it is still used by aggregations."),
             )
         if rule_refs:
             raise MKUserError(
@@ -944,7 +954,10 @@ class ModeBIRules(ABCBIMode):
             )
 
             html.button(
-                "_bulk_move_bi_rules", _("Bulk move"), "submit", form="form_bulk_action_form"
+                "_bulk_move_bi_rules",
+                _("Bulk move"),
+                "submit",
+                form="form_bulk_action_form",
             )
 
             return HTML(output_funnel.drain())
@@ -1008,7 +1021,9 @@ class ModeBIRules(ABCBIMode):
                             ],
                         )
                         html.icon_button(
-                            tree_url, _("This is a top-level rule. Show rule tree"), "aggr"
+                            tree_url,
+                            _("This is a top-level rule. Show rule tree"),
+                            "aggr",
                         )
 
                     if refs == 0:
@@ -1031,7 +1046,8 @@ class ModeBIRules(ABCBIMode):
                     table.cell("", css=["narrow"])
                     if bi_rule.computation_options.disabled:
                         html.icon(
-                            "disabled", _("This rule is currently disabled and will not be applied")
+                            "disabled",
+                            _("This rule is currently disabled and will not be applied"),
                         )
                     else:
                         html.empty_icon_button()
@@ -1061,9 +1077,11 @@ class ModeBIRules(ABCBIMode):
                     table.cell(_("Nodes"), str(bi_rule.num_nodes()), css=["number"])
                     table.cell(_("Used by"))
                     have_this = set()
-                    for pack_id, aggr_id, bi_aggregation in aggregations_that_use_rule.get(
-                        rule_id, []
-                    ):
+                    for (
+                        pack_id,
+                        aggr_id,
+                        bi_aggregation,
+                    ) in aggregations_that_use_rule.get(rule_id, []):
                         if aggr_id not in have_this:
                             aggr_url = makeuri_contextless(
                                 request,
@@ -1087,7 +1105,9 @@ class ModeBIRules(ABCBIMode):
         assert rule is not None
         return f"{rule.properties.title} ({rule.id})"
 
-    def _find_aggregation_rule_usages(self) -> dict[str, list[tuple[str, str, BIAggregation]]]:
+    def _find_aggregation_rule_usages(
+        self,
+    ) -> dict[str, list[tuple[str, str, BIAggregation]]]:
         aggregations_that_use_rule: dict[str, list[tuple[str, str, BIAggregation]]] = {}
         for pack_id, bi_pack in self._bi_packs.get_packs().items():
             for aggr_id, bi_aggregation in bi_pack.get_aggregations().items():
@@ -1730,7 +1750,9 @@ class BIModeEditAggregation(ABCBIMode):
             save_is_enabled=is_contact_for_pack(self.bi_pack),
         )
 
-    def _get_aggregations_by_id(self) -> dict[str, tuple[BIAggregationPack, BIAggregation]]:
+    def _get_aggregations_by_id(
+        self,
+    ) -> dict[str, tuple[BIAggregationPack, BIAggregation]]:
         ids = {}
         for bi_pack in self._bi_packs.get_packs().values():
             for bi_aggregation in bi_pack.get_aggregations().values():
@@ -1782,11 +1804,13 @@ class BIModeEditAggregation(ABCBIMode):
 
         if self._new:
             self._add_change(
-                "bi-new-aggregation", _("Add new BI aggregation %s") % new_bi_aggregation.id
+                "bi-new-aggregation",
+                _("Add new BI aggregation %s") % new_bi_aggregation.id,
             )
         else:
             self._add_change(
-                "bi-edit-aggregation", _("Modified BI aggregation %s") % (new_bi_aggregation.id)
+                "bi-edit-aggregation",
+                _("Modified BI aggregation %s") % (new_bi_aggregation.id),
             )
 
         return redirect(mode_url("bi_aggregations", **redirect_kwargs))
@@ -1873,7 +1897,9 @@ class BIModeEditAggregation(ABCBIMode):
                     elements=[
                         TextInput(title=_("Group name")),
                         ListOfStrings(
-                            title=_("Group path"), orientation="horizontal", separator="/"
+                            title=_("Group path"),
+                            orientation="horizontal",
+                            separator="/",
                         ),
                     ],
                 ),
@@ -2073,7 +2099,8 @@ class BIModeAggregations(ABCBIMode):
         for aggregation_id in selection[::-1]:
             self._bi_packs.delete_aggregation(aggregation_id)
             self._add_change(
-                "bi-delete-aggregation", _("Deleted BI aggregation with ID %s") % (aggregation_id)
+                "bi-delete-aggregation",
+                _("Deleted BI aggregation with ID %s") % (aggregation_id),
             )
         self._bi_packs.save_config()
 
@@ -2223,7 +2250,10 @@ class BIModeAggregations(ABCBIMode):
             )
 
             html.button(
-                "_bulk_move_bi_aggregations", _("Bulk move"), "submit", form="form_bulk_action_form"
+                "_bulk_move_bi_aggregations",
+                _("Bulk move"),
+                "submit",
+                form="form_bulk_action_form",
             )
             return HTML(output_funnel.drain())
 
@@ -2268,7 +2298,8 @@ class BIModeAggregations(ABCBIMode):
                 html.icon_button(edit_url, _("Edit this aggregation"), "edit")
 
                 clone_url = self.url_to_pack(
-                    [("mode", "bi_edit_aggregation"), ("clone", bi_aggregation.id)], self.bi_pack
+                    [("mode", "bi_edit_aggregation"), ("clone", bi_aggregation.id)],
+                    self.bi_pack,
                 )
                 html.icon_button(clone_url, _("Create a copy of this aggregation"), "clone")
 
@@ -2297,16 +2328,26 @@ class BIModeAggregations(ABCBIMode):
                 if bi_aggregation.computation_options.use_hard_states:
                     html.icon("hard_states", _("Base state computation on hard states"))
                 else:
-                    html.icon("all_states", _("Base state computation on soft and hard states"))
+                    html.icon(
+                        "all_states",
+                        _("Base state computation on soft and hard states"),
+                    )
 
                 if bi_aggregation.computation_options.escalate_downtimes_as_warn:
-                    html.icon("warning", _("Escalate downtimes based on aggregated WARN state"))
+                    html.icon(
+                        "warning",
+                        _("Escalate downtimes based on aggregated WARN state"),
+                    )
                 else:
-                    html.icon("critical", _("Escalate downtimes based on aggregated CRIT state"))
+                    html.icon(
+                        "critical",
+                        _("Escalate downtimes based on aggregated CRIT state"),
+                    )
 
                 table.cell(_("Groups"), ", ".join(bi_aggregation.groups.names))
                 table.cell(
-                    _("Paths"), ", ".join(["/".join(x) for x in bi_aggregation.groups.paths])
+                    _("Paths"),
+                    ", ".join(["/".join(x) for x in bi_aggregation.groups.paths]),
                 )
 
                 action = bi_aggregation.node.action
@@ -2314,7 +2355,11 @@ class BIModeAggregations(ABCBIMode):
                 rule_id = action.rule_id
                 edit_url = makeuri(
                     request,
-                    [("mode", "bi_edit_rule"), ("pack", self.bi_pack.id), ("id", rule_id)],
+                    [
+                        ("mode", "bi_edit_rule"),
+                        ("pack", self.bi_pack.id),
+                        ("id", rule_id),
+                    ],
                 )
                 table.cell(_("Rule Tree"), css=["bi_rule_tree"])
                 self.render_aggregation_rule_tree(bi_aggregation)

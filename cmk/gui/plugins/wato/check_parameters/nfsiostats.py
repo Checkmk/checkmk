@@ -11,7 +11,15 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Dictionary, Float, Migrate, Percentage, TextInput, Transform, Tuple
+from cmk.gui.valuespec import (
+    Dictionary,
+    Float,
+    Migrate,
+    Percentage,
+    TextInput,
+    Transform,
+    Tuple,
+)
 
 _MS_KEY_MAP = {
     "write_avg_exe_ms": "write_avg_exe_s",

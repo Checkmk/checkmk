@@ -35,7 +35,11 @@ def tls_verify_flag_default_yes() -> tuple[Literal["no-cert-check"], Alternative
             title=_("SSL certificate verification"),
             elements=[
                 FixedValue(value=False, title=_("Verify the certificate"), totext=""),
-                FixedValue(value=True, title=_("Ignore certificate errors (unsecure)"), totext=""),
+                FixedValue(
+                    value=True,
+                    title=_("Ignore certificate errors (unsecure)"),
+                    totext="",
+                ),
             ],
             default_value=False,
         ),
@@ -49,7 +53,11 @@ def tls_verify_flag_default_no() -> tuple[Literal["verify-cert"], Alternative]:
             title=_("SSL certificate verification"),
             elements=[
                 FixedValue(value=True, title=_("Verify the certificate"), totext=""),
-                FixedValue(value=False, title=_("Ignore certificate errors (unsecure)"), totext=""),
+                FixedValue(
+                    value=False,
+                    title=_("Ignore certificate errors (unsecure)"),
+                    totext="",
+                ),
             ],
             default_value=False,
         ),

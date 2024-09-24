@@ -2,8 +2,7 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Checkmk development script to manage werks
-"""
+"""Checkmk development script to manage werks"""
 
 # pylint: disable=too-many-lines
 
@@ -460,9 +459,7 @@ def next_werk_id() -> WerkId:
 
 
 def add_comment(werk: Werk, title: str, comment: str) -> None:
-    werk.content.metadata[
-        "description"
-    ] += f"""
+    werk.content.metadata["description"] += f"""
 {time.strftime('%F %T')}: {title}
 {comment}"""
 
@@ -1035,7 +1032,8 @@ def main_fetch_ids(args: argparse.Namespace) -> None:
 def main_preview(args: argparse.Namespace) -> None:
     werk_path = werk_path_by_id(WerkId(args.id))
     werk = cmk_werks_load_werk(
-        file_content=Path(werk_path).read_text(encoding="utf-8"), file_name=werk_path.name
+        file_content=Path(werk_path).read_text(encoding="utf-8"),
+        file_name=werk_path.name,
     )
 
     def meta_data() -> Iterator[str]:

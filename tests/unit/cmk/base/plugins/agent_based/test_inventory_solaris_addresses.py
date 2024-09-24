@@ -7,7 +7,10 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    InventoryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.inventory_solaris_addresses import (
     inventory_solaris_addresses,
     parse_solaris_addresses,
@@ -40,7 +43,14 @@ from .utils_inventory import sort_inventory_result
                     "index",
                     "3",
                 ],
-                ["inet", "192.168.84.253", "netmask", "ffffff00", "broadcast", "192.168.84.255"],
+                [
+                    "inet",
+                    "192.168.84.253",
+                    "netmask",
+                    "ffffff00",
+                    "broadcast",
+                    "192.168.84.255",
+                ],
                 ["ether", "0:3:ba:7:84:5e"],
                 [
                     "bge0:",
@@ -50,7 +60,14 @@ from .utils_inventory import sort_inventory_result
                     "index",
                     "2",
                 ],
-                ["inet", "10.8.57.39", "netmask", "ffffff00", "broadcast", "10.8.57.255"],
+                [
+                    "inet",
+                    "10.8.57.39",
+                    "netmask",
+                    "ffffff00",
+                    "broadcast",
+                    "10.8.57.255",
+                ],
                 ["ether", "0:3:ba:29:fc:cc"],
             ],
             [

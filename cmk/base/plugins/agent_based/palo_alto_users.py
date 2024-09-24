@@ -57,7 +57,9 @@ def discover(section: Section) -> DiscoveryResult:
     yield Service()
 
 
-def _abs_and_rel_levels(levels: tuple[str, LEVEL_TYPE]) -> tuple[LEVEL_TYPE, LEVEL_TYPE]:
+def _abs_and_rel_levels(
+    levels: tuple[str, LEVEL_TYPE],
+) -> tuple[LEVEL_TYPE, LEVEL_TYPE]:
     match levels:
         case "ignore":
             return None, None

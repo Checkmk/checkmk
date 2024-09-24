@@ -8,6 +8,7 @@ To add a new example (new language, library, etc.), a new Jinja2-Template has to
 be referenced in the result of _build_code_templates.
 
 """
+
 import functools
 import json
 import re
@@ -16,7 +17,9 @@ from typing import Any, cast, NamedTuple, TypeAlias
 import black
 import jinja2
 from apispec import APISpec
-from apispec.ext.marshmallow import resolve_schema_instance  # type: ignore[attr-defined]
+from apispec.ext.marshmallow import (  # type: ignore[attr-defined]
+    resolve_schema_instance,
+)
 from marshmallow import Schema
 
 from cmk.utils.site import omd_site
@@ -408,7 +411,9 @@ def _httpie_request_body_lines(prefix: str, field: JsonObject, lines: list[str])
             case dict():
                 nested = cast(dict, example)
                 _httpie_request_body_lines(
-                    f"{prefix}{key}", {f"[{key}]": val for key, val in nested.items()}, lines
+                    f"{prefix}{key}",
+                    {f"[{key}]": val for key, val in nested.items()},
+                    lines,
                 )
             case _:
                 raise ValueError(f"Value of unexpected type: {example} of type {type(example)}")

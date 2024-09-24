@@ -14,7 +14,9 @@ from cmk.agent_based.v2 import render
 from cmk.plugins.aws.lib import GenericAWSSection, parse_aws
 
 
-def discover_aws_dynamodb_summary(section: GenericAWSSection) -> Iterable[tuple[None, dict]]:
+def discover_aws_dynamodb_summary(
+    section: GenericAWSSection,
+) -> Iterable[tuple[None, dict]]:
     if section:
         yield None, {}
 

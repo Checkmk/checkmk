@@ -32,7 +32,10 @@ def check_proliant_general(_no_item, _no_params, info):
 
     status, firmware, serial_number = info[0]
     state, state_readable = map_states.get(status, (3, "unhandled[%s]" % status))
-    return state, f"Status: {state_readable}, Firmware: {firmware}, S/N: {serial_number}"
+    return (
+        state,
+        f"Status: {state_readable}, Firmware: {firmware}, S/N: {serial_number}",
+    )
 
 
 def parse_hp_proliant(string_table: StringTable) -> StringTable:

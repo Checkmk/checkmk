@@ -5,7 +5,12 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.liebert_temp_fluid import (
     check_liebert_temp_fluid,
@@ -62,7 +67,8 @@ def test_discover(section: Section) -> None:
             [
                 Metric("temp", 14.0, levels=(0.0, 0.0)),
                 Result(
-                    state=State.CRIT, summary="Temperature: 14.0 °C (warn/crit at 0.0 °C/0.0 °C)"
+                    state=State.CRIT,
+                    summary="Temperature: 14.0 °C (warn/crit at 0.0 °C/0.0 °C)",
                 ),
                 Result(
                     state=State.OK,

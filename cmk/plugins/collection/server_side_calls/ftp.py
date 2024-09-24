@@ -65,5 +65,7 @@ def check_ftp_get_item(params: FTPParams) -> str:
 
 
 active_check_ftp = ActiveCheckConfig(
-    name="ftp", parameter_parser=FTPParams.model_validate, commands_function=generate_ftp_command
+    name="ftp",
+    parameter_parser=FTPParams.model_validate,
+    commands_function=generate_ftp_command,
 )

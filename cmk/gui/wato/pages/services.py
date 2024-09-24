@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Modes for services and discovery"""
+
 import dataclasses
 import json
 import pprint
@@ -63,9 +64,15 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.view_utils import format_plugin_output, render_labels
 from cmk.gui.wato.pages.hosts import ModeEditHost
-from cmk.gui.watolib.activate_changes import ActivateChanges, get_pending_changes_tooltip
+from cmk.gui.watolib.activate_changes import (
+    ActivateChanges,
+    get_pending_changes_tooltip,
+)
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
-from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
+from cmk.gui.watolib.automation_commands import (
+    AutomationCommand,
+    AutomationCommandRegistry,
+)
 from cmk.gui.watolib.automations import cmk_version_of_remote_automation_source
 from cmk.gui.watolib.check_mk_automations import active_check
 from cmk.gui.watolib.hosts_and_folders import (
@@ -333,7 +340,11 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         )
         if self._sources_failed_on_first_attempt(previous_discovery_result, discovery_result):
             discovery_result = discovery_result._replace(
-                check_table=(), host_labels={}, new_labels={}, vanished_labels={}, changed_labels={}
+                check_table=(),
+                host_labels={},
+                new_labels={},
+                vanished_labels={},
+                changed_labels={},
             )
 
         if not discovery_result.check_table_created and previous_discovery_result:
@@ -512,7 +523,8 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         page_menu = service_page_menu(self._get_discovery_breadcrumb(host), host, discovery_options)
         with output_funnel.plugged():
             PageMenuRenderer().show(
-                page_menu, hide_suggestions=not user.get_tree_state("suggestions", "all", True)
+                page_menu,
+                hide_suggestions=not user.get_tree_state("suggestions", "all", True),
             )
             return output_funnel.drain()
 
@@ -708,7 +720,8 @@ class DiscoveryPageRenderer:
                     label_id,
                     {
                         "value": "{} \u279c {}".format(
-                            discovery_result.changed_labels[label_id]["value"], label["value"]
+                            discovery_result.changed_labels[label_id]["value"],
+                            label["value"],
                         ),
                         "plugin_name": label["plugin_name"],
                     },
@@ -814,7 +827,11 @@ class DiscoveryPageRenderer:
                 ) as table:
                     for check in sorted(checks, key=lambda e: e.description.lower()):
                         self._show_check_row(
-                            table, discovery_result, api_request, check, entry.show_bulk_actions
+                            table,
+                            discovery_result,
+                            api_request,
+                            check,
+                            entry.show_bulk_actions,
                         )
 
                 if entry.show_bulk_actions:
@@ -943,7 +960,11 @@ class DiscoveryPageRenderer:
         )
         has_changes = any(
             check.check_source
-            in (DiscoveryState.UNDECIDED, DiscoveryState.VANISHED, DiscoveryState.CHANGED)
+            in (
+                DiscoveryState.UNDECIDED,
+                DiscoveryState.VANISHED,
+                DiscoveryState.CHANGED,
+            )
             for check in discovery_result.check_table
         )
         had_services_before = any(
@@ -1411,7 +1432,10 @@ class DiscoveryPageRenderer:
         return 1
 
     def _icon_button_removed(
-        self, table_source: Literal["vanished"], checkbox_name: str, button_classes: list[str]
+        self,
+        table_source: Literal["vanished"],
+        checkbox_name: str,
+        button_classes: list[str],
     ) -> Literal[1]:
         options = self._options._replace(action=DiscoveryAction.SINGLE_UPDATE)
         html.icon_button(
@@ -1459,7 +1483,9 @@ class DiscoveryPageRenderer:
         if not url:
             return 0
         html.icon_button(
-            url, _("Edit and analyze the check parameters of this service"), "check_parameters"
+            url,
+            _("Edit and analyze the check parameters of this service"),
+            "check_parameters",
         )
         return 1
 

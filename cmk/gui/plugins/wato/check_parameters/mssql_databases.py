@@ -21,14 +21,23 @@ def _parameter_valuespec_mssql_databases():
                     elements=[
                         ("ONLINE", MonitoringState(title=_("Database online"))),
                         ("OFFLINE", MonitoringState(title=_("Database offline"))),
-                        ("RESTORING", MonitoringState(title=_("Database files are restored"))),
-                        ("RECOVERING", MonitoringState(title=_("Database is being recovered"))),
+                        (
+                            "RESTORING",
+                            MonitoringState(title=_("Database files are restored")),
+                        ),
+                        (
+                            "RECOVERING",
+                            MonitoringState(title=_("Database is being recovered")),
+                        ),
                         (
                             "RECOVERY_PENDING",
                             MonitoringState(title=_("Database must be recovered")),
                         ),
                         ("SUSPECT", MonitoringState(title=_("Database suspect"))),
-                        ("EMERGENCY", MonitoringState(title=_("Database changed to emergency"))),
+                        (
+                            "EMERGENCY",
+                            MonitoringState(title=_("Database changed to emergency")),
+                        ),
                     ],
                     title=_("Map Database States"),
                     optional_keys=[],
@@ -38,7 +47,10 @@ def _parameter_valuespec_mssql_databases():
                 "map_auto_close_state",
                 Dictionary(
                     elements=[
-                        ("on", MonitoringState(title=_("Auto close on"), default_value=1)),
+                        (
+                            "on",
+                            MonitoringState(title=_("Auto close on"), default_value=1),
+                        ),
                         ("off", MonitoringState(title=_("Auto close off"))),
                     ],
                     title=_("Map auto close status"),
@@ -49,7 +61,10 @@ def _parameter_valuespec_mssql_databases():
                 "map_auto_shrink_state",
                 Dictionary(
                     elements=[
-                        ("on", MonitoringState(title=_("Auto shrink on"), default_value=1)),
+                        (
+                            "on",
+                            MonitoringState(title=_("Auto shrink on"), default_value=1),
+                        ),
                         ("off", MonitoringState(title=_("Auto shrink off"))),
                     ],
                     title=_("Map auto shrink status"),

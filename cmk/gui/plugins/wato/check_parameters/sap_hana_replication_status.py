@@ -39,7 +39,8 @@ def _parameter_valuespec_sap_hana_replication_status():
             (
                 "state_initializing",
                 MonitoringState(
-                    title=_("State when replication state is intializing"), default_value=1
+                    title=_("State when replication state is intializing"),
+                    default_value=1,
                 ),
             ),
             (

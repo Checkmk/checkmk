@@ -23,7 +23,10 @@ from cmk.gui.graphing._artwork import (
     TimeAxis,
     TimeAxisLabel,
 )
-from cmk.gui.graphing._graph_specification import FixedVerticalRange, MinimalVerticalRange
+from cmk.gui.graphing._graph_specification import (
+    FixedVerticalRange,
+    MinimalVerticalRange,
+)
 from cmk.gui.graphing._utils import SizeEx
 from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
 
@@ -324,7 +327,9 @@ def test_halfstep_interpolation() -> None:
         pytest.param(([None, 0], [None, 2]), [(None, None), (0, 2)], id="stack data missing"),
         pytest.param(([], [-1, -2, -0.5]), [(-1, 0), (-2, 0), (-0.5, 0)], id="mirror area"),
         pytest.param(
-            ([], [-5, None, -6]), [(-5, 0), (None, None), (-6, 0)], id="mirror area holes"
+            ([], [-5, None, -6]),
+            [(-5, 0), (None, None), (-6, 0)],
+            id="mirror area holes",
         ),
     ],
 )

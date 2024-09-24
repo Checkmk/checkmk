@@ -190,7 +190,10 @@ def parse_cisco_qos(
 
     config_index_to_object_index = {
         cfg_idex: obj_idx
-        for (_pol_idx, obj_idx), cfg_idex in policy_and_object_index_to_config_index.items()
+        for (
+            _pol_idx,
+            obj_idx,
+        ), cfg_idex in policy_and_object_index_to_config_index.items()
     }
     section = {}
 
@@ -215,7 +218,10 @@ def parse_cisco_qos(
             try:
                 policy_map_idx = next(
                     policy_and_object_index_to_config_index[(pol_idx, obj_idx)]
-                    for (pol_idx, obj_idx), type_ in policy_and_object_index_to_object_type.items()
+                    for (
+                        pol_idx,
+                        obj_idx,
+                    ), type_ in policy_and_object_index_to_object_type.items()
                     if pol_idx == policy_index and type_ is _QosObjectType.POLICYMAP
                 )
             except StopIteration:
@@ -344,7 +350,8 @@ def _calculate_bandwidth(
 register.snmp_section(
     name="cisco_qos",
     detect=all_of(
-        contains(".1.3.6.1.2.1.1.1.0", "cisco"), exists(".1.3.6.1.4.1.9.9.166.1.1.1.1.4.*")
+        contains(".1.3.6.1.2.1.1.1.0", "cisco"),
+        exists(".1.3.6.1.4.1.9.9.166.1.1.1.1.4.*"),
     ),
     parse_function=parse_cisco_qos,
     fetch=[

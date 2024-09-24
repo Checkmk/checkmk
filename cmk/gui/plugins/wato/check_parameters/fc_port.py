@@ -9,7 +9,15 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Alternative, Dictionary, Float, Integer, Percentage, TextInput, Tuple
+from cmk.gui.valuespec import (
+    Alternative,
+    Dictionary,
+    Float,
+    Integer,
+    Percentage,
+    TextInput,
+    Tuple,
+)
 
 
 def _item_spec_fc_port():

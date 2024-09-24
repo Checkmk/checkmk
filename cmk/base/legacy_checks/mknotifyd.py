@@ -181,7 +181,10 @@ def check_mknotifyd(item, _no_params, parsed):
     # because this should be always present in a valid state file.
     stat = sites[item]
     if not stat.get("Version"):
-        yield 2, "The state file seems to be empty or corrupted. It is very likely that the spooler is not working properly"
+        yield (
+            2,
+            "The state file seems to be empty or corrupted. It is very likely that the spooler is not working properly",
+        )
         return
 
     # Output Version
@@ -197,20 +200,29 @@ def check_mknotifyd(item, _no_params, parsed):
     else:
         state = 0
         infotext = "Spooler running"
-    yield state, infotext, [
-        ("last_updated", status_age),
-        ("new_files", stat["spools"]["New"]["Count"]),
-    ]
+    yield (
+        state,
+        infotext,
+        [
+            ("last_updated", status_age),
+            ("new_files", stat["spools"]["New"]["Count"]),
+        ],
+    )
 
     # Are there any corrupted files
     corrupted = stat["spools"]["Corrupted"]
     if corrupted["Count"]:
         age = parsed["timestamp"] - corrupted["Youngest"]
         perf_data = [("corrupted_files", corrupted["Count"])]
-        yield 1, "%d corrupted files: youngest %s ago" % (
-            corrupted["Count"],
-            render.timespan(age),
-        ), perf_data
+        yield (
+            1,
+            "%d corrupted files: youngest %s ago"
+            % (
+                corrupted["Count"],
+                render.timespan(age),
+            ),
+            perf_data,
+        )
 
     # Are there deferred files that are too old?
     deferred = stat["spools"]["Deferred"]
@@ -224,10 +236,15 @@ def check_mknotifyd(item, _no_params, parsed):
             state = 2
         else:
             state = 0
-        yield state, "%d deferred files: oldest %s ago" % (
-            count,
-            render.timespan(age),
-        ), perf_data
+        yield (
+            state,
+            "%d deferred files: oldest %s ago"
+            % (
+                count,
+                render.timespan(age),
+            ),
+            perf_data,
+        )
 
     return
 
@@ -256,7 +273,6 @@ def inventory_mknotifyd_connection(parsed):
 
 
 def check_mknotifyd_connection(item, _no_params, parsed):
-
     # "mknotifyd.connection_v2"
     if "Notification Spooler connection to" in item:
         site_name, connection_name = item.split(" Notification Spooler connection to ", 1)
@@ -315,7 +331,10 @@ def inventory_mknotifyd_connection_v2(parsed):
             if "." in connection_name:
                 # item of old discovered "mknotifyd.connection"
                 continue
-            yield f"{site_name} Notification Spooler connection to {connection_name}", {}
+            yield (
+                f"{site_name} Notification Spooler connection to {connection_name}",
+                {},
+            )
 
 
 check_info["mknotifyd.connection_v2"] = LegacyCheckDefinition(

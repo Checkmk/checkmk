@@ -5,7 +5,10 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.arbor import check_arbor_disk_usage, inventory_arbor_disk_usage
+from cmk.base.check_legacy_includes.arbor import (
+    check_arbor_disk_usage,
+    inventory_arbor_disk_usage,
+)
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import SNMPTree

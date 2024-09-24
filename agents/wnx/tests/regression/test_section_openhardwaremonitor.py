@@ -59,7 +59,10 @@ def expected_output_engine():
         re_str += r"|" + re.escape(r"<<<systemtime>>>") + r"|\d+"
     re_str += r"$"
     return chain(
-        [re.escape(r"<<<openhardwaremonitor:sep(44)>>>"), r"Index,Name,Parent,SensorType,Value"],
+        [
+            re.escape(r"<<<openhardwaremonitor:sep(44)>>>"),
+            r"Index,Name,Parent,SensorType,Value",
+        ],
         repeat(re_str),
     )
 

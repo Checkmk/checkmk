@@ -87,7 +87,8 @@ def check_kaspersky_av_tasks(item: str, section: Section) -> CheckResult:
 
     state = section[item].get("State")
     yield Result(
-        state=State.OK if state == "Started" else State.CRIT, summary=f"Current state is {state}"
+        state=State.OK if state == "Started" else State.CRIT,
+        summary=f"Current state is {state}",
     )
 
 

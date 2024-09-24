@@ -9,7 +9,12 @@ import pytest
 
 from tests.testlib import on_time
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.extreme_vsp_switches_cpu_util import (
     check_vsp_switches_cpu_util,
@@ -62,7 +67,10 @@ def test_discover_vsp_switches_cpu_util(
             [["85"]],
             {"util": (80.0, 90.0)},
             [
-                Result(state=State.WARN, summary="Total CPU: 85.00% (warn/crit at 80.00%/90.00%)"),
+                Result(
+                    state=State.WARN,
+                    summary="Total CPU: 85.00% (warn/crit at 80.00%/90.00%)",
+                ),
                 Metric("util", 85.0, levels=(80.0, 90.0), boundaries=(0.0, None)),
             ],
             id="The CPU Utilization is above the WARN level, so the check state is WARN.",
@@ -71,7 +79,10 @@ def test_discover_vsp_switches_cpu_util(
             [["95"]],
             {"util": (80.0, 90.0)},
             [
-                Result(state=State.CRIT, summary="Total CPU: 95.00% (warn/crit at 80.00%/90.00%)"),
+                Result(
+                    state=State.CRIT,
+                    summary="Total CPU: 95.00% (warn/crit at 80.00%/90.00%)",
+                ),
                 Metric("util", 95.0, levels=(80.0, 90.0), boundaries=(0.0, None)),
             ],
             id="The CPU Utilization is above the CRIT level, so the check state is CRIT.",

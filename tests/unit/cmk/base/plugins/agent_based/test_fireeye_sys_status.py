@@ -6,7 +6,12 @@
 import pytest
 
 import cmk.base.plugins.agent_based.fireeye_sys_status as fss
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Attributes,
+    Result,
+    Service,
+    State,
+)
 
 
 @pytest.fixture(name="section", scope="module")

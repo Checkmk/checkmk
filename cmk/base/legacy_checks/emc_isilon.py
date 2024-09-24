@@ -13,7 +13,9 @@ from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.emc import DETECT_ISILON
 
 
-def parse_emc_isilon(string_table: Sequence[StringTable]) -> Sequence[StringTable] | None:
+def parse_emc_isilon(
+    string_table: Sequence[StringTable],
+) -> Sequence[StringTable] | None:
     return string_table if any(string_table) else None
 
 

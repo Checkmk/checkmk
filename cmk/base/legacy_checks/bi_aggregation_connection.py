@@ -30,13 +30,21 @@ def discover_bi_aggregation_connection(parsed):
 
 def check_bi_aggregation_connection(_no_item, _no_params, parsed):
     if parsed.get("missing_sites"):
-        yield 1, "Unable to query data from site(s): %s" % ", ".join(parsed["missing_sites"])
+        yield (
+            1,
+            "Unable to query data from site(s): %s" % ", ".join(parsed["missing_sites"]),
+        )
     if parsed.get("missing_aggr"):
-        yield 1, "Unable to display aggregations because of missing data: %s" % ", ".join(
-            parsed["missing_aggr"]
+        yield (
+            1,
+            "Unable to display aggregations because of missing data: %s"
+            % ", ".join(parsed["missing_aggr"]),
         )
     if parsed.get("generic_errors"):
-        yield 1, "Error during data collection: %s" % ", ".join(parsed["generic_errors"])
+        yield (
+            1,
+            "Error during data collection: %s" % ", ".join(parsed["generic_errors"]),
+        )
 
     if not parsed:
         yield 0, "No connection problems"

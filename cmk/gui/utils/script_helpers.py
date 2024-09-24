@@ -46,7 +46,9 @@ def request_context(app: Flask, environ: dict[str, Any] | None = None) -> Iterat
 
 
 @contextmanager
-def application_and_request_context(environ: dict[str, Any] | None = None) -> Iterator[None]:
+def application_and_request_context(
+    environ: dict[str, Any] | None = None,
+) -> Iterator[None]:
     warnings.warn(
         "Please either use the `request_context` fixture or the `flask_app` fixture from now "
         "on. Using `flask_app` you can have access to the test client as well. "

@@ -14,7 +14,13 @@ from tests.testlib import set_timezone
 
 import cmk.base.plugins.agent_based.agent_based_api.v1.type_defs as type_defs
 from cmk.base.plugins.agent_based import ps_check, ps_section
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, render, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    render,
+    Result,
+    Service,
+    State,
+)
 
 from cmk.plugins.lib import ps as ps_utils
 
@@ -786,7 +792,10 @@ check_results = [
     [
         Result(state=State.OK, summary="Processes: 1"),
         Metric("count", 1.0, levels=(100000, 100000), boundaries=(0.0, None)),
-        Result(state=State.CRIT, summary="Virtual memory: 2.79 GiB (warn/crit at 90 B/98 B)"),
+        Result(
+            state=State.CRIT,
+            summary="Virtual memory: 2.79 GiB (warn/crit at 90 B/98 B)",
+        ),
         Metric("vsz", 2924232.0, levels=(90.0, 98.0)),
         Result(state=State.OK, summary="Resident memory: 461 MiB"),
         Metric("rss", 472252.0),
@@ -801,7 +810,10 @@ check_results = [
         Metric("count", 1.0, levels=(100000, 100000), boundaries=(0.0, None)),
         Result(state=State.OK, summary="Virtual memory: 2.79 GiB"),
         Metric("vsz", 2924232.0),
-        Result(state=State.CRIT, summary="Resident memory: 461 MiB (warn/crit at 90 B/98 B)"),
+        Result(
+            state=State.CRIT,
+            summary="Resident memory: 461 MiB (warn/crit at 90 B/98 B)",
+        ),
         Metric("rss", 472252.0, levels=(90.0, 98.0)),
         Metric("pcpu", 0.0),
         Result(state=State.OK, summary="CPU: 0%"),
@@ -902,7 +914,8 @@ check_results = [
         Result(state=State.OK, summary="Resident memory: 461 MiB"),
         Metric("rss", 472252.0),
         Result(
-            state=State.OK, summary="Percentage of resident memory: 45.04%, 15 min average: 45.04%"
+            state=State.OK,
+            summary="Percentage of resident memory: 45.04%, 15 min average: 45.04%",
         ),
         Metric("pcpu", 0.0),
         Result(state=State.OK, summary="CPU: 0%"),
@@ -1039,7 +1052,12 @@ cpu_util_data = [
         False,
     ),
     cpu_config(
-        "linux Core_division 2 cores", "(on,105,30,00:00:{:02}/03:59:39,902) test", 30, 2, 25, True
+        "linux Core_division 2 cores",
+        "(on,105,30,00:00:{:02}/03:59:39,902) test",
+        30,
+        2,
+        25,
+        True,
     ),
     cpu_config(
         "Win no cpu scale conf 2 cores",
@@ -1386,7 +1404,11 @@ def test_parse_ps_windows(mocker: MockerFixture) -> None:
         iter(
             ps_utils.discover_ps(
                 params=[
-                    {"descr": "CPUSTRES64", "match": "CPUSTRES64.EXE", "default_params": {}},
+                    {
+                        "descr": "CPUSTRES64",
+                        "match": "CPUSTRES64.EXE",
+                        "default_params": {},
+                    },
                     {},
                 ],
                 section_ps=section_ps,
@@ -1401,7 +1423,10 @@ def test_parse_ps_windows(mocker: MockerFixture) -> None:
     item = service.item
 
     mocker.patch("cmk.plugins.lib.ps.cpu_rate", return_value=1000000)
-    mocker.patch("cmk.base.plugins.agent_based.agent_based_api.v1.get_value_store", return_value={})
+    mocker.patch(
+        "cmk.base.plugins.agent_based.agent_based_api.v1.get_value_store",
+        return_value={},
+    )
     results = list(
         ps_check.check_ps(
             item=item,

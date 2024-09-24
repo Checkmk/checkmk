@@ -128,8 +128,14 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             legacy_valuespecs.Transform(
                 legacy_valuespecs.Dictionary(
                     elements=[
-                        ("key_req", legacy_valuespecs.MonitoringState(title=_("title"))),
-                        ("key_read_only", legacy_valuespecs.MonitoringState(title=_("title"))),
+                        (
+                            "key_req",
+                            legacy_valuespecs.MonitoringState(title=_("title")),
+                        ),
+                        (
+                            "key_read_only",
+                            legacy_valuespecs.MonitoringState(title=_("title")),
+                        ),
                     ],
                     title=_("Configuration title"),
                     help=_("Helpful description"),
@@ -372,7 +378,9 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         pytest.param(
             api_v1.form_specs.SingleChoice(elements=[]),
             legacy_valuespecs.DropdownChoice(
-                choices=[], invalid_choice="complain", no_preselect_title="Please choose"
+                choices=[],
+                invalid_choice="complain",
+                no_preselect_title="Please choose",
             ),
             id="minimal DropdownChoice",
         ),
@@ -435,7 +443,11 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             ),
             legacy_valuespecs.CascadingDropdown(
                 choices=[
-                    ("first", _("Spec title"), legacy_valuespecs.TextInput(placeholder="", size=35))
+                    (
+                        "first",
+                        _("Spec title"),
+                        legacy_valuespecs.TextInput(placeholder="", size=35),
+                    )
                 ],
                 title=_("parent title"),
                 help=_("parent help"),
@@ -477,7 +489,10 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 valuespec=legacy_valuespecs.Transform(
                     legacy_valuespecs.Dictionary(
                         elements=[
-                            ("key1", legacy_valuespecs.TextInput(placeholder="", size=35)),
+                            (
+                                "key1",
+                                legacy_valuespecs.TextInput(placeholder="", size=35),
+                            ),
                             ("key2", legacy_valuespecs.Integer(unit="km")),
                         ]
                     )
@@ -590,7 +605,14 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                                 title=_("Proxy URL"),
                                 default_scheme="http",
                                 allowed_schemes=frozenset(
-                                    {"http", "https", "socks4", "socks4a", "socks5", "socks5h"}
+                                    {
+                                        "http",
+                                        "https",
+                                        "socks4",
+                                        "socks4a",
+                                        "socks5",
+                                        "socks5h",
+                                    }
                                 ),
                             ),
                         ),
@@ -1043,7 +1065,8 @@ def _get_cascading_single_choice_with_prefill_selection(
     ],
 )
 def test_cascading_singe_choice_prefill_selection_conversion(
-    prefilled_spec: api_v1.form_specs.CascadingSingleChoice, expected_default_value: tuple
+    prefilled_spec: api_v1.form_specs.CascadingSingleChoice,
+    expected_default_value: tuple,
 ) -> None:
     converted_prefilled_spec = _convert_to_legacy_valuespec(prefilled_spec, lambda x: x)
     assert expected_default_value == converted_prefilled_spec.default_value()
@@ -1101,7 +1124,10 @@ def test_convert_to_legacy_rulespec_group(
                 parameter_valuespec=lambda: legacy_valuespecs.Transform(
                     legacy_valuespecs.Dictionary(
                         elements=[
-                            ("key", legacy_valuespecs.MonitoringState(title=_("valuespec title")))
+                            (
+                                "key",
+                                legacy_valuespecs.MonitoringState(title=_("valuespec title")),
+                            )
                         ],
                     )
                 ),
@@ -1135,7 +1161,10 @@ def test_convert_to_legacy_rulespec_group(
                 parameter_valuespec=lambda: legacy_valuespecs.Transform(
                     legacy_valuespecs.Dictionary(
                         elements=[
-                            ("key", legacy_valuespecs.MonitoringState(title=_("valuespec title")))
+                            (
+                                "key",
+                                legacy_valuespecs.MonitoringState(title=_("valuespec title")),
+                            )
                         ],
                     )
                 ),
@@ -1179,7 +1208,10 @@ def test_convert_to_legacy_rulespec_group(
                 parameter_valuespec=lambda: legacy_valuespecs.Transform(
                     legacy_valuespecs.Dictionary(
                         elements=[
-                            ("key", legacy_valuespecs.MonitoringState(title=_("valuespec title")))
+                            (
+                                "key",
+                                legacy_valuespecs.MonitoringState(title=_("valuespec title")),
+                            )
                         ],
                     )
                 ),
@@ -1240,7 +1272,10 @@ def test_convert_to_legacy_rulespec_group(
                 parameter_valuespec=lambda: legacy_valuespecs.Transform(
                     legacy_valuespecs.Dictionary(
                         elements=[
-                            ("key", legacy_valuespecs.MonitoringState(title=_("valuespec title")))
+                            (
+                                "key",
+                                legacy_valuespecs.MonitoringState(title=_("valuespec title")),
+                            )
                         ],
                     )
                 ),
@@ -1684,7 +1719,9 @@ def test_percentage_validation(
     "input_value, expected_error",
     [
         pytest.param(
-            ["first", "second", "third"], "Max number of elements exceeded", id="max elements"
+            ["first", "second", "third"],
+            "Max number of elements exceeded",
+            id="max elements",
         ),
         pytest.param([], "Empty list", id="empty validation"),
         pytest.param(["first", "first"], "Duplicate elements", id="custom validation"),
@@ -1846,12 +1883,16 @@ def _get_legacy_no_levels_choice() -> tuple[str, str, legacy_valuespecs.FixedVal
         "no_levels",
         _("No levels"),
         legacy_valuespecs.FixedValue(
-            value=None, title=_("No levels"), totext=_("Do not impose levels, always be OK")
+            value=None,
+            title=_("No levels"),
+            totext=_("Do not impose levels, always be OK"),
         ),
     )
 
 
-def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_valuespecs.Tuple]:
+def _get_legacy_fixed_levels_choice(
+    at_or_below: str,
+) -> tuple[str, str, legacy_valuespecs.Tuple]:
     return (
         "fixed",
         _("Fixed levels"),
@@ -2142,7 +2183,12 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
                                             ),
                                         ),
                                     ],
-                                    required_keys=["period", "horizon", "levels", "bound"],
+                                    required_keys=[
+                                        "period",
+                                        "horizon",
+                                        "levels",
+                                        "bound",
+                                    ],
                                 ),
                                 to_valuespec=lambda x: x,
                                 from_valuespec=lambda x: x,
@@ -2242,12 +2288,18 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
                                                             elements=[
                                                                 legacy_valuespecs.TimeSpan(
                                                                     title=_("Warning below"),
-                                                                    display=["seconds", "minutes"],
+                                                                    display=[
+                                                                        "seconds",
+                                                                        "minutes",
+                                                                    ],
                                                                     default_value=5,
                                                                 ),
                                                                 legacy_valuespecs.TimeSpan(
                                                                     title=_("Critical below"),
-                                                                    display=["seconds", "minutes"],
+                                                                    display=[
+                                                                        "seconds",
+                                                                        "minutes",
+                                                                    ],
                                                                     default_value=10,
                                                                 ),
                                                             ],
@@ -2317,18 +2369,29 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
                                                     elements=[
                                                         legacy_valuespecs.TimeSpan(
                                                             title="Warning level is at most",
-                                                            display=["seconds", "minutes"],
+                                                            display=[
+                                                                "seconds",
+                                                                "minutes",
+                                                            ],
                                                         ),
                                                         legacy_valuespecs.TimeSpan(
                                                             title="Critical level is at most",
-                                                            display=["seconds", "minutes"],
+                                                            display=[
+                                                                "seconds",
+                                                                "minutes",
+                                                            ],
                                                         ),
                                                     ],
                                                 ),
                                             ),
                                         ),
                                     ],
-                                    required_keys=["period", "horizon", "levels", "bound"],
+                                    required_keys=[
+                                        "period",
+                                        "horizon",
+                                        "levels",
+                                        "bound",
+                                    ],
                                 ),
                                 to_valuespec=lambda x: x,
                                 from_valuespec=lambda x: x,
@@ -2367,7 +2430,10 @@ def test_level_conversion(
                 ),
             },
             {"a": 1, "b": 2, "c": 3},
-            {"DictGroup(title=Title('Grouptitle'),help_text=None)": {"a": 1, "b": 2}, "c": 3},
+            {
+                "DictGroup(title=Title('Grouptitle'),help_text=None)": {"a": 1, "b": 2},
+                "c": 3,
+            },
             id="some elements grouped, some not",
         ),
         pytest.param(
@@ -2379,7 +2445,8 @@ def test_level_conversion(
                 "b": api_v1.form_specs.DictElement(
                     parameter_form=api_v1.form_specs.Integer(),
                     group=api_v1.form_specs.DictGroup(
-                        title=api_v1.Title("Group title"), help_text=api_v1.Help("Help text")
+                        title=api_v1.Title("Group title"),
+                        help_text=api_v1.Help("Help text"),
                     ),
                 ),
             },
@@ -2792,7 +2859,8 @@ def _out_migration(values: object) -> dict[str, object]:
                         parameter_form=api_v1.form_specs.Dictionary(
                             elements={
                                 "a_nested": api_v1.form_specs.DictElement(
-                                    parameter_form=api_v1.form_specs.Integer(), required=True
+                                    parameter_form=api_v1.form_specs.Integer(),
+                                    required=True,
                                 ),
                             }
                         ),
@@ -2803,7 +2871,10 @@ def _out_migration(values: object) -> dict[str, object]:
                         group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
                     ),
                 },
-                migrate=lambda x: {"a": {"a_nested": x["a"]["a_nested"] * 2}, "b": x["b"] * 2},  # type: ignore[index]
+                migrate=lambda x: {
+                    "a": {"a_nested": x["a"]["a_nested"] * 2},  # type: ignore[index]
+                    "b": x["b"] * 2,  # type: ignore[index]
+                },
             ),
             {"a": {"a_nested": 1}, "b": 2},
             {"a": {"a_nested": 2}, "b": 4},
@@ -3036,7 +3107,8 @@ def test_dictionary_groups_legacy_validation(
                         parameter_form=api_v1.form_specs.Dictionary(
                             elements={
                                 "a_nested": api_v1.form_specs.DictElement(
-                                    parameter_form=api_v1.form_specs.Integer(), required=True
+                                    parameter_form=api_v1.form_specs.Integer(),
+                                    required=True,
                                 ),
                             }
                         ),

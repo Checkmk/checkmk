@@ -75,7 +75,9 @@ def test_legacy_icon_plugin(monkeypatch: pytest.MonkeyPatch) -> None:
         "toplevel": True,
     }
     monkeypatch.setattr(
-        cmk.gui.views, "icon_and_action_registry", registry := icon_registry.IconRegistry()
+        cmk.gui.views,
+        "icon_and_action_registry",
+        registry := icon_registry.IconRegistry(),
     )
     monkeypatch.setitem(cmk.gui.views.multisite_icons_and_actions, "legacy", icon)
     cmk.gui.views.register_legacy_icons()
@@ -97,7 +99,9 @@ def test_legacy_icon_plugin_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
         "paint": lambda: "bla",
     }
     monkeypatch.setattr(
-        cmk.gui.views, "icon_and_action_registry", registry := icon_registry.IconRegistry()
+        cmk.gui.views,
+        "icon_and_action_registry",
+        registry := icon_registry.IconRegistry(),
     )
     monkeypatch.setitem(cmk.gui.views.multisite_icons_and_actions, "legacy", icon)
     cmk.gui.views.register_legacy_icons()
@@ -107,7 +111,9 @@ def test_legacy_icon_plugin_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     assert registered_icon.sort_index() == 30
 
 
-def test_register_icon_plugin_with_default_registry_works(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_register_icon_plugin_with_default_registry_works(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     class TestIcon(Icon):
         @classmethod
         def ident(cls):
@@ -127,7 +133,9 @@ def test_register_icon_plugin_with_default_registry_works(monkeypatch: pytest.Mo
             return "agents", "Title", "url"
 
     monkeypatch.setattr(
-        icon_registry, "icon_and_action_registry", registry := icon_registry.IconRegistry()
+        icon_registry,
+        "icon_and_action_registry",
+        registry := icon_registry.IconRegistry(),
     )
     registry.register(TestIcon)
 

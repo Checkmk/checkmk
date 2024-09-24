@@ -41,7 +41,9 @@ from cmk.gui.valuespec import (
 )
 
 
-def _transform_discards(v: tuple[float, float] | Mapping[str, object]) -> Mapping[str, object]:
+def _transform_discards(
+    v: tuple[float, float] | Mapping[str, object],
+) -> Mapping[str, object]:
     if isinstance(v, dict):
         return v
 
@@ -910,8 +912,14 @@ def _parameter_valuespec_if() -> Dictionary:
                         ("alias", _("Show alias")),
                         ("description", _("Show description")),
                         ("alias_and_description", _("Show alias and description")),
-                        ("alias_or_description", _("Show alias if set, else description")),
-                        ("desription_or_alias", _("Show description if set, else alias")),
+                        (
+                            "alias_or_description",
+                            _("Show alias if set, else description"),
+                        ),
+                        (
+                            "desription_or_alias",
+                            _("Show description if set, else alias"),
+                        ),
                         ("hide", _("Hide infotext")),
                     ],
                 ),

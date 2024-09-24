@@ -8,7 +8,13 @@ from typing import Any
 
 from cmk.plugins.lib.mssql_counters import get_int, get_item, get_rate_or_none, Section
 
-from .agent_based_api.v1 import check_levels, get_value_store, IgnoreResults, register, Service
+from .agent_based_api.v1 import (
+    check_levels,
+    get_value_store,
+    IgnoreResults,
+    register,
+    Service,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 
@@ -22,7 +28,11 @@ def discovery_mssql_counters_sqlstats(section: Section) -> DiscoveryResult:
     Service(item='MSSQL_VEEAMSQL2012:SQL_Statistics None sql_compilations/sec')
     Service(item='MSSQL_VEEAMSQL2012:SQL_Statistics None sql_re-compilations/sec')
     """
-    want_counters = {"batch_requests/sec", "sql_compilations/sec", "sql_re-compilations/sec"}
+    want_counters = {
+        "batch_requests/sec",
+        "sql_compilations/sec",
+        "sql_re-compilations/sec",
+    }
     yield from (
         Service(item=f"{obj} {instance} {counter}")
         for (obj, instance), counters in section.items()

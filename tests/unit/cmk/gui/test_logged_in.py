@@ -108,7 +108,11 @@ def test_user_context_explicit_permissions(with_user: tuple[UserId, str]) -> Non
     ],
 )
 def test_unauthenticated_users(
-    user: LoggedInUser, alias: str, email: str, role_ids: Sequence[str], baserole_id: str
+    user: LoggedInUser,
+    alias: str,
+    email: str,
+    role_ids: Sequence[str],
+    baserole_id: str,
 ) -> None:
     assert user.id is None
     assert user.alias == alias

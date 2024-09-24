@@ -14,7 +14,10 @@ from cmk.utils.sectionname import SectionName
 from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+)
 
 from cmk.agent_based.v1.type_defs import StringTable
 from cmk.plugins.lib.sap_hana import ParsedSection
@@ -103,8 +106,14 @@ def test_parse_sap_hana_proc(
             ],
             [
                 Service(item="HXE 90 SYSTEMDB - daemon", parameters={"coordin": "NONE"}),
-                Service(item="HXE 90 SYSTEMDB - webdispatcher", parameters={"coordin": "NONE"}),
-                Service(item="HXE 90 SYSTEMDB - compileserver", parameters={"coordin": "NONE"}),
+                Service(
+                    item="HXE 90 SYSTEMDB - webdispatcher",
+                    parameters={"coordin": "NONE"},
+                ),
+                Service(
+                    item="HXE 90 SYSTEMDB - compileserver",
+                    parameters={"coordin": "NONE"},
+                ),
             ],
         ),
     ],

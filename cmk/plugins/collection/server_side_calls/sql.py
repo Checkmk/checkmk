@@ -89,7 +89,7 @@ def generate_sql_command(
 
 
 def _extract_levels(
-    levels: tuple[str, tuple[float, float] | None] | None
+    levels: tuple[str, tuple[float, float] | None] | None,
 ) -> tuple[str, str] | tuple[float, float]:
     match levels:
         case ("no_levels", None):
@@ -101,5 +101,7 @@ def _extract_levels(
 
 
 active_check_sql = ActiveCheckConfig(
-    name="sql", parameter_parser=SQLParams.model_validate, commands_function=generate_sql_command
+    name="sql",
+    parameter_parser=SQLParams.model_validate,
+    commands_function=generate_sql_command,
 )

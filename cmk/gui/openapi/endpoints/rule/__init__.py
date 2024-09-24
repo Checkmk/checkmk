@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Rules"""
+
 from __future__ import annotations
 
 import dataclasses
@@ -90,11 +91,13 @@ class RuleEntry:
 def _validate_rule_move(lhs: RuleEntry, rhs: RuleEntry) -> None:
     if lhs.ruleset.name != rhs.ruleset.name:
         raise RestAPIRequestDataValidationException(
-            title="Invalid rule move.", detail="The two rules are not in the same ruleset."
+            title="Invalid rule move.",
+            detail="The two rules are not in the same ruleset.",
         )
     if lhs.rule.id == rhs.rule.id:
         raise RestAPIRequestDataValidationException(
-            title="Invalid rule move", detail="You cannot move a rule before/after itself."
+            title="Invalid rule move",
+            detail="You cannot move a rule before/after itself.",
         )
 
 
@@ -201,7 +204,12 @@ def create_rule(param):
         )
 
     rule = _create_rule(
-        folder, ruleset, body.get("conditions", {}), body.get("properties", {}), value, gen_id()
+        folder,
+        ruleset,
+        body.get("conditions", {}),
+        body.get("properties", {}),
+        value,
+        gen_id(),
     )
 
     index = ruleset.append_rule(folder, rule)
@@ -436,7 +444,9 @@ def _api_to_internal(
     return internal_label_groups
 
 
-def _internal_to_api(label_groups: LabelGroups | None) -> list[APILabelGroupCondition] | None:
+def _internal_to_api(
+    label_groups: LabelGroups | None,
+) -> list[APILabelGroupCondition] | None:
     """
     >>> _internal_to_api([("and", [("and", "os:windows")])])
     [{'operator': 'and', 'label_group': [{'operator': 'and', 'label': 'os:windows'}]}]

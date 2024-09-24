@@ -6,7 +6,12 @@
 import pytest
 
 from cmk.base.plugins.agent_based import apache_status
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 
 from cmk.agent_based.v1.type_defs import StringTable
 
@@ -17,8 +22,24 @@ def make_agent_output_1():
         ["127.0.0.1", "None", "ServerVersion:", "Apache/2.4.29", "(Ubuntu)"],
         ["127.0.0.1", "None", "ServerMPM:", "event"],
         ["127.0.0.1", "None", "Server", "Built:", "2019-07-16T18:14:45"],
-        ["127.0.0.1", "None", "CurrentTime:", "Wednesday,", "14-Aug-2019", "10:46:26", "CEST"],
-        ["127.0.0.1", "None", "RestartTime:", "Monday,", "12-Aug-2019", "11:28:34", "CEST"],
+        [
+            "127.0.0.1",
+            "None",
+            "CurrentTime:",
+            "Wednesday,",
+            "14-Aug-2019",
+            "10:46:26",
+            "CEST",
+        ],
+        [
+            "127.0.0.1",
+            "None",
+            "RestartTime:",
+            "Monday,",
+            "12-Aug-2019",
+            "11:28:34",
+            "CEST",
+        ],
         ["127.0.0.1", "None", "ParentServerConfigGeneration:", "9"],
         ["127.0.0.1", "None", "ParentServerMPMGeneration:", "8"],
         ["127.0.0.1", "None", "ServerUptimeSeconds:", "170272"],
@@ -107,12 +128,27 @@ def make_agent_output_2():
         ["127.0.0.1", "None", "MY CHECK MK", "ServerVersion: Apache/2.4.29 (Ubuntu)"],
         ["127.0.0.1", "None", "MY CHECK MK", "ServerMPM: event"],
         ["127.0.0.1", "None", "MY CHECK MK", "Server Built: 2019-07-16T18:14:45"],
-        ["127.0.0.1", "None", "MY CHECK MK", "CurrentTime: Tuesday, 13-Aug-2019 15:10:54 CEST"],
-        ["127.0.0.1", "None", "MY CHECK MK", "RestartTime: Monday, 12-Aug-2019 11:28:34 CEST"],
+        [
+            "127.0.0.1",
+            "None",
+            "MY CHECK MK",
+            "CurrentTime: Tuesday, 13-Aug-2019 15:10:54 CEST",
+        ],
+        [
+            "127.0.0.1",
+            "None",
+            "MY CHECK MK",
+            "RestartTime: Monday, 12-Aug-2019 11:28:34 CEST",
+        ],
         ["127.0.0.1", "None", "MY CHECK MK", "ParentServerConfigGeneration: 6"],
         ["127.0.0.1", "None", "MY CHECK MK", "ParentServerMPMGeneration: 5"],
         ["127.0.0.1", "None", "MY CHECK MK", "ServerUptimeSeconds: 99739"],
-        ["127.0.0.1", "None", "MY CHECK MK", "ServerUptime: 1 day 3 hours 42 minutes 19 seconds"],
+        [
+            "127.0.0.1",
+            "None",
+            "MY CHECK MK",
+            "ServerUptime: 1 day 3 hours 42 minutes 19 seconds",
+        ],
         ["127.0.0.1", "None", "MY CHECK MK", "Load1: 0.70"],
         ["127.0.0.1", "None", "MY CHECK MK", "Load5: 0.70"],
         ["127.0.0.1", "None", "MY CHECK MK", "Load15: 0.58"],
@@ -243,5 +279,8 @@ def test_check_function(monkeypatch: pytest.MonkeyPatch) -> None:
         Metric("State_Logging", 0),
         Metric("State_Finishing", 0),
         Metric("State_IdleCleanup", 0),
-        Result(state=State.OK, notice="Scoreboard states:\n  Waiting: 49\n  SendingReply: 1"),
+        Result(
+            state=State.OK,
+            notice="Scoreboard states:\n  Waiting: 49\n  SendingReply: 1",
+        ),
     ]

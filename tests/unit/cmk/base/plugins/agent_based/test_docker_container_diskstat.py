@@ -20,7 +20,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.render import iobandwidth
-from cmk.base.plugins.agent_based.docker_container_diskstat_cgroupv2 import DockerDiskstatParser
+from cmk.base.plugins.agent_based.docker_container_diskstat_cgroupv2 import (
+    DockerDiskstatParser,
+)
 
 from cmk.agent_based.v1.type_defs import StringTable
 

@@ -23,7 +23,13 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.num_split import cmp_version
-from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
+from cmk.gui.type_defs import (
+    FilterHeader,
+    FilterHTTPVariables,
+    Row,
+    Rows,
+    VisualContext,
+)
 from cmk.gui.utils.labels import (
     encode_label_groups_for_livestatus,
     encode_labels_for_livestatus,
@@ -385,7 +391,10 @@ class TimeQuery(NumberRangeQuery):
                 return int(time.mktime(time.strptime(value[var], "%Y-%m-%d %H:%M:%S")))
             except ValueError:
                 user_errors.add(
-                    MKUserError(var, _("Please enter the date in the format YYYY-MM-DD HH:mm:ss."))
+                    MKUserError(
+                        var,
+                        _("Please enter the date in the format YYYY-MM-DD HH:mm:ss."),
+                    )
                 )
                 return None
         if rangename == "abs":
@@ -762,7 +771,10 @@ class AuxTagsQuery(ABCTagsQuery):
 
         request_vars = []
         for num in range(self.count):
-            request_vars += ["%s_%d" % (self.var_prefix, num), "%s_%d_neg" % (self.var_prefix, num)]
+            request_vars += [
+                "%s_%d" % (self.var_prefix, num),
+                "%s_%d_neg" % (self.var_prefix, num),
+            ]
 
         super().__init__(ident=f"{object_type}_auxtags", request_vars=request_vars)
 
@@ -862,7 +874,11 @@ def log_alerts_filter(value: FilterHTTPVariables) -> FilterHeader:
             log_type = "HOST" if request_var[-2] == "h" else "SERVICE"
             state = request_var[-1]
             headers.append(
-                lq_logic("Filter:", [f"log_type ~ {log_type} .*", f"log_state = {state}"], "And")
+                lq_logic(
+                    "Filter:",
+                    [f"log_type ~ {log_type} .*", f"log_state = {state}"],
+                    "And",
+                )
             )
 
     return "".join(headers) + ("Or: %d\n" % len(headers))

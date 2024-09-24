@@ -18,7 +18,9 @@ from cmk.ec.config import (  # pylint: disable=cmk-module-layer-violation
     State,
 )
 
-from cmk.gui.watolib.site_changes import ChangeSpec  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.watolib.site_changes import (
+    ChangeSpec,  # pylint: disable=cmk-module-layer-violation
+)
 
 logger = logging.getLogger(__name__)
 
@@ -103,7 +105,11 @@ def _generate_event_message(site: Site, message: str) -> None:
     events_path = site.path("tmp/run/mkeventd/events")
     cmd = f"sudo su -l {site.id} -c 'echo {message} > {events_path}'"
     with subprocess.Popen(
-        cmd, encoding="utf-8", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        cmd,
+        encoding="utf-8",
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
     ) as process:
         _validate_process_return_code(process, "Failed to generate EC message via Unix socket.")
 
@@ -146,7 +152,8 @@ def _setup_ec(site: Site) -> Iterator:
     rule_state: State = 1
 
     _write_ec_rule(
-        site, _get_ec_rule_packs(title="", rule_id=rule_id, state=rule_state, match=match)
+        site,
+        _get_ec_rule_packs(title="", rule_id=rule_id, state=rule_state, match=match),
     )
 
     # in order for the EC rule to take effect, we need to inject a change in the EC domain and
@@ -278,7 +285,9 @@ def test_ec_rule_match_snmp_trap(
     event_message = f"some {match} status"
 
     process = site.execute(
-        _get_snmp_trap_cmd(event_message), stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        _get_snmp_trap_cmd(event_message),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
     )
     _validate_process_return_code(process, "Failed to send message via SNMP trap.")
 
@@ -313,7 +322,9 @@ def test_ec_rule_no_match_snmp_trap(
     assert match not in event_message
 
     process = site.execute(
-        _get_snmp_trap_cmd(event_message), stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        _get_snmp_trap_cmd(event_message),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
     )
     _validate_process_return_code(process, "Failed to send message via SNMP trap.")
 
@@ -341,7 +352,9 @@ def test_ec_global_settings(
     event_message = f"some {match} status"
 
     process = site.execute(
-        _get_snmp_trap_cmd(event_message), stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        _get_snmp_trap_cmd(event_message),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
     )
     _validate_process_return_code(process, "Failed to send message via SNMP trap.")
 

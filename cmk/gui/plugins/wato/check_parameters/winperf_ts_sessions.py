@@ -22,7 +22,11 @@ def _parameter_valuespec_winperf_ts_sessions():
                     title=_("Number of active sessions"),
                     elements=[
                         Integer(title=_("Warning at"), unit=_("sessions"), default_value=100),
-                        Integer(title=_("Critical at"), unit=_("sessions"), default_value=200),
+                        Integer(
+                            title=_("Critical at"),
+                            unit=_("sessions"),
+                            default_value=200,
+                        ),
                     ],
                 ),
             ),

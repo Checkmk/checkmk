@@ -7,7 +7,12 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -135,9 +140,13 @@ def test_inventory_printer_supply(
             ],
             [
                 Result(
-                    state=State.CRIT, summary="Remaining: 5.00% (warn/crit below 20.00%/10.00%)"
+                    state=State.CRIT,
+                    summary="Remaining: 5.00% (warn/crit below 20.00%/10.00%)",
                 ),
-                Result(state=State.OK, summary="Supply: 5 of max. 100 tenths of milliliters"),
+                Result(
+                    state=State.OK,
+                    summary="Supply: 5 of max. 100 tenths of milliliters",
+                ),
                 Metric("pages", 5, levels=(20.0, 10.0), boundaries=(0, 100)),
             ],
         ),
@@ -152,9 +161,13 @@ def test_inventory_printer_supply(
             ],
             [
                 Result(
-                    state=State.WARN, summary="Remaining: 15.00% (warn/crit below 20.00%/10.00%)"
+                    state=State.WARN,
+                    summary="Remaining: 15.00% (warn/crit below 20.00%/10.00%)",
                 ),
-                Result(state=State.OK, summary="Supply: 15 of max. 100 tenths of milliliters"),
+                Result(
+                    state=State.OK,
+                    summary="Supply: 15 of max. 100 tenths of milliliters",
+                ),
                 Metric("pages", 15, levels=(20.0, 10.0), boundaries=(0, 100)),
             ],
         ),
@@ -169,7 +182,10 @@ def test_inventory_printer_supply(
             ],
             [
                 Result(state=State.OK, summary="Remaining: 25.00%"),
-                Result(state=State.OK, summary="Supply: 25 of max. 100 tenths of milliliters"),
+                Result(
+                    state=State.OK,
+                    summary="Supply: 25 of max. 100 tenths of milliliters",
+                ),
                 Metric("pages", 25, levels=(20.0, 10.0), boundaries=(0, 100)),
             ],
         ),
@@ -335,7 +351,10 @@ def test_inventory_printer_supply(
     ],
 )
 def test_check_printer_supply(
-    item: str, params: Mapping[str, object], info: list[StringTable], expected_result: CheckResult
+    item: str,
+    params: Mapping[str, object],
+    info: list[StringTable],
+    expected_result: CheckResult,
 ) -> None:
     section = parse_printer_supply(info)
     result = check_printer_supply(item, params, section)

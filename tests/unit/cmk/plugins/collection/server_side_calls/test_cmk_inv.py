@@ -7,7 +7,10 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.plugins.collection.server_side_calls.cmk_inv import CmkInvParams, generate_cmk_inv_commands
+from cmk.plugins.collection.server_side_calls.cmk_inv import (
+    CmkInvParams,
+    generate_cmk_inv_commands,
+)
 from cmk.server_side_calls.v1 import HostConfig, IPv4Config
 
 ARGS = [

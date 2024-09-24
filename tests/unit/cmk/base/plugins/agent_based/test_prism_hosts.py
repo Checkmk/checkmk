@@ -10,7 +10,10 @@ import pytest
 from pytest import MonkeyPatch
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.prism_hosts import check_prism_hosts, discovery_prism_hosts
+from cmk.base.plugins.agent_based.prism_hosts import (
+    check_prism_hosts,
+    discovery_prism_hosts,
+)
 
 SECTION = {
     "SRV-AHV-01": {
@@ -104,7 +107,10 @@ def test_discovery_prism_hosts(
             {"system_state": "OFFLINE"},
             SECTION,
             [
-                Result(state=State.WARN, summary="has state NORMAL(!) expected state OFFLINE"),
+                Result(
+                    state=State.WARN,
+                    summary="has state NORMAL(!) expected state OFFLINE",
+                ),
                 Result(state=State.OK, summary="Number of VMs 4"),
                 Result(state=State.OK, summary="Memory 376 GiB"),
                 Result(state=State.OK, summary="Boottime 2022-08-11 13:40:02"),

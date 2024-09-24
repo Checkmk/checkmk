@@ -15,15 +15,20 @@ def paint_wiki_notes(row):
     svc = svc.replace(" ", "_")
     svc = svc.lower()
     host = host.lower()
-    filename = cmk.utils.paths.omd_root + "/var/dokuwiki/data/pages/docu/{}/{}.txt".format(
-        host, svc
+    filename = (
+        cmk.utils.paths.omd_root
+        + "/var/dokuwiki/data/pages/docu/{}/{}.txt".format(host, svc)
     )
     if not os.path.isfile(filename):
-        filename = cmk.utils.paths.omd_root + "/var/dokuwiki/data/pages/docu/default/{}.txt".format(
-            svc
+        filename = (
+            cmk.utils.paths.omd_root
+            + "/var/dokuwiki/data/pages/docu/default/{}.txt".format(svc)
         )
 
-    text = "<a href='../wiki/doku.php?id=docu:default:%s'>Edit Default Instructions</a> - " % svc
+    text = (
+        "<a href='../wiki/doku.php?id=docu:default:%s'>Edit Default Instructions</a> - "
+        % svc
+    )
     text += "<a href='../wiki/doku.php?id=docu:{}:{}'>Edit Host Instructions</a> <hr> ".format(
         host, svc
     )

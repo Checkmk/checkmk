@@ -9,7 +9,9 @@ from cmk.plugins.lib import memory
 from .agent_based_api.v1 import Attributes, register, type_defs
 
 
-def parse_proc_meminfo_bytes(string_table: type_defs.StringTable) -> memory.SectionMem | None:
+def parse_proc_meminfo_bytes(
+    string_table: type_defs.StringTable,
+) -> memory.SectionMem | None:
     """Parse /proc/meminfo into the canonical form: into bytes
 
     >>> import pprint

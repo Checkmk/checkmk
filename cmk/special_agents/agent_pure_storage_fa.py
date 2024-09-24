@@ -17,8 +17,14 @@ import requests
 import urllib3
 from requests.adapters import HTTPAdapter
 
-from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
-from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.agent_common import (
+    SectionWriter,
+    special_agent_main,
+)
+from cmk.special_agents.v0_unstable.argument_parsing import (
+    Args,
+    create_default_argument_parser,
+)
 
 _LOGGER = logging.getLogger("agent_pure_storage_fa")
 __version__ = "2.3.0b1"
@@ -152,7 +158,10 @@ class _PureStorageFlashArraySession:
         )
 
     def get(
-        self, path: str, headers: Mapping[str, str], params: Mapping[str, str] | None = None
+        self,
+        path: str,
+        headers: Mapping[str, str],
+        params: Mapping[str, str] | None = None,
     ) -> requests.Response:
         # Watch out: we must provide the verify keyword to every individual request call!
         # Else it will be overwritten by the REQUESTS_CA_BUNDLE env variable

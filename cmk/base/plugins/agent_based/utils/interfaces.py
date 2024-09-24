@@ -25,8 +25,8 @@
 # NOTE: we have no idea what exactly is in use.
 # Just import everything that is not explicitly marked private.
 
-from cmk.plugins.lib.interfaces import _cleanup_if_strings  # adsl_line-1.4.0.mkp
 from cmk.plugins.lib.interfaces import (
+    _cleanup_if_strings,  # adsl_line-1.4.0.mkp
     Attributes,
     Average,
     bandwidth_levels,

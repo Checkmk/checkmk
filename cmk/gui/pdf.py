@@ -166,7 +166,12 @@ class Document:
         self._width, self._height = self._pagesize
         self._height = self._pagesize[1]
 
-        self._margin_top, self._margin_right, self._margin_bottom, self._margin_left = self._margins
+        (
+            self._margin_top,
+            self._margin_right,
+            self._margin_bottom,
+            self._margin_left,
+        ) = self._margins
 
         self._inner_width = self._width - self._margin_left - self._margin_right
         self._inner_height = self._height - self._margin_top - self._margin_bottom
@@ -327,7 +332,10 @@ class Document:
         self._linepos = self._top
         self._page_number += 1
         if self._mirror_margins:
-            self._margin_left, self._margin_right = self._margin_right, self._margin_left
+            self._margin_left, self._margin_right = (
+                self._margin_right,
+                self._margin_left,
+            )
             self._left = self._margin_left
             self._right = self._width - self._margin_right
 
@@ -582,7 +590,12 @@ class Document:
             self._canvas.rect(left, bottom, right - left, top - bottom, fill=0, stroke=1)
             self.restore_state()
 
-        return left / mm, top / mm, (right - left) / mm, (top - bottom) / mm  # fixed: true-division
+        return (
+            left / mm,
+            top / mm,
+            (right - left) / mm,
+            (top - bottom) / mm,
+        )  # fixed: true-division
 
     # Add one line of text. This line may include horizontal tabulators ('\t').
     # You can set the width of the tabulators with set_tabstops()
@@ -719,13 +732,23 @@ class Document:
         self.restore_state()
 
     def render_image(
-        self, left_mm: SizeMM, top_mm: SizeMM, width_mm: SizeMM, height_mm: SizeMM, path: str
+        self,
+        left_mm: SizeMM,
+        top_mm: SizeMM,
+        width_mm: SizeMM,
+        height_mm: SizeMM,
+        path: str,
     ) -> None:
         pil = PngImagePlugin.PngImageFile(fp=path)
         ir = ImageReader(pil)
         try:
             self._canvas.drawImage(
-                ir, left_mm * mm, top_mm * mm, width_mm * mm, height_mm * mm, mask="auto"
+                ir,
+                left_mm * mm,
+                top_mm * mm,
+                width_mm * mm,
+                height_mm * mm,
+                mask="auto",
             )
         except Exception as e:
             raise Exception(f"Cannot render image {path}: {e}")
@@ -1073,7 +1096,8 @@ class TableRenderer:
         # ( "number", "0.75" ), or ("", ("icon", "/bar/foo.png") )
         # The headers come *without* the css field and are always texts.
         headers: list[CellRenderer] = [
-            TitleCell(["heading"], header_text) for header_text in header_texts  #
+            TitleCell(["heading"], header_text)
+            for header_text in header_texts  #
         ]
 
         rows: list[list[CellRenderer]] = []
@@ -1358,7 +1382,10 @@ class TableRenderer:
             self.pdf._canvas.setLineWidth(rule_width)
             self.pdf._canvas.setStrokeColorRGB(*black)
             self.pdf._canvas.line(
-                left, self.pdf._linepos, left, self.pdf._linepos - row_height - 2 * y_padding
+                left,
+                self.pdf._linepos,
+                left,
+                self.pdf._linepos - row_height - 2 * y_padding,
             )
 
     def _paint_stepwise(
@@ -1405,7 +1432,10 @@ class TableRenderer:
 
         for index, step in enumerate(column.get_render_steps(self.pdf, headers, y_padding)):
             if is_single_dataset:
-                step_row = [row[0] if index == 0 else TitleCell(["leftheading"], ""), step]
+                step_row = [
+                    row[0] if index == 0 else TitleCell(["leftheading"], ""),
+                    step,
+                ]
             else:
                 step_row = [step]
 

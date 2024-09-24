@@ -25,7 +25,13 @@ def parse_apc_inrow_temp(string_table):
     if string_table:
         for what, what_item in zip(
             string_table[0],
-            ["Rack Inlet", "Supply Air", "Return Air", "Entering Fluid", "Leaving Fluid"],
+            [
+                "Rack Inlet",
+                "Supply Air",
+                "Return Air",
+                "Entering Fluid",
+                "Leaving Fluid",
+            ],
         ):
             if what not in ["", "-1"]:
                 parsed.setdefault(what_item, float(what) / 10)

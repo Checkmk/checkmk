@@ -7,6 +7,7 @@
 The audit log records the activities taking place in CheckMK. These endpoints allow you to read and clean these logs
 
 """
+
 import datetime
 import math
 from collections.abc import Mapping, Sequence
@@ -25,7 +26,11 @@ from cmk.gui.openapi.endpoints.audit_log.response_schemas import AuditLogEntryCo
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import serve_json
-from cmk.gui.watolib.audit_log import AuditLogFilterRaw, AuditLogStore, build_audit_log_filter
+from cmk.gui.watolib.audit_log import (
+    AuditLogFilterRaw,
+    AuditLogStore,
+    build_audit_log_filter,
+)
 
 AuditLogResponse = dict[str, Any]
 

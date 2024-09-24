@@ -62,20 +62,32 @@ WALK_SKYHIGH = """
 
 @pytest.mark.parametrize(
     "walk, detected_section",
-    [(WALK_MCAFEE, "mcafee_webgateway_misc"), (WALK_SKYHIGH, "skyhigh_security_webgateway_misc")],
+    [
+        (WALK_MCAFEE, "mcafee_webgateway_misc"),
+        (WALK_SKYHIGH, "skyhigh_security_webgateway_misc"),
+    ],
 )
 def test_detect(
-    walk: str, detected_section: str, fix_register: FixRegister, as_path: Callable[[str], Path]
+    walk: str,
+    detected_section: str,
+    fix_register: FixRegister,
+    as_path: Callable[[str], Path],
 ) -> None:
     assert snmp_is_detected(SectionName(detected_section), as_path(walk))
 
 
 @pytest.mark.parametrize(
     "walk, detected_section",
-    [(WALK_MCAFEE, "mcafee_webgateway_misc"), (WALK_SKYHIGH, "skyhigh_security_webgateway_misc")],
+    [
+        (WALK_MCAFEE, "mcafee_webgateway_misc"),
+        (WALK_SKYHIGH, "skyhigh_security_webgateway_misc"),
+    ],
 )
 def test_parse(
-    walk: str, detected_section: str, fix_register: FixRegister, as_path: Callable[[str], Path]
+    walk: str,
+    detected_section: str,
+    fix_register: FixRegister,
+    as_path: Callable[[str], Path],
 ) -> None:
     # Act
     section = get_parsed_snmp_section(SectionName(detected_section), as_path(walk))
@@ -86,10 +98,16 @@ def test_parse(
 
 @pytest.mark.parametrize(
     "walk, detected_section",
-    [(WALK_MCAFEE, "mcafee_webgateway_misc"), (WALK_SKYHIGH, "skyhigh_security_webgateway_misc")],
+    [
+        (WALK_MCAFEE, "mcafee_webgateway_misc"),
+        (WALK_SKYHIGH, "skyhigh_security_webgateway_misc"),
+    ],
 )
 def test_discovery(
-    walk: str, detected_section: str, fix_register: FixRegister, as_path: Callable[[str], Path]
+    walk: str,
+    detected_section: str,
+    fix_register: FixRegister,
+    as_path: Callable[[str], Path],
 ) -> None:
     # Assemble
     section = get_parsed_snmp_section(SectionName(detected_section), as_path(walk))
@@ -142,7 +160,8 @@ def test_discovery(
             [
                 v1.Result(state=v1.State.WARN, summary="Clients: 2 (warn/crit at 2/3)"),
                 v1.Result(
-                    state=v1.State.WARN, summary="Open network sockets: 2 (warn/crit at 2/3)"
+                    state=v1.State.WARN,
+                    summary="Open network sockets: 2 (warn/crit at 2/3)",
                 ),
             ],
             id="Critical",
@@ -154,7 +173,8 @@ def test_discovery(
             [
                 v1.Result(state=v1.State.WARN, summary="Clients: 2 (warn/crit at 2/3)"),
                 v1.Result(
-                    state=v1.State.WARN, summary="Open network sockets: 2 (warn/crit at 2/3)"
+                    state=v1.State.WARN,
+                    summary="Open network sockets: 2 (warn/crit at 2/3)",
                 ),
             ],
             id="Critical skyhigh",
@@ -166,7 +186,8 @@ def test_discovery(
             [
                 v1.Result(state=v1.State.CRIT, summary="Clients: 2 (warn/crit at 1/2)"),
                 v1.Result(
-                    state=v1.State.CRIT, summary="Open network sockets: 2 (warn/crit at 1/2)"
+                    state=v1.State.CRIT,
+                    summary="Open network sockets: 2 (warn/crit at 1/2)",
                 ),
             ],
             id="Warning",
@@ -214,7 +235,10 @@ def test_check_metrics(fix_register: FixRegister, as_path: Callable[[str], Path]
     ]
 
     # Assert
-    assert metrics == [v1.Metric("connections", 2.0), v1.Metric("open_network_sockets", 2.0)]
+    assert metrics == [
+        v1.Metric("connections", 2.0),
+        v1.Metric("open_network_sockets", 2.0),
+    ]
 
 
 INVALID_WALK = """

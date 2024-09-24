@@ -7,7 +7,10 @@ from cmk.utils.dateutils import weekday_ids
 
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
-from cmk.gui.openapi.restful_objects.response_schemas import DomainObjectCollection, Linkable
+from cmk.gui.openapi.restful_objects.response_schemas import (
+    DomainObjectCollection,
+    Linkable,
+)
 
 from cmk import fields
 
@@ -97,7 +100,8 @@ class TimePeriodResponse(Linkable):
         description="The domain type of the object.",
     )
     id = fields.String(
-        description="The unique identifier for this time period.", example="time_period_name"
+        description="The unique identifier for this time period.",
+        example="time_period_name",
     )
     title = fields.String(
         description="The time period name.",

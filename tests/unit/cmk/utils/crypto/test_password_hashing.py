@@ -62,7 +62,10 @@ def test_verify_invalid_password_failure(password: str, password_hash: str) -> N
     [
         ("garbage_hash", "0123abcd"),
         ("empty_hash", ""),
-        ("bad_algo", "$pbkdf2-sha256$5$n7O2NmaMMeZ87w$1q0e9XwOYpkcY2E1rYGpP1MChmGdKdQDFzuZIzGOML0"),
+        (
+            "bad_algo",
+            "$pbkdf2-sha256$5$n7O2NmaMMeZ87w$1q0e9XwOYpkcY2E1rYGpP1MChmGdKdQDFzuZIzGOML0",
+        ),
         # no longer supported hashes
         (
             "foo",
@@ -87,11 +90,17 @@ def test_verify_invalid_hash_failure(password: str, password_hash: str) -> None:
     [
         # NUL in password
         ("foo\0bar", "$2b$04$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2lypa"),
-        ("foo\0bar", "$5$rounds=1000$.J4mcfJGFGgWJA7R$bDhUCLMe2v1.L3oWclfsVYMyOhsS/6RmyzqFRyCgDi/"),
+        (
+            "foo\0bar",
+            "$5$rounds=1000$.J4mcfJGFGgWJA7R$bDhUCLMe2v1.L3oWclfsVYMyOhsS/6RmyzqFRyCgDi/",
+        ),
         # NUL in hash
         ("foobar", "$2b$04$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2ly\0a"),
         ("foobar", "$2y$04$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2ly\0a"),
-        ("foobar", "$5$rounds=1000$.J4mcfJGFGgWJA7R$bDhUCLMe2v1.L3oWclfsVYMyOhsS/6RmyzqFRyCg\0i/"),
+        (
+            "foobar",
+            "$5$rounds=1000$.J4mcfJGFGgWJA7R$bDhUCLMe2v1.L3oWclfsVYMyOhsS/6RmyzqFRyCg\0i/",
+        ),
     ],
 )
 def test_verify_null_bytes(password: str, password_hash: str) -> None:
@@ -124,7 +133,10 @@ def test_verify_invalid_rounds(password: str, pw_hash: str) -> None:
             True,
             "$5$rounds=5000$GX7BopJZJxPc/KEK$le16UF8I2Anb.rOrn22AUPWvzUETDGefUmAV8AZkGcD",
         ),  # Sha256 crypt
-        (True, "$5$rounds=1000$.J4mcfJGFGgWJA7R$bDhUCLMe2v1.L3oWclfsVYMyOhsS/6RmyzqFRyCgDi/"),
+        (
+            True,
+            "$5$rounds=1000$.J4mcfJGFGgWJA7R$bDhUCLMe2v1.L3oWclfsVYMyOhsS/6RmyzqFRyCgDi/",
+        ),
         (False, "foobar"),  # ignore unrecognized algorithms
         (False, ""),
         (False, "$2b$04$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2lypa"),

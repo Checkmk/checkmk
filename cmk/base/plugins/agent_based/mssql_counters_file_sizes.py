@@ -27,7 +27,11 @@ def discovery_mssql_counters_file_sizes(section: Section) -> DiscoveryResult:
     """
     yield from discovery_mssql_counters_generic(
         section,
-        {"data_file(s)_size_(kb)", "log_file(s)_size_(kb)", "log_file(s)_used_size_(kb)"},
+        {
+            "data_file(s)_size_(kb)",
+            "log_file(s)_size_(kb)",
+            "log_file(s)_used_size_(kb)",
+        },
         dflt={},
     )
 

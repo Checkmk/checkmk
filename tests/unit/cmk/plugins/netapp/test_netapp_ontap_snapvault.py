@@ -7,7 +7,9 @@
 from polyfactory.factories.pydantic_factory import ModelFactory
 
 from cmk.agent_based.v2 import Result, State
-from cmk.plugins.netapp.agent_based.netapp_ontap_snapvault import check_netapp_ontap_snapvault
+from cmk.plugins.netapp.agent_based.netapp_ontap_snapvault import (
+    check_netapp_ontap_snapvault,
+)
 from cmk.plugins.netapp.models import SnapMirrorModel
 
 

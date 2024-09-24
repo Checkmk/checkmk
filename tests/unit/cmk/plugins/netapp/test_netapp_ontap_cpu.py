@@ -48,7 +48,10 @@ def test_check_netapp_ontap_cpu_utilization(
     value_store_patch: None,
 ) -> None:
     node_model = NodeModelFactory.build(
-        name="cpu1", processor_utilization_raw=30, processor_utilization_base=100, cpu_count=2
+        name="cpu1",
+        processor_utilization_raw=30,
+        processor_utilization_base=100,
+        cpu_count=2,
     )
     section = {node_model.name: node_model}
 
@@ -61,7 +64,9 @@ def test_check_netapp_ontap_cpu_utilization(
     assert result[2] == Result(state=State.OK, summary="Number of CPUs: 2 CPUs")
 
 
-def test_check_netapp_ontap_cpu_utilization_not_present(value_store_patch: None) -> None:
+def test_check_netapp_ontap_cpu_utilization_not_present(
+    value_store_patch: None,
+) -> None:
     node_model = NodeModelFactory.build(name="cpu1")
     section = {node_model.name: node_model}
 

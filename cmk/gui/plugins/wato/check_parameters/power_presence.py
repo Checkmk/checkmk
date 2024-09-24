@@ -31,7 +31,8 @@ rulespec_registry.register(
         check_group_name="power_presence",
         group=RulespecGroupCheckParametersEnvironment,
         item_spec=lambda: TextInput(
-            title=_("Sensor Name"), help=_("The power supply sensor name as shown in the service")
+            title=_("Sensor Name"),
+            help=_("The power supply sensor name as shown in the service"),
         ),
         parameter_valuespec=_parameter_valuespec_power_presence,
         title=lambda: _("Power Presence Sensors"),

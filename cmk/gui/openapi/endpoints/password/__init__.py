@@ -22,8 +22,14 @@ from cmk.utils.password_store import Password
 
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.endpoints.password.request_schemas import InputPassword, UpdatePassword
-from cmk.gui.openapi.endpoints.password.response_schemas import PasswordCollection, PasswordObject
+from cmk.gui.openapi.endpoints.password.request_schemas import (
+    InputPassword,
+    UpdatePassword,
+)
+from cmk.gui.openapi.endpoints.password.response_schemas import (
+    PasswordCollection,
+    PasswordObject,
+)
 from cmk.gui.openapi.endpoints.utils import complement_customer, update_customer_info
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.openapi.restful_objects.parameters import NAME_ID_FIELD

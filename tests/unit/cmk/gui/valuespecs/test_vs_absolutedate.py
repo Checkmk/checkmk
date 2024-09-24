@@ -11,7 +11,12 @@ from tests.testlib import set_timezone
 import cmk.gui.valuespec as vs
 from cmk.gui.exceptions import MKUserError
 
-from .utils import expect_validate_failure, expect_validate_success, raise_exception, request_var
+from .utils import (
+    expect_validate_failure,
+    expect_validate_success,
+    raise_exception,
+    request_var,
+)
 
 
 class TestAbsoluteDate:
@@ -47,7 +52,12 @@ class TestAbsoluteDate:
             with request_var(a_year="2021", a_month="9", a_day="12"):
                 assert vs.AbsoluteDate().from_html_vars("a") == 1631397600.0
             with request_var(
-                a_year="2021", a_month="9", a_day="12", a_hour="15", a_min="37", a_sec="18"
+                a_year="2021",
+                a_month="9",
+                a_day="12",
+                a_hour="15",
+                a_min="37",
+                a_sec="18",
             ):
                 assert vs.AbsoluteDate(include_time=True).from_html_vars("a") == 1631453838.0
         with pytest.raises(MKUserError, match="Please enter a valid number"):

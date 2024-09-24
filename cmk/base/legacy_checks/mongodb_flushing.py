@@ -27,8 +27,10 @@ def check_mongodb_flushing(_no_item, params, info):
     info_dict = dict(info)
 
     if not {"last_ms", "average_ms", "flushed"} <= set(info_dict):  # check if keys in dict
-        yield 3, "missing data: %s" % (
-            _get_missing_keys(["last_ms", "average_ms", "flushed"], info_dict)
+        yield (
+            3,
+            "missing data: %s"
+            % (_get_missing_keys(["last_ms", "average_ms", "flushed"], info_dict)),
         )
         return
 
@@ -37,10 +39,13 @@ def check_mongodb_flushing(_no_item, params, info):
         avg_flush_time = float(info_dict["average_ms"]) / 1000.0
         flushed = int(info_dict["flushed"])
     except (ValueError, TypeError):
-        yield 3, "Invalid data: last_ms: {}, average_ms: {}, flushed:{}".format(
-            info_dict["last_ms"],
-            info_dict["average_ms"],
-            info_dict["flushed"],
+        yield (
+            3,
+            "Invalid data: last_ms: {}, average_ms: {}, flushed:{}".format(
+                info_dict["last_ms"],
+                info_dict["average_ms"],
+                info_dict["flushed"],
+            ),
         )
         return
 
@@ -66,9 +71,11 @@ def check_mongodb_flushing(_no_item, params, info):
     )
 
     yield 0, "Flushes since restart: %s" % flushed, [("flushed", flushed)]
-    yield 0, "Average flush time since restart: %s" % render.timespan(avg_flush_time), [
-        ("avg_flush_time", avg_flush_time)
-    ]
+    yield (
+        0,
+        "Average flush time since restart: %s" % render.timespan(avg_flush_time),
+        [("avg_flush_time", avg_flush_time)],
+    )
 
 
 def _get_missing_keys(key_list, info_dict):

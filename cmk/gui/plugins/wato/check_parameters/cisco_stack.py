@@ -31,12 +31,17 @@ def _parameter_valuespec_cisco_stack() -> Dictionary:
                     help=_("Master election or mismatch checks in progress"),
                 ),
             ),
-            ("added", MonitoringState(title="added", default_value=0, help=_("Added to stack"))),
+            (
+                "added",
+                MonitoringState(title="added", default_value=0, help=_("Added to stack")),
+            ),
             ("ready", MonitoringState(title="ready", default_value=0, help=_("Ready"))),
             (
                 "sdmMismatch",
                 MonitoringState(
-                    title="sdmMismatch", default_value=1, help=_("SDM template mismatch")
+                    title="sdmMismatch",
+                    default_value=1,
+                    help=_("SDM template mismatch"),
                 ),
             ),
             (
@@ -48,7 +53,9 @@ def _parameter_valuespec_cisco_stack() -> Dictionary:
             (
                 "featureMismatch",
                 MonitoringState(
-                    title="featureMismatch", default_value=1, help=_("Configured feature mismatch")
+                    title="featureMismatch",
+                    default_value=1,
+                    help=_("Configured feature mismatch"),
                 ),
             ),
             (
@@ -70,7 +77,9 @@ def _parameter_valuespec_cisco_stack() -> Dictionary:
             (
                 "invalid",
                 MonitoringState(
-                    title="invalid", default_value=2, help=_("State machine in invalid state")
+                    title="invalid",
+                    default_value=2,
+                    help=_("State machine in invalid state"),
                 ),
             ),
             (

@@ -48,6 +48,8 @@ from cmk.plugins.lib.kube import NodeInfo, NodeName, Timestamp
     ],
 )
 def test_check_kube_node_info(
-    section: NodeInfo, expected_check_result: Sequence[Result], mocker: pytest_mock.MockerFixture
+    section: NodeInfo,
+    expected_check_result: Sequence[Result],
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
     assert list(check_kube_node_info(1600000001.0, section)) == expected_check_result

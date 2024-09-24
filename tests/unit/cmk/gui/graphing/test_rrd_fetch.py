@@ -42,7 +42,14 @@ def _setup_livestatus(mock_livestatus: MockLiveStatusConnection) -> Iterator[Non
                 {
                     "host_name": "my-host",
                     "service_description": "Temperature Zone 6",
-                    "rrddata:temp:temp.max:1681985455:1681999855:20": [1, 2, 3, 4, 5, None],
+                    "rrddata:temp:temp.max:1681985455:1681999855:20": [
+                        1,
+                        2,
+                        3,
+                        4,
+                        5,
+                        None,
+                    ],
                 }
             ],
         )
@@ -231,7 +238,10 @@ def test_translate_and_merge_rrd_columns_unit_conversion(
     assert translate_and_merge_rrd_columns(
         MetricName("temp"),
         [
-            ("rrddata:ambient_temp:ambient_temp.average:1682324616:1682497416:60", [0, 0, 0]),
+            (
+                "rrddata:ambient_temp:ambient_temp.average:1682324616:1682497416:60",
+                [0, 0, 0],
+            ),
             (
                 "rrddata:temp:temp.average:1682324616:1682497416:60",
                 [
@@ -279,7 +289,10 @@ def test_translate_and_merge_rrd_columns_unit_conversion(
                     54.05,
                 ],
             ),
-            ("rrddata:temperature:temperature.average:1682324616:1682497416:60", [0, 0, 0]),
+            (
+                "rrddata:temperature:temperature.average:1682324616:1682497416:60",
+                [0, 0, 0],
+            ),
         ],
         {},
     ) == TimeSeries(

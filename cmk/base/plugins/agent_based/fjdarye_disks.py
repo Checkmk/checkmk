@@ -17,7 +17,15 @@ from collections import Counter
 from collections.abc import Mapping, MutableMapping
 from typing import Any, NamedTuple
 
-from .agent_based_api.v1 import any_of, equals, register, Result, Service, SNMPTree, State
+from .agent_based_api.v1 import (
+    any_of,
+    equals,
+    register,
+    Result,
+    Service,
+    SNMPTree,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 FJDARYE_DISKS = {
@@ -95,7 +103,8 @@ def discover_fjdarye_disks(section: SectionFjdaryeDisk) -> DiscoveryResult:
     for disk in section.values():
         if disk.state_disk != "3":
             yield Service(
-                item=disk.disk_index, parameters={"expected_state": disk.state_description}
+                item=disk.disk_index,
+                parameters={"expected_state": disk.state_description},
             )
 
 

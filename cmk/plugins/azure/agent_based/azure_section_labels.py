@@ -12,11 +12,15 @@ from cmk.agent_based.v2 import AgentSection
 from cmk.plugins.lib.labels import custom_tags_to_valid_labels
 
 
-def _parse_host_labels(string_table: StringTable) -> tuple[Mapping[str, str], Mapping[str, str]]:
+def _parse_host_labels(
+    string_table: StringTable,
+) -> tuple[Mapping[str, str], Mapping[str, str]]:
     return json.loads(string_table[0][0]), json.loads(string_table[1][0])
 
 
-def host_labels(section: tuple[Mapping[str, str], Mapping[str, str]]) -> HostLabelGenerator:
+def host_labels(
+    section: tuple[Mapping[str, str], Mapping[str, str]],
+) -> HostLabelGenerator:
     """Host label function
 
     Labels:

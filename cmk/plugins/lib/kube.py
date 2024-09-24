@@ -165,7 +165,9 @@ def kube_labels_to_cmk_labels(labels: Labels) -> HostLabelGenerator:
 
 
 # TODO: CMK-10380 (the change will incompatible)
-def kube_annotations_to_cmk_labels(annotations: FilteredAnnotations) -> HostLabelGenerator:
+def kube_annotations_to_cmk_labels(
+    annotations: FilteredAnnotations,
+) -> HostLabelGenerator:
     """Convert Kubernetes Annotations to HostLabels.
 
     Kubernetes annotations are not valid Checkmk labels, but agent_kube makes
@@ -1038,7 +1040,7 @@ T = TypeVar("T", bound=Section)
 
 
 def check_with_time(
-    check_function: Callable[[float, T], CheckResult]
+    check_function: Callable[[float, T], CheckResult],
 ) -> Callable[[T], CheckResult]:
     def check_function_with_time(section: T) -> CheckResult:
         yield from check_function(time.time(), section)

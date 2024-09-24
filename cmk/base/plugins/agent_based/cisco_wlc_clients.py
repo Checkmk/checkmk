@@ -6,7 +6,11 @@
 import re
 
 from cmk.plugins.lib.cisco_wlc import CISCO_WLC_OIDS
-from cmk.plugins.lib.wlc_clients import ClientsPerInterface, ClientsTotal, WlcClientsSection
+from cmk.plugins.lib.wlc_clients import (
+    ClientsPerInterface,
+    ClientsTotal,
+    WlcClientsSection,
+)
 
 from .agent_based_api.v1 import any_of, equals, matches, register, SNMPTree
 from .agent_based_api.v1.type_defs import StringTable

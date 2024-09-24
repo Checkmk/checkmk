@@ -6,8 +6,21 @@
 from collections.abc import Mapping
 from typing import NamedTuple
 
-from .agent_based_api.v1 import Attributes, exists, register, Result, Service, SNMPTree, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
+from .agent_based_api.v1 import (
+    Attributes,
+    exists,
+    register,
+    Result,
+    Service,
+    SNMPTree,
+    State,
+)
+from .agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    InventoryResult,
+    StringTable,
+)
 
 
 class Section(NamedTuple):

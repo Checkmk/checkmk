@@ -81,7 +81,9 @@ def send_pem_file(page: LoginPage, description: str, password: str, content: str
     page.main_area.get_input("key_p_key_file_0").set_input_files(
         files=[
             FilePayload(
-                name="mypem.pem", mimeType="application/x-x509-ca-cert", buffer=content.encode()
+                name="mypem.pem",
+                mimeType="application/x-x509-ca-cert",
+                buffer=content.encode(),
             )
         ]
     )
@@ -244,7 +246,8 @@ def test_bake_and_sign_disabled(logged_in_page: LoginPage) -> None:
     delete_key(logged_in_page)
 
     logged_in_page.click_and_wait(
-        logged_in_page.main_menu.setup_menu("Windows, Linux, Solaris, AIX"), navigate=True
+        logged_in_page.main_menu.setup_menu("Windows, Linux, Solaris, AIX"),
+        navigate=True,
     )
 
     expect(logged_in_page.main_area.get_suggestion("Bake and sign agents")).to_have_class(

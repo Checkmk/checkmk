@@ -123,7 +123,12 @@ def test_discover_netapp_ontap_environment_without_predicate() -> None:
         ),
         pytest.param(
             "discrete_sensor2",
-            [Result(state=State.CRIT, summary="Sensor state: not_normal, Sensor value: NOT OK")],
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="Sensor state: not_normal, Sensor value: NOT OK",
+                )
+            ],
             id="sensor status crit",
         ),
     ],
@@ -134,7 +139,9 @@ def test_check_netapp_ontap_environment_discrete(item: str, expected_result: Che
             name="discrete_sensor", discrete_state="normal", discrete_value="OK"
         ),
         EnvironmentDiscreteSensorModelFactory.build(
-            name="discrete_sensor2", discrete_state="not_normal", discrete_value="NOT OK"
+            name="discrete_sensor2",
+            discrete_state="not_normal",
+            discrete_value="NOT OK",
         ),
     ]
 
@@ -315,7 +322,10 @@ def test_check_environment_threshold_thermal_trend(
     with time_machine.travel(datetime.fromtimestamp(NOW_SIMULATED_SECONDS, tz=ZoneInfo("UTC"))):
         result = list(
             check_environment_threshold(
-                item="thermal_sensor", params=params, section=section, value_store=value_store
+                item="thermal_sensor",
+                params=params,
+                section=section,
+                value_store=value_store,
             )
         )
 

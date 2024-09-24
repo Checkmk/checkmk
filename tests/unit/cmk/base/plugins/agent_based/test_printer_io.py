@@ -151,7 +151,8 @@ from cmk.base.plugins.agent_based.printer_io import (
                 Result(state=State.OK, summary="Alerts: None"),
                 Result(state=State.OK, summary="Maximal capacity: 15 sheets"),
                 Result(
-                    state=State.WARN, summary="Remaining: 73.33% (warn/crit below 80.00%/20.00%)"
+                    state=State.WARN,
+                    summary="Remaining: 73.33% (warn/crit below 80.00%/20.00%)",
                 ),
             ],
         ),
@@ -212,7 +213,10 @@ def test_check_printer_input_capacity_not_reported_if_unit_is_unkown(
     expected_result = [
         Result(state=State.OK, summary="Status: Available and idle"),
         Result(state=State.OK, summary="Alerts: None"),
-        Result(state=State.WARN, summary="Remaining: 26.19% (warn/crit below 80.00%/20.00%)"),
+        Result(
+            state=State.WARN,
+            summary="Remaining: 26.19% (warn/crit below 80.00%/20.00%)",
+        ),
     ]
     assert list(result) == expected_result
 
@@ -244,13 +248,19 @@ def test_check_printer_input_capacity_not_reported_if_unit_is_unkown(
                 Result(state=State.OK, summary="Status: Available and idle"),
                 Result(state=State.OK, summary="Alerts: None"),
                 Result(state=State.OK, summary="Maximal capacity: 15 sheets"),
-                Result(state=State.WARN, summary="Filled: 73.33% (warn/crit at 70.00%/80.00%)"),
+                Result(
+                    state=State.WARN,
+                    summary="Filled: 73.33% (warn/crit at 70.00%/80.00%)",
+                ),
             ],
         ),
     ],
 )
 def test_check_priner_output(
-    item: str, params: Mapping[str, object], info: list[StringTable], expected_result: CheckResult
+    item: str,
+    params: Mapping[str, object],
+    info: list[StringTable],
+    expected_result: CheckResult,
 ) -> None:
     data = parse_printer_io(info)
     result = check_printer_output(item, params, data)

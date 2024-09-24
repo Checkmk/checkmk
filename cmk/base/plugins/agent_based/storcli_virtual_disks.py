@@ -17,7 +17,13 @@ def parse_storcli_virtual_disks(string_table: StringTable) -> megaraid.SectionLD
             continue
 
         item = first_word
-        _, _, header, _, row = next(lines), next(lines), next(lines), next(lines), next(lines)
+        _, _, header, _, row = (
+            next(lines),
+            next(lines),
+            next(lines),
+            next(lines),
+            next(lines),
+        )
         header.insert(header.index("Size") + 1, "Unit")
         raw[item] = dict(zip(header, row))
 

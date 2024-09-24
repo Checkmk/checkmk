@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.check_parameters.fortigate_sessions import fortigate_sessions_element
+from cmk.gui.plugins.wato.check_parameters.fortigate_sessions import (
+    fortigate_sessions_element,
+)
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,

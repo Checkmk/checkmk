@@ -7,7 +7,11 @@ import pytest
 from tests.unit.cmk.base.plugins.agent_based.esx_vsphere_vm_util import esx_vm_section
 
 from cmk.base.plugins.agent_based import esx_vsphere_vm, esx_vsphere_vm_name
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    IgnoreResultsError,
+    Result,
+    State,
+)
 
 from cmk.plugins.lib.esx_vsphere import ESXVm
 

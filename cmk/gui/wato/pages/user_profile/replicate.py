@@ -16,7 +16,9 @@ from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.utils.urls import requested_file_name
-from cmk.gui.wato.pages.user_profile.async_replication import user_profile_async_replication_page
+from cmk.gui.wato.pages.user_profile.async_replication import (
+    user_profile_async_replication_page,
+)
 from cmk.gui.wato.pages.user_profile.page_menu import page_menu_dropdown_user_related
 
 

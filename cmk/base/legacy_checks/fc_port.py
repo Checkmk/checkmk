@@ -229,10 +229,18 @@ def check_fc_port(item, params, info):  # pylint: disable=too-many-branches
     # R X O B J E C T S & T X O B J E C T S
     # Put number of objects into performance data (honor averaging)
     rxobjects_rate = get_rate(
-        get_value_store(), "fc_port.rxobjects.%s" % index, this_time, rxobjects, raise_overflow=True
+        get_value_store(),
+        "fc_port.rxobjects.%s" % index,
+        this_time,
+        rxobjects,
+        raise_overflow=True,
     )
     txobjects_rate = get_rate(
-        get_value_store(), "fc_port.txobjects.%s" % index, this_time, txobjects, raise_overflow=True
+        get_value_store(),
+        "fc_port.txobjects.%s" % index,
+        this_time,
+        txobjects,
+        raise_overflow=True,
     )
     for what, value in [("rxobjects", rxobjects_rate), ("txobjects", txobjects_rate)]:
         perfdata.append((what, value))
@@ -284,7 +292,11 @@ def check_fc_port(item, params, info):  # pylint: disable=too-many-branches
         # if averaging is on, compute average and apply levels to average
         if average:
             per_sec_avg = get_average(
-                value_store, f"fc_port.{counter}.{item}.avg", this_time, per_sec, average
+                value_store,
+                f"fc_port.{counter}.{item}.avg",
+                this_time,
+                per_sec,
+                average,
             )
             perfdata.append(("%s_avg" % counter, per_sec_avg))
 
@@ -298,7 +310,11 @@ def check_fc_port(item, params, info):  # pylint: disable=too-many-branches
         # Honor averaging of error rate
         if average:
             rate = get_average(
-                value_store, f"fc_port.{counter}.{item}.avgrate", this_time, rate, average
+                value_store,
+                f"fc_port.{counter}.{item}.avgrate",
+                this_time,
+                rate,
+                average,
             )
             text += ", Avg: %.2f%%" % (rate * 100.0)
 

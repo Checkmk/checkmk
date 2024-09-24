@@ -6,7 +6,14 @@
 from collections.abc import Callable, Mapping
 from typing import Any, Literal, NewType, Protocol
 
-from cmk.agent_based.v2 import CheckResult, HostLabel, HostLabelGenerator, render, Result, State
+from cmk.agent_based.v2 import (
+    CheckResult,
+    HostLabel,
+    HostLabelGenerator,
+    render,
+    Result,
+    State,
+)
 
 from .kube import (
     ControlChain,
@@ -48,7 +55,8 @@ def result_from_control_chain(control_chain: ControlChain) -> Result:
     """
     chain_display = " <- ".join(f"{c.type_}/{c.name}" for c in control_chain)
     return Result(
-        state=State.OK, summary=f"Controlled by: {chain_display if chain_display else None}"
+        state=State.OK,
+        summary=f"Controlled by: {chain_display if chain_display else None}",
     )
 
 
@@ -113,7 +121,7 @@ class Info(Protocol):
 
 
 def host_labels(
-    object_type: Literal["deployment", "daemonset", "statefulset"]
+    object_type: Literal["deployment", "daemonset", "statefulset"],
 ) -> Callable[[Info], HostLabelGenerator]:
     def _host_labels(section: Info) -> HostLabelGenerator:
         """Host label function.

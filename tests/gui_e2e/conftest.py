@@ -29,7 +29,10 @@ def _credentials(test_site: Site) -> CmkCredentials:
 
 
 def _log_in(
-    page: Page, test_site: Site, credentials: CmkCredentials, mobile_device: bool = False
+    page: Page,
+    test_site: Site,
+    credentials: CmkCredentials,
+    mobile_device: bool = False,
 ) -> LoginPage:
     ppage = LoginPage(
         page,

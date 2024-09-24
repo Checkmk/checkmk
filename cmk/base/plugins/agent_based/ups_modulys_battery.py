@@ -36,9 +36,13 @@ UPSBatterySection = UPSBattery | None
 
 def parse_ups_modulys_battery(string_table: list[StringTable]) -> UPSBatterySection:
     try:
-        raw_health, raw_uptime, raw_remaining_time, raw_capacity, raw_temperature = string_table[0][
-            0
-        ]
+        (
+            raw_health,
+            raw_uptime,
+            raw_remaining_time,
+            raw_capacity,
+            raw_temperature,
+        ) = string_table[0][0]
     except (IndexError, ValueError):
         return None
 

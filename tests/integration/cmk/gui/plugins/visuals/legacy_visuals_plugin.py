@@ -17,7 +17,11 @@ filter_registry.register(
         sort_index=102,
         info="host",
         query_filter=query_filters.TextQuery(
-            ident="test", op="~~", negateable=False, request_var="test", column="host_test"
+            ident="test",
+            op="~~",
+            negateable=False,
+            request_var="test",
+            column="host_test",
         ),
         description="",
         is_show_more=True,

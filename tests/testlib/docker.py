@@ -593,7 +593,9 @@ def checkmk_register_agent(
     ), f"Error registering agent: {register_agent_output.decode('utf-8')}"
 
 
-def checkmk_install_agent_controller_daemon(app: docker.models.containers.Container) -> None:
+def checkmk_install_agent_controller_daemon(
+    app: docker.models.containers.Container,
+) -> None:
     """Install an agent controller daemon in an application container
     to avoid systemd dependency."""
     daemon_path = str(repo_path() / "tests" / "scripts" / "agent_controller_daemon.py")

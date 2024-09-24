@@ -123,7 +123,9 @@ _CTR_TO_IF_FIELDS = {
 }
 
 
-def convert_esx_counters_if(section: Section) -> interfaces.Section[interfaces.InterfaceWithRates]:
+def convert_esx_counters_if(
+    section: Section,
+) -> interfaces.Section[interfaces.InterfaceWithRates]:
     rates: dict[str, dict[str, int]] = {}
     mac_addresses: dict[str, str] = {}
 

@@ -23,7 +23,15 @@ pytestmark = pytest.mark.checks
                 "port": 8443,
                 "address": True,
             },
-            ["--address", "address", "8443", "--venueid", "venueID", "--apikey", "55410aaa"],
+            [
+                "--address",
+                "address",
+                "8443",
+                "--venueid",
+                "venueID",
+                "--apikey",
+                "55410aaa",
+            ],
             id="with explicit password",
         ),
         pytest.param(

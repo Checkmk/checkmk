@@ -10,7 +10,13 @@ from typing import Final
 
 import pytest
 
-from .utils import CTL_STATUS_LINE, obtain_agent_data, ONLY_FROM_LINE, SECTION_COUNT, YamlDict
+from .utils import (
+    CTL_STATUS_LINE,
+    obtain_agent_data,
+    ONLY_FROM_LINE,
+    SECTION_COUNT,
+    YamlDict,
+)
 
 
 def _make_config(config: YamlDict, only_from: Sequence[str]) -> YamlDict:

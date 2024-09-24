@@ -8,7 +8,12 @@ This special agent is deprecated. Please use netapp_ontap_ports.
 
 from collections.abc import Container, Mapping
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import register, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    register,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -25,7 +30,9 @@ def port_name(name: str, values: Mapping[str, str]) -> str:
         return name
 
 
-def parse_netapp_api_ports(string_table: StringTable) -> netapp_api.SectionSingleInstance:
+def parse_netapp_api_ports(
+    string_table: StringTable,
+) -> netapp_api.SectionSingleInstance:
     return netapp_api.parse_netapp_api_single_instance(
         string_table, custom_keys=None, item_func=port_name
     )

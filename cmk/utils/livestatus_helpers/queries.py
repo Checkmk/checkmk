@@ -18,7 +18,12 @@ from cmk.utils.livestatus_helpers.expressions import (
     Or,
     QueryExpression,
 )
-from cmk.utils.livestatus_helpers.types import Column, expr_to_tree, ExpressionDict, Table
+from cmk.utils.livestatus_helpers.types import (
+    Column,
+    expr_to_tree,
+    ExpressionDict,
+    Table,
+)
 
 # TODO: Support Stats headers in Query() class
 

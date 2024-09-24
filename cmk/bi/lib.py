@@ -268,7 +268,9 @@ class BIAggregationComputationOptions(ABCWithSchema):
 
 class BIAggregationComputationOptionsSchema(Schema):
     disabled = ReqBoolean(
-        dump_default=False, example=False, description="Enable or disable this computation option."
+        dump_default=False,
+        example=False,
+        description="Enable or disable this computation option.",
     )
     use_hard_states = ReqBoolean(
         dump_default=False,
@@ -344,7 +346,10 @@ class BIParams(ABCWithSchema):
 
 class BIParamsSchema(Schema):
     arguments = ReqList(
-        String, dump_default=[], example=["testhostParams"], description="List of arguments."
+        String,
+        dump_default=[],
+        example=["testhostParams"],
+        description="List of arguments.",
     )
 
 
@@ -591,7 +596,10 @@ class ABCBIAction(ABC):
         raise NotImplementedError()
 
     def execute_search_results(
-        self, search_results: list[dict], macros: MacroMapping, bi_searcher: ABCBISearcher
+        self,
+        search_results: list[dict],
+        macros: MacroMapping,
+        bi_searcher: ABCBISearcher,
     ) -> Iterable[ABCBICompiledNode]:
         action_arguments = self._generate_action_arguments(search_results, macros)
         for argument in self._deduplicate_action_arguments(action_arguments):

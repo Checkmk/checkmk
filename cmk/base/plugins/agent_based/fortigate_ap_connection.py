@@ -8,7 +8,15 @@ from typing import NamedTuple
 
 from typing_extensions import TypedDict
 
-from .agent_based_api.v1 import check_levels, register, Result, Service, SNMPTree, startswith, State
+from .agent_based_api.v1 import (
+    check_levels,
+    register,
+    Result,
+    Service,
+    SNMPTree,
+    startswith,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 

@@ -12,7 +12,10 @@ from cmk.utils.sectionname import SectionName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
-from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin, SNMPSectionPlugin
+from cmk.base.api.agent_based.plugin_classes import (
+    AgentSectionPlugin,
+    SNMPSectionPlugin,
+)
 
 from cmk.agent_based.v2 import (
     AgentSection,

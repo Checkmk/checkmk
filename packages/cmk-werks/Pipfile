@@ -5,17 +5,14 @@ name = "pypi"
 
 [dev-packages]
 bandit = "*"
-black = "*"
-isort = "*"
+ruff = "*"
 mypy = "*"
 pylint = "*"
 pytest = "*"
 types-lxml = "*"
 types-markdown = "*"
 # LSP server stuff for IDEs
-pyls-isort = "*"
 pylsp-mypy = "*"
-python-lsp-black = "*"
 python-lsp-server = "*"
 
 [packages]

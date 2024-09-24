@@ -51,10 +51,16 @@ def hook_before_load_schema(  # pylint: disable=too-many-branches
     )
     require_properties(raw_schema, "HostOrServiceCondition", ["operator", "match_on"], "CMK-15035")
     require_properties(
-        raw_schema, "TagConditionScalarSchemaBase", ["key", "operator", "value"], "CMK-15035"
+        raw_schema,
+        "TagConditionScalarSchemaBase",
+        ["key", "operator", "value"],
+        "CMK-15035",
     )
     require_properties(
-        raw_schema, "TagConditionConditionSchemaBase", ["key", "operator", "value"], "CMK-15035"
+        raw_schema,
+        "TagConditionConditionSchemaBase",
+        ["key", "operator", "value"],
+        "CMK-15035",
     )
     require_properties(raw_schema, "LabelCondition", ["operator"], "CMK-15035")
     require_properties(raw_schema, "PreDefinedTimeRange", ["range"], "CMK-15166")
@@ -200,9 +206,9 @@ def hook_before_load_schema(  # pylint: disable=too-many-branches
             and schemas[schema_name]["additionalProperties"].get("type") == "string"
             and not schemas[schema_name]["additionalProperties"].get("pattern")
         ):
-            schemas[schema_name]["additionalProperties"][
-                "pattern"
-            ] = settings.default_string_pattern
+            schemas[schema_name]["additionalProperties"]["pattern"] = (
+                settings.default_string_pattern
+            )
 
     # PATH modifications
     # ignore some endpoints (via deprecating them) to avoid failures during parametrization
@@ -317,7 +323,12 @@ def hook_after_call(  # pylint: disable=too-many-branches
         valid_body=True,
         object_type="ruleset",
         update_items={
-            "value": {"href": "", "method": "GET", "rel": "", "type": "application/json"}
+            "value": {
+                "href": "",
+                "method": "GET",
+                "rel": "",
+                "type": "application/json",
+            }
         },
         ticket_id="CMK-TODO",
     )
@@ -330,7 +341,11 @@ def hook_after_call(  # pylint: disable=too-many-branches
         path="/domain-types/host_config/actions/wait-for-completion/invoke",
         status_code=404,
         body={"title": "No running renaming job was found", "status": 404},
-        set_body={"title": "No running renaming job was found", "status": 404, "detail": ""},
+        set_body={
+            "title": "No running renaming job was found",
+            "status": 404,
+            "detail": "",
+        },
         ticket_id="CMK-14273",
     )
 

@@ -193,7 +193,10 @@ def get_stats_per_site(only_sites: OnlySites) -> Iterator[dict[str, float]]:
         # Do not mark the site as dead in case the Event Console is not available.
         query = Query(
             "GET eventconsolestatus\nColumns: %s" % " ".join(stats_keys),
-            suppress_exceptions=(MKLivestatusTableNotFoundError, MKLivestatusBadGatewayError),
+            suppress_exceptions=(
+                MKLivestatusTableNotFoundError,
+                MKLivestatusBadGatewayError,
+            ),
         )
         for list_row in sites.live().query(query):
             yield dict(zip(stats_keys, list_row))

@@ -133,11 +133,15 @@ rstcli_states = {
 def check_rstcli(item, _no_params, parsed):
     if not (volume := parsed.get(item)):
         return
-    yield rstcli_states.get(volume["State"], 3), "RAID %s, %d disks (%s), state %s" % (
-        volume["Raid Level"],
-        int(volume["Num Disks"]),
-        volume["Size"],
-        volume["State"],
+    yield (
+        rstcli_states.get(volume["State"], 3),
+        "RAID %s, %d disks (%s), state %s"
+        % (
+            volume["Raid Level"],
+            int(volume["Num Disks"]),
+            volume["Size"],
+            volume["State"],
+        ),
     )
 
 

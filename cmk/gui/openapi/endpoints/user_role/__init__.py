@@ -39,8 +39,14 @@ from marshmallow import ValidationError
 from cmk.gui.fields.definitions import UserRoleID
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.endpoints.user_role.request_schemas import CreateUserRole, EditUserRole
-from cmk.gui.openapi.endpoints.user_role.response_schemas import UserRoleCollection, UserRoleObject
+from cmk.gui.openapi.endpoints.user_role.request_schemas import (
+    CreateUserRole,
+    EditUserRole,
+)
+from cmk.gui.openapi.endpoints.user_role.response_schemas import (
+    UserRoleCollection,
+    UserRoleObject,
+)
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject

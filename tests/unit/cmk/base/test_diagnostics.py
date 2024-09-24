@@ -382,7 +382,11 @@ def test_diagnostics_element_checkmk_overview() -> None:
     "host_list, host_tree, error",
     [
         ([], None, "No Checkmk server found"),
-        ([["checkmk-server-name"]], None, "No HW/SW inventory tree of 'checkmk-server-name' found"),
+        (
+            [["checkmk-server-name"]],
+            None,
+            "No HW/SW inventory tree of 'checkmk-server-name' found",
+        ),
         (
             [["checkmk-server-name"]],
             {
@@ -583,7 +587,11 @@ def test_diagnostics_element_checkmk_files_error(
             cmk.utils.paths.default_config_dir,
             "test.conf",
         ),
-        (diagnostics.CheckmkLogFilesDiagnosticsElement, cmk.utils.paths.log_dir, "test.log"),
+        (
+            diagnostics.CheckmkLogFilesDiagnosticsElement,
+            cmk.utils.paths.log_dir,
+            "test.log",
+        ),
     ],
     ids=["conf", "log"],
 )
@@ -637,7 +645,13 @@ def test_diagnostics_element_performance_graphs() -> None:
             b"",
             "Login failed - Invalid automation user or secret",
         ),
-        ([["checkmk-server-name"]], 200, "", b"", "Verification of PDF document header failed"),
+        (
+            [["checkmk-server-name"]],
+            200,
+            "",
+            b"",
+            "Verification of PDF document header failed",
+        ),
     ],
 )
 def test_diagnostics_element_performance_graphs_error(
@@ -660,7 +674,9 @@ def test_diagnostics_element_performance_graphs_error(
         content: str
 
     monkeypatch.setattr(
-        requests, "post", lambda *arg, **kwargs: FakeResponse(status_code, text, content)
+        requests,
+        "post",
+        lambda *arg, **kwargs: FakeResponse(status_code, text, content),
     )
 
     automation_dir = Path(cmk.utils.paths.var_dir) / "web" / "automation"
@@ -712,7 +728,9 @@ def test_diagnostics_element_performance_graphs_content(
         content: str
 
     monkeypatch.setattr(
-        requests, "post", lambda *arg, **kwargs: FakeResponse(status_code, text, content)
+        requests,
+        "post",
+        lambda *arg, **kwargs: FakeResponse(status_code, text, content),
     )
 
     automation_dir = Path(cmk.utils.paths.var_dir) / "web" / "automation"

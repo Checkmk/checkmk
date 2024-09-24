@@ -30,7 +30,11 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.type_defs import SessionInfo
-from cmk.gui.userdb.store import convert_session_info, load_custom_attr, save_custom_attr
+from cmk.gui.userdb.store import (
+    convert_session_info,
+    load_custom_attr,
+    save_custom_attr,
+)
 
 from ._two_factor import is_two_factor_login_enabled
 
@@ -143,7 +147,9 @@ def is_valid_user_session(
 
     if session_id not in session_infos or session_infos[session_id].logged_out:
         auth_logger.debug(
-            "%s session_id %s not valid (logged out or timed out?)", username, session_id
+            "%s session_id %s not valid (logged out or timed out?)",
+            username,
+            session_id,
         )
         return False
 

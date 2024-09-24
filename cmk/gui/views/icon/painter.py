@@ -20,9 +20,8 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.painter.v0.base import Cell, Painter
 from cmk.gui.painter.v0.helpers import replace_action_url_macros, transform_action_url
-from cmk.gui.type_defs import ColumnName
+from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.type_defs import Icon as IconSpec
-from cmk.gui.type_defs import Row
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.html import HTML
 from cmk.gui.view_utils import CellSpec, CSVExportError
@@ -134,7 +133,11 @@ def _paint_icons(
                     url = "javascript:void(0)"
 
                 output += html.render_icon_button(
-                    url, icon.title or "", icon.icon_name, onclick=onclick, target=target_frame
+                    url,
+                    icon.title or "",
+                    icon.icon_name,
+                    onclick=onclick,
+                    target=target_frame,
                 )
             else:
                 output += html.render_icon(icon.icon_name, icon.title)

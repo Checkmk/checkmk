@@ -202,7 +202,14 @@ def parse_brocade_fcport(string_table) -> Section | None:  # type: ignore[no-unt
         bbcredits = None
         if if64_info:
             fcmgmt_portstats = []
-            for oidend, tx_objects, rx_objects, tx_elements, rx_elements, bbcredits_64 in if64_info:
+            for (
+                oidend,
+                tx_objects,
+                rx_objects,
+                tx_elements,
+                rx_elements,
+                bbcredits_64,
+            ) in if64_info:
                 if index == str(oidend).rsplit(".", 1)[-1]:
                     fcmgmt_portstats = [
                         _to_int(tx_objects),
@@ -448,7 +455,12 @@ def _check_brocade_fcport(  # pylint: disable=too-many-branches
     for what, value in [("In", in_bytes), ("Out", out_bytes)]:
         output.append(f"{what}: {render.iobandwidth(value)}")
         perfdata.append(
-            Metric(what.lower(), value, levels=(warn_bytes, crit_bytes), boundaries=(0, wirespeed))
+            Metric(
+                what.lower(),
+                value,
+                levels=(warn_bytes, crit_bytes),
+                boundaries=(0, wirespeed),
+            )
         )
         # average turned on: use averaged traffic values instead of current ones
         if average:

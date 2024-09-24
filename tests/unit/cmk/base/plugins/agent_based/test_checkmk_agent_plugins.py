@@ -42,7 +42,10 @@ class File:
         return TableRow(
             path=["software", "applications", "checkmk-agent", str(self.kind)],
             key_columns={"name": self.name},
-            inventory_columns={"version": self.version, "cache_interval": self.cache_interval},
+            inventory_columns={
+                "version": self.version,
+                "cache_interval": self.cache_interval,
+            },
         )
 
 
@@ -60,7 +63,12 @@ def _win_file_list() -> list[File]:
 
 def _lin_file_list() -> list[File]:
     return [
-        File(name="mk_filestats.py", version="2.1.0i1", cache_interval=None, kind=_FileKind.plugin),
+        File(
+            name="mk_filestats.py",
+            version="2.1.0i1",
+            cache_interval=None,
+            kind=_FileKind.plugin,
+        ),
         File(name="zorp", version="2.1.0i1", cache_interval=123, kind=_FileKind.plugin),
         File(
             name="sync_local_check.sh",

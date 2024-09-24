@@ -39,17 +39,20 @@ def inventory_ddn_s2a_errors(parsed):
         #       for the IB ports at this time, we only implement logic for what
         #       we can test.
         if port_type == "FC":
-            yield "%d" % (nr + 1), {
-                "link_failure_errs": value_to_levels(parsed["link_failure_errs"][nr]),
-                "lost_sync_errs": value_to_levels(parsed["lost_sync_errs"][nr]),
-                "loss_of_signal_errs": value_to_levels(parsed["loss_of_signal_errs"][nr]),
-                "prim_seq_errs": value_to_levels(parsed["prim_seq_errs"][nr]),
-                "crc_errs": value_to_levels(parsed["crc_errs"][nr]),
-                "receive_errs": value_to_levels(parsed["receive_errs"][nr]),
-                "ctio_timeouts": value_to_levels(parsed["ctio_timeouts"][nr]),
-                "ctio_xmit_errs": value_to_levels(parsed["ctio_xmit_errs"][nr]),
-                "ctio_other_errs": value_to_levels(parsed["ctio_other_errs"][nr]),
-            }
+            yield (
+                "%d" % (nr + 1),
+                {
+                    "link_failure_errs": value_to_levels(parsed["link_failure_errs"][nr]),
+                    "lost_sync_errs": value_to_levels(parsed["lost_sync_errs"][nr]),
+                    "loss_of_signal_errs": value_to_levels(parsed["loss_of_signal_errs"][nr]),
+                    "prim_seq_errs": value_to_levels(parsed["prim_seq_errs"][nr]),
+                    "crc_errs": value_to_levels(parsed["crc_errs"][nr]),
+                    "receive_errs": value_to_levels(parsed["receive_errs"][nr]),
+                    "ctio_timeouts": value_to_levels(parsed["ctio_timeouts"][nr]),
+                    "ctio_xmit_errs": value_to_levels(parsed["ctio_xmit_errs"][nr]),
+                    "ctio_other_errs": value_to_levels(parsed["ctio_other_errs"][nr]),
+                },
+            )
 
 
 def check_ddn_s2a_errors(item, params, parsed):

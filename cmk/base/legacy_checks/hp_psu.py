@@ -90,7 +90,8 @@ check_info["hp_psu"] = LegacyCheckDefinition(
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "hp"),
         any_of(
-            contains(".1.3.6.1.2.1.1.1.0", "5406rzl2"), contains(".1.3.6.1.2.1.1.1.0", "5412rzl2")
+            contains(".1.3.6.1.2.1.1.1.0", "5406rzl2"),
+            contains(".1.3.6.1.2.1.1.1.0", "5412rzl2"),
         ),
     ),
     fetch=SNMPTree(

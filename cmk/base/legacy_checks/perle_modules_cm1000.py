@@ -18,7 +18,7 @@ def parse_perle_modules(string_table: StringTable) -> StringTable:
 
 
 def inventory_perle_cm_modules(info):
-    yield from ((index, {}) for _name, _led, index, *_rest, in info)
+    yield from ((index, {}) for _name, _led, index, *_rest in info)
 
 
 MAP_SPEED: Mapping[str, str] = {

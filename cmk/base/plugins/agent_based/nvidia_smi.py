@@ -189,7 +189,8 @@ def parse_nvidia_smi(string_table: StringTable) -> Section:
                         gpu.find(f"{ power_readings_element }/default_power_limit"), "W"
                     ),
                     enforced_power_limit=get_float_from_element(
-                        gpu.find(f"{ power_readings_element }/enforced_power_limit"), "W"
+                        gpu.find(f"{ power_readings_element }/enforced_power_limit"),
+                        "W",
                     ),
                     min_power_limit=get_float_from_element(
                         gpu.find(f"{ power_readings_element }/min_power_limit"), "W"

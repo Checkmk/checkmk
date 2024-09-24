@@ -6,7 +6,7 @@
 from collections.abc import Callable
 from typing import Any
 
-from cmk.utils.version import edition, Edition
+from cmk.utils.version import Edition, edition
 
 import cmk.gui.watolib.config_domain_name as config_domain_name
 from cmk.gui.global_config import get_global_config, GlobalConfig
@@ -19,7 +19,9 @@ from cmk.gui.watolib.config_domain_name import (
 
 
 def load_configuration_settings(
-    site_specific: bool = False, custom_site_path: str | None = None, full_config: bool = False
+    site_specific: bool = False,
+    custom_site_path: str | None = None,
+    full_config: bool = False,
 ) -> GlobalSettings:
     settings = {}
     for domain in ABCConfigDomain.enabled_domains():

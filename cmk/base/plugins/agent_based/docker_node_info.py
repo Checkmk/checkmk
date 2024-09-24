@@ -8,7 +8,11 @@ from itertools import zip_longest
 from cmk.plugins.lib import docker
 
 from .agent_based_api.v1 import Attributes, HostLabel, register, TableRow
-from .agent_based_api.v1.type_defs import HostLabelGenerator, InventoryResult, StringTable
+from .agent_based_api.v1.type_defs import (
+    HostLabelGenerator,
+    InventoryResult,
+    StringTable,
+)
 
 
 def parse_docker_node_info(string_table: StringTable) -> docker.NodeInfoSection:
@@ -64,7 +68,10 @@ def inventory_docker_node_info(section: docker.NodeInfoSection) -> InventoryResu
 
     inventory_attributes = {
         ikey: section[skey]
-        for ikey, skey in [("version", "ServerVersion"), ("registry", "IndexServerAddress")]
+        for ikey, skey in [
+            ("version", "ServerVersion"),
+            ("registry", "IndexServerAddress"),
+        ]
         if skey in section
     }
     if swarm_data:
@@ -72,7 +79,10 @@ def inventory_docker_node_info(section: docker.NodeInfoSection) -> InventoryResu
         inventory_attributes.update(
             {
                 ikey: swarm_data[skey]
-                for ikey, skey in [("swarm_state", "LocalNodeState"), ("swarm_node_id", "NodeID")]
+                for ikey, skey in [
+                    ("swarm_state", "LocalNodeState"),
+                    ("swarm_node_id", "NodeID"),
+                ]
                 if skey in swarm_data
             }
         )

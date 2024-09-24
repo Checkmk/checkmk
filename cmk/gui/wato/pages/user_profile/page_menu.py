@@ -9,7 +9,12 @@ import cmk.utils.version as cmk_version
 
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.page_menu import make_simple_link, PageMenuDropdown, PageMenuEntry, PageMenuTopic
+from cmk.gui.page_menu import (
+    make_simple_link,
+    PageMenuDropdown,
+    PageMenuEntry,
+    PageMenuTopic,
+)
 
 
 def page_menu_dropdown_user_related(

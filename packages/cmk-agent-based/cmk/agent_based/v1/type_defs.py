@@ -25,6 +25,7 @@ Example:
     ...     pass
 
 """
+
 from collections.abc import Generator as _Generator
 from collections.abc import Iterable as _Iterable
 from typing import List as _List

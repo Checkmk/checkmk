@@ -5,7 +5,10 @@
 
 from cmk.gui.config import builtin_role_ids
 from cmk.gui.fields.utils import BaseSchema
-from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, DomainObjectCollection
+from cmk.gui.openapi.restful_objects.response_schemas import (
+    DomainObject,
+    DomainObjectCollection,
+)
 
 from cmk import fields
 

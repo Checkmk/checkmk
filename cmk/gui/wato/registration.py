@@ -46,7 +46,9 @@ from . import (
     pages,
 )
 from ._notification_parameter import NotificationParameterRegistry
-from ._notification_parameter import registration as _notification_parameter_registration
+from ._notification_parameter import (
+    registration as _notification_parameter_registration,
+)
 from ._virtual_host_tree import VirtualHostTree
 from .icons import DownloadAgentOutputIcon, DownloadSnmpWalkIcon, WatoIcon
 from .pages._rule_conditions import PageAjaxDictHostTagConditionGetChoice

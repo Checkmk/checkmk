@@ -165,7 +165,10 @@ def check_f5_bigip_vserver(item, params, parsed):
 
     enabled_state = int(data["enabled"] not in MAP_ENABLED)
     enabled_txt = MAP_ENABLED.get(data["enabled"], "in unknown state")
-    yield enabled_state, "Virtual Server with IP {} is {}".format(data["ip_address"], enabled_txt)
+    yield (
+        enabled_state,
+        "Virtual Server with IP {} is {}".format(data["ip_address"], enabled_txt),
+    )
 
     state_map = params.get("state", {})
     state, state_readable = MAP_SERVER_STATUS.get(

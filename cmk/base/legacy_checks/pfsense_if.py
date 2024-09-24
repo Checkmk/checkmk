@@ -9,7 +9,11 @@ from typing import Any
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_average, get_rate, get_value_store
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_average,
+    get_rate,
+    get_value_store,
+)
 
 from cmk.agent_based.v2 import contains, SNMPTree
 
@@ -49,7 +53,11 @@ def check_firewall_if(item, params, section):
         if params.get("averaging"):
             backlog_minutes = params["averaging"]
             avgrate = get_average(
-                value_store, f"firewall_if-{what}.{item}", this_time, rate, backlog_minutes
+                value_store,
+                f"firewall_if-{what}.{item}",
+                this_time,
+                rate,
+                backlog_minutes,
             )
             check_against = avgrate
         else:

@@ -25,7 +25,9 @@ class FortigateCluster(NamedTuple):
 FortigateClusterSection = Sequence[FortigateCluster]
 
 
-def parse_fortigate_sync_status(string_table: list[StringTable]) -> FortigateClusterSection:
+def parse_fortigate_sync_status(
+    string_table: list[StringTable],
+) -> FortigateClusterSection:
     if not string_table:
         return []
 
@@ -59,7 +61,10 @@ def discover_fortigate_sync_status(section: FortigateClusterSection) -> Discover
 def check_fortigate_sync_status(
     section: FortigateClusterSection,
 ) -> CheckResult:
-    map_statuses = {"0": (State.CRIT, "unsynchronized"), "1": (State.OK, "synchronized")}
+    map_statuses = {
+        "0": (State.CRIT, "unsynchronized"),
+        "1": (State.OK, "synchronized"),
+    }
 
     if not section:
         return

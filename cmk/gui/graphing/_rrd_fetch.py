@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Core for getting the actual raw data points via Livestatus from RRD"""
 
-
 import collections
 import contextlib
 import time
@@ -307,6 +306,8 @@ def translate_and_merge_rrd_columns(
     )
 
 
-def _retrieve_unit_conversion_function(metric_name: MetricName) -> Callable[[float], float]:
+def _retrieve_unit_conversion_function(
+    metric_name: MetricName,
+) -> Callable[[float], float]:
     mie = get_extended_metric_info(metric_name)
     return mie["unit"].get("conversion", lambda v: v)

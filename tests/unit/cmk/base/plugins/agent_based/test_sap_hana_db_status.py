@@ -15,7 +15,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
     State,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    StringTable,
+)
 
 
 @pytest.mark.parametrize(
@@ -82,7 +85,12 @@ def test_inventory_sap_hana_db_status(
                 ["[[HXE 98]]"],
                 ["DB status failed: * -10104: Invalid value for KEY"],
             ],
-            [Result(state=State.CRIT, summary="DB status failed: * -10104: Invalid value for KEY")],
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="DB status failed: * -10104: Invalid value for KEY",
+                )
+            ],
             id="db status error",
         ),
     ],

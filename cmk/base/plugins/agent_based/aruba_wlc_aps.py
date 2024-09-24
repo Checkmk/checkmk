@@ -8,7 +8,12 @@ from typing import NamedTuple
 from cmk.plugins.lib.aruba import DETECT_WLC
 
 from .agent_based_api.v1 import register, Result, Service, SNMPTree, State, TableRow
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
+from .agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    InventoryResult,
+    StringTable,
+)
 
 
 class WLCAp(NamedTuple):

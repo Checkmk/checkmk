@@ -8,7 +8,14 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Alternative, Dictionary, Filesize, Percentage, TextInput, Tuple
+from cmk.gui.valuespec import (
+    Alternative,
+    Dictionary,
+    Filesize,
+    Percentage,
+    TextInput,
+    Tuple,
+)
 
 
 def _item_spec_prism_container():
@@ -37,8 +44,14 @@ def _parameter_valuespec_prism_container():
                         Tuple(
                             title=_("Specify levels in absolute usage"),
                             elements=[
-                                Filesize(title=_("Warning at"), default_value=1000 * 1024 * 1024),
-                                Filesize(title=_("Critical at"), default_value=5000 * 1024 * 1024),
+                                Filesize(
+                                    title=_("Warning at"),
+                                    default_value=1000 * 1024 * 1024,
+                                ),
+                                Filesize(
+                                    title=_("Critical at"),
+                                    default_value=5000 * 1024 * 1024,
+                                ),
                             ],
                         ),
                     ],

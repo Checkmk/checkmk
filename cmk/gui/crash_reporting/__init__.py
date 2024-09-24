@@ -8,7 +8,10 @@ from cmk.gui.pages import PageRegistry
 from cmk.gui.painter.v0.base import PainterRegistry
 from cmk.gui.views.command import CommandRegistry
 from cmk.gui.views.sorter import SorterRegistry
-from cmk.gui.watolib.config_domain_name import ConfigVariableGroupRegistry, ConfigVariableRegistry
+from cmk.gui.watolib.config_domain_name import (
+    ConfigVariableGroupRegistry,
+    ConfigVariableRegistry,
+)
 
 from . import pages
 from ._settings import (

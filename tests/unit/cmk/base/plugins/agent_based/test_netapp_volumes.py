@@ -7,11 +7,21 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.netapp_volumes import check, discover, parse_netapp_volumes
+from cmk.base.plugins.agent_based.netapp_volumes import (
+    check,
+    discover,
+    parse_netapp_volumes,
+)
 
 STRING_TABLE_FILER_NETAPP_8_1_1 = [
     ["vol0", "23465813", "1", "online", "raid_dp, 64-bit, rlw_on"],
-    ["lun_29Aug2012_162910_vol", "1885979353", "1", "offline", "raid_dp, 64-bit, rlw_on"],
+    [
+        "lun_29Aug2012_162910_vol",
+        "1885979353",
+        "1",
+        "offline",
+        "raid_dp, 64-bit, rlw_on",
+    ],
     ["a2_esx_zit_g7_00", "1597710601", "1", "online", ""],
     ["a2_lika_vol0", "102390877", "1", "online", "raid_dp, 64-bit, rlw_on"],
     ["a2_nfs_lika_ans", "614473649", "1", "online", "raid_dp, 64-bit, rlw_on"],

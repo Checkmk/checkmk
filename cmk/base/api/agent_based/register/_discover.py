@@ -17,7 +17,12 @@ from cmk.agent_based.v2 import (
     SimpleSNMPSection,
     SNMPSection,
 )
-from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup, PluginLocation
+from cmk.discover_plugins import (
+    discover_plugins,
+    DiscoveredPlugins,
+    PluginGroup,
+    PluginLocation,
+)
 
 from ._config import (
     add_check_plugin,

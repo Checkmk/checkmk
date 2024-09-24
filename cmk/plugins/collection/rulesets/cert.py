@@ -126,7 +126,8 @@ def _valuespec_specific_values() -> Dictionary:
                         ),
                         "org_unit": DictElement[str](
                             parameter_form=String(
-                                title=Title("Organizational unit (OU)"), macro_support=True
+                                title=Title("Organizational unit (OU)"),
+                                macro_support=True,
                             )
                         ),
                         "state": DictElement[str](
@@ -161,7 +162,8 @@ def _valuespec_specific_values() -> Dictionary:
                         ),
                         "org_unit": DictElement[str](
                             parameter_form=String(
-                                title=Title("Organizational unit (OU)"), macro_support=True
+                                title=Title("Organizational unit (OU)"),
+                                macro_support=True,
                             )
                         ),
                         "pubkey_algorithm": DictElement(
@@ -449,7 +451,6 @@ SIGNATURE_CHOICES = {
 
 
 def migrate_from_old_signature_keys(value: object) -> tuple[str, object]:
-
     keys_old_reference = {
         "rsa": {
             "sha224": "RSA_WITH_SHA224",

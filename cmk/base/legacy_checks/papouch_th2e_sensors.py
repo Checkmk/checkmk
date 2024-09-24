@@ -105,7 +105,8 @@ def check_papouch_th2e_sensors(item, params, parsed):
 
 check_info["papouch_th2e_sensors"] = LegacyCheckDefinition(
     detect=all_of(
-        contains(".1.3.6.1.2.1.1.1.0", "th2e"), startswith(".1.3.6.1.2.1.1.2.0", ".0.10.43.6.1.4.1")
+        contains(".1.3.6.1.2.1.1.1.0", "th2e"),
+        startswith(".1.3.6.1.2.1.1.2.0", ".0.10.43.6.1.4.1"),
     ),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.18248.20.1.2.1.1",

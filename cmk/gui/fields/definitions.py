@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """A few upgraded Fields which handle some OpenAPI validation internally."""
+
 import ast
 import json
 import logging
@@ -36,7 +37,12 @@ from cmk.gui.config import builtin_role_ids
 from cmk.gui.customer import customer_api, SCOPE_GLOBAL
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields.base import BaseSchema, MultiNested, ValueTypedDictSchema
-from cmk.gui.fields.utils import attr_openapi_schema, ObjectContext, ObjectType, tree_to_expr
+from cmk.gui.fields.utils import (
+    attr_openapi_schema,
+    ObjectContext,
+    ObjectType,
+    tree_to_expr,
+)
 from cmk.gui.groups import GroupName, GroupType, load_group_information
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
@@ -235,7 +241,9 @@ class BinaryExprSchema(BaseSchema):
 
     op = base.String(description="The operator.")
     left = base.String(
-        description="The LiveStatus column name.", pattern=r"^([a-z]+\.)?[_a-z]+$", example="name"
+        description="The LiveStatus column name.",
+        pattern=r"^([a-z]+\.)?[_a-z]+$",
+        example="name",
     )
     right = base.String(
         description="The value to compare the column to."

@@ -64,7 +64,10 @@ def register(
     painters.register(painter_option_registry, painter_registry)
     register_sorters(sorter_registry)
     command.register(
-        command_group_registry, command_registry, permission_section_registry, permission_registry
+        command_group_registry,
+        command_registry,
+        permission_section_registry,
+        permission_registry,
     )
     register_data_sources(data_source_registry)
     perfometer.register(sorter_registry, painter_registry)

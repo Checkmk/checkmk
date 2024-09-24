@@ -90,9 +90,12 @@ def check_cisco_vss(item, params, info):
             state = 0
         else:
             state = 2
-        yield state, "core switch {}: VSL {}".format(
-            core_switch_id,
-            cisco_vss_operstatus_names[operstatus],
+        yield (
+            state,
+            "core switch {}: VSL {}".format(
+                core_switch_id,
+                cisco_vss_operstatus_names[operstatus],
+            ),
         )
 
         if conf_portcount == op_portcount:

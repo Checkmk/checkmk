@@ -37,14 +37,24 @@ from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
-from cmk.gui.valuespec import Dictionary, DropdownChoice, FixedValue, Float
+from cmk.gui.valuespec import (
+    Dictionary,
+    DropdownChoice,
+    FixedValue,
+    Float,
+    Integer,
+    Password,
+)
 from cmk.gui.valuespec import HostAddress as VSHostAddress
-from cmk.gui.valuespec import Integer, Password
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.attributes import SNMPCredentials as VSSNMPCredentials
 from cmk.gui.watolib.check_mk_automations import diag_host
 from cmk.gui.watolib.host_attributes import HostAttributes
-from cmk.gui.watolib.hosts_and_folders import folder_from_request, folder_preserving_link, Host
+from cmk.gui.watolib.hosts_and_folders import (
+    folder_from_request,
+    folder_preserving_link,
+    Host,
+)
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 
 SNMPv3NoAuthNoPriv = tuple[str, str]
@@ -292,7 +302,10 @@ class ModeDiagHost(WatoMode):
             html.icon("reload", id_="%s_img" % ident)
             html.open_a(href="")
             html.icon(
-                "reload", title=_("Retry this test"), cssclass="retry", id_="%s_retry" % ident
+                "reload",
+                title=_("Retry this test"),
+                cssclass="retry",
+                id_="%s_retry" % ident,
             )
             html.close_a()
             html.close_div()
@@ -379,7 +392,10 @@ class ModeDiagHost(WatoMode):
                         size=2,  # SNMP-Timeout
                         title=_('TCP connection timeout (<a href="%s">Rules</a>)')
                         % folder_preserving_link(
-                            [("mode", "edit_ruleset"), ("varname", "tcp_connect_timeouts")]
+                            [
+                                ("mode", "edit_ruleset"),
+                                ("varname", "tcp_connect_timeouts"),
+                            ]
                         ),
                         help=_(
                             "This variable allows to specify a timeout for the "

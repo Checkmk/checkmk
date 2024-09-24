@@ -142,7 +142,16 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
     ],
     "ibmsvc": ["HOSTNAME"],
     "jenkins": ["HOSTNAME"],
-    "jira": ["-P", "PROTOCOL", "-u", "USER", "-s", "PASSWORD", "--hostname", "HOSTNAME"],
+    "jira": [
+        "-P",
+        "PROTOCOL",
+        "-u",
+        "USER",
+        "-s",
+        "PASSWORD",
+        "--hostname",
+        "HOSTNAME",
+    ],
     "kube": [
         "--cluster",
         "CLUSTER",
@@ -180,7 +189,14 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
         "Hostname",
     ],
     "netapp": ["address", "user", "password"],
-    "netapp_ontap": ["--hostname", "HOSTNAME", "--username", "USERNAME", "--password", "PASSWORD"],
+    "netapp_ontap": [
+        "--hostname",
+        "HOSTNAME",
+        "--username",
+        "USERNAME",
+        "--password",
+        "PASSWORD",
+    ],
     "activemq": ["server", "1234"],
     "datadog": [
         "HOSTNAME",

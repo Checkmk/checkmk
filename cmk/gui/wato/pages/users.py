@@ -29,7 +29,13 @@ from cmk.gui.groups import load_contact_group_information
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import ExperimentalRenderMode, get_render_mode, html
 from cmk.gui.http import request
-from cmk.gui.i18n import _, _u, get_language_alias, get_languages, is_community_translation
+from cmk.gui.i18n import (
+    _,
+    _u,
+    get_language_alias,
+    get_languages,
+    is_community_translation,
+)
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
@@ -44,7 +50,13 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.table import show_row_count, table_element
-from cmk.gui.type_defs import ActionResult, Choices, PermissionName, UserObject, UserSpec
+from cmk.gui.type_defs import (
+    ActionResult,
+    Choices,
+    PermissionName,
+    UserObject,
+    UserSpec,
+)
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.userdb import (
     active_connections,
@@ -83,10 +95,22 @@ from cmk.gui.validation.visitors.vue_table import (
     build_text,
     render_vue_table,
 )
-from cmk.gui.valuespec import Alternative, DualListChoice, EmailAddress, FixedValue, UserID
+from cmk.gui.valuespec import (
+    Alternative,
+    DualListChoice,
+    EmailAddress,
+    FixedValue,
+    UserID,
+)
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
-from cmk.gui.watolib.mode import mode_registry, mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.mode import (
+    mode_registry,
+    mode_url,
+    ModeRegistry,
+    redirect,
+    WatoMode,
+)
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.users import (
     delete_users,
@@ -308,7 +332,8 @@ class ModeUsers(WatoMode):
                     )
                 except background_job.BackgroundJobAlreadyRunning as e:
                     raise MKUserError(
-                        None, _("Another synchronization job is already running: %s") % e
+                        None,
+                        _("Another synchronization job is already running: %s") % e,
                     )
 
                 self._job_snapshot = job.get_status_snapshot()
@@ -614,7 +639,11 @@ class ModeUsers(WatoMode):
                 add_header(_u(vs_title) if isinstance(vs_title, str) else vs_title)
                 cells.append(build_table_cell(content=[build_text(custom_text)]))
             vue_rows.append(
-                build_row(key=uid, columns=cells, classes=["data", "even0" if odd_even else "odd0"])
+                build_row(
+                    key=uid,
+                    columns=cells,
+                    classes=["data", "even0" if odd_even else "odd0"],
+                )
             )
             odd_even = not odd_even
 
@@ -733,7 +762,8 @@ class ModeUsers(WatoMode):
                 # Connection
                 if connection:
                     table.cell(
-                        _("Connection"), f"{connection.short_title()} ({user_connection_id})"
+                        _("Connection"),
+                        f"{connection.short_title()} ({user_connection_id})",
                     )
                     locked_attributes = userdb.locked_attributes(user_connection_id)
                 else:
@@ -1419,7 +1449,10 @@ class ModeEditUser(WatoMode):
 
         if "password" in options_to_render:
             html.radiobutton(
-                "authmethod", "password", not is_automation, _("Normal user login with password")
+                "authmethod",
+                "password",
+                not is_automation,
+                _("Normal user login with password"),
             )
             html.open_ul()
             html.open_table()
@@ -1470,7 +1503,10 @@ class ModeEditUser(WatoMode):
 
         if "automation" in options_to_render:
             html.radiobutton(
-                "authmethod", "secret", is_automation, _("Automation secret for machine accounts")
+                "authmethod",
+                "secret",
+                is_automation,
+                _("Automation secret for machine accounts"),
             )
             html.open_ul()
             html.password_input(

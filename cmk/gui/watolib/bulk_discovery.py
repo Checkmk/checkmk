@@ -17,7 +17,11 @@ from cmk.automations.results import ServiceDiscoveryResult as AutomationDiscover
 
 from cmk.checkengine.discovery import DiscoveryResult, DiscoverySettings
 
-from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
+from cmk.gui.background_job import (
+    BackgroundJob,
+    BackgroundProcessInterface,
+    InitialStatusArgs,
+)
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -34,7 +38,11 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.watolib.changes import add_service_change
 from cmk.gui.watolib.check_mk_automations import discovery
-from cmk.gui.watolib.hosts_and_folders import disk_or_search_folder_from_request, folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import (
+    disk_or_search_folder_from_request,
+    folder_tree,
+    Host,
+)
 
 DoFullScan = NewType("DoFullScan", bool)
 
@@ -62,9 +70,13 @@ def vs_bulk_discovery(render_form: bool = False, include_subfolders: bool = True
 
     selection_elements += [
         Checkbox(
-            label=_("Only include hosts that failed on previous discovery"), default_value=False
+            label=_("Only include hosts that failed on previous discovery"),
+            default_value=False,
         ),
-        Checkbox(label=_("Only include hosts with a failed discovery check"), default_value=False),
+        Checkbox(
+            label=_("Only include hosts with a failed discovery check"),
+            default_value=False,
+        ),
         Checkbox(label=_("Exclude hosts where the agent is unreachable"), default_value=False),
     ]
 
@@ -138,7 +150,10 @@ def vs_bulk_discovery(render_form: bool = False, include_subfolders: bool = True
                     title=_("Performance options"),
                     elements=[
                         Checkbox(label=_("Do a full service scan"), default_value=True),
-                        Integer(label=_("Number of hosts to handle at once"), default_value=10),
+                        Integer(
+                            label=_("Number of hosts to handle at once"),
+                            default_value=10,
+                        ),
                     ],
                 ),
             ),
@@ -156,7 +171,7 @@ def vs_bulk_discovery(render_form: bool = False, include_subfolders: bool = True
 
 
 def _migrate_automatic_rediscover_parameters(
-    param: str | tuple[str, dict[str, bool]]
+    param: str | tuple[str, dict[str, bool]],
 ) -> tuple[str, dict[str, bool]]:
     # already migrated
     if isinstance(param, tuple):

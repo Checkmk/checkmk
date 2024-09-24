@@ -8,7 +8,10 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
-from cmk.base.plugins.agent_based.graylog_events import check_graylog_events, parse_graylog_events
+from cmk.base.plugins.agent_based.graylog_events import (
+    check_graylog_events,
+    parse_graylog_events,
+)
 
 from cmk.agent_based.v1.type_defs import StringTable
 
@@ -22,7 +25,12 @@ from cmk.agent_based.v1.type_defs import StringTable
                     '{"events": {"num_of_events": 3, "has_since_argument": false, "events_since": null, "num_of_events_in_range": 0}}'
                 ]
             ],
-            [Result(state=State.OK, summary="Total number of events in the last 24 hours: 3")],
+            [
+                Result(
+                    state=State.OK,
+                    summary="Total number of events in the last 24 hours: 3",
+                )
+            ],
             id="Timeframe for 'events_since' not configured.",
         ),
         pytest.param(
@@ -32,7 +40,10 @@ from cmk.agent_based.v1.type_defs import StringTable
                 ]
             ],
             [
-                Result(state=State.OK, summary="Total number of events in the last 24 hours: 5"),
+                Result(
+                    state=State.OK,
+                    summary="Total number of events in the last 24 hours: 5",
+                ),
                 Result(
                     state=State.OK,
                     summary="Total number of events in the last 30 minutes 0 seconds: 2",

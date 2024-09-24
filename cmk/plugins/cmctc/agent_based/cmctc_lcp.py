@@ -19,7 +19,11 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.cmctc import cmctc_translate_status, cmctc_translate_status_text, DETECT_CMCTC
+from cmk.plugins.lib.cmctc import (
+    cmctc_translate_status,
+    cmctc_translate_status_text,
+    DETECT_CMCTC,
+)
 from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
 Params: TypeAlias = Any
@@ -99,7 +103,9 @@ _TREES = [
 ]
 
 
-def _parse_cmctc_lcp(string_table: Sequence[StringTable]) -> Iterable[tuple[str, Sensor]]:
+def _parse_cmctc_lcp(
+    string_table: Sequence[StringTable],
+) -> Iterable[tuple[str, Sensor]]:
     for tree, block in zip(_TREES, string_table):
         for index, typeid, status, reading, high, low, warn, description in block:
             if sensor_spec := _CMCTC_LCP_SENSORS.get(typeid):

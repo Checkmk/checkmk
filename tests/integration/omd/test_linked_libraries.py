@@ -36,7 +36,18 @@ def _run_find_dynamically_linked(site: Site, path: Path) -> frozenset[Path]:
 
     # Implemented with as much find magic as I could muster because os.walk is _much_ slower.
     find_result = site.check_output(
-        ["find", "-L", str(path), "-type", "f", "-executable", "-exec", "file", "{}", ";"]
+        [
+            "find",
+            "-L",
+            str(path),
+            "-type",
+            "f",
+            "-executable",
+            "-exec",
+            "file",
+            "{}",
+            ";",
+        ]
     ).splitlines()
 
     return frozenset(

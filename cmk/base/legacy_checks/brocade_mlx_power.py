@@ -48,7 +48,10 @@ def check_brocade_mlx_power(item, _no_params, parsed):
             elif powersupply_data["state"] == "1":
                 yield 3, "Power supply reports state: other"
             else:
-                yield 3, "Power supply reports an unhandled state (%s)" % powersupply_data["state"]
+                yield (
+                    3,
+                    "Power supply reports an unhandled state (%s)" % powersupply_data["state"],
+                )
 
 
 check_info["brocade_mlx_power"] = LegacyCheckDefinition(

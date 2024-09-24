@@ -175,7 +175,10 @@ def build_docker_image_name_and_registry(
     for edition in loaded_yaml["editions"]:
         registry = edition_to_registry(edition, registries)
         yield (
-            DockerImage(tag=args.version, image_name=f"{build_folder(edition)}check-mk-{edition}"),
+            DockerImage(
+                tag=args.version,
+                image_name=f"{build_folder(edition)}check-mk-{edition}",
+            ),
             edition,
             registry,
         )

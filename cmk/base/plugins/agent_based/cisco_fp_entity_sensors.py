@@ -57,7 +57,9 @@ from cmk.plugins.lib import entity_sensors as utils
 from cmk.plugins.lib.entity_sensors import EntitySensorSection, OIDSysDescr
 
 
-def parse_cisco_fp_entity_sensors(string_table: list[StringTable]) -> EntitySensorSection:
+def parse_cisco_fp_entity_sensors(
+    string_table: list[StringTable],
+) -> EntitySensorSection:
     # do not add undefined and temperature (duplicate with cisco_temperature) sensors
     return utils.parse_entity_sensors(
         string_table,

@@ -33,7 +33,11 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.process import pid_from_file, send_signal
 
 import cmk.gui.watolib.config_domain_name as config_domain_name
-from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
+from cmk.gui.background_job import (
+    BackgroundJob,
+    BackgroundProcessInterface,
+    InitialStatusArgs,
+)
 from cmk.gui.config import active_config, get_default_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, get_language_alias, is_community_translation
@@ -225,7 +229,10 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
         self.activate()
 
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
-        log_audit("liveproxyd-activate", "Activating changes of Livestatus Proxy configuration")
+        log_audit(
+            "liveproxyd-activate",
+            "Activating changes of Livestatus Proxy configuration",
+        )
 
         try:
             pidfile = Path(cmk.utils.paths.livestatus_unix_socket).with_name("liveproxyd.pid")
@@ -704,7 +711,9 @@ class OMDConfigChangeBackgroundJob(BackgroundJob):
         )
 
     def do_execute(
-        self, config_change_commands: list[str], job_interface: BackgroundProcessInterface
+        self,
+        config_change_commands: list[str],
+        job_interface: BackgroundProcessInterface,
     ) -> None:
         _do_config_change(config_change_commands, self._logger)
         job_interface.send_result_message(_("OMD config changes have been applied."))

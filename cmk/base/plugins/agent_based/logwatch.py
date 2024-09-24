@@ -26,11 +26,21 @@ from typing import Any, IO, Literal
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
 
-from cmk.base.plugin_contexts import host_name  # pylint: disable=cmk-module-layer-violation
+from cmk.base.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
+    host_name,
+)
 
 from cmk.plugins.lib import eval_regex
 
-from .agent_based_api.v1 import get_value_store, regex, register, render, Result, Service, State
+from .agent_based_api.v1 import (
+    get_value_store,
+    regex,
+    register,
+    render,
+    Result,
+    Service,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils import logwatch
 
@@ -44,7 +54,9 @@ DiscoveredGroupParams = Mapping[Literal["group_patterns"], Iterable[GroupingPatt
 _LOGWATCH_MAX_FILESIZE = 500000  # do not save more than 500k of messages
 
 
-def _get_discovery_groups(params: AllParams) -> Sequence[list[tuple[str, GroupingPattern]]]:
+def _get_discovery_groups(
+    params: AllParams,
+) -> Sequence[list[tuple[str, GroupingPattern]]]:
     return [p["grouping_patterns"] for p in params if "grouping_patterns" in p]
 
 

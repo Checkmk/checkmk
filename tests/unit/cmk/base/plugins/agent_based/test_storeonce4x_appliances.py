@@ -7,7 +7,12 @@ import pytest
 
 from tests.testlib import on_time
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.storeonce4x_appliances import (
     check_storeonce4x_appliances,
     check_storeonce4x_appliances_license,
@@ -70,7 +75,10 @@ def test_check_storage(monkeypatch: pytest.MonkeyPatch, section: Section) -> Non
             ),
             Metric("fs_free", 246748242.40234375, boundaries=(0, None)),
             Metric(
-                "fs_used_percent", 28.034681725872236, levels=(80.0, 90.0), boundaries=(0.0, 100.0)
+                "fs_used_percent",
+                28.034681725872236,
+                levels=(80.0, 90.0),
+                boundaries=(0.0, 100.0),
             ),
             Result(
                 state=State.OK,

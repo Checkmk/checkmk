@@ -2,8 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Classes used by the API for check plug-ins
-"""
+"""Classes used by the API for check plug-ins"""
 
 from __future__ import annotations
 
@@ -128,7 +127,9 @@ class Service(_ServiceTuple):
         raise TypeError(f"'item' must be a non empty string or ommited entirely, got {item!r}")
 
     @staticmethod
-    def _parse_parameters(parameters: Mapping[str, object] | None) -> Mapping[str, object]:
+    def _parse_parameters(
+        parameters: Mapping[str, object] | None,
+    ) -> Mapping[str, object]:
         if parameters is None:
             return {}
         if isinstance(parameters, dict) and all(isinstance(k, str) for k in parameters):

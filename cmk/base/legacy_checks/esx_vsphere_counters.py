@@ -87,7 +87,11 @@ check_info["esx_vsphere_counters.uptime"] = LegacyCheckDefinition(
 def _parse_esx_vsphere_counters_swap(parsed):
     swap_values = {}
 
-    for agent_key, key in (("mem.swapin", "in"), ("mem.swapout", "out"), ("mem.swapused", "used")):
+    for agent_key, key in (
+        ("mem.swapin", "in"),
+        ("mem.swapout", "out"),
+        ("mem.swapused", "used"),
+    ):
         try:
             swap_values[key] = parsed[agent_key][""][0][0][0]
         except (KeyError, IndexError, TypeError, ValueError):

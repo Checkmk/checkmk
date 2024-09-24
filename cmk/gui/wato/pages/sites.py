@@ -85,7 +85,10 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.wato.pages._html_elements import wato_html_head
-from cmk.gui.wato.pages.global_settings import ABCEditGlobalSettingMode, ABCGlobalSettingsMode
+from cmk.gui.wato.pages.global_settings import (
+    ABCEditGlobalSettingMode,
+    ABCGlobalSettingsMode,
+)
 from cmk.gui.watolib.activate_changes import get_free_message
 from cmk.gui.watolib.automations import (
     do_remote_automation,
@@ -105,7 +108,11 @@ from cmk.gui.watolib.global_settings import (
     save_global_settings,
     save_site_global_settings,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree, make_action_link
+from cmk.gui.watolib.hosts_and_folders import (
+    folder_preserving_link,
+    folder_tree,
+    make_action_link,
+)
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.site_management import add_changes_after_editing_site_connection
 from cmk.gui.watolib.sites import (
@@ -225,7 +232,8 @@ class ModeEditSite(WatoMode):
         )
         if not self._new and isinstance(self._site_id, str):
             menu.dropdowns.insert(
-                1, _page_menu_dropdown_site_details(self._site_id, self._site, self.name())
+                1,
+                _page_menu_dropdown_site_details(self._site_id, self._site, self.name()),
             )
         return menu
 
@@ -285,7 +293,10 @@ class ModeEditSite(WatoMode):
             headers=[
                 (_("Basic settings"), [key for key, _vs in basic_elements]),
                 (_("Status connection"), [key for key, _vs in livestatus_elements]),
-                (_("Configuration connection"), [key for key, _vs in replication_elements]),
+                (
+                    _("Configuration connection"),
+                    [key for key, _vs in replication_elements],
+                ),
             ],
             render="form",
             form_narrow=True,
@@ -727,7 +738,8 @@ class ModeDistributedMonitoring(WatoMode):
                 user_errors.add(MKUserError("_name", error))
 
         wato_html_head(
-            title=_('Login into site "%s"') % site["alias"], breadcrumb=self.breadcrumb()
+            title=_('Login into site "%s"') % site["alias"],
+            breadcrumb=self.breadcrumb(),
         )
         if error:
             html.show_error(error)
@@ -752,7 +764,9 @@ class ModeDistributedMonitoring(WatoMode):
             html.password_input("_passwd")
             forms.section(_("Confirm overwrite"))
             html.checkbox(
-                "_confirm", False, label=_("Confirm overwrite of the remote site configuration")
+                "_confirm",
+                False,
+                label=_("Confirm overwrite of the remote site configuration"),
             )
             forms.end()
             html.button("_do_login", _("Login"))
@@ -1522,5 +1536,9 @@ def sort_sites(sites: SiteConfigurations) -> list[tuple[SiteId, SiteConfiguratio
     """Sort given sites argument by local, followed by remote sites"""
     return sorted(
         sites.items(),
-        key=lambda sid_s: (sid_s[1].get("replication") or "", sid_s[1].get("alias", ""), sid_s[0]),
+        key=lambda sid_s: (
+            sid_s[1].get("replication") or "",
+            sid_s[1].get("alias", ""),
+            sid_s[0],
+        ),
     )

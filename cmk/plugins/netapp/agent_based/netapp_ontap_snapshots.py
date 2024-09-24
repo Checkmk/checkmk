@@ -82,7 +82,8 @@ def check_netapp_ontap_snapshots(
 
     if not volume.snapshot_reserve_size:
         yield Result(
-            state=State.OK, summary=f"Used snapshot space: {render.bytes(volume.snapshot_used)}"
+            state=State.OK,
+            summary=f"Used snapshot space: {render.bytes(volume.snapshot_used)}",
         )
         yield Metric("bytes", volume.snapshot_used)
         yield Result(
@@ -107,7 +108,9 @@ def check_netapp_ontap_snapshots(
         summary=f"Total Reserve: {volume.snapshot_reserve_percent}% ({render.bytes(volume.snapshot_reserve_size)}) of {render.bytes(volume_total)}",
     )
     yield Metric(
-        name="bytes", value=volume.snapshot_used, boundaries=(0, volume.snapshot_reserve_size)
+        name="bytes",
+        value=volume.snapshot_used,
+        boundaries=(0, volume.snapshot_reserve_size),
     )
 
 

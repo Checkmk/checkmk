@@ -95,7 +95,10 @@ def test_check_snapshots(monkeypatch: pytest.MonkeyPatch) -> None:
     ) == [
         Result(state=State.OK, summary="Count: 1"),
         Result(state=State.OK, summary="Powered on: test_vm_name/Snapshotname"),
-        Result(state=State.OK, summary="Latest: test_vm_name/Snapshotname 2020-11-17 15:15:14"),
+        Result(
+            state=State.OK,
+            summary="Latest: test_vm_name/Snapshotname 2020-11-17 15:15:14",
+        ),
         Result(state=State.OK, notice="Age of latest: 5 days 8 hours"),
         Result(state=State.OK, notice="Age of oldest: 5 days 8 hours"),
     ]
@@ -124,7 +127,8 @@ def test_check_multi_snapshots(monkeypatch: pytest.MonkeyPatch) -> None:
         Result(state=State.OK, summary="Count: 2"),
         Result(state=State.OK, summary="Powered on: test_vm_name/LinuxI Testsnapshot"),
         Result(
-            state=State.OK, summary="Latest: test_vm_name/LinuxI Testsnapshot 2014-10-22 11:37:07"
+            state=State.OK,
+            summary="Latest: test_vm_name/LinuxI Testsnapshot 2014-10-22 11:37:07",
         ),
         Result(state=State.OK, notice="Age of latest: 6 years 34 days"),
         Result(
@@ -155,7 +159,8 @@ def test_check_one_snapshot(monkeypatch: pytest.MonkeyPatch) -> None:
     assert parsed is not None
     assert list(
         check_snapshots(
-            {"age_oldest": (30, 3600)}, _esx_vm_section(parsed.snapshots, parsed.systime)
+            {"age_oldest": (30, 3600)},
+            _esx_vm_section(parsed.snapshots, parsed.systime),
         )
     ) == [
         Result(state=State.OK, summary="Count: 1"),
@@ -180,7 +185,13 @@ def test_time_reference_snapshot(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(time, "localtime", time.gmtime)
     parsed = parse_esx_vsphere_vm(
         [
-            ["snapshot.rootSnapshotList", "732", "1594041788", "poweredOn", "FransTeil2"],
+            [
+                "snapshot.rootSnapshotList",
+                "732",
+                "1594041788",
+                "poweredOn",
+                "FransTeil2",
+            ],
             ["systime", "1655856000"],
         ]
     )
@@ -193,7 +204,10 @@ def test_time_reference_snapshot(monkeypatch: pytest.MonkeyPatch) -> None:
     ) == [
         Result(state=State.OK, summary="Count: 1"),
         Result(state=State.OK, summary="Powered on: test_vm_name/FransTeil2"),
-        Result(state=State.OK, summary="Latest: test_vm_name/FransTeil2 2020-07-06 13:23:08"),
+        Result(
+            state=State.OK,
+            summary="Latest: test_vm_name/FransTeil2 2020-07-06 13:23:08",
+        ),
         Result(
             state=State.CRIT,
             summary="Age of latest: 1 year 350 days (warn/crit at 1 day 0 hours/2 days 0 hours)",

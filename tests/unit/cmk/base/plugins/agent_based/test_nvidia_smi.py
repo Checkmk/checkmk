@@ -358,7 +358,10 @@ def test_discover_nvidia_smi_gpu_util(
             nvidia_smi.GenericLevelsParam(levels=(2.0, 4.0)),
             SECTION,
             [
-                Result(state=State.CRIT, summary="Utilization: 5.00% (warn/crit at 2.00%/4.00%)"),
+                Result(
+                    state=State.CRIT,
+                    summary="Utilization: 5.00% (warn/crit at 2.00%/4.00%)",
+                ),
                 Metric("gpu_utilization", 5.0, levels=(2.0, 4.0)),
             ],
         ),
@@ -408,9 +411,15 @@ def test_discover_nvidia_smi_en_de_coder_util(
             nvidia_smi.DeEnCoderParams(encoder_levels=(2.5, 3.5), decoder_levels=(5.0, 10.0)),
             SECTION,
             [
-                Result(state=State.WARN, summary="Encoder: 3.00% (warn/crit at 2.50%/3.50%)"),
+                Result(
+                    state=State.WARN,
+                    summary="Encoder: 3.00% (warn/crit at 2.50%/3.50%)",
+                ),
                 Metric("encoder_utilization", 3.0, levels=(2.5, 3.5)),
-                Result(state=State.WARN, summary="Decoder: 8.00% (warn/crit at 5.00%/10.00%)"),
+                Result(
+                    state=State.WARN,
+                    summary="Decoder: 8.00% (warn/crit at 5.00%/10.00%)",
+                ),
                 Metric("decoder_utilization", 8.0, levels=(5.0, 10.0)),
             ],
         ),
@@ -464,7 +473,8 @@ def test_discover_nvidia_smi_power(
             SECTION,
             [
                 Result(
-                    state=State.CRIT, summary="Power Draw: 49.44 W (warn/crit at 30.00 W/40.00 W)"
+                    state=State.CRIT,
+                    summary="Power Draw: 49.44 W (warn/crit at 30.00 W/40.00 W)",
                 ),
                 Metric("power_usage", 49.44, levels=(30.0, 40.0), boundaries=(0.0, 255.0)),
                 Result(state=State.OK, notice="Power limit: 255.0 W"),
@@ -507,7 +517,10 @@ def test_discover_nvidia_smi_memory_util(
             {},
             SECTION,
             [
-                Result(state=State.OK, summary="Total memory: 12.70% - 1.05 GiB of 8.25 GiB"),
+                Result(
+                    state=State.OK,
+                    summary="Total memory: 12.70% - 1.05 GiB of 8.25 GiB",
+                ),
                 Metric("mem_used_percent", 12.70123106060606, boundaries=(0.0, None)),
                 Result(state=State.OK, summary="FB memory: 13.07% - 1.05 GiB of 8.00 GiB"),
                 Metric("fb_mem_usage_used", 1123024896.0, boundaries=(0.0, 8589934592.0)),

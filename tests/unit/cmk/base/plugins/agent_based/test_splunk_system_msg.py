@@ -5,7 +5,12 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
-from cmk.base.plugins.agent_based.splunk_system_msg import check, parse, Section, SplunkMessage
+from cmk.base.plugins.agent_based.splunk_system_msg import (
+    check,
+    parse,
+    Section,
+    SplunkMessage,
+)
 
 from cmk.agent_based.v1.type_defs import StringTable
 
@@ -111,7 +116,12 @@ def test_parsing(string_table: StringTable, section: Section) -> None:
         ),
         pytest.param(
             [SplunkMessage("foo", "nope", "host", "2019-05-16T08:32:33+02:00", "msg")],
-            [Result(state=State.UNKNOWN, summary="2019-05-16T08:32:33+02:00 - host - msg")],
+            [
+                Result(
+                    state=State.UNKNOWN,
+                    summary="2019-05-16T08:32:33+02:00 - host - msg",
+                )
+            ],
             id="unkown",
         ),
     ],

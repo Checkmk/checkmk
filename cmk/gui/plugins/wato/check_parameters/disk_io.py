@@ -12,7 +12,15 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Checkbox, Dictionary, Float, Integer, TextInput, Transform, Tuple
+from cmk.gui.valuespec import (
+    Checkbox,
+    Dictionary,
+    Float,
+    Integer,
+    TextInput,
+    Transform,
+    Tuple,
+)
 
 from .transforms import scale_levels
 
@@ -118,7 +126,11 @@ def _parameter_valuespec_disk_io():
                         title=_("IO latency"),
                         elements=[
                             Float(title=_("warning at"), unit=_("ms"), default_value=80.0),
-                            Float(title=_("critical at"), unit=_("ms"), default_value=160.0),
+                            Float(
+                                title=_("critical at"),
+                                unit=_("ms"),
+                                default_value=160.0,
+                            ),
                         ],
                     ),
                 ),

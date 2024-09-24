@@ -8,10 +8,20 @@ from math import ceil
 
 from cmk.base.check_api import check_levels, CheckResult
 
-from cmk.agent_based.v2 import get_rate, get_value_store, IgnoreResultsError, render, StringTable
-from cmk.plugins.lib.wmi import get_wmi_time
+from cmk.agent_based.v2 import (
+    get_rate,
+    get_value_store,
+    IgnoreResultsError,
+    render,
+    StringTable,
+)
+from cmk.plugins.lib.wmi import (
+    get_wmi_time,
+    required_tables_missing,
+    WMISection,
+    WMITable,
+)
 from cmk.plugins.lib.wmi import parse_wmi_table as parse_wmi_table_migrated
-from cmk.plugins.lib.wmi import required_tables_missing, WMISection, WMITable
 
 # This set of functions are used for checks that handle "generic" windows
 # performance counters as reported via wmi
@@ -289,7 +299,11 @@ def wmi_calculate_raw_average_time(
     sample_time = get_wmi_time(table, row)
 
     measure_per_sec = get_rate(
-        get_value_store(), f"{column}_{table.name}", sample_time, int(measure), raise_overflow=True
+        get_value_store(),
+        f"{column}_{table.name}",
+        sample_time,
+        int(measure),
+        raise_overflow=True,
     )
     base_per_sec = get_rate(
         get_value_store(),

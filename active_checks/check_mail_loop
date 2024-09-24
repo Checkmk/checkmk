@@ -2,8 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Email server roundtrip active check
-"""
+"""Email server roundtrip active check"""
+
 import argparse
 import email.utils
 import logging
@@ -17,7 +17,14 @@ from pathlib import Path
 
 from exchangelib import Message as EWSMessage  # type: ignore[import]
 
-from cmk.utils.mailbox import active_check_main, Args, CheckResult, Mailbox, MailID, Message
+from cmk.utils.mailbox import (
+    active_check_main,
+    Args,
+    CheckResult,
+    Mailbox,
+    MailID,
+    Message,
+)
 
 # "<sent-timestamp>-<key>" -> (sent-timestamp, key)
 MailDict = MutableMapping[str, MailID]
@@ -56,7 +63,10 @@ def create_argument_parser() -> argparse.ArgumentParser:
         help="Username to use for SMTP communictation (leave empty for anonymous SMTP) or EWS connection",
     )
     parser.add_argument(
-        "--send-password", type=str, metavar="PASSWORD", help="Password to authenticate SMTP/EWS"
+        "--send-password",
+        type=str,
+        metavar="PASSWORD",
+        help="Password to authenticate SMTP/EWS",
     )
 
     # SEND (EWS only)
@@ -89,10 +99,16 @@ def create_argument_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
-        "--mail-from", type=str, required=True, help="Use this mail address as sender address"
+        "--mail-from",
+        type=str,
+        required=True,
+        help="Use this mail address as sender address",
     )
     parser.add_argument(
-        "--mail-to", type=str, required=True, help="Use this mail address as recipient address"
+        "--mail-to",
+        type=str,
+        required=True,
+        help="Use this mail address as recipient address",
     )
 
     parser.add_argument(
@@ -245,7 +261,8 @@ def check_mails(  # pylint: disable=too-many-branches
             output.insert(0, "Mail received within %d seconds" % durations[0])
         else:
             output.insert(
-                0, "Received %d mails within average of %d seconds" % (len(durations), average)
+                0,
+                "Received %d mails within average of %d seconds" % (len(durations), average),
             )
         # TODO: wouldn't max(durations) be useful here?
         perfdata.append(("duration", average, warning or "", critical or ""))
@@ -341,7 +358,12 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
         # relevant messages are a subset of above received messages which we expected
         relevant_mail_loop_messages = {
             ts_key: (index, rx_timestamp)
-            for ts_key, (index, rx_timestamp, subject, raw_message) in message_details.items()
+            for ts_key, (
+                index,
+                rx_timestamp,
+                subject,
+                raw_message,
+            ) in message_details.items()
             if ts_key in expected_mails
         }
         logging.debug("relevant messages: %r", relevant_mail_loop_messages)
@@ -362,7 +384,12 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
 
         deletion_candidates = {
             index: raw_message
-            for ts_key, (index, rx_timestamp, _subject, raw_message) in message_details.items()
+            for ts_key, (
+                index,
+                rx_timestamp,
+                _subject,
+                raw_message,
+            ) in message_details.items()
             if ts_key in expected_mails_keys or now - rx_timestamp > DEPRECATION_AGE
         }
         logging.debug(

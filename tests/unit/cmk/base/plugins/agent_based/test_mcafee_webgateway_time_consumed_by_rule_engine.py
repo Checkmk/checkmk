@@ -61,20 +61,32 @@ WALK_SKYHIGH = """
 
 @pytest.mark.parametrize(
     "walk, detected_section",
-    [(WALK_MCAFEE, "mcafee_webgateway_misc"), (WALK_SKYHIGH, "skyhigh_security_webgateway_misc")],
+    [
+        (WALK_MCAFEE, "mcafee_webgateway_misc"),
+        (WALK_SKYHIGH, "skyhigh_security_webgateway_misc"),
+    ],
 )
 def test_detect(
-    walk: str, detected_section: str, fix_register: FixRegister, as_path: Callable[[str], Path]
+    walk: str,
+    detected_section: str,
+    fix_register: FixRegister,
+    as_path: Callable[[str], Path],
 ) -> None:
     assert snmp_is_detected(SectionName(detected_section), as_path(walk))
 
 
 @pytest.mark.parametrize(
     "walk, detected_section",
-    [(WALK_MCAFEE, "mcafee_webgateway_misc"), (WALK_SKYHIGH, "skyhigh_security_webgateway_misc")],
+    [
+        (WALK_MCAFEE, "mcafee_webgateway_misc"),
+        (WALK_SKYHIGH, "skyhigh_security_webgateway_misc"),
+    ],
 )
 def test_parse(
-    walk: str, detected_section: str, fix_register: FixRegister, as_path: Callable[[str], Path]
+    walk: str,
+    detected_section: str,
+    fix_register: FixRegister,
+    as_path: Callable[[str], Path],
 ) -> None:
     # Act
     section = get_parsed_snmp_section(SectionName(detected_section), as_path(walk))
@@ -85,10 +97,16 @@ def test_parse(
 
 @pytest.mark.parametrize(
     "walk, detected_section",
-    [(WALK_MCAFEE, "mcafee_webgateway_misc"), (WALK_SKYHIGH, "skyhigh_security_webgateway_misc")],
+    [
+        (WALK_MCAFEE, "mcafee_webgateway_misc"),
+        (WALK_SKYHIGH, "skyhigh_security_webgateway_misc"),
+    ],
 )
 def test_discovery(
-    walk: str, detected_section: str, fix_register: FixRegister, as_path: Callable[[str], Path]
+    walk: str,
+    detected_section: str,
+    fix_register: FixRegister,
+    as_path: Callable[[str], Path],
 ) -> None:
     # Assemble
     section = get_parsed_snmp_section(SectionName(detected_section), as_path(walk))
@@ -137,7 +155,8 @@ def test_discovery(
             {"time_consumed_by_rule_engine": (2000, 3000)},
             [
                 v1.Result(
-                    state=v1.State.WARN, summary="2 seconds (warn/crit at 2 seconds/3 seconds)"
+                    state=v1.State.WARN,
+                    summary="2 seconds (warn/crit at 2 seconds/3 seconds)",
                 ),
             ],
             id="Critical",
@@ -148,7 +167,8 @@ def test_discovery(
             {"time_consumed_by_rule_engine": (2000, 3000)},
             [
                 v1.Result(
-                    state=v1.State.WARN, summary="2 seconds (warn/crit at 2 seconds/3 seconds)"
+                    state=v1.State.WARN,
+                    summary="2 seconds (warn/crit at 2 seconds/3 seconds)",
                 ),
             ],
             id="Critical",
@@ -159,7 +179,8 @@ def test_discovery(
             {"time_consumed_by_rule_engine": (1000, 2000)},
             [
                 v1.Result(
-                    state=v1.State.CRIT, summary="2 seconds (warn/crit at 1 second/2 seconds)"
+                    state=v1.State.CRIT,
+                    summary="2 seconds (warn/crit at 1 second/2 seconds)",
                 ),
             ],
             id="Warning",
@@ -196,10 +217,16 @@ def test_check_results(
 
 @pytest.mark.parametrize(
     "walk, detected_section",
-    [(WALK_MCAFEE, "mcafee_webgateway_misc"), (WALK_SKYHIGH, "skyhigh_security_webgateway_misc")],
+    [
+        (WALK_MCAFEE, "mcafee_webgateway_misc"),
+        (WALK_SKYHIGH, "skyhigh_security_webgateway_misc"),
+    ],
 )
 def test_check_metrics(
-    walk: str, detected_section: str, fix_register: FixRegister, as_path: Callable[[str], Path]
+    walk: str,
+    detected_section: str,
+    fix_register: FixRegister,
+    as_path: Callable[[str], Path],
 ) -> None:
     # Assemble
     section = get_parsed_snmp_section(SectionName(detected_section), as_path(walk))

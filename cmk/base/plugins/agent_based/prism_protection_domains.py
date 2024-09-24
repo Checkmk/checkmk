@@ -81,10 +81,12 @@ def check_prism_protection_domains(
         exclusivesnapshot = int(data["usage_stats"].get("dr.exclusive_snapshot_usage_bytes"))
         yield Metric("pd_exclusivesnapshot", exclusivesnapshot)
         yield Metric(
-            "pd_bandwidthtx", float(data["stats"].get("replication_received_bandwidth_kBps"))
+            "pd_bandwidthtx",
+            float(data["stats"].get("replication_received_bandwidth_kBps")),
         )
         yield Metric(
-            "pd_bandwidthrx", float(data["stats"].get("replication_transmitted_bandwidth_kBps"))
+            "pd_bandwidthrx",
+            float(data["stats"].get("replication_transmitted_bandwidth_kBps")),
         )
         summary = (
             f"Type: Async DR, "

@@ -49,7 +49,11 @@ STRING_TABLE_SECTION_CHECK_RESULT_5171 = [
         [[["2"]], [["1"]], [["2"], ["2"]], [["2"]], [["1"], ["1"]]],
         [
             SNMPData("memory state(s)", TceHealthStatus, Counter({TceHealthStatus.normal: 1})),
-            SNMPData("power supplies", PowerSupplyState, Counter({PowerSupplyState.online: 1})),
+            SNMPData(
+                "power supplies",
+                PowerSupplyState,
+                Counter({PowerSupplyState.online: 1}),
+            ),
             SNMPData("CPU health", TceHealthStatus, Counter({TceHealthStatus.normal: 2})),
             SNMPData("disk(s)", TceHealthStatus, Counter({TceHealthStatus.normal: 1})),
             SNMPData("fan(s)", FanStatus, Counter({FanStatus.ok: 2})),
@@ -86,8 +90,16 @@ STRING_TABLE_SECTION_CHECK_RESULT_5171 = [
     pytest.param(
         [[["1"]], [["1"]], [["2"], ["2"]], [["2"]], [["1"], ["1"]]],
         [
-            SNMPData("memory state(s)", TceHealthStatus, Counter({TceHealthStatus.unknown: 1})),
-            SNMPData("power supplies", PowerSupplyState, Counter({PowerSupplyState.online: 1})),
+            SNMPData(
+                "memory state(s)",
+                TceHealthStatus,
+                Counter({TceHealthStatus.unknown: 1}),
+            ),
+            SNMPData(
+                "power supplies",
+                PowerSupplyState,
+                Counter({PowerSupplyState.online: 1}),
+            ),
             SNMPData("CPU health", TceHealthStatus, Counter({TceHealthStatus.normal: 2})),
             SNMPData("disk(s)", TceHealthStatus, Counter({TceHealthStatus.normal: 1})),
             SNMPData("fan(s)", FanStatus, Counter({FanStatus.ok: 2})),
@@ -124,7 +136,11 @@ STRING_TABLE_SECTION_CHECK_RESULT_5171 = [
     pytest.param(
         [[], [["1"], ["1"]], [], [["2"]], [["1"], ["1"]]],
         [
-            SNMPData("power supplies", PowerSupplyState, Counter({PowerSupplyState.online: 2})),
+            SNMPData(
+                "power supplies",
+                PowerSupplyState,
+                Counter({PowerSupplyState.online: 2}),
+            ),
             SNMPData("disk(s)", TceHealthStatus, Counter({TceHealthStatus.normal: 1})),
             SNMPData("fan(s)", FanStatus, Counter({FanStatus.ok: 2})),
         ],
@@ -156,7 +172,9 @@ STRING_TABLE_SECTION_CHECK_RESULT_5142 = [
         [
             SNMPData("memory state(s)", LeoSystemState, Counter({LeoSystemState.normal: 1})),
             SNMPData(
-                "power supplies", LeoPowerSupplyState, Counter({LeoPowerSupplyState.online: 2})
+                "power supplies",
+                LeoPowerSupplyState,
+                Counter({LeoPowerSupplyState.online: 2}),
             ),
             SNMPData("tmpfs", LeoSystemState, Counter({LeoSystemState.normal: 1})),
             SNMPData("sysfs", LeoSystemState, Counter({LeoSystemState.normal: 1})),
@@ -196,7 +214,9 @@ STRING_TABLE_SECTION_CHECK_RESULT_5142 = [
         [
             SNMPData("memory state(s)", LeoSystemState, Counter({LeoSystemState.warning: 1})),
             SNMPData(
-                "power supplies", LeoPowerSupplyState, Counter({LeoPowerSupplyState.online: 2})
+                "power supplies",
+                LeoPowerSupplyState,
+                Counter({LeoPowerSupplyState.online: 2}),
             ),
             SNMPData("tmpfs", LeoSystemState, Counter({LeoSystemState.normal: 1})),
             SNMPData("sysfs", LeoSystemState, Counter({LeoSystemState.normal: 1})),

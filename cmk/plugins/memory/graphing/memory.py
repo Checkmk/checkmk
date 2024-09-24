@@ -273,7 +273,11 @@ graph_pagefile_absolute = Graph(
     name="pagefile_absolute",
     title=Title("Commit charge"),
     simple_lines=(
-        Sum(Title("Total commitable memory"), Color.DARK_BLUE, ("pagefile_used", "pagefile_free")),
+        Sum(
+            Title("Total commitable memory"),
+            Color.DARK_BLUE,
+            ("pagefile_used", "pagefile_free"),
+        ),
         WarningOf("pagefile_used"),
         CriticalOf("pagefile_used"),
     ),

@@ -43,7 +43,9 @@ from tests.testlib.utils import (
     virtualenv_path,
     wait_until,
 )
-from tests.testlib.version import CMKVersion  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib.version import (
+    CMKVersion,  # noqa: F401 # pylint: disable=unused-import
+)
 from tests.testlib.web_session import APIError, CMKWebSession
 
 from cmk.utils.hostaddress import HostName
@@ -334,7 +336,9 @@ class BaseCheck(abc.ABC):
 class Check(BaseCheck):
     def __init__(self, name: str) -> None:
         import cmk.base.config as config  # pylint: disable=import-outside-toplevel
-        from cmk.base.api.agent_based import register  # pylint: disable=import-outside-toplevel
+        from cmk.base.api.agent_based import (
+            register,  # pylint: disable=import-outside-toplevel
+        )
 
         super().__init__(name)
         if self.name not in config.check_info:

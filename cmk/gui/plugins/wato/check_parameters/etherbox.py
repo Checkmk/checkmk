@@ -106,7 +106,7 @@ def _vs_smoke() -> ValueSpec:
 
 
 def _migrate_smoke(
-    p: dict[Literal["levels"] | Literal["smoke_handling"], object]
+    p: dict[Literal["levels"] | Literal["smoke_handling"], object],
 ) -> dict[Literal["smoke_handling"], object]:
     if "smoke_handling" in p:
         return {"smoke_handling": p["smoke_handling"]}

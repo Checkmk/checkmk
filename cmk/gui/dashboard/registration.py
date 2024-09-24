@@ -20,10 +20,18 @@ from .page_create_view_dashlet import (
     page_create_view_dashlet_infos,
 )
 from .page_edit_dashboard import page_edit_dashboard
-from .page_edit_dashboard_actions import ajax_dashlet_pos, page_clone_dashlet, page_delete_dashlet
+from .page_edit_dashboard_actions import (
+    ajax_dashlet_pos,
+    page_clone_dashlet,
+    page_delete_dashlet,
+)
 from .page_edit_dashboards import page_edit_dashboards
 from .page_edit_dashlet import EditDashletPage
-from .page_show_dashboard import ajax_dashlet, AjaxInitialDashboardFilters, page_dashboard
+from .page_show_dashboard import (
+    ajax_dashlet,
+    AjaxInitialDashboardFilters,
+    page_dashboard,
+)
 from .visual_type import VisualTypeDashboards
 
 

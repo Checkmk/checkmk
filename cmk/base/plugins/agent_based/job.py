@@ -9,7 +9,15 @@ from typing import Any, Final
 
 from typing_extensions import TypedDict
 
-from .agent_based_api.v1 import check_levels, register, render, Result, Service, State, type_defs
+from .agent_based_api.v1 import (
+    check_levels,
+    register,
+    render,
+    Result,
+    Service,
+    State,
+    type_defs,
+)
 
 # <<<job>>>
 # ==> asd ASD <==
@@ -116,9 +124,7 @@ def _get_jobname_and_running_state(
 
 def parse_job(string_table: type_defs.StringTable) -> Section:
     parsed: Section = {}
-    pseudo_running_jobs: Section = (
-        {}
-    )  # contains jobs that are flagged as running but are not, e.g. killed jobs
+    pseudo_running_jobs: Section = {}  # contains jobs that are flagged as running but are not, e.g. killed jobs
     job: Job = {}
     for idx, line in enumerate(string_table):
         if line[0] == "==>" and line[-1] == "<==":
@@ -283,7 +289,10 @@ def check_job(
     yield from _process_job_stats(
         job,
         params.get("age"),
-        {0: State.OK, **{k: State(v) for k, v in params.get("exit_code_to_state_map", [])}},
+        {
+            0: State.OK,
+            **{k: State(v) for k, v in params.get("exit_code_to_state_map", [])},
+        },
         time.time(),
     )
 

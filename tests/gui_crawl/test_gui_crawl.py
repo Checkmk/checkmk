@@ -22,16 +22,26 @@ def test_crawl(test_crawler: Crawler) -> None:
     [
         ("http://host/page.py", "payload", []),
         ("http://host/page.py?key=", "payload", ["http://host/page.py?key=payload"]),
-        ("http://host/page.py?key=value", "payload", ["http://host/page.py?key=payload"]),
+        (
+            "http://host/page.py?key=value",
+            "payload",
+            ["http://host/page.py?key=payload"],
+        ),
         (
             "http://host/page.py?k1=v1&k2=v2",
             "payload",
-            ["http://host/page.py?k1=payload&k2=v2", "http://host/page.py?k1=v1&k2=payload"],
+            [
+                "http://host/page.py?k1=payload&k2=v2",
+                "http://host/page.py?k1=v1&k2=payload",
+            ],
         ),
         (
             "http://host/page.py?k1=v1&k1=v2",
             "payload",
-            ["http://host/page.py?k1=payload&k1=v2", "http://host/page.py?k1=v1&k1=payload"],
+            [
+                "http://host/page.py?k1=payload&k1=v2",
+                "http://host/page.py?k1=v1&k1=payload",
+            ],
         ),
     ],
 )

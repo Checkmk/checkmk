@@ -14,7 +14,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
     State,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+)
 from cmk.base.plugins.agent_based.fritz import (
     check_fritz_conn,
     check_fritz_link,
@@ -29,7 +32,10 @@ from cmk.base.plugins.agent_based.fritz import (
     Section,
 )
 
-from cmk.plugins.lib.interfaces import CHECK_DEFAULT_PARAMETERS, DISCOVERY_DEFAULT_PARAMETERS
+from cmk.plugins.lib.interfaces import (
+    CHECK_DEFAULT_PARAMETERS,
+    DISCOVERY_DEFAULT_PARAMETERS,
+)
 
 _STRING_TABLE = [
     ["VersionOS", "137.06.83"],

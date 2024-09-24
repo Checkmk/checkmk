@@ -109,7 +109,11 @@ class Connector:
         return 0
 
     def handle_alert_ack(
-        self, ack_author: str, ack_comment: str, alias: str | None, alert_source: str | None
+        self,
+        ack_author: str,
+        ack_comment: str,
+        alias: str | None,
+        alert_source: str | None,
     ) -> int:
         body = AcknowledgeAlertPayload(
             source=alert_source,

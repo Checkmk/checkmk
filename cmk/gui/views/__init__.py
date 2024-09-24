@@ -107,8 +107,12 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
     import cmk.gui.plugins.views as api_module  # pylint: disable=cmk-module-layer-violation
     import cmk.gui.visual_link as visual_link
     from cmk.gui import display_options
-    from cmk.gui.plugins.views import icons  # pylint: disable=cmk-module-layer-violation
-    from cmk.gui.views.perfometer.legacy_perfometers import utils as legacy_perfometers_utils
+    from cmk.gui.plugins.views import (  # pylint: disable=cmk-module-layer-violation
+        icons,
+    )
+    from cmk.gui.views.perfometer.legacy_perfometers import (
+        utils as legacy_perfometers_utils,
+    )
 
     from . import command, layout, sorter, store
 

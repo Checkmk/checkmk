@@ -47,9 +47,13 @@ def check_ibm_svc_eventlog(item, _no_params, info):
         last_err = description
 
     if messagecount > 0:
-        return 1, "%d messages not expired and not yet fixed found in event log, last was: %s" % (
-            messagecount,
-            last_err,
+        return (
+            1,
+            "%d messages not expired and not yet fixed found in event log, last was: %s"
+            % (
+                messagecount,
+                last_err,
+            ),
         )
 
     return 0, "No messages not expired and not yet fixed found in event log"

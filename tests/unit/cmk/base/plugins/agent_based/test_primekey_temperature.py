@@ -5,7 +5,12 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.primekey_temperature import check, discover, parse
 
 from cmk.plugins.lib.temperature import TempParamDict
@@ -29,7 +34,10 @@ def test_check() -> None:
         )
     ) == [
         Metric("temp", 31.0, levels=(20.0, 50.0)),
-        Result(state=State.WARN, summary="Temperature: 31.0 °C (warn/crit at 20.0 °C/50.0 °C)"),
+        Result(
+            state=State.WARN,
+            summary="Temperature: 31.0 °C (warn/crit at 20.0 °C/50.0 °C)",
+        ),
         Result(
             state=State.OK,
             notice="Configuration: prefer user levels over device levels (used user levels)",

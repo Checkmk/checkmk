@@ -8,7 +8,12 @@ import json
 from collections.abc import Mapping, Sequence
 from typing import Literal
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import register, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    register,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -27,7 +32,9 @@ from cmk.plugins.lib.kube import (
 
 
 # TODO: change section from info to components
-def parse_collector_processing_logs(string_table: StringTable) -> CollectorProcessingLogs:
+def parse_collector_processing_logs(
+    string_table: StringTable,
+) -> CollectorProcessingLogs:
     return CollectorProcessingLogs(**json.loads(string_table[0][0]))
 
 

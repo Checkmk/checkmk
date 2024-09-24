@@ -566,7 +566,11 @@ class ModeFolder(WatoMode):
     def _page_menu_entries_details(self) -> Iterator[PageMenuEntry]:
         for toggle_id, title, setting in [
             ("_show_host_tags", _("host tags"), user.wato_folders_show_tags),
-            ("_show_explicit_labels", _("explicit host labels"), user.wato_folders_show_labels),
+            (
+                "_show_explicit_labels",
+                _("explicit host labels"),
+                user.wato_folders_show_labels,
+            ),
         ]:
             yield PageMenuEntry(
                 title=_("Show %s") % title,
@@ -648,7 +652,8 @@ class ModeFolder(WatoMode):
         selected_host_names = get_hostnames_from_checkboxes(self._folder)
         if not selected_host_names:
             raise MKUserError(
-                None, _("Please select some hosts before doing bulk operations on hosts.")
+                None,
+                _("Please select some hosts before doing bulk operations on hosts."),
             )
 
         # Move
@@ -719,7 +724,8 @@ class ModeFolder(WatoMode):
                 [
                     MenuItem(
                         mode_or_url=makeuri_contextless(
-                            request, [("mode", "newhost"), ("folder", self._folder.path())]
+                            request,
+                            [("mode", "newhost"), ("folder", self._folder.path())],
                         ),
                         title=_("Add host to the monitoring"),
                         icon="new",
@@ -730,7 +736,8 @@ class ModeFolder(WatoMode):
                     ),
                     MenuItem(
                         mode_or_url=makeuri_contextless(
-                            request, [("mode", "newcluster"), ("folder", self._folder.path())]
+                            request,
+                            [("mode", "newcluster"), ("folder", self._folder.path())],
                         ),
                         title=_("Create cluster"),
                         icon="new_cluster",
@@ -748,7 +755,8 @@ class ModeFolder(WatoMode):
                 [
                     MenuItem(
                         mode_or_url=makeuri_contextless(
-                            request, [("mode", "newfolder"), ("folder", self._folder.path())]
+                            request,
+                            [("mode", "newfolder"), ("folder", self._folder.path())],
                         ),
                         title=_("Add folder"),
                         icon="newfolder",
@@ -807,7 +815,10 @@ class ModeFolder(WatoMode):
 
     def _show_subfolder(self, subfolder: Folder) -> None:
         html.open_div(
-            class_=["floatfolder", "unlocked" if subfolder.permissions.may("read") else "locked"],
+            class_=[
+                "floatfolder",
+                "unlocked" if subfolder.permissions.may("read") else "locked",
+            ],
             id_="folder_%s" % subfolder.name(),
             onclick="cmk.wato.open_folder(event, '%s');" % subfolder.url(),
         )
@@ -828,7 +839,9 @@ class ModeFolder(WatoMode):
             html.close_div()  # hoverarea
         else:
             html.icon(
-                "autherr", subfolder.permissions.reason_why_may_not("read"), class_=["autherr"]
+                "autherr",
+                subfolder.permissions.reason_why_may_not("read"),
+                class_=["autherr"],
             )
             html.div("", class_="hoverarea")
 
@@ -1342,7 +1355,11 @@ class ABCFolderMode(WatoMode, abc.ABC):
         with html.form_context("edit_host", method="POST"):
             # title
             basic_attributes: list[tuple[str, ValueSpec, str]] = [
-                ("title", TextInput(title=_("Title")), "" if new else self._folder.title()),
+                (
+                    "title",
+                    TextInput(title=_("Title")),
+                    "" if new else self._folder.title(),
+                ),
             ]
             html.set_focus("title")
 

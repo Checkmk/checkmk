@@ -44,7 +44,13 @@ def response():
     ],
 )
 def test_http_cfg_versions(cfg: object) -> None:
-    assert apache_status._unpack(cfg) == (("http", None), "127.0.0.1", None, "", "server-status")
+    assert apache_status._unpack(cfg) == (
+        ("http", None),
+        "127.0.0.1",
+        None,
+        "",
+        "server-status",
+    )
 
 
 @pytest.mark.parametrize(

@@ -192,7 +192,10 @@ class Version:
 
         match match.group(1, 2, 3, 4, 5):
             case major, minor, sub, None, None:
-                return cls(_BaseVersion(int(major), int(minor), int(sub)), _Release.unspecified())
+                return cls(
+                    _BaseVersion(int(major), int(minor), int(sub)),
+                    _Release.unspecified(),
+                )
             case major, minor, sub, r_type, patch:
                 return cls(
                     _BaseVersion(int(major), int(minor), int(sub)),

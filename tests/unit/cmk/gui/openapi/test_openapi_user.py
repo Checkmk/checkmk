@@ -34,7 +34,10 @@ from cmk.gui.openapi.endpoints.utils import complement_customer
 from cmk.gui.type_defs import UserObject, UserRole
 from cmk.gui.userdb import ConnectorType
 from cmk.gui.userdb.ldap_connector import LDAPUserConnector
-from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file, update_user_custom_attrs
+from cmk.gui.watolib.custom_attributes import (
+    save_custom_attrs_to_mk_file,
+    update_user_custom_attrs,
+)
 from cmk.gui.watolib.userroles import clone_role, RoleID
 from cmk.gui.watolib.users import edit_users
 
@@ -382,7 +385,8 @@ def test_openapi_user_edit_auth(clients: ClientRegistry, monkeypatch: MonkeyPatc
 
     with freeze_time("2010-02-01 08:30:00"):
         resp = clients.User.edit(
-            username=name, auth_option={"auth_type": "automation", "secret": "QWXWBFUCSUOXNCPJUMS@"}
+            username=name,
+            auth_option={"auth_type": "automation", "secret": "QWXWBFUCSUOXNCPJUMS@"},
         )
 
     with freeze_time("2010-02-01 09:00:00"):
@@ -533,7 +537,12 @@ def test_openapi_user_internal_auth_handling(
     with freeze_time("2010-02-01 09:00:00"):
         updated_internal_attributes = _api_to_internal_format(
             _load_user(name),
-            {"auth_option": {"secret": "QWXWBFUCSUOXNCPJUMS@", "auth_type": "automation"}},
+            {
+                "auth_option": {
+                    "secret": "QWXWBFUCSUOXNCPJUMS@",
+                    "auth_type": "automation",
+                }
+            },
         )
         with run_as_superuser():
             edit_users(
@@ -929,7 +938,10 @@ def test_openapi_new_user_with_cloned_role(
     fullname = f"NewUser_{cloned_role.name}"
 
     res1 = clients.User.create(
-        username=username, fullname=fullname, customer="provider", roles=[cloned_role.name]
+        username=username,
+        fullname=fullname,
+        customer="provider",
+        roles=[cloned_role.name],
     )
     assert res1.json["extensions"]["roles"] == [cloned_role.name]
 
@@ -1161,7 +1173,9 @@ def test_openapi_auth_type_of_saml_user(clients: ClientRegistry) -> None:
 
 
 @managedtest
-def test_user_without_permission_cant_interrogate_if_user_exists(clients: ClientRegistry) -> None:
+def test_user_without_permission_cant_interrogate_if_user_exists(
+    clients: ClientRegistry,
+) -> None:
     # Create a guest user using default client credentials
     clients.User.create(
         username="user1",

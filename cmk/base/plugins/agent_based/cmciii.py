@@ -145,7 +145,9 @@ def sensor_value(
     return value
 
 
-def parse_devices_and_states(device_table: type_defs.StringTable) -> tuple[Devices, Sensors]:
+def parse_devices_and_states(
+    device_table: type_defs.StringTable,
+) -> tuple[Devices, Sensors]:
     devices: dict[str, str] = {}
     states: dict[str, dict[str, str]] = {}
     for num, (endoid, name, alias, status) in enumerate(device_table, start=1):

@@ -34,7 +34,13 @@ PY_VERSION_MAJOR = sys.version_info[0]
 
 SEP_LINUX = ":"
 SEP_WINDOWS = "|"
-VALID_CONFIG_WITHOUT_INSTANCE = ["# A comment", "not a comment but trash", "", "", "DBUSER=user_xy"]
+VALID_CONFIG_WITHOUT_INSTANCE = [
+    "# A comment",
+    "not a comment but trash",
+    "",
+    "",
+    "DBUSER=user_xy",
+]
 VALID_CONFIG_WITH_INSTANCES = [
     "# A comment",
     "",

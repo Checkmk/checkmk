@@ -5,7 +5,10 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.hp_msa import check_hp_msa_health, inventory_hp_msa_health
+from cmk.base.check_legacy_includes.hp_msa import (
+    check_hp_msa_health,
+    inventory_hp_msa_health,
+)
 from cmk.base.config import check_info
 
 # <<<hp_msa_system>>>

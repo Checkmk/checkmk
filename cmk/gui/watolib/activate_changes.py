@@ -28,7 +28,14 @@ import shutil
 import subprocess
 import time
 import traceback
-from collections.abc import Callable, Iterable, Iterator, Mapping, MutableMapping, Sequence
+from collections.abc import (
+    Callable,
+    Iterable,
+    Iterator,
+    Mapping,
+    MutableMapping,
+    Sequence,
+)
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from itertools import filterfalse
@@ -41,7 +48,14 @@ from typing_extensions import TypedDict
 
 from livestatus import SiteConfiguration, SiteId
 
-from cmk.utils import agent_registration, paths, render, setup_search_index, store, version
+from cmk.utils import (
+    agent_registration,
+    paths,
+    render,
+    setup_search_index,
+    store,
+    version,
+)
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.licensing.export import LicenseUsageExtensions
 from cmk.utils.licensing.registry import get_licensing_user_effect, is_free
@@ -75,7 +89,12 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.nodevis.utils import topology_dir
-from cmk.gui.site_config import enabled_sites, get_site_config, is_single_local_site, site_is_local
+from cmk.gui.site_config import (
+    enabled_sites,
+    get_site_config,
+    is_single_local_site,
+    site_is_local,
+)
 from cmk.gui.sites import disconnect as sites_disconnect
 from cmk.gui.sites import SiteStatus
 from cmk.gui.sites import states as sites_states
@@ -238,7 +257,8 @@ def get_replication_paths() -> list[ReplicationPath]:
             "file",
             "stored_passwords",
             os.path.relpath(
-                "%s/stored_passwords" % cmk.utils.paths.var_dir, cmk.utils.paths.omd_root
+                "%s/stored_passwords" % cmk.utils.paths.var_dir,
+                cmk.utils.paths.omd_root,
             ),
             [],
         ),
@@ -601,7 +621,9 @@ def _set_result(
 
 
 def _handle_activation_changes_exception(
-    exc_logger: logging.Logger, exc_msg: str, site_activation_status: SiteActivationState
+    exc_logger: logging.Logger,
+    exc_msg: str,
+    site_activation_status: SiteActivationState,
 ) -> None:
     exc_logger.exception("error activating changes")
     # The text of following exception will be rendered in the GUI and the error message may
@@ -640,7 +662,10 @@ def _set_sync_state(
     site_activation_state: SiteActivationState, status_details: str | None = None
 ) -> None:
     _set_result(
-        site_activation_state, PHASE_SYNC, _("Synchronizing"), status_details=status_details
+        site_activation_state,
+        PHASE_SYNC,
+        _("Synchronizing"),
+        status_details=status_details,
     )
 
 
@@ -811,7 +836,13 @@ def _set_done_result(
 ) -> None:
     if any(configuration_warnings.values()):
         details = _render_warnings(configuration_warnings)
-        _set_result(site_activation_state, PHASE_DONE, _("Activated"), details, state=STATE_WARNING)
+        _set_result(
+            site_activation_state,
+            PHASE_DONE,
+            _("Activated"),
+            details,
+            state=STATE_WARNING,
+        )
     else:
         _set_result(site_activation_state, PHASE_DONE, _("Success"), state=STATE_SUCCESS)
 
@@ -1623,7 +1654,10 @@ class ActivateChangesManager(ActivateChanges):
         self._log_activation()
         assert self._activation_id is not None
         job = ActivateChangesSchedulerBackgroundJob(
-            self._activation_id, self._site_snapshot_settings, self._prevent_activate, self._source
+            self._activation_id,
+            self._site_snapshot_settings,
+            self._prevent_activate,
+            self._source,
         )
         job.start(job.schedule_sites)
 
@@ -1641,7 +1675,8 @@ class ActivateChangesManager(ActivateChanges):
         if self._activation_id is None:
             raise Exception("activation ID is not set")
         return store.load_object_from_file(
-            ActivateChangesManager.site_state_path(self._activation_id, site_id), default={}
+            ActivateChangesManager.site_state_path(self._activation_id, site_id),
+            default={},
         )
 
     @staticmethod
@@ -1939,7 +1974,9 @@ class ActivationCleanupBackgroundJob(BackgroundJob):
                         self._logger.debug("Is not running")
                 except Exception as e:
                     self._logger.warning(
-                        "  Failed to load activation (%s), trying to delete...", e, exc_info=True
+                        "  Failed to load activation (%s), trying to delete...",
+                        e,
+                        exc_info=True,
                     )
 
                 self._logger.info("  -> %s", "Delete" if delete else "Keep")
@@ -2217,8 +2254,15 @@ def sync_and_activate(
             if _handle_distributed_sites_in_free(site_snapshot_settings, time_started):
                 return
 
-        (site_central_file_infos, site_activation_states) = _prepare_for_activation_tasks(
-            activate_changes, activation_id, site_snapshot_settings, time_started, source
+        (
+            site_central_file_infos,
+            site_activation_states,
+        ) = _prepare_for_activation_tasks(
+            activate_changes,
+            activation_id,
+            site_snapshot_settings,
+            time_started,
+            source,
         )
 
         task_pool = ThreadPool(processes=len(site_snapshot_settings))
@@ -2394,7 +2438,8 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
         )
 
         job_interface.send_progress_update(
-            _("Going to update %d sites") % len(self._site_snapshot_settings), with_timestamp=True
+            _("Going to update %d sites") % len(self._site_snapshot_settings),
+            with_timestamp=True,
         )
 
         sync_and_activate(
@@ -2535,7 +2580,10 @@ def _need_to_update_config_after_sync() -> bool:
         # We can not decide which is the current base version of the master daily builds.
         # For this reason we always treat them to be compatbile.
         return False
-    return (this_v.base.major, this_v.base.minor) != (other_v.base.major, other_v.base.minor)
+    return (this_v.base.major, this_v.base.minor) != (
+        other_v.base.major,
+        other_v.base.minor,
+    )
 
 
 def _execute_cmk_update_config() -> None:
@@ -2682,7 +2730,9 @@ def verify_remote_site_config(site_id: SiteId) -> None:
         raise MKGeneralException(message)
 
 
-def _get_replication_components(site_config: SiteConfiguration) -> list[ReplicationPath]:
+def _get_replication_components(
+    site_config: SiteConfiguration,
+) -> list[ReplicationPath]:
     """Gives a list of ReplicationPath instances.
 
     These represent the folders which need to be sent to remote sites. Whether a specific subset

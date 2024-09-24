@@ -23,7 +23,10 @@ def _parameter_valuespec_netapp_instance() -> Migrate:
                             help=_("This rule allows you to override netapp warnings"),
                             elements=[
                                 ("name", TextInput(title=_("Warning starts with"))),
-                                ("state", MonitoringState(title="Set state to", default_value=1)),
+                                (
+                                    "state",
+                                    MonitoringState(title="Set state to", default_value=1),
+                                ),
                             ],
                             optional_keys=False,
                         ),

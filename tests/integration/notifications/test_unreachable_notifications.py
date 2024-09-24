@@ -198,7 +198,10 @@ def test_unreachable_child_down_before_parent_down(unreachable_enabled: bool, si
             # Difference beween nagios/cmc: when sending DOWN via PROCESS_HOST_CHECK_RESULT
             # the nagios core needs another child down check result to report it as unreachable.
             site.send_host_check_result(
-                "notify-test-child", STATE_DOWN, "DOWN", expected_state=STATE_UNREACHABLE
+                "notify-test-child",
+                STATE_DOWN,
+                "DOWN",
+                expected_state=STATE_UNREACHABLE,
             )
             log.check_logged("HOST ALERT: notify-test-child;UNREACHABLE;HARD;1;")
 
@@ -454,7 +457,10 @@ def test_down_child_becomes_unreachable_and_down_again(
             )
 
             site.send_host_check_result(
-                "notify-test-child", STATE_DOWN, "DOWN", expected_state=STATE_UNREACHABLE
+                "notify-test-child",
+                STATE_DOWN,
+                "DOWN",
+                expected_state=STATE_UNREACHABLE,
             )
             log.check_logged("HOST ALERT: notify-test-child;UNREACHABLE;HARD;1;")
 
@@ -530,7 +536,10 @@ def test_down_child_becomes_unreachable_then_up(unreachable_enabled: bool, site:
             )
 
             site.send_host_check_result(
-                "notify-test-child", STATE_DOWN, "DOWN", expected_state=STATE_UNREACHABLE
+                "notify-test-child",
+                STATE_DOWN,
+                "DOWN",
+                expected_state=STATE_UNREACHABLE,
             )
             log.check_logged("HOST ALERT: notify-test-child;UNREACHABLE;HARD;1;")
 

@@ -11,7 +11,14 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
 )
-from cmk.gui.valuespec import CascadingDropdown, Dictionary, Integer, Percentage, Tuple, ValueSpec
+from cmk.gui.valuespec import (
+    CascadingDropdown,
+    Dictionary,
+    Integer,
+    Percentage,
+    Tuple,
+    ValueSpec,
+)
 
 ParamsTuple = t.Tuple[float, float]  # absolute levels only  # version 1
 ParamsDictValue = ParamsTuple
@@ -39,8 +46,16 @@ def _parameter_valuespec_threads() -> Dictionary:
                     _("Absolute levels"),
                     Tuple(
                         elements=[
-                            Integer(title=_("Warning at"), unit=_("threads"), default_value=2000),
-                            Integer(title=_("Critical at"), unit=_("threads"), default_value=4000),
+                            Integer(
+                                title=_("Warning at"),
+                                unit=_("threads"),
+                                default_value=2000,
+                            ),
+                            Integer(
+                                title=_("Critical at"),
+                                unit=_("threads"),
+                                default_value=4000,
+                            ),
                         ],
                     ),
                 ),

@@ -124,7 +124,9 @@ def fixture_import_error_package(tmp_path: Path, package_type: str) -> str:
     return package_name
 
 
-def test_load_plugins_with_exceptions_handle_import_error(import_error_package: str) -> None:
+def test_load_plugins_with_exceptions_handle_import_error(
+    import_error_package: str,
+) -> None:
     package_name = import_error_package
     errors = list(load_plugins_with_exceptions(package_name))
     assert len(errors) == 1

@@ -145,9 +145,11 @@ def physical_precision_list(
     else:
         reference = min(abs(v) for v in values)
 
-    scale_symbol, places_after_comma, scale_factor = cmk.utils.render.calculate_physical_precision(
-        reference, precision
-    )
+    (
+        scale_symbol,
+        places_after_comma,
+        scale_factor,
+    ) = cmk.utils.render.calculate_physical_precision(reference, precision)
 
     scaled_values = ["%.*f" % (places_after_comma, float(value) / scale_factor) for value in values]
 
@@ -172,7 +174,10 @@ def bytes_human_readable_list(
         reference = 0.0
     else:
         reference = min(abs(v) for v in values)
-    scale_factor, scale_prefix = cmk.utils.render.IECUnitPrefixes.scale_factor_and_prefix(reference)
+    (
+        scale_factor,
+        scale_prefix,
+    ) = cmk.utils.render.IECUnitPrefixes.scale_factor_and_prefix(reference)
     scaled_values = ["%.*f" % (precision, value / scale_factor) for value in values]
     return scale_prefix + unit_symbol, scaled_values
 

@@ -219,8 +219,14 @@ def _valuespec_active_checks_http() -> Migrate:
                                                         "auto",
                                                         _("Use SSL with auto negotiation"),
                                                     ),
-                                                    ("1.2", _("Use SSL, enforce TLSv1.2")),
-                                                    ("1.1", _("Use SSL, enforce TLSv1.1")),
+                                                    (
+                                                        "1.2",
+                                                        _("Use SSL, enforce TLSv1.2"),
+                                                    ),
+                                                    (
+                                                        "1.1",
+                                                        _("Use SSL, enforce TLSv1.1"),
+                                                    ),
                                                     ("1", _("Use SSL, enforce TLSv1")),
                                                     ("2", _("Use SSL, enforce SSLv2")),
                                                     ("3", _("Use SSL, enforce SSLv3")),
@@ -295,9 +301,18 @@ def _valuespec_active_checks_http() -> Migrate:
                                                 title=_("How to handle redirect"),
                                                 choices=[
                                                     ("ok", _("Make check OK")),
-                                                    ("warning", _("Make check WARNING")),
-                                                    ("critical", _("Make check CRITICAL")),
-                                                    ("follow", _("Follow the redirection")),
+                                                    (
+                                                        "warning",
+                                                        _("Make check WARNING"),
+                                                    ),
+                                                    (
+                                                        "critical",
+                                                        _("Make check CRITICAL"),
+                                                    ),
+                                                    (
+                                                        "follow",
+                                                        _("Follow the redirection"),
+                                                    ),
                                                     (
                                                         "sticky",
                                                         _("Follow, but stay to same IP address"),
@@ -415,8 +430,14 @@ def _valuespec_active_checks_http() -> Migrate:
                                             Tuple(
                                                 title=_("Page size to expect"),
                                                 elements=[
-                                                    Integer(title=_("Minimum"), unit=_("Bytes")),
-                                                    Integer(title=_("Maximum"), unit=_("Bytes")),
+                                                    Integer(
+                                                        title=_("Minimum"),
+                                                        unit=_("Bytes"),
+                                                    ),
+                                                    Integer(
+                                                        title=_("Maximum"),
+                                                        unit=_("Bytes"),
+                                                    ),
                                                 ],
                                             ),
                                         ),

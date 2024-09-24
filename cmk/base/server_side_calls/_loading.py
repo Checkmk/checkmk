@@ -8,7 +8,11 @@ from collections.abc import Mapping, Sequence
 import cmk.utils.debug
 
 from cmk.discover_plugins import discover_plugins, PluginGroup, PluginLocation
-from cmk.server_side_calls.v1 import ActiveCheckConfig, entry_point_prefixes, SpecialAgentConfig
+from cmk.server_side_calls.v1 import (
+    ActiveCheckConfig,
+    entry_point_prefixes,
+    SpecialAgentConfig,
+)
 
 
 def load_active_checks() -> tuple[Sequence[str], Mapping[PluginLocation, ActiveCheckConfig]]:

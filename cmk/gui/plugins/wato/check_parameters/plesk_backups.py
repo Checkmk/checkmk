@@ -9,7 +9,14 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Age, Dictionary, Filesize, MonitoringState, TextInput, Tuple
+from cmk.gui.valuespec import (
+    Age,
+    Dictionary,
+    Filesize,
+    MonitoringState,
+    TextInput,
+    Tuple,
+)
 
 
 def _parameter_valuespec_plesk_backups():

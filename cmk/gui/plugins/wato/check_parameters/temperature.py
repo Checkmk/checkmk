@@ -9,7 +9,14 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Dictionary, DropdownChoice, Float, Integer, TextInput, Tuple
+from cmk.gui.valuespec import (
+    Dictionary,
+    DropdownChoice,
+    Float,
+    Integer,
+    TextInput,
+    Tuple,
+)
 
 
 # New temperature rule for modern temperature checks that have the
@@ -83,7 +90,10 @@ def _parameter_valuespec_temperature() -> Dictionary:
                         ("dev", _("Only use device's levels, ignore yours")),
                         ("best", _("Use least critical of your and device's levels")),
                         ("worst", _("Use most critical of your and device's levels")),
-                        ("devdefault", _("Use device's levels if present, otherwise yours")),
+                        (
+                            "devdefault",
+                            _("Use device's levels if present, otherwise yours"),
+                        ),
                         (
                             "usrdefault",
                             _("Use your own levels if present, otherwise the device's"),
@@ -163,7 +173,11 @@ def _parameter_valuespec_temperature() -> Dictionary:
                             ),
                         ),
                     ],
-                    optional_keys=["trend_levels", "trend_levels_lower", "trend_timeleft"],
+                    optional_keys=[
+                        "trend_levels",
+                        "trend_levels_lower",
+                        "trend_timeleft",
+                    ],
                 ),
             ),
         ],

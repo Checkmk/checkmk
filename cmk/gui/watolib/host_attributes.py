@@ -548,7 +548,8 @@ def get_sorted_host_attribute_topics(for_what: str, new: bool) -> list[tuple[str
     return [
         (t.ident, t.title)
         for t in sorted(
-            [t_class() for t_class in needed_topics], key=lambda e: (e.sort_index, e.title)
+            [t_class() for t_class in needed_topics],
+            key=lambda e: (e.sort_index, e.title),
         )
     ]
 
@@ -793,7 +794,9 @@ def _validate_is_ascii(value: str, varprefix: str) -> None:
             raise MKUserError(varprefix, _("Non-ASCII characters are not allowed here."))
 
 
-def transform_pre_16_host_topics(custom_attributes: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def transform_pre_16_host_topics(
+    custom_attributes: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
     """Previous to 1.6 the titles of the host attribute topics were stored.
 
     This lead to issues with localized topics. We now have internal IDs for
@@ -897,7 +900,8 @@ class ABCHostAttributeText(ABCHostAttribute, abc.ABC):
     def validate_input(self, value: str | None, varprefix: str) -> None:
         if self.is_mandatory() and not value:
             raise MKUserError(
-                varprefix + "attr_" + self.name(), _("Please specify a value for %s") % self.title()
+                varprefix + "attr_" + self.name(),
+                _("Please specify a value for %s") % self.title(),
             )
         if not self._allow_empty and (value is None or not value.strip()):
             raise MKUserError(

@@ -17,7 +17,11 @@ from cmk.agent_based.v2 import (
     render,
     StringTable,
 )
-from cmk.plugins.aws.lib import discover_aws_generic, extract_aws_metrics_by_labels, parse_aws
+from cmk.plugins.aws.lib import (
+    discover_aws_generic,
+    extract_aws_metrics_by_labels,
+    parse_aws,
+)
 from cmk.plugins.lib.diskstat import check_diskstat_dict
 
 Section = Mapping[str, Mapping[str, float]]

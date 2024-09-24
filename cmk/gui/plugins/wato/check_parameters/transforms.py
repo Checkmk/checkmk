@@ -40,7 +40,10 @@ def _scale_predictive_element(k: str, v: Any, factor: float) -> Any:
     match k:
         case "levels_upper" | "levels_lower":
             type_, (warn, crit) = v
-            return (type_, (warn * factor, crit * factor) if type_ == "absolute" else (warn, crit))
+            return (
+                type_,
+                (warn * factor, crit * factor) if type_ == "absolute" else (warn, crit),
+            )
         case "levels_upper_min":
             warn, crit = v
             return warn * factor, crit * factor

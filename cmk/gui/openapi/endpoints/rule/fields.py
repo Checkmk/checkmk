@@ -179,7 +179,10 @@ class LabelConditionSchema(base.BaseSchema):
                 )
 
             label_group.append(
-                {"operator": "not" if entry["operator"] == "is_not" else "and", "label": label_str},
+                {
+                    "operator": "not" if entry["operator"] == "is_not" else "and",
+                    "label": label_str,
+                },
             )
             labels_added.append(label_str)
 
@@ -623,7 +626,9 @@ class LabelCondition(base.BaseSchema):
         "label group condition",
     )
     label = fields.String(
-        required=True, description='A label of format "{key}:{value}"', example="os:windows"
+        required=True,
+        description='A label of format "{key}:{value}"',
+        example="os:windows",
     )
 
 

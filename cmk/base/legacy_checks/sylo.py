@@ -62,7 +62,10 @@ def check_sylo(item, params, info):
         age = now - mtime
         if age > params["max_age_secs"]:
             status = 2
-            return (2, "Sylo not running (Hintfile too old: last update %d secs ago)" % age)
+            return (
+                2,
+                "Sylo not running (Hintfile too old: last update %d secs ago)" % age,
+            )
 
         # Current fill state
         if inOffset == outOffset:

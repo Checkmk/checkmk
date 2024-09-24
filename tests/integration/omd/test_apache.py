@@ -26,7 +26,8 @@ def test_http_methods(site: Site) -> None:
     apache_log_file = check_output(["cat", site.path("var/log/apache/access_log")])
     for line in apache_log_file.splitlines():
         if re.match(
-            r'^.*"PROPFIND /\w+/check_mk/ HTTP/1.1" 405 \d+ "-" "' + user_agent + '"$', line
+            r'^.*"PROPFIND /\w+/check_mk/ HTTP/1.1" 405 \d+ "-" "' + user_agent + '"$',
+            line,
         ):
             return
     pytest.fail("Could not find regex in logfile")

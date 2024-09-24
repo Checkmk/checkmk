@@ -310,7 +310,11 @@ class CMKOpenApiSession(requests.Session):
         query_string = "?bake_agent=1" if bake_agent else ""
         response = self.post(
             f"/domain-types/host_config/collections/all{query_string}",
-            json={"folder": folder, "host_name": hostname, "attributes": attributes or {}},
+            json={
+                "folder": folder,
+                "host_name": hostname,
+                "attributes": attributes or {},
+            },
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
@@ -548,7 +552,10 @@ class CMKOpenApiSession(requests.Session):
                 time.sleep(0.5)
 
     def get_host_services(
-        self, hostname: str, pending: bool | None = None, columns: list[str] | None = None
+        self,
+        hostname: str,
+        pending: bool | None = None,
+        columns: list[str] | None = None,
     ) -> list[dict[str, Any]]:
         if pending is not None:
             if columns is None:

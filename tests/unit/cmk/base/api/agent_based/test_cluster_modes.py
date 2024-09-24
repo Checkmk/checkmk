@@ -115,7 +115,9 @@ def _simple_check_notice(section: Any) -> CheckResult:
     """just a simple way to create test check results"""
     yield Result(state=State.OK, notice="notice text moved to details")
     yield Result(
-        state=State.OK, notice="This should be deleted from the output", details="yeah details"
+        state=State.OK,
+        notice="This should be deleted from the output",
+        details="yeah details",
     )
 
 
@@ -184,14 +186,17 @@ def test_cluster_check_worst_yield_worst_nodes_metrics(vsm: ValueStoreManager) -
             },
         )
         if isinstance(m, Metric)
-    )[0] == Metric(
-        "n", 42
-    )  # Nodeberts value
+    )[0] == Metric("n", 42)  # Nodeberts value
 
 
-def test_cluster_check_worst_yield_selected_nodes_metrics(vsm: ValueStoreManager) -> None:
+def test_cluster_check_worst_yield_selected_nodes_metrics(
+    vsm: ValueStoreManager,
+) -> None:
     check_worst = _get_cluster_check_function(
-        _simple_check, mode="worst", vsm=vsm, clusterization_parameters={"metrics_node": "Nodett"}
+        _simple_check,
+        mode="worst",
+        vsm=vsm,
+        clusterization_parameters={"metrics_node": "Nodett"},
     )
 
     assert list(
@@ -203,14 +208,15 @@ def test_cluster_check_worst_yield_selected_nodes_metrics(vsm: ValueStoreManager
             },
         )
         if isinstance(m, Metric)
-    )[0] == Metric(
-        "n", 23
-    )  # Nodetts value
+    )[0] == Metric("n", 23)  # Nodetts value
 
 
 def test_cluster_check_worst_unprefered_node_is_ok(vsm: ValueStoreManager) -> None:
     check_failover = _get_cluster_check_function(
-        _simple_check, mode="worst", vsm=vsm, clusterization_parameters={"primary_node": "Nodebert"}
+        _simple_check,
+        mode="worst",
+        vsm=vsm,
+        clusterization_parameters={"primary_node": "Nodebert"},
     )
     section = {"Nodett": [0]}
 
@@ -282,14 +288,15 @@ def test_cluster_check_best_yield_best_nodes_metrics(vsm: ValueStoreManager) -> 
             },
         )
         if isinstance(m, Metric)
-    )[0] == Metric(
-        "n", 23
-    )  # Nodetts value
+    )[0] == Metric("n", 23)  # Nodetts value
 
 
 def test_cluster_check_best_unprefered_node_is_ok(vsm: ValueStoreManager) -> None:
     check_failover = _get_cluster_check_function(
-        _simple_check, mode="best", vsm=vsm, clusterization_parameters={"primary_node": "Nodebert"}
+        _simple_check,
+        mode="best",
+        vsm=vsm,
+        clusterization_parameters={"primary_node": "Nodebert"},
     )
     section = {"Nodett": [0]}
 
@@ -331,7 +338,9 @@ def test_cluster_check_failover_others_are_notice_only(vsm: ValueStoreManager) -
     ]
 
 
-def test_cluster_check_failover_yield_worst_nodes_metrics(vsm: ValueStoreManager) -> None:
+def test_cluster_check_failover_yield_worst_nodes_metrics(
+    vsm: ValueStoreManager,
+) -> None:
     check_failover = _get_cluster_check_function(_simple_check, mode="failover", vsm=vsm)
 
     assert list(
@@ -343,9 +352,7 @@ def test_cluster_check_failover_yield_worst_nodes_metrics(vsm: ValueStoreManager
             },
         )
         if isinstance(m, Metric)
-    )[0] == Metric(
-        "n", 42
-    )  # Nodeberts value.
+    )[0] == Metric("n", 42)  # Nodeberts value.
 
 
 def test_cluster_check_failover_two_are_not_ok(vsm: ValueStoreManager) -> None:
@@ -355,7 +362,9 @@ def test_cluster_check_failover_two_are_not_ok(vsm: ValueStoreManager) -> None:
     assert not _is_ok(*check_failover(section=section))
 
 
-def test_cluster_check_failover_unprefered_node_is_not_ok(vsm: ValueStoreManager) -> None:
+def test_cluster_check_failover_unprefered_node_is_not_ok(
+    vsm: ValueStoreManager,
+) -> None:
     check_failover = _get_cluster_check_function(
         _simple_check,
         mode="failover",

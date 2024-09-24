@@ -18,16 +18,22 @@ class TestListOfStrings:
         expect_validate_success(vs.ListOfStrings(), ["1", "2"])
         expect_validate_success(vs.ListOfStrings(), [])
         expect_validate_failure(
-            vs.ListOfStrings(allow_empty=False), [], match="Please specify at least one value"
+            vs.ListOfStrings(allow_empty=False),
+            [],
+            match="Please specify at least one value",
         )
         expect_validate_failure(
             vs.ListOfStrings(allow_empty=False, empty_text="!!!"), [], match="^!!!$"
         )
         expect_validate_failure(
-            vs.ListOfStrings(max_entries=1), ["1", "2"], match="You can specify at most 1 entries"
+            vs.ListOfStrings(max_entries=1),
+            ["1", "2"],
+            match="You can specify at most 1 entries",
         )
         expect_validate_failure(  # type: ignore[misc]
-            vs.ListOfStrings(), 123, match="Expected data type is list, but your type is int."
+            vs.ListOfStrings(),
+            123,
+            match="Expected data type is list, but your type is int.",
         )
 
     def test_value_to_html(self) -> None:
@@ -44,7 +50,10 @@ class TestListOfStrings:
 
     def test_mask(self) -> None:
         assert vs.ListOfStrings().mask(["1", "2"]) == ["1", "2"]
-        assert vs.ListOfStrings(valuespec=vs.Password()).mask(["1", "2"]) == ["******", "******"]
+        assert vs.ListOfStrings(valuespec=vs.Password()).mask(["1", "2"]) == [
+            "******",
+            "******",
+        ]
 
     def test_value_to_json(self) -> None:
         assert vs.ListOfStrings().value_to_json(["1", "2"]) == ["1", "2"]

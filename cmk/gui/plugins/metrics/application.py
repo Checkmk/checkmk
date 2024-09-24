@@ -719,7 +719,10 @@ graph_info["firewall_users"] = {
 
 graph_info["mobileiron_compliances"] = {
     "title": _l("Total non-compliant devices"),
-    "metrics": [("mobileiron_non_compliant", "stack"), ("mobileiron_devices_total", "line")],
+    "metrics": [
+        ("mobileiron_non_compliant", "stack"),
+        ("mobileiron_devices_total", "line"),
+    ],
 }
 
 

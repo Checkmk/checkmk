@@ -65,12 +65,29 @@ class FakeOrganisations:
     ) -> Sequence[Mapping]:
         if organisation_id == "123":
             return [
-                {"serial": "S123-1", "lanIp": "1.2.3.4", "name": "dev1", "status": "online"},
-                {"serial": "S123-2", "lanIp": "1.2.3.5", "name": "dev2", "status": "online"},
+                {
+                    "serial": "S123-1",
+                    "lanIp": "1.2.3.4",
+                    "name": "dev1",
+                    "status": "online",
+                },
+                {
+                    "serial": "S123-2",
+                    "lanIp": "1.2.3.5",
+                    "name": "dev2",
+                    "status": "online",
+                },
             ]
 
         if organisation_id == "456":
-            return [{"serial": "S456", "lanIp": "1.2.3.6", "name": "dev3", "status": "online"}]
+            return [
+                {
+                    "serial": "S456",
+                    "lanIp": "1.2.3.6",
+                    "name": "dev3",
+                    "status": "online",
+                }
+            ]
 
         return []
 

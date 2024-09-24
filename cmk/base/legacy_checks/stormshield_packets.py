@@ -28,13 +28,25 @@ def check_stormshield_packets(item, _no_params, info):
         if item == descrip:
             now = time.time()
             rate_pktaccepted = get_rate(
-                get_value_store(), "acc_%s" % item, now, int(pktaccepted), raise_overflow=True
+                get_value_store(),
+                "acc_%s" % item,
+                now,
+                int(pktaccepted),
+                raise_overflow=True,
             )
             rate_pktblocked = get_rate(
-                get_value_store(), "block_%s" % item, now, int(pktblocked), raise_overflow=True
+                get_value_store(),
+                "block_%s" % item,
+                now,
+                int(pktblocked),
+                raise_overflow=True,
             )
             rate_pkticmp = get_rate(
-                get_value_store(), "icmp_%s" % item, now, int(pkticmp), raise_overflow=True
+                get_value_store(),
+                "icmp_%s" % item,
+                now,
+                int(pkticmp),
+                raise_overflow=True,
             )
             infotext = f"[{name}], tcp: {tcp}, udp: {udp}"
             perfdata = [

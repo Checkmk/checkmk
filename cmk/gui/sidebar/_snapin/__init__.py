@@ -29,7 +29,9 @@ from ._helpers import write_snapin_exception as write_snapin_exception
 from ._master_control import MasterControlSnapin
 from ._nagvis_maps import NagVisMaps
 from ._performance import Performance
-from ._permission_section import PermissionSectionSidebarSnapins as PermissionSectionSidebarSnapins
+from ._permission_section import (
+    PermissionSectionSidebarSnapins as PermissionSectionSidebarSnapins,
+)
 from ._registry import snapin_registry as snapin_registry
 from ._registry import SnapinRegistry as SnapinRegistry
 from ._search import PageSearchMonitoring, PageSearchSetup, QuicksearchSnapin

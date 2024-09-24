@@ -317,7 +317,10 @@ def check_drbd_general(item, params, info):  # pylint: disable=too-many-branches
 
         params_diskstates_dict = dict(params.get("diskstates", []))
         diskstates_info = set()
-        for ro, ds in [(parsed["ro"][0], parsed["ds"][0]), (parsed["ro"][1], parsed["ds"][1])]:
+        for ro, ds in [
+            (parsed["ro"][0], parsed["ds"][0]),
+            (parsed["ro"][1], parsed["ds"][1]),
+        ]:
             diskstate = f"{ro.lower()}_{ds}"
             params_diskstate = params_diskstates_dict.get(diskstate)
 

@@ -9,7 +9,10 @@ from typing import Final
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
-from cmk.base.plugins.agent_based.inventory_win_bios import inventory_win_bios, parse_win_bios
+from cmk.base.plugins.agent_based.inventory_win_bios import (
+    inventory_win_bios,
+    parse_win_bios,
+)
 
 OUTPUT: Final = """Manufacturer       : innotek GmbH
 Name               : Default System BIOS

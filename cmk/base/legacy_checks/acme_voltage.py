@@ -66,7 +66,14 @@ def check_acme_voltage(item, params, info):
             return check_elphase(
                 descr,
                 params,
-                {descr: {"voltage": (float(value_str) / 1000.0, ACME_ENVIRONMENT_STATES[state])}},
+                {
+                    descr: {
+                        "voltage": (
+                            float(value_str) / 1000.0,
+                            ACME_ENVIRONMENT_STATES[state],
+                        )
+                    }
+                },
             )
     return None
 

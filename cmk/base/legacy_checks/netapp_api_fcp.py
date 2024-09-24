@@ -177,7 +177,11 @@ def _latency_results(item, params, fcp_if):
             # According to NetApp's "Performance Management Design Guide",
             # the latency is a function of `total_ops`.
             value = get_rate(
-                value_store, f"{item}.{what}", total_ops, fcp_if.get(what), raise_overflow=True
+                value_store,
+                f"{item}.{what}",
+                total_ops,
+                fcp_if.get(what),
+                raise_overflow=True,
             )
         except IgnoreResultsError:
             continue

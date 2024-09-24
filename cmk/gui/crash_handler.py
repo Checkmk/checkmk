@@ -3,7 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.crash_reporting import ABCCrashReport, CrashReportRegistry, CrashReportStore
+from cmk.utils.crash_reporting import (
+    ABCCrashReport,
+    CrashReportRegistry,
+    CrashReportStore,
+)
 from cmk.utils.site import omd_site
 
 import cmk.gui.utils.escaping as escaping
@@ -61,7 +65,10 @@ def handle_exception_as_gui_crash_report(
 
 
 def _show_crash_dump_message(
-    crash: "GUICrashReport", plain_text: bool, fail_silently: bool, show_crash_link: bool | None
+    crash: "GUICrashReport",
+    plain_text: bool,
+    fail_silently: bool,
+    show_crash_link: bool | None,
 ) -> None:
     """Create a crash dump from a GUI exception and display a message to the user"""
 

@@ -107,7 +107,10 @@ def check_ups_test(_no_item, params, info):
     # it reflects the truth and the check is able to show further check results.
     state = _SUMMARY_STATE_MAP.get(results_summary, 3)
     details = f" ({ups_test_results_detail})" if ups_test_results_detail else ""
-    yield state, f"Last test: {_TEST_RESULT_SUMMARY_MAP.get(results_summary, 'unknown')}{details}"
+    yield (
+        state,
+        f"Last test: {_TEST_RESULT_SUMMARY_MAP.get(results_summary, 'unknown')}{details}",
+    )
 
     if (elapsed_time := uptime - start_time) < 0:
         yield 3, "Could not determine time since start of last test"

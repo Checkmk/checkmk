@@ -44,7 +44,10 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
         ReplicationPath("file", "auth.serials", "etc/auth.serials", []),
         ReplicationPath("file", "stored_passwords", "var/check_mk/stored_passwords", []),
         ReplicationPath(
-            "dir", "usersettings", "var/check_mk/web", ["report-thumbnails", "session_info.mk"]
+            "dir",
+            "usersettings",
+            "var/check_mk/web",
+            ["report-thumbnails", "session_info.mk"],
         ),
         ReplicationPath("dir", "mkps", "var/check_mk/packages", []),
         ReplicationPath("dir", "local", "local", []),
@@ -55,7 +58,10 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
             excludes=[],
         ),
         ReplicationPath(
-            ty="dir", ident="omd", site_path="etc/omd", excludes=["site.conf", "instance_id"]
+            ty="dir",
+            ident="omd",
+            site_path="etc/omd",
+            excludes=["site.conf", "instance_id"],
         ),
         ReplicationPath(
             ty="dir",
@@ -407,7 +413,9 @@ def test_get_file_names_to_sync() -> None:
         site_id=SiteId("remote"),
         site_logger=logger,
         sync_state=activate_changes.SyncState(
-            central_file_infos=central, remote_file_infos=remote, remote_config_generation=0
+            central_file_infos=central,
+            remote_file_infos=remote,
+            remote_config_generation=0,
         ),
         file_filter_func=None,
     )

@@ -63,9 +63,7 @@ def msi_component_table() -> list[str]:
 
 def _remove_cab(path_to_msibuild: Path, *, msi: Path) -> None:
     _verbose("Removing product.cab from %s" % msi)
-    cmd: Final = (
-        f"{path_to_msibuild/'msibuild'} {msi} -q \"DELETE FROM _Streams where Name = 'product.cab'\""
-    )
+    cmd: Final = f"{path_to_msibuild/'msibuild'} {msi} -q \"DELETE FROM _Streams where Name = 'product.cab'\""
 
     if (result := os.system(cmd)) != 0:  # nosec B605 # BNS:f6c1b9
         bail_out(f"msibuild is failed on remove cab, {result=}")
@@ -273,7 +271,10 @@ def parse_command_line(argv: Sequence[str]) -> _Parameters:
         "version", type=str, help="Official version: 2015.04.12 or 1.2.6-2015.04.12"
     )
     parser.add_argument(
-        "config_hash", type=str, nargs="?", help="hash of agent configuration(aka aghash)"
+        "config_hash",
+        type=str,
+        nargs="?",
+        help="hash of agent configuration(aka aghash)",
     )
     result = parser.parse_args(argv[1:])
     opt_verbose = result.verbose

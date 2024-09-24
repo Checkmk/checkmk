@@ -9,7 +9,13 @@ from collections.abc import Sequence
 
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _u
-from cmk.gui.type_defs import FilterHTTPVariables, FilterName, ViewSpec, Visual, VisualContext
+from cmk.gui.type_defs import (
+    FilterHTTPVariables,
+    FilterName,
+    ViewSpec,
+    Visual,
+    VisualContext,
+)
 
 from ._filter_context import get_filter, get_singlecontext_vars, get_ubiquitary_filters
 

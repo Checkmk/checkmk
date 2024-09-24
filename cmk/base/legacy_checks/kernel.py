@@ -95,7 +95,10 @@ def check_kernel_performance(_no_item, params, parsed):
             continue
 
         if len(item_values) > 1:
-            yield 3, "item '%s' not unique (found %d times)" % (item_name, len(item_values))
+            yield (
+                3,
+                "item '%s' not unique (found %d times)" % (item_name, len(item_values)),
+            )
 
         counter, value = item_values[0]
         rate = get_rate(get_value_store(), counter, timestamp, value)

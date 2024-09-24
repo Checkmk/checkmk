@@ -169,15 +169,18 @@ def check_skype_mcu(_no_item, _no_params, parsed):
     )
 
     yield health(
-        parsed["LS:AVMCU - MCU Health And Performance"].get(0, "AVMCU - MCU Health State"), "AVMCU"
+        parsed["LS:AVMCU - MCU Health And Performance"].get(0, "AVMCU - MCU Health State"),
+        "AVMCU",
     )
 
     yield health(
-        parsed["LS:AsMcu - MCU Health And Performance"].get(0, "ASMCU - MCU Health State"), "ASMCU"
+        parsed["LS:AsMcu - MCU Health And Performance"].get(0, "ASMCU - MCU Health State"),
+        "ASMCU",
     )
 
     yield health(
-        parsed["LS:ImMcu - MCU Health And Performance"].get(0, "IMMCU - MCU Health State"), "IMMCU"
+        parsed["LS:ImMcu - MCU Health And Performance"].get(0, "IMMCU - MCU Health State"),
+        "IMMCU",
     )
 
 
@@ -592,7 +595,8 @@ def check_skype_av_edge(item, params, parsed):
 
 def discover_skype_edge(parsed):
     return inventory_wmi_table_instances(
-        parsed, required_tables=["LS:A/V Edge - TCP Counters", "LS:A/V Edge - UDP Counters"]
+        parsed,
+        required_tables=["LS:A/V Edge - TCP Counters", "LS:A/V Edge - UDP Counters"],
     )
 
 
@@ -705,7 +709,11 @@ def check_skype_mobile(_no_item, params, parsed):
             value = int(ucwa_table.get(instance, "UCWA - Active Session Count"))
         except KeyError:
             continue
-        yield 0, f"{name}: {value} active", [("ucwa_active_sessions_%s" % name.lower(), value)]
+        yield (
+            0,
+            f"{name}: {value} active",
+            [("ucwa_active_sessions_%s" % name.lower(), value)],
+        )
 
     yield from wmi_yield_raw_counter(
         parsed.get("LS:WEB - Throttling and Authentication"),

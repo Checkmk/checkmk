@@ -8,7 +8,11 @@ from collections.abc import Container, Sequence
 import pytest
 
 from cmk.agent_based.v2 import State, StringTable
-from cmk.plugins.lib.entity_sensors import EntitySensor, EntitySensorSection, parse_entity_sensors
+from cmk.plugins.lib.entity_sensors import (
+    EntitySensor,
+    EntitySensorSection,
+    parse_entity_sensors,
+)
 
 _STRIN_TABLE_fp1140 = [
     [

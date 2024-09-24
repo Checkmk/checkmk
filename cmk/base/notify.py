@@ -73,7 +73,11 @@ from cmk.utils.notify_types import (
 from cmk.utils.regex import regex
 from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.timeout import MKTimeout, Timeout
-from cmk.utils.timeperiod import is_timeperiod_active, load_timeperiods, timeperiod_active
+from cmk.utils.timeperiod import (
+    is_timeperiod_active,
+    load_timeperiods,
+    timeperiod_active,
+)
 
 import cmk.base.config as config
 import cmk.base.core
@@ -228,7 +232,13 @@ def do_notify(  # pylint: disable=too-many-branches
         notify_mode = "notify"
         if args:
             notify_mode = args[0]
-            if notify_mode not in ["stdin", "spoolfile", "replay", "test", "send-bulks"]:
+            if notify_mode not in [
+                "stdin",
+                "spoolfile",
+                "replay",
+                "test",
+                "send-bulks",
+            ]:
                 console.error("ERROR: Invalid call to check_mk --notify.\n\n")
                 notify_usage()
                 sys.exit(1)
@@ -540,7 +550,11 @@ def _create_notifications(
                 )
                 continue
 
-            logger.info("   - cancelling notification of %s via %s", ", ".join(overlap), plugintxt)
+            logger.info(
+                "   - cancelling notification of %s via %s",
+                ", ".join(overlap),
+                plugintxt,
+            )
 
             remaining = notify_contacts.difference(contacts)
             if not remaining:
@@ -584,7 +598,10 @@ def _process_notifications(  # pylint: disable=too-many-branches
 
     if not notifications:
         if num_rule_matches:
-            logger.info("%d rules matched, but no notification has been created.", num_rule_matches)
+            logger.info(
+                "%d rules matched, but no notification has been created.",
+                num_rule_matches,
+            )
         elif not analyse:
             fallback_contacts = rbn_fallback_contacts()
             if fallback_contacts:
@@ -707,7 +724,9 @@ def rbn_finalize_plugin_parameters(
 
 
 def rbn_finalize_plugin_parameters(
-    hostname: HostName, plugin_name: NotificationPluginNameStr, rule_parameters: NotifyPluginParams
+    hostname: HostName,
+    plugin_name: NotificationPluginNameStr,
+    rule_parameters: NotifyPluginParams,
 ) -> NotifyPluginParams:
     # Right now we are only able to finalize notification plugins with dict parameters..
     if not isinstance(rule_parameters, dict):
@@ -797,7 +816,9 @@ def rbn_add_contact_information(
         plugin_context[context_key] = ",".join(items)
 
 
-def rbn_split_plugin_context(plugin_context: NotificationContext) -> list[NotificationContext]:
+def rbn_split_plugin_context(
+    plugin_context: NotificationContext,
+) -> list[NotificationContext]:
     """Takes a plugin_context containing multiple contacts and returns
     a list of plugin_contexts with a context for each contact"""
     num_contacts = len(plugin_context["CONTACTNAME"].split(","))
@@ -1077,7 +1098,8 @@ def rbn_rule_contacts(  # pylint: disable=too-many-branches
                 start, end = disable_notifications_opts.get("timerange", (None, None))
                 if start is None or end is None:
                     logger.info(
-                        "   - skipping contact %s: he/she has disabled notifications", contactname
+                        "   - skipping contact %s: he/she has disabled notifications",
+                        contactname,
                     )
                     continue
                 if start <= time.time() <= end:
@@ -1139,7 +1161,8 @@ def rbn_match_contact_groups(
     if "contact_match_groups" in rule:
         if "contactgroups" not in contact:
             logger.info(
-                "Warning: cannot determine contact groups of %s: skipping restrictions", contactname
+                "Warning: cannot determine contact groups of %s: skipping restrictions",
+                contactname,
             )
             return None
 
@@ -1461,7 +1484,9 @@ def call_notification_script(
 
 
 # Construct the environment for the notification script
-def notification_script_env(plugin_context: NotificationContext) -> PluginNotificationContext:
+def notification_script_env(
+    plugin_context: NotificationContext,
+) -> PluginNotificationContext:
     # Use half of the maximum allowed string length MAX_ARG_STRLEN
     # which is usually 32 pages on Linux (see "man execve").
     #
@@ -1740,7 +1765,8 @@ def bulk_uuids(bulk_dir: str) -> tuple[UUIDs, float]:
             continue
         if len(notify_uuid) != 36:
             logger.info(
-                "Skipping invalid notification file %s", os.path.join(bulk_dir, notify_uuid)
+                "Skipping invalid notification file %s",
+                os.path.join(bulk_dir, notify_uuid),
             )
             continue
 
@@ -1796,7 +1822,12 @@ def find_bulks(only_ripe: bool) -> NotifyBulks:  # pylint: disable=too-many-bran
                     if age >= interval:
                         logger.info("Bulk %s is ripe: age %d >= %d", bulk_dir, age, interval)
                     elif len(uuids) >= count:
-                        logger.info("Bulk %s is ripe: count %d >= %d", bulk_dir, len(uuids), count)
+                        logger.info(
+                            "Bulk %s is ripe: count %d >= %d",
+                            bulk_dir,
+                            len(uuids),
+                            count,
+                        )
                     else:
                         logger.info(
                             "Bulk %s is not ripe yet (age: %d, count: %d)!",
@@ -1837,10 +1868,17 @@ def find_bulks(only_ripe: bool) -> NotifyBulks:  # pylint: disable=too-many-bran
                             continue
                     elif active is False:
                         logger.info(
-                            "Bulk %s is ripe: time period %s has ended", bulk_dir, timeperiod
+                            "Bulk %s is ripe: time period %s has ended",
+                            bulk_dir,
+                            timeperiod,
                         )
                     elif len(uuids) >= count:
-                        logger.info("Bulk %s is ripe: count %d >= %d", bulk_dir, len(uuids), count)
+                        logger.info(
+                            "Bulk %s is ripe: count %d >= %d",
+                            bulk_dir,
+                            len(uuids),
+                            count,
+                        )
                     else:
                         logger.info(
                             "Bulk %s is ripe: time period %s is not known anymore",
@@ -1884,7 +1922,10 @@ def notify_bulk(dirname: str, uuids: UUIDs) -> None:  # pylint: disable=too-many
             if cmk.utils.debug.enabled():
                 raise
             logger.info(
-                "    Deleting corrupted or empty bulk file %s/%s: %s", dirname, notify_uuid, e
+                "    Deleting corrupted or empty bulk file %s/%s: %s",
+                dirname,
+                notify_uuid,
+                e,
             )
             continue
 

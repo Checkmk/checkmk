@@ -9,7 +9,13 @@ from typing import Any, Final, Mapping, MutableMapping, NamedTuple, Sequence
 
 from cmk.plugins.lib import diskstat
 
-from .agent_based_api.v1 import get_rate, get_value_store, IgnoreResultsError, register, type_defs
+from .agent_based_api.v1 import (
+    get_rate,
+    get_value_store,
+    IgnoreResultsError,
+    register,
+    type_defs,
+)
 
 # Example output from agent
 # <<<winperf_phydisk>>>
@@ -130,7 +136,9 @@ class InstancesRowIndex(IntEnum):
     FIRST_DISK = 2
 
 
-def parse_winperf_phydisk(string_table: type_defs.StringTable) -> diskstat.Section | None:
+def parse_winperf_phydisk(
+    string_table: type_defs.StringTable,
+) -> diskstat.Section | None:
     if _is_data_absent(string_table):
         return None
     instances = string_table[TableRows.INSTANCES]

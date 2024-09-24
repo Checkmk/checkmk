@@ -24,7 +24,13 @@ from cmk.rulesets.v1.form_specs.validators import (
 
 
 @pytest.mark.parametrize(
-    ["input_args", "input_message", "test_value", "expected_raises", "expected_message"],
+    [
+        "input_args",
+        "input_message",
+        "test_value",
+        "expected_raises",
+        "expected_message",
+    ],
     [
         pytest.param(
             {},
@@ -35,9 +41,21 @@ from cmk.rulesets.v1.form_specs.validators import (
             "validator is meaningless.",
             id="no limits specified",
         ),
-        pytest.param({"min_value": 5.0}, None, 5.0, does_not_raise(), None, id="equal lower limit"),
         pytest.param(
-            {"max_value": 50.0}, None, 50.0, does_not_raise(), None, id="equal upper limit"
+            {"min_value": 5.0},
+            None,
+            5.0,
+            does_not_raise(),
+            None,
+            id="equal lower limit",
+        ),
+        pytest.param(
+            {"max_value": 50.0},
+            None,
+            50.0,
+            does_not_raise(),
+            None,
+            id="equal upper limit",
         ),
         pytest.param(
             {"min_value": 5.0, "max_value": 5.0},
@@ -97,7 +115,13 @@ def test_number_in_range(
 
 
 @pytest.mark.parametrize(
-    ["input_args", "input_message", "test_value", "expected_raises", "expected_message"],
+    [
+        "input_args",
+        "input_message",
+        "test_value",
+        "expected_raises",
+        "expected_message",
+    ],
     [
         pytest.param(
             {},
@@ -109,7 +133,12 @@ def test_number_in_range(
             id="no limits specified",
         ),
         pytest.param(
-            {"min_groups": 1}, None, r"(\b[A-Z]+\b)", does_not_raise(), None, id="equal lower limit"
+            {"min_groups": 1},
+            None,
+            r"(\b[A-Z]+\b)",
+            does_not_raise(),
+            None,
+            id="equal lower limit",
         ),
         pytest.param(
             {"max_groups": 2},
@@ -223,13 +252,29 @@ def test_match_regex(
 
 
 @pytest.mark.parametrize(
-    ["input_args", "input_message", "test_value", "expected_raises", "expected_message"],
+    [
+        "input_args",
+        "input_message",
+        "test_value",
+        "expected_raises",
+        "expected_message",
+    ],
     [
         pytest.param(
-            {"min_value": 1}, None, "valid_string", does_not_raise(), None, id="valid string"
+            {"min_value": 1},
+            None,
+            "valid_string",
+            does_not_raise(),
+            None,
+            id="valid string",
         ),
         pytest.param(
-            {"min_value": 1}, None, [0, 1, 2], does_not_raise(), None, id="valid sequence"
+            {"min_value": 1},
+            None,
+            [0, 1, 2],
+            does_not_raise(),
+            None,
+            id="valid sequence",
         ),
         pytest.param(
             {"min_value": 1},
@@ -329,7 +374,12 @@ def test_network_port(
     ["protocols", "input_msg", "test_value", "expected_raises", "expected_message"],
     [
         pytest.param(
-            [UrlProtocol.FILE], {}, "file://valid/url", does_not_raise(), None, id="valid string"
+            [UrlProtocol.FILE],
+            {},
+            "file://valid/url",
+            does_not_raise(),
+            None,
+            id="valid string",
         ),
         pytest.param(
             [UrlProtocol.HTTP, UrlProtocol.HTTPS],
@@ -383,10 +433,18 @@ def test_url(
     [
         pytest.param({}, "simple@example.com", does_not_raise(), None, id="valid address"),
         pytest.param(
-            {}, "name.surname@example.com", does_not_raise(), None, id="full name address"
+            {},
+            "name.surname@example.com",
+            does_not_raise(),
+            None,
+            id="full name address",
         ),
         pytest.param(
-            {}, "name.surname@localhost.com", does_not_raise(), None, id="localhost domain"
+            {},
+            "name.surname@localhost.com",
+            does_not_raise(),
+            None,
+            id="localhost domain",
         ),
         pytest.param(
             {},

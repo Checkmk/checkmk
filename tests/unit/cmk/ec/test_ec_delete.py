@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """EC delete methods with one or more event IDs"""
+
 from tests.testlib import CMKEventConsole
 
 from tests.unit.cmk.ec.helpers import FakeStatusSocket

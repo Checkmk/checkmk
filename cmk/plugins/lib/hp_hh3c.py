@@ -28,7 +28,10 @@ def parse_hp_hh3c_device(string_table: list[StringTable]) -> Section:
 
 def discover_hp_hh3c_device(section: Section) -> DiscoveryResult:
     for num, status in section.items():
-        if status not in (DeviceStatus.UNSUPPORTED.value, DeviceStatus.NOT_INSTALLED.value):
+        if status not in (
+            DeviceStatus.UNSUPPORTED.value,
+            DeviceStatus.NOT_INSTALLED.value,
+        ):
             yield Service(item=num)
 
 

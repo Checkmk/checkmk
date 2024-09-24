@@ -17,7 +17,15 @@ from dataclasses import dataclass, field
 from itertools import chain
 from pathlib import Path
 from typing import NamedTuple
-from urllib.parse import parse_qs, parse_qsl, urlencode, urljoin, urlparse, urlsplit, urlunsplit
+from urllib.parse import (
+    parse_qs,
+    parse_qsl,
+    urlencode,
+    urljoin,
+    urlparse,
+    urlsplit,
+    urlunsplit,
+)
 
 import playwright.async_api
 import requests
@@ -68,7 +76,9 @@ class Progress:
         self.done_total += done
         if time.time() > self.next_report:
             logger.info(
-                "rate: %.2f per sec (%d total)", self.done_total / self.duration, self.done_total
+                "rate: %.2f per sec (%d total)",
+                self.done_total / self.duration,
+                self.done_total,
             )
             self.next_report = time.time() + self.report_interval
 
@@ -131,7 +141,9 @@ def format_js_error(error: playwright.async_api.Error) -> str:
     return f"{error.name}: {error.message}\n{error.stack}"
 
 
-def try_find_frame_named_main(page: playwright.async_api.Page) -> playwright.async_api.Frame:
+def try_find_frame_named_main(
+    page: playwright.async_api.Page,
+) -> playwright.async_api.Frame:
     # There are two main frames: Playwright main_frame is the outer frame, the
     # frame named main is the frame with the name "main". This is where the
     # interesting checkmk stuff is happening, so we try to find it, but fall
@@ -284,7 +296,9 @@ class Crawler:
 
         if response.status_code != 200:
             self.handle_error(
-                Url(url=crash_reports_url), "CrashReportsPageFailed", str(response.status_code)
+                Url(url=crash_reports_url),
+                "CrashReportsPageFailed",
+                str(response.status_code),
             )
 
         for crash_id_match in re.finditer(rf"crash_id=({CrashIdRegex})", response.text):
@@ -383,7 +397,9 @@ class Crawler:
     ) -> PageContent:
         logs = []
 
-        async def handle_console_messages(msg: playwright.async_api.ConsoleMessage) -> None:
+        async def handle_console_messages(
+            msg: playwright.async_api.ConsoleMessage,
+        ) -> None:
             location = (
                 f"{msg.location['url']}:{msg.location['lineNumber']}:{msg.location['columnNumber']}"
             )

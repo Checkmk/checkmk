@@ -122,7 +122,11 @@ def parse_arguments(argv):
         help="Use 'http' or 'https' for connection to splunk (default=https)",
     )
     parser.add_argument(
-        "-p", "--port", default=8089, type=int, help="Use alternative port (default: 8089)"
+        "-p",
+        "--port",
+        default=8089,
+        type=int,
+        help="Use alternative port (default: 8089)",
     )
     parser.add_argument(
         "-m",
@@ -132,7 +136,9 @@ def parse_arguments(argv):
         help="Space-separated list of data to query. Possible values: 'license_state license_usage system_msg jobs health alerts' (default: all)",
     )
     parser.add_argument(
-        "--debug", action="store_true", help="Debug mode: let Python exceptions come through"
+        "--debug",
+        action="store_true",
+        help="Debug mode: let Python exceptions come through",
     )
     parser.add_argument(
         "hostname", metavar="HOSTNAME", help="Name of the splunk instance to query."
@@ -222,7 +228,9 @@ def handle_health(value):
             feature_name = f"{feature[0].upper()}{feature[1:].lower()}"
             sys.stdout.write(
                 "{} {} {}\n".format(
-                    func_name.replace(" ", "_"), feature_name.replace(" ", "_"), status["health"]
+                    func_name.replace(" ", "_"),
+                    feature_name.replace(" ", "_"),
+                    status["health"],
                 )
             )
 

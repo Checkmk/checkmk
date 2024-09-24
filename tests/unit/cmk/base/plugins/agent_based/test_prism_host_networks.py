@@ -8,7 +8,12 @@ from typing import Any
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.prism_host_networks import (
     _check_prism_host_network,
     discovery_prism_host_networks,
@@ -72,7 +77,10 @@ def fixture_section() -> interfaces.Section[interfaces.InterfaceWithRates]:
             [
                 Service(
                     item="1",
-                    parameters={"discovered_oper_status": ["1"], "discovered_speed": 10000000000.0},
+                    parameters={
+                        "discovered_oper_status": ["1"],
+                        "discovered_speed": 10000000000.0,
+                    },
                 ),
             ],
             id="For every network interface, a Service is discovered.",

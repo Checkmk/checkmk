@@ -12,8 +12,17 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.api.agent_based.plugin_classes import CheckFunction, CheckPlugin, DiscoveryFunction
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.api.agent_based.plugin_classes import (
+    CheckFunction,
+    CheckPlugin,
+    DiscoveryFunction,
+)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 
 _PLUGIN = CheckPluginName("fireeye_mailq")
 

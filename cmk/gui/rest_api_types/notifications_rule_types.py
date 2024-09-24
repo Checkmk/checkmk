@@ -1115,7 +1115,9 @@ class CheckboxSysLogPriority:
             }
         return r
 
-    def to_mk_file_format(self) -> tuple[SyslogPriorityIntType, SyslogPriorityIntType] | None:
+    def to_mk_file_format(
+        self,
+    ) -> tuple[SyslogPriorityIntType, SyslogPriorityIntType] | None:
         return self.value
 
     def disable(self) -> None:
@@ -1220,7 +1222,10 @@ class CheckboxHttpProxy:
 
             case {
                 "state": "enabled",
-                "value": {"option": "global", "global_proxy_id": str() as global_proxy_id},
+                "value": {
+                    "option": "global",
+                    "global_proxy_id": str() as global_proxy_id,
+                },
             }:
                 return cls(value=("global", global_proxy_id))
 
@@ -1771,7 +1776,10 @@ class EventConsoleAlerts:
             "match_facility": self.match_syslog_facility.to_mk_file_format(),
             "match_comment": self.match_comment.to_mk_file_format(),
         }
-        return cast(ConditionEventConsoleAlertsType, {k: v for k, v in r.items() if v is not None})
+        return cast(
+            ConditionEventConsoleAlertsType,
+            {k: v for k, v in r.items() if v is not None},
+        )
 
 
 # ----------------------------------------------------------------
@@ -1784,7 +1792,10 @@ class NotificationBulkingAlwaysParams:
     time_horizon: int
 
     def __iter__(self) -> Iterator:
-        yield "subject_for_bulk_notifications", self.subject_for_bulk_notifications.api_response()
+        yield (
+            "subject_for_bulk_notifications",
+            self.subject_for_bulk_notifications.api_response(),
+        )
         for k, v in self.__dict__.items():
             if k in ("subject_for_bulk_notifications"):
                 continue
@@ -1801,7 +1812,10 @@ class NotificationBulkingTimeoutParams:
     bulk_outside_timeperiod: BulkOutsideTimePeriod
 
     def __iter__(self) -> Iterator:
-        yield "subject_for_bulk_notifications", self.subject_for_bulk_notifications.api_response()
+        yield (
+            "subject_for_bulk_notifications",
+            self.subject_for_bulk_notifications.api_response(),
+        )
         yield "bulk_outside_timeperiod", self.bulk_outside_timeperiod.api_response()
 
         for k, v in self.__dict__.items():

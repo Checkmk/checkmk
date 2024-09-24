@@ -10,7 +10,12 @@ import pytest
 
 from tests.unit.checks.checktestlib import mock_item_state
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.threepar_capacity import (
     check_threepar_capacity,
     discover_threepar_capacity,
@@ -104,7 +109,10 @@ def test_discover_threepar_capacity(
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +2.28 GiB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +<0.01%"),
                 Metric("trend", 2337.2427533197924),
-                Result(state=State.OK, summary="Time left until disk full: 141 years 160 days"),
+                Result(
+                    state=State.OK,
+                    summary="Time left until disk full: 141 years 160 days",
+                ),
             ],
             id="If the free capacity is above the WARN/CRIT level, the check result is OK.",
         ),
@@ -115,7 +123,12 @@ def test_discover_threepar_capacity(
             [
                 Metric("fs_used", 81.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Metric("fs_free", 19.0, boundaries=(0.0, None)),
-                Metric("fs_used_percent", 81.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+                Metric(
+                    "fs_used_percent",
+                    81.0,
+                    levels=(80.0, 90.0),
+                    boundaries=(0.0, 100.0),
+                ),
                 Result(
                     state=State.WARN,
                     summary="Used: 81.00% - 81.0 MiB of 100 MiB (warn/crit at 80.00%/90.00% used)",
@@ -125,7 +138,10 @@ def test_discover_threepar_capacity(
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +4.20 KiB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +<0.01%"),
                 Metric("trend", 0.004101514958375289),
-                Result(state=State.OK, summary="Time left until disk full: 12 years 252 days"),
+                Result(
+                    state=State.OK,
+                    summary="Time left until disk full: 12 years 252 days",
+                ),
             ],
             id="If the free capacity is below the WARN level, the check result is WARN.",
         ),
@@ -136,7 +152,12 @@ def test_discover_threepar_capacity(
             [
                 Metric("fs_used", 91.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Metric("fs_free", 9.0, boundaries=(0.0, None)),
-                Metric("fs_used_percent", 91.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+                Metric(
+                    "fs_used_percent",
+                    91.0,
+                    levels=(80.0, 90.0),
+                    boundaries=(0.0, 100.0),
+                ),
                 Result(
                     state=State.CRIT,
                     summary="Used: 91.00% - 91.0 MiB of 100 MiB (warn/crit at 80.00%/90.00% used)",
@@ -157,15 +178,26 @@ def test_discover_threepar_capacity(
             [
                 Metric("fs_used", 20.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Metric("fs_free", 80.0, boundaries=(0.0, None)),
-                Metric("fs_used_percent", 20.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+                Metric(
+                    "fs_used_percent",
+                    20.0,
+                    levels=(80.0, 90.0),
+                    boundaries=(0.0, 100.0),
+                ),
                 Result(state=State.OK, summary="Used: 20.00% - 20.0 MiB of 100 MiB"),
                 Metric("fs_size", 100.0, boundaries=(0.0, None)),
                 Metric("growth", 0.0005776781631514493),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +606 B"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +<0.01%"),
                 Metric("trend", 0.0005776781631514493),
-                Result(state=State.OK, summary="Time left until disk full: 379 years 150 days"),
-                Result(state=State.WARN, summary="3.0 MB failed: 3.00% (warn/crit at 2.00%/5.00%)"),
+                Result(
+                    state=State.OK,
+                    summary="Time left until disk full: 379 years 150 days",
+                ),
+                Result(
+                    state=State.WARN,
+                    summary="3.0 MB failed: 3.00% (warn/crit at 2.00%/5.00%)",
+                ),
             ],
             id="If the failed capacity is above the WARN level, the result is WARN.",
         ),
@@ -176,15 +208,26 @@ def test_discover_threepar_capacity(
             [
                 Metric("fs_used", 20.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Metric("fs_free", 80.0, boundaries=(0.0, None)),
-                Metric("fs_used_percent", 20.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+                Metric(
+                    "fs_used_percent",
+                    20.0,
+                    levels=(80.0, 90.0),
+                    boundaries=(0.0, 100.0),
+                ),
                 Result(state=State.OK, summary="Used: 20.00% - 20.0 MiB of 100 MiB"),
                 Metric("fs_size", 100.0, boundaries=(0.0, None)),
                 Metric("growth", 0.0005776781631514493),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +606 B"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +<0.01%"),
                 Metric("trend", 0.0005776781631514493),
-                Result(state=State.OK, summary="Time left until disk full: 379 years 150 days"),
-                Result(state=State.CRIT, summary="6.0 MB failed: 6.00% (warn/crit at 2.00%/5.00%)"),
+                Result(
+                    state=State.OK,
+                    summary="Time left until disk full: 379 years 150 days",
+                ),
+                Result(
+                    state=State.CRIT,
+                    summary="6.0 MB failed: 6.00% (warn/crit at 2.00%/5.00%)",
+                ),
             ],
             id="If the failed capacity is above the CRIT level, the result is CRIT.",
         ),

@@ -101,7 +101,10 @@ pytestmark = pytest.mark.checks
                             "disable_cert_validation": True,
                             "port": 50,
                         },
-                        "auth": ("oauth2", ("client_id", ("store", "password_1"), "tenant_id")),
+                        "auth": (
+                            "oauth2",
+                            ("client_id", ("store", "password_1"), "tenant_id"),
+                        ),
                         "email_address": "address@email.com",
                     },
                 ),

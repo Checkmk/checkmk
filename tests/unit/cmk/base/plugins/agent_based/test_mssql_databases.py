@@ -23,7 +23,15 @@ def _get_section():
             ["MSSQL_MSSQL46", "msdb", "ONLINE", "SIMPLE", "0", "0"],
             ["MSSQL_MSSQL46", "NOC_ALARM_T", "ONLINE", "FULL", "0", "1"],
             ["MSSQL_MSSQL46", "test_autoclose", "ONLINE", "FULL", "1", "0"],
-            ["MSSQL_MSSQL46", "test_autoclose", "RECOVERY", "PENDING", "FULL", "1", "0"],
+            [
+                "MSSQL_MSSQL46",
+                "test_autoclose",
+                "RECOVERY",
+                "PENDING",
+                "FULL",
+                "1",
+                "0",
+            ],
             ["MSSQL_Mouse", "-", "ERROR: We are out of cheese!", "-", "-", "-"],
         ]
     )

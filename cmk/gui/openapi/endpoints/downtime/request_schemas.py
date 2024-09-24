@@ -330,7 +330,9 @@ class ModifyDowntimeFieldsSchema(BaseSchema):
     )
 
     comment = fields.String(
-        required=False, example="Security updates", description="The comment for the downtime."
+        required=False,
+        example="Security updates",
+        description="The comment for the downtime.",
     )
 
 

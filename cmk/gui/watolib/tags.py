@@ -15,7 +15,14 @@ import cmk.utils.store as store
 import cmk.utils.tags
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
-from cmk.utils.tags import BuiltinTagConfig, TagConfig, TagConfigSpec, TagGroup, TagGroupID, TagID
+from cmk.utils.tags import (
+    BuiltinTagConfig,
+    TagConfig,
+    TagConfigSpec,
+    TagGroup,
+    TagGroupID,
+    TagID,
+)
 
 from cmk.gui import hooks
 from cmk.gui.config import load_config
@@ -324,7 +331,9 @@ def change_host_tags_in_rulesets(
 
 
 def _change_host_tags_in_folders(
-    operation: ABCTagGroupOperation | OperationReplaceGroupedTags, mode: TagCleanupMode, folder: Any
+    operation: ABCTagGroupOperation | OperationReplaceGroupedTags,
+    mode: TagCleanupMode,
+    folder: Any,
 ) -> tuple[list[Folder], list[Host]]:
     """Update host tag assignments in hosts/folders
 

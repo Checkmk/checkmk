@@ -11,7 +11,10 @@ from cmk.plugins.lib import interfaces
 def test_parse_emc_vplex_if() -> None:
     assert parse_emc_vplex_if(
         [
-            [["director-1-1-A", "128.221.252.35"], ["director-1-1-B", "128.221.252.36"]],
+            [
+                ["director-1-1-A", "128.221.252.35"],
+                ["director-1-1-B", "128.221.252.36"],
+            ],
             [
                 ["A0-FC00", "159850409786880", "118814791148032", "128.221.252.35.1"],
                 ["B0-FC00", "325205070345216", "198559903067648", "128.221.252.36.1"],

@@ -67,7 +67,8 @@ check_plugin_azure_postgresql_replication = CheckPlugin(
     sections=["azure_servers"],
     service_name="Azure/DB for PostgreSQL %s Replication",
     discovery_function=create_discover_by_metrics_function(
-        "maximum_pg_replica_log_delay_in_seconds", resource_types=DB_POSTGRESQL_RESOURCE_TYPES
+        "maximum_pg_replica_log_delay_in_seconds",
+        resource_types=DB_POSTGRESQL_RESOURCE_TYPES,
     ),
     check_function=check_replication(),
     check_ruleset_name="replication_lag",

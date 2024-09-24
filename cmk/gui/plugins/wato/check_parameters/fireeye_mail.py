@@ -18,7 +18,9 @@ def _parameter_valuespec_fireeye_mail():
             (
                 "interval",
                 Integer(
-                    title="Timespan for mail rate computation", default_value=60, unit="minutes"
+                    title="Timespan for mail rate computation",
+                    default_value=60,
+                    unit="minutes",
                 ),
             ),
         ],

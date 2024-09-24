@@ -32,7 +32,12 @@ pytestmark = pytest.mark.checks
                     {},
                     BasicCheckResult(0, "20.7 °C", [("temp", 20.70)]),
                 ),
-                ("ra32e_sensors", "Heat Index", {}, BasicCheckResult(3, "no data for sensor")),
+                (
+                    "ra32e_sensors",
+                    "Heat Index",
+                    {},
+                    BasicCheckResult(3, "no data for sensor"),
+                ),
                 (
                     "ra32e_sensors.humidity",
                     "Internal",
@@ -48,7 +53,12 @@ pytestmark = pytest.mark.checks
                 ("ra32e_sensors.humidity", [("Internal", {})]),
             ],
             [
-                ("ra32e_sensors", "Internal", {}, BasicCheckResult(3, "no data for sensor")),
+                (
+                    "ra32e_sensors",
+                    "Internal",
+                    {},
+                    BasicCheckResult(3, "no data for sensor"),
+                ),
                 (
                     "ra32e_sensors",
                     "Heat Index",
@@ -64,16 +74,41 @@ pytestmark = pytest.mark.checks
             ],
         ),
         (  # temp sensor (ignores fahrenheit value)
-            [[["", "", ""]], [], [["2580", "9999", "", "", ""]], [], [], [], [], [], []],
+            [
+                [["", "", ""]],
+                [],
+                [["2580", "9999", "", "", ""]],
+                [],
+                [],
+                [],
+                [],
+                [],
+                [],
+            ],
             [
                 ("ra32e_sensors", [("Sensor 2", {})]),
             ],
             [
-                ("ra32e_sensors", "Sensor 2", {}, BasicCheckResult(0, "25.8 °C", [("temp", 25.8)])),
+                (
+                    "ra32e_sensors",
+                    "Sensor 2",
+                    {},
+                    BasicCheckResult(0, "25.8 °C", [("temp", 25.8)]),
+                ),
             ],
         ),
         (  # temp/active sensor
-            [[["", "", ""]], [], [], [], [], [["3100", "9999", "0", "", ""]], [], [], []],
+            [
+                [["", "", ""]],
+                [],
+                [],
+                [],
+                [],
+                [["3100", "9999", "0", "", ""]],
+                [],
+                [],
+                [],
+            ],
             [
                 ("ra32e_sensors", [("Sensor 5", {})]),
                 ("ra32e_sensors.power", [("Sensor 5", {})]),
@@ -84,7 +119,9 @@ pytestmark = pytest.mark.checks
                     "Sensor 5",
                     {"levels": (30.0, 35.0)},
                     BasicCheckResult(
-                        1, "31.0 °C (warn/crit at 30.0/35.0 °C)", [("temp", 31.0, 30.0, 35.0)]
+                        1,
+                        "31.0 °C (warn/crit at 30.0/35.0 °C)",
+                        [("temp", 31.0, 30.0, 35.0)],
                     ),
                 ),
                 (
@@ -118,18 +155,28 @@ pytestmark = pytest.mark.checks
                 ],
             ],
             [
-                ("ra32e_sensors", [("Heat Index 1", {}), ("Sensor 1", {}), ("Sensor 8", {})]),
+                (
+                    "ra32e_sensors",
+                    [("Heat Index 1", {}), ("Sensor 1", {}), ("Sensor 8", {})],
+                ),
                 ("ra32e_sensors.voltage", [("Sensor 8", {})]),
                 ("ra32e_sensors.humidity", [("Sensor 1", {})]),
             ],
             [
-                ("ra32e_sensors", "Sensor 8", {}, BasicCheckResult(0, "25.8 °C", [("temp", 25.8)])),
+                (
+                    "ra32e_sensors",
+                    "Sensor 8",
+                    {},
+                    BasicCheckResult(0, "25.8 °C", [("temp", 25.8)]),
+                ),
                 (
                     "ra32e_sensors",
                     "Heat Index 1",
                     {"levels": (27.0, 28.0)},
                     BasicCheckResult(
-                        2, "28.0 °C (warn/crit at 27.0/28.0 °C)", [("temp", 28.0, 27.0, 28.0)]
+                        2,
+                        "28.0 °C (warn/crit at 27.0/28.0 °C)",
+                        [("temp", 28.0, 27.0, 28.0)],
                     ),
                 ),
                 (
@@ -137,7 +184,9 @@ pytestmark = pytest.mark.checks
                     "Sensor 8",
                     {"voltage": (210, 180)},
                     BasicCheckResult(
-                        1, "Voltage: 200.0 V (warn/crit below 210.0 V/180.0 V)", [("voltage", 200)]
+                        1,
+                        "Voltage: 200.0 V (warn/crit below 210.0 V/180.0 V)",
+                        [("voltage", 200)],
                     ),
                 ),
                 (

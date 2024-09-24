@@ -14,7 +14,14 @@ from cmk.plugins.lib.liebert import (
 )
 from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
-from .agent_based_api.v1 import get_value_store, register, Result, Service, SNMPTree, State
+from .agent_based_api.v1 import (
+    get_value_store,
+    register,
+    Result,
+    Service,
+    SNMPTree,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 ParsedSection = Mapping[str, tuple[str, str]]

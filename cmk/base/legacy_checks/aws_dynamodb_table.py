@@ -93,9 +93,11 @@ def _check_aws_dynamodb_capacity(params, parsed, capacity_units_to_check):
 
     metric_name, unit = _capacity_metric_id_to_name_and_unit(metric_id_avg)
 
-    yield 0, "Avg. consumption: %s" % aws_get_float_human_readable(metric_val_avg, unit=unit), [
-        (metric_name, metric_val_avg)
-    ]
+    yield (
+        0,
+        "Avg. consumption: %s" % aws_get_float_human_readable(metric_val_avg, unit=unit),
+        [(metric_name, metric_val_avg)],
+    )
 
     params_avg = params.get("levels_average", {})
     limit_val = params_avg.get("limit")

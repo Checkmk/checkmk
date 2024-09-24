@@ -80,7 +80,9 @@ def _get_aux_tag_choice(aux_tag: AuxTag) -> tuple[TagID, Tuple]:
 
 
 def _validate_tag_list(
-    value: Sequence[Any], varprefix: str, tag_choices: Sequence[tuple[TagID | None, str]]
+    value: Sequence[Any],
+    varprefix: str,
+    tag_choices: Sequence[tuple[TagID | None, str]],
 ) -> None:
     seen = set()
     for tag_id in value:
@@ -93,7 +95,9 @@ def _validate_tag_list(
         seen.add(tag_id)
 
 
-def _get_tag_group_choice(tag_group: TagGroup) -> tuple[TagGroupID, Tuple | CascadingDropdown]:
+def _get_tag_group_choice(
+    tag_group: TagGroup,
+) -> tuple[TagGroupID, Tuple | CascadingDropdown]:
     tag_choices = tag_group.get_tag_choices()
 
     if len(tag_choices) == 1:

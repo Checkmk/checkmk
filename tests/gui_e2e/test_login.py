@@ -33,7 +33,11 @@ def test_logout_works(logged_in_page: LoginPage) -> None:
     ],
 )
 def test_redirected_to_desired_page(
-    test_site: Site, page: Page, credentials: CmkCredentials, url: str, mobile_device: bool
+    test_site: Site,
+    page: Page,
+    credentials: CmkCredentials,
+    url: str,
+    mobile_device: bool,
 ) -> None:
     cmk_page = url.replace(r"<SITE_ID>", test_site.id)
     visit_url = urljoin(test_site.internal_url, cmk_page)

@@ -201,7 +201,11 @@ def parse_brocade_optical(string_table: list[type_defs.StringTable]) -> Section:
     for if_id, if_descr, if_type, if_operstatus in if_info:
         if if_id in parsed:
             parsed[if_id].update(
-                {"port_type": if_type, "description": if_descr, "operational_status": if_operstatus}
+                {
+                    "port_type": if_type,
+                    "description": if_descr,
+                    "operational_status": if_operstatus,
+                }
             )
 
     # add informational values

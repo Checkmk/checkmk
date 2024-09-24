@@ -204,7 +204,10 @@ def test_oracle_sql_discovery(info, expected):
                     'Unexpected Keyword: "detail". Line was: detail:SHA-TT File (sha-ra), '
                     "welches Sachen macht.",
                 ),
-                (0, "\nMonitoring SHA/RAB Resultat = 1\nTODO siehe FOOBAR; Monitoring SHA"),
+                (
+                    0,
+                    "\nMonitoring SHA/RAB Resultat = 1\nTODO siehe FOOBAR; Monitoring SHA",
+                ),
             ],
         ),
         (

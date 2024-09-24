@@ -48,7 +48,7 @@ def _format_value(value: object) -> str:
 
 
 def _iter_path_components(
-    components: tuple[PATH_COMPONENT | PATH_COMPONENTS, ...]
+    components: tuple[PATH_COMPONENT | PATH_COMPONENTS, ...],
 ) -> Iterable[PATH_COMPONENT]:
     for component in components:
         if isinstance(component, (str, int)):
@@ -137,13 +137,15 @@ def __diff_set(path_components: PATH_COMPONENTS, old: set, new: set) -> Iterable
         yield (
             path_components,
             _("Item {diff_path} with value {val_t1} removed.").format(
-                diff_path=_diff_path(path_components).formatted, val_t1=_format_value(removed)
+                diff_path=_diff_path(path_components).formatted,
+                val_t1=_format_value(removed),
             ),
         )
     for added in new - old:
         yield (
             path_components,
             _("Item {diff_path} with value {val_t2} added.").format(
-                diff_path=_diff_path(path_components).formatted, val_t2=_format_value(added)
+                diff_path=_diff_path(path_components).formatted,
+                val_t2=_format_value(added),
             ),
         )

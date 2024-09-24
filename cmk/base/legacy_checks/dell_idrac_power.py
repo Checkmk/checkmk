@@ -36,7 +36,9 @@ def check_dell_idrac_power(item, _no_params, info):
             yield state, "Status: %s" % state_readable
 
 
-def parse_dell_idrac_power(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+def parse_dell_idrac_power(
+    string_table: Sequence[StringTable],
+) -> Sequence[StringTable]:
     return string_table
 
 
@@ -92,10 +94,13 @@ def check_dell_idrac_power_unit(item, _no_params, info):
         if index == item:
             state, state_readable = translate_status[status]
             psu_type_readable = translate_type[psu_type]
-            yield state, "Status: {}, Type: {}, Name: {}".format(
-                state_readable,
-                psu_type_readable,
-                location,
+            yield (
+                state,
+                "Status: {}, Type: {}, Name: {}".format(
+                    state_readable,
+                    psu_type_readable,
+                    location,
+                ),
             )
 
 

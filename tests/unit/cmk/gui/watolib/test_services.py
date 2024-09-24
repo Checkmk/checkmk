@@ -91,7 +91,8 @@ MOCK_DISCOVERY_RESULT = ServiceDiscoveryPreviewResult(
 @pytest.fixture(name="mock_discovery_preview")
 def fixture_mock_discovery_preview(mocker: MockerFixture) -> MagicMock:
     return mocker.patch(
-        "cmk.gui.watolib.services.local_discovery_preview", return_value=MOCK_DISCOVERY_RESULT
+        "cmk.gui.watolib.services.local_discovery_preview",
+        return_value=MOCK_DISCOVERY_RESULT,
     )
 
 
@@ -110,7 +111,9 @@ def mock_add_service_change(mocker: MockerFixture) -> MagicMock:
 @pytest.fixture(name="mock_check_transaction")
 def fixture_check_transaction():
     return patch.object(
-        transaction_manager.TransactionManager, "check_transaction", MagicMock(side_effect=[True])
+        transaction_manager.TransactionManager,
+        "check_transaction",
+        MagicMock(side_effect=[True]),
     )
 
 
@@ -316,7 +319,12 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
         "NO_SITE",
         sample_host_name,
         {
-            ("lnx_thermal", "Zone 1"): ("Temperature Zone 1", {}, {}, [sample_host_name]),
+            ("lnx_thermal", "Zone 1"): (
+                "Temperature Zone 1",
+                {},
+                {},
+                [sample_host_name],
+            ),
         },
     )
     mock_discovery_preview.assert_called_once()
@@ -767,7 +775,10 @@ def test_perform_discovery_action_update_services(
         {
             ("df", "/opt/omd/sites/heute/tmp"): (
                 "Filesystem /opt/omd/sites/heute/tmp",
-                {"item_appearance": "mountpoint", "mountpoint_for_block_devices": "volume_name"},
+                {
+                    "item_appearance": "mountpoint",
+                    "mountpoint_for_block_devices": "volume_name",
+                },
                 {},
                 ["TODAY"],
             )

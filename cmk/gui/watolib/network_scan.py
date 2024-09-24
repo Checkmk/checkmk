@@ -75,7 +75,9 @@ def execute_network_scan_job() -> None:
                 found = _do_network_scan(folder)
             else:
                 raw_response = do_remote_automation(
-                    get_site_config(folder.site_id()), "network-scan", [("folder", folder.path())]
+                    get_site_config(folder.site_id()),
+                    "network-scan",
+                    [("folder", folder.path())],
                 )
                 assert isinstance(raw_response, list)
                 found = raw_response
@@ -210,7 +212,9 @@ def _ip_addresses_to_scan(folder: Folder) -> set[HostAddress]:
     return to_scan
 
 
-def _ip_addresses_of_ranges(ip_ranges: list[IPRange] | list[ExcludeIPRange]) -> set[HostAddress]:
+def _ip_addresses_of_ranges(
+    ip_ranges: list[IPRange] | list[ExcludeIPRange],
+) -> set[HostAddress]:
     addresses = set()
 
     for ip_range in ip_ranges:
@@ -365,7 +369,8 @@ def _scan_ip_addresses(
 
 
 def _ping_worker(
-    addresses: list[HostAddress], hosts: list[tuple[HostName | HostAddress, HostAddress]]
+    addresses: list[HostAddress],
+    hosts: list[tuple[HostName | HostAddress, HostAddress]],
 ) -> None:
     while True:
         try:

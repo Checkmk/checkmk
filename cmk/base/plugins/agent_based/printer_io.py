@@ -97,7 +97,15 @@ ALARM_MAP = {
 def parse_printer_io(string_table: list[StringTable]) -> Section:
     parsed: Section = {}
     for line in string_table[0]:
-        tray_index, name, descr, snmp_status_raw, capacity_unit, capacity_max, level = line[:7]
+        (
+            tray_index,
+            name,
+            descr,
+            snmp_status_raw,
+            capacity_unit,
+            capacity_max,
+            level,
+        ) = line[:7]
         snmp_status = int(snmp_status_raw) if snmp_status_raw else 0
 
         transitioning = bool(snmp_status & 64)
@@ -226,7 +234,8 @@ def check_printer_io(
 
     if tray.capacity_unit != " unknown":
         yield Result(
-            state=State.OK, summary=f"Maximal capacity: {tray.capacity_max}{tray.capacity_unit}"
+            state=State.OK,
+            summary=f"Maximal capacity: {tray.capacity_max}{tray.capacity_unit}",
         )
 
     quantity_message = "remaining" if io_type == IOType.INPUT else "filled"

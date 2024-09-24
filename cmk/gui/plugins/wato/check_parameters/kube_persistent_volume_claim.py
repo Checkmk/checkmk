@@ -4,7 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.check_parameters.filesystem_utils import FilesystemElements, vs_filesystem
+from cmk.gui.plugins.wato.check_parameters.filesystem_utils import (
+    FilesystemElements,
+    vs_filesystem,
+)
 from cmk.gui.plugins.wato.check_parameters.kube import age_levels_dropdown
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -21,7 +24,10 @@ def _parameter_valuespec_persistent_volume_claims():
                 "pending",
                 age_levels_dropdown(_("Time to alert when PVC status is in pending state")),
             ),
-            ("lost", MonitoringState(title="Monitoring State if PVC status reports lost")),
+            (
+                "lost",
+                MonitoringState(title="Monitoring State if PVC status reports lost"),
+            ),
             (
                 "filesystem",
                 vs_filesystem(

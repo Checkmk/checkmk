@@ -13,7 +13,11 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.fetcher import HostKey, SourceType
-from cmk.checkengine.parser import AgentRawDataSection, AgentRawDataSectionElem, HostSections
+from cmk.checkengine.parser import (
+    AgentRawDataSection,
+    AgentRawDataSectionElem,
+    HostSections,
+)
 from cmk.checkengine.sectionparser import (
     ParsedSectionName,
     ParsedSectionsResolver,
@@ -87,7 +91,10 @@ NODE_2: Sequence[AgentRawDataSectionElem] = [
         (["parsed"], {"section": {"parsed_by": "two", "node": "node1"}}),
         (
             ["parsed", "nonexistent"],
-            {"section_parsed": {"parsed_by": "two", "node": "node1"}, "section_nonexistent": None},
+            {
+                "section_parsed": {"parsed_by": "two", "node": "node1"},
+                "section_nonexistent": None,
+            },
         ),
         (
             ["parsed", "parsed2"],

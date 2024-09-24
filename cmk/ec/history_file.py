@@ -17,7 +17,14 @@ from cmk.utils.render import date_and_time
 
 from .config import Config
 from .event import Event, scrub_string
-from .history import _log_event, ActiveHistoryPeriod, get_logfile, History, HistoryWhat, quote_tab
+from .history import (
+    _log_event,
+    ActiveHistoryPeriod,
+    get_logfile,
+    History,
+    HistoryWhat,
+    quote_tab,
+)
 from .query import Columns, OperatorName, QueryFilter, QueryGET
 from .settings import Settings
 
@@ -129,7 +136,11 @@ class FileHistory(History):
 
 
 def _expire_logfiles(
-    settings: Settings, config: Config, logger: Logger, lock_history: threading.Lock, flush: bool
+    settings: Settings,
+    config: Config,
+    logger: Logger,
+    lock_history: threading.Lock,
+    flush: bool,
 ) -> None:
     """Delete old log files."""
     with lock_history:
@@ -145,7 +156,9 @@ def _expire_logfiles(
             for path in settings.paths.history_dir.value.glob("*.log"):
                 if flush or path.stat().st_mtime < min_mtime:
                     logger.info(
-                        "Deleting log file %s (age %s)", path, date_and_time(path.stat().st_mtime)
+                        "Deleting log file %s (age %s)",
+                        path,
+                        date_and_time(path.stat().st_mtime),
                     )
                     path.unlink()
         except Exception as e:
@@ -208,7 +221,7 @@ def _grep_pattern(argument: str) -> str:
 
 
 def _greatest_lower_bound_for_filters(
-    filters: Iterable[tuple[OperatorName, float]]
+    filters: Iterable[tuple[OperatorName, float]],
 ) -> float | None:
     result: float | None = None
     for operator, value in filters:
@@ -228,7 +241,9 @@ def _greatest_lower_bound_for_filter(operator: OperatorName, value: float) -> fl
     return None
 
 
-def _least_upper_bound_for_filters(filters: Iterable[tuple[OperatorName, float]]) -> float | None:
+def _least_upper_bound_for_filters(
+    filters: Iterable[tuple[OperatorName, float]],
+) -> float | None:
     result: float | None = None
     for operator, value in filters:
         lub = _least_upper_bound_for_filter(operator, value)

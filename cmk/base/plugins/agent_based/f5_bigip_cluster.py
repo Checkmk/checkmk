@@ -2,8 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""F5-BIGIP-Cluster Config Sync - SNMP sections and Checks
-"""
+"""F5-BIGIP-Cluster Config Sync - SNMP sections and Checks"""
+
 from collections.abc import Mapping
 from typing import Any, NamedTuple
 
@@ -52,7 +52,9 @@ def discover_f5_bigip_config_sync(section: NodeState) -> DiscoveryResult:
         yield Service()
 
 
-def parse_f5_bigip_config_sync_pre_v11(string_table: list[StringTable]) -> NodeState | None:
+def parse_f5_bigip_config_sync_pre_v11(
+    string_table: list[StringTable],
+) -> NodeState | None:
     """Read a node status encoded as stringified int
     >>> parse_f5_bigip_config_sync_pre_v11([[["0 - Synchronized"]]])
     NodeState(state='0', description='Synchronized')
@@ -112,7 +114,9 @@ register.check_plugin(
 # F5 nodes need to be ntp synced otherwise status reports might be wrong.
 
 
-def parse_f5_bigip_config_sync_v11_plus(string_table: list[StringTable]) -> NodeState | None:
+def parse_f5_bigip_config_sync_v11_plus(
+    string_table: list[StringTable],
+) -> NodeState | None:
     """Read a node status encoded as stringified int
     >>> parse_f5_bigip_config_sync_v11_plus([[['3', 'In Sync']]])
     NodeState(state='3', description='In Sync')

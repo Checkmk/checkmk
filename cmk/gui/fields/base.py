@@ -629,7 +629,9 @@ Keys 'optional1', 'required1' occur more than once.
         )
 
     def _load_schemas(  # pylint: disable=too-many-branches
-        self, scalar: Result, partial: bool | typing.Sequence[str] | set[str] | None = None
+        self,
+        scalar: Result,
+        partial: bool | typing.Sequence[str] | set[str] | None = None,
     ) -> Result:
         rv = {}
         error_store = ErrorStore()

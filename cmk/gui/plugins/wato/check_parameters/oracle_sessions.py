@@ -34,7 +34,9 @@ def _parameter_valuespec_oracle_sessions() -> Dictionary:
                             title=_("Number of active sessions"),
                             elements=[
                                 Integer(
-                                    title=_("Warning at"), unit=_("sessions"), default_value=100
+                                    title=_("Warning at"),
+                                    unit=_("sessions"),
+                                    default_value=100,
                                 ),
                                 Integer(
                                     title=_("Critical at"),

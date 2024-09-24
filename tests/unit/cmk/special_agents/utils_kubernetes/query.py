@@ -116,7 +116,15 @@ def test_prometheus__from_result(
 
 @pytest.mark.parametrize(
     "result",
-    [SSLERROR, PROXYERROR, CONNECTIONERROR, JSONERROR, VALIDATIONERROR, EMPTY_DATA, SUCCESS],
+    [
+        SSLERROR,
+        PROXYERROR,
+        CONNECTIONERROR,
+        JSONERROR,
+        VALIDATIONERROR,
+        EMPTY_DATA,
+        SUCCESS,
+    ],
 )
 def test_prometheus_result_from_response(result: query.HTTPResult) -> None:
     # Assemble

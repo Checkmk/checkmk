@@ -25,7 +25,9 @@ class BIAggregationVisualizationSchema(Schema):
         dump_default=False, example=False, description="Ignore rule styles."
     )
     layout_id = ReqString(
-        dump_default="builtin_default", example="radial_layout2", description="ID of the layout."
+        dump_default="builtin_default",
+        example="radial_layout2",
+        description="ID of the layout.",
     )
     line_style = ReqString(dump_default="round", example="round", description="Line style to use.")
 
@@ -55,7 +57,8 @@ class BINodeVisRadialStyleConfigSchema(Schema):
 class BINodeVisRadialStyleSchema(Schema):
     type = ReqConstant("radial", description="Visualize child nodes radially.")
     style_config = ReqNested(
-        BINodeVisRadialStyleConfigSchema, description="Configuration options for this style."
+        BINodeVisRadialStyleConfigSchema,
+        description="Configuration options for this style.",
     )
 
 
@@ -66,17 +69,22 @@ class BINodeVisRadialStyleSchema(Schema):
 class BINodeVisHierarchyStyleConfigSchema(Schema):
     layer_height = ReqInteger(dump_default=80, example=85, description="Distance between layers.")
     node_size = ReqInteger(
-        dump_default=25, example=40, description="Distance between nodes within the same layer."
+        dump_default=25,
+        example=40,
+        description="Distance between nodes within the same layer.",
     )
     rotation = ReqInteger(
-        dump_default=270, example=180, description="Rotation of the hierarchy, in degrees."
+        dump_default=270,
+        example=180,
+        description="Rotation of the hierarchy, in degrees.",
     )
 
 
 class BINodeVisHierarchyStyleSchema(Schema):
     type = ReqConstant("hierarchy", description="Visualize child nodes in a hierarchy.")
     style_config = ReqNested(
-        BINodeVisHierarchyStyleConfigSchema, description="Configuration options for this style."
+        BINodeVisHierarchyStyleConfigSchema,
+        description="Configuration options for this style.",
     )
 
 

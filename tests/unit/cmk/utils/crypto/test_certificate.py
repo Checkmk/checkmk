@@ -52,7 +52,11 @@ def test_generate_self_signed(self_signed_cert: CertificateWithPrivateKey) -> No
             None,  # The default 2 hours slack is not enough.
             pytest.raises(InvalidExpiryError, match="not yet valid"),
         ),
-        (relativedelta(hours=+5), None, pytest.raises(InvalidExpiryError, match="expired")),
+        (
+            relativedelta(hours=+5),
+            None,
+            pytest.raises(InvalidExpiryError, match="expired"),
+        ),
         (
             # It's now 5 hours after cert creation, so the cert has expired 3 hours ago.
             relativedelta(hours=+5),
@@ -113,7 +117,9 @@ def test_write_and_read(tmp_path: Path, self_signed_cert: CertificateWithPrivate
     assert rsa_private_keys_equal(loaded.private_key, self_signed_cert.private_key)
 
 
-def test_loading_combined_file_content(self_signed_cert: CertificateWithPrivateKey) -> None:
+def test_loading_combined_file_content(
+    self_signed_cert: CertificateWithPrivateKey,
+) -> None:
     pw = Password("unittest")
     with pytest.raises(InvalidPEMError, match="Could not find certificate"):
         CertificateWithPrivateKey.load_combined_file_content("", None)

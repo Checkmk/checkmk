@@ -311,7 +311,10 @@ class _Builder:
             case "ipmi":
                 self._add(
                     IPMISource(
-                        self.config_cache, self.host_name, ip_address, max_age=self.max_age_agent
+                        self.config_cache,
+                        self.host_name,
+                        ip_address,
+                        max_age=self.max_age_agent,
                     )
                 )
             case _:

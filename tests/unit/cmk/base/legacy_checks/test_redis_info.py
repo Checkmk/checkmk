@@ -110,7 +110,6 @@ def test_check_redis_info(item, params, section, expected):
         datetime.datetime.fromisoformat("2019-12-06T11:36:00Z").replace(tzinfo=ZoneInfo("UTC")),
         tick=False,
     ):
-
         assert list(check_redis_info(item, params, section)) == expected
 
 
@@ -168,7 +167,11 @@ def test_discover_redis_info_persistence(section, expected):
                 (0, "Last RDB save operation: successful"),
                 (0, "Last AOF rewrite operation: successful"),
                 (0, "Last successful RDB save: 2019-12-06 07:45:57"),
-                (0, "Number of changes since last dump: 0", [("changes_sld", "0", None, None)]),
+                (
+                    0,
+                    "Number of changes since last dump: 0",
+                    [("changes_sld", "0", None, None)],
+                ),
             ],
             id="full_persistence",
         ),
@@ -210,7 +213,12 @@ def test_discover_redis_info_clients(section, expected):
 @pytest.mark.parametrize(
     "section, params, expected",
     [
-        pytest.param({"127.0.0.1:6379": {"host": "127.0.0.1", "port": "6379"}}, {}, [], id="empty"),
+        pytest.param(
+            {"127.0.0.1:6379": {"host": "127.0.0.1", "port": "6379"}},
+            {},
+            [],
+            id="empty",
+        ),
         pytest.param(
             {
                 "127.0.0.1:6379": {
@@ -226,7 +234,11 @@ def test_discover_redis_info_clients(section, expected):
             },
             {},
             [
-                (0, "Number of client connections: 1", [("clients_connected", 1, None, None)]),
+                (
+                    0,
+                    "Number of client connections: 1",
+                    [("clients_connected", 1, None, None)],
+                ),
                 (0, "Longest output list: 0", [("clients_output", 0, None, None)]),
                 (0, "Biggest input buffer: 0", [("clients_input", 0, None, None)]),
                 (

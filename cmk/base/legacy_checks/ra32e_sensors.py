@@ -71,7 +71,10 @@ def parse_ra32e_sensors(string_table):
                 temperature, _, power_state, _, _ = sensor_data
                 parsed["temperature"][name] = float(temperature) / 100.0
 
-                power_status_map = {"1": (0, "power detected"), "0": (2, "no power detected")}
+                power_status_map = {
+                    "1": (0, "power detected"),
+                    "0": (2, "no power detected"),
+                }
                 parsed["power"][name] = {"device_state": power_status_map.get(power_state)}
             elif type_ == "temp/analog":
                 temperature, _, voltage, _, _ = sensor_data

@@ -32,7 +32,9 @@ def parse(string_table: StringTable) -> _ExceptionSection:
     raw_exception = string_table[0][0]
     exc_type, exc_source, exc_msg = raw_exception.split(":", maxsplit=2)
     return _ExceptionSection(
-        type=exc_type, message=exc_msg, gcp_source=exc_source if exc_source != "" else None
+        type=exc_type,
+        message=exc_msg,
+        gcp_source=exc_source if exc_source != "" else None,
     )
 
 

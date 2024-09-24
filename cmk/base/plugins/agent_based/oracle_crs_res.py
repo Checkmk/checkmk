@@ -8,7 +8,14 @@ from typing import Any
 
 import pydantic
 
-from .agent_based_api.v1 import check_levels, IgnoreResultsError, register, Result, Service, State
+from .agent_based_api.v1 import (
+    check_levels,
+    IgnoreResultsError,
+    register,
+    Result,
+    Service,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 # <<<oracle_crs_res:sep(124)>>>

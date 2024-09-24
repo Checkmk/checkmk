@@ -145,7 +145,8 @@ def cluster_check_bluecat_operational_state(
             yield result
     else:
         first_node_section: Section = next(
-            (node_section for node_section in section.values() if node_section is not None), {}
+            (node_section for node_section in section.values() if node_section is not None),
+            {},
         )
         yield Result(
             state=overall_state,

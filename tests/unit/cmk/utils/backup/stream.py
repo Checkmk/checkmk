@@ -82,7 +82,12 @@ KEY_IDENT = "C0:4E:D4:4B:B4:AB:8B:3F:B4:09:32:CE:7D:A6:CF:76"
 )
 @mock.patch("os.environ", {"MKBACKUP_PASSPHRASE": MKBACKUP_PASSPHRASE})
 def _run_stream(Stream: type[MKBackupStream], data: bytes) -> bytes:
-    s = Stream(stream=io.BytesIO(data), is_alive=lambda: False, key_ident=KEY_IDENT, debug=False)
+    s = Stream(
+        stream=io.BytesIO(data),
+        is_alive=lambda: False,
+        key_ident=KEY_IDENT,
+        debug=False,
+    )
     return b"".join(s.process())
 
 

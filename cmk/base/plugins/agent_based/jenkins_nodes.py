@@ -8,7 +8,15 @@ from collections.abc import Mapping, Sequence
 from contextlib import suppress
 from typing import Any, Final
 
-from .agent_based_api.v1 import check_levels, register, render, Result, Service, ServiceLabel, State
+from .agent_based_api.v1 import (
+    check_levels,
+    register,
+    render,
+    Result,
+    Service,
+    ServiceLabel,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 _MAP_NODE_STATES: Final = {

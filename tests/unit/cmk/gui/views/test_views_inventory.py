@@ -490,7 +490,11 @@ def test_make_node_displayhint_from_hint(
                         "flashback": "Flashback 2",
                         "other": "Other 2",
                     },
-                    ("SID 1",): {"sid": "SID 1", "flashback": "Flashback 1", "other": "Other 1"},
+                    ("SID 1",): {
+                        "sid": "SID 1",
+                        "flashback": "Flashback 1",
+                        "other": "Other 1",
+                    },
                     (None,): {"sid": None, "flashback": None, "other": None},
                 },
                 retentions={

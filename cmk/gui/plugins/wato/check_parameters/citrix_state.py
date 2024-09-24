@@ -20,10 +20,22 @@ def _parameter_valuespec_citrix_state():
                 Dictionary(
                     title=_("Interpretation of Registration States"),
                     elements=[
-                        ("Unregistered", MonitoringState(title=_("Unregistered"), default_value=2)),
-                        ("Initializing", MonitoringState(title=_("Initializing"), default_value=1)),
-                        ("Registered", MonitoringState(title=_("Registered"), default_value=0)),
-                        ("AgentError", MonitoringState(title=_("Agent Error"), default_value=2)),
+                        (
+                            "Unregistered",
+                            MonitoringState(title=_("Unregistered"), default_value=2),
+                        ),
+                        (
+                            "Initializing",
+                            MonitoringState(title=_("Initializing"), default_value=1),
+                        ),
+                        (
+                            "Registered",
+                            MonitoringState(title=_("Registered"), default_value=0),
+                        ),
+                        (
+                            "AgentError",
+                            MonitoringState(title=_("Agent Error"), default_value=2),
+                        ),
                     ],
                     optional_keys=False,
                 ),

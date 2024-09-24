@@ -62,7 +62,6 @@ def _get_snmp_section_plugin(
 def snmp_is_detected(
     section: SectionName | SNMPSection | SimpleSNMPSection, snmp_walk: Path
 ) -> bool:
-
     section_plugin = _get_snmp_section_plugin(section)
 
     backend = StoredWalkSNMPBackend(SNMP_HOST_CONFIG, logging.getLogger("test"), snmp_walk)

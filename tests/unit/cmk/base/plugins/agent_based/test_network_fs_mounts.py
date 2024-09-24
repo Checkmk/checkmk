@@ -10,7 +10,12 @@ import pytest
 from tests.testlib import on_time
 
 from cmk.base.plugins.agent_based import network_fs_mounts
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -72,7 +77,10 @@ size2 = SizeBasic(
             [Service(item="/AB"), Service(item="/ABC")],
         ),
         (  # Mountpoint with spaces and permission denied
-            [["/var/dba", "export", "Permission", "denied"], ["/var/dbaexport", "ok", *size2.info]],
+            [
+                ["/var/dba", "export", "Permission", "denied"],
+                ["/var/dbaexport", "ok", *size2.info],
+            ],
             [Service(item="/var/dba export"), Service(item="/var/dbaexport")],
         ),
         (  # with perfdata
@@ -124,7 +132,11 @@ def test_network_fs_mounts_discovery(
                 Metric("fs_free", 30158487552.0, boundaries=(0.0, None)),
                 Metric("fs_size", 32212254720.0, boundaries=(0.0, None)),
                 Metric("fs_growth", -54252.567354853214),
-                Metric("fs_trend", -54252.567354853214, boundaries=(0.0, 15534.459259259258)),
+                Metric(
+                    "fs_trend",
+                    -54252.567354853214,
+                    boundaries=(0.0, 15534.459259259258),
+                ),
             ],
         ),
         (  # two mountpoints with empty data
@@ -138,12 +150,18 @@ def test_network_fs_mounts_discovery(
             [Result(state=State.OK, summary="Mount seems OK")],
         ),
         (  # Mountpoint with spaces and permission denied
-            [["/var/dba", "export", "Permission", "denied"], ["/var/dbaexport", "ok", *size2.info]],
+            [
+                ["/var/dba", "export", "Permission", "denied"],
+                ["/var/dbaexport", "ok", *size2.info],
+            ],
             "/var/dba export",
             [Result(state=State.CRIT, summary="State: Permission denied")],
         ),
         (
-            [["/var/dba", "export", "Permission", "denied"], ["/var/dbaexport", "ok", *size2.info]],
+            [
+                ["/var/dba", "export", "Permission", "denied"],
+                ["/var/dbaexport", "ok", *size2.info],
+            ],
             "/var/dbaexport",
             [
                 Result(state=State.OK, summary=size2.text),
@@ -177,7 +195,11 @@ def test_network_fs_mounts_discovery(
                 Metric("fs_free", 30158487552.0, boundaries=(0.0, None)),
                 Metric("fs_size", 32212254720.0, boundaries=(0.0, None)),
                 Metric("fs_growth", -54252.567354853214),
-                Metric("fs_trend", -54252.567354853214, boundaries=(0.0, 15534.459259259258)),
+                Metric(
+                    "fs_trend",
+                    -54252.567354853214,
+                    boundaries=(0.0, 15534.459259259258),
+                ),
             ],
         ),
         (  # state == 'hanging'

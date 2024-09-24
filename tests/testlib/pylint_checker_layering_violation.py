@@ -17,7 +17,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Collection, Container, Hashable, Iterable, Mapping, Sequence, Set
+from collections.abc import (
+    Collection,
+    Container,
+    Hashable,
+    Iterable,
+    Mapping,
+    Sequence,
+    Set,
+)
 from pathlib import Path
 from typing import NewType, Protocol, TypeVar
 
@@ -48,7 +56,9 @@ class IsPackageRelationshipOK(Protocol):
 
 class IsImportOK:
     def __init__(
-        self, package_for: PackageFor, is_package_relationship_ok: IsPackageRelationshipOK
+        self,
+        package_for: PackageFor,
+        is_package_relationship_ok: IsPackageRelationshipOK,
     ) -> None:
         self._package_for = package_for
         self._is_package_relationship_ok = is_package_relationship_ok
@@ -305,7 +315,10 @@ class RelationChecker:
             if package_name not in defined_package_names:
                 raise ValueError(f"unknown package {package_name!r} in {where}")
 
-        for importing_package, allowed_imports in self._allowed_package_relationships.items():
+        for (
+            importing_package,
+            allowed_imports,
+        ) in self._allowed_package_relationships.items():
             validate_defined(importing_package, "allowed package relationships")
             for allowed_import in allowed_imports:
                 validate_defined(allowed_import, f"allowed imports for {importing_package!r}")

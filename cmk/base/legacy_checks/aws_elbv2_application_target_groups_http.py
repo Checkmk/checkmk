@@ -5,7 +5,10 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.aws import aws_get_parsed_item_data, check_aws_http_errors
+from cmk.base.check_legacy_includes.aws import (
+    aws_get_parsed_item_data,
+    check_aws_http_errors,
+)
 from cmk.base.config import check_info
 
 from cmk.plugins.aws.lib import extract_aws_metrics_by_labels, parse_aws

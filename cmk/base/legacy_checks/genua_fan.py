@@ -13,7 +13,9 @@ from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.genua import DETECT_GENUA
 
 
-def inventory_genua_fan(string_table: list[StringTable]) -> Iterable[tuple[str, dict[str, object]]]:
+def inventory_genua_fan(
+    string_table: list[StringTable],
+) -> Iterable[tuple[str, dict[str, object]]]:
     for tree in string_table:
         if not tree:
             continue

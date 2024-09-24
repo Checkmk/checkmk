@@ -44,9 +44,21 @@ LAST_TIME_EPOCH = (
                 ["Trace", "OK", "Size 64.3 GB, Used 10.1 GB, Free 85 %"],
             ],
             {
-                "HXE 90 HXE - Data": {"size": 65843.2, "state_name": "OK", "used": 10342.4},
-                "HXE 90 HXE - Log": {"size": 65843.2, "state_name": "OK", "used": 10342.4},
-                "HXE 90 HXE - Trace": {"size": 65843.2, "state_name": "OK", "used": 10342.4},
+                "HXE 90 HXE - Data": {
+                    "size": 65843.2,
+                    "state_name": "OK",
+                    "used": 10342.4,
+                },
+                "HXE 90 HXE - Log": {
+                    "size": 65843.2,
+                    "state_name": "OK",
+                    "used": 10342.4,
+                },
+                "HXE 90 HXE - Trace": {
+                    "size": 65843.2,
+                    "state_name": "OK",
+                    "used": 10342.4,
+                },
             },
         ),
         (
@@ -58,13 +70,19 @@ LAST_TIME_EPOCH = (
             ],
             {
                 "HXE 90 HXE - Data": {"state_name": "OK", "used": 10342.4},
-                "HXE 90 HXE - Trace": {"size": 65843.2, "state_name": "OK", "used": 10342.4},
+                "HXE 90 HXE - Trace": {
+                    "size": 65843.2,
+                    "state_name": "OK",
+                    "used": 10342.4,
+                },
             },
         ),
     ],
 )
 def test_parse_sap_hana_diskusage(
-    fix_register: FixRegister, info: StringTable, expected_result: Mapping[str, Mapping[str, float]]
+    fix_register: FixRegister,
+    info: StringTable,
+    expected_result: Mapping[str, Mapping[str, float]],
 ) -> None:
     section_plugin = fix_register.agent_sections[SectionName("sap_hana_diskusage")]
     assert section_plugin.parse_function(info) == expected_result

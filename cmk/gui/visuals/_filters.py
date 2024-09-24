@@ -29,7 +29,10 @@ from cmk.gui.type_defs import (
     Rows,
     VisualContext,
 )
-from cmk.gui.utils.autocompleter_config import AutocompleterConfig, GroupAutocompleterConfig
+from cmk.gui.utils.autocompleter_config import (
+    AutocompleterConfig,
+    GroupAutocompleterConfig,
+)
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.user_errors import user_errors
@@ -43,9 +46,6 @@ from .filter import (
     display_filter_radiobuttons,
     DualListFilter,
     Filter,
-)
-from .filter import filter_registry as global_filter_registry
-from .filter import (
     FilterGroupCombo,
     FilterNumberRange,
     FilterOption,
@@ -54,6 +54,7 @@ from .filter import (
     InputTextFilter,
     RegexFilter,
 )
+from .filter import filter_registry as global_filter_registry
 
 
 def register(page_registry: PageRegistry, filter_registry: FilterRegistry) -> None:
@@ -295,7 +296,8 @@ class IPAddressFilter(Filter):
 
     def display(self, value: FilterHTTPVariables) -> None:
         html.text_input(
-            self.query_filter.request_vars[0], value.get(self.query_filter.request_vars[0], "")
+            self.query_filter.request_vars[0],
+            value.get(self.query_filter.request_vars[0], ""),
         )
         html.br()
         display_filter_radiobuttons(
@@ -734,7 +736,8 @@ def register_host_and_service_state_filters(filter_registry: FilterRegistry) -> 
             sort_index=251,
             info="service",
             query_filter=query_filters.TristateQuery(
-                ident="has_performance_data", filter_code=query_filters.service_perfdata_toggle
+                ident="has_performance_data",
+                filter_code=query_filters.service_perfdata_toggle,
             ),
             is_show_more=True,
         )
@@ -746,7 +749,8 @@ def register_host_and_service_state_filters(filter_registry: FilterRegistry) -> 
             sort_index=232,
             info="service",
             query_filter=query_filters.TristateQuery(
-                ident="in_downtime", filter_code=query_filters.host_service_perfdata_toggle
+                ident="in_downtime",
+                filter_code=query_filters.host_service_perfdata_toggle,
             ),
         )
     )
@@ -769,7 +773,8 @@ def register_host_and_service_state_filters(filter_registry: FilterRegistry) -> 
             sort_index=232,
             info="service",
             query_filter=query_filters.TristateQuery(
-                ident="service_staleness", filter_code=query_filters.staleness("service")
+                ident="service_staleness",
+                filter_code=query_filters.staleness("service"),
             ),
             is_show_more=True,
         )
@@ -1475,7 +1480,11 @@ class _FilterHostAuxTags(Filter):
             varname = "%s_%d" % (self.query_filter.var_prefix, num)
             negate_varname = varname + "_neg"
             html.dropdown(
-                varname, self._options(), deflt=value.get(varname, ""), ordered=True, class_=["neg"]
+                varname,
+                self._options(),
+                deflt=value.get(varname, ""),
+                ordered=True,
+                class_=["neg"],
             )
             html.open_nobr()
             html.checkbox(negate_varname, bool(value.get(negate_varname)), label=_("negate"))

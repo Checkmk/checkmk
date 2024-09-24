@@ -15,8 +15,16 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.plugins.agent_based.cmciii as cmciii
 import cmk.base.plugins.agent_based.cmciii_phase as cmciii_phase
 import cmk.base.plugins.agent_based.cmciii_status as cmciii_status
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+)
 
 from cmk.plugins.lib.cmciii import SensorType, Variable
 
@@ -218,11 +226,23 @@ def _lcp_sensor():
         (
             "cmciii_temp_in_out",
             [
-                Service(item="Air LCP In Bottom", parameters={"_item_key": "Air LCP In Bottom"}),
-                Service(item="Air LCP In Middle", parameters={"_item_key": "Air LCP In Middle"}),
+                Service(
+                    item="Air LCP In Bottom",
+                    parameters={"_item_key": "Air LCP In Bottom"},
+                ),
+                Service(
+                    item="Air LCP In Middle",
+                    parameters={"_item_key": "Air LCP In Middle"},
+                ),
                 Service(item="Air LCP In Top", parameters={"_item_key": "Air LCP In Top"}),
-                Service(item="Air LCP Out Bottom", parameters={"_item_key": "Air LCP Out Bottom"}),
-                Service(item="Air LCP Out Middle", parameters={"_item_key": "Air LCP Out Middle"}),
+                Service(
+                    item="Air LCP Out Bottom",
+                    parameters={"_item_key": "Air LCP Out Bottom"},
+                ),
+                Service(
+                    item="Air LCP Out Middle",
+                    parameters={"_item_key": "Air LCP Out Middle"},
+                ),
                 Service(item="Air LCP Out Top", parameters={"_item_key": "Air LCP Out Top"}),
             ],
         ),
@@ -532,7 +552,11 @@ def test_cmciii_status_discovery(variable: str) -> None:
     [
         ("External release", "OK", [Result(state=State.OK, summary="Status: OK")]),
         ("Air flow", "Too Low", [Result(state=State.CRIT, summary="Status: Too Low")]),
-        ("Battery change", "Service", [Result(state=State.CRIT, summary="Status: Service")]),
+        (
+            "Battery change",
+            "Service",
+            [Result(state=State.CRIT, summary="Status: Service")],
+        ),
     ],
 )
 def test_cmciii_status_sensors(variable: str, status: str, expected: CheckResult) -> None:
@@ -903,40 +927,52 @@ def _generictest_cmciii():
             {},
             [
                 Service(
-                    item="CMC-IOModul Input 1", parameters={"_item_key": "CMC-IOModul Input 1"}
+                    item="CMC-IOModul Input 1",
+                    parameters={"_item_key": "CMC-IOModul Input 1"},
                 ),
                 Service(
-                    item="CMC-IOModul Input 2", parameters={"_item_key": "CMC-IOModul Input 2"}
+                    item="CMC-IOModul Input 2",
+                    parameters={"_item_key": "CMC-IOModul Input 2"},
                 ),
                 Service(
-                    item="CMC-IOModul Input 3", parameters={"_item_key": "CMC-IOModul Input 3"}
+                    item="CMC-IOModul Input 3",
+                    parameters={"_item_key": "CMC-IOModul Input 3"},
                 ),
                 Service(
-                    item="CMC-IOModul Input 4", parameters={"_item_key": "CMC-IOModul Input 4"}
+                    item="CMC-IOModul Input 4",
+                    parameters={"_item_key": "CMC-IOModul Input 4"},
                 ),
                 Service(
-                    item="CMC-IOModul Input 5", parameters={"_item_key": "CMC-IOModul Input 5"}
+                    item="CMC-IOModul Input 5",
+                    parameters={"_item_key": "CMC-IOModul Input 5"},
                 ),
                 Service(
-                    item="CMC-IOModul Input 6", parameters={"_item_key": "CMC-IOModul Input 6"}
+                    item="CMC-IOModul Input 6",
+                    parameters={"_item_key": "CMC-IOModul Input 6"},
                 ),
                 Service(
-                    item="CMC-IOModul Input 7", parameters={"_item_key": "CMC-IOModul Input 7"}
+                    item="CMC-IOModul Input 7",
+                    parameters={"_item_key": "CMC-IOModul Input 7"},
                 ),
                 Service(
-                    item="CMC-IOModul Input 8", parameters={"_item_key": "CMC-IOModul Input 8"}
+                    item="CMC-IOModul Input 8",
+                    parameters={"_item_key": "CMC-IOModul Input 8"},
                 ),
                 Service(
-                    item="CMC-IOModul Output 1", parameters={"_item_key": "CMC-IOModul Output 1"}
+                    item="CMC-IOModul Output 1",
+                    parameters={"_item_key": "CMC-IOModul Output 1"},
                 ),
                 Service(
-                    item="CMC-IOModul Output 2", parameters={"_item_key": "CMC-IOModul Output 2"}
+                    item="CMC-IOModul Output 2",
+                    parameters={"_item_key": "CMC-IOModul Output 2"},
                 ),
                 Service(
-                    item="CMC-IOModul Output 3", parameters={"_item_key": "CMC-IOModul Output 3"}
+                    item="CMC-IOModul Output 3",
+                    parameters={"_item_key": "CMC-IOModul Output 3"},
                 ),
                 Service(
-                    item="CMC-IOModul Output 4", parameters={"_item_key": "CMC-IOModul Output 4"}
+                    item="CMC-IOModul Output 4",
+                    parameters={"_item_key": "CMC-IOModul Output 4"},
                 ),
                 Service(item="CMC-PU Input 1", parameters={"_item_key": "CMC-PU Input 1"}),
                 Service(item="CMC-PU Input 2", parameters={"_item_key": "CMC-PU Input 2"}),
@@ -1259,9 +1295,7 @@ def test_genericdataset_cmciii_check(
                 params,
             )
             == expected
-        ), (
-            "Item %s does not match" % item
-        )
+        ), "Item %s does not match" % item
 
 
 def _generictest_cmciii_input_regression():
@@ -1349,13 +1383,34 @@ def _generictest_cmciii_input_regression():
             "cmciii_io",
             {},
             [
-                Service(item="CMCIII-IO2 Input 2", parameters={"_item_key": "CMCIII-IO2 Input 2"}),
-                Service(item="CMCIII-IO2 Input 3", parameters={"_item_key": "CMCIII-IO2 Input 3"}),
-                Service(item="CMCIII-IO2 Input 4", parameters={"_item_key": "CMCIII-IO2 Input 4"}),
-                Service(item="CMCIII-IO2 Input 5", parameters={"_item_key": "CMCIII-IO2 Input 5"}),
-                Service(item="CMCIII-IO2 Input 6", parameters={"_item_key": "CMCIII-IO2 Input 6"}),
-                Service(item="CMCIII-IO2 Input 7", parameters={"_item_key": "CMCIII-IO2 Input 7"}),
-                Service(item="CMCIII-IO2 Input 8", parameters={"_item_key": "CMCIII-IO2 Input 8"}),
+                Service(
+                    item="CMCIII-IO2 Input 2",
+                    parameters={"_item_key": "CMCIII-IO2 Input 2"},
+                ),
+                Service(
+                    item="CMCIII-IO2 Input 3",
+                    parameters={"_item_key": "CMCIII-IO2 Input 3"},
+                ),
+                Service(
+                    item="CMCIII-IO2 Input 4",
+                    parameters={"_item_key": "CMCIII-IO2 Input 4"},
+                ),
+                Service(
+                    item="CMCIII-IO2 Input 5",
+                    parameters={"_item_key": "CMCIII-IO2 Input 5"},
+                ),
+                Service(
+                    item="CMCIII-IO2 Input 6",
+                    parameters={"_item_key": "CMCIII-IO2 Input 6"},
+                ),
+                Service(
+                    item="CMCIII-IO2 Input 7",
+                    parameters={"_item_key": "CMCIII-IO2 Input 7"},
+                ),
+                Service(
+                    item="CMCIII-IO2 Input 8",
+                    parameters={"_item_key": "CMCIII-IO2 Input 8"},
+                ),
                 Service(item="Doors Input", parameters={"_item_key": "Doors Input"}),
             ],
         ),
@@ -1470,7 +1525,9 @@ def test_genericdataset_cmciii_input_regression_discovery(
     ],
 )
 def test_genericdataset_cmciii_input_regression_check(
-    plugin: str, params: Mapping[object, object] | None, items: Sequence[tuple[str, CheckResult]]
+    plugin: str,
+    params: Mapping[object, object] | None,
+    items: Sequence[tuple[str, CheckResult]],
 ) -> None:
     for item, expected in items:
         assert (
@@ -1482,6 +1539,4 @@ def test_genericdataset_cmciii_input_regression_check(
                 params,
             )
             == expected
-        ), (
-            "Item %s does not match" % item
-        )
+        ), "Item %s does not match" % item

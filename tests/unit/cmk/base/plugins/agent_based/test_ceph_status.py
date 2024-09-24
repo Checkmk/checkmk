@@ -7,7 +7,12 @@
 from functools import lru_cache
 
 from cmk.base.plugins.agent_based import ceph_status
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_value_store,
+    Result,
+    Service,
+    State,
+)
 
 STRING_TABLE_1 = [
     ["{"],

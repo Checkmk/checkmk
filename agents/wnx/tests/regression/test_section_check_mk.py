@@ -8,7 +8,13 @@ import re
 
 import pytest
 
-from .local import get_main_yaml_name, get_user_yaml_name, local_test, root_dir, user_dir
+from .local import (
+    get_main_yaml_name,
+    get_user_yaml_name,
+    local_test,
+    root_dir,
+    user_dir,
+)
 
 
 class Globals:
@@ -16,7 +22,10 @@ class Globals:
     alone = True
     output_file = "agentoutput.txt"
     only_from: str | None = None
-    ipv4_to_ipv6 = {"127.0.0.1": "0:0:0:0:0:ffff:7f00:1", "10.1.2.3": "0:0:0:0:0:ffff:a01:203"}
+    ipv4_to_ipv6 = {
+        "127.0.0.1": "0:0:0:0:0:ffff:7f00:1",
+        "10.1.2.3": "0:0:0:0:0:ffff:a01:203",
+    }
 
 
 @pytest.fixture(name="testfile")

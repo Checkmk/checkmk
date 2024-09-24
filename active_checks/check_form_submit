@@ -159,9 +159,7 @@ def init_http(validate_server_cert: bool) -> urllib.request.OpenerDirector:
         urllib.request.HTTPSHandler(
             debuglevel=0,
             context=(
-                None
-                if validate_server_cert
-                else ssl._create_unverified_context()  # nosec B323 # BNS:501305
+                None if validate_server_cert else ssl._create_unverified_context()  # nosec B323 # BNS:501305
             ),
         ),
         urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()),
@@ -253,7 +251,10 @@ class FormParser(html.parser.HTMLParser):
                 if "name" in attrs:
                     self.current_form["elements"][attrs["name"]] = attrs.get("value", "")
                 else:
-                    debug("Ignoring form field without name %r" % attrs, self.debug_enabled)
+                    debug(
+                        "Ignoring form field without name %r" % attrs,
+                        self.debug_enabled,
+                    )
 
     def handle_endtag(self, tag):
         if tag == "form":
@@ -354,7 +355,10 @@ def raise_host_state(
         if matches is not None:
             new_state(0, 'Found expected regex "%s" in form response' % expected_regex)
         else:
-            new_state(2, 'Expected regex "%s" could not be found in form response' % expected_regex)
+            new_state(
+                2,
+                'Expected regex "%s" could not be found in form response' % expected_regex,
+            )
     else:
         new_state(0, "Form has been submitted")
 

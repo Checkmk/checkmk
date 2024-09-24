@@ -20,6 +20,7 @@ The event console endpoints allow for
     * Query the event console table using filters, id or live status query and archive those events.
 
 """
+
 from collections.abc import Mapping
 from typing import Any
 
@@ -47,7 +48,13 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, serve_json
 
-from .common_fields import ApplicationField, EventIDField, HostNameField, PhaseField, StateField
+from .common_fields import (
+    ApplicationField,
+    EventIDField,
+    HostNameField,
+    PhaseField,
+    StateField,
+)
 from .request_schemas import (
     ChangeEventState,
     ChangeEventStateSelector,

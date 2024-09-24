@@ -2,8 +2,7 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""All objects defined here are intended to be exposed in the API
-"""
+"""All objects defined here are intended to be exposed in the API"""
 
 # pylint: disable=too-many-instance-attributes
 
@@ -258,10 +257,12 @@ class SimpleSNMPSection(Generic[_TableTypeT, _Section]):
 
     @staticmethod
     def _wrap_in_upacker(
-        parse_function: Callable[[_TableTypeT], _Section | None]
+        parse_function: Callable[[_TableTypeT], _Section | None],
     ) -> Callable[[Sequence[_TableTypeT]], _Section | None]:
         @functools.wraps(parse_function)
-        def unpacking_parse_function(string_table: Sequence[_TableTypeT]) -> _Section | None:
+        def unpacking_parse_function(
+            string_table: Sequence[_TableTypeT],
+        ) -> _Section | None:
             return parse_function(string_table[0])
 
         return unpacking_parse_function

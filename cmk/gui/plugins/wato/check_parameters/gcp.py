@@ -13,7 +13,13 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersApplications,
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import CascadingDropdown, Dictionary, Percentage, TextInput, ValueSpec
+from cmk.gui.valuespec import (
+    CascadingDropdown,
+    Dictionary,
+    Percentage,
+    TextInput,
+    ValueSpec,
+)
 
 # A notes about the names of the Dictionary elements. They correspond to the names of the metrics in
 # the check plug-in. Please do not change them.
@@ -21,7 +27,10 @@ from cmk.gui.valuespec import CascadingDropdown, Dictionary, Percentage, TextInp
 
 def _vs_disk_elements() -> Sequence[tuple[str, ValueSpec]]:
     return [
-        ("disk_utilization", Levels(title=_("Disk usage"), unit="%", default_value=(80, 90))),
+        (
+            "disk_utilization",
+            Levels(title=_("Disk usage"), unit="%", default_value=(80, 90)),
+        ),
         ("disk_read_ios", Levels(title=_("Number of read IOPS"))),
         ("disk_write_ios", Levels(title=_("Number of write IOPS"))),
     ]
@@ -38,7 +47,10 @@ def _vs_cpu() -> ValueSpec:
     return Dictionary(
         title=_("Levels CPU"),
         elements=[
-            ("util", SimpleLevels(Percentage, title=_("CPU utilization"), default_value=(80, 90))),
+            (
+                "util",
+                SimpleLevels(Percentage, title=_("CPU utilization"), default_value=(80, 90)),
+            ),
         ],
     )
 
@@ -73,8 +85,14 @@ def _vs_latency_disk() -> ValueSpec:
         title=_("Levels disk"),
         elements=[
             *_vs_disk_elements(),
-            ("disk_average_read_wait", Levels(title=_("Average disk read latency"), unit="s")),
-            ("disk_average_write_wait", Levels(title=_("Average disk write latency"), unit="s")),
+            (
+                "disk_average_read_wait",
+                Levels(title=_("Average disk read latency"), unit="s"),
+            ),
+            (
+                "disk_average_write_wait",
+                Levels(title=_("Average disk write latency"), unit="s"),
+            ),
             ("latency", Levels(title=_("Average disk latency"), unit="s")),
         ],
     )

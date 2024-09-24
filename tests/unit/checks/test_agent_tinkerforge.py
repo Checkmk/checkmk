@@ -17,7 +17,11 @@ pytestmark = pytest.mark.checks
     [
         ({}, ["--host", "address"]),
         (
-            {"segment_display_brightness": 5, "segment_display_uid": "8888", "port": 4223},
+            {
+                "segment_display_brightness": 5,
+                "segment_display_uid": "8888",
+                "port": 4223,
+            },
             [
                 "--host",
                 "address",

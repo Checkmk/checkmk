@@ -8,7 +8,10 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import HostLabel
-from cmk.base.plugins.agent_based.check_mk import host_label_function_labels, parse_checkmk_labels
+from cmk.base.plugins.agent_based.check_mk import (
+    host_label_function_labels,
+    parse_checkmk_labels,
+)
 
 from cmk.agent_based.v1.type_defs import StringTable
 

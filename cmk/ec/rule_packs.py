@@ -134,9 +134,7 @@ def _load_config(  # pylint: disable=too-many-branches
     global_context["mkp_rule_packs"] = {}
     for path in config_files:
         with open(str(path), mode="rb") as file_object:
-            exec(
-                compile(file_object.read(), path, "exec"), global_context
-            )  # nosec B102 # BNS:aee528
+            exec(compile(file_object.read(), path, "exec"), global_context)  # nosec B102 # BNS:aee528
     assert isinstance(global_context["rule_packs"], Iterable)
     assert isinstance(global_context["mkp_rule_packs"], Mapping)
     _bind_to_rule_pack_proxies(global_context["rule_packs"], global_context["mkp_rule_packs"])
@@ -268,7 +266,9 @@ def load_rule_packs() -> Sequence[ECRulePack]:
 
 
 def save_rule_packs(
-    rule_packs: Iterable[ECRulePack], pretty_print: bool = False, dir_: Path | None = None
+    rule_packs: Iterable[ECRulePack],
+    pretty_print: bool = False,
+    dir_: Path | None = None,
 ) -> None:
     """Saves the given rule packs to rules.mk. By default they are saved to the
     default directory for rule packs. If dir_ is given it is used instead of

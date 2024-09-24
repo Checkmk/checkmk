@@ -4,14 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """EC History sqlite backend"""
 
-
 import sqlite3
 from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from cmk.ec.history_sqlite import filters_to_sqlite_query, history_file_to_sqlite, SQLiteHistory
+from cmk.ec.history_sqlite import (
+    filters_to_sqlite_query,
+    history_file_to_sqlite,
+    SQLiteHistory,
+)
 from cmk.ec.query import QueryFilter
 
 

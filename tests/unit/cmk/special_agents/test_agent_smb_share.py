@@ -254,7 +254,10 @@ def test_parse_arguments() -> None:
             {
                 (f"{SHARE_BASE}\\Subfolder1\\some_file", "some_file"),
                 (f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\some_file", "some_file"),
-                (f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\Subfolder4\\some_file", "some_file"),
+                (
+                    f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\Subfolder4\\some_file",
+                    "some_file",
+                ),
                 (f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\some_file", "some_file"),
                 (
                     f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\Subfolder5\\some_file",
@@ -334,7 +337,10 @@ def test_parse_arguments() -> None:
             ["Subfolder1", "**", "Subfolder5", "some_file"],
             True,
             {
-                (f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\Subfolder5\\some_file", "some_file"),
+                (
+                    f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\Subfolder5\\some_file",
+                    "some_file",
+                ),
             },
             id="double star globbing, folder after the double star",
         ),
@@ -372,9 +378,15 @@ def test_parse_arguments() -> None:
             {
                 (f"{SHARE_BASE}\\Subfolder1\\some_file", "some_file"),
                 (f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\some_file", "some_file"),
-                (f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\Subfolder4\\some_file", "some_file"),
+                (
+                    f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\Subfolder4\\some_file",
+                    "some_file",
+                ),
                 (f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\some_file", "some_file"),
-                (f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\Subfolder5\\some_file", "some_file"),
+                (
+                    f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\Subfolder5\\some_file",
+                    "some_file",
+                ),
             },
             id="double star globbing, single star after the double star",
         ),
@@ -417,8 +429,14 @@ def test_parse_arguments() -> None:
                 (f"{SHARE_BASE}\\Subfolder1\\some_file", "some_file"),
                 (f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\some_file", "some_file"),
                 (f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\some_file", "some_file"),
-                (f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\Subfolder4\\some_file", "some_file"),
-                (f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\Subfolder5\\some_file", "some_file"),
+                (
+                    f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\Subfolder4\\some_file",
+                    "some_file",
+                ),
+                (
+                    f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\Subfolder5\\some_file",
+                    "some_file",
+                ),
                 (
                     f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\Subfolder5\\Subfolder6\\some_file",
                     "some_file",
@@ -462,8 +480,14 @@ def test_parse_arguments() -> None:
             ["Subfolder1", "**", "**", "some_file"],
             False,
             {
-                (f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\Subfolder4\\some_file", "some_file"),
-                (f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\Subfolder5\\some_file", "some_file"),
+                (
+                    f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\Subfolder4\\some_file",
+                    "some_file",
+                ),
+                (
+                    f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\Subfolder5\\some_file",
+                    "some_file",
+                ),
             },
             id="non-recursive double star globbing twice",
         ),
@@ -507,7 +531,10 @@ def test_parse_arguments() -> None:
             ["Subfolder1", "**", "Subfolder*", "**", "some_file"],
             True,
             {
-                (f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\Subfolder4\\some_file", "some_file"),
+                (
+                    f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\Subfolder4\\some_file",
+                    "some_file",
+                ),
                 (f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\some_file", "some_file"),
                 (
                     f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\Subfolder5\\Subfolder6\\Subfolder7\\some_file",
@@ -517,7 +544,10 @@ def test_parse_arguments() -> None:
                     f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\Subfolder5\\Subfolder6\\some_file",
                     "some_file",
                 ),
-                (f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\Subfolder5\\some_file", "some_file"),
+                (
+                    f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\Subfolder5\\some_file",
+                    "some_file",
+                ),
                 (f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\some_file", "some_file"),
             },
             id="double star globbing twice, with a folder in between",

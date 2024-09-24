@@ -5,7 +5,12 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.cisco_cpu_memory import (
     check_cisco_cpu_memory_multiitem,
     discover_cisco_cpu_memory_multiitem,
@@ -65,7 +70,12 @@ def test_check_used_levels(section: Section) -> None:
             state=State.CRIT,
             summary="Usage: 92.81% - 3.46 GiB of 3.73 GiB (warn/crit at 50.00%/90.00% used)",
         ),
-        Metric("mem_used_percent", 92.81207602536634, levels=(50.0, 90.0), boundaries=(0.0, None)),
+        Metric(
+            "mem_used_percent",
+            92.81207602536634,
+            levels=(50.0, 90.0),
+            boundaries=(0.0, None),
+        ),
     ]
 
 
@@ -73,7 +83,9 @@ def test_check_used_levels(section: Section) -> None:
 def test_check_free_levels(section: Section) -> None:
     assert list(
         check_cisco_cpu_memory_multiitem(
-            "Switch2 Supervisor 1 (virtual slot 11)", {"levels": (-20.0, -10.0)}, section
+            "Switch2 Supervisor 1 (virtual slot 11)",
+            {"levels": (-20.0, -10.0)},
+            section,
         )
     ) == [
         Result(

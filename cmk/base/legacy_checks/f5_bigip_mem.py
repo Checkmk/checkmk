@@ -31,7 +31,10 @@ def parse_f5_bigip_mem(string_table):
         pass
 
     try:
-        parsed["TMM"] = (float(string_table[0][2]) * 1024, float(string_table[0][3]) * 1024)
+        parsed["TMM"] = (
+            float(string_table[0][2]) * 1024,
+            float(string_table[0][3]) * 1024,
+        )
     except ValueError:
         pass
 

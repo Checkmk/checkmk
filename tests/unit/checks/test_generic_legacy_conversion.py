@@ -11,7 +11,10 @@ from cmk.utils.check_utils import section_name_of
 from cmk.utils.legacy_check_api import LegacyCheckDefinition
 from cmk.utils.sectionname import SectionName
 
-from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin, SNMPSectionPlugin
+from cmk.base.api.agent_based.plugin_classes import (
+    AgentSectionPlugin,
+    SNMPSectionPlugin,
+)
 
 pytestmark = pytest.mark.checks
 

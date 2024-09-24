@@ -27,7 +27,9 @@ class BIAggregationFilter(NamedTuple):
 
 class ABCPostprocessComputeResult:
     def postprocess(
-        self, bi_aggregation: BICompiledAggregation, node_result_bundle: NodeResultBundle
+        self,
+        bi_aggregation: BICompiledAggregation,
+        node_result_bundle: NodeResultBundle,
     ) -> NodeResultBundle:
         raise NotImplementedError()
 
@@ -100,7 +102,8 @@ class BIComputer:
         ]
 
     def get_required_elements(
-        self, required_aggregations: list[tuple[BICompiledAggregation, list[BICompiledRule]]]
+        self,
+        required_aggregations: list[tuple[BICompiledAggregation, list[BICompiledRule]]],
     ) -> set[RequiredBIElement]:
         required_elements = set()
         for _compiled_aggregation, branches in required_aggregations:
@@ -109,7 +112,8 @@ class BIComputer:
         return required_elements
 
     def compute_results(
-        self, required_aggregations: list[tuple[BICompiledAggregation, list[BICompiledRule]]]
+        self,
+        required_aggregations: list[tuple[BICompiledAggregation, list[BICompiledRule]]],
     ) -> list[tuple[BICompiledAggregation, list[NodeResultBundle]]]:
         results = []
         for compiled_aggregation, branches in required_aggregations:
@@ -175,7 +179,9 @@ class BIComputer:
         )
 
     def _use_aggregation_branch(
-        self, compiled_branch: BICompiledRule, bi_aggregation_filter: BIAggregationFilter
+        self,
+        compiled_branch: BICompiledRule,
+        bi_aggregation_filter: BIAggregationFilter,
     ) -> bool:
         branch_elements = compiled_branch.required_elements()
         branch_hosts = {x[1] for x in branch_elements}

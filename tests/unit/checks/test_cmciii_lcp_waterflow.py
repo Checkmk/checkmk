@@ -72,7 +72,12 @@ def test_parse_cmciii_lcp_waterflow_empty_section() -> None:
     [
         pytest.param(
             WaterflowReading(
-                name="Waterflow", flow=0.0, unit="l/min", maxflow=130.0, minflow=0.0, status="OK"
+                name="Waterflow",
+                flow=0.0,
+                unit="l/min",
+                maxflow=130.0,
+                minflow=0.0,
+                status="OK",
             ),
             [(None, {})],
             id="Waterflow sensor is discovered within OID range.",
@@ -96,7 +101,12 @@ def test_discover_cmciii_lcp_waterflow(
     [
         pytest.param(
             WaterflowReading(
-                name="Waterflow", flow=0.0, unit="l/min", maxflow=130.0, minflow=0.0, status="OK"
+                name="Waterflow",
+                flow=0.0,
+                unit="l/min",
+                maxflow=130.0,
+                minflow=0.0,
+                status="OK",
             ),
             [
                 0,

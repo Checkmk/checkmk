@@ -138,14 +138,30 @@ from cmk.gui.availability import layout_availability_table
                 "downtimes": {"include": "honor", "exclude_ok": False},
                 "consider": {"flapping": True, "host_down": True, "unmonitored": True},
                 "host_state_grouping": {"unreach": "unreach"},
-                "state_grouping": {"warn": "warn", "unknown": "unknown", "host_down": "host_down"},
+                "state_grouping": {
+                    "warn": "warn",
+                    "unknown": "unknown",
+                    "host_down": "host_down",
+                },
             },
             {
                 "title": None,
                 "rows": [
-                    {"urls": [], "object": 0, "cells": [("100%", "state0 state narrow number")]},
-                    {"urls": [], "object": 0, "cells": [("100%", "state0 state narrow number")]},
-                    {"urls": [], "object": 0, "cells": [("100%", "state0 state narrow number")]},
+                    {
+                        "urls": [],
+                        "object": 0,
+                        "cells": [("100%", "state0 state narrow number")],
+                    },
+                    {
+                        "urls": [],
+                        "object": 0,
+                        "cells": [("100%", "state0 state narrow number")],
+                    },
+                    {
+                        "urls": [],
+                        "object": 0,
+                        "cells": [("100%", "state0 state narrow number")],
+                    },
                 ],
                 "object_titles": ["Host", "Service"],
                 "cell_titles": [("Avail.", None)],
@@ -291,7 +307,11 @@ def test_availability_percentage_only_option(
                 "downtimes": {"include": "honor", "excl    ude_ok": False},
                 "consider": {"flapping": True, "host_down": True, "unmonitored": True},
                 "host_state_grouping": {"unreach": "unreach"},
-                "state_grouping": {"warn": "warn", "unknown": "unknown", "host_down": "host_down"},
+                "state_grouping": {
+                    "warn": "warn",
+                    "unknown": "unknown",
+                    "host_down": "host_down",
+                },
             },
             {
                 "title": None,

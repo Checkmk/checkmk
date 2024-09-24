@@ -53,7 +53,16 @@ def check_dell_om_fans(item, params, info):
         "10": (2, "FAILED"),
     }
 
-    for index, status, value, name, warn_upper, crit_upper, warn_lower, crit_lower in info:
+    for (
+        index,
+        status,
+        value,
+        name,
+        warn_upper,
+        crit_upper,
+        warn_lower,
+        crit_lower,
+    ) in info:
         if index == item:
             state, state_readable = translate_status[status]
             yield state, f"Status: {state_readable}, Name: {name}"

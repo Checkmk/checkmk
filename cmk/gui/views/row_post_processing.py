@@ -30,5 +30,7 @@ def post_process_rows(
         func(view, all_active_filters, rows)
 
 
-def register_row_post_processor(func: Callable[[View, Sequence[Filter], Rows], None]) -> None:
+def register_row_post_processor(
+    func: Callable[[View, Sequence[Filter], Rows], None],
+) -> None:
     _ROW_POST_PROCESSORS.append(func)

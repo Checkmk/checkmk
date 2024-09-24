@@ -200,7 +200,10 @@ def _check_trend(
     if levels_lower_trend is not None:
         # GUI representation of this parameter is labelled 'temperature decrease'; the user may input this
         # as a positive or negative value
-        levels_lower_trend = (abs(levels_lower_trend[0]) * -1, abs(levels_lower_trend[1]) * -1)
+        levels_lower_trend = (
+            abs(levels_lower_trend[0]) * -1,
+            abs(levels_lower_trend[1]) * -1,
+        )
 
     yield from check_levels(
         value=trend,
@@ -247,7 +250,12 @@ def _check_trend(
 
 class TemperatureResult:
     def __init__(
-        self, *, metric: Metric, reading: Result, trends: Sequence[Result], config: Result
+        self,
+        *,
+        metric: Metric,
+        reading: Result,
+        trends: Sequence[Result],
+        config: Result,
     ) -> None:
         self.metric = metric
         self.reading = reading
@@ -583,11 +591,17 @@ def aggregate_temperature_results(
     unitsym = temp_unitsym[output_unit]
 
     tempmax = max(s.temp for s in sensorlist)
-    yield Result(state=State.OK, summary=f"Highest: {render_temp(tempmax, output_unit)} {unitsym}")
+    yield Result(
+        state=State.OK,
+        summary=f"Highest: {render_temp(tempmax, output_unit)} {unitsym}",
+    )
     yield Metric("temp", tempmax)
 
     tempavg = sum(s.temp for s in sensorlist) / float(sensor_count)
-    yield Result(state=State.OK, summary=f"Average: {render_temp(tempavg, output_unit)} {unitsym}")
+    yield Result(
+        state=State.OK,
+        summary=f"Average: {render_temp(tempavg, output_unit)} {unitsym}",
+    )
 
     tempmin = min(s.temp for s in sensorlist)
     yield Result(state=State.OK, summary=f"Lowest: {render_temp(tempmin, output_unit)} {unitsym}")

@@ -148,7 +148,11 @@ def test_openapi_acknowledge_specific_service(
                         "op": "and",
                         "expr": [
                             {"op": "~", "left": "services.host_name", "right": "heute"},
-                            {"op": "~", "left": "services.description", "right": service},
+                            {
+                                "op": "~",
+                                "left": "services.description",
+                                "right": service,
+                            },
                         ],
                     },
                     "sticky": True,

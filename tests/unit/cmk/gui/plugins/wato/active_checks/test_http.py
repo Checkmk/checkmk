@@ -110,7 +110,10 @@ from cmk.gui.plugins.wato.active_checks import http
             },
             {
                 "name": "old.com",
-                "host": {"address": ("proxy", {"address": "proxy", "port": 80}), "port": 443},
+                "host": {
+                    "address": ("proxy", {"address": "proxy", "port": 80}),
+                    "port": 443,
+                },
                 "mode": ("cert", {"cert_days": (10, 20)}),
             },
             id="old format with proxy",
@@ -119,7 +122,11 @@ from cmk.gui.plugins.wato.active_checks import http
             {
                 "name": "old.com",
                 "host": {"address": "my-machine", "address_family": "ipv6"},
-                "proxy": {"address": "proxy", "port": 80, "auth": ("user", ("password", "pwd"))},
+                "proxy": {
+                    "address": "proxy",
+                    "port": 80,
+                    "auth": ("user", ("password", "pwd")),
+                },
                 "mode": ("url", {"urlize": True}),
             },
             {
@@ -127,7 +134,11 @@ from cmk.gui.plugins.wato.active_checks import http
                 "host": {
                     "address": (
                         "proxy",
-                        {"address": "proxy", "auth": ("user", ("password", "pwd")), "port": 80},
+                        {
+                            "address": "proxy",
+                            "auth": ("user", ("password", "pwd")),
+                            "port": 80,
+                        },
                     ),
                     "address_family": "ipv6",
                     "virthost": "my-machine",
@@ -140,7 +151,11 @@ from cmk.gui.plugins.wato.active_checks import http
             {
                 "name": "old.com",
                 "host": {"address_family": "ipv6", "virthost": "virthost"},
-                "proxy": {"address": "proxy", "port": 80, "auth": ("user", ("password", "pwd"))},
+                "proxy": {
+                    "address": "proxy",
+                    "port": 80,
+                    "auth": ("user", ("password", "pwd")),
+                },
                 "mode": ("url", {"urlize": True}),
             },
             {
@@ -148,7 +163,11 @@ from cmk.gui.plugins.wato.active_checks import http
                 "host": {
                     "address": (
                         "proxy",
-                        {"address": "proxy", "auth": ("user", ("password", "pwd")), "port": 80},
+                        {
+                            "address": "proxy",
+                            "auth": ("user", ("password", "pwd")),
+                            "port": 80,
+                        },
                     ),
                     "address_family": "ipv6",
                 },
@@ -165,14 +184,22 @@ from cmk.gui.plugins.wato.active_checks import http
                     "address_family": "ipv6",
                     "virthost": "virthost",
                 },
-                "proxy": {"address": "proxy", "port": 80, "auth": ("user", ("password", "pwd"))},
+                "proxy": {
+                    "address": "proxy",
+                    "port": 80,
+                    "auth": ("user", ("password", "pwd")),
+                },
                 "mode": ("url", {"onredirect": "follow", "urlize": True}),
             },
             {
                 "host": {
                     "address": (
                         "proxy",
-                        {"address": "proxy", "auth": ("user", ("password", "pwd")), "port": 80},
+                        {
+                            "address": "proxy",
+                            "auth": ("user", ("password", "pwd")),
+                            "port": 80,
+                        },
                     ),
                     "address_family": "ipv6",
                     "port": 443,

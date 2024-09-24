@@ -17,7 +17,12 @@ from cmk.utils.sectionname import SectionName
 from cmk.utils.translations import TranslationOptions
 
 from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.parser import AgentParser, AgentRawDataSectionElem, NO_SELECTION, SectionStore
+from cmk.checkengine.parser import (
+    AgentParser,
+    AgentRawDataSectionElem,
+    NO_SELECTION,
+    SectionStore,
+)
 
 import cmk.base.api.agent_based.register as agent_based_register
 

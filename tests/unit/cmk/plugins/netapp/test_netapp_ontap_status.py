@@ -21,7 +21,10 @@ class AlertModelFactory(ModelFactory):
     "alerts_models, expected_result",
     [
         pytest.param(
-            [AlertModelFactory.build(name="alert1"), AlertModelFactory.build(name="alert2")],
+            [
+                AlertModelFactory.build(name="alert1"),
+                AlertModelFactory.build(name="alert2"),
+            ],
             [Result(state=State.CRIT, summary="Status: Alerts present")],
             id="alerts present",
         ),

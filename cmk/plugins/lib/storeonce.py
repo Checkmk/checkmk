@@ -6,7 +6,14 @@ from collections.abc import Mapping
 from typing import Any, Final
 
 from cmk.agent_based.v1 import check_levels
-from cmk.agent_based.v2 import CheckResult, get_value_store, render, Result, State, StringTable
+from cmk.agent_based.v2 import (
+    CheckResult,
+    get_value_store,
+    render,
+    Result,
+    State,
+    StringTable,
+)
 
 from .df import df_check_filesystem_list
 
@@ -61,7 +68,10 @@ def check_storeonce_space(
 
     factor = 1024 * 1024
     yield from df_check_filesystem_list(
-        get_value_store(), item, params, [(item, total_bytes / factor, free_bytes / factor, 0)]
+        get_value_store(),
+        item,
+        params,
+        [(item, total_bytes / factor, free_bytes / factor, 0)],
     )
 
     if cloud_bytes:

@@ -40,14 +40,16 @@ class BIAllHostsChoiceSchema(Schema):
 
 class BIHostNameRegexChoiceSchema(Schema):
     type = ReqConstant(
-        "host_name_regex", description="Select hosts based on a regex against their host name."
+        "host_name_regex",
+        description="Select hosts based on a regex against their host name.",
     )
     pattern = ReqString(dump_default="", example="testhostn.*", description="Regex pattern.")
 
 
 class BIHostAliasRegexChoiceSchema(Schema):
     type = ReqConstant(
-        "host_alias_regex", description="Select hosts based on a regex against their alias."
+        "host_alias_regex",
+        description="Select hosts based on a regex against their alias.",
     )
     pattern = ReqString(dump_default="", example="testali.*", description="Regex pattern.")
 
@@ -167,7 +169,9 @@ class HostConditionsSchema(Schema):
 
 class ServiceConditionsSchema(HostConditionsSchema):
     service_regex = ReqString(
-        dump_default="", example="Filesystem.*", description="Service description regex."
+        dump_default="",
+        example="Filesystem.*",
+        description="Service description regex.",
     )
     service_label_groups = fields.List(
         fields.Nested(LabelGroupConditionSchema),
@@ -361,7 +365,10 @@ class BIHostSearch(ABCBISearch):
         return search_results
 
     def _refer_to_children_with_results(
-        self, search_matches: list[BIHostSearchMatch], bi_searcher: ABCBISearcher, refer_to: dict
+        self,
+        search_matches: list[BIHostSearchMatch],
+        bi_searcher: ABCBISearcher,
+        refer_to: dict,
     ) -> list[dict]:
         all_children: set[HostName] = set()
 
@@ -389,7 +396,11 @@ class BIHostSearch(ABCBISearch):
             # Note: The parameter $1$ does not reflect the first regex match group for the initial host
             #       This information was lost when all children were put into the all_children pool
             #       We can live with it. The option is not used sensibly anywhere anyway :)
-            search_result = {"$1$": host.name, "$HOSTNAME$": host.name, "$HOSTALIAS$": host.alias}
+            search_result = {
+                "$1$": host.name,
+                "$HOSTNAME$": host.name,
+                "$HOSTALIAS$": host.alias,
+            }
             search_results.append(search_result)
         return search_results
 
@@ -573,7 +584,8 @@ class BIFixedArgumentsSearchTokenSchema(Schema):
 class BIFixedArgumentsSearchSchema(Schema):
     type = ReqConstant(BIFixedArgumentsSearch.kind(), description="Fixed search arguments.")
     arguments = ReqList(
-        fields.Nested(BIFixedArgumentsSearchTokenSchema), description="Search arguments."
+        fields.Nested(BIFixedArgumentsSearchTokenSchema),
+        description="Search arguments.",
     )
 
 

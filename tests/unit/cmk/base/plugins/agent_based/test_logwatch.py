@@ -95,7 +95,10 @@ SECTION1 = logwatch_.Section(
             "attr": "ok",
             "lines": {},
         },
-        "my_other_log": {"attr": "ok", "lines": {"test-batch-id": ["W watch your step!"]}},
+        "my_other_log": {
+            "attr": "ok",
+            "lines": {"test-batch-id": ["W watch your step!"]},
+        },
     },
 )
 

@@ -912,7 +912,9 @@ def parse_arguments(argv):
 
     # flags
     parser.add_argument(
-        "--debug", action="store_true", help="""Debug mode: let Python exceptions come through"""
+        "--debug",
+        action="store_true",
+        help="""Debug mode: let Python exceptions come through""",
     )
     parser.add_argument(
         "--no-cert-check",
@@ -1020,7 +1022,9 @@ def parse_arguments(argv):
 
     # positional arguments
     parser.add_argument(
-        "host_address", metavar="HOST", help="""Host name or IP address of VMware HostSystem"""
+        "host_address",
+        metavar="HOST",
+        help="""Host name or IP address of VMware HostSystem""",
     )
 
     return parser.parse_args(argv)
@@ -1102,7 +1106,13 @@ class ESXSession(requests.Session):
 class ESXConnection:
     """Encapsulates the API calls to the ESX system"""
 
-    ESCAPED_CHARS = {"&": "&amp;", ">": "&gt;", "<": "&lt;", "'": "&apos;", '"': "&quot;"}
+    ESCAPED_CHARS = {
+        "&": "&amp;",
+        ">": "&gt;",
+        "<": "&lt;",
+        "'": "&apos;",
+        '"': "&quot;",
+    }
 
     @staticmethod
     def filter_request(request):
@@ -1213,7 +1223,10 @@ class ESXConnection:
             self._session.headers["Cookie"] = self._server_cookie_path.open(encoding="utf-8").read()
             return
 
-        auth = {"username": self._escape_xml(user), "password": self._escape_xml(password)}
+        auth = {
+            "username": self._escape_xml(user),
+            "password": self._escape_xml(password),
+        }
         response = self._session.postsoap(self._soap_templates.login % auth)
 
         server_cookie = response.headers.get("set-cookie")
@@ -1280,7 +1293,12 @@ def fetch_counters_syntax(connection, counter_ids):
     )
 
     return {
-        id_: {"key": ".".join((group, name)), "name": name, "group": group, "unit": unit}
+        id_: {
+            "key": ".".join((group, name)),
+            "name": name,
+            "group": group,
+            "unit": unit,
+        }
         for id_, name, group, unit in elements
     }
 
@@ -1475,7 +1493,11 @@ def eval_cpu_pkg(hostname, current_propname, cpu_pkg_propset):
 
 def eval_pci_device(hostname, current_propname, pci_propset):
     return eval_propset_block(
-        hostname, current_propname, ("id", "vendorName", "deviceName"), "id", pci_propset
+        hostname,
+        current_propname,
+        ("id", "vendorName", "deviceName"),
+        "id",
+        pci_propset,
     )
 
 
@@ -1627,7 +1649,10 @@ def get_hostsystem_power_states(vms, hostsystems, hostsystems_properties, opt):
 def _format_piggybacked_objects_sections(piggy_data):
     output = []
     for piggy_target, info in piggy_data.items():
-        output += ["<<<<%s>>>>" % piggy_target, "<<<esx_vsphere_objects:sep(9)>>>"] + info
+        output += [
+            "<<<<%s>>>>" % piggy_target,
+            "<<<esx_vsphere_objects:sep(9)>>>",
+        ] + info
     return output + ["<<<<>>>>"]
 
 

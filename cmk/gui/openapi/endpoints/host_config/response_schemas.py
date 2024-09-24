@@ -86,7 +86,10 @@ def _effective_attributes_schema():
     class HostExtensionsEffectiveAttributesSchema(attr_openapi_schema("host", "view")):  # type: ignore
         @post_dump(pass_original=True)
         def add_tags_and_custom_attributes_back(
-            self, dump_data: dict[str, Any], original_data: dict[str, Any], **_kwargs: Any
+            self,
+            dump_data: dict[str, Any],
+            original_data: dict[str, Any],
+            **_kwargs: Any,
         ) -> dict[str, Any]:
             # Custom attributes and tags are thrown away during validation as they have no field in the schema.
             # So we dump them back in here.

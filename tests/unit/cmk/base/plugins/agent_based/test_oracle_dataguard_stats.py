@@ -9,7 +9,13 @@ from tests.unit.conftest import FixRegister
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State, TableRow
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+    TableRow,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -64,7 +70,9 @@ _AGENT_OUTPUT = [
     ],
 )
 def test_discover_oracle_dataguard_stats(
-    fix_register: FixRegister, string_table: StringTable, expected_result: DiscoveryResult
+    fix_register: FixRegister,
+    string_table: StringTable,
+    expected_result: DiscoveryResult,
 ) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("oracle_dataguard_stats")]
     section = parse_oracle_dataguard_stats(string_table)
@@ -78,7 +86,10 @@ def test_discover_oracle_dataguard_stats(
             _AGENT_OUTPUT,
             "TESTDB.TESTDBU2",
             [
-                Result(state=State.OK, summary="Database Role physical standbyapply finish time"),
+                Result(
+                    state=State.OK,
+                    summary="Database Role physical standbyapply finish time",
+                ),
                 Result(state=State.OK, summary="Protection Mode performance"),
                 Result(state=State.OK, summary="Broker maximum"),
             ],
@@ -112,7 +123,10 @@ def test_discover_oracle_dataguard_stats(
     ],
 )
 def test_check_oracle_dataguard_stats(
-    fix_register: FixRegister, string_table: StringTable, item: str, expected_result: CheckResult
+    fix_register: FixRegister,
+    string_table: StringTable,
+    item: str,
+    expected_result: CheckResult,
 ) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("oracle_dataguard_stats")]
     section = parse_oracle_dataguard_stats(string_table)

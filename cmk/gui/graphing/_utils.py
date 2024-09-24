@@ -134,7 +134,7 @@ class RawGraphTemplate(TypedDict):
 
 
 def _parse_raw_scalar_definition(
-    raw_scalar_definition: str | tuple[str, str | LazyString]
+    raw_scalar_definition: str | tuple[str, str | LazyString],
 ) -> ScalarDefinition:
     if isinstance(raw_scalar_definition, tuple):
         return ScalarDefinition(
@@ -157,7 +157,7 @@ def _parse_raw_scalar_definition(
 def _parse_raw_metric_definition(
     raw_metric_definition: (
         tuple[str, LineType] | tuple[str, LineType, str] | tuple[str, LineType, LazyString]
-    )
+    ),
 ) -> MetricDefinition:
     expression, line_type, *title = raw_metric_definition
     return MetricDefinition(
@@ -436,7 +436,9 @@ class GraphTemplate:
         )
 
 
-def _parse_raw_graph_range(raw_graph_range: tuple[int | str, int | str]) -> FixedGraphTemplateRange:
+def _parse_raw_graph_range(
+    raw_graph_range: tuple[int | str, int | str],
+) -> FixedGraphTemplateRange:
     return FixedGraphTemplateRange(
         min=parse_expression(raw_graph_range[0], {}),
         max=parse_expression(raw_graph_range[1], {}),
@@ -633,7 +635,8 @@ def add_graphing_plugins(
                 }
 
         elif isinstance(
-            plugin, (perfometers.Perfometer, perfometers.Bidirectional, perfometers.Stacked)
+            plugin,
+            (perfometers.Perfometer, perfometers.Bidirectional, perfometers.Stacked),
         ):
             perfometers_from_api.register(plugin)
 
@@ -1161,7 +1164,7 @@ def get_graph_template(template_id: str) -> GraphTemplate:
 
 
 def get_graph_templates(
-    translated_metrics: Mapping[str, TranslatedMetric]
+    translated_metrics: Mapping[str, TranslatedMetric],
 ) -> Iterator[GraphTemplate]:
     if not translated_metrics:
         yield from ()
@@ -1186,7 +1189,8 @@ def get_graph_templates(
 
 
 def _compute_predictive_metrics(
-    translated_metrics: Mapping[str, TranslatedMetric], metrics_: Sequence[MetricDefinition]
+    translated_metrics: Mapping[str, TranslatedMetric],
+    metrics_: Sequence[MetricDefinition],
 ) -> Iterator[MetricDefinition]:
     for metric_defintion in metrics_:
         line_type: Literal["line", "-line"] = (

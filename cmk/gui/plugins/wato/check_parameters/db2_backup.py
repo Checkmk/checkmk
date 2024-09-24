@@ -15,7 +15,8 @@ from cmk.gui.valuespec import Age, Dictionary, Migrate, TextInput
 
 def _item_spec_db2_backup():
     return TextInput(
-        title=_("Instance"), help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1")
+        title=_("Instance"),
+        help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1"),
     )
 
 

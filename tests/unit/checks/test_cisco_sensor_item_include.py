@@ -39,11 +39,26 @@ FALLBACK = "999"
         ("Sw1, PS1 Normal, RPS Normal", "Sw1 PS1"),
         ("Switch 1 Power Supply 1", "Switch 1 Power Supply 1"),
         ("Switch#1, PowerSupply 1", "Switch 1 PowerSupply 1"),
-        ("Switch#1, PowerSupply#1, Status is Normal, RPS is Normal", "Switch 1 PowerSupply 1"),
-        ("Switch#3, PowerSupply#1, Status is Critical, RPS is Normal", "Switch 3 PowerSupply 1"),
-        ("Switch 1 - Power Supply A, Normal", "Switch 1 - Power Supply A %s" % FALLBACK),
-        ("Switch 2 - Power Supply A, Normal", "Switch 2 - Power Supply A %s" % FALLBACK),
-        ("Switch 3 - Power Supply A, Normal", "Switch 3 - Power Supply A %s" % FALLBACK),
+        (
+            "Switch#1, PowerSupply#1, Status is Normal, RPS is Normal",
+            "Switch 1 PowerSupply 1",
+        ),
+        (
+            "Switch#3, PowerSupply#1, Status is Critical, RPS is Normal",
+            "Switch 3 PowerSupply 1",
+        ),
+        (
+            "Switch 1 - Power Supply A, Normal",
+            "Switch 1 - Power Supply A %s" % FALLBACK,
+        ),
+        (
+            "Switch 2 - Power Supply A, Normal",
+            "Switch 2 - Power Supply A %s" % FALLBACK,
+        ),
+        (
+            "Switch 3 - Power Supply A, Normal",
+            "Switch 3 - Power Supply A %s" % FALLBACK,
+        ),
         ("SW#1, Sensor#1, YELLOW ", "SW 1 Sensor 1"),
         ("Switch 1 - Temp Sensor 0, GREEN", "Switch 1 - Temp Sensor 0"),
         ("Switch#2, Sensor#1, Status is GREEN", "Switch 2 Sensor 1"),
@@ -51,7 +66,10 @@ FALLBACK = "999"
             "Power Supply 1B Temp Sensor : GREEN ",
             "Power Supply 1B Temp Sensor : GREEN  %s" % FALLBACK,
         ),
-        ("Switch 1 - HotSpot Temp Sensor, GREEN ", "Switch 1 - HotSpot Temp Sensor %s" % FALLBACK),
+        (
+            "Switch 1 - HotSpot Temp Sensor, GREEN ",
+            "Switch 1 - HotSpot Temp Sensor %s" % FALLBACK,
+        ),
         ("Switch#1, Fan#1", "Switch 1 Fan 1"),
         ("Switch 1 - FAN 1, Normal", "Switch 1 - FAN 1"),
         ("Switch#1, Fan#2", "Switch 1 Fan 2"),

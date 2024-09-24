@@ -203,7 +203,11 @@ def _handle_custom_query(jira, args):
 def _handle_search_issues(jira, jql, field, max_results, args, project, svc_desc):
     try:
         return jira.search_issues(
-            jql, maxResults=max_results, json_result=False, fields=field, validate_query=True
+            jql,
+            maxResults=max_results,
+            json_result=False,
+            fields=field,
+            validate_query=True,
         )
     except JIRAError as jira_error:
         # errors of sections are handled and shown by/in the related checks
@@ -257,7 +261,10 @@ def parse_arguments(argv):
         "-s", "--password", default=None, required=True, help="Password for Jira login"
     )
     parser.add_argument(
-        "--project-workflows-key", nargs=1, action="append", help="The full project name"
+        "--project-workflows-key",
+        nargs=1,
+        action="append",
+        help="The full project name",
     )
     parser.add_argument(
         "--project-workflows-values",
@@ -283,7 +290,10 @@ def parse_arguments(argv):
         help='Field for operation. Please use "None" if you ' 'use "count" as result option.',
     )
     parser.add_argument(
-        "--jql-limit", nargs=1, action="append", help="Maximum number of processed search results."
+        "--jql-limit",
+        nargs=1,
+        action="append",
+        help="Maximum number of processed search results.",
     )
     parser.add_argument("--hostname", required=True, help="Jira server to use")
 

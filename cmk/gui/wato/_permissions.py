@@ -12,7 +12,8 @@ from cmk.gui.permissions import (
 
 
 def register(
-    permission_section_registry: PermissionSectionRegistry, permission_registry: PermissionRegistry
+    permission_section_registry: PermissionSectionRegistry,
+    permission_registry: PermissionRegistry,
 ) -> None:
     permission_section_registry.register(PermissionSectionWATO)
 

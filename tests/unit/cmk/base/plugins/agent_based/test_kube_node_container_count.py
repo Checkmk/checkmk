@@ -16,7 +16,10 @@ from tests.unit.conftest import FixRegister
 from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin, CheckPlugin
 from cmk.base.plugins.agent_based import kube_node_container_count
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    StringTable,
+)
 
 from cmk.plugins.lib.kube import ContainerCount
 
@@ -146,14 +149,19 @@ def test_check_issues_expected_check_levels_calls(
 def test_check_calls_check_levels_with_values(
     check_levels: MagicMock, check_result: CheckResult, section: ContainerCount
 ) -> None:
-    expected_values = [*section.model_dump().values(), sum(section.model_dump().values())]
+    expected_values = [
+        *section.model_dump().values(),
+        sum(section.model_dump().values()),
+    ]
     list(check_result)
     actual_values = [call.args[0] for call in check_levels.call_args_list]
     assert actual_values == expected_values
 
 
 def test_check_calls_check_levels_with_levels_from_params(
-    check_levels: MagicMock, check_result: CheckResult, params: Mapping[str, tuple[str, object]]
+    check_levels: MagicMock,
+    check_result: CheckResult,
+    params: Mapping[str, tuple[str, object]],
 ) -> None:
     list(check_result)
     actual_levels = []

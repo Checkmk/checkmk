@@ -521,7 +521,10 @@ def save_state_for_playing_alarm_sounds(row: Row) -> None:
 
     for state_map, state in [
         (host_state_map, row.get("host_hard_state", row.get("host_state"))),
-        (service_state_map, row.get("service_last_hard_state", row.get("service_state"))),
+        (
+            service_state_map,
+            row.get("service_last_hard_state", row.get("service_state")),
+        ),
     ]:
         if state is None:
             continue

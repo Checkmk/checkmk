@@ -41,7 +41,11 @@ from cmk.gui.userdb import ldap_connector as ldap
 from cmk.gui.userdb import UserAttributeRegistry
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.userdb.session import is_valid_user_session, load_session_infos
-from cmk.gui.userdb.store import load_custom_attr, save_two_factor_credentials, save_users
+from cmk.gui.userdb.store import (
+    load_custom_attr,
+    save_two_factor_credentials,
+    save_users,
+)
 from cmk.gui.valuespec import Dictionary
 
 if TYPE_CHECKING:
@@ -231,7 +235,9 @@ def test_on_logout_invalidate_session(single_auth_request: SingleRequest) -> Non
     assert load_session_infos(user_id)[session_info.session_id].logged_out
 
 
-def test_access_denied_with_invalidated_session(single_auth_request: SingleRequest) -> None:
+def test_access_denied_with_invalidated_session(
+    single_auth_request: SingleRequest,
+) -> None:
     user_id, session_info = single_auth_request()
     session_id = session_info.session_id
 
@@ -316,7 +322,9 @@ def test_logout_on_maximum_session_reached(single_auth_request: SingleRequest) -
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
-def test_on_succeeded_login_already_existing_session(single_auth_request: SingleRequest) -> None:
+def test_on_succeeded_login_already_existing_session(
+    single_auth_request: SingleRequest,
+) -> None:
     user_id, _session_info = single_auth_request()
     now = datetime.now()
     with pytest.raises(MKUserError, match="Another session"):
@@ -372,7 +380,9 @@ def test_ensure_user_can_init_with_previous_session_timeout(user_id: UserId) -> 
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
-def test_ensure_user_can_not_init_with_previous_session(single_auth_request: SingleRequest) -> None:
+def test_ensure_user_can_not_init_with_previous_session(
+    single_auth_request: SingleRequest,
+) -> None:
     now = datetime.now()
     user_id, _session_info = single_auth_request()
     with pytest.raises(MKUserError, match="Another session"):
@@ -494,7 +504,9 @@ def test_get_last_activity(single_auth_request: SingleRequest) -> None:
 def test_user_attribute_sync_plugins(monkeypatch: MonkeyPatch, set_config: SetConfig) -> None:
     monkeypatch.setattr(userdb, "user_attribute_registry", UserAttributeRegistry())
     monkeypatch.setattr(
-        cmk.gui.userdb._user_attribute._registry, "user_attribute_registry", UserAttributeRegistry()
+        cmk.gui.userdb._user_attribute._registry,
+        "user_attribute_registry",
+        UserAttributeRegistry(),
     )
     monkeypatch.setattr(
         userdb._user_attribute._registry,
@@ -594,7 +606,9 @@ def test_check_credentials_local_user_create_htpasswd_user_ad_hoc() -> None:
     assert user_id in _load_users_uncached(lock=False)
 
 
-def test_check_credentials_local_user_disallow_locked(with_user: tuple[UserId, str]) -> None:
+def test_check_credentials_local_user_disallow_locked(
+    with_user: tuple[UserId, str],
+) -> None:
     now = datetime.now()
     user_id, password = with_user
     assert userdb.check_credentials(user_id, Password(password), now) == user_id
@@ -625,7 +639,9 @@ def make_cme(
 
 @pytest.mark.skipif(not is_managed_repo(), reason="managed-edition-only test")
 @pytest.mark.usefixtures("make_cme")
-def test_check_credentials_managed_global_user_is_allowed(with_user: tuple[UserId, str]) -> None:
+def test_check_credentials_managed_global_user_is_allowed(
+    with_user: tuple[UserId, str],
+) -> None:
     user_id, password = with_user
     now = datetime.now()
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
@@ -638,7 +654,9 @@ def test_check_credentials_managed_global_user_is_allowed(with_user: tuple[UserI
 
 @pytest.mark.skipif(not is_managed_repo(), reason="managed-edition-only test")
 @pytest.mark.usefixtures("make_cme")
-def test_check_credentials_managed_customer_user_is_allowed(with_user: tuple[UserId, str]) -> None:
+def test_check_credentials_managed_customer_user_is_allowed(
+    with_user: tuple[UserId, str],
+) -> None:
     user_id, password = with_user
     now = datetime.now()
     users = _load_users_uncached(lock=True)
@@ -650,7 +668,7 @@ def test_check_credentials_managed_customer_user_is_allowed(with_user: tuple[Use
 @pytest.mark.skipif(not is_managed_repo(), reason="managed-edition-only test")
 @pytest.mark.usefixtures("make_cme")
 def test_check_credentials_managed_wrong_customer_user_is_denied(
-    with_user: tuple[UserId, str]
+    with_user: tuple[UserId, str],
 ) -> None:
     user_id, password = with_user
     now = datetime.now()

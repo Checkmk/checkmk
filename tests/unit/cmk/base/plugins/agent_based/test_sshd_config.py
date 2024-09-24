@@ -8,7 +8,10 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.sshd_config import (
     check_sshd_config,
     discover_sshd_config,
@@ -215,7 +218,10 @@ def test_discovery(string_table: StringTable) -> None:
                 Result(state=State.OK, summary="Use pluggable authentication module: yes"),
                 Result(state=State.OK, summary="Permit root login: key-based"),
                 Result(state=State.OK, summary="Allow password authentication: yes"),
-                Result(state=State.OK, summary="Allow keyboard-interactive authentication: no"),
+                Result(
+                    state=State.OK,
+                    summary="Allow keyboard-interactive authentication: no",
+                ),
                 Result(state=State.OK, summary="Permit X11 forwarding: yes"),
                 Result(state=State.OK, summary="Permit empty passwords: no"),
                 Result(
@@ -236,7 +242,8 @@ def test_discovery(string_table: StringTable) -> None:
                 Result(state=State.OK, summary="Use pluggable authentication module: yes"),
                 Result(state=State.OK, summary="Permit root login: key-based"),
                 Result(
-                    state=State.CRIT, summary="Allow password authentication: yes (expected no)"
+                    state=State.CRIT,
+                    summary="Allow password authentication: yes (expected no)",
                 ),
                 Result(
                     state=State.CRIT,
@@ -259,9 +266,15 @@ def test_discovery(string_table: StringTable) -> None:
                 Result(state=State.OK, summary="Permit X11 forwarding: yes"),
                 Result(state=State.OK, summary="Permit empty passwords: no"),
                 Result(state=State.OK, summary="Allow password authentication: yes"),
-                Result(state=State.OK, summary="Allow challenge-response authentication: no"),
+                Result(
+                    state=State.OK,
+                    summary="Allow challenge-response authentication: no",
+                ),
                 Result(state=State.OK, summary="Permit root login: key-based"),
-                Result(state=State.OK, summary="Ciphers: aes128-ctr, aes192-ctr, aes256-ctr"),
+                Result(
+                    state=State.OK,
+                    summary="Ciphers: aes128-ctr, aes192-ctr, aes256-ctr",
+                ),
             ],
         ),
         pytest.param(
@@ -276,9 +289,15 @@ def test_discovery(string_table: StringTable) -> None:
                 Result(state=State.OK, summary="Permit X11 forwarding: yes"),
                 Result(state=State.OK, summary="Permit empty passwords: no"),
                 Result(state=State.OK, summary="Allow password authentication: yes"),
-                Result(state=State.OK, summary="Allow challenge-response authentication: no"),
+                Result(
+                    state=State.OK,
+                    summary="Allow challenge-response authentication: no",
+                ),
                 Result(state=State.OK, summary="Permit root login: key-based"),
-                Result(state=State.OK, summary="Ciphers: aes128-ctr, aes192-ctr, aes256-ctr"),
+                Result(
+                    state=State.OK,
+                    summary="Ciphers: aes128-ctr, aes192-ctr, aes256-ctr",
+                ),
                 Result(
                     state=State.CRIT,
                     summary="Use pluggable authentication module: not present in SSH daemon configuration",

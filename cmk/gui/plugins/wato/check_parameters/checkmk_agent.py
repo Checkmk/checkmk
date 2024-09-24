@@ -33,7 +33,7 @@ def _validate_version(value: str, varprefix: str) -> None:
 
 
 def _migrate_version_spec(
-    param: str | tuple[str, str] | tuple[str, dict[str, str]]
+    param: str | tuple[str, str] | tuple[str, dict[str, str]],
 ) -> tuple[str, dict[str, str]]:
     """
     >>> _migrate_version_spec(('at_least', {'build': '1.1.1'}))
@@ -175,7 +175,8 @@ def _parameter_valuespec_checkmk_agent():
             (
                 "error_deployment_globally_disabled",
                 MonitoringState(
-                    title=_("State if agent deployment is globally disabled"), default_value=1
+                    title=_("State if agent deployment is globally disabled"),
+                    default_value=1,
                 ),
             ),
             (
@@ -205,8 +206,14 @@ def _parameter_valuespec_checkmk_agent():
                                     "currently deployed agent plug-ins."
                                 ),
                                 elements=[
-                                    TextInput(title=_("Warning at"), validate=_validate_version),
-                                    TextInput(title=_("Critical at"), validate=_validate_version),
+                                    TextInput(
+                                        title=_("Warning at"),
+                                        validate=_validate_version,
+                                    ),
+                                    TextInput(
+                                        title=_("Critical at"),
+                                        validate=_validate_version,
+                                    ),
                                 ],
                             ),
                         ),
@@ -239,8 +246,14 @@ def _parameter_valuespec_checkmk_agent():
                                     "currently deployed local checks."
                                 ),
                                 elements=[
-                                    TextInput(title=_("Warning at"), validate=_validate_version),
-                                    TextInput(title=_("Critical at"), validate=_validate_version),
+                                    TextInput(
+                                        title=_("Warning at"),
+                                        validate=_validate_version,
+                                    ),
+                                    TextInput(
+                                        title=_("Critical at"),
+                                        validate=_validate_version,
+                                    ),
                                 ],
                             ),
                         ),

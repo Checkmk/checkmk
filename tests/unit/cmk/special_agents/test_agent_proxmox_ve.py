@@ -10,7 +10,11 @@ from pathlib import Path
 
 import pytest
 
-from cmk.special_agents.agent_proxmox_ve import BackupInfo, BackupTask, collect_vm_backup_info
+from cmk.special_agents.agent_proxmox_ve import (
+    BackupInfo,
+    BackupTask,
+    collect_vm_backup_info,
+)
 
 
 @pytest.mark.parametrize(
@@ -277,7 +281,10 @@ from cmk.special_agents.agent_proxmox_ve import BackupInfo, BackupTask, collect_
                     "transfer_time": 65,
                     "total_duration": 82,
                 },
-                "157": {"started_time": "2021-04-11 14:40:19", "error": "interrupted by signal"},
+                "157": {
+                    "started_time": "2021-04-11 14:40:19",
+                    "error": "interrupted by signal",
+                },
             },
             None,
         ),
@@ -497,7 +504,10 @@ def test_parse_backup_logs(
     ],
 )
 def test_parsing_backuped_log_formats(
-    log: str, expected_backup_amount: int, expected_backup_total: int, expected_backup_time: int
+    log: str,
+    expected_backup_amount: int,
+    expected_backup_total: int,
+    expected_backup_time: int,
 ) -> None:
     backup_task = BackupTask(
         {},

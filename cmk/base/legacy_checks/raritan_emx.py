@@ -25,7 +25,14 @@ def parse_raritan_emx(string_table):
         "4": ("valve", ""),
     }
     parsed = {}
-    for rack_id, rack_name, sensor_number, value_text, unit, sensor_state in string_table:
+    for (
+        rack_id,
+        rack_name,
+        sensor_number,
+        value_text,
+        unit,
+        sensor_state,
+    ) in string_table:
         rack_type, rack_type_readable = raritan_type_map[sensor_number]
 
         extra_name = ""

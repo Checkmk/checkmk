@@ -14,7 +14,10 @@ ICON: vs.IconSelectorModel = {"icon": "crash", "emblem": None}
 ICON_WRONG_TYPE: vs.IconSelectorModel = {"icon": 123, "emblem": None}  # type: ignore[typeddict-item]
 ICON_NOT_EXISTANT: vs.IconSelectorModel = {"icon": "asd", "emblem": None}
 ICON_EMBLEM: vs.IconSelectorModel = {"icon": "graph", "emblem": "add"}
-ICON_EMBLEM_NOT_EXISTANT: vs.IconSelectorModel = {"icon": "graph", "emblem": "xxx123xxx"}
+ICON_EMBLEM_NOT_EXISTANT: vs.IconSelectorModel = {
+    "icon": "graph",
+    "emblem": "xxx123xxx",
+}
 ICON_EMBLEM_WRONG_TYPE: vs.IconSelectorModel = {"icon": "graph", "emblem": 123}  # type: ignore[typeddict-item]
 # TODO: by type icon may not be None, but code explicitly tests for this...
 ICON_NONE: vs.IconSelectorModel = {"icon": None, "emblem": None}  # type: ignore[typeddict-item]
@@ -36,7 +39,9 @@ class TestValueSpecFloat:
 
         # ## ...then test dictionary:
         expect_validate_failure(
-            vs.IconSelector(), ICON_NOT_EXISTANT, match="The selected icon does not exist."
+            vs.IconSelector(),
+            ICON_NOT_EXISTANT,
+            match="The selected icon does not exist.",
         )
 
         expect_validate_failure(

@@ -59,7 +59,10 @@ def test_openapi_get_graph_graph(
                     "service_description": "CPU load",
                     "type": "predefined_graph",
                     "graph_id": "cpu_load",
-                    "time_range": {"start": "1970-01-01T00:00:00Z", "end": "1970-01-01T00:00:30Z"},
+                    "time_range": {
+                        "start": "1970-01-01T00:00:00Z",
+                        "end": "1970-01-01T00:00:30Z",
+                    },
                 }
             ),
         )
@@ -73,7 +76,10 @@ def test_openapi_get_graph_graph(
             }
         ],
         "step": 60,
-        "time_range": {"end": "1970-01-01T00:01:00+00:00", "start": "1970-01-01T00:00:00+00:00"},
+        "time_range": {
+            "end": "1970-01-01T00:01:00+00:00",
+            "start": "1970-01-01T00:00:00+00:00",
+        },
     }
     assert resp.json == expected
 
@@ -118,7 +124,10 @@ def test_openapi_get_graph_metric(
                     "service_description": "CPU load",
                     "metric_id": "load1",
                     "type": "single_metric",
-                    "time_range": {"start": "1970-01-01T00:00:01Z", "end": "1970-01-01T00:00:02Z"},
+                    "time_range": {
+                        "start": "1970-01-01T00:00:01Z",
+                        "end": "1970-01-01T00:00:02Z",
+                    },
                 }
             ),
         )
@@ -132,7 +141,10 @@ def test_openapi_get_graph_metric(
             }
         ],
         "step": 60,
-        "time_range": {"end": "1970-01-01T00:01:00+00:00", "start": "1970-01-01T00:00:00+00:00"},
+        "time_range": {
+            "end": "1970-01-01T00:01:00+00:00",
+            "start": "1970-01-01T00:00:00+00:00",
+        },
     }
     assert resp.json == expected
 
@@ -182,6 +194,9 @@ def test_openapi_get_graph_metric_without_site(
             }
         ],
         "step": 60,
-        "time_range": {"end": "1970-01-01T00:01:00+00:00", "start": "1970-01-01T00:00:00+00:00"},
+        "time_range": {
+            "end": "1970-01-01T00:01:00+00:00",
+            "start": "1970-01-01T00:00:00+00:00",
+        },
     }
     assert resp.json == expected

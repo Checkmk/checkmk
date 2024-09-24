@@ -7,8 +7,16 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+)
 from cmk.base.plugins.agent_based.mssql_counters_page_life_expectancy import (
     check_mssql_counters_page_life_expectancy,
     discover_mssql_counters_page_life_expectancy,
@@ -189,6 +197,9 @@ def test_discover_mssql_counters_page_life_expectancy(
     ],
 )
 def test_check_mssql_counters_page_life_expectancy(
-    item: str, params: Mapping[str, object], section: Section, expected_result: CheckResult
+    item: str,
+    params: Mapping[str, object],
+    section: Section,
+    expected_result: CheckResult,
 ) -> None:
     assert list(check_mssql_counters_page_life_expectancy(item, params, section)) == expected_result

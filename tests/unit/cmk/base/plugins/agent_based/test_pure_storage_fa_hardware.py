@@ -30,7 +30,10 @@ from cmk.base.plugins.agent_based.pure_storage_fa_hardware import (
 HARDWARE = Hardware(
     storage_bays={
         "SH0.BAY3": Device(
-            name="SH0.BAY3", status="ok", type="drive_bay", details="Storage bay doing good."
+            name="SH0.BAY3",
+            status="ok",
+            type="drive_bay",
+            details="Storage bay doing good.",
         )
     },
     ethernet_ports={
@@ -38,7 +41,10 @@ HARDWARE = Hardware(
             name="CT0.ETH3", status="unknown", type="eth_port", details="Unknown state"
         ),
         "CT0.ETH4": Device(
-            name="CT0.ETH4", status="not_installed", type="eth_port", details="Not installed"
+            name="CT0.ETH4",
+            status="not_installed",
+            type="eth_port",
+            details="Not installed",
         ),
     },
     fibre_channel_ports={

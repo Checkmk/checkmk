@@ -8,6 +8,7 @@ Decorating a function with `Endpoint` will result in a change of the SPEC object
 which then has to be dumped into the checkmk.yaml file.
 
 """
+
 from __future__ import annotations
 
 import contextlib
@@ -39,7 +40,11 @@ from cmk.gui.openapi.permission_tracking import (
 from cmk.gui.openapi.restful_objects import permissions
 from cmk.gui.openapi.restful_objects.api_error import ApiError
 from cmk.gui.openapi.restful_objects.parameters import CONTENT_TYPE
-from cmk.gui.openapi.restful_objects.params import path_parameters, to_openapi, to_schema
+from cmk.gui.openapi.restful_objects.params import (
+    path_parameters,
+    to_openapi,
+    to_schema,
+)
 from cmk.gui.openapi.restful_objects.type_defs import (
     EndpointTarget,
     ErrorStatusCodeInt,
@@ -531,7 +536,6 @@ class Endpoint:
 
         # If we have an schema, or doing post/put, we need a content-type
         if self.request_schema and not request.content_type:
-
             valid_types = ", ".join(self.accept)
 
             raise RestAPIRequestContentTypeException(

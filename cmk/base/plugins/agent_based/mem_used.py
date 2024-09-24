@@ -109,7 +109,11 @@ def check_mem_used(params: Mapping, section: memory.SectionMemUsed) -> CheckResu
     ramused = MemBytes(memused.kb - caches.kb)
     metrics.append(Metric("mem_used", ramused.bytes, boundaries=(0, memtotal.bytes)))
     metrics.append(
-        Metric("mem_used_percent", 100.0 * ramused.bytes / memtotal.bytes, boundaries=(0, 100.0))
+        Metric(
+            "mem_used_percent",
+            100.0 * ramused.bytes / memtotal.bytes,
+            boundaries=(0, 100.0),
+        )
     )
 
     totalused, totalused_descr = _get_total_usage(ramused, swapused, pagetables)

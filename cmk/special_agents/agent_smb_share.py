@@ -16,8 +16,14 @@ from smb.base import NotConnectedError, SharedFile  # type: ignore[import]
 from smb.smb_structs import OperationFailure  # type: ignore[import]
 from smb.SMBConnection import SMBConnection  # type: ignore[import]
 
-from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
-from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.agent_common import (
+    SectionWriter,
+    special_agent_main,
+)
+from cmk.special_agents.v0_unstable.argument_parsing import (
+    Args,
+    create_default_argument_parser,
+)
 
 
 class SMBShareAgentError(Exception): ...
@@ -106,7 +112,12 @@ def iter_shared_files(conn, hostname, share_name, pattern, subdir="", recursive=
         for child_dir in child_dirs:
             if len(pattern) > 1:
                 yield from iter_shared_files(
-                    conn, hostname, share_name, pattern[1:], subdir=child_dir, recursive=recursive
+                    conn,
+                    hostname,
+                    share_name,
+                    pattern[1:],
+                    subdir=child_dir,
+                    recursive=recursive,
                 )
                 continue
 
@@ -158,8 +169,9 @@ def get_all_shared_files(
         if share_name.lower() not in share_names:
             raise SMBShareAgentError(f"Share {share_name} doesn't exist on host {hostname}")
 
-        yield pattern_string, set(
-            iter_shared_files(conn, hostname, share_name, pattern[2:], recursive=recursive)
+        yield (
+            pattern_string,
+            set(iter_shared_files(conn, hostname, share_name, pattern[2:], recursive=recursive)),
         )
 
 

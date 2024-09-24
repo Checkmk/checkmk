@@ -60,11 +60,13 @@ check_info["cisco_cpu"] = LegacyCheckDefinition(
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "cisco"),
         any_of(
-            not_contains(".1.3.6.1.2.1.1.1.0", "nx-os"), not_exists(".1.3.6.1.4.1.9.9.305.1.1.1.0")
+            not_contains(".1.3.6.1.2.1.1.1.0", "nx-os"),
+            not_exists(".1.3.6.1.4.1.9.9.305.1.1.1.0"),
         ),
         not_exists(".1.3.6.1.4.1.9.9.109.1.1.1.1.2.*"),
         any_of(
-            exists(".1.3.6.1.4.1.9.9.109.1.1.1.1.8.1"), exists(".1.3.6.1.4.1.9.9.109.1.1.1.1.5.1")
+            exists(".1.3.6.1.4.1.9.9.109.1.1.1.1.8.1"),
+            exists(".1.3.6.1.4.1.9.9.109.1.1.1.1.5.1"),
         ),
     ),
     fetch=SNMPTree(

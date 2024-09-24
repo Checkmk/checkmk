@@ -151,7 +151,9 @@ def test_registered_command_groups() -> None:
 
 def test_legacy_register_command_group(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        group_module, "command_group_registry", registry := command.CommandGroupRegistry()
+        group_module,
+        "command_group_registry",
+        registry := command.CommandGroupRegistry(),
     )
     command.register_command_group("abc", "A B C", 123)
 
@@ -404,9 +406,21 @@ def test_view_row_limit(view: View) -> None:
         ("hard", {"general.ignore_soft_limit": True}, 5000),
         # Strange. Shouldn't this stick to the hard limit?
         ("none", {"general.ignore_soft_limit": True}, 1000),
-        ("soft", {"general.ignore_soft_limit": True, "general.ignore_hard_limit": True}, 1000),
-        ("hard", {"general.ignore_soft_limit": True, "general.ignore_hard_limit": True}, 5000),
-        ("none", {"general.ignore_soft_limit": True, "general.ignore_hard_limit": True}, None),
+        (
+            "soft",
+            {"general.ignore_soft_limit": True, "general.ignore_hard_limit": True},
+            1000,
+        ),
+        (
+            "hard",
+            {"general.ignore_soft_limit": True, "general.ignore_hard_limit": True},
+            5000,
+        ),
+        (
+            "none",
+            {"general.ignore_soft_limit": True, "general.ignore_hard_limit": True},
+            None,
+        ),
     ],
 )
 @pytest.mark.usefixtures("request_context")
@@ -1120,7 +1134,8 @@ def test_get_inventory_display_hint() -> None:
 
 @pytest.mark.usefixtures("suppress_license_expiry_header")
 def test_view_page(
-    logged_in_admin_wsgi_app: WebTestAppForCMK, mock_livestatus: MockLiveStatusConnection
+    logged_in_admin_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     wsgi_app = logged_in_admin_wsgi_app
 

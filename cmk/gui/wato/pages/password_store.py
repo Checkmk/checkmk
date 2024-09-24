@@ -19,9 +19,9 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     DualListChoice,
     FixedValue,
+    ValueSpec,
 )
 from cmk.gui.valuespec import Password as PasswordValuespec
-from cmk.gui.valuespec import ValueSpec
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode

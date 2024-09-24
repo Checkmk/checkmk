@@ -9,7 +9,7 @@ import abc
 import logging
 import time
 from collections.abc import Iterator, Mapping, MutableMapping, Sequence
-from typing import final, Final, NamedTuple
+from typing import Final, final, NamedTuple
 
 import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.debug

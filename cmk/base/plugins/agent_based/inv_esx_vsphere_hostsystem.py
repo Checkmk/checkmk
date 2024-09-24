@@ -57,7 +57,10 @@ SECTION_TO_INVENTORY: dict[str, SUB_SECTION] = {
         "path": ["software", "bios"],
         "translation": {
             "hardware.biosInfo.biosVersion": ("version", FIRST_ELEMENT),
-            "hardware.biosInfo.releaseDate": ("date", lambda v: _try_convert_to_epoch(v[0])),
+            "hardware.biosInfo.releaseDate": (
+                "date",
+                lambda v: _try_convert_to_epoch(v[0]),
+            ),
         },
     },
     "os": {
@@ -105,7 +108,10 @@ def inv_esx_vsphere_hostsystem(section: Section) -> type_defs.InventoryResult:
         # Handle some corner cases for hw and sys
         if name == "hw":
             if all(k in data for k in ["cpus", "cores", "threads"]):
-                for inv_key, metric in (("cores_per_cpu", "cores"), ("threads_per_cpu", "threads")):
+                for inv_key, metric in (
+                    ("cores_per_cpu", "cores"),
+                    ("threads_per_cpu", "threads"),
+                ):
                     data[inv_key] = int(data[metric]) / int(data["cpus"])  # type: ignore[arg-type]
         if name == "sys":
             # We only know for HP that ServiceTag is the serial...

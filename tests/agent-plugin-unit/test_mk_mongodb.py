@@ -334,7 +334,8 @@ def test_read_config(
     ],
 )
 def test_transform_config(
-    pymongo_version: Tuple[int, int, int], pymongo_config: Mapping[str, Union[str, bool]]
+    pymongo_version: Tuple[int, int, int],
+    pymongo_config: Mapping[str, Union[str, bool]],
 ) -> None:
     class DummyConfig(mk_mongodb.Config):
         def __init__(self) -> None:  # pylint: disable=super-init-not-called
@@ -419,7 +420,10 @@ def test_sections_replica_active_secondaries(capsys):
 
     assert len(replicas) == 3
     assert replicas["primary"] == "abc"
-    assert sorted(replicas["secondaries"].items()) == [("active", ["def"]), ("passive", [])]
+    assert sorted(replicas["secondaries"].items()) == [
+        ("active", ["def"]),
+        ("passive", []),
+    ]
     assert replicas["arbiters"] == []
 
     assert not noop
@@ -438,7 +442,10 @@ def test_sections_replica_passive_secondaries(capsys):
 
     assert len(replicas) == 3
     assert replicas["primary"] == "abc"
-    assert sorted(replicas["secondaries"].items()) == [("active", []), ("passive", ["def"])]
+    assert sorted(replicas["secondaries"].items()) == [
+        ("active", []),
+        ("passive", ["def"]),
+    ]
     assert replicas["arbiters"] == []
 
     assert not noop

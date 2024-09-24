@@ -123,7 +123,10 @@ def _common_is_compatible_for_licensing(
     central_license_state: LicenseState | None,
     remote_edition: cmk_version.Edition,
 ) -> LicensingCompatibility:
-    if central_edition in [cmk_version.Edition.CRE, cmk_version.Edition.CEE] and remote_edition in [
+    if central_edition in [
+        cmk_version.Edition.CRE,
+        cmk_version.Edition.CEE,
+    ] and remote_edition in [
         cmk_version.Edition.CRE,
         cmk_version.Edition.CEE,
         cmk_version.Edition.CCE,

@@ -114,7 +114,9 @@ def remove_nonrelated_site_folders(effective_hosts):
         import shutil
 
         for folder in remove_folders:
-            if folder:  # This is just another safety mechanism to prevent the deletion of the
+            if (
+                folder
+            ):  # This is just another safety mechanism to prevent the deletion of the
                 # WATO root folder. The WATO root folder should never appear in this list of folders,
                 # because it is filtered out earlier on. Just in case..
                 the_folder = "{}{}".format(config_dir, folder)

@@ -73,7 +73,8 @@ class PasswordStore(WatoSimpleConfigFile[Password]):
 def update_passwords_merged_file() -> None:
     # update the "live" merged passwords file
     subprocess.check_call(
-        ["cmk", "--automation", "update-passwords-merged-file"], stdout=subprocess.DEVNULL
+        ["cmk", "--automation", "update-passwords-merged-file"],
+        stdout=subprocess.DEVNULL,
     )
 
 
@@ -89,7 +90,7 @@ def join_password_specs(
 
 
 def split_password_specs(
-    joined: Mapping[str, Password]
+    joined: Mapping[str, Password],
 ) -> tuple[dict[str, Password], dict[str, str]]:
     """Separate passwords from meta data"""
     meta_data, passwords = {}, {}

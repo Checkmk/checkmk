@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Users"""
+
 import datetime as dt
 import time
 from collections.abc import Mapping
@@ -18,7 +19,10 @@ from cmk.gui.fields import Username
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.user_config.request_schemas import CreateUser, UpdateUser
-from cmk.gui.openapi.endpoints.user_config.response_schemas import UserCollection, UserObject
+from cmk.gui.openapi.endpoints.user_config.response_schemas import (
+    UserCollection,
+    UserObject,
+)
 from cmk.gui.openapi.endpoints.utils import complement_customer, update_customer_info
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
@@ -339,7 +343,9 @@ def _internal_to_api_format(  # pylint: disable=too-many-branches
     return api_attrs
 
 
-def _idle_options_to_api_format(internal_attributes: UserSpec) -> dict[str, dict[str, Any]]:
+def _idle_options_to_api_format(
+    internal_attributes: UserSpec,
+) -> dict[str, dict[str, Any]]:
     if "idle_timeout" in internal_attributes:
         idle_option = internal_attributes["idle_timeout"]
         if idle_option:
@@ -449,7 +455,9 @@ class AuthOptions(TypedDict, total=False):
 
 
 def _update_auth_options(
-    internal_attrs: dict[str, int | str | bool], auth_options: AuthOptions, new_user: bool = False
+    internal_attrs: dict[str, int | str | bool],
+    auth_options: AuthOptions,
+    new_user: bool = False,
 ) -> dict[str, int | str | bool]:
     """Update the internal attributes with the authentication options (used for create and update)
 
@@ -491,7 +499,9 @@ def _update_auth_options(
     return internal_attrs
 
 
-def _auth_options_to_internal_format(auth_details: AuthOptions) -> dict[str, int | str | bool]:
+def _auth_options_to_internal_format(
+    auth_details: AuthOptions,
+) -> dict[str, int | str | bool]:
     """Format the authentication information to be Checkmk compatible
 
     Args:
@@ -538,7 +548,10 @@ def _auth_options_to_internal_format(auth_details: AuthOptions) -> dict[str, int
         return internal_options
 
     auth_type = auth_details["auth_type"]
-    assert auth_type in ["automation", "password"]  # assuming remove was handled above...
+    assert auth_type in [
+        "automation",
+        "password",
+    ]  # assuming remove was handled above...
 
     password_field: Literal["secret", "password"] = (
         "secret" if auth_type == "automation" else "password"
@@ -600,13 +613,15 @@ def _interface_options_to_internal_format(
             "light": "facelift",
         }[theme]
     if sidebar_position := api_interface_options.get("sidebar_position"):
-        internal_inteface_options["ui_sidebar_position"] = {"right": None, "left": "left"}[
-            sidebar_position
-        ]
+        internal_inteface_options["ui_sidebar_position"] = {
+            "right": None,
+            "left": "left",
+        }[sidebar_position]
     if show_icon_titles := api_interface_options.get("navigation_bar_icons"):
-        internal_inteface_options["nav_hide_icons_title"] = {"show": None, "hide": "hide"}[
-            show_icon_titles
-        ]
+        internal_inteface_options["nav_hide_icons_title"] = {
+            "show": None,
+            "hide": "hide",
+        }[show_icon_titles]
     if mega_menu_icons := api_interface_options.get("mega_menu_icons"):
         internal_inteface_options["icons_per_item"] = {"topic": None, "entry": "entry"}[
             mega_menu_icons

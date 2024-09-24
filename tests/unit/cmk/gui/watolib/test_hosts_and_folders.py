@@ -763,7 +763,11 @@ def test_folder_permissions(
         wato_folder = make_monkeyfree_folder(structure)
         # dump_wato_folder_structure(wato_folder)
         testfolder = wato_folder._subfolders["sub1"]._subfolders["testfolder"]
-        permitted_groups_cre_folder, _host_contact_groups, _use_for_service = testfolder.groups()
+        (
+            permitted_groups_cre_folder,
+            _host_contact_groups,
+            _use_for_service,
+        ) = testfolder.groups()
         assert permitted_groups_cre_folder == testfolder_expected_groups
 
         all_folders = _convert_folder_tree_to_all_folders(wato_folder)
@@ -930,7 +934,9 @@ def _run_num_host_test(
             assert wato_folder.num_hosts_recursively() == expected_host_count
 
 
-def _fake_redis_num_hosts_answer(wato_folder: hosts_and_folders.Folder) -> list[list[str]]:
+def _fake_redis_num_hosts_answer(
+    wato_folder: hosts_and_folders.Folder,
+) -> list[list[str]]:
     redis_answer = []
     for folder in _convert_folder_tree_to_all_folders(wato_folder).values():
         redis_answer.extend([",".join(folder.groups()[0]), str(folder._num_hosts)])

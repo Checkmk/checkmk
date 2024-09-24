@@ -31,7 +31,11 @@ def parse_sap_hana(info: StringTable) -> dict[str, StringTable]:
 def get_replication_state(raw: str) -> tuple[State, str, str]:
     match raw:
         case "0":
-            return State.UNKNOWN, "unknown status from replication script", "state_unknown"
+            return (
+                State.UNKNOWN,
+                "unknown status from replication script",
+                "state_unknown",
+            )
         case "10":
             return State.CRIT, "no system replication", "state_no_replication"
         case "11":

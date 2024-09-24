@@ -60,9 +60,12 @@ def check_oracle_dataguard_stats(item, params, parsed):  # pylint: disable=too-m
             if dgdata["fs_failover_observer_present"] != "YES":
                 yield 2, "Observer not connected"
             else:
-                yield 0, "Observer connected {} from host {}".format(
-                    dgdata["fs_failover_observer_present"].lower(),
-                    dgdata["fs_failover_observer_host"],
+                yield (
+                    0,
+                    "Observer connected {} from host {}".format(
+                        dgdata["fs_failover_observer_present"].lower(),
+                        dgdata["fs_failover_observer_host"],
+                    ),
                 )
 
                 if (
@@ -75,7 +78,10 @@ def check_oracle_dataguard_stats(item, params, parsed):  # pylint: disable=too-m
                     state = 0
                 else:
                     state = 1
-                yield state, "Fast Start Failover %s" % (dgdata["fs_failover_status"].lower())
+                yield (
+                    state,
+                    "Fast Start Failover %s" % (dgdata["fs_failover_status"].lower()),
+                )
 
     # switchover_status is important for non broker environemnts as well.
     if "switchover_status" in dgdata:
@@ -91,20 +97,27 @@ def check_oracle_dataguard_stats(item, params, parsed):  # pylint: disable=too-m
                 primary_broker_state = params.get("primary_broker_state")
                 if primary_broker_state or dgdata["broker_state"].lower() == "enabled":
                     # We need primary_broker_state False for Data-Guards without Broker
-                    yield 2, "Switchover to standby not possible! reason: %s" % dgdata[
-                        "switchover_status"
-                    ].lower()
+                    yield (
+                        2,
+                        "Switchover to standby not possible! reason: %s"
+                        % dgdata["switchover_status"].lower(),
+                    )
                 else:
                     yield 0, "Switchoverstate ignored "
 
         elif dgdata["database_role"] == "PHYSICAL STANDBY":
             # don't show the ok state, due to distracting 'NOT ALLOWED' state!
-            if dgdata["switchover_status"] in ("SYNCHRONIZED", "NOT ALLOWED", "SESSIONS ACTIVE"):
+            if dgdata["switchover_status"] in (
+                "SYNCHRONIZED",
+                "NOT ALLOWED",
+                "SESSIONS ACTIVE",
+            ):
                 yield 0, "Switchover to primary possible"
             else:
-                yield 2, "Switchover to primary not possible! reason: %s" % dgdata[
-                    "switchover_status"
-                ]
+                yield (
+                    2,
+                    "Switchover to primary not possible! reason: %s" % dgdata["switchover_status"],
+                )
 
     if dgdata["database_role"] != "PHYSICAL STANDBY":
         return
@@ -126,7 +139,10 @@ def check_oracle_dataguard_stats(item, params, parsed):  # pylint: disable=too-m
         # NOTE: not all of these metrics have params implemented, that's why we have to use 'get'
 
         if seconds is None:
-            yield params.get(f"missing_{pkey}_state", 0), f"{label}: {raw_value or 'no value'}"
+            yield (
+                params.get(f"missing_{pkey}_state", 0),
+                f"{label}: {raw_value or 'no value'}",
+            )
             continue
 
         levels_upper = params.get(pkey) or (None, None)

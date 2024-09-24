@@ -216,7 +216,9 @@ class TCPFetcher(Fetcher[AgentRawData]):
 
         self._logger.debug("Detected transport protocol: %s", protocol)
         validate_agent_protocol(
-            protocol, self.encryption_handling, is_registered=server_hostname is not None
+            protocol,
+            self.encryption_handling,
+            is_registered=server_hostname is not None,
         )
 
         if protocol is TransportProtocol.TLS:

@@ -146,13 +146,21 @@ def test_parse_perf_data2(request_context: None, set_config: SetConfig) -> None:
 @pytest.mark.parametrize(
     "perf_name, check_command, result",
     [
-        ("in", "check_mk-lnx_if", {"scale": 8, "name": "if_in_bps", "auto_graph": True}),
+        (
+            "in",
+            "check_mk-lnx_if",
+            {"scale": 8, "name": "if_in_bps", "auto_graph": True},
+        ),
         (
             "memused",
             "check_mk-hr_mem",
             {"auto_graph": False, "name": "mem_lnx_total_used", "scale": 1024**2},
         ),
-        ("fake", "check_mk-imaginary", {"auto_graph": True, "name": "fake", "scale": 1.0}),
+        (
+            "fake",
+            "check_mk-imaginary",
+            {"auto_graph": True, "name": "fake", "scale": 1.0},
+        ),
     ],
 )
 def test_perfvar_translation(perf_name: str, check_command: str, result: TranslationInfo) -> None:
@@ -175,7 +183,10 @@ def test_perfvar_translation(perf_name: str, check_command: str, result: Transla
         pytest.param(
             {
                 MetricName("my_metric"): {"name": MetricName("new_name")},
-                MetricName("other_metric"): {"name": MetricName("other_new_name"), "scale": 0.1},
+                MetricName("other_metric"): {
+                    "name": MetricName("other_new_name"),
+                    "scale": 0.1,
+                },
             },
             {"name": MetricName("new_name")},
             id="1-to-1 translations",
@@ -183,7 +194,10 @@ def test_perfvar_translation(perf_name: str, check_command: str, result: Transla
         pytest.param(
             {
                 MetricName("~.*my_metric"): {"scale": 5},
-                MetricName("other_metric"): {"name": MetricName("other_new_name"), "scale": 0.1},
+                MetricName("other_metric"): {
+                    "name": MetricName("other_new_name"),
+                    "scale": 0.1,
+                },
             },
             {"scale": 5},
             id="regex translations",
@@ -231,7 +245,9 @@ def test_find_matching_translation(
     ],
 )
 def test__normalize_perf_data(
-    perf_data: PerfDataTuple, check_command: str, result: tuple[str, _NormalizedPerfData]
+    perf_data: PerfDataTuple,
+    check_command: str,
+    result: tuple[str, _NormalizedPerfData],
 ) -> None:
     assert utils._normalize_perf_data(perf_data, check_command) == result
 
@@ -239,7 +255,11 @@ def test__normalize_perf_data(
 @pytest.mark.parametrize(
     "metric_names, check_command, graph_ids",
     [
-        (["user", "system", "wait", "util"], "check_mk-kernel_util", ["cpu_utilization_5_util"]),
+        (
+            ["user", "system", "wait", "util"],
+            "check_mk-kernel_util",
+            ["cpu_utilization_5_util"],
+        ),
         (["util1", "util15"], "check_mk-kernel_util", ["util_average_2"]),
         (["util"], "check_mk-kernel_util", ["util_fallback"]),
         (["util"], "check_mk-lxc_container_cpu", ["util_fallback"]),
@@ -249,16 +269,32 @@ def test__normalize_perf_data(
             ["cpu_utilization_5_util"],
         ),
         (["util", "util_average"], "check_mk-kernel_util", ["util_average_1"]),
-        (["user", "util_numcpu_as_max"], "check_mk-kernel_util", ["cpu_utilization_numcpus"]),
+        (
+            ["user", "util_numcpu_as_max"],
+            "check_mk-kernel_util",
+            ["cpu_utilization_numcpus"],
+        ),
         (
             ["user", "util"],
             "check_mk-kernel_util",
             ["util_fallback", "METRIC_user"],
         ),  # METRIC_user has no recipe
         (["util"], "check_mk-netapp_api_cpu_utilization", ["cpu_utilization_numcpus"]),
-        (["user", "util"], "check_mk-winperf_processor_util", ["cpu_utilization_numcpus"]),
-        (["user", "system", "idle", "nice"], "check_mk-kernel_util", ["cpu_utilization_3"]),
-        (["user", "system", "idle", "io_wait"], "check_mk-kernel_util", ["cpu_utilization_4"]),
+        (
+            ["user", "util"],
+            "check_mk-winperf_processor_util",
+            ["cpu_utilization_numcpus"],
+        ),
+        (
+            ["user", "system", "idle", "nice"],
+            "check_mk-kernel_util",
+            ["cpu_utilization_3"],
+        ),
+        (
+            ["user", "system", "idle", "io_wait"],
+            "check_mk-kernel_util",
+            ["cpu_utilization_4"],
+        ),
         (["user", "system", "io_wait"], "check_mk-kernel_util", ["cpu_utilization_5"]),
         (
             ["util_average", "util", "wait", "user", "system", "guest"],
@@ -270,13 +306,28 @@ def test__normalize_perf_data(
             "check_mk-statgrab_cpu",
             ["cpu_utilization_6_guest", "cpu_utilization_7"],
         ),
-        (["user", "system", "interrupt"], "check_mk-kernel_util", ["cpu_utilization_8"]),
         (
-            ["user", "system", "wait", "util", "cpu_entitlement", "cpu_entitlement_util"],
+            ["user", "system", "interrupt"],
+            "check_mk-kernel_util",
+            ["cpu_utilization_8"],
+        ),
+        (
+            [
+                "user",
+                "system",
+                "wait",
+                "util",
+                "cpu_entitlement",
+                "cpu_entitlement_util",
+            ],
             "check_mk-lparstat_aix_cpu_util",
             ["cpu_utilization_5_util", "cpu_entitlement"],
         ),
-        (["ramused", "swapused", "memused"], "check_mk-statgrab_mem", ["ram_swap_used"]),
+        (
+            ["ramused", "swapused", "memused"],
+            "check_mk-statgrab_mem",
+            ["ram_swap_used"],
+        ),
         (
             [
                 "aws_ec2_running_ondemand_instances_total",
@@ -284,7 +335,10 @@ def test__normalize_perf_data(
                 "aws_ec2_running_ondemand_instances_t2.nano",
             ],
             "check_mk-aws_ec2_limits",
-            ["aws_ec2_running_ondemand_instances", "aws_ec2_running_ondemand_instances_t2"],
+            [
+                "aws_ec2_running_ondemand_instances",
+                "aws_ec2_running_ondemand_instances_t2",
+            ],
         ),
     ],
 )
@@ -309,7 +363,8 @@ def test_get_graph_templates(
             [
                 MetricDefinition(expression=Metric(name="predict_metric_name"), line_type="line"),
                 MetricDefinition(
-                    expression=Metric(name="predict_lower_metric_name"), line_type="line"
+                    expression=Metric(name="predict_lower_metric_name"),
+                    line_type="line",
                 ),
             ],
             id="line",
@@ -319,7 +374,8 @@ def test_get_graph_templates(
             [
                 MetricDefinition(expression=Metric(name="predict_metric_name"), line_type="line"),
                 MetricDefinition(
-                    expression=Metric(name="predict_lower_metric_name"), line_type="line"
+                    expression=Metric(name="predict_lower_metric_name"),
+                    line_type="line",
                 ),
             ],
             id="area",
@@ -329,7 +385,8 @@ def test_get_graph_templates(
             [
                 MetricDefinition(expression=Metric(name="predict_metric_name"), line_type="line"),
                 MetricDefinition(
-                    expression=Metric(name="predict_lower_metric_name"), line_type="line"
+                    expression=Metric(name="predict_lower_metric_name"),
+                    line_type="line",
                 ),
             ],
             id="stack",
@@ -339,7 +396,8 @@ def test_get_graph_templates(
             [
                 MetricDefinition(expression=Metric(name="predict_metric_name"), line_type="-line"),
                 MetricDefinition(
-                    expression=Metric(name="predict_lower_metric_name"), line_type="-line"
+                    expression=Metric(name="predict_lower_metric_name"),
+                    line_type="-line",
                 ),
             ],
             id="-line",
@@ -349,7 +407,8 @@ def test_get_graph_templates(
             [
                 MetricDefinition(expression=Metric(name="predict_metric_name"), line_type="-line"),
                 MetricDefinition(
-                    expression=Metric(name="predict_lower_metric_name"), line_type="-line"
+                    expression=Metric(name="predict_lower_metric_name"),
+                    line_type="-line",
                 ),
             ],
             id="-area",
@@ -359,7 +418,8 @@ def test_get_graph_templates(
             [
                 MetricDefinition(expression=Metric(name="predict_metric_name"), line_type="-line"),
                 MetricDefinition(
-                    expression=Metric(name="predict_lower_metric_name"), line_type="-line"
+                    expression=Metric(name="predict_lower_metric_name"),
+                    line_type="-line",
                 ),
             ],
             id="-stack",
@@ -484,10 +544,24 @@ def test_translate_metrics_with_multiple_predictive_metrics() -> None:
     perfdata: Perfdata = [
         PerfDataTuple("messages_outbound", "messages_outbound", 0, "", None, None, None, None),
         PerfDataTuple(
-            "predict_messages_outbound", "messages_outbound", 0, "", None, None, None, None
+            "predict_messages_outbound",
+            "messages_outbound",
+            0,
+            "",
+            None,
+            None,
+            None,
+            None,
         ),
         PerfDataTuple(
-            "predict_lower_messages_outbound", "messages_outbound", 0, "", None, None, None, None
+            "predict_lower_messages_outbound",
+            "messages_outbound",
+            0,
+            "",
+            None,
+            None,
+            None,
+            None,
         ),
     ]
     translated_metrics = utils.translate_metrics(perfdata, "my-check-plugin")
@@ -858,7 +932,14 @@ def test_get_graph_templates_with_predictive_metrics(
             id="cpu_utilization_6_steal_util_conflicting_metrics",
         ),
         pytest.param(
-            ["user", "system", "io_wait", "cpu_util_guest", "util_average", "cpu_util_steal"],
+            [
+                "user",
+                "system",
+                "io_wait",
+                "cpu_util_guest",
+                "util_average",
+                "cpu_util_steal",
+            ],
             ["cpu_utilization_6_guest", "cpu_utilization_7"],
             id="cpu_utilization_6_guest",
         ),
@@ -895,7 +976,14 @@ def test_get_graph_templates_with_predictive_metrics(
         ),
         #
         pytest.param(
-            ["user", "system", "io_wait", "cpu_util_guest", "cpu_util_steal", "util_average"],
+            [
+                "user",
+                "system",
+                "io_wait",
+                "cpu_util_guest",
+                "cpu_util_steal",
+                "util_average",
+            ],
             ["cpu_utilization_6_guest", "cpu_utilization_7"],
             id="cpu_utilization_7",
         ),
@@ -975,7 +1063,11 @@ def test_get_graph_templates_with_predictive_metrics(
             id="size_of_mails_in_queues_conflicting_metrics",
         ),
         pytest.param(
-            ["mail_queue_hold_length", "mail_queue_incoming_length", "mail_queue_drop_length"],
+            [
+                "mail_queue_hold_length",
+                "mail_queue_incoming_length",
+                "mail_queue_drop_length",
+            ],
             ["amount_of_mails_in_secondary_queues"],
             id="amount_of_mails_in_secondary_queues",
         ),
@@ -1246,7 +1338,11 @@ def test_automatic_dict_append() -> None:
         pytest.param(
             utils.RawGraphTemplate(
                 metrics=[],
-                scalars=[("metric", "Title"), ("metric:warn", "Warn"), ("metric:crit", "Crit")],
+                scalars=[
+                    ("metric", "Title"),
+                    ("metric:warn", "Warn"),
+                    ("metric:crit", "Crit"),
+                ],
             ),
             utils.GraphTemplate(
                 id="ident",
@@ -1659,7 +1755,9 @@ COLOR_HEX = "#1e90ff"
     ],
 )
 def test_graph_template_from_graph(
-    graph: graphs.Graph, raw_metric_names: Sequence[str], expected_template: utils.GraphTemplate
+    graph: graphs.Graph,
+    raw_metric_names: Sequence[str],
+    expected_template: utils.GraphTemplate,
 ) -> None:
     for r in raw_metric_names:
         metrics_from_api.register(

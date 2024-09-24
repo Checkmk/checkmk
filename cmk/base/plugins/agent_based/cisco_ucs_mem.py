@@ -10,7 +10,13 @@ from enum import Enum
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register, SNMPTree
 
-from cmk.plugins.lib.cisco_ucs import check_cisco_fault, DETECT, Fault, Operability, Presence
+from cmk.plugins.lib.cisco_ucs import (
+    check_cisco_fault,
+    DETECT,
+    Fault,
+    Operability,
+    Presence,
+)
 
 from .agent_based_api.v1 import Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -121,7 +127,8 @@ def check_cisco_ucs_mem(
     )
     yield Result(state=State.OK, summary=f"Type: {memory_module.memtype.name}")
     yield Result(
-        state=State.OK, summary=f"Size: {memory_module.capacity} MB, SN: {memory_module.serial}"
+        state=State.OK,
+        summary=f"Size: {memory_module.capacity} MB, SN: {memory_module.serial}",
     )
 
     yield from check_cisco_fault((section_cisco_ucs_fault or {}).get(memory_module.id, []))

@@ -93,8 +93,9 @@ def check_graylog_license(_no_item, params, parsed):
     ]:
         value = license_data.get("license", {}).get(key)
         if value is not None:
-            yield 0, "{}: {}".format(
-                " ".join(key.split("_")).title(), _handle_readable_output(value)
+            yield (
+                0,
+                "{}: {}".format(" ".join(key.split("_")).title(), _handle_readable_output(value)),
             )
 
     remote_check = license_data.get("license", {}).get("enterprise", {}).get("require_remote_check")

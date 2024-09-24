@@ -11,7 +11,11 @@ from pytest import MonkeyPatch
 from cmk.base.plugins.agent_based import wmi_cpuload
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.wmi_cpuload import check_wmi_cpuload, parse_wmi_cpuload, Section
+from cmk.base.plugins.agent_based.wmi_cpuload import (
+    check_wmi_cpuload,
+    parse_wmi_cpuload,
+    Section,
+)
 
 from cmk.plugins.lib.cpu import ProcessorType
 
@@ -1618,7 +1622,10 @@ def test_parse_wmi_cpuload(
             [
                 Result(state=State.OK, summary="15 min load: 12.00"),
                 Metric("load15", 12.0),
-                Result(state=State.OK, summary="15 min load per core: 6.00 (2 logical cores)"),
+                Result(
+                    state=State.OK,
+                    summary="15 min load per core: 6.00 (2 logical cores)",
+                ),
                 Result(state=State.OK, notice="1 min load: 12.00"),
                 Metric("load1", 12.0, boundaries=(0.0, 2.0)),
                 Result(state=State.OK, notice="1 min load per core: 6.00 (2 logical cores)"),

@@ -9,7 +9,14 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersPrinters,
 )
-from cmk.gui.valuespec import Checkbox, Dictionary, MonitoringState, Percentage, TextInput, Tuple
+from cmk.gui.valuespec import (
+    Checkbox,
+    Dictionary,
+    MonitoringState,
+    Percentage,
+    TextInput,
+    Tuple,
+)
 
 
 def _parameter_valuespec_printer_supply() -> Dictionary:

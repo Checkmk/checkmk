@@ -20,8 +20,16 @@ def _parameter_valuespec_mssql_stats():
                 Tuple(
                     title=_("Batch Requests/sec"),
                     elements=[
-                        Float(title=_("warning at"), unit=_("/sec"), default_value=100000.0),
-                        Float(title=_("critical at"), unit=_("/sec"), default_value=200000.0),
+                        Float(
+                            title=_("warning at"),
+                            unit=_("/sec"),
+                            default_value=100000.0,
+                        ),
+                        Float(
+                            title=_("critical at"),
+                            unit=_("/sec"),
+                            default_value=200000.0,
+                        ),
                     ],
                 ),
             ),
@@ -31,7 +39,11 @@ def _parameter_valuespec_mssql_stats():
                     title=_("SQL Compilations/sec"),
                     elements=[
                         Float(title=_("warning at"), unit=_("/sec"), default_value=10000.0),
-                        Float(title=_("critical at"), unit=_("/sec"), default_value=20000.0),
+                        Float(
+                            title=_("critical at"),
+                            unit=_("/sec"),
+                            default_value=20000.0,
+                        ),
                     ],
                 ),
             ),

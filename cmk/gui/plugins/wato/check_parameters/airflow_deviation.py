@@ -40,10 +40,14 @@ def _parameter_valuespec_airflow_deviation():
                         help=_("Lower levels"),
                         elements=[
                             Float(
-                                title=_("critical if below or equal"), unit="%", default_value=-20
+                                title=_("critical if below or equal"),
+                                unit="%",
+                                default_value=-20,
                             ),
                             Float(
-                                title=_("warning if below or equal"), unit="%", default_value=-20
+                                title=_("warning if below or equal"),
+                                unit="%",
+                                default_value=-20,
                             ),
                         ],
                     ),

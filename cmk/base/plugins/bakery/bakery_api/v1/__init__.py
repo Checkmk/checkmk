@@ -19,7 +19,13 @@ from cmk.base.api.bakery.artifact_types import (
     WindowsGlobalConfigEntry,
     WindowsSystemConfigEntry,
 )
-from cmk.base.api.bakery.constants import DebStep, OS, RpmStep, SolStep, WindowsConfigContent
+from cmk.base.api.bakery.constants import (
+    DebStep,
+    OS,
+    RpmStep,
+    SolStep,
+    WindowsConfigContent,
+)
 from cmk.base.api.bakery.function_types import (
     FileGenerator,
     ScriptletGenerator,

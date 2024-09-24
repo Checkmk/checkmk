@@ -465,7 +465,9 @@ class ServiceLevelField(fields.Integer):
         if self.presence == "should_exist":
             if value not in choices:
                 raise self.make_error(
-                    "should_exist", value=value, choices=", ".join([str(c) for c in choices])
+                    "should_exist",
+                    value=value,
+                    choices=", ".join([str(c) for c in choices]),
                 )
 
         if self.presence == "should_not_exist":

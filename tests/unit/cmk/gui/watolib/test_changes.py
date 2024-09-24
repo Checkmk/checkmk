@@ -36,7 +36,10 @@ class TestObjectRef:
     def test_serialize(self) -> None:
         ty = ObjectRefType.Host
         ident = "node1"
-        assert ObjectRef(ty, ident).serialize() == {"ident": "node1", "object_type": "Host"}
+        assert ObjectRef(ty, ident).serialize() == {
+            "ident": "node1",
+            "object_type": "Host",
+        }
 
     def test_serialization_with_labels(self) -> None:
         ty = ObjectRefType.Host

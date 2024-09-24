@@ -17,7 +17,9 @@ equipmentPsu	dn sys/switch-B/psu-1	id 1	model UCS-PSU-6332-AC	operability operab
 """
 
 
-def test_discovery_does_not_discover_UCS_voltage_unknown(fix_register: FixRegister) -> None:
+def test_discovery_does_not_discover_UCS_voltage_unknown(
+    fix_register: FixRegister,
+) -> None:
     # see SUP-11285
     string_table = [line.split("\t") for line in SECTION.strip().split("\n")]
     discovery_function = fix_register.check_plugins[

@@ -19,8 +19,10 @@ from cmk.checkengine.checkresults import (  # pylint: disable=cmk-module-layer-v
     ActiveCheckResult,
 )
 
-from cmk.base import check_api  # pylint: disable=cmk-module-layer-violation
-from cmk.base import server_side_calls  # pylint: disable=cmk-module-layer-violation
+from cmk.base import (  # pylint: disable=cmk-module-layer-violation
+    check_api,
+    server_side_calls,
+)
 from cmk.base.api.agent_based.register import (  # pylint: disable=cmk-module-layer-violation
     iter_all_check_plugins,
     iter_all_discovery_rulesets,
@@ -31,10 +33,18 @@ from cmk.base.config import (  # pylint: disable=cmk-module-layer-violation
     load_all_plugins,
 )
 
-from cmk.gui.main_modules import load_plugins  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.utils import get_failed_plugins  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.utils.rule_specs.loader import RuleSpec  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.utils.script_helpers import gui_context  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.main_modules import (  # pylint: disable=cmk-module-layer-violation
+    load_plugins,
+)
+from cmk.gui.utils import (  # pylint: disable=cmk-module-layer-violation
+    get_failed_plugins,
+)
+from cmk.gui.utils.rule_specs.loader import (  # pylint: disable=cmk-module-layer-violation
+    RuleSpec,
+)
+from cmk.gui.utils.script_helpers import (  # pylint: disable=cmk-module-layer-violation
+    gui_context,
+)
 from cmk.gui.watolib.rulespecs import (  # pylint: disable=cmk-module-layer-violation
     rulespec_registry,
 )

@@ -21,7 +21,10 @@ def parse_huawei_wlc_devs(string_table):
     for name, cpu_perc, mem_perc in string_table:
         if name:
             parsed[name] = {}
-            for metric, value in (("cpu_percent", cpu_perc), ("mem_used_percent", mem_perc)):
+            for metric, value in (
+                ("cpu_percent", cpu_perc),
+                ("mem_used_percent", mem_perc),
+            ):
                 parsed[name][metric] = float(value)
 
     return parsed

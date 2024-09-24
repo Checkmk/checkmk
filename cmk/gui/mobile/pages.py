@@ -276,7 +276,11 @@ def page_index() -> None:
 
     html.open_ul(**{"data-role": "listview", "data-theme": "f", "data-inset": "true"})
     html.open_li()
-    html.a(_("Logout"), href="logout.py", **{"data-ajax": "false", "data-transition": "fade"})
+    html.a(
+        _("Logout"),
+        href="logout.py",
+        **{"data-ajax": "false", "data-transition": "fade"},
+    )
     html.close_li()
     html.close_ul()
     mobile_html_foot()
@@ -383,7 +387,11 @@ class MobileViewRenderer(ABCViewRenderer):
             jqm_page_header(
                 title,
                 left_button=home,
-                right_button=("javascript:document.location.reload();", _("Reload"), "refresh"),
+                right_button=(
+                    "javascript:document.location.reload();",
+                    _("Reload"),
+                    "refresh",
+                ),
                 id_="data",
             )
             html.open_div(id_="view_results")
@@ -503,7 +511,12 @@ def do_commands(what: str, rows: Rows) -> bool:
     count = 0
     already_executed: set[CommandSpec] = set()
     for nr, row in enumerate(rows):
-        nagios_commands, _confirm_options, _confirm_dialog_options, executor = core_command(
+        (
+            nagios_commands,
+            _confirm_options,
+            _confirm_dialog_options,
+            executor,
+        ) = core_command(
             what,
             row,
             nr,

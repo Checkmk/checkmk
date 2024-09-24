@@ -186,7 +186,8 @@ class HostTagCondition(ValueSpec[Sequence[str]]):
     def validate_datatype(self, value: Sequence[str], varprefix: str) -> None:
         if not isinstance(value, list):
             raise MKUserError(
-                varprefix, _("The list of host tags must be a list, but is %r") % type(value)
+                varprefix,
+                _("The list of host tags must be a list, but is %r") % type(value),
             )
         for x in value:
             if not isinstance(x, str):

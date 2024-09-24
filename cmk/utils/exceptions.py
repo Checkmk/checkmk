@@ -45,7 +45,10 @@ class MKSNMPError(MKFetcherError):
 
 class MKParseFunctionError(MKException):
     def __init__(
-        self, exception_type: type[Exception], exception: Exception, backtrace: TracebackType
+        self,
+        exception_type: type[Exception],
+        exception: Exception,
+        backtrace: TracebackType,
     ) -> None:
         self.exception_type = exception_type
         self.exception = exception

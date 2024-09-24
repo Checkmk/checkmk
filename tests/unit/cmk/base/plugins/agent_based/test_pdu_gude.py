@@ -4,7 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.pdu_gude import check_pdu_gude, GudePDUProperty, parse_pdu_gude
+from cmk.base.plugins.agent_based.pdu_gude import (
+    check_pdu_gude,
+    GudePDUProperty,
+    parse_pdu_gude,
+)
 
 _SECTION = {
     "1": [

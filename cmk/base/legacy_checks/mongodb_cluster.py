@@ -64,7 +64,10 @@ def check_mongodb_cluster_databases(item, _params, databases_dict):
     database = databases_dict.get("databases", {}).get(item, {})
 
     # is partitioned
-    yield 0, "Partitioned: %s" % ("true" if database.get("partitioned", False) else "false")
+    yield (
+        0,
+        "Partitioned: %s" % ("true" if database.get("partitioned", False) else "false"),
+    )
 
     # number of collections
     number_of_collections = len(database.get("collections", []))
@@ -236,7 +239,11 @@ def _mongodb_cluster_shard_has_jumbos(levels, collection_dict):
         if number_of_jumbos >= levels[0]:
             warning_info.append(
                 "%s (%d jumbo %s)"
-                % (shard_name, number_of_jumbos, "chunks" if number_of_jumbos > 1 else "chunk")
+                % (
+                    shard_name,
+                    number_of_jumbos,
+                    "chunks" if number_of_jumbos > 1 else "chunk",
+                )
             )
 
     return warning_level, "Jumbo: %s" % (
@@ -304,7 +311,12 @@ def _mongodb_cluster_is_balanced(
 
 
 def _generate_mongodb_cluster_long_output(
-    is_sharded, collection_dict, primary_shard_name, settings_dict, shards_dict, perf_data
+    is_sharded,
+    collection_dict,
+    primary_shard_name,
+    settings_dict,
+    shards_dict,
+    perf_data,
 ):
     """
     create long output with collection and shard information
@@ -357,11 +369,18 @@ def _generate_mongodb_cluster_long_output(
         shard_info.append(
             "\n"
             + _mongodb_cluster_get_shard_statistic_info(
-                is_sharded, aggregated_shards_dict, total_collection_size, total_number_of_documents
+                is_sharded,
+                aggregated_shards_dict,
+                total_collection_size,
+                total_number_of_documents,
             )
         )
 
-    return 0, "\n{}\n{}".format("\n".join(collections_info), "\n".join(shard_info)), perf_data
+    return (
+        0,
+        "\n{}\n{}".format("\n".join(collections_info), "\n".join(shard_info)),
+        perf_data,
+    )
 
 
 def _mongodb_cluster_get_shard_statistic_info(

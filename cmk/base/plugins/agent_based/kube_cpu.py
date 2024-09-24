@@ -6,8 +6,15 @@ import time
 from collections.abc import MutableMapping
 from typing import Any
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store, register, Service
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_value_store,
+    register,
+    Service,
+)
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+)
 
 from cmk.plugins.lib.kube import PerformanceUsage
 from cmk.plugins.lib.kube_resources import (
@@ -94,7 +101,11 @@ register.agent_section(
 register.check_plugin(
     name="kube_cpu",
     service_name="CPU resources",
-    sections=["kube_performance_cpu", "kube_cpu_resources", "kube_allocatable_cpu_resource"],
+    sections=[
+        "kube_performance_cpu",
+        "kube_cpu_resources",
+        "kube_allocatable_cpu_resource",
+    ],
     check_ruleset_name="kube_cpu",
     discovery_function=discovery_kube_cpu,
     check_function=check_kube_cpu,

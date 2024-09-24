@@ -20,7 +20,9 @@ from cmk.gui.time_series import TimeSeries
         pytest.param(("%", []), id="Unknown symbol"),
     ],
 )
-def test__time_series_math_exc_symbol(args: tuple[Literal["%"], list[TimeSeries]]) -> None:
+def test__time_series_math_exc_symbol(
+    args: tuple[Literal["%"], list[TimeSeries]],
+) -> None:
     with pytest.raises(MKGeneralException, match="Undefined operator"):
         time_series_math(*args)  # type: ignore[arg-type]
 

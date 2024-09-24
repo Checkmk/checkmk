@@ -37,6 +37,7 @@ def test_parse_physical_volumes(volume_data: Iterable[object], expected: tuple[d
     ],
 )
 def test_parse_virtual_volumes(
-    volume_data: tuple[dict[str, str], Iterable[object], Iterable[object]], expected: dict
+    volume_data: tuple[dict[str, str], Iterable[object], Iterable[object]],
+    expected: dict,
 ) -> None:
     assert parse_virtual_volumes(*volume_data) == expected

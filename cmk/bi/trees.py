@@ -17,7 +17,9 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 from cmk.utils.statename import host_state_name, service_state_name
 
-from cmk.checkengine.submitters import ServiceState  # pylint: disable=cmk-module-layer-violation
+from cmk.checkengine.submitters import (  # pylint: disable=cmk-module-layer-violation
+    ServiceState,
+)
 
 from cmk import fields
 from cmk.bi.aggregation_functions import BIAggregationFunctionSchema
@@ -379,7 +381,9 @@ class BICompiledRule(ABCBICompiledNode):
         return NodeResultBundle(actual_result, assumed_result, bundled_results, self)
 
     def _process_node_compute_result(
-        self, results: list[NodeComputeResult], computation_options: BIAggregationComputationOptions
+        self,
+        results: list[NodeComputeResult],
+        computation_options: BIAggregationComputationOptions,
     ) -> NodeComputeResult:
         state = self.aggregation_function.aggregate([result.state for result in results])
 
@@ -558,7 +562,9 @@ class BICompiledAggregation:
             required_elements = bi_compiled_branch.required_elements()
             compute_assumed_state = any(assumed_state_ids.intersection(required_elements))
             result = bi_compiled_branch.compute(
-                self.computation_options, bi_status_fetcher, use_assumed=compute_assumed_state
+                self.computation_options,
+                bi_status_fetcher,
+                use_assumed=compute_assumed_state,
             )
             if result is not None:
                 aggregation_results.append(result)
@@ -686,7 +692,10 @@ class BICompiledAggregationSchema(Schema):
     )
     groups = create_nested_schema_for_class(
         BIAggregationGroups,
-        example_config={"names": ["groupA", "groupB"], "paths": [["path", "group", "a"]]},
+        example_config={
+            "names": ["groupA", "groupB"],
+            "paths": [["path", "group", "a"]],
+        },
         description="Groups.",
     )
 

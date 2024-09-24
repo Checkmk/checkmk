@@ -10,7 +10,14 @@ from cmk.gui import query_filters
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
-from cmk.gui.type_defs import Choices, FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
+from cmk.gui.type_defs import (
+    Choices,
+    FilterHeader,
+    FilterHTTPVariables,
+    Row,
+    Rows,
+    VisualContext,
+)
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.visuals.filter import Filter, FilterOption, FilterRegistry
@@ -214,10 +221,14 @@ class _BIFrozenAggregations(Filter):
 
     def display(self, value: FilterHTTPVariables) -> None:
         html.checkbox(
-            self.htmlvars[0], deflt=bool(value.get(self.htmlvars[0], True)), label=_("Show frozen")
+            self.htmlvars[0],
+            deflt=bool(value.get(self.htmlvars[0], True)),
+            label=_("Show frozen"),
         )
         html.checkbox(
-            self.htmlvars[1], deflt=bool(value.get(self.htmlvars[1], True)), label=_("Show dynamic")
+            self.htmlvars[1],
+            deflt=bool(value.get(self.htmlvars[1], True)),
+            label=_("Show dynamic"),
         )
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:

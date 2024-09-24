@@ -14,7 +14,8 @@ from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 
 def _item_spec_db2_connections():
     return TextInput(
-        title=_("Instance"), help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1")
+        title=_("Instance"),
+        help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1"),
     )
 
 
@@ -27,8 +28,16 @@ def _parameter_valuespec_db2_connections():
                 Tuple(
                     title=_("Number of current connections"),
                     elements=[
-                        Integer(title=_("Warning at"), unit=_("connections"), default_value=150),
-                        Integer(title=_("Critical at"), unit=_("connections"), default_value=200),
+                        Integer(
+                            title=_("Warning at"),
+                            unit=_("connections"),
+                            default_value=150,
+                        ),
+                        Integer(
+                            title=_("Critical at"),
+                            unit=_("connections"),
+                            default_value=200,
+                        ),
                     ],
                 ),
             ),

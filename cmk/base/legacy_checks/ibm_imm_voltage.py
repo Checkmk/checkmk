@@ -23,7 +23,12 @@ def check_ibm_imm_voltage(item, _no_params, info):
             infotext = "%.2f Volt" % volt
 
             perfdata = [
-                ("volt", volt, str(warn_low) + ":" + str(warn), str(crit_low) + ":" + str(crit))
+                (
+                    "volt",
+                    volt,
+                    str(warn_low) + ":" + str(warn),
+                    str(crit_low) + ":" + str(crit),
+                )
             ]
             levelstext = " (levels warn/crit lower: {:.1f}/{:.1f} upper: {:.1f}/{:.1f})".format(
                 warn_low,

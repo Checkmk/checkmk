@@ -52,7 +52,9 @@ def check_juniper_trpz_aps(section: Section) -> CheckResult:
     yield from _check_common_juniper_trpz_aps("", section)
 
 
-def cluster_check_juniper_trpz_aps(section: Mapping[str, Section | None]) -> CheckResult:
+def cluster_check_juniper_trpz_aps(
+    section: Mapping[str, Section | None],
+) -> CheckResult:
     """
     >>> for result in cluster_check_juniper_trpz_aps({"node1": (1, 2), "node2": (3, 4)}):
     ...   print(result)

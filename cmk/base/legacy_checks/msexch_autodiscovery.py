@@ -21,7 +21,11 @@ def discover_msexch_autodiscovery(parsed):
 
 def check_msexch_autodiscovery(_no_item, params, parsed):
     yield from wmi_yield_raw_persec(
-        parsed[""], None, "RequestsPersec", infoname="Requests/sec", perfvar="requests_per_sec"
+        parsed[""],
+        None,
+        "RequestsPersec",
+        infoname="Requests/sec",
+        perfvar="requests_per_sec",
     )
 
 

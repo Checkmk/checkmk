@@ -26,7 +26,9 @@ class IncompleteControlChain:
     chain: Sequence[api.Controller]
 
 
-def _find_controller(owner_references: api.OwnerReferences) -> api.OwnerReference | None:
+def _find_controller(
+    owner_references: api.OwnerReferences,
+) -> api.OwnerReference | None:
     # There is only ever one controller, Checkmk ignores non-controlling owners.
     return next((o for o in owner_references if o.controller), None)
 
@@ -92,7 +94,7 @@ def _find_control_chains(
 
 # TODO Needs an integration test
 def _match_controllers(
-    pod_to_controllers: Mapping[api.PodUID, Sequence[api.Controller]]
+    pod_to_controllers: Mapping[api.PodUID, Sequence[api.Controller]],
 ) -> Mapping[str, Sequence[api.PodUID]]:
     """Matches controllers to the pods they control."""
     controller_to_pods: dict[str, list[api.PodUID]] = {}
@@ -115,7 +117,7 @@ def map_controllers(
 
 
 def map_controllers_top_to_down(
-    object_to_owners: Mapping[str, api.OwnerReferences]
+    object_to_owners: Mapping[str, api.OwnerReferences],
 ) -> Mapping[str, Sequence[str]]:
     """Creates a mapping where the key is the controller and the value a sequence of controlled
     objects

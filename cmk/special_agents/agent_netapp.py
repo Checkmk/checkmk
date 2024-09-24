@@ -50,6 +50,7 @@ Additionally you may need to make further adjustments for the Ontap 9.5:
  * Create a role for the command ''statistics' on the Ontap 9.5:
      sec log role create -role netapp-monitoring-role -cmddirname \"statistics\" -access readonly
 """
+
 from __future__ import annotations
 
 import argparse
@@ -119,7 +120,9 @@ def parse_arguments(argv: Sequence[str]) -> Args:
 
     description, epilog = __doc__.split("\n\n", 1)  # See module's doc-string.
     parser = argparse.ArgumentParser(
-        description=description.strip(), formatter_class=Formatter, epilog=epilog.lstrip()
+        description=description.strip(),
+        formatter_class=Formatter,
+        epilog=epilog.lstrip(),
     )
     parser.add_argument(
         "host_address",
@@ -280,7 +283,7 @@ class NetAppResponse:
     # In that case replace them and try again.
     # According to https://www.w3.org/TR/xml/#charsets
     # these should never be in an XML output:
-    INVALID_XML = re.compile(b"[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]")
+    INVALID_XML = re.compile(b"[\x00-\x08\x0b-\x0c\x0e-\x1f\x7f]")
 
     def __init__(self, response: requests.Response, debug: bool) -> None:
         self.status = None
@@ -1299,7 +1302,11 @@ def process_7mode(  # pylint: disable=too-many-branches
             print(
                 format_dict(
                     protocol_dict[key],
-                    report=["instance_name", "%s_read_ops" % what, "%s_write_ops" % what],
+                    report=[
+                        "instance_name",
+                        "%s_read_ops" % what,
+                        "%s_write_ops" % what,
+                    ],
                     prefix="protocol %s" % key,
                     as_line=True,
                 )
@@ -1575,7 +1582,10 @@ def query_counters_clustermode(server: NetAppConnection, what: str) -> NetAppNod
     response = server.get_response(
         (
             "perf-object-instance-list-info-iter",
-            [("objectname", what), ("max-records", str(COUNTERS_CLUSTERMODE_MAX_RECORDS))],
+            [
+                ("objectname", what),
+                ("max-records", str(COUNTERS_CLUSTERMODE_MAX_RECORDS)),
+            ],
         )
     )
 

@@ -73,7 +73,11 @@ def _valuespec_active_checks_ftp() -> Dictionary:
             ),
             (
                 "ssl",
-                FixedValue(value=True, totext=_("use SSL"), title=_("Use SSL for the connection.")),
+                FixedValue(
+                    value=True,
+                    totext=_("use SSL"),
+                    title=_("Use SSL for the connection."),
+                ),
             ),
             (
                 "cert_days",

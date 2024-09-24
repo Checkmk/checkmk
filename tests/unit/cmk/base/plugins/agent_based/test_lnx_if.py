@@ -47,7 +47,10 @@ from cmk.plugins.lib import bonding, interfaces
                 ],
                 ["link/ether", "AA:AA:AA:AA:AA:AA", "brd", "BB:BB:BB:BB:BB:BB"],
                 ["[end_iplink]"],
-                ["wlp3s0", "130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0"],
+                [
+                    "wlp3s0",
+                    "130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0",
+                ],
             ],
             [
                 interfaces.InterfaceWithCounters(
@@ -100,7 +103,10 @@ from cmk.plugins.lib import bonding, interfaces
                 ],
                 ["link/ether", "BB:BB:BB:BB:BB:BB", "brd", "BB:BB:BB:BB:BB:BB"],
                 ["[end_iplink]"],
-                ["wlp3s0", "130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0"],
+                [
+                    "wlp3s0",
+                    "130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0",
+                ],
             ],
             [
                 interfaces.InterfaceWithCounters(
@@ -153,7 +159,10 @@ from cmk.plugins.lib import bonding, interfaces
                 ],
                 ["link/ether", "BB:BB:BB:BB:BB:BB", "brd", "BB:BB:BB:BB:BB:BB"],
                 ["[end_iplink]"],
-                ["wlp3s0", "130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0"],
+                [
+                    "wlp3s0",
+                    "130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0",
+                ],
             ],
             [
                 interfaces.InterfaceWithCounters(
@@ -486,10 +495,12 @@ def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
             ],
             [
                 Service(
-                    item="1", parameters={"discovered_oper_status": ["1"], "discovered_speed": 0}
+                    item="1",
+                    parameters={"discovered_oper_status": ["1"], "discovered_speed": 0},
                 ),
                 Service(
-                    item="4", parameters={"discovered_oper_status": ["1"], "discovered_speed": 0}
+                    item="4",
+                    parameters={"discovered_oper_status": ["1"], "discovered_speed": 0},
                 ),
             ],
             [
@@ -498,7 +509,11 @@ def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
                     {"errors": {"both": ("abs", (10, 20))}, "speed": 0, "state": ["1"]},
                     [
                         Result(state=State.OK, summary="[docker0]"),
-                        Result(state=State.OK, summary="(up)", details="Operational state: up"),
+                        Result(
+                            state=State.OK,
+                            summary="(up)",
+                            details="Operational state: up",
+                        ),
                         Result(state=State.OK, summary="MAC: AA:AA:AA:AA:AA:AA"),
                         Result(state=State.OK, summary="Speed: unknown"),
                         Metric("outqlen", 0.0),
@@ -519,7 +534,11 @@ def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
                     {"errors": {"both": ("abs", (10, 20))}, "speed": 0, "state": ["1"]},
                     [
                         Result(state=State.OK, summary="[wlp3s0]"),
-                        Result(state=State.OK, summary="(up)", details="Operational state: up"),
+                        Result(
+                            state=State.OK,
+                            summary="(up)",
+                            details="Operational state: up",
+                        ),
                         Result(state=State.OK, summary="MAC: AA:AA:AA:AA:AA:BB"),
                         Result(state=State.OK, summary="Speed: unknown"),
                         Metric("outqlen", 0.0),
@@ -651,10 +670,12 @@ def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
             ],
             [
                 Service(
-                    item="2", parameters={"discovered_oper_status": ["1"], "discovered_speed": 0}
+                    item="2",
+                    parameters={"discovered_oper_status": ["1"], "discovered_speed": 0},
                 ),
                 Service(
-                    item="4", parameters={"discovered_oper_status": ["1"], "discovered_speed": 0}
+                    item="4",
+                    parameters={"discovered_oper_status": ["1"], "discovered_speed": 0},
                 ),
             ],
             [
@@ -663,7 +684,11 @@ def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
                     {"errors": {"both": ("abs", (10, 20))}, "speed": 0, "state": ["1"]},
                     [
                         Result(state=State.OK, summary="[docker0]"),
-                        Result(state=State.OK, summary="(up)", details="Operational state: up"),
+                        Result(
+                            state=State.OK,
+                            summary="(up)",
+                            details="Operational state: up",
+                        ),
                         Result(state=State.OK, summary="MAC: AA:AA:AA:AA:AA:AA"),
                         Result(state=State.OK, summary="Speed: unknown"),
                         Metric("outqlen", 0.0),
@@ -684,7 +709,11 @@ def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
                     {"errors": {"both": ("abs", (10, 20))}, "speed": 0, "state": ["1"]},
                     [
                         Result(state=State.OK, summary="[wlp3s0]"),
-                        Result(state=State.OK, summary="(up)", details="Operational state: up"),
+                        Result(
+                            state=State.OK,
+                            summary="(up)",
+                            details="Operational state: up",
+                        ),
                         Result(state=State.OK, summary="MAC: AA:AA:AA:AA:AA:AA"),
                         Result(state=State.OK, summary="Speed: unknown"),
                         Metric("outqlen", 0.0),
@@ -816,10 +845,12 @@ def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
             ],
             [
                 Service(
-                    item="2", parameters={"discovered_oper_status": ["1"], "discovered_speed": 0}
+                    item="2",
+                    parameters={"discovered_oper_status": ["1"], "discovered_speed": 0},
                 ),
                 Service(
-                    item="4", parameters={"discovered_oper_status": ["1"], "discovered_speed": 0}
+                    item="4",
+                    parameters={"discovered_oper_status": ["1"], "discovered_speed": 0},
                 ),
             ],
             [
@@ -828,7 +859,11 @@ def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
                     {"errors": {"both": ("abs", (10, 20))}, "speed": 0, "state": ["1"]},
                     [
                         Result(state=State.OK, summary="[docker0]"),
-                        Result(state=State.OK, summary="(up)", details="Operational state: up"),
+                        Result(
+                            state=State.OK,
+                            summary="(up)",
+                            details="Operational state: up",
+                        ),
                         Result(state=State.OK, summary="MAC: AA:AA:AA:AA:AA:AA"),
                         Result(state=State.OK, summary="Speed: unknown"),
                         Metric("outqlen", 0.0),
@@ -849,7 +884,11 @@ def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
                     {"errors": {"both": ("abs", (10, 20))}, "speed": 0, "state": ["1"]},
                     [
                         Result(state=State.OK, summary="[wlp3s0]"),
-                        Result(state=State.OK, summary="(up)", details="Operational state: up"),
+                        Result(
+                            state=State.OK,
+                            summary="(up)",
+                            details="Operational state: up",
+                        ),
                         Result(state=State.OK, summary="MAC: AA:AA:AA:AA:AA:AA"),
                         Result(state=State.OK, summary="Speed: unknown"),
                         Metric("outqlen", 0.0),
@@ -869,7 +908,10 @@ def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
         ),
         (
             [
-                ["em0", "376716785370 417455222 0 0 0 0 0 0 383578105955 414581956 0 0 0 0 0 0"],
+                [
+                    "em0",
+                    "376716785370 417455222 0 0 0 0 0 0 383578105955 414581956 0 0 0 0 0 0",
+                ],
                 ["tun0", "342545566242 0 259949262 0 0 0 0 0  0 19196 0 0  0 0"],
                 ["tun1", "2422824602 0 2357563 0 0 0 0 0  0 0 0 0  0 0"],
                 ["[em0]"],
@@ -888,22 +930,35 @@ def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
             [
                 Service(
                     item="1",
-                    parameters={"discovered_oper_status": ["1"], "discovered_speed": 1000000000},
+                    parameters={
+                        "discovered_oper_status": ["1"],
+                        "discovered_speed": 1000000000,
+                    },
                 ),
                 Service(
-                    item="2", parameters={"discovered_oper_status": ["1"], "discovered_speed": 0}
+                    item="2",
+                    parameters={"discovered_oper_status": ["1"], "discovered_speed": 0},
                 ),
                 Service(
-                    item="3", parameters={"discovered_oper_status": ["1"], "discovered_speed": 0}
+                    item="3",
+                    parameters={"discovered_oper_status": ["1"], "discovered_speed": 0},
                 ),
             ],
             [
                 (
                     "1",
-                    {"errors": {"both": ("abs", (10, 20))}, "speed": 1000000000, "state": ["1"]},
+                    {
+                        "errors": {"both": ("abs", (10, 20))},
+                        "speed": 1000000000,
+                        "state": ["1"],
+                    },
                     [
                         Result(state=State.OK, summary="[em0]"),
-                        Result(state=State.OK, summary="(up)", details="Operational state: up"),
+                        Result(
+                            state=State.OK,
+                            summary="(up)",
+                            details="Operational state: up",
+                        ),
                         Result(state=State.OK, summary="MAC: 00:AA:11:BB:22:CC"),
                         Result(state=State.OK, summary="Speed: 1 GBit/s"),
                         Metric("outqlen", 0.0),
@@ -923,7 +978,11 @@ def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
                     {"errors": {"both": ("abs", (10, 20))}, "speed": 0, "state": ["1"]},
                     [
                         Result(state=State.OK, summary="[tun0]"),
-                        Result(state=State.OK, summary="(up)", details="Operational state: up"),
+                        Result(
+                            state=State.OK,
+                            summary="(up)",
+                            details="Operational state: up",
+                        ),
                         Result(state=State.OK, summary="Speed: unknown"),
                         Metric("outqlen", 0.0),
                         Result(
@@ -943,7 +1002,11 @@ def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
                     {"errors": {"both": ("abs", (10, 20))}, "speed": 0, "state": ["1"]},
                     [
                         Result(state=State.OK, summary="[tun1]"),
-                        Result(state=State.OK, summary="(up)", details="Operational state: up"),
+                        Result(
+                            state=State.OK,
+                            summary="(up)",
+                            details="Operational state: up",
+                        ),
                         Result(state=State.OK, summary="Speed: unknown"),
                         Metric("outqlen", 0.0),
                         Result(
@@ -997,22 +1060,25 @@ def test_lnx_if_regression(
 
     node_name = "node"
     for item, par, res in items_params_results:
-        assert list(
-            lnx_if.cluster_check_lnx_if(
-                item,
-                par,
-                {node_name: section},
-                {},
-            )
-        )[:-1] == [
-            Result(  # type: ignore[call-overload]
-                state=res[0].state,
-                summary=res[0].summary + " on %s" % node_name if res[0].summary else None,
-                notice=res[0].summary + " on %s" % node_name if not res[0].summary else None,
-                details=res[0].details + " on %s" % node_name if res[0].details else None,
-            ),
-            *res[1:-1],
-        ]
+        assert (
+            list(
+                lnx_if.cluster_check_lnx_if(
+                    item,
+                    par,
+                    {node_name: section},
+                    {},
+                )
+            )[:-1]
+            == [
+                Result(  # type: ignore[call-overload]
+                    state=res[0].state,
+                    summary=res[0].summary + " on %s" % node_name if res[0].summary else None,
+                    notice=res[0].summary + " on %s" % node_name if not res[0].summary else None,
+                    details=res[0].details + " on %s" % node_name if res[0].details else None,
+                ),
+                *res[1:-1],
+            ]
+        )
 
 
 def test_lnx_if_with_bonding(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -1192,7 +1258,10 @@ def test_inventory_lnx_if_no_bonding() -> None:
                     ],
                     ["link/ether", "AA:AA:AA:AA:AA:AA", "brd", "BB:BB:BB:BB:BB:BB"],
                     ["[end_iplink]"],
-                    ["wlp3s0", "130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0"],
+                    [
+                        "wlp3s0",
+                        "130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0",
+                    ],
                 ]
             ),
             None,
@@ -1244,7 +1313,10 @@ def test_inventory_lnx_if_with_bonding() -> None:
                     ],
                     ["link/ether", "AA:AA:AA:AA:AA:AA", "brd", "BB:BB:BB:BB:BB:BB"],
                     ["[end_iplink]"],
-                    ["wlp3s0", "130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0"],
+                    [
+                        "wlp3s0",
+                        "130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0",
+                    ],
                 ]
             ),
             {

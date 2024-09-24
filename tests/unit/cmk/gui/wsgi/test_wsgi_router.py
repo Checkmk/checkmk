@@ -84,7 +84,9 @@ def test_request_url(flask_app: flask.Flask) -> None:
 def test_webserver_auth(wsgi_app: WebTestAppForCMK, with_user: tuple[UserId, str]) -> None:
     username, _ = with_user
     wsgi_app.get(
-        "/NO_SITE/check_mk/api/1.0/version", headers={"Accept": "application/json"}, status=401
+        "/NO_SITE/check_mk/api/1.0/version",
+        headers={"Accept": "application/json"},
+        status=401,
     )
 
     wsgi_app.get(
@@ -126,7 +128,9 @@ def test_normal_auth(base: str, wsgi_app: WebTestAppForCMK, with_user: tuple[Use
 
     wsgi_app.set_authorization(None)
     wsgi_app.get(
-        "/NO_SITE/check_mk/api/1.0/version", headers={"Accept": "application/json"}, status=200
+        "/NO_SITE/check_mk/api/1.0/version",
+        headers={"Accept": "application/json"},
+        status=200,
     )
 
 
@@ -136,7 +140,9 @@ def test_openapi_version(
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
     resp = wsgi_app.get(
-        "/NO_SITE/check_mk/api/1.0/version", headers={"Accept": "application/json"}, status=200
+        "/NO_SITE/check_mk/api/1.0/version",
+        headers={"Accept": "application/json"},
+        status=200,
     )
     assert resp.json["site"] == omd_site()
 

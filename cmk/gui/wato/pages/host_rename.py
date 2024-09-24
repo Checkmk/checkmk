@@ -349,7 +349,10 @@ class ModeBulkRenameHost(WatoMode):
                 ("add_suffix", _("Add Suffix"), TextInput(allow_empty=False, size=38)),
                 ("add_prefix", _("Add Prefix"), TextInput(allow_empty=False, size=38)),
                 ("drop_domain", _("Drop Domain Suffix")),
-                ("reverse_dns", _("Convert IP addresses of hosts into host their DNS names")),
+                (
+                    "reverse_dns",
+                    _("Convert IP addresses of hosts into host their DNS names"),
+                ),
                 (
                     "regex",
                     _("Regular expression substitution"),

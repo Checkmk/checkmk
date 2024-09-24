@@ -9,7 +9,9 @@ from typing import Any
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
-from cmk.base.plugins.agent_based.inventory_kube_namespace import inventory_kube_namespace
+from cmk.base.plugins.agent_based.inventory_kube_namespace import (
+    inventory_kube_namespace,
+)
 
 from cmk.plugins.lib.kube import NamespaceInfo, NamespaceName
 

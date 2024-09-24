@@ -117,25 +117,36 @@ def print_generic(settings, sensor_type, ident, factor, unit, *values):
 
 
 def print_ambient_light(conn, settings, uid):
-    from tinkerforge.bricklet_ambient_light import BrickletAmbientLight  # type: ignore[import]
+    from tinkerforge.bricklet_ambient_light import (  # type: ignore[import]
+        BrickletAmbientLight,
+    )
 
     br = BrickletAmbientLight(uid, conn)
     print_generic(settings, "ambient", br.get_identity(), 0.01, "L", br.get_illuminance())
 
 
 def print_ambient_light_v2(conn, settings, uid):
-    from tinkerforge.bricklet_ambient_light_v2 import BrickletAmbientLightV2  # type: ignore[import]
+    from tinkerforge.bricklet_ambient_light_v2 import (  # type: ignore[import]
+        BrickletAmbientLightV2,
+    )
 
     br = BrickletAmbientLightV2(uid, conn)
     print_generic(settings, "ambient", br.get_identity(), 0.01, "L", br.get_illuminance())
 
 
 def print_temperature(conn, settings, uid):
-    from tinkerforge.bricklet_temperature import BrickletTemperature  # type: ignore[import]
+    from tinkerforge.bricklet_temperature import (  # type: ignore[import]
+        BrickletTemperature,
+    )
 
     br = BrickletTemperature(uid, conn)
     print_generic(
-        settings, "temperature", br.get_identity(), 0.01, "\N{DEGREE SIGN}C", br.get_temperature()
+        settings,
+        "temperature",
+        br.get_identity(),
+        0.01,
+        "\N{DEGREE SIGN}C",
+        br.get_temperature(),
     )
 
 
@@ -177,7 +188,9 @@ def print_master(conn, settings, uid):
 
 
 def print_motion_detector(conn, settings, uid):
-    from tinkerforge.bricklet_motion_detector import BrickletMotionDetector  # type: ignore[import]
+    from tinkerforge.bricklet_motion_detector import (  # type: ignore[import]
+        BrickletMotionDetector,
+    )
 
     br = BrickletMotionDetector(uid, conn)
     print_generic(settings, "motion", br.get_identity(), 1.0, "", br.get_motion_detected())
@@ -239,11 +252,21 @@ def init_device_handlers():
     for dev_id, module_name, clazz, handler in [
         (13, "brick_master", "BrickMaster", print_master),
         (21, "bricklet_ambient_light", "BrickletAmbientLight", print_ambient_light),
-        (259, "bricklet_ambient_light_v2", "BrickletAmbientLightV2", print_ambient_light_v2),
+        (
+            259,
+            "bricklet_ambient_light_v2",
+            "BrickletAmbientLightV2",
+            print_ambient_light_v2,
+        ),
         (216, "bricklet_temperature", "BrickletTemperature", print_temperature),
         (226, "bricklet_ptc", "BrickletPTC", print_temperature_ext),
         (27, "bricklet_humidity", "BrickletHumidity", print_humidity),
-        (233, "bricklet_motion_detector", "BrickletMotionDetector", print_motion_detector),
+        (
+            233,
+            "bricklet_motion_detector",
+            "BrickletMotionDetector",
+            print_motion_detector,
+        ),
     ]:
         if dev_id is not None:
             device_handlers[dev_id] = handler
@@ -356,7 +379,13 @@ def main():
 
         conn.register_callback(
             IPConnection.CALLBACK_ENUMERATE,
-            lambda uid, connected_uid, position, hardware_version, firmware_version, device_identifier, enumeration_type: enumerate_callback(
+            lambda uid,
+            connected_uid,
+            position,
+            hardware_version,
+            firmware_version,
+            device_identifier,
+            enumeration_type: enumerate_callback(
                 conn,
                 device_handlers,
                 settings,
@@ -378,7 +407,9 @@ def main():
         if segment_display is not None:
             if segment_display_value is not None:
                 display_on_segment(
-                    conn, settings, "%d%s" % (segment_display_value, segment_display_unit)
+                    conn,
+                    settings,
+                    "%d%s" % (segment_display_value, segment_display_unit),
                 )
             else:
                 display_on_segment(conn, settings, "")

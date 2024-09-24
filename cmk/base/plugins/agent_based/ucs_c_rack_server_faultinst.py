@@ -15,7 +15,9 @@
 from .agent_based_api.v1 import register, type_defs
 
 
-def parse_ucs_c_rack_server_faultinst(string_table: type_defs.StringTable) -> dict[str, list[str]]:
+def parse_ucs_c_rack_server_faultinst(
+    string_table: type_defs.StringTable,
+) -> dict[str, list[str]]:
     """
     >>> parse_ucs_c_rack_server_faultinst([['faultInst', 'severity critical', 'cause powerproblem', 'code F0883', 'descr Broken', 'affectedDN sys/rack-unit-1/psu-4']])
     {'Severity': ['critical'], 'Cause': ['powerproblem'], 'Code': ['F0883'], 'Description': ['Broken'], 'Affected DN': ['rack-unit-1/psu-4']}

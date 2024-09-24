@@ -12,7 +12,14 @@ from cmk.utils.exceptions import MKGeneralException, MKSNMPError, MKTimeout
 from cmk.utils.log import console
 from cmk.utils.sectionname import SectionName
 
-from cmk.snmplib import OID, SNMPBackend, SNMPContext, SNMPRawValue, SNMPRowInfo, SNMPVersion
+from cmk.snmplib import (
+    OID,
+    SNMPBackend,
+    SNMPContext,
+    SNMPRawValue,
+    SNMPRowInfo,
+    SNMPVersion,
+)
 
 from ._utils import strip_snmp_value
 
@@ -104,7 +111,14 @@ class ClassicSNMPBackend(SNMPBackend):
 
         portspec = self._snmp_port_spec()
         command = self._snmp_base_command("snmpwalk", context) + ["-Cc"]
-        command += ["-OQ", "-OU", "-On", "-Ot", f"{protospec}{ipaddress}{portspec}", oid]
+        command += [
+            "-OQ",
+            "-OU",
+            "-On",
+            "-Ot",
+            f"{protospec}{ipaddress}{portspec}",
+            oid,
+        ]
         console.vverbose("Running '%s'\n" % subprocess.list2cmdline(command))
 
         rowinfo: SNMPRowInfo = []

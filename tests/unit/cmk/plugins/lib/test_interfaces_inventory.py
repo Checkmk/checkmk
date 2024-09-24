@@ -10,10 +10,16 @@ from pytest_mock import MockerFixture
 
 from tests.testlib import on_time
 
-from tests.unit.cmk.base.plugins.agent_based.utils_inventory import sort_inventory_result
+from tests.unit.cmk.base.plugins.agent_based.utils_inventory import (
+    sort_inventory_result,
+)
 
 from cmk.agent_based.v2 import Attributes, InventoryResult, TableRow
-from cmk.plugins.lib.inventory_interfaces import Interface, inventorize_interfaces, InventoryParams
+from cmk.plugins.lib.inventory_interfaces import (
+    Interface,
+    inventorize_interfaces,
+    InventoryParams,
+)
 
 
 @pytest.mark.parametrize(

@@ -55,7 +55,14 @@ from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import all_of, contains, exists, OIDEnd, SNMPTree, StringTable
 
-hsrp_states = {1: "initial", 2: "learn", 3: "listen", 4: "speak", 5: "standby", 6: "active"}
+hsrp_states = {
+    1: "initial",
+    2: "learn",
+    3: "listen",
+    4: "speak",
+    5: "standby",
+    6: "active",
+}
 
 
 def inventory_cisco_hsrp(info):

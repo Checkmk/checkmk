@@ -102,7 +102,10 @@ from .utils_inventory import sort_inventory_result
                     "LocalNodeState": "active",
                     "NodeID": "x2my5tv8bqg0yh5jq98gzodr2",
                     "RemoteManagers": [
-                        {"NodeID": "x2my5tv8bqg0yh5jq98gzodr2", "Addr": "101.102.103.104:2377"}
+                        {
+                            "NodeID": "x2my5tv8bqg0yh5jq98gzodr2",
+                            "Addr": "101.102.103.104:2377",
+                        }
                     ],
                 },
                 "Containers": 7,
@@ -110,7 +113,10 @@ from .utils_inventory import sort_inventory_result
                 "ContainersPaused": 0,
                 "ContainersStopped": 3,
                 "Images": 7,
-                "Labels": ["this_is_a_label_in=etc_docker_daemon_json", "another=label"],
+                "Labels": [
+                    "this_is_a_label_in=etc_docker_daemon_json",
+                    "another=label",
+                ],
             },
             [
                 Attributes(

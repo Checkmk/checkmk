@@ -160,7 +160,11 @@ def check_mailboxes(args: Args) -> CheckResult:
                     )
 
         if messages:
-            return max(m[0] for m in messages), ", ".join([m[1] for m in messages]), None
+            return (
+                max(m[0] for m in messages),
+                ", ".join([m[1] for m in messages]),
+                None,
+            )
 
         return 0, "all mailboxes fine", None
 

@@ -131,7 +131,8 @@ def check_sap_hana_backup(item: str, params: Mapping[str, Any], section: Section
 
     if data.end_time is not None:
         yield Result(
-            state=State.OK, summary="Last: %s" % render.datetime(data.end_time.timestamp())
+            state=State.OK,
+            summary="Last: %s" % render.datetime(data.end_time.timestamp()),
         )
         yield from check_levels(
             (datetime.now(tz=timezone.utc) - data.end_time).total_seconds(),

@@ -21,7 +21,12 @@ from cmk.plugins.lib.inventory_interfaces import Interface as InterfaceInv
 from cmk.plugins.lib.inventory_interfaces import inventorize_interfaces
 
 from .agent_based_api.v1 import get_value_store, register, Result, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
+from .agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    InventoryResult,
+    StringTable,
+)
 
 Line = Sequence[str]
 Lines = Iterator[Line]
@@ -191,7 +196,13 @@ def _filter_out_deprecated_plugin_lines(
             continue
 
         # from windows_if.ps1 or wmic_if.bat
-        if {"Node", "MACAddress", "Name", "NetConnectionID", "NetConnectionStatus"}.issubset(line):
+        if {
+            "Node",
+            "MACAddress",
+            "Name",
+            "NetConnectionID",
+            "NetConnectionStatus",
+        }.issubset(line):
             found_windows_if = True
             for l in lines:
                 if len(l) < 4:

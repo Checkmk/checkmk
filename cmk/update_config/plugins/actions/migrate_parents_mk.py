@@ -56,7 +56,8 @@ class MigrateParentsMK(UpdateAction):
                     AssertionError,  # Validation assertions
                 ) as ex:
                     logger.warning(
-                        f"Could not parse parents.mk file {path}, skipping.", exc_info=ex
+                        f"Could not parse parents.mk file {path}, skipping.",
+                        exc_info=ex,
                     )
                     continue
 
@@ -184,6 +185,8 @@ class MigrateParentsMK(UpdateAction):
 
 update_action_registry.register(
     MigrateParentsMK(
-        name="migrate_parent_scan_config", title="Migrate CLI parent scan config", sort_index=40
+        name="migrate_parent_scan_config",
+        title="Migrate CLI parent scan config",
+        sort_index=40,
     )
 )

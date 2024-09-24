@@ -162,7 +162,9 @@ def _file_name_from_path(
 
 
 def requested_file_name(
-    request: Request, on_error: Literal["raise", "ignore"] = "ignore", default: str = "index"
+    request: Request,
+    on_error: Literal["raise", "ignore"] = "ignore",
+    default: str = "index",
 ) -> str:
     """Convenience wrapper around _file_name_from_path
 

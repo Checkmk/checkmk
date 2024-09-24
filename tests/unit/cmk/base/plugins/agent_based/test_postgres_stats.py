@@ -6,7 +6,12 @@
 from typing import Any
 
 from cmk.base.plugins.agent_based import postgres_stats
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResults, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    IgnoreResults,
+    Result,
+    Service,
+    State,
+)
 
 NOW = 1489840000
 

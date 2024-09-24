@@ -99,12 +99,18 @@ import cmk.base.api.agent_based.register as agent_based_register
         ),
         (
             "brocade_info",
-            {".1.3.6.1.2.1.1.2.0": "Moo.Quack", ".1.3.6.1.4.1.1588.2.1.1.1.1.6.0": "Not None"},
+            {
+                ".1.3.6.1.2.1.1.2.0": "Moo.Quack",
+                ".1.3.6.1.4.1.1588.2.1.1.1.1.6.0": "Not None",
+            },
             False,
         ),
         (
             "brocade_info",
-            {".1.3.6.1.2.1.1.2.0": "Moo.Quack", ".1.3.6.1.4.1.1588.2.1.1.1.1.6.0": None},
+            {
+                ".1.3.6.1.2.1.1.2.0": "Moo.Quack",
+                ".1.3.6.1.4.1.1588.2.1.1.1.1.6.0": None,
+            },
             False,
         ),
     ],

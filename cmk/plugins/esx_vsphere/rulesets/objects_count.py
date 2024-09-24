@@ -30,7 +30,8 @@ def _parameter_form_esx_vsphere_objects_count() -> Dictionary:
                             ),
                             "hosts_count": DictElement(
                                 parameter_form=Integer(
-                                    title=Title("Number of hosts"), prefill=DefaultValue(2)
+                                    title=Title("Number of hosts"),
+                                    prefill=DefaultValue(2),
                                 ),
                                 required=True,
                             ),

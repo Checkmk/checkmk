@@ -7,7 +7,12 @@ import pytest
 from freezegun import freeze_time
 
 import cmk.base.plugins.agent_based.jenkins_jobs as jn
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 
 NOW_SIMULATED = "2021-11-23 13:00:00"
 

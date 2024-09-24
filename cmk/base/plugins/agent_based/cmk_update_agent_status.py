@@ -8,7 +8,9 @@ from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
 
 
-def _parse_cmk_update_agent_status(string_table: StringTable) -> CMKAgentUpdateSection | None:
+def _parse_cmk_update_agent_status(
+    string_table: StringTable,
+) -> CMKAgentUpdateSection | None:
     """parse cmk_update_agent_status"""
 
     try:

@@ -295,7 +295,12 @@ def section_cluster(client, databases):
 
     # aggregate all information in one dict
     all_informations_dict = _aggregate_chunks_and_shards_info(
-        databases, chunks_dict, shards_dict, collections_dict, balancer_dict, chunk_size_info
+        databases,
+        chunks_dict,
+        shards_dict,
+        collections_dict,
+        balancer_dict,
+        chunk_size_info,
     )
 
     sys.stdout.write("%s\n" % json.dumps(all_informations_dict, separators=(",", ":")))
@@ -345,7 +350,12 @@ def _add_cluster_info(databases, databases_cluster_info):
 
 
 def _aggregate_chunks_and_shards_info(
-    databases_dict, chunks_dict, shards_dict, collections_dict, balancer_dict, settings_dict
+    databases_dict,
+    chunks_dict,
+    shards_dict,
+    collections_dict,
+    balancer_dict,
+    settings_dict,
 ):
     """
     generate one dictionary containing shards and chunks information per collection per database

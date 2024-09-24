@@ -129,7 +129,9 @@ def _node_is_ready(node: api.Node) -> bool:
     return False
 
 
-def _node_collector_daemons(api_daemonsets: Iterable[api.DaemonSet]) -> section.CollectorDaemons:
+def _node_collector_daemons(
+    api_daemonsets: Iterable[api.DaemonSet],
+) -> section.CollectorDaemons:
     # Extract DaemonSets with label key `node-collector`
     collector_daemons = defaultdict(list)
     for api_daemonset in api_daemonsets:

@@ -5,14 +5,13 @@
 
 """Central module for common (non-edition specific) registrations"""
 
-
 from functools import partial
 
 from livestatus import MultiSiteConnection
 
 from cmk.utils.crash_reporting import crash_report_registry
 from cmk.utils.licensing.registry import register_cre_licensing_handler
-from cmk.utils.version import edition, Edition
+from cmk.utils.version import Edition, edition
 
 import cmk.gui.help
 from cmk.gui import (
@@ -91,7 +90,10 @@ from cmk.gui.watolib.config_domain_name import (
     sample_config_generator_registry,
 )
 from cmk.gui.watolib.groups import contact_group_usage_finder_registry
-from cmk.gui.watolib.host_attributes import host_attribute_registry, host_attribute_topic_registry
+from cmk.gui.watolib.host_attributes import (
+    host_attribute_registry,
+    host_attribute_topic_registry,
+)
 from cmk.gui.watolib.host_rename import rename_host_hook_registry
 from cmk.gui.watolib.main_menu import main_module_registry, main_module_topic_registry
 from cmk.gui.watolib.mode import mode_registry
@@ -107,7 +109,8 @@ def register_sites_options() -> None:
     visuals.SiteFilter.heading_hook = visuals.cre_site_filter_heading_info
 
     autocompleter_registry.register_autocompleter(
-        "sites", partial(autocompleters.sites_autocompleter, sites_options=cre_sites_options)
+        "sites",
+        partial(autocompleters.sites_autocompleter, sites_options=cre_sites_options),
     )
 
 

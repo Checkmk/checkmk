@@ -79,6 +79,7 @@ from cmk.gui.plugins.wato.active_checks.dns import _migrate
     ],
 )
 def test_legacy_params(
-    params: Mapping[str, object] | tuple[str, Mapping[str, object]], result: Mapping[str, object]
+    params: Mapping[str, object] | tuple[str, Mapping[str, object]],
+    result: Mapping[str, object],
 ) -> None:
     assert _migrate(params) == result

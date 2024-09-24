@@ -67,7 +67,9 @@ def _mocked_container_info_from_state(
                 containers={
                     "downloading-container": _mocked_container_info_from_state(
                         ContainerWaitingState(
-                            type=ContainerStateType.waiting, reason="ContainerCreating", detail=None
+                            type=ContainerStateType.waiting,
+                            reason="ContainerCreating",
+                            detail=None,
                         )
                     )
                 }
@@ -110,7 +112,10 @@ def test_check_kube_pod_status_no_issues_in_containers(
     assert (
         list(
             check_kube_pod_status(
-                DEFAULT_PARAMS, section_kube_pod_containers, None, section_kube_pod_lifecycle
+                DEFAULT_PARAMS,
+                section_kube_pod_containers,
+                None,
+                section_kube_pod_lifecycle,
             )
         )
         == expected_result
@@ -177,7 +182,10 @@ def test_check_kube_pod_status_failing_container(
     assert (
         list(
             check_kube_pod_status(
-                DEFAULT_PARAMS, section_kube_pod_containers, None, section_kube_pod_lifecycle
+                DEFAULT_PARAMS,
+                section_kube_pod_containers,
+                None,
+                section_kube_pod_lifecycle,
             )
         )
         == expected_result
@@ -245,7 +253,10 @@ def test_check_kube_pod_status_failing_container(
                     state=State.OK,
                     notice="some_name: back-off 5m0s restarting failed container=busybox pod=failingcontainer-imagepullbackerror_default(e7437bfb-3043-44a0-a071-4221ab43c550)",
                 ),
-                Result(state=State.OK, notice='some_name: Back-off pulling image "busybox1"'),
+                Result(
+                    state=State.OK,
+                    notice='some_name: Back-off pulling image "busybox1"',
+                ),
             ],
             id="One container has incorrect image name, one container fails with exit code 0",
         ),
@@ -271,7 +282,10 @@ def test_check_kube_pod_status_multiple_issues(
     assert (
         list(
             check_kube_pod_status(
-                DEFAULT_PARAMS, section_kube_pod_containers, None, section_kube_pod_lifecycle
+                DEFAULT_PARAMS,
+                section_kube_pod_containers,
+                None,
+                section_kube_pod_lifecycle,
             )
         )
         == expected_result
@@ -291,13 +305,24 @@ def test_check_alert_if_pending_too_long() -> None:
 
     expected_results = (
         (State.OK, "0 seconds"),
-        (State.WARN, "1 minute 0 seconds (warn/crit at 1 minute 0 seconds/2 minutes 0 seconds)"),
-        (State.CRIT, "2 minutes 0 seconds (warn/crit at 1 minute 0 seconds/2 minutes 0 seconds)"),
+        (
+            State.WARN,
+            "1 minute 0 seconds (warn/crit at 1 minute 0 seconds/2 minutes 0 seconds)",
+        ),
+        (
+            State.CRIT,
+            "2 minutes 0 seconds (warn/crit at 1 minute 0 seconds/2 minutes 0 seconds)",
+        ),
     )
     for time, expected_result in zip(count(0.1, 60.1), expected_results):
         expected_state, expected_message = expected_result
         summary_result, *_ = _check_kube_pod_status(
-            time, value_store, params, section_kube_pod_containers, None, section_kube_pod_lifecycle
+            time,
+            value_store,
+            params,
+            section_kube_pod_containers,
+            None,
+            section_kube_pod_lifecycle,
         )
         assert isinstance(summary_result, Result)
         assert summary_result.state == expected_state
@@ -401,7 +426,12 @@ def test_check_alert_resets() -> None:
     ):
         expected_state, expected_summary, expected_notice = expected
         summary_result, *notice = _check_kube_pod_status(
-            time, value_store, params, section_kube_pod_containers, None, section_kube_pod_lifecycle
+            time,
+            value_store,
+            params,
+            section_kube_pod_containers,
+            None,
+            section_kube_pod_lifecycle,
         )
         assert isinstance(summary_result, Result)
         assert summary_result.state == expected_state
@@ -458,7 +488,12 @@ def test_check_group_timer() -> None:
     ):
         expected_state, expected_summary, expected_notice = expected
         summary_result, *notice = _check_kube_pod_status(
-            time, value_store, params, section_kube_pod_containers, None, section_kube_pod_lifecycle
+            time,
+            value_store,
+            params,
+            section_kube_pod_containers,
+            None,
+            section_kube_pod_lifecycle,
         )
         assert isinstance(summary_result, Result)
         assert summary_result.state == expected_state

@@ -25,11 +25,17 @@ info = [
     "check,lines,expected_result",
     [
         ("jolokia_generic", info, [("PingFederate-CUK-CDI MBean TotalRequests", {})]),
-        ("jolokia_generic.rate", info, [("PingFederate-CUK-CDI MBean MaxRequestTime", {})]),
+        (
+            "jolokia_generic.rate",
+            info,
+            [("PingFederate-CUK-CDI MBean MaxRequestTime", {})],
+        ),
     ],
 )
 def test_jolokia_generic_discovery(
-    check: str, lines: StringTable, expected_result: Sequence[tuple[str, dict[str, object]]]
+    check: str,
+    lines: StringTable,
+    expected_result: Sequence[tuple[str, dict[str, object]]],
 ) -> None:
     parsed = Check("jolokia_generic").run_parse(lines)
 

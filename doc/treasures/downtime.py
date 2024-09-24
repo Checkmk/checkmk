@@ -162,7 +162,9 @@ class MultilineFormatter(argparse.HelpFormatter):
         multiline_text = ""
         for paragraph in paragraphs:
             formatted_paragraph = (
-                textwrap.fill(paragraph, width, initial_indent=indent, subsequent_indent=indent)
+                textwrap.fill(
+                    paragraph, width, initial_indent=indent, subsequent_indent=indent
+                )
                 + "\n\n"
             )
             multiline_text = multiline_text + formatted_paragraph
@@ -230,10 +232,14 @@ def main():
         try:
             datetime.datetime.fromisoformat(arg_value.replace("Z", "+00:00"))
         except ValueError:
-            raise RuntimeError("Invalid datetime specified: must conform to ISO 8601 format")
+            raise RuntimeError(
+                "Invalid datetime specified: must conform to ISO 8601 format"
+            )
         return arg_value
 
-    setting = parser.add_argument_group(description="When setting downtimes, these can be used:")
+    setting = parser.add_argument_group(
+        description="When setting downtimes, these can be used:"
+    )
     setting.add_argument(
         "--start",
         dest="start_time",
@@ -261,10 +267,15 @@ def main():
         help="Duration of the downtime in minutes (default: %(default)s)",
     )
     setting.add_argument(
-        "-c", "--comment", type=str, help="Comment for the downtime (default: %(default)r)"
+        "-c",
+        "--comment",
+        type=str,
+        help="Comment for the downtime (default: %(default)r)",
     )
 
-    removing = parser.add_argument_group(description="When removing downtimes, these can be used:")
+    removing = parser.add_argument_group(
+        description="When removing downtimes, these can be used:"
+    )
     removing.add_argument(
         "--id",
         dest="downtime_id",
@@ -290,7 +301,10 @@ def main():
         "-u", "--user", type=str, help="Name of automation user (default: %(default)r)"
     )
     credentials.add_argument(
-        "-S", "--secret", type=str, help="Automation secret (default: read from user settings)"
+        "-S",
+        "--secret",
+        type=str,
+        help="Automation secret (default: read from user settings)",
     )
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
@@ -303,7 +317,9 @@ def main():
         )
 
     def _read_secret(username: str) -> str:
-        with open(f"{omd_root or ''}/var/check_mk/web/{username}/automation.secret") as secret:
+        with open(
+            f"{omd_root or ''}/var/check_mk/web/{username}/automation.secret"
+        ) as secret:
             return secret.read().strip()
 
     if not args.secret:
@@ -336,7 +352,7 @@ def manage_downtime(args: argparse.Namespace):
     if args.action == "set":
         if not args.start_time or not args.end_time:
             raise RuntimeError(
-                f"Time frame for downtime must be specified: both start and end times must be set"
+                "Time frame for downtime must be specified: both start and end times must be set"
             )
         output("Mode", "set downtime")
         output("Start time", f"{args.start_time}")
@@ -369,7 +385,7 @@ def manage_downtime(args: argparse.Namespace):
             args.services,
         )
     else:
-        raise RuntimeError(f"No action specified: must be --set or --remove")
+        raise RuntimeError("No action specified: must be --set or --remove")
 
 
 def output(title: str, message: str, level: int = 1) -> str:

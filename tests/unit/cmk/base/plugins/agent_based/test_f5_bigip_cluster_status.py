@@ -8,7 +8,10 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.f5_bigip_cluster_status import (
     check_f5_bigip_cluster_status,
     check_f5_bigip_cluster_status_v11_2,
@@ -19,7 +22,9 @@ from cmk.base.plugins.agent_based.f5_bigip_cluster_status import (
     parse_f5_bigip_vcmpfailover,
 )
 
-from cmk.plugins.lib.f5_bigip import F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS as def_params
+from cmk.plugins.lib.f5_bigip import (
+    F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS as def_params,
+)
 from cmk.plugins.lib.f5_bigip import F5BigipClusterStatusVSResult
 
 
@@ -103,7 +108,8 @@ def test_check_f5_bigip_cluster_status_v11_2(
     ],
 )
 def test_cluster_check_f5_bigip_cluster_status(
-    arg: tuple[F5BigipClusterStatusVSResult, Mapping[str, NodeState | None]], result: CheckResult
+    arg: tuple[F5BigipClusterStatusVSResult, Mapping[str, NodeState | None]],
+    result: CheckResult,
 ) -> None:
     assert list(cluster_check_f5_bigip_cluster_status(arg[0], arg[1])) == result
 
@@ -143,7 +149,8 @@ def test_cluster_check_f5_bigip_cluster_status(
     ],
 )
 def test_cluster_check_f5_bigip_cluster_status_v11_2(
-    arg: tuple[F5BigipClusterStatusVSResult, Mapping[str, NodeState | None]], result: CheckResult
+    arg: tuple[F5BigipClusterStatusVSResult, Mapping[str, NodeState | None]],
+    result: CheckResult,
 ) -> None:
     assert list(cluster_check_f5_bigip_cluster_status_v11_2(arg[0], arg[1])) == result
 

@@ -19,7 +19,10 @@ from cmk.base.plugins.agent_based.kaspersky_av_quarantine import (
         (
             {"Objects": " 1", "Last added": " unkown"},
             [
-                Result(state=State.CRIT, summary="1 Objects in Quarantine, Last added: unkown"),
+                Result(
+                    state=State.CRIT,
+                    summary="1 Objects in Quarantine, Last added: unkown",
+                ),
                 Metric(name="Objects", value=1.0),
             ],
         )

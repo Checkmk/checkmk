@@ -12,7 +12,7 @@ from pytest import MonkeyPatch
 
 import cmk.utils.paths
 
-from cmk.gui.utils.theme import theme, Theme, theme_choices
+from cmk.gui.utils.theme import Theme, theme, theme_choices
 
 
 @pytest.fixture(name="theme_dirs")
@@ -110,7 +110,10 @@ def test_base_dir(th: Theme) -> None:
 )
 @pytest.mark.parametrize("with_logo", [True, False])
 def test_has_custom_logo(
-    monkeypatch: MonkeyPatch, th: Theme, edition: cmk.utils.version.Edition, with_logo: bool
+    monkeypatch: MonkeyPatch,
+    th: Theme,
+    edition: cmk.utils.version.Edition,
+    with_logo: bool,
 ) -> None:
     monkeypatch.setattr("cmk.gui.utils.theme.edition", lambda: edition)
     if with_logo:

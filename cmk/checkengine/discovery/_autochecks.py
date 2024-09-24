@@ -346,7 +346,9 @@ def remove_autochecks_of_host(
 
 class DiscoveredService:
     @staticmethod
-    def check_plugin_name(discovered_item: DiscoveredItem[AutocheckEntry]) -> CheckPluginName:
+    def check_plugin_name(
+        discovered_item: DiscoveredItem[AutocheckEntry],
+    ) -> CheckPluginName:
         return DiscoveredService.older(discovered_item).check_plugin_name
 
     @staticmethod

@@ -56,6 +56,8 @@ sock.connect((mkevent_host, mkevent_port))
 
 timestamp = time.strftime("%b %d %H:%M:%S", time.localtime(time.time()))
 sock.sendall(
-    ("<{}>{} {} {}: {}\n".format(prio, timestamp, host, application, message)).encode("utf-8")
+    ("<{}>{} {} {}: {}\n".format(prio, timestamp, host, application, message)).encode(
+        "utf-8"
+    )
 )
 sock.close()

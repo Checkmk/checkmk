@@ -52,7 +52,16 @@ def test_ac_check_uniserv_broken_arguments(
             ("host", 123, "service", "job", None, None, None, None),
         ),
         (
-            ["host", "123", "service", "ADDRESS", "street", "street_nr", "city", "regex"],
+            [
+                "host",
+                "123",
+                "service",
+                "ADDRESS",
+                "street",
+                "street_nr",
+                "city",
+                "regex",
+            ],
             ("host", 123, "service", "ADDRESS", "street", "street_nr", "city", "regex"),
         ),
     ],
@@ -125,7 +134,11 @@ def test_ac_check_uniserv_parse_response(
             {"version_str": "123"},
             (0, "Version: 123"),
         ),
-        (("ADDRESS", None, "SID", None, None, None, ""), {}, (3, "Unknown zip or city")),
+        (
+            ("ADDRESS", None, "SID", None, None, None, ""),
+            {},
+            (3, "Unknown zip or city"),
+        ),
         (
             ("ADDRESS", None, "SID", None, None, None, ""),
             {

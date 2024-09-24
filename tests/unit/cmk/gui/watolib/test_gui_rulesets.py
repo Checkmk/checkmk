@@ -27,7 +27,9 @@ import cmk.gui.utils
 import cmk.gui.watolib.rulesets as rulesets
 from cmk.gui.config import active_config
 from cmk.gui.plugins.wato.check_parameters.local import _parameter_valuespec_local
-from cmk.gui.plugins.wato.check_parameters.ps import _valuespec_inventory_processes_rules
+from cmk.gui.plugins.wato.check_parameters.ps import (
+    _valuespec_inventory_processes_rules,
+)
 from cmk.gui.utils.rule_specs import legacy_converter
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 from cmk.gui.watolib.rulesets import Rule, RuleOptions, Ruleset, RuleValue
@@ -644,14 +646,21 @@ class _RuleHelper:
     def ssh_rule() -> rulesets.Rule:
         return _RuleHelper._make_rule(
             RuleGroup.AgentConfig("lnx_remote_alert_handlers"),
-            {"handlers": {}, "runas": "old_value", "sshkey": ("private_key", "public_key")},
+            {
+                "handlers": {},
+                "runas": "old_value",
+                "sshkey": ("private_key", "public_key"),
+            },
         )
 
 
 @pytest.fixture(
     params=[
         _RuleHelper(
-            _RuleHelper.gcp_rule, "credentials", ("explicit_password", "uuid", "geheim"), "project"
+            _RuleHelper.gcp_rule,
+            "credentials",
+            ("explicit_password", "uuid", "geheim"),
+            "project",
         ),
         pytest.param(
             _RuleHelper(_RuleHelper.ssh_rule, "sshkey", ("new_priv", "public_key"), "runas"),

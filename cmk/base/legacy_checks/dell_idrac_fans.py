@@ -25,14 +25,32 @@ DELL_IDRAC_FANS_STATE_MAP = {
 
 
 def inventory_dell_idrac_fans(info):
-    for index, state, _value, _name, _warn_upper, _crit_upper, _warn_lower, _crit_lower in info:
+    for (
+        index,
+        state,
+        _value,
+        _name,
+        _warn_upper,
+        _crit_upper,
+        _warn_lower,
+        _crit_lower,
+    ) in info:
         # don't discover fans with a state of other or unknown
         if DELL_IDRAC_FANS_STATE_MAP[state][1] not in ("OTHER", "UNKNOWN"):
             yield index, {}
 
 
 def check_dell_idrac_fans(item, params, info):
-    for index, status, value, name, warn_upper, crit_upper, warn_lower, crit_lower in info:
+    for (
+        index,
+        status,
+        value,
+        name,
+        warn_upper,
+        crit_upper,
+        warn_lower,
+        crit_lower,
+    ) in info:
         if index == item:
             state, state_readable = DELL_IDRAC_FANS_STATE_MAP[status]
             yield state, f"Status: {state_readable}, Name: {name}"

@@ -10,7 +10,11 @@ from typing import Annotated, Any, Union
 
 from pydantic import BaseModel, BeforeValidator, Field
 
-from cmk.plugins.lib.cisco_meraki import check_last_reported_ts, load_json, MerakiAPIData
+from cmk.plugins.lib.cisco_meraki import (
+    check_last_reported_ts,
+    load_json,
+    MerakiAPIData,
+)
 from cmk.plugins.lib.humidity import check_humidity
 from cmk.plugins.lib.temperature import check_temperature, TempParamType
 

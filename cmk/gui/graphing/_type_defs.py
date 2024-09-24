@@ -50,7 +50,14 @@ class UnitInfo(TypedDict):
     conversion: NotRequired[Callable[[float], float]]
     perfometer_render: NotRequired[Callable[[float], str]]
     formatter_ident: NotRequired[
-        Literal["Decimal", "SI", "IEC", "StandardScientific", "EngineeringScientific", "Time"]
+        Literal[
+            "Decimal",
+            "SI",
+            "IEC",
+            "StandardScientific",
+            "EngineeringScientific",
+            "Time",
+        ]
     ]
 
 

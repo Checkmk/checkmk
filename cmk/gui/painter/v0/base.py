@@ -44,11 +44,19 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.valuespec import ValueSpec
-from cmk.gui.view_utils import CellSpec, CSVExportError, JSONExportError, PythonExportError
+from cmk.gui.view_utils import (
+    CellSpec,
+    CSVExportError,
+    JSONExportError,
+    PythonExportError,
+)
 
-from ..v1.painter_lib import experimental_painter_registry, Formatters
+from ..v1.painter_lib import (
+    experimental_painter_registry,
+    Formatters,
+    PainterConfiguration,
+)
 from ..v1.painter_lib import Painter as V1Painter
-from ..v1.painter_lib import PainterConfiguration
 
 ExportCellContent = str | dict[str, Any]
 PDFCellContent = str | tuple[Literal["icon"], str]

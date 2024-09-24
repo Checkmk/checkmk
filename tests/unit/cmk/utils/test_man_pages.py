@@ -41,7 +41,10 @@ _IF64_MAN_PAGE = man_pages.ManPage(
 
 
 def man_page_dirs_for_test(tmp_path: Path) -> Mapping[str, Sequence[str]]:
-    return {"additional_test_folders": [str(tmp_path)], **discover_families(raise_errors=True)}
+    return {
+        "additional_test_folders": [str(tmp_path)],
+        **discover_families(raise_errors=True),
+    }
 
 
 @pytest.fixture(scope="module", name="catalog")
@@ -195,15 +198,15 @@ def test_cluster_check_functions_match_manpages_cluster_sections(
             (
                 missing_cluster_description,
                 unexpected_cluster_description,
-            )[
-                has_cluster_doc
-            ].add(str(plugin.name))
+            )[has_cluster_doc].add(str(plugin.name))
 
     assert not missing_cluster_description
     assert not unexpected_cluster_description
 
 
-def test_no_subtree_and_entries_on_same_level(catalog: man_pages.ManPageCatalog) -> None:
+def test_no_subtree_and_entries_on_same_level(
+    catalog: man_pages.ManPageCatalog,
+) -> None:
     for category, entries in catalog.items():
         has_entries = bool(entries)
         has_categories = bool(man_pages._manpage_catalog_subtree_names(catalog, category))
@@ -228,7 +231,9 @@ def test_print_man_page() -> None:
     assert "\n License: " in rendered
 
 
-def test_missing_catalog_entries_of_man_pages(all_pages: Mapping[str, man_pages.ManPage]) -> None:
+def test_missing_catalog_entries_of_man_pages(
+    all_pages: Mapping[str, man_pages.ManPage],
+) -> None:
     found_catalog_entries_from_man_pages = {e for page in all_pages.values() for e in page.catalog}
     missing_catalog_entries = found_catalog_entries_from_man_pages - set(man_pages.CATALOG_TITLES)
     assert not missing_catalog_entries

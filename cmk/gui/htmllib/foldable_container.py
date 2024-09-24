@@ -74,7 +74,9 @@ def foldable_container(
         html.close_table()
         indent_style += "margin: 0; "
     html.open_ul(
-        id_=container_id, class_=["treeangle", "open" if isopen else "closed"], style=indent_style
+        id_=container_id,
+        class_=["treeangle", "open" if isopen else "closed"],
+        style=indent_style,
     )
     try:
         yield isopen

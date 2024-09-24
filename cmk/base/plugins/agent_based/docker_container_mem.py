@@ -8,7 +8,9 @@ from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
 
 
-def _parse_docker_container_mem_plugin(string_table: StringTable) -> docker.MemorySection:
+def _parse_docker_container_mem_plugin(
+    string_table: StringTable,
+) -> docker.MemorySection:
     """
     parse output of mk_docker.py which corresponds to the docker api
     """
@@ -39,7 +41,9 @@ def _parse_docker_container_mem_plugin(string_table: StringTable) -> docker.Memo
     )
 
 
-def parse_docker_container_mem(string_table: StringTable) -> memory.SectionMemUsed | None:
+def parse_docker_container_mem(
+    string_table: StringTable,
+) -> memory.SectionMemUsed | None:
     """
         >>> import pprint
         >>> pprint.pprint(parse_docker_container_mem([

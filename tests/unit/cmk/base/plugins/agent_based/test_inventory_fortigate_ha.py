@@ -41,7 +41,12 @@ def test_inventory_fortigate_ha() -> None:
     assert sort_inventory_result(inventory_fortigate_ha(SECTION)) == sort_inventory_result(
         [
             Attributes(
-                path=["software", "applications", "fortinet", "fortigate_high_availability"],
+                path=[
+                    "software",
+                    "applications",
+                    "fortinet",
+                    "fortigate_high_availability",
+                ],
                 inventory_attributes={
                     "Mode": "activePassive",
                     "Priority": "128",

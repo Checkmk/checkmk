@@ -153,10 +153,18 @@ def _parameter_valuespec_oracle_performance():
     ]
     for waitclass in oracle_waitclasses:
         waitclasses_choices.append(
-            (waitclass.metric, "%s wait class" % waitclass.name, levels_tuple(Float, "1/s"))
+            (
+                waitclass.metric,
+                "%s wait class" % waitclass.name,
+                levels_tuple(Float, "1/s"),
+            )
         )
         waitclasses_choices.append(
-            (waitclass.metric_fg, "%s wait class (FG)" % waitclass.name, levels_tuple(Float, "1/s"))
+            (
+                waitclass.metric_fg,
+                "%s wait class (FG)" % waitclass.name,
+                levels_tuple(Float, "1/s"),
+            )
         )
 
     return Dictionary(
@@ -171,7 +179,11 @@ def _parameter_valuespec_oracle_performance():
                         choices=[
                             ("oracle_db_cpu", "DB CPU", levels_tuple(Float, "1/s")),
                             ("oracle_db_time", "DB time", levels_tuple(Float, "1/s")),
-                            ("oracle_db_wait_time", "DB non-idle wait", levels_tuple(Float, "1/s")),
+                            (
+                                "oracle_db_wait_time",
+                                "DB non-idle wait",
+                                levels_tuple(Float, "1/s"),
+                            ),
                         ],
                     ),
                     title=_("Levels for DB time"),

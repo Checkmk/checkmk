@@ -13,7 +13,12 @@ from tests.unit.conftest import FixRegister
 from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.api.agent_based.plugin_classes import CheckFunction
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.windows_updates import parse_windows_updates, Section
 
 SECTION_OK: Final = Section(

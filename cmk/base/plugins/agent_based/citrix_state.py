@@ -67,7 +67,9 @@ v1.register.check_plugin(
 )
 
 
-def discovery_citrix_state_hosting_server(section: Section) -> v1.type_defs.DiscoveryResult:
+def discovery_citrix_state_hosting_server(
+    section: Section,
+) -> v1.type_defs.DiscoveryResult:
     if "hosting_server" in section:
         yield v1.Service()
 

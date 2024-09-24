@@ -26,7 +26,9 @@ def parse_arguments(argv):
     # flags
     parser.add_argument("-v", "--verbose", action="count", help="""Increase verbosity""")
     parser.add_argument(
-        "--debug", action="store_true", help="""Debug mode: let Python exceptions come through"""
+        "--debug",
+        action="store_true",
+        help="""Debug mode: let Python exceptions come through""",
     )
 
     parser.add_argument("hostaddress", help="HP MSA host name")
@@ -177,7 +179,8 @@ class HPMSAConnection:
         response = self._session.get(url, timeout=self._timeout, verify=self._verify_ssl)
         if response.status_code != 200:
             LOGGER.warning(
-                "RESPONSE.status_code, reason: %r", (response.status_code, response.reason)
+                "RESPONSE.status_code, reason: %r",
+                (response.status_code, response.reason),
             )
         LOGGER.debug("RESPONSE.text\n%s", response.text)
         return response

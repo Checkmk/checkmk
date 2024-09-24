@@ -331,7 +331,9 @@ def _create_cmk_image(
         ),
     ) as container:
         logger.info(
-            "Building in container %s (from [%s])", container.short_id, base_image_name_with_tag
+            "Building in container %s (from [%s])",
+            container.short_id,
+            base_image_name_with_tag,
         )
 
         _exec_run(container, ["mkdir", "-p", "/results"])
@@ -378,7 +380,11 @@ def _create_cmk_image(
 
         if not use_local_package:
             try:
-                logger.info("Uploading [%s] to registry (%s)", image_name_with_tag, image.short_id)
+                logger.info(
+                    "Uploading [%s] to registry (%s)",
+                    image_name_with_tag,
+                    image.short_id,
+                )
                 client.images.push(image_name_with_tag)
                 logger.info("  Upload complete")
             except docker.errors.APIError as e:
@@ -417,7 +423,10 @@ def _is_using_current_cmk_package(image: Image, version: CMKVersion) -> bool:
 
     cmk_hash_image, package_name_image = cmk_hash_entry.split()
     logger.info(
-        "  CMK hash of image (%s): %s (%s)", image.short_id, cmk_hash_image, package_name_image
+        "  CMK hash of image (%s): %s (%s)",
+        image.short_id,
+        cmk_hash_image,
+        package_name_image,
     )
     cmk_hash_current = get_current_cmk_hash_for_artifact(version, package_name_image)
     logger.info("  Current CMK Hash of artifact: %s (%s)", cmk_hash_current, package_name_image)

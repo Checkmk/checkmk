@@ -48,7 +48,11 @@ def check_mcafee_emailgateway_bridge(item, params, info):
     ]:
         key = title.lower()
         packets_rate = get_rate(
-            value_store, f"mcafee_emailgateway_bridge.{key}", now, int(packets), raise_overflow=True
+            value_store,
+            f"mcafee_emailgateway_bridge.{key}",
+            now,
+            int(packets),
+            raise_overflow=True,
         )
         perfdata = ["%s_packets_received" % key, packets_rate]
         infotext = f"{title}: {packets_rate:.2f} packets received/s"

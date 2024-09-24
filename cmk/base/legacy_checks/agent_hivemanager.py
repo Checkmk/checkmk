@@ -16,7 +16,11 @@ def agent_hivemanager_arguments(
     params: tuple, hostname: str, ipaddress: str | None
 ) -> Sequence[str]:
     # User, Password
-    return [ipaddress or hostname, params[0], passwordstore_get_cmdline("%s", params[1])]
+    return [
+        ipaddress or hostname,
+        params[0],
+        passwordstore_get_cmdline("%s", params[1]),
+    ]
 
 
 special_agent_info["hivemanager"] = agent_hivemanager_arguments

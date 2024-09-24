@@ -49,7 +49,10 @@ def check_huawei_switch_stack(item, params, parsed):
         yield 0, item_data
 
     else:
-        yield 2, "Unexpected role: {} (Expected: {})".format(item_data, params["expected_role"])
+        yield (
+            2,
+            "Unexpected role: {} (Expected: {})".format(item_data, params["expected_role"]),
+        )
 
 
 check_info["huawei_switch_stack"] = LegacyCheckDefinition(

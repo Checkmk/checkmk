@@ -130,7 +130,9 @@ class RulesetMatchObject:
     service_labels: Labels | None = None
 
 
-def merge_cluster_labels(all_node_labels: Iterable[Iterable[HostLabel]]) -> Sequence[HostLabel]:
+def merge_cluster_labels(
+    all_node_labels: Iterable[Iterable[HostLabel]],
+) -> Sequence[HostLabel]:
     """A cluster has all its nodes labels. Last node wins."""
     return list({l.name: l for node_labels in all_node_labels for l in node_labels}.values())
 
@@ -171,7 +173,9 @@ class RulesetMatcher:
 
         self._service_match_cache: dict[
             tuple[
-                tuple[ServiceName | None, int], PreprocessedPattern, tuple[tuple[str, object], ...]
+                tuple[ServiceName | None, int],
+                PreprocessedPattern,
+                tuple[tuple[str, object], ...],
             ],
             object,
         ] = {}
@@ -264,7 +268,10 @@ class RulesetMatcher:
         )
 
     def get_service_bool_value(
-        self, hostname: HostName, description: ServiceName, ruleset: Sequence[RuleSpec[TRuleValue]]
+        self,
+        hostname: HostName,
+        description: ServiceName,
+        ruleset: Sequence[RuleSpec[TRuleValue]],
     ) -> bool:
         """Compute outcome of a ruleset set that just says yes/no
 
@@ -300,7 +307,10 @@ class RulesetMatcher:
         )
 
     def service_extra_conf(
-        self, hostname: HostName, description: ServiceName, ruleset: Sequence[RuleSpec[TRuleValue]]
+        self,
+        hostname: HostName,
+        description: ServiceName,
+        ruleset: Sequence[RuleSpec[TRuleValue]],
     ) -> list[TRuleValue]:
         """Compute outcome of a service rule set that has an item."""
         return list(
@@ -546,7 +556,9 @@ class RulesetOptimizer:
         return self.__service_ruleset_cache.setdefault(cache_id, _impl(ruleset, with_foreign_hosts))
 
     @staticmethod
-    def _convert_pattern_list(patterns: HostOrServiceConditions | None) -> PreprocessedPattern:
+    def _convert_pattern_list(
+        patterns: HostOrServiceConditions | None,
+    ) -> PreprocessedPattern:
         """Compiles a list of service match patterns to a to a single regex
 
         Reducing the number of individual regex matches improves the performance dramatically.

@@ -85,15 +85,19 @@ class CMKWebSession:
         return url + ("&" if "?" in url else "?") + "_transid=" + self.transids.pop()
 
     def _handle_http_response(
-        self, response: requests.Response, expected_code: int, allow_redirect_to_login: bool
+        self,
+        response: requests.Response,
+        expected_code: int,
+        allow_redirect_to_login: bool,
     ) -> None:
-        assert (
-            response.status_code == expected_code
-        ), "Got invalid status code (%d != %d) for URL %s (Location: %s)" % (
-            response.status_code,
-            expected_code,
-            response.url,
-            response.headers.get("Location", "None"),
+        assert response.status_code == expected_code, (
+            "Got invalid status code (%d != %d) for URL %s (Location: %s)"
+            % (
+                response.status_code,
+                expected_code,
+                response.url,
+                response.headers.get("Location", "None"),
+            )
         )
 
         if not allow_redirect_to_login and response.history:
@@ -155,7 +159,12 @@ class CMKWebSession:
             filters=script_filters,
         )
         self._check_resources(
-            soup, base_url, "link", "href", ["text/css"], filters=[("rel", "stylesheet")]
+            soup,
+            base_url,
+            "link",
+            "href",
+            ["text/css"],
+            filters=[("rel", "stylesheet")],
         )
         self._check_resources(
             soup,
@@ -189,7 +198,11 @@ class CMKWebSession:
             assert mime_type in allowed_mime_types
 
     def _find_resource_urls(
-        self, tag: str, attribute: str, soup: BeautifulSoup, filters: Collection | None = None
+        self,
+        tag: str,
+        attribute: str,
+        soup: BeautifulSoup,
+        filters: Collection | None = None,
     ) -> list:
         urls = []
 

@@ -1026,7 +1026,11 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
             self.close_x()
 
     def status_label(
-        self, content: HTMLContent, status: str, title: str, **attrs: HTMLTagAttributeValue
+        self,
+        content: HTMLContent,
+        status: str,
+        title: str,
+        **attrs: HTMLTagAttributeValue,
     ) -> None:
         """Shows a colored badge with text (used on Setup activation page for the site status)"""
         self.status_label_button(content, status, title, onclick=None, **attrs)
@@ -1233,7 +1237,12 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
             css_classes.append(class_)
 
         self.open_select(
-            name=varname, id_=varname, label=label, class_=css_classes, size=str(size), **attrs
+            name=varname,
+            id_=varname,
+            label=label,
+            class_=css_classes,
+            size=str(size),
+            **attrs,
         )
 
         for group in grouped:
@@ -1292,7 +1301,10 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
 
     def begin_radio_group(self, horizontal: bool = False) -> None:
         if self.mobile:
-            attrs = {"data-type": "horizontal" if horizontal else None, "data-role": "controlgroup"}
+            attrs = {
+                "data-type": "horizontal" if horizontal else None,
+                "data-role": "controlgroup",
+            }
             self._write(render_start_tag("fieldset", close_tag=False, **attrs))
 
     def end_radio_group(self) -> None:
@@ -1308,7 +1320,11 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
         id_ = f"rb_{varname}_{value}" if label else None
         self.open_span(class_="radiobutton_group")
         self.input(
-            name=varname, type_="radio", value=value, checked="" if checked else None, id_=id_
+            name=varname,
+            type_="radio",
+            value=value,
+            checked="" if checked else None,
+            id_=id_,
         )
         if label and id_:
             self.label(label, for_=id_)
@@ -1525,7 +1541,11 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
         )
 
     def more_button(
-        self, id_: str, dom_levels_up: int, additional_js: str = "", with_text: bool = False
+        self,
+        id_: str,
+        dom_levels_up: int,
+        additional_js: str = "",
+        with_text: bool = False,
     ) -> None:
         if user.show_mode == "enforce_show_more":
             return
@@ -1632,7 +1652,10 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
 
         # TODO: Make method.content return HTML
         return HTMLWriter.render_div(
-            atag + HTML(method.content), class_=classes, id_="popup_trigger_%s" % ident, style=style
+            atag + HTML(method.content),
+            class_=classes,
+            id_="popup_trigger_%s" % ident,
+            style=style,
         )
 
     def element_dragger_url(self, dragging_tag: str, base_url: str) -> None:

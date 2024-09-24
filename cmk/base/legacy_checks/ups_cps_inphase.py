@@ -13,7 +13,9 @@ from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.ups import DETECT_UPS_CPS
 
 
-def parse_ups_cps_inphase(string_table: list[str]) -> dict[Literal["1"], dict[str, float]] | None:
+def parse_ups_cps_inphase(
+    string_table: list[str],
+) -> dict[Literal["1"], dict[str, float]] | None:
     if not string_table:
         return None
 

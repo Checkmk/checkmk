@@ -134,7 +134,8 @@ def check_entity_sensors_fan(
         return
 
     yield Result(
-        state=sensor_reading.state, summary=f"Operational status: {sensor_reading.status_descr}"
+        state=sensor_reading.state,
+        summary=f"Operational status: {sensor_reading.status_descr}",
     )
 
     yield from check_levels(
@@ -159,7 +160,9 @@ register.check_plugin(
 )
 
 
-def discover_entity_sensors_power_presence(section: EntitySensorSection) -> DiscoveryResult:
+def discover_entity_sensors_power_presence(
+    section: EntitySensorSection,
+) -> DiscoveryResult:
     yield from (Service(item=item) for item in section.get("power_presence", {}))
 
 

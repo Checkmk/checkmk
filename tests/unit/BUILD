@@ -19,6 +19,11 @@ py_library(
 
 py_pytest_main(
     name = "__test__",
+    deps = [
+        requirement("pytest"),
+        # pytest-xdist for `--numprocesses=NPROC`
+        requirement("pytest-xdist"),
+    ],
 )
 
 write_file(
@@ -50,5 +55,70 @@ py_test(
         "//cmk:lib_cmk",
         "//tests:conftest",
         "//tests:testlib",
+    ],
+)
+
+py_test(
+    name = "repo",
+    # https://bazel.build/reference/be/common-definitions#test.size
+    size = "large",
+    srcs = glob(
+        include = ["**/*.py"],
+        exclude = [
+            "omdlib/**/*.py",
+            "testlib/cse/**/*.py",
+            "unit/cmk/cse/**/*.py",
+            "**/*pylint*.py",
+            "**/*pylint*/**/*.py",
+        ],
+    ) + ["__test__.py"],
+    args = [
+        "--config-file=$(location @//:pyproject.toml)",
+        "--import-mode=importlib",
+        "--random-order-bucket=global",
+        "--dist=loadfile",
+    ],
+    data = ["@//:pyproject.toml"] + glob(
+        include = [
+            # canned data
+            "**/_check_form_submit_response",
+            "**/_innovaphone_vcrtrace",
+            "**/test-files/**",
+            "**/tree_test_data/**",
+            "**/*.json",
+            "**/*.log",
+            "**/*.pem",
+            "**/*.xml",
+        ],
+        exclude = ["**/*.py"],
+    ),
+    main = ":__test__.py",
+    package_collisions = "ignore",  # "warning"
+    tags = [
+        # TODO:  *Shouldn't* be required in unit tests!
+        # `test_diagnostics_element_hw_info_content` and
+        # `test_wsgi_router::test_wsgi_app` require "local"
+        "local",
+    ],
+    deps = [
+        ":__test__",
+        requirement("astroid"),
+        requirement("fastapi"),
+        requirement("httpx"),
+        requirement("hypothesis"),
+        requirement("mypy-boto3-logs"),
+        requirement("mypy-extensions"),
+        requirement("pika"),
+        requirement("polyfactory"),
+        requirement("pylint"),
+        requirement("pytest-mock"),
+        requirement("pytest-random-order"),
+        requirement("responses"),
+        requirement("time-machine"),
+        requirement("webtest"),
+        "//cmk:lib_cmk_repo",
+        "//tests:conftest",
+        "//tests:testlib",
+        "//tests/unit:conftest",
     ],
 )

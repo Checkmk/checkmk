@@ -8,19 +8,14 @@ def main() {
             inside_container() {
                 sh("make -C doc/documentation htmlhelp");
             }
-            stage("Stash") {
-                stash(
-                    name: "htmlhelp",
-                    includes: "doc/documentation/_build/htmlhelp/**"
-                );
-            }
         }
 
-        // The pages produced by the job are served by the web server on our CI
-        // master node. Extract the results there to make it available to the
-        // web server.
-        node("Master_DoNotUse") {
-            unstash("htmlhelp");
+        stage("Deploy") {
+            withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {    // groovylint-disable DuplicateMapLiteral
+                sh("""
+                    scp -rs -o StrictHostKeyChecking=accept-new -i ${RELEASE_KEY} doc/documentation/_build/htmlhelp ${DEV_DOCS_URL}/devdoc
+                """);
+            }
         }
     }
 }

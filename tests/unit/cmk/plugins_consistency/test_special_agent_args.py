@@ -100,6 +100,7 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "vnx_quotas": None,
     "zerto": None,
     "prometheus": agent_prometheus,
+    "vsphere": None,
 }
 
 UNMIGRATED = {

@@ -50,7 +50,8 @@ def parse_chrony(string_table: StringTable) -> dict[str, Any] | None:
             if key == "Reference ID":
                 parsed[key] = value
                 try:
-                    parsed["address"] = value.split(" ")[1]
+                    # if brackets are empty, NTP servers are unreachable
+                    parsed["address"] = value.split(" ")[1].replace("()", "") or None
                 except IndexError:
                     pass
             elif key == "System time":
@@ -106,13 +107,10 @@ def check_chrony(params, section_chrony, section_ntp):
         return
 
     address = section_chrony.get("address")
-    if address in (None, "", "()"):
-        # if brackets are empty, NTP servers are unreachable
-        address = "unreachable"
     ref_id = section_chrony.get("Reference ID")
     yield Result(
-        state=State.WARN if address == "unreachable" else State.OK,
-        notice=f"NTP servers: {address}\nReference ID: {ref_id}",
+        state=State.OK if address else State.WARN,
+        notice=f"NTP servers: {address or 'unreachable'}\nReference ID: {ref_id}",
     )
 
     crit_stratum, warn, crit = params["ntp_levels"]

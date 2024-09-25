@@ -13,7 +13,11 @@ from cmk.ccc import store
 
 from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.log import VERBOSE
-from cmk.utils.notify_types import EventRule, MailPluginModel, NotificationRuleID
+from cmk.utils.notify_types import (
+    EventRule,
+    MailPluginModel,
+    NotificationRuleID,
+)
 from cmk.utils.paths import configuration_lockfile, site_cert_file
 from cmk.utils.tags import sample_tag_config, TagConfig
 

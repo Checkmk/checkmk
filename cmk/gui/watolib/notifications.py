@@ -32,7 +32,13 @@ from typing import Any, cast
 
 from cmk.ccc import store
 
-from cmk.utils.notify_types import EventRule, NotificationRuleID, NotifyBulkType, NotifyPlugin
+from cmk.utils.notify_types import (
+    EventRule,
+    NotificationParameterConfig,
+    NotificationRuleID,
+    NotifyBulkType,
+    NotifyPlugin,
+)
 from cmk.utils.user import UserId
 
 from cmk.gui import userdb
@@ -671,3 +677,24 @@ def find_timeperiod_usage_in_notification_rules(time_period_name: str) -> list[t
     for index, rule in enumerate(NotificationRuleConfigFile().load_for_reading()):
         used_in += userdb.find_timeperiod_usage_in_notification_rule(time_period_name, index, rule)
     return used_in
+
+
+# TODO Final format has still to be choosen, currently only the parameters are
+# stored without link to notification method
+class NotificationParameterConfigFile(WatoListConfigFile[NotificationParameterConfig]):
+    def __init__(self) -> None:
+        super().__init__(
+            config_file_path=Path(wato_root_dir() + "notification_parameter.mk"),
+            config_variable="notification_parameter",
+            spec_class=NotificationParameterConfig,
+        )
+
+    def _load_file(self, lock: bool) -> list[NotificationParameterConfig]:
+        notification_parameters = store.load_from_mk_file(
+            self._config_file_path,
+            key=self._config_variable,
+            default=[],
+            lock=lock,
+        )
+
+        return notification_parameters

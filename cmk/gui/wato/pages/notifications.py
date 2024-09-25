@@ -21,7 +21,13 @@ from cmk.ccc.version import Edition, edition
 from cmk.utils import paths
 from cmk.utils.labels import Labels
 from cmk.utils.notify import NotificationContext
-from cmk.utils.notify_types import EventRule, is_always_bulk, NotifyAnalysisInfo
+from cmk.utils.notify_types import (
+    EventRule,
+    is_always_bulk,
+    NotificationParameterConfig,
+    NotificationParameterGeneral,
+    NotifyAnalysisInfo,
+)
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.statename import host_state_name, service_state_name
 from cmk.utils.user import UserId
@@ -33,6 +39,10 @@ from cmk.gui import forms, permissions, sites, userdb
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs.private import Catalog, Topic
+from cmk.gui.form_specs.private.definitions import CommentTextArea
+from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
+from cmk.gui.form_specs.vue.form_spec_visitor import parse_data_from_frontend, render_form_spec
 from cmk.gui.form_specs.vue.shared_type_defs import (
     CoreStats,
     CoreStatsI18n,
@@ -46,6 +56,7 @@ from cmk.gui.form_specs.vue.shared_type_defs import (
     RuleSection,
     RuleTopic,
 )
+from cmk.gui.form_specs.vue.visitors import DataOrigin, DEFAULT_VALUE
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -129,15 +140,26 @@ from cmk.gui.watolib.check_mk_automations import (
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
-from cmk.gui.watolib.notifications import load_user_notification_rules, NotificationRuleConfigFile
+from cmk.gui.watolib.notifications import (
+    load_user_notification_rules,
+    NotificationParameterConfigFile,
+    NotificationRuleConfigFile,
+)
 from cmk.gui.watolib.rulesets import AllRulesets, Ruleset
-from cmk.gui.watolib.sample_config import get_default_notification_rule, new_notification_rule_id
+from cmk.gui.watolib.sample_config import (
+    get_default_notification_rule,
+    new_notification_rule_id,
+)
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.users import notification_script_choices
 
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import DictElement, FieldSize, String
+from cmk.rulesets.v1.form_specs import Dictionary as FormSpecDictionary
+
 from .._group_selection import ContactGroupSelection
-from .._notification_parameter import notification_parameter_registry
+from .._notification_parameter import notification_parameter_registry, NotificationParameter
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -150,6 +172,9 @@ def register(mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeEditUserNotificationRule)
     mode_registry.register(ModeEditPersonalNotificationRule)
     mode_registry.register(ModeNotificationParametersOverview)
+
+    mode_registry.register(ModeNotificationParameters)
+    mode_registry.register(ModeEditNotificationParameter)
 
 
 class ABCNotificationsMode(ABCEventsMode):
@@ -3007,3 +3032,418 @@ class ModeNotificationParametersOverview(WatoMode):
                 )
             ]
         )
+
+
+class ABCNotificationParameterMode(WatoMode):
+    @classmethod
+    def name(cls):
+        return "notification_parameter"
+
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
+        return ["notifications"]
+
+    def title(self) -> str:
+        raise NotImplementedError()
+
+    def _back_mode(self) -> ActionResult:
+        raise NotImplementedError()
+
+    def _load_parameters(self) -> list[NotificationParameterConfig]:
+        if transactions.is_transaction():
+            return NotificationParameterConfigFile().load_for_modification()
+        return NotificationParameterConfigFile().load_for_reading()
+
+    def _save_parameters(self, parameters: list[NotificationParameterConfig]) -> None:
+        NotificationParameterConfigFile().save(parameters)
+
+    def _add_change(self, log_what, log_text):
+        _changes.add_change(log_what, log_text, need_restart=False)
+
+    def _log_text(self, edit_nr: int) -> str:
+        raise NotImplementedError()
+
+    def _from_vars(self) -> None:
+        self._edit_nr = request.get_integer_input_mandatory("edit", -1)
+        self._clone_nr = request.get_integer_input_mandatory("clone", -1)
+        self._new = self._edit_nr < 0
+
+        self._parameters = self._load_parameters()
+
+        if self._new:
+            if self._clone_nr >= 0 and not request.var("_clear"):
+                try:
+                    self._parameter = deepcopy(self._parameters[self._clone_nr])
+                except IndexError:
+                    raise MKUserError(None, _("This %s does not exist.") % "notification parameter")
+            else:
+                self._parameter = NotificationParameterConfig(
+                    general=NotificationParameterGeneral(
+                        description="",
+                        comment="",
+                        docu_url="",
+                        method=self._method(),
+                        rule_id=new_notification_rule_id(),
+                    ),
+                    parameter_properties=DEFAULT_VALUE,  # type: ignore[typeddict-item]  # can not import in cmk.utils.notify_types
+                )
+        else:
+            try:
+                self._parameter = self._parameters[self._edit_nr]
+            except IndexError:
+                raise MKUserError(None, _("This %s does not exist.") % "notification parameter")
+
+    def _form_spec(self) -> DictionaryExtended:
+        notification_parameter = self._notification_parameter()
+        return notification_parameter()._form_spec()  # pylint: disable=protected-access
+
+    def _notification_parameter(self) -> type[NotificationParameter]:
+        return notification_parameter_registry[self._method()]
+
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_form_page_menu(
+            _("Notification parameter"), breadcrumb, form_name="parameter", button_name="_save"
+        )
+
+    def action(self) -> ActionResult:
+        check_csrf_token()
+
+        self._parameters = self._load_parameters()
+        if request.has_var("_delete"):
+            nr = request.get_integer_input_mandatory("_delete")
+            del self._parameters[nr]
+            self._save_parameters(self._parameters)
+            self._add_change(
+                "notification-delete-notification-parameter",
+                _("Deleted notification parameter %d") % nr,
+            )
+
+        elif request.has_var("_move"):
+            from_pos = request.get_integer_input_mandatory("_move")
+            to_pos = request.get_integer_input_mandatory("_index")
+            parameter = self._parameters[from_pos]
+            del self._parameters[from_pos]  # make to_pos now match!
+            self._parameters[to_pos:to_pos] = [parameter]
+            self._save_parameters(self._parameters)
+
+            self._add_change(
+                "notification-move-notification-parameter",
+                _("Changed position of notification parameter %d") % from_pos,
+            )
+
+        if back_mode := request.var("back_mode"):
+            return redirect(mode_url(back_mode, method=self._method()))
+
+        return redirect(mode_url("notification_parameters", method=self._method()))
+
+    def _vue_field_id(self) -> str:
+        return "_vue_edit_notification_parameter"
+
+    def _get_parameter_value_and_origin(self) -> tuple[NotificationParameterConfig, DataOrigin]:
+        if request.has_var(self._vue_field_id()):
+            return (
+                json.loads(request.get_str_input_mandatory(self._vue_field_id())),
+                DataOrigin.FRONTEND,
+            )
+
+        return self._parameter, DataOrigin.DISK
+
+    def _method(self) -> str:
+        return request.get_str_input_mandatory("method")
+
+
+class ModeNotificationParameters(ABCNotificationParameterMode):
+    """Show notification parameter for a specific method"""
+
+    @classmethod
+    def name(cls) -> str:
+        return "notification_parameters"
+
+    def _back_mode(self) -> ActionResult:
+        return redirect(mode_url("edit_notification_parameters"))
+
+    def title(self) -> str:
+        return _("Parameters for %s") % request.var("method")
+
+    def _log_text(self, edit_nr: int) -> str:
+        if self._new:
+            return _("Created new notification parameter")
+        return _("Changed notification parameter %d") % edit_nr
+
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="parameters",
+                    title=_("Notification parameter"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Parameter"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Add parameter"),
+                                    icon_name="new",
+                                    item=make_simple_link(
+                                        folder_preserving_link(
+                                            [
+                                                ("mode", "edit_notification_parameter"),
+                                                ("method", self._method()),
+                                            ]
+                                        )
+                                    ),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                            ],
+                        )
+                    ],
+                ),
+                page_menu_dropdown_user_related("user_notifications_p"),
+            ],
+            breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
+        )
+
+    def page(self) -> None:
+        parameters = self._load_parameters()
+        if not parameters:
+            html.show_message(_("You have not created any parameters yet."))
+            return
+        self._render_notification_parameters(parameters)
+
+    def _render_notification_parameters(
+        self,
+        parameters,
+    ):
+        notification_parameter = self._notification_parameter()
+        with table_element(title=_("Parameters"), limit=None, sortable=False) as table:
+            for nr, parameter in enumerate(parameters):
+                table.row()
+
+                table.cell("#", css=["narrow nowrap"])
+                html.write_text_permissive(nr)
+                table.cell(_("Actions"), css=["buttons"])
+                links = self._parameter_links(parameter, nr)
+                html.icon_button(links.edit, _("Edit this notification parameter"), "edit")
+                html.icon_button(
+                    links.clone, _("Create a copy of this notification parameter"), "clone"
+                )
+                html.element_dragger_url("tr", base_url=links.drag)
+                html.icon_button(links.delete, _("Delete this notification parameter"), "delete")
+
+                table.cell(_("Method"), self._method())
+
+                table.cell(_("Description"))
+                url = parameter.get("docu_url")
+                if url:
+                    html.icon_button(
+                        url, _("Context information about this parameter"), "url", target="_blank"
+                    )
+                    html.write_text_permissive("&nbsp;")
+                html.write_text_permissive(parameter["general"]["description"])
+
+                table.cell(_("Parameter properties"))
+                num_properties = len(parameter["parameter_properties"])
+                title = _("%d defined parameter properties") % num_properties
+                with foldable_container(
+                    treename="parameter_{nr}",
+                    id_=str(nr),
+                    isopen=False,
+                    title=title,
+                    indent=False,
+                ):
+                    html.write_text_permissive(
+                        notification_parameter().spec.value_to_html(
+                            parameter["parameter_properties"]
+                        )
+                    )
+
+    def _add_change(self, log_what, log_text):
+        _changes.add_change(log_what, log_text, need_restart=False)
+
+    def _parameter_links(self, parameter, nr):
+        listmode = "notification_parameters"
+        mode = "edit_notification_parameter"
+
+        additional_vars = [
+            ("back_mode", "notification_parameters"),
+            ("method", self._method()),
+        ]
+
+        delete_url = make_confirm_delete_link(
+            url=make_action_link(
+                [
+                    ("mode", listmode),
+                    ("_delete", nr),
+                ]
+                + additional_vars
+            ),
+            title=_("Delete notification parameter #%d") % nr,
+            suffix=parameter.get("description", ""),
+        )
+        drag_url = make_action_link(
+            [
+                ("mode", listmode),
+                ("_move", nr),
+            ]
+            + additional_vars
+        )
+        edit_url = folder_preserving_link(
+            [
+                ("mode", mode),
+                ("edit", nr),
+            ]
+            + additional_vars
+        )
+        clone_url = folder_preserving_link(
+            [
+                ("mode", mode),
+                ("clone", nr),
+            ]
+            + additional_vars
+        )
+
+        return NotificationRuleLinks(
+            delete=delete_url, edit=edit_url, drag=drag_url, clone=clone_url
+        )
+
+
+class ModeEditNotificationParameter(ABCNotificationParameterMode):
+    """Edit a notification parameter"""
+
+    @classmethod
+    def name(cls) -> str:
+        return "edit_notification_parameter"
+
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
+        return ["notifications"]
+
+    @classmethod
+    def parent_mode(cls) -> type[WatoMode] | None:
+        return ModeNotificationParameters
+
+    def _back_mode(self) -> ActionResult:
+        return redirect(mode_url("notification_parameters", method=self._method()))
+
+    def title(self) -> str:
+        if self._new:
+            return _("Add %s notification parameter") % self._method()
+        return _("Edit %s notification parameter %d") % (self._method(), self._edit_nr)
+
+    def _log_text(self, edit_nr: int) -> str:
+        if self._new:
+            return _("Created new notification parameter")
+        return _("Changed notification parameter %d") % edit_nr
+
+    def action(self) -> ActionResult:
+        check_csrf_token()
+
+        if not transactions.check_transaction():
+            return self._back_mode()
+
+        value = parse_data_from_frontend(
+            self._catalog(),
+            self._vue_field_id(),
+        )
+
+        self._parameter = value
+
+        if self._new and self._clone_nr >= 0:
+            self._parameters[self._clone_nr : self._clone_nr] = [self._parameter]
+        elif self._new:
+            self._parameters[0:0] = [self._parameter]
+        else:
+            self._parameters[self._edit_nr] = self._parameter
+
+        self._save_parameters(self._parameters)
+
+        log_what = "new-notification-parameter" if self._new else "edit-notification-parameter"
+        self._add_change(log_what, self._log_text(self._edit_nr))
+
+        if back_mode := request.var("back_mode"):
+            return redirect(mode_url(back_mode, method=self._method()))
+
+        return self._back_mode()
+
+    def _catalog(self) -> Catalog:
+        return Catalog(
+            topics=[
+                Topic(
+                    ident="general",
+                    dictionary=FormSpecDictionary(
+                        title=Title("Parameter properties"),
+                        elements={
+                            "method": DictElement(
+                                parameter_form=String(
+                                    title=Title("Notification method"),
+                                ),
+                                # TODO shouldn't this be hidden? It isn't
+                                render_only=True,
+                            ),
+                            "rule_id": DictElement(
+                                parameter_form=String(
+                                    title=Title("Rule ID"),
+                                ),
+                                # TODO shouldn't this be hidden? It isn't
+                                render_only=True,
+                            ),
+                            "description": DictElement(
+                                parameter_form=String(
+                                    title=Title("Description"),
+                                    field_size=FieldSize.LARGE,
+                                )
+                            ),
+                            "comment": DictElement(
+                                parameter_form=CommentTextArea(
+                                    title=Title("Comment"),
+                                )
+                            ),
+                            "docu_url": DictElement(
+                                parameter_form=String(
+                                    title=Title("Documentation URL"),
+                                    help_text=Help(
+                                        (
+                                            "An optional URL pointing to documentation or any other page. This will be "
+                                            "displayed as an icon and open "
+                                            "a new page when clicked. You can use either global URLs (beginning with "
+                                            "<tt>http://</tt>), absolute local urls (beginning with <tt>/</tt>) or relative "
+                                            "URLs (that are relative to <tt>check_mk/</tt>)."
+                                        )
+                                    ),
+                                )
+                            ),
+                        },
+                    ),
+                ),
+                Topic(
+                    ident="parameter_properties",
+                    # TODO if sections are not rendered by fixed DictGroup(),
+                    # we will need this:
+                    # dictionary=FormSpecDictionary(
+                    #    title=Title("Parameter properties"),
+                    #    elements={
+                    #        "properties": DictElement(
+                    #            parameter_form=self._form_spec(),
+                    #        )
+                    #    },
+                    # ),
+                    dictionary=self._form_spec(),
+                ),
+            ]
+        )
+
+    def page(self) -> None:
+        value, origin = self._get_parameter_value_and_origin()
+
+        with html.form_context("parameter", method="POST"):
+            render_form_spec(
+                self._catalog(),
+                self._vue_field_id(),
+                value,
+                origin,
+                True,
+            )
+
+            forms.end()
+            html.hidden_fields()

@@ -137,9 +137,11 @@ def manage_new_browser_context(
     """
     if not context_kwargs:
         context_kwargs = {}
-    context = browser.new_context(**context_kwargs)
-    yield context
-    context.close()
+    try:
+        context = browser.new_context(**context_kwargs)
+        yield context
+    finally:
+        context.close()
 
 
 @pytest.fixture(name="page")
@@ -181,12 +183,14 @@ def manage_new_page_from_browser_context(
         NOTE: requires access to pytest fixture: `request`.
     """
     pages: t.List[Page] = []
-    context.on("page", lambda page: pages.append(page))  # pylint: disable=unnecessary-lambda
-    page = context.new_page()
-    yield page
-    _may_create_screenshot(request, pages)
-    page.close()
-    _may_record_video(page, request, video_name)
+    try:
+        context.on("page", lambda page: pages.append(page))  # pylint: disable=unnecessary-lambda
+        page = context.new_page()
+        yield page
+    finally:
+        _may_create_screenshot(request, pages)
+        page.close()
+        _may_record_video(page, request, video_name)
 
 
 def _may_create_screenshot(

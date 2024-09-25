@@ -21,6 +21,7 @@ def recompose(form_spec: FormSpec[Any]) -> ListExtended[Any]:
     return ListExtended(
         title=form_spec.title,
         help_text=form_spec.help_text,
+        custom_validate=form_spec.custom_validate,
         element_template=form_spec.element_template,
         add_element_label=form_spec.add_element_label,
         remove_element_label=form_spec.remove_element_label,

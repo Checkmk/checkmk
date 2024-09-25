@@ -79,9 +79,14 @@ def current_base_branch_name() -> str:
     # Detect which other branch this one was created from. We do this by going back the
     # current branches git log one step by another and check which branches contain these
     # commits. Only search for our main (master + major-version) branches
-    commits = subprocess.check_output(
-        ["git", "rev-list", "--max-count=30", branch_name], encoding="utf-8"
-    )
+    try:
+        commits = subprocess.check_output(
+            ["git", "rev-list", "--max-count=30", branch_name],
+            encoding="utf-8",
+            stderr=subprocess.DEVNULL,
+        )
+    except subprocess.CalledProcessError:
+        return branch_name
     for commit in commits.strip().split("\n"):
         # Asking for remote heads here, since the git repos checked out in CI
         # do not create all branches locally
@@ -118,10 +123,16 @@ def current_base_branch_name() -> str:
     return branch_name
 
 
-def current_branch_name() -> str:
-    branch_name = subprocess.check_output(
-        ["git", "rev-parse", "--abbrev-ref", "HEAD"], encoding="utf-8"
-    )
+def current_branch_name(default: str = "no-branch") -> str:
+    try:
+        branch_name = subprocess.check_output(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            encoding="utf-8",
+            stderr=subprocess.DEVNULL,
+        )
+    except subprocess.CalledProcessError:
+        return default
+
     return branch_name.split("\n", 1)[0]
 
 

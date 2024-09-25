@@ -338,6 +338,24 @@ def test_render_unit_precision(
             "24 h",
             id="time-large-border",
         ),
+        pytest.param(
+            DecimalFormatter(
+                symbol="/unit",
+                precision=StrictPrecision(digits=2),
+            ),
+            2,
+            "2/unit",
+            id="unit-with-leading-slash",
+        ),
+        pytest.param(
+            SIFormatter(
+                symbol="/unit",
+                precision=StrictPrecision(digits=2),
+            ),
+            2000,
+            "2 k/unit",
+            id="unit-with-leading-slash-but-prefix",
+        ),
     ],
 )
 def test_render_unit_notation(

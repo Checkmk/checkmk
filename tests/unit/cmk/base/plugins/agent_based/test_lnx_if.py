@@ -496,11 +496,19 @@ def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
             [
                 Service(
                     item="1",
-                    parameters={"discovered_oper_status": ["1"], "discovered_speed": 0},
+                    parameters={
+                        "item_appearance": "index",
+                        "discovered_oper_status": ["1"],
+                        "discovered_speed": 0,
+                    },
                 ),
                 Service(
                     item="4",
-                    parameters={"discovered_oper_status": ["1"], "discovered_speed": 0},
+                    parameters={
+                        "item_appearance": "index",
+                        "discovered_oper_status": ["1"],
+                        "discovered_speed": 0,
+                    },
                 ),
             ],
             [
@@ -671,11 +679,19 @@ def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
             [
                 Service(
                     item="2",
-                    parameters={"discovered_oper_status": ["1"], "discovered_speed": 0},
+                    parameters={
+                        "item_appearance": "index",
+                        "discovered_oper_status": ["1"],
+                        "discovered_speed": 0,
+                    },
                 ),
                 Service(
                     item="4",
-                    parameters={"discovered_oper_status": ["1"], "discovered_speed": 0},
+                    parameters={
+                        "item_appearance": "index",
+                        "discovered_oper_status": ["1"],
+                        "discovered_speed": 0,
+                    },
                 ),
             ],
             [
@@ -846,11 +862,19 @@ def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
             [
                 Service(
                     item="2",
-                    parameters={"discovered_oper_status": ["1"], "discovered_speed": 0},
+                    parameters={
+                        "item_appearance": "index",
+                        "discovered_oper_status": ["1"],
+                        "discovered_speed": 0,
+                    },
                 ),
                 Service(
                     item="4",
-                    parameters={"discovered_oper_status": ["1"], "discovered_speed": 0},
+                    parameters={
+                        "item_appearance": "index",
+                        "discovered_oper_status": ["1"],
+                        "discovered_speed": 0,
+                    },
                 ),
             ],
             [
@@ -931,17 +955,26 @@ def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
                 Service(
                     item="1",
                     parameters={
+                        "item_appearance": "index",
                         "discovered_oper_status": ["1"],
                         "discovered_speed": 1000000000,
                     },
                 ),
                 Service(
                     item="2",
-                    parameters={"discovered_oper_status": ["1"], "discovered_speed": 0},
+                    parameters={
+                        "item_appearance": "index",
+                        "discovered_oper_status": ["1"],
+                        "discovered_speed": 0,
+                    },
                 ),
                 Service(
                     item="3",
-                    parameters={"discovered_oper_status": ["1"], "discovered_speed": 0},
+                    parameters={
+                        "item_appearance": "index",
+                        "discovered_oper_status": ["1"],
+                        "discovered_speed": 0,
+                    },
                 ),
             ],
             [

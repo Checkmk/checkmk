@@ -96,6 +96,7 @@ from cmk.plugins.lib.netapp_api import check_netapp_interfaces
                 Service(
                     item="1",
                     parameters={
+                        "item_appearance": "index",
                         "discovered_oper_status": ["1"],
                         "discovered_speed": 1000000000,
                     },
@@ -103,6 +104,7 @@ from cmk.plugins.lib.netapp_api import check_netapp_interfaces
                 Service(
                     item="2",
                     parameters={
+                        "item_appearance": "index",
                         "discovered_oper_status": ["1"],
                         "discovered_speed": 1000000000,
                     },
@@ -237,6 +239,7 @@ from cmk.plugins.lib.netapp_api import check_netapp_interfaces
                 Service(
                     item="1",
                     parameters={
+                        "item_appearance": "index",
                         "discovered_oper_status": ["1"],
                         "discovered_speed": 1000000000,
                     },
@@ -244,6 +247,7 @@ from cmk.plugins.lib.netapp_api import check_netapp_interfaces
                 Service(
                     item="2",
                     parameters={
+                        "item_appearance": "index",
                         "discovered_oper_status": ["1"],
                         "discovered_speed": 1000000000,
                     },
@@ -251,6 +255,7 @@ from cmk.plugins.lib.netapp_api import check_netapp_interfaces
                 Service(
                     item="3",
                     parameters={
+                        "item_appearance": "index",
                         "discovered_oper_status": ["1"],
                         "discovered_speed": 1000000000,
                     },
@@ -258,6 +263,7 @@ from cmk.plugins.lib.netapp_api import check_netapp_interfaces
                 Service(
                     item="4",
                     parameters={
+                        "item_appearance": "index",
                         "discovered_oper_status": ["1"],
                         "discovered_speed": 1000000000,
                     },
@@ -265,6 +271,7 @@ from cmk.plugins.lib.netapp_api import check_netapp_interfaces
                 Service(
                     item="5",
                     parameters={
+                        "item_appearance": "index",
                         "discovered_oper_status": ["1"],
                         "discovered_speed": 1000000000,
                     },
@@ -347,6 +354,7 @@ from cmk.plugins.lib.netapp_api import check_netapp_interfaces
                 Service(
                     item="1",
                     parameters={
+                        "item_appearance": "index",
                         "discovered_oper_status": ["1"],
                         "discovered_speed": 0,
                     },
@@ -426,6 +434,7 @@ from cmk.plugins.lib.netapp_api import check_netapp_interfaces
                 Service(
                     item="1",
                     parameters={
+                        "item_appearance": "index",
                         "discovered_oper_status": ["1"],
                         "discovered_speed": 10000000000,
                     },

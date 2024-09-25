@@ -78,6 +78,7 @@ def fixture_section() -> interfaces.Section[interfaces.InterfaceWithRates]:
                 Service(
                     item="1",
                     parameters={
+                        "item_appearance": "index",
                         "discovered_oper_status": ["1"],
                         "discovered_speed": 10000000000.0,
                     },

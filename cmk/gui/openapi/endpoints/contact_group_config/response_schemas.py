@@ -14,7 +14,7 @@ class ContactGroupExtensions(BaseSchema):
     customer = customer_field_response()
     inventory_paths = fields.Nested(
         InventoryPaths,
-        description="Permitted HW/SW inventory paths.",
+        description="Permitted HW/SW Inventory paths.",
     )
 
 

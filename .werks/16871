@@ -1,0 +1,11 @@
+Title: smart: Monitor SATA disks connected via HBA
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1726577620
+Edition: cre
+Level: 1
+Version: 2.1.0p48
+
+Previously, SATA disks connected via HBA weren't monitored by the smart
+agent plugin. Now, they are monitored the same way as other ATA disks.

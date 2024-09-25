@@ -153,18 +153,18 @@ if inpath smartctl >/dev/null 2>&1; then
                     [ "$a" == Serial ] && echo SN="$c"
                     [ "$a" == Current ] && [ "$b" == Drive ] && [ "$c" == Temperature: ] && echo TEMP="$d"
                 done)"
-                [ -n "$TEMP" ] && CMD="echo 194 Temperature_Celsius 0x0000 000 000 000 Old_age Always - $TEMP (0 0 0 0)"
+                [ -n "$TEMP" ] && CMD="echo 194 Temperature_Celsius 0x0000 000 000 000 Old_age Always - $TEMP \(0 0 0 0\)"
                 DNAME="${VEND}_${MODEL}_${SN}"
             fi
         else
-            CMD="smartctl -d ata -v 9,raw48 -A $D"
+            CMD="smartctl -d ata -v 9,raw48 -A $D; smartctl -d sat -v 9,raw48 -A $D"
         fi
 
         if [ $VEND == "NVME" ]; then
             echo "$DNAME $VEND $MODEL"
-            [ -n "$CMD" ] && $CMD | sed -e '1,5d; /^$/d'
+            [ -n "$CMD" ] && eval "$CMD" | sed -e '1,5d; /^$/d'
         else
-            [ -n "$CMD" ] && $CMD | grep Always | grep -v -E '^190(.*)Temperature(.*)' | sed "s|^|$DNAME $VEND $MODEL |"
+            [ -n "$CMD" ] && eval "$CMD" | grep Always | grep -v -E '^190(.*)Temperature(.*)' | sed "s|^|$DNAME $VEND $MODEL |"
         fi
     done 2>/dev/null
 

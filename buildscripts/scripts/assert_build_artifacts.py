@@ -55,9 +55,9 @@ def build_docker_image_name_and_registry(
     def build_folder(ed: str) -> str:
         # TODO: Merge with build-cmk-container.py
         match ed:
-            case "raw" | "cloud":
+            case "raw" | "cloud" | "managed":
                 return "checkmk/"
-            case "enterprise" | "managed":
+            case "enterprise":
                 return f"{ed}/"
             case "saas":
                 return ""

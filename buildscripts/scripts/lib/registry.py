@@ -333,7 +333,7 @@ class Registry:
         self.client = docker.client.from_env()
         self.credentials = get_credentials()
         match self.editions:
-            case ["enterprise", "managed"]:
+            case ["enterprise"]:
                 self.url = "https://registry.checkmk.com"
                 # Asking why we're also pulling? -> CMK-14567
                 self.image_exists = self.image_exists_and_can_be_pulled_enterprise
@@ -343,7 +343,7 @@ class Registry:
                     username=self.credentials.username,
                     password=self.credentials.password,
                 )
-            case ["raw", "cloud"]:
+            case ["raw", "cloud", "managed"]:
                 self.url = "https://hub.docker.com/"
                 self.image_exists = self.image_exists_docker_hub
                 self.get_image_tags = self._get_image_tags_docker_hub
@@ -369,10 +369,10 @@ def get_credentials() -> Credentials:
 def get_default_registries() -> list[Registry]:
     return [
         Registry(
-            editions=["enterprise", "managed"],
+            editions=["enterprise"],
         ),
         Registry(
-            editions=["raw", "cloud"],
+            editions=["raw", "cloud", "managed"],
         ),
         Registry(
             editions=["saas"],

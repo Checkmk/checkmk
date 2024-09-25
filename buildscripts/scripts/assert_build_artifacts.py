@@ -100,7 +100,7 @@ class Registry:
         self.client = docker.client.from_env()
         self.credentials = get_credentials()
         match self.editions:
-            case ["enterprise", "managed"]:
+            case ["enterprise"]:
                 self.url = "https://registry.checkmk.com"
                 # Asking why we're also pulling? -> CMK-14567
                 self.image_exists = self.image_exists_and_can_be_pulled_enterprise
@@ -109,7 +109,7 @@ class Registry:
                     username=self.credentials.username,
                     password=self.credentials.password,
                 )
-            case ["raw", "cloud"]:
+            case ["raw", "cloud", "managed"]:
                 self.url = "https://docker.io"
                 self.image_exists = self.image_exists_docker_hub
             case ["saas"]:
@@ -163,9 +163,9 @@ def build_docker_image_name_and_registry(
     def build_folder(ed: str) -> str:
         # TODO: Merge with build-cmk-container.py
         match ed:
-            case "raw" | "cloud":
+            case "raw" | "cloud" | "managed":
                 return "checkmk/"
-            case "enterprise" | "managed":
+            case "enterprise":
                 return f"{ed}/"
             case "saas":
                 return ""
@@ -228,10 +228,10 @@ def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
     credentials = get_credentials()
     registries = [
         Registry(
-            editions=["enterprise", "managed"],
+            editions=["enterprise"],
         ),
         Registry(
-            editions=["raw", "cloud"],
+            editions=["raw", "cloud", "managed"],
         ),
         Registry(
             editions=["saas"],

@@ -2021,14 +2021,11 @@ class ConfigCache:
         hostname: HostName,
         service_desc: ServiceName,
     ) -> Labels:
-        return {
-            label.name: label.value
-            for label in self._discovered_labels_cache.discovered_labels_of(
-                hostname,
-                service_desc,
-                functools.partial(service_description, self.ruleset_matcher),
-            ).values()
-        }
+        return self._discovered_labels_cache.discovered_labels_of(
+            hostname,
+            service_desc,
+            functools.partial(service_description, self.ruleset_matcher),
+        )
 
     @staticmethod
     def get_tag_to_group_map() -> Mapping[TagID, TagGroupID]:

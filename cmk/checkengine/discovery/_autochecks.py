@@ -14,7 +14,7 @@ from cmk.ccc.store import ObjectStore
 
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
-from cmk.utils.labels import ServiceLabel
+from cmk.utils.labels import Labels
 from cmk.utils.servicename import Item, ServiceName
 
 from cmk.checkengine.checking import CheckPluginName, ConfiguredService, ServiceID
@@ -335,16 +335,14 @@ class DiscoveredService:
 class DiscoveredLabelsCache:
     def __init__(self, get_autochecks: Callable[[HostName], Iterable[AutocheckEntry]]) -> None:
         self._get_autochecks = get_autochecks
-        self._discovered_labels_of: dict[
-            HostName, dict[ServiceName, Mapping[str, ServiceLabel]]
-        ] = {}
+        self._discovered_labels_of: dict[HostName, dict[ServiceName, Labels]] = {}
 
     def discovered_labels_of(
         self,
         hostname: HostName,
         service_desc: ServiceName,
         get_service_description: GetServiceDescription,
-    ) -> Mapping[str, ServiceLabel]:
+    ) -> Labels:
         # NOTE: this returns an empty labels object for non-existing services
         if (loaded_labels := self._discovered_labels_of.get(hostname)) is not None:
             return loaded_labels.get(service_desc, {})
@@ -358,7 +356,7 @@ class DiscoveredLabelsCache:
                 get_service_description(
                     hostname, autocheck_entry.check_plugin_name, autocheck_entry.item
                 )
-            ] = {n: ServiceLabel(n, v) for n, v in autocheck_entry.service_labels.items()}
+            ] = autocheck_entry.service_labels
 
         if (labels := hosts_labels.get(service_desc)) is not None:
             return labels

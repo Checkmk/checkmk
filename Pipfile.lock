@@ -688,7 +688,6 @@
                 "sha256:35f314a9f878467f5453cc1fee295c3e18e52f1b99f10f6cf5b1682e968a9e7c",
                 "sha256:eec7ec56b92aad751f9912a73404bc02ba212a23adb2c7098ee668417051a1ff"
             ],
-            "index": "pypi",
             "markers": "python_version >= '3.7'",
             "version": "==3.1.43"
         },
@@ -705,12 +704,12 @@
         },
         "google-api-python-client": {
             "hashes": [
-                "sha256:41f671be10fa077ee5143ee9f0903c14006d39dc644564f4e044ae96b380bf68",
-                "sha256:b1e62c9889c5ef6022f11d30d7ef23dc55100300f0e8aaf8aa09e8e92540acad"
+                "sha256:c6ecfa193c695baa41e84562d8f8f244fcd164419eca3fc9fd7565646668f9b2",
+                "sha256:e864c2cf61d34c00f05278b8bdb72b93b6fa34f0de9ead51d20435f3b65f91be"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.7'",
-            "version": "==2.146.0"
+            "version": "==2.147.0"
         },
         "google-auth": {
             "hashes": [
@@ -1445,7 +1444,6 @@
                 "sha256:fb2ed8b3fe4bf4506d6dab3b93b83bbc22237e230cba03866d561c3577517d18",
                 "sha256:fe0a5a1025eb797752136ac8b4fa21aa891e3d74fd340f864ff982d649691867"
             ],
-            "index": "pypi",
             "markers": "python_version >= '3.7'",
             "version": "==2.14.5"
         },
@@ -1679,7 +1677,6 @@
                 "sha256:a618140129e2ff00afa6b7afc1a154c2cb2177166621a519941b7058d6f6c339",
                 "sha256:c4bc7d0d26fcda0ac3b773c9706fd1e271b7b0e0230ad0ee02ccab55e274ea11"
             ],
-            "index": "pypi",
             "version": "==2.0.2"
         },
         "redfish": {
@@ -1917,11 +1914,11 @@
         },
         "tzdata": {
             "hashes": [
-                "sha256:2674120f8d891909751c38abcdfd386ac0a5a1127954fbc332af6b5ceae07efd",
-                "sha256:9068bc196136463f5245e51efda838afa15aaeca9903f49050dfa2679db4d252"
+                "sha256:7d85cc416e9382e69095b7bdf4afd9e3880418a2413feec7069d533d6b4e31cc",
+                "sha256:a48093786cdcde33cad18c2555e8532f34422074448fbc874186f0abd79565cd"
             ],
             "markers": "python_version >= '2'",
-            "version": "==2024.1"
+            "version": "==2024.2"
         },
         "tzlocal": {
             "hashes": [
@@ -3467,7 +3464,6 @@
                 "sha256:fb2ed8b3fe4bf4506d6dab3b93b83bbc22237e230cba03866d561c3577517d18",
                 "sha256:fe0a5a1025eb797752136ac8b4fa21aa891e3d74fd340f864ff982d649691867"
             ],
-            "index": "pypi",
             "markers": "python_version >= '3.7'",
             "version": "==2.14.5"
         },

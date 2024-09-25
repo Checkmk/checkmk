@@ -39,6 +39,7 @@ from cmk.gui.watolib.configuration_bundles import (
     ConfigBundle,
     create_config_bundle,
     CreateBundleEntities,
+    CreateDCDConnection,
     CreateHost,
     CreatePassword,
     CreateRule,
@@ -54,6 +55,12 @@ from cmk.gui.watolib.services import (
 )
 
 from cmk.rulesets.v1.form_specs import Dictionary
+
+
+class DCDHook:
+    create_dcd_connections: Callable[[BundleId, SiteId, Folder], list[CreateDCDConnection]] = (
+        lambda *_args: []
+    )
 
 
 def _normalize_folder_path_str(folder_path: str) -> str:
@@ -126,13 +133,11 @@ def sanitize_folder_path(folder_path: str) -> Folder:
 def create_host_from_form_data(
     host_name: HostName,
     site_id: SiteId,
-    host_path: str,
+    folder: Folder,
 ) -> CreateHost:
-    # TODO Folder formspec.  The sanitize function is likely to change once we have a folder formspec.
-
     return CreateHost(
         name=host_name,
-        folder=sanitize_folder_path(host_path),
+        folder=folder,
         attributes=HostAttributes(
             tag_address_family="no-ip",
             site=site_id,
@@ -218,6 +223,13 @@ def create_and_save_special_agent_bundle_custom_collect_params(
     )
 
 
+def _find_bundle_id(all_stages_form_data: ParsedFormData) -> BundleId:
+    bundle_id = _find_id_in_form_data(form_data=all_stages_form_data, target_key=UniqueBundleIDStr)
+    if bundle_id is None:
+        raise ValueError("No bundle id found")
+    return BundleId(bundle_id)
+
+
 def _create_and_save_special_agent_bundle(
     special_agent_name: str,
     parameter_form: Dictionary,
@@ -225,9 +237,7 @@ def _create_and_save_special_agent_bundle(
     collect_params: Callable[[ParsedFormData, Dictionary], Mapping[str, object]],
 ) -> str:
     rulespec_name = RuleGroup.SpecialAgents(special_agent_name)
-    bundle_id = _find_id_in_form_data(form_data=all_stages_form_data, target_key=UniqueBundleIDStr)
-    if bundle_id is None:
-        raise ValueError("No bundle id found")
+    bundle_id = _find_bundle_id(all_stages_form_data)
 
     host_name = all_stages_form_data[FormSpecId("host_data")]["host_name"]
     host_path = all_stages_form_data[FormSpecId("host_data")]["host_path"]
@@ -247,15 +257,13 @@ def _create_and_save_special_agent_bundle(
         for pwid, pw in collected_passwords.items()
     }
 
-    # TODO: DCD still to be implemented cmk-18341
-
+    # TODO: The sanitize function is likely to change once we have a folder FormSpec.
+    folder = sanitize_folder_path(host_path)
     hosts = [
-        create_host_from_form_data(
-            host_name=HostName(host_name), host_path=host_path, site_id=site_id
-        )
+        create_host_from_form_data(host_name=HostName(host_name), folder=folder, site_id=site_id)
     ]
     create_config_bundle(
-        bundle_id=BundleId(bundle_id),
+        bundle_id=bundle_id,
         bundle=ConfigBundle(
             title=f"{bundle_id}_config",
             comment="",
@@ -267,19 +275,20 @@ def _create_and_save_special_agent_bundle(
             passwords=create_passwords(
                 passwords=passwords,
                 rulespec_name=rulespec_name,
-                bundle_id=BundleId(bundle_id),
+                bundle_id=bundle_id,
             ),
             rules=[
                 create_rule(
                     params=params,
-                    host_name=host["name"],
-                    host_path=host["folder"].path(),
+                    host_name=create_host["name"],
+                    host_path=create_host["folder"].path(),
                     rulespec_name=rulespec_name,
-                    bundle_id=BundleId(bundle_id),
+                    bundle_id=bundle_id,
                     site_id=site_id,
                 )
-                for host in hosts
+                for create_host in hosts
             ],
+            dcd_connections=DCDHook.create_dcd_connections(bundle_id, site_id, folder),
         ),
     )
     try:

@@ -118,6 +118,11 @@ def check_chrony(params, section_chrony, section_ntp):
             boundaries=(0, None),
         )
 
+    # without address ('Reference ID') being specified `last_sync` ('Ref time (UTC)') and
+    # Stratum are semantically 'n/a' - don't execute checks or return metrics in that case!
+    if not address:
+        return
+
     if (stratum := section_chrony.get("Stratum")) is not None:
         yield from check_levels(
             stratum,

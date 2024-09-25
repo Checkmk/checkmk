@@ -1,0 +1,15 @@
+Title: chrony: wrong handling of 'n/a' values for 'Ref time (UTC)' and 'Stratum'
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1727263001
+Edition: cre
+Level: 1
+Version: 2.2.0p36
+
+A chrony status without a valid server also contains invalid values for 'Stratum' and 'Ref time',
+resulting in a 'Time since last sync' of 54 years 256 days being reported (which is the difference
+to epoc := 1.1.1970).
+
+This change just skips reporting 'Stratum' and 'Time since last sync' if we don't have a valid
+server (address).

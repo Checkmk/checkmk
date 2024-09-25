@@ -244,7 +244,10 @@ class DecimalFormatter(NotationFormatter):
             # '1e-05'
             sign = "" if value > 0 else "-"
             return f"{sign}{_stringify_small_decimal_number(abs(value))}"
-        return str(value)
+        return f"{value:,}".replace(
+            ",",
+            "\N{THIN SPACE}",
+        )
 
     def _compose(self, formatted: Formatted) -> str:
         return f"{formatted.text} {formatted.symbol}"

@@ -10,7 +10,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from functools import partial
 from types import ModuleType
-from typing import Any, assert_never, Literal, Self, TypeVar
+from typing import Any, assert_never, Literal, Self, Tuple, TypeVar
 
 from cmk.ccc.version import Edition
 
@@ -198,6 +198,7 @@ def _convert_to_legacy_check_parameter_rulespec(
 ) -> CheckParameterRulespecWithItem | CheckParameterRulespecWithoutItem:
     convert_condition = to_convert.condition
     if isinstance(convert_condition, ruleset_api_v1.rule_specs.HostAndItemCondition):
+        item_spec, item_form_spec = _get_item_spec_maker(convert_condition, localizer)
         return CheckParameterRulespecWithItem(
             check_group_name=to_convert.name,
             title=(
@@ -208,7 +209,7 @@ def _convert_to_legacy_check_parameter_rulespec(
                 to_convert.topic,
                 localizer,
             ),
-            item_spec=_get_item_spec_maker(convert_condition, localizer),
+            item_spec=item_spec,
             match_type="dict",
             parameter_valuespec=partial(
                 convert_to_legacy_valuespec, to_convert.parameter_form(), localizer
@@ -219,7 +220,7 @@ def _convert_to_legacy_check_parameter_rulespec(
             # want to mark rulespecs that are available in both the CCE and CME as such
             is_cloud_and_managed_edition_only=edition_only is Edition.CCE,
             form_spec_definition=FormSpecDefinition(
-                to_convert.parameter_form, lambda: convert_condition.item_form
+                to_convert.parameter_form, lambda: item_form_spec
             ),
         )
     return CheckParameterRulespecWithoutItem(
@@ -248,11 +249,10 @@ def _convert_to_legacy_manual_check_parameter_rulespec(
             item_spec = None
             item_form_spec = None
         case ruleset_api_v1.rule_specs.HostAndItemCondition():
-            item_spec = _get_item_spec_maker(to_convert.condition, localizer)
-            wrapped_item_form_spec = to_convert.condition.item_form
+            item_spec, item_as_form_spec = _get_item_spec_maker(to_convert.condition, localizer)
 
             def wrapped_value():
-                return wrapped_item_form_spec
+                return item_as_form_spec
 
             item_form_spec = wrapped_value
         case other:
@@ -1397,24 +1397,35 @@ def _convert_to_legacy_cascading_dropdown(
 def _get_item_spec_maker(
     condition: ruleset_api_v1.rule_specs.HostAndItemCondition,
     localizer: Callable[[str], str],
-) -> Callable[
-    [],
-    legacy_valuespecs.TextInput
-    | legacy_valuespecs.DropdownChoice
-    | legacy_valuespecs.TextAreaUnicode
-    | legacy_valuespecs.FixedValue,
+) -> Tuple[
+    Callable[
+        [],
+        legacy_valuespecs.TextInput
+        | legacy_valuespecs.DropdownChoice
+        | legacy_valuespecs.TextAreaUnicode
+        | legacy_valuespecs.FixedValue,
+    ],
+    ruleset_api_v1.form_specs.FormSpec,
 ]:
     item_form_with_title = dataclasses.replace(condition.item_form, title=condition.item_title)
 
     match item_form_with_title:
         case ruleset_api_v1.form_specs.String():
-            return partial(_convert_to_legacy_text_input, item_form_with_title, localizer)
+            return partial(
+                _convert_to_legacy_text_input, item_form_with_title, localizer
+            ), item_form_with_title
         case ruleset_api_v1.form_specs.SingleChoice():
-            return partial(_convert_to_legacy_dropdown_choice, item_form_with_title, localizer)
+            return partial(
+                _convert_to_legacy_dropdown_choice, item_form_with_title, localizer
+            ), item_form_with_title
         case ruleset_api_v1.form_specs.MultilineText():
-            return partial(_convert_to_legacy_text_area, item_form_with_title, localizer)
+            return partial(
+                _convert_to_legacy_text_area, item_form_with_title, localizer
+            ), item_form_with_title
         case ruleset_api_v1.form_specs.FixedValue():
-            return partial(_convert_to_legacy_fixed_value, item_form_with_title, localizer)
+            return partial(
+                _convert_to_legacy_fixed_value, item_form_with_title, localizer
+            ), item_form_with_title
         case other:
             raise ValueError(other)
 

@@ -197,17 +197,9 @@ test-docker:
 	shellcheck -x $(SHELLCHECK_OUTPUT_ARGS) ../docker_image/docker-entrypoint.sh
 	$(PYTEST) -x -T docker --log-cli-level=INFO docker
 
-test-format-python: test-format-python-sort test-format-python-format
-
-test-format-python-sort: ../pyproject.toml
-	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
-	xargs -n 1500 ../scripts/run-pipenv run ruff check --select I --diff;\
-	exit $${PIPESTATUS[1]}
-
-test-format-python-format: ../pyproject.toml
-	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
-	xargs -n 1500 ../scripts/run-pipenv run ruff format --check --diff;\
-	exit $${PIPESTATUS[1]}
+test-format-python: ../pyproject.toml
+	$(PIPENV) run ruff check --select I --diff
+	../.venv/bin/ruff format --diff
 
 test-format-python-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-python

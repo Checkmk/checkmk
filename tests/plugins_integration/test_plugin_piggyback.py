@@ -1,21 +1,20 @@
+import logging
 import re
+import time
 
 import pytest
 
 from tests.testlib.site import Site
-from tests.testlib.utils import get_services_with_status
+from tests.testlib.utils import get_services_with_status, write_file
 
 from tests.plugins_integration.checks import (
+    dump_path_site,
     get_host_names,
     get_piggyback_hosts,
     read_cmk_dump,
     read_disk_dump,
     setup_source_host_piggyback,
-    dump_path_site,
 )
-import logging
-import time
-from tests.testlib.utils import write_file
 
 logger = logging.getLogger(__name__)
 

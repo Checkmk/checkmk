@@ -153,7 +153,7 @@ if %ss% lss 10 set ss=0%ss%
 if %cc% lss 10 set cc=0%cc%
 powershell Write-Host "Elapsed time: %hh%:%mm%:%ss%,%cc%" -Foreground Blue
 
-call :patch_msi_code
+call :patch_msi_code 
 call :sign_msi
 call :detach
 powershell Write-Host "FULL SUCCESS" -Foreground Blue
@@ -261,7 +261,7 @@ goto :eof
 if not "%arg_mk_sql%" == "1" powershell Write-Host "Skipped Sql Check Build"  -Foreground Yellow & goto :eof
 powershell Write-Host "run:Building MK-SQL..." -Foreground White
 pushd ..\..\packages\mk-sql
-call run.cmd --build
+call run.cmd --all
 if not %errorlevel% == 0 powershell Write-Host "Failed Sql Check Build" -Foreground Red && popd & call :halt 74
 popd
 goto :eof

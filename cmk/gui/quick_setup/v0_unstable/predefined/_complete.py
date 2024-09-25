@@ -46,6 +46,7 @@ from cmk.gui.watolib.configuration_bundles import (
 )
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
+from cmk.gui.watolib.passwords import load_passwords
 from cmk.gui.watolib.services import (
     DiscoveryAction,
     get_check_table,
@@ -235,19 +236,16 @@ def _create_and_save_special_agent_bundle(
     site_id = SiteId(site_selection) if site_selection else omd_site()
     params = collect_params(all_stages_form_data, parameter_form)
 
+    collected_passwords = _collect_passwords_from_form_data(all_stages_form_data, parameter_form)
+
     # TODO: Find a better solution.
     # Here we replace the password id if the user has selected from password store
     # otherwise, the previous one will be overwritten.
-    if all_stages_form_data[FormSpecId("credentials")]["secret_access_key"][1] == "stored_password":
-        all_stages_form_data[FormSpecId("credentials")]["secret_access_key"] = (
-            "explicit_password",
-            all_stages_form_data[FormSpecId("credentials")]["secret_access_key"][1],
-            (
-                ad_hoc_password_id(),
-                all_stages_form_data[FormSpecId("credentials")]["secret_access_key"][2][1],
-            ),
-        )
-    passwords = _collect_passwords_from_form_data(all_stages_form_data, parameter_form)
+    stored_passwords = load_passwords()
+    passwords = {
+        pwid if pwid not in stored_passwords else ad_hoc_password_id(): pw
+        for pwid, pw in collected_passwords.items()
+    }
 
     # TODO: DCD still to be implemented cmk-18341
 

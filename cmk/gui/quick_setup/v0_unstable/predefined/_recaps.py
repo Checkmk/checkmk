@@ -48,7 +48,7 @@ def recaps_form_spec(
     if quick_setup is None:
         raise ValueError(f"Quick setup with id {quick_setup_id} not found")
 
-    quick_setup_formspec_map = build_quick_setup_formspec_map([quick_setup.stages[stage_index]])
+    quick_setup_formspec_map = build_quick_setup_formspec_map([quick_setup.stages[stage_index]()])
 
     return [
         FormSpecRecap(

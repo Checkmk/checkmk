@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 
 import pytest
 
@@ -37,7 +37,9 @@ from cmk.rulesets.v1.form_specs import (
 )
 
 
-def register_quick_setup(setup_stages: Sequence[QuickSetupStage] | None = None) -> None:
+def register_quick_setup(
+    setup_stages: Sequence[Callable[[], QuickSetupStage]] | None = None,
+) -> None:
     quick_setup_registry.register(
         QuickSetup(
             title="Quick Setup Test",
@@ -52,7 +54,7 @@ def register_quick_setup(setup_stages: Sequence[QuickSetupStage] | None = None) 
 def test_get_quick_setup_mode_guided(clients: ClientRegistry) -> None:
     register_quick_setup(
         setup_stages=[
-            QuickSetupStage(
+            lambda: QuickSetupStage(
                 title="stage1",
                 configure_components=[
                     widgets.unique_id_formspec_wrapper(Title("account name")),
@@ -74,7 +76,7 @@ def test_get_quick_setup_mode_guided(clients: ClientRegistry) -> None:
 def test_validate_retrieve_next(clients: ClientRegistry) -> None:
     register_quick_setup(
         setup_stages=[
-            QuickSetupStage(
+            lambda: QuickSetupStage(
                 title="stage1",
                 configure_components=[
                     widgets.unique_id_formspec_wrapper(Title("account name")),
@@ -83,7 +85,7 @@ def test_validate_retrieve_next(clients: ClientRegistry) -> None:
                 recap=[recaps.recaps_form_spec],
                 button_label="Next",
             ),
-            QuickSetupStage(
+            lambda: QuickSetupStage(
                 title="stage2",
                 configure_components=[],
                 custom_validators=[],
@@ -110,7 +112,7 @@ def _form_spec_extra_validate(
 def test_failing_validate(clients: ClientRegistry) -> None:
     register_quick_setup(
         setup_stages=[
-            QuickSetupStage(
+            lambda: QuickSetupStage(
                 title="stage1",
                 configure_components=[
                     widgets.unique_id_formspec_wrapper(Title("account name")),
@@ -145,7 +147,7 @@ def test_failing_validate(clients: ClientRegistry) -> None:
 def test_failing_validate_host_path(clients: ClientRegistry) -> None:
     register_quick_setup(
         setup_stages=[
-            QuickSetupStage(
+            lambda: QuickSetupStage(
                 title="stage1",
                 configure_components=[
                     FormSpecWrapper(
@@ -197,7 +199,7 @@ def test_failing_validate_host_path(clients: ClientRegistry) -> None:
 def test_quick_setup_save(clients: ClientRegistry) -> None:
     register_quick_setup(
         setup_stages=[
-            QuickSetupStage(
+            lambda: QuickSetupStage(
                 title="stage1",
                 configure_components=[
                     widgets.unique_id_formspec_wrapper(Title("account name")),
@@ -224,7 +226,7 @@ def test_unique_id_must_be_unique(
 
     register_quick_setup(
         setup_stages=[
-            QuickSetupStage(
+            lambda: QuickSetupStage(
                 title="stage1",
                 configure_components=[
                     widgets.unique_id_formspec_wrapper(Title("account name")),
@@ -247,7 +249,7 @@ def test_unique_id_must_be_unique(
 def test_get_quick_setup_mode_overview(clients: ClientRegistry) -> None:
     register_quick_setup(
         setup_stages=[
-            QuickSetupStage(
+            lambda: QuickSetupStage(
                 title="stage1",
                 sub_title="1",
                 configure_components=[
@@ -257,7 +259,7 @@ def test_get_quick_setup_mode_overview(clients: ClientRegistry) -> None:
                 recap=[],
                 button_label="Next",
             ),
-            QuickSetupStage(
+            lambda: QuickSetupStage(
                 title="stage2",
                 sub_title="2",
                 configure_components=[],

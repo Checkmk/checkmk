@@ -24,7 +24,7 @@ class QuickSetupStageForTest(QuickSetupStage):
 
 @dataclass(frozen=True)
 class QuickSetupForTest(QuickSetup):
-    stages: Sequence[QuickSetupStageForTest]
+    stages: Sequence[Callable]
     save_action: Callable | None = None
 
 

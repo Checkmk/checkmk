@@ -17,7 +17,6 @@ def package_wheel(
     """
     whl_filegroup_name = name + "_fg"
     pkg_files_name = name + "_pkg_files"
-    pkg_tar_name = name + "_pkg_tar"
     whl_filegroup(
         name = whl_filegroup_name,
         whl = whl,
@@ -32,7 +31,7 @@ def package_wheel(
         strip_prefix = whl_filegroup_name,
     )
     pkg_tar(
-        name = pkg_tar_name,
+        name = name,
         srcs = [pkg_files_name],
         visibility = visibility,
     )

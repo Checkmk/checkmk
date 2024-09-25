@@ -1904,6 +1904,19 @@ def make_hosts_config() -> Hosts:
     )
 
 
+def _make_clusters_nodes_maps() -> (
+    tuple[Mapping[HostName, Sequence[HostName]], Mapping[HostName, Sequence[HostName]]]
+):
+    clusters_of_cache: dict[HostName, list[HostName]] = {}
+    nodes_cache: dict[HostName, Sequence[HostName]] = {}
+    for cluster, hosts in clusters.items():
+        clustername = HostName(cluster.split("|", 1)[0])
+        for name in hosts:
+            clusters_of_cache.setdefault(name, []).append(clustername)
+        nodes_cache[clustername] = [HostName(h) for h in hosts]
+    return clusters_of_cache, nodes_cache
+
+
 class ConfigCache:
     def __init__(self) -> None:
         super().__init__()
@@ -1941,17 +1954,19 @@ class ConfigCache:
         self._host_paths: dict[HostName, str] = ConfigCache._get_host_paths(host_paths)
         self._hosttags: dict[HostName, Sequence[TagID]] = {}
 
+        (
+            self._clusters_of_cache,
+            self._nodes_cache,
+        ) = _make_clusters_nodes_maps()
+
         self._autochecks_manager = AutochecksManager()
         self._discovered_labels_cache = DiscoveredLabelsCache(
             self._autochecks_manager.get_autochecks
         )
-        self._clusters_of_cache: dict[HostName, list[HostName]] = {}
-        self._nodes_cache: dict[HostName, list[HostName]] = {}
         self._effective_host_cache: dict[tuple[HostName, ServiceName, tuple | None], HostName] = {}
         self._check_mk_check_interval: dict[HostName, float] = {}
 
         self.hosts_config = make_hosts_config()
-        self._setup_clusters_nodes_cache()
 
         tag_to_group_map = ConfigCache.get_tag_to_group_map()
         self._collect_hosttags(tag_to_group_map)
@@ -3804,13 +3819,6 @@ class ConfigCache:
         check_plugin_name_str = str(check_plugin_name)
 
         return _checktype_ignored_for_host(check_plugin_name_str)
-
-    def _setup_clusters_nodes_cache(self) -> None:
-        for cluster, hosts in clusters.items():
-            clustername = HostName(cluster.split("|", 1)[0])
-            for name in hosts:
-                self._clusters_of_cache.setdefault(name, []).append(clustername)
-            self._nodes_cache[clustername] = hosts
 
     def get_cluster_cache_info(self) -> ClusterCacheInfo:
         return ClusterCacheInfo(clusters_of=self._clusters_of_cache, nodes_of=self._nodes_cache)

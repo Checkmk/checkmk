@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """All objects defined here are intended to be exposed in the API"""
 
-# pylint: disable=too-many-instance-attributes
-
 import functools
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
@@ -106,7 +104,7 @@ class AgentSection(Generic[_Section]):
     supersedes: list[str] | None = None
 
     @overload
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         *,
         name: str,
@@ -120,7 +118,7 @@ class AgentSection(Generic[_Section]):
     ): ...
 
     @overload
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         *,
         name: str,
@@ -134,7 +132,7 @@ class AgentSection(Generic[_Section]):
     ): ...
 
     @overload
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         *,
         name: str,
@@ -147,7 +145,7 @@ class AgentSection(Generic[_Section]):
         supersedes: list[str] | None = None,
     ): ...
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(  # noqa: PLR0913
         self,
         *,
         name: str,
@@ -266,7 +264,7 @@ class SimpleSNMPSection(Generic[_TableTypeT, _Section]):
         return unpacking_parse_function
 
     @overload
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         *,
         name: str,
@@ -282,7 +280,7 @@ class SimpleSNMPSection(Generic[_TableTypeT, _Section]):
     ): ...
 
     @overload
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         *,
         name: str,
@@ -298,7 +296,7 @@ class SimpleSNMPSection(Generic[_TableTypeT, _Section]):
     ): ...
 
     @overload
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         *,
         name: str,
@@ -313,7 +311,7 @@ class SimpleSNMPSection(Generic[_TableTypeT, _Section]):
         supersedes: list[str] | None = None,
     ): ...
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(  # noqa: PLR0913
         self,
         *,
         name: str,
@@ -423,7 +421,7 @@ class SNMPSection(Generic[_TableTypeT, _Section]):
     supersedes: list[str] | None = None
 
     @overload
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         *,
         name: str,
@@ -439,7 +437,7 @@ class SNMPSection(Generic[_TableTypeT, _Section]):
     ): ...
 
     @overload
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         *,
         name: str,
@@ -455,7 +453,7 @@ class SNMPSection(Generic[_TableTypeT, _Section]):
     ): ...
 
     @overload
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         *,
         name: str,
@@ -470,7 +468,7 @@ class SNMPSection(Generic[_TableTypeT, _Section]):
         supersedes: list[str] | None = None,
     ): ...
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(  # noqa: PLR0913
         self,
         *,
         name: str,

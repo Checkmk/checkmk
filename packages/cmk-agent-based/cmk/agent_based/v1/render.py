@@ -171,7 +171,7 @@ def disksize(bytes_: float) -> str:
     return f"{value_str if unit != 'B' else value_str.split('.')[0]} {unit}"
 
 
-def bytes(bytes_: float) -> str:  # pylint: disable=redefined-builtin
+def bytes(bytes_: float) -> str:  # noqa: A001
     """Render a number of bytes using an appropriate IEC prefix
 
     Example:

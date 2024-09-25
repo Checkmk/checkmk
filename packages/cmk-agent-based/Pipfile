@@ -7,7 +7,6 @@ name = "pypi"
 bandit = "*"
 ruff = "*"
 mypy = "*"
-pylint = "*"
 pytest = "*"
 # LSP server stuff for IDEs
 pylsp-mypy = "*"

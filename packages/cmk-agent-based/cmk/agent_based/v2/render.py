@@ -9,9 +9,7 @@ All the render functions take a single numerical value as an argument, and retur
 a string.
 """
 
-# pylint: disable=duplicate-code
-
-from cmk.agent_based.v1.render import (  # pylint: disable=redefined-builtin
+from cmk.agent_based.v1.render import (
     bytes,
     date,
     datetime,

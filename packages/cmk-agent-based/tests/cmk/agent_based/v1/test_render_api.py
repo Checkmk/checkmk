@@ -71,7 +71,7 @@ def test_timespan_negative() -> None:
     ],
 )
 def test__digits_left(value: float, output: int) -> None:
-    assert output == render._digits_left(value)  # pylint: disable=protected-access
+    assert output == render._digits_left(value)  # noqa: SLF001
 
 
 @pytest.mark.parametrize(
@@ -89,7 +89,7 @@ def test__digits_left(value: float, output: int) -> None:
     ],
 )
 def test__auto_scale(value: float, use_si_units: bool, output: tuple[str, str]) -> None:
-    assert output == render._auto_scale(value, use_si_units)  # pylint: disable=protected-access
+    assert output == render._auto_scale(value, use_si_units)  # noqa: SLF001
 
 
 @pytest.mark.parametrize(

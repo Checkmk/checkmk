@@ -8,18 +8,10 @@
 import cmk.gui.graphing._graph_images as graph_images
 import cmk.gui.graphing._html_render as html_render
 import cmk.gui.pages
-from cmk.gui.i18n import _
 from cmk.gui.metrics import PageGraphDashlet, PageHostServiceGraphPopup
-from cmk.gui.painter.v0 import painters
-from cmk.gui.painter.v0.base import Cell, painter_registry
-from cmk.gui.type_defs import Row
-from cmk.gui.view_utils import CellSpec
+from cmk.gui.painter.v0.base import painter_registry
 from cmk.gui.views import graph
 from cmk.gui.wato import notification_parameter_registry, NotificationParameterMail
-
-
-def painter_downtime_recurring_renderer(row: Row, cell: Cell) -> CellSpec:
-    return "", _("(not supported)")
 
 
 def register_pages() -> None:
@@ -36,9 +28,6 @@ def register_painters() -> None:
     painter_registry.register(graph.PainterHostGraphs)
     painter_registry.register(graph.PainterSvcPnpgraph)
     painter_registry.register(graph.PainterHostPnpgraph)
-
-    painters.PainterDowntimeRecurring.renderer = painter_downtime_recurring_renderer
-    painter_registry.register(painters.PainterDowntimeRecurring)
 
 
 def register() -> None:

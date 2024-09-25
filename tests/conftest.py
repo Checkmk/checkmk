@@ -232,20 +232,6 @@ def cleanup_cmk():
         pass
 
 
-def pytest_cmdline_main(config):
-    if not config.getoption("-T"):
-        return  # missing option is handled later
-    verify_virtualenv()
-
-
-def verify_virtualenv():
-    if not sys.prefix.endswith("/.venv"):
-        raise SystemExit(
-            "ERROR: Please load virtual environment first "
-            f'(Use "pipenv shell" or configure direnv) ({sys.prefix})'
-        )
-
-
 # Some cmk.* code is calling things like cmk_version.is_raw_edition() at import time
 # (e.g. cmk/base/default_config/notify.py) for edition specific variable
 # defaults. In integration tests we want to use the exact version of the

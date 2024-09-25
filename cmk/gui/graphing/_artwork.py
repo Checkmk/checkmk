@@ -246,11 +246,6 @@ def _layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], 
     # For areas we put (lower, higher) as point into the list of points.
     # For lines simply the values. For mirrored values from is >= to.
 
-    def mirror_point(p: TimeSeriesValue) -> TimeSeriesValue:
-        if p is None:
-            return p
-        return -p
-
     def _positive_line_type(line_type: LineType) -> Literal["line", "area", "stack"]:
         if line_type == "-line":
             return "line"
@@ -270,7 +265,7 @@ def _layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], 
             continue
 
         if line_type[0] == "-":
-            raw_points = list(map(mirror_point, raw_points))
+            raw_points = [None if p is None else -p for p in raw_points]
             line_type = _positive_line_type(line_type)
             mirrored = True
             stack_nr = 0

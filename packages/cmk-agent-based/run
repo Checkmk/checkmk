@@ -164,8 +164,7 @@ run_mypy() {
 }
 
 run_ruff() {
-    setup_venv
-    ruff check cmk tests
+    ../../scripts/run-bazel.sh lint :all
 }
 
 run_bandit() {

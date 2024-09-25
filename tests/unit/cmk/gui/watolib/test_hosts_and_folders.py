@@ -983,22 +983,22 @@ def get_fake_setup_redis_client(
     all_folders: dict[hosts_and_folders.PathWithoutSlash, hosts_and_folders.Folder],
     redis_answers: list[list[list[str]]],
 ) -> Iterator[MockRedisClient]:
-    monkeypatch.setattr(hosts_and_folders, "may_use_redis", lambda: True)
-    mock_redis_client = MockRedisClient(redis_answers)
-    monkeypatch.setattr(hosts_and_folders._RedisHelper, "_cache_integrity_ok", lambda x: True)
-    tree = folder_tree()
-    redis_helper = hosts_and_folders.get_wato_redis_client(tree)
-    monkeypatch.setattr(redis_helper, "_client", mock_redis_client)
-    monkeypatch.setattr(redis_helper, "_folder_paths", [f"{x}/" for x in all_folders.keys()])
-    monkeypatch.setattr(
-        redis_helper,
-        "_folder_metadata",
-        {
-            f"{x}/": hosts_and_folders.FolderMetaData(tree, f"{x}/", "nix", "nix", [])
-            for x in all_folders.keys()
-        },
-    )
     try:
+        monkeypatch.setattr(hosts_and_folders, "may_use_redis", lambda: True)
+        mock_redis_client = MockRedisClient(redis_answers)
+        monkeypatch.setattr(hosts_and_folders._RedisHelper, "_cache_integrity_ok", lambda x: True)
+        tree = folder_tree()
+        redis_helper = hosts_and_folders.get_wato_redis_client(tree)
+        monkeypatch.setattr(redis_helper, "_client", mock_redis_client)
+        monkeypatch.setattr(redis_helper, "_folder_paths", [f"{x}/" for x in all_folders.keys()])
+        monkeypatch.setattr(
+            redis_helper,
+            "_folder_metadata",
+            {
+                f"{x}/": hosts_and_folders.FolderMetaData(tree, f"{x}/", "nix", "nix", [])
+                for x in all_folders.keys()
+            },
+        )
         yield mock_redis_client
     finally:
         monkeypatch.setattr(hosts_and_folders, "may_use_redis", lambda: False)

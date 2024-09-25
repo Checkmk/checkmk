@@ -76,8 +76,10 @@ def queue_log_sink(logger: logging.Logger) -> Iterator[queue.Queue[logging.LogRe
     q: queue.Queue[logging.LogRecord] = queue.Queue()
     queue_handler = logging.handlers.QueueHandler(q)
     logger.addHandler(queue_handler)
-    yield q
-    logger.removeHandler(queue_handler)
+    try:
+        yield q
+    finally:
+        logger.removeHandler(queue_handler)
 
 
 def test_security_event(tmp_path: Path) -> None:

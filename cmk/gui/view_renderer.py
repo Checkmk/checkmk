@@ -93,13 +93,15 @@ class ABCViewRenderer(abc.ABC):
 
 
 class GUIViewRenderer(ABCViewRenderer):
-    page_menu_dropdowns_hook: Callable[[View, Rows, list[PageMenuDropdown]], None] = (
-        lambda v, r, p: None
-    )
-
-    def __init__(self, view: View, show_buttons: bool) -> None:
+    def __init__(
+        self,
+        view: View,
+        show_buttons: bool,
+        page_menu_dropdowns_callback: Callable[[View, Rows, list[PageMenuDropdown]], None],
+    ) -> None:
         super().__init__(view)
         self._show_buttons = show_buttons
+        self._page_menu_dropdowns_callback = page_menu_dropdowns_callback
 
     def render(  # pylint: disable=too-many-branches
         self,
@@ -352,7 +354,7 @@ class GUIViewRenderer(ABCViewRenderer):
             + export_dropdown
         )
 
-        GUIViewRenderer.page_menu_dropdowns_hook(self.view, rows, page_menu_dropdowns)
+        self._page_menu_dropdowns_callback(self.view, rows, page_menu_dropdowns)
 
         menu = PageMenu(
             dropdowns=page_menu_dropdowns,

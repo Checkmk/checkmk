@@ -12,7 +12,7 @@ from cmk.gui import hooks, utils
 from cmk.gui.pages import PageRegistry
 from cmk.gui.valuespec import autocompleter_registry
 
-from . import _filters, info
+from . import _filters, _site_filters, info
 from ._add_to_visual import (
     add_to_dashboard_choices_autocompleter,
     add_to_report_choices_autocompleter,
@@ -49,9 +49,6 @@ from ._filter_valuespecs import filters_exist_for_infos as filters_exist_for_inf
 from ._filter_valuespecs import PageAjaxVisualFilterListGetChoice
 from ._filter_valuespecs import VisualFilterList as VisualFilterList
 from ._filter_valuespecs import VisualFilterListWithAddPopup as VisualFilterListWithAddPopup
-from ._filters import cre_site_filter_heading_info as cre_site_filter_heading_info
-from ._filters import MultipleSitesFilter as MultipleSitesFilter
-from ._filters import SiteFilter as SiteFilter
 from ._livestatus import get_filter_headers as get_filter_headers
 from ._livestatus import get_livestatus_filter_headers as get_livestatus_filter_headers
 from ._livestatus import get_only_sites_from_context as get_only_sites_from_context
@@ -66,6 +63,9 @@ from ._page_edit_visual import render_context_specs as render_context_specs
 from ._page_edit_visual import single_infos_spec as single_infos_spec
 from ._page_list import page_list as page_list
 from ._permissions import declare_visual_permissions as declare_visual_permissions
+from ._site_filters import cre_site_filter_heading_info as cre_site_filter_heading_info
+from ._site_filters import MultipleSitesFilter as MultipleSitesFilter
+from ._site_filters import SiteFilter as SiteFilter
 from ._store import available as available
 from ._store import available_by_owner as available_by_owner
 from ._store import declare_custom_permissions as declare_custom_permissions
@@ -108,6 +108,7 @@ def register(
     page_registry.register_page_handler("ajax_add_visual", ajax_add_visual)
     info.register(_visual_info_registry)
     _filters.register(page_registry, filter_registry)
+    _site_filters.register(filter_registry)
     autocompleter_registry.register_autocompleter(
         "add_to_dashboard_choices", add_to_dashboard_choices_autocompleter
     )

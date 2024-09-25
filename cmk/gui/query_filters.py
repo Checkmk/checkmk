@@ -16,7 +16,6 @@ import livestatus
 from cmk.utils.labels import LabelGroups
 from cmk.utils.tags import TagGroupID
 
-from cmk.gui import site_config, sites
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -979,14 +978,3 @@ def if_oper_status_filter_table(ident: str, context: VisualContext, rows: Rows) 
         return True
 
     return [row for row in rows if _add_row(row)]
-
-
-def cre_sites_options() -> SitesOptions:
-    return sorted(
-        [
-            (sitename, site_config.get_site_config(active_config, sitename)["alias"])
-            for sitename, state in sites.states().items()
-            if state["state"] == "online"
-        ],
-        key=lambda a: a[1].lower(),
-    )

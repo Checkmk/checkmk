@@ -8,9 +8,6 @@ from collections.abc import Callable, Collection, Sequence
 
 from livestatus import LivestatusColumn, MultiSiteConnection
 
-import cmk.ccc.version as cmk_version
-
-from cmk.utils import paths
 from cmk.utils.regex import regex
 
 from cmk.gui import sites
@@ -94,25 +91,6 @@ def monitored_hostname_autocompleter(value: str, params: dict) -> Choices:
     if user_errors:
         return [(value, value)]
     return _sorted_unique_lq(query, 200, value, params)
-
-
-def sites_autocompleter(
-    value: str, params: dict, sites_options: Callable[[], list[tuple[str, str]]]
-) -> Choices:
-    """Return the matching list of dropdown choices
-    Called by the webservice with the current input field value and the completions_params to get the list of choices
-    """
-
-    choices: Choices = [v for v in sites_options() if _matches_id_or_title(value, v)]
-    # CME sort order is already in place
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CME:
-        choices.sort(key=lambda a: a[1].lower())
-
-    # This part should not exists as the optional(not enforce) would better be not having the filter at all
-    if not params.get("strict"):
-        empty_choice: Choices = [("", "All Sites")]
-        choices = empty_choice + choices
-    return choices
 
 
 def hostgroup_autocompleter(value: str, params: dict) -> Choices:

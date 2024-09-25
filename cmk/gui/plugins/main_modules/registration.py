@@ -64,10 +64,10 @@ from cmk.gui.pages import page_registry
 from cmk.gui.painter.v0.base import painter_registry
 from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.permissions import permission_registry, permission_section_registry
-from cmk.gui.query_filters import cre_sites_options
 from cmk.gui.quick_setup import registration as quick_setup_registration
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.sidebar import snapin_registry
+from cmk.gui.sites import site_choices
 from cmk.gui.userdb import register_config_file as user_connections_config
 from cmk.gui.userdb import register_userroles_config_file as register_userroles
 from cmk.gui.userdb import registration as userdb_registration
@@ -82,6 +82,7 @@ from cmk.gui.views.layout import layout_registry
 from cmk.gui.views.row_post_processing import register_row_post_processor
 from cmk.gui.views.sorter import sorter_registry
 from cmk.gui.views.store import multisite_builtin_views
+from cmk.gui.visuals._site_filters import sites_autocompleter
 from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
@@ -117,11 +118,11 @@ from cmk.gui.watolib.timeperiods import timeperiod_usage_finder_registry
 def register_sites_options() -> None:
     if edition(paths.omd_root) is not Edition.CME:
         hooks.register_builtin("mkeventd-activate-changes", save_active_config)
-    visuals.MultipleSitesFilter.sites_options = cre_sites_options
+    visuals.MultipleSitesFilter.sites_options = site_choices
     visuals.SiteFilter.heading_hook = visuals.cre_site_filter_heading_info
 
     autocompleter_registry.register_autocompleter(
-        "sites", partial(autocompleters.sites_autocompleter, sites_options=cre_sites_options)
+        "sites", partial(sites_autocompleter, sites_options=site_choices)
     )
 
 

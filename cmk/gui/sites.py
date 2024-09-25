@@ -39,6 +39,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.logged_in import user as global_user
+from cmk.gui.site_config import get_site_config
 from cmk.gui.utils.compatibility import (
     is_distributed_monitoring_compatible_for_licensing,
     LicensingCompatibility,
@@ -598,3 +599,14 @@ def filter_available_site_choices(choices: list[tuple[SiteId, str]]) -> list[tup
             continue
         sites_enabled.append(entry)
     return sites_enabled
+
+
+def site_choices() -> list[tuple[str, str]]:
+    return sorted(
+        [
+            (sitename, get_site_config(active_config, sitename)["alias"])
+            for sitename, state in states().items()
+            if state["state"] == "online"
+        ],
+        key=lambda a: a[1].lower(),
+    )

@@ -104,7 +104,7 @@ def configure_host_and_regions() -> QuickSetupStage:
                 ),
             ),
         ],
-        custom_validators=[],
+        custom_validators=[qs_validators.validate_host_name_doesnt_exists],
         recap=[recaps.recaps_form_spec],
         button_label="Configure services to monitor",
     )

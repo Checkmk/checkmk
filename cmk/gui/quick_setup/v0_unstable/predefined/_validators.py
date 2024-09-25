@@ -10,6 +10,9 @@ from livestatus import SiteId
 
 from cmk.ccc.site import omd_site
 
+from cmk.utils.hostaddress import HostName
+
+from cmk.gui.i18n import _
 from cmk.gui.quick_setup.v0_unstable.definitions import UniqueBundleIDStr
 from cmk.gui.quick_setup.v0_unstable.predefined._common import (
     _collect_params_with_defaults_from_form_data,
@@ -26,6 +29,7 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
 )
 from cmk.gui.watolib.check_mk_automations import diag_special_agent
 from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
+from cmk.gui.watolib.hosts_and_folders import Host
 
 from cmk.rulesets.v1.form_specs import Dictionary
 
@@ -91,5 +95,25 @@ def validate_unique_id(
 
     if bundle_id in ConfigBundleStore().load_for_reading():
         return [f'Configuration bundle "{bundle_id}" already exists.']
+
+    return []
+
+
+def validate_host_name_doesnt_exists(
+    _quick_setup_id: QuickSetupId,
+    _stage_index: StageIndex,
+    stages_form_data: ParsedFormData,
+) -> GeneralStageErrors:
+    host_name = _find_unique_id(stages_form_data, "host_name")
+    assert host_name is not None
+    host = Host.host(HostName(host_name))
+    if host:
+        return [
+            _(
+                "A host with the name %s already exists in the folder %s. "
+                "Please choose a different host name."
+            )
+            % (host_name, host.folder().alias_path())
+        ]
 
     return []

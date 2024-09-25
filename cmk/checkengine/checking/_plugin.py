@@ -27,7 +27,7 @@ __all__ = [
     "CheckPluginName",
     "ConfiguredService",
     "ServiceConfigurer",
-    "aggregate_enforced_services",
+    "merge_enforced_services",
     "ServiceID",
     "AutocheckEntryProtocol",
 ]
@@ -165,7 +165,7 @@ class CheckPlugin:
     discovery_ruleset_name: RuleSetName | None
 
 
-def aggregate_enforced_services(
+def merge_enforced_services(
     services: Mapping[HostAddress, Mapping[ServiceID, tuple[object, ConfiguredService]]],
     appears_on_cluster: Callable[[HostAddress, ServiceName], bool],
 ) -> Iterable[ConfiguredService]:

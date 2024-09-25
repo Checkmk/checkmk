@@ -10,11 +10,11 @@ from cmk.utils.hostaddress import HostAddress
 from cmk.utils.servicename import ServiceName
 
 from cmk.checkengine.checking import (
-    aggregate_enforced_services,
     AggregatedResult,
     check_plugins_missing_data,
     CheckPluginName,
     ConfiguredService,
+    merge_enforced_services,
     ServiceConfigurer,
     ServiceID,
 )
@@ -207,7 +207,7 @@ def test_aggregate_enforced_services_filters_unclustered() -> None:
     sid1 = ServiceID(CheckPluginName("check1"), None)
     sid2 = ServiceID(CheckPluginName("check2"), None)
     assert tuple(
-        aggregate_enforced_services(
+        merge_enforced_services(
             {
                 HostAddress("host1"): {sid1: ("ruleset_name1", _dummy_service(sid1))},
                 HostAddress("host2"): {sid2: ("ruleset_name2", _dummy_service(sid2))},
@@ -224,7 +224,7 @@ def _make_params(raw: Mapping[str, object]) -> TimespecificParameters:
 def test_aggregate_enforced_services_merge() -> None:
     sid = ServiceID(CheckPluginName("check"), None)
     assert tuple(
-        aggregate_enforced_services(
+        merge_enforced_services(
             {
                 HostAddress("host1"): {
                     sid: (

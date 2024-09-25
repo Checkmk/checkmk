@@ -100,9 +100,9 @@ from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import MaxAge
 
 from cmk.checkengine.checking import (
-    aggregate_enforced_services,
     CheckPluginName,
     ConfiguredService,
+    merge_enforced_services,
     ServiceConfigurer,
     ServiceID,
 )
@@ -382,7 +382,7 @@ def _get_clustered_services(
             if config_cache.effective_host(node, service.description) == cluster_name
         )
 
-    yield from aggregate_enforced_services(
+    yield from merge_enforced_services(
         {node: config_cache.enforced_services_table(node) for node in nodes},
         appears_on_cluster,
     )

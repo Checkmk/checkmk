@@ -26,7 +26,8 @@ py_library(
         "cmk/werks/parse.py",
         "cmk/werks/validate.py",
     ],
-    visibility = ["//visibility:public"],
+    imports = ["."],
+    visibility = ["//cmk:__pkg__"],
     deps = [
         requirement("markdown"),
         requirement("lxml"),

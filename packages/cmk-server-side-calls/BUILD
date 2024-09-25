@@ -11,6 +11,8 @@ py_library(
         "cmk/server_side_calls/v1/_special_agents.py",
         "cmk/server_side_calls/v1/_utils.py",
     ],
+    imports = ["."],
+    visibility = ["//cmk:__pkg__"],
 )
 
 py_wheel(

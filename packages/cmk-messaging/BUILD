@@ -11,6 +11,8 @@ py_library(
         "cmk/messaging/_constants.py",
         "cmk/messaging/rabbitmq.py",
     ],
+    imports = ["."],
+    visibility = ["//cmk:__pkg__"],
 )
 
 py_wheel(

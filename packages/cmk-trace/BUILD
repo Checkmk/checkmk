@@ -11,6 +11,8 @@ py_library(
         "cmk/trace/logs.py",
         "cmk/trace/py.typed",
     ],
+    imports = ["."],
+    visibility = ["//cmk:__pkg__"],
 )
 
 py_wheel(

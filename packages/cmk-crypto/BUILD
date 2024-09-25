@@ -17,6 +17,8 @@ py_library(
         "cmk/crypto/symmetric.py",
         "cmk/crypto/totp.py",
     ],
+    imports = ["."],
+    visibility = ["//cmk:__pkg__"],
 )
 
 py_wheel(

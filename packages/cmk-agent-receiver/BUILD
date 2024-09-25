@@ -19,6 +19,8 @@ py_library(
         "cmk/agent_receiver/utils.py",
         "cmk/agent_receiver/worker.py",
     ],
+    imports = ["."],
+    visibility = ["//cmk:__pkg__"],
 )
 
 py_wheel(

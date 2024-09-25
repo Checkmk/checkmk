@@ -18,6 +18,8 @@ py_library(
         "cmk/rulesets/v1/form_specs/validators.py",
         "cmk/rulesets/v1/rule_specs.py",
     ],
+    imports = ["."],
+    visibility = ["//cmk:__pkg__"],
 )
 
 py_wheel(

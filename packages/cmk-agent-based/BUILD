@@ -35,7 +35,8 @@ py_library(
         "cmk/agent_based/v2/clusterize.py",
         "cmk/agent_based/v2/render.py",
     ],
-    visibility = ["//visibility:public"],
+    imports = ["."],
+    visibility = ["//cmk:__pkg__"],
     deps = [
         requirement("pydantic"),
     ],

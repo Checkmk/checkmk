@@ -17,7 +17,8 @@ py_library(
         "cmk/mkp_tool/_unsorted.py",
         "cmk/mkp_tool/cli.py",
     ],
-    visibility = ["//visibility:public"],
+    imports = ["."],
+    visibility = ["//cmk:__pkg__"],
 )
 
 py_wheel(

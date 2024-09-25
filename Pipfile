@@ -56,7 +56,7 @@ pytest-xdist = "==3.5.0" # used to limit number of procs in e2e tests
 python-lsp-black = "==1.3.0"  # black plugin for python-lsp-server
 python-lsp-server = "==1.10.0"  # Note: There are extras, but the default seems sensible.
 responses = "==0.24.1"  # used for unit tests
-ruff = "==0.1.14"
+ruff = "==0.6.7"
 schemathesis = "==3.21.2"  # used for openapi tests
 semver = "==3.0.2"
 sphinx = "==6.2.1"  # used for the plugin API documentation, pinned for now  see https://github.com/kivy/kivy/issues/8230)

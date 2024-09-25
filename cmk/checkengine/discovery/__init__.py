@@ -10,6 +10,7 @@ from ._autochecks import (
     AutochecksManager,
     AutochecksStore,
     DiscoveredLabelsCache,
+    merge_cluster_autochecks,
     remove_autochecks_of_host,
     set_autochecks_for_effective_host,
     set_autochecks_of_cluster,
@@ -62,4 +63,5 @@ __all__ = [
     "set_autochecks_of_cluster",
     "set_autochecks_of_real_hosts",
     "set_autochecks_for_effective_host",
+    "merge_cluster_autochecks",
 ]

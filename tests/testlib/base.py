@@ -195,7 +195,9 @@ class Scenario:
             monkeypatch.setattr(
                 self.config_cache,
                 "_discovered_labels_cache",
-                DiscoveredLabelsCache(self._autochecks_mocker.get_autochecks),
+                DiscoveredLabelsCache(
+                    self.config["clusters"], self._autochecks_mocker.get_autochecks
+                ),
                 raising=False,
             )
 

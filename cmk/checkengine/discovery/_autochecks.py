@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import ast
+from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import NamedTuple, TypedDict
@@ -139,6 +140,33 @@ class AutochecksStore:
             self._store.path.unlink()
         except OSError:
             pass
+
+
+def merge_cluster_autochecks(
+    autochecks: Mapping[HostName, Sequence[AutocheckEntry]],
+    appears_on_cluster: Callable[[HostName, ServiceID], bool],
+) -> Sequence[AutocheckEntry]:
+    # filter for cluster and flatten:
+    entries = [
+        e
+        for node_name, entries in autochecks.items()
+        for e in entries
+        if appears_on_cluster(node_name, e.id())
+    ]
+
+    # group by service id and reverse order to make the first node win in merging
+    entries_by_id: dict[ServiceID, list[AutocheckEntry]] = defaultdict(list)
+    for entry in entries:
+        entries_by_id[entry.id()].insert(0, entry)
+
+    return [
+        AutocheckEntry(
+            *id,
+            parameters={k: v for e in entries for k, v in e.parameters.items()},
+            service_labels={k: v for e in entries for k, v in e.service_labels.items()},
+        )
+        for id, entries in entries_by_id.items()
+    ]
 
 
 class AutochecksManager:
@@ -348,8 +376,10 @@ class DiscoveredLabelsCache:
 
     def __init__(
         self,
-        get_autochecks: Callable[[HostName], Iterable[AutocheckEntry]],
+        clusters: Mapping[HostName, Sequence[HostName]],
+        get_autochecks: Callable[[HostName], Sequence[AutocheckEntry]],
     ) -> None:
+        self._clusters = clusters
         self._get_autochecks = get_autochecks
         self._discovered_labels_of: dict[HostName, Mapping[ServiceName, Labels]] = {}
 
@@ -358,6 +388,7 @@ class DiscoveredLabelsCache:
         hostname: HostName,
         service_desc: ServiceName,
         get_service_description: GetServiceDescription,
+        get_effective_host: GetEffectiveHost,
     ) -> Labels:
         # NOTE: this returns an empty labels object for non-existing services
         if (hosts_service_labels := self._discovered_labels_of.get(hostname)) is None:
@@ -366,6 +397,7 @@ class DiscoveredLabelsCache:
                 self._get_hosts_discovered_service_labels(
                     hostname,
                     get_service_description,
+                    get_effective_host,
                 ),
             )
 
@@ -375,11 +407,44 @@ class DiscoveredLabelsCache:
         self,
         host_name: HostName,
         get_service_description: GetServiceDescription,
+        get_effective_host: GetEffectiveHost,
     ) -> Mapping[ServiceName, Labels]:
-        # FIXME: we're completely messing up the cluster case here. Root cause of CMK-18804.
+        return (
+            self._get_real_hosts_discovered_service_labels(host_name, get_service_description)
+            if (nodes := self._clusters.get(host_name)) is None
+            else self._get_clusters_discovered_service_labels(
+                host_name, nodes, get_service_description, get_effective_host
+            )
+        )
+
+    def _get_real_hosts_discovered_service_labels(
+        self,
+        node_name: HostName,
+        get_service_description: GetServiceDescription,
+    ) -> Mapping[ServiceName, Labels]:
         return {
             get_service_description(
-                host_name, autocheck_entry.check_plugin_name, autocheck_entry.item
+                node_name, autocheck_entry.check_plugin_name, autocheck_entry.item
             ): autocheck_entry.service_labels
-            for autocheck_entry in self._get_autochecks(host_name)
+            for autocheck_entry in self._get_autochecks(node_name)
+        }
+
+    def _get_clusters_discovered_service_labels(
+        self,
+        cluster_name: HostName,
+        nodes: Sequence[HostName],
+        get_service_description: GetServiceDescription,
+        get_effective_host: GetEffectiveHost,
+    ) -> Mapping[ServiceName, Labels]:
+        return {
+            get_service_description(
+                cluster_name, autocheck_entry.check_plugin_name, autocheck_entry.item
+            ): autocheck_entry.service_labels
+            for autocheck_entry in merge_cluster_autochecks(
+                {node: self._get_autochecks(node) for node in nodes},
+                lambda node_name, service_id: (
+                    get_effective_host(node_name, get_service_description(node_name, *service_id))
+                    == cluster_name
+                ),
+            )
         }

@@ -41,6 +41,7 @@ from ._autochecks import (
     AutocheckServiceWithNodes,
     AutochecksStore,
     DiscoveredService,
+    merge_cluster_autochecks,
     remove_autochecks_of_host,
     set_autochecks_of_cluster,
     set_autochecks_of_real_hosts,
@@ -737,29 +738,24 @@ def _node_service_source(
     return "clustered_new"
 
 
-def _reclassify_disabled_items(
-    host_name: HostName,
-    services: ServicesTable[_Transition],
-    ignore_service: Callable[[HostName, ServiceName], bool],
-    ignore_plugin: Callable[[HostName, CheckPluginName], bool],
-    get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
-) -> Iterable[tuple[ServiceID, ServicesTableEntry]]:
-    """Handle disabled services -> 'ignored'"""
-    yield from (
-        (
-            DiscoveredService.id(service.autocheck),
-            ServicesTableEntry(
-                transition="ignored",
-                autocheck=service.autocheck,
-                hosts=[host_name],
-            ),
+def _make_cluster_table(
+    entries: QualifiedDiscovery[AutocheckEntry],
+    node_tables: Mapping[HostName, ServicesTable[_Transition]],
+    is_ignored_on_cluster: Callable[[ServiceID], bool],
+) -> ServicesTable[_Transition]:
+    return {
+        sid: ServicesTableEntry(
+            transition="ignored" if is_ignored_on_cluster(sid) else service_transition,
+            autocheck=entry,
+            hosts=[
+                hn
+                for hn, entries in node_tables.items()
+                if sid in entries and entries[sid].autocheck.new is not None
+            ],
         )
-        for service in services.values()
-        if ignore_service(
-            host_name, get_service_description(host_name, *DiscoveredService.id(service.autocheck))
-        )
-        or ignore_plugin(host_name, DiscoveredService.check_plugin_name(service.autocheck))
-    )
+        for service_transition, entry in entries.chain_with_transition()
+        for sid in (DiscoveredService.id(entry),)
+    }
 
 
 def _group_by_transition(
@@ -785,246 +781,58 @@ def _get_cluster_services(
     get_effective_host: Callable[[HostName, ServiceName], HostName],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
 ) -> dict[HostName, ServicesTable[_Transition]]:
-    cluster_items: dict[
-        HostName, ServicesTable[_Transition]
-    ] = {}  # actually _BasicTransition but typing...
-    cluster_items[host_name] = {}
+    # should/can we move these up the stack?
+    def is_ignored(hn: HostName, service_id: ServiceID, service_description: ServiceName) -> bool:
+        if ignore_plugin(hn, service_id[0]):
+            return True
+        return ignore_service(hn, service_description)
 
-    for node in cluster_nodes:
-        entries = analyse_services(
+    def appears_on_cluster(hn: HostName, service_id: ServiceID) -> bool:
+        service_description = get_service_description(hn, *service_id)
+        return (
+            not is_ignored(hn, service_id, service_description)
+            and get_effective_host(hn, service_description) == host_name
+        )
+
+    nodes_discovery_results = {
+        node: analyse_services(
             existing_services=existing_services[node],
             discovered_services=discovered_services[node],
             run_plugin_names=EVERYTHING,
             forget_existing=False,
             keep_vanished=False,
         )
-
-        cluster_items[node] = {
-            **make_table(
-                node,
-                entries,
-                ignore_service=ignore_service,
-                ignore_plugin=ignore_plugin,
-                get_effective_host=get_effective_host,
-                get_service_description=get_service_description,
-            )
-        }
-        for check_source, entry in entries.chain_with_transition():
-            cluster_items[host_name].update(
-                _cluster_service_entry(
-                    node_transition=check_source,
-                    host_name=host_name,
-                    node_name=node,
-                    services_cluster=get_effective_host(
-                        node, get_service_description(node, *DiscoveredService.id(entry))
-                    ),
-                    entry=entry,
-                    current_recorded_entry=cluster_items[host_name].get(
-                        DiscoveredService.id(entry)
-                    ),
-                )
-            )
-    cluster_items[host_name].update(
-        _reclassify_disabled_items(
-            host_name,
-            cluster_items[host_name],
-            ignore_service,
-            ignore_plugin,
-            get_service_description,
+        for node in cluster_nodes
+    }
+    node_tables = {
+        hn: make_table(
+            hn,
+            entries,
+            ignore_service=ignore_service,
+            ignore_plugin=ignore_plugin,
+            get_effective_host=get_effective_host,
+            get_service_description=get_service_description,
         )
+        for hn, entries in nodes_discovery_results.items()
+    }
+    clusters_discovery_result = QualifiedDiscovery(
+        preexisting=merge_cluster_autochecks(
+            {hn: q.preexisting for hn, q in nodes_discovery_results.items()},
+            appears_on_cluster,
+        ),
+        current=merge_cluster_autochecks(
+            {hn: q.current for hn, q in nodes_discovery_results.items()},
+            appears_on_cluster,
+        ),
     )
 
-    return cluster_items
-
-
-def _cluster_service_entry(
-    *,
-    node_transition: _BasicTransition,
-    host_name: HostName,
-    node_name: HostName,
-    services_cluster: HostName,
-    entry: DiscoveredItem[AutocheckEntry],
-    current_recorded_entry: ServicesTableEntry[_Transition] | None,
-) -> Iterable[tuple[ServiceID, ServicesTableEntry[_Transition]]]:
-    """
-    The purpose of this function is to determine the service transition (and autocheck) in a
-    cumulative way by going through all nodes where the service is present
-
-    To keep in mind:
-        * the order of the nodes is always the same
-
-    Variables:
-        * entry:
-            the service representation of the node we are currently investigating
-        * current_recorded_entry:
-            the cumulative service representation based on all previously iterated nodes
-
-    Example for understanding:
-        * cluster consists of 2 nodes: node1 and node2
-        * node1 has a service with transition "vanished"
-        * node2 has a service with transition "new"
-        * the order of nodes is always the same: first we inspect node1 and then node2
-        * from a cluster perspective the service is neither new nor vanished
-            * vanished assumes that the service existed before in the previous run
-            * new assumes that the service does still exist in the current run
-            --> from a cluster perspective it is therefore changed/unchanged it only moved from one
-            node to another
-
-    Service labels for clustered services:
-        * cluster service should inherit the labels of services from all of its nodes
-        * label values take priority according to the order of the nodes: first come first serve
-        * we assume that the order of the node never changes
-        * we must merge labels for both the new and old autochecks
-
-    """
-    if host_name != services_cluster:
-        return  # not part of this host
-
-    if current_recorded_entry is None:
-        # first encounter of the service
-        yield (
-            DiscoveredService.id(entry),
-            ServicesTableEntry(
-                transition=node_transition,
-                autocheck=entry,
-                hosts=[node_name],
+    return {
+        host_name: _make_cluster_table(
+            clusters_discovery_result,
+            node_tables,
+            is_ignored_on_cluster=lambda sid: is_ignored(
+                host_name, sid, get_service_description(host_name, *sid)
             ),
-        )
-        return
-
-    nodes_with_service = current_recorded_entry.hosts
-    if node_name not in nodes_with_service:
-        nodes_with_service.append(node_name)
-
-    existing_autocheck_entry = current_recorded_entry.autocheck
-    accumulated_transition = current_recorded_entry.transition
-    match accumulated_transition, node_transition:
-        case "unchanged" | "changed", _not_relevant:
-            # unchanged/changed always preconditions a service's preexistence
-            # we only update the labels
-            assert existing_autocheck_entry.new is not None
-            assert existing_autocheck_entry.previous is not None
-            yield (
-                DiscoveredService.id(entry),
-                ServicesTableEntry(
-                    transition=accumulated_transition,
-                    autocheck=DiscoveredItem[AutocheckEntry](
-                        new=_autocheck_with_merged_labels(existing_autocheck_entry.new, entry.new),
-                        previous=_autocheck_with_merged_labels(
-                            existing_autocheck_entry.previous, entry.previous
-                        ),
-                    ),
-                    hosts=nodes_with_service,
-                ),
-            )
-            return
-        case "new", "unchanged" | "changed" | "vanished":
-            # turns out the service already existed and is not really new
-            # Understanding example:
-            # Current run: node1 (new service), node2 (unchanged service --> existed before)
-            # --> have to compare new service state to previous state of node2 service due to next
-            # run, if we simply take node2 service state (e.g. unchanged), then we potentially jump
-            # over any potential changes relative to the next run
-            # Next run: node1 (unchanged service), node2 (unchanged service)
-            # --> node1 service will be taken (first node appearance wins)
-            assert existing_autocheck_entry.new is not None
-            assert entry.previous is not None
-            assert existing_autocheck_entry.new is not None
-            yield (
-                DiscoveredService.id(entry),
-                ServicesTableEntry(
-                    transition=(
-                        "changed"
-                        if _changed_service(existing_autocheck_entry.new, entry.previous)
-                        else "unchanged"
-                    ),
-                    autocheck=DiscoveredItem[AutocheckEntry](
-                        new=_autocheck_with_merged_labels(existing_autocheck_entry.new, entry.new),
-                        previous=existing_autocheck_entry.previous,
-                    ),
-                    hosts=nodes_with_service,
-                ),
-            )
-        case "new", "new":
-            # still new, first new node appearance wins so we keep the existing entry
-            # we only update the labels of the new entry
-            assert existing_autocheck_entry.new is not None
-            yield (
-                DiscoveredService.id(entry),
-                ServicesTableEntry(
-                    transition=accumulated_transition,
-                    autocheck=DiscoveredItem[AutocheckEntry](
-                        new=_autocheck_with_merged_labels(existing_autocheck_entry.new, entry.new),
-                        previous=existing_autocheck_entry.previous,
-                    ),
-                    hosts=nodes_with_service,
-                ),
-            )
-            return
-        case "vanished", "unchanged" | "changed" | "new":
-            # turns out the service is not vanished but moved to another node or was already
-            # present before
-            assert current_recorded_entry.autocheck.previous is not None
-            assert entry.new is not None
-            assert existing_autocheck_entry.previous is not None
-            yield (
-                DiscoveredService.id(entry),
-                ServicesTableEntry(
-                    transition=(
-                        "changed"
-                        if _changed_service(current_recorded_entry.autocheck.previous, entry.new)
-                        else "unchanged"
-                    ),
-                    autocheck=DiscoveredItem[AutocheckEntry](
-                        new=entry.new,
-                        previous=_autocheck_with_merged_labels(
-                            existing_autocheck_entry.previous, entry.previous
-                        ),
-                    ),
-                    hosts=nodes_with_service,
-                ),
-            )
-        case "vanished", "vanished":
-            # still vanished, first vanished node appearance wins so we keep the existing entry but
-            # look for new labels
-            assert existing_autocheck_entry.previous is not None
-            yield (
-                DiscoveredService.id(entry),
-                ServicesTableEntry(
-                    transition=accumulated_transition,
-                    autocheck=DiscoveredItem[AutocheckEntry](
-                        new=existing_autocheck_entry.new,
-                        previous=_autocheck_with_merged_labels(
-                            existing_autocheck_entry.previous, entry.previous
-                        ),
-                    ),
-                    hosts=nodes_with_service,
-                ),
-            )
-            return
-
-
-def _autocheck_with_merged_labels(
-    governing_autocheck: AutocheckEntry, completing_autocheck: AutocheckEntry | None
-) -> AutocheckEntry:
-    """Merge service labels of two autochecks
-
-    The service labels of the preceding autocheck are merged with the service labels of the current
-    where the first appearance of a label wins.
-    """
-    if completing_autocheck is None:
-        return governing_autocheck
-
-    return AutocheckEntry(
-        check_plugin_name=governing_autocheck.check_plugin_name,
-        item=governing_autocheck.item,
-        parameters=governing_autocheck.parameters,
-        service_labels={
-            **completing_autocheck.service_labels,
-            **governing_autocheck.service_labels,
-        },
-    )
-
-
-def _changed_service(service: AutocheckEntry, compare_service: AutocheckEntry) -> bool:
-    return service.comparator() != compare_service.comparator()
+        ),
+        **node_tables,
+    }

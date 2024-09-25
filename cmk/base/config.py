@@ -107,10 +107,12 @@ from cmk.checkengine.checking import (
     ServiceID,
 )
 from cmk.checkengine.discovery import (
+    AutocheckEntry,
     AutochecksManager,
     CheckPreviewEntry,
     DiscoveredLabelsCache,
     DiscoveryCheckParameters,
+    merge_cluster_autochecks,
 )
 from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.fetcher import FetcherType, SourceType
@@ -247,6 +249,10 @@ def _aggregate_check_table_services(
     config_cache: ConfigCache,
     skip_ignored: bool,
     filter_mode: FilterMode,
+    get_autochecks: Callable[[HostAddress], Sequence[AutocheckEntry]],
+    configure_autochecks: Callable[
+        [HostName, Sequence[AutocheckEntry]], Iterable[ConfiguredService]
+    ],
 ) -> Iterable[ConfiguredService]:
     sfilter = _ServiceFilter(
         host_name,
@@ -263,7 +269,11 @@ def _aggregate_check_table_services(
         if is_cluster:
             # Add checks a cluster might receive from its nodes
             yield from (
-                s for s in _get_clustered_services(config_cache, host_name) if sfilter.keep(s)
+                s
+                for s in _get_clustered_services(
+                    config_cache, host_name, get_autochecks, configure_autochecks
+                )
+                if sfilter.keep(s)
             )
         else:
             yield from (
@@ -297,7 +307,9 @@ def _aggregate_check_table_services(
     yield from (
         s
         # ... this adds it for node2
-        for s in _get_services_from_cluster_nodes(config_cache, host_name)
+        for s in _get_services_from_cluster_nodes(
+            config_cache, host_name, get_autochecks, configure_autochecks
+        )
         if sfilter.keep(s)
         # ... and this condition prevents it from being added on node3
         # 'not is_mine' means: would it be there, it would be clustered.
@@ -355,37 +367,52 @@ class _ServiceFilter:
 
 
 def _get_services_from_cluster_nodes(
-    config_cache: ConfigCache, node_name: HostName
+    config_cache: ConfigCache,
+    node_name: HostName,
+    get_autochecks: Callable[[HostAddress], Sequence[AutocheckEntry]],
+    configure_autochecks: Callable[
+        [HostName, Sequence[AutocheckEntry]], Iterable[ConfiguredService]
+    ],
 ) -> Iterable[ConfiguredService]:
     for cluster in config_cache.clusters_of(node_name):
-        yield from _get_clustered_services(config_cache, cluster)
+        yield from _get_clustered_services(
+            config_cache, cluster, get_autochecks, configure_autochecks
+        )
 
 
 def _get_clustered_services(
     config_cache: ConfigCache,
     cluster_name: HostName,
+    get_autochecks: Callable[[HostAddress], Sequence[AutocheckEntry]],
+    configure_autochecks: Callable[
+        [HostName, Sequence[AutocheckEntry]], Iterable[ConfiguredService]
+    ],
 ) -> Iterable[ConfiguredService]:
     nodes = config_cache.nodes(cluster_name)
 
-    def appears_on_cluster(node_name: HostName, service_name: ServiceName) -> bool:
-        return config_cache.effective_host(node_name, service_name) == cluster_name
+    if not config_cache.is_ping_host(cluster_name):
 
-    nodes_discovered_services = (
-        {}
-        if config_cache.is_ping_host(cluster_name)
-        else {node: config_cache.get_discovered_services(node) for node in nodes}
-    )
+        def appears_on_cluster(node_name: HostAddress, service_id: ServiceID) -> bool:
+            if config_cache.check_plugin_ignored(node_name, service_id[0]):
+                return False
+            description = service_description(config_cache.ruleset_matcher, node_name, *service_id)
+            return not config_cache.service_ignored(node_name, description) and (
+                config_cache.effective_host(node_name, description) == cluster_name
+            )
 
-    for node in nodes:
-        yield from (
-            service
-            for service in nodes_discovered_services[node]
-            if config_cache.effective_host(node, service.description) == cluster_name
+        yield from configure_autochecks(
+            cluster_name,
+            merge_cluster_autochecks(
+                {node: get_autochecks(node) for node in nodes},
+                appears_on_cluster,
+            ),
         )
 
     yield from merge_enforced_services(
-        {node: config_cache.enforced_services_table(node) for node in nodes},
-        appears_on_cluster,
+        {node_name: config_cache.enforced_services_table(node_name) for node_name in nodes},
+        lambda node_name, service_name: (
+            config_cache.effective_host(node_name, service_name) == cluster_name
+        ),
     )
 
 
@@ -1962,7 +1989,7 @@ class ConfigCache:
 
         self._autochecks_manager = AutochecksManager()
         self._discovered_labels_cache = DiscoveredLabelsCache(
-            self._autochecks_manager.get_autochecks
+            self._nodes_cache, self._autochecks_manager.get_autochecks
         )
         self._effective_host_cache: dict[tuple[HostName, ServiceName, tuple | None], HostName] = {}
         self._check_mk_check_interval: dict[HostName, float] = {}
@@ -2036,6 +2063,7 @@ class ConfigCache:
             hostname,
             service_desc,
             functools.partial(service_description, self.ruleset_matcher),
+            self.effective_host,
         )
 
     @staticmethod
@@ -2218,6 +2246,8 @@ class ConfigCache:
                 config_cache=self,
                 skip_ignored=skip_ignored,
                 filter_mode=filter_mode,
+                get_autochecks=self._autochecks_manager.get_autochecks,
+                configure_autochecks=self._service_configurer.configure_autochecks,
             )
         )
 

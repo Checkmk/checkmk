@@ -372,6 +372,21 @@ install_for_localize_dev() {
     print_green "Installation for Localization development done"
 }
 
+install_for_bazel() {
+    # install Bazel for package building
+    print_green "Installing Bazel/Bazelisk ..."
+
+    export TARGET_DIR="${INSTALL_PATH}"
+    "${SCRIPT_DIR}"/install-bazel.sh
+
+    install_packages golang-go
+
+    # install_packages golang-go
+    "${SCRIPT_DIR}"/install-buildifier.sh
+
+    print_green "Installation of Bazel/Bazelisk done"
+}
+
 POSITIONAL_ARGS=()
 PROFILE_ARGS=()
 INSTALL_PATH=/opt
@@ -561,17 +576,8 @@ fi
 
 if [[ $REQUIRES_NEXUS -gt 0 || $INSTALL_FOR_BAZEL -eq 1 ]]; then
     # only localize or web is installed, which don't require nexus interactions
-    # install Bazel for package building
-    print_green "Installing Bazel/Bazelisk ..."
-
-    export TARGET_DIR="${INSTALL_PATH}"
-    "${SCRIPT_DIR}"/install-bazel.sh
-
-    print_green "Installation of Bazel/Bazelisk done"
+    install_for_bazel
 fi
-
-# install_packages golang-go
-# "${SCRIPT_DIR}"/install-buildifier.sh
 
 perform_cleanup
 

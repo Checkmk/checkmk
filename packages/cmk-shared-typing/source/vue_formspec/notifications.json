@@ -202,7 +202,7 @@
                     }
                 }
             },
-            "required": ["i18n", "rules"]
+            "required": ["rules"]
         },
         "rule": {
             "type": "object",

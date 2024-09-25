@@ -312,7 +312,7 @@ export interface RuleSection {
   topics: RuleTopic[];
 }
 export interface RuleTopic {
-  i18n: string;
+  i18n?: string;
   rules: Rule[];
 }
 export interface Rule {

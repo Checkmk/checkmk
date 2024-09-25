@@ -19,7 +19,7 @@ defineProps<{
         <thead>
           <tr>
             <th>
-              <div class="text ruleset_section ruleset">{{ section.i18n }}</div>
+              <div v-if="topic.i18n" class="text ruleset_section ruleset">{{ topic.i18n }}</div>
             </th>
           </tr>
         </thead>

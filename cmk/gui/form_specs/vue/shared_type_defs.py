@@ -432,8 +432,8 @@ class CoreStats:
 
 @dataclass(kw_only=True)
 class RuleTopic:
-    i18n: str
     rules: list[Rule]
+    i18n: Optional[str] = None
 
 
 @dataclass(kw_only=True)

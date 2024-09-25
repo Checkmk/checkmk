@@ -333,9 +333,25 @@ class DiscoveredService:
 
 
 class DiscoveredLabelsCache:
-    def __init__(self, get_autochecks: Callable[[HostName], Iterable[AutocheckEntry]]) -> None:
+    """Cache for discovered labels of services
+
+    This is insane.
+
+    We need this because we insist on looking up the labels of a service by its name.
+    Discovered labels are attached to the autocheck entry, which is identified by the
+    service ID (check plugin name and item).
+    We read all of the autochecks, compute all the service names, and then see if one
+    matches.
+
+    Ironically, at the start we already knew the service ID. We just forgot about it.
+    """
+
+    def __init__(
+        self,
+        get_autochecks: Callable[[HostName], Iterable[AutocheckEntry]],
+    ) -> None:
         self._get_autochecks = get_autochecks
-        self._discovered_labels_of: dict[HostName, dict[ServiceName, Labels]] = {}
+        self._discovered_labels_of: dict[HostName, Mapping[ServiceName, Labels]] = {}
 
     def discovered_labels_of(
         self,
@@ -344,20 +360,26 @@ class DiscoveredLabelsCache:
         get_service_description: GetServiceDescription,
     ) -> Labels:
         # NOTE: this returns an empty labels object for non-existing services
-        if (loaded_labels := self._discovered_labels_of.get(hostname)) is not None:
-            return loaded_labels.get(service_desc, {})
+        if (hosts_service_labels := self._discovered_labels_of.get(hostname)) is None:
+            hosts_service_labels = self._discovered_labels_of.setdefault(
+                hostname,
+                self._get_hosts_discovered_service_labels(
+                    hostname,
+                    get_service_description,
+                ),
+            )
 
-        hosts_labels = self._discovered_labels_of.setdefault(hostname, {})
-        # Only read the raw autochecks here, do not compute the effective
-        # check parameters. The latter would involve ruleset matching which
-        # in turn would require already computed labels.
-        for autocheck_entry in self._get_autochecks(hostname):
-            hosts_labels[
-                get_service_description(
-                    hostname, autocheck_entry.check_plugin_name, autocheck_entry.item
-                )
-            ] = autocheck_entry.service_labels
+        return hosts_service_labels.get(service_desc, {})
 
-        if (labels := hosts_labels.get(service_desc)) is not None:
-            return labels
-        return {}
+    def _get_hosts_discovered_service_labels(
+        self,
+        host_name: HostName,
+        get_service_description: GetServiceDescription,
+    ) -> Mapping[ServiceName, Labels]:
+        # FIXME: we're completely messing up the cluster case here. Root cause of CMK-18804.
+        return {
+            get_service_description(
+                host_name, autocheck_entry.check_plugin_name, autocheck_entry.item
+            ): autocheck_entry.service_labels
+            for autocheck_entry in self._get_autochecks(host_name)
+        }

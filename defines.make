@@ -74,11 +74,6 @@ GCC_VERSION	       := ${GCC_VERSION_MAJOR}.${GCC_VERSION_MINOR}.${GCC_VERSION_PA
 # * update test_03_pip_interpreter_version
 # * update omd/Licenses.csv, too.
 # * you may need to regenerate the Pipfile.lock with "make --what-if Pipfile Pipfile.lock"
-# ATTENNTION! Due to security reasons Windows uses 3.11.7.
-# If distro updated to 3.11.7, please, find and replace: 
-# `PY_SUBVER          ?= 7` with 
-# `PY_SUBVER          ?= $(PYTHON_VERSION_PATCH)`
-# again
 PYTHON_VERSION  := 3.11.10
 
 # convenience stuff derived from PYTHON_VERSION

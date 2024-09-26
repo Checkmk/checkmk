@@ -8,7 +8,7 @@
 # Expected python.exe is python3 reasonably updated
 #
 # Usage:
-#  make 
+#  make
 
 include ../../../defines.make
 # commandline
@@ -72,7 +72,7 @@ $(PYTHON_TIMESTAMP): $(OMD_PYTHON_PACKAGE) ## deploying python sources
 	@if not exist "$(MSBUILD)" powershell Write-Host -foreground Red "MS VS 2022 must be installed" && exit 1
 	@if not exist $< powershell Write-Host -foreground Red "$< absent" && exit 1
 	@powershell Write-Host -foreground Green "Unpacking $< ..."
-	7z x -y -mmt4 -o$(PYTHON_SRC_DIR) $< 
+	7z x -y -mmt4 -o$(PYTHON_SRC_DIR) $<
 	7z x -y -o$(PYTHON_SRC_DIR) $(PYTHON_SRC_DIR)\$(OMD_PYTHON_NAME).tar && del /S $(PYTHON_SRC_DIR)\$(OMD_PYTHON_NAME).tar
 	@type nul >>$@ && powershell (ls $@).LastWriteTime = Get-Date   # windows touch
 	@powershell Write-Host -foreground Green "Done"
@@ -83,7 +83,7 @@ $(PYTHON_TIMESTAMP): $(OMD_PYTHON_PACKAGE) ## deploying python sources
 	@7z -? > nul
 	@if "%errorlevel%" NEQ "0" powershell Write-Host "7zip must be installed: use choco or windows_setup" -Foreground Red && exit /b 1
 	@powershell Write-Host "7zip is installed. This is good" -Foreground Green
-	
+
 unpack: 7zip $(PYTHON_TIMESTAMP) ## unpacking python sources
 	@powershell Write-Host "Target $@" -foreground white
 	@powershell Write-Host -foreground Green "cpython is ready to build"
@@ -120,8 +120,8 @@ venv: python_install $(PYTHON_PIPFILE_LOCK) ## venv building
 	exec_cmd.bat build_environment.cmd $(PY_VER) $(PY_SUBVER)
 	exec_cmd.bat clean_environment.cmd $(PY_VER) $(PY_SUBVER)
 	exec_cmd.bat patch_environment.cmd $(PY_VER) $(PY_SUBVER)
-	
-	
+
+
 $(PYTHON_MODULE): venv ## compressing venv
 	@powershell Write-Host "+Target $@" -foreground white
 	@powershell Write-Host "*CAB*" -foreground white
@@ -130,18 +130,18 @@ $(PYTHON_MODULE): venv ## compressing venv
 $(ARTEFACT_MODULE): $(PYTHON_MODULE) ## copy to artefacts
 	@powershell Write-Host "+Target $@" -foreground white
 	@if not exist $(ARTEFACTS_DIR) mkdir $(ARTEFACTS_DIR) 2> nul
-	@copy /Y $< $@ 
+	@copy /Y $< $@
 
 build: unpack $(ARTEFACT_MODULE) ## building all
 	@powershell Write-Host -foreground Green "Build finished, uninstalling python"
 	@echo NOT REQUIRED call exec_cmd.bat uninstall_python.cmd $(PY_VER) $(PY_SUBVER)
-	
+
 
 clean:
 	@powershell Write-Host -foreground Green "Cleaninn..."
 	@call exec_cmd.bat uninstall.cmd
 	@rmdir /s/q .\$(PYTHON_TMP_DIR)
-	@rmdir /s/q .\$(PYTHON_SRC_DIR) 
+	@rmdir /s/q .\$(PYTHON_SRC_DIR)
 
 python_344:
 	@powershell Write-Host "Building Legacy Python 3.4.4 ..." -foreground white

@@ -61,7 +61,7 @@ def download_version_dir(DOWNLOAD_SOURCE,
 
 def upload_version_dir(SOURCE_PATH, UPLOAD_DEST, PORT, EXCLUDE_PATTERN="") {
     println("""
-        ||== upload_version_dir ================================================================
+        ||== upload_version_dir ====================================================================
         || SOURCE_PATH      = |${SOURCE_PATH}|
         || UPLOAD_DEST      = |${UPLOAD_DEST}|
         || PORT             = |${PORT}|
@@ -102,6 +102,24 @@ def upload_via_rsync(archive_base, cmk_version, filename, upload_dest, upload_po
                 ${archive_base}/./${cmk_version}/${filename} \
                 ${archive_base}/./${cmk_version}/${filename}${hashfile_extension} \
                 ${upload_dest}
+        """);
+    }
+}
+
+def upload_files_to_nexus(SOURCE_PATTERN, UPLOAD_DEST) {
+    println("""
+        ||== upload_files_to_nexus() ================================================
+        || SOURCE_PATTERN      = |${SOURCE_PATTERN}|
+        || UPLOAD_DEST      = |${UPLOAD_DEST}|
+        ||======================================================================
+        """.stripMargin());
+
+    withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
+        sh("""
+            for i in ${SOURCE_PATTERN}; do
+                echo "Upload $i to Nexus";
+                curl -sSf -u "${NEXUS_USERNAME}:${NEXUS_PASSWORD}" --upload-file "${i}" "${UPLOAD_DEST}";
+            done
         """);
     }
 }

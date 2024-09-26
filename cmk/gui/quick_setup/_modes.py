@@ -258,14 +258,14 @@ class ModeEditConfigurationBundles(WatoMode):
     def action(self) -> ActionResult:
         check_csrf_token()
         if not transactions.check_transaction():
-            return redirect(self.mode_url(varname=self._name))
+            return redirect(self.mode_url(**{"mode": self.name(), self.VAR_NAME: self._name}))
 
-        action = request.get_ascii_input_mandatory(self.VAR_ACTION)
         bundle_id = BundleId(request.get_ascii_input_mandatory(self.VAR_BUNDLE_ID))
+        action = request.get_ascii_input_mandatory(self.VAR_ACTION)
         if action == "delete":
             delete_config_bundle(bundle_id)
 
-        return redirect(self.mode_url(varname=self._name))
+        return redirect(self.mode_url(**{"mode": self.name(), self.VAR_NAME: self._name}))
 
     def _special_agent_bundles_listing(
         self, group_name: str, bundles: Mapping[BundleId, BundleReferences]

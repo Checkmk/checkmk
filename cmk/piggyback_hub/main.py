@@ -8,12 +8,11 @@ import logging
 import os
 import signal
 import sys
-import time
 from dataclasses import dataclass
+from itertools import cycle
 from logging import getLogger
 from logging.handlers import WatchedFileHandler
 from pathlib import Path
-from types import FrameType
 
 from cmk.ccc.daemon import daemonize, pid_file_lock
 
@@ -21,9 +20,10 @@ from cmk.piggyback_hub.config import PiggybackHubConfig, save_config_on_message
 from cmk.piggyback_hub.payload import (
     PiggybackPayload,
     save_payload_on_message,
-    SendingPayloadThread,
+    SendingPayloadProcess,
 )
-from cmk.piggyback_hub.utils import ReceivingThread, SignalException
+
+from .utils import APP_NAME, ReceivingProcess
 
 VERBOSITY_MAP = {
     0: logging.INFO,
@@ -80,7 +80,7 @@ def _setup_logging(args: Arguments) -> logging.Logger:
         if args.foreground
         else WatchedFileHandler(Path(args.log_file))
     )
-    handler.setFormatter(logging.Formatter("%(asctime)s [%(levelno)s] [%(name)s] %(message)s"))
+    handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] [%(name)s] %(message)s"))
     logger.addHandler(handler)
 
     logger.setLevel(VERBOSITY_MAP.get(args.verbosity, logging.INFO))
@@ -88,33 +88,35 @@ def _setup_logging(args: Arguments) -> logging.Logger:
     return logger
 
 
-def signal_handler(_signum: int, _stack_frame: FrameType | None) -> None:
-    raise SignalException()
-
-
-def _register_signal_handler() -> None:
-    signal.signal(signal.SIGTERM, signal_handler)
-
-
-def run_piggyback_hub(logger: logging.Logger, omd_root: Path) -> None:
-    # TODO: remove this loop when rabbitmq available in site
-    for _ in range(1_000_000):
-        time.sleep(1_000)
-
-    receiving_thread = ReceivingThread(
-        logger, omd_root, PiggybackPayload, save_payload_on_message(logger, omd_root), "payload"
-    )
-    sending_thread = SendingPayloadThread(logger, omd_root)
-    receive_config_thread = ReceivingThread(
-        logger, omd_root, PiggybackHubConfig, save_config_on_message(logger, omd_root), "config"
+def run_piggyback_hub(logger: logging.Logger, omd_root: Path) -> int:
+    processes = (
+        ReceivingProcess(
+            logger, omd_root, PiggybackPayload, save_payload_on_message(logger, omd_root), "payload"
+        ),
+        SendingPayloadProcess(logger, omd_root),
+        ReceivingProcess(
+            logger, omd_root, PiggybackHubConfig, save_config_on_message(logger, omd_root), "config"
+        ),
     )
 
-    receiving_thread.start()
-    sending_thread.start()
-    receive_config_thread.start()
-    receiving_thread.join()
-    sending_thread.join()
-    receive_config_thread.join()
+    for p in processes:
+        p.start()
+
+    def terminate_all_processes() -> int:
+        logger.info("Stopping: %s", APP_NAME)
+        for p in processes:
+            p.terminate()
+        return 0
+
+    signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit(terminate_all_processes()))
+
+    # All processes should run forever. Die if either finishes.
+    for proc in cycle(processes):
+        proc.join(timeout=5)
+        if not proc.is_alive():
+            return terminate_all_processes()
+
+    raise RuntimeError("Unreachable code reached")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -124,15 +126,7 @@ def main(argv: list[str] | None = None) -> int:
     args = _parse_arguments(argv)
     logger = _setup_logging(args)
 
-    logger.info("Starting Piggyback Hub daemon.")
-
-    try:
-        _register_signal_handler()
-    except Exception as e:
-        if args.debug:
-            raise
-        logger.exception("Unhandled exception: %s.", e)
-        return 1
+    logger.info("Starting: %s", APP_NAME)
 
     if not args.foreground:
         daemonize()
@@ -140,14 +134,9 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         with pid_file_lock(Path(args.pid_file)):
-            run_piggyback_hub(logger, Path(args.omd_root))
-    except SignalException:
-        logger.info("Stopping Piggyback Hub daemon.")
-    except Exception as e:
+            return run_piggyback_hub(logger, Path(args.omd_root))
+    except Exception as exc:
         if args.debug:
             raise
-        logger.exception("Unhandled exception: %s.", e)
+        logger.exception("Exception: %s: %s", APP_NAME, exc)
         return 1
-
-    logger.info("Shutting down.")
-    return 0

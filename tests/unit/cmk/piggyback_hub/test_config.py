@@ -6,6 +6,7 @@
 import json
 import logging
 from pathlib import Path
+from threading import Event
 from unittest.mock import Mock
 
 from cmk.utils.hostaddress import HostName
@@ -19,12 +20,14 @@ def test_save_config_on_message(tmp_path: Path) -> None:
     input_payload = PiggybackHubConfig(
         targets=[Target(host_name=HostName("test_host"), site_id="test_site")]
     )
-    on_message = save_config_on_message(test_logger, tmp_path)
+    on_message = save_config_on_message(test_logger, tmp_path, (reload_config := Event()))
 
     config_dir = tmp_path / "etc/check_mk"
     config_dir.mkdir(parents=True)
 
+    assert not reload_config.is_set()
     on_message(Mock(), DeliveryTag(0), input_payload)
+    assert reload_config.is_set()
 
     expected_config = PiggybackHubConfig(
         targets=[Target(host_name=HostName("test_host"), site_id="test_site")]

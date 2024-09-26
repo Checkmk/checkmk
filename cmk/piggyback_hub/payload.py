@@ -9,6 +9,7 @@ import signal
 import time
 from collections.abc import Sequence
 from pathlib import Path
+from threading import Event
 from typing import Callable
 
 from pydantic import BaseModel
@@ -116,11 +117,12 @@ def _send_message(
 
 
 class SendingPayloadProcess(multiprocessing.Process):
-    def __init__(self, logger: logging.Logger, omd_root: Path):
+    def __init__(self, logger: logging.Logger, omd_root: Path, reload_config: Event) -> None:
         super().__init__()
         self.logger = logger
         self.omd_root = omd_root
         self.config_path = create_paths(omd_root).config
+        self.reload_config = reload_config
         self.task_name = "publishing on queue 'payload'"
 
     def run(self):
@@ -129,14 +131,21 @@ class SendingPayloadProcess(multiprocessing.Process):
             signal.SIGTERM,
             make_log_and_exit(self.logger.debug, f"Stopping: {self.task_name}"),
         )
+
+        self.logger.debug("Loading configuration")
+        config = load_config(self.config_path)
+
         try:
             with Connection(APP_NAME, self.omd_root) as conn:
                 channel = conn.channel(PiggybackPayload)
 
                 while True:
-                    for target in _filter_piggyback_hub_targets(
-                        load_config(self.config_path), self.omd_root.name
-                    ):
+                    if self.reload_config.is_set():
+                        self.logger.debug("Reloading configuration")
+                        config = load_config(self.config_path)
+                        self.reload_config.clear()
+
+                    for target in _filter_piggyback_hub_targets(config, self.omd_root.name):
                         for piggyback_message in _get_piggyback_raw_data_to_send(
                             target.host_name, self.omd_root
                         ):

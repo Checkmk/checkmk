@@ -10,6 +10,7 @@ import tempfile
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from threading import Event
 from typing import Callable
 
 from pydantic import BaseModel
@@ -34,7 +35,7 @@ class PiggybackHubConfig(BaseModel):
 
 
 def save_config_on_message(
-    logger: logging.Logger, omd_root: Path
+    logger: logging.Logger, omd_root: Path, reload_config: Event
 ) -> Callable[[Channel[PiggybackHubConfig], DeliveryTag, PiggybackHubConfig], None]:
     def _on_message(
         channel: Channel[PiggybackHubConfig],
@@ -52,6 +53,7 @@ def save_config_on_message(
             tmp.write(json.dumps(received.model_dump_json()))
 
         os.rename(tmp_path, str(config_path))
+        reload_config.set()
 
         channel.acknowledge(delivery_tag)
 

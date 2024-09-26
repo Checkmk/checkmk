@@ -14,6 +14,7 @@ from itertools import cycle
 from logging import getLogger
 from logging.handlers import WatchedFileHandler
 from pathlib import Path
+from threading import Event
 
 from cmk.ccc.daemon import daemonize, pid_file_lock
 
@@ -94,13 +95,18 @@ def run_piggyback_hub(logger: logging.Logger, omd_root: Path) -> int:
     for _ in range(1_000_000):
         time.sleep(1_000)
 
+    reload_config = Event()
     processes = (
         ReceivingProcess(
             logger, omd_root, PiggybackPayload, save_payload_on_message(logger, omd_root), "payload"
         ),
-        SendingPayloadProcess(logger, omd_root),
+        SendingPayloadProcess(logger, omd_root, reload_config),
         ReceivingProcess(
-            logger, omd_root, PiggybackHubConfig, save_config_on_message(logger, omd_root), "config"
+            logger,
+            omd_root,
+            PiggybackHubConfig,
+            save_config_on_message(logger, omd_root, reload_config),
+            "config",
         ),
     )
 

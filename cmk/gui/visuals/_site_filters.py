@@ -30,6 +30,7 @@ def register(
     filter_registry: FilterRegistry,
     autocompleter_registry: AutocompleterRegistry,
     site_choices: Callable[[], list[tuple[str, str]]],
+    site_filter_heading_info: Callable[[FilterHTTPVariables], str | None],
 ) -> None:
     filter_registry.register(
         SiteFilter(
@@ -40,6 +41,7 @@ def register(
                 request_vars=["site"],
             ),
             description=_l("Optional selection of a site"),
+            heading_info=site_filter_heading_info,
         )
     )
 
@@ -50,10 +52,11 @@ def register(
             query_filter=query_filters.Query(ident="site", request_vars=["site"]),
             description=_l("Selection of site is enforced, use this filter for joining"),
             is_show_more=True,
+            heading_info=site_filter_heading_info,
         )
     )
 
-    filter_registry.register(MultipleSitesFilter(site_choices=site_choices))
+    filter_registry.register(MultipleSitesFilter(site_choices, site_filter_heading_info))
 
     autocompleter_registry.register_autocompleter(
         "sites", partial(sites_autocompleter, sites_options=site_choices)
@@ -61,8 +64,6 @@ def register(
 
 
 class SiteFilter(Filter):
-    heading_hook: Callable[[FilterHTTPVariables], str | None]
-
     def __init__(
         self,
         *,
@@ -71,19 +72,20 @@ class SiteFilter(Filter):
         query_filter: query_filters.Query,
         description: None | str | LazyString = None,
         is_show_more: bool = False,
+        heading_info: Callable[[FilterHTTPVariables], str | None],
     ) -> None:
-        self.query_filter = query_filter
-
         super().__init__(
-            ident=self.query_filter.ident,
+            ident=query_filter.ident,
             title=title,
             sort_index=sort_index,
             info="host",
-            htmlvars=self.query_filter.request_vars,
+            htmlvars=query_filter.request_vars,
             link_columns=[],
             description=description,
             is_show_more=is_show_more,
         )
+        self.query_filter = query_filter
+        self._heading_info = heading_info
 
     def display(self, value: FilterHTTPVariables) -> None:
         current_value = value.get(self.query_filter.request_vars[0], "")
@@ -104,13 +106,13 @@ class SiteFilter(Filter):
         )
 
     def heading_info(self, value: FilterHTTPVariables) -> str | None:
-        return SiteFilter.heading_hook(value)
+        return self._heading_info(value)
 
     def request_vars_from_row(self, row: Row) -> dict[str, str]:
         return {"site": row["site"]}
 
 
-def cre_site_filter_heading_info(value: FilterHTTPVariables) -> str | None:
+def default_site_filter_heading_info(value: FilterHTTPVariables) -> str | None:
     current_value = value.get("site")
     return (
         get_site_config(active_config, livestatus.SiteId(current_value))["alias"]
@@ -120,12 +122,17 @@ def cre_site_filter_heading_info(value: FilterHTTPVariables) -> str | None:
 
 
 class MultipleSitesFilter(SiteFilter):
-    def __init__(self, site_choices: Callable[[], list[tuple[str, str]]]) -> None:
+    def __init__(
+        self,
+        site_choices: Callable[[], list[tuple[str, str]]],
+        heading_info: Callable[[FilterHTTPVariables], str | None],
+    ) -> None:
         super().__init__(
             title=_l("Multiple sites"),
             sort_index=502,
             query_filter=query_filters.Query(ident="sites", request_vars=["sites"]),
             description=_l("Associative selection of multiple sites"),
+            heading_info=heading_info,
         )
         self._site_choices = site_choices
 

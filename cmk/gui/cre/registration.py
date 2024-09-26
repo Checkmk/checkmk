@@ -15,6 +15,7 @@ from cmk.gui.painter.v0.base import painter_registry
 from cmk.gui.sites import site_choices
 from cmk.gui.valuespec import autocompleter_registry
 from cmk.gui.views import graph
+from cmk.gui.visuals import default_site_filter_heading_info
 from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.wato import notification_parameter_registry, NotificationParameterMail
@@ -43,6 +44,7 @@ def register() -> None:
         filter_registry,
         autocompleter_registry,
         site_choices,
+        default_site_filter_heading_info,
     )
     notification_parameter_registry.register(NotificationParameterMail)
     register_pages()

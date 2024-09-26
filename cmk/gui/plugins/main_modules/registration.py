@@ -39,7 +39,6 @@ from cmk.gui import (
     sites,
     user_message,
     valuespec,
-    visuals,
     weblib,
     werks,
 )
@@ -114,7 +113,6 @@ from cmk.gui.watolib.timeperiods import timeperiod_usage_finder_registry
 def register_sites_options() -> None:
     if edition(paths.omd_root) is not Edition.CME:
         hooks.register_builtin("mkeventd-activate-changes", save_active_config)
-    visuals.SiteFilter.heading_hook = visuals.cre_site_filter_heading_info
 
 
 def register() -> None:

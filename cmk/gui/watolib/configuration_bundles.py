@@ -56,19 +56,24 @@ class DomainDefinition:
 
 
 ALL_ENTITIES: set[Entity] = set(get_args(Entity))
-BUNDLE_DOMAINS: Mapping[RuleGroupType, set[DomainDefinition]] = {
-    RuleGroupType.SPECIAL_AGENTS: {
+
+
+def bundle_domains() -> Mapping[RuleGroupType, set[DomainDefinition]]:
+    domains: set[DomainDefinition] = {
         DomainDefinition(entity="host", permission="hosts"),
         DomainDefinition(entity="rule", permission="rulesets"),
         DomainDefinition(entity="password", permission="passwords"),
-        DomainDefinition(entity="dcd", permission="dcd_connections"),
     }
-}
+
+    if DCDConnectionHook.domain_definition is not None:
+        domains.update({DCDConnectionHook.domain_definition})
+
+    return {RuleGroupType.SPECIAL_AGENTS: domains}
 
 
 def _get_affected_entities(bundle_group: str) -> set[Entity]:
     rule_group_type = RuleGroupType(bundle_group.split(":", maxsplit=1)[0])
-    bundle_domain = BUNDLE_DOMAINS.get(rule_group_type, None)
+    bundle_domain = bundle_domains().get(rule_group_type, None)
     return set(domain.entity for domain in bundle_domain) if bundle_domain else ALL_ENTITIES
 
 
@@ -111,6 +116,7 @@ class DCDConnectionHook:
     load_dcd_connections: Callable[[], DCDConnectionDict] = lambda: {}
     create_dcd_connection: Callable[[str, DCDConnectionSpec], None] = _dcd_unsupported
     delete_dcd_connection: Callable[[str], None] = _dcd_unsupported
+    domain_definition: DomainDefinition | None = None
 
 
 @dataclass

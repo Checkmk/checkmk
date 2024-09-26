@@ -42,7 +42,7 @@ from cmk.gui.wato.pages.hosts import ModeEditHost
 from cmk.gui.wato.pages.password_store import ModeEditPassword
 from cmk.gui.wato.pages.rulesets import ModeEditRule
 from cmk.gui.watolib.configuration_bundles import (
-    BUNDLE_DOMAINS,
+    bundle_domains,
     BundleId,
     BundleReferences,
     ConfigBundle,
@@ -109,7 +109,7 @@ class ModeQuickSetupSpecialAgent(WatoMode):
 
     def ensure_permissions(self) -> None:
         self._ensure_static_permissions()
-        for domain_definition in BUNDLE_DOMAINS[RuleGroupType.SPECIAL_AGENTS]:
+        for domain_definition in bundle_domains()[RuleGroupType.SPECIAL_AGENTS]:
             pname = domain_definition.permission
             user.need_permission(pname if "." in pname else ("wato." + pname))
 
@@ -156,7 +156,7 @@ class ModeEditConfigurationBundles(WatoMode):
 
     def ensure_permissions(self) -> None:
         self._ensure_static_permissions()
-        for domain_definition in BUNDLE_DOMAINS[self._bundle_group_type]:
+        for domain_definition in bundle_domains()[self._bundle_group_type]:
             pname = domain_definition.permission
             user.need_permission(pname if "." in pname else ("wato." + pname))
 
@@ -166,7 +166,7 @@ class ModeEditConfigurationBundles(WatoMode):
             self._bundle_group_type = RuleGroupType(self._name.split(":")[0])
         except ValueError:
             raise MKUserError(None, _("Invalid configuration bundle group type."))
-        if self._bundle_group_type not in BUNDLE_DOMAINS:
+        if self._bundle_group_type not in bundle_domains():
             raise MKUserError(
                 self.VAR_NAME,
                 _("No edit configuration bundle implemented for bundle group type '%s'.")
@@ -419,7 +419,7 @@ class ModeConfigurationBundle(WatoMode):
 
     def ensure_permissions(self) -> None:
         self._ensure_static_permissions()
-        for domain_definition in BUNDLE_DOMAINS.get(self._rule_group_type, []):
+        for domain_definition in bundle_domains().get(self._rule_group_type, []):
             pname = domain_definition.permission
             user.need_permission(pname if "." in pname else ("wato." + pname))
 

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import abc
 import traceback
-from pathlib import Path
 
 from dateutil.relativedelta import relativedelta
 
@@ -35,18 +34,16 @@ from cmk.messaging import (
     multisite_ca_key_file,
     multisite_cacert_file,
     multisite_cert_file,
-    multisite_key_file,
     site_cert_file,
     site_key_file,
 )
 
 
 def create_broker_certs(
-    cert_path: Path, key_path: Path, site_id: SiteId, ca: CertificateWithPrivateKey
+    site_id: SiteId, ca: CertificateWithPrivateKey
 ) -> CertificateWithPrivateKey:
     """
     Create a new certificate for the broker of a site.
-    Just store the certificate and not the private key.
     """
 
     bundle = ca.issue_new_certificate(
@@ -55,9 +52,6 @@ def create_broker_certs(
         expiry=relativedelta(years=2),
         key_size=4096,
     )
-
-    save_single_cert(cert_path, bundle.certificate)
-
     return bundle
 
 
@@ -88,12 +82,8 @@ def load_or_create_broker_central_certs() -> PersistedCertificateWithPrivateKey:
     PersistedCertificateWithPrivateKey.persist(ca, cert_path, key_path)
 
     # saves certs to etc/rabbitmq/ssl/multisite
-    bundle = create_broker_certs(
-        multisite_cert_file(paths.omd_root, omd_site()),
-        multisite_key_file(paths.omd_root, omd_site()),
-        omd_site(),
-        ca,
-    )
+    bundle = create_broker_certs(omd_site(), ca)
+    save_single_cert(cert_path, bundle.certificate)
 
     # saves certs to etc/rabbitmq/ssl/
     PersistedCertificateWithPrivateKey.persist(
@@ -144,6 +134,10 @@ class CREBrokerCertificateSync(BrokerCertificateSync):
     def create_broker_certificates(self, site_id: SiteId, settings: SiteConfiguration) -> None:
         remote_broker_certs = create_remote_broker_certs(self.local_broker_ca, site_id, settings)
         sync_remote_broker_certs(settings, remote_broker_certs)
+        save_single_cert(
+            multisite_cert_file(paths.omd_root, site_id),
+            Certificate.load_pem(CertificatePEM(remote_broker_certs.cert)),
+        )
 
     def dump_provider_broker_certificates(self) -> None:
         pass
@@ -156,12 +150,7 @@ def create_remote_broker_certs(
     Create a new certificate with private key for the broker of a remote site.
     """
 
-    cert_key = create_broker_certs(
-        multisite_cert_file(paths.omd_root, site_id),
-        multisite_key_file(paths.omd_root, site_id),
-        site_id,
-        central_site_ca,
-    )
+    cert_key = create_broker_certs(site_id, central_site_ca)
     return BrokerCertificates(
         key=cert_key[1].dump_pem(None).bytes,
         cert=cert_key[0].dump_pem().bytes,

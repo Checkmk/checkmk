@@ -368,7 +368,7 @@ def main() {
                 }
             }
 
-            if (EDITION.toLowerCase() == "saas" && is_official_release(cmk_version_rc_aware)) {
+            if (EDITION.toLowerCase() == "saas" && versioning.is_official_release(cmk_version_rc_aware)) {
                 // check-mk-saas-2.3.0p17.cse.tar.gz + .hash
                 // check-mk-saas-2.3.0p17_0.jammy_amd64.deb + .hash
                 artifacts_helper.upload_files_to_nexus(

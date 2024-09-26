@@ -117,8 +117,8 @@ def upload_files_to_nexus(SOURCE_PATTERN, UPLOAD_DEST) {
     withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
         sh("""
             for i in ${SOURCE_PATTERN}; do
-                echo "Upload $i to Nexus";
-                curl -sSf -u "${NEXUS_USERNAME}:${NEXUS_PASSWORD}" --upload-file "${i}" "${UPLOAD_DEST}";
+                echo "Upload \${i} to Nexus";
+                curl -sSf -u "${NEXUS_USERNAME}:${NEXUS_PASSWORD}" --upload-file "\${i}" "${UPLOAD_DEST}";
             done
         """);
     }

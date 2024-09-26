@@ -20,6 +20,7 @@ repos:
       rev: 'v0.4.4'
       hooks:
         - id: ruff
+        - id: ruff-format
     - repo: https://github.com/pre-commit/pre-commit-hooks
       rev: v4.6.0
       hooks:
@@ -57,16 +58,6 @@ repos:
             name: Remove stale imports
             language: script
             entry: scripts/run-autoflake
-            types: [file, python]
-          - id: format
-            name: Run format
-            entry: scripts/run-format
-            language: script
-            types: [file, python]
-          - id: sort
-            name: Run sort imports
-            entry: scripts/run-sort
-            language: script
             types: [file, python]
           - id: bandit
             name: Run bandit

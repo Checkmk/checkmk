@@ -86,7 +86,6 @@ def test_world_accessible_files_parents(site: Site) -> None:
             assert has_permission(parent, Mode.WORLD_EXECUTE)
 
 
-@pytest.mark.skip(reason="CMK-19330")
 def test_version_file_permissions(site: Site) -> None:
     """Test that there are no writeable files in the version dir.
 

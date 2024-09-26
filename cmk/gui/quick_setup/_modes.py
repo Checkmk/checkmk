@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Collection, Iterator, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from typing import Protocol
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -11,7 +11,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.utils.rulesets.definition import RuleGroup, RuleGroupType
 
 from cmk.gui import forms
-from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -54,7 +54,11 @@ from cmk.gui.watolib.configuration_bundles import (
     valid_special_agent_bundle,
 )
 from cmk.gui.watolib.hosts_and_folders import folder_from_request, make_action_link
-from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
+from cmk.gui.watolib.main_menu import (
+    ABCMainModule,
+    MainModuleRegistry,
+    MainModuleTopic,
+)
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.rulespecs import rulespec_registry
 
@@ -142,6 +146,13 @@ class ModeEditConfigurationBundles(WatoMode):
     @staticmethod
     def static_permissions() -> Collection[PermissionName]:
         return []
+
+    def _topic_breadcrumb_item(self) -> Iterable[BreadcrumbItem]:
+        """Return the BreadcrumbItem for the topic of this mode"""
+        yield BreadcrumbItem(
+            title=MainModuleTopicQuickSetup.title,
+            url=None,
+        )
 
     def ensure_permissions(self) -> None:
         self._ensure_static_permissions()
@@ -397,6 +408,10 @@ class ModeConfigurationBundle(WatoMode):
     @classmethod
     def name(cls) -> str:
         return "edit_configuration_bundle"
+
+    @classmethod
+    def parent_mode(cls) -> None | type["WatoMode"]:
+        return ModeEditConfigurationBundles
 
     @staticmethod
     def static_permissions() -> Collection[PermissionName]:

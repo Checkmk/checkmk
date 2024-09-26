@@ -13,7 +13,7 @@
 include ../../../defines.make
 # commandline
 PY_VER             ?= $(PYTHON_MAJOR_DOT_MINOR)
-PY_SUBVER          ?= $(PYTHON_VERSION_PATCH)
+PY_SUBVER          ?= 10
 #MSBUILD            ?= C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin\MSBuild.exe
 MSBUILD            ?= C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\msbuild.exe
 

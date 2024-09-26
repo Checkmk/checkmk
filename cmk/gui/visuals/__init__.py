@@ -5,7 +5,6 @@
 
 from collections.abc import Callable
 
-import cmk.ccc.version as cmk_version
 from cmk.ccc import store
 
 from cmk.utils import paths
@@ -18,10 +17,10 @@ from cmk.gui.valuespec import AutocompleterRegistry
 from . import _filters, _site_filters, info
 from ._add_to_visual import (
     add_to_dashboard_choices_autocompleter,
-    add_to_report_choices_autocompleter,
     ajax_add_visual,
     ajax_popup_add,
 )
+from ._add_to_visual import get_visual_choices as get_visual_choices
 from ._add_to_visual import page_menu_dropdown_add_to_visual as page_menu_dropdown_add_to_visual
 from ._add_to_visual import page_menu_topic_add_to as page_menu_topic_add_to
 from ._add_to_visual import set_page_context as set_page_context
@@ -119,10 +118,6 @@ def register(
     autocompleter_registry.register_autocompleter(
         "add_to_dashboard_choices", add_to_dashboard_choices_autocompleter
     )
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
-        autocompleter_registry.register_autocompleter(
-            "add_to_report_choices", add_to_report_choices_autocompleter
-        )
 
     hooks.register_builtin("snapshot-pushed", invalidate_all_caches)
     hooks.register_builtin(

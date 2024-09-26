@@ -212,20 +212,13 @@ def page_menu_topic_add_to(visual_type: str, name: str, source_type: str) -> lis
 
 
 def add_to_dashboard_choices_autocompleter(value: str, params: dict) -> Choices:
-    return _get_visual_choices(
+    return get_visual_choices(
         visual_type="dashboards",
         value=value,
     )
 
 
-def add_to_report_choices_autocompleter(value: str, params: dict) -> Choices:
-    return _get_visual_choices(
-        visual_type="reports",
-        value=value,
-    )
-
-
-def _get_visual_choices(visual_type: str, value: str) -> Choices:
+def get_visual_choices(visual_type: str, value: str) -> Choices:
     match_pattern = re.compile(value, re.IGNORECASE)
     matching_visuals = []
     for name, content in sorted(visual_type_registry[f"{visual_type}"]().permitted_visuals.items()):

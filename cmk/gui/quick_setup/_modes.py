@@ -330,7 +330,7 @@ class ModeEditConfigurationBundles(WatoMode):
         html.empty_icon()
 
         table.cell(_("Actions"), css=["buttons rulebuttons"])
-        edit_url = ""  # TODO: introduce edit button
+        edit_url = mode_url(ModeConfigurationBundle.name(), bundle_id=bundle_id)
         html.icon_button(url=edit_url, title=_("Edit this configuration"), icon="edit")
 
         html.icon_button(

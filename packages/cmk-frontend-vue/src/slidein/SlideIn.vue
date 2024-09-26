@@ -14,7 +14,7 @@ import {
   DialogTitle,
   DialogTrigger
 } from 'radix-vue'
-import { Label } from '@/quick-setup/ui/label'
+import { Label } from '@/quick-setup/components/ui/label'
 import type { SlideInProps } from '@/slidein/slidein_types'
 import Button from '@/quick-setup/components/IconButton.vue'
 import FormCatalog from '@/form/components/forms/FormCatalog.vue'

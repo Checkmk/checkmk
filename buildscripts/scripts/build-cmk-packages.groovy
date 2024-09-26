@@ -392,6 +392,15 @@ def main() {
             if (deploy_to_website) {
                 artifacts_helper.deploy_to_website(cmk_version_rc_aware);
             }
+
+            if (EDITION.toLowerCase() == "saas" && is_official_release(cmk_version_rc_aware)) {
+                // check-mk-saas-2.3.0p17.cse.tar.gz + .hash
+                // check-mk-saas-2.3.0p17_0.jammy_amd64.deb + .hash
+                artifacts_helper.upload_files_to_nexus(
+                    "${WORKSPACE}/versions/${cmk_version_rc_aware}/check-mk-saas-${cmk_version}*",
+                    "${ARTIFACT_STORAGE}/repository/saas-patch-releases/",
+                );
+            }
         }
     }
 }

@@ -247,4 +247,12 @@ def strip_rc_number_from_version(VERSION) {
     return VERSION.split("-rc")[0];
 }
 
+def is_official_release(version) {
+    if (strip_rc_number_from_version(version) ==~ /((\d+.\d+.\d+)(([pib])(\d+))?)/) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 return this;

@@ -17,6 +17,7 @@ defineProps<QuickSetupSaveStageProps>()
       :number-of-stages="numberOfStages"
       :loading="loading"
       :errors="errors"
+      :mode="mode"
       :buttons="buttons"
       :content="content || null"
     />

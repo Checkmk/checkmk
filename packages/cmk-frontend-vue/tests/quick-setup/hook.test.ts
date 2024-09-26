@@ -5,7 +5,7 @@
  */
 import useWizard from '@/quick-setup/components/quick-setup/useWizard'
 
-test('Quick Setup hook initialization', async () => {
+test('Wizard hook initialization', async () => {
   let quickSetup = useWizard(3, 'guided')
 
   expect(quickSetup.stages.value).toBe(3)
@@ -18,7 +18,7 @@ test('Quick Setup hook initialization', async () => {
   expect(quickSetup.mode.value).toBe('overview')
 })
 
-test('Quick Setup hook switch display mode', async () => {
+test('Wizard hook switch display mode', async () => {
   const quickSetup = useWizard(3, 'guided')
   expect(quickSetup.mode.value).toBe('guided')
 
@@ -35,7 +35,7 @@ test('Quick Setup hook switch display mode', async () => {
   expect(quickSetup.mode.value).toBe('overview')
 })
 
-test('Quick Setup navigation', async () => {
+test('Wizard navigation', async () => {
   const quickSetup = useWizard(3, 'guided')
 
   expect(quickSetup.stage.value).toBe(0)

@@ -17,6 +17,7 @@ const props = defineProps<QuickSetupStageProps>()
 
 const isSelectedStage = computed(() => props.index == props.currentStage)
 const isCompleted = computed(() => props.index < props.currentStage)
+const isOpen = computed(() => isSelectedStage.value || props.mode === 'overview')
 </script>
 
 <template>
@@ -35,12 +36,13 @@ const isCompleted = computed(() => props.index < props.currentStage)
         <component :is="recapContent" />
       </ErrorBoundary>
 
-      <Collapsible :open="isSelectedStage">
+      <Collapsible :open="isOpen">
         <CollapsibleContent>
           <QuickSetupStageContent
             :index="index"
             :number-of-stages="numberOfStages"
             :loading="loading"
+            :mode="mode"
             :errors="errors"
             :buttons="buttons"
             :content="content || null"

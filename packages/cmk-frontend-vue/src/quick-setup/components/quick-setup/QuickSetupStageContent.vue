@@ -23,20 +23,22 @@ const isLast = computed(() => props.index == props.numberOfStages - 1)
       <p v-for="error in errors" :key="error">{{ error }}</p>
     </AlertBox>
 
-    <div v-if="!loading" class="qs-stage-content__action">
-      <Button
-        v-for="button in buttons"
-        :key="button.label"
-        :label="button.label"
-        :variant="button.variant"
-        @click="button.action"
-      />
-    </div>
-    <div v-else class="qs-stage-content__loading">
-      <LoadingIcon size="lg" />
-      <!-- TODO: move these texts to the backend to make them translatable (CMK-19020) -->
-      <span v-if="isLast">This process may take several minutes, please wait...</span>
-      <span v-else>Please wait...</span>
+    <div v-if="mode === 'guided'">
+      <div v-if="!loading" class="qs-stage__action">
+        <Button
+          v-for="button in buttons"
+          :key="button.label"
+          :label="button.label"
+          :variant="button.variant"
+          @click="button.action"
+        />
+      </div>
+      <div v-else class="qs-stage__loading">
+        <LoadingIcon size="lg" />
+        <!-- TODO: move these texts to the backend to make them translatable (CMK-19020) -->
+        <span v-if="isLast">This process may take several minutes, please wait...</span>
+        <span v-else>Please wait...</span>
+      </div>
     </div>
   </div>
 </template>

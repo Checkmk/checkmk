@@ -10,7 +10,10 @@ import QuickSetupStage from './QuickSetupStage.vue'
 import QuickSetupSaveStage from './QuickSetupSaveStage.vue'
 import type { QuickSetupProps } from './quick_setup_types'
 
-const props = defineProps<QuickSetupProps>()
+const props = withDefaults(defineProps<QuickSetupProps>(), {
+  mode: 'guided'
+})
+
 const numberOfStages = computed(() => props.regularStages.length)
 const isSaveStage = computed(() => props.currentStage === numberOfStages.value)
 </script>
@@ -23,6 +26,7 @@ const isSaveStage = computed(() => props.currentStage === numberOfStages.value)
       :index="index"
       :current-stage="currentStage"
       :number-of-stages="numberOfStages"
+      :mode="props.mode"
       :loading="loading"
       :title="stg.title"
       :sub_title="stg.sub_title || null"
@@ -37,6 +41,7 @@ const isSaveStage = computed(() => props.currentStage === numberOfStages.value)
     :index="numberOfStages"
     :current-stage="currentStage"
     :number-of-stages="numberOfStages"
+    :mode="props.mode"
     :loading="loading"
     :content="saveStage.content || null"
     :errors="saveStage.errors || []"

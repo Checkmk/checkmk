@@ -5,6 +5,7 @@
  */
 import type { VNode } from 'vue'
 import { type ButtonVariants } from '@/quick-setup/components/IconButton.vue'
+import type { WizardMode } from './useWizard'
 
 export interface QuickSetupProps {
   /** @property {boolean} loading - when true, it hides the current stage's buttons */
@@ -18,6 +19,9 @@ export interface QuickSetupProps {
 
   /** @property {QuickSetupSaveStageSpec} - This is the last stage, displayed without title, subtitle, or stage number */
   saveStage?: QuickSetupSaveStageSpec | null
+
+  /** @property {WizardMode} mode - Sets the quick setup in overview or guided mode */
+  mode?: WizardMode
 }
 
 /**
@@ -58,6 +62,9 @@ interface QuickSetupSaveAndStageContentProps extends QuickSetupSaveStageSpec {
 
   /** @property {bolean} loading - When true, the buttons of the stage are hidden */
   loading: boolean
+
+  /** @property {WizardMode} mode - Sets the quick setup in overview or guided mode */
+  mode: WizardMode
 }
 
 export interface QuickSetupSaveStageProps extends QuickSetupSaveAndStageContentProps {
@@ -84,6 +91,9 @@ export interface StageButtonSpec {
 export interface QuickSetupStageContent extends QuickSetupSaveAndStageContentProps {
   /** @property {Vnode | null} content - Element to be rendered as stage's content */
   content: VnodeOrNull
+
+  /** @property {WizardMode} mode - Sets the quick setup in overview or guided mode */
+  mode: WizardMode
 }
 
 export type VnodeOrNull = Readonly<VNode> | null

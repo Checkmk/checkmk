@@ -58,7 +58,7 @@ This procedure may quite annoying, you have to check next points:
 
    Usually it is conftest.py and Makefile.
 
-6. Check build_the_module.cmd for 3.9, 3.4 and et cetera
+6. Check build_the_module.cmd for 3.11, 3.4 and et cetera
 7. Check the Windows node builds artifacts succesfully.
 
 ### PROCESS
@@ -66,7 +66,7 @@ This procedure may quite annoying, you have to check next points:
 #### Execution local
 
 ##### Building
-make build PY_VER=3.9 PY_SUBVER=10
+make build PY_VER=3.11 PY_SUBVER=10
 make python_344 PY_VER=3.4 PY_SUBVER=4
 
 ##### Testing
@@ -81,7 +81,7 @@ build_the_module cached
 
 In a turn the script makes two calls:
 build_the_cached artefact_dir credentials url 3.4 4
-build_the_cached artefact_dir credentials url 3.9 10
+build_the_cached artefact_dir credentials url 3.11 10
 
 #### Caching
 
@@ -133,8 +133,8 @@ This can be difficult to obtain, you have to ask a person having Visual Studio P
 |
 |-- tmp/
 |    |
-|    |-- 3.9/
-|    |      |   python-3.9.cab  * resulting module file
+|    |-- 3.11/
+|    |      |   python-3.11.cab  * resulting module file
 |    |      |
 |    |      |-- to_save/		* to produce module *
 |    |      |
@@ -169,11 +169,11 @@ This can be difficult to obtain, you have to ask a person having Visual Studio P
 |
 |-- python/
      |
-     |-- 3.9/
+     |-- 3.11/
      |       |
-     |       |-- python-3.9.timestamp
+     |       |-- python-3.11.timestamp
      |       |
-     |       +-- python-3.9/
+     |       +-- python-3.11/
      |
      |-- 3.4/
              |

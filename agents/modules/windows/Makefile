@@ -13,7 +13,7 @@
 include ../../../defines.make
 # commandline
 PY_VER             ?= $(PYTHON_MAJOR_DOT_MINOR)
-PY_SUBVER          ?= 8
+PY_SUBVER          ?= 10
 #MSBUILD            ?= C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin\MSBuild.exe
 MSBUILD            ?= C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\msbuild.exe
 
@@ -40,7 +40,7 @@ PYTHON_MODULE_NAME_344 := python-3.4.cab
 
 # files
 PYTHON_TIMESTAMP   := $(PYTHON_SRC_DIR)\$(OMD_PYTHON_NAME).timestamp
-OMD_PYTHON_PACKAGE := $(OMD_PACKAGES_DIR)\$(OMD_PYTHON_NAME).tar.xz
+OMD_PYTHON_PACKAGE := $(OMD_PACKAGES_DIR)\$(OMD_PYTHON_NAME).tgz
 
 PYTHON_INSTALLER   := $(PYTHON_TMP_DIR)\out\win32\python-$(PY_VER).$(PY_SUBVER).exe
 SRC_PIPFILE        := $(SRC_PIPFILE_DIR)\Pipfile

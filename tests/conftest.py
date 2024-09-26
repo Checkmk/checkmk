@@ -253,16 +253,18 @@ def _fake_version_and_paths() -> None:
     monkeypatch = MonkeyPatch()
     tmp_dir = tempfile.mkdtemp(prefix="pytest_cmk_")
 
-    if is_managed_repo():
-        edition_short = "cme"
-    elif is_cloud_repo():
-        edition_short = "cce"
-    elif is_saas_repo():
-        edition_short = "cse"
-    elif is_enterprise_repo():
-        edition_short = "cee"
-    else:
-        edition_short = "cre"
+    def guess_from_repo() -> str:
+        if is_managed_repo():
+            return "cme"
+        if is_cloud_repo():
+            return "cce"
+        if is_saas_repo():
+            return "cse"
+        if is_enterprise_repo():
+            return "cee"
+        return "cre"
+
+    edition_short = os.getenv("EDITION") or guess_from_repo()
 
     unpatched_paths: Final = {
         # FIXME :-(

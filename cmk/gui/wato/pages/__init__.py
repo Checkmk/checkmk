@@ -11,6 +11,7 @@ from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.pages import PageRegistry
 from cmk.gui.watolib.automation_commands import AutomationCommandRegistry
 from cmk.gui.watolib.mode import ModeRegistry
+from cmk.gui.watolib.search import MatchItemGeneratorRegistry
 
 from . import (
     activate_changes,
@@ -68,6 +69,7 @@ def register(
     mode_registry: ModeRegistry,
     automation_command_registry: AutomationCommandRegistry,
     job_registry: BackgroundJobRegistry,
+    match_item_generator_registry: MatchItemGeneratorRegistry,
 ) -> None:
     activate_changes.register(page_registry, mode_registry, automation_command_registry)
     analyze_configuration.register(mode_registry)
@@ -82,7 +84,7 @@ def register(
     download_agents.register(mode_registry)
     fetch_agent_output.register(page_registry, automation_command_registry, job_registry)
     folders.register(page_registry, mode_registry)
-    global_settings.register(mode_registry)
+    global_settings.register(mode_registry, match_item_generator_registry)
     groups.register(mode_registry)
     gui_timings.register(page_registry)
     host_diagnose.register(page_registry, mode_registry)
@@ -93,7 +95,7 @@ def register(
     object_parameters.register(mode_registry)
     parentscan.register(mode_registry)
     password_store.register(mode_registry)
-    pattern_editor.register(mode_registry)
+    pattern_editor.register(mode_registry, match_item_generator_registry)
     predefined_conditions.register(mode_registry)
     random_hosts.register(mode_registry)
     read_only.register(mode_registry)

@@ -164,6 +164,7 @@ def register() -> None:
         timeperiod_usage_finder_registry,
         config_variable_group_registry,
         autocompleter_registry,
+        match_item_generator_registry,
     )
     piggyback_hub.register(
         config_domain_registry,

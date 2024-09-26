@@ -58,15 +58,25 @@ from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
-    match_item_generator_registry,
     MatchItem,
+    MatchItemGeneratorRegistry,
     MatchItems,
 )
 
 
-def register(mode_registry: ModeRegistry) -> None:
+def register(
+    mode_registry: ModeRegistry,
+    match_item_generator_registry: MatchItemGeneratorRegistry,
+) -> None:
     mode_registry.register(ModeEditGlobals)
     mode_registry.register(ModeEditGlobalSetting)
+    match_item_generator_registry.register(
+        MatchItemGeneratorSettings(
+            "global_settings",
+            _("Global settings"),
+            ModeEditGlobals,
+        )
+    )
 
 
 class ABCGlobalSettingsMode(WatoMode):
@@ -647,12 +657,3 @@ class MatchItemGeneratorSettings(ABCMatchItemGenerator):
     @property
     def is_localization_dependent(self) -> bool:
         return True
-
-
-match_item_generator_registry.register(
-    MatchItemGeneratorSettings(
-        "global_settings",
-        _("Global settings"),
-        ModeEditGlobals,
-    )
-)

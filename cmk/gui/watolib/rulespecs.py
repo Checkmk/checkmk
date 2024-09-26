@@ -59,7 +59,7 @@ from cmk.rulesets.v1.form_specs import FixedValue as FSFixedValue
 
 from .check_mk_automations import get_check_information_cached
 from .main_menu import ABCMainModule, MainModuleRegistry
-from .search import ABCMatchItemGenerator, match_item_generator_registry, MatchItem, MatchItems
+from .search import ABCMatchItemGenerator, MatchItem, MatchItems
 from .timeperiods import TimeperiodSelection
 
 MatchType = Literal["first", "all", "list", "dict", "varies"]
@@ -1551,11 +1551,3 @@ class MatchItemGeneratorRules(ABCMatchItemGenerator):
 
 
 rulespec_registry = RulespecRegistry(rulespec_group_registry)
-
-match_item_generator_registry.register(
-    MatchItemGeneratorRules(
-        "rules",
-        rulespec_group_registry,
-        rulespec_registry,
-    )
-)

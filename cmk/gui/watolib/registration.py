@@ -16,6 +16,7 @@ from cmk.gui import hooks
 from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.cron import register_job
 from cmk.gui.valuespec import AutocompleterRegistry
+from cmk.gui.watolib.search import MatchItemGeneratorRegistry
 
 from . import (
     _host_attributes,
@@ -64,8 +65,10 @@ from .host_rename import (
     RenameHostsBackgroundJob,
 )
 from .hosts_and_folders import (
+    collect_all_hosts,
     find_usages_of_contact_group_in_hosts_and_folders,
     Folder,
+    MatchItemGeneratorHosts,
     rebuild_folder_lookup_cache,
 )
 from .network_scan import AutomationNetworkScan, execute_network_scan_job
@@ -78,7 +81,12 @@ from .rulesets import (
     find_timeperiod_usage_in_host_and_service_rules,
     find_timeperiod_usage_in_time_specific_parameters,
 )
-from .rulespecs import RulespecGroupEnforcedServices, RulespecGroupRegistry
+from .rulespecs import (
+    MatchItemGeneratorRules,
+    rulespec_registry,
+    RulespecGroupEnforcedServices,
+    RulespecGroupRegistry,
+)
 from .sample_config import (
     ConfigGeneratorAcknowledgeInitialWerks,
     ConfigGeneratorAutomationUser,
@@ -102,6 +110,7 @@ def register(
     timeperiod_usage_finder_registry: TimeperiodUsageFinderRegistry,
     config_variable_group_registry: ConfigVariableGroupRegistry,
     autocompleter_registry: AutocompleterRegistry,
+    match_item_generator_registry: MatchItemGeneratorRegistry,
 ) -> None:
     _register_automation_commands(automation_command_registry)
     _register_gui_background_jobs(job_registry)
@@ -142,6 +151,19 @@ def register(
     hooks.register_builtin("request-start", launch_requests_processing_background)
     hooks.register_builtin("validate-host", builtin_attributes.validate_host_parents)
     hooks.register_builtin("ldap-sync-finished", handle_ldap_sync_finished)
+    match_item_generator_registry.register(
+        MatchItemGeneratorRules(
+            "rules",
+            rulespec_group_registry,
+            rulespec_registry,
+        )
+    )
+    match_item_generator_registry.register(
+        MatchItemGeneratorHosts(
+            "hosts",
+            collect_all_hosts,
+        )
+    )
 
 
 def _register_automation_commands(automation_command_registry: AutomationCommandRegistry) -> None:

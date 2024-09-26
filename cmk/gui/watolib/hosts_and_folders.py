@@ -95,7 +95,6 @@ from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
-    match_item_generator_registry,
     MatchItem,
     MatchItems,
 )
@@ -3703,14 +3702,6 @@ class MatchItemGeneratorHosts(ABCMatchItemGenerator):
     @property
     def is_localization_dependent(self) -> bool:
         return False
-
-
-match_item_generator_registry.register(
-    MatchItemGeneratorHosts(
-        "hosts",
-        collect_all_hosts,
-    )
-)
 
 
 def rebuild_folder_lookup_cache() -> None:

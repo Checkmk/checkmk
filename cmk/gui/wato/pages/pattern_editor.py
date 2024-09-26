@@ -41,15 +41,21 @@ from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.rulesets import rules_grouped_by_folder, SingleRulesetRecursively
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
-    match_item_generator_registry,
     MatchItem,
+    MatchItemGeneratorRegistry,
     MatchItems,
 )
 from cmk.gui.watolib.utils import mk_repr
 
 
-def register(mode_registry: ModeRegistry) -> None:
+def register(
+    mode_registry: ModeRegistry,
+    match_item_generator_registry: MatchItemGeneratorRegistry,
+) -> None:
     mode_registry.register(ModePatternEditor)
+    match_item_generator_registry.register(
+        MatchItemGeneratorLogfilePatternAnalyzer("logfile_pattern_analyzer")
+    )
 
 
 class ModePatternEditor(WatoMode):
@@ -378,8 +384,3 @@ class MatchItemGeneratorLogfilePatternAnalyzer(ABCMatchItemGenerator):
     @property
     def is_localization_dependent(self) -> bool:
         return True
-
-
-match_item_generator_registry.register(
-    MatchItemGeneratorLogfilePatternAnalyzer("logfile_pattern_analyzer")
-)

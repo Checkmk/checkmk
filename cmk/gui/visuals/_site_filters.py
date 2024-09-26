@@ -9,10 +9,6 @@ from functools import partial
 
 import livestatus
 
-import cmk.ccc.version as cmk_version
-
-from cmk.utils import paths
-
 from cmk.gui import query_filters
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.html import html
@@ -152,9 +148,6 @@ def sites_autocompleter(
     """
 
     choices: Choices = [v for v in sites_options() if _matches_id_or_title(value, v)]
-    # CME sort order is already in place
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CME:
-        choices.sort(key=lambda a: a[1].lower())
 
     # This part should not exists as the optional(not enforce) would better be not having the filter at all
     if not params.get("strict"):

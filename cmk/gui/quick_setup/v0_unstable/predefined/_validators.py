@@ -5,6 +5,7 @@
 
 from collections.abc import Callable, Mapping
 from functools import partial
+from uuid import uuid4
 
 from livestatus import SiteId
 
@@ -42,24 +43,28 @@ def validate_test_connection_custom_collect_params(
     rulespec_name: str,
     parameter_form: Dictionary,
     custom_collect_params: Callable[[ParsedFormData, Dictionary], Mapping[str, object]],
+    error_message: str | None = None,
 ) -> CallableValidator:
     return partial(
         _validate_test_connection,
         rulespec_name,
         parameter_form,
         custom_collect_params,
+        error_message,
     )
 
 
 def validate_test_connection(
     rulespec_name: str,
     parameter_form: Dictionary,
+    error_message: str | None = None,
 ) -> CallableValidator:
     return partial(
         _validate_test_connection,
         rulespec_name,
         parameter_form,
         _collect_params_with_defaults_from_form_data,
+        error_message,
     )
 
 
@@ -67,13 +72,14 @@ def _validate_test_connection(
     rulespec_name: str,
     parameter_form: Dictionary,
     collect_params: Callable[[ParsedFormData, Dictionary], Mapping[str, object]],
+    error_message: str | None,
     _quick_setup_id: QuickSetupId,
     _stage_index: StageIndex,
     all_stages_form_data: ParsedFormData,
 ) -> GeneralStageErrors:
     general_errors: GeneralStageErrors = []
     site_id = _find_id_in_form_data(all_stages_form_data, QSSiteSelection)
-    host_name = _find_id_in_form_data(all_stages_form_data, QSHostName)
+    host_name = _find_id_in_form_data(all_stages_form_data, QSHostName) or str(uuid4())
     params = collect_params(all_stages_form_data, parameter_form)
     passwords = _collect_passwords_from_form_data(all_stages_form_data, parameter_form)
     output = diag_special_agent(
@@ -84,6 +90,8 @@ def _validate_test_connection(
     )
     for result in output.results:
         if result.return_code != 0:
+            if error_message:
+                general_errors.append(error_message)
             # Do not show long output
             general_errors.append(result.response.split("\n")[-1])
     return general_errors

@@ -17,6 +17,7 @@ from cmk.gui.quick_setup.config_setups.aws.form_specs import quick_setup_aws_for
 from cmk.gui.quick_setup.v0_unstable.definitions import QSSiteSelection
 from cmk.gui.quick_setup.v0_unstable.predefined import (
     collect_params_from_form_data,
+    collect_params_with_defaults_from_form_data,
     complete,
     recaps,
     widgets,
@@ -83,7 +84,17 @@ def prepare_aws() -> QuickSetupStage:
                 ),
             ),
         ],
-        custom_validators=[qs_validators.validate_unique_id],
+        custom_validators=[
+            qs_validators.validate_unique_id,
+            qs_validators.validate_test_connection_custom_collect_params(
+                rulespec_name=RuleGroup.SpecialAgents("aws"),
+                parameter_form=quick_setup_aws_form_spec(),
+                custom_collect_params=aws_collect_params_with_defaults,
+                error_message=_(
+                    "Could not access your AWS account. Please check your Access and Secret key and try again."
+                ),
+            ),
+        ],
         recap=[recaps.recaps_form_spec],
         button_label="Configure host and regions",
     )
@@ -188,13 +199,7 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
         title=_("Review and run preview service discovery"),
         sub_title=_("Review your configuration and run preview service discovery"),
         configure_components=[],
-        custom_validators=[
-            qs_validators.validate_test_connection_custom_collect_params(
-                rulespec_name=RuleGroup.SpecialAgents("aws"),
-                parameter_form=quick_setup_aws_form_spec(),
-                custom_collect_params=aws_collect_params,
-            )
-        ],
+        custom_validators=[],
         recap=[
             recaps.recap_service_discovery_custom_collect_params(
                 rulespec_name=RuleGroup.SpecialAgents("aws"),
@@ -221,6 +226,14 @@ def aws_collect_params(
 ) -> Mapping[str, object]:
     return aws_transform_to_disk(
         collect_params_from_form_data(all_stages_form_data, parameter_form)
+    )
+
+
+def aws_collect_params_with_defaults(
+    all_stages_form_data: ParsedFormData, parameter_form: Dictionary
+) -> Mapping[str, object]:
+    return aws_transform_to_disk(
+        collect_params_with_defaults_from_form_data(all_stages_form_data, parameter_form)
     )
 
 

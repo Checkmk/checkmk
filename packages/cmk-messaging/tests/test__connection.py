@@ -10,10 +10,11 @@ from dataclasses import dataclass
 import pika
 import pika.adapters.blocking_connection
 import pika.channel
+import pika.spec
 import pytest
 from pydantic import BaseModel
 
-from cmk.messaging import Channel
+from cmk.messaging import Channel, DeliveryTag
 
 
 class _ConsumedSuccesfully(RuntimeError):
@@ -53,7 +54,9 @@ class ChannelTester:
         self.bound_queues: list[Binding] = []
         self.published_messages: list[Published] = []
         self.consumer: (
-            Callable[[pika.channel.Channel, pika.DeliveryMode, pika.BasicProperties, bytes], object]
+            Callable[
+                [pika.channel.Channel, pika.spec.Basic.Deliver, pika.BasicProperties, bytes], object
+            ]
             | None
         ) = None
 
@@ -84,7 +87,7 @@ class ChannelTester:
         self,
         queue: str,  # pylint: disable=unused-argument
         on_message_callback: Callable[
-            [pika.channel.Channel, pika.DeliveryMode, pika.BasicProperties, bytes],
+            [pika.channel.Channel, pika.spec.Basic.Deliver, pika.BasicProperties, bytes],
             object,
         ],
         auto_ack: bool,  # pylint: disable=unused-argument
@@ -97,8 +100,8 @@ class ChannelTester:
             # we don't care about the binding and so on. Just call the callback on
             # all stored messages from our test setup.
             self.consumer(
-                None,  # type: ignore[arg-type] # don't create a Channel just to ignore it
-                pika.DeliveryMode.Persistent,
+                self,  # type: ignore[arg-type]
+                pika.spec.Basic.Deliver(delivery_tag=42),
                 published.properties,
                 published.body,
             )
@@ -106,6 +109,9 @@ class ChannelTester:
         # Design your tests to deal with this.
 
         raise AssertionError("No more messages to consume")
+
+    def basic_ack(self, delivery_tag: int, multiple: bool) -> None:
+        pass
 
 
 def _make_test_channel() -> tuple[Channel[Message], ChannelTester]:
@@ -186,7 +192,9 @@ class TestChannel:
 
         channel.publish_for_site("other_site", message, routing="subrouting.key")
 
-        def _on_message(_channel: Channel[Message], received: Message) -> None:
+        def _on_message(
+            _channel: Channel[Message], _delivery_tag: DeliveryTag, received: Message
+        ) -> None:
             assert received == message
             raise _ConsumedSuccesfully()
 

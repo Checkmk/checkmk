@@ -12,6 +12,7 @@ import pytest
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 
+from cmk.messaging import DeliveryTag
 from cmk.piggyback import (
     get_piggyback_raw_data,
     load_last_distribution_time,
@@ -41,7 +42,7 @@ def test__on_message() -> None:
     )
     on_message = save_payload_on_message(test_logger, cmk.utils.paths.omd_root)
 
-    on_message(Mock(), input_payload)
+    on_message(Mock(), DeliveryTag(0), input_payload)
 
     expected_payload = [
         PiggybackMessage(

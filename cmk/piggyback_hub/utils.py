@@ -13,7 +13,7 @@ from typing import Callable, Generic, TypeVar
 
 from pydantic import BaseModel
 
-from cmk.messaging import Channel, CMKConnectionError, Connection
+from cmk.messaging import Channel, CMKConnectionError, Connection, DeliveryTag
 
 from .config import PiggybackHubConfig
 
@@ -36,7 +36,7 @@ class ReceivingProcess(multiprocessing.Process, Generic[_ModelT]):
         logger: logging.Logger,
         omd_root: Path,
         model: type[_ModelT],
-        callback: Callable[[Channel[_ModelT], _ModelT], None],
+        callback: Callable[[Channel[_ModelT], DeliveryTag, _ModelT], None],
         queue: str,
     ) -> None:
         super().__init__()

@@ -26,6 +26,7 @@ from ._connection import (
     ConnectionFailed,
     ConnectionOK,
     ConnectionUnknown,
+    DeliveryTag,
 )
 
 __all__ = [
@@ -37,6 +38,7 @@ __all__ = [
     "site_key_file",
     "Channel",
     "Connection",
+    "DeliveryTag",
     "multisite_ca_key_file",
     "multisite_cacert_file",
     "multisite_cert_file",

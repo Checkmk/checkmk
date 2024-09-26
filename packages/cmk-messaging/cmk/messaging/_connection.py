@@ -15,6 +15,7 @@ from typing import Final, Generic, NoReturn, Protocol, Self, TypeVar
 import pika
 import pika.adapters.blocking_connection
 import pika.channel
+import pika.spec
 from pika.exceptions import AMQPConnectionError
 from pydantic import BaseModel
 
@@ -71,15 +72,20 @@ class ChannelP(Protocol):
         # For a pure solution, we'd need to have protocol types for the callback arguments as well,
         # but let's keep it simple for now.
         on_message_callback: Callable[
-            [pika.channel.Channel, pika.DeliveryMode, pika.BasicProperties, bytes], object
+            [pika.channel.Channel, pika.spec.Basic.Deliver, pika.BasicProperties, bytes], object
         ],
         auto_ack: bool,
     ) -> None: ...
 
     def start_consuming(self) -> None: ...
 
+    def basic_ack(self, delivery_tag: int, multiple: bool) -> None: ...
+
 
 _ChannelT = TypeVar("_ChannelT", bound=ChannelP)
+
+
+class DeliveryTag(int): ...
 
 
 class Channel(Generic[_ModelT]):
@@ -179,7 +185,7 @@ class Channel(Generic[_ModelT]):
 
     def consume(
         self,
-        callback: Callable[[Self, _ModelT], object],
+        callback: Callable[[Self, DeliveryTag, _ModelT], object],
         *,
         auto_ack: bool = False,
         queue: str | None = None,
@@ -192,11 +198,15 @@ class Channel(Generic[_ModelT]):
 
         def _on_message(
             _channel: pika.channel.Channel,
-            _method: pika.DeliveryMode,
-            _properties: pika.BasicProperties,
+            method: pika.spec.Basic.Deliver,
+            _properties: pika.spec.BasicProperties,
             body: bytes,
         ) -> None:
-            callback(self, self._model.model_validate_json(body.decode("utf-8")))
+            callback(
+                self,
+                DeliveryTag(method.delivery_tag),
+                self._model.model_validate_json(body.decode("utf-8")),
+            )
 
         self._pchannel.basic_consume(
             queue=self._make_queue_name(queue),
@@ -209,6 +219,9 @@ class Channel(Generic[_ModelT]):
             raise CMKConnectionError from e
 
         raise RuntimeError("start_consuming() should never return")
+
+    def acknowledge(self, delivery_tag: DeliveryTag) -> None:
+        self._pchannel.basic_ack(delivery_tag=delivery_tag, multiple=False)
 
 
 class Connection:

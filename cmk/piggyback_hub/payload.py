@@ -15,7 +15,7 @@ from pydantic import BaseModel
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.messaging import Channel, CMKConnectionError, Connection
+from cmk.messaging import Channel, CMKConnectionError, Connection, DeliveryTag
 from cmk.piggyback import (
     get_piggyback_raw_data,
     load_last_distribution_time,
@@ -43,8 +43,10 @@ class PiggybackPayload(BaseModel):
 def save_payload_on_message(
     logger: logging.Logger,
     omd_root: Path,
-) -> Callable[[Channel[PiggybackPayload], PiggybackPayload], None]:
-    def _on_message(_channel: Channel[PiggybackPayload], received: PiggybackPayload) -> None:
+) -> Callable[[Channel[PiggybackPayload], DeliveryTag, PiggybackPayload], None]:
+    def _on_message(
+        channel: Channel[PiggybackPayload], delivery_tag: DeliveryTag, received: PiggybackPayload
+    ) -> None:
         logger.debug(
             "Received payload for piggybacked host '%s' from source host '%s'",
             received.target_host,
@@ -57,6 +59,7 @@ def save_payload_on_message(
             omd_root=omd_root,
             status_file_timestamp=received.last_contact,
         )
+        channel.acknowledge(delivery_tag)
 
     return _on_message
 

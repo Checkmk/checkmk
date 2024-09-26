@@ -10,6 +10,7 @@ from unittest.mock import Mock
 
 from cmk.utils.hostaddress import HostName
 
+from cmk.messaging import DeliveryTag
 from cmk.piggyback_hub.config import PiggybackHubConfig, save_config_on_message, Target
 
 
@@ -23,7 +24,7 @@ def test_save_config_on_message(tmp_path: Path) -> None:
     config_dir = tmp_path / "etc/check_mk"
     config_dir.mkdir(parents=True)
 
-    on_message(Mock(), input_payload)
+    on_message(Mock(), DeliveryTag(0), input_payload)
 
     expected_config = PiggybackHubConfig(
         targets=[Target(host_name=HostName("test_host"), site_id="test_site")]

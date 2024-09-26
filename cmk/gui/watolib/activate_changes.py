@@ -89,10 +89,9 @@ from cmk.gui.utils import escaping
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.watolib import backup_snapshots, config_domain_name, piggyback_hub
+from cmk.gui.watolib import backup_snapshots, broker_certificates, config_domain_name, piggyback_hub
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import AutomationCommand
-from cmk.gui.watolib.broker_certificates import CREBrokerCertificateSync
 from cmk.gui.watolib.broker_connections import BrokerConnectionsConfigFile
 from cmk.gui.watolib.config_domain_name import (
     ConfigDomainName,
@@ -165,6 +164,10 @@ FileFilterFunc = Callable[[str], bool] | None
 ActivationSource = Literal["GUI", "REST API", "INTERNAL"]
 
 tracer = trace.get_tracer()
+
+BrokerCertificateSync: type[broker_certificates.BrokerCertificateSync] = (
+    broker_certificates.CREBrokerCertificateSync
+)
 
 
 class SiteReplicationStatus(TypedDict, total=False):
@@ -1307,20 +1310,6 @@ def get_rabbitmq_definitions(
     return rabbitmq.compute_distributed_definitions(connection_info)
 
 
-def create_broker_certificates(dirty_sites: list[tuple[SiteId, SiteConfiguration]]) -> None:
-    broker_sync = CREBrokerCertificateSync()
-
-    for site_id, settings in dirty_sites:
-        # only remote
-        if site_id == omd_site():
-            continue
-
-        if broker_sync.broker_certs_created(site_id, settings):
-            continue
-
-        broker_sync.create_broker_certificates(site_id, settings)
-
-
 class ActivateChangesManager(ActivateChanges):
     """Manages the activation of pending configuration changes
 
@@ -1498,7 +1487,6 @@ class ActivateChangesManager(ActivateChanges):
         self._save_activation()
 
         self._start_activation()
-        create_broker_certificates(self.dirty_sites())
         self._distribute_piggyback_config()
 
         create_rabbitmq_definitions_file(paths.omd_root, rabbitmq_definitions[omd_site()])
@@ -2412,6 +2400,10 @@ def sync_and_activate(
 
         task_pool = ThreadPool(processes=len(site_snapshot_settings))
 
+        site_activation_states = _create_broker_certificates_for_remote_sites(
+            site_activation_states, site_snapshot_settings, task_pool
+        )
+
         active_tasks = ActiveTasks(
             fetch_sync_state={},
             calc_sync_delta={},
@@ -2472,6 +2464,73 @@ def sync_and_activate(
     finally:
         for activation_site_id in site_activation_states:
             _cleanup_activation(activation_site_id, activation_id, source)
+
+
+def create_broker_certificates(
+    broker_cert_sync: broker_certificates.BrokerCertificateSync,
+    settings: SiteConfiguration,
+    site_activation_state: SiteActivationState,
+    origin_span: trace.Span,
+) -> SiteActivationState | None:
+    site_id = site_activation_state["_site_id"]
+    site_logger = logger.getChild(f"site[{site_id}]")
+
+    with tracer.start_as_current_span(
+        f"create_broker_certificates[{site_id}]",
+        context=trace.set_span_in_context(origin_span),
+    ):
+        sync_start = time.time()
+        try:
+            _set_sync_state(site_activation_state, _("Syncing broker certificates"))
+            broker_cert_sync.create_broker_certificates(site_id, settings)
+            return site_activation_state
+        except Exception as e:
+            duration = time.time() - sync_start
+            update_activation_time(site_id, ACTIVATION_TIME_SYNC, duration)
+            _handle_activation_changes_exception(site_logger, str(e), site_activation_state)
+            return None
+
+
+def _create_broker_certificates_for_remote_sites(
+    site_activation_states: Mapping[SiteId, SiteActivationState],
+    site_snapshot_settings: Mapping[SiteId, SnapshotSettings],
+    task_pool: ThreadPool,
+) -> Mapping[SiteId, SiteActivationState]:
+    broker_cert_sync = BrokerCertificateSync()
+
+    if all(
+        broker_cert_sync.broker_certs_created(site_id, settings.site_config)
+        or site_id == omd_site()
+        for site_id, settings in site_snapshot_settings.items()
+    ):
+        return site_activation_states
+
+    map_args = [
+        (
+            broker_cert_sync,
+            settings.site_config,
+            site_activation_states[site_id],
+            trace.get_current_span(),
+        )
+        for site_id, settings in site_snapshot_settings.items()
+        if site_id != omd_site()
+    ]
+    site_activation_states_certs_synced = (
+        {omd_site(): site_activation_states[omd_site()]}
+        if omd_site() in site_activation_states
+        else {}
+    )
+    for result in task_pool.starmap(
+        copy_request_context(func=create_broker_certificates),
+        map_args,
+    ):
+        if result is None:
+            continue
+        site_activation_states_certs_synced[result["_site_id"]] = result
+
+    broker_cert_sync.dump_provider_broker_certificates()
+
+    return site_activation_states_certs_synced
 
 
 def _cleanup_activation(

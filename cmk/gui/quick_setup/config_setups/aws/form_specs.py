@@ -171,14 +171,24 @@ def quick_setup_stage_1() -> Mapping[str, DictElement]:
             parameter_form=String(
                 title=Title("Access key ID"),
                 field_size=FieldSize.MEDIUM,
-                custom_validate=(validators.LengthInRange(min_value=1),),
+                custom_validate=(
+                    validators.LengthInRange(
+                        min_value=1,
+                        error_msg=Message("Access key ID cannot be empty"),
+                    ),
+                ),
             ),
             required=True,
         ),
         "secret_access_key": DictElement(
             parameter_form=Password(
                 title=Title("Secret access key"),
-                custom_validate=(validators.LengthInRange(min_value=1),),
+                custom_validate=(
+                    validators.LengthInRange(
+                        min_value=1,
+                        error_msg=Message("Secret access key cannot be empty"),
+                    ),
+                ),
             ),
             required=True,
         ),
@@ -200,7 +210,7 @@ def quick_setup_stage_2() -> Mapping[str, DictElement]:
                 custom_validate=(
                     validators.LengthInRange(
                         min_value=1,
-                        error_msg=Message("At least one region is required"),
+                        error_msg=Message("Please choose one or more regions to continue"),
                     ),
                 ),
             ),

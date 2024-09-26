@@ -55,3 +55,49 @@ test('Wizard navigation', async () => {
   quickSetup.rewind()
   expect(quickSetup.stage.value).toBe(0)
 })
+
+test('Wizard cannot disable stage 0', async () => {
+  const quickSetup = useWizard(3, 'guided')
+
+  quickSetup.disableStage(0)
+  expect(quickSetup.isStageEnabled(0)).toBe(true)
+})
+
+test('Wizard cannot disable current stage', async () => {
+  const quickSetup = useWizard(3, 'guided')
+
+  quickSetup.goto(1)
+  quickSetup.disableStage(1)
+  expect(quickSetup.isStageEnabled(1)).toBe(true)
+})
+
+test('Wizard enable and disable stages', async () => {
+  const quickSetup = useWizard(3, 'guided')
+
+  quickSetup.disableStage(1)
+  expect(quickSetup.isStageEnabled(1)).toBe(false)
+
+  quickSetup.enableStage(1)
+  expect(quickSetup.isStageEnabled(1)).toBe(true)
+})
+
+test('Wizard walk', async () => {
+  const quickSetup = useWizard(3, 'guided')
+
+  quickSetup.disableStage(1)
+
+  quickSetup.next()
+  expect(quickSetup.stage.value).toBe(2)
+
+  quickSetup.rewind()
+  expect(quickSetup.stage.value).toBe(0)
+
+  // We cannot go to stage 1, as it is disabled
+  quickSetup.goto(1)
+  expect(quickSetup.stage.value).toBe(0)
+
+  quickSetup.goto(2)
+  expect(quickSetup.stage.value).toBe(2)
+  quickSetup.prev()
+  expect(quickSetup.stage.value).toBe(0)
+})

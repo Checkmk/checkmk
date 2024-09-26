@@ -193,6 +193,7 @@ class Crawler:
                     name=cookie_dict["name"],
                     value=cookie_dict["value"],
                 )
+            browser_context = await browser.new_context(storage_state=storage_state)
             # special-case
             search_limited_urls: bool = self._max_urls > 0
             if search_limited_urls and self._max_urls < max_tasks:
@@ -207,7 +208,7 @@ class Crawler:
                         url = None
                     if url and len(tasks) < max_tasks:
                         logger.debug("Checking URL %s", url.url)
-                        tasks.add(asyncio.create_task(self.visit_url(browser, storage_state, url)))
+                        tasks.add(asyncio.create_task(self.visit_url(browser_context, url)))
                     else:
                         logger.debug(
                             "Maximum tasks assgined. Waiting for tasks to be completed ..."
@@ -355,8 +356,7 @@ class Crawler:
 
     async def visit_url(
         self,
-        browser: playwright.async_api.Browser,
-        storage_state: playwright.async_api.StorageState,
+        browser_context: playwright.async_api.BrowserContext,
         url: Url,
     ) -> bool:
         start = time.time()
@@ -364,7 +364,7 @@ class Crawler:
         content_type = self.requests_session.head(url.url).headers["content-type"]
         if content_type.startswith("text/html"):
             try:
-                page_content = await self.get_page_content(browser, storage_state, url)
+                page_content = await self.get_page_content(browser_context, url)
                 await self.validate(url, page_content.content, page_content.logs)
             except playwright.async_api.Error as e:
                 self.handle_error(url, "BrowserError", repr(e))
@@ -381,8 +381,7 @@ class Crawler:
 
     @staticmethod
     async def get_page_content(
-        browser: playwright.async_api.Browser,
-        storage_state: playwright.async_api.StorageState,
+        browser_context: playwright.async_api.BrowserContext,
         url: Url,
     ) -> PageContent:
         logs = []
@@ -396,7 +395,7 @@ class Crawler:
         async def handle_page_error(error: playwright.async_api.Error) -> None:
             logs.append(format_js_error(error))
 
-        page = await browser.new_page(storage_state=storage_state)
+        page = await browser_context.new_page()
         page.on("pageerror", handle_page_error)
         page.on("console", handle_console_messages)
         try:

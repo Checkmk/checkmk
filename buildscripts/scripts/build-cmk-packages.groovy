@@ -355,6 +355,14 @@ def main() {
                             "${upload_path}",
                             INTERNAL_DEPLOY_PORT,
                         );
+
+                        if (EDITION.toLowerCase() == "saas" && versioning.is_official_release(cmk_version_rc_aware)) {
+                            // check-mk-saas-2.3.0p17*.deb + .hash
+                            artifacts_helper.upload_files_to_nexus(
+                                "${node_version_dir}/${cmk_version_rc_aware}/${package_name}*",
+                                "${ARTIFACT_STORAGE}/repository/saas-patch-releases/",
+                            );
+                        }
                     }
                 }
 
@@ -395,7 +403,6 @@ def main() {
 
             if (EDITION.toLowerCase() == "saas" && versioning.is_official_release(cmk_version_rc_aware)) {
                 // check-mk-saas-2.3.0p17.cse.tar.gz + .hash
-                // check-mk-saas-2.3.0p17_0.jammy_amd64.deb + .hash
                 artifacts_helper.upload_files_to_nexus(
                     "${WORKSPACE}/versions/${cmk_version_rc_aware}/check-mk-saas-${cmk_version}*",
                     "${ARTIFACT_STORAGE}/repository/saas-patch-releases/",

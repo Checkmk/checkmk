@@ -197,6 +197,12 @@ def quick_setup_stage_2() -> Mapping[str, DictElement]:
                     )
                     for name, title in aws_region_to_monitor()
                 ],
+                custom_validate=(
+                    validators.LengthInRange(
+                        min_value=1,
+                        error_msg=Message("At least one region is required"),
+                    ),
+                ),
             ),
             required=True,
         ),

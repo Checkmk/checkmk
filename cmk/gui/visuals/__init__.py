@@ -66,7 +66,6 @@ from ._page_edit_visual import single_infos_spec as single_infos_spec
 from ._page_list import page_list as page_list
 from ._permissions import declare_visual_permissions as declare_visual_permissions
 from ._site_filters import cre_site_filter_heading_info as cre_site_filter_heading_info
-from ._site_filters import MultipleSitesFilter as MultipleSitesFilter
 from ._site_filters import SiteFilter as SiteFilter
 from ._store import available as available
 from ._store import available_by_owner as available_by_owner

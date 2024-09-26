@@ -53,14 +53,7 @@ def register(
         )
     )
 
-    filter_registry.register(
-        MultipleSitesFilter(
-            title=_l("Multiple sites"),
-            sort_index=502,
-            query_filter=query_filters.Query(ident="sites", request_vars=["sites"]),
-            description=_l("Associative selection of multiple sites"),
-        )
-    )
+    filter_registry.register(MultipleSitesFilter(site_choices=site_choices))
 
     autocompleter_registry.register_autocompleter(
         "sites", partial(sites_autocompleter, sites_options=site_choices)
@@ -127,16 +120,20 @@ def cre_site_filter_heading_info(value: FilterHTTPVariables) -> str | None:
 
 
 class MultipleSitesFilter(SiteFilter):
-    # Poor man's composition:  Renderer differs between CME and non-CME.
-    sites_options: Callable[[], list[tuple[str, str]]] | None = None
+    def __init__(self, site_choices: Callable[[], list[tuple[str, str]]]) -> None:
+        super().__init__(
+            title=_l("Multiple sites"),
+            sort_index=502,
+            query_filter=query_filters.Query(ident="sites", request_vars=["sites"]),
+            description=_l("Associative selection of multiple sites"),
+        )
+        self._site_choices = site_choices
 
     def get_request_sites(self, value: FilterHTTPVariables) -> list[str]:
         return [x for x in value.get(self.htmlvars[0], "").strip().split("|") if x]
 
     def display(self, value: FilterHTTPVariables) -> None:
-        sites_options = type(self).sites_options
-        assert sites_options is not None
-        sites_vs = DualListChoice(choices=sites_options, rows=4)
+        sites_vs = DualListChoice(choices=self._site_choices(), rows=4)
         sites_vs.render_input(self.htmlvars[0], self.get_request_sites(value))
 
 

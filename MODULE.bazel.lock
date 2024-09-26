@@ -1,6 +1,6 @@
 {
   "lockFileVersion": 6,
-  "moduleFileHash": "c4579a6c4929e06cb910dcf9ad6b9a62fa434c2167e53c04aa0ba08de99a47bd",
+  "moduleFileHash": "977afb6681af0c8694c0e634de09bc1dc26c86d7053df489c5e250226c6ba102",
   "flags": {
     "cmdRegistries": [
       "https://bcr.bazel.build/"
@@ -74,7 +74,7 @@
                 "hub_name": "cmk_agent_based",
                 "python_version": "3.12.3",
                 "requirements_by_platform": {
-                  "//packages/cmk-agent-based:requirements_lock.txt": "linux_*,osx_*"
+                  "//packages/cmk-agent-based:requirements_lock.txt": "linux_*"
                 }
               },
               "devDependency": false,
@@ -90,7 +90,7 @@
                 "hub_name": "cmk_werks",
                 "python_version": "3.12.3",
                 "requirements_by_platform": {
-                  "//packages/cmk-werks:requirements_lock.txt": "linux_*,osx_*"
+                  "//packages/cmk-werks:requirements_lock.txt": "linux_*"
                 }
               },
               "devDependency": false,

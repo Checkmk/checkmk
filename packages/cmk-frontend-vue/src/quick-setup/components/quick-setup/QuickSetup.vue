@@ -34,6 +34,7 @@ const isSaveStage = computed(() => props.currentStage === numberOfStages.value)
       :content="stg.content || null"
       :recap-content="stg.recapContent || null"
       :errors="stg.errors"
+      :go-to-this-stage="stg.goToThisStage || null"
     />
   </ol>
   <QuickSetupSaveStage

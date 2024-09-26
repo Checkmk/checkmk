@@ -163,6 +163,7 @@ const regularStages = computed((): QuickSetupStageSpec[] => {
       title: stg.title,
       sub_title: stg.sub_title || null,
       recapContent: renderRecap(stg.recap || []),
+      goToThisStage: () => quickSetupHook.goto(index),
       content: renderContent(
         stg.components || [],
         (value) => update(index, value),

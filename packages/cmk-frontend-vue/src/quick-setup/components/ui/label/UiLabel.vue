@@ -25,6 +25,7 @@ type LabelVariants = VariantProps<typeof labelVariants>
 const props = defineProps<
   LabelProps & {
     variant?: LabelVariants['variant']
+    onClick?: (() => void) | null
   }
 >()
 
@@ -38,7 +39,11 @@ const delegatedProps = computed(() => {
 
 <template>
   <!-- @vue-expect-error Radix-vue props doesn't follow our exactOptionalPropertyTypes rule -->
-  <Label v-bind="delegatedProps" :class="labelVariants({ variant })">
+  <Label
+    v-bind="delegatedProps"
+    :class="[labelVariants({ variant }), { 'qs-ui-label--clickable': !!props.onClick }]"
+    @click="onClick"
+  >
     <slot />
   </Label>
 </template>
@@ -57,6 +62,11 @@ label {
   &.qs-ui-label--subtitle {
     font-size: var(--font-size-normal);
     margin-bottom: var(--spacing);
+  }
+
+  &.qs-ui-label--clickable {
+    cursor: pointer;
+    pointer-events: all;
   }
 }
 </style>

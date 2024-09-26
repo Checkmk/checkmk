@@ -18,18 +18,22 @@ const props = defineProps<QuickSetupStageProps>()
 const isSelectedStage = computed(() => props.index == props.currentStage)
 const isCompleted = computed(() => props.index < props.currentStage)
 const isOpen = computed(() => isSelectedStage.value || props.mode === 'overview')
+const onClickGoTo = computed(() =>
+  !!props.goToThisStage && props.currentStage > props.index ? () => props.goToThisStage!() : null
+)
 </script>
 
 <template>
   <li
     class="qs-stage"
     :class="{
-      active: isSelectedStage,
-      complete: isCompleted
+      'qs-stage-active': isSelectedStage,
+      'qs-stage-complete': isCompleted
     }"
+    @click="(_mouse_event) => onClickGoTo"
   >
     <div class="qs-stage__content">
-      <Label variant="title">{{ title }}</Label>
+      <Label variant="title" :on-click="onClickGoTo">{{ title }}</Label>
       <Label v-if="!isCompleted && sub_title" variant="subtitle">{{ sub_title }}</Label>
 
       <ErrorBoundary v-if="isCompleted && recapContent">
@@ -76,18 +80,6 @@ const isOpen = computed(() => isSelectedStage.value || props.mode === 'overview'
     background-color: lightgrey;
   }
 
-  &.active:before,
-  &.complete:before {
-    background-color: var(--success-dimmed);
-  }
-
-  &.complete:before {
-    background-image: var(--icon-check);
-    background-repeat: no-repeat;
-    background-position: center;
-    content: '';
-  }
-
   &:not(:last-child):after {
     content: '';
     position: absolute;
@@ -99,7 +91,12 @@ const isOpen = computed(() => isSelectedStage.value || props.mode === 'overview'
     background-color: var(--qs-stage-line-color);
   }
 
-  &.active:after {
+  &.qs-stage-active:before,
+  &.qs-stage-complete:before {
+    background-color: var(--success-dimmed);
+  }
+
+  &.qs-stage-active:after {
     background: linear-gradient(
       to bottom,
       var(--success-dimmed) 50px,
@@ -107,8 +104,21 @@ const isOpen = computed(() => isSelectedStage.value || props.mode === 'overview'
     );
   }
 
-  &.complete:after {
-    background-color: var(--success-dimmed);
+  &.qs-stage-complete {
+    pointer-events: none;
+
+    &:before {
+      background-image: var(--icon-check);
+      background-repeat: no-repeat;
+      background-position: center;
+      content: '';
+      cursor: pointer;
+      pointer-events: all;
+    }
+
+    &:after {
+      background-color: var(--success-dimmed);
+    }
   }
 }
 

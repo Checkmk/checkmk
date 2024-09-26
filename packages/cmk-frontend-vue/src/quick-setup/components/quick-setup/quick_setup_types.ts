@@ -43,6 +43,9 @@ export interface QuickSetupStageSpec extends QuickSetupSaveStageSpec {
   /** @property {string} title - Title of the stage */
   title: string
 
+  /** @property {undefined | null | () => void} goToThisStage - Method to open the stage */
+  goToThisStage?: (() => void) | null
+
   /** @property {string | null | undefined} sub_title - Subtitle of the stage */
   sub_title?: string | null
 

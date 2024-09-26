@@ -8,17 +8,12 @@ import NotificationRules from '@/notification/components/NotificationRules.vue'
 import type { RuleSection } from '@/form/components/vue_formspec_components'
 
 defineProps<{
-  notification_parameters: RuleSection[]
+  parameters: RuleSection[]
 }>()
 </script>
 
 <template>
-  <NotificationRules :rule_sections="notification_parameters"></NotificationRules>
+  <NotificationRules :rule_sections="parameters"></NotificationRules>
 </template>
 
-<style scoped>
-.overview_container {
-  display: flex;
-  margin-bottom: 24px;
-}
-</style>
+<style scoped></style>

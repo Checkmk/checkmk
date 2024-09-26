@@ -80,7 +80,7 @@ function setupVue() {
         }
         case 'notification_parameters_overview': {
           app = createApp(NotificationParametersOverviewApp, {
-            notification_parameters: appData.notification_parameters
+            parameters: appData.parameters
           })
           break
         }

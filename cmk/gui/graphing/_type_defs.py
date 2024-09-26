@@ -6,7 +6,6 @@
 from typing import assert_never, Literal
 
 GraphConsolidationFunction = Literal["max", "min", "average"]
-GraphPresentation = Literal["lines", "stacked", "sum", "average", "min", "max"]
 LineType = Literal["line", "area", "stack", "-line", "-area", "-stack"]
 
 

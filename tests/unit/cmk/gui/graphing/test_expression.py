@@ -30,8 +30,8 @@ from cmk.gui.graphing._expression import (
 )
 from cmk.gui.graphing._formatter import AutoPrecision
 from cmk.gui.graphing._legacy import unit_info, UnitInfo
+from cmk.gui.graphing._metric_operation import LineType
 from cmk.gui.graphing._translated_metrics import parse_perf_data, translate_metrics
-from cmk.gui.graphing._type_defs import LineType
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation, IECNotation
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 

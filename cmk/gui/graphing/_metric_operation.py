@@ -11,7 +11,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from itertools import chain
-from typing import Annotated, Callable, final, Literal, TypeVar
+from typing import Annotated, assert_never, Callable, final, Literal, TypeVar
 
 from pydantic import BaseModel, computed_field, PlainValidator, SerializeAsAny
 
@@ -28,7 +28,27 @@ from cmk.gui.i18n import _
 from cmk.gui.time_series import TimeSeries, TimeSeriesValues
 from cmk.gui.utils import escaping
 
-from ._type_defs import GraphConsolidationFunction, LineType
+GraphConsolidationFunction = Literal["max", "min", "average"]
+LineType = Literal["line", "area", "stack", "-line", "-area", "-stack"]
+
+
+def line_type_mirror(line_type: LineType) -> LineType:
+    match line_type:
+        case "line":
+            return "-line"
+        case "-line":
+            return "line"
+        case "area":
+            return "-area"
+        case "-area":
+            return "area"
+        case "stack":
+            return "-stack"
+        case "-stack":
+            return "stack"
+        case other:
+            assert_never(other)
+
 
 Operators = Literal["+", "*", "-", "/", "MAX", "MIN", "AVERAGE", "MERGE"]
 

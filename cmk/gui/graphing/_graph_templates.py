@@ -59,9 +59,14 @@ from ._graph_specification import (
     MinimalVerticalRange,
 )
 from ._legacy import get_render_function, graph_info, LegacyUnitSpecification, RawGraphTemplate
-from ._metric_operation import MetricOpConstant, MetricOpOperator, MetricOpRRDSource
+from ._metric_operation import (
+    GraphConsolidationFunction,
+    LineType,
+    MetricOpConstant,
+    MetricOpOperator,
+    MetricOpRRDSource,
+)
 from ._translated_metrics import translated_metrics_from_row, TranslatedMetric
-from ._type_defs import GraphConsolidationFunction, LineType
 from ._unit import ConvertibleUnitSpecification
 from ._utils import get_graph_data_from_livestatus
 

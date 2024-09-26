@@ -53,14 +53,13 @@ from cmk.gui.graphing._graph_templates import (
     MinimalGraphTemplateRange,
 )
 from cmk.gui.graphing._legacy import get_render_function, RawGraphTemplate
-from cmk.gui.graphing._metric_operation import MetricOpOperator, MetricOpRRDSource
+from cmk.gui.graphing._metric_operation import LineType, MetricOpOperator, MetricOpRRDSource
 from cmk.gui.graphing._translated_metrics import (
     Original,
     parse_perf_data,
     translate_metrics,
     TranslatedMetric,
 )
-from cmk.gui.graphing._type_defs import LineType
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 

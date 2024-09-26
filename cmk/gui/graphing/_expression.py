@@ -22,9 +22,9 @@ from ._color import mix_colors, parse_color, parse_color_from_api, render_color,
 from ._formatter import AutoPrecision, StrictPrecision
 from ._from_api import parse_unit_from_api
 from ._legacy import get_unit_info, unit_info, UnitInfo
+from ._metric_operation import GraphConsolidationFunction, line_type_mirror, LineType
 from ._metrics import get_metric_spec
 from ._translated_metrics import TranslatedMetric
-from ._type_defs import GraphConsolidationFunction, line_type_mirror, LineType
 from ._unit import ConvertibleUnitSpecification, DecimalNotation
 
 # TODO CMK-15246 Checkmk 2.4: Remove legacy objects/RPNs

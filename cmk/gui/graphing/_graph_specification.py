@@ -22,8 +22,12 @@ from cmk.ccc.plugin_registry import Registry
 
 from ._graph_render_config import GraphRenderOptions
 from ._legacy import LegacyUnitSpecification
-from ._metric_operation import MetricOperation, parse_metric_operation
-from ._type_defs import GraphConsolidationFunction, LineType
+from ._metric_operation import (
+    GraphConsolidationFunction,
+    LineType,
+    MetricOperation,
+    parse_metric_operation,
+)
 from ._unit import ConvertibleUnitSpecification, NonConvertibleUnitSpecification
 
 

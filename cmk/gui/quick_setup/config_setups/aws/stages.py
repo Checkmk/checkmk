@@ -72,7 +72,7 @@ def prepare_aws() -> QuickSetupStage:
                 list_type="ordered",
             ),
             widgets.unique_id_formspec_wrapper(
-                title=Title("AWS account name"), prefill_template="aws_config"
+                title=Title("Configuration name"), prefill_template="aws_config"
             ),
             FormSpecWrapper(
                 id=FormSpecId("credentials"),

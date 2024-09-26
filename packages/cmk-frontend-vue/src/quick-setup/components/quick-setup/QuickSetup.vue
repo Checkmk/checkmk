@@ -46,13 +46,13 @@ const isSaveStage = computed(() => props.currentStage === numberOfStages.value)
 
 <style scoped>
 .quick-setup {
+  margin: 8px 0 0;
+  padding-left: 0;
   counter-reset: stage-index;
 }
 
 .quick-setup__action {
-  padding-top: 1rem;
-  padding-left: 7.5rem;
-  position: relative;
+  padding-left: 40px;
 }
 
 .quick-setup__loading {

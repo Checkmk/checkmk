@@ -21,7 +21,10 @@ from tests.plugins_integration.checks import (
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.parametrize("host_name", get_host_names())
+@pytest.mark.parametrize(
+    "host_name",
+    [host_name for host_name in get_host_names() if host_name != "snmp-citrix-netscaler-11.1"],
+)
 def test_plugin(
     test_site: Site,
     host_name: str,

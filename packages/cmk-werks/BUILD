@@ -4,6 +4,8 @@ load("@omd_packages//omd/packages/rules:package_wheel.bzl", "package_wheel")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("@rules_python//python:pip.bzl", "compile_pip_requirements")
 
+exports_files(["pyproject.toml"])
+
 compile_pip_requirements(
     name = "requirements",
     requirements_in = "pyproject.toml",
@@ -43,11 +45,8 @@ py_pytest_main(
 py_test(
     name = "unit",
     srcs = glob(["tests/**/*.py"]) + [":__test__.py"],
-    # TODO: Duplicated from pyproject.toml
-    args = [
-        "--import-mode=importlib",
-        "--doctest-modules",
-    ],
+    args = ["--config-file=$(location pyproject.toml)"],
+    data = ["pyproject.toml"],
     imports = ["."],
     main = ":__test__.py",
     deps = [

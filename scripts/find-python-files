@@ -7,7 +7,7 @@
 
 usage() {
     cat >&2 <<-HERE
-usage: $(basename "${0}") [--omit-legacy-checks|--filter]
+usage: $(basename "${0}") [--filter]
 
    --filter:             read file candidates from lines of stdin (one file per line)
 HERE

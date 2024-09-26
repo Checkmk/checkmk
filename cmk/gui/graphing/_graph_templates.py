@@ -26,7 +26,18 @@ from cmk.gui.utils.speaklater import LazyString
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.graphing.v1 import metrics as metrics_api
 
-from ._expression import (
+from ._from_api import graphs_from_api
+from ._graph_specification import (
+    FixedVerticalRange,
+    graph_specification_registry,
+    GraphMetric,
+    GraphRecipe,
+    GraphSpecification,
+    HorizontalRule,
+    MinimalVerticalRange,
+)
+from ._legacy import get_render_function, graph_info, LegacyUnitSpecification, RawGraphTemplate
+from ._metric_expression import (
     Average,
     BaseMetricExpression,
     Constant,
@@ -48,17 +59,6 @@ from ._expression import (
     Sum,
     WarningOf,
 )
-from ._from_api import graphs_from_api
-from ._graph_specification import (
-    FixedVerticalRange,
-    graph_specification_registry,
-    GraphMetric,
-    GraphRecipe,
-    GraphSpecification,
-    HorizontalRule,
-    MinimalVerticalRange,
-)
-from ._legacy import get_render_function, graph_info, LegacyUnitSpecification, RawGraphTemplate
 from ._metric_operation import (
     GraphConsolidationFunction,
     LineType,

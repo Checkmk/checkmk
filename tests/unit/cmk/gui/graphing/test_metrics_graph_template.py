@@ -11,10 +11,10 @@ from cmk.utils.hostaddress import HostName
 
 import cmk.gui.graphing._graph_templates as gt
 from cmk.gui.config import active_config
-from cmk.gui.graphing._expression import parse_legacy_expression
 from cmk.gui.graphing._formatter import AutoPrecision
 from cmk.gui.graphing._graph_specification import GraphMetric, GraphRecipe, MinimalVerticalRange
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
+from cmk.gui.graphing._metric_expression import parse_legacy_expression
 from cmk.gui.graphing._metric_operation import (
     MetricOpConstant,
     MetricOperation,

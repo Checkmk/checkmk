@@ -18,23 +18,6 @@ from cmk.utils.hostaddress import HostName
 
 from cmk.gui.config import active_config
 from cmk.gui.graphing import _graph_templates as gt
-from cmk.gui.graphing._expression import (
-    BaseMetricExpression,
-    Constant,
-    CriticalOf,
-    Difference,
-    Evaluated,
-    Fraction,
-    Maximum,
-    MaximumOf,
-    Metric,
-    MetricExpression,
-    Minimum,
-    MinimumOf,
-    Product,
-    Sum,
-    WarningOf,
-)
 from cmk.gui.graphing._formatter import AutoPrecision
 from cmk.gui.graphing._from_api import metrics_from_api, RegisteredMetric
 from cmk.gui.graphing._graph_specification import HorizontalRule
@@ -53,6 +36,23 @@ from cmk.gui.graphing._graph_templates import (
     MinimalGraphTemplateRange,
 )
 from cmk.gui.graphing._legacy import get_render_function, RawGraphTemplate
+from cmk.gui.graphing._metric_expression import (
+    BaseMetricExpression,
+    Constant,
+    CriticalOf,
+    Difference,
+    Evaluated,
+    Fraction,
+    Maximum,
+    MaximumOf,
+    Metric,
+    MetricExpression,
+    Minimum,
+    MinimumOf,
+    Product,
+    Sum,
+    WarningOf,
+)
 from cmk.gui.graphing._metric_operation import LineType, MetricOpOperator, MetricOpRRDSource
 from cmk.gui.graphing._translated_metrics import (
     Original,

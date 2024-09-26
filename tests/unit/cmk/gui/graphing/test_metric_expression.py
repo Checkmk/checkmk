@@ -6,7 +6,9 @@
 import pytest
 
 from cmk.gui.config import active_config
-from cmk.gui.graphing._expression import (
+from cmk.gui.graphing._formatter import AutoPrecision
+from cmk.gui.graphing._legacy import unit_info, UnitInfo
+from cmk.gui.graphing._metric_expression import (
     _FALLBACK_UNIT_SPEC_FLOAT,
     _FALLBACK_UNIT_SPEC_INT,
     ConditionalMetricExpression,
@@ -28,8 +30,6 @@ from cmk.gui.graphing._expression import (
     Sum,
     WarningOf,
 )
-from cmk.gui.graphing._formatter import AutoPrecision
-from cmk.gui.graphing._legacy import unit_info, UnitInfo
 from cmk.gui.graphing._metric_operation import LineType
 from cmk.gui.graphing._translated_metrics import parse_perf_data, translate_metrics
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation, IECNotation

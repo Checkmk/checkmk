@@ -468,6 +468,7 @@ div#page_menu_popups {
       background-color: $headline-color;
       margin-bottom: $spacing;
       button.confirm_question,
+      button.confirm_success,
       button.confirm_warning {
         margin-left: 0px;
       }
@@ -495,6 +496,18 @@ div#page_menu_popups {
           border-color: $color-state-2-background;
         }
       }
+      button.confirm_success {
+        &,
+        &:active {
+          color: $font-color-light-bg;
+          background-color: $success-dimmed;
+          border-color: $success-dimmed;
+        }
+        &:hover {
+          background-color: $success;
+          border-color: $success;
+        }
+      }
     }
   }
   .confirm_icon {
@@ -516,6 +529,10 @@ div#page_menu_popups {
       color: $white;
       background-color: $color-state-2-background;
       border-color: $color-state-2-background;
+    }
+    &.confirm_success {
+      background-color: $success;
+      border-color: $success;
     }
   }
   .confirm_title,

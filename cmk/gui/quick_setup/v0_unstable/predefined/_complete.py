@@ -323,6 +323,10 @@ def _create_and_save_special_agent_bundle(
 
     return makeuri_contextless(
         request,
-        [("mode", ModeActivateChanges.name())],
+        [
+            ("mode", ModeActivateChanges.name()),
+            ("origin", "quick_setup"),
+            ("special_agent_name", special_agent_name),
+        ],
         filename="wato.py",
     )

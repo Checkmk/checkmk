@@ -121,28 +121,57 @@ def make_confirmed_form_submit_link(
     )
 
 
+def show_success_dialog(
+    title: str,
+    confirm_url: str,
+    message: str | HTML | None = None,
+    confirm_text: str | None = None,
+) -> None:
+    dialog_options = {
+        "title": title,
+        "html": escaping.escape_text(message),
+        "confirmButtonText": confirm_text if confirm_text else _("Confirm"),
+        "customClass": {
+            "confirmButton": "confirm_success",
+            "icon": "confirm_icon" + " confirm_success",
+        },
+        "showCancelButton": False,
+        "iconHtml": "<span>&check;</span>",
+    }
+
+    html.javascript(
+        "cmk.forms.confirm_dialog(%s, ()=>{location.href = %s;})"
+        % (
+            json.dumps(dialog_options),
+            json.dumps(confirm_url),
+        )
+    )
+
+
 def show_confirm_cancel_dialog(
     title: str,
     confirm_url: str,
     cancel_url: str | None = None,
     message: str | HTML | None = None,
     confirm_text: str | None = None,
+    show_cancel_button: bool = True,
 ) -> None:
+    dialog_options = {
+        "title": title,
+        "html": escaping.escape_text(message),
+        "confirmButtonText": confirm_text if confirm_text else _("Confirm"),
+        "cancelButtonText": _("Cancel"),
+        "customClass": {
+            "confirmButton": "confirm_question",
+            "icon": "confirm_icon" + " confirm_question",
+        },
+        "showCancelButton": show_cancel_button,
+    }
+
     html.javascript(
         "cmk.forms.confirm_dialog(%s, ()=>{location.href = %s;}, %s)"
         % (
-            json.dumps(
-                {
-                    "title": title,
-                    "html": escaping.escape_text(message),
-                    "confirmButtonText": confirm_text if confirm_text else _("Confirm"),
-                    "cancelButtonText": _("Cancel"),
-                    "customClass": {
-                        "confirmButton": "confirm_question",
-                        "icon": "confirm_icon" + " confirm_question",
-                    },
-                }
-            ),
+            json.dumps(dialog_options),
             json.dumps(confirm_url),
             f"()=>{{location.href = {json.dumps(cancel_url)}}}" if cancel_url else "null",
         )

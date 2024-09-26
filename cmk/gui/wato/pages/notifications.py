@@ -28,7 +28,6 @@ from cmk.utils.notify_types import (
     NotificationParameterGeneral,
     NotifyAnalysisInfo,
 )
-from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.statename import host_state_name, service_state_name
 from cmk.utils.user import UserId
 
@@ -145,7 +144,7 @@ from cmk.gui.watolib.notifications import (
     NotificationParameterConfigFile,
     NotificationRuleConfigFile,
 )
-from cmk.gui.watolib.rulesets import AllRulesets, Ruleset
+from cmk.gui.watolib.rulesets import AllRulesets
 from cmk.gui.watolib.sample_config import (
     get_default_notification_rule,
     new_notification_rule_id,
@@ -2964,11 +2963,8 @@ class ModeNotificationParametersOverview(WatoMode):
                                     item=make_simple_link(
                                         folder_preserving_link(
                                             [
-                                                ("mode", "new_rule"),
-                                                (
-                                                    "varname",
-                                                    RuleGroup.NotificationParameters("mail"),
-                                                ),
+                                                ("mode", "notification_parameters"),
+                                                ("method", "mail"),
                                                 ("back_mode", self.name()),
                                                 ("rule_folder", ""),
                                             ]
@@ -2999,26 +2995,30 @@ class ModeNotificationParametersOverview(WatoMode):
             data=asdict(self._get_notification_parameters_data()),
         )
 
-    def _get_parameter_rulesets(self, all_rulesets: AllRulesets) -> Generator[Rule]:
+    def _get_parameter_rulesets(
+        self, all_rulesets: list[NotificationParameterConfig]
+    ) -> Generator[Rule]:
         for script_name, title in notification_script_choices():
-            if not all_rulesets.exists(RuleGroup.NotificationParameters(script_name)):
-                continue
-            ruleset: Ruleset = all_rulesets.get(RuleGroup.NotificationParameters(script_name))
+            ruleset: list[NotificationParameterConfig] = [
+                parameter
+                for parameter in all_rulesets
+                if parameter.get("general", {}).get("method", "") == script_name
+            ]
             yield Rule(
                 i18n=title,
-                count=f"{len(ruleset.get_rules())}",
+                count=f"{len(ruleset)}",
                 link=makeuri(
                     request,
                     [
-                        ("mode", "edit_ruleset"),
-                        ("varname", RuleGroup.NotificationParameters(script_name)),
+                        ("mode", "notification_parameters"),
+                        ("method", script_name),
                         ("back_mode", self.name()),
                     ],
                 ),
             )
 
     def _get_notification_parameters_data(self) -> NotificationParametersOverview:
-        all_rulesets = AllRulesets.load_all_rulesets()
+        all_rulesets = NotificationParameterConfigFile().load_for_reading()
         return NotificationParametersOverview(
             parameters=[
                 RuleSection(
@@ -3160,7 +3160,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
         return "notification_parameters"
 
     def _back_mode(self) -> ActionResult:
-        return redirect(mode_url("edit_notification_parameters"))
+        return redirect(mode_url("edit_notification_parameters", method=self._method()))
 
     def title(self) -> str:
         return _("Parameters for %s") % request.var("method")
@@ -3205,6 +3205,10 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
         )
 
     def page(self) -> None:
+        # TODO Remove if config model is clear
+        if self._method() != "mail":
+            raise MKUserError(None, _("Only 'mail' is currently implemented for this mode"))
+
         parameters = self._load_parameters()
         if not parameters:
             html.show_message(_("You have not created any parameters yet."))

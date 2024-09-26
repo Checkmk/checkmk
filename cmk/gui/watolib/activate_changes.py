@@ -89,9 +89,10 @@ from cmk.gui.utils import escaping
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.watolib import backup_snapshots, broker_certificates, config_domain_name, piggyback_hub
+from cmk.gui.watolib import backup_snapshots, config_domain_name, piggyback_hub
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import AutomationCommand
+from cmk.gui.watolib.broker_certificates import CREBrokerCertificateSync
 from cmk.gui.watolib.broker_connections import BrokerConnectionsConfigFile
 from cmk.gui.watolib.config_domain_name import (
     ConfigDomainName,
@@ -1307,19 +1308,17 @@ def get_rabbitmq_definitions(
 
 
 def create_broker_certificates(dirty_sites: list[tuple[SiteId, SiteConfiguration]]) -> None:
-    local_broker_ca = broker_certificates.load_or_create_broker_central_certs()
+    broker_sync = CREBrokerCertificateSync()
+
     for site_id, settings in dirty_sites:
         # only remote
         if site_id == omd_site():
             continue
 
-        if broker_certificates.broker_certs_created(site_id):
+        if broker_sync.broker_certs_created(site_id, settings):
             continue
 
-        remote_broker_certs = broker_certificates.create_remote_broker_certs(
-            local_broker_ca, site_id, settings
-        )
-        broker_certificates.sync_remote_broker_certs(settings, remote_broker_certs)
+        broker_sync.create_broker_certificates(site_id, settings)
 
 
 class ActivateChangesManager(ActivateChanges):

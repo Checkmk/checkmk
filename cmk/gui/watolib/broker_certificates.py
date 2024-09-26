@@ -2,7 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import abc
 import traceback
 from pathlib import Path
 
@@ -107,6 +107,46 @@ def load_or_create_broker_central_certs() -> PersistedCertificateWithPrivateKey:
 
 def broker_certs_created(site_id: SiteId) -> bool:
     return multisite_cert_file(paths.omd_root, site_id).exists()
+
+
+class BrokerCertificateSync(abc.ABC):
+    @property
+    @abc.abstractmethod
+    def local_broker_ca(self) -> PersistedCertificateWithPrivateKey:
+        raise NotImplementedError
+
+    def broker_certs_created(self, site_id: SiteId, settings: SiteConfiguration) -> bool:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def create_broker_certificates(self, site_id: SiteId, settings: SiteConfiguration) -> None:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def dump_provider_broker_certificates(self) -> None:
+        raise NotImplementedError
+
+
+class CREBrokerCertificateSync(BrokerCertificateSync):
+    def __init__(self) -> None:
+        self._local_broker_ca = load_or_create_broker_central_certs()
+
+    @property
+    def local_broker_ca(self) -> PersistedCertificateWithPrivateKey:
+        return self._local_broker_ca
+
+    def broker_certs_created(self, site_id: SiteId, settings: SiteConfiguration) -> bool:
+        return broker_certs_created(site_id)
+
+    def load_or_create_broker_central_certs(self):
+        return load_or_create_broker_central_certs()
+
+    def create_broker_certificates(self, site_id: SiteId, settings: SiteConfiguration) -> None:
+        remote_broker_certs = create_remote_broker_certs(self.local_broker_ca, site_id, settings)
+        sync_remote_broker_certs(settings, remote_broker_certs)
+
+    def dump_provider_broker_certificates(self) -> None:
+        pass
 
 
 def create_remote_broker_certs(

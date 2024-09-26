@@ -18,7 +18,7 @@ from cmk.gui.quick_setup.v0_unstable.predefined._common import (
     _collect_params_with_defaults_from_form_data,
     _collect_passwords_from_form_data,
     _create_diag_special_agent_input,
-    _find_unique_id,
+    _find_id_in_form_data,
 )
 from cmk.gui.quick_setup.v0_unstable.setups import CallableValidator
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
@@ -68,8 +68,8 @@ def _validate_test_connection(
     all_stages_form_data: ParsedFormData,
 ) -> GeneralStageErrors:
     general_errors: GeneralStageErrors = []
-    site_id = _find_unique_id(all_stages_form_data, "site_selection")
-    host_name = _find_unique_id(all_stages_form_data, "host_name")
+    site_id = _find_id_in_form_data(all_stages_form_data, "site_selection")
+    host_name = _find_id_in_form_data(all_stages_form_data, "host_name")
     params = collect_params(all_stages_form_data, parameter_form)
     passwords = _collect_passwords_from_form_data(all_stages_form_data, parameter_form)
     output = diag_special_agent(
@@ -89,7 +89,7 @@ def validate_unique_id(
     _stage_index: StageIndex,
     stages_form_data: ParsedFormData,
 ) -> GeneralStageErrors:
-    bundle_id = _find_unique_id(stages_form_data, UniqueBundleIDStr)
+    bundle_id = _find_id_in_form_data(stages_form_data, UniqueBundleIDStr)
     if bundle_id is None:
         return [f"Expected the key '{UniqueBundleIDStr}' in the form data"]
 
@@ -104,7 +104,7 @@ def validate_host_name_doesnt_exists(
     _stage_index: StageIndex,
     stages_form_data: ParsedFormData,
 ) -> GeneralStageErrors:
-    host_name = _find_unique_id(stages_form_data, "host_name")
+    host_name = _find_id_in_form_data(stages_form_data, "host_name")
     assert host_name is not None
     host = Host.host(HostName(host_name))
     if host:

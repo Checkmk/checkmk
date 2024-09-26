@@ -77,18 +77,18 @@ def _create_diag_special_agent_input(
     )
 
 
-def _find_unique_id(form_data: Any, target_key: str) -> None | str:
+def _find_id_in_form_data(form_data: Any, target_key: str) -> None | str:
     if isinstance(form_data, dict):
         for key, value in form_data.items():
             if key == target_key:
                 return value
-            result = _find_unique_id(value, target_key)
+            result = _find_id_in_form_data(value, target_key)
             if result is not None:
                 return result
         return None
     if isinstance(form_data, list):
         for item in form_data:
-            result = _find_unique_id(item, target_key)
+            result = _find_id_in_form_data(item, target_key)
             if result is not None:
                 return result
     return None

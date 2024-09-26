@@ -22,7 +22,7 @@ from cmk.gui.quick_setup.v0_unstable.predefined._common import (
     _collect_params_with_defaults_from_form_data,
     _collect_passwords_from_form_data,
     _create_diag_special_agent_input,
-    _find_unique_id,
+    _find_id_in_form_data,
     _match_service_interest,
     build_quick_setup_formspec_map,
 )
@@ -106,8 +106,8 @@ def _recap_service_discovery(
 ) -> Sequence[Widget]:
     params = collect_params(all_stages_form_data, parameter_form)
     passwords = _collect_passwords_from_form_data(all_stages_form_data, parameter_form)
-    site_id = _find_unique_id(all_stages_form_data, "site_selection")
-    host_name = _find_unique_id(all_stages_form_data, "host_name")
+    site_id = _find_id_in_form_data(all_stages_form_data, "site_selection")
+    host_name = _find_id_in_form_data(all_stages_form_data, "host_name")
 
     service_discovery_result = special_agent_discovery_preview(
         SiteId(site_id) if site_id else omd_site(),

@@ -24,7 +24,7 @@ from cmk.gui.quick_setup.v0_unstable.definitions import UniqueBundleIDStr
 from cmk.gui.quick_setup.v0_unstable.predefined._common import (
     _collect_params_with_defaults_from_form_data,
     _collect_passwords_from_form_data,
-    _find_unique_id,
+    _find_id_in_form_data,
 )
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
@@ -225,14 +225,14 @@ def _create_and_save_special_agent_bundle(
     collect_params: Callable[[ParsedFormData, Dictionary], Mapping[str, object]],
 ) -> str:
     rulespec_name = RuleGroup.SpecialAgents(special_agent_name)
-    bundle_id = _find_unique_id(form_data=all_stages_form_data, target_key=UniqueBundleIDStr)
+    bundle_id = _find_id_in_form_data(form_data=all_stages_form_data, target_key=UniqueBundleIDStr)
     if bundle_id is None:
         raise ValueError("No bundle id found")
 
     host_name = all_stages_form_data[FormSpecId("host_data")]["host_name"]
     host_path = all_stages_form_data[FormSpecId("host_data")]["host_path"]
 
-    site_selection = _find_unique_id(all_stages_form_data, "site_selection")
+    site_selection = _find_id_in_form_data(all_stages_form_data, "site_selection")
     site_id = SiteId(site_selection) if site_selection else omd_site()
     params = collect_params(all_stages_form_data, parameter_form)
 

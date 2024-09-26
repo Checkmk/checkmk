@@ -579,7 +579,9 @@ class ModeConfigurationBundle(WatoMode):
         yield PageMenuEntry(
             title=_("Cancel"),
             icon_name="cancel",
-            item=make_simple_link(""),
+            item=make_simple_link(
+                mode_url(ModeEditConfigurationBundles.name(), varname=self._bundle_group)
+            ),
             is_shortcut=True,
         )
 

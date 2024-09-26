@@ -5,6 +5,7 @@
 
 import json
 from collections.abc import Callable
+from functools import partial
 
 import livestatus
 
@@ -20,12 +21,16 @@ from cmk.gui.site_config import get_site_config
 from cmk.gui.type_defs import Choices, FilterHTTPVariables, Row
 from cmk.gui.utils.autocompleter_config import AutocompleterConfig
 from cmk.gui.utils.speaklater import LazyString
-from cmk.gui.valuespec import DualListChoice
+from cmk.gui.valuespec import AutocompleterRegistry, DualListChoice
 
 from .filter import Filter, FilterRegistry
 
 
-def register(filter_registry: FilterRegistry) -> None:
+def register(
+    filter_registry: FilterRegistry,
+    autocompleter_registry: AutocompleterRegistry,
+    site_choices: Callable[[], list[tuple[str, str]]],
+) -> None:
     filter_registry.register(
         SiteFilter(
             title=_l("Site"),
@@ -55,6 +60,10 @@ def register(filter_registry: FilterRegistry) -> None:
             query_filter=query_filters.Query(ident="sites", request_vars=["sites"]),
             description=_l("Associative selection of multiple sites"),
         )
+    )
+
+    autocompleter_registry.register_autocompleter(
+        "sites", partial(sites_autocompleter, sites_options=site_choices)
     )
 
 

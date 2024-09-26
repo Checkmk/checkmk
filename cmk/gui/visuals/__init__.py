@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable
+
 import cmk.ccc.version as cmk_version
 from cmk.ccc import store
 
@@ -10,7 +12,7 @@ from cmk.utils import paths
 
 from cmk.gui import hooks, utils
 from cmk.gui.pages import PageRegistry
-from cmk.gui.valuespec import autocompleter_registry
+from cmk.gui.valuespec import AutocompleterRegistry
 
 from . import _filters, _site_filters, info
 from ._add_to_visual import (
@@ -100,6 +102,8 @@ def register(
     page_registry: PageRegistry,
     _visual_info_registry: VisualInfoRegistry,
     _filter_registry: FilterRegistry,
+    autocompleter_registry: AutocompleterRegistry,
+    site_choices: Callable[[], list[tuple[str, str]]],
 ) -> None:
     page_registry.register_page("ajax_visual_filter_list_get_choice")(
         PageAjaxVisualFilterListGetChoice
@@ -108,7 +112,7 @@ def register(
     page_registry.register_page_handler("ajax_add_visual", ajax_add_visual)
     info.register(_visual_info_registry)
     _filters.register(page_registry, filter_registry)
-    _site_filters.register(filter_registry)
+    _site_filters.register(filter_registry, autocompleter_registry, site_choices)
     autocompleter_registry.register_autocompleter(
         "add_to_dashboard_choices", add_to_dashboard_choices_autocompleter
     )

@@ -5,8 +5,6 @@
 
 """Central module for common (non-edition specific) registrations"""
 
-from functools import partial
-
 from livestatus import MultiSiteConnection
 
 from cmk.ccc.crash_reporting import crash_report_registry
@@ -82,7 +80,6 @@ from cmk.gui.views.layout import layout_registry
 from cmk.gui.views.row_post_processing import register_row_post_processor
 from cmk.gui.views.sorter import sorter_registry
 from cmk.gui.views.store import multisite_builtin_views
-from cmk.gui.visuals._site_filters import sites_autocompleter
 from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
@@ -121,16 +118,11 @@ def register_sites_options() -> None:
     visuals.MultipleSitesFilter.sites_options = site_choices
     visuals.SiteFilter.heading_hook = visuals.cre_site_filter_heading_info
 
-    autocompleter_registry.register_autocompleter(
-        "sites", partial(sites_autocompleter, sites_options=site_choices)
-    )
-
 
 def register() -> None:
     crash_handler.register(crash_report_registry)
     default_permissions.register(permission_section_registry, permission_registry)
     register_cre_licensing_handler()
-    visuals.register(page_registry, visual_info_registry, filter_registry)
     painter_options.register(painter_option_registry)
     views_registration.register(
         permission_section_registry,

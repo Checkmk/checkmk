@@ -8,9 +8,15 @@
 import cmk.gui.graphing._graph_images as graph_images
 import cmk.gui.graphing._html_render as html_render
 import cmk.gui.pages
+from cmk.gui import visuals
 from cmk.gui.metrics import PageGraphDashlet, PageHostServiceGraphPopup
+from cmk.gui.pages import page_registry
 from cmk.gui.painter.v0.base import painter_registry
+from cmk.gui.sites import site_choices
+from cmk.gui.valuespec import autocompleter_registry
 from cmk.gui.views import graph
+from cmk.gui.visuals.filter import filter_registry
+from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.wato import notification_parameter_registry, NotificationParameterMail
 
 
@@ -31,6 +37,13 @@ def register_painters() -> None:
 
 
 def register() -> None:
+    visuals.register(
+        page_registry,
+        visual_info_registry,
+        filter_registry,
+        autocompleter_registry,
+        site_choices,
+    )
     notification_parameter_registry.register(NotificationParameterMail)
     register_pages()
     register_painters()

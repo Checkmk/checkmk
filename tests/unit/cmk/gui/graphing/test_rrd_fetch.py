@@ -16,14 +16,10 @@ from cmk.utils.metrics import MetricName
 
 from cmk.gui.config import active_config
 from cmk.gui.graphing._formatter import AutoPrecision
-from cmk.gui.graphing._graph_specification import (
-    GraphDataRange,
-    GraphMetric,
-    GraphRecipe,
-    MetricOpRRDSource,
-)
+from cmk.gui.graphing._graph_specification import GraphDataRange, GraphMetric, GraphRecipe
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing._legacy import CheckMetricEntry
+from cmk.gui.graphing._metric_operation import MetricOpRRDSource
 from cmk.gui.graphing._rrd_fetch import (
     _reverse_translate_into_all_potentially_relevant_metrics,
     fetch_rrd_data_for_graph,

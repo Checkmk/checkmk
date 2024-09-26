@@ -10,16 +10,16 @@ from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
 from . import _perfometer
 from ._autocompleter import graph_templates_autocompleter, metrics_autocompleter
 from ._explicit_graphs import ExplicitGraphSpecification
-from ._graph_specification import (
-    graph_specification_registry,
+from ._graph_specification import graph_specification_registry
+from ._graph_templates import TemplateGraphSpecification
+from ._legacy import perfometer_info, PerfometerSpec
+from ._metric_operation import (
     metric_operation_registry,
     MetricOpConstant,
     MetricOpConstantNA,
     MetricOpOperator,
     MetricOpRRDSource,
 )
-from ._graph_templates import TemplateGraphSpecification
-from ._legacy import perfometer_info, PerfometerSpec
 from ._perfometer import get_first_matching_perfometer, parse_perfometer
 from ._settings import ConfigVariableGraphTimeranges
 from ._valuespecs import PageVsAutocomplete

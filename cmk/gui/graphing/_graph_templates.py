@@ -56,12 +56,10 @@ from ._graph_specification import (
     GraphRecipe,
     GraphSpecification,
     HorizontalRule,
-    MetricOpConstant,
-    MetricOpOperator,
-    MetricOpRRDSource,
     MinimalVerticalRange,
 )
 from ._legacy import get_render_function, graph_info, LegacyUnitSpecification, RawGraphTemplate
+from ._metric_operation import MetricOpConstant, MetricOpOperator, MetricOpRRDSource
 from ._translated_metrics import translated_metrics_from_row, TranslatedMetric
 from ._type_defs import GraphConsolidationFunction, LineType
 from ._unit import ConvertibleUnitSpecification

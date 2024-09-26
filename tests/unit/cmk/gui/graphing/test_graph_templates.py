@@ -37,11 +37,7 @@ from cmk.gui.graphing._expression import (
 )
 from cmk.gui.graphing._formatter import AutoPrecision
 from cmk.gui.graphing._from_api import metrics_from_api, RegisteredMetric
-from cmk.gui.graphing._graph_specification import (
-    HorizontalRule,
-    MetricOpOperator,
-    MetricOpRRDSource,
-)
+from cmk.gui.graphing._graph_specification import HorizontalRule
 from cmk.gui.graphing._graph_templates import (
     _evaluate_predictive_metrics,
     _evaluate_scalars,
@@ -57,6 +53,7 @@ from cmk.gui.graphing._graph_templates import (
     MinimalGraphTemplateRange,
 )
 from cmk.gui.graphing._legacy import get_render_function, RawGraphTemplate
+from cmk.gui.graphing._metric_operation import MetricOpOperator, MetricOpRRDSource
 from cmk.gui.graphing._translated_metrics import (
     Original,
     parse_perf_data,

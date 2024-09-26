@@ -36,9 +36,9 @@ from ._graph_specification import (
     MinimalVerticalRange,
 )
 from ._legacy import get_unit_info, LegacyUnitSpecification, UnitInfo
+from ._metric_operation import clean_time_series_point, RRDData
 from ._rrd_fetch import fetch_rrd_data_for_graph
-from ._timeseries import clean_time_series_point
-from ._type_defs import LineType, RRDData
+from ._type_defs import LineType
 from ._unit import user_specific_unit, UserSpecificUnit
 from ._utils import SizeEx
 

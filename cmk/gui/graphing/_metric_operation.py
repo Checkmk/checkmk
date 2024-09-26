@@ -5,32 +5,152 @@
 
 from __future__ import annotations
 
+import functools
+import operator
 from abc import ABC, abstractmethod
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from itertools import chain
-from typing import Annotated, final, Literal
+from typing import Annotated, Callable, final, Literal, TypeVar
 
 from pydantic import BaseModel, computed_field, PlainValidator, SerializeAsAny
 
 from livestatus import SiteId
 
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.plugin_registry import Registry
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 
-from cmk.gui.time_series import TimeSeries
+from cmk.gui.i18n import _
+from cmk.gui.time_series import TimeSeries, TimeSeriesValues
+from cmk.gui.utils import escaping
 
-from ._timeseries import AugmentedTimeSeries, derive_num_points_twindow, time_series_math
-from ._type_defs import GraphConsolidationFunction, Operators, RRDData, RRDDataKey
+from ._type_defs import GraphConsolidationFunction, LineType
+
+Operators = Literal["+", "*", "-", "/", "MAX", "MIN", "AVERAGE", "MERGE"]
+
+
+@dataclass(frozen=True)
+class RRDDataKey:
+    site_id: SiteId
+    host_name: HostName
+    service_name: ServiceName
+    metric_name: str
+    consolidation_function: GraphConsolidationFunction | None
+    scale: float
+
+
+RRDData = Mapping[RRDDataKey, TimeSeries]
+
+
+def _derive_num_points_twindow(rrd_data: RRDData) -> tuple[int, tuple[int, int, int]]:
+    if rrd_data:
+        sample_data = next(iter(rrd_data.values()))
+        return len(sample_data), sample_data.twindow
+    # no data, default clean graph, use for pure scalars on custom graphs
+    return 1, (0, 60, 60)
+
+
+_TOperatorReturn = TypeVar("_TOperatorReturn")
+
+
+def op_func_wrapper(
+    op_func: Callable[[TimeSeries | TimeSeriesValues], _TOperatorReturn],
+    tsp: TimeSeries | TimeSeriesValues,
+) -> _TOperatorReturn | None:
+    if tsp.count(None) < len(tsp):  # At least one non-None value
+        try:
+            return op_func(tsp)
+        except ZeroDivisionError:
+            pass
+    return None
+
+
+def clean_time_series_point(tsp: TimeSeries | TimeSeriesValues) -> list[float]:
+    """removes "None" entries from input list"""
+    return [x for x in tsp if x is not None]
+
+
+def _time_series_operator_sum(tsp: TimeSeries | TimeSeriesValues) -> float:
+    return sum(clean_time_series_point(tsp))
+
+
+def _time_series_operator_product(tsp: TimeSeries | TimeSeriesValues) -> float | None:
+    if None in tsp:
+        return None
+    return functools.reduce(operator.mul, tsp, 1)
+
+
+def _time_series_operator_difference(tsp: TimeSeries | TimeSeriesValues) -> float | None:
+    if None in tsp:
+        return None
+    assert tsp[0] is not None
+    assert tsp[1] is not None
+    return tsp[0] - tsp[1]
+
+
+def _time_series_operator_fraction(tsp: TimeSeries | TimeSeriesValues) -> float | None:
+    if None in tsp or tsp[1] == 0:
+        return None
+    assert tsp[0] is not None
+    assert tsp[1] is not None
+    return tsp[0] / tsp[1]
+
+
+def _time_series_operator_maximum(tsp: TimeSeries | TimeSeriesValues) -> float:
+    return max(clean_time_series_point(tsp))
+
+
+def _time_series_operator_minimum(tsp: TimeSeries | TimeSeriesValues) -> float:
+    return min(clean_time_series_point(tsp))
+
+
+def _time_series_operator_average(tsp: TimeSeries | TimeSeriesValues) -> float:
+    tsp_clean = clean_time_series_point(tsp)
+    return sum(tsp_clean) / len(tsp_clean)
+
+
+def time_series_operators() -> (
+    dict[
+        Operators,
+        tuple[
+            str,
+            Callable[[TimeSeries | TimeSeriesValues], float | None],
+        ],
+    ]
+):
+    return {
+        "+": (_("Sum"), _time_series_operator_sum),
+        "*": (_("Product"), _time_series_operator_product),
+        "-": (_("Difference"), _time_series_operator_difference),
+        "/": (_("Fraction"), _time_series_operator_fraction),
+        "MAX": (_("Maximum"), _time_series_operator_maximum),
+        "MIN": (_("Minimum"), _time_series_operator_minimum),
+        "AVERAGE": (_("Average"), _time_series_operator_average),
+        "MERGE": ("First non None", lambda x: next(iter(clean_time_series_point(x)))),
+    }
 
 
 @dataclass(frozen=True)
 class TranslationKey:
     host_name: HostName
     service_name: ServiceName
+
+
+@dataclass(frozen=True)
+class TimeSeriesMetaData:
+    title: str | None = None
+    color: str | None = None
+    line_type: LineType | Literal["ref"] | None = None
+
+
+@dataclass(frozen=True)
+class AugmentedTimeSeries:
+    data: TimeSeries
+    metadata: TimeSeriesMetaData = TimeSeriesMetaData()
 
 
 class MetricOperation(BaseModel, ABC, frozen=True):
@@ -87,7 +207,7 @@ class MetricOpConstant(MetricOperation, frozen=True):
         yield from ()
 
     def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
-        num_points, twindow = derive_num_points_twindow(rrd_data)
+        num_points, twindow = _derive_num_points_twindow(rrd_data)
         return [AugmentedTimeSeries(data=TimeSeries([self.value] * num_points, twindow))]
 
 
@@ -100,8 +220,37 @@ class MetricOpConstantNA(MetricOperation, frozen=True):
         yield from ()
 
     def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
-        num_points, twindow = derive_num_points_twindow(rrd_data)
+        num_points, twindow = _derive_num_points_twindow(rrd_data)
         return [AugmentedTimeSeries(data=TimeSeries([None] * num_points, twindow))]
+
+
+def _time_series_math(
+    operator_id: Operators,
+    operands_evaluated: list[TimeSeries],
+) -> TimeSeries | None:
+    operators = time_series_operators()
+    if operator_id not in operators:
+        raise MKGeneralException(
+            _("Undefined operator '%s' in graph expression")
+            % escaping.escape_attribute(operator_id)
+        )
+    # Test for correct arity on FOUND[evaluated] data
+    if any(
+        (
+            operator_id in ["-", "/"] and len(operands_evaluated) != 2,
+            len(operands_evaluated) < 1,
+        )
+    ):
+        # raise MKGeneralException(_("Incorrect amount of data to correctly evaluate expression"))
+        # Silently return so to get an empty graph slot
+        return None
+
+    _op_title, op_func = operators[operator_id]
+    twindow = operands_evaluated[0].twindow
+
+    return TimeSeries(
+        [op_func_wrapper(op_func, list(tsp)) for tsp in zip(*operands_evaluated)], twindow
+    )
 
 
 class MetricOpOperator(MetricOperation, frozen=True):
@@ -118,7 +267,7 @@ class MetricOpOperator(MetricOperation, frozen=True):
         yield from (k for o in self.operands for k in o.keys())
 
     def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
-        if result := time_series_math(
+        if result := _time_series_math(
             self.operator_name,
             [
                 operand_evaluated.data
@@ -166,7 +315,7 @@ class MetricOpRRDSource(MetricOperation, frozen=True):
         ) in rrd_data:
             return [AugmentedTimeSeries(data=rrd_data[key])]
 
-        num_points, twindow = derive_num_points_twindow(rrd_data)
+        num_points, twindow = _derive_num_points_twindow(rrd_data)
         return [AugmentedTimeSeries(data=TimeSeries([None] * num_points, twindow))]
 
 

@@ -9,8 +9,7 @@ import pytest
 
 from cmk.ccc.exceptions import MKGeneralException
 
-from cmk.gui.graphing._timeseries import time_series_math
-from cmk.gui.graphing._type_defs import Operators
+from cmk.gui.graphing._metric_operation import _time_series_math, Operators
 from cmk.gui.time_series import TimeSeries
 
 
@@ -22,10 +21,10 @@ from cmk.gui.time_series import TimeSeries
 )
 def test__time_series_math_exc_symbol(args: tuple[Literal["%"], list[TimeSeries]]) -> None:
     with pytest.raises(MKGeneralException, match="Undefined operator"):
-        time_series_math(*args)  # type: ignore[arg-type]
+        _time_series_math(*args)  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize("operator", ["+", "*", "MAX", "MIN", "AVERAGE", "MERGE"])
 def test__time_series_math_stable_singles(operator: Operators) -> None:
     test_ts = TimeSeries([0, 180, 60, 6, 5, 10, None, -2, -3.14])
-    assert time_series_math(operator, [test_ts]) == test_ts
+    assert _time_series_math(operator, [test_ts]) == test_ts

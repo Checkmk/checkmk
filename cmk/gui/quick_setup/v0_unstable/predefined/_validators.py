@@ -80,7 +80,8 @@ def _validate_test_connection(
     )
     for result in output.results:
         if result.return_code != 0:
-            general_errors.append(result.response)
+            # Do not show long output
+            general_errors.append(result.response.split("\n")[-1])
     return general_errors
 
 

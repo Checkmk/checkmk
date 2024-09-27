@@ -37,12 +37,17 @@ do_query() {
             FROM information_schema.TABLES GROUP BY table_schema"
 
     MYSQL_VERSION=$($MYSQL --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -s -e "SELECT VERSION();" | grep -o '^[0-9]\+')
+    MYSQL_FULL_VERSION=$($MYSQL --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -s -e "SELECT VERSION();")
+
     echo "<<<mysql_replica_slave>>>"
     echo "$INSTANCE_HEADER"
-    if [ "$MYSQL_VERSION" -ge 8 ]; then
-        STATUS_COMMAND="show replica status\G"
+
+    if echo "$MYSQL_FULL_VERSION" | grep -q "MariaDB"; then
+        STATUS_COMMAND="SHOW SLAVE STATUS\G"
+    elif [ "$MYSQL_VERSION" -ge 8 ]; then
+        STATUS_COMMAND="SHOW REPLICA STATUS\G"
     else
-        STATUS_COMMAND="show slave status\G"
+        STATUS_COMMAND="SHOW SLAVE STATUS\G"
     fi
     $MYSQL --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -s \
         -e "$STATUS_COMMAND"

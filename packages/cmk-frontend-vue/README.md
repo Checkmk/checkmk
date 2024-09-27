@@ -55,3 +55,11 @@ src/
     graph-designer/  # upcoming: reworked graph designer
         GraphDesignerApp.vue
         components/  # Files for the graph-designer feature
+    notification/
+        NotificationOverviewApp.vue  # Overview page for notifications
+        NotificationParametersOverviewApp.vue # Overview page for notification parameter
+        components/
+            CoreStats.vue  # Core statistics on notification overview page
+            FallbackWarning.vue  # Warning about missing fallback Email address on notification overview page
+            NotificationRules.vue  # Notification rule list on notification overview page
+            NotificationStats.vue  # Notification statistics on notification overview page

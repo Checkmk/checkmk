@@ -18,7 +18,7 @@ from cmk.utils.exceptions import MKTimeout
 from cmk.utils.log import console
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.regex import regex
-from cmk.utils.structured_data import TreeStore
+from cmk.utils.structured_data import make_meta, TreeStore
 from cmk.utils.type_defs import (
     AgentRawData,
     CheckPluginName,
@@ -178,7 +178,11 @@ def _do_inventory_actions_during_checking_for(
     )
 
     if status_data_tree and not status_data_tree.is_empty():
-        tree_store.save(host_name=host_name, tree=status_data_tree)
+        tree_store.save(
+            host_name=host_name,
+            tree=status_data_tree,
+            meta=make_meta(do_archive=False),
+        )
 
 
 def _timing_results(

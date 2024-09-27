@@ -9,7 +9,12 @@ from typing import NamedTuple
 import cmk.utils.paths
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.log import console
-from cmk.utils.structured_data import StructuredDataNode, TreeOrArchiveStore, UpdateResult
+from cmk.utils.structured_data import (
+    make_meta,
+    StructuredDataNode,
+    TreeOrArchiveStore,
+    UpdateResult,
+)
 from cmk.utils.type_defs import (
     EVERYTHING,
     HostName,
@@ -83,7 +88,11 @@ def execute_active_check_inventory(
             tree_or_archive_store.archive(host_name=host_name)
         if save_tree_actions.do_save:
             console.verbose("Save new inventory tree.\n")
-            tree_or_archive_store.save(host_name=host_name, tree=result.inventory_tree)
+            tree_or_archive_store.save(
+                host_name=host_name,
+                tree=result.inventory_tree,
+                meta=make_meta(do_archive=save_tree_actions.do_archive),
+            )
 
     return result.check_result
 

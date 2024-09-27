@@ -34,7 +34,7 @@ from cmk.ccc import store
 
 from cmk.utils.notify_types import (
     EventRule,
-    NotificationParameterConfig,
+    NotificationParameterSpec,
     NotificationRuleID,
     NotifyBulkType,
     NotifyPlugin,
@@ -71,7 +71,11 @@ from cmk.gui.rest_api_types.notifications_types import (
     PluginAdapter,
 )
 from cmk.gui.type_defs import GlobalSettings
-from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoListConfigFile
+from cmk.gui.watolib.simple_config_file import (
+    ConfigFileRegistry,
+    WatoListConfigFile,
+    WatoSimpleConfigFile,
+)
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.utils import wato_root_dir
 
@@ -679,22 +683,10 @@ def find_timeperiod_usage_in_notification_rules(time_period_name: str) -> list[t
     return used_in
 
 
-# TODO Final format has still to be choosen, currently only the parameters are
-# stored without link to notification method
-class NotificationParameterConfigFile(WatoListConfigFile[NotificationParameterConfig]):
+class NotificationParameterConfigFile(WatoSimpleConfigFile[NotificationParameterSpec]):
     def __init__(self) -> None:
         super().__init__(
             config_file_path=Path(wato_root_dir() + "notification_parameter.mk"),
             config_variable="notification_parameter",
-            spec_class=NotificationParameterConfig,
+            spec_class=NotificationParameterSpec,
         )
-
-    def _load_file(self, lock: bool) -> list[NotificationParameterConfig]:
-        notification_parameters = store.load_from_mk_file(
-            self._config_file_path,
-            key=self._config_variable,
-            default=[],
-            lock=lock,
-        )
-
-        return notification_parameters

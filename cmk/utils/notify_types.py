@@ -43,12 +43,16 @@ __all__ = [
     "UUIDs",
     "NotifyBulk",
     "NotifyBulks",
+    "NotificationParameterID",
+    "NotificationParameterMethod",
+    "NotificationParameterSpec",
+    "NotificationParameterSpecs",
     # Classes
     "EventRule",
     "DisabledNotificationsOptions",
     "Contact",
-    "NotificationParameterGeneral",
-    "NotificationParameterConfig",
+    "NotificationParameterGeneralInfos",
+    "NotificationParameterItem",
 ]
 
 ContactName = str
@@ -417,7 +421,6 @@ class BulkParameters(TypedDict, total=False):
 
 PluginNotificationContext = dict[str, str]
 NotificationRuleID = NewType("NotificationRuleID", str)
-NotificationParameterID = NewType("NotificationParameterID", str)
 
 
 class EmailFromOrTo(TypedDict):
@@ -919,14 +922,18 @@ class Contact(TypedDict, total=False):
     service_notification_options: str
 
 
-class NotificationParameterGeneral(TypedDict):
+class NotificationParameterGeneralInfos(TypedDict):
     description: str
     comment: str
     docu_url: str
-    method: str
-    rule_id: str
 
 
-class NotificationParameterConfig(TypedDict):
-    general: NotificationParameterGeneral
+class NotificationParameterItem(TypedDict):
+    general: NotificationParameterGeneralInfos
     parameter_properties: dict[str, Any]
+
+
+NotificationParameterID = NewType("NotificationParameterID", str)
+NotificationParameterMethod = str
+NotificationParameterSpec = dict[NotificationParameterID, NotificationParameterItem]
+NotificationParameterSpecs = dict[NotificationParameterMethod, NotificationParameterSpec]

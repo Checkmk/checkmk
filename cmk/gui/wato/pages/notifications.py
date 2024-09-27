@@ -24,8 +24,10 @@ from cmk.utils.notify import NotificationContext
 from cmk.utils.notify_types import (
     EventRule,
     is_always_bulk,
-    NotificationParameterConfig,
-    NotificationParameterGeneral,
+    NotificationParameterGeneralInfos,
+    NotificationParameterID,
+    NotificationParameterItem,
+    NotificationParameterSpecs,
     NotifyAnalysisInfo,
 )
 from cmk.utils.statename import host_state_name, service_state_name
@@ -76,7 +78,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.site_config import has_wato_slave_sites, site_is_local, wato_slave_sites
 from cmk.gui.table import Table, table_element
-from cmk.gui.type_defs import ActionResult, MegaMenu, PermissionName
+from cmk.gui.type_defs import ActionResult, HTTPVariables, MegaMenu, PermissionName
 from cmk.gui.user_async_replication import user_profile_async_replication_dialog
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -147,6 +149,7 @@ from cmk.gui.watolib.notifications import (
 from cmk.gui.watolib.rulesets import AllRulesets
 from cmk.gui.watolib.sample_config import (
     get_default_notification_rule,
+    new_notification_parameter_id,
     new_notification_rule_id,
 )
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
@@ -2996,17 +2999,16 @@ class ModeNotificationParametersOverview(WatoMode):
         )
 
     def _get_parameter_rulesets(
-        self, all_rulesets: list[NotificationParameterConfig]
+        self,
+        all_parameters: NotificationParameterSpecs,
     ) -> Generator[Rule]:
         for script_name, title in notification_script_choices():
-            ruleset: list[NotificationParameterConfig] = [
-                parameter
-                for parameter in all_rulesets
-                if parameter.get("general", {}).get("method", "") == script_name
-            ]
+            method_parameters: dict[NotificationParameterID, NotificationParameterItem] | None = (
+                all_parameters.get(script_name)
+            )
             yield Rule(
                 i18n=title,
-                count=f"{len(ruleset)}",
+                count="0" if method_parameters is None else f"{len(method_parameters)}",
                 link=makeuri(
                     request,
                     [
@@ -3018,7 +3020,7 @@ class ModeNotificationParametersOverview(WatoMode):
             )
 
     def _get_notification_parameters_data(self) -> NotificationParametersOverview:
-        all_rulesets = NotificationParameterConfigFile().load_for_reading()
+        all_parameters = NotificationParameterConfigFile().load_for_reading()
         return NotificationParametersOverview(
             parameters=[
                 RuleSection(
@@ -3026,7 +3028,7 @@ class ModeNotificationParametersOverview(WatoMode):
                     topics=[
                         RuleTopic(
                             i18n=None,
-                            rules=list(self._get_parameter_rulesets(all_rulesets)),
+                            rules=list(self._get_parameter_rulesets(all_parameters)),
                         )
                     ],
                 )
@@ -3049,12 +3051,15 @@ class ABCNotificationParameterMode(WatoMode):
     def _back_mode(self) -> ActionResult:
         raise NotImplementedError()
 
-    def _load_parameters(self) -> list[NotificationParameterConfig]:
+    def _load_parameters(self) -> NotificationParameterSpecs:
         if transactions.is_transaction():
             return NotificationParameterConfigFile().load_for_modification()
         return NotificationParameterConfigFile().load_for_reading()
 
-    def _save_parameters(self, parameters: list[NotificationParameterConfig]) -> None:
+    def _save_parameters(
+        self,
+        parameters: NotificationParameterSpecs,
+    ) -> None:
         NotificationParameterConfigFile().save(parameters)
 
     def _add_change(self, log_what, log_text):
@@ -3064,32 +3069,36 @@ class ABCNotificationParameterMode(WatoMode):
         raise NotImplementedError()
 
     def _from_vars(self) -> None:
-        self._edit_nr = request.get_integer_input_mandatory("edit", -1)
-        self._clone_nr = request.get_integer_input_mandatory("clone", -1)
-        self._new = self._edit_nr < 0
+        self._edit_nr = request.get_integer_input_mandatory("edit_nr", -1)
+        self._edit_parameter = request.get_str_input_mandatory("parameter", "")
+        clone_id = request.get_str_input_mandatory("clone", "")
+        self._clone_id = NotificationParameterID(clone_id)
 
         self._parameters = self._load_parameters()
+        method_parameters: dict[NotificationParameterID, NotificationParameterItem]
+        self._new = (
+            not (method_parameters := self._parameters.get(self._method(), {}))
+            or self._edit_parameter not in method_parameters
+        )
 
         if self._new:
-            if self._clone_nr >= 0 and not request.var("_clear"):
+            if self._clone_id and not request.var("_clear"):
                 try:
-                    self._parameter = deepcopy(self._parameters[self._clone_nr])
+                    self._parameter = deepcopy(method_parameters[self._clone_id])
                 except IndexError:
                     raise MKUserError(None, _("This %s does not exist.") % "notification parameter")
             else:
-                self._parameter = NotificationParameterConfig(
-                    general=NotificationParameterGeneral(
+                self._parameter = NotificationParameterItem(
+                    general=NotificationParameterGeneralInfos(
                         description="",
                         comment="",
                         docu_url="",
-                        method=self._method(),
-                        rule_id=new_notification_rule_id(),
                     ),
                     parameter_properties=DEFAULT_VALUE,  # type: ignore[typeddict-item]  # can not import in cmk.utils.notify_types
                 )
         else:
             try:
-                self._parameter = self._parameters[self._edit_nr]
+                self._parameter = method_parameters[NotificationParameterID(self._edit_parameter)]
             except IndexError:
                 raise MKUserError(None, _("This %s does not exist.") % "notification parameter")
 
@@ -3109,21 +3118,33 @@ class ABCNotificationParameterMode(WatoMode):
         check_csrf_token()
 
         self._parameters = self._load_parameters()
+        if (method_parameters := self._parameters.get(self._method())) is None:
+            return redirect(mode_url("notification_parameters", method=self._method()))
+
+        method_parameter_list = list(method_parameters.items())
         if request.has_var("_delete"):
-            nr = request.get_integer_input_mandatory("_delete")
-            del self._parameters[nr]
+            parameter_id = request.get_str_input_mandatory("_delete")
+            method_parameters.pop(NotificationParameterID(parameter_id), None)
+            self._parameters[self._method()] = method_parameters
             self._save_parameters(self._parameters)
+
+            parameter_number = next(
+                i for i, v in enumerate(method_parameter_list) if v[0] == parameter_id
+            )
             self._add_change(
                 "notification-delete-notification-parameter",
-                _("Deleted notification parameter %d") % nr,
+                _("Deleted notification parameter %d") % parameter_number,
             )
 
         elif request.has_var("_move"):
             from_pos = request.get_integer_input_mandatory("_move")
             to_pos = request.get_integer_input_mandatory("_index")
-            parameter = self._parameters[from_pos]
-            del self._parameters[from_pos]  # make to_pos now match!
-            self._parameters[to_pos:to_pos] = [parameter]
+
+            parameter = method_parameter_list[from_pos]
+            del method_parameter_list[from_pos]  # make to_pos now match!
+            method_parameter_list[to_pos:to_pos] = [parameter]
+            method_parameter_dict = dict(method_parameter_list)
+            self._parameters[self._method()] = method_parameter_dict
             self._save_parameters(self._parameters)
 
             self._add_change(
@@ -3139,7 +3160,7 @@ class ABCNotificationParameterMode(WatoMode):
     def _vue_field_id(self) -> str:
         return "_vue_edit_notification_parameter"
 
-    def _get_parameter_value_and_origin(self) -> tuple[NotificationParameterConfig, DataOrigin]:
+    def _get_parameter_value_and_origin(self) -> tuple[NotificationParameterItem, DataOrigin]:
         if request.has_var(self._vue_field_id()):
             return (
                 json.loads(request.get_str_input_mandatory(self._vue_field_id())),
@@ -3198,22 +3219,20 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
                         )
                     ],
                 ),
-                page_menu_dropdown_user_related("user_notifications_p"),
             ],
             breadcrumb=breadcrumb,
             inpage_search=PageMenuSearch(),
         )
 
     def page(self) -> None:
-        # TODO Remove if config model is clear
-        if self._method() != "mail":
-            raise MKUserError(None, _("Only 'mail' is currently implemented for this mode"))
-
         parameters = self._load_parameters()
-        if not parameters:
-            html.show_message(_("You have not created any parameters yet."))
+        method_parameters = parameters.get(self._method())
+        if not method_parameters:
+            html.show_message(
+                _("You have not created any parameters for this notification method yet.")
+            )
             return
-        self._render_notification_parameters(parameters)
+        self._render_notification_parameters(method_parameters)
 
     def _render_notification_parameters(
         self,
@@ -3221,13 +3240,13 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
     ):
         notification_parameter = self._notification_parameter()
         with table_element(title=_("Parameters"), limit=None, sortable=False) as table:
-            for nr, parameter in enumerate(parameters):
+            for nr, (parameter_id, parameter) in enumerate(parameters.items()):
                 table.row()
 
                 table.cell("#", css=["narrow nowrap"])
                 html.write_text_permissive(nr)
                 table.cell(_("Actions"), css=["buttons"])
-                links = self._parameter_links(parameter, nr)
+                links = self._parameter_links(parameter, parameter_id, nr)
                 html.icon_button(links.edit, _("Edit this notification parameter"), "edit")
                 html.icon_button(
                     links.clone, _("Create a copy of this notification parameter"), "clone"
@@ -3265,11 +3284,16 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
     def _add_change(self, log_what, log_text):
         _changes.add_change(log_what, log_text, need_restart=False)
 
-    def _parameter_links(self, parameter, nr):
+    def _parameter_links(
+        self,
+        parameter: dict[str, Any],
+        parameter_id: NotificationParameterID,
+        nr: int,
+    ) -> NotificationRuleLinks:
         listmode = "notification_parameters"
         mode = "edit_notification_parameter"
 
-        additional_vars = [
+        additional_vars: HTTPVariables = [
             ("back_mode", "notification_parameters"),
             ("method", self._method()),
         ]
@@ -3278,7 +3302,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
             url=make_action_link(
                 [
                     ("mode", listmode),
-                    ("_delete", nr),
+                    ("_delete", parameter_id),
                 ]
                 + additional_vars
             ),
@@ -3288,21 +3312,22 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
         drag_url = make_action_link(
             [
                 ("mode", listmode),
-                ("_move", nr),
+                ("_move", str(nr)),
             ]
             + additional_vars
         )
         edit_url = folder_preserving_link(
             [
                 ("mode", mode),
-                ("edit", nr),
+                ("parameter", parameter_id),
+                ("edit", str(nr)),
             ]
             + additional_vars
         )
         clone_url = folder_preserving_link(
             [
                 ("mode", mode),
-                ("clone", nr),
+                ("clone", parameter_id),
             ]
             + additional_vars
         )
@@ -3333,12 +3358,12 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
     def title(self) -> str:
         if self._new:
             return _("Add %s notification parameter") % self._method()
-        return _("Edit %s notification parameter %d") % (self._method(), self._edit_nr)
+        return _("Edit %s notification parameter %s") % (self._method(), self._edit_nr)
 
     def _log_text(self, edit_nr: int) -> str:
         if self._new:
             return _("Created new notification parameter")
-        return _("Changed notification parameter %d") % edit_nr
+        return _("Changed notification parameter %s") % edit_nr
 
     def action(self) -> ActionResult:
         check_csrf_token()
@@ -3353,12 +3378,15 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
 
         self._parameter = value
 
-        if self._new and self._clone_nr >= 0:
-            self._parameters[self._clone_nr : self._clone_nr] = [self._parameter]
+        if self._new and self._clone_id:
+            self._parameters[self._method()][new_notification_parameter_id()] = self._parameter
         elif self._new:
-            self._parameters[0:0] = [self._parameter]
+            self._parameters.setdefault(self._method(), {})
+            self._parameters[self._method()][new_notification_parameter_id()] = self._parameter
         else:
-            self._parameters[self._edit_nr] = self._parameter
+            self._parameters[self._method()][NotificationParameterID(self._edit_parameter)] = (
+                self._parameter
+            )
 
         self._save_parameters(self._parameters)
 
@@ -3378,20 +3406,6 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
                     dictionary=FormSpecDictionary(
                         title=Title("Parameter properties"),
                         elements={
-                            "method": DictElement(
-                                parameter_form=String(
-                                    title=Title("Notification method"),
-                                ),
-                                # TODO shouldn't this be hidden? It isn't
-                                render_only=True,
-                            ),
-                            "rule_id": DictElement(
-                                parameter_form=String(
-                                    title=Title("Rule ID"),
-                                ),
-                                # TODO shouldn't this be hidden? It isn't
-                                render_only=True,
-                            ),
                             "description": DictElement(
                                 parameter_form=String(
                                     title=Title("Description"),

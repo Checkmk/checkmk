@@ -149,7 +149,7 @@ python_344:
 	exec_cmd.bat install_legacy.cmd 3.4 4
 	exec_cmd.bat build_environment_legacy.cmd 3.4 4
 	exec_cmd.bat uninstall_legacy.cmd 3.4 4
-	exec_cmd.bat clean_environment.cmd 3.4 4
+#	exec_cmd.bat clean_environment.cmd 3.4 4 DISABLED: NEW TOOLING makes cleaning impossible
 	exec_cmd.bat patch_environment.cmd 3.4 4
 	python_to_cab.cmd $(PYTHON_TMP_DIR_344) $(PYTHON_MODULE_NAME_344) to_save
 	@if not exist $(ARTEFACTS_DIR) mkdir $(ARTEFACTS_DIR) 2> nul

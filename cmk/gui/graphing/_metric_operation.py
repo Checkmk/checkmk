@@ -300,6 +300,9 @@ class MetricOpOperator(MetricOperation, frozen=True):
         return []
 
 
+MetricOpOperator.model_rebuild()
+
+
 class MetricOpRRDSource(MetricOperation, frozen=True):
     site_id: SiteId
     host_name: HostName
@@ -337,6 +340,3 @@ class MetricOpRRDSource(MetricOperation, frozen=True):
 
         num_points, twindow = _derive_num_points_twindow(rrd_data)
         return [AugmentedTimeSeries(data=TimeSeries([None] * num_points, twindow))]
-
-
-MetricOpOperator.model_rebuild()

@@ -8,7 +8,7 @@ import contextlib
 import dataclasses
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from re import Pattern
-from typing import Any, cast, Generic, NamedTuple, NotRequired, TypeAlias, TypeVar
+from typing import Any, cast, FrozenSet, Generic, NamedTuple, NotRequired, Set, TypeAlias, TypeVar
 
 from typing_extensions import TypedDict
 
@@ -150,7 +150,7 @@ class RulesetMatcher:
         host_tags: TagsOfHosts,
         host_paths: Mapping[HostName, str],
         label_manager: LabelManager,
-        all_configured_hosts: Sequence[HostName],
+        all_configured_hosts: FrozenSet[HostName],
         clusters_of: Mapping[HostName, Sequence[HostName]],
         nodes_of: Mapping[HostName, Sequence[HostName]],
     ) -> None:
@@ -400,7 +400,7 @@ class RulesetOptimizer:
         host_tags: TagsOfHosts,
         host_paths: Mapping[HostName, str],
         label_manager: LabelManager,
-        all_configured_hosts: Sequence[HostName],
+        all_configured_hosts: FrozenSet[HostName],
         clusters_of: Mapping[HostName, Sequence[HostName]],
         nodes_of: Mapping[HostName, Sequence[HostName]],
     ) -> None:
@@ -450,11 +450,11 @@ class RulesetOptimizer:
         self.__host_ruleset_cache.clear()
         self._all_matching_hosts_match_cache.clear()
 
-    def all_processed_hosts(self) -> Sequence[HostName]:
+    def all_processed_hosts(self) -> FrozenSet[HostName]:
         """Returns a set of all processed hosts"""
         return self._all_processed_hosts
 
-    def set_all_processed_hosts(self, all_processed_hosts: Iterable[HostName]) -> None:
+    def set_all_processed_hosts(self, all_processed_hosts: Set[HostName]) -> None:
         involved_clusters: set[HostName] = set()
         involved_nodes: set[HostName] = set()
         for hostname in self._all_processed_hosts:
@@ -465,11 +465,11 @@ class RulesetOptimizer:
         for hostname in involved_clusters:
             involved_nodes.update(self._nodes_of.get(hostname, []))
 
-        nodes_and_clusters = involved_clusters | involved_nodes | set(all_processed_hosts)
+        nodes_and_clusters = involved_clusters | involved_nodes | all_processed_hosts
 
         # Only add references to configured hosts
         nodes_and_clusters.intersection_update(self._all_configured_hosts)
-        self._all_processed_hosts = list(nodes_and_clusters)
+        self._all_processed_hosts = frozenset(nodes_and_clusters)
 
         # The folder host lookup includes a list of all -processed- hosts within a given
         # folder. Any update with set_all_processed hosts invalidates this cache, because

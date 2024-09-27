@@ -202,11 +202,17 @@ def _get_services_fs() -> Mapping[str, DictElement]:
     }
 
 
-def _migrate_sequential(value: object) -> Mapping[str, object]:
+def _migrate(value: object) -> Mapping[str, object]:
     if not isinstance(value, dict):
         raise TypeError(value)
 
     value.pop("sequential", None)
+
+    # Migrate from 2.3 valuespec to 2.4 formspec
+    if import_tags := value.get("import_tags"):
+        if import_tags == "all_tags":
+            value["import_tags"] = (import_tags, None)
+
     return value
 
 
@@ -220,7 +226,7 @@ def _migrate_authority(value: object) -> str:
 
 def _formspec() -> Dictionary:
     return Dictionary(
-        migrate=_migrate_sequential,
+        migrate=_migrate,
         elements={
             "authority": DictElement(
                 parameter_form=SingleChoice(

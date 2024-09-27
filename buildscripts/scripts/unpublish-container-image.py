@@ -6,7 +6,7 @@ import argparse
 from collections.abc import Iterator, Sequence
 from typing import Literal
 
-from cmk.utils.version import Version
+from cmk.ccc.version import Version
 
 from .lib.common import load_editions_file
 from .lib.registry import DockerImage, edition_to_registry, get_default_registries, Registry

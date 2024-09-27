@@ -125,7 +125,7 @@ def load_file(filename: Path) -> tuple[Sequence[Vars], Stages]:
     """Read and parse a YAML file containing 'VARIABLES' and 'STAGES' and return a tuple with
     typed content"""
     try:
-        raw_data = yaml.load(Path.read_text(filename), Loader=yaml.BaseLoader)
+        raw_data = yaml.safe_load(Path.read_text(filename))
     except FileNotFoundError:
         raise RuntimeError(
             f"Could not find {filename}. Must be a YAML file containing stage declarations."
@@ -236,7 +236,17 @@ def evaluate_vars(raw_vars: Sequence[Vars], env_vars: Vars) -> Vars:
             )
 
         LOG.debug("evaluate %r run command %r", e["NAME"], cmd)
-        replace_newlines = e.get("REPLACE_NEWLINES", "false") in (
+        replace_newlines = convert_newline_entry_to_bool(e.get("REPLACE_NEWLINES", False))
+        cmd_result = run_shell_command(cmd, replace_newlines)
+        LOG.debug("set to %r", cmd_result)
+        result[e["NAME"]] = cmd_result
+
+    return result
+
+
+def convert_newline_entry_to_bool(entry: str | bool) -> bool:
+    if isinstance(entry, str):
+        return entry.lower() in (
             "y",
             "yes",
             "t",
@@ -244,11 +254,8 @@ def evaluate_vars(raw_vars: Sequence[Vars], env_vars: Vars) -> Vars:
             "on",
             "1",
         )
-        cmd_result = run_shell_command(cmd, replace_newlines)
-        LOG.debug("set to %r", cmd_result)
-        result[e["NAME"]] = cmd_result
 
-    return result
+    return bool(entry)
 
 
 def compile_stage_info(stages_file: Path, env_vars: Vars, no_skip: bool) -> tuple[Vars, Stages]:

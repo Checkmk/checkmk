@@ -28,7 +28,7 @@ import sys
 from pathlib import Path
 from typing import List, Optional, Sequence, Tuple
 
-import docker  # type: ignore
+import docker  # type: ignore[import-untyped]
 import yaml
 
 LOG = logging.getLogger("register-dia")

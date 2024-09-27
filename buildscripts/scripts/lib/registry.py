@@ -16,10 +16,10 @@ from pathlib import Path
 from typing import NamedTuple, Self, TypeAlias
 from urllib.parse import urlparse
 
-import docker  # type: ignore
+import docker  # type: ignore[import-untyped]
 import requests
 
-from cmk.utils.version import BuildDate, ReleaseType, Version
+from cmk.ccc.version import BuildDate, ReleaseType, Version
 
 sys.path.insert(0, Path(__file__).parent.parent.parent.parent.as_posix())
 from tests.testlib.utils import get_cmk_download_credentials as _get_cmk_download_credentials

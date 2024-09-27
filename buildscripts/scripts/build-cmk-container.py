@@ -51,7 +51,7 @@ from shutil import rmtree
 from tempfile import mkdtemp
 from typing import Union
 
-import docker  # type: ignore
+import docker  # type: ignore[import-untyped]
 
 sys.path.insert(0, Path(__file__).parent.parent.parent.as_posix())
 from buildscripts.scripts.lib.common import cwd, strtobool

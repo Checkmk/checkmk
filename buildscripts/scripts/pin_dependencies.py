@@ -9,7 +9,7 @@ import json
 import re
 from typing import Iterator
 
-import pipfile  # type: ignore
+import pipfile  # type: ignore[import-untyped]
 
 
 def insert_pinned_version(p_to_v: dict[str, str], args: argparse.Namespace) -> None:
@@ -58,7 +58,7 @@ def parse_arguments() -> argparse.Namespace:
     return parser.parse_args()
 
 
-if __name__ == "__main__":
+def main() -> None:
     args = parse_arguments()
     loaded_pipfile = pipfile.Pipfile.load(args.path_to_pipfile)
     with open(args.path_to_pipfile_lock) as pl:
@@ -75,3 +75,7 @@ if __name__ == "__main__":
             )
             package_to_version[package] = version
     insert_pinned_version(package_to_version, args)
+
+
+if __name__ == "__main__":
+    main()

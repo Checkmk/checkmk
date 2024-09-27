@@ -355,31 +355,101 @@
             },
             "required": ["name", "title"]
         },
-        "multiple_choice": {
+        "dual_list_choice": {
+            "id": "dual_list_choice",
             "type": "object",
             "properties": {
                 "type": {
-                    "const": "multiple_choice",
-                    "default": "multiple_choice"
-                },
-                "elements": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/$defs/multiple_choice_element"
-                    },
-                    "default": []
-                },
-                "show_toggle_all": {
-                    "type": "boolean",
-                    "default": false
+                    "const": "dual_list_choice",
+                    "default": "dual_list_choice"
                 }
             },
-            "required": ["type", "elements", "show_toggle_all"],
             "allOf": [
                 {
                     "$ref": "#/$defs/form_spec"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "elements": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/multiple_choice_element"
+                            },
+                            "default": []
+                        },
+                        "show_toggle_all": {
+                            "type": "boolean",
+                            "default": false
+                        },
+                        "i18n": {
+                            "type": "object",
+                            "title": "dual_list_choice_i18n",
+                            "properties": {
+                                "add": {
+                                    "type": "string"
+                                },
+                                "remove": {
+                                    "type": "string"
+                                },
+                                "add_all": {
+                                    "type": "string"
+                                },
+                                "remove_all": {
+                                    "type": "string"
+                                },
+                                "available_options": {
+                                    "type": "string"
+                                },
+                                "selected_options": {
+                                    "type": "string"
+                                },
+                                "selected": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "add",
+                                "remove",
+                                "add_all",
+                                "remove_all",
+                                "available_options",
+                                "selected_options",
+                                "selected"
+                            ]
+                        }
+                    },
+                    "required": ["elements", "show_toggle_all", "i18n"]
                 }
-            ]
+            ],
+            "required": ["type"]
+        },
+        "checkbox_list_choice": {
+            "id": "checkbox_list_choice",
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/$defs/form_spec"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "const": "checkbox_list_choice",
+                            "default": "checkbox_list_choice"
+                        },
+                        "elements": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/multiple_choice_element"
+                            },
+                            "default": []
+                        }
+                    },
+                    "required": ["type", "elements", "show_toggle_all"]
+                }
+            ],
+            "required": ["type"]
         },
         "cascading_single_choice_element": {
             "type": "object",
@@ -841,7 +911,10 @@
                     "$ref": "#/$defs/catalog"
                 },
                 {
-                    "$ref": "#/$defs/multiple_choice"
+                    "$ref": "#/$defs/dual_list_choice"
+                },
+                {
+                    "$ref": "#/$defs/checkbox_list_choice"
                 },
                 {
                     "$ref": "#/$defs/time_span"

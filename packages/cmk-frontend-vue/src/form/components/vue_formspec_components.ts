@@ -21,7 +21,8 @@ export type Components =
   | Password
   | DataSize
   | Catalog
-  | MultipleChoice
+  | DualListChoice
+  | CheckboxListChoice
   | TimeSpan
   | Tuple
   | OptionalChoice
@@ -137,10 +138,16 @@ export type Catalog = FormSpec & {
   type: "catalog";
   topics: Topic[];
 };
-export type MultipleChoice = FormSpec & {
-  type: "multiple_choice";
+export type DualListChoice = (FormSpec & {
   elements: MultipleChoiceElement[];
   show_toggle_all: boolean;
+  i18n: DualListChoiceI18N;
+}) & {
+  type: "dual_list_choice";
+};
+export type CheckboxListChoice = FormSpec & {
+  type: "checkbox_list_choice";
+  elements: MultipleChoiceElement[];
 };
 export type TimeSpan = FormSpec & {
   type?: "time_span";
@@ -248,6 +255,15 @@ export interface Topic {
 export interface MultipleChoiceElement {
   name: string;
   title: string;
+}
+export interface DualListChoiceI18N {
+  add: string;
+  remove: string;
+  add_all: string;
+  remove_all: string;
+  available_options: string;
+  selected_options: string;
+  selected: string;
 }
 export interface TimeSpanI18N {
   millisecond: string;

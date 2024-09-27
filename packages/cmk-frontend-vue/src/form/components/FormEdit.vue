@@ -22,13 +22,14 @@ import FormDataSize from '@/form/components/forms/FormDataSize.vue'
 import FormCatalog from '@/form/components/forms/FormCatalog.vue'
 import FormTimeSpan from '@/form/components/forms/FormTimeSpan.vue'
 import type { ValidationMessages } from '@/form/components/utils/validation'
-import FormMultipleChoice from '@/form/components/forms/FormMultipleChoice.vue'
+import FormDualListChoice from '@/form/components/forms/FormDualListChoice.vue'
 import FormPassword from './forms/FormPassword.vue'
 import FormTuple from '@/form/components/forms/FormTuple.vue'
 import FormOptionalChoice from '@/form/components/forms/FormOptionalChoice.vue'
 import FormSimplePassword from '@/form/components/forms/FormSimplePassword.vue'
 import FormCommentTextArea from './forms/FormCommentTextArea.vue'
 import FormListOfStrings from '@/form/components/forms/FormListOfStrings.vue'
+import FormCheckboxListChoice from './forms/FormCheckboxListChoice.vue'
 
 const props = defineProps<{
   spec: FormSpec
@@ -52,7 +53,8 @@ const components: Record<Components['type'], unknown> = {
   boolean_choice: FormBooleanChoice,
   multiline_text: FormMultilineText,
   comment_text_area: FormCommentTextArea,
-  multiple_choice: FormMultipleChoice,
+  dual_list_choice: FormDualListChoice,
+  checkbox_list_choice: FormCheckboxListChoice,
   password: FormPassword,
   data_size: FormDataSize,
   catalog: FormCatalog,

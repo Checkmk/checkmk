@@ -37,6 +37,7 @@
   --icon-check: url('~cmk-frontend/src/themes/facelift/images/icon_check.svg');
   --icon-save: url('~cmk-frontend/src/themes/facelift/images/icon_save.svg');
   --icon-cancel: url('~cmk-frontend/src/themes/facelift/images/icon_cancel.svg');
+  --icon-search: url('~cmk-frontend/src/themes/facelift/images/icon_search_action_light.svg');
 }
 
 @layer theme {

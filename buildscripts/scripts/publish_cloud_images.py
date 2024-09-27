@@ -259,13 +259,17 @@ class AzurePublisher(CloudPublisher):
         resource_group: str,
     ):
         super().__init__(version, build_tag, image_name)
+        assert self.version is not None
+
         credentials = DefaultAzureCredential()
         self.subscription_id = subscription_id
         self.resource_group = resource_group
+        # The image name is hardcoded, because we changing this for each new
+        # major or minor version would require going through the complete
+        # listing process again.
+        # The gallery ID is only visible internally and not visible by users.
         # Use Checkmk_Cloud_Edition_2.2b5 for e.g. testing
-        self.gallery_image_name = (
-            f"Checkmk-Cloud-Edition-{self.version.version.major}.{self.version.version.minor}"
-        )
+        self.gallery_image_name = "Checkmk-Cloud-Edition-2.2"
         self.compute_client = ComputeManagementClient(
             credentials,
             self.subscription_id,

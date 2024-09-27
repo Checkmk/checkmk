@@ -21,7 +21,6 @@ import subprocess
 import sys
 import time
 from collections.abc import Callable, Mapping, Sequence
-from distutils.util import strtobool
 from functools import reduce
 from pathlib import Path
 from typing import Any
@@ -114,7 +113,7 @@ def to_stage_info(raw_stage: Mapping[Any, Any]) -> StageInfo:
         ONLY_WHEN_NOT_EMPTY=str(raw_stage.get("ONLY_WHEN_NOT_EMPTY", "")),
         DIR=str(raw_stage.get("DIR", "")),
         ENV_VARS={str(k): str(v) for k, v in raw_stage.get("ENV_VARS", {}).items()},
-        SEC_VAR_LIST=[v for v in raw_stage.get("SEC_VAR_LIST", [])],
+        SEC_VAR_LIST=list(raw_stage.get("SEC_VAR_LIST", [])),
         COMMAND=str(raw_stage["COMMAND"]),
         TEXT_ON_SKIP=str(raw_stage.get("TEXT_ON_SKIP", "")),
         RESULT_CHECK_TYPE=str(raw_stage.get("RESULT_CHECK_TYPE", "")),
@@ -126,7 +125,7 @@ def load_file(filename: Path) -> tuple[Sequence[Vars], Stages]:
     """Read and parse a YAML file containing 'VARIABLES' and 'STAGES' and return a tuple with
     typed content"""
     try:
-        raw_data = yaml.load(Path.read_text(filename), Loader=yaml.BaseLoader)
+        raw_data = yaml.safe_load(Path.read_text(filename))
     except FileNotFoundError:
         raise RuntimeError(
             f"Could not find {filename}. Must be a YAML file containing stage declarations."
@@ -153,7 +152,7 @@ def apply_variables(in_data: StageInfo, env_vars: Vars) -> StageInfo:
         ONLY_WHEN_NOT_EMPTY=replace_variables(in_data["ONLY_WHEN_NOT_EMPTY"], env_vars),
         DIR=replace_variables(in_data["DIR"], env_vars),
         ENV_VARS={k: replace_variables(v, env_vars) for k, v in in_data["ENV_VARS"].items()},
-        SEC_VAR_LIST=[v for v in in_data["SEC_VAR_LIST"]],
+        SEC_VAR_LIST=list(in_data["SEC_VAR_LIST"]),
         COMMAND=replace_variables(in_data["COMMAND"], env_vars),
         TEXT_ON_SKIP=replace_variables(in_data["TEXT_ON_SKIP"], env_vars),
         RESULT_CHECK_TYPE=replace_variables(in_data["RESULT_CHECK_TYPE"], env_vars),
@@ -170,7 +169,7 @@ def finalize_stage(stage: StageInfo, env_vars: Vars, no_skip: bool) -> StageInfo
             NAME=stage["NAME"],
             DIR=stage.get("DIR", ""),
             ENV_VAR_LIST=[f"{k}={v}" for k, v in stage.get("ENV_VARS", {}).items()],
-            SEC_VAR_LIST=[v for v in stage.get("SEC_VAR_LIST", [])],
+            SEC_VAR_LIST=list(stage.get("SEC_VAR_LIST", [])),
             COMMAND=stage["COMMAND"],
             RESULT_CHECK_TYPE=stage["RESULT_CHECK_TYPE"],
             RESULT_CHECK_FILE_PATTERN=stage["RESULT_CHECK_FILE_PATTERN"],
@@ -230,11 +229,26 @@ def evaluate_vars(raw_vars: Sequence[Vars], env_vars: Vars) -> Mapping[str, str]
             )
 
         LOG.debug("evaluate %r run command %r", e["NAME"], cmd)
-        cmd_result = run_shell_command(cmd, bool(strtobool(e.get("REPLACE_NEWLINES", "false"))))
+        replace_newlines = convert_newline_entry_to_bool(e.get("REPLACE_NEWLINES", False))
+        cmd_result = run_shell_command(cmd, replace_newlines)
         LOG.debug("set to %r", cmd_result)
         result[e["NAME"]] = cmd_result
 
     return result
+
+
+def convert_newline_entry_to_bool(entry: str | bool) -> bool:
+    if isinstance(entry, str):
+        return entry.lower() in (
+            "y",
+            "yes",
+            "t",
+            "true",
+            "on",
+            "1",
+        )
+
+    return bool(entry)
 
 
 def compile_stage_info(stages_file: Path, env_vars: Vars, no_skip: bool) -> tuple[Vars, Stages]:
@@ -294,8 +308,8 @@ async def run_cmd(
     return process.returncode == 0
 
 
-async def run_locally(
-    stages: Stages, exitfirst: bool, filter_substring: str, verbosity: int
+async def run_locally(  # pylint: disable=too-many-branches
+    stages: Stages, exitfirst: bool, filter_substring: list[str], verbosity: int
 ) -> None:
     """Not yet implementd: run all stages by executing each command"""
     col = {
@@ -305,10 +319,27 @@ async def run_locally(
         "bold": "\033[0;37m",
         "reset": "\033[0;0m",
     }
+
+    def stderr_fn(l: str) -> None:
+        if verbosity == 0:
+            fn = output.append
+        else:
+            fn = print
+
+        fn(f"{col['bold']}{name}: {col['purple']}stderr:{col['reset']} {l}")
+
+    def stdout_fn(l: str) -> None:
+        if verbosity == 0:
+            fn = output.append
+        else:
+            fn = print
+
+        fn(f"{col['bold']}{name}: {col['reset']}{l}")
+
     results = {}
     for stage in stages:
         name = stage["NAME"]
-        if filter_substring and not any(map(lambda s: s.lower() in name.lower(), filter_substring)):
+        if filter_substring and not any(s.lower() in name.lower() for s in filter_substring):
             results[name] = f"SKIPPED Reason: none of {filter_substring!r} in name"
             print(f"Stage {name!r}: {results[name]}")
             continue
@@ -331,16 +362,8 @@ async def run_locally(
             env=dict(v.split("=", 1) for v in stage["ENV_VAR_LIST"]),
             cwd=stage["DIR"] or None,
             check=exitfirst,
-            stdout_fn=(
-                lambda l, name=name: (output.append if verbosity == 0 else print)(
-                    f"{col['bold']}{name}: {col['reset']}{l}"
-                )
-            ),
-            stderr_fn=(
-                lambda l, name=name: (output.append if verbosity == 0 else print)(
-                    f"{col['bold']}{name}: {col['purple']}stderr:{col['reset']} {l}"
-                )
-            ),
+            stdout_fn=stdout_fn,
+            stderr_fn=stderr_fn,
         )
         duration = time.time() - t_before
 
@@ -407,14 +430,13 @@ def main() -> None:
             print(f"  {file}")
 
     if args.write_file:
-        json.dump(
-            obj={
-                "VARIABLES": variables,
-                "STAGES": stages,
-            },
-            fp=sys.stdout if args.write_file == "-" else open(args.write_file, "w"),
-            indent=2,
-        )
+        obj = {"VARIABLES": variables, "STAGES": stages}
+        if args.write_file == "-":
+            json.dump(obj=obj, fp=sys.stdout, indent=2)
+        else:
+            with open(Path(args.write_file), "w", encoding="UTF-8") as f:
+                json.dump(obj=obj, fp=f, indent=2)
+
     else:
         print(f"Found {len(stages)} stage commands to run locally")
         loop = asyncio.get_event_loop()

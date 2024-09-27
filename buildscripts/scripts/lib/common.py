@@ -35,15 +35,14 @@ def strtobool(val: str | bool) -> bool:
     val = val.lower()
     if val in ("y", "yes", "t", "true", "on", "1"):
         return True
-    elif val in ("n", "no", "f", "false", "off", "0"):
+    if val in ("n", "no", "f", "false", "off", "0"):
         return False
-    else:
-        raise argparse.ArgumentTypeError("Boolean value expected.")
+    raise argparse.ArgumentTypeError("Boolean value expected.")
 
 
 def load_editions_file(filename: str | Path) -> dict:
     with open(filename) as editions_file:
-        return yaml.load(editions_file, Loader=yaml.FullLoader)
+        return yaml.safe_load(editions_file)
 
 
 @contextmanager

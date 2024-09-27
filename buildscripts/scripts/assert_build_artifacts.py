@@ -70,6 +70,7 @@ class Registry:
             in requests.get(
                 url,
                 auth=(self.credentials.username, self.credentials.password),
+                timeout=10,
             ).json()["tags"]
         )
         if not exists:
@@ -207,6 +208,7 @@ def file_exists_on_download_server(filename: str, version: str, credentials: Cre
         requests.head(
             f"https://download.checkmk.com/checkmk/{version}/{filename}",
             auth=(credentials.username, credentials.password),
+            timeout=10,
         ).status_code
         != 200
     ):

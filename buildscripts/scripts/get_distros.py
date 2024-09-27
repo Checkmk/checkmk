@@ -7,8 +7,7 @@ import sys
 from argparse import ArgumentParser
 from argparse import Namespace as Args
 from collections.abc import Iterable
-
-import yaml
+from pathlib import Path
 
 sys.path.insert(0, Path(__file__).parent.parent.parent.as_posix())
 from buildscripts.scripts.lib.common import flatten, load_editions_file
@@ -57,8 +56,9 @@ def print_editions(args: Args, loaded_yaml: dict) -> None:
 
 
 def test_distro_lists():
-    with open(Path(__file__).parent.parent.parent / "editions.yml") as editions_file:
-        edition_distros = yaml.load(editions_file, Loader=yaml.FullLoader)["editions"]
+    edition_distros = load_editions_file(Path(__file__).parent.parent.parent / "editions.yml")[
+        "editions"
+    ]
     assert distros_for_use_case(edition_distros, "enterprise", "release") == [
         "almalinux-9",
         "centos-8",

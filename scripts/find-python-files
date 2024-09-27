@@ -28,6 +28,7 @@ get_candidates_from_filesystem() {
     PRUNE=
     SEARCH+=" active_checks"
     SEARCH+=" agents"
+    SEARCH+=" buildscripts"
     SEARCH+=" bin"
     PRUNE+=" -path $(realpath bin)/cmk -prune -o" # symlink to bin/check_mk + confusion with cmk/ directory
     SEARCH+=" cmk"

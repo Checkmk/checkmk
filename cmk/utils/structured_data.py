@@ -16,9 +16,7 @@ from collections import Counter
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Generic, Literal, NamedTuple, Self, TypeVar
-
-from typing_extensions import TypedDict
+from typing import Generic, Literal, NamedTuple, Self, TypedDict, TypeVar
 
 from cmk.utils import store
 from cmk.utils.hostaddress import HostName
@@ -1631,6 +1629,58 @@ def load_tree(filepath: Path) -> ImmutableTree:
     return ImmutableTree()
 
 
+class SDMeta(TypedDict):
+    version: Literal["1"]
+    do_archive: bool
+
+
+def make_meta(*, do_archive: bool) -> SDMeta:
+    return SDMeta(version="1", do_archive=do_archive)
+
+
+class SDMetaAndRawTreeV0(TypedDict):
+    meta_version: Literal["0"]
+    meta_do_archive: bool
+    Attributes: SDRawAttributes
+    Table: SDRawTable
+    Nodes: Mapping[SDNodeName, SDRawTree]
+
+
+class SDMetaAndRawTree(TypedDict):
+    meta: SDMeta
+    raw_tree: SDRawTree
+
+
+def parse_from_unzipped(raw: Mapping) -> SDMetaAndRawTree:
+    # Note: Since Checkmk 2.1 we explicitly extract "Attributes", "Table" or "Nodes" while
+    # deserialization. This means that "meta_*" are not taken into account and we stay
+    # compatible.
+    if set(raw) == set(["meta", "raw_tree"]):
+        # Handle future versions
+        return SDMetaAndRawTree(meta=raw["meta"], raw_tree=raw["raw_tree"])
+    return SDMetaAndRawTree(
+        meta=SDMeta(
+            version="1",
+            do_archive=raw.get("meta_do_archive", True),
+        ),
+        raw_tree=SDRawTree(
+            Attributes=raw.get("Attributes", {}),
+            Table=raw.get("Table", {}),
+            Nodes=raw.get("Nodes", {}),
+        ),
+    )
+
+
+def _make_meta_and_raw_tree(meta: SDMeta, raw_tree: SDRawTree) -> SDMetaAndRawTreeV0:
+    return SDMetaAndRawTreeV0(
+        meta_version="0",
+        meta_do_archive=meta["do_archive"],
+        Attributes=raw_tree["Attributes"],
+        Table=raw_tree["Table"],
+        Nodes=raw_tree["Nodes"],
+    )
+
+
 class TreeStore:
     def __init__(self, tree_dir: Path | str) -> None:
         self._tree_dir = Path(tree_dir)
@@ -1639,17 +1689,19 @@ class TreeStore:
     def load(self, *, host_name: HostName) -> ImmutableTree:
         return load_tree(self._tree_file(host_name))
 
-    def save(self, *, host_name: HostName, tree: MutableTree, pretty: bool = False) -> None:
+    def save(
+        self, *, host_name: HostName, tree: MutableTree, meta: SDMeta, pretty: bool = False
+    ) -> None:
         self._tree_dir.mkdir(parents=True, exist_ok=True)
 
         tree_file = self._tree_file(host_name)
 
-        output = tree.serialize()
-        store.save_object_to_file(tree_file, output, pretty=pretty)
+        raw_tree = tree.serialize()
+        store.save_object_to_file(tree_file, raw_tree, pretty=pretty)
 
         buf = io.BytesIO()
         with gzip.GzipFile(fileobj=buf, mode="wb") as f:
-            f.write((repr(output) + "\n").encode("utf-8"))
+            f.write((repr(_make_meta_and_raw_tree(meta, raw_tree)) + "\n").encode("utf-8"))
         store.save_bytes_to_file(self._gz_file(host_name), buf.getvalue())
 
         # Inform Livestatus about the latest inventory update

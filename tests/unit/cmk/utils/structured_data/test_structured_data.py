@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import ast
 import gzip
 import shutil
 from collections.abc import Iterable, Mapping, Sequence
@@ -15,18 +16,25 @@ from tests.testlib.repo import repo_path
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import (
+    _make_meta_and_raw_tree,
     _MutableAttributes,
     _MutableTable,
     ImmutableAttributes,
     ImmutableDeltaTree,
     ImmutableTable,
     ImmutableTree,
+    make_meta,
     MutableTree,
+    parse_from_unzipped,
     parse_visible_raw_path,
     RetentionInterval,
     SDFilterChoice,
+    SDMeta,
+    SDMetaAndRawTree,
+    SDMetaAndRawTreeV0,
     SDNodeName,
     SDPath,
+    SDRawTree,
     SDRetentionFilterChoices,
     TreeStore,
     UpdateResult,
@@ -876,7 +884,7 @@ def test_save_tree(tmp_path: Path) -> None:
     tree = MutableTree()
     tree.add(path=("path-to", "node"), pairs=[{"foo": 1, "bär": 2}])
     tree_store = TreeStore(tmp_path / "inventory")
-    tree_store.save(host_name=host_name, tree=tree)
+    tree_store.save(host_name=host_name, tree=tree, meta=make_meta(do_archive=True))
 
     assert target.exists()
 
@@ -884,7 +892,119 @@ def test_save_tree(tmp_path: Path) -> None:
     assert gzip_filepath.exists()
 
     with gzip.open(str(gzip_filepath), "rb") as f:
-        f.read()
+        content = f.read()
+
+    # Similiar to InventoryUpdater:
+    meta_and_raw_tree = parse_from_unzipped(ast.literal_eval(content.decode("utf-8")))
+    assert meta_and_raw_tree["meta"]["version"] == "1"
+    assert meta_and_raw_tree["meta"]["do_archive"]
+
+    expected_raw_tree = tree.serialize()
+    assert meta_and_raw_tree["raw_tree"]["Attributes"] == expected_raw_tree["Attributes"]
+    assert meta_and_raw_tree["raw_tree"]["Table"] == expected_raw_tree["Table"]
+    assert meta_and_raw_tree["raw_tree"]["Nodes"] == expected_raw_tree["Nodes"]
+
+
+@pytest.mark.parametrize(
+    "raw, expected",
+    [
+        pytest.param(
+            {"Attributes": {}, "Table": {}, "Nodes": {}},
+            SDMetaAndRawTree(
+                meta=SDMeta(version="1", do_archive=True),
+                raw_tree=SDRawTree(Attributes={}, Table={}, Nodes={}),
+            ),
+            id="missing-version:missing-meta",
+        ),
+        pytest.param(
+            {
+                "meta_version": "0",
+                "meta_do_archive": True,
+                "Attributes": {},
+                "Table": {},
+                "Nodes": {},
+            },
+            SDMetaAndRawTree(
+                meta=SDMeta(version="1", do_archive=True),
+                raw_tree=SDRawTree(Attributes={}, Table={}, Nodes={}),
+            ),
+            id="version=0:do-archive",
+        ),
+        pytest.param(
+            {
+                "meta_version": "0",
+                "meta_do_archive": False,
+                "Attributes": {},
+                "Table": {},
+                "Nodes": {},
+            },
+            SDMetaAndRawTree(
+                meta=SDMeta(version="1", do_archive=False),
+                raw_tree=SDRawTree(Attributes={}, Table={}, Nodes={}),
+            ),
+            id="version=0:do-not-archive",
+        ),
+        pytest.param(
+            {
+                "meta": {"version": "1", "do_archive": True},
+                "raw_tree": {"Attributes": {}, "Table": {}, "Nodes": {}},
+            },
+            SDMetaAndRawTree(
+                meta=SDMeta(version="1", do_archive=True),
+                raw_tree=SDRawTree(Attributes={}, Table={}, Nodes={}),
+            ),
+            id="version=1:do-archive",
+        ),
+        pytest.param(
+            {
+                "meta": {"version": "1", "do_archive": False},
+                "raw_tree": {"Attributes": {}, "Table": {}, "Nodes": {}},
+            },
+            SDMetaAndRawTree(
+                meta=SDMeta(version="1", do_archive=False),
+                raw_tree=SDRawTree(Attributes={}, Table={}, Nodes={}),
+            ),
+            id="version=1:do-archive",
+        ),
+    ],
+)
+def test_parse_from_unzipped(raw: Mapping[str, object], expected: SDMetaAndRawTree) -> None:
+    assert parse_from_unzipped(raw) == expected
+
+
+@pytest.mark.parametrize(
+    "meta, raw_tree, expected",
+    [
+        pytest.param(
+            SDMeta(version="1", do_archive=True),
+            SDRawTree(Attributes={}, Table={}, Nodes={}),
+            SDMetaAndRawTreeV0(
+                meta_version="0",
+                meta_do_archive=True,
+                Attributes={},
+                Table={},
+                Nodes={},
+            ),
+            id="version=0:do-archive",
+        ),
+        pytest.param(
+            SDMeta(version="1", do_archive=False),
+            SDRawTree(Attributes={}, Table={}, Nodes={}),
+            SDMetaAndRawTreeV0(
+                meta_version="0",
+                meta_do_archive=False,
+                Attributes={},
+                Table={},
+                Nodes={},
+            ),
+            id="version=0:do-not-archive",
+        ),
+    ],
+)
+def test__make_meta_and_raw_tree(
+    meta: SDMeta, raw_tree: SDRawTree, expected: SDMetaAndRawTreeV0
+) -> None:
+    assert _make_meta_and_raw_tree(meta, raw_tree) == expected
 
 
 @pytest.mark.parametrize(
@@ -981,7 +1101,11 @@ def test_save_and_load_real_tree(tree_name: HostName, tmp_path: Path) -> None:
     orig_tree = _get_tree_store().load(host_name=tree_name)
     tree_store = TreeStore(tmp_path / "inventory")
     try:
-        tree_store.save(host_name=HostName("foo"), tree=_make_mutable_tree(orig_tree))
+        tree_store.save(
+            host_name=HostName("foo"),
+            tree=_make_mutable_tree(orig_tree),
+            meta=make_meta(do_archive=False),
+        )
         loaded_tree = tree_store.load(host_name=HostName("foo"))
         assert orig_tree == loaded_tree
     finally:

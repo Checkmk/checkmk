@@ -38,6 +38,7 @@ class ReceivingProcess(multiprocessing.Process, Generic[_ModelT]):
         model: type[_ModelT],
         callback: Callable[[Channel[_ModelT], DeliveryTag, _ModelT], None],
         queue: str,
+        message_ttl: int | None,
     ) -> None:
         super().__init__()
         self.logger = logger
@@ -45,6 +46,7 @@ class ReceivingProcess(multiprocessing.Process, Generic[_ModelT]):
         self.model = model
         self.callback = callback
         self.queue = queue
+        self.message_ttl = message_ttl
         self.task_name = f"receiving on queue '{self.queue}'"
 
     def run(self) -> None:
@@ -56,7 +58,9 @@ class ReceivingProcess(multiprocessing.Process, Generic[_ModelT]):
         try:
             with Connection(APP_NAME, self.omd_root) as conn:
                 channel: Channel[_ModelT] = conn.channel(self.model)
-                channel.queue_declare(queue=self.queue, bindings=(self.queue,))
+                channel.queue_declare(
+                    queue=self.queue, bindings=(self.queue,), message_ttl=self.message_ttl
+                )
 
                 self.logger.debug("Consuming: %s", self.task_name)
                 channel.consume(self.callback, queue=self.queue)

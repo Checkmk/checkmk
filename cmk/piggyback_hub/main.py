@@ -98,7 +98,12 @@ def run_piggyback_hub(logger: logging.Logger, omd_root: Path) -> int:
     reload_config = Event()
     processes = (
         ReceivingProcess(
-            logger, omd_root, PiggybackPayload, save_payload_on_message(logger, omd_root), "payload"
+            logger,
+            omd_root,
+            PiggybackPayload,
+            save_payload_on_message(logger, omd_root),
+            "payload",
+            message_ttl=600,
         ),
         SendingPayloadProcess(logger, omd_root, reload_config),
         ReceivingProcess(
@@ -107,6 +112,7 @@ def run_piggyback_hub(logger: logging.Logger, omd_root: Path) -> int:
             PiggybackHubConfig,
             save_config_on_message(logger, omd_root, reload_config),
             "config",
+            message_ttl=None,
         ),
     )
 

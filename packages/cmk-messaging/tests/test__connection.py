@@ -28,6 +28,14 @@ class Message(BaseModel):
 
 
 @dataclass(frozen=True)
+class Queue:
+    """Record of a declared queue"""
+
+    name: str
+    arguments: Mapping[str, object] | None = None
+
+
+@dataclass(frozen=True)
 class Binding:
     """Record of a binding"""
 
@@ -50,7 +58,7 @@ class ChannelTester:
     """Test double for the pika channel"""
 
     def __init__(self) -> None:
-        self.declared_queues: list[str] = []
+        self.declared_queues: list[Queue] = []
         self.bound_queues: list[Binding] = []
         self.published_messages: list[Published] = []
         self.consumer: (
@@ -60,8 +68,8 @@ class ChannelTester:
             | None
         ) = None
 
-    def queue_declare(self, queue: str) -> None:
-        self.declared_queues.append(queue)
+    def queue_declare(self, queue: str, arguments: Mapping[str, object] | None = None) -> None:
+        self.declared_queues.append(Queue(queue, arguments))
 
     def queue_bind(
         self,
@@ -127,15 +135,23 @@ class TestChannel:
         channel, test_channel = _make_test_channel()
 
         channel.queue_declare()
-        assert test_channel.declared_queues == ["cmk.app.my-app"]
+        assert test_channel.declared_queues == [Queue("cmk.app.my-app")]
         assert test_channel.bound_queues == [Binding("cmk.local", "*.my-app", "cmk.app.my-app")]
+
+    @staticmethod
+    def test_queue_declare_ttl() -> None:
+        """Declare a queue with ttl"""
+        channel, test_channel = _make_test_channel()
+
+        channel.queue_declare(message_ttl=42)
+        assert test_channel.declared_queues[0] == Queue("cmk.app.my-app", {"x-message-ttl": 42000})
 
     @staticmethod
     def test_queue_declare_multiple() -> None:
         channel, test_channel = _make_test_channel()
 
         channel.queue_declare("my-queue", ["my-first-binding", "my-second-binding.*.yodo"])
-        assert test_channel.declared_queues == ["cmk.app.my-app.my-queue"]
+        assert test_channel.declared_queues == [Queue("cmk.app.my-app.my-queue")]
         assert test_channel.bound_queues == [
             Binding("cmk.local", "*.my-app.my-first-binding", "cmk.app.my-app.my-queue"),
             Binding("cmk.local", "*.my-app.my-second-binding.*.yodo", "cmk.app.my-app.my-queue"),

@@ -6,7 +6,7 @@
 
 import socket
 import ssl
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from types import TracebackType
@@ -52,7 +52,9 @@ class ConnectionUnknown:
 class ChannelP(Protocol):
     """Protocol of the wrapped channel type"""
 
-    def queue_declare(self, queue: str) -> None: ...
+    def queue_declare(
+        self, queue: str, *, arguments: Mapping[str, object] | None = None
+    ) -> None: ...
 
     def queue_bind(
         self, queue: str, exchange: str, routing_key: str, arguments: None = None
@@ -130,6 +132,7 @@ class Channel(Generic[_ModelT]):
         self,
         queue: str | None = None,
         bindings: Sequence[str | None] = (None,),
+        message_ttl: int | None = None,
     ) -> None:
         """
         Bind a queue to the local exchange with the given queue and bindings.
@@ -143,7 +146,10 @@ class Channel(Generic[_ModelT]):
         You can omit all arguments, but you _must_ bind in order to consume messages.
         """
         full_queue_name = self._make_queue_name(queue)
-        self._pchannel.queue_declare(queue=full_queue_name)
+        self._pchannel.queue_declare(
+            queue=full_queue_name,
+            arguments=None if message_ttl is None else {"x-message-ttl": message_ttl * 1000},
+        )
         for binding in bindings:
             self._pchannel.queue_bind(
                 exchange=LOCAL_EXCHANGE,

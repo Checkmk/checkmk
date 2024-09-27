@@ -17,7 +17,7 @@ from cmk.utils.regex import regex
 from cmk.utils.resulttype import Result
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import ServiceName
-from cmk.utils.structured_data import TreeStore
+from cmk.utils.structured_data import make_meta, TreeStore
 from cmk.utils.timeperiod import check_timeperiod, TimeperiodName
 
 from cmk.snmplib import SNMPRawData
@@ -140,7 +140,11 @@ def _do_inventory_actions_during_checking_for(
     )
 
     if status_data_tree:
-        tree_store.save(host_name=host_name, tree=status_data_tree)
+        tree_store.save(
+            host_name=host_name,
+            tree=status_data_tree,
+            meta=make_meta(do_archive=False),
+        )
 
 
 class PluginState(NamedTuple):

@@ -2010,7 +2010,13 @@ class ConfigCache:
             ),
             clusters_of=self._clusters_of_cache,
             nodes_of=self._nodes_cache,
-            all_configured_hosts=list(set(self.hosts_config)),
+            all_configured_hosts=frozenset(
+                itertools.chain(
+                    self.hosts_config.hosts,
+                    self.hosts_config.clusters,
+                    self.hosts_config.shadow_hosts,
+                )
+            ),
             builtin_host_labels_store=BuiltinHostLabelsStore(),
             debug_matching_stats=ruleset_matching_stats,
         )

@@ -149,7 +149,7 @@ def test_ruleset_matcher_get_host_values_labels(
             service_label_rules=(),
             discovered_labels_of_service=lambda *args, **kw: {},
         ),
-        all_configured_hosts=[HostName("host1"), HostName("host2")],
+        all_configured_hosts=frozenset([HostName("host1"), HostName("host2")]),
         clusters_of={},
         nodes_of={},
         builtin_host_labels_store=BuiltinHostLabelsStore(),
@@ -187,7 +187,7 @@ def test_labels_of_service(monkeypatch: MonkeyPatch) -> None:
             ],
             discovered_labels_of_service=lambda *args, **kw: {},
         ),
-        all_configured_hosts=[test_host, xyz_host],
+        all_configured_hosts=frozenset([test_host, xyz_host]),
         clusters_of={},
         nodes_of={},
         builtin_host_labels_store=BuiltinHostLabelsStore(),
@@ -220,7 +220,7 @@ def test_labels_of_service_discovered_labels() -> None:
                 lambda host_name, *args, **kw: {"äzzzz": "eeeeez"} if host_name == test_host else {}
             ),
         ),
-        all_configured_hosts=[test_host],
+        all_configured_hosts=frozenset([test_host]),
         clusters_of={},
         nodes_of={},
         builtin_host_labels_store=BuiltinHostLabelsStore(),
@@ -252,12 +252,14 @@ def test_basic_get_host_values() -> None:
             service_label_rules=(),
             discovered_labels_of_service=lambda *args, **kw: {},
         ),
-        all_configured_hosts=[
-            HostName("abc"),
-            HostName("xyz"),
-            HostName("host1"),
-            HostName("host2"),
-        ],
+        all_configured_hosts=frozenset(
+            [
+                HostName("abc"),
+                HostName("xyz"),
+                HostName("host1"),
+                HostName("host2"),
+            ]
+        ),
         clusters_of={},
         nodes_of={},
         builtin_host_labels_store=BuiltinHostLabelsStore(),
@@ -292,13 +294,15 @@ def test_basic_get_host_values_subfolders() -> None:
             service_label_rules=(),
             discovered_labels_of_service=lambda *args, **kw: {},
         ),
-        all_configured_hosts=[
-            HostName("abc"),
-            HostName("xyz"),
-            HostName("lvl1"),
-            HostName("lvl2"),
-            HostName("lvl1a"),
-        ],
+        all_configured_hosts=frozenset(
+            [
+                HostName("abc"),
+                HostName("xyz"),
+                HostName("lvl1"),
+                HostName("lvl2"),
+                HostName("lvl1a"),
+            ]
+        ),
         clusters_of={},
         nodes_of={},
         builtin_host_labels_store=BuiltinHostLabelsStore(),
@@ -369,12 +373,14 @@ def test_basic_host_ruleset_get_merged_dict_values() -> None:
             service_label_rules=(),
             discovered_labels_of_service=lambda *args, **kw: {},
         ),
-        all_configured_hosts=[
-            HostName("abc"),
-            HostName("xyz"),
-            HostName("host1"),
-            HostName("host2"),
-        ],
+        all_configured_hosts=frozenset(
+            [
+                HostName("abc"),
+                HostName("xyz"),
+                HostName("host1"),
+                HostName("host2"),
+            ]
+        ),
         clusters_of={},
         nodes_of={},
         builtin_host_labels_store=BuiltinHostLabelsStore(),
@@ -445,12 +451,14 @@ def test_basic_host_ruleset_get_host_bool_value() -> None:
             service_label_rules=(),
             discovered_labels_of_service=lambda *args, **kw: {},
         ),
-        all_configured_hosts=[
-            HostName("abc"),
-            HostName("xyz"),
-            HostName("host1"),
-            HostName("host2"),
-        ],
+        all_configured_hosts=frozenset(
+            [
+                HostName("abc"),
+                HostName("xyz"),
+                HostName("host1"),
+                HostName("host2"),
+            ]
+        ),
         clusters_of={},
         nodes_of={},
         builtin_host_labels_store=BuiltinHostLabelsStore(),
@@ -569,11 +577,13 @@ def test_ruleset_matcher_get_host_values_tags(
             service_label_rules=(),
             discovered_labels_of_service=lambda *args, **kw: {},
         ),
-        all_configured_hosts=[
-            HostName("host1"),
-            HostName("host2"),
-            HostName("host3"),
-        ],
+        all_configured_hosts=frozenset(
+            [
+                HostName("host1"),
+                HostName("host2"),
+                HostName("host3"),
+            ]
+        ),
         clusters_of={},
         nodes_of={},
         builtin_host_labels_store=BuiltinHostLabelsStore(),

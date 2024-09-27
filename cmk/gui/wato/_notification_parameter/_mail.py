@@ -76,6 +76,7 @@ class NotificationParameterMail(NotificationParameter):
                 group=DictGroup(
                     title=Title("Settings"),
                 ),
+                # TODO only option that crashes from old configs, getting {"automatic": "http"}
                 parameter_form=CascadingSingleChoice(
                     title=Title("URL prefix for links to Checkmk"),
                     help_text=Help(
@@ -313,6 +314,15 @@ def _content_elements() -> dict[str, DictElement[Any]]:
                     "a notification."
                 ),
             ),
+        ),
+        "no_floating_graphs": DictElement(
+            group=DictGroup(
+                title=Title("Email body/content"),
+            ),
+            parameter_form=FixedValue(
+                value=True,
+            ),
+            render_only=True,
         ),
     }
 

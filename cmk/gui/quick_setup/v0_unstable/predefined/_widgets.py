@@ -7,7 +7,12 @@ from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.fields.definitions import HOST_NAME_REGEXP
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
 from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout
-from cmk.gui.quick_setup.v0_unstable.definitions import UniqueBundleIDStr, UniqueFormSpecIDStr
+from cmk.gui.quick_setup.v0_unstable.definitions import (
+    QSHostName,
+    QSHostPath,
+    UniqueBundleIDStr,
+    UniqueFormSpecIDStr,
+)
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, FormSpecWrapper
 from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
 from cmk.gui.watolib.hosts_and_folders import folder_tree
@@ -99,8 +104,8 @@ def host_name_and_host_path_formspec_wrapper(
         id=FormSpecId("host_data"),
         form_spec=DictionaryExtended(
             elements={
-                "host_name": _host_name_dict_element(prefill_template=host_prefill_template),
-                "host_path": _host_path_dict_element(),
+                QSHostName: _host_name_dict_element(prefill_template=host_prefill_template),
+                QSHostPath: _host_path_dict_element(),
             },
             layout=DictionaryLayout.two_columns,
         ),

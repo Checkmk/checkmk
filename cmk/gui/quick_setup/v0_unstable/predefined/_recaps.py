@@ -18,6 +18,7 @@ from cmk.gui.form_specs.vue.form_spec_visitor import serialize_data_for_frontend
 from cmk.gui.form_specs.vue.visitors import DataOrigin
 from cmk.gui.i18n import ungettext
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
+from cmk.gui.quick_setup.v0_unstable.definitions import QSHostName
 from cmk.gui.quick_setup.v0_unstable.predefined._common import (
     _collect_params_with_defaults_from_form_data,
     _collect_passwords_from_form_data,
@@ -107,7 +108,7 @@ def _recap_service_discovery(
     params = collect_params(all_stages_form_data, parameter_form)
     passwords = _collect_passwords_from_form_data(all_stages_form_data, parameter_form)
     site_id = _find_id_in_form_data(all_stages_form_data, "site_selection")
-    host_name = _find_id_in_form_data(all_stages_form_data, "host_name")
+    host_name = _find_id_in_form_data(all_stages_form_data, QSHostName)
 
     service_discovery_result = special_agent_discovery_preview(
         SiteId(site_id) if site_id else omd_site(),

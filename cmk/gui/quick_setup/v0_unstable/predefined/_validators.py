@@ -13,7 +13,7 @@ from cmk.ccc.site import omd_site
 from cmk.utils.hostaddress import HostName
 
 from cmk.gui.i18n import _
-from cmk.gui.quick_setup.v0_unstable.definitions import UniqueBundleIDStr
+from cmk.gui.quick_setup.v0_unstable.definitions import QSHostName, UniqueBundleIDStr
 from cmk.gui.quick_setup.v0_unstable.predefined._common import (
     _collect_params_with_defaults_from_form_data,
     _collect_passwords_from_form_data,
@@ -69,7 +69,7 @@ def _validate_test_connection(
 ) -> GeneralStageErrors:
     general_errors: GeneralStageErrors = []
     site_id = _find_id_in_form_data(all_stages_form_data, "site_selection")
-    host_name = _find_id_in_form_data(all_stages_form_data, "host_name")
+    host_name = _find_id_in_form_data(all_stages_form_data, QSHostName)
     params = collect_params(all_stages_form_data, parameter_form)
     passwords = _collect_passwords_from_form_data(all_stages_form_data, parameter_form)
     output = diag_special_agent(
@@ -105,7 +105,7 @@ def validate_host_name_doesnt_exists(
     _stage_index: StageIndex,
     stages_form_data: ParsedFormData,
 ) -> GeneralStageErrors:
-    host_name = _find_id_in_form_data(stages_form_data, "host_name")
+    host_name = _find_id_in_form_data(stages_form_data, QSHostName)
     assert host_name is not None
     host = Host.host(HostName(host_name))
     if host:

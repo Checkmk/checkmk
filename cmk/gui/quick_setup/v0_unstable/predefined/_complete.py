@@ -20,7 +20,7 @@ from cmk.utils.rulesets.ruleset_matcher import RuleConditionsSpec, RuleOptionsSp
 from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.quick_setup.v0_unstable.definitions import UniqueBundleIDStr
+from cmk.gui.quick_setup.v0_unstable.definitions import QSHostName, QSHostPath, UniqueBundleIDStr
 from cmk.gui.quick_setup.v0_unstable.predefined._common import (
     _collect_params_with_defaults_from_form_data,
     _collect_passwords_from_form_data,
@@ -239,8 +239,8 @@ def _create_and_save_special_agent_bundle(
     rulespec_name = RuleGroup.SpecialAgents(special_agent_name)
     bundle_id = _find_bundle_id(all_stages_form_data)
 
-    host_name = all_stages_form_data[FormSpecId("host_data")]["host_name"]
-    host_path = all_stages_form_data[FormSpecId("host_data")]["host_path"]
+    host_name = all_stages_form_data[FormSpecId("host_data")][QSHostName]
+    host_path = all_stages_form_data[FormSpecId("host_data")][QSHostPath]
 
     site_selection = _find_id_in_form_data(all_stages_form_data, "site_selection")
     site_id = SiteId(site_selection) if site_selection else omd_site()

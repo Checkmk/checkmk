@@ -13,7 +13,12 @@ from cmk.utils.user import UserId
 from cmk.base.server_side_calls import load_special_agents
 
 from cmk.gui.quick_setup.config_setups.aws.form_specs import quick_setup_aws_form_spec
-from cmk.gui.quick_setup.v0_unstable.definitions import QSHostName, QSHostPath, UniqueFormSpecIDStr
+from cmk.gui.quick_setup.v0_unstable.definitions import (
+    QSHostName,
+    QSHostPath,
+    QSSiteSelection,
+    UniqueFormSpecIDStr,
+)
 from cmk.gui.quick_setup.v0_unstable.predefined import (
     collect_params_from_form_data,
     collect_params_with_defaults_from_form_data,
@@ -63,7 +68,7 @@ ALL_FORM_SPEC_DATA: ParsedFormData = {
             "elasticache": ["all", {"limits": "limits"}],
         },
     },
-    FormSpecId("site"): {"site_selection": "my_site"},
+    FormSpecId("site"): {QSSiteSelection: "my_site"},
     FormSpecId("aws_tags"): {"overall_tags": {}},
 }
 

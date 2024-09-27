@@ -20,14 +20,18 @@ from cmk.utils.rulesets.ruleset_matcher import RuleConditionsSpec, RuleOptionsSp
 from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.quick_setup.v0_unstable.definitions import QSHostName, QSHostPath, UniqueBundleIDStr
+from cmk.gui.quick_setup.v0_unstable.definitions import (
+    QSHostName,
+    QSHostPath,
+    QSSiteSelection,
+    UniqueBundleIDStr,
+)
 from cmk.gui.quick_setup.v0_unstable.predefined._common import (
     _collect_params_with_defaults_from_form_data,
     _collect_passwords_from_form_data,
     _find_id_in_form_data,
 )
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData
-from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
 from cmk.gui.site_config import site_is_local
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.wato.pages.activate_changes import ModeActivateChanges
@@ -239,10 +243,13 @@ def _create_and_save_special_agent_bundle(
     rulespec_name = RuleGroup.SpecialAgents(special_agent_name)
     bundle_id = _find_bundle_id(all_stages_form_data)
 
-    host_name = all_stages_form_data[FormSpecId("host_data")][QSHostName]
-    host_path = all_stages_form_data[FormSpecId("host_data")][QSHostPath]
+    host_name = _find_id_in_form_data(all_stages_form_data, QSHostName)
+    host_path = _find_id_in_form_data(all_stages_form_data, QSHostPath)
 
-    site_selection = _find_id_in_form_data(all_stages_form_data, "site_selection")
+    if host_name is None or host_path is None:
+        raise ValueError("Host name or host path not found in form data")
+
+    site_selection = _find_id_in_form_data(all_stages_form_data, QSSiteSelection)
     site_id = SiteId(site_selection) if site_selection else omd_site()
     params = collect_params(all_stages_form_data, parameter_form)
 
@@ -292,7 +299,7 @@ def _create_and_save_special_agent_bundle(
         ),
     )
     try:
-        host: Host = Host.load_host(host_name)
+        host: Host = Host.load_host(HostName(host_name))
         if not site_is_local(active_config, site_id):
             get_check_table(host, DiscoveryAction.REFRESH, raise_errors=False)
             snapshot = fetch_service_discovery_background_job_status(site_id, host_name)

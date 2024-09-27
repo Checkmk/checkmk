@@ -13,7 +13,11 @@ from cmk.ccc.site import omd_site
 from cmk.utils.hostaddress import HostName
 
 from cmk.gui.i18n import _
-from cmk.gui.quick_setup.v0_unstable.definitions import QSHostName, UniqueBundleIDStr
+from cmk.gui.quick_setup.v0_unstable.definitions import (
+    QSHostName,
+    QSSiteSelection,
+    UniqueBundleIDStr,
+)
 from cmk.gui.quick_setup.v0_unstable.predefined._common import (
     _collect_params_with_defaults_from_form_data,
     _collect_passwords_from_form_data,
@@ -68,7 +72,7 @@ def _validate_test_connection(
     all_stages_form_data: ParsedFormData,
 ) -> GeneralStageErrors:
     general_errors: GeneralStageErrors = []
-    site_id = _find_id_in_form_data(all_stages_form_data, "site_selection")
+    site_id = _find_id_in_form_data(all_stages_form_data, QSSiteSelection)
     host_name = _find_id_in_form_data(all_stages_form_data, QSHostName)
     params = collect_params(all_stages_form_data, parameter_form)
     passwords = _collect_passwords_from_form_data(all_stages_form_data, parameter_form)

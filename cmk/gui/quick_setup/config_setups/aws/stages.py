@@ -14,6 +14,7 @@ from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout
 from cmk.gui.quick_setup.config_setups.aws import form_specs as aws
 from cmk.gui.quick_setup.config_setups.aws import ruleset_helper
 from cmk.gui.quick_setup.config_setups.aws.form_specs import quick_setup_aws_form_spec
+from cmk.gui.quick_setup.v0_unstable.definitions import QSSiteSelection
 from cmk.gui.quick_setup.v0_unstable.predefined import (
     collect_params_from_form_data,
     complete,
@@ -127,7 +128,7 @@ def _configure() -> Sequence[Widget]:
                     id=FormSpecId("site"),
                     form_spec=DictionaryExtended(
                         elements={
-                            "site_selection": DictElement(
+                            QSSiteSelection: DictElement(
                                 parameter_form=SingleChoice(
                                     elements=[
                                         SingleChoiceElement(

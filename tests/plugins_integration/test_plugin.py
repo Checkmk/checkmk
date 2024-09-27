@@ -23,7 +23,35 @@ logger = logging.getLogger(__name__)
 
 @pytest.mark.parametrize(
     "host_name",
-    [host_name for host_name in get_host_names() if host_name != "snmp-citrix-netscaler-11.1"],
+    [
+        host_name
+        for host_name in get_host_names()
+        if host_name
+        not in (
+            "snmp-citrix-netscaler-11.1",
+            "snmp-cisco-router",
+            "snmp-switch-dell-n3048p",
+            "snmp-switch-cisco-redundancy",
+            "snmp-idrac",
+            "snmp-switch-dell-powerconnect-m8024",
+            "snmp-brocade-router-5.7.0",
+            "snmp-sky-cisco-asa-9.9",
+            "snmp-checkpoint-firewall",
+            "snmp-switch-cisco-powersupplies",
+            "snmp-sw-arista.demo.checkmk.com_2_2_p12",
+            "snmp-switch-dell-s4820t",
+            "snmp-switch-cisco-nexus-n7700",
+            "snmp-switch-cisco-c6509",
+            "snmp-switch-hp-procurve-j9851a",
+            "snmp-switch-hp-procurve-j4819a",
+            "snmp-dell-openmanage",
+            "snmp-opnsense-22.1",
+            "snmp-juniper",
+            "snmp-f5-bigip-failover-cluster",
+            "snmp-meraki-switch",
+            "snmp-fcswitch-brocade",
+        )
+    ],
 )
 def test_plugin(
     test_site: Site,

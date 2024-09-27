@@ -360,7 +360,7 @@ class ABCEditGlobalSettingMode(WatoMode):
             new_value = self._valuespec.from_html_vars("ve")
             self._valuespec.validate_value(new_value, "ve")
 
-            current = self._current_settings[self._varname]
+            current = self._current_settings.get(self._varname)
             self._current_settings[self._varname] = new_value
             msg = HTML.without_escaping(
                 _("Changed global configuration variable %s to %s.")

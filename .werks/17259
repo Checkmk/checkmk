@@ -1,0 +1,25 @@
+Title: Fix mismatching network interface and switch port services
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1727275034
+Edition: cre
+Level: 1
+Version: 2.2.0p35
+
+When configuring network interfaces to be discovered by alias or
+description (rule "Network interface and switch port discovery"), there
+was a chance of a mismatch between the discovered service item and the
+interface checked by the service.
+
+This happened if the alias or description of one interface matched the
+index of another interface. For example, if the interface discovery is
+configured to discover interfaces by alias, then the service "Interface
+5" is supposed to check the interface with the alias "5". Instead, it
+checked the interface with the index 5.
+
+<strong>Compatibility Hint</strong>
+
+To apply the fix, you need to remove the interface services and
+rediscover them. If you do not remove and rediscover them, the fix will
+not be applied and you might still have mismatched services.

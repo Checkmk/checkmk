@@ -202,11 +202,19 @@ DEFAULT_DISCOVERY_PARAMS = interfaces.DISCOVERY_DEFAULT_PARAMETERS
 SINGLE_SERVICES = [
     Service(
         item="5",
-        parameters={"discovered_oper_status": ["1"], "discovered_speed": 10000000},
+        parameters={
+            "item_appearance": "index",
+            "discovered_oper_status": ["1"],
+            "discovered_speed": 10000000,
+        },
     ),
     Service(
         item="6",
-        parameters={"discovered_oper_status": ["1"], "discovered_speed": 0},
+        parameters={
+            "item_appearance": "index",
+            "discovered_oper_status": ["1"],
+            "discovered_speed": 0,
+        },
     ),
 ]
 
@@ -271,6 +279,7 @@ def test_discovery_ungrouped_admin_status() -> None:
         Service(
             item="5",
             parameters={
+                "item_appearance": "index",
                 "discovered_oper_status": ["1"],
                 "discovered_speed": 10000000,
                 "discovered_admin_status": ["1"],
@@ -331,6 +340,7 @@ def test_discovery_duplicate_index() -> None:
         Service(
             item="1",
             parameters={
+                "item_appearance": "index",
                 "discovered_oper_status": ["1"],
                 "discovered_speed": 10000000,
             },
@@ -360,6 +370,7 @@ def test_discovery_duplicate_descr() -> None:
         Service(
             item="description 5",
             parameters={
+                "item_appearance": "descr",
                 "discovered_oper_status": ["1"],
                 "discovered_speed": 10000000,
             },
@@ -368,6 +379,7 @@ def test_discovery_duplicate_descr() -> None:
         Service(
             item="description 6",
             parameters={
+                "item_appearance": "descr",
                 "discovered_oper_status": ["1"],
                 "discovered_speed": 0,
             },
@@ -402,6 +414,7 @@ def test_discovery_duplicate_alias() -> None:
         Service(
             item="alias 5",
             parameters={
+                "item_appearance": "alias",
                 "discovered_oper_status": ["1"],
                 "discovered_speed": 10000000,
             },
@@ -441,6 +454,7 @@ def test_discovery_partial_duplicate_desc_duplicate_alias() -> None:
         Service(
             item="duplicate_descr 4",
             parameters={
+                "item_appearance": "descr",
                 "discovered_oper_status": ["2"],
                 "discovered_speed": 10000000,
             },
@@ -449,6 +463,7 @@ def test_discovery_partial_duplicate_desc_duplicate_alias() -> None:
         Service(
             item="duplicate_descr 5",
             parameters={
+                "item_appearance": "descr",
                 "discovered_oper_status": ["1"],
                 "discovered_speed": 10000000,
             },
@@ -457,6 +472,7 @@ def test_discovery_partial_duplicate_desc_duplicate_alias() -> None:
         Service(
             item="wlp2s0",
             parameters={
+                "item_appearance": "descr",
                 "discovered_oper_status": ["1"],
                 "discovered_speed": 0,
             },
@@ -773,32 +789,56 @@ def test_discovery_labels() -> None:
     ) == [
         Service(
             item="lo",
-            parameters={"discovered_oper_status": ["1"], "discovered_speed": 0},
+            parameters={
+                "discovered_oper_status": ["1"],
+                "discovered_speed": 0,
+                "item_appearance": "alias",
+            },
             labels=[ServiceLabel("single", "default")],
         ),
         Service(
             item="docker0",
-            parameters={"discovered_oper_status": ["2"], "discovered_speed": 0},
+            parameters={
+                "discovered_oper_status": ["2"],
+                "discovered_speed": 0,
+                "item_appearance": "alias",
+            },
             labels=[ServiceLabel("single", "default")],
         ),
         Service(
             item="enp0s31f6",
-            parameters={"discovered_oper_status": ["2"], "discovered_speed": 0},
+            parameters={
+                "discovered_oper_status": ["2"],
+                "discovered_speed": 0,
+                "item_appearance": "alias",
+            },
             labels=[ServiceLabel("single", "default")],
         ),
         Service(
             item="enxe4b97ab99f99",
-            parameters={"discovered_oper_status": ["2"], "discovered_speed": 10000000},
+            parameters={
+                "discovered_oper_status": ["2"],
+                "discovered_speed": 10000000,
+                "item_appearance": "alias",
+            },
             labels=[ServiceLabel("single", "default")],
         ),
         Service(
             item="vboxnet0",
-            parameters={"discovered_oper_status": ["1"], "discovered_speed": 10000000},
+            parameters={
+                "discovered_oper_status": ["1"],
+                "discovered_speed": 10000000,
+                "item_appearance": "alias",
+            },
             labels=[ServiceLabel("single", "default")],
         ),
         Service(
             item="wlp2s0",
-            parameters={"discovered_oper_status": ["1"], "discovered_speed": 0},
+            parameters={
+                "discovered_oper_status": ["1"],
+                "discovered_speed": 0,
+                "item_appearance": "alias",
+            },
             labels=[ServiceLabel("single", "wlp")],
         ),
         Service(
@@ -2418,6 +2458,225 @@ def test_matching_interfaces_for_item(
         for iface in interfaces.matching_interfaces_for_item(
             item,
             section,
+        )
+    ] == expected_matches
+
+
+@pytest.mark.parametrize(
+    ["item", "appearance", "section", "expected_matches"],
+    [
+        pytest.param(
+            "1",
+            None,
+            [
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="1",
+                        descr="",
+                        alias="Port 1",
+                        type="10",
+                    ),
+                    interfaces.Counters(),
+                ),
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="2",
+                        descr="",
+                        alias="1",
+                        type="10",
+                    ),
+                    interfaces.Counters(),
+                ),
+            ],
+            [
+                interfaces.Attributes(
+                    index="1",
+                    descr="",
+                    alias="Port 1",
+                    type="10",
+                )
+            ],
+            id="Support legacy matching logic simple",
+        ),
+        pytest.param(
+            "1",
+            "alias",
+            [
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="1",
+                        descr="",
+                        alias="Port 1",
+                        type="10",
+                    ),
+                    interfaces.Counters(),
+                ),
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="2",
+                        descr="",
+                        alias="1",
+                        type="10",
+                    ),
+                    interfaces.Counters(),
+                ),
+            ],
+            [
+                interfaces.Attributes(
+                    index="2",
+                    descr="",
+                    alias="1",
+                    type="10",
+                )
+            ],
+            id="Clear up index alias mixup simple",
+        ),
+        pytest.param(
+            "1",
+            "descr",
+            [
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="1",
+                        descr="Port 1",
+                        alias="",
+                        type="10",
+                    ),
+                    interfaces.Counters(),
+                ),
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="2",
+                        descr="1",
+                        alias="",
+                        type="10",
+                    ),
+                    interfaces.Counters(),
+                ),
+            ],
+            [
+                interfaces.Attributes(
+                    index="2",
+                    descr="1",
+                    alias="",
+                    type="10",
+                )
+            ],
+            id="Clear up index descr mixup simple",
+        ),
+        pytest.param(
+            "Port 2",
+            None,
+            [
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="1",
+                        descr="",
+                        alias="Port",
+                        type="10",
+                        node="node1",
+                    ),
+                    interfaces.Counters(),
+                ),
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="2",
+                        descr="",
+                        alias="Port",
+                        type="10",
+                        node="node1",
+                    ),
+                    interfaces.Counters(),
+                ),
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="2",
+                        descr="Port 2",
+                        alias="",
+                        type="10",
+                        node="node2",
+                    ),
+                    interfaces.Counters(),
+                ),
+            ],
+            [
+                interfaces.Attributes(
+                    index="2",
+                    descr="",
+                    alias="Port",
+                    type="10",
+                    node="node1",
+                ),
+                interfaces.Attributes(
+                    index="2",
+                    descr="Port 2",
+                    alias="",
+                    type="10",
+                    node="node2",
+                ),
+            ],
+            id="Support legacy matching logic compound, descr mixup is picked up",
+        ),
+        pytest.param(
+            "Port 2",
+            "alias",
+            [
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="1",
+                        descr="",
+                        alias="Port",
+                        type="10",
+                        node="node1",
+                    ),
+                    interfaces.Counters(),
+                ),
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="2",
+                        descr="",
+                        alias="Port",
+                        type="10",
+                        node="node1",
+                    ),
+                    interfaces.Counters(),
+                ),
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="2",
+                        descr="Port 2",
+                        alias="",
+                        type="10",
+                        node="node2",
+                    ),
+                    interfaces.Counters(),
+                ),
+            ],
+            [
+                interfaces.Attributes(
+                    index="2",
+                    descr="",
+                    alias="Port",
+                    type="10",
+                    node="node1",
+                ),
+            ],
+            id="Clear up descr mixup compound",
+        ),
+    ],
+)
+def test_matching_interfaces_for_item_clear_mixup_with_appearance(
+    item: str,
+    appearance: interfaces._ItemAppearance | None,
+    section: interfaces.Section[interfaces.TInterfaceType],
+    expected_matches: Sequence[interfaces.Attributes],
+) -> None:
+    assert [
+        iface.attributes
+        for iface in interfaces.matching_interfaces_for_item(
+            item,
+            section,
+            appearance,
         )
     ] == expected_matches
 

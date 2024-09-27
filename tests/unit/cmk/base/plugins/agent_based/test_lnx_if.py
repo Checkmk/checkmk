@@ -483,10 +483,20 @@ def test_cluster_check_lnx_if(monkeypatch) -> None:  # type:ignore[no-untyped-de
             ],
             [
                 Service(
-                    item="1", parameters={"discovered_oper_status": ["1"], "discovered_speed": 0}
+                    item="1",
+                    parameters={
+                        "item_appearance": "index",
+                        "discovered_oper_status": ["1"],
+                        "discovered_speed": 0,
+                    },
                 ),
                 Service(
-                    item="4", parameters={"discovered_oper_status": ["1"], "discovered_speed": 0}
+                    item="4",
+                    parameters={
+                        "item_appearance": "index",
+                        "discovered_oper_status": ["1"],
+                        "discovered_speed": 0,
+                    },
                 ),
             ],
             [
@@ -648,10 +658,20 @@ def test_cluster_check_lnx_if(monkeypatch) -> None:  # type:ignore[no-untyped-de
             ],
             [
                 Service(
-                    item="2", parameters={"discovered_oper_status": ["1"], "discovered_speed": 0}
+                    item="2",
+                    parameters={
+                        "item_appearance": "index",
+                        "discovered_oper_status": ["1"],
+                        "discovered_speed": 0,
+                    },
                 ),
                 Service(
-                    item="4", parameters={"discovered_oper_status": ["1"], "discovered_speed": 0}
+                    item="4",
+                    parameters={
+                        "item_appearance": "index",
+                        "discovered_oper_status": ["1"],
+                        "discovered_speed": 0,
+                    },
                 ),
             ],
             [
@@ -813,10 +833,20 @@ def test_cluster_check_lnx_if(monkeypatch) -> None:  # type:ignore[no-untyped-de
             ],
             [
                 Service(
-                    item="2", parameters={"discovered_oper_status": ["1"], "discovered_speed": 0}
+                    item="2",
+                    parameters={
+                        "item_appearance": "index",
+                        "discovered_oper_status": ["1"],
+                        "discovered_speed": 0,
+                    },
                 ),
                 Service(
-                    item="4", parameters={"discovered_oper_status": ["1"], "discovered_speed": 0}
+                    item="4",
+                    parameters={
+                        "item_appearance": "index",
+                        "discovered_oper_status": ["1"],
+                        "discovered_speed": 0,
+                    },
                 ),
             ],
             [
@@ -885,13 +915,27 @@ def test_cluster_check_lnx_if(monkeypatch) -> None:  # type:ignore[no-untyped-de
             [
                 Service(
                     item="1",
-                    parameters={"discovered_oper_status": ["1"], "discovered_speed": 1000000000},
+                    parameters={
+                        "item_appearance": "index",
+                        "discovered_oper_status": ["1"],
+                        "discovered_speed": 1000000000,
+                    },
                 ),
                 Service(
-                    item="2", parameters={"discovered_oper_status": ["1"], "discovered_speed": 0}
+                    item="2",
+                    parameters={
+                        "item_appearance": "index",
+                        "discovered_oper_status": ["1"],
+                        "discovered_speed": 0,
+                    },
                 ),
                 Service(
-                    item="3", parameters={"discovered_oper_status": ["1"], "discovered_speed": 0}
+                    item="3",
+                    parameters={
+                        "item_appearance": "index",
+                        "discovered_oper_status": ["1"],
+                        "discovered_speed": 0,
+                    },
                 ),
             ],
             [

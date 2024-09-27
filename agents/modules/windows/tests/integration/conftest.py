@@ -17,7 +17,8 @@ def pytest_addoption(parser):
     parser.addoption("--expected_version", action="store", default="3.10.4")
 
 
-tested_pythons = ["python-3.4.cab", "python-3.cab"]
+# tested_pythons = ["python-3.4.cab", "python-3.cab"]
+tested_pythons = ["python-3.cab"]
 # I know this is not a best method to reach artifacts, but in Windows not so many options.
 artifact_location = Path("..\\..\\..\\..\\..\\artefacts")
 

@@ -4,8 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-import multiprocessing
-import signal
+import threading
 import time
 from collections.abc import Sequence
 from pathlib import Path
@@ -24,10 +23,9 @@ from cmk.piggyback import (
     store_last_distribution_time,
     store_piggyback_raw_data,
 )
-
-from .config import load_config, PiggybackHubConfig, Target
-from .paths import create_paths
-from .utils import APP_NAME, make_log_and_exit
+from cmk.piggyback_hub.config import load_config, PiggybackHubConfig, Target
+from cmk.piggyback_hub.paths import create_paths
+from cmk.piggyback_hub.utils import SignalException
 
 SENDING_PAUSE = 60  # [s]
 
@@ -112,22 +110,16 @@ def _send_message(
     )
 
 
-class SendingPayloadProcess(multiprocessing.Process):
+class SendingPayloadThread(threading.Thread):
     def __init__(self, logger: logging.Logger, omd_root: Path):
         super().__init__()
         self.logger = logger
         self.omd_root = omd_root
         self.config_path = create_paths(omd_root).config
-        self.task_name = "publishing on queue 'payload'"
 
     def run(self):
-        self.logger.info("Starting: %s", self.task_name)
-        signal.signal(
-            signal.SIGTERM,
-            make_log_and_exit(self.logger.debug, f"Stopping: {self.task_name}"),
-        )
         try:
-            with Connection(APP_NAME, self.omd_root) as conn:
+            with Connection("piggyback-hub", self.omd_root) as conn:
                 channel = conn.channel(PiggybackPayload)
 
                 while True:
@@ -138,10 +130,9 @@ class SendingPayloadProcess(multiprocessing.Process):
                             target.host_name, self.omd_root
                         ):
                             self.logger.debug(
-                                "%s: from host '%s' to host '%s' on site '%s'",
-                                self.task_name.title(),
-                                piggyback_message.meta.source,
+                                "Sending payload for piggybacked host '%s' from source host '%s' to site '%s'",
                                 piggyback_message.meta.piggybacked,
+                                piggyback_message.meta.source,
                                 target.site_id,
                             )
                             _send_message(
@@ -149,8 +140,10 @@ class SendingPayloadProcess(multiprocessing.Process):
                             )
 
                     time.sleep(SENDING_PAUSE)
-        except CMKConnectionError as exc:
-            self.logger.error("Stopping: %s: %s", self.task_name, exc)
-        except Exception as exc:
-            self.logger.exception("Exception: %s: %s", self.task_name, exc)
-            raise
+        except CMKConnectionError:
+            self.logger.error("RabbitMQ is not running. Stopping thread.")
+        except SignalException:
+            self.logger.debug("Stopping distributing messages")
+            return
+        except Exception as e:
+            self.logger.exception("Unhandled exception: %s.", e)

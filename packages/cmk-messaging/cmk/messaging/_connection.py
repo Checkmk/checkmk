@@ -22,7 +22,7 @@ from ._config import get_local_port, make_connection_params
 from ._constants import APP_PREFIX, INTERSITE_EXCHANGE, LOCAL_EXCHANGE
 
 
-class CMKConnectionError(RuntimeError):
+class CMKConnectionError(Exception):
     pass
 
 

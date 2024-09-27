@@ -4,9 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-import multiprocessing
-import signal
-import sys
+import threading
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Callable, Generic, TypeVar
@@ -17,20 +15,14 @@ from cmk.messaging import Channel, CMKConnectionError, Connection
 
 from .config import PiggybackHubConfig
 
-APP_NAME = "piggyback-hub"
-
 _ModelT = TypeVar("_ModelT", bound=BaseModel)
 
 
-def make_log_and_exit(log: Callable[[str], None], message: str) -> Callable[[object, object], None]:
-    def log_and_exit(signum: object, frame: object) -> None:
-        log(message)
-        sys.exit(0)
-
-    return log_and_exit
+class SignalException(Exception):
+    pass
 
 
-class ReceivingProcess(multiprocessing.Process, Generic[_ModelT]):
+class ReceivingThread(threading.Thread, Generic[_ModelT]):
     def __init__(
         self,
         logger: logging.Logger,
@@ -45,27 +37,23 @@ class ReceivingProcess(multiprocessing.Process, Generic[_ModelT]):
         self.model = model
         self.callback = callback
         self.queue = queue
-        self.task_name = f"receiving on queue '{self.queue}'"
 
     def run(self) -> None:
-        self.logger.info("Starting: %s", self.task_name)
-        signal.signal(
-            signal.SIGTERM,
-            make_log_and_exit(self.logger.debug, f"Stopping: {self.task_name}"),
-        )
         try:
-            with Connection(APP_NAME, self.omd_root) as conn:
+            with Connection("piggyback-hub", self.omd_root) as conn:
                 channel: Channel[_ModelT] = conn.channel(self.model)
                 channel.queue_declare(queue=self.queue, bindings=(self.queue,))
 
-                self.logger.debug("Consuming: %s", self.task_name)
+                self.logger.debug("Waiting for messages in queue %s", self.queue)
                 channel.consume(self.callback, queue=self.queue)
 
-        except CMKConnectionError as exc:
-            self.logger.error("Stopping: %s: %s", self.task_name, exc)
-        except Exception as exc:
-            self.logger.exception("Exception: %s: %s", self.task_name, exc)
-            raise
+        except CMKConnectionError:
+            self.logger.error("RabbitMQ is not running. Stopping thread.")
+        except SignalException:
+            self.logger.debug("Stopping receiving messages")
+            return
+        except Exception as e:
+            self.logger.exception("Unhandled exception: %s.", e)
 
 
 def distribute(configs: Mapping[str, PiggybackHubConfig], omd_root: Path) -> None:

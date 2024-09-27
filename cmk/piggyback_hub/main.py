@@ -8,7 +8,6 @@ import logging
 import os
 import signal
 import sys
-import time
 from dataclasses import dataclass
 from itertools import cycle
 from logging import getLogger
@@ -91,10 +90,6 @@ def _setup_logging(args: Arguments) -> logging.Logger:
 
 
 def run_piggyback_hub(logger: logging.Logger, omd_root: Path) -> int:
-    # TODO: remove this loop when rabbitmq available in site
-    for _ in range(1_000_000):
-        time.sleep(1_000)
-
     reload_config = Event()
     processes = (
         ReceivingProcess(

@@ -1149,7 +1149,7 @@ class ImmutableAttributes:
 
     @classmethod
     def deserialize(cls, raw_attributes: SDRawAttributes) -> ImmutableAttributes:
-        return ImmutableAttributes(
+        return cls(
             pairs=raw_attributes.get("Pairs", {}),
             retentions={
                 key: RetentionInterval.deserialize(raw_retention_interval)
@@ -1226,7 +1226,7 @@ class ImmutableTable:
         for row in rows:
             rows_by_ident.setdefault(_make_row_ident(key_columns, row), {}).update(row)
 
-        return ImmutableTable(
+        return cls(
             key_columns=key_columns,
             rows_by_ident=rows_by_ident,
             retentions={
@@ -1332,8 +1332,7 @@ class ImmutableTree:
             raw_nodes = raw_tree["Nodes"]
         except KeyError:
             return _deserialize_legacy_node(path=(), raw_tree=raw_tree)
-
-        return ImmutableTree._deserialize(
+        return cls._deserialize(
             path=(),
             raw_attributes=raw_attributes,
             raw_table=raw_table,

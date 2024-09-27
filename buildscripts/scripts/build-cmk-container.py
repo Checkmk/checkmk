@@ -127,13 +127,10 @@ def parse_arguments() -> argparse.Namespace:
 
 def run_cmd(
     cmd: Union[list[str], str],
-    shell: bool = False,
     raise_exception: bool = True,
     print_stdout: bool = True,
 ) -> subprocess.CompletedProcess:
-    completed_process = subprocess.run(
-        cmd, encoding="utf-8", capture_output=True, shell=shell, check=False
-    )
+    completed_process = subprocess.run(cmd, encoding="utf-8", capture_output=True, check=False)
     if raise_exception and completed_process.returncode != 0:
         raise Exception(
             f"Failed to execute command '{' '.join(cmd)}' with: {completed_process.stdout}, {completed_process.stderr}"

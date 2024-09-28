@@ -16,7 +16,7 @@ from collections import Counter
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Generic, Literal, NamedTuple, NewType, Self, TypedDict, TypeVar
+from typing import Generic, Literal, NewType, Self, TypedDict, TypeVar
 
 from cmk.ccc import store
 
@@ -89,24 +89,12 @@ class SDBareTree(TypedDict):
     Nodes: Mapping[SDNodeName, SDBareTree]
 
 
-class SDDeltaValue(NamedTuple):
-    old: SDValue
-    new: SDValue
-
-    @classmethod
-    def deserialize(cls, raw_delta_value: tuple[SDValue, SDValue]) -> Self:
-        return cls(*raw_delta_value)
-
-    def serialize(self) -> tuple[SDValue, SDValue]:
-        return (self.old, self.new)
-
-
 class SDRawDeltaAttributes(TypedDict, total=False):
     Pairs: Mapping[SDKey, tuple[SDValue, SDValue]]
 
 
 class SDBareDeltaAttributes(TypedDict):
-    Pairs: Mapping[SDKey, SDDeltaValue]
+    Pairs: Mapping[SDKey, tuple[SDValue, SDValue]]
 
 
 class SDRawDeltaTable(TypedDict, total=False):
@@ -116,7 +104,7 @@ class SDRawDeltaTable(TypedDict, total=False):
 
 class SDBareDeltaTable(TypedDict, total=False):
     KeyColumns: Sequence[SDKey]
-    Rows: Sequence[Mapping[SDKey, SDDeltaValue]]
+    Rows: Sequence[Mapping[SDKey, tuple[SDValue, SDValue]]]
 
 
 class SDRawDeltaTree(TypedDict):
@@ -1007,6 +995,19 @@ def _merge_nodes(left: ImmutableTree, right: ImmutableTree) -> ImmutableTree:
     )
 
 
+@dataclass(frozen=True)
+class SDDeltaValue:
+    old: SDValue
+    new: SDValue
+
+    @classmethod
+    def deserialize(cls, raw_delta_value: tuple[SDValue, SDValue]) -> Self:
+        return cls(*raw_delta_value)
+
+    def serialize(self) -> tuple[SDValue, SDValue]:
+        return (self.old, self.new)
+
+
 def _encode_as_new(value: SDValue) -> SDDeltaValue:
     return SDDeltaValue(None, value)
 
@@ -1442,13 +1443,13 @@ SDDeltaCounter = Counter[Literal["new", "changed", "removed"]]
 
 def _compute_delta_stats(dict_: Mapping[SDKey, SDDeltaValue]) -> SDDeltaCounter:
     counter: SDDeltaCounter = Counter()
-    for left, right in dict_.values():
-        match [left is None, right is None]:
+    for delta_value in dict_.values():
+        match [delta_value.old is None, delta_value.new is None]:
             case [True, False]:
                 counter["new"] += 1
             case [False, True]:
                 counter["removed"] += 1
-            case [False, False] if left != right:
+            case [False, False] if delta_value.old != delta_value.new:
                 counter["changed"] += 1
     return counter
 
@@ -1483,7 +1484,7 @@ class ImmutableDeltaAttributes:
     @property
     def bare(self) -> SDBareDeltaAttributes:
         # Useful for debugging; no restrictions
-        return {"Pairs": self.pairs}
+        return {"Pairs": {k: v.serialize() for k, v in self.pairs.items()}}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -1530,7 +1531,10 @@ class ImmutableDeltaTable:
     @property
     def bare(self) -> SDBareDeltaTable:
         # Useful for debugging; no restrictions
-        return {"KeyColumns": self.key_columns, "Rows": self.rows}
+        return {
+            "KeyColumns": self.key_columns,
+            "Rows": [{k: v.serialize() for k, v in r.items()} for r in self.rows],
+        }
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -24,6 +24,7 @@ from cmk.utils.structured_data import (
     MutableTree,
     parse_visible_raw_path,
     RetentionInterval,
+    SDDeltaValue,
     SDFilterChoice,
     SDKey,
     SDNodeName,
@@ -502,8 +503,8 @@ def test_filter_delta_tree_nt() -> None:
     assert not filtered_child.attributes.pairs
     assert len(filtered_child.table.rows) == 2
     for row in (
-        {"nt1": (None, "NT 01")},
-        {"nt1": (None, "NT 11")},
+        {"nt1": SDDeltaValue(None, "NT 01")},
+        {"nt1": SDDeltaValue(None, "NT 11")},
     ):
         assert row in filtered_child.table.rows
 
@@ -530,7 +531,7 @@ def test_filter_delta_tree_na() -> None:
     filtered_child = filtered.get_tree((SDNodeName("path-to-nta"), SDNodeName("na")))
     assert len(filtered_child) == 1
     assert filtered_child.path == ("path-to-nta", "na")
-    assert filtered_child.attributes.pairs == {"na1": (None, "NA 1")}
+    assert filtered_child.attributes.pairs == {"na1": SDDeltaValue(None, "NA 1")}
     assert filtered_child.table.rows == []
 
 
@@ -556,11 +557,11 @@ def test_filter_delta_tree_ta() -> None:
     filtered_child = filtered.get_tree((SDNodeName("path-to-nta"), SDNodeName("ta")))
     assert len(filtered_child) == 3
     assert filtered_child.path == ("path-to-nta", "ta")
-    assert filtered_child.attributes.pairs == {"ta1": (None, "TA 1")}
+    assert filtered_child.attributes.pairs == {"ta1": SDDeltaValue(None, "TA 1")}
     assert len(filtered_child.table.rows) == 2
     for row in (
-        {"ta1": (None, "TA 01")},
-        {"ta1": (None, "TA 11")},
+        {"ta1": SDDeltaValue(None, "TA 01")},
+        {"ta1": SDDeltaValue(None, "TA 11")},
     ):
         assert row in filtered_child.table.rows
 
@@ -597,11 +598,11 @@ def test_filter_delta_tree_nta_ta() -> None:
 
     filtered_ta = filtered.get_tree((SDNodeName("path-to-nta"), SDNodeName("ta")))
     assert len(filtered_ta) == 5
-    assert filtered_ta.attributes.pairs == {"ta0": (None, "TA 0")}
+    assert filtered_ta.attributes.pairs == {"ta0": SDDeltaValue(None, "TA 0")}
     assert len(filtered_ta.table.rows) == 2
     for row in (
-        {"ta0": (None, "TA 00"), "ta1": (None, "TA 01")},
-        {"ta0": (None, "TA 10"), "ta1": (None, "TA 11")},
+        {"ta0": SDDeltaValue(None, "TA 00"), "ta1": SDDeltaValue(None, "TA 01")},
+        {"ta0": SDDeltaValue(None, "TA 10"), "ta1": SDDeltaValue(None, "TA 11")},
     ):
         assert row in filtered_ta.table.rows
 

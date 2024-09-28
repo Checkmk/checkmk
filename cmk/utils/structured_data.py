@@ -273,7 +273,8 @@ class SDFilterChoice(NamedTuple):
     nodes: Literal["nothing", "all"] | Sequence[SDNodeName]
 
 
-class _SDRetentionFilterChoice(NamedTuple):
+@dataclass(frozen=True)
+class _SDRetentionFilterChoice:
     choice: Literal["nothing", "all"] | Sequence[SDKey]
     cache_info: tuple[int, int]
 

@@ -1404,6 +1404,12 @@ msgid "<b>You do not have any roles.</b>"
 msgstr "<b>Nu aveți niciun rol.</b>"
 
 msgid ""
+"<br> <br>  <b>Important note</b>: When changing this option, the services "
+"need to be removed and rediscovered to apply the changes. Otherwise there is "
+"a risk of mismatch between the discovered and checked services."
+msgstr ""
+
+msgid ""
 "<br> HINT: The individual program is called from the current working "
 "directory. You should therefore specify absolute path names in scripts (by "
 "using environment variables like OMD_SITE) to make the individual program "
@@ -34234,6 +34240,10 @@ msgstr ""
 "Înregistrați procesul de înregistrare a agentului de cereri primite prin "
 "comanda de înregistrare a controlorului agentului Checkmk."
 
+#, fuzzy
+msgid "Log the automatic host removal process."
+msgstr "Activați eliminarea automată a gazdei"
+
 msgid "Log: Details"
 msgstr "Jurnal: Detalii"
 
@@ -47847,6 +47857,10 @@ msgstr "Reîncercați acest test"
 
 msgid "Retry time"
 msgstr "Timpul de reintroducere"
+
+#, fuzzy
+msgid "Return WARNING if found, OK if not"
+msgstr "returnează CRITICAL dacă este găsit, OK dacă nu este găsit"
 
 msgid "Return code class 2xx (success)"
 msgstr "Cod de returnare clasa 2xx (succes)"

@@ -1385,6 +1385,12 @@ msgid "<b>You do not have any roles.</b>"
 msgstr "<b>Non hai alcun ruolo.</b>"
 
 msgid ""
+"<br> <br>  <b>Important note</b>: When changing this option, the services "
+"need to be removed and rediscovered to apply the changes. Otherwise there is "
+"a risk of mismatch between the discovered and checked services."
+msgstr ""
+
+msgid ""
 "<br> HINT: The individual program is called from the current working "
 "directory. You should therefore specify absolute path names in scripts (by "
 "using environment variables like OMD_SITE) to make the individual program "
@@ -33878,6 +33884,10 @@ msgstr ""
 "Registrare il processo di registrazione dell'agente delle richieste in "
 "arrivo tramite il comando Checkmk agent controller registration."
 
+#, fuzzy
+msgid "Log the automatic host removal process."
+msgstr "Abilita la rimozione automatica degli host"
+
 msgid "Log: Details"
 msgstr "Registro: Dettagli"
 
@@ -47350,6 +47360,10 @@ msgstr "Riprova questo test"
 
 msgid "Retry time"
 msgstr "Tempo di riprova"
+
+#, fuzzy
+msgid "Return WARNING if found, OK if not"
+msgstr "restituisce CRITICAL se trovato, OK altrimenti"
 
 msgid "Return code class 2xx (success)"
 msgstr "Codice di ritorno classe 2xx (successo)"

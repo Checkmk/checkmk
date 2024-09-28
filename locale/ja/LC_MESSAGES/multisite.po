@@ -1372,6 +1372,12 @@ msgid "<b>You do not have any roles.</b>"
 msgstr "<b>あなたには役割がありません。</b>"
 
 msgid ""
+"<br> <br>  <b>Important note</b>: When changing this option, the services "
+"need to be removed and rediscovered to apply the changes. Otherwise there is "
+"a risk of mismatch between the discovered and checked services."
+msgstr ""
+
+msgid ""
 "<br> HINT: The individual program is called from the current working "
 "directory. You should therefore specify absolute path names in scripts (by "
 "using environment variables like OMD_SITE) to make the individual program "
@@ -32948,6 +32954,10 @@ msgstr ""
 "Checkmk agent controller registrationコマンドで受信したリクエストのエージェン"
 "ト登録処理を記録します。"
 
+#, fuzzy
+msgid "Log the automatic host removal process."
+msgstr "ホストの自動削除を有効化"
+
 msgid "Log: Details"
 msgstr "ログ:詳細"
 
@@ -46386,6 +46396,10 @@ msgstr "このテストを再試行してください"
 
 msgid "Retry time"
 msgstr "再試行時間"
+
+#, fuzzy
+msgid "Return WARNING if found, OK if not"
+msgstr "見つかった場合はクリティカルを返し、見つからなかった場合はOKを返します"
 
 msgid "Return code class 2xx (success)"
 msgstr "リターンコードクラス 2xx（成功）"

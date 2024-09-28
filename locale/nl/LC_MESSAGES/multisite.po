@@ -1396,6 +1396,12 @@ msgid "<b>You do not have any roles.</b>"
 msgstr "<b>U heeft geen rollen.</b>"
 
 msgid ""
+"<br> <br>  <b>Important note</b>: When changing this option, the services "
+"need to be removed and rediscovered to apply the changes. Otherwise there is "
+"a risk of mismatch between the discovered and checked services."
+msgstr ""
+
+msgid ""
 "<br> HINT: The individual program is called from the current working "
 "directory. You should therefore specify absolute path names in scripts (by "
 "using environment variables like OMD_SITE) to make the individual program "
@@ -34199,6 +34205,10 @@ msgstr ""
 "Log het agent registratieproces van inkomende verzoeken door het Checkmk "
 "agent controller registratiecommando."
 
+#, fuzzy
+msgid "Log the automatic host removal process."
+msgstr "Automatische hostverwijdering inschakelen"
+
 msgid "Log: Details"
 msgstr "Logboek: Details"
 
@@ -47808,6 +47818,10 @@ msgstr "Probeer deze test opnieuw"
 
 msgid "Retry time"
 msgstr "Herhalingstijd"
+
+#, fuzzy
+msgid "Return WARNING if found, OK if not"
+msgstr "geef CRITICAL terug indien gevonden, OK indien niet"
 
 msgid "Return code class 2xx (success)"
 msgstr "Retourcode klasse 2xx (succes)"

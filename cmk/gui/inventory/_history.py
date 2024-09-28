@@ -20,7 +20,8 @@ from cmk.gui.i18n import _
 from ._tree import _get_permitted_inventory_paths, make_filter_choices_from_permitted_paths
 
 
-class InventoryHistoryPath(NamedTuple):
+@dataclass(frozen=True)
+class InventoryHistoryPath:
     path: Path
     timestamp: int | None
 

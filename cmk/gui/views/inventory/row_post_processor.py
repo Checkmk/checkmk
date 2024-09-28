@@ -7,7 +7,6 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from typing import NamedTuple
 
 from cmk.utils.structured_data import ImmutableTree, SDKey, SDPath, SDValue
 
@@ -166,7 +165,8 @@ def _extract_table_rows(
     return table_rows_by_master_key
 
 
-class _MasterKey(NamedTuple):
+@dataclass(frozen=True)
+class _MasterKey:
     site: str
     hostname: str
 

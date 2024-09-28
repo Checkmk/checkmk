@@ -30,7 +30,8 @@ class InventoryHistoryPath:
         return self.path.relative_to(cmk.utils.paths.omd_root)
 
 
-class HistoryEntry(NamedTuple):
+@dataclass(frozen=True)
+class HistoryEntry:
     timestamp: int | None
     new: int
     changed: int

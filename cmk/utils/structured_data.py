@@ -266,7 +266,8 @@ class _DictKeys(Generic[_T]):
 #   '----------------------------------------------------------------------'
 
 
-class SDFilterChoice(NamedTuple):
+@dataclass(frozen=True)
+class SDFilterChoice:
     path: SDPath
     pairs: Literal["nothing", "all"] | Sequence[SDKey]
     columns: Literal["nothing", "all"] | Sequence[SDKey]

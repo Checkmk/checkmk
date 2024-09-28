@@ -6,7 +6,6 @@
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import NamedTuple
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
@@ -39,7 +38,8 @@ class HistoryEntry:
     delta_tree: ImmutableDeltaTree
 
 
-class FilteredInventoryHistoryPaths(NamedTuple):
+@dataclass(frozen=True)
+class FilteredInventoryHistoryPaths:
     start_tree_path: InventoryHistoryPath
     tree_paths: Sequence[InventoryHistoryPath]
 

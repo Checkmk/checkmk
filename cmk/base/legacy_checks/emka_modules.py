@@ -16,7 +16,7 @@ _TABLES = ["1", "2", "3", "4"]
 
 
 def parse_emka_modules(string_table):  # pylint: disable=too-many-branches
-    if not all(string_table):
+    if not any(string_table):
         return None
 
     # basModuleCoIx == 0
@@ -86,7 +86,7 @@ def parse_emka_modules(string_table):  # pylint: disable=too-many-branches
                 if mode:
                     attrs["mode"] = mode
 
-    for oidend, threshold in string_table[6]:
+    for oidend, threshold in string_table[5]:
         location, threshold_ty = oidend.split(".")
         if threshold_ty == "1":
             ty = "levels_lower"
@@ -109,7 +109,7 @@ def parse_emka_modules(string_table):  # pylint: disable=too-many-branches
     # 0.02  => 2/100 [multiplicator]/[divisor]
     # -30.0          [offset]
     # Notice, may also "=#\xb0C0.0230.0"
-    for oidend, equation_bin in string_table[7]:
+    for oidend, equation_bin in string_table[6]:
         equation = []
         part = []
         for entry in equation_bin:

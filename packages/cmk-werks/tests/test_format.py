@@ -15,13 +15,13 @@ def test_markdown_parse_roundtrip() -> None:
 
 key        | value
 ---------- | ---
-class      | fix
-component  | core
 date       | 2022-12-12T11:08:08+00:00
-level      | 1
 version    | 2.0.0p7
-compatible | yes
+class      | fix
 edition    | cre
+component  | core
+level      | 1
+compatible | yes
 
 this is the `description` with some *italic* and __bold__ ***formatting***.
 """
@@ -37,13 +37,13 @@ this is the `description` with some *italic* and __bold__ ***formatting***.
 
 key        | value
 ---------- | ---
-class      | fix
-component  | core
 date       | 2022-12-12T11:08:08+00:00
-level      | 1
 version    | 99.99.99p99
-compatible | yes
+class      | fix
 edition    | cre
+component  | core
+level      | 1
+compatible | yes
 
 this is the `description` with some *italic* and __bold__ ***formatting***.
 """
@@ -143,13 +143,13 @@ def test_markdown_output_keys_stable() -> None:
 
 key        | value
 ---------- | ---
+date       | 2022-12-12T11:08:08+00:00
+version    | 2.0.0p7
+class      | fix
+edition    | cre
 component  | core
 level      | 1
-version    | 2.0.0p7
 compatible | yes
-edition    | cre
-date       | 2022-12-12T11:08:08+00:00
-class      | fix
 
 description"""
     )

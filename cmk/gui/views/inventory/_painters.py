@@ -18,6 +18,7 @@ from cmk.utils.structured_data import (
     SDRawDeltaTree,
     SDRawTree,
     SDValue,
+    serialize_delta_tree,
     serialize_tree,
 )
 
@@ -221,13 +222,13 @@ class PainterInvhistDelta(Painter):
         return "invtree", code
 
     def export_for_python(self, row: Row, cell: Cell) -> SDRawDeltaTree:
-        return self._compute_data(row, cell).serialize()
+        return serialize_delta_tree(self._compute_data(row, cell))
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
     def export_for_json(self, row: Row, cell: Cell) -> SDRawDeltaTree:
-        return self._compute_data(row, cell).serialize()
+        return serialize_delta_tree(self._compute_data(row, cell))
 
 
 def _paint_invhist_count(row: Row, what: str) -> CellSpec:

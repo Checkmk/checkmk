@@ -30,6 +30,7 @@ from cmk.utils.structured_data import (
     SDNodeName,
     SDPath,
     SDRetentionFilterChoices,
+    serialize_delta_tree,
     serialize_tree,
     TreeStore,
     UpdateResult,
@@ -251,7 +252,7 @@ def test_deserialize_filled_imm_tree() -> None:
 
 
 def test_serialize_empty_delta_tree() -> None:
-    assert _create_empty_imm_tree().difference(_create_empty_imm_tree()).serialize() == {
+    assert serialize_delta_tree(_create_empty_imm_tree().difference(_create_empty_imm_tree())) == {
         "Attributes": {},
         "Table": {},
         "Nodes": {},
@@ -259,7 +260,7 @@ def test_serialize_empty_delta_tree() -> None:
 
 
 def test_serialize_filled_delta_tree() -> None:
-    raw_tree = _create_empty_imm_tree().difference(_create_filled_imm_tree()).serialize()
+    raw_tree = serialize_delta_tree(_create_empty_imm_tree().difference(_create_filled_imm_tree()))
     assert not raw_tree["Attributes"]
     assert not raw_tree["Table"]
     assert not raw_tree["Nodes"][SDNodeName("path-to-nta")]["Attributes"]

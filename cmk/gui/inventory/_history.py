@@ -12,7 +12,13 @@ from cmk.ccc.exceptions import MKGeneralException
 
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
-from cmk.utils.structured_data import ImmutableDeltaTree, ImmutableTree, load_tree, SDFilterChoice
+from cmk.utils.structured_data import (
+    ImmutableDeltaTree,
+    ImmutableTree,
+    load_tree,
+    SDFilterChoice,
+    serialize_delta_tree,
+)
 
 from cmk.gui.i18n import _
 
@@ -280,7 +286,7 @@ class _CachedDeltaTreeLoader:
         if new or changed or removed:
             store.save_text_to_file(
                 self._path,
-                repr((new, changed, removed, delta_tree.serialize())),
+                repr((new, changed, removed, serialize_delta_tree(delta_tree))),
             )
             return self._make_history_entry(new, changed, removed, delta_tree)
         return None

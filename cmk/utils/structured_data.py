@@ -433,6 +433,37 @@ def serialize_tree(tree: MutableTree | ImmutableTree) -> SDRawTree:
     }
 
 
+def _serialize_delta_attributes(delta_attributes: ImmutableDeltaAttributes) -> SDRawDeltaAttributes:
+    return (
+        {"Pairs": {k: v.serialize() for k, v in delta_attributes.pairs.items()}}
+        if delta_attributes.pairs
+        else {}
+    )
+
+
+def _serialize_delta_table(delta_table: ImmutableDeltaTable) -> SDRawDeltaTable:
+    return (
+        {
+            "KeyColumns": delta_table.key_columns,
+            "Rows": [{k: v.serialize() for k, v in r.items()} for r in delta_table.rows],
+        }
+        if delta_table.rows
+        else {}
+    )
+
+
+def serialize_delta_tree(delta_tree: ImmutableDeltaTree) -> SDRawDeltaTree:
+    return {
+        "Attributes": _serialize_delta_attributes(delta_tree.attributes),
+        "Table": _serialize_delta_table(delta_tree.table),
+        "Nodes": {
+            edge: serialize_delta_tree(node)
+            for edge, node in delta_tree.nodes_by_name.items()
+            if node
+        },
+    }
+
+
 # .
 #   .--mutable tree--------------------------------------------------------.
 #   |                      _        _     _        _                       |
@@ -1462,9 +1493,6 @@ class ImmutableDeltaAttributes:
             }
         )
 
-    def serialize(self) -> SDRawDeltaAttributes:
-        return {"Pairs": {k: v.serialize() for k, v in self.pairs.items()}} if self.pairs else {}
-
     @property
     def bare(self) -> SDBareDeltaAttributes:
         # Useful for debugging; no restrictions
@@ -1500,16 +1528,6 @@ class ImmutableDeltaTable:
                 {k: SDDeltaValue.deserialize(v) for k, v in r.items()}
                 for r in raw_table.get("Rows", [])
             ],
-        )
-
-    def serialize(self) -> SDRawDeltaTable:
-        return (
-            {
-                "KeyColumns": self.key_columns,
-                "Rows": [{k: v.serialize() for k, v in r.items()} for r in self.rows],
-            }
-            if self.rows
-            else {}
         )
 
     @property
@@ -1593,13 +1611,6 @@ class ImmutableDeltaTree:
                 for raw_node_name, raw_node in raw_tree["Nodes"].items()
             },
         )
-
-    def serialize(self) -> SDRawDeltaTree:
-        return {
-            "Attributes": self.attributes.serialize(),
-            "Table": self.table.serialize(),
-            "Nodes": {edge: node.serialize() for edge, node in self.nodes_by_name.items() if node},
-        }
 
     @property
     def bare(self) -> SDBareDeltaTree:

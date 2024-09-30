@@ -132,12 +132,13 @@ DEALLOCATE instance_cursor;
 
 SELECT InstanceNames, InstanceIds, EditionNames, VersionNames, ClusterNames,Ports, DynamicPorts FROM @GetAll;";
 
-    pub const UTC_ENTRY: &str = "SELECT CONVERT(varchar, GETUTCDATE(), 20) as utc_date";
+    pub const UTC_ENTRY: &str = "SELECT CONVERT(nvarchar, GETUTCDATE(), 20) as utc_date";
 
-    pub const COUNTERS_ENTRIES: &str =
-        "SELECT counter_name, object_name, instance_name, cntr_value \
-     FROM sys.dm_os_performance_counters \
-     WHERE object_name NOT LIKE '%Deprecated%'";
+    pub const COUNTERS_ENTRIES: &str = "SELECT cast(counter_name as NVARCHAR) as counter_name, \
+                cast(object_name as NVARCHAR) as object_name, \
+                cast(instance_name as NVARCHAR) as instance_name, \
+                cntr_value \
+     FROM sys.dm_os_performance_counters WHERE object_name NOT LIKE '%Deprecated%'";
 
     /// used only for testing: it is difficult to get blocked tasks in reality
     pub const WAITING_TASKS: &str = "SELECT cast(session_id as varchar) as session_id, \
@@ -180,58 +181,60 @@ SELECT InstanceNames, InstanceIds, EditionNames, VersionNames, ClusterNames,Port
     pub const _SPACE_USED_ORIGINAL: &str = "EXEC sp_spaceused";
 
     pub const BACKUP: &str = r"
-DECLARE @HADRStatus sql_variant; 
+DECLARE @HADRStatus sql_variant;
 DECLARE @SQLCommand nvarchar(max);
 SET @HADRStatus = (SELECT SERVERPROPERTY ('IsHadrEnabled'));
 IF (@HADRStatus IS NULL or @HADRStatus <> 1)
 BEGIN
     SET @SQLCommand = '
-    SELECT 
-      CONVERT(VARCHAR, DATEADD(s, MAX(DATEDIFF(s, ''19700101'', backup_finish_date) - (CASE WHEN time_zone IS NOT NULL AND time_zone <> 127 THEN 60 * 15 * time_zone ELSE 0 END)), ''19700101''), 120) AS last_backup_date,
-      type, 
-      machine_name, 
-      ''True'' as is_primary_replica, 
-      ''1'' as is_local, 
-      '''' as replica_id,
-      sys.databases.name AS database_name 
+    SELECT
+      CONVERT(NVARCHAR, DATEADD(s, MAX(DATEDIFF(s, ''19700101'', backup_finish_date) - (CASE WHEN time_zone IS NOT NULL AND time_zone <> 127 THEN 60 * 15 * time_zone ELSE 0 END)), ''19700101''), 120) AS last_backup_date,
+      cast(type as nvarchar(128)) as type,
+      cast(machine_name as nvarchar(128)) as machine_name,
+      cast(''True'' as nvarchar(12))as is_primary_replica,
+      cast(''1'' as nvarchar(12)) as is_local,
+      cast('''' as nvarchar(12)) as replica_id,
+      cast(sys.databases.name as nvarchar(max)) AS database_name
     FROM
       msdb.dbo.backupset
-      LEFT OUTER JOIN sys.databases ON sys.databases.name = msdb.dbo.backupset.database_name
+      LEFT OUTER JOIN sys.databases ON cast(sys.databases.name as nvarchar(max)) = cast(msdb.dbo.backupset.database_name as nvarchar(max))
     WHERE
-      UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS VARCHAR))
+      UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS NVARCHAR))
     GROUP BY
       type,
       machine_name,
-      sys.databases.name 
+      cast(sys.databases.name as nvarchar(max))
     '
 END
 ELSE
 BEGIN
     SET @SQLCommand = '
-    SELECT 
-    CONVERT(VARCHAR, DATEADD(s, MAX(DATEDIFF(s, ''19700101'', b.backup_finish_date) - (CASE WHEN time_zone IS NOT NULL AND time_zone <> 127 THEN 60 * 15 * time_zone ELSE 0 END)), ''19700101''), 120) AS last_backup_date,
-      b.type, 
-      b.machine_name, 
-      isnull(rep.is_primary_replica,0) as is_primary_replica, 
-      rep.is_local, 
-      isnull(convert(varchar(40), rep.replica_id), '''') AS replica_id,
-      db.name AS database_name 
-    FROM 
+    SELECT
+    CONVERT(NVARCHAR, DATEADD(s, MAX(DATEDIFF(s, ''19700101'', b.backup_finish_date) -
+                     (CASE WHEN time_zone IS NOT NULL AND time_zone <> 127 THEN 60 * 15 * time_zone ELSE 0 END)), ''19700101''), 120)
+                     AS last_backup_date,
+      cast(b.type as nvarchar(max)) as type,
+      cast(b.machine_name as nvarchar(max)),
+      isnull(rep.is_primary_replica,0) as is_primary_replica,
+      rep.is_local,
+      isnull(convert(nvarchar(40), rep.replica_id), '''') AS replica_id,
+      cast(db.name as nvarchar(max)) AS database_name
+    FROM
       msdb.dbo.backupset b
-      LEFT OUTER JOIN sys.databases db ON b.database_name = db.name
+      LEFT OUTER JOIN sys.databases db ON cast(b.database_name as nvarchar(max)) = cast(db.name as nvarchar(max))
       LEFT OUTER JOIN sys.dm_hadr_database_replica_states rep ON db.database_id = rep.database_id
-    WHERE 
+    WHERE
       (rep.is_local is null or rep.is_local = 1)
-      AND (rep.is_primary_replica is null or rep.is_primary_replica = ''True'') 
-      AND UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS VARCHAR))
-    GROUP BY 
-      type, 
-      rep.replica_id, 
-      rep.is_primary_replica, 
-      rep.is_local, 
-      db.name, 
-      b.machine_name, 
-      rep.synchronization_state, 
+      AND (rep.is_primary_replica is null or rep.is_primary_replica = ''True'')
+      AND UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS NVARCHAR(120)))
+    GROUP BY
+      type,
+      rep.replica_id,
+      rep.is_primary_replica,
+      rep.is_local,
+      cast(db.name as nvarchar(max)),
+      cast(b.machine_name as nvarchar(max)),
+      rep.synchronization_state,
       rep.synchronization_health
     '
 END
@@ -270,17 +273,18 @@ EXEC (@SQLCommand)
 FROM sys.database_files WHERE type_desc = 'ROWS'";
 
     pub const DATABASES: &str = "SELECT name, \
-cast(DATABASEPROPERTYEX(name, 'Status') as varchar) AS Status, \
-  cast(DATABASEPROPERTYEX(name, 'Recovery') as varchar) AS Recovery, \
+cast(DATABASEPROPERTYEX(name, 'Status') as nvarchar) AS Status, \
+  cast(DATABASEPROPERTYEX(name, 'Recovery') as nvarchar) AS Recovery, \
   cast(DATABASEPROPERTYEX(name, 'IsAutoClose') as bigint) AS auto_close, \
   cast(DATABASEPROPERTYEX(name, 'IsAutoShrink') as bigint) AS auto_shrink \
 FROM master.dbo.sysdatabases";
 
     pub const IS_CLUSTERED: &str =
         "SELECT cast( SERVERPROPERTY('IsClustered') as nvarchar) AS is_clustered";
-    pub const CLUSTER_NODES: &str = "SELECT nodename FROM sys.dm_os_cluster_nodes";
+    pub const CLUSTER_NODES: &str =
+        "SELECT cast(nodename as NVARCHAR) as nodename FROM sys.dm_os_cluster_nodes";
     pub const CLUSTER_ACTIVE_NODES: &str =
-        "SELECT cast(SERVERPROPERTY('ComputerNamePhysicalNetBIOS') as varchar) AS active_node";
+        "SELECT cast(SERVERPROPERTY('ComputerNamePhysicalNetBIOS') as nvarchar) AS active_node";
 
     pub const CONNECTIONS: &str = "SELECT name AS DbName, \
       cast((SELECT COUNT(dbid) AS Num_Of_Connections FROM sys.sysprocesses WHERE dbid > 0 AND name = DB_NAME(dbid) GROUP BY dbid ) as bigint) AS NumberOfConnections  \
@@ -288,24 +292,24 @@ FROM sys.databases";
 
     pub const JOBS: &str = "SELECT \
   sj.job_id AS job_id, \
-  sj.name AS job_name, \
+  cast(sj.name  as NVARCHAR) AS job_name, \
   sj.enabled AS job_enabled, \
-  CAST(sjs.next_run_date AS VARCHAR(8)) AS next_run_date, \
-  CAST(sjs.next_run_time AS VARCHAR(6)) AS next_run_time, \
+  CAST(sjs.next_run_date AS NVARCHAR(8)) AS next_run_date, \
+  CAST(sjs.next_run_time AS NVARCHAR(6)) AS next_run_time, \
   sjserver.last_run_outcome, \
-  sjserver.last_outcome_message, \
-  CAST(sjserver.last_run_date AS VARCHAR(8)) AS last_run_date, \
-  CAST(sjserver.last_run_time AS VARCHAR(6)) AS last_run_time, \
+  CAST(sjserver.last_outcome_message as NVARCHAR) as last_outcome_message, \
+  CAST(sjserver.last_run_date AS NVARCHAR(8)) AS last_run_date, \
+  CAST(sjserver.last_run_time AS NVARCHAR(6)) AS last_run_time, \
   sjserver.last_run_duration, \
   ss.enabled AS schedule_enabled, \
-  CONVERT(VARCHAR, CURRENT_TIMESTAMP, 20) AS server_current_time \
+  CONVERT(NVARCHAR, CURRENT_TIMESTAMP, 20) AS server_current_time \
 FROM dbo.sysjobs sj \
 LEFT JOIN dbo.sysjobschedules sjs ON sj.job_id = sjs.job_id \
 LEFT JOIN dbo.sysjobservers sjserver ON sj.job_id = sjserver.job_id \
 LEFT JOIN dbo.sysschedules ss ON sjs.schedule_id = ss.schedule_id \
-ORDER BY sj.name, \
-         sjs.next_run_date ASC, \
-         sjs.next_run_time ASC \
+ORDER BY job_name, \
+         next_run_date ASC, \
+         next_run_time ASC \
 ";
 
     pub const MIRRORING: &str = "SELECT @@SERVERNAME as server_name, \
@@ -334,12 +338,12 @@ FROM sys.dm_hadr_availability_group_states Groups \
 INNER JOIN master.sys.availability_groups GroupsName ON Groups.group_id = GroupsName.group_id";
 
     pub const INSTANCE_PROPERTIES: &str = "SELECT \
-    cast(SERVERPROPERTY( 'InstanceName' ) as varchar)as InstanceName, \
-    cast(SERVERPROPERTY( 'ProductVersion' ) as varchar) as ProductVersion, \
-    cast(SERVERPROPERTY( 'MachineName' ) as varchar) as MachineName, \
-    cast(SERVERPROPERTY( 'Edition' ) as varchar) as Edition, \
-    cast(SERVERPROPERTY( 'ProductLevel' ) as varchar) as ProductLevel, \
-    cast(SERVERPROPERTY( 'ComputerNamePhysicalNetBIOS' ) as varchar) as NetBios";
+    cast(SERVERPROPERTY( 'InstanceName' ) as nvarchar) as InstanceName, \
+    cast(SERVERPROPERTY( 'ProductVersion' ) as nvarchar) as ProductVersion, \
+    cast(SERVERPROPERTY( 'MachineName' ) as nvarchar) as MachineName, \
+    cast(SERVERPROPERTY( 'Edition' ) as nvarchar) as Edition, \
+    cast(SERVERPROPERTY( 'ProductLevel' ) as nvarchar) as ProductLevel, \
+    cast(SERVERPROPERTY( 'ComputerNamePhysicalNetBIOS' ) as nvarchar) as NetBios";
 
     #[allow(dead_code)]
     pub const BAD_QUERY: &str = "SELEC name FROM sys.databases";

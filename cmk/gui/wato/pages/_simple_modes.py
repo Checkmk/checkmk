@@ -27,7 +27,7 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.generators.setup_site_choice import create_setup_site_choice
-from cmk.gui.form_specs.private import Catalog, LegacyValueSpec
+from cmk.gui.form_specs.private import Catalog, CommentTextArea, LegacyValueSpec
 from cmk.gui.form_specs.vue.form_spec_visitor import parse_data_from_frontend, render_form_spec
 from cmk.gui.form_specs.vue.visitors import DataOrigin, DEFAULT_VALUE
 from cmk.gui.form_specs.vue.visitors.catalog import Dict2CatalogConverter, Headers
@@ -563,7 +563,7 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
             ),
         )
         elements["comment"] = form_specs.DictElement(
-            parameter_form=form_specs.MultilineText(
+            parameter_form=CommentTextArea(
                 title=Title("Comment"),
                 help_text=Help(
                     "Optionally, add a comment to explain the purpose of this "

@@ -488,6 +488,7 @@ class BaseApiClient(abc.ABC):
             {
                 "Authorization": "Bearer %s" % token["access_token"],
                 "Content-Type": "application/json",
+                "ClientType": "monitoring-custom-client-type",
             }
         )
 
@@ -795,7 +796,10 @@ class MgmtApiClient(BaseApiClient):
         return self._query(
             "/providers/Microsoft.CostManagement/query",
             body=body,
-            params={"api-version": "2021-10-01", "$top": "100"},
+            # here 10000 might be too high,
+            # but I haven't found any useful documentation.
+            # No "$top" means 1000
+            params={"api-version": "2021-10-01", "$top": "10000"},
         )
 
     def metrics(self, region, resource_ids, params):

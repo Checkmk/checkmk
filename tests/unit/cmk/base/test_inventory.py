@@ -23,6 +23,7 @@ from cmk.utils.structured_data import (
     SDKey,
     SDNodeName,
     SDRowIdent,
+    serialize_tree,
     UpdateResult,
 )
 
@@ -160,7 +161,7 @@ def test__inventorize_real_host_only_items() -> None:
         previous_tree=ImmutableTree(),
     )
 
-    assert trees.inventory.serialize() == {
+    assert serialize_tree(trees.inventory) == {
         "Attributes": {},
         "Nodes": {
             "path-to": {
@@ -369,7 +370,7 @@ def test__inventorize_real_host_only_intervals(
     else:
         table_retentions = {}
 
-    assert trees.inventory.serialize() == {
+    assert serialize_tree(trees.inventory) == {
         "Attributes": {},
         "Nodes": {
             "path-to": {
@@ -578,7 +579,7 @@ def test__inventorize_real_host_raw_cache_info_and_only_intervals(
     else:
         table_retentions = {}
 
-    assert trees.inventory.serialize() == {
+    assert serialize_tree(trees.inventory) == {
         "Attributes": {},
         "Nodes": {
             "path-to": {
@@ -1536,7 +1537,7 @@ def test_add_rows_with_different_key_columns() -> None:
             ),
         ]
     )
-    tree_from_fs = ImmutableTree.deserialize(trees.inventory.serialize())
+    tree_from_fs = ImmutableTree.deserialize(serialize_tree(trees.inventory))
     assert tree_from_fs == trees.inventory
     rows = tree_from_fs.get_rows((SDNodeName("path-to-node"),))
     assert len(rows) == 3

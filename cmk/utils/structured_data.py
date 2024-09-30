@@ -390,6 +390,50 @@ def _make_retentions_filter_func(
 
 
 # .
+#   .--serialization-------------------------------------------------------.
+#   |                      _       _ _          _   _                      |
+#   |        ___  ___ _ __(_) __ _| (_)______ _| |_(_) ___  _ __           |
+#   |       / __|/ _ \ '__| |/ _` | | |_  / _` | __| |/ _ \| '_ \          |
+#   |       \__ \  __/ |  | | (_| | | |/ / (_| | |_| | (_) | | | |         |
+#   |       |___/\___|_|  |_|\__,_|_|_/___\__,_|\__|_|\___/|_| |_|         |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def _serialize_attributes(attributes: _MutableAttributes | ImmutableAttributes) -> SDRawAttributes:
+    raw_attributes: SDRawAttributes = {}
+    if attributes.pairs:
+        raw_attributes["Pairs"] = attributes.pairs
+    if attributes.retentions:
+        raw_attributes["Retentions"] = {k: v.serialize() for k, v in attributes.retentions.items()}
+    return raw_attributes
+
+
+def _serialize_table(table: _MutableTable | ImmutableTable) -> SDRawTable:
+    raw_table: SDRawTable = {}
+    if table.rows_by_ident:
+        raw_table.update(
+            {
+                "KeyColumns": table.key_columns,
+                "Rows": list(table.rows_by_ident.values()),
+            }
+        )
+    if table.retentions:
+        raw_table["Retentions"] = {
+            i: {k: v.serialize() for k, v in ri.items()} for i, ri in table.retentions.items()
+        }
+    return raw_table
+
+
+def serialize_tree(tree: MutableTree | ImmutableTree) -> SDRawTree:
+    return {
+        "Attributes": _serialize_attributes(tree.attributes),
+        "Table": _serialize_table(tree.table),
+        "Nodes": {name: serialize_tree(node) for name, node in tree.nodes_by_name.items() if node},
+    }
+
+
+# .
 #   .--mutable tree--------------------------------------------------------.
 #   |                      _        _     _        _                       |
 #   |      _ __ ___  _   _| |_ __ _| |__ | | ___  | |_ _ __ ___  ___       |
@@ -461,14 +505,6 @@ class _MutableAttributes:
             update_result.add_attr_reason(
                 path, "Keep until", [f"{k} ({v.keep_until})" for k, v in retentions.items()]
             )
-
-    def serialize(self) -> SDRawAttributes:
-        raw_attributes: SDRawAttributes = {}
-        if self.pairs:
-            raw_attributes["Pairs"] = self.pairs
-        if self.retentions:
-            raw_attributes["Retentions"] = {k: v.serialize() for k, v in self.retentions.items()}
-        return raw_attributes
 
     @property
     def bare(self) -> SDBareAttributes:
@@ -612,21 +648,6 @@ class _MutableTable:
                     [f"{k} ({v.keep_until})" for k, v in intervals_by_key.items()],
                 )
 
-    def serialize(self) -> SDRawTable:
-        raw_table: SDRawTable = {}
-        if self.rows_by_ident:
-            raw_table.update(
-                {
-                    "KeyColumns": self.key_columns,
-                    "Rows": list(self.rows_by_ident.values()),
-                }
-            )
-        if self.retentions:
-            raw_table["Retentions"] = {
-                i: {k: v.serialize() for k, v in ri.items()} for i, ri in self.retentions.items()
-            }
-        return raw_table
-
     @property
     def bare(self) -> SDBareTable:
         # Useful for debugging; no restrictions
@@ -744,13 +765,6 @@ class MutableTree:
 
     def has_table(self, path: SDPath) -> bool:
         return len(self.get_tree(path).table) > 0
-
-    def serialize(self) -> SDRawTree:
-        return {
-            "Attributes": self.attributes.serialize(),
-            "Table": self.table.serialize(),
-            "Nodes": {name: node.serialize() for name, node in self.nodes_by_name.items() if node},
-        }
 
     @property
     def bare(self) -> SDBareTree:
@@ -1160,14 +1174,6 @@ class ImmutableAttributes:
             },
         )
 
-    def serialize(self) -> SDRawAttributes:
-        raw_attributes: SDRawAttributes = {}
-        if self.pairs:
-            raw_attributes["Pairs"] = self.pairs
-        if self.retentions:
-            raw_attributes["Retentions"] = {k: v.serialize() for k, v in self.retentions.items()}
-        return raw_attributes
-
     @property
     def bare(self) -> SDBareAttributes:
         # Useful for debugging; no restrictions
@@ -1240,21 +1246,6 @@ class ImmutableTable:
                 for ident, raw_intervals_by_key in raw_table.get("Retentions", {}).items()
             },
         )
-
-    def serialize(self) -> SDRawTable:
-        raw_table: SDRawTable = {}
-        if self.rows_by_ident:
-            raw_table.update(
-                {
-                    "KeyColumns": self.key_columns,
-                    "Rows": list(self.rows_by_ident.values()),
-                }
-            )
-        if self.retentions:
-            raw_table["Retentions"] = {
-                i: {k: v.serialize() for k, v in ri.items()} for i, ri in self.retentions.items()
-            }
-        return raw_table
 
     @property
     def bare(self) -> SDBareTable:
@@ -1365,13 +1356,6 @@ class ImmutableTree:
                 for name, raw_node in raw_nodes.items()
             },
         )
-
-    def serialize(self) -> SDRawTree:
-        return {
-            "Attributes": self.attributes.serialize(),
-            "Table": self.table.serialize(),
-            "Nodes": {name: node.serialize() for name, node in self.nodes_by_name.items() if node},
-        }
 
     @property
     def bare(self) -> SDBareTree:
@@ -1661,7 +1645,7 @@ class TreeStore:
 
         tree_file = self._tree_file(host_name)
 
-        output = tree.serialize()
+        output = serialize_tree(tree)
         store.save_object_to_file(tree_file, output, pretty=pretty)
 
         buf = io.BytesIO()

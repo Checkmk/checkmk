@@ -30,6 +30,7 @@ from cmk.utils.structured_data import (
     SDNodeName,
     SDPath,
     SDRetentionFilterChoices,
+    serialize_tree,
     TreeStore,
     UpdateResult,
 )
@@ -143,11 +144,11 @@ def _create_filled_imm_tree() -> ImmutableTree:
 
 
 def test_serialize_empty_mut_tree() -> None:
-    assert _create_empty_mut_tree().serialize() == {"Attributes": {}, "Table": {}, "Nodes": {}}
+    assert serialize_tree(_create_empty_mut_tree()) == {"Attributes": {}, "Table": {}, "Nodes": {}}
 
 
 def test_serialize_filled_mut_tree() -> None:
-    raw_tree = _create_filled_mut_tree().serialize()
+    raw_tree = serialize_tree(_create_filled_mut_tree())
     assert not raw_tree["Attributes"]
     assert not raw_tree["Table"]
     assert not raw_tree["Nodes"][SDNodeName("path-to-nta")]["Attributes"]
@@ -1259,7 +1260,7 @@ def test_merge_trees_2() -> None:
     inventory_tree = tree_store.load(host_name=HostName("tree_inv"))
     status_data_tree = tree_store.load(host_name=HostName("tree_status"))
     tree = inventory_tree.merge(status_data_tree)
-    assert "foobar" in tree.serialize()["Nodes"]
+    assert "foobar" in serialize_tree(tree)["Nodes"]
     table = tree.get_tree((SDNodeName("foobar"),)).table
     assert len(table) == 19
     assert len(table.rows) == 5

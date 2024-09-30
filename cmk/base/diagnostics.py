@@ -62,7 +62,7 @@ from cmk.utils.licensing.usage import deserialize_dump
 from cmk.utils.local_secrets import AutomationUserSecret
 from cmk.utils.log import console, section
 from cmk.utils.paths import omd_root
-from cmk.utils.structured_data import load_tree, SDNodeName, SDRawTree
+from cmk.utils.structured_data import load_tree, SDNodeName, SDRawTree, serialize_tree
 from cmk.utils.user import UserId
 
 if cmk_version.edition(cmk.utils.paths.omd_root) in [
@@ -829,7 +829,7 @@ class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             raise DiagnosticsElementError(
                 "No HW/SW Inventory node 'Software > Applications > Checkmk'"
             )
-        return node.serialize()
+        return serialize_tree(node)
 
 
 #   ---collect exiting files------------------------------------------------

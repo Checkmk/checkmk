@@ -11,7 +11,7 @@ from cmk.ccc.exceptions import MKGeneralException
 
 import cmk.utils
 from cmk.utils.hostaddress import HostName
-from cmk.utils.structured_data import ImmutableTree
+from cmk.utils.structured_data import ImmutableTree, serialize_tree
 
 from cmk.gui.inventory._history import get_history, load_delta_tree, load_latest_delta_tree
 
@@ -29,7 +29,7 @@ def test_get_history_archive_but_no_inv_tree(request_context: None) -> None:
     # history
     cmk.ccc.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_archive_dir, hostname, "0"),
-        ImmutableTree.deserialize({"inv": "attr-0"}).serialize(),
+        serialize_tree(ImmutableTree.deserialize({"inv": "attr-0"})),
     )
 
     history, corrupted_history_files = get_history(hostname)
@@ -45,24 +45,24 @@ def _create_inventory_history() -> None:
     # history
     cmk.ccc.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_archive_dir, hostname, "0"),
-        ImmutableTree.deserialize({"inv": "attr-0"}).serialize(),
+        serialize_tree(ImmutableTree.deserialize({"inv": "attr-0"})),
     )
     cmk.ccc.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_archive_dir, hostname, "1"),
-        ImmutableTree.deserialize({"inv": "attr-1"}).serialize(),
+        serialize_tree(ImmutableTree.deserialize({"inv": "attr-1"})),
     )
     cmk.ccc.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_archive_dir, hostname, "2"),
-        ImmutableTree.deserialize({"inv-2": "attr"}).serialize(),
+        serialize_tree(ImmutableTree.deserialize({"inv-2": "attr"})),
     )
     cmk.ccc.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_archive_dir, hostname, "3"),
-        ImmutableTree.deserialize({"inv": "attr-3"}).serialize(),
+        serialize_tree(ImmutableTree.deserialize({"inv": "attr-3"})),
     )
     # current tree
     cmk.ccc.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_output_dir, hostname),
-        ImmutableTree.deserialize({"inv": "attr"}).serialize(),
+        serialize_tree(ImmutableTree.deserialize({"inv": "attr"})),
     )
 
 
@@ -172,7 +172,7 @@ def test_load_latest_delta_tree_no_archive_and_inv_tree(request_context: None) -
     # current tree
     cmk.ccc.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_output_dir, hostname),
-        ImmutableTree.deserialize({"inv": "attr"}).serialize(),
+        serialize_tree(ImmutableTree.deserialize({"inv": "attr"})),
     )
 
     assert not load_latest_delta_tree(hostname)
@@ -184,13 +184,13 @@ def test_load_latest_delta_tree_one_archive_and_inv_tree(request_context: None) 
     # history
     cmk.ccc.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_archive_dir, hostname, "0"),
-        ImmutableTree.deserialize({"inv": "attr-0"}).serialize(),
+        serialize_tree(ImmutableTree.deserialize({"inv": "attr-0"})),
     )
 
     # current tree
     cmk.ccc.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_output_dir, hostname),
-        ImmutableTree.deserialize({"inv": "attr"}).serialize(),
+        serialize_tree(ImmutableTree.deserialize({"inv": "attr"})),
     )
 
     delta_tree = load_latest_delta_tree(hostname)
@@ -204,7 +204,7 @@ def test_load_latest_delta_tree_one_archive_and_no_inv_tree(request_context: Non
     # history
     cmk.ccc.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_archive_dir, hostname, "0"),
-        ImmutableTree.deserialize({"inv": "attr-0"}).serialize(),
+        serialize_tree(ImmutableTree.deserialize({"inv": "attr-0"})),
     )
 
     delta_tree = load_latest_delta_tree(hostname)

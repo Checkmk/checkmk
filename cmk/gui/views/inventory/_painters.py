@@ -18,6 +18,7 @@ from cmk.utils.structured_data import (
     SDRawDeltaTree,
     SDRawTree,
     SDValue,
+    serialize_tree,
 )
 
 from cmk.gui import sites
@@ -138,13 +139,13 @@ class PainterInventoryTree(Painter):
         return "invtree", code
 
     def export_for_python(self, row: Row, cell: Cell) -> SDRawTree:
-        return self._compute_data(row, cell).serialize()
+        return serialize_tree(self._compute_data(row, cell))
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
     def export_for_json(self, row: Row, cell: Cell) -> SDRawTree:
-        return self._compute_data(row, cell).serialize()
+        return serialize_tree(self._compute_data(row, cell))
 
 
 class PainterInvhistTime(Painter):
@@ -507,8 +508,10 @@ def node_painter_from_hint(
         sorter=hint.ident,
         paint=lambda row: _paint_host_inventory_tree(row, hint.path, painter_options),
         export_for_python=lambda row, cell: (
-            _compute_node_painter_data(row, hint.path).serialize()
+            serialize_tree(_compute_node_painter_data(row, hint.path))
         ),
         export_for_csv=lambda row, cell: _export_node_for_csv(),
-        export_for_json=lambda row, cell: _compute_node_painter_data(row, hint.path).serialize(),
+        export_for_json=lambda row, cell: serialize_tree(
+            _compute_node_painter_data(row, hint.path)
+        ),
     )

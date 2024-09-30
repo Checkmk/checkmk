@@ -619,6 +619,41 @@ def serialize_delta_tree(delta_tree: ImmutableDeltaTree) -> SDRawDeltaTree:
     }
 
 
+def _deserialize_delta_attributes(raw_attributes: SDRawDeltaAttributes) -> ImmutableDeltaAttributes:
+    return ImmutableDeltaAttributes(
+        pairs={k: SDDeltaValue.deserialize(v) for k, v in raw_attributes.get("Pairs", {}).items()}
+    )
+
+
+def _deserialize_delta_table(raw_table: SDRawDeltaTable) -> ImmutableDeltaTable:
+    return ImmutableDeltaTable(
+        key_columns=raw_table.get("KeyColumns", []),
+        rows=[
+            {k: SDDeltaValue.deserialize(v) for k, v in r.items()}
+            for r in raw_table.get("Rows", [])
+        ],
+    )
+
+
+def _deserialize_delta_tree(*, path: SDPath, raw_tree: SDRawDeltaTree) -> ImmutableDeltaTree:
+    return ImmutableDeltaTree(
+        path=path,
+        attributes=_deserialize_delta_attributes(raw_attributes=raw_tree["Attributes"]),
+        table=_deserialize_delta_table(raw_table=raw_tree["Table"]),
+        nodes_by_name={
+            raw_node_name: _deserialize_delta_tree(
+                path=path + (raw_node_name,),
+                raw_tree=raw_node,
+            )
+            for raw_node_name, raw_node in raw_tree["Nodes"].items()
+        },
+    )
+
+
+def deserialize_delta_tree(raw_tree: SDRawDeltaTree) -> ImmutableDeltaTree:
+    return _deserialize_delta_tree(path=(), raw_tree=raw_tree)
+
+
 # .
 #   .--mutable tree--------------------------------------------------------.
 #   |                      _        _     _        _                       |
@@ -1484,14 +1519,6 @@ class ImmutableDeltaAttributes:
     def get_stats(self) -> SDDeltaCounter:
         return _compute_delta_stats(self.pairs)
 
-    @classmethod
-    def deserialize(cls, raw_attributes: SDRawDeltaAttributes) -> ImmutableDeltaAttributes:
-        return cls(
-            pairs={
-                k: SDDeltaValue.deserialize(v) for k, v in raw_attributes.get("Pairs", {}).items()
-            }
-        )
-
     @property
     def bare(self) -> SDBareDeltaAttributes:
         # Useful for debugging; no restrictions
@@ -1518,16 +1545,6 @@ class ImmutableDeltaTable:
         for row in self.rows:
             counter.update(_compute_delta_stats(row))
         return counter
-
-    @classmethod
-    def deserialize(cls, raw_table: SDRawDeltaTable) -> ImmutableDeltaTable:
-        return cls(
-            key_columns=raw_table.get("KeyColumns", []),
-            rows=[
-                {k: SDDeltaValue.deserialize(v) for k, v in r.items()}
-                for r in raw_table.get("Rows", [])
-            ],
-        )
 
     @property
     def bare(self) -> SDBareDeltaTable:
@@ -1591,25 +1608,6 @@ class ImmutableDeltaTree:
         for node in self.nodes_by_name.values():
             counter.update(node.get_stats())
         return counter
-
-    @classmethod
-    def deserialize(cls, raw_tree: SDRawDeltaTree) -> ImmutableDeltaTree:
-        return cls._deserialize(path=(), raw_tree=raw_tree)
-
-    @classmethod
-    def _deserialize(cls, *, path: SDPath, raw_tree: SDRawDeltaTree) -> ImmutableDeltaTree:
-        return cls(
-            path=path,
-            attributes=ImmutableDeltaAttributes.deserialize(raw_attributes=raw_tree["Attributes"]),
-            table=ImmutableDeltaTable.deserialize(raw_table=raw_tree["Table"]),
-            nodes_by_name={
-                raw_node_name: cls._deserialize(
-                    path=path + (raw_node_name,),
-                    raw_tree=raw_node,
-                )
-                for raw_node_name, raw_node in raw_tree["Nodes"].items()
-            },
-        )
 
     @property
     def bare(self) -> SDBareDeltaTree:

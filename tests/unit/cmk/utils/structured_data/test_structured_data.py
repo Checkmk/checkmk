@@ -17,6 +17,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import (
     _MutableAttributes,
     _MutableTable,
+    deserialize_delta_tree,
     deserialize_tree,
     ImmutableAttributes,
     ImmutableDeltaTree,
@@ -317,7 +318,7 @@ def test_deserialize_empty_delta_tree() -> None:
 
 
 def test_deserialize_filled_delta_tree() -> None:
-    delta_tree = ImmutableDeltaTree.deserialize(
+    delta_tree = deserialize_delta_tree(
         {
             "Attributes": {},
             "Nodes": {

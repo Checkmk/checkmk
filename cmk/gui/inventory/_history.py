@@ -13,6 +13,7 @@ from cmk.ccc.exceptions import MKGeneralException
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import (
+    deserialize_delta_tree,
     ImmutableDeltaTree,
     ImmutableTree,
     load_tree,
@@ -270,7 +271,7 @@ class _CachedDeltaTreeLoader:
             new,
             changed,
             removed,
-            ImmutableDeltaTree.deserialize(raw_delta_tree),
+            deserialize_delta_tree(raw_delta_tree),
         )
 
     def get_calculated_or_store_entry(

@@ -588,9 +588,13 @@ def deserialize_tree(raw_tree: Mapping) -> ImmutableTree:
     )
 
 
+def _serialize_delta_value(delta_value: SDDeltaValue) -> tuple[SDValue, SDValue]:
+    return (delta_value.old, delta_value.new)
+
+
 def _serialize_delta_attributes(delta_attributes: ImmutableDeltaAttributes) -> SDRawDeltaAttributes:
     return (
-        {"Pairs": {k: v.serialize() for k, v in delta_attributes.pairs.items()}}
+        {"Pairs": {k: _serialize_delta_value(v) for k, v in delta_attributes.pairs.items()}}
         if delta_attributes.pairs
         else {}
     )
@@ -600,7 +604,9 @@ def _serialize_delta_table(delta_table: ImmutableDeltaTable) -> SDRawDeltaTable:
     return (
         {
             "KeyColumns": delta_table.key_columns,
-            "Rows": [{k: v.serialize() for k, v in r.items()} for r in delta_table.rows],
+            "Rows": [
+                {k: _serialize_delta_value(v) for k, v in r.items()} for r in delta_table.rows
+            ],
         }
         if delta_table.rows
         else {}
@@ -619,9 +625,13 @@ def serialize_delta_tree(delta_tree: ImmutableDeltaTree) -> SDRawDeltaTree:
     }
 
 
+def _deserialize_delta_value(raw_delta_value: tuple[SDValue, SDValue]) -> SDDeltaValue:
+    return SDDeltaValue(raw_delta_value[0], raw_delta_value[1])
+
+
 def _deserialize_delta_attributes(raw_attributes: SDRawDeltaAttributes) -> ImmutableDeltaAttributes:
     return ImmutableDeltaAttributes(
-        pairs={k: SDDeltaValue.deserialize(v) for k, v in raw_attributes.get("Pairs", {}).items()}
+        pairs={k: _deserialize_delta_value(v) for k, v in raw_attributes.get("Pairs", {}).items()}
     )
 
 
@@ -629,7 +639,7 @@ def _deserialize_delta_table(raw_table: SDRawDeltaTable) -> ImmutableDeltaTable:
     return ImmutableDeltaTable(
         key_columns=raw_table.get("KeyColumns", []),
         rows=[
-            {k: SDDeltaValue.deserialize(v) for k, v in r.items()}
+            {k: _deserialize_delta_value(v) for k, v in r.items()}
             for r in raw_table.get("Rows", [])
         ],
     )
@@ -1149,13 +1159,6 @@ class SDDeltaValue:
     old: SDValue
     new: SDValue
 
-    @classmethod
-    def deserialize(cls, raw_delta_value: tuple[SDValue, SDValue]) -> Self:
-        return cls(*raw_delta_value)
-
-    def serialize(self) -> tuple[SDValue, SDValue]:
-        return (self.old, self.new)
-
 
 def _encode_as_new(value: SDValue) -> SDDeltaValue:
     return SDDeltaValue(None, value)
@@ -1522,7 +1525,7 @@ class ImmutableDeltaAttributes:
     @property
     def bare(self) -> SDBareDeltaAttributes:
         # Useful for debugging; no restrictions
-        return {"Pairs": {k: v.serialize() for k, v in self.pairs.items()}}
+        return {"Pairs": {k: _serialize_delta_value(v) for k, v in self.pairs.items()}}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -1551,7 +1554,7 @@ class ImmutableDeltaTable:
         # Useful for debugging; no restrictions
         return {
             "KeyColumns": self.key_columns,
-            "Rows": [{k: v.serialize() for k, v in r.items()} for r in self.rows],
+            "Rows": [{k: _serialize_delta_value(v) for k, v in r.items()} for r in self.rows],
         }
 
 

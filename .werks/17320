@@ -1,0 +1,16 @@
+Title: azure usage details: increase API page size and specify ClientType
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1727687374
+Edition: cre
+Level: 1
+Version: 2.2.0p36
+
+The <code>429 (Too Many Requests)</code> error was frequently raised when monitoring Azure usage details.
+This problem was caused by the high number of queries, performed to retrieve the usage details,
+due to pagination with a limited number of items per page, and due to the <code>ClientType</code> quota
+limit (see: https://learn.microsoft.com/en-us/answers/questions/1340993/exception-429-too-many-requests-for-azure-cost-man).
+
+This werk increases the number of items retrieved by each individual API call
+and specifies a <code>ClientType</code> in the request header.

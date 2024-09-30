@@ -12,7 +12,6 @@ from typing import NamedTuple
 
 import pytest
 
-import cmk.utils.paths
 from cmk.utils import password_store
 from cmk.utils.hostaddress import HostAddress, HostName
 
@@ -93,7 +92,7 @@ def _with_file(path: Path) -> Iterator[None]:
 
 
 def argument_function_with_exception(*args, **kwargs):
-    raise Exception("Can't create argument list")
+    raise RuntimeError("Can't create argument list")
 
 
 @pytest.mark.parametrize(
@@ -409,69 +408,7 @@ def test_iter_special_agent_commands_stored_password_without_hack() -> None:
 def test_iter_special_agent_commands_crash(
     plugins: Mapping[PluginLocation, SpecialAgentConfig],
     legacy_plugins: Mapping[str, InfoFunc],
-    monkeypatch: pytest.MonkeyPatch,
-    capsys: pytest.CaptureFixture[str],
 ) -> None:
-    monkeypatch.setattr(
-        cmk.ccc.debug,
-        "enabled",
-        lambda: False,
-    )
-
-    special_agent = SpecialAgent(
-        plugins,
-        legacy_plugins,
-        HostName("test_host"),
-        HostAddress("127.0.0.1"),
-        HOST_CONFIG,
-        HOST_ATTRS,
-        http_proxies={},
-        stored_passwords={},
-        password_store_file=Path("/pw/store"),
-        finder=lambda *_: "/path/to/agent",
-    )
-
-    list(special_agent.iter_special_agent_commands("test_agent", {}))
-
-    captured = capsys.readouterr()
-    assert (
-        captured.out
-        == "\nWARNING: Config creation for special agent test_agent failed on test_host: Can't create argument list\n"
-    )
-
-
-@pytest.mark.parametrize(
-    "plugins, legacy_plugins",
-    [
-        pytest.param(
-            {
-                PluginLocation(
-                    "cmk.plugins.test.server_side_calls.test_agent", "special_agent_text"
-                ): SpecialAgentConfig(
-                    name="test_agent",
-                    parameter_parser=lambda e: e,
-                    commands_function=argument_function_with_exception,
-                )
-            },
-            {},
-            id="special agent",
-        ),
-        pytest.param(
-            {}, {"test_agent": argument_function_with_exception}, id="legacy special agent"
-        ),
-    ],
-)
-def test_iter_special_agent_commands_crash_with_debug(
-    plugins: Mapping[PluginLocation, SpecialAgentConfig],
-    legacy_plugins: Mapping[str, InfoFunc],
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(
-        cmk.ccc.debug,
-        "enabled",
-        lambda: True,
-    )
-
     special_agent = SpecialAgent(
         plugins,
         legacy_plugins,
@@ -486,7 +423,7 @@ def test_iter_special_agent_commands_crash_with_debug(
     )
 
     with pytest.raises(
-        Exception,
+        RuntimeError,
         match="Can't create argument list",
     ):
         list(special_agent.iter_special_agent_commands("test_agent", {}))

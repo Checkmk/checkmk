@@ -2771,8 +2771,15 @@ class ConfigCache:
         )
         for agentname, params_seq in self.special_agents(host_name):
             for params in params_seq:
-                for agent_data in special_agent.iter_special_agent_commands(agentname, params):
-                    yield agentname, agent_data
+                try:
+                    for agent_data in special_agent.iter_special_agent_commands(agentname, params):
+                        yield agentname, agent_data
+                except Exception as exc:
+                    if cmk.ccc.debug.enabled():
+                        raise
+                    config_warnings.warn(
+                        f"Config creation for special agent {agentname} failed on {host_name}: {exc}"
+                    )
 
     def collect_passwords(self) -> Mapping[str, str]:
         # consider making the hosts an argument. Sometimes we only need one.

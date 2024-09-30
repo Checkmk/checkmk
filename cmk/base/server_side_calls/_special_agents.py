@@ -7,10 +7,7 @@ from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
-import cmk.ccc.debug
-
-import cmk.utils.paths
-from cmk.utils import config_warnings, password_store
+from cmk.utils import password_store
 from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.discover_plugins import PluginLocation
@@ -126,16 +123,9 @@ class SpecialAgent:
     def iter_special_agent_commands(
         self, agent_name: str, params: Mapping[str, object] | object
     ) -> Iterator[SpecialAgentCommandLine]:
-        try:
-            if (info_func := self._legacy_plugins.get(agent_name)) is not None:
-                yield from self._iter_legacy_commands(agent_name, info_func, params)
+        if (info_func := self._legacy_plugins.get(agent_name)) is not None:
+            yield from self._iter_legacy_commands(agent_name, info_func, params)
 
-            if (special_agent := self._plugins.get(agent_name.replace("agent_", ""))) is not None:
-                params = _ensure_mapping_str_object(params)
-                yield from self._iter_commands(special_agent, params)
-        except Exception as e:
-            if cmk.ccc.debug.enabled():
-                raise
-            config_warnings.warn(
-                f"Config creation for special agent {agent_name} failed on {self.host_name}: {e}"
-            )
+        if (special_agent := self._plugins.get(agent_name.replace("agent_", ""))) is not None:
+            params = _ensure_mapping_str_object(params)
+            yield from self._iter_commands(special_agent, params)

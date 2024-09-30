@@ -308,3 +308,61 @@ agent_section_openbsd_mem = AgentSection(
     parsed_section_name="mem_used",
     parse_function=parse_openbsd_mem,
 )
+
+
+def parse_freebsd_mem(string_table: StringTable) -> SectionMemUsed | None:
+    """
+    >>> import pprint
+    >>> pprint.pprint(parse_statgrab_mem([
+    ...     ['mem.cache', '0'],
+    ...     ['mem.free', '677666816'],
+    ...     ['mem.total', '4294967296'],
+    ...     ['mem.used', '3617300480'],
+    ...     ['swap.free', '4976402432'],
+    ...     ['swap.total', '8589934592'],
+    ...     ['swap.used', '3613532160']
+    ... ]))
+    {'Cached': 0,
+     'MemFree': 677666816,
+     'MemUsed': 3617300480,
+     'MemTotal': 4294967296,
+     'SwapFree': 4976402432,
+     'SwapUsed': 3613532160,
+     'SwapTotal': 8589934592}
+
+    """
+    parsed: dict[str, int] = {}
+    for var, value in string_table:
+        try:
+            parsed.setdefault(var, int(value))
+        except ValueError:
+            pass
+
+    try:
+        totalmem = parsed["mem.total"]
+        memused = parsed["mem.used"]
+        memfree = parsed["mem.free"]
+        totalswap = parsed["swap.total"]
+        swapused = parsed["swap.used"]
+        swapfree = parsed["swap.free"]
+    except KeyError:
+        return None
+
+    section: SectionMemUsed = {
+        "MemTotal": totalmem,
+        "MemUsed": memused,
+        "MemFree": memfree,
+        "SwapTotal": totalswap,
+        "SwapUsed": swapused
+        "SwapFree": swapfree,
+    }
+    if "mem.cache" in parsed:
+        section["Cached"] = parsed["mem.cache"]
+
+
+agent_section_freebsd_mem = AgentSection(
+    name="sysctl_mem",
+    parsed_section_name="mem_used",
+    parse_function=parse_freebsd_mem,
+    supersedes=["statgrab_mem","ucd_mem"],
+)

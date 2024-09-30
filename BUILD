@@ -47,3 +47,8 @@ refresh_compile_commands(
         "//packages/unixcat:all": "",
     },
 )
+
+alias(
+    name = "requirements.update",
+    actual = "//cmk:requirements.update",
+)

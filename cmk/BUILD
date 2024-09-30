@@ -31,4 +31,5 @@ compile_pip_requirements(
     name = "requirements",
     requirements_in = "requirements_in.txt",
     requirements_txt = "@//:requirements_lock.txt",
+    visibility = ["//visibility:public"],
 )

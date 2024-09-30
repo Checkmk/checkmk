@@ -19,27 +19,49 @@ font-size: 7pt;border: 1px solid #666;position: relative;top: -1px;' %}
 >') | safe }} {% endmacro %}
 
 {% macro view_issue_button(href) %}
-<a
-    href="{{ href }}"
-    class="button"
-    style="
-        width: 472px;
-        height: 34px;
-        border-radius: 8px;
-        background-color: #2c3843;
-        display: inline-block;
-        color: white;
-        line-height: 33px;
-        text-align: center;
-        text-decoration: none;
-        font-size: 14px;
-        font-weight: 600;
-        margin-top: 10px;
-        margin-left: 32px;
-    "
->
-    View issue
-</a>
+  <table
+    role="presentation"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+    style="margin: 10px 0 0 32px;">
+    <tr>
+      <td align="center">
+        <!--[if mso]>
+        <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml"
+          xmlns:w="urn:schemas-microsoft-com:office:word"
+          href="{{ href }}"
+          style="height:34px; v-text-anchor:middle; width:472px;"
+          arcsize="8%"
+          strokecolor="#2c3843"
+          fillcolor="#2c3843">
+          <w:anchorlock/>
+          <center style="color:#ffffff; font-family:Arial, sans-serif; font-size:14px; font-weight:600;">
+            View issue
+          </center>
+        </v:roundrect>
+        <![endif]-->
+        <!--[if !mso]><!-- -->
+        <a
+          href="{{ href }}"
+          style="
+            display: inline-block;
+            width: 472px;
+            height: 34px;
+            background-color: #2c3843;
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 34px;
+            text-align: center;
+            border-radius: 8px;">
+          View issue
+        </a>
+        <!--<![endif]-->
+      </td>
+    </tr>
+  </table>
 {% endmacro %}
 
 {% macro event_marker_style() %}

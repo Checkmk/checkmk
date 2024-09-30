@@ -22,7 +22,8 @@ del /Q python-3.cab
 del /Q python-3.8.cab
 del /Q python-3.4.cab
 powershell Write-Host "root files" -foreground white
-del /Q *.*
+del /Q *.txt
+del /Q Pipfile.*
 powershell Write-Host "root folders" -foreground white
 rd /q /s libs
 rd /q /s tools

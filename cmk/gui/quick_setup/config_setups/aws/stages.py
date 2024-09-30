@@ -90,6 +90,7 @@ def prepare_aws() -> QuickSetupStage:
 
 
 def configure_host_and_regions() -> QuickSetupStage:
+    site_default_value = site_attribute_default_value()
     return QuickSetupStage(
         title=_("Configure host and regions"),
         sub_title=_(
@@ -104,6 +105,34 @@ def configure_host_and_regions() -> QuickSetupStage:
                     layout=DictionaryLayout.two_columns,
                 ),
             ),
+            FormSpecWrapper(
+                id=FormSpecId("site"),
+                form_spec=DictionaryExtended(
+                    elements={
+                        QSSiteSelection: DictElement(
+                            parameter_form=SingleChoice(
+                                elements=[
+                                    SingleChoiceElement(
+                                        name=site_id,
+                                        title=Title(  # pylint: disable=localization-of-non-literal-string
+                                            title
+                                        ),
+                                    )
+                                    for site_id, title in get_configured_site_choices()
+                                ],
+                                title=Title("Site selection"),
+                                prefill=(
+                                    DefaultValue(site_default_value)
+                                    if site_default_value
+                                    else InputHint(Title("Please choose"))
+                                ),
+                            ),
+                            required=True,
+                        )
+                    },
+                    layout=DictionaryLayout.two_columns,
+                ),
+            ),
         ],
         custom_validators=[qs_validators.validate_host_name_doesnt_exists],
         recap=[recaps.recaps_form_spec],
@@ -112,7 +141,6 @@ def configure_host_and_regions() -> QuickSetupStage:
 
 
 def _configure() -> Sequence[Widget]:
-    site_default_value = site_attribute_default_value()
     return [
         FormSpecWrapper(
             id=FormSpecId("configure_services_to_monitor"),
@@ -124,34 +152,6 @@ def _configure() -> Sequence[Widget]:
         Collapsible(
             title="Other options",
             items=[
-                FormSpecWrapper(
-                    id=FormSpecId("site"),
-                    form_spec=DictionaryExtended(
-                        elements={
-                            QSSiteSelection: DictElement(
-                                parameter_form=SingleChoice(
-                                    elements=[
-                                        SingleChoiceElement(
-                                            name=site_id,
-                                            title=Title(  # pylint: disable=localization-of-non-literal-string
-                                                title
-                                            ),
-                                        )
-                                        for site_id, title in get_configured_site_choices()
-                                    ],
-                                    title=Title("Site selection"),
-                                    prefill=(
-                                        DefaultValue(site_default_value)
-                                        if site_default_value
-                                        else InputHint(Title("Please choose"))
-                                    ),
-                                ),
-                                required=True,
-                            )
-                        },
-                        layout=DictionaryLayout.two_columns,
-                    ),
-                ),
                 FormSpecWrapper(
                     id=FormSpecId("aws_tags"),
                     form_spec=DictionaryExtended(

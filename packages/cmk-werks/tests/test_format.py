@@ -6,7 +6,7 @@
 
 from cmk.werks import parse_werk
 from cmk.werks.format import format_as_werk_v1, format_as_werk_v2
-from cmk.werks.parse import parse_werk_v2
+from cmk.werks.parse import parse_werk_v2, WerkV2ParseResult
 
 
 def test_markdown_parse_roundtrip() -> None:
@@ -116,4 +116,40 @@ LI: a list...
 LI: ...with...
 LI: ...entries!
 """
+    )
+
+
+def test_markdown_output_keys_stable() -> None:
+    parsed = WerkV2ParseResult(
+        metadata={
+            "id": "123",
+            "component": "core",
+            "level": "1",
+            "version": "2.0.0p7",
+            "compatible": "yes",
+            "edition": "cre",
+            "date": "2022-12-12T11:08:08+00:00",  # date is at the bottom
+            "class": "fix",
+            "title": "test < werk",
+        },
+        description="description",
+    )
+    content = format_as_werk_v2(parsed)
+    print(content)
+    assert (
+        content
+        == """[//]: # (werk v2)
+# test < werk
+
+key        | value
+---------- | ---
+component  | core
+level      | 1
+version    | 2.0.0p7
+compatible | yes
+edition    | cre
+date       | 2022-12-12T11:08:08+00:00
+class      | fix
+
+description"""
     )

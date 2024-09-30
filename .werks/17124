@@ -1,0 +1,13 @@
+Title: mk_postgres: Fix 'Argument list too long'
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1720077731
+Edition: cre
+Level: 1
+Version: 2.2.0p35
+
+The execution of large queries might run into an OS specific restriction
+regarding the length of arguments. In order to bypass the above error we use
+<code>psql -f &lt;FILE_PATH&gt;</code> instead of using <code>echo</code>, <code>cat</code> or similar for passing the
+SQL to <code>pyql</code>.

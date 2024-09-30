@@ -15,6 +15,7 @@ import QuickSetup from './quick-setup/QuickSetupApp.vue'
 import NotificationOverview from './notification/NotificationOverviewApp.vue'
 import { FormApp } from '@/form'
 import NotificationParametersOverviewApp from '@/notification/NotificationParametersOverviewApp.vue'
+import GraphDesignerApp from '@/graph-designer/GraphDesignerApp.vue'
 
 function setupVue() {
   document
@@ -69,6 +70,10 @@ function setupVue() {
           app = createApp(NotificationParametersOverviewApp, {
             parameters: appData.parameters
           })
+          break
+        }
+        case 'graph_designer': {
+          app = createApp(GraphDesignerApp, {})
           break
         }
         default:

@@ -11,9 +11,11 @@ SOURCES=(
     python/vue_formspec_components.py
     python/configuration_entity.py
     python/notifications.py
+    python/graph_designer.py
     typescript/vue_formspec_components.ts
     typescript/configuration_entity.ts
     typescript/notifications.ts
+    typescript/graph_designer.ts
 )
 # you should also modify the following files if you change something here!
 # buildscripts/scripts/stages.yml
@@ -22,9 +24,11 @@ DESTINATIONS=(
     ../../cmk/gui/form_specs/vue/shared_type_defs.py
     ../../cmk/gui/watolib/configuration_entity/type_defs.py
     ../../cmk/gui/watolib/notification_types.py
+    ../../cmk/gui/graphing/cee/_graph_designer_type_defs.py
     ../../packages/cmk-frontend-vue/src/form/components/vue_formspec_components.ts
     ../../packages/cmk-frontend-vue/src/form/components/configuration_entity.ts
     ../../packages/cmk-frontend-vue/src/notification/type_defs.ts
+    ../../packages/cmk-frontend-vue/src/graph-designer/type_defs.ts
 )
 
 failure() {
@@ -155,31 +159,54 @@ run_build() {
     mkdir -p python typescript
     cwd=$(pwd)
     export PYTHONPATH="$PYTHONPATH:$cwd"
-    TS_HEADER="$(cat header_ts.txt)"
     for file in source/*.json; do
         target_base=$(basename "${file}" .json)
         echo "Processing $file"
 
-        datamodel-codegen --input "$file" \
-            --input-file-type jsonschema \
-            --output "python/${target_base}.py" \
-            --target-python-version 3.12 \
-            --output-model-type=dataclasses.dataclass \
-            --use-field-description \
-            --use-title-as-name \
-            --use-double-quotes \
-            --use-default \
-            --use-standard-collections \
-            --use-one-literal-as-default \
-            --use-subclass-enum \
-            --custom-file-header-path header_py.txt \
-            --custom-formatters "utils.format"
-        npm run json2ts -- \
-            --additionalProperties=false \
-            --declareExternallyReferenced \
-            --bannerComment "${TS_HEADER}" \
-            --cwd source/ "${file}" \
-            -o "typescript/${target_base}.ts"
+        if [[ "$file" == "source/graph_designer.json" ]]; then
+            datamodel-codegen --input "$file" \
+                --input-file-type jsonschema \
+                --output "python/${target_base}.py" \
+                --target-python-version 3.12 \
+                --output-model-type=dataclasses.dataclass \
+                --use-field-description \
+                --use-title-as-name \
+                --use-double-quotes \
+                --use-default \
+                --use-one-literal-as-default \
+                --custom-file-header-path header_cee_py.txt \
+                --custom-formatters "utils.format" \
+                --enum-field-as-literal all \
+                --use-generic-container-types \
+                --use-union-operator
+            npm run json2ts -- \
+                --additionalProperties=false \
+                --declareExternallyReferenced \
+                --bannerComment "$(cat header_cee_ts.txt)" \
+                --cwd source/ "${file}" \
+                -o "typescript/${target_base}.ts"
+        else
+            datamodel-codegen --input "$file" \
+                --input-file-type jsonschema \
+                --output "python/${target_base}.py" \
+                --target-python-version 3.12 \
+                --output-model-type=dataclasses.dataclass \
+                --use-field-description \
+                --use-title-as-name \
+                --use-double-quotes \
+                --use-default \
+                --use-standard-collections \
+                --use-one-literal-as-default \
+                --use-subclass-enum \
+                --custom-file-header-path header_py.txt \
+                --custom-formatters "utils.format"
+            npm run json2ts -- \
+                --additionalProperties=false \
+                --declareExternallyReferenced \
+                --bannerComment "$(cat header_ts.txt)" \
+                --cwd source/ "${file}" \
+                -o "typescript/${target_base}.ts"
+        fi
     done
 
     if [ "$CI" == "true" ]; then

@@ -112,11 +112,6 @@ const isOpen = computed(() => isSelectedStage.value || props.mode === 'overview'
   }
 }
 
-.qs-stage__action {
-  padding-top: var(--spacing);
-  position: relative;
-}
-
 .qs-stage__loading {
   display: flex;
   align-items: center;

@@ -24,7 +24,7 @@ const isLast = computed(() => props.index == props.numberOfStages - 1)
     </AlertBox>
 
     <div v-if="mode === 'guided'">
-      <div v-if="!loading" class="qs-stage__action">
+      <div v-if="!loading" class="qs-stage-content__action">
         <Button
           v-for="button in buttons"
           :key="button.label"
@@ -33,7 +33,7 @@ const isLast = computed(() => props.index == props.numberOfStages - 1)
           @click="button.action"
         />
       </div>
-      <div v-else class="qs-stage__loading">
+      <div v-else class="qs-stage-content__loading">
         <LoadingIcon size="lg" />
         <!-- TODO: move these texts to the backend to make them translatable (CMK-19020) -->
         <span v-if="isLast">This process may take several minutes, please wait...</span>

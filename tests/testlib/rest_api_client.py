@@ -178,19 +178,23 @@ class RestApiException(Exception):
 
 
 def get_link(resp: dict, rel: str) -> Mapping:
-    for link in resp.get("links", []):
-        if link["rel"].startswith(rel):
-            return link
-    if "result" in resp:
-        for link in resp["result"].get("links", []):
-            if link["rel"].startswith(rel):
-                return link
-    for member in resp.get("members", {}).values():
-        if member["memberType"] == "action":
-            for link in member["links"]:
-                if link["rel"].startswith(rel):
+    """Return the first instance of 'link' corresponding to pattern 'rel'.
+
+    Searches recursively within the dictionary.
+    """
+    for key, value in resp.items():
+        if key == "members" and value.get("memberType", "") != "action":
+            continue
+        if key == "links" and isinstance(value, list):
+            for link in value:
+                if link.get("rel", "").startswith(rel):
                     return link
-    raise KeyError(f"{rel!r} not found")
+        elif isinstance(value, dict):
+            try:
+                return get_link(value, rel)
+            except KeyError:
+                continue
+    raise KeyError(f"No 'link' found corresponding to 'rel' pattern: '{rel}'!")
 
 
 def expand_rel(rel: str) -> str:

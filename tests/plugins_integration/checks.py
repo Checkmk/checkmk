@@ -489,6 +489,7 @@ def setup_host(site: Site, host_name: str, skip_cleanup: bool = False) -> Iterat
         if not (config.skip_cleanup or skip_cleanup):
             logger.info('Deleting host "%s"...', host_name)
             site.openapi.delete_host(host_name)
+            site.activate_changes_and_wait_for_core_reload()
 
 
 @contextmanager

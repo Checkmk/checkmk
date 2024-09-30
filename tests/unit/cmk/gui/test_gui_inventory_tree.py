@@ -7,7 +7,13 @@ from pytest import MonkeyPatch
 
 import cmk.utils
 from cmk.utils.hostaddress import HostName
-from cmk.utils.structured_data import ImmutableTree, SDFilterChoice, SDKey, SDNodeName
+from cmk.utils.structured_data import (
+    deserialize_tree,
+    ImmutableTree,
+    SDFilterChoice,
+    SDKey,
+    SDNodeName,
+)
 
 import cmk.gui.inventory
 from cmk.gui.inventory._tree import (
@@ -287,22 +293,22 @@ def test__make_filter_choices_from_api_request_paths(
         (
             None,
             {},
-            ImmutableTree.deserialize({"loaded": "tree"}),
+            deserialize_tree({"loaded": "tree"}),
         ),
         (
             HostName("hostname"),
             {},
-            ImmutableTree.deserialize({"loaded": "tree"}),
+            deserialize_tree({"loaded": "tree"}),
         ),
         (
             HostName("hostname"),
             {"host_structured_status": b""},
-            ImmutableTree.deserialize({"loaded": "tree"}),
+            deserialize_tree({"loaded": "tree"}),
         ),
         (
             HostName("hostname"),
             {"host_structured_status": b"{'deserialized': 'tree'}"},
-            ImmutableTree.deserialize({"deserialized": "tree"}),
+            deserialize_tree({"deserialized": "tree"}),
         ),
     ],
 )
@@ -318,7 +324,7 @@ def test_load_filtered_and_merged_tree(
         "_load_tree_from_file",
         (
             lambda *args, **kw: (
-                ImmutableTree.deserialize({"loaded": "tree"})
+                deserialize_tree({"loaded": "tree"})
                 if kw["tree_type"] == "status_data"
                 else ImmutableTree()
             )

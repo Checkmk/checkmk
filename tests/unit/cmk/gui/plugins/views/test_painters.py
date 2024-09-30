@@ -18,7 +18,7 @@ import cmk.ccc.version as cmk_version
 from cmk.utils import paths
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.paths import default_config_dir
-from cmk.utils.structured_data import ImmutableTree
+from cmk.utils.structured_data import deserialize_tree
 from cmk.utils.user import UserId
 
 from cmk.gui import sites
@@ -986,7 +986,7 @@ def _service_row():
         "host_in_check_period": 1,
         "host_in_notification_period": 1,
         "host_in_service_period": 1,
-        "host_inventory": ImmutableTree.deserialize(
+        "host_inventory": deserialize_tree(
             {
                 "hardware": {
                     "memory": {

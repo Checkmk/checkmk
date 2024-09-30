@@ -15,6 +15,7 @@ from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.structured_data import (
+    deserialize_tree,
     ImmutableAttributes,
     ImmutableTable,
     ImmutableTree,
@@ -654,7 +655,7 @@ def _make_tree_or_items(
     previous_table_retentions: Mapping[SDRowIdent, Mapping[SDKey, RetentionInterval]],
     raw_cache_info: tuple[int, int] | None,
 ) -> tuple[ImmutableTree, list[ItemsOfInventoryPlugin]]:
-    previous_tree = ImmutableTree.deserialize(
+    previous_tree = deserialize_tree(
         {
             "Attributes": {},
             "Table": {},
@@ -1422,7 +1423,7 @@ def _create_root_tree(pairs: Mapping[SDKey, int | float | str | None]) -> Mutabl
     "previous_tree, inventory_tree, update_result, expected_save_tree_actions",
     [
         (
-            ImmutableTree.deserialize(
+            deserialize_tree(
                 {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
             ),
             # No further impact, may not be realistic here
@@ -1439,7 +1440,7 @@ def _create_root_tree(pairs: Mapping[SDKey, int | float | str | None]) -> Mutabl
             _SaveTreeActions(do_archive=False, do_save=True),
         ),
         (
-            ImmutableTree.deserialize(
+            deserialize_tree(
                 {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
             ),
             _create_root_tree({SDKey("key"): "new value"}),
@@ -1448,7 +1449,7 @@ def _create_root_tree(pairs: Mapping[SDKey, int | float | str | None]) -> Mutabl
             _SaveTreeActions(do_archive=True, do_save=True),
         ),
         (
-            ImmutableTree.deserialize(
+            deserialize_tree(
                 {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
             ),
             _create_root_tree({SDKey("key"): "new value"}),
@@ -1456,17 +1457,13 @@ def _create_root_tree(pairs: Mapping[SDKey, int | float | str | None]) -> Mutabl
             _SaveTreeActions(do_archive=True, do_save=True),
         ),
         (
-            ImmutableTree.deserialize(
-                {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
-            ),
+            deserialize_tree({"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}),
             _create_root_tree({SDKey("key"): "value"}),
             UpdateResult(),
             _SaveTreeActions(do_archive=False, do_save=False),
         ),
         (
-            ImmutableTree.deserialize(
-                {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
-            ),
+            deserialize_tree({"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}),
             _create_root_tree({SDKey("key"): "value"}),
             # Content of path does not matter here
             UpdateResult(reasons_by_path={(SDNodeName("path-to"), SDNodeName("node")): []}),
@@ -1537,7 +1534,7 @@ def test_add_rows_with_different_key_columns() -> None:
             ),
         ]
     )
-    tree_from_fs = ImmutableTree.deserialize(serialize_tree(trees.inventory))
+    tree_from_fs = deserialize_tree(serialize_tree(trees.inventory))
     assert tree_from_fs == trees.inventory
     rows = tree_from_fs.get_rows((SDNodeName("path-to-node"),))
     assert len(rows) == 3

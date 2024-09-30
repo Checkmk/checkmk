@@ -17,6 +17,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import (
     _MutableAttributes,
     _MutableTable,
+    deserialize_tree,
     ImmutableAttributes,
     ImmutableDeltaTree,
     ImmutableTable,
@@ -201,12 +202,12 @@ def test_serialize_filled_mut_tree() -> None:
 
 
 def test_deserialize_empty_imm_tree() -> None:
-    assert ImmutableTree.deserialize({}) == MutableTree()
-    assert ImmutableTree.deserialize({}) == ImmutableTree()
+    assert deserialize_tree({}) == MutableTree()
+    assert deserialize_tree({}) == ImmutableTree()
 
 
 def test_deserialize_filled_imm_tree() -> None:
-    tree = ImmutableTree.deserialize(
+    tree = deserialize_tree(
         {
             "Attributes": {},
             "Table": {},
@@ -1545,7 +1546,7 @@ def test_legacy_tree() -> None:
     #     }
     # }
 
-    tree = ImmutableTree.deserialize(raw_tree)
+    tree = deserialize_tree(raw_tree)
 
     idx_node_attr = tree.get_tree((SDNodeName("path-to"), SDNodeName("idx-node"), SDNodeName("0")))
     assert len(idx_node_attr) > 0
@@ -1604,7 +1605,7 @@ def test_legacy_tree() -> None:
 
 
 def test_update_from_previous_1() -> None:
-    previous_tree = ImmutableTree.deserialize(
+    previous_tree = deserialize_tree(
         {
             "Attributes": {},
             "Table": {
@@ -1651,7 +1652,7 @@ def test_update_from_previous_1() -> None:
 
 
 def test_update_from_previous_2() -> None:
-    previous_tree = ImmutableTree.deserialize(
+    previous_tree = deserialize_tree(
         {
             "Attributes": {},
             "Table": {

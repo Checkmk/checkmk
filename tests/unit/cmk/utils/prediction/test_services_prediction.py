@@ -21,7 +21,7 @@ def _load_fake_rrd_response(start: int, end: int) -> RRDResponse:
         (
             repo_path()
             / "tests/unit/cmk/utils/prediction/test-files/input"
-            / f"test-prediction-CPU load-load15-{start}-{end}"
+            / f"test-prediction-CPU_load-load15-{start}-{end}"
         ).read_text()
     )
     return RRDResponse(

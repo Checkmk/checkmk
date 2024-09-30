@@ -62,11 +62,11 @@ def prepare_aws() -> QuickSetupStage:
                             "your AWS account."
                         ),
                     ),
-                    Text(text=_("Save the generated Access key and Secret access key.")),
+                    Text(text=_("Note down the generated Access key ID and Secret access key.")),
                     Text(
                         text=_(
                             "Return to Checkmk, define a unique AWS account name, and use the "
-                            "Access key and Secret access key below."
+                            "Access key ID and Secret access key below."
                         )
                     ),
                 ],

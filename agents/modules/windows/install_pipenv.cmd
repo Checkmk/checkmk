@@ -8,9 +8,7 @@ if not exist %install_dir% powershell Write-Host "%install_dir% doesnt exist" -f
 cd %install_dir%
 powershell Write-Host "Pipenv installing..." -foreground green
 .\python.exe -m pip install pipenv
-
-:: As for 19.03.2019 we must use virtualenv 20.0.10
-powershell Write-Host "virtualenv resetting to the correct version..." -foreground green
-.\python.exe -m pip install virtualenv==20.0.10
+powershell Write-Host "Virtualenv installing..." -foreground green
+.\python.exe -m pip install virtualenv
 powershell Write-Host "Pipenv installed" -foreground green
 exit /b 0

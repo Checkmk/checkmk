@@ -15,6 +15,7 @@ from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.structured_data import (
+    _serialize_retention_interval,
     deserialize_tree,
     ImmutableAttributes,
     ImmutableTable,
@@ -350,7 +351,9 @@ def test__inventorize_real_host_only_intervals(
                 "foo1": "2. bar1",
                 "foo2": "bar2",
             },
-            "Retentions": {k: v.serialize() for k, v in attrs_expected_retentions.items()},
+            "Retentions": {
+                k: _serialize_retention_interval(v) for k, v in attrs_expected_retentions.items()
+            },
         }
     else:
         raw_attributes = {
@@ -364,7 +367,7 @@ def test__inventorize_real_host_only_intervals(
     if table_expected_retentions:
         table_retentions = {
             "Retentions": {
-                i: {k: v.serialize() for k, v in ri.items()}
+                i: {k: _serialize_retention_interval(v) for k, v in ri.items()}
                 for i, ri in table_expected_retentions.items()
             }
         }
@@ -559,7 +562,9 @@ def test__inventorize_real_host_raw_cache_info_and_only_intervals(
                 "foo1": "2. bar1",
                 "foo2": "bar2",
             },
-            "Retentions": {k: v.serialize() for k, v in attrs_expected_retentions.items()},
+            "Retentions": {
+                k: _serialize_retention_interval(v) for k, v in attrs_expected_retentions.items()
+            },
         }
     else:
         raw_attributes = {
@@ -573,7 +578,7 @@ def test__inventorize_real_host_raw_cache_info_and_only_intervals(
     if table_expected_retentions:
         table_retentions = {
             "Retentions": {
-                i: {k: v.serialize() for k, v in ri.items()}
+                i: {k: _serialize_retention_interval(v) for k, v in ri.items()}
                 for i, ri in table_expected_retentions.items()
             }
         }
@@ -668,7 +673,7 @@ def _make_tree_or_items(
                             "Attributes": {
                                 "Pairs": {"old": "Key", "keys": "Previous Keys"},
                                 "Retentions": {
-                                    k: v.serialize()
+                                    k: _serialize_retention_interval(v)
                                     for k, v in previous_attributes_retentions.items()
                                 },
                             },
@@ -693,7 +698,7 @@ def _make_tree_or_items(
                                     },
                                 ],
                                 "Retentions": {
-                                    i: {k: v.serialize() for k, v in ri.items()}
+                                    i: {k: _serialize_retention_interval(v) for k, v in ri.items()}
                                     for i, ri in previous_table_retentions.items()
                                 },
                             },

@@ -15,8 +15,10 @@ from tests.testlib.repo import repo_path
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import (
+    _deserialize_retention_interval,
     _MutableAttributes,
     _MutableTable,
+    _serialize_retention_interval,
     deserialize_delta_tree,
     deserialize_tree,
     ImmutableAttributes,
@@ -1709,7 +1711,7 @@ def test_deserialize_retention_interval(
     ),
     expected_retention_interval: RetentionInterval,
 ) -> None:
-    assert RetentionInterval.deserialize(raw_retention_interval) == expected_retention_interval
+    assert _deserialize_retention_interval(raw_retention_interval) == expected_retention_interval
 
 
 @pytest.mark.parametrize(
@@ -1723,4 +1725,4 @@ def test_serialize_retention_interval(
     retention_interval: RetentionInterval,
     expected_raw_retention_interval: tuple[int, int, int, Literal["previous", "current"]],
 ) -> None:
-    assert retention_interval.serialize() == expected_raw_retention_interval
+    assert _serialize_retention_interval(retention_interval) == expected_raw_retention_interval

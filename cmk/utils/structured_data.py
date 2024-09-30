@@ -153,22 +153,6 @@ class RetentionInterval:
     def keep_until(self) -> int:
         return self.cached_at + self.cache_interval + self.retention_interval
 
-    @classmethod
-    def deserialize(
-        cls,
-        raw_retention_interval: (
-            tuple[int, int, int] | tuple[int, int, int, Literal["previous", "current"]]
-        ),
-    ) -> RetentionInterval:
-        return (
-            cls(*raw_retention_interval)
-            if len(raw_retention_interval) == 4
-            else cls(*raw_retention_interval[:3], "current")
-        )
-
-    def serialize(self) -> tuple[int, int, int, Literal["previous", "current"]]:
-        return self.cached_at, self.cache_interval, self.retention_interval, self.source
-
 
 @dataclass(frozen=True)
 class UpdateResult:
@@ -400,12 +384,25 @@ def _make_retentions_filter_func(
 #   '----------------------------------------------------------------------'
 
 
+def _serialize_retention_interval(
+    retention_interval: RetentionInterval,
+) -> tuple[int, int, int, Literal["previous", "current"]]:
+    return (
+        retention_interval.cached_at,
+        retention_interval.cache_interval,
+        retention_interval.retention_interval,
+        retention_interval.source,
+    )
+
+
 def _serialize_attributes(attributes: _MutableAttributes | ImmutableAttributes) -> SDRawAttributes:
     raw_attributes: SDRawAttributes = {}
     if attributes.pairs:
         raw_attributes["Pairs"] = attributes.pairs
     if attributes.retentions:
-        raw_attributes["Retentions"] = {k: v.serialize() for k, v in attributes.retentions.items()}
+        raw_attributes["Retentions"] = {
+            k: _serialize_retention_interval(v) for k, v in attributes.retentions.items()
+        }
     return raw_attributes
 
 
@@ -420,7 +417,8 @@ def _serialize_table(table: _MutableTable | ImmutableTable) -> SDRawTable:
         )
     if table.retentions:
         raw_table["Retentions"] = {
-            i: {k: v.serialize() for k, v in ri.items()} for i, ri in table.retentions.items()
+            i: {k: _serialize_retention_interval(v) for k, v in ri.items()}
+            for i, ri in table.retentions.items()
         }
     return raw_table
 
@@ -519,11 +517,22 @@ def _deserialize_legacy_tree(  # pylint: disable=too-many-branches
     )
 
 
+def _deserialize_retention_interval(
+    raw_retention_interval: tuple[int, int, int]
+    | tuple[int, int, int, Literal["previous", "current"]],
+) -> RetentionInterval:
+    return (
+        RetentionInterval(*raw_retention_interval)
+        if len(raw_retention_interval) == 4
+        else RetentionInterval(*raw_retention_interval[:3], "current")
+    )
+
+
 def _deserialize_attributes(raw_attributes: SDRawAttributes) -> ImmutableAttributes:
     return ImmutableAttributes(
         pairs=raw_attributes.get("Pairs", {}),
         retentions={
-            key: RetentionInterval.deserialize(raw_retention_interval)
+            key: _deserialize_retention_interval(raw_retention_interval)
             for key, raw_retention_interval in raw_attributes.get("Retentions", {}).items()
         },
     )
@@ -542,7 +551,7 @@ def _deserialize_table(raw_table: SDRawTable) -> ImmutableTable:
         rows_by_ident=rows_by_ident,
         retentions={
             ident: {
-                key: RetentionInterval.deserialize(raw_retention_interval)
+                key: _deserialize_retention_interval(raw_retention_interval)
                 for key, raw_retention_interval in raw_intervals_by_key.items()
             }
             for ident, raw_intervals_by_key in raw_table.get("Retentions", {}).items()
@@ -742,7 +751,7 @@ class _MutableAttributes:
         # Useful for debugging; no restrictions
         return {
             "Pairs": self.pairs,
-            "Retentions": {k: v.serialize() for k, v in self.retentions.items()},
+            "Retentions": {k: _serialize_retention_interval(v) for k, v in self.retentions.items()},
         }
 
 
@@ -886,7 +895,8 @@ class _MutableTable:
             "KeyColumns": self.key_columns,
             "RowsByIdent": self.rows_by_ident,
             "Retentions": {
-                i: {k: v.serialize() for k, v in ri.items()} for i, ri in self.retentions.items()
+                i: {k: _serialize_retention_interval(v) for k, v in ri.items()}
+                for i, ri in self.retentions.items()
             },
         }
 
@@ -1307,7 +1317,7 @@ class ImmutableAttributes:
         # Useful for debugging; no restrictions
         return {
             "Pairs": self.pairs,
-            "Retentions": {k: v.serialize() for k, v in self.retentions.items()},
+            "Retentions": {k: _serialize_retention_interval(v) for k, v in self.retentions.items()},
         }
 
 
@@ -1361,7 +1371,8 @@ class ImmutableTable:
             "KeyColumns": self.key_columns,
             "RowsByIdent": self.rows_by_ident,
             "Retentions": {
-                i: {k: v.serialize() for k, v in ri.items()} for i, ri in self.retentions.items()
+                i: {k: _serialize_retention_interval(v) for k, v in ri.items()}
+                for i, ri in self.retentions.items()
             },
         }
 

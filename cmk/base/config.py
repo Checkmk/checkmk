@@ -2640,10 +2640,6 @@ class ConfigCache:
             ),
         }
 
-    def custom_checks(self, host_name: HostName) -> Sequence[dict[Any, Any]]:
-        """Return the free form configured custom checks without formalization"""
-        return self.ruleset_matcher.get_host_values(host_name, custom_checks)
-
     def active_checks(self, host_name: HostName) -> Sequence[SSCRules]:
         """Returns active checks configured for this host
 
@@ -2671,6 +2667,10 @@ class ConfigCache:
             return self.__active_checks[host_name]
 
         return self.__active_checks.setdefault(host_name, make_active_checks())
+
+    def custom_checks(self, host_name: HostName) -> Sequence[dict[Any, Any]]:
+        """Return the free form configured custom checks without formalization"""
+        return self.ruleset_matcher.get_host_values(host_name, custom_checks)
 
     def custom_check_preview_rows(self, host_name: HostName) -> Sequence[CheckPreviewEntry]:
         custom_checks_ = self.custom_checks(host_name)

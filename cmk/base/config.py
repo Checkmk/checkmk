@@ -2736,40 +2736,35 @@ class ConfigCache:
         password_store_file: Path,
         ip_address_of: IPLookup,
     ) -> Iterable[tuple[str, SpecialAgentCommandLine]]:
-        for agentname, params_seq in self.special_agents(host_name):
-            for params in params_seq:
-                host_attrs = self.get_host_attributes(host_name, ip_address_of)
-                macros = {
+        host_attrs = self.get_host_attributes(host_name, ip_address_of)
+        special_agent = SpecialAgent(
+            load_special_agents()[1],
+            special_agent_info,
+            host_name,
+            ip_address,
+            get_ssc_host_config(
+                host_name,
+                self.alias(host_name),
+                self.default_address_family(host_name),
+                self.ip_stack_config(host_name),
+                *self.additional_ipaddresses(host_name),
+                {
                     "<IP>": ip_address or "",
                     "<HOST>": host_name,
                     **self.get_host_macros_from_attributes(host_name, host_attrs),
-                }
-                additional_addresses_ipv4, additional_addresses_ipv6 = self.additional_ipaddresses(
-                    host_name
-                )
-                special_agent = SpecialAgent(
-                    load_special_agents()[1],
-                    special_agent_info,
-                    host_name,
-                    ip_address,
-                    get_ssc_host_config(
-                        host_name,
-                        self.alias(host_name),
-                        self.default_address_family(host_name),
-                        self.ip_stack_config(host_name),
-                        additional_addresses_ipv4,
-                        additional_addresses_ipv6,
-                        macros,
-                        ip_address_of,
-                    ),
-                    host_attrs,
-                    http_proxies,
-                    passwords,
-                    password_store_file,
-                    ExecutableFinder(
-                        cmk.utils.paths.local_special_agents_dir, cmk.utils.paths.special_agents_dir
-                    ),
-                )
+                },
+                ip_address_of,
+            ),
+            host_attrs,
+            http_proxies,
+            passwords,
+            password_store_file,
+            ExecutableFinder(
+                cmk.utils.paths.local_special_agents_dir, cmk.utils.paths.special_agents_dir
+            ),
+        )
+        for agentname, params_seq in self.special_agents(host_name):
+            for params in params_seq:
                 for agent_data in special_agent.iter_special_agent_commands(agentname, params):
                     yield agentname, agent_data
 

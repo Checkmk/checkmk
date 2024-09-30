@@ -512,14 +512,14 @@ class _MutableTable:
     def _add_key_columns(self, key_columns: Iterable[SDKey]) -> None:
         self.key_columns = sorted(set(self.key_columns).union(key_columns))
 
+    def _add_row(self, ident: SDRowIdent, row: Mapping[SDKey, SDValue]) -> None:
+        if row:
+            self.rows_by_ident.setdefault(ident, {}).update(row)
+
     def add(self, key_columns: Iterable[SDKey], rows: Sequence[Mapping[SDKey, SDValue]]) -> None:
         self._add_key_columns(key_columns)
         for row in rows:
             self._add_row(_make_row_ident(self.key_columns, row), row)
-
-    def _add_row(self, ident: SDRowIdent, row: Mapping[SDKey, SDValue]) -> None:
-        if row:
-            self.rows_by_ident.setdefault(ident, {}).update(row)
 
     def update(  # pylint: disable=too-many-branches
         self,

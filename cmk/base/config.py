@@ -2770,7 +2770,7 @@ class ConfigCache:
     ) -> Iterable[tuple[str, SpecialAgentCommandLine]]:
         host_attrs = self.get_host_attributes(host_name, ip_address_of)
         special_agent = SpecialAgent(
-            load_special_agents()[1],
+            load_special_agents(raise_errors=cmk.ccc.debug.enabled()),
             special_agent_info,
             host_name,
             ip_address,

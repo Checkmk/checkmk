@@ -485,7 +485,9 @@ def mode_list_checks() -> None:
         p.name for p in agent_based_register.iter_all_check_plugins()
     ]
 
-    all_checks.extend("check_" + p.name for p in load_active_checks()[1].values())
+    all_checks.extend(
+        "check_" + p.name for p in load_active_checks(raise_errors=cmk.ccc.debug.enabled()).values()
+    )
 
     for plugin_name in sorted(all_checks, key=str):
         ds_protocol = _get_ds_protocol(plugin_name)

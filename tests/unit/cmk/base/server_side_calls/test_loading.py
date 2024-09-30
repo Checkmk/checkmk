@@ -10,11 +10,11 @@ from cmk.base.server_side_calls import load_active_checks, load_special_agents
 
 def test_hack_apply_map_special_agents_is_complete() -> None:
     assert set(password_store.hack.HACK_AGENTS) == {
-        p.name for p in load_special_agents()[1].values()
+        p.name for p in load_special_agents(raise_errors=True).values()
     }
 
 
 def test_hack_apply_map_active_checks_is_complete() -> None:
     assert set(password_store.hack.HACK_CHECKS) == {
-        p.name for p in load_active_checks()[1].values()
+        p.name for p in load_active_checks(raise_errors=True).values()
     }

@@ -87,7 +87,7 @@ def _patch_plugin_loading(
     monkeypatch.setattr(
         check_mk,
         server_side_calls.load_active_checks.__name__,
-        lambda: ((), loaded_active_checks),
+        lambda *a, **kw: loaded_active_checks,
     )
 
 

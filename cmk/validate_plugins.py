@@ -95,12 +95,22 @@ def _validate_agent_based_plugin_loading() -> ActiveCheckResult:
 
 
 def _validate_active_checks_loading() -> ActiveCheckResult:
-    errors, _ = server_side_calls.load_active_checks()
+    try:
+        _ = server_side_calls.load_active_checks(raise_errors=True)
+    except Exception as error:
+        errors = [f"At least one error: {error}"]
+    else:
+        errors = []
     return to_result(ValidationStep.ACTIVE_CHECKS, errors)
 
 
-def _validate_special_agents_loading() -> ActiveCheckResult:
-    errors, _ = server_side_calls.load_special_agents()
+def _validate_special_agent_loading() -> ActiveCheckResult:
+    try:
+        _ = server_side_calls.load_special_agents(raise_errors=True)
+    except Exception as error:
+        errors = [f"At least one error: {error}"]
+    else:
+        errors = []
     return to_result(ValidationStep.SPECIAL_AGENTS, errors)
 
 
@@ -312,7 +322,8 @@ def _validate_active_check_usage() -> Sequence[str]:
         raise_errors=False,
     )
     referenced_ruleset_names = {
-        active_check.name for active_check in server_side_calls.load_active_checks()[1].values()
+        active_check.name
+        for active_check in server_side_calls.load_active_checks(raise_errors=False).values()
     }
     return _check_if_referenced(discovered_active_checks, referenced_ruleset_names)
 
@@ -324,7 +335,8 @@ def _validate_special_agent_usage() -> Sequence[str]:
         raise_errors=False,
     )
     referenced_ruleset_names = {
-        active_check.name for active_check in server_side_calls.load_special_agents()[1].values()
+        active_check.name
+        for active_check in server_side_calls.load_special_agents(raise_errors=False).values()
     }
     return _check_if_referenced(discovered_special_agents, referenced_ruleset_names)
 
@@ -346,7 +358,7 @@ def validate_plugins() -> ActiveCheckResult:
     sub_results = [
         _validate_agent_based_plugin_loading(),
         _validate_active_checks_loading(),
-        _validate_special_agents_loading(),
+        _validate_special_agent_loading(),
         _validate_rule_spec_loading(),
         _validate_rule_spec_form_creation(),
         _validate_referenced_rule_spec(),

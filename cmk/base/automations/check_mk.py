@@ -568,7 +568,7 @@ def _active_check_preview_rows(
         host_name
     )
     active_check_config = server_side_calls.ActiveCheck(
-        load_active_checks()[1],
+        load_active_checks(raise_errors=cmk.ccc.debug.enabled()),
         host_name,
         config.get_ssc_host_config(
             host_name,
@@ -1521,7 +1521,7 @@ class AutomationAnalyseServices(Automation):
             host_name
         )
         active_check_config = server_side_calls.ActiveCheck(
-            load_active_checks()[1],
+            load_active_checks(raise_errors=cmk.ccc.debug.enabled()),
             host_name,
             config.get_ssc_host_config(
                 host_name,
@@ -2046,7 +2046,7 @@ def get_special_agent_commandline(
     http_proxies: Mapping[str, Mapping[str, str]],
 ) -> Iterator[SpecialAgentCommandLine]:
     special_agent = SpecialAgent(
-        load_special_agents()[1],
+        load_special_agents(raise_errors=cmk.ccc.debug.enabled()),
         {},
         host_config.host_name,
         host_config.ip_address,
@@ -2604,7 +2604,7 @@ class AutomationActiveCheck(Automation):
             host_name
         )
         active_check_config = server_side_calls.ActiveCheck(
-            load_active_checks()[1],
+            load_active_checks(raise_errors=cmk.ccc.debug.enabled()),
             host_name,
             config.get_ssc_host_config(
                 host_name,

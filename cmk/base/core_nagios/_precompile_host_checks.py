@@ -22,6 +22,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import assert_never
 
+import cmk.ccc.debug
 from cmk.ccc import store
 
 import cmk.utils.config_path
@@ -304,7 +305,12 @@ def _get_needed_plugin_names(
 
 
 def _get_needed_legacy_special_agents(config_cache: ConfigCache, host_name: HostName) -> set[str]:
-    ssc_api_special_agents = {p.name for p in server_side_calls.load_special_agents()[1].values()}
+    ssc_api_special_agents = {
+        p.name
+        for p in server_side_calls.load_special_agents(
+            raise_errors=cmk.ccc.debug.enabled()
+        ).values()
+    }
     return {
         f"agent_{name}"
         for name, _p in config_cache.special_agents(host_name)

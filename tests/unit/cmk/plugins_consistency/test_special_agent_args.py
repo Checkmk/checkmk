@@ -228,7 +228,7 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
 
 
 def test_all_agents_tested() -> None:
-    _errors, agents = load_special_agents()
+    agents = load_special_agents(raise_errors=True)
     migrated = {agent.name for agent in agents.values()}
     assert not migrated & UNMIGRATED
     assert set(TESTED_SA_MODULES) == (migrated | UNMIGRATED)

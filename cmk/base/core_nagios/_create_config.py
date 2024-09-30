@@ -14,6 +14,7 @@ from contextlib import suppress
 from io import StringIO
 from typing import Any, cast, IO, Literal
 
+import cmk.ccc.debug
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 
@@ -497,7 +498,7 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
         hostname
     )
     active_check_config = server_side_calls.ActiveCheck(
-        server_side_calls.load_active_checks()[1],
+        server_side_calls.load_active_checks(raise_errors=cmk.ccc.debug.enabled()),
         hostname,
         config.get_ssc_host_config(
             hostname,

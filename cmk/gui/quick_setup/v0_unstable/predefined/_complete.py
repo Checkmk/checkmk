@@ -134,7 +134,7 @@ def sanitize_folder_path(folder_path: str) -> Folder:
     )
 
 
-def create_host_from_form_data(
+def create_special_agent_host_from_form_data(
     host_name: HostName,
     site_id: SiteId,
     folder: Folder,
@@ -144,6 +144,9 @@ def create_host_from_form_data(
         folder=folder,
         attributes=HostAttributes(
             tag_address_family="no-ip",
+            tag_agent="special-agents",
+            tag_piggyback="auto-piggyback",
+            tag_snmp_ds="no-snmp",
             site=site_id,
         ),
     )
@@ -267,7 +270,9 @@ def _create_and_save_special_agent_bundle(
     # TODO: The sanitize function is likely to change once we have a folder FormSpec.
     folder = sanitize_folder_path(host_path)
     hosts = [
-        create_host_from_form_data(host_name=HostName(host_name), folder=folder, site_id=site_id)
+        create_special_agent_host_from_form_data(
+            host_name=HostName(host_name), folder=folder, site_id=site_id
+        )
     ]
     create_config_bundle(
         bundle_id=bundle_id,

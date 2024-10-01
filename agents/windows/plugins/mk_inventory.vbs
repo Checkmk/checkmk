@@ -87,6 +87,17 @@ Sub startSection(name,sep,timeUntil)
 End Sub
 
 
+Function poorMansJson(valuesDict)
+    Dim serialized
+
+    serialized = ""
+    For Each key in valuesDict.Keys
+        serialized = serialized & ", """ & Replace(key, """", "\\""") & """:""" & Replace(valuesDict.Item(key), """", "\\""") & """"
+    Next
+    poorMansJson = "{" & Mid(serialized, 2) & "}"
+End Function
+
+
 Sub getWMIObject(strClass,arrVars)
     Set objClass = GetObject("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2")
     Set Entries = objClass.ExecQuery("Select * from " & strClass)
@@ -236,34 +247,26 @@ Sub SoftwareFromInstaller(fields)
     Dim IteratedItem, productCode
     For Each IteratedItem In oProducts
         On Error Resume Next
+        Dim values : Set values = CreateObject("Scripting.Dictionary")
         if productsEx then
             ' ProductEx function
             Err.clear()
             Dim oProduct : Set oProduct = IteratedItem
             productCode = oProduct.ProductCode
-            values = fields   ' copy
-            idx = 0
 
             For Each field In fields
-                values(idx) = oProduct.InstallProperty(field)
-                idx = idx + 1
+                values.Add field, oProduct.InstallProperty(field)
             Next
-
-            outPut(Join(values, "|"))
         else
             'Products function
             Err.clear()
             productCode = IteratedItem
-            values = fields   ' copy
-            idx = 0
 
             For Each field In fields
-                values(idx) = oInstaller.ProductInfo(productCode, field)
-                idx = idx + 1
+                values.Add field, oInstaller.ProductInfo(productCode, field)
             Next
-
-            outPut(Join(values, "|"))
         end if
+        outPut(poorMansJson(values))
     Next
 End Sub
 
@@ -321,7 +324,7 @@ Call startSection("win_ip_r",124,timeUntil)
 Call getRouteTable()
 
 ' Installed Software
-Call startSection("win_wmi_software",124,timeUntil)
+Call startSection("win_wmi_software_json",0,timeUntil)
 swVars = Array( "ProductName", "Publisher", "VersionString", "InstallDate", "Language")
 Call SoftwareFromInstaller(swVars)
 
@@ -335,7 +338,7 @@ Do While Not objExecObject.StdOut.AtEndOfStream
 Loop
 
 ' Search Registry
-Call startSection("win_reg_uninstall",124,timeUntil)
+Call startSection("win_reg_uninstall_json",0,timeUntil)
 Set rego = GetObject("WinMgmts:{impersonationLevel=impersonate}!\\.\root\default:StdRegProv")
 regVars = Array("DisplayName", "Publisher", "InstallLocation", "PSChildName", "DisplayVersion", "EstimatedSize", "InstallDate", "Language")
 
@@ -345,6 +348,7 @@ For Each path in regPaths
         For Each strIdentityCode in arrIdentityCode
             strOut = ""
             boleanContent = False
+            Dim values : Set values = CreateObject("Scripting.Dictionary")
             For Each var in regVars
                 ' PSChildName is the name in powershell
                 ' We use strIdentityCode in vbs
@@ -359,17 +363,17 @@ For Each path in regPaths
                 End If
                 ' Only allow vartypes which can be represented as a string
                 If VarType(value) <= 8 and VarType(value) > 1 Then
-                    strOut = strOut & "|" & CStr(value)
+                    values.Add var, CStr(value)
                     ' Only print a line when more than only PSChildName is present
                     If var <> "PSChildName" Then
                         boleanContent = True
                     End If
                 Else
-                    strOut = strOut & "|"
+                    values.Add var, ""
                 End If
             Next
             If boleanContent Then
-                outPut(Mid(strOut,2))
+                outPut(poorMansJson(values))
             End If
         Next
     End If

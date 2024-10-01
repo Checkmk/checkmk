@@ -69,13 +69,18 @@ const passwordStoreChoice = computed({
   </select>
   {{ ' ' }}
   <template v-if="data[0] === 'explicit_password'">
-    <input v-model="explicitPassword" type="password" :placeholder="'******'" />
+    <input
+      v-model="explicitPassword"
+      aria-label="explicit password"
+      type="password"
+      :placeholder="'******'"
+    />
   </template>
   <template v-if="data[0] === 'stored_password'">
     <template v-if="props.spec.password_store_choices.length === 0">
       {{ props.spec.i18n.no_password_store_choices }}
     </template>
-    <select v-else v-model="passwordStoreChoice">
+    <select v-else v-model="passwordStoreChoice" aria-label="password store choice">
       <option
         v-for="{ password_id, name } in props.spec.password_store_choices"
         :key="password_id"

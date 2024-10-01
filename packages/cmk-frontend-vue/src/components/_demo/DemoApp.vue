@@ -1,0 +1,60 @@
+<!--
+Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+conditions defined in the file COPYING, which is part of this source code package.
+-->
+
+<script setup lang="ts">
+import { onMounted, ref, h } from 'vue'
+import DemoSlideIn from './DemoSlideIn.vue'
+
+const demo = ref('')
+
+function renderDemo() {
+  switch (demo.value) {
+    case 'slidein':
+      return h(DemoSlideIn)
+  }
+  return h('i', 'choose demo from navigation')
+}
+
+function setTheme(name: 'modern-dark' | 'facelift') {
+  document.getElementsByTagName('body')[0]!.dataset['theme'] = name
+}
+
+onMounted(() => {
+  setTheme('facelift')
+})
+</script>
+
+<template>
+  <div class="demo">
+    <nav>
+      <button @click="setTheme('modern-dark')">dark</button>
+      <button @click="setTheme('facelift')">light</button>
+      <ul>
+        <li><a href="#" @click.prevent="demo = ''">home</a></li>
+        <li><a href="#" @click.prevent="demo = 'slidein'">slide in</a></li>
+      </ul>
+    </nav>
+    <main>
+      <h1>{{ demo }}</h1>
+      <div class="demo-area">
+        <renderDemo />
+      </div>
+    </main>
+  </div>
+</template>
+
+<style scoped>
+.demo {
+  display: flex;
+}
+main .demo-area {
+  background-color: white;
+  padding: 1em;
+}
+nav {
+  flex: 0 200px;
+}
+</style>

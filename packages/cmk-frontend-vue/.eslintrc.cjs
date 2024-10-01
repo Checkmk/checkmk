@@ -2,7 +2,7 @@
 require('@rushstack/eslint-patch/modern-module-resolution')
 
 module.exports = {
-  ignorePatterns: ['.eslintrc.cjs', 'vite.config.ts', 'tailwind.config.js'],
+  ignorePatterns: ['.eslintrc.cjs', 'vite.config.demo.ts', 'vite.config.ts', 'tailwind.config.js'],
   root: true,
   extends: [
     'plugin:@typescript-eslint/recommended',

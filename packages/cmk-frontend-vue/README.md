@@ -30,6 +30,12 @@ vite dev server is used.
 Checkmk should then automatically reload as soon as you change a file of the
 cmk-frontend-vue project.
 
+### testing components outsite a site
+
+* run `npm run -- dev --config vite.config.demo.ts`
+* surf to `http://localhost:5173/demo.html`
+
+
 ### Location of files and folders
 src/
     form/  # files for form rendering

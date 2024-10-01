@@ -28,6 +28,7 @@ FILES_IGNORED = set(
         Path(".prettierrc.json"),
         Path("README.md"),
         Path("index.html"),
+        Path("demo.html"),
         Path("env.d.ts"),
         Path("src/form/components/vue_formspec_components.ts"),  # auto generated
     ]

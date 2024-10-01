@@ -5198,6 +5198,15 @@ msgstr "Statistiche di allarme: Numero di allarmi sconosciuti"
 msgid "Alert statistics: Number of warnings"
 msgstr "Statistiche degli avvisi: Numero di avvisi"
 
+msgid "Alert when a major version release is available"
+msgstr ""
+
+msgid "Alert when a minor version release is available"
+msgstr ""
+
+msgid "Alert when a patch version release is available"
+msgstr ""
+
 msgid "Alerted"
 msgstr "Allertato"
 
@@ -16906,6 +16915,9 @@ msgstr "Profilo utente predefinito"
 msgid "Default value"
 msgstr "Valore predefinito"
 
+msgid "Defaults to 'https' when not provided."
+msgstr ""
+
 #, fuzzy
 msgid "Deferred files age"
 msgstr "File differiti Età"
@@ -25233,6 +25245,21 @@ msgstr "Tasso generico"
 
 msgid "Generic string"
 msgstr "Stringa generica"
+
+msgid "Gerrit"
+msgstr ""
+
+#, fuzzy
+msgid "Gerrit Version"
+msgstr "Versione del kernel"
+
+#, fuzzy
+msgid "Gerrit connection"
+msgstr "Modifica connessione"
+
+#, fuzzy
+msgid "Gerrit instance to query."
+msgstr "istanza di Jenkins da interrogare."
 
 msgid "Get file from SFTP server"
 msgstr "Ottenere file dal server SFTP"
@@ -50942,6 +50969,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Requests data from a Gerrit instance."
+msgstr "Richiede dati da un'istanza di Jenkins."
+
+#, fuzzy
 msgid "Requests data from a Jenkins instance."
 msgstr "Richiede dati da un'istanza di Jenkins."
 
@@ -64557,6 +64588,14 @@ msgid "The username returned by the %s connector is not of type string (%r)."
 msgstr ""
 "Il nome utente restituito dal connettore %s non è di tipo stringa (%r)."
 
+#, fuzzy
+msgid ""
+"The username that should be used for accessing the Gerrit API. Must have (at "
+"least) read permissions."
+msgstr ""
+"Il nome utente che dovrebbe essere usato per accedere all'API Graylog. Deve "
+"avere almeno i permessi di lettura."
+
 msgid ""
 "The username that should be used for accessing the Graylog API. Has to have "
 "read permissions at least."
@@ -75513,6 +75552,12 @@ msgstr ""
 "mode=mkeventd_edit_configvar&site=&varname=event_limit\">limite globale "
 "degli eventi delle regole</a>"
 
+#, fuzzy
+msgid "Use this option to query a non-standard port."
+msgstr ""
+"Usate questa opzione per interrogare una porta diversa dalla porta standard "
+"443."
+
 msgid ""
 "Use this option to query a port which is different from standard port 443."
 msgstr ""
@@ -75553,6 +75598,14 @@ msgstr ""
 "dall'agente speciale. Se la connessione al primo server fallisce, verrà "
 "interrogato il server successivo (fallback). Il controllo emetterà solo dati "
 "dal primo host che invia una risposta."
+
+#, fuzzy
+msgid ""
+"Use this option to set which instance should be checked by the special "
+"agent. Please add the host name here, e.g. my_gerrit.com."
+msgstr ""
+"Usa questa opzione per impostare quale istanza dovrebbe essere controllata "
+"dall'agente speciale. Aggiungi qui l'hostname, ad esempio my_graylog.com."
 
 #, fuzzy
 msgid ""
@@ -77154,6 +77207,9 @@ msgstr "Versione del dispositivo PKI"
 
 msgid "Version of Server"
 msgstr "Versione del server"
+
+msgid "Version will only appear in summary if non-OK state set."
+msgstr ""
 
 #, python-format
 msgid "Version: %s"
@@ -84891,9 +84947,6 @@ msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
 
 #~ msgid "InfluxDB Queue Usage"
 #~ msgstr "Utilizzo della coda di InfluxDB"
-
-#~ msgid "Kernel Version"
-#~ msgstr "Versione del kernel"
 
 #~ msgid "Levels Helper usage Check"
 #~ msgstr "Livelli di utilizzo dell'aiutante Controllo"

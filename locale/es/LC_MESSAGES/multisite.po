@@ -5271,6 +5271,24 @@ msgstr "Estadísticas de alertas: Número de alertas desconocidas"
 msgid "Alert statistics: Number of warnings"
 msgstr "Estadísticas de alertas: Número de avisos"
 
+#, fuzzy
+msgid "Alert when a major version release is available"
+msgstr ""
+" para recibir una notificación cuando el lanzamiento comercial esté "
+"disponible. "
+
+#, fuzzy
+msgid "Alert when a minor version release is available"
+msgstr ""
+" para recibir una notificación cuando el lanzamiento comercial esté "
+"disponible. "
+
+#, fuzzy
+msgid "Alert when a patch version release is available"
+msgstr ""
+" para recibir una notificación cuando el lanzamiento comercial esté "
+"disponible. "
+
 msgid "Alerted"
 msgstr "Alerta"
 
@@ -17202,6 +17220,9 @@ msgstr "Perfil de usuario por defecto"
 msgid "Default value"
 msgstr "Valor por defecto"
 
+msgid "Defaults to 'https' when not provided."
+msgstr ""
+
 #, fuzzy
 msgid "Deferred files age"
 msgstr "Antigüedad de archivos diferidos"
@@ -25668,6 +25689,21 @@ msgstr "Tasa genérica"
 
 msgid "Generic string"
 msgstr "Cadena genérica"
+
+msgid "Gerrit"
+msgstr ""
+
+#, fuzzy
+msgid "Gerrit Version"
+msgstr "Versión del núcleo"
+
+#, fuzzy
+msgid "Gerrit connection"
+msgstr "Editar la conexión"
+
+#, fuzzy
+msgid "Gerrit instance to query."
+msgstr "Instancia de Jenkins a consultar."
 
 msgid "Get file from SFTP server"
 msgstr "Obtener un archivo del servidor SFTP"
@@ -51828,6 +51864,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Requests data from a Gerrit instance."
+msgstr "Solicita datos de una instancia de jenkins."
+
+#, fuzzy
 msgid "Requests data from a Jenkins instance."
 msgstr "Solicita datos de una instancia de jenkins."
 
@@ -65683,6 +65723,14 @@ msgid "The username returned by the %s connector is not of type string (%r)."
 msgstr ""
 "El nombre de usuario devuelto por el conector %s no es de tipo cadena (%r)."
 
+#, fuzzy
+msgid ""
+"The username that should be used for accessing the Gerrit API. Must have (at "
+"least) read permissions."
+msgstr ""
+"El nombre de usuario que debe usarse para acceder a la API de Graylog. Tiene "
+"que tener permisos de lectura al menos."
+
 msgid ""
 "The username that should be used for accessing the Graylog API. Has to have "
 "read permissions at least."
@@ -76861,6 +76909,12 @@ msgstr ""
 "mode=mkeventd_edit_configvar&site=&varname=event_limit\">límite de eventos "
 "de la regla global</a>"
 
+#, fuzzy
+msgid "Use this option to query a non-standard port."
+msgstr ""
+"Utilice esta opción para consultar un puerto diferente al puerto estándar "
+"443."
+
 msgid ""
 "Use this option to query a port which is different from standard port 443."
 msgstr ""
@@ -76901,6 +76955,15 @@ msgstr ""
 "agente especial. Si la conexión con el primer servidor falla, se consultará "
 "al siguiente servidor (fallback). La comprobación sólo emitirá datos del "
 "primer host que envíe una respuesta."
+
+#, fuzzy
+msgid ""
+"Use this option to set which instance should be checked by the special "
+"agent. Please add the host name here, e.g. my_gerrit.com."
+msgstr ""
+"Utilice esta opción para establecer qué instancia debe ser comprobada por el "
+"agente especial. Por favor, añada el nombre de host aquí, por ejemplo, "
+"mi_graylog.com."
 
 #, fuzzy
 msgid ""
@@ -78518,6 +78581,9 @@ msgstr "Versión del dispositivo PKI"
 
 msgid "Version of Server"
 msgstr "Versión del servidor"
+
+msgid "Version will only appear in summary if non-OK state set."
+msgstr ""
 
 #, python-format
 msgid "Version: %s"
@@ -85711,11 +85777,6 @@ msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
 #~ msgid "Database for PostgreSQL"
 #~ msgstr "Base de datos para PostgreSQL"
 
-#~ msgid " to get notified once the commercial release is available. "
-#~ msgstr ""
-#~ " para recibir una notificación cuando el lanzamiento comercial esté "
-#~ "disponible. "
-
 #, fuzzy
 #~ msgid "Checkmk Cloud (SaaS) Beta"
 #~ msgstr "Agente Checkmk"
@@ -86399,9 +86460,6 @@ msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
 
 #~ msgid "InfluxDB Queue Usage"
 #~ msgstr "Uso de la cola InfluxDB"
-
-#~ msgid "Kernel Version"
-#~ msgstr "Versión del núcleo"
 
 #~ msgid "Levels Helper usage Check"
 #~ msgstr "Niveles Comprobación de uso del ayudante"

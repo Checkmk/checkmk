@@ -5238,6 +5238,15 @@ msgstr "Statistici de alertă: Numărul de alerte necunoscute"
 msgid "Alert statistics: Number of warnings"
 msgstr "Statistici de alertă: Numărul de avertismente"
 
+msgid "Alert when a major version release is available"
+msgstr ""
+
+msgid "Alert when a minor version release is available"
+msgstr ""
+
+msgid "Alert when a patch version release is available"
+msgstr ""
+
 msgid "Alerted"
 msgstr "Alertat"
 
@@ -17084,6 +17093,9 @@ msgstr "Profil de utilizator implicit"
 msgid "Default value"
 msgstr "Valoarea implicită"
 
+msgid "Defaults to 'https' when not provided."
+msgstr ""
+
 #, fuzzy
 msgid "Deferred files age"
 msgstr "Dosare amânate Vârsta"
@@ -25493,6 +25505,21 @@ msgstr "Rata generică"
 
 msgid "Generic string"
 msgstr "Șir generic"
+
+msgid "Gerrit"
+msgstr ""
+
+#, fuzzy
+msgid "Gerrit Version"
+msgstr "Versiunea Kernel"
+
+#, fuzzy
+msgid "Gerrit connection"
+msgstr "Editați conexiunea"
+
+#, fuzzy
+msgid "Gerrit instance to query."
+msgstr "Instanța Jenkins de interogat."
 
 msgid "Get file from SFTP server"
 msgstr "Obțineți fișierul de pe serverul SFTP"
@@ -51441,6 +51468,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Requests data from a Gerrit instance."
+msgstr "Solicită date de la o instanță Jenkins."
+
+#, fuzzy
 msgid "Requests data from a Jenkins instance."
 msgstr "Solicită date de la o instanță Jenkins."
 
@@ -65282,6 +65313,14 @@ msgid "The username returned by the %s connector is not of type string (%r)."
 msgstr ""
 "Numele de utilizator returnat de conectorul %s nu este de tip string (%r)."
 
+#, fuzzy
+msgid ""
+"The username that should be used for accessing the Gerrit API. Must have (at "
+"least) read permissions."
+msgstr ""
+"Numele de utilizator care trebuie utilizat pentru accesarea API Graylog. "
+"Trebuie să aibă cel puțin permisiuni de citire."
+
 msgid ""
 "The username that should be used for accessing the Graylog API. Has to have "
 "read permissions at least."
@@ -76361,6 +76400,12 @@ msgstr ""
 "mode=mkeventd_edit_configvar&site=&varname=event_limit\">limita globală a "
 "evenimentului de regulă</a>"
 
+#, fuzzy
+msgid "Use this option to query a non-standard port."
+msgstr ""
+"Utilizați această opțiune pentru a interoga un port diferit de portul "
+"standard 443."
+
 msgid ""
 "Use this option to query a port which is different from standard port 443."
 msgstr ""
@@ -76401,6 +76446,15 @@ msgstr ""
 "agentul special. În cazul în care conexiunea cu primul server eșuează, va fi "
 "interogat următorul server (fallback). Verificarea va emite date numai de la "
 "prima gazdă care trimite un răspuns."
+
+#, fuzzy
+msgid ""
+"Use this option to set which instance should be checked by the special "
+"agent. Please add the host name here, e.g. my_gerrit.com."
+msgstr ""
+"Utilizați această opțiune pentru a seta instanța care trebuie verificată de "
+"către agentul special. Vă rugăm să adăugați aici numele de gazdă, de exemplu "
+"my_graylog.com."
 
 #, fuzzy
 msgid ""
@@ -78016,6 +78070,9 @@ msgstr "Versiunea dispozitivului PKI"
 
 msgid "Version of Server"
 msgstr "Versiunea serverului"
+
+msgid "Version will only appear in summary if non-OK state set."
+msgstr ""
 
 #, python-format
 msgid "Version: %s"
@@ -85866,9 +85923,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 
 #~ msgid "InfluxDB Queue Usage"
 #~ msgstr "InfluxDB Queue Utilizare"
-
-#~ msgid "Kernel Version"
-#~ msgstr "Versiunea Kernel"
 
 #~ msgid "Levels Helper usage Check"
 #~ msgstr "Niveluri Verificarea utilizării Helper"

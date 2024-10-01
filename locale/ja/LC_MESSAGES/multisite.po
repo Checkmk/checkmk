@@ -5005,6 +5005,18 @@ msgstr "アラート統計: 不明なアラートの数"
 msgid "Alert statistics: Number of warnings"
 msgstr "アラート統計:警告の数"
 
+#, fuzzy
+msgid "Alert when a major version release is available"
+msgstr " 商業リリースが可能になり次第、通知を受け取る。 "
+
+#, fuzzy
+msgid "Alert when a minor version release is available"
+msgstr " 商業リリースが可能になり次第、通知を受け取る。 "
+
+#, fuzzy
+msgid "Alert when a patch version release is available"
+msgstr " 商業リリースが可能になり次第、通知を受け取る。 "
+
 msgid "Alerted"
 msgstr "警告"
 
@@ -16334,6 +16346,9 @@ msgstr "デフォルトのユーザープロファイル"
 msgid "Default value"
 msgstr "デフォルト値"
 
+msgid "Defaults to 'https' when not provided."
+msgstr ""
+
 msgid "Deferred files age"
 msgstr "遅延ファイルの経過時間"
 
@@ -24427,6 +24442,21 @@ msgstr "一般的なレート"
 
 msgid "Generic string"
 msgstr "一般的な文字列"
+
+msgid "Gerrit"
+msgstr ""
+
+#, fuzzy
+msgid "Gerrit Version"
+msgstr "カーネルバージョン"
+
+#, fuzzy
+msgid "Gerrit connection"
+msgstr "接続を編集する"
+
+#, fuzzy
+msgid "Gerrit instance to query."
+msgstr "クエリするJenkinsインスタンス。"
 
 msgid "Get file from SFTP server"
 msgstr "SFTPサーバーからファイルを取得する"
@@ -49984,6 +50014,10 @@ msgstr ""
 "ス・エンドポイントからデータを要求します"
 
 #, fuzzy
+msgid "Requests data from a Gerrit instance."
+msgstr "jenkinsインスタンスからデータをリクエストします。"
+
+#, fuzzy
 msgid "Requests data from a Jenkins instance."
 msgstr "jenkinsインスタンスからデータをリクエストします。"
 
@@ -63395,6 +63429,14 @@ msgstr "ログイン用のユーザー。"
 msgid "The username returned by the %s connector is not of type string (%r)."
 msgstr "%sコネクタによって返されるユーザー名は文字列(%r)タイプではありません。"
 
+#, fuzzy
+msgid ""
+"The username that should be used for accessing the Gerrit API. Must have (at "
+"least) read permissions."
+msgstr ""
+"GraylogAPIへのアクセスに使用する必要があるユーザー名。少なくとも読み取り権限"
+"が必要です。"
+
 msgid ""
 "The username that should be used for accessing the Graylog API. Has to have "
 "read permissions at least."
@@ -74206,6 +74248,10 @@ msgstr ""
 "mode=mkeventd_edit_configvar&site=&varname=event_limit\">グローバルルールのイ"
 "ベント制限 event limit</a>を上書きできます"
 
+#, fuzzy
+msgid "Use this option to query a non-standard port."
+msgstr "このオプションを使用して、標準ポート443とは異なるポートを照会します。"
+
 msgid ""
 "Use this option to query a port which is different from standard port 443."
 msgstr "このオプションを使用して、標準ポート443とは異なるポートを照会します。"
@@ -74238,6 +74284,14 @@ msgstr ""
 "す。最初のサーバーへの接続が失敗した場合、次のサーバーが照会されます(フォール"
 "バック)。このチェックでは、応答を送信した最初のホストからのデータのみが出力さ"
 "れます。"
+
+#, fuzzy
+msgid ""
+"Use this option to set which instance should be checked by the special "
+"agent. Please add the host name here, e.g. my_gerrit.com."
+msgstr ""
+"このオプションを使用して、スペシャルエージェントによりチェックされるべきイン"
+"スタンスを設定します。ここにホスト名を追加してください(例:my_graylog.com)。"
 
 #, fuzzy
 msgid ""
@@ -75818,6 +75872,9 @@ msgstr "PKI アプライアンスのバージョン"
 
 msgid "Version of Server"
 msgstr "サーバーのバージョン"
+
+msgid "Version will only appear in summary if non-OK state set."
+msgstr ""
 
 #, python-format
 msgid "Version: %s"
@@ -82793,9 +82850,6 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 #~ msgid "Database for PostgreSQL"
 #~ msgstr "PostgreSQL用データベース"
 
-#~ msgid " to get notified once the commercial release is available. "
-#~ msgstr " 商業リリースが可能になり次第、通知を受け取る。 "
-
 #~ msgid "Checkmk Cloud (SaaS) Beta"
 #~ msgstr "Checkmk Cloud (SaaS) Beta"
 
@@ -83455,9 +83509,6 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 
 #~ msgid "InfluxDB Queue Usage"
 #~ msgstr "InfluxDBキューの使用状況"
-
-#~ msgid "Kernel Version"
-#~ msgstr "カーネルバージョン"
 
 #~ msgid "Levels Helper usage Check"
 #~ msgstr "レベルヘルパーの使用状況チェック"

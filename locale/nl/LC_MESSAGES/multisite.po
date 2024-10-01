@@ -5234,6 +5234,15 @@ msgstr "Waarschuwingsstatistieken: Aantal onbekende waarschuwingen"
 msgid "Alert statistics: Number of warnings"
 msgstr "Waarschuwingsstatistieken: Aantal waarschuwingen"
 
+msgid "Alert when a major version release is available"
+msgstr ""
+
+msgid "Alert when a minor version release is available"
+msgstr ""
+
+msgid "Alert when a patch version release is available"
+msgstr ""
+
 msgid "Alerted"
 msgstr "Alerted"
 
@@ -17081,6 +17090,9 @@ msgstr "Standaard gebruikersprofiel"
 msgid "Default value"
 msgstr "Standaardwaarde"
 
+msgid "Defaults to 'https' when not provided."
+msgstr ""
+
 #, fuzzy
 msgid "Deferred files age"
 msgstr "Uitgestelde bestanden Leeftijd"
@@ -25461,6 +25473,21 @@ msgstr "Algemeen tarief"
 
 msgid "Generic string"
 msgstr "Generieke string"
+
+msgid "Gerrit"
+msgstr ""
+
+#, fuzzy
+msgid "Gerrit Version"
+msgstr "Kernel Versie"
+
+#, fuzzy
+msgid "Gerrit connection"
+msgstr "Verbinding bewerken"
+
+#, fuzzy
+msgid "Gerrit instance to query."
+msgstr "Jenkins instantie om te bevragen."
 
 msgid "Get file from SFTP server"
 msgstr "Bestand van SFTP-server halen"
@@ -51380,6 +51407,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Requests data from a Gerrit instance."
+msgstr "Vraagt gegevens op van een Jenkins instantie."
+
+#, fuzzy
 msgid "Requests data from a Jenkins instance."
 msgstr "Vraagt gegevens op van een Jenkins instantie."
 
@@ -65108,6 +65139,14 @@ msgstr ""
 "De gebruikersnaam geretourneerd door de %s connector is niet van het type "
 "string (%r)."
 
+#, fuzzy
+msgid ""
+"The username that should be used for accessing the Gerrit API. Must have (at "
+"least) read permissions."
+msgstr ""
+"De gebruikersnaam die moet worden gebruikt voor toegang tot de Graylog API. "
+"Moet minstens leesrechten hebben."
+
 msgid ""
 "The username that should be used for accessing the Graylog API. Has to have "
 "read permissions at least."
@@ -76200,6 +76239,12 @@ msgstr ""
 "mode=mkeventd_edit_configvar&site=&varname=event_limit\">global rule event "
 "limit</a> op te heffen"
 
+#, fuzzy
+msgid "Use this option to query a non-standard port."
+msgstr ""
+"Gebruik deze optie om een poort op te vragen die afwijkt van standaardpoort "
+"443."
+
 msgid ""
 "Use this option to query a port which is different from standard port 443."
 msgstr ""
@@ -76240,6 +76285,15 @@ msgstr ""
 "door de special agent. Als de verbinding met de eerste server mislukt, zal "
 "de volgende server worden ondervraagd (fallback). De controle zal alleen "
 "gegevens uitvoeren van de eerste host die een antwoord stuurt."
+
+#, fuzzy
+msgid ""
+"Use this option to set which instance should be checked by the special "
+"agent. Please add the host name here, e.g. my_gerrit.com."
+msgstr ""
+"Gebruik deze optie om in te stellen welke instantie moet worden "
+"gecontroleerd door de special agent. Voeg hier de hostnaam toe, bijv. "
+"my_graylog.com."
 
 #, fuzzy
 msgid ""
@@ -77843,6 +77897,9 @@ msgstr "Versie van PKI-toestel"
 
 msgid "Version of Server"
 msgstr "Versie van server"
+
+msgid "Version will only appear in summary if non-OK state set."
+msgstr ""
 
 #, python-format
 msgid "Version: %s"
@@ -85677,9 +85734,6 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 
 #~ msgid "InfluxDB Queue Usage"
 #~ msgstr "InfluxDB wachtrijgebruik"
-
-#~ msgid "Kernel Version"
-#~ msgstr "Kernel Versie"
 
 #~ msgid "Levels Helper usage Check"
 #~ msgstr "Niveaus Helper gebruik Check"

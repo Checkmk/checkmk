@@ -1,0 +1,20 @@
+Title: azure: Fix app registration crashing while parsing agent output
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1727782634
+Edition: cre
+Level: 1
+Version: 2.2.0p35
+
+When using a <code>|</code> symbol in the display name of an azure app, the
+azure_app_registration check would fail with
+<code>WARNING: Parsing of section azure_app_registration failed - please submit a crash report!</code>.
+
+With this werk, we fix this error and support the <code>|</code> symbol in the
+display name of azure apps.
+
+<strong>User action required</strong>
+
+To apply the fix, you need to rediscover the <code>azure_app_registration</code>
+services.

@@ -129,6 +129,11 @@ from cmk.gui.valuespec import (
     Tuple,
     UUID,
 )
+from cmk.gui.wato._group_selection import ContactGroupSelection
+from cmk.gui.wato._notification_parameter import (
+    notification_parameter_registry,
+    NotificationParameter,
+)
 from cmk.gui.wato.pages.events import ABCEventsMode
 from cmk.gui.wato.pages.user_profile.page_menu import page_menu_dropdown_user_related
 from cmk.gui.wato.pages.users import ModeEditUser
@@ -159,9 +164,6 @@ from cmk.gui.watolib.users import notification_script_choices
 from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import DictElement, FieldSize, String
 from cmk.rulesets.v1.form_specs import Dictionary as FormSpecDictionary
-
-from .._group_selection import ContactGroupSelection
-from .._notification_parameter import notification_parameter_registry, NotificationParameter
 
 
 def register(mode_registry: ModeRegistry) -> None:

@@ -6,7 +6,7 @@
 from . import config
 from ._storage import (
     cleanup_piggyback_files,
-    get_piggyback_raw_data,
+    get_messages_for,
     get_piggybacked_host_with_sources,
     load_last_distribution_time,
     move_for_host_rename,
@@ -21,7 +21,7 @@ __all__ = [
     "config",
     "cleanup_piggyback_files",
     "get_piggybacked_host_with_sources",
-    "get_piggyback_raw_data",
+    "get_messages_for",
     "PiggybackMetaData",
     "PiggybackMessage",
     "remove_source_status_file",

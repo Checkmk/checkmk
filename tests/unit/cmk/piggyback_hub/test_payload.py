@@ -14,7 +14,7 @@ from cmk.utils.hostaddress import HostName
 
 from cmk.messaging import DeliveryTag
 from cmk.piggyback import (
-    get_piggyback_raw_data,
+    get_messages_for,
     load_last_distribution_time,
     PiggybackMessage,
     PiggybackMetaData,
@@ -55,7 +55,7 @@ def test__on_message() -> None:
             raw_data=b"line1\nline2\n",
         )
     ]
-    actual_payload = get_piggyback_raw_data(HostName("target"), cmk.utils.paths.omd_root)
+    actual_payload = get_messages_for(HostName("target"), cmk.utils.paths.omd_root)
     assert actual_payload == expected_payload
 
 

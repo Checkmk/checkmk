@@ -24,13 +24,13 @@ _REF_TIME = 1640000000.0
 
 
 def _get_only_raw_data_element(host_name: HostAddress) -> piggyback.PiggybackMessage:
-    first, *other = piggyback.get_piggyback_raw_data(host_name, cmk.utils.paths.omd_root)
+    first, *other = piggyback.get_messages_for(host_name, cmk.utils.paths.omd_root)
     assert not other
     return first
 
 
 def test_get_piggyback_raw_data_no_data() -> None:
-    assert not piggyback.get_piggyback_raw_data(HostAddress("no-host"), cmk.utils.paths.omd_root)
+    assert not piggyback.get_messages_for(HostAddress("no-host"), cmk.utils.paths.omd_root)
 
 
 def test_store_piggyback_raw_data_simple() -> None:
@@ -112,7 +112,7 @@ def test_store_piggyback_raw_data_second_source() -> None:
 
     raw_data_map = {
         rd.meta.source: rd.meta
-        for rd in piggyback.get_piggyback_raw_data(_TEST_HOST_NAME, cmk.utils.paths.omd_root)
+        for rd in piggyback.get_messages_for(_TEST_HOST_NAME, cmk.utils.paths.omd_root)
     }
     assert len(raw_data_map) == 2
 
@@ -132,7 +132,7 @@ def test_store_piggyback_raw_data_different_timestamp() -> None:
     )
     raw_data_map = {
         rd.meta.source: rd.meta
-        for rd in piggyback.get_piggyback_raw_data(_TEST_HOST_NAME, cmk.utils.paths.omd_root)
+        for rd in piggyback.get_messages_for(_TEST_HOST_NAME, cmk.utils.paths.omd_root)
     }
 
     assert (raw1 := raw_data_map[HostAddress("source1")]).last_update == _REF_TIME

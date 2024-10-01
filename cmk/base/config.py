@@ -3335,9 +3335,7 @@ class ConfigCache:
         def _is_usable(data: piggyback.PiggybackMessage) -> bool:
             return (now - data.meta.last_update) <= piggy_config.max_cache_age(data.meta.source)
 
-        return any(
-            map(_is_usable, piggyback.get_piggyback_raw_data(host_name, cmk.utils.paths.omd_root))
-        )
+        return any(map(_is_usable, piggyback.get_messages_for(host_name, cmk.utils.paths.omd_root)))
 
     def _piggybacked_host_files(self, host_name: HostName) -> list[tuple[str | None, str, int]]:
         if rules := self.ruleset_matcher.get_host_values(host_name, piggybacked_host_files):

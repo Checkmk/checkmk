@@ -67,7 +67,7 @@ class PiggybackMessage:
 # - Path(tmp/check_mk/piggyback_sources/SOURCE).name
 
 
-def get_piggyback_raw_data(
+def get_messages_for(
     piggybacked_hostname: HostAddress, omd_root: Path
 ) -> Sequence[PiggybackMessage]:
     """Returns piggyback messages for the given host"""

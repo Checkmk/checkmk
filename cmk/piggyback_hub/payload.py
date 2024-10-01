@@ -18,7 +18,7 @@ from cmk.utils.hostaddress import HostName
 
 from cmk.messaging import Channel, CMKConnectionError, Connection, DeliveryTag
 from cmk.piggyback import (
-    get_piggyback_raw_data,
+    get_messages_for,
     load_last_distribution_time,
     PiggybackMessage,
     PiggybackMetaData,
@@ -85,7 +85,7 @@ def _get_piggyback_raw_data_to_send(
 ) -> Sequence[PiggybackMessage]:
     return [
         data
-        for data in get_piggyback_raw_data(target_host, omd_root)
+        for data in get_messages_for(target_host, omd_root)
         if not _is_message_already_distributed(data.meta, omd_root)
     ]
 

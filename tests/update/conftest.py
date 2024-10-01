@@ -203,14 +203,11 @@ def _create_site(base_version: CMKVersion) -> Site:
 
     try:
         site = site_factory.get_site(site_name, auto_restart_httpd=True)
-    except Exception as e:
-        if f"Version {base_version.version} could not be installed" in str(e):
-            pytest.skip(
-                f"Base-version {base_version.version} not available in "
-                f'{os.environ.get("DISTRO")}'
-            )
-        else:
-            raise
+    except FileNotFoundError:
+        pytest.skip(
+            f"Base-version '{base_version.version}' is not available for distro "
+            f'{os.environ.get("DISTRO")}'
+        )
 
     return site
 

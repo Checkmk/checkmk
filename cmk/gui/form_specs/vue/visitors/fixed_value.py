@@ -40,7 +40,7 @@ class FixedValueVisitor(FormSpecVisitor[FixedValue[T], T]):
             shared_type_defs.FixedValue(
                 title=title,
                 help=help_text,
-                label=localize(self.form_spec.label),
+                label=localize(self.form_spec.label) if self.form_spec.label is not None else None,
                 value=parsed_value,
                 validators=build_vue_validators(compute_validators(self.form_spec)),
             ),

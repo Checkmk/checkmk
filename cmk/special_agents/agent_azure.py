@@ -979,8 +979,10 @@ class Section:
 
 
 class AzureSection(Section):
-    def __init__(self, name: str, piggytargets: Iterable[str] = ("",)) -> None:
-        super().__init__("azure_%s" % name, piggytargets, separator=124, options=[])
+    def __init__(
+        self, name: str, piggytargets: Iterable[str] = ("",), separator: int = 124
+    ) -> None:
+        super().__init__("azure_%s" % name, piggytargets, separator=separator, options=[])
 
 
 class LabelsSection(Section):
@@ -1461,7 +1463,7 @@ def write_section_app_registrations(graph_client: GraphApiClient, args: argparse
     if "app_registrations" not in args.services:
         return
 
-    section = AzureSection("app_registration")
+    section = AzureSection("app_registration", separator=0)
 
     # app registration with client secrets
     apps = graph_client.applications()

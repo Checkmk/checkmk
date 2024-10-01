@@ -4,59 +4,26 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import {
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogOverlay,
-  DialogPortal,
-  DialogRoot,
-  DialogTitle,
-  DialogTrigger
-} from 'radix-vue'
+import { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot } from 'radix-vue'
 import { Label } from '@/quick-setup/components/ui/label'
 import type { SlideInProps } from './slidein_types'
-import Button from '@/quick-setup/components/IconButton.vue'
-import FormCatalog from '@/form/components/forms/FormCatalog.vue'
-import { computed, ref } from 'vue'
-const data = defineModel<Record<string, Record<string, unknown>>>('data', { required: true })
 
 defineProps<SlideInProps>()
-const backendValidation = ref([])
-
-const valueAsJSON = computed(() => {
-  return JSON.stringify(data.value)
-})
-const save = async () => {
-  console.log('Save')
-}
+const emit = defineEmits(['close'])
 </script>
 
 <template>
-  <DialogRoot>
-    <DialogTrigger class="slide-in__trigger">{{ trigger_text }}</DialogTrigger>
+  <DialogRoot :open="open">
     <DialogPortal>
-      <DialogOverlay />
-      <DialogContent class="slide-in__content">
-        <DialogTitle class="slide-in__title">
-          <Label variant="title">{{ catalog.title }}</Label>
-          <DialogClose class="slide-in__close">
+      <DialogOverlay class="slide-in__overlay" />
+      <DialogContent class="slide-in__content" @escape-key-down="emit('close')">
+        <div v-if="header" class="slide-in__title">
+          <Label variant="title">{{ header.title }}</Label>
+          <DialogClose v-if="header.closeButton" class="slide-in__close" @click="emit('close')">
             <div class="slide-in__icon-close" />
           </DialogClose>
-        </DialogTitle>
-        <Button
-          :label="save_button_label"
-          variant="custom"
-          icon-name="save"
-          class="slide-in__save"
-          @click="save"
-        />
-        <DialogClose class="slide-in__close">
-          <Button :label="cancel_button_label" variant="custom" icon-name="cancel" />
-        </DialogClose>
-        <DialogDescription>{{ description }}</DialogDescription>
-        <FormCatalog v-model:data="data" :spec="catalog" :backend-validation="backendValidation" />
-        <input v-model="valueAsJSON" :name="id" type="hidden" />
+        </div>
+        <slot />
       </DialogContent>
     </DialogPortal>
   </DialogRoot>
@@ -104,6 +71,22 @@ const save = async () => {
   }
 }
 
+.slide-in__overlay {
+  backdrop-filter: blur(1.5px);
+  position: fixed;
+  inset: 0;
+  animation: slide-in__overlay-show 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slide-in__overlay-show {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .slide-in__title {
   display: flex;
   justify-content: space-between;
@@ -115,24 +98,11 @@ const save = async () => {
   }
 }
 
-.slide-in__trigger {
-  background: none;
-  border: none;
-  text-decoration: underline var(--success);
-  padding: 0;
-  margin: 0;
-  font-weight: normal;
-}
-
 .slide-in__close {
   background: none;
   border: none;
   margin: 0;
   padding: 0;
-}
-
-.slide-in__save {
-  border: 1px solid var(--default-submit-button-border-color);
 }
 
 div.slide-in__icon-close {

@@ -6,7 +6,6 @@
 import logging
 import multiprocessing
 import signal
-import time
 from collections.abc import Sequence
 from pathlib import Path
 from threading import Event
@@ -18,19 +17,14 @@ from cmk.utils.hostaddress import HostName
 
 from cmk.messaging import Channel, CMKConnectionError, Connection, DeliveryTag, RoutingKey
 from cmk.piggyback import (
-    get_messages_for,
-    load_last_distribution_time,
     PiggybackMessage,
-    PiggybackMetaData,
-    store_last_distribution_time,
     store_piggyback_raw_data,
+    watch_new_messages,
 )
 
-from .config import load_config, PiggybackHubConfig
+from .config import load_config
 from .paths import create_paths
 from .utils import APP_NAME, make_log_and_exit
-
-SENDING_PAUSE = 60  # [s]
 
 
 class PiggybackPayload(BaseModel):
@@ -65,40 +59,10 @@ def save_payload_on_message(
     return _on_message
 
 
-def _filter_piggyback_hub_targets(
-    config: PiggybackHubConfig, current_site_id: str
-) -> Sequence[tuple[HostName, str]]:
-    return [
-        (host_name, site_id)
-        for host_name, site_id in config.targets.items()
-        if site_id != current_site_id
-    ]
-
-
-def _is_message_already_distributed(meta: PiggybackMetaData, omd_root: Path) -> bool:
-    if (
-        distribution_time := load_last_distribution_time(meta.source, meta.piggybacked, omd_root)
-    ) is None:
-        return False
-
-    return distribution_time >= meta.last_update
-
-
-def _get_piggyback_raw_data_to_send(
-    target_host: HostName, omd_root: Path
-) -> Sequence[PiggybackMessage]:
-    return [
-        data
-        for data in get_messages_for(target_host, omd_root)
-        if not _is_message_already_distributed(data.meta, omd_root)
-    ]
-
-
 def _send_payload_message(
     channel: Channel,
     piggyback_message: PiggybackMessage,
     target_site_id: str,
-    omd_root: Path,
 ) -> None:
     channel.publish_for_site(
         target_site_id,
@@ -110,12 +74,6 @@ def _send_payload_message(
             sections=[piggyback_message.raw_data],
         ),
         routing=RoutingKey("payload"),
-    )
-    store_last_distribution_time(
-        piggyback_message.meta.source,
-        piggyback_message.meta.piggybacked,
-        piggyback_message.meta.last_update,
-        omd_root,
     )
 
 
@@ -138,34 +96,32 @@ class SendingPayloadProcess(multiprocessing.Process):
         config = load_config(self.paths)
         self.logger.debug("Loaded configuration: %r", config)
 
+        this_site = self.omd_root.name
+
         try:
             with Connection(APP_NAME, self.omd_root) as conn:
                 channel = conn.channel(PiggybackPayload)
 
-                while True:
+                for piggyback_message in watch_new_messages(self.omd_root):
                     if self.reload_config.is_set():
                         self.logger.debug("Reloading configuration")
                         config = load_config(self.paths)
                         self.reload_config.clear()
 
-                    for host_name, site_id in _filter_piggyback_hub_targets(
-                        config, self.omd_root.name
-                    ):
-                        for piggyback_message in _get_piggyback_raw_data_to_send(
-                            host_name, self.omd_root
-                        ):
-                            self.logger.debug(
-                                "%s: from host '%s' to host '%s' on site '%s'",
-                                self.task_name.title(),
-                                piggyback_message.meta.source,
-                                piggyback_message.meta.piggybacked,
-                                site_id,
-                            )
-                            _send_payload_message(
-                                channel, piggyback_message, site_id, self.omd_root
-                            )
+                    if (
+                        site_id := config.targets.get(piggyback_message.meta.piggybacked, this_site)
+                    ) is this_site:
+                        continue
 
-                    time.sleep(SENDING_PAUSE)
+                    self.logger.debug(
+                        "%s: from host '%s' to host '%s' on site '%s'",
+                        self.task_name.title(),
+                        piggyback_message.meta.source,
+                        piggyback_message.meta.piggybacked,
+                        site_id,
+                    )
+                    _send_payload_message(channel, piggyback_message, site_id)
+
         except CMKConnectionError as exc:
             self.logger.error("Stopping: %s: %s", self.task_name, exc)
         except Exception as exc:

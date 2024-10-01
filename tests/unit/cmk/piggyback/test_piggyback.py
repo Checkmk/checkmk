@@ -197,15 +197,3 @@ def test_get_source_and_piggyback_hosts() -> None:
             ),
         ],
     }
-
-
-def test_last_distribution_time() -> None:
-    piggyback.store_last_distribution_time(
-        HostAddress("source1"), HostAddress("test-host"), int(_REF_TIME), cmk.utils.paths.omd_root
-    )
-    assert (
-        piggyback.load_last_distribution_time(
-            HostAddress("source1"), HostAddress("test-host"), cmk.utils.paths.omd_root
-        )
-        == _REF_TIME
-    )

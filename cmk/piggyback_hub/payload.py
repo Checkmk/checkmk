@@ -14,7 +14,7 @@ from pydantic import BaseModel
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.messaging import Channel, CMKConnectionError, Connection, DeliveryTag, RoutingKey
+from cmk.messaging import Channel, CMKConnectionError, DeliveryTag, RoutingKey
 from cmk.piggyback import (
     PiggybackMessage,
     store_piggyback_raw_data,
@@ -23,7 +23,7 @@ from cmk.piggyback import (
 
 from .config import load_config, PiggybackHubConfig
 from .paths import create_paths
-from .utils import APP_NAME, make_log_and_exit
+from .utils import make_log_and_exit, reconnect
 
 
 class PiggybackPayload(BaseModel):
@@ -89,11 +89,11 @@ class SendingPayloadProcess(multiprocessing.Process):
         self.logger.debug("Loaded configuration: %r", config)
 
         try:
-            with Connection(APP_NAME, self.omd_root) as conn:
-                channel = conn.channel(PiggybackPayload)
-
-                for piggyback_message in watch_new_messages(self.omd_root):
-                    self._handle_message(channel, config, piggyback_message)
+            for conn in reconnect(self.omd_root, self.logger, self.task_name):
+                with conn:
+                    channel = conn.channel(PiggybackPayload)
+                    for piggyback_message in watch_new_messages(self.omd_root):
+                        self._handle_message(channel, config, piggyback_message)
 
         except CMKConnectionError as exc:
             self.logger.error("Stopping: %s: %s", self.task_name, exc)

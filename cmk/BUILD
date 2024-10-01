@@ -19,8 +19,6 @@ FILTER_OUT = [
     # Provided elsewhere
     "rrdtool",
     "protobuf",
-    # Broken, see https://github.com/NetApp/ontap-rest-python/issues/46
-    "netapp-ontap",
 ]
 
 genrule(
@@ -68,7 +66,7 @@ REQUIRED_EXTERNAL_DEPS = [
     "marshmallow-oneofschema",
     "meraki",
     "msal",
-    # "netapp-ontap",  # provided elsewhere
+    "netapp-ontap",  # provided elsewhere
     "numpy",
     "oauthlib",
     "openapi-spec-validator",

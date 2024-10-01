@@ -329,6 +329,7 @@ certifi==2024.8.30 ; python_version >= "3.6" \
     #   httpx
     #   kubernetes
     #   msrest
+    #   netapp-ontap
     #   opsgenie-sdk
     #   requests
 cffi==1.17.1 ; platform_python_implementation != "PyPy" \
@@ -1788,6 +1789,7 @@ marshmallow==3.22.0 ; python_version >= "3.8" \
     #   -r cmk/requirements_in.txt
     #   apispec-oneofschema
     #   marshmallow-oneofschema
+    #   netapp-ontap
 marshmallow-oneofschema==3.1.1 ; python_version >= "3.8" \
     --hash=sha256:68b4a57d0281a04ac25d4eb7a4c5865a57090a0a8fd30fd6362c8e833ac6a6d9 \
     --hash=sha256:ff4cb2a488785ee8edd521a765682c2c80c78b9dc48894124531bdfa1ec9303b
@@ -1984,6 +1986,10 @@ mypy-extensions==1.0.0 ; python_version >= "3.5" \
 mypy-protobuf==3.6.0 ; python_version >= "3.8" \
     --hash=sha256:02f242eb3409f66889f2b1a3aa58356ec4d909cdd0f93115622e9e70366eca3c \
     --hash=sha256:56176e4d569070e7350ea620262478b49b7efceba4103d468448f1d21492fd6c
+    # via -r cmk/requirements_in.txt
+netapp-ontap==9.14.1.0 ; python_version >= "3.6" \
+    --hash=sha256:495e679e10e61b9bb2cf5a432a5cdaf9f2ec56855540ba221c021d31a6b91eb7 \
+    --hash=sha256:9e1ed21dccae8d35574a0c506a3440e04b9e37a1dff1c2ae7906ec6e7afafaac
     # via -r cmk/requirements_in.txt
 networkx==3.3 ; python_version >= "3.10" \
     --hash=sha256:0c127d8b2f4865f59ae9cb8aafcd60b5c70f3241ebd66f7defad7c4ab90126c9 \
@@ -3166,6 +3172,7 @@ requests==2.32.3 ; python_version >= "3.8" \
     #   meraki
     #   msal
     #   msrest
+    #   netapp-ontap
     #   opentelemetry-exporter-otlp-proto-http
     #   pysaml2
     #   pysmi-lextudio
@@ -3206,6 +3213,7 @@ requests-toolbelt==1.0.0 ; python_version >= "2.7" and python_version not in "3.
     # via
     #   -r cmk/requirements_in.txt
     #   jira
+    #   netapp-ontap
     #   redfish
     #   twine
 requests-unixsocket==0.3.0 \
@@ -4047,6 +4055,7 @@ urllib3==2.2.3 ; python_version >= "3.8" \
     #   botocore
     #   docker
     #   kubernetes
+    #   netapp-ontap
     #   opsgenie-sdk
     #   requests
     #   responses

@@ -132,19 +132,16 @@ def store_piggyback_raw_data(
         remove_source_status_file(source_hostname, omd_root)
         return
 
-    piggyback_file_paths = []
     for piggybacked_hostname, lines in piggybacked_raw_data.items():
-        piggyback_file_path = _get_piggybacked_file_path(
-            source_hostname, piggybacked_hostname, omd_root
-        )
         logger.debug("Storing piggyback data for: %r", piggybacked_hostname)
         # Raw data is always stored as bytes. Later the content is
         # converted to unicode in abstact.py:_parse_info which respects
         # 'encoding' in section options.
         _write_file_with_mtime(
-            file_path=piggyback_file_path, content=b"%s\n" % b"\n".join(lines), mtime=timestamp
+            file_path=_get_piggybacked_file_path(source_hostname, piggybacked_hostname, omd_root),
+            content=b"%s\n" % b"\n".join(lines),
+            mtime=timestamp,
         )
-        piggyback_file_paths.append(piggyback_file_path)
 
     # Store the last contact with this piggyback source to be able to filter outdated data later
     # We use the mtime of this file later for comparison.

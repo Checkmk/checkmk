@@ -405,8 +405,8 @@ class ABCNotificationsMode(ABCEventsMode):
                     html.icon_button(
                         links.clone, _("Create a copy of this notification rule"), "clone"
                     )
-                    html.element_dragger_url("tr", base_url=links.drag)
                     html.icon_button(links.delete, _("Delete this notification rule"), "delete")
+                    html.element_dragger_url("tr", base_url=links.drag)
                 else:
                     table.cell("", css=["buttons"])
                     for _x in range(4):
@@ -425,13 +425,21 @@ class ABCNotificationsMode(ABCEventsMode):
                     notify_method = (None, [])
                 notify_plugin = notify_method[0]
 
-                table.cell(_("Type"), css=["narrow"])
-                if notify_method[1] is None:
-                    html.icon("cross_bg_white", _("Cancel notifications for this plug-in type"))
-                else:
-                    html.icon("checkmark", _("Create a notification"))
-
                 table.cell(_("Method"), notify_plugin or _("Plain email"), css=["narrow nowrap"])
+
+                table.cell(_("Effect"), css=["narrow"])
+                if notify_method[1] is None:
+                    html.icon(
+                        "cancel_notifications", _("Cancel notifications for this plug-in type")
+                    )
+                else:
+                    html.icon(
+                        {
+                            "icon": "notifications",
+                            "emblem": "enable",
+                        },
+                        _("Create a notification"),
+                    )
 
                 table.cell(_("Bulk"), css=["narrow"])
                 if "bulk" in rule or "bulk_period" in rule:
@@ -615,7 +623,7 @@ class ModeNotifications(ABCNotificationsMode):
         self._show_user_rules = options.get("show_user_rules", False)
 
     def title(self) -> str:
-        return _("Notification configuration")
+        return _("Notifications")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
@@ -758,10 +766,7 @@ class ModeNotifications(ABCNotificationsMode):
                         title=(
                             _("Hide user rules") if self._show_user_rules else _("Show user rules")
                         ),
-                        icon_name={
-                            "icon": "checkbox",
-                            "emblem": "disable" if self._show_user_rules else "enable",
-                        },
+                        icon_name="toggle_on" if self._show_user_rules else "toggle_off",
                         item=make_simple_link(
                             makeactionuri(
                                 request,
@@ -946,7 +951,11 @@ def _get_vue_data() -> Notifications:
                 i18n=FallbackWarningI18n(
                     title=_("No fallback email address configured"),
                     message=_(
-                        "If your monitoring produces a notification that is not matched by any of your notification rules, the notification will not be sent out. To prevent that, we recommend configuring either the global setting or enable the fallback contact option for at least one of your users."
+                        "Without a fallback email address, you may miss alerts "
+                        "that are not covered by a notification rule. To ensure "
+                        "full notification coverage, we recommend that you "
+                        "configure the fallback email address to which all "
+                        "alerts that don't match a notification rule are sent."
                     ),
                     setup_link_title=_("Configure fallback email address"),
                     do_not_show_again_title=_("Do not show again"),
@@ -1949,10 +1958,7 @@ class ModeTestNotifications(ModeNotifications):
     def _vs_dispatched_option(self) -> Checkbox:
         return Checkbox(
             title=_("Dispatch notification"),
-            label=_(
-                "Send out HTML/ASCII email notification according "
-                "to notification rules (uncheck to avoid spam)"
-            ),
+            label=_("Send out HTML/ASCII email notification according to notification rules"),
             default_value=False,
         )
 

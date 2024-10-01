@@ -1014,8 +1014,16 @@ div#page_menu_popups div[id^="popup_add_to_"] > div.content > span {
     div#advanced_opts_d_date_and_time,
     div#advanced_opts_d_notification_nr {
       margin: 0px;
-      input {
+      input#date_advanced_opts_p_date_and_time_0 {
         margin-left: $spacing;
+      }
+
+      input.number {
+        margin-left: 12px;
+      }
+
+      .tuple_td:last-child {
+        align-content: center;
       }
     }
 

@@ -20,7 +20,9 @@ site_factory = get_site_factory(prefix="comp_")
 
 @pytest.fixture(name="central_site", scope="session")
 def _central_site(request: pytest.FixtureRequest) -> Iterator[Site]:
-    with exit_pytest_on_exceptions():
+    with exit_pytest_on_exceptions(
+        exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
+    ):
         yield from site_factory.get_test_site(
             "central", description=request.node.name, auto_restart_httpd=True
         )
@@ -28,7 +30,9 @@ def _central_site(request: pytest.FixtureRequest) -> Iterator[Site]:
 
 @pytest.fixture(name="remote_site", scope="session")
 def _remote_site(central_site: Site, request: pytest.FixtureRequest) -> Iterator[Site]:
-    with exit_pytest_on_exceptions():
+    with exit_pytest_on_exceptions(
+        exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
+    ):
         remote_site_generator = site_factory.get_test_site(
             "remote", description=request.node.name, auto_restart_httpd=True
         )

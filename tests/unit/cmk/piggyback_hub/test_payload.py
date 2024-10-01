@@ -25,7 +25,7 @@ from cmk.piggyback_hub.config import PiggybackHubConfig, Target
 from cmk.piggyback_hub.payload import (
     _filter_piggyback_hub_targets,
     _get_piggyback_raw_data_to_send,
-    _send_message,
+    _send_payload_message,
     PiggybackPayload,
     save_payload_on_message,
 )
@@ -71,7 +71,7 @@ def test__send_message() -> None:
         raw_data=b"section1",
     )
 
-    _send_message(channel, input_message, "site_id", cmk.utils.paths.omd_root, "payload")
+    _send_payload_message(channel, input_message, "site_id", cmk.utils.paths.omd_root)
 
     channel.publish_for_site.assert_called_once_with(
         "site_id",

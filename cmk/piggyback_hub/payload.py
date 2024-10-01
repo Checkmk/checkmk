@@ -90,12 +90,11 @@ def _get_piggyback_raw_data_to_send(
     ]
 
 
-def _send_message(
+def _send_payload_message(
     channel: Channel,
     piggyback_message: PiggybackMessage,
     target_site_id: str,
     omd_root: Path,
-    routing: str,
 ) -> None:
     channel.publish_for_site(
         target_site_id,
@@ -106,7 +105,7 @@ def _send_message(
             last_contact=piggyback_message.meta.last_contact,
             sections=[piggyback_message.raw_data],
         ),
-        routing=routing,
+        routing="payload",
     )
     store_last_distribution_time(
         piggyback_message.meta.source,
@@ -156,8 +155,8 @@ class SendingPayloadProcess(multiprocessing.Process):
                                 piggyback_message.meta.piggybacked,
                                 target.site_id,
                             )
-                            _send_message(
-                                channel, piggyback_message, target.site_id, self.omd_root, "payload"
+                            _send_payload_message(
+                                channel, piggyback_message, target.site_id, self.omd_root
                             )
 
                     time.sleep(SENDING_PAUSE)

@@ -26,7 +26,7 @@ from cmk.piggyback import (
     store_piggyback_raw_data,
 )
 
-from .config import load_config, PiggybackHubConfig, Target
+from .config import load_config, PiggybackHubConfig
 from .paths import create_paths
 from .utils import APP_NAME, make_log_and_exit
 
@@ -67,8 +67,12 @@ def save_payload_on_message(
 
 def _filter_piggyback_hub_targets(
     config: PiggybackHubConfig, current_site_id: str
-) -> Sequence[Target]:
-    return [t for t in config.targets if t.site_id != current_site_id]
+) -> Sequence[tuple[HostName, str]]:
+    return [
+        (host_name, site_id)
+        for host_name, site_id in config.targets.items()
+        if site_id != current_site_id
+    ]
 
 
 def _is_message_already_distributed(meta: PiggybackMetaData, omd_root: Path) -> bool:
@@ -144,19 +148,21 @@ class SendingPayloadProcess(multiprocessing.Process):
                         config = load_config(self.paths)
                         self.reload_config.clear()
 
-                    for target in _filter_piggyback_hub_targets(config, self.omd_root.name):
+                    for host_name, site_id in _filter_piggyback_hub_targets(
+                        config, self.omd_root.name
+                    ):
                         for piggyback_message in _get_piggyback_raw_data_to_send(
-                            target.host_name, self.omd_root
+                            host_name, self.omd_root
                         ):
                             self.logger.debug(
                                 "%s: from host '%s' to host '%s' on site '%s'",
                                 self.task_name.title(),
                                 piggyback_message.meta.source,
                                 piggyback_message.meta.piggybacked,
-                                target.site_id,
+                                site_id,
                             )
                             _send_payload_message(
-                                channel, piggyback_message, target.site_id, self.omd_root
+                                channel, piggyback_message, site_id, self.omd_root
                             )
 
                     time.sleep(SENDING_PAUSE)

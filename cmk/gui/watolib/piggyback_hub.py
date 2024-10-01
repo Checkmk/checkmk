@@ -14,7 +14,7 @@ from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 
-from cmk.piggyback_hub.config import load_config, PiggybackHubConfig, save_config, Target
+from cmk.piggyback_hub.config import load_config, PiggybackHubConfig, save_config
 from cmk.piggyback_hub.paths import create_paths
 from cmk.piggyback_hub.utils import distribute
 
@@ -39,11 +39,11 @@ def _get_piggyback_hub_config(
 ) -> PiggybackHubConfig:
     root_folder = folder_tree().root_folder()
     return PiggybackHubConfig(
-        targets=[
-            Target(host_name=host_name, site_id=host.site_id())
+        targets={
+            host_name: host.site_id()
             for host_name, host in root_folder.all_hosts_recursively().items()
             if host.site_id() in site_configs.keys()
-        ]
+        }
     )
 
 

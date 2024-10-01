@@ -4,8 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from collections.abc import Sequence
-from dataclasses import dataclass
+from collections.abc import Mapping
 from pathlib import Path
 from threading import Event
 from typing import Callable
@@ -19,14 +18,8 @@ from cmk.messaging import Channel, DeliveryTag
 from .paths import create_paths, PiggybackHubPaths
 
 
-@dataclass(frozen=True)
-class Target:
-    host_name: HostName
-    site_id: str
-
-
 class PiggybackHubConfig(BaseModel):
-    targets: Sequence[Target] = []
+    targets: Mapping[HostName, str] = {}
 
 
 def save_config_on_message(

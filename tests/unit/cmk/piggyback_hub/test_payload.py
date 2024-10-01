@@ -21,7 +21,7 @@ from cmk.piggyback import (
     store_last_distribution_time,
     store_piggyback_raw_data,
 )
-from cmk.piggyback_hub.config import PiggybackHubConfig, Target
+from cmk.piggyback_hub.config import PiggybackHubConfig
 from cmk.piggyback_hub.payload import (
     _filter_piggyback_hub_targets,
     _get_piggyback_raw_data_to_send,
@@ -134,23 +134,18 @@ def test__get_piggyback_raw_data_to_send(
     "config, expected_targets",
     [
         pytest.param(
-            PiggybackHubConfig(targets=[Target(host_name=HostName("host1"), site_id="site1")]),
+            PiggybackHubConfig(targets={HostName("host1"): "site1"}),
             [],
             id="skip_self",
         ),
         pytest.param(
-            PiggybackHubConfig(
-                targets=[
-                    Target(host_name=HostName("host1"), site_id="site1"),
-                    Target(host_name=HostName("host2"), site_id="site2"),
-                ]
-            ),
-            [Target(host_name=HostName("host2"), site_id="site2")],
+            PiggybackHubConfig(targets={HostName("host1"): "site1", HostName("host2"): "site2"}),
+            [(HostName("host2"), "site2")],
             id="additional_site",
         ),
     ],
 )
 def test__filter_piggyback_hub_targets(
-    config: PiggybackHubConfig, expected_targets: Sequence[Target]
+    config: PiggybackHubConfig, expected_targets: Sequence[tuple[HostName, str]]
 ) -> None:
     assert _filter_piggyback_hub_targets(config, "site1") == expected_targets

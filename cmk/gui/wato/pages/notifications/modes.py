@@ -76,6 +76,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
+from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.site_config import has_wato_slave_sites, site_is_local, wato_slave_sites
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, HTTPVariables, MegaMenu, PermissionName
@@ -176,6 +177,7 @@ def register(mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeEditUserNotificationRule)
     mode_registry.register(ModeEditPersonalNotificationRule)
     mode_registry.register(ModeNotificationParametersOverview)
+    mode_registry.register(ModeEditNotificationRuleQuickSetup)
 
     mode_registry.register(ModeNotificationParameters)
     mode_registry.register(ModeEditNotificationParameter)
@@ -3502,3 +3504,48 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
 
             forms.end()
             html.hidden_fields()
+
+
+class ModeEditNotificationRuleQuickSetup(WatoMode):
+    @classmethod
+    def name(cls) -> str:
+        return "notification_rule_quick_setup"
+
+    @classmethod
+    def parent_mode(cls) -> type[WatoMode] | None:
+        return ModeNotifications
+
+    def _from_vars(self) -> None:
+        self._edit_nr = request.get_integer_input_mandatory("edit", -1)
+        self._new = self._edit_nr < 0
+        quick_setup = quick_setup_registry["notification_rule"]
+        self._quick_setup_id = quick_setup.id
+
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
+        return ["notifications"]
+
+    def title(self) -> str:
+        if self._new:
+            return _("Add notification rule")
+        return _("Edit notification rule %d") % self._edit_nr
+
+    def breadcrumb(self) -> Breadcrumb:
+        with request.stashed_vars():
+            return super().breadcrumb()
+
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_form_page_menu(
+            title=_("Notification rule"),
+            breadcrumb=breadcrumb,
+            add_cancel_link=True,
+            cancel_url=mode_url(mode_name=ModeNotifications.name()),
+        )
+
+    def page(self) -> None:
+        html.vue_app(
+            app_name="quick_setup",
+            data={
+                "quick_setup_id": self._quick_setup_id,
+            },
+        )

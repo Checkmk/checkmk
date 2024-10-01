@@ -24,6 +24,7 @@ from cmk.gui import (
     default_permissions,
     graphing,
     gui_background_job,
+    help_menu,
     hooks,
     inventory,
     login,
@@ -118,6 +119,7 @@ def register_sites_options() -> None:
 
 def register() -> None:
     pagetypes.register(mega_menu_registry)
+    help_menu.register(mega_menu_registry)
     crash_handler.register(crash_report_registry)
     default_permissions.register(permission_section_registry, permission_registry)
     register_cre_licensing_handler()

@@ -121,7 +121,7 @@ class SendingPayloadProcess(multiprocessing.Process):
         super().__init__()
         self.logger = logger
         self.omd_root = omd_root
-        self.config_path = create_paths(omd_root).config
+        self.paths = create_paths(omd_root)
         self.reload_config = reload_config
         self.task_name = "publishing on queue 'payload'"
 
@@ -132,7 +132,7 @@ class SendingPayloadProcess(multiprocessing.Process):
             make_log_and_exit(self.logger.debug, f"Stopping: {self.task_name}"),
         )
 
-        config = load_config(self.config_path)
+        config = load_config(self.paths)
         self.logger.debug("Loaded configuration: %r", config)
 
         try:
@@ -142,7 +142,7 @@ class SendingPayloadProcess(multiprocessing.Process):
                 while True:
                     if self.reload_config.is_set():
                         self.logger.debug("Reloading configuration")
-                        config = load_config(self.config_path)
+                        config = load_config(self.paths)
                         self.reload_config.clear()
 
                     for target in _filter_piggyback_hub_targets(config, self.omd_root.name):

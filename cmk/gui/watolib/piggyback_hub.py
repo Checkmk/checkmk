@@ -15,6 +15,7 @@ from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 
 from cmk.piggyback_hub.config import load_config, PiggybackHubConfig, save_config, Target
+from cmk.piggyback_hub.paths import create_paths
 from cmk.piggyback_hub.utils import distribute
 
 
@@ -49,9 +50,11 @@ def _get_piggyback_hub_config(
 def distribute_config() -> None:
     site_configs = get_enabled_piggyback_hub_site_configs()
 
-    old_config = load_config(omd_root)
+    paths = create_paths(omd_root)
+
+    old_config = load_config(paths)
     new_config = _get_piggyback_hub_config(site_configs)
 
     if set(old_config.targets) != set(new_config.targets):
         distribute({site: new_config for site in site_configs.keys()}, omd_root)
-        save_config(omd_root, new_config)
+        save_config(paths, new_config)

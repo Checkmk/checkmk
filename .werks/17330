@@ -1,0 +1,18 @@
+Title: Fix comment selection affecting comments across multiple sites
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1727763093
+Edition: cre
+Level: 1
+Version: 2.2.0p35
+
+When selecting comments in a view with comments from multiple sites,
+rows were selected by comment id regardless of which site they were
+from. This led to cases where trying to delete a single comment with
+comment id <code>1</code> from one site led to all comments with the comment id <code>1</code>
+being deleted from all sites.
+
+With this werk, comment selection in view is site and id dependent,
+allowing the user to delete single comments even if they share an id
+with a comment on a different site.

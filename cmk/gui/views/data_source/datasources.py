@@ -303,7 +303,7 @@ class DataSourceComments(DataSourceLivestatus):
 
     @property
     def id_keys(self):
-        return ["comment_id"]
+        return ["site", "comment_id"]
 
 
 class DataSourceDowntimes(DataSourceLivestatus):

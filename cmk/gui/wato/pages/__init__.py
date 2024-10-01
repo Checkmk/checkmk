@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Sequence
-
 from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
@@ -13,6 +11,7 @@ from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.main_menu import MegaMenuRegistry
 from cmk.gui.page_menu import PageMenuDropdown
 from cmk.gui.pages import PageRegistry
+from cmk.gui.quick_setup.v0_unstable._registry import QuickSetupRegistry
 from cmk.gui.watolib.automation_commands import AutomationCommandRegistry
 from cmk.gui.watolib.mode import ModeRegistry
 from cmk.gui.watolib.search import MatchItemGeneratorRegistry
@@ -71,6 +70,7 @@ from ._password_store_valuespecs import (
 def register(
     page_registry: PageRegistry,
     mode_registry: ModeRegistry,
+    quick_setup_registry: QuickSetupRegistry,
     automation_command_registry: AutomationCommandRegistry,
     job_registry: BackgroundJobRegistry,
     match_item_generator_registry: MatchItemGeneratorRegistry,
@@ -96,7 +96,7 @@ def register(
     host_rename.register(mode_registry)
     hosts.register(mode_registry)
     not_implemented.register(mode_registry)
-    notifications.register(mode_registry)
+    notifications.register(mode_registry, quick_setup_registry)
     object_parameters.register(mode_registry)
     parentscan.register(mode_registry)
     password_store.register(mode_registry)

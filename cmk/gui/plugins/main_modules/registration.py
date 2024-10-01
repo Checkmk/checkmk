@@ -233,6 +233,7 @@ def register() -> None:
         job_registry,
         filter_registry,
         mode_registry,
+        quick_setup_registry,
         permission_section_registry,
         permission_registry,
         main_module_topic_registry,

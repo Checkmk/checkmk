@@ -3,10 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.quick_setup.v0_unstable._registry import QuickSetupRegistry
 from cmk.gui.watolib.mode import ModeRegistry
 
-from . import modes
+from . import modes, quick_setup
 
 
-def register(mode_registry: ModeRegistry) -> None:
+def register(mode_registry: ModeRegistry, quick_setup_registry: QuickSetupRegistry) -> None:
     modes.register(mode_registry)
+    quick_setup.register(quick_setup_registry)

@@ -14,6 +14,7 @@ from cmk.gui.main_menu import MegaMenuRegistry
 from cmk.gui.pages import PageRegistry
 from cmk.gui.painter.v0.base import PainterRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
+from cmk.gui.quick_setup.v0_unstable._registry import QuickSetupRegistry
 from cmk.gui.sidebar import SnapinRegistry
 from cmk.gui.views.icon import IconRegistry
 from cmk.gui.views.sorter import SorterRegistry
@@ -74,6 +75,7 @@ def register(
     job_registry: BackgroundJobRegistry,
     filter_registry: FilterRegistry,
     mode_registry: ModeRegistry,
+    quick_setup_registry: QuickSetupRegistry,
     permission_section_registry: PermissionSectionRegistry,
     permission_registry: PermissionRegistry,
     main_module_topic_registry: MainModuleTopicRegistry,
@@ -111,6 +113,7 @@ def register(
     wato_pages.register(
         page_registry,
         mode_registry,
+        quick_setup_registry,
         automation_command_registry,
         job_registry,
         match_item_generator_registry,

@@ -6,7 +6,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot } from 'radix-vue'
 import { Label } from '@/quick-setup/components/ui/label'
-import type { SlideInProps } from './slidein_types'
+
+export interface SlideInProps {
+  open: boolean
+  header?: {
+    title: string
+    closeButton: boolean
+  }
+}
 
 defineProps<SlideInProps>()
 const emit = defineEmits(['close'])

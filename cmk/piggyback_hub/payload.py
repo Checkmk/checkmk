@@ -132,8 +132,8 @@ class SendingPayloadProcess(multiprocessing.Process):
             make_log_and_exit(self.logger.debug, f"Stopping: {self.task_name}"),
         )
 
-        self.logger.debug("Loading configuration")
         config = load_config(self.config_path)
+        self.logger.debug("Loaded configuration: %r", config)
 
         try:
             with Connection(APP_NAME, self.omd_root) as conn:

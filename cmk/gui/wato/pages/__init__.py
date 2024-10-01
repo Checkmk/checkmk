@@ -10,6 +10,7 @@ from cmk.ccc.version import Edition, edition
 from cmk.utils import paths
 
 from cmk.gui.background_job import BackgroundJobRegistry
+from cmk.gui.main_menu import MegaMenuRegistry
 from cmk.gui.page_menu import PageMenuDropdown
 from cmk.gui.pages import PageRegistry
 from cmk.gui.watolib.automation_commands import AutomationCommandRegistry
@@ -73,6 +74,7 @@ def register(
     automation_command_registry: AutomationCommandRegistry,
     job_registry: BackgroundJobRegistry,
     match_item_generator_registry: MatchItemGeneratorRegistry,
+    mega_menu_registry: MegaMenuRegistry,
 ) -> None:
     activate_changes.register(page_registry, mode_registry, automation_command_registry)
     analyze_configuration.register(mode_registry)
@@ -109,7 +111,7 @@ def register(
     tags.register(mode_registry)
     timeperiods.register(mode_registry)
     user_migrate.register(mode_registry)
-    user_profile.register(page_registry)
+    user_profile.register(page_registry, mega_menu_registry)
     users.register(mode_registry)
     certificate_overview.register(mode_registry)
 

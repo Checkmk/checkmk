@@ -16,7 +16,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
-from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.main_menu import MegaMenuRegistry
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
 from cmk.gui.userdb import remove_custom_attr, validate_start_url
@@ -26,10 +26,21 @@ from cmk.gui.utils.theme import theme, theme_choices
 from cmk.gui.utils.urls import makeuri_contextless
 
 
-def register(page_registry: PageRegistry) -> None:
+def register(page_registry: PageRegistry, mega_menu_registry: MegaMenuRegistry) -> None:
     page_registry.register_page("ajax_ui_theme")(ModeAjaxCycleThemes)
     page_registry.register_page("ajax_sidebar_position")(ModeAjaxCycleSidebarPosition)
     page_registry.register_page("ajax_set_dashboard_start_url")(ModeAjaxSetStartURL)
+
+    mega_menu_registry.register(
+        MegaMenu(
+            name="user",
+            title=_l("User"),
+            icon="main_user",
+            sort_index=20,
+            topics=_user_menu_topics,
+            info_line=lambda: f"{user.id} ({'+'.join(user.role_ids)})",
+        )
+    )
 
     if cmk_version.edition(cmk.utils.paths.omd_root) == cmk_version.Edition.CSE:
         page_registry.register_page("ajax_saas_onboarding_button_toggle")(
@@ -179,18 +190,6 @@ def _user_menu_topics() -> list[TopicMenuTopic]:
             items=items,
         ),
     ]
-
-
-mega_menu_registry.register(
-    MegaMenu(
-        name="user",
-        title=_l("User"),
-        icon="main_user",
-        sort_index=20,
-        topics=_user_menu_topics,
-        info_line=lambda: f"{user.id} ({'+'.join(user.role_ids)})",
-    )
-)
 
 
 class ModeAjaxCycleThemes(AjaxPage):

@@ -18,13 +18,35 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import response
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
-from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.main_menu import MegaMenuRegistry
 from cmk.gui.nodevis.topology import ParentChildTopologyPage
+from cmk.gui.pages import PageRegistry
 from cmk.gui.type_defs import ABCMegaMenuSearch, MegaMenu, TopicMenuTopic, Visual
 from cmk.gui.views.store import get_permitted_views
 
 from ._base import SidebarSnapin
 from ._helpers import footnotelinks, make_topic_menu, show_topic_menu
+from ._registry import SnapinRegistry
+
+
+def register(
+    page_registry: PageRegistry,
+    snapin_registry: SnapinRegistry,
+    mega_menu_registry: MegaMenuRegistry,
+) -> None:
+    snapin_registry.register(Views)
+    page_registry.register_page_handler("export_views", ajax_export_views)
+
+    mega_menu_registry.register(
+        MegaMenu(
+            name="monitoring",
+            title=_l("Monitor"),
+            icon="main_monitoring",
+            sort_index=5,
+            topics=lambda: view_menu_topics(include_reports=True),
+            search=MonitoringSearch("monitoring_search"),
+        )
+    )
 
 
 class Views(SidebarSnapin):
@@ -154,15 +176,3 @@ class MonitoringSearch(ABCMegaMenuSearch):
             )
         html.close_div()
         html.div("", id_="mk_side_clear")
-
-
-mega_menu_registry.register(
-    MegaMenu(
-        name="monitoring",
-        title=_l("Monitor"),
-        icon="main_monitoring",
-        sort_index=5,
-        topics=lambda: view_menu_topics(include_reports=True),
-        search=MonitoringSearch("monitoring_search"),
-    )
-)

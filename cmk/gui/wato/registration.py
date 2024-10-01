@@ -114,6 +114,7 @@ def register(
         automation_command_registry,
         job_registry,
         match_item_generator_registry,
+        mega_menu_registry,
     )
     _permissions.register(permission_section_registry, permission_registry)
     _main_module_topics.register(main_module_topic_registry)

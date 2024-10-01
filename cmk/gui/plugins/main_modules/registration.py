@@ -32,6 +32,7 @@ from cmk.gui import (
     message,
     mobile,
     notifications,
+    pagetypes,
     painter_options,
     piggyback_hub,
     prediction,
@@ -116,6 +117,7 @@ def register_sites_options() -> None:
 
 
 def register() -> None:
+    pagetypes.register(mega_menu_registry)
     crash_handler.register(crash_report_registry)
     default_permissions.register(permission_section_registry, permission_registry)
     register_cre_licensing_handler()
@@ -271,7 +273,13 @@ def register() -> None:
     autocompleters.register(page_registry, autocompleter_registry)
     werks.register(page_registry)
     login.register(page_registry)
-    sidebar.register(page_registry, permission_section_registry, snapin_registry, dashlet_registry)
+    sidebar.register(
+        page_registry,
+        permission_section_registry,
+        snapin_registry,
+        dashlet_registry,
+        mega_menu_registry,
+    )
     message.register(page_registry)
     cmk.gui.help.register(page_registry)
     main.register(page_registry)

@@ -54,7 +54,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, _u
 from cmk.gui.logged_in import LoggedInUser, save_user_file, user
-from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.main_menu import mega_menu_registry, MegaMenuRegistry
 from cmk.gui.page_menu import (
     doc_reference_to_page_menu,
     make_confirmed_form_submit_link,
@@ -188,6 +188,19 @@ class PagetypeTopicConfig(OverridableConfig):
     sort_index: int
     max_entries: int = 10
     hide: bool = False  # TODO: Seems it is not configurable through the UI. Is it OK?
+
+
+def register(mega_menu_registry_: MegaMenuRegistry) -> None:
+    mega_menu_registry_.register(
+        MegaMenu(
+            name="customize",
+            title=_l("Customize"),
+            icon="main_customize",
+            sort_index=10,
+            topics=_customize_menu_topics,
+            hide=hide_customize_menu,
+        )
+    )
 
 
 #   .--Base----------------------------------------------------------------.
@@ -2377,17 +2390,6 @@ def hide_customize_menu() -> bool:
 
     return not any(user.may(perm) for perm in permissions)
 
-
-mega_menu_registry.register(
-    MegaMenu(
-        name="customize",
-        title=_l("Customize"),
-        icon="main_customize",
-        sort_index=10,
-        topics=_customize_menu_topics,
-        hide=hide_customize_menu,
-    )
-)
 
 #   .--Permissions---------------------------------------------------------.
 #   |        ____                     _         _                          |

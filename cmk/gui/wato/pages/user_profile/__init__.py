@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.main_menu import MegaMenuRegistry
 from cmk.gui.pages import PageRegistry
 
 from . import async_replication, change_password, edit_profile, mega_menu, replicate, two_factor
 
 
-def register(page_registry: PageRegistry) -> None:
-    mega_menu.register(page_registry)
+def register(page_registry: PageRegistry, mega_menu_registry: MegaMenuRegistry) -> None:
+    mega_menu.register(page_registry, mega_menu_registry)
     two_factor.register(page_registry)
     two_factor.register(page_registry)
     edit_profile.register(page_registry)

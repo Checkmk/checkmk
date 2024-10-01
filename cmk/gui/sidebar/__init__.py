@@ -34,7 +34,7 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
-from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.main_menu import mega_menu_registry, MegaMenuRegistry
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuTopic
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.permissions import PermissionSectionRegistry
@@ -86,6 +86,7 @@ def register(
     permission_section_registry: PermissionSectionRegistry,
     snapin_registry_: SnapinRegistry,
     dashlet_registry: DashletRegistry,
+    mega_menu_registry_: MegaMenuRegistry,
 ) -> None:
     page_registry.register_page("sidebar_fold")(AjaxFoldSnapin)
     page_registry.register_page("sidebar_openclose")(AjaxOpenCloseSnapin)
@@ -101,7 +102,7 @@ def register(
         PageAjaxSidebarGetUnackIncompWerks
     )
     permission_section_registry.register(PermissionSectionSidebarSnapins)
-    _snapin.register(snapin_registry_, page_registry)
+    _snapin.register(snapin_registry_, page_registry, mega_menu_registry_)
     dashlet_registry.register(SnapinDashlet)
 
 

@@ -9,6 +9,7 @@ import { onMounted, ref, h } from 'vue'
 import DemoAlertBox from './DemoAlertBox.vue'
 import DemoIconButton from './DemoIconButton.vue'
 import DemoSlideIn from './DemoSlideIn.vue'
+import DemoFormEditAsync from './DemoFormEditAsync.vue'
 
 const demo = ref('')
 
@@ -20,6 +21,8 @@ function renderDemo() {
       return h(DemoIconButton)
     case 'slidein':
       return h(DemoSlideIn)
+    case 'formeditasync':
+      return h(DemoFormEditAsync)
   }
   return h('i', 'choose demo from navigation')
 }
@@ -43,6 +46,7 @@ onMounted(() => {
         <li><a href="#" @click.prevent="demo = 'alertbox'">alert box</a></li>
         <li><a href="#" @click.prevent="demo = 'iconbutton'">icon button</a></li>
         <li><a href="#" @click.prevent="demo = 'slidein'">slide in</a></li>
+        <li><a href="#" @click.prevent="demo = 'formeditasync'">form edit async</a></li>
       </ul>
     </nav>
     <main>

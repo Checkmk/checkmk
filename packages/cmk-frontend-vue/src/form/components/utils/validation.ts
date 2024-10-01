@@ -84,6 +84,18 @@ export function isFloat(value: string): boolean {
   return /^-?\d+(\.\d+)?$/.test(value)
 }
 
+export function requiresSomeInput(validators: Validator[]): boolean {
+  return validators.some((validator) => {
+    if (validator.type === 'length_in_range') {
+      if (validator.min_value === undefined) {
+        return false
+      }
+      return validator.min_value > 0
+    }
+    return false
+  })
+}
+
 export function groupDictionaryValidations(
   elements: Array<{ ident: string }>,
   newValidation: ValidationMessages

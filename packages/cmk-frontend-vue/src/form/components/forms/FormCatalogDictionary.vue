@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { DictionaryElement } from '@/form/components/vue_formspec_components'
 import FormEdit from '@/form/components/FormEdit.vue'
 import { immediateWatch } from '@/form/components/utils/watch'
-import type { ValidationMessages } from '@/form/components/utils/validation'
+import { requiresSomeInput, type ValidationMessages } from '@/form/components/utils/validation'
 
 const props = defineProps<{
   entries: Array<DictionaryElement>
@@ -26,6 +26,10 @@ immediateWatch(
     })
   }
 )
+
+function isRequired(element: DictionaryElement): boolean {
+  return requiresSomeInput(element.parameter_form.validators)
+}
 </script>
 
 <template>
@@ -36,7 +40,7 @@ immediateWatch(
         <span
           class="dots"
           :class="{
-            required: element.required
+            required: isRequired(element)
           }"
           >{{ Array(200).join('.') }}</span
         >

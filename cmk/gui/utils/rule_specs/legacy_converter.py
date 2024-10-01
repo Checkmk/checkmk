@@ -50,6 +50,14 @@ except ImportError:
     legacy_bakery_groups = None
 
 
+@dataclass(frozen=True)
+class FormSpecCallable:
+    spec: Callable[[], ruleset_api_v1.form_specs.FormSpec[Any]]
+
+    def __call__(self) -> ruleset_api_v1.form_specs.FormSpec:
+        return self.spec()
+
+
 GENERATED_GROUP_PREFIX = "gen-"
 
 RULESET_DOC_REFERENCES_MAP = {
@@ -212,7 +220,7 @@ def _convert_to_legacy_check_parameter_rulespec(
             item_spec=item_spec,
             match_type="dict",
             parameter_valuespec=partial(
-                convert_to_legacy_valuespec, to_convert.parameter_form(), localizer
+                convert_to_legacy_valuespec, FormSpecCallable(to_convert.parameter_form), localizer
             ),
             is_deprecated=to_convert.is_deprecated,
             create_manual_check=False,
@@ -231,7 +239,7 @@ def _convert_to_legacy_check_parameter_rulespec(
         ),
         match_type="dict",
         parameter_valuespec=partial(
-            convert_to_legacy_valuespec, to_convert.parameter_form(), localizer
+            convert_to_legacy_valuespec, FormSpecCallable(to_convert.parameter_form), localizer
         ),
         create_manual_check=False,
         is_cloud_and_managed_edition_only=edition_only is Edition.CCE,
@@ -264,7 +272,9 @@ def _convert_to_legacy_manual_check_parameter_rulespec(
         ),
         check_group_name=to_convert.name,
         parameter_valuespec=(
-            partial(convert_to_legacy_valuespec, to_convert.parameter_form(), localizer)
+            partial(
+                convert_to_legacy_valuespec, FormSpecCallable(to_convert.parameter_form), localizer
+            )
             if to_convert.parameter_form is not None
             else None
         ),
@@ -343,7 +353,9 @@ def _convert_to_legacy_host_rule_spec_rulespec(
     return legacy_rulespecs.HostRulespec(
         group=_convert_to_legacy_rulespec_group(legacy_main_group, to_convert.topic, localizer),
         name=config_scope_prefix(to_convert.name),
-        valuespec=partial(convert_to_legacy_valuespec, to_convert.parameter_form(), localizer),
+        valuespec=partial(
+            convert_to_legacy_valuespec, FormSpecCallable(to_convert.parameter_form), localizer
+        ),
         title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
         is_deprecated=to_convert.is_deprecated,
         match_type=_convert_to_legacy_match_type(to_convert),
@@ -361,7 +373,9 @@ def _convert_to_legacy_agent_config_rule_spec(
         group=_convert_to_legacy_rulespec_group(legacy_main_group, to_convert.topic, localizer),
         name=RuleGroup.AgentConfig(to_convert.name),
         valuespec=partial(
-            _transform_agent_config_rule_spec_match_type, to_convert.parameter_form(), localizer
+            _transform_agent_config_rule_spec_match_type,
+            FormSpecCallable(to_convert.parameter_form),
+            localizer,
         ),
         title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
         is_deprecated=to_convert.is_deprecated,
@@ -388,7 +402,7 @@ def _remove_agent_config_match_type_key(value: object) -> object:
 
 
 def _transform_agent_config_rule_spec_match_type(
-    parameter_form: ruleset_api_v1.form_specs.Dictionary, localizer: Callable[[str], str]
+    parameter_form: FormSpecCallable, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.ValueSpec:
     return Transform(
         convert_to_legacy_valuespec(parameter_form, localizer),
@@ -408,7 +422,9 @@ def _convert_to_legacy_service_rule_spec_rulespec(
         ),
         item_type="service",
         name=config_scope_prefix(to_convert.name),
-        valuespec=partial(convert_to_legacy_valuespec, to_convert.parameter_form(), localizer),
+        valuespec=partial(
+            convert_to_legacy_valuespec, FormSpecCallable(to_convert.parameter_form), localizer
+        ),
         title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
         is_deprecated=to_convert.is_deprecated,
         match_type=(
@@ -744,8 +760,12 @@ def _convert_to_inner_legacy_valuespec(
 
 
 def convert_to_legacy_valuespec(
-    to_convert: ruleset_api_v1.form_specs.FormSpec, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.FormSpec | FormSpecCallable,
+    localizer: Callable[[str], str],
 ) -> legacy_valuespecs.ValueSpec:
+    if isinstance(to_convert, FormSpecCallable):
+        to_convert = to_convert()
+
     def allow_empty_value_wrapper(
         update_func: Callable[[object], object],
     ) -> Callable[[object], object]:

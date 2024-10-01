@@ -22,6 +22,8 @@ from cmk.gui import inventory as legacy_inventory_groups
 from cmk.gui import valuespec as legacy_valuespecs
 from cmk.gui import wato as legacy_wato
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs.private import DictionaryExtended
+from cmk.gui.form_specs.vue.visitors import DefaultValue as VueDefaultValue
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
 from cmk.gui.utils.urls import DocReference
@@ -698,7 +700,7 @@ def _convert_to_inner_legacy_valuespec(
         case ruleset_api_v1.form_specs.RegularExpression():
             return _convert_to_legacy_regular_expression(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.Dictionary():
+        case ruleset_api_v1.form_specs.Dictionary() | DictionaryExtended():
             return _convert_to_legacy_dictionary(to_convert, localizer)
 
         case ruleset_api_v1.form_specs.SingleChoice():
@@ -1061,6 +1063,10 @@ def _get_packed_value(
     packed_dict: dict,
 ) -> object:
     match nested_form, value_to_pack:
+        case DictionaryExtended() as dict_form, dict() as dict_to_pack:
+            return _pack_dict_groups(
+                dict_form.elements, dict_form.ignored_elements, dict_to_pack, packed_dict
+            )
         case ruleset_api_v1.form_specs.Dictionary() as dict_form, dict() as dict_to_pack:
             return _pack_dict_groups(
                 dict_form.elements, dict_form.ignored_elements, dict_to_pack, packed_dict
@@ -1088,7 +1094,7 @@ def _pack_dict_groups(
         nested_packed_dict = {}
         if isinstance(
             (nested_form := dict_elements[key_to_pack].parameter_form),
-            ruleset_api_v1.form_specs.Dictionary,
+            (ruleset_api_v1.form_specs.Dictionary, DictionaryExtended),
         ):
             # handle innermost migrations
             if nested_form.migrate is not None:
@@ -1127,6 +1133,10 @@ def _get_unpacked_value(
     nested_form: ruleset_api_v1.form_specs.FormSpec, value_to_unpack: object
 ) -> object:
     match nested_form, value_to_unpack:
+        case DictionaryExtended() as dict_form, dict() as dict_to_unpack:
+            return _unpack_dict_group(
+                dict_form.elements, dict_form.ignored_elements, dict_to_unpack
+            )
         case ruleset_api_v1.form_specs.Dictionary() as dict_form, dict() as dict_to_unpack:
             return _unpack_dict_group(
                 dict_form.elements, dict_form.ignored_elements, dict_to_unpack
@@ -1190,13 +1200,24 @@ def _convert_to_dict_legacy_validation(
 
 
 def _convert_to_legacy_dictionary(
-    to_convert: ruleset_api_v1.form_specs.Dictionary, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.Dictionary | DictionaryExtended,
+    localizer: Callable[[str], str],
 ) -> legacy_valuespecs.Transform | legacy_valuespecs.Dictionary:
     ungrouped_element_key_props, ungrouped_elements = _get_ungrouped_elements(
         to_convert.elements, localizer
     )
     grouped_elements_map, hidden_group_keys = _group_elements(to_convert.elements, localizer)
     required_group_keys = set(grouped_elements_map.keys()) - hidden_group_keys
+
+    default_keys: list[str] | None = None
+    if isinstance(to_convert, DictionaryExtended) and (prefill := to_convert.prefill) is not None:
+        default_keys = []
+        for key, value in prefill.value.items():
+            if not isinstance(value, VueDefaultValue):
+                raise ValueError(
+                    "Unable to migrate prefill value. Only able to use Vue-DefaultValue as value for key."
+                )
+            default_keys.append(key)
 
     return legacy_valuespecs.Transform(
         legacy_valuespecs.Dictionary(
@@ -1207,6 +1228,7 @@ def _convert_to_legacy_dictionary(
             required_keys=ungrouped_element_key_props.required + list(required_group_keys),
             ignored_keys=list(to_convert.ignored_elements),
             hidden_keys=ungrouped_element_key_props.hidden + list(hidden_group_keys),
+            default_keys=default_keys,
             validate=(
                 _convert_to_dict_legacy_validation(
                     to_convert.custom_validate,

@@ -61,6 +61,11 @@ def test_plugin_update(
     target_data_status_0 = {}
     for host_name in get_host_names(test_site_update):
         target_data[host_name] = test_site_update.get_host_services(host_name)
+
+        for skipped_check in SKIPPED_CHECKS:
+            if skipped_check in target_data[host_name]:
+                target_data[host_name].pop(skipped_check)
+
         target_data_status_0[host_name] = get_services_with_status(target_data[host_name], 0)
 
         not_found_services = [

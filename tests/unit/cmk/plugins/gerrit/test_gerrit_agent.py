@@ -8,13 +8,13 @@ import pytest
 
 from cmk.utils.semantic_version import SemanticVersion
 
-from cmk.special_agents import agent_gerrit
-from cmk.special_agents.agent_gerrit import LatestVersions, SectionName, Sections
+from cmk.plugins.gerrit.lib import agent
+from cmk.plugins.gerrit.lib.agent import LatestVersions, SectionName, Sections
 
 
 def test_parse_arguments() -> None:
     argv = ["--user", "abc", "--password", "123", "review.gerrit.com"]
-    args = agent_gerrit.parse_arguments(argv)
+    args = agent.parse_arguments(argv)
 
     value = (args.user, args.password, args.hostname)
     expected = ("abc", "123", "review.gerrit.com")
@@ -27,7 +27,7 @@ def test_fetch_section_data() -> None:
         def collect(self) -> Sections:
             return {SectionName("foobar"): {"foo": "bar"}}
 
-    value = agent_gerrit.collect_sections(DummySectionCollector())
+    value = agent.collect_sections(DummySectionCollector())
     expected = {SectionName("foobar"): {"foo": "bar"}}
 
     assert value == expected
@@ -40,7 +40,7 @@ def test_write_sections(capsys: pytest.CaptureFixture) -> None:
             "latest": {"major": None, "minor": "1.3.4", "patch": "1.2.5"},
         }
     }
-    agent_gerrit.write_sections(sections)
+    agent.write_sections(sections)
 
     value = capsys.readouterr().out
     expected = """\

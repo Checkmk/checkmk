@@ -18,6 +18,7 @@ from cmk.plugins.alertmanager.special_agents import agent_alertmanager
 from cmk.plugins.bazel.lib import agent as agent_bazel
 from cmk.plugins.fritzbox.lib import agent as agent_fritzbox
 from cmk.plugins.gcp.special_agents import agent_gcp, agent_gcp_status
+from cmk.plugins.gerrit.lib import agent as agent_gerrit
 from cmk.plugins.jenkins.lib import jenkins as agent_jenkins
 from cmk.plugins.prometheus.special_agents import agent_prometheus
 from cmk.special_agents import (
@@ -32,7 +33,6 @@ from cmk.special_agents import (
     agent_couchbase,
     agent_datadog,
     agent_elasticsearch,
-    agent_gerrit,
     agent_graylog,
     agent_hivemanager_ng,
     agent_innovaphone,

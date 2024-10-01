@@ -5,7 +5,7 @@
 
 import sys
 
-from cmk.special_agents.agent_gerrit import main
+from cmk.plugins.gerrit.lib import agent
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(agent.main())

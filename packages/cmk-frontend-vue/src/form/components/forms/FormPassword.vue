@@ -32,8 +32,10 @@ immediateWatch(() => props.backendValidation, updateValidation)
 const passwordType = computed({
   get: () => data.value[0] as string,
   set: (value: string) => {
-    data.value[0] = value as PasswordType
-    data.value[1] = ''
+    const passwordType = value as PasswordType
+    const defaultStoreChoice = props.spec.password_store_choices[0]?.password_id ?? ''
+    data.value[0] = passwordType
+    data.value[1] = passwordType === 'stored_password' ? defaultStoreChoice : ''
     data.value[2] = ''
     data.value[3] = false
   }

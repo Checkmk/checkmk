@@ -91,3 +91,21 @@ test('FormPassword updates validation but dont touch value', async () => {
   const element = screen.getByLabelText<HTMLInputElement>('explicit password')
   expect(element.value).toBe('some_password')
 })
+
+test('FormPassword selected first password store choice if present', async () => {
+  render(FormPassword, {
+    props: {
+      spec,
+      data: ['explicit_password', '', '', true],
+      backendValidation: []
+    }
+  })
+
+  const element = screen.getByRole<HTMLSelectElement>('combobox')
+  await fireEvent.update(element, 'stored_password')
+
+  const storeChoice = await screen.getByRole<HTMLSelectElement>('combobox', {
+    name: 'password store choice'
+  })
+  expect(storeChoice.value).toBe('pw_id0')
+})

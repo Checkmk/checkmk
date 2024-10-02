@@ -3110,7 +3110,15 @@ class ABCNotificationParameterMode(WatoMode):
 
     def _form_spec(self) -> DictionaryExtended:
         notification_parameter = self._notification_parameter()
-        return notification_parameter()._form_spec()  # pylint: disable=protected-access
+        try:
+            return notification_parameter()._form_spec()  # pylint: disable=protected-access
+        except NotImplementedError:
+            raise MKUserError(
+                None,
+                _(
+                    "This page is currently not implemented, needs FormSpec migration of NotificationParameter."
+                ),
+            )
 
     def _notification_parameter(self) -> type[NotificationParameter]:
         return notification_parameter_registry[self._method()]

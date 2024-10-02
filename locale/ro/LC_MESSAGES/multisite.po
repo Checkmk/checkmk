@@ -404,6 +404,10 @@ msgstr "%d zile"
 msgid "%d days ago"
 msgstr "%d zile în urmă"
 
+#, fuzzy, python-format
+msgid "%d defined parameter properties"
+msgstr "Proprietăți generale"
+
 #, python-format
 msgid "%d errors occured:"
 msgstr "%d au apărut erori:"
@@ -3216,6 +3220,10 @@ msgstr "Recunoașterea problemei"
 msgid "Acknowledging problems"
 msgstr "Recunoașterea problemelor"
 
+#, fuzzy
+msgid "Acknowledgment author"
+msgstr "Autorul Confirmației"
+
 msgid "Acknowledgment expires:"
 msgstr "Confirmarea expiră:"
 
@@ -3597,6 +3605,10 @@ msgstr "Adaugă %s"
 msgid "Add %s configuration"
 msgstr "Configurația RRA"
 
+#, fuzzy, python-format
+msgid "Add %s notification parameter"
+msgstr "Adăugați o regulă de notificare"
+
 msgid "Add & remove folders"
 msgstr "Adaugă sau șterge directoare"
 
@@ -3642,10 +3654,6 @@ msgstr "Adaugă Excepție"
 
 msgid "Add Group"
 msgstr "Adăugați un grup"
-
-msgid "Add HTML section above table (e.g. title, description…)"
-msgstr ""
-"Adăugați secțiunea HTML deasupra tabelului (de exemplu, titlu, descriere...)"
 
 msgid "Add LDAP connection"
 msgstr "Adăugați conexiunea LDAP"
@@ -3998,6 +4006,10 @@ msgstr "Adăugați un nou scalar"
 msgid "Add new service"
 msgstr "Adăugați un nou serviciu"
 
+#, fuzzy
+msgid "Add new smarthost"
+msgstr "Adăugați o nouă macro"
+
 msgid "Add new status"
 msgstr "Adăugați un nou statut"
 
@@ -4038,6 +4050,10 @@ msgstr "Adăugarea sau modificarea executabilelor"
 
 msgid "Add page element"
 msgstr "Adăugați un element de pagină"
+
+#, fuzzy
+msgid "Add parameter"
+msgstr "Parametrii modelului"
 
 msgid "Add pattern"
 msgstr "Adaugă model/tipar"
@@ -4310,6 +4326,10 @@ msgid "Additional agent labels to send during registration"
 msgstr ""
 "Etichete suplimentare pentru agenți care trebuie trimise în timpul "
 "înregistrării"
+
+#, fuzzy
+msgid "Additional details"
+msgstr "Opțiuni adiționale"
 
 msgid "Additional header lines"
 msgstr "Linii de header adiționale"
@@ -9199,8 +9219,9 @@ msgstr "Importul de gazde în masă"
 msgid "Bulk move"
 msgstr "Mutarea în vrac"
 
-msgid "Bulk notifications with graphs (default: 5)"
-msgstr "Notificări în masă cu grafice (implicit: 5)"
+#, fuzzy
+msgid "Bulk notifications"
+msgstr "Deschideți notificări în masă"
 
 msgid "Bulk removal of explicit attributes"
 msgstr "Eliminarea în bloc a atributelor explicite"
@@ -9557,14 +9578,6 @@ msgstr ""
 "gazdele prin SNMP v1/v2. Această regulă poate fi utilizată pentru a "
 "personaliza acreditările care urmează să fie utilizate la contactarea "
 "gazdelor prin SNMP."
-
-msgid ""
-"By default all multiple graphs in emails are displayed floating nearby. You "
-"can enable this option to show the graphs among each other."
-msgstr ""
-"În mod implicit, toate graficele multiple din e-mailuri sunt afișate în mod "
-"plutitor în apropiere. Puteți activa această opțiune pentru a afișa "
-"graficele unele printre altele."
 
 msgid "By default all of the sections will be executed."
 msgstr "În mod implicit, toate secțiunile vor fi executate."
@@ -11343,6 +11356,14 @@ msgstr[2] "Etichete de gazdă modificate: "
 msgid "Changed host selection has been saved."
 msgstr "Selecția modificată a gazdei a fost salvată."
 
+#, fuzzy, python-format
+msgid "Changed notification parameter %d"
+msgstr "Regula de notificare modificată %d"
+
+#, fuzzy, python-format
+msgid "Changed notification parameter %s"
+msgstr "Regula de notificare modificată %d"
+
 #, python-format
 msgid "Changed notification rule %d"
 msgstr "Regula de notificare modificată %d"
@@ -11361,6 +11382,11 @@ msgstr "A fost schimbată poziția lui %s %d"
 #, python-format
 msgid "Changed position of connection %s to %d"
 msgstr "A schimbat poziția conexiunii %s în %d"
+
+#, fuzzy, python-format
+msgid "Changed position of notification parameter %d"
+msgstr ""
+"A fost modificată poziția regulii de notificare %d a utilizatorului %s."
 
 #, python-format
 msgid "Changed position of notification rule %d of user %s"
@@ -13438,6 +13464,10 @@ msgstr "Finalizați restaurarea"
 msgid "Complete tree"
 msgstr "Arbore complet"
 
+#, fuzzy
+msgid "Complete variable list"
+msgstr "Lista completă de variabile (pentru testare)"
+
 msgid "Complete variable list (for testing)"
 msgstr "Lista completă de variabile (pentru testare)"
 
@@ -13981,20 +14011,6 @@ msgstr ""
 "Configurați utilizatorul sau grupul care să primească notificările, "
 "furnizând aici cheia de utilizator sau de grup. Cheia poate fi obținută de "
 "pe site-ul Pushover."
-
-#, fuzzy
-msgid ""
-"Configure this to have the notification plug-in connect directly to the SMTP "
-"server. This has the advantage of providing better error messages in case of "
-"an error, but it does require more configuration and is strictly "
-"synchronous. So we advice use only on enterprise installations using the "
-"notification spooler."
-msgstr ""
-"Configurarea acestui lucru pentru ca pluginul de notificare să se conecteze "
-"direct la serverul smtp. Acest lucru are avantajul de a oferi mesaje de "
-"eroare mai bune în caz de eroare, dar necesită mai multă configurare și este "
-"strict sincronă, așa că vă recomandăm să o utilizați numai în cazul "
-"instalațiilor de întreprindere care utilizează spoolerul de notificare."
 
 msgid ""
 "Configure thresholds that apply to clusters based on how many nodes they "
@@ -14556,6 +14572,10 @@ msgstr "Informații contextuale"
 msgid "Context information about this connection"
 msgstr "Informații contextuale despre această conexiune"
 
+#, fuzzy
+msgid "Context information about this parameter"
+msgstr "Informații contextuale despre această regulă"
+
 msgid "Context information about this rule"
 msgstr "Informații contextuale despre această regulă"
 
@@ -15097,6 +15117,10 @@ msgstr "Creați o copie a acestei conexiuni"
 msgid "Create a copy of this group"
 msgstr "Creați o copie a acestui grup"
 
+#, fuzzy
+msgid "Create a copy of this notification parameter"
+msgstr "Creați o copie a acestei reguli de notificare"
+
 msgid "Create a copy of this notification rule"
 msgstr "Creați o copie a acestei reguli de notificare"
 
@@ -15396,6 +15420,10 @@ msgstr "A creat o nouă gazdă %s."
 #, python-format
 msgid "Created new host tag group '%s'"
 msgstr "A creat un nou grup de etichete gazdă '%s'"
+
+#, fuzzy
+msgid "Created new notification parameter"
+msgstr "A creat o nouă regulă de notificare"
 
 msgid "Created new notification rule"
 msgstr "A creat o nouă regulă de notificare"
@@ -15846,6 +15874,11 @@ msgstr "Proiectare GUI personalizată de %s"
 msgid "Custom Graph"
 msgstr "Grafic personalizat"
 
+#, fuzzy
+msgid "Custom HTML section (e.g. title, description…)"
+msgstr ""
+"Adăugați secțiunea HTML deasupra tabelului (de exemplu, titlu, descriere...)"
+
 msgid "Custom Icons"
 msgstr "Icoane personalizate"
 
@@ -15964,8 +15997,14 @@ msgstr "Starea sondei personalizate"
 msgid "Custom profile"
 msgstr "Profil personalizat"
 
+msgid "Custom recipient of \"Reply to\""
+msgstr ""
+
 msgid "Custom search query"
 msgstr "Interogare de căutare personalizată"
+
+msgid "Custom sender (\"From\")"
+msgstr ""
 
 msgid "Custom service attributes"
 msgstr "Atributele serviciilor personalizate"
@@ -17520,6 +17559,10 @@ msgstr "Ștergeți postul #%d"
 msgid "Delete last alert handler rule"
 msgstr "Ștergeți ultima regulă de gestionare a alertelor"
 
+#, fuzzy, python-format
+msgid "Delete notification parameter #%d"
+msgstr "Ștergerea regulii de notificare #%d"
+
 #, python-format
 msgid "Delete notification rule #%d"
 msgstr "Ștergerea regulii de notificare #%d"
@@ -17676,6 +17719,10 @@ msgstr "Ștergeți acest logo"
 msgid "Delete this metric"
 msgstr "Ștergeți această măsurătoare"
 
+#, fuzzy
+msgid "Delete this notification parameter"
+msgstr "Ștergeți această regulă de notificare"
+
 msgid "Delete this notification rule"
 msgstr "Ștergeți această regulă de notificare"
 
@@ -17772,6 +17819,10 @@ msgstr "Dosar șters %s"
 #, python-format
 msgid "Deleted host %s"
 msgstr "Gazdă ștearsă %s"
+
+#, fuzzy, python-format
+msgid "Deleted notification parameter %d"
+msgstr "Ștergerea regulii de notificare #%d"
 
 #, python-format
 msgid "Deleted notification rule %d of user %s"
@@ -19079,9 +19130,6 @@ msgstr ""
 "Afișați un avertisment dacă un LUN nu este numai pentru citire. Fără această "
 "setare, va fi afișat un avertisment dacă un LUN este numai pentru citire."
 
-msgid "Display additional information"
-msgstr "Afișarea de informații suplimentare"
-
 msgid "Display additional messages"
 msgstr "Afișarea mesajelor suplimentare"
 
@@ -19104,9 +19152,6 @@ msgstr "Afișarea etichetelor axei pentru intervalul de date selectat/automat"
 
 msgid "Display dashboard title"
 msgstr "Afișați titlul tabloului de bord"
-
-msgid "Display graphs among each other"
-msgstr "Afișarea graficelor între ele"
 
 msgid "Display historic data since the last"
 msgstr "Afișarea datelor istorice de la ultima"
@@ -20802,6 +20847,10 @@ msgstr "Editați"
 msgid "Edit %s"
 msgstr "Editare %s"
 
+#, fuzzy, python-format
+msgid "Edit %s notification parameter %s"
+msgstr "Editarea regulii de notificare %d"
+
 #, python-format
 msgid "Edit %s: %s"
 msgstr "Editați %s: %s"
@@ -21108,6 +21157,10 @@ msgstr "Editați acest element"
 msgid "Edit this host"
 msgstr "Editați această gazdă"
 
+#, fuzzy
+msgid "Edit this notification parameter"
+msgstr "Editați această regulă de notificare"
+
 msgid "Edit this notification rule"
 msgstr "Editați această regulă de notificare"
 
@@ -21364,6 +21417,14 @@ msgstr "Adresa de e-mail utilizată pentru identificarea contului"
 #, fuzzy
 msgid "Email addresses to mail PDF reports to"
 msgstr "Adresele de e-mail la care să trimiteți rapoartele PDF"
+
+#, fuzzy
+msgid "Email body/content"
+msgstr "Email trimis"
+
+#, fuzzy
+msgid "Email header"
+msgstr "Adresa de e-mail"
 
 msgid "Email sent"
 msgstr "Email trimis"
@@ -25579,6 +25640,10 @@ msgstr "Regula de notificare globală"
 msgid "Global notification rules"
 msgstr "Reguli globale de notificare"
 
+#, fuzzy
+msgid "Global services"
+msgstr "Toate serviciile"
+
 msgid "Global services to monitor"
 msgstr "Servicii globale de monitorizare"
 
@@ -25779,17 +25844,11 @@ msgstr "Carduri grafice"
 msgid "Graphs"
 msgstr "Grafice"
 
-msgid "Graphs are shown among each other"
-msgstr "Graficele sunt afișate între ele"
-
 msgid "Graphs for averaged single-core utilizations"
 msgstr "Grafice pentru media utilizărilor pe un singur nucleu"
 
 msgid "Graphs for individual cores"
 msgstr "Grafice pentru nuclee individuale"
-
-msgid "Graphs per notification (default: 5)"
-msgstr "Grafice pe notificare (implicit: 5)"
 
 msgid "Graylog"
 msgstr "Graylog"
@@ -26074,6 +26133,10 @@ msgstr "HPE StoreOnce prin REST API 4.x"
 
 msgid "HR: Used memory via SNMP"
 msgstr "HR: Memorie utilizată prin SNMP"
+
+#, fuzzy
+msgid "HTML Email parameters"
+msgstr "Parametrii modelului"
 
 #, fuzzy
 msgid "HTML email"
@@ -27410,6 +27473,10 @@ msgstr "Ascundeți numele variabilelor de configurare"
 #, fuzzy
 msgid "Hide notification bulks"
 msgstr "reguli de notificare"
+
+#, fuzzy
+msgid "Hide other recipients: Send individual notifications to each recipient"
+msgstr "Trimiteți notificări separate fiecărui destinatar"
 
 msgid "Hide response from socket"
 msgstr "Ascundeți răspunsul de la soclu"
@@ -29864,6 +29931,10 @@ msgstr "IP - regiune - ID instanță"
 
 msgid "IP Address"
 msgstr "Adresa IP"
+
+#, fuzzy
+msgid "IP Address of Hosts"
+msgstr "Adresa IP a gazdei"
 
 msgid "IP address"
 msgstr "Adresa IP"
@@ -41969,6 +42040,10 @@ msgstr "Nu a fost introdusă nicio parolă. Vă rugăm să introduceți o parol�
 msgid "No password provided"
 msgstr "Din magazinul de parole"
 
+#, fuzzy
+msgid "No password selected"
+msgstr "Din magazinul de parole"
+
 msgid "No pending changes"
 msgstr "Nu există modificări în curs de desfășurare"
 
@@ -42043,6 +42118,10 @@ msgstr "Fără căutare"
 
 msgid "No search, specify list of arguments"
 msgstr "Fără căutare, specificați lista de argumente"
+
+#, fuzzy
+msgid "No smarthosts"
+msgstr "Smarthost-uri"
 
 msgid "No snapshot to restore available."
 msgstr "Nu este disponibil niciun instantaneu pentru restaurare."
@@ -42505,6 +42584,9 @@ msgstr "Notificare"
 msgid "Notation: %s"
 msgstr "Adnotare: %s"
 
+msgid "Note down the generated Access key ID and Secret access key."
+msgstr ""
+
 msgid ""
 "Note that since OpenSSH 7.6, only version 2 is supported. Therefore, newer "
 "versions neither use nor report this configuration variable anymore."
@@ -42670,6 +42752,10 @@ msgstr "Nivelul jurnalului de notificare"
 
 msgid "Notification method"
 msgstr "Metoda de notificare"
+
+#, fuzzy
+msgid "Notification parameter"
+msgstr "Faza de notificare"
 
 #, fuzzy
 msgid "Notification period"
@@ -43116,6 +43202,14 @@ msgstr "Numărul de dosare care trebuie create în fiecare nivel"
 #, fuzzy
 msgid "Number of goroutines"
 msgstr "Numărul de încercări repetate"
+
+#, fuzzy
+msgid "Number of graphs per event (default: 5)"
+msgstr "Grafice pe notificare (implicit: 5)"
+
+#, fuzzy
+msgid "Number of graphs per notification (default: 5)"
+msgstr "Grafice pe notificare (implicit: 5)"
 
 msgid "Number of healthy hosts lower levels"
 msgstr "Numărul de gazde sănătoase niveluri inferioare"
@@ -46471,6 +46565,10 @@ msgstr ""
 msgid "Parallelize core config creation"
 msgstr "Crearea în paralel a configurației de bază"
 
+#, fuzzy
+msgid "Parameter"
+msgstr "Parametrii"
+
 msgid "Parameter groups"
 msgstr "Grupuri de parametri"
 
@@ -46479,6 +46577,10 @@ msgstr "Grupuri de parametri pe regiune"
 
 msgid "Parameter name"
 msgstr "Numele parametrului"
+
+#, fuzzy
+msgid "Parameter properties"
+msgstr "Proprietățile pachetului"
 
 msgid "Parameter rule set"
 msgstr "Set de reguli de parametri"
@@ -48363,6 +48465,10 @@ msgstr "Plugin-uri, verificări locale și MRPE pentru utilizatorii non-root"
 
 msgid "Plugin"
 msgstr "Plugin"
+
+#, fuzzy
+msgid "Plugin output"
+msgstr "Ieșirea plugin-ului"
 
 msgid "Plugins"
 msgstr "Plugin-uri"
@@ -50897,6 +51003,10 @@ msgstr "Eliminați perioadele de întrerupere programate?"
 msgid "Remove service"
 msgstr "Îndepărtarea serviciului"
 
+#, fuzzy
+msgid "Remove smarthost"
+msgstr "Eliminați această intrare"
+
 msgid "Remove style"
 msgstr "Eliminați stilul"
 
@@ -52020,7 +52130,7 @@ msgstr "Timpii de procesare a returului în cadrul datelor de performanță"
 
 msgid ""
 "Return to Checkmk, define a unique AWS account name, and use the Access key "
-"and Secret access key below."
+"ID and Secret access key below."
 msgstr ""
 
 msgid ""
@@ -53205,9 +53315,6 @@ msgstr "Salvați ca nou aspect pentru această agregare"
 msgid "Save response"
 msgstr "Salvați răspunsul"
 
-msgid "Save the generated Access key and Secret access key."
-msgstr ""
-
 msgid "Save this host and go to"
 msgstr "Salvați această gazdă și mergeți la"
 
@@ -54199,10 +54306,6 @@ msgstr ""
 "Trimiteți indiferent de restricții, de exemplu, perioada de notificare sau "
 "notificări dezactivate (forțate)"
 
-#, fuzzy
-msgid "Send separate notifications to every recipient"
-msgstr "Trimiteți notificări separate fiecărui destinatar"
-
 msgid "Send service metrics to Graphite"
 msgstr "Trimiteți parametrii serviciului către Graphite"
 
@@ -54891,6 +54994,10 @@ msgstr "Serviciile site-ului"
 msgid "Services per cluster"
 msgstr "Servicii per cluster"
 
+#, fuzzy
+msgid "Services per region"
+msgstr "Servicii de monitorizat pe regiune"
+
 msgid "Services per region to monitor"
 msgstr "Servicii de monitorizat pe regiune"
 
@@ -55428,7 +55535,7 @@ msgstr ""
 msgid ""
 "Sets a limit for the number of notifications in a bulk for which graphs are "
 "displayed. If you do not use bulk notifications this option is ignored. Note "
-"that each graph increases the size of the mail and takes time to renderon "
+"that each graph increases the size of the mail and takes time to render on "
 "the monitoring server. Therefore, large bulks may exceed the maximum size "
 "for attachements or the plug-in may run into a timeout so that a failed "
 "notification is produced."
@@ -55812,6 +55919,10 @@ msgstr "Afișați casetele de selectare"
 msgid "Show column headings"
 msgstr "Afișați titlurile coloanelor"
 
+#, fuzzy
+msgid "Show contact groups"
+msgstr "Grupuri de contact gazdă"
+
 msgid "Show context"
 msgstr "Afișați contextul"
 
@@ -55878,7 +55989,15 @@ msgstr "Afișați indicii în meniul 'Utilizator' meniu"
 msgid "Show historic values"
 msgstr "Afișați valorile istorice"
 
+#, fuzzy
+msgid "Show host labels"
+msgstr "Afișați în tabelele gazdă"
+
 msgid "Show host status"
+msgstr "Afișați starea gazdei"
+
+#, fuzzy
+msgid "Show host tags"
 msgstr "Afișați starea gazdei"
 
 msgid "Show icon linking to Setup parameter editor for services"
@@ -55958,6 +56077,10 @@ msgstr "Arată mai mult / Arată mai puțin"
 msgid "Show notification bulks"
 msgstr "reguli de notificare"
 
+#, fuzzy
+msgid "Show notification rule that triggered the notification"
+msgstr "Ordinea de sortare a notificărilor pentru notificările în masă"
+
 msgid "Show number of groups"
 msgstr "Afișați numărul de grupuri"
 
@@ -56019,6 +56142,10 @@ msgstr "Afișați regulile folosind acest %s."
 
 msgid "Show separate result for each SLA period"
 msgstr "Afișați un rezultat separat pentru fiecare perioadă SLA"
+
+#, fuzzy
+msgid "Show service labels"
+msgstr "Etichete de servicii"
 
 #, fuzzy
 msgid "Show service name"
@@ -59481,10 +59608,12 @@ msgstr "Denumirea secțiunii"
 msgid "Subject for bulk notifications"
 msgstr "Subiect pentru notificări în masă"
 
-msgid "Subject for host notifications"
+#, fuzzy
+msgid "Subject line for host notifications"
 msgstr "Subiect pentru notificările gazdelor"
 
-msgid "Subject for service notifications"
+#, fuzzy
+msgid "Subject line for service notifications"
 msgstr "Subiect pentru notificările de serviciu"
 
 msgid "Submit"
@@ -59878,10 +60007,6 @@ msgstr "Sincronă"
 
 msgid "Syncing"
 msgstr "Sincronizare"
-
-#, fuzzy
-msgid "Syncing broker certificates"
-msgstr "Certificat de router SAP"
 
 msgid "Synology Updates"
 msgstr "Actualizări Synology"
@@ -62464,25 +62589,6 @@ msgstr "Elementul nu poate fi găsit în tabloul de bord."
 
 msgid "The element does not exist."
 msgstr "Elementul nu există."
-
-msgid ""
-"The email address and visible name used in the From header of notifications "
-"messages. If no email address is specified the default address is "
-"<tt>OMD_SITE@FQDN</tt> is used. If the environment variable <tt>OMD_SITE</"
-"tt> is not set it defaults to <tt>checkmk</tt>."
-msgstr ""
-"Adresa de e-mail și numele vizibil utilizate în antetul From (De la) al "
-"mesajelor de notificare. Dacă nu se specifică nicio adresă de e-mail, se "
-"utilizează adresa implicită <tt>OMD_SITE@FQDN</tt>. Dacă variabila de mediu "
-"<tt>OMD_SITE</tt> nu este setată, se utilizează în mod implicit <tt>checkmk</"
-"tt>."
-
-msgid ""
-"The email address and visible name used in the Reply-To header of "
-"notifications messages."
-msgstr ""
-"Adresa de e-mail și numele vizibil utilizate în antetul Reply-To al "
-"mesajelor de notificare."
 
 #, fuzzy
 msgid ""
@@ -73811,6 +73917,9 @@ msgstr "A încercat să înregistreze o specificație de reguli incompatibilă: 
 msgid "Trivial change"
 msgstr "Schimbare banală"
 
+msgid "Troubleshooting/testing settings"
+msgstr ""
+
 msgid ""
 "Truncate content at this amount of characters.A zero value mean not to "
 "truncate"
@@ -82220,6 +82329,10 @@ msgstr ""
 "Nu ați creat încă niciun agent <a href='%s' target='_blank'>signature keys</"
 "a>. Acest lucru este necesar."
 
+#, fuzzy
+msgid "You have not created any parameters for this notification method yet."
+msgstr "Parametrii pentru această gazdă"
+
 msgid ""
 "You have not created any rule packs yet. The Event Console is useless unless "
 "you have activated <i>Force message archiving</i> in the global settings."
@@ -85066,6 +85179,64 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "Bulk notifications with graphs (default: 5)"
+#~ msgstr "Notificări în masă cu grafice (implicit: 5)"
+
+#~ msgid ""
+#~ "By default all multiple graphs in emails are displayed floating nearby. "
+#~ "You can enable this option to show the graphs among each other."
+#~ msgstr ""
+#~ "În mod implicit, toate graficele multiple din e-mailuri sunt afișate în "
+#~ "mod plutitor în apropiere. Puteți activa această opțiune pentru a afișa "
+#~ "graficele unele printre altele."
+
+#, fuzzy
+#~ msgid ""
+#~ "Configure this to have the notification plug-in connect directly to the "
+#~ "SMTP server. This has the advantage of providing better error messages in "
+#~ "case of an error, but it does require more configuration and is strictly "
+#~ "synchronous. So we advice use only on enterprise installations using the "
+#~ "notification spooler."
+#~ msgstr ""
+#~ "Configurarea acestui lucru pentru ca pluginul de notificare să se "
+#~ "conecteze direct la serverul smtp. Acest lucru are avantajul de a oferi "
+#~ "mesaje de eroare mai bune în caz de eroare, dar necesită mai multă "
+#~ "configurare și este strict sincronă, așa că vă recomandăm să o utilizați "
+#~ "numai în cazul instalațiilor de întreprindere care utilizează spoolerul "
+#~ "de notificare."
+
+#~ msgid "Display additional information"
+#~ msgstr "Afișarea de informații suplimentare"
+
+#~ msgid "Display graphs among each other"
+#~ msgstr "Afișarea graficelor între ele"
+
+#~ msgid "Graphs are shown among each other"
+#~ msgstr "Graficele sunt afișate între ele"
+
+#, fuzzy
+#~ msgid "Syncing broker certificates"
+#~ msgstr "Certificat de router SAP"
+
+#~ msgid ""
+#~ "The email address and visible name used in the From header of "
+#~ "notifications messages. If no email address is specified the default "
+#~ "address is <tt>OMD_SITE@FQDN</tt> is used. If the environment variable "
+#~ "<tt>OMD_SITE</tt> is not set it defaults to <tt>checkmk</tt>."
+#~ msgstr ""
+#~ "Adresa de e-mail și numele vizibil utilizate în antetul From (De la) al "
+#~ "mesajelor de notificare. Dacă nu se specifică nicio adresă de e-mail, se "
+#~ "utilizează adresa implicită <tt>OMD_SITE@FQDN</tt>. Dacă variabila de "
+#~ "mediu <tt>OMD_SITE</tt> nu este setată, se utilizează în mod implicit "
+#~ "<tt>checkmk</tt>."
+
+#~ msgid ""
+#~ "The email address and visible name used in the Reply-To header of "
+#~ "notifications messages."
+#~ msgstr ""
+#~ "Adresa de e-mail și numele vizibil utilizate în antetul Reply-To al "
+#~ "mesajelor de notificare."
 
 #~ msgid "Activate"
 #~ msgstr "Activați"

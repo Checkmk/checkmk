@@ -400,6 +400,10 @@ msgstr "%d日間"
 msgid "%d days ago"
 msgstr "%d 日前"
 
+#, fuzzy, python-format
+msgid "%d defined parameter properties"
+msgstr "一般的なプロパティ"
+
 #, python-format
 msgid "%d errors occured:"
 msgstr "%d エラーが発生しました:"
@@ -3078,6 +3082,10 @@ msgstr "問題の確認"
 msgid "Acknowledging problems"
 msgstr "問題の認知"
 
+#, fuzzy
+msgid "Acknowledgment author"
+msgstr "承認作成者"
+
 msgid "Acknowledgment expires:"
 msgstr "承認期限切れ:"
 
@@ -3445,6 +3453,10 @@ msgstr "%sを追加"
 msgid "Add %s configuration"
 msgstr "RRA構成"
 
+#, fuzzy, python-format
+msgid "Add %s notification parameter"
+msgstr "通知ルールを追加する"
+
 msgid "Add & remove folders"
 msgstr "フォルダの追加と削除"
 
@@ -3490,9 +3502,6 @@ msgstr "例外を追加"
 
 msgid "Add Group"
 msgstr "グループを追加"
-
-msgid "Add HTML section above table (e.g. title, description…)"
-msgstr "テーブル上にHTMLセクションを追加する（例：タイトル、説明文...）"
 
 msgid "Add LDAP connection"
 msgstr "LDAP接続を追加します"
@@ -3842,6 +3851,10 @@ msgstr "新しいスカラーを追加する"
 msgid "Add new service"
 msgstr "新しいサービスを追加する"
 
+#, fuzzy
+msgid "Add new smarthost"
+msgstr "新しいマクロを追加"
+
 msgid "Add new status"
 msgstr "ステータスを追加"
 
@@ -3882,6 +3895,10 @@ msgstr "実行可能ファイルの追加と変更"
 
 msgid "Add page element"
 msgstr "ページ要素を追加"
+
+#, fuzzy
+msgid "Add parameter"
+msgstr "モデルパラメータ"
 
 msgid "Add pattern"
 msgstr "パターンを追加する"
@@ -4146,6 +4163,10 @@ msgstr "追加のIPv6アドレス"
 
 msgid "Additional agent labels to send during registration"
 msgstr "登録時に送信するエージェントラベルの追加"
+
+#, fuzzy
+msgid "Additional details"
+msgstr "追加オプション"
 
 msgid "Additional header lines"
 msgstr "追加のヘッダー行"
@@ -8819,8 +8840,9 @@ msgstr "ホストの一括インポート"
 msgid "Bulk move"
 msgstr "一括移動"
 
-msgid "Bulk notifications with graphs (default: 5)"
-msgstr "グラフ付きの一括通知(デフォルト: 5)"
+#, fuzzy
+msgid "Bulk notifications"
+msgstr "一括通知を開く"
 
 msgid "Bulk removal of explicit attributes"
 msgstr "明示的な属性の一括削除"
@@ -9149,13 +9171,6 @@ msgstr ""
 "デフォルトでは、Checkmkはコミュニティ[public]を使用してSNMP v1/v2経由でホスト"
 "に接続します。このルールを使用して、SNMPを介してホストに接続するときに使用す"
 "る資格情報をカスタマイズできます。"
-
-msgid ""
-"By default all multiple graphs in emails are displayed floating nearby. You "
-"can enable this option to show the graphs among each other."
-msgstr ""
-"デフォルトでは、電子メール内のすべての複数のグラフが近くに浮かんで表示されま"
-"す。このオプションを有効にすると、グラフを相互に表示できます。"
 
 msgid "By default all of the sections will be executed."
 msgstr "デフォルトでは、すべてのセクションが実行されます。"
@@ -10855,6 +10870,14 @@ msgstr[0] "変更されたホストラベル: "
 msgid "Changed host selection has been saved."
 msgstr "変更されたホストの選択が保存されました。"
 
+#, fuzzy, python-format
+msgid "Changed notification parameter %d"
+msgstr "通知ルール %d を変更しました"
+
+#, fuzzy, python-format
+msgid "Changed notification parameter %s"
+msgstr "通知ルール %d を変更しました"
+
 #, python-format
 msgid "Changed notification rule %d"
 msgstr "通知ルール %d を変更しました"
@@ -10873,6 +10896,10 @@ msgstr "%s %dの位置を変更しました"
 #, python-format
 msgid "Changed position of connection %s to %d"
 msgstr "接続%sの位置を%dに変更しました"
+
+#, fuzzy, python-format
+msgid "Changed position of notification parameter %d"
+msgstr "ユーザー%dの通知ルール%sの位置を変更しました"
 
 #, python-format
 msgid "Changed position of notification rule %d of user %s"
@@ -12838,6 +12865,10 @@ msgstr "復元を完了します"
 msgid "Complete tree"
 msgstr "完全なツリー"
 
+#, fuzzy
+msgid "Complete variable list"
+msgstr "完全な変数リスト(テスト用)"
+
 msgid "Complete variable list (for testing)"
 msgstr "完全な変数リスト(テスト用)"
 
@@ -13352,18 +13383,6 @@ msgstr ""
 "ここでユーザーまたはグループのキーを指定して、通知を受信するようにユーザーま"
 "たはグループを構成します。キーはプッシュオーバーのウェブサイトから入手できま"
 "す。"
-
-msgid ""
-"Configure this to have the notification plug-in connect directly to the SMTP "
-"server. This has the advantage of providing better error messages in case of "
-"an error, but it does require more configuration and is strictly "
-"synchronous. So we advice use only on enterprise installations using the "
-"notification spooler."
-msgstr ""
-"通知プラグインが直接smtpサーバーに接続するように設定します。これはエラー発生"
-"時により良いエラーメッセージを提供するという利点があります。しかし、より多く"
-"の設定が必要であり、厳密な同期です。そのため、通知スプーラを使用する商用版の"
-"インストール時のみ使用することをお勧めします。"
 
 msgid ""
 "Configure thresholds that apply to clusters based on how many nodes they "
@@ -13894,6 +13913,10 @@ msgstr "コンテキスト情報"
 msgid "Context information about this connection"
 msgstr "この接続に関するコンテキスト情報"
 
+#, fuzzy
+msgid "Context information about this parameter"
+msgstr "このルールに関するコンテキスト情報"
+
 msgid "Context information about this rule"
 msgstr "このルールに関するコンテキスト情報"
 
@@ -14415,6 +14438,10 @@ msgstr "この接続のコピーを作成します"
 msgid "Create a copy of this group"
 msgstr "このグループのコピーを作成します"
 
+#, fuzzy
+msgid "Create a copy of this notification parameter"
+msgstr "この通知ルールのコピーを作成します"
+
 msgid "Create a copy of this notification rule"
 msgstr "この通知ルールのコピーを作成します"
 
@@ -14700,6 +14727,10 @@ msgstr "新しいホスト %s を作成しました。"
 #, python-format
 msgid "Created new host tag group '%s'"
 msgstr "新しいホストタググループ '%s'を作成しました"
+
+#, fuzzy
+msgid "Created new notification parameter"
+msgstr "新しい通知ルールを作成しました"
 
 msgid "Created new notification rule"
 msgstr "新しい通知ルールを作成しました"
@@ -15133,6 +15164,10 @@ msgstr "カスタムGUIデザイン %s"
 msgid "Custom Graph"
 msgstr "カスタムグラフ"
 
+#, fuzzy
+msgid "Custom HTML section (e.g. title, description…)"
+msgstr "テーブル上にHTMLセクションを追加する（例：タイトル、説明文...）"
+
 msgid "Custom Icons"
 msgstr "カスタムアイコン"
 
@@ -15249,8 +15284,14 @@ msgstr "カスタムプローブの状態"
 msgid "Custom profile"
 msgstr "カスタムプロフィール"
 
+msgid "Custom recipient of \"Reply to\""
+msgstr ""
+
 msgid "Custom search query"
 msgstr "カスタム検索クエリ"
+
+msgid "Custom sender (\"From\")"
+msgstr ""
 
 msgid "Custom service attributes"
 msgstr "カスタムサービス属性"
@@ -16748,6 +16789,10 @@ msgstr "ジョブ#%dを削除"
 msgid "Delete last alert handler rule"
 msgstr "最後のアラートハンドラルールを削除する"
 
+#, fuzzy, python-format
+msgid "Delete notification parameter #%d"
+msgstr "通知ルール#%dを削除"
+
 #, python-format
 msgid "Delete notification rule #%d"
 msgstr "通知ルール#%dを削除"
@@ -16903,6 +16948,10 @@ msgstr "ロゴを削除します"
 msgid "Delete this metric"
 msgstr "このメトリックを削除します"
 
+#, fuzzy
+msgid "Delete this notification parameter"
+msgstr "この通知ルールを削除します"
+
 msgid "Delete this notification rule"
 msgstr "この通知ルールを削除します"
 
@@ -16999,6 +17048,10 @@ msgstr "フォルダ%sを削除"
 #, python-format
 msgid "Deleted host %s"
 msgstr "削除されたホスト %s"
+
+#, fuzzy, python-format
+msgid "Deleted notification parameter %d"
+msgstr "通知ルール#%dを削除"
 
 #, python-format
 msgid "Deleted notification rule %d of user %s"
@@ -18208,9 +18261,6 @@ msgstr ""
 "LUNが読み取り専用でない場合は、警告を表示します。この設定がないと、LUNが読み"
 "取り専用の場合に警告が表示されます。"
 
-msgid "Display additional information"
-msgstr "追加情報の表示"
-
 msgid "Display additional messages"
 msgstr "追加のメッセージを表示する"
 
@@ -18232,9 +18282,6 @@ msgstr "選択された/自動データ範囲の軸ラベルを表示する"
 
 msgid "Display dashboard title"
 msgstr "ダッシュボードのタイトルを表示する"
-
-msgid "Display graphs among each other"
-msgstr "相互にグラフを表示する"
 
 msgid "Display historic data since the last"
 msgstr "前回以降の履歴データを表示する"
@@ -19817,6 +19864,10 @@ msgstr "編集"
 msgid "Edit %s"
 msgstr "%sを編集する"
 
+#, fuzzy, python-format
+msgid "Edit %s notification parameter %s"
+msgstr "通知ルール %d を編集する"
+
 #, python-format
 msgid "Edit %s: %s"
 msgstr "%s を編集: %s"
@@ -20121,6 +20172,10 @@ msgstr "この要素を編集する"
 msgid "Edit this host"
 msgstr "このホストを編集する"
 
+#, fuzzy
+msgid "Edit this notification parameter"
+msgstr "この通知ルールを編集する"
+
 msgid "Edit this notification rule"
 msgstr "この通知ルールを編集する"
 
@@ -20372,6 +20427,14 @@ msgstr "アカウントの識別に使用されるEメールアドレス"
 
 msgid "Email addresses to mail PDF reports to"
 msgstr "PDFレポートの送付先メールアドレス"
+
+#, fuzzy
+msgid "Email body/content"
+msgstr "送信済みメール"
+
+#, fuzzy
+msgid "Email header"
+msgstr "Eメールアドレス"
 
 msgid "Email sent"
 msgstr "送信済みメール"
@@ -24514,6 +24577,10 @@ msgstr "グローバル通知ルール"
 msgid "Global notification rules"
 msgstr "グローバル通知ルール"
 
+#, fuzzy
+msgid "Global services"
+msgstr "すべてのサービス"
+
 msgid "Global services to monitor"
 msgstr "監視するグローバルサービス"
 
@@ -24710,17 +24777,11 @@ msgstr "グラフィックカード"
 msgid "Graphs"
 msgstr "グラフ"
 
-msgid "Graphs are shown among each other"
-msgstr "グラフは相互に表示されます"
-
 msgid "Graphs for averaged single-core utilizations"
 msgstr "シングルコア使用率の平均のグラフ"
 
 msgid "Graphs for individual cores"
 msgstr "個々のコアのグラフ"
-
-msgid "Graphs per notification (default: 5)"
-msgstr "通知ごとのグラフ(デフォルト: 5)"
 
 msgid "Graylog"
 msgstr "Graylog"
@@ -25005,6 +25066,10 @@ msgstr "REST API 4.xを介したHPE StoreOnce"
 
 msgid "HR: Used memory via SNMP"
 msgstr "HR: SNMP経由で使用されたメモリ"
+
+#, fuzzy
+msgid "HTML Email parameters"
+msgstr "モデルパラメータ"
 
 #, fuzzy
 msgid "HTML email"
@@ -26313,6 +26378,10 @@ msgstr "構成変数の名前を非表示にする"
 #, fuzzy
 msgid "Hide notification bulks"
 msgstr "通知ルール"
+
+#, fuzzy
+msgid "Hide other recipients: Send individual notifications to each recipient"
+msgstr "すべての受信者に個別の通知を送信"
 
 msgid "Hide response from socket"
 msgstr "ソケットからの応答を非表示"
@@ -28760,6 +28829,10 @@ msgstr "IP - 範囲 - インスタンスID"
 
 msgid "IP Address"
 msgstr "IPアドレス"
+
+#, fuzzy
+msgid "IP Address of Hosts"
+msgstr "ホストのIPアドレス"
 
 msgid "IP address"
 msgstr "IPアドレス"
@@ -40623,6 +40696,10 @@ msgstr "パスワードが入力されていません。パスワードを入力
 msgid "No password provided"
 msgstr "パスワードストアから"
 
+#, fuzzy
+msgid "No password selected"
+msgstr "パスワードストアから"
+
 msgid "No pending changes"
 msgstr "保留中の変更はありません"
 
@@ -40699,6 +40776,10 @@ msgstr "検索なし"
 
 msgid "No search, specify list of arguments"
 msgstr "検索なし、引数のリストを指定"
+
+#, fuzzy
+msgid "No smarthosts"
+msgstr "スマートホスト"
 
 msgid "No snapshot to restore available."
 msgstr "復元可能なスナップショットはありません。"
@@ -41150,6 +41231,9 @@ msgstr "通知"
 msgid "Notation: %s"
 msgstr "注釈: %s"
 
+msgid "Note down the generated Access key ID and Secret access key."
+msgstr ""
+
 msgid ""
 "Note that since OpenSSH 7.6, only version 2 is supported. Therefore, newer "
 "versions neither use nor report this configuration variable anymore."
@@ -41313,6 +41397,10 @@ msgstr "通知ログレベル"
 
 msgid "Notification method"
 msgstr "通知方法"
+
+#, fuzzy
+msgid "Notification parameter"
+msgstr "通知フェーズ"
 
 #, fuzzy
 msgid "Notification period"
@@ -41752,6 +41840,14 @@ msgstr "各レベルで作成するフォルダーの数"
 #, fuzzy
 msgid "Number of goroutines"
 msgstr "再試行回数"
+
+#, fuzzy
+msgid "Number of graphs per event (default: 5)"
+msgstr "通知ごとのグラフ(デフォルト: 5)"
+
+#, fuzzy
+msgid "Number of graphs per notification (default: 5)"
+msgstr "通知ごとのグラフ(デフォルト: 5)"
 
 msgid "Number of healthy hosts lower levels"
 msgstr "正常なホストの数 下位レベル"
@@ -45056,6 +45152,10 @@ msgstr ""
 msgid "Parallelize core config creation"
 msgstr "コア構成の作成を並列化する"
 
+#, fuzzy
+msgid "Parameter"
+msgstr "パラメーター"
+
 msgid "Parameter groups"
 msgstr "パラメータグループ"
 
@@ -45064,6 +45164,10 @@ msgstr "リージョンごとのパラメータグループ"
 
 msgid "Parameter name"
 msgstr "パラメータ名"
+
+#, fuzzy
+msgid "Parameter properties"
+msgstr "パッケージのプロパティ"
 
 msgid "Parameter rule set"
 msgstr "パラメータルールセット"
@@ -46906,6 +47010,10 @@ msgstr "root以外のユーザー向けのプラグイン、ローカルチェ�
 
 msgid "Plugin"
 msgstr "プラグイン"
+
+#, fuzzy
+msgid "Plugin output"
+msgstr "プラグイン出力"
 
 msgid "Plugins"
 msgstr "プラグイン"
@@ -49436,6 +49544,10 @@ msgid "Remove service"
 msgstr "サービスを削除する"
 
 #, fuzzy
+msgid "Remove smarthost"
+msgstr "このエントリを移動する"
+
+#, fuzzy
 msgid "Remove style"
 msgstr "すべて削除する"
 
@@ -50556,7 +50668,7 @@ msgstr "パフォーマンスデータ内のプロセス時間を返す"
 
 msgid ""
 "Return to Checkmk, define a unique AWS account name, and use the Access key "
-"and Secret access key below."
+"ID and Secret access key below."
 msgstr ""
 
 msgid ""
@@ -51736,9 +51848,6 @@ msgstr "この集計のコピーを作成します"
 msgid "Save response"
 msgstr "応答を保存"
 
-msgid "Save the generated Access key and Secret access key."
-msgstr ""
-
 msgid "Save this host and go to"
 msgstr "このホストを保存して、行く"
 
@@ -52696,10 +52805,6 @@ msgid ""
 "notifications (forced)"
 msgstr "通知期間や通知の無効化など、制限に関係なく送信する（強制）"
 
-#, fuzzy
-msgid "Send separate notifications to every recipient"
-msgstr "すべての受信者に個別の通知を送信"
-
 msgid "Send service metrics to Graphite"
 msgstr "サービスメトリックをGraphiteに送信する"
 
@@ -53366,6 +53471,10 @@ msgstr "サイトのサービス"
 msgid "Services per cluster"
 msgstr "クラスターごとのサービス"
 
+#, fuzzy
+msgid "Services per region"
+msgstr "監視する地域ごとのサービス"
+
 msgid "Services per region to monitor"
 msgstr "監視する地域ごとのサービス"
 
@@ -53881,7 +53990,7 @@ msgstr "通知に表示されるグラフの数の制限を設定します。"
 msgid ""
 "Sets a limit for the number of notifications in a bulk for which graphs are "
 "displayed. If you do not use bulk notifications this option is ignored. Note "
-"that each graph increases the size of the mail and takes time to renderon "
+"that each graph increases the size of the mail and takes time to render on "
 "the monitoring server. Therefore, large bulks may exceed the maximum size "
 "for attachements or the plug-in may run into a timeout so that a failed "
 "notification is produced."
@@ -54245,6 +54354,10 @@ msgstr "チェックボックスを表示する"
 msgid "Show column headings"
 msgstr "列見出しを表示する"
 
+#, fuzzy
+msgid "Show contact groups"
+msgstr "ホストの連絡先グループ"
+
 msgid "Show context"
 msgstr "コンテキストを表示"
 
@@ -54312,7 +54425,15 @@ msgstr "ユーザー' メニューにヒントを表示する"
 msgid "Show historic values"
 msgstr "歴史的価値観を示す"
 
+#, fuzzy
+msgid "Show host labels"
+msgstr "ホストテーブルに表示"
+
 msgid "Show host status"
+msgstr "ホストステータスを表示する"
+
+#, fuzzy
+msgid "Show host tags"
 msgstr "ホストステータスを表示する"
 
 msgid "Show icon linking to Setup parameter editor for services"
@@ -54389,6 +54510,10 @@ msgstr "もっと表示/少なく表示"
 msgid "Show notification bulks"
 msgstr "通知ルール"
 
+#, fuzzy
+msgid "Show notification rule that triggered the notification"
+msgstr "一括通知の通知の並べ替え順序"
+
 msgid "Show number of groups"
 msgstr "グループの数を表示する"
 
@@ -54452,6 +54577,10 @@ msgstr "この %s を使用してルールを表示する"
 
 msgid "Show separate result for each SLA period"
 msgstr "SLA期間ごとに個別の結果を表示する"
+
+#, fuzzy
+msgid "Show service labels"
+msgstr "サービスラベル"
 
 #, fuzzy
 msgid "Show service name"
@@ -57805,10 +57934,12 @@ msgstr "セクション名"
 msgid "Subject for bulk notifications"
 msgstr "一括通知の対象"
 
-msgid "Subject for host notifications"
+#, fuzzy
+msgid "Subject line for host notifications"
 msgstr "ホスト通知の対象"
 
-msgid "Subject for service notifications"
+#, fuzzy
+msgid "Subject line for service notifications"
 msgstr "サービス通知の対象"
 
 msgid "Submit"
@@ -58201,10 +58332,6 @@ msgstr "同期"
 #, fuzzy
 msgid "Syncing"
 msgstr "同期"
-
-#, fuzzy
-msgid "Syncing broker certificates"
-msgstr "SAPルーター証明書"
 
 msgid "Synology Updates"
 msgstr "Synologyの更新"
@@ -60671,23 +60798,6 @@ msgstr "ダッシュボードに要素が見つかりません。"
 
 msgid "The element does not exist."
 msgstr "エレメントが存在しません。"
-
-msgid ""
-"The email address and visible name used in the From header of notifications "
-"messages. If no email address is specified the default address is "
-"<tt>OMD_SITE@FQDN</tt> is used. If the environment variable <tt>OMD_SITE</"
-"tt> is not set it defaults to <tt>checkmk</tt>."
-msgstr ""
-"通知メッセージのFromヘッダーで使用されるメールアドレスと表示名。メールアドレ"
-"スが指定されていない場合、デフォルトのアドレスは<tt> OMD_SITE @ FQDN </tt>が"
-"使用されます。環境変数<tt> OMD_SITE </tt>が設定されていない場合、デフォルトで"
-"<tt> checkmk </tt>になります。"
-
-msgid ""
-"The email address and visible name used in the Reply-To header of "
-"notifications messages."
-msgstr ""
-"通知メッセージのReply-Toヘッダーで使用される電子メールアドレスと表示名。"
 
 #, fuzzy
 msgid ""
@@ -71709,6 +71819,9 @@ msgstr "互換性のないrulespecを登録しようとしました: %r"
 msgid "Trivial change"
 msgstr "ささいな変更"
 
+msgid "Troubleshooting/testing settings"
+msgstr ""
+
 msgid ""
 "Truncate content at this amount of characters.A zero value mean not to "
 "truncate"
@@ -79846,6 +79959,10 @@ msgstr ""
 "エージェントの<a href='%s' target='_blank'>署名キー</a>をまだ作成していませ"
 "ん。これは必須です。"
 
+#, fuzzy
+msgid "You have not created any parameters for this notification method yet."
+msgstr "このホストのパラメーター"
+
 msgid ""
 "You have not created any rule packs yet. The Event Console is useless unless "
 "you have activated <i>Force message archiving</i> in the global settings."
@@ -82687,6 +82804,58 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid "Bulk notifications with graphs (default: 5)"
+#~ msgstr "グラフ付きの一括通知(デフォルト: 5)"
+
+#~ msgid ""
+#~ "By default all multiple graphs in emails are displayed floating nearby. "
+#~ "You can enable this option to show the graphs among each other."
+#~ msgstr ""
+#~ "デフォルトでは、電子メール内のすべての複数のグラフが近くに浮かんで表示され"
+#~ "ます。このオプションを有効にすると、グラフを相互に表示できます。"
+
+#~ msgid ""
+#~ "Configure this to have the notification plug-in connect directly to the "
+#~ "SMTP server. This has the advantage of providing better error messages in "
+#~ "case of an error, but it does require more configuration and is strictly "
+#~ "synchronous. So we advice use only on enterprise installations using the "
+#~ "notification spooler."
+#~ msgstr ""
+#~ "通知プラグインが直接smtpサーバーに接続するように設定します。これはエラー発"
+#~ "生時により良いエラーメッセージを提供するという利点があります。しかし、より"
+#~ "多くの設定が必要であり、厳密な同期です。そのため、通知スプーラを使用する商"
+#~ "用版のインストール時のみ使用することをお勧めします。"
+
+#~ msgid "Display additional information"
+#~ msgstr "追加情報の表示"
+
+#~ msgid "Display graphs among each other"
+#~ msgstr "相互にグラフを表示する"
+
+#~ msgid "Graphs are shown among each other"
+#~ msgstr "グラフは相互に表示されます"
+
+#, fuzzy
+#~ msgid "Syncing broker certificates"
+#~ msgstr "SAPルーター証明書"
+
+#~ msgid ""
+#~ "The email address and visible name used in the From header of "
+#~ "notifications messages. If no email address is specified the default "
+#~ "address is <tt>OMD_SITE@FQDN</tt> is used. If the environment variable "
+#~ "<tt>OMD_SITE</tt> is not set it defaults to <tt>checkmk</tt>."
+#~ msgstr ""
+#~ "通知メッセージのFromヘッダーで使用されるメールアドレスと表示名。メールアド"
+#~ "レスが指定されていない場合、デフォルトのアドレスは<tt> OMD_SITE @ FQDN </"
+#~ "tt>が使用されます。環境変数<tt> OMD_SITE </tt>が設定されていない場合、デ"
+#~ "フォルトで<tt> checkmk </tt>になります。"
+
+#~ msgid ""
+#~ "The email address and visible name used in the Reply-To header of "
+#~ "notifications messages."
+#~ msgstr ""
+#~ "通知メッセージのReply-Toヘッダーで使用される電子メールアドレスと表示名。"
 
 #~ msgid "Activate"
 #~ msgstr "アクティベート"

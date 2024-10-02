@@ -6,6 +6,7 @@
 # pylint: disable=protected-access
 
 import pprint
+from collections.abc import Callable
 
 from cmk.utils.user import UserId
 
@@ -32,6 +33,7 @@ def register(
     page_registry: PageRegistry,
     snapin_registry: SnapinRegistry,
     mega_menu_registry: MegaMenuRegistry,
+    view_menu_topics: Callable[[], list[TopicMenuTopic]],
 ) -> None:
     snapin_registry.register(Views)
     page_registry.register_page_handler("export_views", ajax_export_views)
@@ -62,7 +64,7 @@ class Views(SidebarSnapin):
         return _("Links to global views and dashboards")
 
     def show(self):
-        show_topic_menu(treename="views", menu=make_topic_menu(_view_menu_items()))
+        show_topic_menu(treename="views", menu=make_topic_menu(view_menu_items()))
 
         links = []
         if user.may("general.edit_views"):
@@ -80,11 +82,11 @@ def ajax_export_views() -> None:
 
 
 @request_memoize()
-def view_menu_topics() -> list[TopicMenuTopic]:
-    return make_topic_menu(_view_menu_items() + report_menu_items())
+def default_view_menu_topics() -> list[TopicMenuTopic]:
+    return make_topic_menu(view_menu_items())
 
 
-def _view_menu_items() -> list[tuple[str, tuple[str, Visual]]]:
+def view_menu_items() -> list[tuple[str, tuple[str, Visual]]]:
     # The page types that are implementing the PageRenderer API should also be
     # part of the menu. Bring them into a visual like structure to make it easy to
     # integrate them.
@@ -121,11 +123,6 @@ def _view_menu_items() -> list[tuple[str, tuple[str, Visual]]]:
     visuals_to_show += page_type_items
 
     return visuals_to_show
-
-
-def report_menu_items() -> list[tuple[str, tuple[str, Visual]]]:
-    """Is replaced by cmk.gui.reporting.registration"""
-    return []
 
 
 class MonitoringSearch(ABCMegaMenuSearch):

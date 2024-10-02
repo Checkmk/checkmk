@@ -37,7 +37,6 @@ from cmk.gui import (
     painter_options,
     piggyback_hub,
     prediction,
-    sidebar,
     sites,
     user_message,
     valuespec,
@@ -275,13 +274,6 @@ def register() -> None:
     autocompleters.register(page_registry, autocompleter_registry)
     werks.register(page_registry)
     login.register(page_registry)
-    sidebar.register(
-        page_registry,
-        permission_section_registry,
-        snapin_registry,
-        dashlet_registry,
-        mega_menu_registry,
-    )
     message.register(page_registry)
     cmk.gui.help.register(page_registry)
     main.register(page_registry)

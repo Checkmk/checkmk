@@ -11,7 +11,7 @@ import json
 import os
 import textwrap
 import traceback
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, cast, Self
@@ -39,6 +39,7 @@ from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuTopic
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.permissions import PermissionSectionRegistry
 from cmk.gui.type_defs import Icon as Icon
+from cmk.gui.type_defs import TopicMenuTopic
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.utils import load_web_plugins
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -53,6 +54,7 @@ from . import _snapin
 from ._snapin import begin_footnote_links as begin_footnote_links
 from ._snapin import bulletlink as bulletlink
 from ._snapin import CustomizableSidebarSnapin as CustomizableSidebarSnapin
+from ._snapin import default_view_menu_topics as default_view_menu_topics
 from ._snapin import end_footnote_links as end_footnote_links
 from ._snapin import footnotelinks as footnotelinks
 from ._snapin import heading as heading
@@ -68,6 +70,7 @@ from ._snapin import snapin_registry as snapin_registry
 from ._snapin import snapin_site_choice as snapin_site_choice
 from ._snapin import snapin_width as snapin_width
 from ._snapin import SnapinRegistry as SnapinRegistry
+from ._snapin import view_menu_items as view_menu_items
 from ._snapin import write_snapin_exception as write_snapin_exception
 from ._snapin_dashlet import SnapinDashlet
 from .main_menu import (
@@ -87,6 +90,7 @@ def register(
     snapin_registry_: SnapinRegistry,
     dashlet_registry: DashletRegistry,
     mega_menu_registry_: MegaMenuRegistry,
+    view_menu_topics: Callable[[], list[TopicMenuTopic]],
 ) -> None:
     page_registry.register_page("sidebar_fold")(AjaxFoldSnapin)
     page_registry.register_page("sidebar_openclose")(AjaxOpenCloseSnapin)
@@ -102,7 +106,12 @@ def register(
         PageAjaxSidebarGetUnackIncompWerks
     )
     permission_section_registry.register(PermissionSectionSidebarSnapins)
-    _snapin.register(snapin_registry_, page_registry, mega_menu_registry_)
+    _snapin.register(
+        snapin_registry_,
+        page_registry,
+        mega_menu_registry_,
+        view_menu_topics,
+    )
     dashlet_registry.register(SnapinDashlet)
 
 

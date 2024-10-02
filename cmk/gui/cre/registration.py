@@ -8,10 +8,14 @@
 import cmk.gui.graphing._graph_images as graph_images
 import cmk.gui.graphing._html_render as html_render
 import cmk.gui.pages
-from cmk.gui import visuals
+from cmk.gui import sidebar, visuals
+from cmk.gui.dashboard import dashlet_registry
+from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.metrics import PageGraphDashlet, PageHostServiceGraphPopup
 from cmk.gui.pages import page_registry
 from cmk.gui.painter.v0.base import painter_registry
+from cmk.gui.permissions import permission_section_registry
+from cmk.gui.sidebar import snapin_registry
 from cmk.gui.sites import site_choices
 from cmk.gui.valuespec import autocompleter_registry
 from cmk.gui.views import graph
@@ -45,6 +49,14 @@ def register() -> None:
         autocompleter_registry,
         site_choices,
         default_site_filter_heading_info,
+    )
+    sidebar.register(
+        page_registry,
+        permission_section_registry,
+        snapin_registry,
+        dashlet_registry,
+        mega_menu_registry,
+        view_menu_topics=sidebar.default_view_menu_topics,
     )
     notification_parameter_registry.register(NotificationParameterMail)
     register_pages()

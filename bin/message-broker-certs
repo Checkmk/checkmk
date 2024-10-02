@@ -54,6 +54,7 @@ def initialize_message_broker_certs(omd_root: Path, site_name: str) -> None:
     PersistedCertificateWithPrivateKey.persist(
         bundle, messaging.site_cert_file(omd_root), messaging.site_key_file(omd_root)
     )
+    messaging.trusted_cas_file(omd_root).write_text(cacert_file.read_text())
 
 
 def _parse_arguments(argv: list[str]) -> Arguments:

@@ -6,6 +6,7 @@
 
 from . import rabbitmq
 from ._config import (
+    all_cme_cacert_files,
     BrokerCertificates,
     ca_key_file,
     cacert_file,
@@ -13,10 +14,10 @@ from ._config import (
     multisite_ca_key_file,
     multisite_cacert_file,
     multisite_cert_file,
-    multisite_key_file,
     site_cert_file,
     site_key_file,
     TLS_PATH_CUSTOMERS,
+    trusted_cas_file,
 )
 from ._connection import (
     Channel,
@@ -30,24 +31,25 @@ from ._connection import (
 )
 
 __all__ = [
+    "all_cme_cacert_files",
     "BrokerCertificates",
     "cacert_file",
     "ca_key_file",
-    "site_cert_file",
-    "get_local_port",
-    "site_key_file",
     "Channel",
-    "Connection",
-    "DeliveryTag",
-    "multisite_ca_key_file",
-    "multisite_cacert_file",
-    "multisite_cert_file",
-    "multisite_key_file",
-    "TLS_PATH_CUSTOMERS",
-    "rabbitmq",
     "check_remote_connection",
     "CMKConnectionError",
-    "ConnectionOK",
+    "Connection",
     "ConnectionFailed",
+    "ConnectionOK",
     "ConnectionUnknown",
+    "DeliveryTag",
+    "get_local_port",
+    "multisite_cacert_file",
+    "multisite_ca_key_file",
+    "multisite_cert_file",
+    "rabbitmq",
+    "site_cert_file",
+    "site_key_file",
+    "TLS_PATH_CUSTOMERS",
+    "trusted_cas_file",
 ]

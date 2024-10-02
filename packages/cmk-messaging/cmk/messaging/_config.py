@@ -6,7 +6,7 @@
 
 import ssl
 import subprocess
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import TYPE_CHECKING, TypeVar
 
@@ -32,8 +32,8 @@ class BrokerCertificates(BaseModel):
 
     key: bytes
     cert: bytes
-    central_ca: bytes
-    customer_ca: bytes | None = None
+    signing_ca: bytes
+    additionally_trusted_ca: bytes = b""
 
 
 @lru_cache
@@ -47,10 +47,10 @@ def get_local_port() -> int:
 #
 # /etc/rabbitmq/ssl
 #                ├── multisite
-#                │   ├── ca_cert.pem      (multisite_cacert_file)
-#                │   ├── ca_key.pem       (multisite_ca_key_file)
 #                │   └── <site>_cert.pem  (multisite_cert_file)
+#                ├── trusted_cas.pem      (cacert_file)
 #                ├── ca_cert.pem          (cacert_file)
+#                ├── ca_key.pem           (ca_key_file)
 #                ├── cert.pem             (site_cert_file)
 #                └── key.pem              (site_key_file)
 #
@@ -64,17 +64,26 @@ def get_local_port() -> int:
 #                │           ├── ca_key.pem       (multisite_ca_key_file)
 #                │           ├── <site>_cert.pem  (multisite_cert_file)
 #                │           └── <site>_key.pem   (multisite_key_file)
-#                ├── ca_cert.pem                  (cacert_file)
-#                ├── cert.pem                     (site_cert_file)
+#                ├── trusted_cas.pem      (cacert_file)
+#                ├── ca_cert.pem          (cacert_file)
+#                ├── ca_key.pem           (ca_key_file)
+#                ├── cert.pem             (site_cert_file)
 #                └── key.pem                      (site_key_file)
 #
 # remote sites (both CME and Non-CME)
 #
 # /etc/rabbitmq/ssl
+#                ├── trusted_cas.pem      (cacert_file)
 #                ├── ca_cert.pem          (cacert_file)
+#                ├── ca_key.pem           (ca_key_file)
 #                ├── cert.pem             (site_cert_file)
 #                └── key.pem              (site_key_file)
 #
+
+
+def trusted_cas_file(omd_root: Path) -> Path:
+    """The trusted CAs of the local message broker"""
+    return omd_root.joinpath(*_TLS_PATH, "trusted_cas.pem")
 
 
 def cacert_file(omd_root: Path) -> Path:
@@ -103,23 +112,21 @@ def site_key_file(omd_root: Path) -> Path:
     return omd_root.joinpath(*_TLS_PATH, "key.pem")
 
 
-def multisite_cacert_file(omd_root: Path, customer: str = "") -> Path:
+def all_cme_cacert_files(omd_root: Path) -> Iterator[Path]:
     """Get the path of the messaging broker ca for a customer or the provider"""
-    base_path = (
-        omd_root.joinpath(*TLS_PATH_CUSTOMERS, customer)
-        if customer
-        else omd_root.joinpath(*_TLS_PATH_MULTISITE)
-    )
+    base_path = omd_root.joinpath(*TLS_PATH_CUSTOMERS)
+    return base_path.glob("*/ca_cert.pem")
+
+
+def multisite_cacert_file(omd_root: Path, customer: str) -> Path:
+    """Get the path of the messaging broker ca for a customer or the provider"""
+    base_path = omd_root.joinpath(*TLS_PATH_CUSTOMERS, customer)
     return base_path.joinpath("ca_cert.pem")
 
 
-def multisite_ca_key_file(omd_root: Path, customer: str = "") -> Path:
+def multisite_ca_key_file(omd_root: Path, customer: str) -> Path:
     """Get the path of the messaging broker ca for a customer or the provider"""
-    base_path = (
-        omd_root.joinpath(*TLS_PATH_CUSTOMERS, customer)
-        if customer
-        else omd_root.joinpath(*_TLS_PATH_MULTISITE)
-    )
+    base_path = omd_root.joinpath(*TLS_PATH_CUSTOMERS, customer)
     return base_path.joinpath("ca_key.pem")
 
 
@@ -131,16 +138,6 @@ def multisite_cert_file(omd_root: Path, site: str, customer: str = "") -> Path:
         else omd_root.joinpath(*_TLS_PATH_MULTISITE)
     )
     return base_path.joinpath(f"{site}_cert.pem")
-
-
-def multisite_key_file(omd_root: Path, site: str, customer: str = "") -> Path:
-    """Get the path of the local messaging broker key"""
-    base_path = (
-        omd_root.joinpath(*TLS_PATH_CUSTOMERS, customer)
-        if customer
-        else omd_root.joinpath(*_TLS_PATH_MULTISITE)
-    )
-    return base_path.joinpath(f"{site}_key.pem")
 
 
 def make_connection_params(omd_root: Path, server: str, port: int) -> pika.ConnectionParameters:

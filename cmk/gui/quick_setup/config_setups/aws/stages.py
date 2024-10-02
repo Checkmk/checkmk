@@ -241,8 +241,8 @@ def aws_transform_to_disk(params: Mapping[str, object]) -> Mapping[str, object]:
     assert isinstance(global_services, list)
     services = params["services"]
     assert isinstance(services, list)
-    overall_tags = params.get("overall_tags", [])
-    assert isinstance(overall_tags, list)
+    overall_tags = params.get("overall_tags")
+
     regions_to_monitor = params["regions_to_monitor"]
     assert isinstance(regions_to_monitor, list)
     keys_to_rename = {"aws_lambda": "lambda"}
@@ -254,8 +254,11 @@ def aws_transform_to_disk(params: Mapping[str, object]) -> Mapping[str, object]:
         "access": {},  # TODO required key but not yet implemented. It's part of quick_setup_advanced()
         "services": {keys_to_rename.get(k, k): _migrate_aws_service(k) for k in services},
         "piggyback_naming_convention": "ip_region_instance",
-        "overall_tags": [(tag["key"], tag["values"]) for tag in overall_tags],
     }
+    if overall_tags is not None:
+        assert isinstance(overall_tags, list)
+        params["overall_tags"] = [(tag["key"], tag["values"]) for tag in overall_tags]
+
     return params
 
 

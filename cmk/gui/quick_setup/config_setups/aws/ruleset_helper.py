@@ -8,7 +8,7 @@ from typing import Any
 
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import DictElement, Dictionary, FormSpec, List, String
-from cmk.rulesets.v1.form_specs.validators import ValidationError
+from cmk.rulesets.v1.form_specs.validators import LengthInRange, ValidationError
 
 
 def _validate_aws_tags(values: Sequence[Any]) -> object:
@@ -48,6 +48,12 @@ def formspec_aws_tags(title: Title | None = None) -> FormSpec:
                 "key": DictElement(
                     parameter_form=String(
                         title=Title("Key"),
+                        custom_validate=[
+                            LengthInRange(
+                                min_value=1,
+                                error_msg=Message("Tags enabled but no key defined."),
+                            ),
+                        ],
                     ),
                     required=True,
                 ),
@@ -58,6 +64,12 @@ def formspec_aws_tags(title: Title | None = None) -> FormSpec:
                         remove_element_label=Label("Remove value"),
                         no_element_label=Label("No values defined"),
                         editable_order=False,
+                        custom_validate=[
+                            LengthInRange(
+                                min_value=1,
+                                error_msg=Message("Tags enabled but no values defined."),
+                            ),
+                        ],
                     ),
                     required=True,
                 ),
@@ -67,5 +79,11 @@ def formspec_aws_tags(title: Title | None = None) -> FormSpec:
         remove_element_label=Label("Remove tag"),
         no_element_label=Label("No tags defined"),
         editable_order=False,
-        custom_validate=[_validate_aws_tags],
+        custom_validate=[
+            _validate_aws_tags,
+            LengthInRange(
+                min_value=1,
+                error_msg=Message("Tags enabled but no tags defined."),
+            ),
+        ],
     )

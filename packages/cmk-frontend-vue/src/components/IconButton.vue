@@ -40,32 +40,13 @@ interface IconButtonProps {
 
 const props = defineProps<IconButtonProps>()
 defineEmits(['click'])
-
-let selectedAriaLabel = ''
-
-if (props?.variant) {
-  switch (props.variant) {
-    case 'custom':
-      selectedAriaLabel = props.ariaLabel || ''
-      break
-    case 'prev':
-      selectedAriaLabel = 'Go to the previous stage'
-      break
-    case 'next':
-      selectedAriaLabel = 'Go to the next stage'
-      break
-    case 'save':
-      selectedAriaLabel = 'Save'
-      break
-  }
-}
 </script>
 
 <template>
   <button
     class="qs-icon-button button"
     :class="buttonVariants({ variant })"
-    :aria-label="selectedAriaLabel"
+    :aria-label="ariaLabel || label"
     @click="$emit('click')"
   >
     <div class="icon" />

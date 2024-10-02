@@ -9,10 +9,24 @@ import Button from '@/components/IconButton.vue'
 import LoadingIcon from '@/components/LoadingIcon.vue'
 import AlertBox from '@/components/AlertBox.vue'
 import type { QuickSetupStageContent } from './quick_setup_types'
+import { type ButtonVariants } from '@/components/IconButton.vue'
 
 const props = defineProps<QuickSetupStageContent>()
 
 const isLast = computed(() => props.index === props.numberOfStages - 1)
+
+function getButtonAriaLabel(variant: ButtonVariants['variant']): string {
+  /* TODO: move this strings to the backend to make it translatable (CMK-19020) */
+  switch (variant) {
+    case 'prev':
+      return 'Go to the previous stage'
+    case 'next':
+      return 'Go to the next stage'
+    case 'save':
+      return 'Save'
+  }
+  return ''
+}
 </script>
 
 <template>
@@ -29,6 +43,7 @@ const isLast = computed(() => props.index === props.numberOfStages - 1)
           v-for="button in buttons"
           :key="button.label"
           :label="button.label"
+          :aria-label="getButtonAriaLabel(button.variant)"
           :variant="button.variant"
           @click="button.action"
         />

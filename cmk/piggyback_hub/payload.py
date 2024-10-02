@@ -16,7 +16,7 @@ from pydantic import BaseModel
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.messaging import Channel, CMKConnectionError, Connection, DeliveryTag
+from cmk.messaging import Channel, CMKConnectionError, Connection, DeliveryTag, RoutingKey
 from cmk.piggyback import (
     get_messages_for,
     load_last_distribution_time,
@@ -109,7 +109,7 @@ def _send_payload_message(
             last_contact=piggyback_message.meta.last_contact,
             sections=[piggyback_message.raw_data],
         ),
-        routing="payload",
+        routing=RoutingKey("payload"),
     )
     store_last_distribution_time(
         piggyback_message.meta.source,

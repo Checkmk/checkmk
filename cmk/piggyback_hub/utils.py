@@ -13,11 +13,11 @@ from typing import Callable, Generic, TypeVar
 
 from pydantic import BaseModel
 
-from cmk.messaging import Channel, CMKConnectionError, Connection, DeliveryTag
+from cmk.messaging import AppName, Channel, CMKConnectionError, Connection, DeliveryTag, QueueName
 
 from .config import PiggybackHubConfig
 
-APP_NAME = "piggyback-hub"
+APP_NAME = AppName("piggyback-hub")
 
 _ModelT = TypeVar("_ModelT", bound=BaseModel)
 
@@ -37,7 +37,7 @@ class ReceivingProcess(multiprocessing.Process, Generic[_ModelT]):
         omd_root: Path,
         model: type[_ModelT],
         callback: Callable[[Channel[_ModelT], DeliveryTag, _ModelT], None],
-        queue: str,
+        queue: QueueName,
         message_ttl: int | None,
     ) -> None:
         super().__init__()
@@ -58,12 +58,10 @@ class ReceivingProcess(multiprocessing.Process, Generic[_ModelT]):
         try:
             with Connection(APP_NAME, self.omd_root) as conn:
                 channel: Channel[_ModelT] = conn.channel(self.model)
-                channel.queue_declare(
-                    queue=self.queue, bindings=(self.queue,), message_ttl=self.message_ttl
-                )
+                channel.queue_declare(queue=self.queue, message_ttl=self.message_ttl)
 
                 self.logger.debug("Consuming: %s", self.task_name)
-                channel.consume(self.callback, queue=self.queue)
+                channel.consume(self.queue, self.callback)
 
         except CMKConnectionError as exc:
             self.logger.error("Stopping: %s: %s", self.task_name, exc)
@@ -76,6 +74,6 @@ def distribute(configs: Mapping[str, PiggybackHubConfig], omd_root: Path) -> Non
     # TODO: remove the return statement and uncomment the code below after fix the flaky integration test
     return
     # for site_id, config in configs.items():
-    #     with Connection("piggyback-hub", omd_root) as conn:
+    #     with Connection(APP_NAME, omd_root) as conn:
     #         channel = conn.channel(PiggybackHubConfig)
-    #         channel.publish_for_site(site_id, config, routing="config")
+    #         channel.publish_for_site(site_id, config, routing=RoutingKey("config"))

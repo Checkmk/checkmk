@@ -12,7 +12,7 @@ import pytest
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 
-from cmk.messaging import DeliveryTag
+from cmk.messaging import DeliveryTag, RoutingKey
 from cmk.piggyback import (
     get_messages_for,
     load_last_distribution_time,
@@ -82,7 +82,7 @@ def test__send_message() -> None:
             last_contact=1234567891,
             sections=[b"section1"],
         ),
-        routing="payload",
+        routing=RoutingKey("payload"),
     )
     actual_last_distribution_time = load_last_distribution_time(
         HostName("source_host"), HostName("target_host"), cmk.utils.paths.omd_root

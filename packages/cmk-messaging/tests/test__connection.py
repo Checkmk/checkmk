@@ -14,7 +14,7 @@ import pika.spec
 import pytest
 from pydantic import BaseModel
 
-from cmk.messaging import Channel, DeliveryTag
+from cmk.messaging import AppName, BindingKey, Channel, DeliveryTag, QueueName, RoutingKey
 
 
 class _ConsumedSuccesfully(RuntimeError):
@@ -123,7 +123,7 @@ class ChannelTester:
 
 
 def _make_test_channel() -> tuple[Channel[Message], ChannelTester]:
-    return Channel("my-app", test_channel := ChannelTester(), Message), test_channel
+    return Channel(AppName("my-app"), test_channel := ChannelTester(), Message), test_channel
 
 
 class TestChannel:
@@ -134,23 +134,30 @@ class TestChannel:
         """Just declare the default queue and bind to it"""
         channel, test_channel = _make_test_channel()
 
-        channel.queue_declare()
-        assert test_channel.declared_queues == [Queue("cmk.app.my-app")]
-        assert test_channel.bound_queues == [Binding("cmk.local", "*.my-app", "cmk.app.my-app")]
+        channel.queue_declare(QueueName("default"))
+        assert test_channel.declared_queues == [Queue("cmk.app.my-app.default")]
+        assert test_channel.bound_queues == [
+            Binding("cmk.local", "*.my-app.default", "cmk.app.my-app.default")
+        ]
 
     @staticmethod
     def test_queue_declare_ttl() -> None:
         """Declare a queue with ttl"""
         channel, test_channel = _make_test_channel()
 
-        channel.queue_declare(message_ttl=42)
-        assert test_channel.declared_queues[0] == Queue("cmk.app.my-app", {"x-message-ttl": 42000})
+        channel.queue_declare(QueueName("Q"), message_ttl=42)
+        assert test_channel.declared_queues[0] == Queue(
+            "cmk.app.my-app.Q", {"x-message-ttl": 42000}
+        )
 
     @staticmethod
     def test_queue_declare_multiple() -> None:
         channel, test_channel = _make_test_channel()
 
-        channel.queue_declare("my-queue", ["my-first-binding", "my-second-binding.*.yodo"])
+        channel.queue_declare(
+            QueueName("my-queue"),
+            [BindingKey("my-first-binding"), BindingKey("my-second-binding.*.yodo")],
+        )
         assert test_channel.declared_queues == [Queue("cmk.app.my-app.my-queue")]
         assert test_channel.bound_queues == [
             Binding("cmk.local", "*.my-app.my-first-binding", "cmk.app.my-app.my-queue"),
@@ -162,7 +169,7 @@ class TestChannel:
         channel, test_channel = _make_test_channel()
         message = Message(text="Hello 🌍")
 
-        channel.publish_locally(message, routing="subrouting.key")
+        channel.publish_locally(message, routing=RoutingKey("subrouting.key"))
         assert test_channel.published_messages == [
             Published(
                 "cmk.local",
@@ -177,7 +184,7 @@ class TestChannel:
         channel, test_channel = _make_test_channel()
         message = Message(text="Hello 🌍")
 
-        channel.publish_for_site("other_site", message, routing="subrouting.key")
+        channel.publish_for_site("other_site", message, routing=RoutingKey("subrouting.key"))
         assert test_channel.published_messages == [
             Published(
                 "cmk.intersite",
@@ -192,21 +199,21 @@ class TestChannel:
         channel, _test_channel = _make_test_channel()
         message = Message(text="Hello 🌍")
 
-        channel.publish_for_site("other_site", message, routing="subrouting.key")
+        channel.publish_for_site("other_site", message, routing=RoutingKey("subrouting.key"))
 
         # make sure that we're called at all
         def _on_message(*args: object, **kw: Mapping[str, object]) -> None:
             raise RuntimeError()
 
         with pytest.raises(RuntimeError):
-            channel.consume(_on_message)
+            channel.consume(QueueName("ignored-by-this-test"), _on_message)
 
     @staticmethod
     def test_consume_message_model_roundtrip() -> None:
         channel, _test_channel = _make_test_channel()
         message = Message(text="Hello 🌍")
 
-        channel.publish_for_site("other_site", message, routing="subrouting.key")
+        channel.publish_for_site("other_site", message, routing=RoutingKey("subrouting.key"))
 
         def _on_message(
             _channel: Channel[Message], _delivery_tag: DeliveryTag, received: Message
@@ -215,4 +222,4 @@ class TestChannel:
             raise _ConsumedSuccesfully()
 
         with pytest.raises(_ConsumedSuccesfully):
-            channel.consume(_on_message)
+            channel.consume(QueueName("ignored-by-this-test"), _on_message)

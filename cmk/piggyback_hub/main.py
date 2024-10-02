@@ -17,6 +17,7 @@ from threading import Event
 
 from cmk.ccc.daemon import daemonize, pid_file_lock
 
+from cmk.messaging import QueueName
 from cmk.piggyback_hub.config import PiggybackHubConfig, save_config_on_message
 from cmk.piggyback_hub.payload import (
     PiggybackPayload,
@@ -97,7 +98,7 @@ def run_piggyback_hub(logger: logging.Logger, omd_root: Path) -> int:
             omd_root,
             PiggybackPayload,
             save_payload_on_message(logger, omd_root),
-            "payload",
+            QueueName("payload"),
             message_ttl=600,
         ),
         SendingPayloadProcess(logger, omd_root, reload_config),
@@ -106,7 +107,7 @@ def run_piggyback_hub(logger: logging.Logger, omd_root: Path) -> int:
             omd_root,
             PiggybackHubConfig,
             save_config_on_message(logger, omd_root, reload_config),
-            "config",
+            QueueName("config"),
             message_ttl=None,
         ),
     )

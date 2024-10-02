@@ -27,3 +27,17 @@ export const getIconVariable = (iconName: string | undefined): string => {
   iconVar = iconVar.replace(/_/g, '-').split('.')[0]!
   return `var(--${iconVar})`
 }
+
+export const localStorageHandler = {
+  get: (key: string, defaultValue: unknown = null): unknown => {
+    const value = localStorage.getItem(key)
+    if (value) {
+      return JSON.parse(value)
+    }
+    return defaultValue
+  },
+
+  set: (key: string, value: unknown): void => {
+    localStorage.setItem(key, JSON.stringify(value))
+  }
+}

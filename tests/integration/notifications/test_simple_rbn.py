@@ -10,6 +10,7 @@ from typing import Final
 
 import pytest
 
+from tests.testlib.pytest_helpers.marks import skip_if_raw_edition
 from tests.testlib.site import Site
 
 from cmk.utils.hostaddress import HostName
@@ -69,6 +70,7 @@ def fixture_host(site: Site) -> Iterator[HostName]:
 @pytest.mark.usefixtures("test_user")
 @pytest.mark.usefixtures("disable_checks")
 @pytest.mark.usefixtures("disable_flap_detection")
+@skip_if_raw_edition
 def test_simple_rbn_host_notification(host: HostName, site: Site) -> None:
     with WatchLog(site, default_timeout=20) as log:
         # This checks the following log files: `var/log/nagios.log` or `var/check_mk/core/history`.

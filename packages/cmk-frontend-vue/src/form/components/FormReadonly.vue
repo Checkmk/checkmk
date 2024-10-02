@@ -154,21 +154,26 @@ function renderMultipleChoice(formSpec: MultipleChoice, value: string[]): VNode 
     nameToTitle[element.name] = element.title
   }
 
-  const maxEntries = 10
-  const textTokens: string[] = []
+  const maxEntries = 5
+  const textSpans: VNode[] = []
 
   // WIP: no i18n...
   for (let [index, entry] of value.entries()) {
     if (index >= maxEntries) {
       break
     }
-    textTokens.push(nameToTitle[entry]!)
+    textSpans.push(h('span', nameToTitle[entry]!))
   }
-  let infoText = textTokens.join(', ')
   if (value.length > maxEntries) {
-    infoText += ` and ${value.length - maxEntries} more`
+    textSpans.push(
+      h(
+        'span',
+        { class: 'form-readonly__multiple-choice__max-entries' },
+        ` and ${value.length - maxEntries} more`
+      )
+    )
   }
-  return h('div', infoText)
+  return h('div', { class: 'form-readonly__multiple-choice' }, textSpans)
 }
 
 function renderDataSize(value: [string, string]): VNode {
@@ -416,9 +421,31 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.form-readonly__dictionary--two_columns > tr > th {
-  width: 130px;
-  padding-right: 16px;
-  font-weight: var(--font-weight-bold);
+.form-readonly__dictionary--two_columns > tr {
+  line-height: 18px;
+
+  > th {
+    width: 130px;
+    padding-right: 16px;
+    font-weight: var(--font-weight-bold);
+  }
+
+  .form-readonly__multiple-choice span {
+    display: block;
+
+    &:before {
+      content: '';
+    }
+  }
+}
+
+.form-readonly__multiple-choice span {
+  &:not(:first-child):before {
+    content: ', ';
+  }
+
+  &.form-readonly__multiple-choice__max-entries:before {
+    content: '';
+  }
 }
 </style>

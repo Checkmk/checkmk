@@ -27,7 +27,7 @@ from cmk.gui.visuals.filter import (
     RegexFilter,
 )
 
-from .defines import phase_names, syslog_priorities
+from .defines import action_whats, phase_names, syslog_priorities
 
 
 def register(filter_registry: FilterRegistry) -> None:
@@ -201,6 +201,19 @@ def register(filter_registry: FilterRegistry) -> None:
                 ident="event_priority",
                 options=[("event_priority_%d" % e[0], e[1]) for e in syslog_priorities],
                 livestatus_query=partial(query_filters.options_toggled_filter, "event_priority"),
+            ),
+        )
+    )
+
+    filter_registry.register(
+        CheckboxRowFilter(
+            title=_l("History action type"),
+            sort_index=225,
+            info="history",
+            query_filter=query_filters.MultipleOptionsQuery(
+                ident="history_what",
+                options=[("history_what_%s" % k, k) for k in action_whats],
+                livestatus_query=partial(query_filters.options_toggled_filter, "history_what"),
             ),
         )
     )

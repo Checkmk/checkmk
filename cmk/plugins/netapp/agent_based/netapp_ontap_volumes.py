@@ -157,8 +157,9 @@ def _check_single_netapp_volume(
     if volume.incomplete():
         return
 
-    assert volume.files_used is not None  # to avoid my-py complaining about this being None
-    assert volume.files_maximum is not None  # to avoid my-py complaining about this being None
+    if volume.files_used is None or volume.files_maximum is None:
+        return
+
     inodes_total = volume.files_maximum
     yield from df_check_filesystem_single(
         value_store,
@@ -171,9 +172,9 @@ def _check_single_netapp_volume(
         params,
     )
 
-    assert volume.space_total is not None  # to avoid my-py complaining about this being None
-    assert volume.logical_used is not None  # to avoid my-py complaining about this being None
-    assert volume.space_available is not None  # to avoid my-py complaining about this being None
+    if volume.space_total is None or volume.logical_used is None or volume.space_available is None:
+        return
+
     if not volume.logical_enforcement:
         logical_available = volume.space_total - volume.logical_used
         yield Metric(

@@ -1,0 +1,12 @@
+Title: mk_logwatch: Apply context to informational (OK) messages
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1727871675
+Edition: cre
+Level: 1
+Version: 2.2.0p35
+
+With the <code>maxcontextlines</code> option the output of the mk_logwatch agent plugin can be reduced to a certain number of lines before and after relevant messages.
+Previously the messages were seen as relevant if they had the level <code>W</code>(warning) or <code>C</code>(critical).
+With this werk messages that are marked with <code>O</code> (OK/informational) are also considered relevant and will have the context applied.

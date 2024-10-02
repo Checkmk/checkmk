@@ -6,10 +6,12 @@
 from collections.abc import Sequence
 from typing import Literal
 
+from cmk.utils.urls import is_allowed_url
 from cmk.utils.user import UserId
 
 from cmk.gui.form_specs.converter import Tuple
 from cmk.gui.form_specs.private import (
+    CommentTextArea,
     DictionaryExtended,
     ListExtended,
     ListOfStrings,
@@ -32,12 +34,14 @@ from cmk.gui.userdb import load_users
 from cmk.gui.wato._group_selection import sorted_contact_group_choices
 from cmk.gui.watolib.mode import mode_url
 
-from cmk.rulesets.v1 import Label, Title
+from cmk.rulesets.v1 import Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
     CascadingSingleChoiceElement,
     DefaultValue,
     DictElement,
+    Dictionary,
+    FieldSize,
     FixedValue,
     HostState,
     InputHint,
@@ -46,7 +50,7 @@ from cmk.rulesets.v1.form_specs import (
     SingleChoiceElement,
     String,
 )
-from cmk.rulesets.v1.form_specs.validators import EmailAddress
+from cmk.rulesets.v1.form_specs.validators import EmailAddress, ValidationError
 
 
 def _host_states() -> Sequence[tuple[int, Title]]:
@@ -393,19 +397,77 @@ def sending_conditions() -> QuickSetupStage:
     )
 
 
+def _validate_documentation_url(value: str) -> None:
+    if not is_allowed_url(value, cross_domain=True, schemes=["http", "https"]):
+        raise ValidationError(
+            Message("Not a valid URL (Only http and https URLs are allowed)."),
+        )
+
+
 def general_properties() -> QuickSetupStage:
     def _components() -> Sequence[Widget]:
-        return []
+        return [
+            FormSpecWrapper(
+                id=FormSpecId("general_properties"),
+                form_spec=DictionaryExtended(
+                    layout=DictionaryLayout.two_columns,
+                    elements={
+                        "description": DictElement(
+                            required=True,
+                            parameter_form=String(
+                                title=Title("Description"),
+                                field_size=FieldSize.LARGE,
+                            ),
+                        ),
+                        "settings": DictElement(
+                            required=True,
+                            parameter_form=Dictionary(
+                                title=Title("Settings"),
+                                elements={
+                                    "disable_rule": DictElement(
+                                        parameter_form=FixedValue(
+                                            title=Title("Disable rule"), value=None
+                                        )
+                                    ),
+                                    "allow_users_to_disable": DictElement(
+                                        parameter_form=FixedValue(
+                                            title=Title(
+                                                "Allow users to deactivate this notification"
+                                            ),
+                                            value=None,
+                                        )
+                                    ),
+                                },
+                            ),
+                        ),
+                        "comment": DictElement(
+                            required=True,
+                            parameter_form=CommentTextArea(
+                                title=Title("Comment"),
+                            ),
+                        ),
+                        "documentation_url": DictElement(
+                            required=True,
+                            parameter_form=String(
+                                title=Title("Documentation"),
+                                field_size=FieldSize.LARGE,
+                                custom_validate=(_validate_documentation_url,),
+                            ),
+                        ),
+                    },
+                ),
+            )
+        ]
 
     return QuickSetupStage(
         title=_("General properties"),
         sub_title=_(
             "Review your notification rule before applying it. They will take effect right "
-            "away without 'Activate changes'."
+            'away without "Activate changes".'
         ),
         configure_components=_components,
         custom_validators=[],
-        recap=[],
+        recap=[recaps.recaps_form_spec],
         button_label=_("Next step: Saving"),
     )
 

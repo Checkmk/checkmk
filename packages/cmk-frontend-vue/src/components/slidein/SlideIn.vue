@@ -4,7 +4,14 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot } from 'radix-vue'
+import {
+  DialogClose,
+  DialogTitle,
+  DialogContent,
+  DialogOverlay,
+  DialogPortal,
+  DialogRoot
+} from 'radix-vue'
 import { Label } from '@/components/ui/label'
 
 export interface SlideInProps {
@@ -23,13 +30,17 @@ const emit = defineEmits(['close'])
   <DialogRoot :open="open">
     <DialogPortal>
       <DialogOverlay class="slide-in__overlay" />
-      <DialogContent class="slide-in__content" @escape-key-down="emit('close')">
-        <div v-if="header" class="slide-in__title">
+      <DialogContent
+        class="slide-in__content"
+        :aria-describedby="undefined"
+        @escape-key-down="emit('close')"
+      >
+        <DialogTitle v-if="header" class="slide-in__title">
           <Label variant="title">{{ header.title }}</Label>
           <DialogClose v-if="header.closeButton" class="slide-in__close" @click="emit('close')">
             <div class="slide-in__icon-close" />
           </DialogClose>
-        </div>
+        </DialogTitle>
         <slot />
       </DialogContent>
     </DialogPortal>

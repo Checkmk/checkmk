@@ -1157,7 +1157,7 @@ def _filter_maxcontextlines(lines_list, before, after):
         if new_in_context_idx < n_lines and context_end < n_lines:
             new_in_context = lines_list[new_in_context_idx]
             # if the line ahead is relevant, extend the context
-            if new_in_context.startswith(("C", "W")):
+            if new_in_context.startswith(("C", "W", "O")):
                 context_end = new_in_context_idx + after
         if 0 <= idx <= context_end:
             yield lines_list[idx]

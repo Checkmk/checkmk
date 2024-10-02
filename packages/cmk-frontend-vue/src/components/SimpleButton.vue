@@ -4,8 +4,6 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { Button } from '@/components/ui/button'
-
 interface IconButtonProps {
   /** @property {string} label - Button's caption */
   label: string
@@ -19,9 +17,9 @@ defineEmits(['click'])
 </script>
 
 <template>
-  <Button class="button" :aria-label="ariaLabel" @click="$emit('click')">
+  <button class="button" :aria-label="ariaLabel || label" @click="$emit('click')">
     <span>{{ props.label }}</span>
-  </Button>
+  </button>
 </template>
 
 <style scoped></style>

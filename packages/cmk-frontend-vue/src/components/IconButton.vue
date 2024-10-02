@@ -7,7 +7,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type VariantProps, cva } from 'class-variance-authority'
 
 import { getIconVariable } from '@/lib/utils'
-import { Button } from './ui/button'
 
 const buttonVariants = cva('', {
   variants: {
@@ -63,7 +62,7 @@ if (props?.variant) {
 </script>
 
 <template>
-  <Button
+  <button
     class="qs-icon-button button"
     :class="buttonVariants({ variant })"
     :aria-label="selectedAriaLabel"
@@ -71,7 +70,7 @@ if (props?.variant) {
   >
     <div class="icon" />
     <span>{{ props.label }}</span>
-  </Button>
+  </button>
 </template>
 
 <style scoped>

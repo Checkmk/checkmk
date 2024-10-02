@@ -6,12 +6,15 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import { onMounted, ref, h } from 'vue'
+import DemoIconButton from './DemoIconButton.vue'
 import DemoSlideIn from './DemoSlideIn.vue'
 
 const demo = ref('')
 
 function renderDemo() {
   switch (demo.value) {
+    case 'iconbutton':
+      return h(DemoIconButton)
     case 'slidein':
       return h(DemoSlideIn)
   }
@@ -34,6 +37,7 @@ onMounted(() => {
       <button @click="setTheme('facelift')">light</button>
       <ul>
         <li><a href="#" @click.prevent="demo = ''">home</a></li>
+        <li><a href="#" @click.prevent="demo = 'iconbutton'">icon button</a></li>
         <li><a href="#" @click.prevent="demo = 'slidein'">slide in</a></li>
       </ul>
     </nav>

@@ -16,17 +16,16 @@ const props = withDefaults(defineProps<AlertBoxProps>(), {
   variant: 'info'
 })
 
-const alertIcon = computed(() => {
-  const url = 'themes/facelift/images'
+const alertIconCssVariable = computed(() => {
   switch (props.variant) {
     case 'error':
-      return `${url}/icon_alert_crit.svg`
+      return 'var(--icon-alert-crit)'
     case 'warning':
-      return `${url}/icon_alert_warn.png`
+      return 'var(--icon-alert-warn)'
     case 'success':
-      return `${url}/icon_alert_up.png`
+      return 'var(--icon-alert-up)'
     default:
-      return `${url}/icon_about_checkmk.svg`
+      return 'var(--icon-about-checkmk)'
   }
 })
 
@@ -47,7 +46,7 @@ const alertClass = computed(() => {
 
 <template>
   <div :class="alertClass" :style="{ maxWidth: 'fit-content' }">
-    <img :src="alertIcon" />
+    <div class="icon" />
     <slot />
   </div>
 </template>
@@ -62,8 +61,11 @@ const alertClass = computed(() => {
   border-radius: var(--border-radius);
   margin: 12px 0;
 
-  img {
+  .icon {
+    width: 18px;
     height: 18px;
+    background-size: 18px;
+    background-image: v-bind(alertIconCssVariable);
     margin-right: 12px;
   }
 

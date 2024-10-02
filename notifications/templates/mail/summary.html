@@ -114,6 +114,7 @@
             </td>
         </tr>
     </table>
-
-    {{ macros.view_issue_button(href) }}
+    {% if href %}
+        {{ macros.view_issue_button(href) }}
+    {% endif %}
 </div>

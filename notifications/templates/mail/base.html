@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html style="background-color: #EAEAEA;">
     <head>
         <title>HTML Email template</title>
     </head>
@@ -14,6 +14,7 @@
         <table
             id="mail_container"
             style="
+                background-color: #ffffff;
                 margin: 0 auto;
                 width: 600px;
                 padding: 20px;
@@ -56,7 +57,7 @@
                         >
                             {% include 'event_overview.html' %}
 
-                            {% if graphs %}
+                            {% if data.PARAMETER_ELEMENTSS and 'graph' in data.PARAMETER_ELEMENTSS.split() %}
                                 {% include 'graph.html' %}
                             {% endif %}
 
@@ -64,17 +65,25 @@
                                 {% include 'additional.html' %}
                             {% endif %}
 
-                            {% include 'contact_groups.html' %}
+                            {% if data.PARAMETER_CONTACT_GROUPS %}
+                                {% include 'contact_groups.html' %}
+                            {% endif %}
 
-                            {% if service_notification %}
+                            {% if service_notification  and data.PARAMETER_SERVICE_LABEL%}
                                 {% include 'service_labels.html' %}
                             {% endif %}
 
-                            {% include 'host_labels.html' %}
+                            {% if data.PARAMETER_HOST_LABELS %}
+                                {% include 'host_labels.html' %}
+                            {% endif %}
 
-                            {% include 'host_tags.html' %}
+                            {% if data.PARAMETER_HOST_TAGS %}
+                                {% include 'host_tags.html' %}
+                            {% endif %}
 
-                            {{ macros.view_issue_button(href) }}
+                            {% if href %}
+                                {{ macros.view_issue_button(href) }}
+                            {% endif %}
 
                         </div>
                     </div>

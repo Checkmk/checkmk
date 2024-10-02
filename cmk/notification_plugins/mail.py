@@ -709,16 +709,7 @@ class SingleEmailContent(EmailContent):
         extend_context(escaped_context)
         content_txt, content_html, attachments = construct_content(escaped_context)
 
-        for icon in [
-            "checkmk_logo.png",
-            "additional.png",
-            "vector.png",
-            "label.png",
-            "graph.png",
-            "overview.png",
-            "contact_groups.png",
-        ]:
-            attachments.append(attach_file(icon=icon))
+        attachments = _add_template_attachments(context, attachments)
 
         # TODO: cleanup duplicate code with BulkEmailContent
         # TODO: the context is only needed because of SMPT settings used in send_mail
@@ -738,6 +729,31 @@ class SingleEmailContent(EmailContent):
             content_html=content_html,
             attachments=attachments,
         )
+
+
+def _add_template_attachments(
+    context: dict[str, str],
+    attachments: list[Attachment],
+) -> list[Attachment]:
+    # always needed
+    for icon in [
+        "checkmk_logo.png",
+        "overview.png",
+    ]:
+        attachments.append(attach_file(icon=icon))
+
+    if context.get("PARAMETER_CONTACT_GROUPS"):
+        attachments.append(attach_file(icon="contact_groups.png"))
+    if elements := context.get("PARAMETER_ELEMENTSS", "").split():
+        attachments.append(attach_file(icon="additional.png"))
+        if "graph" in elements:
+            attachments.append(attach_file(icon="graph.png"))
+    if context.get("PARAMETER_SVC_LABELS") or context.get("PARAMETER_HOST_LABELS"):
+        attachments.append(attach_file(icon="label.png"))
+    if context.get("PARAMETER_HOST_TAGS"):
+        attachments.append(attach_file(icon="vector.png"))
+
+    return attachments
 
 
 def attach_file(icon: str) -> Attachment:

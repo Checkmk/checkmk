@@ -47,6 +47,8 @@ class AuditLogFilterRaw(TypedDict, total=False):
 
 
 class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
+    separator = b"\n"
+
     def __init__(self, filepath: Path = wato_var_dir() / "log" / "wato_audit.log") -> None:
         super().__init__(path=filepath)
 

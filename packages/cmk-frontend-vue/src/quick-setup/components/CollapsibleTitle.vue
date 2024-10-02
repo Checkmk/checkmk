@@ -36,7 +36,7 @@ defineEmits(['toggleOpen'])
   cursor: pointer;
 
   &:hover {
-    background-color: none;
+    background-color: transparent;
   }
 }
 

@@ -14,10 +14,10 @@ export interface QuickSetupProps {
   /** @property {boolean} currentStage - Currently selected stage */
   currentStage: number
 
-  /** @property {QuickSetupStageSpec[]} - List of stages */
+  /** @property {QuickSetupStageSpec[]} regularStages - List of stages */
   regularStages: QuickSetupStageSpec[]
 
-  /** @property {QuickSetupSaveStageSpec} - This is the last stage, displayed without title, subtitle, or stage number */
+  /** @property {QuickSetupSaveStageSpec} saveStage - This is the last stage, displayed without title, subtitle, or stage number */
   saveStage?: QuickSetupSaveStageSpec | null
 
   /** @property {WizardMode} mode - Sets the quick setup in overview or guided mode */
@@ -29,13 +29,13 @@ export interface QuickSetupProps {
  */
 
 export interface QuickSetupSaveStageSpec {
-  /** @property {Vnode | null} content - Component to be displayed as last stage content */
+  /** @property {VNode | null} content - Component to be displayed as last stage content */
   content?: VnodeOrNull
 
   /** @property {string[]} errors - List of errors (General + stage validation) */
   errors: Readonly<string[]>
 
-  /** @property {StageButtonSpec} - List of butons to be rendered at the bottom of the stage */
+  /** @property {StageButtonSpec} buttons - List of butons to be rendered at the bottom of the stage */
   buttons: Readonly<StageButtonSpec[]>
 }
 
@@ -49,7 +49,7 @@ export interface QuickSetupStageSpec extends QuickSetupSaveStageSpec {
   /** @property {string | null | undefined} sub_title - Subtitle of the stage */
   sub_title?: string | null
 
-  /** @property {Vnode | null | undefined} recapContent - Component to be displayed when the stage is completed */
+  /** @property {VNode | null | undefined} recapContent - Component to be displayed when the stage is completed */
   recapContent?: VnodeOrNull
 }
 
@@ -63,7 +63,7 @@ interface QuickSetupSaveAndStageContentProps extends QuickSetupSaveStageSpec {
   /** @property {number} numberOfStages - How many stages are in total */
   numberOfStages: number
 
-  /** @property {bolean} loading - When true, the buttons of the stage are hidden */
+  /** @property {boolean} loading - When true, the buttons of the stage are hidden */
   loading: boolean
 
   /** @property {WizardMode} mode - Sets the quick setup in overview or guided mode */
@@ -92,7 +92,7 @@ export interface StageButtonSpec {
 }
 
 export interface QuickSetupStageContent extends QuickSetupSaveAndStageContentProps {
-  /** @property {Vnode | null} content - Element to be rendered as stage's content */
+  /** @property {VNode | null} content - Element to be rendered as stage's content */
   content: VnodeOrNull
 
   /** @property {WizardMode} mode - Sets the quick setup in overview or guided mode */

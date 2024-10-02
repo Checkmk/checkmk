@@ -64,7 +64,7 @@ def main() {
     // TODO: saas has all tests disabled for now. Need some way to login in those tests, SAASDEV-664
     def run_int_tests = true;
     def run_comp_tests = !(edition in ["saas", "managed"]);
-    def run_image_tests = edition != "managed";
+    def run_image_tests = !(edition in ["saas", "managed"]);
     def run_update_tests = (edition in ["enterprise", "cloud"]);
 
     print(

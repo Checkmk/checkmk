@@ -27,6 +27,14 @@ from tests.testlib.version import CMKVersion, git_tag_exists, version_from_env
 
 from cmk.ccc.version import Edition, Version, versions_compatible
 
+# Apply the skipif marker to all tests in this file for SaaS edition
+pytestmark = [
+    pytest.mark.skipif(
+        version_from_env().is_saas_edition(),
+        reason="CSE has its own docker entrypoint which is covered in SaaS tests",
+    )
+]
+
 logger = logging.getLogger()
 
 old_version = CMKVersion(
@@ -312,9 +320,6 @@ def test_redirects_work_with_custom_port(client: docker.DockerClient) -> None:
         assert response.headers["Location"] == "http://%s/cmk/" % address[0]
 
 
-@pytest.mark.skipif(
-    version_from_env().is_saas_edition(), reason="SaaS edition replaced the login screen"
-)
 def test_http_access_login_screen(checkmk: docker.models.containers.Container) -> None:
     ip = get_container_ip(checkmk)
 
@@ -328,8 +333,6 @@ def test_http_access_login_screen(checkmk: docker.models.containers.Container) -
     assert 'name="_login"' in response.text, "Login field not found!"
 
 
-@pytest.mark.skip(reason="SaaS edition requires cognito config")
-# @pytest.mark.skipif(not version_from_env().is_saas_edition(), reason="SaaS check saas login")
 def test_http_access_login_screen_saas(checkmk: docker.models.containers.Container) -> None:
     ip = get_container_ip(checkmk)
 

@@ -19,6 +19,8 @@ def monitoring_plugins(version_str, sha256):
             "//omd/packages/monitoring-plugins:patches/0009-check_dns-case-insensitive.dif",
             "//omd/packages/monitoring-plugins:patches/0010-get_omd_root_in_checks.dif",
             "//omd/packages/monitoring-plugins:patches/0011-check_http-sanitise-http-response-body.dif",
+            "//omd/packages/monitoring-plugins:patches/0012-fixup-ssl-linking.diff",
+            "//omd/packages/monitoring-plugins:patches/0013-link-root-plugins-statically.diff",
         ],
         patch_args = ["-p1"],
         patch_tool = "patch",

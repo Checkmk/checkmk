@@ -5,8 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { type VariantProps, cva } from 'class-variance-authority'
-
-import { getIconVariable } from '@/lib/utils'
+import IconElement from './IconElement.vue'
 
 const buttonVariants = cva('', {
   variants: {
@@ -40,6 +39,25 @@ interface IconButtonProps {
 
 const props = defineProps<IconButtonProps>()
 defineEmits(['click'])
+
+let _iconName = props.iconName || '' // custom and default case
+let rotate = 0
+
+if (props?.variant) {
+  switch (props.variant) {
+    case 'prev':
+      _iconName = 'back'
+      rotate = 90
+      break
+    case 'next':
+      _iconName = 'continue'
+      rotate = 90
+      break
+    case 'save':
+      _iconName = 'save_to_services'
+      break
+  }
+}
 </script>
 
 <template>
@@ -49,7 +67,7 @@ defineEmits(['click'])
     :aria-label="ariaLabel || label"
     @click="$emit('click')"
   >
-    <div class="icon" />
+    <IconElement :name="_iconName" variant="inline" :rotate="rotate" />
     <span>{{ props.label }}</span>
   </button>
 </template>
@@ -63,14 +81,6 @@ defineEmits(['click'])
     margin: 0;
   }
 
-  div.icon {
-    display: inline-block;
-    background-size: 15px;
-    width: 15px;
-    height: 15px;
-    margin-right: var(--spacing-half);
-  }
-
   span {
     position: relative;
     top: 1px;
@@ -80,23 +90,5 @@ defineEmits(['click'])
 .qs-icon-button--next,
 .qs-icon-button--save {
   border: 1px solid var(--default-submit-button-border-color);
-}
-
-.qs-icon-button--next div.icon {
-  background-image: var(--icon-continue);
-  transform: rotate(90deg);
-}
-
-.qs-icon-button--save div.icon {
-  background-image: var(--icon-save-to-services);
-}
-
-.qs-icon-button--prev div.icon {
-  background-image: var(--icon-back);
-  transform: rotate(90deg);
-}
-
-.qs-icon-button--custom div.icon {
-  background-image: v-bind('getIconVariable(props?.iconName)');
 }
 </style>

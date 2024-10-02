@@ -4,6 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import IconElement from '@/components/IconElement.vue'
+
 const props = defineProps<{
   validation: Array<string>
 }>()
@@ -11,7 +13,7 @@ const props = defineProps<{
 
 <template>
   <div v-if="props.validation.length > 0" class="form-validation">
-    <div class="form-validation__icon" />
+    <IconElement name="alert_crit" variant="inline" size="large" />
     <div>
       <span v-for="message in props.validation" :key="message">{{ message }}</span>
     </div>
@@ -27,15 +29,7 @@ div.form-validation {
 
   div {
     display: inline-block;
-    margin-right: 12px;
-    vertical-align: top;
-  }
-
-  div.form-validation__icon {
-    width: 18px;
-    height: 18px;
-    background-size: 18px;
-    background-image: var(--icon-alert-crit);
+    margin-left: 7px;
   }
 
   span {

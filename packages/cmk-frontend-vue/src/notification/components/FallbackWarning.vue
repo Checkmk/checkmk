@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { FallbackWarning } from '@/notification/type_defs'
 import Button from '@/components/IconButton.vue'
+import IconElement from '@/components/IconElement.vue'
 
 const props = defineProps<{
   properties: FallbackWarning
@@ -37,7 +38,7 @@ function openInNewTab(url: string) {
 <template>
   <div v-if="isContentVisible" class="help always_on">
     <div class="info_icon">
-      <img class="icon" />
+      <IconElement name="info" />
     </div>
     <div class="help_text">
       <p>{{ props.properties['i18n']['title'] }}</p>
@@ -58,10 +59,6 @@ function openInNewTab(url: string) {
 div.help {
   display: flex;
   margin-bottom: 24px;
-
-  div.info_icon img {
-    content: var(--icon-info);
-  }
 
   div.help_text {
     background-color: rgb(38 47 56);

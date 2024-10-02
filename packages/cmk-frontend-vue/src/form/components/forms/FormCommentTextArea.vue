@@ -23,12 +23,14 @@ const prependDateAndUsername = (): void => {
 }
 </script>
 <template>
-  <div style="display: flex">
+  <div class="form-comment-text-area">
     <FormMultilineText
       v-model:data="data"
       :backend-validation="backendValidation"
       :spec="{ ...spec, type: 'multiline_text' }"
     />
+    <!-- TODO: replace thise with something like
+      <Button variant='invisible'><IconElement /></Button> -->
     <img
       :alt="props.spec.i18n.prefix_date_and_comment"
       :title="props.spec.i18n.prefix_date_and_comment"
@@ -39,9 +41,13 @@ const prependDateAndUsername = (): void => {
 </template>
 
 <style scoped>
-img {
-  width: 20px;
-  height: 20px;
-  margin-left: 10px;
+.form-comment-text-area {
+  display: flex;
+
+  img {
+    width: 20px;
+    height: 20px;
+    margin-left: var(--spacing);
+  }
 }
 </style>

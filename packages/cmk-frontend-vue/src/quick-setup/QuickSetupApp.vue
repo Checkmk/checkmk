@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import LoadingIcon from '@/components/LoadingIcon.vue'
+import IconElement from '@/components/IconElement.vue'
 import QuickSetupAsync from './QuickSetupAsync.vue'
 import type { QuickSetupAppProps } from './types'
 
@@ -18,7 +18,7 @@ defineProps<QuickSetupAppProps>()
       :mode="mode"
     />
     <template #fallback>
-      <LoadingIcon />
+      <IconElement name="load-graph" size="xxlarge" />
     </template>
   </Suspense>
 </template>

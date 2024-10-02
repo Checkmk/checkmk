@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed } from 'vue'
 import Button from '@/components/IconButton.vue'
-import LoadingIcon from '@/components/LoadingIcon.vue'
+import IconElement from '@/components/IconElement.vue'
 import AlertBox from '@/components/AlertBox.vue'
 import type { QuickSetupStageContent } from './quick_setup_types'
 import { type ButtonVariants } from '@/components/IconButton.vue'
@@ -56,7 +56,7 @@ function getButtonAriaLabel(variant: ButtonVariants['variant']): string {
         />
       </div>
       <div v-else class="qs-stage-content__loading">
-        <LoadingIcon size="lg" />
+        <IconElement name="load-graph" variant="inline" size="xlarge" />
         <!-- TODO: move these texts to the backend to make them translatable (CMK-19020) -->
         <span v-if="isLast">This process may take several minutes, please wait...</span>
         <span v-else>Please wait...</span>

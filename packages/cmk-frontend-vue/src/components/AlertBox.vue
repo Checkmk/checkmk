@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { computed } from 'vue'
+import IconElement from '@/components/IconElement.vue'
 
 type AlertType = 'error' | 'warning' | 'success' | 'info'
 
@@ -16,16 +17,16 @@ const props = withDefaults(defineProps<AlertBoxProps>(), {
   variant: 'info'
 })
 
-const alertIconCssVariable = computed(() => {
+const alertIconName = computed(() => {
   switch (props.variant) {
     case 'error':
-      return 'var(--icon-alert-crit)'
+      return 'alert_crit'
     case 'warning':
-      return 'var(--icon-alert-warn)'
+      return 'alert_warn'
     case 'success':
-      return 'var(--icon-alert-up)'
+      return 'alert_up'
     default:
-      return 'var(--icon-about-checkmk)'
+      return 'about_checkmk'
   }
 })
 
@@ -46,8 +47,10 @@ const alertClass = computed(() => {
 
 <template>
   <div :class="alertClass" :style="{ maxWidth: 'fit-content' }">
-    <div class="icon" />
-    <slot />
+    <IconElement :name="alertIconName" variant="inline" size="large" />
+    <div>
+      <slot />
+    </div>
   </div>
 </template>
 
@@ -61,12 +64,8 @@ const alertClass = computed(() => {
   border-radius: var(--border-radius);
   margin: 12px 0;
 
-  .icon {
-    width: 18px;
-    height: 18px;
-    background-size: 18px;
-    background-image: v-bind(alertIconCssVariable);
-    margin-right: 12px;
+  div {
+    margin-left: 7px;
   }
 
   &.error {

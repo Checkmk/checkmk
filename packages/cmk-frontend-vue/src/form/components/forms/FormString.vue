@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import IconElement from '@/components/IconElement.vue'
 import type * as FormSpec from '@/form/components/vue_formspec_components'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import FormValidation from '@/form/components/FormValidation.vue'
@@ -93,7 +94,7 @@ function resetInput() {
       />
       <ComboboxCancel class="cancel"><label @click="resetInput">×</label></ComboboxCancel>
       <ComboboxTrigger class="trigger">
-        <img />
+        <IconElement name="select_arrow" />
       </ComboboxTrigger>
     </ComboboxAnchor>
 
@@ -116,7 +117,6 @@ function resetInput() {
   width: 24px;
   height: 9px;
   opacity: 0.3;
-  content: var(--icon-select-arrow);
 }
 
 button.trigger {

@@ -12,6 +12,7 @@ import {
   DialogPortal,
   DialogRoot
 } from 'radix-vue'
+import IconElement from '@/components/IconElement.vue'
 import { Label } from '@/components/ui/label'
 
 export interface SlideInProps {
@@ -38,7 +39,7 @@ const emit = defineEmits(['close'])
         <DialogTitle v-if="header" class="slide-in__title">
           <Label variant="title">{{ header.title }}</Label>
           <DialogClose v-if="header.closeButton" class="slide-in__close" @click="emit('close')">
-            <div class="slide-in__icon-close" />
+            <IconElement name="close" size="xsmall" />
           </DialogClose>
         </DialogTitle>
         <slot />
@@ -121,13 +122,6 @@ const emit = defineEmits(['close'])
   border: none;
   margin: 0;
   padding: 0;
-}
-
-div.slide-in__icon-close {
-  width: 10px;
-  height: 10px;
-  background-size: 10px;
-  background-image: var(--icon-close);
 }
 
 button {

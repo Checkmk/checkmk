@@ -4,8 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import IconElement from '@/components/IconElement.vue'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { getIconVariable } from '@/lib/utils'
 
 const DEFAULT_DELAY: number = 200
 const DEFAULT_ICON: string = 'main_help'
@@ -31,7 +31,7 @@ const props = defineProps<ToolTipInterface>()
   <TooltipProvider :delay-duration="delayDuration || DEFAULT_DELAY">
     <Tooltip>
       <TooltipTrigger as-child>
-        <div class="qs-tooltip__trigger" />
+        <IconElement :name="props.icon || DEFAULT_ICON" variant="inline" />
       </TooltipTrigger>
       <TooltipContent as-child class="qs-tooltip__content message">
         <div>
@@ -43,15 +43,6 @@ const props = defineProps<ToolTipInterface>()
 </template>
 
 <style scoped>
-.qs-tooltip__trigger {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  position: relative;
-  top: 4px;
-  background-image: v-bind('getIconVariable(props.icon || DEFAULT_ICON)');
-}
-
 .qs-tooltip__content {
   padding: 6px 12px;
   border-radius: 4px;

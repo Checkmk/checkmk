@@ -1663,14 +1663,6 @@ def make_meta(*, do_archive: bool) -> SDMeta:
     return SDMeta(version="1", do_archive=do_archive)
 
 
-class SDMetaAndRawTreeV0(TypedDict):
-    meta_version: Literal["0"]
-    meta_do_archive: bool
-    Attributes: SDRawAttributes
-    Table: SDRawTable
-    Nodes: Mapping[SDNodeName, SDRawTree]
-
-
 class SDMetaAndRawTree(TypedDict):
     meta: SDMeta
     raw_tree: SDRawTree
@@ -1696,15 +1688,8 @@ def parse_from_unzipped(raw: Mapping) -> SDMetaAndRawTree:
     )
 
 
-def _make_meta_and_raw_tree(meta: SDMeta, raw_tree: SDRawTree) -> SDMetaAndRawTreeV0:
-    # TODO CMK-19461: Implement version 1
-    return SDMetaAndRawTreeV0(
-        meta_version="0",
-        meta_do_archive=meta["do_archive"],
-        Attributes=raw_tree["Attributes"],
-        Table=raw_tree["Table"],
-        Nodes=raw_tree["Nodes"],
-    )
+def _make_meta_and_raw_tree(meta: SDMeta, raw_tree: SDRawTree) -> SDMetaAndRawTree:
+    return SDMetaAndRawTree(meta=meta, raw_tree=raw_tree)
 
 
 class TreeStore:

@@ -6,7 +6,6 @@
 # pylint: disable=protected-access
 
 import pprint
-from collections.abc import Sequence
 
 from cmk.utils.user import UserId
 
@@ -43,7 +42,7 @@ def register(
             title=_l("Monitor"),
             icon="main_monitoring",
             sort_index=5,
-            topics=lambda: view_menu_topics(include_reports=True),
+            topics=view_menu_topics,
             search=MonitoringSearch("monitoring_search"),
         )
     )
@@ -63,7 +62,7 @@ class Views(SidebarSnapin):
         return _("Links to global views and dashboards")
 
     def show(self):
-        show_topic_menu(treename="views", menu=view_menu_topics(include_reports=False))
+        show_topic_menu(treename="views", menu=make_topic_menu(_view_menu_items()))
 
         links = []
         if user.may("general.edit_views"):
@@ -81,11 +80,11 @@ def ajax_export_views() -> None:
 
 
 @request_memoize()
-def view_menu_topics(include_reports: bool) -> list[TopicMenuTopic]:
-    return make_topic_menu(view_menu_items(include_reports))
+def view_menu_topics() -> list[TopicMenuTopic]:
+    return make_topic_menu(_view_menu_items() + report_menu_items())
 
 
-def view_menu_items(include_reports: bool) -> Sequence[tuple[str, tuple[str, Visual]]]:
+def _view_menu_items() -> list[tuple[str, tuple[str, Visual]]]:
     # The page types that are implementing the PageRenderer API should also be
     # part of the menu. Bring them into a visual like structure to make it easy to
     # integrate them.
@@ -120,9 +119,6 @@ def view_menu_items(include_reports: bool) -> Sequence[tuple[str, tuple[str, Vis
     visuals_to_show += [("dashboards", (k, v)) for k, v in get_permitted_dashboards().items()]
     visuals_to_show += [("pages", e) for e in pages_to_show]
     visuals_to_show += page_type_items
-
-    if include_reports:
-        visuals_to_show += report_menu_items()
 
     return visuals_to_show
 

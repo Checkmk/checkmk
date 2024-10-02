@@ -20,10 +20,11 @@ export type UpdateCallback = (value: StageData) => void
 export interface ButtonDefiner {
   next: (label: string) => StageButtonSpec
   prev: (label: string) => StageButtonSpec
-  save: (label: string) => StageButtonSpec
+  save: (buttonId: string, label: string) => StageButtonSpec
 }
 
 type Callback = () => void
+type SaveCallback = (buttonId: string) => void
 
 /**
  * Renders a component for the recap section of a completed stage
@@ -68,7 +69,7 @@ export const renderContent = (
 export const defineButtons = (
   nextStageCallback: Callback,
   prevStageCallback: Callback,
-  saveCallback: Callback
+  saveCallback: SaveCallback
 ): ButtonDefiner => {
   const next = (label: string): StageButtonSpec => {
     return {
@@ -86,11 +87,11 @@ export const defineButtons = (
     }
   }
 
-  const save = (label: string): StageButtonSpec => {
+  const save = (buttonId: string, label: string): StageButtonSpec => {
     return {
       label,
       variant: 'save',
-      action: saveCallback
+      action: () => saveCallback(buttonId)
     }
   }
 

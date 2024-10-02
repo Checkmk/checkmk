@@ -14,7 +14,7 @@ from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.definitions import UniqueBundleIDStr, UniqueFormSpecIDStr
 from cmk.gui.quick_setup.v0_unstable.predefined import recaps, widgets
 from cmk.gui.quick_setup.v0_unstable.predefined import validators as qs_validators
-from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupStage
+from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupSaveAction, QuickSetupStage
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     GeneralStageErrors,
     ParsedFormData,
@@ -45,8 +45,18 @@ def register_quick_setup(
             title="Quick Setup Test",
             id=QuickSetupId("quick_setup_test"),
             stages=setup_stages if setup_stages is not None else [],
-            save_action=lambda stages: "http://save/url",
-            button_complete_label="Complete",
+            save_actions=[
+                QuickSetupSaveAction(
+                    id="save",
+                    label="Complete",
+                    action=lambda stages: "http://save/url",
+                ),
+                QuickSetupSaveAction(
+                    id="other_save",
+                    label="Complete2: The Sequel",
+                    action=lambda stages: "http://other_save",
+                ),
+            ],
         ),
     )
 
@@ -212,10 +222,29 @@ def test_quick_setup_save(clients: ClientRegistry) -> None:
     )
     resp = clients.QuickSetup.complete_quick_setup(
         quick_setup_id="quick_setup_test",
-        payload={"stages": []},
+        payload={"button_id": "save", "stages": []},
     )
     resp.assert_status_code(201)
     assert resp.json == {"redirect_url": "http://save/url"}
+
+
+def test_quick_setup_save_action_exists(clients: ClientRegistry) -> None:
+    register_quick_setup(
+        setup_stages=[
+            lambda: QuickSetupStage(
+                title="stage1",
+                configure_components=[],
+                custom_validators=[],
+                recap=[],
+                button_label="Next",
+            ),
+        ],
+    )
+    clients.QuickSetup.complete_quick_setup(
+        quick_setup_id="quick_setup_test",
+        payload={"button_id": "some_nonexistent_id", "stages": []},
+        expect_ok=False,
+    ).assert_status_code(404)
 
 
 def test_unique_id_must_be_unique(

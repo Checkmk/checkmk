@@ -77,6 +77,7 @@ if (props?.variant) {
 <style scoped>
 .qs-icon-button {
   padding: 7px 8px 6px;
+  margin: 0 0 0 10px;
 
   &:first-child {
     margin: 0;

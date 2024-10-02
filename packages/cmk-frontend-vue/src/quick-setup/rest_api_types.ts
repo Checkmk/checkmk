@@ -15,6 +15,14 @@ export interface QSStageStructure {
 }
 
 /**
+ * Save button
+ */
+export interface QSCompleteButton {
+  id: string
+  label: string
+}
+
+/**
  * Response from the API when initializing the quick setup
  */
 export interface QSInitializationResponse {
@@ -25,7 +33,7 @@ export interface QSInitializationResponse {
     stage_recap: ComponentSpec[]
     next_stage_structure: QSStageStructure
   }
-  button_complete_label: string
+  complete_buttons: QSCompleteButton[]
 }
 
 /**
@@ -84,6 +92,7 @@ export interface GeneralError extends RestApiError {
  * Request to complete the quick setup (QuickSetupFinalSaveRequest)
  */
 export interface QSRequestComplete {
+  button_id: string
   stages: QSStageRequest[]
 }
 

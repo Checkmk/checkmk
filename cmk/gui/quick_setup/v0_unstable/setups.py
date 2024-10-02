@@ -23,6 +23,13 @@ WidgetConfigurator = Callable[[], Sequence[Widget]]
 
 
 @dataclass(frozen=True)
+class QuickSetupSaveAction:
+    id: str
+    label: str
+    action: CallableSaveAction
+
+
+@dataclass(frozen=True)
 class QuickSetupStage:
     title: str
     configure_components: WidgetConfigurator | Sequence[Widget]
@@ -37,5 +44,4 @@ class QuickSetup:
     title: str
     id: QuickSetupId
     stages: Sequence[Callable[[], QuickSetupStage]]
-    button_complete_label: str
-    save_action: CallableSaveAction | None = None
+    save_actions: Sequence[QuickSetupSaveAction]

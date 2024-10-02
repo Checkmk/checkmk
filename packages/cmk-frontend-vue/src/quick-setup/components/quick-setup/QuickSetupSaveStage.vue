@@ -26,6 +26,14 @@ defineProps<QuickSetupSaveStageProps>()
 
 <style scoped>
 .qs-save-stage__content {
-  padding-left: 6.8rem;
+  /* checkmark icon size + gap from QS stage */
+  padding-left: 40px;
+}
+</style>
+
+<style>
+/* Overwrite top padding for buttons */
+.qs-save-stage__content .qs-stage-content__action {
+  padding-top: 0;
 }
 </style>

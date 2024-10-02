@@ -33,6 +33,17 @@ class Errors(BaseSchema):
     )
 
 
+class QuickSetupCompleteButton(BaseSchema):
+    id = fields.String(
+        example="save",
+        description="The button id",
+    )
+    label = fields.String(
+        example="Save configuration",
+        description="The label of the complete button of the overall Quick setup",
+    )
+
+
 class QuickSetupNextStageStructure(BaseSchema):
     components = fields.List(
         fields.Dict,
@@ -92,9 +103,10 @@ class QuickSetupBaseResponse(BaseSchema):
         example="aws_quicksetup",
         description="The quicksetup id",
     )
-    button_complete_label = fields.String(
-        example="Save configuration",
-        description="The label of the complete button of the overall Quick setup",
+    complete_buttons = fields.List(
+        fields.Nested(QuickSetupCompleteButton),
+        example=[{"id": "save", "label": "Save configuration"}],
+        description="A list of all complete buttons",
     )
 
 

@@ -20,7 +20,7 @@ from cmk.gui.quick_setup.v0_unstable.predefined import (
     build_quick_setup_formspec_map,
     stage_components,
 )
-from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup
+from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupSaveAction
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     GeneralStageErrors,
     ParsedFormData,
@@ -86,11 +86,17 @@ class Stage:
 
 
 @dataclass
+class CompleteButton:
+    id: str
+    label: str
+
+
+@dataclass
 class QuickSetupOverview:
     quick_setup_id: QuickSetupId
     overviews: list[StageOverview]
     stage: Stage
-    button_complete_label: str
+    complete_buttons: list[CompleteButton]
     mode: str = field(default="guided")
 
 
@@ -106,7 +112,7 @@ class CompleteStage:
 class QuickSetupAllStages:
     quick_setup_id: QuickSetupId
     stages: list[CompleteStage]
-    button_complete_label: str
+    complete_buttons: list[CompleteButton]
     mode: str = field(default="overview")
 
 
@@ -187,7 +193,10 @@ def quick_setup_guided_mode(quick_setup: QuickSetup) -> QuickSetupOverview:
                 button_label=stages[0].button_label,
             ),
         ),
-        button_complete_label=quick_setup.button_complete_label,
+        complete_buttons=[
+            CompleteButton(id=save_action.id, label=save_action.label)
+            for save_action in quick_setup.save_actions
+        ],
     )
 
 
@@ -256,13 +265,11 @@ def retrieve_next_stage(
 
 def complete_quick_setup(
     quick_setup: QuickSetup,
+    save_action: QuickSetupSaveAction,
     stages_raw_formspecs: Sequence[RawFormData],
 ) -> QuickSetupSaveRedirect:
-    if quick_setup.save_action is None:
-        return QuickSetupSaveRedirect(redirect_url=None)
-
     return QuickSetupSaveRedirect(
-        redirect_url=quick_setup.save_action(
+        redirect_url=save_action.action(
             _form_spec_parse(
                 stages_raw_formspecs,
                 build_quick_setup_formspec_map([stage() for stage in quick_setup.stages]),
@@ -286,5 +293,8 @@ def quick_setup_overview_mode(quick_setup: QuickSetup) -> QuickSetupAllStages:
             )
             for stage in stages
         ],
-        button_complete_label=quick_setup.button_complete_label,
+        complete_buttons=[
+            CompleteButton(id=save_action.id, label=save_action.label)
+            for save_action in quick_setup.save_actions
+        ],
     )

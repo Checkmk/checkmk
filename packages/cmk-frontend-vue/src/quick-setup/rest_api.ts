@@ -98,11 +98,13 @@ export const validateStage = async (
 
 export const completeQuickSetup = async (
   quickSetupId: string,
+  buttonId: string,
   formData: StageData[]
 ): Promise<QSResponseComplete> => {
   return new Promise((resolve, reject) => {
     const url = COMPLETE_QUICK_SETUP_URL.replace('{QUICK_SETUP_ID}', quickSetupId)
     const payload: QSRequestComplete = {
+      button_id: buttonId,
       stages: formData.map((step) => ({ form_data: step }))
     }
 

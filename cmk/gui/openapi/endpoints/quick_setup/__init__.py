@@ -153,18 +153,28 @@ def complete_quick_setup_action(params: Mapping[str, Any]) -> Response:
     """Save the quick setup"""
     body = params["body"]
     quick_setup_id = params["quick_setup_id"]
+    button_id = body["button_id"]
     quick_setup = quick_setup_registry.get(quick_setup_id)
     if quick_setup is None:
         return _serve_error(
             title="Quick setup not found",
             detail=f"Quick setup with id '{quick_setup_id}' does not exist.",
         )
-    return _serve_data(
-        data=complete_quick_setup(
-            quick_setup=quick_setup,
-            stages_raw_formspecs=[RawFormData(stage["form_data"]) for stage in body["stages"]],
-        ),
-        status_code=201,
+    for save_action in quick_setup.save_actions:
+        if save_action.id == button_id:
+            return _serve_data(
+                complete_quick_setup(
+                    quick_setup=quick_setup,
+                    save_action=save_action,
+                    stages_raw_formspecs=[
+                        RawFormData(stage["form_data"]) for stage in body["stages"]
+                    ],
+                ),
+                status_code=201,
+            )
+    return _serve_error(
+        title="Save action not found",
+        detail=f"Save action with id '{button_id}' does not exist.",
     )
 
 

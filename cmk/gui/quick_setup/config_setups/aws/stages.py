@@ -22,7 +22,7 @@ from cmk.gui.quick_setup.v0_unstable.predefined import (
     widgets,
 )
 from cmk.gui.quick_setup.v0_unstable.predefined import validators as qs_validators
-from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupStage
+from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupSaveAction, QuickSetupStage
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, QuickSetupId, ServiceInterest
 from cmk.gui.quick_setup.v0_unstable.widgets import (
     Collapsible,
@@ -271,6 +271,11 @@ quick_setup_aws = QuickSetup(
         configure_services_to_monitor,
         review_and_run_preview_service_discovery,
     ],
-    save_action=save_action,
-    button_complete_label=_("Save & go to Activate changes"),
+    save_actions=[
+        QuickSetupSaveAction(
+            id="activate_changes",
+            label=_("Save & go to Activate changes"),
+            action=save_action,
+        ),
+    ],
 )

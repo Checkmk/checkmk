@@ -119,7 +119,7 @@ const prevStage = () => {
   quickSetupHook.prev()
 }
 
-const save = async () => {
+const save = async (buttonId: string) => {
   loading.value = true
   globalError.value = null
 
@@ -131,7 +131,11 @@ const save = async () => {
   }
 
   try {
-    const { redirect_url: redirectUrl } = await completeQuickSetup(props.quick_setup_id, userInput)
+    const { redirect_url: redirectUrl } = await completeQuickSetup(
+      props.quick_setup_id,
+      buttonId,
+      userInput
+    )
     window.location.href = redirectUrl
   } catch (err) {
     loading.value = false
@@ -220,7 +224,10 @@ stages.value.push({
   form_spec_errors: {},
   errors: [],
   user_input: {},
-  buttons: [defineButton.save(data.button_complete_label), defineButton.prev(PREV_BUTTON_LABEL)]
+  buttons: [
+    ...data.complete_buttons.map((button) => defineButton.save(button.id, button.label)),
+    defineButton.prev(PREV_BUTTON_LABEL)
+  ]
 })
 
 const handleError = (err: RestApiError) => {

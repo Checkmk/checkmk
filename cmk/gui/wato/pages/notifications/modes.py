@@ -3199,8 +3199,13 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
     def name(cls) -> str:
         return "notification_parameters"
 
-    def _back_mode(self) -> ActionResult:
-        return redirect(mode_url("edit_notification_parameters", method=self._method()))
+    @classmethod
+    def parent_mode(cls) -> type[WatoMode] | None:
+        return ModeNotificationParametersOverview
+
+    def _breadcrumb_url(self) -> str:
+        """Ensure the URL is computed correctly when linking from man pages to the topic"""
+        return self.mode_url(method=self._method())
 
     def title(self) -> str:
         return _("Parameters for %s") % request.var("method")
@@ -3370,6 +3375,11 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
     @classmethod
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeNotificationParameters
+
+    def breadcrumb(self) -> Breadcrumb:
+        with request.stashed_vars():
+            request.set_var("method", self._method())
+            return super().breadcrumb()
 
     def _back_mode(self) -> ActionResult:
         return redirect(mode_url("notification_parameters", method=self._method()))

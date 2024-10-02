@@ -7,7 +7,7 @@ from collections.abc import Sequence
 
 from cmk.gui.i18n import _
 from cmk.gui.quick_setup.v0_unstable._registry import QuickSetupRegistry
-from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupStage
+from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupSaveAction, QuickSetupStage
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, QuickSetupId
 from cmk.gui.quick_setup.v0_unstable.widgets import Widget
 from cmk.gui.watolib.mode import mode_url
@@ -105,7 +105,11 @@ def general_properties() -> QuickSetupStage:
     )
 
 
-def save_action(all_stages_form_data: ParsedFormData) -> str:
+def save_and_test_action(all_stages_form_data: ParsedFormData) -> str:
+    return mode_url("test_notifications")
+
+
+def save_and_new_action(all_stages_form_data: ParsedFormData) -> str:
     return mode_url("test_notifications")
 
 
@@ -124,6 +128,16 @@ quick_setup_notifications = QuickSetup(
         sending_conditions,
         general_properties,
     ],
-    save_action=save_action,
-    button_complete_label=_("Apply & test notification rule"),
+    save_actions=[
+        QuickSetupSaveAction(
+            id="apply_and_test",
+            label=_("Apply & test notification rule"),
+            action=save_and_test_action,
+        ),
+        QuickSetupSaveAction(
+            id="apply_and_create_new",
+            label=_("Apply & create another rule"),
+            action=save_and_new_action,
+        ),
+    ],
 )

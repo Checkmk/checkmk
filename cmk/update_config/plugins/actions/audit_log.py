@@ -13,10 +13,44 @@ from typing_extensions import Buffer
 from cmk.utils import tty
 from cmk.utils.exceptions import MKException, MKGeneralException
 
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.paths import wato_var_dir
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.update_config.update_state import UpdateActionState
+
+
+class WatoAuditLogConversion(UpdateAction):
+    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
+        for file_ in (wato_var_dir() / "log").glob("wato_audit.*"):
+            if self.needs_conversion(file_):
+                self.convert_file(file_)
+
+    @staticmethod
+    def needs_conversion(file_: Path) -> bool:
+        try:
+            AuditLogStore(file_).read()
+        except MKUserError:
+            return True
+        return False
+
+    @staticmethod
+    def convert_file(file_: Path) -> None:
+        with file_.open("rb") as f:
+            data = f.read()
+        with file_.open("wb") as f:
+            f.write(data.replace(b"\0", b"\n"))
+
+
+# This must go first of all audit log thingies
+update_action_registry.register(
+    WatoAuditLogConversion(
+        name="wato_audit_log_converter",
+        title="Convert WATO audit log to be newline separated",
+        sort_index=10,
+    )
+)
 
 
 class UpdateAuditLog(UpdateAction):  # pylint: disable=too-few-public-methods
@@ -64,7 +98,7 @@ class UpdateAuditLog(UpdateAction):  # pylint: disable=too-few-public-methods
         with open(self._audit_log_path, "rb") as source_file:
             source_content = source_file.read()
 
-        lines = source_content.split(b"\0")
+        lines = source_content.split(b"\n")
 
         suffix = time.strftime("%Y-%m-%d")
         current_file = 0
@@ -77,7 +111,7 @@ class UpdateAuditLog(UpdateAction):  # pylint: disable=too-few-public-methods
             if current_size + line_size > self._audit_log_target_size:
                 output_file_path = output_dir / f"wato_audit.log.{suffix}"
                 with open(output_file_path, "wb") as output_file:
-                    output_file.write(b"\0".join(current_lines))
+                    output_file.write(b"\n".join(current_lines))
                 current_file += 1
                 current_lines = []
                 current_size = 0
@@ -93,7 +127,7 @@ class UpdateAuditLog(UpdateAction):  # pylint: disable=too-few-public-methods
         if current_lines:
             output_file_path = output_dir / f"wato_audit.log.{suffix}"
             with open(output_file_path, "wb") as output_file:
-                output_file.write(b"\0".join(current_lines))
+                output_file.write(b"\n".join(current_lines))
 
     def _clear_source_log(self) -> None:
         self._audit_log_path.write_text("")

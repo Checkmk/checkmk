@@ -5,6 +5,7 @@
 
 import logging
 import time
+from pathlib import Path
 
 import pytest
 
@@ -16,7 +17,11 @@ from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.paths import wato_var_dir
 
-from cmk.update_config.plugins.actions.audit_log import SanitizeAuditLog, UpdateAuditLog
+from cmk.update_config.plugins.actions.audit_log import (
+    SanitizeAuditLog,
+    UpdateAuditLog,
+    WatoAuditLogConversion,
+)
 
 
 @pytest.fixture(name="plugin", scope="module")
@@ -62,9 +67,9 @@ def test_audit_log(plugin: UpdateAuditLog) -> None:
             continue
 
         with open(wato_var_dir() / "log" / file, "rb") as f:
-            content += f.read() + b"\0"
+            content += f.read() + b"\n"
 
-    assert expected_content == content[:-1]  # remove duplicated b"\0"
+    assert expected_content == content[:-1]  # remove duplicated b"\n"
 
 
 @pytest.fixture(name="sanitize_plugin", scope="module")
@@ -139,3 +144,72 @@ def test_sanitize_audit_log(
         update_flag.unlink()
     sanitize_plugin(logging.getLogger(), {})
     assert AuditLogStore().read()[-1].diff_text == expected_diff_text
+
+
+EXAMPLE_ENTRIES = [
+    AuditLogStore.Entry(
+        time=0,
+        object_ref=None,
+        user_id="unittest",
+        action="oldentry",
+        text="Lorem ipsum",
+        diff_text="diff",
+    ),
+    AuditLogStore.Entry(
+        time=1,
+        object_ref=None,
+        user_id="unittest",
+        action="oldentry",
+        text="Lorem ipsum\ndolor sit amen",
+        diff_text="diff\0text",
+    ),
+]
+
+
+class OldAuditStore(AuditLogStore):
+    separator = b"\0"
+
+
+def test_conversion(tmp_path: Path) -> None:
+    store_path = tmp_path / "wato_audit.log"
+
+    old_store = OldAuditStore(store_path)
+    old_store.append(EXAMPLE_ENTRIES[0])
+    old_store.append(EXAMPLE_ENTRIES[1])
+
+    assert (
+        store_path.read_bytes()
+        == repr(AuditLogStore.Entry.serialize(EXAMPLE_ENTRIES[0])).encode()
+        + b"\0"
+        + repr(AuditLogStore.Entry.serialize(EXAMPLE_ENTRIES[1])).encode()
+        + b"\0"
+    )
+
+    WatoAuditLogConversion.convert_file(store_path)
+    assert (
+        store_path.read_bytes()
+        == repr(AuditLogStore.Entry.serialize(EXAMPLE_ENTRIES[0])).encode()
+        + b"\n"
+        + repr(AuditLogStore.Entry.serialize(EXAMPLE_ENTRIES[1])).encode()
+        + b"\n"
+    )
+    new_store = AuditLogStore(store_path)
+    assert new_store.read() == EXAMPLE_ENTRIES
+
+
+def test_conversion_needed(tmp_path: Path) -> None:
+    store_path = tmp_path / "wato_audit.log"
+
+    old_store = OldAuditStore(store_path)
+    for entry in EXAMPLE_ENTRIES:
+        old_store.append(entry)
+        assert WatoAuditLogConversion.needs_conversion(store_path)
+
+    WatoAuditLogConversion.convert_file(store_path)
+    assert not WatoAuditLogConversion.needs_conversion(store_path)
+
+    new_store_path = tmp_path / "wato_audit2.log"
+    new_store = AuditLogStore(new_store_path)
+    for entry in EXAMPLE_ENTRIES:
+        new_store.append(entry)
+        assert not WatoAuditLogConversion.needs_conversion(new_store_path)

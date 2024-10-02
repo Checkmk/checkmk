@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { FallbackWarning } from '@/form/components/vue_formspec_components'
-import Button from '@/quick-setup/components/IconButton.vue'
+import Button from '@/components/IconButton.vue'
 
 const props = defineProps<{
   properties: FallbackWarning

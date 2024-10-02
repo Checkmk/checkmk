@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot } from 'radix-vue'
-import { Label } from '@/quick-setup/components/ui/label'
+import { Label } from '@/components/ui/label'
 
 export interface SlideInProps {
   open: boolean

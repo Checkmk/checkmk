@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { VNode } from 'vue'
-import { type ButtonVariants } from '@/quick-setup/components/IconButton.vue'
+import { type ButtonVariants } from '@/components/IconButton.vue'
 import type { WizardMode } from './useWizard'
 
 export interface QuickSetupProps {

@@ -5,9 +5,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { computed } from 'vue'
-import Button from '@/quick-setup/components/IconButton.vue'
-import LoadingIcon from '@/quick-setup/components/LoadingIcon.vue'
-import AlertBox from '@/quick-setup/components/AlertBox.vue'
+import Button from '@/components/IconButton.vue'
+import LoadingIcon from '@/components/LoadingIcon.vue'
+import AlertBox from '@/components/AlertBox.vue'
 import type { QuickSetupStageContent } from './quick_setup_types'
 
 const props = defineProps<QuickSetupStageContent>()

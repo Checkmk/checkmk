@@ -398,7 +398,7 @@ export function confirm_link(url, message, custom_args) {
             document.createElement("input"),
             {
                 type: "hidden",
-                name: "csrf_token",
+                name: "_csrf_token",
                 value: global_csrf_token,
             }
         );

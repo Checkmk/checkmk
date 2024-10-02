@@ -364,7 +364,7 @@ class HTMLGenerator(HTMLWriter):
         )
 
         if hasattr(session, "session_info"):
-            self.hidden_field("csrf_token", session.session_info.csrf_token)
+            self.hidden_field("_csrf_token", session.session_info.csrf_token)
 
         self.hidden_field("filled_in", name, add_var=True)
         if add_transid:

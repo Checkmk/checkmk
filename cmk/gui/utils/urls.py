@@ -251,7 +251,7 @@ def makeactionuri(
         addvars
         + [
             ("_transid", transaction_manager.get()),
-            ("csrf_token", session.session_info.csrf_token),
+            ("_csrf_token", session.session_info.csrf_token),
         ],
         filename=filename,
         delvars=delvars,
@@ -272,7 +272,7 @@ def makeactionuri_contextless(
         addvars
         + [
             ("_transid", transaction_manager.get()),
-            ("csrf_token", session.session_info.csrf_token),
+            ("_csrf_token", session.session_info.csrf_token),
         ],
         filename=filename,
     )

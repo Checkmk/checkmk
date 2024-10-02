@@ -3860,7 +3860,7 @@ def make_action_link(vars_: HTTPVariables) -> str:
         vars_
         + [
             ("_transid", transactions.get()),
-            ("csrf_token", session.session_info.csrf_token),
+            ("_csrf_token", session.session_info.csrf_token),
         ]
     )
 

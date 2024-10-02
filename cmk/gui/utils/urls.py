@@ -131,7 +131,7 @@ def makeactionuri(
 ) -> str:
     session_vars: HTTPVariables = [("_transid", transaction_manager.get())]
     if session and session.session_info is not None:
-        session_vars.append(("csrf_token", session.session_info.csrf_token))
+        session_vars.append(("_csrf_token", session.session_info.csrf_token))
 
     return makeuri(request, addvars=addvars + session_vars, filename=filename, delvars=delvars)
 
@@ -144,7 +144,7 @@ def makeactionuri_contextless(
 ) -> str:
     session_vars: HTTPVariables = [("_transid", transaction_manager.get())]
     if session and session.session_info is not None:
-        session_vars.append(("csrf_token", session.session_info.csrf_token))
+        session_vars.append(("_csrf_token", session.session_info.csrf_token))
 
     return makeuri_contextless(request, addvars + session_vars, filename=filename)
 

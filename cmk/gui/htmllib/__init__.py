@@ -1320,7 +1320,7 @@ class html(ABCHTMLGenerator):
             enctype="multipart/form-data" if method.lower() == "post" else None,
         )
         if hasattr(session, "session_info"):
-            self.hidden_field("csrf_token", session.session_info.csrf_token)
+            self.hidden_field("_csrf_token", session.session_info.csrf_token)
         self.hidden_field("filled_in", name, add_var=True)
         if add_transid:
             self.hidden_field(

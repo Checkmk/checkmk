@@ -16,9 +16,9 @@ def check_csrf_token(token: Optional[str] = None) -> None:
     if not hasattr(session, "session_info"):
         return
 
-    csrf_token = token or request.get_str_input("csrf_token")
+    csrf_token = token or request.get_str_input("_csrf_token")
     if csrf_token is None:
-        csrf_token = request.get_request().get("csrf_token")
+        csrf_token = request.get_request().get("_csrf_token")
 
     if csrf_token is None:
         raise MKGeneralException(_("No CSRF token received"))

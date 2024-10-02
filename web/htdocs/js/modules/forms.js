@@ -308,7 +308,7 @@ export function confirm_link(url, message) {
         });
         const csrf_token_input = Object.assign(document.createElement("input"), {
             type: "hidden",
-            name: "csrf_token",
+            name: "_csrf_token",
             value: global_csrf_token,
         });
 

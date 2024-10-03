@@ -30,8 +30,13 @@ genrule(
 
 compile_pip_requirements(
     name = "requirements",
+    timeout = "moderate",
+    env = {
+        "PIPENV_PYPI_MIRROR": "https://pypi.org/simple",
+    },
     requirements_in = "requirements_in.txt",
     requirements_txt = "@//:requirements_lock.txt",
+    tags = ["manual"],
     visibility = ["//visibility:public"],
 )
 

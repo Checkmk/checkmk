@@ -700,6 +700,10 @@ msgstr "%s rata"
 msgid "%s resulting notifications"
 msgstr "%s notificări rezultate"
 
+#, fuzzy, python-format
+msgid "%s rules"
+msgstr "%s Cereri"
+
 #, python-format
 msgid "%s running for %s"
 msgstr "%s rulează pentru %s"
@@ -1001,6 +1005,10 @@ msgstr "1 schimbare"
 
 msgid "1 row"
 msgstr "1 rând"
+
+#, fuzzy
+msgid "1 rule"
+msgstr "regula"
 
 msgid "1 year"
 msgstr "1 an"
@@ -3369,6 +3377,9 @@ msgstr "Activarea modificărilor în așteptare"
 
 msgid "Activate resolution with following resolution transition ID"
 msgstr "Activați rezoluția cu următorul ID de tranziție a rezoluției"
+
+msgid "Activate the changes by clicking the Activate on selected sites button."
+msgstr ""
 
 msgid "Activate total bandwidth metric (sum of in and out)"
 msgstr "Activați metrica lățime de bandă totală (suma intrărilor și ieșirilor)"
@@ -6593,8 +6604,20 @@ msgstr "Prezentare generală a aplicațiilor"
 msgid "Applications, Processes & Services"
 msgstr "Aplicații, procese & Servicii"
 
+#, fuzzy
+msgid "Applied to"
+msgstr "Aplicați la"
+
 msgid "Apply"
 msgstr "Aplicați"
+
+#, fuzzy
+msgid "Apply & create another rule"
+msgstr "Regula de gestionare a alertelor"
+
+#, fuzzy
+msgid "Apply & test notification rule"
+msgstr "Ștergeți această regulă de notificare"
 
 #, fuzzy
 msgid "Apply Latency"
@@ -6617,6 +6640,11 @@ msgstr "Aplicați condițiile"
 
 msgid "Apply filters"
 msgstr "Aplicați filtre"
+
+msgid ""
+"Apply filters to specify which hosts and services are affected by this "
+"notification rule."
+msgstr ""
 
 #, fuzzy
 msgid "Apply finish time"
@@ -11339,6 +11367,10 @@ msgstr "Conexiune LDAP schimbată %s"
 msgid "Changed alert handler rule %d"
 msgstr "Regula de gestionare a alertelor a fost modificată %d"
 
+#, fuzzy
+msgid "Changed by"
+msgstr "Modificat"
+
 msgid "Changed entries"
 msgstr "Intrări modificate"
 
@@ -11446,6 +11478,10 @@ msgstr ""
 
 msgid "Changes"
 msgstr "Modificări"
+
+#, fuzzy
+msgid "Changes activated"
+msgstr "Nu a fost niciodată activat"
 
 msgid "Changes since last dump"
 msgstr "Modificări de la ultima descărcare de gestiune"
@@ -14826,6 +14862,11 @@ msgstr "Couchbase vBuckets"
 
 msgid "Couchbase: Cache"
 msgstr "Couchbase: Cache"
+
+msgid ""
+"Could not access your AWS account. Please check your Access and Secret key "
+"and try again."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -21232,6 +21273,9 @@ msgstr "Profil de utilizator editat pentru utilizator %s"
 msgid "Edition"
 msgstr "Ediție"
 
+msgid "Effect"
+msgstr ""
+
 msgid "Effective  State"
 msgstr "Statul efectiv"
 
@@ -23664,10 +23708,6 @@ msgstr "Nu a reușit să redea valoarea:"
 msgid "Failed to render value: %r"
 msgstr "Nu a reușit să redea valoarea: %r."
 
-#, fuzzy, python-format
-msgid "Failed to save broker certificates: %s"
-msgstr "Nu s-a reușit să se obțină certificatul peer (%s)"
-
 #, python-format
 msgid "Failed to search rule of ruleset '%s' in folder '%s' (%r): %s"
 msgstr ""
@@ -24204,6 +24244,10 @@ msgid ""
 msgstr ""
 "Filtrează toate agregările care se bazează pe informațiile de stare ale "
 "gazdei respective. Potrivire exactă (fără expresie regulată)"
+
+#, fuzzy
+msgid "Filter for hosts/services"
+msgstr "Timpul de nefuncționare pentru gazdă/serviciu"
 
 msgid "Filter group (see help)"
 msgstr "Grup de filtre (a se vedea ajutorul)"
@@ -25669,6 +25713,10 @@ msgstr "Model de globbing pentru fișierele de intrare"
 msgid "Go critical if all licenses are used"
 msgstr "Devine critic dacă sunt folosite toate licențele"
 
+#, fuzzy
+msgid "Go to \"All hosts\""
+msgstr "Toate gazdele"
+
 msgid "Go to AWS root account > Services > IAM."
 msgstr ""
 
@@ -25680,6 +25728,12 @@ msgstr "Mergeți la pagina principală"
 
 msgid "Go to rules of this InfluxDB connection"
 msgstr "Mergeți la regulile acestei conexiuni InfluxDB"
+
+#, python-format
+msgid ""
+"Go to the Monitor > All Hosts page or click the Go to All hosts button to "
+"start monitoring your %s services."
+msgstr ""
 
 msgid "Go to the Saas Admin Panel"
 msgstr "Mergeți la panoul de administrare Saas"
@@ -27542,6 +27596,10 @@ msgstr "Istorie"
 
 msgid "History Line Number"
 msgstr "Numărul liniei de istorie"
+
+#, fuzzy
+msgid "History action type"
+msgstr "Statul de înregistrare"
 
 msgid "History entries of one specific event"
 msgstr "Înregistrări istorice ale unui anumit eveniment"
@@ -31950,21 +32008,6 @@ msgstr ""
 "de nume corespunzătoare. Rețineți că acest lucru se referă la tot ceea ce "
 "face parte din spațiile de nume corespunzătoare, cum ar fi, de exemplu, "
 "podurile."
-
-#, fuzzy
-msgid ""
-"If your monitoring produces a notification that is not matched by any of "
-"your notification rules, the notification will not be sent out. To prevent "
-"that, we recommend configuring either the global setting or enable the "
-"fallback contact option for at least one of your users."
-msgstr ""
-"<b>Avertisment</b><br><br>Nu ați configurat o <a href=\"%s\">>adresă de e-"
-"mail de rezervă</a> și nici nu ați activat primirea de e-mailuri de rezervă "
-"pentru niciun utilizator. Dacă monitorizarea dvs. produce o notificare care "
-"nu se potrivește cu niciuna dintre regulile de notificare, notificarea nu va "
-"fi trimisă. Pentru a preveni acest lucru, vă rugăm să configurați fie "
-"setarea globală, fie să activați opțiunea de contact de rezervă pentru cel "
-"puțin unul dintre utilizatorii dvs."
 
 msgid "Ignore"
 msgstr "Ignoră"
@@ -38116,6 +38159,10 @@ msgid "Managed Robot"
 msgstr "Obiecte gestionate"
 
 #, fuzzy
+msgid "Managed Robots"
+msgstr "Obiecte gestionate"
+
+#, fuzzy
 msgid "Managed objects"
 msgstr "Obiecte gestionate"
 
@@ -41731,6 +41778,29 @@ msgstr "Următoarea notificare"
 msgid "Next run"
 msgstr "Următoarea cursă"
 
+#, fuzzy
+msgid "Next step: General properties"
+msgstr "Proprietăți generale"
+
+#, fuzzy
+msgid "Next step: Notification method (plug-in)"
+msgstr "Plugin-uri de notificare"
+
+#, fuzzy
+msgid "Next step: Recipient"
+msgstr "Destinatarul"
+
+msgid "Next step: Saving"
+msgstr ""
+
+#, fuzzy
+msgid "Next step: Sending conditions"
+msgstr "conexiuni în așteptare"
+
+#, fuzzy
+msgid "Next step: Specify host/services"
+msgstr "Tipul de comentariu (gazdă/serviciu)"
+
 msgid "Nginx Server"
 msgstr "Server Nginx"
 
@@ -42752,6 +42822,10 @@ msgstr "Nivelul jurnalului de notificare"
 
 msgid "Notification method"
 msgstr "Metoda de notificare"
+
+#, fuzzy
+msgid "Notification method (plug-in)"
+msgstr "Plugin-uri de notificare"
 
 #, fuzzy
 msgid "Notification parameter"
@@ -52157,6 +52231,11 @@ msgstr "Salvați & rulați descoperirea serviciilor"
 msgid "Review your configuration and run preview service discovery"
 msgstr "Salvați & rulați descoperirea serviciilor"
 
+msgid ""
+"Review your notification rule before applying it. They will take effect "
+"right away without 'Activate changes'."
+msgstr ""
+
 msgid "Revolutions per minute"
 msgstr "Rotații pe minut"
 
@@ -54292,9 +54371,7 @@ msgid "Send notifications to remote Event Console"
 msgstr "Trimiteți notificări către consola de evenimente la distanță"
 
 #, fuzzy
-msgid ""
-"Send out HTML/ASCII email notification according to notification rules "
-"(uncheck to avoid spam)"
+msgid "Send out HTML/ASCII email notification according to notification rules"
 msgstr ""
 "Trimiteți notificări în conformitate cu regulile de notificare (debifați "
 "pentru a evita spam-ul)"
@@ -54348,6 +54425,10 @@ msgstr "Trimiteți prin e-mail"
 
 msgid "Sending Power"
 msgstr "Puterea de trimitere"
+
+#, fuzzy
+msgid "Sending conditions"
+msgstr "Condiții stabilite"
 
 msgid "Sending reply"
 msgstr "Trimiterea răspunsului"
@@ -58127,6 +58208,11 @@ msgstr ""
 "Precizați ce trebuie să facem dacă graficul selectat lipsește sau nu poate "
 "fi recuperat."
 
+msgid ""
+"Specify when and how notifications are sent based on frequency, timing, and "
+"content criteria."
+msgstr ""
+
 msgid "Specify which port types should not be discovered"
 msgstr "Specificați ce tipuri de porturi nu trebuie să fie descoperite"
 
@@ -60514,6 +60600,16 @@ msgstr ""
 "Etichetele pot fi utilizate pentru a clasifica gazdele și serviciile într-un "
 "mod flexibil."
 
+msgid "Tags enabled but no key defined."
+msgstr ""
+
+msgid "Tags enabled but no tags defined."
+msgstr ""
+
+#, fuzzy
+msgid "Tags enabled but no values defined."
+msgstr "Nu este definită nicio sursă de date."
+
 #, fuzzy, python-format
 msgid "Tags of the alert.<br><br>%s"
 msgstr "Etichete de alertă."
@@ -62036,6 +62132,10 @@ msgid "The central (%s) and remote site (%s) are not compatible. Reason: %s"
 msgstr ""
 "Site-ul central (%s) și cel de la distanță (%s) nu sunt compatibile. "
 "Motivul: %s."
+
+#, fuzzy
+msgid "The changes have been activated successfully."
+msgstr "Nu a fost niciodată activat"
 
 #, python-format
 msgid "The character <tt>%s</tt> is not allowed here."
@@ -66236,6 +66336,9 @@ msgstr ""
 "agentului de pe gazda monitorizată (consultați `cmk-agent-ctl help`).</li></"
 "ul>"
 
+msgid "This action will affect all pending changes you have made."
+msgstr ""
+
 msgid ""
 "This active check sends out special emails to a defined mail address using "
 "either the SMTP protocol or an EWS connection and then tries to receive "
@@ -67733,6 +67836,11 @@ msgstr "Această pagină nu oferă un ajutor în linie."
 
 msgid "This page does not support cluster hosts."
 msgstr "Această pagină nu acceptă gazde de cluster."
+
+msgid ""
+"This page is currently not implemented, needs FormSpec migration of "
+"NotificationParameter."
+msgstr ""
 
 msgid "This page was not found. Sorry."
 msgstr "Această pagină nu a fost găsită. Ne pare rău."
@@ -73914,6 +74022,10 @@ msgstr ""
 msgid "Tried to register incompatible rulespec: %r"
 msgstr "A încercat să înregistreze o specificație de reguli incompatibilă: %r."
 
+#, fuzzy
+msgid "Triggering events"
+msgstr "Arhiva evenimentelor"
+
 msgid "Trivial change"
 msgstr "Schimbare banală"
 
@@ -75110,6 +75222,14 @@ msgstr "Încărcați răspunsul"
 
 msgid "Upload verification response file"
 msgstr "Încărcați fișierul de răspuns la verificare"
+
+#, fuzzy
+msgid "Uploaded"
+msgstr "Încărcați"
+
+#, fuzzy
+msgid "Uploaded by"
+msgstr "Încărcați cheia"
 
 #, python-format
 msgid "Uploaded custom GUI logo: %s"
@@ -79023,6 +79143,9 @@ msgstr "Care este ocazia?"
 msgid "What is the purpose?"
 msgstr "Care este scopul?"
 
+msgid "What should be send out?"
+msgstr ""
+
 msgid ""
 "When Multisite is running in debug mode, internal Python error messages are "
 "being displayed and various debug information in other places is also "
@@ -80096,6 +80219,10 @@ msgstr ""
 msgid "Who"
 msgstr "Cine"
 
+#, fuzzy
+msgid "Who should receive the notification?"
+msgstr "permite utilizatorilor să dezactiveze această notificare"
+
 msgid "WiFi connection types"
 msgstr "Tipuri de conexiuni WiFi"
 
@@ -80581,6 +80708,13 @@ msgstr ""
 "dar este utilizat în condițiile parametrilor mai departe, dacă sunt "
 "configurați parametri. Acest lucru poate crea confuzie.</li></ul>Această "
 "regulă ar trebui configurată numai în etapele inițiale."
+
+msgid ""
+"Without a fallback email address, you may miss alerts that are not covered "
+"by a notification rule. To ensure full notification coverage, we recommend "
+"that you configure the fallback email address to which all alerts that don't "
+"match a notification rule are sent."
+msgstr ""
 
 msgid ""
 "Without authentication everybody can send notifications to the spooler.  If "
@@ -85180,6 +85314,25 @@ msgstr ""
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 
+#, fuzzy, python-format
+#~ msgid "Failed to save broker certificates: %s"
+#~ msgstr "Nu s-a reușit să se obțină certificatul peer (%s)"
+
+#, fuzzy
+#~ msgid ""
+#~ "If your monitoring produces a notification that is not matched by any of "
+#~ "your notification rules, the notification will not be sent out. To "
+#~ "prevent that, we recommend configuring either the global setting or "
+#~ "enable the fallback contact option for at least one of your users."
+#~ msgstr ""
+#~ "<b>Avertisment</b><br><br>Nu ați configurat o <a href=\"%s\">>adresă de e-"
+#~ "mail de rezervă</a> și nici nu ați activat primirea de e-mailuri de "
+#~ "rezervă pentru niciun utilizator. Dacă monitorizarea dvs. produce o "
+#~ "notificare care nu se potrivește cu niciuna dintre regulile de "
+#~ "notificare, notificarea nu va fi trimisă. Pentru a preveni acest lucru, "
+#~ "vă rugăm să configurați fie setarea globală, fie să activați opțiunea de "
+#~ "contact de rezervă pentru cel puțin unul dintre utilizatorii dvs."
+
 #~ msgid "Bulk notifications with graphs (default: 5)"
 #~ msgstr "Notificări în masă cu grafice (implicit: 5)"
 
@@ -85422,10 +85575,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 
 #~ msgid "Used quota: Absolute or relative upper levels"
 #~ msgstr "Cota utilizată: Niveluri superioare absolute sau relative"
-
-#, fuzzy
-#~ msgid "Changes have been activated"
-#~ msgstr "Nu a fost niciodată activat"
 
 #, fuzzy
 #~ msgid "Decimal places"
@@ -85723,10 +85872,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #, python-format
 #~ msgid "%s operations"
 #~ msgstr "%s operațiuni"
-
-#, fuzzy, python-format
-#~ msgid "%s requests"
-#~ msgstr "%s Cereri"
 
 #~ msgid ""
 #~ "Amount of time that the application of redo data on the standby database "

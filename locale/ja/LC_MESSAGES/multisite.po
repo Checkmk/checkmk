@@ -689,6 +689,10 @@ msgstr "%sレート"
 msgid "%s resulting notifications"
 msgstr "%s 結果の通知"
 
+#, fuzzy, python-format
+msgid "%s rules"
+msgstr "%s リクエスト"
+
 #, python-format
 msgid "%s running for %s"
 msgstr "%s は %sで実行されています"
@@ -989,6 +993,10 @@ msgstr "1つの変更"
 
 msgid "1 row"
 msgstr "1行"
+
+#, fuzzy
+msgid "1 rule"
+msgstr "ルール"
 
 msgid "1 year"
 msgstr "1年"
@@ -3225,6 +3233,9 @@ msgstr "保留中の変更をアクティブ化する"
 
 msgid "Activate resolution with following resolution transition ID"
 msgstr "次の解像度遷移IDで解像度をアクティブ化する"
+
+msgid "Activate the changes by clicking the Activate on selected sites button."
+msgstr ""
 
 msgid "Activate total bandwidth metric (sum of in and out)"
 msgstr "合計帯域幅メトリック(入力と出力の合計)をアクティブにします"
@@ -6294,8 +6305,20 @@ msgstr "アプリケーションの概要"
 msgid "Applications, Processes & Services"
 msgstr "アプリケーション、プロセスとサービス"
 
+#, fuzzy
+msgid "Applied to"
+msgstr "に適用する"
+
 msgid "Apply"
 msgstr "適用する"
+
+#, fuzzy
+msgid "Apply & create another rule"
+msgstr "アラートハンドラールール"
+
+#, fuzzy
+msgid "Apply & test notification rule"
+msgstr "この通知ルールを削除します"
 
 #, fuzzy
 msgid "Apply Latency"
@@ -6318,6 +6341,11 @@ msgstr "条件を適用する"
 
 msgid "Apply filters"
 msgstr "フィルタを適用する"
+
+msgid ""
+"Apply filters to specify which hosts and services are affected by this "
+"notification rule."
+msgstr ""
 
 msgid "Apply finish time"
 msgstr "終了時間を適用する"
@@ -10856,6 +10884,10 @@ msgstr "LDAP接続 %s を変更しました"
 msgid "Changed alert handler rule %d"
 msgstr "アラートハンドラルール%dを変更しました"
 
+#, fuzzy
+msgid "Changed by"
+msgstr "変更"
+
 msgid "Changed entries"
 msgstr "変更されたエントリ"
 
@@ -10954,6 +10986,10 @@ msgstr "サイト固有の構成変数 %s を %sに変更しました。"
 
 msgid "Changes"
 msgstr "変更"
+
+#, fuzzy
+msgid "Changes activated"
+msgstr "アクティベートされたことがない"
 
 msgid "Changes since last dump"
 msgstr "前回ダンプ時からの変更点"
@@ -14156,6 +14192,11 @@ msgstr "Couchbase vBuckets"
 
 msgid "Couchbase: Cache"
 msgstr "Couchbase:キャッシュ"
+
+msgid ""
+"Could not access your AWS account. Please check your Access and Secret key "
+"and try again."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -20247,6 +20288,9 @@ msgstr "ユーザ %s のプロファイルを編集しました"
 msgid "Edition"
 msgstr "版"
 
+msgid "Effect"
+msgstr ""
+
 msgid "Effective  State"
 msgstr "効果的な  状態"
 
@@ -22624,10 +22668,6 @@ msgstr "値のレンダリングに失敗しました:"
 msgid "Failed to render value: %r"
 msgstr "値のレンダリングに失敗しました: %r"
 
-#, fuzzy, python-format
-msgid "Failed to save broker certificates: %s"
-msgstr "ピア証明書のフェッチに失敗しました(%s)"
-
 #, python-format
 msgid "Failed to search rule of ruleset '%s' in folder '%s' (%r): %s"
 msgstr "ルールセット '%s' ルの検索に失敗しましたフォルダ内 '%s' (%r): %s"
@@ -23158,6 +23198,10 @@ msgid ""
 msgstr ""
 "そのホストのステータス情報に基づいて、すべての集計をフィルタリングします。完"
 "全一致(正規表現なし)"
+
+#, fuzzy
+msgid "Filter for hosts/services"
+msgstr "ホスト/サービスのダウンタイム"
 
 msgid "Filter group (see help)"
 msgstr "フィルタグループ(ヘルプを参照)"
@@ -24606,6 +24650,10 @@ msgstr "入力ファイルのグロブパターン"
 msgid "Go critical if all licenses are used"
 msgstr "すべてのライセンスが使用されている場合はクリティカルに変化します"
 
+#, fuzzy
+msgid "Go to \"All hosts\""
+msgstr "すべてのホスト"
+
 msgid "Go to AWS root account > Services > IAM."
 msgstr ""
 
@@ -24617,6 +24665,12 @@ msgstr "メインページに移動"
 
 msgid "Go to rules of this InfluxDB connection"
 msgstr "新しいInfluxDB接続のルールに移動する"
+
+#, python-format
+msgid ""
+"Go to the Monitor > All Hosts page or click the Go to All hosts button to "
+"start monitoring your %s services."
+msgstr ""
 
 msgid "Go to the Saas Admin Panel"
 msgstr "Saasの管理パネルに移動する"
@@ -26448,6 +26502,10 @@ msgstr "ヒストリー"
 
 msgid "History Line Number"
 msgstr "履歴行番号"
+
+#, fuzzy
+msgid "History action type"
+msgstr "登録状態"
 
 msgid "History entries of one specific event"
 msgstr "1つの特定のイベントの履歴エントリ"
@@ -30749,19 +30807,6 @@ msgstr ""
 "クラスタに複数のネームスペースがある場合は、正規表現パターンのリストを指定で"
 "きます。一致するネームスペースのみが監視されます。これは、たとえばPodなど、一"
 "致する名前空間の一部であるすべてに関係することに注意してください。"
-
-#, fuzzy
-msgid ""
-"If your monitoring produces a notification that is not matched by any of "
-"your notification rules, the notification will not be sent out. To prevent "
-"that, we recommend configuring either the global setting or enable the "
-"fallback contact option for at least one of your users."
-msgstr ""
-"<b>警告</b><br><br><a href=\"%s\">フォールバックメールアドレス</a>を設定して"
-"おらず、どのユーザーに対してもフォールバックメールの受信を有効にしていませ"
-"ん。監視によって通知ルールのいずれにも一致しない通知が生成された場合、通知は"
-"送信されません。これを防ぐには、グローバル設定を構成するか、少なくとも1人の"
-"ユーザーに対してフォールバック連絡先オプションを有効にしてください。"
 
 msgid "Ignore"
 msgstr "無視する"
@@ -36810,6 +36855,10 @@ msgid "Managed Robot"
 msgstr "管理対象オブジェクト"
 
 #, fuzzy
+msgid "Managed Robots"
+msgstr "管理対象オブジェクト"
+
+#, fuzzy
 msgid "Managed objects"
 msgstr "管理対象オブジェクト"
 
@@ -40390,6 +40439,29 @@ msgstr "次の通知"
 msgid "Next run"
 msgstr "次の実行"
 
+#, fuzzy
+msgid "Next step: General properties"
+msgstr "一般的なプロパティ"
+
+#, fuzzy
+msgid "Next step: Notification method (plug-in)"
+msgstr "通知プラグイン"
+
+#, fuzzy
+msgid "Next step: Recipient"
+msgstr "受信者"
+
+msgid "Next step: Saving"
+msgstr ""
+
+#, fuzzy
+msgid "Next step: Sending conditions"
+msgstr "保留中の接続"
+
+#, fuzzy
+msgid "Next step: Specify host/services"
+msgstr "コメントタイプ(ホスト/サービス)"
+
 msgid "Nginx Server"
 msgstr "Nginxサーバー"
 
@@ -41397,6 +41469,10 @@ msgstr "通知ログレベル"
 
 msgid "Notification method"
 msgstr "通知方法"
+
+#, fuzzy
+msgid "Notification method (plug-in)"
+msgstr "通知プラグイン"
 
 #, fuzzy
 msgid "Notification parameter"
@@ -50693,6 +50769,11 @@ msgstr "サービスディスカバリの実行と保存"
 msgid "Review your configuration and run preview service discovery"
 msgstr "サービスディスカバリの実行と保存"
 
+msgid ""
+"Review your notification rule before applying it. They will take effect "
+"right away without 'Activate changes'."
+msgstr ""
+
 msgid "Revolutions per minute"
 msgstr "1分あたりの回転数"
 
@@ -52795,9 +52876,7 @@ msgid "Send notifications to remote Event Console"
 msgstr "リモートイベントコンソールに通知を送信する"
 
 #, fuzzy
-msgid ""
-"Send out HTML/ASCII email notification according to notification rules "
-"(uncheck to avoid spam)"
+msgid "Send out HTML/ASCII email notification according to notification rules"
 msgstr "通知は、通知ルールに従って送信されます"
 
 msgid ""
@@ -52845,6 +52924,10 @@ msgstr "メールで送信"
 
 msgid "Sending Power"
 msgstr "送信力"
+
+#, fuzzy
+msgid "Sending conditions"
+msgstr "条件を設定する"
 
 msgid "Sending reply"
 msgstr "返信を送信する"
@@ -56474,6 +56557,11 @@ msgid ""
 "retrieved."
 msgstr "選択したグラフがない、または取得できない場合の対処方法を指定します。"
 
+msgid ""
+"Specify when and how notifications are sent based on frequency, timing, and "
+"content criteria."
+msgstr ""
+
 msgid "Specify which port types should not be discovered"
 msgstr "検出しないポートタイプを指定します"
 
@@ -58834,6 +58922,16 @@ msgstr ""
 msgid "Tags can be used to classify hosts and services in a flexible way."
 msgstr "タグを使用して、ホストとサービスを柔軟に分類できます。"
 
+msgid "Tags enabled but no key defined."
+msgstr ""
+
+msgid "Tags enabled but no tags defined."
+msgstr ""
+
+#, fuzzy
+msgid "Tags enabled but no values defined."
+msgstr "データソースが定義されていません。"
+
 #, fuzzy, python-format
 msgid "Tags of the alert.<br><br>%s"
 msgstr "アラートのタグ。"
@@ -60275,6 +60373,10 @@ msgstr ""
 #, python-format
 msgid "The central (%s) and remote site (%s) are not compatible. Reason: %s"
 msgstr "セントラル(%s)は、リモートサイト(%s)と互換性がありません。理由: %s"
+
+#, fuzzy
+msgid "The changes have been activated successfully."
+msgstr "アクティベートされたことがない"
 
 #, python-format
 msgid "The character <tt>%s</tt> is not allowed here."
@@ -64321,6 +64423,9 @@ msgstr ""
 "トのエージェントコントローラもリセットする必要があります。'cmk-agent-ctl "
 "help' を参照してください)</li></ul>"
 
+msgid "This action will affect all pending changes you have made."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "This active check sends out special emails to a defined mail address using "
@@ -65737,6 +65842,11 @@ msgstr "このページはインラインヘルプを提供していません。
 
 msgid "This page does not support cluster hosts."
 msgstr "このページはクラスターホストをサポートしていません。"
+
+msgid ""
+"This page is currently not implemented, needs FormSpec migration of "
+"NotificationParameter."
+msgstr ""
 
 msgid "This page was not found. Sorry."
 msgstr "このページは見つかりませんでした。"
@@ -71816,6 +71926,10 @@ msgstr "ベータ期間中の試用時間は未定"
 msgid "Tried to register incompatible rulespec: %r"
 msgstr "互換性のないrulespecを登録しようとしました: %r"
 
+#, fuzzy
+msgid "Triggering events"
+msgstr "イベントのアーカイブ"
+
 msgid "Trivial change"
 msgstr "ささいな変更"
 
@@ -73004,6 +73118,14 @@ msgstr "応答をアップロード"
 
 msgid "Upload verification response file"
 msgstr "検証回答ファイルのアップロード"
+
+#, fuzzy
+msgid "Uploaded"
+msgstr "アップロード"
+
+#, fuzzy
+msgid "Uploaded by"
+msgstr "キーをアップロード"
 
 #, python-format
 msgid "Uploaded custom GUI logo: %s"
@@ -76826,6 +76948,9 @@ msgstr "どんな機会ですか？"
 msgid "What is the purpose?"
 msgstr "目的は何ですか？"
 
+msgid "What should be send out?"
+msgstr ""
+
 msgid ""
 "When Multisite is running in debug mode, internal Python error messages are "
 "being displayed and various debug information in other places is also "
@@ -77816,6 +77941,10 @@ msgstr ""
 msgid "Who"
 msgstr "WHO"
 
+#, fuzzy
+msgid "Who should receive the notification?"
+msgstr "ユーザーがこの通知を非アクティブ化できるようにする"
+
 msgid "WiFi connection types"
 msgstr "WiFi接続タイプ"
 
@@ -78286,6 +78415,13 @@ msgstr ""
 "があるが、パラメーターが構成されている場合は、パラメーターの条件で使用される"
 "ことを意味します。これは混乱を招く可能性があります。</li></ul>このルールは、"
 "初期段階でのみ構成する必要があります。"
+
+msgid ""
+"Without a fallback email address, you may miss alerts that are not covered "
+"by a notification rule. To ensure full notification coverage, we recommend "
+"that you configure the fallback email address to which all alerts that don't "
+"match a notification rule are sent."
+msgstr ""
 
 msgid ""
 "Without authentication everybody can send notifications to the spooler.  If "
@@ -82805,6 +82941,23 @@ msgstr ""
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
 
+#, fuzzy, python-format
+#~ msgid "Failed to save broker certificates: %s"
+#~ msgstr "ピア証明書のフェッチに失敗しました(%s)"
+
+#, fuzzy
+#~ msgid ""
+#~ "If your monitoring produces a notification that is not matched by any of "
+#~ "your notification rules, the notification will not be sent out. To "
+#~ "prevent that, we recommend configuring either the global setting or "
+#~ "enable the fallback contact option for at least one of your users."
+#~ msgstr ""
+#~ "<b>警告</b><br><br><a href=\"%s\">フォールバックメールアドレス</a>を設定し"
+#~ "ておらず、どのユーザーに対してもフォールバックメールの受信を有効にしていま"
+#~ "せん。監視によって通知ルールのいずれにも一致しない通知が生成された場合、通"
+#~ "知は送信されません。これを防ぐには、グローバル設定を構成するか、少なくとも"
+#~ "1人のユーザーに対してフォールバック連絡先オプションを有効にしてください。"
+
 #~ msgid "Bulk notifications with graphs (default: 5)"
 #~ msgstr "グラフ付きの一括通知(デフォルト: 5)"
 
@@ -83054,10 +83207,6 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 
 #~ msgid "Used quota: Absolute or relative upper levels"
 #~ msgstr "使用済みクォータ: 絶対または相対的な上位レベル"
-
-#, fuzzy
-#~ msgid "Changes have been activated"
-#~ msgstr "アクティベートされたことがない"
 
 #, fuzzy
 #~ msgid "Decimal places"
@@ -83344,10 +83493,6 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 #, python-format
 #~ msgid "%s operations"
 #~ msgstr "%s操作"
-
-#, python-format
-#~ msgid "%s requests"
-#~ msgstr "%s リクエスト"
 
 #~ msgid ""
 #~ "Amount of time that the application of redo data on the standby database "

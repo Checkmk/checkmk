@@ -691,6 +691,10 @@ msgstr "%s tasso"
 msgid "%s resulting notifications"
 msgstr "%s notifiche risultanti"
 
+#, fuzzy, python-format
+msgid "%s rules"
+msgstr "%s Richieste"
+
 #, python-format
 msgid "%s running for %s"
 msgstr "%s in esecuzione per %s"
@@ -986,6 +990,10 @@ msgstr "1 cambio"
 
 msgid "1 row"
 msgstr "1 fila"
+
+#, fuzzy
+msgid "1 rule"
+msgstr "regola"
 
 msgid "1 year"
 msgstr "1 anno"
@@ -3331,6 +3339,9 @@ msgstr "Attivare le modifiche in sospeso"
 msgid "Activate resolution with following resolution transition ID"
 msgstr ""
 "Attivare la risoluzione con il seguente ID di transizione della risoluzione"
+
+msgid "Activate the changes by clicking the Activate on selected sites button."
+msgstr ""
 
 msgid "Activate total bandwidth metric (sum of in and out)"
 msgstr ""
@@ -6539,8 +6550,20 @@ msgstr "Panoramica delle applicazioni"
 msgid "Applications, Processes & Services"
 msgstr "Applicazioni, processi e servizi"
 
+#, fuzzy
+msgid "Applied to"
+msgstr "Applicare a"
+
 msgid "Apply"
 msgstr "Applica"
+
+#, fuzzy
+msgid "Apply & create another rule"
+msgstr "Regola del gestore degli avvisi"
+
+#, fuzzy
+msgid "Apply & test notification rule"
+msgstr "Elimina questa regola di notifica"
 
 #, fuzzy
 msgid "Apply Latency"
@@ -6563,6 +6586,11 @@ msgstr "Applicare le condizioni"
 
 msgid "Apply filters"
 msgstr "Applicare i filtri"
+
+msgid ""
+"Apply filters to specify which hosts and services are affected by this "
+"notification rule."
+msgstr ""
 
 #, fuzzy
 msgid "Apply finish time"
@@ -11215,6 +11243,10 @@ msgstr "Connessione LDAP modificata %s"
 msgid "Changed alert handler rule %d"
 msgstr "Modificata regola di gestione degli avvisi %d"
 
+#, fuzzy
+msgid "Changed by"
+msgstr "Cambiato"
+
 msgid "Changed entries"
 msgstr "Voci modificate"
 
@@ -11315,6 +11347,10 @@ msgstr "Cambiata la variabile di configurazione specifica del sito %s in %s."
 
 msgid "Changes"
 msgstr "Cambiamenti"
+
+#, fuzzy
+msgid "Changes activated"
+msgstr "Non è mai stato attivato"
 
 msgid "Changes since last dump"
 msgstr "Cambiamenti dall'ultimo dump"
@@ -14679,6 +14715,11 @@ msgstr "Couchbase vBuckets"
 
 msgid "Couchbase: Cache"
 msgstr "Couchbase: Cache"
+
+msgid ""
+"Could not access your AWS account. Please check your Access and Secret key "
+"and try again."
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -21011,6 +21052,9 @@ msgstr "Modificato il profilo utente per l'utente %s"
 msgid "Edition"
 msgstr "Edizione"
 
+msgid "Effect"
+msgstr ""
+
 msgid "Effective  State"
 msgstr "Stato effettivo"
 
@@ -23415,10 +23459,6 @@ msgstr "Fallito il rendering del valore:"
 msgid "Failed to render value: %r"
 msgstr "Fallito il rendering del valore: %r"
 
-#, fuzzy, python-format
-msgid "Failed to save broker certificates: %s"
-msgstr "Fallito il recupero del certificato peer (%s)"
-
 #, python-format
 msgid "Failed to search rule of ruleset '%s' in folder '%s' (%r): %s"
 msgstr ""
@@ -23954,6 +23994,10 @@ msgid ""
 msgstr ""
 "Filtro per tutte le aggregazioni che si basano sulle informazioni di stato "
 "di quell'host. Corrispondenza esatta (nessuna espressione regolare)"
+
+#, fuzzy
+msgid "Filter for hosts/services"
+msgstr "Tempo di inattività per l'host/servizio"
 
 msgid "Filter group (see help)"
 msgstr "Gruppo di filtri (vedi aiuto)"
@@ -25408,6 +25452,10 @@ msgstr "Modello di globbing per i file di input"
 msgid "Go critical if all licenses are used"
 msgstr "Diventa critico se tutte le licenze sono utilizzate"
 
+#, fuzzy
+msgid "Go to \"All hosts\""
+msgstr "Tutti gli host"
+
 msgid "Go to AWS root account > Services > IAM."
 msgstr ""
 
@@ -25419,6 +25467,12 @@ msgstr "Vai alla pagina principale"
 
 msgid "Go to rules of this InfluxDB connection"
 msgstr "Vai alle regole di questa connessione InfluxDB"
+
+#, python-format
+msgid ""
+"Go to the Monitor > All Hosts page or click the Go to All hosts button to "
+"start monitoring your %s services."
+msgstr ""
 
 msgid "Go to the Saas Admin Panel"
 msgstr ""
@@ -27271,6 +27325,10 @@ msgstr "Storia"
 
 msgid "History Line Number"
 msgstr "Numero di linea della storia"
+
+#, fuzzy
+msgid "History action type"
+msgstr "Stato di registrazione"
 
 msgid "History entries of one specific event"
 msgstr "Voci della storia di un evento specifico"
@@ -31624,20 +31682,6 @@ msgstr ""
 "regex. Solo gli spazi dei nomi corrispondenti saranno monitorati. Si noti "
 "che questo riguarda tutto ciò che fa parte degli spazi dei nomi "
 "corrispondenti, come ad esempio i pod."
-
-#, fuzzy
-msgid ""
-"If your monitoring produces a notification that is not matched by any of "
-"your notification rules, the notification will not be sent out. To prevent "
-"that, we recommend configuring either the global setting or enable the "
-"fallback contact option for at least one of your users."
-msgstr ""
-"<b>Avviso</b><br><br>Non hai configurato un <a href=\"%s\">indirizzo email "
-"di ripiego</a> né hai abilitato la ricezione di email di ripiego per nessun "
-"utente. Se il tuo monitoraggio produce una notifica che non corrisponde a "
-"nessuna delle tue regole di notifica, la notifica non sarà inviata. Per "
-"evitare ciò, configura l'impostazione globale o attiva l'opzione di contatto "
-"di ripiego per almeno uno dei tuoi utenti."
 
 msgid "Ignore"
 msgstr "Ignora"
@@ -37735,6 +37779,10 @@ msgid "Managed Robot"
 msgstr "Oggetti gestiti"
 
 #, fuzzy
+msgid "Managed Robots"
+msgstr "Oggetti gestiti"
+
+#, fuzzy
 msgid "Managed objects"
 msgstr "Oggetti gestiti"
 
@@ -41299,6 +41347,29 @@ msgstr "Prossima notifica"
 msgid "Next run"
 msgstr "Prossima corsa"
 
+#, fuzzy
+msgid "Next step: General properties"
+msgstr "Proprietà generali"
+
+#, fuzzy
+msgid "Next step: Notification method (plug-in)"
+msgstr "Plugin di notifica"
+
+#, fuzzy
+msgid "Next step: Recipient"
+msgstr "Destinatario"
+
+msgid "Next step: Saving"
+msgstr ""
+
+#, fuzzy
+msgid "Next step: Sending conditions"
+msgstr "connessioni in sospeso"
+
+#, fuzzy
+msgid "Next step: Specify host/services"
+msgstr "Tipo di commento (host/servizio)"
+
 msgid "Nginx Server"
 msgstr "Server Nginx"
 
@@ -42312,6 +42383,10 @@ msgstr "Livello del registro delle notifiche"
 
 msgid "Notification method"
 msgstr "Metodo di notifica"
+
+#, fuzzy
+msgid "Notification method (plug-in)"
+msgstr "Plugin di notifica"
 
 #, fuzzy
 msgid "Notification parameter"
@@ -51648,6 +51723,11 @@ msgstr "Salvare & eseguire il rilevamento dei servizi"
 msgid "Review your configuration and run preview service discovery"
 msgstr "Salvare & eseguire il rilevamento dei servizi"
 
+msgid ""
+"Review your notification rule before applying it. They will take effect "
+"right away without 'Activate changes'."
+msgstr ""
+
 msgid "Revolutions per minute"
 msgstr "Giri al minuto"
 
@@ -53744,9 +53824,7 @@ msgid "Send notifications to remote Event Console"
 msgstr "Inviare notifiche alla console degli eventi remota"
 
 #, fuzzy
-msgid ""
-"Send out HTML/ASCII email notification according to notification rules "
-"(uncheck to avoid spam)"
+msgid "Send out HTML/ASCII email notification according to notification rules"
 msgstr ""
 "Inviare le notifiche secondo le regole di notifica (deselezionare per "
 "evitare lo spam)"
@@ -53796,6 +53874,10 @@ msgstr "Inviare via e-mail"
 
 msgid "Sending Power"
 msgstr "Invio di potenza"
+
+#, fuzzy
+msgid "Sending conditions"
+msgstr "Impostare le condizioni"
 
 msgid "Sending reply"
 msgstr "Invio della risposta"
@@ -57495,6 +57577,11 @@ msgstr ""
 "Specifica cosa fare se il grafico selezionato manca o non può essere "
 "recuperato."
 
+msgid ""
+"Specify when and how notifications are sent based on frequency, timing, and "
+"content criteria."
+msgstr ""
+
 msgid "Specify which port types should not be discovered"
 msgstr "Specificare quali tipi di porta non devono essere scoperti"
 
@@ -59853,6 +59940,16 @@ msgstr ""
 "I tag possono essere utilizzati per classificare host e servizi in modo "
 "flessibile."
 
+msgid "Tags enabled but no key defined."
+msgstr ""
+
+msgid "Tags enabled but no tags defined."
+msgstr ""
+
+#, fuzzy
+msgid "Tags enabled but no values defined."
+msgstr "Nessuna fonte di dati definita."
+
 #, fuzzy, python-format
 msgid "Tags of the alert.<br><br>%s"
 msgstr "Tag dell'allarme."
@@ -61360,6 +61457,10 @@ msgstr ""
 msgid "The central (%s) and remote site (%s) are not compatible. Reason: %s"
 msgstr ""
 "Il sito centrale (%s) e quello remoto (%s) non sono compatibili. Motivo: %s"
+
+#, fuzzy
+msgid "The changes have been activated successfully."
+msgstr "Non è mai stato attivato"
 
 #, python-format
 msgid "The character <tt>%s</tt> is not allowed here."
@@ -65496,6 +65597,9 @@ msgstr ""
 "dell'agente sull'host monitorato (fare riferimento a `cmk-agent-ctl help`).</"
 "li></ul>"
 
+msgid "This action will affect all pending changes you have made."
+msgstr ""
+
 msgid ""
 "This active check sends out special emails to a defined mail address using "
 "either the SMTP protocol or an EWS connection and then tries to receive "
@@ -66958,6 +67062,11 @@ msgstr "Questa pagina non fornisce un aiuto in linea."
 
 msgid "This page does not support cluster hosts."
 msgstr "Questa pagina non supporta gli host cluster."
+
+msgid ""
+"This page is currently not implemented, needs FormSpec migration of "
+"NotificationParameter."
+msgstr ""
 
 msgid "This page was not found. Sorry."
 msgstr "Questa pagina non è stata trovata. Mi dispiace."
@@ -73083,6 +73192,10 @@ msgstr ""
 msgid "Tried to register incompatible rulespec: %r"
 msgstr "Si è cercato di registrare un rulespec incompatibile: %r"
 
+#, fuzzy
+msgid "Triggering events"
+msgstr "Archivio eventi"
+
 msgid "Trivial change"
 msgstr "Cambiamento banale"
 
@@ -74282,6 +74395,14 @@ msgstr "Carica la risposta"
 
 msgid "Upload verification response file"
 msgstr "Caricare il file di risposta alla verifica"
+
+#, fuzzy
+msgid "Uploaded"
+msgstr "Carica"
+
+#, fuzzy
+msgid "Uploaded by"
+msgstr "Carica la chiave"
 
 #, python-format
 msgid "Uploaded custom GUI logo: %s"
@@ -78156,6 +78277,9 @@ msgstr ""
 msgid "What is the purpose?"
 msgstr ""
 
+msgid "What should be send out?"
+msgstr ""
+
 msgid ""
 "When Multisite is running in debug mode, internal Python error messages are "
 "being displayed and various debug information in other places is also "
@@ -79210,6 +79334,10 @@ msgstr ""
 msgid "Who"
 msgstr "Chi"
 
+#, fuzzy
+msgid "Who should receive the notification?"
+msgstr "permettere agli utenti di disattivare questa notifica"
+
 msgid "WiFi connection types"
 msgstr "Tipi di connessione WiFi"
 
@@ -79688,6 +79816,13 @@ msgstr ""
 "condizioni dei parametri più avanti se qualche parametro è configurato. "
 "Questo potrebbe confondere.</li></ul>Questa regola dovrebbe essere "
 "configurata solo nelle fasi iniziali."
+
+msgid ""
+"Without a fallback email address, you may miss alerts that are not covered "
+"by a notification rule. To ensure full notification coverage, we recommend "
+"that you configure the fallback email address to which all alerts that don't "
+"match a notification rule are sent."
+msgstr ""
 
 msgid ""
 "Without authentication everybody can send notifications to the spooler.  If "
@@ -84248,6 +84383,24 @@ msgstr ""
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
 
+#, fuzzy, python-format
+#~ msgid "Failed to save broker certificates: %s"
+#~ msgstr "Fallito il recupero del certificato peer (%s)"
+
+#, fuzzy
+#~ msgid ""
+#~ "If your monitoring produces a notification that is not matched by any of "
+#~ "your notification rules, the notification will not be sent out. To "
+#~ "prevent that, we recommend configuring either the global setting or "
+#~ "enable the fallback contact option for at least one of your users."
+#~ msgstr ""
+#~ "<b>Avviso</b><br><br>Non hai configurato un <a href=\"%s\">indirizzo "
+#~ "email di ripiego</a> né hai abilitato la ricezione di email di ripiego "
+#~ "per nessun utente. Se il tuo monitoraggio produce una notifica che non "
+#~ "corrisponde a nessuna delle tue regole di notifica, la notifica non sarà "
+#~ "inviata. Per evitare ciò, configura l'impostazione globale o attiva "
+#~ "l'opzione di contatto di ripiego per almeno uno dei tuoi utenti."
+
 #~ msgid "Bulk notifications with graphs (default: 5)"
 #~ msgstr "Notifiche di massa con grafici (predefinito: 5)"
 
@@ -84489,10 +84642,6 @@ msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
 
 #~ msgid "Used quota: Absolute or relative upper levels"
 #~ msgstr "Quota utilizzata: Livelli superiori assoluti o relativi"
-
-#, fuzzy
-#~ msgid "Changes have been activated"
-#~ msgstr "Non è mai stato attivato"
 
 #, fuzzy
 #~ msgid "Decimal places"
@@ -84784,10 +84933,6 @@ msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
 #, python-format
 #~ msgid "%s operations"
 #~ msgstr "%s operazioni"
-
-#, fuzzy, python-format
-#~ msgid "%s requests"
-#~ msgstr "%s Richieste"
 
 #~ msgid ""
 #~ "Amount of time that the application of redo data on the standby database "

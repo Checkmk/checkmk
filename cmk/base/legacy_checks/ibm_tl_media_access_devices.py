@@ -13,7 +13,7 @@ from cmk.base.check_legacy_includes.ibm_tape_library import (
 )
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import SNMPTree, startswith, any_of
+from cmk.agent_based.v2 import any_of, SNMPTree, startswith
 
 # .1.3.6.1.4.1.14851.3.1.6.2.1.2.1 3 --> SNIA-SML-MIB::mediaAccessDeviceObjectType.1
 # .1.3.6.1.4.1.14851.3.1.6.2.1.2.2 3 --> SNIA-SML-MIB::mediaAccessDeviceObjectType.2

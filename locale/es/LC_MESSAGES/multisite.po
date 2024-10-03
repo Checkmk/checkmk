@@ -26433,6 +26433,10 @@ msgstr "Historia"
 msgid "History Line Number"
 msgstr "Número de línea del historial"
 
+#, fuzzy
+msgid "History action type"
+msgstr "Estado de registro"
+
 msgid "History entries of one specific event"
 msgstr "Entradas del historial de un evento específico"
 

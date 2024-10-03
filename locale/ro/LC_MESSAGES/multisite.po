@@ -26224,6 +26224,10 @@ msgstr "Istorie"
 msgid "History Line Number"
 msgstr "Numărul liniei de istorie"
 
+#, fuzzy
+msgid "History action type"
+msgstr "Statul de înregistrare"
+
 msgid "History entries of one specific event"
 msgstr "Înregistrări istorice ale unui anumit eveniment"
 

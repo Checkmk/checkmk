@@ -25635,6 +25635,10 @@ msgstr "Verlauf"
 msgid "History Line Number"
 msgstr "Zeilennummer in der Historie"
 
+#, fuzzy
+msgid "History action type"
+msgstr "Registrierungsstatus"
+
 msgid "History entries of one specific event"
 msgstr "Historische Einträge eines bestimmten Ereignisses"
 

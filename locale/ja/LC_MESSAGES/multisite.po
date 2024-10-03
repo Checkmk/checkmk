@@ -25128,6 +25128,10 @@ msgstr "ヒストリー"
 msgid "History Line Number"
 msgstr "履歴行番号"
 
+#, fuzzy
+msgid "History action type"
+msgstr "登録状態"
+
 msgid "History entries of one specific event"
 msgstr "1つの特定のイベントの履歴エントリ"
 

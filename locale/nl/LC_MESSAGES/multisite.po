@@ -26209,6 +26209,10 @@ msgstr "Geschiedenis"
 msgid "History Line Number"
 msgstr "Geschiedenis Lijnnummer"
 
+#, fuzzy
+msgid "History action type"
+msgstr "Registratie Staat"
+
 msgid "History entries of one specific event"
 msgstr "Historische gegevens van één specifieke gebeurtenis"
 

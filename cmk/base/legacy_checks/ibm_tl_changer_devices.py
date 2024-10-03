@@ -37,7 +37,7 @@ check_info["ibm_tl_changer_devices"] = LegacyCheckDefinition(
     parse_function=parse_ibm_tl_changer_devices,
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.32925.1"),
-        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2.6.254")
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2.6.254"),
     ),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14851.3.1.11.2.1",

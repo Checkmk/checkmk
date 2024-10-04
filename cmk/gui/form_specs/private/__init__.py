@@ -14,6 +14,7 @@ from .definitions import (
 from .dictionary_extended import DictionaryExtended
 from .list_extended import ListExtended
 from .list_of_strings import ListOfStrings
+from .monitored_host_extended import MonitoredHostExtended
 from .multiple_choice import AdaptiveMultipleChoice, AdaptiveMultipleChoiceLayout
 from .optional_choice import OptionalChoice
 from .string_autocompleter import StringAutocompleter
@@ -35,4 +36,5 @@ __all__ = [
     "not_empty",
     "AdaptiveMultipleChoice",
     "AdaptiveMultipleChoiceLayout",
+    "MonitoredHostExtended",
 ]

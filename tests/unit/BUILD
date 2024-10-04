@@ -96,9 +96,8 @@ py_test(
     package_collisions = "ignore",  # "warning"
     tags = [
         # TODO:  *Shouldn't* be required in unit tests!
-        # `test_diagnostics_element_hw_info_content` and
-        # `test_wsgi_router::test_wsgi_app` require "local"
-        "local",
+        # `test_diagnostics_element_hw_info_content` reads from `/sys`
+        "no-sandbox",
     ],
     deps = [
         ":__test__",

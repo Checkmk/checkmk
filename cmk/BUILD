@@ -177,6 +177,7 @@ py_library(
         include = ["**/*.py"],
         exclude = CRE_PY + CCE_PY + CEE_PY + CME_PY + CSE_PY,
     ),
+    data = ["gui/wsgi/applications/index.wsgi"],
     imports = [".."],
     visibility = [
         # for conftest
@@ -217,6 +218,7 @@ py_library(
     # The repo edition is only used for testing.
     name = "lib_cmk_repo",
     srcs = glob(["**/*.py"]),
+    data = ["gui/wsgi/applications/index.wsgi"],
     imports = [".."],
     visibility = ["//tests/unit:__pkg__"],
     deps = [

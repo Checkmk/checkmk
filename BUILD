@@ -1,5 +1,6 @@
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
 load("@hedron_compile_commands//:refresh_compile_commands.bzl", "refresh_compile_commands")
+load("@repo_license//:license.bzl", "REPO_LICENSE")
 
 exports_files([
     "Pipfile",
@@ -33,6 +34,23 @@ config_setting(
 config_setting(
     name = "fhs_filesystem_layout",
     flag_values = {":filesystem_layout": "fhs"},
+)
+
+string_flag(
+    name = "repo_license",
+    build_setting_default = REPO_LICENSE,
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "gpl_repo",
+    flag_values = {":repo_license": "gpl"},
+)
+
+config_setting(
+    # We really mean the license here, editions are handled differently!
+    name = "gpl+enterprise_repo",
+    flag_values = {":repo_license": "gpl+enterprise"},
 )
 
 # Generate `compile_commands.json` with `bazel run //:refresh_compile_commands`.

@@ -1,3 +1,6 @@
+repo_license = use_repo_rule("//omd/packages/rules:repo_license.bzl", "detect_repo_license")
+repo_license(name = "repo_license")
+
 # Hedron's Compile Commands Extractor for Bazel
 # https://github.com/hedronvision/bazel-compile-commands-extractor
 bazel_dep(name = "hedron_compile_commands", dev_dependency = True)

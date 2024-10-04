@@ -7,13 +7,6 @@
 
 from collections.abc import Callable
 
-import cmk.ccc.version as cmk_version
-
-import cmk.utils.paths
-
-# Disabled temporarily to make this change green. Will be fixed in the following commit.
-# if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CSE:
-#    from cmk.gui.cse.utils.roles import user_may_see_saas_onboarding
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
@@ -72,7 +65,9 @@ def _sidebar_position_id(stored_value: str) -> str:
     return "left" if stored_value == "left" else "right"
 
 
-def default_user_menu_topics() -> list[TopicMenuTopic]:
+def default_user_menu_topics(
+    add_change_password_menu_item: bool = True, add_two_factor_menu_item: bool = True
+) -> list[TopicMenuTopic]:
     quick_items = [
         TopicMenuItem(
             name="ui_theme",
@@ -94,26 +89,6 @@ def default_user_menu_topics() -> list[TopicMenuTopic]:
         ),
     ]
 
-    # Disabled temporarily to make this change green. Will be fixed in the following commit.
-    # if cmk_version.edition(
-    #    cmk.utils.paths.omd_root
-    # ) == cmk_version.Edition.CSE and user_may_see_saas_onboarding(user.id):
-    #    quick_items.append(
-    #        TopicMenuItem(
-    #            name="saas_onboarding_button_toggle",
-    #            title=_("Toggle onboarding button"),
-    #            url='javascript:cmk.sidebar.toggle_user_attribute("ajax_saas_onboarding_button_toggle.py")',
-    #            target="",
-    #            sort_index=30,
-    #            icon="sidebar_position",
-    #            button_title=(
-    #                _("Visible")
-    #                if _get_saas_onboarding_visibility_status() is None
-    #                else _("Invisible")
-    #            ),
-    #        ),
-    #    )
-
     items = [
         TopicMenuItem(
             name="user_profile",
@@ -124,24 +99,26 @@ def default_user_menu_topics() -> list[TopicMenuTopic]:
         ),
     ]
 
-    if cmk_version.edition(cmk.utils.paths.omd_root) != cmk_version.Edition.CSE:
-        items.extend(
-            [
-                TopicMenuItem(
-                    name="change_password",
-                    title=_("Change password"),
-                    url="user_change_pw.py",
-                    sort_index=30,
-                    icon="topic_change_password",
-                ),
-                TopicMenuItem(
-                    name="two_factor",
-                    title=_("Two-factor authentication"),
-                    url="user_two_factor_overview.py",
-                    sort_index=30,
-                    icon="topic_two_factor",
-                ),
-            ]
+    if add_change_password_menu_item:
+        items.append(
+            TopicMenuItem(
+                name="change_password",
+                title=_("Change password"),
+                url="user_change_pw.py",
+                sort_index=30,
+                icon="topic_change_password",
+            )
+        )
+
+    if add_two_factor_menu_item:
+        items.append(
+            TopicMenuItem(
+                name="two_factor",
+                title=_("Two-factor authentication"),
+                url="user_two_factor_overview.py",
+                sort_index=30,
+                icon="topic_two_factor",
+            ),
         )
 
     items.append(
@@ -169,13 +146,13 @@ def default_user_menu_topics() -> list[TopicMenuTopic]:
 
     return [
         TopicMenuTopic(
-            name="user",
+            name="user_interface",
             title=_("User interface"),
             icon="topic_user_interface",
             items=quick_items,
         ),
         TopicMenuTopic(
-            name="user",
+            name="user_profile",
             title=_("User profile"),
             icon="topic_profile",
             items=items,

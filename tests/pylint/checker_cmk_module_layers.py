@@ -464,9 +464,17 @@ def _is_allowed_for_robotmk_rulesets_cee_plugins(
     imported: ModuleName,
     component: Component,
 ) -> bool:
-    return _in_component(
-        imported=imported,
-        component=Component("cmk.cee.robotmk.checking.rulesets"),
+    return any(
+        (
+            _in_component(
+                imported=imported,
+                component=Component("cmk.cee.robotmk.checking.rulesets"),
+            ),
+            _in_component(
+                imported=imported,
+                component=Component("cmk.cee.robotmk.bakery.rulesets"),
+            ),
+        )
     )
 
 

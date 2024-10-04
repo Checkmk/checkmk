@@ -333,6 +333,7 @@ def test_http_access_login_screen(checkmk: docker.models.containers.Container) -
     assert 'name="_login"' in response.text, "Login field not found!"
 
 
+@pytest.mark.skip(reason="SaaS edition requires cognito config")
 def test_http_access_login_screen_saas(checkmk: docker.models.containers.Container) -> None:
     ip = get_container_ip(checkmk)
 

@@ -27,10 +27,10 @@ py_pytest_main(
 )
 
 write_file(
-    name = "smoke_test",
-    out = "test_smoke.py",
+    name = "cannot_fail",
+    out = "test_cannot_fail.py",
     content = [
-        "def test_smoke_and_run():",
+        "def test_cannot_fail():",
         "    assert True",
     ],
 )
@@ -40,8 +40,8 @@ py_test(
     # of those warrants this target.
     name = "smoke",
     srcs = [
-        ":__test__.py",
-        ":smoke_test",
+        "__test__.py",
+        "test_cannot_fail.py",
     ],
     args = [
         "--config-file=$(location @//:pyproject.toml)",

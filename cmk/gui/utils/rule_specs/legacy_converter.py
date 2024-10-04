@@ -25,7 +25,9 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.private import (
     DictionaryExtended,
     ListExtended,
+    ListOfStrings,
 )
+from cmk.gui.form_specs.vue.shared_type_defs import ListOfStringsLayout
 from cmk.gui.form_specs.vue.visitors import DefaultValue as VueDefaultValue
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
@@ -720,6 +722,9 @@ def _convert_to_inner_legacy_valuespec(
 
         case ruleset_api_v1.form_specs.List() | ListExtended():
             return _convert_to_legacy_list(to_convert, localizer)
+
+        case ListOfStrings():
+            return _convert_to_legacy_list_of_strings(to_convert, localizer)
 
         case ruleset_api_v1.form_specs.FixedValue():
             return _convert_to_legacy_fixed_value(to_convert, localizer)
@@ -1515,6 +1520,35 @@ def _convert_to_legacy_list(
         converted_kwargs["default_value"] = to_convert.prefill.value
 
     return legacy_valuespecs.ListOf(**converted_kwargs)
+
+
+def _convert_to_legacy_list_of_strings(
+    to_convert: ListOfStrings, localizer: Callable[[str], str]
+) -> legacy_valuespecs.ListOfStrings:
+    template = convert_to_legacy_valuespec(to_convert.string_spec, localizer)
+    match to_convert.layout:
+        case ListOfStringsLayout.horizontal:
+            orientation = "horizontal"
+        case ListOfStringsLayout.vertical:
+            orientation = "vertical"
+        case _:
+            assert_never(to_convert.layout)
+
+    converted_kwargs: dict[str, Any] = {
+        "valuespec": template,
+        "title": _localize_optional(to_convert.title, localizer),
+        "help": _localize_optional(to_convert.help_text, localizer),
+        "orientation": orientation,
+        "default_value": to_convert.prefill.value,
+        **_get_allow_empty_conf(to_convert, localizer),
+    }
+
+    if to_convert.custom_validate is not None:
+        converted_kwargs["validate"] = _convert_to_legacy_validation(
+            to_convert.custom_validate, localizer
+        )
+
+    return legacy_valuespecs.ListOfStrings(**converted_kwargs)
 
 
 def _convert_to_legacy_fixed_value(

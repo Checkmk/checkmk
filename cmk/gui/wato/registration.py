@@ -94,6 +94,8 @@ def register(
     contact_group_usage_finder_registry: ContactGroupUsageFinderRegistry,
     notification_parameter_registry: NotificationParameterRegistry,
     user_menu_topics: Callable[[], list[TopicMenuTopic]],
+    edition_supports_ldap: bool,
+    edition_supports_managing_roles: bool,
 ) -> None:
     painter_registry.register(PainterHostFilename)
     painter_registry.register(PainterWatoFolderAbs)
@@ -123,6 +125,8 @@ def register(
         match_item_generator_registry,
         mega_menu_registry,
         user_menu_topics,
+        edition_supports_ldap,
+        edition_supports_managing_roles,
     )
     _permissions.register(permission_section_registry, permission_registry)
     _main_module_topics.register(main_module_topic_registry)

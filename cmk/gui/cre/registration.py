@@ -104,6 +104,8 @@ def register() -> None:
         contact_group_usage_finder_registry,
         notification_parameter_registry,
         default_user_menu_topics,
+        edition_supports_ldap=True,
+        edition_supports_managing_roles=True,
     )
     notification_parameter_registry.register(NotificationParameterMail)
     register_pages()

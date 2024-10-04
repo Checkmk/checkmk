@@ -5,10 +5,6 @@
 
 from collections.abc import Callable
 
-from cmk.ccc.version import Edition, edition
-
-from cmk.utils import paths
-
 from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.main_menu import MegaMenuRegistry
 from cmk.gui.page_menu import PageMenuDropdown
@@ -79,6 +75,8 @@ def register(
     match_item_generator_registry: MatchItemGeneratorRegistry,
     mega_menu_registry: MegaMenuRegistry,
     user_menu_topics: Callable[[], list[TopicMenuTopic]],
+    edition_supports_ldap: bool,
+    edition_supports_managing_roles: bool,
 ) -> None:
     activate_changes.register(page_registry, mode_registry, automation_command_registry)
     analyze_configuration.register(mode_registry)
@@ -119,6 +117,7 @@ def register(
     users.register(mode_registry)
     certificate_overview.register(mode_registry)
 
-    if edition(paths.omd_root) is not Edition.CSE:  # disabled in CSE
+    if edition_supports_ldap:
         ldap.register(mode_registry)
+    if edition_supports_managing_roles:
         roles.register(mode_registry)

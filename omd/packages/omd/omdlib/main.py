@@ -2258,10 +2258,10 @@ def finalize_site_as_user(
     # Run all hooks in order to setup things according to the
     # configuration settings
     config_set_all(site, ignored_hooks)
-    _update_cmk_core_config(site)
     initialize_site_ca(site)
     initialize_agent_ca(site)
     save_site_conf(site)
+    _update_cmk_core_config(site)
 
     if command_type in [CommandType.create, CommandType.copy, CommandType.restore_as_new_site]:
         save_instance_id(file_path=get_instance_id_file_path(Path(site.dir)), instance_id=uuid4())

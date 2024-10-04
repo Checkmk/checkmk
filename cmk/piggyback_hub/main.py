@@ -84,7 +84,7 @@ def _setup_logging(args: Arguments) -> logging.Logger:
     handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] [%(name)s] %(message)s"))
     logger.addHandler(handler)
 
-    logger.setLevel(VERBOSITY_MAP.get(args.verbosity, logging.INFO))
+    logger.setLevel(VERBOSITY_MAP[max(args.verbosity, 2)])
 
     return logger
 

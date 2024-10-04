@@ -91,9 +91,9 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, Mapping[str, object]
 
             else:
                 group = shared_type_defs.DictionaryGroup(
-                    title=localize(self.form_spec.title),
-                    help=localize(self.form_spec.help_text),
-                    key=localize(self.form_spec.title) + localize(self.form_spec.help_text),
+                    title=localize(dict_element.group.title),
+                    help=localize(dict_element.group.help_text),
+                    key=repr(dict_element.group.title) + repr(dict_element.group.help_text),
                 )
 
             if is_active:

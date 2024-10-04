@@ -11,6 +11,13 @@
         {% else %}
             {% set href = data.LINKEDHOSTNAME.split('"')[1] %}
         {% endif %}
+        {% if data.PARAMETER_ELEMENTSS %}
+            {% set elements =  data.PARAMETER_ELEMENTSS.split() %}
+        {% else %}
+            {% set elements = ["graph"] %}
+        {% endif %}
+        {% set elements_without_graph = elements | reject("equalto", "graph") | list %}
+
         <table
             id="mail_container"
             style="
@@ -57,11 +64,11 @@
                         >
                             {% include 'event_overview.html' %}
 
-                            {% if data.PARAMETER_ELEMENTSS and 'graph' in data.PARAMETER_ELEMENTSS.split() %}
+                            {% if graphs and 'graph' in elements %}
                                 {% include 'graph.html' %}
                             {% endif %}
 
-                            {% if data.PARAMETER_ELEMENTSS %}
+                            {% if elements_without_graph %}
                                 {% include 'additional.html' %}
                             {% endif %}
 

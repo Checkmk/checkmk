@@ -745,9 +745,11 @@ def _add_template_attachments(
     if context.get("PARAMETER_CONTACT_GROUPS"):
         attachments.append(attach_file(icon="contact_groups.png"))
     if elements := context.get("PARAMETER_ELEMENTSS", "").split():
-        attachments.append(attach_file(icon="additional.png"))
         if "graph" in elements:
             attachments.append(attach_file(icon="graph.png"))
+            elements.remove("graph")
+        if elements:
+            attachments.append(attach_file(icon="additional.png"))
     if context.get("PARAMETER_SVC_LABELS") or context.get("PARAMETER_HOST_LABELS"):
         attachments.append(attach_file(icon="label.png"))
     if context.get("PARAMETER_HOST_TAGS"):

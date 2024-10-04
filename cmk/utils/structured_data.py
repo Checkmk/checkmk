@@ -582,7 +582,9 @@ def _deserialize_tree(
     )
 
 
-def deserialize_tree(raw_tree: Mapping) -> ImmutableTree:
+def deserialize_tree(raw_tree: object) -> ImmutableTree:
+    if not isinstance(raw_tree, dict):
+        raise TypeError(raw_tree)
     try:
         raw_attributes = raw_tree["Attributes"]
         raw_table = raw_tree["Table"]
@@ -1668,13 +1670,42 @@ class SDMetaAndRawTree(TypedDict):
     raw_tree: SDRawTree
 
 
-def parse_from_unzipped(raw: Mapping) -> SDMetaAndRawTree:
+def _parse_raw_meta(raw_meta: object) -> SDMeta:
+    if not isinstance(raw_meta, dict):
+        raise TypeError(raw_meta)
+    if not isinstance(version := raw_meta.get("version"), str):
+        raise TypeError(version)
+    if not isinstance(do_archive := raw_meta.get("do_archive"), bool):
+        raise TypeError(do_archive)
+    match version:
+        case "1":
+            return SDMeta(version=version, do_archive=do_archive)
+        case _:
+            raise ValueError(version)
+
+
+def _parse_raw_tree(raw_tree: object) -> SDRawTree:
+    if not isinstance(raw_tree, dict):
+        raise TypeError(raw_tree)
+    return SDRawTree(
+        Attributes=raw_tree.get("Attributes", {}),
+        Table=raw_tree.get("Table", {}),
+        Nodes=raw_tree.get("Nodes", {}),
+    )
+
+
+def parse_from_unzipped(raw: object) -> SDMetaAndRawTree:
     # Note: Since Checkmk 2.1 we explicitly extract "Attributes", "Table" or "Nodes" while
     # deserialization. This means that "meta_*" are not taken into account and we stay
     # compatible.
+    if not isinstance(raw, dict):
+        raise TypeError(raw)
     if set(raw) == set(["meta", "raw_tree"]):
         # Handle future versions
-        return SDMetaAndRawTree(meta=raw["meta"], raw_tree=raw["raw_tree"])
+        return SDMetaAndRawTree(
+            meta=_parse_raw_meta(raw.get("meta")),
+            raw_tree=_parse_raw_tree(raw.get("raw_tree")),
+        )
     return SDMetaAndRawTree(
         meta=SDMeta(
             version="1",

@@ -82,8 +82,7 @@ from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
-from cmk.gui.wato import default_user_menu_topics, notification_parameter_registry
-from cmk.gui.wato import registration as wato_registration
+from cmk.gui.wato import notification_parameter_registry
 from cmk.gui.watolib import broker_connections as broker_connections_config
 from cmk.gui.watolib import configuration_bundles, groups_io, password_store
 from cmk.gui.watolib import notifications as notifications_config
@@ -92,7 +91,6 @@ from cmk.gui.watolib import rulesets as rule_config
 from cmk.gui.watolib import sites as sites_config
 from cmk.gui.watolib import tags as tag_config
 from cmk.gui.watolib import users as user_config
-from cmk.gui.watolib.analyze_configuration import ac_test_registry
 from cmk.gui.watolib.automation_commands import automation_command_registry
 from cmk.gui.watolib.config_domain_name import (
     config_domain_registry,
@@ -224,32 +222,6 @@ def register() -> None:
     if edition(paths.omd_root) is Edition.CSE:
         userdb_registration.saas_register(user_attribute_registry)
 
-    wato_registration.register(
-        page_registry,
-        painter_registry,
-        sorter_registry,
-        icon_and_action_registry,
-        automation_command_registry,
-        job_registry,
-        filter_registry,
-        mode_registry,
-        quick_setup_registry,
-        permission_section_registry,
-        permission_registry,
-        main_module_topic_registry,
-        main_module_registry,
-        rulespec_group_registry,
-        config_domain_registry,
-        config_variable_registry,
-        config_variable_group_registry,
-        snapin_registry,
-        match_item_generator_registry,
-        mega_menu_registry,
-        ac_test_registry,
-        contact_group_usage_finder_registry,
-        notification_parameter_registry,
-        default_user_menu_topics,
-    )
     bi_registration.register(
         data_source_registry,
         painter_registry,

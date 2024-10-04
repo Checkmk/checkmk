@@ -62,16 +62,14 @@ py_test(
     name = "repo",
     # https://bazel.build/reference/be/common-definitions#test.size
     size = "large",
-    srcs = glob(
+    srcs = ["__test__.py"] + glob(
         include = ["**/*.py"],
         exclude = [
             "omdlib/**/*.py",
-            "testlib/cse/**/*.py",
-            "unit/cmk/cse/**/*.py",
             "**/*pylint*.py",
             "**/*pylint*/**/*.py",
         ],
-    ) + ["__test__.py"],
+    ),
     args = [
         "--config-file=$(location @//:pyproject.toml)",
         "--import-mode=importlib",
@@ -119,5 +117,10 @@ py_test(
         "//tests:conftest",
         "//tests:testlib",
         "//tests/unit:conftest",
-    ],
+    ] + select({
+        "@//:gpl_repo": [],
+        "@//:gpl+enterprise_repo": [
+            requirement("python-multipart"),
+        ],
+    }),
 )

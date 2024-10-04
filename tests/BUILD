@@ -6,10 +6,7 @@ package(default_visibility = [":__subpackages__"])
 py_library(
     name = "testlib",
     testonly = True,
-    srcs = glob(
-        include = ["testlib/**"],
-        exclude = ["testlib/cse/**"],
-    ) + ["__init__.py"],
+    srcs = ["__init__.py"] + glob(include = ["testlib/**"]),
     imports = [".."],
     deps = [
         "//cmk:lib_cmk",

@@ -3121,12 +3121,18 @@ class ABCNotificationParameterMode(WatoMode):
             raise MKUserError(
                 None,
                 _(
-                    "This page is currently not implemented, needs FormSpec migration of NotificationParameter."
+                    "This page is currently not implemented, needs FormSpec "
+                    "migration of NotificationParameter."
                 ),
             )
 
     def _notification_parameter(self) -> type[NotificationParameter]:
-        return notification_parameter_registry[self._method()]
+        try:
+            return notification_parameter_registry[self._method()]
+        except KeyError:
+            raise MKUserError(
+                None, _("No notification parameters for method '%s' found") % self._method()
+            )
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
@@ -3249,9 +3255,11 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
         )
 
     def page(self) -> None:
+        if self._method() not in load_notification_scripts():
+            raise MKUserError(None, _("Notification method '%s' does not exist") % self._method())
+
         parameters = self._load_parameters()
-        method_parameters = parameters.get(self._method())
-        if not method_parameters:
+        if not (method_parameters := parameters.get(self._method())):
             html.show_message(
                 _("You have not created any parameters for this notification method yet.")
             )

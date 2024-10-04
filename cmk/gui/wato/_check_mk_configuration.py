@@ -5847,7 +5847,7 @@ def _valuespec_agent_encryption() -> Migrate:
     return Migrate(
         migrate=_migrate_encryption_settings,
         valuespec=Alternative(
-            title=_("Symmetric encryption (Linux, Windows)"),
+            title=_("Symmetric encryption (Linux, Solaris, Windows)"),
             help=_(
                 "If you cannot use the agent controllers encrypted TLS connections,"
                 " you can resort to the old OpenSSH based symmetric encryption (if your host system supports it)."

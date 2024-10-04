@@ -5,6 +5,8 @@
 
 """The user profile mega menu and related AJAX endpoints"""
 
+from collections.abc import Callable
+
 import cmk.ccc.version as cmk_version
 
 import cmk.utils.paths
@@ -26,7 +28,11 @@ from cmk.gui.utils.theme import theme, theme_choices
 from cmk.gui.utils.urls import makeuri_contextless
 
 
-def register(page_registry: PageRegistry, mega_menu_registry: MegaMenuRegistry) -> None:
+def register(
+    page_registry: PageRegistry,
+    mega_menu_registry: MegaMenuRegistry,
+    user_menu_topics: Callable[[], list[TopicMenuTopic]],
+) -> None:
     page_registry.register_page("ajax_ui_theme")(ModeAjaxCycleThemes)
     page_registry.register_page("ajax_sidebar_position")(ModeAjaxCycleSidebarPosition)
     page_registry.register_page("ajax_set_dashboard_start_url")(ModeAjaxSetStartURL)
@@ -37,7 +43,7 @@ def register(page_registry: PageRegistry, mega_menu_registry: MegaMenuRegistry) 
             title=_l("User"),
             icon="main_user",
             sort_index=20,
-            topics=_user_menu_topics,
+            topics=user_menu_topics,
             info_line=lambda: f"{user.id} ({'+'.join(user.role_ids)})",
         )
     )
@@ -66,7 +72,7 @@ def _sidebar_position_id(stored_value: str) -> str:
     return "left" if stored_value == "left" else "right"
 
 
-def _user_menu_topics() -> list[TopicMenuTopic]:
+def default_user_menu_topics() -> list[TopicMenuTopic]:
     quick_items = [
         TopicMenuItem(
             name="ui_theme",

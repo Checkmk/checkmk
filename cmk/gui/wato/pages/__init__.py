@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable
+
 from cmk.ccc.version import Edition, edition
 
 from cmk.utils import paths
@@ -12,6 +14,7 @@ from cmk.gui.main_menu import MegaMenuRegistry
 from cmk.gui.page_menu import PageMenuDropdown
 from cmk.gui.pages import PageRegistry
 from cmk.gui.quick_setup.v0_unstable._registry import QuickSetupRegistry
+from cmk.gui.type_defs import TopicMenuTopic
 from cmk.gui.watolib.automation_commands import AutomationCommandRegistry
 from cmk.gui.watolib.mode import ModeRegistry
 from cmk.gui.watolib.search import MatchItemGeneratorRegistry
@@ -75,6 +78,7 @@ def register(
     job_registry: BackgroundJobRegistry,
     match_item_generator_registry: MatchItemGeneratorRegistry,
     mega_menu_registry: MegaMenuRegistry,
+    user_menu_topics: Callable[[], list[TopicMenuTopic]],
 ) -> None:
     activate_changes.register(page_registry, mode_registry, automation_command_registry)
     analyze_configuration.register(mode_registry)
@@ -111,7 +115,7 @@ def register(
     tags.register(mode_registry)
     timeperiods.register(mode_registry)
     user_migrate.register(mode_registry)
-    user_profile.register(page_registry, mega_menu_registry)
+    user_profile.register(page_registry, mega_menu_registry, user_menu_topics)
     users.register(mode_registry)
     certificate_overview.register(mode_registry)
 

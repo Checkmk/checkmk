@@ -82,7 +82,7 @@ from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
-from cmk.gui.wato import notification_parameter_registry
+from cmk.gui.wato import default_user_menu_topics, notification_parameter_registry
 from cmk.gui.wato import registration as wato_registration
 from cmk.gui.watolib import broker_connections as broker_connections_config
 from cmk.gui.watolib import configuration_bundles, groups_io, password_store
@@ -248,6 +248,7 @@ def register() -> None:
         ac_test_registry,
         contact_group_usage_finder_registry,
         notification_parameter_registry,
+        default_user_menu_topics,
     )
     bi_registration.register(
         data_source_registry,

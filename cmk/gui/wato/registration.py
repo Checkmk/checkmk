@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Callable
+
 from cmk.ccc import version
 from cmk.ccc.version import edition_supports_nagvis
 
@@ -16,6 +18,7 @@ from cmk.gui.painter.v0.base import PainterRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.quick_setup.v0_unstable._registry import QuickSetupRegistry
 from cmk.gui.sidebar import SnapinRegistry
+from cmk.gui.type_defs import TopicMenuTopic
 from cmk.gui.views.icon import IconRegistry
 from cmk.gui.views.sorter import SorterRegistry
 from cmk.gui.visuals.filter import FilterRegistry
@@ -90,6 +93,7 @@ def register(
     ac_test_registry: ACTestRegistry,
     contact_group_usage_finder_registry: ContactGroupUsageFinderRegistry,
     notification_parameter_registry: NotificationParameterRegistry,
+    user_menu_topics: Callable[[], list[TopicMenuTopic]],
 ) -> None:
     painter_registry.register(PainterHostFilename)
     painter_registry.register(PainterWatoFolderAbs)
@@ -118,6 +122,7 @@ def register(
         job_registry,
         match_item_generator_registry,
         mega_menu_registry,
+        user_menu_topics,
     )
     _permissions.register(permission_section_registry, permission_registry)
     _main_module_topics.register(main_module_topic_registry)

@@ -22,7 +22,10 @@ from cmk.gui import inventory as legacy_inventory_groups
 from cmk.gui import valuespec as legacy_valuespecs
 from cmk.gui import wato as legacy_wato
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.private import DictionaryExtended
+from cmk.gui.form_specs.private import (
+    DictionaryExtended,
+    ListExtended,
+)
 from cmk.gui.form_specs.vue.visitors import DefaultValue as VueDefaultValue
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
@@ -715,7 +718,7 @@ def _convert_to_inner_legacy_valuespec(
         case ruleset_api_v1.form_specs.HostState():
             return _convert_to_legacy_host_state(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.List():
+        case ruleset_api_v1.form_specs.List() | ListExtended():
             return _convert_to_legacy_list(to_convert, localizer)
 
         case ruleset_api_v1.form_specs.FixedValue():
@@ -1489,8 +1492,8 @@ def _convert_to_legacy_validation(
 
 
 def _convert_to_legacy_list(
-    to_convert: ruleset_api_v1.form_specs.List, localizer: Callable[[str], str]
-) -> legacy_valuespecs.ListOf | legacy_valuespecs.ListOfStrings:
+    to_convert: ruleset_api_v1.form_specs.List | ListExtended, localizer: Callable[[str], str]
+) -> legacy_valuespecs.ListOf:
     template = convert_to_legacy_valuespec(to_convert.element_template, localizer)
     converted_kwargs: dict[str, Any] = {
         "valuespec": template,
@@ -1507,6 +1510,9 @@ def _convert_to_legacy_list(
         converted_kwargs["validate"] = _convert_to_legacy_validation(
             to_convert.custom_validate, localizer
         )
+
+    if isinstance(to_convert, ListExtended):
+        converted_kwargs["default_value"] = to_convert.prefill.value
 
     return legacy_valuespecs.ListOf(**converted_kwargs)
 

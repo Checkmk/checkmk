@@ -58,6 +58,10 @@ def main() {
         [$class: 'StringParameterValue',  name: 'USE_CASE', value: use_case],
     ];
 
+    job_parameters_fips = [
+        [$class: 'StringParameterValue',  name: 'USE_CASE', value: 'fips'],
+    ];
+
     job_parameters = job_parameters_common + job_parameters_use_case;
 
     // TODO we should take this list from a single source of truth
@@ -67,6 +71,7 @@ def main() {
     def build_image = edition != "managed";
 
     def run_int_tests = true;
+    def run_fips_tests = edition == "enterprise";
     def run_comp_tests = !(edition in ["saas", "managed"]);
     def run_image_tests = !(edition in ["saas", "managed"]);
     def run_update_tests = (edition in ["enterprise", "cloud", "saas"]);
@@ -79,6 +84,7 @@ def main() {
         |build_image:........... │${build_image}│
         |run_comp_tests:........ │${run_comp_tests}│
         |run_int_tests:..........│${run_int_tests}│
+        |run_fips_tests:.........│${run_fips_tests}│
         |run_image_tests:....... │${run_image_tests}│
         |run_update_tests:...... │${run_update_tests}│
         |use_case:.............. │${use_case}│
@@ -122,6 +128,14 @@ def main() {
             condition: run_int_tests,
             raiseOnError: false,) {
         build(job: "${base_folder}/test-integration-packages", parameters: job_parameters);
+    }
+
+    success &= smart_stage(
+        name: "System Tests for FIPS compliance",
+        condition: run_fips_tests,
+        raiseOnError: false,) {
+        build(job: "${base_folder}/test-integration-fips", parameters: job_parameters_common + job_parameters_fips);
+        build(job: "${base_folder}/test-composition-fips", parameters: job_parameters_common + job_parameters_fips);
     }
 
     success &= smart_stage(

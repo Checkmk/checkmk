@@ -34,6 +34,9 @@ internal_editions:
 cma_distros: &cma_distros
     - "cma-4"
 
+fips_distros: &fips_distros
+    - "ubuntu-22.04"
+
 # README:
 # - the following sections defines what will be build/tested under which "use-case"
 # - as a consequence, you need to consider e.g.:
@@ -45,6 +48,7 @@ editions:
         release: [*common, *cma_distros]
         daily: [*common, *cma_distros, *internal_distros]
         daily_tests: [*common, *internal_distros]
+        fips: [*fips_distros]
         # Don't test the update process for internal distros, they are not public anyway
         daily_update_tests: [*common]
         weekly: [*common, *cma_distros]
@@ -53,6 +57,7 @@ editions:
         release: [*common, *cma_distros]
         daily: *daily_reduced
         daily_tests: *daily_reduced
+        fips: []
         # Don't test the update process for internal distros, they are not public anyway
         daily_update_tests: [*daily_reduced]
         weekly: *daily_reduced
@@ -61,12 +66,14 @@ editions:
         release: [*common, *cma_distros]
         daily: *daily_reduced
         daily_tests: *daily_reduced
+        fips: []
         weekly: *daily_reduced
         testbuild: []
     raw:
         release: *common
         daily: *daily_reduced
         daily_tests: *daily_reduced
+        fips: []
         weekly: *daily_reduced
         testbuild: []
     saas:
@@ -74,6 +81,7 @@ editions:
         daily: *daily_saas
         daily_tests: *daily_saas
         daily_update_tests: [*daily_saas]
+        fips: []
         weekly: *daily_saas
         testbuild: []
 

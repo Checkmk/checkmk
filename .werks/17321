@@ -1,0 +1,13 @@
+Title: Azure agent: fix query for network interface configuration in virtual machine scale set
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1728054182
+Edition: cre
+Level: 1
+Version: 2.2.0p36
+
+When retrieving network interface configuration information for a load balancer,
+the agent queried an incorrect API endpoint when handling network configurations
+associated with virtual machines, within a Virtual Machine Scale Set.
+This resulted in the error: <em>Management client: //aka.ms/ARMResourceNotFoundFix.</em>

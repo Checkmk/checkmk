@@ -483,7 +483,11 @@ def render_performance_graphs(
 
 
 def construct_content(
-    context: dict[str, str], is_bulk: bool = False, notification_number: int = 1
+    context: dict[str, str],
+    is_bulk: bool = False,
+    bulk_summary: list[dict[str, str]] | None = None,
+    last_bulk_entry: bool = False,
+    notification_number: int = 1,
 ) -> tuple[str, str, list[Attachment]]:
     # A list of optional information is configurable via the parameter "elements"
     # (new configuration style)
@@ -524,6 +528,9 @@ def construct_content(
                 "data": context,
                 "graphs": file_names,
                 "insert": escape_permissive(context.get("PARAMETER_INSERT_HTML_SECTION", "")),
+                "is_bulk": is_bulk,
+                "bulk_summary": bulk_summary,
+                "last_bulk_entry": last_bulk_entry,
             },
         ),
         context,
@@ -663,16 +670,27 @@ class BulkEmailContent(EmailContent):
         parameters, contexts = context_function()
         hosts = set()
 
-        for i, c in enumerate(contexts, 1):
-            c.update(parameters)
-            escaped_context = utils.html_escape_context(c)
+        all_contexts_updated: list[dict[str, str]] = []
+        for single_context in contexts:
+            single_context.update(parameters)
+            escaped_context = utils.html_escape_context(single_context)
             extend_context(escaped_context)
+            all_contexts_updated.append(escaped_context)
 
-            txt, html, att = construct_content(escaped_context, is_bulk=True, notification_number=i)
+        for i, c in enumerate(all_contexts_updated, 1):
+            txt, html, att = construct_content(
+                c,
+                is_bulk=True,
+                bulk_summary=all_contexts_updated if i == 1 else None,
+                last_bulk_entry=i == len(all_contexts_updated),
+                notification_number=i,
+            )
             content_txt += txt
             content_html += html
             attachments += att
             hosts.add(c["HOSTNAME"])
+
+        attachments = _add_template_attachments(escaped_context, attachments)
 
         # TODO: cleanup duplicate code with SingleEmailContent
         # TODO: the context is only needed because of SMPT settings used in send_mail

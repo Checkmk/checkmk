@@ -2,21 +2,37 @@
 <html style="background-color: #EAEAEA;">
     <head>
         <title>HTML Email template</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
     <body>
         {% import 'macros.html' as macros %}
+
         {% set service_notification = data.WHAT == 'SERVICE' %}
+
         {% if service_notification %}
             {% set href = data.LINKEDSERVICEDESC.split('"')[1] %}
         {% else %}
             {% set href = data.LINKEDHOSTNAME.split('"')[1] %}
         {% endif %}
+
         {% if data.PARAMETER_ELEMENTSS %}
             {% set elements =  data.PARAMETER_ELEMENTSS.split() %}
         {% else %}
             {% set elements = ["graph"] %}
         {% endif %}
+
         {% set elements_without_graph = elements | reject("equalto", "graph") | list %}
+
+        {% set state_mapping = {
+            "OK":"background-color: #13D389; color: #000000;",
+            "UP": "background-color: #13D389; color: #000000;",
+            "WARNING":"background-color: #FFD703; color: #000000;",
+            "CRITICAL": "background-color: #C83232; color: #ffffff;",
+            "DOWN":"background-color: #C83232; color: #ffffff;",
+            "UNKNOWN": "background-color: #ff8800; color: #ffffff;",
+            "UNREACHABLE":"background-color: #ff8800; color: #ffffff;",
+            "PENDING":"background-color: #888888; color: #ffffff;", }
+        %}
 
         <table
             id="mail_container"
@@ -32,13 +48,28 @@
             <tr>
                 <td>
                     <div id="content_container">
-                        <img
-                            src="cid:checkmk_logo.png"
-                            id="logo"
-                            style="width: 110px; height: 30px;"
-                        />
+                        {% if not is_bulk or bulk_summary %}
+                            <img
+                                src="cid:checkmk_logo.png"
+                                id="logo"
+                                style="
+                                    width: 110px;
+                                    height: 30px;
+                                    margin-left: 1%;
+                                "
+                            />
 
-                        <hr style="width: 536px; border: 1px solid #e5e5e5;margin-left: 0;" />
+                            <hr style="
+                                width: 536px;
+                                border: 1px solid #e5e5e5;
+                                margin: 0 auto;
+                            "
+                            />
+                        {% endif %}
+
+                        {% if bulk_summary %}
+                            {% include 'bulk.html' %}
+                        {% endif %}
 
                         {% if insert %}
                             <div
@@ -97,12 +128,14 @@
                 </td>
             </tr>
         </table>
-         <table class="footer" cellpadding="0" cellspacing="0" border="0" width="100%">
-          <tr>
-            <td style="width: 536px;text-align: center;">
-              <p style="color: #23496D">Checkmk GmbH, Kellerstraße 27, München, Bayern 81667, Germany, +49 89 998209700</p>
-            </td>
-          </tr>
+        {% if not is_bulk or last_bulk_entry %}
+        <table class="footer" cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tr>
+                <td style="width: 536px;text-align: center;">
+                    <p style="color: #23496D">Checkmk GmbH<br>Kellerstraße 27, München, Bayern 81667, Germany<br>+49 89 998209700</p>
+                </td>
+            </tr>
         </table>
+        {% endif %}
     </body>
 </html>

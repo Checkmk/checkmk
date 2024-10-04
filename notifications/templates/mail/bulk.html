@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<table
+    style="
+        margin: 20px auto;
+        width: 536px;
+        height: 124px;
+        border-collapse: collapse;
+        border-spacing: 0;
+        border: 1px solid #dfdfdf;
+        text-align: left;
+    "
+>
+    <tr style="
+        background-color: #F1F1F1;
+        height: 35px;
+        "
+    >
+        <th style="
+            border: 1px solid #DFDFDF;
+            padding-left: 2%;
+            "
+        >
+            Host
+        </th>
+        <th style="
+            border: 1px solid #DFDFDF;
+            padding-left: 2%;
+            "
+        >
+            Service
+        </th>
+        <th style="
+            border: 1px solid #DFDFDF;
+            padding-left: 2%;
+            "
+        >
+            Event
+        </th>
+        <th style="
+            border: 1px solid #DFDFDF;
+            padding-left: 2%;
+            "
+        >
+            Event date
+        </th>
+    </tr>
+    {% for entry in bulk_summary %}
+        {% set bulk_service_notification = entry.WHAT == 'SERVICE' %}
+        <tr style="
+            border: 1px solid #DFDFDF;
+            height: 35px;
+            "
+        >
+            <td style="
+                border: 1px solid #DFDFDF;
+                padding: 0% 2% 0 2%;
+                width: 15%;
+                "
+            >
+                {{ entry.LINKEDHOSTNAME | safe }}
+            </td>
+            <td style="
+                border: 1px solid #DFDFDF;
+                padding: 0% 2% 0 2%;
+                "
+            >
+            {% if bulk_service_notification %}
+                {{ entry.LINKEDSERVICEDESC | safe }}
+            {% endif %}
+            </td>
+            <td style="
+                border: 1px solid #DFDFDF;
+                width: 29%;
+                padding-left: 3%;
+                "
+            >
+                <div class="event_state">
+                    <p style="
+                        {{ macros.event_marker_summary_style() }};
+                        {% if bulk_service_notification %}
+                            {{ state_mapping[entry.PREVIOUSSERVICEHARDSTATE] }}
+                        {% else %}
+                            {{ state_mapping[entry.PREVIOUSHOSTHARDSTATE] }}
+                        {% endif %};"
+                    >
+                        {% if bulk_service_notification %}
+                            {{entry.PREVIOUSSERVICEHARDSTATE[:4] }}
+                        {% else %}
+                            {{entry.PREVIOUSHOSTHARDSHORTSTATE[:4] }}
+                        {% endif %}
+                    </p>
+
+                    <p style="
+                        float: left;
+                        line-height: 11px;
+                        font-size: 14px;
+                        font-weight: 600;
+                        margin-right: 5px;
+                        "
+                    >
+                        &#8211;&#8250;
+                    </p>
+
+                    <p style="
+                        {{ macros.event_marker_summary_style() }};
+                        {% if bulk_service_notification %}
+                            {{ state_mapping[entry.SERVICESTATE] }}
+                        {% else %}
+                            {{ state_mapping[entry.HOSTSTATE] }}
+                        {% endif %};"
+                    >
+                        {% if bulk_service_notification %}
+                            {{entry.SERVICESTATE[:4]}}
+                        {% else %}
+                            {{entry.HOSTSTATE[:4] }}
+                        {% endif %}
+                    </p>
+                </div>
+            </td>
+            <td style="
+                border: 1px solid #DFDFDF;
+                width: 27%;
+                padding: 0% 2% 0 2%;
+                "
+            >
+                {{ entry.LONGDATETIME }}
+            </td>
+        </tr>
+    {% endfor %}
+</table>

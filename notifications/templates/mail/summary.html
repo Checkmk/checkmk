@@ -1,20 +1,11 @@
 <!DOCTYPE html>
-{% set state_mapping = {
-    "OK":"background-color: #13D389; color: #000000;",
-    "UP": "background-color: #13D389; color: #000000;",
-    "WARNING":"background-color: #FFD703; color: #000000;",
-    "CRITICAL": "background-color: #C83232; color: #ffffff;",
-    "DOWN":"background-color: #C83232; color: #ffffff;",
-    "UNKNOWN": "background-color: #ff8800; color: #ffffff;",
-    "UNREACHABLE":"background-color: #ff8800; color: #ffffff;",
-    "PENDING":"background-color: #888888; color: #ffffff;", } %}
 <div
     id="summary_container"
     style="
         border: 1px solid #e5e5e5;
         width: 536px;
-        border-radius: 4px 0px 0px 0px;
-        margin-top: 16px;
+        border-radius: 4px 4px 0px 0px;
+        margin: 20px auto;
         padding-bottom: 20px;
         border-top: 8px solid
         {% if service_notification %}

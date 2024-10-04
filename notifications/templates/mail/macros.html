@@ -1,22 +1,37 @@
-{% macro td_first_child(width, padding="0") %} style=" padding: {{ padding }};
-font-size: 14px; color: #2c3844; font-weight: 600; width: {{ width }}; height:
-33px;" {%endmacro %} {% macro td_last_child() %} style="font-size: 14px; color:
-#2c3844;" {% endmacro %} {% macro replace_statemarker(data) %}
-{% set default_style = 'margin-left: 2px;padding: 1px 3px;border-radius: 4px;
-font-size: 7pt;border: 1px solid #666;position: relative;top: -1px;' %}
-{{ data | replace('(.)','<b
-    style="'+default_style+'background-color: #ffff00; color: #000000"
-    >OK</b
->') | replace('(!)', '<b
-    style="'+default_style+'background-color: #ffff00; color: #000000"
-    >WARN</b
->') | replace('(!!)', '<b
-    style="'+default_style+'background-color: #ff0000; color: #ffffff"
-    >CRIT</b
->') | replace('(?)', '<b
-    style="'+default_style+'background-color: #ff8800; color: #ffffff"
-    >UNKN</b
->') | safe }} {% endmacro %}
+{% macro td_first_child(width, padding="0") %}
+    style="
+        padding: {{ padding }};
+        font-size: 14px;
+        color: #2c3844;
+        font-weight: 600;
+        width: {{ width }};
+        height:33px;
+    "
+{%endmacro %}
+
+{% macro td_last_child() %}
+    style="
+        font-size: 14px; color:#2c3844;
+    "
+{% endmacro %}
+
+{% macro replace_statemarker(data) %}
+    {% set default_style = 'margin-left: 2px;padding: 1px 3px;border-radius: 4px;
+    font-size: 7pt;border: 1px solid #666;position: relative;top: -1px;' %}
+    {{ data | replace('(.)','<b
+        style="'+default_style+'background-color: #ffff00; color: #000000"
+        >OK</b
+    >') | replace('(!)', '<b
+        style="'+default_style+'background-color: #ffff00; color: #000000"
+        >WARN</b
+    >') | replace('(!!)', '<b
+        style="'+default_style+'background-color: #ff0000; color: #ffffff"
+        >CRIT</b
+    >') | replace('(?)', '<b
+        style="'+default_style+'background-color: #ff8800; color: #ffffff"
+        >UNKN</b
+    >') | safe }}
+{% endmacro %}
 
 {% macro view_issue_button(href) %}
   <table
@@ -67,7 +82,7 @@ font-size: 7pt;border: 1px solid #666;position: relative;top: -1px;' %}
 {% macro event_marker_style() %}
 float: left;
 border-radius: 8px;
-width: 85px;
+width: 70px;
 height: 28px;
 padding: 6px 0px 7px 0px;
 font-size: 16px;
@@ -76,3 +91,16 @@ text-align: center;
 line-height: 28px;
 margin-right: 10px
 {% endmacro %}
+
+{% macro event_marker_summary_style() %}
+float: left;
+border-radius: 8px;
+width: 50px;
+height: 20px;
+font-size: 10px;
+font-weight: 700;
+text-align: center;
+line-height: 21px;
+margin-right: 5px
+{% endmacro %}
+

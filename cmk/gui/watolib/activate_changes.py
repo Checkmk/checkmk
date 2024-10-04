@@ -1482,6 +1482,7 @@ class ActivateChangesManager(ActivateChanges):
             distribute_piggyback_hub_configs(
                 load_configuration_settings(),
                 configured_sites(),
+                {site_id for site_id, _site_config in self.dirty_sites()},
                 {
                     host_name: host.site_id()
                     for host_name, host in folder_tree()

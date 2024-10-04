@@ -14,9 +14,14 @@ from pydantic import BaseModel
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.messaging import Channel, DeliveryTag
+from cmk.messaging import Channel, Connection, DeliveryTag, QueueName, RoutingKey
 
 from .paths import create_paths, PiggybackHubPaths
+from .utils import APP_NAME
+
+CONFIG_ROUTE = RoutingKey("config")
+
+CONFIG_QUEUE = QueueName("config")
 
 
 class PiggybackHubConfig(BaseModel):
@@ -54,3 +59,10 @@ def load_config(paths: PiggybackHubPaths) -> PiggybackHubConfig:
         return PiggybackHubConfig.model_validate_json(paths.config.read_text())
     except FileNotFoundError:
         return PiggybackHubConfig()
+
+
+def distribute_config(configs: Mapping[str, PiggybackHubConfig], omd_root: Path) -> None:
+    for site_id, config in configs.items():
+        with Connection(APP_NAME, omd_root) as conn:
+            channel = conn.channel(PiggybackHubConfig)
+            channel.publish_for_site(site_id, config, routing=CONFIG_ROUTE)

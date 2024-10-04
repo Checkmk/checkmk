@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Container, Iterable, Mapping
 
 from livestatus import SiteConfiguration, SiteId
 
@@ -13,9 +13,7 @@ from cmk.utils.paths import omd_root
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.site_changes import ChangeSpec
 
-from cmk.piggyback_hub.config import load_config, PiggybackHubConfig, save_config
-from cmk.piggyback_hub.paths import create_paths
-from cmk.piggyback_hub.utils import distribute
+from cmk.piggyback_hub.config import distribute_config, PiggybackHubConfig
 
 _HOST_CHANGES = (
     "edit-host",
@@ -41,6 +39,7 @@ def has_piggyback_hub_relevant_changes(pending_changes: Iterable[ChangeSpec]) ->
 def distribute_piggyback_hub_configs(
     global_settings: GlobalSettings,
     configured_sites: Mapping[SiteId, SiteConfiguration],
+    dirty_sites: Container[SiteId],  # only needed in CME case.
     hosts_sites: Mapping[HostName, SiteId],
 ) -> None:
     site_configs = filter_for_enabled_piggyback_hub(global_settings, configured_sites)
@@ -53,11 +52,7 @@ def distribute_piggyback_hub_configs(
         }
     )
 
-    paths = create_paths(omd_root)
-    old_config = load_config(paths)
-    if set(old_config.targets) != set(new_config.targets):
-        distribute({site: new_config for site in site_configs.keys()}, omd_root)
-        save_config(paths, new_config)
+    distribute_config({site: new_config for site in site_configs}, omd_root)
 
 
 def _piggyback_hub_enabled(site_config: SiteConfiguration, global_settings: GlobalSettings) -> bool:

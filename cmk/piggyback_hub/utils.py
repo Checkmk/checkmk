@@ -7,15 +7,12 @@ import logging
 import multiprocessing
 import signal
 import sys
-from collections.abc import Mapping
 from pathlib import Path
 from typing import Callable, Generic, TypeVar
 
 from pydantic import BaseModel
 
 from cmk.messaging import AppName, Channel, CMKConnectionError, Connection, DeliveryTag, QueueName
-
-from .config import PiggybackHubConfig
 
 APP_NAME = AppName("piggyback-hub")
 
@@ -68,12 +65,3 @@ class ReceivingProcess(multiprocessing.Process, Generic[_ModelT]):
         except Exception as exc:
             self.logger.exception("Exception: %s: %s", self.task_name, exc)
             raise
-
-
-def distribute(configs: Mapping[str, PiggybackHubConfig], omd_root: Path) -> None:
-    # TODO: remove the return statement and uncomment the code below after fix the flaky integration test
-    return
-    # for site_id, config in configs.items():
-    #     with Connection(APP_NAME, omd_root) as conn:
-    #         channel = conn.channel(PiggybackHubConfig)
-    #         channel.publish_for_site(site_id, config, routing=RoutingKey("config"))

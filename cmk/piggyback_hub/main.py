@@ -25,6 +25,7 @@ from cmk.piggyback_hub.payload import (
     SendingPayloadProcess,
 )
 
+from .config import CONFIG_QUEUE
 from .utils import APP_NAME, ReceivingProcess
 
 VERBOSITY_MAP = {
@@ -107,7 +108,7 @@ def run_piggyback_hub(logger: logging.Logger, omd_root: Path) -> int:
             omd_root,
             PiggybackHubConfig,
             save_config_on_message(logger, omd_root, reload_config),
-            QueueName("config"),
+            CONFIG_QUEUE,
             message_ttl=None,
         ),
     )

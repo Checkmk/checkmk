@@ -77,7 +77,13 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.nodevis.utils import topology_dir
-from cmk.gui.site_config import enabled_sites, get_site_config, is_single_local_site, site_is_local
+from cmk.gui.site_config import (
+    configured_sites,
+    enabled_sites,
+    get_site_config,
+    is_single_local_site,
+    site_is_local,
+)
 from cmk.gui.sites import SiteStatus
 from cmk.gui.sites import states as sites_states
 from cmk.gui.type_defs import Users
@@ -111,10 +117,11 @@ from cmk.gui.watolib.config_sync import (
     ReplicationPath,
     SnapshotSettings,
 )
-from cmk.gui.watolib.global_settings import save_site_global_settings
+from cmk.gui.watolib.global_settings import load_configuration_settings, save_site_global_settings
 from cmk.gui.watolib.hosts_and_folders import (
     collect_all_hosts,
     folder_preserving_link,
+    folder_tree,
     validate_all_hosts,
 )
 from cmk.gui.watolib.paths import wato_var_dir
@@ -1472,7 +1479,17 @@ class ActivateChangesManager(ActivateChanges):
 
         if has_piggyback_hub_relevant_changes([change for _, change in self._pending_changes]):
             logger.debug("Starting piggyback hub config distribution")
-            distribute_piggyback_hub_configs()
+            distribute_piggyback_hub_configs(
+                load_configuration_settings(),
+                configured_sites(),
+                {
+                    host_name: host.site_id()
+                    for host_name, host in folder_tree()
+                    .root_folder()
+                    .all_hosts_recursively()
+                    .items()
+                },
+            )
 
         create_rabbitmq_definitions_file(paths.omd_root, rabbitmq_definitions[omd_site()])
         return self._activation_id

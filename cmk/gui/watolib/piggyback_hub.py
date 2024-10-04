@@ -3,16 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Container, Iterable, Mapping
 
 from livestatus import SiteConfiguration, SiteId
 
+from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import omd_root
 
-from cmk.gui.site_config import configured_sites
 from cmk.gui.type_defs import GlobalSettings
-from cmk.gui.watolib.global_settings import load_configuration_settings
-from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.site_changes import ChangeSpec
 
 from cmk.piggyback_hub.config import load_config, PiggybackHubConfig, save_config
@@ -40,13 +38,17 @@ def has_piggyback_hub_relevant_changes(pending_changes: Iterable[ChangeSpec]) ->
     return any(_is_relevant_config_change(change) for change in pending_changes)
 
 
-def distribute_piggyback_hub_configs() -> None:
-    site_configs = get_enabled_piggyback_hub_site_configs()
+def distribute_piggyback_hub_configs(
+    global_settings: GlobalSettings,
+    configured_sites: Mapping[SiteId, SiteConfiguration],
+    hosts_sites: Mapping[HostName, SiteId],
+) -> None:
+    site_configs = get_enabled_piggyback_hub_site_configs(global_settings, configured_sites)
 
     paths = create_paths(omd_root)
 
     old_config = load_config(paths)
-    new_config = _get_piggyback_hub_config(site_configs)
+    new_config = _get_piggyback_hub_config(site_configs, hosts_sites)
 
     if set(old_config.targets) != set(new_config.targets):
         distribute({site: new_config for site in site_configs.keys()}, omd_root)
@@ -59,23 +61,24 @@ def _piggyback_hub_enabled(site_config: SiteConfiguration, global_settings: Glob
     return global_settings.get("piggyback_hub_enabled", True)
 
 
-def get_enabled_piggyback_hub_site_configs() -> Mapping[SiteId, SiteConfiguration]:
-    global_settings = load_configuration_settings()
+def get_enabled_piggyback_hub_site_configs(
+    global_settings: GlobalSettings, configured_sites: Mapping[SiteId, SiteConfiguration]
+) -> Mapping[SiteId, SiteConfiguration]:
     return {
         site_id: site_config
-        for site_id, site_config in configured_sites().items()
+        for site_id, site_config in configured_sites.items()
         if _piggyback_hub_enabled(site_config, global_settings) is True
     }
 
 
 def _get_piggyback_hub_config(
-    site_configs: Mapping[SiteId, SiteConfiguration],
+    site_configs: Container[SiteId],
+    hosts_sites: Mapping[HostName, SiteId],
 ) -> PiggybackHubConfig:
-    root_folder = folder_tree().root_folder()
     return PiggybackHubConfig(
         targets={
-            host_name: host.site_id()
-            for host_name, host in root_folder.all_hosts_recursively().items()
-            if host.site_id() in site_configs.keys()
+            host_name: site_id
+            for host_name, site_id in hosts_sites.items()
+            if site_id in site_configs
         }
     )

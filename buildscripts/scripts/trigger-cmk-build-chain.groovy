@@ -31,7 +31,7 @@ def main() {
     def use_case = LocalDate.now().getDayOfWeek() in ["SATURDAY", "SUNDAY"] ? "weekly" : "daily"
 
     /// NOTE: this way ALL parameter are being passed through..
-    def job_parameters = [
+    def job_parameters_common = [
         [$class: 'StringParameterValue', name: 'EDITION', value: edition],
 
         // TODO perhaps use `params` + [EDITION]?
@@ -52,8 +52,13 @@ def main() {
         [$class: 'StringParameterValue',  name: 'CIPARAM_CLEANUP_WORKSPACE', value: params.CIPARAM_CLEANUP_WORKSPACE],
         // PUBLISH_IN_MARKETPLACE will only be set during the release process (aka bw-release)
         [$class: 'BooleanParameterValue', name: 'PUBLISH_IN_MARKETPLACE', value: false],
+    ];
+
+    job_parameters_use_case = [
         [$class: 'StringParameterValue',  name: 'USE_CASE', value: use_case],
     ];
+
+    job_parameters = job_parameters_common + job_parameters_use_case;
 
     // TODO we should take this list from a single source of truth
     assert edition in ["enterprise", "raw", "managed", "cloud", "saas"] : (

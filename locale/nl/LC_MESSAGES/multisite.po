@@ -42036,6 +42036,10 @@ msgstr "Geen verbindingen gedefinieerd"
 msgid "No need for syncing sites"
 msgstr "Geen behoefte om sites te synchroniseren"
 
+#, fuzzy, python-format
+msgid "No notification parameters for method '%s' found"
+msgstr "Gewijzigde meldingsregel %d"
+
 msgid "No object type"
 msgstr "Geen objecttype"
 
@@ -42762,6 +42766,10 @@ msgstr "Niveau meldingslogboek"
 
 msgid "Notification method"
 msgstr "Kennisgevingsmethode"
+
+#, fuzzy, python-format
+msgid "Notification method '%s' does not exist"
+msgstr "Grafiekverzameling '%s' bestaat niet"
 
 #, fuzzy
 msgid "Notification method (plug-in)"

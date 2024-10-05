@@ -42386,6 +42386,10 @@ msgstr "No hay conexiones definidas"
 msgid "No need for syncing sites"
 msgstr "No es necesario sincronizar los sitios"
 
+#, fuzzy, python-format
+msgid "No notification parameters for method '%s' found"
+msgstr "Regla de notificación modificada %d"
+
 msgid "No object type"
 msgstr "Ningún tipo de objeto"
 
@@ -43117,6 +43121,10 @@ msgstr "Nivel de registro de notificaciones"
 
 msgid "Notification method"
 msgstr "Método de notificación"
+
+#, fuzzy, python-format
+msgid "Notification method '%s' does not exist"
+msgstr "La colección de gráficos '%s' no existe"
 
 #, fuzzy
 msgid "Notification method (plug-in)"

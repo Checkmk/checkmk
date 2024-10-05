@@ -42100,6 +42100,10 @@ msgstr "Nu sunt definite conexiuni"
 msgid "No need for syncing sites"
 msgstr "Nu este nevoie de site-uri de sincronizare"
 
+#, fuzzy, python-format
+msgid "No notification parameters for method '%s' found"
+msgstr "Regula de notificare modificată %d"
+
 msgid "No object type"
 msgstr "Nici un tip de obiect"
 
@@ -42822,6 +42826,10 @@ msgstr "Nivelul jurnalului de notificare"
 
 msgid "Notification method"
 msgstr "Metoda de notificare"
+
+#, fuzzy, python-format
+msgid "Notification method '%s' does not exist"
+msgstr "Colecția de grafice \"%s\" nu există"
 
 #, fuzzy
 msgid "Notification method (plug-in)"

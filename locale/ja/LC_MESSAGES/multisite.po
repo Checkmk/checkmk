@@ -40758,6 +40758,10 @@ msgstr "接続が定義されていません"
 msgid "No need for syncing sites"
 msgstr "サイト同期不要"
 
+#, fuzzy, python-format
+msgid "No notification parameters for method '%s' found"
+msgstr "通知ルール %d を変更しました"
+
 msgid "No object type"
 msgstr "オブジェクトタイプなし"
 
@@ -41469,6 +41473,10 @@ msgstr "通知ログレベル"
 
 msgid "Notification method"
 msgstr "通知方法"
+
+#, fuzzy, python-format
+msgid "Notification method '%s' does not exist"
+msgstr "グラフコレクション '%s'は存在しません"
 
 #, fuzzy
 msgid "Notification method (plug-in)"

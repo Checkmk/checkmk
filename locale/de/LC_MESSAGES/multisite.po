@@ -40528,6 +40528,10 @@ msgstr "Keine Namen definiert"
 msgid "No need for syncing sites"
 msgstr "Synchronisierung von Instanzen nicht nötig"
 
+#, fuzzy, python-format
+msgid "No notification parameters for method '%s' found"
+msgstr "Benachrichtigungsregel %d geändert"
+
 msgid "No object type"
 msgstr "Kein Objekttyp"
 
@@ -41235,6 +41239,10 @@ msgstr "Loglevel für die Benachrichtigung"
 
 msgid "Notification method"
 msgstr "Benachrichtigungsmethode"
+
+#, fuzzy, python-format
+msgid "Notification method '%s' does not exist"
+msgstr "Die Graphensammlung '%s' existiert nicht"
 
 #, fuzzy
 msgid "Notification method (plug-in)"

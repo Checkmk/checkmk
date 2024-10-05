@@ -44,6 +44,7 @@ def parse_emc_datadomain_fans(string_table: StringTable) -> StringTable:
 
 
 check_info["emc_datadomain_fans"] = LegacyCheckDefinition(
+    name="emc_datadomain_fans",
     parse_function=parse_emc_datadomain_fans,
     detect=DETECT_DATADOMAIN,
     fetch=SNMPTree(

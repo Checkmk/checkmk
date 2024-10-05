@@ -39,6 +39,7 @@ def parse_netscaler_health(string_table: StringTable) -> StringTable:
 
 
 check_info["netscaler_health"] = LegacyCheckDefinition(
+    name="netscaler_health",
     parse_function=parse_netscaler_health,
     detect=SNMP_DETECT,
     fetch=SNMPTree(
@@ -72,6 +73,7 @@ def check_netscaler_health_fan(item, params, info):
 
 
 check_info["netscaler_health.fan"] = LegacyCheckDefinition(
+    name="netscaler_health_fan",
     service_name="FAN %s",
     sections=["netscaler_health"],
     discovery_function=inventory_netscaler_health_fan,
@@ -107,6 +109,7 @@ def check_netscaler_health_temp(item, params, info):
 
 
 check_info["netscaler_health.temp"] = LegacyCheckDefinition(
+    name="netscaler_health_temp",
     service_name="Temperature %s",
     sections=["netscaler_health"],
     discovery_function=inventory_netscaler_health_temp,
@@ -154,6 +157,7 @@ def check_netscaler_health_psu(item, _no_params, info):
 
 
 check_info["netscaler_health.psu"] = LegacyCheckDefinition(
+    name="netscaler_health_psu",
     service_name="Power Supply %s",
     sections=["netscaler_health"],
     discovery_function=inventory_netscaler_health_psu,

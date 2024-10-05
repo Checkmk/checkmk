@@ -40,6 +40,7 @@ def parse_juniper_alarm(string_table: StringTable) -> StringTable:
 
 
 check_info["juniper_alarm"] = LegacyCheckDefinition(
+    name="juniper_alarm",
     parse_function=parse_juniper_alarm,
     detect=DETECT_JUNIPER,
     fetch=SNMPTree(

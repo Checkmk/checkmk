@@ -74,6 +74,7 @@ def parse_supermicro(string_table: StringTable) -> StringTable:
 
 
 check_info["supermicro"] = LegacyCheckDefinition(
+    name="supermicro",
     parse_function=parse_supermicro,
     detect=DETECT_SUPERMICRO,
     fetch=SNMPTree(
@@ -161,6 +162,7 @@ def parse_supermicro_sensors(string_table: StringTable) -> StringTable:
 
 
 check_info["supermicro_sensors"] = LegacyCheckDefinition(
+    name="supermicro_sensors",
     parse_function=parse_supermicro_sensors,
     detect=DETECT_SUPERMICRO,
     fetch=SNMPTree(
@@ -209,6 +211,7 @@ def parse_supermicro_smart(string_table: StringTable) -> StringTable:
 
 
 check_info["supermicro_smart"] = LegacyCheckDefinition(
+    name="supermicro_smart",
     parse_function=parse_supermicro_smart,
     detect=DETECT_SUPERMICRO,
     fetch=SNMPTree(

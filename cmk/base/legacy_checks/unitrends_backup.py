@@ -60,6 +60,7 @@ def parse_unitrends_backup(string_table: StringTable) -> StringTable:
 
 
 check_info["unitrends_backup"] = LegacyCheckDefinition(
+    name="unitrends_backup",
     parse_function=parse_unitrends_backup,
     service_name="Schedule %s",
     discovery_function=inventory_unitrends_backup,

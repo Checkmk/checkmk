@@ -50,6 +50,7 @@ def parse_decru_perf(string_table: StringTable) -> StringTable:
 
 
 check_info["decru_perf"] = LegacyCheckDefinition(
+    name="decru_perf",
     parse_function=parse_decru_perf,
     detect=DETECT_DECRU,
     fetch=SNMPTree(

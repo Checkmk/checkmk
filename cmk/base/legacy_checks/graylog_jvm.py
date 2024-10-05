@@ -49,6 +49,7 @@ def check_graylog_jvm(_no_item, params, parsed):
 
 
 check_info["graylog_jvm"] = LegacyCheckDefinition(
+    name="graylog_jvm",
     parse_function=deserialize_and_merge_json,
     service_name="Graylog JVM",
     discovery_function=discover_graylog_jvm,

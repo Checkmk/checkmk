@@ -165,6 +165,7 @@ def check_postfix_mailq(item, params, parsed):
 
 
 check_info["postfix_mailq"] = LegacyCheckDefinition(
+    name="postfix_mailq",
     parse_function=parse_postfix_mailq,
     service_name="Postfix Queue %s",
     discovery_function=inventory_postfix_mailq,

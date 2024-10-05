@@ -53,6 +53,7 @@ def parse_bvip_link(string_table: StringTable) -> StringTable:
 
 
 check_info["bvip_link"] = LegacyCheckDefinition(
+    name="bvip_link",
     parse_function=parse_bvip_link,
     detect=DETECT_BVIP,
     fetch=SNMPTree(

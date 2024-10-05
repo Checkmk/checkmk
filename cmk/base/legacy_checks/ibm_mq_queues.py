@@ -189,6 +189,7 @@ def ibm_mq_get_qtime(qtime, label, key):
 
 
 check_info["ibm_mq_queues"] = LegacyCheckDefinition(
+    name="ibm_mq_queues",
     service_name="IBM MQ Queue %s",
     discovery_function=inventory_ibm_mq_queues,
     check_function=check_ibm_mq_queues,

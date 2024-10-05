@@ -44,6 +44,7 @@ def check_db2_sort_overflow(item, params, parsed):
 
 
 check_info["db2_sort_overflow"] = LegacyCheckDefinition(
+    name="db2_sort_overflow",
     parse_function=parse_db2_dbs,
     service_name="DB2 Sort Overflow %s",
     discovery_function=inventory_db2_sort_overflow,

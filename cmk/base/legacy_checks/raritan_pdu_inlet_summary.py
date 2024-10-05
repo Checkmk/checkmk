@@ -34,6 +34,7 @@ def discover_raritan_pdu_inlet_summary(section):
 
 
 check_info["raritan_pdu_inlet_summary"] = LegacyCheckDefinition(
+    name="raritan_pdu_inlet_summary",
     detect=DETECT_RARITAN,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.13742.6",

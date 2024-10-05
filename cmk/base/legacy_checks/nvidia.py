@@ -42,6 +42,7 @@ def parse_nvidia(string_table: StringTable) -> StringTable:
 
 
 check_info["nvidia"] = LegacyCheckDefinition(
+    name="nvidia",
     parse_function=parse_nvidia,
 )
 
@@ -51,6 +52,7 @@ def discover_nvidia_temp(info):
 
 
 check_info["nvidia.temp"] = LegacyCheckDefinition(
+    name="nvidia_temp",
     service_name="Temperature %s",
     sections=["nvidia"],
     discovery_function=discover_nvidia_temp,
@@ -65,6 +67,7 @@ def discover_nvidia_temp_core(info):
 
 
 check_info["nvidia.temp_core"] = LegacyCheckDefinition(
+    name="nvidia_temp_core",
     service_name="Temperature %s",
     sections=["nvidia"],
     discovery_function=discover_nvidia_temp_core,
@@ -92,6 +95,7 @@ def check_nvidia_errors(_no_item, _no_params, info):
 
 
 check_info["nvidia.errors"] = LegacyCheckDefinition(
+    name="nvidia_errors",
     service_name="NVIDIA GPU Errors",
     sections=["nvidia"],
     discovery_function=inventory_nvidia_errors,

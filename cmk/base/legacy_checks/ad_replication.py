@@ -183,6 +183,7 @@ def parse_ad_replication(string_table: StringTable) -> StringTable:
 
 
 check_info["ad_replication"] = LegacyCheckDefinition(
+    name="ad_replication",
     parse_function=parse_ad_replication,
     service_name="AD Replication %s",
     discovery_function=inventory_ad_replication,

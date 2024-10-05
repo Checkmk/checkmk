@@ -47,6 +47,7 @@ def discover_fsc_sc2_power_consumption(section):
 
 
 check_info["fsc_sc2_power_consumption"] = LegacyCheckDefinition(
+    name="fsc_sc2_power_consumption",
     detect=DETECT_FSC_SC2,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.231.2.10.2.2.10.6.7.1",

@@ -69,6 +69,7 @@ def discover_jira_workflow(section):
 
 
 check_info["jira_workflow"] = LegacyCheckDefinition(
+    name="jira_workflow",
     parse_function=parse_jira_workflow,
     service_name="Jira Workflow %s",
     discovery_function=discover_jira_workflow,

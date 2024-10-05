@@ -64,6 +64,7 @@ def parse_strem1_sensors(string_table: Sequence[StringTable]) -> Sequence[String
 
 
 check_info["strem1_sensors"] = LegacyCheckDefinition(
+    name="strem1_sensors",
     parse_function=parse_strem1_sensors,
     detect=contains(".1.3.6.1.2.1.1.1.0", "Sensatronics EM1"),
     fetch=[

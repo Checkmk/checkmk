@@ -32,6 +32,7 @@ def parse_barracuda_mail_latency(string_table: StringTable) -> StringTable | Non
 
 
 check_info["barracuda_mail_latency"] = LegacyCheckDefinition(
+    name="barracuda_mail_latency",
     parse_function=parse_barracuda_mail_latency,
     detect=DETECT_BARRACUDA,
     # The barracuda spam firewall does not response or returns a timeout error

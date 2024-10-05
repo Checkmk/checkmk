@@ -45,6 +45,7 @@ def check_hp_psu_temp(item, params, parsed):
 
 
 check_info["hp_psu.temp"] = LegacyCheckDefinition(
+    name="hp_psu_temp",
     service_name="Temperature Power Supply %s",
     sections=["hp_psu"],
     discovery_function=inventory_hp_psu_temp,
@@ -87,6 +88,7 @@ def check_hp_psu(item, params, parsed):
 
 
 check_info["hp_psu"] = LegacyCheckDefinition(
+    name="hp_psu",
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "hp"),
         any_of(

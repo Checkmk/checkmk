@@ -44,6 +44,7 @@ def check_alcatel_temp(item, params, info):
 
 
 check_info["alcatel_temp"] = LegacyCheckDefinition(
+    name="alcatel_temp",
     parse_function=parse_alcatel_temp,
     detect=DETECT_ALCATEL,
     fetch=SNMPTree(

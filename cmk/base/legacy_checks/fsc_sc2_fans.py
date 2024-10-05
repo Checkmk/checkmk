@@ -70,6 +70,7 @@ def check_fsc_sc2_fans(item, params, info):
 
 
 check_info["fsc_sc2_fans"] = LegacyCheckDefinition(
+    name="fsc_sc2_fans",
     parse_function=parse_fsc_sc2_fans,
     detect=DETECT_FSC_SC2,
     fetch=SNMPTree(

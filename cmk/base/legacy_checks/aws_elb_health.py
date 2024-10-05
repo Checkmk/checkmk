@@ -48,6 +48,7 @@ def check_aws_elb_health(item, params, parsed):
 
 
 check_info["aws_elb_health"] = LegacyCheckDefinition(
+    name="aws_elb_health",
     parse_function=parse_aws_elb_health,
     service_name="AWS/ELB Health ",
     discovery_function=discover_aws_elb_health,

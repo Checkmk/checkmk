@@ -32,6 +32,7 @@ def parse_domino_transactions(string_table: StringTable) -> StringTable:
 
 
 check_info["domino_transactions"] = LegacyCheckDefinition(
+    name="domino_transactions",
     parse_function=parse_domino_transactions,
     detect=DETECT,
     fetch=SNMPTree(

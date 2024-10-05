@@ -58,6 +58,7 @@ def parse_hp_blade_fan(string_table: StringTable) -> StringTable:
 
 
 check_info["hp_blade_fan"] = LegacyCheckDefinition(
+    name="hp_blade_fan",
     parse_function=parse_hp_blade_fan,
     detect=DETECT_HP_BLADE,
     fetch=SNMPTree(

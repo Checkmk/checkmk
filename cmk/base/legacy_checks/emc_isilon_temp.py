@@ -65,6 +65,7 @@ def discover_emc_isilon_temp(info):
 
 
 check_info["emc_isilon_temp"] = LegacyCheckDefinition(
+    name="emc_isilon_temp",
     parse_function=parse_emc_isilon_temp,
     detect=DETECT_ISILON,
     fetch=SNMPTree(
@@ -102,6 +103,7 @@ def discover_emc_isilon_temp_cpu(info):
 #   '----------------------------------------------------------------------'
 
 check_info["emc_isilon_temp.cpu"] = LegacyCheckDefinition(
+    name="emc_isilon_temp_cpu",
     service_name="Temperature %s",
     sections=["emc_isilon_temp"],
     discovery_function=discover_emc_isilon_temp_cpu,

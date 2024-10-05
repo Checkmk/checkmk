@@ -29,6 +29,7 @@ def parse_packeteer_ps_status(string_table: StringTable) -> StringTable:
 
 
 check_info["packeteer_ps_status"] = LegacyCheckDefinition(
+    name="packeteer_ps_status",
     parse_function=parse_packeteer_ps_status,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2334"),
     fetch=SNMPTree(

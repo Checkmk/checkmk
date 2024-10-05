@@ -58,6 +58,7 @@ def discover_quanta_fan(section):
 
 
 check_info["quanta_fan"] = LegacyCheckDefinition(
+    name="quanta_fan",
     detect=DETECT_QUANTA,
     fetch=[
         SNMPTree(

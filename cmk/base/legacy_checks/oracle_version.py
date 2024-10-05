@@ -40,6 +40,7 @@ def parse_oracle_version(string_table: StringTable) -> StringTable:
 
 
 check_info["oracle_version"] = LegacyCheckDefinition(
+    name="oracle_version",
     parse_function=parse_oracle_version,
     service_name="ORA Version %s",
     discovery_function=inventory_oracle_version,

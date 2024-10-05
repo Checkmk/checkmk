@@ -38,6 +38,7 @@ def check_huawei_switch_temp(
 
 
 check_info["huawei_switch_temp"] = LegacyCheckDefinition(
+    name="huawei_switch_temp",
     detect=DETECT_HUAWEI_SWITCH,
     fetch=[
         SNMPTree(

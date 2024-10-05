@@ -90,6 +90,7 @@ def parse_mbg_lantime_refclock(string_table: StringTable) -> StringTable:
 
 
 check_info["mbg_lantime_refclock"] = LegacyCheckDefinition(
+    name="mbg_lantime_refclock",
     parse_function=parse_mbg_lantime_refclock,
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5597.3"),
     fetch=SNMPTree(

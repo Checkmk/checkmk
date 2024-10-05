@@ -33,6 +33,7 @@ def parse_sap_state(string_table: StringTable) -> StringTable:
 
 
 check_info["sap_state"] = LegacyCheckDefinition(
+    name="sap_state",
     parse_function=parse_sap_state,
     service_name="SAP State %s",
     discovery_function=inventory_sap_state,

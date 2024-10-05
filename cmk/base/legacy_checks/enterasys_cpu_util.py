@@ -30,6 +30,7 @@ def parse_enterasys_cpu_util(string_table: StringTable) -> StringTable:
 
 
 check_info["enterasys_cpu_util"] = LegacyCheckDefinition(
+    name="enterasys_cpu_util",
     parse_function=parse_enterasys_cpu_util,
     detect=DETECT_ENTERASYS,
     fetch=SNMPTree(

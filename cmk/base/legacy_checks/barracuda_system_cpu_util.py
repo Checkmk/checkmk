@@ -29,6 +29,7 @@ def parse_barracuda_system_cpu_util(string_table: StringTable) -> StringTable | 
 
 
 check_info["barracuda_system_cpu_util"] = LegacyCheckDefinition(
+    name="barracuda_system_cpu_util",
     parse_function=parse_barracuda_system_cpu_util,
     detect=DETECT_BARRACUDA,
     # The barracuda spam firewall does not response or returns a timeout error

@@ -41,6 +41,7 @@ def check_fortigate_cpu(item, params, info):
 
 
 check_info["fortigate_cpu_base"] = LegacyCheckDefinition(
+    name="fortigate_cpu_base",
     parse_function=parse_fortigate_cpu,
     detect=all_of(
         contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1"),
@@ -59,6 +60,7 @@ check_info["fortigate_cpu_base"] = LegacyCheckDefinition(
 )
 
 check_info["fortigate_cpu"] = LegacyCheckDefinition(
+    name="fortigate_cpu",
     parse_function=parse_fortigate_cpu,
     detect=all_of(
         contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1"),

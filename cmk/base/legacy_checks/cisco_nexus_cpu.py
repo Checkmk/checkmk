@@ -39,6 +39,7 @@ def parse_cisco_nexus_cpu(string_table: StringTable) -> StringTable:
 
 
 check_info["cisco_nexus_cpu"] = LegacyCheckDefinition(
+    name="cisco_nexus_cpu",
     parse_function=parse_cisco_nexus_cpu,
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "cisco"),

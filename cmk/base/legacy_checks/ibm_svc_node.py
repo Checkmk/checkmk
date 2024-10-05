@@ -84,6 +84,7 @@ def discover_ibm_svc_node(section):
 
 
 check_info["ibm_svc_node"] = LegacyCheckDefinition(
+    name="ibm_svc_node",
     parse_function=parse_ibm_svc_node,
     service_name="IO Group %s",
     discovery_function=discover_ibm_svc_node,

@@ -76,6 +76,7 @@ def check_f5_bigip_fans(item, params, parsed):
 # Get ID and Speed from the CPU and chassis fan tables
 
 check_info["f5_bigip_fans"] = LegacyCheckDefinition(
+    name="f5_bigip_fans",
     detect=DETECT,
     fetch=[
         SNMPTree(

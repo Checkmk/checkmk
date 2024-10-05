@@ -34,6 +34,7 @@ def check_pandacom_module_temp(item, params, info):
 
 
 check_info["pandacom_10gm_temp"] = LegacyCheckDefinition(
+    name="pandacom_10gm_temp",
     parse_function=parse_pandacom_temp,
     detect=DETECT_PANDACOM,
     fetch=SNMPTree(
@@ -57,6 +58,7 @@ check_info["pandacom_10gm_temp"] = LegacyCheckDefinition(
 
 
 check_info["pandacom_fc_temp"] = LegacyCheckDefinition(
+    name="pandacom_fc_temp",
     parse_function=parse_pandacom_temp,
     detect=DETECT_PANDACOM,
     fetch=SNMPTree(

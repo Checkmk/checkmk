@@ -33,6 +33,7 @@ def parse_dell_poweredge_amperage(string_table: StringTable) -> StringTable:
 
 
 check_info["dell_poweredge_amperage"] = LegacyCheckDefinition(
+    name="dell_poweredge_amperage",
     parse_function=parse_dell_poweredge_amperage,
     detect=DETECT_IDRAC_POWEREDGE,
     fetch=SNMPTree(
@@ -42,6 +43,7 @@ check_info["dell_poweredge_amperage"] = LegacyCheckDefinition(
 )
 
 check_info["dell_poweredge_amperage.power"] = LegacyCheckDefinition(
+    name="dell_poweredge_amperage_power",
     service_name="%s",
     sections=["dell_poweredge_amperage"],
     discovery_function=inventory_dell_poweredge_amperage_power,
@@ -49,6 +51,7 @@ check_info["dell_poweredge_amperage.power"] = LegacyCheckDefinition(
 )
 
 check_info["dell_poweredge_amperage.current"] = LegacyCheckDefinition(
+    name="dell_poweredge_amperage_current",
     service_name="%s",
     sections=["dell_poweredge_amperage"],
     discovery_function=inventory_dell_poweredge_amperage_current,

@@ -216,6 +216,7 @@ def _mongodb_collections_get_as_int(data, key):
 
 
 check_info["mongodb_collections"] = LegacyCheckDefinition(
+    name="mongodb_collections",
     parse_function=parse_mongodb_collections,
     service_name="MongoDB Collection: %s",
     discovery_function=inventory_mongodb_collections,

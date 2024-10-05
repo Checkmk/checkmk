@@ -25,6 +25,7 @@ def parse_dell_poweredge_cpu(string_table: Sequence[StringTable]) -> Sequence[St
 
 
 check_info["dell_poweredge_cpu"] = LegacyCheckDefinition(
+    name="dell_poweredge_cpu",
     parse_function=parse_dell_poweredge_cpu,
     detect=DETECT_IDRAC_POWEREDGE,
     fetch=[

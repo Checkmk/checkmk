@@ -43,6 +43,7 @@ def parse_emc_datadomain_nvbat(string_table: StringTable) -> StringTable:
 
 
 check_info["emc_datadomain_nvbat"] = LegacyCheckDefinition(
+    name="emc_datadomain_nvbat",
     parse_function=parse_emc_datadomain_nvbat,
     detect=DETECT_DATADOMAIN,
     fetch=SNMPTree(

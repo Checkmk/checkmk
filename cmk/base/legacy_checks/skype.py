@@ -127,6 +127,7 @@ def discover_skype(table):
 
 
 check_info["skype"] = LegacyCheckDefinition(
+    name="skype",
     parse_function=parse_skype,
     service_name="Skype Web Components",
     discovery_function=discover_skype,
@@ -194,6 +195,7 @@ def discover_skype_mcu(parsed):
 
 
 check_info["skype.mcu"] = LegacyCheckDefinition(
+    name="skype_mcu",
     service_name="Skype MCU Health",
     sections=["skype"],
     discovery_function=discover_skype_mcu,
@@ -245,6 +247,7 @@ def discover_skype_conferencing(table):
 
 
 check_info["skype.conferencing"] = LegacyCheckDefinition(
+    name="skype_conferencing",
     service_name="Skype Conferencing",
     sections=["skype"],
     discovery_function=discover_skype_conferencing,
@@ -407,6 +410,7 @@ def check_skype_sip_stack(_no_item, params, parsed):
 
 
 check_info["skype.sip_stack"] = LegacyCheckDefinition(
+    name="skype_sip_stack",
     service_name="Skype SIP Stack",
     sections=["skype"],
     discovery_function=discover_skype_sip_stack,
@@ -486,6 +490,7 @@ def discover_skype_mediation_server(parsed):
 
 
 check_info["skype.mediation_server"] = LegacyCheckDefinition(
+    name="skype_mediation_server",
     service_name="Skype Mediation Server",
     sections=["skype"],
     discovery_function=discover_skype_mediation_server,
@@ -517,6 +522,7 @@ def discover_skype_edge_auth(parsed):
 
 
 check_info["skype.edge_auth"] = LegacyCheckDefinition(
+    name="skype_edge_auth",
     service_name="Skype Edge Authentification",
     sections=["skype"],
     discovery_function=discover_skype_edge_auth,
@@ -597,6 +603,7 @@ def discover_skype_edge(parsed):
 
 
 check_info["skype.edge"] = LegacyCheckDefinition(
+    name="skype_edge",
     service_name="Skype AV Edge %s",
     sections=["skype"],
     discovery_function=discover_skype_edge,
@@ -637,6 +644,7 @@ def discover_skype_data_proxy(parsed):
 
 
 check_info["skype.data_proxy"] = LegacyCheckDefinition(
+    name="skype_data_proxy",
     service_name="Skype Data Proxy %s",
     sections=["skype"],
     discovery_function=discover_skype_data_proxy,
@@ -675,6 +683,7 @@ def discover_skype_xmpp_proxy(parsed):
 
 
 check_info["skype.xmpp_proxy"] = LegacyCheckDefinition(
+    name="skype_xmpp_proxy",
     service_name="Skype XMPP Proxy",
     sections=["skype"],
     discovery_function=discover_skype_xmpp_proxy,
@@ -728,6 +737,7 @@ def discover_skype_mobile(parsed):
 
 
 check_info["skype.mobile"] = LegacyCheckDefinition(
+    name="skype_mobile",
     service_name="Skype Mobile Sessions",
     sections=["skype"],
     discovery_function=discover_skype_mobile,

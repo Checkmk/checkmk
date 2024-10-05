@@ -51,6 +51,7 @@ def parse_netscaler_dnsrates(string_table: StringTable) -> StringTable:
 
 
 check_info["netscaler_dnsrates"] = LegacyCheckDefinition(
+    name="netscaler_dnsrates",
     parse_function=parse_netscaler_dnsrates,
     detect=SNMP_DETECT,
     fetch=SNMPTree(

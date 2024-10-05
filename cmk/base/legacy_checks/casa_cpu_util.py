@@ -55,6 +55,7 @@ def parse_casa_cpu_util(string_table: Sequence[StringTable]) -> Sequence[StringT
 
 
 check_info["casa_cpu_util"] = LegacyCheckDefinition(
+    name="casa_cpu_util",
     parse_function=parse_casa_cpu_util,
     detect=DETECT_CASA,
     fetch=[

@@ -100,6 +100,7 @@ def discover_msoffice_licenses(section):
 
 
 check_info["msoffice_licenses"] = LegacyCheckDefinition(
+    name="msoffice_licenses",
     parse_function=parse_msoffice_licenses,
     service_name="MS Office Licenses %s",
     discovery_function=discover_msoffice_licenses,

@@ -7,13 +7,23 @@ import pytest
 
 from tests.unit.conftest import FixPluginLegacy, FixRegister
 
-from cmk.utils.check_utils import section_name_of
+from cmk.utils.check_utils import maincheckify, section_name_of
 from cmk.utils.legacy_check_api import LegacyCheckDefinition
 from cmk.utils.sectionname import SectionName
 
 from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin, SNMPSectionPlugin
 
 pytestmark = pytest.mark.checks
+
+
+def test_name_is_correctly_derived_from_check_info_key(fix_plugin_legacy: FixPluginLegacy) -> None:
+    """Temporary test to make sure we add the correct sections."""
+    offenders = {
+        check_info_key
+        for check_info_key, check_info_element in fix_plugin_legacy.check_info.items()
+        if check_info_element.name != maincheckify(check_info_key)
+    }
+    assert not offenders
 
 
 def test_create_section_plugin_from_legacy(

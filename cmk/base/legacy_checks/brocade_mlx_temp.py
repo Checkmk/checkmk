@@ -43,6 +43,7 @@ def check_brocade_mlx_temp(item, params, parsed):
 
 
 check_info["brocade_mlx_temp"] = LegacyCheckDefinition(
+    name="brocade_mlx_temp",
     detect=DETECT_MLX,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1991.1.1.2.13.1.1",

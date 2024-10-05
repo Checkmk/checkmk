@@ -36,6 +36,7 @@ def parse_mcafee_emailgateway_av_authentium(string_table: StringTable) -> String
 
 
 check_info["mcafee_emailgateway_av_authentium"] = LegacyCheckDefinition(
+    name="mcafee_emailgateway_av_authentium",
     parse_function=parse_mcafee_emailgateway_av_authentium,
     detect=DETECT_EMAIL_GATEWAY,
     fetch=SNMPTree(

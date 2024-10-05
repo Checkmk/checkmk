@@ -26,6 +26,7 @@ def parse_viprinet_serial(string_table: StringTable) -> StringTable:
 
 
 check_info["viprinet_serial"] = LegacyCheckDefinition(
+    name="viprinet_serial",
     parse_function=parse_viprinet_serial,
     detect=DETECT_VIPRINET,
     fetch=SNMPTree(

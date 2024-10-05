@@ -61,6 +61,7 @@ def check_kentix_temp(
 
 
 check_info["kentix_temp"] = LegacyCheckDefinition(
+    name="kentix_temp",
     detect=DETECT_KENTIX,
     fetch=[
         SNMPTree(

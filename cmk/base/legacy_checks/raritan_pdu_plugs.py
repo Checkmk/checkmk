@@ -42,6 +42,7 @@ def check_raritan_pdu_plugs(item, params, parsed):
 
 
 check_info["raritan_pdu_plugs"] = LegacyCheckDefinition(
+    name="raritan_pdu_plugs",
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13742.6"),
         any_of(

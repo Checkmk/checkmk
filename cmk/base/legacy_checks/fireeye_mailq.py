@@ -40,6 +40,7 @@ def check_fireeye_mailq(_no_item, params, parsed):
 
 
 check_info["fireeye_mailq"] = LegacyCheckDefinition(
+    name="fireeye_mailq",
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.13.1",

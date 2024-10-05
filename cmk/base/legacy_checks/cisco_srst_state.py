@@ -36,6 +36,7 @@ def parse_cisco_srst_state(string_table: StringTable) -> StringTable | None:
 
 
 check_info["cisco_srst_state"] = LegacyCheckDefinition(
+    name="cisco_srst_state",
     parse_function=parse_cisco_srst_state,
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "cisco"), equals(".1.3.6.1.4.1.9.9.441.1.2.1.0", "1")

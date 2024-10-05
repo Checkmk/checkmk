@@ -56,6 +56,7 @@ def parse_lgp_info(string_table: Sequence[StringTable]) -> Sequence[StringTable]
 
 
 check_info["lgp_info"] = LegacyCheckDefinition(
+    name="lgp_info",
     parse_function=parse_lgp_info,
     detect=DETECT_LGP,
     fetch=[

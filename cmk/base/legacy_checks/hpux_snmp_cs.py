@@ -86,6 +86,7 @@ def parse_hpux_snmp_cs(string_table: StringTable) -> StringTable:
 
 
 check_info["hpux_snmp_cs"] = LegacyCheckDefinition(
+    name="hpux_snmp_cs",
     parse_function=parse_hpux_snmp_cs,
     detect=startswith(".1.3.6.1.2.1.1.1.0", "HP-UX"),
     fetch=SNMPTree(
@@ -96,6 +97,7 @@ check_info["hpux_snmp_cs"] = LegacyCheckDefinition(
 
 
 check_info["hpux_snmp_cs.cpu"] = LegacyCheckDefinition(
+    name="hpux_snmp_cs_cpu",
     service_name="CPU utilization",
     sections=["hpux_snmp_cs"],
     discovery_function=inventory_hpux_snmp_cpu,

@@ -37,6 +37,7 @@ def discover_aruba_cpu_util(section):
 
 
 check_info["aruba_cpu_util"] = LegacyCheckDefinition(
+    name="aruba_cpu_util",
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14823"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14823.2.2.1.1.1.9.1",

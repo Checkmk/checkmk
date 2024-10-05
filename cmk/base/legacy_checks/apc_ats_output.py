@@ -67,6 +67,7 @@ def check_apc_ats_output(item, params, parsed):
 
 
 check_info["apc_ats_output"] = LegacyCheckDefinition(
+    name="apc_ats_output",
     detect=DETECT_ATS,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.8.5.4.3.1",

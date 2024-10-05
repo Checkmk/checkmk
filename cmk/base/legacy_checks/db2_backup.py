@@ -47,6 +47,7 @@ def check_db2_backup(item, params, parsed):
 
 
 check_info["db2_backup"] = LegacyCheckDefinition(
+    name="db2_backup",
     parse_function=parse_db2_dbs,
     service_name="DB2 Backup %s",
     discovery_function=inventory_db2_backup,

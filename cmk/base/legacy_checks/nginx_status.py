@@ -99,6 +99,7 @@ def discover_nginx_status(section):
 
 
 check_info["nginx_status"] = LegacyCheckDefinition(
+    name="nginx_status",
     parse_function=parse_nginx_status,
     service_name="Nginx %s Status",
     discovery_function=discover_nginx_status,

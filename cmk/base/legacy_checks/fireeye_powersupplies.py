@@ -32,6 +32,7 @@ def discover_fireeye_powersupplies(info):
 
 
 check_info["fireeye_powersupplies"] = LegacyCheckDefinition(
+    name="fireeye_powersupplies",
     parse_function=parse_fireeye_powersupplies,
     detect=DETECT,
     fetch=SNMPTree(

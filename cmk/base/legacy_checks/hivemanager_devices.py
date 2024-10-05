@@ -97,6 +97,7 @@ def parse_hivemanager_devices(string_table: StringTable) -> StringTable:
 
 
 check_info["hivemanager_devices"] = LegacyCheckDefinition(
+    name="hivemanager_devices",
     parse_function=parse_hivemanager_devices,
     service_name="Client %s",
     discovery_function=inventory_hivemanager_devices,

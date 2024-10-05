@@ -94,6 +94,7 @@ def check_db2_logsizes(item, params, parsed):
 
 
 check_info["db2_logsizes"] = LegacyCheckDefinition(
+    name="db2_logsizes",
     parse_function=parse_db2_logsizes,
     service_name="DB2 Logsize %s",
     discovery_function=inventory_db2_logsizes,

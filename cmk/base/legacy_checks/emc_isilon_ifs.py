@@ -22,6 +22,7 @@ def check_emc_isilon_ifs(item: str, params: Mapping[str, Any], section: FSBlock)
 
 
 check_info["emc_isilon_ifs"] = LegacyCheckDefinition(
+    name="emc_isilon_ifs",
     service_name="Filesystem %s",
     # section already migrated
     discovery_function=inventory_emc_isilon_ifs,

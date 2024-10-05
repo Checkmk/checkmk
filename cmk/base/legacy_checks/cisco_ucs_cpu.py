@@ -44,6 +44,7 @@ def parse_cisco_ucs_cpu(string_table: StringTable) -> StringTable:
 
 
 check_info["cisco_ucs_cpu"] = LegacyCheckDefinition(
+    name="cisco_ucs_cpu",
     parse_function=parse_cisco_ucs_cpu,
     detect=DETECT,
     fetch=SNMPTree(

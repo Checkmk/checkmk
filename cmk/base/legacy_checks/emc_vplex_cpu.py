@@ -30,6 +30,7 @@ def check_emc_vplex_cpu(
 
 
 check_info["emc_vplex_cpu"] = LegacyCheckDefinition(
+    name="emc_vplex_cpu",
     detect=DETECT_VPLEX,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1139.21.2.2",

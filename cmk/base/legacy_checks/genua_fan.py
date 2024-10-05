@@ -64,6 +64,7 @@ def parse_genua_fan(string_table: Sequence[StringTable]) -> Sequence[StringTable
 
 
 check_info["genua_fan"] = LegacyCheckDefinition(
+    name="genua_fan",
     parse_function=parse_genua_fan,
     detect=DETECT_GENUA,
     fetch=[

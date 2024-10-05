@@ -82,6 +82,7 @@ def check_oracle_sessions(item, params, parsed):
 
 
 check_info["oracle_sessions"] = LegacyCheckDefinition(
+    name="oracle_sessions",
     parse_function=parse_oracle_sessions,
     service_name="ORA %s Sessions",
     discovery_function=inventory_oracle_sessions,

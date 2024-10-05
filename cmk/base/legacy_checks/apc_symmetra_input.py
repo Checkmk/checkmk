@@ -29,6 +29,7 @@ def discover_apc_symmetra_input(section):
 
 
 check_info["apc_symmetra_input"] = LegacyCheckDefinition(
+    name="apc_symmetra_input",
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.1.3.2",

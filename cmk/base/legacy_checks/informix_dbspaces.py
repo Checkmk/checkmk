@@ -88,6 +88,7 @@ def check_informix_dbspaces(item, params, parsed):
 
 
 check_info["informix_dbspaces"] = LegacyCheckDefinition(
+    name="informix_dbspaces",
     parse_function=parse_informix_dbspaces,
     service_name="Informix Tablespace %s",
     discovery_function=inventory_informix_dbspaces,

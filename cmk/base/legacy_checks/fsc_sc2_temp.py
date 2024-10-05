@@ -107,6 +107,7 @@ def check_fsc_sc2_temp(item, params, info):
 
 
 check_info["fsc_sc2_temp"] = LegacyCheckDefinition(
+    name="fsc_sc2_temp",
     parse_function=parse_fsc_sc2_temp,
     detect=DETECT_FSC_SC2,
     fetch=SNMPTree(

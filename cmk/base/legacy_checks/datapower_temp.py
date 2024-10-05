@@ -47,6 +47,7 @@ def parse_datapower_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["datapower_temp"] = LegacyCheckDefinition(
+    name="datapower_temp",
     parse_function=parse_datapower_temp,
     detect=DETECT,
     fetch=SNMPTree(

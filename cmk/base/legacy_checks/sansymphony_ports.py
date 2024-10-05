@@ -38,6 +38,7 @@ def parse_sansymphony_ports(string_table: StringTable) -> StringTable:
 
 
 check_info["sansymphony_ports"] = LegacyCheckDefinition(
+    name="sansymphony_ports",
     parse_function=parse_sansymphony_ports,
     service_name="sansymphony Port %s",
     discovery_function=inventory_sansymphony_ports,

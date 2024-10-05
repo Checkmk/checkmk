@@ -81,6 +81,7 @@ def parse_oracle_longactivesessions(string_table: StringTable) -> StringTable:
 
 
 check_info["oracle_longactivesessions"] = LegacyCheckDefinition(
+    name="oracle_longactivesessions",
     parse_function=parse_oracle_longactivesessions,
     service_name="ORA %s Long Active Sessions",
     discovery_function=inventory_oracle_longactivesessions,

@@ -41,6 +41,7 @@ def parse_citrix_serverload(string_table: StringTable) -> StringTable:
 
 
 check_info["citrix_serverload"] = LegacyCheckDefinition(
+    name="citrix_serverload",
     parse_function=parse_citrix_serverload,
     service_name="Citrix Serverload",
     discovery_function=inventory_citrix_serverload,

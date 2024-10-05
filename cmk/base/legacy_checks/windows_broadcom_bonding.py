@@ -42,6 +42,7 @@ def parse_windows_broadcom_bonding(string_table: StringTable) -> StringTable:
 
 
 check_info["windows_broadcom_bonding"] = LegacyCheckDefinition(
+    name="windows_broadcom_bonding",
     parse_function=parse_windows_broadcom_bonding,
     service_name="Bonding Interface %s",
     discovery_function=inventory_windows_broadcom_bonding,

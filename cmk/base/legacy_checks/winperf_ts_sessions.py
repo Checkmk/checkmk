@@ -61,6 +61,7 @@ def parse_winperf_ts_sessions(string_table: StringTable) -> StringTable:
 
 
 check_info["winperf_ts_sessions"] = LegacyCheckDefinition(
+    name="winperf_ts_sessions",
     parse_function=parse_winperf_ts_sessions,
     service_name="Sessions",
     discovery_function=inventory_winperf_ts_sessions,

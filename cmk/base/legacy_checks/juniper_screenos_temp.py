@@ -33,6 +33,7 @@ def parse_juniper_screenos_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["juniper_screenos_temp"] = LegacyCheckDefinition(
+    name="juniper_screenos_temp",
     parse_function=parse_juniper_screenos_temp,
     detect=DETECT_JUNIPER_SCREENOS,
     fetch=SNMPTree(

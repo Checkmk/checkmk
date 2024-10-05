@@ -83,6 +83,7 @@ def parse_genua_pfstate(string_table: Sequence[StringTable]) -> Sequence[StringT
 
 
 check_info["genua_pfstate"] = LegacyCheckDefinition(
+    name="genua_pfstate",
     parse_function=parse_genua_pfstate,
     detect=DETECT_GENUA,
     fetch=[

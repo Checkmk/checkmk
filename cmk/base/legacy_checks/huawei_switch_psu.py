@@ -46,6 +46,7 @@ def check_huawei_switch_psu(
 
 
 check_info["huawei_switch_psu"] = LegacyCheckDefinition(
+    name="huawei_switch_psu",
     detect=DETECT_HUAWEI_SWITCH,
     fetch=[
         SNMPTree(

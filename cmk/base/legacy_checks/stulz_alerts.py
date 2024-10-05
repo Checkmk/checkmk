@@ -29,6 +29,7 @@ def parse_stulz_alerts(string_table: StringTable) -> StringTable:
 
 
 check_info["stulz_alerts"] = LegacyCheckDefinition(
+    name="stulz_alerts",
     parse_function=parse_stulz_alerts,
     detect=DETECT_STULZ,
     fetch=SNMPTree(

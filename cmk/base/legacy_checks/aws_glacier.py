@@ -71,6 +71,7 @@ def check_aws_glacier_archives(item, params, parsed):
 
 
 check_info["aws_glacier"] = LegacyCheckDefinition(
+    name="aws_glacier",
     parse_function=parse_aws_glacier,
     service_name="AWS/Glacier Vault: %s",
     discovery_function=inventory_aws_glacier,
@@ -128,6 +129,7 @@ def check_aws_glacier_summary(item, params, parsed):
 
 
 check_info["aws_glacier.summary"] = LegacyCheckDefinition(
+    name="aws_glacier_summary",
     service_name="AWS/Glacier Summary",
     sections=["aws_glacier"],
     discovery_function=discover_aws_glacier_summary,

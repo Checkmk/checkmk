@@ -44,6 +44,7 @@ def check_vutlan_ems_temp(item, params, parsed):
 
 
 check_info["vutlan_ems_temp"] = LegacyCheckDefinition(
+    name="vutlan_ems_temp",
     detect=DETECT_VUTLAN_EMS,
     fetch=[
         SNMPTree(

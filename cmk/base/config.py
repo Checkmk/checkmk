@@ -1494,7 +1494,9 @@ def load_checks(
             " -- this API is deprecated!"
         )
 
-    legacy_check_plugin_names.update({CheckPluginName(maincheckify(n)): n for n in sane_check_info})
+    legacy_check_plugin_names.update(
+        {CheckPluginName(lcd.name): n for n, lcd in sane_check_info.items()}
+    )
 
     section_errors, sections = _make_agent_and_snmp_sections(sane_check_info)
     check_errors, checks = _make_check_plugins(

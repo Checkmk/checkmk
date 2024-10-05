@@ -38,6 +38,7 @@ def parse_innovaphone_cpu(string_table: StringTable) -> StringTable:
 
 
 check_info["innovaphone_cpu"] = LegacyCheckDefinition(
+    name="innovaphone_cpu",
     parse_function=parse_innovaphone_cpu,
     service_name="CPU utilization",
     discovery_function=inventory_innovaphone_cpu,

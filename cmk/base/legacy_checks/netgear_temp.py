@@ -107,6 +107,7 @@ def check_netgear_temp(item, params, parsed):
 
 
 check_info["netgear_temp"] = LegacyCheckDefinition(
+    name="netgear_temp",
     detect=DETECT_NETGEAR,
     fetch=[
         SNMPTree(

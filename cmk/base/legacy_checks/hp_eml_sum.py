@@ -45,6 +45,7 @@ def parse_hp_eml_sum(string_table: StringTable) -> StringTable:
 
 
 check_info["hp_eml_sum"] = LegacyCheckDefinition(
+    name="hp_eml_sum",
     parse_function=parse_hp_eml_sum,
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.11.10.2.1.3.20"),
     fetch=SNMPTree(

@@ -332,6 +332,7 @@ def parse_fc_port(string_table: StringTable) -> StringTable:
 
 
 check_info["fc_port"] = LegacyCheckDefinition(
+    name="fc_port",
     parse_function=parse_fc_port,
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588.2.1.1"),

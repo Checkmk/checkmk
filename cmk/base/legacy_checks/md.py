@@ -237,6 +237,7 @@ def check_md(item, _no_params, parsed):  # pylint: disable=too-many-branches
 
 
 check_info["md"] = LegacyCheckDefinition(
+    name="md",
     parse_function=parse_md,
     service_name="MD Softraid %s",
     discovery_function=inventory_md,

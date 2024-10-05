@@ -76,6 +76,7 @@ def check_ibm_tl_media_access_devices(item, params, parsed):
 
 
 check_info["ibm_tl_media_access_devices"] = LegacyCheckDefinition(
+    name="ibm_tl_media_access_devices",
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.32925.1"),
     fetch=[
         SNMPTree(

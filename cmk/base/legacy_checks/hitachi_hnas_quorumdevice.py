@@ -42,6 +42,7 @@ def parse_hitachi_hnas_quorumdevice(string_table: StringTable) -> StringTable | 
 
 
 check_info["hitachi_hnas_quorumdevice"] = LegacyCheckDefinition(
+    name="hitachi_hnas_quorumdevice",
     parse_function=parse_hitachi_hnas_quorumdevice,
     detect=DETECT,
     fetch=SNMPTree(

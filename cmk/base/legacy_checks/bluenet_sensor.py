@@ -51,6 +51,7 @@ def parse_bluenet_sensor(string_table: StringTable) -> StringTable:
 
 
 check_info["bluenet_sensor"] = LegacyCheckDefinition(
+    name="bluenet_sensor",
     parse_function=parse_bluenet_sensor,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.21695.1"),
     fetch=SNMPTree(
@@ -105,6 +106,7 @@ def check_bluenet_sensor_hum(item, params, info):
 
 
 check_info["bluenet_sensor.hum"] = LegacyCheckDefinition(
+    name="bluenet_sensor_hum",
     service_name="Humidity %s",
     sections=["bluenet_sensor"],
     discovery_function=inventory_bluenet_sensor_hum,

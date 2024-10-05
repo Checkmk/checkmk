@@ -45,6 +45,7 @@ def inventory_ups_cps_outphase(section: Section) -> Iterable[tuple[str, dict]]:
 
 
 check_info["ups_cps_outphase"] = LegacyCheckDefinition(
+    name="ups_cps_outphase",
     detect=DETECT_UPS_CPS,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3808.1.1.1.4.2",

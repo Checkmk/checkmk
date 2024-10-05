@@ -43,6 +43,7 @@ def check_couchbase_nodes_operations(item, params, parsed):
 
 
 check_info["couchbase_nodes_operations"] = LegacyCheckDefinition(
+    name="couchbase_nodes_operations",
     parse_function=parse_couchbase_nodes_operations,
     service_name="Couchbase %s Operations",
     discovery_function=discover_couchbase_buckets_nodes_operations,
@@ -51,6 +52,7 @@ check_info["couchbase_nodes_operations"] = LegacyCheckDefinition(
 )
 
 check_info["couchbase_nodes_operations.total"] = LegacyCheckDefinition(
+    name="couchbase_nodes_operations_total",
     service_name="Couchbase Total Operations",
     sections=["couchbase_nodes_operations"],
     discovery_function=discover_couchbase_buckets_nodes_operations_total,

@@ -52,6 +52,7 @@ def parse_climaveneta_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["climaveneta_temp"] = LegacyCheckDefinition(
+    name="climaveneta_temp",
     parse_function=parse_climaveneta_temp,
     detect=equals(".1.3.6.1.2.1.1.1.0", "pCO Gateway"),
     fetch=SNMPTree(

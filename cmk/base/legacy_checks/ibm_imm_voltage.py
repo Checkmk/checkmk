@@ -50,6 +50,7 @@ def parse_ibm_imm_voltage(string_table: StringTable) -> StringTable:
 
 
 check_info["ibm_imm_voltage"] = LegacyCheckDefinition(
+    name="ibm_imm_voltage",
     parse_function=parse_ibm_imm_voltage,
     detect=DETECT_IBM_IMM,
     fetch=SNMPTree(

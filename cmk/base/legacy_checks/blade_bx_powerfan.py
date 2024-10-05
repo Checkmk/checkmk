@@ -85,6 +85,7 @@ def parse_blade_bx_powerfan(string_table: StringTable) -> StringTable:
 
 
 check_info["blade_bx_powerfan"] = LegacyCheckDefinition(
+    name="blade_bx_powerfan",
     parse_function=parse_blade_bx_powerfan,
     detect=DETECT_BLADE_BX,
     fetch=SNMPTree(

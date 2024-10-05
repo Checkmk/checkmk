@@ -59,6 +59,7 @@ def discover_fireeye_raid(parsed):
 
 
 check_info["fireeye_raid"] = LegacyCheckDefinition(
+    name="fireeye_raid",
     detect=DETECT,
     fetch=[
         SNMPTree(
@@ -101,6 +102,7 @@ def discover_fireeye_raid_disks(parsed):
 
 
 check_info["fireeye_raid.disks"] = LegacyCheckDefinition(
+    name="fireeye_raid_disks",
     service_name="Disk status %s",
     sections=["fireeye_raid"],
     discovery_function=discover_fireeye_raid_disks,

@@ -156,6 +156,7 @@ def check_postgres_bloat(item, params, parsed):  # pylint: disable=too-many-bran
 
 
 check_info["postgres_bloat"] = LegacyCheckDefinition(
+    name="postgres_bloat",
     parse_function=postgres.parse_dbs,
     service_name="PostgreSQL Bloat %s",
     discovery_function=inventory_postgres_bloat,

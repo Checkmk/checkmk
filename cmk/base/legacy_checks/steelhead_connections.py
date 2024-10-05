@@ -74,6 +74,7 @@ def parse_steelhead_connections(string_table: StringTable) -> StringTable:
 
 
 check_info["steelhead_connections"] = LegacyCheckDefinition(
+    name="steelhead_connections",
     parse_function=parse_steelhead_connections,
     detect=DETECT_STEELHEAD,
     fetch=SNMPTree(

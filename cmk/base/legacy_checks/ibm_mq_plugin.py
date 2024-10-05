@@ -50,6 +50,7 @@ def check_ibm_mq_plugin(_no_item, params, parsed):
 
 
 check_info["ibm_mq_plugin"] = LegacyCheckDefinition(
+    name="ibm_mq_plugin",
     parse_function=parse_ibm_mq_plugin,
     service_name="IBM MQ Plugin",
     discovery_function=inventory_ibm_mq_plugin,

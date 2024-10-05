@@ -55,6 +55,7 @@ def parse_bluecat_ntp(string_table: StringTable) -> StringTable:
 
 
 check_info["bluecat_ntp"] = LegacyCheckDefinition(
+    name="bluecat_ntp",
     parse_function=parse_bluecat_ntp,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13315"),
     fetch=SNMPTree(

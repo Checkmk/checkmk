@@ -30,6 +30,7 @@ def parse_superstack3_sensors(string_table: StringTable) -> StringTable:
 
 
 check_info["superstack3_sensors"] = LegacyCheckDefinition(
+    name="superstack3_sensors",
     parse_function=parse_superstack3_sensors,
     detect=contains(".1.3.6.1.2.1.1.1.0", "3com superstack 3"),
     fetch=SNMPTree(

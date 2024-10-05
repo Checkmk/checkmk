@@ -52,6 +52,7 @@ def parse_oracle_crs_voting(string_table: StringTable) -> StringTable:
 
 
 check_info["oracle_crs_voting"] = LegacyCheckDefinition(
+    name="oracle_crs_voting",
     parse_function=parse_oracle_crs_voting,
     service_name="ORA-GI Voting",
     discovery_function=inventory_oracle_crs_voting,

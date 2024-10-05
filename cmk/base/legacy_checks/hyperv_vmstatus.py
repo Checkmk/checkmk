@@ -36,6 +36,7 @@ def check_hyperv_vmstatus(_no_item, _no_params, parsed):
 
 
 check_info["hyperv_vmstatus"] = LegacyCheckDefinition(
+    name="hyperv_vmstatus",
     parse_function=parse_hyperv_vmstatus,
     service_name="HyperV Status",
     discovery_function=discover_hyperv_vmstatus,

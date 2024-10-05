@@ -30,6 +30,7 @@ def check_hwg_humidity(item, params, parsed):
 
 
 check_info["hwg_humidity"] = LegacyCheckDefinition(
+    name="hwg_humidity",
     detect=contains(".1.3.6.1.2.1.1.1.0", "hwg"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.21796.4.1.3.1",
@@ -44,6 +45,7 @@ check_info["hwg_humidity"] = LegacyCheckDefinition(
 )
 
 check_info["hwg_ste2.humidity"] = LegacyCheckDefinition(
+    name="hwg_ste2_humidity",
     service_name="Humidity %s",
     sections=["hwg_ste2"],
     discovery_function=inventory_hwg_humidity,

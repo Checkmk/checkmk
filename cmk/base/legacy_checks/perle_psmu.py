@@ -27,6 +27,7 @@ def discover_perle_psmu(info):
 
 
 check_info["perle_psmu"] = LegacyCheckDefinition(
+    name="perle_psmu",
     # section is already migrated!
     service_name="Power supply %s",
     discovery_function=discover_perle_psmu,
@@ -47,6 +48,7 @@ def discover_perle_psmu_fan(info):
 
 
 check_info["perle_psmu.fan"] = LegacyCheckDefinition(
+    name="perle_psmu_fan",
     service_name="Fan %s",
     sections=["perle_psmu"],
     discovery_function=discover_perle_psmu_fan,

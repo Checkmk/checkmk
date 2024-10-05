@@ -40,6 +40,7 @@ def parse_huawei_osn_power(string_table: StringTable) -> StringTable:
 
 
 check_info["huawei_osn_power"] = LegacyCheckDefinition(
+    name="huawei_osn_power",
     parse_function=parse_huawei_osn_power,
     detect=DETECT_HUAWEI_OSN,
     fetch=SNMPTree(

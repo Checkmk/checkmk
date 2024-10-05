@@ -103,6 +103,7 @@ def check_printer_supply_ricoh(item, params, parsed):
 
 
 check_info["printer_supply_ricoh"] = LegacyCheckDefinition(
+    name="printer_supply_ricoh",
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.367.1.1"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.367.3.2.1.2.24.1.1",

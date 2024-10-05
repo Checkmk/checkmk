@@ -45,6 +45,7 @@ def check_apc_inrow_temp(item, params, parsed):
 
 
 check_info["apc_inrow_temp"] = LegacyCheckDefinition(
+    name="apc_inrow_temp",
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.13.3.2.2.2",

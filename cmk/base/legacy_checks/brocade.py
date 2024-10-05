@@ -40,6 +40,7 @@ def parse_brocade(string_table: StringTable) -> StringTable:
 
 
 check_info["brocade"] = LegacyCheckDefinition(
+    name="brocade",
     parse_function=parse_brocade,
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588.2.1.1"),
@@ -82,6 +83,7 @@ def check_brocade_fan(item, params, info):
 
 
 check_info["brocade.fan"] = LegacyCheckDefinition(
+    name="brocade_fan",
     service_name="FAN %s",
     sections=["brocade"],
     discovery_function=inventory_brocade_fan,
@@ -109,6 +111,7 @@ def check_brocade_power(item, _no_params, info):
 
 
 check_info["brocade.power"] = LegacyCheckDefinition(
+    name="brocade_power",
     service_name="Power supply %s",
     sections=["brocade"],
     discovery_function=inventory_brocade_power,
@@ -130,6 +133,7 @@ def check_brocade_temp(item, params, info):
 
 
 check_info["brocade.temp"] = LegacyCheckDefinition(
+    name="brocade_temp",
     service_name="Temperature Ambient %s",
     sections=["brocade"],
     discovery_function=inventory_brocade_temp,

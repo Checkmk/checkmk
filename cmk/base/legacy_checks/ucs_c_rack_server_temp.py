@@ -83,6 +83,7 @@ def discover_ucs_c_rack_server_temp(section):
 
 
 check_info["ucs_c_rack_server_temp"] = LegacyCheckDefinition(
+    name="ucs_c_rack_server_temp",
     parse_function=parse_ucs_c_rack_server_temp,
     service_name="Temperature %s",
     discovery_function=discover_ucs_c_rack_server_temp,

@@ -30,6 +30,7 @@ def check_mcafee_emailgateway_smtp(item, params, info):
 
 
 check_info["mcafee_emailgateway_smtp"] = LegacyCheckDefinition(
+    name="mcafee_emailgateway_smtp",
     parse_function=parse_mcafee_emailgateway_smtp,
     detect=DETECT_EMAIL_GATEWAY,
     fetch=SNMPTree(

@@ -105,6 +105,7 @@ def check_appdynamics_web_container(
 
 
 check_info["appdynamics_web_container"] = LegacyCheckDefinition(
+    name="appdynamics_web_container",
     service_name="AppDynamics Web Container %s",
     parse_function=parse_appdynamics_web_container,
     discovery_function=discover_appdynamics_web_container,

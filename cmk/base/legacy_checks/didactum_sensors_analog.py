@@ -62,6 +62,7 @@ def inventory_didactum_sensors_analog_temp(parsed):
 
 
 check_info["didactum_sensors_analog"] = LegacyCheckDefinition(
+    name="didactum_sensors_analog",
     detect=DETECT_DIDACTUM,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.46501.5.2.1",
@@ -90,6 +91,7 @@ def inventory_didactum_sensors_analog_humid(parsed):
 
 
 check_info["didactum_sensors_analog.humidity"] = LegacyCheckDefinition(
+    name="didactum_sensors_analog_humidity",
     service_name="Humidity %s",
     sections=["didactum_sensors_analog"],
     discovery_function=inventory_didactum_sensors_analog_humid,
@@ -113,6 +115,7 @@ def inventory_didactum_sensors_analog_volt(parsed):
 
 
 check_info["didactum_sensors_analog.voltage"] = LegacyCheckDefinition(
+    name="didactum_sensors_analog_voltage",
     service_name="Phase %s",
     sections=["didactum_sensors_analog"],
     discovery_function=inventory_didactum_sensors_analog_volt,

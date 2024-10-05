@@ -79,6 +79,7 @@ def check_raritan_px_outlets(item, params, parsed):
 
 
 check_info["raritan_px_outlets"] = LegacyCheckDefinition(
+    name="raritan_px_outlets",
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13742.4"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.13742.4.1.2.2.1",

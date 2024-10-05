@@ -44,6 +44,7 @@ def check_hp_proliant_cpu(item, params, info):
 
 
 check_info["hp_proliant_cpu"] = LegacyCheckDefinition(
+    name="hp_proliant_cpu",
     parse_function=parse_hp_proliant_cpu,
     detect=DETECT,
     fetch=SNMPTree(

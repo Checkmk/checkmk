@@ -131,6 +131,7 @@ def check_scaleio_mdm(_no_item, _no_params, parsed):
 
 
 check_info["scaleio_mdm"] = LegacyCheckDefinition(
+    name="scaleio_mdm",
     parse_function=parse_scaleio_mdm,
     service_name="ScaleIO cluster status",
     discovery_function=inventory_scaleio_mdm,

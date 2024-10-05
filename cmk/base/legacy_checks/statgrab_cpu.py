@@ -48,6 +48,7 @@ def parse_statgrab_cpu(string_table: StringTable) -> StringTable:
 
 
 check_info["statgrab_cpu"] = LegacyCheckDefinition(
+    name="statgrab_cpu",
     parse_function=parse_statgrab_cpu,
     service_name="CPU utilization",
     discovery_function=inventory_statgrab_cpu,

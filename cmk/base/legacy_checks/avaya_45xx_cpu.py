@@ -31,6 +31,7 @@ def parse_avaya_45xx_cpu(string_table: StringTable) -> StringTable:
 
 
 check_info["avaya_45xx_cpu"] = LegacyCheckDefinition(
+    name="avaya_45xx_cpu",
     parse_function=parse_avaya_45xx_cpu,
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.45.3"),
     fetch=SNMPTree(

@@ -121,6 +121,7 @@ def discover_nimble_latency(parsed):
 
 
 check_info["nimble_latency"] = LegacyCheckDefinition(
+    name="nimble_latency",
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.37447.3.1"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.37447.1.2.1",
@@ -184,6 +185,7 @@ def discover_nimble_latency_write(parsed):
 
 
 check_info["nimble_latency.write"] = LegacyCheckDefinition(
+    name="nimble_latency_write",
     service_name="Volume %s Write IO",
     sections=["nimble_latency"],
     discovery_function=discover_nimble_latency_write,

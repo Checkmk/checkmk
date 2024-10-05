@@ -26,6 +26,7 @@ def parse_fortigate_sessions_base(string_table: StringTable) -> StringTable | No
 
 
 check_info["fortigate_sessions_base"] = LegacyCheckDefinition(
+    name="fortigate_sessions_base",
     parse_function=parse_fortigate_sessions_base,
     detect=all_of(
         contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1"),

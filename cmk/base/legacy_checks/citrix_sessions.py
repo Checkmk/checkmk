@@ -62,6 +62,7 @@ def parse_citrix_sessions(string_table: StringTable) -> StringTable:
 
 
 check_info["citrix_sessions"] = LegacyCheckDefinition(
+    name="citrix_sessions",
     parse_function=parse_citrix_sessions,
     service_name="Citrix Sessions",
     discovery_function=inventory_citrix_sessions,

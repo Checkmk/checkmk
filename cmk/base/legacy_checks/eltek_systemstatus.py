@@ -33,6 +33,7 @@ def parse_eltek_systemstatus(string_table: StringTable) -> StringTable | None:
 
 
 check_info["eltek_systemstatus"] = LegacyCheckDefinition(
+    name="eltek_systemstatus",
     parse_function=parse_eltek_systemstatus,
     detect=DETECT_ELTEK,
     fetch=SNMPTree(

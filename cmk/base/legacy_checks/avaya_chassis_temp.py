@@ -27,6 +27,7 @@ def parse_avaya_chassis_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["avaya_chassis_temp"] = LegacyCheckDefinition(
+    name="avaya_chassis_temp",
     parse_function=parse_avaya_chassis_temp,
     detect=DETECT_AVAYA,
     fetch=SNMPTree(

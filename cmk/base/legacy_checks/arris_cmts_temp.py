@@ -31,6 +31,7 @@ def parse_arris_cmts_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["arris_cmts_temp"] = LegacyCheckDefinition(
+    name="arris_cmts_temp",
     parse_function=parse_arris_cmts_temp,
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4998.2.1"),
     fetch=SNMPTree(

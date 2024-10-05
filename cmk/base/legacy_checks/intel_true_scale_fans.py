@@ -82,6 +82,7 @@ def parse_intel_true_scale_fans(string_table: StringTable) -> StringTable:
 
 
 check_info["intel_true_scale_fans"] = LegacyCheckDefinition(
+    name="intel_true_scale_fans",
     parse_function=parse_intel_true_scale_fans,
     detect=DETECT_INTEL_TRUE_SCALE,
     fetch=SNMPTree(

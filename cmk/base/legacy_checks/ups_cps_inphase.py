@@ -33,6 +33,7 @@ def inventory_ups_cps_inphase(parsed):
 
 
 check_info["ups_cps_inphase"] = LegacyCheckDefinition(
+    name="ups_cps_inphase",
     detect=DETECT_UPS_CPS,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3808.1.1.1.3.2",

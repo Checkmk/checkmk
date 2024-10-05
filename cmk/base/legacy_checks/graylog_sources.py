@@ -96,6 +96,7 @@ def discover_graylog_sources(section):
 
 
 check_info["graylog_sources"] = LegacyCheckDefinition(
+    name="graylog_sources",
     parse_function=parse_graylog_sources,
     service_name="Graylog Source %s",
     discovery_function=discover_graylog_sources,

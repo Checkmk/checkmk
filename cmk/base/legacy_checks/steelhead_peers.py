@@ -32,6 +32,7 @@ def parse_steelhead_peers(string_table: StringTable) -> StringTable:
 
 
 check_info["steelhead_peers"] = LegacyCheckDefinition(
+    name="steelhead_peers",
     parse_function=parse_steelhead_peers,
     detect=DETECT_STEELHEAD,
     fetch=SNMPTree(

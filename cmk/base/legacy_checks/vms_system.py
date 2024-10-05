@@ -24,6 +24,7 @@ def parse_vms_system(string_table: StringTable) -> StringTable:
 
 
 check_info["vms_system"] = LegacyCheckDefinition(
+    name="vms_system",
     parse_function=parse_vms_system,
 )
 
@@ -44,6 +45,7 @@ def check_vms_system_ios(_no_item, _no_params, info):
 
 
 check_info["vms_system.ios"] = LegacyCheckDefinition(
+    name="vms_system_ios",
     service_name="IOs",
     sections=["vms_system"],
     discovery_function=inventory_vms_system,
@@ -65,6 +67,7 @@ def check_vms_system_procs(_no_item, params, info):
 
 
 check_info["vms_system.procs"] = LegacyCheckDefinition(
+    name="vms_system_procs",
     service_name="Number of processes",
     sections=["vms_system"],
     discovery_function=inventory_vms_system,

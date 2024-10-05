@@ -48,6 +48,7 @@ def check_postgres_conn_time(item, _no_params, parsed):
 
 
 check_info["postgres_conn_time"] = LegacyCheckDefinition(
+    name="postgres_conn_time",
     parse_function=parse_postgres_conn_time,
     service_name="PostgreSQL Connection Time %s",
     discovery_function=inventory_postgres_conn_time,

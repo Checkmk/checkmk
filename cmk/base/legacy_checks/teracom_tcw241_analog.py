@@ -90,6 +90,7 @@ def discover_teracom_tcw241_analog(section):
 
 
 check_info["teracom_tcw241_analog"] = LegacyCheckDefinition(
+    name="teracom_tcw241_analog",
     detect=contains(".1.3.6.1.2.1.1.1.0", "Teracom"),
     fetch=[
         *(

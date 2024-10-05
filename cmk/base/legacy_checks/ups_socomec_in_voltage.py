@@ -41,6 +41,7 @@ def parse_ups_socomec_in_voltage(string_table: StringTable) -> StringTable:
 
 
 check_info["ups_socomec_in_voltage"] = LegacyCheckDefinition(
+    name="ups_socomec_in_voltage",
     parse_function=parse_ups_socomec_in_voltage,
     detect=DETECT_SOCOMEC,
     fetch=SNMPTree(

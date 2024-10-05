@@ -34,6 +34,7 @@ def parse_stulz_powerstate(string_table: StringTable) -> StringTable:
 
 
 check_info["stulz_powerstate"] = LegacyCheckDefinition(
+    name="stulz_powerstate",
     parse_function=parse_stulz_powerstate,
     detect=DETECT_STULZ,
     fetch=SNMPTree(

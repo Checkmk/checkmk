@@ -46,6 +46,7 @@ def parse_ispro_sensors_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["ispro_sensors_temp"] = LegacyCheckDefinition(
+    name="ispro_sensors_temp",
     parse_function=parse_ispro_sensors_temp,
     detect=DETECT_ISPRO_SENSORS,
     fetch=SNMPTree(

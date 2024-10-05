@@ -52,6 +52,7 @@ def check_ddn_s2a_stats_readhits(item, params, parsed):
 
 
 check_info["ddn_s2a_stats.readhits"] = LegacyCheckDefinition(
+    name="ddn_s2a_stats_readhits",
     service_name="DDN S2A Read Hits %s",
     sections=["ddn_s2a_stats"],
     discovery_function=inventory_ddn_s2a_stats_readhits,
@@ -123,6 +124,7 @@ def check_ddn_s2a_stats_io(item, params, parsed):
 
 
 check_info["ddn_s2a_stats.io"] = LegacyCheckDefinition(
+    name="ddn_s2a_stats_io",
     service_name="DDN S2A IO %s",
     sections=["ddn_s2a_stats"],
     discovery_function=inventory_ddn_s2a_stats_io,
@@ -196,6 +198,7 @@ def check_ddn_s2a_stats(item, params, parsed):
 
 
 check_info["ddn_s2a_stats"] = LegacyCheckDefinition(
+    name="ddn_s2a_stats",
     parse_function=parse_ddn_s2a_stats,
     service_name="DDN S2A Data Rate %s",
     discovery_function=inventory_ddn_s2a_stats,

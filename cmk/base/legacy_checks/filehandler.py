@@ -47,6 +47,7 @@ def parse_filehandler(string_table: StringTable) -> StringTable:
 
 
 check_info["filehandler"] = LegacyCheckDefinition(
+    name="filehandler",
     parse_function=parse_filehandler,
     service_name="Filehandler",
     discovery_function=inventory_filehandler,

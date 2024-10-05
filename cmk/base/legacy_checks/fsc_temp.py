@@ -50,6 +50,7 @@ def parse_fsc_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["fsc_temp"] = LegacyCheckDefinition(
+    name="fsc_temp",
     parse_function=parse_fsc_temp,
     detect=all_of(
         all_of(

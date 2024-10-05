@@ -202,6 +202,7 @@ def check_emka_modules(item, params, parsed):
 
 
 check_info["emka_modules"] = LegacyCheckDefinition(
+    name="emka_modules",
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "emka"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13595"),
@@ -269,6 +270,7 @@ def check_emka_modules_alarm(item, params, parsed):
 
 
 check_info["emka_modules.alarm"] = LegacyCheckDefinition(
+    name="emka_modules_alarm",
     service_name="Alarm %s",
     sections=["emka_modules"],
     discovery_function=inventory_emka_modules_alarm,
@@ -308,6 +310,7 @@ def check_emka_modules_handle(item, params, parsed):
 
 
 check_info["emka_modules.handle"] = LegacyCheckDefinition(
+    name="emka_modules_handle",
     service_name="Handle %s",
     sections=["emka_modules"],
     discovery_function=inventory_emka_modules_handle,
@@ -339,6 +342,7 @@ def check_emka_modules_sensor_volt(item, params, parsed):
 
 
 check_info["emka_modules.sensor_volt"] = LegacyCheckDefinition(
+    name="emka_modules_sensor_volt",
     service_name="Phase %s",
     sections=["emka_modules"],
     discovery_function=inventory_emka_modules_sensor_volt,
@@ -377,6 +381,7 @@ def check_emka_modules_sensor_temp(item, params, parsed):
 
 
 check_info["emka_modules.sensor_temp"] = LegacyCheckDefinition(
+    name="emka_modules_sensor_temp",
     service_name="Temperature %s",
     sections=["emka_modules"],
     discovery_function=inventory_emka_modules_sensor_temp,
@@ -409,6 +414,7 @@ def check_emka_modules_sensor_humid(item, params, parsed):
 
 
 check_info["emka_modules.sensor_humid"] = LegacyCheckDefinition(
+    name="emka_modules_sensor_humid",
     service_name="Humidity %s",
     sections=["emka_modules"],
     discovery_function=inventory_emka_modules_sensor_humid,
@@ -446,6 +452,7 @@ def check_emka_modules_relay(item, params, parsed):
 
 
 check_info["emka_modules.relay"] = LegacyCheckDefinition(
+    name="emka_modules_relay",
     service_name="Relay %s",
     sections=["emka_modules"],
     discovery_function=inventory_emka_modules_relay,

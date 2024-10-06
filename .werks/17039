@@ -1,0 +1,11 @@
+Title: db2_sort_overflow: Fix typo in service summary
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1728235151
+Edition: cre
+Level: 1
+Version: 2.2.0p36
+
+There was a typo in the summary. When the state was WARN or CRIT, the summary said "leves at" instead of "levels at".
+This is now fixed.

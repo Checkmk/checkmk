@@ -18,8 +18,10 @@ from cmk.utils.legacy_check_api import LegacyCheckDefinition
 
 from cmk.checkengine.parameters import Parameters
 
-from cmk.base.api.agent_based.plugin_classes import CheckPlugin
-from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
+from cmk.base.api.agent_based.plugin_classes import CheckPlugin, LegacyPluginLocation
+from cmk.base.api.agent_based.register.check_plugins import (
+    create_check_plugin,
+)
 
 from cmk.agent_based.v1 import IgnoreResults, Metric, Result, Service, State
 from cmk.agent_based.v1.type_defs import CheckResult
@@ -243,6 +245,7 @@ def _create_signature_check_function(
 
 def create_check_plugin_from_legacy(
     check_info_element: LegacyCheckDefinition,
+    location: LegacyPluginLocation,
     *,
     validate_creation_kwargs: bool = True,
 ) -> CheckPlugin:
@@ -269,5 +272,6 @@ def create_check_plugin_from_legacy(
         check_function=check_function,
         check_default_parameters=check_info_element.check_default_parameters or {},
         check_ruleset_name=check_info_element.check_ruleset_name,
+        location=location,
         validate_kwargs=validate_creation_kwargs,
     )

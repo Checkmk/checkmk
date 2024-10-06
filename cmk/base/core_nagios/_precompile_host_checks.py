@@ -18,7 +18,7 @@ import py_compile
 import re
 import socket
 import sys
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 from pathlib import Path
 from typing import assert_never
 
@@ -39,7 +39,7 @@ from cmk.checkengine.inventory import InventoryPluginName
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.utils
 from cmk.base import server_side_calls
-from cmk.base.api.agent_based.plugin_classes import SectionPlugin
+from cmk.base.api.agent_based.plugin_classes import LegacyPluginLocation, SectionPlugin
 from cmk.base.config import ConfigCache, FilterMode, lookup_ip_address, save_packed_config
 
 from cmk.discover_plugins import PluginLocation
@@ -108,8 +108,6 @@ class HostCheckStore:
 def precompile_hostchecks(
     config_path: VersionedConfigPath,
     config_cache: ConfigCache,
-    legacy_check_plugin_names: Mapping[CheckPluginName, str],
-    legacy_check_plugin_files: Mapping[str, str],
     *,
     precompile_mode: PrecompileMode,
 ) -> None:
@@ -135,8 +133,6 @@ def precompile_hostchecks(
                 config_cache,
                 config_path,
                 hostname,
-                legacy_check_plugin_names,
-                legacy_check_plugin_files,
                 precompile_mode=precompile_mode,
             )
             if host_check is None:
@@ -157,8 +153,6 @@ def dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
     config_cache: ConfigCache,
     config_path: VersionedConfigPath,
     hostname: HostName,
-    legacy_check_plugin_names: Mapping[CheckPluginName, str],
-    legacy_check_plugin_files: Mapping[str, str],
     *,
     verify_site_python: bool = True,
     precompile_mode: PrecompileMode,
@@ -207,8 +201,6 @@ def dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
             needed_agent_based_section_plugin_names.values(),
             needed_agent_based_check_plugin_names,
             needed_legacy_special_agents,
-            legacy_check_plugin_files,
-            legacy_check_plugin_names,
         )
     )
 
@@ -324,26 +316,26 @@ def _get_needed_legacy_check_files(
     section_plugins: Iterable[SectionPlugin],
     check_plugin_names: Iterable[CheckPluginName],
     legacy_special_agent_names: set[str],
-    legacy_check_plugin_files: Mapping[str, str],
-    legacy_check_plugin_names: Mapping[CheckPluginName, str],
 ) -> set[str]:
-    actual_names = {
-        CheckPluginName(str(section.name))
-        for section in section_plugins
-        if section.location is None
-    } | {
-        check_plugin.name
-        for check_plugin_name in check_plugin_names
-        if (check_plugin := agent_based_register.get_check_plugin(check_plugin_name)) is not None
-        and check_plugin.location is None
-    }
-    file_lookup_names = {legacy_check_plugin_names[name] for name in actual_names}
-
-    return {legacy_check_plugin_files[name] for name in file_lookup_names} | {
-        f"{os.path.join(base, name)}.py"
-        for base in (cmk.utils.paths.local_checks_dir, cmk.utils.paths.checks_dir)
-        for name in legacy_special_agent_names
-    }
+    return (
+        {
+            section.location.file_name
+            for section in section_plugins
+            if isinstance(section.location, LegacyPluginLocation)
+        }
+        | {
+            check_plugin.location.file_name
+            for check_plugin_name in check_plugin_names
+            if (check_plugin := agent_based_register.get_check_plugin(check_plugin_name))
+            is not None
+            and isinstance(check_plugin.location, LegacyPluginLocation)
+        }
+        | {
+            f"{os.path.join(base, name)}.py"
+            for base in (cmk.utils.paths.local_checks_dir, cmk.utils.paths.checks_dir)
+            for name in legacy_special_agent_names
+        }
+    )
 
 
 def _get_needed_agent_based_locations(
@@ -354,13 +346,17 @@ def _get_needed_agent_based_locations(
     modules = {
         plugin.location
         for plugin in [agent_based_register.get_check_plugin(p) for p in check_plugin_names]
-        if plugin is not None and plugin.location is not None
+        if plugin is not None and isinstance(plugin.location, PluginLocation)
     }
     modules.update(
         plugin.location
         for plugin in [agent_based_register.get_inventory_plugin(p) for p in inventory_plugin_names]
-        if plugin is not None and plugin.location is not None
+        if plugin is not None and isinstance(plugin.location, PluginLocation)
     )
-    modules.update(section.location for section in section_plugins if section.location is not None)
+    modules.update(
+        section.location
+        for section in section_plugins
+        if isinstance(section.location, PluginLocation)
+    )
 
     return sorted(modules, key=lambda l: (l.module, l.name or ""))

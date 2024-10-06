@@ -7,7 +7,11 @@
 from collections.abc import Callable, Sequence
 from typing import cast
 
-from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin, SNMPSectionPlugin
+from cmk.base.api.agent_based.plugin_classes import (
+    AgentSectionPlugin,
+    LegacyPluginLocation,
+    SNMPSectionPlugin,
+)
 from cmk.base.api.agent_based.register.section_plugins import (
     create_agent_section_plugin,
     create_snmp_section_plugin,
@@ -29,6 +33,7 @@ def create_section_plugin_from_legacy(
     parse_function: Callable[[list], object],
     detect: SNMPDetectSpecification | None,
     fetch: SNMPTree | Sequence[SNMPTree] | None,
+    location: LegacyPluginLocation,
 ) -> SNMPSectionPlugin | AgentSectionPlugin:
     match fetch:
         case None:
@@ -37,7 +42,7 @@ def create_section_plugin_from_legacy(
                     name=name,
                     parse_function=parse_function,
                 ),
-                location=None,
+                location=location,
                 validate=False,
             )
 
@@ -50,7 +55,7 @@ def create_section_plugin_from_legacy(
                     fetch=fetch,
                     detect=detect,
                 ),
-                location=None,
+                location=location,
                 validate=False,
             )
 
@@ -63,6 +68,6 @@ def create_section_plugin_from_legacy(
                     fetch=fetch_list,
                     detect=detect,
                 ),
-                location=None,
+                location=location,
                 validate=False,
             )

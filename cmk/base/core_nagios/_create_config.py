@@ -70,8 +70,6 @@ class NagiosCore(core_config.MonitoringCore):
         self._create_core_config(config_path, licensing_handler, passwords, ip_address_of)
         self._precompile_hostchecks(
             config_path,
-            config.legacy_check_plugin_names,
-            config.legacy_check_plugin_files,
             precompile_mode=(
                 PrecompileMode.DELAYED if config.delay_precompile else PrecompileMode.INSTANT
             ),
@@ -116,8 +114,6 @@ class NagiosCore(core_config.MonitoringCore):
     def _precompile_hostchecks(
         self,
         config_path: VersionedConfigPath,
-        legacy_check_plugin_names: Mapping[CheckPluginName, str],
-        legacy_check_plugin_files: Mapping[str, str],
         *,
         precompile_mode: PrecompileMode,
     ) -> None:
@@ -126,8 +122,6 @@ class NagiosCore(core_config.MonitoringCore):
         precompile_hostchecks(
             config_path,
             self._config_cache,
-            legacy_check_plugin_names,
-            legacy_check_plugin_files,
             precompile_mode=precompile_mode,
         )
         with suppress(IOError):

@@ -134,6 +134,7 @@ from cmk.base.api.agent_based.cluster_mode import ClusterMode
 from cmk.base.api.agent_based.plugin_classes import (
     AgentSectionPlugin,
     CheckPlugin,
+    LegacyPluginLocation,
     SNMPSectionPlugin,
 )
 from cmk.base.api.agent_based.register.check_plugins_legacy import create_check_plugin_from_legacy
@@ -1376,10 +1377,6 @@ NEGATE = tuple_rulesets.NEGATE
 check_info: dict[
     object, object
 ] = {}  # want: dict[str, LegacyCheckDefinition], but don't trust the plugins!
-# for nagios config: keep track which plug-in lives where
-legacy_check_plugin_files: dict[str, str] = {}
-# Lookup for legacy names
-legacy_check_plugin_names: dict[CheckPluginName, str] = {}
 # definitions of special agents
 special_agent_info: dict[str, SpecialAgentInfoFunction] = {}
 
@@ -1423,8 +1420,6 @@ def load_all_plugins(
 def _initialize_data_structures() -> None:
     """Initialize some data structures which are populated while loading the checks"""
     check_info.clear()
-    legacy_check_plugin_files.clear()
-    legacy_check_plugin_names.clear()
     special_agent_info.clear()
 
 
@@ -1446,6 +1441,7 @@ def load_checks(
     loaded_files: set[str] = set()
     ignored_plugins_errors = []
     sane_check_info = {}
+    legacy_check_plugin_files: dict[str, str] = {}
 
     did_compile = False
     for f in filelist:
@@ -1481,8 +1477,7 @@ def load_checks(
         for plugin_name, plugin in defined_checks:
             if isinstance(plugin, LegacyCheckDefinition):
                 sane_check_info[plugin_name] = plugin
-                legacy_check_plugin_names[CheckPluginName(plugin.name)] = plugin_name
-                legacy_check_plugin_files[plugin_name] = f
+                legacy_check_plugin_files[plugin.name] = f
             else:
                 # Now just drop everything we don't like; this is not a supported API anymore.
                 # Users affected by this will see a CRIT in their "Analyse Configuration" page.
@@ -1491,9 +1486,15 @@ def load_checks(
                     " -- this API is deprecated!"
                 )
 
-    section_errors, sections = _make_agent_and_snmp_sections(sane_check_info)
+    section_errors, sections = _make_agent_and_snmp_sections(
+        sane_check_info.values(), legacy_check_plugin_files
+    )
+
+    section_errors, sections = _make_agent_and_snmp_sections(
+        sane_check_info.values(), legacy_check_plugin_files
+    )
     check_errors, checks = _make_check_plugins(
-        sane_check_info, validate_creation_kwargs=did_compile
+        sane_check_info.values(), legacy_check_plugin_files, validate_creation_kwargs=did_compile
     )
 
     _add_sections_to_register(sections)
@@ -1614,7 +1615,7 @@ def _add_sections_to_register(sections: Iterable[SNMPSectionPlugin | AgentSectio
 
 
 def _make_agent_and_snmp_sections(
-    legacy_checks: Mapping[str, LegacyCheckDefinition],
+    legacy_checks: Iterable[LegacyCheckDefinition], tracked_files: Mapping[str, str]
 ) -> tuple[list[str], Sequence[SNMPSectionPlugin | AgentSectionPlugin]]:
     """Here comes the next layer of converting-to-"new"-api.
 
@@ -1624,16 +1625,18 @@ def _make_agent_and_snmp_sections(
     errors = []
     sections = []
 
-    for section_name, check_info_element in legacy_checks.items():
+    for check_info_element in legacy_checks:
         if (parse_function := check_info_element.parse_function) is None:
             continue
+        file = tracked_files[check_info_element.name]
         try:
             sections.append(
                 create_section_plugin_from_legacy(
-                    name=section_name,
+                    name=check_info_element.name,
                     parse_function=parse_function,
                     fetch=check_info_element.fetch,
                     detect=check_info_element.detect,
+                    location=LegacyPluginLocation(file),
                 )
             )
         except (NotImplementedError, KeyError, AssertionError, ValueError) as exc:
@@ -1642,7 +1645,7 @@ def _make_agent_and_snmp_sections(
             #       passed un-parsed data unexpectedly.
             if cmk.ccc.debug.enabled():
                 raise MKGeneralException(exc) from exc
-            errors.append(AUTO_MIGRATION_ERR_MSG % ("section", section_name))
+            errors.append(AUTO_MIGRATION_ERR_MSG % ("section", file))
 
     return errors, sections
 
@@ -1664,23 +1667,28 @@ def _add_checks_to_register(checks: Iterable[CheckPlugin]) -> None:
 
 
 def _make_check_plugins(
-    legacy_checks: Mapping[str, LegacyCheckDefinition], *, validate_creation_kwargs: bool
+    legacy_checks: Iterable[LegacyCheckDefinition],
+    tracked_files: Mapping[str, str],
+    *,
+    validate_creation_kwargs: bool,
 ) -> tuple[list[str], Sequence[CheckPlugin]]:
     """Here comes the next layer of converting-to-"new"-api.
 
-    For the new check-API in cmk/base/api/agent_based, we use the accumulated information
+    For the new check-API we use the accumulated information
     in check_info to create API compliant check plug-ins.
     """
     errors = []
     checks = []
-    for check_plugin_name, check_info_element in sorted(legacy_checks.items()):
+    for check_info_element in legacy_checks:
         # skip pure section declarations:
         if check_info_element.service_name is None:
             continue
+        file = tracked_files[check_info_element.name]
         try:
             checks.append(
                 create_check_plugin_from_legacy(
                     check_info_element,
+                    location=LegacyPluginLocation(file),
                     validate_creation_kwargs=validate_creation_kwargs,
                 )
             )
@@ -1689,7 +1697,7 @@ def _make_check_plugins(
             #       will be silently droppend on most (all?) occasions.
             if cmk.ccc.debug.enabled():
                 raise MKGeneralException(exc) from exc
-            errors.append(AUTO_MIGRATION_ERR_MSG % ("check plug-in", check_plugin_name))
+            errors.append(AUTO_MIGRATION_ERR_MSG % ("check plug-in", file))
 
     return errors, checks
 

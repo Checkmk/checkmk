@@ -49,11 +49,12 @@ from cmk.checkengine.sectionparser import ParsedSectionName
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import config
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin as CheckPluginAPI
-from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin
+from cmk.base.api.agent_based.plugin_classes import LegacyPluginLocation, SNMPSectionPlugin
 from cmk.base.config import ConfigCache, ConfiguredIPLookup, handle_ip_lookup_failure
 from cmk.base.default_config.base import _PeriodicDiscovery
 
 from cmk.agent_based.v1 import HostLabel
+from cmk.discover_plugins import PluginLocation
 
 
 def test_all_offline_hosts(monkeypatch: MonkeyPatch) -> None:
@@ -1472,7 +1473,7 @@ def test_host_config_static_checks(
             check_default_parameters=None,
             check_ruleset_name=None,
             cluster_check_function=None,
-            location=None,
+            location=LegacyPluginLocation(""),
         )
 
     monkeypatch.setattr(agent_based_register, "get_check_plugin", make_plugin)
@@ -2971,12 +2972,11 @@ class TestPackedConfigStore:
 
 
 def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
-    duplicate_plugin = {
-        "duplicate_plugin": LegacyCheckDefinition(
-            name="duplicate_plugin",
-            service_name="blah",
-        ),
-    }
+    duplicate_legacy_plugin = LegacyCheckDefinition(
+        name="duplicate_plugin",
+        service_name="blah",
+    )
+
     registered_plugin = CheckPluginAPI(
         name=CheckPluginName("duplicate_plugin"),
         sections=[],
@@ -2989,7 +2989,7 @@ def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
         cluster_check_function=None,
         check_default_parameters=None,
         check_ruleset_name=None,
-        location=None,
+        location=PluginLocation(module="module", name="name"),
     )
 
     monkeypatch.setattr(
@@ -3006,14 +3006,16 @@ def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
     assert agent_based_register.is_registered_check_plugin(CheckPluginName("duplicate_plugin"))
     with pytest.raises(MKGeneralException):
         config._add_checks_to_register(
-            config._make_check_plugins(duplicate_plugin, validate_creation_kwargs=False)[1]
+            config._make_check_plugins(
+                (duplicate_legacy_plugin,),
+                {duplicate_legacy_plugin.name: "/path/to/duplicate_legacy_plugin.py"},
+                validate_creation_kwargs=False,
+            )[1]
         )
 
 
 def test__extract_agent_and_snmp_sections(monkeypatch: MonkeyPatch) -> None:
-    duplicate_plugin = {
-        "duplicate_plugin": LegacyCheckDefinition(name="duplicate_plugin"),
-    }
+    duplicate_plugin = (LegacyCheckDefinition(name="duplicate_plugin"),)
     registered_section = SNMPSectionPlugin(
         SectionName("duplicate_plugin"),
         ParsedSectionName("duplicate_plugin"),
@@ -3025,7 +3027,7 @@ def test__extract_agent_and_snmp_sections(monkeypatch: MonkeyPatch) -> None:
         [],
         [],
         set(),
-        None,
+        PluginLocation(module="module", name="name"),
     )
 
     monkeypatch.setattr(
@@ -3040,7 +3042,7 @@ def test__extract_agent_and_snmp_sections(monkeypatch: MonkeyPatch) -> None:
     )
 
     assert agent_based_register.is_registered_section_plugin(SectionName("duplicate_plugin"))
-    config._add_sections_to_register(config._make_agent_and_snmp_sections(duplicate_plugin)[1])
+    config._add_sections_to_register(config._make_agent_and_snmp_sections(duplicate_plugin, {})[1])
     assert (
         agent_based_register.get_section_plugin(SectionName("duplicate_plugin"))
         == registered_section

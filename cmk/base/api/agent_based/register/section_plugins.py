@@ -25,6 +25,7 @@ from cmk.base.api.agent_based.plugin_classes import (
     AgentParseFunction,
     AgentSectionPlugin,
     HostLabelFunction,
+    LegacyPluginLocation,
     SimpleSNMPParseFunction,
     SNMPParseFunction,
     SNMPSectionPlugin,
@@ -230,7 +231,7 @@ def _create_supersedes(
 
 def create_agent_section_plugin(
     agent_section_spec: AgentSection,
-    location: PluginLocation | None,
+    location: PluginLocation | LegacyPluginLocation,
     *,
     validate: bool,
 ) -> AgentSectionPlugin:
@@ -273,7 +274,7 @@ def create_agent_section_plugin(
 
 def create_snmp_section_plugin(
     snmp_section_spec: SimpleSNMPSection | SNMPSection,
-    location: PluginLocation | None,
+    location: PluginLocation | LegacyPluginLocation,
     *,
     validate: bool,
 ) -> SNMPSectionPlugin:

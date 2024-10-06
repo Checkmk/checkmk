@@ -13,6 +13,8 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin, SNMPSectionPlugin
 
+from cmk.discover_plugins import PluginLocation
+
 pytestmark = pytest.mark.checks
 
 
@@ -71,7 +73,7 @@ def _is_section_migrated(name: str, fix_register: FixRegister) -> bool:
     sname = SectionName(name)
     return (
         section := fix_register.snmp_sections.get(sname, fix_register.agent_sections.get(sname))
-    ) is not None and section.location is not None
+    ) is not None and isinstance(section.location, PluginLocation)
 
 
 def test_sections_definitions_exactly_in_mainchecks(

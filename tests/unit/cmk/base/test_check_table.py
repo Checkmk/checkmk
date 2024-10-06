@@ -27,6 +27,8 @@ from cmk.base import config
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin
 from cmk.base.config import FilterMode, HostCheckTable
 
+from cmk.discover_plugins import PluginLocation
+
 
 @pytest.fixture(autouse=True, scope="module")
 def _use_fix_register(fix_register):
@@ -634,7 +636,7 @@ def test_check_table__get_static_check_entries(
             {},
             RuleSetName("ps"),
             None,
-            None,
+            PluginLocation(module="module", name="name"),
         ),
     )
 

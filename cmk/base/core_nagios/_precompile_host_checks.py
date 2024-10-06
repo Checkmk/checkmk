@@ -337,11 +337,13 @@ def _get_needed_legacy_check_files(
         if (check_plugin := agent_based_register.get_check_plugin(check_plugin_name)) is not None
         and check_plugin.location is None
     }
-    file_lookup_names = {
-        legacy_check_plugin_names[name] for name in actual_names
-    } | legacy_special_agent_names
+    file_lookup_names = {legacy_check_plugin_names[name] for name in actual_names}
 
-    return {legacy_check_plugin_files[name] for name in file_lookup_names}
+    return {legacy_check_plugin_files[name] for name in file_lookup_names} | {
+        f"{os.path.join(base, name)}.py"
+        for base in (cmk.utils.paths.local_checks_dir, cmk.utils.paths.checks_dir)
+        for name in legacy_special_agent_names
+    }
 
 
 def _get_needed_agent_based_locations(

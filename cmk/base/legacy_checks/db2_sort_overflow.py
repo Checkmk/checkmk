@@ -33,9 +33,9 @@ def check_db2_sort_overflow(item, params, parsed):
         overflow_perc = 0.0
     warn, crit = params.get("levels_perc")
     if overflow_perc >= crit:
-        yield 2, f"{overflow_perc:.1f}% sort overflow (leves at {warn:.1f}%/{crit:.1f}%)"
+        yield 2, f"{overflow_perc:.1f}% sort overflow (levels at {warn:.1f}%/{crit:.1f}%)"
     elif overflow_perc >= warn:
-        yield 1, f"{overflow_perc:.1f}% sort overflow (leves at {warn:.1f}%/{crit:.1f}%)"
+        yield 1, f"{overflow_perc:.1f}% sort overflow (levels at {warn:.1f}%/{crit:.1f}%)"
     else:
         yield 0, "%.1f%% sort overflow" % overflow_perc
 

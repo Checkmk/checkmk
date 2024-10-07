@@ -1,6 +1,6 @@
 {
   "lockFileVersion": 6,
-  "moduleFileHash": "d598f523327acaa6833f11d1bf2096d07c51f31ec0d1bfeff03596944dd58061",
+  "moduleFileHash": "7a580ed4db6a406a3a7771b42376b7cd92ae05130cf802d15065552721ea639b",
   "flags": {
     "cmdRegistries": [
       "https://bcr.bazel.build/"
@@ -162,6 +162,7 @@
         "rules_python": "rules_python@_",
         "aspect_rules_py": "aspect_rules_py@0.7.4",
         "aspect_rules_lint": "aspect_rules_lint@1.0.0-rc9",
+        "com_google_protobuf": "protobuf@28.2",
         "bazel_tools": "bazel_tools@_",
         "local_config_platform": "local_config_platform@_"
       }
@@ -485,7 +486,7 @@
         "rules_license": "rules_license@0.0.8",
         "rules_proto": "rules_proto@6.0.2",
         "build_bazel_apple_support": "apple_support@1.13.0",
-        "com_google_protobuf": "protobuf@24.4",
+        "com_google_protobuf": "protobuf@28.2",
         "aspect_rules_js": "aspect_rules_js@1.40.0",
         "bazel_tools": "bazel_tools@_",
         "local_config_platform": "local_config_platform@_"
@@ -622,7 +623,7 @@
         "rules_cc": "rules_cc@0.0.9",
         "platforms": "platforms@0.0.8",
         "rules_proto": "rules_proto@6.0.2",
-        "com_google_protobuf": "protobuf@24.4",
+        "com_google_protobuf": "protobuf@28.2",
         "bazel_tools": "bazel_tools@_",
         "local_config_platform": "local_config_platform@_"
       }
@@ -802,6 +803,303 @@
         }
       }
     },
+    "protobuf@28.2": {
+      "name": "protobuf",
+      "version": "28.2",
+      "key": "protobuf@28.2",
+      "repoName": "com_google_protobuf",
+      "executionPlatformsToRegister": [],
+      "toolchainsToRegister": [
+        "@rust_toolchains//:all"
+      ],
+      "extensionUsages": [
+        {
+          "extensionBzlFile": "@rules_python//python/extensions:python.bzl",
+          "extensionName": "python",
+          "usingModule": "protobuf@28.2",
+          "location": {
+            "file": "https://bcr.bazel.build/modules/protobuf/28.2/MODULE.bazel",
+            "line": 38,
+            "column": 23
+          },
+          "imports": {
+            "system_python": "python_3_12"
+          },
+          "devImports": [],
+          "tags": [
+            {
+              "tagName": "toolchain",
+              "attributeValues": {
+                "is_default": false,
+                "python_version": "3.8"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "https://bcr.bazel.build/modules/protobuf/28.2/MODULE.bazel",
+                "line": 40,
+                "column": 21
+              }
+            },
+            {
+              "tagName": "toolchain",
+              "attributeValues": {
+                "is_default": false,
+                "python_version": "3.9"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "https://bcr.bazel.build/modules/protobuf/28.2/MODULE.bazel",
+                "line": 40,
+                "column": 21
+              }
+            },
+            {
+              "tagName": "toolchain",
+              "attributeValues": {
+                "is_default": false,
+                "python_version": "3.10"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "https://bcr.bazel.build/modules/protobuf/28.2/MODULE.bazel",
+                "line": 40,
+                "column": 21
+              }
+            },
+            {
+              "tagName": "toolchain",
+              "attributeValues": {
+                "is_default": false,
+                "python_version": "3.11"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "https://bcr.bazel.build/modules/protobuf/28.2/MODULE.bazel",
+                "line": 40,
+                "column": 21
+              }
+            },
+            {
+              "tagName": "toolchain",
+              "attributeValues": {
+                "is_default": true,
+                "python_version": "3.12"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "https://bcr.bazel.build/modules/protobuf/28.2/MODULE.bazel",
+                "line": 40,
+                "column": 21
+              }
+            }
+          ],
+          "hasDevUseExtension": false,
+          "hasNonDevUseExtension": true
+        },
+        {
+          "extensionBzlFile": "@rules_python//python/extensions:pip.bzl",
+          "extensionName": "pip",
+          "usingModule": "protobuf@28.2",
+          "location": {
+            "file": "https://bcr.bazel.build/modules/protobuf/28.2/MODULE.bazel",
+            "line": 47,
+            "column": 20
+          },
+          "imports": {
+            "pip_deps": "pip_deps"
+          },
+          "devImports": [],
+          "tags": [
+            {
+              "tagName": "parse",
+              "attributeValues": {
+                "hub_name": "pip_deps",
+                "python_version": "3.8",
+                "requirements_lock": "//python:requirements.txt"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "https://bcr.bazel.build/modules/protobuf/28.2/MODULE.bazel",
+                "line": 49,
+                "column": 14
+              }
+            },
+            {
+              "tagName": "parse",
+              "attributeValues": {
+                "hub_name": "pip_deps",
+                "python_version": "3.9",
+                "requirements_lock": "//python:requirements.txt"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "https://bcr.bazel.build/modules/protobuf/28.2/MODULE.bazel",
+                "line": 49,
+                "column": 14
+              }
+            },
+            {
+              "tagName": "parse",
+              "attributeValues": {
+                "hub_name": "pip_deps",
+                "python_version": "3.10",
+                "requirements_lock": "//python:requirements.txt"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "https://bcr.bazel.build/modules/protobuf/28.2/MODULE.bazel",
+                "line": 49,
+                "column": 14
+              }
+            },
+            {
+              "tagName": "parse",
+              "attributeValues": {
+                "hub_name": "pip_deps",
+                "python_version": "3.11",
+                "requirements_lock": "//python:requirements.txt"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "https://bcr.bazel.build/modules/protobuf/28.2/MODULE.bazel",
+                "line": 49,
+                "column": 14
+              }
+            },
+            {
+              "tagName": "parse",
+              "attributeValues": {
+                "hub_name": "pip_deps",
+                "python_version": "3.12",
+                "requirements_lock": "//python:requirements.txt"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "https://bcr.bazel.build/modules/protobuf/28.2/MODULE.bazel",
+                "line": 49,
+                "column": 14
+              }
+            }
+          ],
+          "hasDevUseExtension": false,
+          "hasNonDevUseExtension": true
+        },
+        {
+          "extensionBzlFile": "@rules_rust//rust:extensions.bzl",
+          "extensionName": "rust",
+          "usingModule": "protobuf@28.2",
+          "location": {
+            "file": "https://bcr.bazel.build/modules/protobuf/28.2/MODULE.bazel",
+            "line": 58,
+            "column": 21
+          },
+          "imports": {
+            "rust_toolchains": "rust_toolchains"
+          },
+          "devImports": [],
+          "tags": [
+            {
+              "tagName": "toolchain",
+              "attributeValues": {
+                "edition": "2021"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "https://bcr.bazel.build/modules/protobuf/28.2/MODULE.bazel",
+                "line": 59,
+                "column": 15
+              }
+            }
+          ],
+          "hasDevUseExtension": false,
+          "hasNonDevUseExtension": true
+        },
+        {
+          "extensionBzlFile": "@rules_rust//crate_universe:extension.bzl",
+          "extensionName": "crate",
+          "usingModule": "protobuf@28.2",
+          "location": {
+            "file": "https://bcr.bazel.build/modules/protobuf/28.2/MODULE.bazel",
+            "line": 62,
+            "column": 22
+          },
+          "imports": {
+            "crate_index": "crates"
+          },
+          "devImports": [],
+          "tags": [
+            {
+              "tagName": "spec",
+              "attributeValues": {
+                "package": "googletest",
+                "version": ">0.0.0"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "https://bcr.bazel.build/modules/protobuf/28.2/MODULE.bazel",
+                "line": 63,
+                "column": 11
+              }
+            },
+            {
+              "tagName": "spec",
+              "attributeValues": {
+                "package": "paste",
+                "version": ">=1"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "https://bcr.bazel.build/modules/protobuf/28.2/MODULE.bazel",
+                "line": 67,
+                "column": 11
+              }
+            },
+            {
+              "tagName": "from_specs",
+              "attributeValues": {},
+              "devDependency": false,
+              "location": {
+                "file": "https://bcr.bazel.build/modules/protobuf/28.2/MODULE.bazel",
+                "line": 71,
+                "column": 17
+              }
+            }
+          ],
+          "hasDevUseExtension": false,
+          "hasNonDevUseExtension": true
+        }
+      ],
+      "deps": {
+        "com_google_absl": "abseil-cpp@20240116.1",
+        "bazel_skylib": "bazel_skylib@1.6.1",
+        "jsoncpp": "jsoncpp@1.9.5",
+        "rules_cc": "rules_cc@0.0.9",
+        "rules_fuzzing": "rules_fuzzing@0.5.2",
+        "rules_java": "rules_java@7.4.0",
+        "rules_jvm_external": "rules_jvm_external@5.1",
+        "rules_pkg": "rules_pkg@0.7.0",
+        "rules_python": "rules_python@_",
+        "rules_rust": "rules_rust@0.49.3",
+        "platforms": "platforms@0.0.8",
+        "zlib": "zlib@1.3.1",
+        "rules_proto": "rules_proto@6.0.2",
+        "bazel_tools": "bazel_tools@_",
+        "local_config_platform": "local_config_platform@_"
+      },
+      "repoSpec": {
+        "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+        "ruleClassName": "http_archive",
+        "attributes": {
+          "urls": [
+            "https://github.com/protocolbuffers/protobuf/releases/download/v28.2/protobuf-28.2.zip"
+          ],
+          "integrity": "sha256-4BBolY8Sl0eYin++Cd3nzGSXTjs1Mx7kHuKCnwlh1HI=",
+          "strip_prefix": "protobuf-28.2",
+          "remote_patches": {},
+          "remote_patch_strip": 0
+        }
+      }
+    },
     "bazel_tools@_": {
       "name": "bazel_tools",
       "version": "",
@@ -948,8 +1246,8 @@
         "rules_python": "rules_python@_",
         "buildozer": "buildozer@6.4.0.2",
         "platforms": "platforms@0.0.8",
-        "com_google_protobuf": "protobuf@24.4",
-        "zlib": "zlib@1.3",
+        "com_google_protobuf": "protobuf@28.2",
+        "zlib": "zlib@1.3.1",
         "build_bazel_apple_support": "apple_support@1.13.0",
         "local_config_platform": "local_config_platform@_"
       }
@@ -1176,109 +1474,6 @@
           "strip_prefix": "",
           "remote_patches": {
             "https://bcr.bazel.build/modules/apple_support/1.13.0/patches/module_dot_bazel_version.patch": "sha256-OqLgfAMNy6ZUF/WaVkNXzB/KcCYLlHLspYNk67mcASA="
-          },
-          "remote_patch_strip": 1
-        }
-      }
-    },
-    "protobuf@24.4": {
-      "name": "protobuf",
-      "version": "24.4",
-      "key": "protobuf@24.4",
-      "repoName": "protobuf",
-      "executionPlatformsToRegister": [],
-      "toolchainsToRegister": [],
-      "extensionUsages": [
-        {
-          "extensionBzlFile": "@protobuf//:non_module_deps.bzl",
-          "extensionName": "non_module_deps",
-          "usingModule": "protobuf@24.4",
-          "location": {
-            "file": "https://bcr.bazel.build/modules/protobuf/24.4/MODULE.bazel",
-            "line": 20,
-            "column": 32
-          },
-          "imports": {
-            "utf8_range": "utf8_range"
-          },
-          "devImports": [],
-          "tags": [],
-          "hasDevUseExtension": false,
-          "hasNonDevUseExtension": true
-        },
-        {
-          "extensionBzlFile": "@rules_jvm_external//:extensions.bzl",
-          "extensionName": "maven",
-          "usingModule": "protobuf@24.4",
-          "location": {
-            "file": "https://bcr.bazel.build/modules/protobuf/24.4/MODULE.bazel",
-            "line": 28,
-            "column": 22
-          },
-          "imports": {
-            "maven": "maven"
-          },
-          "devImports": [],
-          "tags": [
-            {
-              "tagName": "install",
-              "attributeValues": {
-                "name": "maven",
-                "artifacts": [
-                  "com.google.code.findbugs:jsr305:3.0.2",
-                  "com.google.code.gson:gson:2.8.9",
-                  "com.google.errorprone:error_prone_annotations:2.3.2",
-                  "com.google.j2objc:j2objc-annotations:1.3",
-                  "com.google.guava:guava:31.1-jre",
-                  "com.google.guava:guava-testlib:31.1-jre",
-                  "com.google.truth:truth:1.1.2",
-                  "junit:junit:4.13.2",
-                  "org.mockito:mockito-core:4.3.1"
-                ]
-              },
-              "devDependency": false,
-              "location": {
-                "file": "https://bcr.bazel.build/modules/protobuf/24.4/MODULE.bazel",
-                "line": 30,
-                "column": 14
-              }
-            }
-          ],
-          "hasDevUseExtension": false,
-          "hasNonDevUseExtension": true
-        }
-      ],
-      "deps": {
-        "bazel_skylib": "bazel_skylib@1.6.1",
-        "rules_python": "rules_python@_",
-        "rules_cc": "rules_cc@0.0.9",
-        "rules_proto": "rules_proto@6.0.2",
-        "rules_java": "rules_java@7.4.0",
-        "rules_pkg": "rules_pkg@0.7.0",
-        "platforms": "platforms@0.0.8",
-        "com_google_absl": "abseil-cpp@20230802.0.bcr.1",
-        "zlib": "zlib@1.3",
-        "upb": "upb@0.0.0-20230516-61a97ef",
-        "rules_jvm_external": "rules_jvm_external@5.1",
-        "com_google_googletest": "googletest@1.14.0",
-        "bazel_tools": "bazel_tools@_",
-        "local_config_platform": "local_config_platform@_"
-      },
-      "repoSpec": {
-        "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
-        "ruleClassName": "http_archive",
-        "attributes": {
-          "urls": [
-            "https://github.com/protocolbuffers/protobuf/releases/download/v24.4/protobuf-24.4.tar.gz"
-          ],
-          "integrity": "sha256-YWuzU2rB//P7GhQUUPoouHXphXEhcOp/G/5eX8QeLNg=",
-          "strip_prefix": "protobuf-24.4",
-          "remote_patches": {
-            "https://bcr.bazel.build/modules/protobuf/24.4/patches/0001-Add-MODULE.bazel.patch": "sha256-nF6uuO4jHJpzOqJyhWhSZ8aRWznjbgrdSM50IiT0GhY=",
-            "https://bcr.bazel.build/modules/protobuf/24.4/patches/0002-Add-utf8_range-dependency.patch": "sha256-UPhKk5lQVa/8675JZJG/h/WTIzmQml6g/wTFJWgWnL8=",
-            "https://bcr.bazel.build/modules/protobuf/24.4/patches/0003-Examples-MODULE.bazel.patch": "sha256-mzBuXdk9K9RTN4PhYkoXcSXDXncPjSYjj6nVcq+dNv4=",
-            "https://bcr.bazel.build/modules/protobuf/24.4/patches/0004-Migrate-from-bind-to-alias.patch": "sha256-OHsXlAzbHYMAvGRlKGcxmolaoLXa86Rc5lhs84YAApg=",
-            "https://bcr.bazel.build/modules/protobuf/24.4/patches/0005-Make-rules_ruby-a-dev-only-dependency.patch": "sha256-k6M0C9i23kADrLUupaKQcv5sQ59LZDYp2cp3dcBPcbA="
           },
           "remote_patch_strip": 1
         }
@@ -1680,7 +1875,7 @@
       ],
       "deps": {
         "platforms": "platforms@0.0.8",
-        "com_google_protobuf": "protobuf@24.4",
+        "com_google_protobuf": "protobuf@28.2",
         "rules_proto": "rules_proto@6.0.2",
         "bazel_tools": "bazel_tools@_",
         "local_config_platform": "local_config_platform@_"
@@ -1764,6 +1959,326 @@
             "https://bcr.bazel.build/modules/toolchains_protoc/0.2.1/patches/module_dot_bazel_version.patch": "sha256-e6awp9mKvoRfg3Zq+xppjZTfJLRsQdVrDkNUfd7ft9Q="
           },
           "remote_patch_strip": 1
+        }
+      }
+    },
+    "abseil-cpp@20240116.1": {
+      "name": "abseil-cpp",
+      "version": "20240116.1",
+      "key": "abseil-cpp@20240116.1",
+      "repoName": "abseil-cpp",
+      "executionPlatformsToRegister": [],
+      "toolchainsToRegister": [],
+      "extensionUsages": [],
+      "deps": {
+        "bazel_skylib": "bazel_skylib@1.6.1",
+        "com_google_googletest": "googletest@1.14.0.bcr.1",
+        "platforms": "platforms@0.0.8",
+        "bazel_tools": "bazel_tools@_",
+        "local_config_platform": "local_config_platform@_"
+      },
+      "repoSpec": {
+        "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+        "ruleClassName": "http_archive",
+        "attributes": {
+          "urls": [
+            "https://github.com/abseil/abseil-cpp/releases/download/20240116.1/abseil-cpp-20240116.1.tar.gz"
+          ],
+          "integrity": "sha256-PHQyBN94NmrS6vI21mMdg/a8ko0XBd0AALhy5Ttz3Go=",
+          "strip_prefix": "abseil-cpp-20240116.1",
+          "remote_patches": {
+            "https://bcr.bazel.build/modules/abseil-cpp/20240116.1/patches/module_dot_bazel.patch": "sha256-H6J0U5xTQRVVGFkTsBioOCeWetuCfpavigN8YvpQkIQ="
+          },
+          "remote_patch_strip": 0
+        }
+      }
+    },
+    "jsoncpp@1.9.5": {
+      "name": "jsoncpp",
+      "version": "1.9.5",
+      "key": "jsoncpp@1.9.5",
+      "repoName": "jsoncpp",
+      "executionPlatformsToRegister": [],
+      "toolchainsToRegister": [],
+      "extensionUsages": [],
+      "deps": {
+        "bazel_tools": "bazel_tools@_",
+        "local_config_platform": "local_config_platform@_"
+      },
+      "repoSpec": {
+        "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+        "ruleClassName": "http_archive",
+        "attributes": {
+          "urls": [
+            "https://github.com/open-source-parsers/jsoncpp/archive/refs/tags/1.9.5.tar.gz"
+          ],
+          "integrity": "sha256-9AmFblkgwY0ML7hSduJO5gfSoJtefV8KNxNokDwnXaI=",
+          "strip_prefix": "jsoncpp-1.9.5",
+          "remote_patches": {
+            "https://bcr.bazel.build/modules/jsoncpp/1.9.5/patches/build_dot_bazel.patch": "sha256-Vj8diXSWps8I8h5cdEqBDYmKBA2ulvWxMZBEQlIgcpU=",
+            "https://bcr.bazel.build/modules/jsoncpp/1.9.5/patches/module_dot_bazel.patch": "sha256-7RC7fS8N11vcyeDEaUZ05yBqr0YY7OzuzqaWz5W2XDo="
+          },
+          "remote_patch_strip": 1
+        }
+      }
+    },
+    "rules_fuzzing@0.5.2": {
+      "name": "rules_fuzzing",
+      "version": "0.5.2",
+      "key": "rules_fuzzing@0.5.2",
+      "repoName": "rules_fuzzing",
+      "executionPlatformsToRegister": [],
+      "toolchainsToRegister": [],
+      "extensionUsages": [
+        {
+          "extensionBzlFile": "@rules_fuzzing//fuzzing/private:extensions.bzl",
+          "extensionName": "non_module_dependencies",
+          "usingModule": "rules_fuzzing@0.5.2",
+          "location": {
+            "file": "https://bcr.bazel.build/modules/rules_fuzzing/0.5.2/MODULE.bazel",
+            "line": 30,
+            "column": 40
+          },
+          "imports": {
+            "honggfuzz": "honggfuzz",
+            "rules_fuzzing_jazzer": "rules_fuzzing_jazzer",
+            "rules_fuzzing_jazzer_api": "rules_fuzzing_jazzer_api",
+            "rules_fuzzing_oss_fuzz": "rules_fuzzing_oss_fuzz"
+          },
+          "devImports": [],
+          "tags": [],
+          "hasDevUseExtension": false,
+          "hasNonDevUseExtension": true
+        },
+        {
+          "extensionBzlFile": "@rules_python//python/extensions:python.bzl",
+          "extensionName": "python",
+          "usingModule": "rules_fuzzing@0.5.2",
+          "location": {
+            "file": "https://bcr.bazel.build/modules/rules_fuzzing/0.5.2/MODULE.bazel",
+            "line": 47,
+            "column": 23
+          },
+          "imports": {},
+          "devImports": [],
+          "tags": [
+            {
+              "tagName": "toolchain",
+              "attributeValues": {
+                "ignore_root_user_error": true,
+                "is_default": false,
+                "python_version": "3.8"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "https://bcr.bazel.build/modules/rules_fuzzing/0.5.2/MODULE.bazel",
+                "line": 50,
+                "column": 21
+              }
+            },
+            {
+              "tagName": "toolchain",
+              "attributeValues": {
+                "ignore_root_user_error": true,
+                "is_default": false,
+                "python_version": "3.9"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "https://bcr.bazel.build/modules/rules_fuzzing/0.5.2/MODULE.bazel",
+                "line": 50,
+                "column": 21
+              }
+            },
+            {
+              "tagName": "toolchain",
+              "attributeValues": {
+                "ignore_root_user_error": true,
+                "is_default": false,
+                "python_version": "3.10"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "https://bcr.bazel.build/modules/rules_fuzzing/0.5.2/MODULE.bazel",
+                "line": 50,
+                "column": 21
+              }
+            },
+            {
+              "tagName": "toolchain",
+              "attributeValues": {
+                "ignore_root_user_error": true,
+                "is_default": false,
+                "python_version": "3.11"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "https://bcr.bazel.build/modules/rules_fuzzing/0.5.2/MODULE.bazel",
+                "line": 50,
+                "column": 21
+              }
+            },
+            {
+              "tagName": "toolchain",
+              "attributeValues": {
+                "ignore_root_user_error": true,
+                "is_default": true,
+                "python_version": "3.12"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "https://bcr.bazel.build/modules/rules_fuzzing/0.5.2/MODULE.bazel",
+                "line": 50,
+                "column": 21
+              }
+            }
+          ],
+          "hasDevUseExtension": false,
+          "hasNonDevUseExtension": true
+        },
+        {
+          "extensionBzlFile": "@rules_python//python/extensions:pip.bzl",
+          "extensionName": "pip",
+          "usingModule": "rules_fuzzing@0.5.2",
+          "location": {
+            "file": "https://bcr.bazel.build/modules/rules_fuzzing/0.5.2/MODULE.bazel",
+            "line": 59,
+            "column": 20
+          },
+          "imports": {
+            "fuzzing_py_deps": "rules_fuzzing_py_deps"
+          },
+          "devImports": [],
+          "tags": [
+            {
+              "tagName": "parse",
+              "attributeValues": {
+                "extra_pip_args": [
+                  "--require-hashes"
+                ],
+                "hub_name": "rules_fuzzing_py_deps",
+                "python_version": "3.8",
+                "requirements_lock": "//fuzzing:requirements.txt"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "https://bcr.bazel.build/modules/rules_fuzzing/0.5.2/MODULE.bazel",
+                "line": 62,
+                "column": 14
+              }
+            },
+            {
+              "tagName": "parse",
+              "attributeValues": {
+                "extra_pip_args": [
+                  "--require-hashes"
+                ],
+                "hub_name": "rules_fuzzing_py_deps",
+                "python_version": "3.9",
+                "requirements_lock": "//fuzzing:requirements.txt"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "https://bcr.bazel.build/modules/rules_fuzzing/0.5.2/MODULE.bazel",
+                "line": 62,
+                "column": 14
+              }
+            },
+            {
+              "tagName": "parse",
+              "attributeValues": {
+                "extra_pip_args": [
+                  "--require-hashes"
+                ],
+                "hub_name": "rules_fuzzing_py_deps",
+                "python_version": "3.10",
+                "requirements_lock": "//fuzzing:requirements.txt"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "https://bcr.bazel.build/modules/rules_fuzzing/0.5.2/MODULE.bazel",
+                "line": 62,
+                "column": 14
+              }
+            },
+            {
+              "tagName": "parse",
+              "attributeValues": {
+                "extra_pip_args": [
+                  "--require-hashes"
+                ],
+                "hub_name": "rules_fuzzing_py_deps",
+                "python_version": "3.11",
+                "requirements_lock": "//fuzzing:requirements.txt"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "https://bcr.bazel.build/modules/rules_fuzzing/0.5.2/MODULE.bazel",
+                "line": 62,
+                "column": 14
+              }
+            },
+            {
+              "tagName": "parse",
+              "attributeValues": {
+                "extra_pip_args": [
+                  "--require-hashes"
+                ],
+                "hub_name": "rules_fuzzing_py_deps",
+                "python_version": "3.12",
+                "requirements_lock": "//fuzzing:requirements.txt"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "https://bcr.bazel.build/modules/rules_fuzzing/0.5.2/MODULE.bazel",
+                "line": 62,
+                "column": 14
+              }
+            }
+          ],
+          "hasDevUseExtension": false,
+          "hasNonDevUseExtension": true
+        },
+        {
+          "extensionBzlFile": "@rules_java//java:extensions.bzl",
+          "extensionName": "toolchains",
+          "usingModule": "rules_fuzzing@0.5.2",
+          "location": {
+            "file": "https://bcr.bazel.build/modules/rules_fuzzing/0.5.2/MODULE.bazel",
+            "line": 73,
+            "column": 32
+          },
+          "imports": {
+            "local_jdk": "local_jdk"
+          },
+          "devImports": [],
+          "tags": [],
+          "hasDevUseExtension": false,
+          "hasNonDevUseExtension": true
+        }
+      ],
+      "deps": {
+        "com_google_absl": "abseil-cpp@20240116.1",
+        "bazel_skylib": "bazel_skylib@1.6.1",
+        "platforms": "platforms@0.0.8",
+        "rules_python": "rules_python@_",
+        "rules_java": "rules_java@7.4.0",
+        "bazel_tools": "bazel_tools@_",
+        "local_config_platform": "local_config_platform@_"
+      },
+      "repoSpec": {
+        "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+        "ruleClassName": "http_archive",
+        "attributes": {
+          "urls": [
+            "https://github.com/bazelbuild/rules_fuzzing/releases/download/v0.5.2/rules_fuzzing-0.5.2.zip"
+          ],
+          "integrity": "sha256-5rwhm/rJ4fg7Mn3QkPcoqflz7pm5tdjloYSicy7whiM=",
+          "strip_prefix": "rules_fuzzing-0.5.2",
+          "remote_patches": {
+            "https://bcr.bazel.build/modules/rules_fuzzing/0.5.2/patches/module_dot_bazel.patch": "sha256-+S/1nXWYEzeyvZeC9Zpgmt6bmmStrSBG99b33+dTmXc="
+          },
+          "remote_patch_strip": 0
         }
       }
     },
@@ -1867,220 +2382,6 @@
         }
       }
     },
-    "buildozer@6.4.0.2": {
-      "name": "buildozer",
-      "version": "6.4.0.2",
-      "key": "buildozer@6.4.0.2",
-      "repoName": "buildozer",
-      "executionPlatformsToRegister": [],
-      "toolchainsToRegister": [],
-      "extensionUsages": [
-        {
-          "extensionBzlFile": "@buildozer//:buildozer_binary.bzl",
-          "extensionName": "buildozer_binary",
-          "usingModule": "buildozer@6.4.0.2",
-          "location": {
-            "file": "https://bcr.bazel.build/modules/buildozer/6.4.0.2/MODULE.bazel",
-            "line": 7,
-            "column": 33
-          },
-          "imports": {
-            "buildozer_binary": "buildozer_binary"
-          },
-          "devImports": [],
-          "tags": [
-            {
-              "tagName": "buildozer",
-              "attributeValues": {
-                "sha256": {
-                  "darwin-amd64": "d29e347ecd6b5673d72cb1a8de05bf1b06178dd229ff5eb67fad5100c840cc8e",
-                  "darwin-arm64": "9b9e71bdbec5e7223871e913b65d12f6d8fa026684daf991f00e52ed36a6978d",
-                  "linux-amd64": "8dfd6345da4e9042daa738d7fdf34f699c5dfce4632f7207956fceedd8494119",
-                  "linux-arm64": "6559558fded658c8fa7432a9d011f7c4dcbac6b738feae73d2d5c352e5f605fa",
-                  "windows-amd64": "e7f05bf847f7c3689dd28926460ce6e1097ae97380ac8e6ae7147b7b706ba19b"
-                },
-                "version": "6.4.0"
-              },
-              "devDependency": false,
-              "location": {
-                "file": "https://bcr.bazel.build/modules/buildozer/6.4.0.2/MODULE.bazel",
-                "line": 8,
-                "column": 27
-              }
-            }
-          ],
-          "hasDevUseExtension": false,
-          "hasNonDevUseExtension": true
-        }
-      ],
-      "deps": {
-        "bazel_tools": "bazel_tools@_",
-        "local_config_platform": "local_config_platform@_"
-      },
-      "repoSpec": {
-        "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
-        "ruleClassName": "http_archive",
-        "attributes": {
-          "urls": [
-            "https://github.com/fmeum/buildozer/releases/download/v6.4.0.2/buildozer-v6.4.0.2.tar.gz"
-          ],
-          "integrity": "sha256-k7tFKQMR2AygxpmZfH0yEPnQmF3efFgD9rBPkj+Yz/8=",
-          "strip_prefix": "buildozer-6.4.0.2",
-          "remote_patches": {
-            "https://bcr.bazel.build/modules/buildozer/6.4.0.2/patches/module_dot_bazel_version.patch": "sha256-gKANF2HMilj7bWmuXs4lbBIAAansuWC4IhWGB/CerjU="
-          },
-          "remote_patch_strip": 1
-        }
-      }
-    },
-    "zlib@1.3": {
-      "name": "zlib",
-      "version": "1.3",
-      "key": "zlib@1.3",
-      "repoName": "zlib",
-      "executionPlatformsToRegister": [],
-      "toolchainsToRegister": [],
-      "extensionUsages": [],
-      "deps": {
-        "platforms": "platforms@0.0.8",
-        "rules_cc": "rules_cc@0.0.9",
-        "bazel_tools": "bazel_tools@_",
-        "local_config_platform": "local_config_platform@_"
-      },
-      "repoSpec": {
-        "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
-        "ruleClassName": "http_archive",
-        "attributes": {
-          "urls": [
-            "https://github.com/madler/zlib/releases/download/v1.3/zlib-1.3.tar.gz"
-          ],
-          "integrity": "sha256-/wukwpIBPbwnUws6geH5qBPNOd4Byl4Pi/NVcC76WT4=",
-          "strip_prefix": "zlib-1.3",
-          "remote_patches": {
-            "https://bcr.bazel.build/modules/zlib/1.3/patches/add_build_file.patch": "sha256-Ei+FYaaOo7A3jTKunMEodTI0Uw5NXQyZEcboMC8JskY=",
-            "https://bcr.bazel.build/modules/zlib/1.3/patches/module_dot_bazel.patch": "sha256-fPWLM+2xaF/kuy+kZc1YTfW6hNjrkG400Ho7gckuyJk="
-          },
-          "remote_patch_strip": 0
-        }
-      }
-    },
-    "rules_pkg@0.7.0": {
-      "name": "rules_pkg",
-      "version": "0.7.0",
-      "key": "rules_pkg@0.7.0",
-      "repoName": "rules_pkg",
-      "executionPlatformsToRegister": [],
-      "toolchainsToRegister": [],
-      "extensionUsages": [],
-      "deps": {
-        "rules_python": "rules_python@_",
-        "bazel_skylib": "bazel_skylib@1.6.1",
-        "rules_license": "rules_license@0.0.8",
-        "bazel_tools": "bazel_tools@_",
-        "local_config_platform": "local_config_platform@_"
-      },
-      "repoSpec": {
-        "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
-        "ruleClassName": "http_archive",
-        "attributes": {
-          "urls": [
-            "https://github.com/bazelbuild/rules_pkg/releases/download/0.7.0/rules_pkg-0.7.0.tar.gz"
-          ],
-          "integrity": "sha256-iimOgydi7aGDBZfWT+fbWBeKqEzVkm121bdE1lWJQcI=",
-          "strip_prefix": "",
-          "remote_patches": {
-            "https://bcr.bazel.build/modules/rules_pkg/0.7.0/patches/module_dot_bazel.patch": "sha256-4OaEPZwYF6iC71ZTDg6MJ7LLqX7ZA0/kK4mT+4xKqiE="
-          },
-          "remote_patch_strip": 0
-        }
-      }
-    },
-    "abseil-cpp@20230802.0.bcr.1": {
-      "name": "abseil-cpp",
-      "version": "20230802.0.bcr.1",
-      "key": "abseil-cpp@20230802.0.bcr.1",
-      "repoName": "abseil-cpp",
-      "executionPlatformsToRegister": [],
-      "toolchainsToRegister": [],
-      "extensionUsages": [],
-      "deps": {
-        "rules_cc": "rules_cc@0.0.9",
-        "platforms": "platforms@0.0.8",
-        "bazel_skylib": "bazel_skylib@1.6.1",
-        "com_google_googletest": "googletest@1.14.0",
-        "bazel_tools": "bazel_tools@_",
-        "local_config_platform": "local_config_platform@_"
-      },
-      "repoSpec": {
-        "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
-        "ruleClassName": "http_archive",
-        "attributes": {
-          "urls": [
-            "https://github.com/abseil/abseil-cpp/archive/refs/tags/20230802.0.tar.gz"
-          ],
-          "integrity": "sha256-WdKXavnW7PABqBo1dJpuVRozW5SdNJGM+t4Hc3udk8U=",
-          "strip_prefix": "abseil-cpp-20230802.0",
-          "remote_patches": {
-            "https://bcr.bazel.build/modules/abseil-cpp/20230802.0.bcr.1/patches/module_dot_bazel.patch": "sha256-Ku6wJ7uNqANq3fVmW03ySSUddevratZDsJ67NqtXIEY="
-          },
-          "remote_patch_strip": 0
-        }
-      }
-    },
-    "upb@0.0.0-20230516-61a97ef": {
-      "name": "upb",
-      "version": "0.0.0-20230516-61a97ef",
-      "key": "upb@0.0.0-20230516-61a97ef",
-      "repoName": "upb",
-      "executionPlatformsToRegister": [],
-      "toolchainsToRegister": [],
-      "extensionUsages": [
-        {
-          "extensionBzlFile": "@upb//:non_module_deps.bzl",
-          "extensionName": "non_module_deps",
-          "usingModule": "upb@0.0.0-20230516-61a97ef",
-          "location": {
-            "file": "https://bcr.bazel.build/modules/upb/0.0.0-20230516-61a97ef/MODULE.bazel",
-            "line": 15,
-            "column": 32
-          },
-          "imports": {
-            "utf8_range": "utf8_range"
-          },
-          "devImports": [],
-          "tags": [],
-          "hasDevUseExtension": false,
-          "hasNonDevUseExtension": true
-        }
-      ],
-      "deps": {
-        "bazel_skylib": "bazel_skylib@1.6.1",
-        "rules_proto": "rules_proto@6.0.2",
-        "com_google_protobuf": "protobuf@24.4",
-        "com_google_absl": "abseil-cpp@20230802.0.bcr.1",
-        "rules_pkg": "rules_pkg@0.7.0",
-        "platforms": "platforms@0.0.8",
-        "bazel_tools": "bazel_tools@_",
-        "local_config_platform": "local_config_platform@_"
-      },
-      "repoSpec": {
-        "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
-        "ruleClassName": "http_archive",
-        "attributes": {
-          "urls": [
-            "https://github.com/protocolbuffers/upb/archive/61a97efa24a5ce01fb8cc73c9d1e6e7060f8ea98.tar.gz"
-          ],
-          "integrity": "sha256-fRnyrJweUIqGonKRPZqmfIFHgn+UkDWCiRC7BdnyzwM=",
-          "strip_prefix": "upb-61a97efa24a5ce01fb8cc73c9d1e6e7060f8ea98",
-          "remote_patches": {
-            "https://bcr.bazel.build/modules/upb/0.0.0-20230516-61a97ef/patches/0001-Add-MODULE.bazel.patch": "sha256-YSOPeNFt006ghZRI1D056RQ1USwCodZnjXMw6pAPhKc=",
-            "https://bcr.bazel.build/modules/upb/0.0.0-20230516-61a97ef/patches/0002-Add-utf8_range-dependency.patch": "sha256-L9jPxcjZqoJh5t9mH4BR01puRI5aUY4jtYptZt5T/p8=",
-            "https://bcr.bazel.build/modules/upb/0.0.0-20230516-61a97ef/patches/0003-Backport-path-generation-instead-of-hardcoded-one.patch": "sha256-K+OqQb2b+5k43UOwHupBlfqakuNST470j/yTfvwjj04="
-          },
-          "remote_patch_strip": 1
-        }
-      }
-    },
     "rules_jvm_external@5.1": {
       "name": "rules_jvm_external",
       "version": "5.1",
@@ -2169,16 +2470,46 @@
         }
       }
     },
-    "googletest@1.14.0": {
-      "name": "googletest",
-      "version": "1.14.0",
-      "key": "googletest@1.14.0",
-      "repoName": "googletest",
+    "rules_pkg@0.7.0": {
+      "name": "rules_pkg",
+      "version": "0.7.0",
+      "key": "rules_pkg@0.7.0",
+      "repoName": "rules_pkg",
       "executionPlatformsToRegister": [],
       "toolchainsToRegister": [],
       "extensionUsages": [],
       "deps": {
-        "com_google_absl": "abseil-cpp@20230802.0.bcr.1",
+        "rules_python": "rules_python@_",
+        "bazel_skylib": "bazel_skylib@1.6.1",
+        "rules_license": "rules_license@0.0.8",
+        "bazel_tools": "bazel_tools@_",
+        "local_config_platform": "local_config_platform@_"
+      },
+      "repoSpec": {
+        "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+        "ruleClassName": "http_archive",
+        "attributes": {
+          "urls": [
+            "https://github.com/bazelbuild/rules_pkg/releases/download/0.7.0/rules_pkg-0.7.0.tar.gz"
+          ],
+          "integrity": "sha256-iimOgydi7aGDBZfWT+fbWBeKqEzVkm121bdE1lWJQcI=",
+          "strip_prefix": "",
+          "remote_patches": {
+            "https://bcr.bazel.build/modules/rules_pkg/0.7.0/patches/module_dot_bazel.patch": "sha256-4OaEPZwYF6iC71ZTDg6MJ7LLqX7ZA0/kK4mT+4xKqiE="
+          },
+          "remote_patch_strip": 0
+        }
+      }
+    },
+    "zlib@1.3.1": {
+      "name": "zlib",
+      "version": "1.3.1",
+      "key": "zlib@1.3.1",
+      "repoName": "zlib",
+      "executionPlatformsToRegister": [],
+      "toolchainsToRegister": [],
+      "extensionUsages": [],
+      "deps": {
         "platforms": "platforms@0.0.8",
         "rules_cc": "rules_cc@0.0.9",
         "bazel_tools": "bazel_tools@_",
@@ -2189,14 +2520,81 @@
         "ruleClassName": "http_archive",
         "attributes": {
           "urls": [
-            "https://github.com/google/googletest/archive/refs/tags/v1.14.0.tar.gz"
+            "https://github.com/madler/zlib/releases/download/v1.3.1/zlib-1.3.1.tar.gz"
           ],
-          "integrity": "sha256-itWYxzrXluDYKAsILOvYKmMNc+c808cAV5OKZQG7pdc=",
-          "strip_prefix": "googletest-1.14.0",
+          "integrity": "sha256-mpOyt9/ax3zrpaVYpYDnRmfdb+3kWFuR7vtg8Dty3yM=",
+          "strip_prefix": "zlib-1.3.1",
           "remote_patches": {
-            "https://bcr.bazel.build/modules/googletest/1.14.0/patches/module_dot_bazel.patch": "sha256-CSomzvti38LCuURDG5EEoa3O1tQF3cKKt/mknnP1qcc="
+            "https://bcr.bazel.build/modules/zlib/1.3.1/patches/add_build_file.patch": "sha256-Ei+FYaaOo7A3jTKunMEodTI0Uw5NXQyZEcboMC8JskY=",
+            "https://bcr.bazel.build/modules/zlib/1.3.1/patches/module_dot_bazel.patch": "sha256-IFCFES6KY2jaryT+Kq2NemDn7hgdZYH0kZC1esA4cyE="
           },
           "remote_patch_strip": 0
+        }
+      }
+    },
+    "buildozer@6.4.0.2": {
+      "name": "buildozer",
+      "version": "6.4.0.2",
+      "key": "buildozer@6.4.0.2",
+      "repoName": "buildozer",
+      "executionPlatformsToRegister": [],
+      "toolchainsToRegister": [],
+      "extensionUsages": [
+        {
+          "extensionBzlFile": "@buildozer//:buildozer_binary.bzl",
+          "extensionName": "buildozer_binary",
+          "usingModule": "buildozer@6.4.0.2",
+          "location": {
+            "file": "https://bcr.bazel.build/modules/buildozer/6.4.0.2/MODULE.bazel",
+            "line": 7,
+            "column": 33
+          },
+          "imports": {
+            "buildozer_binary": "buildozer_binary"
+          },
+          "devImports": [],
+          "tags": [
+            {
+              "tagName": "buildozer",
+              "attributeValues": {
+                "sha256": {
+                  "darwin-amd64": "d29e347ecd6b5673d72cb1a8de05bf1b06178dd229ff5eb67fad5100c840cc8e",
+                  "darwin-arm64": "9b9e71bdbec5e7223871e913b65d12f6d8fa026684daf991f00e52ed36a6978d",
+                  "linux-amd64": "8dfd6345da4e9042daa738d7fdf34f699c5dfce4632f7207956fceedd8494119",
+                  "linux-arm64": "6559558fded658c8fa7432a9d011f7c4dcbac6b738feae73d2d5c352e5f605fa",
+                  "windows-amd64": "e7f05bf847f7c3689dd28926460ce6e1097ae97380ac8e6ae7147b7b706ba19b"
+                },
+                "version": "6.4.0"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "https://bcr.bazel.build/modules/buildozer/6.4.0.2/MODULE.bazel",
+                "line": 8,
+                "column": 27
+              }
+            }
+          ],
+          "hasDevUseExtension": false,
+          "hasNonDevUseExtension": true
+        }
+      ],
+      "deps": {
+        "bazel_tools": "bazel_tools@_",
+        "local_config_platform": "local_config_platform@_"
+      },
+      "repoSpec": {
+        "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+        "ruleClassName": "http_archive",
+        "attributes": {
+          "urls": [
+            "https://github.com/fmeum/buildozer/releases/download/v6.4.0.2/buildozer-v6.4.0.2.tar.gz"
+          ],
+          "integrity": "sha256-k7tFKQMR2AygxpmZfH0yEPnQmF3efFgD9rBPkj+Yz/8=",
+          "strip_prefix": "buildozer-6.4.0.2",
+          "remote_patches": {
+            "https://bcr.bazel.build/modules/buildozer/6.4.0.2/patches/module_dot_bazel_version.patch": "sha256-gKANF2HMilj7bWmuXs4lbBIAAansuWC4IhWGB/CerjU="
+          },
+          "remote_patch_strip": 1
         }
       }
     },
@@ -2338,6 +2736,131 @@
           "remote_patches": {
             "https://bcr.bazel.build/modules/buildifier_prebuilt/6.1.2/patches/module_dot_bazel_version.patch": "sha256-U79F1nzwKoLhPknGAjb0A/xNnnB62K5Hj71pgXYfNO0="
           },
+          "remote_patch_strip": 0
+        }
+      }
+    },
+    "googletest@1.14.0.bcr.1": {
+      "name": "googletest",
+      "version": "1.14.0.bcr.1",
+      "key": "googletest@1.14.0.bcr.1",
+      "repoName": "googletest",
+      "executionPlatformsToRegister": [],
+      "toolchainsToRegister": [],
+      "extensionUsages": [],
+      "deps": {
+        "com_google_absl": "abseil-cpp@20240116.1",
+        "platforms": "platforms@0.0.8",
+        "rules_cc": "rules_cc@0.0.9",
+        "com_googlesource_code_re2": "re2@2023-09-01",
+        "bazel_tools": "bazel_tools@_",
+        "local_config_platform": "local_config_platform@_"
+      },
+      "repoSpec": {
+        "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+        "ruleClassName": "http_archive",
+        "attributes": {
+          "urls": [
+            "https://github.com/google/googletest/archive/refs/tags/v1.14.0.tar.gz"
+          ],
+          "integrity": "sha256-itWYxzrXluDYKAsILOvYKmMNc+c808cAV5OKZQG7pdc=",
+          "strip_prefix": "googletest-1.14.0",
+          "remote_patches": {
+            "https://bcr.bazel.build/modules/googletest/1.14.0.bcr.1/patches/module_dot_bazel.patch": "sha256-jijctisPYOzP4X4cl0K7neRh/kqJB+yODNHf8V8heCE="
+          },
+          "remote_patch_strip": 0
+        }
+      }
+    },
+    "re2@2023-09-01": {
+      "name": "re2",
+      "version": "2023-09-01",
+      "key": "re2@2023-09-01",
+      "repoName": "re2",
+      "executionPlatformsToRegister": [],
+      "toolchainsToRegister": [],
+      "extensionUsages": [
+        {
+          "extensionBzlFile": "@pybind11_bazel//:python_configure.bzl",
+          "extensionName": "extension",
+          "usingModule": "re2@2023-09-01",
+          "location": {
+            "file": "https://bcr.bazel.build/modules/re2/2023-09-01/MODULE.bazel",
+            "line": 22,
+            "column": 33
+          },
+          "imports": {
+            "local_config_python": "local_config_python",
+            "pybind11": "pybind11"
+          },
+          "devImports": [],
+          "tags": [
+            {
+              "tagName": "toolchain",
+              "attributeValues": {
+                "python_version": "3"
+              },
+              "devDependency": false,
+              "location": {
+                "file": "https://bcr.bazel.build/modules/re2/2023-09-01/MODULE.bazel",
+                "line": 23,
+                "column": 27
+              }
+            }
+          ],
+          "hasDevUseExtension": false,
+          "hasNonDevUseExtension": true
+        }
+      ],
+      "deps": {
+        "platforms": "platforms@0.0.8",
+        "rules_cc": "rules_cc@0.0.9",
+        "com_google_absl": "abseil-cpp@20240116.1",
+        "rules_python": "rules_python@_",
+        "pybind11_bazel": "pybind11_bazel@2.11.1",
+        "bazel_tools": "bazel_tools@_",
+        "local_config_platform": "local_config_platform@_"
+      },
+      "repoSpec": {
+        "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+        "ruleClassName": "http_archive",
+        "attributes": {
+          "urls": [
+            "https://github.com/google/re2/releases/download/2023-09-01/re2-2023-09-01.zip"
+          ],
+          "integrity": "sha256-IkuDUdxGM7EBLb2EdWTgYKRr5goioUY9S1uZP9S/Wcw=",
+          "strip_prefix": "re2-2023-09-01",
+          "remote_patches": {
+            "https://bcr.bazel.build/modules/re2/2023-09-01/patches/module_dot_bazel.patch": "sha256-MUQkRNgPJ0lbYqOXoBu2m2vLH7IuKEbK/VWTw7WWrnA="
+          },
+          "remote_patch_strip": 0
+        }
+      }
+    },
+    "pybind11_bazel@2.11.1": {
+      "name": "pybind11_bazel",
+      "version": "2.11.1",
+      "key": "pybind11_bazel@2.11.1",
+      "repoName": "pybind11_bazel",
+      "executionPlatformsToRegister": [],
+      "toolchainsToRegister": [],
+      "extensionUsages": [],
+      "deps": {
+        "platforms": "platforms@0.0.8",
+        "rules_cc": "rules_cc@0.0.9",
+        "bazel_tools": "bazel_tools@_",
+        "local_config_platform": "local_config_platform@_"
+      },
+      "repoSpec": {
+        "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+        "ruleClassName": "http_archive",
+        "attributes": {
+          "urls": [
+            "https://github.com/pybind/pybind11_bazel/releases/download/v2.11.1/pybind11_bazel-2.11.1.zip"
+          ],
+          "integrity": "sha256-LEZsmzzKeFK0fgeFADEomE/PDV1hoaLkxazu/ZNawiA=",
+          "strip_prefix": "pybind11_bazel-2.11.1",
+          "remote_patches": {},
           "remote_patch_strip": 0
         }
       }
@@ -3345,28 +3868,35 @@
         "recordedRepoMappingEntries": []
       }
     },
-    "@@protobuf~//:non_module_deps.bzl%non_module_deps": {
+    "@@pybind11_bazel~//:python_configure.bzl%extension": {
       "general": {
-        "bzlTransitiveDigest": "aGnO/HqVtCmRLEQWGCuKp7jwX+lCh/nc3/hI3clfwD8=",
-        "recordedFileInputs": {},
+        "bzlTransitiveDigest": "DJPCeiYqQS2i13szWN5NSI6sC6eaWgvECEyY/oNXWms=",
+        "recordedFileInputs": {
+          "@@pybind11_bazel~//MODULE.bazel": "88af1c246226d87e65be78ed49ecd1e6f5e98648558c14ce99176da041dc378e"
+        },
         "recordedDirentsInputs": {},
         "envVariables": {},
         "generatedRepoSpecs": {
-          "utf8_range": {
+          "local_config_python": {
+            "bzlFile": "@@pybind11_bazel~//:python_configure.bzl",
+            "ruleClassName": "python_configure",
+            "attributes": {}
+          },
+          "pybind11": {
             "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
             "ruleClassName": "http_archive",
             "attributes": {
+              "build_file": "@@pybind11_bazel~//:pybind11.BUILD",
+              "strip_prefix": "pybind11-2.11.1",
               "urls": [
-                "https://github.com/protocolbuffers/utf8_range/archive/de0b4a8ff9b5d4c98108bdfe723291a33c52c54f.zip"
-              ],
-              "strip_prefix": "utf8_range-de0b4a8ff9b5d4c98108bdfe723291a33c52c54f",
-              "sha256": "5da960e5e5d92394c809629a03af3c7709d2d3d0ca731dacb3a9fb4bf28f7702"
+                "https://github.com/pybind/pybind11/archive/v2.11.1.zip"
+              ]
             }
           }
         },
         "recordedRepoMappingEntries": [
           [
-            "protobuf~",
+            "pybind11_bazel~",
             "bazel_tools",
             "bazel_tools"
           ]
@@ -3391,6 +3921,96 @@
         "recordedRepoMappingEntries": [
           [
             "rules_buf~",
+            "bazel_tools",
+            "bazel_tools"
+          ]
+        ]
+      }
+    },
+    "@@rules_fuzzing~//fuzzing/private:extensions.bzl%non_module_dependencies": {
+      "general": {
+        "bzlTransitiveDigest": "9kQ3JauWmRx45J65UZSW1lSvsLfHK49ZHkX6kws/stU=",
+        "recordedFileInputs": {},
+        "recordedDirentsInputs": {},
+        "envVariables": {},
+        "generatedRepoSpecs": {
+          "bazel_skylib": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_archive",
+            "attributes": {
+              "sha256": "cd55a062e763b9349921f0f5db8c3933288dc8ba4f76dd9416aac68acee3cb94",
+              "urls": [
+                "https://mirror.bazel.build/github.com/bazelbuild/bazel-skylib/releases/download/1.5.0/bazel-skylib-1.5.0.tar.gz",
+                "https://github.com/bazelbuild/bazel-skylib/releases/download/1.5.0/bazel-skylib-1.5.0.tar.gz"
+              ]
+            }
+          },
+          "rules_fuzzing_jazzer": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_jar",
+            "attributes": {
+              "sha256": "ee6feb569d88962d59cb59e8a31eb9d007c82683f3ebc64955fd5b96f277eec2",
+              "url": "https://repo1.maven.org/maven2/com/code-intelligence/jazzer/0.20.1/jazzer-0.20.1.jar"
+            }
+          },
+          "rules_python": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_archive",
+            "attributes": {
+              "sha256": "d70cd72a7a4880f0000a6346253414825c19cdd40a28289bdf67b8e6480edff8",
+              "strip_prefix": "rules_python-0.28.0",
+              "url": "https://github.com/bazelbuild/rules_python/releases/download/0.28.0/rules_python-0.28.0.tar.gz"
+            }
+          },
+          "rules_fuzzing_oss_fuzz": {
+            "bzlFile": "@@rules_fuzzing~//fuzzing/private/oss_fuzz:repository.bzl",
+            "ruleClassName": "oss_fuzz_repository",
+            "attributes": {}
+          },
+          "com_google_absl": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_archive",
+            "attributes": {
+              "urls": [
+                "https://github.com/abseil/abseil-cpp/archive/refs/tags/20240116.1.zip"
+              ],
+              "strip_prefix": "abseil-cpp-20240116.1",
+              "integrity": "sha256-7capMWOvWyoYbUaHF/b+I2U6XLMaHmky8KugWvfXYuk="
+            }
+          },
+          "honggfuzz": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_archive",
+            "attributes": {
+              "build_file": "@@rules_fuzzing~//:honggfuzz.BUILD",
+              "sha256": "6b18ba13bc1f36b7b950c72d80f19ea67fbadc0ac0bb297ec89ad91f2eaa423e",
+              "url": "https://github.com/google/honggfuzz/archive/2.5.zip",
+              "strip_prefix": "honggfuzz-2.5"
+            }
+          },
+          "platforms": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_archive",
+            "attributes": {
+              "urls": [
+                "https://mirror.bazel.build/github.com/bazelbuild/platforms/releases/download/0.0.8/platforms-0.0.8.tar.gz",
+                "https://github.com/bazelbuild/platforms/releases/download/0.0.8/platforms-0.0.8.tar.gz"
+              ],
+              "sha256": "8150406605389ececb6da07cbcb509d5637a3ab9a24bc69b1101531367d89d74"
+            }
+          },
+          "rules_fuzzing_jazzer_api": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_jar",
+            "attributes": {
+              "sha256": "f5a60242bc408f7fa20fccf10d6c5c5ea1fcb3c6f44642fec5af88373ae7aa1b",
+              "url": "https://repo1.maven.org/maven2/com/code-intelligence/jazzer-api/0.20.1/jazzer-api-0.20.1.jar"
+            }
+          }
+        },
+        "recordedRepoMappingEntries": [
+          [
+            "rules_fuzzing~",
             "bazel_tools",
             "bazel_tools"
           ]
@@ -4261,45 +4881,6 @@
               "downloaded_file_path": "com/google/oauth-client/google-oauth-client/1.31.1/google-oauth-client-1.31.1.jar"
             }
           },
-          "maven": {
-            "bzlFile": "@@rules_jvm_external~//:coursier.bzl",
-            "ruleClassName": "coursier_fetch",
-            "attributes": {
-              "repositories": [
-                "{ \"repo_url\": \"https://repo1.maven.org/maven2\" }"
-              ],
-              "artifacts": [
-                "{ \"group\": \"com.google.code.findbugs\", \"artifact\": \"jsr305\", \"version\": \"3.0.2\" }",
-                "{ \"group\": \"com.google.code.gson\", \"artifact\": \"gson\", \"version\": \"2.8.9\" }",
-                "{ \"group\": \"com.google.errorprone\", \"artifact\": \"error_prone_annotations\", \"version\": \"2.3.2\" }",
-                "{ \"group\": \"com.google.j2objc\", \"artifact\": \"j2objc-annotations\", \"version\": \"1.3\" }",
-                "{ \"group\": \"com.google.guava\", \"artifact\": \"guava\", \"version\": \"31.1-jre\" }",
-                "{ \"group\": \"com.google.guava\", \"artifact\": \"guava-testlib\", \"version\": \"31.1-jre\" }",
-                "{ \"group\": \"com.google.truth\", \"artifact\": \"truth\", \"version\": \"1.1.2\" }",
-                "{ \"group\": \"junit\", \"artifact\": \"junit\", \"version\": \"4.13.2\" }",
-                "{ \"group\": \"org.mockito\", \"artifact\": \"mockito-core\", \"version\": \"4.3.1\" }"
-              ],
-              "fail_on_missing_checksum": true,
-              "fetch_sources": true,
-              "fetch_javadoc": false,
-              "excluded_artifacts": [],
-              "generate_compat_repositories": false,
-              "version_conflict_policy": "default",
-              "override_targets": {},
-              "strict_visibility": false,
-              "strict_visibility_value": [
-                "@@//visibility:private"
-              ],
-              "resolve_timeout": 600,
-              "jetify": false,
-              "jetify_include_list": [
-                "*"
-              ],
-              "use_starlark_android_rules": false,
-              "aar_import_bzl_label": "@build_bazel_rules_android//android:rules.bzl",
-              "duplicate_version_warning": "warn"
-            }
-          },
           "software_amazon_awssdk_aws_xml_protocol_2_17_183": {
             "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
             "ruleClassName": "http_file",
@@ -5152,7 +5733,7 @@
     },
     "@@rules_python~//python/private/pypi:pip.bzl%pip_internal": {
       "general": {
-        "bzlTransitiveDigest": "H+DH88SNvq6JY6+HlxNwz1YGNoModIYcyGwHAzpw3pI=",
+        "bzlTransitiveDigest": "USZadcu8aw/cnMJ66IU2YvXZ56ZQQVX12eYsmEo9d7c=",
         "recordedFileInputs": {
           "@@rules_python~//tools/publish/requirements.txt": "031e35d03dde03ae6305fe4b3d1f58ad7bdad857379752deede0f93649991b8a",
           "@@rules_python~//tools/publish/requirements_windows.txt": "15472d5a28e068d31ba9e2dc389459698afaff366e9db06e15890283a3ea252e",
@@ -7387,6 +7968,11 @@
           ],
           [
             "rules_python~~python~pythons_hub",
+            "python_3_10_host",
+            "rules_python~~python~python_3_10_host"
+          ],
+          [
+            "rules_python~~python~pythons_hub",
             "python_3_11_host",
             "rules_python~~python~python_3_11_host"
           ],
@@ -7397,8 +7983,377 @@
           ],
           [
             "rules_python~~python~pythons_hub",
+            "python_3_12_host",
+            "rules_python~~python~python_3_12_host"
+          ],
+          [
+            "rules_python~~python~pythons_hub",
             "python_3_8_12_host",
             "rules_python~~python~python_3_8_12_host"
+          ],
+          [
+            "rules_python~~python~pythons_hub",
+            "python_3_8_host",
+            "rules_python~~python~python_3_8_host"
+          ],
+          [
+            "rules_python~~python~pythons_hub",
+            "python_3_9_host",
+            "rules_python~~python~python_3_9_host"
+          ]
+        ]
+      }
+    },
+    "@@rules_rust~//crate_universe:extension.bzl%crate": {
+      "general": {
+        "bzlTransitiveDigest": "6mE8s7wFAWiPu3kQk6oTasDDdM99gLsQl93XBnkbkac=",
+        "recordedFileInputs": {
+          "@@rules_rust~~rust_host_tools~rust_host_tools//bin/rustc": "3f89818bb07ef2c1b4191a9289e0871c91b1e693792629d92c864bef5c2484f3",
+          "@@rules_rust~~rust_host_tools~rust_host_tools//bin/cargo": "7046c9b8b9cbce00ad3e757211d7fb6b893d8413accb4ae6c90e4b2ef4c32b33"
+        },
+        "recordedDirentsInputs": {},
+        "envVariables": {},
+        "generatedRepoSpecs": {
+          "crates__paste-1.0.15": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_archive",
+            "attributes": {
+              "patch_args": [
+                "-p0"
+              ],
+              "patch_tool": "",
+              "patches": [],
+              "remote_patch_strip": 1,
+              "sha256": "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a",
+              "type": "tar.gz",
+              "urls": [
+                "https://static.crates.io/crates/paste/1.0.15/download"
+              ],
+              "strip_prefix": "paste-1.0.15",
+              "build_file_content": "###############################################################################\n# @generated\n# DO NOT MODIFY: This file is auto-generated by a crate_universe tool. To \n# regenerate this file, run the following:\n#\n#     Run 'cargo update [--workspace]'\n###############################################################################\n\nload(\"@rules_rust//cargo:defs.bzl\", \"cargo_build_script\")\n\nload(\"@rules_rust//rust:defs.bzl\", \"rust_proc_macro\")\n\n# buildifier: disable=bzl-visibility\nload(\"@rules_rust//crate_universe/private:selects.bzl\", \"selects\")\n\npackage(default_visibility = [\"//visibility:public\"])\n\nrust_proc_macro(\n    name = \"paste\",\n    deps = [\n        \"@crates__paste-1.0.15//:build_script_build\",\n    ],\n    compile_data = glob(\n        allow_empty = True,\n        include = [\"**\"],\n        exclude = [\n            \"**/* *\",\n            \".tmp_git_root/**/*\",\n            \"BUILD\",\n            \"BUILD.bazel\",\n            \"WORKSPACE\",\n            \"WORKSPACE.bazel\",\n        ],\n    ),\n    crate_root = \"src/lib.rs\",\n    edition = \"2018\",\n    rustc_flags = [\n        \"--cap-lints=allow\",\n    ],\n    srcs = glob(\n        allow_empty = True,\n        include = [\"**/*.rs\"],\n    ),\n    tags = [\n        \"cargo-bazel\",\n        \"crate-name=paste\",\n        \"manual\",\n        \"noclippy\",\n        \"norustfmt\",\n    ],\n    target_compatible_with = select({\n        \"@rules_rust//rust/platform:aarch64-apple-darwin\": [],\n        \"@rules_rust//rust/platform:aarch64-apple-ios\": [],\n        \"@rules_rust//rust/platform:aarch64-apple-ios-sim\": [],\n        \"@rules_rust//rust/platform:aarch64-fuchsia\": [],\n        \"@rules_rust//rust/platform:aarch64-linux-android\": [],\n        \"@rules_rust//rust/platform:aarch64-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-nixos-gnu\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-nto-qnx710\": [],\n        \"@rules_rust//rust/platform:arm-unknown-linux-gnueabi\": [],\n        \"@rules_rust//rust/platform:armv7-linux-androideabi\": [],\n        \"@rules_rust//rust/platform:armv7-unknown-linux-gnueabi\": [],\n        \"@rules_rust//rust/platform:i686-apple-darwin\": [],\n        \"@rules_rust//rust/platform:i686-linux-android\": [],\n        \"@rules_rust//rust/platform:i686-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:i686-unknown-freebsd\": [],\n        \"@rules_rust//rust/platform:i686-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:powerpc-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:riscv32imc-unknown-none-elf\": [],\n        \"@rules_rust//rust/platform:riscv64gc-unknown-none-elf\": [],\n        \"@rules_rust//rust/platform:s390x-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:thumbv7em-none-eabi\": [],\n        \"@rules_rust//rust/platform:thumbv8m.main-none-eabi\": [],\n        \"@rules_rust//rust/platform:wasm32-unknown-unknown\": [],\n        \"@rules_rust//rust/platform:wasm32-wasi\": [],\n        \"@rules_rust//rust/platform:x86_64-apple-darwin\": [],\n        \"@rules_rust//rust/platform:x86_64-apple-ios\": [],\n        \"@rules_rust//rust/platform:x86_64-fuchsia\": [],\n        \"@rules_rust//rust/platform:x86_64-linux-android\": [],\n        \"@rules_rust//rust/platform:x86_64-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-freebsd\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-nixos-gnu\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-none\": [],\n        \"//conditions:default\": [\"@platforms//:incompatible\"],\n    }),\n    version = \"1.0.15\",\n)\n\ncargo_build_script(\n    name = \"_bs\",\n    crate_name = \"build_script_build\",\n    crate_root = \"build.rs\",\n    data = glob(\n        allow_empty = True,\n        include = [\"**\"],\n        exclude = [\n            \"**/* *\",\n            \".tmp_git_root/**/*\",\n            \"BUILD\",\n            \"BUILD.bazel\",\n            \"WORKSPACE\",\n            \"WORKSPACE.bazel\",\n        ],\n    ),\n    edition = \"2018\",\n    pkg_name = \"paste\",\n    rustc_flags = [\n        \"--cap-lints=allow\",\n    ],\n    srcs = glob(\n        allow_empty = True,\n        include = [\"**/*.rs\"],\n    ),\n    tags = [\n        \"cargo-bazel\",\n        \"crate-name=paste\",\n        \"manual\",\n        \"noclippy\",\n        \"norustfmt\",\n    ],\n    version = \"1.0.15\",\n    visibility = [\"//visibility:private\"],\n)\n\nalias(\n    name = \"build_script_build\",\n    actual = \":_bs\",\n    tags = [\"manual\"],\n)\n"
+            }
+          },
+          "crates__memchr-2.7.4": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_archive",
+            "attributes": {
+              "patch_args": [
+                "-p0"
+              ],
+              "patch_tool": "",
+              "patches": [],
+              "remote_patch_strip": 1,
+              "sha256": "78ca9ab1a0babb1e7d5695e3530886289c18cf2f87ec19a575a0abdce112e3a3",
+              "type": "tar.gz",
+              "urls": [
+                "https://static.crates.io/crates/memchr/2.7.4/download"
+              ],
+              "strip_prefix": "memchr-2.7.4",
+              "build_file_content": "###############################################################################\n# @generated\n# DO NOT MODIFY: This file is auto-generated by a crate_universe tool. To \n# regenerate this file, run the following:\n#\n#     Run 'cargo update [--workspace]'\n###############################################################################\n\nload(\"@rules_rust//rust:defs.bzl\", \"rust_library\")\n\n# buildifier: disable=bzl-visibility\nload(\"@rules_rust//crate_universe/private:selects.bzl\", \"selects\")\n\npackage(default_visibility = [\"//visibility:public\"])\n\nrust_library(\n    name = \"memchr\",\n    compile_data = glob(\n        allow_empty = True,\n        include = [\"**\"],\n        exclude = [\n            \"**/* *\",\n            \".tmp_git_root/**/*\",\n            \"BUILD\",\n            \"BUILD.bazel\",\n            \"WORKSPACE\",\n            \"WORKSPACE.bazel\",\n        ],\n    ),\n    crate_features = [\n        \"alloc\",\n        \"std\",\n    ],\n    crate_root = \"src/lib.rs\",\n    edition = \"2021\",\n    rustc_flags = [\n        \"--cap-lints=allow\",\n    ],\n    srcs = glob(\n        allow_empty = True,\n        include = [\"**/*.rs\"],\n    ),\n    tags = [\n        \"cargo-bazel\",\n        \"crate-name=memchr\",\n        \"manual\",\n        \"noclippy\",\n        \"norustfmt\",\n    ],\n    target_compatible_with = select({\n        \"@rules_rust//rust/platform:aarch64-apple-darwin\": [],\n        \"@rules_rust//rust/platform:aarch64-apple-ios\": [],\n        \"@rules_rust//rust/platform:aarch64-apple-ios-sim\": [],\n        \"@rules_rust//rust/platform:aarch64-fuchsia\": [],\n        \"@rules_rust//rust/platform:aarch64-linux-android\": [],\n        \"@rules_rust//rust/platform:aarch64-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-nixos-gnu\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-nto-qnx710\": [],\n        \"@rules_rust//rust/platform:arm-unknown-linux-gnueabi\": [],\n        \"@rules_rust//rust/platform:armv7-linux-androideabi\": [],\n        \"@rules_rust//rust/platform:armv7-unknown-linux-gnueabi\": [],\n        \"@rules_rust//rust/platform:i686-apple-darwin\": [],\n        \"@rules_rust//rust/platform:i686-linux-android\": [],\n        \"@rules_rust//rust/platform:i686-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:i686-unknown-freebsd\": [],\n        \"@rules_rust//rust/platform:i686-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:powerpc-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:riscv32imc-unknown-none-elf\": [],\n        \"@rules_rust//rust/platform:riscv64gc-unknown-none-elf\": [],\n        \"@rules_rust//rust/platform:s390x-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:thumbv7em-none-eabi\": [],\n        \"@rules_rust//rust/platform:thumbv8m.main-none-eabi\": [],\n        \"@rules_rust//rust/platform:wasm32-unknown-unknown\": [],\n        \"@rules_rust//rust/platform:wasm32-wasi\": [],\n        \"@rules_rust//rust/platform:x86_64-apple-darwin\": [],\n        \"@rules_rust//rust/platform:x86_64-apple-ios\": [],\n        \"@rules_rust//rust/platform:x86_64-fuchsia\": [],\n        \"@rules_rust//rust/platform:x86_64-linux-android\": [],\n        \"@rules_rust//rust/platform:x86_64-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-freebsd\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-nixos-gnu\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-none\": [],\n        \"//conditions:default\": [\"@platforms//:incompatible\"],\n    }),\n    version = \"2.7.4\",\n)\n"
+            }
+          },
+          "crates__autocfg-1.4.0": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_archive",
+            "attributes": {
+              "patch_args": [
+                "-p0"
+              ],
+              "patch_tool": "",
+              "patches": [],
+              "remote_patch_strip": 1,
+              "sha256": "ace50bade8e6234aa140d9a2f552bbee1db4d353f69b8217bc503490fc1a9f26",
+              "type": "tar.gz",
+              "urls": [
+                "https://static.crates.io/crates/autocfg/1.4.0/download"
+              ],
+              "strip_prefix": "autocfg-1.4.0",
+              "build_file_content": "###############################################################################\n# @generated\n# DO NOT MODIFY: This file is auto-generated by a crate_universe tool. To \n# regenerate this file, run the following:\n#\n#     Run 'cargo update [--workspace]'\n###############################################################################\n\nload(\"@rules_rust//rust:defs.bzl\", \"rust_library\")\n\n# buildifier: disable=bzl-visibility\nload(\"@rules_rust//crate_universe/private:selects.bzl\", \"selects\")\n\npackage(default_visibility = [\"//visibility:public\"])\n\nrust_library(\n    name = \"autocfg\",\n    compile_data = glob(\n        allow_empty = True,\n        include = [\"**\"],\n        exclude = [\n            \"**/* *\",\n            \".tmp_git_root/**/*\",\n            \"BUILD\",\n            \"BUILD.bazel\",\n            \"WORKSPACE\",\n            \"WORKSPACE.bazel\",\n        ],\n    ),\n    crate_root = \"src/lib.rs\",\n    edition = \"2015\",\n    rustc_flags = [\n        \"--cap-lints=allow\",\n    ],\n    srcs = glob(\n        allow_empty = True,\n        include = [\"**/*.rs\"],\n    ),\n    tags = [\n        \"cargo-bazel\",\n        \"crate-name=autocfg\",\n        \"manual\",\n        \"noclippy\",\n        \"norustfmt\",\n    ],\n    target_compatible_with = select({\n        \"@rules_rust//rust/platform:aarch64-apple-darwin\": [],\n        \"@rules_rust//rust/platform:aarch64-apple-ios\": [],\n        \"@rules_rust//rust/platform:aarch64-apple-ios-sim\": [],\n        \"@rules_rust//rust/platform:aarch64-fuchsia\": [],\n        \"@rules_rust//rust/platform:aarch64-linux-android\": [],\n        \"@rules_rust//rust/platform:aarch64-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-nixos-gnu\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-nto-qnx710\": [],\n        \"@rules_rust//rust/platform:arm-unknown-linux-gnueabi\": [],\n        \"@rules_rust//rust/platform:armv7-linux-androideabi\": [],\n        \"@rules_rust//rust/platform:armv7-unknown-linux-gnueabi\": [],\n        \"@rules_rust//rust/platform:i686-apple-darwin\": [],\n        \"@rules_rust//rust/platform:i686-linux-android\": [],\n        \"@rules_rust//rust/platform:i686-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:i686-unknown-freebsd\": [],\n        \"@rules_rust//rust/platform:i686-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:powerpc-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:riscv32imc-unknown-none-elf\": [],\n        \"@rules_rust//rust/platform:riscv64gc-unknown-none-elf\": [],\n        \"@rules_rust//rust/platform:s390x-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:thumbv7em-none-eabi\": [],\n        \"@rules_rust//rust/platform:thumbv8m.main-none-eabi\": [],\n        \"@rules_rust//rust/platform:wasm32-unknown-unknown\": [],\n        \"@rules_rust//rust/platform:wasm32-wasi\": [],\n        \"@rules_rust//rust/platform:x86_64-apple-darwin\": [],\n        \"@rules_rust//rust/platform:x86_64-apple-ios\": [],\n        \"@rules_rust//rust/platform:x86_64-fuchsia\": [],\n        \"@rules_rust//rust/platform:x86_64-linux-android\": [],\n        \"@rules_rust//rust/platform:x86_64-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-freebsd\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-nixos-gnu\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-none\": [],\n        \"//conditions:default\": [\"@platforms//:incompatible\"],\n    }),\n    version = \"1.4.0\",\n)\n"
+            }
+          },
+          "crates__regex-automata-0.4.8": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_archive",
+            "attributes": {
+              "patch_args": [
+                "-p0"
+              ],
+              "patch_tool": "",
+              "patches": [],
+              "remote_patch_strip": 1,
+              "sha256": "368758f23274712b504848e9d5a6f010445cc8b87a7cdb4d7cbee666c1288da3",
+              "type": "tar.gz",
+              "urls": [
+                "https://static.crates.io/crates/regex-automata/0.4.8/download"
+              ],
+              "strip_prefix": "regex-automata-0.4.8",
+              "build_file_content": "###############################################################################\n# @generated\n# DO NOT MODIFY: This file is auto-generated by a crate_universe tool. To \n# regenerate this file, run the following:\n#\n#     Run 'cargo update [--workspace]'\n###############################################################################\n\nload(\"@rules_rust//rust:defs.bzl\", \"rust_library\")\n\n# buildifier: disable=bzl-visibility\nload(\"@rules_rust//crate_universe/private:selects.bzl\", \"selects\")\n\npackage(default_visibility = [\"//visibility:public\"])\n\nrust_library(\n    name = \"regex_automata\",\n    deps = [\n        \"@crates__aho-corasick-1.1.3//:aho_corasick\",\n        \"@crates__memchr-2.7.4//:memchr\",\n        \"@crates__regex-syntax-0.8.5//:regex_syntax\",\n    ],\n    compile_data = glob(\n        allow_empty = True,\n        include = [\"**\"],\n        exclude = [\n            \"**/* *\",\n            \".tmp_git_root/**/*\",\n            \"BUILD\",\n            \"BUILD.bazel\",\n            \"WORKSPACE\",\n            \"WORKSPACE.bazel\",\n        ],\n    ),\n    crate_features = [\n        \"alloc\",\n        \"dfa-onepass\",\n        \"hybrid\",\n        \"meta\",\n        \"nfa-backtrack\",\n        \"nfa-pikevm\",\n        \"nfa-thompson\",\n        \"perf-inline\",\n        \"perf-literal\",\n        \"perf-literal-multisubstring\",\n        \"perf-literal-substring\",\n        \"std\",\n        \"syntax\",\n        \"unicode\",\n        \"unicode-age\",\n        \"unicode-bool\",\n        \"unicode-case\",\n        \"unicode-gencat\",\n        \"unicode-perl\",\n        \"unicode-script\",\n        \"unicode-segment\",\n        \"unicode-word-boundary\",\n    ],\n    crate_root = \"src/lib.rs\",\n    edition = \"2021\",\n    rustc_flags = [\n        \"--cap-lints=allow\",\n    ],\n    srcs = glob(\n        allow_empty = True,\n        include = [\"**/*.rs\"],\n    ),\n    tags = [\n        \"cargo-bazel\",\n        \"crate-name=regex-automata\",\n        \"manual\",\n        \"noclippy\",\n        \"norustfmt\",\n    ],\n    target_compatible_with = select({\n        \"@rules_rust//rust/platform:aarch64-apple-darwin\": [],\n        \"@rules_rust//rust/platform:aarch64-apple-ios\": [],\n        \"@rules_rust//rust/platform:aarch64-apple-ios-sim\": [],\n        \"@rules_rust//rust/platform:aarch64-fuchsia\": [],\n        \"@rules_rust//rust/platform:aarch64-linux-android\": [],\n        \"@rules_rust//rust/platform:aarch64-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-nixos-gnu\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-nto-qnx710\": [],\n        \"@rules_rust//rust/platform:arm-unknown-linux-gnueabi\": [],\n        \"@rules_rust//rust/platform:armv7-linux-androideabi\": [],\n        \"@rules_rust//rust/platform:armv7-unknown-linux-gnueabi\": [],\n        \"@rules_rust//rust/platform:i686-apple-darwin\": [],\n        \"@rules_rust//rust/platform:i686-linux-android\": [],\n        \"@rules_rust//rust/platform:i686-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:i686-unknown-freebsd\": [],\n        \"@rules_rust//rust/platform:i686-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:powerpc-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:riscv32imc-unknown-none-elf\": [],\n        \"@rules_rust//rust/platform:riscv64gc-unknown-none-elf\": [],\n        \"@rules_rust//rust/platform:s390x-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:thumbv7em-none-eabi\": [],\n        \"@rules_rust//rust/platform:thumbv8m.main-none-eabi\": [],\n        \"@rules_rust//rust/platform:wasm32-unknown-unknown\": [],\n        \"@rules_rust//rust/platform:wasm32-wasi\": [],\n        \"@rules_rust//rust/platform:x86_64-apple-darwin\": [],\n        \"@rules_rust//rust/platform:x86_64-apple-ios\": [],\n        \"@rules_rust//rust/platform:x86_64-fuchsia\": [],\n        \"@rules_rust//rust/platform:x86_64-linux-android\": [],\n        \"@rules_rust//rust/platform:x86_64-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-freebsd\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-nixos-gnu\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-none\": [],\n        \"//conditions:default\": [\"@platforms//:incompatible\"],\n    }),\n    version = \"0.4.8\",\n)\n"
+            }
+          },
+          "crates__unicode-ident-1.0.13": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_archive",
+            "attributes": {
+              "patch_args": [
+                "-p0"
+              ],
+              "patch_tool": "",
+              "patches": [],
+              "remote_patch_strip": 1,
+              "sha256": "e91b56cd4cadaeb79bbf1a5645f6b4f8dc5bde8834ad5894a8db35fda9efa1fe",
+              "type": "tar.gz",
+              "urls": [
+                "https://static.crates.io/crates/unicode-ident/1.0.13/download"
+              ],
+              "strip_prefix": "unicode-ident-1.0.13",
+              "build_file_content": "###############################################################################\n# @generated\n# DO NOT MODIFY: This file is auto-generated by a crate_universe tool. To \n# regenerate this file, run the following:\n#\n#     Run 'cargo update [--workspace]'\n###############################################################################\n\nload(\"@rules_rust//rust:defs.bzl\", \"rust_library\")\n\n# buildifier: disable=bzl-visibility\nload(\"@rules_rust//crate_universe/private:selects.bzl\", \"selects\")\n\npackage(default_visibility = [\"//visibility:public\"])\n\nrust_library(\n    name = \"unicode_ident\",\n    compile_data = glob(\n        allow_empty = True,\n        include = [\"**\"],\n        exclude = [\n            \"**/* *\",\n            \".tmp_git_root/**/*\",\n            \"BUILD\",\n            \"BUILD.bazel\",\n            \"WORKSPACE\",\n            \"WORKSPACE.bazel\",\n        ],\n    ),\n    crate_root = \"src/lib.rs\",\n    edition = \"2018\",\n    rustc_flags = [\n        \"--cap-lints=allow\",\n    ],\n    srcs = glob(\n        allow_empty = True,\n        include = [\"**/*.rs\"],\n    ),\n    tags = [\n        \"cargo-bazel\",\n        \"crate-name=unicode-ident\",\n        \"manual\",\n        \"noclippy\",\n        \"norustfmt\",\n    ],\n    target_compatible_with = select({\n        \"@rules_rust//rust/platform:aarch64-apple-darwin\": [],\n        \"@rules_rust//rust/platform:aarch64-apple-ios\": [],\n        \"@rules_rust//rust/platform:aarch64-apple-ios-sim\": [],\n        \"@rules_rust//rust/platform:aarch64-fuchsia\": [],\n        \"@rules_rust//rust/platform:aarch64-linux-android\": [],\n        \"@rules_rust//rust/platform:aarch64-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-nixos-gnu\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-nto-qnx710\": [],\n        \"@rules_rust//rust/platform:arm-unknown-linux-gnueabi\": [],\n        \"@rules_rust//rust/platform:armv7-linux-androideabi\": [],\n        \"@rules_rust//rust/platform:armv7-unknown-linux-gnueabi\": [],\n        \"@rules_rust//rust/platform:i686-apple-darwin\": [],\n        \"@rules_rust//rust/platform:i686-linux-android\": [],\n        \"@rules_rust//rust/platform:i686-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:i686-unknown-freebsd\": [],\n        \"@rules_rust//rust/platform:i686-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:powerpc-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:riscv32imc-unknown-none-elf\": [],\n        \"@rules_rust//rust/platform:riscv64gc-unknown-none-elf\": [],\n        \"@rules_rust//rust/platform:s390x-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:thumbv7em-none-eabi\": [],\n        \"@rules_rust//rust/platform:thumbv8m.main-none-eabi\": [],\n        \"@rules_rust//rust/platform:wasm32-unknown-unknown\": [],\n        \"@rules_rust//rust/platform:wasm32-wasi\": [],\n        \"@rules_rust//rust/platform:x86_64-apple-darwin\": [],\n        \"@rules_rust//rust/platform:x86_64-apple-ios\": [],\n        \"@rules_rust//rust/platform:x86_64-fuchsia\": [],\n        \"@rules_rust//rust/platform:x86_64-linux-android\": [],\n        \"@rules_rust//rust/platform:x86_64-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-freebsd\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-nixos-gnu\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-none\": [],\n        \"//conditions:default\": [\"@platforms//:incompatible\"],\n    }),\n    version = \"1.0.13\",\n)\n"
+            }
+          },
+          "crates__googletest-0.12.0": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_archive",
+            "attributes": {
+              "patch_args": [
+                "-p0"
+              ],
+              "patch_tool": "",
+              "patches": [],
+              "remote_patch_strip": 1,
+              "sha256": "22e38fa267f4db1a2fa51795ea4234eaadc3617a97486a9f158de9256672260e",
+              "type": "tar.gz",
+              "urls": [
+                "https://static.crates.io/crates/googletest/0.12.0/download"
+              ],
+              "strip_prefix": "googletest-0.12.0",
+              "build_file_content": "###############################################################################\n# @generated\n# DO NOT MODIFY: This file is auto-generated by a crate_universe tool. To \n# regenerate this file, run the following:\n#\n#     Run 'cargo update [--workspace]'\n###############################################################################\n\nload(\"@rules_rust//rust:defs.bzl\", \"rust_library\")\n\n# buildifier: disable=bzl-visibility\nload(\"@rules_rust//crate_universe/private:selects.bzl\", \"selects\")\n\npackage(default_visibility = [\"//visibility:public\"])\n\nrust_library(\n    name = \"googletest\",\n    deps = [\n        \"@crates__num-traits-0.2.19//:num_traits\",\n        \"@crates__regex-1.11.0//:regex\",\n    ],\n    proc_macro_deps = [\n        \"@crates__googletest_macro-0.12.0//:googletest_macro\",\n        \"@crates__rustversion-1.0.17//:rustversion\",\n    ],\n    compile_data = glob(\n        allow_empty = True,\n        include = [\"**\"],\n        exclude = [\n            \"**/* *\",\n            \".tmp_git_root/**/*\",\n            \"BUILD\",\n            \"BUILD.bazel\",\n            \"WORKSPACE\",\n            \"WORKSPACE.bazel\",\n        ],\n    ),\n    crate_root = \"src/lib.rs\",\n    edition = \"2021\",\n    rustc_flags = [\n        \"--cap-lints=allow\",\n    ],\n    srcs = glob(\n        allow_empty = True,\n        include = [\"**/*.rs\"],\n    ),\n    tags = [\n        \"cargo-bazel\",\n        \"crate-name=googletest\",\n        \"manual\",\n        \"noclippy\",\n        \"norustfmt\",\n    ],\n    target_compatible_with = select({\n        \"@rules_rust//rust/platform:aarch64-apple-darwin\": [],\n        \"@rules_rust//rust/platform:aarch64-apple-ios\": [],\n        \"@rules_rust//rust/platform:aarch64-apple-ios-sim\": [],\n        \"@rules_rust//rust/platform:aarch64-fuchsia\": [],\n        \"@rules_rust//rust/platform:aarch64-linux-android\": [],\n        \"@rules_rust//rust/platform:aarch64-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-nixos-gnu\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-nto-qnx710\": [],\n        \"@rules_rust//rust/platform:arm-unknown-linux-gnueabi\": [],\n        \"@rules_rust//rust/platform:armv7-linux-androideabi\": [],\n        \"@rules_rust//rust/platform:armv7-unknown-linux-gnueabi\": [],\n        \"@rules_rust//rust/platform:i686-apple-darwin\": [],\n        \"@rules_rust//rust/platform:i686-linux-android\": [],\n        \"@rules_rust//rust/platform:i686-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:i686-unknown-freebsd\": [],\n        \"@rules_rust//rust/platform:i686-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:powerpc-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:riscv32imc-unknown-none-elf\": [],\n        \"@rules_rust//rust/platform:riscv64gc-unknown-none-elf\": [],\n        \"@rules_rust//rust/platform:s390x-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:thumbv7em-none-eabi\": [],\n        \"@rules_rust//rust/platform:thumbv8m.main-none-eabi\": [],\n        \"@rules_rust//rust/platform:wasm32-unknown-unknown\": [],\n        \"@rules_rust//rust/platform:wasm32-wasi\": [],\n        \"@rules_rust//rust/platform:x86_64-apple-darwin\": [],\n        \"@rules_rust//rust/platform:x86_64-apple-ios\": [],\n        \"@rules_rust//rust/platform:x86_64-fuchsia\": [],\n        \"@rules_rust//rust/platform:x86_64-linux-android\": [],\n        \"@rules_rust//rust/platform:x86_64-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-freebsd\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-nixos-gnu\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-none\": [],\n        \"//conditions:default\": [\"@platforms//:incompatible\"],\n    }),\n    version = \"0.12.0\",\n)\n"
+            }
+          },
+          "crates__googletest_macro-0.12.0": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_archive",
+            "attributes": {
+              "patch_args": [
+                "-p0"
+              ],
+              "patch_tool": "",
+              "patches": [],
+              "remote_patch_strip": 1,
+              "sha256": "171deab504ad43a9ea80324a3686a0cbe9436220d9d0b48ae4d7f7bd303b48a9",
+              "type": "tar.gz",
+              "urls": [
+                "https://static.crates.io/crates/googletest_macro/0.12.0/download"
+              ],
+              "strip_prefix": "googletest_macro-0.12.0",
+              "build_file_content": "###############################################################################\n# @generated\n# DO NOT MODIFY: This file is auto-generated by a crate_universe tool. To \n# regenerate this file, run the following:\n#\n#     Run 'cargo update [--workspace]'\n###############################################################################\n\nload(\"@rules_rust//rust:defs.bzl\", \"rust_proc_macro\")\n\n# buildifier: disable=bzl-visibility\nload(\"@rules_rust//crate_universe/private:selects.bzl\", \"selects\")\n\npackage(default_visibility = [\"//visibility:public\"])\n\nrust_proc_macro(\n    name = \"googletest_macro\",\n    deps = [\n        \"@crates__quote-1.0.37//:quote\",\n        \"@crates__syn-2.0.79//:syn\",\n    ],\n    compile_data = glob(\n        allow_empty = True,\n        include = [\"**\"],\n        exclude = [\n            \"**/* *\",\n            \".tmp_git_root/**/*\",\n            \"BUILD\",\n            \"BUILD.bazel\",\n            \"WORKSPACE\",\n            \"WORKSPACE.bazel\",\n        ],\n    ),\n    crate_root = \"src/lib.rs\",\n    edition = \"2021\",\n    rustc_flags = [\n        \"--cap-lints=allow\",\n    ],\n    srcs = glob(\n        allow_empty = True,\n        include = [\"**/*.rs\"],\n    ),\n    tags = [\n        \"cargo-bazel\",\n        \"crate-name=googletest_macro\",\n        \"manual\",\n        \"noclippy\",\n        \"norustfmt\",\n    ],\n    target_compatible_with = select({\n        \"@rules_rust//rust/platform:aarch64-apple-darwin\": [],\n        \"@rules_rust//rust/platform:aarch64-apple-ios\": [],\n        \"@rules_rust//rust/platform:aarch64-apple-ios-sim\": [],\n        \"@rules_rust//rust/platform:aarch64-fuchsia\": [],\n        \"@rules_rust//rust/platform:aarch64-linux-android\": [],\n        \"@rules_rust//rust/platform:aarch64-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-nixos-gnu\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-nto-qnx710\": [],\n        \"@rules_rust//rust/platform:arm-unknown-linux-gnueabi\": [],\n        \"@rules_rust//rust/platform:armv7-linux-androideabi\": [],\n        \"@rules_rust//rust/platform:armv7-unknown-linux-gnueabi\": [],\n        \"@rules_rust//rust/platform:i686-apple-darwin\": [],\n        \"@rules_rust//rust/platform:i686-linux-android\": [],\n        \"@rules_rust//rust/platform:i686-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:i686-unknown-freebsd\": [],\n        \"@rules_rust//rust/platform:i686-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:powerpc-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:riscv32imc-unknown-none-elf\": [],\n        \"@rules_rust//rust/platform:riscv64gc-unknown-none-elf\": [],\n        \"@rules_rust//rust/platform:s390x-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:thumbv7em-none-eabi\": [],\n        \"@rules_rust//rust/platform:thumbv8m.main-none-eabi\": [],\n        \"@rules_rust//rust/platform:wasm32-unknown-unknown\": [],\n        \"@rules_rust//rust/platform:wasm32-wasi\": [],\n        \"@rules_rust//rust/platform:x86_64-apple-darwin\": [],\n        \"@rules_rust//rust/platform:x86_64-apple-ios\": [],\n        \"@rules_rust//rust/platform:x86_64-fuchsia\": [],\n        \"@rules_rust//rust/platform:x86_64-linux-android\": [],\n        \"@rules_rust//rust/platform:x86_64-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-freebsd\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-nixos-gnu\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-none\": [],\n        \"//conditions:default\": [\"@platforms//:incompatible\"],\n    }),\n    version = \"0.12.0\",\n)\n"
+            }
+          },
+          "crates": {
+            "bzlFile": "@@rules_rust~//crate_universe:extension.bzl",
+            "ruleClassName": "_generate_repo",
+            "attributes": {
+              "contents": {
+                "BUILD.bazel": "###############################################################################\n# @generated\n# DO NOT MODIFY: This file is auto-generated by a crate_universe tool. To \n# regenerate this file, run the following:\n#\n#     Run 'cargo update [--workspace]'\n###############################################################################\n\npackage(default_visibility = [\"//visibility:public\"])\n\nexports_files(\n    [\n        \"cargo-bazel.json\",\n        \"crates.bzl\",\n        \"defs.bzl\",\n    ] + glob(\n        allow_empty = True,\n        include = [\"*.bazel\"],\n    ),\n)\n\nfilegroup(\n    name = \"srcs\",\n    srcs = glob(\n        allow_empty = True,\n        include = [\n            \"*.bazel\",\n            \"*.bzl\",\n        ],\n    ),\n)\n\n# Workspace Member Dependencies\nalias(\n    name = \"googletest\",\n    actual = \"@crates__googletest-0.12.0//:googletest\",\n    tags = [\"manual\"],\n)\n\nalias(\n    name = \"paste\",\n    actual = \"@crates__paste-1.0.15//:paste\",\n    tags = [\"manual\"],\n)\n",
+                "defs.bzl": "###############################################################################\n# @generated\n# DO NOT MODIFY: This file is auto-generated by a crate_universe tool. To \n# regenerate this file, run the following:\n#\n#     Run 'cargo update [--workspace]'\n###############################################################################\n\"\"\"\n# `crates_repository` API\n\n- [aliases](#aliases)\n- [crate_deps](#crate_deps)\n- [all_crate_deps](#all_crate_deps)\n- [crate_repositories](#crate_repositories)\n\n\"\"\"\n\nload(\"@bazel_tools//tools/build_defs/repo:git.bzl\", \"new_git_repository\")\nload(\"@bazel_tools//tools/build_defs/repo:http.bzl\", \"http_archive\")\nload(\"@bazel_tools//tools/build_defs/repo:utils.bzl\", \"maybe\")\nload(\"@bazel_skylib//lib:selects.bzl\", \"selects\")\n\n###############################################################################\n# MACROS API\n###############################################################################\n\n# An identifier that represent common dependencies (unconditional).\n_COMMON_CONDITION = \"\"\n\ndef _flatten_dependency_maps(all_dependency_maps):\n    \"\"\"Flatten a list of dependency maps into one dictionary.\n\n    Dependency maps have the following structure:\n\n    ```python\n    DEPENDENCIES_MAP = {\n        # The first key in the map is a Bazel package\n        # name of the workspace this file is defined in.\n        \"workspace_member_package\": {\n\n            # Not all dependencies are supported for all platforms.\n            # the condition key is the condition required to be true\n            # on the host platform.\n            \"condition\": {\n\n                # An alias to a crate target.     # The label of the crate target the\n                # Aliases are only crate names.   # package name refers to.\n                \"package_name\":                   \"@full//:label\",\n            }\n        }\n    }\n    ```\n\n    Args:\n        all_dependency_maps (list): A list of dicts as described above\n\n    Returns:\n        dict: A dictionary as described above\n    \"\"\"\n    dependencies = {}\n\n    for workspace_deps_map in all_dependency_maps:\n        for pkg_name, conditional_deps_map in workspace_deps_map.items():\n            if pkg_name not in dependencies:\n                non_frozen_map = dict()\n                for key, values in conditional_deps_map.items():\n                    non_frozen_map.update({key: dict(values.items())})\n                dependencies.setdefault(pkg_name, non_frozen_map)\n                continue\n\n            for condition, deps_map in conditional_deps_map.items():\n                # If the condition has not been recorded, do so and continue\n                if condition not in dependencies[pkg_name]:\n                    dependencies[pkg_name].setdefault(condition, dict(deps_map.items()))\n                    continue\n\n                # Alert on any miss-matched dependencies\n                inconsistent_entries = []\n                for crate_name, crate_label in deps_map.items():\n                    existing = dependencies[pkg_name][condition].get(crate_name)\n                    if existing and existing != crate_label:\n                        inconsistent_entries.append((crate_name, existing, crate_label))\n                    dependencies[pkg_name][condition].update({crate_name: crate_label})\n\n    return dependencies\n\ndef crate_deps(deps, package_name = None):\n    \"\"\"Finds the fully qualified label of the requested crates for the package where this macro is called.\n\n    Args:\n        deps (list): The desired list of crate targets.\n        package_name (str, optional): The package name of the set of dependencies to look up.\n            Defaults to `native.package_name()`.\n\n    Returns:\n        list: A list of labels to generated rust targets (str)\n    \"\"\"\n\n    if not deps:\n        return []\n\n    if package_name == None:\n        package_name = native.package_name()\n\n    # Join both sets of dependencies\n    dependencies = _flatten_dependency_maps([\n        _NORMAL_DEPENDENCIES,\n        _NORMAL_DEV_DEPENDENCIES,\n        _PROC_MACRO_DEPENDENCIES,\n        _PROC_MACRO_DEV_DEPENDENCIES,\n        _BUILD_DEPENDENCIES,\n        _BUILD_PROC_MACRO_DEPENDENCIES,\n    ]).pop(package_name, {})\n\n    # Combine all conditional packages so we can easily index over a flat list\n    # TODO: Perhaps this should actually return select statements and maintain\n    # the conditionals of the dependencies\n    flat_deps = {}\n    for deps_set in dependencies.values():\n        for crate_name, crate_label in deps_set.items():\n            flat_deps.update({crate_name: crate_label})\n\n    missing_crates = []\n    crate_targets = []\n    for crate_target in deps:\n        if crate_target not in flat_deps:\n            missing_crates.append(crate_target)\n        else:\n            crate_targets.append(flat_deps[crate_target])\n\n    if missing_crates:\n        fail(\"Could not find crates `{}` among dependencies of `{}`. Available dependencies were `{}`\".format(\n            missing_crates,\n            package_name,\n            dependencies,\n        ))\n\n    return crate_targets\n\ndef all_crate_deps(\n        normal = False, \n        normal_dev = False, \n        proc_macro = False, \n        proc_macro_dev = False,\n        build = False,\n        build_proc_macro = False,\n        package_name = None):\n    \"\"\"Finds the fully qualified label of all requested direct crate dependencies \\\n    for the package where this macro is called.\n\n    If no parameters are set, all normal dependencies are returned. Setting any one flag will\n    otherwise impact the contents of the returned list.\n\n    Args:\n        normal (bool, optional): If True, normal dependencies are included in the\n            output list.\n        normal_dev (bool, optional): If True, normal dev dependencies will be\n            included in the output list..\n        proc_macro (bool, optional): If True, proc_macro dependencies are included\n            in the output list.\n        proc_macro_dev (bool, optional): If True, dev proc_macro dependencies are\n            included in the output list.\n        build (bool, optional): If True, build dependencies are included\n            in the output list.\n        build_proc_macro (bool, optional): If True, build proc_macro dependencies are\n            included in the output list.\n        package_name (str, optional): The package name of the set of dependencies to look up.\n            Defaults to `native.package_name()` when unset.\n\n    Returns:\n        list: A list of labels to generated rust targets (str)\n    \"\"\"\n\n    if package_name == None:\n        package_name = native.package_name()\n\n    # Determine the relevant maps to use\n    all_dependency_maps = []\n    if normal:\n        all_dependency_maps.append(_NORMAL_DEPENDENCIES)\n    if normal_dev:\n        all_dependency_maps.append(_NORMAL_DEV_DEPENDENCIES)\n    if proc_macro:\n        all_dependency_maps.append(_PROC_MACRO_DEPENDENCIES)\n    if proc_macro_dev:\n        all_dependency_maps.append(_PROC_MACRO_DEV_DEPENDENCIES)\n    if build:\n        all_dependency_maps.append(_BUILD_DEPENDENCIES)\n    if build_proc_macro:\n        all_dependency_maps.append(_BUILD_PROC_MACRO_DEPENDENCIES)\n\n    # Default to always using normal dependencies\n    if not all_dependency_maps:\n        all_dependency_maps.append(_NORMAL_DEPENDENCIES)\n\n    dependencies = _flatten_dependency_maps(all_dependency_maps).pop(package_name, None)\n\n    if not dependencies:\n        if dependencies == None:\n            fail(\"Tried to get all_crate_deps for package \" + package_name + \" but that package had no Cargo.toml file\")\n        else:\n            return []\n\n    crate_deps = list(dependencies.pop(_COMMON_CONDITION, {}).values())\n    for condition, deps in dependencies.items():\n        crate_deps += selects.with_or({\n            tuple(_CONDITIONS[condition]): deps.values(),\n            \"//conditions:default\": [],\n        })\n\n    return crate_deps\n\ndef aliases(\n        normal = False,\n        normal_dev = False,\n        proc_macro = False,\n        proc_macro_dev = False,\n        build = False,\n        build_proc_macro = False,\n        package_name = None):\n    \"\"\"Produces a map of Crate alias names to their original label\n\n    If no dependency kinds are specified, `normal` and `proc_macro` are used by default.\n    Setting any one flag will otherwise determine the contents of the returned dict.\n\n    Args:\n        normal (bool, optional): If True, normal dependencies are included in the\n            output list.\n        normal_dev (bool, optional): If True, normal dev dependencies will be\n            included in the output list..\n        proc_macro (bool, optional): If True, proc_macro dependencies are included\n            in the output list.\n        proc_macro_dev (bool, optional): If True, dev proc_macro dependencies are\n            included in the output list.\n        build (bool, optional): If True, build dependencies are included\n            in the output list.\n        build_proc_macro (bool, optional): If True, build proc_macro dependencies are\n            included in the output list.\n        package_name (str, optional): The package name of the set of dependencies to look up.\n            Defaults to `native.package_name()` when unset.\n\n    Returns:\n        dict: The aliases of all associated packages\n    \"\"\"\n    if package_name == None:\n        package_name = native.package_name()\n\n    # Determine the relevant maps to use\n    all_aliases_maps = []\n    if normal:\n        all_aliases_maps.append(_NORMAL_ALIASES)\n    if normal_dev:\n        all_aliases_maps.append(_NORMAL_DEV_ALIASES)\n    if proc_macro:\n        all_aliases_maps.append(_PROC_MACRO_ALIASES)\n    if proc_macro_dev:\n        all_aliases_maps.append(_PROC_MACRO_DEV_ALIASES)\n    if build:\n        all_aliases_maps.append(_BUILD_ALIASES)\n    if build_proc_macro:\n        all_aliases_maps.append(_BUILD_PROC_MACRO_ALIASES)\n\n    # Default to always using normal aliases\n    if not all_aliases_maps:\n        all_aliases_maps.append(_NORMAL_ALIASES)\n        all_aliases_maps.append(_PROC_MACRO_ALIASES)\n\n    aliases = _flatten_dependency_maps(all_aliases_maps).pop(package_name, None)\n\n    if not aliases:\n        return dict()\n\n    common_items = aliases.pop(_COMMON_CONDITION, {}).items()\n\n    # If there are only common items in the dictionary, immediately return them\n    if not len(aliases.keys()) == 1:\n        return dict(common_items)\n\n    # Build a single select statement where each conditional has accounted for the\n    # common set of aliases.\n    crate_aliases = {\"//conditions:default\": dict(common_items)}\n    for condition, deps in aliases.items():\n        condition_triples = _CONDITIONS[condition]\n        for triple in condition_triples:\n            if triple in crate_aliases:\n                crate_aliases[triple].update(deps)\n            else:\n                crate_aliases.update({triple: dict(deps.items() + common_items)})\n\n    return select(crate_aliases)\n\n###############################################################################\n# WORKSPACE MEMBER DEPS AND ALIASES\n###############################################################################\n\n_NORMAL_DEPENDENCIES = {\n    \"\": {\n        _COMMON_CONDITION: {\n            \"googletest\": Label(\"@crates__googletest-0.12.0//:googletest\"),\n        },\n    },\n}\n\n\n_NORMAL_ALIASES = {\n    \"\": {\n        _COMMON_CONDITION: {\n        },\n    },\n}\n\n\n_NORMAL_DEV_DEPENDENCIES = {\n    \"\": {\n    },\n}\n\n\n_NORMAL_DEV_ALIASES = {\n    \"\": {\n    },\n}\n\n\n_PROC_MACRO_DEPENDENCIES = {\n    \"\": {\n        _COMMON_CONDITION: {\n            \"paste\": Label(\"@crates__paste-1.0.15//:paste\"),\n        },\n    },\n}\n\n\n_PROC_MACRO_ALIASES = {\n    \"\": {\n    },\n}\n\n\n_PROC_MACRO_DEV_DEPENDENCIES = {\n    \"\": {\n    },\n}\n\n\n_PROC_MACRO_DEV_ALIASES = {\n    \"\": {\n    },\n}\n\n\n_BUILD_DEPENDENCIES = {\n    \"\": {\n    },\n}\n\n\n_BUILD_ALIASES = {\n    \"\": {\n    },\n}\n\n\n_BUILD_PROC_MACRO_DEPENDENCIES = {\n    \"\": {\n    },\n}\n\n\n_BUILD_PROC_MACRO_ALIASES = {\n    \"\": {\n    },\n}\n\n\n_CONDITIONS = {\n    \"aarch64-apple-darwin\": [\"@rules_rust//rust/platform:aarch64-apple-darwin\"],\n    \"aarch64-apple-ios\": [\"@rules_rust//rust/platform:aarch64-apple-ios\"],\n    \"aarch64-apple-ios-sim\": [\"@rules_rust//rust/platform:aarch64-apple-ios-sim\"],\n    \"aarch64-fuchsia\": [\"@rules_rust//rust/platform:aarch64-fuchsia\"],\n    \"aarch64-linux-android\": [\"@rules_rust//rust/platform:aarch64-linux-android\"],\n    \"aarch64-pc-windows-msvc\": [\"@rules_rust//rust/platform:aarch64-pc-windows-msvc\"],\n    \"aarch64-unknown-linux-gnu\": [\"@rules_rust//rust/platform:aarch64-unknown-linux-gnu\"],\n    \"aarch64-unknown-nixos-gnu\": [\"@rules_rust//rust/platform:aarch64-unknown-nixos-gnu\"],\n    \"aarch64-unknown-nto-qnx710\": [\"@rules_rust//rust/platform:aarch64-unknown-nto-qnx710\"],\n    \"arm-unknown-linux-gnueabi\": [\"@rules_rust//rust/platform:arm-unknown-linux-gnueabi\"],\n    \"armv7-linux-androideabi\": [\"@rules_rust//rust/platform:armv7-linux-androideabi\"],\n    \"armv7-unknown-linux-gnueabi\": [\"@rules_rust//rust/platform:armv7-unknown-linux-gnueabi\"],\n    \"i686-apple-darwin\": [\"@rules_rust//rust/platform:i686-apple-darwin\"],\n    \"i686-linux-android\": [\"@rules_rust//rust/platform:i686-linux-android\"],\n    \"i686-pc-windows-msvc\": [\"@rules_rust//rust/platform:i686-pc-windows-msvc\"],\n    \"i686-unknown-freebsd\": [\"@rules_rust//rust/platform:i686-unknown-freebsd\"],\n    \"i686-unknown-linux-gnu\": [\"@rules_rust//rust/platform:i686-unknown-linux-gnu\"],\n    \"powerpc-unknown-linux-gnu\": [\"@rules_rust//rust/platform:powerpc-unknown-linux-gnu\"],\n    \"riscv32imc-unknown-none-elf\": [\"@rules_rust//rust/platform:riscv32imc-unknown-none-elf\"],\n    \"riscv64gc-unknown-none-elf\": [\"@rules_rust//rust/platform:riscv64gc-unknown-none-elf\"],\n    \"s390x-unknown-linux-gnu\": [\"@rules_rust//rust/platform:s390x-unknown-linux-gnu\"],\n    \"thumbv7em-none-eabi\": [\"@rules_rust//rust/platform:thumbv7em-none-eabi\"],\n    \"thumbv8m.main-none-eabi\": [\"@rules_rust//rust/platform:thumbv8m.main-none-eabi\"],\n    \"wasm32-unknown-unknown\": [\"@rules_rust//rust/platform:wasm32-unknown-unknown\"],\n    \"wasm32-wasi\": [\"@rules_rust//rust/platform:wasm32-wasi\"],\n    \"x86_64-apple-darwin\": [\"@rules_rust//rust/platform:x86_64-apple-darwin\"],\n    \"x86_64-apple-ios\": [\"@rules_rust//rust/platform:x86_64-apple-ios\"],\n    \"x86_64-fuchsia\": [\"@rules_rust//rust/platform:x86_64-fuchsia\"],\n    \"x86_64-linux-android\": [\"@rules_rust//rust/platform:x86_64-linux-android\"],\n    \"x86_64-pc-windows-msvc\": [\"@rules_rust//rust/platform:x86_64-pc-windows-msvc\"],\n    \"x86_64-unknown-freebsd\": [\"@rules_rust//rust/platform:x86_64-unknown-freebsd\"],\n    \"x86_64-unknown-linux-gnu\": [\"@rules_rust//rust/platform:x86_64-unknown-linux-gnu\"],\n    \"x86_64-unknown-nixos-gnu\": [\"@rules_rust//rust/platform:x86_64-unknown-nixos-gnu\"],\n    \"x86_64-unknown-none\": [\"@rules_rust//rust/platform:x86_64-unknown-none\"],\n}\n\n###############################################################################\n\ndef crate_repositories():\n    \"\"\"A macro for defining repositories for all generated crates.\n\n    Returns:\n      A list of repos visible to the module through the module extension.\n    \"\"\"\n    maybe(\n        http_archive,\n        name = \"crates__aho-corasick-1.1.3\",\n        sha256 = \"8e60d3430d3a69478ad0993f19238d2df97c507009a52b3c10addcd7f6bcb916\",\n        type = \"tar.gz\",\n        urls = [\"https://static.crates.io/crates/aho-corasick/1.1.3/download\"],\n        strip_prefix = \"aho-corasick-1.1.3\",\n        build_file = Label(\"@crates//crates:BUILD.aho-corasick-1.1.3.bazel\"),\n    )\n\n    maybe(\n        http_archive,\n        name = \"crates__autocfg-1.4.0\",\n        sha256 = \"ace50bade8e6234aa140d9a2f552bbee1db4d353f69b8217bc503490fc1a9f26\",\n        type = \"tar.gz\",\n        urls = [\"https://static.crates.io/crates/autocfg/1.4.0/download\"],\n        strip_prefix = \"autocfg-1.4.0\",\n        build_file = Label(\"@crates//crates:BUILD.autocfg-1.4.0.bazel\"),\n    )\n\n    maybe(\n        http_archive,\n        name = \"crates__googletest-0.12.0\",\n        sha256 = \"22e38fa267f4db1a2fa51795ea4234eaadc3617a97486a9f158de9256672260e\",\n        type = \"tar.gz\",\n        urls = [\"https://static.crates.io/crates/googletest/0.12.0/download\"],\n        strip_prefix = \"googletest-0.12.0\",\n        build_file = Label(\"@crates//crates:BUILD.googletest-0.12.0.bazel\"),\n    )\n\n    maybe(\n        http_archive,\n        name = \"crates__googletest_macro-0.12.0\",\n        sha256 = \"171deab504ad43a9ea80324a3686a0cbe9436220d9d0b48ae4d7f7bd303b48a9\",\n        type = \"tar.gz\",\n        urls = [\"https://static.crates.io/crates/googletest_macro/0.12.0/download\"],\n        strip_prefix = \"googletest_macro-0.12.0\",\n        build_file = Label(\"@crates//crates:BUILD.googletest_macro-0.12.0.bazel\"),\n    )\n\n    maybe(\n        http_archive,\n        name = \"crates__memchr-2.7.4\",\n        sha256 = \"78ca9ab1a0babb1e7d5695e3530886289c18cf2f87ec19a575a0abdce112e3a3\",\n        type = \"tar.gz\",\n        urls = [\"https://static.crates.io/crates/memchr/2.7.4/download\"],\n        strip_prefix = \"memchr-2.7.4\",\n        build_file = Label(\"@crates//crates:BUILD.memchr-2.7.4.bazel\"),\n    )\n\n    maybe(\n        http_archive,\n        name = \"crates__num-traits-0.2.19\",\n        sha256 = \"071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841\",\n        type = \"tar.gz\",\n        urls = [\"https://static.crates.io/crates/num-traits/0.2.19/download\"],\n        strip_prefix = \"num-traits-0.2.19\",\n        build_file = Label(\"@crates//crates:BUILD.num-traits-0.2.19.bazel\"),\n    )\n\n    maybe(\n        http_archive,\n        name = \"crates__paste-1.0.15\",\n        sha256 = \"57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a\",\n        type = \"tar.gz\",\n        urls = [\"https://static.crates.io/crates/paste/1.0.15/download\"],\n        strip_prefix = \"paste-1.0.15\",\n        build_file = Label(\"@crates//crates:BUILD.paste-1.0.15.bazel\"),\n    )\n\n    maybe(\n        http_archive,\n        name = \"crates__proc-macro2-1.0.86\",\n        sha256 = \"5e719e8df665df0d1c8fbfd238015744736151d4445ec0836b8e628aae103b77\",\n        type = \"tar.gz\",\n        urls = [\"https://static.crates.io/crates/proc-macro2/1.0.86/download\"],\n        strip_prefix = \"proc-macro2-1.0.86\",\n        build_file = Label(\"@crates//crates:BUILD.proc-macro2-1.0.86.bazel\"),\n    )\n\n    maybe(\n        http_archive,\n        name = \"crates__quote-1.0.37\",\n        sha256 = \"b5b9d34b8991d19d98081b46eacdd8eb58c6f2b201139f7c5f643cc155a633af\",\n        type = \"tar.gz\",\n        urls = [\"https://static.crates.io/crates/quote/1.0.37/download\"],\n        strip_prefix = \"quote-1.0.37\",\n        build_file = Label(\"@crates//crates:BUILD.quote-1.0.37.bazel\"),\n    )\n\n    maybe(\n        http_archive,\n        name = \"crates__regex-1.11.0\",\n        sha256 = \"38200e5ee88914975b69f657f0801b6f6dccafd44fd9326302a4aaeecfacb1d8\",\n        type = \"tar.gz\",\n        urls = [\"https://static.crates.io/crates/regex/1.11.0/download\"],\n        strip_prefix = \"regex-1.11.0\",\n        build_file = Label(\"@crates//crates:BUILD.regex-1.11.0.bazel\"),\n    )\n\n    maybe(\n        http_archive,\n        name = \"crates__regex-automata-0.4.8\",\n        sha256 = \"368758f23274712b504848e9d5a6f010445cc8b87a7cdb4d7cbee666c1288da3\",\n        type = \"tar.gz\",\n        urls = [\"https://static.crates.io/crates/regex-automata/0.4.8/download\"],\n        strip_prefix = \"regex-automata-0.4.8\",\n        build_file = Label(\"@crates//crates:BUILD.regex-automata-0.4.8.bazel\"),\n    )\n\n    maybe(\n        http_archive,\n        name = \"crates__regex-syntax-0.8.5\",\n        sha256 = \"2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c\",\n        type = \"tar.gz\",\n        urls = [\"https://static.crates.io/crates/regex-syntax/0.8.5/download\"],\n        strip_prefix = \"regex-syntax-0.8.5\",\n        build_file = Label(\"@crates//crates:BUILD.regex-syntax-0.8.5.bazel\"),\n    )\n\n    maybe(\n        http_archive,\n        name = \"crates__rustversion-1.0.17\",\n        sha256 = \"955d28af4278de8121b7ebeb796b6a45735dc01436d898801014aced2773a3d6\",\n        type = \"tar.gz\",\n        urls = [\"https://static.crates.io/crates/rustversion/1.0.17/download\"],\n        strip_prefix = \"rustversion-1.0.17\",\n        build_file = Label(\"@crates//crates:BUILD.rustversion-1.0.17.bazel\"),\n    )\n\n    maybe(\n        http_archive,\n        name = \"crates__syn-2.0.79\",\n        sha256 = \"89132cd0bf050864e1d38dc3bbc07a0eb8e7530af26344d3d2bbbef83499f590\",\n        type = \"tar.gz\",\n        urls = [\"https://static.crates.io/crates/syn/2.0.79/download\"],\n        strip_prefix = \"syn-2.0.79\",\n        build_file = Label(\"@crates//crates:BUILD.syn-2.0.79.bazel\"),\n    )\n\n    maybe(\n        http_archive,\n        name = \"crates__unicode-ident-1.0.13\",\n        sha256 = \"e91b56cd4cadaeb79bbf1a5645f6b4f8dc5bde8834ad5894a8db35fda9efa1fe\",\n        type = \"tar.gz\",\n        urls = [\"https://static.crates.io/crates/unicode-ident/1.0.13/download\"],\n        strip_prefix = \"unicode-ident-1.0.13\",\n        build_file = Label(\"@crates//crates:BUILD.unicode-ident-1.0.13.bazel\"),\n    )\n\n    return [\n       struct(repo=\"crates__googletest-0.12.0\", is_dev_dep = False),\n       struct(repo=\"crates__paste-1.0.15\", is_dev_dep = False),\n    ]\n"
+              }
+            }
+          },
+          "crates__quote-1.0.37": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_archive",
+            "attributes": {
+              "patch_args": [
+                "-p0"
+              ],
+              "patch_tool": "",
+              "patches": [],
+              "remote_patch_strip": 1,
+              "sha256": "b5b9d34b8991d19d98081b46eacdd8eb58c6f2b201139f7c5f643cc155a633af",
+              "type": "tar.gz",
+              "urls": [
+                "https://static.crates.io/crates/quote/1.0.37/download"
+              ],
+              "strip_prefix": "quote-1.0.37",
+              "build_file_content": "###############################################################################\n# @generated\n# DO NOT MODIFY: This file is auto-generated by a crate_universe tool. To \n# regenerate this file, run the following:\n#\n#     Run 'cargo update [--workspace]'\n###############################################################################\n\nload(\"@rules_rust//rust:defs.bzl\", \"rust_library\")\n\n# buildifier: disable=bzl-visibility\nload(\"@rules_rust//crate_universe/private:selects.bzl\", \"selects\")\n\npackage(default_visibility = [\"//visibility:public\"])\n\nrust_library(\n    name = \"quote\",\n    deps = [\n        \"@crates__proc-macro2-1.0.86//:proc_macro2\",\n    ],\n    compile_data = glob(\n        allow_empty = True,\n        include = [\"**\"],\n        exclude = [\n            \"**/* *\",\n            \".tmp_git_root/**/*\",\n            \"BUILD\",\n            \"BUILD.bazel\",\n            \"WORKSPACE\",\n            \"WORKSPACE.bazel\",\n        ],\n    ),\n    crate_features = [\n        \"default\",\n        \"proc-macro\",\n    ],\n    crate_root = \"src/lib.rs\",\n    edition = \"2018\",\n    rustc_flags = [\n        \"--cap-lints=allow\",\n    ],\n    srcs = glob(\n        allow_empty = True,\n        include = [\"**/*.rs\"],\n    ),\n    tags = [\n        \"cargo-bazel\",\n        \"crate-name=quote\",\n        \"manual\",\n        \"noclippy\",\n        \"norustfmt\",\n    ],\n    target_compatible_with = select({\n        \"@rules_rust//rust/platform:aarch64-apple-darwin\": [],\n        \"@rules_rust//rust/platform:aarch64-apple-ios\": [],\n        \"@rules_rust//rust/platform:aarch64-apple-ios-sim\": [],\n        \"@rules_rust//rust/platform:aarch64-fuchsia\": [],\n        \"@rules_rust//rust/platform:aarch64-linux-android\": [],\n        \"@rules_rust//rust/platform:aarch64-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-nixos-gnu\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-nto-qnx710\": [],\n        \"@rules_rust//rust/platform:arm-unknown-linux-gnueabi\": [],\n        \"@rules_rust//rust/platform:armv7-linux-androideabi\": [],\n        \"@rules_rust//rust/platform:armv7-unknown-linux-gnueabi\": [],\n        \"@rules_rust//rust/platform:i686-apple-darwin\": [],\n        \"@rules_rust//rust/platform:i686-linux-android\": [],\n        \"@rules_rust//rust/platform:i686-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:i686-unknown-freebsd\": [],\n        \"@rules_rust//rust/platform:i686-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:powerpc-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:riscv32imc-unknown-none-elf\": [],\n        \"@rules_rust//rust/platform:riscv64gc-unknown-none-elf\": [],\n        \"@rules_rust//rust/platform:s390x-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:thumbv7em-none-eabi\": [],\n        \"@rules_rust//rust/platform:thumbv8m.main-none-eabi\": [],\n        \"@rules_rust//rust/platform:wasm32-unknown-unknown\": [],\n        \"@rules_rust//rust/platform:wasm32-wasi\": [],\n        \"@rules_rust//rust/platform:x86_64-apple-darwin\": [],\n        \"@rules_rust//rust/platform:x86_64-apple-ios\": [],\n        \"@rules_rust//rust/platform:x86_64-fuchsia\": [],\n        \"@rules_rust//rust/platform:x86_64-linux-android\": [],\n        \"@rules_rust//rust/platform:x86_64-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-freebsd\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-nixos-gnu\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-none\": [],\n        \"//conditions:default\": [\"@platforms//:incompatible\"],\n    }),\n    version = \"1.0.37\",\n)\n"
+            }
+          },
+          "crates__regex-1.11.0": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_archive",
+            "attributes": {
+              "patch_args": [
+                "-p0"
+              ],
+              "patch_tool": "",
+              "patches": [],
+              "remote_patch_strip": 1,
+              "sha256": "38200e5ee88914975b69f657f0801b6f6dccafd44fd9326302a4aaeecfacb1d8",
+              "type": "tar.gz",
+              "urls": [
+                "https://static.crates.io/crates/regex/1.11.0/download"
+              ],
+              "strip_prefix": "regex-1.11.0",
+              "build_file_content": "###############################################################################\n# @generated\n# DO NOT MODIFY: This file is auto-generated by a crate_universe tool. To \n# regenerate this file, run the following:\n#\n#     Run 'cargo update [--workspace]'\n###############################################################################\n\nload(\"@rules_rust//rust:defs.bzl\", \"rust_library\")\n\n# buildifier: disable=bzl-visibility\nload(\"@rules_rust//crate_universe/private:selects.bzl\", \"selects\")\n\npackage(default_visibility = [\"//visibility:public\"])\n\nrust_library(\n    name = \"regex\",\n    deps = [\n        \"@crates__aho-corasick-1.1.3//:aho_corasick\",\n        \"@crates__memchr-2.7.4//:memchr\",\n        \"@crates__regex-automata-0.4.8//:regex_automata\",\n        \"@crates__regex-syntax-0.8.5//:regex_syntax\",\n    ],\n    compile_data = glob(\n        allow_empty = True,\n        include = [\"**\"],\n        exclude = [\n            \"**/* *\",\n            \".tmp_git_root/**/*\",\n            \"BUILD\",\n            \"BUILD.bazel\",\n            \"WORKSPACE\",\n            \"WORKSPACE.bazel\",\n        ],\n    ),\n    crate_features = [\n        \"default\",\n        \"perf\",\n        \"perf-backtrack\",\n        \"perf-cache\",\n        \"perf-dfa\",\n        \"perf-inline\",\n        \"perf-literal\",\n        \"perf-onepass\",\n        \"std\",\n        \"unicode\",\n        \"unicode-age\",\n        \"unicode-bool\",\n        \"unicode-case\",\n        \"unicode-gencat\",\n        \"unicode-perl\",\n        \"unicode-script\",\n        \"unicode-segment\",\n    ],\n    crate_root = \"src/lib.rs\",\n    edition = \"2021\",\n    rustc_flags = [\n        \"--cap-lints=allow\",\n    ],\n    srcs = glob(\n        allow_empty = True,\n        include = [\"**/*.rs\"],\n    ),\n    tags = [\n        \"cargo-bazel\",\n        \"crate-name=regex\",\n        \"manual\",\n        \"noclippy\",\n        \"norustfmt\",\n    ],\n    target_compatible_with = select({\n        \"@rules_rust//rust/platform:aarch64-apple-darwin\": [],\n        \"@rules_rust//rust/platform:aarch64-apple-ios\": [],\n        \"@rules_rust//rust/platform:aarch64-apple-ios-sim\": [],\n        \"@rules_rust//rust/platform:aarch64-fuchsia\": [],\n        \"@rules_rust//rust/platform:aarch64-linux-android\": [],\n        \"@rules_rust//rust/platform:aarch64-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-nixos-gnu\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-nto-qnx710\": [],\n        \"@rules_rust//rust/platform:arm-unknown-linux-gnueabi\": [],\n        \"@rules_rust//rust/platform:armv7-linux-androideabi\": [],\n        \"@rules_rust//rust/platform:armv7-unknown-linux-gnueabi\": [],\n        \"@rules_rust//rust/platform:i686-apple-darwin\": [],\n        \"@rules_rust//rust/platform:i686-linux-android\": [],\n        \"@rules_rust//rust/platform:i686-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:i686-unknown-freebsd\": [],\n        \"@rules_rust//rust/platform:i686-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:powerpc-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:riscv32imc-unknown-none-elf\": [],\n        \"@rules_rust//rust/platform:riscv64gc-unknown-none-elf\": [],\n        \"@rules_rust//rust/platform:s390x-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:thumbv7em-none-eabi\": [],\n        \"@rules_rust//rust/platform:thumbv8m.main-none-eabi\": [],\n        \"@rules_rust//rust/platform:wasm32-unknown-unknown\": [],\n        \"@rules_rust//rust/platform:wasm32-wasi\": [],\n        \"@rules_rust//rust/platform:x86_64-apple-darwin\": [],\n        \"@rules_rust//rust/platform:x86_64-apple-ios\": [],\n        \"@rules_rust//rust/platform:x86_64-fuchsia\": [],\n        \"@rules_rust//rust/platform:x86_64-linux-android\": [],\n        \"@rules_rust//rust/platform:x86_64-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-freebsd\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-nixos-gnu\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-none\": [],\n        \"//conditions:default\": [\"@platforms//:incompatible\"],\n    }),\n    version = \"1.11.0\",\n)\n"
+            }
+          },
+          "crates__aho-corasick-1.1.3": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_archive",
+            "attributes": {
+              "patch_args": [
+                "-p0"
+              ],
+              "patch_tool": "",
+              "patches": [],
+              "remote_patch_strip": 1,
+              "sha256": "8e60d3430d3a69478ad0993f19238d2df97c507009a52b3c10addcd7f6bcb916",
+              "type": "tar.gz",
+              "urls": [
+                "https://static.crates.io/crates/aho-corasick/1.1.3/download"
+              ],
+              "strip_prefix": "aho-corasick-1.1.3",
+              "build_file_content": "###############################################################################\n# @generated\n# DO NOT MODIFY: This file is auto-generated by a crate_universe tool. To \n# regenerate this file, run the following:\n#\n#     Run 'cargo update [--workspace]'\n###############################################################################\n\nload(\"@rules_rust//rust:defs.bzl\", \"rust_library\")\n\n# buildifier: disable=bzl-visibility\nload(\"@rules_rust//crate_universe/private:selects.bzl\", \"selects\")\n\npackage(default_visibility = [\"//visibility:public\"])\n\nrust_library(\n    name = \"aho_corasick\",\n    deps = [\n        \"@crates__memchr-2.7.4//:memchr\",\n    ],\n    compile_data = glob(\n        allow_empty = True,\n        include = [\"**\"],\n        exclude = [\n            \"**/* *\",\n            \".tmp_git_root/**/*\",\n            \"BUILD\",\n            \"BUILD.bazel\",\n            \"WORKSPACE\",\n            \"WORKSPACE.bazel\",\n        ],\n    ),\n    crate_features = [\n        \"perf-literal\",\n        \"std\",\n    ],\n    crate_root = \"src/lib.rs\",\n    edition = \"2021\",\n    rustc_flags = [\n        \"--cap-lints=allow\",\n    ],\n    srcs = glob(\n        allow_empty = True,\n        include = [\"**/*.rs\"],\n    ),\n    tags = [\n        \"cargo-bazel\",\n        \"crate-name=aho-corasick\",\n        \"manual\",\n        \"noclippy\",\n        \"norustfmt\",\n    ],\n    target_compatible_with = select({\n        \"@rules_rust//rust/platform:aarch64-apple-darwin\": [],\n        \"@rules_rust//rust/platform:aarch64-apple-ios\": [],\n        \"@rules_rust//rust/platform:aarch64-apple-ios-sim\": [],\n        \"@rules_rust//rust/platform:aarch64-fuchsia\": [],\n        \"@rules_rust//rust/platform:aarch64-linux-android\": [],\n        \"@rules_rust//rust/platform:aarch64-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-nixos-gnu\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-nto-qnx710\": [],\n        \"@rules_rust//rust/platform:arm-unknown-linux-gnueabi\": [],\n        \"@rules_rust//rust/platform:armv7-linux-androideabi\": [],\n        \"@rules_rust//rust/platform:armv7-unknown-linux-gnueabi\": [],\n        \"@rules_rust//rust/platform:i686-apple-darwin\": [],\n        \"@rules_rust//rust/platform:i686-linux-android\": [],\n        \"@rules_rust//rust/platform:i686-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:i686-unknown-freebsd\": [],\n        \"@rules_rust//rust/platform:i686-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:powerpc-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:riscv32imc-unknown-none-elf\": [],\n        \"@rules_rust//rust/platform:riscv64gc-unknown-none-elf\": [],\n        \"@rules_rust//rust/platform:s390x-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:thumbv7em-none-eabi\": [],\n        \"@rules_rust//rust/platform:thumbv8m.main-none-eabi\": [],\n        \"@rules_rust//rust/platform:wasm32-unknown-unknown\": [],\n        \"@rules_rust//rust/platform:wasm32-wasi\": [],\n        \"@rules_rust//rust/platform:x86_64-apple-darwin\": [],\n        \"@rules_rust//rust/platform:x86_64-apple-ios\": [],\n        \"@rules_rust//rust/platform:x86_64-fuchsia\": [],\n        \"@rules_rust//rust/platform:x86_64-linux-android\": [],\n        \"@rules_rust//rust/platform:x86_64-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-freebsd\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-nixos-gnu\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-none\": [],\n        \"//conditions:default\": [\"@platforms//:incompatible\"],\n    }),\n    version = \"1.1.3\",\n)\n"
+            }
+          },
+          "crates__syn-2.0.79": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_archive",
+            "attributes": {
+              "patch_args": [
+                "-p0"
+              ],
+              "patch_tool": "",
+              "patches": [],
+              "remote_patch_strip": 1,
+              "sha256": "89132cd0bf050864e1d38dc3bbc07a0eb8e7530af26344d3d2bbbef83499f590",
+              "type": "tar.gz",
+              "urls": [
+                "https://static.crates.io/crates/syn/2.0.79/download"
+              ],
+              "strip_prefix": "syn-2.0.79",
+              "build_file_content": "###############################################################################\n# @generated\n# DO NOT MODIFY: This file is auto-generated by a crate_universe tool. To \n# regenerate this file, run the following:\n#\n#     Run 'cargo update [--workspace]'\n###############################################################################\n\nload(\"@rules_rust//rust:defs.bzl\", \"rust_library\")\n\n# buildifier: disable=bzl-visibility\nload(\"@rules_rust//crate_universe/private:selects.bzl\", \"selects\")\n\npackage(default_visibility = [\"//visibility:public\"])\n\nrust_library(\n    name = \"syn\",\n    deps = [\n        \"@crates__proc-macro2-1.0.86//:proc_macro2\",\n        \"@crates__quote-1.0.37//:quote\",\n        \"@crates__unicode-ident-1.0.13//:unicode_ident\",\n    ],\n    compile_data = glob(\n        allow_empty = True,\n        include = [\"**\"],\n        exclude = [\n            \"**/* *\",\n            \".tmp_git_root/**/*\",\n            \"BUILD\",\n            \"BUILD.bazel\",\n            \"WORKSPACE\",\n            \"WORKSPACE.bazel\",\n        ],\n    ),\n    crate_features = [\n        \"clone-impls\",\n        \"default\",\n        \"derive\",\n        \"full\",\n        \"parsing\",\n        \"printing\",\n        \"proc-macro\",\n    ],\n    crate_root = \"src/lib.rs\",\n    edition = \"2021\",\n    rustc_flags = [\n        \"--cap-lints=allow\",\n    ],\n    srcs = glob(\n        allow_empty = True,\n        include = [\"**/*.rs\"],\n    ),\n    tags = [\n        \"cargo-bazel\",\n        \"crate-name=syn\",\n        \"manual\",\n        \"noclippy\",\n        \"norustfmt\",\n    ],\n    target_compatible_with = select({\n        \"@rules_rust//rust/platform:aarch64-apple-darwin\": [],\n        \"@rules_rust//rust/platform:aarch64-apple-ios\": [],\n        \"@rules_rust//rust/platform:aarch64-apple-ios-sim\": [],\n        \"@rules_rust//rust/platform:aarch64-fuchsia\": [],\n        \"@rules_rust//rust/platform:aarch64-linux-android\": [],\n        \"@rules_rust//rust/platform:aarch64-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-nixos-gnu\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-nto-qnx710\": [],\n        \"@rules_rust//rust/platform:arm-unknown-linux-gnueabi\": [],\n        \"@rules_rust//rust/platform:armv7-linux-androideabi\": [],\n        \"@rules_rust//rust/platform:armv7-unknown-linux-gnueabi\": [],\n        \"@rules_rust//rust/platform:i686-apple-darwin\": [],\n        \"@rules_rust//rust/platform:i686-linux-android\": [],\n        \"@rules_rust//rust/platform:i686-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:i686-unknown-freebsd\": [],\n        \"@rules_rust//rust/platform:i686-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:powerpc-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:riscv32imc-unknown-none-elf\": [],\n        \"@rules_rust//rust/platform:riscv64gc-unknown-none-elf\": [],\n        \"@rules_rust//rust/platform:s390x-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:thumbv7em-none-eabi\": [],\n        \"@rules_rust//rust/platform:thumbv8m.main-none-eabi\": [],\n        \"@rules_rust//rust/platform:wasm32-unknown-unknown\": [],\n        \"@rules_rust//rust/platform:wasm32-wasi\": [],\n        \"@rules_rust//rust/platform:x86_64-apple-darwin\": [],\n        \"@rules_rust//rust/platform:x86_64-apple-ios\": [],\n        \"@rules_rust//rust/platform:x86_64-fuchsia\": [],\n        \"@rules_rust//rust/platform:x86_64-linux-android\": [],\n        \"@rules_rust//rust/platform:x86_64-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-freebsd\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-nixos-gnu\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-none\": [],\n        \"//conditions:default\": [\"@platforms//:incompatible\"],\n    }),\n    version = \"2.0.79\",\n)\n"
+            }
+          },
+          "crates__num-traits-0.2.19": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_archive",
+            "attributes": {
+              "patch_args": [
+                "-p0"
+              ],
+              "patch_tool": "",
+              "patches": [],
+              "remote_patch_strip": 1,
+              "sha256": "071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841",
+              "type": "tar.gz",
+              "urls": [
+                "https://static.crates.io/crates/num-traits/0.2.19/download"
+              ],
+              "strip_prefix": "num-traits-0.2.19",
+              "build_file_content": "###############################################################################\n# @generated\n# DO NOT MODIFY: This file is auto-generated by a crate_universe tool. To \n# regenerate this file, run the following:\n#\n#     Run 'cargo update [--workspace]'\n###############################################################################\n\nload(\"@rules_rust//cargo:defs.bzl\", \"cargo_build_script\")\n\nload(\"@rules_rust//rust:defs.bzl\", \"rust_library\")\n\n# buildifier: disable=bzl-visibility\nload(\"@rules_rust//crate_universe/private:selects.bzl\", \"selects\")\n\npackage(default_visibility = [\"//visibility:public\"])\n\nrust_library(\n    name = \"num_traits\",\n    deps = [\n        \"@crates__num-traits-0.2.19//:build_script_build\",\n    ],\n    compile_data = glob(\n        allow_empty = True,\n        include = [\"**\"],\n        exclude = [\n            \"**/* *\",\n            \".tmp_git_root/**/*\",\n            \"BUILD\",\n            \"BUILD.bazel\",\n            \"WORKSPACE\",\n            \"WORKSPACE.bazel\",\n        ],\n    ),\n    crate_features = [\n        \"default\",\n        \"std\",\n    ],\n    crate_root = \"src/lib.rs\",\n    edition = \"2021\",\n    rustc_flags = [\n        \"--cap-lints=allow\",\n    ],\n    srcs = glob(\n        allow_empty = True,\n        include = [\"**/*.rs\"],\n    ),\n    tags = [\n        \"cargo-bazel\",\n        \"crate-name=num-traits\",\n        \"manual\",\n        \"noclippy\",\n        \"norustfmt\",\n    ],\n    target_compatible_with = select({\n        \"@rules_rust//rust/platform:aarch64-apple-darwin\": [],\n        \"@rules_rust//rust/platform:aarch64-apple-ios\": [],\n        \"@rules_rust//rust/platform:aarch64-apple-ios-sim\": [],\n        \"@rules_rust//rust/platform:aarch64-fuchsia\": [],\n        \"@rules_rust//rust/platform:aarch64-linux-android\": [],\n        \"@rules_rust//rust/platform:aarch64-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-nixos-gnu\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-nto-qnx710\": [],\n        \"@rules_rust//rust/platform:arm-unknown-linux-gnueabi\": [],\n        \"@rules_rust//rust/platform:armv7-linux-androideabi\": [],\n        \"@rules_rust//rust/platform:armv7-unknown-linux-gnueabi\": [],\n        \"@rules_rust//rust/platform:i686-apple-darwin\": [],\n        \"@rules_rust//rust/platform:i686-linux-android\": [],\n        \"@rules_rust//rust/platform:i686-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:i686-unknown-freebsd\": [],\n        \"@rules_rust//rust/platform:i686-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:powerpc-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:riscv32imc-unknown-none-elf\": [],\n        \"@rules_rust//rust/platform:riscv64gc-unknown-none-elf\": [],\n        \"@rules_rust//rust/platform:s390x-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:thumbv7em-none-eabi\": [],\n        \"@rules_rust//rust/platform:thumbv8m.main-none-eabi\": [],\n        \"@rules_rust//rust/platform:wasm32-unknown-unknown\": [],\n        \"@rules_rust//rust/platform:wasm32-wasi\": [],\n        \"@rules_rust//rust/platform:x86_64-apple-darwin\": [],\n        \"@rules_rust//rust/platform:x86_64-apple-ios\": [],\n        \"@rules_rust//rust/platform:x86_64-fuchsia\": [],\n        \"@rules_rust//rust/platform:x86_64-linux-android\": [],\n        \"@rules_rust//rust/platform:x86_64-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-freebsd\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-nixos-gnu\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-none\": [],\n        \"//conditions:default\": [\"@platforms//:incompatible\"],\n    }),\n    version = \"0.2.19\",\n)\n\ncargo_build_script(\n    name = \"_bs\",\n    crate_features = [\n        \"default\",\n        \"std\",\n    ],\n    crate_name = \"build_script_build\",\n    crate_root = \"build.rs\",\n    data = glob(\n        allow_empty = True,\n        include = [\"**\"],\n        exclude = [\n            \"**/* *\",\n            \".tmp_git_root/**/*\",\n            \"BUILD\",\n            \"BUILD.bazel\",\n            \"WORKSPACE\",\n            \"WORKSPACE.bazel\",\n        ],\n    ),\n    deps = [\n        \"@crates__autocfg-1.4.0//:autocfg\",\n    ],\n    edition = \"2021\",\n    pkg_name = \"num-traits\",\n    rustc_flags = [\n        \"--cap-lints=allow\",\n    ],\n    srcs = glob(\n        allow_empty = True,\n        include = [\"**/*.rs\"],\n    ),\n    tags = [\n        \"cargo-bazel\",\n        \"crate-name=num-traits\",\n        \"manual\",\n        \"noclippy\",\n        \"norustfmt\",\n    ],\n    version = \"0.2.19\",\n    visibility = [\"//visibility:private\"],\n)\n\nalias(\n    name = \"build_script_build\",\n    actual = \":_bs\",\n    tags = [\"manual\"],\n)\n"
+            }
+          },
+          "crates__rustversion-1.0.17": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_archive",
+            "attributes": {
+              "patch_args": [
+                "-p0"
+              ],
+              "patch_tool": "",
+              "patches": [],
+              "remote_patch_strip": 1,
+              "sha256": "955d28af4278de8121b7ebeb796b6a45735dc01436d898801014aced2773a3d6",
+              "type": "tar.gz",
+              "urls": [
+                "https://static.crates.io/crates/rustversion/1.0.17/download"
+              ],
+              "strip_prefix": "rustversion-1.0.17",
+              "build_file_content": "###############################################################################\n# @generated\n# DO NOT MODIFY: This file is auto-generated by a crate_universe tool. To \n# regenerate this file, run the following:\n#\n#     Run 'cargo update [--workspace]'\n###############################################################################\n\nload(\"@rules_rust//cargo:defs.bzl\", \"cargo_build_script\")\n\nload(\"@rules_rust//rust:defs.bzl\", \"rust_proc_macro\")\n\n# buildifier: disable=bzl-visibility\nload(\"@rules_rust//crate_universe/private:selects.bzl\", \"selects\")\n\npackage(default_visibility = [\"//visibility:public\"])\n\nrust_proc_macro(\n    name = \"rustversion\",\n    deps = [\n        \"@crates__rustversion-1.0.17//:build_script_build\",\n    ],\n    compile_data = glob(\n        allow_empty = True,\n        include = [\"**\"],\n        exclude = [\n            \"**/* *\",\n            \".tmp_git_root/**/*\",\n            \"BUILD\",\n            \"BUILD.bazel\",\n            \"WORKSPACE\",\n            \"WORKSPACE.bazel\",\n        ],\n    ),\n    crate_root = \"src/lib.rs\",\n    edition = \"2018\",\n    rustc_flags = [\n        \"--cap-lints=allow\",\n    ],\n    srcs = glob(\n        allow_empty = True,\n        include = [\"**/*.rs\"],\n    ),\n    tags = [\n        \"cargo-bazel\",\n        \"crate-name=rustversion\",\n        \"manual\",\n        \"noclippy\",\n        \"norustfmt\",\n    ],\n    target_compatible_with = select({\n        \"@rules_rust//rust/platform:aarch64-apple-darwin\": [],\n        \"@rules_rust//rust/platform:aarch64-apple-ios\": [],\n        \"@rules_rust//rust/platform:aarch64-apple-ios-sim\": [],\n        \"@rules_rust//rust/platform:aarch64-fuchsia\": [],\n        \"@rules_rust//rust/platform:aarch64-linux-android\": [],\n        \"@rules_rust//rust/platform:aarch64-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-nixos-gnu\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-nto-qnx710\": [],\n        \"@rules_rust//rust/platform:arm-unknown-linux-gnueabi\": [],\n        \"@rules_rust//rust/platform:armv7-linux-androideabi\": [],\n        \"@rules_rust//rust/platform:armv7-unknown-linux-gnueabi\": [],\n        \"@rules_rust//rust/platform:i686-apple-darwin\": [],\n        \"@rules_rust//rust/platform:i686-linux-android\": [],\n        \"@rules_rust//rust/platform:i686-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:i686-unknown-freebsd\": [],\n        \"@rules_rust//rust/platform:i686-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:powerpc-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:riscv32imc-unknown-none-elf\": [],\n        \"@rules_rust//rust/platform:riscv64gc-unknown-none-elf\": [],\n        \"@rules_rust//rust/platform:s390x-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:thumbv7em-none-eabi\": [],\n        \"@rules_rust//rust/platform:thumbv8m.main-none-eabi\": [],\n        \"@rules_rust//rust/platform:wasm32-unknown-unknown\": [],\n        \"@rules_rust//rust/platform:wasm32-wasi\": [],\n        \"@rules_rust//rust/platform:x86_64-apple-darwin\": [],\n        \"@rules_rust//rust/platform:x86_64-apple-ios\": [],\n        \"@rules_rust//rust/platform:x86_64-fuchsia\": [],\n        \"@rules_rust//rust/platform:x86_64-linux-android\": [],\n        \"@rules_rust//rust/platform:x86_64-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-freebsd\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-nixos-gnu\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-none\": [],\n        \"//conditions:default\": [\"@platforms//:incompatible\"],\n    }),\n    version = \"1.0.17\",\n)\n\ncargo_build_script(\n    name = \"_bs\",\n    crate_name = \"build_script_build\",\n    crate_root = \"build/build.rs\",\n    data = glob(\n        allow_empty = True,\n        include = [\"**\"],\n        exclude = [\n            \"**/* *\",\n            \".tmp_git_root/**/*\",\n            \"BUILD\",\n            \"BUILD.bazel\",\n            \"WORKSPACE\",\n            \"WORKSPACE.bazel\",\n        ],\n    ),\n    edition = \"2018\",\n    pkg_name = \"rustversion\",\n    rustc_flags = [\n        \"--cap-lints=allow\",\n    ],\n    srcs = glob(\n        allow_empty = True,\n        include = [\"**/*.rs\"],\n    ),\n    tags = [\n        \"cargo-bazel\",\n        \"crate-name=rustversion\",\n        \"manual\",\n        \"noclippy\",\n        \"norustfmt\",\n    ],\n    version = \"1.0.17\",\n    visibility = [\"//visibility:private\"],\n)\n\nalias(\n    name = \"build_script_build\",\n    actual = \":_bs\",\n    tags = [\"manual\"],\n)\n"
+            }
+          },
+          "crates__proc-macro2-1.0.86": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_archive",
+            "attributes": {
+              "patch_args": [
+                "-p0"
+              ],
+              "patch_tool": "",
+              "patches": [],
+              "remote_patch_strip": 1,
+              "sha256": "5e719e8df665df0d1c8fbfd238015744736151d4445ec0836b8e628aae103b77",
+              "type": "tar.gz",
+              "urls": [
+                "https://static.crates.io/crates/proc-macro2/1.0.86/download"
+              ],
+              "strip_prefix": "proc-macro2-1.0.86",
+              "build_file_content": "###############################################################################\n# @generated\n# DO NOT MODIFY: This file is auto-generated by a crate_universe tool. To \n# regenerate this file, run the following:\n#\n#     Run 'cargo update [--workspace]'\n###############################################################################\n\nload(\"@rules_rust//cargo:defs.bzl\", \"cargo_build_script\")\n\nload(\"@rules_rust//rust:defs.bzl\", \"rust_library\")\n\n# buildifier: disable=bzl-visibility\nload(\"@rules_rust//crate_universe/private:selects.bzl\", \"selects\")\n\npackage(default_visibility = [\"//visibility:public\"])\n\nrust_library(\n    name = \"proc_macro2\",\n    deps = [\n        \"@crates__proc-macro2-1.0.86//:build_script_build\",\n        \"@crates__unicode-ident-1.0.13//:unicode_ident\",\n    ],\n    compile_data = glob(\n        allow_empty = True,\n        include = [\"**\"],\n        exclude = [\n            \"**/* *\",\n            \".tmp_git_root/**/*\",\n            \"BUILD\",\n            \"BUILD.bazel\",\n            \"WORKSPACE\",\n            \"WORKSPACE.bazel\",\n        ],\n    ),\n    crate_features = [\n        \"proc-macro\",\n    ],\n    crate_root = \"src/lib.rs\",\n    edition = \"2021\",\n    rustc_flags = [\n        \"--cap-lints=allow\",\n    ],\n    srcs = glob(\n        allow_empty = True,\n        include = [\"**/*.rs\"],\n    ),\n    tags = [\n        \"cargo-bazel\",\n        \"crate-name=proc-macro2\",\n        \"manual\",\n        \"noclippy\",\n        \"norustfmt\",\n    ],\n    target_compatible_with = select({\n        \"@rules_rust//rust/platform:aarch64-apple-darwin\": [],\n        \"@rules_rust//rust/platform:aarch64-apple-ios\": [],\n        \"@rules_rust//rust/platform:aarch64-apple-ios-sim\": [],\n        \"@rules_rust//rust/platform:aarch64-fuchsia\": [],\n        \"@rules_rust//rust/platform:aarch64-linux-android\": [],\n        \"@rules_rust//rust/platform:aarch64-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-nixos-gnu\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-nto-qnx710\": [],\n        \"@rules_rust//rust/platform:arm-unknown-linux-gnueabi\": [],\n        \"@rules_rust//rust/platform:armv7-linux-androideabi\": [],\n        \"@rules_rust//rust/platform:armv7-unknown-linux-gnueabi\": [],\n        \"@rules_rust//rust/platform:i686-apple-darwin\": [],\n        \"@rules_rust//rust/platform:i686-linux-android\": [],\n        \"@rules_rust//rust/platform:i686-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:i686-unknown-freebsd\": [],\n        \"@rules_rust//rust/platform:i686-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:powerpc-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:riscv32imc-unknown-none-elf\": [],\n        \"@rules_rust//rust/platform:riscv64gc-unknown-none-elf\": [],\n        \"@rules_rust//rust/platform:s390x-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:thumbv7em-none-eabi\": [],\n        \"@rules_rust//rust/platform:thumbv8m.main-none-eabi\": [],\n        \"@rules_rust//rust/platform:wasm32-unknown-unknown\": [],\n        \"@rules_rust//rust/platform:wasm32-wasi\": [],\n        \"@rules_rust//rust/platform:x86_64-apple-darwin\": [],\n        \"@rules_rust//rust/platform:x86_64-apple-ios\": [],\n        \"@rules_rust//rust/platform:x86_64-fuchsia\": [],\n        \"@rules_rust//rust/platform:x86_64-linux-android\": [],\n        \"@rules_rust//rust/platform:x86_64-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-freebsd\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-nixos-gnu\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-none\": [],\n        \"//conditions:default\": [\"@platforms//:incompatible\"],\n    }),\n    version = \"1.0.86\",\n)\n\ncargo_build_script(\n    name = \"_bs\",\n    crate_features = [\n        \"proc-macro\",\n    ],\n    crate_name = \"build_script_build\",\n    crate_root = \"build.rs\",\n    data = glob(\n        allow_empty = True,\n        include = [\"**\"],\n        exclude = [\n            \"**/* *\",\n            \".tmp_git_root/**/*\",\n            \"BUILD\",\n            \"BUILD.bazel\",\n            \"WORKSPACE\",\n            \"WORKSPACE.bazel\",\n        ],\n    ),\n    edition = \"2021\",\n    pkg_name = \"proc-macro2\",\n    rustc_flags = [\n        \"--cap-lints=allow\",\n    ],\n    srcs = glob(\n        allow_empty = True,\n        include = [\"**/*.rs\"],\n    ),\n    tags = [\n        \"cargo-bazel\",\n        \"crate-name=proc-macro2\",\n        \"manual\",\n        \"noclippy\",\n        \"norustfmt\",\n    ],\n    version = \"1.0.86\",\n    visibility = [\"//visibility:private\"],\n)\n\nalias(\n    name = \"build_script_build\",\n    actual = \":_bs\",\n    tags = [\"manual\"],\n)\n"
+            }
+          },
+          "crates__regex-syntax-0.8.5": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_archive",
+            "attributes": {
+              "patch_args": [
+                "-p0"
+              ],
+              "patch_tool": "",
+              "patches": [],
+              "remote_patch_strip": 1,
+              "sha256": "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c",
+              "type": "tar.gz",
+              "urls": [
+                "https://static.crates.io/crates/regex-syntax/0.8.5/download"
+              ],
+              "strip_prefix": "regex-syntax-0.8.5",
+              "build_file_content": "###############################################################################\n# @generated\n# DO NOT MODIFY: This file is auto-generated by a crate_universe tool. To \n# regenerate this file, run the following:\n#\n#     Run 'cargo update [--workspace]'\n###############################################################################\n\nload(\"@rules_rust//rust:defs.bzl\", \"rust_library\")\n\n# buildifier: disable=bzl-visibility\nload(\"@rules_rust//crate_universe/private:selects.bzl\", \"selects\")\n\npackage(default_visibility = [\"//visibility:public\"])\n\nrust_library(\n    name = \"regex_syntax\",\n    compile_data = glob(\n        allow_empty = True,\n        include = [\"**\"],\n        exclude = [\n            \"**/* *\",\n            \".tmp_git_root/**/*\",\n            \"BUILD\",\n            \"BUILD.bazel\",\n            \"WORKSPACE\",\n            \"WORKSPACE.bazel\",\n        ],\n    ),\n    crate_features = [\n        \"default\",\n        \"std\",\n        \"unicode\",\n        \"unicode-age\",\n        \"unicode-bool\",\n        \"unicode-case\",\n        \"unicode-gencat\",\n        \"unicode-perl\",\n        \"unicode-script\",\n        \"unicode-segment\",\n    ],\n    crate_root = \"src/lib.rs\",\n    edition = \"2021\",\n    rustc_flags = [\n        \"--cap-lints=allow\",\n    ],\n    srcs = glob(\n        allow_empty = True,\n        include = [\"**/*.rs\"],\n    ),\n    tags = [\n        \"cargo-bazel\",\n        \"crate-name=regex-syntax\",\n        \"manual\",\n        \"noclippy\",\n        \"norustfmt\",\n    ],\n    target_compatible_with = select({\n        \"@rules_rust//rust/platform:aarch64-apple-darwin\": [],\n        \"@rules_rust//rust/platform:aarch64-apple-ios\": [],\n        \"@rules_rust//rust/platform:aarch64-apple-ios-sim\": [],\n        \"@rules_rust//rust/platform:aarch64-fuchsia\": [],\n        \"@rules_rust//rust/platform:aarch64-linux-android\": [],\n        \"@rules_rust//rust/platform:aarch64-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-nixos-gnu\": [],\n        \"@rules_rust//rust/platform:aarch64-unknown-nto-qnx710\": [],\n        \"@rules_rust//rust/platform:arm-unknown-linux-gnueabi\": [],\n        \"@rules_rust//rust/platform:armv7-linux-androideabi\": [],\n        \"@rules_rust//rust/platform:armv7-unknown-linux-gnueabi\": [],\n        \"@rules_rust//rust/platform:i686-apple-darwin\": [],\n        \"@rules_rust//rust/platform:i686-linux-android\": [],\n        \"@rules_rust//rust/platform:i686-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:i686-unknown-freebsd\": [],\n        \"@rules_rust//rust/platform:i686-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:powerpc-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:riscv32imc-unknown-none-elf\": [],\n        \"@rules_rust//rust/platform:riscv64gc-unknown-none-elf\": [],\n        \"@rules_rust//rust/platform:s390x-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:thumbv7em-none-eabi\": [],\n        \"@rules_rust//rust/platform:thumbv8m.main-none-eabi\": [],\n        \"@rules_rust//rust/platform:wasm32-unknown-unknown\": [],\n        \"@rules_rust//rust/platform:wasm32-wasi\": [],\n        \"@rules_rust//rust/platform:x86_64-apple-darwin\": [],\n        \"@rules_rust//rust/platform:x86_64-apple-ios\": [],\n        \"@rules_rust//rust/platform:x86_64-fuchsia\": [],\n        \"@rules_rust//rust/platform:x86_64-linux-android\": [],\n        \"@rules_rust//rust/platform:x86_64-pc-windows-msvc\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-freebsd\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-linux-gnu\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-nixos-gnu\": [],\n        \"@rules_rust//rust/platform:x86_64-unknown-none\": [],\n        \"//conditions:default\": [\"@platforms//:incompatible\"],\n    }),\n    version = \"0.8.5\",\n)\n"
+            }
+          }
+        },
+        "moduleExtensionMetadata": {
+          "useAllRepos": "NO",
+          "reproducible": false
+        },
+        "recordedRepoMappingEntries": [
+          [
+            "bazel_features~",
+            "bazel_features_globals",
+            "bazel_features~~version_extension~bazel_features_globals"
+          ],
+          [
+            "bazel_features~",
+            "bazel_features_version",
+            "bazel_features~~version_extension~bazel_features_version"
+          ],
+          [
+            "rules_rust~",
+            "bazel_features",
+            "bazel_features~"
+          ],
+          [
+            "rules_rust~",
+            "bazel_skylib",
+            "bazel_skylib~"
+          ],
+          [
+            "rules_rust~",
+            "bazel_tools",
+            "bazel_tools"
+          ],
+          [
+            "rules_rust~",
+            "rules_cc",
+            "rules_cc~"
+          ],
+          [
+            "rules_rust~",
+            "rules_rust",
+            "rules_rust~"
+          ],
+          [
+            "rules_rust~",
+            "rust_host_tools",
+            "rules_rust~~rust_host_tools~rust_host_tools"
           ]
         ]
       }
@@ -21137,34 +22092,6 @@
           }
         },
         "recordedRepoMappingEntries": []
-      }
-    },
-    "@@upb~//:non_module_deps.bzl%non_module_deps": {
-      "general": {
-        "bzlTransitiveDigest": "aGnO/HqVtCmRLEQWGCuKp7jwX+lCh/nc3/hI3clfwD8=",
-        "recordedFileInputs": {},
-        "recordedDirentsInputs": {},
-        "envVariables": {},
-        "generatedRepoSpecs": {
-          "utf8_range": {
-            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
-            "ruleClassName": "http_archive",
-            "attributes": {
-              "urls": [
-                "https://github.com/protocolbuffers/utf8_range/archive/de0b4a8ff9b5d4c98108bdfe723291a33c52c54f.zip"
-              ],
-              "strip_prefix": "utf8_range-de0b4a8ff9b5d4c98108bdfe723291a33c52c54f",
-              "sha256": "5da960e5e5d92394c809629a03af3c7709d2d3d0ca731dacb3a9fb4bf28f7702"
-            }
-          }
-        },
-        "recordedRepoMappingEntries": [
-          [
-            "upb~",
-            "bazel_tools",
-            "bazel_tools"
-          ]
-        ]
       }
     }
   }

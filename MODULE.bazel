@@ -67,3 +67,5 @@ pip.parse(
     },
 )
 use_repo(pip, "cmk_py")
+
+bazel_dep(name = "protobuf", version = "28.2", repo_name = "com_google_protobuf")

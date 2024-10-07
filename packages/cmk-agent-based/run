@@ -20,7 +20,7 @@ usage() {
     echo "  -u, --unit-tests        run unit tests"
     echo "  -F, --check-format      check for correct formatting"
     echo "  -m, --mypy              run mypy"
-    echo "  -p, --ruff            run pylint"
+    echo "  -r, --ruff              run ruff linter"
     echo "  -B, --bandit            run bandit"
     echo "  -a, --all               shortcut for -u -F -m -p -B -C"
     echo "  -f, --format            format sources"

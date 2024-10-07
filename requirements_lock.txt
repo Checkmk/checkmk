@@ -162,10 +162,8 @@ attrs==24.2.0 ; python_version >= "3.7" \
     # via
     #   -r cmk/requirements_in.txt
     #   aiohttp
-    #   cattrs
     #   hypothesis
     #   jsonschema
-    #   lsprotocol
     #   referencing
 autoflake==2.3.1 ; python_version >= "3.8" \
     --hash=sha256:3ae7495db9084b7b32818b4140e6dc4fc280b712fb414f5b8fe57b0a8e85a840 \
@@ -313,13 +311,6 @@ cachetools==5.5.0 ; python_version >= "3.7" \
     # via
     #   -r cmk/requirements_in.txt
     #   google-auth
-cattrs==24.1.2 ; python_version >= "3.8" \
-    --hash=sha256:67c7495b760168d931a10233f979b28dc04daf853b30752246f4f8471c6d68d0 \
-    --hash=sha256:8028cfe1ff5382df59dd36474a86e02d817b06eaf8af84555441bac915d2ef85
-    # via
-    #   -r cmk/requirements_in.txt
-    #   lsprotocol
-    #   python-lsp-ruff
 certifi==2024.8.30 ; python_version >= "3.6" \
     --hash=sha256:922820b53db7a7257ffbda3f597266d435245903d80737e34f8a45ff3e3230d8 \
     --hash=sha256:bec941d2aa8195e248a60b31ff9f0558284cf01a52591ceda73ea9afffd69fd9
@@ -1516,12 +1507,6 @@ libcst==1.4.0 ; python_version >= "3.9" \
     --hash=sha256:f42797309bb725f0f000510d5463175ccd7155395f09b5e7723971b0007a976d \
     --hash=sha256:f6abce0e66bba2babfadc20530fd3688f672d565674336595b4623cd800b91ef
     # via -r cmk/requirements_in.txt
-lsprotocol==2023.0.1 ; python_version >= "3.7" \
-    --hash=sha256:c75223c9e4af2f24272b14c6375787438279369236cd568f596d4951052a60f2 \
-    --hash=sha256:cc5c15130d2403c18b734304339e51242d3018a05c4f7d0f198ad6e0cd21861d
-    # via
-    #   -r cmk/requirements_in.txt
-    #   python-lsp-ruff
 lupa==2.2 \
     --hash=sha256:00bcae88a2123f0cfd34f7206cc2d88008d905ebc065d41797827d046404b09e \
     --hash=sha256:011dbc81a790693b5457a0d761b032a8acdcc2945e32ca6ef34a7698bda0b09a \
@@ -3018,17 +3003,12 @@ python-lsp-jsonrpc==1.1.2 ; python_version >= "3.8" \
     # via
     #   -r cmk/requirements_in.txt
     #   python-lsp-server
-python-lsp-ruff==2.2.2 ; python_version >= "3.8" \
-    --hash=sha256:3f80bdb0b4a8ee24624596a1cff60b28cc37771773730f9bf7d946ddff9f0cac \
-    --hash=sha256:7034d16c5cfdf07e932195649ebef569a7ddfcc5853fb2fee05fa7fc739afe3a
-    # via -r cmk/requirements_in.txt
 python-lsp-server==1.12.0 ; python_version >= "3.8" \
     --hash=sha256:2e912c661881d85f67f2076e4e66268b695b62bf127e07e81f58b187d4bb6eda \
     --hash=sha256:b6a336f128da03bd9bac1e61c3acca6e84242b8b31055a1ccf49d83df9dc053b
     # via
     #   -r cmk/requirements_in.txt
     #   pylsp-mypy
-    #   python-lsp-ruff
 python-multipart==0.0.12 ; python_version >= "3.8" \
     --hash=sha256:045e1f98d719c1ce085ed7f7e1ef9d8ccc8c02ba02b5566d5f7521410ced58cb \
     --hash=sha256:43dcf96cf65888a9cd3423544dd0d75ac10f7aa0c3c28a175bbcd00c9ce1aebf
@@ -3385,9 +3365,7 @@ ruff==0.6.9 ; python_version >= "3.7" \
     --hash=sha256:b076ef717a8e5bc819514ee1d602bbdca5b4420ae13a9cf61a0c0a4f53a2baa2 \
     --hash=sha256:eae02b700763e3847595b9d2891488989cac00214da7f845f4bcf2989007d577 \
     --hash=sha256:eb61ec9bdb2506cffd492e05ac40e5bc6284873aceb605503d8494180d6fc84d
-    # via
-    #   -r cmk/requirements_in.txt
-    #   python-lsp-ruff
+    # via -r cmk/requirements_in.txt
 s3transfer==0.10.2 ; python_version >= "3.8" \
     --hash=sha256:0711534e9356d3cc692fdde846b4a1e4b0cb6519971860796e6bc4c7aea00ef6 \
     --hash=sha256:eca1c20de70a39daee580aef4986996620f365c4e0fda6a86100231d62f1bf69

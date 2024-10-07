@@ -30,10 +30,19 @@ check_metrics["check_icmp"] = {
     "~.*rtmax": {"scale": m},
     "~.*rtmin": {"scale": m},
 }
-# May be provided by an check_ping check configured as mrpe
+# May be provided by a check_ping.exe check configured as mrpe at Windows agent
+check_metrics["check_ping_exe"] = {
+    "~.*rta": {"scale": m},
+}
+# May be provided by a check_tcp.exe check configured as mrpe at Windows agent
+check_metrics["check_tcp_exe"] = {
+    "time": {"name": "response_time"},
+}
+# May be provided by a check_ping check configured as mrpe
 check_metrics["check_ping"] = {
     "~.*rta": {"scale": m},
 }
+# May be provided by a check_tcp check configured as mrpe
 check_metrics["check_tcp"] = {
     "time": {"name": "response_time"},
 }

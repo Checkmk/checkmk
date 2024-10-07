@@ -6,14 +6,17 @@
 from collections.abc import Sequence
 from typing import Literal
 
-from cmk.gui.form_specs.converter.tuple import Tuple
+from cmk.utils.user import UserId
+
+from cmk.gui.form_specs.converter import Tuple
 from cmk.gui.form_specs.private import (
     DictionaryExtended,
     ListExtended,
+    ListOfStrings,
     SingleChoiceElementExtended,
     SingleChoiceExtended,
 )
-from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout
+from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout, ListOfStringsLayout
 from cmk.gui.i18n import _
 from cmk.gui.quick_setup.v0_unstable._registry import QuickSetupRegistry
 from cmk.gui.quick_setup.v0_unstable.predefined import recaps
@@ -25,6 +28,8 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
     StageIndex,
 )
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, FormSpecWrapper, Widget
+from cmk.gui.userdb import load_users
+from cmk.gui.wato._group_selection import sorted_contact_group_choices
 from cmk.gui.watolib.mode import mode_url
 
 from cmk.rulesets.v1 import Label, Title
@@ -35,10 +40,13 @@ from cmk.rulesets.v1.form_specs import (
     DictElement,
     FixedValue,
     HostState,
+    InputHint,
     ServiceState,
     SingleChoice,
     SingleChoiceElement,
+    String,
 )
+from cmk.rulesets.v1.form_specs.validators import EmailAddress
 
 
 def _host_states() -> Sequence[tuple[int, Title]]:
@@ -240,16 +248,130 @@ def notification_method() -> QuickSetupStage:
     )
 
 
+def _get_sorted_users() -> list[tuple[UserId, str]]:
+    return sorted(
+        (name, f"{name} - {user.get("alias", name)}") for name, user in load_users().items()
+    )
+
+
+def _contact_group_choice() -> SingleChoice:
+    return SingleChoice(
+        prefill=InputHint(Title("Select contact group")),
+        elements=[
+            SingleChoiceElement(
+                name=ident,
+                title=Title(title),  # pylint: disable=localization-of-non-literal-string
+            )
+            for ident, title in sorted_contact_group_choices()
+        ],
+    )
+
+
 def recipient() -> QuickSetupStage:
     def _components() -> Sequence[Widget]:
-        return []
+        return [
+            FormSpecWrapper(
+                id=FormSpecId("recipient"),
+                form_spec=ListExtended(
+                    title=Title("Recipients"),
+                    prefill=DefaultValue([("all_contacts_affected", None)]),
+                    element_template=CascadingSingleChoice(
+                        # TODO: add horizontal layout (CMK-18894)
+                        elements=[
+                            CascadingSingleChoiceElement(
+                                title=Title("All contacts of the affected object"),
+                                name="all_contacts_affected",
+                                parameter_form=FixedValue(value=None),
+                            ),
+                            CascadingSingleChoiceElement(
+                                title=Title("All users with an email address"),
+                                name="all_email_users",
+                                parameter_form=FixedValue(value=None),
+                            ),
+                            CascadingSingleChoiceElement(
+                                title=Title("Contact group"),
+                                name="contact_group",
+                                parameter_form=_contact_group_choice(),
+                            ),
+                            CascadingSingleChoiceElement(
+                                title=Title("Explicit email addresses"),
+                                name="explicit_email_addresses",
+                                parameter_form=ListOfStrings(
+                                    layout=ListOfStringsLayout.vertical,
+                                    string_spec=String(custom_validate=[EmailAddress()]),
+                                ),
+                            ),
+                            CascadingSingleChoiceElement(
+                                title=Title("Restrict previous options to"),
+                                name="restrict_previous",
+                                parameter_form=CascadingSingleChoice(
+                                    # TODO: add horizontal layout (CMK-18894)
+                                    prefill=DefaultValue("contact_group"),
+                                    elements=[
+                                        CascadingSingleChoiceElement(
+                                            name="contact_group",
+                                            title=Title("Users of contact groups"),
+                                            parameter_form=ListOfStrings(
+                                                string_spec=_contact_group_choice(),
+                                            ),
+                                        ),
+                                        CascadingSingleChoiceElement(
+                                            name="custom_macros",
+                                            title=Title("Custom macros"),
+                                            parameter_form=ListExtended(
+                                                prefill=DefaultValue([]),
+                                                element_template=Tuple(
+                                                    title=Title("Custom macro"),
+                                                    elements=[
+                                                        String(
+                                                            title=Title("Name of the macro"),
+                                                        ),
+                                                        String(
+                                                            title=Title(
+                                                                "Required match (regular expression)"
+                                                            ),
+                                                        ),
+                                                    ],
+                                                ),
+                                                add_element_label=Label("Add condition"),
+                                            ),
+                                        ),
+                                    ],
+                                ),
+                            ),
+                            CascadingSingleChoiceElement(
+                                title=Title("Specific users"),
+                                name="specific_users",
+                                parameter_form=SingleChoice(
+                                    prefill=InputHint(Title("Select user")),
+                                    elements=[
+                                        SingleChoiceElement(
+                                            name=ident,
+                                            title=Title(title),  # pylint: disable=localization-of-non-literal-string
+                                        )
+                                        for ident, title in _get_sorted_users()
+                                    ],
+                                ),
+                            ),
+                            CascadingSingleChoiceElement(
+                                title=Title("All users"),
+                                name="all_users",
+                                parameter_form=FixedValue(value=None),
+                            ),
+                        ],
+                    ),
+                    add_element_label=Label("Add recipient"),
+                    editable_order=False,
+                ),
+            )
+        ]
 
     return QuickSetupStage(
         title=_("Recipient"),
         sub_title=_("Who should receive the notification?"),
         configure_components=_components,
         custom_validators=[],
-        recap=[],
+        recap=[recaps.recaps_form_spec],
         button_label=_("Next step: Sending conditions"),
     )
 

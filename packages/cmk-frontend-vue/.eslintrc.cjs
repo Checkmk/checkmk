@@ -45,6 +45,8 @@ module.exports = {
         varsIgnorePattern: '^_'
       }
     ],
+    eqeqeq: 'error',
+    'no-var': 'error',
     curly: 'error',
     'prefer-template': 'error',
     'vue/prefer-template': 'error',

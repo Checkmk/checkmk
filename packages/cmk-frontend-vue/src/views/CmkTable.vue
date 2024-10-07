@@ -24,7 +24,7 @@ const search_text_dimension = row_crossfilter.dimension<string>((d: TableRow) =>
   d.columns.forEach((column) => {
     column.content.forEach((content) => {
       // Might add additional types to this data dimension
-      if (content.type == 'text') {
+      if (content.type === 'text') {
         combined_text.push(content.content!.toLowerCase())
       }
     })
@@ -57,7 +57,7 @@ function get_rows() {
       let found_match = false
       row.columns.forEach((column) => {
         column.content.forEach((content) => {
-          if (content.type == 'text' && content.content!.includes(search_value)) {
+          if (content.type === 'text' && content.content!.includes(search_value)) {
             found_match = true
           }
         })
@@ -75,7 +75,7 @@ function get_rows() {
     return function (a: TableRow, b: TableRow) {
       const a_content = a.columns[index]!.content[0]!.content!.toLowerCase()
       const b_content = b.columns[index]!.content[0]!.content!.toLowerCase()
-      if (a_content == b_content) {
+      if (a_content === b_content) {
         return 0
       }
       if (a_content > b_content) {
@@ -85,7 +85,7 @@ function get_rows() {
     }
   }
 
-  if (current_sort_index != null) {
+  if (current_sort_index !== null) {
     records.sort(get_custom_sorter_function(current_sort_index[0], current_sort_index[1]))
   }
   return records
@@ -109,9 +109,9 @@ onUpdated(() => {
 
 let current_sort_index: null | [number, number] = null
 function set_sort_index(index: number) {
-  if (current_sort_index == null || current_sort_index[0] != index) {
+  if (current_sort_index === null || current_sort_index[0] !== index) {
     current_sort_index = [index, 1]
-  } else if (current_sort_index[0] == index) {
+  } else if (current_sort_index[0] === index) {
     current_sort_index = [index, current_sort_index[1] * -1]
   }
   force_render.value += 1

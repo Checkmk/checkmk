@@ -25,7 +25,7 @@ const search_text_dimension = row_crossfilter.dimension<string>((d: TableRow) =>
   let combined_text: string[] = []
   d.columns.forEach((column) => {
     column.content.forEach((content) => {
-      if (content.type == 'text') {
+      if (content.type === 'text') {
         combined_text.push(content.content!.toLowerCase())
       }
     })
@@ -53,7 +53,7 @@ function get_rows(): TableRow[] {
     return function (a: TableRow, b: TableRow) {
       const a_content = a.columns[index].content[0]!.content!.toLowerCase()
       const b_content = b.columns[index].content[0]!.content!.toLowerCase()
-      if (a_content == b_content) {
+      if (a_content === b_content) {
         return 0
       }
       if (a_content > b_content) {
@@ -62,7 +62,7 @@ function get_rows(): TableRow[] {
       return -direction
     }
   }
-  if (current_sort_index != null) {
+  if (current_sort_index !== null) {
     records.sort(get_custom_sorter_function(current_sort_index[0], current_sort_index[1]))
   }
   return records as TableRow[]
@@ -93,9 +93,9 @@ onMounted(() => {
 let current_sort_index: null | [number, number] = null
 
 function set_sort_index(index: number) {
-  if (current_sort_index == null || current_sort_index[0] != index) {
+  if (current_sort_index === null || current_sort_index[0] !== index) {
     current_sort_index = [index, 1]
-  } else if (current_sort_index[0] == index) {
+  } else if (current_sort_index[0] === index) {
     current_sort_index = [index, current_sort_index[1] * -1]
   }
   force_render.value += 1
@@ -105,7 +105,7 @@ function set_sort_index(index: number) {
 const d3_anchor = ref<HTMLDivElement | undefined>()
 
 function update_d3js_table() {
-  if (d3_anchor.value == undefined) {
+  if (d3_anchor.value === undefined) {
     return
   }
 

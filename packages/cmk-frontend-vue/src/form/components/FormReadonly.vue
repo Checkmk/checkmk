@@ -197,7 +197,7 @@ function renderBooleanChoice(formSpec: BooleanChoice, value: boolean): VNode {
 
 function renderFixedValue(formSpec: FixedValue): VNode {
   let shownValue = formSpec.value
-  if (formSpec.label != null) {
+  if (formSpec.label !== null) {
     shownValue = formSpec.label
   }
   return h('div', shownValue as string)
@@ -212,7 +212,7 @@ function renderDict(
   // Note: Dictionary validations are not shown
   const [, elementValidations] = groupDictionaryValidations(formSpec.elements, backendValidation)
   formSpec.elements.map((element) => {
-    if (value[element.ident] == undefined) {
+    if (value[element.ident] === undefined) {
       return
     }
 

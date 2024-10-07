@@ -16,7 +16,7 @@ defineProps<{
     <div class="section">
       <h3 class="table">{{ notification_stats['i18n']['failed_notifications'] }}</h3>
       <div class="content">
-        <p v-if="notification_stats['num_failed_notifications'] == 0" class="count">
+        <p v-if="notification_stats['num_failed_notifications'] === 0" class="count">
           <img class="checkmark" />
           {{ notification_stats['num_failed_notifications'] }}
         </p>
@@ -25,7 +25,7 @@ defineProps<{
           {{ notification_stats['num_failed_notifications'] }}
         </p>
         <a
-          v-if="notification_stats['num_failed_notifications'] != 0"
+          v-if="notification_stats['num_failed_notifications'] !== 0"
           :href="notification_stats['i18n']['sent_notifications_link_title']"
           >{{ notification_stats['i18n']['failed_notifications_link_title'] }}</a
         >
@@ -38,7 +38,7 @@ defineProps<{
           {{ notification_stats['num_sent_notifications'] }}
         </p>
         <a
-          v-if="notification_stats['num_sent_notifications'] != 0"
+          v-if="notification_stats['num_sent_notifications'] !== 0"
           :href="notification_stats['i18n']['sent_notifications_link_title']"
           >{{ notification_stats['i18n']['sent_notifications_link_title'] }}</a
         >

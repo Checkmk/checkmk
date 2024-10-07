@@ -49,7 +49,7 @@ function capitalizeFirstLetter(value: string): string {
 
 <template>
   <table
-    v-if="spec.layout == 'horizontal' || spec.layout == 'horizontal_titles_top'"
+    v-if="spec.layout === 'horizontal' || spec.layout === 'horizontal_titles_top'"
     class="valuespec_tuple horizontal"
   >
     <tr>
@@ -58,7 +58,7 @@ function capitalizeFirstLetter(value: string): string {
           <span v-if="spec.show_titles && element.title" class="title">{{
             capitalizeFirstLetter(element.title)
           }}</span>
-          <br v-if="spec.show_titles && element.title && spec.layout == 'horizontal_titles_top'" />
+          <br v-if="spec.show_titles && element.title && spec.layout === 'horizontal_titles_top'" />
           <span v-else> </span>
           <FormEdit
             v-model:data="data[index]"
@@ -70,7 +70,7 @@ function capitalizeFirstLetter(value: string): string {
     </tr>
   </table>
 
-  <table v-if="spec.layout == 'vertical'" class="valuespec_tuple vertical">
+  <table v-if="spec.layout === 'vertical'" class="valuespec_tuple vertical">
     <tr v-for="(element, index) in spec.elements" :key="index">
       <td v-if="spec.show_titles" class="tuple_left">
         <span v-if="element.title" class="vs_floating_text">{{
@@ -87,7 +87,7 @@ function capitalizeFirstLetter(value: string): string {
     </tr>
   </table>
 
-  <template v-if="spec.layout == 'float'">
+  <template v-if="spec.layout === 'float'">
     <template v-for="(element, index) in spec.elements" :key="index">
       <FormEdit
         v-model:data="data[index]"

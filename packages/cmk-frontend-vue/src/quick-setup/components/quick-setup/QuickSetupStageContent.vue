@@ -12,7 +12,7 @@ import type { QuickSetupStageContent } from './quick_setup_types'
 
 const props = defineProps<QuickSetupStageContent>()
 
-const isLast = computed(() => props.index == props.numberOfStages - 1)
+const isLast = computed(() => props.index === props.numberOfStages - 1)
 </script>
 
 <template>

@@ -102,7 +102,7 @@ const componentId = useId()
 <template>
   <div class="choice">
     <select :id="componentId" v-model="selectedOption">
-      <option v-if="activeElement == null" disabled selected hidden value="">
+      <option v-if="activeElement === null" disabled selected hidden value="">
         {{ props.spec.input_hint }}
       </option>
       <option v-for="element in spec.elements" :key="element.name" :value="element.name">
@@ -111,7 +111,7 @@ const componentId = useId()
     </select>
     <label v-if="$props.spec.label" :for="componentId">{{ props.spec.label }}</label>
   </div>
-  <template v-if="activeElement != null">
+  <template v-if="activeElement !== null">
     <FormEdit
       :key="data[0]"
       v-model:data="data[1]"

@@ -22,7 +22,7 @@ const [validation, _value] = useValidation<unknown>(
 )
 
 const fixedValue = computed(() => {
-  if (props.spec.label != null) {
+  if (props.spec.label !== undefined) {
     return props.spec.label
   }
   return props.spec.value

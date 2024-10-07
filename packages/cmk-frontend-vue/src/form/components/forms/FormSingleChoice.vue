@@ -28,7 +28,7 @@ const componentId = useId()
   <div>
     <label v-if="$props.spec.label" :for="componentId">{{ spec.label }}</label>
     <select :id="componentId" v-model="value" :disabled="spec.frozen">
-      <option v-if="value.length == 0" disabled selected hidden value="">
+      <option v-if="value.length === 0" disabled selected hidden value="">
         {{ props.spec.input_hint }}
       </option>
       <option

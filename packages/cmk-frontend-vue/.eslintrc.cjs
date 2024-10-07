@@ -46,6 +46,7 @@ module.exports = {
       }
     ],
     eqeqeq: 'error',
+    'vue/eqeqeq': 'error',
     'no-var': 'error',
     curly: 'error',
     'prefer-template': 'error',

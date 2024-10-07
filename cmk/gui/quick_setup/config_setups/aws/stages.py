@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
+from typing import Any
 
 from cmk.ccc.i18n import _
 
@@ -194,6 +195,16 @@ def configure_services_to_monitor() -> QuickSetupStage:
     )
 
 
+def _create_time_delay_warning(*args: Any) -> Sequence[Widget]:
+    return [
+        Text(
+            text=_(
+                "Save your progress and go to the Activate Changes page to enable it. EC2 instances may take a few minutes to show up."
+            )
+        )
+    ]
+
+
 def review_and_run_preview_service_discovery() -> QuickSetupStage:
     return QuickSetupStage(
         title=_("Review and run preview service discovery"),
@@ -206,7 +217,8 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
                 parameter_form=quick_setup_aws_form_spec(),
                 services_of_interest=[ServiceInterest(".*", "services")],
                 custom_collect_params=aws_collect_params,
-            )
+            ),
+            _create_time_delay_warning,
         ],
         button_label="Run preview service discovery",
     )

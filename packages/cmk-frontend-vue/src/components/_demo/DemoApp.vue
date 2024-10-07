@@ -5,27 +5,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { onMounted, ref, h } from 'vue'
-import DemoAlertBox from './DemoAlertBox.vue'
-import DemoIconButton from './DemoIconButton.vue'
-import DemoSlideIn from './DemoSlideIn.vue'
-import DemoFormEditAsync from './DemoFormEditAsync.vue'
+import { computed, onMounted } from 'vue'
+import router from './router'
 
-const demo = ref('')
-
-function renderDemo() {
-  switch (demo.value) {
-    case 'alertbox':
-      return h(DemoAlertBox)
-    case 'iconbutton':
-      return h(DemoIconButton)
-    case 'slidein':
-      return h(DemoSlideIn)
-    case 'formeditasync':
-      return h(DemoFormEditAsync)
-  }
-  return h('i', 'choose demo from navigation')
-}
+const routes = computed(() => {
+  return router.getRoutes()
+})
 
 function setTheme(name: 'modern-dark' | 'facelift') {
   document.getElementsByTagName('body')[0]!.dataset['theme'] = name
@@ -42,17 +27,15 @@ onMounted(() => {
       <button @click="setTheme('modern-dark')">dark</button>
       <button @click="setTheme('facelift')">light</button>
       <ul>
-        <li><a href="#" @click.prevent="demo = ''">home</a></li>
-        <li><a href="#" @click.prevent="demo = 'alertbox'">alert box</a></li>
-        <li><a href="#" @click.prevent="demo = 'iconbutton'">icon button</a></li>
-        <li><a href="#" @click.prevent="demo = 'slidein'">slide in</a></li>
-        <li><a href="#" @click.prevent="demo = 'formeditasync'">form edit async</a></li>
+        <li v-for="route in routes" :key="route.path">
+          <RouterLink :to="route.path">{{ route.name }}</RouterLink>
+        </li>
       </ul>
     </nav>
     <main>
-      <h1>{{ demo }}</h1>
+      <h1>{{ $route.name }}</h1>
       <div class="demo-area">
-        <renderDemo />
+        <RouterView />
       </div>
     </main>
   </div>

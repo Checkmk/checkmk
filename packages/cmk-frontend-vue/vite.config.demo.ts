@@ -13,10 +13,11 @@ export default defineConfig(({ command }) => {
   return {
     plugins: [vue()],
     clearScreen: false,
+    root: './src/components/_demo/',
     server: {
       strictPort: true,
       fs: {
-        allow: ['.', '../cmk-frontend/']
+        allow: ['.', '../../../../cmk-frontend/']
       }
     },
     resolve: {

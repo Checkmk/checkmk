@@ -10,5 +10,8 @@ import '~cmk-frontend/src/themes/facelift/theme.scss'
 
 import { createApp } from 'vue'
 import DemoApp from './DemoApp.vue'
+import router from './router'
 
-createApp(DemoApp).mount('#app')
+const app = createApp(DemoApp)
+app.use(router)
+app.mount('#app')

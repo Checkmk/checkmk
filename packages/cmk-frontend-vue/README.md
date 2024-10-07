@@ -33,7 +33,7 @@ cmk-frontend-vue project.
 ### testing components outsite a site
 
 * run `npm run -- dev --config vite.config.demo.ts`
-* surf to `http://localhost:5173/demo.html`
+* surf to `http://localhost:5173/`
 
 
 ### Location of files and folders

@@ -38,7 +38,17 @@ onMounted(() => {
   // @ts-expect-error comes from different javascript file
   window['cmk'].valuespecs.initialize_autocompleters(legacyDOM.value!)
   select(legacyDOM.value!).selectAll('input,select').on('input.observer', collectData)
-  collectData()
+
+  const observer = new MutationObserver(() => {
+    collectData()
+  })
+
+  observer.observe(legacyDOM.value!, {
+    attributes: true,
+    characterData: true,
+    childList: true,
+    subtree: true
+  })
 })
 
 onBeforeUnmount(() => {

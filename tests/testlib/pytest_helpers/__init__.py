@@ -33,6 +33,9 @@ not_cloud_edition = SkipIf(
 is_raw_edition = SkipIf(
     version_from_env().is_raw_edition(), "Skipping test; not intended for raw edition"
 )
+is_enterprise_edition = SkipIf(
+    version_from_env().is_enterprise_edition(), "Skipping test; not intended for enterprise edition"
+)
 is_saas_edition = SkipIf(
     version_from_env().is_saas_edition(), "Skipping test; not intended for SaaS edition"
 )

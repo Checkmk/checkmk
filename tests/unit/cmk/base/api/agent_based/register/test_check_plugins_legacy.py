@@ -208,10 +208,7 @@ def test_create_check_function_with_zero_details_after_newline() -> None:
 
 
 def test_create_check_plugin_from_legacy_wo_params() -> None:
-    plugin = check_plugins_legacy.create_check_plugin_from_legacy(
-        "norris",
-        MINIMAL_CHECK_INFO,
-    )
+    plugin = check_plugins_legacy.create_check_plugin_from_legacy(MINIMAL_CHECK_INFO)
 
     assert plugin.name == CheckPluginName("norris")
     assert plugin.sections == [ParsedSectionName("norris")]
@@ -232,10 +229,7 @@ def test_create_check_plugin_from_legacy_with_params() -> None:
         check_default_parameters={"levels": (23, 42)},
     )
 
-    plugin = check_plugins_legacy.create_check_plugin_from_legacy(
-        "norris",
-        check_info_element,
-    )
+    plugin = check_plugins_legacy.create_check_plugin_from_legacy(check_info_element)
 
     assert plugin.name == CheckPluginName("norris")
     assert plugin.sections == [ParsedSectionName("norris")]

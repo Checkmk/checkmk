@@ -1687,7 +1687,6 @@ def _make_check_plugins(
         try:
             checks.append(
                 create_check_plugin_from_legacy(
-                    check_plugin_name,
                     check_info_element,
                     validate_creation_kwargs=validate_creation_kwargs,
                 )

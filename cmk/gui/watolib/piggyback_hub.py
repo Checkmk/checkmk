@@ -43,7 +43,7 @@ def distribute_piggyback_hub_configs(
     configured_sites: Mapping[SiteId, SiteConfiguration],
     hosts_sites: Mapping[HostName, SiteId],
 ) -> None:
-    site_configs = get_enabled_piggyback_hub_site_configs(global_settings, configured_sites)
+    site_configs = filter_for_enabled_piggyback_hub(global_settings, configured_sites)
 
     paths = create_paths(omd_root)
 
@@ -61,7 +61,7 @@ def _piggyback_hub_enabled(site_config: SiteConfiguration, global_settings: Glob
     return global_settings.get("piggyback_hub_enabled", True)
 
 
-def get_enabled_piggyback_hub_site_configs(
+def filter_for_enabled_piggyback_hub(
     global_settings: GlobalSettings, configured_sites: Mapping[SiteId, SiteConfiguration]
 ) -> Mapping[SiteId, SiteConfiguration]:
     return {

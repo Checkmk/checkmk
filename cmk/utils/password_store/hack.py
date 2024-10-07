@@ -67,6 +67,7 @@ HACK_AGENTS = {
     "vsphere": True,
     "jolokia": True,
     "random": False,  # needs no secret
+    "mqtt": True,
 }
 
 

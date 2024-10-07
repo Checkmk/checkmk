@@ -119,6 +119,10 @@ class Site:
     def internal_url_mobile(self) -> str:
         return self.internal_url + "mobile.py"
 
+    @property
+    def licensing_dir(self) -> Path:
+        return Path(self.root) / "var" / "check_mk" / "licensing"
+
     # Previous versions of integration/composition tests needed this distinction. This is no
     # longer the case and can be safely removed once all tests switch to either one of url
     # or internal_url.
@@ -1844,7 +1848,11 @@ class PythonHelper:
         finally:
             self.site.delete_file(str(self.site_path))
 
-    def check_output(self, input: str | None = None, encoding: str = "utf-8") -> str:  # pylint: disable=redefined-builtin
+    def check_output(
+        self,
+        input: str | None = None,  # pylint: disable=redefined-builtin
+        encoding: str = "utf-8",
+    ) -> str:
         with self.copy_helper():
             output = self.site.check_output(
                 ["python3", str(self.site_path)],

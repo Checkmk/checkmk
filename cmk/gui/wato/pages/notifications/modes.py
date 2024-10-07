@@ -40,9 +40,7 @@ from cmk.gui import forms, permissions, sites, userdb
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.private import Catalog, Topic
-from cmk.gui.form_specs.private.definitions import CommentTextArea
-from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
+from cmk.gui.form_specs.private import Catalog
 from cmk.gui.form_specs.vue.form_spec_visitor import parse_data_from_frontend, render_form_spec
 from cmk.gui.form_specs.vue.shared_type_defs import (
     CoreStats,
@@ -161,10 +159,6 @@ from cmk.gui.watolib.sample_config import (
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.users import notification_script_choices
-
-from cmk.rulesets.v1 import Help, Title
-from cmk.rulesets.v1.form_specs import DictElement, FieldSize, String
-from cmk.rulesets.v1.form_specs import Dictionary as FormSpecDictionary
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -3115,19 +3109,6 @@ class ABCNotificationParameterMode(WatoMode):
             except IndexError:
                 raise MKUserError(None, _("This %s does not exist.") % "notification parameter")
 
-    def _form_spec(self) -> DictionaryExtended:
-        notification_parameter = self._notification_parameter()
-        try:
-            return notification_parameter()._form_spec()  # pylint: disable=protected-access
-        except NotImplementedError:
-            raise MKUserError(
-                None,
-                _(
-                    "This page is currently not implemented, needs FormSpec "
-                    "migration of NotificationParameter."
-                ),
-            )
-
     def _notification_parameter(self) -> type[NotificationParameter]:
         try:
             return notification_parameter_registry[self._method()]
@@ -3404,6 +3385,9 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
             return _("Created new notification parameter")
         return _("Changed notification parameter %s") % edit_nr
 
+    def _form_spec(self) -> Catalog:
+        return notification_parameter_registry.form_spec(self._method())
+
     def action(self) -> ActionResult:
         check_csrf_token()
 
@@ -3411,7 +3395,7 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
             return self._back_mode()
 
         value = parse_data_from_frontend(
-            self._catalog(),
+            self._form_spec(),
             self._vue_field_id(),
         )
 
@@ -3437,65 +3421,12 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
 
         return self._back_mode()
 
-    def _catalog(self) -> Catalog:
-        return Catalog(
-            topics=[
-                Topic(
-                    ident="general",
-                    dictionary=FormSpecDictionary(
-                        title=Title("Parameter properties"),
-                        elements={
-                            "description": DictElement(
-                                parameter_form=String(
-                                    title=Title("Description"),
-                                    field_size=FieldSize.LARGE,
-                                )
-                            ),
-                            "comment": DictElement(
-                                parameter_form=CommentTextArea(
-                                    title=Title("Comment"),
-                                )
-                            ),
-                            "docu_url": DictElement(
-                                parameter_form=String(
-                                    title=Title("Documentation URL"),
-                                    help_text=Help(
-                                        (
-                                            "An optional URL pointing to documentation or any other page. This will be "
-                                            "displayed as an icon and open "
-                                            "a new page when clicked. You can use either global URLs (beginning with "
-                                            "<tt>http://</tt>), absolute local urls (beginning with <tt>/</tt>) or relative "
-                                            "URLs (that are relative to <tt>check_mk/</tt>)."
-                                        )
-                                    ),
-                                )
-                            ),
-                        },
-                    ),
-                ),
-                Topic(
-                    ident="parameter_properties",
-                    # TODO if sections are not rendered by fixed DictGroup(),
-                    # we will need this:
-                    # dictionary=FormSpecDictionary(
-                    #    title=Title("Parameter properties"),
-                    #    elements={
-                    #        "properties": DictElement(
-                    #            parameter_form=self._form_spec(),
-                    #        )
-                    #    },
-                    # ),
-                    dictionary=self._form_spec(),
-                ),
-            ]
-        )
-
     def page(self) -> None:
         value, origin = self._get_parameter_value_and_origin()
 
         with html.form_context("parameter", method="POST"):
             render_form_spec(
-                self._catalog(),
+                self._form_spec(),
                 self._vue_field_id(),
                 value,
                 origin,

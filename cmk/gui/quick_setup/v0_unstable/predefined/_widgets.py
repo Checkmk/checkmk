@@ -86,7 +86,7 @@ FOLDER_PATTERN = (
 )
 
 
-def _host_path_dict_element(title: Title = Title("Host Path")) -> DictElement:
+def _host_path_dict_element(title: Title = Title("Folder")) -> DictElement:
     return DictElement(
         parameter_form=String(
             title=title,

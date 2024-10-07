@@ -367,20 +367,40 @@ def _add_agent_config_match_type_key(value: object) -> object:
 
 def _remove_agent_config_match_type_key(value: object) -> object:
     if isinstance(value, dict):
-        value.pop("cmk-match-type", None)
-        return value
+        return {k: v for k, v in value.items() if k != "cmk-match-type"}
 
     raise TypeError(value)
 
 
 def _transform_agent_config_rule_spec_match_type(
-    parameter_form: ruleset_api_v1.form_specs.Dictionary,
-    localizer: Callable[[str], str],
+    parameter_form: ruleset_api_v1.form_specs.Dictionary, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.ValueSpec:
+    legacy_vs = _convert_to_legacy_valuespec(parameter_form, localizer)
+    inner_transform = (
+        legacy_vs if isinstance(legacy_vs, Transform) and parameter_form.migrate else None
+    )
+    if not inner_transform:
+        return Transform(
+            legacy_vs,
+            forth=_remove_agent_config_match_type_key,
+            back=_add_agent_config_match_type_key,
+        )
+
+    # We cannot simply wrap legacy_vs into a Transform to handle the match type key. Wrapping a
+    # valuespec into a Transform results in the following order of transformations:
+    # 1. outer transform   (_remove_agent_config_match_type_key)
+    # 2. inner transforms
+    # _remove_agent_config_match_type_key fails for non-dictionaries, however, it is the job of the
+    # inner transforms to migrate to a dictionairy in case of a migration from a non-dictionary
+    # rule spec.
     return Transform(
-        _convert_to_legacy_valuespec(parameter_form, localizer),
-        forth=_remove_agent_config_match_type_key,
-        back=_add_agent_config_match_type_key,
+        valuespec=Transform(
+            inner_transform._valuespec,  # pylint: disable=protected-access
+            to_valuespec=_remove_agent_config_match_type_key,
+            from_valuespec=_add_agent_config_match_type_key,
+        ),
+        to_valuespec=inner_transform.to_valuespec,
+        from_valuespec=inner_transform.from_valuespec,
     )
 
 

@@ -3225,3 +3225,21 @@ def test_dictionary_groups_validate(
     converted = _convert_to_legacy_valuespec(to_convert, _)
     with pytest.raises(MKUserError):
         converted.validate_value(value_to_validate, "")
+
+
+def test_agent_config_rule_spec_transformations_work_with_previous_non_dict_values() -> None:
+    legacy_rulespec = convert_to_legacy_rulespec(
+        api_v1.rule_specs.AgentConfig(
+            name="test_rulespec",
+            title=api_v1.Title("rulespec title"),
+            topic=api_v1.rule_specs.Topic.GENERAL,
+            parameter_form=lambda: api_v1.form_specs.Dictionary(
+                elements={},
+                migrate=lambda _x: {},
+            ),
+            help_text=api_v1.Help("help text"),
+        ),
+        Edition.CRE,
+        _,
+    )
+    assert legacy_rulespec.valuespec.transform_value(()) == {"cmk-match-type": "dict"}

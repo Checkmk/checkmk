@@ -5,9 +5,5 @@
  */
 
 html {
-  background-color: #ccc;
   font-family: sans-serif;
-}
-body.side.visible {
-  padding-top: 1em;
 }

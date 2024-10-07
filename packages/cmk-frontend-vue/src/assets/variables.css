@@ -60,6 +60,8 @@
     --default-select-background-color: rgb(224, 224, 228);
     --default-select-hover-color: var(--success);
     --default-border-color-green: rgb(21, 209, 160);
+    --default-text-color: rgb(39, 39, 39);
+    --default-component-background-color: rgb(240, 240, 240);
   }
 
   body[data-theme='modern-dark'] {
@@ -76,5 +78,7 @@
     --default-select-background-color: rgb(48, 57, 70);
     --default-select-hover-color: var(--success);
     --default-border-color-green: rgb(21, 209, 160);
+    --default-text-color: rgb(255, 255, 255);
+    --default-component-background-color: rgb(46, 44, 44);
   }
 }

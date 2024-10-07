@@ -141,8 +141,6 @@ const api: API<ObjectId, ObjectData> = {
 
 <style scoped>
 .demo-control {
-  background-color: #ccc;
-  margin: -1em;
   margin-bottom: 1em;
   padding: 1em;
   display: flex;

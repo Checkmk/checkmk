@@ -59,14 +59,18 @@ const catalog = ref<Catalog>({
       <Button label="save text" variant="custom" icon-name="save" class="slide-in__save" />
       <Button label="cancel text" variant="custom" icon-name="cancel" @click="open = false" />
     </div>
-    <FormCatalog v-model:data="data" :spec="catalog" :backend-validation="[]" />
+    <div class="content">
+      <FormCatalog v-model:data="data" :spec="catalog" :backend-validation="[]" />
+    </div>
   </SlideIn>
   <pre>{{ data }}</pre>
 </template>
 
 <style scoped>
+.content {
+  min-width: 600px;
+}
 .slide-in__trigger {
-  background: none;
   border: none;
   text-decoration: underline var(--success);
   padding: 0;

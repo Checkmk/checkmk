@@ -42,14 +42,39 @@ onMounted(() => {
 </template>
 
 <style scoped>
+* {
+  padding: 10px;
+}
 .demo {
   display: flex;
-}
-main .demo-area {
-  background-color: white;
-  padding: 1em;
-}
-nav {
-  flex: 0 200px;
+  color: var(--default-text-color);
+  background-color: var(--default-background-color);
+  height: 100vh;
+
+  main {
+    h1 {
+      color: inherit;
+    }
+    height: fit-content;
+    border: 2px solid var(--default-select-background-color);
+    background-color: var(--default-component-background-color);
+    border-radius: 5px;
+    .demo-area {
+      padding: 1em;
+    }
+  }
+  nav {
+    margin: 0 1em;
+    ul {
+      list-style: none;
+      padding: 0;
+      li {
+        margin: 0.5em 0;
+      }
+    }
+    a {
+      color: inherit;
+    }
+  }
 }
 </style>

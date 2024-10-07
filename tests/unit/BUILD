@@ -92,11 +92,6 @@ py_test(
     ),
     main = ":__test__.py",
     package_collisions = "ignore",  # "warning"
-    tags = [
-        # TODO:  *Shouldn't* be required in unit tests!
-        # `test_diagnostics_element_hw_info_content` reads from `/sys`
-        "no-sandbox",
-    ],
     deps = [
         ":__test__",
         requirement("astroid"),

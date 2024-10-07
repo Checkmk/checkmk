@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+import os
 from collections.abc import Mapping
 from pathlib import Path
 from threading import Event
@@ -43,8 +44,8 @@ def save_config_on_message(
 
 def save_config(paths: PiggybackHubPaths, config: PiggybackHubConfig) -> None:
     paths.config.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
-    tmp_path = paths.config.with_suffix(".new")
-    tmp_path.write_text(config.model_dump_json())
+    tmp_path = paths.config.with_suffix(f".{os.getpid()}.tmp")
+    tmp_path.write_text(f"{config.model_dump_json()}\n")
     tmp_path.rename(paths.config)
 
 

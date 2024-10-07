@@ -552,16 +552,17 @@ class Site:
         return output
 
     @contextmanager
-    def copy_file(self, name: str, target: str | Path) -> Iterator[None]:
+    def copy_file(self, name: str | Path, target: str | Path) -> Iterator[None]:
         """Copies a file from the same directory as the caller to the site"""
         caller_file = Path(inspect.stack()[2].filename)
-        source = caller_file.parent / name
-        self.makedirs(Path(target).parent)
-        self.write_text_file(target, source.read_text())
+        source_path = caller_file.parent / name
+        target_path = Path(target)
+        self.makedirs(target_path.parent)
+        self.write_text_file(target_path, source_path.read_text())
         try:
             yield
         finally:
-            self.delete_file(target)
+            self.delete_file(target_path)
 
     def python_helper(self, name: str) -> PythonHelper:
         caller_file = Path(inspect.stack()[1].filename)

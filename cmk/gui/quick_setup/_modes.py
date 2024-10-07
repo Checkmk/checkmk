@@ -36,7 +36,13 @@ from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link
-from cmk.gui.valuespec import Dictionary, DictionaryEntry, FixedValue, RuleComment, TextInput
+from cmk.gui.valuespec import (
+    Dictionary,
+    DictionaryEntry,
+    FixedValue,
+    RuleComment,
+    TextInput,
+)
 from cmk.gui.wato._main_module_topics import MainModuleTopicQuickSetup
 from cmk.gui.wato.pages.hosts import ModeEditHost
 from cmk.gui.wato.pages.password_store import ModeEditPassword
@@ -54,11 +60,7 @@ from cmk.gui.watolib.configuration_bundles import (
     valid_special_agent_bundle,
 )
 from cmk.gui.watolib.hosts_and_folders import folder_from_request, make_action_link
-from cmk.gui.watolib.main_menu import (
-    ABCMainModule,
-    MainModuleRegistry,
-    MainModuleTopic,
-)
+from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.rulespecs import rulespec_registry
 
@@ -68,6 +70,7 @@ def register(main_module_registry: MainModuleRegistry, mode_registry: ModeRegist
     mode_registry.register(ModeEditConfigurationBundles)
     mode_registry.register(ModeQuickSetupSpecialAgent)
     main_module_registry.register(MainModuleQuickSetupAWS)
+    main_module_registry.register(MainModuleQuickSetupAzure)
 
 
 class ModeQuickSetupSpecialAgent(WatoMode):
@@ -198,7 +201,8 @@ class ModeEditConfigurationBundles(WatoMode):
                                     icon_name="new",
                                     item=make_simple_link(
                                         mode_url(
-                                            ModeQuickSetupSpecialAgent.name(), varname=self._name
+                                            ModeQuickSetupSpecialAgent.name(),
+                                            varname=self._name,
                                         )
                                     ),
                                     is_shortcut=True,
@@ -392,6 +396,47 @@ class MainModuleQuickSetupAWS(ABCMainModule):
         return ["aws"]
 
 
+class MainModuleQuickSetupAzure(ABCMainModule):
+    @property
+    def mode_or_url(self) -> str:
+        return mode_url(
+            ModeEditConfigurationBundles.name(),
+            varname=RuleGroup.SpecialAgents("azure"),
+        )
+
+    @property
+    def topic(self) -> MainModuleTopic:
+        return MainModuleTopicQuickSetup
+
+    @property
+    def title(self) -> str:
+        return _("Microsoft Azure")
+
+    @property
+    def icon(self) -> Icon:
+        return "quick_setup_azure"
+
+    @property
+    def permission(self) -> None | str:
+        return None
+
+    @property
+    def description(self) -> str:
+        return _("Configure Microsoft Azure monitoring in Checkmk")
+
+    @property
+    def sort_index(self) -> int:
+        return 11
+
+    @property
+    def is_show_more(self) -> bool:
+        return False
+
+    @classmethod
+    def megamenu_search_terms(cls) -> Sequence[str]:
+        return ["azure"]
+
+
 class EditDCDConnection(Protocol):
     def __init__(self) -> None: ...
 
@@ -503,7 +548,10 @@ class ModeConfigurationBundle(WatoMode):
         elements: Sequence[DictionaryEntry] = [
             ("_name", TextInput(title=_("Name"), size=80)),
             ("_comment", RuleComment()),
-            ("_bundle_id", FixedValue(title=_("Configuration bundle ID"), value=bundle_id)),
+            (
+                "_bundle_id",
+                FixedValue(title=_("Configuration bundle ID"), value=bundle_id),
+            ),
         ]
         return Dictionary(
             title=_("Configuration bundle properties"),
@@ -535,7 +583,10 @@ class ModeConfigurationBundle(WatoMode):
 
     def _sub_page_dcd_connection(self) -> None:
         if any(edit_dcd_connection for edit_dcd_connection in self._edit_dcd_connections):
-            html.h1(_("Dynamic host management"), class_=["edit_configuration_bundle_header"])
+            html.h1(
+                _("Dynamic host management"),
+                class_=["edit_configuration_bundle_header"],
+            )
             for index, edit_dcd_connection in enumerate(self._edit_dcd_connections):
                 if edit_dcd_connection:
                     edit_dcd_connection.page(f"edit_dcd_{index}")

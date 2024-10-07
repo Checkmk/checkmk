@@ -2,6 +2,7 @@ load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@com_google_protobuf//:protobuf_version.bzl", "PROTOBUF_PYTHON_VERSION")
 load("@rules_python//python:packaging.bzl", "py_wheel")
+load("@rules_python//python:proto.bzl", "py_proto_library")
 
 genrule(
     name = "_generate_requirements_in",
@@ -194,14 +195,19 @@ py_library(
     ],
 )
 
+py_proto_library(
+    name = "config_proto_pb2",
+    deps = ["//:config_proto"],
+)
+
 [py_library(
     name = "lib_cmk_" + edition,
     srcs = srcs,
     imports = [".."],
     visibility = ["//tests:__subpackages__"],
     deps = [
+        "config_proto_pb2",
         "lib_cmk",
-        "//non-free/cmc-protocols/protocols:py_config_proto",
     ],
 ) for edition, srcs in [
     ("cce", CCE_PY),
@@ -219,7 +225,25 @@ py_library(
     visibility = ["//tests/unit:__pkg__"],
     deps = [
         "@rrdtool_native//:rrdtool_python_lib",
-    ] + CMK_PACKAGES + [requirement(dep) for dep in REQUIRED_EXTERNAL_DEPS],
+    ] + select({
+        "@//:gpl_repo": [],
+        "@//:gpl+enterprise_repo": [
+            "config_proto_pb2",
+        ],
+    }) + CMK_PACKAGES + [requirement(dep) for dep in REQUIRED_EXTERNAL_DEPS],
+)
+
+py_wheel(
+    name = "cmk_cre",
+    distribution = "checkmk",
+    requires = REQUIRED_EXTERNAL_DEPS,
+    # TODO(ml): cmk_version vs. PEP 440?
+    version = "1+cre",
+    visibility = ["//visibility:public"],
+    deps = [
+        "lib_cmk",
+        "lib_cmk_cre",
+    ],
 )
 
 [py_wheel(
@@ -232,9 +256,9 @@ py_library(
     deps = [
         "lib_cmk",
         "lib_cmk_" + edition,
+        "config_proto_pb2",
     ],
 ) for edition in [
-    "cre",
     "cce",
     "cee",
     "cme",

@@ -1,6 +1,8 @@
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
+load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@hedron_compile_commands//:refresh_compile_commands.bzl", "refresh_compile_commands")
 load("@repo_license//:license.bzl", "REPO_LICENSE")
+load("@rules_proto//proto:defs.bzl", "proto_library")
 load("@rules_python//python:pip.bzl", "compile_pip_requirements")
 
 exports_files([
@@ -107,4 +109,35 @@ compile_pip_requirements(
     requirements_txt = "@//:requirements_lock.txt",
     tags = ["manual"],
     visibility = ["//visibility:public"],
+)
+
+copy_file(
+    name = "_cmc_config_proto",
+    src = "//non-free/cmc-protocols/protocols:checkmk/cmc/config/v1/types.proto",
+    out = "cmc_proto/config/v1/types.proto",
+)
+
+copy_file(
+    name = "_cmc_cycletime_proto",
+    src = "//non-free/cmc-protocols/protocols:checkmk/cmc/cycletime/v1/types.proto",
+    out = "cmc_proto/cycletime/v1/types.proto",
+)
+
+proto_library(
+    name = "cycletime_proto",
+    srcs = ["cmc_proto/cycletime/v1/types.proto"],
+    strip_import_prefix = "cmc_proto",
+    visibility = ["//visibility:public"],
+)
+
+proto_library(
+    name = "config_proto",
+    srcs = ["cmc_proto/config/v1/types.proto"],
+    strip_import_prefix = "cmc_proto",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":cycletime_proto",
+        "@com_google_protobuf//:duration_proto",
+        "@com_google_protobuf//:timestamp_proto",
+    ],
 )

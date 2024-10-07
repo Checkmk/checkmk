@@ -393,8 +393,9 @@ test-unit-doctests: prepare-protobuf-files
 		cmk/
 
 test-unit: prepare-protobuf-files test-unit-doctests
-	cd .. && TZ=$(RANDOM_TZ) \
+	cd .. && \
 	    ./scripts/run-bazel.sh test --test_verbose_timeout_warnings //tests/unit:all \
+	    --test_env=TZ=$(RANDOM_TZ) \
 	    --test_arg="-m" --test_arg="not slow" \
 	    --test_arg="--numprocesses=4"
 	cd .. && TZ=$(RANDOM_TZ) \
@@ -415,8 +416,9 @@ test-unit-docker:
 	../scripts/run-in-docker.sh make --quiet test-unit
 
 test-unit-all: prepare-protobuf-files
-	cd .. && TZ=$(RANDOM_TZ) \
+	cd .. && \
 	    ./scripts/run-bazel.sh test --test_verbose_timeout_warnings //tests/unit:all \
+	    --test_env=TZ=$(RANDOM_TZ) \
 	    --test_arg="--numprocesses=4"
 	cd .. && TZ=$(RANDOM_TZ) \
 	    $(PYTEST) \

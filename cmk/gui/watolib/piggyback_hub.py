@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Container, Iterable, Mapping
+from collections.abc import Iterable, Mapping
 
 from livestatus import SiteConfiguration, SiteId
 
@@ -45,11 +45,16 @@ def distribute_piggyback_hub_configs(
 ) -> None:
     site_configs = filter_for_enabled_piggyback_hub(global_settings, configured_sites)
 
+    new_config = PiggybackHubConfig(
+        targets={
+            host_name: site_id
+            for host_name, site_id in hosts_sites.items()
+            if site_id in site_configs
+        }
+    )
+
     paths = create_paths(omd_root)
-
     old_config = load_config(paths)
-    new_config = _get_piggyback_hub_config(site_configs, hosts_sites)
-
     if set(old_config.targets) != set(new_config.targets):
         distribute({site: new_config for site in site_configs.keys()}, omd_root)
         save_config(paths, new_config)
@@ -69,16 +74,3 @@ def filter_for_enabled_piggyback_hub(
         for site_id, site_config in configured_sites.items()
         if _piggyback_hub_enabled(site_config, global_settings) is True
     }
-
-
-def _get_piggyback_hub_config(
-    site_configs: Container[SiteId],
-    hosts_sites: Mapping[HostName, SiteId],
-) -> PiggybackHubConfig:
-    return PiggybackHubConfig(
-        targets={
-            host_name: site_id
-            for host_name, site_id in hosts_sites.items()
-            if site_id in site_configs
-        }
-    )

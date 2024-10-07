@@ -20,7 +20,6 @@
     "core-js": "^3.38.0",
     "crossfilter2": "^1.5.4",
     "d3": "^7.9.0",
-    "jquery": "^3.7.1",
     "lucide-vue-next": "^0.427.0",
     "radix-vue": "^1.9.4",
     "tailwind-merge": "^2.5.2",

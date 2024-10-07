@@ -1,0 +1,11 @@
+Title: Add metric translations mrpe based windows checks
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1728288891
+Edition: cre
+Level: 1
+Version: 2.2.0p36
+
+Metrics provided by <code>check_ping.exe</code> or <code>check_tcp.exe</code> have now a metric translation and are
+displayed in a correct manner.

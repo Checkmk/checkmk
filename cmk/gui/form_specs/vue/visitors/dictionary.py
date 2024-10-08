@@ -5,6 +5,8 @@
 import ast
 from typing import Mapping
 
+from cmk.ccc.i18n import _
+
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
 from cmk.gui.form_specs.vue import shared_type_defs
 
@@ -131,6 +133,14 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, Mapping[str, object]
         ]
         for key_name, dict_element in self.form_spec.elements.items():
             if key_name not in parsed_value:
+                if dict_element.required:
+                    element_validations.append(
+                        shared_type_defs.ValidationMessage(
+                            location=[key_name],
+                            message=_("Required field missing"),
+                            invalid_value=None,
+                        )
+                    )
                 continue
 
             element_visitor = get_visitor(dict_element.parameter_form, self.options)

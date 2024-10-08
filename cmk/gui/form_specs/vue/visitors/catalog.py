@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any, cast, Mapping, Self, Sequence
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.i18n import _
 
 from cmk.gui.form_specs.private.catalog import Catalog, Topic
 from cmk.gui.form_specs.vue import shared_type_defs
@@ -73,6 +74,13 @@ class CatalogVisitor(FormSpecVisitor[Catalog, Mapping[str, object]]):
 
         for topic in self.form_spec.topics:
             if topic.ident not in parsed_value:
+                validations.append(
+                    shared_type_defs.ValidationMessage(
+                        location=[topic.ident],
+                        message=_("Missing catalog topic."),
+                        invalid_value=None,
+                    )
+                )
                 continue
 
             element_visitor = get_visitor(topic.dictionary, self.options)

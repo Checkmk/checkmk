@@ -48,8 +48,8 @@ def tuple_spec() -> Tuple:
     [
         [DEFAULT_VALUE, [7, "default string", {"test_float": 42.0}]],
         [[9, DEFAULT_VALUE, DEFAULT_VALUE], [9, "default string", {"test_float": 42.0}]],
-        [[3, "some_string", {}], [3, "some_string", {}]],
-        [(3, "some_string", {}), [3, "some_string", {}]],
+        [[3, "some_string", DEFAULT_VALUE], [3, "some_string", {"test_float": 42.0}]],
+        [(3, "some_string", {"test_float": 42.0}), [3, "some_string", {"test_float": 42.0}]],
     ],
 )
 def test_tuple_visitor_valid_value(
@@ -66,8 +66,9 @@ def test_tuple_visitor_valid_value(
     ["invalid_value", "expected_errors"],
     [
         [(1, 2), 1],  # wrong tuple length
-        [("asd", 2, {}), 2],  # wrong data type
-        [(15, "some_string", {}), 1],  # int validator failed
+        [("asd", 2, {"test_float": 42.0}), 2],  # wrong data type
+        [(15, "some_string", {"test_float": 42.0}), 1],  # int validator failed
+        [(1, "some_string", {}), 1],  # dict validator failed
     ],
 )
 def test_tuple_visitor_invalid_value(

@@ -14,6 +14,13 @@ import { type ButtonVariants } from '@/components/IconButton.vue'
 const props = defineProps<QuickSetupStageContent>()
 
 const isLast = computed(() => props.index === props.numberOfStages - 1)
+const isSaveOverview = computed(
+  () => props.index === props.numberOfStages && props.mode === 'overview'
+)
+const showButtons = computed(() => props.mode === 'guided' || isSaveOverview.value)
+const filteredButtons = computed(() =>
+  props.buttons.filter((b) => !isSaveOverview.value || b.variant === 'save')
+)
 
 function getButtonAriaLabel(variant: ButtonVariants['variant']): string {
   /* TODO: move this strings to the backend to make it translatable (CMK-19020) */
@@ -37,10 +44,10 @@ function getButtonAriaLabel(variant: ButtonVariants['variant']): string {
       <p v-for="error in errors" :key="error">{{ error }}</p>
     </AlertBox>
 
-    <div v-if="mode === 'guided'">
+    <div v-if="showButtons">
       <div v-if="!loading" class="qs-stage-content__action">
         <Button
-          v-for="button in buttons"
+          v-for="button in filteredButtons"
           :key="button.label"
           :label="button.label"
           :aria-label="getButtonAriaLabel(button.variant)"

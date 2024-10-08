@@ -12,7 +12,8 @@ import {
   type QSStageResponse,
   type ValidationError,
   type QSResponseComplete,
-  type QSRequestComplete
+  type QSRequestComplete,
+  type QSAllStagesResponse
 } from './rest_api_types'
 import type { StageData } from './components/quick-setup/widgets/widget_types'
 
@@ -63,6 +64,23 @@ const processError = (err: unknown): ValidationError | GeneralError => {
 export const getOverview = async (quickSetupId: string): Promise<QSInitializationResponse> => {
   return new Promise((resolve, reject) => {
     const url = GET_QUICK_SETUP_OVERVIEW_URL.replace('{QUICK_SETUP_ID}', quickSetupId)
+    axios
+      .get(url)
+      .then((response) => {
+        resolve(response.data)
+      })
+      .catch((err) => {
+        reject(processError(err))
+      })
+  })
+}
+
+export const getAllStages = async (quickSetupId: string): Promise<QSAllStagesResponse> => {
+  return new Promise((resolve, reject) => {
+    const url = `${GET_QUICK_SETUP_OVERVIEW_URL}?mode=overview`.replace(
+      '{QUICK_SETUP_ID}',
+      quickSetupId
+    )
     axios
       .get(url)
       .then((response) => {

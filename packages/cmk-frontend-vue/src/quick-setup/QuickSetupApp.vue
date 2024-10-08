@@ -12,7 +12,11 @@ defineProps<QuickSetupAppProps>()
 </script>
 <template>
   <Suspense>
-    <QuickSetupAsync :quick_setup_id="quick_setup_id" />
+    <QuickSetupAsync
+      :quick_setup_id="quick_setup_id"
+      :toggle-enabled="toggleEnabled"
+      :mode="mode"
+    />
     <template #fallback>
       <LoadingIcon />
     </template>

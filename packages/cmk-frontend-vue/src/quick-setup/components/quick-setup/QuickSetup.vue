@@ -10,12 +10,12 @@ import QuickSetupStage from './QuickSetupStage.vue'
 import QuickSetupSaveStage from './QuickSetupSaveStage.vue'
 import type { QuickSetupProps } from './quick_setup_types'
 
-const props = withDefaults(defineProps<QuickSetupProps>(), {
-  mode: 'guided'
-})
+const props = defineProps<QuickSetupProps>()
 
 const numberOfStages = computed(() => props.regularStages.length)
-const isSaveStage = computed(() => props.currentStage === numberOfStages.value)
+const showSaveStage = computed(
+  () => props.currentStage === numberOfStages.value || props.mode.value === 'overview'
+)
 </script>
 
 <template>
@@ -26,7 +26,7 @@ const isSaveStage = computed(() => props.currentStage === numberOfStages.value)
       :index="index"
       :current-stage="currentStage"
       :number-of-stages="numberOfStages"
-      :mode="props.mode"
+      :mode="props.mode.value"
       :loading="loading"
       :title="stg.title"
       :sub_title="stg.sub_title || null"
@@ -38,11 +38,11 @@ const isSaveStage = computed(() => props.currentStage === numberOfStages.value)
     />
   </ol>
   <QuickSetupSaveStage
-    v-if="saveStage && isSaveStage"
+    v-if="saveStage && showSaveStage"
     :index="numberOfStages"
     :current-stage="currentStage"
     :number-of-stages="numberOfStages"
-    :mode="props.mode"
+    :mode="props.mode.value"
     :loading="loading"
     :content="saveStage.content || null"
     :errors="saveStage.errors || []"

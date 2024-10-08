@@ -134,7 +134,14 @@ class ModeQuickSetupSpecialAgent(WatoMode):
         )
 
     def page(self) -> None:
-        html.vue_app(app_name="quick_setup", data={"quick_setup_id": self._quick_setup_id})
+        html.vue_app(
+            app_name="quick_setup",
+            data={
+                "quick_setup_id": self._quick_setup_id,
+                "mode": "guided",
+                "toggle_enabled": False,
+            },
+        )
 
 
 class ModeEditConfigurationBundles(WatoMode):

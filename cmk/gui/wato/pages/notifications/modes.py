@@ -3478,5 +3478,7 @@ class ModeEditNotificationRuleQuickSetup(WatoMode):
             app_name="quick_setup",
             data={
                 "quick_setup_id": self._quick_setup_id,
+                "mode": "guided" if self._new else "overview",
+                "toggle_enabled": True,
             },
         )

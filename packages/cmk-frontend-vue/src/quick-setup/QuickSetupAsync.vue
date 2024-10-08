@@ -8,8 +8,8 @@ import { computed, ref, toValue, type Ref } from 'vue'
 
 import QuickSetup from './components/quick-setup/QuickSetup.vue'
 
-import { completeQuickSetup, getOverview, validateStage } from './rest_api'
-import useWizard from './components/quick-setup/useWizard'
+import { completeQuickSetup, getOverview, validateStage, getAllStages } from './rest_api'
+import useWizard, { type WizardMode } from './components/quick-setup/useWizard'
 import type { ComponentSpec } from './components/quick-setup/widgets/widget_types'
 import { renderContent, renderRecap, defineButtons } from './render_utils'
 import type {
@@ -23,13 +23,16 @@ import type {
   ValidationError,
   GeneralError,
   RestApiError,
-  QSStageResponse
+  QSStageResponse,
+  QSAllStagesResponse
 } from './rest_api_types'
 import { asStringArray } from './utils'
 import type {
   StageData,
   AllValidationMessages
 } from '@/quick-setup/components/quick-setup/widgets/widget_types'
+import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
+import usePersistentRef from '@/lib/usePersistentRef'
 /**
  * Type definition for internal stage storage
  */
@@ -46,8 +49,15 @@ interface QSStageStore {
 
 /* TODO: move this string to the backend to make it translatable (CMK-19020) */
 const PREV_BUTTON_LABEL = 'Back'
+const GUIDED_MODE_LABEL = 'Guided mode'
+const OVERVIEW_MODE_LABEL = 'Overview mode'
 
-const props = defineProps<QuickSetupAppProps>()
+const props = withDefaults(defineProps<QuickSetupAppProps>(), {
+  mode: 'guided',
+  toggleEnabled: false
+})
+
+const loadedAllStages = ref(false)
 const ready = ref(false)
 const stages = ref<QSStageStore[]>([])
 const globalError = ref<string | null>(null) //Main error message
@@ -117,6 +127,65 @@ const nextStage = async () => {
 const prevStage = () => {
   globalError.value = null
   quickSetupHook.prev()
+}
+
+const loadAllStages = async () => {
+  ready.value = false
+  loading.value = true
+  globalError.value = null
+  stages.value = []
+
+  let result: QSAllStagesResponse | null = null
+  try {
+    result = await getAllStages(props.quick_setup_id)
+  } catch (err) {
+    handleError(err as RestApiError)
+  }
+  loading.value = false
+
+  if (!result) {
+    return
+  }
+
+  for (let stageIndex = 0; stageIndex < result.stages.length; stageIndex++) {
+    const stage = result.stages[stageIndex]!
+    const btn: StageButtonSpec[] = []
+    if (stageIndex !== result.stages.length - 1) {
+      btn.push(defineButton.next(stage.button_label))
+    }
+
+    if (stageIndex !== 0) {
+      btn.push(defineButton.prev(PREV_BUTTON_LABEL))
+    }
+
+    stages.value.push({
+      title: stage.title,
+      sub_title: stage?.sub_title || null,
+      components: stage.components || [],
+      recap: [],
+      form_spec_errors: {},
+      errors: [],
+      user_input: {},
+      buttons: btn
+    })
+  }
+
+  // Add save stage
+  stages.value.push({
+    title: '',
+    sub_title: null,
+    components: [],
+    recap: [],
+    form_spec_errors: {},
+    errors: [],
+    user_input: {},
+    buttons: [
+      ...result.complete_buttons.map((button) => defineButton.save(button.id, button.label)),
+      defineButton.prev(PREV_BUTTON_LABEL)
+    ]
+  })
+  ready.value = true
+  loadedAllStages.value = true
 }
 
 const save = async (buttonId: string) => {
@@ -240,19 +309,40 @@ const handleError = (err: RestApiError) => {
     ).formspec_errors
   }
 }
+const wizardMode: Ref<WizardMode> = usePersistentRef<WizardMode>(
+  'quick_setup_wizard_mode',
+  'guided'
+)
 
-const quickSetupHook = useWizard(stages.value.length)
+const quickSetupHook = useWizard(stages.value.length, props.mode)
+const setWizardMode = (mode: WizardMode) => {
+  wizardMode.value = mode
+  quickSetupHook.setMode(mode)
+  if (mode === 'overview' && !loadedAllStages.value) {
+    loadAllStages()
+  }
+}
 
 ready.value = true
 </script>
 
 <template>
+  <ToggleButtonGroup
+    v-if="toggleEnabled"
+    :options="[
+      { label: GUIDED_MODE_LABEL, value: 'guided' },
+      { label: OVERVIEW_MODE_LABEL, value: 'overview' }
+    ]"
+    :value="quickSetupHook.mode.value"
+    @change="setWizardMode"
+  />
   <QuickSetup
     v-if="ready"
     :loading="loading"
     :regular-stages="regularStages"
     :save-stage="saveStage"
     :current-stage="quickSetupHook.stage.value"
+    :mode="quickSetupHook.mode"
   />
 </template>
 

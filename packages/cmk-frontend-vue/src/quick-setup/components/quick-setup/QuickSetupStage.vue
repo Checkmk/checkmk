@@ -27,8 +27,8 @@ const onClickGoTo = computed(() =>
   <li
     class="qs-stage"
     :class="{
-      'qs-stage-active': isSelectedStage,
-      'qs-stage-complete': isCompleted
+      'qs-stage-active': isSelectedStage && props.mode !== 'overview',
+      'qs-stage-complete': isCompleted && props.mode !== 'overview'
     }"
     @click="(_mouse_event) => onClickGoTo"
   >

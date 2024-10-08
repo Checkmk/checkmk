@@ -48,7 +48,11 @@ function setupVue() {
           break
         }
         case 'quick_setup': {
-          app = createApp(QuickSetup, { quick_setup_id: appData.quick_setup_id })
+          app = createApp(QuickSetup, {
+            quick_setup_id: appData.quick_setup_id,
+            mode: appData.mode,
+            toggleEnabled: appData.toggle_enabled
+          })
           break
         }
         case 'notification_overview': {

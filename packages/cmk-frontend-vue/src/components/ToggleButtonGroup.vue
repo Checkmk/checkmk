@@ -16,7 +16,10 @@ export interface ToggleButtonGroupProps {
   value?: string | null
 }
 
-const props = defineProps<ToggleButtonGroupProps>()
+const props = withDefaults(defineProps<ToggleButtonGroupProps>(), {
+  value: null
+})
+
 defineEmits(['change'])
 
 const isSelected = (value: string) => value === props.value

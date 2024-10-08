@@ -3,8 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
 from collections import defaultdict
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass
 
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
@@ -43,6 +45,28 @@ _check_plugins_by_ruleset_name: dict[RuleSetName | None, list[CheckPlugin]] = de
 _sections_by_parsed_name: dict[ParsedSectionName, dict[SectionName, SectionPlugin]] = defaultdict(
     dict
 )
+
+
+@dataclass(frozen=True)
+class AgentBasedPlugins:
+    agent_sections: Mapping[SectionName, AgentSectionPlugin]
+    snmp_sections: Mapping[SectionName, SNMPSectionPlugin]
+    check_plugins: Mapping[CheckPluginName, CheckPlugin]
+    inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin]
+
+
+def get_previously_loaded_plugins() -> AgentBasedPlugins:
+    """Return the previously loaded agent-based plugins
+
+    In the long run we want to get rid of this function and instead
+    return the plugins directly after loading them (without registry).
+    """
+    return AgentBasedPlugins(
+        agent_sections=registered_agent_sections,
+        snmp_sections=registered_snmp_sections,
+        check_plugins=registered_check_plugins,
+        inventory_plugins=registered_inventory_plugins,
+    )
 
 
 def add_check_plugin(check_plugin: CheckPlugin) -> None:
@@ -187,10 +211,6 @@ def iter_all_discovery_rulesets() -> Iterable[RuleSetName]:
 
 def iter_all_host_label_rulesets() -> Iterable[RuleSetName]:
     return stored_rulesets.keys()
-
-
-def iter_all_inventory_plugins() -> Iterable[InventoryPlugin]:
-    return registered_inventory_plugins.values()
 
 
 def iter_all_snmp_sections() -> Iterable[SNMPSectionPlugin]:

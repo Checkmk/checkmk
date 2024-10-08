@@ -34,6 +34,7 @@ from cmk.checkengine.checking import CheckPluginName
 
 import cmk.base.utils
 from cmk.base import config, core_config
+from cmk.base.api.agent_based.register import AgentBasedPlugins
 from cmk.base.config import ConfigCache, HostgroupName, ObjectAttributes, ServicegroupName
 from cmk.base.core_config import (
     AbstractServiceID,
@@ -66,6 +67,7 @@ class NagiosCore(core_config.MonitoringCore):
         config_cache: ConfigCache,
         ip_address_of: config.IPLookup,
         licensing_handler: LicensingHandler,
+        plugins: AgentBasedPlugins,
         passwords: Mapping[str, str],
         hosts_to_update: set[HostName] | None = None,
     ) -> None:
@@ -73,6 +75,7 @@ class NagiosCore(core_config.MonitoringCore):
         self._create_core_config(config_path, licensing_handler, passwords, ip_address_of)
         self._precompile_hostchecks(
             config_path,
+            plugins,
             precompile_mode=(
                 PrecompileMode.DELAYED if config.delay_precompile else PrecompileMode.INSTANT
             ),
@@ -117,6 +120,7 @@ class NagiosCore(core_config.MonitoringCore):
     def _precompile_hostchecks(
         self,
         config_path: VersionedConfigPath,
+        plugins: AgentBasedPlugins,
         *,
         precompile_mode: PrecompileMode,
     ) -> None:
@@ -125,6 +129,7 @@ class NagiosCore(core_config.MonitoringCore):
         precompile_hostchecks(
             config_path,
             self._config_cache,
+            plugins,
             precompile_mode=precompile_mode,
         )
         with suppress(IOError):

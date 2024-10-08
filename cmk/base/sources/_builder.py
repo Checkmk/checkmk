@@ -175,7 +175,9 @@ class _Builder:
             #
             # The current solution is brittle in that there is not guarantee
             # that all the relevant plugins are loaded at this point.
-            SNMPFetcher.plugin_store = make_plugin_store()
+            SNMPFetcher.plugin_store = make_plugin_store(
+                agent_based_register.get_previously_loaded_plugins()
+            )
 
     def _initialize_snmp_based(self) -> None:
         if not self.cds.is_snmp:

@@ -9,7 +9,7 @@ import enum
 import os
 import sys
 from argparse import ArgumentParser
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import assert_never
 
 from cmk.ccc import debug
@@ -20,11 +20,18 @@ from cmk.utils.rulesets.definition import RuleGroup
 from cmk.checkengine.checkresults import (  # pylint: disable=cmk-module-layer-violation
     ActiveCheckResult,
 )
+from cmk.checkengine.inventory import (  # pylint: disable=cmk-module-layer-violation
+    InventoryPluginName,
+)
 
+from cmk.base.api.agent_based.plugin_classes import (  # pylint: disable=cmk-module-layer-violation
+    InventoryPlugin,
+)
 from cmk.base.api.agent_based.register import (  # pylint: disable=cmk-module-layer-violation
+    AgentBasedPlugins,
+    get_previously_loaded_plugins,
     iter_all_check_plugins,
     iter_all_discovery_rulesets,
-    iter_all_inventory_plugins,
 )
 from cmk.base.config import (  # pylint: disable=cmk-module-layer-violation
     load_all_plugins,
@@ -300,7 +307,9 @@ def _validate_discovery_parameters_usage() -> Sequence[str]:
     return _check_if_referenced(discovered_discovery_parameters, referenced_ruleset_names)
 
 
-def _validate_inventory_parameters_usage() -> Sequence[str]:
+def _validate_inventory_parameters_usage(
+    inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
+) -> Sequence[str]:
     discovered_inventory_parameters: DiscoveredPlugins[RuleSpec] = discover_plugins(
         PluginGroup.RULESETS,
         {InventoryParameters: entry_point_prefixes()[InventoryParameters]},
@@ -308,7 +317,7 @@ def _validate_inventory_parameters_usage() -> Sequence[str]:
     )
     referenced_ruleset_names = {
         str(plugin.inventory_ruleset_name)
-        for plugin in iter_all_inventory_plugins()
+        for plugin in inventory_plugins.values()
         if plugin.inventory_ruleset_name is not None
     }
     return _check_if_referenced(discovered_inventory_parameters, referenced_ruleset_names)
@@ -338,13 +347,13 @@ def _validate_special_agent_usage() -> Sequence[str]:
     return _check_if_referenced(discovered_special_agents, referenced_ruleset_names)
 
 
-def _validate_rule_spec_usage() -> ActiveCheckResult:
+def _validate_rule_spec_usage(plugins: AgentBasedPlugins) -> ActiveCheckResult:
     # only for ruleset API v1
     errors: list[str] = []
 
     errors.extend(_validate_check_parameters_usage())
     errors.extend(_validate_discovery_parameters_usage())
-    errors.extend(_validate_inventory_parameters_usage())
+    errors.extend(_validate_inventory_parameters_usage(plugins.inventory_plugins))
     errors.extend(_validate_active_check_usage())
     errors.extend(_validate_special_agent_usage())
 
@@ -352,14 +361,16 @@ def _validate_rule_spec_usage() -> ActiveCheckResult:
 
 
 def validate_plugins() -> ActiveCheckResult:
+    loading_subresult = _validate_agent_based_plugin_loading()
+    loaded_plugins = get_previously_loaded_plugins()
     sub_results = [
-        _validate_agent_based_plugin_loading(),
+        loading_subresult,
         _validate_active_checks_loading(),
         _validate_special_agent_loading(),
         _validate_rule_spec_loading(),
         _validate_rule_spec_form_creation(),
         _validate_referenced_rule_spec(),
-        _validate_rule_spec_usage(),
+        _validate_rule_spec_usage(loaded_plugins),
     ]
     return ActiveCheckResult.from_subresults(*sub_results)
 

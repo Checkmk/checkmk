@@ -16,28 +16,28 @@ from cmk.fetchers.snmp import (  # pylint: disable=cmk-module-layer-violation
 )
 
 from ._config import (
+    AgentBasedPlugins,
     get_relevant_raw_sections,
     is_registered_snmp_section_plugin,
-    iter_all_inventory_plugins,
     iter_all_snmp_sections,
 )
 
 __all__ = ["make_plugin_store"]
 
 
-def _make_inventory_sections() -> frozenset[SectionName]:
+def _make_inventory_sections(plugins: AgentBasedPlugins) -> frozenset[SectionName]:
     return frozenset(
         s
-        for s in get_relevant_raw_sections(
+        for s in get_relevant_raw_sections(  # this will need to know all the plugins soon.
             check_plugin_names=(),
-            inventory_plugin_names=(p.name for p in iter_all_inventory_plugins()),
+            inventory_plugin_names=plugins.inventory_plugins,
         )
         if is_registered_snmp_section_plugin(s)
     )
 
 
-def make_plugin_store() -> SNMPPluginStore:
-    inventory_sections = _make_inventory_sections()
+def make_plugin_store(plugins: AgentBasedPlugins) -> SNMPPluginStore:
+    inventory_sections = _make_inventory_sections(plugins)
     return SNMPPluginStore(
         {
             s.name: SNMPPluginStoreItem(

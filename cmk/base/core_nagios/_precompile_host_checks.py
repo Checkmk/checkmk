@@ -18,7 +18,7 @@ import py_compile
 import re
 import socket
 import sys
-from collections.abc import Iterable
+from collections.abc import Collection, Iterable
 from pathlib import Path
 from typing import assert_never
 
@@ -109,6 +109,7 @@ class HostCheckStore:
 def precompile_hostchecks(
     config_path: VersionedConfigPath,
     config_cache: ConfigCache,
+    plugins: agent_based_register.AgentBasedPlugins,
     *,
     precompile_mode: PrecompileMode,
 ) -> None:
@@ -134,6 +135,7 @@ def precompile_hostchecks(
                 config_cache,
                 config_path,
                 hostname,
+                plugins,
                 precompile_mode=precompile_mode,
             )
             if host_check is None:
@@ -154,6 +156,7 @@ def dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
     config_cache: ConfigCache,
     config_path: VersionedConfigPath,
     hostname: HostName,
+    plugins: agent_based_register.AgentBasedPlugins,
     *,
     verify_site_python: bool = True,
     precompile_mode: PrecompileMode,
@@ -161,7 +164,7 @@ def dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
     (
         needed_agent_based_check_plugin_names,
         needed_agent_based_inventory_plugin_names,
-    ) = _get_needed_plugin_names(config_cache, hostname)
+    ) = _get_needed_plugin_names(config_cache, hostname, plugins.inventory_plugins)
 
     if hostname in config_cache.hosts_config.clusters:
         assert config_cache.nodes(hostname)
@@ -169,7 +172,7 @@ def dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
             (
                 node_needed_agent_based_check_plugin_names,
                 node_needed_agent_based_inventory_plugin_names,
-            ) = _get_needed_plugin_names(config_cache, node)
+            ) = _get_needed_plugin_names(config_cache, node, plugins.inventory_plugins)
             needed_agent_based_check_plugin_names.update(node_needed_agent_based_check_plugin_names)
             needed_agent_based_inventory_plugin_names.update(
                 node_needed_agent_based_inventory_plugin_names
@@ -195,6 +198,7 @@ def dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
         needed_agent_based_section_plugin_names.values(),
         needed_agent_based_check_plugin_names,
         needed_agent_based_inventory_plugin_names,
+        plugins,
     )
 
     legacy_checks_to_load = sorted(
@@ -281,6 +285,7 @@ def dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
 def _get_needed_plugin_names(
     config_cache: ConfigCache,
     host_name: HostName,
+    inventory_plugins: Collection[InventoryPluginName],
 ) -> tuple[set[CheckPluginName], set[InventoryPluginName]]:
     # Collect the needed check plug-in names using the host check table.
     # Even auto-migrated checks must be on the list of needed *agent based* plugins:
@@ -295,10 +300,7 @@ def _get_needed_plugin_names(
             filter_mode=FilterMode.INCLUDE_CLUSTERED,
             skip_ignored=False,
         ).needed_check_names(),
-        {
-            inventory_plugin.name
-            for inventory_plugin in agent_based_register.iter_all_inventory_plugins()
-        }
+        set(inventory_plugins)
         if config_cache.hwsw_inventory_parameters(host_name).status_data_inventory
         else set(),
     )
@@ -345,6 +347,7 @@ def _get_needed_agent_based_locations(
     section_plugins: Iterable[SectionPlugin],
     check_plugin_names: Iterable[CheckPluginName],
     inventory_plugin_names: Iterable[InventoryPluginName],
+    plugins: agent_based_register.AgentBasedPlugins,
 ) -> list[PluginLocation]:
     modules = {
         plugin.location
@@ -353,8 +356,9 @@ def _get_needed_agent_based_locations(
     }
     modules.update(
         plugin.location
-        for plugin in [agent_based_register.get_inventory_plugin(p) for p in inventory_plugin_names]
-        if plugin is not None and isinstance(plugin.location, PluginLocation)
+        for name in inventory_plugin_names
+        if (plugin := plugins.inventory_plugins.get(name)) is not None
+        and isinstance(plugin.location, PluginLocation)
     )
     modules.update(
         section.location

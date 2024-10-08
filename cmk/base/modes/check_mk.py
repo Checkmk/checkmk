@@ -1385,8 +1385,9 @@ def mode_update() -> None:
         with cmk.base.core.activation_lock(mode=config.restart_locking):
             do_create_config(
                 core=create_core(config.monitoring_core),
-                ip_address_of=ip_address_of,
                 config_cache=config_cache,
+                plugins=agent_based_register.get_previously_loaded_plugins(),
+                ip_address_of=ip_address_of,
                 all_hosts=hosts_config.hosts,
                 duplicates=sorted(
                     hosts_config.duplicates(

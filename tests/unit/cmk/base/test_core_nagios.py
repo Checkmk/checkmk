@@ -31,6 +31,7 @@ from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import AutocheckEntry
 
 from cmk.base import config, core_nagios
+from cmk.base.api.agent_based.register import AgentBasedPlugins
 
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig
@@ -386,6 +387,7 @@ def test_dump_precompiled_hostcheck(
         config_cache,
         config_path,
         hostname,
+        plugins=AgentBasedPlugins({}, {}, {}, {}),
         precompile_mode=core_nagios.PrecompileMode.INSTANT,
     )
     assert host_check is not None
@@ -403,6 +405,7 @@ def test_dump_precompiled_hostcheck_without_check_mk_service(
         config_cache,
         config_path,
         hostname,
+        plugins=AgentBasedPlugins({}, {}, {}, {}),
         precompile_mode=core_nagios.PrecompileMode.INSTANT,
     )
     assert host_check is None
@@ -416,6 +419,7 @@ def test_dump_precompiled_hostcheck_not_existing_host(
         config_cache,
         config_path,
         HostName("not-existing"),
+        plugins=AgentBasedPlugins({}, {}, {}, {}),
         precompile_mode=core_nagios.PrecompileMode.INSTANT,
     )
     assert host_check is None

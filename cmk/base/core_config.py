@@ -66,6 +66,7 @@ class MonitoringCore(abc.ABC):
         self,
         config_path: VersionedConfigPath,
         config_cache: ConfigCache,
+        plugins: agent_based_register.AgentBasedPlugins,
         ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
         passwords: Mapping[str, str],
         hosts_to_update: set[HostName] | None = None,
@@ -77,6 +78,7 @@ class MonitoringCore(abc.ABC):
             config_cache,
             ip_address_of,
             licensing_handler,
+            plugins,
             passwords,
             hosts_to_update,
         )
@@ -92,6 +94,7 @@ class MonitoringCore(abc.ABC):
         config_cache: ConfigCache,
         ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
         licensing_handler: LicensingHandler,
+        plugins: agent_based_register.AgentBasedPlugins,
         passwords: Mapping[str, str],
         hosts_to_update: set[HostName] | None = None,
     ) -> None:
@@ -261,6 +264,7 @@ def check_icmp_arguments_of(
 def do_create_config(
     core: MonitoringCore,
     config_cache: ConfigCache,
+    plugins: agent_based_register.AgentBasedPlugins,
     ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     all_hosts: Iterable[HostName],
     hosts_to_update: set[HostName] | None = None,
@@ -292,6 +296,7 @@ def do_create_config(
             _create_core_config(
                 core,
                 config_cache,
+                plugins,
                 ip_address_of,
                 hosts_to_update=hosts_to_update,
                 duplicates=duplicates,
@@ -384,6 +389,7 @@ def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
 def _create_core_config(
     core: MonitoringCore,
     config_cache: ConfigCache,
+    plugins: agent_based_register.AgentBasedPlugins,
     ip_address_of: config.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     hosts_to_update: set[HostName] | None = None,
     *,
@@ -403,6 +409,7 @@ def _create_core_config(
         core.create_config(
             config_path,
             config_cache,
+            plugins,
             ip_address_of,
             hosts_to_update=hosts_to_update,
             passwords=passwords,

@@ -34,7 +34,10 @@ compile_pip_requirements(
     env = {
         "PIPENV_PYPI_MIRROR": "https://pypi.org/simple",
     },
-    extra_args = ["--quiet"],
+    extra_args = [
+        "--no-strip-extras",  # reconsider this? (https://github.com/jazzband/pip-tools/issues/1613)
+        "--quiet",
+    ],
     requirements_in = "requirements_in.txt",
     requirements_txt = "@//:requirements_lock.txt",
     tags = ["manual"],

@@ -4,8 +4,6 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { useId } from '@/form/utils'
-
 export interface DropdownOption {
   ident: string | number
   name: string
@@ -23,15 +21,18 @@ const props = defineProps({
   disabled: {
     type: Boolean,
     default: false
+  },
+  componentId: {
+    type: String,
+    default: ''
   }
 })
 
 const selectedOption = defineModel<string>('selectedOption', { required: true })
-const componentId = useId()
 </script>
 
 <template>
-  <select :id="componentId" v-model="selectedOption" :disabled="props.disabled">
+  <select :id="props.componentId" v-model="selectedOption" :disabled="props.disabled">
     <option v-if="selectedOption === ''" disabled selected hidden value="">
       {{ props.input_hint }}
     </option>

@@ -4,10 +4,12 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import type { SingleChoice } from '@/form/components/vue_formspec_components'
+import type { SingleChoice, SingleChoiceElement } from '@/form/components/vue_formspec_components'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import FormValidation from '@/form/components/FormValidation.vue'
 import { useId } from '@/form/utils'
+import { computed } from 'vue'
+import DropDown from '@/components/DropDown.vue'
 
 const props = defineProps<{
   spec: SingleChoice
@@ -22,23 +24,27 @@ const [validation, value] = useValidation<string>(
 )
 
 const componentId = useId()
+
+const options = computed(() => {
+  return props.spec.elements.map((element: SingleChoiceElement) => {
+    return {
+      ident: element.name,
+      name: element.title
+    }
+  })
+})
 </script>
 
 <template>
   <div>
     <label v-if="$props.spec.label" :for="componentId">{{ spec.label }}</label>
-    <select :id="componentId" v-model="value" :disabled="spec.frozen">
-      <option v-if="value.length === 0" disabled selected hidden value="">
-        {{ props.spec.input_hint }}
-      </option>
-      <option
-        v-for="element in spec.elements"
-        :key="JSON.stringify(element.name)"
-        :value="element.name"
-      >
-        {{ element.title }}
-      </option>
-    </select>
+    <DropDown
+      v-model:selected-option="value"
+      :options="options"
+      :input_hint="spec.input_hint"
+      :disabled="spec.frozen"
+      :component-id="componentId"
+    />
   </div>
   <FormValidation :validation="validation"></FormValidation>
 </template>

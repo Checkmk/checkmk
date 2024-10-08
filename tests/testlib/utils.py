@@ -440,8 +440,8 @@ def restart_httpd() -> None:
     test environment, but not a real distribution.
 
     Before using this in your test, try an Apache reload instead. It is much more likely to work
-    accross different distributions. If your test needs a system Apache, then run this command at
-    the beginning of the test. This ensures consistency accross distributions.
+    across different distributions. If your test needs a system Apache, then run this command at
+    the beginning of the test. This ensures consistency across distributions.
     """
 
     # When executed locally and un-dockerized, DISTRO may not be set

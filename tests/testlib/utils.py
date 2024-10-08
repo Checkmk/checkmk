@@ -431,7 +431,7 @@ def makedirs(path: str | Path, sudo: bool = True, substitute_user: str | None = 
 def restart_httpd() -> None:
     """Restart Apache manually on RHEL-based containers.
 
-    On RHEL-based containers, such as CentOS and AlmaLinux, the system Apache is not running.
+    On RHEL-based containers, such as AlmaLinux, the system Apache is not running.
     OMD will not start Apache, if it is not running already.
 
     If a distro uses an `INIT_CMD`, which is not available inside of docker, then the system
@@ -445,7 +445,7 @@ def restart_httpd() -> None:
     """
 
     # When executed locally and un-dockerized, DISTRO may not be set
-    if os.environ.get("DISTRO") in {"centos-8", "almalinux-9"}:
+    if os.environ.get("DISTRO") == "almalinux-9":
         run(["httpd", "-k", "restart"], sudo=True)
 
 

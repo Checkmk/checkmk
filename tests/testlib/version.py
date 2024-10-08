@@ -273,12 +273,6 @@ def get_omd_distro_name() -> str:
     rh = Path("/etc/redhat-release")
     if rh.exists():
         content = rh.read_text()
-        if content.startswith("CentOS release 6"):
-            return "el6"
-        if content.startswith("CentOS Linux release 7"):
-            return "el7"
-        if content.startswith("CentOS Linux release 8"):
-            return "el8"
         if content.startswith("AlmaLinux release 9"):
             return "el9"
         raise NotImplementedError()

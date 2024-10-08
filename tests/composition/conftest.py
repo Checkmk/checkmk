@@ -125,7 +125,7 @@ def _run_cron() -> Iterator[None]:
     for cron_cmd in (
         cron_cmds := (
             "cron",  # Ubuntu, Debian, ...
-            "crond",  # RHEL (CentOS, AlmaLinux)
+            "crond",  # RHEL (AlmaLinux)
         )
     ):
         try:

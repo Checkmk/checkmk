@@ -272,7 +272,7 @@ section_checkmk() {
     echo "<<<check_mk>>>"
     echo "Version: 2.4.0b1"
     echo "AgentOS: openwrt"
-    echo "Hostname: $(hostname)"
+    echo "Hostname: $(cat /proc/sys/kernel/hostname)"
     echo "AgentDirectory: ${MK_CONFDIR}"
     echo "DataDirectory: ${MK_VARDIR}"
     echo "SpoolDirectory: ${SPOOLDIR}"
@@ -866,7 +866,7 @@ section_veritas_vcs() {
     # Secure mode must be off to allow root to execute commands
     if [ -x /opt/VRTSvcs/bin/haclus ]; then
         echo "<<<veritas_vcs>>>"
-        vcshost=$(hostname | cut -d. -f1)
+        vcshost=$(cat /proc/sys/kernel/hostname | cut -d. -f1)
         waitmax -s 9 2 /opt/VRTSvcs/bin/haclus -display -localclus | grep -e ClusterName -e ClusState
         waitmax -s 9 2 /opt/VRTSvcs/bin/hasys -display -attribute SysState
         waitmax -s 9 2 /opt/VRTSvcs/bin/hagrp -display -sys "${vcshost}" -attribute State -localclus

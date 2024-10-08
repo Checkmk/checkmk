@@ -34,6 +34,7 @@ compile_pip_requirements(
     env = {
         "PIPENV_PYPI_MIRROR": "https://pypi.org/simple",
     },
+    extra_args = ["--quiet"],
     requirements_in = "requirements_in.txt",
     requirements_txt = "@//:requirements_lock.txt",
     tags = ["manual"],

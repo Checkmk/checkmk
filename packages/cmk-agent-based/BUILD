@@ -10,6 +10,7 @@ exports_files(["pyproject.toml"])
 
 compile_pip_requirements(
     name = "requirements",
+    extra_args = ["--quiet"],
     requirements_in = "pyproject.toml",
     requirements_txt = "requirements_lock.txt",  # shall exist, emtpy is okay
 )

@@ -11,6 +11,7 @@ import DemoAlertBox from './DemoAlertBox.vue'
 import DemoIconButton from './DemoIconButton.vue'
 import DemoSlideIn from './DemoSlideIn.vue'
 import DemoFormEditAsync from './DemoFormEditAsync.vue'
+import DemoLoadingIcon from './DemoLoadingIcon.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -39,6 +40,11 @@ const router = createRouter({
       path: '/formeditasync',
       name: 'FormEditAsync',
       component: DemoFormEditAsync
+    },
+    {
+      path: '/loadingicon',
+      name: 'LoadingIcon',
+      component: DemoLoadingIcon
     }
   ]
 })

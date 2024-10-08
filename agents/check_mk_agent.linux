@@ -1040,15 +1040,9 @@ section_drbd() {
 }
 
 section_heartbeat() {
-    if command -v crm_mon >/dev/null 2>&1 || [ -S /var/run/heartbeat/crm/cib_ro ] || [ -S /var/run/crm/cib_ro ] || pgrep "^(crmd|pacemaker-contr)$" >/dev/null 2>&1; then
-        crm_output=$(TZ=UTC crm_mon -1 -r | grep -v ^$ | sed 's/^ //; /^\sResource Group:/,$ s/^\s//; s/^\s/_/g')
-        if [ -n "$crm_output" ]; then
-            echo '<<<heartbeat_crm>>>'
-            echo "$crm_output"
-        else
-            echo '<<<heartbeat_crm>>>'
-            crm_mon -1 -r 2>&1
-        fi
+    if [ -S /var/run/heartbeat/crm/cib_ro ] || [ -S /var/run/crm/cib_ro ] || pgrep "^(crmd|pacemaker-contr)$" >/dev/null 2>&1; then
+        echo '<<<heartbeat_crm>>>'
+        TZ=UTC crm_mon -1 -r | grep -v ^$ | sed 's/^ //; /^\sResource Group:/,$ s/^\s//; s/^\s/_/g'
     fi
 
     if inpath cl_status; then

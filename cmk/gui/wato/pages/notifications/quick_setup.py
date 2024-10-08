@@ -16,6 +16,7 @@ from cmk.gui.form_specs.private import (
 from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout
 from cmk.gui.i18n import _
 from cmk.gui.quick_setup.v0_unstable._registry import QuickSetupRegistry
+from cmk.gui.quick_setup.v0_unstable.predefined import recaps
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupSaveAction, QuickSetupStage
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     GeneralStageErrors,
@@ -203,7 +204,7 @@ def triggering_events() -> QuickSetupStage:
         title=_("Triggering events"),
         configure_components=_components,
         custom_validators=[_validate_at_least_one_event],
-        recap=[],
+        recap=[recaps.recaps_form_spec],
         button_label=_("Next step: Specify host/services"),
     )
 

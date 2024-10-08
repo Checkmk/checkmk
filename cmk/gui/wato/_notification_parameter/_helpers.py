@@ -107,13 +107,14 @@ def _transform_to_valuespec_html_mail_url_prefix(p):
 
 
 def _get_url_prefix_setting(
-    is_cse: bool, default_value: str = "automatic_https", group_title: str | None = None
+    is_cse: bool = False, default_value: str = "automatic_https", group_title: str | None = None
 ) -> DictElement[Any]:
     return DictElement(
         group=DictGroup(
             title=Title("%s") % group_title if group_title else None,
         ),
         # TODO only option that crashes from old configs, getting {"automatic": "http"}
+        # see
         parameter_form=CascadingSingleChoice(
             title=Title("URL prefix for links to Checkmk"),
             help_text=Help(

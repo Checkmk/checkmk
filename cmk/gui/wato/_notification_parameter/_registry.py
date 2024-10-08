@@ -15,7 +15,7 @@ from cmk.utils.rulesets.definition import RuleGroup
 import cmk.gui.rulespec as _rulespec
 import cmk.gui.watolib.rulespecs as _rulespecs
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.private import Catalog, CommentTextArea, Topic
+from cmk.gui.form_specs.private import Catalog, CommentTextArea, not_empty, Topic
 from cmk.gui.utils.rule_specs.loader import LoadedRuleSpec
 from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfigurationNotifications
 from cmk.gui.watolib.users import notification_script_title
@@ -79,7 +79,9 @@ class NotificationParameterRegistry(Registry[type[NotificationParameter]]):
                                 parameter_form=String(
                                     title=Title("Description"),
                                     field_size=FieldSize.LARGE,
-                                )
+                                    custom_validate=[not_empty()],
+                                ),
+                                required=True,
                             ),
                             "comment": DictElement(
                                 parameter_form=CommentTextArea(

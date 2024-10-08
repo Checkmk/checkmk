@@ -22,6 +22,7 @@ from pprint import pformat
 from typing import Any, assert_never, overload
 
 import pexpect  # type: ignore[import-untyped]
+import yaml
 
 from tests.testlib.repo import branch_from_env, current_branch_name, repo_path
 
@@ -444,8 +445,13 @@ def restart_httpd() -> None:
     the beginning of the test. This ensures consistency across distributions.
     """
 
+    almalinux_9 = "almalinux-9"
+    assert almalinux_9 in get_supported_distros(), (
+        f"{almalinux_9} is not supported anymore. " f"Please adapt the code below."
+    )
+
     # When executed locally and un-dockerized, DISTRO may not be set
-    if os.environ.get("DISTRO") == "almalinux-9":
+    if os.environ.get("DISTRO") == almalinux_9:
         run(["httpd", "-k", "restart"], sudo=True)
 
 
@@ -502,3 +508,10 @@ def parse_files(pathname: Path, pattern: str, ignore_case: bool = True) -> dict[
                     logger.info("Match found in %s: %s", file_path, line.strip())
                     match_dict[file_path] = match_dict.get(file_path, []) + [line]
     return match_dict
+
+
+def get_supported_distros() -> list[str]:
+    with open(repo_path() / "editions.yml") as stream:
+        yaml_file = yaml.safe_load(stream)
+
+    return yaml_file["common"]

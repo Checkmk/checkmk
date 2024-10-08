@@ -17,7 +17,7 @@ use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 use string_enum::StringEnum;
 
-#[derive(StringEnum, PartialEq)]
+#[derive(StringEnum, PartialEq, Eq)]
 pub enum ConnectionType {
     /// `push-agent`
     Push,
@@ -71,7 +71,7 @@ pub struct RegistrationPreset {
 
 impl JSONLoader for RegistrationPreset {}
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum HostRegistrationData {
     Name(String),
     Labels(types::AgentLabels),
@@ -339,7 +339,7 @@ impl Connection {
     }
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
 pub struct RegisteredConnections {
     #[serde(default)]
     pub push: HashMap<site_spec::Coordinates, Connection>,
@@ -355,12 +355,12 @@ impl JSONLoader for RegisteredConnections {}
 
 fn mtime(path: &Path) -> AnyhowResult<Option<SystemTime>> {
     Ok(if path.exists() {
-        Some(fs::metadata(&path)?.modified()?)
+        Some(fs::metadata(path)?.modified()?)
     } else {
         None
     })
 }
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Eq, Debug, Clone)]
 pub struct Registry {
     connections: RegisteredConnections,
     path: PathBuf,
@@ -429,10 +429,8 @@ impl Registry {
     }
 
     pub fn save(&self) -> io::Result<()> {
-        let write_op_result = fs::write(
-            &self.path,
-            &serde_json::to_string_pretty(&self.connections)?,
-        );
+        let write_op_result =
+            fs::write(&self.path, serde_json::to_string_pretty(&self.connections)?);
         #[cfg(windows)]
         return write_op_result;
         #[cfg(unix)]

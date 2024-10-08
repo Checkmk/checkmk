@@ -131,7 +131,7 @@ mod tests {
     fn test_mailslot_log() {
         let mail_slot_name = format!("mail_slot_{}", std::process::id());
         let mut server = MailslotServer::new(&MailslotName::local(&mail_slot_name)).unwrap();
-        send_log_to_mailslot(&TEXT_TO_SEND, &mail_slot_name);
+        send_log_to_mailslot(TEXT_TO_SEND, &mail_slot_name);
         let msg = server.get_next_unread().unwrap().take().expect("Empty!");
         let (hdr, payload) = parse_message(&msg);
         assert_eq!(&payload, TEXT_TO_SEND.as_bytes());

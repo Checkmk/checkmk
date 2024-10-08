@@ -100,7 +100,7 @@ class CatalogVisitor(FormSpecVisitor[Catalog, Mapping[str, object]]):
         disk_values = {}
         for topic in self.form_spec.topics:
             element_visitor = get_visitor(topic.dictionary, self.options)
-            if topic_value := parsed_value.get(topic.ident):
+            if (topic_value := parsed_value.get(topic.ident)) is not None:
                 disk_values[topic.ident] = element_visitor.to_disk(topic_value)
         return disk_values
 

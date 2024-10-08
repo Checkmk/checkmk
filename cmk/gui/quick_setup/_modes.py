@@ -501,7 +501,6 @@ class ModeConfigurationBundle(WatoMode):
             [
                 self._bundle_references.rules,
                 self._bundle_references.hosts,
-                self._bundle_references.passwords,
             ]
         ):
             raise MKUserError(
@@ -513,7 +512,6 @@ class ModeConfigurationBundle(WatoMode):
         assert len(self._bundle_references.rules) == 1
         assert self._bundle_references.hosts
         assert len(self._bundle_references.hosts) == 1
-        assert self._bundle_references.passwords
 
         # Rule
         ModeEditRule.set_vars(self._bundle_group, self._bundle_references.rules[0].id)
@@ -537,11 +535,13 @@ class ModeConfigurationBundle(WatoMode):
                     edit_dcd_connection.from_vars(f"dcd_id_{index}")
 
         # Passwords
-        for index, password in enumerate(self._bundle_references.passwords):
-            request.set_var(f"password_id_{index}", password[0])
-        self._edit_passwords = [ModeEditPassword() for _pw in self._bundle_references.passwords]
-        for index, edit_password in enumerate(self._edit_passwords):
-            edit_password.from_vars(f"password_id_{index}")
+        self._edit_passwords = []
+        if self._bundle_references.passwords:
+            for index, password in enumerate(self._bundle_references.passwords):
+                request.set_var(f"password_id_{index}", password[0])
+            self._edit_passwords = [ModeEditPassword() for _pw in self._bundle_references.passwords]
+            for index, edit_password in enumerate(self._edit_passwords):
+                edit_password.from_vars(f"password_id_{index}")
 
     @staticmethod
     def _configuration_vs(bundle_id: str) -> Dictionary:

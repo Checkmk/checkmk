@@ -12,7 +12,6 @@ from cmk.ccc.site import omd_site
 
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_QUICK_SETUP
 from cmk.utils.hostaddress import HostName
-from cmk.utils.password_store import ad_hoc_password_id
 from cmk.utils.password_store import Password as StorePassword
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RuleConditionsSpec, RuleOptionsSpec, RuleSpec
@@ -258,13 +257,11 @@ def _create_and_save_special_agent_bundle(
 
     collected_passwords = _collect_passwords_from_form_data(all_stages_form_data, parameter_form)
 
-    # TODO: Find a better solution.
-    # Here we replace the password id if the user has selected from password store
-    # otherwise, the previous one will be overwritten.
     stored_passwords = load_passwords()
+    # We need to filter out the passwords that are already stored in the password store since they
+    # should be independent of the configuration bundle
     passwords = {
-        pwid if pwid not in stored_passwords else ad_hoc_password_id(): pw
-        for pwid, pw in collected_passwords.items()
+        pwid: pw for pwid, pw in collected_passwords.items() if pwid not in stored_passwords
     }
 
     # TODO: The sanitize function is likely to change once we have a folder FormSpec.

@@ -102,6 +102,14 @@ class CreateDCDConnection(TypedDict):
 
 @dataclass
 class CreateBundleEntities:
+    """
+
+    Remarks for Special agents:
+        * when creating a special agent rule, the user may select an existing password. In such,
+        cases the password shouldn't be part of the bundle, as deletion of the bundle should leave
+        the password untouched.
+    """
+
     hosts: Iterable[CreateHost] | None = None
     passwords: Iterable[CreatePassword] | None = None
     rules: Iterable[CreateRule] | None = None

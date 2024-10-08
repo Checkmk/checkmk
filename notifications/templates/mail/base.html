@@ -2,7 +2,10 @@
 <html style="background-color: #EAEAEA;">
     <head>
         <title>HTML Email template</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0"
+        >
     </head>
     <body>
         {% import 'macros.html' as macros %}
@@ -35,104 +38,168 @@
         %}
 
         <table
-            id="mail_container"
+            width="100%"
             style="
-                background-color: #ffffff;
-                margin: 0 auto;
-                width: 600px;
-                padding: 20px;
-                border: 1px solid #ccc;
-                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                background-color: #f7f7f7;
+                border-collapse: collapse;
             "
         >
             <tr>
-                <td>
-                    <div id="content_container">
-                        {% if not is_bulk or bulk_summary %}
-                            <img
-                                src="cid:checkmk_logo.png"
-                                id="logo"
-                                style="
-                                    width: 110px;
-                                    height: 30px;
-                                    margin-left: 1%;
-                                "
-                            />
-
-                            <hr style="
-                                width: 536px;
-                                border: 1px solid #e5e5e5;
-                                margin: 0 auto;
-                            "
-                            />
-                        {% endif %}
-
-                        {% if bulk_summary %}
-                            {% include 'bulk.html' %}
-                        {% endif %}
-
-                        {% if insert %}
-                            <div
-                                id="extra_section"
-                                style="
-                                    border: 1px solid #e5e5e5;
-                                    width: 536px;
-                                    border-radius: 4px 0 0 0;
-                                    margin-top: 16px;
-                                "
+                <td align="center" style="padding: 20px;">
+                    <table
+                        width="600"
+                        align="center"
+                        style="
+                            border: 1px solid #ccc;
+                            border-collapse: collapse;
+                            background-color: #ffffff;
+                        "
+                    >
+                        {{ macros.margin_tr() }}
+                        <tr>
+                            <td
+                                align="center"
+                                style="padding: 0;"
                             >
-                                <div style="padding: 20px;">
-                                    {{ insert|safe }}
-                                </div>
-                            </div>
-                        {% endif %}
+                                {% if not is_bulk or bulk_summary %}
+                                    <table
+                                        align="center"
+                                        style="
+                                            border-collapse: collapse;
+                                            width: 536px;
+                                        "
+                                    >
+                                        <tr>
+                                            <td>
+                                                <img
+                                                    src="cid:checkmk_logo.png"
+                                                    alt="Checkmk Logo"
+                                                    style="
+                                                        display: block;
+                                                        width: 110px;
+                                                        height: 30px;
+                                                        border: 0
+                                                    "
+                                                />
+                                            </td>
+                                        </tr>
+                                    </table>
 
-                        {% include 'summary.html' %}
+                                    <table align="center">
+                                        <tr>
+                                            <td style="padding: 5px 0 20px 0;">
+                                                <table
+                                                    width="536"
+                                                >
+                                                    <tr>
+                                                        <td style="
+                                                                border-bottom: 1px solid #e5e5e5;
+                                                                height: 1px;
+                                                                line-height: 1px;
+                                                                mso-line-height-rule: exactly;
+                                                            "
+                                                        >
+                                                            <!--[if mso]>
+                                                                <div style="
+                                                                        border-bottom: 1px solid #e5e5e5;
+                                                                        width: 536px;
+                                                                        height: 1px;
+                                                                        line-height: 1px;
+                                                                        mso-line-height-rule: exactly;
+                                                                    "
+                                                                >
+                                                                    &nbsp;
+                                                                </div>
+                                                            <![endif]-->
+                                                            <span style="
+                                                                    display: block;
+                                                                    width: 536px;
+                                                                    height: 1px;
+                                                                    line-height: 1px;
+                                                                "
+                                                            >
+                                                                &nbsp;
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                {% endif %}
 
-                        <div
-                            id="sections_container"
-                            style="width: 536px; margin: 20px auto"
-                        >
-                            {% include 'event_overview.html' %}
 
-                            {% if graphs and 'graph' in elements %}
-                                {% include 'graph.html' %}
-                            {% endif %}
+                                {% if bulk_summary %}
+                                    {% include 'bulk.html' %}
+                                {% endif %}
 
-                            {% if elements_without_graph %}
-                                {% include 'additional.html' %}
-                            {% endif %}
+                                {% if insert %}
+                                    <div
+                                        style="
+                                            margin-top: 16px;
+                                            border: 1px solid #e5e5e5;
+                                            width: 536px;
+                                            border-radius: 4px 0 0 0;
+                                        "
+                                    >
+                                        <div style="padding: 20px;">
+                                            {{ insert|safe }}
+                                        </div>
+                                    </div>
+                                {% endif %}
 
-                            {% if data.PARAMETER_CONTACT_GROUPS %}
-                                {% include 'contact_groups.html' %}
-                            {% endif %}
+                                {% include 'summary.html' %}
 
-                            {% if service_notification  and data.PARAMETER_SERVICE_LABEL%}
-                                {% include 'service_labels.html' %}
-                            {% endif %}
 
-                            {% if data.PARAMETER_HOST_LABELS %}
-                                {% include 'host_labels.html' %}
-                            {% endif %}
+                                {% include 'event_overview.html' %}
 
-                            {% if data.PARAMETER_HOST_TAGS %}
-                                {% include 'host_tags.html' %}
-                            {% endif %}
+                                {% if graphs and 'graph' in elements %}
+                                    {% include 'graph.html' %}
+                                {% endif %}
 
-                            {% if href %}
-                                {{ macros.view_issue_button(href) }}
-                            {% endif %}
 
-                        </div>
-                    </div>
+                                {% if elements_without_graph %}
+                                    {% include 'additional.html' %}
+                                {% endif %}
+
+                                {% if data.PARAMETER_CONTACT_GROUPS %}
+                                    {% include 'contact_groups.html' %}
+                                {% endif %}
+
+                                {% if service_notification and data.PARAMETER_SVC_LABELS%}
+                                    {% include 'service_labels.html' %}
+                                {% endif %}
+
+                                {% if data.PARAMETER_HOST_LABELS %}
+                                    {% include 'host_labels.html' %}
+                                {% endif %}
+
+                                {% if data.PARAMETER_HOST_TAGS %}
+                                    {% include 'host_tags.html' %}
+                                {% endif %}
+
+                                {% if href %}
+                                    {{ macros.view_issue_button(href) }}
+                                {% endif %}
+                            <td>
+                        </tr>
+                    </table>
                 </td>
             </tr>
         </table>
         {% if not is_bulk or last_bulk_entry %}
-        <table class="footer" cellpadding="0" cellspacing="0" border="0" width="100%">
+        <table
+            width="100%"
+        >
             <tr>
-                <td style="width: 536px;text-align: center;">
-                    <p style="color: #23496D">Checkmk GmbH<br>Kellerstraße 27, München, Bayern 81667, Germany<br>+49 89 998209700</p>
+                <td style="
+                        width: 536px;
+                        text-align: center;
+                    "
+                >
+                    <p style="color: #23496D">
+                        Checkmk GmbH<br>Kellerstraße 27, München, Bayern 81667, Germany<br>+49 89 998209700
+                    </p>
                 </td>
             </tr>
         </table>

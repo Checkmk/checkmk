@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import dataclasses
 import time
 from collections.abc import Mapping, Sequence
 from typing import Any
@@ -60,6 +61,12 @@ def _add_admin_status_to_ifaces(
         iface.attributes.admin_status = admin_status
 
 
+def _uptime_or_server_time(now: float, section_uptime: uptime.Section | None) -> float:
+    if section_uptime is None:
+        return now
+    return section_uptime.uptime_sec or now
+
+
 def discover_if64(
     params: Sequence[Mapping[str, Any]],
     section_if64: interfaces.Section[interfaces.TInterfaceType] | None,
@@ -85,15 +92,12 @@ def check_if64(
     if section_if64 is None:
         return
     _add_admin_status_to_ifaces(section_if64, section_if64adm)
-    if section_uptime is not None:
-        timestamp = section_uptime.uptime_sec or time.time()
-    else:
-        timestamp = time.time()
+    timestamp = _uptime_or_server_time(time.time(), section_uptime)
     yield from interfaces.check_multiple_interfaces(
         item,
         params,
         section_if64,
-        timestamp=timestamp,
+        timestamps=[timestamp] * len(section_if64),
     )
 
 
@@ -110,10 +114,26 @@ def cluster_check_if64(
             _add_admin_status_to_ifaces(node_section_if64, section_if64adm[node_name])
             sections_w_admin_status[node_name] = node_section_if64
 
-    yield from interfaces.cluster_check(
+    ifaces = []
+    timestamps = []
+    now = time.time()
+    for node, node_ifaces in sections_w_admin_status.items():
+        for iface in node_ifaces or ():
+            ifaces.append(
+                dataclasses.replace(
+                    iface,
+                    attributes=dataclasses.replace(
+                        iface.attributes,
+                        node=node,
+                    ),
+                )
+            )
+            timestamps.append(_uptime_or_server_time(now, section_uptime[node]))
+    yield from interfaces.check_multiple_interfaces(
         item,
         params,
-        sections_w_admin_status,
+        ifaces,
+        timestamps=timestamps,
     )
 
 

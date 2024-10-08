@@ -24,7 +24,9 @@ const spec: FormSpec.DualListChoice = {
     remove: 'Remove',
     available_options: 'Available options',
     selected_options: 'Selected options',
-    selected: 'Selected'
+    selected: 'Selected',
+    no_elements_available: 'No elements available',
+    no_elements_selected: 'No elements selected'
   },
   validators: [],
   show_toggle_all: false
@@ -70,9 +72,7 @@ describe('FormDualListChoice', () => {
 
     const filterInactiveElements = screen.getByTestId('search-inactive')
     await fireEvent.update(filterInactiveElements, 'Choice 1')
-    expect(
-      screen.getByRole<HTMLSelectElement>('listbox', { name: 'available' }).options.length
-    ).equal(0)
+    expect(screen.getByText('No elements available')).toBeInTheDocument()
   })
 
   test('add all while filter on available options', async () => {
@@ -109,6 +109,8 @@ describe('FormDualListChoice', () => {
     expect(
       screen.getByRole<HTMLSelectElement>('listbox', { name: 'available' }).options.length
     ).equal(2)
+
+    expect(screen.getByText('No elements selected')).toBeInTheDocument()
   })
 
   test('add by double click on available item', async () => {

@@ -98,6 +98,8 @@ class DualListChoiceI18n:
     available_options: str
     selected_options: str
     selected: str
+    no_elements_available: str
+    no_elements_selected: str
 
 
 class CascadingChoiceLayout(str, Enum):

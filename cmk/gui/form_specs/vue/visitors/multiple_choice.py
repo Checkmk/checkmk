@@ -81,6 +81,8 @@ class MultipleChoiceVisitor(FormSpecVisitor[AdaptiveMultipleChoice, Sequence[str
                         available_options=_("Available options"),
                         selected_options=_("Selected options"),
                         selected=_("Selected"),
+                        no_elements_available=_("No elements available"),
+                        no_elements_selected=_("No elements selected"),
                     ),
                     show_toggle_all=self.form_spec.show_toggle_all,
                 ),

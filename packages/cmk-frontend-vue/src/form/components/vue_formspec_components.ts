@@ -264,6 +264,8 @@ export interface DualListChoiceI18N {
   available_options: string;
   selected_options: string;
   selected: string;
+  no_elements_available: string;
+  no_elements_selected: string;
 }
 export interface TimeSpanI18N {
   millisecond: string;

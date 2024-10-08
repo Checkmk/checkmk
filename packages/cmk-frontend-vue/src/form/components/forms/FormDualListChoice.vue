@@ -11,6 +11,7 @@ import type {
   DualListChoice,
   MultipleChoiceElement
 } from '@/form/components/vue_formspec_components'
+
 import { useId } from '@/form/utils'
 
 const props = defineProps<{
@@ -198,23 +199,29 @@ const handleDoubleClickToRemoveItem = (elementName: string) => {
 
       <tr>
         <td>
-          <select
-            :id="`${componentId}_available`"
-            v-model="availableSelected"
-            tabindex="2"
-            aria-label="available"
-            multiple
-            :style="selectStyle"
-          >
-            <option
-              v-for="element in items.inactive"
-              :key="JSON.stringify(element.name)"
-              :value="element.name"
-              @dblclick="() => handleDoubleClickToAddItem(element.name)"
+          <div v-if="items.inactive.length > 0">
+            <select
+              :id="`${componentId}_available`"
+              v-model="availableSelected"
+              tabindex="2"
+              aria-label="available"
+              multiple
+              :style="selectStyle"
             >
-              {{ element.title }}
-            </option>
-          </select>
+              <option
+                v-for="element in items.inactive"
+                :key="JSON.stringify(element.name)"
+                :value="element.name"
+                @dblclick="() => handleDoubleClickToAddItem(element.name)"
+              >
+                {{ element.title }}
+              </option>
+            </select>
+          </div>
+
+          <div v-else :style="selectStyle" class="no-element-in-select">
+            {{ props.spec.i18n.no_elements_available }}
+          </div>
         </td>
         <td>
           <div class="centered-container">
@@ -236,23 +243,28 @@ const handleDoubleClickToRemoveItem = (elementName: string) => {
           </div>
         </td>
         <td>
-          <select
-            :id="`${componentId}_active`"
-            v-model="activeSelected"
-            tabindex="4"
-            aria-label="active"
-            multiple
-            :style="selectStyle"
-          >
-            <option
-              v-for="element in items.active"
-              :key="JSON.stringify(element.name)"
-              :value="element.name"
-              @dblclick="() => handleDoubleClickToRemoveItem(element.name)"
+          <div v-if="items.active.length > 0">
+            <select
+              :id="`${componentId}_active`"
+              v-model="activeSelected"
+              tabindex="4"
+              aria-label="active"
+              multiple
+              :style="selectStyle"
             >
-              {{ element.title }}
-            </option>
-          </select>
+              <option
+                v-for="element in items.active"
+                :key="JSON.stringify(element.name)"
+                :value="element.name"
+                @dblclick="() => handleDoubleClickToRemoveItem(element.name)"
+              >
+                {{ element.title }}
+              </option>
+            </select>
+          </div>
+          <div v-else :style="selectStyle" class="no-element-in-select">
+            {{ props.spec.i18n.no_elements_selected }}
+          </div>
         </td>
       </tr>
     </table>
@@ -345,6 +357,17 @@ const handleDoubleClickToRemoveItem = (elementName: string) => {
     border: 1px solid #303946;
     border-radius: 2px;
   }
+}
+
+.no-element-in-select {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--default-select-background-color);
+  height: 100%;
+  user-select: none;
+  opacity: 0.5;
+  border-radius: 3px;
 }
 
 /* custom scroll bar => should be removed or moved to globals*/

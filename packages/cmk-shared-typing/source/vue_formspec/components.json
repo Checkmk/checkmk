@@ -406,6 +406,12 @@
                                 },
                                 "selected": {
                                     "type": "string"
+                                },
+                                "no_elements_available": {
+                                    "type": "string"
+                                },
+                                "no_elements_selected": {
+                                    "type": "string"
                                 }
                             },
                             "required": [
@@ -415,7 +421,9 @@
                                 "remove_all",
                                 "available_options",
                                 "selected_options",
-                                "selected"
+                                "selected",
+                                "no_elements_available",
+                                "no_elements_selected"
                             ]
                         }
                     },

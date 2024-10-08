@@ -66,6 +66,7 @@ HACK_AGENTS = {
     "storeonce4x": True,
     "vsphere": True,
     "jolokia": True,
+    "random": False,  # needs no secret
 }
 
 

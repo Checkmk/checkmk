@@ -109,7 +109,6 @@ UNMIGRATED = {
     "ipmi_sensors",
     "jira",
     "mqtt",
-    "random",
     "ruckus_spot",
     "salesforce",
     "smb_share",

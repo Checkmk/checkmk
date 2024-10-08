@@ -1,0 +1,16 @@
+Title: Registering agents without automation user
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1728390830
+Edition: cme
+Level: 1
+Version: 2.2.0p36
+
+This is only relevant if you use the managed edition and you set the automation user to belong to the provider!
+
+If the automation user is marked to belong to the *provider* the user is not synchronized to the customer sites.
+When registering an agent the agent receiver queries the RestAPI in order to get the configuration for the configured lifetime of agent certificates.
+In order to authenticate the agent receiver tries to use the automation user.
+This failed with an uncaught exception if that automation user does not exists.
+In 2.3.0 we switched to another authentication scheme which is not available in 2.2.0, therefore these cases are now caught and the default lifetime (5 years) is used.

@@ -73,5 +73,8 @@ def uuid_from_pem_csr(pem_csr: str) -> str:
 
 
 def internal_credentials() -> HTTPBasicCredentials:
+    """return credentials of the INTERNAL_REST_API_USER aka automation user
+
+    If there is not automation user this will raise a FileNotFoundError"""
     secret = (users_dir() / INTERNAL_REST_API_USER / "automation.secret").read_text().strip()
     return HTTPBasicCredentials(username=INTERNAL_REST_API_USER, password=secret)

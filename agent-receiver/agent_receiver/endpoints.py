@@ -81,12 +81,20 @@ def _validate_uuid_against_csr(uuid: UUID4, csr_field: CsrField) -> None:
 
 
 def _sign_agent_csr(uuid: UUID4, csr_field: CsrField) -> Certificate:
-    return sign_agent_csr(
-        csr_field.csr,
-        controller_certificate_settings(
+    try:
+        lifetime = controller_certificate_settings(
             f"uuid={uuid} Querying agent controller certificate settings failed",
             internal_credentials(),
-        ).lifetime_in_months,
+        ).lifetime_in_months
+    except FileNotFoundError:
+        # In a managed edition the automation user might not be available,
+        # therefore we cannot lookup what is configured. So let's go with the
+        # default of 60. This would have been configurable via
+        # `lifetime_in_months` aka "Lifetime of certificates"
+        lifetime = 60
+    return sign_agent_csr(
+        csr_field.csr,
+        lifetime,
     )
 
 

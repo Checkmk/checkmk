@@ -68,4 +68,5 @@ pip.parse(
 )
 use_repo(pip, "cmk_py")
 
+single_version_override(module_name = "protobuf", patches = ["//omd/packages/protobuf/patches:make_binary_wheel_work.dif"])
 bazel_dep(name = "protobuf", version = "28.2", repo_name = "com_google_protobuf")

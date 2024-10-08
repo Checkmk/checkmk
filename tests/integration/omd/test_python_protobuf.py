@@ -11,12 +11,10 @@ import pytest
 from tests.testlib.site import Site
 
 
-def test_protobuf_api_implementation_is_cpp(site: Site) -> None:
+def test_protobuf_api_implementation(site: Site) -> None:
     assert (
-        site.python_helper("helper_test_protobuf_api_implementation_is_cpp.py")
-        .check_output()
-        .rstrip()
-        == "cpp"
+        site.python_helper("helper_test_protobuf_api_implementation.py").check_output().rstrip()
+        == "upb"
     )
 
 

@@ -94,7 +94,7 @@ $(PROTOBUF_CACHE_PKG_PROCESS_LIBRARY): $(PROTOBUF_CACHE_PKG_PATH_LIBRARY)
 	$(call upload_pkg_archive,$(PROTOBUF_CACHE_PKG_PATH_LIBRARY),$(PROTOBUF_DIR)-library,$(PROTOBUF_BUILD_ID))
 	$(TOUCH) $@
 
-$(PROTOBUF_INTERMEDIATE_INSTALL): $(PROTOBUF_INTERMEDIATE_INSTALL_PYTHON) $(PROTOBUF_INTERMEDIATE_INSTALL_LIBRARY)
+$(PROTOBUF_INTERMEDIATE_INSTALL): $(PROTOBUF_INTERMEDIATE_INSTALL_LIBRARY)
 
 $(PROTOBUF_INTERMEDIATE_INSTALL_LIBRARY): $(PROTOBUF_BUILD_LIBRARY)
 	file $(PROTOBUF_BUILD_DIR)/src/protoc | grep ELF >/dev/null
@@ -102,23 +102,8 @@ $(PROTOBUF_INTERMEDIATE_INSTALL_LIBRARY): $(PROTOBUF_BUILD_LIBRARY)
 	make -C $(PROTOBUF_BUILD_DIR) DESTDIR=$(PROTOBUF_INSTALL_DIR_LIBRARY) install
 	$(TOUCH) $@
 
-$(PROTOBUF_INTERMEDIATE_INSTALL_PYTHON): $(PROTOBUF_BUILD_PYTHON) $(INTERMEDIATE_INSTALL_BAZEL)
 
-	# With Python 3.12, distutils is removed and we need to use setuptools from our python modules.
-	# By adding the pth file, we make the modules available for our own python interpreter.
-	cd $(PROTOBUF_BUILD_DIR)/python && \
-	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" && \
-	    echo "$(PYTHON3_MODULES_INSTALL_DIR)/$(SITE_PACKAGES_PATH_REL)" > "$(PYTHON_INSTALL_DIR)/$(SITE_PACKAGES_PATH_REL)python_modules.pth" && \
-	    $(PACKAGE_PYTHON_EXECUTABLE) setup.py install \
-	    --cpp_implementation \
-	    --root=$(PROTOBUF_INSTALL_DIR_PYTHON) \
-	    --prefix=''
-	# Quick hack to unblock CMK-18157
-	patchelf --set-rpath "\$$ORIGIN/../../../../.." \
-	    $(PROTOBUF_INSTALL_DIR_PYTHON)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/site-packages/google/protobuf/pyext/_message.cpython-$(PYTHON_MAJOR_MINOR)-x86_64-linux-gnu.so
-	$(TOUCH) $@
-
-$(PROTOBUF_INSTALL): $(PROTOBUF_INSTALL_LIBRARY) $(PROTOBUF_INSTALL_PYTHON)
+$(PROTOBUF_INSTALL): $(PROTOBUF_INSTALL_LIBRARY)
 
 $(PROTOBUF_INSTALL_LIBRARY): $(PROTOBUF_CACHE_PKG_PROCESS_LIBRARY)
 # Only install the libraries we really need in run time environment. The
@@ -134,9 +119,4 @@ $(PROTOBUF_INSTALL_LIBRARY): $(PROTOBUF_CACHE_PKG_PROCESS_LIBRARY)
 	    --exclude 'libprotobuf-lite.*' \
 	    --exclude 'protobuf-lite.pc' \
 	    $(PROTOBUF_INSTALL_DIR_LIBRARY)/ $(DESTDIR)$(OMD_ROOT)/
-	$(TOUCH) $@
-
-
-$(PROTOBUF_INSTALL_PYTHON): $(PROTOBUF_CACHE_PKG_PROCESS_PYTHON)
-	$(RSYNC) $(PROTOBUF_INSTALL_DIR_PYTHON)/ $(DESTDIR)$(OMD_ROOT)/
 	$(TOUCH) $@

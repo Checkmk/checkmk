@@ -1,0 +1,106 @@
+diff --git python/BUILD.bazel python/BUILD.bazel
+index 3e34bbdbc..94e0fd102 100644
+--- python/BUILD.bazel
++++ python/BUILD.bazel
+@@ -138,8 +138,6 @@ selects.config_setting_group(
+ # begin:github_only
+ _message_target_compatible_with = {
+     "@platforms//os:windows": ["@platforms//:incompatible"],
+-    "@system_python//:none": ["@platforms//:incompatible"],
+-    "@system_python//:unsupported": ["@platforms//:incompatible"],
+     "//conditions:default": [],
+ }
+ 
+diff --git python/dist/BUILD.bazel python/dist/BUILD.bazel
+index 265d9b885..14813d956 100644
+--- python/dist/BUILD.bazel
++++ python/dist/BUILD.bazel
+@@ -11,13 +11,14 @@ load("@pip_deps//:requirements.bzl", "requirement")
+ load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
+ load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+ load("@rules_python//python:packaging.bzl", "py_wheel")
+-load("@system_python//:version.bzl", "SYSTEM_PYTHON_VERSION")
+ load("//:protobuf_version.bzl", "PROTOBUF_PYTHON_VERSION")
+ load(":dist.bzl", "py_dist", "py_dist_module")
+ load(":py_proto_library.bzl", "py_proto_library")
+ 
+ licenses(["notice"])
+ 
++SYSTEM_PYTHON_VERSION = "312"
++
+ py_dist_module(
+     name = "message_mod",
+     extension = "//python:_message_binary",
+@@ -272,7 +273,6 @@ pkg_tar(
+     package_file_name = "protobuf.tar.gz",
+     strip_prefix = ".",
+     target_compatible_with = select({
+-        "@system_python//:none": ["@platforms//:incompatible"],
+         "//conditions:default": [],
+     }),
+ )
+@@ -291,7 +291,6 @@ genrule(
+         mv protobuf/dist/*.tar.gz $@
+     """,
+     target_compatible_with = select({
+-        "@system_python//:none": ["@platforms//:incompatible"],
+         "//conditions:default": [],
+     }),
+     tools = [requirement("setuptools")],
+@@ -304,6 +303,7 @@ py_wheel(
+         "//python:full_api_3.9": "cp39",
+         "//conditions:default": "abi3",
+     }),
++    visibility = ["//visibility:public"],
+     author = "protobuf@googlegroups.com",
+     author_email = "protobuf@googlegroups.com",
+     classifiers = [
+@@ -350,7 +350,6 @@ py_wheel(
+         "src/",
+     ],
+     target_compatible_with = select({
+-        "@system_python//:none": ["@platforms//:incompatible"],
+         "//conditions:default": [],
+     }),
+     version = PROTOBUF_PYTHON_VERSION,
+@@ -390,7 +389,6 @@ py_wheel(
+         "src/",
+     ],
+     target_compatible_with = select({
+-        "@system_python//:none": ["@platforms//:incompatible"],
+         "//conditions:default": [],
+     }),
+     version = PROTOBUF_PYTHON_VERSION,
+@@ -416,7 +414,6 @@ py_wheel(
+         "src/",
+     ],
+     target_compatible_with = select({
+-        "@system_python//:none": ["@platforms//:incompatible"],
+         "//conditions:default": [],
+     }),
+     version = PROTOBUF_PYTHON_VERSION,
+diff --git python/dist/dist.bzl python/dist/dist.bzl
+index 061125ede..5239c782c 100644
+--- python/dist/dist.bzl
++++ python/dist/dist.bzl
+@@ -1,7 +1,7 @@
+ """Rules to create python distribution files and properly name them"""
+ 
+ load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
+-load("@system_python//:version.bzl", "SYSTEM_PYTHON_VERSION")
++SYSTEM_PYTHON_VERSION = "312"
+ 
+ def _get_suffix(limited_api, python_version, cpu):
+     """Computes an ABI version tag for an extension module per PEP 3149."""
+diff --git python/internal.bzl python/internal.bzl
+index 8f99becec..6fec58610 100644
+--- python/internal.bzl
++++ python/internal.bzl
+@@ -127,7 +127,6 @@ def internal_py_test(deps = [], **kwargs):
+         imports = ["."],
+         deps = deps + ["//python:python_test_lib"],
+         target_compatible_with = select({
+-            "@system_python//:supported": [],
+             "//conditions:default": ["@platforms//:incompatible"],
+         }),
+         **kwargs

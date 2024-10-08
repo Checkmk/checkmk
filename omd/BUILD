@@ -28,6 +28,7 @@ PACKAGES_INT = [
     "//packages/cmk-livestatus-client:cmk_livestatus_pkg_tar",
     "//packages/cmk-trace:pkg_tar",
     "//omd/packages/protobuf:protobuf_tar",
+    "//omd/packages/protobuf:proto_wheel_tar",
 ]
 
 genrule(

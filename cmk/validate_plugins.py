@@ -31,7 +31,6 @@ from cmk.base.api.agent_based.register import (  # pylint: disable=cmk-module-la
     iter_all_inventory_plugins,
 )
 from cmk.base.config import (  # pylint: disable=cmk-module-layer-violation
-    check_info,
     load_all_plugins,
 )
 
@@ -274,20 +273,11 @@ def _validate_check_parameters_usage() -> Sequence[str]:
         raise_errors=False,
     )
 
-    agent_based_api_referenced_ruleset_names = [
+    referenced_ruleset_names = {
         str(plugin.check_ruleset_name)
         for plugin in iter_all_check_plugins()
         if plugin.check_ruleset_name is not None
-    ]
-    legacy_checks_referenced_ruleset_names = [
-        str(check.check_ruleset_name)
-        for check in check_info.values()
-        if hasattr(check, "check_ruleset_name")
-    ]
-
-    referenced_ruleset_names = set(
-        agent_based_api_referenced_ruleset_names + legacy_checks_referenced_ruleset_names
-    )
+    }
     return _check_if_referenced(discovered_check_parameters, referenced_ruleset_names)
 
 

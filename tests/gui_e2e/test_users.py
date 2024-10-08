@@ -2,12 +2,16 @@ import logging
 from collections.abc import Iterator
 
 import pytest
+from playwright.sync_api import BrowserContext, Page
 
-from tests.testlib.playwright.pom.dashboard import Dashboard
-from tests.testlib.playwright.pom.setup.add_user import AddUser, UserData
+from tests.testlib.playwright.helpers import CmkCredentials
+from tests.testlib.playwright.pom.dashboard import Dashboard, ProblemDashboard
+from tests.testlib.playwright.pom.login import LoginPage
 from tests.testlib.playwright.pom.setup.edit_role import EditRole, RoleData
 from tests.testlib.playwright.pom.setup.roles_and_permissions import RolesAndPermissions
+from tests.testlib.playwright.pom.setup.user import AddUser, EditUser, UserData
 from tests.testlib.playwright.pom.setup.users import Users
+from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
 
@@ -95,3 +99,55 @@ def test_delete_role_in_use(
     roles_and_permissions_page.delete_role_button(role_data.role_id).click()
     roles_and_permissions_page.delete_role_confirmation_button.click()
     roles_and_permissions_page.main_area.check_error(expected_error_msg)
+
+
+@pytest.mark.parametrize(
+    "new_user",
+    [
+        pytest.param(
+            UserData(user_id="test_user", full_name="Test User", password="cmkcmkcmkcmk"),
+            id="locked_user",
+        )
+    ],
+    indirect=True,
+)
+def test_locked_user(
+    dashboard_page: Dashboard,
+    new_browser_context_and_page: tuple[BrowserContext, Page],
+    new_user: UserData,
+    test_site: Site,
+) -> None:
+    """Test locked user have no access to the site.
+
+    Create a new user and lock it. Check that locked user is automatically logged out and cannot login.
+    Then unlock the user and check that it can login again.
+    """
+
+    user_data = new_user
+    new_user_credentials = CmkCredentials(user_data.user_id, user_data.password)  # type: ignore[arg-type]
+    _, new_page = new_browser_context_and_page
+
+    login_page = LoginPage(new_page, test_site.internal_url)
+    logger.info("As '%s': login", user_data.user_id)
+    login_page.login(new_user_credentials)
+    problem_dashboard_page = ProblemDashboard(login_page.page, navigate_to_page=False)
+
+    logger.info("As cmkadmin: lock the user '%s'", user_data.user_id)
+    edit_user_page = EditUser(dashboard_page.page, user_data.user_id)
+    edit_user_page.check_disable_login(True)
+    edit_user_page.save_button.click()
+
+    logger.info("As locked user '%s': reload the page and try to login", user_data.user_id)
+    problem_dashboard_page.page.reload()
+    login_page._validate_page()  # pylint: disable=protected-access
+    login_page.login(new_user_credentials)
+    login_page.check_error("User is locked")
+
+    logger.info("As cmkadmin: unlock the user '%s'", user_data.user_id)
+    edit_user_page.navigate()
+    edit_user_page.check_disable_login(False)
+    edit_user_page.save_button.click()
+
+    logger.info("As unlocked user '%s': login", user_data.user_id)
+    login_page.login(new_user_credentials)
+    problem_dashboard_page._validate_page()  # pylint: disable=protected-access

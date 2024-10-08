@@ -46,6 +46,9 @@ class Users(CmkPage):
     def delete_user_button(self, username: str) -> Locator:
         return self._user_row(username).get_by_role("link", name="Delete")
 
+    def user_properties_button(self, username: str) -> Locator:
+        return self._user_row(username).get_by_role("link", name="Properties")
+
     def _delete_user_confirmation_window(self) -> Locator:
         return self.main_area.locator("div[class*='confirm_popup']:has(h2:has-text('Delete user'))")
 

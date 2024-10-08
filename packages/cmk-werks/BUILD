@@ -45,6 +45,7 @@ py_pytest_main(
 
 py_test(
     name = "unit",
+    size = "small",
     srcs = glob(["tests/**/*.py"]) + [":__test__.py"],
     args = ["--config-file=$(location pyproject.toml)"],
     data = ["pyproject.toml"],

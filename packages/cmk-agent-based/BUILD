@@ -48,6 +48,7 @@ py_library(
 
 ruff_test(
     name = "ruff_lint",
+    size = "small",
     srcs = [
         ":cmk-agent-based",
         ":unit",
@@ -60,6 +61,7 @@ py_pytest_main(
 
 py_test(
     name = "unit",
+    size = "small",
     srcs = glob(["tests/**/*.py"]) + [":__test__.py"],
     args = ["--config-file=$(location pyproject.toml)"],
     data = ["pyproject.toml"],

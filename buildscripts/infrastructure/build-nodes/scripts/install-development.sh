@@ -454,6 +454,7 @@ for PROFILE in "${PROFILE_ARGS[@]}"; do
             INSTALL_FOR_RUST=1
             INSTALL_FOR_FRONTEND=1
             INSTALL_FOR_LOCALIZE=1
+            INSTALL_FOR_BAZEL=1
             ((STRIP_LATER += 5))
             ;;
         python)

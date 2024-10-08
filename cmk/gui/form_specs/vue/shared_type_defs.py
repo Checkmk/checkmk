@@ -79,7 +79,7 @@ class DictionaryLayout(str, Enum):
 
 @dataclass(kw_only=True)
 class SingleChoiceElement:
-    name: Any
+    name: str
     title: str
 
 
@@ -241,7 +241,7 @@ class Dictionary(FormSpec):
 @dataclass(kw_only=True)
 class SingleChoice(FormSpec):
     frozen: bool
-    input_hint: Any
+    input_hint: str
     type: str = "single_choice"
     elements: list[SingleChoiceElement] = field(default_factory=lambda: [])
     no_elements_text: Optional[str] = None

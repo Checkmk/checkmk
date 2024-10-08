@@ -83,7 +83,7 @@ export type SingleChoice = FormSpec & {
   no_elements_text?: string;
   frozen: boolean;
   label?: string;
-  input_hint: unknown;
+  input_hint: string;
 };
 export type CascadingSingleChoice = FormSpec & {
   type: "cascading_single_choice";
@@ -232,7 +232,7 @@ export interface DictionaryGroup {
   help?: string;
 }
 export interface SingleChoiceElement {
-  name: unknown;
+  name: string;
   title: string;
 }
 export interface CascadingSingleChoiceElement {

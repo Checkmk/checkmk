@@ -304,7 +304,9 @@
         "single_choice_element": {
             "type": "object",
             "properties": {
-                "name": {},
+                "name": {
+                    "type": "string"
+                },
                 "title": {
                     "type": "string"
                 }
@@ -334,7 +336,9 @@
                 "label": {
                     "type": "string"
                 },
-                "input_hint": {}
+                "input_hint": {
+                    "type": "string"
+                }
             },
             "required": ["type", "frozen", "elements", "input_hint"],
             "allOf": [

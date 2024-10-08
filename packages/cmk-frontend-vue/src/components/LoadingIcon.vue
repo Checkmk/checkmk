@@ -27,17 +27,14 @@ defineProps<LoadingIconProps>()
 </script>
 
 <template>
-  <img
-    src="themes/facelift/images/load_graph.png"
-    alt="Loading"
-    aria-label="Loading"
-    class="qs-loading-icon"
-  />
+  <div aria-label="Loading" class="qs-loading-icon" />
 </template>
 
 <style scoped>
 .qs-loading-icon {
   margin-right: 8px;
   height: v-bind('loadingIconVariants({ size })');
+  background-size: 100%;
+  background-image: var(--image-load-graph);
 }
 </style>

@@ -1445,6 +1445,7 @@ def load_checks(
 ) -> list[str]:
     loaded_files: set[str] = set()
     ignored_plugins_errors = []
+    sane_check_info = {}
 
     did_compile = False
     for f in filelist:
@@ -1476,24 +1477,19 @@ def load_checks(
                 raise
             continue
 
-        for plugin_name in {str(k) for k in check_info}.difference(known_checks):
-            legacy_check_plugin_files[plugin_name] = f
-
-    # Now just drop everything we don't like; this is not a supported API anymore.
-    # Users affected by this will see a CRIT in their "Analyse Configuration" page.
-    sane_check_info = {}
-    for k, v in check_info.items():
-        if isinstance(k, str) and isinstance(v, LegacyCheckDefinition):
-            sane_check_info[k] = v
-            continue
-        ignored_plugins_errors.append(
-            f"Ignoring outdated plug-in {k!r}: Format no longer supported"
-            " -- this API is deprecated!"
-        )
-
-    legacy_check_plugin_names.update(
-        {CheckPluginName(lcd.name): n for n, lcd in sane_check_info.items()}
-    )
+        defined_checks = ((str(n), p) for n, p in check_info.items() if n not in known_checks)
+        for plugin_name, plugin in defined_checks:
+            if isinstance(plugin, LegacyCheckDefinition):
+                sane_check_info[plugin_name] = plugin
+                legacy_check_plugin_names[CheckPluginName(plugin.name)] = plugin_name
+                legacy_check_plugin_files[plugin_name] = f
+            else:
+                # Now just drop everything we don't like; this is not a supported API anymore.
+                # Users affected by this will see a CRIT in their "Analyse Configuration" page.
+                ignored_plugins_errors.append(
+                    f"Ignoring outdated plug-in in {f!r}: Format no longer supported"
+                    " -- this API is deprecated!"
+                )
 
     section_errors, sections = _make_agent_and_snmp_sections(sane_check_info)
     check_errors, checks = _make_check_plugins(

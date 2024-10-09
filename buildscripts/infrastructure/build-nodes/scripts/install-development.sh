@@ -52,16 +52,17 @@ install_packages() {
 install_basic_tools() {
     print_green "Installing common basic tools ..."
     local PACKAGES_TO_INSTALL=(
-        "binutils"    # "strip" required to cleanup during strip_binaries
-        "curl"        # curl is used to download artifacts from Nexus
-        "doxygen"     # to be able to create docs in the unlikely event
-        "gawk"        # TBC
-        "git"         # git is used by install-[bazel, cmake, iwyu, patchelf, protobuf-cpp].sh
-        "gnupg"       # "apt-key" used by install-docker
-        "lsb-release" # lsb is used by install-[clang, docker, packer, nodejs].sh
-        "make"        # don't forget your towel when you're taveling :)
-        "sudo"        # some make calls require sudo
-        "wget"        # wget is used by install-[clang, packer, protobuf-cpp].sh
+        "binutils"       # "strip" required to cleanup during strip_binaries
+        "curl"           # curl is used to download artifacts from Nexus
+        "doxygen"        # to be able to create docs in the unlikely event
+        "gawk"           # TBC
+        "git"            # git is used by install-[bazel, cmake, iwyu, patchelf, protobuf-cpp].sh
+        "gnupg"          # "apt-key" used by install-docker
+        "lsb-release"    # lsb is used by install-[clang, docker, packer, nodejs].sh
+        "make"           # don't forget your towel when you're taveling :)
+        "sudo"           # some make calls require sudo
+        "wget"           # wget is used by install-[clang, packer, protobuf-cpp].sh
+        "libglib2.0-dev" # required by packages/glib and therfore transitive by python unit tests
     )
     install_packages "${PACKAGES_TO_INSTALL[@]}"
     print_green "Common basic tool installation done"

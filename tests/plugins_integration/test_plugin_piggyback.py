@@ -77,6 +77,10 @@ def _wait_for_pb_host_removal(
     ), f"Host {pb_host_name} was not removed from the site."
 
 
+@pytest.mark.xfail(
+    reason="Batch hosts-deletion via DCD currently broken. "
+    "To be restored as soon this is fixed. See CMK-19548."
+)
 @pytest.mark.parametrize("source_host_name", get_host_names(piggyback=True))
 def test_plugin_piggyback(
     test_site_piggyback: Site,

@@ -18,6 +18,7 @@ from .list_of_strings import ListOfStrings
 from .monitored_host_extended import MonitoredHostExtended
 from .multiple_choice import AdaptiveMultipleChoice, AdaptiveMultipleChoiceLayout
 from .optional_choice import OptionalChoice
+from .single_choice_editable import SingleChoiceEditable
 from .string_autocompleter import StringAutocompleter
 from .validators import not_empty
 
@@ -32,6 +33,7 @@ __all__ = [
     "ListOfStrings",
     "SingleChoiceElementExtended",
     "SingleChoiceExtended",
+    "SingleChoiceEditable",
     "StringAutocompleter",
     "OptionalChoice",
     "UnknownFormSpec",

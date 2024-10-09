@@ -8,6 +8,7 @@ import FormInteger from '@/form/components/forms/FormInteger.vue'
 import FormFloat from '@/form/components/forms/FormFloat.vue'
 import FormString from '@/form/components/forms/FormString.vue'
 import FormSingleChoice from '@/form/components/forms/FormSingleChoice.vue'
+import FormSingleChoiceEditable from '@/form/components/forms/FormSingleChoiceEditable.vue'
 import FormDictionary from '@/form/components/forms/FormDictionary.vue'
 import type { FormSpec, Components } from '@/form/components/vue_formspec_components'
 import FormCascadingSingleChoice from '@/form/components/forms/FormCascadingSingleChoice.vue'
@@ -46,6 +47,7 @@ const components: Record<Components['type'], unknown> = {
   string: FormString,
   float: FormFloat,
   single_choice: FormSingleChoice,
+  single_choice_editable: FormSingleChoiceEditable,
   cascading_single_choice: FormCascadingSingleChoice,
   list: FormList,
   legacy_valuespec: FormLegacyValueSpec,

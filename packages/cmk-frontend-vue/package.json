@@ -39,6 +39,7 @@
     "eslint": "^8.56.0",
     "eslint-plugin-vue": "^9.27.0",
     "jsdom": "^24.1.1",
+    "msw": "^2.4.9",
     "npm-run-all2": "^6.2.2",
     "prettier": "^3.3.3",
     "sass-embedded": "^1.79.4",
@@ -47,5 +48,10 @@
     "vitest": "^1.6.0",
     "vitest-fail-on-console": "^0.7.1",
     "vue-tsc": "^2.0.29"
+  },
+  "msw": {
+    "workerDirectory": [
+      "src/components/_demo/public/"
+    ]
   }
 }

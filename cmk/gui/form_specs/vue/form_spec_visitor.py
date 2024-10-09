@@ -25,6 +25,7 @@ from cmk.gui.form_specs.private import (
     ListExtended,
     ListOfStrings,
     OptionalChoice,
+    SingleChoiceEditable,
     SingleChoiceExtended,
     StringAutocompleter,
     UnknownFormSpec,
@@ -97,6 +98,7 @@ from .visitors import (
     PasswordVisitor,
     register_visitor_class,
     SimplePasswordVisitor,
+    SingleChoiceEditableVisitor,
     SingleChoiceVisitor,
     StringVisitor,
     TimeSpanVisitor,
@@ -125,6 +127,7 @@ def register_form_specs():
     register_visitor_class(String, StringVisitor)
     register_visitor_class(Float, FloatVisitor)
     register_visitor_class(SingleChoiceExtended, SingleChoiceVisitor)
+    register_visitor_class(SingleChoiceEditable, SingleChoiceEditableVisitor)
     register_visitor_class(Password, PasswordVisitor)
     register_visitor_class(CascadingSingleChoice, CascadingSingleChoiceVisitor)
     register_visitor_class(LegacyValueSpec, LegacyValuespecVisitor)

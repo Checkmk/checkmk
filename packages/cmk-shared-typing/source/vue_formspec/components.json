@@ -832,6 +832,99 @@
                 }
             ]
         },
+        "single_choice_editable": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "single_choice_editable",
+                    "default": "single_choice_editable"
+                },
+                "config_entity_type": {
+                    "type": "string"
+                },
+                "config_entity_type_specifier": {
+                    "type": "string"
+                },
+                "elements": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/single_choice_element"
+                    }
+                },
+                "i18n": {
+                    "title": "single_choice_editable_i18n",
+                    "type": "object",
+                    "properties": {
+                        "slidein_save_button": {
+                            "type": "string"
+                        },
+                        "slidein_cancel_button": {
+                            "type": "string"
+                        },
+                        "slidein_create_button": {
+                            "type": "string"
+                        },
+                        "slidein_new_title": {
+                            "type": "string"
+                        },
+                        "slidein_edit_title": {
+                            "type": "string"
+                        },
+                        "edit": {
+                            "type": "string"
+                        },
+                        "create": {
+                            "type": "string"
+                        },
+                        "loading": {
+                            "type": "string"
+                        },
+                        "no_objects": {
+                            "type": "string"
+                        },
+                        "no_selection": {
+                            "type": "string"
+                        },
+                        "validation_error": {
+                            "type": "string"
+                        },
+                        "fatal_error": {
+                            "type": "string"
+                        },
+                        "fatal_error_reload": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "slidein_save_button",
+                        "slidein_cancel_button",
+                        "slidein_create_button",
+                        "slidein_new_title",
+                        "slidein_edit_title",
+                        "edit",
+                        "create",
+                        "loading",
+                        "no_objects",
+                        "no_selection",
+                        "validation_error",
+                        "fatal_error",
+                        "fatal_error_reload"
+                    ]
+                }
+            },
+            "required": [
+                "type",
+                "i18n",
+                "config_entity_type",
+                "config_entity_type_specifier",
+                "elements"
+            ],
+            "allOf": [
+                {
+                    "$ref": "#/$defs/form_spec"
+                }
+            ]
+        },
         "autocompleter": {
             "type": "object",
             "properties": {
@@ -948,6 +1041,9 @@
                 },
                 {
                     "$ref": "#/$defs/time_span"
+                },
+                {
+                    "$ref": "#/$defs/single_choice_editable"
                 },
                 {
                     "$ref": "#/$defs/tuple"

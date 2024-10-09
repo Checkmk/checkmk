@@ -23,6 +23,7 @@ from .optional_choice import OptionalChoiceVisitor
 from .password import PasswordVisitor
 from .simple_password import SimplePasswordVisitor
 from .single_choice import SingleChoiceVisitor
+from .single_choice_editable import SingleChoiceEditableVisitor
 from .string import StringVisitor
 from .time_span import TimeSpanVisitor
 from .transform import TransformVisitor
@@ -53,6 +54,7 @@ __all__ = [
     "SimplePasswordVisitor",
     "CommentTextAreaVisitor",
     "SingleChoiceVisitor",
+    "SingleChoiceEditableVisitor",
     "StringVisitor",
     "TimeSpanVisitor",
     "TransformVisitor",

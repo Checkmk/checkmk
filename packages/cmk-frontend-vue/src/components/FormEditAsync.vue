@@ -3,16 +3,25 @@ Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts" generic="T, D">
+<script setup lang="ts" generic="T">
 import type { FormSpec, ValidationMessage } from '@/form/components/vue_formspec_components'
 import { ref, toRaw } from 'vue'
 import FormEdit from '@/form/components/FormEdit.vue'
 import CmkButton from '@/components/CmkButton.vue'
+import CmkIcon from '@/components/CmkIcon.vue'
 import AlertBox from '@/components/AlertBox.vue'
 import { immediateWatch } from '@/form/components/utils/watch'
 
+export type D = Record<string, unknown>
+
 export type SetDataResult<T> =
-  | { type: 'success'; objectId: T }
+  | {
+      type: 'success'
+      entity: {
+        ident: T
+        description: string
+      }
+    }
   | { type: 'error'; validationMessages: Array<ValidationMessage> }
 
 export type API<T, D> = {
@@ -30,12 +39,15 @@ export interface FormEditAsyncProps<T, D> {
     create_button: string
     loading: string
     fatal_error: string
+    validation_error: string
   }
 }
 
 const props = defineProps<FormEditAsyncProps<T, D>>()
+
 const schema = ref<FormSpec>()
 const data = ref<D>()
+
 const error = ref<string>()
 const backendValidation = ref<Array<ValidationMessage>>([])
 
@@ -55,7 +67,7 @@ async function save() {
   }
 
   if (result.type === 'success') {
-    emit('submitted', result.objectId)
+    emit('submitted', result.entity)
   } else if (result.type === 'error') {
     backendValidation.value = result.validationMessages
   } else {
@@ -69,13 +81,13 @@ function cancel() {
 
 const emit = defineEmits<{
   (e: 'cancel'): void
-  (e: 'submitted', objectId: T): void
+  (e: 'submitted', entity: { ident: T; description: string }): void
 }>()
 
-async function reload(api: API<T, D>) {
+async function reloadAll({ api, objectId }: { api: API<T, D>; objectId: T | null }) {
   error.value = ''
   try {
-    const [apiData, apiSchema] = await Promise.all([api.getData(props.objectId), api.getSchema()])
+    const [apiData, apiSchema] = await Promise.all([api.getData(objectId), api.getSchema()])
     data.value = apiData
     schema.value = apiSchema
   } catch (apiError: unknown) {
@@ -83,12 +95,7 @@ async function reload(api: API<T, D>) {
   }
 }
 
-immediateWatch(
-  () => props.api,
-  async (api) => {
-    reload(api)
-  }
-)
+immediateWatch(() => ({ api: props.api, objectId: props.objectId }), reloadAll)
 </script>
 
 <template>
@@ -97,16 +104,22 @@ immediateWatch(
       {{ objectId === undefined ? props.i18n.create_button : props.i18n.save_button }}</CmkButton
     >
     <CmkButton variant="cancel" @click="cancel">{{ props.i18n.cancel_button }}</CmkButton>
+    <!-- the validation error could be scrolled out of the viewport, so we have to show an error bar at the top -->
+    <AlertBox v-if="backendValidation.length !== 0" variant="error">
+      {{ i18n.validation_error }}
+    </AlertBox>
   </div>
   <AlertBox v-if="error" variant="error">
     {{ i18n.fatal_error }}
     {{ error }}
-    <button @click="reload(api)">reload</button>
+    <button @click="() => reloadAll({ api: props.api, objectId: props.objectId })">reload</button>
   </AlertBox>
-  <div v-if="schema !== undefined && !error">
+  <div v-if="schema !== undefined && !error && data !== undefined">
     <FormEdit v-model:data="data" :spec="schema" :backend-validation="backendValidation" />
   </div>
-  <div v-if="schema === undefined && !error">{{ i18n.loading }}</div>
+  <div v-if="schema === undefined && !error">
+    <CmkIcon name="load-graph" size="xxlarge" /> {{ i18n.loading }}
+  </div>
 </template>
 
 <style scoped>

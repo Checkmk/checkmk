@@ -152,6 +152,23 @@ class I18nOptionalChoice:
 
 
 @dataclass(kw_only=True)
+class SingleChoiceEditableI18n:
+    slidein_save_button: str
+    slidein_cancel_button: str
+    slidein_create_button: str
+    slidein_new_title: str
+    slidein_edit_title: str
+    edit: str
+    create: str
+    loading: str
+    no_objects: str
+    no_selection: str
+    validation_error: str
+    fatal_error: str
+    fatal_error_reload: str
+
+
+@dataclass(kw_only=True)
 class Autocompleter:
     data: dict[str, Any]
     fetch_method: str = "ajax_vs_autocomplete"
@@ -371,6 +388,15 @@ class SimplePassword(FormSpec):
 
 
 @dataclass(kw_only=True)
+class SingleChoiceEditable(FormSpec):
+    config_entity_type: str
+    config_entity_type_specifier: str
+    elements: list[SingleChoiceElement]
+    i18n: SingleChoiceEditableI18n
+    type: str = "single_choice_editable"
+
+
+@dataclass(kw_only=True)
 class ListOfStrings(FormSpec):
     string_spec: FormSpec
     type: str = "list_of_strings"
@@ -403,6 +429,7 @@ Components = Union[
     DualListChoice,
     CheckboxListChoice,
     TimeSpan,
+    SingleChoiceEditable,
     Tuple,
     OptionalChoice,
     SimplePassword,

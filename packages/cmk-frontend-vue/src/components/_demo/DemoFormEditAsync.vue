@@ -27,7 +27,7 @@ function sleep(ms: number) {
 // demo stuff end
 
 type ObjectId = string
-type ObjectData = Record<string, string>
+type ObjectData = Record<string, unknown>
 
 const api: API<ObjectId, ObjectData> = {
   getData: async (objectId: ObjectId | null): Promise<ObjectData> => {
@@ -50,7 +50,7 @@ const api: API<ObjectId, ObjectData> = {
     if (backendValidation.value.length) {
       return { type: 'error', validationMessages: toRaw(backendValidation.value) }
     } else {
-      return { type: 'success', objectId: 'smth' }
+      return { type: 'success', entity: { ident: 'smth', description: 'smth description' } }
     }
   },
   getSchema: async (): Promise<FormSpec> => {
@@ -132,7 +132,8 @@ const api: API<ObjectId, ObjectData> = {
       cancel_button: 'cancel',
       create_button: 'create',
       loading: 'loading data i18n',
-      fatal_error: 'unrecoverable error:'
+      fatal_error: 'unrecoverable error:',
+      validation_error: 'i18n validation_error'
     }"
     @cancel="console.log('cancel')"
     @submitted="(event: unknown) => console.log(event)"

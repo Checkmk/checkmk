@@ -14,6 +14,7 @@ import DemoFormEditAsync from './DemoFormEditAsync.vue'
 import DemoToggleButtonGroup from './DemoToggleButtonGroup.vue'
 import DemoCmkButton from './DemoCmkButton.vue'
 import DemoCmkIcon from './DemoCmkIcon.vue'
+import DemoFormSingleChoiceEditable from './DemoFormSingleChoiceEditable.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -57,6 +58,11 @@ const router = createRouter({
       path: '/button',
       name: 'CmkButton',
       component: DemoCmkButton
+    },
+    {
+      path: '/FormSingleChoiceEditable',
+      name: 'FormSingleChoiceEditable',
+      component: DemoFormSingleChoiceEditable
     }
   ]
 })

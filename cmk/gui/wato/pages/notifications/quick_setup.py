@@ -19,6 +19,7 @@ from cmk.gui.form_specs.private import (
     ListExtended,
     ListOfStrings,
     not_empty,
+    SingleChoiceEditable,
     SingleChoiceElementExtended,
     SingleChoiceExtended,
 )
@@ -43,6 +44,7 @@ from cmk.gui.userdb import load_users
 from cmk.gui.wato._group_selection import sorted_contact_group_choices
 from cmk.gui.wato._notification_parameter import notification_parameter_registry
 from cmk.gui.wato.pages.notifications.quick_setup_types import NotificationQuickSetupSpec
+from cmk.gui.watolib.configuration_entity.type_defs import ConfigEntityType
 from cmk.gui.watolib.mode import mode_url
 from cmk.gui.watolib.notifications import NotificationRuleConfigFile
 from cmk.gui.watolib.timeperiods import load_timeperiods
@@ -281,22 +283,6 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
 
 
 def notification_method() -> QuickSetupStage:
-    # TODO: Remove once the "method" slidein is implemented
-    def _create_element(method: str) -> CascadingSingleChoiceElement:
-        try:
-            return CascadingSingleChoiceElement(
-                title=Title("%s") % (_("%s") % method),
-                name=method,
-                parameter_form=notification_parameter_registry.form_spec(method),
-            )
-
-        except Exception:
-            return CascadingSingleChoiceElement(
-                title=Title("%s") % (_("%s") % method),
-                name=method,
-                parameter_form=FixedValue(value="Not yet implemented - Coming soon!"),
-            )
-
     def bulk_notification(
         title: Literal["always", "during_timeperiod"],
     ) -> DictionaryExtended:
@@ -446,13 +432,20 @@ def notification_method() -> QuickSetupStage:
                                 custom_validate=(),
                             ),
                         ),
-                        # TODO: Replace with the slide-in formspec “SlideIn”
                         "methods": DictElement(
                             required=True,
                             parameter_form=CascadingSingleChoice(
                                 title=Title("Method"),
                                 elements=[
-                                    _create_element(method)
+                                    CascadingSingleChoiceElement(
+                                        title=Title("%s") % (_("%s") % method),
+                                        name=method,
+                                        parameter_form=SingleChoiceEditable(
+                                            title=Title("Notification method"),
+                                            entity_type=ConfigEntityType.notification_parameter,
+                                            entity_type_specifier=method,
+                                        ),
+                                    )
                                     for method in notification_parameter_registry
                                 ],
                             ),

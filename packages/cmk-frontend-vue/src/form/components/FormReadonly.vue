@@ -12,6 +12,7 @@ import type {
   List,
   TimeSpan,
   SingleChoice,
+  SingleChoiceElement,
   CascadingSingleChoice,
   LegacyValuespec,
   FixedValue,
@@ -48,6 +49,7 @@ function renderForm(
     case 'integer':
     case 'float':
       return renderSimpleValue(formSpec, value as string, backendValidation)
+    case 'single_choice_editable':
     case 'single_choice':
       return renderSingleChoice(formSpec as SingleChoice, value as unknown, backendValidation)
     case 'list':
@@ -298,7 +300,7 @@ function renderTimeSpan(formSpec: TimeSpan, value: number): VNode {
 }
 
 function renderSingleChoice(
-  formSpec: SingleChoice,
+  formSpec: { elements: SingleChoiceElement[] },
   value: unknown,
   backendValidation: ValidationMessages = []
 ): VNode {

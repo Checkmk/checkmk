@@ -28,6 +28,7 @@ export type Components =
   | DualListChoice
   | CheckboxListChoice
   | TimeSpan
+  | SingleChoiceEditable
   | Tuple
   | OptionalChoice
   | SimplePassword
@@ -162,6 +163,13 @@ export type TimeSpan = FormSpec & {
   input_hint?: number;
 };
 export type TimeSpanTimeMagnitude = "millisecond" | "second" | "minute" | "hour" | "day";
+export type SingleChoiceEditable = FormSpec & {
+  type: "single_choice_editable";
+  config_entity_type: string;
+  config_entity_type_specifier: string;
+  elements: SingleChoiceElement[];
+  i18n: SingleChoiceEditableI18N;
+};
 export type Tuple = FormSpec & {
   type: "tuple";
   elements: FormSpec[];
@@ -285,6 +293,21 @@ export interface TimeSpanI18N {
   minute: string;
   hour: string;
   day: string;
+}
+export interface SingleChoiceEditableI18N {
+  slidein_save_button: string;
+  slidein_cancel_button: string;
+  slidein_create_button: string;
+  slidein_new_title: string;
+  slidein_edit_title: string;
+  edit: string;
+  create: string;
+  loading: string;
+  no_objects: string;
+  no_selection: string;
+  validation_error: string;
+  fatal_error: string;
+  fatal_error_reload: string;
 }
 export interface I18NOptionalChoice {
   label?: string;

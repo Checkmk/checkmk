@@ -18,6 +18,13 @@ export default defineConfig(({ command }) => {
       strictPort: true,
       fs: {
         allow: ['.', '../../../../cmk-frontend/']
+      },
+      proxy: {
+        '/site-api': {
+          target: 'http://localhost/',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/site-api/, '')
+        }
       }
     },
     resolve: {

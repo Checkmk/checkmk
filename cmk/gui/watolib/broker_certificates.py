@@ -99,8 +99,13 @@ class CREBrokerCertificateSync(BrokerCertificateSync):
         central_ca: CertificateWithPrivateKey,
         customer_ca: CertificateWithPrivateKey | None,
     ) -> None:
-        sync_remote_broker_certs(
-            settings, create_remote_broker_certs(central_ca, site_id, settings)
+        remote_broker_certs = create_remote_broker_certs(central_ca, site_id, settings)
+        sync_remote_broker_certs(settings, remote_broker_certs)
+        # the presence of the following cert is used to determine if the broker certificates need
+        # to be created/synced, so only save it if the sync was successful
+        save_single_cert(
+            multisite_cert_file(paths.omd_root, site_id),
+            Certificate.load_pem(CertificatePEM(remote_broker_certs.cert)),
         )
 
     def update_trusted_cas(self) -> None:
@@ -109,23 +114,18 @@ class CREBrokerCertificateSync(BrokerCertificateSync):
 
 
 def create_broker_certs(
-    cert_path: Path, site_id: SiteId, ca: CertificateWithPrivateKey
+    site_id: SiteId, ca: CertificateWithPrivateKey
 ) -> CertificateWithPrivateKey:
     """
     Create a new certificate for the broker of a site.
-    Just store the certificate and not the private key.
     """
 
-    bundle = ca.issue_new_certificate(
+    return ca.issue_new_certificate(
         common_name=site_id,
         organization=f"Checkmk Site {omd_site()}",
         expiry=relativedelta(years=2),
         key_size=4096,
     )
-
-    save_single_cert(cert_path, bundle.certificate)
-
-    return bundle
 
 
 def load_broker_ca(omd_root: Path) -> PersistedCertificateWithPrivateKey:
@@ -145,11 +145,7 @@ def create_remote_broker_certs(
     Create a new certificate with private key for the broker of a remote site.
     """
 
-    cert_key = create_broker_certs(
-        multisite_cert_file(paths.omd_root, site_id),
-        site_id,
-        signing_ca,
-    )
+    cert_key = create_broker_certs(site_id, signing_ca)
     return BrokerCertificates(
         key=cert_key.private_key.dump_pem(None).bytes,
         cert=cert_key.certificate.dump_pem().bytes,

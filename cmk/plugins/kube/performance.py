@@ -96,6 +96,8 @@ _AllSamples = MemorySample | CPUSample | UnusedSample
 
 
 def parse_performance_metrics(cluster_collector_metrics: bytes) -> Sequence[_AllSamples]:
+    # Performance impact needs to be investigated (see CMK-19527)
+    # nosemgrep: type-adapter-detected
     adapter = TypeAdapter(list[_AllSamples])
     return adapter.validate_json(cluster_collector_metrics)
 

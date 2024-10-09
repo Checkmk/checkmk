@@ -60,6 +60,8 @@ def load(base_dir: Path | None = None) -> dict[int, Werk]:
 
 def load_precompiled_werks_file(path: Path) -> dict[int, Werk]:
     # ? what is the content of these files, to which the path shows
+    # There is no performance issue with this TypeAdapter call
+    # nosemgrep: type-adapter-detected
     adapter = TypeAdapter(dict[int, Werk | WerkV1])
     with path.open("r", encoding="utf-8") as f:
 

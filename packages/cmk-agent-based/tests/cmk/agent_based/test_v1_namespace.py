@@ -25,7 +25,6 @@ def _names(space: ModuleType) -> set[str]:
 def test_v1() -> None:
     expected = {
         # value_store: not explicitly exposed here,
-        # not at all exposed in the old location under cmk/base/plugins/agent_based/agent_based/api
         "value_store",
         # register: only partially in this package, b/c that is not how we're doing things anymore.
         "register",

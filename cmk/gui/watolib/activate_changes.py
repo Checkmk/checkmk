@@ -1496,7 +1496,7 @@ class ActivateChangesManager(ActivateChanges):
         return self._activation_id
 
     def _verify_valid_host_config(self):
-        defective_hosts = validate_all_hosts([], force_all=True)
+        defective_hosts = validate_all_hosts(folder_tree(), [], force_all=True)
         if defective_hosts:
             raise MKUserError(
                 None,

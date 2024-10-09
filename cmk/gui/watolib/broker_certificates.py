@@ -2,7 +2,9 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import abc
+from collections import defaultdict
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 from dateutil.relativedelta import relativedelta
@@ -36,21 +38,87 @@ from cmk.messaging import (
 )
 
 
+class BrokerCertificateSync(abc.ABC):
+    def load_central_ca(self) -> PersistedCertificateWithPrivateKey:
+        return load_broker_ca(paths.omd_root)
+
+    @abc.abstractmethod
+    def broker_certs_created(self, site_id: SiteId, settings: SiteConfiguration) -> bool:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_site_to_sync(
+        self, myself: SiteId, dirty_sites: list[tuple[SiteId, SiteConfiguration]]
+    ) -> Mapping[str, Sequence[tuple[SiteId, SiteConfiguration]]]:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def load_or_create_customer_ca(
+        self, customer: str
+    ) -> PersistedCertificateWithPrivateKey | None:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def create_broker_certificates(
+        self,
+        site_id: SiteId,
+        settings: SiteConfiguration,
+        central_ca: CertificateWithPrivateKey,
+        customer_ca: CertificateWithPrivateKey | None,
+    ) -> None:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def update_trusted_cas(self) -> None:
+        raise NotImplementedError
+
+
+class CREBrokerCertificateSync(BrokerCertificateSync):
+    def broker_certs_created(self, site_id: SiteId, settings: SiteConfiguration) -> bool:
+        return broker_certs_created(site_id)
+
+    def get_site_to_sync(
+        self, myself: SiteId, dirty_sites: list[tuple[SiteId, SiteConfiguration]]
+    ) -> Mapping[str, Sequence[tuple[SiteId, SiteConfiguration]]]:
+        required_certificates: dict[str, list[tuple[SiteId, SiteConfiguration]]] = defaultdict(list)
+        for site_id, settings in dirty_sites:
+            if site_id != myself and not self.broker_certs_created(site_id, settings):
+                required_certificates["provider"].append((site_id, settings))
+        return required_certificates
+
+    def load_or_create_customer_ca(
+        self, customer: str
+    ) -> PersistedCertificateWithPrivateKey | None:
+        # Only relevant for editions with different customers
+        return None
+
+    def create_broker_certificates(
+        self,
+        site_id: SiteId,
+        settings: SiteConfiguration,
+        central_ca: CertificateWithPrivateKey,
+        customer_ca: CertificateWithPrivateKey | None,
+    ) -> None:
+        sync_remote_broker_certs(
+            settings, create_remote_broker_certs(central_ca, site_id, settings)
+        )
+
+    def update_trusted_cas(self) -> None:
+        # Only relevant for editions with different customers
+        pass
+
+
 def create_all_broker_certificates(
     myself: SiteId, dirty_sites: list[tuple[SiteId, SiteConfiguration]]
 ) -> None:
-    if not (
-        required_certificates := [
-            (site_id, settings)
-            for site_id, settings in dirty_sites
-            if site_id != myself and not broker_certs_created(site_id)
-        ]
-    ):
+    broker_sync = CREBrokerCertificateSync()
+
+    if not (required_sites := broker_sync.get_site_to_sync(myself, dirty_sites)):
         return
 
-    broker_ca = load_broker_ca(paths.omd_root)
-    for site_id, settings in required_certificates:
-        sync_remote_broker_certs(settings, create_remote_broker_certs(broker_ca, site_id, settings))
+    central_ca = broker_sync.load_central_ca()
+    for site_id, settings in required_sites["provider"]:
+        broker_sync.create_broker_certificates(site_id, settings, central_ca, None)
 
 
 def create_broker_certs(

@@ -125,7 +125,7 @@ def check(suffix: str, path: Path) -> bool:
 
 
 def main() -> int:
-    print("Checking license headers...")
+    sys.stdout.write("Checking license headers...\n")
     problems = []
     for root, _dirs, files in Path(".").walk():
         if root.parts and root.parts[0] in ROOT_FOLDERS_IGNORED:
@@ -149,10 +149,10 @@ def main() -> int:
                 problems.append(path)
 
     if problems:
-        print("Please check the license header for the following files:")
-        print("\n".join(str(p) for p in problems))
+        sys.stdout.write("Please check the license header for the following files:\n")
+        sys.stdout.write("\n".join(str(p) for p in problems) + "\n")
         return 1
-    print("Done!")
+    sys.stdout.write("Done!\n")
     return 0
 
 

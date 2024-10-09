@@ -104,7 +104,7 @@ def _run_cmkpasswd(
     if dst_file is not None:
         Htpasswd(dst_file).save(user_id, pw_hash)
     else:
-        print(Htpasswd.serialize_entries([(user_id, pw_hash)]))
+        sys.stdout.write(Htpasswd.serialize_entries([(user_id, pw_hash)]) + "\n")
 
 
 def main(args: Sequence[str]) -> int:
@@ -123,7 +123,7 @@ def main(args: Sequence[str]) -> int:
         InvalidPasswordError,
         InvalidUsernameError,
     ) as e:
-        print("cmk-passwd:", e, file=sys.stderr)
+        sys.stderr.write(f"cmk-passwd: {e}\n")
         return 1
 
     return 0

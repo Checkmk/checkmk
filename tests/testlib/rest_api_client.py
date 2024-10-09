@@ -33,6 +33,7 @@ IF_MATCH_HEADER_OPTIONS = Literal["valid_etag", "invalid_etag", "star"] | None
 
 
 API_DOMAIN = Literal[
+    "configuration_entity",
     "licensing",
     "activation_run",
     "user_config",
@@ -3044,6 +3045,34 @@ class QuickSetupClient(RestApiClient):
         )
 
 
+class ConfigurationEntityClient(RestApiClient):
+    domain: API_DOMAIN = "configuration_entity"
+
+    def create_configuration_entity(
+        self,
+        payload: dict[str, Any],
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body=payload,
+            expect_ok=expect_ok,
+        )
+
+    def update_configuration_entity(
+        self,
+        payload: dict[str, Any],
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "put",
+            url=f"/domain-types/{self.domain}/actions/edit-single-entity/invoke",
+            body=payload,
+            expect_ok=expect_ok,
+        )
+
+
 class ManagedRobotsClient(RestApiClient):
     domain: API_DOMAIN = "managed_robots"
 
@@ -3082,6 +3111,7 @@ class ClientRegistry:
 
     """
 
+    ConfigurationEntity: ConfigurationEntityClient
     Licensing: LicensingClient
     ActivateChanges: ActivateChangesClient
     User: UserClient
@@ -3121,6 +3151,7 @@ class ClientRegistry:
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
     return ClientRegistry(
+        ConfigurationEntity=ConfigurationEntityClient(request_handler, url_prefix),
         Licensing=LicensingClient(request_handler, url_prefix),
         ActivateChanges=ActivateChangesClient(request_handler, url_prefix),
         User=UserClient(request_handler, url_prefix),

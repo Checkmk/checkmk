@@ -1,0 +1,49 @@
+#!/usr/bin/env python3
+# Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+import enum
+from dataclasses import dataclass
+from typing import assert_never, NewType, Sequence
+
+from cmk.utils.notify_types import NotificationParameterID, NotificationParameterMethod
+
+from cmk.gui.form_specs.vue import shared_type_defs
+from cmk.gui.wato import notification_parameter_registry
+from cmk.gui.watolib.notification_parameter import save_notification_parameter
+
+
+class ConfigEntityType(str, enum.Enum):
+    NOTIFICATION_PARAMETER = "notification_parameter"
+
+
+EntityId = NewType("EntityId", str)
+
+
+@dataclass(frozen=True, kw_only=True)
+class ConfigurationEntityDescription:
+    ident: EntityId
+    description: str
+
+
+def save_configuration_entity(
+    entity_type: ConfigEntityType,
+    entity_type_specifier: str,
+    data: object,
+    object_id: EntityId | None,
+) -> ConfigurationEntityDescription | Sequence[shared_type_defs.ValidationMessage]:
+    match entity_type:
+        case ConfigEntityType.NOTIFICATION_PARAMETER:
+            return_value = save_notification_parameter(
+                notification_parameter_registry,
+                NotificationParameterMethod(entity_type_specifier),
+                data,
+                NotificationParameterID(object_id) if object_id else None,
+            )
+            if isinstance(return_value, Sequence):
+                return return_value
+            return ConfigurationEntityDescription(
+                ident=EntityId(return_value.ident), description=return_value.description
+            )
+        case other:
+            assert_never(other)

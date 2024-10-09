@@ -14,6 +14,7 @@ from cmk.gui.openapi.endpoints import (
     aux_tags,
     cert,
     comment,
+    configuration_entity,
     contact_group_config,
     downtime,
     folder_config,
@@ -56,6 +57,7 @@ def register(endpoint_registry: EndpointRegistry, job_registry: BackgroundJobReg
     contact_group_config.register(endpoint_registry)
     downtime.register(endpoint_registry)
     folder_config.register(endpoint_registry)
+    configuration_entity.register(endpoint_registry)
     ldap_connection.register(endpoint_registry)
     host.register(endpoint_registry)
     host_config.register(endpoint_registry)

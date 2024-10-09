@@ -28,7 +28,7 @@ HOST_NAME = "HOSTNAME"
 SHARE_BASE = f"\\\\{HOST_NAME}\\{SHARED_FOLDER}"
 
 
-def file(name: str) -> SharedFile:
+def file_(name: str) -> SharedFile:
     return SharedFile(0, 0, 0, 0, 10, 0, 32, "", name)
 
 
@@ -130,8 +130,8 @@ def test_parse_arguments() -> None:
                 SHARED_FOLDER: {
                     "": [folder("Subfolder1")],
                     "Subfolder1\\": [
-                        file("My File"),
-                        file("File"),
+                        file_("My File"),
+                        file_("File"),
                     ],
                 }
             },
@@ -146,21 +146,21 @@ def test_parse_arguments() -> None:
                 SHARED_FOLDER: {
                     "": [
                         folder("Subfolder1"),
-                        file("file1"),
+                        file_("file1"),
                     ],
                     "Subfolder1\\": [
                         folder("Subfolder2"),
                         folder("Subfolder3"),
-                        file("Ordner"),
-                        file("file2"),
+                        file_("Ordner"),
+                        file_("file2"),
                     ],
                     "Subfolder1\\Ordner\\": [],
                     "Subfolder1\\Subfolder2\\": [
-                        file("file3"),
-                        file("file4"),
+                        file_("file3"),
+                        file_("file4"),
                     ],
                     "Subfolder1\\Subfolder3\\": [
-                        file("file5"),
+                        file_("file5"),
                     ],
                 }
             },
@@ -179,27 +179,27 @@ def test_parse_arguments() -> None:
                 SHARED_FOLDER: {
                     "": [
                         folder("Subfolder1"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\": [
                         folder("Subfolder2"),
                         folder("Subfolder3"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder2\\": [
                         folder("Subfolder4"),
-                        file("some_file"),
-                        file("some_file"),
+                        file_("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder2\\Subfolder4\\": [
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder3\\": [
                         folder("Subfolder5"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder3\\Subfolder5\\": [
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                 }
             },
@@ -224,27 +224,27 @@ def test_parse_arguments() -> None:
                     "": [
                         folder("Subfolder1"),
                         folder("do_not_go_here"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "do_not_go_here\\": [],
                     "Subfolder1\\": [
                         folder("Subfolder2"),
                         folder("Subfolder3"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder2\\": [
                         folder("Subfolder4"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder2\\Subfolder4\\": [
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder3\\": [
                         folder("Subfolder5"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder3\\Subfolder5\\": [
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                 }
             },
@@ -269,27 +269,27 @@ def test_parse_arguments() -> None:
                     "": [
                         folder("Subfolder1"),
                         folder("do_not_go_here"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "do_not_go_here\\": [],
                     "Subfolder1\\": [
                         folder("Subfolder2"),
                         folder("Subfolder3"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder2\\": [
                         folder("Subfolder4"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder2\\Subfolder4\\": [
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder3\\": [
                         folder("Subfolder5"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder3\\Subfolder5\\": [
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                 }
             },
@@ -307,26 +307,26 @@ def test_parse_arguments() -> None:
                 SHARED_FOLDER: {
                     "": [
                         folder("Subfolder1"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\": [
                         folder("Subfolder2"),
                         folder("Subfolder3"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder2\\": [
                         folder("Subfolder4"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder2\\Subfolder4\\": [
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder3\\": [
                         folder("Subfolder5"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder3\\Subfolder5\\": [
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                 }
             },
@@ -343,26 +343,26 @@ def test_parse_arguments() -> None:
                 SHARED_FOLDER: {
                     "": [
                         folder("Subfolder1"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\": [
                         folder("Subfolder2"),
                         folder("Subfolder3"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder2\\": [
                         folder("Subfolder4"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder2\\Subfolder4\\": [
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder3\\": [
                         folder("Subfolder5"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder3\\Subfolder5\\": [
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                 }
             },
@@ -383,30 +383,30 @@ def test_parse_arguments() -> None:
                 SHARED_FOLDER: {
                     "": [
                         folder("Subfolder1"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\": [
                         folder("Subfolder2"),
                         folder("Subfolder3"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder2\\": [
                         folder("Subfolder4"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder2\\Subfolder4\\": [
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder3\\": [
                         folder("Subfolder5"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder3\\Subfolder5\\": [
                         folder("Subfolder6"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder3\\Subfolder5\\Subfolder6\\": [
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                 }
             },
@@ -431,30 +431,30 @@ def test_parse_arguments() -> None:
                 SHARED_FOLDER: {
                     "": [
                         folder("Subfolder1"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\": [
                         folder("Subfolder2"),
                         folder("Subfolder3"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder2\\": [
                         folder("Subfolder4"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder2\\Subfolder4\\": [
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder3\\": [
                         folder("Subfolder5"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder3\\Subfolder5\\": [
                         folder("Subfolder6"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder3\\Subfolder5\\Subfolder6\\": [
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                 }
             },
@@ -472,34 +472,34 @@ def test_parse_arguments() -> None:
                 SHARED_FOLDER: {
                     "": [
                         folder("Subfolder1"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\": [
                         folder("Subfolder2"),
                         folder("Subfolder3"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder2\\": [
                         folder("Subfolder4"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder2\\Subfolder4\\": [
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder3\\": [
                         folder("Subfolder5"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder3\\Subfolder5\\": [
                         folder("Subfolder6"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder3\\Subfolder5\\Subfolder6\\": [
                         folder("Subfolder7"),
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                     "Subfolder1\\Subfolder3\\Subfolder5\\Subfolder6\\Subfolder7\\": [
-                        file("some_file"),
+                        file_("some_file"),
                     ],
                 }
             },
@@ -527,11 +527,11 @@ def test_parse_arguments() -> None:
                 SHARED_FOLDER: {
                     "": [
                         folder("Subfolder1"),
-                        file("file1"),
-                        file("file2"),
+                        file_("file1"),
+                        file_("file2"),
                     ],
                     "Subfolder1\\": [
-                        file("file3"),
+                        file_("file3"),
                     ],
                 }
             },
@@ -549,11 +549,11 @@ def test_parse_arguments() -> None:
                 SHARED_FOLDER: {
                     "": [
                         folder("Subfolder1"),
-                        file("file1"),
-                        file("file2"),
+                        file_("file1"),
+                        file_("file2"),
                     ],
                     "Subfolder1\\": [
-                        file("file3"),
+                        file_("file3"),
                     ],
                 }
             },
@@ -572,18 +572,18 @@ def test_parse_arguments() -> None:
                 SHARED_FOLDER: {
                     "": [
                         folder("sub1"),
-                        file("root.txt"),
+                        file_("root.txt"),
                     ],
                     "sub1\\": [
                         folder("sub2"),
-                        file("sub1.txt"),
+                        file_("sub1.txt"),
                     ],
                     "sub1\\sub2\\": [
                         folder("sub3"),
-                        file("sub2.txt"),
+                        file_("sub2.txt"),
                     ],
                     "sub1\\sub2\\sub3\\": [
-                        file("sub3.txt"),
+                        file_("sub3.txt"),
                     ],
                 }
             },
@@ -602,7 +602,7 @@ def test_parse_arguments() -> None:
                         folder("."),
                         folder(".."),
                     ],
-                    "..": [file("file")],
+                    "..": [file_("file")],
                 }
             },
             [],
@@ -616,11 +616,11 @@ def test_parse_arguments() -> None:
                 SHARED_FOLDER: {
                     "": [
                         folder("Subfolder1"),
-                        file("file1"),
-                        file("file2"),
+                        file_("file1"),
+                        file_("file2"),
                     ],
                     "Subfolder1\\": [
-                        file("file3"),
+                        file_("file3"),
                     ],
                 }
             },

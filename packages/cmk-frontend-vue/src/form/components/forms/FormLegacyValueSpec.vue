@@ -6,9 +6,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { LegacyValuespec } from '@/form/components/vue_formspec_components'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { select } from 'd3-selection'
 import FormValidation from '@/form/components/FormValidation.vue'
 import type { ValidationMessages } from '@/form/components/utils/validation'
+
+const QUERY_INPUT_OBSERVER = 'select,input'
 
 const props = defineProps<{
   spec: LegacyValuespec
@@ -37,7 +38,9 @@ onMounted(() => {
   window['cmk'].forms.enable_dynamic_form_elements(legacyDOM.value!)
   // @ts-expect-error comes from different javascript file
   window['cmk'].valuespecs.initialize_autocompleters(legacyDOM.value!)
-  select(legacyDOM.value!).selectAll('input,select').on('input.observer', collectData)
+  legacyDOM.value!.querySelectorAll(QUERY_INPUT_OBSERVER).forEach((element) => {
+    element.addEventListener('input', collectData)
+  })
 
   const observer = new MutationObserver(() => {
     collectData()
@@ -52,7 +55,9 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  select(legacyDOM.value!).selectAll('input').on('input.observer', null)
+  legacyDOM.value!.querySelectorAll(QUERY_INPUT_OBSERVER).forEach((element) => {
+    element.removeEventListener('input', collectData)
+  })
 })
 
 function collectData() {

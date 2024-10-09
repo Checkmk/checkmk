@@ -113,8 +113,6 @@ def _get_url_prefix_setting(
         group=DictGroup(
             title=Title("%s") % group_title if group_title else None,
         ),
-        # TODO only option that crashes from old configs, getting {"automatic": "http"}
-        # see
         parameter_form=CascadingSingleChoice(
             title=Title("URL prefix for links to Checkmk"),
             help_text=Help(
@@ -151,7 +149,20 @@ def _get_url_prefix_setting(
                     ),
                 ),
             ],
+            migrate=_migrate_html_mail_url_prefix,
             prefill=DefaultValue(default_value),
         ),
         render_only=is_cse,
     )
+
+
+def _migrate_html_mail_url_prefix(p: object) -> tuple[str, str | None]:
+    if isinstance(p, tuple):
+        return p
+    if isinstance(p, dict):
+        for key, value in p.items():
+            if key == "manual":
+                return (key, value)
+            return (f"{key}_{value}", None)
+
+    raise ValueError(f"Invalid format for URL prefix: {p}")

@@ -29,7 +29,7 @@ from cmk.utils.mail import default_from_address, MailString, send_mail_sendmail,
 from cmk.utils.paths import omd_root, web_dir
 
 from cmk.notification_plugins import utils
-from cmk.notification_plugins.utils import render_cmk_graphs
+from cmk.notification_plugins.utils import _get_password_from_env_or_context, render_cmk_graphs
 
 # Elements to be put into the mail body. Columns:
 # 1. Name
@@ -444,7 +444,13 @@ def send_mail_smtp_impl(
         conn.starttls()
 
     if context.get("PARAMETER_SMTP_AUTH_USER") is not None:
-        conn.login(context["PARAMETER_SMTP_AUTH_USER"], context["PARAMETER_SMTP_AUTH_PASSWORD"])
+        conn.login(
+            context["PARAMETER_SMTP_AUTH_USER"],
+            _get_password_from_env_or_context(
+                key="PARAMETER_SMTP_AUTH_PASSWORD",
+                context=context,
+            ),
+        )
 
     # this call returns a dictionary with the recipients that failed + the reason, but only
     # if at least one succeeded, otherwise it throws an exception.
@@ -762,7 +768,7 @@ def _add_template_attachments(
 
     if context.get("PARAMETER_CONTACT_GROUPS"):
         attachments.append(attach_file(icon="contact_groups.png"))
-    if elements := context.get("PARAMETER_ELEMENTSS", "").split():
+    if elements := context.get("PARAMETER_ELEMENTSS", "graph abstime longoutput").split():
         if "graph" in elements:
             attachments.append(attach_file(icon="graph.png"))
             elements.remove("graph")

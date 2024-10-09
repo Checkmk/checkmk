@@ -259,12 +259,13 @@ def retrieve_from_passwordstore(parameter: str | list[str]) -> str:
     return value
 
 
-def _get_password_from_context(key: str) -> str:
+def _get_password_from_env_or_context(key: str, context: dict[str, str] | None = None) -> str:
     """
     Since 2.4 the passwords are stored in FormSpec format, this leads to
     multiple keys in the notification context
     """
-    password_parameter_list = [os.environ[key] for key in os.environ if key.startswith(key)]
+    source = context if context else os.environ
+    password_parameter_list = [source[k] for k in source if k.startswith(key)]
     return retrieve_from_passwordstore(password_parameter_list)
 
 

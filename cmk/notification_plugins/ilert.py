@@ -6,7 +6,7 @@
 # License: GNU Public License v2
 
 from cmk.notification_plugins.utils import (
-    _get_password_from_context,
+    _get_password_from_env_or_context,
     JsonFieldMatcher,
     post_request,
     process_by_matchers,
@@ -41,7 +41,7 @@ RESULT_MATCHER: list[tuple[ResponseMatcher | StatusCodeRange, StateInfo]] = [
 
 
 def _ilert_url() -> str:
-    password = _get_password_from_context(key="NOTIFY_PARAMETER_ILERT_API_KEY")
+    password = _get_password_from_env_or_context(key="NOTIFY_PARAMETER_ILERT_API_KEY")
     return f"https://api.ilert.com/api/v1/events/checkmk-ext/{password}"
 
 

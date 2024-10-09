@@ -12,6 +12,7 @@ import {
   groupDictionaryValidations,
   type ValidationMessages
 } from '@/form/components/utils/validation'
+import HelpText from '@/components/HelpText.vue'
 
 const props = defineProps<{
   spec: Catalog
@@ -81,6 +82,7 @@ function getClass(ident: string) {
         <td colspan="2">
           <img class="vue nform treeangle" :class="getClass(topic.ident)" />
           {{ topic.dictionary.title }}
+          <HelpText :help="topic.dictionary.help" />
         </td>
       </tr>
     </thead>

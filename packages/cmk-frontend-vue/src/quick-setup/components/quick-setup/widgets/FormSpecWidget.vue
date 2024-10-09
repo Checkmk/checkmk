@@ -33,6 +33,7 @@ watch(internal.value, (newValue) => {
     <tbody>
       <tr>
         <td>
+          <HelpText :help="form_spec.spec.help" />
           <FormEdit
             v-model:data="internal"
             :spec="form_spec.spec"

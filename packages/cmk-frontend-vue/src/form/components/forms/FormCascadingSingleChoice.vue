@@ -15,6 +15,7 @@ import type {
 import { useId } from '@/form/utils'
 import FormValidation from '@/form/components/FormValidation.vue'
 import { validateValue, type ValidationMessages } from '@/form/components/utils/validation'
+import HelpText from '@/components/HelpText.vue'
 
 const props = defineProps<{
   spec: CascadingSingleChoice
@@ -110,6 +111,7 @@ const componentId = useId()
       </option>
     </select>
     <label v-if="$props.spec.label" :for="componentId">{{ props.spec.label }}</label>
+    <HelpText :help="props.spec.help" />
   </div>
   <template v-if="activeElement !== null">
     <FormEdit

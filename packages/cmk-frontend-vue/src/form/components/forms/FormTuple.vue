@@ -12,6 +12,7 @@ import {
 import FormEdit from '@/form/components/FormEdit.vue'
 import { ref, watch } from 'vue'
 import FormValidation from '@/form/components/FormValidation.vue'
+import HelpText from '@/components/HelpText.vue'
 
 const props = defineProps<{
   spec: FormSpec.Tuple
@@ -58,6 +59,7 @@ function capitalizeFirstLetter(value: string): string {
           <span v-if="spec.show_titles && element.title" class="title">{{
             capitalizeFirstLetter(element.title)
           }}</span>
+          <HelpText :help="spec.help" />
           <br v-if="spec.show_titles && element.title && spec.layout === 'horizontal_titles_top'" />
           <span v-else> </span>
           <FormEdit
@@ -76,6 +78,7 @@ function capitalizeFirstLetter(value: string): string {
         <span v-if="element.title" class="vs_floating_text">{{
           capitalizeFirstLetter(element.title)
         }}</span>
+        <HelpText :help="spec.help" />
       </td>
       <td :class="{ tuple_right: true, has_title: element.title }">
         <FormEdit
@@ -89,6 +92,7 @@ function capitalizeFirstLetter(value: string): string {
 
   <template v-if="spec.layout === 'float'">
     <template v-for="(element, index) in spec.elements" :key="index">
+      <HelpText :help="spec.help" />
       <FormEdit
         v-model:data="data[index]"
         :spec="element"

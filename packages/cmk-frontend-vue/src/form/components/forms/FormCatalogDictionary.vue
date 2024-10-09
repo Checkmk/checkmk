@@ -13,6 +13,7 @@ import {
   type ValidationMessages
 } from '@/form/components/utils/validation'
 import { ref } from 'vue'
+import HelpText from '@/components/HelpText.vue'
 
 const props = defineProps<{
   elements: Array<DictionaryElement>
@@ -51,12 +52,14 @@ function isRequired(element: DictionaryElement): boolean {
     <td class="legend">
       <div class="title">
         {{ element.parameter_form.title }}
+        <HelpText :help="element.parameter_form.help" />
         <span
           class="dots"
           :class="{
             required: isRequired(element)
           }"
-          >{{ Array(200).join('.') }}</span
+        >
+          {{ Array(200).join('.') }}</span
         >
       </div>
     </td>

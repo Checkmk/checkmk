@@ -10,6 +10,7 @@ import FormReadonly from '@/form/components/FormReadonly.vue'
 import type { FormSpec } from '@/form/components/vue_formspec_components'
 import type { ValidationMessages } from '@/form/components/utils/validation'
 import { immediateWatch } from '@/form/components/utils/watch'
+import HelpText from '@/components/HelpText.vue'
 
 const props = defineProps<{
   id: string
@@ -69,6 +70,7 @@ function toggleActiveMode() {
       ></FormReadonly>
     </div>
 
+    <HelpText :help="spec.help" />
     <div v-if="activeMode === 'edit' || activeMode === 'both'">
       <table class="nform">
         <tr>

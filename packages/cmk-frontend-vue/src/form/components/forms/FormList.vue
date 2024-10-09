@@ -13,6 +13,7 @@ import {
   validateValue,
   type ValidationMessages
 } from '@/form/components/utils/validation'
+import HelpText from '@/components/HelpText.vue'
 
 const props = defineProps<{
   spec: List
@@ -159,6 +160,7 @@ function sendDataUpstream() {
           </a>
         </td>
         <td class="vlof_content">
+          <HelpText :help="spec.help" />
           <FormEdit
             v-model:data="data[backendIndex]"
             :spec="spec.element_template"

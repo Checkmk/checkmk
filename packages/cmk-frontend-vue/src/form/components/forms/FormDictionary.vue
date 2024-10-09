@@ -16,6 +16,7 @@ import {
 } from '@/form/components/utils/validation'
 import FormHelp from '../FormHelp.vue'
 import { useId } from '@/form/utils'
+import HelpText from '@/components/HelpText.vue'
 
 const DICT_ELEMENT_NO_GROUP = '-ungrouped-'
 
@@ -173,6 +174,7 @@ const componentId = useId()
                 <label :for="`${componentId}.${dict_element.dict_config.ident}`">
                   {{ dict_element.dict_config.parameter_form.title }}
                 </label>
+                <HelpText :help="dict_element.dict_config.parameter_form.help" />
               </span>
             </template>
             <div

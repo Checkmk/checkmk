@@ -10,6 +10,7 @@
   --success-dimmed: rgb(17 188 122);
   --white: rgb(255, 255, 255);
   --error-msg-bg-color: rgba(200, 50, 50, 0.15);
+  --tag-added-color-light: rgb(6, 103, 193);
 
   /* Fonts */
   --font-size-xlarge: 16px;
@@ -41,6 +42,7 @@
   --icon-save: url('~cmk-frontend/src/themes/facelift/images/icon_save.svg');
   --icon-cancel: url('~cmk-frontend/src/themes/facelift/images/icon_cancel.svg');
   --icon-search: url('~cmk-frontend/src/themes/facelift/images/icon_search_action_light.svg');
+  --icon-help: url('~cmk-frontend/src/themes/facelift/images/icon_info.svg');
   --icon-load-graph: url('~cmk-frontend/src/themes/facelift/images/load_graph.png');
 }
 
@@ -59,6 +61,12 @@
     --default-select-background-color: rgb(224, 224, 228);
     --default-select-hover-color: var(--success);
     --default-border-color-green: rgb(21, 209, 160);
+    --default-tooltip-icon-color: rgb(233, 233, 233);
+    --default-tooltip-background-color: rgb(233, 233, 233);
+    --default-tooltip-text-color: rgb(17, 24, 29);
+    --custom-scroll-bar-thumb-border-color: rgb(234, 234, 234);
+    --custom-scroll-bar-thumb-color: rgb(88, 88, 88);
+    --custom-scroll-bar-backgroud-color: rgb(249, 249, 255);
     --default-text-color: rgb(39, 39, 39);
     --default-component-background-color: rgb(240, 240, 240);
   }
@@ -77,6 +85,12 @@
     --default-select-background-color: rgb(48, 57, 70);
     --default-select-hover-color: var(--success);
     --default-border-color-green: rgb(21, 209, 160);
+    --default-tooltip-icon-color: rgb(83, 83, 83);
+    --default-tooltip-background-color: rgb(17, 24, 29);
+    --default-tooltip-text-color: var(--white);
+    --custom-scroll-bar-thumb-border-color: rgb(48, 57, 70);
+    --custom-scroll-bar-thumb-color: rgb(224, 224, 228);
+    --custom-scroll-bar-backgroud-color: rgb(48, 57, 70);
     --default-text-color: rgb(255, 255, 255);
     --default-component-background-color: rgb(46, 44, 44);
   }

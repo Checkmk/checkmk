@@ -28,6 +28,12 @@ from cmk.gui.watolib.sample_config import new_notification_parameter_id
 INTERNAL_TRANSFORM_ERROR = _("FormSpec and internal data structure mismatch")
 
 
+@dataclass(frozen=True, kw_only=True)
+class NotificationParameterDescription:
+    ident: NotificationParameterID
+    description: str
+
+
 def _to_param_item(data: object) -> NotificationParameterItem:
     if not isinstance(data, dict):
         raise ValueError(INTERNAL_TRANSFORM_ERROR)
@@ -54,7 +60,7 @@ def save_notification_parameter(
     parameter_method: NotificationParameterMethod,
     data: object,
     object_id: NotificationParameterID | None = None,
-) -> NotificationParameterID | Sequence[shared_type_defs.ValidationMessage]:
+) -> NotificationParameterDescription | Sequence[shared_type_defs.ValidationMessage]:
     form_spec = registry.form_spec(parameter_method)
     visitor = get_visitor(form_spec, VisitorOptions(DataOrigin.FRONTEND))
 
@@ -79,7 +85,9 @@ def save_notification_parameter(
     notification_parameter.setdefault(parameter_method, {})[parameter_id] = item
     config_file.save(notification_parameter)
 
-    return parameter_id
+    return NotificationParameterDescription(
+        ident=parameter_id, description=item["general"]["description"]
+    )
 
 
 class NotificationParameterSchema(NamedTuple):
@@ -94,12 +102,6 @@ def get_notification_parameter_schema(
     visitor = get_visitor(form_spec, VisitorOptions(DataOrigin.FRONTEND))
     schema, default_values = visitor.to_vue(DEFAULT_VALUE)
     return NotificationParameterSchema(schema=schema, default_values=default_values)
-
-
-@dataclass(frozen=True, kw_only=True)
-class NotificationParameterDescription:
-    ident: NotificationParameterID
-    description: str
 
 
 def get_list_of_notification_parameter(

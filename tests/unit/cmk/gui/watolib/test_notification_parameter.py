@@ -19,6 +19,7 @@ from cmk.gui.watolib.notification_parameter import (
     get_list_of_notification_parameter,
     get_notification_parameter,
     get_notification_parameter_schema,
+    NotificationParameterDescription,
     save_notification_parameter,
 )
 from cmk.gui.watolib.notifications import NotificationParameterConfigFile
@@ -60,7 +61,7 @@ def _registry() -> NotificationParameterRegistry:
 @pytest.mark.usefixtures("request_context")
 def test_save_notification_params(registry: NotificationParameterRegistry) -> None:
     # WHEN
-    ident = save_notification_parameter(
+    save_return = save_notification_parameter(
         registry,
         "dummy_params",
         {
@@ -70,8 +71,8 @@ def test_save_notification_params(registry: NotificationParameterRegistry) -> No
     )
 
     # THEN
-    assert isinstance(ident, str)
-    param = NotificationParameterConfigFile().load_for_reading()["dummy_params"][ident]
+    assert isinstance(save_return, NotificationParameterDescription)
+    param = NotificationParameterConfigFile().load_for_reading()["dummy_params"][save_return.ident]
     assert param["general"]["description"] == "foo"
     assert param["parameter_properties"]["test_param"] == "bar"
 

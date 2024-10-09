@@ -9,7 +9,7 @@ from tests.unit.conftest import FixRegister
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.agent_based.v2 import Metric, Result, State
 
 SECTION = [
     ["up1", "2"],

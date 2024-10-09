@@ -13,7 +13,8 @@ from cmk.utils.sectionname import SectionName
 from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin, SNMPSectionPlugin
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+
+from cmk.agent_based.v2 import Result, Service, State
 
 
 @pytest.fixture(name="check_plugin")

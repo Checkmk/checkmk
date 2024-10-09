@@ -8,7 +8,7 @@
 import time
 from collections.abc import Callable
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+from cmk.agent_based.v2 import (
     get_average,
     get_rate,
     get_value_store,

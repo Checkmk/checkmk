@@ -8,13 +8,13 @@ from collections.abc import Iterable, Mapping, Sequence
 from typing import Any
 
 from cmk.base.check_api import check_levels, LegacyResult
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+
+from cmk.agent_based.v2 import (
     get_average,
     get_value_store,
     IgnoreResultsError,
+    render,
 )
-
-from cmk.agent_based.v2 import render
 from cmk.plugins.lib import cpu_util
 
 # Common file for all (modern) checks that check CPU utilization (not load!)

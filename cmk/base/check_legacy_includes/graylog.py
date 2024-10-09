@@ -9,9 +9,8 @@ import json as json_module
 import time
 
 from cmk.base.check_api import check_levels
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_average, get_rate, get_value_store
 
-from cmk.agent_based.v2 import render
+from cmk.agent_based.v2 import get_average, get_rate, get_value_store, render
 from cmk.plugins.lib import graylog
 
 json = json_module

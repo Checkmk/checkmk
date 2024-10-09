@@ -1,0 +1,11 @@
+Title: esx_vsphere_vm_snapshot: Correctly compute creation time
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1728468451
+Edition: cre
+Level: 1
+Version: 2.2.0p36
+
+The creation time of snapshots has been computed incorrectly.
+The time stamp (like <code>2024-10-09T12:10:00.123456Z</code>) has been treated as local time, while in fact refering to UTC.

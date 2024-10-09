@@ -1676,6 +1676,10 @@ def get_section_snapshot_summary(vms):
     ]
 
 
+def _make_unix_time(raw_time: str) -> int:
+    return int(dateutil.parser.isoparse(raw_time).timestamp())
+
+
 def get_section_systemtime(connection: ESXConnection, debug: bool) -> Sequence[str]:
     try:
         response = connection.query_server("systemtime")
@@ -1685,7 +1689,7 @@ def get_section_systemtime(connection: ESXConnection, debug: bool) -> Sequence[s
             raise
         return []
 
-    systime = dateutil.parser.isoparse(raw_systime).timestamp()
+    systime = _make_unix_time(raw_systime)
     return ["<<<systemtime>>>", f"{systime} {time.time()}"]
 
 
@@ -1728,7 +1732,7 @@ def eval_snapshot_list(info, _datastores):
     for entry in snapshot_info:
         try:
             # 2013-11-06T15:39:39.347543Z
-            creation_time = int(time.mktime(time.strptime(entry[2][:19], "%Y-%m-%dT%H:%M:%S")))
+            creation_time = _make_unix_time(entry[2])
         except ValueError:
             creation_time = 0
         response.append(

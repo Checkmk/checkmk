@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import argparse
+
 import pytest
 
 from cmk.utils.semantic_version import SemanticVersion
@@ -14,10 +16,19 @@ from cmk.plugins.gerrit.lib.agent import LatestVersions, SectionName, Sections
 
 def test_parse_arguments() -> None:
     argv = ["--user", "abc", "--password", "123", "review.gerrit.com"]
-    args = agent.parse_arguments(argv)
 
-    value = (args.user, args.password, args.hostname)
-    expected = ("abc", "123", "review.gerrit.com")
+    value = agent.parse_arguments(argv)
+    expected = argparse.Namespace(
+        debug=False,
+        verbose=0,
+        vcrtrace=False,
+        user="abc",
+        password_ref=None,
+        password="123",
+        proto="https",
+        port=443,
+        hostname="review.gerrit.com",
+    )
 
     assert value == expected
 

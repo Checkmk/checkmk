@@ -4,8 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from typing import Literal
+from typing import cast, Literal
+from uuid import uuid4
 
+from cmk.utils.notify_types import EventRule, NotificationRuleID
 from cmk.utils.urls import is_allowed_url
 from cmk.utils.user import UserId
 
@@ -33,7 +35,9 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, FormSpecWrapper, Widget
 from cmk.gui.userdb import load_users
 from cmk.gui.wato._group_selection import sorted_contact_group_choices
+from cmk.gui.wato.pages.notifications.quick_setup_types import NotificationQuickSetupSpec
 from cmk.gui.watolib.mode import mode_url
+from cmk.gui.watolib.notifications import NotificationRuleConfigFile
 
 from cmk.rulesets.v1 import Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
@@ -478,15 +482,40 @@ def general_properties() -> QuickSetupStage:
 
 
 def save_and_test_action(all_stages_form_data: ParsedFormData) -> str:
+    _save(all_stages_form_data)
     return mode_url("test_notifications")
 
 
 def save_and_new_action(all_stages_form_data: ParsedFormData) -> str:
-    return mode_url("test_notifications")
+    _save(all_stages_form_data)
+    return mode_url("notification_rule_quick_setup")
 
 
 def register(quick_setup_registry: QuickSetupRegistry) -> None:
     quick_setup_registry.register(quick_setup_notifications)
+
+
+def _save(all_stages_form_data: ParsedFormData) -> None:
+    config_file = NotificationRuleConfigFile()
+    notifications_rules = list(config_file.load_for_modification())
+    notifications_rules += [
+        _migrate_to_event_rule(cast(NotificationQuickSetupSpec, all_stages_form_data))
+    ]
+    config_file.save(notifications_rules)
+
+
+def _migrate_to_event_rule(notification: NotificationQuickSetupSpec) -> EventRule:
+    # TODO: implement actual migration
+    return EventRule(
+        rule_id=NotificationRuleID(str(uuid4())),
+        allow_disable=False,
+        contact_all=False,
+        contact_all_with_email=False,
+        contact_object=False,
+        description="foo",
+        disabled=False,
+        notify_plugin=("mail", None),
+    )
 
 
 quick_setup_notifications = QuickSetup(

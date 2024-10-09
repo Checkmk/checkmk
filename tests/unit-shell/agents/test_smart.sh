@@ -179,5 +179,10 @@ p11    NOT-PRESENT      -      -           -             -"
     assertEquals "$(_tw_cli_drivestatus_to_port "$TW_CLI_DRIVER_STATUS" "$DNAME")" "9"
 }
 
+test_AMCC_format_model_name() {
+    TW_CLI_SHOW_MODEL="/c0 Model = 7500-12"
+    assertEquals "$(_format_model_name "$TW_CLI_SHOW_MODEL")" "7500-12"
+}
+
 # shellcheck disable=SC1090 # Can't follow
 . "$UNIT_SH_SHUNIT2"

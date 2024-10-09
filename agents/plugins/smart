@@ -81,6 +81,12 @@ _tw_cli_drivestatus_to_port() {
     done
 }
 
+_format_model_name() {
+    MODEL=$(echo "$1" | head -n 1 | awk -F= '{ print $2 }')
+    MODEL=${MODEL## }
+    echo "${MODEL// /-}"
+}
+
 main() {
     # Only handle always updated values, add device path and vendor/model
     if inpath smartctl >/dev/null 2>&1; then
@@ -147,9 +153,7 @@ main() {
                 [ -z "$PORT" ] && continue
                 CMD="smartctl -d 3ware,$PORT, -v 9,raw48 -A /dev/twa0"
                 # create nice device name including model
-                MODEL=$(tw_cli /"$TWAC"/p"$PORT" show model | head -n 1 | awk -F= '{ print $2 }')
-                MODEL=${MODEL## }
-                MODEL=${MODEL// /-}
+                MODEL=_format_model_name "$(tw_cli /"$TWAC"/p"$PORT" show model)"
                 DNAME=${DNAME#AMCC_}
                 DNAME="AMCC_${MODEL}_${DNAME%000000000000}"
             elif [ "$VEND" != "ATA" ]; then

@@ -12,11 +12,9 @@ from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
     LevelsT,
-    Result,
     Service,
     SimpleSNMPSection,
     SNMPTree,
-    State,
     StringTable,
 )
 from cmk.plugins.lib.apc import DETECT_ATS
@@ -35,6 +33,10 @@ Section = Dict[str, ATS]
 class DefaultParameters(TypedDict):
     output_voltage_max: LevelsT[float]
     output_voltage_min: LevelsT[float]
+    output_current_max: LevelsT[float]
+    output_current_min: LevelsT[float]
+    output_power_max: LevelsT[float]
+    output_power_min: LevelsT[float]
     load_perc_max: LevelsT[float]
     load_perc_min: LevelsT[float]
 
@@ -80,24 +82,39 @@ def check_apc_ats_output(item: str, params: Mapping[str, Any], section: Section)
             levels_upper=params.get("output_voltage_max", None),
             levels_lower=params.get("output_voltage_min", None),
             label="Voltage",
-            render_func=lambda v: f"{v} V",
+            render_func=lambda v: f"{v:.2f} V",
         )
     if (power := data.get("power")) is not None:
-        yield Result(state=State.OK, summary="Power: %.2f W" % power)
+        yield from check_levels(
+            value=power,
+            metric_name="watt",
+            levels_upper=params.get("output_power_max", None),
+            levels_lower=params.get("output_power_min", None),
+            label="Power",
+            render_func=lambda v: f"{v:.2f} W",
+        )
 
     if (current := data.get("current")) is not None:
-        yield Result(state=State.OK, summary="Current: %.2f A" % current)
+        yield from check_levels(
+            value=current,
+            metric_name="current",
+            levels_upper=params.get("output_current_max", None),
+            levels_lower=params.get("output_current_min", None),
+            label="Current",
+            render_func=lambda v: f"{v:.2f} A",
+        )
 
     if (perc_load := data.get("perc_load")) is not None:
         # -1 means that the ATS doesn't support this value
-        yield from check_levels(
-            value=perc_load,
-            metric_name="load_perc",
-            levels_lower=params.get("load_perc_min", None),
-            levels_upper=params.get("load_perc_max", None),
-            label="Load",
-            render_func=percent,
-        )
+        if perc_load != -1:
+            yield from check_levels(
+                value=perc_load,
+                metric_name="load_perc",
+                levels_lower=params.get("load_perc_min", None),
+                levels_upper=params.get("load_perc_max", None),
+                label="Load",
+                render_func=percent,
+            )
 
 
 snmp_section_apc_ats_output = SimpleSNMPSection(
@@ -119,6 +136,10 @@ check_plugin_apc_ats_output = CheckPlugin(
     check_default_parameters=DefaultParameters(
         output_voltage_max=("fixed", (240, 250)),
         output_voltage_min=("no_levels", None),
+        output_current_max=("no_levels", None),
+        output_current_min=("no_levels", None),
+        output_power_max=("no_levels", None),
+        output_power_min=("no_levels", None),
         load_perc_min=("no_levels", None),
         load_perc_max=("fixed", (85.0, 95.0)),
     ),

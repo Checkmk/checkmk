@@ -50,7 +50,7 @@ defineProps<{
   .content {
     padding: 0;
 
-    :first-child {
+    > p {
       padding: var(--spacing-half);
     }
 

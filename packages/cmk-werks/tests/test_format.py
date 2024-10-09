@@ -135,7 +135,6 @@ def test_markdown_output_keys_stable() -> None:
         description="description",
     )
     content = format_as_werk_v2(parsed)
-    print(content)
     assert (
         content
         == """[//]: # (werk v2)

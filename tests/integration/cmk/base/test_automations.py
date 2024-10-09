@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
+import logging
 import re
 from collections.abc import Iterator, MutableMapping, Sequence
 
@@ -24,12 +25,14 @@ from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import DiscoveryResult
 from cmk.checkengine.discovery._autochecks import _AutochecksSerializer, AutocheckEntry
 
+logger = logging.getLogger(__name__)
+
 
 @pytest.fixture(name="test_cfg", scope="module")
 def test_cfg_fixture(site: Site) -> Iterator[None]:
     site.ensure_running()
 
-    print("Applying default config")
+    logger.info("Applying default config")
     site.openapi.create_host(
         "modes-test-host",
         attributes={
@@ -94,7 +97,7 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
         #
         # Cleanup code
         #
-        print("Cleaning up test config")
+        logger.info("Cleaning up test config")
 
         site.delete_dir("var/check_mk/agent_output")
 

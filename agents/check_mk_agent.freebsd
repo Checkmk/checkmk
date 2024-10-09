@@ -234,6 +234,45 @@ unset_locale() {
 # END COMMON AGENT CODE
 #
 
+read_python_version() {
+    if inpath "${1}"; then
+        version=$(${1} -c 'import sys; print("%s.%s"%(sys.version_info[0], sys.version_info[1]))')
+
+        major=${version%%.*}
+        minor=${version##*.}
+
+        if [ "${major}" -eq "${2}" ] && [ "${minor}" -ge "${3}" ]; then
+            echo "${1}"
+            return 0
+        fi
+    fi
+    return 1
+}
+
+detect_python() {
+    PYTHON3=$(read_python_version python3 3 4 || read_python_version python 3 4)
+    PYTHON2=$(read_python_version python2 2 6 || read_python_version python 2 6)
+    if [ -f "${MK_CONFDIR}/python_path.cfg" ]; then
+        # shellcheck source=/dev/null
+        . "${MK_CONFDIR}/python_path.cfg"
+    fi
+    export PYTHON2 PYTHON3
+
+    if [ -z "${PYTHON2}" ] && [ -z "${PYTHON3}" ]; then
+        NO_PYTHON=true
+    elif [ -n "${PYTHON3}" ] && [ "$(
+        ${PYTHON3} -c 'pass' >/dev/null 2>&1
+        echo $?
+    )" -eq 127 ]; then
+        WRONG_PYTHON_COMMAND=true
+    elif [ -z "${PYTHON3}" ] && [ "$(
+        ${PYTHON2} -c 'pass' >/dev/null 2>&1
+        echo $?
+    )" -eq 127 ]; then
+        WRONG_PYTHON_COMMAND=true
+    fi
+}
+
 section_checkmk() {
     echo "<<<check_mk>>>"
     echo "Version: 2.4.0b1"
@@ -927,6 +966,8 @@ main_setup() {
     set_variable_defaults
 
     unset_locale
+
+    detect_python
 
     preamble_1
 

@@ -205,14 +205,10 @@ STAGES:
     - NAME: "Python Unit Tests"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES,CHANGED_PIPFILE_LOCK,CHANGED_PYPROJECT_TOML_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT,CHANGED_CHECKMAN_FILES
       DIR: "tests"
-      ENV_VARS:
-          PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-unit-junit.xml --color=no"
-          # https://bazel.build/reference/test-encyclopedia
-          XML_OUTPUT_FILE: "${RESULTS}/python3-unit-junit.xml"
       COMMAND: "make test-unit-docker"
       TEXT_ON_SKIP: "No Python files changed"
       RESULT_CHECK_TYPE: "JUNIT"
-      RESULT_CHECK_FILE_PATTERN: "results/python3-unit-junit.xml"
+      RESULT_CHECK_FILE_PATTERN: "results/testlogs/unit/repo/test.xml"
 
     - NAME: "Python License Headers Test"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES

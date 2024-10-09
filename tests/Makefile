@@ -413,7 +413,11 @@ test-unit: prepare-protobuf-files test-unit-doctests
 	    tests/unit/test_pylint_checker_forbidden_objects.py
 
 test-unit-docker:
-	../scripts/run-in-docker.sh make --quiet test-unit
+	../scripts/run-in-docker.sh '\
+	    make --quiet test-unit ;\
+	    x=$$? ;\
+	    cp -Lr ../bazel-testlogs/tests/ ../results/testlogs ;\
+	    exit $$x'
 
 test-unit-all: prepare-protobuf-files
 	cd .. && \

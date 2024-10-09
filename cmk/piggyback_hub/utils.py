@@ -44,7 +44,7 @@ class ReceivingProcess(multiprocessing.Process, Generic[_ModelT]):
         self.callback = callback
         self.queue = queue
         self.message_ttl = message_ttl
-        self.task_name = f"receiving on queue '{self.queue}'"
+        self.task_name = f"receiving on queue '{self.queue.value}'"
 
     def run(self) -> None:
         self.logger.info("Starting: %s", self.task_name)

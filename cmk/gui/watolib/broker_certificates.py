@@ -108,19 +108,6 @@ class CREBrokerCertificateSync(BrokerCertificateSync):
         pass
 
 
-def create_all_broker_certificates(
-    myself: SiteId, dirty_sites: list[tuple[SiteId, SiteConfiguration]]
-) -> None:
-    broker_sync = CREBrokerCertificateSync()
-
-    if not (required_sites := broker_sync.get_site_to_sync(myself, dirty_sites)):
-        return
-
-    central_ca = broker_sync.load_central_ca()
-    for site_id, settings in required_sites["provider"]:
-        broker_sync.create_broker_certificates(site_id, settings, central_ca, None)
-
-
 def create_broker_certs(
     cert_path: Path, site_id: SiteId, ca: CertificateWithPrivateKey
 ) -> CertificateWithPrivateKey:

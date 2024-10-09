@@ -86,6 +86,10 @@ def _check_netapp_ontap_luns(
     yield Result(state=State.OK, summary=f"Volume: {lun.volume_name}")
     yield Result(state=State.OK, summary=f"SVM: {lun.svm_name}")
 
+    if lun.space_used is None:
+        yield Result(state=State.UNKNOWN, summary="Space used is unknown")
+        return
+
     yield from check_netapp_luns(
         item=item,
         online=lun.enabled,

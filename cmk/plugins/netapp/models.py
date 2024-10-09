@@ -200,7 +200,7 @@ class LunModel(BaseModel):
 
     name: str
     space_size: int
-    space_used: int
+    space_used: int | None = None
     enabled: bool
     read_only: bool
     svm_name: str
@@ -210,6 +210,8 @@ class LunModel(BaseModel):
         return self.space_size / MEGA
 
     def free_space(self) -> float:
+        if self.space_used is None:
+            raise ValueError("space_used must be available to calculate free space")
         return (self.space_size - self.space_used) / MEGA
 
     def item_name(self) -> str:

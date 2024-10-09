@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Literal
+
+import cmk.utils.password_store as password_store
+
 from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import recompose
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
 
@@ -44,6 +48,7 @@ class NotificationParameterILert(NotificationParameter):
                     parameter_form=Password(
                         title=Title("iLert alert source API key"),
                         help_text=Help("API key for iLert alert server"),
+                        migrate=_migrate_to_password,
                     ),
                     required=True,
                 ),
@@ -103,3 +108,26 @@ class NotificationParameterILert(NotificationParameter):
                 "url_prefix": _get_url_prefix_setting(),
             },
         )
+
+
+def _migrate_to_password(
+    password: object,
+) -> tuple[
+    Literal["cmk_postprocessed"], Literal["explicit_password", "stored_password"], tuple[str, str]
+]:
+    if isinstance(password, tuple):
+        if password[0] == "store":
+            return ("cmk_postprocessed", "stored_password", (password[1], ""))
+
+        if password[0] == "ilert_api_key":
+            return (
+                "cmk_postprocessed",
+                "explicit_password",
+                (password_store.ad_hoc_password_id(), password[1]),
+            )
+
+        # Already migrated
+        assert len(password) == 3
+        return password
+
+    raise ValueError(f"Invalid password format: {password}")

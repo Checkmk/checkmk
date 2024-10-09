@@ -171,13 +171,12 @@ p8     OK               -      149.05 GB   312581808     3JS0VG8D
 p9     NOT-PRESENT      -      -           -             -
 p10    NOT-PRESENT      -      -           -             -
 p11    NOT-PRESENT      -      -           -             -"
-    _write_ports_to_environment_var "$TW_CLI_DRIVER_STATUS"
     DNAME=AMCC_blah0000000000
-    assertEquals "${!DNAME}" ""
+    assertEquals "$(_tw_cli_drivestatus_to_port "$TW_CLI_DRIVER_STATUS" "$DNAME")" ""
     DNAME=AMCC_3JS0VF43000000000000
-    assertEquals "${!DNAME}" "7"
+    assertEquals "$(_tw_cli_drivestatus_to_port "$TW_CLI_DRIVER_STATUS" "$DNAME")" "7"
     DNAME=AMCC_00000000000
-    assertEquals "${!DNAME}" "11"
+    assertEquals "$(_tw_cli_drivestatus_to_port "$TW_CLI_DRIVER_STATUS" "$DNAME")" "9"
 }
 
 # shellcheck disable=SC1090 # Can't follow

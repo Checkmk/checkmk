@@ -64,31 +64,33 @@ megaraid_info() {
         done
 }
 
-_write_ports_to_environment_var() {
+_tw_cli_drivestatus_to_port() {
+    tw_cli_driver_status="${1}"
+    device_name="${2}"
     # - add a trailing zero to handle case of unused slot
     #   trailing zeros are part of the device links in /dev/disk/by-id/... anyway
-    # - only the last 9 chars seem to be relevant
-    # (hopefully all this doesn't change with new kernels...)
-    eval "$(echo "$1" | grep -E '^p[0-9]' | awk '{print $1 " " $7 "0"}' | while read -r twaminor serial; do
-        twaminor=${twaminor#p}
-        serial=${serial:(-9)}
+    echo "$tw_cli_driver_status" | grep -E '^p[0-9]' | awk '{print $1 " " $7 "0"}' | while read -r twaminor serial; do
+        # - only the last 9 chars seem to be relevant
+        # (hopefully all this doesn't change with new kernels...)
+        serial=$(echo "$serial" | sed -n -e 's/.*\(.\{9\}\)$/\1/p')
         serial=AMCC_${serial}00000000000
-        echo "$serial=$twaminor"
-    done)"
+        if [ "$serial" = "$device_name" ]; then
+            echo "${twaminor#p}"
+            break
+        fi
+    done
 }
 
 main() {
     # Only handle always updated values, add device path and vendor/model
     if inpath smartctl >/dev/null 2>&1; then
         #
-        # if the 3ware-utility is found
-        # get the serials for all disks on the controller
         #
         if inpath tw_cli >/dev/null 2>&1; then
             # support for only one controller at the moment
             TWAC=$(tw_cli show | awk 'NR < 4 { next } { print $1 }' | head -n 1)
+            # if the 3ware-utility is found, then we get ports via the drivestatus
             TW_CLI_DRIVER_STATUS=$(tw_cli /"$TWAC" show drivestatus)
-            _write_ports_to_environment_var "$TW_CLI_DRIVER_STATUS"
         else
             echo "tw_cli not found" >&2
         fi
@@ -141,10 +143,11 @@ main() {
             CMD=
             if [ "$VEND" == "AMCC" ] && [ -n "$TWAC" ]; then
                 DNAME=${DNAME#1}
-                [ -z "${!DNAME}" ] && continue
-                CMD="smartctl -d 3ware,${!DNAME} -v 9,raw48 -A /dev/twa0"
+                PORT=$(_tw_cli_drivestatus_to_port "$TW_CLI_DRIVER_STATUS" "$DNAME")
+                [ -z "$PORT" ] && continue
+                CMD="smartctl -d 3ware,$PORT, -v 9,raw48 -A /dev/twa0"
                 # create nice device name including model
-                MODEL=$(tw_cli /"$TWAC"/p"${!DNAME}" show model | head -n 1 | awk -F= '{ print $2 }')
+                MODEL=$(tw_cli /"$TWAC"/p"$PORT" show model | head -n 1 | awk -F= '{ print $2 }')
                 MODEL=${MODEL## }
                 MODEL=${MODEL// /-}
                 DNAME=${DNAME#AMCC_}

@@ -141,6 +141,7 @@ class HostAttributes(TypedDict, total=False):
     locked_attributes: Sequence[str]
     meta_data: MetaData
     inventory_failed: bool
+    waiting_for_discovery: bool
     labels: Labels
     contactgroups: HostContactGroupSpec
     # Enterprise editions only

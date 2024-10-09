@@ -3214,6 +3214,9 @@ class Host:
     def discovery_failed(self) -> bool:
         return self.attributes.get("inventory_failed", False)
 
+    def is_waiting_for_discovery(self) -> bool:
+        return self.attributes.get("waiting_for_discovery", False)
+
     def validation_errors(self) -> list[str]:
         if hooks.registered("validate-host"):
             errors = []

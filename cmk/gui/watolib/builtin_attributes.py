@@ -1449,7 +1449,7 @@ class HostAttributeDiscoveryFailed(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "inventory_failed"
 
-    def topic(self) -> type[HostAttributeTopic]:
+    def topic(self) -> type[HostAttributeTopicMetaData]:
         return HostAttributeTopicMetaData
 
     @classmethod
@@ -1498,6 +1498,65 @@ class HostAttributeDiscoveryFailed(ABCHostAttributeValueSpec):
         return _(
             "Whether or not the last bulk discovery failed. It is set to True once it fails "
             "and unset in case a later discovery succeeds."
+        )
+
+    def get_tag_groups(self, value):
+        return {}
+
+
+class HostAttributeWaitingForDiscovery(ABCHostAttributeValueSpec):
+    def name(self) -> str:
+        return "waiting_for_discovery"
+
+    def topic(self) -> type[HostAttributeTopic]:
+        return HostAttributeTopicCustomAttributes
+
+    @classmethod
+    def sort_index(cls) -> int:
+        return 210
+
+    def show_in_table(self):
+        return False
+
+    def show_in_form(self):
+        return False
+
+    def show_on_create(self):
+        return False
+
+    def show_in_folder(self):
+        return False
+
+    def show_in_host_search(self):
+        return False
+
+    def show_inherited_value(self):
+        return False
+
+    def editable(self):
+        return False
+
+    def openapi_editable(self) -> bool:
+        return True
+
+    def valuespec(self) -> ValueSpec:
+        return Checkbox(
+            title=_("Waiting for discovery"),
+            help=self._help_text(),
+            default_value=False,
+        )
+
+    def openapi_field(self) -> gui_fields.Field:
+        return fields.Boolean(
+            example=False,
+            required=False,
+            description=self._help_text(),
+        )
+
+    def _help_text(self) -> str:
+        return _(
+            "Indicates that host is waiting for bulk discovery. It is set to True once it in queue."
+            "Removed after discovery is ended."
         )
 
     def get_tag_groups(self, value):

@@ -223,6 +223,7 @@ def _register_host_attribute(host_attribute_registry: HostAttributeRegistry) -> 
         builtin_attributes.HostAttributeLockedAttributes,
         builtin_attributes.HostAttributeMetaData,
         builtin_attributes.HostAttributeDiscoveryFailed,
+        builtin_attributes.HostAttributeWaitingForDiscovery,
         builtin_attributes.HostAttributeLabels,
         groups.HostAttributeContactGroups,
     ]

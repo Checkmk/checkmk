@@ -3421,6 +3421,9 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
 
         return self._back_mode()
 
+    def _validate_form_spec(self, origin: DataOrigin) -> bool:
+        return (origin == DataOrigin.FRONTEND) or (DataOrigin.DISK and not self._new)
+
     def page(self) -> None:
         value, origin = self._get_parameter_value_and_origin()
 
@@ -3430,7 +3433,7 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
                 self._vue_field_id(),
                 value,
                 origin,
-                True,
+                self._validate_form_spec(origin),
             )
 
             forms.end()

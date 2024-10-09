@@ -161,12 +161,20 @@ def test_call(mocker: MockerFixture) -> None:
     hook2_mock.assert_called_once()
 
 
-@pytest.mark.usefixtures("request_context")
-def test_call_exception_handling(mocker: MockerFixture) -> None:
-    hooks.register_builtin("bli", lambda: 1.0 / 0.0)
+def test_call_exception_handling_for_plugin_register(mocker: MockerFixture) -> None:
+    hooks.register_from_plugin("bli", lambda: 1.0 / 0.0)
     hook3_mock = mocker.Mock()
     hooks.register("bli", hook3_mock)
     with pytest.raises(MKGeneralException, match="float division by zero"):
+        hooks.call("bli")
+    hook3_mock.assert_not_called()
+
+
+def test_call_exception_handling_for_builtin_register(mocker: MockerFixture) -> None:
+    hooks.register_builtin("bli", lambda: 1.0 / 0.0)
+    hook3_mock = mocker.Mock()
+    hooks.register("bli", hook3_mock)
+    with pytest.raises(ZeroDivisionError, match="float division by zero"):
         hooks.call("bli")
     hook3_mock.assert_not_called()
 

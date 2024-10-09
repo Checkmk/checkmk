@@ -23,6 +23,10 @@ import {
 import { computed, type ComputedRef } from 'vue'
 import { setupAutocompleter } from '@/form/components/utils/autocompleter'
 
+defineOptions({
+  inheritAttrs: false
+})
+
 const props = defineProps<{
   spec: FormSpec.String
   backendValidation: ValidationMessages
@@ -82,6 +86,7 @@ function resetInput() {
     :placeholder="spec.input_hint || ''"
     type="text"
     :size="getSize(spec.field_size)"
+    v-bind="$attrs"
   />
   <!-- @vue-ignore -->
   <ComboboxRoot v-if="spec.autocompleter" v-model="value" class="ComboboxRoot">

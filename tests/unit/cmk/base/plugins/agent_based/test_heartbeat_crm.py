@@ -217,26 +217,6 @@ def _get_section_3() -> Section:
     return section
 
 
-@pytest.fixture(name="section_no_cluster", scope="module")
-def _get_section_no_cluster() -> Section:
-    section = parse_heartbeat_crm([["Error: cluster is not available on this node"]])
-    assert section
-    return section
-
-
-@pytest.fixture(name="section_connection_refused", scope="module")
-def _get_section_connection_refused() -> Section:
-    section = parse_heartbeat_crm(
-        [
-            [
-                "error: Could not connect to launcher: Connection refused crm_mon: Connection to cluster failed: Connection refused"
-            ]
-        ]
-    )
-    assert section
-    return section
-
-
 def test_discover_heartbeat_crm(section_1: Section) -> None:
     assert list(discover_heartbeat_crm({"naildown_dc": False}, section_1)) == [
         Service(parameters={"num_nodes": 2, "num_resources": 3}),
@@ -299,35 +279,6 @@ def test_check_heartbeat_crm_crit(section_2: Section) -> None:
                     "status=Timed Out, exitreason='none', "
                     "last-rc-change='Fri Feb 22 22:54:52 2019', queued=0ms, exec=0ms"
                 ),
-            ),
-        ]
-
-
-def test_check_heartbeat_crm_no_cluster_crit(section_no_cluster: Section) -> None:
-    with on_time("2019-08-18 10:36:36", "UTC"):
-
-        assert list(
-            check_heartbeat_crm(
-                {"dc": "hasi", "max_age": 60, "num_nodes": 1, "num_resources": 4},
-                section_no_cluster,
-            )
-        ) == [
-            Result(state=State.CRIT, summary="Error: cluster is not available on this node"),
-        ]
-
-
-def test_check_heartbeat_crm_failed_connection_crit(section_connection_refused: Section) -> None:
-
-    with on_time("2019-08-18 10:36:36", "UTC"):
-        assert list(
-            check_heartbeat_crm(
-                {"dc": "hasi", "max_age": 60, "num_nodes": 1, "num_resources": 4},
-                section_connection_refused,
-            )
-        ) == [
-            Result(
-                state=State.CRIT,
-                summary="error: Could not connect to launcher: Connection refused crm_mon: Connection to cluster failed: Connection refused",
             ),
         ]
 

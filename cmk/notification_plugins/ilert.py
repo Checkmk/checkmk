@@ -5,9 +5,8 @@
 #       iLert <support@ilert.com>
 # License: GNU Public License v2
 
-from os import environ
-
 from cmk.notification_plugins.utils import (
+    _get_password_from_context,
     JsonFieldMatcher,
     post_request,
     process_by_matchers,
@@ -16,7 +15,6 @@ from cmk.notification_plugins.utils import (
     StatusCodeMatcher,
     StatusCodeRange,
 )
-from cmk.notification_plugins.utils import retrieve_from_passwordstore as passwords
 
 PLUGIN_VERSION = "1.0"
 
@@ -43,10 +41,7 @@ RESULT_MATCHER: list[tuple[ResponseMatcher | StatusCodeRange, StateInfo]] = [
 
 
 def _ilert_url() -> str:
-    password_parameter_list = [
-        environ[key] for key in environ if key.startswith("NOTIFY_PARAMETER_ILERT_API_KEY")
-    ]
-    password = passwords(password_parameter_list)
+    password = _get_password_from_context(key="NOTIFY_PARAMETER_ILERT_API_KEY")
     return f"https://api.ilert.com/api/v1/events/checkmk-ext/{password}"
 
 

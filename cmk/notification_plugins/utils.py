@@ -259,6 +259,15 @@ def retrieve_from_passwordstore(parameter: str | list[str]) -> str:
     return value
 
 
+def _get_password_from_context(key: str) -> str:
+    """
+    Since 2.4 the passwords are stored in FormSpec format, this leads to
+    multiple keys in the notification context
+    """
+    password_parameter_list = [os.environ[key] for key in os.environ if key.startswith(key)]
+    return retrieve_from_passwordstore(password_parameter_list)
+
+
 def post_request(
     message_constructor: Callable[[dict[str, str]], dict[str, str | object]],
     url: str | None = None,

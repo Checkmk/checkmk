@@ -16,11 +16,10 @@ from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
 from cmk.gui.wato._notification_parameter import NotificationParameter
 from cmk.gui.wato._notification_parameter._registry import NotificationParameterRegistry
 from cmk.gui.watolib.notification_parameter import (
-    get_form_spec_notification_parameter_schema,
     get_list_of_notification_parameter,
     get_notification_parameter,
-    get_notification_parameter_default_values,
-    save_form_spec_notification_parameter,
+    get_notification_parameter_schema,
+    save_notification_parameter,
 )
 from cmk.gui.watolib.notifications import NotificationParameterConfigFile
 
@@ -61,7 +60,7 @@ def _registry() -> NotificationParameterRegistry:
 @pytest.mark.usefixtures("request_context")
 def test_save_notification_params(registry: NotificationParameterRegistry) -> None:
     # WHEN
-    ident = save_form_spec_notification_parameter(
+    ident = save_notification_parameter(
         registry,
         "dummy_params",
         {
@@ -107,7 +106,7 @@ def test_validation_on_saving_notification_params(
     registry: NotificationParameterRegistry, params: dict
 ) -> None:
     # WHEN
-    validation = save_form_spec_notification_parameter(registry, "dummy_params", params)
+    validation = save_notification_parameter(registry, "dummy_params", params)
 
     # THEN
     assert isinstance(validation, list)
@@ -117,9 +116,12 @@ def test_validation_on_saving_notification_params(
 @pytest.mark.usefixtures("request_context")
 def test_get_notification_params_schema(registry: NotificationParameterRegistry) -> None:
     # WHEN
-    schema = get_form_spec_notification_parameter_schema(registry, "dummy_params")
+    schema, default_values = get_notification_parameter_schema(registry, "dummy_params")
 
     # THEN
+    assert isinstance(default_values, dict)
+    assert isinstance(default_values["parameter_properties"], dict)
+    assert default_values["parameter_properties"]["test_param"] == "some_default_value"
     assert isinstance(schema, shared_type_defs.Catalog)
     assert schema.topics[0].ident == "general"
     assert schema.topics[1].ident == "parameter_properties"
@@ -176,13 +178,3 @@ def test_get_notification_parameter() -> None:
     # THEN
     assert param["general"]["description"] == "foo"
     assert param["parameter_properties"]["test_param"] == "bar"
-
-
-@pytest.mark.usefixtures("request_context")
-def test_get_notification_parameter_default(registry: NotificationParameterRegistry) -> None:
-    # WHEN
-    default_values = get_notification_parameter_default_values(registry, "dummy_params")
-
-    # THEN
-    assert isinstance(default_values["parameter_properties"], dict)
-    assert default_values["parameter_properties"]["test_param"] == "some_default_value"

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import dataclass
-from typing import Sequence
+from typing import NamedTuple, Sequence
 
 from cmk.ccc.i18n import _
 
@@ -49,7 +49,7 @@ def _to_param_item(data: object) -> NotificationParameterItem:
         raise ValueError from exc
 
 
-def save_form_spec_notification_parameter(
+def save_notification_parameter(
     registry: NotificationParameterRegistry,
     parameter_method: NotificationParameterMethod,
     data: object,
@@ -82,13 +82,18 @@ def save_form_spec_notification_parameter(
     return parameter_id
 
 
-def get_form_spec_notification_parameter_schema(
+class NotificationParameterSchema(NamedTuple):
+    schema: shared_type_defs.FormSpec
+    default_values: object
+
+
+def get_notification_parameter_schema(
     registry: NotificationParameterRegistry, parameter_method: NotificationParameterMethod
-) -> shared_type_defs.FormSpec:
+) -> NotificationParameterSchema:
     form_spec = registry.form_spec(parameter_method)
     visitor = get_visitor(form_spec, VisitorOptions(DataOrigin.FRONTEND))
-    schema, _ = visitor.to_vue(DEFAULT_VALUE)
-    return schema
+    schema, default_values = visitor.to_vue(DEFAULT_VALUE)
+    return NotificationParameterSchema(schema=schema, default_values=default_values)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -113,12 +118,3 @@ def get_notification_parameter(
 ) -> NotificationParameterItem:
     notification_parameter = NotificationParameterConfigFile().load_for_reading()
     return notification_parameter[parameter_method][parameter_id]
-
-
-def get_notification_parameter_default_values(
-    registry: NotificationParameterRegistry, parameter_method: NotificationParameterMethod
-) -> dict[str, object]:
-    form_spec = registry.form_spec(parameter_method)
-    visitor = get_visitor(form_spec, VisitorOptions(DataOrigin.FRONTEND))
-    _, default_values = visitor.to_vue(DEFAULT_VALUE)
-    return default_values

@@ -24,6 +24,7 @@ from cmk.gui import wato as legacy_wato
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.private import (
     DictionaryExtended,
+    LegacyValueSpec,
     ListExtended,
     ListOfStrings,
     MonitoredHostExtended,
@@ -786,6 +787,9 @@ def _convert_to_inner_legacy_valuespec(
 
         case ruleset_api_v1.form_specs.TimePeriod():
             return _convert_to_legacy_timeperiod_selection(to_convert, localizer)
+
+        case LegacyValueSpec():
+            return to_convert.valuespec
 
         case other:
             raise NotImplementedError(other)

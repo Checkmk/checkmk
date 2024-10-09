@@ -32,9 +32,11 @@ def check_mbg_lantime_ng_state(_no_item, params, info):
     # make sure, we don't try to parse "n/a" but pass 0 instead, because check_mbg_lantime_state_common()
     # also tries to parse it as float
     refclock_offset = (
-        refclock_offset_str if refclock_offset_str == "n/a" else float(refclock_offset_str) * 1000
+        refclock_offset_str
+        if refclock_offset_str == "n/a"
+        else float(refclock_offset_str.lstrip("=")) * 1000
     )
-    newinfo = [[ntp_state, stratum, refclock_name, refclock_offset]]
+    newinfo = [[ntp_state, stratum, refclock_name.lstrip("="), refclock_offset]]
     return check_mbg_lantime_state_common(states, _no_item, params, newinfo)
 
 

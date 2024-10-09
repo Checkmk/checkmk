@@ -43,7 +43,10 @@ RESULT_MATCHER: list[tuple[ResponseMatcher | StatusCodeRange, StateInfo]] = [
 
 
 def _ilert_url() -> str:
-    password = passwords(environ["NOTIFY_PARAMETER_ILERT_API_KEY"])
+    password_parameter_list = [
+        environ[key] for key in environ if key.startswith("NOTIFY_PARAMETER_ILERT_API_KEY")
+    ]
+    password = passwords(password_parameter_list)
     return f"https://api.ilert.com/api/v1/events/checkmk-ext/{password}"
 
 

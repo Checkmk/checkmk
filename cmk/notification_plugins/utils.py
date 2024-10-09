@@ -231,20 +231,31 @@ def get_bulk_notification_subject(contexts: list[dict[str, str]], hosts: Iterabl
 
 #################################################################################################
 # REST
-def retrieve_from_passwordstore(parameter: str) -> str:
-    values = parameter.split()
-
-    if len(values) == 2:
-        if values[0] == "store":
-            value = cmk.utils.password_store.extract(values[1])
+def retrieve_from_passwordstore(parameter: str | list[str]) -> str:
+    if isinstance(parameter, list):
+        if "explicit_password" in parameter:
+            value: str | None = parameter[-1]
+        else:
+            value = cmk.utils.password_store.extract(parameter[-2])
             if value is None:
                 sys.stderr.write("Unable to retrieve password from passwordstore")
                 sys.exit(2)
-        else:
-            value = values[1]
     else:
-        value = values[0]
+        # old valuespec style
+        values = parameter.split()
 
+        if len(values) == 2:
+            if values[0] == "store":
+                value = cmk.utils.password_store.extract(values[1])
+                if value is None:
+                    sys.stderr.write("Unable to retrieve password from passwordstore")
+                    sys.exit(2)
+            else:
+                value = values[1]
+        else:
+            value = values[0]
+
+    assert value is not None
     return value
 
 

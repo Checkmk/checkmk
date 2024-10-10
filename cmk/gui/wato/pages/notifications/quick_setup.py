@@ -15,6 +15,7 @@ from cmk.gui.form_specs.private import (
     DictionaryExtended,
     ListExtended,
     ListOfStrings,
+    not_empty,
     SingleChoiceElementExtended,
     SingleChoiceExtended,
 )
@@ -367,6 +368,9 @@ def recipient() -> QuickSetupStage:
                     ),
                     add_element_label=Label("Add recipient"),
                     editable_order=False,
+                    custom_validate=[
+                        not_empty(error_msg=Message("Please add at least one recipient"))
+                    ],
                 ),
             )
         ]

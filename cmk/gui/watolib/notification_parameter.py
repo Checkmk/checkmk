@@ -115,8 +115,17 @@ def get_list_of_notification_parameter(
 
 
 def get_notification_parameter(
-    parameter_method: NotificationParameterMethod,
     parameter_id: NotificationParameterID,
 ) -> NotificationParameterItem:
     notification_parameter = NotificationParameterConfigFile().load_for_reading()
-    return notification_parameter[parameter_method][parameter_id]
+    item = next(
+        (
+            item.get(parameter_id)
+            for item in notification_parameter.values()
+            if parameter_id in item
+        ),
+        None,
+    )
+    if item is None:
+        raise KeyError(parameter_id)
+    return item

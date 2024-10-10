@@ -174,7 +174,7 @@ def test_get_notification_parameter() -> None:
     )
 
     # WHEN
-    param = get_notification_parameter("dummy_params", NotificationParameterID("some-id"))
+    param = get_notification_parameter(NotificationParameterID("some-id"))
 
     # THEN
     assert param["general"]["description"] == "foo"

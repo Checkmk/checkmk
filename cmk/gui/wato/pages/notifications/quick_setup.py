@@ -214,6 +214,7 @@ def triggering_events() -> QuickSetupStage:
 
     return QuickSetupStage(
         title=_("Triggering events"),
+        sub_title=_("Define any events you want to be notified about."),
         configure_components=_components,
         custom_validators=[_validate_at_least_one_event],
         recap=[recaps.recaps_form_spec],

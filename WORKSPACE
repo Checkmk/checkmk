@@ -200,7 +200,6 @@ create_python_requirements(
     # TODO: differentiate between own code and things we get from other omd packages
     ignored_modules = [
         # Third party modules with special handling
-        "protobuf",  # don't build with pip -> see protobuf omd packages
         "rrdtool",  # don't build with pip -> see rrdtool omd packages
         # Our own packages
         "agent-based",

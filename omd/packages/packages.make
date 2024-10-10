@@ -211,7 +211,6 @@ include \
     packages/xmlsec1/xmlsec1.make \
     packages/robotmk/robotmk.make \
     packages/redfish_mkp/redfish_mkp.make \
-    packages/rabbitmq/rabbitmq.make \
 
 ifeq ($(EDITION),enterprise)
 include \
@@ -235,8 +234,9 @@ include \
     packages/saas/saas.make
 else
 # Ship nagvis for all but saas edition: CMK-14926
-# also exclude jaeger
+# also exclude jaeger and rabbitmq
 include \
     packages/nagvis/nagvis.make \
+    packages/rabbitmq/rabbitmq.make \
     packages/jaeger/jaeger.make
 endif

@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import SimpleButton from './SimpleButton.vue'
+import CmkButton from './CmkButton.vue'
 
 export type ToggleButtonOption = {
   label: string
@@ -27,15 +27,15 @@ const isSelected = (value: string) => value === props.value
 
 <template>
   <div class="toggle_buttons_container">
-    <SimpleButton
+    <CmkButton
       v-for="option in options"
       :key="option.value"
       class="toggle_option"
       :class="{ selected: isSelected(option.value) }"
-      :label="option.label"
       :aria-label="`Toggle ${option.label}`"
       @click="$emit('change', option.value)"
-    />
+      >{{ option.label }}</CmkButton
+    >
   </div>
 </template>
 

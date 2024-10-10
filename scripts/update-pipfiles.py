@@ -130,10 +130,10 @@ def _update_requirementslock(requirements_lock: Path) -> Sequence[UpdateInfo]:
 
 
 def _commit_lock(commit_infos: Sequence[CommitInfo]) -> None:
-    message = f"lock python dependencies {"" if (p := commit_infos[0].file_to_be_committed.parent) == Path() else f" in {p}"}\n\n"
+    message = f"lock python dependencies{"" if (p := commit_infos[0].file_to_be_committed.parent) == Path() else f" in {p}"}\n\n"
     for ci in commit_infos:
         subprocess.run(
-            ["git", "add", ci.file_to_be_committed],
+            ["git", "add", ci.file_to_be_committed.name],
             cwd=ci.file_to_be_committed.parent,
             check=True,
             stdout=subprocess.DEVNULL,

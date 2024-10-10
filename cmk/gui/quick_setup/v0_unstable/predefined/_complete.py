@@ -129,7 +129,11 @@ def sanitize_folder_path(folder_path: str) -> Folder:
     if sanitized_folder_path in tree.all_folders():
         return tree.all_folders()[sanitized_folder_path]
     return tree.root_folder().create_subfolder(
-        name=sanitized_folder_path, title=sanitized_folder_path, attributes={}
+        name=sanitized_folder_path,
+        title=sanitized_folder_path.split("/")[-1]
+        if "/" in sanitized_folder_path
+        else sanitized_folder_path,
+        attributes={},
     )
 
 

@@ -204,7 +204,7 @@ def triggering_events() -> QuickSetupStage:
                         "ec_alerts": DictElement(
                             parameter_form=FixedValue(
                                 title=Title("Event console alerts"),
-                                value=None,
+                                value="Enabled",
                             ),
                         ),
                     },

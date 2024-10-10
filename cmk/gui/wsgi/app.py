@@ -14,20 +14,13 @@ from werkzeug.exceptions import BadRequest
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import safe_join
 
-from cmk.gui import http
-from cmk.gui.session import FileBasedSession
+from cmk.gui.flask_app import CheckmkFlaskApp
 from cmk.gui.wsgi.blueprints.checkmk import checkmk
 from cmk.gui.wsgi.blueprints.rest_api import rest_api
 
 from .trace import instrument_app_dependencies
 
 logger = logging.getLogger(__name__)
-
-
-class CheckmkFlaskApp(Flask):
-    request_class = http.Request
-    response_class = http.Response
-    session_interface = FileBasedSession()
 
 
 def make_wsgi_app(debug: bool = False, testing: bool = False) -> Flask:
@@ -95,4 +88,4 @@ def make_wsgi_app(debug: bool = False, testing: bool = False) -> Flask:
     return app
 
 
-__all__ = ["make_wsgi_app", "CheckmkFlaskApp"]
+__all__ = ["make_wsgi_app"]

@@ -366,6 +366,27 @@ def main() {
                     }
                 }
 
+                stage("${distro} cleanup") {
+                    inside_container(image: docker.image("${distro}:${docker_tag}")) {
+                        /// this removes unneeded build artifacts from distro-workspaces
+                        sh("""
+                            # might increase build time but we do it anyway on startup..
+                            (cd ${distro_dir}; bazel clean)
+
+                            # rust/cargo artifacts - might increase incremental build times..
+                            find "${distro_dir}/packages" -name target -exec rm -rf "{}" +
+
+                            # leftovers from make -C omd <deb|rpm..>
+                            rm -rf "${distro_dir}/omd/build"
+
+                            # already transferred checkmk packages
+                            rm -rf "${WORKSPACE}/versions"
+
+                            # container_shadow_workspace_ci is quite big - can we clean older Bazel stuff?
+                        """);
+                    }
+                }
+
                 stage("${distro} workspace sanity check") {
                     check_for_workspace_sanity();
                 }
@@ -409,6 +430,17 @@ def main() {
                 );
             }
         }
+    }
+    stage("Cleanup") {
+        /// this removes unneeded build artifacts from master job workspace
+        sh("""
+            # rust/cargo artifacts - might increase incremental build times..
+            find "${checkout_dir}/packages" -name target -exec rm -rf "{}" +
+            # what about node_modules?
+            rm -rf "${checkout_dir}/omd/build"
+            rm -rf "${WORKSPACE}/versions"
+            rm -f "${checkout_dir}/*.tar.gz"
+        """);
     }
 }
 

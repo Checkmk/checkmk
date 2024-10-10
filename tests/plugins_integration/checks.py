@@ -523,7 +523,7 @@ def setup_source_host_piggyback(site: Site, source_host_name: str) -> Iterator:
         logger.info("Activating changes & reloading core...")
         site.activate_changes_and_wait_for_core_reload()
 
-        _wait_for_piggyback_hosts_creation(site, source_host=source_host_name)
+        _wait_for_piggyback_hosts_discovery(site, source_host=source_host_name)
         _wait_for_dcd_pend_changes(site)
 
         hostnames = get_piggyback_hosts(site, source_host_name) + [source_host_name]
@@ -646,31 +646,32 @@ def get_piggyback_hosts(site: Site, source_host: str) -> list[str]:
     return [_.get("id") for _ in site.openapi.get_hosts() if _.get("id") != source_host]
 
 
-def _wait_for_piggyback_hosts_creation(
-    site: Site, source_host: str, max_count: int = 80, sleep_time: float = 5, strict: bool = True
-) -> None:
+def _wait_for_piggyback_hosts_discovery(site: Site, source_host: str, strict: bool = True) -> None:
+    """Hosts' discovery by DCD should take up to 30 seconds."""
+    max_count = 30
     count = 0
     while not (piggyback_hosts := get_piggyback_hosts(site, source_host)) and count < max_count:
-        logger.info("Waiting for piggyback hosts to be created. Count: %s/%s", count, max_count)
-        time.sleep(sleep_time)
+        logger.info("Waiting for piggyback hosts to be discovered. Count: %s/%s", count, max_count)
+        time.sleep(1)
         count += 1
     if strict:
         assert piggyback_hosts, "No piggyback hosts found."
 
 
-def _wait_for_piggyback_hosts_deletion(
-    site: Site, source_host: str, max_count: int = 80, sleep_time: float = 5, strict: bool = True
-) -> None:
+def _wait_for_piggyback_hosts_deletion(site: Site, source_host: str, strict: bool = True) -> None:
+    max_count = 30
     count = 0
     while piggyback_hosts := get_piggyback_hosts(site, source_host) and count < max_count:
-        logger.info("Waiting for piggyback hosts to be removed. Count: %s/%s", count, max_count)
-        time.sleep(sleep_time)
+        logger.info("Waiting for all piggyback hosts to be removed. Count: %s/%s", count, max_count)
+        time.sleep(5)
         count += 1
     if strict:
         assert not piggyback_hosts, "Piggyback hosts still found: %s" % piggyback_hosts
 
 
-def _wait_for_dcd_pend_changes(site: Site, max_count: int = 60) -> None:
+def _wait_for_dcd_pend_changes(site: Site) -> None:
+    """Changes activation by DCD should take up to 30 seconds."""
+    max_count = 30
     count = 0
     while (
         n_pending_changes := len(site.openapi.pending_changes([site.id]))
@@ -680,6 +681,6 @@ def _wait_for_dcd_pend_changes(site: Site, max_count: int = 60) -> None:
             count,
             max_count,
         )
-        time.sleep(5)
+        time.sleep(1)
         count += 1
     assert n_pending_changes == 0, "Pending changes found!"

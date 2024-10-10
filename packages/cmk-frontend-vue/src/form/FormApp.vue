@@ -84,7 +84,6 @@ function toggleActiveMode() {
         <!-- This input field contains the computed json value which is sent when the form is submitted -->
         <input v-model="valueAsJSON" :name="id" type="hidden" />
       </table>
-      <pre>{{ dataRef }}</pre>
     </div>
   </div>
 </template>

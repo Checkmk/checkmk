@@ -193,6 +193,14 @@ def _get_site_piggyback(request: pytest.FixtureRequest) -> Iterator[Site]:
             site.openapi.create_rule(ruleset_name=ruleset_name, value=f"cat {dump_path}/<HOST>")
             logger.info('Rule "%s" created!', ruleset_name)
 
+            logger.info("Setting dynamic configuration global settings...")
+            site.write_text_file(
+                "etc/check_mk/dcd.d/wato/global.mk",
+                "dcd_activate_changes_timeout = 30\n"
+                "dcd_bulk_discovery_timeout = 30\n"
+                "dcd_site_update_interval = 60\n",
+            )
+
             yield site
 
 

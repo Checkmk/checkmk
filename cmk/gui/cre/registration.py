@@ -39,6 +39,7 @@ from cmk.gui.watolib.config_domain_name import (
     config_variable_group_registry,
     config_variable_registry,
 )
+from cmk.gui.watolib.config_sync import replication_path_registry
 from cmk.gui.watolib.groups import contact_group_usage_finder_registry
 from cmk.gui.watolib.main_menu import main_module_registry, main_module_topic_registry
 from cmk.gui.watolib.mode import mode_registry
@@ -103,6 +104,7 @@ def register() -> None:
         ac_test_registry,
         contact_group_usage_finder_registry,
         notification_parameter_registry,
+        replication_path_registry,
         default_user_menu_topics,
         edition_supports_ldap=True,
         edition_supports_managing_roles=True,

@@ -224,7 +224,7 @@ def test_get_replication_paths_defaults(
     edition: cmk_version.Edition, request_context: None
 ) -> None:
     expected = _expected_replication_paths(edition)
-    assert sorted(activate_changes.get_replication_paths()) == sorted(expected)
+    assert sorted(replication_path_registry.values()) == sorted(expected)
 
 
 @pytest.mark.parametrize("replicate_ec", [None, True, False])
@@ -254,18 +254,6 @@ def test_get_replication_components(
 
     assert sorted(activate_changes._get_replication_components(partial_site_config)) == sorted(
         expected
-    )
-
-
-def test_add_replication_paths(request_context: None) -> None:
-    activate_changes.add_replication_paths(
-        [
-            ReplicationPath("dir", "abc", "path/to/abc", ["e1", "e2"]),
-        ]
-    )
-
-    assert activate_changes.get_replication_paths()[-1] == ReplicationPath(
-        "dir", "abc", "path/to/abc", ["e1", "e2"]
     )
 
 

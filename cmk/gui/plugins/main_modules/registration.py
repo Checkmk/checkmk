@@ -98,6 +98,7 @@ from cmk.gui.watolib.config_domain_name import (
     config_variable_registry,
     sample_config_generator_registry,
 )
+from cmk.gui.watolib.config_sync import replication_path_registry
 from cmk.gui.watolib.groups import contact_group_usage_finder_registry
 from cmk.gui.watolib.host_attributes import host_attribute_registry, host_attribute_topic_registry
 from cmk.gui.watolib.host_rename import rename_host_hook_registry
@@ -166,6 +167,7 @@ def register() -> None:
         config_variable_group_registry,
         autocompleter_registry,
         match_item_generator_registry,
+        replication_path_registry,
     )
     piggyback_hub.register(
         config_domain_registry,
@@ -202,6 +204,7 @@ def register() -> None:
             contact_group_usage_finder_registry,
             timeperiod_usage_finder_registry,
             endpoint_registry,
+            replication_path_registry,
         )
         custom_icons_register(
             mode_registry,

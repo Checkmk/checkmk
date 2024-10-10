@@ -113,6 +113,7 @@ from cmk.gui.watolib.config_sync import (
     get_site_globals,
     replication_path_registry,
     ReplicationPath,
+    ReplicationPathRegistry,
     SnapshotSettings,
 )
 from cmk.gui.watolib.global_settings import load_configuration_settings, save_site_global_settings
@@ -206,26 +207,8 @@ def get_free_message(format_html: bool = False) -> str:
     return "{}\n{}{}".format(subject, body, "https://checkmk.com/contact")
 
 
-# TODO: Replace this wrapper with replication_path_registry.register
-def add_replication_paths(repl_paths: list[ReplicationPath]) -> None:
-    """Addition of any edition-specific replication paths (i.e. config files) that need
-    to be synchronised in a distributed set-up.
-
-    This addition is done dynamically by the various edition plugins.
-    {enterprise,managed}/cmk/gui/{cee,cme}/plugins/wato
-    """
-    for repl_path in repl_paths:
-        replication_path_registry.register(repl_path)
-
-
-# TODO: Replace this wrapper with replication_path_registry.register
-def get_replication_paths() -> list[ReplicationPath]:
-    """A list of replication paths common to all editions.
-
-    NOTE: This list is enriched further by edition plugins. See
-    'add_replication_paths'.
-    """
-    repl_paths: list[ReplicationPath] = [
+def register(replication_path_registry_: ReplicationPathRegistry) -> None:
+    for repl_path in [
         ReplicationPath(
             "dir",
             "check_mk",
@@ -336,18 +319,8 @@ def get_replication_paths() -> list[ReplicationPath]:
             site_path="etc/check_mk/piggyback_hub.d/wato",
             excludes=[],
         ),
-    ]
-
-    # Include rule configuration into backup/restore/replication. Current
-    # status is not backed up.
-    if active_config.mkeventd_enabled:
-        _rule_pack_dir = str(ec.rule_pack_dir().relative_to(cmk.utils.paths.omd_root))
-        repl_paths.append(ReplicationPath("dir", "mkeventd", _rule_pack_dir, []))
-
-        _mkp_rule_pack_dir = str(ec.mkp_rule_pack_dir().relative_to(cmk.utils.paths.omd_root))
-        repl_paths.append(ReplicationPath("dir", "mkeventd_mkp", _mkp_rule_pack_dir, []))
-
-    return repl_paths + list(replication_path_registry.values())
+    ]:
+        replication_path_registry.register(repl_path)
 
 
 # If the site is not up-to-date, synchronize it first.
@@ -2032,7 +2005,7 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
             copy_pool.starmap(_clone_site_config_directory, clone_args)
 
     def get_generic_components(self) -> list[ReplicationPath]:
-        return get_replication_paths()
+        return list(replication_path_registry.values())
 
     def get_site_components(
         self, snapshot_settings: SnapshotSettings
@@ -2299,7 +2272,7 @@ def _prepare_for_activation_tasks(
     source: ActivationSource,
 ) -> tuple[Mapping[SiteId, ConfigSyncFileInfos], Mapping[SiteId, SiteActivationState]]:
     config_sync_file_infos_per_inode = _get_config_sync_file_infos_per_inode(
-        get_replication_paths()
+        list(replication_path_registry.values())
     )
     central_file_infos_per_site = {}
     site_activation_states_per_site = {}
@@ -2966,7 +2939,7 @@ def _get_replication_components(site_config: SiteConfiguration) -> list[Replicat
         particular site.
 
     """
-    repl_paths = get_replication_paths()[:]
+    repl_paths = list(replication_path_registry.values())
 
     # Remove Event Console settings, if this site does not want it (might
     # be removed in some future day)

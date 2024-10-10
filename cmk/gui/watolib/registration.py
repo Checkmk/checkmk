@@ -21,6 +21,7 @@ from cmk.gui.watolib.search import MatchItemGeneratorRegistry
 from . import (
     _host_attributes,
     _sync_remote_sites,
+    activate_changes,
     auth_php,
     autodiscovery,
     automatic_host_removal,
@@ -56,6 +57,7 @@ from .config_domain_name import (
     SampleConfigGeneratorRegistry,
 )
 from .config_hostname import config_hostname_autocompleter
+from .config_sync import ReplicationPathRegistry
 from .groups import ContactGroupUsageFinderRegistry as ContactGroupUsageFinderRegistry
 from .host_attributes import ABCHostAttribute, HostAttributeRegistry, HostAttributeTopicRegistry
 from .host_label_sync import AutomationDiscoveredHostLabelSync, DiscoveredHostLabelSyncJob
@@ -111,6 +113,7 @@ def register(
     config_variable_group_registry: ConfigVariableGroupRegistry,
     autocompleter_registry: AutocompleterRegistry,
     match_item_generator_registry: MatchItemGeneratorRegistry,
+    replication_path_registry: ReplicationPathRegistry,
 ) -> None:
     _register_automation_commands(automation_command_registry)
     _register_gui_background_jobs(job_registry)
@@ -118,6 +121,7 @@ def register(
         _register_nagvis_hooks()
     _register_config_domains(config_domain_registry)
     host_attributes.register(host_attribute_topic_registry)
+    activate_changes.register(replication_path_registry)
     _host_attributes.register()
     _register_host_attribute(host_attribute_registry)
     _register_cronjobs()

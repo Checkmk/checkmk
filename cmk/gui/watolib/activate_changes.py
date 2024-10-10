@@ -111,6 +111,7 @@ from cmk.gui.watolib.config_sync import (
     create_distributed_wato_files,
     create_rabbitmq_definitions_file,
     get_site_globals,
+    replication_path_registry,
     ReplicationPath,
     SnapshotSettings,
 )
@@ -165,9 +166,6 @@ var_dir = cmk.utils.paths.var_dir + "/wato/"
 
 GENERAL_DIR_EXCLUDE = "__pycache__"
 
-# Directories and files to synchronize during replication
-_replication_paths: list[ReplicationPath] = []
-
 ConfigWarnings = dict[ConfigDomainName, list[str]]
 ActivationId = str
 SiteActivationState = dict[str, Any]
@@ -208,7 +206,7 @@ def get_free_message(format_html: bool = False) -> str:
     return "{}\n{}{}".format(subject, body, "https://checkmk.com/contact")
 
 
-# TODO: find a way to make this more obvious/transparent in code
+# TODO: Replace this wrapper with replication_path_registry.register
 def add_replication_paths(repl_paths: list[ReplicationPath]) -> None:
     """Addition of any edition-specific replication paths (i.e. config files) that need
     to be synchronised in a distributed set-up.
@@ -216,9 +214,11 @@ def add_replication_paths(repl_paths: list[ReplicationPath]) -> None:
     This addition is done dynamically by the various edition plugins.
     {enterprise,managed}/cmk/gui/{cee,cme}/plugins/wato
     """
-    _replication_paths.extend(repl_paths)
+    for repl_path in repl_paths:
+        replication_path_registry.register(repl_path)
 
 
+# TODO: Replace this wrapper with replication_path_registry.register
 def get_replication_paths() -> list[ReplicationPath]:
     """A list of replication paths common to all editions.
 
@@ -347,7 +347,7 @@ def get_replication_paths() -> list[ReplicationPath]:
         _mkp_rule_pack_dir = str(ec.mkp_rule_pack_dir().relative_to(cmk.utils.paths.omd_root))
         repl_paths.append(ReplicationPath("dir", "mkeventd_mkp", _mkp_rule_pack_dir, []))
 
-    return repl_paths + _replication_paths
+    return repl_paths + list(replication_path_registry.values())
 
 
 # If the site is not up-to-date, synchronize it first.

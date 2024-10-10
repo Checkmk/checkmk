@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 from werkzeug import datastructures as werkzeug_datastructures
 
+from tests.testlib.plugin_registry import reset_registries
 from tests.testlib.repo import is_enterprise_repo, is_managed_repo
 
 from livestatus import SiteConfiguration, SiteId
@@ -29,16 +30,15 @@ from cmk.gui.background_job._defines import BackgroundJobDefines
 from cmk.gui.http import Request
 from cmk.gui.watolib import activate_changes
 from cmk.gui.watolib.activate_changes import ActivationCleanupBackgroundJob, ConfigSyncFileInfo
-from cmk.gui.watolib.config_sync import ReplicationPath
+from cmk.gui.watolib.config_sync import replication_path_registry, ReplicationPath
 
 logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(autouse=True)
 def restore_orig_replication_paths():
-    _orig_paths = activate_changes._replication_paths[:]
-    yield
-    activate_changes._replication_paths = _orig_paths
+    with reset_registries([replication_path_registry]):
+        yield
 
 
 def _expected_replication_paths(edition: cmk_version.Edition) -> list[ReplicationPath]:

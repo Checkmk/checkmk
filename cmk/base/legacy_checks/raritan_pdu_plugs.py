@@ -33,12 +33,14 @@ def check_raritan_pdu_plugs(item, params, parsed):
     if data.get("outlet_name"):
         yield 0, data["outlet_name"]
 
-    state, state_info = data["state"]
-    yield state, "Status: %s" % state_info
-
     required_state = params.get("required_state", params["discovered_state"])
+    discovered_state = params["discovered_state"]
+    state, state_info = data["state"]
+
     if state_info != required_state:
-        yield 2, "Expected: %s" % required_state
+        yield 2, "CRIT - Status: %s (discovered: %s, required: %s) (!!)" % (state_info, discovered_state, required_state)
+    else:
+        yield 0, "OK - Status: %s" % state_info
 
 
 check_info["raritan_pdu_plugs"] = LegacyCheckDefinition(

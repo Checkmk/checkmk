@@ -22,6 +22,10 @@ import CmkButton from '@/components/CmkButton.vue'
     <dd>
       <CmkButton type="tertiary">button</CmkButton>
     </dd>
+    <dt><code>&lt;CmkButton type="transparent"&gt;button&lt;/CmkButton&gt;</code></dt>
+    <dd>
+      <CmkButton type="transparent">button</CmkButton>
+    </dd>
     <dt><code>&lt;CmkButton variant="cancel"&gt;button&lt;/CmkButton&gt;</code></dt>
     <dd>
       <CmkButton variant="cancel">button</CmkButton>

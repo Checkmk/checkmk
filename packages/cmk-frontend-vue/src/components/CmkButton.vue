@@ -12,7 +12,8 @@ const buttonVariants = cva('', {
     type: {
       primary: 'button--type-primary',
       secondary: 'button--type-secondary',
-      tertiary: 'button--type-tertiary'
+      tertiary: 'button--type-tertiary',
+      transparent: 'button--type-transparent'
     },
     spacing: {
       small: 'button--spacing-small',
@@ -61,9 +62,12 @@ defineProps<ButtonProps>()
   border: 1px solid var(--default-submit-button-border-color);
 }
 .button--type-tertiary {
+  text-decoration: underline var(--success);
+}
+.button--type-tertiary,
+.button--type-transparent {
   background: none;
   border: none;
-  text-decoration: underline var(--success);
   padding: 0;
   margin: 0;
   font-weight: normal;

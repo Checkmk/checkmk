@@ -30,7 +30,6 @@ FILES_IGNORED = set(
         Path("index.html"),
         Path("src/components/_demo/index.html"),
         Path("env.d.ts"),
-        Path("src/form/components/vue_formspec_components.ts"),  # auto generated
     ]
 )
 

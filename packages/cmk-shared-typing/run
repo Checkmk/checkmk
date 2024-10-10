@@ -135,6 +135,7 @@ run_build() {
     mkdir -p python typescript
     cwd=$(pwd)
     export PYTHONPATH="$PYTHONPATH:$cwd"
+    TS_HEADER="$(cat header_ts.txt)"
     for file in source/*.json; do
         target_base=$(basename "${file}" .json)
         echo "Processing $file"
@@ -154,7 +155,12 @@ run_build() {
             --custom-file-header-path header_py.txt \
             --use-title-as-name \
             --custom-formatters "utils.format"
-        npm run json2ts "${file}" -o "typescript/${target_base}.ts"
+        npm run json2ts -- \
+            --additionalProperties=false \
+            --declareExternallyReferenced \
+            --bannerComment "${TS_HEADER}" \
+            --cwd source/ "${file}" \
+            -o "typescript/${target_base}.ts"
     done
 
     SOURCE_PYTHON=python/vue_formspec_components.py

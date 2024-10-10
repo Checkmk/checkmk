@@ -31,6 +31,7 @@ class QuickSetupSaveActionForTest(QuickSetupSaveAction):
 class QuickSetupForTest(QuickSetup):
     stages: Sequence[Callable]
     save_actions: Sequence[QuickSetupSaveActionForTest]
+    load_data: Callable
 
 
 class QuickSetupFactory(DataclassFactory):

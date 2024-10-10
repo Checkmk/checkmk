@@ -14,6 +14,7 @@ from cmk.gui.form_specs.vue.form_spec_visitor import (
     serialize_data_for_frontend,
     validate_value_from_frontend,
 )
+from cmk.gui.form_specs.vue.visitors import DEFAULT_VALUE
 from cmk.gui.form_specs.vue.visitors._type_defs import DataOrigin
 from cmk.gui.quick_setup.v0_unstable.definitions import QuickSetupSaveRedirect
 from cmk.gui.quick_setup.v0_unstable.predefined import (
@@ -116,10 +117,12 @@ class QuickSetupAllStages:
     mode: str = field(default="overview")
 
 
-def _get_stage_components_from_widget(widget: Widget) -> dict:
+def _get_stage_components_from_widget(widget: Widget, prefill_data: ParsedFormData | None) -> dict:
     if isinstance(widget, (ListOfWidgets, Collapsible)):
         widget_as_dict = asdict(widget)
-        widget_as_dict["items"] = [_get_stage_components_from_widget(item) for item in widget.items]
+        widget_as_dict["items"] = [
+            _get_stage_components_from_widget(item, prefill_data) for item in widget.items
+        ]
         return widget_as_dict
 
     if isinstance(widget, FormSpecWrapper):
@@ -131,8 +134,9 @@ def _get_stage_components_from_widget(widget: Widget) -> dict:
                     form_spec=form_spec,
                     field_id=str(widget.id),
                     origin=DataOrigin.DISK,
+                    value=prefill_data.get(widget.id) if prefill_data else DEFAULT_VALUE,
                     do_validate=False,
-                ),
+                )
             ),
         }
 
@@ -173,7 +177,9 @@ def _form_spec_parse(
     }
 
 
-def quick_setup_guided_mode(quick_setup: QuickSetup) -> QuickSetupOverview:
+def quick_setup_guided_mode(
+    quick_setup: QuickSetup, prefill_data: ParsedFormData | None
+) -> QuickSetupOverview:
     stages = [stage() for stage in quick_setup.stages]
     return QuickSetupOverview(
         quick_setup_id=quick_setup.id,
@@ -187,7 +193,7 @@ def quick_setup_guided_mode(quick_setup: QuickSetup) -> QuickSetupOverview:
         stage=Stage(
             next_stage_structure=NextStageStructure(
                 components=[
-                    _get_stage_components_from_widget(widget)
+                    _get_stage_components_from_widget(widget, prefill_data)
                     for widget in stage_components(stages[0])
                 ],
                 button_label=stages[0].button_label,
@@ -232,6 +238,7 @@ def validate_stage(
 def retrieve_next_stage(
     quick_setup: QuickSetup,
     stages_raw_formspecs: Sequence[RawFormData],
+    prefill_data: ParsedFormData | None = None,
 ) -> Stage:
     current_stage_index = StageIndex(len(stages_raw_formspecs) - 1)
     stages = [stage() for stage in quick_setup.stages]
@@ -255,7 +262,8 @@ def retrieve_next_stage(
     return Stage(
         next_stage_structure=NextStageStructure(
             components=[
-                _get_stage_components_from_widget(widget) for widget in stage_components(next_stage)
+                _get_stage_components_from_widget(widget, prefill_data)
+                for widget in stage_components(next_stage)
             ],
             button_label=next_stage.button_label,
         ),
@@ -278,7 +286,9 @@ def complete_quick_setup(
     )
 
 
-def quick_setup_overview_mode(quick_setup: QuickSetup) -> QuickSetupAllStages:
+def quick_setup_overview_mode(
+    quick_setup: QuickSetup, prefill_data: ParsedFormData | None
+) -> QuickSetupAllStages:
     stages = [stage() for stage in quick_setup.stages]
     return QuickSetupAllStages(
         quick_setup_id=quick_setup.id,
@@ -287,7 +297,8 @@ def quick_setup_overview_mode(quick_setup: QuickSetup) -> QuickSetupAllStages:
                 title=stage.title,
                 sub_title=stage.sub_title,
                 components=[
-                    _get_stage_components_from_widget(widget) for widget in stage_components(stage)
+                    _get_stage_components_from_widget(widget, prefill_data)
+                    for widget in stage_components(stage)
                 ],
                 button_label=stage.button_label,
             )

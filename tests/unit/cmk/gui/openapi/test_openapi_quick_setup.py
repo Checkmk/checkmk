@@ -39,6 +39,7 @@ from cmk.rulesets.v1.form_specs import (
 
 def register_quick_setup(
     setup_stages: Sequence[Callable[[], QuickSetupStage]] | None = None,
+    load_data: Callable[[str], ParsedFormData | None] = lambda _: None,
 ) -> None:
     quick_setup_registry.register(
         QuickSetup(
@@ -57,6 +58,7 @@ def register_quick_setup(
                     action=lambda stages: "http://other_save",
                 ),
             ],
+            load_data=load_data,
         ),
     )
 
@@ -303,3 +305,47 @@ def test_get_quick_setup_mode_overview(clients: ClientRegistry) -> None:
     )
     assert len(resp.json["stages"]) == 2
     assert set(resp.json["stages"][0]) == {"title", "sub_title", "components", "button_label"}
+
+
+def test_get_quick_setup_overview_prefilled(clients: ClientRegistry) -> None:
+    def load_data(obj_id: str) -> ParsedFormData | None:
+        return {
+            "obj1": {FormSpecId(UniqueFormSpecIDStr): {UniqueBundleIDStr: "foo"}},
+            "obj2": {FormSpecId(UniqueFormSpecIDStr): {UniqueBundleIDStr: "bar"}},
+        }.get(obj_id)
+
+    register_quick_setup(
+        setup_stages=[
+            lambda: QuickSetupStage(
+                title="stage1",
+                sub_title="1",
+                configure_components=[
+                    widgets.unique_id_formspec_wrapper(Title("account name")),
+                ],
+                custom_validators=[],
+                recap=[],
+                button_label="Next",
+            ),
+        ],
+        load_data=load_data,
+    )
+    resp = clients.QuickSetup.get_overview_mode_or_guided_mode(
+        quick_setup_id="quick_setup_test", mode="overview", object_id="obj1"
+    )
+    assert (
+        resp.json["stages"][0]["components"][0]["form_spec"]["spec"]["elements"][0]["default_value"]
+        == "foo"
+    )
+
+    resp = clients.QuickSetup.get_overview_mode_or_guided_mode(
+        quick_setup_id="quick_setup_test", mode="overview", object_id="obj2"
+    )
+    assert (
+        resp.json["stages"][0]["components"][0]["form_spec"]["spec"]["elements"][0]["default_value"]
+        == "bar"
+    )
+
+    resp = clients.QuickSetup.get_overview_mode_or_guided_mode(
+        quick_setup_id="quick_setup_test", mode="overview", object_id="obj3", expect_ok=False
+    )
+    resp.assert_status_code(404)

@@ -33,7 +33,6 @@ from cmk.gui.quick_setup.v0_unstable.predefined._common import (
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData
 from cmk.gui.site_config import site_is_local
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.wato.pages.activate_changes import ModeActivateChanges
 from cmk.gui.watolib.automations import (
     fetch_service_discovery_background_job_status,
 )
@@ -330,7 +329,7 @@ def _create_and_save_special_agent_bundle(
     return makeuri_contextless(
         request,
         [
-            ("mode", ModeActivateChanges.name()),
+            ("mode", "changelog"),
             ("origin", "quick_setup"),
             ("special_agent_name", special_agent_name),
         ],

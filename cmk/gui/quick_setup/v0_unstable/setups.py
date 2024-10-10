@@ -45,3 +45,4 @@ class QuickSetup:
     id: QuickSetupId
     stages: Sequence[Callable[[], QuickSetupStage]]
     save_actions: Sequence[QuickSetupSaveAction]
+    load_data: Callable[[str], ParsedFormData | None] = lambda _: None

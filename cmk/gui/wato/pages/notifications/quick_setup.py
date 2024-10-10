@@ -519,6 +519,51 @@ def _migrate_to_event_rule(notification: NotificationQuickSetupSpec) -> EventRul
     )
 
 
+def load_notifications(object_id: str) -> ParsedFormData:
+    config_file = NotificationRuleConfigFile()
+    notifications_rules = list(config_file.load_for_reading())
+    for rule in notifications_rules:
+        if rule["rule_id"] == object_id:
+            return cast(ParsedFormData, _migrate_to_notification_quick_setup_spec(rule))
+    return {}
+
+
+def _migrate_to_notification_quick_setup_spec(event_rule: EventRule) -> NotificationQuickSetupSpec:
+    # TODO: add migration logic
+    return {
+        "triggering_events": {
+            "host_events": [],
+            "service_events": [],
+            "ec_alerts": "Enabled",
+        },
+        "filter_for_hosts_and_services": {
+            "host_filters": None,
+            "service_filters": None,
+            "assignee_filters": None,
+            "general_filters": None,
+        },
+        "notification_method": {
+            "effect": None,
+            "method": None,
+            "bulk_notification": None,
+        },
+        "recipient": [("all_contacts_affected", None)],
+        "sending_conditions": {
+            "restrict_to_timeperiod": None,
+            "limit_by_count": None,
+            "throttling_of_period": None,
+            "by_plugin_output": None,
+            "custom_by_comment": None,
+        },
+        "general_properties": {
+            "description": "foo",
+            "settings": {"disable_rule": None, "allow_users_to_disable": None},
+            "comment": "",
+            "documentation": "",
+        },
+    }
+
+
 quick_setup_notifications = QuickSetup(
     title=_("Notification rule"),
     id=QuickSetupId("notification_rule"),
@@ -542,4 +587,5 @@ quick_setup_notifications = QuickSetup(
             action=save_and_new_action,
         ),
     ],
+    load_data=load_notifications,
 )

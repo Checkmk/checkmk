@@ -3005,12 +3005,13 @@ class QuickSetupClient(RestApiClient):
         self,
         quick_setup_id: str,
         mode: Literal["overview", "guided"] | None = "guided",
+        object_id: str | None = None,
         expect_ok: bool = True,
     ) -> Response:
         return self.request(
             "get",
             url=f"/objects/{self.domain}/{quick_setup_id}",
-            query_params=_only_set_keys({"mode": mode}),
+            query_params=_only_set_keys({"mode": mode, "object_id": object_id}),
             expect_ok=expect_ok,
         )
 
@@ -3018,12 +3019,14 @@ class QuickSetupClient(RestApiClient):
         self,
         quick_setup_id: str,
         stages: list[dict[str, Any]],
+        object_id: str | None = None,
         expect_ok: bool = True,
     ) -> Response:
         return self.request(
             "post",
             url=f"/domain-types/{self.domain}/collections/all",
             body={"quick_setup_id": quick_setup_id, "stages": stages},
+            query_params=_only_set_keys({"object_id": object_id}),
             expect_ok=expect_ok,
         )
 

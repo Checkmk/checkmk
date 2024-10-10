@@ -20,9 +20,11 @@ from cmk.ccc import version
 from cmk.utils import paths
 
 from cmk.gui.http import HTTPMethod
+from cmk.gui.openapi.endpoints.configuration_entity import _to_domain_type
 from cmk.gui.openapi.endpoints.contact_group_config.common import APIInventoryPaths
 from cmk.gui.rest_api_types.notifications_rule_types import APINotificationRule
 from cmk.gui.rest_api_types.site_connection import SiteConfig
+from cmk.gui.watolib.configuration_entity import ConfigEntityType
 
 if TYPE_CHECKING:
     from cmk.gui.openapi.endpoints.downtime import FindByType
@@ -69,6 +71,7 @@ API_DOMAIN = Literal[
     "parent_scan",
     "quick_setup",
     "managed_robots",
+    "notification_parameter",
 ]
 
 
@@ -3069,6 +3072,18 @@ class ConfigurationEntityClient(RestApiClient):
             "put",
             url=f"/domain-types/{self.domain}/actions/edit-single-entity/invoke",
             body=payload,
+            expect_ok=expect_ok,
+        )
+
+    def list_configuration_entities(
+        self,
+        entity_type: ConfigEntityType,
+        entity_type_specifier: str,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{_to_domain_type(entity_type)}/collections/{entity_type_specifier}",
             expect_ok=expect_ok,
         )
 

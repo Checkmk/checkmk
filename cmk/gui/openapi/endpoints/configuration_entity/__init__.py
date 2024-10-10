@@ -10,7 +10,7 @@ Which entities can be configured like this is defined by the configuration entit
 
 from collections.abc import Mapping
 from dataclasses import asdict
-from typing import Any, Sequence
+from typing import Any, assert_never, Sequence
 
 from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.http import Response
@@ -21,15 +21,34 @@ from cmk.gui.openapi.endpoints.configuration_entity.request_schemas import (
 from cmk.gui.openapi.endpoints.configuration_entity.response_schemas import (
     EditConfigurationEntityResponse,
 )
-from cmk.gui.openapi.restful_objects import constructors, Endpoint
+from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_schemas, type_defs
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import EXT, FIELDS, problem, serve_json
 from cmk.gui.watolib.configuration_entity import (
     ConfigEntityType,
     ConfigurationEntityDescription,
     EntityId,
+    get_list_of_configuration_entities,
     save_configuration_entity,
 )
+
+from cmk import fields
+
+ENTITY_TYPE_SPECIFIER_FIELD = {
+    "entity_type_specifier": fields.String(
+        required=True,
+        description="Entity type specifier of the configuration entity",
+        example="mail",
+    )
+}
+
+
+def _to_domain_type(entity_type: ConfigEntityType) -> type_defs.DomainType:
+    match entity_type:
+        case ConfigEntityType.NOTIFICATION_PARAMETER:
+            return "notification_parameter"
+        case other:
+            assert_never(other)
 
 
 def _serve_save_json(
@@ -106,6 +125,43 @@ def put_configuration_entity(params: Mapping[str, Any]) -> Response:
     return _serve_save_json(return_data)
 
 
+@Endpoint(
+    constructors.collection_href(
+        _to_domain_type(ConfigEntityType.NOTIFICATION_PARAMETER), "{entity_type_specifier}"
+    ),
+    "cmk/list",
+    tag_group="Checkmk Internal",
+    path_params=[ENTITY_TYPE_SPECIFIER_FIELD],
+    method="get",
+    response_schema=response_schemas.DomainObjectCollection,
+)
+def list_configuration_entities(params: Mapping[str, Any]) -> Response:
+    """List existing notification parameter"""
+    entity_type_specifier = params["entity_type_specifier"]
+
+    entity_descriptions = get_list_of_configuration_entities(
+        ConfigEntityType.NOTIFICATION_PARAMETER, entity_type_specifier
+    )
+
+    return serve_json(
+        constructors.collection_object(
+            domain_type=_to_domain_type(ConfigEntityType.NOTIFICATION_PARAMETER),
+            value=[
+                constructors.domain_object(
+                    domain_type=_to_domain_type(ConfigEntityType.NOTIFICATION_PARAMETER),
+                    identifier=entry.ident,
+                    title=entry.description,
+                    include_links=False,
+                    editable=False,
+                    deletable=False,
+                )
+                for entry in entity_descriptions
+            ],
+        )
+    )
+
+
 def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(create_configuration_entity)
     endpoint_registry.register(put_configuration_entity)
+    endpoint_registry.register(list_configuration_entities)

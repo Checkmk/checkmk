@@ -152,3 +152,27 @@ def test_save_configuration_validation(
     # THEN
     assert resp.json["ext"]["validation_errors"]
     assert error_fields_present(resp.json["fields"]["data"], num_expected_error_fields)
+
+
+def test_list_configuration_entities(
+    clients: ClientRegistry, registry: NotificationParameterRegistry
+) -> None:
+    # GIVEN
+    entity = save_notification_parameter(
+        registry,
+        "dummy_params",
+        {"general": {"description": "foo"}, "parameter_properties": {"test_param": "some_value"}},
+        None,
+    )
+    assert isinstance(entity, NotificationParameterDescription), "type guard"
+
+    # WHEN
+    resp = clients.ConfigurationEntity.list_configuration_entities(
+        entity_type=ConfigEntityType.NOTIFICATION_PARAMETER,
+        entity_type_specifier="dummy_params",
+    )
+
+    # THEN
+    assert len(resp.json["value"]) == 1
+    assert resp.json["value"][0]["id"] == entity.ident
+    assert resp.json["value"][0]["title"] == "foo"

@@ -10,7 +10,10 @@ from cmk.utils.notify_types import NotificationParameterID, NotificationParamete
 
 from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.wato import notification_parameter_registry
-from cmk.gui.watolib.notification_parameter import save_notification_parameter
+from cmk.gui.watolib.notification_parameter import (
+    get_list_of_notification_parameter,
+    save_notification_parameter,
+)
 
 
 class ConfigEntityType(str, enum.Enum):
@@ -45,5 +48,23 @@ def save_configuration_entity(
             return ConfigurationEntityDescription(
                 ident=EntityId(return_value.ident), description=return_value.description
             )
+        case other:
+            assert_never(other)
+
+
+def get_list_of_configuration_entities(
+    entity_type: ConfigEntityType,
+    entity_type_specifier: str,
+) -> Sequence[ConfigurationEntityDescription]:
+    match entity_type:
+        case ConfigEntityType.NOTIFICATION_PARAMETER:
+            return [
+                ConfigurationEntityDescription(
+                    ident=EntityId(obj.ident), description=obj.description
+                )
+                for obj in get_list_of_notification_parameter(
+                    NotificationParameterMethod(entity_type_specifier),
+                )
+            ]
         case other:
             assert_never(other)

@@ -41,6 +41,7 @@ DomainType = Literal[
     "license_request",
     "metric",
     "notification_rule",
+    "notification_parameter",
     "password",
     "parent_scan",
     "rule",

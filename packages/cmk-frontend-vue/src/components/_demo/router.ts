@@ -12,6 +12,7 @@ import DemoIconButton from './DemoIconButton.vue'
 import DemoSlideIn from './DemoSlideIn.vue'
 import DemoFormEditAsync from './DemoFormEditAsync.vue'
 import DemoIconElement from './DemoIconElement.vue'
+import DemoToggleButtonGroup from './DemoToggleButtonGroup.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -45,6 +46,11 @@ const router = createRouter({
       path: '/iconelement',
       name: 'IconElement',
       component: DemoIconElement
+    },
+    {
+      path: '/togglebuttongroup',
+      name: 'ToggleButtonGroup',
+      component: DemoToggleButtonGroup
     }
   ]
 })

@@ -29,6 +29,7 @@ from cmk.gui.watolib.configuration_entity import (
     ConfigurationEntityDescription,
     EntityId,
     get_configuration_entity_data,
+    get_configuration_entity_schema,
     get_list_of_configuration_entities,
     save_configuration_entity,
 )
@@ -48,6 +49,16 @@ ENTITY_TYPE_SPECIFIER_FIELD = {
         required=True,
         description="Entity type specifier of the configuration entity",
         example="mail",
+    )
+}
+
+
+ENTITY_TYPE = {
+    "entity_type": fields.String(
+        required=True,
+        enum=[t.value for t in ConfigEntityType],
+        description="Type of configuration entity",
+        example=ConfigEntityType.NOTIFICATION_PARAMETER.value,
     )
 }
 
@@ -198,8 +209,37 @@ def get_configuration_entity(params: Mapping[str, Any]) -> Response:
     )
 
 
+@Endpoint(
+    constructors.collection_href("form_spec", "{entity_type}"),
+    "cmk/show",
+    tag_group="Checkmk Internal",
+    path_params=[ENTITY_TYPE],
+    query_params=[ENTITY_TYPE_SPECIFIER_FIELD],
+    method="get",
+    response_schema=response_schemas.DomainObject,
+)
+def get_configuration_entity_form_spec_schema(params: Mapping[str, Any]) -> Response:
+    """Get a configuration entity form spec schema"""
+    entity_type = ConfigEntityType(params["entity_type"])
+    entity_type_specifier = params["entity_type_specifier"]
+
+    schema, default_values = get_configuration_entity_schema(entity_type, entity_type_specifier)
+
+    return serve_json(
+        constructors.domain_object(
+            domain_type="form_spec",
+            identifier="",
+            title="",
+            extensions={"schema": asdict(schema), "default_values": default_values},
+            editable=False,
+            deletable=False,
+        )
+    )
+
+
 def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(create_configuration_entity)
     endpoint_registry.register(put_configuration_entity)
     endpoint_registry.register(list_configuration_entities)
     endpoint_registry.register(get_configuration_entity)
+    endpoint_registry.register(get_configuration_entity_form_spec_schema)

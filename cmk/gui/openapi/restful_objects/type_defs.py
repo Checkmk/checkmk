@@ -27,6 +27,7 @@ DomainType = Literal[
     "discovery_run",
     "downtime",
     "event_console",
+    "form_spec",
     "folder_config",
     "host",
     "host_config",

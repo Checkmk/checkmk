@@ -199,3 +199,18 @@ def test_get_configuration_entity(
     # THEN
     assert resp.json["extensions"]["general"]["description"] == "foo"
     assert resp.json["extensions"]["parameter_properties"]["test_param"] == "some_value"
+
+
+def test_get_confguration_entity_fs_schema(clients: ClientRegistry) -> None:
+    # WHEN
+    resp = clients.ConfigurationEntity.get_configuration_entity_schema(
+        entity_type=ConfigEntityType.NOTIFICATION_PARAMETER,
+        entity_type_specifier="dummy_params",
+    )
+
+    # THEN
+    schema = resp.json["extensions"]["schema"]
+    default_values = resp.json["extensions"]["default_values"]
+    assert schema["type"] == "catalog"
+    assert schema["topics"][1]["dictionary"]["elements"][0]["parameter_form"]["type"] == "string"
+    assert default_values["parameter_properties"]["test_param"] == "some_default_value"

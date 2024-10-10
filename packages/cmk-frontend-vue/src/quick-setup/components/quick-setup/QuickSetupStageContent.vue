@@ -5,11 +5,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { computed } from 'vue'
-import Button from '@/components/IconButton.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
+import CmkButton from '@/components/CmkButton.vue'
 import AlertBox from '@/components/AlertBox.vue'
 import type { QuickSetupStageContent } from './quick_setup_types'
-import { type ButtonVariants } from '@/components/IconButton.vue'
 
 const props = defineProps<QuickSetupStageContent>()
 
@@ -22,17 +21,20 @@ const filteredButtons = computed(() =>
   props.buttons.filter((b) => !isSaveOverview.value || b.variant === 'save')
 )
 
-function getButtonAriaLabel(variant: ButtonVariants['variant']): string {
+function getButtonConfig(variant: 'next' | 'prev' | 'save' | unknown): {
+  ariaLabel: string
+  icon: { name: string; rotate: number }
+} {
   /* TODO: move this strings to the backend to make it translatable (CMK-19020) */
   switch (variant) {
     case 'prev':
-      return 'Go to the previous stage'
+      return { ariaLabel: 'Go to the previous stage', icon: { name: 'back', rotate: 90 } }
     case 'next':
-      return 'Go to the next stage'
+      return { ariaLabel: 'Go to the next stage', icon: { name: 'continue', rotate: 90 } }
     case 'save':
-      return 'Save'
+      return { ariaLabel: 'Save', icon: { name: 'save-to-services', rotate: 0 } }
   }
-  return ''
+  return { ariaLabel: '', icon: { name: '', rotate: 0 } }
 }
 </script>
 
@@ -46,14 +48,22 @@ function getButtonAriaLabel(variant: ButtonVariants['variant']): string {
 
     <div v-if="showButtons">
       <div v-if="!loading" class="qs-stage-content__action">
-        <Button
-          v-for="button in filteredButtons"
+        <CmkButton
+          v-for="{ button, buttonConfig } in filteredButtons.map((btn) => {
+            return { button: btn, buttonConfig: getButtonConfig(btn.variant) }
+          })"
           :key="button.label"
-          :label="button.label"
-          :aria-label="getButtonAriaLabel(button.variant)"
-          :variant="button.variant"
+          :aria-label="buttonConfig.ariaLabel"
+          spacing="small"
+          :type="button.variant === 'next' || button.variant === 'save' ? 'primary' : 'secondary'"
           @click="button.action"
-        />
+        >
+          <CmkIcon
+            :name="buttonConfig.icon.name"
+            :rotate="buttonConfig.icon.rotate"
+            variant="inline"
+          />{{ button.label }}
+        </CmkButton>
       </div>
       <div v-else class="qs-stage-content__loading">
         <CmkIcon name="load-graph" variant="inline" size="xlarge" />

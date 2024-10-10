@@ -30,6 +30,10 @@ import CmkButton from '@/components/CmkButton.vue'
     <dd>
       <CmkButton variant="submit">button</CmkButton>
     </dd>
+    <dt><code>&lt;CmkButton spacing="small"&gt;button&lt;/CmkButton&gt;</code></dt>
+    <dd>
+      <CmkButton spacing="small">button</CmkButton>
+    </dd>
     <dt>TODO: add CmkButton with Icon, after icon component is ready</dt>
     <dd></dd>
   </dl>

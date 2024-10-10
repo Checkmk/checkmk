@@ -14,13 +14,18 @@ const buttonVariants = cva('', {
       secondary: 'button__type-secondary',
       tertiary: 'button__type-tertiary'
     },
+    spacing: {
+      small: 'button__spacing-small',
+      medium: 'button__spacing-medium'
+    },
     variant: {
       submit: 'button__type-primary',
       cancel: 'button__type-secondary'
     }
   },
   defaultVariants: {
-    type: 'secondary'
+    type: 'secondary',
+    spacing: 'medium'
   }
 })
 export type ButtonVariants = VariantProps<typeof buttonVariants>
@@ -30,13 +35,14 @@ interface ButtonProps {
   variant?: ButtonVariants['variant']
   /** @property {ButtonVariants['type']} type - three different levels of importance */
   type?: ButtonVariants['type']
+  spacing?: ButtonVariants['spacing']
 }
 
 defineProps<ButtonProps>()
 </script>
 
 <template>
-  <button class="button" :class="buttonVariants({ type, variant })">
+  <button class="button" :class="buttonVariants({ type, variant, spacing })">
     <CmkIcon v-if="variant === 'submit'" variant="inline" name="save" />
     <CmkIcon v-if="variant === 'cancel'" variant="inline" name="cancel" />
     <slot />
@@ -46,6 +52,7 @@ defineProps<ButtonProps>()
 <style scoped>
 .button {
   margin: 0;
+  letter-spacing: unset;
 }
 .button + .button {
   margin-left: 10px;
@@ -60,5 +67,8 @@ defineProps<ButtonProps>()
   padding: 0;
   margin: 0;
   font-weight: normal;
+}
+.button__spacing-small {
+  padding: 5px 8px;
 }
 </style>

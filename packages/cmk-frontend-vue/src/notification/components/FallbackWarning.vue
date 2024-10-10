@@ -5,8 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { FallbackWarning } from '@/notification/type_defs'
-import Button from '@/components/IconButton.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
+import CmkButton from '@/components/CmkButton.vue'
 
 const props = defineProps<{
   properties: FallbackWarning
@@ -44,12 +44,12 @@ function openInNewTab(url: string) {
       <p>{{ props.properties['i18n']['title'] }}</p>
       <p>{{ props.properties['i18n']['message'] }}</p>
       <div class="buttons">
-        <!-- TODO: Change buttons to a new implementation -->
-        <Button
-          :label="properties['i18n']['setup_link_title']"
-          @click="openInNewTab(properties['setup_link'])"
-        />
-        <Button :label="properties['i18n']['do_not_show_again_title']" @click="hideContent" />
+        <CmkButton @click="openInNewTab(properties['setup_link'])">
+          {{ properties['i18n']['setup_link_title'] }}
+        </CmkButton>
+        <CmkButton @click="hideContent">
+          {{ properties['i18n']['do_not_show_again_title'] }}
+        </CmkButton>
       </div>
     </div>
   </div>

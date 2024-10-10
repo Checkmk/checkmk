@@ -4,7 +4,6 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { Ref, VNode } from 'vue'
-import { type ButtonVariants } from '@/components/IconButton.vue'
 import type { WizardMode } from './useWizard'
 
 export interface QuickSetupProps {
@@ -84,8 +83,8 @@ export interface StageButtonSpec {
   /** @property {string} label - Button's caption */
   label: string
 
-  /** @property {ButtonVariants['variant']} variant - type of button */
-  variant: ButtonVariants['variant']
+  /** @property {'prev' | 'next' | 'save'} variant - type of button */
+  variant: 'prev' | 'next' | 'save'
 
   /** @property { () => void } action - Callback to be called on click */
   action: () => void

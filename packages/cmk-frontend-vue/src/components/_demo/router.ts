@@ -8,7 +8,6 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import DemoEmpty from './DemoEmpty.vue'
 import DemoAlertBox from './DemoAlertBox.vue'
-import DemoIconButton from './DemoIconButton.vue'
 import DemoSlideIn from './DemoSlideIn.vue'
 import DemoFormEditAsync from './DemoFormEditAsync.vue'
 import DemoToggleButtonGroup from './DemoToggleButtonGroup.vue'
@@ -28,11 +27,6 @@ const router = createRouter({
       path: '/alertbox',
       name: 'AlertBox',
       component: DemoAlertBox
-    },
-    {
-      path: '/iconbutton',
-      name: 'IconButton',
-      component: DemoIconButton
     },
     {
       path: '/slidein',

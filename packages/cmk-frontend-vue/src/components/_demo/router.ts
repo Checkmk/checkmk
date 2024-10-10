@@ -13,6 +13,7 @@ import DemoSlideIn from './DemoSlideIn.vue'
 import DemoFormEditAsync from './DemoFormEditAsync.vue'
 import DemoIconElement from './DemoIconElement.vue'
 import DemoToggleButtonGroup from './DemoToggleButtonGroup.vue'
+import DemoCmkButton from './DemoCmkButton.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -51,6 +52,11 @@ const router = createRouter({
       path: '/togglebuttongroup',
       name: 'ToggleButtonGroup',
       component: DemoToggleButtonGroup
+    },
+    {
+      path: '/button',
+      name: 'CmkButton',
+      component: DemoCmkButton
     }
   ]
 })

@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { FormSpec, ValidationMessage } from '@/form/components/vue_formspec_components'
 import { ref, toRaw } from 'vue'
 import FormEdit from '@/form/components/FormEdit.vue'
-import Button from '@/components/IconButton.vue'
+import CmkButton from '@/components/CmkButton.vue'
 import AlertBox from '@/components/AlertBox.vue'
 import { immediateWatch } from '@/form/components/utils/watch'
 
@@ -93,14 +93,10 @@ immediateWatch(
 
 <template>
   <div v-if="!error" class="edit-object__buttons">
-    <Button
-      :label="objectId === undefined ? props.i18n.create_button : props.i18n.save_button"
-      variant="custom"
-      icon-name="save"
-      class="edit-object__save-button"
-      @click="save"
-    />
-    <Button :label="props.i18n.cancel_button" variant="custom" icon-name="cancel" @click="cancel" />
+    <CmkButton variant="submit" @click="save">
+      {{ objectId === undefined ? props.i18n.create_button : props.i18n.save_button }}</CmkButton
+    >
+    <CmkButton variant="cancel" @click="cancel">{{ props.i18n.cancel_button }}</CmkButton>
   </div>
   <AlertBox v-if="error" variant="error">
     {{ i18n.fatal_error }}
@@ -114,10 +110,6 @@ immediateWatch(
 </template>
 
 <style scoped>
-.edit-object__save-button {
-  border: 1px solid var(--default-submit-button-border-color);
-  /* TODO: this should be a variant/prop of the button CMK-19365 */
-}
 .edit-object__buttons {
   margin-bottom: 1em;
 }

@@ -8,7 +8,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import SlideIn from '@/components/slidein/SlideIn.vue'
 import type { Catalog } from '@/form/components/vue_formspec_components'
 
-import Button from '@/components/IconButton.vue'
+import CmkButton from '@/components/CmkButton.vue'
 import FormCatalog from '@/form/components/forms/FormCatalog.vue'
 import { ref } from 'vue'
 
@@ -53,11 +53,11 @@ const catalog = ref<Catalog>({
 </script>
 
 <template>
-  <button class="slide-in__trigger" @click="open = !open">trigger button text</button>
+  <CmkButton type="tertiary" @click="open = !open">trigger button text</CmkButton>
   <SlideIn :open="open" :header="{ title: 'some title', closeButton: true }" @close="open = false">
     <div style="margin-bottom: 1em">
-      <Button label="save text" variant="custom" icon-name="save" class="slide-in__save" />
-      <Button label="cancel text" variant="custom" icon-name="cancel" @click="open = false" />
+      <CmkButton variant="submit">save</CmkButton>
+      <CmkButton variant="cancel" @click="open = false">cancel</CmkButton>
     </div>
     <div class="content">
       <FormCatalog v-model:data="data" :spec="catalog" :backend-validation="[]" />
@@ -69,17 +69,5 @@ const catalog = ref<Catalog>({
 <style scoped>
 .content {
   min-width: 600px;
-}
-.slide-in__trigger {
-  border: none;
-  text-decoration: underline var(--success);
-  padding: 0;
-  margin: 0;
-  font-weight: normal;
-}
-
-.slide-in__save {
-  border: 1px solid var(--default-submit-button-border-color);
-  /* TODO: this should be a variant/prop of the button CMK-19365 */
 }
 </style>

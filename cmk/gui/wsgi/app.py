@@ -15,6 +15,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import safe_join
 
 from cmk.gui.flask_app import CheckmkFlaskApp
+from cmk.gui.session import FileBasedSession
 from cmk.gui.wsgi.blueprints.checkmk import checkmk
 from cmk.gui.wsgi.blueprints.rest_api import rest_api
 
@@ -38,7 +39,7 @@ def make_wsgi_app(debug: bool = False, testing: bool = False) -> Flask:
         The WSGI application
     """
 
-    app = CheckmkFlaskApp(__name__)
+    app = CheckmkFlaskApp(__name__, FileBasedSession())
     app.debug = debug
     app.testing = testing
     # Config needs a request context to work. :(

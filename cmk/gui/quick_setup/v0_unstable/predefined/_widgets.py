@@ -68,7 +68,10 @@ def _host_name_dict_element(
                     min_value=1,
                     error_msg=Message("%s cannot be empty") % str(title),
                 ),
-                validators.MatchRegex(HOST_NAME_REGEXP),
+                validators.MatchRegex(
+                    regex=HOST_NAME_REGEXP,
+                    error_msg=Message("Invalid characters in %s") % str(title),
+                ),
             ),
             prefill=DefaultValue(
                 unique_default_name_suggestion(
@@ -91,7 +94,12 @@ def _host_path_dict_element(title: Title = Title("Folder")) -> DictElement:
         parameter_form=String(
             title=title,
             field_size=FieldSize.MEDIUM,
-            custom_validate=(validators.MatchRegex(FOLDER_PATTERN),),
+            custom_validate=(
+                validators.MatchRegex(
+                    regex=FOLDER_PATTERN,
+                    error_msg=Message("Invalid characters in %s") % str(title),
+                ),
+            ),
         ),
         required=True,
     )

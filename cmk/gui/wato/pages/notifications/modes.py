@@ -2784,6 +2784,11 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
 
         log_what = "new-notification-rule" if self._new else "edit-notification-rule"
         self._add_change(log_what, self._log_text(self._edit_nr))
+        flash(
+            _("New notification rule #%d successfully created!") % (len(self._rules) - 1)
+            if self._new
+            else _("Notification rule number #%d successfully edited!") % self._edit_nr
+        )
 
         if back_mode := request.var("back_mode"):
             return redirect(mode_url(back_mode))

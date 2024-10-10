@@ -28,11 +28,20 @@ from cmk.gui.watolib.configuration_entity import (
     ConfigEntityType,
     ConfigurationEntityDescription,
     EntityId,
+    get_configuration_entity_data,
     get_list_of_configuration_entities,
     save_configuration_entity,
 )
 
 from cmk import fields
+
+ENTITY_ID_FIELD = {
+    "entity_id": fields.String(
+        required=True,
+        description="Object id of the configuration entity",
+        example="b43b060b-3b8c-41cf-8405-dddc6dd02575",
+    )
+}
 
 ENTITY_TYPE_SPECIFIER_FIELD = {
     "entity_type_specifier": fields.String(
@@ -161,7 +170,36 @@ def list_configuration_entities(params: Mapping[str, Any]) -> Response:
     )
 
 
+@Endpoint(
+    constructors.object_href(
+        _to_domain_type(ConfigEntityType.NOTIFICATION_PARAMETER), "{entity_id}"
+    ),
+    "cmk/show",
+    tag_group="Checkmk Internal",
+    path_params=[ENTITY_ID_FIELD],
+    method="get",
+    response_schema=response_schemas.DomainObject,
+)
+def get_configuration_entity(params: Mapping[str, Any]) -> Response:
+    """Get a notification parameter"""
+    entity_id = EntityId(params["entity_id"])
+
+    data = get_configuration_entity_data(ConfigEntityType.NOTIFICATION_PARAMETER, entity_id)
+
+    return serve_json(
+        constructors.domain_object(
+            domain_type=_to_domain_type(ConfigEntityType.NOTIFICATION_PARAMETER),
+            identifier=entity_id,
+            title="",
+            extensions=dict(data),
+            editable=False,
+            deletable=False,
+        )
+    )
+
+
 def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(create_configuration_entity)
     endpoint_registry.register(put_configuration_entity)
     endpoint_registry.register(list_configuration_entities)
+    endpoint_registry.register(get_configuration_entity)

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import enum
 from dataclasses import dataclass
-from typing import assert_never, NewType, Sequence
+from typing import assert_never, Mapping, NewType, Sequence
 
 from cmk.utils.notify_types import NotificationParameterID, NotificationParameterMethod
 
@@ -12,6 +12,7 @@ from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.wato import notification_parameter_registry
 from cmk.gui.watolib.notification_parameter import (
     get_list_of_notification_parameter,
+    get_notification_parameter,
     save_notification_parameter,
 )
 
@@ -47,6 +48,19 @@ def save_configuration_entity(
                 return return_value
             return ConfigurationEntityDescription(
                 ident=EntityId(return_value.ident), description=return_value.description
+            )
+        case other:
+            assert_never(other)
+
+
+def get_configuration_entity_data(
+    entity_type: ConfigEntityType,
+    entity_id: EntityId,
+) -> Mapping:
+    match entity_type:
+        case ConfigEntityType.NOTIFICATION_PARAMETER:
+            return get_notification_parameter(
+                NotificationParameterID(entity_id),
             )
         case other:
             assert_never(other)

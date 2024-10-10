@@ -176,3 +176,26 @@ def test_list_configuration_entities(
     assert len(resp.json["value"]) == 1
     assert resp.json["value"][0]["id"] == entity.ident
     assert resp.json["value"][0]["title"] == "foo"
+
+
+def test_get_configuration_entity(
+    clients: ClientRegistry, registry: NotificationParameterRegistry
+) -> None:
+    # GIVEN
+    entity = save_notification_parameter(
+        registry,
+        "dummy_params",
+        {"general": {"description": "foo"}, "parameter_properties": {"test_param": "some_value"}},
+        None,
+    )
+    assert isinstance(entity, NotificationParameterDescription), "type guard"
+
+    # WHEN
+    resp = clients.ConfigurationEntity.get_configuration_entity(
+        entity_type=ConfigEntityType.NOTIFICATION_PARAMETER,
+        entity_id=entity.ident,
+    )
+
+    # THEN
+    assert resp.json["extensions"]["general"]["description"] == "foo"
+    assert resp.json["extensions"]["parameter_properties"]["test_param"] == "some_value"

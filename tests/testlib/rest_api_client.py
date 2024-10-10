@@ -3087,6 +3087,18 @@ class ConfigurationEntityClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def get_configuration_entity(
+        self,
+        entity_type: ConfigEntityType,
+        entity_id: str,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{_to_domain_type(entity_type)}/{entity_id}",
+            expect_ok=expect_ok,
+        )
+
 
 class ManagedRobotsClient(RestApiClient):
     domain: API_DOMAIN = "managed_robots"

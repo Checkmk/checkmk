@@ -28,6 +28,7 @@ from cmk.gui.form_specs.private import (
     ListExtended,
     ListOfStrings,
     MonitoredHostExtended,
+    SingleChoiceExtended,
 )
 from cmk.gui.form_specs.vue.shared_type_defs import ListOfStringsLayout
 from cmk.gui.form_specs.vue.visitors import DefaultValue as VueDefaultValue
@@ -731,7 +732,7 @@ def _convert_to_inner_legacy_valuespec(
         case ruleset_api_v1.form_specs.Dictionary() | DictionaryExtended():
             return _convert_to_legacy_dictionary(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.SingleChoice():
+        case ruleset_api_v1.form_specs.SingleChoice() | SingleChoiceExtended():
             return _convert_to_legacy_dropdown_choice(to_convert, localizer)
 
         case ruleset_api_v1.form_specs.CascadingSingleChoice():
@@ -1386,7 +1387,8 @@ def _convert_to_legacy_host_state(
 
 
 def _convert_to_legacy_dropdown_choice(
-    to_convert: ruleset_api_v1.form_specs.SingleChoice, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.SingleChoice | SingleChoiceExtended,
+    localizer: Callable[[str], str],
 ) -> legacy_valuespecs.DropdownChoice:
     choices = [
         (

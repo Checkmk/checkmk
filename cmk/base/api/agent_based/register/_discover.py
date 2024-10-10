@@ -6,8 +6,6 @@
 
 from typing import assert_never
 
-from cmk.utils.plugin_loader import load_plugins_with_exceptions
-
 from cmk import trace
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -43,17 +41,12 @@ tracer = trace.get_tracer()
 
 @tracer.start_as_current_span("load_all_plugins")
 def load_all_plugins(*, raise_errors: bool) -> list[str]:
-    errors = []
-    for plugin_name, exception in load_plugins_with_exceptions("cmk.base.plugins.agent_based"):
-        errors.append(f"Error in agent based plug-in {plugin_name}: {exception}")
-        if raise_errors:
-            raise exception
-
     with tracer.start_as_current_span("discover_plugins"):
         discovered_plugins: DiscoveredPlugins[_ABPlugins] = discover_plugins(
             PluginGroup.AGENT_BASED, entry_point_prefixes(), raise_errors=raise_errors
         )
-        errors.extend(f"Error in agent based plugin: {exc}" for exc in discovered_plugins.errors)
+
+    errors = [f"Error in agent based plugin: {exc}" for exc in discovered_plugins.errors]
 
     with tracer.start_as_current_span("load_discovered_plugins"):
         for location, plugin in discovered_plugins.plugins.items():

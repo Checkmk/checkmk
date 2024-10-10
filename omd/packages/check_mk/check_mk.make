@@ -202,7 +202,6 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	$(LN) -sf python3/cmk $(CHECK_MK_INSTALL_DIR)/skel/local/lib/check_mk
 	# Create the plugin namespaces
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk_addons/plugins
-	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/base/plugins/agent_based
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/plugins
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/special_agents
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/gui/plugins/views

@@ -163,21 +163,36 @@ run_build() {
             -o "typescript/${target_base}.ts"
     done
 
-    SOURCE_PYTHON=python/vue_formspec_components.py
-    SOURCE_TYPESCRIPT=typescript/vue_formspec_components.ts
-    # you should also modify uildscripts/scripts/stages.yml if you change the destination!
-    DESTINATION_PYTHON=../../cmk/gui/form_specs/vue/shared_type_defs.py
-    DESTINATION_TYPESCRIPT=../../packages/cmk-frontend-vue/src/form/components/vue_formspec_components.ts
+    SOURCES=(
+        python/vue_formspec_components.py
+        python/notifications.py
+        typescript/vue_formspec_components.ts
+        typescript/notifications.ts
+    )
+    # you should also modify buildscripts/scripts/stages.yml if you change the destination!
+    DESTINATIONS=(
+        ../../cmk/gui/form_specs/vue/shared_type_defs.py
+        ../../cmk/gui/watolib/notification_types.py
+        ../../packages/cmk-frontend-vue/src/form/components/vue_formspec_components.ts
+        ../../packages/cmk-frontend-vue/src/notification/type_defs.ts
+    )
 
     if [ "$CI" == "true" ]; then
-        # this is a hack, we should create another "copy" or "diff" target
-        diff $SOURCE_PYTHON $DESTINATION_PYTHON
-        diff $SOURCE_TYPESCRIPT $DESTINATION_TYPESCRIPT
+        echo "Checking if the generated files are up-to-date..."
     else
-        echo "Copying vue type defs..."
-        cp $SOURCE_PYTHON $DESTINATION_PYTHON
-        cp $SOURCE_TYPESCRIPT $DESTINATION_TYPESCRIPT
+        echo "Copying the generated files..."
     fi
+
+    for i in "${!SOURCES[@]}"; do
+        SOURCE=${SOURCES[$i]}
+        DESTINATION=${DESTINATIONS[$i]}
+        if [ "$CI" == "true" ]; then
+            # this is a hack, we should create another "copy" or "diff" target
+            diff "$SOURCE" "$DESTINATION"
+        else
+            cp "$SOURCE" "$DESTINATION"
+        fi
+    done
 
     echo "Done."
 }

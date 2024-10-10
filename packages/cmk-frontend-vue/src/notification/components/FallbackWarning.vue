@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import type { FallbackWarning } from '@/form/components/vue_formspec_components'
+import type { FallbackWarning } from '@/notification/type_defs'
 import Button from '@/components/IconButton.vue'
 
 const props = defineProps<{

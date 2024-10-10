@@ -42,6 +42,7 @@ def parse_qnap_disks(string_table: StringTable) -> StringTable:
 
 
 check_info["qnap_disks"] = LegacyCheckDefinition(
+    name="qnap_disks",
     parse_function=parse_qnap_disks,
     detect=DETECT_QNAP,
     fetch=SNMPTree(

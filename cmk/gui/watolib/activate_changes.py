@@ -77,7 +77,13 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.nodevis.utils import topology_dir
-from cmk.gui.site_config import enabled_sites, get_site_config, is_single_local_site, site_is_local
+from cmk.gui.site_config import (
+    configured_sites,
+    enabled_sites,
+    get_site_config,
+    is_single_local_site,
+    site_is_local,
+)
 from cmk.gui.sites import SiteStatus
 from cmk.gui.sites import states as sites_states
 from cmk.gui.type_defs import Users
@@ -89,7 +95,7 @@ from cmk.gui.utils import escaping
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.watolib import backup_snapshots, config_domain_name, piggyback_hub
+from cmk.gui.watolib import backup_snapshots, config_domain_name
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.broker_certificates import (
@@ -111,13 +117,18 @@ from cmk.gui.watolib.config_sync import (
     ReplicationPath,
     SnapshotSettings,
 )
-from cmk.gui.watolib.global_settings import save_site_global_settings
+from cmk.gui.watolib.global_settings import load_configuration_settings, save_site_global_settings
 from cmk.gui.watolib.hosts_and_folders import (
     collect_all_hosts,
     folder_preserving_link,
+    folder_tree,
     validate_all_hosts,
 )
 from cmk.gui.watolib.paths import wato_var_dir
+from cmk.gui.watolib.piggyback_hub import (
+    distribute_piggyback_hub_configs as distribute_piggyback_hub_configs,  # might be replcaed by the CME version
+)
+from cmk.gui.watolib.piggyback_hub import has_piggyback_hub_relevant_changes
 from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
 
 from cmk import mkp_tool, trace
@@ -1372,28 +1383,6 @@ class ActivateChangesManager(ActivateChanges):
         for key in self.info_keys:
             setattr(self, key, from_file[key])
 
-    def _distribute_piggyback_config(self) -> None:
-        def piggyback_config_change(change):
-            return (
-                change["action_name"] == "edit-configvar" and "piggyback_hub" in change["domains"]
-            )
-
-        host_changes = (
-            "edit-host",
-            "create-host",
-            "delete-host",
-            "rename-host",
-            "move-host",
-            "edit-folder",
-        )
-
-        if any(
-            piggyback_config_change(change) or change["action_name"] in host_changes
-            for _id, change in self._pending_changes
-        ):
-            logger.debug("Starting config distribution")
-            piggyback_hub.distribute_config()
-
     # Creates the snapshot and starts the single site sync processes. In case these
     # steps could not be started, exceptions are raised and have to be handled by
     # the caller.
@@ -1487,13 +1476,27 @@ class ActivateChangesManager(ActivateChanges):
 
         self._start_activation()
         create_all_broker_certificates(omd_site(), self.dirty_sites())
-        self._distribute_piggyback_config()
+
+        if has_piggyback_hub_relevant_changes([change for _, change in self._pending_changes]):
+            logger.debug("Starting piggyback hub config distribution")
+            distribute_piggyback_hub_configs(
+                load_configuration_settings(),
+                configured_sites(),
+                {site_id for site_id, _site_config in self.dirty_sites()},
+                {
+                    host_name: host.site_id()
+                    for host_name, host in folder_tree()
+                    .root_folder()
+                    .all_hosts_recursively()
+                    .items()
+                },
+            )
 
         create_rabbitmq_definitions_file(paths.omd_root, rabbitmq_definitions[omd_site()])
         return self._activation_id
 
     def _verify_valid_host_config(self):
-        defective_hosts = validate_all_hosts([], force_all=True)
+        defective_hosts = validate_all_hosts(folder_tree(), [], force_all=True)
         if defective_hosts:
             raise MKUserError(
                 None,

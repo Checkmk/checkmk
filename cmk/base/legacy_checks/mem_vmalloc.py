@@ -55,6 +55,7 @@ def check_mem_vmalloc(_item, params, section):
 
 
 check_info["mem.vmalloc"] = LegacyCheckDefinition(
+    name="mem_vmalloc",
     service_name="Vmalloc address space",
     sections=["mem"],
     discovery_function=inventory_mem_vmalloc,

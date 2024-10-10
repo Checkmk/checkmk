@@ -24,6 +24,7 @@ def parse_vnx_version(string_table: StringTable) -> StringTable:
 
 
 check_info["vnx_version"] = LegacyCheckDefinition(
+    name="vnx_version",
     parse_function=parse_vnx_version,
     service_name="VNX Version",
     discovery_function=inventory_vnx_version,

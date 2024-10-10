@@ -5,6 +5,10 @@
 
 from typing import Sequence, TypeVar
 
+from cmk.gui.form_specs.private.multiple_choice import (
+    AdaptiveMultipleChoice,
+    AdaptiveMultipleChoiceLayout,
+)
 from cmk.gui.form_specs.vue import shared_type_defs
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.form_specs.vue.visitors._base import FormSpecVisitor
@@ -16,15 +20,14 @@ from cmk.gui.form_specs.vue.visitors._utils import (
     get_prefill_default,
     get_title_and_help,
 )
-from cmk.gui.i18n import translate_to_current_language
+from cmk.gui.i18n import _, translate_to_current_language
 
 from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import MultipleChoice
 
 T = TypeVar("T")
 
 
-class MultipleChoiceVisitor(FormSpecVisitor[MultipleChoice, Sequence[str]]):
+class MultipleChoiceVisitor(FormSpecVisitor[AdaptiveMultipleChoice, Sequence[str]]):
     def _is_valid_choice(self, value: str) -> bool:
         return value in [x.name for x in self.form_spec.elements]
 
@@ -48,7 +51,9 @@ class MultipleChoiceVisitor(FormSpecVisitor[MultipleChoice, Sequence[str]]):
 
     def _to_vue(
         self, raw_value: object, parsed_value: Sequence[str] | EmptyValue
-    ) -> tuple[shared_type_defs.MultipleChoice, Sequence[str]]:
+    ) -> tuple[
+        shared_type_defs.DualListChoice | shared_type_defs.CheckboxListChoice, Sequence[str]
+    ]:
         title, help_text = get_title_and_help(self.form_spec)
 
         elements = [
@@ -59,13 +64,37 @@ class MultipleChoiceVisitor(FormSpecVisitor[MultipleChoice, Sequence[str]]):
             for element in self.form_spec.elements
         ]
 
+        if self.form_spec.layout.value == AdaptiveMultipleChoiceLayout.dual_list or (
+            self.form_spec.layout.value == AdaptiveMultipleChoiceLayout.auto and len(elements) > 15
+        ):
+            return (
+                shared_type_defs.DualListChoice(
+                    title=title,
+                    help=help_text,
+                    elements=elements,
+                    validators=build_vue_validators(compute_validators(self.form_spec)),
+                    i18n=shared_type_defs.DualListChoiceI18n(
+                        add_all=_("Add all >>"),
+                        remove_all=_("<< Remove all"),
+                        add=_("Add >"),
+                        remove=_("< Remove"),
+                        available_options=_("Available options"),
+                        selected_options=_("Selected options"),
+                        selected=_("Selected"),
+                        no_elements_available=_("No elements available"),
+                        no_elements_selected=_("No elements selected"),
+                    ),
+                    show_toggle_all=self.form_spec.show_toggle_all,
+                ),
+                [] if isinstance(parsed_value, EmptyValue) else parsed_value,
+            )
+        # checkbox list or auto with <= 15 elements
         return (
-            shared_type_defs.MultipleChoice(
+            shared_type_defs.CheckboxListChoice(
                 title=title,
                 help=help_text,
                 elements=elements,
                 validators=build_vue_validators(compute_validators(self.form_spec)),
-                show_toggle_all=self.form_spec.show_toggle_all,
             ),
             [] if isinstance(parsed_value, EmptyValue) else parsed_value,
         )

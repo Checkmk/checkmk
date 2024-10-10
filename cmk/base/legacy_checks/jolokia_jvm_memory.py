@@ -89,6 +89,7 @@ def check_jolokia_jvm_memory(item, params, parsed):
 
 
 check_info["jolokia_jvm_memory"] = LegacyCheckDefinition(
+    name="jolokia_jvm_memory",
     parse_function=parse_jolokia_jvm_memory,
     service_name="JVM %s Memory",
     discovery_function=discover_jolokia_jvm_memory,
@@ -156,6 +157,7 @@ def check_jolokia_jvm_memory_pools(item, params, parsed):
 
 
 check_info["jolokia_jvm_memory.pools"] = LegacyCheckDefinition(
+    name="jolokia_jvm_memory_pools",
     service_name="JVM %s",
     sections=["jolokia_jvm_memory"],
     discovery_function=discover_jolokia_jvm_memory_pools,

@@ -31,6 +31,7 @@ def parse_hitachi_hnas_cifs(string_table: StringTable) -> StringTable:
 
 
 check_info["hitachi_hnas_cifs"] = LegacyCheckDefinition(
+    name="hitachi_hnas_cifs",
     parse_function=parse_hitachi_hnas_cifs,
     detect=DETECT,
     fetch=SNMPTree(

@@ -82,6 +82,7 @@ def discover_juniper_bgp_state(section):
 
 
 check_info["juniper_bgp_state"] = LegacyCheckDefinition(
+    name="juniper_bgp_state",
     detect=DETECT_JUNIPER,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2636.5.1.1.2.1.1.1",

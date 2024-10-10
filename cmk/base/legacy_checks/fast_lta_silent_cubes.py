@@ -32,6 +32,7 @@ def parse_fast_lta_silent_cubes(string_table: StringTable) -> StringTable:
 
 
 check_info["fast_lta_silent_cubes"] = LegacyCheckDefinition(
+    name="fast_lta_silent_cubes",
     parse_function=parse_fast_lta_silent_cubes,
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.10"),
@@ -48,6 +49,7 @@ check_info["fast_lta_silent_cubes"] = LegacyCheckDefinition(
 
 
 check_info["fast_lta_silent_cubes.capacity"] = LegacyCheckDefinition(
+    name="fast_lta_silent_cubes_capacity",
     service_name="Fast LTA SC Capacity %s",
     sections=["fast_lta_silent_cubes"],
     discovery_function=inventory_fast_lta_silent_cubes_status,

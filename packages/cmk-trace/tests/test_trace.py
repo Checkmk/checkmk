@@ -97,17 +97,6 @@ def test_exporter_from_config_local_site() -> None:
     assert exporter.test_insecure is True
 
 
-@pytest.fixture(name="reset_global_tracer_provider")
-def _fixture_reset_global_tracer_provider() -> Iterator[None]:
-    # pylint: disable=protected-access
-    provider_orig = otel_trace._TRACER_PROVIDER
-    try:
-        yield
-    finally:
-        otel_trace._TRACER_PROVIDER_SET_ONCE._done = False
-        otel_trace._TRACER_PROVIDER = provider_orig
-
-
 @pytest.mark.usefixtures("reset_global_tracer_provider")
 def test_get_tracer_after_initialized() -> None:
     trace.init_tracing("namespace", "service")

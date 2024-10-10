@@ -52,7 +52,7 @@ def test_activate_changes(
     clients.HostConfig.create(host_name="foobar", folder="/")
 
     monkeypatch.setattr(
-        "cmk.gui.watolib.activate_changes.ActivateChangesManager._distribute_piggyback_config",
+        "cmk.gui.watolib.activate_changes.distribute_piggyback_hub_configs",
         lambda *args, **kwargs: None,
     )
 
@@ -129,7 +129,7 @@ def test_list_activate_changes_star_etag(
         "cmk.gui.watolib.activate_changes.execute_activation_cleanup_background_job"
     )
     distribute_piggyback_config = mocker.patch(
-        "cmk.gui.watolib.activate_changes.ActivateChangesManager._distribute_piggyback_config"
+        "cmk.gui.watolib.activate_changes.distribute_piggyback_hub_configs"
     )
     with mock_livestatus(expect_status_query=True):
         clients.ActivateChanges.activate_changes(etag="star")
@@ -153,7 +153,7 @@ def test_list_activate_changes_valid_etag(
         "cmk.gui.watolib.activate_changes.execute_activation_cleanup_background_job"
     )
     distribute_piggyback_config = mocker.patch(
-        "cmk.gui.watolib.activate_changes.ActivateChangesManager._distribute_piggyback_config"
+        "cmk.gui.watolib.activate_changes.distribute_piggyback_hub_configs"
     )
     with mock_livestatus(expect_status_query=True):
         clients.ActivateChanges.activate_changes(etag="valid_etag")

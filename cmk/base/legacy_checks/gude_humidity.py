@@ -47,6 +47,7 @@ def check_gude_humidity(
 
 
 check_info["gude_humidity"] = LegacyCheckDefinition(
+    name="gude_humidity",
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.28507.19"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.28507.38"),

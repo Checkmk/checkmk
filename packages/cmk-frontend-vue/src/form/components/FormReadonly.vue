@@ -17,11 +17,12 @@ import type {
   FixedValue,
   BooleanChoice,
   MultilineText,
-  MultipleChoice,
   Password,
   Tuple,
   OptionalChoice,
-  ListOfStrings
+  ListOfStrings,
+  DualListChoice,
+  CheckboxListChoice
 } from '@/form/components/vue_formspec_components'
 import {
   groupDictionaryValidations,
@@ -71,8 +72,10 @@ function renderForm(
       return renderDataSize(value as [string, string])
     case 'catalog':
       return h('div', 'Catalog does not support readonly')
-    case 'multiple_choice':
-      return renderMultipleChoice(formSpec as MultipleChoice, value as string[])
+    case 'dual_list_choice':
+      return renderMultipleChoice(formSpec as DualListChoice, value as string[])
+    case 'checkbox_list_choice':
+      return renderMultipleChoice(formSpec as CheckboxListChoice, value as string[])
     case 'password':
       return renderPassword(formSpec as Password, value as (string | boolean)[])
     case 'tuple':
@@ -148,7 +151,10 @@ function renderTuple(
   return h('span', tupleResults)
 }
 
-function renderMultipleChoice(formSpec: MultipleChoice, value: string[]): VNode {
+function renderMultipleChoice(
+  formSpec: DualListChoice | CheckboxListChoice,
+  value: string[]
+): VNode {
   let nameToTitle: Record<string, string> = {}
   for (const element of formSpec.elements) {
     nameToTitle[element.name] = element.title
@@ -197,7 +203,7 @@ function renderBooleanChoice(formSpec: BooleanChoice, value: boolean): VNode {
 
 function renderFixedValue(formSpec: FixedValue): VNode {
   let shownValue = formSpec.value
-  if (formSpec.label != null) {
+  if (formSpec.label !== null) {
     shownValue = formSpec.label
   }
   return h('div', shownValue as string)
@@ -212,7 +218,7 @@ function renderDict(
   // Note: Dictionary validations are not shown
   const [, elementValidations] = groupDictionaryValidations(formSpec.elements, backendValidation)
   formSpec.elements.map((element) => {
-    if (value[element.ident] == undefined) {
+    if (value[element.ident] === undefined) {
       return
     }
 

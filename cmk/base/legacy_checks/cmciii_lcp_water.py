@@ -108,6 +108,7 @@ def check_cmciii_lcp_water(item, params, parsed):
 
 
 check_info["cmciii_lcp_water"] = LegacyCheckDefinition(
+    name="cmciii_lcp_water",
     detect=DETECT_CMCIII_LCP,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2606.7.4.2.2.1.10",

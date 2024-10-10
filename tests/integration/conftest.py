@@ -20,8 +20,10 @@ logger = logging.getLogger(__name__)
 
 # Session fixtures must be in conftest.py to work properly
 @pytest.fixture(name="site", scope="session")
-def get_site() -> Iterator[Site]:
-    with exit_pytest_on_exceptions():
+def get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
+    with exit_pytest_on_exceptions(
+        exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
+    ):
         yield from get_site_factory(prefix="int_").get_test_site(
             name="test", auto_restart_httpd=True
         )

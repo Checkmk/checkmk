@@ -113,6 +113,7 @@ def check_hpux_multipath(item, params, parsed):
 
 
 check_info["hpux_multipath"] = LegacyCheckDefinition(
+    name="hpux_multipath",
     service_name="Multipath %s",
     parse_function=parse_hpux_multipath,
     discovery_function=inventory_hpux_multipath,

@@ -444,7 +444,7 @@ def _is_allowed_for_robotmk_agent_based_cee_plugins(
 ) -> bool:
     return _in_component(
         imported=imported,
-        component=Component("cmk.cee.robotmk.checking.plugins"),
+        component=Component("cmk.cee.robotmk.checking.agent_based"),
     )
 
 

@@ -100,6 +100,7 @@ def parse_ibm_svc_system(string_table: StringTable) -> StringTable:
 
 
 check_info["ibm_svc_system"] = LegacyCheckDefinition(
+    name="ibm_svc_system",
     parse_function=parse_ibm_svc_system,
     service_name="Info",
     discovery_function=inventory_ibm_svc_system,

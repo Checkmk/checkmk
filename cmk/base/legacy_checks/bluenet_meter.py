@@ -31,6 +31,7 @@ def discover_bluenet_meter(section):
 
 
 check_info["bluenet_meter"] = LegacyCheckDefinition(
+    name="bluenet_meter",
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.21695.1"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.21695.1.10.7.2.1",

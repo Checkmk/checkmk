@@ -115,6 +115,7 @@ def check_suseconnect(
 
 
 check_info["suseconnect"] = LegacyCheckDefinition(
+    name="suseconnect",
     service_name="SLES license",
     # section is migrated already!,
     discovery_function=inventory_suseconnect,

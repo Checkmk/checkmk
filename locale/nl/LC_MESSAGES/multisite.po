@@ -407,6 +407,10 @@ msgstr "%d dagen"
 msgid "%d days ago"
 msgstr "%d dagen geleden"
 
+#, fuzzy, python-format
+msgid "%d defined parameter properties"
+msgstr "Algemene eigenschappen"
+
 #, python-format
 msgid "%d errors occured:"
 msgstr "%d foutmeldingen:"
@@ -692,6 +696,10 @@ msgstr "%s ratio"
 #, fuzzy, python-format
 msgid "%s resulting notifications"
 msgstr "Resulterende kennisgevingen"
+
+#, fuzzy, python-format
+msgid "%s rules"
+msgstr "%s Verzoeken"
 
 #, python-format
 msgid "%s running for %s"
@@ -991,6 +999,10 @@ msgstr "1 wijziging"
 
 msgid "1 row"
 msgstr "1 rij"
+
+#, fuzzy
+msgid "1 rule"
+msgstr "regel"
 
 msgid "1 year"
 msgstr "1 jaar"
@@ -3199,6 +3211,10 @@ msgid "Acknowledging problems"
 msgstr "Problemen erkennen"
 
 #, fuzzy
+msgid "Acknowledgment author"
+msgstr "Erkenning Auteur"
+
+#, fuzzy
 msgid "Acknowledgment expires:"
 msgstr "Erken problemen"
 
@@ -3346,6 +3362,9 @@ msgstr "In behandeling zijnde wijzigingen activeren"
 
 msgid "Activate resolution with following resolution transition ID"
 msgstr "Activeer resolutie met de volgende resolutie overgang ID"
+
+msgid "Activate the changes by clicking the Activate on selected sites button."
+msgstr ""
 
 msgid "Activate total bandwidth metric (sum of in and out)"
 msgstr "Activeer totale bandbreedte metriek (som van in en uit)"
@@ -3585,6 +3604,10 @@ msgstr "Toevoegen %s"
 msgid "Add %s configuration"
 msgstr "RRA-configuratie"
 
+#, fuzzy, python-format
+msgid "Add %s notification parameter"
+msgstr "Meldingsregel toevoegen"
+
 msgid "Add & remove folders"
 msgstr "Mappen toevoegen en verwijderen"
 
@@ -3630,9 +3653,6 @@ msgstr "Uitzondering toevoegen"
 
 msgid "Add Group"
 msgstr "Groep toevoegen"
-
-msgid "Add HTML section above table (e.g. title, description…)"
-msgstr "HTML-sectie boven tabel toevoegen (bijv. titel, beschrijving...)"
 
 msgid "Add LDAP connection"
 msgstr "LDAP-verbinding toevoegen"
@@ -3990,6 +4010,10 @@ msgstr "Nieuwe scalair toevoegen"
 msgid "Add new service"
 msgstr "Nieuwe dienst toevoegen"
 
+#, fuzzy
+msgid "Add new smarthost"
+msgstr "Nieuwe macro toevoegen"
+
 msgid "Add new status"
 msgstr "Nieuwe status toevoegen"
 
@@ -4031,6 +4055,10 @@ msgstr "Uitvoerbare bestanden toevoegen of wijzigen"
 
 msgid "Add page element"
 msgstr "Pagina-element toevoegen"
+
+#, fuzzy
+msgid "Add parameter"
+msgstr "Modelparameters"
 
 msgid "Add pattern"
 msgstr "Patroon toevoegen"
@@ -4303,6 +4331,10 @@ msgstr "Extra IPv6-adressen"
 
 msgid "Additional agent labels to send during registration"
 msgstr "Extra agent labels te sturen tijdens de registratie"
+
+#, fuzzy
+msgid "Additional details"
+msgstr "Extra opties"
 
 msgid "Additional header lines"
 msgstr "Extra kopregels"
@@ -6566,8 +6598,20 @@ msgstr "Overzicht toepassingen"
 msgid "Applications, Processes & Services"
 msgstr "Toepassingen, processen en diensten"
 
+#, fuzzy
+msgid "Applied to"
+msgstr "Solliciteer naar"
+
 msgid "Apply"
 msgstr "Solliciteer"
+
+#, fuzzy
+msgid "Apply & create another rule"
+msgstr "Waarschuwings afhandeling regel"
+
+#, fuzzy
+msgid "Apply & test notification rule"
+msgstr "Verwijder deze meldingsregel"
 
 #, fuzzy
 msgid "Apply Latency"
@@ -6591,6 +6635,11 @@ msgstr "Voorwaarden toepassen"
 
 msgid "Apply filters"
 msgstr "Filters toepassen"
+
+msgid ""
+"Apply filters to specify which hosts and services are affected by this "
+"notification rule."
+msgstr ""
 
 #, fuzzy
 msgid "Apply finish time"
@@ -9209,8 +9258,9 @@ msgstr "Bulk host import"
 msgid "Bulk move"
 msgstr "Bulk verplaatsing"
 
-msgid "Bulk notifications with graphs (default: 5)"
-msgstr "Bulk meldingen met grafieken (standaard: 5)"
+#, fuzzy
+msgid "Bulk notifications"
+msgstr "Open bulk meldingen"
 
 msgid "Bulk removal of explicit attributes"
 msgstr "Bulk verwijderen van expliciete attributen"
@@ -9575,13 +9625,6 @@ msgstr ""
 "Standaard gebruikt Checkmk de gemeenschap \"public\" om hosts te contacteren "
 "via SNMP v1/v2. Deze regel kan worden gebruikt om de credentials aan te "
 "passen die moeten worden gebruikt bij het contacteren van hosts via SNMP."
-
-msgid ""
-"By default all multiple graphs in emails are displayed floating nearby. You "
-"can enable this option to show the graphs among each other."
-msgstr ""
-"Standaard worden alle meervoudige grafieken in emails zwevend naast elkaar "
-"getoond. U kunt deze optie aanzetten om de grafieken onder elkaar te tonen."
 
 msgid "By default all of the sections will be executed."
 msgstr "Standaard zullen alle secties worden uitgevoerd."
@@ -11303,6 +11346,10 @@ msgstr "Gewijzigde LDAP-verbinding %s"
 msgid "Changed alert handler rule %d"
 msgstr "Waarschuwings afhandel regel %d veranderd"
 
+#, fuzzy
+msgid "Changed by"
+msgstr "Gewijzigd"
+
 msgid "Changed entries"
 msgstr "Gewijzigde ingangen"
 
@@ -11317,6 +11364,14 @@ msgstr[1] "Gewijzigde host labels: "
 
 msgid "Changed host selection has been saved."
 msgstr "De gewijzigde hostselectie is opgeslagen."
+
+#, fuzzy, python-format
+msgid "Changed notification parameter %d"
+msgstr "Gewijzigde meldingsregel %d"
+
+#, fuzzy, python-format
+msgid "Changed notification parameter %s"
+msgstr "Gewijzigde meldingsregel %d"
 
 #, python-format
 msgid "Changed notification rule %d"
@@ -11336,6 +11391,10 @@ msgstr "Veranderde positie van %s %d"
 #, python-format
 msgid "Changed position of connection %s to %d"
 msgstr "Positie van verbinding %s gewijzigd in %d"
+
+#, fuzzy, python-format
+msgid "Changed position of notification parameter %d"
+msgstr "Gewijzigde positie van meldingsregel %d van gebruiker %s"
 
 #, python-format
 msgid "Changed position of notification rule %d of user %s"
@@ -11392,6 +11451,10 @@ msgstr "Locatie specifieke configuratie variabele %s veranderd in %s."
 
 msgid "Changes"
 msgstr "Wijzigingen"
+
+#, fuzzy
+msgid "Changes activated"
+msgstr "Is nooit geactiveerd geweest"
 
 msgid "Changes since last dump"
 msgstr "Veranderingen sinds de laatste dump"
@@ -13425,6 +13488,10 @@ msgstr "Voltooi de restauratie"
 msgid "Complete tree"
 msgstr "Volledige boom"
 
+#, fuzzy
+msgid "Complete variable list"
+msgstr "Volledige lijst van variabelen (voor testen)"
+
 msgid "Complete variable list (for testing)"
 msgstr "Volledige lijst van variabelen (voor testen)"
 
@@ -13970,20 +14037,6 @@ msgstr ""
 "Configureer de gebruiker of groep die de meldingen moet ontvangen door hier "
 "de gebruikers- of groepssleutel op te geven. De sleutel kan worden verkregen "
 "op de Pushover website."
-
-#, fuzzy
-msgid ""
-"Configure this to have the notification plug-in connect directly to the SMTP "
-"server. This has the advantage of providing better error messages in case of "
-"an error, but it does require more configuration and is strictly "
-"synchronous. So we advice use only on enterprise installations using the "
-"notification spooler."
-msgstr ""
-"Configureer dit om de meldingsplugin direct verbinding te laten maken met de "
-"smtp server. Dit heeft het voordeel dat het betere foutmeldingen geeft in "
-"geval van een fout, maar het vereist meer configuratie en is strikt "
-"synchroon, dus we adviseren het alleen te gebruiken op bedrijfsinstallaties "
-"die de notificatie spooler gebruiken."
 
 msgid ""
 "Configure thresholds that apply to clusters based on how many nodes they "
@@ -14549,6 +14602,10 @@ msgstr "Contextinformatie"
 msgid "Context information about this connection"
 msgstr "Contextinformatie over deze verbinding"
 
+#, fuzzy
+msgid "Context information about this parameter"
+msgstr "Contextinformatie over deze regel"
+
 msgid "Context information about this rule"
 msgstr "Contextinformatie over deze regel"
 
@@ -14807,6 +14864,11 @@ msgstr "Couchbase vBuckets"
 
 msgid "Couchbase: Cache"
 msgstr "Couchbase: Cache"
+
+msgid ""
+"Could not access your AWS account. Please check your Access and Secret key "
+"and try again."
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -15091,6 +15153,10 @@ msgstr "Maak een kopie van deze verbinding"
 
 msgid "Create a copy of this group"
 msgstr "Maak een kopie van deze groep"
+
+#, fuzzy
+msgid "Create a copy of this notification parameter"
+msgstr "Maak een kopie van deze notificatieregel"
 
 msgid "Create a copy of this notification rule"
 msgstr "Maak een kopie van deze notificatieregel"
@@ -15384,6 +15450,10 @@ msgstr "Nieuwe host %s aangemaakt."
 #, python-format
 msgid "Created new host tag group '%s'"
 msgstr "Nieuwe host tag groep '%s' aangemaakt"
+
+#, fuzzy
+msgid "Created new notification parameter"
+msgstr "Nieuwe meldingsregel aangemaakt"
 
 msgid "Created new notification rule"
 msgstr "Nieuwe meldingsregel aangemaakt"
@@ -15833,6 +15903,10 @@ msgstr "Aangepast GUI ontwerp van %s"
 msgid "Custom Graph"
 msgstr "Aangepaste grafiek"
 
+#, fuzzy
+msgid "Custom HTML section (e.g. title, description…)"
+msgstr "HTML-sectie boven tabel toevoegen (bijv. titel, beschrijving...)"
+
 msgid "Custom Icons"
 msgstr "Aangepaste pictogrammen"
 
@@ -15953,8 +16027,14 @@ msgstr "Aangepaste sondestatus"
 msgid "Custom profile"
 msgstr "Aangepaste titel"
 
+msgid "Custom recipient of \"Reply to\""
+msgstr ""
+
 msgid "Custom search query"
 msgstr "Aangepaste zoekopdracht"
+
+msgid "Custom sender (\"From\")"
+msgstr ""
 
 msgid "Custom service attributes"
 msgstr "Aangepaste dienstkenmerken"
@@ -17506,6 +17586,10 @@ msgstr "Job verwijderen #%d"
 msgid "Delete last alert handler rule"
 msgstr "Verwijder de laatste alert handler regel"
 
+#, fuzzy, python-format
+msgid "Delete notification parameter #%d"
+msgstr "Kennisgevingsregel verwijderen #%d"
+
 #, python-format
 msgid "Delete notification rule #%d"
 msgstr "Kennisgevingsregel verwijderen #%d"
@@ -17661,6 +17745,10 @@ msgstr "Dit logo verwijderen"
 msgid "Delete this metric"
 msgstr "Verwijder deze metriek"
 
+#, fuzzy
+msgid "Delete this notification parameter"
+msgstr "Verwijder deze meldingsregel"
+
 msgid "Delete this notification rule"
 msgstr "Verwijder deze meldingsregel"
 
@@ -17757,6 +17845,10 @@ msgstr "Verwijderde map %s"
 #, python-format
 msgid "Deleted host %s"
 msgstr "Verwijderde host %s"
+
+#, fuzzy, python-format
+msgid "Deleted notification parameter %d"
+msgstr "Kennisgevingsregel verwijderen #%d"
 
 #, python-format
 msgid "Deleted notification rule %d of user %s"
@@ -19066,9 +19158,6 @@ msgstr ""
 "Geef een waarschuwing weer als een LUN niet alleen-lezen is. Zonder deze "
 "instelling wordt een waarschuwing weergegeven als een LUN alleen-lezen is."
 
-msgid "Display additional information"
-msgstr "Aanvullende informatie weergeven"
-
 msgid "Display additional messages"
 msgstr "Extra berichten weergeven"
 
@@ -19091,9 +19180,6 @@ msgstr "Toon aslabels voor het geselecteerde/automatische gegevensbereik"
 
 msgid "Display dashboard title"
 msgstr "Titel dashboard weergeven"
-
-msgid "Display graphs among each other"
-msgstr "Grafieken onder elkaar weergeven"
 
 msgid "Display historic data since the last"
 msgstr "Toon historische gegevens sinds de laatste"
@@ -20766,6 +20852,10 @@ msgstr "Bewerken"
 msgid "Edit %s"
 msgstr "Bewerk %s"
 
+#, fuzzy, python-format
+msgid "Edit %s notification parameter %s"
+msgstr "Wijzig notificatie regel %d"
+
 #, python-format
 msgid "Edit %s: %s"
 msgstr "Bewerken %s: %s"
@@ -21073,6 +21163,10 @@ msgstr "Dit element bewerken"
 msgid "Edit this host"
 msgstr "Bewerk deze host"
 
+#, fuzzy
+msgid "Edit this notification parameter"
+msgstr "Bewerk deze meldingsregel"
+
 msgid "Edit this notification rule"
 msgstr "Bewerk deze meldingsregel"
 
@@ -21143,6 +21237,9 @@ msgstr "Bewerkt gebruikersprofiel voor gebruiker %s"
 
 msgid "Edition"
 msgstr "Editie"
+
+msgid "Effect"
+msgstr ""
 
 msgid "Effective  State"
 msgstr "Effectieve staat"
@@ -21327,6 +21424,14 @@ msgstr "E-mailadres gebruikt voor rekeningidentificatie"
 #, fuzzy
 msgid "Email addresses to mail PDF reports to"
 msgstr "Email-Adressen om PDF-rapporten naar te mailen"
+
+#, fuzzy
+msgid "Email body/content"
+msgstr "E-mail verzonden"
+
+#, fuzzy
+msgid "Email header"
+msgstr "Emailadres"
 
 msgid "Email sent"
 msgstr "E-mail verzonden"
@@ -23560,10 +23665,6 @@ msgstr "Mislukt om waarde te renderen:"
 msgid "Failed to render value: %r"
 msgstr "Mislukt om waarde te renderen: %r"
 
-#, fuzzy, python-format
-msgid "Failed to save broker certificates: %s"
-msgstr "Kan peer-certificaat niet ophalen (%s)"
-
 #, python-format
 msgid "Failed to search rule of ruleset '%s' in folder '%s' (%r): %s"
 msgstr "Regel van regelset '%s' in map '%s' (%r) zoeken mislukt: %s"
@@ -24099,6 +24200,10 @@ msgid ""
 msgstr ""
 "Filter voor alle aggregaties die gebaseerd zijn op statusinformatie van die "
 "host. Exacte overeenkomst (geen reguliere expressie)"
+
+#, fuzzy
+msgid "Filter for hosts/services"
+msgstr "Downtime voor host/dienst"
 
 msgid "Filter group (see help)"
 msgstr "Filter groep (zie help)"
@@ -25547,6 +25652,10 @@ msgstr "Algemene kennisgevingsregel"
 msgid "Global notification rules"
 msgstr "Globale kennisgevingsregels"
 
+#, fuzzy
+msgid "Global services"
+msgstr "Alle diensten"
+
 msgid "Global services to monitor"
 msgstr "Wereldwijde diensten voor toezicht"
 
@@ -25572,6 +25681,10 @@ msgstr "Globbing patroon voor invoerbestanden"
 msgid "Go critical if all licenses are used"
 msgstr "Ga kritisch als alle licenties zijn gebruikt"
 
+#, fuzzy
+msgid "Go to \"All hosts\""
+msgstr "Alle gastheren"
+
 msgid "Go to AWS root account > Services > IAM."
 msgstr ""
 
@@ -25583,6 +25696,12 @@ msgstr "Ga naar de hoofdpagina"
 
 msgid "Go to rules of this InfluxDB connection"
 msgstr "Ga naar de regels van deze InfluxDB verbinding"
+
+#, python-format
+msgid ""
+"Go to the Monitor > All Hosts page or click the Go to All hosts button to "
+"start monitoring your %s services."
+msgstr ""
 
 msgid "Go to the Saas Admin Panel"
 msgstr ""
@@ -25744,17 +25863,11 @@ msgstr "Grafische kaarten"
 msgid "Graphs"
 msgstr "Grafieken"
 
-msgid "Graphs are shown among each other"
-msgstr "Grafieken worden onder elkaar getoond"
-
 msgid "Graphs for averaged single-core utilizations"
 msgstr "Grafieken voor gemiddeld single-core gebruik"
 
 msgid "Graphs for individual cores"
 msgstr "Grafieken voor afzonderlijke kernen"
-
-msgid "Graphs per notification (default: 5)"
-msgstr "Grafieken per melding (standaard: 5)"
 
 msgid "Graylog"
 msgstr "Graylog"
@@ -26041,6 +26154,10 @@ msgstr "HPE StoreOnce via REST API 4.x"
 
 msgid "HR: Used memory via SNMP"
 msgstr "HR: Gebruikt geheugen via SNMP"
+
+#, fuzzy
+msgid "HTML Email parameters"
+msgstr "Modelparameters"
 
 #, fuzzy
 msgid "HTML email"
@@ -27381,6 +27498,10 @@ msgstr "Verberg namen van configuratievariabelen"
 msgid "Hide notification bulks"
 msgstr "kennisgevingsregel"
 
+#, fuzzy
+msgid "Hide other recipients: Send individual notifications to each recipient"
+msgstr "Stuur aparte meldingen naar elke ontvanger"
+
 msgid "Hide response from socket"
 msgstr "Verberg antwoord van socket"
 
@@ -27446,6 +27567,10 @@ msgstr "Geschiedenis"
 
 msgid "History Line Number"
 msgstr "Geschiedenis Lijnnummer"
+
+#, fuzzy
+msgid "History action type"
+msgstr "Registratie Staat"
 
 msgid "History entries of one specific event"
 msgstr "Historische gegevens van één specifieke gebeurtenis"
@@ -29842,6 +29967,10 @@ msgstr "IP - regio - instantie-ID"
 msgid "IP Address"
 msgstr "IP-adres"
 
+#, fuzzy
+msgid "IP Address of Hosts"
+msgstr "IP-adres van gastheer"
+
 msgid "IP address"
 msgstr "IP-adres"
 
@@ -31830,21 +31959,6 @@ msgstr ""
 "specificeren. Alleen overeenkomende namespaces zullen worden gemonitord. "
 "Merk op dat dit alles betreft wat deel uitmaakt van de overeenkomende "
 "namespaces, zoals pods bijvoorbeeld."
-
-#, fuzzy
-msgid ""
-"If your monitoring produces a notification that is not matched by any of "
-"your notification rules, the notification will not be sent out. To prevent "
-"that, we recommend configuring either the global setting or enable the "
-"fallback contact option for at least one of your users."
-msgstr ""
-"<b>Waarschuwing</b><br><br>U hebt geen <a href=\"%s\">terugval-e-mailadres</"
-"a> geconfigureerd en u hebt het ontvangen van terugval-e-mails voor geen "
-"enkele gebruiker ingeschakeld. Als uw bewaking een melding genereert die "
-"niet overeenkomt met een van uw meldingsregels, zal de melding niet worden "
-"verzonden. Om dat te voorkomen, moet u ofwel de globale instelling "
-"configureren of de optie voor fallback contact inschakelen voor ten minste "
-"één van uw gebruikers."
 
 msgid "Ignore"
 msgstr "Negeer"
@@ -37993,6 +38107,10 @@ msgid "Managed Robot"
 msgstr "Beheerde objecten"
 
 #, fuzzy
+msgid "Managed Robots"
+msgstr "Beheerde objecten"
+
+#, fuzzy
 msgid "Managed objects"
 msgstr "Beheerde objecten"
 
@@ -41595,6 +41713,29 @@ msgstr "Volgende kennisgeving"
 msgid "Next run"
 msgstr "Volgende run"
 
+#, fuzzy
+msgid "Next step: General properties"
+msgstr "Algemene eigenschappen"
+
+#, fuzzy
+msgid "Next step: Notification method (plug-in)"
+msgstr "Plugins voor kennisgeving"
+
+#, fuzzy
+msgid "Next step: Recipient"
+msgstr "Ontvanger"
+
+msgid "Next step: Saving"
+msgstr ""
+
+#, fuzzy
+msgid "Next step: Sending conditions"
+msgstr "in behandeling zijnde verbindingen"
+
+#, fuzzy
+msgid "Next step: Specify host/services"
+msgstr "Type opmerking (host/dienst)"
+
 msgid "Nginx Server"
 msgstr "Nginx Server"
 
@@ -41895,6 +42036,10 @@ msgstr "Geen verbindingen gedefinieerd"
 msgid "No need for syncing sites"
 msgstr "Geen behoefte om sites te synchroniseren"
 
+#, fuzzy, python-format
+msgid "No notification parameters for method '%s' found"
+msgstr "Gewijzigde meldingsregel %d"
+
 msgid "No object type"
 msgstr "Geen objecttype"
 
@@ -41903,6 +42048,10 @@ msgstr ""
 
 #, fuzzy
 msgid "No password provided"
+msgstr "Van wachtwoord opslag"
+
+#, fuzzy
+msgid "No password selected"
 msgstr "Van wachtwoord opslag"
 
 msgid "No pending changes"
@@ -41982,6 +42131,10 @@ msgstr "Geen zoekopdracht"
 
 msgid "No search, specify list of arguments"
 msgstr "Geen zoekfunctie, geef een lijst met argumenten"
+
+#, fuzzy
+msgid "No smarthosts"
+msgstr "Smarthosts"
 
 #, fuzzy
 msgid "No snapshot to restore available."
@@ -42445,6 +42598,9 @@ msgstr "Kennisgeving"
 msgid "Notation: %s"
 msgstr "Annotaties: %s"
 
+msgid "Note down the generated Access key ID and Secret access key."
+msgstr ""
+
 msgid ""
 "Note that since OpenSSH 7.6, only version 2 is supported. Therefore, newer "
 "versions neither use nor report this configuration variable anymore."
@@ -42610,6 +42766,18 @@ msgstr "Niveau meldingslogboek"
 
 msgid "Notification method"
 msgstr "Kennisgevingsmethode"
+
+#, fuzzy, python-format
+msgid "Notification method '%s' does not exist"
+msgstr "Grafiekverzameling '%s' bestaat niet"
+
+#, fuzzy
+msgid "Notification method (plug-in)"
+msgstr "Plugins voor kennisgeving"
+
+#, fuzzy
+msgid "Notification parameter"
+msgstr "Kennisgevingsfase"
 
 #, fuzzy
 msgid "Notification period"
@@ -43055,6 +43223,14 @@ msgstr "Aantal te creëren mappen in elk niveau"
 #, fuzzy
 msgid "Number of goroutines"
 msgstr "Aantal herhalingen"
+
+#, fuzzy
+msgid "Number of graphs per event (default: 5)"
+msgstr "Grafieken per melding (standaard: 5)"
+
+#, fuzzy
+msgid "Number of graphs per notification (default: 5)"
+msgstr "Grafieken per melding (standaard: 5)"
 
 msgid "Number of healthy hosts lower levels"
 msgstr "Aantal gezonde gastheren lagere niveaus"
@@ -46412,6 +46588,10 @@ msgstr ""
 msgid "Parallelize core config creation"
 msgstr "Paralleliseren van core config creatie"
 
+#, fuzzy
+msgid "Parameter"
+msgstr "Parameters"
+
 msgid "Parameter groups"
 msgstr "Parameter groepen"
 
@@ -46420,6 +46600,10 @@ msgstr "Parameter groepen per regio"
 
 msgid "Parameter name"
 msgstr "Naam van de parameter"
+
+#, fuzzy
+msgid "Parameter properties"
+msgstr "Pakketeigenschappen"
 
 msgid "Parameter rule set"
 msgstr "Parameter regel set"
@@ -48297,6 +48481,10 @@ msgstr "Plugins, lokale controles en MRPE voor niet-root gebruikers"
 
 msgid "Plugin"
 msgstr "Plugin"
+
+#, fuzzy
+msgid "Plugin output"
+msgstr "Plugin uitgang"
 
 msgid "Plugins"
 msgstr "Plugins"
@@ -50843,6 +51031,10 @@ msgid "Remove service"
 msgstr "Service verwijderen"
 
 #, fuzzy
+msgid "Remove smarthost"
+msgstr "Verplaats dit item"
+
+#, fuzzy
 msgid "Remove style"
 msgstr "Verwijder alle"
 
@@ -51959,7 +52151,7 @@ msgstr "Terugkeren procestijden binnen prestatiegegevens"
 
 msgid ""
 "Return to Checkmk, define a unique AWS account name, and use the Access key "
-"and Secret access key below."
+"ID and Secret access key below."
 msgstr ""
 
 msgid ""
@@ -51985,6 +52177,11 @@ msgstr "Save & run service discovery"
 #, fuzzy
 msgid "Review your configuration and run preview service discovery"
 msgstr "Save & run service discovery"
+
+msgid ""
+"Review your notification rule before applying it. They will take effect "
+"right away without 'Activate changes'."
+msgstr ""
 
 msgid "Revolutions per minute"
 msgstr "Omwentelingen per minuut"
@@ -53147,9 +53344,6 @@ msgstr "Maak een kopie van deze aggregatie"
 msgid "Save response"
 msgstr "Reactie opslaan"
 
-msgid "Save the generated Access key and Secret access key."
-msgstr ""
-
 msgid "Save this host and go to"
 msgstr "Sla deze host op en ga naar"
 
@@ -54107,19 +54301,13 @@ msgid "Send notifications to remote Event Console"
 msgstr "Meldingen verzenden naar externe gebeurtenissenconsole"
 
 #, fuzzy
-msgid ""
-"Send out HTML/ASCII email notification according to notification rules "
-"(uncheck to avoid spam)"
+msgid "Send out HTML/ASCII email notification according to notification rules"
 msgstr "Sorteervolgorde voor bulkmeldingen"
 
 msgid ""
 "Send regardless of restrictions, e.g. notification period or disabled "
 "notifications (forced)"
 msgstr ""
-
-#, fuzzy
-msgid "Send separate notifications to every recipient"
-msgstr "Stuur aparte meldingen naar elke ontvanger"
 
 msgid "Send service metrics to Graphite"
 msgstr "Dienstgegevens naar Graphite sturen"
@@ -54163,6 +54351,10 @@ msgstr "Versturen via e-mail"
 
 msgid "Sending Power"
 msgstr "Zendvermogen"
+
+#, fuzzy
+msgid "Sending conditions"
+msgstr "Stel voorwaarden"
 
 msgid "Sending reply"
 msgstr "Ik stuur antwoord"
@@ -54794,6 +54986,10 @@ msgstr "Diensten van Site"
 msgid "Services per cluster"
 msgstr "Diensten per cluster"
 
+#, fuzzy
+msgid "Services per region"
+msgstr "Te controleren diensten per regio"
+
 msgid "Services per region to monitor"
 msgstr "Te controleren diensten per regio"
 
@@ -55322,7 +55518,7 @@ msgstr ""
 msgid ""
 "Sets a limit for the number of notifications in a bulk for which graphs are "
 "displayed. If you do not use bulk notifications this option is ignored. Note "
-"that each graph increases the size of the mail and takes time to renderon "
+"that each graph increases the size of the mail and takes time to render on "
 "the monitoring server. Therefore, large bulks may exceed the maximum size "
 "for attachements or the plug-in may run into a timeout so that a failed "
 "notification is produced."
@@ -55691,6 +55887,10 @@ msgstr "Toon selectievakjes"
 msgid "Show column headings"
 msgstr "Toon kolomkoppen"
 
+#, fuzzy
+msgid "Show contact groups"
+msgstr "Host contactgroepen"
+
 msgid "Show context"
 msgstr "Toon context"
 
@@ -55758,7 +55958,15 @@ msgstr "Toon hint in het \"Gebruiker\" menu"
 msgid "Show historic values"
 msgstr "Toon historische waarden"
 
+#, fuzzy
+msgid "Show host labels"
+msgstr "Toon in gastheertabellen"
+
 msgid "Show host status"
+msgstr "Toon host status"
+
+#, fuzzy
+msgid "Show host tags"
 msgstr "Toon host status"
 
 msgid "Show icon linking to Setup parameter editor for services"
@@ -55836,6 +56044,10 @@ msgstr "Toon meer / Toon minder"
 msgid "Show notification bulks"
 msgstr "kennisgevingsregel"
 
+#, fuzzy
+msgid "Show notification rule that triggered the notification"
+msgstr "Sorteervolgorde voor bulkmeldingen"
+
 msgid "Show number of groups"
 msgstr "Toon aantal groepen"
 
@@ -55899,6 +56111,10 @@ msgstr "Toon regels met behulp van deze %s"
 
 msgid "Show separate result for each SLA period"
 msgstr "Toon afzonderlijk resultaat voor elke SLA periode"
+
+#, fuzzy
+msgid "Show service labels"
+msgstr "Dienstetiketten"
 
 #, fuzzy
 msgid "Show service name"
@@ -57853,6 +58069,11 @@ msgstr ""
 "Geef aan wat we moeten doen als de geselecteerde grafiek ontbreekt of niet "
 "kan worden opgehaald."
 
+msgid ""
+"Specify when and how notifications are sent based on frequency, timing, and "
+"content criteria."
+msgstr ""
+
 msgid "Specify which port types should not be discovered"
 msgstr "Geef aan welke poorttypes niet ontdekt mogen worden"
 
@@ -59327,10 +59548,12 @@ msgstr "Naam van de sectie"
 msgid "Subject for bulk notifications"
 msgstr "Onderwerp voor bulkmeldingen"
 
-msgid "Subject for host notifications"
+#, fuzzy
+msgid "Subject line for host notifications"
 msgstr "Onderwerp voor hostmeldingen"
 
-msgid "Subject for service notifications"
+#, fuzzy
+msgid "Subject line for service notifications"
 msgstr "Onderwerp voor dienstmededelingen"
 
 msgid "Submit"
@@ -59727,10 +59950,6 @@ msgstr "Synchroon"
 #, fuzzy
 msgid "Syncing"
 msgstr "Synchroniseren"
-
-#, fuzzy
-msgid "Syncing broker certificates"
-msgstr "SAP-routercertificaat"
 
 msgid "Synology Updates"
 msgstr "Synology Updates"
@@ -60246,6 +60465,16 @@ msgid "Tags can be used to classify hosts and services in a flexible way."
 msgstr ""
 "Tags kunnen worden gebruikt om hosts en diensten op een flexibele manier te "
 "classificeren."
+
+msgid "Tags enabled but no key defined."
+msgstr ""
+
+msgid "Tags enabled but no tags defined."
+msgstr ""
+
+#, fuzzy
+msgid "Tags enabled but no values defined."
+msgstr "Geen datasource gedefinieerd."
 
 #, fuzzy, python-format
 msgid "Tags of the alert.<br><br>%s"
@@ -61776,6 +62005,10 @@ msgstr ""
 msgid "The central (%s) and remote site (%s) are not compatible. Reason: %s"
 msgstr "De centrale (%s) en externe site (%s) zijn niet compatibel. Reden: %s"
 
+#, fuzzy
+msgid "The changes have been activated successfully."
+msgstr "Is nooit geactiveerd geweest"
+
 #, python-format
 msgid "The character <tt>%s</tt> is not allowed here."
 msgstr "Het teken <tt>%s</tt> is hier niet toegestaan."
@@ -62327,24 +62560,6 @@ msgstr "Het element is niet te vinden op het dashboard."
 
 msgid "The element does not exist."
 msgstr "Het element bestaat niet."
-
-msgid ""
-"The email address and visible name used in the From header of notifications "
-"messages. If no email address is specified the default address is "
-"<tt>OMD_SITE@FQDN</tt> is used. If the environment variable <tt>OMD_SITE</"
-"tt> is not set it defaults to <tt>checkmk</tt>."
-msgstr ""
-"Het e-mailadres en de zichtbare naam die worden gebruikt in de kop Van van "
-"kennisgevingen. Als geen e-mailadres wordt opgegeven, wordt standaard "
-"<tt>OMD_SITE@FQDN</tt> gebruikt. Als de omgevingsvariabele <tt>OMD_SITE</tt> "
-"niet is ingesteld, wordt standaard <tt>checkmk</tt> gebruikt."
-
-msgid ""
-"The email address and visible name used in the Reply-To header of "
-"notifications messages."
-msgstr ""
-"Het e-mailadres en de zichtbare naam die worden gebruikt in de kop Reply-To "
-"van kennisgevingen."
 
 #, fuzzy
 msgid ""
@@ -65950,6 +66165,9 @@ msgstr ""
 "controller op de bewaakte host moet resetten (raadpleeg `cmk-agent-ctl "
 "help`).</li></ul>"
 
+msgid "This action will affect all pending changes you have made."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "This active check sends out special emails to a defined mail address using "
@@ -67440,6 +67658,11 @@ msgstr "Deze pagina biedt geen inline help."
 
 msgid "This page does not support cluster hosts."
 msgstr "Deze pagina ondersteunt geen cluster hosts."
+
+msgid ""
+"This page is currently not implemented, needs FormSpec migration of "
+"NotificationParameter."
+msgstr ""
 
 msgid "This page was not found. Sorry."
 msgstr "Deze pagina werd niet gevonden. Sorry."
@@ -73646,8 +73869,15 @@ msgstr ""
 msgid "Tried to register incompatible rulespec: %r"
 msgstr "Geprobeerd om incompatibele regelspec te registreren: %r"
 
+#, fuzzy
+msgid "Triggering events"
+msgstr "Archief gebeurtenissen"
+
 msgid "Trivial change"
 msgstr "Triviale verandering"
+
+msgid "Troubleshooting/testing settings"
+msgstr ""
 
 msgid ""
 "Truncate content at this amount of characters.A zero value mean not to "
@@ -74849,6 +75079,14 @@ msgstr "antwoord verbergen"
 #, fuzzy
 msgid "Upload verification response file"
 msgstr "Antwoord op verificatie uploaden"
+
+#, fuzzy
+msgid "Uploaded"
+msgstr "Upload"
+
+#, fuzzy
+msgid "Uploaded by"
+msgstr "Upload sleutel"
 
 #, python-format
 msgid "Uploaded custom GUI logo: %s"
@@ -78750,6 +78988,9 @@ msgstr ""
 msgid "What is the purpose?"
 msgstr ""
 
+msgid "What should be send out?"
+msgstr ""
+
 msgid ""
 "When Multisite is running in debug mode, internal Python error messages are "
 "being displayed and various debug information in other places is also "
@@ -79816,6 +80057,10 @@ msgstr ""
 msgid "Who"
 msgstr "Wie"
 
+#, fuzzy
+msgid "Who should receive the notification?"
+msgstr "gebruikers in staat stellen deze melding te deactiveren"
+
 msgid "WiFi connection types"
 msgstr "WiFi-verbindingstypes"
 
@@ -80298,6 +80543,13 @@ msgstr ""
 "van de parameters verderop als er parameters zijn geconfigureerd. Dit kan "
 "verwarrend zijn.</li></ul>Deze regel moet alleen in het beginstadium worden "
 "geconfigureerd."
+
+msgid ""
+"Without a fallback email address, you may miss alerts that are not covered "
+"by a notification rule. To ensure full notification coverage, we recommend "
+"that you configure the fallback email address to which all alerts that don't "
+"match a notification rule are sent."
+msgstr ""
 
 msgid ""
 "Without authentication everybody can send notifications to the spooler.  If "
@@ -82057,6 +82309,10 @@ msgid ""
 msgstr ""
 "U hebt nog geen agent <a href='%s'>signature keys</a> aangemaakt. Dit is "
 "nodig."
+
+#, fuzzy
+msgid "You have not created any parameters for this notification method yet."
+msgstr "Parameters voor deze host"
 
 msgid ""
 "You have not created any rule packs yet. The Event Console is useless unless "
@@ -84904,6 +85160,81 @@ msgstr ""
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 
+#, fuzzy, python-format
+#~ msgid "Failed to save broker certificates: %s"
+#~ msgstr "Kan peer-certificaat niet ophalen (%s)"
+
+#, fuzzy
+#~ msgid ""
+#~ "If your monitoring produces a notification that is not matched by any of "
+#~ "your notification rules, the notification will not be sent out. To "
+#~ "prevent that, we recommend configuring either the global setting or "
+#~ "enable the fallback contact option for at least one of your users."
+#~ msgstr ""
+#~ "<b>Waarschuwing</b><br><br>U hebt geen <a href=\"%s\">terugval-e-"
+#~ "mailadres</a> geconfigureerd en u hebt het ontvangen van terugval-e-mails "
+#~ "voor geen enkele gebruiker ingeschakeld. Als uw bewaking een melding "
+#~ "genereert die niet overeenkomt met een van uw meldingsregels, zal de "
+#~ "melding niet worden verzonden. Om dat te voorkomen, moet u ofwel de "
+#~ "globale instelling configureren of de optie voor fallback contact "
+#~ "inschakelen voor ten minste één van uw gebruikers."
+
+#~ msgid "Bulk notifications with graphs (default: 5)"
+#~ msgstr "Bulk meldingen met grafieken (standaard: 5)"
+
+#~ msgid ""
+#~ "By default all multiple graphs in emails are displayed floating nearby. "
+#~ "You can enable this option to show the graphs among each other."
+#~ msgstr ""
+#~ "Standaard worden alle meervoudige grafieken in emails zwevend naast "
+#~ "elkaar getoond. U kunt deze optie aanzetten om de grafieken onder elkaar "
+#~ "te tonen."
+
+#, fuzzy
+#~ msgid ""
+#~ "Configure this to have the notification plug-in connect directly to the "
+#~ "SMTP server. This has the advantage of providing better error messages in "
+#~ "case of an error, but it does require more configuration and is strictly "
+#~ "synchronous. So we advice use only on enterprise installations using the "
+#~ "notification spooler."
+#~ msgstr ""
+#~ "Configureer dit om de meldingsplugin direct verbinding te laten maken met "
+#~ "de smtp server. Dit heeft het voordeel dat het betere foutmeldingen geeft "
+#~ "in geval van een fout, maar het vereist meer configuratie en is strikt "
+#~ "synchroon, dus we adviseren het alleen te gebruiken op "
+#~ "bedrijfsinstallaties die de notificatie spooler gebruiken."
+
+#~ msgid "Display additional information"
+#~ msgstr "Aanvullende informatie weergeven"
+
+#~ msgid "Display graphs among each other"
+#~ msgstr "Grafieken onder elkaar weergeven"
+
+#~ msgid "Graphs are shown among each other"
+#~ msgstr "Grafieken worden onder elkaar getoond"
+
+#, fuzzy
+#~ msgid "Syncing broker certificates"
+#~ msgstr "SAP-routercertificaat"
+
+#~ msgid ""
+#~ "The email address and visible name used in the From header of "
+#~ "notifications messages. If no email address is specified the default "
+#~ "address is <tt>OMD_SITE@FQDN</tt> is used. If the environment variable "
+#~ "<tt>OMD_SITE</tt> is not set it defaults to <tt>checkmk</tt>."
+#~ msgstr ""
+#~ "Het e-mailadres en de zichtbare naam die worden gebruikt in de kop Van "
+#~ "van kennisgevingen. Als geen e-mailadres wordt opgegeven, wordt standaard "
+#~ "<tt>OMD_SITE@FQDN</tt> gebruikt. Als de omgevingsvariabele <tt>OMD_SITE</"
+#~ "tt> niet is ingesteld, wordt standaard <tt>checkmk</tt> gebruikt."
+
+#~ msgid ""
+#~ "The email address and visible name used in the Reply-To header of "
+#~ "notifications messages."
+#~ msgstr ""
+#~ "Het e-mailadres en de zichtbare naam die worden gebruikt in de kop Reply-"
+#~ "To van kennisgevingen."
+
 #~ msgid "Activate"
 #~ msgstr "Activeer"
 
@@ -85090,10 +85421,6 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Used quota: Absolute or relative upper levels"
 #~ msgstr "Gebruikt quotum: Absolute of relatieve bovengrenzen"
-
-#, fuzzy
-#~ msgid "Changes have been activated"
-#~ msgstr "Is nooit geactiveerd geweest"
 
 #, fuzzy
 #~ msgid "Decimal places"
@@ -85391,10 +85718,6 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 #, python-format
 #~ msgid "%s operations"
 #~ msgstr "%s operaties"
-
-#, fuzzy, python-format
-#~ msgid "%s requests"
-#~ msgstr "%s Verzoeken"
 
 #~ msgid ""
 #~ "Amount of time that the application of redo data on the standby database "

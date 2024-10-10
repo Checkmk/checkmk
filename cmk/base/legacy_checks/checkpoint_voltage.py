@@ -30,6 +30,7 @@ def parse_checkpoint_voltage(string_table: StringTable) -> StringTable:
 
 
 check_info["checkpoint_voltage"] = LegacyCheckDefinition(
+    name="checkpoint_voltage",
     parse_function=parse_checkpoint_voltage,
     detect=DETECT,
     fetch=SNMPTree(

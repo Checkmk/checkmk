@@ -28,6 +28,7 @@ def discover_fireeye_smtp_conn(info):
 
 
 check_info["fireeye_smtp_conn"] = LegacyCheckDefinition(
+    name="fireeye_smtp_conn",
     parse_function=parse_fireeye_smtp_conn,
     detect=DETECT,
     fetch=SNMPTree(

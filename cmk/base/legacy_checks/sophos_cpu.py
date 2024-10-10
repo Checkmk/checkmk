@@ -27,6 +27,7 @@ def discover_sophos_cpu(parsed):
 
 
 check_info["sophos_cpu"] = LegacyCheckDefinition(
+    name="sophos_cpu",
     detect=DETECT_SOPHOS,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.21067.2.1.2.2",

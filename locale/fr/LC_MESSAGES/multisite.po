@@ -405,6 +405,10 @@ msgstr "%d jours"
 msgid "%d days ago"
 msgstr "Il y a %d jours"
 
+#, fuzzy, python-format
+msgid "%d defined parameter properties"
+msgstr "Propriétés générales"
+
 #, python-format
 msgid "%d errors occured:"
 msgstr "%d d'erreurs produites :"
@@ -691,6 +695,10 @@ msgstr "taux de %s"
 #, python-format
 msgid "%s resulting notifications"
 msgstr "%s notifications résultantes"
+
+#, fuzzy, python-format
+msgid "%s rules"
+msgstr "%s Demandes"
 
 #, python-format
 msgid "%s running for %s"
@@ -999,6 +1007,10 @@ msgstr "1 changement"
 
 msgid "1 row"
 msgstr "1 rang"
+
+#, fuzzy
+msgid "1 rule"
+msgstr "règle"
 
 msgid "1 year"
 msgstr "1 an"
@@ -3241,6 +3253,10 @@ msgstr "Reconnaissance du problème"
 msgid "Acknowledging problems"
 msgstr "Reconnaître les problèmes"
 
+#, fuzzy
+msgid "Acknowledgment author"
+msgstr "Remerciements Auteur"
+
 msgid "Acknowledgment expires:"
 msgstr "Accusé de réception expire :"
 
@@ -3384,6 +3400,9 @@ msgstr "Activer les changements en attente"
 
 msgid "Activate resolution with following resolution transition ID"
 msgstr "Activer la résolution avec l'ID de transition de résolution suivant"
+
+msgid "Activate the changes by clicking the Activate on selected sites button."
+msgstr ""
 
 msgid "Activate total bandwidth metric (sum of in and out)"
 msgstr ""
@@ -3623,6 +3642,10 @@ msgstr "Ajouter %s"
 msgid "Add %s configuration"
 msgstr "Configuration de l'ARR"
 
+#, fuzzy, python-format
+msgid "Add %s notification parameter"
+msgstr "Ajouter une règle de notification"
+
 msgid "Add & remove folders"
 msgstr "Ajouter et supprimer des dossiers"
 
@@ -3668,11 +3691,6 @@ msgstr "Ajouter une exception"
 
 msgid "Add Group"
 msgstr "Ajouter un groupe"
-
-msgid "Add HTML section above table (e.g. title, description…)"
-msgstr ""
-"Ajouter une section HTML au-dessus du tableau (par exemple, titre, "
-"description...)"
 
 msgid "Add LDAP connection"
 msgstr "Ajouter une connexion LDAP"
@@ -4032,6 +4050,10 @@ msgstr "Ajouter un nouveau scalaire"
 msgid "Add new service"
 msgstr "Ajouter un nouveau service"
 
+#, fuzzy
+msgid "Add new smarthost"
+msgstr "Ajouter une nouvelle macro"
+
 msgid "Add new status"
 msgstr "Ajouter un nouveau statut"
 
@@ -4073,6 +4095,10 @@ msgstr "Ajouter ou modifier des exécutables"
 
 msgid "Add page element"
 msgstr "Ajouter un élément de page"
+
+#, fuzzy
+msgid "Add parameter"
+msgstr "Paramètres du modèle"
 
 msgid "Add pattern"
 msgstr "Ajouter un motif"
@@ -4346,6 +4372,10 @@ msgstr "Adresses IPv6 supplémentaires"
 msgid "Additional agent labels to send during registration"
 msgstr ""
 "Étiquettes supplémentaires à envoyer à l'agent lors de l'enregistrement"
+
+#, fuzzy
+msgid "Additional details"
+msgstr "Options supplémentaires"
 
 msgid "Additional header lines"
 msgstr "Lignes d'en-tête supplémentaires"
@@ -6625,8 +6655,20 @@ msgstr "Aperçu des applications"
 msgid "Applications, Processes & Services"
 msgstr "Applications, processus et services"
 
+#, fuzzy
+msgid "Applied to"
+msgstr "Postulez à"
+
 msgid "Apply"
 msgstr "Appliquer"
+
+#, fuzzy
+msgid "Apply & create another rule"
+msgstr "Règle de traitement des alertes"
+
+#, fuzzy
+msgid "Apply & test notification rule"
+msgstr "Supprimer cette règle de notification"
 
 #, fuzzy
 msgid "Apply Latency"
@@ -6650,6 +6692,11 @@ msgstr "Appliquer les conditions"
 
 msgid "Apply filters"
 msgstr "Appliquer les filtres"
+
+msgid ""
+"Apply filters to specify which hosts and services are affected by this "
+"notification rule."
+msgstr ""
 
 #, fuzzy
 msgid "Apply finish time"
@@ -9281,8 +9328,9 @@ msgstr "Importation groupée d'hôtes"
 msgid "Bulk move"
 msgstr "Déplacement en vrac"
 
-msgid "Bulk notifications with graphs (default: 5)"
-msgstr "Notifications en vrac avec graphiques (par défaut : 5)"
+#, fuzzy
+msgid "Bulk notifications"
+msgstr "Ouvrir les notifications groupées"
 
 msgid "Bulk removal of explicit attributes"
 msgstr "Suppression en bloc d'attributs explicites"
@@ -9645,14 +9693,6 @@ msgstr ""
 "Par défaut, Checkmk utilise la communauté \"public\" ; pour contacter les "
 "hôtes via SNMP v1/v2. Cette règle peut être utilisée pour personnaliser les "
 "informations d'identification à utiliser pour contacter les hôtes via SNMP."
-
-msgid ""
-"By default all multiple graphs in emails are displayed floating nearby. You "
-"can enable this option to show the graphs among each other."
-msgstr ""
-"Par défaut, tous les graphiques multiples dans les e-mails sont affichés de "
-"manière flottante à proximité les uns des autres. Vous pouvez activer cette "
-"option pour afficher les graphiques les uns à côté des autres."
 
 msgid "By default all of the sections will be executed."
 msgstr "Par défaut, toutes les sections seront exécutées."
@@ -11391,6 +11431,10 @@ msgstr "Modification de la connexion LDAP %s"
 msgid "Changed alert handler rule %d"
 msgstr "Modification de la règle de traitement des alertes %d"
 
+#, fuzzy
+msgid "Changed by"
+msgstr "Modifié"
+
 msgid "Changed entries"
 msgstr "Entrées modifiées"
 
@@ -11405,6 +11449,14 @@ msgstr[1] "Étiquettes des hôtes modifiées : "
 
 msgid "Changed host selection has been saved."
 msgstr "La sélection d'hôte modifiée a été enregistrée."
+
+#, fuzzy, python-format
+msgid "Changed notification parameter %d"
+msgstr "Modification de la règle de notification %d"
+
+#, fuzzy, python-format
+msgid "Changed notification parameter %s"
+msgstr "Modification de la règle de notification %d"
 
 #, python-format
 msgid "Changed notification rule %d"
@@ -11424,6 +11476,11 @@ msgstr "Changement de la position de %s %d"
 #, python-format
 msgid "Changed position of connection %s to %d"
 msgstr "Changement de la position de la connexion %s en %d"
+
+#, fuzzy, python-format
+msgid "Changed position of notification parameter %d"
+msgstr ""
+"Changement de la position de la règle de notification %d de l'utilisateur %s"
 
 #, python-format
 msgid "Changed position of notification rule %d of user %s"
@@ -11483,6 +11540,10 @@ msgstr ""
 
 msgid "Changes"
 msgstr "Changements"
+
+#, fuzzy
+msgid "Changes activated"
+msgstr "N'a jamais été activé"
 
 msgid "Changes since last dump"
 msgstr "Changements depuis la dernière vidange"
@@ -13533,6 +13594,10 @@ msgstr "Terminez la restauration"
 msgid "Complete tree"
 msgstr "Arbre complet"
 
+#, fuzzy
+msgid "Complete variable list"
+msgstr "Liste complète des variables (pour les tests)"
+
 msgid "Complete variable list (for testing)"
 msgstr "Liste complète des variables (pour les tests)"
 
@@ -14083,20 +14148,6 @@ msgstr ""
 "Configurez l'utilisateur ou le groupe qui recevra les notifications en "
 "fournissant la clé de l'utilisateur ou du groupe ici. La clé peut être "
 "obtenue sur le site web de Pushover."
-
-#, fuzzy
-msgid ""
-"Configure this to have the notification plug-in connect directly to the SMTP "
-"server. This has the advantage of providing better error messages in case of "
-"an error, but it does require more configuration and is strictly "
-"synchronous. So we advice use only on enterprise installations using the "
-"notification spooler."
-msgstr ""
-"Configurer ceci pour que le plugin de notification se connecte directement "
-"au serveur smtp. Cela a l'avantage de fournir de meilleurs messages d'erreur "
-"en cas d'erreur mais cela nécessite plus de configuration et est strictement "
-"synchrone, nous conseillons donc de l'utiliser uniquement sur les "
-"installations d'entreprise utilisant le spooler de notification."
 
 msgid ""
 "Configure thresholds that apply to clusters based on how many nodes they "
@@ -14660,6 +14711,10 @@ msgstr "Informations sur le contexte"
 msgid "Context information about this connection"
 msgstr "Informations contextuelles sur cette connexion"
 
+#, fuzzy
+msgid "Context information about this parameter"
+msgstr "Informations contextuelles sur cette règle"
+
 msgid "Context information about this rule"
 msgstr "Informations contextuelles sur cette règle"
 
@@ -14923,6 +14978,11 @@ msgstr "Couchbase vBuckets"
 
 msgid "Couchbase: Cache"
 msgstr "Couchbase : Cache"
+
+msgid ""
+"Could not access your AWS account. Please check your Access and Secret key "
+"and try again."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -15213,6 +15273,10 @@ msgstr "Créer une copie de cette connexion"
 
 msgid "Create a copy of this group"
 msgstr "Créer une copie de ce groupe"
+
+#, fuzzy
+msgid "Create a copy of this notification parameter"
+msgstr "Créer une copie de cette règle de notification"
 
 msgid "Create a copy of this notification rule"
 msgstr "Créer une copie de cette règle de notification"
@@ -15510,6 +15574,10 @@ msgstr "Création d'un nouvel hôte %s."
 #, python-format
 msgid "Created new host tag group '%s'"
 msgstr "Création d'un nouveau groupe d'étiquettes d'hôte '%s'"
+
+#, fuzzy
+msgid "Created new notification parameter"
+msgstr "Création d'une nouvelle règle de notification"
 
 msgid "Created new notification rule"
 msgstr "Création d'une nouvelle règle de notification"
@@ -15970,6 +16038,12 @@ msgstr "Conception personnalisée de l'interface graphique de %s"
 msgid "Custom Graph"
 msgstr "Graphique personnalisé"
 
+#, fuzzy
+msgid "Custom HTML section (e.g. title, description…)"
+msgstr ""
+"Ajouter une section HTML au-dessus du tableau (par exemple, titre, "
+"description...)"
+
 msgid "Custom Icons"
 msgstr "Icônes personnalisées"
 
@@ -16090,8 +16164,14 @@ msgstr "État de la sonde personnalisé"
 msgid "Custom profile"
 msgstr "Titre personnalisé"
 
+msgid "Custom recipient of \"Reply to\""
+msgstr ""
+
 msgid "Custom search query"
 msgstr "Requête de recherche personnalisée"
+
+msgid "Custom sender (\"From\")"
+msgstr ""
 
 msgid "Custom service attributes"
 msgstr "Attributs de services personnalisés"
@@ -17655,6 +17735,10 @@ msgstr "Supprimer le travail %d"
 msgid "Delete last alert handler rule"
 msgstr "Supprimer la dernière règle de traitement des alertes"
 
+#, fuzzy, python-format
+msgid "Delete notification parameter #%d"
+msgstr "Supprimer la règle de notification #%d"
+
 #, python-format
 msgid "Delete notification rule #%d"
 msgstr "Supprimer la règle de notification #%d"
@@ -17811,6 +17895,10 @@ msgstr "Supprimer ce logo"
 msgid "Delete this metric"
 msgstr "Supprimer cette métrique"
 
+#, fuzzy
+msgid "Delete this notification parameter"
+msgstr "Supprimer cette règle de notification"
+
 msgid "Delete this notification rule"
 msgstr "Supprimer cette règle de notification"
 
@@ -17907,6 +17995,10 @@ msgstr "Dossier supprimé %s"
 #, python-format
 msgid "Deleted host %s"
 msgstr "Hôte supprimé %s"
+
+#, fuzzy, python-format
+msgid "Deleted notification parameter %d"
+msgstr "Supprimer la règle de notification #%d"
 
 #, python-format
 msgid "Deleted notification rule %d of user %s"
@@ -19221,9 +19313,6 @@ msgstr ""
 "Afficher un avertissement si un LUN n'est pas en lecture seule. Sans ce "
 "paramètre, un avertissement sera affiché si un LUN est en lecture seule."
 
-msgid "Display additional information"
-msgstr "Afficher des informations supplémentaires"
-
 msgid "Display additional messages"
 msgstr "Afficher des messages supplémentaires"
 
@@ -19248,9 +19337,6 @@ msgstr ""
 
 msgid "Display dashboard title"
 msgstr "Afficher le titre du tableau de bord"
-
-msgid "Display graphs among each other"
-msgstr "Afficher les graphiques entre eux"
 
 msgid "Display historic data since the last"
 msgstr "Afficher les données historiques depuis la dernière"
@@ -20950,6 +21036,10 @@ msgstr "Modifier"
 msgid "Edit %s"
 msgstr "Modifier %s"
 
+#, fuzzy, python-format
+msgid "Edit %s notification parameter %s"
+msgstr "Modifier la règle de notification %d"
+
 #, python-format
 msgid "Edit %s: %s"
 msgstr "Modifier %s : %s"
@@ -21259,6 +21349,10 @@ msgstr "Modifier cet élément"
 msgid "Edit this host"
 msgstr "Modifier cet hôte"
 
+#, fuzzy
+msgid "Edit this notification parameter"
+msgstr "Modifier cette règle de notification"
+
 msgid "Edit this notification rule"
 msgstr "Modifier cette règle de notification"
 
@@ -21329,6 +21423,9 @@ msgstr "Modification du profil de l'utilisateur %s"
 
 msgid "Edition"
 msgstr "Edition"
+
+msgid "Effect"
+msgstr ""
 
 msgid "Effective  State"
 msgstr "État efficace"
@@ -21516,6 +21613,14 @@ msgstr "Adresse électronique utilisée pour l'identification du compte"
 #, fuzzy
 msgid "Email addresses to mail PDF reports to"
 msgstr "Adresses e-mail pour l'envoi de rapports PDF"
+
+#, fuzzy
+msgid "Email body/content"
+msgstr "Courriel envoyé"
+
+#, fuzzy
+msgid "Email header"
+msgstr "Adresse électronique"
 
 msgid "Email sent"
 msgstr "Courriel envoyé"
@@ -23773,10 +23878,6 @@ msgstr "Échec du rendu de la valeur :"
 msgid "Failed to render value: %r"
 msgstr "Échec du rendu de la valeur : %r"
 
-#, fuzzy, python-format
-msgid "Failed to save broker certificates: %s"
-msgstr "Échec de la récupération du certificat du pair (%s)"
-
 #, python-format
 msgid "Failed to search rule of ruleset '%s' in folder '%s' (%r): %s"
 msgstr ""
@@ -24315,6 +24416,10 @@ msgid ""
 msgstr ""
 "Filtre pour toutes les agrégations qui se basent sur les informations d'état "
 "de cet hôte. Correspondance exacte (pas d'expression régulière)"
+
+#, fuzzy
+msgid "Filter for hosts/services"
+msgstr "Temps d'arrêt de l'hôte/service"
 
 msgid "Filter group (see help)"
 msgstr "Groupe de filtres (voir aide)"
@@ -25772,6 +25877,10 @@ msgstr "Règle de notification globale"
 msgid "Global notification rules"
 msgstr "Règles de notification globale"
 
+#, fuzzy
+msgid "Global services"
+msgstr "Tous les services"
+
 msgid "Global services to monitor"
 msgstr "Des services mondiaux pour surveiller"
 
@@ -25798,6 +25907,10 @@ msgstr "Modèle de globalisation pour les fichiers d'entrée"
 msgid "Go critical if all licenses are used"
 msgstr "Devenir critique si toutes les licences sont utilisées"
 
+#, fuzzy
+msgid "Go to \"All hosts\""
+msgstr "Tous les hôtes"
+
 msgid "Go to AWS root account > Services > IAM."
 msgstr ""
 
@@ -25809,6 +25922,12 @@ msgstr "Aller à la page principale"
 
 msgid "Go to rules of this InfluxDB connection"
 msgstr "Aller aux règles de cette connexion InfluxDB"
+
+#, python-format
+msgid ""
+"Go to the Monitor > All Hosts page or click the Go to All hosts button to "
+"start monitoring your %s services."
+msgstr ""
 
 msgid "Go to the Saas Admin Panel"
 msgstr ""
@@ -25972,17 +26091,11 @@ msgstr "Cartes graphiques"
 msgid "Graphs"
 msgstr "Graphiques"
 
-msgid "Graphs are shown among each other"
-msgstr "Les graphiques sont affichés entre eux"
-
 msgid "Graphs for averaged single-core utilizations"
 msgstr "Graphiques de l'utilisation moyenne d'un seul cœur"
 
 msgid "Graphs for individual cores"
 msgstr "Graphiques pour les cœurs individuels"
-
-msgid "Graphs per notification (default: 5)"
-msgstr "Graphiques par notification (par défaut : 5)"
 
 msgid "Graylog"
 msgstr "Graylog"
@@ -26269,6 +26382,10 @@ msgstr "HPE StoreOnce via l'API REST 4.x"
 
 msgid "HR: Used memory via SNMP"
 msgstr "HR : Mémoire utilisée via SNMP"
+
+#, fuzzy
+msgid "HTML Email parameters"
+msgstr "Paramètres du modèle"
 
 #, fuzzy
 msgid "HTML email"
@@ -27642,6 +27759,10 @@ msgstr "Cacher les noms des variables de configuration"
 msgid "Hide notification bulks"
 msgstr "règle de notification"
 
+#, fuzzy
+msgid "Hide other recipients: Send individual notifications to each recipient"
+msgstr "Envoyer des notifications distinctes à chaque destinataire"
+
 msgid "Hide response from socket"
 msgstr "Cacher la réponse du socket"
 
@@ -27708,6 +27829,10 @@ msgstr "Histoire"
 
 msgid "History Line Number"
 msgstr "Numéro de la ligne d'histoire"
+
+#, fuzzy
+msgid "History action type"
+msgstr "État d'enregistrement"
 
 msgid "History entries of one specific event"
 msgstr "Entrées de l'histoire d'un événement spécifique"
@@ -30111,6 +30236,10 @@ msgstr "IP - région - ID de l'instance"
 msgid "IP Address"
 msgstr "Adresse IP"
 
+#, fuzzy
+msgid "IP Address of Hosts"
+msgstr "Adresse IP de l'hôte"
+
 msgid "IP address"
 msgstr "Adresse IP"
 
@@ -32122,21 +32251,6 @@ msgstr ""
 "une liste de motifs regex. Seuls les espaces de noms correspondants seront "
 "surveillés. Notez que cela concerne tout ce qui fait partie des espaces de "
 "noms correspondants, comme les pods par exemple."
-
-#, fuzzy
-msgid ""
-"If your monitoring produces a notification that is not matched by any of "
-"your notification rules, the notification will not be sent out. To prevent "
-"that, we recommend configuring either the global setting or enable the "
-"fallback contact option for at least one of your users."
-msgstr ""
-"<b>Avertissement</b><br><br>Vous n'avez pas configuré une <a href=\"%s"
-"\">adresse e-mail de repli</a> ni activé la réception d'e-mails de repli "
-"pour aucun utilisateur. Si votre surveillance produit une notification qui "
-"ne correspond à aucune de vos règles de notification, la notification ne "
-"sera pas envoyée. Pour éviter cela, veuillez configurer le paramètre global "
-"ou activer l'option de contact de secours pour au moins un de vos "
-"utilisateurs."
 
 msgid "Ignore"
 msgstr "Ignorer"
@@ -38334,6 +38448,10 @@ msgid "Managed Robot"
 msgstr "Objets gérés"
 
 #, fuzzy
+msgid "Managed Robots"
+msgstr "Objets gérés"
+
+#, fuzzy
 msgid "Managed objects"
 msgstr "Objets gérés"
 
@@ -41966,6 +42084,29 @@ msgstr "Avis suivant"
 msgid "Next run"
 msgstr "Prochain cycle"
 
+#, fuzzy
+msgid "Next step: General properties"
+msgstr "Propriétés générales"
+
+#, fuzzy
+msgid "Next step: Notification method (plug-in)"
+msgstr "Plugins de notification"
+
+#, fuzzy
+msgid "Next step: Recipient"
+msgstr "Bénéficiaire"
+
+msgid "Next step: Saving"
+msgstr ""
+
+#, fuzzy
+msgid "Next step: Sending conditions"
+msgstr "connexions en attente"
+
+#, fuzzy
+msgid "Next step: Specify host/services"
+msgstr "Type de commentaire (hôte/service)"
+
 msgid "Nginx Server"
 msgstr "Serveur Nginx"
 
@@ -42268,6 +42409,10 @@ msgstr "Aucune connexion définie"
 msgid "No need for syncing sites"
 msgstr "Pas besoin de synchroniser les sites"
 
+#, fuzzy, python-format
+msgid "No notification parameters for method '%s' found"
+msgstr "Modification de la règle de notification %d"
+
 msgid "No object type"
 msgstr "Aucun type d'objet"
 
@@ -42276,6 +42421,10 @@ msgstr ""
 
 #, fuzzy
 msgid "No password provided"
+msgstr "Depuis le magasin de mots de passe"
+
+#, fuzzy
+msgid "No password selected"
 msgstr "Depuis le magasin de mots de passe"
 
 msgid "No pending changes"
@@ -42355,6 +42504,10 @@ msgstr "Pas de recherche"
 
 msgid "No search, specify list of arguments"
 msgstr "Pas de recherche, spécifier la liste des arguments"
+
+#, fuzzy
+msgid "No smarthosts"
+msgstr "Smarthosts"
 
 msgid "No snapshot to restore available."
 msgstr ""
@@ -42823,6 +42976,9 @@ msgstr "Notification"
 msgid "Notation: %s"
 msgstr "Annotation : %s"
 
+msgid "Note down the generated Access key ID and Secret access key."
+msgstr ""
+
 msgid ""
 "Note that since OpenSSH 7.6, only version 2 is supported. Therefore, newer "
 "versions neither use nor report this configuration variable anymore."
@@ -42988,6 +43144,18 @@ msgstr "Niveau du journal de notification"
 
 msgid "Notification method"
 msgstr "Méthode de notification"
+
+#, fuzzy, python-format
+msgid "Notification method '%s' does not exist"
+msgstr "La collection de graphiques '%s' n'existe pas"
+
+#, fuzzy
+msgid "Notification method (plug-in)"
+msgstr "Plugins de notification"
+
+#, fuzzy
+msgid "Notification parameter"
+msgstr "Phase de notification"
 
 #, fuzzy
 msgid "Notification period"
@@ -43434,6 +43602,14 @@ msgstr "Nombre de dossiers à créer dans chaque niveau"
 #, fuzzy
 msgid "Number of goroutines"
 msgstr "Nombre de tentatives"
+
+#, fuzzy
+msgid "Number of graphs per event (default: 5)"
+msgstr "Graphiques par notification (par défaut : 5)"
+
+#, fuzzy
+msgid "Number of graphs per notification (default: 5)"
+msgstr "Graphiques par notification (par défaut : 5)"
 
 msgid "Number of healthy hosts lower levels"
 msgstr "Nombre d'hôtes sains niveaux inférieurs"
@@ -46816,6 +46992,10 @@ msgstr ""
 msgid "Parallelize core config creation"
 msgstr "Paralléliser la création de la configuration du noyau"
 
+#, fuzzy
+msgid "Parameter"
+msgstr "Paramètres"
+
 msgid "Parameter groups"
 msgstr "Groupes de paramètres"
 
@@ -46824,6 +47004,10 @@ msgstr "Groupes de paramètres par région"
 
 msgid "Parameter name"
 msgstr "Nom du paramètre"
+
+#, fuzzy
+msgid "Parameter properties"
+msgstr "Propriétés du paquet"
 
 msgid "Parameter rule set"
 msgstr "Jeu de règles de paramétrage"
@@ -48733,6 +48917,10 @@ msgstr "Plugins, vérifications locales et MRPE pour les utilisateurs non-roots"
 
 msgid "Plugin"
 msgstr "Plugin"
+
+#, fuzzy
+msgid "Plugin output"
+msgstr "Sortie du plugin"
 
 msgid "Plugins"
 msgstr "Plugins"
@@ -51299,6 +51487,10 @@ msgid "Remove service"
 msgstr "Supprimer le service"
 
 #, fuzzy
+msgid "Remove smarthost"
+msgstr "Déplacez cette entrée"
+
+#, fuzzy
 msgid "Remove style"
 msgstr "Supprimer tout"
 
@@ -52449,7 +52641,7 @@ msgstr "Retour des temps de traitement dans les données de performance"
 
 msgid ""
 "Return to Checkmk, define a unique AWS account name, and use the Access key "
-"and Secret access key below."
+"ID and Secret access key below."
 msgstr ""
 
 msgid ""
@@ -52474,6 +52666,11 @@ msgstr "Sauvegarder & ; lancer la découverte des services"
 #, fuzzy
 msgid "Review your configuration and run preview service discovery"
 msgstr "Sauvegarder & ; lancer la découverte des services"
+
+msgid ""
+"Review your notification rule before applying it. They will take effect "
+"right away without 'Activate changes'."
+msgstr ""
 
 msgid "Revolutions per minute"
 msgstr "Révolutions par minute"
@@ -53645,9 +53842,6 @@ msgstr "Créer une copie de cette agrégation"
 msgid "Save response"
 msgstr "Sauvegarder la réponse"
 
-msgid "Save the generated Access key and Secret access key."
-msgstr ""
-
 msgid "Save this host and go to"
 msgstr "Sauvegardez cet hôte et allez à"
 
@@ -54618,19 +54812,13 @@ msgid "Send notifications to remote Event Console"
 msgstr "Envoyer des notifications à la console d'événements distante"
 
 #, fuzzy
-msgid ""
-"Send out HTML/ASCII email notification according to notification rules "
-"(uncheck to avoid spam)"
+msgid "Send out HTML/ASCII email notification according to notification rules"
 msgstr "Ordre de tri des notifications pour les notifications groupées"
 
 msgid ""
 "Send regardless of restrictions, e.g. notification period or disabled "
 "notifications (forced)"
 msgstr ""
-
-#, fuzzy
-msgid "Send separate notifications to every recipient"
-msgstr "Envoyer des notifications distinctes à chaque destinataire"
 
 msgid "Send service metrics to Graphite"
 msgstr "Envoi des mesures de service à Graphite"
@@ -54672,6 +54860,10 @@ msgstr "Envoyer par courriel"
 
 msgid "Sending Power"
 msgstr "Puissance d'envoi"
+
+#, fuzzy
+msgid "Sending conditions"
+msgstr "Définir les conditions"
 
 msgid "Sending reply"
 msgstr "Envoi de la réponse"
@@ -55308,6 +55500,10 @@ msgstr "Services du site"
 msgid "Services per cluster"
 msgstr "Services par cluster"
 
+#, fuzzy
+msgid "Services per region"
+msgstr "Services par région à surveiller"
+
 msgid "Services per region to monitor"
 msgstr "Services par région à surveiller"
 
@@ -55849,7 +56045,7 @@ msgstr ""
 msgid ""
 "Sets a limit for the number of notifications in a bulk for which graphs are "
 "displayed. If you do not use bulk notifications this option is ignored. Note "
-"that each graph increases the size of the mail and takes time to renderon "
+"that each graph increases the size of the mail and takes time to render on "
 "the monitoring server. Therefore, large bulks may exceed the maximum size "
 "for attachements or the plug-in may run into a timeout so that a failed "
 "notification is produced."
@@ -56225,6 +56421,10 @@ msgstr "Afficher les cases à cocher"
 msgid "Show column headings"
 msgstr "Afficher les en-têtes de colonne"
 
+#, fuzzy
+msgid "Show contact groups"
+msgstr "Accueillir des groupes de contact"
+
 msgid "Show context"
 msgstr "Montrer le contexte"
 
@@ -56292,7 +56492,15 @@ msgstr "Afficher les conseils dans le menu \"Utilisateur"
 msgid "Show historic values"
 msgstr "Montrer les valeurs historiques"
 
+#, fuzzy
+msgid "Show host labels"
+msgstr "Afficher dans les tableaux des hôtes"
+
 msgid "Show host status"
+msgstr "Afficher l'état de l'hôte"
+
+#, fuzzy
+msgid "Show host tags"
 msgstr "Afficher l'état de l'hôte"
 
 msgid "Show icon linking to Setup parameter editor for services"
@@ -56374,6 +56582,10 @@ msgstr "Afficher plus / Afficher moins"
 msgid "Show notification bulks"
 msgstr "règle de notification"
 
+#, fuzzy
+msgid "Show notification rule that triggered the notification"
+msgstr "Ordre de tri des notifications pour les notifications groupées"
+
 msgid "Show number of groups"
 msgstr "Afficher le nombre de groupes"
 
@@ -56437,6 +56649,10 @@ msgstr "Afficher les règles utilisant ce %s"
 
 msgid "Show separate result for each SLA period"
 msgstr "Afficher un résultat distinct pour chaque période de SLA"
+
+#, fuzzy
+msgid "Show service labels"
+msgstr "Étiquettes de service"
 
 #, fuzzy
 msgid "Show service name"
@@ -58416,6 +58632,11 @@ msgstr ""
 "Indiquez ce que nous devons faire si le graphique sélectionné est manquant "
 "ou ne peut être récupéré."
 
+msgid ""
+"Specify when and how notifications are sent based on frequency, timing, and "
+"content criteria."
+msgstr ""
+
 msgid "Specify which port types should not be discovered"
 msgstr "Spécifier les types de port qui ne doivent pas être découverts"
 
@@ -59896,10 +60117,12 @@ msgstr "Nom de la section"
 msgid "Subject for bulk notifications"
 msgstr "Objet des notifications groupées"
 
-msgid "Subject for host notifications"
+#, fuzzy
+msgid "Subject line for host notifications"
 msgstr "Objet des notifications des hôtes"
 
-msgid "Subject for service notifications"
+#, fuzzy
+msgid "Subject line for service notifications"
 msgstr "Objet des notifications de service"
 
 msgid "Submit"
@@ -60300,10 +60523,6 @@ msgstr "Synchrone"
 #, fuzzy
 msgid "Syncing"
 msgstr "Synchroniser"
-
-#, fuzzy
-msgid "Syncing broker certificates"
-msgstr "Certificat de routeur SAP"
 
 msgid "Synology Updates"
 msgstr "Mises à jour de Synology"
@@ -60825,6 +61044,16 @@ msgid "Tags can be used to classify hosts and services in a flexible way."
 msgstr ""
 "Les balises peuvent être utilisées pour classer les hôtes et les services de "
 "manière flexible."
+
+msgid "Tags enabled but no key defined."
+msgstr ""
+
+msgid "Tags enabled but no tags defined."
+msgstr ""
+
+#, fuzzy
+msgid "Tags enabled but no values defined."
+msgstr "Aucune source de données définie."
 
 #, fuzzy, python-format
 msgid "Tags of the alert.<br><br>%s"
@@ -62370,6 +62599,10 @@ msgstr ""
 "Le site central (%s) et le site distant (%s) ne sont pas compatibles. "
 "Raison : %s"
 
+#, fuzzy
+msgid "The changes have been activated successfully."
+msgstr "N'a jamais été activé"
+
 #, python-format
 msgid "The character <tt>%s</tt> is not allowed here."
 msgstr "Le caractère <tt>%s</tt> n'est pas autorisé ici."
@@ -62926,25 +63159,6 @@ msgstr "L'élément ne peut être trouvé sur le tableau de bord."
 
 msgid "The element does not exist."
 msgstr "L'élément n'existe pas."
-
-msgid ""
-"The email address and visible name used in the From header of notifications "
-"messages. If no email address is specified the default address is "
-"<tt>OMD_SITE@FQDN</tt> is used. If the environment variable <tt>OMD_SITE</"
-"tt> is not set it defaults to <tt>checkmk</tt>."
-msgstr ""
-"L'adresse email et le nom visible utilisés dans l'en-tête From des messages "
-"de notifications. Si aucune adresse électronique n'est spécifiée, l'adresse "
-"par défaut <tt>OMD_SITE@FQDN</tt> est utilisée. Si la variable "
-"d'environnement <tt>OMD_SITE</tt> n'est pas définie, elle prend par défaut "
-"la valeur <tt>checkmk</tt>."
-
-msgid ""
-"The email address and visible name used in the Reply-To header of "
-"notifications messages."
-msgstr ""
-"L'adresse électronique et le nom visible utilisés dans l'en-tête \"Reply-To"
-"\" des messages de notification."
 
 #, fuzzy
 msgid ""
@@ -66579,6 +66793,9 @@ msgstr ""
 "réinitialiser le contrôleur d'agent sur l'hôte surveillé (référez-vous à "
 "`cmk-agent-ctl help`).</li></ul>"
 
+msgid "This action will affect all pending changes you have made."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "This active check sends out special emails to a defined mail address using "
@@ -68092,6 +68309,11 @@ msgstr "Cette page ne fournit pas d'aide en ligne."
 
 msgid "This page does not support cluster hosts."
 msgstr "Cette page ne prend pas en charge les hôtes en grappe."
+
+msgid ""
+"This page is currently not implemented, needs FormSpec migration of "
+"NotificationParameter."
+msgstr ""
 
 msgid "This page was not found. Sorry."
 msgstr "Cette page n'a pas été trouvée. Désolé."
@@ -74358,8 +74580,15 @@ msgstr ""
 msgid "Tried to register incompatible rulespec: %r"
 msgstr "A essayé d'enregistrer des règles incompatibles : %r"
 
+#, fuzzy
+msgid "Triggering events"
+msgstr "Événements d'archives"
+
 msgid "Trivial change"
 msgstr "Changement trivial"
+
+msgid "Troubleshooting/testing settings"
+msgstr ""
 
 msgid ""
 "Truncate content at this amount of characters.A zero value mean not to "
@@ -75564,6 +75793,14 @@ msgstr "Télécharger la réponse"
 #, fuzzy
 msgid "Upload verification response file"
 msgstr "Télécharger la réponse de vérification"
+
+#, fuzzy
+msgid "Uploaded"
+msgstr "Télécharger"
+
+#, fuzzy
+msgid "Uploaded by"
+msgstr "Clé de téléchargement"
 
 #, python-format
 msgid "Uploaded custom GUI logo: %s"
@@ -79535,6 +79772,9 @@ msgstr ""
 msgid "What is the purpose?"
 msgstr ""
 
+msgid "What should be send out?"
+msgstr ""
+
 msgid ""
 "When Multisite is running in debug mode, internal Python error messages are "
 "being displayed and various debug information in other places is also "
@@ -80619,6 +80859,10 @@ msgstr ""
 msgid "Who"
 msgstr "Qui"
 
+#, fuzzy
+msgid "Who should receive the notification?"
+msgstr "permettre aux utilisateurs de désactiver cette notification"
+
 msgid "WiFi connection types"
 msgstr "Types de connexion WiFi"
 
@@ -81105,6 +81349,13 @@ msgstr ""
 "est utilisé dans les conditions des paramètres plus loin si des paramètres "
 "sont configurés. Cela peut prêter à confusion.</li></ul>Cette règle ne "
 "devrait être configurée que dans les premières étapes."
+
+msgid ""
+"Without a fallback email address, you may miss alerts that are not covered "
+"by a notification rule. To ensure full notification coverage, we recommend "
+"that you configure the fallback email address to which all alerts that don't "
+"match a notification rule are sent."
+msgstr ""
 
 msgid ""
 "Without authentication everybody can send notifications to the spooler.  If "
@@ -82907,6 +83158,10 @@ msgid ""
 msgstr ""
 "Vous n'avez pas encore créé de <a href='%s' target='_blank'>clés de "
 "signature d'agent</a>. C'est nécessaire."
+
+#, fuzzy
+msgid "You have not created any parameters for this notification method yet."
+msgstr "Paramètres pour cet hôte"
 
 msgid ""
 "You have not created any rule packs yet. The Event Console is useless unless "
@@ -85766,6 +86021,83 @@ msgstr ""
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tous droits réservés."
 
+#, fuzzy, python-format
+#~ msgid "Failed to save broker certificates: %s"
+#~ msgstr "Échec de la récupération du certificat du pair (%s)"
+
+#, fuzzy
+#~ msgid ""
+#~ "If your monitoring produces a notification that is not matched by any of "
+#~ "your notification rules, the notification will not be sent out. To "
+#~ "prevent that, we recommend configuring either the global setting or "
+#~ "enable the fallback contact option for at least one of your users."
+#~ msgstr ""
+#~ "<b>Avertissement</b><br><br>Vous n'avez pas configuré une <a href=\"%s"
+#~ "\">adresse e-mail de repli</a> ni activé la réception d'e-mails de repli "
+#~ "pour aucun utilisateur. Si votre surveillance produit une notification "
+#~ "qui ne correspond à aucune de vos règles de notification, la notification "
+#~ "ne sera pas envoyée. Pour éviter cela, veuillez configurer le paramètre "
+#~ "global ou activer l'option de contact de secours pour au moins un de vos "
+#~ "utilisateurs."
+
+#~ msgid "Bulk notifications with graphs (default: 5)"
+#~ msgstr "Notifications en vrac avec graphiques (par défaut : 5)"
+
+#~ msgid ""
+#~ "By default all multiple graphs in emails are displayed floating nearby. "
+#~ "You can enable this option to show the graphs among each other."
+#~ msgstr ""
+#~ "Par défaut, tous les graphiques multiples dans les e-mails sont affichés "
+#~ "de manière flottante à proximité les uns des autres. Vous pouvez activer "
+#~ "cette option pour afficher les graphiques les uns à côté des autres."
+
+#, fuzzy
+#~ msgid ""
+#~ "Configure this to have the notification plug-in connect directly to the "
+#~ "SMTP server. This has the advantage of providing better error messages in "
+#~ "case of an error, but it does require more configuration and is strictly "
+#~ "synchronous. So we advice use only on enterprise installations using the "
+#~ "notification spooler."
+#~ msgstr ""
+#~ "Configurer ceci pour que le plugin de notification se connecte "
+#~ "directement au serveur smtp. Cela a l'avantage de fournir de meilleurs "
+#~ "messages d'erreur en cas d'erreur mais cela nécessite plus de "
+#~ "configuration et est strictement synchrone, nous conseillons donc de "
+#~ "l'utiliser uniquement sur les installations d'entreprise utilisant le "
+#~ "spooler de notification."
+
+#~ msgid "Display additional information"
+#~ msgstr "Afficher des informations supplémentaires"
+
+#~ msgid "Display graphs among each other"
+#~ msgstr "Afficher les graphiques entre eux"
+
+#~ msgid "Graphs are shown among each other"
+#~ msgstr "Les graphiques sont affichés entre eux"
+
+#, fuzzy
+#~ msgid "Syncing broker certificates"
+#~ msgstr "Certificat de routeur SAP"
+
+#~ msgid ""
+#~ "The email address and visible name used in the From header of "
+#~ "notifications messages. If no email address is specified the default "
+#~ "address is <tt>OMD_SITE@FQDN</tt> is used. If the environment variable "
+#~ "<tt>OMD_SITE</tt> is not set it defaults to <tt>checkmk</tt>."
+#~ msgstr ""
+#~ "L'adresse email et le nom visible utilisés dans l'en-tête From des "
+#~ "messages de notifications. Si aucune adresse électronique n'est "
+#~ "spécifiée, l'adresse par défaut <tt>OMD_SITE@FQDN</tt> est utilisée. Si "
+#~ "la variable d'environnement <tt>OMD_SITE</tt> n'est pas définie, elle "
+#~ "prend par défaut la valeur <tt>checkmk</tt>."
+
+#~ msgid ""
+#~ "The email address and visible name used in the Reply-To header of "
+#~ "notifications messages."
+#~ msgstr ""
+#~ "L'adresse électronique et le nom visible utilisés dans l'en-tête \"Reply-"
+#~ "To\" des messages de notification."
+
 #~ msgid "Activate"
 #~ msgstr "Activez"
 
@@ -85952,10 +86284,6 @@ msgstr "© %s Checkmk GmbH. Tous droits réservés."
 
 #~ msgid "Used quota: Absolute or relative upper levels"
 #~ msgstr "Quota utilisé : Niveaux supérieurs absolus ou relatifs"
-
-#, fuzzy
-#~ msgid "Changes have been activated"
-#~ msgstr "N'a jamais été activé"
 
 #, fuzzy
 #~ msgid "Decimal places"
@@ -86254,10 +86582,6 @@ msgstr "© %s Checkmk GmbH. Tous droits réservés."
 #, python-format
 #~ msgid "%s operations"
 #~ msgstr "%s opérations"
-
-#, fuzzy, python-format
-#~ msgid "%s requests"
-#~ msgstr "%s Demandes"
 
 #~ msgid ""
 #~ "Amount of time that the application of redo data on the standby database "

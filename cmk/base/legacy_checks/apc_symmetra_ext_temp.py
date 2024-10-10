@@ -34,6 +34,7 @@ def parse_apc_symmetra_ext_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["apc_symmetra_ext_temp"] = LegacyCheckDefinition(
+    name="apc_symmetra_ext_temp",
     parse_function=parse_apc_symmetra_ext_temp,
     detect=DETECT,
     fetch=SNMPTree(

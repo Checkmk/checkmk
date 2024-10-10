@@ -86,6 +86,7 @@ def check_ucs_bladecenter_psu(item, params, parsed):
 
 
 check_info["ucs_bladecenter_psu"] = LegacyCheckDefinition(
+    name="ucs_bladecenter_psu",
     parse_function=ucs_bladecenter_psu_parse,
     service_name="Voltage %s",
     discovery_function=inventory_ucs_bladecenter_psu,
@@ -132,6 +133,7 @@ def check_ucs_bladecenter_psu_switch_power(item, params, parsed):
 
 
 check_info["ucs_bladecenter_psu.switch_power"] = LegacyCheckDefinition(
+    name="ucs_bladecenter_psu_switch_power",
     service_name="Power Supply %s",
     sections=["ucs_bladecenter_psu"],
     discovery_function=inventory_ucs_bladecenter_psu_switch_power,
@@ -167,6 +169,7 @@ def check_ucs_bladecenter_psu_chassis_temp(item, params, parsed):
 
 
 check_info["ucs_bladecenter_psu.chassis_temp"] = LegacyCheckDefinition(
+    name="ucs_bladecenter_psu_chassis_temp",
     service_name="Temperature %s",
     sections=["ucs_bladecenter_psu"],
     discovery_function=inventory_ucs_bladecenter_psu_chassis_temp,

@@ -111,7 +111,7 @@ export function groupDictionaryValidations(
   const dictionaryValidations: ValidationMessages = []
 
   newValidation.forEach((msg) => {
-    if (msg.location.length == 0) {
+    if (msg.location.length === 0) {
       dictionaryValidations.push(msg)
       return
     }
@@ -142,8 +142,8 @@ export function groupIndexedValidations(
     elementValidations[i] = []
   }
   messages.forEach((msg) => {
-    const index = msg.location.length == 0 ? -1 : parseInt(msg.location[0]!)
-    if (index == -1) {
+    const index = msg.location.length === 0 ? -1 : parseInt(msg.location[0]!)
+    if (index === -1) {
       ownValidations.push(msg.message)
       return
     }

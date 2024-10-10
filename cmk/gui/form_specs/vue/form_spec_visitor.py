@@ -16,6 +16,7 @@ import cmk.gui.form_specs.private.validators as private_form_specs_validators
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.converter import SimplePassword, TransformForLegacyData, Tuple
 from cmk.gui.form_specs.private import (
+    AdaptiveMultipleChoice,
     Catalog,
     CommentTextArea,
     DictionaryExtended,
@@ -32,6 +33,7 @@ from cmk.gui.form_specs.vue.visitors.recomposers import (
     recompose_dictionary,
     recompose_host_state,
     recompose_list,
+    recompose_multiple_choice,
     recompose_percentage,
     recompose_regular_expression,
     recompose_service_state,
@@ -132,7 +134,7 @@ def register_form_specs():
     register_visitor_class(DataSize, DataSizeVisitor)
     register_visitor_class(Catalog, CatalogVisitor)
     register_visitor_class(ListExtended, ListVisitor)
-    register_visitor_class(MultipleChoice, MultipleChoiceVisitor)
+
     register_visitor_class(TimeSpan, TimeSpanVisitor)
     register_visitor_class(TransformForLegacyData, TransformVisitor)
     register_visitor_class(Tuple, TupleVisitor)
@@ -140,6 +142,8 @@ def register_form_specs():
     register_visitor_class(SimplePassword, SimplePasswordVisitor)
     register_visitor_class(StringAutocompleter, StringVisitor)
     register_visitor_class(ListOfStrings, ListOfStringsVisitor)
+    register_visitor_class(AdaptiveMultipleChoice, MultipleChoiceVisitor)
+    register_visitor_class(MultipleChoice, MultipleChoiceVisitor, recompose_multiple_choice)
 
     # Recomposed
     register_visitor_class(String, StringVisitor, recompose_string)

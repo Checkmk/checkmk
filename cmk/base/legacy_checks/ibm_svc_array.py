@@ -70,6 +70,7 @@ def discover_ibm_svc_array(section):
 
 
 check_info["ibm_svc_array"] = LegacyCheckDefinition(
+    name="ibm_svc_array",
     parse_function=parse_ibm_svc_array,
     service_name="RAID Array %s",
     discovery_function=discover_ibm_svc_array,

@@ -22,7 +22,13 @@ from cmk.gui import inventory as legacy_inventory_groups
 from cmk.gui import valuespec as legacy_valuespecs
 from cmk.gui import wato as legacy_wato
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.private import DictionaryExtended
+from cmk.gui.form_specs.private import (
+    DictionaryExtended,
+    ListExtended,
+    ListOfStrings,
+    MonitoredHostExtended,
+)
+from cmk.gui.form_specs.vue.shared_type_defs import ListOfStringsLayout
 from cmk.gui.form_specs.vue.visitors import DefaultValue as VueDefaultValue
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
@@ -397,8 +403,7 @@ def _add_agent_config_match_type_key(value: object) -> object:
 
 def _remove_agent_config_match_type_key(value: object) -> object:
     if isinstance(value, dict):
-        value.pop("cmk-match-type", None)
-        return value
+        return {k: v for k, v in value.items() if k != "cmk-match-type"}
 
     raise TypeError(value)
 
@@ -406,10 +411,32 @@ def _remove_agent_config_match_type_key(value: object) -> object:
 def _transform_agent_config_rule_spec_match_type(
     parameter_form: FormSpecCallable, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.ValueSpec:
+    legacy_vs = convert_to_legacy_valuespec(parameter_form, localizer)
+    inner_transform = (
+        legacy_vs if isinstance(legacy_vs, Transform) and parameter_form().migrate else None
+    )
+    if not inner_transform:
+        return Transform(
+            legacy_vs,
+            forth=_remove_agent_config_match_type_key,
+            back=_add_agent_config_match_type_key,
+        )
+
+    # We cannot simply wrap legacy_vs into a Transform to handle the match type key. Wrapping a
+    # valuespec into a Transform results in the following order of transformations:
+    # 1. outer transform   (_remove_agent_config_match_type_key)
+    # 2. inner transforms
+    # _remove_agent_config_match_type_key fails for non-dictionaries, however, it is the job of the
+    # inner transforms to migrate to a dictionairy in case of a migration from a non-dictionary
+    # rule spec.
     return Transform(
-        convert_to_legacy_valuespec(parameter_form, localizer),
-        forth=_remove_agent_config_match_type_key,
-        back=_add_agent_config_match_type_key,
+        valuespec=Transform(
+            inner_transform._valuespec,  # pylint: disable=protected-access
+            to_valuespec=_remove_agent_config_match_type_key,
+            from_valuespec=_add_agent_config_match_type_key,
+        ),
+        to_valuespec=inner_transform.to_valuespec,
+        from_valuespec=inner_transform.from_valuespec,
     )
 
 
@@ -715,8 +742,11 @@ def _convert_to_inner_legacy_valuespec(
         case ruleset_api_v1.form_specs.HostState():
             return _convert_to_legacy_host_state(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.List():
+        case ruleset_api_v1.form_specs.List() | ListExtended():
             return _convert_to_legacy_list(to_convert, localizer)
+
+        case ListOfStrings():
+            return _convert_to_legacy_list_of_strings(to_convert, localizer)
 
         case ruleset_api_v1.form_specs.FixedValue():
             return _convert_to_legacy_fixed_value(to_convert, localizer)
@@ -739,7 +769,7 @@ def _convert_to_inner_legacy_valuespec(
         case ruleset_api_v1.form_specs.Metric():
             return _convert_to_legacy_metric_name(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.MonitoredHost():
+        case ruleset_api_v1.form_specs.MonitoredHost() | MonitoredHostExtended():
             return _convert_to_legacy_monitored_host_name(to_convert, localizer)
 
         case ruleset_api_v1.form_specs.MonitoredService():
@@ -1489,8 +1519,8 @@ def _convert_to_legacy_validation(
 
 
 def _convert_to_legacy_list(
-    to_convert: ruleset_api_v1.form_specs.List, localizer: Callable[[str], str]
-) -> legacy_valuespecs.ListOf | legacy_valuespecs.ListOfStrings:
+    to_convert: ruleset_api_v1.form_specs.List | ListExtended, localizer: Callable[[str], str]
+) -> legacy_valuespecs.ListOf:
     template = convert_to_legacy_valuespec(to_convert.element_template, localizer)
     converted_kwargs: dict[str, Any] = {
         "valuespec": template,
@@ -1508,7 +1538,39 @@ def _convert_to_legacy_list(
             to_convert.custom_validate, localizer
         )
 
+    if isinstance(to_convert, ListExtended):
+        converted_kwargs["default_value"] = to_convert.prefill.value
+
     return legacy_valuespecs.ListOf(**converted_kwargs)
+
+
+def _convert_to_legacy_list_of_strings(
+    to_convert: ListOfStrings, localizer: Callable[[str], str]
+) -> legacy_valuespecs.ListOfStrings:
+    template = convert_to_legacy_valuespec(to_convert.string_spec, localizer)
+    match to_convert.layout:
+        case ListOfStringsLayout.horizontal:
+            orientation = "horizontal"
+        case ListOfStringsLayout.vertical:
+            orientation = "vertical"
+        case _:
+            assert_never(to_convert.layout)
+
+    converted_kwargs: dict[str, Any] = {
+        "valuespec": template,
+        "title": _localize_optional(to_convert.title, localizer),
+        "help": _localize_optional(to_convert.help_text, localizer),
+        "orientation": orientation,
+        "default_value": to_convert.prefill.value,
+        **_get_allow_empty_conf(to_convert, localizer),
+    }
+
+    if to_convert.custom_validate is not None:
+        converted_kwargs["validate"] = _convert_to_legacy_validation(
+            to_convert.custom_validate, localizer
+        )
+
+    return legacy_valuespecs.ListOfStrings(**converted_kwargs)
 
 
 def _convert_to_legacy_fixed_value(
@@ -2165,7 +2227,7 @@ def _convert_to_legacy_metric_name(
 
 
 def _convert_to_legacy_monitored_host_name(
-    to_convert: ruleset_api_v1.form_specs.MonitoredHost,
+    to_convert: ruleset_api_v1.form_specs.MonitoredHost | MonitoredHostExtended,
     localizer: Callable[[str], str],
 ) -> legacy_valuespecs.MonitoredHostname:
     converted_kwargs: dict[str, Any] = {
@@ -2183,6 +2245,8 @@ def _convert_to_legacy_monitored_host_name(
     if (title := _localize_optional(to_convert.title, localizer)) is None:
         title = ruleset_api_v1.Title("Host name").localize(localizer)
     converted_kwargs["title"] = title
+    if isinstance(to_convert, MonitoredHostExtended):
+        converted_kwargs["default_value"] = to_convert.prefill.value
 
     return legacy_valuespecs.MonitoredHostname(**converted_kwargs)
 

@@ -52,6 +52,7 @@ def parse_nfsexports(string_table: StringTable) -> StringTable:
 
 
 check_info["nfsexports"] = LegacyCheckDefinition(
+    name="nfsexports",
     parse_function=parse_nfsexports,
     service_name="NFS export %s",
     discovery_function=inventory_nfsexports,

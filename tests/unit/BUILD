@@ -19,13 +19,18 @@ py_library(
 
 py_pytest_main(
     name = "__test__",
+    deps = [
+        requirement("pytest"),
+        # pytest-xdist for `--numprocesses=NPROC`
+        requirement("pytest-xdist"),
+    ],
 )
 
 write_file(
-    name = "smoke_test",
-    out = "test_smoke.py",
+    name = "cannot_fail",
+    out = "test_cannot_fail.py",
     content = [
-        "def test_smoke_and_run():",
+        "def test_cannot_fail():",
         "    assert True",
     ],
 )
@@ -35,8 +40,8 @@ py_test(
     # of those warrants this target.
     name = "smoke",
     srcs = [
-        ":__test__.py",
-        ":smoke_test",
+        "__test__.py",
+        "test_cannot_fail.py",
     ],
     args = [
         "--config-file=$(location @//:pyproject.toml)",
@@ -51,4 +56,66 @@ py_test(
         "//tests:conftest",
         "//tests:testlib",
     ],
+)
+
+py_test(
+    name = "repo",
+    # https://bazel.build/reference/be/common-definitions#test.size
+    size = "large",
+    srcs = ["__test__.py"] + glob(
+        include = ["**/*.py"],
+        exclude = [
+            "omdlib/**/*.py",
+            "**/*pylint*.py",
+            "**/*pylint*/**/*.py",
+        ],
+    ),
+    args = [
+        "--config-file=$(location @//:pyproject.toml)",
+        "--import-mode=importlib",
+        "--random-order-bucket=global",
+        "--dist=loadfile",
+    ],
+    data = ["@//:pyproject.toml"] + glob(
+        include = [
+            # canned data
+            "**/_check_form_submit_response",
+            "**/_innovaphone_vcrtrace",
+            "**/test-files/**",
+            "**/tree_test_data/**",
+            "**/*.json",
+            "**/*.log",
+            "**/*.pem",
+            "**/*.xml",
+        ],
+        exclude = ["**/*.py"],
+    ),
+    main = ":__test__.py",
+    package_collisions = "ignore",  # "warning"
+    deps = [
+        ":__test__",
+        requirement("astroid"),
+        requirement("fastapi"),
+        requirement("httpx"),
+        requirement("hypothesis"),
+        requirement("mypy-boto3-logs"),
+        requirement("mypy-extensions"),
+        requirement("pika"),
+        requirement("polyfactory"),
+        requirement("pylint"),
+        requirement("pytest-mock"),
+        requirement("pytest-random-order"),
+        requirement("responses"),
+        requirement("time-machine"),
+        requirement("webtest"),
+        "//cmk:lib_cmk_repo",
+        "//tests:conftest",
+        "//tests:testlib",
+        "//tests/unit:conftest",
+    ] + select({
+        "@//:gpl_repo": [],
+        "@//:gpl+enterprise_repo": [
+            requirement("python-multipart"),
+        ],
+    }),
 )

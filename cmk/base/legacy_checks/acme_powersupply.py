@@ -33,6 +33,7 @@ def parse_acme_powersupply(string_table: StringTable) -> StringTable:
 
 
 check_info["acme_powersupply"] = LegacyCheckDefinition(
+    name="acme_powersupply",
     parse_function=parse_acme_powersupply,
     detect=DETECT_ACME,
     fetch=SNMPTree(

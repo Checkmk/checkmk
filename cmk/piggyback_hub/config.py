@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from collections.abc import Sequence
-from dataclasses import dataclass
+import os
+from collections.abc import Mapping
 from pathlib import Path
 from threading import Event
 from typing import Callable
@@ -14,19 +14,18 @@ from pydantic import BaseModel
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.messaging import Channel, DeliveryTag
+from cmk.messaging import Channel, Connection, DeliveryTag, QueueName, RoutingKey
 
 from .paths import create_paths, PiggybackHubPaths
+from .utils import APP_NAME
 
+CONFIG_ROUTE = RoutingKey("config")
 
-@dataclass(frozen=True)
-class Target:
-    host_name: HostName
-    site_id: str
+CONFIG_QUEUE = QueueName("config")
 
 
 class PiggybackHubConfig(BaseModel):
-    targets: Sequence[Target] = []
+    targets: Mapping[HostName, str] = {}
 
 
 def save_config_on_message(
@@ -50,8 +49,8 @@ def save_config_on_message(
 
 def save_config(paths: PiggybackHubPaths, config: PiggybackHubConfig) -> None:
     paths.config.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
-    tmp_path = paths.config.with_suffix(".new")
-    tmp_path.write_text(config.model_dump_json())
+    tmp_path = paths.config.with_suffix(f".{os.getpid()}.tmp")
+    tmp_path.write_text(f"{config.model_dump_json()}\n")
     tmp_path.rename(paths.config)
 
 
@@ -60,3 +59,10 @@ def load_config(paths: PiggybackHubPaths) -> PiggybackHubConfig:
         return PiggybackHubConfig.model_validate_json(paths.config.read_text())
     except FileNotFoundError:
         return PiggybackHubConfig()
+
+
+def distribute_config(configs: Mapping[str, PiggybackHubConfig], omd_root: Path) -> None:
+    for site_id, config in configs.items():
+        with Connection(APP_NAME, omd_root) as conn:
+            channel = conn.channel(PiggybackHubConfig)
+            channel.publish_for_site(site_id, config, routing=CONFIG_ROUTE)

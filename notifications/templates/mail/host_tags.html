@@ -1,42 +1,61 @@
 <!DOCTYPE html>
-<div
-    class="ht_container"
-    style="width: 536px; margin-bottom: 20px"
+<table
+    align="center"
+    width="536"
+    style="border-spacing: 0;"
 >
-    <p
-        class="heading"
+    <tr>
+        <td
+            style="
+                height: 20px;
+                line-height: 20px;
+                font-size: 0;
+                mso-line-height-rule: exactly;
+            "
+        >
+            &nbsp;
+        </td>
+    </tr>
+    <tr>
+        <th
         style="
             font-size: 18px;
             font-weight: 600;
-            margin: 0px;
+            text-align: left;
         "
-    >
-        <img
-            src="cid:vector.png"
-            style="width: 18px; height: 19px"
-        />
-        Host tags
-    </p>
-    {% for tag_with_id in data.HOSTTAGS.split(' ') %}
-    <div
-        class="label"
-        style="
-            min-width: 50px;
-            height: 24px;
-            border-radius: 8px;
-            background-color: #dcdcdc;
-            display: inline-block;
-            color: #2c3843;
-            align-content: center;
-            text-align: center;
-            text-decoration: none;
-            font-size: 14px;
-            padding: 0 10px 0px 10px;
-            margin: 10px 10px 0 0;
-            line-height: 25px;
-        "
-    >
-        {{ tag_with_id }}
-    </div>
-    {% endfor %}
-</div>
+        colspan=2
+        >
+            <img
+                src="cid:vector.png"
+                style="width: 18px; height: 19px"
+            />
+            Host tags
+        </th>
+    </tr>
+    <tr>
+        <td
+            style="
+                padding: 10px 10px 30px 0;
+            "
+        >
+            {% for tag_with_id in data.HOSTTAGS.split(' ') %}
+                <span
+                    style="
+                        margin: 0px 5px 10px 0;
+                        display: inline-block;
+                        color: #2c3843;
+                        text-decoration: none;
+                        font-size: 14px;
+                        line-height: 24px;
+                        padding: 0 10px;
+                        border-radius: 8px;
+                        background-color: #dcdcdc;
+                        border: 1px solid #ccc;
+                    "
+                >
+                    {{ tag_with_id }}
+                </span>
+            {% endfor %}
+        </td>
+    </tr>
+</table>

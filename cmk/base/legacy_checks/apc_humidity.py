@@ -43,6 +43,7 @@ def parse_apc_humidity(string_table: StringTable) -> StringTable:
 
 
 check_info["apc_humidity"] = LegacyCheckDefinition(
+    name="apc_humidity",
     parse_function=parse_apc_humidity,
     detect=DETECT,
     fetch=SNMPTree(

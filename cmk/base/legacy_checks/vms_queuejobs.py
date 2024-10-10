@@ -53,6 +53,7 @@ def parse_vms_queuejobs(string_table: StringTable) -> StringTable:
 
 
 check_info["vms_queuejobs"] = LegacyCheckDefinition(
+    name="vms_queuejobs",
     parse_function=parse_vms_queuejobs,
     service_name="Queue Jobs",
     discovery_function=inventory_vms_queuejobs,

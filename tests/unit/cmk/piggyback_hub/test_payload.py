@@ -4,27 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from collections.abc import Sequence
 from unittest.mock import Mock
-
-import pytest
 
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 
-from cmk.messaging import DeliveryTag
+from cmk.messaging import DeliveryTag, RoutingKey
 from cmk.piggyback import (
     get_messages_for,
-    load_last_distribution_time,
     PiggybackMessage,
     PiggybackMetaData,
-    store_last_distribution_time,
-    store_piggyback_raw_data,
 )
-from cmk.piggyback_hub.config import PiggybackHubConfig, Target
 from cmk.piggyback_hub.payload import (
-    _filter_piggyback_hub_targets,
-    _get_piggyback_raw_data_to_send,
     _send_payload_message,
     PiggybackPayload,
     save_payload_on_message,
@@ -71,7 +62,7 @@ def test__send_message() -> None:
         raw_data=b"section1",
     )
 
-    _send_payload_message(channel, input_message, "site_id", cmk.utils.paths.omd_root)
+    _send_payload_message(channel, input_message, "site_id")
 
     channel.publish_for_site.assert_called_once_with(
         "site_id",
@@ -82,75 +73,5 @@ def test__send_message() -> None:
             last_contact=1234567891,
             sections=[b"section1"],
         ),
-        routing="payload",
+        routing=RoutingKey("payload"),
     )
-    actual_last_distribution_time = load_last_distribution_time(
-        HostName("source_host"), HostName("target_host"), cmk.utils.paths.omd_root
-    )
-    assert actual_last_distribution_time == 1234567890
-
-
-@pytest.mark.parametrize(
-    "last_update, last_distribution_time, expected_result",
-    [
-        pytest.param(15000000, 15000000, [], id="already_distributed"),
-        pytest.param(
-            15000000,
-            10000000,
-            [
-                PiggybackMessage(
-                    meta=PiggybackMetaData(
-                        source=HostName("source"),
-                        piggybacked=HostName("target"),
-                        last_update=15000000,
-                        last_contact=15000000,
-                    ),
-                    raw_data=b"line1\nline2\n",
-                )
-            ],
-            id="not_distributed",
-        ),
-    ],
-)
-def test__get_piggyback_raw_data_to_send(
-    last_update: float, last_distribution_time: float, expected_result: Sequence[PiggybackMessage]
-) -> None:
-    piggybacked_host = HostName("target")
-    store_piggyback_raw_data(
-        HostName("source"),
-        {piggybacked_host: (b"line1", b"line2")},
-        last_update,
-        cmk.utils.paths.omd_root,
-    )
-    store_last_distribution_time(
-        HostName("source"), piggybacked_host, last_distribution_time, cmk.utils.paths.omd_root
-    )
-
-    actual_payload = _get_piggyback_raw_data_to_send(piggybacked_host, cmk.utils.paths.omd_root)
-    assert actual_payload == expected_result
-
-
-@pytest.mark.parametrize(
-    "config, expected_targets",
-    [
-        pytest.param(
-            PiggybackHubConfig(targets=[Target(host_name=HostName("host1"), site_id="site1")]),
-            [],
-            id="skip_self",
-        ),
-        pytest.param(
-            PiggybackHubConfig(
-                targets=[
-                    Target(host_name=HostName("host1"), site_id="site1"),
-                    Target(host_name=HostName("host2"), site_id="site2"),
-                ]
-            ),
-            [Target(host_name=HostName("host2"), site_id="site2")],
-            id="additional_site",
-        ),
-    ],
-)
-def test__filter_piggyback_hub_targets(
-    config: PiggybackHubConfig, expected_targets: Sequence[Target]
-) -> None:
-    assert _filter_piggyback_hub_targets(config, "site1") == expected_targets

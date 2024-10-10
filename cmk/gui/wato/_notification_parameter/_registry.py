@@ -5,6 +5,7 @@
 
 # pylint: disable=protected-access
 
+from cmk.ccc.i18n import _
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.version import edition
 
@@ -13,11 +14,14 @@ from cmk.utils.rulesets.definition import RuleGroup
 
 import cmk.gui.rulespec as _rulespec
 import cmk.gui.watolib.rulespecs as _rulespecs
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs.private import Catalog, CommentTextArea, not_empty, Topic
 from cmk.gui.utils.rule_specs.loader import LoadedRuleSpec
 from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfigurationNotifications
 from cmk.gui.watolib.users import notification_script_title
 
-from cmk.rulesets.v1 import rule_specs, Title
+from cmk.rulesets.v1 import Help, rule_specs, Title
+from cmk.rulesets.v1.form_specs import DictElement, Dictionary, FieldSize, String
 
 from ._base import NotificationParameter
 
@@ -52,6 +56,71 @@ class NotificationParameterRegistry(Registry[type[NotificationParameter]]):
                     match_type="dict",
                 )
             )
+
+    def form_spec(self, method: str) -> Catalog:
+        try:
+            param_form_spec = self._entries[method]()._form_spec()
+        except KeyError:
+            raise MKUserError(None, _("No notification parameters for method '%s' found") % method)
+        except NotImplementedError:
+            raise MKUserError(
+                None,
+                _("No FormSpec implementation for method '%s' found.") % method,
+            )
+
+        return Catalog(
+            topics=[
+                Topic(
+                    ident="general",
+                    dictionary=Dictionary(
+                        title=Title("Parameter properties"),
+                        elements={
+                            "description": DictElement(
+                                parameter_form=String(
+                                    title=Title("Description"),
+                                    field_size=FieldSize.LARGE,
+                                    custom_validate=[not_empty()],
+                                ),
+                                required=True,
+                            ),
+                            "comment": DictElement(
+                                parameter_form=CommentTextArea(
+                                    title=Title("Comment"),
+                                )
+                            ),
+                            "docu_url": DictElement(
+                                parameter_form=String(
+                                    title=Title("Documentation URL"),
+                                    help_text=Help(
+                                        (
+                                            "An optional URL pointing to documentation or any other page. This will be "
+                                            "displayed as an icon and open "
+                                            "a new page when clicked. You can use either global URLs (beginning with "
+                                            "<tt>http://</tt>), absolute local urls (beginning with <tt>/</tt>) or relative "
+                                            "URLs (that are relative to <tt>check_mk/</tt>)."
+                                        )
+                                    ),
+                                )
+                            ),
+                        },
+                    ),
+                ),
+                Topic(
+                    ident="parameter_properties",
+                    # TODO if sections are not rendered by fixed DictGroup(),
+                    # we will need this:
+                    # dictionary=FormSpecDictionary(
+                    #    title=Title("Parameter properties"),
+                    #    elements={
+                    #        "properties": DictElement(
+                    #            parameter_form=param_form_spec,
+                    #        )
+                    #    },
+                    # ),
+                    dictionary=param_form_spec,
+                ),
+            ]
+        )
 
 
 notification_parameter_registry = NotificationParameterRegistry()

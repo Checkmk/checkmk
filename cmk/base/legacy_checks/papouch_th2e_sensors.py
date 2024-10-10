@@ -104,6 +104,7 @@ def check_papouch_th2e_sensors(item, params, parsed):
 
 
 check_info["papouch_th2e_sensors"] = LegacyCheckDefinition(
+    name="papouch_th2e_sensors",
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "th2e"), startswith(".1.3.6.1.2.1.1.2.0", ".0.10.43.6.1.4.1")
     ),
@@ -139,6 +140,7 @@ def check_papouch_th2e_sensors_dewpoint(item, params, parsed):
 
 
 check_info["papouch_th2e_sensors.dewpoint"] = LegacyCheckDefinition(
+    name="papouch_th2e_sensors_dewpoint",
     service_name="Dew point %s",
     sections=["papouch_th2e_sensors"],
     discovery_function=discover_papouch_th2e_sensors_dewpoint,
@@ -170,6 +172,7 @@ def check_papouch_th2e_sensors_humidity(item, params, parsed):
 
 
 check_info["papouch_th2e_sensors.humidity"] = LegacyCheckDefinition(
+    name="papouch_th2e_sensors_humidity",
     service_name="Humidity %s",
     sections=["papouch_th2e_sensors"],
     discovery_function=inventory_papouch_th2e_sensors_humidity,

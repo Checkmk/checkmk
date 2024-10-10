@@ -56,6 +56,7 @@ def parse_sophos_messages(string_table: StringTable) -> StringTable:
 
 
 check_info["sophos_messages"] = LegacyCheckDefinition(
+    name="sophos_messages",
     parse_function=parse_sophos_messages,
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2604"),
     fetch=SNMPTree(

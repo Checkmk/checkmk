@@ -56,6 +56,7 @@ def discover_alcatel_temp_aos7(section):
 
 
 check_info["alcatel_temp_aos7"] = LegacyCheckDefinition(
+    name="alcatel_temp_aos7",
     detect=DETECT_ALCATEL_AOS7,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.6486.801.1.1.1.3.1.1.3.1",

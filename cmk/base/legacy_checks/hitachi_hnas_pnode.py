@@ -51,6 +51,7 @@ def parse_hitachi_hnas_pnode(string_table: StringTable) -> StringTable:
 
 
 check_info["hitachi_hnas_pnode"] = LegacyCheckDefinition(
+    name="hitachi_hnas_pnode",
     parse_function=parse_hitachi_hnas_pnode,
     detect=DETECT,
     fetch=SNMPTree(

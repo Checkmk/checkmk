@@ -87,6 +87,7 @@ def discover_aws_s3(p):
 
 
 check_info["aws_s3"] = LegacyCheckDefinition(
+    name="aws_s3",
     parse_function=parse_aws_s3,
     service_name="AWS/S3 Objects %s",
     discovery_function=discover_aws_s3,
@@ -140,6 +141,7 @@ def check_aws_s3_summary(item, params, parsed):
 
 
 check_info["aws_s3.summary"] = LegacyCheckDefinition(
+    name="aws_s3_summary",
     service_name="AWS/S3 Summary",
     sections=["aws_s3"],
     discovery_function=discover_aws_s3_summary,

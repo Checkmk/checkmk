@@ -34,9 +34,15 @@
   --icon-save-to-services: url('~cmk-frontend/src/themes/facelift/images/icon_save_to_services.svg');
   --icon-insertdate: url('~cmk-frontend/src/themes/facelift/images/icon_insertdate.png');
   --icon-alert-crit: url('~cmk-frontend/src/themes/facelift/images/icon_alert_crit.svg');
+  --icon-alert-warn: url('~cmk-frontend/src/themes/facelift/images/icon_alert_warn.png');
+  --icon-alert-up: url('~cmk-frontend/src/themes/facelift/images/icon_alert_up.png');
+  --icon-about-checkmk: url('~cmk-frontend/src/themes/facelift/images/icon_about_checkmk.svg');
   --icon-check: url('~cmk-frontend/src/themes/facelift/images/icon_check.svg');
   --icon-save: url('~cmk-frontend/src/themes/facelift/images/icon_save.svg');
   --icon-cancel: url('~cmk-frontend/src/themes/facelift/images/icon_cancel.svg');
+  --icon-search: url('~cmk-frontend/src/themes/facelift/images/icon_search_action_light.svg');
+
+  --image-load-graph: url('~cmk-frontend/src/themes/facelift/images/load_graph.png');
 }
 
 @layer theme {

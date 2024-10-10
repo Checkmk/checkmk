@@ -40,7 +40,7 @@ parse_options() {
     RUN_FORMAT=no
     RUN_DOCUMENTATION=no
 
-    if ! OPTIONS=$(getopt --options 'cuFmprBafDj:h' --long 'clean,unit-tests,check-format,mypy,ruff,bandit,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'cuFmrBafDj:h' --long 'clean,unit-tests,check-format,mypy,ruff,bandit,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi

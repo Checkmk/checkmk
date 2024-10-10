@@ -30,8 +30,17 @@ genrule(
 
 compile_pip_requirements(
     name = "requirements",
+    timeout = "moderate",
+    env = {
+        "PIPENV_PYPI_MIRROR": "https://pypi.org/simple",
+    },
+    extra_args = [
+        "--no-strip-extras",  # reconsider this? (https://github.com/jazzband/pip-tools/issues/1613)
+        "--quiet",
+    ],
     requirements_in = "requirements_in.txt",
     requirements_txt = "@//:requirements_lock.txt",
+    tags = ["manual"],
     visibility = ["//visibility:public"],
 )
 
@@ -150,6 +159,21 @@ CSE_PY = glob([
     "**/cse.py",
 ])
 
+CMK_PACKAGES = [
+    "//packages/cmk-agent-based",
+    "//packages/cmk-agent-receiver",
+    "//packages/cmk-crypto",
+    "//packages/cmk-graphing",
+    "//packages/cmk-livestatus-client",
+    "//packages/cmk-livestatus-client:py_livestatus",
+    "//packages/cmk-messaging",
+    "//packages/cmk-mkp-tool",
+    "//packages/cmk-rulesets",
+    "//packages/cmk-server-side-calls",
+    "//packages/cmk-trace",
+    "//packages/cmk-werks",
+]
+
 py_library(
     name = "lib_cmk",
     srcs = glob(
@@ -157,26 +181,15 @@ py_library(
         include = ["**/*.py"],
         exclude = CRE_PY + CCE_PY + CEE_PY + CME_PY + CSE_PY,
     ),
+    data = ["gui/wsgi/applications/index.wsgi"],
     imports = [".."],
     visibility = [
         # for conftest
         "//tests:__subpackages__",
     ],
     deps = [
-        "//packages/cmk-agent-based",
-        "//packages/cmk-agent-receiver",
-        "//packages/cmk-crypto",
-        "//packages/cmk-graphing",
-        "//packages/cmk-livestatus-client",
-        "//packages/cmk-livestatus-client:py_livestatus",
-        "//packages/cmk-messaging",
-        "//packages/cmk-mkp-tool",
-        "//packages/cmk-rulesets",
-        "//packages/cmk-server-side-calls",
-        "//packages/cmk-trace",
-        "//packages/cmk-werks",
         "@rrdtool_native//:rrdtool_python_lib",
-    ] + [requirement(dep) for dep in REQUIRED_EXTERNAL_DEPS],
+    ] + CMK_PACKAGES + [requirement(dep) for dep in REQUIRED_EXTERNAL_DEPS],
 )
 
 py_library(
@@ -204,6 +217,18 @@ py_library(
     ("cme", CME_PY),
     ("cse", CSE_PY),
 ]]
+
+py_library(
+    # The repo edition is only used for testing.
+    name = "lib_cmk_repo",
+    srcs = glob(["**/*.py"]),
+    data = ["gui/wsgi/applications/index.wsgi"],
+    imports = [".."],
+    visibility = ["//tests/unit:__pkg__"],
+    deps = [
+        "@rrdtool_native//:rrdtool_python_lib",
+    ] + CMK_PACKAGES + [requirement(dep) for dep in REQUIRED_EXTERNAL_DEPS],
+)
 
 [py_wheel(
     name = "cmk_" + edition,

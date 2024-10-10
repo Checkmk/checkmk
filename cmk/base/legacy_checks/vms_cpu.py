@@ -65,6 +65,7 @@ def check_vms_cpu(_no_item, params, parsed):
 
 
 check_info["vms_cpu"] = LegacyCheckDefinition(
+    name="vms_cpu",
     parse_function=parse_vms_cpu,
     service_name="CPU utilization",
     discovery_function=inventory_vms_cpu,

@@ -44,6 +44,7 @@ def parse_hp_webmgmt_status(string_table: Sequence[StringTable]) -> Sequence[Str
 
 
 check_info["hp_webmgmt_status"] = LegacyCheckDefinition(
+    name="hp_webmgmt_status",
     parse_function=parse_hp_webmgmt_status,
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.11"),

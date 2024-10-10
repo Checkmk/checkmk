@@ -54,6 +54,7 @@ def parse_sni_octopuse_trunks(string_table: Sequence[StringTable]) -> Sequence[S
 
 
 check_info["sni_octopuse_trunks"] = LegacyCheckDefinition(
+    name="sni_octopuse_trunks",
     parse_function=parse_sni_octopuse_trunks,
     detect=DETECT_SNI_OCTOPUSE,
     fetch=[

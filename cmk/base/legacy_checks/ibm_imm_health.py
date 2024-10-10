@@ -47,6 +47,7 @@ def parse_ibm_imm_health(string_table: StringTable) -> StringTable:
 
 
 check_info["ibm_imm_health"] = LegacyCheckDefinition(
+    name="ibm_imm_health",
     parse_function=parse_ibm_imm_health,
     detect=DETECT_IBM_IMM,
     fetch=SNMPTree(

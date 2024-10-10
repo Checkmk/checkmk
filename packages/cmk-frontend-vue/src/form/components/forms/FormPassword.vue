@@ -9,6 +9,7 @@ import type { Password } from '@/form/components/vue_formspec_components'
 import { validateValue, type ValidationMessages } from '@/form/components/utils/validation'
 import { computed, ref } from 'vue'
 import { immediateWatch } from '@/form/components/utils/watch'
+import DropDown from '@/components/DropDown.vue'
 
 const props = defineProps<{
   spec: Password
@@ -62,13 +63,33 @@ const passwordStoreChoice = computed({
     data.value[3] = false
   }
 })
+
+const passwordTypeOptions = computed(() => {
+  return [
+    {
+      ident: 'explicit_password',
+      name: props.spec.i18n.explicit_password
+    },
+    {
+      ident: 'stored_password',
+      name: props.spec.i18n.password_store
+    }
+  ]
+})
+
+const passwordStoreOptions = computed(() => {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  return props.spec.password_store_choices.map(({ password_id, name }) => {
+    return {
+      ident: password_id,
+      name: name
+    }
+  })
+})
 </script>
 
 <template>
-  <select v-model="passwordType">
-    <option value="explicit_password">{{ props.spec.i18n.explicit_password }}</option>
-    <option value="stored_password">{{ props.spec.i18n.password_store }}</option>
-  </select>
+  <DropDown v-model:selected-option="passwordType" :options="passwordTypeOptions" />
   {{ ' ' }}
   <template v-if="data[0] === 'explicit_password'">
     <input
@@ -82,15 +103,12 @@ const passwordStoreChoice = computed({
     <template v-if="props.spec.password_store_choices.length === 0">
       {{ props.spec.i18n.no_password_store_choices }}
     </template>
-    <select v-else v-model="passwordStoreChoice" aria-label="password store choice">
-      <option
-        v-for="{ password_id, name } in props.spec.password_store_choices"
-        :key="password_id"
-        :value="password_id"
-      >
-        {{ name }}
-      </option>
-    </select>
+    <DropDown
+      v-else
+      v-model:selected-option="passwordStoreChoice"
+      :options="passwordStoreOptions"
+      aria-label="password store choice"
+    />
   </template>
   <FormValidation :validation="validation"></FormValidation>
 </template>

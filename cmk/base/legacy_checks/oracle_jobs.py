@@ -264,6 +264,7 @@ def parse_oracle_jobs(string_table: StringTable) -> StringTable:
 
 
 check_info["oracle_jobs"] = LegacyCheckDefinition(
+    name="oracle_jobs",
     parse_function=parse_oracle_jobs,
     service_name="ORA %s Job",
     discovery_function=inventory_oracle_jobs,

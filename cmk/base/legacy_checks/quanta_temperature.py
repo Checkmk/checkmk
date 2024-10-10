@@ -60,6 +60,7 @@ def discover_quanta_temperature(section):
 
 
 check_info["quanta_temperature"] = LegacyCheckDefinition(
+    name="quanta_temperature",
     detect=DETECT_QUANTA,
     fetch=[
         SNMPTree(

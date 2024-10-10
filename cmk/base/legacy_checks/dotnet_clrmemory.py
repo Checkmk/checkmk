@@ -33,6 +33,7 @@ def discover_dotnet_clrmemory(parsed):
 
 
 check_info["dotnet_clrmemory"] = LegacyCheckDefinition(
+    name="dotnet_clrmemory",
     parse_function=parse_wmi_table,
     service_name="DotNet Memory Management %s",
     discovery_function=discover_dotnet_clrmemory,

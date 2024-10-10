@@ -68,6 +68,7 @@ def check_sap_hana_ess_migration(item, params, parsed):
 
 
 check_info["sap_hana_ess_migration"] = LegacyCheckDefinition(
+    name="sap_hana_ess_migration",
     parse_function=parse_sap_hana_ess_migration,
     service_name="SAP HANA ESS Migration %s",
     discovery_function=inventory_sap_hana_ess_migration,

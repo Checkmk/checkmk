@@ -47,6 +47,7 @@ def discover_couchbase_nodes_info(section):
 
 
 check_info["couchbase_nodes_info"] = LegacyCheckDefinition(
+    name="couchbase_nodes_info",
     parse_function=parse_couchbase_lines,
     service_name="Couchbase %s Info",
     discovery_function=discover_couchbase_nodes_info,

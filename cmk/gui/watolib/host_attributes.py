@@ -156,6 +156,24 @@ class HostAttributes(TypedDict, total=False):
     tag_criticality: str
 
 
+def mask_attributes(attributes: Mapping[str, object]) -> dict[str, object]:
+    """Create a copy of the given attributes and mask credential data"""
+
+    MASK_STRING = "******"
+
+    masked = dict(attributes)
+    if "snmp_community" in masked:
+        masked["snmp_community"] = MASK_STRING
+    if "management_snmp_community" in masked:
+        masked["management_snmp_community"] = MASK_STRING
+    if ipmi := masked.get("management_ipmi_credentials"):
+        username = ipmi.get("username", None) if isinstance(ipmi, dict) else None
+        masked["management_ipmi_credentials"] = IPMICredentials(
+            username=username or "(Unknown)", password=MASK_STRING
+        )
+    return masked
+
+
 class HostAttributeTopic(abc.ABC):
     @property
     @abc.abstractmethod

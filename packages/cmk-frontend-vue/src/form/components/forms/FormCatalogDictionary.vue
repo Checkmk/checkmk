@@ -7,17 +7,22 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { DictionaryElement } from '@/form/components/vue_formspec_components'
 import FormEdit from '@/form/components/FormEdit.vue'
 import { immediateWatch } from '@/form/components/utils/watch'
-import { requiresSomeInput, type ValidationMessages } from '@/form/components/utils/validation'
+import {
+  groupDictionaryValidations,
+  requiresSomeInput,
+  type ValidationMessages
+} from '@/form/components/utils/validation'
+import { ref } from 'vue'
 
 const props = defineProps<{
-  entries: Array<DictionaryElement>
+  elements: Array<DictionaryElement>
   backendValidation: ValidationMessages
 }>()
 
 const data = defineModel<Record<string, unknown>>({ required: true })
 
 immediateWatch(
-  () => props.entries,
+  () => props.elements,
   (newValue) => {
     newValue.forEach((element) => {
       if (!(element.ident in data.value)) {
@@ -27,13 +32,22 @@ immediateWatch(
   }
 )
 
+const elementValidation = ref<Record<string, ValidationMessages>>({})
+immediateWatch(
+  () => props.backendValidation,
+  (newValidation: ValidationMessages) => {
+    const [, _elementValidation] = groupDictionaryValidations(props.elements, newValidation)
+    elementValidation.value = _elementValidation
+  }
+)
+
 function isRequired(element: DictionaryElement): boolean {
   return requiresSomeInput(element.parameter_form.validators)
 }
 </script>
 
 <template>
-  <tr v-for="element in entries" :key="element.ident">
+  <tr v-for="element in elements" :key="element.ident">
     <td class="legend">
       <div class="title">
         {{ element.parameter_form.title }}
@@ -49,7 +63,7 @@ function isRequired(element: DictionaryElement): boolean {
     <td class="content">
       <FormEdit
         v-model:data="data[element.ident]!"
-        :backend-validation="backendValidation"
+        :backend-validation="elementValidation[element.ident]!"
         :spec="element.parameter_form"
       />
     </td>

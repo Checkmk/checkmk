@@ -89,6 +89,19 @@ class MultipleChoiceElement:
     title: str
 
 
+@dataclass(kw_only=True)
+class DualListChoiceI18n:
+    add: str
+    remove: str
+    add_all: str
+    remove_all: str
+    available_options: str
+    selected_options: str
+    selected: str
+    no_elements_available: str
+    no_elements_selected: str
+
+
 class CascadingChoiceLayout(str, Enum):
     vertical = "vertical"
     horizontal = "horizontal"
@@ -269,10 +282,17 @@ class SingleChoice(FormSpec):
 
 
 @dataclass(kw_only=True)
-class MultipleChoice(FormSpec):
-    type: str = "multiple_choice"
-    elements: list[MultipleChoiceElement] = field(default_factory=lambda: [])
-    show_toggle_all: bool = False
+class DualListChoice(FormSpec):
+    i18n: DualListChoiceI18n
+    elements: Optional[list[MultipleChoiceElement]] = field(default_factory=lambda: [])
+    show_toggle_all: Optional[bool] = False
+    type: str = "dual_list_choice"
+
+
+@dataclass(kw_only=True)
+class CheckboxListChoice(FormSpec):
+    type: str = "checkbox_list_choice"
+    elements: Optional[list[MultipleChoiceElement]] = field(default_factory=lambda: [])
 
 
 @dataclass(kw_only=True)
@@ -398,7 +418,8 @@ Components = Union[
     Password,
     DataSize,
     Catalog,
-    MultipleChoice,
+    DualListChoice,
+    CheckboxListChoice,
     TimeSpan,
     Tuple,
     OptionalChoice,

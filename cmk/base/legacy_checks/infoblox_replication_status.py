@@ -58,6 +58,7 @@ def parse_infoblox_replication_status(string_table: StringTable) -> StringTable:
 
 
 check_info["infoblox_replication_status"] = LegacyCheckDefinition(
+    name="infoblox_replication_status",
     parse_function=parse_infoblox_replication_status,
     detect=DETECT_INFOBLOX,
     fetch=SNMPTree(

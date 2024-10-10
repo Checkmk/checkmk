@@ -255,6 +255,7 @@ def parse_qlogic_fcport(string_table: StringTable) -> StringTable:
 
 
 check_info["qlogic_fcport"] = LegacyCheckDefinition(
+    name="qlogic_fcport",
     parse_function=parse_qlogic_fcport,
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1663.1.1"),

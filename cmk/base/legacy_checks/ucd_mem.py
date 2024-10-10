@@ -56,6 +56,7 @@ def check_ucd_mem(_no_item, params, parsed):
 
 # This check plug-in uses the migrated section in cmk/base/plugins/agent_based/ucd_mem.py!
 check_info["ucd_mem"] = LegacyCheckDefinition(
+    name="ucd_mem",
     service_name="Memory",
     discovery_function=inventory_ucd_mem,
     check_function=check_ucd_mem,

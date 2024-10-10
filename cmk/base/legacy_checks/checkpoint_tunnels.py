@@ -38,6 +38,7 @@ def parse_checkpoint_tunnels(string_table: StringTable) -> StringTable:
 
 
 check_info["checkpoint_tunnels"] = LegacyCheckDefinition(
+    name="checkpoint_tunnels",
     parse_function=parse_checkpoint_tunnels,
     detect=DETECT,
     fetch=SNMPTree(

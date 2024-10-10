@@ -73,6 +73,7 @@ def parse_hp_blade_manager(string_table: StringTable) -> StringTable:
 
 
 check_info["hp_blade_manager"] = LegacyCheckDefinition(
+    name="hp_blade_manager",
     parse_function=parse_hp_blade_manager,
     detect=DETECT_HP_BLADE,
     fetch=SNMPTree(

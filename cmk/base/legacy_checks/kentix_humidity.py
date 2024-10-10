@@ -63,6 +63,7 @@ _OIDS = [
 
 
 check_info["kentix_humidity"] = LegacyCheckDefinition(
+    name="kentix_humidity",
     detect=DETECT_KENTIX,
     fetch=[
         SNMPTree(

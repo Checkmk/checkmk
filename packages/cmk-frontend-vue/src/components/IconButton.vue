@@ -7,7 +7,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type VariantProps, cva } from 'class-variance-authority'
 
 import { getIconVariable } from '@/lib/utils'
-import { Button } from './ui/button'
 
 const buttonVariants = cva('', {
   variants: {
@@ -41,37 +40,18 @@ interface IconButtonProps {
 
 const props = defineProps<IconButtonProps>()
 defineEmits(['click'])
-
-let selectedAriaLabel = ''
-
-if (props?.variant) {
-  switch (props.variant) {
-    case 'custom':
-      selectedAriaLabel = props.ariaLabel || ''
-      break
-    case 'prev':
-      selectedAriaLabel = 'Go to the previous stage'
-      break
-    case 'next':
-      selectedAriaLabel = 'Go to the next stage'
-      break
-    case 'save':
-      selectedAriaLabel = 'Save'
-      break
-  }
-}
 </script>
 
 <template>
-  <Button
+  <button
     class="qs-icon-button button"
     :class="buttonVariants({ variant })"
-    :aria-label="selectedAriaLabel"
+    :aria-label="ariaLabel || label"
     @click="$emit('click')"
   >
     <div class="icon" />
     <span>{{ props.label }}</span>
-  </Button>
+  </button>
 </template>
 
 <style scoped>

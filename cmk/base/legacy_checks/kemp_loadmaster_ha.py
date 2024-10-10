@@ -35,6 +35,7 @@ def parse_kemp_loadmaster_ha(string_table: StringTable) -> StringTable:
 
 
 check_info["kemp_loadmaster_ha"] = LegacyCheckDefinition(
+    name="kemp_loadmaster_ha",
     parse_function=parse_kemp_loadmaster_ha,
     detect=all_of(
         any_of(

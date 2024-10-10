@@ -149,6 +149,7 @@ def check_veeam_client(item, params, parsed):  # pylint: disable=too-many-branch
 
 
 check_info["veeam_client"] = LegacyCheckDefinition(
+    name="veeam_client",
     parse_function=parse_veeam_client,
     service_name="VEEAM Client %s",
     discovery_function=inventory_veeam_client,

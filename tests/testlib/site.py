@@ -1601,19 +1601,7 @@ class SiteFactory:
         # refresh the site object after creating the site
         site = self.get_existing_site(test_site.id)
 
-        # restoring the tmpfs was broken and has been fixed with
-        # 3448a7da56ed6d4fa2c2f425d0b1f4b6e02230aa
-        from_version = Version.from_str(base_version.version)
-        if (
-            (Version.from_str("2.1.0p36") <= from_version < Version.from_str("2.2.0"))
-            or (Version.from_str("2.2.0p13") <= from_version < Version.from_str("2.3.0"))
-            or Version.from_str("2.3.0b1") <= from_version
-        ):
-            # tmpfs should have been restored:
-            tmp_dirs = site.listdir("tmp/check_mk")
-            assert "counters" in tmp_dirs
-            assert "piggyback" in tmp_dirs
-            assert "piggyback_sources" in tmp_dirs
+        _assert_tmpfs(site, base_version)
 
         # open the livestatus port
         site.open_livestatus_tcp(encrypted=False)
@@ -1677,8 +1665,12 @@ class SiteFactory:
 
         # refresh the site object after creating the site
         site = self.get_existing_site(site.id)
+
+        _assert_tmpfs(site, base_version)
+
         # open the livestatus port
         site.open_livestatus_tcp(encrypted=False)
+
         # start the site after manually installing it
         site.start()
 
@@ -1865,3 +1857,19 @@ class PythonHelper:
     def execute(self, *args, **kwargs) -> Iterator[subprocess.Popen]:  # type: ignore[no-untyped-def]
         with self.copy_helper():
             yield self.site.execute(["python3", str(self.site_path)], *args, **kwargs)
+
+
+def _assert_tmpfs(site: Site, version: CMKVersion) -> None:
+    # restoring the tmpfs was broken and has been fixed with
+    # 3448a7da56ed6d4fa2c2f425d0b1f4b6e02230aa
+    from_version = Version.from_str(version.version)
+    if (
+        (Version.from_str("2.1.0p36") <= from_version < Version.from_str("2.2.0"))
+        or (Version.from_str("2.2.0p13") <= from_version < Version.from_str("2.3.0"))
+        or Version.from_str("2.3.0b1") <= from_version
+    ):
+        # tmpfs should have been restored:
+        tmp_dirs = site.listdir("tmp/check_mk")
+        assert "counters" in tmp_dirs
+        assert "piggyback" in tmp_dirs
+        assert "piggyback_sources" in tmp_dirs

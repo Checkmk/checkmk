@@ -40,6 +40,7 @@ def parse_solaris_prtdiag_status(string_table: StringTable) -> StringTable:
 
 
 check_info["solaris_prtdiag_status"] = LegacyCheckDefinition(
+    name="solaris_prtdiag_status",
     parse_function=parse_solaris_prtdiag_status,
     service_name="Hardware Overall State",
     discovery_function=inventory_solaris_prtdiag_status,

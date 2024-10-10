@@ -15,7 +15,7 @@ import type { QuickSetupStageProps } from './quick_setup_types'
 
 const props = defineProps<QuickSetupStageProps>()
 
-const isSelectedStage = computed(() => props.index == props.currentStage)
+const isSelectedStage = computed(() => props.index === props.currentStage)
 const isCompleted = computed(() => props.index < props.currentStage)
 const isOpen = computed(() => isSelectedStage.value || props.mode === 'overview')
 const onClickGoTo = computed(() =>

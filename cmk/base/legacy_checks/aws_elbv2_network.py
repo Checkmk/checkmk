@@ -74,6 +74,7 @@ def discover_aws_elbv2_network(p):
 
 
 check_info["aws_elbv2_network"] = LegacyCheckDefinition(
+    name="aws_elbv2_network",
     parse_function=parse_aws_elbv2_network,
     service_name="AWS/NetworkELB LCUs",
     discovery_function=discover_aws_elbv2_network,
@@ -126,6 +127,7 @@ def discover_aws_elbv2_network_connections(p):
 
 
 check_info["aws_elbv2_network.connections"] = LegacyCheckDefinition(
+    name="aws_elbv2_network_connections",
     service_name="AWS/NetworkELB Connections",
     sections=["aws_elbv2_network"],
     discovery_function=discover_aws_elbv2_network_connections,
@@ -229,6 +231,7 @@ def discover_aws_elbv2_network_tls_handshakes(p):
 
 
 check_info["aws_elbv2_network.tls_handshakes"] = LegacyCheckDefinition(
+    name="aws_elbv2_network_tls_handshakes",
     service_name="AWS/NetworkELB TLS Handshakes",
     sections=["aws_elbv2_network"],
     discovery_function=discover_aws_elbv2_network_tls_handshakes,
@@ -278,6 +281,7 @@ def discover_aws_elbv2_network_rst_packets(p):
 
 
 check_info["aws_elbv2_network.rst_packets"] = LegacyCheckDefinition(
+    name="aws_elbv2_network_rst_packets",
     service_name="AWS/NetworkELB Reset Packets",
     sections=["aws_elbv2_network"],
     discovery_function=discover_aws_elbv2_network_rst_packets,
@@ -327,6 +331,7 @@ def discover_aws_elbv2_network_statistics(p):
 
 
 check_info["aws_elbv2_network.statistics"] = LegacyCheckDefinition(
+    name="aws_elbv2_network_statistics",
     service_name="AWS/NetworkELB Statistics",
     sections=["aws_elbv2_network"],
     discovery_function=discover_aws_elbv2_network_statistics,

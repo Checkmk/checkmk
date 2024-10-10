@@ -83,6 +83,7 @@ def check_kentix_motion(
 
 
 check_info["kentix_motion"] = LegacyCheckDefinition(
+    name="kentix_motion",
     detect=DETECT_KENTIX,
     fetch=[
         SNMPTree(

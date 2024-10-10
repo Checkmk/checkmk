@@ -65,6 +65,7 @@ def discover_ucs_c_rack_server_faultinst(p):
 
 
 check_info["ucs_c_rack_server_faultinst"] = LegacyCheckDefinition(
+    name="ucs_c_rack_server_faultinst",
     service_name="Fault Instances Rack",
     discovery_function=discover_ucs_c_rack_server_faultinst,
     check_function=check_ucs_c_rack_server_faultinst,

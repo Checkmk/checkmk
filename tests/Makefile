@@ -393,34 +393,46 @@ test-unit-doctests: prepare-protobuf-files
 		cmk/
 
 test-unit: prepare-protobuf-files test-unit-doctests
-	cd .. \
-	    && ./scripts/run-bazel.sh test //tests/unit:all \
-	    && TZ=$(RANDOM_TZ) $(PYTEST) \
-		-T unit \
-		--config-file=pyproject.toml \
-		--override-ini="pythonpath=." \
-		--random-order-bucket=global \
-		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
-		--ignore=tests/unit/omdlib/ \
-		--numprocesses=4 \
-		--dist=loadfile \
-		-- \
-		tests/unit
+	cd .. && \
+	    ./scripts/run-bazel.sh test --test_verbose_timeout_warnings //tests/unit:all \
+	    --test_env=TZ=$(RANDOM_TZ) \
+	    --test_arg="-m" --test_arg="not slow" \
+	    --test_arg="--numprocesses=4"
+	cd .. && TZ=$(RANDOM_TZ) \
+	    $(PYTEST) \
+	    -T unit \
+	    --config-file=pyproject.toml \
+	    --override-ini="pythonpath=." \
+	    --random-order-bucket=global \
+	    $(PYTEST_OPTS_UNIT_SKIP_SLOW) \
+	    --numprocesses=4 \
+	    --dist=loadfile \
+	    -- \
+	    tests/unit/test_pylint_checker_cmk_module_layers.py \
+	    tests/unit/test_pylint_checker_localization.py \
+	    tests/unit/test_pylint_checker_forbidden_objects.py
 
 test-unit-docker:
 	../scripts/run-in-docker.sh make --quiet test-unit
 
 test-unit-all: prepare-protobuf-files
-	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
-		-T unit \
-		--config-file=pyproject.toml \
-		--override-ini="pythonpath=." \
-		--random-order-bucket=global \
-		--ignore=tests/unit/omdlib/ \
-		--numprocesses=4 \
-		--dist=loadfile \
-		-- \
-		tests/unit
+	cd .. && \
+	    ./scripts/run-bazel.sh test --test_verbose_timeout_warnings //tests/unit:all \
+	    --test_env=TZ=$(RANDOM_TZ) \
+	    --test_arg="--numprocesses=4"
+	cd .. && TZ=$(RANDOM_TZ) \
+	    $(PYTEST) \
+	    -T unit \
+	    --config-file=pyproject.toml \
+	    --override-ini="pythonpath=." \
+	    --random-order-bucket=global \
+	    --ignore=tests/unit/omdlib/ \
+	    --numprocesses=4 \
+	    --dist=loadfile \
+	    -- \
+	    tests/unit/test_pylint_checker_cmk_module_layers.py \
+	    tests/unit/test_pylint_checker_localization.py \
+	    tests/unit/test_pylint_checker_forbidden_objects.py
 
 test-unit-all-docker:
 	../scripts/run-in-docker.sh make --quiet test-unit-all

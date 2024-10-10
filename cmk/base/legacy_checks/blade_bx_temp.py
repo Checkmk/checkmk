@@ -68,6 +68,7 @@ def parse_blade_bx_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["blade_bx_temp"] = LegacyCheckDefinition(
+    name="blade_bx_temp",
     parse_function=parse_blade_bx_temp,
     detect=DETECT_BLADE_BX,
     fetch=SNMPTree(

@@ -31,6 +31,7 @@ def parse_ra32e_power(string_table: StringTable) -> StringTable:
 
 
 check_info["ra32e_power"] = LegacyCheckDefinition(
+    name="ra32e_power",
     parse_function=parse_ra32e_power,
     detect=DETECT_RA32E,
     fetch=SNMPTree(

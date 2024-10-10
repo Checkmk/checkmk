@@ -28,6 +28,7 @@ def parse_tplink_poe_summary(string_table: StringTable) -> StringTable:
 
 
 check_info["tplink_poe_summary"] = LegacyCheckDefinition(
+    name="tplink_poe_summary",
     parse_function=parse_tplink_poe_summary,
     detect=DETECT_TPLINK,
     fetch=SNMPTree(

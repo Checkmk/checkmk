@@ -28,6 +28,7 @@ def discover_viprinet_temp(section: StringTable) -> DiscoveryResult:
 
 
 check_info["viprinet_temp"] = LegacyCheckDefinition(
+    name="viprinet_temp",
     parse_function=parse_viprinet_temp,
     detect=DETECT_VIPRINET,
     fetch=SNMPTree(

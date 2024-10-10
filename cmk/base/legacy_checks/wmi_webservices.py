@@ -24,6 +24,7 @@ def discover_wmi_webservices(p):
 
 
 check_info["wmi_webservices"] = LegacyCheckDefinition(
+    name="wmi_webservices",
     parse_function=parse_wmi_table,
     service_name="Web Service %s",
     discovery_function=discover_wmi_webservices,

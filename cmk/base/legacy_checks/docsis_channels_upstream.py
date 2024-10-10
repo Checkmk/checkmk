@@ -161,6 +161,7 @@ def check_docsis_channels_upstream(item, params, parsed):
 
 
 check_info["docsis_channels_upstream"] = LegacyCheckDefinition(
+    name="docsis_channels_upstream",
     detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4115.820.1.0.0.0.0.0"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4115.900.2.0.0.0.0.0"),

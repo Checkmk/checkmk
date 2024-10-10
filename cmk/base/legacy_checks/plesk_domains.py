@@ -27,6 +27,7 @@ def parse_plesk_domains(string_table: StringTable) -> StringTable:
 
 
 check_info["plesk_domains"] = LegacyCheckDefinition(
+    name="plesk_domains",
     parse_function=parse_plesk_domains,
     service_name="Plesk Domains",
     discovery_function=inventory_plesk_domains,

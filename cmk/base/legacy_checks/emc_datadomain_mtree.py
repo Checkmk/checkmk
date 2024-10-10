@@ -47,6 +47,7 @@ def discover_emc_datadomain_mtree(section):
 
 
 check_info["emc_datadomain_mtree"] = LegacyCheckDefinition(
+    name="emc_datadomain_mtree",
     detect=DETECT_DATADOMAIN,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.19746.1.15.2.1.1",

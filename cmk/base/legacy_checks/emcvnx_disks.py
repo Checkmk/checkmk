@@ -196,6 +196,7 @@ def check_emcvnx_disks(item, params, parsed):
 
 
 check_info["emcvnx_disks"] = LegacyCheckDefinition(
+    name="emcvnx_disks",
     parse_function=parse_emcvnx_disks,
     service_name="Enclosure %s",
     discovery_function=inventory_emcvnx_disks,

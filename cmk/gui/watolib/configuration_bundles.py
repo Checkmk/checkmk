@@ -102,6 +102,14 @@ class CreateDCDConnection(TypedDict):
 
 @dataclass
 class CreateBundleEntities:
+    """
+
+    Remarks for Special agents:
+        * when creating a special agent rule, the user may select an existing password. In such,
+        cases the password shouldn't be part of the bundle, as deletion of the bundle should leave
+        the password untouched.
+    """
+
     hosts: Iterable[CreateHost] | None = None
     passwords: Iterable[CreatePassword] | None = None
     rules: Iterable[CreateRule] | None = None
@@ -437,7 +445,8 @@ class ConfigBundle(TypedDict):
     """
     A configuration bundle is a collection of configs which are managed together by this bundle.
     Each underlying config must have the locked_by attribute set to the id of the bundle. We
-    explicitly avoid double references here to keep the data model simple. The group and program
+    explicitly avoid double references (for now: but might have to be considered in the context
+    of performance restrictions) here to keep the data model simple. The group and program
     combination should determine which configuration objects are potentially part of the bundle.
     """
 

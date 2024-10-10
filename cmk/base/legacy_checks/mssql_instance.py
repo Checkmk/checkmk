@@ -48,6 +48,7 @@ def check_mssql_instance(item, params, parsed):
 
 
 check_info["mssql_instance"] = LegacyCheckDefinition(
+    name="mssql_instance",
     service_name="MSSQL %s Instance",
     discovery_function=inventory_mssql_instance,
     check_function=check_mssql_instance,

@@ -65,6 +65,8 @@ HACK_AGENTS = {
     "innovaphone": True,
     "storeonce4x": True,
     "vsphere": True,
+    "jolokia": True,
+    "random": False,  # needs no secret
 }
 
 

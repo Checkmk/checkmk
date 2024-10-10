@@ -47,6 +47,7 @@ def check_ibm_xraid_pdisks(item, _no_params, section):
 
 
 check_info["ibm_xraid_pdisks"] = LegacyCheckDefinition(
+    name="ibm_xraid_pdisks",
     detect=all_of(
         any_of(
             equals(".1.3.6.1.2.1.1.1.0", "software: windows"), equals(".1.3.6.1.2.1.1.1.0", "linux")

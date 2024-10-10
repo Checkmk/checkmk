@@ -140,6 +140,7 @@ def check_graylog_nodes(item, params, parsed):  # pylint: disable=too-many-branc
 
 
 check_info["graylog_nodes"] = LegacyCheckDefinition(
+    name="graylog_nodes",
     parse_function=parse_graylog_nodes,
     service_name="Graylog Node %s",
     discovery_function=inventory_graylog_nodes,

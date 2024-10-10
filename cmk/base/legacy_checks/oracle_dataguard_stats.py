@@ -158,6 +158,7 @@ def check_oracle_dataguard_stats(item, params, parsed):  # pylint: disable=too-m
 
 
 check_info["oracle_dataguard_stats"] = LegacyCheckDefinition(
+    name="oracle_dataguard_stats",
     # section is already migrated!
     service_name="ORA %s Dataguard-Stats",
     discovery_function=inventory_oracle_dataguard_stats,

@@ -360,15 +360,17 @@ def test_openapi_hosts_in_folder_collection(aut_user_auth_wsgi_app: WebTestAppFo
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
-        params={"show_hosts": True},
+        query_string={"show_hosts": True},
         headers={"Accept": "application/json"},
+        content_type="application/json",
+        status=200,
     )
     hosts_ = resp.json["value"][0]["members"]["hosts"]["value"]
     assert len(hosts_) == 2
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
-        params={"show_hosts": False},
+        query_string={"show_hosts": False},
         headers={"Accept": "application/json"},
     )
     assert "hosts" not in resp.json["value"][0]["members"]
@@ -512,7 +514,7 @@ def test_openapi_show_folder_with_network_scan_result(
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
-        params={"show_hosts": False},
+        query_string={"show_hosts": False},
         headers={"Accept": "application/json"},
     )
     assert resp.json["value"][0]["extensions"] == {
@@ -569,7 +571,7 @@ def test_openapi_show_hosts_on_folder(aut_user_auth_wsgi_app: WebTestAppForCMK) 
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/objects/folder_config/~new_folder",
-        params={"show_hosts": True},
+        query_string={"show_hosts": True},
         status=200,
         headers={"Accept": "application/json"},
     )
@@ -579,7 +581,7 @@ def test_openapi_show_hosts_on_folder(aut_user_auth_wsgi_app: WebTestAppForCMK) 
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/objects/folder_config/~new_folder",
-        params={"show_hosts": False},
+        query_string={"show_hosts": False},
         status=200,
         headers={"Accept": "application/json"},
     )
@@ -704,7 +706,7 @@ def test_openapi_folder_root(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     _ = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/objects/folder_config/~",
-        params={"show_hosts": False},
+        query_string={"show_hosts": False},
         headers={"Accept": "application/json"},
         status=200,
     )
@@ -758,7 +760,7 @@ def test_openapi_folder_config_collections_recursive_list(
     response = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
-        params={"parent": "~I", "recursive": "True"},
+        query_string={"parent": "~I", "recursive": "True"},
         status=200,
         headers={"Accept": "application/json"},
     )

@@ -8,7 +8,6 @@ import logging
 import os
 import signal
 import sys
-import time
 from dataclasses import dataclass
 from itertools import cycle
 from logging import getLogger
@@ -18,6 +17,7 @@ from threading import Event
 
 from cmk.ccc.daemon import daemonize, pid_file_lock
 
+from cmk.messaging import QueueName
 from cmk.piggyback_hub.config import PiggybackHubConfig, save_config_on_message
 from cmk.piggyback_hub.payload import (
     PiggybackPayload,
@@ -25,6 +25,7 @@ from cmk.piggyback_hub.payload import (
     SendingPayloadProcess,
 )
 
+from .config import CONFIG_QUEUE
 from .utils import APP_NAME, ReceivingProcess
 
 VERBOSITY_MAP = {
@@ -85,16 +86,12 @@ def _setup_logging(args: Arguments) -> logging.Logger:
     handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] [%(name)s] %(message)s"))
     logger.addHandler(handler)
 
-    logger.setLevel(VERBOSITY_MAP.get(args.verbosity, logging.INFO))
+    logger.setLevel(VERBOSITY_MAP[max(args.verbosity, 2)])
 
     return logger
 
 
 def run_piggyback_hub(logger: logging.Logger, omd_root: Path) -> int:
-    # TODO: remove this loop when rabbitmq available in site
-    for _ in range(1_000_000):
-        time.sleep(1_000)
-
     reload_config = Event()
     processes = (
         ReceivingProcess(
@@ -102,7 +99,7 @@ def run_piggyback_hub(logger: logging.Logger, omd_root: Path) -> int:
             omd_root,
             PiggybackPayload,
             save_payload_on_message(logger, omd_root),
-            "payload",
+            QueueName("payload"),
             message_ttl=600,
         ),
         SendingPayloadProcess(logger, omd_root, reload_config),
@@ -111,7 +108,7 @@ def run_piggyback_hub(logger: logging.Logger, omd_root: Path) -> int:
             omd_root,
             PiggybackHubConfig,
             save_config_on_message(logger, omd_root, reload_config),
-            "config",
+            CONFIG_QUEUE,
             message_ttl=None,
         ),
     )

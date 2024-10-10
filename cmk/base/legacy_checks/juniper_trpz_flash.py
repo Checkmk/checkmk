@@ -62,6 +62,7 @@ def parse_juniper_trpz_flash(string_table: StringTable) -> StringTable | None:
 
 
 check_info["juniper_trpz_flash"] = LegacyCheckDefinition(
+    name="juniper_trpz_flash",
     parse_function=parse_juniper_trpz_flash,
     detect=DETECT_JUNIPER_TRPZ,
     fetch=SNMPTree(

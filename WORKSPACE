@@ -280,36 +280,6 @@ http_archive(
     url = "https://github.com/google/googletest/archive/57e107a10ea4ff5d8d31df9e4833f80b414b0dd2.tar.gz",
 )
 
-http_archive(
-    name = "rules_proto",
-    sha256 = "6fb6767d1bef535310547e03247f7518b03487740c11b6c6adb7952033fe1295",
-    strip_prefix = "rules_proto-6.0.2",
-    url = "https://github.com/bazelbuild/rules_proto/releases/download/6.0.2/rules_proto-6.0.2.tar.gz",
-)
-
-load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies")
-
-rules_proto_dependencies()
-
-load("@rules_proto//proto:setup.bzl", "rules_proto_setup")
-
-rules_proto_setup()
-
-load("@rules_proto//proto:toolchains.bzl", "rules_proto_toolchains")
-
-rules_proto_toolchains()
-
-http_archive(
-    name = "com_google_protobuf",
-    sha256 = "76637ddb08533dc6bffbd382e2614b119b8f84d16a025f7516cf2f833d103c12",
-    strip_prefix = "protobuf-3d9f7c430a5ae1385512908801492d4421c3cdb7",
-    url = "https://github.com/protocolbuffers/protobuf/archive/3d9f7c430a5ae1385512908801492d4421c3cdb7.tar.gz",
-)
-
-load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
-
-protobuf_deps()
-
 load("//omd/packages/redfish_mkp:redfish_mkp_http.bzl", "redfish_mkp_workspace")
 
 redfish_mkp_workspace()

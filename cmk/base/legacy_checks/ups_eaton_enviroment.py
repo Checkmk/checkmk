@@ -70,6 +70,7 @@ def parse_ups_eaton_enviroment(string_table: StringTable) -> StringTable:
 
 
 check_info["ups_eaton_enviroment"] = LegacyCheckDefinition(
+    name="ups_eaton_enviroment",
     parse_function=parse_ups_eaton_enviroment,
     detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.705.1.2"),

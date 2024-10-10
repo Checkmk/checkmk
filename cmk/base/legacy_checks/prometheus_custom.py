@@ -141,6 +141,7 @@ def discover_prometheus_custom(section):
 
 
 check_info["prometheus_custom"] = LegacyCheckDefinition(
+    name="prometheus_custom",
     parse_function=parse_prometheus_custom,
     service_name="%s",
     discovery_function=discover_prometheus_custom,

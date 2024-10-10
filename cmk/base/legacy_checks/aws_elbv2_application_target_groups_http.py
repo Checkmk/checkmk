@@ -40,6 +40,7 @@ def check_aws_application_elb_target_groups_http(item, params, section):
 
 
 check_info["aws_elbv2_application_target_groups_http"] = LegacyCheckDefinition(
+    name="aws_elbv2_application_target_groups_http",
     parse_function=parse_aws_elbv2_target_groups_http,
     service_name="AWS/ApplicationELB HTTP %s",
     discovery_function=discover_aws_application_elb_target_groups_http,

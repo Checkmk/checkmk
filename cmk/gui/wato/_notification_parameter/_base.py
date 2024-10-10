@@ -8,6 +8,8 @@ from abc import ABC, abstractmethod
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
 
+from cmk.rulesets.v1.form_specs import Dictionary
+
 
 class NotificationParameter(ABC):
     @property
@@ -20,5 +22,5 @@ class NotificationParameter(ABC):
     def spec(self) -> ValueSpecDictionary:
         raise NotImplementedError()
 
-    def _form_spec(self) -> DictionaryExtended:
+    def _form_spec(self) -> DictionaryExtended | Dictionary:
         raise NotImplementedError()

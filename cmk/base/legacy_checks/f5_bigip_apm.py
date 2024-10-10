@@ -27,6 +27,7 @@ def parse_f5_bigip_apm(string_table: StringTable) -> StringTable:
 
 
 check_info["f5_bigip_apm"] = LegacyCheckDefinition(
+    name="f5_bigip_apm",
     parse_function=parse_f5_bigip_apm,
     detect=DETECT,
     fetch=SNMPTree(

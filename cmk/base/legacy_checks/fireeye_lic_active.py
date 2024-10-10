@@ -34,6 +34,7 @@ def discover_fireeye_lic_active(info):
 
 
 check_info["fireeye_lic_active"] = LegacyCheckDefinition(
+    name="fireeye_lic_active",
     parse_function=parse_fireeye_lic_active,
     detect=DETECT,
     fetch=SNMPTree(

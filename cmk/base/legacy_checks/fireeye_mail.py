@@ -72,6 +72,7 @@ def discover_fireeye_mail(info):
 
 
 check_info["fireeye_mail"] = LegacyCheckDefinition(
+    name="fireeye_mail",
     parse_function=parse_fireeye_mail,
     detect=DETECT,
     fetch=SNMPTree(
@@ -137,6 +138,7 @@ def discover_fireeye_mail_attachment(info):
 
 
 check_info["fireeye_mail.attachment"] = LegacyCheckDefinition(
+    name="fireeye_mail_attachment",
     service_name="Mails Containing Attachment",
     sections=["fireeye_mail"],
     discovery_function=discover_fireeye_mail_attachment,
@@ -177,6 +179,7 @@ def discover_fireeye_mail_url(info):
 
 
 check_info["fireeye_mail.url"] = LegacyCheckDefinition(
+    name="fireeye_mail_url",
     service_name="Mails Containing URL",
     sections=["fireeye_mail"],
     discovery_function=discover_fireeye_mail_url,
@@ -247,6 +250,7 @@ def discover_fireeye_mail_statistics(info):
 
 
 check_info["fireeye_mail.statistics"] = LegacyCheckDefinition(
+    name="fireeye_mail_statistics",
     service_name="Mail Processing Statistics",
     sections=["fireeye_mail"],
     discovery_function=discover_fireeye_mail_statistics,
@@ -283,6 +287,7 @@ def discover_fireeye_mail_received(info):
 
 
 check_info["fireeye_mail.received"] = LegacyCheckDefinition(
+    name="fireeye_mail_received",
     service_name="Mails Received",
     sections=["fireeye_mail"],
     discovery_function=discover_fireeye_mail_received,

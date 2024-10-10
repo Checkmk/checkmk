@@ -27,8 +27,10 @@ def pytest_addoption(parser):
 
 
 @pytest.fixture(name="test_site", scope="session")
-def get_site() -> Generator[Site, None, None]:
-    with exit_pytest_on_exceptions():
+def get_site(request: pytest.FixtureRequest) -> Generator[Site, None, None]:
+    with exit_pytest_on_exceptions(
+        exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
+    ):
         yield from get_site_factory(prefix="crawl_").get_test_site()
 
 

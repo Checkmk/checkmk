@@ -17,11 +17,11 @@ import asyncio
 import json
 import logging
 import os
+import re
 import subprocess
 import sys
 import time
 from collections.abc import Mapping, Sequence
-from functools import reduce
 from pathlib import Path
 from typing import Any
 
@@ -142,7 +142,12 @@ def replace_variables(string: str, env_vars: Vars) -> str:
     >>> replace_variables("foo: ${foo}", {"foo": "bar"})
     'foo: bar'
     """
-    return reduce(lambda s, kv: str.replace(s, f"${{{kv[0]}}}", kv[1]), env_vars.items(), string)
+
+    def replace_match(match: re.Match) -> str:
+        var_name = match.group(1)
+        return env_vars.get(var_name, match.group(0))
+
+    return re.sub(r"\$\{(\w+)\}", replace_match, string)
 
 
 def apply_variables(in_data: StageInfo, env_vars: Vars) -> StageInfo:

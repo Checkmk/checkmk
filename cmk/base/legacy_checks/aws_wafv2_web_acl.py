@@ -75,6 +75,7 @@ def discover_aws_wafv2_web_acl(p):
 
 
 check_info["aws_wafv2_web_acl"] = LegacyCheckDefinition(
+    name="aws_wafv2_web_acl",
     parse_function=parse_aws_wafv2_web_acl,
     service_name="AWS/WAFV2 Web ACL Requests",
     discovery_function=discover_aws_wafv2_web_acl,

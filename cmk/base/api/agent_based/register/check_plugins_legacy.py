@@ -14,7 +14,6 @@ from collections.abc import Callable, Generator, Iterable
 from contextlib import suppress
 from typing import Any
 
-from cmk.utils.check_utils import maincheckify
 from cmk.utils.legacy_check_api import LegacyCheckDefinition
 
 from cmk.checkengine.parameters import Parameters
@@ -243,7 +242,6 @@ def _create_signature_check_function(
 
 
 def create_check_plugin_from_legacy(
-    check_plugin_name: str,
     check_info_element: LegacyCheckDefinition,
     *,
     validate_creation_kwargs: bool = True,
@@ -253,22 +251,17 @@ def create_check_plugin_from_legacy(
         # handled gracefully
         raise ValueError(check_info_element.service_name)
 
-    new_check_name = maincheckify(check_plugin_name)
-    sections = [check_plugin_name.split(".", 1)[0]]
-    if "." in check_plugin_name:
-        assert sections == check_info_element.sections
-
     discovery_function = _create_discovery_function(check_info_element)
 
     check_function = _create_check_function(
-        check_plugin_name,
+        check_info_element.name,
         check_info_element.service_name,
         check_info_element,
     )
 
     return create_check_plugin(
-        name=new_check_name,
-        sections=sections,
+        name=check_info_element.name,
+        sections=check_info_element.sections,
         service_name=check_info_element.service_name,
         discovery_function=discovery_function,
         discovery_default_parameters=None,  # legacy madness!

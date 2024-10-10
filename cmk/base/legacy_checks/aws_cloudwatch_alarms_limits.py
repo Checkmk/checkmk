@@ -20,6 +20,7 @@ def discover_aws_cloudwatch_alarms_limits(section):
 
 
 check_info["aws_cloudwatch_alarms_limits"] = LegacyCheckDefinition(
+    name="aws_cloudwatch_alarms_limits",
     parse_function=parse_aws_limits_generic,
     service_name="AWS/CloudWatch Alarms Limits %s",
     discovery_function=discover_aws_cloudwatch_alarms_limits,

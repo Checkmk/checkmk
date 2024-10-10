@@ -30,6 +30,17 @@ vite dev server is used.
 Checkmk should then automatically reload as soon as you change a file of the
 cmk-frontend-vue project.
 
+### testing components outsite a site
+
+* run `npm ci` in this folder, and also in `../cmk-frontend`
+    * yes, we should not need to execute `npm ci` in another package, but this
+      is the current reality: the code in `cmk-frontend-vue` is not really
+      independent of `cmk-frontend`. The styling of `cmk-frontend` is necessary
+      for many `FormEdit` sub-components.
+* run `npm run -- dev --config vite.config.demo.ts`
+* surf to `http://localhost:5173/`
+
+
 ### Location of files and folders
 src/
     form/  # files for form rendering

@@ -43,6 +43,7 @@ def parse_lgp_pdu_info(string_table: StringTable) -> StringTable:
 
 
 check_info["lgp_pdu_info"] = LegacyCheckDefinition(
+    name="lgp_pdu_info",
     parse_function=parse_lgp_pdu_info,
     detect=DETECT_LGP,
     fetch=SNMPTree(

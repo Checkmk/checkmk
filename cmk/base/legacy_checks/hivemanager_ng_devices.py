@@ -71,6 +71,7 @@ def check_hivemanager_ng_devices(item, params, parsed):
 
 
 check_info["hivemanager_ng_devices"] = LegacyCheckDefinition(
+    name="hivemanager_ng_devices",
     parse_function=parse_hivemanager_ng_devices,
     service_name="Client %s",
     discovery_function=inventory_hivemanager_ng_devices,

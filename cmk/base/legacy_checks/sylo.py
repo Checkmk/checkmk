@@ -109,6 +109,7 @@ def parse_sylo(string_table: StringTable) -> StringTable:
 
 
 check_info["sylo"] = LegacyCheckDefinition(
+    name="sylo",
     parse_function=parse_sylo,
     service_name="Sylo",
     discovery_function=inventory_sylo,

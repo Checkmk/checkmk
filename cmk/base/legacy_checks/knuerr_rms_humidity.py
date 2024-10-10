@@ -26,6 +26,7 @@ def parse_knuerr_rms_humidity(string_table: StringTable) -> StringTable | None:
 
 
 check_info["knuerr_rms_humidity"] = LegacyCheckDefinition(
+    name="knuerr_rms_humidity",
     parse_function=parse_knuerr_rms_humidity,
     detect=DETECT_KNUERR,
     fetch=SNMPTree(

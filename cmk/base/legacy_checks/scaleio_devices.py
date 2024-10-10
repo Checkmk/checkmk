@@ -81,6 +81,7 @@ def discover_scaleio_devices(section):
 
 
 check_info["scaleio_devices"] = LegacyCheckDefinition(
+    name="scaleio_devices",
     parse_function=parse_scaleio_devices,
     service_name="ScaleIO Data Server %s Devices",
     discovery_function=discover_scaleio_devices,

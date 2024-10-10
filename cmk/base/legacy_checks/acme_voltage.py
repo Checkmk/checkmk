@@ -76,6 +76,7 @@ def parse_acme_voltage(string_table: StringTable) -> StringTable:
 
 
 check_info["acme_voltage"] = LegacyCheckDefinition(
+    name="acme_voltage",
     parse_function=parse_acme_voltage,
     detect=DETECT_ACME,
     fetch=SNMPTree(

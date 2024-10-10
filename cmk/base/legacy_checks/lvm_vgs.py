@@ -30,6 +30,7 @@ def parse_lvm_vgs(string_table: StringTable) -> StringTable:
 
 
 check_info["lvm_vgs"] = LegacyCheckDefinition(
+    name="lvm_vgs",
     parse_function=parse_lvm_vgs,
     service_name="LVM VG %s",
     discovery_function=inventory_lvm_vgs,

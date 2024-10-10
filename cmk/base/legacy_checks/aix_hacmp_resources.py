@@ -66,6 +66,7 @@ def check_aix_hacmp_resources(item, params, parsed):
 
 
 check_info["aix_hacmp_resources"] = LegacyCheckDefinition(
+    name="aix_hacmp_resources",
     parse_function=parse_aix_hacmp_resources,
     service_name="HACMP RG %s",
     discovery_function=inventory_aix_hacmp_resources,

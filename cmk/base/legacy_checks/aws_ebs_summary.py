@@ -74,6 +74,7 @@ def check_aws_ebs_summary(item, params, parsed):
 
 
 check_info["aws_ebs_summary"] = LegacyCheckDefinition(
+    name="aws_ebs_summary",
     parse_function=parse_aws_summary,
     service_name="AWS/EBS Summary",
     discovery_function=discover_aws_ebs_summary,
@@ -106,6 +107,7 @@ def discover_aws_ebs_summary_health(p):
 
 
 check_info["aws_ebs_summary.health"] = LegacyCheckDefinition(
+    name="aws_ebs_summary_health",
     service_name="AWS/EBS Health %s",
     sections=["aws_ebs_summary"],
     discovery_function=discover_aws_ebs_summary_health,

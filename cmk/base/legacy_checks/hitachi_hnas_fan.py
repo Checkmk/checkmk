@@ -66,6 +66,7 @@ def parse_hitachi_hnas_fan(string_table: StringTable) -> StringTable:
 
 
 check_info["hitachi_hnas_fan"] = LegacyCheckDefinition(
+    name="hitachi_hnas_fan",
     parse_function=parse_hitachi_hnas_fan,
     detect=DETECT,
     fetch=SNMPTree(

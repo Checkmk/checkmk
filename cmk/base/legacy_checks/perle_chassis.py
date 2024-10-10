@@ -35,6 +35,7 @@ def check_perle_chassis(_no_item, _no_params, section):
 
 
 check_info["perle_chassis"] = LegacyCheckDefinition(
+    name="perle_chassis",
     service_name="Chassis status",
     discovery_function=inventory_perle_chassis,
     check_function=check_perle_chassis,
@@ -50,6 +51,7 @@ def check_perle_chassis_temp(item, params, section):
 
 
 check_info["perle_chassis.temp"] = LegacyCheckDefinition(
+    name="perle_chassis_temp",
     service_name="Temperature %s",
     sections=["perle_chassis"],
     discovery_function=inventory_perle_chassis_temp,

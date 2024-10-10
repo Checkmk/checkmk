@@ -39,6 +39,7 @@ def check_lparstat(_no_item: int, _no_params: Mapping[str, Any], section: Sectio
 
 
 check_info["lparstat_aix"] = LegacyCheckDefinition(
+    name="lparstat_aix",
     service_name="lparstat",
     discovery_function=inventory_lparstat,
     check_function=check_lparstat,
@@ -91,6 +92,7 @@ def check_lparstat_aix_cpu(
 
 
 check_info["lparstat_aix.cpu_util"] = LegacyCheckDefinition(
+    name="lparstat_aix_cpu_util",
     service_name="CPU utilization",
     sections=["lparstat_aix"],
     discovery_function=inventory_lparstat_aix_cpu,

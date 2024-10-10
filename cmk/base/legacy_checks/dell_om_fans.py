@@ -73,6 +73,7 @@ def parse_dell_om_fans(string_table: StringTable) -> StringTable:
 
 
 check_info["dell_om_fans"] = LegacyCheckDefinition(
+    name="dell_om_fans",
     parse_function=parse_dell_om_fans,
     detect=DETECT_OPENMANAGE,
     fetch=SNMPTree(

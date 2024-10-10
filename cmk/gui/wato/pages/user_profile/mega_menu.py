@@ -5,12 +5,7 @@
 
 """The user profile mega menu and related AJAX endpoints"""
 
-import cmk.ccc.version as cmk_version
-
-import cmk.utils.paths
-
-if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CSE:
-    from cmk.gui.cse.utils.roles import user_may_see_saas_onboarding
+from collections.abc import Callable
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
@@ -26,7 +21,11 @@ from cmk.gui.utils.theme import theme, theme_choices
 from cmk.gui.utils.urls import makeuri_contextless
 
 
-def register(page_registry: PageRegistry, mega_menu_registry: MegaMenuRegistry) -> None:
+def register(
+    page_registry: PageRegistry,
+    mega_menu_registry: MegaMenuRegistry,
+    user_menu_topics: Callable[[], list[TopicMenuTopic]],
+) -> None:
     page_registry.register_page("ajax_ui_theme")(ModeAjaxCycleThemes)
     page_registry.register_page("ajax_sidebar_position")(ModeAjaxCycleSidebarPosition)
     page_registry.register_page("ajax_set_dashboard_start_url")(ModeAjaxSetStartURL)
@@ -37,15 +36,10 @@ def register(page_registry: PageRegistry, mega_menu_registry: MegaMenuRegistry) 
             title=_l("User"),
             icon="main_user",
             sort_index=20,
-            topics=_user_menu_topics,
+            topics=user_menu_topics,
             info_line=lambda: f"{user.id} ({'+'.join(user.role_ids)})",
         )
     )
-
-    if cmk_version.edition(cmk.utils.paths.omd_root) == cmk_version.Edition.CSE:
-        page_registry.register_page("ajax_saas_onboarding_button_toggle")(
-            ModeAjaxCycleSaasOnboardingButtonToggle
-        )
 
 
 def _get_current_theme_title() -> str:
@@ -63,17 +57,6 @@ def _get_sidebar_position() -> str:
     return sidebar_position or "right"
 
 
-def _get_saas_onboarding_visibility_status() -> str | None:
-    assert user.id is not None
-    saas_onboarding_button_toggle = load_custom_attr(
-        user_id=user.id,
-        key="ui_saas_onboarding_button_toggle",
-        parser=lambda x: None if x == "None" else x,
-    )
-
-    return saas_onboarding_button_toggle
-
-
 def _sidebar_position_title(stored_value: str) -> str:
     return _("Left") if stored_value == "left" else _("Right")
 
@@ -82,7 +65,9 @@ def _sidebar_position_id(stored_value: str) -> str:
     return "left" if stored_value == "left" else "right"
 
 
-def _user_menu_topics() -> list[TopicMenuTopic]:
+def default_user_menu_topics(
+    add_change_password_menu_item: bool = True, add_two_factor_menu_item: bool = True
+) -> list[TopicMenuTopic]:
     quick_items = [
         TopicMenuItem(
             name="ui_theme",
@@ -104,25 +89,6 @@ def _user_menu_topics() -> list[TopicMenuTopic]:
         ),
     ]
 
-    if cmk_version.edition(
-        cmk.utils.paths.omd_root
-    ) == cmk_version.Edition.CSE and user_may_see_saas_onboarding(user.id):
-        quick_items.append(
-            TopicMenuItem(
-                name="saas_onboarding_button_toggle",
-                title=_("Toggle onboarding button"),
-                url='javascript:cmk.sidebar.toggle_user_attribute("ajax_saas_onboarding_button_toggle.py")',
-                target="",
-                sort_index=30,
-                icon="sidebar_position",
-                button_title=(
-                    _("Visible")
-                    if _get_saas_onboarding_visibility_status() is None
-                    else _("Invisible")
-                ),
-            ),
-        )
-
     items = [
         TopicMenuItem(
             name="user_profile",
@@ -133,24 +99,26 @@ def _user_menu_topics() -> list[TopicMenuTopic]:
         ),
     ]
 
-    if cmk_version.edition(cmk.utils.paths.omd_root) != cmk_version.Edition.CSE:
-        items.extend(
-            [
-                TopicMenuItem(
-                    name="change_password",
-                    title=_("Change password"),
-                    url="user_change_pw.py",
-                    sort_index=30,
-                    icon="topic_change_password",
-                ),
-                TopicMenuItem(
-                    name="two_factor",
-                    title=_("Two-factor authentication"),
-                    url="user_two_factor_overview.py",
-                    sort_index=30,
-                    icon="topic_two_factor",
-                ),
-            ]
+    if add_change_password_menu_item:
+        items.append(
+            TopicMenuItem(
+                name="change_password",
+                title=_("Change password"),
+                url="user_change_pw.py",
+                sort_index=30,
+                icon="topic_change_password",
+            )
+        )
+
+    if add_two_factor_menu_item:
+        items.append(
+            TopicMenuItem(
+                name="two_factor",
+                title=_("Two-factor authentication"),
+                url="user_two_factor_overview.py",
+                sort_index=30,
+                icon="topic_two_factor",
+            ),
         )
 
     items.append(
@@ -178,13 +146,13 @@ def _user_menu_topics() -> list[TopicMenuTopic]:
 
     return [
         TopicMenuTopic(
-            name="user",
+            name="user_interface",
             title=_("User interface"),
             icon="topic_user_interface",
             items=quick_items,
         ),
         TopicMenuTopic(
-            name="user",
+            name="user_profile",
             title=_("User profile"),
             icon="topic_profile",
             items=items,
@@ -221,18 +189,6 @@ class ModeAjaxCycleSidebarPosition(AjaxPage):
         _set_user_attribute(
             "ui_sidebar_position",
             None if _sidebar_position_id(_get_sidebar_position()) == "left" else "left",
-        )
-        return {}
-
-
-class ModeAjaxCycleSaasOnboardingButtonToggle(AjaxPage):
-    """AJAX handler for quick access option 'Toggle onboarding button" in user menu"""
-
-    def page(self) -> PageResult:
-        check_csrf_token()
-        _set_user_attribute(
-            "ui_saas_onboarding_button_toggle",
-            (None if _get_saas_onboarding_visibility_status() == "invisible" else "invisible"),
         )
         return {}
 

@@ -90,6 +90,7 @@ def parse_netscaler_ha(string_table: StringTable) -> StringTable:
 
 
 check_info["netscaler_ha"] = LegacyCheckDefinition(
+    name="netscaler_ha",
     parse_function=parse_netscaler_ha,
     detect=SNMP_DETECT,
     fetch=SNMPTree(

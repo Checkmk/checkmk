@@ -32,9 +32,11 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(name="test_site", scope="session")
-def fixture_test_site() -> Iterator[Site]:
+def fixture_test_site(request: pytest.FixtureRequest) -> Iterator[Site]:
     """Return the Checkmk site object."""
-    with exit_pytest_on_exceptions():
+    with exit_pytest_on_exceptions(
+        exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
+    ):
         yield from get_site_factory(prefix="gui_e2e_").get_test_site()
 
 

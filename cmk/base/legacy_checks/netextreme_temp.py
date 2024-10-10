@@ -29,6 +29,7 @@ def parse_netextreme_temp(string_table: StringTable) -> StringTable | None:
 
 
 check_info["netextreme_temp"] = LegacyCheckDefinition(
+    name="netextreme_temp",
     parse_function=parse_netextreme_temp,
     detect=DETECT_NETEXTREME,
     fetch=SNMPTree(

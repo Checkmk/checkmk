@@ -84,6 +84,7 @@ def parse_tsm_drives(string_table: StringTable) -> StringTable:
 
 
 check_info["tsm_drives"] = LegacyCheckDefinition(
+    name="tsm_drives",
     parse_function=parse_tsm_drives,
     service_name="TSM Drive %s",
     discovery_function=inventory_tsm_drives,

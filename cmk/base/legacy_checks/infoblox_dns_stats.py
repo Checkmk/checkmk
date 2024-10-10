@@ -42,6 +42,7 @@ def parse_infoblox_dns_stats(string_table: StringTable) -> StringTable | None:
 
 
 check_info["infoblox_dns_stats"] = LegacyCheckDefinition(
+    name="infoblox_dns_stats",
     parse_function=parse_infoblox_dns_stats,
     detect=DETECT_INFOBLOX,
     fetch=SNMPTree(

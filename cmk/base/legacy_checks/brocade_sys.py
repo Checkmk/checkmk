@@ -47,6 +47,7 @@ def check_brocade_sys_mem(item, params, parsed):
 
 
 check_info["brocade_sys.mem"] = LegacyCheckDefinition(
+    name="brocade_sys_mem",
     service_name="Memory",
     sections=["brocade_sys"],
     discovery_function=inventory_brocade_sys_mem,
@@ -75,6 +76,7 @@ def check_brocade_sys(item, params, parsed):
 
 
 check_info["brocade_sys"] = LegacyCheckDefinition(
+    name="brocade_sys",
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588.2.1.1"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1916.2.306"),

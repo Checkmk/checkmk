@@ -29,6 +29,7 @@ def parse_bvip_poe(string_table: StringTable) -> StringTable:
 
 
 check_info["bvip_poe"] = LegacyCheckDefinition(
+    name="bvip_poe",
     parse_function=parse_bvip_poe,
     detect=DETECT_BVIP,
     fetch=SNMPTree(

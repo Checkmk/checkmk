@@ -43,6 +43,7 @@ def discover_azure_sites(section):
 
 
 check_info["azure_sites"] = LegacyCheckDefinition(
+    name="azure_sites",
     parse_function=parse_resources,
     service_name="Site %s",
     discovery_function=discover_azure_sites,

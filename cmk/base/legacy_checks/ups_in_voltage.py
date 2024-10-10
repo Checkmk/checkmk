@@ -21,6 +21,7 @@ def parse_ups_in_voltage(string_table: StringTable) -> StringTable:
 
 
 check_info["ups_in_voltage"] = LegacyCheckDefinition(
+    name="ups_in_voltage",
     parse_function=parse_ups_in_voltage,
     detect=DETECT_UPS_GENERIC,
     fetch=SNMPTree(

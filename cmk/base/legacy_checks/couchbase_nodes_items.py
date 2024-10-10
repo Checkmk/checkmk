@@ -53,6 +53,7 @@ def check_couchbase_nodes_items(item, params, parsed):
 
 
 check_info["couchbase_nodes_items"] = LegacyCheckDefinition(
+    name="couchbase_nodes_items",
     parse_function=parse_couchbase_lines,
     service_name="Couchbase %s vBucket items",
     discovery_function=discover_couchbase_nodes_items,

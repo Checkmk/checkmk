@@ -56,6 +56,7 @@ def discover_gude_relayport(section):
 
 
 check_info["gude_relayport"] = LegacyCheckDefinition(
+    name="gude_relayport",
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.28507.38"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.28507.38.1",

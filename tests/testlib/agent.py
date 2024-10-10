@@ -294,7 +294,7 @@ def wait_for_baking_job(central_site: Site, expected_start_time: float) -> None:
 def _remove_omd_status_cache() -> None:
     logger.info("Removing omd status agent cache...")
     try:
-        run(["rm", "-f", str(OMD_STATUS_CACHE)], shell=True, sudo=True)
+        run(["rm", "-f", str(OMD_STATUS_CACHE)], sudo=True)
     except subprocess.CalledProcessError as excp:
         excp.add_note("Failed to remove agent cache!")
         raise excp

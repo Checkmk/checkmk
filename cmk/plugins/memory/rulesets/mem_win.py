@@ -238,7 +238,11 @@ def _parameters_memory_pagefile_win() -> Dictionary:
             "average": DictElement[float](
                 parameter_form=TimeSpan(
                     title=Title("Averaging"),
-                    displayed_magnitudes=[TimeMagnitude.MINUTE],
+                    displayed_magnitudes=[
+                        TimeMagnitude.HOUR,
+                        TimeMagnitude.MINUTE,
+                        TimeMagnitude.SECOND,
+                    ],
                     help_text=Help(
                         "If this parameter is set, all measured values will be averaged "
                         "over the specified time interval before levels are being applied. "

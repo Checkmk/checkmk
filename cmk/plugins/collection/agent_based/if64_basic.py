@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
 from collections.abc import Mapping
 from typing import Any
 
@@ -21,7 +20,6 @@ def check_interfaces(
         params=params,
         section=section,
         group_name="Interface group",
-        timestamp=time.time(),
     )
 
 

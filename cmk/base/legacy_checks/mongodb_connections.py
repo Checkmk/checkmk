@@ -78,6 +78,7 @@ def parse_mongodb_connections(string_table: StringTable) -> StringTable:
 
 
 check_info["mongodb_connections"] = LegacyCheckDefinition(
+    name="mongodb_connections",
     parse_function=parse_mongodb_connections,
     service_name="MongoDB %s",
     discovery_function=inventory_mongodb_connections,

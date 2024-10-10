@@ -131,11 +131,13 @@ from cmk.base.server_side_calls import load_active_checks
 from cmk.base.sources import make_parser, SNMPFetcherConfig
 from cmk.base.utils import register_sigint_handler
 
-from cmk import piggyback
+from cmk import piggyback, trace
 from cmk.agent_based.v1.value_store import set_value_store_manager
 from cmk.discover_plugins import discover_families, PluginGroup
 
 from ._localize import do_localize
+
+tracer = trace.get_tracer()
 
 # TODO: Investigate all modes and try to find out whether or not we can
 # set needs_checks=False for them. This would save a lot of IO/time for
@@ -342,7 +344,10 @@ def mode_list_hosts(options: dict, args: list[str]) -> None:
 
 # TODO: Does not care about internal group "check_mk"
 def _list_all_hosts(
-    config_cache: ConfigCache, ruleset_matcher: RulesetMatcher, hostgroups: list[str], options: dict
+    config_cache: ConfigCache,
+    ruleset_matcher: RulesetMatcher,
+    hostgroups: list[str],
+    options: dict,
 ) -> list[HostName]:
     hosts_config = config_cache.hosts_config
     hostnames: Iterable[HostName]
@@ -471,7 +476,8 @@ def mode_list_checks() -> None:
     all_check_manuals = {
         n: man_pages.parse_man_page(n, p)
         for n, p in man_pages.make_man_page_path_map(
-            discover_families(raise_errors=cmk.ccc.debug.enabled()), PluginGroup.CHECKMAN.value
+            discover_families(raise_errors=cmk.ccc.debug.enabled()),
+            PluginGroup.CHECKMAN.value,
         ).items()
     }
 
@@ -828,7 +834,7 @@ def mode_update_dns_cache() -> None:
         configured_ipv6_addresses=config.ipaddresses,
         configured_ipv4_addresses=config.ipv6addresses,
         simulation_mode=config.simulation_mode,
-        override_dns=HostAddress(config.fake_dns) if config.fake_dns is not None else None,
+        override_dns=(HostAddress(config.fake_dns) if config.fake_dns is not None else None),
     )
 
 
@@ -966,7 +972,9 @@ def _do_snmpwalk(options: _SNMPWalkOptions, *, backend: SNMPBackend) -> None:
     # TODO: What about SNMP management boards?
     try:
         _do_snmpwalk_on(
-            options, cmk.utils.paths.snmpwalks_dir + "/" + backend.hostname, backend=backend
+            options,
+            cmk.utils.paths.snmpwalks_dir + "/" + backend.hostname,
+            backend=backend,
         )
     except Exception as e:
         console.error(f"Error walking {backend.hostname}: {e}", file=sys.stderr)
@@ -1528,7 +1536,8 @@ def mode_man(options: Mapping[str, str], args: list[str]) -> None:
     from cmk.utils import man_pages  # pylint: disable=import-outside-toplevel
 
     man_page_path_map = man_pages.make_man_page_path_map(
-        discover_families(raise_errors=cmk.ccc.debug.enabled()), PluginGroup.CHECKMAN.value
+        discover_families(raise_errors=cmk.ccc.debug.enabled()),
+        PluginGroup.CHECKMAN.value,
     )
     if not args:
         man_pages.print_man_page_table(man_page_path_map)
@@ -1599,7 +1608,8 @@ def mode_browse_man() -> None:
 
     man_pages.print_man_page_browser(
         man_pages.load_man_page_catalog(
-            discover_families(raise_errors=cmk.ccc.debug.enabled()), PluginGroup.CHECKMAN.value
+            discover_families(raise_errors=cmk.ccc.debug.enabled()),
+            PluginGroup.CHECKMAN.value,
         )
     )
 
@@ -1646,7 +1656,15 @@ def mode_automation(args: list[str]) -> None:
         log.logger.addHandler(logging.NullHandler())
         log.logger.setLevel(logging.INFO)
 
-    sys.exit(automations.automations.execute(args[0], args[1:]))
+    name, automation_args = args[0], args[1:]
+    with tracer.start_as_current_span(
+        f"mode_automation[{name}]",
+        attributes={
+            "cmk.automation.name": name,
+            "cmk.automation.args": automation_args,
+        },
+    ):
+        sys.exit(automations.automations.execute(name, automation_args))
 
 
 modes.register(
@@ -1863,7 +1881,9 @@ def register_mode_check_discovery(
         Mode(
             long_option="check-discovery",
             handler_function=partial(
-                mode_check_discovery, active_check_handler=active_check_handler, keepalive=keepalive
+                mode_check_discovery,
+                active_check_handler=active_check_handler,
+                keepalive=keepalive,
             ),
             argument=True,
             argument_descr="HOSTNAME",
@@ -2109,7 +2129,9 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         ip_address_of=config.ConfiguredIPLookup(
             config_cache, error_handler=config.handle_ip_lookup_failure
         ),
-        mode=FetchMode.DISCOVERY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS,
+        mode=(
+            FetchMode.DISCOVERY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
+        ),
         on_error=on_error,
         selected_sections=selected_sections,
         simulation_mode=config.simulation_mode,
@@ -2127,7 +2149,9 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     ):
 
         def section_error_handling(
-            section_name: SectionName, raw_data: Sequence[object], host_name: HostName = hostname
+            section_name: SectionName,
+            raw_data: Sequence[object],
+            host_name: HostName = hostname,
         ) -> str:
             return create_section_crash_dump(
                 operation="parsing",
@@ -2270,7 +2294,9 @@ def mode_check(
         ip_address_of=config.ConfiguredIPLookup(
             config_cache, error_handler=config.handle_ip_lookup_failure
         ),
-        mode=FetchMode.CHECKING if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS,
+        mode=(
+            FetchMode.CHECKING if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
+        ),
         on_error=OnError.RAISE,
         selected_sections=selected_sections,
         simulation_mode=config.simulation_mode,
@@ -2353,7 +2379,7 @@ def mode_check(
                     monitoring_core=config.monitoring_core,
                     dry_run=dry_run,
                     host_name=hostname,
-                    perfdata_format="pnp" if config.perfdata_format == "pnp" else "standard",
+                    perfdata_format=("pnp" if config.perfdata_format == "pnp" else "standard"),
                     show_perfdata=options.get("perfdata", False),
                 ),
                 exit_spec=config_cache.exit_code_spec(hostname),
@@ -2511,7 +2537,9 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         ip_address_of=config.ConfiguredIPLookup(
             config_cache, error_handler=config.handle_ip_lookup_failure
         ),
-        mode=FetchMode.INVENTORY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS,
+        mode=(
+            FetchMode.INVENTORY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
+        ),
         on_error=OnError.RAISE,
         selected_sections=selected_sections,
         simulation_mode=config.simulation_mode,

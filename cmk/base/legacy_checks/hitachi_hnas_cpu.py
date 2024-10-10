@@ -38,6 +38,7 @@ def parse_hitachi_hnas_cpu(string_table: StringTable) -> StringTable:
 
 
 check_info["hitachi_hnas_cpu"] = LegacyCheckDefinition(
+    name="hitachi_hnas_cpu",
     parse_function=parse_hitachi_hnas_cpu,
     detect=DETECT,
     fetch=SNMPTree(

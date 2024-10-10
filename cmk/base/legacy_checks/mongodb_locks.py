@@ -47,6 +47,7 @@ def parse_mongodb_locks(string_table: StringTable) -> StringTable:
 
 
 check_info["mongodb_locks"] = LegacyCheckDefinition(
+    name="mongodb_locks",
     parse_function=parse_mongodb_locks,
     service_name="MongoDB Locks",
     discovery_function=inventory_mongodb_locks,

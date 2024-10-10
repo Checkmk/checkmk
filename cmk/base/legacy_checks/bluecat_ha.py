@@ -43,6 +43,7 @@ def parse_bluecat_ha(string_table: StringTable) -> StringTable:
 
 
 check_info["bluecat_ha"] = LegacyCheckDefinition(
+    name="bluecat_ha",
     parse_function=parse_bluecat_ha,
     detect=DETECT_BLUECAT,
     fetch=SNMPTree(

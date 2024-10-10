@@ -52,6 +52,7 @@ def parse_infoblox_dhcp_stats(string_table: StringTable) -> StringTable | None:
 
 
 check_info["infoblox_dhcp_stats"] = LegacyCheckDefinition(
+    name="infoblox_dhcp_stats",
     parse_function=parse_infoblox_dhcp_stats,
     detect=DETECT_INFOBLOX,
     fetch=SNMPTree(

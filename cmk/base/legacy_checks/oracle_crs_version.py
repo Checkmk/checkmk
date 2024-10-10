@@ -29,6 +29,7 @@ def parse_oracle_crs_version(string_table: StringTable) -> StringTable:
 
 
 check_info["oracle_crs_version"] = LegacyCheckDefinition(
+    name="oracle_crs_version",
     parse_function=parse_oracle_crs_version,
     service_name="ORA-GI Version",
     discovery_function=inventory_oracle_crs_version,

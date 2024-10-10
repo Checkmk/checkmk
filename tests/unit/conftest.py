@@ -323,7 +323,6 @@ class FixPluginLegacy:
             for k, v in config.check_info.items()
             if isinstance(k, str) and isinstance(v, LegacyCheckDefinition)
         }
-        self.factory_settings = copy.deepcopy(config.factory_settings)
 
 
 @pytest.fixture(scope="session", name="fix_register")

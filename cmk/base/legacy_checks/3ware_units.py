@@ -71,6 +71,7 @@ def parse_3ware_units(string_table: StringTable) -> StringTable:
 
 
 check_info["3ware_units"] = LegacyCheckDefinition(
+    name="3ware_units",
     parse_function=parse_3ware_units,
     service_name="RAID 3ware unit %s",
     discovery_function=inventory_3ware_units,

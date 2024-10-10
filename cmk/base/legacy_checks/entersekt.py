@@ -44,6 +44,7 @@ def parse_entersekt(string_table: StringTable) -> StringTable:
 
 
 check_info["entersekt"] = LegacyCheckDefinition(
+    name="entersekt",
     parse_function=parse_entersekt,
     detect=all_of(contains(".1.3.6.1.2.1.1.1.0", "linux"), exists(".1.3.6.1.4.1.38235.2.3.1.0")),
     fetch=SNMPTree(
@@ -99,6 +100,7 @@ def check_entersekt_emrerrors(item, params, info):
 
 
 check_info["entersekt.emrerrors"] = LegacyCheckDefinition(
+    name="entersekt_emrerrors",
     service_name="Entersekt http EMR Errors",
     sections=["entersekt"],
     discovery_function=inventory_entersekt_emrerrors,
@@ -151,6 +153,7 @@ def check_entersekt_ecerterrors(item, params, info):
 
 
 check_info["entersekt.ecerterrors"] = LegacyCheckDefinition(
+    name="entersekt_ecerterrors",
     service_name="Entersekt http Ecert Errors",
     sections=["entersekt"],
     discovery_function=inventory_entersekt_ecerterrors,
@@ -202,6 +205,7 @@ def check_entersekt_soaperrors(item, params, info):
 
 
 check_info["entersekt.soaperrors"] = LegacyCheckDefinition(
+    name="entersekt_soaperrors",
     service_name="Entersekt Soap Service Errors",
     sections=["entersekt"],
     discovery_function=inventory_entersekt_soaperrors,
@@ -266,6 +270,7 @@ def check_entersekt_certexpiry(item, params, info):
 
 
 check_info["entersekt.certexpiry"] = LegacyCheckDefinition(
+    name="entersekt_certexpiry",
     service_name="Entersekt Certificate Expiration",
     sections=["entersekt"],
     discovery_function=inventory_entersekt_certexpiry,

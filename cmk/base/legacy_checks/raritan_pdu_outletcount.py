@@ -30,6 +30,7 @@ def parse_raritan_pdu_outletcount(string_table: StringTable) -> StringTable:
 
 
 check_info["raritan_pdu_outletcount"] = LegacyCheckDefinition(
+    name="raritan_pdu_outletcount",
     parse_function=parse_raritan_pdu_outletcount,
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13742.6"),

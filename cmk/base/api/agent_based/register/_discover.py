@@ -8,6 +8,7 @@ from typing import assert_never
 
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 
+from cmk import trace
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -37,7 +38,10 @@ from .section_plugins import create_agent_section_plugin, create_snmp_section_pl
 
 _ABPlugins = SimpleSNMPSection | SNMPSection | AgentSection | CheckPlugin | InventoryPlugin
 
+tracer = trace.get_tracer()
 
+
+@tracer.start_as_current_span("load_all_plugins")
 def load_all_plugins(*, raise_errors: bool) -> list[str]:
     errors = []
     for plugin_name, exception in load_plugins_with_exceptions("cmk.base.plugins.agent_based"):
@@ -45,17 +49,20 @@ def load_all_plugins(*, raise_errors: bool) -> list[str]:
         if raise_errors:
             raise exception
 
-    discovered_plugins: DiscoveredPlugins[_ABPlugins] = discover_plugins(
-        PluginGroup.AGENT_BASED, entry_point_prefixes(), raise_errors=raise_errors
-    )
-    errors.extend(f"Error in agent based plugin: {exc}" for exc in discovered_plugins.errors)
-    for location, plugin in discovered_plugins.plugins.items():
-        try:
-            register_plugin_by_type(location, plugin, validate=raise_errors)
-        except Exception as exc:
-            if raise_errors:
-                raise
-            errors.append(f"Error in agent based plug-in {plugin.name} ({type(plugin)}): {exc}")
+    with tracer.start_as_current_span("discover_plugins"):
+        discovered_plugins: DiscoveredPlugins[_ABPlugins] = discover_plugins(
+            PluginGroup.AGENT_BASED, entry_point_prefixes(), raise_errors=raise_errors
+        )
+        errors.extend(f"Error in agent based plugin: {exc}" for exc in discovered_plugins.errors)
+
+    with tracer.start_as_current_span("load_discovered_plugins"):
+        for location, plugin in discovered_plugins.plugins.items():
+            try:
+                register_plugin_by_type(location, plugin, validate=raise_errors)
+            except Exception as exc:
+                if raise_errors:
+                    raise
+                errors.append(f"Error in agent based plug-in {plugin.name} ({type(plugin)}): {exc}")
 
     return errors
 

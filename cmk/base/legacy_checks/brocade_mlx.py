@@ -35,6 +35,7 @@ def parse_brocade_mlx(string_table: Sequence[StringTable]) -> Sequence[StringTab
 
 
 check_info["brocade_mlx"] = LegacyCheckDefinition(
+    name="brocade_mlx",
     parse_function=parse_brocade_mlx,
     detect=DETECT_MLX,
     fetch=[
@@ -101,6 +102,7 @@ def check_brocade_mlx_module(item, _no_params, info):
 
 
 check_info["brocade_mlx.module_status"] = LegacyCheckDefinition(
+    name="brocade_mlx_module_status",
     service_name="Status Module %s",
     sections=["brocade_mlx"],
     discovery_function=inventory_brocade_mlx_module,
@@ -185,6 +187,7 @@ def check_brocade_mlx_module_mem(item, params, info):
 
 
 check_info["brocade_mlx.module_mem"] = LegacyCheckDefinition(
+    name="brocade_mlx_module_mem",
     service_name="Memory Module %s",
     sections=["brocade_mlx"],
     discovery_function=inventory_brocade_mlx_module_mem,
@@ -264,6 +267,7 @@ def check_brocade_mlx_module_cpu(item, params, info):
 
 
 check_info["brocade_mlx.module_cpu"] = LegacyCheckDefinition(
+    name="brocade_mlx_module_cpu",
     service_name="CPU utilization Module %s",
     sections=["brocade_mlx"],
     discovery_function=inventory_brocade_mlx_module_cpu,

@@ -15,7 +15,7 @@ defineProps<{
   <div class="core_stats">
     <h3 class="table">{{ stats['i18n']['title'] }}</h3>
     <div class="content">
-      <p v-if="stats['sites'].length == 0">
+      <p v-if="stats['sites'].length === 0">
         <img class="checkmark" />
         {{ stats['i18n']['ok_msg'] }}
       </p>
@@ -23,7 +23,7 @@ defineProps<{
         <img class="problem" />
         {{ stats['i18n']['warning_msg'] }}
       </p>
-      <div v-if="stats['sites']!.length != 0" class="table">
+      <div v-if="stats['sites']!.length !== 0" class="table">
         <table class="data even0">
           <tr class="data even0">
             <th>{{ stats['i18n']['sites_column_title'] }}</th>

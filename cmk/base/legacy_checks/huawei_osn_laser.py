@@ -70,6 +70,7 @@ def parse_huawei_osn_laser(string_table: StringTable) -> StringTable:
 
 
 check_info["huawei_osn_laser"] = LegacyCheckDefinition(
+    name="huawei_osn_laser",
     parse_function=parse_huawei_osn_laser,
     detect=DETECT_HUAWEI_OSN,
     fetch=SNMPTree(

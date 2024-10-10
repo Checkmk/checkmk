@@ -54,6 +54,7 @@ def discover_apc_sts_inputs(section):
 
 
 check_info["apc_sts_inputs"] = LegacyCheckDefinition(
+    name="apc_sts_inputs",
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.705.2.2"),
     fetch=[
         SNMPTree(

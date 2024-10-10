@@ -20,6 +20,7 @@ def discover_aws_s3_limits(section):
 
 
 check_info["aws_s3_limits"] = LegacyCheckDefinition(
+    name="aws_s3_limits",
     parse_function=parse_aws_limits_generic,
     service_name="AWS/S3 Limits %s",
     discovery_function=discover_aws_s3_limits,

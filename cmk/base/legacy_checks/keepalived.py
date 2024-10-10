@@ -57,6 +57,7 @@ def parse_keepalived(string_table: Sequence[StringTable]) -> Sequence[StringTabl
 
 
 check_info["keepalived"] = LegacyCheckDefinition(
+    name="keepalived",
     parse_function=parse_keepalived,
     detect=all_of(contains(".1.3.6.1.2.1.1.1.0", "linux"), exists(".1.3.6.1.4.1.9586.100.5.1.1.0")),
     fetch=[

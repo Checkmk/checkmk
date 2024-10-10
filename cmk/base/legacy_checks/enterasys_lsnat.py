@@ -47,6 +47,7 @@ def parse_enterasys_lsnat(string_table: StringTable) -> StringTable | None:
 
 
 check_info["enterasys_lsnat"] = LegacyCheckDefinition(
+    name="enterasys_lsnat",
     parse_function=parse_enterasys_lsnat,
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5624.2.1"),

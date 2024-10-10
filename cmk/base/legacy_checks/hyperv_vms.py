@@ -170,6 +170,7 @@ DEFAULT_PARAMETERS = {
 }
 
 check_info["hyperv_vms"] = LegacyCheckDefinition(
+    name="hyperv_vms",
     parse_function=parse_hyperv_vms,
     service_name="VM %s",
     discovery_function=inventory_hyperv_vms,

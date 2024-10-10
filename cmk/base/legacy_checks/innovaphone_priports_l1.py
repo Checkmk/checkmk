@@ -72,6 +72,7 @@ def check_innovaphone_priports_l1(item, params, parsed):
 
 
 check_info["innovaphone_priports_l1"] = LegacyCheckDefinition(
+    name="innovaphone_priports_l1",
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.6666"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.6666.1.2.1",

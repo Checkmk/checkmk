@@ -274,6 +274,7 @@ def check_lantime_ng_refclock_gps(item, params, info):
 
 
 check_info["mbg_lantime_ng_refclock.gps"] = LegacyCheckDefinition(
+    name="mbg_lantime_ng_refclock_gps",
     service_name="LANTIME Refclock %s",
     sections=["mbg_lantime_ng_refclock"],
     discovery_function=inventory_lantime_ng_refclock_gps,
@@ -343,6 +344,7 @@ def parse_mbg_lantime_ng_refclock(string_table: StringTable) -> StringTable:
 
 
 check_info["mbg_lantime_ng_refclock"] = LegacyCheckDefinition(
+    name="mbg_lantime_ng_refclock",
     parse_function=parse_mbg_lantime_ng_refclock,
     detect=DETECT_MBG_LANTIME_NG,
     fetch=SNMPTree(

@@ -126,6 +126,7 @@ def check_cups_queues(item, params, parsed):
 
 
 check_info["cups_queues"] = LegacyCheckDefinition(
+    name="cups_queues",
     parse_function=parse_cups_queues,
     service_name="CUPS Queue %s",
     discovery_function=inventory_cups_queues,

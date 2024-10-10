@@ -65,6 +65,7 @@ def check_dell_powerconnect_temp(_no_item, params, parsed):
 
 
 check_info["dell_powerconnect_temp"] = LegacyCheckDefinition(
+    name="dell_powerconnect_temp",
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.674.10895"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.89.53.15.1",

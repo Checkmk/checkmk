@@ -36,6 +36,7 @@ def check_pulse_secure_cpu(item, params, parsed):
 
 
 check_info["pulse_secure_cpu_util"] = LegacyCheckDefinition(
+    name="pulse_secure_cpu_util",
     detect=pulse_secure.DETECT_PULSE_SECURE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12532",

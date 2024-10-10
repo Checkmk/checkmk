@@ -26,6 +26,7 @@ def dummy_generator(section):  # pylint: disable=unused-argument
 
 
 MINIMAL_CHECK_INFO = LegacyCheckDefinition(
+    name="norris",
     service_name="Norris Device",
     discovery_function=dummy_generator,
     check_function=dummy_generator,
@@ -47,7 +48,7 @@ def test_create_discovery_function(monkeypatch: MonkeyPatch) -> None:
         ]
 
     new_function = check_plugins_legacy._create_discovery_function(
-        LegacyCheckDefinition(discovery_function=insane_discovery),
+        LegacyCheckDefinition(name="test_plugin", discovery_function=insane_discovery),
     )
 
     fixed_params = inspect.signature(new_function).parameters
@@ -79,6 +80,7 @@ def test_create_check_function() -> None:
         "test_plugin",
         "Foo %s",
         LegacyCheckDefinition(
+            name="test_plugin",
             check_function=insane_check,
         ),
     )
@@ -126,6 +128,7 @@ def test_create_check_function_with_empty_summary_in_details() -> None:
         "test_plugin",
         "Foo %s",
         LegacyCheckDefinition(
+            name="test_plugin",
             check_function=insane_check,
         ),
     )
@@ -158,6 +161,7 @@ def test_create_check_function_without_details() -> None:
         "test_plugin",
         "Foo %s",
         LegacyCheckDefinition(
+            name="test_plugin",
             check_function=insane_check,
         ),
     )
@@ -186,6 +190,7 @@ def test_create_check_function_with_zero_details_after_newline() -> None:
         "test_plugin",
         "Foo %s",
         LegacyCheckDefinition(
+            name="test_plugin",
             check_function=insane_check,
         ),
     )
@@ -203,10 +208,7 @@ def test_create_check_function_with_zero_details_after_newline() -> None:
 
 
 def test_create_check_plugin_from_legacy_wo_params() -> None:
-    plugin = check_plugins_legacy.create_check_plugin_from_legacy(
-        "norris",
-        MINIMAL_CHECK_INFO,
-    )
+    plugin = check_plugins_legacy.create_check_plugin_from_legacy(MINIMAL_CHECK_INFO)
 
     assert plugin.name == CheckPluginName("norris")
     assert plugin.sections == [ParsedSectionName("norris")]
@@ -227,10 +229,7 @@ def test_create_check_plugin_from_legacy_with_params() -> None:
         check_default_parameters={"levels": (23, 42)},
     )
 
-    plugin = check_plugins_legacy.create_check_plugin_from_legacy(
-        "norris",
-        check_info_element,
-    )
+    plugin = check_plugins_legacy.create_check_plugin_from_legacy(check_info_element)
 
     assert plugin.name == CheckPluginName("norris")
     assert plugin.sections == [ParsedSectionName("norris")]

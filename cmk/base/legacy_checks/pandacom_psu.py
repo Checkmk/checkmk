@@ -86,6 +86,7 @@ def check_pandacom_psu(item, _no_params, parsed):
 
 
 check_info["pandacom_psu"] = LegacyCheckDefinition(
+    name="pandacom_psu",
     detect=DETECT_PANDACOM,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3652.3.2",

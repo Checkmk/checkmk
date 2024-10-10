@@ -36,6 +36,7 @@ def check_decru_fans(
 
 
 check_info["decru_fans"] = LegacyCheckDefinition(
+    name="decru_fans",
     detect=DETECT_DECRU,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12962.1.2.3.1",

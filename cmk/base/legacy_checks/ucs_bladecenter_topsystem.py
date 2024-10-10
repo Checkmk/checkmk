@@ -29,6 +29,7 @@ def parse_ucs_bladecenter_topsystem(string_table: StringTable) -> StringTable:
 
 
 check_info["ucs_bladecenter_topsystem"] = LegacyCheckDefinition(
+    name="ucs_bladecenter_topsystem",
     parse_function=parse_ucs_bladecenter_topsystem,
     service_name="UCS TopSystem Info",
     discovery_function=inventory_ucs_bladecenter_topsystem,

@@ -30,17 +30,19 @@ import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 from cmk.ccc.crash_reporting import ABCCrashReport, crash_report_registry, CrashReportStore
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTerminate
+from cmk.ccc.site import get_omd_config, omd_site
 
 import cmk.utils.caching
 import cmk.utils.log
 import cmk.utils.paths
 from cmk.utils.log import console
 
-import cmk.base.check_api as check_api
-import cmk.base.config as config
-import cmk.base.profiling as profiling
 import cmk.base.utils
+from cmk.base import check_api, config, profiling
 from cmk.base.modes import modes
+
+from cmk import trace
+from cmk.trace.export import exporter_from_config, init_span_processor
 
 cmk.utils.log.setup_console_logging()
 logger = logging.getLogger("cmk.base")
@@ -48,6 +50,19 @@ logger = logging.getLogger("cmk.base")
 cmk.base.utils.register_sigint_handler()
 
 help_function = modes.get("help").handler_function
+
+# Would be nice if we could enable tracing in all cases. But the current timeout and retry
+# logic of the Opentelemetry SDK does not work as intended, which can lead to longer hanging
+# executions in case the configured collector (e.g. Jaeger) is not reachable.
+# For now only enable tracing in case the caller provides a tracing context. This way we produce
+# traces only when the caller is interested in them.
+# This condition can be removed once the timeout and retry logic was fixed
+# (https://github.com/open-telemetry/opentelemetry-python/issues/4043).
+if trace_context := trace.extract_context_from_environment(dict(os.environ)):
+    init_span_processor(
+        trace.init_tracing(omd_site(), "cmk"),
+        exporter_from_config(trace.trace_send_config(get_omd_config(cmk.utils.paths.omd_root))),
+    )
 
 
 # We probably don't really need to register that here, do we?
@@ -121,13 +136,13 @@ try:
 
     done, exit_status = False, 0
     if mode_name is not None and mode_args is not None:
-        exit_status = modes.call(mode_name, mode_args, opts, args)
+        exit_status = modes.call(mode_name, mode_args, opts, args, trace_context)
         done = True
 
     # When no mode was found, Checkmk is running the "check" mode
     if not done:
         if (args and len(args) <= 2) or "--keepalive" in [o[0] for o in opts]:
-            exit_status = modes.call("--check", None, opts, args)
+            exit_status = modes.call("--check", None, opts, args, trace_context)
         else:
             help_function = modes.get("help").handler_function
             if help_function is None:

@@ -54,6 +54,7 @@ def parse_qmail_stats(string_table: StringTable) -> StringTable:
 
 
 check_info["qmail_stats"] = LegacyCheckDefinition(
+    name="qmail_stats",
     parse_function=parse_qmail_stats,
     service_name="Qmail Queue",
     discovery_function=discover_qmail_stats,

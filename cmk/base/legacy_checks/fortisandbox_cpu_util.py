@@ -38,6 +38,7 @@ def parse_fortisandbox_cpu_util(string_table: StringTable) -> StringTable:
 
 
 check_info["fortisandbox_cpu_util"] = LegacyCheckDefinition(
+    name="fortisandbox_cpu_util",
     parse_function=parse_fortisandbox_cpu_util,
     detect=DETECT_FORTISANDBOX,
     fetch=SNMPTree(

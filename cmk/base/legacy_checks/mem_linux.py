@@ -120,6 +120,7 @@ def _camelcase_to_underscored(name):
 
 
 check_info["mem.linux"] = LegacyCheckDefinition(
+    name="mem_linux",
     service_name="Memory",
     sections=["mem"],
     discovery_function=inventory_mem_linux,

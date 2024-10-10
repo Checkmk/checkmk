@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 @skip_if_saas_edition
 @pytest.mark.xfail(
-    condition=os.getenv("DISTRO") in ("almalinux-9", "centos-8"),
+    condition=os.getenv("DISTRO") == "almalinux-9",
     reason="May fail on EL* systems, investigating.",
 )
 def test_automatic_host_removal(

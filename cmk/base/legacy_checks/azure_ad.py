@@ -77,6 +77,7 @@ def check_azure_users(item, _no_params, parsed):
 
 
 check_info["azure_ad"] = LegacyCheckDefinition(
+    name="azure_ad",
     parse_function=parse_azure_ad,
     service_name="AD Users",
     discovery_function=discover_ad_users,
@@ -132,6 +133,7 @@ def check_azure_sync(item, params, parsed):
 
 
 check_info["azure_ad.sync"] = LegacyCheckDefinition(
+    name="azure_ad_sync",
     service_name="AD Sync %s",
     sections=["azure_ad"],
     discovery_function=discover_sync,

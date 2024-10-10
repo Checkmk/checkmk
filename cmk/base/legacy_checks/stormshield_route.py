@@ -48,6 +48,7 @@ def parse_stormshield_route(string_table: StringTable) -> StringTable:
 
 
 check_info["stormshield_route"] = LegacyCheckDefinition(
+    name="stormshield_route",
     parse_function=parse_stormshield_route,
     detect=DETECT_STORMSHIELD,
     fetch=SNMPTree(

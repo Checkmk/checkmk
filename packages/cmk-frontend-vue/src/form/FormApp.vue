@@ -54,33 +54,37 @@ function toggleActiveMode() {
 </script>
 
 <template>
-  <input v-if="showToggleMode" type="button" value="TOGGLE MODE" @click="toggleActiveMode" /><label
-    v-if="showToggleMode"
-    >{{ activeMode }}</label
-  >
-  <div v-if="activeMode === 'readonly' || activeMode === 'both'">
-    <FormReadonly
-      :data="dataRef"
-      :backend-validation="backendValidation"
-      :spec="spec"
-    ></FormReadonly>
-  </div>
+  <div :id="`form-app--${id}`">
+    <input
+      v-if="showToggleMode"
+      type="button"
+      value="TOGGLE MODE"
+      @click="toggleActiveMode"
+    /><label v-if="showToggleMode">{{ activeMode }}</label>
+    <div v-if="activeMode === 'readonly' || activeMode === 'both'">
+      <FormReadonly
+        :data="dataRef"
+        :backend-validation="backendValidation"
+        :spec="spec"
+      ></FormReadonly>
+    </div>
 
-  <div v-if="activeMode === 'edit' || activeMode === 'both'">
-    <table class="nform">
-      <tr>
-        <td>
-          <FormEdit
-            v-model:data="dataRef"
-            :v-if="renderMode === 'edit' || renderMode === 'both'"
-            :backend-validation="backendValidation"
-            :spec="spec"
-          />
-        </td>
-      </tr>
-      <!-- This input field contains the computed json value which is sent when the form is submitted -->
-      <input v-model="valueAsJSON" :name="id" type="hidden" />
-    </table>
-    <pre>{{ dataRef }}</pre>
+    <div v-if="activeMode === 'edit' || activeMode === 'both'">
+      <table class="nform">
+        <tr>
+          <td>
+            <FormEdit
+              v-model:data="dataRef"
+              :v-if="renderMode === 'edit' || renderMode === 'both'"
+              :backend-validation="backendValidation"
+              :spec="spec"
+            />
+          </td>
+        </tr>
+        <!-- This input field contains the computed json value which is sent when the form is submitted -->
+        <input v-model="valueAsJSON" :name="id" type="hidden" />
+      </table>
+      <pre>{{ dataRef }}</pre>
+    </div>
   </div>
 </template>

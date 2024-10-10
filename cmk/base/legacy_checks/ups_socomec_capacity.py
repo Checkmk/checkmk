@@ -81,6 +81,7 @@ def parse_ups_socomec_capacity(string_table: StringTable) -> StringTable:
 
 
 check_info["ups_socomec_capacity"] = LegacyCheckDefinition(
+    name="ups_socomec_capacity",
     parse_function=parse_ups_socomec_capacity,
     detect=DETECT_SOCOMEC,
     fetch=SNMPTree(

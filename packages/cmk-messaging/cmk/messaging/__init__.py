@@ -20,6 +20,8 @@ from ._config import (
     trusted_cas_file,
 )
 from ._connection import (
+    AppName,
+    BindingKey,
     Channel,
     check_remote_connection,
     CMKConnectionError,
@@ -28,10 +30,14 @@ from ._connection import (
     ConnectionOK,
     ConnectionUnknown,
     DeliveryTag,
+    QueueName,
+    RoutingKey,
 )
 
 __all__ = [
     "all_cme_cacert_files",
+    "AppName",
+    "BindingKey",
     "BrokerCertificates",
     "cacert_file",
     "ca_key_file",
@@ -47,7 +53,9 @@ __all__ = [
     "multisite_cacert_file",
     "multisite_ca_key_file",
     "multisite_cert_file",
+    "QueueName",
     "rabbitmq",
+    "RoutingKey",
     "site_cert_file",
     "site_key_file",
     "TLS_PATH_CUSTOMERS",

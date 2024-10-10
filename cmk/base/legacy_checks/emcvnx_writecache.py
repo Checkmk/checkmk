@@ -40,6 +40,7 @@ def parse_emcvnx_writecache(string_table: StringTable) -> StringTable:
 
 
 check_info["emcvnx_writecache"] = LegacyCheckDefinition(
+    name="emcvnx_writecache",
     parse_function=parse_emcvnx_writecache,
     service_name="Write Cache State %s",
     discovery_function=inventory_emcvnx_writecache,

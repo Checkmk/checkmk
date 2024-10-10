@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -64,27 +64,39 @@ megaraid_info() {
         done
 }
 
+_tw_cli_drivestatus_to_port() {
+    tw_cli_driver_status="${1}"
+    device_name="${2}"
+    # - add a trailing zero to handle case of unused slot
+    #   trailing zeros are part of the device links in /dev/disk/by-id/... anyway
+    echo "$tw_cli_driver_status" | grep -E '^p[0-9]' | awk '{print $1 " " $7 "0"}' | while read -r twaminor serial; do
+        # - only the last 9 chars seem to be relevant
+        # (hopefully all this doesn't change with new kernels...)
+        serial=$(echo "$serial" | sed -n -e 's/.*\(.\{9\}\)$/\1/p')
+        serial=AMCC_${serial}00000000000
+        if [ "$serial" = "$device_name" ]; then
+            echo "${twaminor#p}"
+            break
+        fi
+    done
+}
+
+_format_model_name() {
+    MODEL=$(echo "$1" | head -n 1 | awk -F= '{ print $2 }')
+    MODEL=${MODEL## }
+    echo "$MODEL" | sed -e "s/ /-/g"
+}
+
 main() {
     # Only handle always updated values, add device path and vendor/model
     if inpath smartctl >/dev/null 2>&1; then
         #
-        # if the 3ware-utility is found
-        # get the serials for all disks on the controller
         #
         if inpath tw_cli >/dev/null 2>&1; then
             # support for only one controller at the moment
             TWAC=$(tw_cli show | awk 'NR < 4 { next } { print $1 }' | head -n 1)
-
-            # - add a trailing zero to handle case of unused slot
-            #   trailing zeros are part of the device links in /dev/disk/by-id/... anyway
-            # - only the last 9 chars seem to be relevant
-            # (hopefully all this doesn't change with new kernels...)
-            eval "$(tw_cli /"$TWAC" show drivestatus | grep -E '^p[0-9]' | awk '{print $1 " " $7 "0"}' | while read -r twaminor serial; do
-                twaminor=${twaminor#p}
-                serial=${serial:(-9)}
-                serial=AMCC_${serial}00000000000
-                echo "$serial=$twaminor"
-            done)"
+            # if the 3ware-utility is found, then we get ports via the drivestatus
+            TW_CLI_DRIVER_STATUS=$(tw_cli /"$TWAC" show drivestatus)
         else
             echo "tw_cli not found" >&2
         fi
@@ -120,12 +132,12 @@ main() {
             fi
 
             # Exclude everything which can read a CD
-            if [ "$INPATH_UDEVADM" == "udevadm_present" ] && (udevadm info /dev/"$N" | grep -Fxq 'E: ID_CDROM_CD=1'); then
+            if [ "$INPATH_UDEVADM" = "udevadm_present" ] && (udevadm info /dev/"$N" | grep -Fxq 'E: ID_CDROM_CD=1'); then
                 continue
             fi
 
             # Avoid duplicate entries for same device
-            if [ "${SEEN//.$N./}" != "$SEEN" ]; then
+            if echo "$SEEN" | grep -q ".$N."; then
                 continue
             fi
             SEEN="$SEEN.$N."
@@ -135,18 +147,17 @@ main() {
             DNAME=${DNAME#"$BY_ID_PATH"/ata-}
             # 2012-01-25 Stefan Kaerst CDJ - special option in case vendor is AMCC
             CMD=
-            if [ "$VEND" == "AMCC" ] && [ -n "$TWAC" ]; then
+            if [ "$VEND" = "AMCC" ] && [ -n "$TWAC" ]; then
                 DNAME=${DNAME#1}
-                [ -z "${!DNAME}" ] && continue
-                CMD="smartctl -d 3ware,${!DNAME} -v 9,raw48 -A /dev/twa0"
+                PORT=$(_tw_cli_drivestatus_to_port "$TW_CLI_DRIVER_STATUS" "$DNAME")
+                [ -z "$PORT" ] && continue
+                CMD="smartctl -d 3ware,$PORT, -v 9,raw48 -A /dev/twa0"
                 # create nice device name including model
-                MODEL=$(tw_cli /"$TWAC"/p"${!DNAME}" show model | head -n 1 | awk -F= '{ print $2 }')
-                MODEL=${MODEL## }
-                MODEL=${MODEL// /-}
+                MODEL=_format_model_name "$(tw_cli /"$TWAC"/p"$PORT" show model)"
                 DNAME=${DNAME#AMCC_}
                 DNAME="AMCC_${MODEL}_${DNAME%000000000000}"
             elif [ "$VEND" != "ATA" ]; then
-                if [ "$VEND" == "NVME" ]; then
+                if [ "$VEND" = "NVME" ]; then
                     DNAME="/dev/$N"
                     CMD="smartctl -d nvme -A $DNAME"
                 else
@@ -154,8 +165,8 @@ main() {
                     # create temperature output as expected by checks/smart
                     # this is a hack, TODO: change checks/smart to support SCSI-disks
                     eval "$(smartctl -d scsi -i -A "$D" | while read -r a b c d _; do
-                        [ "$a" == Serial ] && echo SN="$c"
-                        [ "$a" == Current ] && [ "$b" == Drive ] && [ "$c" == Temperature: ] && echo TEMP="$d"
+                        [ "$a" = Serial ] && echo SN="$c"
+                        [ "$a" = Current ] && [ "$b" = Drive ] && [ "$c" = Temperature: ] && echo TEMP="$d"
                     done)"
                     [ -n "$TEMP" ] && CMD="echo 194 Temperature_Celsius 0x0000 000 000 000 Old_age Always - $TEMP \(0 0 0 0\)"
                     DNAME="${VEND}_${MODEL}_${SN}"
@@ -164,7 +175,7 @@ main() {
                 CMD="smartctl -d ata -v 9,raw48 -A $D; smartctl -d sat -v 9,raw48 -A $D"
             fi
 
-            if [ "$VEND" == "NVME" ]; then
+            if [ "$VEND" = "NVME" ]; then
                 echo "$DNAME $VEND $MODEL"
                 [ -n "$CMD" ] && eval "$CMD" | sed -e '1,5d; /^$/d'
             else

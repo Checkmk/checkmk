@@ -81,6 +81,7 @@ def discover_aws_elbv2_application(p):
 
 
 check_info["aws_elbv2_application"] = LegacyCheckDefinition(
+    name="aws_elbv2_application",
     parse_function=parse_aws_elbv2_application,
     service_name="AWS/ApplicationELB LCUs",
     discovery_function=discover_aws_elbv2_application,
@@ -140,6 +141,7 @@ def discover_aws_elbv2_application_connections(p):
 
 
 check_info["aws_elbv2_application.connections"] = LegacyCheckDefinition(
+    name="aws_elbv2_application_connections",
     service_name="AWS/ApplicationELB Connections",
     sections=["aws_elbv2_application"],
     discovery_function=discover_aws_elbv2_application_connections,
@@ -171,6 +173,7 @@ def discover_aws_elbv2_application_http_elb(p):
 
 
 check_info["aws_elbv2_application.http_elb"] = LegacyCheckDefinition(
+    name="aws_elbv2_application_http_elb",
     service_name="AWS/ApplicationELB HTTP ELB",
     sections=["aws_elbv2_application"],
     discovery_function=discover_aws_elbv2_application_http_elb,
@@ -223,6 +226,7 @@ def discover_aws_elbv2_application_http_redirects(p):
 
 
 check_info["aws_elbv2_application.http_redirects"] = LegacyCheckDefinition(
+    name="aws_elbv2_application_http_redirects",
     service_name="AWS/ApplicationELB HTTP Redirects",
     sections=["aws_elbv2_application"],
     discovery_function=discover_aws_elbv2_application_http_redirects,
@@ -283,6 +287,7 @@ def discover_aws_elbv2_application_statistics(p):
 
 
 check_info["aws_elbv2_application.statistics"] = LegacyCheckDefinition(
+    name="aws_elbv2_application_statistics",
     service_name="AWS/ApplicationELB Statistics",
     sections=["aws_elbv2_application"],
     discovery_function=discover_aws_elbv2_application_statistics,

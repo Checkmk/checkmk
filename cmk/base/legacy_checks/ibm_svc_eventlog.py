@@ -60,6 +60,7 @@ def parse_ibm_svc_eventlog(string_table: StringTable) -> StringTable:
 
 
 check_info["ibm_svc_eventlog"] = LegacyCheckDefinition(
+    name="ibm_svc_eventlog",
     parse_function=parse_ibm_svc_eventlog,
     service_name="Eventlog",
     discovery_function=inventory_ibm_svc_eventlog,

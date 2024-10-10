@@ -5,7 +5,9 @@
 
 from ..v0_unstable._registry import QuickSetupRegistry
 from .aws.stages import quick_setup_aws
+from .azure.stages import quick_setup_azure
 
 
 def register(registry: QuickSetupRegistry) -> None:
     registry.register(quick_setup_aws)
+    registry.register(quick_setup_azure)

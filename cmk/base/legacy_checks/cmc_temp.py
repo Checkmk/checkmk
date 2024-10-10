@@ -39,6 +39,7 @@ def parse_cmc_temp(string_table: Sequence[StringTable]) -> Sequence[StringTable]
 
 
 check_info["cmc_temp"] = LegacyCheckDefinition(
+    name="cmc_temp",
     parse_function=parse_cmc_temp,
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2606.1"),
     fetch=[

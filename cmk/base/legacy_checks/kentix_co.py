@@ -44,6 +44,7 @@ def check_kentix_co(item: str, params: dict, section: int) -> Iterable:
 
 
 check_info["kentix_co"] = LegacyCheckDefinition(
+    name="kentix_co",
     detect=DETECT_KENTIX,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.37954",

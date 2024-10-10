@@ -152,7 +152,7 @@ def make_connection_params(omd_root: Path, server: str, port: int) -> pika.Conne
 
 
 def _make_ssl_context(omd_root: Path) -> ssl.SSLContext:
-    context = ssl.create_default_context(cafile=cacert_file(omd_root))
+    context = ssl.create_default_context(cafile=trusted_cas_file(omd_root))
     context.check_hostname = False  # the host name in the cert is the site name, not the server.
     context.verify_mode = ssl.CERT_REQUIRED
     context.load_cert_chain(site_cert_file(omd_root), site_key_file(omd_root))

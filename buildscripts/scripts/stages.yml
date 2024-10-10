@@ -207,6 +207,8 @@ STAGES:
       DIR: "tests"
       ENV_VARS:
           PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-unit-junit.xml --color=no"
+          # https://bazel.build/reference/test-encyclopedia
+          XML_OUTPUT_FILE: "${RESULTS}/python3-unit-junit.xml"
       COMMAND: "make test-unit-docker"
       TEXT_ON_SKIP: "No Python files changed"
       RESULT_CHECK_TYPE: "JUNIT"

@@ -60,6 +60,7 @@ def parse_fsc_ipmi_mem_status(string_table: StringTable) -> StringTable:
 
 
 check_info["fsc_ipmi_mem_status"] = LegacyCheckDefinition(
+    name="fsc_ipmi_mem_status",
     parse_function=parse_fsc_ipmi_mem_status,
     service_name="IPMI Memory status %s",
     discovery_function=inventory_fsc_ipmi_mem_status,

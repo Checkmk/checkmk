@@ -79,6 +79,7 @@ def check_postgres_sessions(item, params, parsed):
 
 
 check_info["postgres_sessions"] = LegacyCheckDefinition(
+    name="postgres_sessions",
     parse_function=parse_postgres_sessions,
     service_name="PostgreSQL Daemon Sessions %s",
     discovery_function=inventory_postgres_sessions,

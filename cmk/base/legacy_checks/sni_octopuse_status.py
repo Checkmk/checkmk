@@ -45,6 +45,7 @@ def parse_sni_octopuse_status(string_table: StringTable) -> StringTable | None:
 
 
 check_info["sni_octopuse_status"] = LegacyCheckDefinition(
+    name="sni_octopuse_status",
     parse_function=parse_sni_octopuse_status,
     detect=DETECT_SNI_OCTOPUSE,
     fetch=SNMPTree(

@@ -17,8 +17,6 @@ from cmk.gui.valuespec.definitions import Dictionary as ValueSpecDictionary
 
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
-    CascadingSingleChoice,
-    CascadingSingleChoiceElement,
     DefaultValue,
     DictElement,
     DictGroup,
@@ -34,10 +32,9 @@ from cmk.rulesets.v1.form_specs import (
     String,
 )
 from cmk.rulesets.v1.form_specs.validators import EmailAddress as ValidateEmailAddress
-from cmk.rulesets.v1.form_specs.validators import Url, UrlProtocol
 
 from ._base import NotificationParameter
-from ._helpers import local_site_url
+from ._helpers import _get_url_prefix_setting
 
 
 class NotificationParameterMail(NotificationParameter):
@@ -72,46 +69,11 @@ class NotificationParameterMail(NotificationParameter):
 
     def _url_prefix_setting(self, is_cse: bool) -> dict[str, DictElement[Any]]:
         return {
-            "url_prefix": DictElement(
-                group=DictGroup(
-                    title=Title("Settings"),
-                ),
-                # TODO only option that crashes from old configs, getting {"automatic": "http"}
-                parameter_form=CascadingSingleChoice(
-                    title=Title("URL prefix for links to Checkmk"),
-                    help_text=Help(
-                        "If you use <b>Automatic HTTP/s</b>, the URL prefix for host and service links within the notification is filled automatically. If you specify an URL prefix here, then several parts of the notification are armed with hyperlinks to your Checkmk GUI. In both cases, the recipient of the notification can directly visit the host or service in question in Checkmk. Specify an absolute URL including the <tt>.../check_mk/</tt>."
-                    ),
-                    elements=[
-                        CascadingSingleChoiceElement(
-                            name="automatic_http",
-                            title=Title("Automatic HTTP"),
-                            parameter_form=FixedValue(
-                                value=None,
-                            ),
-                        ),
-                        CascadingSingleChoiceElement(
-                            name="automatic_https",
-                            title=Title("Automatic HTTPs"),
-                            parameter_form=FixedValue(
-                                value=None,
-                            ),
-                        ),
-                        CascadingSingleChoiceElement(
-                            name="manual",
-                            title=Title("Specify URL prefix"),
-                            parameter_form=String(
-                                prefill=DefaultValue(local_site_url()),
-                                custom_validate=[Url([UrlProtocol.HTTP, UrlProtocol.HTTPS])],
-                            ),
-                        ),
-                    ],
-                    prefill=DefaultValue(
-                        "automatic_https" if request.is_ssl_request else "automatic_http"
-                    ),
-                ),
-                render_only=is_cse,
-            ),
+            "url_prefix": _get_url_prefix_setting(
+                is_cse,
+                default_value="automatic_https" if request.is_ssl_request else "automatic_http",
+                group_title="Settings",
+            )
         }
 
 

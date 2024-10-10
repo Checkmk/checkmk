@@ -5,7 +5,8 @@
 
 from cmk.ccc.exceptions import MKGeneralException
 
-from cmk.gui.form_specs.private import LegacyValueSpec
+from cmk.gui.form_specs.converter import SimplePassword
+from cmk.gui.form_specs.private import not_empty
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Alternative,
@@ -58,11 +59,8 @@ def create_ipmi_parameters() -> form_specs.Dictionary:
             ),
             "password": form_specs.DictElement(
                 required=True,
-                parameter_form=LegacyValueSpec.wrap(
-                    Password(
-                        title=_("Password"),
-                        allow_empty=False,
-                    ),
+                parameter_form=SimplePassword(
+                    title=Title("Password"), custom_validate=[not_empty()]
                 ),
             ),
         },

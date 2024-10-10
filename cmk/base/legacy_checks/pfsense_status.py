@@ -31,6 +31,7 @@ def parse_pfsense_status(string_table: StringTable) -> StringTable:
 
 
 check_info["pfsense_status"] = LegacyCheckDefinition(
+    name="pfsense_status",
     parse_function=parse_pfsense_status,
     detect=contains(".1.3.6.1.2.1.1.1.0", "pfsense"),
     fetch=SNMPTree(

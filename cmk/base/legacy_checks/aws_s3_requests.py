@@ -97,6 +97,7 @@ def discover_aws_s3_requests(p):
 
 
 check_info["aws_s3_requests"] = LegacyCheckDefinition(
+    name="aws_s3_requests",
     parse_function=parse_aws_s3,
     service_name="AWS/S3 Requests %s",
     discovery_function=discover_aws_s3_requests,
@@ -131,6 +132,7 @@ def discover_aws_s3_requests_http_errors(p):
 
 
 check_info["aws_s3_requests.http_errors"] = LegacyCheckDefinition(
+    name="aws_s3_requests_http_errors",
     service_name="AWS/S3 HTTP Errors %s",
     sections=["aws_s3_requests"],
     discovery_function=discover_aws_s3_requests_http_errors,
@@ -185,6 +187,7 @@ def discover_aws_s3_requests_latency(p):
 
 
 check_info["aws_s3_requests.latency"] = LegacyCheckDefinition(
+    name="aws_s3_requests_latency",
     service_name="AWS/S3 Latency %s",
     sections=["aws_s3_requests"],
     discovery_function=discover_aws_s3_requests_latency,
@@ -226,6 +229,7 @@ def discover_aws_s3_requests_traffic_stats(p):
 
 
 check_info["aws_s3_requests.traffic_stats"] = LegacyCheckDefinition(
+    name="aws_s3_requests_traffic_stats",
     service_name="AWS/S3 Traffic Stats %s",
     sections=["aws_s3_requests"],
     discovery_function=discover_aws_s3_requests_traffic_stats,
@@ -266,6 +270,7 @@ def discover_aws_s3_requests_select_object(p):
 
 
 check_info["aws_s3_requests.select_object"] = LegacyCheckDefinition(
+    name="aws_s3_requests_select_object",
     service_name="AWS/S3 SELECT Object %s",
     sections=["aws_s3_requests"],
     discovery_function=discover_aws_s3_requests_select_object,

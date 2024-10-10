@@ -93,6 +93,7 @@ def parse_wmic_process(string_table: StringTable) -> StringTable:
 
 
 check_info["wmic_process"] = LegacyCheckDefinition(
+    name="wmic_process",
     parse_function=parse_wmic_process,
     service_name="Process %s",
     check_function=check_wmic_process,

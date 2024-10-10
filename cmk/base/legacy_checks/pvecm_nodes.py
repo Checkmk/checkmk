@@ -115,6 +115,7 @@ def check_pvecm_nodes(item, _no_params, parsed):
 
 
 check_info["pvecm_nodes"] = LegacyCheckDefinition(
+    name="pvecm_nodes",
     parse_function=parse_pvecm_nodes,
     service_name="PVE Node %s",
     discovery_function=inventory_pvecm_nodes,

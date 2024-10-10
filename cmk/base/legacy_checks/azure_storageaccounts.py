@@ -48,6 +48,7 @@ def discover_azure_storageaccounts(section):
 
 
 check_info["azure_storageaccounts"] = LegacyCheckDefinition(
+    name="azure_storageaccounts",
     parse_function=parse_resources,
     service_name="Storage %s account",
     discovery_function=discover_azure_storageaccounts,
@@ -83,6 +84,7 @@ def check_azure_storageaccounts_flow(item, params, section):
 
 
 check_info["azure_storageaccounts.flow"] = LegacyCheckDefinition(
+    name="azure_storageaccounts_flow",
     service_name="Storage %s flow",
     sections=["azure_storageaccounts"],
     discovery_function=discover_azure_by_metrics(
@@ -122,6 +124,7 @@ def check_azure_storageaccounts_performance(item, params, section):
 
 
 check_info["azure_storageaccounts.performance"] = LegacyCheckDefinition(
+    name="azure_storageaccounts_performance",
     service_name="Storage %s performance",
     sections=["azure_storageaccounts"],
     discovery_function=discover_azure_by_metrics(

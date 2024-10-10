@@ -11,8 +11,6 @@ import 'core-js/stable'
 
 import { createApp } from 'vue'
 
-import D3Table from './views/D3Table.vue'
-import Table from './views/CmkTable.vue'
 import QuickSetup from './quick-setup/QuickSetupApp.vue'
 import NotificationOverview from './notification/NotificationOverviewApp.vue'
 import { FormApp } from '@/form'
@@ -47,22 +45,6 @@ function setupVue() {
             backendValidation: appData.validation,
             renderMode: appData.render_mode
           })
-          break
-        }
-        case 'd3_table': {
-          console.log('vue create table')
-          app = createApp(D3Table, {
-            table_spec: appData.component
-          })
-          console.log('vue fully mounted table')
-          break
-        }
-        case 'vue_table': {
-          console.log('vue create table')
-          app = createApp(Table, {
-            table_spec: appData.component
-          })
-          console.log('vue fully mounted table')
           break
         }
         case 'quick_setup': {

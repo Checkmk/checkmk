@@ -215,6 +215,7 @@ def check_f5_bigip_vserver(item, params, parsed):
 
 
 check_info["f5_bigip_vserver"] = LegacyCheckDefinition(
+    name="f5_bigip_vserver",
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3375.2.2.10",

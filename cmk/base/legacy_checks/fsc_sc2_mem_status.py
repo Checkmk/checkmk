@@ -70,6 +70,7 @@ def check_fsc_sc2_mem_status(item, _no_params, info):
 
 
 check_info["fsc_sc2_mem_status"] = LegacyCheckDefinition(
+    name="fsc_sc2_mem_status",
     parse_function=parse_fsc_sc2_mem_status,
     detect=DETECT_FSC_SC2,
     fetch=SNMPTree(

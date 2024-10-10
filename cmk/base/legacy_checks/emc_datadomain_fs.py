@@ -37,6 +37,7 @@ def parse_emc_datadomain_fs(string_table: StringTable) -> StringTable:
 
 
 check_info["emc_datadomain_fs"] = LegacyCheckDefinition(
+    name="emc_datadomain_fs",
     parse_function=parse_emc_datadomain_fs,
     detect=DETECT_DATADOMAIN,
     fetch=SNMPTree(

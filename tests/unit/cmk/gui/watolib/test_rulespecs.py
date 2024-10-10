@@ -298,7 +298,6 @@ def test_rulespec_get_all_groups() -> None:
         "datasource_programs/custom",
         "datasource_programs/hw",
         "datasource_programs/os",
-        "datasource_programs/testing",
         "inventory",
         "eventconsole",
     ]

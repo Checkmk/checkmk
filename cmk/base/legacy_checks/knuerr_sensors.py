@@ -31,6 +31,7 @@ def parse_knuerr_sensors(string_table: StringTable) -> StringTable:
 
 
 check_info["knuerr_sensors"] = LegacyCheckDefinition(
+    name="knuerr_sensors",
     parse_function=parse_knuerr_sensors,
     detect=DETECT_KNUERR,
     fetch=SNMPTree(

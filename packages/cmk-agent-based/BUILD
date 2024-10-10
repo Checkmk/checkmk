@@ -10,6 +10,10 @@ exports_files(["pyproject.toml"])
 
 compile_pip_requirements(
     name = "requirements",
+    extra_args = [
+        "--no-strip-extras",  # reconsider this? (https://github.com/jazzband/pip-tools/issues/1613)
+        "--quiet",
+    ],
     requirements_in = "pyproject.toml",
     requirements_txt = "requirements_lock.txt",  # shall exist, emtpy is okay
 )
@@ -47,6 +51,7 @@ py_library(
 
 ruff_test(
     name = "ruff_lint",
+    size = "small",
     srcs = [
         ":cmk-agent-based",
         ":unit",
@@ -59,6 +64,7 @@ py_pytest_main(
 
 py_test(
     name = "unit",
+    size = "small",
     srcs = glob(["tests/**/*.py"]) + [":__test__.py"],
     args = ["--config-file=$(location pyproject.toml)"],
     data = ["pyproject.toml"],

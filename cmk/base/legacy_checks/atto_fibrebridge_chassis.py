@@ -54,6 +54,7 @@ def check_atto_fibrebridge_chassis_temp(item, params, parsed):
 
 
 check_info["atto_fibrebridge_chassis.temp"] = LegacyCheckDefinition(
+    name="atto_fibrebridge_chassis_temp",
     service_name="Temperature %s",
     sections=["atto_fibrebridge_chassis"],
     discovery_function=inventory_atto_fibrebridge_chassis_temp,
@@ -86,6 +87,7 @@ def check_atto_fibrebridge_chassis(_no_item, _no_params, parsed):
 
 
 check_info["atto_fibrebridge_chassis"] = LegacyCheckDefinition(
+    name="atto_fibrebridge_chassis",
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4547"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.4547.2.3.2",

@@ -56,6 +56,7 @@ def parse_ups_bat_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["ups_bat_temp"] = LegacyCheckDefinition(
+    name="ups_bat_temp",
     parse_function=parse_ups_bat_temp,
     detect=DETECT_UPS_GENERIC,
     fetch=SNMPTree(

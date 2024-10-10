@@ -24,6 +24,7 @@ def parse_innovaphone_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["innovaphone_temp"] = LegacyCheckDefinition(
+    name="innovaphone_temp",
     parse_function=parse_innovaphone_temp,
     service_name="Temperature %s",
     discovery_function=inventory_innovaphone_temp,

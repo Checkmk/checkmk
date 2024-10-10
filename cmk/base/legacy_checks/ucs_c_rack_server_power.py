@@ -70,6 +70,7 @@ def discover_ucs_c_rack_server_power(section):
 
 
 check_info["ucs_c_rack_server_power"] = LegacyCheckDefinition(
+    name="ucs_c_rack_server_power",
     parse_function=parse_ucs_c_rack_server_power,
     service_name="Motherboard Power Statistics %s",
     discovery_function=discover_ucs_c_rack_server_power,

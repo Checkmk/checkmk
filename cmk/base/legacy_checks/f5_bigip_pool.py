@@ -95,6 +95,7 @@ def check_f5_bigip_pool(item, params, parsed):
 
 
 check_info["f5_bigip_pool"] = LegacyCheckDefinition(
+    name="f5_bigip_pool",
     detect=DETECT,
     fetch=[
         SNMPTree(

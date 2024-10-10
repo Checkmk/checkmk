@@ -45,6 +45,7 @@ def parse_bintec_cpu(string_table: StringTable) -> StringTable:
 
 
 check_info["bintec_cpu"] = LegacyCheckDefinition(
+    name="bintec_cpu",
     parse_function=parse_bintec_cpu,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.272.4."),
     fetch=SNMPTree(

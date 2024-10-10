@@ -37,7 +37,6 @@ from cmk.utils.structured_data import (
     SDKey,
     SDMeta,
     SDMetaAndRawTree,
-    SDMetaAndRawTreeV0,
     SDNodeName,
     SDPath,
     SDRawTree,
@@ -1043,31 +1042,33 @@ def test_parse_from_unzipped(raw: Mapping[str, object], expected: SDMetaAndRawTr
         pytest.param(
             SDMeta(version="1", do_archive=True),
             SDRawTree(Attributes={}, Table={}, Nodes={}),
-            SDMetaAndRawTreeV0(
-                meta_version="0",
-                meta_do_archive=True,
-                Attributes={},
-                Table={},
-                Nodes={},
+            SDMetaAndRawTree(
+                meta=SDMeta(version="1", do_archive=True),
+                raw_tree=SDRawTree(
+                    Attributes={},
+                    Table={},
+                    Nodes={},
+                ),
             ),
             id="version=0:do-archive",
         ),
         pytest.param(
             SDMeta(version="1", do_archive=False),
             SDRawTree(Attributes={}, Table={}, Nodes={}),
-            SDMetaAndRawTreeV0(
-                meta_version="0",
-                meta_do_archive=False,
-                Attributes={},
-                Table={},
-                Nodes={},
+            SDMetaAndRawTree(
+                meta=SDMeta(version="1", do_archive=False),
+                raw_tree=SDRawTree(
+                    Attributes={},
+                    Table={},
+                    Nodes={},
+                ),
             ),
             id="version=0:do-not-archive",
         ),
     ],
 )
 def test__make_meta_and_raw_tree(
-    meta: SDMeta, raw_tree: SDRawTree, expected: SDMetaAndRawTreeV0
+    meta: SDMeta, raw_tree: SDRawTree, expected: SDMetaAndRawTree
 ) -> None:
     assert _make_meta_and_raw_tree(meta, raw_tree) == expected
 

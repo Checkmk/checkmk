@@ -35,6 +35,7 @@ def parse_nimble_volumes(string_table: StringTable) -> StringTable:
 
 
 check_info["nimble_volumes"] = LegacyCheckDefinition(
+    name="nimble_volumes",
     parse_function=parse_nimble_volumes,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.37447.3.1"),
     fetch=SNMPTree(

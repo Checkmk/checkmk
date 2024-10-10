@@ -78,6 +78,7 @@ def check_raritan_pdu_ocprot(item, params, parsed):
 
 
 check_info["raritan_pdu_ocprot"] = LegacyCheckDefinition(
+    name="raritan_pdu_ocprot",
     detect=contains(".1.3.6.1.2.1.1.2.0", "13742"),
     fetch=[
         SNMPTree(

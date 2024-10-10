@@ -51,6 +51,7 @@ def discover_azure_usagedetails(section):
 
 
 check_info["azure_usagedetails"] = LegacyCheckDefinition(
+    name="azure_usagedetails",
     parse_function=parse_azure_usagedetails,
     service_name="Costs %s",
     discovery_function=discover_azure_usagedetails,

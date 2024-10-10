@@ -50,6 +50,7 @@ def parse_hitachi_hnas_psu(string_table: StringTable) -> StringTable:
 
 
 check_info["hitachi_hnas_psu"] = LegacyCheckDefinition(
+    name="hitachi_hnas_psu",
     parse_function=parse_hitachi_hnas_psu,
     detect=DETECT,
     fetch=SNMPTree(

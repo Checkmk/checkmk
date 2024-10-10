@@ -37,5 +37,4 @@ def exit_pytest_on_exceptions(exceptions: tuple[Any, ...] | None = None, exit_ms
     try:
         yield
     except exceptions as excp:
-        excp.add_note(exit_msg)
-        pytest.exit(str(excp), returncode=1)
+        pytest.exit(f"{exit_msg}\n{str(excp)}", returncode=1)

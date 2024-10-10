@@ -9,7 +9,7 @@ import pytest
 
 from tests.testlib.rest_api_client import ClientRegistry, Response
 
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+from tests.unit.cmk.gui.conftest import CmkTestResponse, WebTestAppForCMK
 
 from cmk.ccc import version
 
@@ -146,15 +146,16 @@ def test_openapi_livestatus_collection_link(
     with live:
         base = "/NO_SITE/check_mk/api/1.0"
 
-        resp = aut_user_auth_wsgi_app.call_method(
+        resp: CmkTestResponse = aut_user_auth_wsgi_app.call_method(
             "get",
             base + "/domain-types/service/collections/all",
             headers={"Accept": "application/json"},
-            params={"include_links": True},
+            params='{"include_links": True}',
             status=200,
         )
+
         assert (
-            resp.json_body["value"][0]["links"][0]["href"]
+            resp.json_body["value"][0]["links"][0]["href"]  # mypy: disable-error-code=index
             == "http://localhost/NO_SITE/check_mk/api/1.0/objects/host/heute/actions/show_service/invoke?service_description=Filesystem+%2Fopt%2Fomd%2Fsites%2Fheute%2Ftmp"
         )
 

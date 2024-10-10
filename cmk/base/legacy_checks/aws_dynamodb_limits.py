@@ -20,6 +20,7 @@ def discover_aws_dynamodb_limits(section):
 
 
 check_info["aws_dynamodb_limits"] = LegacyCheckDefinition(
+    name="aws_dynamodb_limits",
     parse_function=parse_aws_limits_generic,
     service_name="AWS/DynamoDB Limits %s",
     discovery_function=discover_aws_dynamodb_limits,

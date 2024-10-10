@@ -151,7 +151,7 @@ from cmk.base.server_side_calls import (
 )
 from cmk.base.sources import SNMPFetcherConfig
 
-from cmk import piggyback
+from cmk import piggyback, trace
 from cmk.server_side_calls import v1 as server_side_calls_api
 from cmk.server_side_calls_backend.config_processing import PreprocessingResult
 
@@ -168,6 +168,8 @@ try:
 except ModuleNotFoundError:
     # Non-existing edition layering...
     RRDObjectConfig: TypeAlias = object  # type: ignore[no-redef]
+
+tracer = trace.get_tracer()
 
 _ContactgroupName = str
 
@@ -1378,10 +1380,6 @@ check_info: dict[
 legacy_check_plugin_files: dict[str, str] = {}
 # Lookup for legacy names
 legacy_check_plugin_names: dict[CheckPluginName, str] = {}
-# optional functions for parameter precompilation
-precompile_params: dict[str, Callable[[str, str, dict[str, Any]], Any]] = {}
-# factory settings for dictionary-configured checks
-factory_settings: dict[str, Mapping[str, Any]] = {}
 # definitions of special agents
 special_agent_info: dict[str, SpecialAgentInfoFunction] = {}
 
@@ -1413,10 +1411,11 @@ def load_all_plugins(
 
     errors = agent_based_register.load_all_plugins(raise_errors=cmk.ccc.debug.enabled())
 
-    # LEGACY CHECK PLUGINS
-    filelist = _get_plugin_paths(str(local_checks_dir), checks_dir)
+    with tracer.start_as_current_span("load_legacy_check_plugins"):
+        with tracer.start_as_current_span("discover_legacy_check_plugins"):
+            filelist = _get_plugin_paths(str(local_checks_dir), checks_dir)
 
-    errors.extend(load_checks(get_check_api_context, filelist))
+        errors.extend(load_checks(get_check_api_context, filelist))
 
     return errors
 
@@ -1426,8 +1425,6 @@ def _initialize_data_structures() -> None:
     check_info.clear()
     legacy_check_plugin_files.clear()
     legacy_check_plugin_names.clear()
-    precompile_params.clear()
-    factory_settings.clear()
     special_agent_info.clear()
 
 
@@ -1441,12 +1438,14 @@ def _get_plugin_paths(*dirs: str) -> list[str]:
 # NOTE: The given file names should better be absolute, otherwise
 # we depend on the current working directory, which is a bad idea,
 # especially in tests.
+@tracer.start_as_current_span("load_legacy_checks")
 def load_checks(
     get_check_api_context: GetCheckApiContext,
     filelist: list[str],
 ) -> list[str]:
     loaded_files: set[str] = set()
     ignored_plugins_errors = []
+    sane_check_info = {}
 
     did_compile = False
     for f in filelist:
@@ -1462,7 +1461,6 @@ def load_checks(
 
             # Make a copy of known plug-in names, we need to track them for nagios config generation
             known_checks = {str(k) for k in check_info}
-            known_agents = {str(k) for k in special_agent_info}
 
             did_compile |= load_precompiled_plugin(f, check_context)
 
@@ -1479,24 +1477,19 @@ def load_checks(
                 raise
             continue
 
-        for plugin_name in {str(k) for k in check_info}.difference(known_checks) | {
-            str(k) for k in special_agent_info
-        }.difference(known_agents):
-            legacy_check_plugin_files[plugin_name] = f
-
-    # Now just drop everything we don't like; this is not a supported API anymore.
-    # Users affected by this will see a CRIT in their "Analyse Configuration" page.
-    sane_check_info = {}
-    for k, v in check_info.items():
-        if isinstance(k, str) and isinstance(v, LegacyCheckDefinition):
-            sane_check_info[k] = v
-            continue
-        ignored_plugins_errors.append(
-            f"Ignoring outdated plug-in {k!r}: Format no longer supported"
-            " -- this API is deprecated!"
-        )
-
-    legacy_check_plugin_names.update({CheckPluginName(maincheckify(n)): n for n in sane_check_info})
+        defined_checks = ((str(n), p) for n, p in check_info.items() if n not in known_checks)
+        for plugin_name, plugin in defined_checks:
+            if isinstance(plugin, LegacyCheckDefinition):
+                sane_check_info[plugin_name] = plugin
+                legacy_check_plugin_names[CheckPluginName(plugin.name)] = plugin_name
+                legacy_check_plugin_files[plugin_name] = f
+            else:
+                # Now just drop everything we don't like; this is not a supported API anymore.
+                # Users affected by this will see a CRIT in their "Analyse Configuration" page.
+                ignored_plugins_errors.append(
+                    f"Ignoring outdated plug-in in {f!r}: Format no longer supported"
+                    " -- this API is deprecated!"
+                )
 
     section_errors, sections = _make_agent_and_snmp_sections(sane_check_info)
     check_errors, checks = _make_check_plugins(
@@ -1514,7 +1507,6 @@ def new_check_context(get_check_api_context: GetCheckApiContext) -> CheckContext
     # Add the data structures where the checks register with Checkmk
     context = {
         "check_info": check_info,
-        "precompile_params": precompile_params,
         "special_agent_info": special_agent_info,
     }
     # NOTE: For better separation it would be better to copy the values, but
@@ -1688,7 +1680,6 @@ def _make_check_plugins(
         try:
             checks.append(
                 create_check_plugin_from_legacy(
-                    check_plugin_name,
                     check_info_element,
                     validate_creation_kwargs=validate_creation_kwargs,
                 )

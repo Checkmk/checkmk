@@ -32,6 +32,7 @@ def discover_huawei_switch_cpu(section):
 
 
 check_info["huawei_switch_cpu"] = LegacyCheckDefinition(
+    name="huawei_switch_cpu",
     detect=DETECT_HUAWEI_SWITCH,
     fetch=[
         SNMPTree(

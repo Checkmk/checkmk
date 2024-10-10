@@ -52,6 +52,7 @@ def check_storcli_pdisks(item, params, parsed):
 
 
 check_info["storcli_pdisks"] = LegacyCheckDefinition(
+    name="storcli_pdisks",
     parse_function=parse_storcli_pdisks,
     service_name="RAID PDisk EID:Slot-Device %s",
     discovery_function=inventory_storcli_pdisks,

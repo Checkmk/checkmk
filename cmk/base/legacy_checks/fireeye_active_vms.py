@@ -32,6 +32,7 @@ def parse_fireeye_active_vms(string_table: StringTable) -> StringTable:
 
 
 check_info["fireeye_active_vms"] = LegacyCheckDefinition(
+    name="fireeye_active_vms",
     parse_function=parse_fireeye_active_vms,
     detect=fireeye.DETECT,
     fetch=SNMPTree(

@@ -72,6 +72,7 @@ def discover_rds_licenses(section):
 
 
 check_info["rds_licenses"] = LegacyCheckDefinition(
+    name="rds_licenses",
     parse_function=parse_rds_licenses,
     service_name="RDS Licenses %s",
     discovery_function=discover_rds_licenses,

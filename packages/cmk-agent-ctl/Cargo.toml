@@ -31,7 +31,7 @@ rand = { version = "0.8.*" }
 # unfortunately, we couldn't find out why, so for now, we have to keep native-tls
 reqwest = { version = "0.11.*", features = ["blocking", "json", "multipart", "native-tls", "rustls-tls-manual-roots"] }
 rpassword = { version = "6.0.*" }
-rustls = { version = "=0.20.7", features = ["dangerous_configuration"] } # pinned for rustc 1.66
+rustls = { version = "0.20.*" }
 rustls-pemfile = { version = "1.0.*" }
 serde = { version = "1.0.*", features = ["derive"] }
 serde_json = { version = "1.0.*" }
@@ -43,10 +43,6 @@ tokio-rustls = { version = "0.23.*" }
 toml = { version = "0.5.*" }
 uuid = { version = "1.2.*", features = ["v4"] }
 x509-parser = { version = "0.13.*" }
-# transitive dependencies, pinned for rustc 1.66
-time = { version = "=0.3.17" }
-time-core = { version = "=0.1.0" }
-swc_macros_common = {version = "=0.3.6" }
 
 [target.'cfg(windows)'.dependencies]
 is_elevated = { version = "0.1.*" }
@@ -54,13 +50,10 @@ mail_slot = { version = "0.1.*" }  # windows mailslot api
 winapi = { version = "0.3.*", features = ["processthreadsapi"] }
 
 [dev-dependencies]
-assert_cmd = { version = "=2.0.8" } # pinned for rustc 1.66
+assert_cmd = { version = "*" }
 lazy_static = { version = "*" }
-predicates = { version = "=2.1.5" } # pinned for rustc 1.66
+predicates = { version = "*" }
 tempfile = { version = "*" }
-# transitive dependencies, pinned for rustc 1.66
-predicates-tree = { version = "=1.0.7" }
-predicates-core = { version = "=1.0.5" }
 
 [profile.release]
 opt-level = "z"  # Optimize for size.

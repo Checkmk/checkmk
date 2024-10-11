@@ -7,7 +7,6 @@
 
 import math
 from collections.abc import Callable
-from unittest.mock import Mock
 
 import pytest
 
@@ -87,9 +86,3 @@ def test_check_levels(  # type: ignore[no-untyped-def]
     result: check_api.ServiceCheckResult,
 ) -> None:
     assert check_api.check_levels(value, dsname, params, **kwargs) == result
-
-
-def test_http_proxy(mocker: Mock) -> None:
-    proxy_patch = mocker.patch.object(check_api, "_get_http_proxy")
-    check_api.get_http_proxy(("url", "http://xy:123"))
-    proxy_patch.assert_called_once()

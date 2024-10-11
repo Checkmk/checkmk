@@ -9,8 +9,8 @@
 from collections.abc import Mapping, Sequence
 from typing import Any, Literal
 
-from cmk.base.check_api import get_http_proxy, passwordstore_get_cmdline
-from cmk.base.config import special_agent_info
+from cmk.base.check_api import passwordstore_get_cmdline
+from cmk.base.config import get_http_proxy, special_agent_info
 
 
 def _timeouts(timeouts: Mapping[str, int], arg_prefix: str) -> Sequence[str]:

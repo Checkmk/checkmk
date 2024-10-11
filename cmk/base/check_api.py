@@ -18,11 +18,6 @@ The things in this module specify the old Check_MK (<- see? Old!) check API
 from collections.abc import Callable, Generator
 from typing import Any
 
-# These imports are not meant for use in the API. So we prefix the names
-# with an underscore. These names will be skipped when loading into the
-# check context.
-from cmk.utils.http_proxy_config import HTTPProxyConfig
-
 # pylint: disable=unused-import
 from cmk.utils.legacy_check_api import LegacyCheckDefinition as LegacyCheckDefinition
 from cmk.utils.regex import regex as regex  # pylint: disable=unused-import
@@ -31,7 +26,6 @@ from cmk.utils.regex import regex as regex  # pylint: disable=unused-import
 from cmk.checkengine.checkresults import state_markers as state_markers
 
 from cmk.base.config import CheckContext as _CheckContext
-from cmk.base.config import get_http_proxy as _get_http_proxy
 
 from cmk.agent_based import v1 as _v1
 
@@ -231,14 +225,6 @@ def passwordstore_get_cmdline(fmt: str, pw: tuple | str) -> str | tuple[str, str
         return fmt % pw[1]
 
     return ("store", pw[1], fmt)
-
-
-def get_http_proxy(http_proxy: tuple[str, str]) -> HTTPProxyConfig:
-    """Returns a proxy config object to be used for HTTP requests
-
-    Intended to receive a value configured by the user using the HTTPProxyReference valuespec.
-    """
-    return _get_http_proxy(http_proxy)
 
 
 # NOTE: Currently this is not really needed, it is just here to keep any start

@@ -45,15 +45,12 @@ from cmk.gui import (
 )
 from cmk.gui.background_job import job_registry
 from cmk.gui.background_job import registration as background_job_registration
-from cmk.gui.backup.registration import backup_register
 from cmk.gui.bi import registration as bi_registration
 from cmk.gui.config import register_post_config_load_hook
-from cmk.gui.custom_icons.registration import custom_icons_register
 from cmk.gui.dashboard import dashlet_registry
 from cmk.gui.dashboard import registration as dashboard_registration
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.mkeventd import registration as mkeventd_registration
 from cmk.gui.mkeventd.helpers import save_active_config
 from cmk.gui.nodevis import nodevis
 from cmk.gui.openapi import endpoint_registry
@@ -82,7 +79,6 @@ from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
-from cmk.gui.wato import notification_parameter_registry
 from cmk.gui.watolib import broker_connections as broker_connections_config
 from cmk.gui.watolib import configuration_bundles, groups_io, password_store
 from cmk.gui.watolib import notifications as notifications_config
@@ -174,43 +170,6 @@ def register() -> None:
         config_variable_group_registry,
         config_variable_registry,
     )
-
-    if edition(paths.omd_root) is not Edition.CSE:  # disabled in CSE
-        backup_register(
-            page_registry,
-            mode_registry,
-            main_module_registry,
-        )
-        mkeventd_registration.register(
-            permission_section_registry,
-            permission_registry,
-            data_source_registry,
-            painter_registry,
-            command_registry,
-            sorter_registry,
-            icon_and_action_registry,
-            config_domain_registry,
-            sample_config_generator_registry,
-            mode_registry,
-            main_module_registry,
-            config_variable_group_registry,
-            config_variable_registry,
-            rulespec_group_registry,
-            rulespec_registry,
-            autocompleter_registry,
-            filter_registry,
-            notification_parameter_registry,
-            snapin_registry,
-            contact_group_usage_finder_registry,
-            timeperiod_usage_finder_registry,
-            endpoint_registry,
-            replication_path_registry,
-        )
-        custom_icons_register(
-            mode_registry,
-            main_module_registry,
-            permission_registry,
-        )
 
     mobile.register(layout_registry)
     userdb_registration.register(

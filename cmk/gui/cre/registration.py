@@ -10,9 +10,14 @@ import cmk.gui.graphing._html_render as html_render
 import cmk.gui.pages
 from cmk.gui import sidebar, visuals
 from cmk.gui.background_job import job_registry
+from cmk.gui.backup.registration import backup_register
+from cmk.gui.custom_icons.registration import custom_icons_register
 from cmk.gui.dashboard import dashlet_registry
+from cmk.gui.data_source import data_source_registry
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.metrics import PageGraphDashlet, PageHostServiceGraphPopup
+from cmk.gui.mkeventd import registration as mkeventd_registration
+from cmk.gui.openapi import endpoint_registry
 from cmk.gui.pages import page_registry
 from cmk.gui.painter.v0.base import painter_registry
 from cmk.gui.permissions import permission_registry, permission_section_registry
@@ -21,6 +26,7 @@ from cmk.gui.sidebar import snapin_registry
 from cmk.gui.sites import site_choices
 from cmk.gui.valuespec import autocompleter_registry
 from cmk.gui.views import graph
+from cmk.gui.views.command import command_registry
 from cmk.gui.views.icon import icon_and_action_registry
 from cmk.gui.views.sorter import sorter_registry
 from cmk.gui.visuals import default_site_filter_heading_info
@@ -38,13 +44,15 @@ from cmk.gui.watolib.config_domain_name import (
     config_domain_registry,
     config_variable_group_registry,
     config_variable_registry,
+    sample_config_generator_registry,
 )
 from cmk.gui.watolib.config_sync import replication_path_registry
 from cmk.gui.watolib.groups import contact_group_usage_finder_registry
 from cmk.gui.watolib.main_menu import main_module_registry, main_module_topic_registry
 from cmk.gui.watolib.mode import mode_registry
-from cmk.gui.watolib.rulespecs import rulespec_group_registry
+from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
 from cmk.gui.watolib.search import match_item_generator_registry
+from cmk.gui.watolib.timeperiods import timeperiod_usage_finder_registry
 
 
 def register_pages() -> None:
@@ -112,3 +120,38 @@ def register() -> None:
     notification_parameter_registry.register(NotificationParameterMail)
     register_pages()
     register_painters()
+    backup_register(
+        page_registry,
+        mode_registry,
+        main_module_registry,
+    )
+    mkeventd_registration.register(
+        permission_section_registry,
+        permission_registry,
+        data_source_registry,
+        painter_registry,
+        command_registry,
+        sorter_registry,
+        icon_and_action_registry,
+        config_domain_registry,
+        sample_config_generator_registry,
+        mode_registry,
+        main_module_registry,
+        config_variable_group_registry,
+        config_variable_registry,
+        rulespec_group_registry,
+        rulespec_registry,
+        autocompleter_registry,
+        filter_registry,
+        notification_parameter_registry,
+        snapin_registry,
+        contact_group_usage_finder_registry,
+        timeperiod_usage_finder_registry,
+        endpoint_registry,
+        replication_path_registry,
+    )
+    custom_icons_register(
+        mode_registry,
+        main_module_registry,
+        permission_registry,
+    )

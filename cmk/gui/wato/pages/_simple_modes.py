@@ -554,6 +554,15 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
                 ),
             )
 
+        if "locked_by" in self._entry:
+            elements["locked_by"] = form_specs.DictElement(
+                required=True,
+                parameter_form=form_specs.FixedValue(
+                    title=Title("Locked by"),
+                    value=repr(self._entry["locked_by"]),
+                ),
+            )
+
         elements["title"] = form_specs.DictElement(
             parameter_form=form_specs.String(
                 title=Title("Title"),

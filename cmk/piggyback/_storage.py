@@ -31,7 +31,7 @@ class PiggybackMetaData:
     last_contact: int | None
 
     def serialize(self) -> str:
-        return json.dumps({k: str(v) for k, v in asdict(self).items()})
+        return json.dumps({k: None if v is None else str(v) for k, v in asdict(self).items()})
 
     @classmethod
     def deserialize(cls, serialized: str, /) -> Self:

@@ -197,3 +197,23 @@ def test_get_source_and_piggyback_hosts() -> None:
             ),
         ],
     }
+
+
+class TestPiggybackMetaData:
+    def test_serialization_roundtrip(self) -> None:
+        pmd = piggyback.PiggybackMetaData(
+            source=HostAddress("source1"),
+            piggybacked=HostAddress("test-host"),
+            last_update=int(_REF_TIME - 10),
+            last_contact=int(_REF_TIME),
+        )
+        assert piggyback.PiggybackMetaData.deserialize(pmd.serialize()) == pmd
+
+    def test_serialization_roundtrip_with_none(self) -> None:
+        pmd = piggyback.PiggybackMetaData(
+            source=HostAddress("source1"),
+            piggybacked=HostAddress("test-host"),
+            last_update=int(_REF_TIME - 10),
+            last_contact=None,
+        )
+        assert piggyback.PiggybackMetaData.deserialize(pmd.serialize()) == pmd

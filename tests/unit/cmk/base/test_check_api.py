@@ -30,7 +30,7 @@ from cmk.base import check_api
 )
 def test_boundaries(
     value: float,
-    levels: check_api.Levels,
+    levels: check_api._Levels,
     representation: Callable,
     result: tuple[ServiceState, ServiceDetails],
 ) -> None:
@@ -83,6 +83,6 @@ def test_check_levels(  # type: ignore[no-untyped-def]
     dsname: MetricName | None,
     params: None | tuple[float, ...],
     kwargs,
-    result: check_api.ServiceCheckResult,
+    result: check_api.LegacyResult,
 ) -> None:
     assert check_api.check_levels(value, dsname, params, **kwargs) == result

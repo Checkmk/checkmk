@@ -10,7 +10,7 @@ import time
 from collections.abc import Callable, Mapping
 from typing import TypeVar
 
-from cmk.base.check_api import check_levels, CheckResult
+from cmk.base.check_api import check_levels, LegacyCheckResult
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_rate,
     get_value_store,

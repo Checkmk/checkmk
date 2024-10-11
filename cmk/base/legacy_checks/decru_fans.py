@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping
 
-from cmk.base.check_api import check_levels, CheckResult, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition, LegacyCheckResult
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
@@ -23,7 +23,7 @@ def discover_decru_fans(section: Mapping[str, int]) -> DiscoveryResult:
 
 def check_decru_fans(
     item: str, params: Mapping[str, tuple[int, int]], section: Mapping[str, int]
-) -> CheckResult:
+) -> LegacyCheckResult:
     if (rpm := section.get(item)) is None:
         return
     yield check_levels(

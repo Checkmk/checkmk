@@ -7,7 +7,7 @@ import time
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any
 
-from cmk.base.check_api import check_levels, ServiceCheckResult
+from cmk.base.check_api import check_levels, LegacyResult
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_average,
     get_value_store,
@@ -135,7 +135,7 @@ def check_cpu_util_unix(
     params: Mapping[str, Any],
     cores: Sequence[CPUInfo] | None = None,
     values_counter: bool = True,
-) -> Iterable[ServiceCheckResult]:
+) -> Iterable[LegacyResult]:
     this_time = time.time()
     value_store = get_value_store()
 

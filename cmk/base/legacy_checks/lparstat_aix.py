@@ -9,7 +9,7 @@
 from collections.abc import Iterable, Mapping
 from typing import Any
 
-from cmk.base.check_api import check_levels, CheckResult, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition, LegacyCheckResult
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util_unix, CPUInfo
 from cmk.base.check_legacy_includes.transforms import transform_cpu_iowait
 from cmk.base.config import check_info
@@ -28,7 +28,9 @@ def inventory_lparstat(section: Section) -> Iterable[tuple[None, dict]]:
         yield None, {}
 
 
-def check_lparstat(_no_item: int, _no_params: Mapping[str, Any], section: Section) -> CheckResult:
+def check_lparstat(
+    _no_item: int, _no_params: Mapping[str, Any], section: Section
+) -> LegacyCheckResult:
     if section.get("update_required"):
         yield 3, "Please upgrade your AIX agent."
         return
@@ -56,7 +58,7 @@ def inventory_lparstat_aix_cpu(section: Section) -> list[tuple[None, dict]]:
 
 def check_lparstat_aix_cpu(
     _no_item: str, params: Mapping[str, Any], section: Section
-) -> CheckResult:
+) -> LegacyCheckResult:
     if section.get("update_required"):
         yield 3, "Please upgrade your AIX agent."
         return

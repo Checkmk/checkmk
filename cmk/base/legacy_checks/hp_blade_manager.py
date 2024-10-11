@@ -16,7 +16,7 @@
 
 from collections.abc import Mapping
 
-from cmk.base.check_api import CheckResult, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition, LegacyCheckResult
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
@@ -44,7 +44,7 @@ def discover_hp_blade_manager(string_table: StringTable) -> DiscoveryResult:
 
 def check_hp_blade_manager(
     item: str, params: Mapping[str, str], string_table: StringTable
-) -> CheckResult:
+) -> LegacyCheckResult:
     for line in string_table:
         if line[0] == item:
             expected_role = params["role"]

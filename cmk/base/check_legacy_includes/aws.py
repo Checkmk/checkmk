@@ -6,7 +6,7 @@
 from collections.abc import Callable, Mapping
 from typing import TypeVar
 
-from cmk.base.check_api import check_levels, CheckResult
+from cmk.base.check_api import check_levels, LegacyCheckResult
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
 
 import cmk.plugins.aws.constants as agent_aws_types
@@ -189,7 +189,7 @@ def check_aws_http_errors(
 
 def check_aws_metrics(
     metric_infos: list[dict[str, float | str | None | tuple | None | Callable | None]],
-) -> CheckResult:
+) -> LegacyCheckResult:
     go_stale = True
 
     for metric_info in metric_infos:

@@ -31,22 +31,19 @@ from cmk.agent_based import v1 as _v1
 
 # pylint: enable=unused-import
 
-Warn = None | int | float
-Crit = None | int | float
-_Bound = None | int | float
-Levels = tuple  # Has length 2 or 4
+_OptNumber = None | int | float
+_Levels = tuple  # Has length 2 or 4
 
 _MetricTuple = (
     tuple[str, float]
-    | tuple[str, float, Warn, Crit]
-    | tuple[str, float, Warn, Crit, _Bound, _Bound]
+    | tuple[str, float, _OptNumber, _OptNumber]
+    | tuple[str, float, _OptNumber, _OptNumber, _OptNumber, _OptNumber]
 )
 
-ServiceCheckResult = tuple[int, str, list[_MetricTuple]]
+LegacyResult = tuple[int, str, list[_MetricTuple]]
 
 
-# to ease migration:
-CheckResult = Generator[tuple[int, str] | tuple[int, str, list[_MetricTuple]], None, None]
+LegacyCheckResult = Generator[tuple[int, str] | tuple[int, str, list[_MetricTuple]], None, None]
 
 
 def get_check_api_context() -> _CheckContext:
@@ -68,7 +65,7 @@ def get_check_api_context() -> _CheckContext:
 #   '----------------------------------------------------------------------'
 
 
-def _normalize_levels(levels: Levels) -> Levels:
+def _normalize_levels(levels: _Levels) -> _Levels:
     if len(levels) == 2:  # upper warn and crit
         warn_upper, crit_upper = levels[0], levels[1]
         warn_lower, crit_lower = None, None
@@ -81,7 +78,7 @@ def _normalize_levels(levels: Levels) -> Levels:
 
 
 def _do_check_levels(
-    value: int | float, levels: Levels, human_readable_func: Callable
+    value: int | float, levels: _Levels, human_readable_func: Callable
 ) -> tuple[int, str]:
     warn_upper, crit_upper, warn_lower, crit_lower = _normalize_levels(levels)
     # Critical cases
@@ -98,7 +95,9 @@ def _do_check_levels(
     return 0, ""
 
 
-def _levelsinfo_ty(ty: str, warn: Warn, crit: Crit, human_readable_func: Callable) -> str:
+def _levelsinfo_ty(
+    ty: str, warn: _OptNumber, crit: _OptNumber, human_readable_func: Callable
+) -> str:
     warn_str = "never" if warn is None else f"{human_readable_func(warn)}"
     crit_str = "never" if crit is None else f"{human_readable_func(crit)}"
     return f" (warn/crit {ty} {warn_str}/{crit_str})"
@@ -107,7 +106,7 @@ def _levelsinfo_ty(ty: str, warn: Warn, crit: Crit, human_readable_func: Callabl
 def _build_perfdata(
     dsname: None | str,
     value: int | float,
-    levels: Levels,
+    levels: _Levels,
     boundaries: tuple | None,
 ) -> list:
     if not dsname:
@@ -124,7 +123,7 @@ def check_levels(  # pylint: disable=too-many-branches
     human_readable_func: Callable | None = None,
     infoname: str | None = None,
     boundaries: tuple[float | None, float | None] | None = None,
-) -> ServiceCheckResult:
+) -> LegacyResult:
     """Generic function for checking a value against levels
 
     This also supports predictive levels.
@@ -207,7 +206,7 @@ def check_levels(  # pylint: disable=too-many-branches
 
     # normalize {}, (), None, (None, None), (None, None, None, None)
     if not params or set(params) <= {None}:
-        levels: Levels = (None, None, None, None)
+        levels: _Levels = (None, None, None, None)
     else:
         levels = _normalize_levels(params)
 

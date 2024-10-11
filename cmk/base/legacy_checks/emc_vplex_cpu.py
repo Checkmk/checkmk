@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping
 
-from cmk.base.check_api import CheckResult, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition, LegacyCheckResult
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
 
@@ -23,7 +23,7 @@ def discover_emc_vplex_cpu(section: Mapping[str, int]) -> DiscoveryResult:
 
 def check_emc_vplex_cpu(
     item: str, params: Mapping[str, object], section: Mapping[str, int]
-) -> CheckResult:
+) -> LegacyCheckResult:
     if (util := section.get(item)) is None:
         return
     yield check_cpu_util(max(100 - util, 0), params)

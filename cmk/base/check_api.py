@@ -18,17 +18,24 @@ The things in this module specify the old Check_MK (<- see? Old!) check API
 from collections.abc import Callable, Generator
 from typing import Any
 
-# pylint: disable=unused-import
 from cmk.utils.legacy_check_api import LegacyCheckDefinition as LegacyCheckDefinition
 
-# pylint: disable=unused-import
 from cmk.checkengine.checkresults import state_markers as state_markers
 
 from cmk.base.config import CheckContext as _CheckContext
 
 from cmk.agent_based import v1 as _v1
 
-# pylint: enable=unused-import
+__all__ = [
+    "state_markers",
+    "check_levels",
+    "passwordstore_get_cmdline",
+    "LegacyResult",
+    "LegacyCheckResult",
+    "get_check_api_context",
+    "LegacyCheckDefinition",
+]
+
 
 _OptNumber = None | int | float
 _Levels = tuple  # Has length 2 or 4
@@ -48,7 +55,7 @@ LegacyCheckResult = Generator[tuple[int, str] | tuple[int, str, list[_MetricTupl
 def get_check_api_context() -> _CheckContext:
     """This is called from cmk.base code to get the Check API things. Don't
     use this from checks."""
-    return {k: v for k, v in globals().items() if not k.startswith("_")}
+    return {k: v for k, v in globals().items() if k in __all__}
 
 
 # .
@@ -223,8 +230,3 @@ def passwordstore_get_cmdline(fmt: str, pw: tuple | str) -> str | tuple[str, str
         return fmt % pw[1]
 
     return ("store", pw[1], fmt)
-
-
-# NOTE: Currently this is not really needed, it is just here to keep any start
-# import in sync with our intended API.
-__all__ = list(get_check_api_context())

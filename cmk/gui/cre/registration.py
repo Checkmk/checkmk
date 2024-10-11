@@ -5,8 +5,6 @@
 
 """Raw edition and only raw edition specific registrations"""
 
-from livestatus import MultiSiteConnection
-
 from cmk.ccc.version import edition
 
 from cmk.utils import paths
@@ -83,7 +81,7 @@ def register() -> None:
     features_registry.register(
         Features(
             edition(paths.omd_root),
-            MultiSiteConnection,
+            livestatus_only_sites_postprocess=lambda x: list(x) if x else None,
         )
     )
     visuals.register(

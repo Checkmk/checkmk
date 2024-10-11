@@ -282,8 +282,11 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
     enabled_sites, disabled_sites = _get_enabled_and_disabled_sites(user)
     _set_initial_site_states(enabled_sites, disabled_sites)
 
-    ConnectionClass = current_app().features.multi_site_connection_class
-    g.live = ConnectionClass(enabled_sites, disabled_sites)
+    g.live = MultiSiteConnection(
+        sites=enabled_sites,
+        disabled_sites=disabled_sites,
+        only_sites_postprocess=current_app().features.livestatus_only_sites_postprocess,
+    )
 
     # Fetch status of sites by querying the version of Nagios and livestatus
     # This may be cached by a proxy for up to the next configuration reload.

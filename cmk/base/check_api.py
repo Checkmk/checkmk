@@ -25,12 +25,10 @@ from cmk.utils.http_proxy_config import HTTPProxyConfig
 
 # pylint: disable=unused-import
 from cmk.utils.legacy_check_api import LegacyCheckDefinition as LegacyCheckDefinition
-from cmk.utils.metrics import MetricName
 from cmk.utils.regex import regex as regex  # pylint: disable=unused-import
 
 # pylint: disable=unused-import
 from cmk.checkengine.checkresults import state_markers as state_markers
-from cmk.checkengine.submitters import ServiceDetails, ServiceState
 
 from cmk.base.config import CheckContext as _CheckContext
 from cmk.base.config import get_http_proxy as _get_http_proxy
@@ -50,7 +48,7 @@ _MetricTuple = (
     | tuple[str, float, Warn, Crit, _Bound, _Bound]
 )
 
-ServiceCheckResult = tuple[ServiceState, ServiceDetails, list[_MetricTuple]]
+ServiceCheckResult = tuple[int, str, list[_MetricTuple]]
 
 
 # to ease migration:
@@ -90,7 +88,7 @@ def _normalize_levels(levels: Levels) -> Levels:
 
 def _do_check_levels(
     value: int | float, levels: Levels, human_readable_func: Callable
-) -> tuple[ServiceState, ServiceDetails]:
+) -> tuple[int, str]:
     warn_upper, crit_upper, warn_lower, crit_lower = _normalize_levels(levels)
     # Critical cases
     if crit_upper is not None and value >= crit_upper:
@@ -113,7 +111,7 @@ def _levelsinfo_ty(ty: str, warn: Warn, crit: Crit, human_readable_func: Callabl
 
 
 def _build_perfdata(
-    dsname: None | MetricName,
+    dsname: None | str,
     value: int | float,
     levels: Levels,
     boundaries: tuple | None,
@@ -126,7 +124,7 @@ def _build_perfdata(
 
 def check_levels(  # pylint: disable=too-many-branches
     value: int | float,
-    dsname: None | MetricName,
+    dsname: None | str,
     params: Any,
     unit: str = "",
     human_readable_func: Callable | None = None,

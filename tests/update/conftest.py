@@ -13,9 +13,14 @@ from pathlib import Path
 
 import pytest
 
+from tests.testlib.agent_dumps import inject_dumps
 from tests.testlib.licensing import license_site
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import edition_from_env, get_supported_distros, parse_raw_edition, run
+from tests.testlib.utils import (
+    edition_from_env,
+    get_supported_distros,
+    parse_raw_edition,
+)
 from tests.testlib.version import CMKVersion, get_min_version, version_from_env
 
 from cmk.ccc.version import Edition
@@ -273,36 +278,6 @@ def _setup(request: pytest.FixtureRequest) -> Generator[tuple, None, None]:
     test_site.rm()
 
 
-def inject_dumps(site: Site, dumps_dir: Path) -> None:
-    _dumps_up_to_date(dumps_dir, get_min_version())
-
-    # create dump folder in the test site
-    site_dumps_path = site.path("var/check_mk/dumps")
-    LOGGER.info('Creating folder "%s"...', site_dumps_path)
-    _ = site.run(["mkdir", "-p", site_dumps_path])
-
-    LOGGER.info("Injecting agent-output...")
-
-    for dump_name in list(os.listdir(dumps_dir)):
-        assert (
-            run(
-                [
-                    "cp",
-                    "-f",
-                    f"{dumps_dir}/{dump_name}",
-                    f"{site_dumps_path}/{dump_name}",
-                ],
-                sudo=True,
-            ).returncode
-            == 0
-        )
-
-    ruleset_name = "datasource_programs"
-    LOGGER.info('Creating rule "%s"...', ruleset_name)
-    site.openapi.create_rule(ruleset_name=ruleset_name, value=f"cat {site_dumps_path}/*")
-    LOGGER.info('Rule "%s" created!', ruleset_name)
-
-
 def inject_rules(site: Site) -> None:
     try:
         with open(RULES_DIR / "ignore.txt", "r", encoding="UTF-8") as ignore_list_file:
@@ -320,18 +295,3 @@ def inject_rules(site: Site) -> None:
             for rule in rules:
                 site.openapi.create_rule(value=rule)
     site.activate_changes_and_wait_for_core_reload()
-
-
-def _dumps_up_to_date(dumps_dir: Path, min_version: CMKVersion) -> None:
-    """Check if the dumps are up-to-date with the minimum-version branch."""
-    dumps = list(dumps_dir.glob("*"))
-    min_version_str = min_version.version
-    min_version_branch = min_version_str[: min_version_str.find("p")]
-    if not dumps:
-        raise FileNotFoundError("No dumps found!")
-    for dump in dumps:
-        if str(min_version_branch) not in dump.name:
-            raise ValueError(
-                f"Dump '{dump.name}' is outdated! "
-                f"Please regenerate it using an agent with version {min_version_branch}."
-            )

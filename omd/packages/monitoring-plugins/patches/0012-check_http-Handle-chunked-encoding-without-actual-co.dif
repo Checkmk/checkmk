@@ -1,0 +1,32 @@
+From 6d3e44d2d8395076060e9c741e9b173dc5d57b76 Mon Sep 17 00:00:00 2001
+From: RincewindsHat <12514511+RincewindsHat@users.noreply.github.com>
+Date: Mon, 6 Feb 2023 11:39:44 +0100
+Subject: [PATCH] check_http: Handle chunked encoding without actual content
+ correctly
+
+---
+ plugins/check_http.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/plugins/check_http.c b/plugins/check_http.c
+index 5fa310f5..8dda046f 100644
+--- a/plugins/check_http.c
++++ b/plugins/check_http.c
+@@ -1462,7 +1462,13 @@ char *unchunk_content(const char *content) {
+     memcpy(result + (overall_size - size_of_chunk), start_of_chunk, size_of_chunk);
+   }
+ 
+-  result[overall_size] = '\0';
++  if (overall_size == 0 && result == NULL) {
++    // We might just have received the end chunk without previous content, so result is never allocated
++    result = calloc(1, sizeof(char));
++    // No error handling here, we can only return NULL anyway
++  } else {
++    result[overall_size] = '\0';
++  }
+   return result;
+ }
+ 
+-- 
+2.34.1
+

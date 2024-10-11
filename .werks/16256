@@ -1,0 +1,16 @@
+Title: check_http: Handle chunked encoding without actual content correctly
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1728631619
+Edition: cre
+Level: 1
+Version: 2.2.0p36
+
+<tt>check_http</tt> may have crashed with the following trace:
+<code>
+Found chunked content
+Segmentation fault
+</code>
+
+This was fixed upstream with https://github.com/monitoring-plugins/monitoring-plugins/commit/6d3e44d2d8395076060e9c741e9b173dc5d57b76 and was now cherry-picked into our deployed version of monitoring-plugins v2.3.3.

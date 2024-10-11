@@ -1489,10 +1489,6 @@ def load_checks(
     section_errors, sections = _make_agent_and_snmp_sections(
         sane_check_info.values(), legacy_check_plugin_files
     )
-
-    section_errors, sections = _make_agent_and_snmp_sections(
-        sane_check_info.values(), legacy_check_plugin_files
-    )
     check_errors, checks = _make_check_plugins(
         sane_check_info.values(), legacy_check_plugin_files, validate_creation_kwargs=did_compile
     )

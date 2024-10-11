@@ -1439,6 +1439,35 @@ def load_checks(
     get_check_api_context: GetCheckApiContext,
     filelist: list[str],
 ) -> list[str]:
+    discovered_legacy_checks = discover_legacy_checks(get_check_api_context, filelist)
+
+    section_errors, sections = _make_agent_and_snmp_sections(
+        discovered_legacy_checks.sane_check_info.values(), discovered_legacy_checks.plugin_files
+    )
+    check_errors, checks = _make_check_plugins(
+        discovered_legacy_checks.sane_check_info.values(),
+        discovered_legacy_checks.plugin_files,
+        validate_creation_kwargs=discovered_legacy_checks.did_compile,
+    )
+
+    _add_sections_to_register(sections)
+    _add_checks_to_register(checks)
+
+    return [*discovered_legacy_checks.ignored_plugins_errors, *section_errors, *check_errors]
+
+
+@dataclasses.dataclass
+class _DiscoveredLegacyChecks:
+    ignored_plugins_errors: Sequence[str]
+    sane_check_info: Mapping[str, LegacyCheckDefinition]
+    plugin_files: Mapping[str, str]
+    did_compile: bool
+
+
+def discover_legacy_checks(
+    get_check_api_context: GetCheckApiContext,
+    filelist: list[str],
+) -> _DiscoveredLegacyChecks:
     loaded_files: set[str] = set()
     ignored_plugins_errors = []
     sane_check_info = {}
@@ -1487,17 +1516,9 @@ def load_checks(
                     " -- this API is deprecated!"
                 )
 
-    section_errors, sections = _make_agent_and_snmp_sections(
-        sane_check_info.values(), legacy_check_plugin_files
+    return _DiscoveredLegacyChecks(
+        ignored_plugins_errors, sane_check_info, legacy_check_plugin_files, did_compile
     )
-    check_errors, checks = _make_check_plugins(
-        sane_check_info.values(), legacy_check_plugin_files, validate_creation_kwargs=did_compile
-    )
-
-    _add_sections_to_register(sections)
-    _add_checks_to_register(checks)
-
-    return [*ignored_plugins_errors, *section_errors, *check_errors]
 
 
 # Constructs a new check context dictionary. It contains the whole check API.

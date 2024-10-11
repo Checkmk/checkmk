@@ -42,6 +42,7 @@ from cmk.gui.wato import (
     NotificationParameterMail,
 )
 from cmk.gui.wato import registration as wato_registration
+from cmk.gui.watolib.activate_changes import activation_features_registry, ActivationFeatures
 from cmk.gui.watolib.analyze_configuration import ac_test_registry
 from cmk.gui.watolib.automation_commands import automation_command_registry
 from cmk.gui.watolib.config_domain_name import (
@@ -126,6 +127,12 @@ def register(edition: Edition) -> None:
         default_user_menu_topics,
         edition_supports_ldap=True,
         edition_supports_managing_roles=True,
+    )
+    activation_features_registry.register(
+        ActivationFeatures(
+            edition,
+            sync_file_filter_func=None,
+        )
     )
     notification_parameter_registry.register(NotificationParameterMail)
     register_pages()

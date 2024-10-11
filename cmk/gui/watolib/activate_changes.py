@@ -43,6 +43,7 @@ from livestatus import BrokerConnections, SiteConfiguration, SiteId
 
 from cmk.ccc import store, version
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import omd_site
 
 from cmk.utils import agent_registration, paths, render, setup_search_index
@@ -2616,7 +2617,6 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
     job_prefix = "activate-changes-scheduler"
     housekeeping_max_age_sec = 86400 * 30
     housekeeping_max_count = 10
-    file_filter_func: Callable[[str], bool] | None = None
 
     @classmethod
     def gui_title(cls):
@@ -2649,7 +2649,9 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
             sync_and_activate(
                 self._activation_id,
                 self._site_snapshot_settings,
-                ActivateChangesSchedulerBackgroundJob.file_filter_func,
+                activation_features_registry[
+                    str(version.edition(paths.omd_root))
+                ].sync_file_filter_func,
                 self._source,
                 self._prevent_activate,
             )
@@ -3591,3 +3593,17 @@ def activate_changes_wait(
     if manager.wait_for_completion(timeout=timeout):
         return manager.get_state()
     return None
+
+
+@dataclass(frozen=True)
+class ActivationFeatures:
+    edition: version.Edition
+    sync_file_filter_func: Callable[[str], bool] | None
+
+
+class ActivationFeaturesRegistry(Registry[ActivationFeatures]):
+    def plugin_name(self, instance: ActivationFeatures) -> str:
+        return str(instance.edition)
+
+
+activation_features_registry = ActivationFeaturesRegistry()

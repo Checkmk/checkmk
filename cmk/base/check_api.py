@@ -20,8 +20,6 @@ from typing import Any
 
 from cmk.utils.legacy_check_api import LegacyCheckDefinition as LegacyCheckDefinition
 
-from cmk.base.config import CheckContext as _CheckContext
-
 from cmk.agent_based import v1 as _v1
 
 __all__ = [
@@ -30,7 +28,6 @@ __all__ = [
     "passwordstore_get_cmdline",
     "LegacyResult",
     "LegacyCheckResult",
-    "get_check_api_context",
     "LegacyCheckDefinition",
 ]
 
@@ -50,12 +47,6 @@ LegacyResult = tuple[int, str, list[_MetricTuple]]
 
 
 LegacyCheckResult = Generator[tuple[int, str] | tuple[int, str, list[_MetricTuple]], None, None]
-
-
-def get_check_api_context() -> _CheckContext:
-    """This is called from cmk.base code to get the Check API things. Don't
-    use this from checks."""
-    return {k: v for k, v in globals().items() if k in __all__}
 
 
 # .

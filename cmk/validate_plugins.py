@@ -22,7 +22,6 @@ from cmk.checkengine.checkresults import (  # pylint: disable=cmk-module-layer-v
 )
 
 from cmk.base import (  # pylint: disable=cmk-module-layer-violation
-    check_api,
     server_side_calls,
 )
 from cmk.base.api.agent_based.register import (  # pylint: disable=cmk-module-layer-violation
@@ -86,7 +85,6 @@ def to_result(step: ValidationStep, errors: Sequence[str]) -> ActiveCheckResult:
 
 def _validate_agent_based_plugin_loading() -> ActiveCheckResult:
     errors = load_all_plugins(
-        check_api.get_check_api_context,
         local_checks_dir=paths.local_checks_dir,
         checks_dir=paths.checks_dir,
     )

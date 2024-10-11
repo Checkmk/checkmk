@@ -21,7 +21,7 @@ from cmk.utils.plugin_loader import import_plugins
 
 from cmk.automations.results import ABCAutomationResult
 
-from cmk.base import check_api, config, profiling
+from cmk.base import config, profiling
 
 from cmk import trace
 
@@ -62,7 +62,6 @@ class Automations:
                 ):
                     log.setup_console_logging()
                     config.load_all_plugins(
-                        check_api.get_check_api_context,
                         local_checks_dir=paths.local_checks_dir,
                         checks_dir=paths.checks_dir,
                     )

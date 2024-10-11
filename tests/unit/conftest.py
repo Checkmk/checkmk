@@ -269,7 +269,6 @@ class FixRegister:
     def __init__(self) -> None:
         # Local import to have faster pytest initialization
         from cmk.base import (  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
-            check_api,
             config,
         )
         from cmk.base.api.agent_based import (  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
@@ -280,7 +279,6 @@ class FixRegister:
         assert not config.check_info
 
         errors = config.load_all_plugins(
-            check_api.get_check_api_context,
             local_checks_dir=repo_path() / "no-such-path-but-thats-ok",
             checks_dir=str(repo_path() / "cmk/base/legacy_checks"),
         )

@@ -154,7 +154,7 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.core
 import cmk.base.nagios_utils
 import cmk.base.parent_scan
-from cmk.base import check_api, config, core_config, notify, server_side_calls, sources
+from cmk.base import config, core_config, notify, server_side_calls, sources
 from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.automations import Automation, automations, MKAutomationError
 from cmk.base.checkers import (
@@ -995,7 +995,6 @@ class AutomationSetAutochecks(DiscoveryAutomation):
         # (See autochecks.set_autochecks_of_cluster())
         if hostname in config_cache.hosts_config.clusters:
             config.load_all_plugins(
-                check_api.get_check_api_context,
                 local_checks_dir=local_checks_dir,
                 checks_dir=checks_dir,
             )
@@ -1887,7 +1886,6 @@ class AutomationGetConfiguration(Automation):
 
         if missing_variables:
             config.load_all_plugins(
-                check_api.get_check_api_context,
                 local_checks_dir=local_checks_dir,
                 checks_dir=checks_dir,
             )

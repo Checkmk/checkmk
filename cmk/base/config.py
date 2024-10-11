@@ -1400,7 +1400,6 @@ service_rule_groups = {"temperature"}
 
 
 def load_all_plugins(
-    get_check_api_context: GetCheckApiContext,
     *,
     local_checks_dir: Path,
     checks_dir: str,
@@ -1413,7 +1412,7 @@ def load_all_plugins(
         with tracer.start_as_current_span("discover_legacy_check_plugins"):
             filelist = _get_plugin_paths(str(local_checks_dir), checks_dir)
 
-        errors.extend(load_checks(get_check_api_context, filelist))
+        errors.extend(load_checks(filelist))
 
     return errors
 
@@ -1436,10 +1435,9 @@ def _get_plugin_paths(*dirs: str) -> list[str]:
 # especially in tests.
 @tracer.start_as_current_span("load_legacy_checks")
 def load_checks(
-    get_check_api_context: GetCheckApiContext,
     filelist: list[str],
 ) -> list[str]:
-    discovered_legacy_checks = discover_legacy_checks(get_check_api_context, filelist)
+    discovered_legacy_checks = discover_legacy_checks(filelist)
 
     section_errors, sections = _make_agent_and_snmp_sections(
         discovered_legacy_checks.sane_check_info, discovered_legacy_checks.plugin_files
@@ -1465,7 +1463,6 @@ class _DiscoveredLegacyChecks:
 
 
 def discover_legacy_checks(
-    get_check_api_context: GetCheckApiContext,
     filelist: list[str],
 ) -> _DiscoveredLegacyChecks:
     loaded_files: set[str] = set()
@@ -1483,7 +1480,7 @@ def discover_legacy_checks(
             continue  # skip already loaded files (e.g. from local)
 
         try:
-            check_context = new_check_context(get_check_api_context)
+            check_context = new_check_context()
 
             # Make a copy of known plug-in names, we need to track them for nagios config generation
             known_checks = {str(k) for k in check_info}
@@ -1521,17 +1518,12 @@ def discover_legacy_checks(
     )
 
 
-# Constructs a new check context dictionary. It contains the whole check API.
-def new_check_context(get_check_api_context: GetCheckApiContext) -> CheckContext:
+def new_check_context() -> CheckContext:
     # Add the data structures where the checks register with Checkmk
-    context = {
+    return {
         "check_info": check_info,
         "special_agent_info": special_agent_info,
     }
-    # NOTE: For better separation it would be better to copy the values, but
-    # this might consume too much memory, so we simply reference them.
-    context |= get_check_api_context()
-    return context
 
 
 def plugin_pathnames_in_directory(path: str) -> list[str]:

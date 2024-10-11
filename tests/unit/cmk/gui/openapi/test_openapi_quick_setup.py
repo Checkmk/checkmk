@@ -222,7 +222,7 @@ def test_quick_setup_save(clients: ClientRegistry) -> None:
             ),
         ],
     )
-    resp = clients.QuickSetup.complete_quick_setup(
+    resp = clients.QuickSetup.save_quick_setup(
         quick_setup_id="quick_setup_test",
         payload={"button_id": "save", "stages": []},
     )
@@ -242,7 +242,7 @@ def test_quick_setup_save_action_exists(clients: ClientRegistry) -> None:
             ),
         ],
     )
-    clients.QuickSetup.complete_quick_setup(
+    clients.QuickSetup.save_quick_setup(
         quick_setup_id="quick_setup_test",
         payload={"button_id": "some_nonexistent_id", "stages": []},
         expect_ok=False,
@@ -349,3 +349,26 @@ def test_get_quick_setup_overview_prefilled(clients: ClientRegistry) -> None:
         quick_setup_id="quick_setup_test", mode="overview", object_id="obj3", expect_ok=False
     )
     resp.assert_status_code(404)
+
+
+def test_quick_setup_edit(clients: ClientRegistry) -> None:
+    register_quick_setup(
+        setup_stages=[
+            lambda: QuickSetupStage(
+                title="stage1",
+                configure_components=[
+                    widgets.unique_id_formspec_wrapper(Title("account name")),
+                ],
+                custom_validators=[],
+                recap=[],
+                button_label="Next",
+            ),
+        ],
+    )
+    resp = clients.QuickSetup.edit_quick_setup(
+        quick_setup_id="quick_setup_test",
+        payload={"button_id": "save", "stages": []},
+        object_id="obj1",
+    )
+    resp.assert_status_code(201)
+    assert resp.json == {"redirect_url": "http://save/url"}

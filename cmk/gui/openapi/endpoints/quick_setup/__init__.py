@@ -84,6 +84,15 @@ QUICKSETUP_OBJECT_ID = {
 }
 
 
+QUICKSETUP_OBJECT_ID_REQUIRED = {
+    "object_id": fields.String(
+        required=True,
+        description="Select object id to prefill data for the quick setup",
+        example="8558f956-3e45-4c4f-bd02-e88da17c99dd",
+    )
+}
+
+
 @Endpoint(
     object_href("quick_setup", "{quick_setup_id}"),
     "cmk/quick_setup",
@@ -176,7 +185,7 @@ def quicksetup_validate_stage_and_retrieve_next(params: Mapping[str, Any]) -> Re
 
 @Endpoint(
     object_action_href("quick_setup", "{quick_setup_id}", "save"),
-    "cmk/complete_quick_setup",
+    "cmk/save_quick_setup",
     method="post",
     tag_group="Checkmk Internal",
     path_params=[QUICKSETUP_ID],
@@ -184,8 +193,28 @@ def quicksetup_validate_stage_and_retrieve_next(params: Mapping[str, Any]) -> Re
     request_schema=QuickSetupFinalSaveRequest,
     response_schema=QuickSetupSaveResponse,
 )
-def complete_quick_setup_action(params: Mapping[str, Any]) -> Response:
+def save_quick_setup_action(params: Mapping[str, Any]) -> Response:
     """Save the quick setup"""
+    return complete_quick_setup_action(params, QuickSetupActionMode.SAVE)
+
+
+@Endpoint(
+    object_action_href("quick_setup", "{quick_setup_id}", "edit"),
+    "cmk/edit_quick_setup",
+    method="put",
+    tag_group="Checkmk Internal",
+    path_params=[QUICKSETUP_ID],
+    query_params=[QUICKSETUP_OBJECT_ID_REQUIRED],
+    additional_status_codes=[201],
+    request_schema=QuickSetupFinalSaveRequest,
+    response_schema=QuickSetupSaveResponse,
+)
+def edit_quick_setup_action(params: Mapping[str, Any]) -> Response:
+    """Edit the quick setup"""
+    return complete_quick_setup_action(params, QuickSetupActionMode.EDIT)
+
+
+def complete_quick_setup_action(params: Mapping[str, Any], mode: QuickSetupActionMode) -> Response:
     body = params["body"]
     quick_setup_id = params["quick_setup_id"]
     button_id = body["button_id"]
@@ -201,10 +230,11 @@ def complete_quick_setup_action(params: Mapping[str, Any]) -> Response:
                 complete_quick_setup(
                     quick_setup=quick_setup,
                     action=action,
-                    mode=QuickSetupActionMode.SAVE,
+                    mode=mode,
                     stages_raw_formspecs=[
                         RawFormData(stage["form_data"]) for stage in body["stages"]
                     ],
+                    object_id=params.get("object_id"),
                 ),
                 status_code=201,
             )
@@ -236,4 +266,5 @@ def _serve_error(title: str, detail: str, status_code: int = 404) -> Response:
 def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(get_guided_stages_or_overview_stages)
     endpoint_registry.register(quicksetup_validate_stage_and_retrieve_next)
-    endpoint_registry.register(complete_quick_setup_action)
+    endpoint_registry.register(save_quick_setup_action)
+    endpoint_registry.register(edit_quick_setup_action)

@@ -3034,7 +3034,7 @@ class QuickSetupClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def complete_quick_setup(
+    def save_quick_setup(
         self,
         quick_setup_id: str,
         payload: dict[str, Any],
@@ -3044,6 +3044,21 @@ class QuickSetupClient(RestApiClient):
             "post",
             url=f"/objects/{self.domain}/{quick_setup_id}/actions/save/invoke",
             body=payload,
+            expect_ok=expect_ok,
+        )
+
+    def edit_quick_setup(
+        self,
+        quick_setup_id: str,
+        payload: dict[str, Any],
+        object_id: str,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{quick_setup_id}/actions/edit/invoke",
+            body=payload,
+            query_params={"object_id": object_id},
             expect_ok=expect_ok,
         )
 

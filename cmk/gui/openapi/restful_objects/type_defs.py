@@ -139,7 +139,8 @@ CmkEndpointName = Literal[
     "cmk/verify",
     "cmk/register",
     "cmk/quick_setup",
-    "cmk/complete_quick_setup",
+    "cmk/save_quick_setup",
+    "cmk/edit_quick_setup",
 ]
 
 RestfulEndpointName = Literal[

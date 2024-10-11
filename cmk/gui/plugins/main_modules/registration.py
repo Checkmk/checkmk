@@ -5,8 +5,6 @@
 
 """Central module for common (non-edition specific) registrations"""
 
-from livestatus import MultiSiteConnection
-
 from cmk.ccc.crash_reporting import crash_report_registry
 
 from cmk.utils.licensing.registry import register_cre_licensing_handler
@@ -34,7 +32,6 @@ from cmk.gui import (
     painter_options,
     piggyback_hub,
     prediction,
-    sites,
     user_message,
     valuespec,
     weblib,
@@ -212,7 +209,6 @@ def register() -> None:
     agent_registration.register(permission_section_registry)
     weblib.register(page_registry)
     openapi_registration.register(endpoint_registry, job_registry)
-    sites.ConnectionClass = MultiSiteConnection
     customer.CustomerAPIClass = customer.CustomerAPIStub
 
     register_userroles(config_file_registry)

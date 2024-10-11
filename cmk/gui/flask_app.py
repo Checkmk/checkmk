@@ -5,10 +5,12 @@
 
 import os
 
+from flask import current_app as current_flask_app
 from flask import Flask
 from flask.sessions import SessionInterface
 
 from cmk.gui import http
+from cmk.gui.features import Features
 
 
 class CheckmkFlaskApp(Flask):
@@ -19,6 +21,7 @@ class CheckmkFlaskApp(Flask):
         self,
         import_name: str,
         session_interface: SessionInterface,
+        features: Features,
         static_url_path: str | None = None,
         static_folder: str | os.PathLike[str] | None = "static",
         static_host: str | None = None,
@@ -42,3 +45,10 @@ class CheckmkFlaskApp(Flask):
             root_path,
         )
         self.session_interface = session_interface
+        self.features = features
+
+
+def current_app() -> CheckmkFlaskApp:
+    app = current_flask_app
+    assert isinstance(app, CheckmkFlaskApp)
+    return app

@@ -34,6 +34,7 @@ from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
+from cmk.gui.flask_app import current_app
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -277,12 +278,11 @@ def _inhibit_incompatible_site_connection(
     }
 
 
-ConnectionClass = MultiSiteConnection
-
-
 def _connect_multiple_sites(user: LoggedInUser) -> None:
     enabled_sites, disabled_sites = _get_enabled_and_disabled_sites(user)
     _set_initial_site_states(enabled_sites, disabled_sites)
+
+    ConnectionClass = current_app().features.multi_site_connection_class
     g.live = ConnectionClass(enabled_sites, disabled_sites)
 
     # Fetch status of sites by querying the version of Nagios and livestatus

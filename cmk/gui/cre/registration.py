@@ -5,6 +5,12 @@
 
 """Raw edition and only raw edition specific registrations"""
 
+from livestatus import MultiSiteConnection
+
+from cmk.ccc.version import edition
+
+from cmk.utils import paths
+
 import cmk.gui.graphing._graph_images as graph_images
 import cmk.gui.graphing._html_render as html_render
 import cmk.gui.pages
@@ -14,6 +20,7 @@ from cmk.gui.backup.registration import backup_register
 from cmk.gui.custom_icons.registration import custom_icons_register
 from cmk.gui.dashboard import dashlet_registry
 from cmk.gui.data_source import data_source_registry
+from cmk.gui.features import Features, features_registry
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.metrics import PageGraphDashlet, PageHostServiceGraphPopup
 from cmk.gui.mkeventd import registration as mkeventd_registration
@@ -73,6 +80,12 @@ def register_painters() -> None:
 
 
 def register() -> None:
+    features_registry.register(
+        Features(
+            edition(paths.omd_root),
+            MultiSiteConnection,
+        )
+    )
     visuals.register(
         page_registry,
         visual_info_registry,

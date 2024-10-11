@@ -1517,6 +1517,16 @@ class ModeTestNotifications(ModeNotifications):
         return redirect(self.mode_url())
 
     def page(self) -> None:
+        # TODO temp. solution to provide flashed message after quick setup
+        if (referer := request.referer) and referer.endswith("mode=notification_rule_quick_setup"):
+            # TODO Add notification rule number
+            html.javascript(
+                "cmk.wato.message(%s, %s)"
+                % (
+                    json.dumps(_("New notification rule successfully created!")),
+                    json.dumps("success"),
+                )
+            )
         self._render_test_notifications()
         context, analyse = self._result_from_request()
         self._show_notification_test_overview(context, analyse)

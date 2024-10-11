@@ -872,6 +872,24 @@
                 }
             ]
         },
+        "folder": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "folder",
+                    "default": "folder"
+                },
+                "input_hint": {
+                    "type": "string"
+                }
+            },
+            "required": ["type"],
+            "allOf": [
+                {
+                    "$ref": "#/$defs/form_spec"
+                }
+            ]
+        },
         "components": {
             "discriminator": {
                 "propertyName": "type"
@@ -942,6 +960,9 @@
                 },
                 {
                     "$ref": "#/$defs/list_of_strings"
+                },
+                {
+                    "$ref": "#/$defs/folder"
                 }
             ],
             "required": ["type"]

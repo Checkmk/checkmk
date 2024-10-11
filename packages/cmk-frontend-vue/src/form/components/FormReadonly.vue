@@ -22,7 +22,8 @@ import type {
   OptionalChoice,
   ListOfStrings,
   DualListChoice,
-  CheckboxListChoice
+  CheckboxListChoice,
+  Folder
 } from '@/form/components/vue_formspec_components'
 import {
   groupDictionaryValidations,
@@ -84,6 +85,8 @@ function renderForm(
       return renderOptionalChoice(formSpec as OptionalChoice, value as unknown[])
     case 'simple_password':
       return renderSimplePassword()
+    case 'folder':
+      return renderFolder(formSpec as Folder, value as string, backendValidation)
     // Do not add a default case here. This is intentional to make sure that all form types are covered.
   }
 }
@@ -412,6 +415,14 @@ function renderLegacyValuespec(
     }),
     h('div', { validation: backendValidation })
   ])
+}
+
+function renderFolder(
+  formSpec: Folder,
+  value: string,
+  backendValidation: ValidationMessages
+): VNode {
+  return renderSimpleValue(formSpec, `Main/${value}`, backendValidation)
 }
 
 export default defineComponent({

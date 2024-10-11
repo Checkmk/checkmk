@@ -31,14 +31,15 @@ export type Components =
   | Tuple
   | OptionalChoice
   | SimplePassword
-  | ListOfStrings;
+  | ListOfStrings
+  | Folder;
 export type Integer = FormSpec & {
   type: "integer";
   label?: string;
   unit?: string;
   input_hint?: string;
 };
-export type Validator = IsInteger | IsFloat | NumberInRange | LengthInRange;
+export type Validator = IsInteger | IsFloat | NumberInRange | LengthInRange | MatchRegex;
 export type Float = FormSpec & {
   type: "float";
   label?: string;
@@ -184,6 +185,10 @@ export type ListOfStrings = FormSpec & {
   layout?: ListOfStringsLayout;
 };
 export type ListOfStringsLayout = "horizontal" | "vertical";
+export type Folder = FormSpec & {
+  type: "folder";
+  input_hint?: string;
+};
 
 export interface VueFormspecComponents {
   components?: Components;
@@ -213,6 +218,11 @@ export interface LengthInRange {
   type: "length_in_range";
   min_value?: number;
   max_value?: number;
+  error_message?: string;
+}
+export interface MatchRegex {
+  type: "match_regex";
+  regex?: string;
   error_message?: string;
 }
 export interface Autocompleter {

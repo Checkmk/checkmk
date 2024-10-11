@@ -12,6 +12,7 @@ from .data_size import DataSizeVisitor
 from .dictionary import DictionaryVisitor
 from .fixed_value import FixedValueVisitor
 from .float import FloatVisitor
+from .folder import FolderVisitor
 from .integer import IntegerVisitor
 from .legacy_valuespec import LegacyValuespecVisitor
 from .list import ListVisitor
@@ -40,6 +41,7 @@ __all__ = [
     "DictionaryVisitor",
     "FixedValueVisitor",
     "FloatVisitor",
+    "FolderVisitor",
     "IntegerVisitor",
     "LegacyValuespecVisitor",
     "ListVisitor",

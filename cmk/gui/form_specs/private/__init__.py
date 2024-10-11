@@ -12,6 +12,7 @@ from .definitions import (
     UnknownFormSpec,
 )
 from .dictionary_extended import DictionaryExtended
+from .folder import Folder
 from .list_extended import ListExtended
 from .list_of_strings import ListOfStrings
 from .monitored_host_extended import MonitoredHostExtended
@@ -25,6 +26,7 @@ __all__ = [
     "Catalog",
     "CommentTextArea",
     "DictionaryExtended",
+    "Folder",
     "LegacyValueSpec",
     "ListExtended",
     "ListOfStrings",

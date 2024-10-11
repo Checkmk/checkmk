@@ -30,6 +30,7 @@ import FormSimplePassword from '@/form/components/forms/FormSimplePassword.vue'
 import FormCommentTextArea from './forms/FormCommentTextArea.vue'
 import FormListOfStrings from '@/form/components/forms/FormListOfStrings.vue'
 import FormCheckboxListChoice from './forms/FormCheckboxListChoice.vue'
+import FormFolder from './forms/FormFolder.vue'
 
 const props = defineProps<{
   spec: FormSpec
@@ -61,7 +62,8 @@ const components: Record<Components['type'], unknown> = {
   tuple: FormTuple,
   optional_choice: FormOptionalChoice,
   simple_password: FormSimplePassword,
-  list_of_strings: FormListOfStrings
+  list_of_strings: FormListOfStrings,
+  folder: FormFolder
 }
 
 function getComponent(): IComponent {

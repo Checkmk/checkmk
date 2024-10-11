@@ -44,7 +44,14 @@ class NumberInRange:
     error_message: Optional[str] = None
 
 
-Validator = Union[IsInteger, IsFloat, NumberInRange, LengthInRange]
+@dataclass(kw_only=True)
+class MatchRegex:
+    type: str = "match_regex"
+    regex: Optional[str] = None
+    error_message: Optional[str] = None
+
+
+Validator = Union[IsInteger, IsFloat, NumberInRange, LengthInRange, MatchRegex]
 
 
 class StringFieldSize(str, Enum):
@@ -371,6 +378,12 @@ class ListOfStrings(FormSpec):
     layout: Optional[ListOfStringsLayout] = ListOfStringsLayout.horizontal
 
 
+@dataclass(kw_only=True)
+class Folder(FormSpec):
+    type: str = "folder"
+    input_hint: Optional[str] = None
+
+
 Components = Union[
     Integer,
     Float,
@@ -394,6 +407,7 @@ Components = Union[
     OptionalChoice,
     SimplePassword,
     ListOfStrings,
+    Folder,
 ]
 
 

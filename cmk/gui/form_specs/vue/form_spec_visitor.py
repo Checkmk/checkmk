@@ -20,6 +20,7 @@ from cmk.gui.form_specs.private import (
     Catalog,
     CommentTextArea,
     DictionaryExtended,
+    Folder,
     LegacyValueSpec,
     ListExtended,
     ListOfStrings,
@@ -84,6 +85,7 @@ from .visitors import (
     DictionaryVisitor,
     FixedValueVisitor,
     FloatVisitor,
+    FolderVisitor,
     get_visitor,
     IntegerVisitor,
     LegacyValuespecVisitor,
@@ -144,6 +146,7 @@ def register_form_specs():
     register_visitor_class(ListOfStrings, ListOfStringsVisitor)
     register_visitor_class(AdaptiveMultipleChoice, MultipleChoiceVisitor)
     register_visitor_class(MultipleChoice, MultipleChoiceVisitor, recompose_multiple_choice)
+    register_visitor_class(Folder, FolderVisitor)
 
     # Recomposed
     register_visitor_class(String, StringVisitor, recompose_string)

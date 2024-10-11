@@ -66,6 +66,22 @@
             },
             "required": ["type"]
         },
+        "match_regex": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "const": "match_regex",
+                    "default": "match_regex"
+                },
+                "regex": {
+                    "type": "string"
+                },
+                "error_message": {
+                    "type": "string"
+                }
+            },
+            "required": ["type"]
+        },
         "validator": {
             "discriminator": {
                 "propertyName": "type"
@@ -82,6 +98,9 @@
                 },
                 {
                     "$ref": "#/$defs/length_in_range"
+                },
+                {
+                    "$ref": "#/$defs/match_regex"
                 }
             ],
             "required": ["type"]

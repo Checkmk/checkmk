@@ -6,6 +6,7 @@
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.fields.definitions import HOST_NAME_REGEXP
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
+from cmk.gui.form_specs.private.folder import Folder
 from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout
 from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.quick_setup.v0_unstable.definitions import (
@@ -91,22 +92,10 @@ def _host_name_dict_element(
     )
 
 
-FOLDER_PATTERN = (
-    r"^(?:[~\\\/]?[-_ a-zA-Z0-9.]{1,32}(?:[~\\\/][-_ a-zA-Z0-9.]{1,32})*[~\\\/]?|[~\\\/]?)$"
-)
-
-
 def _host_path_dict_element(title: Title = Title("Folder")) -> DictElement:
     return DictElement(
-        parameter_form=String(
+        parameter_form=Folder(
             title=title,
-            field_size=FieldSize.MEDIUM,
-            custom_validate=(
-                validators.MatchRegex(
-                    regex=FOLDER_PATTERN,
-                    error_msg=Message("Invalid characters in %s") % str(title),
-                ),
-            ),
             help_text=Help(
                 "Specify the location where the host will be created. If left empty, "
                 "the host will be created in the root folder."

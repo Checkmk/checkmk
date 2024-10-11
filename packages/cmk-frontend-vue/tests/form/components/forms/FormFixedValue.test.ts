@@ -18,6 +18,7 @@ function getFixedValue(withLabel = false): FormSpec.FixedValue {
   if (withLabel) {
     spec['label'] = 'fooLabel'
   }
+
   return spec
 }
 

@@ -8,9 +8,7 @@
 from livestatus import MultiSiteConnection
 
 from cmk.ccc.crash_reporting import crash_report_registry
-from cmk.ccc.version import Edition, edition
 
-from cmk.utils import paths
 from cmk.utils.licensing.registry import register_cre_licensing_handler
 
 import cmk.gui.help
@@ -173,9 +171,6 @@ def register() -> None:
         contact_group_usage_finder_registry,
         timeperiod_usage_finder_registry,
     )
-
-    if edition(paths.omd_root) is Edition.CSE:
-        userdb_registration.saas_register(user_attribute_registry)
 
     bi_registration.register(
         data_source_registry,

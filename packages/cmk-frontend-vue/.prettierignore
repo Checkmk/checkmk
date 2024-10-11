@@ -1,2 +1,3 @@
 src/form/components/vue_formspec_components.ts
+src/form/components/configuration_entity.ts
 src/notification/type_defs.ts

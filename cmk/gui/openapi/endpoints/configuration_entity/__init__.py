@@ -24,8 +24,7 @@ from cmk.gui.openapi.endpoints.configuration_entity.response_schemas import (
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_schemas, type_defs
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import EXT, FIELDS, problem, serve_json
-from cmk.gui.watolib.configuration_entity import (
-    ConfigEntityType,
+from cmk.gui.watolib.configuration_entity.configuration_entity import (
     ConfigurationEntityDescription,
     EntityId,
     get_configuration_entity_data,
@@ -33,6 +32,7 @@ from cmk.gui.watolib.configuration_entity import (
     get_list_of_configuration_entities,
     save_configuration_entity,
 )
+from cmk.gui.watolib.configuration_entity.type_defs import ConfigEntityType
 
 from cmk import fields
 
@@ -58,14 +58,14 @@ ENTITY_TYPE = {
         required=True,
         enum=[t.value for t in ConfigEntityType],
         description="Type of configuration entity",
-        example=ConfigEntityType.NOTIFICATION_PARAMETER.value,
+        example=ConfigEntityType.notification_parameter.value,
     )
 }
 
 
 def _to_domain_type(entity_type: ConfigEntityType) -> type_defs.DomainType:
     match entity_type:
-        case ConfigEntityType.NOTIFICATION_PARAMETER:
+        case ConfigEntityType.notification_parameter:
             return "notification_parameter"
         case other:
             assert_never(other)
@@ -147,7 +147,7 @@ def put_configuration_entity(params: Mapping[str, Any]) -> Response:
 
 @Endpoint(
     constructors.collection_href(
-        _to_domain_type(ConfigEntityType.NOTIFICATION_PARAMETER), "{entity_type_specifier}"
+        _to_domain_type(ConfigEntityType.notification_parameter), "{entity_type_specifier}"
     ),
     "cmk/list",
     tag_group="Checkmk Internal",
@@ -160,15 +160,15 @@ def list_configuration_entities(params: Mapping[str, Any]) -> Response:
     entity_type_specifier = params["entity_type_specifier"]
 
     entity_descriptions = get_list_of_configuration_entities(
-        ConfigEntityType.NOTIFICATION_PARAMETER, entity_type_specifier
+        ConfigEntityType.notification_parameter, entity_type_specifier
     )
 
     return serve_json(
         constructors.collection_object(
-            domain_type=_to_domain_type(ConfigEntityType.NOTIFICATION_PARAMETER),
+            domain_type=_to_domain_type(ConfigEntityType.notification_parameter),
             value=[
                 constructors.domain_object(
-                    domain_type=_to_domain_type(ConfigEntityType.NOTIFICATION_PARAMETER),
+                    domain_type=_to_domain_type(ConfigEntityType.notification_parameter),
                     identifier=entry.ident,
                     title=entry.description,
                     include_links=False,
@@ -183,7 +183,7 @@ def list_configuration_entities(params: Mapping[str, Any]) -> Response:
 
 @Endpoint(
     constructors.object_href(
-        _to_domain_type(ConfigEntityType.NOTIFICATION_PARAMETER), "{entity_id}"
+        _to_domain_type(ConfigEntityType.notification_parameter), "{entity_id}"
     ),
     "cmk/show",
     tag_group="Checkmk Internal",
@@ -195,11 +195,11 @@ def get_configuration_entity(params: Mapping[str, Any]) -> Response:
     """Get a notification parameter"""
     entity_id = EntityId(params["entity_id"])
 
-    data = get_configuration_entity_data(ConfigEntityType.NOTIFICATION_PARAMETER, entity_id)
+    data = get_configuration_entity_data(ConfigEntityType.notification_parameter, entity_id)
 
     return serve_json(
         constructors.domain_object(
-            domain_type=_to_domain_type(ConfigEntityType.NOTIFICATION_PARAMETER),
+            domain_type=_to_domain_type(ConfigEntityType.notification_parameter),
             identifier=entity_id,
             title="",
             extensions=dict(data),

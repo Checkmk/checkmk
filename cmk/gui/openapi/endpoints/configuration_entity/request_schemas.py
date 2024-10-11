@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.gui.fields.base import BaseSchema
-from cmk.gui.watolib.configuration_entity import ConfigEntityType
+from cmk.gui.watolib.configuration_entity.type_defs import ConfigEntityType
 
 from cmk import fields
 
@@ -13,7 +13,7 @@ class CreateConfigurationEntity(BaseSchema):
         enum=[t.value for t in ConfigEntityType],
         required=True,
         description="Type of configuration entity",
-        example=ConfigEntityType.NOTIFICATION_PARAMETER.value,
+        example=ConfigEntityType.notification_parameter.value,
     )
     entity_type_specifier = fields.String(
         required=True,
@@ -32,7 +32,7 @@ class UpdateConfigurationEntity(BaseSchema):
         enum=[t.value for t in ConfigEntityType],
         required=True,
         description="Type of configuration entity",
-        example=ConfigEntityType.NOTIFICATION_PARAMETER.value,
+        example=ConfigEntityType.notification_parameter.value,
     )
     entity_type_specifier = fields.String(
         required=True,

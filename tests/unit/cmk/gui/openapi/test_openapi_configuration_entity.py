@@ -6,12 +6,12 @@ import pytest
 
 from tests.testlib.rest_api_client import ClientRegistry
 
-import cmk.gui.watolib.configuration_entity
+import cmk.gui.watolib.configuration_entity.configuration_entity
 from cmk.gui.form_specs.private import DictionaryExtended, not_empty
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
 from cmk.gui.wato import NotificationParameter
 from cmk.gui.wato._notification_parameter._registry import NotificationParameterRegistry
-from cmk.gui.watolib.configuration_entity import ConfigEntityType
+from cmk.gui.watolib.configuration_entity.type_defs import ConfigEntityType
 from cmk.gui.watolib.notification_parameter import (
     get_notification_parameter,
     NotificationParameterDescription,
@@ -54,7 +54,7 @@ def _registry_fixture(monkeypatch: pytest.MonkeyPatch) -> NotificationParameterR
     notification_parameter_registry = NotificationParameterRegistry()
     notification_parameter_registry.register(DummyNotificationParams)
     monkeypatch.setattr(
-        cmk.gui.watolib.configuration_entity,
+        cmk.gui.watolib.configuration_entity.configuration_entity,
         "notification_parameter_registry",
         notification_parameter_registry,
     )
@@ -65,7 +65,7 @@ def test_save_configuration_entity(clients: ClientRegistry) -> None:
     # WHEN
     resp = clients.ConfigurationEntity.create_configuration_entity(
         {
-            "entity_type": ConfigEntityType.NOTIFICATION_PARAMETER.value,
+            "entity_type": ConfigEntityType.notification_parameter.value,
             "entity_type_specifier": "dummy_params",
             "data": {
                 "general": {"description": "foo"},
@@ -96,7 +96,7 @@ def test_update_configuration_entity(
     # WHEN
     clients.ConfigurationEntity.update_configuration_entity(
         {
-            "entity_type": ConfigEntityType.NOTIFICATION_PARAMETER.value,
+            "entity_type": ConfigEntityType.notification_parameter.value,
             "entity_type_specifier": "dummy_params",
             "entity_id": entity.ident,
             "data": {
@@ -131,7 +131,7 @@ def test_save_configuration_validation(
     # WHEN
     resp = clients.ConfigurationEntity.create_configuration_entity(
         {
-            "entity_type": ConfigEntityType.NOTIFICATION_PARAMETER.value,
+            "entity_type": ConfigEntityType.notification_parameter.value,
             "entity_type_specifier": "dummy_params",
             "data": data,
         },
@@ -168,7 +168,7 @@ def test_list_configuration_entities(
 
     # WHEN
     resp = clients.ConfigurationEntity.list_configuration_entities(
-        entity_type=ConfigEntityType.NOTIFICATION_PARAMETER,
+        entity_type=ConfigEntityType.notification_parameter,
         entity_type_specifier="dummy_params",
     )
 
@@ -192,7 +192,7 @@ def test_get_configuration_entity(
 
     # WHEN
     resp = clients.ConfigurationEntity.get_configuration_entity(
-        entity_type=ConfigEntityType.NOTIFICATION_PARAMETER,
+        entity_type=ConfigEntityType.notification_parameter,
         entity_id=entity.ident,
     )
 
@@ -204,7 +204,7 @@ def test_get_configuration_entity(
 def test_get_confguration_entity_fs_schema(clients: ClientRegistry) -> None:
     # WHEN
     resp = clients.ConfigurationEntity.get_configuration_entity_schema(
-        entity_type=ConfigEntityType.NOTIFICATION_PARAMETER,
+        entity_type=ConfigEntityType.notification_parameter,
         entity_type_specifier="dummy_params",
     )
 

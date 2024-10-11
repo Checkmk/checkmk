@@ -1953,6 +1953,7 @@ class ConfigCache:
             ],
         ] = {}
         self.__is_piggyback_host: dict[HostName, bool] = {}
+        self.__is_waiting_for_discovery_host: dict[HostName, bool] = {}
         self.__snmp_config: dict[tuple[HostName, HostAddress, SourceType], SNMPHostConfig] = {}
         self.__hwsw_inventory_parameters: dict[HostName, HWSWInventoryParameters] = {}
         self.__explicit_host_attributes: dict[HostName, dict[str, str]] = {}
@@ -2535,6 +2536,14 @@ class ConfigCache:
 
         return self.__is_piggyback_host.setdefault(host_name, get_is_piggyback_host())
 
+    def _is_waiting_for_discovery_host(self, host_name: HostName) -> bool:
+        with contextlib.suppress(KeyError):
+            return self.__is_waiting_for_discovery_host[host_name]
+
+        return self.__is_waiting_for_discovery_host.setdefault(
+            host_name, ConfigCache.is_waiting_for_discovery(host_name)
+        )
+
     def is_ping_host(self, host_name: HostName) -> bool:
         cds = self.computed_datasources(host_name)
         return not (
@@ -2559,7 +2568,7 @@ class ConfigCache:
         return not self.is_online(host_name)
 
     def is_online(self, host_name: HostName) -> bool:
-        return self._is_only_host(host_name)
+        return self._is_only_host(host_name) and not self._is_waiting_for_discovery_host(host_name)
 
     def is_active(self, host_name: HostName) -> bool:
         """Return True if host is active, else False."""
@@ -3256,6 +3265,12 @@ class ConfigCache:
             host_attributes.get(hostname, {}).get("additional_ipv4addresses", []),
             host_attributes.get(hostname, {}).get("additional_ipv6addresses", []),
         )
+
+    @staticmethod
+    def is_waiting_for_discovery(hostname: HostName) -> bool:
+        """Check custom attribute set by WATO to signal
+        the host may be not discovered and should be ignore"""
+        return host_attributes.get(hostname, {}).get("waiting_for_discovery", False)
 
     def check_mk_check_interval(self, hostname: HostName) -> float:
         if hostname not in self._check_mk_check_interval:

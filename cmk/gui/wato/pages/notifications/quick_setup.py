@@ -352,10 +352,11 @@ def recipient() -> QuickSetupStage:
                             CascadingSingleChoiceElement(
                                 title=Title("Specific users"),
                                 name="specific_users",
-                                parameter_form=SingleChoice(
+                                parameter_form=SingleChoiceExtended(
                                     prefill=InputHint(Title("Select user")),
+                                    type=str,
                                     elements=[
-                                        SingleChoiceElement(
+                                        SingleChoiceElementExtended(
                                             name=ident,
                                             title=Title(title),  # pylint: disable=localization-of-non-literal-string
                                         )

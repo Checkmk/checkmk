@@ -64,13 +64,20 @@ Recipient = (
 )
 
 
-# TODO: add correct types after Stage 5 is implemented
+class FrequencyAndTiming(TypedDict):
+    restrict_timeperiod: NotRequired[str]
+    limit_by_count: NotRequired[tuple[int, int]]
+    throttle_periodic: NotRequired[tuple[int, int]]
+
+
+class ContentBasedFiltering(TypedDict):
+    by_plugin_output: NotRequired[str]
+    custom_by_comment: NotRequired[str]
+
+
 class SendingConditions(TypedDict):
-    restrict_to_timeperiod: object
-    limit_by_count: object
-    throttling_of_period: object
-    by_plugin_output: object
-    custom_by_comment: object
+    frequency_and_timing: FrequencyAndTiming
+    content_based_filtering: ContentBasedFiltering
 
 
 class Settings(TypedDict):

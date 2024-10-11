@@ -8,6 +8,7 @@ from typing import cast, Literal
 from uuid import uuid4
 
 from cmk.utils.notify_types import EventRule, NotificationRuleID
+from cmk.utils.timeperiod import TimeperiodName
 from cmk.utils.urls import is_allowed_url
 from cmk.utils.user import UserId
 
@@ -43,6 +44,7 @@ from cmk.gui.wato._group_selection import sorted_contact_group_choices
 from cmk.gui.wato.pages.notifications.quick_setup_types import NotificationQuickSetupSpec
 from cmk.gui.watolib.mode import mode_url
 from cmk.gui.watolib.notifications import NotificationRuleConfigFile
+from cmk.gui.watolib.timeperiods import load_timeperiods
 
 from cmk.rulesets.v1 import Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
@@ -55,6 +57,7 @@ from cmk.rulesets.v1.form_specs import (
     FixedValue,
     HostState,
     InputHint,
+    Integer,
     ServiceState,
     SingleChoice,
     SingleChoiceElement,
@@ -393,9 +396,87 @@ def recipient() -> QuickSetupStage:
     )
 
 
+def _get_time_periods() -> list[tuple[TimeperiodName, str]]:
+    return sorted((name, f"{name} - {spec["alias"]}") for name, spec in load_timeperiods().items())
+
+
 def sending_conditions() -> QuickSetupStage:
     def _components() -> Sequence[Widget]:
-        return []
+        return [
+            FormSpecWrapper(
+                id=FormSpecId("sending_conditions"),
+                form_spec=DictionaryExtended(
+                    layout=DictionaryLayout.one_column,
+                    elements={
+                        "frequency_and_timing": DictElement(
+                            required=True,
+                            parameter_form=DictionaryExtended(
+                                title=Title("Notification frequency and timing"),
+                                elements={
+                                    "restrict_timeperiod": DictElement(
+                                        parameter_form=SingleChoiceExtended(
+                                            title=Title("Restrict notifications to a time period"),
+                                            type=str,
+                                            prefill=InputHint(Title("Select time period")),
+                                            elements=[
+                                                SingleChoiceElementExtended(
+                                                    name=name,
+                                                    title=Title(title),  # pylint: disable=localization-of-non-literal-string
+                                                )
+                                                for name, title in _get_time_periods()
+                                            ],
+                                        )
+                                    ),
+                                    "limit_by_count": DictElement(
+                                        parameter_form=Tuple(
+                                            title=Title("Limit notifications by count to"),
+                                            elements=[
+                                                Integer(label=Label("between")),
+                                                Integer(label=Label("and")),
+                                            ],
+                                            layout="horizontal",
+                                        )
+                                    ),
+                                    "throttle_periodic": DictElement(
+                                        parameter_form=Tuple(
+                                            title=Title("Throttling of 'Periodic notifications'"),
+                                            elements=[
+                                                Integer(
+                                                    label=Label("starting with notification number")
+                                                ),
+                                                Integer(
+                                                    label=Label("send every"),
+                                                    unit_symbol="notifications",
+                                                ),
+                                            ],
+                                            layout="horizontal",
+                                        )
+                                    ),
+                                },
+                            ),
+                        ),
+                        "content_based_filtering": DictElement(
+                            required=True,
+                            parameter_form=Dictionary(
+                                title=Title("Content-based filtering"),
+                                elements={
+                                    "by_plugin_output": DictElement(
+                                        parameter_form=String(
+                                            title=Title("By plugin output"),
+                                        )
+                                    ),
+                                    "custom_by_comment": DictElement(
+                                        parameter_form=String(
+                                            title=Title("'Custom notifications' by comment"),
+                                        )
+                                    ),
+                                },
+                            ),
+                        ),
+                    },
+                ),
+            )
+        ]
 
     return QuickSetupStage(
         title=_("Sending conditions"),
@@ -405,7 +486,7 @@ def sending_conditions() -> QuickSetupStage:
         ),
         configure_components=_components,
         custom_validators=[],
-        recap=[],
+        recap=[recaps.recaps_form_spec],
         button_label=_("Next step: General properties"),
     )
 
@@ -568,11 +649,15 @@ def _migrate_to_notification_quick_setup_spec(event_rule: EventRule) -> Notifica
         },
         "recipient": [("all_contacts_affected", None)],
         "sending_conditions": {
-            "restrict_to_timeperiod": None,
-            "limit_by_count": None,
-            "throttling_of_period": None,
-            "by_plugin_output": None,
-            "custom_by_comment": None,
+            "frequency_and_timing": {
+                "restrict_timeperiod": "",
+                "limit_by_count": (1, 5),
+                "throttle_periodic": (1, 5),
+            },
+            "content_based_filtering": {
+                "by_plugin_output": "",
+                "custom_by_comment": "",
+            },
         },
         "general_properties": {
             "description": "foo",

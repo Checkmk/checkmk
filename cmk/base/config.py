@@ -1442,10 +1442,10 @@ def load_checks(
     discovered_legacy_checks = discover_legacy_checks(get_check_api_context, filelist)
 
     section_errors, sections = _make_agent_and_snmp_sections(
-        discovered_legacy_checks.sane_check_info.values(), discovered_legacy_checks.plugin_files
+        discovered_legacy_checks.sane_check_info, discovered_legacy_checks.plugin_files
     )
     check_errors, checks = _make_check_plugins(
-        discovered_legacy_checks.sane_check_info.values(),
+        discovered_legacy_checks.sane_check_info,
         discovered_legacy_checks.plugin_files,
         validate_creation_kwargs=discovered_legacy_checks.did_compile,
     )
@@ -1459,7 +1459,7 @@ def load_checks(
 @dataclasses.dataclass
 class _DiscoveredLegacyChecks:
     ignored_plugins_errors: Sequence[str]
-    sane_check_info: Mapping[str, LegacyCheckDefinition]
+    sane_check_info: Sequence[LegacyCheckDefinition]
     plugin_files: Mapping[str, str]
     did_compile: bool
 
@@ -1470,7 +1470,7 @@ def discover_legacy_checks(
 ) -> _DiscoveredLegacyChecks:
     loaded_files: set[str] = set()
     ignored_plugins_errors = []
-    sane_check_info = {}
+    sane_check_info = []
     legacy_check_plugin_files: dict[str, str] = {}
 
     did_compile = False
@@ -1503,10 +1503,10 @@ def discover_legacy_checks(
                 raise
             continue
 
-        defined_checks = ((str(n), p) for n, p in check_info.items() if n not in known_checks)
-        for plugin_name, plugin in defined_checks:
+        defined_checks = (p for n, p in check_info.items() if n not in known_checks)
+        for plugin in defined_checks:
             if isinstance(plugin, LegacyCheckDefinition):
-                sane_check_info[plugin_name] = plugin
+                sane_check_info.append(plugin)
                 legacy_check_plugin_files[plugin.name] = f
             else:
                 # Now just drop everything we don't like; this is not a supported API anymore.

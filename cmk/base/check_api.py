@@ -20,7 +20,6 @@ from typing import Any
 
 # pylint: disable=unused-import
 from cmk.utils.legacy_check_api import LegacyCheckDefinition as LegacyCheckDefinition
-from cmk.utils.regex import regex as regex  # pylint: disable=unused-import
 
 # pylint: disable=unused-import
 from cmk.checkengine.checkresults import state_markers as state_markers

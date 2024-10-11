@@ -8,7 +8,7 @@
 import cmk.gui.graphing._graph_images as graph_images
 import cmk.gui.graphing._html_render as html_render
 import cmk.gui.pages
-from cmk.gui import sidebar, visuals
+from cmk.gui import hooks, sidebar, visuals
 from cmk.gui.background_job import job_registry
 from cmk.gui.backup.registration import backup_register
 from cmk.gui.custom_icons.registration import custom_icons_register
@@ -17,6 +17,7 @@ from cmk.gui.data_source import data_source_registry
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.metrics import PageGraphDashlet, PageHostServiceGraphPopup
 from cmk.gui.mkeventd import registration as mkeventd_registration
+from cmk.gui.mkeventd.helpers import save_active_config
 from cmk.gui.openapi import endpoint_registry
 from cmk.gui.pages import page_registry
 from cmk.gui.painter.v0.base import painter_registry
@@ -150,6 +151,7 @@ def register() -> None:
         endpoint_registry,
         replication_path_registry,
     )
+    hooks.register_builtin("mkeventd-activate-changes", save_active_config)
     custom_icons_register(
         mode_registry,
         main_module_registry,

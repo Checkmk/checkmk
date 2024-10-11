@@ -25,7 +25,6 @@ from cmk.gui import (
     graphing,
     gui_background_job,
     help_menu,
-    hooks,
     inventory,
     login,
     logwatch,
@@ -51,7 +50,6 @@ from cmk.gui.dashboard import dashlet_registry
 from cmk.gui.dashboard import registration as dashboard_registration
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.mkeventd.helpers import save_active_config
 from cmk.gui.nodevis import nodevis
 from cmk.gui.openapi import endpoint_registry
 from cmk.gui.openapi import registration as openapi_registration
@@ -104,11 +102,6 @@ from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
 from cmk.gui.watolib.search import match_item_generator_registry
 from cmk.gui.watolib.simple_config_file import config_file_registry
 from cmk.gui.watolib.timeperiods import timeperiod_usage_finder_registry
-
-
-def register_sites_options() -> None:
-    if edition(paths.omd_root) is not Edition.CME:
-        hooks.register_builtin("mkeventd-activate-changes", save_active_config)
 
 
 def register() -> None:
@@ -215,7 +208,6 @@ def register() -> None:
     main.register(page_registry)
     logwatch.register(page_registry)
     prediction.register(page_registry)
-    register_sites_options()
     register_row_post_processor(inventory_row_post_processor)
     register_row_post_processor(join_service_row_post_processor)
     quick_setup_registration.register(main_module_registry, mode_registry, quick_setup_registry)

@@ -138,7 +138,7 @@ class BundleReferences:
 def valid_special_agent_bundle(bundle: BundleReferences) -> bool:
     host_conditions = bundle.hosts is not None and len(bundle.hosts) == 1
     rule_conditions = bundle.rules is not None and len(bundle.rules) == 1
-    password_conditions = bundle.passwords is not None and len(bundle.passwords) == 1
+    password_conditions = bundle.passwords is None or len(bundle.passwords) == 1
     if not host_conditions or not rule_conditions or not password_conditions:
         return False
     return True

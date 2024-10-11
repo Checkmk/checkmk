@@ -68,7 +68,7 @@ from cmk.gui.watolib.mode import mode_url, redirect, WatoMode
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 
 from cmk.rulesets.v1 import form_specs, Help, Label, Message, Title
-from cmk.rulesets.v1.form_specs import DictElement, FormSpec
+from cmk.rulesets.v1.form_specs import DictElement, FieldSize, FormSpec
 from cmk.rulesets.v1.form_specs import Dictionary as FormSpecDictionary
 from cmk.rulesets.v1.form_specs.validators import ValidationError
 
@@ -539,6 +539,7 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
                     ),
                     prefill=form_specs.DefaultValue(self._default_id()),
                     custom_validate=(form_specs.validators.LengthInRange(min_value=1),),
+                    field_size=FieldSize.LARGE,
                 ),
             )
         else:
@@ -570,6 +571,7 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
                 help_text=Help("Name your %s for easy recognition.")
                 % self._mode_type.name_singular(),
                 custom_validate=(form_specs.validators.LengthInRange(min_value=1),),
+                field_size=FieldSize.LARGE,
             ),
         )
         elements["comment"] = form_specs.DictElement(
@@ -602,6 +604,7 @@ class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
                     "<tt>check_mk/</tt>)."
                 ),  # % str(html.render_icon("url")),
                 custom_validate=(_validate_documentation_url,),
+                field_size=FieldSize.LARGE,
             ),
         )
 

@@ -25,6 +25,7 @@ def recompose(form_spec: FormSpec[Any]) -> StringAutocompleter:
         label=form_spec.label,
         # String
         macro_support=form_spec.macro_support,
+        field_size=form_spec.field_size,
         prefill=form_spec.prefill,
         migrate=form_spec.migrate,
     )

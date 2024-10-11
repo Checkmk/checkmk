@@ -196,7 +196,7 @@ def configure_services_to_monitor() -> QuickSetupStage:
         recap=[
             recaps.recaps_form_spec,
         ],
-        button_label="Test configuration",
+        button_label=_("Review and test configuration"),
     )
 
 

@@ -577,6 +577,26 @@ def test_host_config_management_address(
     assert config_cache.management_address(hostname) == result
 
 
+@pytest.mark.parametrize(
+    "result,attrs",
+    [
+        (False, {}),
+        (True, {"waiting_for_discovery": True}),
+        (False, {"waiting_for_discovery": False}),
+    ],
+)
+def test_host_waiting_for_discovery(
+    monkeypatch: MonkeyPatch, attrs: dict[str, str], result: bool
+) -> None:
+    hostname = HostName("hostname")
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.set_option("host_attributes", {hostname: attrs})
+
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache._is_waiting_for_discovery_host(hostname) == result
+
+
 def _management_config_ruleset() -> Sequence[RuleSpec[object]]:
     return [
         {"id": "01", "condition": {}, "value": ("snmp", "eee")},

@@ -7,7 +7,7 @@ import logging
 import re
 from urllib.parse import quote_plus
 
-from playwright.sync_api import expect, Locator
+from playwright.sync_api import expect, Locator, Page
 
 from tests.testlib.playwright.helpers import DropdownListNameToID
 from tests.testlib.playwright.pom.page import CmkPage
@@ -23,6 +23,13 @@ class ServiceSearchPage(CmkPage):
 
     page_title: str = "Service search"
 
+    def __init__(
+        self,
+        page: Page,
+        navigate_to_page: bool = True,
+    ) -> None:
+        super().__init__(page=page, navigate_to_page=navigate_to_page, contain_filter_sidebar=True)
+
     def navigate(self) -> None:
         logger.info("Navigate to Monitor >> Overview >> %s", self.page_title)
         self.main_menu.monitor_menu("Service search").click()
@@ -32,10 +39,12 @@ class ServiceSearchPage(CmkPage):
     def _validate_page(self) -> None:
         logger.info("Validate that current page is %s page", self.page_title)
         self.main_area.check_page_title(self.page_title)
-        expect(self.filter_sidebar).to_be_visible(timeout=5000)
+        expect(self.filter_sidebar.locator()).to_be_visible(timeout=5000)
 
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
-        return DropdownListNameToID()
+        mapping = DropdownListNameToID()
+        setattr(mapping, "Services", "menu_service_multiple")
+        return mapping
 
     @property
     def service_rows(self) -> Locator:
@@ -67,14 +76,6 @@ class ServiceSearchPage(CmkPage):
     def checked_column_cells(self) -> Locator:
         """Return value of time passed since last Check from 'Checked' column, for all the services."""
         return self.service_rows.locator("td:nth-child(6)")
-
-    @property
-    def filter_sidebar(self) -> Locator:
-        return self.main_area.locator("div#popup_filters")
-
-    @property
-    def apply_filters_button(self) -> Locator:
-        return self.main_area.locator().get_by_role("button", name="Apply filters")
 
     @property
     def reschedule_active_checks_popup(self) -> Locator:

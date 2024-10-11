@@ -12,6 +12,7 @@ from playwright.sync_api import expect
 
 from tests.testlib.host_details import AgentAndApiIntegration, HostDetails, SNMP
 from tests.testlib.playwright.pom.dashboard import Dashboard
+from tests.testlib.playwright.pom.monitor.combined_graph import CombinedGraphsServiceSearch
 from tests.testlib.playwright.pom.monitor.service_search import ServiceSearchPage
 
 logger = logging.getLogger(__name__)
@@ -41,8 +42,7 @@ def test_reschedule_active_checks(dashboard_page: Dashboard, created_host: HostD
     service_search_page = ServiceSearchPage(dashboard_page.page)
 
     logger.info("Apply filters and wait for the table to load")
-    service_search_page.apply_filters_button.click()
-    expect(service_search_page.services_table).to_be_visible()
+    service_search_page.filter_sidebar.apply_filters(service_search_page.services_table)
 
     sleep_time = 5
     logger.info("Offset 'checked' state to at least %s seconds for test validation", sleep_time)
@@ -70,3 +70,88 @@ def test_reschedule_active_checks(dashboard_page: Dashboard, created_host: HostD
     assert unit == "ms" or (
         unit == "s" and float(number) < sleep_time
     ), "Service was not rescheduled"
+
+
+@pytest.mark.parametrize(
+    "service_filter, expected_graphs, create_host_using_agent_dump",
+    [
+        pytest.param(
+            "cpu",
+            [
+                "CPU load average of last minute - {host_name} - CPU load",
+                "CPU utilization - {host_name} - CPU utilization",
+            ],
+            ("linux-2.4.0-2024.08.27", [f"{Faker().hostname()}"]),
+            id="cpu_service_filter",
+        ),
+        pytest.param(
+            "filesystem",
+            [
+                "Used inodes - {host_name} - sum (1 objects)",
+                "Size and used space - {host_name} - sum (3 objects)",
+                "Growth trend - {host_name} - sum (1 objects)",
+            ],
+            ("linux-2.4.0-2024.08.27", [f"{Faker().hostname()}"]),
+            id="filesystem_service_filter",
+        ),
+    ],
+    indirect=["create_host_using_agent_dump"],
+)
+def test_filtered_services_combined_graphs(
+    dashboard_page: Dashboard,
+    service_filter: str,
+    expected_graphs: list[str],
+    create_host_using_agent_dump: list[str],
+) -> None:
+    """Test filtered services combined graphs.
+
+    Navigate to 'Service search' page, apply a filter, click on
+    'All metrics of same type in one graph' and check that all expected graphs are displayed.
+    """
+    host_name = create_host_using_agent_dump[0]
+    service_search_page = ServiceSearchPage(dashboard_page.page)
+    service_search_page.filter_sidebar.apply_service_filter(service_filter)
+    service_search_page.filter_sidebar.apply_filters(service_search_page.services_table)
+    service_search_page.main_area.click_item_in_dropdown_list(
+        "Services", "All metrics of same type in one graph"
+    )
+    combined_graphs_service_search_page = CombinedGraphsServiceSearch(
+        service_search_page.page, navigate_to_page=False
+    )
+    for graph_title in expected_graphs:
+        formatted_graph_title = graph_title.format(host_name=host_name)
+        logger.info("Check that the '%s' graph is displayed correctly", formatted_graph_title)
+        combined_graphs_service_search_page.check_graph_with_timeranges(formatted_graph_title)
+
+
+@pytest.mark.parametrize(
+    "create_host_using_agent_dump",
+    [
+        pytest.param(
+            ("linux-2.4.0-2024.08.27", [f"{Faker().hostname()}"]),
+            id="no_errors_on_combined_graphs_page",
+        )
+    ],
+    indirect=["create_host_using_agent_dump"],
+)
+def test_no_errors_on_combined_graphs_page(
+    dashboard_page: Dashboard, create_host_using_agent_dump: list[str]
+) -> None:
+    """Test that there are no errors on the 'Combined graphs - Service search' page."""
+    service_search_page = ServiceSearchPage(dashboard_page.page)
+    service_search_page.filter_sidebar.apply_last_service_state_change_filter(
+        "days ago", "1", "days ago", "0"
+    )
+    service_search_page.filter_sidebar.apply_filters(service_search_page.services_table)
+    service_search_page.main_area.click_item_in_dropdown_list(
+        "Services", "All metrics of same type in one graph"
+    )
+    combined_graphs_service_search_page = CombinedGraphsServiceSearch(
+        service_search_page.page, navigate_to_page=False
+    )
+    combined_graphs_service_search_page.check_no_errors(timeout=5000)
+    # TODO: uncomment this after fixing CMK-19580
+    # broken_graphs_count = combined_graphs_service_search_page.broken_graph.count()
+    # assert (
+    #    broken_graphs_count == 0
+    # ), "There are broken graphs on the 'Combined graphs - Service search' page"

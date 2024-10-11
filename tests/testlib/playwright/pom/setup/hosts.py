@@ -232,7 +232,12 @@ class HostProperties(CmkPage):
         self.details = host
         self._exists = exists
         self.page_title = f"Properties of host {host.name}"
-        super().__init__(page, navigate_to_page, timeout_assertions, timeout_navigation)
+        super().__init__(
+            page=page,
+            navigate_to_page=navigate_to_page,
+            timeout_assertions=timeout_assertions,
+            timeout_navigation=timeout_navigation,
+        )
 
     def navigate(self) -> None:
         """Instructions to navigate to `setup -> Hosts -> <host name> properties` page.

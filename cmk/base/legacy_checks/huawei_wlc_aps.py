@@ -56,6 +56,11 @@ def parse_huawei_wlc_aps(string_table):
         # aps_info1             aps_info2
         # [line]        -->     [2,4GHZ Info]
         #               -->     [5GHz Info]
+
+        # Skip Access Points Reported by the Controller which have no Channel Information
+        if 2 * idx + 1 >= len(aps_info2):
+            continue
+        
         status, mem, cpu, temp, con_users = ap_info1
         ap_id, radio_state_2GHz, ch_usage_2GHz, users_online_2GHz = aps_info2[2 * idx]
         _ap_id, radio_state_5GHz, ch_usage_5GHz, users_online_5GHz = aps_info2[2 * idx + 1]

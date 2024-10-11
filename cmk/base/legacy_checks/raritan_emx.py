@@ -10,10 +10,11 @@ from cmk.base.check_legacy_includes.raritan import (
     raritan_map_unit,
 )
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import any_of, equals, SNMPTree
+
+check_info = {}
 
 
 def parse_raritan_emx(string_table):

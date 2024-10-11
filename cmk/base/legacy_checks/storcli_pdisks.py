@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.plugins.lib import megaraid
+
+check_info = {}
 
 
 def parse_storcli_pdisks(string_table):

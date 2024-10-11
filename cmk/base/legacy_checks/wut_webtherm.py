@@ -6,10 +6,11 @@
 
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, startswith
+
+check_info = {}
 
 _TYPE_TABLE_IDX = (1, 2, 3, 6, 7, 8, 9, 16, 18, 36, 37, 38, 42)
 

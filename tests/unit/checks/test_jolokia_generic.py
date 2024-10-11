@@ -23,7 +23,7 @@ info = [
     "check,lines,expected_result",
     [
         ("jolokia_generic", info, [("PingFederate-CUK-CDI MBean TotalRequests", {})]),
-        ("jolokia_generic.rate", info, [("PingFederate-CUK-CDI MBean MaxRequestTime", {})]),
+        ("jolokia_generic_rate", info, [("PingFederate-CUK-CDI MBean MaxRequestTime", {})]),
     ],
 )
 def test_jolokia_generic_discovery(

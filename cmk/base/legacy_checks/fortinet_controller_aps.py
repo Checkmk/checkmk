@@ -17,10 +17,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import contains, render, SNMPTree
+
+check_info = {}
 
 
 def parse_fortinet_controller_aps(string_table):

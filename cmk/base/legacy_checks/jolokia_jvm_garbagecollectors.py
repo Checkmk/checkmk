@@ -9,10 +9,11 @@
 import time
 
 from cmk.base.check_legacy_includes.jolokia import parse_jolokia_json_output
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store
+
+check_info = {}
 
 
 def parse_jolokia_jvm_garbagecollectors(string_table):

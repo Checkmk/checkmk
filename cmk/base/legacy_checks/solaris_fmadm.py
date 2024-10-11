@@ -138,9 +138,9 @@
 
 # mypy: disable-error-code="attr-defined"
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_solaris_fmadm(string_table):

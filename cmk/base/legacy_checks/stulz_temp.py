@@ -7,11 +7,12 @@
 # mypy: disable-error-code="var-annotated"
 
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree
 from cmk.plugins.lib.stulz import DETECT_STULZ
+
+check_info = {}
 
 # .1.3.6.1.4.1.29462.10.2.1.1.1.1.1.1.1.1170.1.1.1 220 --> Stulz-WIB8000-MIB::unitAirTemperature.1.1.1
 # .1.3.6.1.4.1.29462.10.2.1.1.1.1.1.1.1.1170.1.2.1 216 --> Stulz-WIB8000-MIB::unitAirTemperature.1.2.1

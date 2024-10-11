@@ -5,10 +5,11 @@
 
 
 from cmk.base.check_legacy_includes.oracle import oracle_handle_ora_errors
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError, render, StringTable
+
+check_info = {}
 
 # <<<oracle_locks>>>
 # TUX12C|273|2985|ora12c.local|sqlplus@ora12c.local (TNS V1-V3)|46148|oracle|633|NULL|NULL

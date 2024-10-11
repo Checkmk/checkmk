@@ -5,10 +5,11 @@
 
 
 from cmk.base.check_legacy_includes.elphase import check_elphase
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import equals, SNMPTree
+
+check_info = {}
 
 # .1.3.6.1.4.1.1718.3.1.6.0 2111
 

@@ -8,11 +8,11 @@
 # https://mibs.observium.org/mib/SKYCONTROL-SYSTEM-MIB/#
 
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree
 from cmk.plugins.lib.vutlan import DETECT_VUTLAN_EMS
+
+check_info = {}
 
 
 def parse_vutlan_ems_leakage(string_table):

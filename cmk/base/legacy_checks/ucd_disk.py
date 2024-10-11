@@ -5,11 +5,12 @@
 
 
 from cmk.base.check_legacy_includes.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib import ucd_hr_detection
+
+check_info = {}
 
 # .1.3.6.1.4.1.2021.9.1.2.1 /         --> UCD-SNMP-MIB::dskPath.1
 # .1.3.6.1.4.1.2021.9.1.6.1 958827968 --> UCD-SNMP-MIB::dskTotal.1

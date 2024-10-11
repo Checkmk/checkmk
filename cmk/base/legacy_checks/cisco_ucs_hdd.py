@@ -9,10 +9,11 @@ from collections.abc import Iterable, Iterator, Mapping
 from typing import Any, Final, NamedTuple
 
 from cmk.base.check_legacy_includes.cisco_ucs import DETECT, map_operability
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import render, SNMPTree, StringTable
+
+check_info = {}
 
 _HOT_SPARE_VALUES: Final = {3, 4}
 

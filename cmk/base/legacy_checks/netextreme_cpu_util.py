@@ -5,11 +5,12 @@
 
 
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.netextreme import DETECT_NETEXTREME
+
+check_info = {}
 
 # .1.3.6.1.4.1.1916.1.32.1.2.0 59 --> EXTREME-SOFTWARE-MONITOR-MIB::extremeCpuMonitorTotalUtilization.0$
 

@@ -8,11 +8,12 @@ from dataclasses import dataclass
 from typing import Any
 
 from cmk.base.check_legacy_includes.mem import check_memory_element
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.juniper import DETECT_JUNIPER_SCREENOS, DETECT_JUNIPER_TRPZ
+
+check_info = {}
 
 
 @dataclass(frozen=True)

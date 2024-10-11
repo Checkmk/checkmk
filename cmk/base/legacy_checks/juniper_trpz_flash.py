@@ -6,11 +6,11 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import render, SNMPTree, StringTable
 from cmk.plugins.lib.juniper import DETECT_JUNIPER_TRPZ
+
+check_info = {}
 
 
 def savefloat(f: str) -> float:

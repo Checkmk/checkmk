@@ -48,9 +48,9 @@
 # these default values were suggested by Aldi Sued
 
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_hyperv_vms(string_table):

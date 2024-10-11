@@ -7,10 +7,11 @@
 # mypy: disable-error-code="var-annotated"
 
 from cmk.base.check_legacy_includes.aws import parse_aws
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError
+
+check_info = {}
 
 # 'TargetGroups': [
 #        {

@@ -8,11 +8,12 @@ from cmk.base.check_legacy_includes.didactum import (
     discover_didactum_sensors,
     parse_didactum_sensors,
 )
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.didactum import DETECT_DIDACTUM
+
+check_info = {}
 
 
 def inventory_didactum_sensors_outlet_relay(parsed):

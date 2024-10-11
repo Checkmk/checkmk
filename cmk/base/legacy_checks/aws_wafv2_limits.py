@@ -5,9 +5,10 @@
 
 
 from cmk.base.check_legacy_includes.aws import check_aws_limits, parse_aws_limits_generic
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+
+check_info = {}
 
 
 def check_aws_wafv2_limits(item, params, parsed):

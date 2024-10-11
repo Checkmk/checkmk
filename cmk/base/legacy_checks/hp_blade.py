@@ -13,11 +13,11 @@
 # '.1.3.6.1.4.1.232.22.2.3.1.1.1.16' => 'cpqRackCommonEnclosureCondition',
 
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.hp import DETECT_HP_BLADE
+
+check_info = {}
 
 # GENERAL MAPS:
 

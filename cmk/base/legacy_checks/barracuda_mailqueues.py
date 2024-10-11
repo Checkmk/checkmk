@@ -10,11 +10,11 @@
 
 # Suggested by customer
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.barracuda import DETECT_BARRACUDA
+
+check_info = {}
 
 
 def discover_barracuda_mailqueues(info):

@@ -5,10 +5,11 @@
 
 
 from cmk.base.check_legacy_includes.db2 import parse_db2_dbs
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError
+
+check_info = {}
 
 # <<<db2_connections>>>
 # [[[db2taddm:CMDBS1]]]

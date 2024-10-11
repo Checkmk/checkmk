@@ -5,10 +5,11 @@
 
 
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def format_nvidia_name(identifier):

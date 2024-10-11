@@ -5,9 +5,10 @@
 
 
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+
+check_info = {}
 
 # EXAMPLE DATA FROM: WDC SSC-D0128SC-2100
 # <<<smart>>>

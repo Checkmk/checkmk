@@ -5,9 +5,10 @@
 
 
 from cmk.base.check_legacy_includes.aws import check_aws_elb_summary_generic, parse_aws
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_aws_elbv2_summary(string_table):

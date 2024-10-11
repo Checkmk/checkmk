@@ -14,7 +14,7 @@ from .checktestlib import Check
 
 pytestmark = pytest.mark.checks
 
-CHECK_NAME = "postgres_stat_database.size"
+CHECK_NAME = "postgres_stat_database_size"
 
 
 STRING_TABLE = [

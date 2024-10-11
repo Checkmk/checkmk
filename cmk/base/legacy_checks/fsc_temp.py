@@ -5,7 +5,6 @@
 
 
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import (
@@ -19,6 +18,8 @@ from cmk.agent_based.v2 import (
     startswith,
     StringTable,
 )
+
+check_info = {}
 
 # We fetch the following columns from SNMP:
 # 13: name of the temperature sensor (used as item)

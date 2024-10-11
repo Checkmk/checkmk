@@ -5,11 +5,12 @@
 
 
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
 from cmk.plugins.lib.viprinet import DETECT_VIPRINET
+
+check_info = {}
 
 
 def check_viprinet_temp(item, params, info):

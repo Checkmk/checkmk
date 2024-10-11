@@ -8,10 +8,11 @@
 
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, contains, OIDEnd, SNMPTree, startswith
+
+check_info = {}
 
 # .1.3.6.1.4.1.18248.20.1.2.1.1.1.1 0
 # .1.3.6.1.4.1.18248.20.1.2.1.1.1.2 0

@@ -5,9 +5,10 @@
 
 
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+
+check_info = {}
 
 # exemplary output of special agent agent_ucs_bladecenter (<TAB> is tabulator):
 #

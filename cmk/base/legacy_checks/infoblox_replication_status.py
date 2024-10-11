@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.infoblox import DETECT_INFOBLOX
+
+check_info = {}
 
 # .1.3.6.1.4.1.7779.3.1.1.2.1.2.1.1.X.X.X.X.X X.X.X.X --> IB-PLATFORMONE-MIB::ibNodeIPAddress."11.112.133.14"
 # .1.3.6.1.4.1.7779.3.1.1.2.1.2.1.1.X.X.X.X.X X.X.X.X --> IB-PLATFORMONE-MIB::ibNodeIPAddress."11.112.133.17"

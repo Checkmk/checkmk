@@ -5,9 +5,10 @@
 
 
 from cmk.base.check_legacy_includes.aws import parse_aws
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+
+check_info = {}
 
 
 def inventory_aws_ec2_security_groups(parsed):

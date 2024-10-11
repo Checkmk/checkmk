@@ -6,11 +6,11 @@
 
 import time
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, SNMPTree, StringTable
 from cmk.plugins.lib.stormshield import DETECT_STORMSHIELD
+
+check_info = {}
 
 # Unfortunalty we can not use the normal interface names here, because
 # the interface IDs from the enterprise MIBs and RFC are not the same.

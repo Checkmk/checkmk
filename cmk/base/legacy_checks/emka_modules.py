@@ -7,10 +7,11 @@
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, contains, OIDBytes, OIDEnd, SNMPTree, startswith
+
+check_info = {}
 
 _TABLES = ["1", "2", "3", "4"]
 

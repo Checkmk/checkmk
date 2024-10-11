@@ -5,10 +5,11 @@
 
 
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, exists, SNMPTree, startswith, StringTable
+
+check_info = {}
 
 
 def check_netapp_cpu(item, params, info):

@@ -7,11 +7,12 @@
 from collections.abc import Iterable
 
 from cmk.base.check_legacy_includes.ups_out_voltage import check_ups_out_voltage
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
 from cmk.plugins.lib.ups import DETECT_UPS_GENERIC
+
+check_info = {}
 
 
 def discover_ups_out_voltage(info: list[list[str]]) -> Iterable[tuple[str, dict]]:

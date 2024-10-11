@@ -5,9 +5,10 @@
 
 
 from cmk.base.check_legacy_includes.perle import perle_check_alarms
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+
+check_info = {}
 
 
 def inventory_perle_chassis_slots(info):

@@ -8,10 +8,10 @@
 # check is SNMP-Based, then remove this section
 
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def saveint(i: str) -> int:

@@ -24,9 +24,9 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+
+check_info = {}
 
 
 def add_key_values(data_dict, line):

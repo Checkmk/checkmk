@@ -5,10 +5,11 @@
 
 
 from cmk.base.check_legacy_includes.temperature import check_temperature_list, CheckTempKwargs
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.plugins.lib import ucs_bladecenter
+
+check_info = {}
 
 # <<ucs_bladecenter_fans:sep(9)>>>
 # equipmentNetworkElementFanStats Dn sys/switch-A/fan-module-1-1/fan-1/stats      SpeedAvg 8542

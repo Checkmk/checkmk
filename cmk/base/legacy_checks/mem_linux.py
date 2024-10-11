@@ -7,10 +7,11 @@
 # mypy: disable-error-code="arg-type"
 
 from cmk.base.check_legacy_includes.mem import check_memory_dict
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.plugins.lib import memory
+
+check_info = {}
 
 
 def inventory_mem_linux(section):

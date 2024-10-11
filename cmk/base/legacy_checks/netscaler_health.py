@@ -7,11 +7,12 @@ import re
 
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.netscaler import SNMP_DETECT
+
+check_info = {}
 
 #
 # Based on contribution by Karsten Schöke <karsten.schoeke@geobasis-bb.de>

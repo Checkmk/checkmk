@@ -14,12 +14,12 @@
 
 import re
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
 
 TIME_LEFT_RE = re.compile(r"(\d+) minute")
+
+check_info = {}
 
 
 def parse_win_license(string_table):

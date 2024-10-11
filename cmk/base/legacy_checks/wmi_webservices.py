@@ -9,9 +9,10 @@ from cmk.base.check_legacy_includes.wmi import (
     parse_wmi_table,
     wmi_yield_raw_counter,
 )
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+
+check_info = {}
 
 
 def check_wmi_webservices(item, params, parsed):

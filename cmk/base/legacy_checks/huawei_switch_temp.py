@@ -10,11 +10,12 @@ from cmk.base.check_legacy_includes.huawei_switch import (
     Section,
 )
 from cmk.base.check_legacy_includes.temperature import check_temperature, TempParamType
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
 from cmk.plugins.lib.huawei import DETECT_HUAWEI_SWITCH
+
+check_info = {}
 
 
 def parse_huawei_switch_temp(string_table: list[StringTable]) -> Section:

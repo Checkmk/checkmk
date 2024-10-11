@@ -5,9 +5,10 @@
 
 
 from cmk.base.check_legacy_includes.elphase import check_elphase
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+
+check_info = {}
 
 
 def inventory_perle_psmu(parsed, what_state):

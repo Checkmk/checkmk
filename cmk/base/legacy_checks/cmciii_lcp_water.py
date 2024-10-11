@@ -6,11 +6,12 @@
 from collections.abc import Iterable
 
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.cmciii import DETECT_CMCIII_LCP
+
+check_info = {}
 
 # Note: The CMCIII checks for Water IN/OUT and similar stuff are
 # deep and fundamentally broken (such as the implementation of

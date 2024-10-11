@@ -5,8 +5,6 @@
 
 from collections.abc import Mapping
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import (
     check_levels,
     LegacyCheckDefinition,
@@ -14,6 +12,8 @@ from cmk.agent_based.v0_unstable_legacy import (
 )
 from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
 from cmk.plugins.lib.decru import DETECT_DECRU
+
+check_info = {}
 
 
 def discover_decru_perf(string_table: StringTable) -> DiscoveryResult:

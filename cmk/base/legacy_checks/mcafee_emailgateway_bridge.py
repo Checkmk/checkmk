@@ -6,11 +6,11 @@
 
 import time
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, SNMPTree, StringTable
 from cmk.plugins.lib.mcafee_gateway import DETECT_EMAIL_GATEWAY
+
+check_info = {}
 
 
 def parse_mcafee_emailgateway_bridge(string_table: StringTable) -> StringTable | None:

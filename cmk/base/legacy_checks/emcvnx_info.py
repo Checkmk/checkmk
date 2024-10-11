@@ -7,9 +7,10 @@
 # mypy: disable-error-code="var-annotated"
 
 from cmk.base.check_legacy_includes.emcvnx import preparse_emcvnx_info
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+
+check_info = {}
 
 # Example output from agent:
 # <<<emcvnx_info>>>

@@ -15,11 +15,11 @@
 
 from collections.abc import Sequence
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.lgp import DETECT_LGP
+
+check_info = {}
 
 lgp_info_devices = {
     ".1.3.6.1.4.1.476.1.42.4.8.2.1": "lgpMPX",

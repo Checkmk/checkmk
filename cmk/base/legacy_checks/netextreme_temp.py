@@ -5,11 +5,12 @@
 
 
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.netextreme import DETECT_NETEXTREME
+
+check_info = {}
 
 # .1.3.6.1.4.1.1916.1.1.1.8.0 31 --> EXTREME-SYSTEM-MIB::extremeCurrentTemperature.0
 

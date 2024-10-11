@@ -5,10 +5,11 @@
 
 
 from cmk.base.check_legacy_includes.fan import check_fan
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
+
+check_info = {}
 
 DELL_IDRAC_FANS_STATE_MAP = {
     "1": (3, "OTHER"),

@@ -24,9 +24,9 @@
 
 import json
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_rabbitmq_vhosts(string_table):

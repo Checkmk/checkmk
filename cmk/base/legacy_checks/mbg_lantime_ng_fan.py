@@ -6,11 +6,11 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.mbg_lantime import DETECT_MBG_LANTIME_NG
+
+check_info = {}
 
 
 def parse_mbg_lantime_ng_fan(string_table):

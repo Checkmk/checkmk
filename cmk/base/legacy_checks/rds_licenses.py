@@ -7,9 +7,10 @@
 # mypy: disable-error-code="var-annotated"
 
 from cmk.base.check_legacy_includes.license import license_check_levels
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+
+check_info = {}
 
 # <<<rds_licenses:sep(44)>>>
 # KeyPackId,Description,KeyPackType,ProductType,ProductVersion,ProductVersionID,TotalLicenses,IssuedLi...

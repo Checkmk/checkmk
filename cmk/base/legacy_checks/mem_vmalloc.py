@@ -6,10 +6,10 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.plugins.lib import memory
+
+check_info = {}
 
 
 def inventory_mem_vmalloc(section):

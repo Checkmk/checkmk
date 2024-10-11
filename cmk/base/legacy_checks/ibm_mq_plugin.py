@@ -5,9 +5,10 @@
 
 
 from cmk.base.check_legacy_includes.ibm_mq import ibm_mq_check_version
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+
+check_info = {}
 
 # <<<ibm_mq_plugin:sep(58)>>>
 # version|2.0.4

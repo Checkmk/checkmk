@@ -5,11 +5,12 @@
 
 
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib import ucd_hr_detection
+
+check_info = {}
 
 # .1.3.6.1.2.1.25.3.3.1.2.768 1 --> HOST-RESOURCES-MIB::hrProcessorLoad.768
 # .1.3.6.1.2.1.25.3.3.1.2.769 1 --> HOST-RESOURCES-MIB::hrProcessorLoad.769

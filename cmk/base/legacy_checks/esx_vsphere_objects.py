@@ -21,9 +21,9 @@
 
 import collections
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+
+check_info = {}
 
 vsphere_object_names = {
     "hostsystem": "HostSystem",

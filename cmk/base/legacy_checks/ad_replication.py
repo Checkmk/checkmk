@@ -16,10 +16,10 @@
 
 import time
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import render, StringTable
+
+check_info = {}
 
 
 def _get_relative_date_human_readable(timestamp: float) -> str:

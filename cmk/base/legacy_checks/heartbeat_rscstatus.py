@@ -9,9 +9,9 @@
 # Status can be "local", "foreign", "all" or "none"
 
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_heartbeat_rscstatus(string_table):

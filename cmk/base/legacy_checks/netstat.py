@@ -5,9 +5,10 @@
 
 
 from cmk.base.check_legacy_includes.netstat import check_netstat_generic
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+
+check_info = {}
 
 # Example output from agent (Linux) - note missing LISTENING column for UDP
 # <<netstat>>>

@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, any_of, equals, exists, SNMPTree, startswith, StringTable
+
+check_info = {}
 
 online_mapping = {"1": "online", "0": "offline"}
 

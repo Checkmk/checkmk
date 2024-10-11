@@ -9,10 +9,11 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
+
+check_info = {}
 
 # <<<rabbitmq_nodes>>>
 # {"fd_total": 1098576, "sockets_total": 973629, "mem_limit": 6808874700,

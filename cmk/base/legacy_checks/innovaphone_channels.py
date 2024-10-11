@@ -5,10 +5,11 @@
 
 
 from cmk.base.check_legacy_includes.innovaphone import check_innovaphone
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import DiscoveryResult, Service, StringTable
+
+check_info = {}
 
 
 def discover_innovaphone_channels(string_table: StringTable) -> DiscoveryResult:

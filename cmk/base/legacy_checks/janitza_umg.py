@@ -6,10 +6,11 @@
 
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import any_of, equals, render, SNMPTree
+
+check_info = {}
 
 # 508 and 604 have the same mib
 janitza_umg_device_map = {

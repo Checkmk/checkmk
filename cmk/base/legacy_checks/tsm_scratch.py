@@ -8,9 +8,9 @@
 # check is SNMP-Based, then remove this section
 
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_tsm_scratch(string_table):

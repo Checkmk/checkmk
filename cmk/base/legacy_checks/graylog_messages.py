@@ -5,9 +5,10 @@
 
 
 from cmk.base.check_legacy_includes.graylog import handle_graylog_messages, parse_graylog_agent_data
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+
+check_info = {}
 
 # <<<graylog_messages>>>
 # {"events": 1268586}

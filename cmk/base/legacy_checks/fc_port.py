@@ -9,7 +9,6 @@
 import time
 
 from cmk.base.check_legacy_includes.fc_port import fc_parse_counter
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import (
@@ -24,6 +23,8 @@ from cmk.agent_based.v2 import (
     startswith,
     StringTable,
 )
+
+check_info = {}
 
 # Taken from connUnitPortState
 # user selected state of the port hardware

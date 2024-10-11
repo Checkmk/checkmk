@@ -15,9 +15,9 @@
 # osVersion::6.5.8.1|ip::10.8.95.100|hostName::Host-9|lastUpdated::2017-11-07T22:50:20.425Z|activeClients::9|connected::True|serialId::12345678912345
 
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_hivemanager_ng_devices(string_table):

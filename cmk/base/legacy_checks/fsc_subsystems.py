@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import (
     all_of,
@@ -17,6 +15,8 @@ from cmk.agent_based.v2 import (
     startswith,
     StringTable,
 )
+
+check_info = {}
 
 
 def discover_fsc_subsystems(string_table: StringTable) -> DiscoveryResult:

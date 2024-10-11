@@ -24,10 +24,11 @@ from cmk.base.check_legacy_includes.raritan import (
     inventory_raritan_sensors_temp,
     parse_raritan_sensors,
 )
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import equals, OIDEnd, SNMPTree
+
+check_info = {}
 
 
 def discover_raritan_emx_sensors(parsed):

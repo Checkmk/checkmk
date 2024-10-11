@@ -5,11 +5,12 @@
 
 
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.acme.agent_based.lib import ACME_ENVIRONMENT_STATES, DETECT_ACME
+
+check_info = {}
 
 # .1.3.6.1.4.1.9148.3.3.1.3.1.1.2.1 0 --> ACMEPACKET-ENVMON-MIB::apEnvMonTemperatureStatusType.1
 # .1.3.6.1.4.1.9148.3.3.1.3.1.1.2.2 0 --> ACMEPACKET-ENVMON-MIB::apEnvMonTemperatureStatusType.2

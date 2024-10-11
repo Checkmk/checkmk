@@ -6,10 +6,10 @@
 
 from collections.abc import Sequence
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, contains, exists, SNMPTree, StringTable
+
+check_info = {}
 
 
 def hex2ip(hexstr):

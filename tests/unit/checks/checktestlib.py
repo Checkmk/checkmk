@@ -14,6 +14,8 @@ from unittest import mock
 
 import pytest
 
+from tests.testlib.repo import repo_path
+
 from cmk.checkengine.checking import CheckPluginName
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
@@ -34,6 +36,8 @@ class BaseCheck(abc.ABC):
 
 
 class Check(BaseCheck):
+    _LEGACY_CHECKS: dict[str, LegacyCheckDefinition] = {}
+
     def __init__(self, name: str) -> None:
         from cmk.base import (  # pylint: disable=import-outside-toplevel,cmk-module-layer-violation
             config,
@@ -41,14 +45,17 @@ class Check(BaseCheck):
         from cmk.base.api.agent_based import register  # pylint: disable=import-outside-toplevel
 
         super().__init__(name)
-        if self.name not in config.check_info:
+        if not self._LEGACY_CHECKS:
+            for legacy_check in config.discover_legacy_checks(
+                config.plugin_pathnames_in_directory(str(repo_path() / "cmk/base/legacy_checks"))
+            ).sane_check_info:
+                self._LEGACY_CHECKS[legacy_check.name] = legacy_check
+
+        if (info := self._LEGACY_CHECKS.get(name)) is None:
             raise MissingCheckInfoError(self.name)
-        info = config.check_info[self.name]
-        assert isinstance(info, LegacyCheckDefinition)
+
         self.info = info
-        self._migrated_plugin = register.get_check_plugin(
-            CheckPluginName(self.name.replace(".", "_"))
-        )
+        self._migrated_plugin = register.get_check_plugin(CheckPluginName(info.name))
 
     def default_parameters(self) -> Mapping[str, Any]:
         if self._migrated_plugin:

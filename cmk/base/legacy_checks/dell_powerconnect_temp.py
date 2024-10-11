@@ -5,10 +5,11 @@
 
 
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, startswith
+
+check_info = {}
 
 # Example:
 # .1.3.6.1.4.1.89.53.15.1.9.1 = INTEGER: 42

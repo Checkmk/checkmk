@@ -37,10 +37,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, IgnoreResultsError
+
+check_info = {}
 
 db2_counters_map = {
     "deadlocks": "Deadlocks",

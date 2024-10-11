@@ -9,9 +9,10 @@ from cmk.base.check_legacy_includes.nullmailer_mailq import (
     NULLMAILER_MAILQ_DEFAULT_LEVELS,
     parse_nullmailer_mailq,
 )
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+
+check_info = {}
 
 # Example agent output:
 # old format

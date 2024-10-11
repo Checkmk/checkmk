@@ -5,9 +5,10 @@
 
 
 from cmk.base.check_legacy_includes.ddn_s2a import parse_ddn_s2a_api_response
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
+
+check_info = {}
 
 #   .--Parse function------------------------------------------------------.
 #   |  ____                        __                  _   _               |

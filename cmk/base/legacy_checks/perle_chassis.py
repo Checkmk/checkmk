@@ -6,9 +6,10 @@
 
 from cmk.base.check_legacy_includes.perle import perle_check_alarms
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+
+check_info = {}
 
 # .1.3.6.1.4.1.1966.21.1.1.1.1.1.1.2.1 MCR1900 --> PERLE-MCR-MGT-MIB::chassisModelName.1
 # .1.3.6.1.4.1.1966.21.1.1.1.1.1.1.4.1 103-001715T10033 --> PERLE-MCR-MGT-MIB::chassisSerialNumber.1

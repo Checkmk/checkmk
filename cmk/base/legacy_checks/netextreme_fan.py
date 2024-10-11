@@ -5,11 +5,12 @@
 
 
 from cmk.base.check_legacy_includes.fan import check_fan
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.netextreme import DETECT_NETEXTREME
+
+check_info = {}
 
 # Just an assumption, levels as in other fan checks
 

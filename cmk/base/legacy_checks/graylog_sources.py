@@ -12,10 +12,11 @@ from dataclasses import dataclass
 from typing import Any
 
 from cmk.base.check_legacy_includes.graylog import handle_graylog_messages
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render, StringTable
+
+check_info = {}
 
 # <<<graylog_sources>>>
 # {"sources": {"172.18.0.1": {"messages": 457, "has_since": false}}}

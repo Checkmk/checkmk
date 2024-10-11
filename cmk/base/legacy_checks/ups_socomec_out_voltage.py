@@ -5,11 +5,12 @@
 
 
 from cmk.base.check_legacy_includes.ups_out_voltage import check_ups_out_voltage
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.ups_socomec import DETECT_SOCOMEC
+
+check_info = {}
 
 
 def saveint(i: str) -> int:

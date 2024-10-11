@@ -5,11 +5,12 @@
 
 
 from cmk.base.check_legacy_includes.infoblox import check_infoblox_statistics
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.infoblox import DETECT_INFOBLOX
+
+check_info = {}
 
 
 def inventory_infoblox_statistics(info):

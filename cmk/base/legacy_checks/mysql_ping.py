@@ -7,10 +7,11 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 from cmk.base.check_legacy_includes.mysql import mysql_parse_per_item
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 # <<<mysql_ping>>>
 # [[instance]]

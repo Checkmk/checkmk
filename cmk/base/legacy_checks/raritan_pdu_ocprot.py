@@ -6,10 +6,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import contains, OIDEnd, SNMPTree
+
+check_info = {}
 
 # Example for info:
 # [[[u'1.1.1', u'4', u'0'],

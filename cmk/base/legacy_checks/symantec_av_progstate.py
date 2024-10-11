@@ -6,10 +6,10 @@
 # Example output from agent:
 
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 
 def inventory_symantec_av_progstate(info):

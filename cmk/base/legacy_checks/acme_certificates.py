@@ -6,11 +6,11 @@
 
 import time
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import render, SNMPTree, StringTable
 from cmk.plugins.acme.agent_based.lib import DETECT_ACME
+
+check_info = {}
 
 # .1.3.6.1.4.1.9148.3.9.1.10.1.3.65.1 rootca
 # .1.3.6.1.4.1.9148.3.9.1.10.1.5.65.1 Jul 25 00:33:17 2003 GMT

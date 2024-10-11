@@ -5,11 +5,12 @@
 
 
 from cmk.base.check_legacy_includes.humidity import check_humidity
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree
 from cmk.plugins.lib.vutlan import DETECT_VUTLAN_EMS
+
+check_info = {}
 
 # vutlan is not a typo!
 # MIB can also be browsed on

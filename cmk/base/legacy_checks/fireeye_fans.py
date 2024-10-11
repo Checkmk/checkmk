@@ -5,11 +5,12 @@
 
 
 from cmk.base.check_legacy_includes.fireeye import check_fireeye_states, inventory_fireeye_generic
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.fireeye import DETECT
+
+check_info = {}
 
 # .1.3.6.1.4.1.25597.11.4.1.3.1.1.1 1 --> FE-FIREEYE-MIB::feFanIndex.1
 # .1.3.6.1.4.1.25597.11.4.1.3.1.1.2 2 --> FE-FIREEYE-MIB::feFanIndex.2

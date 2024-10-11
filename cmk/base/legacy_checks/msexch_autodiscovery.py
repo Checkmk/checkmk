@@ -11,9 +11,10 @@ from cmk.base.check_legacy_includes.wmi import (
     parse_wmi_table,
     wmi_yield_raw_persec,
 )
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+
+check_info = {}
 
 
 def discover_msexch_autodiscovery(parsed):

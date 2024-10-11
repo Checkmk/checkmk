@@ -7,9 +7,10 @@
 # mypy: disable-error-code="var-annotated"
 
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+
+check_info = {}
 
 # Example output from agent:
 # Put here the example output from your TCP-Based agent. If the

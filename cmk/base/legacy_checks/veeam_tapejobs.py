@@ -6,10 +6,10 @@
 
 import time
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_value_store, render
+
+check_info = {}
 
 BACKUP_STATE = {"Success": 0, "Warning": 1, "Failed": 2}
 

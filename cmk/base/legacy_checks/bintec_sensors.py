@@ -8,10 +8,11 @@
 
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
+
+check_info = {}
 
 
 def parse_bintec_sensors(string_table: StringTable) -> StringTable:

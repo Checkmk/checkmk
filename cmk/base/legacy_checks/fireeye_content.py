@@ -8,11 +8,11 @@ import collections
 import time
 from collections.abc import Iterable
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render, SNMPTree
 from cmk.plugins.lib.fireeye import DETECT
+
+check_info = {}
 
 # .1.3.6.1.4.1.25597.11.5.1.5.0 456.180 --> FE-FIREEYE-MIB::feSecurityContentVersion.0
 # .1.3.6.1.4.1.25597.11.5.1.6.0 1 --> FE-FIREEYE-MIB::feLastContentUpdatePassed.0

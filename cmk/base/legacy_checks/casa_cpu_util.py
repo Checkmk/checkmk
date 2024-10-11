@@ -6,11 +6,11 @@
 
 from collections.abc import Iterable, Sequence
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
 from cmk.plugins.lib.casa import DETECT_CASA
+
+check_info = {}
 
 
 def parse_casa_info_util(info):

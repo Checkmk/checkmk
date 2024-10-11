@@ -6,11 +6,12 @@
 
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.kentix import DETECT_KENTIX
+
+check_info = {}
 
 # .1.3.6.1.4.1.37954.1.2.7.1.0 RZ1SE-KLIMA-NEU  sensor name
 # .1.3.6.1.4.1.37954.1.2.7.2.0 159              temperature     INTEGER (0..1000)

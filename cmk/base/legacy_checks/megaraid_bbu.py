@@ -6,11 +6,11 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import State
 from cmk.plugins.lib.megaraid import check_state
+
+check_info = {}
 
 # Agent output not included since it has almost 100 lines
 # it's available in our archive or fh's bitbucket

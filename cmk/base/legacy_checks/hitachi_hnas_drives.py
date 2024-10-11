@@ -6,11 +6,11 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.hitachi_hnas import DETECT
+
+check_info = {}
 
 
 def inventory_hitachi_hnas_drives(info):

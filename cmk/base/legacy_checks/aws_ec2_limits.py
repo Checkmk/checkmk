@@ -5,10 +5,11 @@
 
 
 from cmk.base.check_legacy_includes.aws import check_aws_limits, parse_aws_limits_generic
-from cmk.base.config import check_info
 
 import cmk.plugins.aws.constants as aws_types  # pylint: disable=cmk-module-layer-violation
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+
+check_info = {}
 
 default_running_ondemand_instances = [
     (inst_type, (None, 80.0, 90.0)) for inst_type in aws_types.AWSEC2InstTypes

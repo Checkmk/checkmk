@@ -49,10 +49,11 @@ from cmk.base.check_legacy_includes.raritan import (
     inventory_raritan_sensors_temp,
     parse_raritan_sensors,
 )
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import equals, SNMPTree
+
+check_info = {}
 
 
 def parse_raritan_px_sensors(string_table):

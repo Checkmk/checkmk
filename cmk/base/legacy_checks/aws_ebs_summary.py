@@ -9,10 +9,11 @@
 from collections.abc import Iterable
 
 from cmk.base.check_legacy_includes.aws import inventory_aws_generic
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.plugins.aws.lib import GenericAWSSection, parse_aws
+
+check_info = {}
 
 AWSEBSStorageTypes = {
     "standard": "Magnetic volumes",

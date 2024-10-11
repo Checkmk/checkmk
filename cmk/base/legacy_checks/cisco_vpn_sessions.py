@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
+
+check_info = {}
 
 
 def check_cisco_vpn_sessions(item, params, parsed):

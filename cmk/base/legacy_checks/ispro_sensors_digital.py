@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.ispro import DETECT_ISPRO_SENSORS
+
+check_info = {}
 
 # .1.3.6.1.4.1.19011.1.3.2.1.3.1.3.1.2.1 "Water Sensor-R" --> ISPRO-MIB::isDeviceMonitorDigitalInName
 # .1.3.6.1.4.1.19011.1.3.2.1.3.1.3.1.4.1 1 --> ISPRO-MIB::isDeviceMonitorDigitalInAlarm

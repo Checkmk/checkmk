@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.alcatel import DETECT_ALCATEL_AOS7
+
+check_info = {}
 
 
 def parse_alcatel_aos7_temp(string_table):

@@ -36,11 +36,11 @@
 
 from collections.abc import Callable, Mapping
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
 from cmk.plugins.lib.lgp import DETECT_LGP
+
+check_info = {}
 
 lgp_pdu_aux_types = {
     "0": "UNSPEC",

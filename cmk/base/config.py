@@ -1374,14 +1374,9 @@ ALL_SERVICES = tuple_rulesets.ALL_SERVICES
 NEGATE = tuple_rulesets.NEGATE
 
 
-# BE AWARE: sync these global data structures with
+# BE AWARE: sync this global data structure with
 #           _initialize_data_structures()
-# The following data structures will be filled by the checks
-# all known checks
-check_info: dict[
-    object, object
-] = {}  # want: dict[str, LegacyCheckDefinition], but don't trust the plugins!
-# definitions of special agents
+# The following data structure will be filled by the checks
 special_agent_info: dict[str, SpecialAgentInfoFunction] = {}
 
 # workaround: set of check-groups that are to be treated as service-checks even if
@@ -1422,7 +1417,6 @@ def load_all_plugins(
 
 def _initialize_data_structures() -> None:
     """Initialize some data structures which are populated while loading the checks"""
-    check_info.clear()
     special_agent_info.clear()
 
 
@@ -1485,12 +1479,12 @@ def discover_legacy_checks(
         try:
             check_context = new_check_context()
 
-            # Make a copy of known plug-in names, we need to track them for nagios config generation
-            known_checks = {str(k) for k in check_info}
-
             did_compile |= load_precompiled_plugin(f, check_context)
 
             loaded_files.add(file_name)
+
+            if not isinstance(defined_checks := check_context.get("check_info", {}), dict):
+                raise TypeError(defined_checks)
 
         except MKTerminate:
             raise
@@ -1503,8 +1497,7 @@ def discover_legacy_checks(
                 raise
             continue
 
-        defined_checks = (p for n, p in check_info.items() if n not in known_checks)
-        for plugin in defined_checks:
+        for plugin in defined_checks.values():
             if isinstance(plugin, LegacyCheckDefinition):
                 sane_check_info.append(plugin)
                 legacy_check_plugin_files[plugin.name] = f
@@ -1524,7 +1517,6 @@ def discover_legacy_checks(
 def new_check_context() -> CheckContext:
     # Add the data structures where the checks register with Checkmk
     return {
-        "check_info": check_info,
         "special_agent_info": special_agent_info,
     }
 

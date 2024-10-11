@@ -10,11 +10,12 @@ from cmk.base.check_legacy_includes.aws import (
     aws_get_counts_rate_human_readable,
     inventory_aws_generic_single,
 )
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError, render
 from cmk.plugins.aws.lib import extract_aws_metrics_by_labels, parse_aws
+
+check_info = {}
 
 
 def parse_aws_wafv2_web_acl(string_table):

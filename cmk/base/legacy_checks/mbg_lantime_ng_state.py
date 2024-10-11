@@ -8,11 +8,12 @@ from cmk.base.check_legacy_includes.mbg_lantime import (
     check_mbg_lantime_state_common,
     MBG_LANTIME_STATE_CHECK_DEFAULT_PARAMETERS,
 )
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.mbg_lantime import DETECT_MBG_LANTIME_NG
+
+check_info = {}
 
 
 def inventory_mbg_lantime_ng_state(info):

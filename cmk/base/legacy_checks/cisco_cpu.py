@@ -8,8 +8,6 @@
 # oid(".1.3.6.1.4.1.9.9.109.1.1.1.1.8.1"), we recognize both for now
 
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import (
     all_of,
@@ -22,6 +20,8 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
+
+check_info = {}
 
 
 def inventory_cisco_cpu(info):

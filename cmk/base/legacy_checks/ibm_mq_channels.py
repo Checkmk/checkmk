@@ -5,9 +5,10 @@
 
 
 from cmk.base.check_legacy_includes.ibm_mq import is_ibm_mq_service_vanished
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+
+check_info = {}
 
 # <<<ibm_mq_channels:sep(10)>>>
 # QMNAME(MY.TEST)                                           STATUS(RUNNING)

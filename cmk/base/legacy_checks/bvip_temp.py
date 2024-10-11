@@ -5,11 +5,12 @@
 
 
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
 from cmk.plugins.lib.bvip import DETECT_BVIP
+
+check_info = {}
 
 
 def inventory_bvip_temp(info):

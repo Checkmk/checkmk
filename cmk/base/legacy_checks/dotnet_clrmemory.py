@@ -10,9 +10,10 @@ from cmk.base.check_legacy_includes.wmi import (
     wmi_filter_global_only,
     wmi_yield_raw_fraction,
 )
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+
+check_info = {}
 
 dotnet_clrmemory_defaultlevels = {
     "upper": (10.0, 15.0)  # 10.0 percent specified by customer,

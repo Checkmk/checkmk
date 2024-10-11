@@ -7,11 +7,12 @@
 from collections.abc import Iterable
 
 from cmk.base.check_legacy_includes.mem import check_memory_element
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
 from cmk.plugins.lib.couchbase import parse_couchbase_lines, Section
+
+check_info = {}
 
 DiscoveryResult = Iterable[tuple[str, dict]]
 

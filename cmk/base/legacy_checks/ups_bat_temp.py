@@ -5,11 +5,12 @@
 
 
 from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.ups import DETECT_UPS_GENERIC
+
+check_info = {}
 
 
 def format_item_ups_bat_temp(name, new_format):

@@ -10,10 +10,10 @@
 # ORACLE_SID serial# machine process osuser program last_call_el sql_id
 
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError, render, StringTable
+
+check_info = {}
 
 
 def inventory_oracle_longactivesessions(info):

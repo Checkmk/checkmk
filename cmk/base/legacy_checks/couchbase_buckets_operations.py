@@ -8,10 +8,10 @@
 
 import collections
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.plugins.lib.couchbase import parse_couchbase_lines
+
+check_info = {}
 
 
 def parse_couchbase_buckets_operations(string_table):

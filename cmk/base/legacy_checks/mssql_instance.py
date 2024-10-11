@@ -20,9 +20,9 @@
 # ERROR: Failed to gather SQL server instances
 
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+
+check_info = {}
 
 
 def inventory_mssql_instance(parsed):

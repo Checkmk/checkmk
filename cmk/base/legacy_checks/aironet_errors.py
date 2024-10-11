@@ -6,8 +6,6 @@
 
 import time
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import (
     any_of,
@@ -18,6 +16,8 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
+
+check_info = {}
 
 
 def inventory_aironet_errors(info):

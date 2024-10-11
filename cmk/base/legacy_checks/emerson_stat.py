@@ -32,10 +32,10 @@
 # from a customer, it is named "Emerson Energy Systems (EES) Power MIB"
 
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, startswith, StringTable
+
+check_info = {}
 
 
 def discover_emerson_stat(string_table: StringTable) -> DiscoveryResult:

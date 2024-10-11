@@ -8,9 +8,9 @@ import json
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, Literal
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
+
+check_info = {}
 
 Section = Mapping[Literal["alerts"], Sequence[Mapping[str, Any]]]
 

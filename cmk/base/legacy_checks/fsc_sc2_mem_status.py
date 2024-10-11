@@ -5,10 +5,11 @@
 
 
 from cmk.base.check_legacy_includes.fsc import DETECT_FSC_SC2
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
+
+check_info = {}
 
 
 def parse_fsc_sc2_mem_status(string_table: StringTable) -> StringTable:

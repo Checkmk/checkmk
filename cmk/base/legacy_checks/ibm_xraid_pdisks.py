@@ -9,10 +9,10 @@
 # shift and gives false info for "slot_id"
 
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, any_of, equals, exists, SNMPTree
+
+check_info = {}
 
 
 def parse_ibm_xraid_pdisks(info):

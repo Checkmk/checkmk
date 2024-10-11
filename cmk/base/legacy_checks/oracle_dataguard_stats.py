@@ -6,10 +6,10 @@
 # In cooperation with Thorsten Bruhns from OPITZ Consulting
 
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError, render
+
+check_info = {}
 
 # <<<oracle_dataguard_stats:sep(124)>>>
 # TESTDB|TESTDBU2|PHYSICAL STANDBY|apply finish time|+00 00:00:00.000|NOT ALLOWED|ENABLED|MAXIMUM PERFORMANCE|DISABLED||||APPLYING_LOG

@@ -5,7 +5,6 @@
 
 
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import (
@@ -18,6 +17,8 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
+
+check_info = {}
 
 
 def parse_fortigate_cpu(string_table: StringTable) -> StringTable | None:

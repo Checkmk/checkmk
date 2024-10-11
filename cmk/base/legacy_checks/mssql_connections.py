@@ -11,9 +11,9 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
+
+check_info = {}
 
 
 def parse_mssql_connections(string_table):

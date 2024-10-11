@@ -11,11 +11,11 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree
 from cmk.plugins.lib.netgear import DETECT_NETGEAR
+
+check_info = {}
 
 
 def parse_netgear_powersupplies(string_table):

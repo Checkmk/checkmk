@@ -6,10 +6,10 @@
 # "0=Off, 1=On in DI/DO mode or N=Count in DO counter mode"
 
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, SNMPTree, startswith, StringTable
+
+check_info = {}
 
 
 def inventory_iologik_register(info):

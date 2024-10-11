@@ -5,11 +5,12 @@
 
 
 from cmk.base.check_legacy_includes.elphase import check_elphase
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree
 from cmk.plugins.lib.netextreme import DETECT_NETEXTREME
+
+check_info = {}
 
 # .1.3.6.1.4.1.1916.1.1.1.27.1.9.1 52550 --> EXTREME-SYSTEM-MIB::extremePowerSupplyInputPowerUsage.1
 # .1.3.6.1.4.1.1916.1.1.1.27.1.9.2 43700 --> EXTREME-SYSTEM-MIB::extremePowerSupplyInputPowerUsage.2

@@ -5,11 +5,12 @@
 
 
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.barracuda import DETECT_BARRACUDA
+
+check_info = {}
 
 # .1.3.6.1.4.1.20632.2.13 3
 

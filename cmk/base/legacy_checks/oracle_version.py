@@ -8,10 +8,11 @@ from cmk.base.check_legacy_includes.oracle import (
     oracle_handle_ora_errors,
     oracle_handle_ora_errors_discovery,
 )
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
+
+check_info = {}
 
 # <<<oracle_version>>>
 # XE Oracle Database 11g Express Edition Release 11.2.0.2.0 - 64bit Production

@@ -6,8 +6,6 @@
 
 import time
 
-from cmk.base.config import check_info
-
 from cmk.agent_based.v0_unstable_legacy import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import (
     all_of,
@@ -19,6 +17,8 @@ from cmk.agent_based.v2 import (
     startswith,
     StringTable,
 )
+
+check_info = {}
 
 
 def check_netapp_fcpio(item, params, info):

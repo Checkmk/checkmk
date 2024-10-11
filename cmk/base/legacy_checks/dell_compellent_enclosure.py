@@ -5,11 +5,12 @@
 
 
 from cmk.base.check_legacy_includes import dell_compellent
-from cmk.base.config import check_info
 
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.dell import DETECT_DELL_COMPELLENT
+
+check_info = {}
 
 # example output
 # .1.3.6.1.4.1.674.11000.2000.500.1.2.15.1.2.1 1

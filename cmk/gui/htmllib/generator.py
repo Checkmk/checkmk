@@ -204,8 +204,9 @@ class HTMLWriter:
         self,
         msg: HTML | str,
         msg_type: Literal["message", "warning", "error"],
+        flashed: bool = False,
     ) -> None:
-        self._write(self._render_message(msg, msg_type))
+        self._write(self._render_message(msg, msg_type, flashed))
 
     def show_message(self, msg: HTML | str) -> None:
         self._write(self._render_message(msg, "message"))
@@ -216,19 +217,32 @@ class HTMLWriter:
     def show_warning(self, msg: HTML | str) -> None:
         self._write(self._render_message(msg, "warning"))
 
-    def render_message(self, msg: HTML | str) -> HTML:
+    def render_message(
+        self,
+        msg: HTML | str,
+        flashed: bool = False,
+    ) -> HTML:
         return self._render_message(msg, "message")
 
-    def render_error(self, msg: HTML | str) -> HTML:
+    def render_error(
+        self,
+        msg: HTML | str,
+        flashed: bool = False,
+    ) -> HTML:
         return self._render_message(msg, "error")
 
-    def render_warning(self, msg: HTML | str) -> HTML:
+    def render_warning(
+        self,
+        msg: HTML | str,
+        flashed: bool = False,
+    ) -> HTML:
         return self._render_message(msg, "warning")
 
     def _render_message(
         self,
         msg: HTML | str,
         msg_type: Literal["message", "warning", "error"] = "message",
+        flashed: bool = False,
     ) -> HTML:
         if msg_type == "message":
             cls = "success"
@@ -243,7 +257,7 @@ class HTMLWriter:
             raise TypeError(msg_type)
 
         if self.output_format == "html":
-            code = HTMLWriter.render_div(msg, class_=cls)
+            code = HTMLWriter.render_div(msg, class_=[cls, "flashed"] if flashed else cls)
             if self.mobile:
                 return HTMLWriter.render_center(code)
             return code

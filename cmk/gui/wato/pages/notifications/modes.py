@@ -2787,7 +2787,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         flash(
             _("New notification rule #%d successfully created!") % (len(self._rules) - 1)
             if self._new
-            else _("Notification rule number #%d successfully edited!") % self._edit_nr
+            else _("Notification rule number #%d successfully edited!") % self._edit_nr,
         )
 
         if back_mode := request.var("back_mode"):

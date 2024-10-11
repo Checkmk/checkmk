@@ -479,6 +479,32 @@ div.error {
   }
 }
 
+// TODO Render flashed messages in Sweetalert style, maybe we can implement
+// this one day in VUE including a button to make it disappear.
+.success.flashed {
+  padding: 16px 16px 16px 30px;
+  background-color: $ux-theme-4;
+  box-shadow: 0 2px rgba(0, 0, 0, 0.4);
+  position: relative;
+  box-sizing: border-box;
+}
+.success.flashed::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 20px;
+  height: 100%;
+  background-color: $success;
+  border-radius: 4px 0 0 4px;
+
+  background-image: url("images/icon_checkmark.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  z-index: 1;
+}
+
 .warning,
 body.main div.warning {
   color: $font-color-black;

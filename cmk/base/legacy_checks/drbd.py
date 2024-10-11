@@ -127,7 +127,7 @@ import re
 # Default thresholds for drbd checks
 import time
 
-from cmk.base.check_api import LegacyCheckDefinition, state_markers
+from cmk.base.check_api import LegacyCheckDefinition, STATE_MARKERS
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import get_rate, get_value_store, StringTable
@@ -289,7 +289,7 @@ def check_drbd_general(item, params, info):  # pylint: disable=too-many-branches
                     if roles_entry == current_roles:
                         found_role_match = True
                         state = max(state, roles_state)
-                        output += " %s" % state_markers[roles_state]
+                        output += " %s" % STATE_MARKERS[roles_state]
                         break
             else:  # Ignore roles if set to None
                 found_role_match = True
@@ -323,11 +323,11 @@ def check_drbd_general(item, params, info):  # pylint: disable=too-many-branches
 
             if params_diskstate is not None:
                 state = max(state, params_diskstate)
-                diskstates_info.add(f"{ro}/{ds} is {state_markers[params_diskstate]}")
+                diskstates_info.add(f"{ro}/{ds} is {STATE_MARKERS[params_diskstate]}")
             else:
                 default_state = drbd_ds_map.get(diskstate, 3)
                 if default_state > 0:
-                    diskstates_info.add(f"{ro}/{ds} is {state_markers[default_state]}")
+                    diskstates_info.add(f"{ro}/{ds} is {STATE_MARKERS[default_state]}")
                 state = max(state, drbd_ds_map.get(diskstate, 3))
         if diskstates_info:
             output += " (%s)" % ", ".join(diskstates_info)

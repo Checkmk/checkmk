@@ -20,14 +20,12 @@ from typing import Any
 
 from cmk.utils.legacy_check_api import LegacyCheckDefinition as LegacyCheckDefinition
 
-from cmk.checkengine.checkresults import state_markers as state_markers
-
 from cmk.base.config import CheckContext as _CheckContext
 
 from cmk.agent_based import v1 as _v1
 
 __all__ = [
-    "state_markers",
+    "STATE_MARKERS",
     "check_levels",
     "passwordstore_get_cmdline",
     "LegacyResult",
@@ -36,6 +34,8 @@ __all__ = [
     "LegacyCheckDefinition",
 ]
 
+
+STATE_MARKERS = ("", "(!)", "(!!)", "(?)")
 
 _OptNumber = None | int | float
 _Levels = tuple  # Has length 2 or 4

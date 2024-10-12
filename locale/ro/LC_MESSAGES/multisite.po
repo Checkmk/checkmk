@@ -54085,6 +54085,10 @@ msgstr "Starea pentru ID-uri de agregator nepotrivite pentru LACP"
 msgid "State for specific bonding modes"
 msgstr "Stare pentru anumite moduri de lipire"
 
+#, fuzzy
+msgid "State found during service discovery"
+msgstr "Descoperirea serviciilor în așteptare"
+
 msgid "State if 'maintenance' services are found"
 msgstr "Stabiliți dacă 'întreținere' serviciile sunt găsite"
 

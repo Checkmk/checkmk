@@ -54527,6 +54527,10 @@ msgstr "État des ID d'agrégateur non concordants pour LACP"
 msgid "State for specific bonding modes"
 msgstr "État pour la non-concordance de la chaîne attendue"
 
+#, fuzzy
+msgid "State found during service discovery"
+msgstr "Découverte de services en attente"
+
 msgid "State if 'maintenance' services are found"
 msgstr "Indiquer si des services de \"maintenance\" ont été trouvés"
 

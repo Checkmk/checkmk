@@ -53962,6 +53962,10 @@ msgstr "Estado para IDs de agregador não coincidentes para LACP"
 msgid "State for specific bonding modes"
 msgstr "Estado para o esperado descasamento de cordas"
 
+#, fuzzy
+msgid "State found during service discovery"
+msgstr "Pendente de descoberta de serviços"
+
 msgid "State if 'maintenance' services are found"
 msgstr "Indique se são encontrados serviços de \"manutenção"
 

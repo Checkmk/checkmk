@@ -53972,6 +53972,10 @@ msgstr "Toestand voor niet overeenstemmende Aggregator ID's voor LACP"
 msgid "State for specific bonding modes"
 msgstr "Staat voor verwachte string mismatch"
 
+#, fuzzy
+msgid "State found during service discovery"
+msgstr "In afwachting van dienstontdekking"
+
 msgid "State if 'maintenance' services are found"
 msgstr "Vermeld of \"onderhouds\"-diensten zijn gevonden"
 

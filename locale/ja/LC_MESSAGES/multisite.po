@@ -52455,6 +52455,10 @@ msgstr "LACPのアグリゲーターIDの不一致の状態"
 msgid "State for specific bonding modes"
 msgstr "予想される文字列の不一致の状態"
 
+#, fuzzy
+msgid "State found during service discovery"
+msgstr "保留中のサービス検出"
+
 msgid "State if 'maintenance' services are found"
 msgstr "\"メンテナンス\"サービスが見つかった場合の状態"
 

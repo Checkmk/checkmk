@@ -53461,6 +53461,10 @@ msgstr "Stato per ID aggregatore non corrispondenti per LACP"
 msgid "State for specific bonding modes"
 msgstr "Stato per modalità di legame specifiche"
 
+#, fuzzy
+msgid "State found during service discovery"
+msgstr "Scoperta del servizio in sospeso"
+
 msgid "State if 'maintenance' services are found"
 msgstr "Dichiarare se i servizi di \"manutenzione\" si trovano"
 

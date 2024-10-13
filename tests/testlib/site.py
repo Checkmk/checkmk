@@ -1015,7 +1015,9 @@ class Site:
 
     def ensure_running(self) -> None:
         if not self.is_running():
-            omd_status_output = self.check_output(["omd", "status"], stderr=subprocess.STDOUT)
+            omd_status_output = self.run(
+                ["omd", "status"], check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+            ).stdout
             ps_output = self.check_output(["ps", "-ef"], stderr=subprocess.STDOUT)
             self.save_results()
 

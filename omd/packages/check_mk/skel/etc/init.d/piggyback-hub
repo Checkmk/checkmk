@@ -50,12 +50,11 @@ distributed_piggyback_enabled() {
     return 0
 }
 
-
 case "$1" in
 
     start)
         printf "Starting piggyback-hub..."
-        
+
         distributed_piggyback_enabled || exit_with_code 5 'disabled.'
 
         if process_is_running; then

@@ -1262,7 +1262,8 @@ def _add_peer_to_peer_connections(
                     site_id=destination_site,
                     site_server=urlparse(
                         replicated_sites_configs[destination_site]["multisiteurl"]
-                    ).netloc,
+                    ).hostname
+                    or "",
                     rabbitmq_port=replicated_sites_configs[destination_site].get(
                         "message_broker_port", 5672
                     ),
@@ -1291,7 +1292,7 @@ def get_rabbitmq_definitions(
         rabbitmq.Connection(
             connectee=rabbitmq.Connectee(
                 site_id=site_id,
-                site_server=urlparse(site_config["multisiteurl"]).netloc,
+                site_server=urlparse(site_config["multisiteurl"]).hostname or "",
                 rabbitmq_port=site_config.get("message_broker_port", 5672),
             ),
             connecter=rabbitmq.Connecter(

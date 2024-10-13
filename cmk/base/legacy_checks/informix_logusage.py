@@ -98,6 +98,7 @@ def check_informix_logusage(item, params, parsed):
 
 
 check_info["informix_logusage"] = LegacyCheckDefinition(
+    name="informix_logusage",
     parse_function=parse_informix_logusage,
     service_name="Informix Log Usage %s",
     discovery_function=inventory_informix_logusage,

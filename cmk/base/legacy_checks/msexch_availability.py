@@ -28,6 +28,7 @@ def check_msexch_availability(item, params, parsed):
 
 
 check_info["msexch_availability"] = LegacyCheckDefinition(
+    name="msexch_availability",
     parse_function=parse_wmi_table,
     service_name="Exchange Availability Service",
     discovery_function=discover_msexch_availability,

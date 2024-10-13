@@ -43,10 +43,16 @@ __all__ = [
     "UUIDs",
     "NotifyBulk",
     "NotifyBulks",
+    "NotificationParameterID",
+    "NotificationParameterMethod",
+    "NotificationParameterSpec",
+    "NotificationParameterSpecs",
     # Classes
     "EventRule",
     "DisabledNotificationsOptions",
     "Contact",
+    "NotificationParameterGeneralInfos",
+    "NotificationParameterItem",
 ]
 
 ContactName = str
@@ -914,3 +920,20 @@ class Contact(TypedDict, total=False):
     notifications_enabled: bool
     host_notification_options: str
     service_notification_options: str
+
+
+class NotificationParameterGeneralInfos(TypedDict):
+    description: str
+    comment: str
+    docu_url: str
+
+
+class NotificationParameterItem(TypedDict):
+    general: NotificationParameterGeneralInfos
+    parameter_properties: dict[str, Any]
+
+
+NotificationParameterID = NewType("NotificationParameterID", str)
+NotificationParameterMethod = str
+NotificationParameterSpec = dict[NotificationParameterID, NotificationParameterItem]
+NotificationParameterSpecs = dict[NotificationParameterMethod, NotificationParameterSpec]

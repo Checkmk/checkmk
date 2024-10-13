@@ -3,14 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.ccc.version import Edition, edition
-
-from cmk.utils import paths
+from collections.abc import Callable
 
 from cmk.gui.background_job import BackgroundJobRegistry
+from cmk.gui.main_menu import MegaMenuRegistry
+from cmk.gui.page_menu import PageMenuDropdown
 from cmk.gui.pages import PageRegistry
+from cmk.gui.quick_setup.v0_unstable._registry import QuickSetupRegistry
+from cmk.gui.type_defs import TopicMenuTopic
 from cmk.gui.watolib.automation_commands import AutomationCommandRegistry
 from cmk.gui.watolib.mode import ModeRegistry
+from cmk.gui.watolib.search import MatchItemGeneratorRegistry
 
 from . import (
     activate_changes,
@@ -66,8 +69,14 @@ from ._password_store_valuespecs import (
 def register(
     page_registry: PageRegistry,
     mode_registry: ModeRegistry,
+    quick_setup_registry: QuickSetupRegistry,
     automation_command_registry: AutomationCommandRegistry,
     job_registry: BackgroundJobRegistry,
+    match_item_generator_registry: MatchItemGeneratorRegistry,
+    mega_menu_registry: MegaMenuRegistry,
+    user_menu_topics: Callable[[], list[TopicMenuTopic]],
+    edition_supports_ldap: bool,
+    edition_supports_managing_roles: bool,
 ) -> None:
     activate_changes.register(page_registry, mode_registry, automation_command_registry)
     analyze_configuration.register(mode_registry)
@@ -82,18 +91,18 @@ def register(
     download_agents.register(mode_registry)
     fetch_agent_output.register(page_registry, automation_command_registry, job_registry)
     folders.register(page_registry, mode_registry)
-    global_settings.register(mode_registry)
+    global_settings.register(mode_registry, match_item_generator_registry)
     groups.register(mode_registry)
     gui_timings.register(page_registry)
     host_diagnose.register(page_registry, mode_registry)
     host_rename.register(mode_registry)
     hosts.register(mode_registry)
     not_implemented.register(mode_registry)
-    notifications.register(mode_registry)
+    notifications.register(mode_registry, quick_setup_registry)
     object_parameters.register(mode_registry)
     parentscan.register(mode_registry)
     password_store.register(mode_registry)
-    pattern_editor.register(mode_registry)
+    pattern_editor.register(mode_registry, match_item_generator_registry)
     predefined_conditions.register(mode_registry)
     random_hosts.register(mode_registry)
     read_only.register(mode_registry)
@@ -104,10 +113,11 @@ def register(
     tags.register(mode_registry)
     timeperiods.register(mode_registry)
     user_migrate.register(mode_registry)
-    user_profile.register(page_registry)
+    user_profile.register(page_registry, mega_menu_registry, user_menu_topics)
     users.register(mode_registry)
     certificate_overview.register(mode_registry)
 
-    if edition(paths.omd_root) is not Edition.CSE:  # disabled in CSE
+    if edition_supports_ldap:
         ldap.register(mode_registry)
+    if edition_supports_managing_roles:
         roles.register(mode_registry)

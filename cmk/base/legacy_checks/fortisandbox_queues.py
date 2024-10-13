@@ -67,6 +67,7 @@ def check_fortisandbox_queues(item, params, parsed):
 
 
 check_info["fortisandbox_queues"] = LegacyCheckDefinition(
+    name="fortisandbox_queues",
     detect=DETECT_FORTISANDBOX,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12356.118.5.1",

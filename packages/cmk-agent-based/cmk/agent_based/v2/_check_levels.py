@@ -21,7 +21,7 @@ PredictiveLevelsT = tuple[
 ]
 
 # The name is part of the offial API, we have to live with the suppression.
-LevelsT = Union[NoLevelsT, FixedLevelsT[_NumberT], PredictiveLevelsT[_NumberT]]  # pylint: disable=invalid-name
+LevelsT = Union[NoLevelsT, FixedLevelsT[_NumberT], PredictiveLevelsT[_NumberT]]
 
 
 class Direction(StrEnum):
@@ -81,7 +81,7 @@ def _check_fixed_levels(
     return CheckLevelsResult(Type.FIXED, State.OK, levels)
 
 
-def _check_predictive_levels(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+def _check_predictive_levels(  # noqa: PLR0913
     value: float,
     metric_name: str,
     predicted_value: float | None,
@@ -168,7 +168,7 @@ def _summarize_predictions(
     return predictions, f"(upper levels {upper_text}, lower levels {lower_text})"
 
 
-def check_levels(  # pylint: disable=too-many-arguments,too-many-locals
+def check_levels(  # noqa: PLR0913
     value: float,
     *,
     levels_upper: LevelsT[_NumberT] | None = None,

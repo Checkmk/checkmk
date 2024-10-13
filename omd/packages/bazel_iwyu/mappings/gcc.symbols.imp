@@ -82,6 +82,7 @@
   { "symbol": [ "sockaddr", "private", "<sys/socket.h>", "public"] },
   { "symbol": [ "socklen_t", "private", "<sys/socket.h>", "public"] },
   { "symbol": [ "ssize_t", "private", "<sys/types.h>", "public"] },
+  { "symbol": [ "stack_t", "private", "<signal.h>", "public"] },
   { "symbol": [ "stat", "private", "<sys/stat.h>", "public"] },
   { "symbol": [ "suseconds_t", "private", "<sys/types.h>", "public"] },
   { "symbol": [ "time_t", "private", "<time.h>", "public"] },
@@ -94,7 +95,6 @@
   { "symbol": [ "uid_t", "private", "<sys/types.h>", "public"] },
   { "symbol": [ "useconds_t", "private", "<sys/types.h>", "public"] },
   { "symbol": [ "wchar_t", "private", "<stddef.h>", "public"] },
-  { "symbol": [ "wchar_t", "private", "<stdlib.h>", "public"] },
   { "symbol": [ "wint_t", "private", "<wchar.h>", "public"] },
   { "symbol": [ "sig_atomic_t", "private", "<signal.h>", "public"] },
   { "symbol": [ "size_t", "private", "<stddef.h>", "public"] },
@@ -124,8 +124,6 @@
   { "symbol": [ "va_copy", "private", "<stdarg.h>", "public"] },
   { "symbol": [ "va_end", "private", "<stdarg.h>", "public"] },
   { "symbol": [ "va_list", "private", "<stdarg.h>", "public"] },
-  { "symbol": [ "va_list", "private", "<stdio.h>", "public"] },
-  { "symbol": [ "va_list", "private", "<wchar.h>", "public"] },
   { "symbol": [ "va_start", "private", "<stdarg.h>", "public"] },
   # These are symbols that could be defined in either stdlib.h or
   # malloc.h, but we always want the stdlib location.

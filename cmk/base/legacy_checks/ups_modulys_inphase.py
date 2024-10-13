@@ -43,6 +43,7 @@ def discover_ups_modulys_inphase(section):
 
 
 check_info["ups_modulys_inphase"] = LegacyCheckDefinition(
+    name="ups_modulys_inphase",
     detect=DETECT_UPS_MODULYS,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2254.2.4.4",

@@ -6,6 +6,9 @@
 import groovy.transform.Field
 
 /* groovylint-disable DuplicateListLiteral */
+// ATTENTION: The paths added here for removal MUST NOT include slashes, because
+//            the command used in the function patch_folders will then fail and
+//            paths will not be removed as expected.
 @Field
 def REPO_PATCH_RULES = [\
 "raw": [\
@@ -22,9 +25,8 @@ def REPO_PATCH_RULES = [\
         "saas", \
         "cse", \
         "cse.py", \
-        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/{cme,cee,cce}"],\
-    "folders_to_be_created": [\
-        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/{cme,cee,cce}"]], \
+        "cmk.cee.dcd.plugins.connectors.connectors_api"],\
+    "folders_to_be_created": []], \
 "enterprise": [\
     "paths_to_be_removed": [\
         "managed", \
@@ -35,10 +37,8 @@ def REPO_PATCH_RULES = [\
         "cce.py", \
         "saas", \
         "cse", \
-        "cse.py", \
-        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/{cme,cce}"], \
-    "folders_to_be_created": [\
-        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/{cme,cce}"]], \
+        "cse.py"], \
+    "folders_to_be_created": []], \
 "managed": [\
     "paths_to_be_removed": [\
         "saas", \
@@ -52,18 +52,14 @@ def REPO_PATCH_RULES = [\
         "cme.py", \
         "saas", \
         "cse", \
-        "cse.py", \
-        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/cme"], \
-    "folders_to_be_created": [\
-        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/cme"]], \
+        "cse.py"], \
+    "folders_to_be_created": []], \
 "saas": [\
     "paths_to_be_removed": [\
         "managed", \
         "cme", \
-        "cme.py", \
-        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/cme"], \
-    "folders_to_be_created": [\
-        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/cme"]], \
+        "cme.py"], \
+    "folders_to_be_created": []], \
 ];
 /* groovylint-enable DuplicateListLiteral */
 
@@ -245,6 +241,14 @@ def delete_non_cre_files() {
 
 def strip_rc_number_from_version(VERSION) {
     return VERSION.split("-rc")[0];
+}
+
+def is_official_release(version) {
+    if (strip_rc_number_from_version(version) ==~ /((\d+.\d+.\d+)(([pib])(\d+))?)/) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 return this;

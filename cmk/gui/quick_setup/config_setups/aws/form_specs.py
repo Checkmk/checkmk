@@ -171,14 +171,24 @@ def quick_setup_stage_1() -> Mapping[str, DictElement]:
             parameter_form=String(
                 title=Title("Access key ID"),
                 field_size=FieldSize.MEDIUM,
-                custom_validate=(validators.LengthInRange(min_value=1),),
+                custom_validate=(
+                    validators.LengthInRange(
+                        min_value=1,
+                        error_msg=Message("Access key ID cannot be empty"),
+                    ),
+                ),
             ),
             required=True,
         ),
         "secret_access_key": DictElement(
             parameter_form=Password(
                 title=Title("Secret access key"),
-                custom_validate=(validators.LengthInRange(min_value=1),),
+                custom_validate=(
+                    validators.LengthInRange(
+                        min_value=1,
+                        error_msg=Message("Secret access key cannot be empty"),
+                    ),
+                ),
             ),
             required=True,
         ),
@@ -197,6 +207,12 @@ def quick_setup_stage_2() -> Mapping[str, DictElement]:
                     )
                     for name, title in aws_region_to_monitor()
                 ],
+                custom_validate=(
+                    validators.LengthInRange(
+                        min_value=1,
+                        error_msg=Message("Please choose one or more regions to continue"),
+                    ),
+                ),
             ),
             required=True,
         ),
@@ -206,19 +222,19 @@ def quick_setup_stage_2() -> Mapping[str, DictElement]:
 def quick_setup_stage_3() -> Mapping[str, DictElement]:
     valid_service_choices = {c.name for c in _regional_services()}
     return {
-        "global_services": DictElement(
+        "services": DictElement(
             parameter_form=MultipleChoice(
-                title=Title("Global services to monitor"),
-                elements=_global_services(),
-                prefill=DefaultValue([]),
+                title=Title("Services per region"),
+                elements=_regional_services(),
+                prefill=DefaultValue(list(valid_service_choices)),
             ),
             required=True,
         ),
-        "services": DictElement(
+        "global_services": DictElement(
             parameter_form=MultipleChoice(
-                title=Title("Services per region to monitor"),
-                elements=_regional_services(),
-                prefill=DefaultValue(list(valid_service_choices)),
+                title=Title("Global services"),
+                elements=_global_services(),
+                prefill=DefaultValue([]),
             ),
             required=True,
         ),
@@ -240,7 +256,9 @@ def quick_setup_advanced() -> Mapping[str, DictElement]:
                             title=Title("Port"),
                             custom_validate=[
                                 validators.NumberInRange(
-                                    0, 65535, Message("Port must be between 0 and 65535")
+                                    0,
+                                    65535,
+                                    Message("Port must be between 0 and 65535"),
                                 )
                             ],
                         )

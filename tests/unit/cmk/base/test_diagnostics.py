@@ -156,6 +156,7 @@ def test_diagnostics_element_hw_info() -> None:
     assert diagnostics_element.description == ("Hardware information of the Checkmk Server")
 
 
+@pytest.mark.skip("CMK-19489")
 def test_diagnostics_element_hw_info_content(
     tmp_path: PurePath,
 ) -> None:

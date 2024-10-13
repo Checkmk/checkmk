@@ -30,6 +30,7 @@ def parse_netextreme_cpu_util(string_table: StringTable) -> StringTable:
 
 
 check_info["netextreme_cpu_util"] = LegacyCheckDefinition(
+    name="netextreme_cpu_util",
     parse_function=parse_netextreme_cpu_util,
     detect=DETECT_NETEXTREME,
     fetch=SNMPTree(

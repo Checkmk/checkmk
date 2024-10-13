@@ -40,6 +40,7 @@ def parse_dell_chassis_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["dell_chassis_temp"] = LegacyCheckDefinition(
+    name="dell_chassis_temp",
     parse_function=parse_dell_chassis_temp,
     detect=DETECT_CHASSIS,
     fetch=SNMPTree(

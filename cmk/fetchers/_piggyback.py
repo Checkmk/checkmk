@@ -14,7 +14,7 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import omd_root
 
-from cmk.piggyback import get_piggyback_raw_data, PiggybackMessage
+from cmk.piggyback import get_messages_for, PiggybackMessage
 from cmk.piggyback.config import Config as PiggybackConfig
 
 from ._abstract import Fetcher, Mode
@@ -117,4 +117,4 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
 
     @staticmethod
     def _raw_data(hostname: HostAddress) -> Sequence[PiggybackMessage]:
-        return get_piggyback_raw_data(hostname, omd_root)
+        return get_messages_for(hostname, omd_root)

@@ -10,11 +10,10 @@ from importlib._bootstrap_external import SourceFileLoader  # type: ignore[impor
 
 import flask
 import pytest
-import webtest  # type: ignore[import-untyped]
 from flask import request
 from werkzeug.test import create_environ
 
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+from tests.unit.cmk.gui.conftest import CmkTestResponse, WebTestAppForCMK
 
 from cmk.ccc.site import omd_site
 
@@ -121,10 +120,7 @@ def test_normal_auth(base: str, wsgi_app: WebTestAppForCMK, with_user: tuple[Use
     # Add a failing Basic Auth to check if the other types will succeed.
     wsgi_app.set_authorization(("Basic", ("foobazbar", "foobazbar")))
 
-    login: webtest.TestResponse = wsgi_app.get("/NO_SITE/check_mk/login.py", status=200)
-    login.form["_username"] = username
-    login.form["_password"] = password
-    resp = login.form.submit("_login", index=1)
+    resp: CmkTestResponse = wsgi_app.login(username, password)
 
     assert "Invalid credentials." not in resp.text
 

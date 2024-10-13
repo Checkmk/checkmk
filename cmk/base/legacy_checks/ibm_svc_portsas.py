@@ -91,6 +91,7 @@ def check_ibm_svc_portsas(item, params, parsed):
 
 
 check_info["ibm_svc_portsas"] = LegacyCheckDefinition(
+    name="ibm_svc_portsas",
     parse_function=parse_ibm_svc_portsas,
     service_name="SAS %s",
     discovery_function=inventory_ibm_svc_portsas,

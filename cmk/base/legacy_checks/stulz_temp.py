@@ -79,6 +79,7 @@ def check_stulz_temp(item, params, parsed):
 
 
 check_info["stulz_temp"] = LegacyCheckDefinition(
+    name="stulz_temp",
     detect=DETECT_STULZ,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.29462.10.2.1.1.1.1.1.1",

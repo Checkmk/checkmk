@@ -195,11 +195,19 @@ DEFAULT_DISCOVERY_PARAMS = interfaces.DISCOVERY_DEFAULT_PARAMETERS
 SINGLE_SERVICES = [
     Service(
         item="5",
-        parameters={"discovered_oper_status": ["1"], "discovered_speed": 10000000},
+        parameters={
+            "item_appearance": "index",
+            "discovered_oper_status": ["1"],
+            "discovered_speed": 10000000,
+        },
     ),
     Service(
         item="6",
-        parameters={"discovered_oper_status": ["1"], "discovered_speed": 0},
+        parameters={
+            "item_appearance": "index",
+            "discovered_oper_status": ["1"],
+            "discovered_speed": 0,
+        },
     ),
 ]
 
@@ -261,6 +269,7 @@ def test_discovery_ungrouped_admin_status() -> None:
         Service(
             item="5",
             parameters={
+                "item_appearance": "index",
                 "discovered_oper_status": ["1"],
                 "discovered_speed": 10000000,
                 "discovered_admin_status": ["1"],
@@ -318,6 +327,7 @@ def test_discovery_duplicate_index() -> None:
         Service(
             item="1",
             parameters={
+                "item_appearance": "index",
                 "discovered_oper_status": ["1"],
                 "discovered_speed": 10000000,
             },
@@ -347,6 +357,7 @@ def test_discovery_duplicate_descr() -> None:
         Service(
             item="description 5",
             parameters={
+                "item_appearance": "descr",
                 "discovered_oper_status": ["1"],
                 "discovered_speed": 10000000,
             },
@@ -355,6 +366,7 @@ def test_discovery_duplicate_descr() -> None:
         Service(
             item="description 6",
             parameters={
+                "item_appearance": "descr",
                 "discovered_oper_status": ["1"],
                 "discovered_speed": 0,
             },
@@ -389,6 +401,7 @@ def test_discovery_duplicate_alias() -> None:
         Service(
             item="alias 5",
             parameters={
+                "item_appearance": "alias",
                 "discovered_oper_status": ["1"],
                 "discovered_speed": 10000000,
             },
@@ -428,6 +441,7 @@ def test_discovery_partial_duplicate_desc_duplicate_alias() -> None:
         Service(
             item="duplicate_descr 4",
             parameters={
+                "item_appearance": "descr",
                 "discovered_oper_status": ["2"],
                 "discovered_speed": 10000000,
             },
@@ -436,6 +450,7 @@ def test_discovery_partial_duplicate_desc_duplicate_alias() -> None:
         Service(
             item="duplicate_descr 5",
             parameters={
+                "item_appearance": "descr",
                 "discovered_oper_status": ["1"],
                 "discovered_speed": 10000000,
             },
@@ -444,6 +459,7 @@ def test_discovery_partial_duplicate_desc_duplicate_alias() -> None:
         Service(
             item="wlp2s0",
             parameters={
+                "item_appearance": "descr",
                 "discovered_oper_status": ["1"],
                 "discovered_speed": 0,
             },
@@ -760,32 +776,56 @@ def test_discovery_labels() -> None:
     ) == [
         Service(
             item="lo",
-            parameters={"discovered_oper_status": ["1"], "discovered_speed": 0},
+            parameters={
+                "discovered_oper_status": ["1"],
+                "discovered_speed": 0,
+                "item_appearance": "alias",
+            },
             labels=[ServiceLabel("single", "default")],
         ),
         Service(
             item="docker0",
-            parameters={"discovered_oper_status": ["2"], "discovered_speed": 0},
+            parameters={
+                "discovered_oper_status": ["2"],
+                "discovered_speed": 0,
+                "item_appearance": "alias",
+            },
             labels=[ServiceLabel("single", "default")],
         ),
         Service(
             item="enp0s31f6",
-            parameters={"discovered_oper_status": ["2"], "discovered_speed": 0},
+            parameters={
+                "discovered_oper_status": ["2"],
+                "discovered_speed": 0,
+                "item_appearance": "alias",
+            },
             labels=[ServiceLabel("single", "default")],
         ),
         Service(
             item="enxe4b97ab99f99",
-            parameters={"discovered_oper_status": ["2"], "discovered_speed": 10000000},
+            parameters={
+                "discovered_oper_status": ["2"],
+                "discovered_speed": 10000000,
+                "item_appearance": "alias",
+            },
             labels=[ServiceLabel("single", "default")],
         ),
         Service(
             item="vboxnet0",
-            parameters={"discovered_oper_status": ["1"], "discovered_speed": 10000000},
+            parameters={
+                "discovered_oper_status": ["1"],
+                "discovered_speed": 10000000,
+                "item_appearance": "alias",
+            },
             labels=[ServiceLabel("single", "default")],
         ),
         Service(
             item="wlp2s0",
-            parameters={"discovered_oper_status": ["1"], "discovered_speed": 0},
+            parameters={
+                "discovered_oper_status": ["1"],
+                "discovered_speed": 0,
+                "item_appearance": "alias",
+            },
             labels=[ServiceLabel("single", "wlp")],
         ),
         Service(
@@ -1657,21 +1697,23 @@ def test_check_multiple_interfaces(
     params: Mapping[str, Any],
     result: CheckResults,
 ) -> None:
+    ifaces = _create_interfaces_with_counters(0)
     list(
         interfaces.check_multiple_interfaces(
             item,
             params,
-            _create_interfaces_with_counters(0),
-            timestamp=0,
+            ifaces,
+            timestamps=[0] * len(ifaces),
         )
     )
+    ifaces = _create_interfaces_with_counters(4000000)
     assert (
         list(
             interfaces.check_multiple_interfaces(
                 item,
                 params,
-                _create_interfaces_with_counters(4000000),
-                timestamp=5,
+                ifaces,
+                timestamps=[5] * len(ifaces),
             )
         )
         == result
@@ -1687,21 +1729,23 @@ def test_check_multiple_interfaces_duplicate_descr(
 ) -> None:
     description = "description"
     item = f"{description} {item}"
+    ifaces = _create_interfaces_with_counters(0, descr=description)
     list(
         interfaces.check_multiple_interfaces(
             item,
             params,
-            _create_interfaces_with_counters(0, descr=description),
-            timestamp=0,
+            ifaces,
+            timestamps=[0] * len(ifaces),
         )
     )
+    ifaces = _create_interfaces_with_counters(4000000, descr=description)
     assert (
         list(
             interfaces.check_multiple_interfaces(
                 item,
                 params,
-                _create_interfaces_with_counters(4000000, descr=description),
-                timestamp=5,
+                ifaces,
+                timestamps=[5] * len(ifaces),
             )
         )
         == result
@@ -1718,12 +1762,13 @@ def test_check_multiple_interfaces_duplicate_alias(
     alias = "alias"
     index = item
     item = f"{alias} {index}"
+    ifaces = _create_interfaces_with_counters(0, alias=alias)
     list(
         interfaces.check_multiple_interfaces(
             item,
             params,
-            _create_interfaces_with_counters(0, alias=alias),
-            timestamp=0,
+            ifaces,
+            timestamps=[0] * len(ifaces),
         )
     )
     ifaces = _create_interfaces_with_counters(4000000, alias=alias)
@@ -1732,7 +1777,7 @@ def test_check_multiple_interfaces_duplicate_alias(
             item,
             params,
             ifaces,
-            timestamp=5,
+            timestamps=[5] * len(ifaces),
         )
     ) == [
         Result(
@@ -1765,20 +1810,22 @@ def test_check_multiple_interfaces_group_simple() -> None:
         "state": ["8"],
         "speed": 123456,
     }
+    ifaces = _create_interfaces_with_counters(0)
     list(
         interfaces.check_multiple_interfaces(
             "group",
             params,
-            _create_interfaces_with_counters(0),
-            timestamp=0,
+            ifaces,
+            timestamps=[0] * len(ifaces),
         )
     )
+    ifaces = _create_interfaces_with_counters(4000000)
     assert list(
         interfaces.check_multiple_interfaces(
             "group",
             params,
-            _create_interfaces_with_counters(4000000),
-            timestamp=5,
+            ifaces,
+            timestamps=[5] * len(ifaces),
         )
     ) == [
         Result(state=State.OK, summary="Interface group"),
@@ -1818,20 +1865,22 @@ def test_check_multiple_interfaces_group_exclude() -> None:
         "discovered_speed": 20000000,
     }
 
+    ifaces = _create_interfaces_with_counters(0)
     list(
         interfaces.check_multiple_interfaces(
             "group",
             params,
-            _create_interfaces_with_counters(0),
-            timestamp=0,
+            ifaces,
+            timestamps=[0] * len(ifaces),
         )
     )
+    ifaces = _create_interfaces_with_counters(4000000)
     assert list(
         interfaces.check_multiple_interfaces(
             "group",
             params,
-            _create_interfaces_with_counters(4000000),
-            timestamp=5,
+            ifaces,
+            timestamps=[5] * len(ifaces),
         )
     ) == [
         Result(state=State.OK, summary="Interface group"),
@@ -1878,24 +1927,14 @@ def test_check_multiple_interfaces_group_by_agent() -> None:
     ifaces[3].attributes.group = "group"
     ifaces[5].attributes.group = "group"
     list(
-        interfaces.check_multiple_interfaces(
-            "group",
-            params,
-            ifaces,
-            timestamp=0,
-        )
+        interfaces.check_multiple_interfaces("group", params, ifaces, timestamps=[0] * len(ifaces))
     )
 
     ifaces = _create_interfaces_with_counters(4000000)
     ifaces[3].attributes.group = "group"
     ifaces[5].attributes.group = "group"
     assert list(
-        interfaces.check_multiple_interfaces(
-            "group",
-            params,
-            ifaces,
-            timestamp=5,
-        )
+        interfaces.check_multiple_interfaces("group", params, ifaces, timestamps=[5] * len(ifaces))
     ) == [
         Result(state=State.OK, summary="Interface group"),
         Result(state=State.CRIT, summary="(degraded)", details="Operational state: degraded"),
@@ -1947,20 +1986,22 @@ def test_check_multiple_interfaces_w_node(
     result: CheckResults,
 ) -> None:
     node_name = "node"
+    ifaces = _create_interfaces_with_counters(0, node=node_name)
     list(
         interfaces.check_multiple_interfaces(
             item,
             params,
-            _create_interfaces_with_counters(0, node=node_name),
-            timestamp=0,
+            ifaces,
+            timestamps=[0] * len(ifaces),
         )
     )
+    ifaces = _create_interfaces_with_counters(4000000, node=node_name)
     assert list(
         interfaces.check_multiple_interfaces(
             item,
             params,
-            _create_interfaces_with_counters(4000000, node=node_name),
-            timestamp=5,
+            ifaces,
+            timestamps=[5] * len(ifaces),
         )
     ) == _add_node_name_to_results(result, node_name)
 
@@ -1974,26 +2015,28 @@ def test_check_multiple_interfaces_same_item_twice_cluster(
 ) -> None:
     node_name_1 = "node1"
     node_name_2 = "node2"
+    ifaces = [
+        *_create_interfaces_with_counters(0, node=node_name_1),
+        *_create_interfaces_with_counters(0, node=node_name_2),
+    ]
     list(
         interfaces.check_multiple_interfaces(
             item,
             params,
-            [
-                *_create_interfaces_with_counters(0, node=node_name_1),
-                *_create_interfaces_with_counters(0, node=node_name_2),
-            ],
-            timestamp=0,
+            ifaces,
+            timestamps=[0] * len(ifaces),
         )
     )
+    ifaces = [
+        *_create_interfaces_with_counters(4000000, node=node_name_1),
+        *_create_interfaces_with_counters(4000000, node=node_name_2),
+    ]
     assert list(
         interfaces.check_multiple_interfaces(
             item,
             params,
-            [
-                *_create_interfaces_with_counters(4000000, node=node_name_1),
-                *_create_interfaces_with_counters(4000000, node=node_name_2),
-            ],
-            timestamp=5,
+            ifaces,
+            timestamps=[5] * len(ifaces),
         )
     ) == _add_node_name_to_results(result, node_name_1)
 
@@ -2023,36 +2066,38 @@ def test_check_multiple_interfaces_group_multiple_nodes() -> None:
         "discovered_speed": 20000000,
     }
     node_names = ["node1", "node2", "node3"]
+    ifaces = [
+        interface
+        for idx, node_name in enumerate(node_names)
+        for interface in _create_interfaces_with_counters(
+            0,
+            admin_status=str(idx + 1),
+            node=node_name,
+        )
+    ]
     list(
         interfaces.check_multiple_interfaces(
             "group",
             params,
-            [
-                interface
-                for idx, node_name in enumerate(node_names)
-                for interface in _create_interfaces_with_counters(
-                    0,
-                    admin_status=str(idx + 1),
-                    node=node_name,
-                )
-            ],
-            timestamp=0,
+            ifaces,
+            timestamps=[0] * len(ifaces),
         )
     )
+    ifaces = [
+        interface
+        for idx, node_name in enumerate(node_names)
+        for interface in _create_interfaces_with_counters(
+            4000000,
+            admin_status=str(idx + 1),
+            node=node_name,
+        )
+    ]
     assert list(
         interfaces.check_multiple_interfaces(
             "group",
             params,
-            [
-                interface
-                for idx, node_name in enumerate(node_names)
-                for interface in _create_interfaces_with_counters(
-                    4000000,
-                    admin_status=str(idx + 1),
-                    node=node_name,
-                )
-            ],
-            timestamp=5,
+            ifaces,
+            timestamps=[5] * len(ifaces),
         )
     ) == [
         Result(state=State.OK, summary="Interface group"),
@@ -2432,6 +2477,225 @@ def test_matching_interfaces_for_item(
         for iface in interfaces.matching_interfaces_for_item(
             item,
             section,
+        )
+    ] == expected_matches
+
+
+@pytest.mark.parametrize(
+    ["item", "appearance", "section", "expected_matches"],
+    [
+        pytest.param(
+            "1",
+            None,
+            [
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="1",
+                        descr="",
+                        alias="Port 1",
+                        type="10",
+                    ),
+                    interfaces.Counters(),
+                ),
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="2",
+                        descr="",
+                        alias="1",
+                        type="10",
+                    ),
+                    interfaces.Counters(),
+                ),
+            ],
+            [
+                interfaces.Attributes(
+                    index="1",
+                    descr="",
+                    alias="Port 1",
+                    type="10",
+                )
+            ],
+            id="Support legacy matching logic simple",
+        ),
+        pytest.param(
+            "1",
+            "alias",
+            [
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="1",
+                        descr="",
+                        alias="Port 1",
+                        type="10",
+                    ),
+                    interfaces.Counters(),
+                ),
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="2",
+                        descr="",
+                        alias="1",
+                        type="10",
+                    ),
+                    interfaces.Counters(),
+                ),
+            ],
+            [
+                interfaces.Attributes(
+                    index="2",
+                    descr="",
+                    alias="1",
+                    type="10",
+                )
+            ],
+            id="Clear up index alias mixup simple",
+        ),
+        pytest.param(
+            "1",
+            "descr",
+            [
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="1",
+                        descr="Port 1",
+                        alias="",
+                        type="10",
+                    ),
+                    interfaces.Counters(),
+                ),
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="2",
+                        descr="1",
+                        alias="",
+                        type="10",
+                    ),
+                    interfaces.Counters(),
+                ),
+            ],
+            [
+                interfaces.Attributes(
+                    index="2",
+                    descr="1",
+                    alias="",
+                    type="10",
+                )
+            ],
+            id="Clear up index descr mixup simple",
+        ),
+        pytest.param(
+            "Port 2",
+            None,
+            [
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="1",
+                        descr="",
+                        alias="Port",
+                        type="10",
+                        node="node1",
+                    ),
+                    interfaces.Counters(),
+                ),
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="2",
+                        descr="",
+                        alias="Port",
+                        type="10",
+                        node="node1",
+                    ),
+                    interfaces.Counters(),
+                ),
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="2",
+                        descr="Port 2",
+                        alias="",
+                        type="10",
+                        node="node2",
+                    ),
+                    interfaces.Counters(),
+                ),
+            ],
+            [
+                interfaces.Attributes(
+                    index="2",
+                    descr="",
+                    alias="Port",
+                    type="10",
+                    node="node1",
+                ),
+                interfaces.Attributes(
+                    index="2",
+                    descr="Port 2",
+                    alias="",
+                    type="10",
+                    node="node2",
+                ),
+            ],
+            id="Support legacy matching logic compound, descr mixup is picked up",
+        ),
+        pytest.param(
+            "Port 2",
+            "alias",
+            [
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="1",
+                        descr="",
+                        alias="Port",
+                        type="10",
+                        node="node1",
+                    ),
+                    interfaces.Counters(),
+                ),
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="2",
+                        descr="",
+                        alias="Port",
+                        type="10",
+                        node="node1",
+                    ),
+                    interfaces.Counters(),
+                ),
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="2",
+                        descr="Port 2",
+                        alias="",
+                        type="10",
+                        node="node2",
+                    ),
+                    interfaces.Counters(),
+                ),
+            ],
+            [
+                interfaces.Attributes(
+                    index="2",
+                    descr="",
+                    alias="Port",
+                    type="10",
+                    node="node1",
+                ),
+            ],
+            id="Clear up descr mixup compound",
+        ),
+    ],
+)
+def test_matching_interfaces_for_item_clear_mixup_with_appearance(
+    item: str,
+    appearance: interfaces._ItemAppearance | None,
+    section: interfaces.Section[interfaces.TInterfaceType],
+    expected_matches: Sequence[interfaces.Attributes],
+) -> None:
+    assert [
+        iface.attributes
+        for iface in interfaces.matching_interfaces_for_item(
+            item,
+            section,
+            appearance,
         )
     ] == expected_matches
 

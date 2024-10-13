@@ -50,6 +50,7 @@ def parse_barracuda_mailqueues(string_table: StringTable) -> StringTable | None:
 
 
 check_info["barracuda_mailqueues"] = LegacyCheckDefinition(
+    name="barracuda_mailqueues",
     parse_function=parse_barracuda_mailqueues,
     detect=DETECT_BARRACUDA,
     fetch=SNMPTree(

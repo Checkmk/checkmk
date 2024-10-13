@@ -56,6 +56,7 @@ def check_kernel(item, params, parsed):
 
 # This check is deprecated. Please have a look at werk #8969.
 check_info["kernel"] = LegacyCheckDefinition(
+    name="kernel",
     service_name="Kernel %s",
     check_function=check_kernel,
     check_ruleset_name="vm_counter",
@@ -118,6 +119,7 @@ def check_kernel_performance(_no_item, params, parsed):
 
 
 check_info["kernel.performance"] = LegacyCheckDefinition(
+    name="kernel_performance",
     service_name="Kernel Performance",
     sections=["kernel"],
     discovery_function=inventory_kernel_performance,

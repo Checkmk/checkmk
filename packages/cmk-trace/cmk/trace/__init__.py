@@ -8,12 +8,19 @@
 import socket
 
 from opentelemetry import trace
+from opentelemetry.context.context import Context as Context  # pylint: disable=useless-import-alias
 from opentelemetry.sdk import trace as sdk_trace
 from opentelemetry.sdk.resources import Resource
 
 from ._config import LocalTarget as LocalTarget  # pylint: disable=useless-import-alias
 from ._config import trace_send_config as trace_send_config  # pylint: disable=useless-import-alias
 from ._config import TraceSendConfig as TraceSendConfig  # pylint: disable=useless-import-alias
+from ._propagate import (  # pylint: disable=useless-import-alias
+    context_for_environment as context_for_environment,
+)
+from ._propagate import (  # pylint: disable=useless-import-alias
+    extract_context_from_environment as extract_context_from_environment,
+)
 
 # Re-export 3rd party names to avoid direct dependencies in the code
 Span = trace.Span

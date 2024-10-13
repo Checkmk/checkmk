@@ -173,6 +173,7 @@ def discover_security_master(parsed):
 
 
 check_info["security_master"] = LegacyCheckDefinition(
+    name="security_master",
     detect=startswith(".1.3.6.1.2.1.1.2.0", "1.3.6.1.4.1.35491"),
     fetch=[
         SNMPTree(
@@ -216,6 +217,7 @@ def discover_security_master_humidity(parsed):
 
 
 check_info["security_master.humidity"] = LegacyCheckDefinition(
+    name="security_master_humidity",
     service_name="Sensor %s",
     sections=["security_master"],
     discovery_function=discover_security_master_humidity,
@@ -257,6 +259,7 @@ def discover_security_master_temp(parsed):
 
 
 check_info["security_master.temp"] = LegacyCheckDefinition(
+    name="security_master_temp",
     service_name="Sensor %s",
     sections=["security_master"],
     discovery_function=discover_security_master_temp,

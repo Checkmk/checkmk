@@ -9,7 +9,6 @@ from argparse import Namespace as Args
 from collections.abc import Iterator
 from pathlib import Path
 
-import docker  # type: ignore
 import requests
 
 sys.path.insert(0, Path(__file__).parent.parent.parent.as_posix())
@@ -95,6 +94,7 @@ def file_exists_on_download_server(filename: str, version: str, credentials: Cre
         requests.head(
             f"https://download.checkmk.com/checkmk/{version}/{filename}",
             auth=(credentials.username, credentials.password),
+            timeout=10,
         ).status_code
         != 200
     ):

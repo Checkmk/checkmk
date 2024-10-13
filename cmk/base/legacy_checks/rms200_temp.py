@@ -34,6 +34,7 @@ def parse_rms200_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["rms200_temp"] = LegacyCheckDefinition(
+    name="rms200_temp",
     parse_function=parse_rms200_temp,
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1909.13"),
     fetch=SNMPTree(

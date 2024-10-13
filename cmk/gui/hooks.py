@@ -84,6 +84,9 @@ def call(name: str, *args: Any) -> None:
             try:
                 hook.handler(*args)
             except Exception as e:
+                # for builtin hooks do not change exception handling
+                if hook.is_builtin:
+                    raise
                 t, v, tb = sys.exc_info()
                 msg = "".join(traceback.format_exception(t, v, tb, None))
                 raise MKGeneralException(msg) from e

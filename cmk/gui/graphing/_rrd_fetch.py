@@ -34,10 +34,15 @@ from ._legacy import (
     get_unit_info,
     LegacyUnitSpecification,
 )
+from ._metric_operation import (
+    GraphConsolidationFunction,
+    op_func_wrapper,
+    RRDData,
+    RRDDataKey,
+    time_series_operators,
+)
 from ._metrics import get_metric_spec
-from ._timeseries import op_func_wrapper, time_series_operators
 from ._translated_metrics import find_matching_translation, TranslationSpec
-from ._type_defs import GraphConsolidationFunction, RRDData, RRDDataKey
 
 
 def fetch_rrd_data_for_graph(

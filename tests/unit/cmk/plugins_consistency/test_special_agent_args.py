@@ -18,6 +18,7 @@ from cmk.plugins.alertmanager.special_agents import agent_alertmanager
 from cmk.plugins.bazel.lib import agent as agent_bazel
 from cmk.plugins.fritzbox.lib import agent as agent_fritzbox
 from cmk.plugins.gcp.special_agents import agent_gcp, agent_gcp_status
+from cmk.plugins.gerrit.lib import agent as agent_gerrit
 from cmk.plugins.jenkins.lib import jenkins as agent_jenkins
 from cmk.plugins.prometheus.special_agents import agent_prometheus
 from cmk.special_agents import (
@@ -70,6 +71,7 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "fritzbox": agent_fritzbox,
     "gcp": agent_gcp,
     "gcp_status": agent_gcp_status,
+    "gerrit": agent_gerrit,
     "graylog": agent_graylog,
     "hivemanager": None,
     "hivemanager_ng": agent_hivemanager_ng,
@@ -100,24 +102,17 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "vnx_quotas": None,
     "zerto": None,
     "prometheus": agent_prometheus,
+    "vsphere": None,
 }
 
 UNMIGRATED = {
-    "hivemanager",
-    "hivemanager_ng",
-    "hp_msa",
-    "ibmsvc",
-    "innovaphone",
     "ipmi_sensors",
     "jira",
-    "jolokia",
     "mqtt",
-    "random",
     "ruckus_spot",
     "salesforce",
     "smb_share",
     "splunk",
-    "storeonce4x",
     "ucs_bladecenter",
     "vnx_quotas",
 }
@@ -151,6 +146,7 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
     "couchbase": ["HOSTNAME"],
     "elasticsearch": ["HOSTNAME"],
     "fritzbox": ["HOSTNAME"],
+    "gerrit": ["--user", "USER", "--password", "PASSWORD", "HOSTNAME"],
     "graylog": ["HOSTNAME"],
     "hivemanager": ["IP", "USER", "PASSWORD"],
     "hivemanager_ng": [

@@ -58,6 +58,7 @@ def parse_hpux_serviceguard(string_table: StringTable) -> StringTable:
 
 
 check_info["hpux_serviceguard"] = LegacyCheckDefinition(
+    name="hpux_serviceguard",
     parse_function=parse_hpux_serviceguard,
     service_name="Serviceguard %s",
     discovery_function=inventory_hpux_serviceguard,

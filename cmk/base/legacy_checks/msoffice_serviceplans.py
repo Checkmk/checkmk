@@ -57,6 +57,7 @@ def parse_msoffice_serviceplans(string_table: StringTable) -> StringTable:
 
 
 check_info["msoffice_serviceplans"] = LegacyCheckDefinition(
+    name="msoffice_serviceplans",
     parse_function=parse_msoffice_serviceplans,
     service_name="MS Office Serviceplans %s",
     discovery_function=inventory_msoffice_serviceplans,

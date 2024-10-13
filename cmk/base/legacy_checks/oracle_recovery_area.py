@@ -68,6 +68,7 @@ def parse_oracle_recovery_area(string_table: StringTable) -> StringTable:
 
 
 check_info["oracle_recovery_area"] = LegacyCheckDefinition(
+    name="oracle_recovery_area",
     parse_function=parse_oracle_recovery_area,
     service_name="ORA %s Recovery Area",
     discovery_function=inventory_oracle_recovery_area,

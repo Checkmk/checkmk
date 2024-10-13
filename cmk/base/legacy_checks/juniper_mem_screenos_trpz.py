@@ -48,6 +48,7 @@ def check_juniper_mem_generic(
 
 
 check_info["juniper_trpz_mem"] = LegacyCheckDefinition(
+    name="juniper_trpz_mem",
     detect=DETECT_JUNIPER_TRPZ,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14525.4.8.1.1",
@@ -73,6 +74,7 @@ def parse_juniper_screenos_mem(string_table):
 
 
 check_info["juniper_screenos_mem"] = LegacyCheckDefinition(
+    name="juniper_screenos_mem",
     detect=DETECT_JUNIPER_SCREENOS,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3224.16.2",

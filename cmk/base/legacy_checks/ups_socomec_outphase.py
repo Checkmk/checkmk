@@ -35,6 +35,7 @@ def discover_ups_socomec_outphase(section):
 
 
 check_info["ups_socomec_outphase"] = LegacyCheckDefinition(
+    name="ups_socomec_outphase",
     detect=DETECT_SOCOMEC,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.4555.1.1.1.1.4.4.1",

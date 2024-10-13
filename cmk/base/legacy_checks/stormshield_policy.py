@@ -39,6 +39,7 @@ def parse_stormshield_policy(string_table: StringTable) -> StringTable:
 
 
 check_info["stormshield_policy"] = LegacyCheckDefinition(
+    name="stormshield_policy",
     parse_function=parse_stormshield_policy,
     detect=DETECT_STORMSHIELD,
     fetch=SNMPTree(

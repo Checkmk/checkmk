@@ -51,6 +51,7 @@ def parse_cisco_ucs_lun(string_table: StringTable) -> StringTable | None:
 
 
 check_info["cisco_ucs_lun"] = LegacyCheckDefinition(
+    name="cisco_ucs_lun",
     parse_function=parse_cisco_ucs_lun,
     detect=DETECT,
     fetch=SNMPTree(

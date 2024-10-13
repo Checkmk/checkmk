@@ -20,3 +20,6 @@ class QuickSetupNotFoundException(MKGeneralException):
 
 UniqueFormSpecIDStr = "formspec_unique_id"
 UniqueBundleIDStr = "bundle_id"
+QSHostName = "host_name"
+QSHostPath = "host_path"
+QSSiteSelection = "site_selection"

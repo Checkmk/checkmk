@@ -47,6 +47,7 @@ def check_esx_vsphere_licenses(item, params, parsed):
 
 
 check_info["esx_vsphere_licenses"] = LegacyCheckDefinition(
+    name="esx_vsphere_licenses",
     parse_function=parse_esx_vsphere_licenses,
     service_name="License %s",
     discovery_function=inventory_esx_vsphere_licenses,

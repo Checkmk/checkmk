@@ -53,6 +53,7 @@ def parse_ibm_rsa_health(string_table: StringTable) -> StringTable:
 
 
 check_info["ibm_rsa_health"] = LegacyCheckDefinition(
+    name="ibm_rsa_health",
     parse_function=parse_ibm_rsa_health,
     detect=contains(".1.3.6.1.2.1.1.1.0", "Remote Supervisor Adapter"),
     fetch=SNMPTree(

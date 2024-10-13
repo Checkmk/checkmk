@@ -466,6 +466,7 @@ def _valuespec_connection() -> Dictionary:
                         "valid string for a header value."
                     ),
                     prefill=DefaultValue(_DEFAULT_USER_AGENT),
+                    macro_support=True,
                 ),
             ),
             "add_headers": DictElement(
@@ -685,6 +686,7 @@ def _valuespec_endpoints() -> List:
                                     ),
                                     custom_validate=(validators.LengthInRange(min_value=1),),
                                     prefill=InputHint("My service name"),
+                                    macro_support=True,
                                 ),
                                 required=True,
                             ),
@@ -713,6 +715,7 @@ def _valuespec_endpoints() -> List:
                                 [validators.UrlProtocol.HTTP, validators.UrlProtocol.HTTPS],
                             ),
                         ),
+                        # macro_support=True, # deactivated to avoid conflicts with manual help_text
                     ),
                     required=True,
                 ),

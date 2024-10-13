@@ -11,11 +11,10 @@ import 'core-js/stable'
 
 import { createApp } from 'vue'
 
-import D3Table from './views/D3Table.vue'
-import Table from './views/CmkTable.vue'
 import QuickSetup from './quick-setup/QuickSetupApp.vue'
 import NotificationOverview from './notification/NotificationOverviewApp.vue'
 import { FormApp } from '@/form'
+import NotificationParametersOverviewApp from '@/notification/NotificationParametersOverviewApp.vue'
 
 function setupVue() {
   document
@@ -48,24 +47,12 @@ function setupVue() {
           })
           break
         }
-        case 'd3_table': {
-          console.log('vue create table')
-          app = createApp(D3Table, {
-            table_spec: appData.component
-          })
-          console.log('vue fully mounted table')
-          break
-        }
-        case 'vue_table': {
-          console.log('vue create table')
-          app = createApp(Table, {
-            table_spec: appData.component
-          })
-          console.log('vue fully mounted table')
-          break
-        }
         case 'quick_setup': {
-          app = createApp(QuickSetup, { quick_setup_id: appData.quick_setup_id })
+          app = createApp(QuickSetup, {
+            quick_setup_id: appData.quick_setup_id,
+            mode: appData.mode,
+            toggleEnabled: appData.toggle_enabled
+          })
           break
         }
         case 'notification_overview': {
@@ -74,6 +61,12 @@ function setupVue() {
             notification_stats: appData.notification_stats,
             core_stats: appData.core_stats,
             rule_sections: appData.rule_sections
+          })
+          break
+        }
+        case 'notification_parameters_overview': {
+          app = createApp(NotificationParametersOverviewApp, {
+            parameters: appData.parameters
           })
           break
         }

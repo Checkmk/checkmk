@@ -59,6 +59,7 @@ def parse_tsm_sessions(string_table: StringTable) -> StringTable:
 
 
 check_info["tsm_sessions"] = LegacyCheckDefinition(
+    name="tsm_sessions",
     parse_function=parse_tsm_sessions,
     service_name="tsm_sessions",
     discovery_function=inventory_tsm_sessions,

@@ -57,6 +57,7 @@ def parse_ibm_imm_fan(string_table: StringTable) -> StringTable:
 
 
 check_info["ibm_imm_fan"] = LegacyCheckDefinition(
+    name="ibm_imm_fan",
     parse_function=parse_ibm_imm_fan,
     detect=DETECT_IBM_IMM,
     fetch=SNMPTree(

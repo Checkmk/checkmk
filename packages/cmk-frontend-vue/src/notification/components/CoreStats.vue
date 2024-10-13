@@ -4,7 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import type { CoreStats } from '@/form/components/vue_formspec_components'
+import IconElement from '@/components/IconElement.vue'
+import type { CoreStats } from '@/notification/type_defs'
 
 defineProps<{
   stats: CoreStats
@@ -15,15 +16,15 @@ defineProps<{
   <div class="core_stats">
     <h3 class="table">{{ stats['i18n']['title'] }}</h3>
     <div class="content">
-      <p v-if="stats['sites'].length == 0">
-        <img class="checkmark" />
+      <p v-if="stats['sites'].length === 0">
+        <IconElement name="checkmark" size="small" />
         {{ stats['i18n']['ok_msg'] }}
       </p>
       <p v-else>
-        <img class="problem" />
+        <IconElement name="crit-problem" size="small" />
         {{ stats['i18n']['warning_msg'] }}
       </p>
-      <div v-if="stats['sites']!.length != 0" class="table">
+      <div v-if="stats['sites']!.length !== 0" class="table">
         <table class="data even0">
           <tr class="data even0">
             <th>{{ stats['i18n']['sites_column_title'] }}</th>
@@ -32,7 +33,7 @@ defineProps<{
           <tr v-for="(item, index) in stats['sites']!" :key="index" class="data even0">
             <td>{{ item }}</td>
             <td>
-              <img class="problem" />
+              <IconElement name="crit-problem" size="small" />
               {{ stats['i18n']['disabled_msg'] }}
             </td>
           </tr>
@@ -50,23 +51,8 @@ defineProps<{
   .content {
     padding: 0;
 
-    :first-child {
+    > p {
       padding: var(--spacing-half);
-    }
-
-    img {
-      width: 12px;
-      align-content: center;
-    }
-
-    img.checkmark {
-      content: var(--icon-checkmark);
-      padding: 0px;
-    }
-
-    img.problem {
-      content: var(--icon-crit-problem);
-      padding: 0px;
     }
   }
 

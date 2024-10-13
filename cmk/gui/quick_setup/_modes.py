@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Collection, Iterator, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from typing import Protocol
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -11,7 +11,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.utils.rulesets.definition import RuleGroup, RuleGroupType
 
 from cmk.gui import forms
-from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -36,13 +36,19 @@ from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link
-from cmk.gui.valuespec import Dictionary, DictionaryEntry, FixedValue, RuleComment, TextInput
+from cmk.gui.valuespec import (
+    Dictionary,
+    DictionaryEntry,
+    FixedValue,
+    RuleComment,
+    TextInput,
+)
 from cmk.gui.wato._main_module_topics import MainModuleTopicQuickSetup
 from cmk.gui.wato.pages.hosts import ModeEditHost
 from cmk.gui.wato.pages.password_store import ModeEditPassword
 from cmk.gui.wato.pages.rulesets import ModeEditRule
 from cmk.gui.watolib.configuration_bundles import (
-    BUNDLE_DOMAINS,
+    bundle_domains,
     BundleId,
     BundleReferences,
     ConfigBundle,
@@ -64,6 +70,7 @@ def register(main_module_registry: MainModuleRegistry, mode_registry: ModeRegist
     mode_registry.register(ModeEditConfigurationBundles)
     mode_registry.register(ModeQuickSetupSpecialAgent)
     main_module_registry.register(MainModuleQuickSetupAWS)
+    main_module_registry.register(MainModuleQuickSetupAzure)
 
 
 class ModeQuickSetupSpecialAgent(WatoMode):
@@ -105,7 +112,7 @@ class ModeQuickSetupSpecialAgent(WatoMode):
 
     def ensure_permissions(self) -> None:
         self._ensure_static_permissions()
-        for domain_definition in BUNDLE_DOMAINS[RuleGroupType.SPECIAL_AGENTS]:
+        for domain_definition in bundle_domains()[RuleGroupType.SPECIAL_AGENTS]:
             pname = domain_definition.permission
             user.need_permission(pname if "." in pname else ("wato." + pname))
 
@@ -127,7 +134,14 @@ class ModeQuickSetupSpecialAgent(WatoMode):
         )
 
     def page(self) -> None:
-        html.vue_app(app_name="quick_setup", data={"quick_setup_id": self._quick_setup_id})
+        html.vue_app(
+            app_name="quick_setup",
+            data={
+                "quick_setup_id": self._quick_setup_id,
+                "mode": "guided",
+                "toggle_enabled": False,
+            },
+        )
 
 
 class ModeEditConfigurationBundles(WatoMode):
@@ -143,9 +157,16 @@ class ModeEditConfigurationBundles(WatoMode):
     def static_permissions() -> Collection[PermissionName]:
         return []
 
+    def _topic_breadcrumb_item(self) -> Iterable[BreadcrumbItem]:
+        """Return the BreadcrumbItem for the topic of this mode"""
+        yield BreadcrumbItem(
+            title=MainModuleTopicQuickSetup.title,
+            url=None,
+        )
+
     def ensure_permissions(self) -> None:
         self._ensure_static_permissions()
-        for domain_definition in BUNDLE_DOMAINS[self._bundle_group_type]:
+        for domain_definition in bundle_domains()[self._bundle_group_type]:
             pname = domain_definition.permission
             user.need_permission(pname if "." in pname else ("wato." + pname))
 
@@ -155,7 +176,7 @@ class ModeEditConfigurationBundles(WatoMode):
             self._bundle_group_type = RuleGroupType(self._name.split(":")[0])
         except ValueError:
             raise MKUserError(None, _("Invalid configuration bundle group type."))
-        if self._bundle_group_type not in BUNDLE_DOMAINS:
+        if self._bundle_group_type not in bundle_domains():
             raise MKUserError(
                 self.VAR_NAME,
                 _("No edit configuration bundle implemented for bundle group type '%s'.")
@@ -187,7 +208,8 @@ class ModeEditConfigurationBundles(WatoMode):
                                     icon_name="new",
                                     item=make_simple_link(
                                         mode_url(
-                                            ModeQuickSetupSpecialAgent.name(), varname=self._name
+                                            ModeQuickSetupSpecialAgent.name(),
+                                            varname=self._name,
                                         )
                                     ),
                                     is_shortcut=True,
@@ -258,14 +280,14 @@ class ModeEditConfigurationBundles(WatoMode):
     def action(self) -> ActionResult:
         check_csrf_token()
         if not transactions.check_transaction():
-            return redirect(self.mode_url())
+            return redirect(self.mode_url(**{"mode": self.name(), self.VAR_NAME: self._name}))
 
-        action = request.get_ascii_input_mandatory(self.VAR_ACTION)
         bundle_id = BundleId(request.get_ascii_input_mandatory(self.VAR_BUNDLE_ID))
+        action = request.get_ascii_input_mandatory(self.VAR_ACTION)
         if action == "delete":
             delete_config_bundle(bundle_id)
 
-        return redirect(self.mode_url())
+        return redirect(self.mode_url(**{"mode": self.name(), self.VAR_NAME: self._name}))
 
     def _special_agent_bundles_listing(
         self, group_name: str, bundles: Mapping[BundleId, BundleReferences]
@@ -330,7 +352,7 @@ class ModeEditConfigurationBundles(WatoMode):
         html.empty_icon()
 
         table.cell(_("Actions"), css=["buttons rulebuttons"])
-        edit_url = ""  # TODO: introduce edit button
+        edit_url = mode_url(ModeConfigurationBundle.name(), bundle_id=bundle_id)
         html.icon_button(url=edit_url, title=_("Edit this configuration"), icon="edit")
 
         html.icon_button(
@@ -381,6 +403,47 @@ class MainModuleQuickSetupAWS(ABCMainModule):
         return ["aws"]
 
 
+class MainModuleQuickSetupAzure(ABCMainModule):
+    @property
+    def mode_or_url(self) -> str:
+        return mode_url(
+            ModeEditConfigurationBundles.name(),
+            varname=RuleGroup.SpecialAgents("azure"),
+        )
+
+    @property
+    def topic(self) -> MainModuleTopic:
+        return MainModuleTopicQuickSetup
+
+    @property
+    def title(self) -> str:
+        return _("Microsoft Azure")
+
+    @property
+    def icon(self) -> Icon:
+        return "quick_setup_azure"
+
+    @property
+    def permission(self) -> None | str:
+        return None
+
+    @property
+    def description(self) -> str:
+        return _("Configure Microsoft Azure monitoring in Checkmk")
+
+    @property
+    def sort_index(self) -> int:
+        return 11
+
+    @property
+    def is_show_more(self) -> bool:
+        return False
+
+    @classmethod
+    def megamenu_search_terms(cls) -> Sequence[str]:
+        return ["azure"]
+
+
 class EditDCDConnection(Protocol):
     def __init__(self) -> None: ...
 
@@ -398,13 +461,17 @@ class ModeConfigurationBundle(WatoMode):
     def name(cls) -> str:
         return "edit_configuration_bundle"
 
+    @classmethod
+    def parent_mode(cls) -> None | type["WatoMode"]:
+        return ModeEditConfigurationBundles
+
     @staticmethod
     def static_permissions() -> Collection[PermissionName]:
         return []
 
     def ensure_permissions(self) -> None:
         self._ensure_static_permissions()
-        for domain_definition in BUNDLE_DOMAINS.get(self._rule_group_type, []):
+        for domain_definition in bundle_domains().get(self._rule_group_type, []):
             pname = domain_definition.permission
             user.need_permission(pname if "." in pname else ("wato." + pname))
 
@@ -441,7 +508,6 @@ class ModeConfigurationBundle(WatoMode):
             [
                 self._bundle_references.rules,
                 self._bundle_references.hosts,
-                self._bundle_references.passwords,
             ]
         ):
             raise MKUserError(
@@ -453,7 +519,6 @@ class ModeConfigurationBundle(WatoMode):
         assert len(self._bundle_references.rules) == 1
         assert self._bundle_references.hosts
         assert len(self._bundle_references.hosts) == 1
-        assert self._bundle_references.passwords
 
         # Rule
         ModeEditRule.set_vars(self._bundle_group, self._bundle_references.rules[0].id)
@@ -477,18 +542,23 @@ class ModeConfigurationBundle(WatoMode):
                     edit_dcd_connection.from_vars(f"dcd_id_{index}")
 
         # Passwords
-        for index, password in enumerate(self._bundle_references.passwords):
-            request.set_var(f"password_id_{index}", password[0])
-        self._edit_passwords = [ModeEditPassword() for _pw in self._bundle_references.passwords]
-        for index, edit_password in enumerate(self._edit_passwords):
-            edit_password.from_vars(f"password_id_{index}")
+        self._edit_passwords = []
+        if self._bundle_references.passwords:
+            for index, password in enumerate(self._bundle_references.passwords):
+                request.set_var(f"password_id_{index}", password[0])
+            self._edit_passwords = [ModeEditPassword() for _pw in self._bundle_references.passwords]
+            for index, edit_password in enumerate(self._edit_passwords):
+                edit_password.from_vars(f"password_id_{index}")
 
     @staticmethod
     def _configuration_vs(bundle_id: str) -> Dictionary:
         elements: Sequence[DictionaryEntry] = [
             ("_name", TextInput(title=_("Name"), size=80)),
             ("_comment", RuleComment()),
-            ("_bundle_id", FixedValue(title=_("Configuration bundle ID"), value=bundle_id)),
+            (
+                "_bundle_id",
+                FixedValue(title=_("Configuration bundle ID"), value=bundle_id),
+            ),
         ]
         return Dictionary(
             title=_("Configuration bundle properties"),
@@ -520,7 +590,10 @@ class ModeConfigurationBundle(WatoMode):
 
     def _sub_page_dcd_connection(self) -> None:
         if any(edit_dcd_connection for edit_dcd_connection in self._edit_dcd_connections):
-            html.h1(_("Dynamic host management"), class_=["edit_configuration_bundle_header"])
+            html.h1(
+                _("Dynamic host management"),
+                class_=["edit_configuration_bundle_header"],
+            )
             for index, edit_dcd_connection in enumerate(self._edit_dcd_connections):
                 if edit_dcd_connection:
                     edit_dcd_connection.page(f"edit_dcd_{index}")
@@ -579,7 +652,9 @@ class ModeConfigurationBundle(WatoMode):
         yield PageMenuEntry(
             title=_("Cancel"),
             icon_name="cancel",
-            item=make_simple_link(""),
+            item=make_simple_link(
+                mode_url(ModeEditConfigurationBundles.name(), varname=self._bundle_group)
+            ),
             is_shortcut=True,
         )
 

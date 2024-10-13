@@ -78,6 +78,7 @@ def inventory_cisco_fru_powerusage(parsed):
 
 
 check_info["cisco_fru_powerusage"] = LegacyCheckDefinition(
+    name="cisco_fru_powerusage",
     detect=DETECT_CISCO,
     fetch=[
         SNMPTree(

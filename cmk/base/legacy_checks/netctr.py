@@ -103,10 +103,12 @@ def parse_netctr(string_table: StringTable) -> StringTable:
 
 
 check_info["netctr"] = LegacyCheckDefinition(
+    name="netctr",
     parse_function=parse_netctr,
 )
 
 check_info["netctr.combined"] = LegacyCheckDefinition(
+    name="netctr_combined",
     service_name="NIC %s counters",
     sections=["netctr"],
     discovery_function=inventory_netctr_combined,

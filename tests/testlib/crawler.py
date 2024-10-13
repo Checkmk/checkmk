@@ -11,13 +11,14 @@ import os
 import re
 import tarfile
 import time
+import traceback
 from collections import deque
 from collections.abc import Generator, Iterable, MutableSequence
 from dataclasses import dataclass, field
 from itertools import chain
 from pathlib import Path
 from types import TracebackType
-from typing import NamedTuple
+from typing import NamedTuple, Sequence
 from urllib.parse import parse_qs, parse_qsl, urlencode, urljoin, urlparse, urlsplit, urlunsplit
 
 import playwright.async_api
@@ -65,6 +66,8 @@ class Progress:
             self.duration,
             "" if exc_type is None else f"(canceled with {exc_type})",
         )
+        if exc_type is not None:
+            logger.error("".join(traceback.format_exception(exc_type, exc_val, exc_tb)))
 
     @property
     def duration(self) -> float:
@@ -183,45 +186,48 @@ class Crawler:
         self._max_urls = max(0, max_urls)
         self._todos = deque([Url(self.site.internal_url)])
 
-    async def crawl(self, max_tasks: int) -> None:
+    async def batch_test_urls(self, urls: Sequence[Url]) -> int:
+        num_done = 0
         async with async_playwright() as pw:
             browser = await pw.chromium.launch()
-            storage_state = await self.access_storage_state(browser)
-            # makes sure authentication cookies is also available in the "requests" session.
-            for cookie_dict in storage_state["cookies"]:
-                self.requests_session.cookies.set(
-                    name=cookie_dict["name"],
-                    value=cookie_dict["value"],
-                )
-            # special-case
-            search_limited_urls: bool = self._max_urls > 0
-            if search_limited_urls and self._max_urls < max_tasks:
-                max_tasks = self._max_urls
-            with Progress() as progress:
-                tasks: set = set()
-                while tasks or self._todos and self._find_more_urls:
-                    try:
-                        url = self._todos.popleft()
-                    except IndexError:
-                        logger.debug("Populating URLs/TODOs ...")
-                        url = None
-                    if url and len(tasks) < max_tasks:
-                        logger.debug("Checking URL %s", url.url)
-                        tasks.add(asyncio.create_task(self.visit_url(browser, storage_state, url)))
-                    else:
-                        logger.debug(
-                            "Maximum tasks assgined. Waiting for tasks to be completed ..."
-                        )
-                    done, tasks = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
-                    progress.done(done=sum(1 for t in done if t.result()))
-                    if search_limited_urls:
-                        self._find_more_urls = progress.done_total < self._max_urls
-                    self.duration = progress.duration
-            await browser.close()
+            try:
+                browser_context = await self.setup_checkmk_context(browser)
+                storage_state = await browser_context.storage_state()
+                # makes sure authentication cookies is also available in the "requests" session.
+                for cookie_dict in storage_state["cookies"]:
+                    self.requests_session.cookies.set(
+                        name=cookie_dict["name"],
+                        value=cookie_dict["value"],
+                    )
+                for url in urls:
+                    logger.debug("Checking URL %s", url.url)
+                    num_done += await self.visit_url(browser_context, url)
+            finally:
+                await browser.close()
+        return num_done
 
-    async def access_storage_state(
+    async def crawl(self, max_tasks: int, max_url_batch_size: int = 100) -> None:
+        # special-case
+        search_limited_urls: bool = self._max_urls > 0
+        if search_limited_urls and self._max_urls < max_tasks:
+            max_tasks = self._max_urls
+        with Progress() as progress:
+            tasks: set = set()
+            while tasks or self._todos and self._find_more_urls:
+                while len(tasks) < max_tasks and self._todos:
+                    urls = [self._todos.popleft() for _ in range(max_url_batch_size) if self._todos]
+                    tasks.add(asyncio.create_task(self.batch_test_urls(urls)))
+                if len(tasks) >= max_tasks:
+                    logger.debug("Maximum tasks assigned. Waiting for tasks to be completed ...")
+                done, tasks = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+                progress.done(done=sum(task.result() for task in done))
+                if search_limited_urls:
+                    self._find_more_urls = progress.done_total < self._max_urls
+                self.duration = progress.duration
+
+    async def setup_checkmk_context(
         self, browser: playwright.async_api.Browser
-    ) -> playwright.async_api.StorageState:
+    ) -> playwright.async_api.BrowserContext:
         context = await browser.new_context()
         page = await context.new_page()
 
@@ -234,16 +240,15 @@ class Crawler:
 
         page.on("pageerror", handle_page_error)
 
-        await page.goto(self.site.internal_url)
+        # We allow a 120s timeout since a very new page might take a while to setup
+        await page.goto(self.site.internal_url, timeout=120000)
         await page.fill('input[name="_username"]', "cmkadmin")
         await page.fill('input[name="_password"]', "cmk")
         async with page.expect_navigation():
             await page.click("text=Login")
         await page.close()
-        storage_state = await context.storage_state()
-        await context.close()
 
-        return storage_state
+        return context
 
     def _ensure_result(self, url: Url) -> None:
         if url.url not in self.results:
@@ -355,8 +360,7 @@ class Crawler:
 
     async def visit_url(
         self,
-        browser: playwright.async_api.Browser,
-        storage_state: playwright.async_api.StorageState,
+        browser_context: playwright.async_api.BrowserContext,
         url: Url,
     ) -> bool:
         start = time.time()
@@ -364,7 +368,7 @@ class Crawler:
         content_type = self.requests_session.head(url.url).headers["content-type"]
         if content_type.startswith("text/html"):
             try:
-                page_content = await self.get_page_content(browser, storage_state, url)
+                page_content = await self.get_page_content(browser_context, url)
                 await self.validate(url, page_content.content, page_content.logs)
             except playwright.async_api.Error as e:
                 self.handle_error(url, "BrowserError", repr(e))
@@ -381,8 +385,7 @@ class Crawler:
 
     @staticmethod
     async def get_page_content(
-        browser: playwright.async_api.Browser,
-        storage_state: playwright.async_api.StorageState,
+        browser_context: playwright.async_api.BrowserContext,
         url: Url,
     ) -> PageContent:
         logs = []
@@ -396,7 +399,7 @@ class Crawler:
         async def handle_page_error(error: playwright.async_api.Error) -> None:
             logs.append(format_js_error(error))
 
-        page = await browser.new_page(storage_state=storage_state)
+        page = await browser_context.new_page()
         page.on("pageerror", handle_page_error)
         page.on("console", handle_console_messages)
         try:

@@ -181,58 +181,60 @@ SELECT InstanceNames, InstanceIds, EditionNames, VersionNames, ClusterNames,Port
     pub const _SPACE_USED_ORIGINAL: &str = "EXEC sp_spaceused";
 
     pub const BACKUP: &str = r"
-DECLARE @HADRStatus sql_variant; 
+DECLARE @HADRStatus sql_variant;
 DECLARE @SQLCommand nvarchar(max);
 SET @HADRStatus = (SELECT SERVERPROPERTY ('IsHadrEnabled'));
 IF (@HADRStatus IS NULL or @HADRStatus <> 1)
 BEGIN
     SET @SQLCommand = '
-    SELECT 
+    SELECT
       CONVERT(NVARCHAR, DATEADD(s, MAX(DATEDIFF(s, ''19700101'', backup_finish_date) - (CASE WHEN time_zone IS NOT NULL AND time_zone <> 127 THEN 60 * 15 * time_zone ELSE 0 END)), ''19700101''), 120) AS last_backup_date,
-      type, 
-      machine_name, 
-      ''True'' as is_primary_replica, 
-      ''1'' as is_local, 
-      '''' as replica_id,
-      sys.databases.name AS database_name 
+      cast(type as nvarchar(128)) as type,
+      cast(machine_name as nvarchar(128)) as machine_name,
+      cast(''True'' as nvarchar(12))as is_primary_replica,
+      cast(''1'' as nvarchar(12)) as is_local,
+      cast('''' as nvarchar(12)) as replica_id,
+      cast(sys.databases.name as nvarchar(max)) AS database_name
     FROM
       msdb.dbo.backupset
-      LEFT OUTER JOIN sys.databases ON sys.databases.name = msdb.dbo.backupset.database_name
+      LEFT OUTER JOIN sys.databases ON cast(sys.databases.name as nvarchar(max)) = cast(msdb.dbo.backupset.database_name as nvarchar(max))
     WHERE
-      UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS VARCHAR))
+      UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS NVARCHAR))
     GROUP BY
       type,
       machine_name,
-      sys.databases.name 
+      cast(sys.databases.name as nvarchar(max))
     '
 END
 ELSE
 BEGIN
     SET @SQLCommand = '
-    SELECT 
-    CONVERT(NVARCHAR, DATEADD(s, MAX(DATEDIFF(s, ''19700101'', b.backup_finish_date) - (CASE WHEN time_zone IS NOT NULL AND time_zone <> 127 THEN 60 * 15 * time_zone ELSE 0 END)), ''19700101''), 120) AS last_backup_date,
-      b.type, 
-      b.machine_name, 
-      isnull(rep.is_primary_replica,0) as is_primary_replica, 
-      rep.is_local, 
-      isnull(convert(varchar(40), rep.replica_id), '''') AS replica_id,
-      db.name AS database_name 
-    FROM 
+    SELECT
+    CONVERT(NVARCHAR, DATEADD(s, MAX(DATEDIFF(s, ''19700101'', b.backup_finish_date) -
+                     (CASE WHEN time_zone IS NOT NULL AND time_zone <> 127 THEN 60 * 15 * time_zone ELSE 0 END)), ''19700101''), 120)
+                     AS last_backup_date,
+      cast(b.type as nvarchar(max)) as type,
+      cast(b.machine_name as nvarchar(max)),
+      isnull(rep.is_primary_replica,0) as is_primary_replica,
+      rep.is_local,
+      isnull(convert(nvarchar(40), rep.replica_id), '''') AS replica_id,
+      cast(db.name as nvarchar(max)) AS database_name
+    FROM
       msdb.dbo.backupset b
-      LEFT OUTER JOIN sys.databases db ON b.database_name = db.name
+      LEFT OUTER JOIN sys.databases db ON cast(b.database_name as nvarchar(max)) = cast(db.name as nvarchar(max))
       LEFT OUTER JOIN sys.dm_hadr_database_replica_states rep ON db.database_id = rep.database_id
-    WHERE 
+    WHERE
       (rep.is_local is null or rep.is_local = 1)
-      AND (rep.is_primary_replica is null or rep.is_primary_replica = ''True'') 
-      AND UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS VARCHAR))
-    GROUP BY 
-      type, 
-      rep.replica_id, 
-      rep.is_primary_replica, 
-      rep.is_local, 
-      db.name, 
-      b.machine_name, 
-      rep.synchronization_state, 
+      AND (rep.is_primary_replica is null or rep.is_primary_replica = ''True'')
+      AND UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS NVARCHAR(120)))
+    GROUP BY
+      type,
+      rep.replica_id,
+      rep.is_primary_replica,
+      rep.is_local,
+      cast(db.name as nvarchar(max)),
+      cast(b.machine_name as nvarchar(max)),
+      rep.synchronization_state,
       rep.synchronization_health
     '
 END

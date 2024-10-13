@@ -23,6 +23,10 @@ from cmk.automations.results import ABCAutomationResult
 
 from cmk.base import check_api, config, profiling
 
+from cmk import trace
+
+tracer = trace.get_tracer()
+
 
 # TODO: Inherit from MKGeneralException
 class MKAutomationError(MKException):
@@ -52,7 +56,10 @@ class Automations:
                 )
 
             if automation.needs_checks:
-                with redirect_stdout(open(os.devnull, "w")):
+                with (
+                    tracer.start_as_current_span("load_all_plugins"),
+                    redirect_stdout(open(os.devnull, "w")),
+                ):
                     log.setup_console_logging()
                     config.load_all_plugins(
                         check_api.get_check_api_context,
@@ -61,9 +68,11 @@ class Automations:
                     )
 
             if automation.needs_config:
-                config.load(validate_hosts=False)
+                with tracer.start_as_current_span("load_config"):
+                    config.load(validate_hosts=False)
 
-            result = automation.execute(args)
+            with tracer.start_as_current_span(f"execute_automation[{cmd}]"):
+                result = automation.execute(args)
 
         except (MKAutomationError, MKTimeout) as e:
             console.error(f"{e}", file=sys.stderr)

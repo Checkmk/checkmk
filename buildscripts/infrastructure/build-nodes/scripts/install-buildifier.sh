@@ -22,6 +22,10 @@ install_package() {
 }
 
 case "$DISTRO" in
+    ubuntu-20*)
+        echo "ERROR: Your version of go is too old for $DISTRO in order to install buildifier via 'go install ...'"
+        exit 1
+        ;;
     ubuntu-*)
         install_package
         ;;

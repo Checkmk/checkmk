@@ -48,6 +48,7 @@ def check_fortigate_memory(item, params, current_reading):
 
 
 check_info["fortigate_memory"] = LegacyCheckDefinition(
+    name="fortigate_memory",
     detect=all_of(contains(".1.3.6.1.2.1.1.1.0", "fortigate"), exists(".1.3.6.1.4.1.12356.1.9.0")),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12356.1",

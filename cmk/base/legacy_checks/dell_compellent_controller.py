@@ -37,6 +37,7 @@ def parse_dell_compellent_controller(string_table: StringTable) -> StringTable:
 
 
 check_info["dell_compellent_controller"] = LegacyCheckDefinition(
+    name="dell_compellent_controller",
     parse_function=parse_dell_compellent_controller,
     detect=DETECT_DELL_COMPELLENT,
     fetch=SNMPTree(

@@ -5,17 +5,25 @@
 
 from collections.abc import Callable, Mapping
 from functools import partial
+from uuid import uuid4
 
 from livestatus import SiteId
 
 from cmk.ccc.site import omd_site
 
-from cmk.gui.quick_setup.v0_unstable.definitions import UniqueBundleIDStr
+from cmk.utils.hostaddress import HostName
+
+from cmk.gui.i18n import _
+from cmk.gui.quick_setup.v0_unstable.definitions import (
+    QSHostName,
+    QSSiteSelection,
+    UniqueBundleIDStr,
+)
 from cmk.gui.quick_setup.v0_unstable.predefined._common import (
     _collect_params_with_defaults_from_form_data,
     _collect_passwords_from_form_data,
     _create_diag_special_agent_input,
-    _find_unique_id,
+    _find_id_in_form_data,
 )
 from cmk.gui.quick_setup.v0_unstable.setups import CallableValidator
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
@@ -26,6 +34,7 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
 )
 from cmk.gui.watolib.check_mk_automations import diag_special_agent
 from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
+from cmk.gui.watolib.hosts_and_folders import Host
 
 from cmk.rulesets.v1.form_specs import Dictionary
 
@@ -34,24 +43,28 @@ def validate_test_connection_custom_collect_params(
     rulespec_name: str,
     parameter_form: Dictionary,
     custom_collect_params: Callable[[ParsedFormData, Dictionary], Mapping[str, object]],
+    error_message: str | None = None,
 ) -> CallableValidator:
     return partial(
         _validate_test_connection,
         rulespec_name,
         parameter_form,
         custom_collect_params,
+        error_message,
     )
 
 
 def validate_test_connection(
     rulespec_name: str,
     parameter_form: Dictionary,
+    error_message: str | None = None,
 ) -> CallableValidator:
     return partial(
         _validate_test_connection,
         rulespec_name,
         parameter_form,
         _collect_params_with_defaults_from_form_data,
+        error_message,
     )
 
 
@@ -59,13 +72,14 @@ def _validate_test_connection(
     rulespec_name: str,
     parameter_form: Dictionary,
     collect_params: Callable[[ParsedFormData, Dictionary], Mapping[str, object]],
+    error_message: str | None,
     _quick_setup_id: QuickSetupId,
     _stage_index: StageIndex,
     all_stages_form_data: ParsedFormData,
 ) -> GeneralStageErrors:
     general_errors: GeneralStageErrors = []
-    site_id = _find_unique_id(all_stages_form_data, "site_selection")
-    host_name = _find_unique_id(all_stages_form_data, "host_name")
+    site_id = _find_id_in_form_data(all_stages_form_data, QSSiteSelection)
+    host_name = _find_id_in_form_data(all_stages_form_data, QSHostName) or str(uuid4())
     params = collect_params(all_stages_form_data, parameter_form)
     passwords = _collect_passwords_from_form_data(all_stages_form_data, parameter_form)
     output = diag_special_agent(
@@ -76,7 +90,10 @@ def _validate_test_connection(
     )
     for result in output.results:
         if result.return_code != 0:
-            general_errors.append(result.response)
+            if error_message:
+                general_errors.append(error_message)
+            # Do not show long output
+            general_errors.append(result.response.split("\n")[-1])
     return general_errors
 
 
@@ -85,11 +102,31 @@ def validate_unique_id(
     _stage_index: StageIndex,
     stages_form_data: ParsedFormData,
 ) -> GeneralStageErrors:
-    bundle_id = _find_unique_id(stages_form_data, UniqueBundleIDStr)
+    bundle_id = _find_id_in_form_data(stages_form_data, UniqueBundleIDStr)
     if bundle_id is None:
         return [f"Expected the key '{UniqueBundleIDStr}' in the form data"]
 
     if bundle_id in ConfigBundleStore().load_for_reading():
         return [f'Configuration bundle "{bundle_id}" already exists.']
+
+    return []
+
+
+def validate_host_name_doesnt_exists(
+    _quick_setup_id: QuickSetupId,
+    _stage_index: StageIndex,
+    stages_form_data: ParsedFormData,
+) -> GeneralStageErrors:
+    host_name = _find_id_in_form_data(stages_form_data, QSHostName)
+    assert host_name is not None
+    host = Host.host(HostName(host_name))
+    if host:
+        return [
+            _(
+                "A host with the name %s already exists in the folder %s. "
+                "Please choose a different host name."
+            )
+            % (host_name, host.folder().alias_path())
+        ]
 
     return []

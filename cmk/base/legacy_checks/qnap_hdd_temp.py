@@ -34,6 +34,7 @@ def discover_qnap_hdd_temp(section):
 
 
 check_info["qnap_hdd_temp"] = LegacyCheckDefinition(
+    name="qnap_hdd_temp",
     detect=DETECT_QNAP,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.24681.1.2.11.1",

@@ -60,6 +60,7 @@ def parse_fsc_sc2_psu(string_table: StringTable) -> StringTable:
 
 
 check_info["fsc_sc2_psu"] = LegacyCheckDefinition(
+    name="fsc_sc2_psu",
     parse_function=parse_fsc_sc2_psu,
     detect=DETECT_FSC_SC2,
     fetch=SNMPTree(

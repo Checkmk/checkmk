@@ -34,6 +34,7 @@ HACK_AGENTS = {
     "elasticsearch": True,
     "fritzbox": False,  # needs no secret
     "gcp": True,
+    "gerrit": False,
     "jenkins": True,
     "mobileiron": True,
     "netapp_ontap": True,
@@ -57,6 +58,15 @@ HACK_AGENTS = {
     "appdynamics": True,
     "ddn_s2a": True,
     "gcp_status": False,  # needs no secret
+    "hivemanager_ng": True,
+    "hivemanager": True,
+    "hp_msa": True,
+    "ibmsvc": False,  # needs no secret
+    "innovaphone": True,
+    "storeonce4x": True,
+    "vsphere": True,
+    "jolokia": True,
+    "random": False,  # needs no secret
 }
 
 

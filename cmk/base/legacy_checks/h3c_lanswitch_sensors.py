@@ -42,6 +42,7 @@ def check_h3c_lanswitch_sensors(
 
 
 check_info["h3c_lanswitch_sensors"] = LegacyCheckDefinition(
+    name="h3c_lanswitch_sensors",
     detect=contains(".1.3.6.1.2.1.1.1.0", "3com s"),
     fetch=[
         SNMPTree(

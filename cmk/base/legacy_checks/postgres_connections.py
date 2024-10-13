@@ -130,6 +130,7 @@ def check_postgres_connections(item, params, parsed):
 
 
 check_info["postgres_connections"] = LegacyCheckDefinition(
+    name="postgres_connections",
     parse_function=postgres.parse_dbs,
     service_name="PostgreSQL Connections %s",
     discovery_function=inventory_postgres_connections,

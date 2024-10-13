@@ -40,6 +40,7 @@ def check_vutlan_ems_humidity(item, params, parsed):
 
 
 check_info["vutlan_ems_humidity"] = LegacyCheckDefinition(
+    name="vutlan_ems_humidity",
     detect=DETECT_VUTLAN_EMS,
     fetch=[
         SNMPTree(

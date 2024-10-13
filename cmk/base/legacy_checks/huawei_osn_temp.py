@@ -30,6 +30,7 @@ def parse_huawei_osn_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["huawei_osn_temp"] = LegacyCheckDefinition(
+    name="huawei_osn_temp",
     parse_function=parse_huawei_osn_temp,
     detect=DETECT_HUAWEI_OSN,
     fetch=SNMPTree(

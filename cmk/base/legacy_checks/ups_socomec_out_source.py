@@ -52,6 +52,7 @@ def parse_ups_socomec_out_source(string_table: StringTable) -> StringTable:
 
 
 check_info["ups_socomec_out_source"] = LegacyCheckDefinition(
+    name="ups_socomec_out_source",
     parse_function=parse_ups_socomec_out_source,
     detect=DETECT_SOCOMEC,
     fetch=SNMPTree(

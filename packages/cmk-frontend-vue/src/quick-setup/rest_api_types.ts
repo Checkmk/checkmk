@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { type ComponentSpec } from './widgets/widget_types'
+import { type ComponentSpec } from '@/quick-setup/components/quick-setup/widgets/widget_types'
 import type { ValidationMessages } from '@/form'
 
 /**
@@ -15,7 +15,15 @@ export interface QSStageStructure {
 }
 
 /**
- * Response from the API when initializing the quick setup
+ * Save button
+ */
+export interface QSCompleteButton {
+  id: string
+  label: string
+}
+
+/**
+ * Response from the API when initializing the quick setup when in guided mode
  */
 export interface QSInitializationResponse {
   quick_setup_id: string
@@ -25,7 +33,18 @@ export interface QSInitializationResponse {
     stage_recap: ComponentSpec[]
     next_stage_structure: QSStageStructure
   }
-  button_complete_label: string
+  complete_buttons: QSCompleteButton[]
+}
+
+interface QSStage extends QSOverviewSpec, QSStageStructure {}
+
+/**
+ * Response from the API when initializing the quick setup when in overview mode
+ */
+export interface QSAllStagesResponse {
+  quick_setup_id: string
+  stages: QSStage[]
+  complete_buttons: QSCompleteButton[]
 }
 
 /**
@@ -84,6 +103,7 @@ export interface GeneralError extends RestApiError {
  * Request to complete the quick setup (QuickSetupFinalSaveRequest)
  */
 export interface QSRequestComplete {
+  button_id: string
   stages: QSStageRequest[]
 }
 

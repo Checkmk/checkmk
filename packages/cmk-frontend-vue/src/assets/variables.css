@@ -34,7 +34,14 @@
   --icon-save-to-services: url('~cmk-frontend/src/themes/facelift/images/icon_save_to_services.svg');
   --icon-insertdate: url('~cmk-frontend/src/themes/facelift/images/icon_insertdate.png');
   --icon-alert-crit: url('~cmk-frontend/src/themes/facelift/images/icon_alert_crit.svg');
+  --icon-alert-warn: url('~cmk-frontend/src/themes/facelift/images/icon_alert_warn.png');
+  --icon-alert-up: url('~cmk-frontend/src/themes/facelift/images/icon_alert_up.png');
+  --icon-about-checkmk: url('~cmk-frontend/src/themes/facelift/images/icon_about_checkmk.svg');
   --icon-check: url('~cmk-frontend/src/themes/facelift/images/icon_check.svg');
+  --icon-save: url('~cmk-frontend/src/themes/facelift/images/icon_save.svg');
+  --icon-cancel: url('~cmk-frontend/src/themes/facelift/images/icon_cancel.svg');
+  --icon-search: url('~cmk-frontend/src/themes/facelift/images/icon_search_action_light.svg');
+  --icon-load-graph: url('~cmk-frontend/src/themes/facelift/images/load_graph.png');
 }
 
 @layer theme {
@@ -42,25 +49,35 @@
     /* Icons */
     --icon-main-help: url('~cmk-frontend/src/themes/facelift/images/icon_main_help.svg');
     --icon-select-arrow: url('~cmk-frontend/src/themes/facelift/images/select_arrow.png');
+    --icon-close: url('~cmk-frontend/src/themes/facelift/images/icon_close.svg');
 
     /* Colors */
     --default-submit-button-border-color: var(--success-dimmed);
     --default-border-color: rgb(234 234 234);
+    --default-background-color: rgb(249, 249, 255);
     --default-table-th-color: rgb(232 232 238);
     --default-select-background-color: rgb(224, 224, 228);
     --default-select-hover-color: var(--success);
+    --default-border-color-green: rgb(21, 209, 160);
+    --default-text-color: rgb(39, 39, 39);
+    --default-component-background-color: rgb(240, 240, 240);
   }
 
   body[data-theme='modern-dark'] {
     /* Icons */
     --icon-main-help: url('~cmk-frontend/src/themes/modern-dark/images/icon_main_help.svg');
     --icon-select-arrow: url('~cmk-frontend/src/themes/modern-dark/images/select_arrow.png');
+    --icon-close: url('~cmk-frontend/src/themes/modern-dark/images/icon_close.svg');
 
     /* Colors */
     --default-submit-button-border-color: rgb(8 94 61);
     --default-border-color: rgb(38 45 52);
+    --default-background-color: rgb(28, 34, 40);
     --default-table-th-color: rgb(32, 39, 46);
     --default-select-background-color: rgb(48, 57, 70);
     --default-select-hover-color: var(--success);
+    --default-border-color-green: rgb(21, 209, 160);
+    --default-text-color: rgb(255, 255, 255);
+    --default-component-background-color: rgb(46, 44, 44);
   }
 }

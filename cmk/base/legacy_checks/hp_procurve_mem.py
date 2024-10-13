@@ -50,6 +50,7 @@ def parse_hp_procurve_mem(string_table: StringTable) -> StringTable:
 
 
 check_info["hp_procurve_mem"] = LegacyCheckDefinition(
+    name="hp_procurve_mem",
     parse_function=parse_hp_procurve_mem,
     detect=any_of(
         contains(".1.3.6.1.2.1.1.2.0", ".11.2.3.7.11"),

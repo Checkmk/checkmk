@@ -27,6 +27,7 @@ def parse_dell_poweredge_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["dell_poweredge_temp"] = LegacyCheckDefinition(
+    name="dell_poweredge_temp",
     parse_function=parse_dell_poweredge_temp,
     detect=DETECT_IDRAC_POWEREDGE,
     fetch=SNMPTree(

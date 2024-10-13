@@ -62,6 +62,7 @@ def parse_acme_sbc_snmp(string_table: StringTable) -> StringTable | None:
 
 
 check_info["acme_sbc_snmp"] = LegacyCheckDefinition(
+    name="acme_sbc_snmp",
     parse_function=parse_acme_sbc_snmp,
     detect=DETECT_ACME,
     fetch=SNMPTree(

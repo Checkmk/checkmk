@@ -50,3 +50,19 @@ def test_catalog_validation_simple(
             invalid_value="",
         )
     ]
+
+
+def test_catalog_serializes_empty_topics_to_disk() -> None:
+    spec = Catalog(
+        topics=[
+            Topic(
+                ident="some_topic",
+                dictionary=Dictionary(elements={"key": DictElement(parameter_form=String())}),
+            )
+        ]
+    )
+    visitor = get_visitor(spec, VisitorOptions(data_origin=DataOrigin.DISK))
+
+    disk_data = visitor.to_disk({"some_topic": {}})
+
+    assert disk_data == {"some_topic": {}}

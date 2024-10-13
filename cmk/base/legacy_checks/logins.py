@@ -44,6 +44,7 @@ def check_logins(
 
 
 check_info["logins"] = LegacyCheckDefinition(
+    name="logins",
     service_name="Logins",
     parse_function=parse_logins,
     discovery_function=discover_logins,

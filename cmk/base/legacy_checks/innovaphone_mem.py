@@ -29,6 +29,7 @@ def parse_innovaphone_mem(string_table: StringTable) -> StringTable:
 
 
 check_info["innovaphone_mem"] = LegacyCheckDefinition(
+    name="innovaphone_mem",
     parse_function=parse_innovaphone_mem,
     service_name="Memory",
     discovery_function=inventory_innovaphone_mem,

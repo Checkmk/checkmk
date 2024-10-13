@@ -7,7 +7,7 @@
 
 usage() {
     cat >&2 <<-HERE
-usage: $(basename "${0}") [--omit-legacy-checks|--filter]
+usage: $(basename "${0}") [--filter]
 
    --filter:             read file candidates from lines of stdin (one file per line)
 HERE
@@ -28,6 +28,7 @@ get_candidates_from_filesystem() {
     PRUNE=
     SEARCH+=" active_checks"
     SEARCH+=" agents"
+    SEARCH+=" buildscripts"
     SEARCH+=" bin"
     PRUNE+=" -path $(realpath bin)/cmk -prune -o" # symlink to bin/check_mk + confusion with cmk/ directory
     SEARCH+=" cmk"

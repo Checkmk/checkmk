@@ -42,6 +42,7 @@ def parse_hitachi_hnas_fpga(string_table: StringTable) -> StringTable:
 
 
 check_info["hitachi_hnas_fpga"] = LegacyCheckDefinition(
+    name="hitachi_hnas_fpga",
     parse_function=parse_hitachi_hnas_fpga,
     detect=DETECT,
     fetch=SNMPTree(

@@ -20,6 +20,7 @@ from cmk.gui.watolib.config_domain_name import (
     ConfigVariableRegistry,
     SampleConfigGeneratorRegistry,
 )
+from cmk.gui.watolib.config_sync import ReplicationPathRegistry
 from cmk.gui.watolib.groups import ContactGroupUsageFinderRegistry
 from cmk.gui.watolib.main_menu import MainModuleRegistry
 from cmk.gui.watolib.mode import ModeRegistry
@@ -66,6 +67,7 @@ def register(
     contact_group_usage_finder_registry: ContactGroupUsageFinderRegistry,
     timeperiod_usage_finder_registry: TimeperiodUsageFinderRegistry,
     endpoint_registry: EndpointRegistry,
+    replication_path_registry: ReplicationPathRegistry,
 ) -> None:
     views.register(
         data_source_registry,
@@ -86,6 +88,7 @@ def register(
         rulespec_registry,
         match_item_generator_registry,
         notification_parameter_registry,
+        replication_path_registry,
     )
     permission_section_registry.register(PermissionSectionEventConsole)
     config_domain_registry.register(ConfigDomainEventConsole)

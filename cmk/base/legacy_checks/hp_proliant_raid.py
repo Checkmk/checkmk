@@ -86,6 +86,7 @@ def check_hp_proliant_raid(item, _no_params, parsed):
 
 
 check_info["hp_proliant_raid"] = LegacyCheckDefinition(
+    name="hp_proliant_raid",
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.232.3.2.3.1.1",

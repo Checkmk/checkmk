@@ -41,6 +41,7 @@ def check_sensatronics_temp(
 
 
 check_info["sensatronics_temp"] = LegacyCheckDefinition(
+    name="sensatronics_temp",
     detect=any_of(equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.16174.1.1.1")),
     fetch=[
         SNMPTree(

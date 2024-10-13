@@ -7,12 +7,10 @@ from typing import Any, Callable
 from cmk.gui.form_specs.private import UnknownFormSpec
 from cmk.gui.form_specs.vue.visitors._base import FormSpecVisitor
 from cmk.gui.form_specs.vue.visitors._type_defs import VisitorOptions
-from cmk.gui.utils.rule_specs.loader import LoadedRuleSpec
 
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.rulesets.v1.form_specs._base import ModelT
 
-form_spec_registry: dict[str, LoadedRuleSpec] = {}
 RecomposerFunction = Callable[[FormSpec[Any]], FormSpec[Any]]
 form_specs_visitor_registry: dict[
     type[FormSpec[Any]], tuple[type[FormSpecVisitor[FormSpec[Any], Any]], RecomposerFunction | None]

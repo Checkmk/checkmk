@@ -92,8 +92,11 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	find $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks -name "*.py" -type f | sed -e 'p;s~.py$$~~' | xargs -n2 mv
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications
-	install -m 755 $(REPO_PATH)/notifications/* $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications
+	find $(REPO_PATH)/notifications/ -maxdepth 1 -type f ! -name ".*" -exec install -m 755 {} $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications \;
 	chmod 644 $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications/README
+
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications/templates/mail
+	find $(REPO_PATH)/notifications/templates/mail/ -maxdepth 1 -type f ! -name ".*" -exec install -m 644 {} $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications/templates/mail \;
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/web/htdocs
 	tar -c -C $(REPO_PATH)/packages/cmk-frontend/dist \
@@ -195,16 +198,16 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib
 	$(LN) -sf python3/cmk $(CHECK_MK_INSTALL_DIR)/lib/check_mk
 	# ... and ensure the same for the local hierarchy
-	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk
 	$(LN) -sf python3/cmk $(CHECK_MK_INSTALL_DIR)/skel/local/lib/check_mk
 	# Create the plugin namespaces
-	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk_addons/plugins
-	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/base/plugins/agent_based
-	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/plugins
-	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/special_agents
-	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/gui/plugins/views
-	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/gui/plugins/dashboard
-	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk_addons/plugins
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk_addons/plugins
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/base/plugins/agent_based
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/plugins
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/special_agents
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/gui/plugins/views
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/gui/plugins/dashboard
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk_addons/plugins
 
 
 	# Install the diskspace cleanup plugin

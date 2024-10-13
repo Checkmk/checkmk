@@ -53,13 +53,9 @@ Each plugin expects a different prefix in the variable name:
    - graphs the ``graph_`` prefix
 
 .. toctree::
+   :glob:
 
-   cmk.agent_based/index
-   cmk.base.plugins.bakery.bakery_api/index
-   cmk.server_side_calls/index
-   cmk.graphing/index
-   cmk.rulesets/index
-   cmk.cee.dcd.plugins.connectors.connectors_api/index
+   cmk.*/index
 
 Indices and tables
 ==================

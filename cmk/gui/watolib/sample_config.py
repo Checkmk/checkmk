@@ -13,7 +13,12 @@ from cmk.ccc import store
 
 from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.log import VERBOSE
-from cmk.utils.notify_types import EventRule, MailPluginModel, NotificationRuleID
+from cmk.utils.notify_types import (
+    EventRule,
+    MailPluginModel,
+    NotificationParameterID,
+    NotificationRuleID,
+)
 from cmk.utils.paths import configuration_lockfile, site_cert_file
 from cmk.utils.tags import sample_tag_config, TagConfig
 
@@ -93,6 +98,10 @@ def _create_sample_config() -> None:
 
 def new_notification_rule_id() -> NotificationRuleID:
     return NotificationRuleID(str(uuid4()))
+
+
+def new_notification_parameter_id() -> NotificationParameterID:
+    return NotificationParameterID(str(uuid4()))
 
 
 def get_default_notification_rule() -> EventRule:

@@ -53,6 +53,7 @@ def parse_juniper_trpz_power(string_table: StringTable) -> StringTable:
 
 
 check_info["juniper_trpz_power"] = LegacyCheckDefinition(
+    name="juniper_trpz_power",
     parse_function=parse_juniper_trpz_power,
     detect=DETECT_JUNIPER_TRPZ,
     fetch=SNMPTree(

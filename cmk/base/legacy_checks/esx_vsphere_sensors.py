@@ -62,6 +62,7 @@ def parse_esx_vsphere_sensors(string_table: StringTable) -> StringTable:
 
 
 check_info["esx_vsphere_sensors"] = LegacyCheckDefinition(
+    name="esx_vsphere_sensors",
     parse_function=parse_esx_vsphere_sensors,
     service_name="Hardware Sensors",
     discovery_function=inventory_esx_vsphere_sensors,

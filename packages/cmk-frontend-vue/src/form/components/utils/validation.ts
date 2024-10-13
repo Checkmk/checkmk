@@ -84,6 +84,18 @@ export function isFloat(value: string): boolean {
   return /^-?\d+(\.\d+)?$/.test(value)
 }
 
+export function requiresSomeInput(validators: Validator[]): boolean {
+  return validators.some((validator) => {
+    if (validator.type === 'length_in_range') {
+      if (validator.min_value === undefined) {
+        return false
+      }
+      return validator.min_value > 0
+    }
+    return false
+  })
+}
+
 export function groupDictionaryValidations(
   elements: Array<{ ident: string }>,
   newValidation: ValidationMessages
@@ -99,7 +111,7 @@ export function groupDictionaryValidations(
   const dictionaryValidations: ValidationMessages = []
 
   newValidation.forEach((msg) => {
-    if (msg.location.length == 0) {
+    if (msg.location.length === 0) {
       dictionaryValidations.push(msg)
       return
     }
@@ -130,8 +142,8 @@ export function groupIndexedValidations(
     elementValidations[i] = []
   }
   messages.forEach((msg) => {
-    const index = msg.location.length == 0 ? -1 : parseInt(msg.location[0]!)
-    if (index == -1) {
+    const index = msg.location.length === 0 ? -1 : parseInt(msg.location[0]!)
+    if (index === -1) {
       ownValidations.push(msg.message)
       return
     }

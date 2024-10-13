@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import type { RuleSection } from '@/form/components/vue_formspec_components'
+import type { RuleSection } from '@/notification/type_defs'
 
 defineProps<{
   rule_sections: RuleSection[]
@@ -19,7 +19,7 @@ defineProps<{
         <thead>
           <tr>
             <th>
-              <div class="text ruleset_section ruleset">{{ section.i18n }}</div>
+              <div v-if="topic.i18n" class="text ruleset_section ruleset">{{ topic.i18n }}</div>
             </th>
           </tr>
         </thead>

@@ -30,6 +30,7 @@ def check_aws_ec2_security_groups(item, params, parsed):
 
 
 check_info["aws_ec2_security_groups"] = LegacyCheckDefinition(
+    name="aws_ec2_security_groups",
     parse_function=parse_aws,
     service_name="AWS/EC2 Security Groups",
     discovery_function=inventory_aws_ec2_security_groups,

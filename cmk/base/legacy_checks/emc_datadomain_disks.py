@@ -62,6 +62,7 @@ def parse_emc_datadomain_disks(string_table: Sequence[StringTable]) -> Sequence[
 
 
 check_info["emc_datadomain_disks"] = LegacyCheckDefinition(
+    name="emc_datadomain_disks",
     parse_function=parse_emc_datadomain_disks,
     detect=DETECT_DATADOMAIN,
     fetch=[

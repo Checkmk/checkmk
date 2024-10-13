@@ -160,7 +160,7 @@ def test_linked_libraries(site: Site) -> None:
                         # libs found in the seccli directory
                         continue
                     if lib.name == "libnsl.so.1":
-                        # This link is also broken, at least on centos 8. To be investigated.
+                        # This link is also broken. To be investigated.
                         continue
                     assert False, f"seccli file {file} linked to a non-existing library"
 

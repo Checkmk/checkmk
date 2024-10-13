@@ -68,6 +68,7 @@ def discover_teracom_tcw241_digital(section):
 
 
 check_info["teracom_tcw241_digital"] = LegacyCheckDefinition(
+    name="teracom_tcw241_digital",
     detect=contains(".1.3.6.1.2.1.1.1.0", "Teracom"),
     fetch=[
         SNMPTree(

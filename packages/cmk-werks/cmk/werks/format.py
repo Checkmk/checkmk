@@ -35,6 +35,22 @@ def format_as_werk_v1(parsed: WerkV2ParseResult) -> str:
     return "\n".join(generator())
 
 
+def _sort_keys(key_value: tuple[str, str]) -> int:
+    key, _value = key_value
+    try:
+        return [
+            "date",
+            "version",
+            "class",
+            "edition",
+            "component",
+            "level",
+            "compatible",
+        ].index(key)
+    except ValueError:
+        return 99
+
+
 def format_as_werk_v2(werk: WerkV2ParseResult) -> str:
     metadata = werk.metadata.copy()
 
@@ -49,7 +65,7 @@ def format_as_werk_v2(werk: WerkV2ParseResult) -> str:
         yield ""
         yield f"{'key': <{len_key}} | value"
         yield f"{'':-<{len_key}} | ---"
-        for key, value in metadata.items():
+        for key, value in sorted(metadata.items(), key=_sort_keys):
             yield f"{key: <{len_key}} | {value}"
         yield ""
         yield werk.description

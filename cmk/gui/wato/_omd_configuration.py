@@ -32,7 +32,6 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
-from cmk.gui.watolib.activate_changes import add_replication_paths
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     ConfigDomainName,
@@ -44,12 +43,14 @@ from cmk.gui.watolib.config_domain_name import (
     wato_fileheader,
 )
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
-from cmk.gui.watolib.config_sync import ReplicationPath
+from cmk.gui.watolib.config_sync import ReplicationPath, ReplicationPathRegistry
 from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupSiteManagement
 
 
 def register(
-    config_domain_registry: ConfigDomainRegistry, config_variable_registry: ConfigVariableRegistry
+    config_domain_registry: ConfigDomainRegistry,
+    config_variable_registry: ConfigVariableRegistry,
+    replication_path_registry: ReplicationPathRegistry,
 ) -> None:
     config_domain_registry.register(ConfigDomainDiskspace)
     config_domain_registry.register(ConfigDomainApache)
@@ -60,6 +61,14 @@ def register(
     config_variable_registry.register(ConfigVariableSiteDiskspaceCleanup)
     config_variable_registry.register(ConfigVariableSiteApacheProcessTuning)
     config_variable_registry.register(ConfigVariableSiteRRDCachedTuning)
+    replication_path_registry.register(
+        ReplicationPath(
+            "file",
+            "diskspace",
+            str(ConfigDomainDiskspace.diskspace_config.relative_to(cmk.utils.paths.omd_root)),
+            [],
+        )
+    )
 
 
 # .
@@ -394,17 +403,6 @@ class ConfigVariableSiteDiskspaceCleanup(ConfigVariable):
             empty_text=_("Disk space cleanup is disabled"),
         )
 
-
-add_replication_paths(
-    [
-        ReplicationPath(
-            "file",
-            "diskspace",
-            str(ConfigDomainDiskspace.diskspace_config.relative_to(cmk.utils.paths.omd_root)),
-            [],
-        ),
-    ]
-)
 
 # .
 #   .--Apache--------------------------------------------------------------.

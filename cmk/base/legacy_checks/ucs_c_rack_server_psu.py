@@ -104,6 +104,7 @@ def check_ucs_c_rack_server_psu(item, _no_params, parsed):
 
 
 check_info["ucs_c_rack_server_psu"] = LegacyCheckDefinition(
+    name="ucs_c_rack_server_psu",
     parse_function=parse_ucs_c_rack_server_psu,
     service_name="Output Power %s",
     discovery_function=inventory_ucs_c_rack_server_psu,
@@ -141,6 +142,7 @@ def check_ucs_c_rack_server_psu_voltage(item, _no_params, parsed):
 
 
 check_info["ucs_c_rack_server_psu.voltage"] = LegacyCheckDefinition(
+    name="ucs_c_rack_server_psu_voltage",
     service_name="Output Voltage %s",
     sections=["ucs_c_rack_server_psu"],
     discovery_function=inventory_ucs_c_rack_server_psu_voltage,

@@ -66,7 +66,7 @@ def check_mem_windows_static(
     value_store: MutableMapping[str, object],
     now: float,
 ) -> CheckResult:
-    average = params.get("average")
+    averaging_horizon_seconds = params.get("average")
 
     for title, prefix, metric_prefix, levels in (
         ("RAM", "Mem", "mem", params["memory"]),
@@ -87,13 +87,19 @@ def check_mem_windows_static(
         yield from memory.check_element(label=title, used=used_raw, total=total)
 
         # Do averaging, if configured, just for matching the levels
-        if average is None:
+        if averaging_horizon_seconds is None:
             used = used_raw
             avg_text = ""
             avg_suffix = ""
         else:
-            used = get_average(value_store, metric_prefix, now, used_raw, average)
-            avg_text = f" (averaged over {int(average)} min)"
+            used = get_average(
+                value_store,
+                metric_prefix,
+                now,
+                used_raw,
+                averaging_horizon_seconds / 60,
+            )
+            avg_text = f" (averaged over {render.timespan(averaging_horizon_seconds)})"
             avg_suffix = "_avg"
             yield Metric(
                 f"{metric_prefix}_used_percent", used_raw / total * 100.0, boundaries=(0.0, 100.0)

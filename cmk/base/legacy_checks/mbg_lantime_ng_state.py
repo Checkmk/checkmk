@@ -43,6 +43,7 @@ def parse_mbg_lantime_ng_state(string_table: StringTable) -> StringTable:
 
 
 check_info["mbg_lantime_ng_state"] = LegacyCheckDefinition(
+    name="mbg_lantime_ng_state",
     parse_function=parse_mbg_lantime_ng_state,
     detect=DETECT_MBG_LANTIME_NG,
     fetch=SNMPTree(

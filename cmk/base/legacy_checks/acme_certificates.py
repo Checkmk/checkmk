@@ -63,6 +63,7 @@ def parse_acme_certificates(string_table: StringTable) -> StringTable:
 
 
 check_info["acme_certificates"] = LegacyCheckDefinition(
+    name="acme_certificates",
     parse_function=parse_acme_certificates,
     detect=DETECT_ACME,
     fetch=SNMPTree(

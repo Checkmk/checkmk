@@ -37,6 +37,7 @@ def parse_cisco_ucs_temp_mem(string_table: StringTable) -> StringTable:
 
 
 check_info["cisco_ucs_temp_mem"] = LegacyCheckDefinition(
+    name="cisco_ucs_temp_mem",
     parse_function=parse_cisco_ucs_temp_mem,
     detect=DETECT,
     fetch=SNMPTree(

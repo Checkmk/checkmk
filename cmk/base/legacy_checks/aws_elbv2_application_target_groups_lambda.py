@@ -50,6 +50,7 @@ def check_aws_application_elb_target_groups_lambda(item, params, section):
 
 
 check_info["aws_elbv2_application_target_groups_lambda"] = LegacyCheckDefinition(
+    name="aws_elbv2_application_target_groups_lambda",
     parse_function=parse_aws_elbv2_target_groups_lambda,
     service_name="AWS/ApplicationELB Lambda %s",
     discovery_function=discover_aws_elbv2_target_groups_lambda,

@@ -18,6 +18,7 @@ powershell Write-Host "save_dir should point on valid path with tmp inside" -for
 exit /b 4
 
 :processing
+rd /q /s "%save_dir%"
 mkdir %save_dir% 2> nul
 set last_dir=%cd%
 cd %save_dir% || Powershell Write-Host "`'%save_dir%`' absent" -Foreground red && exit /b 5

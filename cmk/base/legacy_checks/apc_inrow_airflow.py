@@ -53,6 +53,7 @@ def parse_apc_inrow_airflow(string_table: StringTable) -> StringTable:
 
 
 check_info["apc_inrow_airflow"] = LegacyCheckDefinition(
+    name="apc_inrow_airflow",
     parse_function=parse_apc_inrow_airflow,
     detect=DETECT,
     fetch=SNMPTree(

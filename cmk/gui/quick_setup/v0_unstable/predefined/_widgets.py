@@ -7,11 +7,17 @@ from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.fields.definitions import HOST_NAME_REGEXP
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
 from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout
-from cmk.gui.quick_setup.v0_unstable.definitions import UniqueBundleIDStr, UniqueFormSpecIDStr
+from cmk.gui.quick_setup.v0_unstable.definitions import (
+    QSHostName,
+    QSHostPath,
+    UniqueBundleIDStr,
+    UniqueFormSpecIDStr,
+)
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, FormSpecWrapper
 from cmk.gui.watolib.configuration_bundles import ConfigBundleStore
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 
-from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1 import Message, Title
 from cmk.rulesets.v1.form_specs import DictElement, FieldSize, String, validators
 from cmk.rulesets.v1.form_specs._base import DefaultValue
 
@@ -28,7 +34,12 @@ def unique_id_formspec_wrapper(
                     parameter_form=String(
                         title=title,
                         field_size=FieldSize.MEDIUM,
-                        custom_validate=(validators.LengthInRange(min_value=1),),
+                        custom_validate=(
+                            validators.LengthInRange(
+                                min_value=1,
+                                error_msg=Message("%s cannot be empty") % str(title),
+                            ),
+                        ),
                         prefill=DefaultValue(
                             unique_default_name_suggestion(
                                 template=prefill_template,
@@ -44,14 +55,29 @@ def unique_id_formspec_wrapper(
     )
 
 
-def _host_name_dict_element(title: Title = Title("Host name")) -> DictElement:
+def _host_name_dict_element(
+    title: Title = Title("Host name"),
+    prefill_template: str = "qs_host",
+) -> DictElement:
     return DictElement(
         parameter_form=String(
             title=title,
             field_size=FieldSize.MEDIUM,
             custom_validate=(
-                validators.LengthInRange(min_value=1),
-                validators.MatchRegex(HOST_NAME_REGEXP),
+                validators.LengthInRange(
+                    min_value=1,
+                    error_msg=Message("%s cannot be empty") % str(title),
+                ),
+                validators.MatchRegex(
+                    regex=HOST_NAME_REGEXP,
+                    error_msg=Message("Invalid characters in %s") % str(title),
+                ),
+            ),
+            prefill=DefaultValue(
+                unique_default_name_suggestion(
+                    template=prefill_template,
+                    used_names=set(folder_tree().root_folder().all_hosts_recursively()),
+                )
             ),
         ),
         required=True,
@@ -63,24 +89,31 @@ FOLDER_PATTERN = (
 )
 
 
-def _host_path_dict_element(title: Title = Title("Host Path")) -> DictElement:
+def _host_path_dict_element(title: Title = Title("Folder")) -> DictElement:
     return DictElement(
         parameter_form=String(
             title=title,
             field_size=FieldSize.MEDIUM,
-            custom_validate=(validators.MatchRegex(FOLDER_PATTERN),),
+            custom_validate=(
+                validators.MatchRegex(
+                    regex=FOLDER_PATTERN,
+                    error_msg=Message("Invalid characters in %s") % str(title),
+                ),
+            ),
         ),
         required=True,
     )
 
 
-def host_name_and_host_path_formspec_wrapper() -> FormSpecWrapper:
+def host_name_and_host_path_formspec_wrapper(
+    host_prefill_template: str = "qs_host",
+) -> FormSpecWrapper:
     return FormSpecWrapper(
         id=FormSpecId("host_data"),
         form_spec=DictionaryExtended(
             elements={
-                "host_name": _host_name_dict_element(),
-                "host_path": _host_path_dict_element(),
+                QSHostName: _host_name_dict_element(prefill_template=host_prefill_template),
+                QSHostPath: _host_path_dict_element(),
             },
             layout=DictionaryLayout.two_columns,
         ),

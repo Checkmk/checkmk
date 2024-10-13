@@ -57,6 +57,7 @@ def check_couchbase_nodes_cache(item, params, parsed):
 
 
 check_info["couchbase_nodes_cache"] = LegacyCheckDefinition(
+    name="couchbase_nodes_cache",
     parse_function=parse_couchbase_lines,
     service_name="Couchbase %s Cache",
     discovery_function=discover_couchbase_nodes_cache,

@@ -102,14 +102,17 @@ from cmk.fetchers.filecache import MaxAge
 from cmk.checkengine.checking import (
     CheckPluginName,
     ConfiguredService,
+    merge_enforced_services,
     ServiceConfigurer,
     ServiceID,
 )
 from cmk.checkengine.discovery import (
+    AutocheckEntry,
     AutochecksManager,
     CheckPreviewEntry,
     DiscoveredLabelsCache,
     DiscoveryCheckParameters,
+    merge_cluster_autochecks,
 )
 from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.fetcher import FetcherType, SourceType
@@ -131,6 +134,7 @@ from cmk.base.api.agent_based.cluster_mode import ClusterMode
 from cmk.base.api.agent_based.plugin_classes import (
     AgentSectionPlugin,
     CheckPlugin,
+    LegacyPluginLocation,
     SNMPSectionPlugin,
 )
 from cmk.base.api.agent_based.register.check_plugins_legacy import create_check_plugin_from_legacy
@@ -140,6 +144,7 @@ from cmk.base.api.agent_based.register.section_plugins_legacy import (
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.parent_scan import ScanConfig as ParentScanConfig
 from cmk.base.server_side_calls import (
+    ExecutableFinder,
     load_special_agents,
     SpecialAgent,
     SpecialAgentCommandLine,
@@ -147,7 +152,7 @@ from cmk.base.server_side_calls import (
 )
 from cmk.base.sources import SNMPFetcherConfig
 
-from cmk import piggyback
+from cmk import piggyback, trace
 from cmk.server_side_calls import v1 as server_side_calls_api
 from cmk.server_side_calls_backend.config_processing import PreprocessingResult
 
@@ -164,6 +169,8 @@ try:
 except ModuleNotFoundError:
     # Non-existing edition layering...
     RRDObjectConfig: TypeAlias = object  # type: ignore[no-redef]
+
+tracer = trace.get_tracer()
 
 _ContactgroupName = str
 
@@ -212,6 +219,9 @@ class HostCheckTable(Mapping[ServiceID, ConfiguredService]):
     ) -> None:
         self._data = {s.id(): s for s in services}
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(services={list(self._data.values())!r})"
+
     def __getitem__(self, key: ServiceID) -> ConfiguredService:
         return self._data[key]
 
@@ -242,6 +252,10 @@ def _aggregate_check_table_services(
     config_cache: ConfigCache,
     skip_ignored: bool,
     filter_mode: FilterMode,
+    get_autochecks: Callable[[HostAddress], Sequence[AutocheckEntry]],
+    configure_autochecks: Callable[
+        [HostName, Sequence[AutocheckEntry]], Iterable[ConfiguredService]
+    ],
 ) -> Iterable[ConfiguredService]:
     sfilter = _ServiceFilter(
         host_name,
@@ -258,7 +272,11 @@ def _aggregate_check_table_services(
         if is_cluster:
             # Add checks a cluster might receive from its nodes
             yield from (
-                s for s in _get_clustered_services(config_cache, host_name) if sfilter.keep(s)
+                s
+                for s in _get_clustered_services(
+                    config_cache, host_name, get_autochecks, configure_autochecks
+                )
+                if sfilter.keep(s)
             )
         else:
             yield from (
@@ -292,7 +310,9 @@ def _aggregate_check_table_services(
     yield from (
         s
         # ... this adds it for node2
-        for s in _get_services_from_cluster_nodes(config_cache, host_name)
+        for s in _get_services_from_cluster_nodes(
+            config_cache, host_name, get_autochecks, configure_autochecks
+        )
         if sfilter.keep(s)
         # ... and this condition prevents it from being added on node3
         # 'not is_mine' means: would it be there, it would be clustered.
@@ -350,40 +370,53 @@ class _ServiceFilter:
 
 
 def _get_services_from_cluster_nodes(
-    config_cache: ConfigCache, node_name: HostName
+    config_cache: ConfigCache,
+    node_name: HostName,
+    get_autochecks: Callable[[HostAddress], Sequence[AutocheckEntry]],
+    configure_autochecks: Callable[
+        [HostName, Sequence[AutocheckEntry]], Iterable[ConfiguredService]
+    ],
 ) -> Iterable[ConfiguredService]:
     for cluster in config_cache.clusters_of(node_name):
-        yield from _get_clustered_services(config_cache, cluster)
+        yield from _get_clustered_services(
+            config_cache, cluster, get_autochecks, configure_autochecks
+        )
 
 
 def _get_clustered_services(
     config_cache: ConfigCache,
     cluster_name: HostName,
+    get_autochecks: Callable[[HostAddress], Sequence[AutocheckEntry]],
+    configure_autochecks: Callable[
+        [HostName, Sequence[AutocheckEntry]], Iterable[ConfiguredService]
+    ],
 ) -> Iterable[ConfiguredService]:
     nodes = config_cache.nodes(cluster_name)
 
-    nodes_discovered_services = (
-        {}
-        if config_cache.is_ping_host(cluster_name)
-        else {node: config_cache.get_discovered_services(node) for node in nodes}
+    if not config_cache.is_ping_host(cluster_name):
+
+        def appears_on_cluster(node_name: HostAddress, service_id: ServiceID) -> bool:
+            if config_cache.check_plugin_ignored(node_name, service_id[0]):
+                return False
+            description = service_description(config_cache.ruleset_matcher, node_name, *service_id)
+            return not config_cache.service_ignored(node_name, description) and (
+                config_cache.effective_host(node_name, description) == cluster_name
+            )
+
+        yield from configure_autochecks(
+            cluster_name,
+            merge_cluster_autochecks(
+                {node: get_autochecks(node) for node in nodes},
+                appears_on_cluster,
+            ),
+        )
+
+    yield from merge_enforced_services(
+        {node_name: config_cache.enforced_services_table(node_name) for node_name in nodes},
+        lambda node_name, service_name: (
+            config_cache.effective_host(node_name, service_name) == cluster_name
+        ),
     )
-
-    nodes_enforced_services = {node: config_cache.enforced_services_table(node) for node in nodes}
-
-    # Note: the way we return the services here means that for a service that is enforced on some
-    # nodes and discovered on others, the parameters of the service on the cluster will depend
-    # on the order of the nodes in the cluster.
-    for node in nodes:
-        yield from (
-            service
-            for service in nodes_discovered_services[node]
-            if config_cache.effective_host(node, service.description) == cluster_name
-        )
-        yield from (
-            service
-            for _ruleset_name, service in nodes_enforced_services[node].values()
-            if config_cache.effective_host(node, service.description) == cluster_name
-        )
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -1344,14 +1377,6 @@ NEGATE = tuple_rulesets.NEGATE
 check_info: dict[
     object, object
 ] = {}  # want: dict[str, LegacyCheckDefinition], but don't trust the plugins!
-# for nagios config: keep track which plug-in lives where
-legacy_check_plugin_files: dict[str, str] = {}
-# Lookup for legacy names
-legacy_check_plugin_names: dict[CheckPluginName, str] = {}
-# optional functions for parameter precompilation
-precompile_params: dict[str, Callable[[str, str, dict[str, Any]], Any]] = {}
-# factory settings for dictionary-configured checks
-factory_settings: dict[str, Mapping[str, Any]] = {}
 # definitions of special agents
 special_agent_info: dict[str, SpecialAgentInfoFunction] = {}
 
@@ -1383,10 +1408,11 @@ def load_all_plugins(
 
     errors = agent_based_register.load_all_plugins(raise_errors=cmk.ccc.debug.enabled())
 
-    # LEGACY CHECK PLUGINS
-    filelist = _get_plugin_paths(str(local_checks_dir), checks_dir)
+    with tracer.start_as_current_span("load_legacy_check_plugins"):
+        with tracer.start_as_current_span("discover_legacy_check_plugins"):
+            filelist = _get_plugin_paths(str(local_checks_dir), checks_dir)
 
-    errors.extend(load_checks(get_check_api_context, filelist))
+        errors.extend(load_checks(get_check_api_context, filelist))
 
     return errors
 
@@ -1394,10 +1420,6 @@ def load_all_plugins(
 def _initialize_data_structures() -> None:
     """Initialize some data structures which are populated while loading the checks"""
     check_info.clear()
-    legacy_check_plugin_files.clear()
-    legacy_check_plugin_names.clear()
-    precompile_params.clear()
-    factory_settings.clear()
     special_agent_info.clear()
 
 
@@ -1411,12 +1433,15 @@ def _get_plugin_paths(*dirs: str) -> list[str]:
 # NOTE: The given file names should better be absolute, otherwise
 # we depend on the current working directory, which is a bad idea,
 # especially in tests.
+@tracer.start_as_current_span("load_legacy_checks")
 def load_checks(
     get_check_api_context: GetCheckApiContext,
     filelist: list[str],
 ) -> list[str]:
     loaded_files: set[str] = set()
     ignored_plugins_errors = []
+    sane_check_info = {}
+    legacy_check_plugin_files: dict[str, str] = {}
 
     did_compile = False
     for f in filelist:
@@ -1432,7 +1457,6 @@ def load_checks(
 
             # Make a copy of known plug-in names, we need to track them for nagios config generation
             known_checks = {str(k) for k in check_info}
-            known_agents = {str(k) for k in special_agent_info}
 
             did_compile |= load_precompiled_plugin(f, check_context)
 
@@ -1449,28 +1473,24 @@ def load_checks(
                 raise
             continue
 
-        for plugin_name in {str(k) for k in check_info}.difference(known_checks) | {
-            str(k) for k in special_agent_info
-        }.difference(known_agents):
-            legacy_check_plugin_files[plugin_name] = f
+        defined_checks = ((str(n), p) for n, p in check_info.items() if n not in known_checks)
+        for plugin_name, plugin in defined_checks:
+            if isinstance(plugin, LegacyCheckDefinition):
+                sane_check_info[plugin_name] = plugin
+                legacy_check_plugin_files[plugin.name] = f
+            else:
+                # Now just drop everything we don't like; this is not a supported API anymore.
+                # Users affected by this will see a CRIT in their "Analyse Configuration" page.
+                ignored_plugins_errors.append(
+                    f"Ignoring outdated plug-in in {f!r}: Format no longer supported"
+                    " -- this API is deprecated!"
+                )
 
-    # Now just drop everything we don't like; this is not a supported API anymore.
-    # Users affected by this will see a CRIT in their "Analyse Configuration" page.
-    sane_check_info = {}
-    for k, v in check_info.items():
-        if isinstance(k, str) and isinstance(v, LegacyCheckDefinition):
-            sane_check_info[k] = v
-            continue
-        ignored_plugins_errors.append(
-            f"Ignoring outdated plug-in {k!r}: Format no longer supported"
-            " -- this API is deprecated!"
-        )
-
-    legacy_check_plugin_names.update({CheckPluginName(maincheckify(n)): n for n in sane_check_info})
-
-    section_errors, sections = _make_agent_and_snmp_sections(sane_check_info)
+    section_errors, sections = _make_agent_and_snmp_sections(
+        sane_check_info.values(), legacy_check_plugin_files
+    )
     check_errors, checks = _make_check_plugins(
-        sane_check_info, validate_creation_kwargs=did_compile
+        sane_check_info.values(), legacy_check_plugin_files, validate_creation_kwargs=did_compile
     )
 
     _add_sections_to_register(sections)
@@ -1484,7 +1504,6 @@ def new_check_context(get_check_api_context: GetCheckApiContext) -> CheckContext
     # Add the data structures where the checks register with Checkmk
     context = {
         "check_info": check_info,
-        "precompile_params": precompile_params,
         "special_agent_info": special_agent_info,
     }
     # NOTE: For better separation it would be better to copy the values, but
@@ -1592,7 +1611,7 @@ def _add_sections_to_register(sections: Iterable[SNMPSectionPlugin | AgentSectio
 
 
 def _make_agent_and_snmp_sections(
-    legacy_checks: Mapping[str, LegacyCheckDefinition],
+    legacy_checks: Iterable[LegacyCheckDefinition], tracked_files: Mapping[str, str]
 ) -> tuple[list[str], Sequence[SNMPSectionPlugin | AgentSectionPlugin]]:
     """Here comes the next layer of converting-to-"new"-api.
 
@@ -1602,16 +1621,18 @@ def _make_agent_and_snmp_sections(
     errors = []
     sections = []
 
-    for section_name, check_info_element in legacy_checks.items():
+    for check_info_element in legacy_checks:
         if (parse_function := check_info_element.parse_function) is None:
             continue
+        file = tracked_files[check_info_element.name]
         try:
             sections.append(
                 create_section_plugin_from_legacy(
-                    name=section_name,
+                    name=check_info_element.name,
                     parse_function=parse_function,
                     fetch=check_info_element.fetch,
                     detect=check_info_element.detect,
+                    location=LegacyPluginLocation(file),
                 )
             )
         except (NotImplementedError, KeyError, AssertionError, ValueError) as exc:
@@ -1620,7 +1641,7 @@ def _make_agent_and_snmp_sections(
             #       passed un-parsed data unexpectedly.
             if cmk.ccc.debug.enabled():
                 raise MKGeneralException(exc) from exc
-            errors.append(AUTO_MIGRATION_ERR_MSG % ("section", section_name))
+            errors.append(AUTO_MIGRATION_ERR_MSG % ("section", file))
 
     return errors, sections
 
@@ -1642,24 +1663,28 @@ def _add_checks_to_register(checks: Iterable[CheckPlugin]) -> None:
 
 
 def _make_check_plugins(
-    legacy_checks: Mapping[str, LegacyCheckDefinition], *, validate_creation_kwargs: bool
+    legacy_checks: Iterable[LegacyCheckDefinition],
+    tracked_files: Mapping[str, str],
+    *,
+    validate_creation_kwargs: bool,
 ) -> tuple[list[str], Sequence[CheckPlugin]]:
     """Here comes the next layer of converting-to-"new"-api.
 
-    For the new check-API in cmk/base/api/agent_based, we use the accumulated information
+    For the new check-API we use the accumulated information
     in check_info to create API compliant check plug-ins.
     """
     errors = []
     checks = []
-    for check_plugin_name, check_info_element in sorted(legacy_checks.items()):
+    for check_info_element in legacy_checks:
         # skip pure section declarations:
         if check_info_element.service_name is None:
             continue
+        file = tracked_files[check_info_element.name]
         try:
             checks.append(
                 create_check_plugin_from_legacy(
-                    check_plugin_name,
                     check_info_element,
+                    location=LegacyPluginLocation(file),
                     validate_creation_kwargs=validate_creation_kwargs,
                 )
             )
@@ -1668,7 +1693,7 @@ def _make_check_plugins(
             #       will be silently droppend on most (all?) occasions.
             if cmk.ccc.debug.enabled():
                 raise MKGeneralException(exc) from exc
-            errors.append(AUTO_MIGRATION_ERR_MSG % ("check plug-in", check_plugin_name))
+            errors.append(AUTO_MIGRATION_ERR_MSG % ("check plug-in", file))
 
     return errors, checks
 
@@ -1694,9 +1719,13 @@ def compute_check_parameters(
     params: Mapping[str, object],
     configured_parameters: TimespecificParameters | None = None,
 ) -> TimespecificParameters:
-    """Compute parameters for a check honoring factory settings,
-    default settings of user in main.mk, check_parameters[] and
-    the values code in autochecks (given as parameter params)"""
+    """Compute effective check parameters.
+
+    Honoring (in order of precedence):
+     * the configured parameters
+     * the discovered parameters
+     * the plugins defaults
+    """
     check_plugin = agent_based_register.get_check_plugin(plugin_name)
     if check_plugin is None:  # handle vanished check plug-in
         return TimespecificParameters()
@@ -1722,24 +1751,15 @@ def _get_configured_parameters(
     ruleset_name: RuleSetName | None,
     item: Item,
 ) -> TimespecificParameters:
-    descr = service_description(matcher, host, plugin_name, item)
-
-    # parameters configured via check_parameters
-    extra = [
-        TimespecificParameterSet.from_parameters(p)
-        for p in matcher.service_extra_conf(host, descr, check_parameters)
-    ]
-
     if ruleset_name is None:
-        return TimespecificParameters(extra)
-
+        return TimespecificParameters()
+    descr = service_description(matcher, host, plugin_name, item)
     return TimespecificParameters(
         [
             # parameters configured via checkgroup_parameters
             TimespecificParameterSet.from_parameters(p)
             for p in _get_checkgroup_parameters(matcher, host, str(ruleset_name), item, descr)
         ]
-        + extra
     )
 
 
@@ -1907,6 +1927,19 @@ def make_hosts_config() -> Hosts:
     )
 
 
+def _make_clusters_nodes_maps() -> (
+    tuple[Mapping[HostName, Sequence[HostName]], Mapping[HostName, Sequence[HostName]]]
+):
+    clusters_of_cache: dict[HostName, list[HostName]] = {}
+    nodes_cache: dict[HostName, Sequence[HostName]] = {}
+    for cluster, hosts in clusters.items():
+        clustername = HostName(cluster.split("|", 1)[0])
+        for name in hosts:
+            clusters_of_cache.setdefault(name, []).append(clustername)
+        nodes_cache[clustername] = [HostName(h) for h in hosts]
+    return clusters_of_cache, nodes_cache
+
+
 class ConfigCache:
     def __init__(self) -> None:
         super().__init__()
@@ -1944,17 +1977,19 @@ class ConfigCache:
         self._host_paths: dict[HostName, str] = ConfigCache._get_host_paths(host_paths)
         self._hosttags: dict[HostName, Sequence[TagID]] = {}
 
+        (
+            self._clusters_of_cache,
+            self._nodes_cache,
+        ) = _make_clusters_nodes_maps()
+
         self._autochecks_manager = AutochecksManager()
         self._discovered_labels_cache = DiscoveredLabelsCache(
-            self._autochecks_manager.get_autochecks
+            self._nodes_cache, self._autochecks_manager.get_autochecks
         )
-        self._clusters_of_cache: dict[HostName, list[HostName]] = {}
-        self._nodes_cache: dict[HostName, list[HostName]] = {}
         self._effective_host_cache: dict[tuple[HostName, ServiceName, tuple | None], HostName] = {}
         self._check_mk_check_interval: dict[HostName, float] = {}
 
         self.hosts_config = make_hosts_config()
-        self._setup_clusters_nodes_cache()
 
         tag_to_group_map = ConfigCache.get_tag_to_group_map()
         self._collect_hosttags(tag_to_group_map)
@@ -1970,7 +2005,13 @@ class ConfigCache:
             ),
             clusters_of=self._clusters_of_cache,
             nodes_of=self._nodes_cache,
-            all_configured_hosts=list(set(self.hosts_config)),
+            all_configured_hosts=frozenset(
+                itertools.chain(
+                    self.hosts_config.hosts,
+                    self.hosts_config.clusters,
+                    self.hosts_config.shadow_hosts,
+                )
+            ),
             builtin_host_labels_store=BuiltinHostLabelsStore(),
             debug_matching_stats=ruleset_matching_stats,
         )
@@ -2019,14 +2060,12 @@ class ConfigCache:
         hostname: HostName,
         service_desc: ServiceName,
     ) -> Labels:
-        return {
-            label.name: label.value
-            for label in self._discovered_labels_cache.discovered_labels_of(
-                hostname,
-                service_desc,
-                functools.partial(service_description, self.ruleset_matcher),
-            ).values()
-        }
+        return self._discovered_labels_cache.discovered_labels_of(
+            hostname,
+            service_desc,
+            functools.partial(service_description, self.ruleset_matcher),
+            self.effective_host,
+        )
 
     @staticmethod
     def get_tag_to_group_map() -> Mapping[TagID, TagGroupID]:
@@ -2208,6 +2247,8 @@ class ConfigCache:
                 config_cache=self,
                 skip_ignored=skip_ignored,
                 filter_mode=filter_mode,
+                get_autochecks=self._autochecks_manager.get_autochecks,
+                configure_autochecks=self._service_configurer.configure_autochecks,
             )
         )
 
@@ -2600,10 +2641,6 @@ class ConfigCache:
             ),
         }
 
-    def custom_checks(self, host_name: HostName) -> Sequence[dict[Any, Any]]:
-        """Return the free form configured custom checks without formalization"""
-        return self.ruleset_matcher.get_host_values(host_name, custom_checks)
-
     def active_checks(self, host_name: HostName) -> Sequence[SSCRules]:
         """Returns active checks configured for this host
 
@@ -2631,6 +2668,10 @@ class ConfigCache:
             return self.__active_checks[host_name]
 
         return self.__active_checks.setdefault(host_name, make_active_checks())
+
+    def custom_checks(self, host_name: HostName) -> Sequence[dict[Any, Any]]:
+        """Return the free form configured custom checks without formalization"""
+        return self.ruleset_matcher.get_host_values(host_name, custom_checks)
 
     def custom_check_preview_rows(self, host_name: HostName) -> Sequence[CheckPreviewEntry]:
         custom_checks_ = self.custom_checks(host_name)
@@ -2696,39 +2737,44 @@ class ConfigCache:
         password_store_file: Path,
         ip_address_of: IPLookup,
     ) -> Iterable[tuple[str, SpecialAgentCommandLine]]:
-        for agentname, params_seq in self.special_agents(host_name):
-            for params in params_seq:
-                host_attrs = self.get_host_attributes(host_name, ip_address_of)
-                macros = {
+        host_attrs = self.get_host_attributes(host_name, ip_address_of)
+        special_agent = SpecialAgent(
+            load_special_agents()[1],
+            special_agent_info,
+            host_name,
+            ip_address,
+            get_ssc_host_config(
+                host_name,
+                self.alias(host_name),
+                self.default_address_family(host_name),
+                self.ip_stack_config(host_name),
+                *self.additional_ipaddresses(host_name),
+                {
                     "<IP>": ip_address or "",
                     "<HOST>": host_name,
                     **self.get_host_macros_from_attributes(host_name, host_attrs),
-                }
-                additional_addresses_ipv4, additional_addresses_ipv6 = self.additional_ipaddresses(
-                    host_name
-                )
-                special_agent = SpecialAgent(
-                    load_special_agents()[1],
-                    special_agent_info,
-                    host_name,
-                    ip_address,
-                    get_ssc_host_config(
-                        host_name,
-                        self.alias(host_name),
-                        self.default_address_family(host_name),
-                        self.ip_stack_config(host_name),
-                        additional_addresses_ipv4,
-                        additional_addresses_ipv6,
-                        macros,
-                        ip_address_of,
-                    ),
-                    host_attrs,
-                    http_proxies,
-                    passwords,
-                    password_store_file,
-                )
-                for agent_data in special_agent.iter_special_agent_commands(agentname, params):
-                    yield agentname, agent_data
+                },
+                ip_address_of,
+            ),
+            host_attrs,
+            http_proxies,
+            passwords,
+            password_store_file,
+            ExecutableFinder(
+                cmk.utils.paths.local_special_agents_dir, cmk.utils.paths.special_agents_dir
+            ),
+        )
+        for agentname, params_seq in self.special_agents(host_name):
+            for params in params_seq:
+                try:
+                    for agent_data in special_agent.iter_special_agent_commands(agentname, params):
+                        yield agentname, agent_data
+                except Exception as exc:
+                    if cmk.ccc.debug.enabled():
+                        raise
+                    config_warnings.warn(
+                        f"Config creation for special agent {agentname} failed on {host_name}: {exc}"
+                    )
 
     def collect_passwords(self) -> Mapping[str, str]:
         # consider making the hosts an argument. Sometimes we only need one.
@@ -3291,9 +3337,7 @@ class ConfigCache:
         def _is_usable(data: piggyback.PiggybackMessage) -> bool:
             return (now - data.meta.last_update) <= piggy_config.max_cache_age(data.meta.source)
 
-        return any(
-            map(_is_usable, piggyback.get_piggyback_raw_data(host_name, cmk.utils.paths.omd_root))
-        )
+        return any(map(_is_usable, piggyback.get_messages_for(host_name, cmk.utils.paths.omd_root)))
 
     def _piggybacked_host_files(self, host_name: HostName) -> list[tuple[str | None, str, int]]:
         if rules := self.ruleset_matcher.get_host_values(host_name, piggybacked_host_files):
@@ -3810,13 +3854,6 @@ class ConfigCache:
         check_plugin_name_str = str(check_plugin_name)
 
         return _checktype_ignored_for_host(check_plugin_name_str)
-
-    def _setup_clusters_nodes_cache(self) -> None:
-        for cluster, hosts in clusters.items():
-            clustername = HostName(cluster.split("|", 1)[0])
-            for name in hosts:
-                self._clusters_of_cache.setdefault(name, []).append(clustername)
-            self._nodes_cache[clustername] = hosts
 
     def get_cluster_cache_info(self) -> ClusterCacheInfo:
         return ClusterCacheInfo(clusters_of=self._clusters_of_cache, nodes_of=self._nodes_cache)
@@ -4698,7 +4735,6 @@ def get_ruleset_id_mapping() -> Mapping[int, str]:
         id(cmc_service_rrd_config): "cmc_service_rrd_config",
         id(inv_retention_intervals): "inv_retention_intervals",
         id(periodic_discovery): "periodic_discovery",
-        id(check_parameters): "check_parameters",
         id(custom_checks): "custom_checks",
         id(host_label_rules): "host_label_rules",
         id(bulkwalk_hosts): "bulkwalk_hosts",

@@ -90,7 +90,7 @@ def query_redis(
     except MKTimeout:
         raise
     except Exception as e:
-        raise DataUnavailableException(e)
+        raise DataUnavailableException(e) from e
     finally:
         if query_lock.owned():
             query_lock.release()

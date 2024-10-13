@@ -119,6 +119,7 @@ def check_db2_counters(item, params, parsed):
 
 
 check_info["db2_counters"] = LegacyCheckDefinition(
+    name="db2_counters",
     parse_function=parse_db2_counters,
     service_name="DB2 Counters %s",
     discovery_function=inventory_db2_counters,

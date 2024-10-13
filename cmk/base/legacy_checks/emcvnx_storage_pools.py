@@ -142,6 +142,7 @@ def check_emcvnx_storage_pools(item, params, parsed):
 
 
 check_info["emcvnx_storage_pools"] = LegacyCheckDefinition(
+    name="emcvnx_storage_pools",
     parse_function=parse_emcvnx_storage_pools,
     service_name="Pool %s General",
     discovery_function=inventory_emcvnx_storage_pools,
@@ -234,6 +235,7 @@ def check_emcvnx_storage_pools_tiering(item, params, parsed):
 
 
 check_info["emcvnx_storage_pools.tiering"] = LegacyCheckDefinition(
+    name="emcvnx_storage_pools_tiering",
     service_name="Pool %s Tiering Status",
     sections=["emcvnx_storage_pools"],
     discovery_function=inventory_emcvnx_storage_pools_tiering,
@@ -323,6 +325,7 @@ def check_emcvnx_storage_pools_tieringtypes(item, params, parsed):
 
 
 check_info["emcvnx_storage_pools.tieringtypes"] = LegacyCheckDefinition(
+    name="emcvnx_storage_pools_tieringtypes",
     service_name="Pool %s tiering",
     sections=["emcvnx_storage_pools"],
     discovery_function=inventory_emcvnx_storage_pools_tieringtypes,
@@ -382,6 +385,7 @@ def check_emcvnx_storage_pools_deduplication(item, _no_params, parsed):
 
 
 check_info["emcvnx_storage_pools.deduplication"] = LegacyCheckDefinition(
+    name="emcvnx_storage_pools_deduplication",
     service_name="Pool %s Deduplication",
     sections=["emcvnx_storage_pools"],
     discovery_function=inventory_emcvnx_storage_pools,

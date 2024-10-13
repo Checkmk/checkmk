@@ -4,9 +4,16 @@ load("@cmk_agent_based//:requirements.bzl", "requirement")
 load("@omd_packages//omd/packages/rules:package_wheel.bzl", "package_wheel")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("@rules_python//python:pip.bzl", "compile_pip_requirements")
+load(":linters.bzl", "ruff_test")
+
+exports_files(["pyproject.toml"])
 
 compile_pip_requirements(
     name = "requirements",
+    extra_args = [
+        "--no-strip-extras",  # reconsider this? (https://github.com/jazzband/pip-tools/issues/1613)
+        "--quiet",
+    ],
     requirements_in = "pyproject.toml",
     requirements_txt = "requirements_lock.txt",  # shall exist, emtpy is okay
 )
@@ -35,9 +42,19 @@ py_library(
         "cmk/agent_based/v2/clusterize.py",
         "cmk/agent_based/v2/render.py",
     ],
-    visibility = ["//visibility:public"],
+    imports = ["."],
+    visibility = ["//cmk:__pkg__"],
     deps = [
         requirement("pydantic"),
+    ],
+)
+
+ruff_test(
+    name = "ruff_lint",
+    size = "small",
+    srcs = [
+        ":cmk-agent-based",
+        ":unit",
     ],
 )
 
@@ -47,12 +64,10 @@ py_pytest_main(
 
 py_test(
     name = "unit",
+    size = "small",
     srcs = glob(["tests/**/*.py"]) + [":__test__.py"],
-    # TODO: Duplicated from pyproject.toml
-    args = [
-        "--import-mode=importlib",
-        "--doctest-modules",
-    ],
+    args = ["--config-file=$(location pyproject.toml)"],
+    data = ["pyproject.toml"],
     imports = ["."],
     main = ":__test__.py",
     deps = [
@@ -73,9 +88,11 @@ py_wheel(
     strip_path_prefixes = ["packages/cmk-agent-based"],
     # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
-    deps = [
-        ":cmk-agent-based",
-    ],
+    deps = [":cmk-agent-based"],
 )
 
-package_wheel(wheel_target = "wheel")
+package_wheel(
+    name = "pkg_tar",
+    visibility = ["//visibility:public"],
+    whl = "wheel",
+)

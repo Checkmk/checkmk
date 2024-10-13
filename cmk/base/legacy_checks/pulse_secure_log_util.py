@@ -39,6 +39,7 @@ def check_pulse_secure_log_util(_no_item, _no_params, parsed):
 
 
 check_info["pulse_secure_log_util"] = LegacyCheckDefinition(
+    name="pulse_secure_log_util",
     detect=pulse_secure.DETECT_PULSE_SECURE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12532",

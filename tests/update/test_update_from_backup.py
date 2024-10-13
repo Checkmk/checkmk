@@ -30,14 +30,11 @@ def _create_site(
 ) -> Iterator[Site]:
     try:
         yield from site_factory.get_test_site(site_name, *args, **kwargs)
-    except Exception as excp:
-        if f"Version {site_factory.version.version} could not be installed" in str(excp):
-            pytest.skip(
-                f"Base-version '{site_factory.version.version}' not available in "
-                f"distro '{os.environ.get("DISTRO")}'."
-            )
-        else:
-            raise excp
+    except FileNotFoundError:
+        pytest.skip(
+            f"Base-version '{site_factory.version.version}' is not available for "
+            f"distro '{os.environ.get("DISTRO")}'."
+        )
 
 
 @pytest.fixture(name="site_factory", scope="function")

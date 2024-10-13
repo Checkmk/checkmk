@@ -2,7 +2,6 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 import pytest
 from pytest_mock import MockerFixture
 
@@ -11,6 +10,8 @@ from tests.testlib.rest_api_client import ClientRegistry
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 from cmk.automations.results import DeleteHostsResult
+
+from cmk.gui.watolib import activate_changes
 
 
 def test_wait_for_completion_invalid_activation_id(clients: ClientRegistry) -> None:
@@ -52,7 +53,12 @@ def test_activate_changes(
     clients.HostConfig.create(host_name="foobar", folder="/")
 
     monkeypatch.setattr(
-        "cmk.gui.watolib.activate_changes.ActivateChangesManager._distribute_piggyback_config",
+        "cmk.gui.watolib.activate_changes.distribute_piggyback_hub_configs",
+        lambda *args, **kwargs: None,
+    )
+    monkeypatch.setattr(
+        activate_changes,
+        activate_changes._restart_rabbitmq_when_changed.__name__,  # pylint: disable=protected-access
         lambda *args, **kwargs: None,
     )
 
@@ -129,13 +135,17 @@ def test_list_activate_changes_star_etag(
         "cmk.gui.watolib.activate_changes.execute_activation_cleanup_background_job"
     )
     distribute_piggyback_config = mocker.patch(
-        "cmk.gui.watolib.activate_changes.ActivateChangesManager._distribute_piggyback_config"
+        "cmk.gui.watolib.activate_changes.distribute_piggyback_hub_configs"
+    )
+    restart_rabbitmq_when_changed = mocker.patch(
+        "cmk.gui.watolib.activate_changes._restart_rabbitmq_when_changed"
     )
     with mock_livestatus(expect_status_query=True):
         clients.ActivateChanges.activate_changes(etag="star")
     activation_start.assert_called_once()
     cleanup_start.assert_called_once()
     distribute_piggyback_config.assert_called_once()
+    restart_rabbitmq_when_changed.assert_called_once()
 
 
 def test_list_activate_changes_valid_etag(
@@ -153,10 +163,14 @@ def test_list_activate_changes_valid_etag(
         "cmk.gui.watolib.activate_changes.execute_activation_cleanup_background_job"
     )
     distribute_piggyback_config = mocker.patch(
-        "cmk.gui.watolib.activate_changes.ActivateChangesManager._distribute_piggyback_config"
+        "cmk.gui.watolib.activate_changes.distribute_piggyback_hub_configs"
+    )
+    restart_rabbitmq_when_changed = mocker.patch(
+        "cmk.gui.watolib.activate_changes._restart_rabbitmq_when_changed"
     )
     with mock_livestatus(expect_status_query=True):
         clients.ActivateChanges.activate_changes(etag="valid_etag")
     activation_start.assert_called_once()
     cleanup_start.assert_called_once()
     distribute_piggyback_config.assert_called_once()
+    restart_rabbitmq_when_changed.assert_called_once()

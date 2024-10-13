@@ -46,6 +46,7 @@ def parse_ucd_disk(string_table: StringTable) -> StringTable:
 
 
 check_info["ucd_disk"] = LegacyCheckDefinition(
+    name="ucd_disk",
     parse_function=parse_ucd_disk,
     detect=ucd_hr_detection.PREFER_HR_ELSE_UCD,
     fetch=SNMPTree(

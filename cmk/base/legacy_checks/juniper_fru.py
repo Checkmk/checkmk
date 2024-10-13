@@ -123,6 +123,7 @@ def discover_juniper_fru(info):
 
 
 check_info["juniper_fru"] = LegacyCheckDefinition(
+    name="juniper_fru",
     detect=DETECT_JUNIPER,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2636.3.1.15.1",
@@ -150,6 +151,7 @@ def discover_juniper_fru_fan(info):
 #   '----------------------------------------------------------------------'
 
 check_info["juniper_fru.fan"] = LegacyCheckDefinition(
+    name="juniper_fru_fan",
     service_name="Fan FRU %s",
     sections=["juniper_fru"],
     discovery_function=discover_juniper_fru_fan,

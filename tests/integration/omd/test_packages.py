@@ -22,7 +22,7 @@ class MonitoringPlugin:
     binary_name: str
     path: str = "lib/nagios/plugins"
     cmd_line_option: str = "-V"
-    expected: str = "v2.3.3"
+    expected: str = "v2.4.0"
 
 
 @dataclass(frozen=True)
@@ -61,7 +61,6 @@ MONITORING_PLUGINS: Sequence[Plugin] = (
     MonitoringPlugin("check_icmp"),
     MonitoringPlugin("check_ide_smart"),
     MonitoringPlugin("check_imap"),
-    MonitoringPlugin("check_ircd"),
     MonitoringPlugin("check_jabber"),
     MonitoringPlugin("check_ldap"),
     MonitoringPlugin("check_ldaps"),

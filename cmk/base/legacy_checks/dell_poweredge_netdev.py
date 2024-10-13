@@ -25,6 +25,7 @@ def parse_dell_poweredge_netdev(string_table: StringTable) -> StringTable:
 
 
 check_info["dell_poweredge_netdev"] = LegacyCheckDefinition(
+    name="dell_poweredge_netdev",
     parse_function=parse_dell_poweredge_netdev,
     detect=DETECT_IDRAC_POWEREDGE,
     fetch=SNMPTree(

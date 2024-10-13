@@ -52,16 +52,17 @@ install_packages() {
 install_basic_tools() {
     print_green "Installing common basic tools ..."
     local PACKAGES_TO_INSTALL=(
-        "binutils"    # "strip" required to cleanup during strip_binaries
-        "curl"        # curl is used to download artifacts from Nexus
-        "doxygen"     # to be able to create docs in the unlikely event
-        "gawk"        # TBC
-        "git"         # git is used by install-[bazel, cmake, iwyu, patchelf, protobuf-cpp].sh
-        "gnupg"       # "apt-key" used by install-docker
-        "lsb-release" # lsb is used by install-[clang, docker, packer, nodejs].sh
-        "make"        # don't forget your towel when you're taveling :)
-        "sudo"        # some make calls require sudo
-        "wget"        # wget is used by install-[clang, packer, protobuf-cpp].sh
+        "binutils"       # "strip" required to cleanup during strip_binaries
+        "curl"           # curl is used to download artifacts from Nexus
+        "doxygen"        # to be able to create docs in the unlikely event
+        "gawk"           # TBC
+        "git"            # git is used by install-[bazel, cmake, iwyu, patchelf, protobuf-cpp].sh
+        "gnupg"          # "apt-key" used by install-docker
+        "lsb-release"    # lsb is used by install-[clang, docker, packer, nodejs].sh
+        "make"           # don't forget your towel when you're taveling :)
+        "sudo"           # some make calls require sudo
+        "wget"           # wget is used by install-[clang, packer, protobuf-cpp].sh
+        "libglib2.0-dev" # required by packages/glib and therfore transitive by python unit tests
     )
     install_packages "${PACKAGES_TO_INSTALL[@]}"
     print_green "Common basic tool installation done"
@@ -372,6 +373,21 @@ install_for_localize_dev() {
     print_green "Installation for Localization development done"
 }
 
+install_for_bazel() {
+    # install Bazel for package building
+    print_green "Installing Bazel/Bazelisk ..."
+
+    export TARGET_DIR="${INSTALL_PATH}"
+    "${SCRIPT_DIR}"/install-bazel.sh
+
+    install_packages golang-go
+
+    # install_packages golang-go
+    "${SCRIPT_DIR}"/install-buildifier.sh
+
+    print_green "Installation of Bazel/Bazelisk done"
+}
+
 POSITIONAL_ARGS=()
 PROFILE_ARGS=()
 INSTALL_PATH=/opt
@@ -561,17 +577,8 @@ fi
 
 if [[ $REQUIRES_NEXUS -gt 0 || $INSTALL_FOR_BAZEL -eq 1 ]]; then
     # only localize or web is installed, which don't require nexus interactions
-    # install Bazel for package building
-    print_green "Installing Bazel/Bazelisk ..."
-
-    export TARGET_DIR="${INSTALL_PATH}"
-    "${SCRIPT_DIR}"/install-bazel.sh
-
-    print_green "Installation of Bazel/Bazelisk done"
+    install_for_bazel
 fi
-
-# install_packages golang-go
-# "${SCRIPT_DIR}"/install-buildifier.sh
 
 perform_cleanup
 

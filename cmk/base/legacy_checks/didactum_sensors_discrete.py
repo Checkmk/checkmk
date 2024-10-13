@@ -48,6 +48,7 @@ def check_didactum_sensors_discrete_dry(item, params, parsed):
 
 
 check_info["didactum_sensors_discrete"] = LegacyCheckDefinition(
+    name="didactum_sensors_discrete",
     detect=DETECT_DIDACTUM,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.46501.5.1.1",

@@ -45,6 +45,7 @@ def parse_stulz_pump(string_table: Sequence[StringTable]) -> Sequence[StringTabl
 
 
 check_info["stulz_pump"] = LegacyCheckDefinition(
+    name="stulz_pump",
     parse_function=parse_stulz_pump,
     detect=DETECT_STULZ,
     fetch=[

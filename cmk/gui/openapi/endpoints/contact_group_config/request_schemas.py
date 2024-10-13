@@ -21,7 +21,7 @@ class UpdateContactGroupAttributes(BaseSchema):
     inventory_paths = fields.Nested(
         InventoryPaths,
         required=False,
-        description="Permitted HW/SW inventory paths.",
+        description="Permitted HW/SW Inventory paths.",
         example={"type": "allow_all"},
     )
     customer = gui_fields.customer_field(
@@ -50,7 +50,7 @@ class InputContactGroup(BaseSchema):
     inventory_paths = fields.Nested(
         InventoryPaths,
         load_default=lambda: {"type": "allow_all"},
-        description="Permitted HW/SW inventory paths.",
+        description="Permitted HW/SW Inventory paths.",
         example={"type": "allow_all"},
     )
     customer = gui_fields.customer_field(

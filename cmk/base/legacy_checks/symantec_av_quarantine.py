@@ -29,6 +29,7 @@ def parse_symantec_av_quarantine(string_table: StringTable) -> StringTable:
 
 
 check_info["symantec_av_quarantine"] = LegacyCheckDefinition(
+    name="symantec_av_quarantine",
     parse_function=parse_symantec_av_quarantine,
     service_name="AV Quarantine",
     discovery_function=inventory_symantec_av_quarantine,

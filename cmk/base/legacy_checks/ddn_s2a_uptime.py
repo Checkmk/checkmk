@@ -31,6 +31,7 @@ def check_ddn_s2a_uptime(_no_item, params, parsed):
 
 
 check_info["ddn_s2a_uptime"] = LegacyCheckDefinition(
+    name="ddn_s2a_uptime",
     parse_function=parse_ddn_s2a_uptime,
     service_name="DDN S2A Power-On Time",  # We don't use "Uptime" as a service name here,
     # because this value is different from the uptime value

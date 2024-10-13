@@ -36,6 +36,7 @@ def parse_bvip_util(string_table: StringTable) -> StringTable:
 
 
 check_info["bvip_util"] = LegacyCheckDefinition(
+    name="bvip_util",
     parse_function=parse_bvip_util,
     detect=DETECT_BVIP,
     fetch=SNMPTree(

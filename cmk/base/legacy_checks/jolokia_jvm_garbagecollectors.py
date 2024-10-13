@@ -74,6 +74,7 @@ def check_jolokia_jvm_garbagecollectors_testable(item, params, parsed, value_sto
 
 
 check_info["jolokia_jvm_garbagecollectors"] = LegacyCheckDefinition(
+    name="jolokia_jvm_garbagecollectors",
     parse_function=parse_jolokia_jvm_garbagecollectors,
     service_name="JVM %s",
     discovery_function=discover_jolokia_jvm_garbagecollectors,

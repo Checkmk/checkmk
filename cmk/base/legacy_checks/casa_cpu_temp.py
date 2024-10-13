@@ -51,6 +51,7 @@ def check_casa_cpu_temp(item, params, parsed):
 
 
 check_info["casa_cpu_temp"] = LegacyCheckDefinition(
+    name="casa_cpu_temp",
     detect=DETECT_CASA,
     fetch=[
         SNMPTree(

@@ -136,6 +136,7 @@ def check_checkpoint_vsx(item, _no_params, parsed):
 
 
 check_info["checkpoint_vsx"] = LegacyCheckDefinition(
+    name="checkpoint_vsx",
     detect=DETECT_NEVER,
     fetch=[
         SNMPTree(
@@ -196,6 +197,7 @@ def check_checkpoint_vsx_connections(item, params, parsed):
 
 
 check_info["checkpoint_vsx.connections"] = LegacyCheckDefinition(
+    name="checkpoint_vsx_connections",
     service_name="VS %s Connections",
     sections=["checkpoint_vsx"],
     discovery_function=discover_key("conn_num"),
@@ -251,6 +253,7 @@ def check_checkpoint_vsx_packets(item, params, parsed):
 
 
 check_info["checkpoint_vsx.packets"] = LegacyCheckDefinition(
+    name="checkpoint_vsx_packets",
     service_name="VS %s Packets",
     sections=["checkpoint_vsx"],
     discovery_function=discover_key("packets"),
@@ -298,6 +301,7 @@ def check_checkpoint_vsx_traffic(item, params, parsed):
 
 
 check_info["checkpoint_vsx.traffic"] = LegacyCheckDefinition(
+    name="checkpoint_vsx_traffic",
     service_name="VS %s Traffic",
     sections=["checkpoint_vsx"],
     discovery_function=discover_key("bytes_accepted"),
@@ -352,6 +356,7 @@ def check_checkpoint_vsx_status(item, _no_params, parsed):
 
 
 check_info["checkpoint_vsx.status"] = LegacyCheckDefinition(
+    name="checkpoint_vsx_status",
     service_name="VS %s Status",
     sections=["checkpoint_vsx"],
     discovery_function=discover_key("vs_ha_status"),

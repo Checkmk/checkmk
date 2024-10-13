@@ -65,6 +65,7 @@ def parse_oracle_logswitches(string_table: StringTable) -> StringTable:
 
 
 check_info["oracle_logswitches"] = LegacyCheckDefinition(
+    name="oracle_logswitches",
     parse_function=parse_oracle_logswitches,
     service_name="ORA %s Logswitches",
     discovery_function=inventory_oracle_logswitches,

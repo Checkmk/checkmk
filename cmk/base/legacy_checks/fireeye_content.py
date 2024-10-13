@@ -71,6 +71,7 @@ def check_fireeye_content(_no_item, params, parsed):
 
 
 check_info["fireeye_content"] = LegacyCheckDefinition(
+    name="fireeye_content",
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.11.5.1",

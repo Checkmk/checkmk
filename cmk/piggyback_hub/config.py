@@ -5,65 +5,64 @@
 
 import logging
 import os
-import tempfile
-from collections.abc import Sequence
-from dataclasses import dataclass
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Callable, Self
+from threading import Event
+from typing import Callable
 
 from pydantic import BaseModel
 
-from cmk.ccc import store
-
 from cmk.utils.hostaddress import HostName
 
-from cmk.messaging import Channel
+from cmk.messaging import Channel, Connection, DeliveryTag, QueueName, RoutingKey
 
-from .paths import create_paths
+from .paths import create_paths, PiggybackHubPaths
+from .utils import APP_NAME
 
+CONFIG_ROUTE = RoutingKey("config")
 
-@dataclass(frozen=True)
-class Target:
-    host_name: HostName
-    site_id: str
+CONFIG_QUEUE = QueueName("config")
 
 
 class PiggybackHubConfig(BaseModel):
-    targets: Sequence[Target] = []
-
-    def serialize(self) -> str:
-        return self.model_dump_json()
-
-    @classmethod
-    def deserialize(cls, raw: str) -> Self:
-        return cls.model_validate_json(raw)
+    targets: Mapping[HostName, str] = {}
 
 
 def save_config_on_message(
-    logger: logging.Logger, omd_root: Path
-) -> Callable[[Channel[PiggybackHubConfig], PiggybackHubConfig], None]:
-    def _on_message(_channel: Channel[PiggybackHubConfig], received: PiggybackHubConfig) -> None:
+    logger: logging.Logger, omd_root: Path, reload_config: Event
+) -> Callable[[Channel[PiggybackHubConfig], DeliveryTag, PiggybackHubConfig], None]:
+    def _on_message(
+        channel: Channel[PiggybackHubConfig],
+        delivery_tag: DeliveryTag,
+        received: PiggybackHubConfig,
+    ) -> None:
         logger.debug("New configuration received")
-        config_path = create_paths(omd_root).config
-        config_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
 
-        with tempfile.NamedTemporaryFile(
-            "w", dir=str(config_path.parent), prefix=f".{config_path.name}.new", delete=False
-        ) as tmp:
-            tmp_path = tmp.name
-            tmp.write(received.serialize())
+        save_config(create_paths(omd_root), received)
 
-        os.rename(tmp_path, str(config_path))
+        reload_config.set()
+
+        channel.acknowledge(delivery_tag)
 
     return _on_message
 
 
-def save_config(root_path: Path, config: PiggybackHubConfig) -> None:
-    store.save_text_to_file(create_paths(root_path).config, config.serialize())
+def save_config(paths: PiggybackHubPaths, config: PiggybackHubConfig) -> None:
+    paths.config.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
+    tmp_path = paths.config.with_suffix(f".{os.getpid()}.tmp")
+    tmp_path.write_text(f"{config.model_dump_json()}\n")
+    tmp_path.rename(paths.config)
 
 
-def load_config(root_path: Path) -> PiggybackHubConfig:
-    config_path = create_paths(root_path).config
-    if not config_path.exists():
+def load_config(paths: PiggybackHubPaths) -> PiggybackHubConfig:
+    try:
+        return PiggybackHubConfig.model_validate_json(paths.config.read_text())
+    except FileNotFoundError:
         return PiggybackHubConfig()
-    return PiggybackHubConfig.deserialize(store.load_text_from_file(config_path))
+
+
+def distribute_config(configs: Mapping[str, PiggybackHubConfig], omd_root: Path) -> None:
+    for site_id, config in configs.items():
+        with Connection(APP_NAME, omd_root) as conn:
+            channel = conn.channel(PiggybackHubConfig)
+            channel.publish_for_site(site_id, config, routing=CONFIG_ROUTE)

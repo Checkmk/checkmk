@@ -35,6 +35,7 @@ def parse_sansymphony_serverstatus(string_table: StringTable) -> StringTable:
 
 
 check_info["sansymphony_serverstatus"] = LegacyCheckDefinition(
+    name="sansymphony_serverstatus",
     parse_function=parse_sansymphony_serverstatus,
     service_name="sansymphony Serverstatus",
     discovery_function=inventory_sansymphony_serverstatus,

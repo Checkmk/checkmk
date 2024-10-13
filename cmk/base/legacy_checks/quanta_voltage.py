@@ -57,6 +57,7 @@ def discover_quanta_voltage(section):
 
 
 check_info["quanta_voltage"] = LegacyCheckDefinition(
+    name="quanta_voltage",
     detect=DETECT_QUANTA,
     fetch=[
         SNMPTree(

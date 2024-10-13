@@ -273,12 +273,6 @@ def get_omd_distro_name() -> str:
     rh = Path("/etc/redhat-release")
     if rh.exists():
         content = rh.read_text()
-        if content.startswith("CentOS release 6"):
-            return "el6"
-        if content.startswith("CentOS Linux release 7"):
-            return "el7"
-        if content.startswith("CentOS Linux release 8"):
-            return "el8"
         if content.startswith("AlmaLinux release 9"):
             return "el9"
         raise NotImplementedError()
@@ -424,11 +418,12 @@ class ABCPackageManager(abc.ABC):
         if os.geteuid() != 0:
             cmd.insert(0, "sudo")
 
-        completed_process = subprocess.run(
-            cmd, shell=False, close_fds=True, encoding="utf-8", check=False
-        )
-        if completed_process.returncode >> 8 != 0:
-            raise Exception("Failed to install package")
+        try:
+            subprocess.run(cmd, shell=False, close_fds=True, encoding="utf-8", check=True)
+        except subprocess.CalledProcessError as excp:
+            if excp.returncode >> 8 != 0:
+                excp.add_note("Failed to install package!")
+                raise excp
 
 
 def sha256_file(path: Path) -> str:

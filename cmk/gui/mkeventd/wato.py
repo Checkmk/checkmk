@@ -143,6 +143,7 @@ from cmk.gui.watolib.config_domain_name import (
     SampleConfigGeneratorRegistry,
 )
 from cmk.gui.watolib.config_domains import ConfigDomainGUI, ConfigDomainOMD
+from cmk.gui.watolib.config_sync import ReplicationPath, ReplicationPathRegistry
 from cmk.gui.watolib.config_variable_groups import (
     ConfigVariableGroupNotifications,
     ConfigVariableGroupSiteManagement,
@@ -194,6 +195,7 @@ def register(
     rulespec_registry: RulespecRegistry,
     match_item_generator_registry: MatchItemGeneratorRegistry,
     notification_parameter_registry: NotificationParameterRegistry,
+    replication_path_registry: ReplicationPathRegistry,
 ) -> None:
     sample_config_generator_registry.register(SampleConfigGeneratorECSampleRulepack)
 
@@ -266,6 +268,21 @@ def register(
     notification_parameter_registry.register(NotificationParameterMKEventDaemon)
 
     hooks.register_builtin("pre-activate-changes", mkeventd_update_notification_configuration)
+
+    replication_path_registry.register(
+        ReplicationPath(
+            "dir", "mkeventd", str(ec.rule_pack_dir().relative_to(cmk.utils.paths.omd_root)), []
+        )
+    )
+
+    replication_path_registry.register(
+        ReplicationPath(
+            "dir",
+            "mkeventd_mkp",
+            str(ec.mkp_rule_pack_dir().relative_to(cmk.utils.paths.omd_root)),
+            [],
+        )
+    )
 
 
 def _compiled_mibs_dir() -> Path:

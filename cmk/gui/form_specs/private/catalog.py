@@ -8,11 +8,13 @@ from typing import Mapping
 from cmk.rulesets.v1 import form_specs
 from cmk.rulesets.v1.form_specs import Dictionary
 
+from .dictionary_extended import DictionaryExtended
+
 
 @dataclass(frozen=True, kw_only=True)
 class Topic:
     ident: str
-    dictionary: Dictionary
+    dictionary: Dictionary | DictionaryExtended
 
 
 @dataclass(frozen=True, kw_only=True)

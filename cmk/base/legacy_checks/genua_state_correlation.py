@@ -82,6 +82,7 @@ def parse_genua_state_correlation(string_table: Sequence[StringTable]) -> Sequen
 
 
 check_info["genua_state_correlation"] = LegacyCheckDefinition(
+    name="genua_state_correlation",
     parse_function=parse_genua_state_correlation,
     detect=DETECT_GENUA,
     fetch=[

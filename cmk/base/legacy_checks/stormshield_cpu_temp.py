@@ -29,6 +29,7 @@ def parse_stormshield_cpu_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["stormshield_cpu_temp"] = LegacyCheckDefinition(
+    name="stormshield_cpu_temp",
     parse_function=parse_stormshield_cpu_temp,
     detect=DETECT_STORMSHIELD,
     fetch=SNMPTree(

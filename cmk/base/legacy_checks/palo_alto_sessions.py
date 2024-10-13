@@ -64,6 +64,7 @@ def parse_palo_alto_sessions(string_table: StringTable) -> StringTable | None:
 
 
 check_info["palo_alto_sessions"] = LegacyCheckDefinition(
+    name="palo_alto_sessions",
     parse_function=parse_palo_alto_sessions,
     detect=DETECT_PALO_ALTO,
     fetch=SNMPTree(

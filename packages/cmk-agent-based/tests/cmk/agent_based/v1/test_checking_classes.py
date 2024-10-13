@@ -39,7 +39,7 @@ def test_service_invalid(item: object, parameters: object, labels: object) -> No
 
 def test_service_kwargs_only() -> None:
     with pytest.raises(TypeError):
-        _ = Service(None)  # type: ignore[misc] # pylint: disable=too-many-function-args
+        _ = Service(None)  # type: ignore[misc]
 
 
 def test_service_features() -> None:
@@ -121,7 +121,7 @@ def test_best_state(
 
 def test_metric_kwarg() -> None:
     with pytest.raises(TypeError):
-        _ = Metric("universe", 42, (23, 23))  # type: ignore[misc] # pylint: disable=too-many-function-args
+        _ = Metric("universe", 42, (23, 23))  # type: ignore[misc]
 
 
 @pytest.mark.parametrize(
@@ -148,7 +148,7 @@ def test_metric() -> None:
     assert metric1.levels == (2.4, 3.0)
     assert metric1.boundaries == (0.0, None)
 
-    assert metric1 == metric1  # pylint: disable=comparison-with-itself # noqa: PLR0124
+    assert metric1 == metric1  # noqa: PLR0124
     assert metric1 != metric2
 
 

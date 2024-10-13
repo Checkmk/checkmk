@@ -56,6 +56,7 @@ def parse_stormshield_cluster(string_table: StringTable) -> StringTable | None:
 
 
 check_info["stormshield_cluster"] = LegacyCheckDefinition(
+    name="stormshield_cluster",
     parse_function=parse_stormshield_cluster,
     detect=all_of(
         any_of(

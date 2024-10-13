@@ -231,21 +231,42 @@ def get_bulk_notification_subject(contexts: list[dict[str, str]], hosts: Iterabl
 
 #################################################################################################
 # REST
-def retrieve_from_passwordstore(parameter: str) -> str:
-    values = parameter.split()
-
-    if len(values) == 2:
-        if values[0] == "store":
-            value = cmk.utils.password_store.extract(values[1])
+def retrieve_from_passwordstore(parameter: str | list[str]) -> str:
+    if isinstance(parameter, list):
+        if "explicit_password" in parameter:
+            value: str | None = parameter[-1]
+        else:
+            value = cmk.utils.password_store.extract(parameter[-2])
             if value is None:
                 sys.stderr.write("Unable to retrieve password from passwordstore")
                 sys.exit(2)
-        else:
-            value = values[1]
     else:
-        value = values[0]
+        # old valuespec style
+        values = parameter.split()
 
+        if len(values) == 2:
+            if values[0] == "store":
+                value = cmk.utils.password_store.extract(values[1])
+                if value is None:
+                    sys.stderr.write("Unable to retrieve password from passwordstore")
+                    sys.exit(2)
+            else:
+                value = values[1]
+        else:
+            value = values[0]
+
+    assert value is not None
     return value
+
+
+def _get_password_from_env_or_context(key: str, context: dict[str, str] | None = None) -> str:
+    """
+    Since 2.4 the passwords are stored in FormSpec format, this leads to
+    multiple keys in the notification context
+    """
+    source = context if context else os.environ
+    password_parameter_list = [source[k] for k in source if k.startswith(key)]
+    return retrieve_from_passwordstore(password_parameter_list)
 
 
 def post_request(

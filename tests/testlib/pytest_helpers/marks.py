@@ -27,6 +27,11 @@ skip_if_raw_edition = pytest.mark.skipif(
     reason=pytest_helpers.is_raw_edition.reason,
 )
 
+skip_if_enterprise_edition = pytest.mark.skipif(
+    pytest_helpers.is_enterprise_edition.condition,
+    reason=pytest_helpers.is_enterprise_edition.reason,
+)
+
 skip_if_saas_edition = pytest.mark.skipif(
     pytest_helpers.is_saas_edition.condition,
     reason=pytest_helpers.is_saas_edition.reason,

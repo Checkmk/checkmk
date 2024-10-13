@@ -31,34 +31,6 @@ def _item_spec() -> TextInput:
     )
 
 
-def _vs_voltage() -> Dictionary:
-    return Dictionary(
-        title=_("Voltage levels"),
-        elements=[
-            (
-                "levels",
-                SimpleLevels(
-                    title=_("Voltage Levels"),
-                    unit="V",
-                ),
-            )
-        ],
-        optional_keys=[],
-    )
-
-
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="etherbox_voltage",
-        group=RulespecGroupCheckParametersApplications,
-        match_type="dict",
-        parameter_valuespec=_vs_voltage,
-        title=lambda: _("Etherbox voltage"),
-        item_spec=_item_spec,
-    )
-)
-
-
 def _vs_smoke() -> Dictionary:
     return Dictionary(
         title=_("Smoke monitoring"),

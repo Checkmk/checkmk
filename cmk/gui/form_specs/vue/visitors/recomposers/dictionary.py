@@ -22,6 +22,7 @@ def recompose(form_spec: FormSpec[Any]) -> DictionaryExtended:
     return DictionaryExtended(
         title=form_spec.title,
         help_text=form_spec.help_text,
+        custom_validate=form_spec.custom_validate,
         elements=form_spec.elements,
         no_elements_text=form_spec.no_elements_text,
         ignored_elements=form_spec.ignored_elements,

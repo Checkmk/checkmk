@@ -64,6 +64,7 @@ def parse_db2_mem(string_table: StringTable) -> StringTable:
 
 
 check_info["db2_mem"] = LegacyCheckDefinition(
+    name="db2_mem",
     parse_function=parse_db2_mem,
     service_name="Memory %s",
     discovery_function=inventory_db2_mem,

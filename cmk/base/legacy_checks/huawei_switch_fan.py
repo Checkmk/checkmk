@@ -51,6 +51,7 @@ def check_huawei_switch_fan(item, params, parsed):
 
 
 check_info["huawei_switch_fan"] = LegacyCheckDefinition(
+    name="huawei_switch_fan",
     detect=DETECT_HUAWEI_SWITCH,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2011.5.25.31.1.1.10.1",

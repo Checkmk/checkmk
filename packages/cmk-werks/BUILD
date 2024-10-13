@@ -4,8 +4,14 @@ load("@omd_packages//omd/packages/rules:package_wheel.bzl", "package_wheel")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("@rules_python//python:pip.bzl", "compile_pip_requirements")
 
+exports_files(["pyproject.toml"])
+
 compile_pip_requirements(
     name = "requirements",
+    extra_args = [
+        "--no-strip-extras",  # reconsider this? (https://github.com/jazzband/pip-tools/issues/1613)
+        "--quiet",
+    ],
     requirements_in = "pyproject.toml",
     requirements_txt = "requirements_lock.txt",  # shall exist, emtpy is okay
 )
@@ -15,6 +21,7 @@ py_library(
     srcs = [
         "cmk/werks/__init__.py",
         "cmk/werks/cli.py",
+        "cmk/werks/collect.py",
         "cmk/werks/config.py",
         "cmk/werks/convert.py",
         "cmk/werks/error.py",
@@ -25,7 +32,14 @@ py_library(
         "cmk/werks/parse.py",
         "cmk/werks/validate.py",
     ],
-    visibility = ["//visibility:public"],
+    imports = ["."],
+    visibility = ["//cmk:__pkg__"],
+    deps = [
+        requirement("markdown"),
+        requirement("lxml"),
+        requirement("pydantic"),
+        requirement("GitPython"),
+    ],
 )
 
 py_pytest_main(
@@ -34,21 +48,16 @@ py_pytest_main(
 
 py_test(
     name = "unit",
+    size = "small",
     srcs = glob(["tests/**/*.py"]) + [":__test__.py"],
-    # TODO: Duplicated from pyproject.toml
-    args = [
-        "--import-mode=importlib",
-        "--doctest-modules",
-    ],
+    args = ["--config-file=$(location pyproject.toml)"],
+    data = ["pyproject.toml"],
     imports = ["."],
     main = ":__test__.py",
     deps = [
         ":__test__",
         ":cmk-werks",
         requirement("pytest"),
-        requirement("markdown"),
-        requirement("lxml"),
-        requirement("pydantic"),
     ],
 )
 
@@ -63,4 +72,8 @@ py_wheel(
     ],
 )
 
-package_wheel(wheel_target = "wheel")
+package_wheel(
+    name = "pkg_tar",
+    visibility = ["//visibility:public"],
+    whl = "wheel",
+)

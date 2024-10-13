@@ -47,6 +47,7 @@ def discover_domino_mailqueues(section):
 
 
 check_info["domino_mailqueues"] = LegacyCheckDefinition(
+    name="domino_mailqueues",
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.334.72.1.1.4",

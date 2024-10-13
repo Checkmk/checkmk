@@ -147,11 +147,28 @@ class ApiSession:
         else:
             self.verify = tls_cert_verification
 
-    def request(self, method: str, url: str, **kwargs: object) -> Response:
-        return self._session.request(method, urljoin(self._base_url, url, **kwargs))
+    def request(
+        self,
+        method: str,
+        url: str,
+        params: Mapping[str, str] | None = None,
+    ) -> Response:
+        return self._session.request(
+            method,
+            urljoin(self._base_url, url),
+            params=params,
+        )
 
-    def get(self, url: str, **kwargs: object) -> Response:
-        return self.request("get", url, **kwargs)
+    def get(
+        self,
+        url: str,
+        params: Mapping[str, str] | None = None,
+    ) -> Response:
+        return self.request(
+            "get",
+            url,
+            params=params,
+        )
 
 
 def parse_api_url(

@@ -128,3 +128,15 @@ class WerkV1(BaseModel):
 
     def to_json_dict(self) -> dict[str, object]:
         return self.model_dump(by_alias=True)
+
+
+class WebsiteWerk(WerkV2Base):
+    # ATTENTION! If you change this model, you have to inform
+    # the website team first! They rely on those fields.
+    """
+    This Model is used to built up a file containing all werks.
+    The file is called all_werks.json or all_werks_v2.json
+    """
+
+    versions: dict[str, str]
+    product: Literal["cmk", "cma", "checkmk_kube_agent"]

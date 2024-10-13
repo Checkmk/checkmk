@@ -53,6 +53,7 @@ def check_ups_cps_battery_temp(item, params, parsed):
 
 
 check_info["ups_cps_battery.temp"] = LegacyCheckDefinition(
+    name="ups_cps_battery_temp",
     service_name="Temperature %s",
     sections=["ups_cps_battery"],
     discovery_function=inventory_ups_cps_battery_temp,
@@ -108,6 +109,7 @@ def check_ups_cps_battery(item, params, parsed):
 
 
 check_info["ups_cps_battery"] = LegacyCheckDefinition(
+    name="ups_cps_battery",
     detect=DETECT_UPS_CPS,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3808.1.1.1.2.2",

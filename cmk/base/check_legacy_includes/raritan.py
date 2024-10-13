@@ -96,6 +96,13 @@ raritan_map_state = {
     "11": (2, "alarmed"),
 }
 
+# SensorStateEnumeration (EMD-, PDU2, LHX-MIB) - simplified for plugs (on/off)
+# nr. --> state human readable
+raritan_pdu_plug_state = {
+    "7": "on",
+    "8": "off",
+}
+
 # .
 #   .--Functions-----------------------------------------------------------.
 #   |             _____                 _   _                              |

@@ -196,6 +196,7 @@ def parse_lgp_pdu_aux(string_table: StringTable) -> StringTable:
 
 
 check_info["lgp_pdu_aux"] = LegacyCheckDefinition(
+    name="lgp_pdu_aux",
     parse_function=parse_lgp_pdu_aux,
     detect=DETECT_LGP,
     fetch=SNMPTree(

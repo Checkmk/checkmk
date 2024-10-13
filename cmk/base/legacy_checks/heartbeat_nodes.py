@@ -59,6 +59,7 @@ def parse_heartbeat_nodes(string_table: StringTable) -> StringTable:
 
 
 check_info["heartbeat_nodes"] = LegacyCheckDefinition(
+    name="heartbeat_nodes",
     parse_function=parse_heartbeat_nodes,
     service_name="Heartbeat Node %s",
     discovery_function=inventory_heartbeat_nodes,

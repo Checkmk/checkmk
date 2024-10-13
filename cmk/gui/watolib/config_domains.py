@@ -309,15 +309,18 @@ class ConfigDomainCACertificates(ABCConfigDomain):
 
     @staticmethod
     def log_changes(
-        config_before: TrustedCertificateAuthorities,
+        config_before: TrustedCertificateAuthorities | None,
         config_after: TrustedCertificateAuthorities,
     ) -> None:
-        current_certs = {
-            (cert := ConfigDomainCACertificates._load_cert(value)).fingerprint(
-                HashAlgorithm.Sha256
-            ): cert
-            for value in config_before["trusted_cas"]
-        }
+        if config_before is None:
+            current_certs = {}
+        else:
+            current_certs = {
+                (cert := ConfigDomainCACertificates._load_cert(value)).fingerprint(
+                    HashAlgorithm.Sha256
+                ): cert
+                for value in config_before["trusted_cas"] or []
+            }
 
         new_certs = {
             (cert := ConfigDomainCACertificates._load_cert(value)).fingerprint(

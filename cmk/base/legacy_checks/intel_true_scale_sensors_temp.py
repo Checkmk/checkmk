@@ -131,6 +131,7 @@ def check_intel_true_scale_sensors_temp(item, params, parsed):
 
 
 check_info["intel_true_scale_sensors_temp"] = LegacyCheckDefinition(
+    name="intel_true_scale_sensors_temp",
     detect=DETECT_INTEL_TRUE_SCALE,
     fetch=[
         SNMPTree(

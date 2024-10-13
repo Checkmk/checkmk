@@ -52,6 +52,7 @@ def parse_symantec_av_updates(string_table: StringTable) -> StringTable:
 
 
 check_info["symantec_av_updates"] = LegacyCheckDefinition(
+    name="symantec_av_updates",
     parse_function=parse_symantec_av_updates,
     service_name="AV Update Status",
     discovery_function=inventory_symantec_av_updates,

@@ -115,6 +115,7 @@ def parse_apc_symmetra_test(string_table: StringTable) -> StringTable:
 
 
 check_info["apc_symmetra_test"] = LegacyCheckDefinition(
+    name="apc_symmetra_test",
     parse_function=parse_apc_symmetra_test,
     detect=DETECT,
     fetch=SNMPTree(

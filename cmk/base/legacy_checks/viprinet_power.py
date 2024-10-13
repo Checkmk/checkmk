@@ -32,6 +32,7 @@ def discover_viprinet_power(section: StringTable) -> DiscoveryResult:
 
 
 check_info["viprinet_power"] = LegacyCheckDefinition(
+    name="viprinet_power",
     parse_function=parse_viprinet_power,
     detect=DETECT_VIPRINET,
     fetch=SNMPTree(

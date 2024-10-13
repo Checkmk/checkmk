@@ -49,6 +49,7 @@ def parse_aironet_errors(string_table: StringTable) -> StringTable:
 
 
 check_info["aironet_errors"] = LegacyCheckDefinition(
+    name="aironet_errors",
     parse_function=parse_aironet_errors,
     detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.525"),

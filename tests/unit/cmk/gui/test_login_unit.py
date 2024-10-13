@@ -115,7 +115,7 @@ def test_login_with_cookies(
         # We try to log in
         response = client.post(
             login_page_url,
-            data={"_username": with_user[0], "_password": with_user[1], "_login": "Login"},
+            params={"_username": with_user[0], "_password": with_user[1], "_login": "Login"},
         )
         index_page = response.location
         assert index_page.endswith("index.py")  # Relative redirect to "index.py" :-( !!!
@@ -280,20 +280,19 @@ def test_web_server_auth_session(flask_app: flask.Flask, user_id: UserId) -> Non
             assert user.id is None
 
 
-def test_auth_session_times(flask_app: flask.Flask, auth_request: http.Request) -> None:
-    with flask_app.test_client(use_cookies=True) as client:
-        client.get(auth_request)
-        assert session.session_info.started_at is not None
-        assert session.user.id == auth_request.environ["REMOTE_USER"]
-        session_id = session.session_info.session_id
-        started_at = session.session_info.started_at
-        last_activity = session.session_info.last_activity
+def test_auth_session_times(wsgi_app: WebTestAppForCMK, auth_request: http.Request) -> None:
+    wsgi_app.get(auth_request)
+    assert session.session_info.started_at is not None
+    assert session.user.id == auth_request.environ["REMOTE_USER"]
+    session_id = session.session_info.session_id
+    started_at = session.session_info.started_at
+    last_activity = session.session_info.last_activity
 
-        client.get(auth_request)
-        assert session.session_info.session_id == session_id
-        assert session.session_info.started_at == started_at
-        # tried it with time.sleep and ">".
-        assert session.session_info.last_activity >= last_activity
+    wsgi_app.get(auth_request)
+    assert session.session_info.session_id == session_id
+    assert session.session_info.started_at == started_at
+    # tried it with time.sleep and ">".
+    assert session.session_info.last_activity >= last_activity
 
 
 # the url auth for the automationuser is disabled by default so it must be enabled for this test

@@ -72,6 +72,7 @@ def check_cisco_ucs_hdd(
 
 
 check_info["cisco_ucs_hdd"] = LegacyCheckDefinition(
+    name="cisco_ucs_hdd",
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.719.1.45.4.1",

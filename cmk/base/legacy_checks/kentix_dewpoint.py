@@ -40,6 +40,7 @@ def check_kentix_dewpoint(item: str, params: TempParamType, section: Section) ->
 
 
 check_info["kentix_dewpoint"] = LegacyCheckDefinition(
+    name="kentix_dewpoint",
     detect=DETECT_KENTIX,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.37954",

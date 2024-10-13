@@ -63,6 +63,7 @@ def check_avaya_88xx(item, params, parsed):
 
 
 check_info["avaya_88xx"] = LegacyCheckDefinition(
+    name="avaya_88xx",
     detect=DETECT_AVAYA,
     # RAPID-CITY MIB,
     fetch=SNMPTree(
@@ -80,6 +81,7 @@ check_info["avaya_88xx"] = LegacyCheckDefinition(
 )
 
 check_info["avaya_88xx.fan"] = LegacyCheckDefinition(
+    name="avaya_88xx_fan",
     service_name="Fan %s Status",
     sections=["avaya_88xx"],
     discovery_function=inventory_avaya_88xx_fan,

@@ -65,6 +65,7 @@ def discover_fireeye_fans(info):
 
 
 check_info["fireeye_fans"] = LegacyCheckDefinition(
+    name="fireeye_fans",
     parse_function=parse_fireeye_fans,
     detect=DETECT,
     fetch=SNMPTree(

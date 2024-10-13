@@ -67,7 +67,7 @@ message AddressBook {
 @pytest.fixture(name="protobuf_py")
 def fixture_protobuf_py(site: Site, test_dir: Path, proto_source_file: Path) -> Iterator[None]:
     target_dir = site.path("local/lib/python3/")
-    p = site.execute(
+    _ = site.run(
         [
             "protoc",
             "-I=%s" % test_dir,
@@ -76,7 +76,6 @@ def fixture_protobuf_py(site: Site, test_dir: Path, proto_source_file: Path) -> 
             str(proto_source_file),
         ]
     )
-    assert p.wait() == 0
 
     assert site.file_exists("local/lib/python3/test_pb2.py")
     yield

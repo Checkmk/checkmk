@@ -16,7 +16,7 @@ from collections import Counter
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Generic, Literal, NamedTuple, NewType, Self, TypedDict, TypeVar
+from typing import Generic, Literal, NewType, Self, TypedDict, TypeVar
 
 from cmk.ccc import store
 
@@ -89,24 +89,12 @@ class SDBareTree(TypedDict):
     Nodes: Mapping[SDNodeName, SDBareTree]
 
 
-class SDDeltaValue(NamedTuple):
-    old: SDValue
-    new: SDValue
-
-    @classmethod
-    def deserialize(cls, raw_delta_value: tuple[SDValue, SDValue]) -> Self:
-        return cls(*raw_delta_value)
-
-    def serialize(self) -> tuple[SDValue, SDValue]:
-        return (self.old, self.new)
-
-
 class SDRawDeltaAttributes(TypedDict, total=False):
     Pairs: Mapping[SDKey, tuple[SDValue, SDValue]]
 
 
 class SDBareDeltaAttributes(TypedDict):
-    Pairs: Mapping[SDKey, SDDeltaValue]
+    Pairs: Mapping[SDKey, tuple[SDValue, SDValue]]
 
 
 class SDRawDeltaTable(TypedDict, total=False):
@@ -116,7 +104,7 @@ class SDRawDeltaTable(TypedDict, total=False):
 
 class SDBareDeltaTable(TypedDict, total=False):
     KeyColumns: Sequence[SDKey]
-    Rows: Sequence[Mapping[SDKey, SDDeltaValue]]
+    Rows: Sequence[Mapping[SDKey, tuple[SDValue, SDValue]]]
 
 
 class SDRawDeltaTree(TypedDict):
@@ -150,8 +138,10 @@ class RetentionInterval:
     source: Literal["previous", "current"]
 
     @classmethod
-    def from_previous(cls, other: RetentionInterval) -> RetentionInterval:
-        return cls(other.cached_at, other.cache_interval, other.retention_interval, "previous")
+    def from_previous(cls, previous: RetentionInterval) -> RetentionInterval:
+        return cls(
+            previous.cached_at, previous.cache_interval, previous.retention_interval, "previous"
+        )
 
     @classmethod
     def from_config(
@@ -162,22 +152,6 @@ class RetentionInterval:
     @property
     def keep_until(self) -> int:
         return self.cached_at + self.cache_interval + self.retention_interval
-
-    @classmethod
-    def deserialize(
-        cls,
-        raw_retention_interval: (
-            tuple[int, int, int] | tuple[int, int, int, Literal["previous", "current"]]
-        ),
-    ) -> RetentionInterval:
-        return (
-            cls(*raw_retention_interval)
-            if len(raw_retention_interval) == 4
-            else cls(*raw_retention_interval[:3], "current")
-        )
-
-    def serialize(self) -> tuple[int, int, int, Literal["previous", "current"]]:
-        return self.cached_at, self.cache_interval, self.retention_interval, self.source
 
 
 @dataclass(frozen=True)
@@ -264,14 +238,16 @@ class _DictKeys(Generic[_T]):
 #   '----------------------------------------------------------------------'
 
 
-class SDFilterChoice(NamedTuple):
+@dataclass(frozen=True)
+class SDFilterChoice:
     path: SDPath
     pairs: Literal["nothing", "all"] | Sequence[SDKey]
     columns: Literal["nothing", "all"] | Sequence[SDKey]
     nodes: Literal["nothing", "all"] | Sequence[SDNodeName]
 
 
-class _SDRetentionFilterChoice(NamedTuple):
+@dataclass(frozen=True)
+class _SDRetentionFilterChoice:
     choice: Literal["nothing", "all"] | Sequence[SDKey]
     cache_info: tuple[int, int]
 
@@ -398,6 +374,308 @@ def _make_retentions_filter_func(
 
 
 # .
+#   .--serialization-------------------------------------------------------.
+#   |                      _       _ _          _   _                      |
+#   |        ___  ___ _ __(_) __ _| (_)______ _| |_(_) ___  _ __           |
+#   |       / __|/ _ \ '__| |/ _` | | |_  / _` | __| |/ _ \| '_ \          |
+#   |       \__ \  __/ |  | | (_| | | |/ / (_| | |_| | (_) | | | |         |
+#   |       |___/\___|_|  |_|\__,_|_|_/___\__,_|\__|_|\___/|_| |_|         |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def _serialize_retention_interval(
+    retention_interval: RetentionInterval,
+) -> tuple[int, int, int, Literal["previous", "current"]]:
+    return (
+        retention_interval.cached_at,
+        retention_interval.cache_interval,
+        retention_interval.retention_interval,
+        retention_interval.source,
+    )
+
+
+def _serialize_attributes(attributes: _MutableAttributes | ImmutableAttributes) -> SDRawAttributes:
+    raw_attributes: SDRawAttributes = {}
+    if attributes.pairs:
+        raw_attributes["Pairs"] = attributes.pairs
+    if attributes.retentions:
+        raw_attributes["Retentions"] = {
+            k: _serialize_retention_interval(v) for k, v in attributes.retentions.items()
+        }
+    return raw_attributes
+
+
+def _serialize_table(table: _MutableTable | ImmutableTable) -> SDRawTable:
+    raw_table: SDRawTable = {}
+    if table.rows_by_ident:
+        raw_table.update(
+            {
+                "KeyColumns": table.key_columns,
+                "Rows": list(table.rows_by_ident.values()),
+            }
+        )
+    if table.retentions:
+        raw_table["Retentions"] = {
+            i: {k: _serialize_retention_interval(v) for k, v in ri.items()}
+            for i, ri in table.retentions.items()
+        }
+    return raw_table
+
+
+def serialize_tree(tree: MutableTree | ImmutableTree) -> SDRawTree:
+    return {
+        "Attributes": _serialize_attributes(tree.attributes),
+        "Table": _serialize_table(tree.table),
+        "Nodes": {name: serialize_tree(node) for name, node in tree.nodes_by_name.items() if node},
+    }
+
+
+def _deserialize_legacy_attributes(raw_pairs: Mapping[SDKey, SDValue]) -> ImmutableAttributes:
+    return ImmutableAttributes(pairs=raw_pairs)
+
+
+def _deserialize_legacy_table(raw_rows: Sequence[Mapping[SDKey, SDValue]]) -> ImmutableTable:
+    key_columns = sorted({k for r in raw_rows for k in r})
+    rows_by_ident: dict[SDRowIdent, dict[SDKey, SDValue]] = {}
+    for row in raw_rows:
+        rows_by_ident.setdefault(_make_row_ident(key_columns, row), {}).update(row)
+
+    return ImmutableTable(key_columns=key_columns, rows_by_ident=rows_by_ident)
+
+
+def _deserialize_legacy_tree(  # pylint: disable=too-many-branches
+    path: SDPath,
+    raw_tree: Mapping[str, object],
+    raw_rows: Sequence[Mapping] | None = None,
+) -> ImmutableTree:
+    raw_pairs: dict[SDKey, SDValue] = {}
+    raw_tables: dict[SDNodeName, list[dict]] = {}
+    raw_nodes: dict[SDNodeName, dict] = {}
+
+    for key, value in raw_tree.items():
+        if isinstance(value, dict):
+            if not value:
+                continue
+            raw_nodes.setdefault(SDNodeName(key), value)
+
+        elif isinstance(value, list):
+            if not value:
+                continue
+
+            if all(isinstance(v, (int, float, str, bool)) or v is None for v in value):
+                if w := ", ".join(str(v) for v in value if v):
+                    raw_pairs.setdefault(SDKey(key), w)
+                continue
+
+            if all(not isinstance(v, (list, dict)) for row in value for v in row.values()):
+                # Either we get:
+                #   [
+                #       {"column1": "value 11", "column2": "value 12",...},
+                #       {"column1": "value 11", "column2": "value 12",...},
+                #       ...
+                #   ]
+                # Or:
+                #   [
+                #       {"attr": "attr1", "table": [...], "node": {...}, "idx-node": [...]},
+                #       ...
+                #   ]
+                raw_tables.setdefault(SDNodeName(key), value)
+                continue
+
+            for idx, entry in enumerate(value):
+                raw_nodes.setdefault(SDNodeName(key), {}).setdefault(str(idx), entry)
+
+        elif isinstance(value, (int, float, str, bool)) or value is None:
+            raw_pairs.setdefault(SDKey(key), value)
+
+        else:
+            raise TypeError(value)
+
+    return ImmutableTree(
+        path=path,
+        attributes=_deserialize_legacy_attributes(raw_pairs),
+        table=_deserialize_legacy_table(raw_rows) if raw_rows else ImmutableTable(),
+        nodes_by_name={
+            **{
+                name: _deserialize_legacy_tree(
+                    path + (name,),
+                    raw_node,
+                    raw_tables.get(name),
+                )
+                for name, raw_node in raw_nodes.items()
+            },
+            **{
+                name: ImmutableTree(
+                    path=path + (name,),
+                    table=_deserialize_legacy_table(raw_rows),
+                )
+                for name in set(raw_tables) - set(raw_nodes)
+                if (raw_rows := raw_tables[name])
+            },
+        },
+    )
+
+
+def _deserialize_retention_interval(
+    raw_retention_interval: tuple[int, int, int]
+    | tuple[int, int, int, Literal["previous", "current"]],
+) -> RetentionInterval:
+    return (
+        RetentionInterval(*raw_retention_interval)
+        if len(raw_retention_interval) == 4
+        else RetentionInterval(*raw_retention_interval[:3], "current")
+    )
+
+
+def _deserialize_attributes(raw_attributes: SDRawAttributes) -> ImmutableAttributes:
+    return ImmutableAttributes(
+        pairs=raw_attributes.get("Pairs", {}),
+        retentions={
+            key: _deserialize_retention_interval(raw_retention_interval)
+            for key, raw_retention_interval in raw_attributes.get("Retentions", {}).items()
+        },
+    )
+
+
+def _deserialize_table(raw_table: SDRawTable) -> ImmutableTable:
+    rows = raw_table.get("Rows", [])
+    key_columns = raw_table.get("KeyColumns", [])
+
+    rows_by_ident: dict[SDRowIdent, dict[SDKey, SDValue]] = {}
+    for row in rows:
+        rows_by_ident.setdefault(_make_row_ident(key_columns, row), {}).update(row)
+
+    return ImmutableTable(
+        key_columns=key_columns,
+        rows_by_ident=rows_by_ident,
+        retentions={
+            ident: {
+                key: _deserialize_retention_interval(raw_retention_interval)
+                for key, raw_retention_interval in raw_intervals_by_key.items()
+            }
+            for ident, raw_intervals_by_key in raw_table.get("Retentions", {}).items()
+        },
+    )
+
+
+def _deserialize_tree(
+    *,
+    path: SDPath,
+    raw_attributes: SDRawAttributes,
+    raw_table: SDRawTable,
+    raw_nodes: Mapping[SDNodeName, SDRawTree],
+) -> ImmutableTree:
+    return ImmutableTree(
+        path=path,
+        attributes=_deserialize_attributes(raw_attributes),
+        table=_deserialize_table(raw_table),
+        nodes_by_name={
+            name: _deserialize_tree(
+                path=path + (name,),
+                raw_attributes=raw_node["Attributes"],
+                raw_table=raw_node["Table"],
+                raw_nodes=raw_node["Nodes"],
+            )
+            for name, raw_node in raw_nodes.items()
+        },
+    )
+
+
+def deserialize_tree(raw_tree: object) -> ImmutableTree:
+    if not isinstance(raw_tree, dict):
+        raise TypeError(raw_tree)
+    try:
+        raw_attributes = raw_tree["Attributes"]
+        raw_table = raw_tree["Table"]
+        raw_nodes = raw_tree["Nodes"]
+    except KeyError:
+        return _deserialize_legacy_tree(path=(), raw_tree=raw_tree)
+    return _deserialize_tree(
+        path=(),
+        raw_attributes=raw_attributes,
+        raw_table=raw_table,
+        raw_nodes=raw_nodes,
+    )
+
+
+def _serialize_delta_value(delta_value: SDDeltaValue) -> tuple[SDValue, SDValue]:
+    return (delta_value.old, delta_value.new)
+
+
+def _serialize_delta_attributes(delta_attributes: ImmutableDeltaAttributes) -> SDRawDeltaAttributes:
+    return (
+        {"Pairs": {k: _serialize_delta_value(v) for k, v in delta_attributes.pairs.items()}}
+        if delta_attributes.pairs
+        else {}
+    )
+
+
+def _serialize_delta_table(delta_table: ImmutableDeltaTable) -> SDRawDeltaTable:
+    return (
+        {
+            "KeyColumns": delta_table.key_columns,
+            "Rows": [
+                {k: _serialize_delta_value(v) for k, v in r.items()} for r in delta_table.rows
+            ],
+        }
+        if delta_table.rows
+        else {}
+    )
+
+
+def serialize_delta_tree(delta_tree: ImmutableDeltaTree) -> SDRawDeltaTree:
+    return {
+        "Attributes": _serialize_delta_attributes(delta_tree.attributes),
+        "Table": _serialize_delta_table(delta_tree.table),
+        "Nodes": {
+            edge: serialize_delta_tree(node)
+            for edge, node in delta_tree.nodes_by_name.items()
+            if node
+        },
+    }
+
+
+def _deserialize_delta_value(raw_delta_value: tuple[SDValue, SDValue]) -> SDDeltaValue:
+    return SDDeltaValue(raw_delta_value[0], raw_delta_value[1])
+
+
+def _deserialize_delta_attributes(raw_attributes: SDRawDeltaAttributes) -> ImmutableDeltaAttributes:
+    return ImmutableDeltaAttributes(
+        pairs={k: _deserialize_delta_value(v) for k, v in raw_attributes.get("Pairs", {}).items()}
+    )
+
+
+def _deserialize_delta_table(raw_table: SDRawDeltaTable) -> ImmutableDeltaTable:
+    return ImmutableDeltaTable(
+        key_columns=raw_table.get("KeyColumns", []),
+        rows=[
+            {k: _deserialize_delta_value(v) for k, v in r.items()}
+            for r in raw_table.get("Rows", [])
+        ],
+    )
+
+
+def _deserialize_delta_tree(*, path: SDPath, raw_tree: SDRawDeltaTree) -> ImmutableDeltaTree:
+    return ImmutableDeltaTree(
+        path=path,
+        attributes=_deserialize_delta_attributes(raw_attributes=raw_tree["Attributes"]),
+        table=_deserialize_delta_table(raw_table=raw_tree["Table"]),
+        nodes_by_name={
+            raw_node_name: _deserialize_delta_tree(
+                path=path + (raw_node_name,),
+                raw_tree=raw_node,
+            )
+            for raw_node_name, raw_node in raw_tree["Nodes"].items()
+        },
+    )
+
+
+def deserialize_delta_tree(raw_tree: SDRawDeltaTree) -> ImmutableDeltaTree:
+    return _deserialize_delta_tree(path=(), raw_tree=raw_tree)
+
+
+# .
 #   .--mutable tree--------------------------------------------------------.
 #   |                      _        _     _        _                       |
 #   |      _ __ ___  _   _| |_ __ _| |__ | | ___  | |_ _ __ ___  ___       |
@@ -429,7 +707,7 @@ class _MutableAttributes:
     def update(
         self,
         now: int,
-        other: ImmutableAttributes,
+        previous: ImmutableAttributes,
         path: SDPath,
         interval: int,
         choice: _SDRetentionFilterChoice,
@@ -440,10 +718,10 @@ class _MutableAttributes:
         compared_keys = _DictKeys.compare(
             left=set(
                 _get_filtered_dict(
-                    other.pairs,
+                    previous.pairs,
                     _make_retentions_filter_func(
                         filter_func=filter_func,
-                        intervals_by_key=other.retentions,
+                        intervals_by_key=previous.retentions,
                         now=now,
                     ),
                 )
@@ -454,8 +732,8 @@ class _MutableAttributes:
         pairs: dict[SDKey, SDValue] = {}
         retentions: dict[SDKey, RetentionInterval] = {}
         for key in compared_keys.only_left:
-            pairs.setdefault(key, other.pairs[key])
-            retentions[key] = RetentionInterval.from_previous(other.retentions[key])
+            pairs.setdefault(key, previous.pairs[key])
+            retentions[key] = RetentionInterval.from_previous(previous.retentions[key])
 
         for key in compared_keys.both.union(compared_keys.only_right):
             retentions[key] = retention_interval
@@ -470,20 +748,12 @@ class _MutableAttributes:
                 path, "Keep until", [f"{k} ({v.keep_until})" for k, v in retentions.items()]
             )
 
-    def serialize(self) -> SDRawAttributes:
-        raw_attributes: SDRawAttributes = {}
-        if self.pairs:
-            raw_attributes["Pairs"] = self.pairs
-        if self.retentions:
-            raw_attributes["Retentions"] = {k: v.serialize() for k, v in self.retentions.items()}
-        return raw_attributes
-
     @property
     def bare(self) -> SDBareAttributes:
         # Useful for debugging; no restrictions
         return {
             "Pairs": self.pairs,
-            "Retentions": {k: v.serialize() for k, v in self.retentions.items()},
+            "Retentions": {k: _serialize_retention_interval(v) for k, v in self.retentions.items()},
         }
 
 
@@ -520,19 +790,19 @@ class _MutableTable:
     def _add_key_columns(self, key_columns: Iterable[SDKey]) -> None:
         self.key_columns = sorted(set(self.key_columns).union(key_columns))
 
+    def _add_row(self, ident: SDRowIdent, row: Mapping[SDKey, SDValue]) -> None:
+        if row:
+            self.rows_by_ident.setdefault(ident, {}).update(row)
+
     def add(self, key_columns: Iterable[SDKey], rows: Sequence[Mapping[SDKey, SDValue]]) -> None:
         self._add_key_columns(key_columns)
         for row in rows:
             self._add_row(_make_row_ident(self.key_columns, row), row)
 
-    def _add_row(self, ident: SDRowIdent, row: Mapping[SDKey, SDValue]) -> None:
-        if row:
-            self.rows_by_ident.setdefault(ident, {}).update(row)
-
     def update(  # pylint: disable=too-many-branches
         self,
         now: int,
-        other: ImmutableTable,
+        previous: ImmutableTable,
         path: SDPath,
         interval: int,
         choice: _SDRetentionFilterChoice,
@@ -540,56 +810,56 @@ class _MutableTable:
     ) -> None:
         filter_func = _make_filter_func(choice.choice)
         retention_interval = RetentionInterval.from_config(*choice.cache_info, interval)
-        self._add_key_columns(other.key_columns)
-        old_filtered_rows = {
+        self._add_key_columns(previous.key_columns)
+        previous_filtered_rows = {
             ident: filtered_row
-            for ident, row in other.rows_by_ident.items()
+            for ident, row in previous.rows_by_ident.items()
             if (
                 filtered_row := _get_filtered_dict(
                     row,
                     _make_retentions_filter_func(
                         filter_func=filter_func,
-                        intervals_by_key=other.retentions.get(ident),
+                        intervals_by_key=previous.retentions.get(ident),
                         now=now,
                     ),
                 )
             )
         }
-        self_filtered_rows = {
+        current_filtered_rows = {
             ident: filtered_row
             for ident, row in self.rows_by_ident.items()
             if (filtered_row := _get_filtered_dict(row, filter_func))
         }
         compared_row_idents = _DictKeys.compare(
-            left=set(old_filtered_rows),
-            right=set(self_filtered_rows),
+            left=set(previous_filtered_rows),
+            right=set(current_filtered_rows),
         )
 
         retentions: dict[SDRowIdent, dict[SDKey, RetentionInterval]] = {}
         for ident in compared_row_idents.only_left:
-            old_row: dict[SDKey, SDValue] = {}
-            for key, value in old_filtered_rows[ident].items():
-                old_row.setdefault(key, value)
+            previous_row: dict[SDKey, SDValue] = {}
+            for key, value in previous_filtered_rows[ident].items():
+                previous_row.setdefault(key, value)
                 retentions.setdefault(ident, {})[key] = RetentionInterval.from_previous(
-                    other.retentions[ident][key]
+                    previous.retentions[ident][key]
                 )
 
-            if old_row:
+            if previous_row:
                 # Update row with key column entries
-                old_row |= {k: other.rows_by_ident[ident][k] for k in other.key_columns}
-                self._add_row(ident, old_row)
-                update_result.add_row_reason(path, ident, "Added row", old_row)
+                previous_row |= {k: previous.rows_by_ident[ident][k] for k in previous.key_columns}
+                self._add_row(ident, previous_row)
+                update_result.add_row_reason(path, ident, "Added row", previous_row)
 
         for ident in compared_row_idents.both:
             compared_keys = _DictKeys.compare(
-                left=set(old_filtered_rows[ident]),
-                right=set(self_filtered_rows[ident]),
+                left=set(previous_filtered_rows[ident]),
+                right=set(current_filtered_rows[ident]),
             )
             row: dict[SDKey, SDValue] = {}
             for key in compared_keys.only_left:
-                row.setdefault(key, other.rows_by_ident[ident][key])
+                row.setdefault(key, previous.rows_by_ident[ident][key])
                 retentions.setdefault(ident, {})[key] = RetentionInterval.from_previous(
-                    other.retentions[ident][key]
+                    previous.retentions[ident][key]
                 )
 
             for key in compared_keys.both.union(compared_keys.only_right):
@@ -599,7 +869,7 @@ class _MutableTable:
                 # Update row with key column entries
                 row.update(
                     {
-                        **{k: other.rows_by_ident[ident][k] for k in other.key_columns},
+                        **{k: previous.rows_by_ident[ident][k] for k in previous.key_columns},
                         **{k: self.rows_by_ident[ident][k] for k in self.key_columns},
                     }
                 )
@@ -607,7 +877,7 @@ class _MutableTable:
                 update_result.add_row_reason(path, ident, "Added row", row)
 
         for ident in compared_row_idents.only_right:
-            for key in self_filtered_rows[ident]:
+            for key in current_filtered_rows[ident]:
                 retentions.setdefault(ident, {})[key] = retention_interval
 
         if retentions:
@@ -620,21 +890,6 @@ class _MutableTable:
                     [f"{k} ({v.keep_until})" for k, v in intervals_by_key.items()],
                 )
 
-    def serialize(self) -> SDRawTable:
-        raw_table: SDRawTable = {}
-        if self.rows_by_ident:
-            raw_table.update(
-                {
-                    "KeyColumns": self.key_columns,
-                    "Rows": list(self.rows_by_ident.values()),
-                }
-            )
-        if self.retentions:
-            raw_table["Retentions"] = {
-                i: {k: v.serialize() for k, v in ri.items()} for i, ri in self.retentions.items()
-            }
-        return raw_table
-
     @property
     def bare(self) -> SDBareTable:
         # Useful for debugging; no restrictions
@@ -642,7 +897,8 @@ class _MutableTable:
             "KeyColumns": self.key_columns,
             "RowsByIdent": self.rows_by_ident,
             "Retentions": {
-                i: {k: v.serialize() for k, v in ri.items()} for i, ri in self.retentions.items()
+                i: {k: _serialize_retention_interval(v) for k, v in ri.items()}
+                for i, ri in self.retentions.items()
             },
         }
 
@@ -753,13 +1009,6 @@ class MutableTree:
     def has_table(self, path: SDPath) -> bool:
         return len(self.get_tree(path).table) > 0
 
-    def serialize(self) -> SDRawTree:
-        return {
-            "Attributes": self.attributes.serialize(),
-            "Table": self.table.serialize(),
-            "Nodes": {name: node.serialize() for name, node in self.nodes_by_name.items() if node},
-        }
-
     @property
     def bare(self) -> SDBareTree:
         # Useful for debugging; no restrictions
@@ -789,92 +1038,6 @@ class MutableTree:
 #   |                          \__|_|  \___|\___|                          |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-
-def _deserialize_legacy_attributes(raw_pairs: Mapping[SDKey, SDValue]) -> ImmutableAttributes:
-    return ImmutableAttributes(pairs=raw_pairs)
-
-
-def _deserialize_legacy_table(raw_rows: Sequence[Mapping[SDKey, SDValue]]) -> ImmutableTable:
-    key_columns = sorted({k for r in raw_rows for k in r})
-    rows_by_ident: dict[SDRowIdent, dict[SDKey, SDValue]] = {}
-    for row in raw_rows:
-        rows_by_ident.setdefault(_make_row_ident(key_columns, row), {}).update(row)
-
-    return ImmutableTable(key_columns=key_columns, rows_by_ident=rows_by_ident)
-
-
-def _deserialize_legacy_node(  # pylint: disable=too-many-branches
-    path: SDPath,
-    raw_tree: Mapping[str, object],
-    raw_rows: Sequence[Mapping] | None = None,
-) -> ImmutableTree:
-    raw_pairs: dict[SDKey, SDValue] = {}
-    raw_tables: dict[SDNodeName, list[dict]] = {}
-    raw_nodes: dict[SDNodeName, dict] = {}
-
-    for key, value in raw_tree.items():
-        if isinstance(value, dict):
-            if not value:
-                continue
-            raw_nodes.setdefault(SDNodeName(key), value)
-
-        elif isinstance(value, list):
-            if not value:
-                continue
-
-            if all(isinstance(v, (int, float, str, bool)) or v is None for v in value):
-                if w := ", ".join(str(v) for v in value if v):
-                    raw_pairs.setdefault(SDKey(key), w)
-                continue
-
-            if all(not isinstance(v, (list, dict)) for row in value for v in row.values()):
-                # Either we get:
-                #   [
-                #       {"column1": "value 11", "column2": "value 12",...},
-                #       {"column1": "value 11", "column2": "value 12",...},
-                #       ...
-                #   ]
-                # Or:
-                #   [
-                #       {"attr": "attr1", "table": [...], "node": {...}, "idx-node": [...]},
-                #       ...
-                #   ]
-                raw_tables.setdefault(SDNodeName(key), value)
-                continue
-
-            for idx, entry in enumerate(value):
-                raw_nodes.setdefault(SDNodeName(key), {}).setdefault(str(idx), entry)
-
-        elif isinstance(value, (int, float, str, bool)) or value is None:
-            raw_pairs.setdefault(SDKey(key), value)
-
-        else:
-            raise TypeError(value)
-
-    return ImmutableTree(
-        path=path,
-        attributes=_deserialize_legacy_attributes(raw_pairs),
-        table=_deserialize_legacy_table(raw_rows) if raw_rows else ImmutableTable(),
-        nodes_by_name={
-            **{
-                name: _deserialize_legacy_node(
-                    path + (name,),
-                    raw_node,
-                    raw_tables.get(name),
-                )
-                for name, raw_node in raw_nodes.items()
-            },
-            **{
-                name: ImmutableTree(
-                    path=path + (name,),
-                    table=_deserialize_legacy_table(raw_rows),
-                )
-                for name in set(raw_tables) - set(raw_nodes)
-                if (raw_rows := raw_tables[name])
-            },
-        },
-    )
 
 
 def _filter_attributes(
@@ -1003,6 +1166,12 @@ def _merge_nodes(left: ImmutableTree, right: ImmutableTree) -> ImmutableTree:
     )
 
 
+@dataclass(frozen=True)
+class SDDeltaValue:
+    old: SDValue
+    new: SDValue
+
+
 def _encode_as_new(value: SDValue) -> SDDeltaValue:
     return SDDeltaValue(None, value)
 
@@ -1032,11 +1201,11 @@ class _DeltaDict:
 
         has_changes = False
         for key in compared_keys.both:
-            if (new_value := right[key]) != (old_value := left[key]):
-                compared_dict.setdefault(key, SDDeltaValue(old_value, new_value))
+            if (left_value := left[key]) != (right_value := right[key]):
+                compared_dict.setdefault(key, SDDeltaValue(left_value, right_value))
                 has_changes = True
             elif keep_identical:
-                compared_dict.setdefault(key, SDDeltaValue(old_value, old_value))
+                compared_dict.setdefault(key, SDDeltaValue(left_value, left_value))
 
         compared_dict |= {k: _encode_as_removed(right[k]) for k in compared_keys.only_right}
         compared_dict |= {k: _encode_as_new(left[k]) for k in compared_keys.only_left}
@@ -1145,30 +1314,12 @@ class ImmutableAttributes:
             return NotImplemented
         return self.pairs == other.pairs
 
-    @classmethod
-    def deserialize(cls, raw_attributes: SDRawAttributes) -> ImmutableAttributes:
-        return ImmutableAttributes(
-            pairs=raw_attributes.get("Pairs", {}),
-            retentions={
-                key: RetentionInterval.deserialize(raw_retention_interval)
-                for key, raw_retention_interval in raw_attributes.get("Retentions", {}).items()
-            },
-        )
-
-    def serialize(self) -> SDRawAttributes:
-        raw_attributes: SDRawAttributes = {}
-        if self.pairs:
-            raw_attributes["Pairs"] = self.pairs
-        if self.retentions:
-            raw_attributes["Retentions"] = {k: v.serialize() for k, v in self.retentions.items()}
-        return raw_attributes
-
     @property
     def bare(self) -> SDBareAttributes:
         # Useful for debugging; no restrictions
         return {
             "Pairs": self.pairs,
-            "Retentions": {k: v.serialize() for k, v in self.retentions.items()},
+            "Retentions": {k: _serialize_retention_interval(v) for k, v in self.retentions.items()},
         }
 
 
@@ -1215,42 +1366,6 @@ class ImmutableTable:
             for ident, row in self.rows_by_ident.items()
         ]
 
-    @classmethod
-    def deserialize(cls, raw_table: SDRawTable) -> ImmutableTable:
-        rows = raw_table.get("Rows", [])
-        key_columns = raw_table.get("KeyColumns", [])
-
-        rows_by_ident: dict[SDRowIdent, dict[SDKey, SDValue]] = {}
-        for row in rows:
-            rows_by_ident.setdefault(_make_row_ident(key_columns, row), {}).update(row)
-
-        return ImmutableTable(
-            key_columns=key_columns,
-            rows_by_ident=rows_by_ident,
-            retentions={
-                ident: {
-                    key: RetentionInterval.deserialize(raw_retention_interval)
-                    for key, raw_retention_interval in raw_intervals_by_key.items()
-                }
-                for ident, raw_intervals_by_key in raw_table.get("Retentions", {}).items()
-            },
-        )
-
-    def serialize(self) -> SDRawTable:
-        raw_table: SDRawTable = {}
-        if self.rows_by_ident:
-            raw_table.update(
-                {
-                    "KeyColumns": self.key_columns,
-                    "Rows": list(self.rows_by_ident.values()),
-                }
-            )
-        if self.retentions:
-            raw_table["Retentions"] = {
-                i: {k: v.serialize() for k, v in ri.items()} for i, ri in self.retentions.items()
-            }
-        return raw_table
-
     @property
     def bare(self) -> SDBareTable:
         # Useful for debugging; no restrictions
@@ -1258,7 +1373,8 @@ class ImmutableTable:
             "KeyColumns": self.key_columns,
             "RowsByIdent": self.rows_by_ident,
             "Retentions": {
-                i: {k: v.serialize() for k, v in ri.items()} for i, ri in self.retentions.items()
+                i: {k: _serialize_retention_interval(v) for k, v in ri.items()}
+                for i, ri in self.retentions.items()
             },
         }
 
@@ -1321,53 +1437,6 @@ class ImmutableTree:
             if (node := self.nodes_by_name.get(path[0])) is None
             else node.get_tree(path[1:])
         )
-
-    @classmethod
-    def deserialize(cls, raw_tree: Mapping) -> ImmutableTree:
-        try:
-            raw_attributes = raw_tree["Attributes"]
-            raw_table = raw_tree["Table"]
-            raw_nodes = raw_tree["Nodes"]
-        except KeyError:
-            return _deserialize_legacy_node(path=(), raw_tree=raw_tree)
-
-        return ImmutableTree._deserialize(
-            path=(),
-            raw_attributes=raw_attributes,
-            raw_table=raw_table,
-            raw_nodes=raw_nodes,
-        )
-
-    @classmethod
-    def _deserialize(
-        cls,
-        *,
-        path: SDPath,
-        raw_attributes: SDRawAttributes,
-        raw_table: SDRawTable,
-        raw_nodes: Mapping[SDNodeName, SDRawTree],
-    ) -> ImmutableTree:
-        return cls(
-            path=path,
-            attributes=ImmutableAttributes.deserialize(raw_attributes),
-            table=ImmutableTable.deserialize(raw_table),
-            nodes_by_name={
-                name: cls._deserialize(
-                    path=path + (name,),
-                    raw_attributes=raw_node["Attributes"],
-                    raw_table=raw_node["Table"],
-                    raw_nodes=raw_node["Nodes"],
-                )
-                for name, raw_node in raw_nodes.items()
-            },
-        )
-
-    def serialize(self) -> SDRawTree:
-        return {
-            "Attributes": self.attributes.serialize(),
-            "Table": self.table.serialize(),
-            "Nodes": {name: node.serialize() for name, node in self.nodes_by_name.items() if node},
-        }
 
     @property
     def bare(self) -> SDBareTree:
@@ -1439,13 +1508,13 @@ SDDeltaCounter = Counter[Literal["new", "changed", "removed"]]
 
 def _compute_delta_stats(dict_: Mapping[SDKey, SDDeltaValue]) -> SDDeltaCounter:
     counter: SDDeltaCounter = Counter()
-    for left, right in dict_.values():
-        match [left is None, right is None]:
+    for delta_value in dict_.values():
+        match [delta_value.old is None, delta_value.new is None]:
             case [True, False]:
                 counter["new"] += 1
             case [False, True]:
                 counter["removed"] += 1
-            case [False, False] if left != right:
+            case [False, False] if delta_value.old != delta_value.new:
                 counter["changed"] += 1
     return counter
 
@@ -1466,21 +1535,10 @@ class ImmutableDeltaAttributes:
     def get_stats(self) -> SDDeltaCounter:
         return _compute_delta_stats(self.pairs)
 
-    @classmethod
-    def deserialize(cls, raw_attributes: SDRawDeltaAttributes) -> ImmutableDeltaAttributes:
-        return cls(
-            pairs={
-                k: SDDeltaValue.deserialize(v) for k, v in raw_attributes.get("Pairs", {}).items()
-            }
-        )
-
-    def serialize(self) -> SDRawDeltaAttributes:
-        return {"Pairs": {k: v.serialize() for k, v in self.pairs.items()}} if self.pairs else {}
-
     @property
     def bare(self) -> SDBareDeltaAttributes:
         # Useful for debugging; no restrictions
-        return {"Pairs": self.pairs}
+        return {"Pairs": {k: _serialize_delta_value(v) for k, v in self.pairs.items()}}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -1504,30 +1562,13 @@ class ImmutableDeltaTable:
             counter.update(_compute_delta_stats(row))
         return counter
 
-    @classmethod
-    def deserialize(cls, raw_table: SDRawDeltaTable) -> ImmutableDeltaTable:
-        return cls(
-            key_columns=raw_table.get("KeyColumns", []),
-            rows=[
-                {k: SDDeltaValue.deserialize(v) for k, v in r.items()}
-                for r in raw_table.get("Rows", [])
-            ],
-        )
-
-    def serialize(self) -> SDRawDeltaTable:
-        return (
-            {
-                "KeyColumns": self.key_columns,
-                "Rows": [{k: v.serialize() for k, v in r.items()} for r in self.rows],
-            }
-            if self.rows
-            else {}
-        )
-
     @property
     def bare(self) -> SDBareDeltaTable:
         # Useful for debugging; no restrictions
-        return {"KeyColumns": self.key_columns, "Rows": self.rows}
+        return {
+            "KeyColumns": self.key_columns,
+            "Rows": [{k: _serialize_delta_value(v) for k, v in r.items()} for r in self.rows],
+        }
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -1584,32 +1625,6 @@ class ImmutableDeltaTree:
             counter.update(node.get_stats())
         return counter
 
-    @classmethod
-    def deserialize(cls, raw_tree: SDRawDeltaTree) -> ImmutableDeltaTree:
-        return cls._deserialize(path=(), raw_tree=raw_tree)
-
-    @classmethod
-    def _deserialize(cls, *, path: SDPath, raw_tree: SDRawDeltaTree) -> ImmutableDeltaTree:
-        return cls(
-            path=path,
-            attributes=ImmutableDeltaAttributes.deserialize(raw_attributes=raw_tree["Attributes"]),
-            table=ImmutableDeltaTable.deserialize(raw_table=raw_tree["Table"]),
-            nodes_by_name={
-                raw_node_name: cls._deserialize(
-                    path=path + (raw_node_name,),
-                    raw_tree=raw_node,
-                )
-                for raw_node_name, raw_node in raw_tree["Nodes"].items()
-            },
-        )
-
-    def serialize(self) -> SDRawDeltaTree:
-        return {
-            "Attributes": self.attributes.serialize(),
-            "Table": self.table.serialize(),
-            "Nodes": {edge: node.serialize() for edge, node in self.nodes_by_name.items() if node},
-        }
-
     @property
     def bare(self) -> SDBareDeltaTree:
         # Useful for debugging; no restrictions
@@ -1637,8 +1652,75 @@ class ImmutableDeltaTree:
 
 def load_tree(filepath: Path) -> ImmutableTree:
     if raw_tree := store.load_object_from_file(filepath, default=None):
-        return ImmutableTree.deserialize(raw_tree)
+        return deserialize_tree(raw_tree)
     return ImmutableTree()
+
+
+class SDMeta(TypedDict):
+    version: Literal["1"]
+    do_archive: bool
+
+
+def make_meta(*, do_archive: bool) -> SDMeta:
+    return SDMeta(version="1", do_archive=do_archive)
+
+
+class SDMetaAndRawTree(TypedDict):
+    meta: SDMeta
+    raw_tree: SDRawTree
+
+
+def _parse_raw_meta(raw_meta: object) -> SDMeta:
+    if not isinstance(raw_meta, dict):
+        raise TypeError(raw_meta)
+    if not isinstance(version := raw_meta.get("version"), str):
+        raise TypeError(version)
+    if not isinstance(do_archive := raw_meta.get("do_archive"), bool):
+        raise TypeError(do_archive)
+    match version:
+        case "1":
+            return SDMeta(version=version, do_archive=do_archive)
+        case _:
+            raise ValueError(version)
+
+
+def _parse_raw_tree(raw_tree: object) -> SDRawTree:
+    if not isinstance(raw_tree, dict):
+        raise TypeError(raw_tree)
+    return SDRawTree(
+        Attributes=raw_tree.get("Attributes", {}),
+        Table=raw_tree.get("Table", {}),
+        Nodes=raw_tree.get("Nodes", {}),
+    )
+
+
+def parse_from_unzipped(raw: object) -> SDMetaAndRawTree:
+    # Note: Since Checkmk 2.1 we explicitly extract "Attributes", "Table" or "Nodes" while
+    # deserialization. This means that "meta_*" are not taken into account and we stay
+    # compatible.
+    if not isinstance(raw, dict):
+        raise TypeError(raw)
+    if set(raw) == set(["meta", "raw_tree"]):
+        # Handle future versions
+        return SDMetaAndRawTree(
+            meta=_parse_raw_meta(raw.get("meta")),
+            raw_tree=_parse_raw_tree(raw.get("raw_tree")),
+        )
+    return SDMetaAndRawTree(
+        meta=SDMeta(
+            version="1",
+            do_archive=raw.get("meta_do_archive", True),
+        ),
+        raw_tree=SDRawTree(
+            Attributes=raw.get("Attributes", {}),
+            Table=raw.get("Table", {}),
+            Nodes=raw.get("Nodes", {}),
+        ),
+    )
+
+
+def _make_meta_and_raw_tree(meta: SDMeta, raw_tree: SDRawTree) -> SDMetaAndRawTree:
+    return SDMetaAndRawTree(meta=meta, raw_tree=raw_tree)
 
 
 class TreeStore:
@@ -1649,17 +1731,19 @@ class TreeStore:
     def load(self, *, host_name: HostName) -> ImmutableTree:
         return load_tree(self._tree_file(host_name))
 
-    def save(self, *, host_name: HostName, tree: MutableTree, pretty: bool = False) -> None:
+    def save(
+        self, *, host_name: HostName, tree: MutableTree, meta: SDMeta, pretty: bool = False
+    ) -> None:
         self._tree_dir.mkdir(parents=True, exist_ok=True)
 
         tree_file = self._tree_file(host_name)
 
-        output = tree.serialize()
-        store.save_object_to_file(tree_file, output, pretty=pretty)
+        raw_tree = serialize_tree(tree)
+        store.save_object_to_file(tree_file, raw_tree, pretty=pretty)
 
         buf = io.BytesIO()
         with gzip.GzipFile(fileobj=buf, mode="wb") as f:
-            f.write((repr(output) + "\n").encode("utf-8"))
+            f.write((repr(_make_meta_and_raw_tree(meta, raw_tree)) + "\n").encode("utf-8"))
         store.save_bytes_to_file(self._gz_file(host_name), buf.getvalue())
 
         # Inform Livestatus about the latest inventory update

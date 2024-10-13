@@ -95,6 +95,7 @@ def check_win_printers(
 
 
 check_info["win_printers"] = LegacyCheckDefinition(
+    name="win_printers",
     parse_function=parse_win_printers,
     service_name="Printer %s",
     discovery_function=discover_win_printers,

@@ -44,6 +44,7 @@ def parse_emc_datadomain_power(string_table: StringTable) -> StringTable:
 
 
 check_info["emc_datadomain_power"] = LegacyCheckDefinition(
+    name="emc_datadomain_power",
     parse_function=parse_emc_datadomain_power,
     detect=DETECT_DATADOMAIN,
     fetch=SNMPTree(

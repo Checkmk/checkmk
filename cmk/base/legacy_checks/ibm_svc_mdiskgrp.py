@@ -158,6 +158,7 @@ def check_ibm_svc_mdiskgrp(item, params, parsed):
 
 
 check_info["ibm_svc_mdiskgrp"] = LegacyCheckDefinition(
+    name="ibm_svc_mdiskgrp",
     parse_function=parse_ibm_svc_mdiskgrp,
     service_name="Pool Capacity %s",
     discovery_function=inventory_ibm_svc_mdiskgrp,

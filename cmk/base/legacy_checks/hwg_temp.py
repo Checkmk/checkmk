@@ -53,6 +53,7 @@ def check_hwg_temp(item, params, parsed):
 
 
 check_info["hwg_temp"] = LegacyCheckDefinition(
+    name="hwg_temp",
     detect=contains(".1.3.6.1.2.1.1.1.0", "hwg"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.21796.4.1.3.1",
@@ -67,6 +68,7 @@ check_info["hwg_temp"] = LegacyCheckDefinition(
 )
 
 check_info["hwg_ste2"] = LegacyCheckDefinition(
+    name="hwg_ste2",
     detect=contains(".1.3.6.1.2.1.1.1.0", "STE2"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.21796.4.9.3.1",

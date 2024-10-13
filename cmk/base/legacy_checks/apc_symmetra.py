@@ -284,6 +284,7 @@ def check_apc_symmetra(_no_item, params, parsed):  # pylint: disable=too-many-br
 
 
 check_info["apc_symmetra"] = LegacyCheckDefinition(
+    name="apc_symmetra",
     detect=DETECT,
     fetch=[
         SNMPTree(
@@ -352,6 +353,7 @@ def check_apc_symmetra_temp(item, params, parsed):
 
 
 check_info["apc_symmetra.temp"] = LegacyCheckDefinition(
+    name="apc_symmetra_temp",
     service_name="Temperature %s",
     sections=["apc_symmetra"],
     discovery_function=inventory_apc_symmetra_temp,
@@ -386,6 +388,7 @@ def check_apc_symmetra_elphase(item, params, parsed):
 
 
 check_info["apc_symmetra.elphase"] = LegacyCheckDefinition(
+    name="apc_symmetra_elphase",
     service_name="Phase %s",
     sections=["apc_symmetra"],
     discovery_function=inventory_apc_symmetra_elphase,

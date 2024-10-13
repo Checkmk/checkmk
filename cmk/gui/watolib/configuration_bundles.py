@@ -56,19 +56,24 @@ class DomainDefinition:
 
 
 ALL_ENTITIES: set[Entity] = set(get_args(Entity))
-BUNDLE_DOMAINS: Mapping[RuleGroupType, set[DomainDefinition]] = {
-    RuleGroupType.SPECIAL_AGENTS: {
+
+
+def bundle_domains() -> Mapping[RuleGroupType, set[DomainDefinition]]:
+    domains: set[DomainDefinition] = {
         DomainDefinition(entity="host", permission="hosts"),
         DomainDefinition(entity="rule", permission="rulesets"),
         DomainDefinition(entity="password", permission="passwords"),
-        DomainDefinition(entity="dcd", permission="dcd_connections"),
     }
-}
+
+    if DCDConnectionHook.domain_definition is not None:
+        domains.update({DCDConnectionHook.domain_definition})
+
+    return {RuleGroupType.SPECIAL_AGENTS: domains}
 
 
 def _get_affected_entities(bundle_group: str) -> set[Entity]:
     rule_group_type = RuleGroupType(bundle_group.split(":", maxsplit=1)[0])
-    bundle_domain = BUNDLE_DOMAINS.get(rule_group_type, None)
+    bundle_domain = bundle_domains().get(rule_group_type, None)
     return set(domain.entity for domain in bundle_domain) if bundle_domain else ALL_ENTITIES
 
 
@@ -97,6 +102,14 @@ class CreateDCDConnection(TypedDict):
 
 @dataclass
 class CreateBundleEntities:
+    """
+
+    Remarks for Special agents:
+        * when creating a special agent rule, the user may select an existing password. In such,
+        cases the password shouldn't be part of the bundle, as deletion of the bundle should leave
+        the password untouched.
+    """
+
     hosts: Iterable[CreateHost] | None = None
     passwords: Iterable[CreatePassword] | None = None
     rules: Iterable[CreateRule] | None = None
@@ -111,6 +124,7 @@ class DCDConnectionHook:
     load_dcd_connections: Callable[[], DCDConnectionDict] = lambda: {}
     create_dcd_connection: Callable[[str, DCDConnectionSpec], None] = _dcd_unsupported
     delete_dcd_connection: Callable[[str], None] = _dcd_unsupported
+    domain_definition: DomainDefinition | None = None
 
 
 @dataclass
@@ -124,7 +138,7 @@ class BundleReferences:
 def valid_special_agent_bundle(bundle: BundleReferences) -> bool:
     host_conditions = bundle.hosts is not None and len(bundle.hosts) == 1
     rule_conditions = bundle.rules is not None and len(bundle.rules) == 1
-    password_conditions = bundle.passwords is not None and len(bundle.passwords) == 1
+    password_conditions = bundle.passwords is None or len(bundle.passwords) == 1
     if not host_conditions or not rule_conditions or not password_conditions:
         return False
     return True
@@ -431,7 +445,8 @@ class ConfigBundle(TypedDict):
     """
     A configuration bundle is a collection of configs which are managed together by this bundle.
     Each underlying config must have the locked_by attribute set to the id of the bundle. We
-    explicitly avoid double references here to keep the data model simple. The group and program
+    explicitly avoid double references (for now: but might have to be considered in the context
+    of performance restrictions) here to keep the data model simple. The group and program
     combination should determine which configuration objects are potentially part of the bundle.
     """
 

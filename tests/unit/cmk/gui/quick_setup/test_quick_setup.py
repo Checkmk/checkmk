@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from tests.unit.cmk.gui.quick_setup.factories import QuickSetupFactory, QuickSetupStageFactory
+from tests.unit.cmk.gui.quick_setup.factories import QuickSetupFactory
 
 from cmk.gui.quick_setup.to_frontend import retrieve_next_stage
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
@@ -18,7 +18,7 @@ from cmk.rulesets.v1.form_specs import DictElement, Dictionary, FieldSize, Strin
 
 def test_form_spec_recap() -> None:
     setup_stages = [
-        QuickSetupStage(
+        lambda: QuickSetupStage(
             title="stage1",
             configure_components=[
                 FormSpecWrapper(
@@ -57,7 +57,32 @@ def test_form_spec_recap() -> None:
 
 
 def test_retrieve_next_following_last_stage() -> None:
-    quick_setup = QuickSetupFactory.build(stages=[QuickSetupStageFactory.build()])
+    setup_stages = [
+        lambda: QuickSetupStage(
+            title="stage1",
+            configure_components=[
+                FormSpecWrapper(
+                    id=FormSpecId("wrapper"),
+                    form_spec=Dictionary(
+                        elements={
+                            "test_dict_element": DictElement(
+                                parameter_form=String(
+                                    title=Title("test title"),
+                                    field_size=FieldSize.MEDIUM,
+                                    custom_validate=(validators.LengthInRange(min_value=1),),
+                                ),
+                                required=True,
+                            )
+                        }
+                    ),
+                ),
+            ],
+            custom_validators=[],
+            recap=[recaps_form_spec],
+            button_label="Next",
+        ),
+    ]
+    quick_setup = QuickSetupFactory.build(stages=setup_stages)
     quick_setup_registry.register(quick_setup)
     stage = retrieve_next_stage(
         quick_setup=quick_setup,

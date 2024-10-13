@@ -63,6 +63,7 @@ def check_eltek_battery(_no_item, _no_params, parsed):
 
 
 check_info["eltek_battery"] = LegacyCheckDefinition(
+    name="eltek_battery",
     detect=DETECT_ELTEK,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12148.9.3",
@@ -101,6 +102,7 @@ def check_eltek_battery_temp(item, params, parsed):
 
 
 check_info["eltek_battery.temp"] = LegacyCheckDefinition(
+    name="eltek_battery_temp",
     service_name="Temperature %s",
     sections=["eltek_battery"],
     discovery_function=inventory_eltek_battery_temp,
@@ -131,6 +133,7 @@ def check_eltek_battery_supply(item, params, parsed):
 
 
 check_info["eltek_battery.supply"] = LegacyCheckDefinition(
+    name="eltek_battery_supply",
     service_name="Battery %s",
     sections=["eltek_battery"],
     discovery_function=discover_eltek_battery_supply,

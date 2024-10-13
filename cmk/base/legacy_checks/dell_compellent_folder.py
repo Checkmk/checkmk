@@ -32,6 +32,7 @@ def parse_dell_compellent_folder(string_table: StringTable) -> StringTable:
 
 
 check_info["dell_compellent_folder"] = LegacyCheckDefinition(
+    name="dell_compellent_folder",
     parse_function=parse_dell_compellent_folder,
     detect=DETECT_DELL_COMPELLENT,
     fetch=SNMPTree(

@@ -89,6 +89,7 @@ def check_intel_true_scale_psus(item, params, parsed):
 
 
 check_info["intel_true_scale_psus"] = LegacyCheckDefinition(
+    name="intel_true_scale_psus",
     detect=DETECT_INTEL_TRUE_SCALE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.10222.2.1.4.7.1",

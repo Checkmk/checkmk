@@ -40,6 +40,7 @@ def check_pulse_secure_disk_util(item, params, parsed):
 
 
 check_info["pulse_secure_disk_util"] = LegacyCheckDefinition(
+    name="pulse_secure_disk_util",
     detect=pulse_secure.DETECT_PULSE_SECURE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12532",

@@ -129,6 +129,7 @@ def parse_genua_carp(string_table: Sequence[StringTable]) -> Sequence[StringTabl
 
 
 check_info["genua_carp"] = LegacyCheckDefinition(
+    name="genua_carp",
     parse_function=parse_genua_carp,
     detect=DETECT_GENUA,
     fetch=[

@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
+from dataclasses import dataclass
 from typing import Any, Literal, NamedTuple, Protocol
 
 from cmk.utils.check_utils import ParametersTypeAlias
@@ -27,6 +28,12 @@ from cmk.agent_based.v1.type_defs import (
     StringTable,
 )
 from cmk.discover_plugins import PluginLocation
+
+
+@dataclass(frozen=True)
+class LegacyPluginLocation:
+    file_name: str
+
 
 InventoryFunction = Callable[..., InventoryResult]
 
@@ -53,7 +60,8 @@ class AgentSectionPlugin(NamedTuple):
     host_label_ruleset_name: RuleSetName | None
     host_label_ruleset_type: RuleSetTypeName
     supersedes: set[SectionName]
-    location: PluginLocation | None  # not available for auto migrated plugins.
+    # We need to allow 'None' for the trivial agent section :-|
+    location: PluginLocation | LegacyPluginLocation | None
 
 
 class _OIDSpecLike(Protocol):
@@ -86,7 +94,7 @@ class SNMPSectionPlugin(NamedTuple):
     detect_spec: SNMPDetectBaseType
     trees: Sequence[_SNMPTreeLike]
     supersedes: set[SectionName]
-    location: PluginLocation | None  # not available for auto migrated plugins.
+    location: PluginLocation | LegacyPluginLocation
 
 
 SectionPlugin = AgentSectionPlugin | SNMPSectionPlugin
@@ -104,7 +112,7 @@ class CheckPlugin(NamedTuple):
     check_default_parameters: ParametersTypeAlias | None
     check_ruleset_name: RuleSetName | None
     cluster_check_function: CheckFunction | None
-    location: PluginLocation | None  # not available for auto migrated plugins.
+    location: PluginLocation | LegacyPluginLocation
 
 
 class InventoryPlugin(NamedTuple):

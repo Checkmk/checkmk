@@ -43,6 +43,7 @@ def parse_emerson_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["emerson_temp"] = LegacyCheckDefinition(
+    name="emerson_temp",
     parse_function=parse_emerson_temp,
     detect=startswith(".1.3.6.1.4.1.6302.2.1.1.1.0", "Emerson Network Power"),
     fetch=SNMPTree(

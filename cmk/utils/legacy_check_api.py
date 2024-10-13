@@ -42,6 +42,7 @@ _CheckFunctionV2Compliant = Callable[..., Generator[Result | Metric | IgnoreResu
 
 @dataclass(frozen=True, kw_only=True)
 class LegacyCheckDefinition:
+    name: str
     detect: SNMPDetectSpecification | None = None
     fetch: list[SNMPTree] | SNMPTree | None = None
     sections: list[str] | None = None

@@ -60,6 +60,7 @@ def check_stormshield_disk(item, params, parsed):
 
 
 check_info["stormshield_disk"] = LegacyCheckDefinition(
+    name="stormshield_disk",
     detect=DETECT_STORMSHIELD,
     fetch=[
         SNMPTree(

@@ -7,7 +7,10 @@ the desired Checkmk version"""
 
 import logging
 import os
+import subprocess
 import sys
+
+import requests
 
 # Make the tests.testlib available
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
@@ -19,6 +22,10 @@ from cmk.ccc.version import Edition
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(filename)s %(message)s")
 logger = logging.getLogger()
+
+CMK_OK = 0
+CMK_DOWNLOAD_ERROR = 11
+CMK_INSTALL_ERROR = 22
 
 
 def main():
@@ -37,16 +44,21 @@ def main():
 
     if version.is_installed():
         logger.info("Already installed. Terminating.")
-        return 0
+        return CMK_OK
 
     manager = ABCPackageManager.factory()
-    manager.install(version.version, version.edition)
+    try:
+        manager.install(version.version, version.edition)
+    except subprocess.CalledProcessError as excp:
+        excp.add_note(f"Failed to install {version.edition} {version.version}!")
+        logger.exception(excp)
+        return CMK_INSTALL_ERROR
+    except requests.exceptions.HTTPError as excp:
+        excp.add_note(f"Failed to download {version.edition} {version.version}!")
+        logger.exception(excp)
+        return CMK_DOWNLOAD_ERROR
 
-    if not version.is_installed():
-        logger.error("Failed not install version")
-        raise Exception(f"Failed to install {version.edition} {version.version}")
-
-    return 0
+    return CMK_OK
 
 
 if __name__ == "__main__":

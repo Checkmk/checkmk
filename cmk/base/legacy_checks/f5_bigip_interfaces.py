@@ -96,6 +96,7 @@ def check_f5_bigip_interfaces(item, _no_params, section):
 
 
 check_info["f5_bigip_interfaces"] = LegacyCheckDefinition(
+    name="f5_bigip_interfaces",
     detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3375.2.1.3.4.10"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3375.2.1.3.4.20"),

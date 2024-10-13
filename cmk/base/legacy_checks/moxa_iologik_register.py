@@ -35,6 +35,7 @@ def parse_moxa_iologik_register(string_table: StringTable) -> StringTable:
 
 
 check_info["moxa_iologik_register"] = LegacyCheckDefinition(
+    name="moxa_iologik_register",
     parse_function=parse_moxa_iologik_register,
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8691."),

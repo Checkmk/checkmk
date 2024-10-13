@@ -105,6 +105,7 @@ def check_saprouter_cert(_no_item, params, parsed):
 
 
 check_info["saprouter_cert"] = LegacyCheckDefinition(
+    name="saprouter_cert",
     parse_function=parse_saprouter_cert,
     service_name="SAP router certificate",
     discovery_function=inventory_saprouter_cert,

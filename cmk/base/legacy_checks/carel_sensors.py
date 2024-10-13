@@ -77,6 +77,7 @@ def check_carel_sensors_temp(item, params, parsed):
 
 
 check_info["carel_sensors"] = LegacyCheckDefinition(
+    name="carel_sensors",
     detect=all_of(
         any_of(contains(".1.3.6.1.2.1.1.1.0", "pCO"), endswith(".1.3.6.1.2.1.1.1.0", "armv4l")),
         exists(".1.3.6.1.4.1.9839.1.1.0"),

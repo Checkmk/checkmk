@@ -35,6 +35,7 @@ def parse_stormshield_info(string_table: StringTable) -> StringTable | None:
 
 
 check_info["stormshield_info"] = LegacyCheckDefinition(
+    name="stormshield_info",
     parse_function=parse_stormshield_info,
     detect=DETECT_STORMSHIELD,
     fetch=SNMPTree(

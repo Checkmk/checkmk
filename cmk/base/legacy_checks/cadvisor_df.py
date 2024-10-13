@@ -45,6 +45,7 @@ def check_cadvisor_df(item, _params, parsed):
 
 
 check_info["cadvisor_df"] = LegacyCheckDefinition(
+    name="cadvisor_df",
     parse_function=parse_cadvisor_df,
     service_name="Filesystem",
     discovery_function=discover_cadvisor_df,

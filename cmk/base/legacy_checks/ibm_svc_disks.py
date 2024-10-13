@@ -105,6 +105,7 @@ def check_ibm_svc_disks(_no_item, params, parsed):
 
 
 check_info["ibm_svc_disks"] = LegacyCheckDefinition(
+    name="ibm_svc_disks",
     parse_function=parse_ibm_svc_disks,
     service_name="Disk Summary",
     discovery_function=discover_ibm_svc_disks,

@@ -41,6 +41,7 @@ def parse_netscaler_mem(string_table: StringTable) -> StringTable:
 
 
 check_info["netscaler_mem"] = LegacyCheckDefinition(
+    name="netscaler_mem",
     parse_function=parse_netscaler_mem,
     detect=SNMP_DETECT,
     fetch=SNMPTree(

@@ -27,6 +27,7 @@ def parse_tsm_paths(string_table: StringTable) -> StringTable:
 
 
 check_info["tsm_paths"] = LegacyCheckDefinition(
+    name="tsm_paths",
     parse_function=parse_tsm_paths,
     service_name="TSM Paths",
     discovery_function=inventory_tsm_paths,

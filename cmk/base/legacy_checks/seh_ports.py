@@ -40,6 +40,7 @@ def check_seh_ports(item, params, parsed):
 
 
 check_info["seh_ports"] = LegacyCheckDefinition(
+    name="seh_ports",
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1229.1.1"),
     fetch=[
         # format taken from SEH-PSRV-MIB v1.167 (2021.10.15)

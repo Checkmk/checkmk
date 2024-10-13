@@ -28,6 +28,7 @@ def discover_sentry_pdu_systempower(section):
 
 
 check_info["sentry_pdu_systempower"] = LegacyCheckDefinition(
+    name="sentry_pdu_systempower",
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1718.3"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1718.3.1",

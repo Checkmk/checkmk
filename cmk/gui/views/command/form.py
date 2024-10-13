@@ -57,8 +57,7 @@ def core_command(
     # itself to be executed (by examining the HTML variables)
     # will return a command to execute and confirm dialog options for the
     # confirmation dialog.
-    for cmd_class in command_registry.values():
-        cmd = cmd_class()
+    for cmd in command_registry.values():
         if user.may(cmd.permission.name):
             result = cmd.action(cmdtag, spec, row, row_nr, action_rows)
             confirm_options = cmd.user_confirm_options(len(action_rows), cmdtag)
@@ -97,8 +96,7 @@ def should_show_command_form(
     # information) then the first info is the primary table. So 'what'
     # will be one of "host", "service", "command" or "downtime".
     what = datasource.infos[0]
-    for command_class in command_registry.values():
-        command = command_class()
+    for command in command_registry.values():
         if what in command.tables and user.may(command.permission.name):
             return True
 
@@ -108,8 +106,7 @@ def should_show_command_form(
 def get_command_groups(info_name: InfoName) -> dict[type[CommandGroup], list[Command]]:
     by_group: dict[type[CommandGroup], list[Command]] = {}
 
-    for command_class in command_registry.values():
-        command = command_class()
+    for command in command_registry.values():
         if info_name in command.tables and user.may(command.permission.name):
             # Some special commands can be shown on special views using this option.  It is
             # currently only used by custom commands, not shipped with Checkmk.

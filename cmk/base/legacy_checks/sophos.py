@@ -158,6 +158,7 @@ def parse_sophos(string_table: StringTable) -> StringTable:
 
 
 check_info["sophos"] = LegacyCheckDefinition(
+    name="sophos",
     parse_function=parse_sophos,
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2604"),
     fetch=SNMPTree(

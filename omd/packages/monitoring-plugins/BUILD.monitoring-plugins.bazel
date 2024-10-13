@@ -87,6 +87,10 @@ POSTFIX_SCRIPT = """
     rm -f "$INSTALLDIR/libexec/check_ifoperstatus" "$INSTALLDIR/libexec/check_ifstatus" \
     "$INSTALLDIR/libexec/check_disk_smb"
 
+    # check_ircd requires the perl module IO::Socket::IP since https://github.com/monitoring-plugins/monitoring-plugins/commit/93cd51bc6221ffc846c69135f2746120683b44c5
+    # We don't want to deploy yet another perl module nor cannot guarantee that the required perl version is available under all distros.
+    rm -f "$INSTALLDIR/libexec/check_ircd"
+
     mkdir -p "$INSTALLDIR/share/doc/monitoring-plugins"
     cp ACKNOWLEDGEMENTS AUTHORS CODING COPYING FAQ NEWS README REQUIREMENTS SUPPORT THANKS \
       "$INSTALLDIR/share/doc/monitoring-plugins"

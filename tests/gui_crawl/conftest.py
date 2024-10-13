@@ -10,6 +10,7 @@ from collections.abc import Generator
 import pytest
 
 from tests.testlib.crawler import Crawler, XssCrawler
+from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.site import get_site_factory, Site
 
 logger = logging.getLogger()
@@ -26,8 +27,11 @@ def pytest_addoption(parser):
 
 
 @pytest.fixture(name="test_site", scope="session")
-def get_site() -> Generator[Site, None, None]:
-    yield from get_site_factory(prefix="crawl_").get_test_site()
+def get_site(request: pytest.FixtureRequest) -> Generator[Site, None, None]:
+    with exit_pytest_on_exceptions(
+        exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
+    ):
+        yield from get_site_factory(prefix="crawl_").get_test_site()
 
 
 @pytest.fixture(name="test_crawler", scope="session")

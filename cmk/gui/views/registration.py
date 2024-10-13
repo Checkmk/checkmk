@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable
+from functools import partial
 
 from cmk.gui.data_source import data_source_registry, register_data_sources
 from cmk.gui.pages import PageRegistry
@@ -51,7 +52,9 @@ def register(
     )
     page_registry.register_page("ajax_reschedule")(PageRescheduleCheck)
     page_registry.register_page("ajax_initial_view_filters")(AjaxInitialViewFilters)
-    page_registry.register_page_handler("view", page_show_view)
+    page_registry.register_page_handler(
+        "view", partial(page_show_view, page_menu_dropdowns_callback=lambda x, y, z: None)
+    )
     page_registry.register_page_handler("create_view", page_select_datasource)
     page_registry.register_page_handler("edit_view", page_edit_view)
     page_registry.register_page_handler("edit_views", page_edit_views)

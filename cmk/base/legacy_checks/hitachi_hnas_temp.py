@@ -59,6 +59,7 @@ def parse_hitachi_hnas_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["hitachi_hnas_temp"] = LegacyCheckDefinition(
+    name="hitachi_hnas_temp",
     parse_function=parse_hitachi_hnas_temp,
     detect=DETECT,
     fetch=SNMPTree(

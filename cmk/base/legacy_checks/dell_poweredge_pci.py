@@ -26,6 +26,7 @@ def parse_dell_poweredge_pci(string_table: StringTable) -> StringTable:
 
 
 check_info["dell_poweredge_pci"] = LegacyCheckDefinition(
+    name="dell_poweredge_pci",
     parse_function=parse_dell_poweredge_pci,
     detect=DETECT_IDRAC_POWEREDGE,
     fetch=SNMPTree(

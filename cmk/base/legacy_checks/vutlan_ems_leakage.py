@@ -43,6 +43,7 @@ def check_vutlan_ems_leakage(item, _no_params, parsed):
 
 
 check_info["vutlan_ems_leakage"] = LegacyCheckDefinition(
+    name="vutlan_ems_leakage",
     detect=DETECT_VUTLAN_EMS,
     fetch=[
         SNMPTree(

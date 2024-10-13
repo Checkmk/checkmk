@@ -62,6 +62,7 @@ def discover_dell_compellent_disks(section):
 
 
 check_info["dell_compellent_disks"] = LegacyCheckDefinition(
+    name="dell_compellent_disks",
     detect=DETECT_DELL_COMPELLENT,
     fetch=[
         SNMPTree(

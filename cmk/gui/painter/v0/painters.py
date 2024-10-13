@@ -5,7 +5,7 @@
 
 import abc
 import time
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from fnmatch import fnmatch
 from pathlib import Path
 
@@ -4287,30 +4287,6 @@ class PainterDowntimeOrigin(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, row["downtime_origin"] == 1 and _("configuration") or _("command"))
-
-
-class PainterDowntimeRecurring(Painter):
-    # Poor man's composition.  CRE and non-CRE have different renderers.
-    renderer: Callable[[Row, Cell], CellSpec] | None = None
-
-    @property
-    def ident(self) -> str:
-        return "downtime_recurring"
-
-    def title(self, cell: Cell) -> str:
-        return _("Downtime recurring interval")
-
-    def short_title(self, cell: Cell) -> str:
-        return _("Recurring")
-
-    @property
-    def columns(self) -> Sequence[ColumnName]:
-        return ["downtime_recurring"]
-
-    def render(self, row: Row, cell: Cell) -> CellSpec:
-        renderer = type(self).renderer
-        assert renderer is not None
-        return renderer(row, cell)  # pylint: disable=not-callable
 
 
 class PainterDowntimeWhat(Painter):

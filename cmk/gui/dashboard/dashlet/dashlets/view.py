@@ -223,7 +223,11 @@ class ABCViewDashlet(IFrameDashlet[VT]):
         view.only_sites = get_only_sites_from_context(context)
         view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)
 
-        process_view(GUIViewRenderer(view, show_buttons=False))
+        process_view(
+            GUIViewRenderer(
+                view, show_buttons=False, page_menu_dropdowns_callback=lambda x, y, z: None
+            )
+        )
 
         html.close_div()
 

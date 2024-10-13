@@ -85,6 +85,7 @@ def parse_winperf_mem(string_table: StringTable) -> StringTable:
 
 
 check_info["winperf_mem"] = LegacyCheckDefinition(
+    name="winperf_mem",
     parse_function=parse_winperf_mem,
     service_name="Memory Pages",
     discovery_function=inventory_winperf_mem,

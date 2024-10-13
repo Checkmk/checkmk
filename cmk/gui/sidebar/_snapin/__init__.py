@@ -3,13 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable
+
 from cmk.ccc import version
 from cmk.ccc.version import edition_supports_nagvis
 
 from cmk.utils import paths
 
+from cmk.gui.main_menu import MegaMenuRegistry
 from cmk.gui.pages import PageRegistry
+from cmk.gui.type_defs import TopicMenuTopic
 
+from . import _views
 from ._base import CustomizableSidebarSnapin as CustomizableSidebarSnapin
 from ._base import PageHandlers as PageHandlers
 from ._base import SidebarSnapin as SidebarSnapin
@@ -40,10 +45,17 @@ from ._server_time import CurrentTime
 from ._site_status import SiteStatus
 from ._speedometer import Speedometer
 from ._tactical_overview import TacticalOverviewSnapin
-from ._views import ajax_export_views, Views
+from ._views import ajax_export_views
+from ._views import default_view_menu_topics as default_view_menu_topics
+from ._views import view_menu_items as view_menu_items
 
 
-def register(snapin_registry_: SnapinRegistry, page_registry: PageRegistry) -> None:
+def register(
+    snapin_registry_: SnapinRegistry,
+    page_registry: PageRegistry,
+    mega_menu_registry: MegaMenuRegistry,
+    view_menu_topics: Callable[[], list[TopicMenuTopic]],
+) -> None:
     snapin_registry_.register(Bookmarks)
     snapin_registry_.register(Dashboards)
     snapin_registry_.register(HostGroups)
@@ -57,7 +69,6 @@ def register(snapin_registry_: SnapinRegistry, page_registry: PageRegistry) -> N
     snapin_registry_.register(SiteStatus)
     snapin_registry_.register(Speedometer)
     snapin_registry_.register(TacticalOverviewSnapin)
-    snapin_registry_.register(Views)
-    page_registry.register_page_handler("export_views", ajax_export_views)
+    _views.register(page_registry, snapin_registry_, mega_menu_registry, view_menu_topics)
     page_registry.register_page("ajax_search_monitoring")(PageSearchMonitoring)
     page_registry.register_page("ajax_search_setup")(PageSearchSetup)

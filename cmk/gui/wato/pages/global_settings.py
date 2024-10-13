@@ -8,7 +8,7 @@
 settings"""
 
 import abc
-from collections.abc import Callable, Collection, Iterable, Iterator
+from collections.abc import Callable, Collection, Iterable, Iterator, Sequence
 from typing import Any, Final
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -58,15 +58,25 @@ from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
-    match_item_generator_registry,
     MatchItem,
+    MatchItemGeneratorRegistry,
     MatchItems,
 )
 
 
-def register(mode_registry: ModeRegistry) -> None:
-    mode_registry.register(ModeEditGlobals)
-    mode_registry.register(ModeEditGlobalSetting)
+def register(
+    mode_registry: ModeRegistry,
+    match_item_generator_registry: MatchItemGeneratorRegistry,
+) -> None:
+    mode_registry.register(DefaultModeEditGlobals)
+    mode_registry.register(DefaultModeEditGlobalSetting)
+    match_item_generator_registry.register(
+        MatchItemGeneratorSettings(
+            "global_settings",
+            _("Global settings"),
+            DefaultModeEditGlobals,
+        )
+    )
 
 
 class ABCGlobalSettingsMode(WatoMode):
@@ -360,7 +370,7 @@ class ABCEditGlobalSettingMode(WatoMode):
             new_value = self._valuespec.from_html_vars("ve")
             self._valuespec.validate_value(new_value, "ve")
 
-            current = self._current_settings[self._varname]
+            current = self._current_settings.get(self._varname)
             self._current_settings[self._varname] = new_value
             msg = HTML.without_escaping(
                 _("Changed global configuration variable %s to %s.")
@@ -469,8 +479,6 @@ class ABCEditGlobalSettingMode(WatoMode):
 
 
 class ModeEditGlobals(ABCGlobalSettingsMode):
-    page_menu_dropdowns_hook: Callable[[], PageMenuDropdown] | None = None
-
     @classmethod
     def name(cls) -> str:
         return "globalvars"
@@ -479,9 +487,15 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
     def static_permissions() -> Collection[PermissionName]:
         return ["global"]
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        page_menu_dropdowns_postprocess: Callable[
+            [Sequence[PageMenuDropdown]], list[PageMenuDropdown]
+        ],
+    ) -> None:
         super().__init__()
         self._current_settings = dict(load_configuration_settings())
+        self._page_menu_dropdowns_postprocess = page_menu_dropdowns_postprocess
 
     def title(self) -> str:
         if self._search:
@@ -490,9 +504,6 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         dropdowns = []
-
-        if ModeEditGlobals.page_menu_dropdowns_hook is not None:
-            dropdowns.append(ModeEditGlobals.page_menu_dropdowns_hook())
 
         dropdowns.append(
             PageMenuDropdown(
@@ -506,6 +517,8 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
                 ],
             ),
         )
+
+        dropdowns = self._page_menu_dropdowns_postprocess(dropdowns)
 
         menu = PageMenu(
             dropdowns=dropdowns,
@@ -567,6 +580,11 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
         self._show_configuration_variables()
 
 
+class DefaultModeEditGlobals(ModeEditGlobals):
+    def __init__(self) -> None:
+        super().__init__(list)
+
+
 class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
     @classmethod
     def name(cls) -> str:
@@ -588,6 +606,12 @@ class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
 
     def _back_url(self) -> str:
         return ModeEditGlobals.mode_url()
+
+
+class DefaultModeEditGlobalSetting(ModeEditGlobalSetting):
+    @classmethod
+    def parent_mode(cls) -> type[WatoMode] | None:
+        return DefaultModeEditGlobals
 
 
 def is_a_checkbox(vs: ValueSpec) -> bool:
@@ -647,12 +671,3 @@ class MatchItemGeneratorSettings(ABCMatchItemGenerator):
     @property
     def is_localization_dependent(self) -> bool:
         return True
-
-
-match_item_generator_registry.register(
-    MatchItemGeneratorSettings(
-        "global_settings",
-        _("Global settings"),
-        ModeEditGlobals,
-    )
-)

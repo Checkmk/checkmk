@@ -24,6 +24,7 @@ def check_pandacom_sys_temp(item, params, info):
 
 
 check_info["pandacom_sys_temp"] = LegacyCheckDefinition(
+    name="pandacom_sys_temp",
     parse_function=parse_pandacom_sys_temp,
     detect=DETECT_PANDACOM,
     fetch=SNMPTree(

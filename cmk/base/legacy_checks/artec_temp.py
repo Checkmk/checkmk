@@ -28,6 +28,7 @@ def parse_artec_temp(string_table: StringTable) -> StringTable | None:
 
 
 check_info["artec_temp"] = LegacyCheckDefinition(
+    name="artec_temp",
     parse_function=parse_artec_temp,
     detect=all_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.10"),

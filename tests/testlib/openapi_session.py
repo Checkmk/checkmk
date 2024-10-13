@@ -748,3 +748,119 @@ class CMKOpenApiSession(requests.Session):
         resp = self.delete(f"/objects/dcd/{dcd_id}")
         if resp.status_code != 204:
             raise UnexpectedResponse.from_response(resp)
+
+    def create_ldap_connection(
+        self,
+        ldap_id: str,
+        user_base_dn: str,
+        user_search_filter: str | None,
+        user_id_attribute: str | None,
+        group_base_dn: str,
+        group_search_filter: str | None,
+        ldap_server: str,
+        bind_dn: str,
+        password: str,
+    ) -> None:
+        """Create an LDAP connection via REST API."""
+        users = {
+            "user_base_dn": user_base_dn,
+            "search_scope": "search_whole_subtree",
+            "search_filter": {
+                "state": "disabled",
+            },
+            "filter_group": {"state": "disabled"},
+            "user_id_attribute": {
+                "state": "disabled",
+            },
+            "user_id_case": "dont_convert_to_lowercase",
+            "umlauts_in_user_ids": "keep_umlauts",
+            "create_users": "on_sync",
+        }
+        if user_search_filter:
+            users["search_filter"] = {
+                "state": "enabled",
+                "filter": user_search_filter,
+            }
+        if user_id_attribute:
+            users["user_id_attribute"] = {
+                "state": "enabled",
+                "attribute": user_id_attribute,
+            }
+
+        groups = {
+            "group_base_dn": group_base_dn,
+            "search_scope": "search_whole_subtree",
+            "search_filter": {
+                "state": "disabled",
+            },
+            "member_attribute": {
+                "state": "disabled",
+            },
+        }
+        if group_search_filter:
+            groups["search_filter"] = {
+                "state": "enabled",
+                "filter": group_search_filter,
+            }
+
+        resp = self.post(
+            "/domain-types/ldap_connection/collections/all",
+            json={
+                "users": users,
+                "groups": groups,
+                "sync_plugins": {},
+                "other": {
+                    "sync_interval": {
+                        "days": 0,
+                        "hours": 0,
+                        "minutes": 1,
+                    },
+                },
+                "general_properties": {
+                    "id": ldap_id,
+                    "description": "test ldap connection",
+                    "comment": "",
+                    "documentation_url": "",
+                    "rule_activation": "activated",
+                },
+                "ldap_connection": {
+                    "directory_type": {
+                        "type": "active_directory_manual",
+                        "ldap_server": ldap_server,
+                    },
+                    "bind_credentials": {
+                        "state": "enabled",
+                        "type": "explicit",
+                        "bind_dn": bind_dn,
+                        "explicit_password": password,
+                    },
+                    "tcp_port": {
+                        "state": "disabled",
+                    },
+                    "ssl_encryption": "disable_ssl",
+                    "connect_timeout": {
+                        "state": "disabled",
+                    },
+                    "ldap_version": {
+                        "state": "disabled",
+                    },
+                    "page_size": {
+                        "state": "disabled",
+                    },
+                    "response_timeout": {
+                        "state": "disabled",
+                    },
+                    "connection_suffix": {
+                        "state": "disabled",
+                    },
+                },
+            },
+        )
+        if resp.status_code != 200:
+            raise UnexpectedResponse.from_response(resp)
+
+    def delete_ldap_connection(self, ldap_id: str) -> None:
+        """Delete an LDAP connection via REST API."""
+        resp = self.delete(f"/objects/ldap_connection/{ldap_id}", headers={"If-Match": "*"})
+        if resp.status_code != 204:
+            raise UnexpectedResponse.from_response(resp)

@@ -37,6 +37,7 @@ def check_fsc_fans(item, params, parsed):
 
 
 check_info["fsc_fans"] = LegacyCheckDefinition(
+    name="fsc_fans",
     detect=all_of(
         all_of(
             any_of(

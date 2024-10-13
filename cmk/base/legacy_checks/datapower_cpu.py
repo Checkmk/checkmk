@@ -27,6 +27,7 @@ def parse_datapower_cpu(string_table: StringTable) -> StringTable:
 
 
 check_info["datapower_cpu"] = LegacyCheckDefinition(
+    name="datapower_cpu",
     parse_function=parse_datapower_cpu,
     detect=DETECT,
     fetch=SNMPTree(

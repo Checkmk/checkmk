@@ -47,6 +47,7 @@ def parse_fireeye_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["fireeye_temp"] = LegacyCheckDefinition(
+    name="fireeye_temp",
     parse_function=parse_fireeye_temp,
     detect=DETECT,
     fetch=SNMPTree(

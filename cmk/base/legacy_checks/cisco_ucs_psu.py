@@ -40,6 +40,7 @@ def parse_cisco_ucs_psu(string_table: StringTable) -> StringTable:
 
 
 check_info["cisco_ucs_psu"] = LegacyCheckDefinition(
+    name="cisco_ucs_psu",
     parse_function=parse_cisco_ucs_psu,
     detect=DETECT,
     fetch=SNMPTree(

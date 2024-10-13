@@ -5,9 +5,11 @@
 
 import json
 
+from cmk.gui import main_modules
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.script_helpers import gui_context
 
+main_modules.load_plugins()
 with gui_context():
     print(
         json.dumps(

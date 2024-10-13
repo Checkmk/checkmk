@@ -37,7 +37,7 @@ $(INTERMEDIATE_INSTALL_BAZEL):
 	#       are built somewhere else without --define git-ssl-no-verify=true being specified, likely
 	#       resulting in different builds
 	$(BAZEL_CMD) build \
-	    $(if $(filter $(DISTRO_CODE),sles15 sles15sp1 sles15sp2 sles15sp3 sles15sp4 sles15sp5 sles15sp6),--define git-ssl-no-verify=true) \
+	    $(if $(filter sles15%,$(DISTRO_CODE)),--define git-ssl-no-verify=true) \
 	    //omd:intermediate_install
 	tar -C $(BUILD_BASE_DIR) -xf $(BAZEL_BIN)/omd/intermediate_install.tar.gz
 
@@ -211,7 +211,6 @@ include \
     packages/xmlsec1/xmlsec1.make \
     packages/robotmk/robotmk.make \
     packages/redfish_mkp/redfish_mkp.make \
-    packages/rabbitmq/rabbitmq.make \
 
 ifeq ($(EDITION),enterprise)
 include \
@@ -235,8 +234,9 @@ include \
     packages/saas/saas.make
 else
 # Ship nagvis for all but saas edition: CMK-14926
-# also exclude jaeger
+# also exclude jaeger and rabbitmq
 include \
     packages/nagvis/nagvis.make \
+    packages/rabbitmq/rabbitmq.make \
     packages/jaeger/jaeger.make
 endif

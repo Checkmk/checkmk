@@ -104,6 +104,7 @@ def check_postgres_stat_database(item, params, parsed):
 
 
 check_info["postgres_stat_database"] = LegacyCheckDefinition(
+    name="postgres_stat_database",
     parse_function=parse_postgres_stat_database,
     service_name="PostgreSQL DB %s Statistics",
     discovery_function=inventory_postgres_stat_database,
@@ -136,6 +137,7 @@ def check_postgres_stat_database_size(item, params, parsed):
 
 
 check_info["postgres_stat_database.size"] = LegacyCheckDefinition(
+    name="postgres_stat_database_size",
     service_name="PostgreSQL DB %s Size",
     sections=["postgres_stat_database"],
     discovery_function=inventory_postgres_stat_database_size,

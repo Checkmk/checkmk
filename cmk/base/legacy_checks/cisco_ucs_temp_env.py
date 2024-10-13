@@ -44,6 +44,7 @@ def check_cisco_ucs_temp_env(item, params, info):
 
 
 check_info["cisco_ucs_temp_env"] = LegacyCheckDefinition(
+    name="cisco_ucs_temp_env",
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.719.1.9.44.1",

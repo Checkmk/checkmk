@@ -148,6 +148,7 @@ def discover_emcvnx_info(x):
 
 
 check_info["emcvnx_info"] = LegacyCheckDefinition(
+    name="emcvnx_info",
     parse_function=parse_emcvnx_info,
     service_name="EMC VNX Info",
     discovery_function=discover_emcvnx_info,
@@ -175,6 +176,7 @@ def discover_emcvnx_info_storage(x):
 
 
 check_info["emcvnx_info.storage"] = LegacyCheckDefinition(
+    name="emcvnx_info_storage",
     service_name="EMC VNX Storage Processor",
     sections=["emcvnx_info"],
     discovery_function=discover_emcvnx_info_storage,
@@ -205,6 +207,7 @@ def discover_emcvnx_info_link(x):
 
 
 check_info["emcvnx_info.link"] = LegacyCheckDefinition(
+    name="emcvnx_info_link",
     service_name="EMC VNX Link",
     sections=["emcvnx_info"],
     discovery_function=discover_emcvnx_info_link,
@@ -232,6 +235,7 @@ def discover_emcvnx_info_config(x):
 
 
 check_info["emcvnx_info.config"] = LegacyCheckDefinition(
+    name="emcvnx_info_config",
     service_name="EMC VNX Config",
     sections=["emcvnx_info"],
     discovery_function=discover_emcvnx_info_config,
@@ -262,6 +266,7 @@ def discover_emcvnx_info_io(x):
 
 
 check_info["emcvnx_info.io"] = LegacyCheckDefinition(
+    name="emcvnx_info_io",
     service_name="EMC VNX IO",
     sections=["emcvnx_info"],
     discovery_function=discover_emcvnx_info_io,

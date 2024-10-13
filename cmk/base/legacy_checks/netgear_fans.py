@@ -123,6 +123,7 @@ def check_netgear_fans(item, params, parsed):
 
 
 check_info["netgear_fans"] = LegacyCheckDefinition(
+    name="netgear_fans",
     detect=DETECT_NETGEAR,
     fetch=[
         SNMPTree(

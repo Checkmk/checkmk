@@ -62,6 +62,7 @@ def parse_ucd_processes(string_table: StringTable) -> StringTable:
 
 
 check_info["ucd_processes"] = LegacyCheckDefinition(
+    name="ucd_processes",
     parse_function=parse_ucd_processes,
     detect=ucd_hr_detection.PREFER_HR_ELSE_UCD,
     fetch=SNMPTree(

@@ -71,6 +71,7 @@ def check_cmctc_temp(item: str, params: TempParamType, section: Section) -> Iter
 
 
 check_info["cmctc_temp"] = LegacyCheckDefinition(
+    name="cmctc_temp",
     detect=DETECT_CMCTC,
     fetch=[
         SNMPTree(

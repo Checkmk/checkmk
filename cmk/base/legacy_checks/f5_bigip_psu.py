@@ -55,6 +55,7 @@ def parse_f5_bigip_psu(string_table: StringTable) -> StringTable:
 
 
 check_info["f5_bigip_psu"] = LegacyCheckDefinition(
+    name="f5_bigip_psu",
     parse_function=parse_f5_bigip_psu,
     detect=DETECT,
     fetch=SNMPTree(

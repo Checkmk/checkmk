@@ -30,6 +30,7 @@ def discover_aws_glacier_limits(section):
 
 
 check_info["aws_glacier_limits"] = LegacyCheckDefinition(
+    name="aws_glacier_limits",
     parse_function=parse_aws_limits_generic,
     service_name="AWS/Glacier Limits %s",
     discovery_function=discover_aws_glacier_limits,

@@ -87,6 +87,7 @@ def check_plesk_backups(item: str, params: Mapping[str, object], section: Sectio
 
 
 check_info["plesk_backups"] = LegacyCheckDefinition(
+    name="plesk_backups",
     parse_function=parse_plesk_backups,
     service_name="Plesk Backup %s",
     discovery_function=inventory_plesk_backups,

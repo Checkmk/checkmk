@@ -5,6 +5,7 @@
 
 import cmk.gui.quick_setup.v0_unstable.predefined._complete as complete
 import cmk.gui.quick_setup.v0_unstable.predefined._recaps as recaps
+import cmk.gui.quick_setup.v0_unstable.predefined._utils as utils
 import cmk.gui.quick_setup.v0_unstable.predefined._validators as validators
 import cmk.gui.quick_setup.v0_unstable.predefined._widgets as widgets
 from cmk.gui.quick_setup.v0_unstable.predefined._common import (
@@ -25,6 +26,7 @@ __all__ = [
     "complete",
     "recaps",
     "validators",
+    "utils",
     "widgets",
     "collect_params_from_form_data",
     "build_quick_setup_formspec_map",

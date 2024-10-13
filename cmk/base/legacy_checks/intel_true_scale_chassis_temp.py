@@ -48,6 +48,7 @@ def parse_intel_true_scale_chassis_temp(string_table: StringTable) -> StringTabl
 
 
 check_info["intel_true_scale_chassis_temp"] = LegacyCheckDefinition(
+    name="intel_true_scale_chassis_temp",
     parse_function=parse_intel_true_scale_chassis_temp,
     detect=DETECT_INTEL_TRUE_SCALE,
     fetch=SNMPTree(

@@ -33,6 +33,7 @@ def discover_sophos_memory(parsed):
 
 
 check_info["sophos_memory"] = LegacyCheckDefinition(
+    name="sophos_memory",
     detect=DETECT_SOPHOS,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.21067.2.1.2.4",

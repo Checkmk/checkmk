@@ -35,6 +35,7 @@ def parse_datapower_mem(string_table: StringTable) -> StringTable:
 
 
 check_info["datapower_mem"] = LegacyCheckDefinition(
+    name="datapower_mem",
     parse_function=parse_datapower_mem,
     detect=DETECT,
     fetch=SNMPTree(

@@ -29,6 +29,7 @@ def discover_nullmailer_mailq(parsed):
 
 
 check_info["nullmailer_mailq"] = LegacyCheckDefinition(
+    name="nullmailer_mailq",
     parse_function=parse_nullmailer_mailq,
     service_name="Nullmailer Queue",
     discovery_function=discover_nullmailer_mailq,

@@ -47,7 +47,7 @@ class HostSearch(CmkPage):
     def _validate_page(self) -> None:
         logger.info("Validate that current page is %s page", self.page_title)
         self.main_area.check_page_title(self.page_title)
-        expect(self.filter_sidebar).to_be_visible()
+        expect(self._filter_sidebar).to_be_visible()
 
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
         return DropdownListNameToID()
@@ -57,12 +57,12 @@ class HostSearch(CmkPage):
         return self.main_area.locator("span[class*='host']")
 
     @property
-    def filter_sidebar(self) -> Locator:
+    def _filter_sidebar(self) -> Locator:
         return self.main_area.locator("div#popup_filters")
 
     @property
     def _labels_table(self) -> Locator:
-        return self.filter_sidebar.locator("tbody[id^='host_labels_1_vs_container']")
+        return self._filter_sidebar.locator("tbody[id^='host_labels_1_vs_container']")
 
     def check_label_filter_applied(
         self,

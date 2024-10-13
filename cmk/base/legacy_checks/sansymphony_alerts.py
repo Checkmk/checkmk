@@ -30,6 +30,7 @@ def parse_sansymphony_alerts(string_table: StringTable) -> StringTable:
 
 
 check_info["sansymphony_alerts"] = LegacyCheckDefinition(
+    name="sansymphony_alerts",
     parse_function=parse_sansymphony_alerts,
     service_name="sansymphony Alerts",
     discovery_function=inventory_sansymphony_alerts,

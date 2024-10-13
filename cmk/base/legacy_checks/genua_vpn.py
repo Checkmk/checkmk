@@ -64,6 +64,7 @@ def parse_genua_vpn(string_table: StringTable) -> StringTable:
 
 
 check_info["genua_vpn"] = LegacyCheckDefinition(
+    name="genua_vpn",
     parse_function=parse_genua_vpn,
     detect=DETECT_GENUA,
     fetch=SNMPTree(

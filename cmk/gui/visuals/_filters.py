@@ -21,7 +21,6 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
-from cmk.gui.site_config import get_site_config
 from cmk.gui.type_defs import (
     Choices,
     ColumnName,
@@ -35,7 +34,7 @@ from cmk.gui.utils.autocompleter_config import AutocompleterConfig, GroupAutocom
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.user_errors import user_errors
-from cmk.gui.valuespec import DualListChoice, LabelGroups
+from cmk.gui.valuespec import LabelGroups
 
 from ._livestatus import get_only_sites_from_context
 from .filter import (
@@ -66,7 +65,6 @@ def register(page_registry: PageRegistry, filter_registry: FilterRegistry) -> No
     register_host_and_service_detail_filters(filter_registry)
     register_contact_filters(filter_registry)
     register_group_table_filters(filter_registry)
-    register_site_filters(filter_registry)
     register_comment_filters(filter_registry)
     register_downtime_filters(filter_registry)
     register_log_filters(filter_registry)
@@ -936,112 +934,6 @@ def register_host_and_service_flag_filters(filter_registry: FilterRegistry) -> N
         title=_l("Host in downtime"),
         sort_index=132,
         info="host",
-    )
-
-
-class SiteFilter(Filter):
-    heading_hook: Callable[[FilterHTTPVariables], str | None]
-
-    def __init__(
-        self,
-        *,
-        title: str | LazyString,
-        sort_index: int,
-        query_filter: query_filters.Query,
-        description: None | str | LazyString = None,
-        is_show_more: bool = False,
-    ) -> None:
-        self.query_filter = query_filter
-
-        super().__init__(
-            ident=self.query_filter.ident,
-            title=title,
-            sort_index=sort_index,
-            info="host",
-            htmlvars=self.query_filter.request_vars,
-            link_columns=[],
-            description=description,
-            is_show_more=is_show_more,
-        )
-
-    def display(self, value: FilterHTTPVariables) -> None:
-        current_value = value.get(self.query_filter.request_vars[0], "")
-        choices = [(current_value, current_value)] if current_value else []
-
-        html.dropdown(
-            self.query_filter.request_vars[0],
-            choices,
-            current_value,
-            style="width: 250px;",
-            class_=["ajax-vals"],
-            data_autocompleter=json.dumps(
-                AutocompleterConfig(
-                    ident="sites",
-                    strict=self.query_filter.ident == "site",
-                ).config
-            ),
-        )
-
-    def heading_info(self, value: FilterHTTPVariables) -> str | None:
-        return SiteFilter.heading_hook(value)
-
-    def request_vars_from_row(self, row: Row) -> dict[str, str]:
-        return {"site": row["site"]}
-
-
-def cre_site_filter_heading_info(value: FilterHTTPVariables) -> str | None:
-    current_value = value.get("site")
-    return (
-        get_site_config(active_config, livestatus.SiteId(current_value))["alias"]
-        if current_value
-        else None
-    )
-
-
-class MultipleSitesFilter(SiteFilter):
-    # Poor man's composition:  Renderer differs between CME and non-CME.
-    sites_options: Callable[[], list[tuple[str, str]]] | None = None
-
-    def get_request_sites(self, value: FilterHTTPVariables) -> list[str]:
-        return [x for x in value.get(self.htmlvars[0], "").strip().split("|") if x]
-
-    def display(self, value: FilterHTTPVariables) -> None:
-        sites_options = type(self).sites_options
-        assert sites_options is not None
-        sites_vs = DualListChoice(choices=sites_options, rows=4)
-        sites_vs.render_input(self.htmlvars[0], self.get_request_sites(value))
-
-
-def register_site_filters(filter_registry: FilterRegistry) -> None:
-    filter_registry.register(
-        SiteFilter(
-            title=_l("Site"),
-            sort_index=500,
-            query_filter=query_filters.Query(
-                ident="siteopt",
-                request_vars=["site"],
-            ),
-            description=_l("Optional selection of a site"),
-        )
-    )
-
-    filter_registry.register(
-        SiteFilter(
-            title=_l("Site (enforced)"),
-            sort_index=501,
-            query_filter=query_filters.Query(ident="site", request_vars=["site"]),
-            description=_l("Selection of site is enforced, use this filter for joining"),
-            is_show_more=True,
-        )
-    )
-
-    filter_registry.register(
-        MultipleSitesFilter(
-            title=_l("Multiple sites"),
-            sort_index=502,
-            query_filter=query_filters.Query(ident="sites", request_vars=["sites"]),
-            description=_l("Associative selection of multiple sites"),
-        )
     )
 
 

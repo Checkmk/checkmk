@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
 import re
 import subprocess
 from collections.abc import Callable, Iterator
@@ -13,10 +14,12 @@ import pytest
 from tests.testlib.site import Site
 from tests.testlib.utils import get_standard_linux_agent_output
 
+logger = logging.getLogger(__name__)
+
 
 @pytest.fixture(name="test_cfg", scope="module")
 def test_cfg_fixture(site: Site) -> Iterator[None]:
-    print("Applying default config")
+    logger.info("Applying default config")
     site.openapi.create_host(
         "modes-test-host",
         attributes={
@@ -72,7 +75,7 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
         #
         # Cleanup code
         #
-        print("Cleaning up test config")
+        logger.info("Cleaning up test config")
 
         site.delete_dir("var/check_mk/agent_output")
 

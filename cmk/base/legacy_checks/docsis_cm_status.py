@@ -83,6 +83,7 @@ def parse_docsis_cm_status(string_table: StringTable) -> StringTable:
 
 
 check_info["docsis_cm_status"] = LegacyCheckDefinition(
+    name="docsis_cm_status",
     parse_function=parse_docsis_cm_status,
     detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4115.820.1.0.0.0.0.0"),

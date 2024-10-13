@@ -45,6 +45,7 @@ def check_cisco_ucs_raid(_no_item, _no_params, section):
 
 
 check_info["cisco_ucs_raid"] = LegacyCheckDefinition(
+    name="cisco_ucs_raid",
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.719.1.45.1.1",

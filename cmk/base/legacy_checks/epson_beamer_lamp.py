@@ -31,6 +31,7 @@ def parse_epson_beamer_lamp(string_table: StringTable) -> StringTable:
 
 
 check_info["epson_beamer_lamp"] = LegacyCheckDefinition(
+    name="epson_beamer_lamp",
     parse_function=parse_epson_beamer_lamp,
     detect=contains(".1.3.6.1.2.1.1.2.0", "1248"),
     fetch=SNMPTree(

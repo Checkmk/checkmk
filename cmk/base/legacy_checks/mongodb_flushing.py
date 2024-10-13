@@ -91,6 +91,7 @@ def parse_mongodb_flushing(string_table: StringTable) -> StringTable:
 
 
 check_info["mongodb_flushing"] = LegacyCheckDefinition(
+    name="mongodb_flushing",
     parse_function=parse_mongodb_flushing,
     service_name="MongoDB Flushing",
     discovery_function=inventory_mongodb_flushing,

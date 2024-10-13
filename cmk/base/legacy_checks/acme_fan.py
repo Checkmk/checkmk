@@ -40,6 +40,7 @@ def parse_acme_fan(string_table: StringTable) -> StringTable:
 
 
 check_info["acme_fan"] = LegacyCheckDefinition(
+    name="acme_fan",
     parse_function=parse_acme_fan,
     detect=DETECT_ACME,
     fetch=SNMPTree(

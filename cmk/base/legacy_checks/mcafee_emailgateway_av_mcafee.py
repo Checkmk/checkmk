@@ -29,6 +29,7 @@ def check_mcafee_emailgateway_av_mcafee(item, params, info):
 
 
 check_info["mcafee_emailgateway_av_mcafee"] = LegacyCheckDefinition(
+    name="mcafee_emailgateway_av_mcafee",
     parse_function=parse_mcafee_emailgateway_av_mcafee,
     detect=DETECT_EMAIL_GATEWAY,
     fetch=SNMPTree(

@@ -51,6 +51,7 @@ def parse_adva_fsp_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["adva_fsp_temp"] = LegacyCheckDefinition(
+    name="adva_fsp_temp",
     parse_function=parse_adva_fsp_temp,
     detect=equals(".1.3.6.1.2.1.1.1.0", "Fiber Service Platform F7"),
     fetch=SNMPTree(

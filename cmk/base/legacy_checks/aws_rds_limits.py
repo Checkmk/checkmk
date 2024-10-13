@@ -43,6 +43,7 @@ def discover_aws_rds_limits(section):
 
 
 check_info["aws_rds_limits"] = LegacyCheckDefinition(
+    name="aws_rds_limits",
     parse_function=parse_aws_rds_limits,
     service_name="AWS/RDS Limits %s",
     discovery_function=discover_aws_rds_limits,

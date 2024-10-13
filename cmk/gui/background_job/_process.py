@@ -27,6 +27,7 @@ from setproctitle import setthreadtitle
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKTerminate
 from cmk.ccc.site import get_omd_config, omd_site
+from cmk.ccc.version import edition
 
 from cmk.utils import paths
 from cmk.utils.log import VERBOSE
@@ -34,6 +35,7 @@ from cmk.utils.user import UserId
 
 from cmk.gui import log
 from cmk.gui.crash_handler import create_gui_crash_report
+from cmk.gui.features import features_registry
 from cmk.gui.i18n import _
 from cmk.gui.session import SuperUserContext, UserContext
 from cmk.gui.single_global_setting import load_gui_log_levels
@@ -148,8 +150,14 @@ def gui_job_context_manager(user: str | None) -> Callable[[], ContextManager[Non
     @contextmanager
     def gui_job_context() -> Iterator[None]:
         _load_ui()
+
+        try:
+            features = features_registry[str(edition(paths.omd_root))]
+        except KeyError:
+            raise ValueError(f"Invalid edition: {edition}")
+
         with (
-            BackgroundJobFlaskApp().test_request_context("/"),
+            BackgroundJobFlaskApp(features).test_request_context("/"),
             SuperUserContext() if user is None else UserContext(UserId(user)),
         ):
             yield None

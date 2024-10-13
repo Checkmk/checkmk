@@ -40,6 +40,7 @@ def parse_mailman_lists(string_table: StringTable) -> StringTable:
 
 
 check_info["mailman_lists"] = LegacyCheckDefinition(
+    name="mailman_lists",
     parse_function=parse_mailman_lists,
     service_name="Mailinglist %s",
     discovery_function=inventory_mailman_lists,

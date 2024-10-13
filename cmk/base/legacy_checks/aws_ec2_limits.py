@@ -50,6 +50,7 @@ def discover_aws_ec2_limits(section):
 
 
 check_info["aws_ec2_limits"] = LegacyCheckDefinition(
+    name="aws_ec2_limits",
     parse_function=parse_aws_limits_generic,
     service_name="AWS/EC2 Limits %s",
     discovery_function=discover_aws_ec2_limits,

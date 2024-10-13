@@ -14,7 +14,7 @@ from cmk.agent_based.prediction_backend import (
 
 from ._checking_classes import Metric, Result, State
 
-# pylint: disable=too-many-arguments
+# ruff: noqa: PLR0913
 
 
 def _do_check_levels(

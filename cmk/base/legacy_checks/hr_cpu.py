@@ -45,6 +45,7 @@ def parse_hr_cpu(string_table: StringTable) -> StringTable:
 
 
 check_info["hr_cpu"] = LegacyCheckDefinition(
+    name="hr_cpu",
     parse_function=parse_hr_cpu,
     detect=ucd_hr_detection.HR,
     fetch=SNMPTree(

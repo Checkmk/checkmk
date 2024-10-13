@@ -108,6 +108,7 @@ def _handle_readable_output(value):
 
 
 check_info["graylog_license"] = LegacyCheckDefinition(
+    name="graylog_license",
     parse_function=parse_graylog_agent_data,
     service_name="Graylog License",
     discovery_function=inventory_graylog_license,

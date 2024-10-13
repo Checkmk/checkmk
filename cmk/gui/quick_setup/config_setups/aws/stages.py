@@ -14,15 +14,23 @@ from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout
 from cmk.gui.quick_setup.config_setups.aws import form_specs as aws
 from cmk.gui.quick_setup.config_setups.aws import ruleset_helper
 from cmk.gui.quick_setup.config_setups.aws.form_specs import quick_setup_aws_form_spec
+from cmk.gui.quick_setup.v0_unstable.definitions import QSSiteSelection
 from cmk.gui.quick_setup.v0_unstable.predefined import (
     collect_params_from_form_data,
+    collect_params_with_defaults_from_form_data,
     complete,
     recaps,
+    utils,
     widgets,
 )
 from cmk.gui.quick_setup.v0_unstable.predefined import validators as qs_validators
-from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupStage
-from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, QuickSetupId, ServiceInterest
+from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupSaveAction, QuickSetupStage
+from cmk.gui.quick_setup.v0_unstable.type_defs import (
+    ParsedFormData,
+    QuickSetupId,
+    ServiceInterest,
+    StageIndex,
+)
 from cmk.gui.quick_setup.v0_unstable.widgets import (
     Collapsible,
     FormSpecId,
@@ -61,18 +69,18 @@ def prepare_aws() -> QuickSetupStage:
                             "your AWS account."
                         ),
                     ),
-                    Text(text=_("Save the generated Access key and Secret access key.")),
+                    Text(text=_("Note down the generated Access key ID and Secret access key.")),
                     Text(
                         text=_(
                             "Return to Checkmk, define a unique AWS account name, and use the "
-                            "Access key and Secret access key below."
+                            "Access key ID and Secret access key below."
                         )
                     ),
                 ],
                 list_type="ordered",
             ),
             widgets.unique_id_formspec_wrapper(
-                title=Title("AWS account name"), prefill_template="aws_config"
+                title=Title("Configuration name"), prefill_template="aws_config"
             ),
             FormSpecWrapper(
                 id=FormSpecId("credentials"),
@@ -82,20 +90,31 @@ def prepare_aws() -> QuickSetupStage:
                 ),
             ),
         ],
-        custom_validators=[qs_validators.validate_unique_id],
+        custom_validators=[
+            qs_validators.validate_unique_id,
+            qs_validators.validate_test_connection_custom_collect_params(
+                rulespec_name=RuleGroup.SpecialAgents("aws"),
+                parameter_form=quick_setup_aws_form_spec(),
+                custom_collect_params=aws_collect_params_with_defaults,
+                error_message=_(
+                    "Could not access your AWS account. Please check your Access and Secret key and try again."
+                ),
+            ),
+        ],
         recap=[recaps.recaps_form_spec],
         button_label="Configure host and regions",
     )
 
 
 def configure_host_and_regions() -> QuickSetupStage:
+    site_default_value = site_attribute_default_value()
     return QuickSetupStage(
         title=_("Configure host and regions"),
         sub_title=_(
             "Name your host, define the path and select the regions you would like to monitor"
         ),
         configure_components=[
-            widgets.host_name_and_host_path_formspec_wrapper(),
+            widgets.host_name_and_host_path_formspec_wrapper(host_prefill_template="aws"),
             FormSpecWrapper(
                 id=FormSpecId("configure_host_and_regions"),
                 form_spec=DictionaryExtended(
@@ -103,15 +122,42 @@ def configure_host_and_regions() -> QuickSetupStage:
                     layout=DictionaryLayout.two_columns,
                 ),
             ),
+            FormSpecWrapper(
+                id=FormSpecId("site"),
+                form_spec=DictionaryExtended(
+                    elements={
+                        QSSiteSelection: DictElement(
+                            parameter_form=SingleChoice(
+                                elements=[
+                                    SingleChoiceElement(
+                                        name=site_id,
+                                        title=Title(  # pylint: disable=localization-of-non-literal-string
+                                            title
+                                        ),
+                                    )
+                                    for site_id, title in get_configured_site_choices()
+                                ],
+                                title=Title("Site selection"),
+                                prefill=(
+                                    DefaultValue(site_default_value)
+                                    if site_default_value
+                                    else InputHint(Title("Please choose"))
+                                ),
+                            ),
+                            required=True,
+                        )
+                    },
+                    layout=DictionaryLayout.two_columns,
+                ),
+            ),
         ],
-        custom_validators=[],
+        custom_validators=[qs_validators.validate_host_name_doesnt_exists],
         recap=[recaps.recaps_form_spec],
         button_label="Configure services to monitor",
     )
 
 
 def _configure() -> Sequence[Widget]:
-    site_default_value = site_attribute_default_value()
     return [
         FormSpecWrapper(
             id=FormSpecId("configure_services_to_monitor"),
@@ -123,34 +169,6 @@ def _configure() -> Sequence[Widget]:
         Collapsible(
             title="Other options",
             items=[
-                FormSpecWrapper(
-                    id=FormSpecId("site"),
-                    form_spec=DictionaryExtended(
-                        elements={
-                            "site_selection": DictElement(
-                                parameter_form=SingleChoice(
-                                    elements=[
-                                        SingleChoiceElement(
-                                            name=site_id,
-                                            title=Title(  # pylint: disable=localization-of-non-literal-string
-                                                title
-                                            ),
-                                        )
-                                        for site_id, title in get_configured_site_choices()
-                                    ],
-                                    title=Title("Site selection"),
-                                    prefill=(
-                                        DefaultValue(site_default_value)
-                                        if site_default_value
-                                        else InputHint(Title("Please choose"))
-                                    ),
-                                ),
-                                required=True,
-                            )
-                        },
-                        layout=DictionaryLayout.two_columns,
-                    ),
-                ),
                 FormSpecWrapper(
                     id=FormSpecId("aws_tags"),
                     form_spec=DictionaryExtended(
@@ -178,31 +196,55 @@ def configure_services_to_monitor() -> QuickSetupStage:
         recap=[
             recaps.recaps_form_spec,
         ],
-        button_label="Review & run preview service discovery",
+        button_label="Test configuration",
     )
+
+
+def recap_found_services(
+    _quick_setup_id: QuickSetupId,
+    _stage_index: StageIndex,
+    parsed_data: ParsedFormData,
+) -> Sequence[Widget]:
+    service_discovery_result = utils.get_service_discovery_preview(
+        rulespec_name=RuleGroup.SpecialAgents("aws"),
+        all_stages_form_data=parsed_data,
+        parameter_form=quick_setup_aws_form_spec(),
+        collect_params=aws_collect_params_with_defaults,
+    )
+    aws_service_interest = ServiceInterest(r"(?i).*aws.*", "services")
+    filtered_groups_of_services, _other_services = utils.group_services_by_interest(
+        services_of_interest=[aws_service_interest],
+        service_discovery_result=service_discovery_result,
+    )
+    if len(filtered_groups_of_services[aws_service_interest]):
+        return [
+            Text(text=_("AWS services found!")),
+            Text(
+                text=_(
+                    "Save your progress and go to the Activate Changes page to enable it. EC2 instances may take a few minutes to show up."
+                )
+            ),
+        ]
+    return [
+        Text(text=_("No AWS services found.")),
+        Text(
+            text=_(
+                "The connection to AWS was successful, but no services were found. If this is unintentional, please verify your configuration."
+            )
+        ),
+    ]
 
 
 def review_and_run_preview_service_discovery() -> QuickSetupStage:
     return QuickSetupStage(
-        title=_("Review and run preview service discovery"),
-        sub_title=_("Review your configuration and run preview service discovery"),
+        title=_("Review and test configuration"),
+        sub_title=_("Test the AWS connection based on your configuration settings"),
         configure_components=[],
-        custom_validators=[
-            qs_validators.validate_test_connection_custom_collect_params(
-                rulespec_name=RuleGroup.SpecialAgents("aws"),
-                parameter_form=quick_setup_aws_form_spec(),
-                custom_collect_params=aws_collect_params,
-            )
-        ],
+        custom_validators=[],
         recap=[
-            recaps.recap_service_discovery_custom_collect_params(
-                rulespec_name=RuleGroup.SpecialAgents("aws"),
-                parameter_form=quick_setup_aws_form_spec(),
-                services_of_interest=[ServiceInterest(".*", "services")],
-                custom_collect_params=aws_collect_params,
-            )
+            recap_found_services,
         ],
-        button_label="Run preview service discovery",
+        button_label=_("Test configuration"),
     )
 
 
@@ -223,6 +265,14 @@ def aws_collect_params(
     )
 
 
+def aws_collect_params_with_defaults(
+    all_stages_form_data: ParsedFormData, parameter_form: Dictionary
+) -> Mapping[str, object]:
+    return aws_transform_to_disk(
+        collect_params_with_defaults_from_form_data(all_stages_form_data, parameter_form)
+    )
+
+
 def _migrate_aws_service(service: str) -> object:
     # Global
     if service in ["ce", "route53"]:
@@ -240,8 +290,8 @@ def aws_transform_to_disk(params: Mapping[str, object]) -> Mapping[str, object]:
     assert isinstance(global_services, list)
     services = params["services"]
     assert isinstance(services, list)
-    overall_tags = params.get("overall_tags", [])
-    assert isinstance(overall_tags, list)
+    overall_tags = params.get("overall_tags")
+
     regions_to_monitor = params["regions_to_monitor"]
     assert isinstance(regions_to_monitor, list)
     keys_to_rename = {"aws_lambda": "lambda"}
@@ -253,8 +303,11 @@ def aws_transform_to_disk(params: Mapping[str, object]) -> Mapping[str, object]:
         "access": {},  # TODO required key but not yet implemented. It's part of quick_setup_advanced()
         "services": {keys_to_rename.get(k, k): _migrate_aws_service(k) for k in services},
         "piggyback_naming_convention": "ip_region_instance",
-        "overall_tags": [(tag["key"], tag["values"]) for tag in overall_tags],
     }
+    if overall_tags is not None:
+        assert isinstance(overall_tags, list)
+        params["overall_tags"] = [(tag["key"], tag["values"]) for tag in overall_tags]
+
     return params
 
 
@@ -262,11 +315,16 @@ quick_setup_aws = QuickSetup(
     title=_("Amazon Web Services (AWS)"),
     id=QuickSetupId(RuleGroup.SpecialAgents("aws")),
     stages=[
-        prepare_aws(),
-        configure_host_and_regions(),
-        configure_services_to_monitor(),
-        review_and_run_preview_service_discovery(),
+        prepare_aws,
+        configure_host_and_regions,
+        configure_services_to_monitor,
+        review_and_run_preview_service_discovery,
     ],
-    save_action=save_action,
-    button_complete_label=_("Save & go to Activate changes"),
+    save_actions=[
+        QuickSetupSaveAction(
+            id="activate_changes",
+            label=_("Save & go to Activate changes"),
+            action=save_action,
+        ),
+    ],
 )

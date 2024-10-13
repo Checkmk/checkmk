@@ -27,6 +27,7 @@ from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin
 from cmk.base.api.agent_based.register.section_plugins import create_snmp_section_plugin
 
 from cmk.agent_based.v2 import SimpleSNMPSection, SNMPSection
+from cmk.discover_plugins import PluginLocation
 
 SNMP_HOST_CONFIG: Final = SNMPHostConfig(
     is_ipv6_primary=False,
@@ -54,7 +55,9 @@ def _get_snmp_section_plugin(
             assert isinstance(section_plugin, SNMPSectionPlugin)
             return section_plugin
         case SNMPSection() | SimpleSNMPSection():
-            return create_snmp_section_plugin(section, None, validate=True)
+            return create_snmp_section_plugin(
+                section, PluginLocation(module="not-relevant"), validate=True
+            )
         case other:
             assert_never(other)
 

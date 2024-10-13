@@ -25,6 +25,7 @@ def discover_netapp_cpu(info):
 
 
 check_info["netapp_cpu"] = LegacyCheckDefinition(
+    name="netapp_cpu",
     parse_function=parse_netapp_cpu,
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.1.0", "NetApp Release"), exists(".1.3.6.1.4.1.789.1.2.1.3.0")

@@ -63,6 +63,7 @@ def check_emcvnx_sp_util(item, params, parsed):
 
 
 check_info["emcvnx_sp_util"] = LegacyCheckDefinition(
+    name="emcvnx_sp_util",
     parse_function=parse_emcvnx_sp_util,
     service_name="Storage Processor Utilization",
     discovery_function=inventory_emcvnx_sp_util,

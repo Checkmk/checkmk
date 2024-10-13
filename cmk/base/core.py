@@ -26,8 +26,9 @@ from cmk.base import core_config
 from cmk.base.config import ConfigCache, ConfiguredIPLookup
 from cmk.base.core_config import MonitoringCore
 
-# suppress "Cannot find module" error from mypy
+from cmk import trace
 
+tracer = trace.get_tracer()
 
 # .
 #   .--Control-------------------------------------------------------------.
@@ -143,27 +144,33 @@ def do_core_action(
     monitoring_core: Literal["nagios", "cmc"],
     quiet: bool = False,
 ) -> None:
-    if not quiet:
-        print_("%sing monitoring core..." % action.value.title())
-
-    if monitoring_core == "nagios":
-        os.putenv("CORE_NOVERIFY", "yes")
-        command = ["%s/etc/init.d/core" % cmk.utils.paths.omd_root, action.value]
-    else:
-        command = ["omd", action.value, "cmc"]
-
-    completed_process = subprocess.run(
-        command,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        close_fds=True,
-        check=False,
-    )
-    if completed_process.returncode != 0:
+    with tracer.start_as_current_span(
+        f"do_core_action[{action.value}]",
+        attributes={
+            "cmk.core_config.core": monitoring_core,
+        },
+    ):
         if not quiet:
-            print_("ERROR: %r\n" % completed_process.stdout)
-        raise MKGeneralException(
-            f"Cannot {action.value} the monitoring core: {completed_process.stdout!r}"
+            print_("%sing monitoring core..." % action.value.title())
+
+        if monitoring_core == "nagios":
+            os.putenv("CORE_NOVERIFY", "yes")
+            command = ["%s/etc/init.d/core" % cmk.utils.paths.omd_root, action.value]
+        else:
+            command = ["omd", action.value, "cmc"]
+
+        completed_process = subprocess.run(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            close_fds=True,
+            check=False,
         )
-    if not quiet:
-        print_(tty.ok + "\n")
+        if completed_process.returncode != 0:
+            if not quiet:
+                print_("ERROR: %r\n" % completed_process.stdout)
+            raise MKGeneralException(
+                f"Cannot {action.value} the monitoring core: {completed_process.stdout!r}"
+            )
+        if not quiet:
+            print_(tty.ok + "\n")

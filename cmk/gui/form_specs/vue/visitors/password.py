@@ -126,6 +126,10 @@ class PasswordVisitor(FormSpecVisitor[Password, ParsedPassword]):
                 for x in optional_validation(compute_validators(self.form_spec), parsed_value[2][1])
                 if x is not None
             ]
+        if parsed_value[1] == "stored_password":
+            if not parsed_value[2][0]:
+                return create_validation_error("", Title("No password selected"))
+
         return []
 
     def _to_disk(self, raw_value: object, parsed_value: ParsedPassword) -> object:

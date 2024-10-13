@@ -47,6 +47,7 @@ def parse_juniper_screenos_cpu(string_table: StringTable) -> StringTable | None:
 
 
 check_info["juniper_screenos_cpu"] = LegacyCheckDefinition(
+    name="juniper_screenos_cpu",
     parse_function=parse_juniper_screenos_cpu,
     detect=DETECT_JUNIPER_SCREENOS,
     fetch=SNMPTree(

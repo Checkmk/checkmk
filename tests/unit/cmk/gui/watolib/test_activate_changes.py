@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 from werkzeug import datastructures as werkzeug_datastructures
 
+from tests.testlib.plugin_registry import reset_registries
 from tests.testlib.repo import is_enterprise_repo, is_managed_repo
 
 from livestatus import SiteConfiguration, SiteId
@@ -29,16 +30,15 @@ from cmk.gui.background_job._defines import BackgroundJobDefines
 from cmk.gui.http import Request
 from cmk.gui.watolib import activate_changes
 from cmk.gui.watolib.activate_changes import ActivationCleanupBackgroundJob, ConfigSyncFileInfo
-from cmk.gui.watolib.config_sync import ReplicationPath
+from cmk.gui.watolib.config_sync import replication_path_registry, ReplicationPath
 
 logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(autouse=True)
 def restore_orig_replication_paths():
-    _orig_paths = activate_changes._replication_paths[:]
-    yield
-    activate_changes._replication_paths = _orig_paths
+    with reset_registries([replication_path_registry]):
+        yield
 
 
 def _expected_replication_paths(edition: cmk_version.Edition) -> list[ReplicationPath]:
@@ -224,7 +224,7 @@ def test_get_replication_paths_defaults(
     edition: cmk_version.Edition, request_context: None
 ) -> None:
     expected = _expected_replication_paths(edition)
-    assert sorted(activate_changes.get_replication_paths()) == sorted(expected)
+    assert sorted(replication_path_registry.values()) == sorted(expected)
 
 
 @pytest.mark.parametrize("replicate_ec", [None, True, False])
@@ -254,18 +254,6 @@ def test_get_replication_components(
 
     assert sorted(activate_changes._get_replication_components(partial_site_config)) == sorted(
         expected
-    )
-
-
-def test_add_replication_paths(request_context: None) -> None:
-    activate_changes.add_replication_paths(
-        [
-            ReplicationPath("dir", "abc", "path/to/abc", ["e1", "e2"]),
-        ]
-    )
-
-    assert activate_changes.get_replication_paths()[-1] == ReplicationPath(
-        "dir", "abc", "path/to/abc", ["e1", "e2"]
     )
 
 

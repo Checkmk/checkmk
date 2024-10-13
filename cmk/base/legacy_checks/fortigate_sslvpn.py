@@ -60,6 +60,7 @@ def discover_fortigate_sslvpn(section):
 
 
 check_info["fortigate_sslvpn"] = LegacyCheckDefinition(
+    name="fortigate_sslvpn",
     detect=DETECT_FORTIGATE,
     fetch=[
         SNMPTree(

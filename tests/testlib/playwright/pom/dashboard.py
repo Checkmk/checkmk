@@ -106,3 +106,34 @@ class DashboardMobile(CmkPage):
     @property
     def logout(self) -> Locator:
         return self.get_link("Logout")
+
+
+class ProblemDashboard(CmkPage):
+    """Represent the page `Problem dashboard`.
+
+    `Problem dashboard` is a default dashboard page for cmk monitoring user.
+    #TODO: create a common base class for 'Main dashboard' and 'Problem dashboard', see CMK-19521
+    """
+
+    page_title: str = "Problem dashboard"
+
+    def navigate(self) -> None:
+        logger.info("Navigate to '%s' page", self.page_title)
+        self.main_menu.main_page.click()
+        self.page.wait_for_url(url=re.compile("dashboard.py$"), wait_until="load")
+        self._validate_page()
+
+    def _validate_page(self) -> None:
+        logger.info("Validate that current page is '%s' page", self.page_title)
+        self.main_area.check_page_title(self.page_title)
+        expect(self.dashlet("Host statistics")).to_be_visible()
+        expect(self.dashlet("Events of recent 4 hours")).to_be_visible()
+
+    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
+        return DropdownListNameToID()
+
+    def dashlet(self, dashlet_name: str) -> Locator:
+        return self.main_area.locator(
+            f'div[class*="dashlet "]:has(text:text-is("{dashlet_name}")), '
+            f'div[class*="dashlet "]:has(a:text-is("{dashlet_name}"))'
+        )

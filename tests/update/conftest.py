@@ -12,12 +12,10 @@ from collections.abc import Generator
 from pathlib import Path
 
 import pytest
-import yaml
 
 from tests.testlib.licensing import license_site
-from tests.testlib.repo import repo_path
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import edition_from_env, parse_raw_edition, run
+from tests.testlib.utils import edition_from_env, get_supported_distros, parse_raw_edition, run
 from tests.testlib.version import CMKVersion, get_min_version, version_from_env
 
 from cmk.ccc.version import Edition
@@ -121,13 +119,6 @@ class BaseVersions:
 
 @dataclasses.dataclass
 class InteractiveModeDistros:
-    @staticmethod
-    def get_supported_distros() -> list[str]:
-        with open(repo_path() / "editions.yml") as stream:
-            yaml_file = yaml.safe_load(stream)
-
-        return yaml_file["common"]
-
     DISTROS = ["ubuntu-22.04", "almalinux-9"]
     assert set(DISTROS).issubset(set(get_supported_distros()))
 
@@ -203,14 +194,11 @@ def _create_site(base_version: CMKVersion) -> Site:
 
     try:
         site = site_factory.get_site(site_name, auto_restart_httpd=True)
-    except Exception as e:
-        if f"Version {base_version.version} could not be installed" in str(e):
-            pytest.skip(
-                f"Base-version {base_version.version} not available in "
-                f'{os.environ.get("DISTRO")}'
-            )
-        else:
-            raise
+    except FileNotFoundError:
+        pytest.skip(
+            f"Base-version '{base_version.version}' is not available for distro "
+            f'{os.environ.get("DISTRO")}'
+        )
 
     return site
 
@@ -291,8 +279,7 @@ def inject_dumps(site: Site, dumps_dir: Path) -> None:
     # create dump folder in the test site
     site_dumps_path = site.path("var/check_mk/dumps")
     LOGGER.info('Creating folder "%s"...', site_dumps_path)
-    rc = site.execute(["mkdir", "-p", site_dumps_path]).wait()
-    assert rc == 0
+    _ = site.run(["mkdir", "-p", site_dumps_path])
 
     LOGGER.info("Injecting agent-output...")
 

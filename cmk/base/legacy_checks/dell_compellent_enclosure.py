@@ -36,6 +36,7 @@ def parse_dell_compellent_enclosure(string_table: StringTable) -> StringTable:
 
 
 check_info["dell_compellent_enclosure"] = LegacyCheckDefinition(
+    name="dell_compellent_enclosure",
     parse_function=parse_dell_compellent_enclosure,
     detect=DETECT_DELL_COMPELLENT,
     fetch=SNMPTree(

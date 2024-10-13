@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 
 import pytest
 
@@ -14,7 +14,7 @@ from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.definitions import UniqueBundleIDStr, UniqueFormSpecIDStr
 from cmk.gui.quick_setup.v0_unstable.predefined import recaps, widgets
 from cmk.gui.quick_setup.v0_unstable.predefined import validators as qs_validators
-from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupStage
+from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupSaveAction, QuickSetupStage
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     GeneralStageErrors,
     ParsedFormData,
@@ -37,14 +37,26 @@ from cmk.rulesets.v1.form_specs import (
 )
 
 
-def register_quick_setup(setup_stages: Sequence[QuickSetupStage] | None = None) -> None:
+def register_quick_setup(
+    setup_stages: Sequence[Callable[[], QuickSetupStage]] | None = None,
+) -> None:
     quick_setup_registry.register(
         QuickSetup(
             title="Quick Setup Test",
             id=QuickSetupId("quick_setup_test"),
             stages=setup_stages if setup_stages is not None else [],
-            save_action=lambda stages: "http://save/url",
-            button_complete_label="Complete",
+            save_actions=[
+                QuickSetupSaveAction(
+                    id="save",
+                    label="Complete",
+                    action=lambda stages: "http://save/url",
+                ),
+                QuickSetupSaveAction(
+                    id="other_save",
+                    label="Complete2: The Sequel",
+                    action=lambda stages: "http://other_save",
+                ),
+            ],
         ),
     )
 
@@ -52,7 +64,7 @@ def register_quick_setup(setup_stages: Sequence[QuickSetupStage] | None = None) 
 def test_get_quick_setup_mode_guided(clients: ClientRegistry) -> None:
     register_quick_setup(
         setup_stages=[
-            QuickSetupStage(
+            lambda: QuickSetupStage(
                 title="stage1",
                 configure_components=[
                     widgets.unique_id_formspec_wrapper(Title("account name")),
@@ -74,7 +86,7 @@ def test_get_quick_setup_mode_guided(clients: ClientRegistry) -> None:
 def test_validate_retrieve_next(clients: ClientRegistry) -> None:
     register_quick_setup(
         setup_stages=[
-            QuickSetupStage(
+            lambda: QuickSetupStage(
                 title="stage1",
                 configure_components=[
                     widgets.unique_id_formspec_wrapper(Title("account name")),
@@ -83,7 +95,7 @@ def test_validate_retrieve_next(clients: ClientRegistry) -> None:
                 recap=[recaps.recaps_form_spec],
                 button_label="Next",
             ),
-            QuickSetupStage(
+            lambda: QuickSetupStage(
                 title="stage2",
                 configure_components=[],
                 custom_validators=[],
@@ -110,7 +122,7 @@ def _form_spec_extra_validate(
 def test_failing_validate(clients: ClientRegistry) -> None:
     register_quick_setup(
         setup_stages=[
-            QuickSetupStage(
+            lambda: QuickSetupStage(
                 title="stage1",
                 configure_components=[
                     widgets.unique_id_formspec_wrapper(Title("account name")),
@@ -145,7 +157,7 @@ def test_failing_validate(clients: ClientRegistry) -> None:
 def test_failing_validate_host_path(clients: ClientRegistry) -> None:
     register_quick_setup(
         setup_stages=[
-            QuickSetupStage(
+            lambda: QuickSetupStage(
                 title="stage1",
                 configure_components=[
                     FormSpecWrapper(
@@ -197,7 +209,7 @@ def test_failing_validate_host_path(clients: ClientRegistry) -> None:
 def test_quick_setup_save(clients: ClientRegistry) -> None:
     register_quick_setup(
         setup_stages=[
-            QuickSetupStage(
+            lambda: QuickSetupStage(
                 title="stage1",
                 configure_components=[
                     widgets.unique_id_formspec_wrapper(Title("account name")),
@@ -210,10 +222,29 @@ def test_quick_setup_save(clients: ClientRegistry) -> None:
     )
     resp = clients.QuickSetup.complete_quick_setup(
         quick_setup_id="quick_setup_test",
-        payload={"stages": []},
+        payload={"button_id": "save", "stages": []},
     )
     resp.assert_status_code(201)
     assert resp.json == {"redirect_url": "http://save/url"}
+
+
+def test_quick_setup_save_action_exists(clients: ClientRegistry) -> None:
+    register_quick_setup(
+        setup_stages=[
+            lambda: QuickSetupStage(
+                title="stage1",
+                configure_components=[],
+                custom_validators=[],
+                recap=[],
+                button_label="Next",
+            ),
+        ],
+    )
+    clients.QuickSetup.complete_quick_setup(
+        quick_setup_id="quick_setup_test",
+        payload={"button_id": "some_nonexistent_id", "stages": []},
+        expect_ok=False,
+    ).assert_status_code(404)
 
 
 def test_unique_id_must_be_unique(
@@ -224,7 +255,7 @@ def test_unique_id_must_be_unique(
 
     register_quick_setup(
         setup_stages=[
-            QuickSetupStage(
+            lambda: QuickSetupStage(
                 title="stage1",
                 configure_components=[
                     widgets.unique_id_formspec_wrapper(Title("account name")),
@@ -247,7 +278,7 @@ def test_unique_id_must_be_unique(
 def test_get_quick_setup_mode_overview(clients: ClientRegistry) -> None:
     register_quick_setup(
         setup_stages=[
-            QuickSetupStage(
+            lambda: QuickSetupStage(
                 title="stage1",
                 sub_title="1",
                 configure_components=[
@@ -257,7 +288,7 @@ def test_get_quick_setup_mode_overview(clients: ClientRegistry) -> None:
                 recap=[],
                 button_label="Next",
             ),
-            QuickSetupStage(
+            lambda: QuickSetupStage(
                 title="stage2",
                 sub_title="2",
                 configure_components=[],

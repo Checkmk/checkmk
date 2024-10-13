@@ -102,6 +102,7 @@ def check_allnet_ip_sensoric_tension(item, _no_params, parsed):
 
 
 check_info["allnet_ip_sensoric.tension"] = LegacyCheckDefinition(
+    name="allnet_ip_sensoric_tension",
     # section already migrated!
     service_name="Electric Tension %s",
     sections=["allnet_ip_sensoric"],
@@ -140,6 +141,7 @@ def check_allnet_ip_sensoric_temp(item, params, parsed):
 
 
 check_info["allnet_ip_sensoric.temp"] = LegacyCheckDefinition(
+    name="allnet_ip_sensoric_temp",
     # section already migrated!
     service_name="Temperature %s",
     sections=["allnet_ip_sensoric"],
@@ -177,6 +179,7 @@ def check_allnet_ip_sensoric_humidity(item, params, parsed):
 
 
 check_info["allnet_ip_sensoric.humidity"] = LegacyCheckDefinition(
+    name="allnet_ip_sensoric_humidity",
     # section already migrated!
     service_name="Humidity %s",
     sections=["allnet_ip_sensoric"],
@@ -222,6 +225,7 @@ def check_allnet_ip_sensoric_pressure(item, _no_params, parsed):
 
 
 check_info["allnet_ip_sensoric.pressure"] = LegacyCheckDefinition(
+    name="allnet_ip_sensoric_pressure",
     # section already migrated!
     service_name="Pressure %s",
     sections=["allnet_ip_sensoric"],

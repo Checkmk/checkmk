@@ -68,10 +68,7 @@ std::vector<Extension> GatherExtensions(const YAML::Node &group) {
         const auto command_line =
             GetVal<std::string>(entry, vars::kExecutionCmdLine, "");
         auto mode = GetVal<std::string>(entry, vars::kExecutionRun, "");
-        exts.emplace_back(Extension{.name = name,
-                                    .binary = FindBinary(binary),
-                                    .command_line = command_line,
-                                    .mode = ToMode(mode)});
+        exts.emplace_back(name, FindBinary(binary), command_line, ToMode(mode));
     }
     return exts;
 }

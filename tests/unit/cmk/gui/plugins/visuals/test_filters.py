@@ -19,7 +19,7 @@ import cmk.ccc.version as cmk_version
 import cmk.utils.tags
 from cmk.utils import paths
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-from cmk.utils.structured_data import ImmutableTree
+from cmk.utils.structured_data import deserialize_tree
 
 from cmk.gui.bi import _filters as bi_filters
 from cmk.gui.type_defs import Rows, VisualContext
@@ -1167,11 +1167,11 @@ def test_filters_filter_table(
                 ("is_has_inv", "0"),
             ],
             rows=[
-                {"host_inventory": ImmutableTree.deserialize({})},
-                {"host_inventory": ImmutableTree.deserialize({"a": "b"})},
+                {"host_inventory": deserialize_tree({})},
+                {"host_inventory": deserialize_tree({"a": "b"})},
             ],
             expected_rows=[
-                {"host_inventory": ImmutableTree.deserialize({})},
+                {"host_inventory": deserialize_tree({})},
             ],
         ),
         # Filter out empty trees (is_has_inv == 1)
@@ -1181,11 +1181,11 @@ def test_filters_filter_table(
                 ("is_has_inv", "1"),
             ],
             rows=[
-                {"host_inventory": ImmutableTree.deserialize({})},
-                {"host_inventory": ImmutableTree.deserialize({"a": "b"})},
+                {"host_inventory": deserialize_tree({})},
+                {"host_inventory": deserialize_tree({"a": "b"})},
             ],
             expected_rows=[
-                {"host_inventory": ImmutableTree.deserialize({"a": "b"})},
+                {"host_inventory": deserialize_tree({"a": "b"})},
             ],
         ),
         # Do not apply filter (is_has_inv == -1)
@@ -1195,12 +1195,12 @@ def test_filters_filter_table(
                 ("is_has_inv", "-1"),
             ],
             rows=[
-                {"host_inventory": ImmutableTree.deserialize({})},
-                {"host_inventory": ImmutableTree.deserialize({"a": "b"})},
+                {"host_inventory": deserialize_tree({})},
+                {"host_inventory": deserialize_tree({"a": "b"})},
             ],
             expected_rows=[
-                {"host_inventory": ImmutableTree.deserialize({})},
-                {"host_inventory": ImmutableTree.deserialize({"a": "b"})},
+                {"host_inventory": deserialize_tree({})},
+                {"host_inventory": deserialize_tree({"a": "b"})},
             ],
         ),
         # Testing base class FilterInvText
@@ -1210,43 +1210,15 @@ def test_filters_filter_table(
                 ("inv_software_os_vendor", "bla"),
             ],
             rows=[
-                {
-                    "host_inventory": ImmutableTree.deserialize(
-                        {"software": {"os": {"vendor": "bla"}}}
-                    )
-                },
-                {
-                    "host_inventory": ImmutableTree.deserialize(
-                        {"software": {"os": {"vendor": "blabla"}}}
-                    )
-                },
-                {
-                    "host_inventory": ImmutableTree.deserialize(
-                        {"software": {"os": {"vendor": "ag blabla"}}}
-                    )
-                },
-                {
-                    "host_inventory": ImmutableTree.deserialize(
-                        {"software": {"os": {"vendor": "blu"}}}
-                    )
-                },
+                {"host_inventory": deserialize_tree({"software": {"os": {"vendor": "bla"}}})},
+                {"host_inventory": deserialize_tree({"software": {"os": {"vendor": "blabla"}}})},
+                {"host_inventory": deserialize_tree({"software": {"os": {"vendor": "ag blabla"}}})},
+                {"host_inventory": deserialize_tree({"software": {"os": {"vendor": "blu"}}})},
             ],
             expected_rows=[
-                {
-                    "host_inventory": ImmutableTree.deserialize(
-                        {"software": {"os": {"vendor": "bla"}}}
-                    )
-                },
-                {
-                    "host_inventory": ImmutableTree.deserialize(
-                        {"software": {"os": {"vendor": "blabla"}}}
-                    )
-                },
-                {
-                    "host_inventory": ImmutableTree.deserialize(
-                        {"software": {"os": {"vendor": "ag blabla"}}}
-                    )
-                },
+                {"host_inventory": deserialize_tree({"software": {"os": {"vendor": "bla"}}})},
+                {"host_inventory": deserialize_tree({"software": {"os": {"vendor": "blabla"}}})},
+                {"host_inventory": deserialize_tree({"software": {"os": {"vendor": "ag blabla"}}})},
             ],
         ),
         # Testing base class FilterInvFloat
@@ -1257,25 +1229,21 @@ def test_filters_filter_table(
                 ("inv_hardware_cpu_bus_speed_until", "20"),
             ],
             rows=[
+                {"host_inventory": deserialize_tree({"hardware": {"cpu": {"bus_speed": 1000000}}})},
                 {
-                    "host_inventory": ImmutableTree.deserialize(
-                        {"hardware": {"cpu": {"bus_speed": 1000000}}}
-                    )
-                },
-                {
-                    "host_inventory": ImmutableTree.deserialize(
+                    "host_inventory": deserialize_tree(
                         {"hardware": {"cpu": {"bus_speed": 15000000}}}
                     )
                 },
                 {
-                    "host_inventory": ImmutableTree.deserialize(
+                    "host_inventory": deserialize_tree(
                         {"hardware": {"cpu": {"bus_speed": 21000000}}}
                     )
                 },
             ],
             expected_rows=[
                 {
-                    "host_inventory": ImmutableTree.deserialize(
+                    "host_inventory": deserialize_tree(
                         {"hardware": {"cpu": {"bus_speed": 15000000}}}
                     )
                 },

@@ -1,0 +1,48 @@
+# This patch fixes linking of some plugins against our own openssl
+# In a bright future, we should completely avoid letting autotools perform any magic and have hermetic builds in bazel...
+--- a/plugins/Makefile.am	2024-09-16 15:33:48.465903341 +0200
++++ b/plugins/Makefile.am	2024-09-16 15:34:23.762761627 +0200
+@@ -89,17 +89,17 @@
+ check_mrtgtraf_LDADD = $(BASEOBJS)
+ check_mysql_CFLAGS = $(AM_CFLAGS) $(MYSQLCFLAGS)
+ check_mysql_CPPFLAGS = $(AM_CPPFLAGS) $(MYSQLINCLUDE)
+-check_mysql_LDADD = $(NETLIBS) $(MYSQLLIBS)
++check_mysql_LDADD = $(NETLIBS) $(MYSQLLIBS) $(SSLOBJS)
+ check_mysql_query_CFLAGS = $(AM_CFLAGS) $(MYSQLCFLAGS)
+ check_mysql_query_CPPFLAGS = $(AM_CPPFLAGS) $(MYSQLINCLUDE)
+-check_mysql_query_LDADD = $(NETLIBS) $(MYSQLLIBS)
++check_mysql_query_LDADD = $(NETLIBS) $(MYSQLLIBS) $(SSLOBJS)
+ check_nagios_LDADD = $(BASEOBJS)
+ check_nt_LDADD = $(NETLIBS)
+ check_ntp_LDADD = $(NETLIBS) $(MATHLIBS)
+ check_ntp_peer_LDADD = $(NETLIBS) $(MATHLIBS)
+ check_nwstat_LDADD = $(NETLIBS)
+ check_overcr_LDADD = $(NETLIBS)
+-check_pgsql_LDADD = $(NETLIBS) $(PGLIBS)
++check_pgsql_LDADD = $(NETLIBS) $(PGLIBS) $(SSLOBJS)
+ check_ping_LDADD = $(NETLIBS)
+ check_procs_LDADD = $(BASEOBJS)
+ check_radius_LDADD = $(NETLIBS) $(RADIUSLIBS)
+--- a/plugins/Makefile.in	2024-09-16 15:36:24.107267031 +0200
++++ b/plugins/Makefile.in	2024-09-16 15:36:13.751310226 +0200
+@@ -2237,17 +2237,17 @@
+ check_mrtgtraf_LDADD = $(BASEOBJS)
+ check_mysql_CFLAGS = $(AM_CFLAGS) $(MYSQLCFLAGS)
+ check_mysql_CPPFLAGS = $(AM_CPPFLAGS) $(MYSQLINCLUDE)
+-check_mysql_LDADD = $(NETLIBS) $(MYSQLLIBS)
++check_mysql_LDADD = $(NETLIBS) $(MYSQLLIBS) $(SSLOBJS)
+ check_mysql_query_CFLAGS = $(AM_CFLAGS) $(MYSQLCFLAGS)
+ check_mysql_query_CPPFLAGS = $(AM_CPPFLAGS) $(MYSQLINCLUDE)
+-check_mysql_query_LDADD = $(NETLIBS) $(MYSQLLIBS)
++check_mysql_query_LDADD = $(NETLIBS) $(MYSQLLIBS) $(SSLOBJS)
+ check_nagios_LDADD = $(BASEOBJS)
+ check_nt_LDADD = $(NETLIBS)
+ check_ntp_LDADD = $(NETLIBS) $(MATHLIBS)
+ check_ntp_peer_LDADD = $(NETLIBS) $(MATHLIBS)
+ check_nwstat_LDADD = $(NETLIBS)
+ check_overcr_LDADD = $(NETLIBS)
+-check_pgsql_LDADD = $(NETLIBS) $(PGLIBS)
++check_pgsql_LDADD = $(NETLIBS) $(PGLIBS) $(SSLOBJS)
+ check_ping_LDADD = $(NETLIBS)
+ check_procs_LDADD = $(BASEOBJS)
+ check_radius_LDADD = $(NETLIBS) $(RADIUSLIBS)

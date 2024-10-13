@@ -87,6 +87,7 @@ def check_iptables(_no_item, params, parsed):
 
 
 check_info["iptables"] = LegacyCheckDefinition(
+    name="iptables",
     parse_function=parse_iptables,
     service_name="Iptables",
     discovery_function=inventory_iptables,

@@ -60,6 +60,7 @@ def parse_enterasys_powersupply(string_table: StringTable) -> StringTable:
 
 
 check_info["enterasys_powersupply"] = LegacyCheckDefinition(
+    name="enterasys_powersupply",
     parse_function=parse_enterasys_powersupply,
     detect=DETECT_ENTERASYS,
     fetch=SNMPTree(

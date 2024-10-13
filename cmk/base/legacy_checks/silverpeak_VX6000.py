@@ -117,6 +117,7 @@ def check_silverpeak(_item, _params, parsed):
 
 
 check_info["silverpeak_VX6000"] = LegacyCheckDefinition(
+    name="silverpeak_VX6000",
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.23867"),
     fetch=[
         SNMPTree(

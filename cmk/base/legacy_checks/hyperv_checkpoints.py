@@ -52,6 +52,7 @@ def parse_hyperv_checkpoints(string_table: StringTable) -> StringTable:
 
 
 check_info["hyperv_checkpoints"] = LegacyCheckDefinition(
+    name="hyperv_checkpoints",
     parse_function=parse_hyperv_checkpoints,
     service_name="HyperV Checkpoints",
     discovery_function=inventory_hyperv_checkpoints,

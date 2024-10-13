@@ -3,15 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 import re
 import time
 from collections.abc import Sequence
-from typing import NamedTuple
+from dataclasses import dataclass
 
 from cmk.agent_based.v2 import AgentSection, InventoryPlugin, InventoryResult, StringTable, TableRow
 
 
-class Package(NamedTuple):
+@dataclass(frozen=True)
+class Package:
     name: str
     version: str
     vendor: str
@@ -20,10 +22,37 @@ class Package(NamedTuple):
     size: int | None
     path: str
     language: str
-    package_type: str
 
 
 Section = Sequence[Package]
+
+
+_DATE_PATTERN = re.compile(r"^20\d{6}")
+
+
+def parse_win_reg_uninstall_json(string_table: StringTable) -> Section:
+    return [
+        Package(
+            name=name,
+            version=raw["DisplayVersion"],
+            vendor=raw["Publisher"],
+            summary=raw["DisplayName"],
+            install_date=_parse_date(raw["InstallDate"]),
+            size=_parse_size(raw["EstimatedSize"]),
+            path=raw["InstallLocation"],
+            language=raw["Language"],
+        )
+        for (word,) in string_table
+        if (raw := json.loads(word))
+        and (name := _parse_package_name(raw["DisplayName"], raw["PSChildName"]))
+    ]
+
+
+agent_section_win_reg_uninstall_json = AgentSection(
+    name="win_reg_uninstall_json",
+    parsed_section_name="win_reg_uninstall",
+    parse_function=parse_win_reg_uninstall_json,
+)
 
 
 def parse_win_reg_uninstall(string_table: StringTable) -> Section:
@@ -37,27 +66,14 @@ def parse_win_reg_uninstall(string_table: StringTable) -> Section:
         else:
             continue
 
-        install_date = None
-        if re.match(r"^20\d{6}", date):
-            # Dates look like '20160930', but we saw also dates like '20132804'
-            # which have transposed month and day fields.
-            try:
-                install_date = int(time.mktime(time.strptime(date, "%Y%m%d")))
-            except ValueError:
-                try:
-                    install_date = int(time.mktime(time.strptime(date, "%Y%d%m")))
-                except ValueError:
-                    pass
+        install_date = _parse_date(date)
 
-        if pacname.startswith("{"):
-            pacname = display_name
-
-        if pacname == "":
+        if (name := _parse_package_name(display_name, pacname)) is None:
             continue
 
         parsed_packages.append(
             Package(
-                name=pacname,
+                name=name,
                 version=version,
                 vendor=publisher,
                 summary=display_name,
@@ -65,10 +81,30 @@ def parse_win_reg_uninstall(string_table: StringTable) -> Section:
                 size=_parse_size(estimated_size),
                 path=path,
                 language=language,
-                package_type="registry",
             )
         )
     return parsed_packages
+
+
+def _parse_package_name(raw_display_name: str, raw_ps_child_name: str) -> str | None:
+    pacname = raw_display_name if raw_ps_child_name.startswith("{") else raw_ps_child_name
+    return pacname or None
+
+
+def _parse_date(raw_date: str) -> int | None:
+    if not _DATE_PATTERN.match(raw_date):
+        return None
+    # Dates look like '20160930', but we saw also dates like '20132804'
+    # which have transposed month and day fields.
+    try:
+        return int(time.mktime(time.strptime(raw_date, "%Y%m%d")))
+    except ValueError:
+        pass
+
+    try:
+        return int(time.mktime(time.strptime(raw_date, "%Y%d%m")))
+    except ValueError:
+        return None
 
 
 def _parse_size(size: str) -> int | None:
@@ -99,7 +135,7 @@ def inventory_win_reg_uninstall(section: Section) -> InventoryResult:
                 "size": package.size,
                 "path": package.path,
                 "language": package.language,
-                "package_type": package.package_type,
+                "package_type": "registry",
             },
             status_columns={},
         )

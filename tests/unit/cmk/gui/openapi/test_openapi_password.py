@@ -75,13 +75,13 @@ def test_openapi_password(
         content_type="application/json",
     )
 
-    resp = aut_user_auth_wsgi_app.call_method(
+    resp_ = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/password/foo",
         headers={"Accept": "application/json"},
         status=200,
     )
-    assert resp.json["extensions"] == {
+    assert resp_.json["extensions"] == {
         "comment": "Something but nothing random",
         "documentation_url": "",
         "owned_by": "admin",

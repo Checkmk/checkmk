@@ -389,6 +389,9 @@ def _oracle(
         yield oracle_db
 
 
+@pytest.mark.xfail(
+    reason="Error in configuring Oracle listener when running in the CI. See CMK-19421."
+)
 @skip_if_not_enterprise_edition
 @pytest.mark.parametrize("auth_mode", ["wallet", "credential"])
 def test_docker_oracle(

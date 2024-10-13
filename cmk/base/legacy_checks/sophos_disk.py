@@ -34,6 +34,7 @@ def discover_sophos_disk(parsed):
 
 
 check_info["sophos_disk"] = LegacyCheckDefinition(
+    name="sophos_disk",
     detect=DETECT_SOPHOS,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.21067.2.1.2.3",

@@ -37,6 +37,7 @@ def check_hitachi_hnas_bossock(
 
 
 check_info["hitachi_hnas_bossock"] = LegacyCheckDefinition(
+    name="hitachi_hnas_bossock",
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11096.6.1.1.6.7.4.1",

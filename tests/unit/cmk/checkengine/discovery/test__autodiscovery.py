@@ -30,7 +30,7 @@ AUTOCHECK_1B = AutocheckEntry(
 AUTOCHECK_1MERGED = AutocheckEntry(
     CheckPluginName("check_plugin_1"),
     "Item",
-    {"parameter_common": "1A", "parameter_1a": "1A"},  # FIXME: should be merged as well!
+    {"parameter_common": "1A", "parameter_1a": "1A", "parameter_1b": "1B"},
     {"label_common": "1A", "label_1a": "1A", "label_1b": "1B"},
 )
 AUTOCHECK_2 = AutocheckEntry(
@@ -159,7 +159,7 @@ def test_get_host_services_by_host_name_vanished_on_cluster() -> None:
         "vanished": [
             AutocheckServiceWithNodes(
                 service=DiscoveredItem(previous=AUTOCHECK_1A, new=None),
-                nodes=[NODE_1],
+                nodes=[],
             )
         ],
     }
@@ -187,7 +187,7 @@ def test_get_host_services_by_host_name_unchanged_on_cluster() -> None:
         "unchanged": [
             AutocheckServiceWithNodes(
                 service=DiscoveredItem(previous=AUTOCHECK_1A, new=AUTOCHECK_1A),
-                nodes=[NODE_1, NODE_2],  # FIXME: should be node 1 only.
+                nodes=[NODE_1],
             )
         ],
     }
@@ -212,7 +212,7 @@ def test_get_host_services_by_host_name_changed_on_cluster() -> None:
         get_service_description=lambda host, plugin, item: f"{plugin} / {item}",
         enforced_services={},
     )[CLUSTER] == {
-        "unchanged": [  # FIXME: should be "changed"
+        "changed": [
             AutocheckServiceWithNodes(
                 service=DiscoveredItem(previous=AUTOCHECK_1A, new=AUTOCHECK_1MERGED),
                 nodes=[NODE_1, NODE_2],
@@ -271,7 +271,7 @@ def test_get_host_services_by_host_name_swaps_on_cluster() -> None:
         "unchanged": [
             AutocheckServiceWithNodes(
                 service=DiscoveredItem(previous=AUTOCHECK_1A, new=AUTOCHECK_1A),
-                nodes=[NODE_1, NODE_2],  # FIXME: should be node 2 only.
+                nodes=[NODE_2],
             )
         ],
     }

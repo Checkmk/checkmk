@@ -29,6 +29,7 @@ def parse_cisco_ucs_mem_total(string_table: StringTable) -> StringTable | None:
 
 
 check_info["cisco_ucs_mem_total"] = LegacyCheckDefinition(
+    name="cisco_ucs_mem_total",
     parse_function=parse_cisco_ucs_mem_total,
     detect=DETECT,
     fetch=SNMPTree(

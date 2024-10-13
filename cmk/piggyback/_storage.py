@@ -10,14 +10,15 @@ import logging
 import os
 import shutil
 import tempfile
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Self
 
 from cmk.utils.hostaddress import HostAddress, HostName
 
-from ._paths import distribution_status_dir, payload_dir, source_status_dir
+from ._inotify import Event, INotify, Masks
+from ._paths import payload_dir, source_status_dir
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +31,7 @@ class PiggybackMetaData:
     last_contact: int | None
 
     def serialize(self) -> str:
-        return json.dumps({k: str(v) for k, v in asdict(self).items()})
+        return json.dumps({k: None if v is None else str(v) for k, v in asdict(self).items()})
 
     @classmethod
     def deserialize(cls, serialized: str, /) -> Self:
@@ -67,7 +68,48 @@ class PiggybackMessage:
 # - Path(tmp/check_mk/piggyback_sources/SOURCE).name
 
 
-def get_piggyback_raw_data(
+def watch_new_messages(omd_root: Path) -> Iterator[PiggybackMessage]:
+    """Yields piggyback messages as they come in."""
+
+    inotify = INotify()
+    watch_for_new_piggybacked_hosts = inotify.add_watch(payload_dir(omd_root), Masks.CREATE)
+    for folder in _get_piggybacked_host_folders(omd_root):
+        inotify.add_watch(folder, Masks.MOVED_TO)
+
+    for event in inotify.read_forever():
+        # check if a new piggybacked host folder was created
+        if event.watchee == watch_for_new_piggybacked_hosts:
+            if event.type & Masks.CREATE:
+                inotify.add_watch(event.watchee.path / event.name, Masks.MOVED_TO)
+                # Handle all files already in the folder (we rather have duplicates than missing files)
+                yield from get_messages_for(HostAddress(event.name), omd_root)
+            continue
+
+        if message := _make_message_from_event(event, omd_root):
+            yield message
+
+
+def _make_message_from_event(event: Event, omd_root: Path) -> PiggybackMessage | None:
+    source = HostAddress(event.name)
+    piggybacked = HostName(event.watchee.path.name)
+    status_file_path = _get_source_status_file_path(source, omd_root)
+    payload_file_path = event.watchee.path / event.name
+
+    if (mtime := _get_mtime(payload_file_path)) is None:
+        return None
+
+    return PiggybackMessage(
+        PiggybackMetaData(
+            source=source,
+            piggybacked=piggybacked,
+            last_update=mtime,
+            last_contact=_get_mtime(status_file_path),
+        ),
+        payload_file_path.read_bytes(),
+    )
+
+
+def get_messages_for(
     piggybacked_hostname: HostAddress, omd_root: Path
 ) -> Sequence[PiggybackMessage]:
     """Returns piggyback messages for the given host"""
@@ -132,19 +174,16 @@ def store_piggyback_raw_data(
         remove_source_status_file(source_hostname, omd_root)
         return
 
-    piggyback_file_paths = []
     for piggybacked_hostname, lines in piggybacked_raw_data.items():
-        piggyback_file_path = _get_piggybacked_file_path(
-            source_hostname, piggybacked_hostname, omd_root
-        )
         logger.debug("Storing piggyback data for: %r", piggybacked_hostname)
         # Raw data is always stored as bytes. Later the content is
         # converted to unicode in abstact.py:_parse_info which respects
         # 'encoding' in section options.
         _write_file_with_mtime(
-            file_path=piggyback_file_path, content=b"%s\n" % b"\n".join(lines), mtime=timestamp
+            file_path=_get_piggybacked_file_path(source_hostname, piggybacked_hostname, omd_root),
+            content=b"%s\n" % b"\n".join(lines),
+            mtime=timestamp,
         )
-        piggyback_file_paths.append(piggyback_file_path)
 
     # Store the last contact with this piggyback source to be able to filter outdated data later
     # We use the mtime of this file later for comparison.
@@ -176,20 +215,6 @@ def _write_file_with_mtime(
     tmp_stats = os.stat(tmp_path)
     os.utime(tmp_path, (tmp_stats.st_atime, mtime))
     os.rename(tmp_path, str(file_path))
-
-
-def store_last_distribution_time(
-    source_host: HostName, piggybacked_host: HostName, timestamp: float, omd_root: Path
-) -> None:
-    file_path = _get_distribution_status_file_path(source_host, piggybacked_host, omd_root)
-    _write_file_with_mtime(file_path=file_path, content=b"", mtime=timestamp)
-
-
-def load_last_distribution_time(
-    source_host: HostName, piggybacked_host: HostName, omd_root: Path
-) -> float | None:
-    file_path = _get_distribution_status_file_path(source_host, piggybacked_host, omd_root)
-    return _get_mtime(file_path)
 
 
 #   .--folders/files-------------------------------------------------------.
@@ -261,12 +286,6 @@ def _get_piggybacked_file_path(
     omd_root: Path,
 ) -> Path:
     return payload_dir(omd_root).joinpath(piggybacked_hostname, source_hostname)
-
-
-def _get_distribution_status_file_path(
-    source_hostname: HostName, piggybacked_hostname: HostName | HostAddress, omd_root: Path
-) -> Path:
-    return distribution_status_dir(omd_root).joinpath(piggybacked_hostname, source_hostname)
 
 
 # .

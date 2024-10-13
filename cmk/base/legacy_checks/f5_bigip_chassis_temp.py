@@ -29,6 +29,7 @@ def parse_f5_bigip_chassis_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["f5_bigip_chassis_temp"] = LegacyCheckDefinition(
+    name="f5_bigip_chassis_temp",
     parse_function=parse_f5_bigip_chassis_temp,
     detect=DETECT,
     fetch=SNMPTree(

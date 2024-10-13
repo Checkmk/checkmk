@@ -53,6 +53,7 @@ def check_huawei_switch_stack(item, params, parsed):
 
 
 check_info["huawei_switch_stack"] = LegacyCheckDefinition(
+    name="huawei_switch_stack",
     detect=DETECT_HUAWEI_SWITCH,
     fetch=[
         SNMPTree(

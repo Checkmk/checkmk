@@ -32,6 +32,7 @@ def parse_bvip_fans(string_table: StringTable) -> StringTable:
 
 
 check_info["bvip_fans"] = LegacyCheckDefinition(
+    name="bvip_fans",
     parse_function=parse_bvip_fans,
     detect=DETECT_BVIP,
     fetch=SNMPTree(

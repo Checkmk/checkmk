@@ -31,6 +31,7 @@ def discover_pulse_secure_temp(section):
 
 
 check_info["pulse_secure_temp"] = LegacyCheckDefinition(
+    name="pulse_secure_temp",
     detect=pulse_secure.DETECT_PULSE_SECURE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12532",

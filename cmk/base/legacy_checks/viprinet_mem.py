@@ -41,6 +41,7 @@ def check_viprinet_mem(_no_item, _no_params, info):
 
 
 check_info["viprinet_mem"] = LegacyCheckDefinition(
+    name="viprinet_mem",
     parse_function=parse_viprinet_mem,
     detect=DETECT_VIPRINET,
     fetch=SNMPTree(

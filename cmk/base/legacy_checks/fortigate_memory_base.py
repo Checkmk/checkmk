@@ -45,6 +45,7 @@ def check_fortigate_memory_base(_item, params, parsed):
 
 
 check_info["fortigate_memory_base"] = LegacyCheckDefinition(
+    name="fortigate_memory_base",
     detect=DETECT_FORTIGATE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12356.101.4.1",

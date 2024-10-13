@@ -41,6 +41,7 @@ def parse_stulz_humidity(string_table: StringTable) -> StringTable:
 
 
 check_info["stulz_humidity"] = LegacyCheckDefinition(
+    name="stulz_humidity",
     parse_function=parse_stulz_humidity,
     detect=DETECT_STULZ,
     fetch=SNMPTree(

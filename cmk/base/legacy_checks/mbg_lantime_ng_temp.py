@@ -27,6 +27,7 @@ def parse_mbg_lantime_ng_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["mbg_lantime_ng_temp"] = LegacyCheckDefinition(
+    name="mbg_lantime_ng_temp",
     parse_function=parse_mbg_lantime_ng_temp,
     detect=DETECT_MBG_LANTIME_NG,
     fetch=SNMPTree(

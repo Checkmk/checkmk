@@ -36,6 +36,7 @@ def parse_netextreme_fan(string_table: StringTable) -> StringTable:
 
 
 check_info["netextreme_fan"] = LegacyCheckDefinition(
+    name="netextreme_fan",
     parse_function=parse_netextreme_fan,
     detect=DETECT_NETEXTREME,
     fetch=SNMPTree(

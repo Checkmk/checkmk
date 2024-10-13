@@ -37,6 +37,7 @@ def parse_bluecat_threads(string_table: StringTable) -> StringTable:
 
 
 check_info["bluecat_threads"] = LegacyCheckDefinition(
+    name="bluecat_threads",
     parse_function=parse_bluecat_threads,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13315.100.200"),
     fetch=SNMPTree(

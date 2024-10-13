@@ -42,7 +42,7 @@ def strtobool(val: str | bool) -> bool:
 
 def load_editions_file(filename: str | Path) -> dict:
     with open(filename) as editions_file:
-        return yaml.load(editions_file, Loader=yaml.FullLoader)
+        return yaml.safe_load(editions_file)
 
 
 @contextmanager

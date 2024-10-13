@@ -83,15 +83,13 @@ def get_prefill_default(prefill: _PrefillTypes[ModelT]) -> ModelT | EmptyValue:
     return prefill.value
 
 
-def compute_title_input_hint(prefill: _PrefillTypes[ModelT]) -> ModelT | str | None:
+def compute_title_input_hint(prefill: DefaultValue[ModelT] | InputHint[Title]) -> str | None:
     # InputHint[Title] is only used by SingleChoice and CascadingSingleChoice
     # in all other cases you should use compute_input_hint
-    if not isinstance(prefill, InputHint):
-        return None
-
-    if isinstance(prefill.value, Title):
+    if isinstance(prefill, InputHint):
         return prefill.value.localize(translate_to_current_language)
-    return prefill.value
+
+    return None
 
 
 def compute_input_hint(prefill: Prefill[ModelT]) -> ModelT | None:

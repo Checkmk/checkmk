@@ -46,6 +46,7 @@ def check_ups_in_freq(item, params, parsed):
 
 
 check_info["ups_in_freq"] = LegacyCheckDefinition(
+    name="ups_in_freq",
     detect=DETECT_UPS_GENERIC,
     fetch=SNMPTree(
         base=".1.3.6.1.2.1.33.1.3.3.1",

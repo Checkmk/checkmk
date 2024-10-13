@@ -1,3 +1,4 @@
+load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 
@@ -200,6 +201,12 @@ cc_shared_library(
     name = "rrdtoolmodule_shared",
     shared_lib_name = "rrdtool.so",
     deps = [":rrdtoolmodule"],
+)
+
+py_library(
+    name = "rrdtool_python_lib",
+    data = [":rrdtoolmodule_shared"],
+    visibility = ["//visibility:public"],
 )
 
 py_wheel(

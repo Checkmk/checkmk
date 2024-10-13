@@ -650,3 +650,10 @@ def test_check_smart_command_timeout_rate() -> None:
             ),
             Metric("Command_Timeout_Counter", 5),
         ]
+
+
+def test_parse_duplicate_output_correctly() -> None:
+    # Werk 16871 causes duplicate output for ATA devices, if they output data for both
+    # `smartctl -d ata -v 9,raw48 -A $D` and `smartctl -d sat -v 9,raw48 -A $D`
+    # Ensure behaviour is unaffected on the check side.
+    assert smart.parse_raw_values(STRING_TABLE_SD + STRING_TABLE_SD) == SECTION_SD

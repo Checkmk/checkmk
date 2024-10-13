@@ -294,30 +294,29 @@ def start_checkmk(
         except TimeoutError:
             logger.error("TIMEOUT while starting Checkmk. Log output: %s", c.logs().decode("utf-8"))
             raise
-
-    status_rc, status_output = c.exec_run(["omd", "status"], user=site_id)
-    assert status_rc == 0, f"Status is {status_rc}. Output: {status_output.decode('utf-8')}"
-
-    # reload() to make sure all attributes are set (e.g. NetworkSettings)
-    c.reload()
-
-    logger.debug(c.logs().decode("utf-8"))
-
-    cse_oauth_context_mngr: ContextManager = nullcontext()
-    if version.is_saas_edition():
-        from tests.testlib.cse.utils import (  # pylint: disable=import-error, no-name-in-module
-            cse_openid_oauth_provider,
-        )
-
-        # TODO: The Oauth provider is currently not reachable from the Checkmk container.
-        # To fix this, we should contenairize the Oauth provider as well and provide the Oauth
-        # provider container IP address to the Checkmk container (via the cognito-cmk.json file).
-        # This is similar to what we are doing with the Oracle container in the test_docker_oracle
-        # test.
-        cse_oauth_context_mngr = cse_openid_oauth_provider(
-            site_url=f"http://{get_container_ip(c)}:5000", config_root=cse_config_root
-        )
     try:
+        status_rc, status_output = c.exec_run(["omd", "status"], user=site_id)
+        assert status_rc == 0, f"Status is {status_rc}. Output: {status_output.decode('utf-8')}"
+
+        # reload() to make sure all attributes are set (e.g. NetworkSettings)
+        c.reload()
+
+        logger.debug(c.logs().decode("utf-8"))
+
+        cse_oauth_context_mngr: ContextManager = nullcontext()
+        if version.is_saas_edition():
+            from tests.testlib.cse.utils import (  # pylint: disable=import-error, no-name-in-module
+                cse_openid_oauth_provider,
+            )
+
+            # TODO: The Oauth provider is currently not reachable from the Checkmk container.
+            # To fix this, we should contenairize the Oauth provider as well and provide the Oauth
+            # provider container IP address to the Checkmk container (via the cognito-cmk.json file).
+            # This is similar to what we are doing with the Oracle container in the
+            # test_docker_oracle test.
+            cse_oauth_context_mngr = cse_openid_oauth_provider(
+                site_url=f"http://{get_container_ip(c)}:5000", config_root=cse_config_root
+            )
         with cse_oauth_context_mngr:
             yield c
     finally:

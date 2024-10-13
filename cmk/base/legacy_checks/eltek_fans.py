@@ -100,6 +100,7 @@ def parse_eltek_fans(string_table: StringTable) -> StringTable:
 
 
 check_info["eltek_fans"] = LegacyCheckDefinition(
+    name="eltek_fans",
     parse_function=parse_eltek_fans,
     detect=DETECT_ELTEK,
     fetch=SNMPTree(

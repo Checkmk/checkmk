@@ -35,6 +35,7 @@ def discover_viprinet_firmware(section: StringTable) -> DiscoveryResult:
 
 
 check_info["viprinet_firmware"] = LegacyCheckDefinition(
+    name="viprinet_firmware",
     parse_function=parse_viprinet_firmware,
     detect=DETECT_VIPRINET,
     fetch=SNMPTree(

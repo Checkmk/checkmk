@@ -90,6 +90,7 @@ def check_hp_proliant_da_cntlr(item, params, info):
 
 
 check_info["hp_proliant_da_cntlr"] = LegacyCheckDefinition(
+    name="hp_proliant_da_cntlr",
     parse_function=parse_hp_proliant_da_cntlr,
     detect=DETECT,
     fetch=SNMPTree(

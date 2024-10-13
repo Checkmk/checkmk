@@ -9,8 +9,8 @@ from typing import TYPE_CHECKING, TypeVar
 if TYPE_CHECKING:
     F = TypeVar("F")
 
-    def lru_cache(maxsize: int) -> Callable[[F], F]:  # pylint: disable=unused-argument
-        pass
+    def lru_cache(maxsize: int) -> Callable[[F], F]:
+        del maxsize
 
 else:
     from functools import lru_cache

@@ -7,13 +7,25 @@ import pytest
 
 from tests.unit.conftest import FixPluginLegacy, FixRegister
 
-from cmk.utils.check_utils import section_name_of
+from cmk.utils.check_utils import maincheckify, section_name_of
 from cmk.utils.legacy_check_api import LegacyCheckDefinition
 from cmk.utils.sectionname import SectionName
 
 from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin, SNMPSectionPlugin
 
+from cmk.discover_plugins import PluginLocation
+
 pytestmark = pytest.mark.checks
+
+
+def test_name_is_correctly_derived_from_check_info_key(fix_plugin_legacy: FixPluginLegacy) -> None:
+    """Temporary test to make sure we add the correct sections."""
+    offenders = {
+        check_info_key
+        for check_info_key, check_info_element in fix_plugin_legacy.check_info.items()
+        if check_info_element.name != maincheckify(check_info_key)
+    }
+    assert not offenders
 
 
 def test_create_section_plugin_from_legacy(
@@ -61,7 +73,7 @@ def _is_section_migrated(name: str, fix_register: FixRegister) -> bool:
     sname = SectionName(name)
     return (
         section := fix_register.snmp_sections.get(sname, fix_register.agent_sections.get(sname))
-    ) is not None and section.location is not None
+    ) is not None and isinstance(section.location, PluginLocation)
 
 
 def test_sections_definitions_exactly_in_mainchecks(
@@ -126,7 +138,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "allnet_ip_sensoric.temp",
         "allnet_ip_sensoric.humidity",
         "allnet_ip_sensoric.pressure",
-        "apc_ats_output",
         "apc_ats_status",
         "apc_humidity",
         "apc_inrow_airflow",

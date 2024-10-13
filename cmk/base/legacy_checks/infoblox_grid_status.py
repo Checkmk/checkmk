@@ -33,6 +33,7 @@ def parse_infoblox_grid_status(string_table: StringTable) -> StringTable | None:
 
 
 check_info["infoblox_grid_status"] = LegacyCheckDefinition(
+    name="infoblox_grid_status",
     parse_function=parse_infoblox_grid_status,
     detect=DETECT_INFOBLOX,
     fetch=SNMPTree(

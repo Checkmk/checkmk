@@ -23,6 +23,7 @@ def parse_dell_poweredge_status(string_table: StringTable) -> StringTable:
 
 
 check_info["dell_poweredge_status"] = LegacyCheckDefinition(
+    name="dell_poweredge_status",
     parse_function=parse_dell_poweredge_status,
     detect=DETECT_IDRAC_POWEREDGE,
     fetch=SNMPTree(

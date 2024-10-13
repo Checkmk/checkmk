@@ -71,6 +71,7 @@ def parse_fortigate_ipsecvpn(string_table: StringTable) -> StringTable:
 
 
 check_info["fortigate_ipsecvpn"] = LegacyCheckDefinition(
+    name="fortigate_ipsecvpn",
     parse_function=parse_fortigate_ipsecvpn,
     detect=DETECT_FORTIGATE,
     fetch=SNMPTree(

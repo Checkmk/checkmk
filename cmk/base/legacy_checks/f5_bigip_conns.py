@@ -89,6 +89,7 @@ def parse_f5_bigip_conns(string_table: StringTable) -> StringTable:
 
 
 check_info["f5_bigip_conns"] = LegacyCheckDefinition(
+    name="f5_bigip_conns",
     parse_function=parse_f5_bigip_conns,
     detect=DETECT,
     fetch=SNMPTree(

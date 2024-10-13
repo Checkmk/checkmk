@@ -7,10 +7,13 @@ py_library(
     srcs = [
         "cmk/trace/__init__.py",
         "cmk/trace/_config.py",
+        "cmk/trace/_propagate.py",
         "cmk/trace/export.py",
         "cmk/trace/logs.py",
         "cmk/trace/py.typed",
     ],
+    imports = ["."],
+    visibility = ["//cmk:__pkg__"],
 )
 
 py_wheel(
@@ -24,4 +27,8 @@ py_wheel(
     ],
 )
 
-package_wheel(wheel_target = "wheel")
+package_wheel(
+    name = "pkg_tar",
+    visibility = ["//visibility:public"],
+    whl = "wheel",
+)

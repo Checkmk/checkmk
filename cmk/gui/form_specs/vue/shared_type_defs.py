@@ -79,7 +79,7 @@ class DictionaryLayout(str, Enum):
 
 @dataclass(kw_only=True)
 class SingleChoiceElement:
-    name: Any
+    name: str
     title: str
 
 
@@ -87,6 +87,19 @@ class SingleChoiceElement:
 class MultipleChoiceElement:
     name: str
     title: str
+
+
+@dataclass(kw_only=True)
+class DualListChoiceI18n:
+    add: str
+    remove: str
+    add_all: str
+    remove_all: str
+    available_options: str
+    selected_options: str
+    selected: str
+    no_elements_available: str
+    no_elements_selected: str
 
 
 class CascadingChoiceLayout(str, Enum):
@@ -145,39 +158,6 @@ class ValidationMessage:
     location: list[str]
     message: str
     invalid_value: Any
-
-
-@dataclass(kw_only=True)
-class FallbackWarningI18n:
-    title: str
-    message: str
-    setup_link_title: str
-    do_not_show_again_title: str
-
-
-@dataclass(kw_only=True)
-class NotificationStatsI18n:
-    sent_notifications: str
-    failed_notifications: str
-    sent_notifications_link_title: str
-    failed_notifications_link_title: str
-
-
-@dataclass(kw_only=True)
-class CoreStatsI18n:
-    title: str
-    sites_column_title: str
-    status_column_title: str
-    ok_msg: str
-    warning_msg: str
-    disabled_msg: str
-
-
-@dataclass(kw_only=True)
-class Rule:
-    i18n: str
-    count: str
-    link: str
 
 
 @dataclass(kw_only=True)
@@ -261,7 +241,7 @@ class Dictionary(FormSpec):
 @dataclass(kw_only=True)
 class SingleChoice(FormSpec):
     frozen: bool
-    input_hint: Any
+    input_hint: str
     type: str = "single_choice"
     elements: list[SingleChoiceElement] = field(default_factory=lambda: [])
     no_elements_text: Optional[str] = None
@@ -269,10 +249,17 @@ class SingleChoice(FormSpec):
 
 
 @dataclass(kw_only=True)
-class MultipleChoice(FormSpec):
-    type: str = "multiple_choice"
-    elements: list[MultipleChoiceElement] = field(default_factory=lambda: [])
-    show_toggle_all: bool = False
+class DualListChoice(FormSpec):
+    i18n: DualListChoiceI18n
+    elements: Optional[list[MultipleChoiceElement]] = field(default_factory=lambda: [])
+    show_toggle_all: Optional[bool] = False
+    type: str = "dual_list_choice"
+
+
+@dataclass(kw_only=True)
+class CheckboxListChoice(FormSpec):
+    type: str = "checkbox_list_choice"
+    elements: Optional[list[MultipleChoiceElement]] = field(default_factory=lambda: [])
 
 
 @dataclass(kw_only=True)
@@ -398,7 +385,8 @@ Components = Union[
     Password,
     DataSize,
     Catalog,
-    MultipleChoice,
+    DualListChoice,
+    CheckboxListChoice,
     TimeSpan,
     Tuple,
     OptionalChoice,
@@ -408,50 +396,6 @@ Components = Union[
 
 
 @dataclass(kw_only=True)
-class FallbackWarning:
-    i18n: FallbackWarningI18n
-    user_id: str
-    setup_link: str
-    do_not_show_again_link: str
-
-
-@dataclass(kw_only=True)
-class NotificationStats:
-    num_sent_notifications: int
-    num_failed_notifications: int
-    sent_notification_link: str
-    failed_notification_link: str
-    i18n: NotificationStatsI18n
-
-
-@dataclass(kw_only=True)
-class CoreStats:
-    sites: list[str]
-    i18n: CoreStatsI18n
-
-
-@dataclass(kw_only=True)
-class RuleTopic:
-    i18n: str
-    rules: list[Rule]
-
-
-@dataclass(kw_only=True)
-class RuleSection:
-    i18n: str
-    topics: list[RuleTopic]
-
-
-@dataclass(kw_only=True)
-class Notifications:
-    notification_stats: NotificationStats
-    core_stats: CoreStats
-    rule_sections: list[RuleSection]
-    fallback_warning: Optional[FallbackWarning] = None
-
-
-@dataclass(kw_only=True)
 class VueFormspecComponents:
     components: Optional[Components] = None
     validation_message: Optional[ValidationMessage] = None
-    notifications: Optional[Notifications] = None

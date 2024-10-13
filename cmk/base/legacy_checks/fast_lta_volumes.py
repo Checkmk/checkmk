@@ -37,6 +37,7 @@ def discover_fast_lta_volumes(section):
 
 
 check_info["fast_lta_volumes"] = LegacyCheckDefinition(
+    name="fast_lta_volumes",
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.10"),
         any_of(exists(".1.3.6.1.4.1.27417.5.1.1.2"), exists(".1.3.6.1.4.1.27417.5.1.1.2.0")),

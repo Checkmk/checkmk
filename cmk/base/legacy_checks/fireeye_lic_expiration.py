@@ -37,6 +37,7 @@ def parse_fireeye_lic_expiration(string_table: StringTable) -> StringTable:
 
 
 check_info["fireeye_lic_expiration"] = LegacyCheckDefinition(
+    name="fireeye_lic_expiration",
     parse_function=parse_fireeye_lic_expiration,
     detect=DETECT,
     fetch=SNMPTree(

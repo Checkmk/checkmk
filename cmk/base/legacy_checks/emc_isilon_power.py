@@ -52,6 +52,7 @@ def parse_emc_isilon_power(string_table: StringTable) -> StringTable:
 
 
 check_info["emc_isilon_power"] = LegacyCheckDefinition(
+    name="emc_isilon_power",
     parse_function=parse_emc_isilon_power,
     detect=DETECT_ISILON,
     fetch=SNMPTree(

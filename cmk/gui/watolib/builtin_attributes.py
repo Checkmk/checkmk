@@ -19,10 +19,15 @@ from cmk.gui.form_specs.generators.host_address import create_host_address
 from cmk.gui.form_specs.generators.setup_site_choice import create_setup_site_choice
 from cmk.gui.form_specs.generators.snmp_credentials import create_snmp_credentials
 from cmk.gui.form_specs.private import (
+    ListOfStrings as FSListOfStrings,
+)
+from cmk.gui.form_specs.private import (
     OptionalChoice,
     SingleChoiceElementExtended,
     SingleChoiceExtended,
+    StringAutocompleter,
 )
+from cmk.gui.form_specs.vue.shared_type_defs import Autocompleter
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -483,6 +488,30 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
                 "monitored by the same site."
             ),
             orientation="horizontal",
+        )
+
+    def form_spec(self) -> FSListOfStrings:
+        return FSListOfStrings(
+            title=Title("Parents"),
+            help_text=Help(
+                "Parents are used to configure the reachability of hosts to the "
+                "monitoring server. A host is considered unreachable if all of "
+                "its parents are unreachable or down. Unreachable hosts are not "
+                "actively monitored.<br><br><b>Clusters</b> automatically "
+                "configure all their nodes as Parents, but only if you do not "
+                "manually configure Parents.<br><br><b>Distributed "
+                "setup:</b><br>Make sure that the host and all its parents are "
+                "monitored by the same site."
+            ),
+            string_spec=StringAutocompleter(
+                autocompleter=Autocompleter(
+                    fetch_method="ajax_vs_autocomplete",
+                    data={
+                        "ident": "config_hostname",
+                        "params": {"strict": False, "escape_regex": False},
+                    },
+                ),
+            ),
         )
 
     def openapi_field(self) -> gui_fields.Field:
@@ -1420,7 +1449,7 @@ class HostAttributeDiscoveryFailed(ABCHostAttributeValueSpec):
     def name(self) -> str:
         return "inventory_failed"
 
-    def topic(self) -> type[HostAttributeTopic]:
+    def topic(self) -> type[HostAttributeTopicMetaData]:
         return HostAttributeTopicMetaData
 
     @classmethod
@@ -1469,6 +1498,65 @@ class HostAttributeDiscoveryFailed(ABCHostAttributeValueSpec):
         return _(
             "Whether or not the last bulk discovery failed. It is set to True once it fails "
             "and unset in case a later discovery succeeds."
+        )
+
+    def get_tag_groups(self, value):
+        return {}
+
+
+class HostAttributeWaitingForDiscovery(ABCHostAttributeValueSpec):
+    def name(self) -> str:
+        return "waiting_for_discovery"
+
+    def topic(self) -> type[HostAttributeTopic]:
+        return HostAttributeTopicCustomAttributes
+
+    @classmethod
+    def sort_index(cls) -> int:
+        return 210
+
+    def show_in_table(self):
+        return False
+
+    def show_in_form(self):
+        return False
+
+    def show_on_create(self):
+        return False
+
+    def show_in_folder(self):
+        return False
+
+    def show_in_host_search(self):
+        return False
+
+    def show_inherited_value(self):
+        return False
+
+    def editable(self):
+        return False
+
+    def openapi_editable(self) -> bool:
+        return True
+
+    def valuespec(self) -> ValueSpec:
+        return Checkbox(
+            title=_("Waiting for discovery"),
+            help=self._help_text(),
+            default_value=False,
+        )
+
+    def openapi_field(self) -> gui_fields.Field:
+        return fields.Boolean(
+            example=False,
+            required=False,
+            description=self._help_text(),
+        )
+
+    def _help_text(self) -> str:
+        return _(
+            "Indicates that host is waiting for bulk discovery. It is set to True once it in queue."
+            "Removed after discovery is ended."
         )
 
     def get_tag_groups(self, value):

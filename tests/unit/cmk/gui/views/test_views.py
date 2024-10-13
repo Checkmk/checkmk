@@ -199,9 +199,14 @@ def test_registered_commands() -> None:
             "tables": ["comment"],
             "title": "Delete comments",
         },
+        "remove_downtimes_hosts_services": {
+            "permission": "action.downtimes",
+            "tables": ["host", "service"],
+            "title": "Remove downtimes",
+        },
         "remove_downtimes": {
             "permission": "action.downtimes",
-            "tables": ["host", "service", "downtime"],
+            "tables": ["downtime"],
             "title": "Remove downtimes",
         },
         "schedule_downtimes": {
@@ -292,8 +297,7 @@ def test_registered_commands() -> None:
     names = command_registry.keys()
     assert sorted(expected.keys()) == sorted(names)
 
-    for cmd_class in command_registry.values():
-        cmd = cmd_class()
+    for cmd in command_registry.values():
         cmd_spec = expected[cmd.ident]
         assert cmd.title == cmd_spec["title"]
         assert cmd.tables == cmd_spec["tables"], cmd.ident
@@ -319,7 +323,7 @@ def test_legacy_register_command(monkeypatch: pytest.MonkeyPatch) -> None:
         }
     )
 
-    cmd = registry["blabla"]()
+    cmd = registry["blabla"]
     assert isinstance(cmd, command.Command)
     assert cmd.ident == "blabla"
     assert cmd.title == "Bla Bla"

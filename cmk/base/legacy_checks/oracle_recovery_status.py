@@ -215,6 +215,7 @@ def parse_oracle_recovery_status(string_table: StringTable) -> StringTable:
 
 
 check_info["oracle_recovery_status"] = LegacyCheckDefinition(
+    name="oracle_recovery_status",
     parse_function=parse_oracle_recovery_status,
     service_name="ORA %s Recovery Status",
     discovery_function=inventory_oracle_recovery_status,

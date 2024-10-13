@@ -8,6 +8,7 @@ from dataclasses import asdict
 from cmk.utils.user import UserId
 
 from cmk.gui.form_specs.vue.form_spec_visitor import serialize_data_for_frontend
+from cmk.gui.form_specs.vue.visitors import SingleChoiceVisitor
 from cmk.gui.form_specs.vue.visitors._type_defs import DataOrigin
 from cmk.gui.session import UserContext
 
@@ -30,9 +31,9 @@ def test_host_state_recompose(
 
         data = asdict(vue_app_config.spec)
         assert data["elements"] == [
-            {"name": 0, "title": "OK"},
-            {"name": 1, "title": "WARN"},
-            {"name": 2, "title": "CRIT"},
-            {"name": 3, "title": "UNKNOWN"},
+            {"name": SingleChoiceVisitor.option_id(0), "title": "OK"},
+            {"name": SingleChoiceVisitor.option_id(1), "title": "WARN"},
+            {"name": SingleChoiceVisitor.option_id(2), "title": "CRIT"},
+            {"name": SingleChoiceVisitor.option_id(3), "title": "UNKNOWN"},
         ]
         assert data["type"] == "single_choice"

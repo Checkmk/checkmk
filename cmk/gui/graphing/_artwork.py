@@ -36,9 +36,8 @@ from ._graph_specification import (
     MinimalVerticalRange,
 )
 from ._legacy import get_unit_info, LegacyUnitSpecification, UnitInfo
+from ._metric_operation import clean_time_series_point, LineType, RRDData
 from ._rrd_fetch import fetch_rrd_data_for_graph
-from ._timeseries import clean_time_series_point
-from ._type_defs import LineType, RRDData
 from ._unit import user_specific_unit, UserSpecificUnit
 from ._utils import SizeEx
 
@@ -246,11 +245,6 @@ def _layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], 
     # For areas we put (lower, higher) as point into the list of points.
     # For lines simply the values. For mirrored values from is >= to.
 
-    def mirror_point(p: TimeSeriesValue) -> TimeSeriesValue:
-        if p is None:
-            return p
-        return -p
-
     def _positive_line_type(line_type: LineType) -> Literal["line", "area", "stack"]:
         if line_type == "-line":
             return "line"
@@ -270,7 +264,7 @@ def _layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], 
             continue
 
         if line_type[0] == "-":
-            raw_points = list(map(mirror_point, raw_points))
+            raw_points = [None if p is None else -p for p in raw_points]
             line_type = _positive_line_type(line_type)
             mirrored = True
             stack_nr = 0
@@ -747,11 +741,6 @@ def _compute_graph_v_axis(
     return v_axis
 
 
-def _apply_mirrored(min_value: float, max_value: float) -> tuple[float, float]:
-    abs_limit = max(abs(min_value), abs(max_value))
-    return -abs_limit, abs_limit
-
-
 def _compute_min_max(
     explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None,
     layouted_curves: Sequence[LayoutedCurve],
@@ -827,7 +816,9 @@ def _compute_v_axis_min_max(
 
     # In case the graph is mirrored, the 0 line is always exactly in the middle
     if mirrored:
-        min_value, max_value = _apply_mirrored(min_value, max_value)
+        abs_limit = max(abs(min_value), abs(max_value))
+        min_value = -abs_limit
+        max_value = abs_limit
 
     # Make sure we have a non-zero range. This avoids math errors for
     # silly graphs.

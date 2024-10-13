@@ -9,6 +9,7 @@ from ._plugin import (
     CheckPlugin,
     CheckPluginName,
     ConfiguredService,
+    merge_enforced_services,
     ServiceConfigurer,
     ServiceID,
 )
@@ -24,5 +25,6 @@ __all__ = [
     "execute_checkmk_checks",
     "make_timing_results",
     "ServiceConfigurer",
+    "merge_enforced_services",
     "ServiceID",
 ]

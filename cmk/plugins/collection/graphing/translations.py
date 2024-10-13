@@ -802,6 +802,20 @@ translation_icmp = translations.Translation(
     },
 )
 
+translation_ping_exe = translations.Translation(
+    name="ping_exe",
+    check_commands=[translations.NagiosPlugin("check_ping.exe")],
+    translations={
+        "~.*rta": translations.ScaleBy(0.001),
+    },
+)
+
+translation_tcp_exe = translations.Translation(
+    name="tcp_exe",
+    check_commands=[translations.NagiosPlugin("check_tcp.exe")],
+    translations={"time": translations.RenameTo("response_time")},
+)
+
 translation_icmp_host_ping_host_service_ping = translations.Translation(
     name="icmp_host-ping_host-service_ping",
     check_commands=[

@@ -20,6 +20,7 @@ def discover_aws_elb_limits(section):
 
 
 check_info["aws_elb_limits"] = LegacyCheckDefinition(
+    name="aws_elb_limits",
     parse_function=parse_aws_limits_generic,
     service_name="AWS/ELB Limits %s",
     discovery_function=discover_aws_elb_limits,

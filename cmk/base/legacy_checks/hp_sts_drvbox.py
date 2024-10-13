@@ -124,6 +124,7 @@ def parse_hp_sts_drvbox(string_table: StringTable) -> StringTable:
 
 
 check_info["hp_sts_drvbox"] = LegacyCheckDefinition(
+    name="hp_sts_drvbox",
     parse_function=parse_hp_sts_drvbox,
     detect=contains(".1.3.6.1.4.1.232.2.2.4.2.0", "proliant"),
     fetch=SNMPTree(

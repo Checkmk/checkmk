@@ -92,6 +92,7 @@ def check_sym_brightmail_queues(item, params, parsed):
 
 
 check_info["sym_brightmail_queues"] = LegacyCheckDefinition(
+    name="sym_brightmail_queues",
     detect=any_of(contains(".1.3.6.1.2.1.1.1.0", "el5_sms"), contains(".1.3.6.1.2.1.1.1.0", "el6")),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.393.200.130.2.2.1.1",

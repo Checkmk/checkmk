@@ -69,6 +69,7 @@ def check_mbg_lantime_ng_fan(item, _no_params, parsed):
 
 
 check_info["mbg_lantime_ng_fan"] = LegacyCheckDefinition(
+    name="mbg_lantime_ng_fan",
     detect=DETECT_MBG_LANTIME_NG,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.5597.30.0.5.1.2.1",

@@ -15,6 +15,7 @@ from typing import Literal
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import (
+    deserialize_tree,
     ImmutableTree,
     load_tree,
     parse_visible_raw_path,
@@ -195,9 +196,7 @@ def load_filtered_and_merged_tree(row: Row) -> ImmutableTree:
     host_name = row.get("host_name")
     inventory_tree = _load_tree_from_file(tree_type="inventory", host_name=host_name)
     if raw_status_data_tree := row.get("host_structured_status"):
-        status_data_tree = ImmutableTree.deserialize(
-            ast.literal_eval(raw_status_data_tree.decode("utf-8"))
-        )
+        status_data_tree = deserialize_tree(ast.literal_eval(raw_status_data_tree.decode("utf-8")))
     else:
         status_data_tree = _load_tree_from_file(tree_type="status_data", host_name=host_name)
 

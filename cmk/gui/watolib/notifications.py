@@ -32,7 +32,13 @@ from typing import Any, cast
 
 from cmk.ccc import store
 
-from cmk.utils.notify_types import EventRule, NotificationRuleID, NotifyBulkType, NotifyPlugin
+from cmk.utils.notify_types import (
+    EventRule,
+    NotificationParameterSpec,
+    NotificationRuleID,
+    NotifyBulkType,
+    NotifyPlugin,
+)
 from cmk.utils.user import UserId
 
 from cmk.gui import userdb
@@ -65,7 +71,11 @@ from cmk.gui.rest_api_types.notifications_types import (
     PluginAdapter,
 )
 from cmk.gui.type_defs import GlobalSettings
-from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoListConfigFile
+from cmk.gui.watolib.simple_config_file import (
+    ConfigFileRegistry,
+    WatoListConfigFile,
+    WatoSimpleConfigFile,
+)
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.utils import wato_root_dir
 
@@ -671,3 +681,12 @@ def find_timeperiod_usage_in_notification_rules(time_period_name: str) -> list[t
     for index, rule in enumerate(NotificationRuleConfigFile().load_for_reading()):
         used_in += userdb.find_timeperiod_usage_in_notification_rule(time_period_name, index, rule)
     return used_in
+
+
+class NotificationParameterConfigFile(WatoSimpleConfigFile[NotificationParameterSpec]):
+    def __init__(self) -> None:
+        super().__init__(
+            config_file_path=Path(wato_root_dir() + "notification_parameter.mk"),
+            config_variable="notification_parameter",
+            spec_class=NotificationParameterSpec,
+        )

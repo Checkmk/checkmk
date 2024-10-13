@@ -11,6 +11,7 @@ from __future__ import annotations
 import ast
 import json
 import logging
+import os
 import re
 import subprocess
 import time
@@ -136,6 +137,8 @@ def check_mk_local_automation_serialized(
                 encoding="utf-8",
                 input=stdin_data,
                 check=False,
+                # Set the environment for the trace context (TRACEPARENT + optional TRACESTATE)
+                env=dict(os.environ) | trace.context_for_environment(),
             )
         except Exception as e:
             raise local_automation_failure(command=command, cmdline=cmd, exc=e)

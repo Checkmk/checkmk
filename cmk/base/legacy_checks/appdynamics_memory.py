@@ -111,6 +111,7 @@ def parse_appdynamics_memory(string_table: StringTable) -> StringTable:
 
 
 check_info["appdynamics_memory"] = LegacyCheckDefinition(
+    name="appdynamics_memory",
     parse_function=parse_appdynamics_memory,
     service_name="AppDynamics Memory %s",
     discovery_function=inventory_appdynamics_memory,

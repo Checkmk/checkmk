@@ -33,6 +33,7 @@ def parse_emc_isilon_diskstatus(string_table: StringTable) -> StringTable:
 
 
 check_info["emc_isilon_diskstatus"] = LegacyCheckDefinition(
+    name="emc_isilon_diskstatus",
     parse_function=parse_emc_isilon_diskstatus,
     detect=DETECT_ISILON,
     fetch=SNMPTree(

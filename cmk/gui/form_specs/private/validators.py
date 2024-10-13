@@ -62,5 +62,10 @@ class IsFloat:
             raise ValidationError(self.error_msg)
 
 
-def not_empty() -> LengthInRange:
-    return LengthInRange(min_value=1, error_msg=Message("An empty value is not allowed here"))
+def not_empty(error_msg: Message | None = None) -> LengthInRange:
+    return LengthInRange(
+        min_value=1,
+        error_msg=error_msg
+        if error_msg is not None
+        else Message("An empty value is not allowed here"),
+    )

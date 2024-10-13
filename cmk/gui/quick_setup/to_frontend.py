@@ -20,7 +20,7 @@ from cmk.gui.quick_setup.v0_unstable.predefined import (
     build_quick_setup_formspec_map,
     stage_components,
 )
-from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup
+from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupSaveAction
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     GeneralStageErrors,
     ParsedFormData,
@@ -86,11 +86,17 @@ class Stage:
 
 
 @dataclass
+class CompleteButton:
+    id: str
+    label: str
+
+
+@dataclass
 class QuickSetupOverview:
     quick_setup_id: QuickSetupId
     overviews: list[StageOverview]
     stage: Stage
-    button_complete_label: str
+    complete_buttons: list[CompleteButton]
     mode: str = field(default="guided")
 
 
@@ -106,7 +112,7 @@ class CompleteStage:
 class QuickSetupAllStages:
     quick_setup_id: QuickSetupId
     stages: list[CompleteStage]
-    button_complete_label: str
+    complete_buttons: list[CompleteButton]
     mode: str = field(default="overview")
 
 
@@ -168,6 +174,7 @@ def _form_spec_parse(
 
 
 def quick_setup_guided_mode(quick_setup: QuickSetup) -> QuickSetupOverview:
+    stages = [stage() for stage in quick_setup.stages]
     return QuickSetupOverview(
         quick_setup_id=quick_setup.id,
         overviews=[
@@ -175,18 +182,21 @@ def quick_setup_guided_mode(quick_setup: QuickSetup) -> QuickSetupOverview:
                 title=stage.title,
                 sub_title=stage.sub_title,
             )
-            for stage in quick_setup.stages
+            for stage in stages
         ],
         stage=Stage(
             next_stage_structure=NextStageStructure(
                 components=[
                     _get_stage_components_from_widget(widget)
-                    for widget in stage_components(quick_setup.stages[0])
+                    for widget in stage_components(stages[0])
                 ],
-                button_label=quick_setup.stages[0].button_label,
+                button_label=stages[0].button_label,
             ),
         ),
-        button_complete_label=quick_setup.button_complete_label,
+        complete_buttons=[
+            CompleteButton(id=save_action.id, label=save_action.label)
+            for save_action in quick_setup.save_actions
+        ],
     )
 
 
@@ -195,8 +205,8 @@ def validate_stage(
     stages_raw_formspecs: Sequence[RawFormData],
 ) -> Errors | None:
     errors = Errors()
-
-    quick_setup_formspec_map = build_quick_setup_formspec_map(quick_setup.stages)
+    stages = [stage() for stage in quick_setup.stages]
+    quick_setup_formspec_map = build_quick_setup_formspec_map(stages)
 
     errors.stage_errors.extend(
         _stage_validate_all_form_spec_keys_existing(
@@ -207,9 +217,7 @@ def validate_stage(
     if errors.exist():
         return errors
 
-    for custom_validator in quick_setup.stages[
-        StageIndex(len(stages_raw_formspecs) - 1)
-    ].custom_validators:
+    for custom_validator in stages[StageIndex(len(stages_raw_formspecs) - 1)].custom_validators:
         errors.stage_errors.extend(
             custom_validator(
                 quick_setup.id,
@@ -226,11 +234,12 @@ def retrieve_next_stage(
     stages_raw_formspecs: Sequence[RawFormData],
 ) -> Stage:
     current_stage_index = StageIndex(len(stages_raw_formspecs) - 1)
-    quick_setup_formspec_map = build_quick_setup_formspec_map(quick_setup.stages)
+    stages = [stage() for stage in quick_setup.stages]
+    quick_setup_formspec_map = build_quick_setup_formspec_map(stages)
 
     current_stage_recap = [
         r
-        for recap_callable in quick_setup.stages[current_stage_index].recap
+        for recap_callable in stages[current_stage_index].recap
         for r in recap_callable(
             quick_setup.id,
             current_stage_index,
@@ -241,7 +250,7 @@ def retrieve_next_stage(
     if current_stage_index == len(quick_setup.stages) - 1:
         return Stage(next_stage_structure=None, stage_recap=current_stage_recap)
 
-    next_stage = quick_setup.stages[current_stage_index + 1]
+    next_stage = stages[current_stage_index + 1]
 
     return Stage(
         next_stage_structure=NextStageStructure(
@@ -256,22 +265,21 @@ def retrieve_next_stage(
 
 def complete_quick_setup(
     quick_setup: QuickSetup,
+    save_action: QuickSetupSaveAction,
     stages_raw_formspecs: Sequence[RawFormData],
 ) -> QuickSetupSaveRedirect:
-    if quick_setup.save_action is None:
-        return QuickSetupSaveRedirect(redirect_url=None)
-
     return QuickSetupSaveRedirect(
-        redirect_url=quick_setup.save_action(
+        redirect_url=save_action.action(
             _form_spec_parse(
                 stages_raw_formspecs,
-                build_quick_setup_formspec_map(quick_setup.stages),
+                build_quick_setup_formspec_map([stage() for stage in quick_setup.stages]),
             )
         )
     )
 
 
 def quick_setup_overview_mode(quick_setup: QuickSetup) -> QuickSetupAllStages:
+    stages = [stage() for stage in quick_setup.stages]
     return QuickSetupAllStages(
         quick_setup_id=quick_setup.id,
         stages=[
@@ -283,7 +291,10 @@ def quick_setup_overview_mode(quick_setup: QuickSetup) -> QuickSetupAllStages:
                 ],
                 button_label=stage.button_label,
             )
-            for stage in quick_setup.stages
+            for stage in stages
         ],
-        button_complete_label=quick_setup.button_complete_label,
+        complete_buttons=[
+            CompleteButton(id=save_action.id, label=save_action.label)
+            for save_action in quick_setup.save_actions
+        ],
     )

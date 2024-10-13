@@ -16,6 +16,7 @@ def discover_couchbase_nodes_size(section):
 
 
 check_info["couchbase_nodes_size"] = LegacyCheckDefinition(
+    name="couchbase_nodes_size",
     parse_function=parse_couchbase_lines,
     discovery_function=discover_couchbase_nodes_size,
 )
@@ -53,6 +54,7 @@ def discover_couchbase_nodes_size_docs(section):
 
 
 check_info["couchbase_nodes_size.docs"] = LegacyCheckDefinition(
+    name="couchbase_nodes_size_docs",
     service_name="Couchbase %s Documents",
     sections=["couchbase_nodes_size"],
     discovery_function=discover_couchbase_nodes_size_docs,
@@ -69,6 +71,7 @@ def discover_couchbase_nodes_size_spacial_views(section):
 
 
 check_info["couchbase_nodes_size.spacial_views"] = LegacyCheckDefinition(
+    name="couchbase_nodes_size_spacial_views",
     service_name="Couchbase %s Spacial Views",
     sections=["couchbase_nodes_size"],
     discovery_function=discover_couchbase_nodes_size_spacial_views,
@@ -85,6 +88,7 @@ def discover_couchbase_nodes_size_couch_views(section):
 
 
 check_info["couchbase_nodes_size.couch_views"] = LegacyCheckDefinition(
+    name="couchbase_nodes_size_couch_views",
     service_name="Couchbase %s Couch Views",
     sections=["couchbase_nodes_size"],
     discovery_function=discover_couchbase_nodes_size_couch_views,

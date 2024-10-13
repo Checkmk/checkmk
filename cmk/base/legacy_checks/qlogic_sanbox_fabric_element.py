@@ -38,6 +38,7 @@ def parse_qlogic_sanbox_fabric_element(string_table: StringTable) -> StringTable
 
 
 check_info["qlogic_sanbox_fabric_element"] = LegacyCheckDefinition(
+    name="qlogic_sanbox_fabric_element",
     parse_function=parse_qlogic_sanbox_fabric_element,
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3873.1.14"),

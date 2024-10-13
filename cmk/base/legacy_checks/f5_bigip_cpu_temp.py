@@ -29,6 +29,7 @@ def parse_f5_bigip_cpu_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["f5_bigip_cpu_temp"] = LegacyCheckDefinition(
+    name="f5_bigip_cpu_temp",
     parse_function=parse_f5_bigip_cpu_temp,
     detect=DETECT,
     fetch=SNMPTree(

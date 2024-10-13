@@ -65,6 +65,7 @@ def parse_ups_modulys_alarms(string_table: StringTable) -> StringTable:
 
 
 check_info["ups_modulys_alarms"] = LegacyCheckDefinition(
+    name="ups_modulys_alarms",
     parse_function=parse_ups_modulys_alarms,
     detect=DETECT_UPS_MODULYS,
     fetch=SNMPTree(

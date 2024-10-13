@@ -26,6 +26,7 @@ def check_msexch_autodiscovery(_no_item, params, parsed):
 
 
 check_info["msexch_autodiscovery"] = LegacyCheckDefinition(
+    name="msexch_autodiscovery",
     parse_function=parse_wmi_table,
     service_name="Exchange Autodiscovery",
     discovery_function=discover_msexch_autodiscovery,

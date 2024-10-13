@@ -62,6 +62,7 @@ def check_ddn_s2a_faultsbasic_disks(_no_item, params, parsed):
 
 
 check_info["ddn_s2a_faultsbasic.disks"] = LegacyCheckDefinition(
+    name="ddn_s2a_faultsbasic_disks",
     service_name="DDN S2A Disks",
     sections=["ddn_s2a_faultsbasic"],
     discovery_function=inventory_ddn_s2a_faultsbasic_disks,
@@ -114,6 +115,7 @@ def check_ddn_s2a_faultsbasic_temp(_no_item, _no_params, parsed):
 
 
 check_info["ddn_s2a_faultsbasic.temp"] = LegacyCheckDefinition(
+    name="ddn_s2a_faultsbasic_temp",
     service_name="DDN S2A Temperature",
     sections=["ddn_s2a_faultsbasic"],
     discovery_function=inventory_ddn_s2a_faultsbasic_temp,
@@ -147,6 +149,7 @@ def check_ddn_s2a_faultsbasic_ps(_no_item, _no_params, parsed):
 
 
 check_info["ddn_s2a_faultsbasic.ps"] = LegacyCheckDefinition(
+    name="ddn_s2a_faultsbasic_ps",
     service_name="DDN S2A Power Supplies",
     sections=["ddn_s2a_faultsbasic"],
     discovery_function=inventory_ddn_s2a_faultsbasic_ps,
@@ -185,6 +188,7 @@ def check_ddn_s2a_faultsbasic_fans(_no_item, params, parsed):
 
 
 check_info["ddn_s2a_faultsbasic.fans"] = LegacyCheckDefinition(
+    name="ddn_s2a_faultsbasic_fans",
     service_name="DDN S2A Fans",
     sections=["ddn_s2a_faultsbasic"],
     discovery_function=inventory_ddn_s2a_faultsbasic_fans,
@@ -221,6 +225,7 @@ def check_ddn_s2a_faultsbasic_pingfault(_no_item, _no_params, parsed):
 
 
 check_info["ddn_s2a_faultsbasic.pingfault"] = LegacyCheckDefinition(
+    name="ddn_s2a_faultsbasic_pingfault",
     service_name="DDN S2A Ping Fault Status",
     sections=["ddn_s2a_faultsbasic"],
     discovery_function=inventory_ddn_s2a_faultsbasic_pingfault,
@@ -251,6 +256,7 @@ def check_ddn_s2a_faultsbasic_bootstatus(_no_item, _no_params, parsed):
 
 
 check_info["ddn_s2a_faultsbasic.bootstatus"] = LegacyCheckDefinition(
+    name="ddn_s2a_faultsbasic_bootstatus",
     service_name="DDN S2A Boot Status",
     sections=["ddn_s2a_faultsbasic"],
     discovery_function=inventory_ddn_s2a_faultsbasic_bootstatus,
@@ -297,6 +303,7 @@ def check_ddn_s2a_faultsbasic_cachecoh(_no_item, _no_params, parsed):
 
 
 check_info["ddn_s2a_faultsbasic.cachecoh"] = LegacyCheckDefinition(
+    name="ddn_s2a_faultsbasic_cachecoh",
     service_name="DDN S2A Cache Coherency",
     sections=["ddn_s2a_faultsbasic"],
     discovery_function=inventory_ddn_s2a_faultsbasic_cachecoh,
@@ -333,6 +340,7 @@ def check_ddn_s2a_faultsbasic_dualcomm(_no_item, _no_params, parsed):
 
 
 check_info["ddn_s2a_faultsbasic.dualcomm"] = LegacyCheckDefinition(
+    name="ddn_s2a_faultsbasic_dualcomm",
     service_name="DDN S2A Dual Communication",
     sections=["ddn_s2a_faultsbasic"],
     discovery_function=inventory_ddn_s2a_faultsbasic_dualcomm,
@@ -368,6 +376,7 @@ def check_ddn_s2a_faultsbasic_ethernet(_no_item, _no_params, parsed):
 
 
 check_info["ddn_s2a_faultsbasic.ethernet"] = LegacyCheckDefinition(
+    name="ddn_s2a_faultsbasic_ethernet",
     service_name="DDN S2A Ethernet",
     sections=["ddn_s2a_faultsbasic"],
     discovery_function=inventory_ddn_s2a_faultsbasic_ethernet,
@@ -405,6 +414,7 @@ def check_ddn_s2a_faultsbasic(item, _no_params, parsed):
 
 
 check_info["ddn_s2a_faultsbasic"] = LegacyCheckDefinition(
+    name="ddn_s2a_faultsbasic",
     parse_function=parse_ddn_s2a_faultsbasic,
     service_name="DDN S2A Unit %s",
     discovery_function=inventory_ddn_s2a_faultsbasic,

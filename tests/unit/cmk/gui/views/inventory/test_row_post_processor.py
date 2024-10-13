@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.structured_data import ImmutableTree, SDNodeName
+from cmk.utils.structured_data import deserialize_tree, ImmutableTree, SDNodeName
 
 from cmk.gui.painter.v0.base import JoinCell
 from cmk.gui.type_defs import ColumnSpec, PainterParameters
@@ -22,7 +22,7 @@ def test_row_post_processor() -> None:
             "invorainstance_sid": "sid1",
             "invorainstance_version": "version1",
             "invorainstance_bar": "bar",
-            "host_inventory": ImmutableTree.deserialize(
+            "host_inventory": deserialize_tree(
                 {
                     "Attributes": {},
                     "Nodes": {
@@ -197,7 +197,7 @@ def test_row_post_processor() -> None:
                 "invorainstance_sid": "sid1",
                 "invorainstance_version": "version1",
                 "invorainstance_bar": "bar",
-                "host_inventory": ImmutableTree.deserialize(
+                "host_inventory": deserialize_tree(
                     {
                         "Attributes": {},
                         "Nodes": {

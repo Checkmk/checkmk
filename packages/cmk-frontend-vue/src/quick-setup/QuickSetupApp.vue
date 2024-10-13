@@ -4,18 +4,23 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import QuickSetup from '@/quick-setup/QuickSetup.vue'
+import IconElement from '@/components/IconElement.vue'
+import QuickSetupAsync from './QuickSetupAsync.vue'
+import type { QuickSetupAppProps } from './types'
 
-export interface QuickSetupAppProperties {
-  /** @property {string} quick_setup_id - The quick setup id  */
-  quick_setup_id: string
-}
-
-defineProps<QuickSetupAppProperties>()
+defineProps<QuickSetupAppProps>()
 </script>
-
 <template>
-  <QuickSetup :quick_setup_id="quick_setup_id" />
+  <Suspense>
+    <QuickSetupAsync
+      :quick_setup_id="quick_setup_id"
+      :toggle-enabled="toggleEnabled"
+      :mode="mode"
+    />
+    <template #fallback>
+      <IconElement name="load-graph" size="xxlarge" />
+    </template>
+  </Suspense>
 </template>
 
 <style>

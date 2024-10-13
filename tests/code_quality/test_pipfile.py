@@ -354,6 +354,7 @@ CEE_UNUSED_PACKAGES = [
 
 def test_dependencies_are_used() -> None:
     known_unused_packages = set(CEE_UNUSED_PACKAGES)
+    known_unused_packages.add("setuptools")  # pinned transitive dependency
     if not is_enterprise_repo():
         known_unused_packages.update(("PyPDF", "numpy", "roman"))
 

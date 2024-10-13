@@ -91,6 +91,7 @@ def check_ucd_cpu_util(item, params, parsed):
 
 
 check_info["ucd_cpu_util"] = LegacyCheckDefinition(
+    name="ucd_cpu_util",
     detect=ucd_hr_detection.PREFER_HR_ELSE_UCD,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2021.11",

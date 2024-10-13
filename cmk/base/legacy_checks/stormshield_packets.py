@@ -52,6 +52,7 @@ def parse_stormshield_packets(string_table: StringTable) -> StringTable:
 
 
 check_info["stormshield_packets"] = LegacyCheckDefinition(
+    name="stormshield_packets",
     parse_function=parse_stormshield_packets,
     detect=DETECT_STORMSHIELD,
     fetch=SNMPTree(

@@ -34,6 +34,7 @@ def discover_raritan_px2_sensors(parsed):
 
 
 check_info["raritan_px2_sensors"] = LegacyCheckDefinition(
+    name="raritan_px2_sensors",
     detect=DETECT_RARITAN,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.13742.6",
@@ -75,6 +76,7 @@ def discover_raritan_px2_sensors_airflow(parsed):
 #   +----------------------------------------------------------------------+
 
 check_info["raritan_px2_sensors.airflow"] = LegacyCheckDefinition(
+    name="raritan_px2_sensors_airflow",
     service_name="Air flow %s",
     sections=["raritan_px2_sensors"],
     discovery_function=discover_raritan_px2_sensors_airflow,
@@ -97,6 +99,7 @@ def discover_raritan_px2_sensors_humidity(parsed):
 #   +----------------------------------------------------------------------+
 
 check_info["raritan_px2_sensors.humidity"] = LegacyCheckDefinition(
+    name="raritan_px2_sensors_humidity",
     service_name="Humidity %s",
     sections=["raritan_px2_sensors"],
     discovery_function=discover_raritan_px2_sensors_humidity,
@@ -119,6 +122,7 @@ def discover_raritan_px2_sensors_pressure(parsed):
 #   +----------------------------------------------------------------------+
 
 check_info["raritan_px2_sensors.pressure"] = LegacyCheckDefinition(
+    name="raritan_px2_sensors_pressure",
     service_name="Pressure %s",
     sections=["raritan_px2_sensors"],
     discovery_function=discover_raritan_px2_sensors_pressure,

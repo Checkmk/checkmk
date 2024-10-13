@@ -73,6 +73,7 @@ def parse_h3c_lanswitch_cpu(string_table: StringTable) -> StringTable:
 
 
 check_info["h3c_lanswitch_cpu"] = LegacyCheckDefinition(
+    name="h3c_lanswitch_cpu",
     parse_function=parse_h3c_lanswitch_cpu,
     detect=contains(".1.3.6.1.2.1.1.1.0", "3com s"),
     fetch=SNMPTree(

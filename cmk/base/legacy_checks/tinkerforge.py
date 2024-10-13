@@ -138,6 +138,7 @@ def discover_tinkerforge(parsed):
 
 
 check_info["tinkerforge"] = LegacyCheckDefinition(
+    name="tinkerforge",
     parse_function=parse_tinkerforge,
     service_name="Master %s",
     discovery_function=discover_tinkerforge,
@@ -150,6 +151,7 @@ def discover_tinkerforge_temperature(parsed):
 
 
 check_info["tinkerforge.temperature"] = LegacyCheckDefinition(
+    name="tinkerforge_temperature",
     service_name="Temperature %s",
     sections=["tinkerforge"],
     discovery_function=discover_tinkerforge_temperature,
@@ -163,6 +165,7 @@ def discover_tinkerforge_ambient(parsed):
 
 
 check_info["tinkerforge.ambient"] = LegacyCheckDefinition(
+    name="tinkerforge_ambient",
     service_name="Ambient Light %s",
     sections=["tinkerforge"],
     discovery_function=discover_tinkerforge_ambient,
@@ -177,6 +180,7 @@ def discover_tinkerforge_humidity(parsed):
 
 
 check_info["tinkerforge.humidity"] = LegacyCheckDefinition(
+    name="tinkerforge_humidity",
     service_name="Humidity %s",
     sections=["tinkerforge"],
     discovery_function=discover_tinkerforge_humidity,
@@ -195,6 +199,7 @@ def discover_tinkerforge_motion(parsed):
 
 
 check_info["tinkerforge.motion"] = LegacyCheckDefinition(
+    name="tinkerforge_motion",
     service_name="Motion Detector %s",
     sections=["tinkerforge"],
     discovery_function=discover_tinkerforge_motion,

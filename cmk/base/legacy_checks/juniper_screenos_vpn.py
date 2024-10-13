@@ -31,6 +31,7 @@ def parse_juniper_screenos_vpn(string_table: StringTable) -> StringTable:
 
 
 check_info["juniper_screenos_vpn"] = LegacyCheckDefinition(
+    name="juniper_screenos_vpn",
     parse_function=parse_juniper_screenos_vpn,
     detect=DETECT_JUNIPER_SCREENOS,
     fetch=SNMPTree(

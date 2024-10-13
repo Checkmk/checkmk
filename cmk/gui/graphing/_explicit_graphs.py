@@ -14,7 +14,7 @@ from ._graph_specification import (
     HorizontalRule,
 )
 from ._legacy import LegacyUnitSpecification
-from ._type_defs import GraphConsolidationFunction
+from ._metric_operation import GraphConsolidationFunction
 from ._unit import ConvertibleUnitSpecification
 
 

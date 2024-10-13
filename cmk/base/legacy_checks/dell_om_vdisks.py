@@ -51,6 +51,7 @@ def check_dell_om_vdisks(item, params, parsed):
 
 
 check_info["dell_om_vdisks"] = LegacyCheckDefinition(
+    name="dell_om_vdisks",
     parse_function=parse_omreport,
     service_name="Virtual Disk %s",
     discovery_function=inventory_dell_om_vdisks,

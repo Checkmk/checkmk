@@ -56,6 +56,7 @@ def parse_openvpn_clients(string_table: StringTable) -> StringTable:
 
 
 check_info["openvpn_clients"] = LegacyCheckDefinition(
+    name="openvpn_clients",
     parse_function=parse_openvpn_clients,
     service_name="OpenVPN Client %s",
     discovery_function=inventory_openvpn_clients,

@@ -5,6 +5,7 @@
 
 import time
 from collections.abc import Callable
+from functools import partial
 from pathlib import Path
 from typing import Any
 
@@ -20,7 +21,7 @@ from cmk.gui.log import logger
 from cmk.gui.pages import PageRegistry
 from cmk.gui.session import SuperUserContext
 
-multisite_cronjobs = []
+multisite_cronjobs: list[Callable[[], Any] | partial] = []
 
 
 def register(page_registry: PageRegistry) -> None:
@@ -97,7 +98,9 @@ def page_run_cron() -> None:
 
         for cron_job in multisite_cronjobs:
             try:
-                job_name = cron_job.__name__
+                job_name = (
+                    cron_job.func.__name__ if isinstance(cron_job, partial) else cron_job.__name__
+                )
 
                 logger.debug("Starting [%s]", job_name)
                 cron_job()

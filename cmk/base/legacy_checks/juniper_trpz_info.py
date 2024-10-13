@@ -26,6 +26,7 @@ def parse_juniper_trpz_info(string_table: StringTable) -> StringTable | None:
 
 
 check_info["juniper_trpz_info"] = LegacyCheckDefinition(
+    name="juniper_trpz_info",
     parse_function=parse_juniper_trpz_info,
     detect=DETECT_JUNIPER_TRPZ,
     fetch=SNMPTree(

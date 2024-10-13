@@ -162,6 +162,7 @@ def check_cisco_ip_sla(item, params, parsed):
 
 
 check_info["cisco_ip_sla"] = LegacyCheckDefinition(
+    name="cisco_ip_sla",
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "cisco"),
         contains(".1.3.6.1.2.1.1.1.0", "ios"),

@@ -129,6 +129,7 @@ def check_mkeventd_status(item, params, parsed):  # pylint: disable=too-many-bra
 
 
 check_info["mkeventd_status"] = LegacyCheckDefinition(
+    name="mkeventd_status",
     parse_function=parse_mkeventd_status,
     service_name="OMD %s Event Console",
     discovery_function=inventory_mkeventd_status,

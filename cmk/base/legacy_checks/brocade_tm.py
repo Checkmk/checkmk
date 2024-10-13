@@ -78,6 +78,7 @@ def parse_brocade_tm(string_table: StringTable) -> StringTable:
 
 
 check_info["brocade_tm"] = LegacyCheckDefinition(
+    name="brocade_tm",
     parse_function=parse_brocade_tm,
     detect=DETECT_MLX,
     fetch=SNMPTree(

@@ -38,6 +38,7 @@ def parse_enterasys_fans(string_table: StringTable) -> StringTable:
 
 
 check_info["enterasys_fans"] = LegacyCheckDefinition(
+    name="enterasys_fans",
     parse_function=parse_enterasys_fans,
     detect=DETECT_ENTERASYS,
     fetch=SNMPTree(

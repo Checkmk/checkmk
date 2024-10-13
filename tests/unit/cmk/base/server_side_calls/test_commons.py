@@ -5,7 +5,8 @@
 
 # pylint: disable=protected-access
 
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
+from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
@@ -13,7 +14,11 @@ import pytest
 from cmk.utils.hostaddress import HostName
 
 from cmk.base.server_side_calls import SpecialAgentInfoFunctionResult
-from cmk.base.server_side_calls._commons import ActiveCheckError, commandline_arguments
+from cmk.base.server_side_calls._commons import (
+    ActiveCheckError,
+    ExecutableFinder,
+    legacy_commandline_arguments,
+)
 
 
 @pytest.mark.parametrize(
@@ -51,7 +56,7 @@ def test_commandline_arguments(
     passwords: Mapping[str, str],
     expected_result: str,
 ) -> None:
-    cmdline_args = commandline_arguments(
+    cmdline_args = legacy_commandline_arguments(
         HostName("test"),
         "test service",
         args,
@@ -90,7 +95,7 @@ def test_commandline_arguments_nonexisting_password(
     expected_warning: str,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    commandline_arguments(
+    legacy_commandline_arguments(
         host_name,
         service_name,
         ["arg1", ("store", "pw-id", "--password=%s"), "arg3"],
@@ -114,7 +119,7 @@ def test_commandline_arguments_invalid_arguments_type(args: int | tuple[int, int
         ActiveCheckError,
         match=r"The check argument function needs to return either a list of arguments or a string of the concatenated arguments \(Service: test service\).",
     ):
-        commandline_arguments(
+        legacy_commandline_arguments(
             HostName("test"),
             "test service",
             args,  # type: ignore[arg-type]
@@ -128,10 +133,34 @@ def test_commandline_arguments_invalid_argument() -> None:
         ActiveCheckError,
         match=r"Invalid argument for command line: \(1, 2\)",
     ):
-        commandline_arguments(
+        legacy_commandline_arguments(
             HostName("test"),
             "test service",
             ["arg1", (1, 2), "arg3"],  # type: ignore[list-item]
             {},
             Path("/pw/store"),
         )
+
+
+@contextmanager
+def _with_file(path: Path) -> Iterator[None]:
+    present = path.exists()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.touch()
+    try:
+        yield
+    finally:
+        if not present:
+            path.unlink(missing_ok=True)
+
+
+def test_executable_finder_local(tmp_path: Path) -> None:
+    binary_name = "execthis"
+    shipped_file = tmp_path / "shipped" / binary_name
+    local_file = tmp_path / "local" / binary_name
+    finder = ExecutableFinder(local_file.parent, shipped_file.parent)
+
+    with _with_file(shipped_file):
+        assert finder(binary_name, None) == str(shipped_file)
+        with _with_file(local_file):
+            assert finder(binary_name, None) == str(local_file)

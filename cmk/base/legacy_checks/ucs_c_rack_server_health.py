@@ -71,6 +71,7 @@ def check_ucs_c_rack_server_health(item, params, parsed):
 
 
 check_info["ucs_c_rack_server_health"] = LegacyCheckDefinition(
+    name="ucs_c_rack_server_health",
     parse_function=parse_ucs_c_rack_server_health,
     service_name="Health %s",
     discovery_function=inventory_ucs_c_rack_server_health,

@@ -33,6 +33,7 @@ def discover_sansymphony_virtualdiskstatus(section):
 
 
 check_info["sansymphony_virtualdiskstatus"] = LegacyCheckDefinition(
+    name="sansymphony_virtualdiskstatus",
     parse_function=parse_sansymphony_virtualdiskstatus,
     service_name="sansymphony Virtual Disk %s",
     discovery_function=discover_sansymphony_virtualdiskstatus,

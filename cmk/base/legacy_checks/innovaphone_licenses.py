@@ -49,6 +49,7 @@ def parse_innovaphone_licenses(string_table: StringTable) -> StringTable:
 
 
 check_info["innovaphone_licenses"] = LegacyCheckDefinition(
+    name="innovaphone_licenses",
     parse_function=parse_innovaphone_licenses,
     service_name="Licenses",
     discovery_function=discover_innovaphone_licenses,

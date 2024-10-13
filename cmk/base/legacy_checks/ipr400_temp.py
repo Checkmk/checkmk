@@ -25,6 +25,7 @@ def parse_ipr400_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["ipr400_temp"] = LegacyCheckDefinition(
+    name="ipr400_temp",
     parse_function=parse_ipr400_temp,
     detect=startswith(".1.3.6.1.2.1.1.1.0", "ipr voip device ipr400"),
     fetch=SNMPTree(

@@ -155,6 +155,7 @@ def check_ddn_s2a_statsdelay(item, params, parsed):
 
 
 check_info["ddn_s2a_statsdelay"] = LegacyCheckDefinition(
+    name="ddn_s2a_statsdelay",
     parse_function=parse_ddn_s2a_statsdelay,
     service_name="DDN S2A Delay %s",
     discovery_function=inventory_ddn_s2a_statsdelay,

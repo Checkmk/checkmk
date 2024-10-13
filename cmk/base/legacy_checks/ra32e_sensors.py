@@ -118,6 +118,7 @@ def discover_ra32e_sensors(x):
 
 
 check_info["ra32e_sensors"] = LegacyCheckDefinition(
+    name="ra32e_sensors",
     detect=DETECT_RA32E,
     fetch=[
         SNMPTree(
@@ -183,6 +184,7 @@ def discover_ra32e_sensors_humidity(x):
 
 
 check_info["ra32e_sensors.humidity"] = LegacyCheckDefinition(
+    name="ra32e_sensors_humidity",
     service_name="Humidity %s",
     sections=["ra32e_sensors"],
     discovery_function=discover_ra32e_sensors_humidity,
@@ -213,6 +215,7 @@ def discover_ra32e_sensors_voltage(x):
 
 
 check_info["ra32e_sensors.voltage"] = LegacyCheckDefinition(
+    name="ra32e_sensors_voltage",
     service_name="Voltage %s",
     sections=["ra32e_sensors"],
     discovery_function=discover_ra32e_sensors_voltage,
@@ -243,6 +246,7 @@ def discover_ra32e_sensors_power(x):
 
 
 check_info["ra32e_sensors.power"] = LegacyCheckDefinition(
+    name="ra32e_sensors_power",
     service_name="Power State %s",
     sections=["ra32e_sensors"],
     discovery_function=discover_ra32e_sensors_power,

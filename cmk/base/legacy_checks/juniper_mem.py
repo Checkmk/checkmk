@@ -47,6 +47,7 @@ def check_juniper_mem(
 
 
 check_info["juniper_mem"] = LegacyCheckDefinition(
+    name="juniper_mem",
     detect=DETECT_JUNIPER,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2636.3.1.13.1",

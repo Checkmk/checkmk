@@ -180,7 +180,87 @@ def _migrate_services_to_monitor(values: object) -> list[str]:
     raise TypeError(values)
 
 
-def _get_services_fs() -> Mapping[str, DictElement]:
+def _migrate(value: object) -> Mapping[str, object]:
+    if not isinstance(value, dict):
+        raise TypeError(value)
+
+    value.pop("sequential", None)
+
+    # Migrate from 2.3 valuespec to 2.4 formspec
+    if import_tags := value.get("import_tags"):
+        if import_tags == "all_tags":
+            value["import_tags"] = (import_tags, None)
+
+    return value
+
+
+def _migrate_authority(value: object) -> str:
+    if value == "global":
+        return "global_"
+    if isinstance(value, str):
+        return value
+    raise TypeError(value)
+
+
+def configuration_authentication() -> Mapping[str, DictElement]:
+    return {
+        "subscription": DictElement(
+            parameter_form=String(
+                title=Title("Subscription ID"),
+            )
+        ),
+        "tenant": DictElement(
+            parameter_form=String(
+                title=Title("Tenant ID / Directory ID"),
+                custom_validate=(validators.LengthInRange(min_value=1),),
+            ),
+            required=True,
+        ),
+        "client": DictElement(
+            parameter_form=String(
+                title=Title("Client ID / Application ID"),
+                custom_validate=(validators.LengthInRange(min_value=1),),
+            ),
+            required=True,
+        ),
+        "secret": DictElement(
+            parameter_form=Password(
+                migrate=migrate_to_password,
+                title=Title("Client Secret"),
+                custom_validate=(validators.LengthInRange(min_value=1),),
+            ),
+            required=True,
+        ),
+    }
+
+
+def configuration_authority() -> Mapping[str, DictElement]:
+    return {
+        "authority": DictElement(
+            parameter_form=SingleChoice(
+                title=Title("Authority"),
+                migrate=_migrate_authority,
+                elements=[
+                    SingleChoiceElement(name="global_", title=Title("Global")),
+                    SingleChoiceElement(name="china", title=Title("China")),
+                ],
+                prefill=DefaultValue("global_"),
+                help_text=Help(
+                    "Specify the authority you want to connect to:"
+                    "<ul>"
+                    "<li>Global: Login into 'https://login.microsoftonline.com',"
+                    " get data from 'https://graph.microsoft.com'</li>"
+                    "<li>China: Login into 'https://login.partner.microsoftonline.cn',"
+                    " get data from 'https://microsoftgraph.chinacloudapi.cn'</li>"
+                    "</ul>"
+                ),
+            ),
+            required=True,
+        )
+    }
+
+
+def configuration_services() -> Mapping[str, DictElement]:
     return {
         "services": DictElement(
             parameter_form=MultipleChoice(
@@ -202,155 +282,97 @@ def _get_services_fs() -> Mapping[str, DictElement]:
     }
 
 
-def _migrate_sequential(value: object) -> Mapping[str, object]:
-    if not isinstance(value, dict):
-        raise TypeError(value)
-
-    value.pop("sequential", None)
-    return value
-
-
-def _migrate_authority(value: object) -> str:
-    if value == "global":
-        return "global_"
-    if isinstance(value, str):
-        return value
-    raise TypeError(value)
-
-
-def _formspec() -> Dictionary:
-    return Dictionary(
-        migrate=_migrate_sequential,
-        elements={
-            "authority": DictElement(
-                parameter_form=SingleChoice(
-                    title=Title("Authority"),
-                    migrate=_migrate_authority,
-                    elements=[
-                        SingleChoiceElement(name="global_", title=Title("Global")),
-                        SingleChoiceElement(name="china", title=Title("China")),
-                    ],
-                    prefill=DefaultValue("global_"),
-                    help_text=Help(
-                        "Specify the authority you want to connect to:"
-                        "<ul>"
-                        "<li>Global: Login into 'https://login.microsoftonline.com',"
-                        " get data from 'https://graph.microsoft.com'</li>"
-                        "<li>China: Login into 'https://login.partner.microsoftonline.cn',"
-                        " get data from 'https://microsoftgraph.chinacloudapi.cn'</li>"
-                        "</ul>"
-                    ),
-                ),
-                required=True,
+def configuration_advanced() -> Mapping[str, DictElement]:
+    return {
+        "proxy": DictElement(
+            parameter_form=Proxy(
+                migrate=migrate_to_proxy,
             ),
-            "subscription": DictElement(
-                parameter_form=String(
-                    title=Title("Subscription ID"),
+        ),
+        "config": DictElement(
+            parameter_form=Dictionary(
+                title=Title("Retrieve information about..."),
+                # Since we introduced this, Microsoft has already reduced the number
+                # of allowed API requests. At the time of this writing (11/2018)
+                # you can find the number here:
+                # https://docs.microsoft.com/de-de/azure/azure-resource-manager/resource-manager-request-limits
+                help_text=Help(
+                    "By default, all resources associated to the configured tenant ID"
+                    " will be monitored. "
+                    "However, since Microsoft limits API calls to %s per hour"
+                    " (%s per minute), you can restrict the monitoring to individual"
+                    " resource groups and resources."
                 )
+                % ("12000", "200"),
+                elements={
+                    "explicit": _special_agents_azure_explicit_config(),
+                    "tag_based": _special_agents_azure_tag_based_config(),
+                },
             ),
-            "tenant": DictElement(
-                parameter_form=String(
-                    title=Title("Tenant ID / Directory ID"),
-                    custom_validate=(validators.LengthInRange(min_value=1),),
+            required=True,
+        ),
+        "piggyback_vms": DictElement(
+            parameter_form=SingleChoice(
+                title=Title("Map data relating to VMs"),
+                help_text=Help(
+                    "By default, data relating to a VM is sent to the group host"
+                    " corresponding to the resource group of the VM, the same way"
+                    " as for any other resource. If the VM is present in your"
+                    " monitoring as a separate host, you can choose to send the data"
+                    " to the VM itself."
                 ),
-                required=True,
+                elements=[
+                    SingleChoiceElement(name="grouphost", title=Title("Map data to group host")),
+                    SingleChoiceElement(name="self", title=Title("Map data to the VM itself")),
+                ],
+                prefill=DefaultValue("grouphost"),
             ),
-            "client": DictElement(
-                parameter_form=String(
-                    title=Title("Client ID / Application ID"),
-                    custom_validate=(validators.LengthInRange(min_value=1),),
+        ),
+        "import_tags": DictElement(
+            parameter_form=CascadingSingleChoice(
+                title=Title("Import tags as host/service labels"),
+                help_text=Help(
+                    "By default, Checkmk imports all Azure tags as host/service labels. "
+                    "The imported tags are added as host labels for resource groups and "
+                    "VMs monitored as hosts and as service labels for resources monitored "
+                    "as services. The label syntax is 'cmk/azure/tag/{key}:{value}'.<br>"
+                    "Additionally, each host representing a resource group is given the "
+                    "host label 'cmk/azure/resource_group:{rg_name}', and VMs monitored as "
+                    "hosts are given the host label 'cmk/azure/vm:instance', which is done "
+                    "independent of this option.<br>"
+                    "You can further restrict the imported tags by specifying a pattern "
+                    "which Checkmk searches for in the key of the Azure tag, or you can "
+                    "disable the import of Azure tags altogether."
                 ),
-                required=True,
-            ),
-            "secret": DictElement(
-                parameter_form=Password(
-                    migrate=migrate_to_password,
-                    title=Title("Client Secret"),
-                    custom_validate=(validators.LengthInRange(min_value=1),),
-                ),
-                required=True,
-            ),
-            "proxy": DictElement(
-                parameter_form=Proxy(
-                    migrate=migrate_to_proxy,
-                ),
-            ),
-            **_get_services_fs(),
-            "config": DictElement(
-                parameter_form=Dictionary(
-                    title=Title("Retrieve information about..."),
-                    # Since we introduced this, Microsoft has already reduced the number
-                    # of allowed API requests. At the time of this writing (11/2018)
-                    # you can find the number here:
-                    # https://docs.microsoft.com/de-de/azure/azure-resource-manager/resource-manager-request-limits
-                    help_text=Help(
-                        "By default, all resources associated to the configured tenant ID"
-                        " will be monitored. "
-                        "However, since Microsoft limits API calls to %s per hour"
-                        " (%s per minute), you can restrict the monitoring to individual"
-                        " resource groups and resources."
-                    )
-                    % ("12000", "200"),
-                    elements={
-                        "explicit": _special_agents_azure_explicit_config(),
-                        "tag_based": _special_agents_azure_tag_based_config(),
-                    },
-                ),
-                required=True,
-            ),
-            "piggyback_vms": DictElement(
-                parameter_form=SingleChoice(
-                    title=Title("Map data relating to VMs"),
-                    help_text=Help(
-                        "By default, data relating to a VM is sent to the group host"
-                        " corresponding to the resource group of the VM, the same way"
-                        " as for any other resource. If the VM is present in your"
-                        " monitoring as a separate host, you can choose to send the data"
-                        " to the VM itself."
+                elements=[
+                    CascadingSingleChoiceElement(
+                        name="all_tags",
+                        title=Title("Import all valid tags"),
+                        parameter_form=FixedValue(value=None),
                     ),
-                    elements=[
-                        SingleChoiceElement(
-                            name="grouphost", title=Title("Map data to group host")
+                    CascadingSingleChoiceElement(
+                        name="filter_tags",
+                        title=Title("Filter valid tags by key pattern"),
+                        parameter_form=RegularExpression(
+                            custom_validate=(validators.LengthInRange(min_value=1),),
+                            predefined_help_text=MatchingScope.INFIX,
                         ),
-                        SingleChoiceElement(name="self", title=Title("Map data to the VM itself")),
-                    ],
-                    prefill=DefaultValue("grouphost"),
-                ),
-            ),
-            "import_tags": DictElement(
-                parameter_form=CascadingSingleChoice(
-                    title=Title("Import tags as host/service labels"),
-                    help_text=Help(
-                        "By default, Checkmk imports all Azure tags as host/service labels. "
-                        "The imported tags are added as host labels for resource groups and "
-                        "VMs monitored as hosts and as service labels for resources monitored "
-                        "as services. The label syntax is 'cmk/azure/tag/{key}:{value}'.<br>"
-                        "Additionally, each host representing a resource group is given the "
-                        "host label 'cmk/azure/resource_group:{rg_name}', and VMs monitored as "
-                        "hosts are given the host label 'cmk/azure/vm:instance', which is done "
-                        "independent of this option.<br>"
-                        "You can further restrict the imported tags by specifying a pattern "
-                        "which Checkmk searches for in the key of the Azure tag, or you can "
-                        "disable the import of Azure tags altogether."
                     ),
-                    elements=[
-                        CascadingSingleChoiceElement(
-                            name="all_tags",
-                            title=Title("Import all valid tags"),
-                            parameter_form=FixedValue(value=None),
-                        ),
-                        CascadingSingleChoiceElement(
-                            name="filter_tags",
-                            title=Title("Filter valid tags by key pattern"),
-                            parameter_form=RegularExpression(
-                                custom_validate=(validators.LengthInRange(min_value=1),),
-                                predefined_help_text=MatchingScope.INFIX,
-                            ),
-                        ),
-                    ],
-                    prefill=DefaultValue("all_tags"),
-                ),
+                ],
+                prefill=DefaultValue("all_tags"),
             ),
+        ),
+    }
+
+
+def formspec() -> Dictionary:
+    return Dictionary(
+        migrate=_migrate,
+        elements={
+            **configuration_authentication(),
+            **configuration_authority(),
+            **configuration_services(),
+            **configuration_advanced(),
         },
     )
 
@@ -366,5 +388,5 @@ rule_spec_azure = SpecialAgent(
         "service of the host owning the datasource program."
     ),
     topic=Topic.CLOUD,
-    parameter_form=_formspec,
+    parameter_form=formspec,
 )

@@ -33,6 +33,7 @@ def parse_checkpoint_fan(string_table: StringTable) -> StringTable:
 
 
 check_info["checkpoint_fan"] = LegacyCheckDefinition(
+    name="checkpoint_fan",
     parse_function=parse_checkpoint_fan,
     detect=DETECT,
     fetch=SNMPTree(

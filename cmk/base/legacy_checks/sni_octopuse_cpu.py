@@ -27,6 +27,7 @@ def parse_sni_octopuse_cpu(string_table: StringTable) -> StringTable | None:
 
 
 check_info["sni_octopuse_cpu"] = LegacyCheckDefinition(
+    name="sni_octopuse_cpu",
     parse_function=parse_sni_octopuse_cpu,
     detect=DETECT_SNI_OCTOPUSE,
     fetch=SNMPTree(

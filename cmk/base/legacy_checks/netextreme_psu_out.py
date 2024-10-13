@@ -57,6 +57,7 @@ def discover_netextreme_psu_out(section):
 
 
 check_info["netextreme_psu_out"] = LegacyCheckDefinition(
+    name="netextreme_psu_out",
     detect=DETECT_NETEXTREME,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1916.1.1.1.38.1",

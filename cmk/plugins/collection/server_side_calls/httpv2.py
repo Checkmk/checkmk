@@ -238,19 +238,18 @@ def generate_http_services(
     for endpoint in params:
         protocol = "HTTPS" if endpoint.url.startswith("https://") else "HTTP"
         prefix = f"{protocol} " if endpoint.service_name.prefix is ServicePrefix.AUTO else ""
-        endpoint.url = replace_macros(endpoint.url, macros)
         yield ActiveCheckCommand(
             service_description=f"{prefix}{replace_macros(endpoint.service_name.name, macros)}",
-            command_arguments=list(_command_arguments(endpoint)),
+            command_arguments=list(_command_arguments(endpoint, macros)),
         )
 
 
-def _command_arguments(endpoint: HttpEndpoint) -> Iterator[str | Secret]:
+def _command_arguments(endpoint: HttpEndpoint, macros: Mapping[str, str]) -> Iterator[str | Secret]:
     yield "--url"
-    yield endpoint.url
+    yield replace_macros(endpoint.url, macros)
 
     if (connection := endpoint.settings.connection) is not None:
-        yield from _connection_args(connection)
+        yield from _connection_args(connection, macros)
     if (response_time := endpoint.settings.response_time) is not None:
         yield from _response_time_arguments(response_time)
     if (server_response := endpoint.settings.server_response) is not None:
@@ -263,7 +262,7 @@ def _command_arguments(endpoint: HttpEndpoint) -> Iterator[str | Secret]:
         yield from _content_args(content)
 
 
-def _connection_args(connection: Connection) -> Iterator[str | Secret]:
+def _connection_args(connection: Connection, macros: Mapping[str, str]) -> Iterator[str | Secret]:
     yield from _method_args(connection.method)
     if (auth := connection.auth) is not None:
         yield from _auth_args(auth)
@@ -278,7 +277,7 @@ def _connection_args(connection: Connection) -> Iterator[str | Secret]:
     if (timeout := connection.timeout) is not None:
         yield from _timeout_args(timeout)
     if (user_agent := connection.user_agent) is not None:
-        yield from _user_agent_args(user_agent)
+        yield from _user_agent_args(replace_macros(user_agent, macros))
     if (add_headers := connection.add_headers) is not None:
         yield from _send_header_args(add_headers)
 

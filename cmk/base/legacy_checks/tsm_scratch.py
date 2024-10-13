@@ -51,6 +51,7 @@ def check_tsm_scratch(item, _no_params, parsed):
 
 
 check_info["tsm_scratch"] = LegacyCheckDefinition(
+    name="tsm_scratch",
     parse_function=parse_tsm_scratch,
     service_name="Scratch Pool %s",
     discovery_function=inventory_tsm_scratch,

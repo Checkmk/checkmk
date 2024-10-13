@@ -89,6 +89,7 @@ def check_aws_application_elb_target_groups(item, params, parsed):
 
 
 check_info["aws_elbv2_target_groups"] = LegacyCheckDefinition(
+    name="aws_elbv2_target_groups",
     parse_function=parse_aws_elbv2_target_groups,
     service_name="AWS/ApplicationELB Target Groups",
     discovery_function=inventory_aws_application_elb_target_groups,
@@ -109,6 +110,7 @@ def check_aws_network_elb_target_groups(item, params, parsed):
 
 
 check_info["aws_elbv2_target_groups.network"] = LegacyCheckDefinition(
+    name="aws_elbv2_target_groups_network",
     service_name="AWS/NetworkELB Target Groups",
     sections=["aws_elbv2_target_groups"],
     discovery_function=inventory_aws_network_elb_target_groups,

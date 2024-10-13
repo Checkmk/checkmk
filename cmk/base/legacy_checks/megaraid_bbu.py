@@ -110,6 +110,7 @@ def check_megaraid_bbu(item, _no_params, section):
 
 
 check_info["megaraid_bbu"] = LegacyCheckDefinition(
+    name="megaraid_bbu",
     parse_function=megaraid_bbu_parse,
     service_name="RAID BBU %s",
     discovery_function=discover_megaraid_bbu,

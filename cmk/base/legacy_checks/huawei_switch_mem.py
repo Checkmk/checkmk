@@ -38,6 +38,7 @@ def discover_huawei_switch_mem(section):
 
 
 check_info["huawei_switch_mem"] = LegacyCheckDefinition(
+    name="huawei_switch_mem",
     detect=DETECT_HUAWEI_SWITCH,
     fetch=[
         SNMPTree(

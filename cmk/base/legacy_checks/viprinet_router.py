@@ -48,6 +48,7 @@ def discover_viprinet_router(section: StringTable) -> DiscoveryResult:
 
 
 check_info["viprinet_router"] = LegacyCheckDefinition(
+    name="viprinet_router",
     parse_function=parse_viprinet_router,
     detect=DETECT_VIPRINET,
     fetch=SNMPTree(

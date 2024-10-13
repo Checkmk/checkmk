@@ -96,6 +96,7 @@ def check_ibm_svc_portfc(item, _no_params, parsed):
 
 
 check_info["ibm_svc_portfc"] = LegacyCheckDefinition(
+    name="ibm_svc_portfc",
     parse_function=parse_ibm_svc_portfc,
     service_name="FC %s",
     discovery_function=inventory_ibm_svc_portfc,

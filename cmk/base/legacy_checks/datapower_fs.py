@@ -60,6 +60,7 @@ def parse_datapower_fs(string_table: StringTable) -> StringTable:
 
 
 check_info["datapower_fs"] = LegacyCheckDefinition(
+    name="datapower_fs",
     parse_function=parse_datapower_fs,
     detect=DETECT,
     fetch=SNMPTree(

@@ -28,6 +28,7 @@ def parse_steelhead_status(string_table: StringTable) -> StringTable:
 
 
 check_info["steelhead_status"] = LegacyCheckDefinition(
+    name="steelhead_status",
     parse_function=parse_steelhead_status,
     detect=DETECT_STEELHEAD,
     fetch=SNMPTree(

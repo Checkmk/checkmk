@@ -18,7 +18,25 @@ from cmk.utils.hostaddress import HostName
 
 from cmk.gui.config import active_config
 from cmk.gui.graphing import _graph_templates as gt
-from cmk.gui.graphing._expression import (
+from cmk.gui.graphing._formatter import AutoPrecision
+from cmk.gui.graphing._from_api import metrics_from_api, RegisteredMetric
+from cmk.gui.graphing._graph_specification import HorizontalRule
+from cmk.gui.graphing._graph_templates import (
+    _evaluate_predictive_metrics,
+    _evaluate_scalars,
+    _get_evaluated_graph_templates,
+    _get_graph_plugins,
+    _matching_graph_templates,
+    _parse_bidirectional_from_api,
+    _parse_graph_from_api,
+    _parse_graph_plugin,
+    evaluate_metrics,
+    EvaluatedGraphTemplate,
+    GraphTemplate,
+    MinimalGraphTemplateRange,
+)
+from cmk.gui.graphing._legacy import get_render_function, RawGraphTemplate
+from cmk.gui.graphing._metric_expression import (
     BaseMetricExpression,
     Constant,
     CriticalOf,
@@ -35,35 +53,13 @@ from cmk.gui.graphing._expression import (
     Sum,
     WarningOf,
 )
-from cmk.gui.graphing._formatter import AutoPrecision
-from cmk.gui.graphing._from_api import metrics_from_api, RegisteredMetric
-from cmk.gui.graphing._graph_specification import (
-    HorizontalRule,
-    MetricOpOperator,
-    MetricOpRRDSource,
-)
-from cmk.gui.graphing._graph_templates import (
-    _evaluate_predictive_metrics,
-    _evaluate_scalars,
-    _get_evaluated_graph_templates,
-    _get_graph_plugins,
-    _matching_graph_templates,
-    _parse_bidirectional_from_api,
-    _parse_graph_from_api,
-    _parse_graph_plugin,
-    evaluate_metrics,
-    EvaluatedGraphTemplate,
-    GraphTemplate,
-    MinimalGraphTemplateRange,
-)
-from cmk.gui.graphing._legacy import get_render_function, RawGraphTemplate
+from cmk.gui.graphing._metric_operation import LineType, MetricOpOperator, MetricOpRRDSource
 from cmk.gui.graphing._translated_metrics import (
     Original,
     parse_perf_data,
     translate_metrics,
     TranslatedMetric,
 )
-from cmk.gui.graphing._type_defs import LineType
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 

@@ -25,6 +25,7 @@ def parse_knuerr_rms_temp(string_table: StringTable) -> StringTable | None:
 
 
 check_info["knuerr_rms_temp"] = LegacyCheckDefinition(
+    name="knuerr_rms_temp",
     parse_function=parse_knuerr_rms_temp,
     detect=DETECT_KNUERR,
     fetch=SNMPTree(

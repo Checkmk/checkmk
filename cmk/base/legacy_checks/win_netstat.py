@@ -68,6 +68,7 @@ def parse_win_netstat(string_table):
 
 
 check_info["win_netstat"] = LegacyCheckDefinition(
+    name="win_netstat",
     parse_function=parse_win_netstat,
     service_name="TCP Connection %s",
     check_function=check_netstat_generic,

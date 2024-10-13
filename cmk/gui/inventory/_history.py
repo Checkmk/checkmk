@@ -6,21 +6,28 @@
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import NamedTuple
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
-from cmk.utils.structured_data import ImmutableDeltaTree, ImmutableTree, load_tree, SDFilterChoice
+from cmk.utils.structured_data import (
+    deserialize_delta_tree,
+    ImmutableDeltaTree,
+    ImmutableTree,
+    load_tree,
+    SDFilterChoice,
+    serialize_delta_tree,
+)
 
 from cmk.gui.i18n import _
 
 from ._tree import _get_permitted_inventory_paths, make_filter_choices_from_permitted_paths
 
 
-class InventoryHistoryPath(NamedTuple):
+@dataclass(frozen=True)
+class InventoryHistoryPath:
     path: Path
     timestamp: int | None
 
@@ -29,7 +36,8 @@ class InventoryHistoryPath(NamedTuple):
         return self.path.relative_to(cmk.utils.paths.omd_root)
 
 
-class HistoryEntry(NamedTuple):
+@dataclass(frozen=True)
+class HistoryEntry:
     timestamp: int | None
     new: int
     changed: int
@@ -37,7 +45,8 @@ class HistoryEntry(NamedTuple):
     delta_tree: ImmutableDeltaTree
 
 
-class FilteredInventoryHistoryPaths(NamedTuple):
+@dataclass(frozen=True)
+class FilteredInventoryHistoryPaths:
     start_tree_path: InventoryHistoryPath
     tree_paths: Sequence[InventoryHistoryPath]
 
@@ -262,7 +271,7 @@ class _CachedDeltaTreeLoader:
             new,
             changed,
             removed,
-            ImmutableDeltaTree.deserialize(raw_delta_tree),
+            deserialize_delta_tree(raw_delta_tree),
         )
 
     def get_calculated_or_store_entry(
@@ -278,7 +287,7 @@ class _CachedDeltaTreeLoader:
         if new or changed or removed:
             store.save_text_to_file(
                 self._path,
-                repr((new, changed, removed, delta_tree.serialize())),
+                repr((new, changed, removed, serialize_delta_tree(delta_tree))),
             )
             return self._make_history_entry(new, changed, removed, delta_tree)
         return None

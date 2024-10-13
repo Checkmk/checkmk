@@ -21,7 +21,7 @@ from cmk.ccc.exceptions import MKException
 
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostAddress, HostName
-from cmk.utils.structured_data import SDRawTree
+from cmk.utils.structured_data import SDRawTree, serialize_tree
 
 from cmk.gui import sites
 from cmk.gui.config import active_config
@@ -185,11 +185,10 @@ def _inventory_of_host(host_name: HostName, api_request: dict[str, Any]) -> SDRa
 
     tree = load_filtered_and_merged_tree(get_status_data_via_livestatus(site, host_name))
     if "paths" in api_request:
-        return tree.filter(
-            make_filter_choices_from_api_request_paths(api_request["paths"])
-        ).serialize()
-
-    return tree.serialize()
+        return serialize_tree(
+            tree.filter(make_filter_choices_from_api_request_paths(api_request["paths"]))
+        )
+    return serialize_tree(tree)
 
 
 def _write_json(resp):

@@ -29,7 +29,12 @@ class LoginPage(CmkPage):
         timeout_navigation: int | None = None,
     ) -> None:
         self.site_url = site_url
-        super().__init__(page, navigate_to_page, timeout_assertions, timeout_navigation)
+        super().__init__(
+            page=page,
+            navigate_to_page=navigate_to_page,
+            timeout_assertions=timeout_assertions,
+            timeout_navigation=timeout_navigation,
+        )
 
     def navigate(self) -> None:
         """Navigate to login page, like a Checkmk GUI user.

@@ -41,6 +41,7 @@ def parse_checkpoint_memory(string_table: StringTable) -> StringTable:
 
 
 check_info["checkpoint_memory"] = LegacyCheckDefinition(
+    name="checkpoint_memory",
     parse_function=parse_checkpoint_memory,
     detect=DETECT,
     fetch=SNMPTree(

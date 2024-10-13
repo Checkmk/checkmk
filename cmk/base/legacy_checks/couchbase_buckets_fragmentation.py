@@ -44,6 +44,7 @@ def check_couchbase_buckets_fragmentation(item, params, parsed):
 
 
 check_info["couchbase_buckets_fragmentation"] = LegacyCheckDefinition(
+    name="couchbase_buckets_fragmentation",
     parse_function=parse_couchbase_lines,
     service_name="Couchbase Bucket %s Fragmentation",
     discovery_function=discover_couchbase_buckets_fragmentation,

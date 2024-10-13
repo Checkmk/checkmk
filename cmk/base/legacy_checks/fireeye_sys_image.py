@@ -38,6 +38,7 @@ def discover_fireeye_sys_image(info):
 
 
 check_info["fireeye_sys_image"] = LegacyCheckDefinition(
+    name="fireeye_sys_image",
     parse_function=parse_fireeye_sys_image,
     detect=DETECT,
     fetch=SNMPTree(

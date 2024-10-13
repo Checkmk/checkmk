@@ -11,7 +11,7 @@ description:
  To use this plugin, Jolokia and the agent plug-in need to be installed
  on the monitored server.
 
- Both, version 1.7 and 2.0 of Jolokia are supported.
+ Versions 1.7, 2.0 and 2.1 of Jolokia are supported.
 
 item:
  The name of the application server instance as configured by the agent.

@@ -17,11 +17,11 @@ import asyncio
 import json
 import logging
 import os
+import re
 import subprocess
 import sys
 import time
 from collections.abc import Mapping, Sequence
-from functools import reduce
 from pathlib import Path
 from typing import Any
 
@@ -125,7 +125,7 @@ def load_file(filename: Path) -> tuple[Sequence[Vars], Stages]:
     """Read and parse a YAML file containing 'VARIABLES' and 'STAGES' and return a tuple with
     typed content"""
     try:
-        raw_data = yaml.load(Path.read_text(filename), Loader=yaml.BaseLoader)
+        raw_data = yaml.safe_load(Path.read_text(filename))
     except FileNotFoundError:
         raise RuntimeError(
             f"Could not find {filename}. Must be a YAML file containing stage declarations."
@@ -142,7 +142,12 @@ def replace_variables(string: str, env_vars: Vars) -> str:
     >>> replace_variables("foo: ${foo}", {"foo": "bar"})
     'foo: bar'
     """
-    return reduce(lambda s, kv: str.replace(s, f"${{{kv[0]}}}", kv[1]), env_vars.items(), string)
+
+    def replace_match(match: re.Match) -> str:
+        var_name = match.group(1)
+        return env_vars.get(var_name, match.group(0))
+
+    return re.sub(r"\$\{(\w+)\}", replace_match, string)
 
 
 def apply_variables(in_data: StageInfo, env_vars: Vars) -> StageInfo:
@@ -236,7 +241,17 @@ def evaluate_vars(raw_vars: Sequence[Vars], env_vars: Vars) -> Vars:
             )
 
         LOG.debug("evaluate %r run command %r", e["NAME"], cmd)
-        replace_newlines = e.get("REPLACE_NEWLINES", "false") in (
+        replace_newlines = convert_newline_entry_to_bool(e.get("REPLACE_NEWLINES", False))
+        cmd_result = run_shell_command(cmd, replace_newlines)
+        LOG.debug("set to %r", cmd_result)
+        result[e["NAME"]] = cmd_result
+
+    return result
+
+
+def convert_newline_entry_to_bool(entry: str | bool) -> bool:
+    if isinstance(entry, str):
+        return entry.lower() in (
             "y",
             "yes",
             "t",
@@ -244,11 +259,8 @@ def evaluate_vars(raw_vars: Sequence[Vars], env_vars: Vars) -> Vars:
             "on",
             "1",
         )
-        cmd_result = run_shell_command(cmd, replace_newlines)
-        LOG.debug("set to %r", cmd_result)
-        result[e["NAME"]] = cmd_result
 
-    return result
+    return bool(entry)
 
 
 def compile_stage_info(stages_file: Path, env_vars: Vars, no_skip: bool) -> tuple[Vars, Stages]:

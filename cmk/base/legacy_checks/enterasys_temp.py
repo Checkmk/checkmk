@@ -36,6 +36,7 @@ def parse_enterasys_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["enterasys_temp"] = LegacyCheckDefinition(
+    name="enterasys_temp",
     parse_function=parse_enterasys_temp,
     detect=DETECT_ENTERASYS,
     fetch=SNMPTree(

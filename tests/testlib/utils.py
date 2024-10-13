@@ -19,23 +19,16 @@ from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from pathlib import Path
 from pprint import pformat
-from typing import Any, assert_never
+from typing import Any, assert_never, overload
 
 import pexpect  # type: ignore[import-untyped]
-import pytest
+import yaml
 
 from tests.testlib.repo import branch_from_env, current_branch_name, repo_path
 
 from cmk.ccc.version import Edition
 
 logger = logging.getLogger(__name__)
-
-
-class UtilCalledProcessError(subprocess.CalledProcessError):
-    def __str__(self) -> str:
-        base_msg = f"\n{super().__str__()}"
-        err_msg = f"\nSTDERR:\n{self.stderr}" if self.stderr else ""
-        return f"{base_msg}{err_msg}"
 
 
 @dataclasses.dataclass
@@ -224,60 +217,89 @@ def spawn_expect_process(
 
 def run(
     args: list[str],
+    capture_output: bool = True,
     check: bool = True,
+    encoding: str | None = "utf-8",
+    input: str | bytes | None = None,  # pylint: disable=redefined-builtin
+    preserve_env: list[str] | None = None,
     sudo: bool = False,
     substitute_user: str | None = None,
     **kwargs: Any,
 ) -> subprocess.CompletedProcess:
-    """Run a process and return a CompletedProcess object."""
-    if sudo:
-        args = ["sudo"] + args
-    if substitute_user:
-        args = ["su", "-l", substitute_user, "-c"] + args
-    logger.info("Executing: %s", subprocess.list2cmdline(args))
-    try:
-        proc = subprocess.run(
-            args,
-            encoding="utf-8",
-            stdin=None if kwargs.get("input") else kwargs.get("stdin", subprocess.DEVNULL),
-            capture_output=True,
-            close_fds=True,
-            check=check,
-            **kwargs,
-        )
-    except subprocess.CalledProcessError as e:
-        raise RuntimeError(
-            f"Subprocess terminated non-successfully. Stdout:\n{e.stdout}\nStderr:\n{e.stderr}"
-        ) from e
-    return proc
+    """Run a process and return a `subprocess.CompletedProcess` object."""
+    args_ = _extend_command(args, substitute_user, sudo, preserve_env, kwargs)
+
+    kwargs["capture_output"] = capture_output
+    kwargs["encoding"] = encoding
+    kwargs["input"] = input
+    return subprocess.run(args_, check=check, **kwargs)
 
 
-def execute(  # type: ignore[no-untyped-def]
+def execute(
     cmd: list[str],
-    *args,
+    encoding: str | None = "utf-8",
     preserve_env: list[str] | None = None,
-    sudo: bool = False,
     substitute_user: str | None = None,
-    **kwargs,
+    sudo: bool = False,
+    **kwargs: Any,
 ) -> subprocess.Popen:
-    """Run a process as root or a different user and return a Popen object."""
-    sudo_cmd = ["sudo"] if sudo else []
-    su_cmd = ["su", "-l", substitute_user] if substitute_user else []
-    if preserve_env:
-        # Skip the test cases calling this for some distros
-        if os.environ.get("DISTRO") == "centos-8":
-            pytest.skip("preserve env not possible in this environment")
-        if sudo:
-            sudo_cmd += [f"--preserve-env={','.join(preserve_env)}"]
-        if substitute_user:
-            su_cmd += ["--whitelist-environment", ",".join(preserve_env)]
+    """Run a process as root or a different user and return a `subprocess.Popen`.
 
-    kwargs.setdefault("encoding", "utf-8")
-    cmd = sudo_cmd + (su_cmd + ["-c", shlex.quote(shlex.join(cmd))] if substitute_user else cmd)
-    cmd_txt = " ".join(cmd)
-    logger.info("Executing: %s", cmd_txt)
-    kwargs["shell"] = kwargs.get("shell", True)
-    return subprocess.Popen(cmd_txt if kwargs.get("shell") else cmd, *args, **kwargs)
+    The method wraps `subprocess.Popen` and initializes some `kwargs` by default.
+    NOTE: use it as a contextmanager; `with execute(...) as process: ...`
+    """
+    cmd_ = _extend_command(cmd, substitute_user, sudo, preserve_env, kwargs)
+
+    kwargs["encoding"] = encoding
+    return subprocess.Popen(cmd_, **kwargs)
+
+
+def _extend_command(
+    cmd: list[str],
+    substitute_user: str | None,
+    sudo: bool,
+    preserve_env: list[str] | None,
+    kwargs: dict,  # subprocess.<method> kwargs
+) -> list[str]:
+    """Return extended command by adding `sudo` or `su` usage."""
+
+    methods = "`testlib.utils.check_output / execute / run`"
+    # TODO: remove usage of kwargs & shell from methods `check_output / execute / run`.
+    if kwargs.get("shell", False):
+        raise NotImplementedError(
+            f"`shell=True` is not supported by {methods}.\n"
+            "Use desired `subprocess.<method>` directly for such cases."
+        )
+    if preserve_env and not (sudo or substitute_user):
+        raise TypeError(
+            f"'preserve_env' requires usage of 'sudo' or 'substitute_user' in {methods}!"
+        )
+
+    sudo_cmd = _cmd_as_sudo(preserve_env) if sudo else []
+    user_cmd = (
+        (_cmd_as_user(substitute_user, preserve_env) + [shlex.join(cmd)])
+        if substitute_user
+        else cmd
+    )
+    cmd_ = sudo_cmd + user_cmd
+    logging.info("Executing command: %s", shlex.join(cmd_))
+    return cmd_
+
+
+def _cmd_as_sudo(preserve_env: list[str] | None = None) -> list[str]:
+    base_cmd = ["sudo"]
+    if preserve_env:
+        base_cmd += [f"--preserve-env={','.join(preserve_env)}"]
+    return base_cmd
+
+
+def _cmd_as_user(username: str, preserve_env: list[str] | None = None) -> list[str]:
+    """Extend commandline by adopting rol oe desired user."""
+    base_cmd = ["su", "-l", username]
+    if preserve_env:
+        base_cmd += ["--whitelist-environment", ",".join(preserve_env)]
+    base_cmd += ["-c"]
+    return base_cmd
 
 
 class DaemonTerminationMode(enum.Enum):
@@ -336,30 +358,48 @@ def _terminate_daemon(
             assert_never(termination_mode)
 
 
+@overload
 def check_output(
     cmd: list[str],
-    input: str | None = None,  # pylint: disable=redefined-builtin
-    sudo: bool = True,
+    encoding: str = "utf-8",
+    input: str | bytes | None = None,  # pylint: disable=redefined-builtin
+    preserve_env: list[str] | None = None,
+    sudo: bool = False,
     substitute_user: str | None = None,
-) -> str:
+    **kwargs: Any,
+) -> str: ...
+
+
+@overload
+def check_output(
+    cmd: list[str],
+    encoding: None,
+    input: str | bytes | None = None,  # pylint: disable=redefined-builtin
+    preserve_env: list[str] | None = None,
+    sudo: bool = False,
+    substitute_user: str | None = None,
+    **kwargs: Any,
+) -> bytes: ...
+
+
+def check_output(
+    cmd: list[str],
+    encoding: str | None = "utf-8",
+    input: str | bytes | None = None,  # pylint: disable=redefined-builtin
+    preserve_env: list[str] | None = None,
+    sudo: bool = False,
+    substitute_user: str | None = None,
+    **kwargs: Any,
+) -> str | bytes:
     """Mimics subprocess.check_output while running a process as root or a different user.
 
     Returns the stdout of the process.
     """
-    p = execute(
-        cmd,
-        sudo=sudo,
-        substitute_user=substitute_user,
-        encoding="utf-8",
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        stdin=subprocess.PIPE if input else None,
-    )
-    stdout, stderr = p.communicate(input)
-    if p.returncode != 0:
-        raise UtilCalledProcessError(p.returncode, p.args, stdout, stderr)
-    assert isinstance(stdout, str)
-    return stdout
+    cmd_ = _extend_command(cmd, substitute_user, sudo, preserve_env, kwargs)
+
+    kwargs["encoding"] = encoding
+    kwargs["input"] = input
+    return subprocess.check_output(cmd_, **kwargs)
 
 
 def write_file(
@@ -369,42 +409,30 @@ def write_file(
     substitute_user: str | None = None,
 ) -> None:
     """Write a file as root or another user."""
-    with execute(
-        ["tee", Path(path).as_posix()],
-        sudo=sudo,
-        substitute_user=substitute_user,
-        stdin=subprocess.PIPE,
-        stdout=subprocess.DEVNULL,
-        encoding=(
-            None
-            if isinstance(
-                content,
-                bytes,
-            )
-            else "utf-8"
-        ),
-    ) as p:
-        p.communicate(content)
-    if p.returncode != 0:
-        raise Exception(
-            "Failed to write file %s. Exit-Code: %d"
-            % (
-                path,
-                p.returncode,
-            )
+    try:
+        _ = run(
+            ["tee", Path(path).as_posix()],
+            capture_output=False,
+            input=content,
+            stdout=subprocess.DEVNULL,
+            encoding=None if isinstance(content, bytes) else "utf-8",
+            sudo=sudo,
+            substitute_user=substitute_user,
         )
+    except subprocess.CalledProcessError as excp:
+        excp.add_note(f"Failed to write file '{path}'!")
+        raise excp
 
 
-def makedirs(path: str | Path, sudo: bool = True, substitute_user: str | None = None) -> bool:
+def makedirs(path: str | Path, sudo: bool = True, substitute_user: str | None = None) -> None:
     """Make directory path (including parents) as root or another user."""
-    p = execute(["mkdir", "-p", Path(path).as_posix()], sudo=sudo, substitute_user=substitute_user)
-    return p.wait() == 0
+    _ = run(["mkdir", "-p", Path(path).as_posix()], sudo=sudo, substitute_user=substitute_user)
 
 
 def restart_httpd() -> None:
     """Restart Apache manually on RHEL-based containers.
 
-    On RHEL-based containers, such as CentOS and AlmaLinux, the system Apache is not running.
+    On RHEL-based containers, such as AlmaLinux, the system Apache is not running.
     OMD will not start Apache, if it is not running already.
 
     If a distro uses an `INIT_CMD`, which is not available inside of docker, then the system
@@ -413,12 +441,17 @@ def restart_httpd() -> None:
     test environment, but not a real distribution.
 
     Before using this in your test, try an Apache reload instead. It is much more likely to work
-    accross different distributions. If your test needs a system Apache, then run this command at
-    the beginning of the test. This ensures consistency accross distributions.
+    across different distributions. If your test needs a system Apache, then run this command at
+    the beginning of the test. This ensures consistency across distributions.
     """
 
+    almalinux_9 = "almalinux-9"
+    assert almalinux_9 in get_supported_distros(), (
+        f"{almalinux_9} is not supported anymore. " f"Please adapt the code below."
+    )
+
     # When executed locally and un-dockerized, DISTRO may not be set
-    if os.environ.get("DISTRO") in {"centos-8", "almalinux-9"}:
+    if os.environ.get("DISTRO") == almalinux_9:
         run(["httpd", "-k", "restart"], sudo=True)
 
 
@@ -475,3 +508,10 @@ def parse_files(pathname: Path, pattern: str, ignore_case: bool = True) -> dict[
                     logger.info("Match found in %s: %s", file_path, line.strip())
                     match_dict[file_path] = match_dict.get(file_path, []) + [line]
     return match_dict
+
+
+def get_supported_distros() -> list[str]:
+    with open(repo_path() / "editions.yml") as stream:
+        yaml_file = yaml.safe_load(stream)
+
+    return yaml_file["common"]

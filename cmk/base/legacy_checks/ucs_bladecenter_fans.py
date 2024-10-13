@@ -84,6 +84,7 @@ def check_ucs_bladecenter_fans(item, _no_params, parsed):
 
 
 check_info["ucs_bladecenter_fans"] = LegacyCheckDefinition(
+    name="ucs_bladecenter_fans",
     parse_function=parse_ucs_bladecenter_fans,
     service_name="Fans %s",
     discovery_function=inventory_ucs_bladecenter_fans,
@@ -125,6 +126,7 @@ def check_ucs_bladecenter_fans_temp(item, params, parsed):
 
 
 check_info["ucs_bladecenter_fans.temp"] = LegacyCheckDefinition(
+    name="ucs_bladecenter_fans_temp",
     service_name="Temperature %s",
     sections=["ucs_bladecenter_fans"],
     discovery_function=inventory_ucs_bladecenter_fans_temp,

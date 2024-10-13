@@ -34,6 +34,7 @@ def parse_fireeye_quarantine(string_table: StringTable) -> StringTable:
 
 
 check_info["fireeye_quarantine"] = LegacyCheckDefinition(
+    name="fireeye_quarantine",
     parse_function=parse_fireeye_quarantine,
     detect=DETECT,
     fetch=SNMPTree(

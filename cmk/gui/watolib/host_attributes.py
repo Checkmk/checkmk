@@ -36,6 +36,7 @@ from cmk.fetchers import IPMICredentials
 
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs.converter import TransformForLegacyData
 from cmk.gui.form_specs.private import SingleChoiceElementExtended, SingleChoiceExtended
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -46,8 +47,8 @@ from cmk.gui.valuespec import Checkbox, DropdownChoice, TextInput, Transform, Va
 from cmk.gui.watolib.utils import host_attribute_matches
 
 from cmk.fields import String
-from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import DefaultValue, FormSpec
+from cmk.rulesets.v1 import Label, Title
+from cmk.rulesets.v1.form_specs import BooleanChoice, DefaultValue, FormSpec
 
 _ContactgroupName = str
 
@@ -140,6 +141,7 @@ class HostAttributes(TypedDict, total=False):
     locked_attributes: Sequence[str]
     meta_data: MetaData
     inventory_failed: bool
+    waiting_for_discovery: bool
     labels: Labels
     contactgroups: HostContactGroupSpec
     # Enterprise editions only
@@ -154,6 +156,24 @@ class HostAttributes(TypedDict, total=False):
     # Shipped tag attributes, but could be changed or even removed by users.
     # So we don't define the shipped literals here
     tag_criticality: str
+
+
+def mask_attributes(attributes: Mapping[str, object]) -> dict[str, object]:
+    """Create a copy of the given attributes and mask credential data"""
+
+    MASK_STRING = "******"
+
+    masked = dict(attributes)
+    if "snmp_community" in masked:
+        masked["snmp_community"] = MASK_STRING
+    if "management_snmp_community" in masked:
+        masked["management_snmp_community"] = MASK_STRING
+    if ipmi := masked.get("management_ipmi_credentials"):
+        username = ipmi.get("username", None) if isinstance(ipmi, dict) else None
+        masked["management_ipmi_credentials"] = IPMICredentials(
+            username=username or "(Unknown)", password=MASK_STRING
+        )
+    return masked
 
 
 class HostAttributeTopic(abc.ABC):
@@ -1107,21 +1127,18 @@ class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag, abc.ABC):
             from_valuespec=lambda s: self._tag_value() if s is True else None,
         )
 
-    def form_spec(self) -> SingleChoiceExtended:
-        return SingleChoiceExtended(
-            title=Title(  # pylint: disable=localization-of-non-literal-string
-                self._tag_group.title
+    def form_spec(self) -> TransformForLegacyData:
+        return TransformForLegacyData(
+            wrapped_form_spec=BooleanChoice(
+                title=Title(  # pylint: disable=localization-of-non-literal-string
+                    self._tag_group.title
+                ),
+                label=Label(  # pylint: disable=localization-of-non-literal-string
+                    self._tag_group.get_tag_choices()[0][1]
+                ),
             ),
-            elements=[
-                SingleChoiceElementExtended(
-                    name=self._tag_value(),
-                    title=Title(  # pylint: disable=localization-of-non-literal-string
-                        self._tag_group.title
-                    ),
-                )
-            ],
-            prefill=DefaultValue(self._tag_value()),
-            type=str,
+            from_disk=lambda s: s == self._tag_value(),
+            to_disk=lambda s: self._tag_value() if s is True else None,
         )
 
     @property

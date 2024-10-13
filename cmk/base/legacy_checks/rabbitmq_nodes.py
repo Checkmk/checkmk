@@ -150,6 +150,7 @@ def check_rabbitmq_nodes(item, params, parsed):
 
 
 check_info["rabbitmq_nodes"] = LegacyCheckDefinition(
+    name="rabbitmq_nodes",
     parse_function=parse_rabbitmq_nodes,
     service_name="RabbitMQ Node %s",
     discovery_function=discover_rabbitmq_nodes,
@@ -206,6 +207,7 @@ def check_rabbitmq_nodes_filedesc(item, params, parsed):
 
 
 check_info["rabbitmq_nodes.filedesc"] = LegacyCheckDefinition(
+    name="rabbitmq_nodes_filedesc",
     service_name="RabbitMQ Node %s Filedesc",
     sections=["rabbitmq_nodes"],
     discovery_function=discover_key("fd"),
@@ -231,6 +233,7 @@ def check_rabbitmq_nodes_sockets(item, params, parsed):
 
 
 check_info["rabbitmq_nodes.sockets"] = LegacyCheckDefinition(
+    name="rabbitmq_nodes_sockets",
     service_name="RabbitMQ Node %s Sockets",
     sections=["rabbitmq_nodes"],
     discovery_function=discover_key("sockets"),
@@ -266,6 +269,7 @@ def check_rabbitmq_nodes_mem(item, params, parsed):
 
 
 check_info["rabbitmq_nodes.mem"] = LegacyCheckDefinition(
+    name="rabbitmq_nodes_mem",
     service_name="RabbitMQ Node %s Memory",
     sections=["rabbitmq_nodes"],
     discovery_function=discover_key("mem"),
@@ -332,6 +336,7 @@ def check_rabbitmq_nodes_uptime(item, params, parsed):
 
 
 check_info["rabbitmq_nodes.uptime"] = LegacyCheckDefinition(
+    name="rabbitmq_nodes_uptime",
     service_name="RabbitMQ Node %s Uptime",
     sections=["rabbitmq_nodes"],
     discovery_function=discover_key("uptime"),
@@ -384,6 +389,7 @@ def _handle_output(params, value, total, info_text, perf_key):
 
 
 check_info["rabbitmq_nodes.gc"] = LegacyCheckDefinition(
+    name="rabbitmq_nodes_gc",
     service_name="RabbitMQ Node %s GC",
     sections=["rabbitmq_nodes"],
     discovery_function=discover_key("gc"),

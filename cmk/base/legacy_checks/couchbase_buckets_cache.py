@@ -34,6 +34,7 @@ def check_couchbase_buckets_cache(item, params, parsed):
 
 
 check_info["couchbase_buckets_cache"] = LegacyCheckDefinition(
+    name="couchbase_buckets_cache",
     parse_function=parse_couchbase_lines,
     service_name="Couchbase Bucket %s Cache",
     discovery_function=discover_couchbase_buckets_cache,

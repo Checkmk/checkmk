@@ -34,6 +34,7 @@ def parse_fireeye_bypass(string_table: StringTable) -> StringTable:
 
 
 check_info["fireeye_bypass"] = LegacyCheckDefinition(
+    name="fireeye_bypass",
     parse_function=parse_fireeye_bypass,
     detect=DETECT,
     fetch=SNMPTree(

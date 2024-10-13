@@ -33,6 +33,7 @@ def discover_qnap_fans(section):
 
 
 check_info["qnap_fans"] = LegacyCheckDefinition(
+    name="qnap_fans",
     detect=DETECT_QNAP,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.24681.1.2.15.1",

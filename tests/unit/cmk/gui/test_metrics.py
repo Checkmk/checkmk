@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.graphing._expression import CriticalOf, Metric, MetricExpression, WarningOf
 from cmk.gui.graphing._formatter import StrictPrecision
 from cmk.gui.graphing._graph_templates import get_graph_template_from_id, GraphTemplate
 from cmk.gui.graphing._legacy import check_metrics
+from cmk.gui.graphing._metric_expression import CriticalOf, Metric, MetricExpression, WarningOf
 from cmk.gui.graphing._metrics import get_metric_spec
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 from cmk.gui.metrics import _add_graphing_plugins, _load_graphing_plugins

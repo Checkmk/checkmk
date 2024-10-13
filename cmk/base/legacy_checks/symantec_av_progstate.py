@@ -27,6 +27,7 @@ def parse_symantec_av_progstate(string_table: StringTable) -> StringTable:
 
 
 check_info["symantec_av_progstate"] = LegacyCheckDefinition(
+    name="symantec_av_progstate",
     parse_function=parse_symantec_av_progstate,
     service_name="AV Program Status",
     discovery_function=inventory_symantec_av_progstate,

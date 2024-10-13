@@ -16,6 +16,7 @@ from cmk.utils.rulesets import RuleSetName
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
+from cmk.base.api.agent_based.plugin_classes import LegacyPluginLocation
 from cmk.base.api.agent_based.register import check_plugins_legacy
 
 from cmk.agent_based.v1 import Metric, Result, Service, State
@@ -26,6 +27,7 @@ def dummy_generator(section):  # pylint: disable=unused-argument
 
 
 MINIMAL_CHECK_INFO = LegacyCheckDefinition(
+    name="norris",
     service_name="Norris Device",
     discovery_function=dummy_generator,
     check_function=dummy_generator,
@@ -47,7 +49,7 @@ def test_create_discovery_function(monkeypatch: MonkeyPatch) -> None:
         ]
 
     new_function = check_plugins_legacy._create_discovery_function(
-        LegacyCheckDefinition(discovery_function=insane_discovery),
+        LegacyCheckDefinition(name="test_plugin", discovery_function=insane_discovery),
     )
 
     fixed_params = inspect.signature(new_function).parameters
@@ -79,6 +81,7 @@ def test_create_check_function() -> None:
         "test_plugin",
         "Foo %s",
         LegacyCheckDefinition(
+            name="test_plugin",
             check_function=insane_check,
         ),
     )
@@ -126,6 +129,7 @@ def test_create_check_function_with_empty_summary_in_details() -> None:
         "test_plugin",
         "Foo %s",
         LegacyCheckDefinition(
+            name="test_plugin",
             check_function=insane_check,
         ),
     )
@@ -158,6 +162,7 @@ def test_create_check_function_without_details() -> None:
         "test_plugin",
         "Foo %s",
         LegacyCheckDefinition(
+            name="test_plugin",
             check_function=insane_check,
         ),
     )
@@ -186,6 +191,7 @@ def test_create_check_function_with_zero_details_after_newline() -> None:
         "test_plugin",
         "Foo %s",
         LegacyCheckDefinition(
+            name="test_plugin",
             check_function=insane_check,
         ),
     )
@@ -204,8 +210,7 @@ def test_create_check_function_with_zero_details_after_newline() -> None:
 
 def test_create_check_plugin_from_legacy_wo_params() -> None:
     plugin = check_plugins_legacy.create_check_plugin_from_legacy(
-        "norris",
-        MINIMAL_CHECK_INFO,
+        MINIMAL_CHECK_INFO, LegacyPluginLocation("blah/norris.py")
     )
 
     assert plugin.name == CheckPluginName("norris")
@@ -228,8 +233,7 @@ def test_create_check_plugin_from_legacy_with_params() -> None:
     )
 
     plugin = check_plugins_legacy.create_check_plugin_from_legacy(
-        "norris",
-        check_info_element,
+        check_info_element, LegacyPluginLocation("blah/norris.py")
     )
 
     assert plugin.name == CheckPluginName("norris")

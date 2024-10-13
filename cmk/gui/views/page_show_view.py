@@ -34,7 +34,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.page_menu import make_external_link, PageMenuEntry, PageMenuTopic
+from cmk.gui.page_menu import make_external_link, PageMenuDropdown, PageMenuEntry, PageMenuTopic
 from cmk.gui.painter.v0.base import Cell, columns_of_cells
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import (
@@ -62,7 +62,9 @@ from .sorter import SorterEntry
 from .store import get_all_views, get_permitted_views
 
 
-def page_show_view() -> None:
+def page_show_view(
+    page_menu_dropdowns_callback: Callable[[View, Rows, list[PageMenuDropdown]], None],
+) -> None:
     """Central entry point for the initial HTML page rendering of a view"""
     with CPUTracker(log.logger.debug) as page_view_tracker:
         view_name = request.get_ascii_input_mandatory("view_name", "")
@@ -97,7 +99,13 @@ def page_show_view() -> None:
         painter_options = PainterOptions.get_instance()
         painter_options.load(view.name)
         painter_options.update_from_url(view.name, view.painter_options)
-        process_view(GUIViewRenderer(view, show_buttons=True))
+        process_view(
+            GUIViewRenderer(
+                view,
+                show_buttons=True,
+                page_menu_dropdowns_callback=page_menu_dropdowns_callback,
+            )
+        )
 
     _may_create_slow_view_log_entry(page_view_tracker, view)
 

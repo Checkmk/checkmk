@@ -160,6 +160,7 @@ def discover_graylog_sidecars(section):
 
 
 check_info["graylog_sidecars"] = LegacyCheckDefinition(
+    name="graylog_sidecars",
     parse_function=parse_graylog_sidecars,
     service_name="Graylog Sidecar %s",
     discovery_function=discover_graylog_sidecars,

@@ -17,6 +17,7 @@ def discover_couchbase_nodes_stats(section):
 
 
 check_info["couchbase_nodes_stats"] = LegacyCheckDefinition(
+    name="couchbase_nodes_stats",
     parse_function=parse_couchbase_lines,
     discovery_function=discover_couchbase_nodes_stats,
 )
@@ -37,6 +38,7 @@ def discover_couchbase_nodes_stats_cpu_util(section):
 
 
 check_info["couchbase_nodes_stats.cpu_util"] = LegacyCheckDefinition(
+    name="couchbase_nodes_stats_cpu_util",
     service_name="Couchbase %s CPU utilization",
     sections=["couchbase_nodes_stats"],
     discovery_function=discover_couchbase_nodes_stats_cpu_util,
@@ -81,6 +83,7 @@ def discover_couchbase_nodes_stats_mem(section):
 
 
 check_info["couchbase_nodes_stats.mem"] = LegacyCheckDefinition(
+    name="couchbase_nodes_stats_mem",
     service_name="Couchbase %s Memory",
     sections=["couchbase_nodes_stats"],
     discovery_function=discover_couchbase_nodes_stats_mem,

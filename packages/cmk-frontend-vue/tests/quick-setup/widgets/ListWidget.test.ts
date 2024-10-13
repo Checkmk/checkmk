@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render, screen } from '@testing-library/vue'
-import ListWidget from '@/quick-setup/widgets/ListWidget.vue'
+import ListWidget from '@/quick-setup/components/quick-setup/widgets/ListWidget.vue'
 
 describe('ListWidget', () => {
   it('renders items', async () => {

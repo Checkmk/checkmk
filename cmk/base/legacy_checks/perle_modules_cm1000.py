@@ -105,6 +105,7 @@ def check_perle_cm_modules(item, _no_params, info):
 
 
 check_info["perle_modules_cm1110"] = LegacyCheckDefinition(
+    name="perle_modules_cm1110",
     parse_function=parse_perle_modules,
     detect=DETECT_PERLE,
     fetch=SNMPTree(
@@ -130,6 +131,7 @@ check_info["perle_modules_cm1110"] = LegacyCheckDefinition(
 
 
 check_info["perle_modules_cm1000"] = LegacyCheckDefinition(
+    name="perle_modules_cm1000",
     parse_function=parse_perle_modules,
     detect=DETECT_PERLE,
     fetch=SNMPTree(

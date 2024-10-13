@@ -120,6 +120,7 @@ def discover_raritan_px_sensors(parsed):
 #   '----------------------------------------------------------------------'
 
 check_info["raritan_px_sensors"] = LegacyCheckDefinition(
+    name="raritan_px_sensors",
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13742.4"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.13742.4.3.3.1",
@@ -148,6 +149,7 @@ def discover_raritan_px_sensors_humidity(parsed):
 #   '----------------------------------------------------------------------'
 
 check_info["raritan_px_sensors.humidity"] = LegacyCheckDefinition(
+    name="raritan_px_sensors_humidity",
     service_name="Humidity %s",
     sections=["raritan_px_sensors"],
     discovery_function=discover_raritan_px_sensors_humidity,
@@ -170,6 +172,7 @@ def discover_raritan_px_sensors_binary(parsed):
 #   '----------------------------------------------------------------------'
 
 check_info["raritan_px_sensors.binary"] = LegacyCheckDefinition(
+    name="raritan_px_sensors_binary",
     service_name="Contact %s",
     sections=["raritan_px_sensors"],
     discovery_function=discover_raritan_px_sensors_binary,

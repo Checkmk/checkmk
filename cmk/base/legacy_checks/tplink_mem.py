@@ -44,6 +44,7 @@ def parse_tplink_mem(string_table: StringTable) -> StringTable:
 
 
 check_info["tplink_mem"] = LegacyCheckDefinition(
+    name="tplink_mem",
     parse_function=parse_tplink_mem,
     detect=DETECT_TPLINK,
     fetch=SNMPTree(

@@ -32,6 +32,7 @@ def parse_decru_temps(string_table: StringTable) -> StringTable:
 
 
 check_info["decru_temps"] = LegacyCheckDefinition(
+    name="decru_temps",
     parse_function=parse_decru_temps,
     detect=DETECT_DECRU,
     fetch=SNMPTree(

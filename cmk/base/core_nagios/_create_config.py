@@ -70,8 +70,6 @@ class NagiosCore(core_config.MonitoringCore):
         self._create_core_config(config_path, licensing_handler, passwords, ip_address_of)
         self._precompile_hostchecks(
             config_path,
-            config.legacy_check_plugin_names,
-            config.legacy_check_plugin_files,
             precompile_mode=(
                 PrecompileMode.DELAYED if config.delay_precompile else PrecompileMode.INSTANT
             ),
@@ -116,8 +114,6 @@ class NagiosCore(core_config.MonitoringCore):
     def _precompile_hostchecks(
         self,
         config_path: VersionedConfigPath,
-        legacy_check_plugin_names: Mapping[CheckPluginName, str],
-        legacy_check_plugin_files: Mapping[str, str],
         *,
         precompile_mode: PrecompileMode,
     ) -> None:
@@ -126,8 +122,6 @@ class NagiosCore(core_config.MonitoringCore):
         precompile_hostchecks(
             config_path,
             self._config_cache,
-            legacy_check_plugin_names,
-            legacy_check_plugin_files,
             precompile_mode=precompile_mode,
         )
         with suppress(IOError):
@@ -515,11 +509,14 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
             macros,
             ip_address_of,
         ),
-        host_attrs,
         config.http_proxies,
         lambda x: config.get_final_service_description(x, translations),
         stored_passwords,
         password_store.core_password_store_path(LATEST_CONFIG),
+        server_side_calls.ExecutableFinder(
+            cmk.utils.paths.local_nagios_plugins_dir, cmk.utils.paths.nagios_plugins_dir
+        ),
+        ip_lookup_failed=ip_lookup.is_fallback_ip(host_attrs["address"]),
     )
 
     active_checks = config_cache.active_checks(hostname)

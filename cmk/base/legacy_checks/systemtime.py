@@ -40,6 +40,7 @@ def check_systemtime(item, params, parsed):
 
 
 check_info["systemtime"] = LegacyCheckDefinition(
+    name="systemtime",
     service_name="System Time",
     discovery_function=discover_systemtime,
     check_function=check_systemtime,

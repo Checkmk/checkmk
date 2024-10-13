@@ -44,6 +44,7 @@ def parse_akcp_daisy_temp(string_table: Sequence[StringTable]) -> Sequence[Strin
 
 
 check_info["akcp_daisy_temp"] = LegacyCheckDefinition(
+    name="akcp_daisy_temp",
     parse_function=parse_akcp_daisy_temp,
     detect=all_of(
         any_of(

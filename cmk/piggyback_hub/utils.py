@@ -4,37 +4,41 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-import threading
-from collections.abc import Mapping
+import multiprocessing
+import signal
+import sys
+import time
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Callable, Generic, Protocol, Self, TypeVar
+from ssl import SSLCertVerificationError
+from typing import Callable, Generic, TypeVar
 
-from cmk.messaging import Channel, Connection
+from pydantic import BaseModel
 
-from .config import PiggybackHubConfig
+from cmk.messaging import AppName, Channel, CMKConnectionError, Connection, DeliveryTag, QueueName
 
+APP_NAME = AppName("piggyback-hub")
 
-class _ModelP(Protocol):
-    def serialize(self) -> str: ...
-    @classmethod
-    def deserialize(cls, raw: str) -> Self: ...
-
-
-_ModelT = TypeVar("_ModelT", bound=_ModelP)
+_ModelT = TypeVar("_ModelT", bound=BaseModel)
 
 
-class SignalException(Exception):
-    pass
+def make_log_and_exit(log: Callable[[str], None], message: str) -> Callable[[object, object], None]:
+    def log_and_exit(signum: object, frame: object) -> None:
+        log(message)
+        sys.exit(0)
+
+    return log_and_exit
 
 
-class ReceivingThread(threading.Thread, Generic[_ModelT]):
+class ReceivingProcess(multiprocessing.Process, Generic[_ModelT]):
     def __init__(
         self,
         logger: logging.Logger,
         omd_root: Path,
         model: type[_ModelT],
-        callback: Callable[[Channel[_ModelT], _ModelT], None],
-        queue: str,
+        callback: Callable[[Channel[_ModelT], DeliveryTag, _ModelT], None],
+        queue: QueueName,
+        message_ttl: int | None,
     ) -> None:
         super().__init__()
         self.logger = logger
@@ -42,27 +46,47 @@ class ReceivingThread(threading.Thread, Generic[_ModelT]):
         self.model = model
         self.callback = callback
         self.queue = queue
+        self.message_ttl = message_ttl
+        self.task_name = f"receiving on queue '{self.queue.value}'"
 
     def run(self) -> None:
+        self.logger.info("Starting: %s", self.task_name)
+        signal.signal(
+            signal.SIGTERM,
+            make_log_and_exit(self.logger.debug, f"Stopping: {self.task_name}"),
+        )
         try:
-            with Connection("piggyback-hub", self.omd_root) as conn:
-                channel: Channel[_ModelT] = conn.channel(self.model)
-                channel.queue_declare(queue=self.queue, bindings=(self.queue,))
+            for conn in reconnect(self.omd_root, self.logger, self.task_name):
+                with conn:
+                    channel: Channel[_ModelT] = conn.channel(self.model)
+                    channel.queue_declare(queue=self.queue, message_ttl=self.message_ttl)
 
-                self.logger.debug("Waiting for messages in queue %s", self.queue)
-                channel.consume(self.callback, queue=self.queue)
+                    self.logger.debug("Consuming: %s", self.task_name)
+                    channel.consume(self.queue, self.callback)
 
-        except SignalException:
-            self.logger.debug("Stopping receiving messages")
-            return
-        except Exception as e:
-            self.logger.exception("Unhandled exception: %s.", e)
+        except CMKConnectionError as exc:
+            self.logger.error("Stopping: %s: %s", self.task_name, exc)
+        except Exception as exc:
+            self.logger.exception("Exception: %s: %s", self.task_name, exc)
+            raise
 
 
-def distribute(configs: Mapping[str, PiggybackHubConfig], omd_root: Path) -> None:
-    # TODO: remove the return statement and uncomment the code below after fix the flaky integration test
-    return
-    # for site_id, config in configs.items():
-    #     with Connection("piggyback-hub", omd_root) as conn:
-    #         channel = conn.channel(PiggybackHubConfig)
-    #         channel.publish_for_site(site_id, config, routing="config")
+def reconnect(omd_root: Path, logger: logging.Logger, task_name: str) -> Iterator[Connection]:
+    attempts = 10
+    interval = 3
+
+    def _try_to_reconnect() -> Connection:
+        error_message = ""
+        for _attempt in range(attempts):
+            try:
+                # Note: We re-read the certificates here.
+                return Connection(APP_NAME, omd_root)
+            except SSLCertVerificationError as exc:
+                # Certs could have changed. Retry.
+                time.sleep(interval)
+                logger.debug("Reconnecting: %s: %s", task_name, exc)
+                error_message = str(exc)
+        raise CMKConnectionError(f"Unable to reconnect after {attempts} attempts: {error_message}")
+
+    while True:
+        yield _try_to_reconnect()

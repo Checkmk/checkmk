@@ -116,6 +116,7 @@ def parse_jar_signature(string_table: StringTable) -> StringTable:
 
 
 check_info["jar_signature"] = LegacyCheckDefinition(
+    name="jar_signature",
     parse_function=parse_jar_signature,
     service_name="Jar-Signature %s",
     discovery_function=inventory_jar_signature,

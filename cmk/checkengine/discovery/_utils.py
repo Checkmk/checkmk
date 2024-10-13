@@ -137,6 +137,9 @@ class QualifiedDiscovery(Generic[_DiscoveredItem]):
         preexisting: Sequence[_DiscoveredItem],
         current: Sequence[_DiscoveredItem],
     ) -> None:
+        self.preexisting: Final = preexisting
+        self.current: Final = current
+
         current_dict = {v.id(): v for v in current}
         preexisting_dict = {v.id(): v for v in preexisting}
 
@@ -181,6 +184,7 @@ class QualifiedDiscovery(Generic[_DiscoveredItem]):
 
     @property
     def present(self) -> list[_DiscoveredItem]:
+        # not quite like 'current'!
         return self.old + self.new
 
     def chain_with_transition(

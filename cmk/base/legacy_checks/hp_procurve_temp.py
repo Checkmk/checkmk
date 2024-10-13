@@ -37,6 +37,7 @@ def parse_hp_procurve_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["hp_procurve_temp"] = LegacyCheckDefinition(
+    name="hp_procurve_temp",
     parse_function=parse_hp_procurve_temp,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.11.2.3.7.11"),
     fetch=SNMPTree(

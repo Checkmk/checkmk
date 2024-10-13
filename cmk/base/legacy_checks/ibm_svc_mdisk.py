@@ -69,6 +69,7 @@ def check_ibm_svc_mdisk(item, params, parsed):
 
 
 check_info["ibm_svc_mdisk"] = LegacyCheckDefinition(
+    name="ibm_svc_mdisk",
     parse_function=parse_ibm_svc_mdisk,
     service_name="MDisk %s",
     discovery_function=inventory_ibm_svc_mdisk,

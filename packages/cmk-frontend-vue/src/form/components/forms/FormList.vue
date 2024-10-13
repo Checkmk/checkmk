@@ -70,7 +70,7 @@ function dragEnd(event: DragEvent) {
 }
 
 function dragging(event: DragEvent) {
-  if (tableRef.value == null || event.clientY == 0) {
+  if (tableRef.value === null || event.clientY === 0) {
     return
   }
   const tableChildren = [...tableRef.value!.children]

@@ -48,6 +48,7 @@ def parse_pandacom_fan(string_table: StringTable) -> StringTable:
 
 
 check_info["pandacom_fan"] = LegacyCheckDefinition(
+    name="pandacom_fan",
     parse_function=parse_pandacom_fan,
     detect=DETECT_PANDACOM,
     fetch=SNMPTree(

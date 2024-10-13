@@ -8,6 +8,7 @@ from wsgiref.types import WSGIEnvironment
 from opentelemetry.instrumentation.wsgi import get_default_span_name, OpenTelemetryMiddleware
 
 from cmk.ccc.site import get_omd_config, omd_site
+from cmk.ccc.version import edition
 
 from cmk.utils import paths
 
@@ -70,7 +71,10 @@ Application = OpenTelemetryMiddleware(
     LazyImportProfilingMiddleware(
         app_factory_module="cmk.gui.wsgi.app",
         app_factory_name="make_wsgi_app",
-        app_factory_args=(DEBUG,),
+        app_factory_args=(
+            edition(paths.omd_root),
+            DEBUG,
+        ),
         app_factory_kwargs={},
         config_loader=ProfileConfigLoader(
             fetch_actual_config=load_actual_config,

@@ -57,6 +57,7 @@ def parse_windows_multipath(string_table: StringTable) -> StringTable:
 
 
 check_info["windows_multipath"] = LegacyCheckDefinition(
+    name="windows_multipath",
     parse_function=parse_windows_multipath,
     service_name="Multipath",
     discovery_function=inventory_windows_multipath,

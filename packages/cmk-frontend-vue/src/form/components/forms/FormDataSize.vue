@@ -8,6 +8,8 @@ import type { DataSize } from '@/form/components/vue_formspec_components'
 import { useValidation, type ValidationMessages } from '@/form/components/utils/validation'
 import FormValidation from '@/form/components/FormValidation.vue'
 import { useId } from '@/form/utils'
+import DropDown from '@/components/DropDown.vue'
+import { computed } from 'vue'
 
 const props = defineProps<{
   spec: DataSize
@@ -22,6 +24,15 @@ const [validation, value] = useValidation<[string, string]>(
 )
 
 const componentId = useId()
+
+const magnitudeOptions = computed(() => {
+  return props.spec.displayed_magnitudes.map((element: string) => {
+    return {
+      ident: element,
+      name: element
+    }
+  })
+})
 </script>
 
 <template>
@@ -33,10 +44,6 @@ const componentId = useId()
     class="number"
     type="text"
   />
-  <select v-model="value[1]">
-    <option v-for="element in spec.displayed_magnitudes" :key="element" :value="element">
-      {{ element }}
-    </option>
-  </select>
+  <DropDown v-model:selected-option="value[1]" :options="magnitudeOptions" />
   <FormValidation :validation="validation"></FormValidation>
 </template>

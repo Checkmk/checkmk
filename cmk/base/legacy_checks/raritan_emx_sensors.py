@@ -35,6 +35,7 @@ def discover_raritan_emx_sensors(parsed):
 
 
 check_info["raritan_emx_sensors"] = LegacyCheckDefinition(
+    name="raritan_emx_sensors",
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13742.8"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.13742.8",
@@ -75,6 +76,7 @@ def discover_raritan_emx_sensors_temp(parsed):
 #   +----------------------------------------------------------------------+
 
 check_info["raritan_emx_sensors.temp"] = LegacyCheckDefinition(
+    name="raritan_emx_sensors_temp",
     service_name="Temperature %s",
     sections=["raritan_emx_sensors"],
     discovery_function=discover_raritan_emx_sensors_temp,
@@ -98,6 +100,7 @@ def discover_raritan_emx_sensors_airflow(parsed):
 #   +----------------------------------------------------------------------+
 
 check_info["raritan_emx_sensors.airflow"] = LegacyCheckDefinition(
+    name="raritan_emx_sensors_airflow",
     service_name="Air flow %s",
     sections=["raritan_emx_sensors"],
     discovery_function=discover_raritan_emx_sensors_airflow,
@@ -120,6 +123,7 @@ def discover_raritan_emx_sensors_humidity(parsed):
 #   +----------------------------------------------------------------------+
 
 check_info["raritan_emx_sensors.humidity"] = LegacyCheckDefinition(
+    name="raritan_emx_sensors_humidity",
     service_name="Humidity %s",
     sections=["raritan_emx_sensors"],
     discovery_function=discover_raritan_emx_sensors_humidity,
@@ -142,6 +146,7 @@ def discover_raritan_emx_sensors_pressure(parsed):
 #   +----------------------------------------------------------------------+
 
 check_info["raritan_emx_sensors.pressure"] = LegacyCheckDefinition(
+    name="raritan_emx_sensors_pressure",
     service_name="Pressure %s",
     sections=["raritan_emx_sensors"],
     discovery_function=discover_raritan_emx_sensors_pressure,

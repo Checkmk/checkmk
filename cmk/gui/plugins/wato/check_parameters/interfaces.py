@@ -59,7 +59,14 @@ def _vs_item_appearance(title, help_txt):
             ("alias", _("Use alias")),
         ],
         default_value="index",
-        help=help_txt,
+        help=help_txt
+        + _(
+            "<br> <br>  "
+            "<b>Important note</b>: When changing this option, the services "
+            "need to be removed and rediscovered to apply the changes. "
+            "Otherwise there is a risk of mismatch between the discovered "
+            "and checked services."
+        ),
     )
 
 
@@ -742,6 +749,7 @@ def _parameter_valuespec_if() -> Dictionary:
             "discovered_oper_status",
             "discovered_admin_status",
             "discovered_speed",
+            "item_appearance",
         ],  # Created by discovery
         elements=[
             (

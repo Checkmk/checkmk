@@ -62,6 +62,7 @@ def check_hp_mcs_sensors(item, params, parsed):
 
 
 check_info["hp_mcs_sensors"] = LegacyCheckDefinition(
+    name="hp_mcs_sensors",
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.232.167"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.232.167.2.4.5.2.1",
@@ -89,6 +90,7 @@ def check_hp_mcs_sensors_fan(item, params, parsed):
 
 
 check_info["hp_mcs_sensors.fan"] = LegacyCheckDefinition(
+    name="hp_mcs_sensors_fan",
     service_name="Sensor %s",
     sections=["hp_mcs_sensors"],
     discovery_function=inventory_hp_mcs_sensors_fan,

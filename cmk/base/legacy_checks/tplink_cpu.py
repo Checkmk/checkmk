@@ -43,6 +43,7 @@ def parse_tplink_cpu(string_table: StringTable) -> StringTable:
 
 
 check_info["tplink_cpu"] = LegacyCheckDefinition(
+    name="tplink_cpu",
     parse_function=parse_tplink_cpu,
     detect=DETECT_TPLINK,
     fetch=SNMPTree(

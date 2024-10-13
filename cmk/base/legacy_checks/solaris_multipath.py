@@ -73,6 +73,7 @@ def parse_solaris_multipath(string_table: StringTable) -> StringTable:
 
 
 check_info["solaris_multipath"] = LegacyCheckDefinition(
+    name="solaris_multipath",
     parse_function=parse_solaris_multipath,
     service_name="Multipath %s",
     discovery_function=inventory_solaris_multipath,

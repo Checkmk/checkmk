@@ -24,6 +24,7 @@ from tests.testlib.site import Site
 from tests.testlib.utils import run
 
 logger = logging.getLogger(__name__)
+dump_path_site = Path("var/check_mk/dumps")
 
 
 @dataclass
@@ -398,8 +399,7 @@ def setup_site(site: Site, dump_path: str) -> None:
     walk_path = site.path("var/check_mk/snmpwalks")
     # create dump folder in the test site
     logger.info('Creating folder "%s"...', dump_path)
-    rc = site.execute(["mkdir", "-p", dump_path]).wait()
-    assert rc == 0
+    _ = site.run(["mkdir", "-p", dump_path])
 
     logger.info("Injecting agent-output...")
     for dump_name in get_host_names():
@@ -453,43 +453,43 @@ def setup_host(site: Site, host_name: str, skip_cleanup: bool = False) -> Iterat
         bake_agent=False,
     )
 
-    logger.info("Activating changes & reloading core...")
-    site.activate_changes_and_wait_for_core_reload()
-
-    logger.info("Running service discovery...")
-    site.openapi.discover_services_and_wait_for_completion(host_name)
-
-    logger.info("Activating changes & reloading core...")
-    site.activate_changes_and_wait_for_core_reload()
-
-    logger.info("Scheduling checks & checking for pending services...")
-    pending_checks = []
-    for idx in range(3):
-        # we have to schedule the checks multiple times (twice at least):
-        # => once to get baseline data
-        # => a second time to calculate differences
-        # => a third time since some checks require it
-        site.schedule_check(host_name, "Check_MK", 0, 60)
-        pending_checks = site.openapi.get_host_services(host_name, pending=True)
-        if idx > 0 and len(pending_checks) == 0:
-            break
-
-    if pending_checks:
-        logger.info(
-            '%s pending service(s) found on host "%s": %s',
-            len(pending_checks),
-            host_name,
-            ",".join(
-                _.get("extensions", {}).get("description", _.get("id")) for _ in pending_checks
-            ),
-        )
-
     try:
+        logger.info("Activating changes & reloading core...")
+        site.activate_changes_and_wait_for_core_reload()
+
+        logger.info("Running service discovery...")
+        site.openapi.discover_services_and_wait_for_completion(host_name)
+
+        logger.info("Activating changes & reloading core...")
+        site.activate_changes_and_wait_for_core_reload()
+
+        logger.info("Scheduling checks & checking for pending services...")
+        pending_checks = []
+        for idx in range(3):
+            # we have to schedule the checks multiple times (twice at least):
+            # => once to get baseline data
+            # => a second time to calculate differences
+            # => a third time since some checks require it
+            site.schedule_check(host_name, "Check_MK", 0, 60)
+            pending_checks = site.openapi.get_host_services(host_name, pending=True)
+            if idx > 0 and len(pending_checks) == 0:
+                break
+
+        if pending_checks:
+            logger.info(
+                '%s pending service(s) found on host "%s": %s',
+                len(pending_checks),
+                host_name,
+                ",".join(
+                    _.get("extensions", {}).get("description", _.get("id")) for _ in pending_checks
+                ),
+            )
         yield
     finally:
         if not (config.skip_cleanup or skip_cleanup):
             logger.info('Deleting host "%s"...', host_name)
             site.openapi.delete_host(host_name)
+            site.activate_changes_and_wait_for_core_reload()
 
 
 @contextmanager
@@ -504,14 +504,13 @@ def setup_source_host_piggyback(site: Site, source_host_name: str) -> Iterator:
 
     logger.info("Injecting agent-output...")
     dump_path_repo = str(qa_test_data_path() / "plugins_integration/dumps/piggyback")
-    dump_path_site = site.path("var/check_mk/dumps")
     assert (
         run(
             [
                 "cp",
                 "-f",
                 f"{dump_path_repo}/{source_host_name}",
-                f"{dump_path_site}/{source_host_name}",
+                f"{site.path(dump_path_site)}/{source_host_name}",
             ],
             sudo=True,
         ).returncode
@@ -520,49 +519,52 @@ def setup_source_host_piggyback(site: Site, source_host_name: str) -> Iterator:
     logger.info("Running service discovery...")
     site.openapi.discover_services_and_wait_for_completion(source_host_name)
 
-    logger.info("Activating changes & reloading core...")
-    site.activate_changes_and_wait_for_core_reload()
-
-    _wait_for_piggyback_hosts_creation(site, source_host=source_host_name)
-    _wait_for_dcd_pend_changes(site)
-
-    hostnames = get_piggyback_hosts(site, source_host_name) + [source_host_name]
-    for hostname in hostnames:
-        logger.info("Scheduling checks & checking for pending services...")
-        pending_checks = []
-        for idx in range(3):
-            # we have to schedule the checks multiple times (twice at least):
-            # => once to get baseline data
-            # => a second time to calculate differences
-            # => a third time since some checks require it
-            site.schedule_check(hostname, "Check_MK", 0, 60)
-            pending_checks = site.openapi.get_host_services(hostname, pending=True)
-            if idx > 0 and len(pending_checks) == 0:
-                break
-
-        if pending_checks:
-            logger.info(
-                '%s pending service(s) found on host "%s": %s',
-                len(pending_checks),
-                hostname,
-                ",".join(
-                    _.get("extensions", {}).get("description", _.get("id")) for _ in pending_checks
-                ),
-            )
-
-    yield
-
-    if not config.skip_cleanup:
-        logger.info('Deleting source host "%s"...', source_host_name)
-        site.openapi.delete_host(source_host_name)
-
-        assert run(["sudo", "rm", "-f", f"{dump_path_site}/{source_host_name}"]).returncode == 0
-
+    try:
         logger.info("Activating changes & reloading core...")
         site.activate_changes_and_wait_for_core_reload()
 
-        _wait_for_piggyback_hosts_deletion(site, source_host=source_host_name)
+        _wait_for_piggyback_hosts_discovery(site, source_host=source_host_name)
         _wait_for_dcd_pend_changes(site)
+
+        hostnames = get_piggyback_hosts(site, source_host_name) + [source_host_name]
+        for hostname in hostnames:
+            logger.info("Scheduling checks & checking for pending services...")
+            pending_checks = []
+            for idx in range(3):
+                # we have to schedule the checks multiple times (twice at least):
+                # => once to get baseline data
+                # => a second time to calculate differences
+                # => a third time since some checks require it
+                site.schedule_check(hostname, "Check_MK", 0, 60)
+                pending_checks = site.openapi.get_host_services(hostname, pending=True)
+                if idx > 0 and len(pending_checks) == 0:
+                    break
+
+            if pending_checks:
+                logger.info(
+                    '%s pending service(s) found on host "%s": %s',
+                    len(pending_checks),
+                    hostname,
+                    ",".join(
+                        _.get("extensions", {}).get("description", _.get("id"))
+                        for _ in pending_checks
+                    ),
+                )
+
+        yield
+
+    finally:
+        if not config.skip_cleanup:
+            logger.info('Deleting source host "%s"...', source_host_name)
+            site.openapi.delete_host(source_host_name)
+
+            assert run(["sudo", "rm", "-f", f"{dump_path_site}/{source_host_name}"]).returncode == 0
+
+            logger.info("Activating changes & reloading core...")
+            site.activate_changes_and_wait_for_core_reload()
+
+            _wait_for_piggyback_hosts_deletion(site, source_host=source_host_name)
+            _wait_for_dcd_pend_changes(site)
 
 
 def setup_hosts(site: Site, host_names: list[str]) -> None:
@@ -644,31 +646,32 @@ def get_piggyback_hosts(site: Site, source_host: str) -> list[str]:
     return [_.get("id") for _ in site.openapi.get_hosts() if _.get("id") != source_host]
 
 
-def _wait_for_piggyback_hosts_creation(
-    site: Site, source_host: str, max_count: int = 80, sleep_time: float = 5, strict: bool = True
-) -> None:
+def _wait_for_piggyback_hosts_discovery(site: Site, source_host: str, strict: bool = True) -> None:
+    """Hosts' discovery by DCD should take up to 30 seconds."""
+    max_count = 30
     count = 0
     while not (piggyback_hosts := get_piggyback_hosts(site, source_host)) and count < max_count:
-        logger.info("Waiting for piggyback hosts to be created. Count: %s/%s", count, max_count)
-        time.sleep(sleep_time)
+        logger.info("Waiting for piggyback hosts to be discovered. Count: %s/%s", count, max_count)
+        time.sleep(1)
         count += 1
     if strict:
         assert piggyback_hosts, "No piggyback hosts found."
 
 
-def _wait_for_piggyback_hosts_deletion(
-    site: Site, source_host: str, max_count: int = 80, sleep_time: float = 5, strict: bool = True
-) -> None:
+def _wait_for_piggyback_hosts_deletion(site: Site, source_host: str, strict: bool = True) -> None:
+    max_count = 30
     count = 0
     while piggyback_hosts := get_piggyback_hosts(site, source_host) and count < max_count:
-        logger.info("Waiting for piggyback hosts to be removed. Count: %s/%s", count, max_count)
-        time.sleep(sleep_time)
+        logger.info("Waiting for all piggyback hosts to be removed. Count: %s/%s", count, max_count)
+        time.sleep(5)
         count += 1
     if strict:
         assert not piggyback_hosts, "Piggyback hosts still found: %s" % piggyback_hosts
 
 
-def _wait_for_dcd_pend_changes(site: Site, max_count: int = 60) -> None:
+def _wait_for_dcd_pend_changes(site: Site) -> None:
+    """Changes activation by DCD should take up to 30 seconds."""
+    max_count = 30
     count = 0
     while (
         n_pending_changes := len(site.openapi.pending_changes([site.id]))
@@ -678,6 +681,6 @@ def _wait_for_dcd_pend_changes(site: Site, max_count: int = 60) -> None:
             count,
             max_count,
         )
-        time.sleep(5)
+        time.sleep(1)
         count += 1
     assert n_pending_changes == 0, "Pending changes found!"

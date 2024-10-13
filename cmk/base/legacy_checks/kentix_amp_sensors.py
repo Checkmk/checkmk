@@ -80,6 +80,7 @@ def check_kentix_amp_sensors(item, params, parsed):
 
 
 check_info["kentix_amp_sensors"] = LegacyCheckDefinition(
+    name="kentix_amp_sensors",
     detect=DETECT_KENTIX,
     fetch=[
         SNMPTree(
@@ -116,6 +117,7 @@ def check_kentix_amp_sensors_humidity(item, params, parsed):
 
 
 check_info["kentix_amp_sensors.humidity"] = LegacyCheckDefinition(
+    name="kentix_amp_sensors_humidity",
     service_name="Humidity %s",
     sections=["kentix_amp_sensors"],
     discovery_function=discover_kentix_amp_sensors_humidity,
@@ -163,6 +165,7 @@ def check_kentix_amp_sensors_smoke(item, params, parsed):
 
 
 check_info["kentix_amp_sensors.smoke"] = LegacyCheckDefinition(
+    name="kentix_amp_sensors_smoke",
     service_name="Smoke Detector %s",
     sections=["kentix_amp_sensors"],
     discovery_function=discover_kentix_amp_sensors_smoke,
@@ -195,6 +198,7 @@ def check_kentix_amp_sensors_leakage(item, params, parsed):
 
 
 check_info["kentix_amp_sensors.leakage"] = LegacyCheckDefinition(
+    name="kentix_amp_sensors_leakage",
     service_name="Leakage %s",
     sections=["kentix_amp_sensors"],
     discovery_function=discover_kentix_amp_sensors_leakage,

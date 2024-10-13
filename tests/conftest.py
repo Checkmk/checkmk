@@ -9,6 +9,7 @@
 import logging
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 from collections.abc import Iterator
@@ -63,6 +64,8 @@ def fail_on_log_exception(
 def pytest_exception_interact(call: pytest.CallInfo) -> None:
     if not (excinfo := call.excinfo):
         return
+
+    _excp = excinfo.value
     if excinfo.type in (TimeoutError, PWTimeoutError):
         try:
             top_output = f"\n{run(["top", "-b", "-n", "1"], check=False).stdout}"
@@ -71,8 +74,16 @@ def pytest_exception_interact(call: pytest.CallInfo) -> None:
             # silence any exception when running top since
             # we do not want to break the exception handling
             logger.error('Could not get "top" output on TimeoutError!')
+    elif isinstance(_excp, subprocess.CalledProcessError):
+        notes = "\n".join(getattr(_excp, "__notes__", []))
+        msg = (
+            f"Command: {str(_excp.cmd)}; Exit code: {str(_excp.returncode)}\n"
+            f"STDOUT: {_excp.stdout}\n"
+            f"STDERR: {_excp.stderr}\n"
+        ) + notes
+        logger.exception(msg)
     if PYTEST_RAISE:
-        raise excinfo.value
+        raise _excp
 
 
 @pytest.hookimpl(tryfirst=True)
@@ -186,7 +197,7 @@ def pytest_collection_modifyitems(items: list[pytest.Item], config: pytest.Confi
         if type_marker and type_marker.args:
             continue  # Do not modify manually set marks
         file_path = Path("%s" % item.reportinfo()[0])
-        repo_rel_path = file_path.relative_to(repo_path())
+        repo_rel_path = file_path.relative_to(Path(__file__).parent.parent)
         ty = repo_rel_path.parts[1]
         if ty not in test_types:
             if not isinstance(item, pytest.DoctestItem):
@@ -232,20 +243,6 @@ def cleanup_cmk():
         pass
 
 
-def pytest_cmdline_main(config):
-    if not config.getoption("-T"):
-        return  # missing option is handled later
-    verify_virtualenv()
-
-
-def verify_virtualenv():
-    if not sys.prefix.endswith("/.venv"):
-        raise SystemExit(
-            "ERROR: Please load virtual environment first "
-            f'(Use "pipenv shell" or configure direnv) ({sys.prefix})'
-        )
-
-
 # Some cmk.* code is calling things like cmk_version.is_raw_edition() at import time
 # (e.g. cmk/base/default_config/notify.py) for edition specific variable
 # defaults. In integration tests we want to use the exact version of the
@@ -256,16 +253,18 @@ def _fake_version_and_paths() -> None:
     monkeypatch = MonkeyPatch()
     tmp_dir = tempfile.mkdtemp(prefix="pytest_cmk_")
 
-    if is_managed_repo():
-        edition_short = "cme"
-    elif is_cloud_repo():
-        edition_short = "cce"
-    elif is_saas_repo():
-        edition_short = "cse"
-    elif is_enterprise_repo():
-        edition_short = "cee"
-    else:
-        edition_short = "cre"
+    def guess_from_repo() -> str:
+        if is_managed_repo():
+            return "cme"
+        if is_cloud_repo():
+            return "cce"
+        if is_saas_repo():
+            return "cse"
+        if is_enterprise_repo():
+            return "cee"
+        return "cre"
+
+    edition_short = os.getenv("EDITION") or guess_from_repo()
 
     unpatched_paths: Final = {
         # FIXME :-(

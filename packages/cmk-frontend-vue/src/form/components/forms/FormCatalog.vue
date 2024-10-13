@@ -24,6 +24,15 @@ const hiddenTopics = ref<Record<string, boolean>>({})
 
 immediateWatch(
   () => props.spec.topics,
+  (newValue) => {
+    newValue.forEach((element) => {
+      data.value[element.ident] = {}
+    })
+  }
+)
+
+immediateWatch(
+  () => props.spec.topics,
   () => {
     hiddenTopics.value = {}
   }
@@ -42,23 +51,25 @@ function toggleTopic(topic: Topic) {
   hiddenTopics.value[topic.ident] = !hiddenTopics.value[topic.ident]
 }
 
-function setAllTopics(isOpen: boolean) {
-  for (const topic of props.spec.topics) {
-    hiddenTopics.value[topic.ident] = !isOpen
-  }
-}
-
 function getClass(ident: string) {
   return {
     open: !hiddenTopics.value[ident],
     closed: hiddenTopics.value[ident]
   }
 }
+
+// Disabled, will be implemented in a future version
+// This function should be accessible outside of the component
+// function setAllTopics(isOpen: boolean) {
+//   for (const topic of props.spec.topics) {
+//     hiddenTopics.value[topic.ident] = !isOpen
+//   }
+// }
 </script>
 
 <template>
-  <input type="button" value="Open all" @click="setAllTopics(true)" />
-  <input type="button" value="Collapse all" @click="setAllTopics(false)" />
+  <!--  <input type="button" value="Open all" @click="setAllTopics(true)" />-->
+  <!--  <input type="button" value="Collapse all" @click="setAllTopics(false)" />-->
   <table
     v-for="topic in props.spec.topics"
     :key="topic.ident"
@@ -79,7 +90,7 @@ function getClass(ident: string) {
       </tr>
       <FormCatalogDictionary
         v-model="data[topic.ident]!"
-        :entries="topic.dictionary.elements"
+        :elements="topic.dictionary.elements"
         :backend-validation="elementValidation[topic.ident]!"
       />
       <tr class="bottom">

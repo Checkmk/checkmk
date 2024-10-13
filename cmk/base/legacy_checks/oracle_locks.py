@@ -128,6 +128,7 @@ def parse_oracle_locks(string_table: StringTable) -> StringTable:
 
 
 check_info["oracle_locks"] = LegacyCheckDefinition(
+    name="oracle_locks",
     parse_function=parse_oracle_locks,
     service_name="ORA %s Locks",
     discovery_function=inventory_oracle_locks,

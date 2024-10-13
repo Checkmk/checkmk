@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
 import subprocess
 import time
 from collections.abc import Iterator
@@ -19,6 +20,8 @@ from .watch_log import WatchLog
 STATE_UP = 0
 STATE_DOWN = 1
 STATE_UNREACHABLE = 2
+
+logger = logging.getLogger(__name__)
 
 
 def get_test_id(unreachable_enabled):
@@ -39,7 +42,7 @@ def unreachable_enabled_fixture(
 
     rule_id = None
     try:
-        print("Applying test config")
+        logger.info("Applying test config")
 
         site.openapi.create_host(
             "notify-test-parent",
@@ -75,7 +78,7 @@ def unreachable_enabled_fixture(
         #
         # Cleanup code
         #
-        print("Cleaning up default config")
+        logger.info("Cleaning up default config")
 
         if rule_id is not None:
             site.openapi.delete_rule(rule_id)

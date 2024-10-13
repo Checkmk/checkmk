@@ -194,6 +194,7 @@ def discover_openbsd_sensors(parsed):
 
 
 check_info["openbsd_sensors"] = LegacyCheckDefinition(
+    name="openbsd_sensors",
     detect=exists(".1.3.6.1.4.1.30155.2.1.1.0"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.30155.2.1.2.1",
@@ -230,6 +231,7 @@ def discover_openbsd_sensors_fan(parsed):
 
 
 check_info["openbsd_sensors.fan"] = LegacyCheckDefinition(
+    name="openbsd_sensors_fan",
     service_name="Fan %s",
     sections=["openbsd_sensors"],
     discovery_function=discover_openbsd_sensors_fan,
@@ -270,6 +272,7 @@ def discover_openbsd_sensors_voltage(parsed):
 
 
 check_info["openbsd_sensors.voltage"] = LegacyCheckDefinition(
+    name="openbsd_sensors_voltage",
     service_name="Voltage Type %s",
     sections=["openbsd_sensors"],
     discovery_function=discover_openbsd_sensors_voltage,
@@ -300,6 +303,7 @@ def discover_openbsd_sensors_powersupply(parsed):
 
 
 check_info["openbsd_sensors.powersupply"] = LegacyCheckDefinition(
+    name="openbsd_sensors_powersupply",
     service_name="Powersupply %s",
     sections=["openbsd_sensors"],
     discovery_function=discover_openbsd_sensors_powersupply,
@@ -329,6 +333,7 @@ def discover_openbsd_sensors_indicator(parsed):
 
 
 check_info["openbsd_sensors.indicator"] = LegacyCheckDefinition(
+    name="openbsd_sensors_indicator",
     service_name="Indicator %s",
     sections=["openbsd_sensors"],
     discovery_function=discover_openbsd_sensors_indicator,
@@ -358,6 +363,7 @@ def discover_openbsd_sensors_drive(parsed):
 
 
 check_info["openbsd_sensors.drive"] = LegacyCheckDefinition(
+    name="openbsd_sensors_drive",
     service_name="Drive %s",
     sections=["openbsd_sensors"],
     discovery_function=discover_openbsd_sensors_drive,

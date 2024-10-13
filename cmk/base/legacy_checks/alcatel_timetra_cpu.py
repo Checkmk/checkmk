@@ -25,6 +25,7 @@ def parse_alcatel_timetra_cpu(string_table: StringTable) -> StringTable | None:
 
 
 check_info["alcatel_timetra_cpu"] = LegacyCheckDefinition(
+    name="alcatel_timetra_cpu",
     parse_function=parse_alcatel_timetra_cpu,
     detect=contains(".1.3.6.1.2.1.1.1.0", "TiMOS"),
     fetch=SNMPTree(

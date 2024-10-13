@@ -67,7 +67,6 @@ Added rendering function :func:`time_offset`
 On popular demand we add a function to render a number of seconds that might be negative.
 
 """
-# pylint: disable=duplicate-code
 
 from cmk.agent_based.v1 import (
     all_of,

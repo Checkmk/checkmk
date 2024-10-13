@@ -51,6 +51,7 @@ def parse_vbox_guest(string_table: StringTable) -> StringTable:
 
 
 check_info["vbox_guest"] = LegacyCheckDefinition(
+    name="vbox_guest",
     parse_function=parse_vbox_guest,
     service_name="VBox Guest Additions",
     discovery_function=inventory_vbox_guest,

@@ -47,6 +47,7 @@ def parse_cisco_asa_connections(string_table: StringTable) -> StringTable | None
 
 
 check_info["cisco_asa_connections"] = LegacyCheckDefinition(
+    name="cisco_asa_connections",
     parse_function=parse_cisco_asa_connections,
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.1.0", "cisco adaptive security"),

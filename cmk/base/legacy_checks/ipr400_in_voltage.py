@@ -34,6 +34,7 @@ def parse_ipr400_in_voltage(string_table: StringTable) -> StringTable:
 
 
 check_info["ipr400_in_voltage"] = LegacyCheckDefinition(
+    name="ipr400_in_voltage",
     parse_function=parse_ipr400_in_voltage,
     detect=startswith(".1.3.6.1.2.1.1.1.0", "ipr voip device ipr400"),
     fetch=SNMPTree(

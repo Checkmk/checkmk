@@ -35,6 +35,7 @@ def parse_cisco_oldcpu(string_table: StringTable) -> StringTable:
 
 
 check_info["cisco_oldcpu"] = LegacyCheckDefinition(
+    name="cisco_oldcpu",
     parse_function=parse_cisco_oldcpu,
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.1745"),

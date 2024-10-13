@@ -72,6 +72,7 @@ def check_scaleio_sds(item, params, parsed):
 
 
 check_info["scaleio_sds"] = LegacyCheckDefinition(
+    name="scaleio_sds",
     parse_function=parse_scaleio_sds,
     service_name="ScaleIO SDS capacity %s",
     discovery_function=inventory_scaleio_sds,
@@ -111,6 +112,7 @@ def check_scaleio_sds_status(item, _no_params, parsed):
 
 
 check_info["scaleio_sds.status"] = LegacyCheckDefinition(
+    name="scaleio_sds_status",
     service_name="ScaleIO SDS status %s",
     sections=["scaleio_sds"],
     discovery_function=inventory_scaleio_sds_status,

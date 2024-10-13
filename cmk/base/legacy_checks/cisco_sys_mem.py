@@ -37,6 +37,7 @@ def parse_cisco_sys_mem(string_table: StringTable) -> StringTable:
 
 
 check_info["cisco_sys_mem"] = LegacyCheckDefinition(
+    name="cisco_sys_mem",
     parse_function=parse_cisco_sys_mem,
     detect=startswith(".1.3.6.1.2.1.1.1.0", "Cisco NX-OS"),
     fetch=SNMPTree(

@@ -46,6 +46,7 @@ def parse_perle_modules_mgt(string_table: StringTable) -> StringTable:
 
 
 check_info["perle_modules_mgt"] = LegacyCheckDefinition(
+    name="perle_modules_mgt",
     parse_function=parse_perle_modules_mgt,
     detect=DETECT_PERLE,
     # If you change snmp info please adapt the related inventory plugin,

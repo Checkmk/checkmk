@@ -76,6 +76,7 @@ def inventory_gude_powerbanks(parsed):
 _TABLES = (19, 38)
 
 check_info["gude_powerbanks"] = LegacyCheckDefinition(
+    name="gude_powerbanks",
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.28507.19"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.28507.38"),

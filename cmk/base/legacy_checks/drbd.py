@@ -346,6 +346,7 @@ def discover_drbd(info):
 
 
 check_info["drbd"] = LegacyCheckDefinition(
+    name="drbd",
     parse_function=parse_drbd,
     service_name="DRBD %s status",
     discovery_function=discover_drbd,
@@ -389,6 +390,7 @@ def discover_drbd_net(info):
 
 
 check_info["drbd.net"] = LegacyCheckDefinition(
+    name="drbd_net",
     service_name="DRBD %s net",
     sections=["drbd"],
     discovery_function=discover_drbd_net,
@@ -418,6 +420,7 @@ def discover_drbd_disk(info):
 
 
 check_info["drbd.disk"] = LegacyCheckDefinition(
+    name="drbd_disk",
     service_name="DRBD %s disk",
     sections=["drbd"],
     discovery_function=discover_drbd_disk,
@@ -459,6 +462,7 @@ def discover_drbd_stats(info):
 
 
 check_info["drbd.stats"] = LegacyCheckDefinition(
+    name="drbd_stats",
     service_name="DRBD %s stats",
     sections=["drbd"],
     discovery_function=discover_drbd_stats,

@@ -60,6 +60,7 @@ def parse_msexch_replhealth(string_table: StringTable) -> StringTable:
 
 
 check_info["msexch_replhealth"] = LegacyCheckDefinition(
+    name="msexch_replhealth",
     parse_function=parse_msexch_replhealth,
     service_name="Exchange Replication Health %s",
     discovery_function=inventory_msexch_replhealth,

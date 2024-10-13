@@ -58,6 +58,7 @@ def parse_vms_users(string_table: StringTable) -> StringTable:
 
 
 check_info["vms_users"] = LegacyCheckDefinition(
+    name="vms_users",
     parse_function=parse_vms_users,
     service_name="VMS Users",
     discovery_function=inventory_vms_users,

@@ -31,6 +31,7 @@ def parse_mongodb_instance(string_table: StringTable) -> StringTable:
 
 
 check_info["mongodb_instance"] = LegacyCheckDefinition(
+    name="mongodb_instance",
     parse_function=parse_mongodb_instance,
     service_name="MongoDB Instance",
     discovery_function=inventory_mongodb_instance,

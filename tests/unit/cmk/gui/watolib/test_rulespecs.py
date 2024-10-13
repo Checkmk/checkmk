@@ -298,7 +298,6 @@ def test_rulespec_get_all_groups() -> None:
         "datasource_programs/custom",
         "datasource_programs/hw",
         "datasource_programs/os",
-        "datasource_programs/testing",
         "inventory",
         "eventconsole",
     ]
@@ -526,7 +525,7 @@ def test_register_check_parameters(patch_rulespec_registries: None) -> None:
     assert rulespec.item_help is None
     # The item_spec of the ManualCheckParameterRulespec fetched differently,
     # since it is no actual item spec
-    assert isinstance(rulespec._get_item_spec(), TextInput)
+    assert isinstance(rulespec._get_item_valuespec(), TextInput)
     assert rulespec.is_deprecated is False
     assert rulespec.is_optional is False
 

@@ -1,7 +1,0 @@
-=================
-connectors_api.v1
-=================
-
-.. automodule:: cmk.cee.dcd.plugins.connectors.connectors_api.v1
-   :members:
-   :show-inheritance:

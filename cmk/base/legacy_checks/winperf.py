@@ -120,11 +120,13 @@ def parse_winperf(string_table: StringTable) -> StringTable:
 
 
 check_info["winperf"] = LegacyCheckDefinition(
+    name="winperf",
     parse_function=parse_winperf,
 )
 
 
 check_info["winperf.cpuusage"] = LegacyCheckDefinition(
+    name="winperf_cpuusage",
     service_name="CPU Usage",
     sections=["winperf"],
     discovery_function=inventory_win_cpuusage,
@@ -132,6 +134,7 @@ check_info["winperf.cpuusage"] = LegacyCheckDefinition(
 )
 
 check_info["winperf.diskstat"] = LegacyCheckDefinition(
+    name="winperf_diskstat",
     service_name="Disk IO",
     sections=["winperf"],
     discovery_function=inventory_win_diskstat,

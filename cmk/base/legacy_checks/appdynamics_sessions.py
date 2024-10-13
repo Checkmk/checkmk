@@ -61,6 +61,7 @@ def parse_appdynamics_sessions(string_table: StringTable) -> StringTable:
 
 
 check_info["appdynamics_sessions"] = LegacyCheckDefinition(
+    name="appdynamics_sessions",
     parse_function=parse_appdynamics_sessions,
     service_name="AppDynamics Sessions %s",
     discovery_function=inventory_appdynamics_sessions,

@@ -124,6 +124,7 @@ def discover_jira_custom_svc(section):
 
 
 check_info["jira_custom_svc"] = LegacyCheckDefinition(
+    name="jira_custom_svc",
     parse_function=parse_jira_custom_svc,
     service_name="Jira %s",
     discovery_function=discover_jira_custom_svc,

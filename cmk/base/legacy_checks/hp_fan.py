@@ -35,6 +35,7 @@ def check_hp_fan(item, _no_params, parsed):
 
 
 check_info["hp_fan"] = LegacyCheckDefinition(
+    name="hp_fan",
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "hp"),
         any_of(

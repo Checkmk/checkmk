@@ -12,7 +12,6 @@ from cmk.ccc.site import omd_site
 
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_QUICK_SETUP
 from cmk.utils.hostaddress import HostName
-from cmk.utils.password_store import ad_hoc_password_id
 from cmk.utils.password_store import Password as StorePassword
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RuleConditionsSpec, RuleOptionsSpec, RuleSpec
@@ -20,14 +19,18 @@ from cmk.utils.rulesets.ruleset_matcher import RuleConditionsSpec, RuleOptionsSp
 from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.quick_setup.v0_unstable.definitions import UniqueBundleIDStr
+from cmk.gui.quick_setup.v0_unstable.definitions import (
+    QSHostName,
+    QSHostPath,
+    QSSiteSelection,
+    UniqueBundleIDStr,
+)
 from cmk.gui.quick_setup.v0_unstable.predefined._common import (
     _collect_params_with_defaults_from_form_data,
     _collect_passwords_from_form_data,
-    _find_unique_id,
+    _find_id_in_form_data,
 )
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData
-from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
 from cmk.gui.site_config import site_is_local
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.wato.pages.activate_changes import ModeActivateChanges
@@ -39,6 +42,7 @@ from cmk.gui.watolib.configuration_bundles import (
     ConfigBundle,
     create_config_bundle,
     CreateBundleEntities,
+    CreateDCDConnection,
     CreateHost,
     CreatePassword,
     CreateRule,
@@ -46,6 +50,7 @@ from cmk.gui.watolib.configuration_bundles import (
 )
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
+from cmk.gui.watolib.passwords import load_passwords
 from cmk.gui.watolib.services import (
     DiscoveryAction,
     get_check_table,
@@ -53,6 +58,12 @@ from cmk.gui.watolib.services import (
 )
 
 from cmk.rulesets.v1.form_specs import Dictionary
+
+
+class DCDHook:
+    create_dcd_connections: Callable[[BundleId, SiteId, Folder], list[CreateDCDConnection]] = (
+        lambda *_args: []
+    )
 
 
 def _normalize_folder_path_str(folder_path: str) -> str:
@@ -118,22 +129,27 @@ def sanitize_folder_path(folder_path: str) -> Folder:
     if sanitized_folder_path in tree.all_folders():
         return tree.all_folders()[sanitized_folder_path]
     return tree.root_folder().create_subfolder(
-        name=sanitized_folder_path, title=sanitized_folder_path, attributes={}
+        name=sanitized_folder_path,
+        title=sanitized_folder_path.split("/")[-1]
+        if "/" in sanitized_folder_path
+        else sanitized_folder_path,
+        attributes={},
     )
 
 
-def create_host_from_form_data(
+def create_special_agent_host_from_form_data(
     host_name: HostName,
     site_id: SiteId,
-    host_path: str,
+    folder: Folder,
 ) -> CreateHost:
-    # TODO Folder formspec.  The sanitize function is likely to change once we have a folder formspec.
-
     return CreateHost(
         name=host_name,
-        folder=sanitize_folder_path(host_path),
+        folder=folder,
         attributes=HostAttributes(
             tag_address_family="no-ip",
+            tag_agent="special-agents",
+            tag_piggyback="auto-piggyback",
+            tag_snmp_ds="no-snmp",
             site=site_id,
         ),
     )
@@ -217,6 +233,13 @@ def create_and_save_special_agent_bundle_custom_collect_params(
     )
 
 
+def _find_bundle_id(all_stages_form_data: ParsedFormData) -> BundleId:
+    bundle_id = _find_id_in_form_data(form_data=all_stages_form_data, target_key=UniqueBundleIDStr)
+    if bundle_id is None:
+        raise ValueError("No bundle id found")
+    return BundleId(bundle_id)
+
+
 def _create_and_save_special_agent_bundle(
     special_agent_name: str,
     parameter_form: Dictionary,
@@ -224,40 +247,36 @@ def _create_and_save_special_agent_bundle(
     collect_params: Callable[[ParsedFormData, Dictionary], Mapping[str, object]],
 ) -> str:
     rulespec_name = RuleGroup.SpecialAgents(special_agent_name)
-    bundle_id = _find_unique_id(form_data=all_stages_form_data, target_key=UniqueBundleIDStr)
-    if bundle_id is None:
-        raise ValueError("No bundle id found")
+    bundle_id = _find_bundle_id(all_stages_form_data)
 
-    host_name = all_stages_form_data[FormSpecId("host_data")]["host_name"]
-    host_path = all_stages_form_data[FormSpecId("host_data")]["host_path"]
+    host_name = _find_id_in_form_data(all_stages_form_data, QSHostName)
+    host_path = _find_id_in_form_data(all_stages_form_data, QSHostPath)
 
-    site_selection = _find_unique_id(all_stages_form_data, "site_selection")
+    if host_name is None or host_path is None:
+        raise ValueError("Host name or host path not found in form data")
+
+    site_selection = _find_id_in_form_data(all_stages_form_data, QSSiteSelection)
     site_id = SiteId(site_selection) if site_selection else omd_site()
     params = collect_params(all_stages_form_data, parameter_form)
 
-    # TODO: Find a better solution.
-    # Here we replace the password id if the user has selected from password store
-    # otherwise, the previous one will be overwritten.
-    if all_stages_form_data[FormSpecId("credentials")]["secret_access_key"][1] == "stored_password":
-        all_stages_form_data[FormSpecId("credentials")]["secret_access_key"] = (
-            "explicit_password",
-            all_stages_form_data[FormSpecId("credentials")]["secret_access_key"][1],
-            (
-                ad_hoc_password_id(),
-                all_stages_form_data[FormSpecId("credentials")]["secret_access_key"][2][1],
-            ),
-        )
-    passwords = _collect_passwords_from_form_data(all_stages_form_data, parameter_form)
+    collected_passwords = _collect_passwords_from_form_data(all_stages_form_data, parameter_form)
 
-    # TODO: DCD still to be implemented cmk-18341
+    stored_passwords = load_passwords()
+    # We need to filter out the passwords that are already stored in the password store since they
+    # should be independent of the configuration bundle
+    passwords = {
+        pwid: pw for pwid, pw in collected_passwords.items() if pwid not in stored_passwords
+    }
 
+    # TODO: The sanitize function is likely to change once we have a folder FormSpec.
+    folder = sanitize_folder_path(host_path)
     hosts = [
-        create_host_from_form_data(
-            host_name=HostName(host_name), host_path=host_path, site_id=site_id
+        create_special_agent_host_from_form_data(
+            host_name=HostName(host_name), folder=folder, site_id=site_id
         )
     ]
     create_config_bundle(
-        bundle_id=BundleId(bundle_id),
+        bundle_id=bundle_id,
         bundle=ConfigBundle(
             title=f"{bundle_id}_config",
             comment="",
@@ -269,23 +288,24 @@ def _create_and_save_special_agent_bundle(
             passwords=create_passwords(
                 passwords=passwords,
                 rulespec_name=rulespec_name,
-                bundle_id=BundleId(bundle_id),
+                bundle_id=bundle_id,
             ),
             rules=[
                 create_rule(
                     params=params,
-                    host_name=host["name"],
-                    host_path=host["folder"].path(),
+                    host_name=create_host["name"],
+                    host_path=create_host["folder"].path(),
                     rulespec_name=rulespec_name,
-                    bundle_id=BundleId(bundle_id),
+                    bundle_id=bundle_id,
                     site_id=site_id,
                 )
-                for host in hosts
+                for create_host in hosts
             ],
+            dcd_connections=DCDHook.create_dcd_connections(bundle_id, site_id, folder),
         ),
     )
     try:
-        host: Host = Host.load_host(host_name)
+        host: Host = Host.load_host(HostName(host_name))
         if not site_is_local(active_config, site_id):
             get_check_table(host, DiscoveryAction.REFRESH, raise_errors=False)
             snapshot = fetch_service_discovery_background_job_status(site_id, host_name)
@@ -309,6 +329,10 @@ def _create_and_save_special_agent_bundle(
 
     return makeuri_contextless(
         request,
-        [("mode", ModeActivateChanges.name())],
+        [
+            ("mode", ModeActivateChanges.name()),
+            ("origin", "quick_setup"),
+            ("special_agent_name", special_agent_name),
+        ],
         filename="wato.py",
     )

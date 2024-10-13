@@ -29,6 +29,7 @@ def parse_avaya_88xx_cpu(string_table: StringTable) -> StringTable | None:
 
 
 check_info["avaya_88xx_cpu"] = LegacyCheckDefinition(
+    name="avaya_88xx_cpu",
     parse_function=parse_avaya_88xx_cpu,
     detect=DETECT_AVAYA,
     fetch=SNMPTree(

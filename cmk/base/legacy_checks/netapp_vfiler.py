@@ -41,6 +41,7 @@ def parse_netapp_vfiler(string_table: StringTable) -> StringTable:
 
 
 check_info["netapp_vfiler"] = LegacyCheckDefinition(
+    name="netapp_vfiler",
     parse_function=parse_netapp_vfiler,
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "netapp release"),

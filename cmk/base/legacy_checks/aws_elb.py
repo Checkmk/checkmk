@@ -93,6 +93,7 @@ def discover_aws_elb(p):
 
 
 check_info["aws_elb"] = LegacyCheckDefinition(
+    name="aws_elb",
     parse_function=parse_aws_elb,
     service_name="AWS/ELB Statistics",
     discovery_function=discover_aws_elb,
@@ -133,6 +134,7 @@ def discover_aws_elb_latency(p):
 
 
 check_info["aws_elb.latency"] = LegacyCheckDefinition(
+    name="aws_elb_latency",
     service_name="AWS/ELB Latency",
     sections=["aws_elb"],
     discovery_function=discover_aws_elb_latency,
@@ -165,6 +167,7 @@ def discover_aws_elb_http_elb(p):
 
 
 check_info["aws_elb.http_elb"] = LegacyCheckDefinition(
+    name="aws_elb_http_elb",
     service_name="AWS/ELB HTTP ELB",
     sections=["aws_elb"],
     discovery_function=discover_aws_elb_http_elb,
@@ -197,6 +200,7 @@ def discover_aws_elb_http_backend(p):
 
 
 check_info["aws_elb.http_backend"] = LegacyCheckDefinition(
+    name="aws_elb_http_backend",
     service_name="AWS/ELB HTTP Backend",
     sections=["aws_elb"],
     discovery_function=discover_aws_elb_http_backend,
@@ -263,6 +267,7 @@ def discover_aws_elb_healthy_hosts(p):
 
 
 check_info["aws_elb.healthy_hosts"] = LegacyCheckDefinition(
+    name="aws_elb_healthy_hosts",
     service_name="AWS/ELB Healthy Hosts",
     sections=["aws_elb"],
     discovery_function=discover_aws_elb_healthy_hosts,
@@ -306,6 +311,7 @@ def discover_aws_elb_backend_connection_errors(p):
 
 
 check_info["aws_elb.backend_connection_errors"] = LegacyCheckDefinition(
+    name="aws_elb_backend_connection_errors",
     service_name="AWS/ELB Backend Connection Errors",
     sections=["aws_elb"],
     discovery_function=discover_aws_elb_backend_connection_errors,

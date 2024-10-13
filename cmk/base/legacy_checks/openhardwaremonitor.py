@@ -175,6 +175,7 @@ def check_openhardwaremonitor_clock(item, params, parsed):
 #   '----------------------------------------------------------------------'
 
 check_info["openhardwaremonitor"] = LegacyCheckDefinition(
+    name="openhardwaremonitor",
     parse_function=parse_openhardwaremonitor,
     service_name="Clock %s",
     discovery_function=discover_openhardwaremonitor,
@@ -208,6 +209,7 @@ def discover_openhardwaremonitor_temperature(parsed):
 
 
 check_info["openhardwaremonitor.temperature"] = LegacyCheckDefinition(
+    name="openhardwaremonitor_temperature",
     service_name="Temperature %s",
     sections=["openhardwaremonitor"],
     discovery_function=discover_openhardwaremonitor_temperature,
@@ -242,6 +244,7 @@ def check_openhardwaremonitor_power(item, params, parsed):
 #   '----------------------------------------------------------------------'
 
 check_info["openhardwaremonitor.power"] = LegacyCheckDefinition(
+    name="openhardwaremonitor_power",
     service_name="Power %s",
     sections=["openhardwaremonitor"],
     discovery_function=discover_openhardwaremonitor_power,
@@ -272,6 +275,7 @@ def discover_openhardwaremonitor_fan(parsed):
 
 
 check_info["openhardwaremonitor.fan"] = LegacyCheckDefinition(
+    name="openhardwaremonitor_fan",
     service_name="Fan %s",
     sections=["openhardwaremonitor"],
     discovery_function=discover_openhardwaremonitor_fan,
@@ -334,6 +338,7 @@ def check_openhardwaremonitor_smart(item, params, parsed):
 # combines different sensors per item (but not all, i.e. hdd temperature is still
 # reported as a temperature item)
 check_info["openhardwaremonitor.smart"] = LegacyCheckDefinition(
+    name="openhardwaremonitor_smart",
     service_name="SMART %s Stats",
     sections=["openhardwaremonitor"],
     discovery_function=inventory_openhardwaremonitor_smart,

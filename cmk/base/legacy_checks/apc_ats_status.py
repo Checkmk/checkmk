@@ -85,6 +85,7 @@ def check_apc_ats_status(_no_item: Any, params: dict, parsed: Status) -> Iterabl
 
 
 check_info["apc_ats_status"] = LegacyCheckDefinition(
+    name="apc_ats_status",
     parse_function=parse_apc_ats_status,
     detect=DETECT_ATS,
     fetch=SNMPTree(

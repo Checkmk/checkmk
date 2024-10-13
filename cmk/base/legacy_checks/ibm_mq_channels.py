@@ -76,6 +76,7 @@ def check_ibm_mq_channels(item, params, parsed):
 
 
 check_info["ibm_mq_channels"] = LegacyCheckDefinition(
+    name="ibm_mq_channels",
     service_name="IBM MQ Channel %s",
     discovery_function=inventory_ibm_mq_channels,
     check_function=check_ibm_mq_channels,

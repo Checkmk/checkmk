@@ -50,6 +50,7 @@ def parse_hitachi_hus_status(string_table: StringTable) -> StringTable | None:
 
 
 check_info["hitachi_hus_status"] = LegacyCheckDefinition(
+    name="hitachi_hus_status",
     parse_function=parse_hitachi_hus_status,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.116"),
     fetch=SNMPTree(

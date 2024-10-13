@@ -84,31 +84,31 @@ def create_and_destroy_user(
 
     # Load the config with the newly created user
     config.load_config()
-
     profile_path = cmk.utils.paths.omd_root / "var/check_mk/web" / user_id
-    profile_path.joinpath("cached_profile.mk").write_text(
-        str(
-            repr(
-                {
-                    "alias": "Test user",
-                    "contactgroups": ["all"],
-                    "disable_notifications": {},
-                    "email": "test_user_%s@checkmk.com" % user_id,
-                    "fallback_contact": False,
-                    "force_authuser": False,
-                    "locked": False,
-                    "language": "de",
-                    "pager": "",
-                    "roles": [role],
-                    "start_url": None,
-                    "ui_theme": "modern-dark",
-                    **(custom_attrs or {}),
-                }
-            )
-        )
-    )
 
     try:
+        profile_path.joinpath("cached_profile.mk").write_text(
+            str(
+                repr(
+                    {
+                        "alias": "Test user",
+                        "contactgroups": ["all"],
+                        "disable_notifications": {},
+                        "email": "test_user_%s@checkmk.com" % user_id,
+                        "fallback_contact": False,
+                        "force_authuser": False,
+                        "locked": False,
+                        "language": "de",
+                        "pager": "",
+                        "roles": [role],
+                        "start_url": None,
+                        "ui_theme": "modern-dark",
+                        **(custom_attrs or {}),
+                    }
+                )
+            )
+        )
+
         yield user_id, password
     finally:
         with SuperUserContext():

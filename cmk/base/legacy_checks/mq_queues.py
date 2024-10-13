@@ -69,6 +69,7 @@ def parse_mq_queues(string_table: StringTable) -> StringTable:
 
 
 check_info["mq_queues"] = LegacyCheckDefinition(
+    name="mq_queues",
     parse_function=parse_mq_queues,
     service_name="Queue %s",
     discovery_function=inventory_mq_queues,

@@ -13,6 +13,12 @@ from cmk.utils.user import UserId
 from cmk.base.server_side_calls import load_special_agents
 
 from cmk.gui.quick_setup.config_setups.aws.form_specs import quick_setup_aws_form_spec
+from cmk.gui.quick_setup.v0_unstable.definitions import (
+    QSHostName,
+    QSHostPath,
+    QSSiteSelection,
+    UniqueFormSpecIDStr,
+)
 from cmk.gui.quick_setup.v0_unstable.predefined import (
     collect_params_from_form_data,
     collect_params_with_defaults_from_form_data,
@@ -23,7 +29,7 @@ from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
 from cmk.gui.session import UserContext
 
 ALL_FORM_SPEC_DATA: ParsedFormData = {
-    FormSpecId("formspec_unique_id"): {
+    FormSpecId(UniqueFormSpecIDStr): {
         "account_name": "my_aws_account",
     },
     FormSpecId("credentials"): {
@@ -35,8 +41,8 @@ ALL_FORM_SPEC_DATA: ParsedFormData = {
         ),
     },
     FormSpecId("host_data"): {
-        "host_name": "my_quick_setup_aws_host",
-        "host_path": "a/path/to/my/quick_setup/aws/host",
+        QSHostName: "my_quick_setup_aws_host",
+        QSHostPath: "a/path/to/my/quick_setup/aws/host",
     },
     FormSpecId("configure_host_and_region"): {
         "regions_to_monitor": {
@@ -62,7 +68,7 @@ ALL_FORM_SPEC_DATA: ParsedFormData = {
             "elasticache": ["all", {"limits": "limits"}],
         },
     },
-    FormSpecId("site"): {"site_selection": "my_site"},
+    FormSpecId("site"): {QSSiteSelection: "my_site"},
     FormSpecId("aws_tags"): {"overall_tags": {}},
 }
 

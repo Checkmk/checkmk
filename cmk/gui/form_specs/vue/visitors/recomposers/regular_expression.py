@@ -55,8 +55,8 @@ def recompose(form_spec: FormSpec[str]) -> String:
     return String(
         title=form_spec.title,
         help_text=combined_help,
+        custom_validate=form_spec.custom_validate,
         label=form_spec.label,
         migrate=form_spec.migrate,
         prefill=form_spec.prefill,
-        custom_validate=form_spec.custom_validate,
     )

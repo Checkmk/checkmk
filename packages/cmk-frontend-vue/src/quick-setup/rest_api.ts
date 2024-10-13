@@ -4,12 +4,6 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import axios from 'axios'
-import {
-  COMPLETE_QUICK_SETUP_URL,
-  GET_QUICK_SETUP_OVERVIEW_URL,
-  VALIDATE_QUICK_SETUP_STAGE_URL
-} from '@/quick-setup/constants/rest_api'
-import { type StageData } from './quick_setup_types'
 
 import {
   type GeneralError,
@@ -18,11 +12,21 @@ import {
   type QSStageResponse,
   type ValidationError,
   type QSResponseComplete,
-  type QSRequestComplete
+  type QSRequestComplete,
+  type QSAllStagesResponse
 } from './rest_api_types'
+import type { StageData } from './components/quick-setup/widgets/widget_types'
 
-// import { ACTIVATE_CHANGES_URL } from '@/constants/ui'
-// import { goToUrl } from '@/helpers/url'
+const API_ROOT = 'api/1.0'
+
+/** @constant {string} GET_QUICK_SETUP_OVERVIEW_URL - Endpoint used to fetch the quick setup overview and first stage */
+const GET_QUICK_SETUP_OVERVIEW_URL = `${API_ROOT}/objects/quick_setup/{QUICK_SETUP_ID}`
+
+/** @constant {string} VALIDATE_QUICK_SETUP_STAGE_URL - Endpoint used to validate a stage and get the next stage */
+const VALIDATE_QUICK_SETUP_STAGE_URL = `${API_ROOT}/domain-types/quick_setup/collections/all`
+
+/** @constant {string}  COMPLETE_QUICK_SETUP_URL - Save all user input and complete the quick setup */
+const COMPLETE_QUICK_SETUP_URL = `${API_ROOT}/objects/quick_setup/{QUICK_SETUP_ID}/actions/save/invoke`
 
 /**
  * Returns a record representation of an error to be shown to the user
@@ -71,6 +75,23 @@ export const getOverview = async (quickSetupId: string): Promise<QSInitializatio
   })
 }
 
+export const getAllStages = async (quickSetupId: string): Promise<QSAllStagesResponse> => {
+  return new Promise((resolve, reject) => {
+    const url = `${GET_QUICK_SETUP_OVERVIEW_URL}?mode=overview`.replace(
+      '{QUICK_SETUP_ID}',
+      quickSetupId
+    )
+    axios
+      .get(url)
+      .then((response) => {
+        resolve(response.data)
+      })
+      .catch((err) => {
+        reject(processError(err))
+      })
+  })
+}
+
 export const validateStage = async (
   quickSetupId: string,
   formData: StageData[]
@@ -95,11 +116,13 @@ export const validateStage = async (
 
 export const completeQuickSetup = async (
   quickSetupId: string,
+  buttonId: string,
   formData: StageData[]
 ): Promise<QSResponseComplete> => {
   return new Promise((resolve, reject) => {
     const url = COMPLETE_QUICK_SETUP_URL.replace('{QUICK_SETUP_ID}', quickSetupId)
     const payload: QSRequestComplete = {
+      button_id: buttonId,
       stages: formData.map((step) => ({ form_data: step }))
     }
 

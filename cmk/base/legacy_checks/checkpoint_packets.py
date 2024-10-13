@@ -65,6 +65,7 @@ def check_checkpoint_packets(_no_item, params, parsed):
 
 
 check_info["checkpoint_packets"] = LegacyCheckDefinition(
+    name="checkpoint_packets",
     detect=DETECT,
     fetch=[
         SNMPTree(

@@ -49,6 +49,7 @@ def parse_netscaler_cpu(string_table: StringTable) -> StringTable:
 
 
 check_info["netscaler_cpu"] = LegacyCheckDefinition(
+    name="netscaler_cpu",
     parse_function=parse_netscaler_cpu,
     detect=SNMP_DETECT,
     fetch=SNMPTree(

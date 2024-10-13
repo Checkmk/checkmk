@@ -65,6 +65,7 @@ def parse_vxvm_objstatus(string_table: StringTable) -> StringTable:
 
 
 check_info["vxvm_objstatus"] = LegacyCheckDefinition(
+    name="vxvm_objstatus",
     parse_function=parse_vxvm_objstatus,
     service_name="VXVM objstatus %s",
     discovery_function=inventory_vxvm_objstatus,

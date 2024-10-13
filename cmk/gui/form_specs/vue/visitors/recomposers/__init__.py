@@ -6,6 +6,7 @@
 from .dictionary import recompose as recompose_dictionary
 from .host_state import recompose as recompose_host_state
 from .list import recompose as recompose_list
+from .multiple_choice import recompose as recompose_multiple_choice
 from .percentage import recompose as recompose_percentage
 from .regular_expression import recompose as recompose_regular_expression
 from .service_state import recompose as recompose_service_state
@@ -23,4 +24,5 @@ __all__ = [
     "recompose_host_state",
     "recompose_service_state",
     "recompose_string",
+    "recompose_multiple_choice",
 ]

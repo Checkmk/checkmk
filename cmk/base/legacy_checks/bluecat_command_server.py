@@ -37,6 +37,7 @@ def parse_bluecat_command_server(string_table: StringTable) -> StringTable | Non
 
 
 check_info["bluecat_command_server"] = LegacyCheckDefinition(
+    name="bluecat_command_server",
     parse_function=parse_bluecat_command_server,
     detect=DETECT_BLUECAT,
     fetch=SNMPTree(

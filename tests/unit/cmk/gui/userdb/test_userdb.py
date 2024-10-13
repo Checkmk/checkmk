@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
-from flask import Flask
 from pytest import MonkeyPatch
 
 from tests.testlib.repo import is_managed_repo
@@ -49,7 +48,7 @@ from cmk.crypto import password_hashing
 from cmk.crypto.password import Password
 
 if TYPE_CHECKING:
-    from tests.unit.cmk.gui.conftest import SetConfig, SingleRequest
+    from tests.unit.cmk.gui.conftest import SetConfig, SingleRequest, WebTestAppForCMK
 
 
 @pytest.fixture(name="user_id")
@@ -197,28 +196,27 @@ def test_on_failed_login_with_locking(
         assert userdb.user_locked(user_id)
 
 
-def test_on_logout_no_session(flask_app: Flask, auth_request: http.Request) -> None:
-    with flask_app.test_client(use_cookies=True) as client:
-        client.get(auth_request)
+def test_on_logout_no_session(wsgi_app: WebTestAppForCMK, auth_request: http.Request) -> None:
+    wsgi_app.get(auth_request)
 
-        user_id = session.user.ident
-        old_session = session.session_info
-        session_id = old_session.session_id
+    user_id = session.user.ident
+    old_session = session.session_info
+    session_id = old_session.session_id
 
-        old_session.invalidate()
-        userdb.session.save_session_infos(user_id, {session_id: old_session})
+    old_session.invalidate()
+    userdb.session.save_session_infos(user_id, {session_id: old_session})
 
-        # Make another request to update "last_activity"
-        client.get(auth_request)
-        # import time
+    # Make another request to update "last_activity"
+    wsgi_app.get(auth_request)
+    # import time
 
-        # time.sleep(2)
-        # print("slept 2", datetime.now().timestamp())
+    # time.sleep(2)
+    # print("slept 2", datetime.now().timestamp())
 
-        assert session.session_info.session_id != old_session.session_id
-        assert session.session_info.started_at >= old_session.started_at
-        #        assert session.session_info.last_activity == int(datetime.now().timestamp())
-        assert session.session_info.last_activity >= old_session.last_activity
+    assert session.session_info.session_id != old_session.session_id
+    assert session.session_info.started_at >= old_session.started_at
+    #        assert session.session_info.last_activity == int(datetime.now().timestamp())
+    assert session.session_info.last_activity >= old_session.last_activity
 
 
 def test_on_logout_invalidate_session(single_auth_request: SingleRequest) -> None:
@@ -245,47 +243,45 @@ def test_access_denied_with_invalidated_session(single_auth_request: SingleReque
 
 
 def test_on_access_update_valid_session(
-    flask_app: Flask,
+    wsgi_app: WebTestAppForCMK,
     auth_request: http.Request,
 ) -> None:
-    with flask_app.test_client() as client:
-        client.get(auth_request)
+    wsgi_app.get(auth_request)
 
-        # We push the access furhter in the past to see if its updated on the next request.
-        session.session_info.last_activity -= 3600
-        session.persist()
+    # We push the access furhter in the past to see if its updated on the next request.
+    session.session_info.last_activity -= 3600
+    session.persist()
 
-        session_info = session.session_info
+    session_info = session.session_info
 
-        client.get(auth_request)
+    wsgi_app.get(auth_request)
 
-        assert session.session_info.session_id == session_info.session_id
-        assert session.session_info.started_at == session_info.started_at
-        assert session.session_info.last_activity > session_info.last_activity
+    assert session.session_info.session_id == session_info.session_id
+    assert session.session_info.started_at == session_info.started_at
+    assert session.session_info.last_activity > session_info.last_activity
 
 
 def test_timed_out_session_gets_a_new_one_instead(
-    flask_app: Flask, auth_request: http.Request
+    wsgi_app: WebTestAppForCMK, auth_request: http.Request
 ) -> None:
-    with flask_app.test_client(use_cookies=True) as client:
-        client.get(auth_request)
+    wsgi_app.get(auth_request)
 
-        user_id = session.user.ident
-        session_id = session.session_info.session_id
+    user_id = session.user.ident
+    session_id = session.session_info.session_id
 
-        # Make the session older than it actually was
-        old_session = session.session_info
-        old_session.started_at -= 3600 * 2
-        old_session.last_activity -= 3600 * 2
-        userdb.session.save_session_infos(user_id, {session_id: old_session})
+    # Make the session older than it actually was
+    old_session = session.session_info
+    old_session.started_at -= 3600 * 2
+    old_session.last_activity -= 3600 * 2
+    userdb.session.save_session_infos(user_id, {session_id: old_session})
 
-        # Make another request to update "last_activity"
-        client.get(auth_request)
+    # Make another request to update "last_activity"
+    wsgi_app.get(auth_request)
 
-        # A new session is created, because the old one expired.
-        assert session.session_info.session_id != old_session.session_id
-        assert session.session_info.started_at != old_session.started_at
-        assert session.session_info.last_activity > old_session.last_activity
+    # A new session is created, because the old one expired.
+    assert session.session_info.session_id != old_session.session_id
+    assert session.session_info.started_at != old_session.started_at
+    assert session.session_info.last_activity > old_session.last_activity
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")

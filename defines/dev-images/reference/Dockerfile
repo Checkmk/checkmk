@@ -1,4 +1,4 @@
-ARG BASE_BUILD_IMAGE
+ARG BASE_BUILD_IMAGE=you_forgot_to_set:base_build_image
 
 FROM ${BASE_BUILD_IMAGE}
 

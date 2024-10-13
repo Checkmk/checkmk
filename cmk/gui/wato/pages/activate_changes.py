@@ -38,6 +38,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     make_checkbox_selection_topic,
+    make_javascript_action,
     make_javascript_link,
     make_simple_link,
     PageMenu,
@@ -45,6 +46,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
     show_confirm_cancel_dialog,
+    show_success_dialog,
 )
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.sites import SiteStatus
@@ -364,6 +366,9 @@ def _change_table(changes: list[tuple[str, dict]], title: str) -> None:
 
 
 class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
+    VAR_ORIGIN = "origin"
+    VAR_SPECIAL_AGENT_NAME = "special_agent_name"
+
     @classmethod
     def name(cls) -> str:
         return "changelog"
@@ -377,6 +382,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         super().__init__()
         super().load()
         self._license_usage_report_validity = get_license_usage_report_validity()
+        self._quick_setup_origin = request.get_ascii_input(self.VAR_ORIGIN) == "quick_setup"
 
     def title(self) -> str:
         return _("Activate pending changes")
@@ -534,6 +540,8 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         return self._license_allows_activation()
 
     def page(self) -> None:
+        self._quick_setup_activation_msg()
+        self._quick_setup_following_step()
         self._activation_msg()
         self._activation_form()
 
@@ -543,6 +551,60 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
 
         if self.has_pending_changes():
             _change_table(self._pending_changes, _("Pending changes"))
+
+    def _quick_setup_activation_msg(self):
+        if not (self._quick_setup_origin and self.has_pending_changes()):
+            return
+
+        message = html.render_div(
+            (
+                html.render_div(
+                    _("Activate the changes by clicking the Activate on selected sites button.")
+                )
+                + html.render_div(_("This action will affect all pending changes you have made."))
+            ),
+            class_="confirm_info",
+        )
+
+        confirm_url = "javascript:" + make_javascript_action(
+            'cmk.activation.activate_changes("selected")'
+        )
+
+        show_confirm_cancel_dialog(
+            title=_("Activate pending changes"),
+            confirm_url=confirm_url,
+            confirm_text=_("Activate on selected sites"),
+            message=message,
+            show_cancel_button=False,
+        )
+
+    def _quick_setup_following_step(self):
+        if not self._quick_setup_origin or self.has_pending_changes():
+            return
+
+        special_agent_name = request.get_ascii_input(self.VAR_SPECIAL_AGENT_NAME, "")
+
+        message = html.render_div(
+            (
+                html.render_div(_("The changes have been activated successfully."))
+                + html.render_div(
+                    _(
+                        "Go to the Monitor > All Hosts page or click the Go to All hosts button to start monitoring your %s services."
+                    )
+                    % special_agent_name
+                )
+            ),
+            class_="confirm_info",
+        )
+
+        show_success_dialog(
+            title=_("Changes activated"),
+            confirm_url=makeuri_contextless(
+                request, [("view_name", "allhosts")], filename="view.py"
+            ),
+            confirm_text=_('Go to "All hosts"'),
+            message=message,
+        )
 
     def _activation_msg(self):
         html.open_div(id_="async_progress_msg")

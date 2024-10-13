@@ -82,6 +82,7 @@ def parse_eltek_outdoor_temp(string_table: StringTable) -> StringTable:
 
 
 check_info["eltek_outdoor_temp"] = LegacyCheckDefinition(
+    name="eltek_outdoor_temp",
     parse_function=parse_eltek_outdoor_temp,
     detect=DETECT_ELTEK,
     fetch=SNMPTree(

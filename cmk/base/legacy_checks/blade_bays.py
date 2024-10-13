@@ -74,6 +74,7 @@ def check_blade_bays(item, params, parsed):
 
 
 check_info["blade_bays"] = LegacyCheckDefinition(
+    name="blade_bays",
     detect=DETECT_BLADE,
     fetch=[
         SNMPTree(

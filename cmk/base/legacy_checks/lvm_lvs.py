@@ -59,6 +59,7 @@ def discover_lvm_lvs(section):
 
 
 check_info["lvm_lvs"] = LegacyCheckDefinition(
+    name="lvm_lvs",
     parse_function=parse_lvm_lvs,
     service_name="LVM LV Pool %s",
     discovery_function=discover_lvm_lvs,

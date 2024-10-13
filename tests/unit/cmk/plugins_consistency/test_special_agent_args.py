@@ -110,7 +110,6 @@ UNMIGRATED = {
     "ruckus_spot",
     "salesforce",
     "smb_share",
-    "ucs_bladecenter",
 }
 
 

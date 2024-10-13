@@ -70,6 +70,7 @@ HACK_AGENTS = {
     "mqtt": True,
     "splunk": True,
     "vnx_quotas": True,
+    "ucs_bladecenter": True,
 }
 
 

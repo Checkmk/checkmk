@@ -85,7 +85,7 @@ def _patch_plugin_loading(
     loaded_active_checks: Mapping[PluginLocation, ActiveCheckConfig],
 ) -> None:
     monkeypatch.setattr(
-        check_mk,
+        config,
         server_side_calls.load_active_checks.__name__,
         lambda *a, **kw: loaded_active_checks,
     )

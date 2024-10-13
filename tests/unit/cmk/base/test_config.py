@@ -18,6 +18,7 @@ from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
+import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.version import Edition, edition
@@ -55,6 +56,7 @@ from cmk.base.default_config.base import _PeriodicDiscovery
 from cmk.agent_based.v0_unstable_legacy import LegacyCheckDefinition
 from cmk.agent_based.v1 import HostLabel
 from cmk.discover_plugins import PluginLocation
+from cmk.server_side_calls.v1 import ActiveCheckConfig
 
 
 def test_all_offline_hosts(monkeypatch: MonkeyPatch) -> None:
@@ -3194,3 +3196,55 @@ def test_collect_passwords_includes_non_matching_rulesets(monkeypatch: MonkeyPat
     config_cache = ts.apply(monkeypatch)
 
     assert config_cache.collect_passwords() == {"uuid1234": "p4ssw0rd!"}
+
+
+def test_get_active_service_data_crash(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(cmk.ccc.debug, cmk.ccc.debug.enabled.__name__, lambda: False)
+    monkeypatch.setattr(
+        config,
+        "load_active_checks",
+        lambda **kw: {
+            PluginLocation(
+                "cmk.plugins.my_stuff.server_side_calls", "active_check_my_active_check"
+            ): ActiveCheckConfig(
+                name="my_active_check",
+                parameter_parser=lambda p: p,
+                commands_function=lambda *a, **kw: 1 / 0,  # type: ignore[arg-type]
+            )
+        },
+    )
+    host_name = HostName("test_host")
+    ts = Scenario()
+    ts.add_host(host_name)
+    ts.set_ruleset_bundle(
+        "active_checks",
+        {
+            "my_active_check": [
+                {
+                    "condition": {},
+                    "id": "2",
+                    "value": {"description": "My active check", "param1": "param1"},
+                }
+            ]
+        },
+    )
+    config_cache = ts.apply(monkeypatch)
+
+    list(
+        config_cache.active_check_services(
+            host_name,
+            config_cache.get_host_attributes(host_name, lambda *a, **kw: None),
+            lambda *a, **kw: None,
+            {},
+            Path(),
+        )
+    )
+
+    captured = capsys.readouterr()
+    assert (
+        captured.out
+        == "\nWARNING: Config creation for active check my_active_check failed on test_host: division by zero\n"
+    )

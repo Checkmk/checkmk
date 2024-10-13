@@ -143,7 +143,10 @@ from cmk.base.api.agent_based.register.section_plugins_legacy import (
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.parent_scan import ScanConfig as ParentScanConfig
 from cmk.base.server_side_calls import (
+    ActiveCheck,
+    ActiveServiceData,
     ExecutableFinder,
+    load_active_checks,
     load_special_agents,
     SpecialAgent,
     SpecialAgentCommandLine,
@@ -2691,6 +2694,67 @@ class ConfigCache:
             return self.__active_checks[host_name]
 
         return self.__active_checks.setdefault(host_name, make_active_checks())
+
+    def active_check_services(
+        self,
+        host_name: HostName,
+        host_attrs: ObjectAttributes,
+        ip_address_of: IPLookup,
+        passwords: Mapping[str, str],
+        password_store_file: Path,
+        single_plugin: str | None = None,
+    ) -> Iterator[ActiveServiceData]:
+        additional_addresses_ipv4, additional_addresses_ipv6 = self.additional_ipaddresses(
+            host_name
+        )
+        host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
+        resource_macros = get_resource_macros()
+        macros = {**host_macros, **resource_macros}
+        active_check_config = ActiveCheck(
+            load_active_checks(raise_errors=cmk.ccc.debug.enabled()),
+            host_name,
+            get_ssc_host_config(
+                host_name,
+                self.alias(host_name),
+                self.default_address_family(host_name),
+                self.ip_stack_config(host_name),
+                additional_addresses_ipv4,
+                additional_addresses_ipv6,
+                macros,
+                ip_address_of,
+            ),
+            http_proxies,
+            lambda x: get_final_service_description(
+                x, get_service_translations(self.ruleset_matcher, host_name)
+            ),
+            passwords,
+            password_store_file,
+            ExecutableFinder(
+                cmk.utils.paths.local_nagios_plugins_dir, cmk.utils.paths.nagios_plugins_dir
+            ),
+            ip_lookup_failed=ip_lookup.is_fallback_ip(host_attrs["address"]),
+        )
+
+        plugin_configs = (
+            self.active_checks(host_name)
+            if single_plugin is None
+            else [
+                (single_plugin, plugin_params)
+                for plugin_name, plugin_params in self.active_checks(host_name)
+                if plugin_name == single_plugin
+            ]
+        )
+
+        for plugin_name, plugin_params in plugin_configs:
+            try:
+                yield from active_check_config.get_active_service_data(plugin_name, plugin_params)
+            except Exception as e:
+                if cmk.ccc.debug.enabled():
+                    raise
+                config_warnings.warn(
+                    f"Config creation for active check {plugin_name} failed on {host_name}: {e}"
+                )
+                continue
 
     def custom_checks(self, host_name: HostName) -> Sequence[dict[Any, Any]]:
         """Return the free form configured custom checks without formalization"""

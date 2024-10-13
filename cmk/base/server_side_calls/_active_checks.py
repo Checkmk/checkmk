@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Iterable, Iterator, Mapping, Reversible, Sequence
+from collections.abc import Callable, Iterable, Mapping, Reversible, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-
-import cmk.ccc.debug
 
 from cmk.utils import config_warnings, password_store
 from cmk.utils.hostaddress import HostName
@@ -20,7 +18,7 @@ from cmk.server_side_calls_backend.config_processing import (
     ProxyConfig,
 )
 
-from ._commons import ConfigSet, ExecutableFinderProtocol, replace_passwords, SSCRules
+from ._commons import ConfigSet, ExecutableFinderProtocol, replace_passwords
 
 
 @dataclass(frozen=True)
@@ -58,22 +56,11 @@ class ActiveCheck:
         self._ip_lookup_failed = ip_lookup_failed
 
     def get_active_service_data(
-        self, active_checks_rules: Iterable[SSCRules]
-    ) -> Iterator[ActiveServiceData]:
-        for plugin_name, plugin_params in active_checks_rules:
-            try:
-                services = self._make_services(plugin_name, plugin_params)
-            except Exception as e:
-                if cmk.ccc.debug.enabled():
-                    raise
-                config_warnings.warn(
-                    f"Config creation for active check {plugin_name} failed on {self.host_name}: {e}"
-                )
-                continue
-
-            yield from self._deduplicate_service_descriptions(
-                self._drop_empty_service_descriptions(services)
-            )
+        self, plugin_name: str, plugin_params: Iterable[ConfigSet]
+    ) -> Sequence[ActiveServiceData]:
+        return self._deduplicate_service_descriptions(
+            self._drop_empty_service_descriptions(self._make_services(plugin_name, plugin_params))
+        )
 
     def _make_services(
         self, plugin_name: str, plugin_params: Iterable[ConfigSet]

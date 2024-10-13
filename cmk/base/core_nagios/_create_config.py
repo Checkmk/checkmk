@@ -489,39 +489,13 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
 
     # legacy checks via active_checks
     active_services = []
-
-    translations = config.get_service_translations(config_cache.ruleset_matcher, hostname)
-    host_macros = ConfigCache.get_host_macros_from_attributes(hostname, host_attrs)
-    resource_macros = config.get_resource_macros()
-    macros = {**host_macros, **resource_macros}
-    additional_addresses_ipv4, additional_addresses_ipv6 = config_cache.additional_ipaddresses(
-        hostname
-    )
-    active_check_config = server_side_calls.ActiveCheck(
-        server_side_calls.load_active_checks(raise_errors=cmk.ccc.debug.enabled()),
+    for service_data in config_cache.active_check_services(
         hostname,
-        config.get_ssc_host_config(
-            hostname,
-            config_cache.alias(hostname),
-            config_cache.default_address_family(hostname),
-            config_cache.ip_stack_config(hostname),
-            additional_addresses_ipv4,
-            additional_addresses_ipv6,
-            macros,
-            ip_address_of,
-        ),
-        config.http_proxies,
-        lambda x: config.get_final_service_description(x, translations),
+        host_attrs,
+        ip_address_of,
         stored_passwords,
         password_store.core_password_store_path(LATEST_CONFIG),
-        server_side_calls.ExecutableFinder(
-            cmk.utils.paths.local_nagios_plugins_dir, cmk.utils.paths.nagios_plugins_dir
-        ),
-        ip_lookup_failed=ip_lookup.is_fallback_ip(host_attrs["address"]),
-    )
-
-    active_checks = config_cache.active_checks(hostname)
-    for service_data in active_check_config.get_active_service_data(active_checks):
+    ):
         if do_omit_service(hostname, service_data.description):
             continue
 

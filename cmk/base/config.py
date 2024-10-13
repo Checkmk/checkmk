@@ -153,6 +153,7 @@ from cmk.base.server_side_calls import (
 from cmk.base.sources import SNMPFetcherConfig
 
 from cmk import piggyback, trace
+from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls import v1 as server_side_calls_api
 from cmk.server_side_calls_backend.config_processing import PreprocessingResult
 
@@ -1650,8 +1651,8 @@ def _add_checks_to_register(checks: Iterable[CheckPlugin]) -> None:
     for check in checks:
         present_plugin = agent_based_register.get_check_plugin(check.name)
 
-        if present_plugin is not None and present_plugin.location is not None:
-            # module is not None => it's a new plug-in
+        if present_plugin is not None and isinstance(present_plugin.location, PluginLocation):
+            # location is PluginLocation => it's a new plug-in
             # (allow loading multiple times, e.g. update-config)
             # implemented here instead of the agent based register so that new API code does not
             # need to include any handling of legacy cases

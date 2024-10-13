@@ -69,6 +69,7 @@ HACK_AGENTS = {
     "random": False,  # needs no secret
     "mqtt": True,
     "splunk": True,
+    "vnx_quotas": True,
 }
 
 

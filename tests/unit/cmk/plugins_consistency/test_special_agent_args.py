@@ -111,7 +111,6 @@ UNMIGRATED = {
     "salesforce",
     "smb_share",
     "ucs_bladecenter",
-    "vnx_quotas",
 }
 
 

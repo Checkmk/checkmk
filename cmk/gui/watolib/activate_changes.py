@@ -82,7 +82,6 @@ from cmk.gui.site_config import (
     enabled_sites,
     get_site_config,
     is_single_local_site,
-    is_wato_slave_site,
     site_is_local,
 )
 from cmk.gui.sites import SiteStatus
@@ -135,14 +134,7 @@ from cmk import mkp_tool, trace
 from cmk.bi.type_defs import frozen_aggregations_dir
 from cmk.crypto.certificate import CertificateWithPrivateKey
 from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
-from cmk.messaging import (
-    ca_key_file,
-    cacert_file,
-    rabbitmq,
-    site_cert_file,
-    trusted_cas_file,
-)
-from cmk.messaging.rabbitmq import DEFINITIONS_PATH as RABBITMQ_DEFINITIONS_PATH
+from cmk.messaging import rabbitmq
 
 # TODO: Make private
 Phase = str  # TODO: Make dedicated type
@@ -169,9 +161,6 @@ ACTIVATION_TIME_PROFILE_SYNC = "profile-sync"
 
 ACTIVATION_TMP_BASE_DIR = str(cmk.utils.paths.tmp_dir / "wato/activation")
 ACTIVATION_PERISTED_DIR = cmk.utils.paths.var_dir + "/wato/activation"
-
-RABBITMQ_DEFS_HASH_PATH = ACTIVATION_PERISTED_DIR + "/rabbitmq_defs_hash"
-RABBITMQ_CERTS_HASH_PATH = ACTIVATION_PERISTED_DIR + "/rabbitmq_certs_hash"
 
 var_dir = cmk.utils.paths.var_dir + "/wato/"
 
@@ -303,7 +292,7 @@ def register(replication_path_registry_: ReplicationPathRegistry) -> None:
         ReplicationPath(
             ty="dir",
             ident="rabbitmq",
-            site_path=RABBITMQ_DEFINITIONS_PATH,
+            site_path="etc/rabbitmq/definitions.d",
             excludes=["00-default.json"],
         ),
         ReplicationPath(
@@ -2705,67 +2694,8 @@ def execute_activate_changes(domain_requests: DomainRequests) -> ConfigWarnings:
 
     _add_extensions_for_license_usage()
     _update_links_for_agent_receiver()
-    # Only the remote sites are dealt with here, since the central site is dealt with separately.
-    # The rabbitmq definition of the central site has to be updated anytime the definition of a
-    # remote site is activated, not only when the central site is activated.
-    if is_wato_slave_site():
-        _activate_local_rabbitmq_changes()
 
     return results
-
-
-def _create_folder_content_hash(folder_path: str) -> str:
-    sha256_hash = hashlib.sha256()
-    for root, _dir, files in sorted(os.walk(folder_path)):
-        for filename in sorted(files):
-            file_path = os.path.join(root, filename)
-            with open(file_path, "rb") as f:
-                while chunk := f.read(8192):
-                    sha256_hash.update(chunk)
-
-    return sha256_hash.hexdigest()
-
-
-def _create_broker_certs_hash() -> str:
-    sha256_hash = hashlib.sha256()
-    cert_file_paths = (
-        trusted_cas_file(paths.omd_root),
-        cacert_file(paths.omd_root),
-        ca_key_file(paths.omd_root),
-        site_cert_file(paths.omd_root),
-    )
-    for file_path in cert_file_paths:
-        if not file_path.exists():
-            continue
-        with open(str(file_path), "rb") as f:
-            while chunk := f.read(8192):
-                sha256_hash.update(chunk)
-
-    return sha256_hash.hexdigest()
-
-
-def _restart_rabbitmq_when_changed(
-    old_certs_hash: str, new_certs_hash: str, old_definitions_hash: str, new_definitions_hash: str
-) -> None:
-    if old_certs_hash != new_certs_hash or old_definitions_hash != new_definitions_hash:
-        subprocess.check_output(["omd", "restart", "rabbitmq"])
-
-
-def _activate_local_rabbitmq_changes():
-    old_certs_hash = store.load_text_from_file(RABBITMQ_CERTS_HASH_PATH)
-    new_certs_hash = _create_broker_certs_hash()
-
-    old_definitions_hash = store.load_text_from_file(RABBITMQ_DEFS_HASH_PATH)
-    new_definitions_hash = _create_folder_content_hash(
-        str(paths.omd_root.joinpath(RABBITMQ_DEFINITIONS_PATH))
-    )
-
-    _restart_rabbitmq_when_changed(
-        old_certs_hash, new_certs_hash, old_definitions_hash, new_definitions_hash
-    )
-
-    store.save_text_to_file(RABBITMQ_CERTS_HASH_PATH, new_certs_hash)
-    store.save_text_to_file(RABBITMQ_DEFS_HASH_PATH, new_definitions_hash)
 
 
 def _add_extensions_for_license_usage():

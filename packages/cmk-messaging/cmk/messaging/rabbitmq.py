@@ -15,8 +15,6 @@ from ._constants import DEFAULT_VHOST_NAME, INTERSITE_EXCHANGE
 
 _logger = logging.getLogger(__name__)
 
-DEFINITIONS_PATH = "etc/rabbitmq/definitions.d"
-
 
 class User(BaseModel):
     name: str

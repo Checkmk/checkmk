@@ -2,6 +2,7 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import pytest
 from pytest_mock import MockerFixture
 
@@ -10,8 +11,6 @@ from tests.testlib.rest_api_client import ClientRegistry
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 from cmk.automations.results import DeleteHostsResult
-
-from cmk.gui.watolib import activate_changes
 
 
 def test_wait_for_completion_invalid_activation_id(clients: ClientRegistry) -> None:
@@ -54,11 +53,6 @@ def test_activate_changes(
 
     monkeypatch.setattr(
         "cmk.gui.watolib.activate_changes.distribute_piggyback_hub_configs",
-        lambda *args, **kwargs: None,
-    )
-    monkeypatch.setattr(
-        activate_changes,
-        activate_changes._restart_rabbitmq_when_changed.__name__,  # pylint: disable=protected-access
         lambda *args, **kwargs: None,
     )
 

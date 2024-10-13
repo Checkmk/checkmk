@@ -1308,26 +1308,6 @@ def get_rabbitmq_definitions(
     return rabbitmq.compute_distributed_definitions(connection_info)
 
 
-def create_and_activate_central_rabbitmq_changes(
-    rabbitmq_definitions: Mapping[str, rabbitmq.Definitions],
-) -> None:
-    old_certs_hash = store.load_text_from_file(RABBITMQ_CERTS_HASH_PATH)
-    new_certs_hash = _create_broker_certs_hash()
-
-    old_definitions_hash = store.load_text_from_file(RABBITMQ_DEFS_HASH_PATH)
-    create_rabbitmq_definitions_file(paths.omd_root, rabbitmq_definitions[omd_site()])
-    new_definitions_hash = _create_folder_content_hash(
-        str(paths.omd_root.joinpath(RABBITMQ_DEFINITIONS_PATH))
-    )
-
-    _restart_rabbitmq_when_changed(
-        old_certs_hash, new_certs_hash, old_definitions_hash, new_definitions_hash
-    )
-
-    store.save_text_to_file(RABBITMQ_CERTS_HASH_PATH, new_certs_hash)
-    store.save_text_to_file(RABBITMQ_DEFS_HASH_PATH, new_definitions_hash)
-
-
 class ActivateChangesManager(ActivateChanges):
     """Manages the activation of pending configuration changes
 
@@ -1484,8 +1464,6 @@ class ActivateChangesManager(ActivateChanges):
 
         self._start_activation()
 
-        create_and_activate_central_rabbitmq_changes(rabbitmq_definitions)
-
         if has_piggyback_hub_relevant_changes([change for _, change in self._pending_changes]):
             logger.debug("Starting piggyback hub config distribution")
             distribute_piggyback_hub_configs(
@@ -1500,6 +1478,8 @@ class ActivateChangesManager(ActivateChanges):
                     .items()
                 },
             )
+
+        create_rabbitmq_definitions_file(paths.omd_root, rabbitmq_definitions[omd_site()])
         return self._activation_id
 
     def _verify_valid_host_config(self):

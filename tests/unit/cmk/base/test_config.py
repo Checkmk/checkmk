@@ -3150,3 +3150,28 @@ def test_boil_down_agent_rules(
     input_rulesets: Mapping[str, Any], expected: Mapping[str, Any]
 ) -> None:
     assert config.boil_down_agent_rules(defaults={}, rulesets=input_rulesets) == expected
+
+
+def test_collect_passwords_includes_non_matching_rulesets(monkeypatch: MonkeyPatch) -> None:
+    ts = Scenario()
+    ts.set_ruleset_bundle(
+        "active_checks",
+        {
+            "some_active_check": [
+                {
+                    "id": "01",
+                    "condition": {"host_name": ["no-such-host"]},
+                    "value": {
+                        "secret": (
+                            "cmk_postprocessed",
+                            "explicit_password",
+                            ("uuid1234", "p4ssw0rd!"),
+                        )
+                    },
+                }
+            ],
+        },
+    )
+    config_cache = ts.apply(monkeypatch)
+
+    assert config_cache.collect_passwords() == {"uuid1234": "p4ssw0rd!"}

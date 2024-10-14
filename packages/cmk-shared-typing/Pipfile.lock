@@ -133,12 +133,12 @@
         },
         "libcst": {
             "hashes": [
-                "sha256:449e0b16604f054fa7f27c3ffe86ea7ef6c409836fe68fe4e752a1894175db00",
-                "sha256:5da9d7dc83801aba3b8d911f82dc1a375db0d508318bad79d9fb245374afe068"
+                "sha256:7dba93cca0a5c6d771ed444c44d21ce8ea9b277af7036cea3743677aba9fbbb8",
+                "sha256:8478abf21ae3861a073e898d80b822bd56e578886331b33129ba77fec05b8c24"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.9'",
-            "version": "==1.4.0"
+            "version": "==1.5.0"
         },
         "markupsafe": {
             "hashes": [

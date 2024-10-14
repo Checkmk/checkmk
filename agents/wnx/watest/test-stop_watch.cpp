@@ -23,11 +23,11 @@ TEST(Wtools, StopWatch) {
     EXPECT_EQ(sw.getCount(), 0);
     EXPECT_EQ(sw.isStarted(), false);
     EXPECT_EQ(sw.check(), 0);
-    auto pos = sw.pos_;
+    auto pos = sw.pos();
     EXPECT_TRUE(pos.time_since_epoch().count() == 0);
 
     sw.start();
-    pos = sw.pos_;
+    pos = sw.pos();
     EXPECT_EQ(sw.getUsCount(), 0);
     EXPECT_EQ(sw.getCount(), 0);
     EXPECT_EQ(sw.isStarted(), true);
@@ -39,14 +39,14 @@ TEST(Wtools, StopWatch) {
 
     EXPECT_NE(check2, 0);
     EXPECT_TRUE(check2 > check1);
-    EXPECT_TRUE(sw.pos_ == pos);
+    EXPECT_TRUE(sw.pos() == pos);
     EXPECT_EQ(sw.getUsCount(), 0);
     EXPECT_EQ(sw.getLastUsCount(), 0);
     EXPECT_EQ(sw.getCount(), 0);
     EXPECT_EQ(sw.isStarted(), true);
 
     sw.start();
-    EXPECT_TRUE(sw.pos_ == pos);
+    EXPECT_TRUE(sw.pos() == pos);
     auto stop_val = sw.stop();
 
     EXPECT_TRUE(sw.getUsCount() > 5000);
@@ -56,36 +56,30 @@ TEST(Wtools, StopWatch) {
     EXPECT_EQ(sw.isStarted(), false);
 
     {
-        sw.started_ = true;
         auto sw1 = sw;
         EXPECT_EQ(sw1.getUsCount(), sw.getUsCount());
         EXPECT_EQ(sw1.getCount(), sw.getCount());
         EXPECT_EQ(sw1.isStarted(), false);
-        sw.started_ = false;
     }
 
     {
-        sw.started_ = true;
         auto sw1(sw);
         EXPECT_EQ(sw1.getUsCount(), sw.getUsCount());
         EXPECT_EQ(sw1.getCount(), sw.getCount());
         EXPECT_EQ(sw1.isStarted(), false);
-        EXPECT_EQ(sw1.pos_,
+        EXPECT_EQ(sw1.pos(),
                   std::chrono::time_point<std::chrono::steady_clock>());
-        sw.started_ = false;
-
-        sw1.started_ = true;
         auto sw2 = std::move(sw1);
         EXPECT_EQ(sw2.getUsCount(), sw.getUsCount());
         EXPECT_EQ(sw2.getCount(), sw.getCount());
         EXPECT_EQ(sw2.isStarted(), false);
-        EXPECT_EQ(sw2.pos_,
+        EXPECT_EQ(sw2.pos(),
                   std::chrono::time_point<std::chrono::steady_clock>());
 
         EXPECT_EQ(sw1.getUsCount(), 0);
         EXPECT_EQ(sw1.getCount(), 0);
         EXPECT_EQ(sw1.isStarted(), false);
-        EXPECT_EQ(sw1.pos_,
+        EXPECT_EQ(sw1.pos(),
                   std::chrono::time_point<std::chrono::steady_clock>());
     }
 
@@ -96,10 +90,10 @@ TEST(Wtools, StopWatch) {
     {
         StopWatch sw;
         sw.start();
-        pos = sw.pos_;
+        pos = sw.pos();
         sw.skip();
-        EXPECT_TRUE(sw.pos_ == pos);
-        EXPECT_FALSE(sw.started_);
+        EXPECT_TRUE(sw.pos() == pos);
+        EXPECT_FALSE(sw.isStarted());
     }
 }
 

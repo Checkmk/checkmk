@@ -784,15 +784,15 @@ class PostgresWin(PostgresBase):
                 "BY totalwastedbytes DESC LIMIT 10;"
             )
 
-        query = "\\pset footer off \\\\"
-
         cur_rows_only = False
+        output = ""
         for idx, database in enumerate(databases):
-            query = "%s \\c %s \\\\ %s" % (query, database, bloat_query)
+            query = "\\pset footer off \\\\ \\c %s \\\\ %s" % (database, bloat_query)
             if idx == 0:
                 query = "%s \\pset tuples_only on" % query
-
-        return self.run_sql_as_db_user(query, mixed_cmd=True, rows_only=cur_rows_only)
+            output += self.run_sql_as_db_user(query, mixed_cmd=True, rows_only=cur_rows_only)
+            cur_rows_only = True
+        return output
 
 
 class PostgresLinux(PostgresBase):

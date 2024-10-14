@@ -241,10 +241,6 @@ unset_locale() {
     export LC_ALL
 }
 
-#
-# END COMMON AGENT CODE
-#
-
 read_python_version() {
     if inpath "${1}"; then
         version=$(${1} -c 'import sys; print("%s.%s"%(sys.version_info[0], sys.version_info[1]))')
@@ -283,6 +279,10 @@ detect_python() {
         WRONG_PYTHON_COMMAND=true
     fi
 }
+
+#
+# END COMMON AGENT CODE
+#
 
 detect_container_environment() {
     if [ -f /.dockerenv ]; then

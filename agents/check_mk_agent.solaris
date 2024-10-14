@@ -225,10 +225,6 @@ unset_locale() {
     export LC_ALL
 }
 
-#
-# END COMMON AGENT CODE
-#
-
 read_python_version() {
     if inpath "${1}"; then
         version=$(${1} -c 'import sys; print("%s.%s"%(sys.version_info[0], sys.version_info[1]))')
@@ -244,7 +240,7 @@ read_python_version() {
     return 1
 }
 
-preamble_3() {
+detect_python() {
     PYTHON3=$(read_python_version python3 3 4 || read_python_version python 3 4)
     PYTHON2=$(read_python_version python2 2 6 || read_python_version python 2 6)
     if [ -f "${MK_CONFDIR}/python_path.cfg" ]; then
@@ -268,17 +264,21 @@ preamble_3() {
     fi
 }
 
+#
+# END COMMON AGENT CODE
+#
+
 # encryption not implemented
 optionally_encrypt() { cat; }
 
-preamble_4() {
+preamble_2() {
     if [ -f "${MK_CONFDIR}/exclude_sections.cfg" ]; then
         # shellcheck source=/dev/null
         . "${MK_CONFDIR}/exclude_sections.cfg"
     fi
 }
 
-preamble_5() {
+preamble_3() {
     # Find out what zone we are running in
     # Treat all pre-Solaris 10 systems as "global"
     if inpath zonename; then
@@ -1059,11 +1059,11 @@ main_setup() {
 
     set_up_profiling
 
+    detect_python
+
+    preamble_2
+
     preamble_3
-
-    preamble_4
-
-    preamble_5
 
     export_utility_functions
 }

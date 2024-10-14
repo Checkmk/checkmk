@@ -317,4 +317,10 @@ def registry_credentials_id(edition) {
     }
 }
 
+def assert_fips_testing(use_case, node_labels) {
+    if (use_case == "fips" && !node_labels.contains("fips")) {
+        throw new Exception("FIPS testing requested but we're not running on a fips node.");
+    }
+}
+
 return this;

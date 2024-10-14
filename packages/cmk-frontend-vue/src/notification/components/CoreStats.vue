@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import IconElement from '@/components/IconElement.vue'
+import CmkIcon from '@/components/CmkIcon.vue'
 import type { CoreStats } from '@/notification/type_defs'
 
 defineProps<{
@@ -17,11 +17,11 @@ defineProps<{
     <h3 class="table">{{ stats['i18n']['title'] }}</h3>
     <div class="content">
       <p v-if="stats['sites'].length === 0">
-        <IconElement name="checkmark" size="small" />
+        <CmkIcon name="checkmark" size="small" />
         {{ stats['i18n']['ok_msg'] }}
       </p>
       <p v-else>
-        <IconElement name="crit-problem" size="small" />
+        <CmkIcon name="crit-problem" size="small" />
         {{ stats['i18n']['warning_msg'] }}
       </p>
       <div v-if="stats['sites']!.length !== 0" class="table">
@@ -33,7 +33,7 @@ defineProps<{
           <tr v-for="(item, index) in stats['sites']!" :key="index" class="data even0">
             <td>{{ item }}</td>
             <td>
-              <IconElement name="crit-problem" size="small" />
+              <CmkIcon name="crit-problem" size="small" />
               {{ stats['i18n']['disabled_msg'] }}
             </td>
           </tr>

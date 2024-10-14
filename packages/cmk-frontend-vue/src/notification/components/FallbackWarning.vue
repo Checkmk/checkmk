@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { FallbackWarning } from '@/notification/type_defs'
 import Button from '@/components/IconButton.vue'
-import IconElement from '@/components/IconElement.vue'
+import CmkIcon from '@/components/CmkIcon.vue'
 
 const props = defineProps<{
   properties: FallbackWarning
@@ -38,7 +38,7 @@ function openInNewTab(url: string) {
 <template>
   <div v-if="isContentVisible" class="help always_on">
     <div class="info_icon">
-      <IconElement name="info" />
+      <CmkIcon name="info" />
     </div>
     <div class="help_text">
       <p>{{ props.properties['i18n']['title'] }}</p>

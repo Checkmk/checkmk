@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type VariantProps, cva } from 'class-variance-authority'
 import { getIconVariable } from '@/lib/utils'
 
-const iconElementVariants = cva('', {
+const cmkIconVariants = cva('', {
   variants: {
     variant: {
       plain: '',
@@ -27,17 +27,17 @@ const iconElementVariants = cva('', {
     size: 'medium'
   }
 })
-export type IconElementVariants = VariantProps<typeof iconElementVariants>
+export type CmkIconVariants = VariantProps<typeof cmkIconVariants>
 
-interface IconElementProps {
+interface CmkIconProps {
   /** @property {string} name - Name of the icon */
   name: string
 
-  /** @property {undefined | IconElementVariants['variant']} variant - Styling variant of the icon */
-  variant?: IconElementVariants['variant']
+  /** @property {undefined | CmkIconVariants['variant']} variant - Styling variant of the icon */
+  variant?: CmkIconVariants['variant']
 
-  /** @property {undefined | IconElementVariants['size']} size - Width and height of the icon */
-  size?: IconElementVariants['size']
+  /** @property {undefined | CmkIconVariants['size']} size - Width and height of the icon */
+  size?: CmkIconVariants['size']
 
   /** @property {undefined | number} rotate - Transform rotate value in degrees */
   rotate?: number
@@ -46,7 +46,7 @@ interface IconElementProps {
   title?: string
 }
 
-const props = defineProps<IconElementProps>()
+const props = defineProps<CmkIconProps>()
 
 const getTransformRotate = () => {
   return `rotate(${props.rotate || 0}deg)`
@@ -56,7 +56,7 @@ const getTransformRotate = () => {
 <template>
   <img
     class="icon-element"
-    :class="iconElementVariants({ variant: props.variant, size: null })"
+    :class="cmkIconVariants({ variant: props.variant, size: null })"
     :title="title || ''"
     :alt="title || ''"
   />
@@ -69,8 +69,8 @@ const getTransformRotate = () => {
   vertical-align: baseline;
 
   content: v-bind(getIconVariable(name));
-  width: v-bind(iconElementVariants({size}));
-  height: v-bind(iconElementVariants({size}));
+  width: v-bind(cmkIconVariants({size}));
+  height: v-bind(cmkIconVariants({size}));
   transform: v-bind(getTransformRotate());
 
   &.icon-element--inline {

@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import IconElement from '@/components/IconElement.vue'
+import CmkIcon from '@/components/CmkIcon.vue'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 const DEFAULT_DELAY: number = 200
@@ -31,7 +31,7 @@ const props = defineProps<ToolTipInterface>()
   <TooltipProvider :delay-duration="delayDuration || DEFAULT_DELAY">
     <Tooltip>
       <TooltipTrigger as-child>
-        <IconElement :name="props.icon || DEFAULT_ICON" variant="inline" />
+        <CmkIcon :name="props.icon || DEFAULT_ICON" variant="inline" />
       </TooltipTrigger>
       <TooltipContent as-child class="qs-tooltip__content message">
         <div>

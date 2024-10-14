@@ -30,7 +30,7 @@ const prependDateAndUsername = (): void => {
       :spec="{ ...spec, type: 'multiline_text' }"
     />
     <!-- TODO: replace thise with something like
-      <Button variant='invisible'><IconElement /></Button> -->
+      <Button variant='invisible'><CmkIcon /></Button> -->
     <img
       :alt="props.spec.i18n.prefix_date_and_comment"
       :title="props.spec.i18n.prefix_date_and_comment"

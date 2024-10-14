@@ -11,9 +11,9 @@ import DemoAlertBox from './DemoAlertBox.vue'
 import DemoIconButton from './DemoIconButton.vue'
 import DemoSlideIn from './DemoSlideIn.vue'
 import DemoFormEditAsync from './DemoFormEditAsync.vue'
-import DemoIconElement from './DemoIconElement.vue'
 import DemoToggleButtonGroup from './DemoToggleButtonGroup.vue'
 import DemoCmkButton from './DemoCmkButton.vue'
+import DemoCmkIcon from './DemoCmkIcon.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -44,9 +44,9 @@ const router = createRouter({
       component: DemoFormEditAsync
     },
     {
-      path: '/iconelement',
-      name: 'IconElement',
-      component: DemoIconElement
+      path: '/cmkicon',
+      name: 'CmkIcon',
+      component: DemoCmkIcon
     },
     {
       path: '/togglebuttongroup',

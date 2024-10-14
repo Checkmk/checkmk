@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import IconElement from '@/components/IconElement.vue'
+import CmkIcon from '@/components/CmkIcon.vue'
 
 const props = defineProps<{
   validation: Array<string>
@@ -13,7 +13,7 @@ const props = defineProps<{
 
 <template>
   <div v-if="props.validation.length > 0" class="form-validation">
-    <IconElement name="alert_crit" variant="inline" size="large" />
+    <CmkIcon name="alert_crit" variant="inline" size="large" />
     <div>
       <span v-for="message in props.validation" :key="message">{{ message }}</span>
     </div>

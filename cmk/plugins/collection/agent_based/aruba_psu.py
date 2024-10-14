@@ -55,6 +55,9 @@ class PSUState(Enum):
     Failed = "4"
     PermFailure = "5"
     Max = "6"
+    AuxFailure = "7"
+    NotPowered = "8"
+    AuxNotPowered = "9"
 
 
 PSUStateMapping = {
@@ -64,6 +67,9 @@ PSUStateMapping = {
     PSUState.Failed: State.CRIT,
     PSUState.PermFailure: State.CRIT,
     PSUState.Max: State.OK,
+    PSUState.AuxFailure: State.CRIT,
+    PSUState.NotPowered: State.CRIT,
+    PSUState.AuxNotPowered: State.CRIT,
 }
 
 

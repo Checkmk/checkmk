@@ -68,7 +68,7 @@ public:
 
     static std::string pathToRegistry(std::wstring_view service);
 
-    [[maybe_unused]] bool configureRestart(bool restart) const;  // NOLINT
+    [[maybe_unused]] bool configureRestart(bool restart) const;
 
     bool configureStart(StartMode mode) const;
 
@@ -77,9 +77,6 @@ public:
 private:
     mutable std::mutex lock_;
     SC_HANDLE handle_ = nullptr;
-#if defined(FRIEND_TEST)
-    FRIEND_TEST(WtoolsService, Ctor);
-#endif
 };
 
 }  // namespace wtools

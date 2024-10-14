@@ -8,7 +8,6 @@ import multiprocessing
 import signal
 import sys
 import time
-from collections.abc import Iterator
 from pathlib import Path
 from ssl import SSLCertVerificationError
 from typing import Callable, Generic, TypeVar
@@ -56,37 +55,38 @@ class ReceivingProcess(multiprocessing.Process, Generic[_ModelT]):
             make_log_and_exit(self.logger.debug, f"Stopping: {self.task_name}"),
         )
         try:
-            for conn in reconnect(self.omd_root, self.logger, self.task_name):
-                with conn:
-                    channel: Channel[_ModelT] = conn.channel(self.model)
-                    channel.queue_declare(queue=self.queue, message_ttl=self.message_ttl)
+            while True:
+                with make_connection(self.omd_root, self.logger, self.task_name) as conn:
+                    try:
+                        channel: Channel[_ModelT] = conn.channel(self.model)
+                        channel.queue_declare(queue=self.queue, message_ttl=self.message_ttl)
 
-                    self.logger.debug("Consuming: %s", self.task_name)
-                    channel.consume(self.queue, self.callback)
-
-        except CMKConnectionError as exc:
-            self.logger.error("Stopping: %s: %s", self.task_name, exc)
+                        self.logger.debug("Consuming: %s", self.task_name)
+                        channel.consume(self.queue, self.callback)
+                    except CMKConnectionError as exc:
+                        self.logger.info("Reconnecting: %s: %s", self.task_name, exc)
         except Exception as exc:
             self.logger.exception("Exception: %s: %s", self.task_name, exc)
             raise
 
 
-def reconnect(omd_root: Path, logger: logging.Logger, task_name: str) -> Iterator[Connection]:
+def make_connection(omd_root: Path, logger: logging.Logger, task_name: str) -> Connection:
     attempts = 10
     interval = 3
 
-    def _try_to_reconnect() -> Connection:
-        error_message = ""
-        for _attempt in range(attempts):
-            try:
-                # Note: We re-read the certificates here.
-                return Connection(APP_NAME, omd_root)
-            except SSLCertVerificationError as exc:
-                # Certs could have changed. Retry.
-                time.sleep(interval)
-                logger.debug("Reconnecting: %s: %s", task_name, exc)
-                error_message = str(exc)
-        raise CMKConnectionError(f"Unable to reconnect after {attempts} attempts: {error_message}")
-
-    while True:
-        yield _try_to_reconnect()
+    error_message = ""
+    for _attempt in range(attempts):
+        try:
+            # Note: We re-read the certificates here.
+            return Connection(APP_NAME, omd_root)
+        except (
+            # Certs could have changed
+            SSLCertVerificationError,
+            # and/or broker is restarting
+            CMKConnectionError,
+        ) as exc:
+            # Retry.
+            time.sleep(interval)
+            logger.debug("Reconnecting: %s: %s", task_name, exc)
+            error_message = str(exc)
+    raise CMKConnectionError(f"Unable to reconnect after {attempts} attempts: {error_message}")

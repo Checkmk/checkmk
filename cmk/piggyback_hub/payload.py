@@ -23,7 +23,7 @@ from cmk.piggyback import (
 
 from .config import load_config, PiggybackHubConfig
 from .paths import create_paths
-from .utils import make_log_and_exit, reconnect
+from .utils import make_connection, make_log_and_exit
 
 
 class PiggybackPayload(BaseModel):
@@ -89,14 +89,14 @@ class SendingPayloadProcess(multiprocessing.Process):
         self.logger.debug("Loaded configuration: %r", config)
 
         try:
-            for conn in reconnect(self.omd_root, self.logger, self.task_name):
-                with conn:
-                    channel = conn.channel(PiggybackPayload)
-                    for piggyback_message in watch_new_messages(self.omd_root):
-                        self._handle_message(channel, config, piggyback_message)
-
-        except CMKConnectionError as exc:
-            self.logger.error("Stopping: %s: %s", self.task_name, exc)
+            while True:
+                with make_connection(self.omd_root, self.logger, self.task_name) as conn:
+                    try:
+                        channel = conn.channel(PiggybackPayload)
+                        for piggyback_message in watch_new_messages(self.omd_root):
+                            self._handle_message(channel, config, piggyback_message)
+                    except CMKConnectionError as exc:
+                        self.logger.info("Reconnecting: %s: %s", self.task_name, exc)
         except Exception as exc:
             self.logger.exception("Exception: %s: %s", self.task_name, exc)
             raise

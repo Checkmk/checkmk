@@ -16,7 +16,7 @@ import pika
 import pika.adapters.blocking_connection
 import pika.channel
 import pika.spec
-from pika.exceptions import AMQPConnectionError
+from pika.exceptions import AMQPConnectionError, StreamLostError
 from pydantic import BaseModel
 
 from ._config import get_local_port, make_connection_params
@@ -262,7 +262,7 @@ class Channel(Generic[_ModelT]):
         )
         try:
             self._pchannel.start_consuming()
-        except AMQPConnectionError as e:
+        except (AMQPConnectionError, StreamLostError) as e:
             raise CMKConnectionError from e
 
         raise RuntimeError("start_consuming() should never return")
@@ -296,7 +296,7 @@ class Connection:
 
     ```python
 
-    with Connection(AbbName("myapp"), Path("/omd/sites/mysite")) as conn:
+    with Connection(AppName("myapp"), Path("/omd/sites/mysite")) as conn:
         channel = conn.channel(MyMessageModel)
         channel.queue_declare(QueueName("default"))  # includes default binding
         channel.consume(my_message_handler_callback)

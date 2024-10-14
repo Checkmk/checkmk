@@ -68,6 +68,7 @@ HACK_AGENTS = {
     "jolokia": True,
     "random": False,  # needs no secret
     "mqtt": True,
+    "splunk": True,
 }
 
 

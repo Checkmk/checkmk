@@ -111,7 +111,6 @@ UNMIGRATED = {
     "ruckus_spot",
     "salesforce",
     "smb_share",
-    "splunk",
     "ucs_bladecenter",
     "vnx_quotas",
 }

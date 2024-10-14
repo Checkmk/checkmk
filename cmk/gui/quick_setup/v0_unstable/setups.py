@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
+from enum import StrEnum
 
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     GeneralStageErrors,
@@ -16,17 +17,23 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
 )
 from cmk.gui.quick_setup.v0_unstable.widgets import Widget
 
+
+class QuickSetupActionMode(StrEnum):
+    SAVE = "save"
+    EDIT = "edit"
+
+
 CallableValidator = Callable[[QuickSetupId, StageIndex, ParsedFormData], GeneralStageErrors]
 CallableRecap = Callable[[QuickSetupId, StageIndex, ParsedFormData], Sequence[Widget]]
-CallableSaveAction = Callable[[ParsedFormData], str]
+CallableAction = Callable[[ParsedFormData, QuickSetupActionMode, str | None], str]
 WidgetConfigurator = Callable[[], Sequence[Widget]]
 
 
 @dataclass(frozen=True)
-class QuickSetupSaveAction:
+class QuickSetupAction:
     id: str
     label: str
-    action: CallableSaveAction
+    action: CallableAction
 
 
 @dataclass(frozen=True)
@@ -44,5 +51,5 @@ class QuickSetup:
     title: str
     id: QuickSetupId
     stages: Sequence[Callable[[], QuickSetupStage]]
-    save_actions: Sequence[QuickSetupSaveAction]
+    actions: Sequence[QuickSetupAction]
     load_data: Callable[[str], ParsedFormData | None] = lambda _: None

@@ -25,7 +25,12 @@ from cmk.gui.form_specs.vue.shared_type_defs import DictionaryLayout, ListOfStri
 from cmk.gui.i18n import _
 from cmk.gui.quick_setup.v0_unstable._registry import QuickSetupRegistry
 from cmk.gui.quick_setup.v0_unstable.predefined import recaps
-from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupSaveAction, QuickSetupStage
+from cmk.gui.quick_setup.v0_unstable.setups import (
+    QuickSetup,
+    QuickSetupAction,
+    QuickSetupActionMode,
+    QuickSetupStage,
+)
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     GeneralStageErrors,
     ParsedFormData,
@@ -480,13 +485,29 @@ def general_properties() -> QuickSetupStage:
     )
 
 
-def save_and_test_action(all_stages_form_data: ParsedFormData) -> str:
-    _save(all_stages_form_data)
+def save_and_test_action(
+    all_stages_form_data: ParsedFormData, mode: QuickSetupActionMode, object_id: str | None
+) -> str:
+    match mode:
+        case QuickSetupActionMode.SAVE:
+            _save(all_stages_form_data)
+        case QuickSetupActionMode.EDIT:
+            raise NotImplementedError("Edit mode not supported")
+        case _:
+            raise ValueError(f"Unknown mode {mode}")
     return mode_url("test_notifications")
 
 
-def save_and_new_action(all_stages_form_data: ParsedFormData) -> str:
-    _save(all_stages_form_data)
+def save_and_new_action(
+    all_stages_form_data: ParsedFormData, mode: QuickSetupActionMode, object_id: str | None
+) -> str:
+    match mode:
+        case QuickSetupActionMode.SAVE:
+            _save(all_stages_form_data)
+        case QuickSetupActionMode.EDIT:
+            raise NotImplementedError("Edit mode not yet supported")
+        case _:
+            raise ValueError(f"Unknown mode {mode}")
     return mode_url("notification_rule_quick_setup")
 
 
@@ -573,13 +594,13 @@ quick_setup_notifications = QuickSetup(
         sending_conditions,
         general_properties,
     ],
-    save_actions=[
-        QuickSetupSaveAction(
+    actions=[
+        QuickSetupAction(
             id="apply_and_test",
             label=_("Apply & test notification rule"),
             action=save_and_test_action,
         ),
-        QuickSetupSaveAction(
+        QuickSetupAction(
             id="apply_and_create_new",
             label=_("Apply & create another rule"),
             action=save_and_new_action,

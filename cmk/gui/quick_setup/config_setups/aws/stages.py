@@ -24,7 +24,12 @@ from cmk.gui.quick_setup.v0_unstable.predefined import (
     widgets,
 )
 from cmk.gui.quick_setup.v0_unstable.predefined import validators as qs_validators
-from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupSaveAction, QuickSetupStage
+from cmk.gui.quick_setup.v0_unstable.setups import (
+    QuickSetup,
+    QuickSetupAction,
+    QuickSetupActionMode,
+    QuickSetupStage,
+)
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     ParsedFormData,
     QuickSetupId,
@@ -248,13 +253,21 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
     )
 
 
-def save_action(all_stages_form_data: ParsedFormData) -> str:
-    return complete.create_and_save_special_agent_bundle_custom_collect_params(
-        special_agent_name="aws",
-        parameter_form=quick_setup_aws_form_spec(),
-        all_stages_form_data=all_stages_form_data,
-        custom_collect_params=aws_collect_params,
-    )
+def save_action(
+    all_stages_form_data: ParsedFormData, mode: QuickSetupActionMode, object_id: str | None
+) -> str:
+    match mode:
+        case QuickSetupActionMode.SAVE:
+            return complete.create_and_save_special_agent_bundle_custom_collect_params(
+                special_agent_name="aws",
+                parameter_form=quick_setup_aws_form_spec(),
+                all_stages_form_data=all_stages_form_data,
+                custom_collect_params=aws_collect_params,
+            )
+        case QuickSetupActionMode.EDIT:
+            raise ValueError("Edit mode not supported")
+        case _:
+            raise ValueError(f"Unknown mode {mode}")
 
 
 def aws_collect_params(
@@ -322,8 +335,8 @@ quick_setup_aws = QuickSetup(
         configure_services_to_monitor,
         review_and_run_preview_service_discovery,
     ],
-    save_actions=[
-        QuickSetupSaveAction(
+    actions=[
+        QuickSetupAction(
             id="activate_changes",
             label=_("Save & go to Activate changes"),
             action=save_action,

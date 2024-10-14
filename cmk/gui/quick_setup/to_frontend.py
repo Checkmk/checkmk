@@ -21,7 +21,11 @@ from cmk.gui.quick_setup.v0_unstable.predefined import (
     build_quick_setup_formspec_map,
     stage_components,
 )
-from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupSaveAction
+from cmk.gui.quick_setup.v0_unstable.setups import (
+    QuickSetup,
+    QuickSetupAction,
+    QuickSetupActionMode,
+)
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     GeneralStageErrors,
     ParsedFormData,
@@ -201,7 +205,7 @@ def quick_setup_guided_mode(
         ),
         complete_buttons=[
             CompleteButton(id=save_action.id, label=save_action.label)
-            for save_action in quick_setup.save_actions
+            for save_action in quick_setup.actions
         ],
     )
 
@@ -273,15 +277,19 @@ def retrieve_next_stage(
 
 def complete_quick_setup(
     quick_setup: QuickSetup,
-    save_action: QuickSetupSaveAction,
+    action: QuickSetupAction,
+    mode: QuickSetupActionMode,
     stages_raw_formspecs: Sequence[RawFormData],
+    object_id: str | None = None,
 ) -> QuickSetupSaveRedirect:
     return QuickSetupSaveRedirect(
-        redirect_url=save_action.action(
+        redirect_url=action.action(
             _form_spec_parse(
                 stages_raw_formspecs,
                 build_quick_setup_formspec_map([stage() for stage in quick_setup.stages]),
-            )
+            ),
+            mode,
+            object_id,
         )
     )
 
@@ -306,6 +314,6 @@ def quick_setup_overview_mode(
         ],
         complete_buttons=[
             CompleteButton(id=save_action.id, label=save_action.label)
-            for save_action in quick_setup.save_actions
+            for save_action in quick_setup.actions
         ],
     )

@@ -14,7 +14,7 @@ from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.definitions import UniqueBundleIDStr, UniqueFormSpecIDStr
 from cmk.gui.quick_setup.v0_unstable.predefined import recaps, widgets
 from cmk.gui.quick_setup.v0_unstable.predefined import validators as qs_validators
-from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupSaveAction, QuickSetupStage
+from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupAction, QuickSetupStage
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
     GeneralStageErrors,
     ParsedFormData,
@@ -46,16 +46,16 @@ def register_quick_setup(
             title="Quick Setup Test",
             id=QuickSetupId("quick_setup_test"),
             stages=setup_stages if setup_stages is not None else [],
-            save_actions=[
-                QuickSetupSaveAction(
+            actions=[
+                QuickSetupAction(
                     id="save",
                     label="Complete",
-                    action=lambda stages: "http://save/url",
+                    action=lambda stages, mode, object_id: "http://save/url",
                 ),
-                QuickSetupSaveAction(
+                QuickSetupAction(
                     id="other_save",
                     label="Complete2: The Sequel",
-                    action=lambda stages: "http://other_save",
+                    action=lambda stages, mode, object_id: "http://other_save",
                 ),
             ],
             load_data=load_data,

@@ -37,6 +37,7 @@ from cmk.gui.quick_setup.to_frontend import (
 )
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.definitions import QuickSetupSaveRedirect
+from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupActionMode
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, RawFormData
 
 from cmk import fields
@@ -194,12 +195,13 @@ def complete_quick_setup_action(params: Mapping[str, Any]) -> Response:
             title="Quick setup not found",
             detail=f"Quick setup with id '{quick_setup_id}' does not exist.",
         )
-    for save_action in quick_setup.save_actions:
-        if save_action.id == button_id:
+    for action in quick_setup.actions:
+        if action.id == button_id:
             return _serve_data(
                 complete_quick_setup(
                     quick_setup=quick_setup,
-                    save_action=save_action,
+                    action=action,
+                    mode=QuickSetupActionMode.SAVE,
                     stages_raw_formspecs=[
                         RawFormData(stage["form_data"]) for stage in body["stages"]
                     ],

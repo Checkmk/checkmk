@@ -12,7 +12,7 @@ from typing import Callable, Sequence
 
 from polyfactory.factories.dataclass_factory import DataclassFactory
 
-from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupSaveAction, QuickSetupStage
+from cmk.gui.quick_setup.v0_unstable.setups import QuickSetup, QuickSetupAction, QuickSetupStage
 
 
 @dataclass(frozen=True)
@@ -23,14 +23,14 @@ class QuickSetupStageForTest(QuickSetupStage):
 
 
 @dataclass(frozen=True)
-class QuickSetupSaveActionForTest(QuickSetupSaveAction):
+class QuickSetupActionForTest(QuickSetupAction):
     action: Callable
 
 
 @dataclass(frozen=True)
 class QuickSetupForTest(QuickSetup):
     stages: Sequence[Callable]
-    save_actions: Sequence[QuickSetupSaveActionForTest]
+    actions: Sequence[QuickSetupActionForTest]
     load_data: Callable
 
 

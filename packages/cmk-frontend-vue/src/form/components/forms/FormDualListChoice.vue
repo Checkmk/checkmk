@@ -58,7 +58,7 @@ const availableSelected = ref<string[]>([])
 const activeSelected = ref<string[]>([])
 
 function addSelected() {
-  let newEntries: string[] = []
+  const newEntries: string[] = []
   availableSelected.value.forEach((entry) => {
     if (!value.value.includes(entry)) {
       newEntries.push(entry)
@@ -72,7 +72,7 @@ function addSelected() {
 }
 
 function removeSelected() {
-  let removedEntries: string[] = []
+  const removedEntries: string[] = []
   activeSelected.value.forEach((entry) => {
     const index = value.value.indexOf(entry)
     if (index !== -1) {

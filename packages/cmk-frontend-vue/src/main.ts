@@ -90,6 +90,3 @@ function setupVue() {
 addEventListener('load', () => {
   setupVue()
 })
-
-/* eslint-disable-next-line @typescript-eslint/naming-convention */
-export const cmk_export = {}

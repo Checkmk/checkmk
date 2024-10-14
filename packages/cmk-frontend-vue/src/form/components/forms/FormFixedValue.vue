@@ -15,7 +15,7 @@ const props = defineProps<{
 }>()
 
 const data = defineModel<unknown>('data', { required: true })
-const [validation, _value] = useValidation<unknown>(
+const [validation] = useValidation<unknown>(
   data,
   props.spec.validators,
   () => props.backendValidation

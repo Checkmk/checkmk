@@ -329,13 +329,13 @@ function computeOddEven(index: number) {
             class="icon iconbutton"
           />
         </td>
-        <td class="narrow"><FormColorPicker v-model:dataColor="graphLine.color" /></td>
-        <td class="nobr narrow"><FormTitle v-model:dataTitle="graphLine.title" /></td>
-        <td class="buttons"><FormSwitch v-model:dataSwitch="graphLine.visible" /></td>
+        <td class="narrow"><FormColorPicker v-model:data-color="graphLine.color" /></td>
+        <td class="nobr narrow"><FormTitle v-model:data-title="graphLine.title" /></td>
+        <td class="buttons"><FormSwitch v-model:data-switch="graphLine.visible" /></td>
         <td class="narrow">
-          <FormLineType v-model:dataLineType="graphLine.line_type" :spec="specLineType" />
+          <FormLineType v-model:data-line-type="graphLine.line_type" :spec="specLineType" />
         </td>
-        <td class="buttons"><FormSwitch v-model:dataSwitch="graphLine.mirrored" /></td>
+        <td class="buttons"><FormSwitch v-model:data-switch="graphLine.mirrored" /></td>
         <td>
           <div v-if="graphLine.type === 'constant'">
             {{ graphLine.title }}

@@ -65,7 +65,7 @@ onBeforeUnmount(() => {
 })
 
 function collectData() {
-  let result = Object.fromEntries(new FormData(legacyDOM.value))
+  const result = Object.fromEntries(new FormData(legacyDOM.value))
   data.value = {
     input_context: result,
     varprefix: props.spec.varprefix

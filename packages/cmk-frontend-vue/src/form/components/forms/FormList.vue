@@ -59,7 +59,7 @@ function setValidation(newBackendValidation: ValidationMessages) {
   elementValidation.value = _elementValidations
 }
 
-let tableRef = ref<HTMLTableElement | null>(null)
+const tableRef = ref<HTMLTableElement | null>(null)
 
 function dragStart(event: DragEvent) {
   ;(event.target! as HTMLTableCellElement).closest('tr')!.classList.add('dragging')

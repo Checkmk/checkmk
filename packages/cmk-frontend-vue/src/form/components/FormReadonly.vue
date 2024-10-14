@@ -158,7 +158,7 @@ function renderMultipleChoice(
   formSpec: DualListChoice | CheckboxListChoice,
   value: string[]
 ): VNode {
-  let nameToTitle: Record<string, string> = {}
+  const nameToTitle: Record<string, string> = {}
   for (const element of formSpec.elements) {
     nameToTitle[element.name] = element.title
   }
@@ -167,7 +167,7 @@ function renderMultipleChoice(
   const textSpans: VNode[] = []
 
   // WIP: no i18n...
-  for (let [index, entry] of value.entries()) {
+  for (const [index, entry] of value.entries()) {
     if (index >= maxEntries) {
       break
     }
@@ -259,7 +259,7 @@ function renderSimpleValue(
   value: string,
   backendValidation: ValidationMessages = []
 ): VNode {
-  let [usedValue, isError, errorMessage] = computeUsedValue(value, backendValidation)
+  const [usedValue, isError, errorMessage] = computeUsedValue(value, backendValidation)
   const cssClasses = ['form-readonly__simple-value', isError ? 'form-readonly__error' : '']
   return h('div', { class: cssClasses }, isError ? [`${usedValue} - ${errorMessage}`] : [usedValue])
 }
@@ -303,7 +303,7 @@ function renderSingleChoice(
   }
 
   // Value not found in valid values. Try to show error
-  let [usedValue, isError, errorMessage] = computeUsedValue(value, backendValidation)
+  const [usedValue, isError, errorMessage] = computeUsedValue(value, backendValidation)
   if (isError) {
     return h('div', { class: 'form-readonly__error' }, [`${usedValue} - ${errorMessage}`])
   }

@@ -85,10 +85,10 @@ const getTransformRotate = () => {
   padding: 0;
   vertical-align: baseline;
 
-  content: v-bind(getIconVariable(name));
-  width: v-bind(cmkIconVariants({size}));
-  height: v-bind(cmkIconVariants({size}));
-  transform: v-bind(getTransformRotate());
+  content: v-bind('getIconVariable(name)');
+  width: v-bind('cmkIconVariants({size})');
+  height: v-bind('cmkIconVariants({size})');
+  transform: v-bind('getTransformRotate()');
 
   &.icon-element--inline {
     margin-right: var(--spacing-half);

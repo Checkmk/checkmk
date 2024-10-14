@@ -43,7 +43,7 @@ export default defineConfig(({ command }) => {
     },
     base: ''
   }
-  if (command == 'build') {
+  if (command === 'build') {
     return resultBuild
   } else {
     console.log(command)

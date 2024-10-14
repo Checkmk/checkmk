@@ -32,7 +32,7 @@ HEADER_CEE = [
 FILES_IGNORED = set(
     [
         Path(".editorconfig"),
-        Path(".eslintrc.cjs"),
+        Path("eslint.config.js"),
         Path(".f12"),
         Path(".gitignore"),
         Path(".prettierignore"),

@@ -104,7 +104,7 @@ function getElementsInGroupsFromProps(): ElementsGroup[] {
   const groups = extractGroups(props.spec.elements)
 
   props.spec.elements.forEach((element: DictionaryElement) => {
-    let isActive = element.ident in data.value ? true : element.required
+    const isActive = element.ident in data.value ? true : element.required
     if (isActive && data.value[element.ident] === undefined) {
       data.value[element.ident] = JSON.parse(JSON.stringify(getDefaultValue(element.ident)))
     }
@@ -126,7 +126,7 @@ function getElementsInGroupsFromProps(): ElementsGroup[] {
 }
 
 function toggleElement(event: MouseEvent, key: string) {
-  let target = event.target
+  const target = event.target
   if (!target) {
     return
   }

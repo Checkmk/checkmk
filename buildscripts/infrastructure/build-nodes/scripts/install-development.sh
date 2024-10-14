@@ -95,6 +95,7 @@ setup_env_variables() {
     print_green "Setup env variables ..."
     DISTRO_NAME=$(lsb_release -is)
     VERSION_NUMBER=$(lsb_release -sr)
+    DISTRO_CODENAME=$(lsb_release -cs)
     BRANCH_NAME=$(get_version "$SCRIPT_DIR" BRANCH_NAME)
     BRANCH_VERSION=$(get_version "$SCRIPT_DIR" BRANCH_VERSION)
     CLANG_VERSION=$(get_version "$SCRIPT_DIR" CLANG_VERSION)
@@ -110,8 +111,10 @@ setup_env_variables() {
     export VIRTUALENV_VERSION
     export DISTRO_NAME
     export VERSION_NUMBER
+    export DISTRO_CODENAME
     print_debug "DISTRO                = ${DISTRO}"
     print_debug "DISTRO_NAME           = ${DISTRO_NAME}"
+    print_debug "DISTRO_CODENAME       = ${DISTRO_CODENAME}"
     print_debug "VERSION_NUMBER        = ${VERSION_NUMBER}"
     print_debug "NEXUS_ARCHIVES_URL    = ${NEXUS_ARCHIVES_URL}"
     print_debug "BRANCH_NAME           = ${BRANCH_NAME}"
@@ -381,7 +384,17 @@ install_for_bazel() {
     "${SCRIPT_DIR}"/install-bazel.sh
 
     # https://tribe29.slack.com/archives/CGBE6U2PK/p1727854295192929
-    add-apt-repository -y ppa:ubuntu-toolchain-r/test
+    # find the right repository name for the distro and version
+    # using "add-apt-repository" would require the installation of "software-properties-common"
+    REPO_NAME="deb https://ppa.launchpadcontent.net/ubuntu-toolchain-r/test/ubuntu/ ${DISTRO_CODENAME} main"
+    if [[ -e "/etc/apt/sources.list.d/g++-13.list" ]]; then
+        if ! grep -Fxq "${REPO_NAME}" /etc/apt/sources.list.d/g++-13.list; then
+            echo "${REPO_NAME}" >/etc/apt/sources.list.d/g++-13.list
+        fi
+    else
+        echo "${REPO_NAME}" >>/etc/apt/sources.list.d/g++-13.list
+    fi
+
     local PACKAGES_TO_INSTALL=(
         "golang-go"
         "g++-13"

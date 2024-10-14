@@ -39,7 +39,7 @@ SYSTEM_TESTS := \
     test-xss-crawl \
     test-gui-e2e \
     test-extension-compatibility
-PYTEST_SYSTEM_TEST_ARGS := -p "no:cov"
+PYTEST_SYSTEM_TEST_ARGS := -p "no:cov" --log-cli-level=INFO
 
 # Since the unit tests (that are written for Python 3) are executed with Python
 # 2.7, we need to convert them, just like it is done for the agent plugins (see
@@ -252,21 +252,20 @@ test-extension-compatibility:
 	$(PYTEST) -vv -T extension_compatibility $(PYTEST_SYSTEM_TEST_ARGS) $(realpath extension_compatibility)
 
 test-update-cee:
-	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update) -m cee --log-cli-level=INFO
+	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update) -m cee
 
 test-update-cce:
-	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update) -m cce --log-cli-level=INFO
+	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update) -m cce
 
 test-update-cse:
-	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update) -m cse --log-cli-level=INFO \
-	--disable-interactive-mode
+	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update) -m cse --disable-interactive-mode
 
 test-update-cross-edition-cce: # from CEE to CCE
-	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/test_update.py) -m cee --log-cli-level=INFO \
+	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/test_update.py) -m cee \
 	--latest-base-version --target-edition=CCE --disable-interactive-mode
 
 test-update-cross-edition-cme: # from CEE to CME
-	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/test_update.py) -m cee --log-cli-level=INFO \
+	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/test_update.py) -m cee \
 	--latest-base-version --target-edition=CME --disable-interactive-mode
 
 test-schemathesis-openapi:
@@ -278,7 +277,7 @@ test-plugins:
 
 test-plugins-piggyback:
 	$(PYTEST) -T plugins_integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_integration) \
-	plugins_integration/test_plugin_piggyback.py --log-cli-level=INFO
+	plugins_integration/test_plugin_piggyback.py
 
 $(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker):
 	$(PIPENV) run scripts/run-dockerized.py "$(subst -docker,,$@)"

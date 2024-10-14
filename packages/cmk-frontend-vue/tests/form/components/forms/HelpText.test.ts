@@ -17,7 +17,7 @@ describe('HelpText', () => {
     expect(trigger).toBeTruthy()
     expect(trigger).toHaveClass('trigger')
     await fireEvent.click(trigger)
-    const helpText = screen.findByText('fooHelp')
+    const helpText = await screen.findAllByText('fooHelp')
     expect(helpText).toBeTruthy()
   })
 

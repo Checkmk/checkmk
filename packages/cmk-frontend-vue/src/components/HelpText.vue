@@ -36,7 +36,6 @@ const closeHelp = () => {
           :style="open ? 'transform: scale(1.1);background-color:var(--tag-added-color-light)' : ''"
           class="help-text"
           data-testid="help-icon"
-          @click="triggerHelp"
       /></TooltipTrigger>
       <TooltipContent
         side="top"

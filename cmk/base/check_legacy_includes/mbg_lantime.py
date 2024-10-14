@@ -3,22 +3,30 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterable, Mapping
+
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyResult
+from cmk.agent_based.v2 import StringTable
+
 MBG_LANTIME_STATE_CHECK_DEFAULT_PARAMETERS = {
     "stratum": (2, 3),
     "offset": (10, 20),  # us
 }
 
 
-def check_mbg_lantime_state_common(states, _no_item, params, info):
-    ntp_state, stratum, refclock_name, refclock_offset = info[0]
-    if not isinstance(params, dict):
-        params = {
-            "stratum": (params[0], params[1]),
-            "offset": (params[2], params[3]),
-        }
+_Levels = tuple[int, int]
+
+
+def check_mbg_lantime_state_common(
+    states: Mapping[str, tuple[int, str]],
+    levels_stratum: _Levels,
+    levels_offset: _Levels,
+    section: StringTable,
+) -> Iterable[LegacyResult]:
+    ntp_state, stratum, refclock_name, refclock_offset = section[0]
 
     # Handle State
-    yield states[ntp_state][0], "State: " + states[ntp_state][1]
+    yield states[ntp_state][0], "State: " + states[ntp_state][1], []
 
     # if refclock_offset (and thus also refclock_name) are 'n/a'
     # we must not treat them as numbers or create metrics
@@ -26,33 +34,25 @@ def check_mbg_lantime_state_common(states, _no_item, params, info):
         return
 
     # Check the reported stratum
-    state = 0
-    levels_text = ""
-    warn, crit = params["stratum"]
-    if int(stratum) >= crit:
-        state = 2
-    elif int(stratum) >= warn:
-        state = 1
-    if state != 0:
-        levels_text = " (warn/crit at %d/%d)" % (warn, crit)
-    yield state, f"Stratum: {stratum}{levels_text}"
+    yield check_levels(
+        int(stratum),
+        None,
+        params=levels_stratum,
+        human_readable_func=lambda x: str(int(x)),
+        infoname="Stratum",
+    )
 
     # Add refclock information
-    yield 0, "Reference clock: " + refclock_name
+    yield 0, "Reference clock: " + refclock_name, []
 
     # Check offset
     # offset AND levels are measured in microseconds
     # Valuespec of "offset" has unit info: microseconds
-    state = 0
-    levels_text = ""
-    warn, crit = params["offset"]
-    refclock_offset = float(refclock_offset)
-    pos_refclock_offset = abs(refclock_offset)
-    if pos_refclock_offset >= crit:
-        state = 2
-    elif pos_refclock_offset >= warn:
-        state = 1
-    if state != 0:
-        levels_text = f" (warn/crit at {warn}/{crit} µs)"
-    perfdata = [("offset", refclock_offset, warn, crit)]  # all in us
-    yield state, f"Reference clock offset: {refclock_offset:g} µs{levels_text}", perfdata
+    warn, crit = levels_offset
+    yield check_levels(
+        float(refclock_offset),
+        "offset",
+        params=(warn, crit, -warn, -crit),
+        human_readable_func=lambda x: f"{x:g} µs",
+        infoname="Reference clock offset",
+    )

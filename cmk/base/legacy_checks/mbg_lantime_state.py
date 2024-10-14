@@ -30,7 +30,7 @@ def check_mbg_lantime_state(_no_item, params, info):
         "4": (0, "normal operation PPS"),
         "5": (0, "normal operation reference clock"),
     }
-    return check_mbg_lantime_state_common(states, _no_item, params, info)
+    return check_mbg_lantime_state_common(states, params["stratum"], params["offset"], info)
 
 
 def parse_mbg_lantime_state(string_table: StringTable) -> StringTable:

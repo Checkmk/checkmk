@@ -282,6 +282,8 @@ def _migrate_aws_service(service: str) -> object:
     # Regional
     if service == "wafv2":
         return {"selection": "all", "limits": True, "cloudfront": None}
+    if service == "cloudwatch_alarms":
+        return {"alarms": "all", "limits": True}
     return {"selection": "all", "limits": True}
 
 

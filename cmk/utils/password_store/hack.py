@@ -71,6 +71,7 @@ HACK_AGENTS = {
     "splunk": True,
     "vnx_quotas": True,
     "ucs_bladecenter": True,
+    "smb_share": True,
 }
 
 

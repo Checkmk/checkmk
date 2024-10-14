@@ -109,7 +109,6 @@ UNMIGRATED = {
     "jira",
     "ruckus_spot",
     "salesforce",
-    "smb_share",
 }
 
 

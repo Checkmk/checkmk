@@ -17,7 +17,6 @@ from cmk.gui import (
     autocompleters,
     crash_handler,
     crash_reporting,
-    cron,
     default_permissions,
     graphing,
     gui_background_job,
@@ -191,7 +190,6 @@ def register() -> None:
         command_registry,
         command_group_registry,
     )
-    cron.register(page_registry)
     nodevis.register(page_registry, filter_registry, icon_and_action_registry)
     notifications.register(page_registry, permission_section_registry)
     user_message.register(page_registry)

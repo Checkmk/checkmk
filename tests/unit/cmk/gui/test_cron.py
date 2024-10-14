@@ -10,6 +10,16 @@ import cmk.ccc.version as cmk_version
 from cmk.utils import paths
 
 from cmk.gui import cron
+from cmk.gui.cron_job import _run_scheduled_jobs
+
+
+def test_cmk_run_cron_jobs() -> None:
+    orig_multisite_cronjobs = cron.multisite_cronjobs[:]
+    try:
+        cron.multisite_cronjobs.clear()
+        _run_scheduled_jobs()
+    finally:
+        cron.multisite_cronjobs = orig_multisite_cronjobs
 
 
 def test_registered_jobs() -> None:

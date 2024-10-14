@@ -62,7 +62,6 @@ def _noauth(func: pages.PageHandlerFunc) -> Callable[[], Response]:
     # however have to make sure all errors get written out in plaintext, without HTML.
     #
     # Currently these are:
-    #  * noauth:run_cron
     #  * noauth:deploy_agent
     #  * noauth:automation
     #

@@ -106,7 +106,6 @@ def test_registered_pages() -> None:
         "mobile",
         "mobile_view",
         "noauth:automation",
-        "noauth:run_cron",
         "message",
         "prediction_graph",
         "parent_child_topology",

@@ -210,28 +210,26 @@ span.checkbox {
 }
 
 /* Variants */
-.form-dictionary--two_columns {
-  .form-dictionary__group_elem {
-    padding: 8px 0;
+.form-dictionary--two_columns > tbody > tr > td > .form-dictionary__group_elem {
+  padding: 8px 0;
 
-    span.checkbox {
-      display: inline-block;
-      float: left;
-      width: 130px;
-      margin: 0;
-      padding-top: 3px;
-      font-weight: bold;
-      word-wrap: break-word;
-      white-space: normal;
-    }
+  > span.checkbox {
+    display: inline-block;
+    float: left;
+    width: 130px;
+    margin: 0;
+    padding-top: 3px;
+    font-weight: bold;
+    word-wrap: break-word;
+    white-space: normal;
+  }
 
-    .dictelement.indent:not(div[id*='DictGroup']) {
-      display: inline-block;
-      margin: 0;
-      margin-left: 16px;
-      padding-left: 0;
-      border-left: none;
-    }
+  > .dictelement.indent:not(div[id*='DictGroup']) {
+    display: inline-block;
+    margin: 0;
+    margin-left: 16px;
+    padding-left: 0;
+    border-left: none;
   }
 }
 </style>

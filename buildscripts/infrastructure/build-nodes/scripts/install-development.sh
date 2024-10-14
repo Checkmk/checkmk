@@ -380,7 +380,16 @@ install_for_bazel() {
     export TARGET_DIR="${INSTALL_PATH}"
     "${SCRIPT_DIR}"/install-bazel.sh
 
-    install_packages golang-go
+    # https://tribe29.slack.com/archives/CGBE6U2PK/p1727854295192929
+    add-apt-repository -y ppa:ubuntu-toolchain-r/test
+    local PACKAGES_TO_INSTALL=(
+        "golang-go"
+        "g++-13"
+        # required by packages/glib and therfore transitive by python unit tests
+        # this might not be installed if only bazel is installed
+        "libglib2.0-dev"
+    )
+    install_packages "${PACKAGES_TO_INSTALL[@]}"
 
     # install_packages golang-go
     "${SCRIPT_DIR}"/install-buildifier.sh

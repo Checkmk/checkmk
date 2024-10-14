@@ -2809,41 +2809,36 @@ class ConfigCache:
 
     def collect_passwords(self) -> Mapping[str, str]:
         # consider making the hosts an argument. Sometimes we only need one.
-        all_active_hosts = {
-            hn
-            for hn in itertools.chain(self.hosts_config.hosts, self.hosts_config.clusters)
-            if self.is_active(hn) and self.is_online(hn)
-        }
 
         def _filter_newstyle_ssc_rule(
             unfiltered: Sequence[Mapping[str, object] | LegacySSCConfigModel],
         ) -> Sequence[Mapping[str, object]]:
+            """Filter out all configuration sets that we know to come from a legacy ruleset
+
+            They don't contain passwords that we're looking for.
+            """
             return [
                 r for r in unfiltered if isinstance(r, dict) and all(isinstance(k, str) for k in r)
             ]
 
         def _compose_filtered_ssc_rules(
-            rules: MixedSSCRules,
+            ssc_config: Mapping[str, Sequence[RuleSpec[object]]]
+            | Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]],
         ) -> Sequence[tuple[str, Sequence[Mapping[str, object]]]]:
-            return [(name, _filter_newstyle_ssc_rule(unfiltered)) for name, unfiltered in rules]
-
-        def _gather_secrets_from(
-            rules_function: Callable[[HostName], MixedSSCRules],
-        ) -> Mapping[str, str]:
-            return {
-                id_: secret
-                for host in all_active_hosts
-                for id_, secret in (
-                    PreprocessingResult.from_config(
-                        _compose_filtered_ssc_rules(rules_function(host))
-                    )
-                ).ad_hoc_secrets.items()
-            }
+            """Get _all_ configured rulesets (not only the ones matching any host)"""
+            return [
+                (name, _filter_newstyle_ssc_rule([r["value"] for r in ruleset]))
+                for name, ruleset in ssc_config.items()
+            ]
 
         return {
             **password_store.load(password_store.password_store_path()),
-            **_gather_secrets_from(self.active_checks),
-            **_gather_secrets_from(self.special_agents),
+            **PreprocessingResult.from_config(
+                _compose_filtered_ssc_rules(active_checks)
+            ).ad_hoc_secrets,
+            **PreprocessingResult.from_config(
+                _compose_filtered_ssc_rules(special_agents)
+            ).ad_hoc_secrets,
         }
 
     def hostgroups(self, host_name: HostName) -> Sequence[str]:

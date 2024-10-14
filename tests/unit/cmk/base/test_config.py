@@ -3169,3 +3169,28 @@ def test_check_table_cluster_merging_enforced_and_discovered(
     config_cache = ts.apply(monkeypatch)
 
     assert config_cache.check_table(CN) == expected
+
+
+def test_collect_passwords_includes_non_matching_rulesets(monkeypatch: MonkeyPatch) -> None:
+    ts = Scenario()
+    ts.set_ruleset_bundle(
+        "active_checks",
+        {
+            "some_active_check": [
+                {
+                    "id": "01",
+                    "condition": {"host_name": ["no-such-host"]},
+                    "value": {
+                        "secret": (
+                            "cmk_postprocessed",
+                            "explicit_password",
+                            ("uuid1234", "p4ssw0rd!"),
+                        )
+                    },
+                }
+            ],
+        },
+    )
+    config_cache = ts.apply(monkeypatch)
+
+    assert config_cache.collect_passwords() == {"uuid1234": "p4ssw0rd!"}

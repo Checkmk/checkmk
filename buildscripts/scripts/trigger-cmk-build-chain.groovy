@@ -122,6 +122,15 @@ def main() {
                 build(job: "${base_folder}/test-composition", parameters: job_parameters);
             }
         },
+        "System Tests for FIPS compliance": {
+            success &= smart_stage(
+                name: "System Tests for FIPS compliance",
+                condition: run_fips_tests,
+                raiseOnError: false,) {
+                build(job: "${base_folder}/test-integration-fips", parameters: job_parameters_common + job_parameters_fips);
+                build(job: "${base_folder}/test-composition-fips", parameters: job_parameters_common + job_parameters_fips);
+            }
+        },
     ]);
 
     success &= smart_stage(
@@ -129,14 +138,6 @@ def main() {
             condition: run_int_tests,
             raiseOnError: false,) {
         build(job: "${base_folder}/test-integration-packages", parameters: job_parameters);
-    }
-
-    success &= smart_stage(
-        name: "System Tests for FIPS compliance",
-        condition: run_fips_tests,
-        raiseOnError: false,) {
-        build(job: "${base_folder}/test-integration-fips", parameters: job_parameters_common + job_parameters_fips);
-        build(job: "${base_folder}/test-composition-fips", parameters: job_parameters_common + job_parameters_fips);
     }
 
     success &= smart_stage(

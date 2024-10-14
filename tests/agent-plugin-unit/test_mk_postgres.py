@@ -451,6 +451,36 @@ class TestWindows:
 
     @patch("os.path.isfile", return_value=True)
     @patch("subprocess.Popen")
+    def test_factory_do_not_overwrite_PG_PASSFILE(
+        self,
+        mock_Popen,
+        mock_isfile,
+    ):
+        instance = {
+            "pg_database": "mydb",
+            "pg_port": "1234",
+            "name": "mydb",
+            "pg_user": "myuser",
+            "pg_version": "12.1",
+        }  # type: dict[str, str | None]
+        process_mock = Mock()
+        attrs = {
+            "communicate.side_effect": [
+                (b"postgres\x00db1\x00", b"ok"),
+                (b"12.1.5\x00", b"ok"),
+            ],
+            "returncode": 0,
+        }
+        process_mock.configure_mock(**attrs)
+        mock_Popen.return_value = process_mock
+
+        myPostgresOnWin = mk_postgres.postgres_factory("postgres", None, instance)
+
+        mock_isfile.assert_called_with("C:\\Program Files\\PostgreSQL\\12\\bin\\psql.exe")
+        assert "PGPASSFILE" not in myPostgresOnWin.my_env
+
+    @patch("os.path.isfile", return_value=True)
+    @patch("subprocess.Popen")
     def test_factory_with_instance(
         self,
         mock_Popen,

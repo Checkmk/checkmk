@@ -38,7 +38,7 @@ const [validation, value] = useValidation<string>(
   height: 15px;
   padding: 0 6px 6px;
   align-items: baseline;
-  background-color: var(--default-select-background-color);
+  background-color: var(--default-form-element-bg-color);
   border-radius: var(--border-radius);
 
   img {

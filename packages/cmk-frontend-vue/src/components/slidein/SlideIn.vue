@@ -57,7 +57,7 @@ const emit = defineEmits(['close'])
   right: 0;
   bottom: 0;
   border-left: 4px solid var(--default-border-color-green);
-  background: var(--default-background-color);
+  background: var(--default-bg-color);
   overflow: auto;
 
   &[data-state='open'] {

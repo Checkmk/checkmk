@@ -156,7 +156,7 @@ button.cancel {
   z-index: 10;
   position: absolute;
   overflow: hidden;
-  background-color: var(--default-select-background-color);
+  background-color: var(--default-form-element-bg-color);
   border-bottom-right-radius: 6px;
   border-bottom-left-radius: 6px;
   margin-top: -7px;

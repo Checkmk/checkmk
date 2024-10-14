@@ -57,9 +57,9 @@
     /* Colors */
     --default-submit-button-border-color: var(--success-dimmed);
     --default-border-color: rgb(234 234 234);
-    --default-background-color: rgb(249, 249, 255);
+    --default-bg-color: rgb(249, 249, 255);
     --default-table-th-color: rgb(232 232 238);
-    --default-select-background-color: rgb(224, 224, 228);
+    --default-form-element-bg-color: rgb(224, 224, 228);
     --default-select-hover-color: var(--success);
     --default-border-color-green: rgb(21, 209, 160);
     --default-tooltip-icon-color: rgb(233, 233, 233);
@@ -69,7 +69,7 @@
     --custom-scroll-bar-thumb-color: rgb(88, 88, 88);
     --custom-scroll-bar-backgroud-color: rgb(249, 249, 255);
     --default-text-color: rgb(39, 39, 39);
-    --default-component-background-color: rgb(240, 240, 240);
+    --default-component-bg-color: rgb(240, 240, 240);
   }
 
   body[data-theme='modern-dark'] {
@@ -82,9 +82,9 @@
     /* Colors */
     --default-submit-button-border-color: rgb(8 94 61);
     --default-border-color: rgb(38 45 52);
-    --default-background-color: rgb(28, 34, 40);
+    --default-bg-color: rgb(28, 34, 40);
     --default-table-th-color: rgb(32, 39, 46);
-    --default-select-background-color: rgb(48, 57, 70);
+    --default-form-element-bg-color: rgb(48, 57, 70);
     --default-select-hover-color: var(--success);
     --default-border-color-green: rgb(21, 209, 160);
     --default-tooltip-icon-color: rgb(83, 83, 83);
@@ -94,6 +94,6 @@
     --custom-scroll-bar-thumb-color: rgb(224, 224, 228);
     --custom-scroll-bar-backgroud-color: rgb(48, 57, 70);
     --default-text-color: rgb(255, 255, 255);
-    --default-component-background-color: rgb(46, 44, 44);
+    --default-component-bg-color: rgb(46, 44, 44);
   }
 }

@@ -363,7 +363,7 @@ const handleDoubleClickToRemoveItem = (elementName: string) => {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: var(--default-select-background-color);
+  background-color: var(--default-form-element-bg-color);
   height: 100%;
   user-select: none;
   opacity: 0.5;

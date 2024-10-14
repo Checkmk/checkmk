@@ -48,7 +48,7 @@ onMounted(() => {
 .demo {
   display: flex;
   color: var(--default-text-color);
-  background-color: var(--default-background-color);
+  background-color: var(--default-bg-color);
   height: 100vh;
 
   main {
@@ -56,8 +56,8 @@ onMounted(() => {
       color: inherit;
     }
     height: fit-content;
-    border: 2px solid var(--default-select-background-color);
-    background-color: var(--default-component-background-color);
+    border: 2px solid var(--default-form-element-bg-color);
+    background-color: var(--default-component-bg-color);
     border-radius: 5px;
     .demo-area {
       padding: 1em;

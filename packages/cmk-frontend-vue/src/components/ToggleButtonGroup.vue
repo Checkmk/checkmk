@@ -56,6 +56,6 @@ const isSelected = (value: string) => value === props.value
 }
 
 .selected {
-  background-color: var(--default-select-background-color);
+  background-color: var(--default-form-element-bg-color);
 }
 </style>

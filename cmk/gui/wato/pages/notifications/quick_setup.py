@@ -150,9 +150,7 @@ def _validate_at_least_one_event(
     _stage_index: StageIndex,
     form_data: ParsedFormData,
 ) -> GeneralStageErrors:
-    if not form_data[FormSpecId("triggering_events")].get("host_events") and not form_data[
-        FormSpecId("triggering_events")
-    ].get("service_events"):
+    if not form_data[FormSpecId("triggering_events")]:
         return [
             "No triggering events selected. "
             "Please select at least one event to trigger the notification."

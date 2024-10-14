@@ -198,6 +198,7 @@ def triggering_events() -> QuickSetupStage:
                                 ),
                                 add_element_label=Label("Add event"),
                                 editable_order=False,
+                                custom_validate=[_validate_empty_selection],
                             )
                         ),
                         "service_events": DictElement(
@@ -210,6 +211,7 @@ def triggering_events() -> QuickSetupStage:
                                 ),
                                 add_element_label=Label("Add event"),
                                 editable_order=False,
+                                custom_validate=[_validate_empty_selection],
                             )
                         ),
                         "ec_alerts": DictElement(
@@ -231,6 +233,15 @@ def triggering_events() -> QuickSetupStage:
         recap=[recaps.recaps_form_spec],
         button_label=_("Next step: Specify host/services"),
     )
+
+
+def _validate_empty_selection(selections: Sequence[Sequence[str | None]]) -> None:
+    # TODO validation seems not to be possible for a single empty element of
+    # the Tuple
+    if ["", None] in selections:
+        raise ValidationError(
+            Message("At least one selection is missing."),
+        )
 
 
 def filter_for_hosts_and_services() -> QuickSetupStage:

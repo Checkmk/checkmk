@@ -48,7 +48,6 @@ VALID_CONFIG_WITH_PG_BINARY_PATH = [
     "",
     "DBUSER=user_xy",
 ]
-PG_PASSFILE = ["myhost:myport:mydb:myusr:mypw"]
 
 #   .--tests---------------------------------------------------------------.
 #   |                        _            _                                |

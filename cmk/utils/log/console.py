@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import io
 import logging
 import sys
 from collections.abc import Generator
@@ -39,6 +40,11 @@ _console = logging.getLogger("cmk.base.console")
 _console.propagate = False
 
 isEnabledFor = _console.isEnabledFor
+
+
+def empty_stream_handler():
+    # Might be of use when the _handler gets broken, due to background job forking
+    _handler.setStream(io.StringIO())
 
 
 def log(level: int, text: str, *args: object, **kwargs: TextIO) -> None:

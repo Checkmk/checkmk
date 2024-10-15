@@ -23,6 +23,7 @@ import cmk.utils.paths
 from cmk.utils import daemon, render, store
 from cmk.utils.exceptions import MKTerminate
 from cmk.utils.log import VERBOSE
+from cmk.utils.log.console import empty_stream_handler as console_empty_stream
 
 from cmk.gui import log, sites
 from cmk.gui.i18n import _
@@ -131,6 +132,8 @@ class BackgroundProcess(multiprocessing.Process):
         }
         for logger_to_close in loggers_to_close:
             del logger_to_close.handlers[:]
+
+        console_empty_stream()
 
         web_logger = logging.getLogger()
         del web_logger.handlers[:]

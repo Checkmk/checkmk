@@ -3102,7 +3102,7 @@ class ABCNotificationParameterMode(WatoMode):
         raise NotImplementedError()
 
     def _from_vars(self) -> None:
-        self._edit_nr = request.get_integer_input_mandatory("edit_nr", -1)
+        self._edit_nr = request.get_integer_input_mandatory("edit", -1)
         self._edit_parameter = request.get_str_input_mandatory("parameter", "")
         clone_id = request.get_str_input_mandatory("clone", "")
         self._clone_id = NotificationParameterID(clone_id)
@@ -3206,6 +3206,14 @@ class ABCNotificationParameterMode(WatoMode):
     def _method(self) -> str:
         return request.get_str_input_mandatory("method")
 
+    def _method_name(self) -> str:
+        try:
+            return [
+                entry[1] for entry in notification_script_choices() if entry[0] == self._method()
+            ][0]
+        except IndexError:
+            return self._method()
+
 
 class ModeNotificationParameters(ABCNotificationParameterMode):
     """Show notification parameter for a specific method"""
@@ -3223,7 +3231,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
         return self.mode_url(method=self._method())
 
     def title(self) -> str:
-        return _("Parameters for %s") % request.var("method")
+        return _("Parameters for %s") % self._method_name()
 
     def _log_text(self, edit_nr: int) -> str:
         if self._new:
@@ -3280,6 +3288,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
         parameters,
     ):
         notification_parameter = self._notification_parameter()
+        method_name = self._method_name()
         with table_element(title=_("Parameters"), limit=None, sortable=False) as table:
             for nr, (parameter_id, parameter) in enumerate(parameters.items()):
                 table.row()
@@ -3295,7 +3304,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
                 html.element_dragger_url("tr", base_url=links.drag)
                 html.icon_button(links.delete, _("Delete this notification parameter"), "delete")
 
-                table.cell(_("Method"), self._method())
+                table.cell(_("Method"), method_name)
 
                 table.cell(_("Description"))
                 url = parameter.get("docu_url")
@@ -3403,13 +3412,13 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
 
     def title(self) -> str:
         if self._new:
-            return _("Add %s notification parameter") % self._method()
-        return _("Edit %s notification parameter %s") % (self._method(), self._edit_nr)
+            return _("Add %s notification parameter") % self._method_name()
+        return _("Edit %s notification parameter #%s") % (self._method_name(), self._edit_nr)
 
     def _log_text(self, edit_nr: int) -> str:
         if self._new:
             return _("Created new notification parameter")
-        return _("Changed notification parameter %s") % edit_nr
+        return _("Changed notification parameter #%s") % edit_nr
 
     def _form_spec(self) -> Catalog:
         return notification_parameter_registry.form_spec(self._method())

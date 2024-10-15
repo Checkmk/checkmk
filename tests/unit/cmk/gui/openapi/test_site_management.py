@@ -532,6 +532,7 @@ config_cnx_test_data_200: list[ConfigurationConnection] = [
         },
         "replicate_event_console": True,
         "replicate_extensions": True,
+        "message_broker_port": 5672,
     },
     {
         "enable_replication": False,
@@ -544,6 +545,7 @@ config_cnx_test_data_200: list[ConfigurationConnection] = [
         },
         "replicate_event_console": False,
         "replicate_extensions": False,
+        "message_broker_port": 5672,
     },
     {
         "enable_replication": True,
@@ -556,6 +558,7 @@ config_cnx_test_data_200: list[ConfigurationConnection] = [
         },
         "replicate_event_console": True,
         "replicate_extensions": True,
+        "message_broker_port": 5672,
     },
 ]
 
@@ -778,6 +781,7 @@ def test_validation_layer_min_config(clients: ClientRegistry) -> None:
             "user_sync": {"sync_with_ldap_connections": "all"},
             "replicate_event_console": True,
             "replicate_extensions": True,
+            "message_broker_port": 5672,
         },
     }
     if version.edition(paths.omd_root) is version.Edition.CME:

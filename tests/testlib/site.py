@@ -83,6 +83,7 @@ class Site:
         self.http_proto = "http"
         self.http_address = "127.0.0.1"
         self._apache_port: int | None = None  # internal cache for the port
+        self._message_broker_port: int | None = None
 
         self._livestatus_port: int | None = None
         self.admin_password = admin_password
@@ -143,6 +144,12 @@ class Site:
         )
         live.set_timeout(2)
         return live
+
+    @property
+    def message_broker_port(self) -> int:
+        if self._message_broker_port is None:
+            self._message_broker_port = int(self.get_config("RABBITMQ_PORT", "5672"))
+        return self._message_broker_port
 
     def url_for_path(self, path: str) -> str:
         """

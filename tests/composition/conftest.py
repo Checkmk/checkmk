@@ -89,6 +89,7 @@ def _add_remote_site_to_central_site(
                 "user_sync": {"sync_with_ldap_connections": "all"},
                 "replicate_event_console": True,
                 "replicate_extensions": True,
+                "message_broker_port": remote_site.message_broker_port,
             },
         }
     )

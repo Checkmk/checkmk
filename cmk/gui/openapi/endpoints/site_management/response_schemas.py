@@ -270,6 +270,12 @@ class ConfigurationConnectionAttributesOutput(BaseSchema):
         example=True,
     )
 
+    message_broker_port = fields.Integer(
+        required=True,
+        description="The port used for the message broker to exchange messages.",
+        example=5672,
+    )
+
 
 class SiteConfigAttributes(BaseSchema):
     basic_settings = fields.Nested(
